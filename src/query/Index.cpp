@@ -222,8 +222,8 @@ ProjectionMatch Index::findCellInterpolation(const Eigen::VectorXd &location, in
       }
     }
 
-    // If no triangle is found, fall-back on NN
-    return findVertexProjection(location);
+    // If no triangle is found, fall-back on NP
+    return findNearestProjection(location, n);
   } else {
     PRECICE_ASSERT(_mesh->getDimensions() == 3, "Volume coupling 3D not  implemented");
     return findTriangleProjection(location, n);

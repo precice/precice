@@ -94,16 +94,20 @@ void VolumeCellInterpolation::computeMapping()
   _interpolations.reserve(fVertices.size());
 
   for (const auto &fVertex : fVertices) {
-    // Find tetrahedra (3D) or triangle (2D) or fall-back on a vertex
+    // Find tetrahedra (3D) or triangle (2D) or fall-back on NP
     auto match = index.findCellInterpolation(fVertex.getCoords(), nnearest);
     _interpolations.push_back(std::move(match.polation));
-    distanceStatistics(match.distance);
+    if (match.distance != 0.0)
+    {
+      // Only push when fall-back occurs, so the number of entries is the number of vertices outside the domain
+      distanceStatistics();
+    }
   }
 
-  if (distanceStatistics.empty()) {
-    PRECICE_INFO("Mapping distance not available due to empty partition.");
-  } else {
-    PRECICE_INFO("Mapping distance {}", distanceStatistics);
+  if (!distanceStatistics.empty()) {
+    PRECICE_WARN("Some points are outisde of the domain defined by connectivity. Fall-back on Nearest-Projection occured."
+                " Statistics: {}", distanceStatistics);
+    
   }
 
   _hasComputedMapping = true;
