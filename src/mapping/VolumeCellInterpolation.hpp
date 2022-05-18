@@ -19,8 +19,6 @@ public:
   /// Constructor, taking mapping constraint.
   VolumeCellInterpolation(Constraint constraint, int dimensions);
 
-  /// Destructor, empty.
-  virtual ~VolumeCellInterpolation() {}
 
   /// Computes the projections and interpolation relations.
   virtual void computeMapping() override;
