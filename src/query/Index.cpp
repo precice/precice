@@ -218,7 +218,7 @@ ProjectionMatch Index::findCellInterpolation(const Eigen::VectorXd &location, in
     for (const auto &match : matchedTriangles) {
       auto polation = mapping::Polation(location, _mesh->triangles()[match.index]);
       if (polation.isInterpolation()) {
-        return {polation, match.distance};
+        return {polation, 0.0};
       }
     }
 
