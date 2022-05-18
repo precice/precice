@@ -29,7 +29,7 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
 
   std::vector<double> values;
   const unsigned int  nCoords = 12;
-  for (uint i = 0; i < nCoords; ++i)
+  for (unsigned int i = 0; i < nCoords; ++i)
     values.emplace_back(std::pow(i + 1, 2));
   // MeshTwo
   Vector3d coordTwoA{0.0, 0.0, z}; // Maps to vertex A
