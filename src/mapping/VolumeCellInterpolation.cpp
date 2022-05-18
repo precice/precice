@@ -88,7 +88,7 @@ void VolumeCellInterpolation::computeMapping()
   constexpr int nnearest = 4;
 
   auto                                  &index = searchSpace->index();
-  utils::statistics::DistanceAccumulator distanceStatistics;
+  utils::statistics::DistanceAccumulator fallbackStatistics;
 
   _interpolations.clear();
   _interpolations.reserve(fVertices.size());
@@ -100,13 +100,13 @@ void VolumeCellInterpolation::computeMapping()
     if (match.distance != 0.0)
     {
       // Only push when fall-back occurs, so the number of entries is the number of vertices outside the domain
-      distanceStatistics();
+      fallbackStatistics();
     }
   }
 
-  if (!distanceStatistics.empty()) {
+  if (!fallbackStatistics.empty()) {
     PRECICE_WARN("Some points are outisde of the domain defined by connectivity. Fall-back on Nearest-Projection occured."
-                " Statistics: {}", distanceStatistics);
+                " Statistics: {}", fallbackStatistics);
     
   }
 
