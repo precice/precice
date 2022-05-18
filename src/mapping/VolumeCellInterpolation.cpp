@@ -100,7 +100,7 @@ void VolumeCellInterpolation::computeMapping()
     if (match.distance != 0.0)
     {
       // Only push when fall-back occurs, so the number of entries is the number of vertices outside the domain
-      fallbackStatistics();
+      fallbackStatistics(match.distance);
     }
   }
 
