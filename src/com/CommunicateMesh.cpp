@@ -86,7 +86,6 @@ void CommunicateMesh::sendMesh(
     }
     _communication->sendRange(triangleIDs, rankReceiver);
   }
-  //}
 }
 
 void CommunicateMesh::receiveMesh(
