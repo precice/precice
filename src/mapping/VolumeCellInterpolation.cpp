@@ -43,7 +43,7 @@ VolumeCellInterpolation::VolumeCellInterpolation(
     setOutputRequirement(Mapping::MeshRequirement::FULL);
   }
 
-  PRECICE_ASSERT(constraint != SCALEDCONSISTENT, "Volume mapping doesn't support scaled-consistent mappings.");
+  PRECICE_CHECK(constraint != SCALEDCONSISTENT, "Volume mapping doesn't support scaled-consistent mappings.");
 }
 
 void VolumeCellInterpolation::computeMapping()
@@ -51,7 +51,7 @@ void VolumeCellInterpolation::computeMapping()
   PRECICE_TRACE(input()->vertices().size(), output()->vertices().size());
   const std::string     baseEvent = "map.vci.computeMapping.From" + input()->getName() + "To" + output()->getName();
   precice::utils::Event e(baseEvent, precice::syncMode);
-  PRECICE_ASSERT(getDimensions() == 2, "Volume mapping not available in 3D.");
+  PRECICE_CHECK(getDimensions() == 2, "Volume mapping not available in 3D.");
 
   // Setup Direction of Mapping
   mesh::PtrMesh origins, searchSpace;
