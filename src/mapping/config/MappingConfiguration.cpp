@@ -13,6 +13,7 @@
 #include "mapping/NearestProjectionMapping.hpp"
 #include "mapping/PetRadialBasisFctMapping.hpp"
 #include "mapping/RadialBasisFctMapping.hpp"
+#include "mapping/VolumeCellInterpolation.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -130,6 +131,11 @@ MappingConfiguration::MappingConfiguration(
   {
     XMLTag tag(*this, VALUE_NEAREST_NEIGHBOR_GRADIENT, occ, TAG);
     tag.setDocumentation("Nearest-neighbor-gradient mapping which uses nearest-neighbor mapping with an additional linear approximation using gradient data.");
+    tags.push_back(tag);
+  }
+  {
+    XMLTag tag(*this, VALUE_VOLUME_CELL_INTERPOLATION, occ, TAG);
+    tag.setDocumentation("Volumetric linear interpolation mapping which uses a rstar-spacial index tree to index meshes and locate the nearest element.");
     tags.push_back(tag);
   }
 
@@ -325,6 +331,11 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   } else if (type == VALUE_NEAREST_PROJECTION) {
     configuredMapping.mapping = PtrMapping(
         new NearestProjectionMapping(constraintValue, dimensions));
+    configuredMapping.isRBF = false;
+    return configuredMapping;
+  } else if (type == VALUE_VOLUME_CELL_INTERPOLATION) {
+    configuredMapping.mapping = PtrMapping(
+        new VolumeCellInterpolation(constraintValue, dimensions));
     configuredMapping.isRBF = false;
     return configuredMapping;
   } else if (type == VALUE_NEAREST_NEIGHBOR_GRADIENT) {

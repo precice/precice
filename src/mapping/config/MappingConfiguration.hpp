@@ -132,8 +132,10 @@ private:
   const std::string VALUE_CONSERVATIVE      = "conservative";
   const std::string VALUE_SCALED_CONSISTENT = "scaled-consistent";
 
-  const std::string VALUE_NEAREST_NEIGHBOR      = "nearest-neighbor";
-  const std::string VALUE_NEAREST_PROJECTION    = "nearest-projection";
+  const std::string VALUE_NEAREST_NEIGHBOR          = "nearest-neighbor";
+  const std::string VALUE_NEAREST_PROJECTION        = "nearest-projection";
+  const std::string VALUE_VOLUME_CELL_INTERPOLATION = "volume-cell-interpolation";
+
   const std::string VALUE_RBF_TPS               = "rbf-thin-plate-splines";
   const std::string VALUE_RBF_MULTIQUADRICS     = "rbf-multiquadrics";
   const std::string VALUE_RBF_INV_MULTIQUADRICS = "rbf-inverse-multiquadrics";

@@ -188,6 +188,8 @@ target_sources(precice
     src/mapping/Polation.hpp
     src/mapping/RadialBasisFctMapping.hpp
     src/mapping/SharedPointer.hpp
+    src/mapping/VolumeCellInterpolation.cpp
+    src/mapping/VolumeCellInterpolation.hpp
     src/mapping/config/MappingConfiguration.cpp
     src/mapping/config/MappingConfiguration.hpp
     src/mapping/impl/BasisFunctions.hpp
