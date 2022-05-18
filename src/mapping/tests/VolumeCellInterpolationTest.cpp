@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
   Vertex &outA = outMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
   Vertex &outB = outMesh->createVertex(Eigen::Vector2d(1.0, 0.0));
   Vertex &outC = outMesh->createVertex(Eigen::Vector2d(0.0, 1.0));
-  // Fallback on NN when slightly outside
+  // Fallback on NP when slightly outside
   // AB: exact middle (slightly outside and on side of A), BC: 2/3 on side B. CA: check fall-back on edge if out of domain
   Vertex &outMidAB = outMesh->createVertex(Eigen::Vector2d(0.49, -0.01));
   Vertex &outBC    = outMesh->createVertex(Eigen::Vector2d(2.5 / 3, 1. / 3));
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
 
   // Check expected
   Eigen::VectorXd expected(outMesh->vertices().size());
-  expected << 2.0, 1.0, 2.0, 3.0, 1.0, 2.0, 1.0, 1.0, 2.0, 3.0;
+  expected << 2.0, 1.0, 2.0, 3.0, 1.49, 2.25, 1.5, 1.0, 2.0, 3.0;
   BOOST_CHECK(equals(expected, outValuesScalar));
 }
 
