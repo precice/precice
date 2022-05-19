@@ -3,7 +3,7 @@
 #include <memory>
 #include "logging/LogMacros.hpp"
 #include "mapping/Mapping.hpp"
-#include "mapping/VolumeCellInterpolation.hpp"
+#include "mapping/LinearCellInterpolation.hpp"
 #include "math/constants.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"

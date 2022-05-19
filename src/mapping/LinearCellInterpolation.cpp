@@ -1,4 +1,4 @@
-#include "VolumeCellInterpolation.hpp"
+#include "LinearCellInterpolation.hpp"
 
 #include <Eigen/Core>
 #include <algorithm>

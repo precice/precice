@@ -134,7 +134,7 @@ private:
 
   const std::string VALUE_NEAREST_NEIGHBOR          = "nearest-neighbor";
   const std::string VALUE_NEAREST_PROJECTION        = "nearest-projection";
-  const std::string VALUE_VOLUME_CELL_INTERPOLATION = "volume-cell-interpolation";
+  const std::string VALUE_LINEAR_CELL_INTERPOLATION = "linear-cell-interpolation";
 
   const std::string VALUE_RBF_TPS               = "rbf-thin-plate-splines";
   const std::string VALUE_RBF_MULTIQUADRICS     = "rbf-multiquadrics";

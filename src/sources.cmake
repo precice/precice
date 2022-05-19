@@ -173,6 +173,8 @@ target_sources(precice
     src/m2n/config/M2NConfiguration.hpp
     src/mapping/BarycentricBaseMapping.cpp
     src/mapping/BarycentricBaseMapping.hpp
+    src/mapping/LinearCellInterpolation.cpp
+    src/mapping/LinearCellInterpolation.hpp
     src/mapping/Mapping.cpp
     src/mapping/Mapping.hpp
     src/mapping/NearestNeighborBaseMapping.cpp
@@ -188,8 +190,6 @@ target_sources(precice
     src/mapping/Polation.hpp
     src/mapping/RadialBasisFctMapping.hpp
     src/mapping/SharedPointer.hpp
-    src/mapping/VolumeCellInterpolation.cpp
-    src/mapping/VolumeCellInterpolation.hpp
     src/mapping/config/MappingConfiguration.cpp
     src/mapping/config/MappingConfiguration.hpp
     src/mapping/impl/BasisFunctions.hpp
