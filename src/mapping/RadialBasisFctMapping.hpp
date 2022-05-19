@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Eigen/Cholesky>
 #include <Eigen/Core>
 
 #include "com/CommunicateMesh.hpp"
@@ -31,6 +32,7 @@ namespace mapping {
 template <typename RADIAL_BASIS_FUNCTION_T>
 class RadialBasisFctMapping : public RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T> {
 public:
+  typedef typename std::conditional<RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite(), Eigen::LDLT<Eigen::MatrixXd>, Eigen::ColPivHouseholderQR<Eigen::MatrixXd>>::type DecompositionType;
   /**
    * @brief Constructor.
    *

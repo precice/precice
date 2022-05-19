@@ -28,13 +28,27 @@ struct NoCompactSupportBase {
 };
 
 /**
+ * @brief Base class for RBF functions to distinguish positive definite functions
+ *
+ * @tparam isDefinite
+ */
+template <bool isDefinite>
+struct DefiniteFunction {
+  static constexpr bool isStrictlyPositiveDefinite()
+  {
+    return isDefinite;
+  }
+};
+
+/**
  * @brief Radial basis function with global support.
  *
  * To be used as template parameter for RadialBasisFctMapping.
  *
  * Evaluates to: radius^2 * log(radius).
  */
-class ThinPlateSplines : public NoCompactSupportBase {
+class ThinPlateSplines : public NoCompactSupportBase,
+                         public DefiniteFunction<false> {
 public:
   inline double evaluate(double radius) const
   {
@@ -49,7 +63,8 @@ public:
  *
  * Evaluates to: sqrt(shape^2 + radius^2).
  */
-class Multiquadrics : public NoCompactSupportBase {
+class Multiquadrics : public NoCompactSupportBase,
+                      public DefiniteFunction<false> {
 public:
   explicit Multiquadrics(double c)
       : _cPow2(std::pow(c, 2)) {}
@@ -71,7 +86,8 @@ private:
  *
  * Evaluates to: 1 / (shape^2 + radius^2).
  */
-class InverseMultiquadrics : public NoCompactSupportBase {
+class InverseMultiquadrics : public NoCompactSupportBase,
+                             public DefiniteFunction<true> {
 public:
   explicit InverseMultiquadrics(double c)
       : _cPow2(std::pow(c, 2))
@@ -98,7 +114,8 @@ private:
  *
  * Evaluates to: radius.
  */
-class VolumeSplines : public NoCompactSupportBase {
+class VolumeSplines : public NoCompactSupportBase,
+                      public DefiniteFunction<false> {
 public:
   inline double evaluate(double radius) const
   {
@@ -114,7 +131,8 @@ public:
  *
  * Evaluates to: exp(-1 * (shape * radius)^2).
  */
-class Gaussian : public CompactSupportBase {
+class Gaussian : public CompactSupportBase,
+                 public DefiniteFunction<true> {
 public:
   Gaussian(const double shape, const double supportRadius = std::numeric_limits<double>::infinity())
       : _shape(shape),
@@ -170,7 +188,8 @@ private:
  * where rn is the radius r normalized over the support radius sr: rn = r/sr.
  * To work around the issue of log(0), the equation is formulated differently in the last term.
  */
-class CompactThinPlateSplinesC2 : public CompactSupportBase {
+class CompactThinPlateSplinesC2 : public CompactSupportBase,
+                                  public DefiniteFunction<false> {
 public:
   explicit CompactThinPlateSplinesC2(double supportRadius)
   {
@@ -208,7 +227,8 @@ private:
  * Evaluates to: (1 - rn)^2,
  * where rn is the radius r normalized over the support radius sr: rn = r/sr.
  */
-class CompactPolynomialC0 : public CompactSupportBase {
+class CompactPolynomialC0 : public CompactSupportBase,
+                            public DefiniteFunction<true> {
 public:
   explicit CompactPolynomialC0(double supportRadius)
   {
@@ -246,7 +266,8 @@ private:
  * Evaluates to: (1 - rn)^8 * (32*rn^3 + 25*rn^2 + 8*rn + 1),
  * where rn is the radius r normalized over the support radius sr: rn = r/sr.
  */
-class CompactPolynomialC6 : public CompactSupportBase {
+class CompactPolynomialC6 : public CompactSupportBase,
+                            public DefiniteFunction<true> {
 public:
   explicit CompactPolynomialC6(double supportRadius)
   {
