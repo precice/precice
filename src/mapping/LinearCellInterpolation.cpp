@@ -31,6 +31,7 @@ LinearCellInterpolation::LinearCellInterpolation(
     int        dimensions)
     : BarycentricBaseMapping(constraint, dimensions)
 {
+  PRECICE_CHECK(getDimensions() == 2, "Volume mapping not available in 3D.");
   if (constraint == CONSISTENT) {
     setInputRequirement(Mapping::MeshRequirement::FULL);
     setOutputRequirement(Mapping::MeshRequirement::VERTEX);
@@ -51,7 +52,7 @@ void LinearCellInterpolation::computeMapping()
   PRECICE_TRACE(input()->vertices().size(), output()->vertices().size());
   const std::string     baseEvent = "map.vci.computeMapping.From" + input()->getName() + "To" + output()->getName();
   precice::utils::Event e(baseEvent, precice::syncMode);
-  PRECICE_CHECK(getDimensions() == 2, "Volume mapping not available in 3D.");
+  PRECICE_ASSERT(getDimensions() == 2, "Volume mapping not available in 3D.");
 
   // Setup Direction of Mapping
   mesh::PtrMesh origins, searchSpace;
