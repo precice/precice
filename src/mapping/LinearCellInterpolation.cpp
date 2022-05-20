@@ -71,13 +71,13 @@ void LinearCellInterpolation::computeMapping()
   if (getDimensions() == 2) {
     if (!fVertices.empty() && searchSpace->triangles().empty()) {
       PRECICE_WARN("2D Mesh \"{}\" does not contain triangles. "
-                   "Volume cell interpolation falls back to nearest neighbor mapping.",
+                   "Linear cell interpolation falls back to nearest projection mapping.",
                    searchSpace->getName());
     }
   } else {
     if (!fVertices.empty() && searchSpace->triangles().empty()) {
       PRECICE_WARN("3D Mesh \"{}\" does not contain tetrahedra. "
-                   "Volume cell interpolation will map to primitives of lower dimension.",
+                   "Linear cell interpolation falls back to nearest projection mapping.",
                    searchSpace->getName());
     }
   }
