@@ -14,17 +14,17 @@ namespace mapping {
  * @brief Mapping using orthogonal projection to nearest triangle/edge/vertex and
  *        linear interpolation from projected point.
  */
-class VolumeCellInterpolation : public BarycentricBaseMapping {
+class LinearCellInterpolation : public BarycentricBaseMapping {
 public:
   /// Constructor, taking mapping constraint.
-  VolumeCellInterpolation(Constraint constraint, int dimensions);
+  LinearCellInterpolation(Constraint constraint, int dimensions);
 
 
   /// Computes the projections and interpolation relations.
   void computeMapping() override;
 
 private:
-  logging::Logger _log{"mapping::VolumeCellInterpolationMapping"};
+  logging::Logger _log{"mapping::LinearCellInterpolationMapping"};
 };
 
 } // namespace mapping

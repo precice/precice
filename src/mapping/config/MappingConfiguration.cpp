@@ -335,7 +335,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
     return configuredMapping;
   } else if (type == VALUE_LINEAR_CELL_INTERPOLATION) {
     configuredMapping.mapping = PtrMapping(
-        new VolumeCellInterpolation(constraintValue, dimensions));
+        new LinearCellInterpolation(constraintValue, dimensions));
     configuredMapping.isRBF = false;
     return configuredMapping;
   } else if (type == VALUE_NEAREST_NEIGHBOR_GRADIENT) {
