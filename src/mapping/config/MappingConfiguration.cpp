@@ -135,7 +135,7 @@ MappingConfiguration::MappingConfiguration(
   }
   {
     XMLTag tag(*this, VALUE_LINEAR_CELL_INTERPOLATION, occ, TAG);
-    tag.setDocumentation("Volumetric linear interpolation mapping which uses a rstar-spacial index tree to index meshes and locate the nearest element.");
+    tag.setDocumentation("Linear cell interpolation mapping which uses a rstar-spacial index tree to index meshes and locate the nearest cell. Only supports 2D meshes.");
     tags.push_back(tag);
   }
 
