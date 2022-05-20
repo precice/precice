@@ -75,11 +75,8 @@ void LinearCellInterpolation::computeMapping()
                    searchSpace->getName());
     }
   } else {
-    if (!fVertices.empty() && searchSpace->triangles().empty()) {
-      PRECICE_WARN("3D Mesh \"{}\" does not contain tetrahedra. "
-                   "Linear cell interpolation falls back to nearest projection mapping.",
-                   searchSpace->getName());
-    }
+    // TODO, shouldn't be reached
+    PRECICE_ERROR("Linear Cell interpolation in 3D not implemented yet. This line should be unreachable");
   }
 
   // Amount of nearest elements to fetch for detailed comparison.
