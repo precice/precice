@@ -21,7 +21,7 @@ public:
 
 
   /// Computes the projections and interpolation relations.
-  virtual void computeMapping() override;
+  void computeMapping() override;
 
 private:
   logging::Logger _log{"mapping::VolumeCellInterpolationMapping"};
