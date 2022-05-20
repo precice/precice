@@ -369,13 +369,7 @@ void SolverInterfaceImpl::initializeData()
   }
   resetWrittenData();
   PRECICE_DEBUG("Plot output");
-  for (const io::ExportContext &context : _accessor->exportContexts()) {
-    if (context.everyNTimeWindows != -1) {
-      std::ostringstream suffix;
-      suffix << _accessorName << ".init";
-      exportMesh(suffix.str());
-    }
-  }
+  _accessor->exportFinal();
   solverInitEvent.start(precice::syncMode);
 
   _hasInitializedData = true;
@@ -492,13 +486,7 @@ void SolverInterfaceImpl::finalize()
     _couplingScheme->finalize();
 
     PRECICE_DEBUG("Handle exports");
-    for (const io::ExportContext &context : _accessor->exportContexts()) {
-      if (context.everyNTimeWindows != -1) {
-        std::ostringstream suffix;
-        suffix << _accessorName << ".final";
-        exportMesh(suffix.str());
-      }
-    }
+    _accessor->exportFinal();
     closeCommunicationChannels(CloseChannels::All);
   }
 
@@ -1791,19 +1779,6 @@ void SolverInterfaceImpl::getMeshVerticesAndIDs(
   }
 }
 
-void SolverInterfaceImpl::exportMesh(const std::string &filenameSuffix) const
-{
-  PRECICE_TRACE(filenameSuffix);
-  // Export meshes
-  for (const io::ExportContext &context : _accessor->exportContexts()) {
-    for (const MeshContext *meshContext : _accessor->usedMeshContexts()) {
-      std::string name = meshContext->mesh->getName() + "-" + filenameSuffix;
-      PRECICE_DEBUG("Exporting mesh to file \"{}\" at location \"{}\"", name, context.location);
-      context.exporter->doExport(name, context.location, *(meshContext->mesh));
-    }
-  }
-}
-
 void SolverInterfaceImpl::configureM2Ns(
     const m2n::M2NConfiguration::SharedPointer &config)
 {
@@ -2040,35 +2015,12 @@ void SolverInterfaceImpl::performDataActions(
 void SolverInterfaceImpl::handleExports()
 {
   PRECICE_TRACE();
-  //timesteps was already incremented before
-  int timesteps = _couplingScheme->getTimeWindows() - 1;
-
-  for (const io::ExportContext &context : _accessor->exportContexts()) {
-    if (_couplingScheme->isTimeWindowComplete() || context.everyIteration) {
-      if (context.everyNTimeWindows != -1) {
-        if (timesteps % context.everyNTimeWindows == 0) {
-          if (context.everyIteration) {
-            std::ostringstream everySuffix;
-            everySuffix << _accessorName << ".it" << _numberAdvanceCalls;
-            exportMesh(everySuffix.str());
-          }
-          std::ostringstream suffix;
-          suffix << _accessorName << ".dt" << _couplingScheme->getTimeWindows() - 1;
-          exportMesh(suffix.str());
-        }
-      }
-    }
-  }
-
-  if (_couplingScheme->isTimeWindowComplete()) {
-    // Export watch point data
-    for (const PtrWatchPoint &watchPoint : _accessor->watchPoints()) {
-      watchPoint->exportPointData(_couplingScheme->getTime());
-    }
-    for (const PtrWatchIntegral &watchIntegral : _accessor->watchIntegrals()) {
-      watchIntegral->exportIntegralData(_couplingScheme->getTime());
-    }
-  }
+  Participant::IntermediateExport exp;
+  exp.timewindow = _couplingScheme->getTimeWindows() - 1;
+  exp.iteration  = _numberAdvanceCalls;
+  exp.complete   = _couplingScheme->isTimeWindowComplete();
+  exp.time       = _couplingScheme->getTime();
+  _accessor->exportIntermediate(exp);
 }
 
 void SolverInterfaceImpl::resetWrittenData()
