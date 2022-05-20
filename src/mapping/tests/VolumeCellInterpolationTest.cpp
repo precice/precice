@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
   Edge &inEdge1 = inMesh->createEdge(inVertexB, inVertexC);
   Edge &inEdge2 = inMesh->createEdge(inVertexC, inVertexA);
 
-  Triangle &       inTriangle     = inMesh->createTriangle(inEdge0, inEdge1, inEdge2);
+  inMesh->createTriangle(inEdge0, inEdge1, inEdge2);
   Eigen::VectorXd &inValuesScalar = inDataScalar->values();
   inValuesScalar << 1.0, 2.0, 3.0;
 
@@ -56,20 +56,20 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
 
   // All vertices to test
   // Center of triangle = average
-  Vertex &outMidPoint = outMesh->createVertex(Eigen::Vector2d::Constant(1.0 / 3.0));
+  outMesh->createVertex(Eigen::Vector2d::Constant(1.0 / 3.0));
   // Exact mapping if grid is matching
-  Vertex &outA = outMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
-  Vertex &outB = outMesh->createVertex(Eigen::Vector2d(1.0, 0.0));
-  Vertex &outC = outMesh->createVertex(Eigen::Vector2d(0.0, 1.0));
+  outMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
+  outMesh->createVertex(Eigen::Vector2d(1.0, 0.0));
+  outMesh->createVertex(Eigen::Vector2d(0.0, 1.0));
   // Fallback on NP when slightly outside
   // AB: exact middle (slightly outside and on side of A), BC: 2/3 on side B. CA: check fall-back on edge if out of domain
-  Vertex &outMidAB = outMesh->createVertex(Eigen::Vector2d(0.49, -0.01));
-  Vertex &outBC    = outMesh->createVertex(Eigen::Vector2d(2.5 / 3, 1. / 3));
-  Vertex &outCA    = outMesh->createVertex(Eigen::Vector2d(-10.0, 0.25));
+  outMesh->createVertex(Eigen::Vector2d(0.49, -0.01));
+  outMesh->createVertex(Eigen::Vector2d(2.5 / 3, 1. / 3));
+  outMesh->createVertex(Eigen::Vector2d(-10.0, 0.25));
   // Check fall back on nearest neighbor
-  Vertex &almostA = outMesh->createVertex(Eigen::Vector2d(-0.1, -0.1)); // Currently maps to opposite edge
-  Vertex &almostB = outMesh->createVertex(Eigen::Vector2d(2.5, -1.0));
-  Vertex &almostC = outMesh->createVertex(Eigen::Vector2d(2.5, 10.0));
+  outMesh->createVertex(Eigen::Vector2d(-0.1, -0.1)); // Currently maps to opposite edge
+  outMesh->createVertex(Eigen::Vector2d(2.5, -1.0));
+  outMesh->createVertex(Eigen::Vector2d(2.5, 10.0));
 
   outMesh->allocateDataValues();
 
