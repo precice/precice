@@ -103,9 +103,10 @@ void LinearCellInterpolation::computeMapping()
   }
 
   if (!fallbackStatistics.empty()) {
-    PRECICE_WARN("Some points are outisde of the domain defined by connectivity. Fall-back on Nearest-Projection occured."
-                " Statistics: {}", fallbackStatistics);
-    
+    PRECICE_INFO("Some points are outisde of the domain defined by connectivity. Fall-back on Nearest-Projection occured."
+                " Projection distances: {}", fallbackStatistics);
+  } else {
+    PRECICE_INFO("All vertices are inside cells, no fallback to Nearest-Projection required");
   }
 
   _hasComputedMapping = true;
