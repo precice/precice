@@ -2,8 +2,8 @@
 #include <algorithm>
 #include <memory>
 #include "logging/LogMacros.hpp"
-#include "mapping/Mapping.hpp"
 #include "mapping/LinearCellInterpolation.hpp"
+#include "mapping/Mapping.hpp"
 #include "math/constants.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"

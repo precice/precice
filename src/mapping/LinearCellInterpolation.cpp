@@ -85,7 +85,7 @@ void LinearCellInterpolation::computeMapping()
   // @TODO Add a configuration option for this factor
   constexpr int nnearest = 4;
 
-  auto                                  &index = searchSpace->index();
+  auto &                                 index = searchSpace->index();
   utils::statistics::DistanceAccumulator fallbackStatistics;
 
   _interpolations.clear();
@@ -95,8 +95,7 @@ void LinearCellInterpolation::computeMapping()
     // Find tetrahedra (3D) or triangle (2D) or fall-back on NP
     auto match = index.findCellInterpolation(fVertex.getCoords(), nnearest);
     _interpolations.push_back(std::move(match.polation));
-    if (match.distance != 0.0)
-    {
+    if (match.distance != 0.0) {
       // Only push when fall-back occurs, so the number of entries is the number of vertices outside the domain
       fallbackStatistics(match.distance);
     }
@@ -104,14 +103,14 @@ void LinearCellInterpolation::computeMapping()
 
   if (!fallbackStatistics.empty()) {
     PRECICE_INFO("Some points are outisde of the domain defined by connectivity. Fall-back on Nearest-Projection occured."
-                " Projection distances: {}", fallbackStatistics);
+                 " Projection distances: {}",
+                 fallbackStatistics);
   } else {
     PRECICE_INFO("All vertices are inside cells, no fallback to Nearest-Projection required");
   }
 
   _hasComputedMapping = true;
 }
-
 
 } // namespace mapping
 } // namespace precice

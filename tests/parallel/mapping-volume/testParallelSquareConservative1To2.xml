@@ -15,7 +15,7 @@
       <use-mesh name="MeshOne" provide="on" />
       <use-mesh name="MeshTwo" from="SolverTwo" />
       <write-data name="DataOne" mesh="MeshOne" />
-        <mapping:linear-cell-interpolation
+      <mapping:linear-cell-interpolation
         direction="write"
         from="MeshOne"
         to="MeshTwo"

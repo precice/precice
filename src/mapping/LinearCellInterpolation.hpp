@@ -19,7 +19,6 @@ public:
   /// Constructor, taking mapping constraint.
   LinearCellInterpolation(Constraint constraint, int dimensions);
 
-
   /// Computes the projections and interpolation relations.
   void computeMapping() override;
 

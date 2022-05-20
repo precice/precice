@@ -12,15 +12,15 @@ BOOST_AUTO_TEST_CASE(testParallelSquare2To1)
 {
   PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(1_rank));
 
-  using precice::testing::equals;
   using precice::VertexID;
+  using precice::testing::equals;
 
   // Implement your test here.
   BOOST_TEST(true);
   precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
 
   std::vector<VertexID> vertexIDs;
-  double dt;
+  double                dt;
 
   if (context.isNamed("SolverOne")) {
     auto meshID = interface.getMeshID("MeshOne");
@@ -30,13 +30,12 @@ BOOST_AUTO_TEST_CASE(testParallelSquare2To1)
 
     // Create a square with top left corner (rank 0) or bottom right. Diagonal "y = x" is shared.
     if (context.rank == 0) {
-      coords = {0.0, 0.0, 
-                1.0, 1.0, 
+      coords = {0.0, 0.0,
+                1.0, 1.0,
                 0.0, 1.0};
-    }
-    else {
-      coords = {0.0, 0.0, 
-                1.0, 1.0, 
+    } else {
+      coords = {0.0, 0.0,
+                1.0, 1.0,
                 1.0, 0.0};
     }
 
@@ -54,8 +53,7 @@ BOOST_AUTO_TEST_CASE(testParallelSquare2To1)
       values = {0.0,
                 3.0,
                 2.0};
-    }
-    else {
+    } else {
       values = {0.0,
                 3.0,
                 1.0};
@@ -97,13 +95,11 @@ BOOST_AUTO_TEST_CASE(testParallelSquare2To1)
     //Check expected VS read
     Eigen::VectorXd expected(4);
     Eigen::VectorXd readData(4);
-    expected << 7./6, 5./6, 11./6, 13./6;
-
+    expected << 7. / 6, 5. / 6, 11. / 6, 13. / 6;
 
     interface.readBlockScalarData(dataID, expected.size(), vertexIDs.data(), readData.data());
     BOOST_CHECK(equals(expected, readData));
     interface.finalize();
-
   }
 }
 

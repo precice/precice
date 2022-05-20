@@ -17,7 +17,7 @@
     </participant>
 
     <participant name="SolverTwo">
-      <use-mesh name="MeshOne" from="SolverOne" geometric-filter="no-filter"/>
+      <use-mesh name="MeshOne" from="SolverOne" geometric-filter="no-filter" />
       <use-mesh name="MeshTwo" provide="on" />
       <mapping:linear-cell-interpolation
         direction="read"

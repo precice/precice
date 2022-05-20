@@ -20,7 +20,7 @@ BOOST_AUTO_TEST_CASE(testParallelSquare1To2)
   precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
 
   std::vector<VertexID> vertexIDs;
-  double              dt;
+  double                dt;
 
   if (context.isNamed("SolverOne")) {
     auto meshID = interface.getMeshID("MeshOne");
