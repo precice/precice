@@ -104,11 +104,13 @@ void Mapping::map(int inputDataID,
 
   if (hasConstraint(CONSERVATIVE)) {
     mapConservative(inputDataID, outputDataID);
-  } else {
+  } else if (hasConstraint(CONSISTENT)) {
     mapConsistent(inputDataID, outputDataID);
-  }
-  if (hasConstraint(Mapping::SCALEDCONSISTENT)) {
+  } else if (hasConstraint(SCALEDCONSISTENT)) {
+    mapConsistent(inputDataID, outputDataID);
     scaleConsistentMapping(inputDataID, outputDataID);
+  } else {
+    PRECICE_UNREACHABLE("Unknown mapping constraint.")
   }
 }
 
