@@ -41,10 +41,10 @@ target_sources(testprecice
     tests/parallel/lifecycle/ImplicitFinalize.cpp
     tests/parallel/mapping-nearest-neighbor-gradient/GradientTestParallelScalar.cpp
     tests/parallel/mapping-nearest-neighbor-gradient/GradientTestParallelVector.cpp
-    tests/parallel/mapping-volume/testParallelSquare1To2.cpp
-    tests/parallel/mapping-volume/testParallelSquare2To1.cpp
-    tests/parallel/mapping-volume/testParallelSquareConservative1To2.cpp
-    tests/parallel/mapping-volume/testParallelTriangleConservative2To1.cpp
+    tests/parallel/mapping-volume/ParallelSquare1To2.cpp
+    tests/parallel/mapping-volume/ParallelSquare2To1.cpp
+    tests/parallel/mapping-volume/ParallelSquareConservative1To2.cpp
+    tests/parallel/mapping-volume/ParallelTriangleConservative2To1.cpp
     tests/parallel/quasi-newton/TestQN1.cpp
     tests/parallel/quasi-newton/TestQN1EmptyPartition.cpp
     tests/parallel/quasi-newton/TestQN2.cpp
