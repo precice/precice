@@ -128,6 +128,7 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 void RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::setDeadAxis(std::array<bool, 3> deadAxis)
 {
   PRECICE_ASSERT(getDimensions() <= 3);
+  PRECICE_ASSERT(_deadAxis.empty());
   std::copy_n(deadAxis.begin(), getDimensions(), std::back_inserter(_deadAxis));
   if (getDimensions() == 2 && deadAxis[2]) {
     PRECICE_WARN("Setting the z-axis to dead on a 2-dimensional problem has no effect. Please remove the respective mapping's \"z-dead\" attribute.");
