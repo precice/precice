@@ -44,9 +44,7 @@ public:
       Mapping::Constraint     constraint,
       int                     dimensions,
       RADIAL_BASIS_FUNCTION_T function,
-      bool                    xDead,
-      bool                    yDead,
-      bool                    zDead);
+      std::array<bool, 3>     deadAxis);
 
   /// Computes the mapping coefficients from the in- and output mesh.
   virtual void computeMapping() override;
@@ -75,10 +73,8 @@ RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctMapping(
     Mapping::Constraint     constraint,
     int                     dimensions,
     RADIAL_BASIS_FUNCTION_T function,
-    bool                    xDead,
-    bool                    yDead,
-    bool                    zDead)
-    : RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>(constraint, dimensions, function, xDead, yDead, zDead)
+    std::array<bool, 3>     deadAxis)
+    : RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>(constraint, dimensions, function, deadAxis)
 {
 }
 

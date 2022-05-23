@@ -37,9 +37,7 @@ public:
       Constraint              constraint,
       int                     dimensions,
       RADIAL_BASIS_FUNCTION_T function,
-      bool                    xDead,
-      bool                    yDead,
-      bool                    zDead);
+      std::array<bool, 3>     deadAxis);
 
   virtual ~RadialBasisFctBaseMapping() = default;
 
@@ -75,7 +73,7 @@ private:
   precice::logging::Logger _log{"mapping::RadialBasisFctBaseMapping"};
 
   /// converts the boolean switches to a boolean vector
-  void setDeadAxis(bool xDead, bool yDead, bool zDead);
+  void setDeadAxis(std::array<bool, 3> deadAxis);
 };
 
 // --------------------------------------------------- HEADER IMPLEMENTATIONS
@@ -85,9 +83,7 @@ RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctBaseMapping(
     Constraint              constraint,
     int                     dimensions,
     RADIAL_BASIS_FUNCTION_T function,
-    bool                    xDead,
-    bool                    yDead,
-    bool                    zDead)
+    std::array<bool, 3>     deadAxis)
     : Mapping(constraint, dimensions),
       _basisFunction(function)
 {
@@ -98,21 +94,17 @@ RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctBaseMapping(
     setInputRequirement(Mapping::MeshRequirement::VERTEX);
     setOutputRequirement(Mapping::MeshRequirement::VERTEX);
   }
-  setDeadAxis(xDead, yDead, zDead);
+  setDeadAxis(deadAxis);
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::setDeadAxis(bool xDead, bool yDead, bool zDead)
+void RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::setDeadAxis(std::array<bool, 3> deadAxis)
 {
-  _deadAxis = {xDead, yDead};
-
-  if (getDimensions() == 3) {
-    _deadAxis.emplace_back(zDead);
-  } else {
-    PRECICE_ASSERT(getDimensions() == 2, "Unknown dimension.");
-    if (zDead) {
-      PRECICE_WARN("Setting the z-axis to dead on a 2-dimensional problem has no effect. Please remove the respective mapping's \"z-dead\" attribute.");
-    }
+  PRECICE_ASSERT(getDimensions() <= 3);
+  PRECICE_ASSERT(_deadAxis.empty());
+  std::copy_n(deadAxis.begin(), getDimensions(), std::back_inserter(_deadAxis));
+  if (getDimensions() == 2 && deadAxis[2]) {
+    PRECICE_WARN("Setting the z-axis to dead on a 2-dimensional problem has no effect. Please remove the respective mapping's \"z-dead\" attribute.");
   }
   PRECICE_CHECK(std::any_of(_deadAxis.begin(), _deadAxis.end(), [](const auto &ax) { return ax == false; }), "You cannot set all axes to dead for an RBF mapping. Please remove one of the respective mapping's \"x-dead\", \"y-dead\", or \"z-dead\" attributes.");
 }
