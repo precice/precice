@@ -7,7 +7,7 @@
 #include <ostream>
 #include <utility>
 #include "logging/LogMacros.hpp"
-#include "mapping/LinearCellInterpolation.hpp"
+#include "mapping/LinearCellInterpolationMapping.hpp"
 #include "mapping/Mapping.hpp"
 #include "mapping/NearestNeighborGradientMapping.hpp"
 #include "mapping/NearestNeighborMapping.hpp"
@@ -335,7 +335,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
     return configuredMapping;
   } else if (type == VALUE_LINEAR_CELL_INTERPOLATION) {
     configuredMapping.mapping = PtrMapping(
-        new LinearCellInterpolation(constraintValue, dimensions));
+        new LinearCellInterpolationMapping(constraintValue, dimensions));
     configuredMapping.isRBF = false;
     return configuredMapping;
   } else if (type == VALUE_NEAREST_NEIGHBOR_GRADIENT) {

@@ -14,16 +14,16 @@ namespace mapping {
  * @brief Mapping using orthogonal projection to nearest triangle/edge/vertex and
  *        linear interpolation from projected point.
  */
-class LinearCellInterpolation : public BarycentricBaseMapping {
+class LinearCellInterpolationMapping : public BarycentricBaseMapping {
 public:
   /// Constructor, taking mapping constraint.
-  LinearCellInterpolation(Constraint constraint, int dimensions);
+  LinearCellInterpolationMapping(Constraint constraint, int dimensions);
 
   /// Computes the projections and interpolation relations.
   void computeMapping() override;
 
 private:
-  logging::Logger _log{"mapping::LinearCellInterpolationMapping"};
+  logging::Logger _log{"mapping::LinearCellInterpolationMappingMapping"};
 };
 
 } // namespace mapping

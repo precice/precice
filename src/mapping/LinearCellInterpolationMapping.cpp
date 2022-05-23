@@ -1,4 +1,4 @@
-#include "LinearCellInterpolation.hpp"
+#include "LinearCellInterpolationMapping.hpp"
 
 #include <Eigen/Core>
 #include <algorithm>
@@ -26,7 +26,7 @@ extern bool syncMode;
 
 namespace mapping {
 
-LinearCellInterpolation::LinearCellInterpolation(
+LinearCellInterpolationMapping::LinearCellInterpolationMapping(
     Constraint constraint,
     int        dimensions)
     : BarycentricBaseMapping(constraint, dimensions)
@@ -47,7 +47,7 @@ LinearCellInterpolation::LinearCellInterpolation(
   PRECICE_CHECK(constraint != SCALEDCONSISTENT, "Volume mapping doesn't support scaled-consistent mappings.");
 }
 
-void LinearCellInterpolation::computeMapping()
+void LinearCellInterpolationMapping::computeMapping()
 {
   PRECICE_TRACE(input()->vertices().size(), output()->vertices().size());
   const std::string     baseEvent = "map.vci.computeMapping.From" + input()->getName() + "To" + output()->getName();

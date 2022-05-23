@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <memory>
 #include "logging/LogMacros.hpp"
-#include "mapping/LinearCellInterpolation.hpp"
+#include "mapping/LinearCellInterpolationMapping.hpp"
 #include "mapping/Mapping.hpp"
 #include "math/constants.hpp"
 #include "mesh/Data.hpp"
@@ -17,7 +17,7 @@ using namespace precice;
 using namespace precice::mesh;
 
 BOOST_AUTO_TEST_SUITE(MappingTests)
-BOOST_AUTO_TEST_SUITE(LinearCellInterpolation)
+BOOST_AUTO_TEST_SUITE(LinearCellInterpolationMapping)
 
 BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
 {
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
   outMesh->allocateDataValues();
 
   // Setup mapping with mapping coordinates and geometry used
-  precice::mapping::LinearCellInterpolation mapping(mapping::Mapping::CONSISTENT, dimensions);
+  precice::mapping::LinearCellInterpolationMapping mapping(mapping::Mapping::CONSISTENT, dimensions);
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
   mapping.computeMapping();
