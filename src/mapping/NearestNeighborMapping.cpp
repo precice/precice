@@ -52,6 +52,7 @@ void NearestNeighborMapping::mapConservative(DataID inputDataID, DataID outputDa
       outputValues(mapOutputIndex) += inputValues(mapInputIndex);
     }
   }
+  PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, outputValues));
 }
 
 void NearestNeighborMapping::mapConsistent(DataID inputDataID, DataID outputDataID)
@@ -78,7 +79,6 @@ void NearestNeighborMapping::mapConsistent(DataID inputDataID, DataID outputData
       outputValues(mapOutputIndex) = inputValues(mapInputIndex);
     }
   }
-
   PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, outputValues));
 }
 
