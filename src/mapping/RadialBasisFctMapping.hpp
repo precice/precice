@@ -377,9 +377,6 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inputD
     std::vector<double> receivedValues           = utils::IntraComm::getCommunication()->receiveRange(0, AsVectorTag<double>{});
     this->output()->data(outputDataID)->values() = Eigen::Map<Eigen::VectorXd>(receivedValues.data(), receivedValues.size());
   }
-  if (this->hasConstraint(Mapping::SCALEDCONSISTENT)) {
-    this->scaleConsistentMapping(inputDataID, outputDataID);
-  }
 }
 
 // ------- Non-Member Functions ---------

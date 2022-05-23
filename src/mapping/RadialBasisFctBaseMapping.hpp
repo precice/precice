@@ -49,14 +49,6 @@ public:
   /// Removes a computed mapping.
   virtual void clear() = 0;
 
-  // Methods sharing common functions
-
-  /// Returns true, if computeMapping() has been called.
-  virtual bool hasComputedMapping() const final;
-
-  /// Maps input data to output data from input mesh to output mesh.
-  virtual void map(int inputDataID, int outputDataID) final;
-
   virtual void tagMeshFirstRound() final;
 
   virtual void tagMeshSecondRound() final;
@@ -67,25 +59,6 @@ protected:
 
   /// true if the mapping along some axis should be ignored
   std::vector<bool> _deadAxis;
-
-  /// boolean switch indicating whether the mapping was computed
-  bool _hasComputedMapping = false;
-
-  /**
-   * @brief Maps data using a conservative constraint
-   *
-   * @param[in] inputDataID Data ID of the input data set
-   * @param[in] outputDataID Data ID of the output data set
-   */
-  virtual void mapConservative(DataID inputDataID, DataID outputDataID) = 0;
-
-  /**
-   * @brief Maps data using a consistent constraint
-   *
-   * @param[in] inputDataID Data ID of the input data set
-   * @param[in] outputDataID Data ID of the output data set
-   */
-  virtual void mapConsistent(DataID inputDataID, DataID outputDataID) = 0;
 
   /**
  * @brief Computes the number of polynomial degrees of freedom based on the problem dimension and the dead axis
@@ -144,38 +117,6 @@ int RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::getPolynomialParameters(
   const int deadDimensions = std::count(_deadAxis.begin(), _deadAxis.end(), true);
   //Formula for the polynomial parameters
   return 1 + getDimensions() - deadDimensions;
-}
-
-template <typename RADIAL_BASIS_FUNCTION_T>
-bool RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::hasComputedMapping() const
-{
-  return _hasComputedMapping;
-}
-
-template <typename RADIAL_BASIS_FUNCTION_T>
-void RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::map(
-    int inputDataID,
-    int outputDataID)
-{
-  PRECICE_TRACE(inputDataID, outputDataID);
-
-  precice::utils::Event e("map.rbf.mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
-
-  PRECICE_ASSERT(_hasComputedMapping);
-  PRECICE_ASSERT(input()->getDimensions() == output()->getDimensions(),
-                 input()->getDimensions(), output()->getDimensions());
-  PRECICE_ASSERT(getDimensions() == output()->getDimensions(),
-                 getDimensions(), output()->getDimensions());
-
-  const int valueDim = input()->data(inputDataID)->getDimensions();
-  PRECICE_ASSERT(valueDim == output()->data(outputDataID)->getDimensions(),
-                 valueDim, output()->data(outputDataID)->getDimensions());
-
-  if (hasConstraint(CONSERVATIVE)) {
-    mapConservative(inputDataID, outputDataID);
-  } else {
-    mapConsistent(inputDataID, outputDataID);
-  }
 }
 
 /*
