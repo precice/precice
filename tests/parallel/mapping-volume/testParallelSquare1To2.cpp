@@ -15,8 +15,6 @@ BOOST_AUTO_TEST_CASE(testParallelSquare1To2)
 
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(2_ranks));
 
-  // Implement your test here.
-  BOOST_TEST(true);
   precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
 
   std::vector<VertexID> vertexIDs;
