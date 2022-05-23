@@ -1,11 +1,8 @@
 #pragma once
 
-#include <list>
-#include <string>
-#include <vector>
 #include "logging/Logger.hpp"
 #include "mapping/BarycentricBaseMapping.hpp"
-#include "mapping/Polation.hpp"
+
 
 namespace precice {
 namespace mapping {
