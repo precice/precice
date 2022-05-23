@@ -1,21 +1,5 @@
 #include "LinearCellInterpolationMapping.hpp"
-
-#include <Eigen/Core>
-#include <algorithm>
-#include <deque>
-#include <memory>
-#include <ostream>
-#include <unordered_set>
-#include <utility>
-
 #include "logging/LogMacros.hpp"
-#include "mapping/Mapping.hpp"
-#include "mapping/Polation.hpp"
-#include "math/differences.hpp"
-#include "mesh/Data.hpp"
-#include "mesh/Mesh.hpp"
-#include "mesh/SharedPointer.hpp"
-#include "mesh/Vertex.hpp"
 #include "query/Index.hpp"
 #include "utils/Event.hpp"
 #include "utils/Statistics.hpp"

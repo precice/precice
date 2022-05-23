@@ -3,7 +3,6 @@
 #include "logging/Logger.hpp"
 #include "mapping/BarycentricBaseMapping.hpp"
 
-
 namespace precice {
 namespace mapping {
 
