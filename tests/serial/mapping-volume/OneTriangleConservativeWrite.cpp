@@ -9,7 +9,7 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(MappingVolume)
-BOOST_AUTO_TEST_CASE(TestOneTriangleConservativeRead)
+BOOST_AUTO_TEST_CASE(OneTriangleConservativeWrite)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
   testMappingVolumeOneTriangleConservative(context.config(), context);
