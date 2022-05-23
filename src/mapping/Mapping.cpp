@@ -87,6 +87,31 @@ bool Mapping::requireGradient() const
   return _requireGradient;
 }
 
+void Mapping::map(int inputDataID,
+                  int outputDataID)
+{
+  PRECICE_ASSERT(_hasComputedMapping);
+  PRECICE_ASSERT(input()->getDimensions() == output()->getDimensions(),
+                 input()->getDimensions(), output()->getDimensions());
+  PRECICE_ASSERT(getDimensions() == output()->getDimensions(),
+                 getDimensions(), output()->getDimensions());
+  PRECICE_ASSERT(input()->data(inputDataID)->getDimensions() == output()->data(outputDataID)->getDimensions(),
+                 input()->data(inputDataID)->getDimensions(), output()->data(outputDataID)->getDimensions());
+  PRECICE_ASSERT(input()->data(inputDataID)->values().size() / input()->data(inputDataID)->getDimensions() == static_cast<int>(input()->vertices().size()),
+                 input()->data(inputDataID)->values().size(), input()->data(inputDataID)->getDimensions(), input()->vertices().size());
+  PRECICE_ASSERT(output()->data(outputDataID)->values().size() / output()->data(outputDataID)->getDimensions() == static_cast<int>(output()->vertices().size()),
+                 output()->data(outputDataID)->values().size(), output()->data(outputDataID)->getDimensions(), output()->vertices().size());
+
+  if (hasConstraint(CONSERVATIVE)) {
+    mapConservative(inputDataID, outputDataID);
+  } else {
+    mapConsistent(inputDataID, outputDataID);
+  }
+  if (hasConstraint(Mapping::SCALEDCONSISTENT)) {
+    scaleConsistentMapping(inputDataID, outputDataID);
+  }
+}
+
 void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
 {
   // Only serial participant is supported for scale-consistent mapping
@@ -126,6 +151,11 @@ void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
 bool Mapping::hasConstraint(const Constraint &constraint) const
 {
   return (getConstraint() == constraint);
+}
+
+bool Mapping::hasComputedMapping() const
+{
+  return _hasComputedMapping;
 }
 
 bool operator<(Mapping::MeshRequirement lhs, Mapping::MeshRequirement rhs)

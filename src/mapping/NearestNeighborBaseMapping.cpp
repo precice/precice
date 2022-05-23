@@ -80,12 +80,6 @@ void NearestNeighborBaseMapping::computeMapping()
   _hasComputedMapping = true;
 }
 
-bool NearestNeighborBaseMapping::hasComputedMapping() const
-{
-  PRECICE_TRACE(_hasComputedMapping);
-  return _hasComputedMapping;
-}
-
 void NearestNeighborBaseMapping::clear()
 {
   PRECICE_TRACE();

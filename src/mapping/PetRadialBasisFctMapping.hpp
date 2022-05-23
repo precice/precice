@@ -711,10 +711,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inp
       outValues[i * valueDim + dim] = vecArray[i];
     }
 
-    if (this->hasConstraint(Mapping::SCALEDCONSISTENT)) {
-      this->scaleConsistentMapping(inputDataID, outputDataID);
-    }
-
     VecRestoreArrayRead(out, &vecArray);
   }
 }

@@ -29,11 +29,6 @@ BarycentricBaseMapping::BarycentricBaseMapping(Constraint constraint, int dimens
 {
 }
 
-bool BarycentricBaseMapping::hasComputedMapping() const
-{
-  return _hasComputedMapping;
-}
-
 void BarycentricBaseMapping::clear()
 {
   PRECICE_TRACE();
@@ -41,61 +36,56 @@ void BarycentricBaseMapping::clear()
   _hasComputedMapping = false;
 }
 
-void BarycentricBaseMapping::map(
-    int inputDataID,
-    int outputDataID)
+void BarycentricBaseMapping::mapConservative(DataID inputDataID, DataID outputDataID)
 {
   PRECICE_TRACE(inputDataID, outputDataID);
+  PRECICE_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
+  PRECICE_DEBUG("Map conservative");
+  PRECICE_ASSERT(_interpolations.size() == input()->vertices().size(),
+                 _interpolations.size(), input()->vertices().size());
+  const int              dimensions = input()->data(inputDataID)->getDimensions();
+  const Eigen::VectorXd &inValues   = input()->data(inputDataID)->values();
+  Eigen::VectorXd &      outValues  = output()->data(outputDataID)->values();
 
-  precice::utils::Event e("map.bm.mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
-
-  mesh::PtrData          inData     = input()->data(inputDataID);
-  mesh::PtrData          outData    = output()->data(outputDataID);
-  const Eigen::VectorXd &inValues   = inData->values();
-  Eigen::VectorXd &      outValues  = outData->values();
-  const int              dimensions = inData->getDimensions();
-  PRECICE_ASSERT(dimensions == outData->getDimensions());
-
-  if (hasConstraint(CONSERVATIVE)) {
-    PRECICE_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
-    PRECICE_DEBUG("Map conservative");
-    PRECICE_ASSERT(_interpolations.size() == input()->vertices().size(),
-                   _interpolations.size(), input()->vertices().size());
-    // For each input vertex, distribute the conserved data among the relevant output vertices
-    // Do it for all dimensions (i.e. components if data is a vector)
-    for (size_t i = 0; i < input()->vertices().size(); i++) {
-      const size_t inOffset = i * dimensions;
-      const auto & elems    = _interpolations[i].getWeightedElements();
-      for (const auto &elem : elems) {
-        size_t outOffset = static_cast<size_t>(elem.vertexID) * dimensions;
-        for (int dim = 0; dim < dimensions; dim++) {
-          PRECICE_ASSERT(outOffset + dim < (size_t) outValues.size());
-          PRECICE_ASSERT(inOffset + dim < (size_t) inValues.size());
-          outValues(outOffset + dim) += elem.weight * inValues(inOffset + dim);
-        }
+  // For each input vertex, distribute the conserved data among the relevant output vertices
+  // Do it for all dimensions (i.e. components if data is a vector)
+  for (size_t i = 0; i < input()->vertices().size(); i++) {
+    const size_t inOffset = i * dimensions;
+    const auto & elems    = _interpolations[i].getWeightedElements();
+    for (const auto &elem : elems) {
+      size_t outOffset = static_cast<size_t>(elem.vertexID) * dimensions;
+      for (int dim = 0; dim < dimensions; dim++) {
+        PRECICE_ASSERT(outOffset + dim < (size_t) outValues.size());
+        PRECICE_ASSERT(inOffset + dim < (size_t) inValues.size());
+        outValues(outOffset + dim) += elem.weight * inValues(inOffset + dim);
       }
     }
-  } else {
-    PRECICE_DEBUG("Map consistent");
-    PRECICE_ASSERT(_interpolations.size() == output()->vertices().size(),
-                   _interpolations.size(), output()->vertices().size());
+  }
+}
 
-    // For each output vertex, compute the linear combination of input vertices
-    // Do it for all dimensions (i.e. components if data is a vector)
-    for (size_t i = 0; i < output()->vertices().size(); i++) {
-      const auto &elems     = _interpolations[i].getWeightedElements();
-      size_t      outOffset = i * dimensions;
-      for (const auto &elem : elems) {
-        const size_t inOffset = static_cast<size_t>(elem.vertexID) * dimensions;
-        for (int dim = 0; dim < dimensions; dim++) {
-          PRECICE_ASSERT(outOffset + dim < (size_t) outValues.size());
-          PRECICE_ASSERT(inOffset + dim < (size_t) inValues.size());
-          outValues(outOffset + dim) += elem.weight * inValues(inOffset + dim);
-        }
+void BarycentricBaseMapping::mapConsistent(DataID inputDataID, DataID outputDataID)
+{
+  PRECICE_TRACE(inputDataID, outputDataID);
+  PRECICE_DEBUG("Map consistent");
+  PRECICE_ASSERT(_interpolations.size() == output()->vertices().size(),
+                 _interpolations.size(), output()->vertices().size());
+
+  const int              dimensions = input()->data(inputDataID)->getDimensions();
+  const Eigen::VectorXd &inValues   = input()->data(inputDataID)->values();
+  Eigen::VectorXd &      outValues  = output()->data(outputDataID)->values();
+
+  // For each output vertex, compute the linear combination of input vertices
+  // Do it for all dimensions (i.e. components if data is a vector)
+  for (size_t i = 0; i < output()->vertices().size(); i++) {
+    const auto &elems     = _interpolations[i].getWeightedElements();
+    size_t      outOffset = i * dimensions;
+    for (const auto &elem : elems) {
+      const size_t inOffset = static_cast<size_t>(elem.vertexID) * dimensions;
+      for (int dim = 0; dim < dimensions; dim++) {
+        PRECICE_ASSERT(outOffset + dim < (size_t) outValues.size());
+        PRECICE_ASSERT(inOffset + dim < (size_t) inValues.size());
+        outValues(outOffset + dim) += elem.weight * inValues(inOffset + dim);
       }
-    }
-    if (hasConstraint(SCALEDCONSISTENT)) {
-      scaleConsistentMapping(inputDataID, outputDataID);
     }
   }
 }

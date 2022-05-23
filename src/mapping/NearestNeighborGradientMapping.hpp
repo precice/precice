@@ -19,11 +19,15 @@ public:
    */
   NearestNeighborGradientMapping(Constraint constraint, int dimensions);
 
-  /// Maps input data to output data from input mesh to output mesh.
-  void map(int inputDataID, int outputDataID) override;
-
   /// Calculates the offsets needed for the gradient mappings after calculating the matched vertices
   void onMappingComputed(mesh::PtrMesh origins, mesh::PtrMesh searchSpace) override;
+
+protected:
+  /// @copydoc Mapping::mapConservative
+  void mapConservative(DataID inputDataID, DataID outputDataID) override;
+
+  /// @copydoc Mapping::mapConsistent
+  void mapConsistent(DataID inputDataID, DataID outputDataID) override;
 };
 
 } // namespace mapping

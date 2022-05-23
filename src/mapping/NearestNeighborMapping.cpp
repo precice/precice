@@ -28,59 +28,58 @@ NearestNeighborMapping::NearestNeighborMapping(
   }
 }
 
-void NearestNeighborMapping::map(
-    int inputDataID,
-    int outputDataID)
+void NearestNeighborMapping::mapConservative(DataID inputDataID, DataID outputDataID)
 {
   PRECICE_TRACE(inputDataID, outputDataID);
-
   precice::utils::Event e("map." + mappingNameShort + ".mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
-  const int             valueDimensions = input()->data(inputDataID)->getDimensions(); // Data dimensions (for scalar = 1, for vectors > 1)
+  PRECICE_DEBUG("Map conservative");
 
   const Eigen::VectorXd &inputValues  = input()->data(inputDataID)->values();
   Eigen::VectorXd &      outputValues = output()->data(outputDataID)->values();
 
-  PRECICE_ASSERT(inputValues.size() / valueDimensions == (int) input()->vertices().size(),
-                 inputValues.size(), valueDimensions, input()->vertices().size());
-  PRECICE_ASSERT(outputValues.size() / valueDimensions == (int) output()->vertices().size(),
-                 outputValues.size(), valueDimensions, output()->vertices().size());
+  // Data dimensions (for scalar = 1, for vectors > 1)
+  const int    valueDimensions = input()->data(inputDataID)->getDimensions();
+  const size_t inSize          = input()->vertices().size();
 
-  if (hasConstraint(CONSERVATIVE)) {
-    PRECICE_DEBUG("Map conservative");
-    size_t const inSize = input()->vertices().size();
+  for (size_t i = 0; i < inSize; i++) {
+    int const outputIndex = _vertexIndices[i] * valueDimensions;
 
-    for (size_t i = 0; i < inSize; i++) {
-      int const outputIndex = _vertexIndices[i] * valueDimensions;
+    for (int dim = 0; dim < valueDimensions; dim++) {
 
-      for (int dim = 0; dim < valueDimensions; dim++) {
+      const int mapOutputIndex = outputIndex + dim;
+      const int mapInputIndex  = (i * valueDimensions) + dim;
 
-        const int mapOutputIndex = outputIndex + dim;
-        const int mapInputIndex  = (i * valueDimensions) + dim;
-
-        outputValues(mapOutputIndex) += inputValues(mapInputIndex);
-      }
+      outputValues(mapOutputIndex) += inputValues(mapInputIndex);
     }
-  } else {
-    PRECICE_DEBUG((hasConstraint(CONSISTENT) ? "Map consistent" : "Map scaled-consistent"));
-    size_t const outSize = output()->vertices().size();
-
-    for (size_t i = 0; i < outSize; i++) {
-      int inputIndex = _vertexIndices[i] * valueDimensions;
-
-      for (int dim = 0; dim < valueDimensions; dim++) {
-
-        const int mapOutputIndex = (i * valueDimensions) + dim;
-        const int mapInputIndex  = inputIndex + dim;
-
-        outputValues(mapOutputIndex) = inputValues(mapInputIndex);
-      }
-    }
-    if (hasConstraint(SCALEDCONSISTENT)) {
-      scaleConsistentMapping(inputDataID, outputDataID);
-    }
-
-    PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, outputValues));
   }
+}
+
+void NearestNeighborMapping::mapConsistent(DataID inputDataID, DataID outputDataID)
+{
+  PRECICE_TRACE(inputDataID, outputDataID);
+  precice::utils::Event e("map." + mappingNameShort + ".mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  PRECICE_DEBUG((hasConstraint(CONSISTENT) ? "Map consistent" : "Map scaled-consistent"));
+
+  const Eigen::VectorXd &inputValues  = input()->data(inputDataID)->values();
+  Eigen::VectorXd &      outputValues = output()->data(outputDataID)->values();
+
+  // Data dimensions (for scalar = 1, for vectors > 1)
+  const int    valueDimensions = input()->data(inputDataID)->getDimensions();
+  const size_t outSize         = output()->vertices().size();
+
+  for (size_t i = 0; i < outSize; i++) {
+    int inputIndex = _vertexIndices[i] * valueDimensions;
+
+    for (int dim = 0; dim < valueDimensions; dim++) {
+
+      const int mapOutputIndex = (i * valueDimensions) + dim;
+      const int mapInputIndex  = inputIndex + dim;
+
+      outputValues(mapOutputIndex) = inputValues(mapInputIndex);
+    }
+  }
+
+  PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, outputValues));
 }
 
 } // namespace mapping
