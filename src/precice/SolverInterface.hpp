@@ -1097,7 +1097,7 @@ public:
    * Values are provided as a block of continuous memory.
    * \p valueIndices contains the indices of the vertices
    *
-   * By default, the values are passed in the same format applied in \ref writeVectorGradientData() for each data vertex:
+   * The values are passed in the same format applied in \ref writeVectorGradientData() for each data vertex:
    *
    * The 2D-format of \p gradientValues is ( v0x_dx, v0y_dx, v0x_dy, v0y_dy,
    *                                         v1x_dx, v1y_dx, v1x_dy, v1y_dy,
@@ -1164,7 +1164,7 @@ public:
    * This function writes the corresponding gradient matrix value of a specified vertex to a dataID.
    * Values are provided as a block of continuous memory.
    *
-   * By default, the gradients are passed in the following way:
+   * The gradients need to be provided in the following format:
    *
    * The 2D-format of \p gradientValues is (vx_dx, vy_dx, vx_dy, vy_dy) matrix corresponding to the data block v = (vx, vy)
    * differentiated respectively in x-direction dx and y-direction dy
@@ -1197,7 +1197,7 @@ public:
    * Values are provided as a block of continuous memory.
    * valueIndices contains the indices of the vertices
    *
-   * By default, the values are passed as follows:
+   * The gradients need to be provided in the following format:
    *
    * The 2D-format of \p gradientValues is (v0_dx, v0_dy, v1_dx, v1_dy, ... , vn_dx, vn_dy, vn_dz)
    * corresponding to the scalar data v0, v1, ... , vn differentiated in spatial directions x and y.
@@ -1208,7 +1208,7 @@ public:
    * @param[in] dataID ID to write to.
    * @param[in] size Number n of vertices.
    * @param[in] valueIndices Indices of the vertices.
-   * @param[in] gradientValues Pointer to the gradient values read columnwise by default.
+   * @param[in] gradientValues Pointer to the gradient values.
    *
    * @pre count of available elements at values matches the given size
    * @pre count of available elements at valueIndices matches the given size
