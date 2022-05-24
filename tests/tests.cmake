@@ -89,10 +89,8 @@ target_sources(testprecice
     tests/serial/mapping-nearest-neighbor-gradient/GradientTestBidirectionalWriteScalar.cpp
     tests/serial/mapping-nearest-neighbor-gradient/GradientTestBidirectionalWriteVector.cpp
     tests/serial/mapping-nearest-neighbor-gradient/GradientTestUnidirectionalReadBlockVector.cpp
-    tests/serial/mapping-nearest-neighbor-gradient/GradientTestUnidirectionalReadBlockVectorColumns.cpp
     tests/serial/mapping-nearest-neighbor-gradient/GradientTestUnidirectionalReadScalar.cpp
     tests/serial/mapping-nearest-neighbor-gradient/GradientTestUnidirectionalReadVector.cpp
-    tests/serial/mapping-nearest-neighbor-gradient/GradientTestUnidirectionalReadVectorColumns.cpp
     tests/serial/mapping-nearest-neighbor-gradient/helpers.cpp
     tests/serial/mapping-nearest-neighbor-gradient/helpers.hpp
     tests/serial/mapping-nearest-projection/MappingNearestProjectionExplicitEdges.cpp

@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_SUITE(SerialGradientMappingTests)
 BOOST_AUTO_TEST_CASE(GradientTestUnidirectionalReadBlockVector)
 {
   PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank))
-  testVectorGradientFunctions(context, true, false);
+  testVectorGradientFunctions(context, true);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

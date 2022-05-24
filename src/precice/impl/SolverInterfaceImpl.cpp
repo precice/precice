@@ -1326,8 +1326,7 @@ void SolverInterfaceImpl::writeBlockScalarGradientData(
 void SolverInterfaceImpl::writeVectorGradientData(
     int           dataID,
     int           valueIndex,
-    const double *gradientValues,
-    bool          rowsFirst)
+    const double *gradientValues)
 {
   PRECICE_EXPERIMENTAL_API();
 
@@ -1366,26 +1365,14 @@ void SolverInterfaceImpl::writeVectorGradientData(
 
     for (int dimSpace = 0; dimSpace < _dimensions; dimSpace++) {
       for (int dimData = 0; dimData < _dimensions; dimData++) {
-
         const int offsetInternal = valueIndex * _dimensions;
+        // Values are entered derived in spatial dimensions first : gradient matrix read rowwise
+        const int offset = dimData * _dimensions;
 
-        if (rowsFirst) {
-          // Values are entered derived in spatial dimensions first : gradient matrix read rowwise
-          const int offset = dimData * _dimensions;
+        PRECICE_ASSERT(offset + dimSpace < gradientValuesInternal.cols() * _dimensions,
+                       offset + dimSpace, gradientValuesInternal.cols() * _dimensions);
 
-          PRECICE_ASSERT(offset + dimSpace < gradientValuesInternal.cols() * _dimensions,
-                         offset + dimSpace, gradientValuesInternal.cols() * _dimensions);
-
-          gradientValuesInternal(dimSpace, offsetInternal + dimData) = gradientValues[offset + dimSpace];
-        } else {
-          // Values are entered derived components first : gradient matrix read columnwise
-          const int offset = dimSpace * _dimensions;
-
-          PRECICE_ASSERT(offset + dimData < gradientValuesInternal.cols() * _dimensions,
-                         offset + dimData, gradientValuesInternal.cols() * _dimensions);
-
-          gradientValuesInternal(dimSpace, offsetInternal + dimData) = gradientValues[offset + dimData];
-        }
+        gradientValuesInternal(dimSpace, offsetInternal + dimData) = gradientValues[offset + dimSpace];
       }
     }
   }
@@ -1395,8 +1382,7 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
     int           dataID,
     int           size,
     const int *   valueIndices,
-    const double *gradientValues,
-    bool          rowsFirst)
+    const double *gradientValues)
 {
 
   PRECICE_EXPERIMENTAL_API();
@@ -1445,28 +1431,15 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
                         "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                         data.getName(), valueIndex);
 
+          // Values are entered derived components first : gradient matrices input one after the other (read columnwise)
           const int offsetInternal = valueIndex * _dimensions;
+          const int offsetOut      = i * _dimensions * _dimensions;
+          const int offsetIn       = dimData * _dimensions;
 
-          if (rowsFirst) {
-            // Values are entered derived in spatial dimensions first : gradient matrices read rowwise
+          PRECICE_ASSERT(offsetOut + offsetIn + dimSpace < gradientValuesInternal.cols() * _dimensions,
+                         offsetOut + offsetIn + dimSpace, gradientValuesInternal.cols() * _dimensions);
 
-            const int offsetOut = i * _dimensions * _dimensions;
-            const int offsetIn  = dimSpace * _dimensions;
-
-            PRECICE_ASSERT(offsetOut + offsetIn + dimData < gradientValuesInternal.cols() * _dimensions,
-                           offsetOut + offsetIn + dimData, gradientValuesInternal.cols() * _dimensions);
-
-            gradientValuesInternal(dimSpace, offsetInternal + dimData) = gradientValues[offsetOut + offsetIn + dimData];
-          } else {
-            // Values are entered derived components first : gradient matrices input one after the other (read columnwise)
-            const int offsetOut = i * _dimensions * _dimensions;
-            const int offsetIn  = dimData * _dimensions;
-
-            PRECICE_ASSERT(offsetOut + offsetIn + dimSpace < gradientValuesInternal.cols() * _dimensions,
-                           offsetOut + offsetIn + dimSpace, gradientValuesInternal.cols() * _dimensions);
-
-            gradientValuesInternal(dimSpace, offsetInternal + dimData) = gradientValues[offsetOut + offsetIn + dimSpace];
-          }
+          gradientValuesInternal(dimSpace, offsetInternal + dimData) = gradientValues[offsetOut + offsetIn + dimSpace];
         }
       }
     }

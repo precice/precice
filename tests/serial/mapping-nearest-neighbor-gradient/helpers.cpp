@@ -7,7 +7,7 @@
 
 using namespace precice;
 
-void testVectorGradientFunctions(const TestContext &context, const bool writeBlockWise, const bool columnsFirst)
+void testVectorGradientFunctions(const TestContext &context, const bool writeBlockWise)
 {
   using Eigen::Vector3d;
 
@@ -38,10 +38,10 @@ void testVectorGradientFunctions(const TestContext &context, const bool writeBlo
                                           10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0});
 
       if (writeBlockWise) {
-        interface.writeBlockVectorGradientData(dataID, 2, indices, gradientValues.data(), columnsFirst);
+        interface.writeBlockVectorGradientData(dataID, 2, indices, gradientValues.data());
       } else {
-        interface.writeVectorGradientData(dataID, indices[0], &gradientValues[0], columnsFirst);
-        interface.writeVectorGradientData(dataID, indices[1], &gradientValues[9], columnsFirst);
+        interface.writeVectorGradientData(dataID, indices[0], &gradientValues[0]);
+        interface.writeVectorGradientData(dataID, indices[1], &gradientValues[9]);
       }
     }
 
@@ -69,11 +69,8 @@ void testVectorGradientFunctions(const TestContext &context, const bool writeBlo
     interface.readBlockVectorData(dataID, 2, indices, valueData);
 
     std::vector<double> expected;
-    if (columnsFirst) {
-      expected = {2.2, 3.5, 4.8, 7.9, 9.2, 10.5};
-    } else {
-      expected = {1.6, 3.5, 5.4, 7.3, 9.2, 11.1};
-    }
+    expected = {1.6, 3.5, 5.4, 7.3, 9.2, 11.1};
+
     BOOST_TEST(valueData == expected);
 
     interface.advance(maxDt);
