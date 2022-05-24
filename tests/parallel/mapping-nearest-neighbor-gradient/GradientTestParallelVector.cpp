@@ -44,14 +44,17 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelVector)
 
   if (context.isNamed("SolverOne")) {
     SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    int             meshID = interface.getMeshID("MeshOne");
-    int             dataID = interface.getDataID("Data2", meshID);
+    int             meshID  = interface.getMeshID("MeshOne");
+    int             dataID  = interface.getDataID("Data2", meshID);
+    int             dataID1 = interface.getDataID("Data1", meshID);
 
     int    vertexIDs[2];
     double xCoord       = context.rank * 0.4 + 0.05;
     double positions[4] = {xCoord, 0.0, xCoord + 0.2, 0.0};
     interface.setMeshVertices(meshID, 2, positions, vertexIDs);
+    BOOST_TEST(interface.isGradientDataRequired(dataID1) == false);
     interface.initialize();
+    BOOST_TEST(interface.isGradientDataRequired(dataID1) == false);
     Eigen::Vector4d values;
     interface.advance(1.0);
     interface.readBlockVectorData(dataID, 2, vertexIDs, values.data());
