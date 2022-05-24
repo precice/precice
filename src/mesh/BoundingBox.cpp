@@ -91,6 +91,29 @@ Eigen::VectorXd BoundingBox::maxCorner() const
   return max;
 }
 
+double BoundingBox::getEdgeLength(int direction) const
+{
+  PRECICE_ASSERT(direction < _dimensions);
+  PRECICE_ASSERT(_bounds.size() > (2 * direction + 1));
+  return std::abs(_bounds[2 * direction + 1] - _bounds[2 * direction]);
+}
+
+double BoundingBox::getMaximumEdgeLength() const
+{
+  double maxEdgeLength = 0;
+  for (int d = 0; d < _dimensions; d++) {
+    maxEdgeLength = std::max(maxEdgeLength, getEdgeLength(d));
+  }
+  return maxEdgeLength;
+}
+
+std::pair<double, double> BoundingBox::getDirectionsCoordinates(int direction) const
+{
+  PRECICE_ASSERT(direction < _dimensions);
+  PRECICE_ASSERT(_bounds.size() > (2 * direction + 1));
+  return {_bounds[2 * direction], _bounds[2 * direction + 1]};
+}
+
 double BoundingBox::getArea(std::vector<bool> deadAxis)
 {
   PRECICE_ASSERT(!empty(), "Data of the bounding box is at default state.");

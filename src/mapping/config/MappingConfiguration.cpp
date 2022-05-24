@@ -12,6 +12,7 @@
 #include "mapping/NearestNeighborGradientMapping.hpp"
 #include "mapping/NearestNeighborMapping.hpp"
 #include "mapping/NearestProjectionMapping.hpp"
+#include "mapping/PartitionOfUnityMapping.hpp"
 #include "mapping/PetRadialBasisFctMapping.hpp"
 #include "mapping/RadialBasisFctMapping.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
@@ -39,6 +40,13 @@ MappingConfiguration::MappingConfiguration(
                             .setDocumentation("Specific shape parameter for RBF basis function.");
   auto attrSupportRadius = XMLAttribute<double>(ATTR_SUPPORT_RADIUS)
                                .setDocumentation("Support radius of each RBF basis function (global choice).");
+  auto vertivesPerPartition = XMLAttribute<double>(ATTR_VERTICES_PER_PARTITION)
+                                  .setDocumentation("Vertices per partition in the PoU");
+  auto relativeOverlap = XMLAttribute<double>(ATTR_RELATIVE_OVERLAP)
+                             .setDocumentation("Value between 0 and 1 indicating the relative overlap between partitions. A value of 0.3 is usually a good trade-off between accuracy and efficiency.");
+  auto projectToInput = XMLAttribute<bool>(ATTR_PROJECT_TO_INPUT)
+                            .setDocumentation("If enabled, places the partition centers at the closest vertex of the input mesh. Should be enabled in case of non-uniform point distributions such as for shell structures.");
+
   auto attrSolverRtol = makeXMLAttribute(ATTR_SOLVER_RTOL, 1e-9)
                             .setDocumentation("Solver relative tolerance for convergence");
   auto attrXDead = makeXMLAttribute(ATTR_X_DEAD, false)
@@ -130,6 +138,16 @@ MappingConfiguration::MappingConfiguration(
     tag.addAttribute(attrUseLU);
   }
   {
+    XMLTag tag(*this, VALUE_RBF_POU, occ, TAG);
+    tag.setDocumentation("Partition of unity");
+    tag.addAttribute(attrSupportRadius);
+    tag.addAttribute(vertivesPerPartition);
+    tag.addAttribute(attrPolynomial);
+    tag.addAttribute(relativeOverlap);
+    tag.addAttribute(projectToInput);
+    tags.push_back(tag);
+  }
+  {
     XMLTag tag(*this, VALUE_NEAREST_NEIGHBOR, occ, TAG);
     tag.setDocumentation("Nearest-neighbour mapping which uses a rstar-spacial index tree to index meshes and run nearest-neighbour queries.");
     tags.push_back(tag);
@@ -186,15 +204,18 @@ void MappingConfiguration::xmlTagCallback(
 {
   PRECICE_TRACE(tag.getName());
   if (tag.getNamespace() == TAG) {
-    std::string   dir            = tag.getStringAttributeValue(ATTR_DIRECTION);
-    std::string   fromMesh       = tag.getStringAttributeValue(ATTR_FROM);
-    std::string   toMesh         = tag.getStringAttributeValue(ATTR_TO);
-    std::string   type           = tag.getName();
-    std::string   constraint     = tag.getStringAttributeValue(ATTR_CONSTRAINT);
-    Timing        timing         = getTiming(tag.getStringAttributeValue(ATTR_TIMING));
-    double        shapeParameter = std::numeric_limits<double>::quiet_NaN();
-    double        supportRadius  = std::numeric_limits<double>::quiet_NaN();
-    double        solverRtol     = 1e-9;
+    std::string   dir                  = tag.getStringAttributeValue(ATTR_DIRECTION);
+    std::string   fromMesh             = tag.getStringAttributeValue(ATTR_FROM);
+    std::string   toMesh               = tag.getStringAttributeValue(ATTR_TO);
+    std::string   type                 = tag.getName();
+    std::string   constraint           = tag.getStringAttributeValue(ATTR_CONSTRAINT);
+    Timing        timing               = getTiming(tag.getStringAttributeValue(ATTR_TIMING));
+    double        shapeParameter       = std::numeric_limits<double>::quiet_NaN();
+    double        supportRadius        = std::numeric_limits<double>::quiet_NaN();
+    double        verticesPerPartition = 0;
+    double        relativeOverlap      = 1;
+    bool          projectToInput       = false;
+    double        solverRtol           = 1e-9;
     bool          xDead = false, yDead = false, zDead = false;
     bool          useLU         = false;
     Polynomial    polynomial    = Polynomial::ON;
@@ -243,10 +264,15 @@ void MappingConfiguration::xmlTagCallback(
       else if (strPrealloc == "off")
         preallocation = Preallocation::OFF;
     }
+    if (tag.hasAttribute(ATTR_VERTICES_PER_PARTITION)) {
+      verticesPerPartition = tag.getDoubleAttributeValue(ATTR_VERTICES_PER_PARTITION);
+      relativeOverlap      = tag.getDoubleAttributeValue(ATTR_RELATIVE_OVERLAP);
+      projectToInput       = tag.getBooleanAttributeValue(ATTR_PROJECT_TO_INPUT);
+    }
 
     RBFParameter rbfParameter;
     // Check valid combinations for the Gaussian RBF input
-    if (type == VALUE_RBF_GAUSSIAN || type == VALUE_RBF_INV_MULTIQUADRICS || type == VALUE_RBF_MULTIQUADRICS || type == VALUE_RBF_CTPS_C2 || type == VALUE_RBF_CPOLYNOMIAL_C0 || type == VALUE_RBF_CPOLYNOMIAL_C6 || type == VALUE_RBF_CPOLYNOMIAL_C2 || type == VALUE_RBF_CPOLYNOMIAL_C4) {
+    if (type == VALUE_RBF_GAUSSIAN || type == VALUE_RBF_INV_MULTIQUADRICS || type == VALUE_RBF_MULTIQUADRICS || type == VALUE_RBF_CTPS_C2 || type == VALUE_RBF_CPOLYNOMIAL_C0 || type == VALUE_RBF_CPOLYNOMIAL_C6 || type == VALUE_RBF_CPOLYNOMIAL_C2 || type == VALUE_RBF_CPOLYNOMIAL_C4 || type == VALUE_RBF_POU) {
       const bool exactlyOneSet = (std::isfinite(supportRadius) && !std::isfinite(shapeParameter)) ||
                                  (std::isfinite(shapeParameter) && !std::isfinite(supportRadius));
       PRECICE_CHECK(exactlyOneSet, "The specified parameters for the Gaussian RBF mapping are invalid. Please specify either a \"shape-parameter\" or a \"support-radius\".");
@@ -264,7 +290,8 @@ void MappingConfiguration::xmlTagCallback(
                                                         rbfParameter, solverRtol,
                                                         xDead, yDead, zDead,
                                                         useLU,
-                                                        polynomial, preallocation);
+                                                        polynomial, preallocation,
+                                                        verticesPerPartition, relativeOverlap, projectToInput);
     checkDuplicates(configuredMapping);
     _mappings.push_back(configuredMapping);
   }
@@ -295,7 +322,10 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
     bool                             zDead,
     bool                             useLU,
     Polynomial                       polynomial,
-    Preallocation                    preallocation) const
+    Preallocation                    preallocation,
+    double                           verticesPerPartition,
+    double                           relativeOverlap,
+    bool                             projectToInput) const
 {
   PRECICE_TRACE(direction, type, timing, rbfParameter.value);
   using namespace mapping;
@@ -360,6 +390,12 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
 
     configuredMapping.mapping = PtrMapping(
         new NearestNeighborGradientMapping(constraintValue, dimensions));
+    configuredMapping.isRBF = false;
+    return configuredMapping;
+
+  } else if (type == VALUE_RBF_POU) {
+    configuredMapping.mapping = PtrMapping(
+        new PartitionOfUnityMapping<CompactPolynomialC2>(constraintValue, dimensions, rbfParameter.value, polynomial, verticesPerPartition, relativeOverlap, projectToInput));
     configuredMapping.isRBF = false;
     return configuredMapping;
   }

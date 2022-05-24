@@ -72,6 +72,9 @@ public:
   /// Get n number of closest vertices to the given vertex
   VertexMatch getClosestVertex(const Eigen::VectorXd &sourceCoord);
 
+  /// Get n number of closest vertices to the given vertex
+  std::vector<VertexID> getClosestVertices(const mesh::Vertex &centerVertex, unsigned int n);
+
   /// Get n number of closest edges to the given vertex
   std::vector<EdgeMatch> getClosestEdges(const Eigen::VectorXd &sourceCoord, int n);
 

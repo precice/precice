@@ -80,6 +80,15 @@ public:
   /// the max corner of the bounding box
   Eigen::VectorXd maxCorner() const;
 
+  /// returns the edge length in a specific direction
+  double getEdgeLength(int direction) const;
+
+  /// returns the maximum length of the bounding box in a particular direction
+  double getMaximumEdgeLength() const;
+
+  /// returns the coordinates of the bounding box in a specific direction
+  std::pair<double, double> getDirectionsCoordinates(int direction) const;
+
   /// Calculate the area of bounding box
   double getArea(std::vector<bool> deadAxis);
 
