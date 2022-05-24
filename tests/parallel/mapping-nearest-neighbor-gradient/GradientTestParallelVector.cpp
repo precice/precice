@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelVector)
       for (int i = 0; i < 36; i++) {
         gradientValues[i] = 1.0;
       }
-      interface.writeBlockVectorGradientData(dataID, 6, vertexIDs, gradientValues, true);
+      interface.writeBlockVectorGradientData(dataID, 6, vertexIDs, gradientValues);
     }
     interface.advance(1.0);
     interface.finalize();
