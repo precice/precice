@@ -79,7 +79,7 @@ void LinearCellInterpolationMapping::computeMapping()
     // Find tetrahedra (3D) or triangle (2D) or fall-back on NP
     auto match = index.findCellOrProjection(fVertex.getCoords(), nnearest);
     _interpolations.push_back(std::move(match.polation));
-    if (match.distance != 0.0) {
+    if (!math::equals(match.distance, 0.0)) {
       // Only push when fall-back occurs, so the number of entries is the number of vertices outside the domain
       fallbackStatistics(match.distance);
     }
