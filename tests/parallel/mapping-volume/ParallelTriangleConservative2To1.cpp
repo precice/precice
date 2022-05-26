@@ -14,9 +14,6 @@ BOOST_AUTO_TEST_CASE(ParallelTriangleConservative2To1)
   using precice::testing::equals;
 
   PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(1_rank));
-
-  // Implement your test here.
-  BOOST_TEST(true);
   precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
 
   std::vector<VertexID> vertexIDs;
@@ -70,6 +67,8 @@ BOOST_AUTO_TEST_CASE(ParallelTriangleConservative2To1)
     // Check expected VS read
     Eigen::VectorXd expected(3);
     Eigen::VectorXd readData(3);
+    // Sum of two forces: one is {0.2, 0.3, 0.5} and the second is {0.1, 0.7, 0.2}
+    // These are proportional to barycentric coordinates.
     expected << 0.3, 1.0, 0.7;
 
     interface.readBlockScalarData(dataID, expected.size(), vertexIDs.data(), readData.data());

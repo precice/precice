@@ -86,6 +86,7 @@ void testMappingVolumeOneTriangle(const std::string configFile, const TestContex
     //Check expected VS read
     Eigen::VectorXd expected(1);
     Eigen::VectorXd readData(1);
+    // Expected value in the middle of the triangle is the average of inputs (1, 10, 100)
     expected << 111.0 / 3;
 
     interface.readBlockScalarData(dataID, expected.size(), vertexIDs.data(), readData.data());
@@ -157,6 +158,9 @@ void testMappingVolumeOneTriangleConservative(const std::string configFile, cons
     //Check expected VS read
     Eigen::VectorXd expected(3);
     Eigen::VectorXd readData(3);
+    // For conservative load, each point takes a fraction of the load.
+    // This fraction is the barycentric coordinate, and there the load is 1.
+    // Input point is (0.3, 0.2) and barycentric coordinates are thus (0.5, 0.3, 0.2)
     expected << 0.5, 0.3, 0.2;
 
     interface.readBlockScalarData(dataID, expected.size(), vertexIDs.data(), readData.data());

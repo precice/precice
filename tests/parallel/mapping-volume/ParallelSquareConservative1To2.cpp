@@ -14,9 +14,6 @@ BOOST_AUTO_TEST_CASE(ParallelSquareConservative1To2)
   using precice::testing::equals;
 
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(2_ranks));
-
-  // Implement your test here.
-  BOOST_TEST(true);
   precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
 
   std::vector<VertexID> vertexIDs;
@@ -28,7 +25,7 @@ BOOST_AUTO_TEST_CASE(ParallelSquareConservative1To2)
 
     std::vector<double> coords;
 
-    // Create a square with top left corner (rank 0) or bottom right. Diagonal "y = x" is shared.
+    // Apply forces on two points
     coords = {0.3, 0.5,
               0.9, 0.2};
     vertexIDs.resize(coords.size() / 2);
@@ -78,8 +75,10 @@ BOOST_AUTO_TEST_CASE(ParallelSquareConservative1To2)
     Eigen::VectorXd expected(3);
     Eigen::VectorXd readData(3);
     if (context.rank == 0) {
+      // Force applied on (0.3, 0.5) to spread with respect to barycentric coordinates
       expected << 0.5, 0.3, 0.2;
     } else {
+      // FOrce applied on (0.9, 0.2)
       expected << 0.1, 0.2, 0.7;
     }
 
