@@ -99,24 +99,23 @@ BOOST_AUTO_TEST_CASE(Conservative)
      Behavior when projecting is not ideal, see #1304
    */
 
-
   // Map to a triangle ABC which represents the lower-left half of a unit square
-  const double forceOnMid = 1.0;
-  const double forceOnMidAB = 2.0;
-  const double forceOnA = 10.0;
-  const double forceOnC = 7.0;
+  const double forceOnMid          = 1.0;
+  const double forceOnMidAB        = 2.0;
+  const double forceOnA            = 10.0;
+  const double forceOnC            = 7.0;
   const double unbalancedforceOnBC = 3.0; // 75% on B, 25% on C
-  const double netForce = forceOnMid + forceOnMidAB + forceOnA + forceOnC + unbalancedforceOnBC;
+  const double netForce            = forceOnMid + forceOnMidAB + forceOnA + forceOnC + unbalancedforceOnBC;
 
   PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
   PtrData inDataScalar   = inMesh->createData("InDataScalar", 1, 0_dataID);
   int     inDataScalarID = inDataScalar->getID();
 
-  inMesh->createVertex(Eigen::Vector2d(1./3, 1./3)); // Mid
-  inMesh->createVertex(Eigen::Vector2d(0.5, 0.0)); // Mid AB
-  inMesh->createVertex(Eigen::Vector2d(0.0, 0.0)); // A
-  inMesh->createVertex(Eigen::Vector2d(0.0, 1.0)); // C
-  inMesh->createVertex(Eigen::Vector2d(0.75, 0.25)); // Along BC
+  inMesh->createVertex(Eigen::Vector2d(1. / 3, 1. / 3)); // Mid
+  inMesh->createVertex(Eigen::Vector2d(0.5, 0.0));       // Mid AB
+  inMesh->createVertex(Eigen::Vector2d(0.0, 0.0));       // A
+  inMesh->createVertex(Eigen::Vector2d(0.0, 1.0));       // C
+  inMesh->createVertex(Eigen::Vector2d(0.75, 0.25));     // Along BC
 
   inMesh->allocateDataValues();
   Eigen::VectorXd &inValuesScalar = inDataScalar->values();
@@ -130,7 +129,6 @@ BOOST_AUTO_TEST_CASE(Conservative)
   Vertex &outVertexA = outMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
   Vertex &outVertexB = outMesh->createVertex(Eigen::Vector2d(1.0, 0.0));
   Vertex &outVertexC = outMesh->createVertex(Eigen::Vector2d(0.0, 1.0));
-
 
   Edge &outEdge0 = outMesh->createEdge(outVertexA, outVertexB);
   Edge &outEdge1 = outMesh->createEdge(outVertexB, outVertexC);
@@ -153,15 +151,14 @@ BOOST_AUTO_TEST_CASE(Conservative)
 
   // Check expected
   Eigen::VectorXd expected(outMesh->vertices().size());
-  const double expectedA = forceOnMid / 3 + forceOnMidAB / 2 + forceOnA;
-  const double expectedB = forceOnMid / 3 + forceOnMidAB / 2 + unbalancedforceOnBC * 0.75;
-  const double expectedC = forceOnMid / 3 + forceOnC + unbalancedforceOnBC * 0.25;
+  const double    expectedA = forceOnMid / 3 + forceOnMidAB / 2 + forceOnA;
+  const double    expectedB = forceOnMid / 3 + forceOnMidAB / 2 + unbalancedforceOnBC * 0.75;
+  const double    expectedC = forceOnMid / 3 + forceOnC + unbalancedforceOnBC * 0.25;
   expected << expectedA, expectedB, expectedC;
   // Check expected value, and conservation
   BOOST_CHECK(equals(expected, outValuesScalar));
   BOOST_CHECK(equals(netForce, outValuesScalar.sum()));
 }
-
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
