@@ -130,6 +130,7 @@ target_sources(testprecice
     tests/serial/stationary-mapping-with-solver-mesh/helpers.hpp
     tests/serial/three-solvers/ThreeSolversExplicitExplicit.cpp
     tests/serial/three-solvers/ThreeSolversExplicitImplicit.cpp
+    tests/serial/three-solvers/ThreeSolversFirstParticipant.cpp
     tests/serial/three-solvers/ThreeSolversImplicitExplicit.cpp
     tests/serial/three-solvers/ThreeSolversImplicitImplicit.cpp
     tests/serial/three-solvers/ThreeSolversParallel.cpp
