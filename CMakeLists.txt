@@ -291,7 +291,6 @@ target_link_libraries(preciceInternal PUBLIC
   Boost::program_options
   Boost::system
   Boost::thread
-  Boost::unit_test_framework
   )
 if(UNIX OR APPLE OR MINGW)
   target_compile_definitions(preciceInternal PUBLIC _GNU_SOURCE)
@@ -412,6 +411,7 @@ IF (BUILD_TESTING)
   target_link_libraries(testprecice
     PRIVATE
     preciceInternal
+    Boost::unit_test_framework
     )
   set_target_properties(testprecice PROPERTIES
     # precice is a C++17 project
