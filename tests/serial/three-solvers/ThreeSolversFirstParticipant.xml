@@ -53,9 +53,9 @@
     <m2n:sockets from="SolverTwo" to="SolverThree" />
 
     <coupling-scheme:serial-explicit>
-      <participants first="SolverOne" second="SolverTwo"/>
+      <participants first="SolverOne" second="SolverTwo" />
       <max-time value="6" />
-      <time-window-size method="first-participant"/>
+      <time-window-size method="first-participant" />
       <exchange data="DataA" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
     </coupling-scheme:serial-explicit>
 
