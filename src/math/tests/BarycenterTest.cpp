@@ -237,6 +237,74 @@ BOOST_AUTO_TEST_CASE(BarycenterTriangle2D)
   }
 }
 
+BOOST_AUTO_TEST_CASE(BarycenterTetrahedron)
+{
+  PRECICE_TEST(1_rank);
+  using Eigen::Vector3d;
+  using Eigen::Vector4d;
+  using precice::testing::equals;
+  Vector3d a(0.0, 0.0, 0.0);
+  Vector3d b(0.0, 1.0, 0.0);
+  Vector3d c(1.0, 0.0, 0.0);
+  Vector3d d(0.0, 0.0, 1.0);
+  // is center?
+  {
+    Vector4d coords(0.25, 0.25, 0.25, 0.25);
+    auto     ret = calcBarycentricCoordsForTetrahedron(a, b, c, d, (a + b + c + d) / 4);
+    BOOST_TEST(ret.sum() == 1.0);
+    BOOST_TEST(equals(ret, coords));
+  }
+  // random combination?
+  {
+    Vector4d coords(0.2, 0.3, 0.4, 0.1);
+    auto     ret = calcBarycentricCoordsForTetrahedron(a, b, c, d, 0.2 * a + +0.3 * b + +0.4 * c + +0.1 * d);
+    BOOST_TEST(ret.sum() == 1.0);
+    BOOST_TEST(equals(ret, coords));
+  }
+  // Is A?
+  {
+    Vector4d coords(1.0, 0.0, 0.0, 0.0);
+    auto     ret = calcBarycentricCoordsForTetrahedron(a, b, c, d, a);
+    BOOST_TEST(ret.sum() == 1.0);
+    BOOST_TEST(equals(ret, coords));
+  }
+  // Is B?
+  {
+    Vector4d coords(0.0, 1.0, 0.0, 0.0);
+    auto     ret = calcBarycentricCoordsForTetrahedron(a, b, c, d, b);
+    BOOST_TEST(ret.sum() == 1.0);
+    BOOST_TEST(equals(ret, coords));
+  }
+  // Is C?
+  {
+    Vector4d coords(0.0, 0.0, 1.0, 0.0);
+    auto     ret = calcBarycentricCoordsForTetrahedron(a, b, c, d, c);
+    BOOST_TEST(ret.sum() == 1.0);
+    BOOST_TEST(equals(ret, coords));
+  }
+  // Is D?
+  {
+    Vector4d coords(0.0, 0.0, 0.0, 1.0);
+    auto     ret = calcBarycentricCoordsForTetrahedron(a, b, c, d, d);
+    BOOST_TEST(ret.sum() == 1.0);
+    BOOST_TEST(equals(ret, coords));
+  }
+  // Is middle of AB?
+  {
+    Vector4d coords(0.5, 0.5, 0.0, 0.0);
+    auto     ret = calcBarycentricCoordsForTetrahedron(a, b, c, d, 0.5 * a + 0.5 * b);
+    BOOST_TEST(ret.sum() == 1.0);
+    BOOST_TEST(equals(ret, coords));
+  }
+  // Is middle of ABD?
+  {
+    Vector4d coords(1. / 3, 1. / 3, 0.0, 1. / 3);
+    auto     ret = calcBarycentricCoordsForTetrahedron(a, b, c, d, (a + b + d) / 3);
+    BOOST_TEST(ret.sum() == 1.0);
+    BOOST_TEST(equals(ret, coords));
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END() // Barycenter
 
 BOOST_AUTO_TEST_SUITE_END() // Math
