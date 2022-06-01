@@ -55,7 +55,6 @@ BOOST_AUTO_TEST_CASE(BasicTetra)
 
   constexpr double expectedVolume = 1.0 / 6.0;
   BOOST_TEST(tetra.getVolume() == expectedVolume);
-
 }
 
 BOOST_AUTO_TEST_CASE(WeirdTetra)
@@ -102,7 +101,6 @@ BOOST_AUTO_TEST_CASE(WeirdTetra)
 
   constexpr double expectedVolume = 1.0 / 6.0;
   BOOST_TEST(tetra.getVolume() == expectedVolume);
-
 }
 
 BOOST_AUTO_TEST_CASE(TetraRangeAccess)
@@ -139,8 +137,8 @@ BOOST_AUTO_TEST_CASE(TetraRangeAccess)
   {
     // Test begin(), end() for const
     const Tetrahedron &ctetra = tetra;
-    auto            ibegin    = ctetra.begin();
-    const auto      iend      = ctetra.end();
+    auto               ibegin = ctetra.begin();
+    const auto         iend   = ctetra.end();
     BOOST_TEST(std::distance(ibegin, iend) == 4);
     BOOST_TEST(*ibegin == v0.rawCoords());
     ++ibegin;
