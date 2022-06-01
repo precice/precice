@@ -210,6 +210,8 @@ target_sources(precice
     src/mesh/Mesh.hpp
     src/mesh/RangeAccessor.hpp
     src/mesh/SharedPointer.hpp
+    src/mesh/Tetrahedron.cpp
+    src/mesh/Tetrahedron.hpp
     src/mesh/Triangle.cpp
     src/mesh/Triangle.hpp
     src/mesh/Utils.cpp
