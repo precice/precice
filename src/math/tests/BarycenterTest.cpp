@@ -1,11 +1,11 @@
 #include <Eigen/Core>
+#include <boost/mpl/vector.hpp>
 #include <ostream>
 #include "math/barycenter.hpp"
 #include "math/constants.hpp"
 #include "math/differences.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
-#include <boost/mpl/vector.hpp>
 
 using namespace precice;
 using namespace precice::math::barycenter;
