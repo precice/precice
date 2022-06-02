@@ -78,13 +78,21 @@ bool Tetrahedron::operator!=(const Tetrahedron &other) const
 
 std::ostream &operator<<(std::ostream &os, const Tetrahedron &t)
 {
+  // Show 6 edges: 0-1, 0-2, 0-3, 1-2, 1-3, 2_3
   using utils::eigenio::wkt;
-  return os << "POLYGON (("
-            << t.vertex(0).getCoords().transpose().format(wkt()) << ", "
-            << t.vertex(1).getCoords().transpose().format(wkt()) << ", "
-            << t.vertex(2).getCoords().transpose().format(wkt()) << ", "
-            << t.vertex(3).getCoords().transpose().format(wkt()) << ", "
-            << t.vertex(0).getCoords().transpose().format(wkt()) << "))";
+  const auto& v0 = t.vertex(0);
+  const auto& v1 = t.vertex(1);
+  const auto& v2 = t.vertex(2);
+  const auto& v3 = t.vertex(3);
+
+  return os << "MULTILINESTRING ("
+            << "(" << v0.getCoords().transpose().format(wkt()) << ", " << v1.getCoords().transpose().format(wkt()) << "), "
+            << "(" << v0.getCoords().transpose().format(wkt()) << ", " << v2.getCoords().transpose().format(wkt()) << "), "
+            << "(" << v0.getCoords().transpose().format(wkt()) << ", " << v3.getCoords().transpose().format(wkt()) << "), "
+            << "(" << v1.getCoords().transpose().format(wkt()) << ", " << v2.getCoords().transpose().format(wkt()) << "), "
+            << "(" << v1.getCoords().transpose().format(wkt()) << ", " << v3.getCoords().transpose().format(wkt()) << "), "
+            << "(" << v2.getCoords().transpose().format(wkt()) << ", " << v3.getCoords().transpose().format(wkt()) << ")"
+            << ")";
 }
 
 } // namespace mesh
