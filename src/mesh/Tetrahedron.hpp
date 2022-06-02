@@ -26,7 +26,6 @@ namespace mesh {
 /// Tetrahedron of a mesh, defined by 4 vertices
 class Tetrahedron {
 public:
-
   /// Fix for the Boost.Test versions 1.65.1 - 1.67
   using value_type = Vertex::RawCoords;
 
