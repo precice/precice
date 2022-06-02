@@ -161,6 +161,13 @@ public:
   bool hasTimeWindowSize() const final override;
 
   /**
+   * @brief Returns true, if this solver sets the time window size via the participant first method.
+   *
+   * Only true, if all coupling schemes in the composition use the participant first method.
+   */
+  bool solverSetsTimeWindowSize() const final override;
+
+  /**
    * @brief Returns the timestep length, if one is given by the coupling scheme.
    *
    * An assertion is thrown, if no valid timestep is given. Check with

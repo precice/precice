@@ -142,6 +142,9 @@ public:
   /// Returns true, if time window size is prescribed by the cpl scheme.
   virtual bool hasTimeWindowSize() const = 0;
 
+  /// Returns true, if this solver sets the time window size via the participant first method.
+  virtual bool solverSetsTimeWindowSize() const = 0;
+
   /**
    * @brief Returns the time window size, if one is given by the coupling scheme.
    *

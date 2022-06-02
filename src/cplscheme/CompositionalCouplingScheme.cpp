@@ -201,6 +201,18 @@ bool CompositionalCouplingScheme::hasTimeWindowSize() const
   return hasIt;
 }
 
+bool CompositionalCouplingScheme::solverSetsTimeWindowSize() const
+{
+  PRECICE_TRACE();
+  bool setsIt = false;
+  for (const Scheme &scheme : _couplingSchemes) {
+    setsIt &= scheme.scheme->solverSetsTimeWindowSize();
+  }
+  PRECICE_DEBUG("return {}", setsIt);
+  PRECICE_ASSERT(not(setsIt && hasTimeWindowSize())); // sanity check that not at the same time first participant sets time window size and there is a given (fixed) time window size.
+  return setsIt;
+}
+
 double CompositionalCouplingScheme::getTimeWindowSize() const
 {
   PRECICE_TRACE();

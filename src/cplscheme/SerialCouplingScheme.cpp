@@ -44,6 +44,12 @@ SerialCouplingScheme::SerialCouplingScheme(
   }
 }
 
+bool SerialCouplingScheme::solverSetsTimeWindowSize() const
+{
+  PRECICE_ASSERT(not(hasTimeWindowSize() && _participantSetsTimeWindowSize));
+  return _participantSetsTimeWindowSize;
+}
+
 void SerialCouplingScheme::sendTimeWindowSize()
 {
   PRECICE_TRACE();

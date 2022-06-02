@@ -157,6 +157,13 @@ public:
   double getTimeWindowSize() const override final;
 
   /**
+   * @brief Returns true, if this solver sets the time window size via the participant first method.
+   *
+   * This option is only allowed for serial coupling schemes, so it can only return true for serial coupling schemes.
+   */
+  bool solverSetsTimeWindowSize() const override;
+
+  /**
    * @brief Returns the remaining timestep length within the current time window.
    *
    * If no time window size is prescribed by the coupling scheme, always 0.0 is
