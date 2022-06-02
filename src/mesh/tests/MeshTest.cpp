@@ -266,36 +266,6 @@ BOOST_AUTO_TEST_CASE(MeshWKTPrint)
   BOOST_TEST(reference == sstream.str());
 }
 
-BOOST_AUTO_TEST_CASE(CreateUniqueEdge)
-{
-  PRECICE_TEST(1_rank);
-  int             dim = 3;
-  Mesh            mesh1("Mesh1", dim, testing::nextMeshID());
-  auto &          mesh = mesh1;
-  Eigen::VectorXd coords0(dim);
-  Eigen::VectorXd coords1(dim);
-  Eigen::VectorXd coords2(dim);
-  coords0 << 0.0, 0.0, 0.0;
-  coords1 << 1.0, 0.0, 0.0;
-  coords2 << 0.0, 0.0, 1.0;
-  Vertex &v0 = mesh.createVertex(coords0);
-  Vertex &v1 = mesh.createVertex(coords1);
-  Vertex &v2 = mesh.createVertex(coords2);
-
-  Edge &e01a = mesh.createEdge(v0, v1); // LINESTRING (0 0 0, 1 0 0)
-  mesh.createEdge(v0, v1);              // LINESTRING (0 0 0, 1 0 0)
-  BOOST_TEST(mesh.edges().size() == 2);
-
-  Edge &e01c = mesh.createUniqueEdge(v0, v1); // LINESTRING (0 0 0, 1 0 0)
-  BOOST_TEST(mesh.edges().size() == 2);
-  BOOST_TEST(e01a == e01c);
-
-  mesh.createUniqueEdge(v1, v2); // LINESTRING (0 0 0, 1 0 0)
-  BOOST_TEST(mesh.edges().size() == 3);
-  mesh.createUniqueEdge(v1, v2); // LINESTRING (0 0 0, 1 0 0)
-  BOOST_TEST(mesh.edges().size() == 3);
-}
-
 BOOST_AUTO_TEST_CASE(ResizeDataGrow)
 {
   PRECICE_TEST(1_rank);
