@@ -22,7 +22,7 @@ class Vertex;
 namespace precice {
 namespace mesh {
 
-/// Triangle of a mesh, defined by three edges (and vertices).
+/// Triangle of a mesh, defined by three vertices.
 class Triangle {
 public:
   /// Type of the read-only const random-access iterator over Vertex coords
@@ -39,11 +39,18 @@ public:
   /// Fix for the Boost.Test versions 1.65.1 - 1.67
   using value_type = Vertex::RawCoords;
 
-  /// Constructor, the order of edges defines the outer normal direction.
+  /// Constructor based on 3 edges
   Triangle(
       Edge &     edgeOne,
       Edge &     edgeTwo,
       Edge &     edgeThree,
+      TriangleID id);
+
+  /// Constructor based on 3 vertices
+  Triangle(
+      Vertex &     VertexOne,
+      Vertex &     VertexTwo,
+      Vertex &     VertexThree,
       TriangleID id);
 
   /// Returns dimensionalty of space the triangle is embedded in.
@@ -66,12 +73,6 @@ public:
    * is determined on construction of the triangle.
    */
   const Vertex &vertex(int i) const;
-
-  /// Returns triangle edge with index 0, 1 or 2.
-  Edge &edge(int i);
-
-  /// Returns const triangle edge with index 0, 1 or 2.
-  const Edge &edge(int i) const;
 
   ///@name Iterators
   ///@{
@@ -123,11 +124,8 @@ public:
   bool operator!=(const Triangle &other) const;
 
 private:
-  /// Edges defining the triangle.
-  std::array<Edge *, 3> _edges;
-
-  /// Decider for choosing unique vertices from _edges.
-  std::array<bool, 3> _vertexMap;
+  /// Vertices defining the triangle.
+  std::array<Vertex *, 3> _vertices;
 
   /// ID of the triangle.
   TriangleID _id;
@@ -138,23 +136,13 @@ private:
 inline Vertex &Triangle::vertex(int i)
 {
   PRECICE_ASSERT((i >= 0) && (i < 3), i);
-  return edge(i).vertex(_vertexMap[i]);
+  return *_vertices[i];
 }
 
 inline const Vertex &Triangle::vertex(int i) const
 {
   PRECICE_ASSERT((i >= 0) && (i < 3), i);
-  return edge(i).vertex(_vertexMap[i]);
-}
-
-inline Edge &Triangle::edge(int i)
-{
-  return *_edges[i];
-}
-
-inline const Edge &Triangle::edge(int i) const
-{
-  return *_edges[i];
+  return *_vertices[i];
 }
 
 inline Triangle::iterator Triangle::begin()
