@@ -131,12 +131,12 @@ BOOST_AUTO_TEST_CASE(TetrahedronEquality)
 BOOST_AUTO_TEST_CASE(TetrahedronWKTPrint)
 {
   PRECICE_TEST(1_rank);
-  Vertex            v1(Eigen::Vector3d(0., 0., 0.), 0);
-  Vertex            v2(Eigen::Vector3d(1., 0., 0.), 1);
-  Vertex            v3(Eigen::Vector3d(0., 1., 0.), 2);
-  Vertex            v4(Eigen::Vector3d(0., 0., 1.), 3);
+  Vertex v1(Eigen::Vector3d(0., 0., 0.), 0);
+  Vertex v2(Eigen::Vector3d(1., 0., 0.), 1);
+  Vertex v3(Eigen::Vector3d(0., 1., 0.), 2);
+  Vertex v4(Eigen::Vector3d(0., 0., 1.), 3);
 
-  Tetrahedron         t1(v1, v2, v3, v4, 0);
+  Tetrahedron       t1(v1, v2, v3, v4, 0);
   std::stringstream stream;
   stream << t1;
   std::string t1string("MULTILINESTRING ((0 0 0, 1 0 0), (0 0 0, 0 1 0), (0 0 0, 0 0 1), (1 0 0, 0 1 0), (1 0 0, 0 0 1), (0 1 0, 0 0 1))");

@@ -80,10 +80,10 @@ std::ostream &operator<<(std::ostream &os, const Tetrahedron &t)
 {
   // Show 6 edges: 0-1, 0-2, 0-3, 1-2, 1-3, 2_3
   using utils::eigenio::wkt;
-  const auto& v0 = t.vertex(0);
-  const auto& v1 = t.vertex(1);
-  const auto& v2 = t.vertex(2);
-  const auto& v3 = t.vertex(3);
+  const auto &v0 = t.vertex(0);
+  const auto &v1 = t.vertex(1);
+  const auto &v2 = t.vertex(2);
+  const auto &v3 = t.vertex(3);
 
   return os << "MULTILINESTRING ("
             << "(" << v0.getCoords().transpose().format(wkt()) << ", " << v1.getCoords().transpose().format(wkt()) << "), "
