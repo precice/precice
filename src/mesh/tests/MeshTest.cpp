@@ -139,10 +139,16 @@ BOOST_AUTO_TEST_CASE(Demonstration)
       index++;
     }
 
+    BOOST_TEST(!mesh.hasEdges());
+    BOOST_TEST(!mesh.hasTriangles());
+
     // Create mesh edges
     Edge &e0 = mesh.createEdge(v0, v1);
     Edge &e1 = mesh.createEdge(v1, v2);
     Edge &e2 = mesh.createEdge(v2, v0);
+
+    BOOST_TEST(mesh.hasEdges());
+    BOOST_TEST(!mesh.hasTriangles());
 
     // Validate mesh edges state
     index = 0;
@@ -166,7 +172,12 @@ BOOST_AUTO_TEST_CASE(Demonstration)
 
       // Validate mesh triangle
       BOOST_TEST((*mesh.triangles().begin()).getID() == t->getID());
+      BOOST_TEST(mesh.hasTriangles());
+    } else {
+      BOOST_TEST(!mesh.hasTriangles());
     }
+
+    BOOST_TEST(mesh.hasEdges());
 
     // Create vertex data
     std::string dataName("MyData");
