@@ -265,10 +265,9 @@ public:
    * Use requiresMeshConnectivityFor() to check if the current participant can make use of the connectivity.
    *
    *
-   * Always set the mesh connectivity of the highest dimensionality available.
-   * preCICE ensures the existence of hierarchical entries for the projection fallback.
-   * Prefer to use bulk versions, as they allows preCICE to efficiently avoid duplicates.
-   * preCICE removes all connectivity duplicates in initialize().
+   * Only set the mesh connectivity that you require.
+   * preCICE removes all connectivity duplicates in initialize() and ensures
+   * the existence of hierarchical entries for the projection fallback.
    *
    * Examples:
    *
@@ -468,8 +467,6 @@ public:
    *
    * @note The order of vertices does not matter.
    *
-   * @warning For setting multiple triangle, prefer the vastly more efficient setMeshTriangles().
-   *
    * @param[in] meshID ID of the mesh to add the triangle to
    * @param[in] firstVertexID ID of the first vertex of the triangle
    * @param[in] secondVertexID ID of the second vertex of the triangle
@@ -512,8 +509,6 @@ public:
    * The planar quad will be triangulated, maximizing area-to-circumference.
    *
    * @warning The order of vertices does not matter, however, only planar quads are allowed.
-   *
-   * @warning For setting multiple quads, prefer the vastly more efficient setMeshQuads().
    *
    * @param[in] meshID ID of the mesh to add the Quad to
    * @param[in] firstVertexID ID of the first vertex of the Quad
@@ -559,8 +554,6 @@ public:
    * @brief Set tetrahedron in 3D mesh from vertex ID
    *
    * @note The order of vertices does not matter.
-   *
-   * @warning For setting multiple tetrahedra, prefer the vastly more efficient setMeshTetrahedra().
    *
    * @param[in] meshID ID of the mesh to add the Tetrahedron to
    * @param[in] firstVertexID ID of the first vertex of the Tetrahedron

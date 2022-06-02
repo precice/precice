@@ -5,6 +5,7 @@
 #include <fmt/ostream.h>
 #include <functional>
 #include <iterator>
+#include <set>
 #include <type_traits>
 #include <utility>
 
@@ -156,6 +157,20 @@ template <class InputIt, class Size, class InOutIt>
 void add_n(InputIt first, Size count, InOutIt result)
 {
   std::transform(first, std::next(first, count), result, result, std::plus{});
+}
+
+/// Calls each value in the range of [first, last[ exactly once.
+template <class InputIt, class Unary>
+void for_each_unique(InputIt first, InputIt last, Unary func)
+{
+  using Inner = std::remove_cv_t<std::remove_reference_t<decltype(*first)>>;
+  std::set<Inner> seen;
+  std::for_each(first, last, [&seen, &func](const auto &elem) {
+    if (seen.count(elem) == 0) {
+      seen.insert(elem);
+      func(elem);
+    }
+  });
 }
 
 } // namespace utils

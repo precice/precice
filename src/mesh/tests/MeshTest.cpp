@@ -1,6 +1,7 @@
 #include <Eigen/Core>
 #include <Eigen/src/Core/Matrix.h>
 #include <algorithm>
+#include <boost/test/tools/old/interface.hpp>
 #include <deque>
 #include <iosfwd>
 #include <memory>
@@ -819,6 +820,55 @@ BOOST_AUTO_TEST_CASE(AddMesh)
   BOOST_TEST(globalMesh->edges().size() == 3);
   BOOST_TEST(globalMesh->triangles().size() == 3);
   BOOST_TEST(globalMesh->tetrahedra().size() == 3);
+}
+
+BOOST_AUTO_TEST_CASE(RemoveDuplicates)
+{
+  PRECICE_TEST(1_rank);
+  Mesh mesh{"Mesh1", 3, 0};
+
+  auto &v1 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+  auto &v2 = mesh.createVertex(Eigen::Vector3d(3.0, 0.0, 0.0));
+  auto &v3 = mesh.createVertex(Eigen::Vector3d(3.0, 4.0, 0.0));
+  auto &v4 = mesh.createVertex(Eigen::Vector3d(0.0, 8.0, 0.0));
+
+  mesh.createEdge(v1, v2);
+  mesh.createEdge(v2, v3);
+  mesh.createEdge(v3, v4);
+
+  // add single duplicate
+  mesh.createEdge(v3, v4);
+
+  // add 1000 duplicates
+  for (int i = 0; i < 1000; ++i) {
+    mesh.createEdge(v2, v3);
+  };
+  BOOST_TEST(mesh.edges().size() == 1004);
+
+  mesh.createTriangle(v1, v2, v3);
+  mesh.createTriangle(v2, v3, v4);
+  for (int i = 0; i < 1000; ++i) {
+    mesh.createTriangle(v2, v3, v4);
+  };
+  BOOST_TEST(mesh.triangles().size() == 1002);
+
+  // creates edges 1-3 and 2-4
+  mesh.preprocess();
+
+  BOOST_TEST(mesh.edges().size() == 5);
+  BOOST_TEST(mesh.triangles().size() == 2);
+
+  std::vector<Edge> expectedEdges{{v1, v2}, {v1, v3}, {v2, v3}, {v3, v4}, {v2, v4}};
+  for (auto &e : expectedEdges) {
+    auto cnt = std::count(mesh.edges().begin(), mesh.edges().end(), e);
+    BOOST_TEST(cnt == 1);
+  }
+
+  std::vector<Triangle> expectedTriangles{{v1, v2, v3}, {v2, v3, v4}};
+  for (auto &t : expectedTriangles) {
+    auto cnt = std::count(mesh.triangles().begin(), mesh.triangles().end(), t);
+    BOOST_TEST(cnt == 1);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Mesh
