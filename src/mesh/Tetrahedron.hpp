@@ -26,16 +26,6 @@ namespace mesh {
 /// Tetrahedron of a mesh, defined by 4 vertices
 class Tetrahedron {
 public:
-  /// Type of the read-only const random-access iterator over Vertex coords
-  /**
-   * This index-based iterator iterates over the vertices of this Tetrahedron.
-   * The returned value is the forwarded result of Vertex::getCoords.
-   * It is thus a read-only random-access iterator.
-   */
-  using const_iterator = IndexRangeIterator<const Tetrahedron, const Vertex::RawCoords>;
-
-  /// Type of the read-only random access vertex iterator
-  using iterator = const_iterator;
 
   /// Fix for the Boost.Test versions 1.65.1 - 1.67
   using value_type = Vertex::RawCoords;
