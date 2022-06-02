@@ -120,7 +120,7 @@ Eigen::Vector4d calcBarycentricCoordsForTetrahedron(
 
   Vector4d barycentricCoords;
 
-  // Varying per poit
+  // Varying per point
   Vector3d au = u - a;
   Vector3d du = u - d;
   Vector3d cu = u - c;
