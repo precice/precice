@@ -1363,11 +1363,11 @@ void SolverInterfaceImpl::writeVectorGradientData(
                   "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                   data.getName(), valueIndex)
 
+    // gradient matrix read rowwise
     for (int dimSpace = 0; dimSpace < _dimensions; dimSpace++) {
       for (int dimData = 0; dimData < _dimensions; dimData++) {
         const int offsetInternal = valueIndex * _dimensions;
-        // Values are entered derived in spatial dimensions first : gradient matrix read rowwise
-        const int offset = dimData * _dimensions;
+        const int offset         = dimData * _dimensions;
 
         PRECICE_ASSERT(offset + dimSpace < gradientValuesInternal.cols() * _dimensions,
                        offset + dimSpace, gradientValuesInternal.cols() * _dimensions);
@@ -1422,16 +1422,16 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
     auto &     gradientValuesInternal = data.gradientValues();
     const auto vertexCount            = gradientValuesInternal.cols() / data.getDimensions();
 
+    // gradient matrices input one after the other (read row-wise)
     for (int i = 0; i < size; i++) {
+      const auto valueIndex = valueIndices[i];
+      PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
+                    "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
+                    data.getName(), valueIndex);
+
       for (int dimSpace = 0; dimSpace < _dimensions; dimSpace++) {
         for (int dimData = 0; dimData < _dimensions; dimData++) {
 
-          const auto valueIndex = valueIndices[i];
-          PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
-                        "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                        data.getName(), valueIndex);
-
-          // Values are entered derived components first : gradient matrices input one after the other (read columnwise)
           const int offsetInternal = valueIndex * _dimensions;
           const int offsetOut      = i * _dimensions * _dimensions;
           const int offsetIn       = dimData * _dimensions;
