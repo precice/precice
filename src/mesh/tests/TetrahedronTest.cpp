@@ -13,7 +13,7 @@ using namespace precice;
 using namespace precice::mesh;
 
 BOOST_AUTO_TEST_SUITE(MeshTests)
-BOOST_AUTO_TEST_SUITE(TriangleTests)
+BOOST_AUTO_TEST_SUITE(TetrahedronTests)
 
 BOOST_AUTO_TEST_CASE(BasicTetra)
 {
@@ -127,22 +127,21 @@ BOOST_AUTO_TEST_CASE(TetrahedronEquality)
   BOOST_TEST(tetra1 != tetra3);
   BOOST_TEST(tetra2 != tetra3);
 }
-/*
-BOOST_AUTO_TEST_CASE(TriangleWKTPrint)
+
+BOOST_AUTO_TEST_CASE(TetrahedronWKTPrint)
 {
   PRECICE_TEST(1_rank);
   Vertex            v1(Eigen::Vector3d(0., 0., 0.), 0);
-  Vertex            v2(Eigen::Vector3d(0., 1., 0.), 0);
-  Vertex            v3(Eigen::Vector3d(1., 0., 0.), 0);
-  Edge              e1(v1, v2, 0);
-  Edge              e2(v2, v3, 0);
-  Edge              e3(v3, v1, 0);
-  Triangle          t1(e1, e2, e3, 0);
+  Vertex            v2(Eigen::Vector3d(1., 0., 0.), 1);
+  Vertex            v3(Eigen::Vector3d(0., 1., 0.), 2);
+  Vertex            v4(Eigen::Vector3d(0., 0., 1.), 3);
+
+  Tetrahedron         t1(v1, v2, v3, v4, 0);
   std::stringstream stream;
   stream << t1;
-  std::string t1string("POLYGON ((0 0 0, 0 1 0, 1 0 0, 0 0 0))");
+  std::string t1string("MULTILINESTRING ((0 0 0, 1 0 0), (0 0 0, 0 1 0), (0 0 0, 0 0 1), (1 0 0, 0 1 0), (1 0 0, 0 0 1), (0 1 0, 0 0 1))");
   BOOST_TEST(t1string == stream.str());
-}*/
+}
 
-BOOST_AUTO_TEST_SUITE_END() // Triangle
+BOOST_AUTO_TEST_SUITE_END() // Tetrahedron
 BOOST_AUTO_TEST_SUITE_END() // Mesh
