@@ -148,30 +148,14 @@ BOOST_AUTO_TEST_CASE(Demonstration)
     Edge &e2 = mesh.createEdge(v2, v0);
 
     BOOST_TEST(mesh.hasEdges());
+    BOOST_TEST(mesh.edges().size() == 3);
     BOOST_TEST(!mesh.hasTriangles());
-
-    // Validate mesh edges state
-    index = 0;
-    for (Edge &edge : mesh.edges()) {
-      if (index == 0) {
-        BOOST_TEST(edge.getID() == e0.getID());
-      } else if (index == 1) {
-        BOOST_TEST(edge.getID() == e1.getID());
-      } else if (index == 2) {
-        BOOST_TEST(edge.getID() == e2.getID());
-      } else {
-        BOOST_TEST(false);
-      }
-      index++;
-    }
 
     Triangle *t = nullptr;
     if (dim == 3) {
       // Create triangle
       t = &mesh.createTriangle(e0, e1, e2);
 
-      // Validate mesh triangle
-      BOOST_TEST((*mesh.triangles().begin()).getID() == t->getID());
       BOOST_TEST(mesh.hasTriangles());
     } else {
       BOOST_TEST(!mesh.hasTriangles());
@@ -409,7 +393,7 @@ BOOST_AUTO_TEST_CASE(EdgeLength)
   coords1 << 0.0, 1.0, 0.0;
   Vertex v0{coords0, 0};
   Vertex v1{coords1, 1};
-  Edge   e(v0, v1, 0);
+  Edge   e(v0, v1);
   BOOST_TEST(edgeLength(e) == std::sqrt(2));
 }
 

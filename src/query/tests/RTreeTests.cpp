@@ -266,9 +266,8 @@ BOOST_AUTO_TEST_CASE(Query3DFullEdge)
   auto            results = indexTree.getClosestEdges(location, 2);
 
   BOOST_TEST(results.size() == 2);
-  std::set<EdgeID> rset{results.at(0).index, results.at(1).index};
-  BOOST_TEST(rset.count(elr.getID()) == 1);
-  BOOST_TEST(rset.count(eld.getID()) == 1);
+  BOOST_TEST(mesh->edges().at(results.at(0).index) == eld);
+  BOOST_TEST(mesh->edges().at(results.at(1).index) == elr);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Edge
@@ -309,12 +308,10 @@ BOOST_AUTO_TEST_CASE(Query3DFullTriangle)
 
   auto results = indexTree.getClosestTriangles(location, 3);
   BOOST_TEST(results.size() == 3);
-
-  std::set<TriangleID> rset{results.at(0).index, results.at(1).index, results.at(2).index};
-  BOOST_TEST(rset.count(tlb.getID()) == 1);
-  BOOST_TEST(rset.count(tlt.getID()) == 1);
-  BOOST_TEST(rset.count(trt.getID()) == 1);
-  BOOST_TEST(rset.count(trb.getID()) == 0);
+  BOOST_TEST(mesh->triangles().at(results.at(0).index) == tlb);
+  BOOST_TEST(mesh->triangles().at(results.at(1).index) == tlt);
+  BOOST_TEST(mesh->triangles().at(results.at(2).index) == trt);
+  BOOST_TEST(mesh->triangles().at(results.at(2).index) != trb);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Triangle
