@@ -398,7 +398,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(BarycenterTetrahedronExtrapolation, T, Tetrahed
     BOOST_TEST(ret.sum() == 1.0);
     BOOST_TEST(equals(ret, coords));
   }
-  // Mirror of D
+  // Mirror of D with respect to A
   {
     Vector4d coords(2.0, 0.0, 0.0, -1.0);
     auto     ret = calcBarycentricCoordsForTetrahedron(a, b, c, d, 2 * a - d);
