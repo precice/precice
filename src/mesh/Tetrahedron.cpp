@@ -14,11 +14,6 @@
 namespace precice {
 namespace mesh {
 
-BOOST_CONCEPT_ASSERT((boost::RandomAccessIteratorConcept<Tetrahedron::iterator>) );
-BOOST_CONCEPT_ASSERT((boost::RandomAccessIteratorConcept<Tetrahedron::const_iterator>) );
-BOOST_CONCEPT_ASSERT((boost::RandomAccessRangeConcept<Tetrahedron>) );
-BOOST_CONCEPT_ASSERT((boost::RandomAccessRangeConcept<const Tetrahedron>) );
-
 Tetrahedron::Tetrahedron(
     Vertex &      vertexOne,
     Vertex &      vertexTwo,

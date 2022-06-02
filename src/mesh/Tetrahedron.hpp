@@ -61,29 +61,6 @@ public:
    */
   const Vertex &vertex(int i) const;
 
-  ///@name Iterators
-  ///@{
-
-  /// Returns a read-only random-access iterator to the begin (0) of the vertex range [0,1,2]
-  iterator begin();
-
-  /// Returns a read-only random-access iterator to the end (3) of the vertex range [0,1,2]
-  iterator end();
-
-  /// Returns a read-only random-access iterator to the begin (0) of the vertex range [0,1,2]
-  const_iterator begin() const;
-
-  /// Returns a read-only random access iterator to the end (3) of the vertex range [0,1,2]
-  const_iterator end() const;
-
-  /// Returns a read-only random-access iterator to the begin (0) of the vertex range [0,1,2]
-  const_iterator cbegin() const;
-
-  /// Returns a read-only random access iterator to the end (3) of the vertex range [0,1,2]
-  const_iterator cend() const;
-
-  ///@}
-
   /// Returns a among Tetrahedrons globally unique ID.
   TetrahedronID getID() const;
 
@@ -126,36 +103,6 @@ inline const Vertex &Tetrahedron::vertex(int i) const
 {
   PRECICE_ASSERT((i >= 0) && (i < 4), i);
   return *_vertices[i];
-}
-
-inline Tetrahedron::iterator Tetrahedron::begin()
-{
-  return {this, 0};
-}
-
-inline Tetrahedron::iterator Tetrahedron::end()
-{
-  return {this, 4};
-}
-
-inline Tetrahedron::const_iterator Tetrahedron::begin() const
-{
-  return {this, 0};
-}
-
-inline Tetrahedron::const_iterator Tetrahedron::end() const
-{
-  return {this, 4};
-}
-
-inline Tetrahedron::const_iterator Tetrahedron::cbegin() const
-{
-  return begin();
-}
-
-inline Tetrahedron::const_iterator Tetrahedron::cend() const
-{
-  return end();
 }
 
 inline TetrahedronID Tetrahedron::getID() const
