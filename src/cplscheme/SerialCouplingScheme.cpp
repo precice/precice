@@ -44,6 +44,15 @@ SerialCouplingScheme::SerialCouplingScheme(
   }
 }
 
+void SerialCouplingScheme::sendTimeWindowSize()
+{
+  PRECICE_TRACE();
+  if (_participantSetsTimeWindowSize) {
+    PRECICE_DEBUG("sending time window size of {}", getComputedTimeWindowPart());
+    getM2N()->send(getComputedTimeWindowPart());
+  }
+}
+
 void SerialCouplingScheme::receiveAndSetTimeWindowSize()
 {
   PRECICE_TRACE();
@@ -101,10 +110,7 @@ bool SerialCouplingScheme::exchangeDataAndAccelerate()
 
   if (doesFirstStep()) { // first participant
     PRECICE_DEBUG("Sending data...");
-    if (_participantSetsTimeWindowSize) {
-      PRECICE_DEBUG("sending time window size of {}", getComputedTimeWindowPart());
-      getM2N()->send(getComputedTimeWindowPart());
-    }
+    sendTimeWindowSize();
     sendData(getM2N(), getSendData());
     if (isImplicitCouplingScheme()) {
       convergence = receiveConvergence(getM2N());
@@ -122,10 +128,8 @@ bool SerialCouplingScheme::exchangeDataAndAccelerate()
     sendData(getM2N(), getSendData());
     // the second participant does not want new data in the last iteration of the last time window
     if (isCouplingOngoing() || (isImplicitCouplingScheme() && not convergence)) {
-      if (_participantReceivesTimeWindowSize) {
-        receiveAndSetTimeWindowSize();
-      }
       PRECICE_DEBUG("Receiving data...");
+      receiveAndSetTimeWindowSize();
       receiveData(getM2N(), getReceiveData());
       checkDataHasBeenReceived();
     }

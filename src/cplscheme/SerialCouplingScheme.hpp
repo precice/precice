@@ -63,6 +63,9 @@ private:
   /// Determines, if the time window size is received by the participant.
   bool _participantReceivesTimeWindowSize = false;
 
+  /// Sends time window size, if this participant is the one to send
+  void sendTimeWindowSize();
+
   /// Receives and sets the time window size, if this participant is the one to receive
   void receiveAndSetTimeWindowSize();
 
