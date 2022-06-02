@@ -43,15 +43,13 @@ public:
   Triangle(
       Edge &     edgeOne,
       Edge &     edgeTwo,
-      Edge &     edgeThree,
-      TriangleID id);
+      Edge &     edgeThree);
 
   /// Constructor based on 3 vertices
   Triangle(
       Vertex &   VertexOne,
       Vertex &   VertexTwo,
-      Vertex &   VertexThree,
-      TriangleID id);
+      Vertex &   VertexThree);
 
   /// Returns dimensionalty of space the triangle is embedded in.
   int getDimensions() const;
@@ -100,9 +98,6 @@ public:
   /// Computes the normal of the triangle.
   Eigen::VectorXd computeNormal() const;
 
-  /// Returns a among triangles globally unique ID.
-  TriangleID getID() const;
-
   /// Returns the surface area of the triangle
   double getArea() const;
 
@@ -126,9 +121,6 @@ public:
 private:
   /// Vertices defining the triangle.
   std::array<Vertex *, 3> _vertices;
-
-  /// ID of the triangle.
-  TriangleID _id;
 };
 
 // --------------------------------------------------------- HEADER DEFINITIONS
@@ -173,11 +165,6 @@ inline Triangle::const_iterator Triangle::cbegin() const
 inline Triangle::const_iterator Triangle::cend() const
 {
   return end();
-}
-
-inline TriangleID Triangle::getID() const
-{
-  return _id;
 }
 
 std::ostream &operator<<(std::ostream &os, const Triangle &t);
