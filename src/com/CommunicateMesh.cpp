@@ -163,7 +163,7 @@ void CommunicateMesh::receiveMesh(
   PRECICE_DEBUG("Number of triangles to receive: {}", numberOfTriangles);
   if (numberOfTriangles > 0) {
     std::vector<int> triangleIDs = _communication->receiveRange(rankSender, AsVectorTag<int>{});
-    PRECICE_ASSERT(triangleIDs.size() == numberOfTriangles*3);
+    PRECICE_ASSERT(triangleIDs.size() == numberOfTriangles * 3);
 
     for (int i = 0; i < numberOfTriangles; i++) {
       PRECICE_ASSERT(vertexMap.count(triangleIDs[i * 3]) == 1);

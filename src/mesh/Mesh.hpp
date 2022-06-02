@@ -78,7 +78,10 @@ public:
   /// Returns const container holding all edges.
   const EdgeContainer &edges() const;
 
-  bool hasEdges() const { return !_edges.empty(); }
+  bool hasEdges() const
+  {
+    return !_edges.empty();
+  }
 
   /// Returns modifiable container holding all triangles.
   TriangleContainer &triangles();
@@ -86,7 +89,10 @@ public:
   /// Returns const container holding all triangles.
   const TriangleContainer &triangles() const;
 
-  bool hasTriangles() const { return !_triangles.empty(); }
+  bool hasTriangles() const
+  {
+    return !_triangles.empty();
+  }
 
   /// Returns modifiable container holding all tetrahedra.
   TetraContainer &tetrahedra();
@@ -94,9 +100,15 @@ public:
   /// Returns const container holding all tetrahedra.
   const TetraContainer &tetrahedra() const;
 
-  bool hasTetrahedra() const { return !_tetrahedra.empty(); }
+  bool hasTetrahedra() const
+  {
+    return !_tetrahedra.empty();
+  }
 
-  bool hasConnectivity() const { return hasEdges() || hasTriangles() || hasTetrahedra(); }
+  bool hasConnectivity() const
+  {
+    return hasEdges() || hasTriangles() || hasTetrahedra();
+  }
 
   int getDimensions() const;
 

@@ -48,9 +48,9 @@ public:
 
   /// Constructor based on 3 vertices
   Triangle(
-      Vertex &     VertexOne,
-      Vertex &     VertexTwo,
-      Vertex &     VertexThree,
+      Vertex &   VertexOne,
+      Vertex &   VertexTwo,
+      Vertex &   VertexThree,
       TriangleID id);
 
   /// Returns dimensionalty of space the triangle is embedded in.
