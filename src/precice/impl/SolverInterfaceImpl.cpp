@@ -1519,8 +1519,8 @@ void SolverInterfaceImpl::readBlockVectorDataImpl(
     double readTime      = timeStepStart + relativeReadTime;
     normalizedReadTime   = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
   } else if (_couplingScheme->solverSetsTimeWindowSize()) {
-    PRECICE_CHECK(relativeReadTime == 0, "Waveform relaxation is not allowed for solver that sets the time step size");
-    normalizedReadTime = 0; // by default read at beginning of window.
+    PRECICE_CHECK(relativeReadTime == _couplingScheme->getThisTimeWindowRemainder(), "Waveform relaxation is not allowed for solver that sets the time step size");
+    normalizedReadTime = 1; // by default read at end of window.
   } else {
     PRECICE_UNREACHABLE("Unexpected control flow.");
   }
@@ -1590,8 +1590,8 @@ void SolverInterfaceImpl::readVectorDataImpl(
     double readTime      = timeStepStart + relativeReadTime;
     normalizedReadTime   = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
   } else if (_couplingScheme->solverSetsTimeWindowSize()) {
-    PRECICE_CHECK(relativeReadTime == 0, "Waveform relaxation is not allowed for solver that sets the time step size");
-    normalizedReadTime = 0; // by default read at beginning of window.
+    PRECICE_CHECK(relativeReadTime == _couplingScheme->getThisTimeWindowRemainder(), "Waveform relaxation is not allowed for solver that sets the time step size");
+    normalizedReadTime = 1; // by default read at end of window.
   } else {
     PRECICE_UNREACHABLE("Unexpected control flow.");
   }
@@ -1661,8 +1661,8 @@ void SolverInterfaceImpl::readBlockScalarDataImpl(
     double readTime      = timeStepStart + relativeReadTime;
     normalizedReadTime   = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
   } else if (_couplingScheme->solverSetsTimeWindowSize()) {
-    PRECICE_CHECK(relativeReadTime == 0, "Waveform relaxation is not allowed for solver that sets the time step size");
-    normalizedReadTime = 0; // by default read at beginning of window.
+    PRECICE_CHECK(relativeReadTime == _couplingScheme->getThisTimeWindowRemainder(), "Waveform relaxation is not allowed for solver that sets the time step size");
+    normalizedReadTime = 1; // by default read at end of window.
   } else {
     PRECICE_UNREACHABLE("Unexpected control flow.");
   }
@@ -1729,8 +1729,8 @@ void SolverInterfaceImpl::readScalarDataImpl(
     double readTime      = timeStepStart + relativeReadTime;
     normalizedReadTime   = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
   } else if (_couplingScheme->solverSetsTimeWindowSize()) {
-    PRECICE_CHECK(relativeReadTime == 0, "Waveform relaxation is not allowed for solver that sets the time step size");
-    normalizedReadTime = 0; // by default read at beginning of window.
+    PRECICE_CHECK(relativeReadTime == _couplingScheme->getThisTimeWindowRemainder(), "Waveform relaxation is not allowed for solver that sets the time step size");
+    normalizedReadTime = 1; // by default read at end of window.
   } else {
     PRECICE_UNREACHABLE("Unexpected control flow.");
   }
