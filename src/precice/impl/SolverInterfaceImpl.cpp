@@ -889,9 +889,9 @@ void SolverInterfaceImpl::setMeshTriangleWithEdges(
                   "setMeshTriangleWithEdges() was called with vertices located at identical coordinates (IDs: {}, {}, {}).",
                   firstVertexID, secondVertexID, thirdVertexID);
     mesh::Edge *edges[3];
-    edges[0] = &mesh->createUniqueEdge(*vertices[0], *vertices[1]);
-    edges[1] = &mesh->createUniqueEdge(*vertices[1], *vertices[2]);
-    edges[2] = &mesh->createUniqueEdge(*vertices[2], *vertices[0]);
+    edges[0] = &mesh->createEdge(*vertices[0], *vertices[1]);
+    edges[1] = &mesh->createEdge(*vertices[1], *vertices[2]);
+    edges[2] = &mesh->createEdge(*vertices[2], *vertices[0]);
 
     mesh->createTriangle(*edges[0], *edges[1], *edges[2]);
   }
@@ -946,11 +946,11 @@ void SolverInterfaceImpl::setMeshQuad(
 
     // The new edge, e[4], is the shortest diagonal of the quad
     if (distance1 <= distance2) {
-      auto &diag = mesh->createUniqueEdge(*chain.vertices[0], *chain.vertices[2]);
+      auto &diag = mesh->createEdge(*chain.vertices[0], *chain.vertices[2]);
       mesh->createTriangle(*chain.edges[3], *chain.edges[0], diag);
       mesh->createTriangle(*chain.edges[1], *chain.edges[2], diag);
     } else {
-      auto &diag = mesh->createUniqueEdge(*chain.vertices[1], *chain.vertices[3]);
+      auto &diag = mesh->createEdge(*chain.vertices[1], *chain.vertices[3]);
       mesh->createTriangle(*chain.edges[0], *chain.edges[1], diag);
       mesh->createTriangle(*chain.edges[2], *chain.edges[3], diag);
     }
@@ -996,10 +996,10 @@ void SolverInterfaceImpl::setMeshQuadWithEdges(
 
     // Vertices are now in the order: V0-V1-V2-V3-V0.
     // The order now identifies all outer edges of the quad.
-    auto &edge0 = mesh.createUniqueEdge(*reordered[0], *reordered[1]);
-    auto &edge1 = mesh.createUniqueEdge(*reordered[1], *reordered[2]);
-    auto &edge2 = mesh.createUniqueEdge(*reordered[2], *reordered[3]);
-    auto &edge3 = mesh.createUniqueEdge(*reordered[3], *reordered[0]);
+    auto &edge0 = mesh.createEdge(*reordered[0], *reordered[1]);
+    auto &edge1 = mesh.createEdge(*reordered[1], *reordered[2]);
+    auto &edge2 = mesh.createEdge(*reordered[2], *reordered[3]);
+    auto &edge3 = mesh.createEdge(*reordered[3], *reordered[0]);
 
     // Use the shortest diagonal to split the quad into 2 triangles.
     // Vertices are now in V0-V1-V2-V3-V0 order. The new edge, e[4] is either 0-2 or 1-3
@@ -1008,11 +1008,11 @@ void SolverInterfaceImpl::setMeshQuadWithEdges(
 
     // The new edge, e[4], is the shortest diagonal of the quad
     if (distance1 <= distance2) {
-      auto &diag = mesh.createUniqueEdge(*reordered[0], *reordered[2]);
+      auto &diag = mesh.createEdge(*reordered[0], *reordered[2]);
       mesh.createTriangle(edge0, edge1, diag);
       mesh.createTriangle(edge2, edge3, diag);
     } else {
-      auto &diag = mesh.createUniqueEdge(*reordered[1], *reordered[3]);
+      auto &diag = mesh.createEdge(*reordered[1], *reordered[3]);
       mesh.createTriangle(edge3, edge0, diag);
       mesh.createTriangle(edge1, edge2, diag);
     }
