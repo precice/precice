@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <array>
 #include <iostream>
+#include <tuple>
 
 #include "math/differences.hpp"
 #include "mesh/Edge.hpp"
@@ -121,6 +122,13 @@ public:
 
   /// Not equal, implemented in terms of equal.
   bool operator!=(const Triangle &other) const;
+
+  /// Weak ordering based on vertex ids
+  bool operator<(const Triangle &other) const
+  {
+    return std::make_tuple(_vertices[0]->getID(), _vertices[1]->getID(), _vertices[2]->getID()) <
+           std::make_tuple(other._vertices[0]->getID(), other._vertices[1]->getID(), other._vertices[2]->getID());
+  }
 
 private:
   /// Vertices defining the triangle, sorted by Vertex::getID()

@@ -57,6 +57,13 @@ public:
   /// Not equal, implemented in terms of equal.
   bool operator!=(const Edge &other) const;
 
+  /// Weak ordering based on vertex ids
+  bool operator<(const Edge &other) const
+  {
+    return std::make_tuple(_vertices[0]->getID(), _vertices[1]->getID()) <
+           std::make_tuple(other._vertices[0]->getID(), other._vertices[1]->getID());
+  }
+
 private:
   /// Pointers to Vertex objects defining the edge, ordered by Vertex::getID().
   std::array<Vertex *, 2> _vertices;

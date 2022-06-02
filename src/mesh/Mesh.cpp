@@ -374,6 +374,33 @@ void Mesh::expandBoundingBox(const BoundingBox &boundingBox)
   _boundingBox.expandBy(boundingBox);
 }
 
+void Mesh::removeDuplicates()
+{
+  // Remove duplicate edges
+  auto edgeCnt = _edges.size();
+  std::sort(_edges.begin(), _edges.end());
+  auto lastEdge = std::unique(_edges.begin(), _edges.end());
+  _edges        = EdgeContainer{_edges.begin(), lastEdge};
+  PRECICE_DEBUG("Removed {} duplicate edges ({} to {})",
+                edgeCnt - _edges.size(), edgeCnt, _edges.size());
+
+  // Remove duplicate triangles
+  auto triangleCnt = _triangles.size();
+  std::sort(_triangles.begin(), _triangles.end());
+  auto lastTriangle = std::unique(_triangles.begin(), _triangles.end());
+  _triangles        = TriangleContainer{_triangles.begin(), lastTriangle};
+  PRECICE_DEBUG("Removed {} duplicate triangles ({} to {})",
+                triangleCnt - _triangles.size(), triangleCnt, _triangles.size());
+
+  // Remove duplicate tetrahedra
+  auto tetrahedraCnt = _tetrahedra.size();
+  std::sort(_tetrahedra.begin(), _tetrahedra.end());
+  auto lastTetrahedron = std::unique(_tetrahedra.begin(), _tetrahedra.end());
+  _tetrahedra          = TetraContainer{_tetrahedra.begin(), lastTetrahedron};
+  PRECICE_DEBUG("Removed {} duplicate tetrahedra ({} to {})",
+                tetrahedraCnt - _tetrahedra.size(), tetrahedraCnt, _tetrahedra.size());
+}
+
 bool Mesh::operator==(const Mesh &other) const
 {
   bool equal = true;

@@ -274,6 +274,15 @@ double SolverInterfaceImpl::initialize()
   Event                    e("initialize", precice::syncMode);
   utils::ScopedEventPrefix sep("initialize/");
 
+  PRECICE_DEBUG("Compressing provided meshes");
+  Event e1("mesh compression", precice::syncMode);
+  for (MeshContext *meshContext : _accessor->usedMeshContexts()) {
+    if (meshContext->provideMesh) {
+      meshContext->mesh->removeDuplicates();
+    }
+  }
+  e1.stop();
+
   // Setup communication
 
   PRECICE_INFO("Setting up primary communication to coupling partner/s");
@@ -329,7 +338,6 @@ double SolverInterfaceImpl::initialize()
   for (auto &context : _accessor->readDataContexts()) {
     context.initializeWaveform();
   }
-
   _meshLock.lockAll();
 
   if (_couplingScheme->sendsInitializedData()) {

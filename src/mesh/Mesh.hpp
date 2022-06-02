@@ -293,6 +293,8 @@ public:
     return _index;
   }
 
+  void removeDuplicates();
+
 private:
   mutable logging::Logger _log{"mesh::Mesh"};
 
