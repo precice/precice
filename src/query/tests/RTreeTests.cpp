@@ -268,8 +268,8 @@ BOOST_AUTO_TEST_CASE(Query3DFullEdge)
   auto            results = indexTree.getClosestEdges(location, 2);
 
   BOOST_TEST(results.size() == 2);
-  BOOST_TEST(results.at(0).index == eld.getID());
-  BOOST_TEST(results.at(1).index == elr.getID());
+  BOOST_TEST(mesh->edges().at(results.at(0).index) == eld);
+  BOOST_TEST(mesh->edges().at(results.at(1).index) == elr);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Edge
@@ -310,10 +310,10 @@ BOOST_AUTO_TEST_CASE(Query3DFullTriangle)
 
   auto results = indexTree.getClosestTriangles(location, 3);
   BOOST_TEST(results.size() == 3);
-  BOOST_TEST(results.at(0).index == tlb.getID());
-  BOOST_TEST(results.at(1).index == tlt.getID());
-  BOOST_TEST(results.at(2).index == trt.getID());
-  BOOST_TEST(results.at(2).index != trb.getID());
+  BOOST_TEST(mesh->triangles().at(results.at(0).index) == tlb);
+  BOOST_TEST(mesh->triangles().at(results.at(1).index) == tlt);
+  BOOST_TEST(mesh->triangles().at(results.at(2).index) == trt);
+  BOOST_TEST(mesh->triangles().at(results.at(2).index) != trb);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Triangle

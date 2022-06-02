@@ -75,6 +75,9 @@ public:
   /// Returns modifiable container holding all edges.
   EdgeContainer &edges();
 
+  /// Returns modifiable container holding all edges.
+  Edge& edge(EdgeID id);
+
   /// Returns const container holding all edges.
   const EdgeContainer &edges() const;
 
@@ -122,6 +125,16 @@ public:
    * @param[in] vertexTwo Reference to second Vertex defining the Edge.
    */
   Edge &createEdge(
+      Vertex &vertexOne,
+      Vertex &vertexTwo);
+
+  /**
+   * @brief Creates and initializes an Edge object and returns an id.
+   *
+   * @param[in] vertexOne Reference to first Vertex defining the Edge.
+   * @param[in] vertexTwo Reference to second Vertex defining the Edge.
+   */
+  std::pair<Edge &, EdgeID> createEdgeWithID(
       Vertex &vertexOne,
       Vertex &vertexTwo);
 
@@ -331,6 +344,8 @@ private:
   BoundingBox _boundingBox;
 
   query::Index _index;
+
+  std::map<EdgeID, Edge *> _edgeRegister;
 };
 
 std::ostream &operator<<(std::ostream &os, const Mesh &q);
