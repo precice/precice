@@ -1009,6 +1009,34 @@ void SolverInterfaceImpl::setMeshQuadWithEdges(
   }
 }
 
+void SolverInterfaceImpl::setMeshTetrahedron(
+    MeshID meshID,
+    int    firstVertexID,
+    int    secondVertexID,
+    int    thirdVertexID,
+    int    fourthVertexID)
+{
+  PRECICE_TRACE(meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
+  PRECICE_REQUIRE_MESH_MODIFY(meshID);
+  PRECICE_CHECK(_dimensions == 3, "setMeshTetrahedron is only possible for 3D cases."
+                                  " Please set the dimension to 3 in the preCICE configuration file.");
+  MeshContext &context = _accessor->usedMeshContext(meshID);
+  if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
+    mesh::PtrMesh &mesh = context.mesh;
+    using impl::errorInvalidVertexID;
+    PRECICE_CHECK(mesh->isValidVertexID(firstVertexID), errorInvalidVertexID(firstVertexID));
+    PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), errorInvalidVertexID(secondVertexID));
+    PRECICE_CHECK(mesh->isValidVertexID(thirdVertexID), errorInvalidVertexID(thirdVertexID));
+    PRECICE_CHECK(mesh->isValidVertexID(fourthVertexID), errorInvalidVertexID(fourthVertexID));
+    mesh::Vertex &v0 = mesh->vertices()[firstVertexID];
+    mesh::Vertex &v1 = mesh->vertices()[thirdVertexID];
+    mesh::Vertex &v2 = mesh->vertices()[firstVertexID];
+    mesh::Vertex &v3 = mesh->vertices()[fourthVertexID];
+    mesh->createTetrahedron(v0, v1, v2, v3).getID();
+  }
+  return -1;
+}
+
 void SolverInterfaceImpl::mapWriteDataFrom(
     int fromMeshID)
 {

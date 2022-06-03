@@ -590,6 +590,24 @@ public:
       int thirdVertexID,
       int fourthVertexID);
 
+  /**
+   * @brief Set tetrahedron in 3D mesh from vertex ID
+   * 
+   * @param[in] meshID ID of the mesh to add the Tetrahedron to
+   * @param[in] firstVertexID ID of the first vertex of the Tetrahedron
+   * @param[in] secondVertexID ID of the second vertex of the Tetrahedron
+   * @param[in] thirdVertexID ID of the third vertex of the Tetrahedron
+   * @param[in] fourthVertexID ID of the fourth vertex of the Tetrahedron
+   *
+   * @pre vertices with firstVertexID, secondVertexID, thirdVertexID, and fourthVertexID were added to the mesh with the ID meshID
+   */
+  void setMeshTetrahedron(
+      int meshID,
+      int firstVertexID,
+      int secondVertexID,
+      int thirdVertexID,
+      int fourthVertexID);
+
   ///@}
 
   ///@name Data Access

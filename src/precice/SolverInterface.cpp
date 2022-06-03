@@ -228,6 +228,17 @@ void SolverInterface::setMeshQuadWithEdges(
                               fourthVertexID);
 }
 
+void SolverInterface::setMeshTetrahedron(
+    int meshID,
+    int firstVertexID,
+    int secondVertexID,
+    int thirdVertexID,
+    int fourthVertexID)
+{
+  _impl->setMeshTetrahedron(meshID, firstVertexID, secondVertexID, thirdVertexID,
+                            fourthVertexID);
+}
+
 void SolverInterface::mapReadDataTo(
     int toMeshID)
 {

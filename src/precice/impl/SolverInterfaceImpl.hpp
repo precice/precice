@@ -227,6 +227,14 @@ public:
       int    thirdVertexID,
       int    fourthVertexID);
 
+  /// @copydoc SolverInterface::setMeshTetrahedron
+  void setMeshTetrahedron(
+      MeshID meshID,
+      int    firstVertexID,
+      int    secondVertexID,
+      int    thirdVertexID,
+      int    fourthVertexID);
+
   ///@}
 
   ///@name Data Access
