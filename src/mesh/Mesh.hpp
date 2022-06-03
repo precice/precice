@@ -14,6 +14,7 @@
 #include "mesh/Edge.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Triangle.hpp"
+#include "Tetrahedron.hpp"
 #include "mesh/Vertex.hpp"
 #include "precice/types.hpp"
 #include "query/Index.hpp"
@@ -40,6 +41,7 @@ public:
   using VertexContainer   = std::deque<Vertex>;
   using EdgeContainer     = std::deque<Edge>;
   using TriangleContainer = std::deque<Triangle>;
+  using TetraContainer = std::deque<Tetrahedron>;
   using DataContainer     = std::vector<PtrData>;
   using BoundingBoxMap    = std::map<int, BoundingBox>;
 
@@ -82,6 +84,12 @@ public:
   /// Returns const container holding all triangles.
   const TriangleContainer &triangles() const;
 
+  /// Returns modifiable container holding all tetrahedra.
+  TetraContainer &tetrahedra();
+
+  /// Returns const container holding all tetrahedra.
+  const TetraContainer &tetrahedra() const;
+
   int getDimensions() const;
 
   /// Creates and initializes a Vertex object.
@@ -118,6 +126,20 @@ public:
       Edge &edgeOne,
       Edge &edgeTwo,
       Edge &edgeThree);
+
+  /**
+   * @brief Creates and initializes a Tetrahedron object.
+   *
+   * @param[in] vertexOne Reference to first vertex defining the Tetrahedron.
+   * @param[in] vertexTwo Reference to second vertex defining the Tetrahedron.
+   * @param[in] vertexThree Reference to third vertex defining the Tetrahedron.
+   * @param[in] vertexFour Reference to fourth vertex defining the Tetrahedron.
+   */
+  Tetrahedron &createTetrahedron(
+      Vertex &vertexOne,
+      Vertex &vertexTwo,
+      Vertex &vertexThree,
+      Vertex &vertexFour);
 
   /// Create only data for vertex
   PtrData &createData(const std::string &name,
@@ -242,10 +264,11 @@ private:
   /// The ID of this mesh.
   MeshID _id;
 
-  /// Holds vertices, edges, and triangles.
+  /// Holds vertices, edges, triangles and tetrahedra.
   VertexContainer   _vertices;
   EdgeContainer     _edges;
   TriangleContainer _triangles;
+  TetraContainer    _tetrahedra;
 
   /// Data hold by the vertices of the mesh.
   DataContainer _data;

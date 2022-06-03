@@ -59,5 +59,24 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
   exportVTK.doExport(filename, location, mesh);
 }
 
+BOOST_AUTO_TEST_CASE(ExportTetrahedron)
+{
+  PRECICE_TEST(1_rank);
+  int           dim = 3;
+  mesh::Mesh    mesh("MyMesh", dim, testing::nextMeshID());
+  mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector3d::Constant(0.0));
+  mesh::Vertex &v2 = mesh.createVertex(Eigen::Vector3d{1.0, 0.0, 0.0});
+  mesh::Vertex &v3 = mesh.createVertex(Eigen::Vector3d{0.0, 1.0, 0.0});
+  mesh::Vertex &v4 = mesh.createVertex(Eigen::Vector3d{0.0, 0.0, 1.0});
+
+
+  mesh.createTetrahedron(v1, v2, v3, v4);
+
+  io::ExportVTK exportVTK;
+  std::string   filename = "io-VTKExport-ExportTetrahedron";
+  std::string   location = "";
+  exportVTK.doExport(filename, location, mesh);
+}
+
 BOOST_AUTO_TEST_SUITE_END() // ExportVTK
 BOOST_AUTO_TEST_SUITE_END() // IOTests
