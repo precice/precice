@@ -1034,7 +1034,6 @@ void SolverInterfaceImpl::setMeshTetrahedron(
     mesh::Vertex &v3 = mesh->vertices()[fourthVertexID];
     mesh->createTetrahedron(v0, v1, v2, v3).getID();
   }
-  return -1;
 }
 
 void SolverInterfaceImpl::mapWriteDataFrom(
