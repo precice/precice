@@ -11,7 +11,7 @@ using namespace precice;
 using namespace precice::math::barycenter;
 
 BOOST_AUTO_TEST_SUITE(MathTests)
-BOOST_AUTO_TEST_SUITE(Barycenter)
+BOOST_AUTO_TEST_SUITE(BarycenterEdge)
 
 BOOST_AUTO_TEST_CASE(BarycenterEdge2D)
 {
@@ -96,6 +96,10 @@ BOOST_AUTO_TEST_CASE(BarycenterEdge3D)
     BOOST_TEST(equals(ret, coords), fmt::format("Coords are {} but should be {}", ret, coords));
   }
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(BarycenterTriangle)
 
 BOOST_AUTO_TEST_CASE(BarycenterTriangle3D)
 {
@@ -237,6 +241,10 @@ BOOST_AUTO_TEST_CASE(BarycenterTriangle2D)
     BOOST_TEST((ret.array() < -precice::math::NUMERICAL_ZERO_DIFFERENCE).any(), fmt::format("Min 1 coord should be negative {}", ret));
   }
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(BarycenterTetrahedra)
 
 struct TetrahedronFixture {
   Eigen::Vector3d a{0.0, 0.0, 0.0};
