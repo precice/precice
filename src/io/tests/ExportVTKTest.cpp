@@ -69,7 +69,6 @@ BOOST_AUTO_TEST_CASE(ExportTetrahedron)
   mesh::Vertex &v3 = mesh.createVertex(Eigen::Vector3d{0.0, 1.0, 0.0});
   mesh::Vertex &v4 = mesh.createVertex(Eigen::Vector3d{0.0, 0.0, 1.0});
 
-
   mesh.createTetrahedron(v1, v2, v3, v4);
 
   io::ExportVTK exportVTK;

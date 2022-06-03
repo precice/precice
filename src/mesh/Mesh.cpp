@@ -130,12 +130,11 @@ Triangle &Mesh::createTriangle(
   return _triangles.back();
 }
 
-
 Tetrahedron &Mesh::createTetrahedron(
-      Vertex &vertexOne,
-      Vertex &vertexTwo,
-      Vertex &vertexThree,
-      Vertex &vertexFour)
+    Vertex &vertexOne,
+    Vertex &vertexTwo,
+    Vertex &vertexThree,
+    Vertex &vertexFour)
 {
 
   auto nextID = _tetrahedra.size();

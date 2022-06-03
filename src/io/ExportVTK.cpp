@@ -73,9 +73,9 @@ void ExportVTK::exportMesh(
   // Plot triangles
   if (mesh.getDimensions() == 3) {
     size_t sizeTetrahedra = mesh.tetrahedra().size();
-    size_t sizeTriangles = mesh.triangles().size();
-    size_t sizeEdges     = mesh.edges().size();
-    size_t sizeElements  = sizeTriangles + sizeEdges + sizeTetrahedra;
+    size_t sizeTriangles  = mesh.triangles().size();
+    size_t sizeEdges      = mesh.edges().size();
+    size_t sizeElements   = sizeTriangles + sizeEdges + sizeTetrahedra;
 
     outFile << "CELLS " << sizeElements << ' '
             << sizeTetrahedra * 5 + sizeTriangles * 4 + sizeEdges * 3 << "\n\n";
@@ -114,8 +114,6 @@ void ExportVTK::exportMesh(
     }
   }
 
-
-  
   outFile << '\n';
 }
 

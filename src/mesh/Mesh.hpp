@@ -8,13 +8,13 @@
 #include <string>
 #include <vector>
 
+#include "Tetrahedron.hpp"
 #include "logging/Logger.hpp"
 #include "mesh/BoundingBox.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Triangle.hpp"
-#include "Tetrahedron.hpp"
 #include "mesh/Vertex.hpp"
 #include "precice/types.hpp"
 #include "query/Index.hpp"
@@ -41,7 +41,7 @@ public:
   using VertexContainer   = std::deque<Vertex>;
   using EdgeContainer     = std::deque<Edge>;
   using TriangleContainer = std::deque<Triangle>;
-  using TetraContainer = std::deque<Tetrahedron>;
+  using TetraContainer    = std::deque<Tetrahedron>;
   using DataContainer     = std::vector<PtrData>;
   using BoundingBoxMap    = std::map<int, BoundingBox>;
 
