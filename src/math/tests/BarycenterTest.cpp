@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(BarycenterEdge3D)
   }
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END() // BarycenterEdges
 
 BOOST_AUTO_TEST_SUITE(BarycenterTriangle)
 
@@ -242,7 +242,7 @@ BOOST_AUTO_TEST_CASE(BarycenterTriangle2D)
   }
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END() // BarycenterTriangles
 
 BOOST_AUTO_TEST_SUITE(BarycenterTetrahedra)
 
@@ -253,7 +253,6 @@ struct TetrahedronFixture {
   Eigen::Vector3d d{0.0, 0.0, 1.0};
 
   Eigen::Vector3d center{0.25, 0.25, 0.25};
-  Eigen::Vector4d center_coords{0.25, 0.25, 0.25, 0.25};
 };
 
 struct FlippedTetrahedronFixture {
@@ -263,7 +262,6 @@ struct FlippedTetrahedronFixture {
   Eigen::Vector3d d{0.0, 0.0, -1.0};
 
   Eigen::Vector3d center{0.25, 0.25, -0.25};
-  Eigen::Vector4d center_coords{0.25, 0.25, 0.25, 0.25};
 };
 
 struct AlmostDegenerateTetrahedronFixture {
@@ -273,7 +271,6 @@ struct AlmostDegenerateTetrahedronFixture {
   Eigen::Vector3d d{0.0, 0.0, 0.001};
 
   Eigen::Vector3d center{0.25, 0.25, 0.00025};
-  Eigen::Vector4d center_coords{0.25, 0.25, 0.25, 0.25};
 };
 
 struct FunnyTetrahedronFixture {
@@ -287,142 +284,113 @@ struct FunnyTetrahedronFixture {
 
 typedef boost::mpl::vector<TetrahedronFixture, FlippedTetrahedronFixture, AlmostDegenerateTetrahedronFixture, FunnyTetrahedronFixture> TetrahedraFixtures;
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(BarycenterTetrahedronVertices, T, TetrahedraFixtures, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(BarycenterTetrahedronExactOnA, T, TetrahedraFixtures, T)
 {
   PRECICE_TEST(1_rank);
-  using Eigen::Vector3d;
-  using Eigen::Vector4d;
-  using precice::testing::equals;
 
-  // Alias for fixture data
-  const auto &a = T::a;
-  const auto &b = T::b;
-  const auto &c = T::c;
-  const auto &d = T::d;
-
-  // Is A?
-  {
-    Vector4d coords(1.0, 0.0, 0.0, 0.0);
-    auto     ret = calcBarycentricCoordsForTetrahedron(a, b, c, d, a);
-    BOOST_TEST(ret.sum() == 1.0);
-    BOOST_TEST(equals(ret, coords));
-  }
-  // Is B?
-  {
-    Vector4d coords(0.0, 1.0, 0.0, 0.0);
-    auto     ret = calcBarycentricCoordsForTetrahedron(a, b, c, d, b);
-    BOOST_TEST(ret.sum() == 1.0);
-    BOOST_TEST(equals(ret, coords));
-  }
-  // Is C?
-  {
-    Vector4d coords(0.0, 0.0, 1.0, 0.0);
-    auto     ret = calcBarycentricCoordsForTetrahedron(a, b, c, d, c);
-    BOOST_TEST(ret.sum() == 1.0);
-    BOOST_TEST(equals(ret, coords));
-  }
-  // Is D?
-  {
-    Vector4d coords(0.0, 0.0, 0.0, 1.0);
-    auto     ret = calcBarycentricCoordsForTetrahedron(a, b, c, d, d);
-    BOOST_TEST(ret.sum() == 1.0);
-    BOOST_TEST(equals(ret, coords));
-  }
+  Eigen::Vector4d coords(1.0, 0.0, 0.0, 0.0);
+  auto            ret = calcBarycentricCoordsForTetrahedron(T::a, T::b, T::c, T::d, T::a);
+  BOOST_TEST(precice::testing::equals(ret, coords));
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(BarycenterTetrahedronCenter, T, TetrahedraFixtures, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(BarycenterTetrahedronExactOnB, T, TetrahedraFixtures, T)
 {
   PRECICE_TEST(1_rank);
-  using Eigen::Vector3d;
-  using Eigen::Vector4d;
-  using precice::testing::equals;
 
-  // Alias for fixture data
-  const auto &a      = T::a;
-  const auto &b      = T::b;
-  const auto &c      = T::c;
-  const auto &d      = T::d;
-  const auto &center = T::center;
+  Eigen::Vector4d coords(0.0, 1.0, 0.0, 0.0);
+  auto            ret = calcBarycentricCoordsForTetrahedron(T::a, T::b, T::c, T::d, T::b);
+  BOOST_TEST(precice::testing::equals(ret, coords));
+}
 
-  Vector4d center_coords{0.25, 0.25, 0.25, 0.25};
-  auto     ret = calcBarycentricCoordsForTetrahedron(a, b, c, d, center);
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(BarycenterTetrahedronExactOnC, T, TetrahedraFixtures, T)
+{
+  PRECICE_TEST(1_rank);
+
+  Eigen::Vector4d coords(0.0, 0.0, 1.0, 0.0);
+  auto            ret = calcBarycentricCoordsForTetrahedron(T::a, T::b, T::c, T::d, T::c);
+  BOOST_TEST(precice::testing::equals(ret, coords));
+}
+
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(BarycenterTetrahedronExactOnD, T, TetrahedraFixtures, T)
+{
+  PRECICE_TEST(1_rank);
+
+  Eigen::Vector4d coords(0.0, 0.0, 0.0, 1.0);
+  auto            ret = calcBarycentricCoordsForTetrahedron(T::a, T::b, T::c, T::d, T::d);
+  BOOST_TEST(precice::testing::equals(ret, coords));
+}
+
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(BarycenterTetrahedronExactOnCenter, T, TetrahedraFixtures, T)
+{
+  PRECICE_TEST(1_rank);
+
+  Eigen::Vector4d center_coords{0.25, 0.25, 0.25, 0.25};
+  auto            ret = calcBarycentricCoordsForTetrahedron(T::a, T::b, T::c, T::d, T::center);
+  BOOST_TEST(precice::testing::equals(ret, center_coords));
+}
+
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(BarycenterTetrahedronInsidePoint, T, TetrahedraFixtures, T)
+{
+  PRECICE_TEST(1_rank);
+
+  Eigen::Vector4d coords(0.2, 0.3, 0.4, 0.1);
+  auto            ret = calcBarycentricCoordsForTetrahedron(T::a, T::b, T::c, T::d, 0.2 * T::a + 0.3 * T::b + 0.4 * T::c + 0.1 * T::d);
   BOOST_TEST(ret.sum() == 1.0);
-  BOOST_TEST(equals(ret, center_coords));
+  BOOST_TEST(precice::testing::equals(ret, coords));
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(BarycenterTetrahedronInterpolation, T, TetrahedraFixtures, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(BarycenterTetrahedronEdgeCenter, T, TetrahedraFixtures, T)
 {
   PRECICE_TEST(1_rank);
-  using Eigen::Vector3d;
   using Eigen::Vector4d;
-  using precice::testing::equals;
 
-  // Alias for fixture data
-  const auto &a = T::a;
-  const auto &b = T::b;
-  const auto &c = T::c;
-  const auto &d = T::d;
-
-  // Arbitrary combination
-  {
-    Vector4d coords(0.2, 0.3, 0.4, 0.1);
-    auto     ret = calcBarycentricCoordsForTetrahedron(a, b, c, d, 0.2 * a + 0.3 * b + 0.4 * c + 0.1 * d);
-    BOOST_TEST(ret.sum() == 1.0);
-    BOOST_TEST(equals(ret, coords));
-  }
-
-  // Middle of edge AB
-  {
-    Vector4d coords(0.5, 0.5, 0.0, 0.0);
-    auto     ret = calcBarycentricCoordsForTetrahedron(a, b, c, d, 0.5 * a + 0.5 * b);
-    BOOST_TEST(ret.sum() == 1.0);
-    BOOST_TEST(equals(ret, coords));
-  }
-  // Middle of triangle ABD
-  {
-    Vector4d coords(1. / 3, 1. / 3, 0.0, 1. / 3);
-    auto     ret = calcBarycentricCoordsForTetrahedron(a, b, c, d, (a + b + d) / 3);
-    BOOST_TEST(ret.sum() == 1.0);
-    BOOST_TEST(equals(ret, coords));
-  }
+  Eigen::Vector4d coords(0.5, 0.5, 0.0, 0.0);
+  auto            ret = calcBarycentricCoordsForTetrahedron(T::a, T::b, T::c, T::d, 0.5 * T::a + 0.5 * T::b);
+  BOOST_TEST(ret.sum() == 1.0);
+  BOOST_TEST(precice::testing::equals(ret, coords));
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(BarycenterTetrahedronExtrapolation, T, TetrahedraFixtures, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(BarycenterTetrahedronTriangleCenter, T, TetrahedraFixtures, T)
 {
   PRECICE_TEST(1_rank);
-  using Eigen::Vector3d;
   using Eigen::Vector4d;
-  using precice::testing::equals;
 
-  // Alias for fixture data
-  const auto &a = T::a;
-  const auto &b = T::b;
-  const auto &c = T::c;
-  const auto &d = T::d;
-
-  // A + 3*(B-A)
-  {
-    Vector4d coords(-2.0, 3.0, 0, 0);
-    auto     ret = calcBarycentricCoordsForTetrahedron(a, b, c, d, a + 3 * (b - a));
-    BOOST_TEST(ret.sum() == 1.0);
-    BOOST_TEST(equals(ret, coords));
-  }
-  // Mirror of D with respect to A
-  {
-    Vector4d coords(2.0, 0.0, 0.0, -1.0);
-    auto     ret = calcBarycentricCoordsForTetrahedron(a, b, c, d, 2 * a - d);
-    BOOST_TEST(ret.sum() == 1.0);
-    BOOST_TEST(equals(ret, coords));
-  }
-  // Mirrored D with ABC as symmetry plane
-  {
-    Vector4d coords(1.0, 1.0, 1.0, -2.0);
-    auto     ret = calcBarycentricCoordsForTetrahedron(a, b, c, d, (a + b + c) - 2 * d);
-    BOOST_TEST(ret.sum() == 1.0);
-    BOOST_TEST(equals(ret, coords));
-  }
+  Eigen::Vector4d coords(1. / 3, 1. / 3, 0.0, 1. / 3);
+  auto            ret = calcBarycentricCoordsForTetrahedron(T::a, T::b, T::c, T::d, (T::a + T::b + T::d) / 3);
+  BOOST_TEST(ret.sum() == 1.0);
+  BOOST_TEST(precice::testing::equals(ret, coords));
 }
 
-BOOST_AUTO_TEST_SUITE_END() // Barycenter
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(BarycenterTetrahedronExtrapolationOnEdge, T, TetrahedraFixtures, T)
+{
+  PRECICE_TEST(1_rank);
+
+  Eigen::Vector4d coords(-2.0, 3.0, 0, 0);
+  auto            ret = calcBarycentricCoordsForTetrahedron(T::a, T::b, T::c, T::d, T::a + 3 * (T::b - T::a));
+  BOOST_TEST(ret.sum() == 1.0);
+  BOOST_TEST(precice::testing::equals(ret, coords));
+}
+
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(BarycenterTetrahedronExtrapolationOnMirrored, T, TetrahedraFixtures, T)
+{
+  PRECICE_TEST(1_rank);
+
+  Eigen::Vector4d coords(2.0, 0.0, 0.0, -1.0);
+  auto            ret = calcBarycentricCoordsForTetrahedron(T::a, T::b, T::c, T::d, 2 * T::a - T::d);
+  BOOST_TEST(ret.sum() == 1.0);
+  BOOST_TEST(precice::testing::equals(ret, coords));
+}
+
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(BarycenterTetrahedronExtrapolationOnMirroredFromTriangle, T, TetrahedraFixtures, T)
+{
+  PRECICE_TEST(1_rank);
+
+  Eigen::Vector4d coords(1.0, 1.0, 1.0, -2.0);
+  auto            ret = calcBarycentricCoordsForTetrahedron(T::a, T::b, T::c, T::d, (T::a + T::b + T::c) - 2 * T::d);
+  BOOST_TEST(ret.sum() == 1.0);
+  BOOST_TEST(precice::testing::equals(ret, coords));
+}
+
+BOOST_AUTO_TEST_SUITE_END() // BarycenterTetrahedra
 
 BOOST_AUTO_TEST_SUITE_END() // Math
