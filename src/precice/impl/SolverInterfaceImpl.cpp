@@ -1032,7 +1032,7 @@ void SolverInterfaceImpl::setMeshTetrahedron(
     mesh::Vertex &v1 = mesh->vertices()[thirdVertexID];
     mesh::Vertex &v2 = mesh->vertices()[firstVertexID];
     mesh::Vertex &v3 = mesh->vertices()[fourthVertexID];
-    mesh->createTetrahedron(v0, v1, v2, v3).getID();
+    mesh->createTetrahedron(v0, v1, v2, v3);
   }
 }
 
