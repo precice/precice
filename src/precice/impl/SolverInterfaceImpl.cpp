@@ -1028,11 +1028,27 @@ void SolverInterfaceImpl::setMeshTetrahedron(
     PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), errorInvalidVertexID(secondVertexID));
     PRECICE_CHECK(mesh->isValidVertexID(thirdVertexID), errorInvalidVertexID(thirdVertexID));
     PRECICE_CHECK(mesh->isValidVertexID(fourthVertexID), errorInvalidVertexID(fourthVertexID));
-    mesh::Vertex &v0 = mesh->vertices()[firstVertexID];
-    mesh::Vertex &v1 = mesh->vertices()[thirdVertexID];
-    mesh::Vertex &v2 = mesh->vertices()[firstVertexID];
-    mesh::Vertex &v3 = mesh->vertices()[fourthVertexID];
-    mesh->createTetrahedron(v0, v1, v2, v3);
+    mesh::Vertex &A = mesh->vertices()[firstVertexID];
+    mesh::Vertex &B = mesh->vertices()[thirdVertexID];
+    mesh::Vertex &C = mesh->vertices()[firstVertexID];
+    mesh::Vertex &D = mesh->vertices()[fourthVertexID];
+
+    // Also add underlying primitives (4 triangles, 6 edges)
+    // Tetra ABCD is made of triangles ABC, ABD, ACD, BCD
+    // Duplicates should get handled in the future
+    mesh::Edge& AB = mesh->createEdge(A, B);
+    mesh::Edge& BC = mesh->createEdge(B, C);
+    mesh::Edge& CD = mesh->createEdge(C, D);
+    mesh::Edge& DA = mesh->createEdge(D, A);
+    mesh::Edge& AC = mesh->createEdge(A, C);
+    mesh::Edge& BD = mesh->createEdge(B, D);
+
+    mesh->createTriangle(AB, BC, AC);
+    mesh->createTriangle(AB, BD, DA);
+    mesh->createTriangle(AC, CD, DA);
+    mesh->createTriangle(BC, CD, BD);
+
+    mesh->createTetrahedron(A, B, C, D);
   }
 }
 
