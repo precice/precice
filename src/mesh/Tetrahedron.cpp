@@ -61,6 +61,16 @@ double Tetrahedron::getEnclosingRadius() const
                    (center - vertex(3).getCoords()).norm()});
 }
 
+BoundingBox Tetrahedron::getBoundingBox() const
+{
+  BoundingBox box(getDimensions());
+  for (int i = 0; i < 4; ++i) {
+    box.expandBy(vertex(i));
+  }
+
+  return box;
+}
+
 bool Tetrahedron::operator==(const Tetrahedron &other) const
 {
   return std::is_permutation(_vertices.begin(), _vertices.end(), other._vertices.begin(),
