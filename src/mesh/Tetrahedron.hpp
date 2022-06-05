@@ -2,8 +2,8 @@
 
 #include <array>
 #include <iostream>
-#include "utils/assertion.hpp"
 #include "precice/types.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace mesh {
