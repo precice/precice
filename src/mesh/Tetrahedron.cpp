@@ -15,7 +15,7 @@ Tetrahedron::Tetrahedron(
     Vertex &      vertexTwo,
     Vertex &      vertexThree,
     Vertex &      vertexFour,
-    TetrahedronID id)
+    int id)
     : _vertices({&vertexOne, &vertexTwo, &vertexThree, &vertexFour}),
       _id(id)
 {
