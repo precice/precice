@@ -3,6 +3,7 @@
 #include <array>
 #include <iostream>
 #include "utils/assertion.hpp"
+#include "precice/types.hpp"
 
 namespace precice {
 namespace mesh {
