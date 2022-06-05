@@ -1,15 +1,8 @@
 #pragma once
 
-#include <Eigen/Core>
-#include <algorithm>
+
 #include <array>
 #include <iostream>
-
-#include "math/differences.hpp"
-#include "mesh/Edge.hpp"
-#include "mesh/RangeAccessor.hpp"
-#include "mesh/Triangle.hpp"
-#include "precice/types.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
