@@ -664,6 +664,10 @@ bool SolverInterfaceImpl::isMeshConnectivityRequired(int meshID) const
 bool SolverInterfaceImpl::isGradientDataRequired(int dataID) const
 {
   PRECICE_VALIDATE_DATA_ID(dataID);
+  // Read data never requires gradients
+  if (!_accessor->isDataWrite(dataID))
+    return false;
+
   WriteDataContext &context = _accessor->writeDataContext(dataID);
   return context.providedData()->hasGradient();
 }

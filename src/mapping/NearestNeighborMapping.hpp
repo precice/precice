@@ -19,8 +19,12 @@ public:
    */
   NearestNeighborMapping(Constraint constraint, int dimensions);
 
-  /// Maps input data to output data from input mesh to output mesh.
-  virtual void map(int inputDataID, int outputDataID) override;
+protected:
+  /// @copydoc Mapping::mapConservative
+  void mapConservative(DataID inputDataID, DataID outputDataID) override;
+
+  /// @copydoc Mapping::mapConsistent
+  void mapConsistent(DataID inputDataID, DataID outputDataID) override;
 };
 
 } // namespace mapping

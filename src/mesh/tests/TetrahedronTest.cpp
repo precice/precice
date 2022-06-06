@@ -1,9 +1,8 @@
 #include <Eigen/Core>
-#include <iterator>
 #include <sstream>
 #include <string>
 #include "logging/Logger.hpp"
-#include "mesh/RangeAccessor.hpp"
+
 #include "mesh/Tetrahedron.hpp"
 #include "mesh/Vertex.hpp"
 #include "testing/TestContext.hpp"

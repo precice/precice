@@ -1,11 +1,10 @@
 #ifndef PRECICE_NO_MPI
 
 #include "helpers.hpp"
-#include "testing/Testing.hpp"
-
-#include "math.h"
+#include "math/geometry.hpp"
 #include "precice/SolverInterface.hpp"
-#include "precice/impl/SolverInterfaceImpl.cpp"
+#include "precice/impl/SolverInterfaceImpl.hpp"
+#include "testing/Testing.hpp"
 
 void testQuadMappingScaledConsistent(const std::string configFile, const TestContext &context)
 {
