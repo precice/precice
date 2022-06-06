@@ -2,7 +2,6 @@
 #include <sstream>
 #include <string>
 #include "logging/Logger.hpp"
-
 #include "mesh/Tetrahedron.hpp"
 #include "mesh/Vertex.hpp"
 #include "testing/TestContext.hpp"

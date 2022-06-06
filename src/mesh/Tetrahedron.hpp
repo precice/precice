@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include <array>
 #include <iostream>
 #include "precice/types.hpp"
@@ -20,7 +19,6 @@ namespace mesh {
 /// Tetrahedron of a mesh, defined by 4 vertices
 class Tetrahedron {
 public:
-
   /// Constructor, the order of vertices doesn't matter.
   Tetrahedron(
       Vertex &      vertexOne,

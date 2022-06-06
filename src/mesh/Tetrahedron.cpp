@@ -1,6 +1,5 @@
 #include "Tetrahedron.hpp"
 #include <Eigen/Core>
-
 #include <algorithm>
 #include <boost/concept/assert.hpp>
 #include "math/differences.hpp"
