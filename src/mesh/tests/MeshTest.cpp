@@ -655,7 +655,7 @@ struct UnitSquareFixture {
   Eigen::Vector2d x3{0.0, 1.0};
 };
 
-BOOST_FIXTURE_TEST_CASE(Integrate2DScalarDataVolume, UnitSquareFixture) 
+BOOST_FIXTURE_TEST_CASE(Integrate2DScalarDataVolume, UnitSquareFixture)
 {
   PRECICE_TEST(1_rank);
   PtrMesh mesh = std::make_shared<Mesh>("Mesh1", 2, testing::nextMeshID());
@@ -672,7 +672,6 @@ BOOST_FIXTURE_TEST_CASE(Integrate2DScalarDataVolume, UnitSquareFixture)
   auto &e3 = mesh->createEdge(v3, v4);
   auto &e4 = mesh->createEdge(v1, v4);
   auto &e5 = mesh->createEdge(v1, v3);
-
 
   // 2 triangles as halves of a unit square
   mesh->createTriangle(e1, e2, e5);
@@ -694,7 +693,7 @@ BOOST_FIXTURE_TEST_CASE(Integrate2DScalarDataVolume, UnitSquareFixture)
   BOOST_TEST(result(0) == expected);
 }
 
-BOOST_FIXTURE_TEST_CASE(Integrate2DVectorDataVolume, UnitSquareFixture) 
+BOOST_FIXTURE_TEST_CASE(Integrate2DVectorDataVolume, UnitSquareFixture)
 {
   PRECICE_TEST(1_rank);
   PtrMesh mesh = std::make_shared<Mesh>("Mesh1", 2, testing::nextMeshID());
@@ -731,23 +730,21 @@ BOOST_FIXTURE_TEST_CASE(Integrate2DVectorDataVolume, UnitSquareFixture)
   mesh->data(0)->values()(5) = 8.0;
   mesh->data(0)->values()(7) = 6.0;
 
-  auto   result   = mesh::integrateVolume(mesh, mesh->data(0));
+  auto            result = mesh::integrateVolume(mesh, mesh->data(0));
   Eigen::Vector2d expected(4.0, 5.0);
   BOOST_REQUIRE(result.size() == 2);
   BOOST_TEST(result(0) == expected(0));
   BOOST_TEST(result(1) == expected(1));
 }
 
-
 struct OneTetraFixture {
   Eigen::Vector3d x1{0.0, 0.0, 0.0};
   Eigen::Vector3d x2{1.0, 0.0, 0.0};
   Eigen::Vector3d x3{0.0, 1.0, 0.0};
   Eigen::Vector3d x4{0.0, 0.0, 1.0};
-  
 };
 
-BOOST_FIXTURE_TEST_CASE(Integrate3DScalarDataVolume, OneTetraFixture) 
+BOOST_FIXTURE_TEST_CASE(Integrate3DScalarDataVolume, OneTetraFixture)
 {
   PRECICE_TEST(1_rank);
   PtrMesh mesh = std::make_shared<Mesh>("Mesh1", 3, testing::nextMeshID());
@@ -760,11 +757,9 @@ BOOST_FIXTURE_TEST_CASE(Integrate3DScalarDataVolume, OneTetraFixture)
 
   mesh->allocateDataValues();
 
-  mesh->createTetrahedron(v1, v2, v3, v4); 
+  mesh->createTetrahedron(v1, v2, v3, v4);
 
-
-  
-  BOOST_REQUIRE(mesh->tetrahedra()[0].getVolume() == 1./6);
+  BOOST_REQUIRE(mesh->tetrahedra()[0].getVolume() == 1. / 6);
   BOOST_REQUIRE(mesh->tetrahedra().size() == 1);
 
   // Integrand is 1 + 2x + 4y + 6z integrated over one tetra
@@ -779,7 +774,7 @@ BOOST_FIXTURE_TEST_CASE(Integrate3DScalarDataVolume, OneTetraFixture)
   BOOST_TEST(result(0) == expected);
 }
 
-BOOST_FIXTURE_TEST_CASE(Integrate3DVectorDataVolume, OneTetraFixture) 
+BOOST_FIXTURE_TEST_CASE(Integrate3DVectorDataVolume, OneTetraFixture)
 {
   PRECICE_TEST(1_rank);
   PtrMesh mesh = std::make_shared<Mesh>("Mesh1", 3, testing::nextMeshID());
@@ -792,37 +787,34 @@ BOOST_FIXTURE_TEST_CASE(Integrate3DVectorDataVolume, OneTetraFixture)
 
   mesh->allocateDataValues();
 
-  mesh->createTetrahedron(v1, v2, v3, v4); 
+  mesh->createTetrahedron(v1, v2, v3, v4);
 
-
-  
-  BOOST_REQUIRE(mesh->tetrahedra()[0].getVolume() == 1./6);
+  BOOST_REQUIRE(mesh->tetrahedra()[0].getVolume() == 1. / 6);
   BOOST_REQUIRE(mesh->tetrahedra().size() == 1);
 
   // Integrand is (1 + 2x + 4y + 6z, 1, 1-x-y-z) integrated over one tetra
-  mesh->data(0)->values()(0*3) = 1.0;
-  mesh->data(0)->values()(1*3) = 3.0;
-  mesh->data(0)->values()(2*3) = 5.0;
-  mesh->data(0)->values()(3*3) = 7.0;
+  mesh->data(0)->values()(0 * 3) = 1.0;
+  mesh->data(0)->values()(1 * 3) = 3.0;
+  mesh->data(0)->values()(2 * 3) = 5.0;
+  mesh->data(0)->values()(3 * 3) = 7.0;
 
-  mesh->data(0)->values()(0*3+1) = 1.0;
-  mesh->data(0)->values()(1*3+1) = 1.0;
-  mesh->data(0)->values()(2*3+1) = 1.0;
-  mesh->data(0)->values()(3*3+1) = 1.0;
+  mesh->data(0)->values()(0 * 3 + 1) = 1.0;
+  mesh->data(0)->values()(1 * 3 + 1) = 1.0;
+  mesh->data(0)->values()(2 * 3 + 1) = 1.0;
+  mesh->data(0)->values()(3 * 3 + 1) = 1.0;
 
-  mesh->data(0)->values()(0*3+2) = 1.0;
-  mesh->data(0)->values()(1*3+2) = 0.0;
-  mesh->data(0)->values()(2*3+2) = 0.0;
-  mesh->data(0)->values()(3*3+2) = 0.0;
+  mesh->data(0)->values()(0 * 3 + 2) = 1.0;
+  mesh->data(0)->values()(1 * 3 + 2) = 0.0;
+  mesh->data(0)->values()(2 * 3 + 2) = 0.0;
+  mesh->data(0)->values()(3 * 3 + 2) = 0.0;
 
-  auto   result   = mesh::integrateVolume(mesh, mesh->data(0));
+  auto            result = mesh::integrateVolume(mesh, mesh->data(0));
   Eigen::Vector3d expected(4.0 / 6, 1.0 / 6, 1.0 / 24);
   BOOST_REQUIRE(result.size() == 3);
   BOOST_TEST(result(0) == expected(0));
   BOOST_TEST(result(1) == expected(1));
   BOOST_TEST(result(2) == expected(2));
 }
-
 
 BOOST_AUTO_TEST_SUITE_END() // VolumeIntegrals
 
