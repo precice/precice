@@ -239,6 +239,11 @@ struct PrimitiveTraits<mesh::Triangle> {
   using MeshContainer = mesh::Mesh::TriangleContainer;
 };
 
+template <>
+struct PrimitiveTraits<mesh::Tetrahedron> {
+  using MeshContainer = mesh::Mesh::TetraContainer;
+};
+
 /// Makes a utils::PtrVector indexable and thus be usable in boost::geometry::rtree
 template <typename Container>
 class PtrVectorIndexable {

@@ -19,21 +19,24 @@ precice::logging::Logger Index::_log{"query::Index"};
 namespace bg  = boost::geometry;
 namespace bgi = boost::geometry::index;
 
-using VertexTraits   = impl::RTreeTraits<mesh::Vertex>;
-using EdgeTraits     = impl::RTreeTraits<mesh::Edge>;
-using TriangleTraits = impl::RTreeTraits<mesh::Triangle>;
+using VertexTraits      = impl::RTreeTraits<mesh::Vertex>;
+using EdgeTraits        = impl::RTreeTraits<mesh::Edge>;
+using TriangleTraits    = impl::RTreeTraits<mesh::Triangle>;
+using TetrahedronTraits = impl::RTreeTraits<mesh::Tetrahedron>;
 
 struct MeshIndices {
-  VertexTraits::Ptr   vertexRTree;
-  EdgeTraits::Ptr     edgeRTree;
-  TriangleTraits::Ptr triangleRTree;
+  VertexTraits::Ptr      vertexRTree;
+  EdgeTraits::Ptr        edgeRTree;
+  TriangleTraits::Ptr    triangleRTree;
+  TetrahedronTraits::Ptr tetraRTree;
 };
 
 class Index::IndexImpl {
 public:
-  VertexTraits::Ptr   getVertexRTree(const mesh::Mesh &mesh);
-  EdgeTraits::Ptr     getEdgeRTree(const mesh::Mesh &mesh);
-  TriangleTraits::Ptr getTriangleRTree(const mesh::Mesh &mesh);
+  VertexTraits::Ptr      getVertexRTree(const mesh::Mesh &mesh);
+  EdgeTraits::Ptr        getEdgeRTree(const mesh::Mesh &mesh);
+  TriangleTraits::Ptr    getTriangleRTree(const mesh::Mesh &mesh);
+  TetrahedronTraits::Ptr getTetraRTree(const mesh::Mesh &mesh);
 
   void clear();
 
@@ -108,6 +111,37 @@ TriangleTraits::Ptr Index::IndexImpl::getTriangleRTree(const mesh::Mesh &mesh)
   auto tree             = std::make_shared<TriangleTraits::RTree>(elements, params, ind);
   indices.triangleRTree = std::move(tree);
   return indices.triangleRTree;
+}
+
+TetrahedronTraits::Ptr Index::IndexImpl::getTetraRTree(const mesh::Mesh &mesh)
+{
+  if (indices.tetraRTree) {
+    return indices.tetraRTree;
+  }
+
+  precice::utils::Event e("query.index.getTriangleIndexTree." + mesh.getName());
+
+  // We first generate the values for the tetra rtree.
+  // The resulting vector is a random access range, which can be passed to the
+  // constructor of the rtree for more efficient indexing.
+  std::vector<TetrahedronTraits::IndexType> elements;
+  elements.reserve(mesh.tetrahedra().size());
+  for (size_t i = 0; i < mesh.tetrahedra().size(); ++i) {
+    // Instead of using bg::return_envelope, we compute the BB of the tetra ourself
+    // Then pass the bounds to Boost.
+    auto ourBox = mesh.tetrahedra()[i].getBoundingBox();
+    auto box    = makeBox(ourBox.minCorner(), ourBox.maxCorner());
+    elements.emplace_back(std::move(box), i);
+  }
+
+  // Generating the rtree is expensive, so passing everything in the ctor is
+  // the best we can do.
+  impl::RTreeParameters          params;
+  TetrahedronTraits::IndexGetter ind;
+
+  auto tree          = std::make_shared<TetrahedronTraits::RTree>(elements, params, ind);
+  indices.tetraRTree = std::move(tree);
+  return indices.tetraRTree;
 }
 
 void Index::IndexImpl::clear()
@@ -199,6 +233,18 @@ std::vector<VertexID> Index::getVerticesInsideBox(const mesh::BoundingBox &bb)
   const auto &          rtree = _pimpl->getVertexRTree(*_mesh);
   std::vector<VertexID> matches;
   rtree->query(bgi::intersects(query::makeBox(bb.minCorner(), bb.maxCorner())), std::back_inserter(matches));
+  return matches;
+}
+
+std::vector<TetrahedronID> Index::getEnclosingTetrahedra(const Eigen::VectorXd &location)
+{
+  PRECICE_TRACE();
+  const auto &rtree = _pimpl->getTetraRTree(*_mesh);
+
+  std::vector<TetrahedronID> matches;
+  rtree->query(bgi::contains(location), boost::make_function_output_iterator([&](TetrahedronTraits::IndexType const &match) {
+                 matches.emplace_back(match.second);
+               }));
   return matches;
 }
 

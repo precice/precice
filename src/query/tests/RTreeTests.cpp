@@ -388,5 +388,33 @@ BOOST_AUTO_TEST_CASE(ProjectionToTriangle)
 
 BOOST_AUTO_TEST_SUITE_END() // Projection
 
+BOOST_AUTO_TEST_SUITE(Tetrahedra)
+
+BOOST_AUTO_TEST_CASE(CubeBoundingBoxIndex)
+{
+  PRECICE_TEST(1_rank);
+  PtrMesh ptr(new Mesh("MyMesh", 3, testing::nextMeshID()));
+  auto &  mesh = *ptr;
+  Index   indexTree(ptr);
+
+  Eigen::Vector3d  location(0.5, 0.5, 0.5);
+  std::vector<int> expectedIndices = {0, 1};
+  // Set up 2 tetrahedra with the same bounding box
+  auto &v00 = mesh.createVertex(Eigen::Vector3d(0, 0, 0));
+  auto &v01 = mesh.createVertex(Eigen::Vector3d(1, 0, 0));
+  auto &v02 = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
+  auto &v03 = mesh.createVertex(Eigen::Vector3d(1, 0, 1));
+  auto &v04 = mesh.createVertex(Eigen::Vector3d(1, 1, 1));
+
+  mesh.createTetrahedron(v00, v01, v02, v03);
+  mesh.createTetrahedron(v04, v01, v02, v03);
+
+  auto match = indexTree.getEnclosingTetrahedra(location);
+
+  BOOST_TEST(match.size() == 2);
+}
+
+BOOST_AUTO_TEST_SUITE_END() // Tetrahedra
+
 BOOST_AUTO_TEST_SUITE_END() // Mesh
 BOOST_AUTO_TEST_SUITE_END() // Query
