@@ -3,6 +3,7 @@
 #include <Eigen/Core>
 #include <Eigen/QR>
 
+#include "RadialBasisFctSolver.h"
 #include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
 #include "impl/BasisFunctions.hpp"
@@ -55,10 +56,7 @@ public:
 private:
   precice::logging::Logger _log{"mapping::RadialBasisFctMapping"};
 
-  Eigen::MatrixXd _matrixA;
-
-  Eigen::ColPivHouseholderQR<Eigen::MatrixXd> _qr;
-
+  RadialBasisFctSolver _rbfSolver;
   /// @copydoc RadialBasisFctBaseMapping::mapConservative
   virtual void mapConservative(DataID inputDataID, DataID outputDataID) override;
 
@@ -141,15 +139,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       globalOutMesh.addMesh(*outMesh);
     }
 
-    _matrixA = buildMatrixA(this->_basisFunction, globalInMesh, globalOutMesh, this->_deadAxis);
-    _qr      = buildMatrixCLU(this->_basisFunction, globalInMesh, this->_deadAxis).colPivHouseholderQr();
-
-    PRECICE_CHECK(_qr.isInvertible(),
-                  "The interpolation matrix of the RBF mapping from mesh {} to mesh {} is not invertable. "
-                  "This means that the mapping problem is not well-posed. "
-                  "Please check if your coupling meshes are correct. Maybe you need to fix axis-aligned mapping setups "
-                  "by marking perpendicular axes as dead?",
-                  this->input()->getName(), this->output()->getName());
+    _rbfSolver.computeDecomposition(this->_basisFunction, globalInMesh, globalOutMesh, this->_deadAxis);
   }
   this->_hasComputedMapping = true;
   PRECICE_DEBUG("Compute Mapping is Completed.");
@@ -159,8 +149,7 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::clear()
 {
   PRECICE_TRACE();
-  _matrixA                  = Eigen::MatrixXd();
-  _qr                       = Eigen::ColPivHouseholderQR<Eigen::MatrixXd>();
+  _rbfSolver.clear();
   this->_hasComputedMapping = false;
 }
 
@@ -222,20 +211,16 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(DataID inpu
 
     // Construct Eigen vectors
     Eigen::Map<Eigen::VectorXd> inputValues(globalInValues.data(), globalInValues.size());
-    Eigen::VectorXd             outputValues((_matrixA.cols() - this->getPolynomialParameters()) * valueDim);
+    Eigen::VectorXd             outputValues((_rbfSolver._matrixA.cols() - this->getPolynomialParameters()) * valueDim);
+    Eigen::VectorXd             in(_rbfSolver._matrixA.rows()); // rows == outputSize
     outputValues.setZero();
-
-    Eigen::VectorXd Au(_matrixA.cols());  // rows == n
-    Eigen::VectorXd in(_matrixA.rows());  // rows == outputSize
-    Eigen::VectorXd out(_matrixA.cols()); // rows == n
 
     for (int dim = 0; dim < valueDim; dim++) {
       for (int i = 0; i < in.size(); i++) { // Fill input data values
         in[i] = inputValues(i * valueDim + dim);
       }
 
-      Au  = _matrixA.transpose() * in;
-      out = _qr.solve(Au);
+      Eigen::VectorXd out = _rbfSolver.solveConservative(in);
 
       // Copy mapped data to output data values
       for (int i = 0; i < out.size() - this->getPolynomialParameters(); i++) {
@@ -305,7 +290,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inputD
 
     int valueDim = this->output()->data(outputDataID)->getDimensions();
 
-    std::vector<double> globalInValues((_matrixA.cols() - this->getPolynomialParameters()) * valueDim, 0.0);
+    std::vector<double> globalInValues((_rbfSolver._matrixA.cols() - this->getPolynomialParameters()) * valueDim, 0.0);
     std::vector<int>    outValuesSize;
 
     if (utils::IntraComm::isPrimary()) { // Parallel case
@@ -333,15 +318,14 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inputD
       outValuesSize.push_back(this->output()->data(outputDataID)->values().size());
     }
 
-    Eigen::VectorXd p(_matrixA.cols());   // rows == n
-    Eigen::VectorXd in(_matrixA.cols());  // rows == n
-    Eigen::VectorXd out(_matrixA.rows()); // rows == outputSize
+    Eigen::VectorXd in(_rbfSolver._matrixA.cols()); // rows == n
     in.setZero();
 
     // Construct Eigen vectors
     Eigen::Map<Eigen::VectorXd> inputValues(globalInValues.data(), globalInValues.size());
 
-    Eigen::VectorXd outputValues((_matrixA.rows()) * valueDim);
+    Eigen::VectorXd outputValues((_rbfSolver._matrixA.rows()) * valueDim);
+    Eigen::VectorXd out;
     outputValues.setZero();
 
     // For every data dimension, perform mapping
@@ -351,8 +335,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inputD
         in[i] = inputValues[i * valueDim + dim];
       }
 
-      p   = _qr.solve(in);
-      out = _matrixA * p;
+      out = _rbfSolver.solveConsistent(in);
 
       // Copy mapped data to output data values
       for (int i = 0; i < out.size(); i++) {
@@ -378,85 +361,5 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inputD
     this->output()->data(outputDataID)->values() = Eigen::Map<Eigen::VectorXd>(receivedValues.data(), receivedValues.size());
   }
 }
-
-// ------- Non-Member Functions ---------
-
-template <typename RADIAL_BASIS_FUNCTION_T>
-static Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, std::vector<bool> deadAxis)
-{
-  int inputSize  = inputMesh.vertices().size();
-  int dimensions = inputMesh.getDimensions();
-
-  int deadDimensions = 0;
-  for (int d = 0; d < dimensions; d++) {
-    if (deadAxis[d])
-      deadDimensions += 1;
-  }
-
-  int polyparams = 1 + dimensions - deadDimensions;
-  PRECICE_ASSERT(inputSize >= 1 + polyparams, inputSize);
-  int n = inputSize + polyparams; // Add linear polynom degrees
-
-  Eigen::MatrixXd matrixCLU(n, n);
-  matrixCLU.setZero();
-
-  for (int i = 0; i < inputSize; ++i) {
-    for (int j = i; j < inputSize; ++j) {
-      const auto &u   = inputMesh.vertices()[i].getCoords();
-      const auto &v   = inputMesh.vertices()[j].getCoords();
-      matrixCLU(i, j) = basisFunction.evaluate(utils::reduceVector((u - v), deadAxis).norm());
-    }
-
-    const auto reduced = utils::reduceVector(inputMesh.vertices()[i].getCoords(), deadAxis);
-
-    for (int dim = 0; dim < dimensions - deadDimensions; dim++) {
-      matrixCLU(i, inputSize + 1 + dim) = reduced[dim];
-    }
-    matrixCLU(i, inputSize) = 1.0;
-  }
-
-  matrixCLU.triangularView<Eigen::Lower>() = matrixCLU.transpose();
-
-  return matrixCLU;
-}
-
-template <typename RADIAL_BASIS_FUNCTION_T>
-static Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const mesh::Mesh &outputMesh, std::vector<bool> deadAxis)
-{
-  int inputSize  = inputMesh.vertices().size();
-  int outputSize = outputMesh.vertices().size();
-  int dimensions = inputMesh.getDimensions();
-
-  int deadDimensions = 0;
-  for (int d = 0; d < dimensions; d++) {
-    if (deadAxis[d])
-      deadDimensions += 1;
-  }
-
-  int polyparams = 1 + dimensions - deadDimensions;
-  PRECICE_ASSERT(inputSize >= 1 + polyparams, inputSize);
-  int n = inputSize + polyparams; // Add linear polynom degrees
-
-  Eigen::MatrixXd matrixA(outputSize, n);
-  matrixA.setZero();
-
-  // Fill _matrixA with values
-  for (int i = 0; i < outputSize; ++i) {
-    for (int j = 0; j < inputSize; ++j) {
-      const auto &u = outputMesh.vertices()[i].getCoords();
-      const auto &v = inputMesh.vertices()[j].getCoords();
-      matrixA(i, j) = basisFunction.evaluate(utils::reduceVector((u - v), deadAxis).norm());
-    }
-
-    const auto reduced = utils::reduceVector(outputMesh.vertices()[i].getCoords(), deadAxis);
-
-    for (int dim = 0; dim < dimensions - deadDimensions; dim++) {
-      matrixA(i, inputSize + 1 + dim) = reduced[dim];
-    }
-    matrixA(i, inputSize) = 1.0;
-  }
-  return matrixA;
-}
-
 } // namespace mapping
 } // namespace precice
