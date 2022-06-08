@@ -105,18 +105,14 @@ static inline Eigen::VectorXd reduceVector(
 template <typename RADIAL_BASIS_FUNCTION_T>
 static Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, std::vector<bool> deadAxis)
 {
-  int inputSize  = inputMesh.vertices().size();
-  int dimensions = inputMesh.getDimensions();
+  const unsigned int inputSize  = inputMesh.vertices().size();
+  const unsigned int dimensions = inputMesh.getDimensions();
 
-  int deadDimensions = 0;
-  for (int d = 0; d < dimensions; d++) {
-    if (deadAxis[d])
-      deadDimensions += 1;
-  }
+  const unsigned int deadDimensions = std::count(deadAxis.begin(), deadAxis.end(), true);
+  const unsigned int polyparams     = 1 + dimensions - deadDimensions;
+  const unsigned int n              = inputSize + polyparams; // Add linear polynom degrees
 
-  int polyparams = 1 + dimensions - deadDimensions;
   PRECICE_ASSERT(inputSize >= 1 + polyparams, inputSize);
-  int n = inputSize + polyparams; // Add linear polynom degrees
 
   Eigen::MatrixXd matrixCLU(n, n);
   matrixCLU.setZero();
@@ -144,19 +140,15 @@ static Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, con
 template <typename RADIAL_BASIS_FUNCTION_T>
 static Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const mesh::Mesh &outputMesh, std::vector<bool> deadAxis)
 {
-  int inputSize  = inputMesh.vertices().size();
-  int outputSize = outputMesh.vertices().size();
-  int dimensions = inputMesh.getDimensions();
+  const unsigned int inputSize  = inputMesh.vertices().size();
+  const unsigned int outputSize = outputMesh.vertices().size();
+  const unsigned int dimensions = inputMesh.getDimensions();
 
-  int deadDimensions = 0;
-  for (int d = 0; d < dimensions; d++) {
-    if (deadAxis[d])
-      deadDimensions += 1;
-  }
+  const unsigned int deadDimensions = std::count(deadAxis.begin(), deadAxis.end(), true);
+  const unsigned int polyparams     = 1 + dimensions - deadDimensions;
+  const unsigned int n              = inputSize + polyparams; // Add linear polynom degrees
 
-  int polyparams = 1 + dimensions - deadDimensions;
   PRECICE_ASSERT(inputSize >= 1 + polyparams, inputSize);
-  int n = inputSize + polyparams; // Add linear polynom degrees
 
   Eigen::MatrixXd matrixA(outputSize, n);
   matrixA.setZero();
