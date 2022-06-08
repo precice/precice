@@ -57,6 +57,7 @@ void RadialBasisFctSolver::computeDecomposition(RADIAL_BASIS_FUNCTION_T basisFun
 Eigen::VectorXd RadialBasisFctSolver::solveConservative(const Eigen::VectorXd &inputData) const
 {
   // TODO: Avoid temporary allocations
+  PRECICE_ASSERT(inputData.size() == _matrixA.rows());
   Eigen::VectorXd Au = _matrixA.transpose() * inputData;
   PRECICE_ASSERT(Au.size() == _matrixA.cols());
   return _qr.solve(Au);
@@ -64,6 +65,7 @@ Eigen::VectorXd RadialBasisFctSolver::solveConservative(const Eigen::VectorXd &i
 
 Eigen::VectorXd RadialBasisFctSolver::solveConsistent(const Eigen::VectorXd &inputData) const
 {
+  PRECICE_ASSERT(inputData.size() == _matrixA.cols());
   Eigen::VectorXd p = _qr.solve(inputData);
   PRECICE_ASSERT(p.size() == _matrixA.cols());
   return _matrixA * p;
