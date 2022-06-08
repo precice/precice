@@ -3,6 +3,7 @@
 #include <Eigen/Core>
 #include <Eigen/QR>
 
+#include "RadialBasisFctSolver.h"
 #include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
 #include "impl/BasisFunctions.hpp"
