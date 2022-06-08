@@ -1,3 +1,4 @@
+#include <numeric>
 #include "impl/BasisFunctions.hpp"
 #include "precice/types.hpp"
 #include "utils/EigenHelperFunctions.hpp"
@@ -32,16 +33,19 @@ private:
 };
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-static Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, std::vector<bool> deadAxis);
+static Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, std::array<bool, 3> activeAxis);
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-static Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const mesh::Mesh &outputMesh, std::vector<bool> deadAxis);
+static Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const mesh::Mesh &outputMesh, std::array<bool, 3> activeAxis);
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 void RadialBasisFctSolver::computeDecomposition(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const mesh::Mesh &outputMesh, std::vector<bool> deadAxis)
 {
+  // Convert dead axis vector into an active axis array so that we can handle the reduction more easily
+  std::array<bool, 3> activeAxis({{false, false, false}});
+  std::transform(deadAxis.begin(), deadAxis.end(), activeAxis.begin(), [](const auto ax) { return !ax; });
   // First, assemble the interpolation matrix
-  _qr = buildMatrixCLU(basisFunction, inputMesh, deadAxis).colPivHouseholderQr();
+  _qr = buildMatrixCLU(basisFunction, inputMesh, activeAxis).colPivHouseholderQr();
 
   PRECICE_CHECK(_qr.isInvertible(),
                 "The interpolation matrix of the RBF mapping from mesh {} to mesh {} is not invertable. "
@@ -51,7 +55,7 @@ void RadialBasisFctSolver::computeDecomposition(RADIAL_BASIS_FUNCTION_T basisFun
                 inputMesh.getName(), outputMesh.getName());
 
   // Second, assemble evaluation matrix
-  _matrixA = buildMatrixA(basisFunction, inputMesh, outputMesh, deadAxis);
+  _matrixA = buildMatrixA(basisFunction, inputMesh, outputMesh, activeAxis);
 }
 
 Eigen::VectorXd RadialBasisFctSolver::solveConservative(const Eigen::VectorXd &inputData) const
@@ -80,54 +84,50 @@ void RadialBasisFctSolver::clear()
 // ------- Non-Member Functions ---------
 
 /// Deletes all dead directions from fullVector and returns a vector of reduced dimensionality.
-static inline Eigen::VectorXd reduceVector(
-    const Eigen::VectorXd &  fullVector,
-    const std::vector<bool> &deadAxis)
+static inline double computeSquaredDifference(
+    const std::array<double, 3> &u,
+    std::array<double, 3>        v,
+    const std::array<bool, 3> &  activeAxis)
 {
-  int deadDimensions = 0;
-  int dimensions     = deadAxis.size();
-  for (int d = 0; d < dimensions; d++) {
-    if (deadAxis[d])
-      deadDimensions += 1;
+  // Substract the values and multiply out dead dimensions
+  for (unsigned int d = 0; d < v.size(); ++d) {
+    v[d] = (u[d] - v[d]) * static_cast<int>(activeAxis[d]);
   }
-  PRECICE_ASSERT(dimensions > deadDimensions, dimensions, deadDimensions);
-  Eigen::VectorXd reducedVector(dimensions - deadDimensions);
-  int             k = 0;
-  for (int d = 0; d < dimensions; d++) {
-    if (not deadAxis[d]) {
-      reducedVector[k] = fullVector[d];
-      k++;
-    }
-  }
-  return reducedVector;
+  return std::accumulate(v.begin(), v.end(), static_cast<double>(0.), [](auto &res, auto &val) { return res + val * val; });
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-static Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, std::vector<bool> deadAxis)
+static Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, std::array<bool, 3> activeAxis)
 {
-  const unsigned int inputSize  = inputMesh.vertices().size();
-  const unsigned int dimensions = inputMesh.getDimensions();
+  const unsigned int inputSize      = inputMesh.vertices().size();
+  const unsigned int deadDimensions = std::count(activeAxis.begin(), activeAxis.end(), false);
+  // Treat the 2D case as 3D case with dead axis
+  const unsigned int dimensions = 3;
+  const unsigned int polyparams = 1 + dimensions - deadDimensions;
+  const unsigned int n          = inputSize + polyparams; // Add linear polynom degrees
 
-  const unsigned int deadDimensions = std::count(deadAxis.begin(), deadAxis.end(), true);
-  const unsigned int polyparams     = 1 + dimensions - deadDimensions;
-  const unsigned int n              = inputSize + polyparams; // Add linear polynom degrees
-
+  PRECICE_ASSERT((inputMesh.getDimensions() == 3) || activeAxis[2] == false);
   PRECICE_ASSERT(inputSize >= 1 + polyparams, inputSize);
 
   Eigen::MatrixXd matrixCLU(n, n);
   matrixCLU.setZero();
 
-  for (int i = 0; i < inputSize; ++i) {
-    for (int j = i; j < inputSize; ++j) {
-      const auto &u   = inputMesh.vertices()[i].getCoords();
-      const auto &v   = inputMesh.vertices()[j].getCoords();
-      matrixCLU(i, j) = basisFunction.evaluate(reduceVector((u - v), deadAxis).norm());
+  for (unsigned int i = 0; i < inputSize; ++i) {
+    for (unsigned int j = i; j < inputSize; ++j) {
+      const auto &u                 = inputMesh.vertices()[i].rawCoords();
+      const auto &v                 = inputMesh.vertices()[j].rawCoords();
+      double      squaredDifference = computeSquaredDifference(u, v, activeAxis);
+      matrixCLU(i, j)               = basisFunction.evaluate(std::sqrt(squaredDifference));
     }
 
-    const auto reduced = reduceVector(inputMesh.vertices()[i].getCoords(), deadAxis);
+    const auto &u = inputMesh.vertices()[i].rawCoords();
 
-    for (int dim = 0; dim < dimensions - deadDimensions; dim++) {
-      matrixCLU(i, inputSize + 1 + dim) = reduced[dim];
+    unsigned int k = 0;
+    for (unsigned int d = 0; d < dimensions; ++d) {
+      if (activeAxis[d]) {
+        matrixCLU(i, inputSize + 1 + k) = u[d];
+        ++k;
+      }
     }
     matrixCLU(i, inputSize) = 1.0;
   }
@@ -138,33 +138,39 @@ static Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, con
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-static Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const mesh::Mesh &outputMesh, std::vector<bool> deadAxis)
+static Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const mesh::Mesh &outputMesh, std::array<bool, 3> activeAxis)
 {
-  const unsigned int inputSize  = inputMesh.vertices().size();
-  const unsigned int outputSize = outputMesh.vertices().size();
-  const unsigned int dimensions = inputMesh.getDimensions();
+  const unsigned int inputSize      = inputMesh.vertices().size();
+  const unsigned int outputSize     = outputMesh.vertices().size();
+  const unsigned int deadDimensions = std::count(activeAxis.begin(), activeAxis.end(), false);
+  // Treat the 2D case as 3D case with dead axis
+  const unsigned int dimensions = 3;
+  const unsigned int polyparams = 1 + dimensions - deadDimensions;
+  const unsigned int n          = inputSize + polyparams; // Add linear polynom degrees
 
-  const unsigned int deadDimensions = std::count(deadAxis.begin(), deadAxis.end(), true);
-  const unsigned int polyparams     = 1 + dimensions - deadDimensions;
-  const unsigned int n              = inputSize + polyparams; // Add linear polynom degrees
-
+  PRECICE_ASSERT((inputMesh.getDimensions() == 3) || activeAxis[2] == false);
   PRECICE_ASSERT(inputSize >= 1 + polyparams, inputSize);
 
   Eigen::MatrixXd matrixA(outputSize, n);
   matrixA.setZero();
 
   // Fill _matrixA with values
-  for (int i = 0; i < outputSize; ++i) {
-    for (int j = 0; j < inputSize; ++j) {
-      const auto &u = outputMesh.vertices()[i].getCoords();
-      const auto &v = inputMesh.vertices()[j].getCoords();
-      matrixA(i, j) = basisFunction.evaluate(reduceVector((u - v), deadAxis).norm());
+  for (unsigned int i = 0; i < outputSize; ++i) {
+    for (unsigned int j = 0; j < inputSize; ++j) {
+      const auto &u                 = outputMesh.vertices()[i].rawCoords();
+      const auto &v                 = inputMesh.vertices()[j].rawCoords();
+      double      squaredDifference = computeSquaredDifference(u, v, activeAxis);
+      matrixA(i, j)                 = basisFunction.evaluate(std::sqrt(squaredDifference));
     }
 
-    const auto reduced = reduceVector(outputMesh.vertices()[i].getCoords(), deadAxis);
+    const auto u = outputMesh.vertices()[i].rawCoords();
 
-    for (int dim = 0; dim < dimensions - deadDimensions; dim++) {
-      matrixA(i, inputSize + 1 + dim) = reduced[dim];
+    unsigned int k = 0;
+    for (unsigned int d = 0; d < dimensions; ++d) {
+      if (activeAxis[d]) {
+        matrixA(i, inputSize + 1 + k) = u[d];
+        ++k;
+      }
     }
     matrixA(i, inputSize) = 1.0;
   }
