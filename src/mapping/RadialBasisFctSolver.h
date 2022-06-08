@@ -48,7 +48,7 @@ void RadialBasisFctSolver::computeDecomposition(RADIAL_BASIS_FUNCTION_T basisFun
                 "This means that the mapping problem is not well-posed. "
                 "Please check if your coupling meshes are correct. Maybe you need to fix axis-aligned mapping setups "
                 "by marking perpendicular axes as dead?",
-                "this->input()->getName()", " this->output()->getName()");
+                inputMesh.getName(), outputMesh.getName());
 
   // Second, assemble evaluation matrix
   _matrixA = buildMatrixA(basisFunction, inputMesh, outputMesh, deadAxis);
