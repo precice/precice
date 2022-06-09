@@ -134,7 +134,7 @@ PtrData &Mesh::createData(
                   name, _name, name);
   }
   //#rows = dimensions of current mesh #columns = dimensions of corresponding data set
-  PtrData data(new Data(name, id, dimension, _dimensions, true));
+  PtrData data(new Data(name, id, dimension, _dimensions, withGradient));
   _data.push_back(data);
   return _data.back();
 }
@@ -373,16 +373,14 @@ void Mesh::addMesh(
     edgeMap[edge.getID()] = &e;
   }
 
-  if (_dimensions == 3) {
-    for (const Triangle &triangle : deltaMesh.triangles()) {
-      EdgeID edgeIndex1 = triangle.edge(0).getID();
-      EdgeID edgeIndex2 = triangle.edge(1).getID();
-      EdgeID edgeIndex3 = triangle.edge(2).getID();
-      PRECICE_ASSERT((edgeMap.count(edgeIndex1) == 1) &&
-                     (edgeMap.count(edgeIndex2) == 1) &&
-                     (edgeMap.count(edgeIndex3) == 1));
-      createTriangle(*edgeMap[edgeIndex1], *edgeMap[edgeIndex2], *edgeMap[edgeIndex3]);
-    }
+  for (const Triangle &triangle : deltaMesh.triangles()) {
+    EdgeID edgeIndex1 = triangle.edge(0).getID();
+    EdgeID edgeIndex2 = triangle.edge(1).getID();
+    EdgeID edgeIndex3 = triangle.edge(2).getID();
+    PRECICE_ASSERT((edgeMap.count(edgeIndex1) == 1) &&
+                   (edgeMap.count(edgeIndex2) == 1) &&
+                   (edgeMap.count(edgeIndex3) == 1));
+    createTriangle(*edgeMap[edgeIndex1], *edgeMap[edgeIndex2], *edgeMap[edgeIndex3]);
   }
   _index.clear();
 }

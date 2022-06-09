@@ -62,7 +62,7 @@
 #include "utils/Event.hpp"
 #include "utils/EventUtils.hpp"
 #include "utils/Helpers.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
 #include "utils/PointerVector.hpp"
@@ -83,13 +83,13 @@ namespace impl {
 SolverInterfaceImpl::SolverInterfaceImpl(
     std::string        participantName,
     const std::string &configurationFileName,
-    int                accessorProcessRank,
-    int                accessorCommunicatorSize,
+    int                solverProcessIndex,
+    int                solverProcessSize,
     void *             communicator,
     bool               allowNullptr)
     : _accessorName(std::move(participantName)),
-      _accessorProcessRank(accessorProcessRank),
-      _accessorCommunicatorSize(accessorCommunicatorSize)
+      _accessorProcessRank(solverProcessIndex),
+      _accessorCommunicatorSize(solverProcessSize)
 {
   if (!allowNullptr) {
     PRECICE_CHECK(communicator != nullptr,
@@ -145,19 +145,19 @@ SolverInterfaceImpl::SolverInterfaceImpl(
 SolverInterfaceImpl::SolverInterfaceImpl(
     std::string        participantName,
     const std::string &configurationFileName,
-    int                accessorProcessRank,
-    int                accessorCommunicatorSize)
-    : SolverInterfaceImpl::SolverInterfaceImpl(std::move(participantName), configurationFileName, accessorProcessRank, accessorCommunicatorSize, nullptr, true)
+    int                solverProcessIndex,
+    int                solverProcessSize)
+    : SolverInterfaceImpl::SolverInterfaceImpl(std::move(participantName), configurationFileName, solverProcessIndex, solverProcessSize, nullptr)
 {
 }
 
 SolverInterfaceImpl::SolverInterfaceImpl(
     std::string        participantName,
     const std::string &configurationFileName,
-    int                accessorProcessRank,
-    int                accessorCommunicatorSize,
+    int                solverProcessIndex,
+    int                solverProcessSize,
     void *             communicator)
-    : SolverInterfaceImpl::SolverInterfaceImpl(std::move(participantName), configurationFileName, accessorProcessRank, accessorCommunicatorSize, communicator, false)
+    : SolverInterfaceImpl::SolverInterfaceImpl(std::move(participantName), configurationFileName, solverProcessIndex, solverProcessSize, communicator, false)
 {
 }
 
@@ -229,7 +229,7 @@ void SolverInterfaceImpl::configure(
                 "If you do not know exactly what an intra-participant communication is and why you want to use it "
                 "you probably just want to remove the intraComm tag from the preCICE configuration.");
 
-  utils::MasterSlave::configure(_accessorProcessRank, _accessorCommunicatorSize);
+  utils::IntraComm::configure(_accessorProcessRank, _accessorCommunicatorSize);
 
   _participants = config.getParticipantConfiguration()->getParticipants();
   configureM2Ns(config.getM2NConfiguration());
@@ -253,8 +253,8 @@ void SolverInterfaceImpl::configure(
   utils::EventRegistry::instance().initialize("precice-" + _accessorName, "", utils::Parallel::current()->comm);
 
   PRECICE_DEBUG("Initialize intra-participant communication");
-  if (utils::MasterSlave::isParallel()) {
-    initializeMasterSlaveCommunication();
+  if (utils::IntraComm::isParallel()) {
+    initializeIntraCommunication();
   }
 
   auto &solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
@@ -431,7 +431,7 @@ double SolverInterfaceImpl::advance(
 
 #ifndef NDEBUG
   PRECICE_DEBUG("Synchronize timestep length");
-  if (utils::MasterSlave::isParallel()) {
+  if (utils::IntraComm::isParallel()) {
     syncTimestep(computedTimestepLength);
   }
 #endif
@@ -524,9 +524,9 @@ void SolverInterfaceImpl::finalize()
 
   // Close Connections
   PRECICE_DEBUG("Close intra-participant communication");
-  if (utils::MasterSlave::isParallel()) {
-    utils::MasterSlave::getCommunication()->closeConnection();
-    utils::MasterSlave::getCommunication() = nullptr;
+  if (utils::IntraComm::isParallel()) {
+    utils::IntraComm::getCommunication()->closeConnection();
+    utils::IntraComm::getCommunication() = nullptr;
   }
   _m2ns.clear();
 
@@ -538,7 +538,7 @@ void SolverInterfaceImpl::finalize()
   utils::EventRegistry::instance().finalize();
 
   // Printing requires finalization
-  if (not precice::utils::MasterSlave::isSecondary()) {
+  if (not precice::utils::IntraComm::isSecondary()) {
     utils::EventRegistry::instance().printAll();
   }
 
@@ -679,6 +679,10 @@ bool SolverInterfaceImpl::isMeshConnectivityRequired(int meshID) const
 bool SolverInterfaceImpl::isGradientDataRequired(int dataID) const
 {
   PRECICE_VALIDATE_DATA_ID(dataID);
+  // Read data never requires gradients
+  if (!_accessor->isDataWrite(dataID))
+    return false;
+
   WriteDataContext &context = _accessor->writeDataContext(dataID);
   return context.providedData()->hasGradient();
 }
@@ -843,8 +847,7 @@ void SolverInterfaceImpl::setMeshTriangle(
 {
   PRECICE_TRACE(meshID, firstEdgeID,
                 secondEdgeID, thirdEdgeID);
-  PRECICE_CHECK(_dimensions == 3, "setMeshTriangle is only possible for 3D cases."
-                                  " Please set the dimension to 3 in the preCICE configuration file.");
+
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->usedMeshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
@@ -874,8 +877,7 @@ void SolverInterfaceImpl::setMeshTriangleWithEdges(
 {
   PRECICE_TRACE(meshID, firstVertexID,
                 secondVertexID, thirdVertexID);
-  PRECICE_CHECK(_dimensions == 3, "setMeshTriangleWithEdges is only possible for 3D cases."
-                                  " Please set the dimension to 3 in the preCICE configuration file.");
+
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->usedMeshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
@@ -2107,26 +2109,26 @@ PtrParticipant SolverInterfaceImpl::determineAccessingParticipant(
                 _accessorName);
 }
 
-void SolverInterfaceImpl::initializeMasterSlaveCommunication()
+void SolverInterfaceImpl::initializeIntraCommunication()
 {
   PRECICE_TRACE();
 
-  Event e("com.initializeMasterSlaveCom", precice::syncMode);
-  utils::MasterSlave::getCommunication()->connectIntraComm(
+  Event e("com.initializeIntraCom", precice::syncMode);
+  utils::IntraComm::getCommunication()->connectIntraComm(
       _accessorName, "IntraComm",
       _accessorProcessRank, _accessorCommunicatorSize);
 }
 
 void SolverInterfaceImpl::syncTimestep(double computedTimestepLength)
 {
-  PRECICE_ASSERT(utils::MasterSlave::isParallel());
-  if (utils::MasterSlave::isSecondary()) {
-    utils::MasterSlave::getCommunication()->send(computedTimestepLength, 0);
+  PRECICE_ASSERT(utils::IntraComm::isParallel());
+  if (utils::IntraComm::isSecondary()) {
+    utils::IntraComm::getCommunication()->send(computedTimestepLength, 0);
   } else {
-    PRECICE_ASSERT(utils::MasterSlave::isPrimary());
-    for (Rank secondaryRank : utils::MasterSlave::allSecondaryRanks()) {
+    PRECICE_ASSERT(utils::IntraComm::isPrimary());
+    for (Rank secondaryRank : utils::IntraComm::allSecondaryRanks()) {
       double dt;
-      utils::MasterSlave::getCommunication()->receive(dt, secondaryRank);
+      utils::IntraComm::getCommunication()->receive(dt, secondaryRank);
       PRECICE_CHECK(math::equals(dt, computedTimestepLength),
                     "Found ambiguous values for the timestep length passed to preCICE in \"advance\". On rank {}, the value is {}, while on rank 0, the value is {}.",
                     secondaryRank, dt, computedTimestepLength);
@@ -2144,7 +2146,7 @@ void SolverInterfaceImpl::closeCommunicationChannels(CloseChannels close)
   std::string pong = "pong";
   for (auto &iter : _m2ns) {
     auto bm2n = iter.second;
-    if (not utils::MasterSlave::isSecondary()) {
+    if (not utils::IntraComm::isSecondary()) {
       PRECICE_DEBUG("Synchronizing primary rank with {}", bm2n.remoteName);
       if (bm2n.isRequesting) {
         bm2n.m2n->getPrimaryRankCommunication()->send(ping, 0);

@@ -13,7 +13,7 @@
 
 #include "com/SharedPointer.hpp"
 #include "logging/LogConfiguration.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/Parallel.hpp"
 
 namespace precice {
@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
     retCode = EXIT_SUCCESS;
   }
 
-  utils::MasterSlave::getCommunication() = nullptr;
+  utils::IntraComm::getCommunication() = nullptr;
   utils::Parallel::finalizeMPI();
   return retCode;
 }

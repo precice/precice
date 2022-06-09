@@ -145,7 +145,7 @@ struct ConnectionOptions {
  * 1. making sure that there are enough ranks to run the test on.
  * 2. restricting and splitting the MPI Communicator.
  * 3. handling invalid contexts (such as unneeded ranks)
- * 4. initializing the intra-participant communication if requested. initializeMasterSlave()
+ * 4. initializing the intra-participant communication if requested. initializeIntraComm()
  * 5. handling further requirements @see Require
  * 6. providing a usable context during the test isNamed(), isPrimary(), isRank()
  * 7. cleaning up after the test case
@@ -328,7 +328,7 @@ private:
   void initializeMPI(const Participants &participants);
 
   /// Initialize the intra-participant communication connection if requested
-  void initializeMasterSlave();
+  void initializeIntraComm();
 
   /// Initialize PETSc if required
   void initializePetsc();

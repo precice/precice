@@ -7,7 +7,7 @@
 #include <stddef.h>
 #include <string>
 
-#include "MPICommunication.hpp"
+#include "com/MPICommunication.hpp"
 #include "logging/Logger.hpp"
 #include "precice/types.hpp"
 

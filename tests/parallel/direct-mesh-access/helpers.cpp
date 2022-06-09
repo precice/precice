@@ -7,11 +7,11 @@
 
 // StartIndex is here the first index to be used for writing on the secondary rank
 void runTestAccessReceivedMesh(const TestContext &       context,
-                               const std::vector<double> boundingBoxSlave,
-                               const std::vector<double> writeDataSlave,
-                               const std::vector<double> expectedPositionSlave,
-                               const std::vector<double> expectedReadDataSlave,
-                               const int                 startIndex)
+                               const std::vector<double> boundingBoxSecondaryRank,
+                               const std::vector<double> writeDataSecondaryRank,
+                               const std::vector<double> expectedPositionSecondaryRank,
+                               const std::vector<double> expectedReadDataSecondaryRank,
+                               const size_t              startIndex)
 {
   if (context.isNamed("SolverOne")) {
     // Defines the bounding box and writes data to the received mesh
@@ -20,7 +20,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
     const int                dataID      = interface.getDataID("Velocities", otherMeshID);
     const int                dim         = interface.getDimensions();
 
-    std::vector<double> boundingBox = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 3.5}) : boundingBoxSlave;
+    std::vector<double> boundingBox = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 3.5}) : boundingBoxSecondaryRank;
     // Set bounding box
     interface.setMeshAccessRegion(otherMeshID, boundingBox.data());
     // Initialize the solverinterface
@@ -31,7 +31,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
 
     // According to the bounding boxes and vertices: the primary rank receives 3 vertices, the secondary rank 2
     const bool expectedSize = (context.isPrimary() && meshSize == 3) ||
-                              (!context.isPrimary() && meshSize == static_cast<int>(expectedPositionSlave.size() / dim));
+                              (!context.isPrimary() && meshSize == static_cast<int>(expectedPositionSecondaryRank.size() / dim));
     BOOST_TEST(expectedSize);
 
     // Allocate memory
@@ -40,7 +40,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
     interface.getMeshVerticesAndIDs(otherMeshID, meshSize, ids.data(), coordinates.data());
 
     // Check the received vertex coordinates
-    std::vector<double> expectedPositions = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 2.0, 0.0, 3.0}) : expectedPositionSlave;
+    std::vector<double> expectedPositions = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 2.0, 0.0, 3.0}) : expectedPositionSecondaryRank;
     BOOST_TEST(testing::equals(expectedPositions, coordinates));
 
     // Check the received vertex IDs (IDs are local?!)
@@ -50,7 +50,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
     BOOST_TEST(expectedIDs == ids);
 
     // Create some unique writeData in order to check it in the other participant
-    std::vector<double> writeData = context.isPrimary() ? std::vector<double>({1, 2, 3}) : writeDataSlave;
+    std::vector<double> writeData = context.isPrimary() ? std::vector<double>({1, 2, 3}) : writeDataSecondaryRank;
 
     while (interface.isCouplingOngoing()) {
       // Write data
@@ -108,7 +108,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
                                     ids.data(), readData.data());
 
       // Check the received data
-      const std::vector<double> expectedReadData = context.isPrimary() ? std::vector<double>({1, 2}) : expectedReadDataSlave;
+      const std::vector<double> expectedReadData = context.isPrimary() ? std::vector<double>({1, 2}) : expectedReadDataSecondaryRank;
       BOOST_TEST(expectedReadData == readData);
     }
   }

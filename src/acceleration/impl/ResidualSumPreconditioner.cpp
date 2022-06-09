@@ -3,7 +3,7 @@
 #include <cmath>
 #include "logging/LogMacros.hpp"
 #include "math/differences.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -39,7 +39,7 @@ void ResidualSumPreconditioner::_update_(bool                   timeWindowComple
       for (size_t i = 0; i < _subVectorSizes[k]; i++) {
         part(i) = res(i + offset);
       }
-      norms[k] = utils::MasterSlave::dot(part, part);
+      norms[k] = utils::IntraComm::dot(part, part);
       sum += norms[k];
       offset += _subVectorSizes[k];
       norms[k] = std::sqrt(norms[k]);

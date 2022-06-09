@@ -14,7 +14,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 
 namespace precice {
 namespace mesh {
@@ -26,7 +26,7 @@ class Parallel;
 } // namespace precice
 
 using precice::testing::TestContext;
-using precice::utils::MasterSlave;
+using precice::utils::IntraComm;
 using precice::utils::Parallel;
 
 using std::vector;
@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_SUITE(M2NTests)
 void process(vector<double> &data)
 {
   for (auto &elem : data) {
-    elem += MasterSlave::getRank() + 1;
+    elem += IntraComm::getRank() + 1;
   }
 }
 

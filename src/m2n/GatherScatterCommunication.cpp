@@ -10,7 +10,7 @@
 #include "m2n/DistributedCommunication.hpp"
 #include "mesh/Mesh.hpp"
 #include "precice/types.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -41,7 +41,7 @@ void GatherScatterCommunication::acceptConnection(
     const std::string &requesterName)
 {
   PRECICE_TRACE(acceptorName, requesterName);
-  PRECICE_ASSERT(utils::MasterSlave::isSecondary() || _com->isConnected());
+  PRECICE_ASSERT(utils::IntraComm::isSecondary() || _com->isConnected());
   _isConnected = true;
 }
 
@@ -50,14 +50,14 @@ void GatherScatterCommunication::requestConnection(
     const std::string &requesterName)
 {
   PRECICE_TRACE(acceptorName, requesterName);
-  PRECICE_ASSERT(utils::MasterSlave::isSecondary() || _com->isConnected());
+  PRECICE_ASSERT(utils::IntraComm::isSecondary() || _com->isConnected());
   _isConnected = true;
 }
 
 void GatherScatterCommunication::closeConnection()
 {
   PRECICE_TRACE();
-  PRECICE_ASSERT(utils::MasterSlave::isSecondary() || not _com->isConnected());
+  PRECICE_ASSERT(utils::IntraComm::isSecondary() || not _com->isConnected());
   _isConnected = false;
 }
 
@@ -66,12 +66,12 @@ void GatherScatterCommunication::send(precice::span<double const> itemsToSend, i
   PRECICE_TRACE(itemsToSend.size());
 
   // Gather data
-  if (utils::MasterSlave::isSecondary()) { // Secondary rank
+  if (utils::IntraComm::isSecondary()) { // Secondary rank
     if (!itemsToSend.empty()) {
-      utils::MasterSlave::getCommunication()->send(itemsToSend, 0);
+      utils::IntraComm::getCommunication()->send(itemsToSend, 0);
     }
   } else { // Primary rank or coupling mode
-    PRECICE_ASSERT(utils::MasterSlave::getRank() == 0);
+    PRECICE_ASSERT(utils::IntraComm::getRank() == 0);
     mesh::Mesh::VertexDistribution &vertexDistribution = _mesh->getVertexDistribution();
     int                             globalSize         = _mesh->getGlobalNumberOfVertices() * valueDimension;
     PRECICE_DEBUG("Global Size = {}", globalSize);
@@ -85,15 +85,15 @@ void GatherScatterCommunication::send(precice::span<double const> itemsToSend, i
     }
 
     // Secondary ranks data
-    for (Rank secondaryRank : utils::MasterSlave::allSecondaryRanks()) {
-      PRECICE_ASSERT(utils::MasterSlave::getCommunication() != nullptr);
-      PRECICE_ASSERT(utils::MasterSlave::getCommunication()->isConnected());
+    for (Rank secondaryRank : utils::IntraComm::allSecondaryRanks()) {
+      PRECICE_ASSERT(utils::IntraComm::getCommunication() != nullptr);
+      PRECICE_ASSERT(utils::IntraComm::getCommunication()->isConnected());
 
       int secondaryRankSize = vertexDistribution[secondaryRank].size() * valueDimension;
-      PRECICE_DEBUG("Slave Size = {}", secondaryRankSize);
+      PRECICE_DEBUG("Secondary Size = {}", secondaryRankSize);
       if (secondaryRankSize > 0) {
         std::vector<double> secondaryRankValues(secondaryRankSize);
-        utils::MasterSlave::getCommunication()->receive(span<double>{secondaryRankValues}, secondaryRank);
+        utils::IntraComm::getCommunication()->receive(span<double>{secondaryRankValues}, secondaryRank);
         for (size_t i = 0; i < vertexDistribution[secondaryRank].size(); i++) {
           for (int j = 0; j < valueDimension; j++) {
             globalItemsToSend[vertexDistribution[secondaryRank][i] * valueDimension + j] += secondaryRankValues[i * valueDimension + j];
@@ -103,7 +103,7 @@ void GatherScatterCommunication::send(precice::span<double const> itemsToSend, i
     }
 
     // Send data to other primary
-    _com->send(globalItemsToSend, 0);
+    _com->sendRange(globalItemsToSend, 0);
   }
 }
 
@@ -114,22 +114,24 @@ void GatherScatterCommunication::receive(precice::span<double> itemsToReceive, i
   std::vector<double> globalItemsToReceive;
 
   // Receive data at primary
-  if (not utils::MasterSlave::isSecondary()) {
+  if (not utils::IntraComm::isSecondary()) {
     int globalSize = _mesh->getGlobalNumberOfVertices() * valueDimension;
     PRECICE_DEBUG("Global Size = {}", globalSize);
-    globalItemsToReceive.resize(globalSize);
-    _com->receive(globalItemsToReceive, 0);
+
+    globalItemsToReceive = _com->receiveRange(0, com::AsVectorTag<double>{});
+    PRECICE_ASSERT(globalItemsToReceive.size() == globalSize);
   }
 
   // Scatter data
-  if (utils::MasterSlave::isSecondary()) { // Secondary rank
+  if (utils::IntraComm::isSecondary()) { // Secondary rank
     if (!itemsToReceive.empty()) {
       PRECICE_DEBUG("itemsToRec[0] = {}", itemsToReceive[0]);
-      utils::MasterSlave::getCommunication()->receive(itemsToReceive, 0);
+      auto received = utils::IntraComm::getCommunication()->receiveRange(0, com::AsVectorTag<double>{});
+      std::copy(received.begin(), received.end(), itemsToReceive.begin());
       PRECICE_DEBUG("itemsToRec[0] = {}", itemsToReceive[0]);
     }
   } else { // Primary rank or coupling mode
-    PRECICE_ASSERT(utils::MasterSlave::getRank() == 0);
+    PRECICE_ASSERT(utils::IntraComm::getRank() == 0);
     mesh::Mesh::VertexDistribution &vertexDistribution = _mesh->getVertexDistribution();
 
     // Primary rank data
@@ -140,12 +142,12 @@ void GatherScatterCommunication::receive(precice::span<double> itemsToReceive, i
     }
 
     // Secondary ranks data
-    for (Rank secondaryRank : utils::MasterSlave::allSecondaryRanks()) {
-      PRECICE_ASSERT(utils::MasterSlave::getCommunication() != nullptr);
-      PRECICE_ASSERT(utils::MasterSlave::getCommunication()->isConnected());
+    for (Rank secondaryRank : utils::IntraComm::allSecondaryRanks()) {
+      PRECICE_ASSERT(utils::IntraComm::getCommunication() != nullptr);
+      PRECICE_ASSERT(utils::IntraComm::getCommunication()->isConnected());
 
       int secondarySize = vertexDistribution[secondaryRank].size() * valueDimension;
-      PRECICE_DEBUG("Slave Size = {}", secondarySize);
+      PRECICE_DEBUG("Secondary Size = {}", secondarySize);
       if (secondarySize > 0) {
         std::vector<double> secondaryRankValues(secondarySize);
         for (size_t i = 0; i < vertexDistribution[secondaryRank].size(); i++) {
@@ -153,11 +155,11 @@ void GatherScatterCommunication::receive(precice::span<double> itemsToReceive, i
             secondaryRankValues[i * valueDimension + j] = globalItemsToReceive[vertexDistribution[secondaryRank][i] * valueDimension + j];
           }
         }
-        utils::MasterSlave::getCommunication()->send(secondaryRankValues, secondaryRank);
+        utils::IntraComm::getCommunication()->sendRange(secondaryRankValues, secondaryRank);
         PRECICE_DEBUG("secondaryRankValues[0] = {}", secondaryRankValues[0]);
       }
     }
-  } // Master
+  } // Primary
 }
 
 void GatherScatterCommunication::acceptPreConnection(
