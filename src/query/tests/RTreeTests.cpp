@@ -7,6 +7,7 @@
 #include <set>
 #include <utility>
 #include <vector>
+
 #include "logging/Logger.hpp"
 #include "math/geometry.hpp"
 #include "mesh/Data.hpp"
@@ -16,16 +17,12 @@
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
 #include "query/Index.hpp"
-#include "query/impl/Indexer.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 
 using namespace precice;
 using namespace precice::mesh;
 using namespace precice::query;
-
-namespace bg  = boost::geometry;
-namespace bgi = boost::geometry::index;
 
 namespace {
 PtrMesh fullMesh()
@@ -172,8 +169,6 @@ BOOST_AUTO_TEST_CASE(QueryWithBox2Matches)
   PRECICE_TEST(1_rank);
   auto  mesh = vertexMesh3D();
   Index indexTree(mesh);
-  auto  tree = impl::Indexer::instance()->getVertexRTree(mesh);
-  BOOST_TEST(tree->size() == 8);
 
   mesh::Vertex searchVertex(Eigen::Vector3d(0.8, 1, 0), 0);
   double       radius = 0.81; // Two vertices in radius
@@ -190,8 +185,6 @@ BOOST_AUTO_TEST_CASE(QueryWithBoxEverything)
   PRECICE_TEST(1_rank);
   auto  mesh = vertexMesh3D();
   Index indexTree(mesh);
-  auto  tree = impl::Indexer::instance()->getVertexRTree(mesh);
-  BOOST_TEST(tree->size() == 8);
 
   mesh::Vertex searchVertex(Eigen::Vector3d(0.8, 1, 0), 0);
   double       radius = std::numeric_limits<double>::max();
@@ -324,84 +317,6 @@ BOOST_AUTO_TEST_CASE(Query3DFullTriangle)
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Triangle
-
-BOOST_AUTO_TEST_SUITE(Cache)
-
-BOOST_AUTO_TEST_CASE(ClearOnChange)
-{
-  PRECICE_TEST(1_rank);
-  PtrMesh mesh(new precice::mesh::Mesh("MyMesh", 2, precice::testing::nextMeshID()));
-  mesh->createVertex(Eigen::Vector2d(0, 0));
-
-  // The Cache should clear whenever a mesh changes
-  auto vTree = query::impl::Indexer::instance()->getVertexRTree(mesh);
-  BOOST_TEST(query::impl::Indexer::instance()->getCacheSize() == 1);
-  mesh->meshChanged(*mesh); // Emit signal, that mesh has changed
-  BOOST_TEST(query::impl::Indexer::instance()->getCacheSize() == 0);
-}
-
-BOOST_AUTO_TEST_CASE(ClearOnDestruction)
-{
-  PRECICE_TEST(1_rank);
-  PtrMesh mesh(new precice::mesh::Mesh("MyMesh", 2, precice::testing::nextMeshID()));
-  mesh->createVertex(Eigen::Vector2d(0, 0));
-
-  // The Cache should clear whenever we destroy the Mesh
-  auto vTree = query::impl::Indexer::instance()->getVertexRTree(mesh);
-  BOOST_TEST(query::impl::Indexer::instance()->getCacheSize() == 1);
-  mesh.reset(); // Destroy mesh object, signal is emitted to clear cache
-  BOOST_TEST(query::impl::Indexer::instance()->getCacheSize() == 0);
-}
-
-BOOST_AUTO_TEST_CASE(CacheVertices)
-{
-  PRECICE_TEST(1_rank);
-  auto ptr = fullMesh();
-
-  auto vt1 = impl::Indexer::instance()->getVertexRTree(ptr);
-  auto vt2 = impl::Indexer::instance()->getVertexRTree(ptr);
-  BOOST_TEST(vt1 == vt2);
-}
-
-BOOST_AUTO_TEST_CASE(CacheEdges)
-{
-  PRECICE_TEST(1_rank);
-  auto ptr = fullMesh();
-
-  auto et1 = impl::Indexer::instance()->getEdgeRTree(ptr);
-  auto et2 = impl::Indexer::instance()->getEdgeRTree(ptr);
-  BOOST_TEST(et1 == et2);
-}
-
-BOOST_AUTO_TEST_CASE(CacheTriangles)
-{
-  PRECICE_TEST(1_rank);
-  auto ptr = fullMesh();
-
-  auto tt1 = impl::Indexer::instance()->getTriangleRTree(ptr);
-  auto tt2 = impl::Indexer::instance()->getTriangleRTree(ptr);
-  BOOST_TEST(tt1 == tt2);
-}
-
-BOOST_AUTO_TEST_CASE(CacheAll)
-{
-  PRECICE_TEST(1_rank);
-  auto ptr = fullMesh();
-
-  auto vt1 = impl::Indexer::instance()->getVertexRTree(ptr);
-  auto et1 = impl::Indexer::instance()->getEdgeRTree(ptr);
-  auto tt1 = impl::Indexer::instance()->getTriangleRTree(ptr);
-
-  auto vt2 = impl::Indexer::instance()->getVertexRTree(ptr);
-  auto et2 = impl::Indexer::instance()->getEdgeRTree(ptr);
-  auto tt2 = impl::Indexer::instance()->getTriangleRTree(ptr);
-
-  BOOST_TEST(vt1 == vt2);
-  BOOST_TEST(et1 == et2);
-  BOOST_TEST(tt1 == tt2);
-}
-
-BOOST_AUTO_TEST_SUITE_END() // Cache
 
 BOOST_AUTO_TEST_SUITE(Projection)
 

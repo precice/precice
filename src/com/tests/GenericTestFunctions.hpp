@@ -7,8 +7,6 @@
 #include "testing/Testing.hpp"
 #include "utils/Parallel.hpp"
 
-using namespace precice;
-
 /// Generic test function that is called from the tests for
 /// MPIPortsCommunication, MPIDirectCommunication and SocketCommunication
 
@@ -16,10 +14,10 @@ namespace precice {
 namespace testing {
 namespace com {
 
-namespace mastermaster {
+namespace primaryprimary {
 
 ///
-/// Tests for Master-Master Connections
+/// Tests for primary connections
 /// Acceptor and Requestor are different participants
 ///
 
@@ -161,7 +159,7 @@ void TestSendReceiveFourProcesses(TestContext const &context)
   int message = -1;
 
   if (context.isNamed("A")) {
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       communication.acceptConnection("A", "B", "", 0);
 
       communication.send(10, 0);
@@ -175,7 +173,7 @@ void TestSendReceiveFourProcesses(TestContext const &context)
       communication.closeConnection();
     }
   } else {
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       communication.requestConnection("A", "B", "", 0, 2);
 
       communication.receive(message, 0);
@@ -414,12 +412,12 @@ void TestSendAndReceive(TestContext const &context)
   TestReduceVectors<T>(context);
 }
 
-} // namespace mastermaster
+} // namespace primaryprimary
 
-namespace masterslave {
+namespace intracomm {
 
 ///
-/// Tests for Master-Slave Connections
+/// Tests for intra-participant communication Connections
 /// Acceptor and Requestor are the same participant
 ///
 
@@ -428,7 +426,7 @@ void TestSendAndReceivePrimitiveTypes(TestContext const &context)
 {
   T com;
 
-  if (context.isMaster()) {
+  if (context.isPrimary()) {
     com.acceptConnection("Master", "Slave", "", 0, 1);
     {
       std::string msg("testOne");
@@ -494,7 +492,7 @@ void TestSendAndReceiveVectors(TestContext const &context)
 {
   T com;
 
-  if (context.isMaster()) {
+  if (context.isPrimary()) {
     com.acceptConnection("Master", "Slave", "", 0, 1);
     {
       Eigen::Vector3d msg = Eigen::Vector3d::Constant(0);
@@ -559,7 +557,7 @@ void TestBroadcastPrimitiveTypes(TestContext const &context)
 {
   T com;
 
-  if (context.isMaster()) {
+  if (context.isPrimary()) {
     com.acceptConnection("Master", "Slave", "", 0, 1);
     {
       double msg = 0.0;
@@ -600,7 +598,7 @@ void TestBroadcastVectors(TestContext const &context)
 {
   T com;
 
-  if (context.isMaster()) {
+  if (context.isPrimary()) {
     com.acceptConnection("Master", "Slave", "", 0, 1);
     {
       Eigen::Vector3d msg = Eigen::Vector3d::Constant(3.1415);
@@ -650,7 +648,7 @@ void TestReducePrimitiveTypes(TestContext const &context)
 {
   T com;
 
-  if (context.isMaster()) {
+  if (context.isPrimary()) {
     com.acceptConnection("Master", "Slave", "", 0, 1);
     {
       int msg = 1;
@@ -707,7 +705,7 @@ void TestReduceVectors(TestContext const &context)
 {
   T com;
 
-  if (context.isMaster()) {
+  if (context.isPrimary()) {
     com.acceptConnection("Master", "Slave", "", 0, 1);
     {
       std::vector<double> msg{0.1, 0.2, 0.3};
@@ -771,7 +769,7 @@ void TestSendAndReceive(TestContext const &context)
   TestReduceVectors<T>(context);
 }
 
-} // namespace masterslave
+} // namespace intracomm
 
 namespace serverclient {
 
@@ -815,7 +813,7 @@ void TestSendReceiveFourProcessesServerClient(TestContext const &context)
   BOOST_REQUIRE(context.hasSize(2));
 
   if (context.isNamed("A")) {
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       communication.acceptConnectionAsServer("A", "B", "", context.rank, 2);
 
       communication.send(10, 0);
@@ -833,7 +831,7 @@ void TestSendReceiveFourProcessesServerClient(TestContext const &context)
     }
   } else {
     BOOST_REQUIRE(context.isNamed("B"));
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       communication.requestConnectionAsClient("A", "B", "", {0}, context.rank);
 
       communication.receive(message, 0);
@@ -864,7 +862,7 @@ void TestSendReceiveFourProcessesServerClientV2(TestContext const &context)
   BOOST_REQUIRE(context.hasSize(2));
 
   if (context.isNamed("A")) {
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
 
       communication.acceptConnectionAsServer("A", "B", "", 0, 2);
 
@@ -894,7 +892,7 @@ void TestSendReceiveFourProcessesServerClientV2(TestContext const &context)
   } else {
     BOOST_REQUIRE(context.isNamed("B"));
 
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       communication.requestConnectionAsClient("A", "B", "", {0, 1}, 0);
 
       communication.receive(message, 0);

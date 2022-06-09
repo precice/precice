@@ -222,12 +222,12 @@ void SolverInterfaceImpl::configure(
   _accessor           = determineAccessingParticipant(config);
   _accessor->setMeshIdManager(config.getMeshConfiguration()->extractMeshIdManager());
 
-  PRECICE_ASSERT(_accessorCommunicatorSize == 1 || _accessor->useMaster(),
-                 "A parallel participant needs a master communication");
-  PRECICE_CHECK(not(_accessorCommunicatorSize == 1 && _accessor->useMaster()),
-                "You cannot use a master communication with a serial participant. "
-                "If you do not know exactly what a master communication is and why you want to use it "
-                "you probably just want to remove the master tag from the preCICE configuration.");
+  PRECICE_ASSERT(_accessorCommunicatorSize == 1 || _accessor->useIntraComm(),
+                 "A parallel participant needs an intra-participant communication");
+  PRECICE_CHECK(not(_accessorCommunicatorSize == 1 && _accessor->useIntraComm()),
+                "You cannot use an intra-participant communication with a serial participant. "
+                "If you do not know exactly what an intra-participant communication is and why you want to use it "
+                "you probably just want to remove the intraComm tag from the preCICE configuration.");
 
   utils::MasterSlave::configure(_accessorProcessRank, _accessorCommunicatorSize);
 
@@ -252,7 +252,7 @@ void SolverInterfaceImpl::configure(
 
   utils::EventRegistry::instance().initialize("precice-" + _accessorName, "", utils::Parallel::current()->comm);
 
-  PRECICE_DEBUG("Initialize master-slave communication");
+  PRECICE_DEBUG("Initialize intra-participant communication");
   if (utils::MasterSlave::isParallel()) {
     initializeMasterSlaveCommunication();
   }
@@ -274,39 +274,39 @@ double SolverInterfaceImpl::initialize()
 
   // Setup communication
 
-  PRECICE_INFO("Setting up master communication to coupling partner/s");
+  PRECICE_INFO("Setting up primary communication to coupling partner/s");
   for (auto &m2nPair : _m2ns) {
     auto &bm2n       = m2nPair.second;
     bool  requesting = bm2n.isRequesting;
     if (bm2n.m2n->isConnected()) {
-      PRECICE_DEBUG("Master connection {} {} already connected.", (requesting ? "from" : "to"), bm2n.remoteName);
+      PRECICE_DEBUG("Primary connection {} {} already connected.", (requesting ? "from" : "to"), bm2n.remoteName);
     } else {
-      PRECICE_DEBUG((requesting ? "Awaiting master connection from {}" : "Establishing master connection to {}"), bm2n.remoteName);
+      PRECICE_DEBUG((requesting ? "Awaiting primary connection from {}" : "Establishing primary connection to {}"), bm2n.remoteName);
       bm2n.prepareEstablishment();
-      bm2n.connectMasters();
-      PRECICE_DEBUG("Established master connection {} {}", (requesting ? "from " : "to "), bm2n.remoteName);
+      bm2n.connectPrimaryRanks();
+      PRECICE_DEBUG("Established primary connection {} {}", (requesting ? "from " : "to "), bm2n.remoteName);
     }
   }
 
-  PRECICE_INFO("Masters are connected");
+  PRECICE_INFO("Primary ranks are connected");
 
   compareBoundingBoxes();
 
-  PRECICE_INFO("Setting up preliminary slaves communication to coupling partner/s");
+  PRECICE_INFO("Setting up preliminary secondary communication to coupling partner/s");
   for (auto &m2nPair : _m2ns) {
     auto &bm2n = m2nPair.second;
-    bm2n.preConnectSlaves();
+    bm2n.preConnectSecondaryRanks();
   }
 
   computePartitions();
 
-  PRECICE_INFO("Setting up slaves communication to coupling partner/s");
+  PRECICE_INFO("Setting up secondary communication to coupling partner/s");
   for (auto &m2nPair : _m2ns) {
     auto &bm2n = m2nPair.second;
-    bm2n.connectSlaves();
-    PRECICE_DEBUG("Established slaves connection {} {}", (bm2n.isRequesting ? "from " : "to "), bm2n.remoteName);
+    bm2n.connectSecondaryRanks();
+    PRECICE_DEBUG("Established secondary connection {} {}", (bm2n.isRequesting ? "from " : "to "), bm2n.remoteName);
   }
-  PRECICE_INFO("Slaves are connected");
+  PRECICE_INFO("Secondary ranks are connected");
 
   for (auto &m2nPair : _m2ns) {
     m2nPair.second.cleanupEstablishment();
@@ -329,6 +329,10 @@ double SolverInterfaceImpl::initialize()
   PRECICE_ASSERT(_couplingScheme->isInitialized());
 
   double dt = _couplingScheme->getNextTimestepMaxLength();
+
+  for (auto &context : _accessor->readDataContexts()) {
+    context.initializeWaveform();
+  }
 
   if (_couplingScheme->hasDataBeenReceived()) {
     performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
@@ -417,6 +421,14 @@ double SolverInterfaceImpl::advance(
   PRECICE_CHECK(computedTimestepLength > 0.0, "advance() cannot be called with a negative timestep size {}.", computedTimestepLength);
   _numberAdvanceCalls++;
 
+  // This is the first time advance is called. Initializes the waveform with data from initializeData or 0, if initializeData was not called.
+  // @todo: Can be moved to the end of initializeData(), if initializeData() becomes mandatory. See https://github.com/precice/precice/issues/1196.
+  if (_numberAdvanceCalls == 1) {
+    for (auto &context : _accessor->readDataContexts()) {
+      context.moveToNextWindow();
+    }
+  }
+
 #ifndef NDEBUG
   PRECICE_DEBUG("Synchronize timestep length");
   if (utils::MasterSlave::isParallel()) {
@@ -447,6 +459,12 @@ double SolverInterfaceImpl::advance(
 
   PRECICE_DEBUG("Advance coupling scheme");
   _couplingScheme->advance();
+
+  if (_couplingScheme->isTimeWindowComplete()) {
+    for (auto &context : _accessor->readDataContexts()) {
+      context.moveToNextWindow();
+    }
+  }
 
   if (_couplingScheme->hasDataBeenReceived()) {
     performDataActions({action::Action::READ_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
@@ -505,7 +523,7 @@ void SolverInterfaceImpl::finalize()
   _accessor.reset();
 
   // Close Connections
-  PRECICE_DEBUG("Close master-slave communication");
+  PRECICE_DEBUG("Close intra-participant communication");
   if (utils::MasterSlave::isParallel()) {
     utils::MasterSlave::getCommunication()->closeConnection();
     utils::MasterSlave::getCommunication() = nullptr;
@@ -520,7 +538,7 @@ void SolverInterfaceImpl::finalize()
   utils::EventRegistry::instance().finalize();
 
   // Printing requires finalization
-  if (not precice::utils::MasterSlave::isSlave()) {
+  if (not precice::utils::MasterSlave::isSecondary()) {
     utils::EventRegistry::instance().printAll();
   }
 
@@ -549,7 +567,9 @@ bool SolverInterfaceImpl::isReadDataAvailable() const
   PRECICE_TRACE();
   PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before isReadDataAvailable().");
   PRECICE_CHECK(_state != State::Finalized, "isReadDataAvailable() cannot be called after finalize().");
-  return _couplingScheme->hasDataBeenReceived();
+  bool available = _couplingScheme->hasDataBeenReceived();
+  available |= (_couplingScheme->hasInitialDataBeenReceived() && _accessor->maxReadWaveformOrder() > 0); // if any read waveform of this participant has order > 1, we return true. Related to https://github.com/precice/precice/issues/1223.
+  return available;
 }
 
 bool SolverInterfaceImpl::isWriteDataRequired(
@@ -1062,6 +1082,7 @@ void SolverInterfaceImpl::mapReadDataTo(
       }
       PRECICE_DEBUG("Map read data \"{}\" to mesh \"{}\"", context.getDataName(), context.getMeshName());
       context.mapData();
+      context.storeDataInWaveform();
     }
     mappingContext.hasMappedData = true;
   }
@@ -1472,21 +1493,51 @@ void SolverInterfaceImpl::readBlockVectorData(
     double *   values) const
 {
   PRECICE_TRACE(dataID, size);
+  double relativeTimeWindowEndTime = _couplingScheme->getThisTimeWindowRemainder(); // samples at end of time window
+  if (_accessor->readDataContext(dataID).getInterpolationOrder() != 0) {
+    PRECICE_WARN("Interpolation order of read data named \"{}\" is set to \"{}\", but you are calling {} without providing a relativeReadTime. This looks like an error. You can fix this by providing a relativeReadTime to {} or by setting interpolation order to 0.",
+                 _accessor->readDataContext(dataID).getDataName(), _accessor->readDataContext(dataID).getInterpolationOrder(), __func__, __func__);
+  }
+  readBlockVectorDataImpl(dataID, size, valueIndices, relativeTimeWindowEndTime, values);
+}
+
+void SolverInterfaceImpl::readBlockVectorData(
+    int        dataID,
+    int        size,
+    const int *valueIndices,
+    double     relativeReadTime,
+    double *   values) const
+{
+  PRECICE_TRACE(dataID, size);
+  PRECICE_EXPERIMENTAL_API();
+  readBlockVectorDataImpl(dataID, size, valueIndices, relativeReadTime, values);
+}
+
+void SolverInterfaceImpl::readBlockVectorDataImpl(
+    int        dataID,
+    int        size,
+    const int *valueIndices,
+    double     relativeReadTime,
+    double *   values) const
+{
   PRECICE_CHECK(_state != State::Finalized, "readBlockVectorData(...) cannot be called after finalize().");
+  PRECICE_CHECK(relativeReadTime <= _couplingScheme->getThisTimeWindowRemainder(), "readBlockVectorData(...) cannot sample data outside of current time window.");
+  PRECICE_CHECK(relativeReadTime >= 0, "readBlockVectorData(...) cannot sample data before the current time.");
+  double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
+  double readTime      = timeStepStart + relativeReadTime;
   PRECICE_REQUIRE_DATA_READ(dataID);
   if (size == 0)
     return;
   PRECICE_CHECK(valueIndices != nullptr, "readBlockVectorData() was called with valueIndices == nullptr");
   PRECICE_CHECK(values != nullptr, "readBlockVectorData() was called with values == nullptr");
   ReadDataContext &context = _accessor->readDataContext(dataID);
-  PRECICE_ASSERT(context.providedData() != nullptr);
   PRECICE_CHECK(context.getDataDimensions() == _dimensions,
                 "You cannot call readBlockVectorData on the scalar data type \"{0}\". "
                 "Use readBlockScalarData or change the data type for \"{0}\" to vector.",
                 context.getDataName());
-  mesh::Data &data           = *context.providedData();
-  auto &      valuesInternal = data.values();
-  const auto  vertexCount    = valuesInternal.size() / context.getDataDimensions();
+  const auto normalizedReadTime = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
+  const auto valuesInternal     = context.sampleWaveformAt(normalizedReadTime);
+  const auto vertexCount        = valuesInternal.size() / context.getDataDimensions();
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
     PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
@@ -1507,10 +1558,38 @@ void SolverInterfaceImpl::readVectorData(
     double *value) const
 {
   PRECICE_TRACE(dataID, valueIndex);
+  double relativeTimeWindowEndTime = _couplingScheme->getThisTimeWindowRemainder(); // samples at end of time window
+  if (_accessor->readDataContext(dataID).getInterpolationOrder() != 0) {
+    PRECICE_WARN("Interpolation order of read data named \"{}\" is set to \"{}\", but you are calling {} without providing a relativeReadTime. This looks like an error. You can fix this by providing a relativeReadTime to {} or by setting interpolation order to 0.",
+                 _accessor->readDataContext(dataID).getDataName(), _accessor->readDataContext(dataID).getInterpolationOrder(), __func__, __func__);
+  }
+  readVectorDataImpl(dataID, valueIndex, relativeTimeWindowEndTime, value);
+}
+
+void SolverInterfaceImpl::readVectorData(
+    int     dataID,
+    int     valueIndex,
+    double  relativeReadTime,
+    double *value) const
+{
+  PRECICE_TRACE(dataID, valueIndex);
+  PRECICE_EXPERIMENTAL_API();
+  readVectorDataImpl(dataID, valueIndex, relativeReadTime, value);
+}
+
+void SolverInterfaceImpl::readVectorDataImpl(
+    int     dataID,
+    int     valueIndex,
+    double  relativeReadTime,
+    double *value) const
+{
   PRECICE_CHECK(_state != State::Finalized, "readVectorData(...) cannot be called after finalize().");
+  PRECICE_CHECK(relativeReadTime <= _couplingScheme->getThisTimeWindowRemainder(), "readVectorData(...) cannot sample data outside of current time window.");
+  PRECICE_CHECK(relativeReadTime >= 0, "readVectorData(...) cannot sample data before the current time.");
+  double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
+  double readTime      = timeStepStart + relativeReadTime;
   PRECICE_REQUIRE_DATA_READ(dataID);
   ReadDataContext &context = _accessor->readDataContext(dataID);
-  PRECICE_ASSERT(context.providedData() != nullptr);
   PRECICE_CHECK(valueIndex >= -1,
                 "Invalid value index ( {} ) when reading vector data. Value index must be >= 0. "
                 "Please check the value index for {}",
@@ -1518,9 +1597,9 @@ void SolverInterfaceImpl::readVectorData(
   PRECICE_CHECK(context.getDataDimensions() == _dimensions,
                 "You cannot call readVectorData on the scalar data type \"{0}\". Use readScalarData or change the data type for \"{0}\" to vector.",
                 context.getDataName());
-  mesh::Data &data        = *context.providedData();
-  auto &      values      = data.values();
-  const auto  vertexCount = values.size() / context.getDataDimensions();
+  const auto normalizedReadTime = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
+  const auto values             = context.sampleWaveformAt(normalizedReadTime);
+  const auto vertexCount        = values.size() / context.getDataDimensions();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                 "Cannot read data \"{}\" to invalid Vertex ID ({}). "
                 "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
@@ -1539,21 +1618,52 @@ void SolverInterfaceImpl::readBlockScalarData(
     double *   values) const
 {
   PRECICE_TRACE(dataID, size);
+  PRECICE_REQUIRE_DATA_READ(dataID);
+  double relativeTimeWindowEndTime = _couplingScheme->getThisTimeWindowRemainder(); // samples at end of time window
+  if (_accessor->readDataContext(dataID).getInterpolationOrder() != 0) {
+    PRECICE_WARN("Interpolation order of read data named \"{}\" is set to \"{}\", but you are calling {} without providing a relativeReadTime. This looks like an error. You can fix this by providing a relativeReadTime to {} or by setting interpolation order to 0.",
+                 _accessor->readDataContext(dataID).getDataName(), _accessor->readDataContext(dataID).getInterpolationOrder(), __func__, __func__);
+  }
+  readBlockScalarDataImpl(dataID, size, valueIndices, relativeTimeWindowEndTime, values);
+}
+
+void SolverInterfaceImpl::readBlockScalarData(
+    int        dataID,
+    int        size,
+    const int *valueIndices,
+    double     relativeReadTime,
+    double *   values) const
+{
+  PRECICE_TRACE(dataID, size);
+  PRECICE_EXPERIMENTAL_API();
+  readBlockScalarDataImpl(dataID, size, valueIndices, relativeReadTime, values);
+}
+
+void SolverInterfaceImpl::readBlockScalarDataImpl(
+    int        dataID,
+    int        size,
+    const int *valueIndices,
+    double     relativeReadTime,
+    double *   values) const
+{
   PRECICE_CHECK(_state != State::Finalized, "readBlockScalarData(...) cannot be called after finalize().");
+  PRECICE_CHECK(relativeReadTime <= _couplingScheme->getThisTimeWindowRemainder(), "readBlockScalarData(...) cannot sample data outside of current time window.");
+  PRECICE_CHECK(relativeReadTime >= 0, "readBlockScalarData(...) cannot sample data before the current time.");
+  double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
+  double readTime      = timeStepStart + relativeReadTime;
   PRECICE_REQUIRE_DATA_READ(dataID);
   if (size == 0)
     return;
   PRECICE_CHECK(valueIndices != nullptr, "readBlockScalarData() was called with valueIndices == nullptr");
   PRECICE_CHECK(values != nullptr, "readBlockScalarData() was called with values == nullptr");
   ReadDataContext &context = _accessor->readDataContext(dataID);
-  PRECICE_ASSERT(context.providedData() != nullptr);
   PRECICE_CHECK(context.getDataDimensions() == 1,
                 "You cannot call readBlockScalarData on the vector data type \"{0}\". "
                 "Use readBlockVectorData or change the data type for \"{0}\" to scalar.",
                 context.getDataName());
-  mesh::Data &data           = *context.providedData();
-  auto &      valuesInternal = data.values();
-  const auto  vertexCount    = valuesInternal.size();
+  const auto normalizedReadTime = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
+  const auto valuesInternal     = context.sampleWaveformAt(normalizedReadTime);
+  const auto vertexCount        = valuesInternal.size();
 
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
@@ -1571,10 +1681,38 @@ void SolverInterfaceImpl::readScalarData(
     double &value) const
 {
   PRECICE_TRACE(dataID, valueIndex);
+  double relativeTimeWindowEndTime = _couplingScheme->getThisTimeWindowRemainder(); // samples at end of time window
+  if (_accessor->readDataContext(dataID).getInterpolationOrder() != 0) {
+    PRECICE_WARN("Interpolation order of read data named \"{}\" is set to \"{}\", but you are calling {} without providing a relativeReadTime. This looks like an error. You can fix this by providing a relativeReadTime to {} or by setting interpolation order to 0.",
+                 _accessor->readDataContext(dataID).getDataName(), _accessor->readDataContext(dataID).getInterpolationOrder(), __func__, __func__);
+  }
+  readScalarDataImpl(dataID, valueIndex, relativeTimeWindowEndTime, value);
+}
+
+void SolverInterfaceImpl::readScalarData(
+    int     dataID,
+    int     valueIndex,
+    double  relativeReadTime,
+    double &value) const
+{
+  PRECICE_TRACE(dataID, valueIndex, value);
+  PRECICE_EXPERIMENTAL_API();
+  readScalarDataImpl(dataID, valueIndex, relativeReadTime, value);
+}
+
+void SolverInterfaceImpl::readScalarDataImpl(
+    int     dataID,
+    int     valueIndex,
+    double  relativeReadTime,
+    double &value) const
+{
   PRECICE_CHECK(_state != State::Finalized, "readScalarData(...) cannot be called after finalize().");
+  PRECICE_CHECK(relativeReadTime <= _couplingScheme->getThisTimeWindowRemainder(), "readScalarData(...) cannot sample data outside of current time window.");
+  PRECICE_CHECK(relativeReadTime >= 0, "readScalarData(...) cannot sample data before the current time.");
+  double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
+  double readTime      = timeStepStart + relativeReadTime;
   PRECICE_REQUIRE_DATA_READ(dataID);
   ReadDataContext &context = _accessor->readDataContext(dataID);
-  PRECICE_ASSERT(context.providedData() != nullptr);
   PRECICE_CHECK(valueIndex >= -1,
                 "Invalid value index ( {} ) when reading scalar data. Value index must be >= 0. "
                 "Please check the value index for {}",
@@ -1583,9 +1721,9 @@ void SolverInterfaceImpl::readScalarData(
                 "You cannot call readScalarData on the vector data type \"{0}\". "
                 "Use readVectorData or change the data type for \"{0}\" to scalar.",
                 context.getDataName());
-  mesh::Data &data        = *context.providedData();
-  auto &      values      = data.values();
-  const auto  vertexCount = values.size();
+  const auto normalizedReadTime = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
+  const auto values             = context.sampleWaveformAt(normalizedReadTime);
+  const auto vertexCount        = values.size();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                 "Cannot read data \"{}\" from invalid Vertex ID ({}). "
                 "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
@@ -1892,6 +2030,7 @@ void SolverInterfaceImpl::mapReadData()
       PRECICE_DEBUG("Map read data \"{}\" to mesh \"{}\"", context.getDataName(), context.getMeshName());
       context.mapData();
     }
+    context.storeDataInWaveform();
   }
   clearMappings(_accessor->readMappingContexts());
 }
@@ -1973,24 +2112,24 @@ void SolverInterfaceImpl::initializeMasterSlaveCommunication()
   PRECICE_TRACE();
 
   Event e("com.initializeMasterSlaveCom", precice::syncMode);
-  utils::MasterSlave::getCommunication()->connectMasterSlaves(
-      _accessorName, "MasterSlaves",
+  utils::MasterSlave::getCommunication()->connectIntraComm(
+      _accessorName, "IntraComm",
       _accessorProcessRank, _accessorCommunicatorSize);
 }
 
 void SolverInterfaceImpl::syncTimestep(double computedTimestepLength)
 {
   PRECICE_ASSERT(utils::MasterSlave::isParallel());
-  if (utils::MasterSlave::isSlave()) {
+  if (utils::MasterSlave::isSecondary()) {
     utils::MasterSlave::getCommunication()->send(computedTimestepLength, 0);
   } else {
-    PRECICE_ASSERT(utils::MasterSlave::isMaster());
-    for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
+    PRECICE_ASSERT(utils::MasterSlave::isPrimary());
+    for (Rank secondaryRank : utils::MasterSlave::allSecondaryRanks()) {
       double dt;
-      utils::MasterSlave::getCommunication()->receive(dt, rankSlave);
+      utils::MasterSlave::getCommunication()->receive(dt, secondaryRank);
       PRECICE_CHECK(math::equals(dt, computedTimestepLength),
                     "Found ambiguous values for the timestep length passed to preCICE in \"advance\". On rank {}, the value is {}, while on rank 0, the value is {}.",
-                    rankSlave, dt, computedTimestepLength);
+                    secondaryRank, dt, computedTimestepLength);
     }
   }
 }
@@ -2005,18 +2144,18 @@ void SolverInterfaceImpl::closeCommunicationChannels(CloseChannels close)
   std::string pong = "pong";
   for (auto &iter : _m2ns) {
     auto bm2n = iter.second;
-    if (not utils::MasterSlave::isSlave()) {
-      PRECICE_DEBUG("Synchronizing Master with {}", bm2n.remoteName);
+    if (not utils::MasterSlave::isSecondary()) {
+      PRECICE_DEBUG("Synchronizing primary rank with {}", bm2n.remoteName);
       if (bm2n.isRequesting) {
-        bm2n.m2n->getMasterCommunication()->send(ping, 0);
+        bm2n.m2n->getPrimaryRankCommunication()->send(ping, 0);
         std::string receive = "init";
-        bm2n.m2n->getMasterCommunication()->receive(receive, 0);
+        bm2n.m2n->getPrimaryRankCommunication()->receive(receive, 0);
         PRECICE_ASSERT(receive == pong);
       } else {
         std::string receive = "init";
-        bm2n.m2n->getMasterCommunication()->receive(receive, 0);
+        bm2n.m2n->getPrimaryRankCommunication()->receive(receive, 0);
         PRECICE_ASSERT(receive == ping);
-        bm2n.m2n->getMasterCommunication()->send(pong, 0);
+        bm2n.m2n->getPrimaryRankCommunication()->send(pong, 0);
       }
     }
     if (close == CloseChannels::Distributed) {

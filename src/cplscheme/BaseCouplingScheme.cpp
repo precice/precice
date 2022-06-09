@@ -314,15 +314,28 @@ bool BaseCouplingScheme::willDataBeExchanged(
   return not math::greater(remainder, 0.0, _eps);
 }
 
+bool BaseCouplingScheme::hasInitialDataBeenReceived() const
+{
+  return _hasInitialDataBeenReceived;
+}
+
 bool BaseCouplingScheme::hasDataBeenReceived() const
 {
   return _hasDataBeenReceived;
 }
 
+void BaseCouplingScheme::checkInitialDataHasBeenReceived()
+{
+  PRECICE_ASSERT(not _hasDataBeenReceived, "checkInitialDataHasBeenReceived() may only be called once within one coupling iteration. If this assertion is triggered this probably means that your coupling scheme has a bug.");
+  _hasInitialDataBeenReceived = true;
+  checkDataHasBeenReceived();
+}
+
 void BaseCouplingScheme::checkDataHasBeenReceived()
 {
   PRECICE_ASSERT(not _hasDataBeenReceived, "checkDataHasBeenReceived() may only be called once within one coupling iteration. If this assertion is triggered this probably means that your coupling scheme has a bug.");
-  _hasDataBeenReceived = true;
+  _hasDataBeenReceived        = true;
+  _hasInitialDataBeenReceived = true; // If any data has been received, this counts as initial data. Important for waveform relaxation & subcycling.
 }
 
 double BaseCouplingScheme::getTime() const
@@ -504,7 +517,7 @@ bool BaseCouplingScheme::measureConvergence()
   bool oneSuffices  = false; //at least one convergence measure suffices and did converge
   bool oneStrict    = false; //at least one convergence measure is strict and did not converge
   PRECICE_ASSERT(_convergenceMeasures.size() > 0);
-  if (not utils::MasterSlave::isSlave()) {
+  if (not utils::MasterSlave::isSecondary()) {
     _convergenceWriter->writeData("TimeWindow", _timeWindows - 1);
     _convergenceWriter->writeData("Iteration", _iterations);
   }
@@ -514,7 +527,7 @@ bool BaseCouplingScheme::measureConvergence()
 
     convMeasure.measure->measure(convMeasure.couplingData->previousIteration(), convMeasure.couplingData->values());
 
-    if (not utils::MasterSlave::isSlave() && convMeasure.doesLogging) {
+    if (not utils::MasterSlave::isSecondary() && convMeasure.doesLogging) {
       _convergenceWriter->writeData(convMeasure.logHeader(), convMeasure.measure->getNormResidual());
     }
 
@@ -545,7 +558,7 @@ bool BaseCouplingScheme::measureConvergence()
 
 void BaseCouplingScheme::initializeTXTWriters()
 {
-  if (not utils::MasterSlave::isSlave()) {
+  if (not utils::MasterSlave::isSecondary()) {
 
     _iterationsWriter = std::make_shared<io::TXTTableWriter>("precice-" + _localParticipant + "-iterations.log");
     if (not doesFirstStep()) {
@@ -580,7 +593,7 @@ void BaseCouplingScheme::initializeTXTWriters()
 
 void BaseCouplingScheme::advanceTXTWriters()
 {
-  if (not utils::MasterSlave::isSlave()) {
+  if (not utils::MasterSlave::isSecondary()) {
 
     _iterationsWriter->writeData("TimeWindow", _timeWindows - 1);
     _iterationsWriter->writeData("TotalIterations", _totalIterations);

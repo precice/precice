@@ -59,7 +59,7 @@ void multiCouplingThreeSolversParallelControl(const std::string configFile, cons
     const int       dataABID = cplInterface.getDataID("DataAB", meshID);
     const int       dataBAID = cplInterface.getDataID("DataBA", meshID);
 
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       int vertex1 = cplInterface.setMeshVertex(meshID, coordOneA.data());
 
       double maxDt = cplInterface.initialize();

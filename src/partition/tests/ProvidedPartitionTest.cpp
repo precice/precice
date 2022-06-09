@@ -41,8 +41,8 @@ BOOST_AUTO_TEST_SUITE(ProvidedPartitionTests)
 
 BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D)
 {
-  PRECICE_TEST("NASTIN"_on(1_rank), "SOLIDZ"_on(3_ranks).setupMasterSlaves(), Require::Events);
-  auto m2n = context.connectMasters("NASTIN", "SOLIDZ");
+  PRECICE_TEST("NASTIN"_on(1_rank), "SOLIDZ"_on(3_ranks).setupIntraComm(), Require::Events);
+  auto m2n = context.connectPrimaryRanks("NASTIN", "SOLIDZ");
 
   int dimensions = 2;
 
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D)
 
     double safetyFactor = 0.1;
 
-    ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_SLAVES, safetyFactor);
+    ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_SECONDARY_RANKS, safetyFactor);
     part.addM2N(m2n);
     part.communicate();
 
@@ -64,15 +64,15 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D)
   } else { //SOLIDZ
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
 
-    if (context.isMaster()) { //Master
+    if (context.isPrimary()) { //Master
       Eigen::VectorXd position(dimensions);
       position << 0.0, 0.0;
       mesh::Vertex &v1 = pSolidzMesh->createVertex(position);
       position << 0.0, 1.5;
       mesh::Vertex &v2 = pSolidzMesh->createVertex(position);
       pSolidzMesh->createEdge(v1, v2);
-    } else if (context.isRank(1)) { //Slave1
-    } else if (context.isRank(2)) { //Slave2
+    } else if (context.isRank(1)) { //SecondaryRank1
+    } else if (context.isRank(2)) { //Secondary rank 2
       Eigen::VectorXd position(dimensions);
       position << 0.0, 3.5;
       mesh::Vertex &v3 = pSolidzMesh->createVertex(position);
@@ -94,11 +94,11 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D)
     part.compute();
 
     BOOST_REQUIRE(pSolidzMesh->getVertexOffsets().size() == 3);
-    if (context.isMaster()) { //master
+    if (context.isPrimary()) {
       BOOST_TEST(pSolidzMesh->getVertexOffsets().at(0) == 2);
       BOOST_TEST(pSolidzMesh->getVertexOffsets().at(1) == 2);
       BOOST_TEST(pSolidzMesh->getVertexOffsets().at(2) == 6);
-    } else if (context.isRank(1)) { //Slave1
+    } else if (context.isRank(1)) { //SecondaryRank1
       BOOST_TEST(pSolidzMesh->getVertexOffsets().at(0) == 2);
       BOOST_TEST(pSolidzMesh->getVertexOffsets().at(1) == 2);
       BOOST_TEST(pSolidzMesh->getVertexOffsets().at(2) == 6);
@@ -112,8 +112,8 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D)
 
 BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D)
 {
-  PRECICE_TEST("NASTIN"_on(1_rank), "SOLIDZ"_on(3_ranks).setupMasterSlaves(), Require::Events);
-  auto m2n = context.connectMasters("NASTIN", "SOLIDZ");
+  PRECICE_TEST("NASTIN"_on(1_rank), "SOLIDZ"_on(3_ranks).setupIntraComm(), Require::Events);
+  auto m2n = context.connectPrimaryRanks("NASTIN", "SOLIDZ");
 
   int dimensions = 3;
 
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D)
 
     double safetyFactor = 0.1;
 
-    ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_SLAVES, safetyFactor);
+    ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_SECONDARY_RANKS, safetyFactor);
     part.addM2N(m2n);
     part.communicate();
 
@@ -136,15 +136,15 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D)
   } else { //SOLIDZ
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
 
-    if (context.isMaster()) { //Master
+    if (context.isPrimary()) { //Master
       Eigen::VectorXd position(dimensions);
       position << 0.0, 0.0, 0.0;
       mesh::Vertex &v1 = pSolidzMesh->createVertex(position);
       position << 0.0, 1.5, 1.0;
       mesh::Vertex &v2 = pSolidzMesh->createVertex(position);
       pSolidzMesh->createEdge(v1, v2);
-    } else if (context.isRank(1)) { //Slave1
-    } else if (context.isRank(2)) { //Slave2
+    } else if (context.isRank(1)) { //SecondaryRank1
+    } else if (context.isRank(2)) { //Secondary rank 2
       Eigen::VectorXd position(dimensions);
       position << 0.0, 3.5, 0.1;
       mesh::Vertex &v3 = pSolidzMesh->createVertex(position);
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D)
     const auto &vertexOffsets      = pSolidzMesh->getVertexOffsets();
     const auto &vertexDistribution = pSolidzMesh->getVertexDistribution();
 
-    if (context.isMaster()) { //master
+    if (context.isPrimary()) {
       BOOST_REQUIRE(vertexOffsets.size() == 3);
       BOOST_TEST(vertexOffsets.at(0) == 2);
       BOOST_TEST(vertexOffsets.at(1) == 2);
@@ -197,12 +197,12 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D)
       BOOST_TEST(vertexDistribution.at(2).at(1) == 3);
       BOOST_TEST(vertexDistribution.at(2).at(2) == 4);
       BOOST_TEST(vertexDistribution.at(2).at(3) == 5);
-    } else if (context.isRank(1)) { //Slave1
+    } else if (context.isRank(1)) { //SecondaryRank1
       BOOST_REQUIRE(vertexOffsets.size() == 3);
       BOOST_TEST(vertexOffsets.at(0) == 2);
       BOOST_TEST(vertexOffsets.at(1) == 2);
       BOOST_TEST(vertexOffsets.at(2) == 6);
-    } else if (context.isRank(2)) { //Slave2
+    } else if (context.isRank(2)) { //Secondary rank 2
       BOOST_REQUIRE(vertexOffsets.size() == 3);
       BOOST_TEST(vertexOffsets.at(0) == 2);
       BOOST_TEST(vertexOffsets.at(1) == 2);
@@ -223,24 +223,24 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D)
 
 BOOST_AUTO_TEST_CASE(TestOnlyDistribution2D)
 {
-  PRECICE_TEST("NASTIN"_on(4_ranks).setupMasterSlaves(), Require::Events);
+  PRECICE_TEST("NASTIN"_on(4_ranks).setupIntraComm(), Require::Events);
   // Create mesh object
   std::string   meshName("MyMesh");
   int           dim = 2;
   mesh::PtrMesh pMesh(new mesh::Mesh(meshName, dim, testing::nextMeshID()));
 
-  if (context.isMaster()) { //Master
+  if (context.isPrimary()) { //Master
     Eigen::VectorXd position(dim);
     position << 0.0, 0.0;
     pMesh->createVertex(position);
     position << 1.0, 0.0;
     pMesh->createVertex(position);
-  } else if (context.isRank(1)) { //Slave1
+  } else if (context.isRank(1)) { //SecondaryRank1
     Eigen::VectorXd position(dim);
     position << 2.0, 0.0;
     pMesh->createVertex(position);
-  } else if (context.isRank(2)) { //Slave2
-  } else if (context.isRank(3)) { //Slave3
+  } else if (context.isRank(2)) { //Secondary rank 2
+  } else if (context.isRank(3)) { //Secondary rank 3
     Eigen::VectorXd position(dim);
     position << 3.0, 0.0;
     pMesh->createVertex(position);
@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(TestOnlyDistribution2D)
 
   BOOST_TEST_CONTEXT(*pMesh)
   {
-    if (context.isMaster()) { //Master
+    if (context.isPrimary()) { //Master
       BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 5);
       BOOST_TEST_REQUIRE(pMesh->getVertexOffsets().size() == 4);
       BOOST_TEST(pMesh->getVertexOffsets().at(0) == 2);
@@ -266,7 +266,7 @@ BOOST_AUTO_TEST_CASE(TestOnlyDistribution2D)
       BOOST_TEST(pMesh->vertices().at(1).getGlobalIndex() == 1);
       BOOST_TEST(pMesh->vertices().at(0).isOwner() == true);
       BOOST_TEST(pMesh->vertices().at(1).isOwner() == true);
-    } else if (context.isRank(1)) { //Slave1
+    } else if (context.isRank(1)) { //SecondaryRank1
       BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 5);
       BOOST_TEST_REQUIRE(pMesh->getVertexOffsets().size() == 4);
       BOOST_TEST(pMesh->getVertexOffsets().at(0) == 2);
@@ -275,14 +275,14 @@ BOOST_AUTO_TEST_CASE(TestOnlyDistribution2D)
       BOOST_TEST(pMesh->getVertexOffsets().at(3) == 5);
       BOOST_TEST(pMesh->vertices().at(0).getGlobalIndex() == 2);
       BOOST_TEST(pMesh->vertices().at(0).isOwner() == true);
-    } else if (context.isRank(2)) { //Slave2
+    } else if (context.isRank(2)) { //Secondary rank 2
       BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 5);
       BOOST_TEST_REQUIRE(pMesh->getVertexOffsets().size() == 4);
       BOOST_TEST(pMesh->getVertexOffsets().at(0) == 2);
       BOOST_TEST(pMesh->getVertexOffsets().at(1) == 3);
       BOOST_TEST(pMesh->getVertexOffsets().at(2) == 3);
       BOOST_TEST(pMesh->getVertexOffsets().at(3) == 5);
-    } else if (context.isRank(3)) { //Slave3
+    } else if (context.isRank(3)) { //Secondary rank 3
       BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 5);
       BOOST_TEST_REQUIRE(pMesh->getVertexOffsets().size() == 4);
       BOOST_TEST(pMesh->getVertexOffsets().at(0) == 2);
@@ -299,11 +299,11 @@ BOOST_AUTO_TEST_CASE(TestOnlyDistribution2D)
 
 BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
 {
-  PRECICE_TEST("SOLIDZ"_on(3_ranks).setupMasterSlaves(), "NASTIN"_on(1_rank), Require::Events);
+  PRECICE_TEST("SOLIDZ"_on(3_ranks).setupIntraComm(), "NASTIN"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = false;
-  options.useTwoLevelInit  = true;
-  auto m2n                 = context.connectMasters("NASTIN", "SOLIDZ", options);
+  options.useOnlyPrimaryCom = false;
+  options.useTwoLevelInit   = true;
+  auto m2n                  = context.connectPrimaryRanks("NASTIN", "SOLIDZ", options);
 
   int dimensions = 2;
 
@@ -311,7 +311,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
 
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
 
-    if (context.isMaster()) { //Master
+    if (context.isPrimary()) { //Master
       Eigen::VectorXd position(dimensions);
       position << -1.0, 0.0;
       mesh::Vertex &v0 = pSolidzMesh->createVertex(position);
@@ -323,14 +323,14 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
       pSolidzMesh->createEdge(v1, v2);
     }
 
-    else if (context.isRank(1)) { //Slave1
+    else if (context.isRank(1)) { //SecondaryRank1
       Eigen::VectorXd position(dimensions);
       position << 1.0, 3.5;
       mesh::Vertex &v3 = pSolidzMesh->createVertex(position);
       position << 0.0, 4.5;
       mesh::Vertex &v4 = pSolidzMesh->createVertex(position);
       pSolidzMesh->createEdge(v3, v4);
-    } else if (context.isRank(2)) { //Slave2
+    } else if (context.isRank(2)) { //Secondary rank 2
       Eigen::VectorXd position(dimensions);
       position << 2.5, 5.5;
       mesh::Vertex &v5 = pSolidzMesh->createVertex(position);
@@ -344,15 +344,15 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
     part.addM2N(m2n);
     part.compareBoundingBoxes();
 
-    if (context.isMaster()) { //Master
+    if (context.isPrimary()) { //Master
       BOOST_TEST(pSolidzMesh->getConnectedRanks().size() == 2);
       BOOST_TEST(pSolidzMesh->getConnectedRanks().at(0) == 1);
       BOOST_TEST(pSolidzMesh->getConnectedRanks().at(1) == 2);
-    } else if (context.isRank(1)) { //Slave1
+    } else if (context.isRank(1)) { //SecondaryRank1
       BOOST_TEST(pSolidzMesh->getConnectedRanks().size() == 2);
       BOOST_TEST(pSolidzMesh->getConnectedRanks().at(0) == 0);
       BOOST_TEST(pSolidzMesh->getConnectedRanks().at(1) == 2);
-    } else if (context.isRank(2)) { //Slave2
+    } else if (context.isRank(2)) { //Secondary rank 2
       BOOST_TEST(pSolidzMesh->getConnectedRanks().size() == 2);
       BOOST_TEST(pSolidzMesh->getConnectedRanks().at(0) == 0);
       BOOST_TEST(pSolidzMesh->getConnectedRanks().at(1) == 1);
@@ -371,14 +371,14 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
 
     // we receive other participants communicator size
     int receivedFeedbackSize = 3;
-    m2n->getMasterCommunication()->receive(receivedFeedbackSize, 0);
+    m2n->getPrimaryRankCommunication()->receive(receivedFeedbackSize, 0);
 
     for (int i = 0; i < receivedFeedbackSize; i++) {
       receivedGlobalBB.emplace(i, localBB);
     }
 
     // we receive global bounding box from other participant!
-    com::CommunicateBoundingBox(m2n->getMasterCommunication()).receiveBoundingBoxMap(receivedGlobalBB, 0);
+    com::CommunicateBoundingBox(m2n->getPrimaryRankCommunication()).receiveBoundingBoxMap(receivedGlobalBB, 0);
     // check whether we have received the correct com size
     BOOST_TEST(receivedFeedbackSize == 3);
 
@@ -388,7 +388,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
     BOOST_TEST(receivedGlobalBB.at(2) == compareBB.at(2));
 
     std::vector<int> connectedRanks = {0, 1, 2};
-    m2n->getMasterCommunication()->send(connectedRanks, 0);
+    m2n->getPrimaryRankCommunication()->send(connectedRanks, 0);
 
     // construct connection map
     std::map<int, std::vector<int>> connectionMap;
@@ -399,17 +399,17 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
     connectionMap[2].push_back(0);
     connectionMap[2].push_back(1);
 
-    com::CommunicateBoundingBox(m2n->getMasterCommunication()).sendConnectionMap(connectionMap, 0);
+    com::CommunicateBoundingBox(m2n->getPrimaryRankCommunication()).sendConnectionMap(connectionMap, 0);
   }
 }
 
 BOOST_AUTO_TEST_CASE(TestSendBoundingBoxes3D)
 {
-  PRECICE_TEST("SOLIDZ"_on(3_ranks).setupMasterSlaves(), "NASTIN"_on(1_rank), Require::Events);
+  PRECICE_TEST("SOLIDZ"_on(3_ranks).setupIntraComm(), "NASTIN"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = false;
-  options.useTwoLevelInit  = true;
-  auto m2n                 = context.connectMasters("NASTIN", "SOLIDZ", options);
+  options.useOnlyPrimaryCom = false;
+  options.useTwoLevelInit   = true;
+  auto m2n                  = context.connectPrimaryRanks("NASTIN", "SOLIDZ", options);
 
   int dimensions = 3;
 
@@ -417,7 +417,7 @@ BOOST_AUTO_TEST_CASE(TestSendBoundingBoxes3D)
 
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
 
-    if (context.isMaster()) { //Master
+    if (context.isPrimary()) { //Master
       Eigen::VectorXd position(dimensions);
       position << -1.0, 0.0, -1.0;
       mesh::Vertex &v0 = pSolidzMesh->createVertex(position);
@@ -429,14 +429,14 @@ BOOST_AUTO_TEST_CASE(TestSendBoundingBoxes3D)
       pSolidzMesh->createEdge(v1, v2);
     }
 
-    else if (context.isRank(1)) { //Slave1
+    else if (context.isRank(1)) { //SecondaryRank1
       Eigen::VectorXd position(dimensions);
       position << 1.0, 3.5, 1.0;
       mesh::Vertex &v3 = pSolidzMesh->createVertex(position);
       position << 0.0, 4.5, 0.0;
       mesh::Vertex &v4 = pSolidzMesh->createVertex(position);
       pSolidzMesh->createEdge(v3, v4);
-    } else if (context.isRank(2)) { //Slave2
+    } else if (context.isRank(2)) { //Secondary rank 2
       Eigen::VectorXd position(dimensions);
       position << 2.5, 5.5, 2.5;
       mesh::Vertex &v5 = pSolidzMesh->createVertex(position);
@@ -463,14 +463,14 @@ BOOST_AUTO_TEST_CASE(TestSendBoundingBoxes3D)
 
     // we receive other participants communicator size
     int remoteParComSize = 3;
-    m2n->getMasterCommunication()->receive(remoteParComSize, 0);
+    m2n->getPrimaryRankCommunication()->receive(remoteParComSize, 0);
 
     for (int i = 0; i < remoteParComSize; i++) {
       receivedGlobalBB.emplace(i, localBB);
     }
 
     // we receive global bounding box from other participant!
-    com::CommunicateBoundingBox(m2n->getMasterCommunication()).receiveBoundingBoxMap(receivedGlobalBB, 0);
+    com::CommunicateBoundingBox(m2n->getPrimaryRankCommunication()).receiveBoundingBoxMap(receivedGlobalBB, 0);
 
     // check whether we have received the correct com size
     BOOST_TEST(remoteParComSize == 3);
@@ -482,26 +482,26 @@ BOOST_AUTO_TEST_CASE(TestSendBoundingBoxes3D)
 
     //send empty dummy list of connected ranks as feedback
     std::vector<int> connectedRanksList;
-    m2n->getMasterCommunication()->send(connectedRanksList, 0);
+    m2n->getPrimaryRankCommunication()->send(connectedRanksList, 0);
   }
 }
 
 BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions)
 {
-  PRECICE_TEST("Solid"_on(2_ranks).setupMasterSlaves(), "Fluid"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  PRECICE_TEST("Solid"_on(2_ranks).setupIntraComm(), "Fluid"_on(2_ranks).setupIntraComm(), Require::Events);
   //mesh creation
   int           dimensions   = 2;
   double        safetyFactor = 0.1;
   mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, testing::nextMeshID()));
 
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = false;
-  options.useTwoLevelInit  = true;
-  options.type             = testing::ConnectionType::PointToPoint;
-  auto m2n                 = context.connectMasters("Fluid", "Solid", options);
+  options.useOnlyPrimaryCom = false;
+  options.useTwoLevelInit   = true;
+  options.type              = testing::ConnectionType::PointToPoint;
+  auto m2n                  = context.connectPrimaryRanks("Fluid", "Solid", options);
 
   if (context.isNamed("Solid")) {
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       Eigen::VectorXd position(dimensions);
       position << 0.5, 0.0;
       mesh::Vertex &v1 = mesh->createVertex(position);
@@ -537,7 +537,7 @@ BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions)
     }
   } else {
     BOOST_TEST(context.isNamed("Fluid"));
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       mesh->getConnectedRanks().push_back(0);
     } else {
       mesh->getConnectedRanks().push_back(1);
@@ -548,20 +548,20 @@ BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions)
   if (context.isNamed("Solid")) {
     m2n->createDistributedCommunication(mesh);
     ProvidedPartition part(mesh);
-    m2n->acceptSlavesPreConnection("SolidSlaves", "FluidSlaves");
+    m2n->acceptSecondaryPreConnections("SolidSecondaryRanks", "FluidSecondaryRanks");
     part.addM2N(m2n);
     part.communicate();
   } else {
     m2n->createDistributedCommunication(mesh);
-    ReceivedPartition part(mesh, ReceivedPartition::ON_SLAVES, safetyFactor);
-    m2n->requestSlavesPreConnection("SolidSlaves", "FluidSlaves");
+    ReceivedPartition part(mesh, ReceivedPartition::ON_SECONDARY_RANKS, safetyFactor);
+    m2n->requestSecondaryRanksPreConnection("SolidSecondaryRanks", "FluidSecondaryRanks");
     part.addM2N(m2n);
 
     part.communicate();
 
     BOOST_TEST(mesh->vertices().size() == 4);
 
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       BOOST_TEST(mesh->vertices().at(0).getCoords()(0) == 0.5);
       BOOST_TEST(mesh->vertices().at(0).getCoords()(1) == 0.0);
       BOOST_TEST(mesh->vertices().at(1).getCoords()(0) == 1.5);
@@ -585,7 +585,7 @@ BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions)
 
 BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning2D)
 {
-  PRECICE_TEST("Solid"_on(2_ranks).setupMasterSlaves(), "Fluid"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  PRECICE_TEST("Solid"_on(2_ranks).setupIntraComm(), "Fluid"_on(2_ranks).setupIntraComm(), Require::Events);
   //mesh creation
   int           dimensions   = 2;
   double        safetyFactor = 0;
@@ -593,13 +593,13 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning2D)
   mesh::PtrMesh receivedMesh(new mesh::Mesh("mesh", dimensions, testing::nextMeshID()));
 
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = false;
-  options.useTwoLevelInit  = true;
-  options.type             = testing::ConnectionType::PointToPoint;
-  auto m2n                 = context.connectMasters("Fluid", "Solid", options);
+  options.useOnlyPrimaryCom = false;
+  options.useTwoLevelInit   = true;
+  options.type              = testing::ConnectionType::PointToPoint;
+  auto m2n                  = context.connectPrimaryRanks("Fluid", "Solid", options);
 
   if (context.isNamed("Solid")) {
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       Eigen::VectorXd position(dimensions);
       position << -2.0, 0.0;
       mesh->createVertex(position);
@@ -636,7 +636,7 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning2D)
     }
   } else {
     BOOST_TEST(context.isNamed("Fluid"));
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       Eigen::VectorXd position(dimensions);
       position << 0.0, 0.0;
       mesh->createVertex(position);
@@ -675,7 +675,7 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning2D)
 
     part.compareBoundingBoxes();
 
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       BOOST_TEST(mesh->getConnectedRanks().size() == 2);
       BOOST_TEST(mesh->getConnectedRanks().at(0) == 0);
       BOOST_TEST(mesh->getConnectedRanks().at(1) == 1);
@@ -685,12 +685,12 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning2D)
       BOOST_TEST(mesh->getConnectedRanks().at(1) == 1);
     }
 
-    m2n->acceptSlavesPreConnection("FluidSlaves", "SolidSlaves");
+    m2n->acceptSecondaryPreConnections("FluidSecondaryRanks", "SolidSecondaryRanks");
 
     part.communicate();
     part.compute();
 
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       BOOST_TEST(mesh->getCommunicationMap().at(0).at(0) == 0);
       BOOST_TEST(mesh->getCommunicationMap().at(0).at(1) == 1);
     } else {
@@ -705,7 +705,7 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning2D)
     boundingFromMapping->setMeshes(receivedMesh, mesh);
     boundingToMapping->setMeshes(mesh, receivedMesh);
 
-    ReceivedPartition part(receivedMesh, ReceivedPartition::ON_SLAVES, safetyFactor);
+    ReceivedPartition part(receivedMesh, ReceivedPartition::ON_SECONDARY_RANKS, safetyFactor);
 
     part.addM2N(m2n);
 
@@ -714,7 +714,7 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning2D)
 
     part.compareBoundingBoxes();
 
-    m2n->requestSlavesPreConnection("FluidSlaves", "SolidSlaves");
+    m2n->requestSecondaryRanksPreConnection("FluidSecondaryRanks", "SolidSecondaryRanks");
 
     part.communicate();
     part.compute();
@@ -723,7 +723,7 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning2D)
 
 BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning3D)
 {
-  PRECICE_TEST("Solid"_on(2_ranks).setupMasterSlaves(), "Fluid"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  PRECICE_TEST("Solid"_on(2_ranks).setupIntraComm(), "Fluid"_on(2_ranks).setupIntraComm(), Require::Events);
 
   //mesh creation
   int           dimensions   = 3;
@@ -733,13 +733,13 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning3D)
 
   // create the communicator for m2n mesh and communication map exchange
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = false;
-  options.useTwoLevelInit  = true;
-  options.type             = testing::ConnectionType::PointToPoint;
-  auto m2n                 = context.connectMasters("Fluid", "Solid", options);
+  options.useOnlyPrimaryCom = false;
+  options.useTwoLevelInit   = true;
+  options.type              = testing::ConnectionType::PointToPoint;
+  auto m2n                  = context.connectPrimaryRanks("Fluid", "Solid", options);
 
   if (context.isNamed("Solid")) {
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       Eigen::VectorXd position(dimensions);
       position << -2.0, 0.0, 0.0;
       mesh->createVertex(position);
@@ -765,7 +765,7 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning3D)
       mesh->createVertex(position);
     }
   } else {
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       Eigen::VectorXd position(dimensions);
       position << 0.0, 0.0, 0.0;
       mesh->createVertex(position);
@@ -804,7 +804,7 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning3D)
 
     part.compareBoundingBoxes();
 
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       BOOST_TEST(mesh->getConnectedRanks().size() == 2);
       BOOST_TEST(mesh->getConnectedRanks().at(0) == 0);
       BOOST_TEST(mesh->getConnectedRanks().at(1) == 1);
@@ -814,12 +814,12 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning3D)
       BOOST_TEST(mesh->getConnectedRanks().at(1) == 1);
     }
 
-    m2n->acceptSlavesPreConnection("FluidSlaves", "SolidSlaves");
+    m2n->acceptSecondaryPreConnections("FluidSecondaryRanks", "SolidSecondaryRanks");
 
     part.communicate();
     part.compute();
 
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       BOOST_TEST(mesh->getCommunicationMap().at(0).at(0) == 0);
       BOOST_TEST(mesh->getCommunicationMap().at(0).at(1) == 1);
     } else {
@@ -834,7 +834,7 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning3D)
     boundingFromMapping->setMeshes(receivedMesh, mesh);
     boundingToMapping->setMeshes(mesh, receivedMesh);
 
-    ReceivedPartition part(receivedMesh, ReceivedPartition::ON_SLAVES, safetyFactor);
+    ReceivedPartition part(receivedMesh, ReceivedPartition::ON_SECONDARY_RANKS, safetyFactor);
     part.addM2N(m2n);
 
     part.addFromMapping(boundingFromMapping);
@@ -842,7 +842,7 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning3D)
 
     part.compareBoundingBoxes();
 
-    m2n->requestSlavesPreConnection("FluidSlaves", "SolidSlaves");
+    m2n->requestSecondaryRanksPreConnection("FluidSecondaryRanks", "SolidSecondaryRanks");
 
     part.communicate();
     part.compute();

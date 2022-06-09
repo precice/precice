@@ -10,8 +10,10 @@
 #include "mapping/config/MappingConfiguration.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "partition/ReceivedPartition.hpp"
+#include "precice/config/SolverInterfaceConfiguration.hpp"
 #include "precice/impl/Participant.hpp"
 #include "precice/impl/SharedPointer.hpp"
+#include "time/Time.hpp"
 #include "utils/networking.hpp"
 #include "xml/XMLTag.hpp"
 
@@ -28,6 +30,8 @@ public:
       mesh::PtrMeshConfiguration meshConfiguration);
 
   void setDimensions(int dimensions);
+
+  void setExperimental(bool experimental);
 
   /**
    * @brief Callback function required for use of automatic configuration.
@@ -92,6 +96,7 @@ private:
   const std::string ATTR_NETWORK            = "network";
   const std::string ATTR_EXCHANGE_DIRECTORY = "exchange-directory";
   const std::string ATTR_SCALE_WITH_CONN    = "scale-with-connectivity";
+  const std::string ATTR_ORDER              = "waveform-order";
 
   const std::string VALUE_FILTER_ON_SLAVES = "on-slaves";
   const std::string VALUE_FILTER_ON_MASTER = "on-master";
@@ -103,6 +108,8 @@ private:
   const std::string VALUE_CSV = "csv";
 
   int _dimensions = 0;
+
+  bool _experimental = false;
 
   mesh::PtrMeshConfiguration _meshConfig;
 
@@ -128,10 +135,10 @@ private:
 
   mapping::PtrMapping getMapping(const std::string &mappingName);
 
-  // Does this participant already define a master tag?
+  // Does this participant already define a primary tag?
   // This context information is needed in xmlEndTagCallback to create a default
-  // master com if required (i.e. no solution yet defined and parallel).
-  bool _isMasterDefined = false;
+  // primary com if required (i.e. no solution yet defined and parallel).
+  bool _isIntraCommDefined = false;
 
   void finishParticipantConfiguration(
       const xml::ConfigurationContext &context,

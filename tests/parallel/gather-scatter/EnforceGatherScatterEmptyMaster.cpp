@@ -11,9 +11,9 @@ BOOST_AUTO_TEST_SUITE(GatherScatter)
 BOOST_AUTO_TEST_CASE(EnforceGatherScatterEmptyMaster)
 {
   // Test case for an enforced gather scatter communication, where the partition
-  // on the master rank is empty (recieved and provided). See issue #1013 for details.
+  // on the primary rank is empty (recieved and provided). See issue #1013 for details.
   PRECICE_TEST("ParallelSolver"_on(2_ranks), "SerialSolver"_on(1_rank));
-  // Provided master partition is empty and received master partition is empty
+  // Provided primary partition is empty and received primary partition is empty
   runTestEnforceGatherScatter(std::vector<double>{}, context);
 }
 
