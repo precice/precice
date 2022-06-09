@@ -81,8 +81,8 @@ void SerialCouplingScheme::initializeImplementation()
   // If the second participant initializes data, the first receive for the
   // second participant is done in initializeData() instead of initialize().
   if (not doesFirstStep() && not sendsInitializedData() && isCouplingOngoing()) {
-    PRECICE_DEBUG("Receiving data");
     receiveAndSetTimeWindowSize();
+    PRECICE_DEBUG("Receiving data");
     receiveData(getM2N(), getReceiveData());
     checkDataHasBeenReceived();
   }
@@ -134,8 +134,8 @@ bool SerialCouplingScheme::exchangeDataAndAccelerate()
     sendData(getM2N(), getSendData());
     // the second participant does not want new data in the last iteration of the last time window
     if (isCouplingOngoing() || (isImplicitCouplingScheme() && not convergence)) {
-      PRECICE_DEBUG("Receiving data...");
       receiveAndSetTimeWindowSize();
+      PRECICE_DEBUG("Receiving data...");
       receiveData(getM2N(), getReceiveData());
       checkDataHasBeenReceived();
     }
