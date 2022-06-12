@@ -5,6 +5,7 @@
 
 #include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
+#include "config/MappingConfiguration.hpp"
 #include "impl/BasisFunctions.hpp"
 #include "mapping/RadialBasisFctBaseMapping.hpp"
 #include "mapping/RadialBasisFctSolver.hpp"
@@ -45,7 +46,8 @@ public:
       Mapping::Constraint     constraint,
       int                     dimensions,
       RADIAL_BASIS_FUNCTION_T function,
-      std::array<bool, 3>     deadAxis);
+      std::array<bool, 3>     deadAxis,
+      Polynomial              polynomial);
 
   /// Computes the mapping coefficients from the in- and output mesh.
   virtual void computeMapping() override;
@@ -71,7 +73,8 @@ RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctMapping(
     Mapping::Constraint     constraint,
     int                     dimensions,
     RADIAL_BASIS_FUNCTION_T function,
-    std::array<bool, 3>     deadAxis)
+    std::array<bool, 3>     deadAxis,
+    Polynomial              polynomial)
     : RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>(constraint, dimensions, function, deadAxis)
 {
 }
