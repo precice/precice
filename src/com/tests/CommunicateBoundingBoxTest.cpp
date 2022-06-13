@@ -11,7 +11,7 @@
 #include "precice/types.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 
 using namespace precice;
 using namespace precice::com;
@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_SUITE(CommunicateBoundingBoxTests)
 BOOST_AUTO_TEST_CASE(SendAndReceiveBoundingBox)
 {
   PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
-  auto m2n = context.connectMasters("A", "B");
+  auto m2n = context.connectPrimaryRanks("A", "B");
 
   for (int dim = 2; dim <= 3; dim++) {
     std::vector<double> bounds;
@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveBoundingBox)
       bounds.push_back(i + 1);
     }
     mesh::BoundingBox      bb(bounds);
-    CommunicateBoundingBox comBB(m2n->getMasterCommunication());
+    CommunicateBoundingBox comBB(m2n->getPrimaryRankCommunication());
 
     if (context.isNamed("A")) {
       comBB.sendBoundingBox(bb, 0);
@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveBoundingBox)
 BOOST_AUTO_TEST_CASE(SendAndReceiveBoundingBoxMap)
 {
   PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
-  auto m2n = context.connectMasters("A", "B");
+  auto m2n = context.connectPrimaryRanks("A", "B");
 
   for (int dim = 2; dim <= 3; dim++) {
     mesh::Mesh::BoundingBoxMap bbm;
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveBoundingBoxMap)
       bbm.emplace(rank, mesh::BoundingBox(bounds));
     }
 
-    CommunicateBoundingBox comBB(m2n->getMasterCommunication());
+    CommunicateBoundingBox comBB(m2n->getPrimaryRankCommunication());
 
     if (context.isNamed("A")) {
       comBB.sendBoundingBoxMap(bbm, 0);
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveBoundingBoxMap)
 
 BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveBoundingBoxMap)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::Events);
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::Events);
 
   // Build BB/BBMap to communicate
   int                        dimension = 3;
@@ -103,9 +103,9 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveBoundingBoxMap)
     bbm.emplace(rank, mesh::BoundingBox(bounds));
   }
 
-  CommunicateBoundingBox comBB(utils::MasterSlave::getCommunication());
+  CommunicateBoundingBox comBB(utils::IntraComm::getCommunication());
 
-  if (context.isMaster()) {
+  if (context.isPrimary()) {
     comBB.broadcastSendBoundingBoxMap(bbm);
   } else {
 
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveBoundingBoxMap)
 BOOST_AUTO_TEST_CASE(SendAndReceiveConnectionMap)
 {
   PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
-  auto m2n = context.connectMasters("A", "B");
+  auto m2n = context.connectPrimaryRanks("A", "B");
 
   std::vector<int>                fb;
   std::map<int, std::vector<int>> fbm;
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveConnectionMap)
     fb.clear();
   }
 
-  CommunicateBoundingBox comBB(m2n->getMasterCommunication());
+  CommunicateBoundingBox comBB(m2n->getPrimaryRankCommunication());
 
   if (context.isNamed("A")) {
     comBB.sendConnectionMap(fbm, 0);
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveConnectionMap)
 
 BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveConnectionMap)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::Events);
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::Events);
 
   std::vector<int>                fb;
   std::map<int, std::vector<int>> fbm;
@@ -186,9 +186,9 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveConnectionMap)
     fb.clear();
   }
 
-  CommunicateBoundingBox comBB(utils::MasterSlave::getCommunication());
+  CommunicateBoundingBox comBB(utils::IntraComm::getCommunication());
 
-  if (context.isMaster()) {
+  if (context.isPrimary()) {
     comBB.broadcastSendConnectionMap(fbm);
   } else {
 

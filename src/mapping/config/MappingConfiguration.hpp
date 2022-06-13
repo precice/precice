@@ -66,6 +66,17 @@ public:
     bool isRBF;
   };
 
+  struct RBFParameter {
+
+    enum struct Type {
+      ShapeParameter,
+      SupportRadius
+    };
+
+    Type   type{};
+    double value{};
+  };
+
   MappingConfiguration(
       xml::XMLTag &              parent,
       mesh::PtrMeshConfiguration meshConfiguration);
@@ -150,8 +161,7 @@ private:
       const std::string &              fromMeshName,
       const std::string &              toMeshName,
       Timing                           timing,
-      double                           shapeParameter,
-      double                           supportRadius,
+      const RBFParameter &             rbfParameter,
       double                           solverRtol,
       bool                             xDead,
       bool                             yDead,

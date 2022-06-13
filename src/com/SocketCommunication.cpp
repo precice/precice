@@ -141,7 +141,7 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
                                                    int                requesterCommunicatorSize)
 {
   PRECICE_TRACE(acceptorName, requesterName, acceptorRank, requesterCommunicatorSize);
-  PRECICE_ASSERT(requesterCommunicatorSize >= 0, "Requester communicator size has to be positve.");
+  PRECICE_ASSERT(requesterCommunicatorSize >= 0, "Requester communicator size has to be positive.");
   PRECICE_ASSERT(not isConnected());
 
   if (requesterCommunicatorSize == 0) {
@@ -454,25 +454,6 @@ PtrRequest SocketCommunication::aSend(precice::span<const double> itemsToSend, R
   return request;
 }
 
-PtrRequest SocketCommunication::aSend(std::vector<double> const &itemsToSend, Rank rankReceiver)
-{
-  PRECICE_TRACE(rankReceiver);
-
-  rankReceiver = adjustRank(rankReceiver);
-
-  PRECICE_ASSERT(rankReceiver >= 0, rankReceiver);
-  PRECICE_ASSERT(isConnected());
-
-  PtrRequest request(new SocketRequest);
-
-  _queue.dispatch(_sockets[rankReceiver],
-                  asio::buffer(itemsToSend),
-                  [request] {
-                    std::static_pointer_cast<SocketRequest>(request)->complete();
-                  });
-  return request;
-}
-
 void SocketCommunication::send(double itemToSend, Rank rankReceiver)
 {
   PRECICE_TRACE(itemToSend, rankReceiver);
@@ -513,25 +494,6 @@ void SocketCommunication::send(int itemToSend, Rank rankReceiver)
 PtrRequest SocketCommunication::aSend(const int &itemToSend, Rank rankReceiver)
 {
   return aSend(precice::refToSpan<const int>(itemToSend), rankReceiver);
-}
-
-PtrRequest SocketCommunication::aSend(std::vector<int> const &itemsToSend, Rank rankReceiver)
-{
-  PRECICE_TRACE(rankReceiver);
-
-  rankReceiver = adjustRank(rankReceiver);
-
-  PRECICE_ASSERT(rankReceiver >= 0, rankReceiver);
-  PRECICE_ASSERT(isConnected());
-
-  PtrRequest request(new SocketRequest);
-
-  _queue.dispatch(_sockets[rankReceiver],
-                  asio::buffer(itemsToSend),
-                  [request] {
-                    std::static_pointer_cast<SocketRequest>(request)->complete();
-                  });
-  return request;
 }
 
 void SocketCommunication::send(bool itemToSend, Rank rankReceiver)
@@ -647,30 +609,6 @@ PtrRequest SocketCommunication::aReceive(precice::span<double> itemsToReceive,
   return request;
 }
 
-PtrRequest SocketCommunication::aReceive(std::vector<double> &itemsToReceive, Rank rankSender)
-{
-  PRECICE_TRACE(rankSender);
-
-  rankSender = adjustRank(rankSender);
-
-  PRECICE_ASSERT(rankSender >= 0, rankSender);
-  PRECICE_ASSERT(isConnected());
-
-  PtrRequest request(new SocketRequest);
-
-  try {
-    asio::async_read(*_sockets[rankSender],
-                     asio::buffer(itemsToReceive),
-                     [request](boost::system::error_code const &, std::size_t) {
-                       std::static_pointer_cast<SocketRequest>(request)->complete();
-                     });
-  } catch (std::exception &e) {
-    PRECICE_ERROR("Receive using sockets failed with system error: {}", e.what());
-  }
-
-  return request;
-}
-
 void SocketCommunication::receive(double &itemToReceive, Rank rankSender)
 {
   PRECICE_TRACE(rankSender);
@@ -773,82 +711,6 @@ PtrRequest SocketCommunication::aReceive(bool &itemToReceive, Rank rankSender)
   return request;
 }
 
-void SocketCommunication::send(std::vector<int> const &v, Rank rankReceiver)
-{
-  PRECICE_TRACE(rankReceiver);
-
-  rankReceiver = adjustRank(rankReceiver);
-
-  PRECICE_ASSERT(rankReceiver >= 0, rankReceiver);
-  PRECICE_ASSERT(isConnected());
-
-  size_t size = v.size();
-  try {
-    asio::write(*_sockets[rankReceiver], asio::buffer(&size, sizeof(size_t)));
-    asio::write(*_sockets[rankReceiver], asio::buffer(v));
-  } catch (std::exception &e) {
-    PRECICE_ERROR("Send using sockets failed with system error: {}", e.what());
-  }
-}
-
-void SocketCommunication::receive(std::vector<int> &v, Rank rankSender)
-{
-  PRECICE_TRACE(rankSender);
-
-  rankSender = adjustRank(rankSender);
-
-  PRECICE_ASSERT(rankSender >= 0, rankSender);
-  PRECICE_ASSERT(isConnected());
-
-  size_t size = 0;
-
-  try {
-    asio::read(*_sockets[rankSender], asio::buffer(&size, sizeof(size_t)));
-    v.resize(size);
-    asio::read(*_sockets[rankSender], asio::buffer(v));
-  } catch (std::exception &e) {
-    PRECICE_ERROR("Recieve using sockets failed with system error: {}", e.what());
-  }
-}
-
-void SocketCommunication::send(std::vector<double> const &v, Rank rankReceiver)
-{
-  PRECICE_TRACE(rankReceiver);
-
-  rankReceiver = adjustRank(rankReceiver);
-
-  PRECICE_ASSERT(rankReceiver >= 0, rankReceiver);
-  PRECICE_ASSERT(isConnected());
-
-  size_t size = v.size();
-  try {
-    asio::write(*_sockets[rankReceiver], asio::buffer(&size, sizeof(size_t)));
-    asio::write(*_sockets[rankReceiver], asio::buffer(v));
-  } catch (std::exception &e) {
-    PRECICE_ERROR("Send using sockets failed with system error: {}", e.what());
-  }
-}
-
-void SocketCommunication::receive(std::vector<double> &v, Rank rankSender)
-{
-  PRECICE_TRACE(rankSender);
-
-  rankSender = adjustRank(rankSender);
-
-  PRECICE_ASSERT(rankSender >= 0, rankSender);
-  PRECICE_ASSERT(isConnected());
-
-  size_t size = 0;
-
-  try {
-    asio::read(*_sockets[rankSender], asio::buffer(&size, sizeof(size_t)));
-    v.resize(size);
-    asio::read(*_sockets[rankSender], asio::buffer(v));
-  } catch (std::exception &e) {
-    PRECICE_ERROR("Recieve using sockets failed with system error: {}", e.what());
-  }
-}
-
 #ifndef _WIN32
 namespace {
 struct Interface {
@@ -879,7 +741,10 @@ std::vector<Interface> detectInterfaces()
             IFNAMSIZ - 1); // Copy interface name
 
     auto socketfd = socket(AF_INET, SOCK_STREAM, 0);
-    auto err      = ioctl(socketfd, SIOCGIFADDR, &request);
+    if (socketfd == -1) {
+      continue;
+    }
+    auto err = ioctl(socketfd, SIOCGIFADDR, &request);
     close(socketfd);
     if (err) {
       continue;
@@ -912,13 +777,13 @@ std::string SocketCommunication::getIpAddress()
   auto pos = std::find_if(interfaces.begin(), interfaces.end(),
                           [&](Interface const &interface) { return interface.name == _networkName; });
   if (pos == interfaces.end()) {
-    PRECICE_DEBUG("There  NOTHIGN");
+    PRECICE_DEBUG("There  NOTHING");
     std::ostringstream err;
     err << "Cannot find network interface \"" << _networkName << "\". Available interfaces are: ";
     for (const auto &interface : interfaces) {
       err << interface.name << ' ';
     }
-    err << " Please check \"network\" attribues in your configuration file.";
+    err << " Please check \"network\" attributes in your configuration file.";
     PRECICE_ERROR(err.str());
   }
 

@@ -3,7 +3,7 @@
 #
 target_sources(testprecice
     PRIVATE
-    src/acceleration/test/AccelerationMasterSlaveTest.cpp
+    src/acceleration/test/AccelerationIntraCommTest.cpp
     src/acceleration/test/AccelerationSerialTest.cpp
     src/acceleration/test/ParallelMatrixOperationsTest.cpp
     src/acceleration/test/PreconditionerTest.cpp
@@ -39,8 +39,8 @@ target_sources(testprecice
     src/m2n/tests/GatherScatterCommunicationTest.cpp
     src/m2n/tests/PointToPointCommunicationTest.cpp
     src/mapping/tests/MappingConfigurationTest.cpp
-    src/mapping/tests/NearestNeighborMappingTest.cpp
     src/mapping/tests/NearestNeighborGradientMappingTest.cpp
+    src/mapping/tests/NearestNeighborMappingTest.cpp
     src/mapping/tests/NearestProjectionMappingTest.cpp
     src/mapping/tests/PetRadialBasisFctMappingTest.cpp
     src/mapping/tests/PolationTest.cpp
@@ -52,6 +52,7 @@ target_sources(testprecice
     src/mesh/tests/DataConfigurationTest.cpp
     src/mesh/tests/EdgeTest.cpp
     src/mesh/tests/MeshTest.cpp
+    src/mesh/tests/TetrahedronTest.cpp
     src/mesh/tests/TriangleTest.cpp
     src/mesh/tests/VertexTest.cpp
     src/partition/tests/ProvidedPartitionTest.cpp
@@ -59,15 +60,17 @@ target_sources(testprecice
     src/partition/tests/fixtures.hpp
     src/precice/tests/DataContextTest.cpp
     src/precice/tests/ParallelTests.cpp
-    src/precice/tests/SerialTests.cpp
     src/precice/tests/ToolingTests.cpp
     src/precice/tests/VersioningTests.cpp
     src/precice/tests/WatchIntegralTest.cpp
     src/precice/tests/WatchPointTest.cpp
     src/query/tests/RTreeAdapterTests.cpp
     src/query/tests/RTreeTests.cpp
+    src/testing/DataContextFixture.cpp
+    src/testing/DataContextFixture.hpp
     src/testing/ExtrapolationFixture.cpp
     src/testing/ExtrapolationFixture.hpp
+    src/testing/GlobalFixtures.cpp
     src/testing/ParallelCouplingSchemeFixture.cpp
     src/testing/ParallelCouplingSchemeFixture.hpp
     src/testing/SerialCouplingSchemeFixture.cpp
@@ -84,8 +87,8 @@ target_sources(testprecice
     src/utils/tests/AlgorithmTest.cpp
     src/utils/tests/DimensionsTest.cpp
     src/utils/tests/EigenHelperFunctionsTest.cpp
+    src/utils/tests/IntraCommTest.cpp
     src/utils/tests/ManageUniqueIDsTest.cpp
-    src/utils/tests/MasterSlaveTest.cpp
     src/utils/tests/MultiLockTest.cpp
     src/utils/tests/ParallelTest.cpp
     src/utils/tests/PointerVectorTest.cpp

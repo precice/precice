@@ -46,12 +46,6 @@ public:
   int getDimensions() const;
 
   /// @brief Returns whether experimental features are allowed or not
-  bool allowsExperimental()
-  {
-    return _experimental;
-  }
-
-  /// @brief Returns whether experimental features are allowed or not
   bool allowsExperimental() const
   {
     return _experimental;
@@ -75,11 +69,6 @@ public:
   const PtrParticipantConfiguration &getParticipantConfiguration() const;
 
   const cplscheme::PtrCouplingSchemeConfiguration getCouplingSchemeConfiguration() const
-  {
-    return _couplingSchemeConfiguration;
-  }
-
-  cplscheme::PtrCouplingSchemeConfiguration getCouplingSchemeConfiguration()
   {
     return _couplingSchemeConfiguration;
   }

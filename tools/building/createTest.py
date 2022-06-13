@@ -141,7 +141,7 @@ def generateTestSource(name, suite, filepath):
     includes = [
         "<precice/SolverInterface.hpp>", "<vector>", '"testing/Testing.hpp"'
     ]
-    suites = ["PreciceTests"] + suite
+    suites = ["Integration"] + suite
     space = [""]
     lines = ["#ifndef PRECICE_NO_MPI"]
     lines += space
@@ -200,6 +200,7 @@ def main():
     print("Create test config {}".format(config))
     if not args.dry_run:
         generateTestConfig(args.test.name, args.test.suites, configPath)
+    print("Remember to run tools/building/updateSourceFiles.py or make sourcesIndex")
 
 
 if __name__ == '__main__':

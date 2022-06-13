@@ -17,145 +17,147 @@ namespace impl {
 /**
  * @brief Stores one Data object with related mesh.
  *
- * - If a DataContext is associated with a mapping, fromData and toData will be set correspondingly.
- *   One of the two must be equal to providedData. fromData and toData must be different.
+ * - For each mapping that is added to the data context fromData and toData will be set correspondingly.
+ *   Either fromData or toData must be equal to providedData. fromData and toData must be different.
  * - If a DataContext is not associated with a mapping, fromData and toData will be unset.
+ * - A DataContext can be associated with multiple mappings, fromData and toData
  */
 class DataContext {
   friend class testing::DataContextFixture; // Make the fixture friend of this class
 public:
   /**
    * @brief Get the Name of _providedData.
-   * 
+   *
    * @return std::string Name of _providedData.
    */
   std::string getDataName() const;
 
   /**
-   * @brief Get the ID of _providedData.
-   * 
-   * @return int ID of _providedData.
+   * @brief Resets provided data and (if mapping exists) fromData or toData.
    */
-  int getProvidedDataID() const;
-
-  /**
-   * @brief Get the ID of _fromData. Used for performing the mapping outside of this class.
-   * 
-   * @return int ID of _fromData.
-   */
-  int getFromDataID() const;
-
-  /**
-   * @brief Purpose unclear. See also https://github.com/precice/precice/issues/1156.
-   */
-  void resetProvidedData();
-
-  /**
-   * @brief Resets _toData to zero. Used before mapping is performed.
-   */
-  void resetToData();
-
-  /**
-   * @brief Get the ID of _toData. Used for performing the mapping outside of this class.
-   * 
-   * @return int ID of _toData.
-   */
-  int getToDataID() const;
+  void resetData();
 
   /**
    * @brief Get the dimensions of _providedData.
-   * 
+   *
    * @return int Dimensions of _providedData.
    */
   int getDataDimensions() const;
 
   /**
    * @brief Get the name of _mesh.
-   * 
+   *
    * @return std::string Name of _mesh.
    */
   std::string getMeshName() const;
 
   /**
    * @brief Get the ID of _mesh.
-   * 
+   *
    * @return int ID of _mesh.
    */
-  int getMeshID() const;
+  MeshID getMeshID() const;
 
   /**
-   * @brief Informs the user whether this DataContext has a _mappingContext.
-   * 
-   * @return True, if this DataContext is associated with a mapping. False, if not. 
+   * @brief Check whether any mapping has to be performed.
+   *
+   * Checks whether any mapping exists for this context and the corresponding timing configuration.
+   *
+   * @return True, if any mapping has to be performed.
    */
-  bool hasMapping() const;
+  bool isMappingRequired();
 
   /**
-   * @brief Get the _mappingContext associated with this DataContext.
-   * 
-   * @return const MappingContext The _mappingContext of this DataContext.
+   * @brief Perform the mapping for all mapping contexts and the corresponding data context (from and to data)
    */
-  const MappingContext mappingContext() const;
+  void mapData();
 
   /**
-   * @brief Informs the user whether this DataContext has a read mapping.
-   * 
-   * @return True, if DataContext has a read mapping.
-   */
-  bool hasReadMapping() const;
-
-  /**
-   * @brief Informs the user whether this DataContext has a write mapping.
-   * 
-   * @return True, if DataContext has a write mapping.
-   */
-  bool hasWriteMapping() const;
-
-  /**
-   * @brief Links a MappingContext and the MeshContext required by the mapping to this DataContext.
-   * 
+   * @brief Adds a MappingContext and the MeshContext required by the mapping to the correspnding DataContext data structures.
+   *
    * A mapping maps the given data from or to _providedData (depending on whether it is a read or write mapping).
    *
    * @param[in] mappingContext Context of the mapping
    * @param[in] meshContext Context of mesh this mapping is mapping from or to
    */
-  virtual void configureMapping(const MappingContext &mappingContext, const MeshContext &meshContext) = 0;
+  virtual void appendMappingConfiguration(const MappingContext &mappingContext, const MeshContext &meshContext) = 0;
 
 protected:
   /**
    * @brief Construct a new DataContext without a mapping. Protected, because only ReadDataContext and WriteDataContext should use this constructor.
-   * 
+   *
    * @param data Data associated with this DataContext.
    * @param mesh Mesh associated with this DataContext.
    */
   DataContext(mesh::PtrData data, mesh::PtrMesh mesh);
 
-  /// Defines the mapping associated to this DataContext. A DataContext may also exist without a mapping.
-  MappingContext _mappingContext;
+  /// Defines all mappings associated to this DataContext. A DataContext may also exist without a mapping.
+  std::vector<MappingContext> _mappingContexts;
 
-  /// Data this participant will write to and read from
+  /// Unique data this context is associated with
   mesh::PtrData _providedData;
 
-  /// If a mapping exists, mesh::PtrData the mapping maps from.
-  mesh::PtrData _fromData;
+  /// If a mapping exists, collection of mesh::PtrData the mapping maps from.
+  std::vector<mesh::PtrData> _fromData;
 
-  /// If a mapping exists, mesh::PtrData the mapping maps from.
-  mesh::PtrData _toData;
+  /// If a mapping exists, collection of mesh::PtrData the mapping maps from.
+  std::vector<mesh::PtrData> _toData;
 
   /**
-   * @brief Helper to set _mappingContext, _fromData and _toData.
-   * 
+   * @brief Helper to append a mappingContext, fromData and toData to the corresponding data containers
+   *
    * @param mappingContext MappingContext this DataContext will be associated to.
    * @param fromData Data the mapping maps from.
    * @param toData Data the mapping maps to.
+   *
+   * @note Only unique mappings may be appended. In case the same mapping is appended twice, an error is raised.
    */
-  void setMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData);
+  void appendMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData);
+
+  /**
+   * @brief Informs the user whether this DataContext has any read mapping.
+   *
+   * @return True, if DataContext has any read mapping.
+   */
+  bool hasReadMapping() const;
+
+  /**
+   * @brief Informs the user whether this DataContext has any write mapping.
+   *
+   * @return True, if DataContext has any write mapping.
+   */
+  bool hasWriteMapping() const;
 
 private:
-  /// Mesh associated with _providedData.
+  /// Unique mesh associated with _providedData.
   mesh::PtrMesh _mesh;
 
   static logging::Logger _log;
+
+  /**
+   * @brief Get the ID of the data in the _fromDatas container. Used for performing the mapping outside of this class.
+   *
+   * @param[in] dataVectorIndex Index of the '_fromDatas' container this data context holds
+   *
+   * @return DataID ID of _fromDatas.
+   */
+  DataID getFromDataID(size_t dataVectorIndex) const;
+
+  /**
+   * @brief Get the ID of the data in the _toDatas container. Used for performing the mapping outside of this class.
+   *
+   * @param[in] dataVectorIndex Index of the '_toDatas' vector this data context holds
+   *
+   * @return DataID ID of _toDatas.
+   */
+  DataID getToDataID(size_t dataVectorIndex) const;
+
+  /**
+   * @brief Informs the user whether this DataContext has any _mappingContext.
+   *
+   * @return True, if this DataContext is associated with a mapping. False, if not.
+   */
+  bool hasMapping() const;
 };
 
 } // namespace impl

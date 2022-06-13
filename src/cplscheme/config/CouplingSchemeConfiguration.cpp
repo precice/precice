@@ -303,8 +303,8 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
   if (tag.getNamespace() == TAG) {
     if (_config.type == VALUE_SERIAL_EXPLICIT) {
       if (_experimental) {
-        int allowedOrder = 0; // explicit coupling schemes do not allow waveform iteration
-        checkWaveformOrderReadData(allowedOrder);
+        int maxAllowedOrder = 0; // explicit coupling schemes do not allow waveform iteration
+        checkWaveformOrderReadData(maxAllowedOrder);
       }
       std::string       accessor(_config.participants[0]);
       PtrCouplingScheme scheme = createSerialExplicitCouplingScheme(accessor);
@@ -317,8 +317,8 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
       _config = Config();
     } else if (_config.type == VALUE_PARALLEL_EXPLICIT) {
       if (_experimental) {
-        int allowedOrder = 0; // explicit coupling schemes do not allow waveform iteration
-        checkWaveformOrderReadData(allowedOrder);
+        int maxAllowedOrder = 0; // explicit coupling schemes do not allow waveform iteration
+        checkWaveformOrderReadData(maxAllowedOrder);
       }
       std::string       accessor(_config.participants[0]);
       PtrCouplingScheme scheme = createParallelExplicitCouplingScheme(accessor);
@@ -330,6 +330,10 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
       //_couplingSchemes[accessor] = scheme;
       _config = Config();
     } else if (_config.type == VALUE_SERIAL_IMPLICIT) {
+      if (_experimental) {
+        int maxAllowedOrder = 0; // serial implicit coupling does not allow waveform iteration yet (see https://github.com/precice/precice/issues/1174#issuecomment-1042823430)
+        checkWaveformOrderReadData(maxAllowedOrder);
+      }
       std::string       accessor(_config.participants[0]);
       PtrCouplingScheme scheme = createSerialImplicitCouplingScheme(accessor);
       addCouplingScheme(scheme, accessor);
@@ -349,8 +353,8 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
       _config = Config();
     } else if (_config.type == VALUE_MULTI) {
       if (_experimental) {
-        int allowedOrder = 0; // multi coupling scheme does not allow waveform iteration
-        checkWaveformOrderReadData(allowedOrder);
+        int maxAllowedOrder = 0; // multi coupling scheme does not allow waveform iteration
+        checkWaveformOrderReadData(maxAllowedOrder);
       }
       PRECICE_CHECK(_config.setController,
                     "One controller per MultiCoupling needs to be defined. "
@@ -693,6 +697,11 @@ void CouplingSchemeConfiguration::addRelativeConvergenceMeasure(
                 "Please check the <relative-convergence-measure limit=\"{}\" data=\"{}\" mesh=\"{}\" /> subtag "
                 "in your <coupling-scheme ... /> in the preCICE configuration file.",
                 limit, dataName, meshName);
+  if (limit < 10 * math::NUMERICAL_ZERO_DIFFERENCE) {
+    PRECICE_WARN("The relative convergence limit=\"{}\" is close to the hard-coded numerical resolution=\"{}\" of preCICE. "
+                 "This may lead to instabilities. The minimum relative convergence limit should be > \"{}\"  ",
+                 limit, math::NUMERICAL_ZERO_DIFFERENCE, 10 * math::NUMERICAL_ZERO_DIFFERENCE);
+  }
 
   impl::PtrConvergenceMeasure measure(new impl::RelativeConvergenceMeasure(limit));
   ConvergenceMeasureDefintion convMeasureDef;
@@ -718,6 +727,12 @@ void CouplingSchemeConfiguration::addResidualRelativeConvergenceMeasure(
                 "Please check the <residul-relative-convergence-measure limit=\"{}\" data=\"{}\" mesh=\"{}\" /> subtag "
                 "in your <coupling-scheme ... /> in the preCICE configuration file.",
                 limit, dataName, meshName);
+  if (limit < 10 * math::NUMERICAL_ZERO_DIFFERENCE) {
+    PRECICE_WARN("The relative convergence limit=\"{}\" is close to the hard-coded numerical resolution=\"{}\" of preCICE. "
+                 "This may lead to instabilities. The minimum relative convergence limit should be > \"{}\"  ",
+                 limit, math::NUMERICAL_ZERO_DIFFERENCE, 10 * math::NUMERICAL_ZERO_DIFFERENCE);
+  }
+
   impl::PtrConvergenceMeasure measure(new impl::ResidualRelativeConvergenceMeasure(limit));
   ConvergenceMeasureDefintion convMeasureDef;
   convMeasureDef.data        = getData(dataName, meshName);
@@ -1044,16 +1059,16 @@ void CouplingSchemeConfiguration::checkIfDataIsExchanged(
 }
 
 void CouplingSchemeConfiguration::checkWaveformOrderReadData(
-    int allowedOrder) const
+    int maxAllowedOrder) const
 {
   for (const precice::impl::PtrParticipant &participant : _participantConfig->getParticipants()) {
     for (auto &dataContext : participant->readDataContexts()) {
       int usedOrder = dataContext.getInterpolationOrder();
       PRECICE_ASSERT(usedOrder >= 0); // ensure that usedOrder was set
-      if (usedOrder > allowedOrder) {
+      if (usedOrder > maxAllowedOrder) {
         PRECICE_ERROR(
             "You configured <read-data name=\"{}\" mesh=\"{}\" waveform-order=\"{}\" />, but for the coupling scheme you are using only a maximum waveform-order of \"{}\" is allowed.",
-            dataContext.getDataName(), dataContext.getMeshName(), usedOrder, allowedOrder);
+            dataContext.getDataName(), dataContext.getMeshName(), usedOrder, maxAllowedOrder);
       }
     }
   }

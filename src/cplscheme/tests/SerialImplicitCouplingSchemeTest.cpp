@@ -1,5 +1,6 @@
 #include <Eigen/Core>
 #include <algorithm>
+#include <boost/test/tools/old/interface.hpp>
 #include <iterator>
 #include <memory>
 #include <string>
@@ -49,10 +50,12 @@ void runCoupling(
     const mesh::MeshConfiguration &meshConfig,
     const std::vector<int> &       validIterations)
 {
-  BOOST_TEST(meshConfig.meshes().size() == 1);
+  BOOST_REQUIRE(meshConfig.meshes().size() == 1);
   mesh::PtrMesh mesh = meshConfig.meshes().at(0);
-  BOOST_TEST(mesh->data().size() == 2);
-  BOOST_TEST(mesh->vertices().size() > 0);
+  BOOST_REQUIRE(mesh->data().size() == 2);
+  BOOST_REQUIRE(!mesh->vertices().empty());
+  BOOST_REQUIRE(!validIterations.empty());
+
   mesh::Vertex &  vertex               = mesh->vertices().at(0);
   int             index                = vertex.getID();
   auto &          dataValues0          = mesh->data(0)->values();
@@ -212,10 +215,12 @@ void runCouplingWithSubcycling(
     const mesh::MeshConfiguration &meshConfig,
     const std::vector<int> &       validIterations)
 {
-  BOOST_TEST(meshConfig.meshes().size() == 1);
+  BOOST_REQUIRE(meshConfig.meshes().size() == 1);
   mesh::PtrMesh mesh = meshConfig.meshes().at(0);
-  BOOST_TEST(mesh->data().size() == 2);
-  BOOST_TEST(mesh->vertices().size() > 0);
+  BOOST_REQUIRE(mesh->data().size() == 2);
+  BOOST_REQUIRE(!mesh->vertices().empty());
+  BOOST_REQUIRE(!validIterations.empty());
+
   double          initialStepsizeData0 = 5.0;
   double          stepsizeData0        = 5.0;
   Eigen::Vector3d initialStepsizeData1 = Eigen::Vector3d::Constant(5.0);
@@ -409,17 +414,19 @@ BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
   PRECICE_TEST(1_rank);
   using namespace mesh;
 
+  int dimensions = 3;
+
   std::string path(_pathToTests + "serial-implicit-cplscheme-relax-const-config.xml");
 
   xml::XMLTag          root = xml::getRootTag();
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
-  dataConfig->setDimensions(3);
+  dataConfig->setDimensions(dimensions);
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
-  meshConfig->setDimensions(3);
+  meshConfig->setDimensions(dimensions);
   m2n::M2NConfiguration::SharedPointer m2nConfig(
       new m2n::M2NConfiguration(root));
   precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
-  participantConfig->setDimensions(3);
+  participantConfig->setDimensions(dimensions);
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
   xml::configure(root, xml::ConfigurationContext{}, path);
@@ -588,15 +595,15 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
 {
   /**
    * Perform first order and constant relaxation acceleration
-   * 
-   * Do two time windows with three iterations each. 
-   * 
+   *
+   * Do two time windows with three iterations each.
+   *
    * Each participant writes dummy data to other participant, received data is checked.
-   * 
+   *
    * Make sure that the following happens, if NOT converged (first two iterations):
    * 1. acceleration is performed
    * 2. participants receive correct (accelerated) data
-   * 
+   *
    * Make sure that the following happens, if converged (end of third iteration):
    * 1. old data is stored (we cannot access this from the coupling scheme, but we can deduct this from the extrapolated value)
    * 2. we move to the next window
@@ -605,8 +612,8 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
 
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = true;
-  auto m2n                 = context.connectMasters("Participant0", "Participant1", options);
+  options.useOnlyPrimaryCom = true;
+  auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
 
   xml::XMLTag root = xml::getRootTag();
 
@@ -795,17 +802,17 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
 {
   /**
    * Perform first order extrapolation and use initialization
-   * 
-   * Do two time windows with three iterations each. 
-   * 
+   *
+   * Do two time windows with three iterations each.
+   *
    * Each participant writes dummy data to other participant, received data is checked.
-   * 
+   *
    **/
 
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = true;
-  auto m2n                 = context.connectMasters("Participant0", "Participant1", options);
+  options.useOnlyPrimaryCom = true;
+  auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
 
   xml::XMLTag root = xml::getRootTag();
 
@@ -906,7 +913,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
     BOOST_TEST(mesh->data(sendDataIndex)->values().size() == 1);
     BOOST_TEST(testing::equals(mesh->data(sendDataIndex)->values()(0), 0.0));
   } else {
-    // second participant receives initial data written by first participant in it's first window = 1 (see below)
+    // second participant receives initial data written by first participant in its first window = 1 (see below)
     BOOST_TEST(context.isNamed(second));
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(mesh->data(receiveDataIndex)->values().size() == 1);
@@ -1029,15 +1036,15 @@ BOOST_AUTO_TEST_CASE(SecondOrderWithAcceleration)
 {
   /**
    * Perform second order extrapolation and constant relaxation acceleration
-   * 
-   * Do three time windows with three iterations each. 
-   * 
+   *
+   * Do three time windows with three iterations each.
+   *
    * Each participant writes dummy data to other participant, received data is checked.
-   * 
+   *
    * Make sure that the following happens, if NOT converged (first two iterations):
    * 1. acceleration is performed
    * 2. participants receive correct (accelerated) data
-   * 
+   *
    * Make sure that the following happens, if converged (end of third iteration):
    * 1. old data is stored (we cannot access this from the coupling scheme, but we can deduct this from the extrapolated value)
    * 2. we move to the next window
@@ -1046,8 +1053,8 @@ BOOST_AUTO_TEST_CASE(SecondOrderWithAcceleration)
 
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = true;
-  auto m2n                 = context.connectMasters("Participant0", "Participant1", options);
+  options.useOnlyPrimaryCom = true;
+  auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
 
   xml::XMLTag root = xml::getRootTag();
 
@@ -1281,20 +1288,22 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
 {
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = true;
-  auto m2n                 = context.connectMasters("Participant0", "Participant1", options);
+  options.useOnlyPrimaryCom = true;
+  auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
 
   using namespace mesh;
+
+  int dimensions = 3;
 
   xml::XMLTag root = xml::getRootTag();
   // Create a data configuration, to simplify configuration of data
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
-  dataConfig->setDimensions(3);
+  dataConfig->setDimensions(dimensions);
   dataConfig->addData("data0", 1);
   dataConfig->addData("data1", 3);
 
   MeshConfiguration meshConfig(root, dataConfig);
-  meshConfig.setDimensions(3);
+  meshConfig.setDimensions(dimensions);
   mesh::PtrMesh mesh(new Mesh("Mesh", 3, testing::nextMeshID()));
   mesh->createData("data0", 1, 0_dataID);
   mesh->createData("data1", 3, 1_dataID);
@@ -1346,22 +1355,24 @@ BOOST_AUTO_TEST_CASE(testConfiguredAbsConvergenceMeasureSynchronized)
 
   using namespace mesh;
 
+  int dimensions = 3;
+
   std::string configurationPath(
       _pathToTests + "serial-implicit-cplscheme-absolute-config.xml");
 
   xml::XMLTag          root = xml::getRootTag();
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
-  dataConfig->setDimensions(3);
+  dataConfig->setDimensions(dimensions);
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
-  meshConfig->setDimensions(3);
+  meshConfig->setDimensions(dimensions);
   m2n::M2NConfiguration::SharedPointer         m2nConfig(new m2n::M2NConfiguration(root));
   precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
-  participantConfig->setDimensions(3);
+  participantConfig->setDimensions(dimensions);
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
   xml::configure(root, xml::ConfigurationContext{}, configurationPath);
-  m2n::PtrM2N m2n       = m2nConfig->getM2N("Participant0", "Participant1");
-  useOnlyMasterCom(m2n) = true;
+  m2n::PtrM2N m2n        = m2nConfig->getM2N("Participant0", "Participant1");
+  useOnlyPrimaryCom(m2n) = true;
 
   // some dummy mesh
   meshConfig->meshes().at(0)->createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
@@ -1373,9 +1384,9 @@ BOOST_AUTO_TEST_CASE(testConfiguredAbsConvergenceMeasureSynchronized)
   std::vector<int> validIterations = {5, 5, 5};
 
   if (context.isNamed("Participant0")) {
-    m2n->requestMasterConnection("Participant1", "Participant0");
+    m2n->requestPrimaryRankConnection("Participant1", "Participant0");
   } else {
-    m2n->acceptMasterConnection("Participant1", "Participant0");
+    m2n->acceptPrimaryRankConnection("Participant1", "Participant0");
   }
 
   runCoupling(*cplSchemeConfig.getCouplingScheme(context.name),
@@ -1386,8 +1397,8 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
 {
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = true;
-  auto m2n                 = context.connectMasters("Participant0", "Participant1", options);
+  options.useOnlyPrimaryCom = true;
+  auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
 
   xml::XMLTag root = xml::getRootTag();
   // Create a data configuration, to simplify configuration of data
@@ -1448,8 +1459,8 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
 {
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = true;
-  auto m2n                 = context.connectMasters("Participant0", "Participant1", options);
+  options.useOnlyPrimaryCom = true;
+  auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
 
   xml::XMLTag root = xml::getRootTag();
   // Create a data configuration, to simplify configuration of data
@@ -1511,8 +1522,8 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
 {
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = true;
-  auto m2n                 = context.connectMasters("Participant0", "Participant1", options);
+  options.useOnlyPrimaryCom = true;
+  auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
 
   xml::XMLTag root = xml::getRootTag();
 

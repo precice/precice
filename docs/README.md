@@ -21,6 +21,9 @@
 <a style="text-decoration: none" href="https://github.com/precice/precice/releases/latest" target="_blank">
     <img src="https://img.shields.io/github/release/precice/precice.svg" alt="Release">
 </a>
+<a style="text-decoration: none" href="https://doi.org/10.18419/darus-2613" target="_blank">
+    <img src="https://img.shields.io/badge/doi-10.18419%2Fdarus--2613-d45815.svg" alt="preCICE distribution">
+</a>
 <a style="text-decoration: none" href="https://github.com/precice/precice/actions?query=workflow%3A%22Build+and+Test%22+branch%3Adevelop" target="_blank">
     <img src="https://github.com/precice/precice/workflows/Build%20and%20Test/badge.svg" alt="Build status">
 </a>
@@ -43,6 +46,4 @@ If you are new to preCICE, please have a look at our [documentation](https://www
 <img src="https://github.com/precice/precice.github.io/blob/master/material/overview/precice-overview.png" alt="preCICE overview" style="max-height: 100%; max-width: 100%">
 </div>
 
-preCICE is an academic project, developed at the [Technical University of Munich](https://www.in.tum.de/i05/startseite/) and at the [University of Stuttgart](https://www.ipvs.uni-stuttgart.de). If you use preCICE, please [cite us](https://www.precice.org/publications/):
-
-*H.-J. Bungartz, F. Lindner, B. Gatzhammer, M. Mehl, K. Scheufele, A. Shukaev, and B. Uekermann: preCICE - A Fully Parallel Library for Multi-Physics Surface Coupling. Computers and Fluids, 141, 250–258, 2016.*
+preCICE is an academic project, developed at the [Technical University of Munich](https://www.in.tum.de/i05/startseite/) and at the [University of Stuttgart](https://www.ipvs.uni-stuttgart.de). If you use preCICE, please [cite us](https://www.precice.org/publications/).

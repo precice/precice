@@ -20,6 +20,12 @@ NearestNeighborGradientMapping::NearestNeighborGradientMapping(
     int        dimensions)
     : NearestNeighborBaseMapping(constraint, dimensions, true, "NearestNeighborGradientMapping", "nng")
 {
+  PRECICE_ASSERT(!hasConstraint(CONSERVATIVE));
+
+  if (hasConstraint(SCALEDCONSISTENT)) {
+    PRECICE_WARN("The scaled-consistent mapping hasn't been specifically tested with nearest-neighbor-gradient. Please avoid using it or choose another mapping method. ");
+  }
+
   if (hasConstraint(SCALEDCONSISTENT)) {
     setInputRequirement(Mapping::MeshRequirement::FULL);
     setOutputRequirement(Mapping::MeshRequirement::FULL);
@@ -41,80 +47,54 @@ void NearestNeighborGradientMapping::onMappingComputed(mesh::PtrMesh origins, me
     const auto &matchedVertexCoords = searchSpace.get()->vertices()[_vertexIndices[i]].getCoords();
     const auto &sourceVertexCoords  = origins->vertices()[i].getCoords();
 
-    // We calculate the distances uniformly for both mapping constraints as the difference (input - output)
-    if (hasConstraint(CONSERVATIVE)) {
-      _offsetsMatched[i] = sourceVertexCoords - matchedVertexCoords;
-    } else {
-      _offsetsMatched[i] = matchedVertexCoords - sourceVertexCoords;
-    }
+    // We calculate the distances uniformly for consistent mapping constraint as the difference (output - input)
+    // For consistent mapping: the source is the output vertex and the matched vertex is the input since we iterate over all outputs
+    // and assign each exactly one vertex form the search space, which are our origins vertices.
+    _offsetsMatched[i] = sourceVertexCoords - matchedVertexCoords;
   }
 };
 
-void NearestNeighborGradientMapping::map(
-    int inputDataID,
-    int outputDataID)
+void NearestNeighborGradientMapping::mapConsistent(DataID inputDataID, DataID outputDataID)
 {
   PRECICE_TRACE(inputDataID, outputDataID);
-
   precice::utils::Event e("map." + mappingNameShort + ".mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
-  const int valueDimensions = input()->data(inputDataID)->getDimensions(); // Data dimensions (for scalar = 1, for vectors > 1)
-
-  const Eigen::VectorXd &inputValues  = input()->data(inputDataID)->values();
-  Eigen::VectorXd &      outputValues = output()->data(outputDataID)->values();
+  PRECICE_CHECK(input()->data(inputDataID)->hasGradient(), "Mesh \"{}\" does not contain gradient data. Using Nearest Neighbor Gradient requires gradient data for each vertices.",
+                "Check if hasGradient flag in the Data object was successfully initialized.",
+                input()->getName());
 
   /// Check if input has gradient data, else send Error
   if (input()->vertices().empty()) {
     PRECICE_WARN("The mesh doesn't contain any vertices.");
   }
 
-  PRECICE_CHECK(input()->data(inputDataID)->hasGradient(), "Mesh \"{}\" does not contain gradient data. Using Nearest Neighbor Gradient requires gradient data for each vertices.",
-                "Check if hasGradient flag in the Data object was successfully initialized.",
-                input()->getName());
+  const int              valueDimensions = input()->data(inputDataID)->getDimensions(); // Data dimensions (for scalar = 1, for vectors > 1)
+  const Eigen::VectorXd &inputValues     = input()->data(inputDataID)->values();
+  Eigen::VectorXd &      outputValues    = output()->data(outputDataID)->values();
+  const Eigen::MatrixXd &gradientValues  = input()->data(inputDataID)->gradientValues();
 
-  const Eigen::MatrixXd &gradientValues = input()->data(inputDataID)->gradientValues();
+  //Consistent mapping
+  PRECICE_DEBUG((hasConstraint(CONSISTENT) ? "Map consistent" : "Map scaled-consistent"));
+  const size_t outSize = output()->vertices().size();
 
-  PRECICE_ASSERT(inputValues.size() / valueDimensions == static_cast<int>(input()->vertices().size()),
-                 inputValues.size(), valueDimensions, input()->vertices().size());
-  PRECICE_ASSERT(outputValues.size() / valueDimensions == static_cast<int>(output()->vertices().size()),
-                 outputValues.size(), valueDimensions, output()->vertices().size());
+  for (size_t i = 0; i < outSize; i++) {
+    int inputIndex = _vertexIndices[i] * valueDimensions;
 
-  if (hasConstraint(CONSERVATIVE)) {
-    PRECICE_DEBUG("Map conservative");
-    size_t const inSize = input()->vertices().size();
+    for (int dim = 0; dim < valueDimensions; dim++) {
 
-    for (size_t i = 0; i < inSize; i++) {
-      int const outputIndex = _vertexIndices[i] * valueDimensions;
+      const int mapOutputIndex = (i * valueDimensions) + dim;
+      const int mapInputIndex  = inputIndex + dim;
 
-      for (int dim = 0; dim < valueDimensions; dim++) {
-
-        const int mapOutputIndex = outputIndex + dim;
-        const int mapInputIndex  = (i * valueDimensions) + dim;
-
-        outputValues(mapOutputIndex) += inputValues(mapInputIndex) + _offsetsMatched[i].transpose() * gradientValues.col(mapInputIndex);
-      }
+      outputValues(mapOutputIndex) = inputValues(mapInputIndex) + _offsetsMatched[i].transpose() * gradientValues.col(mapInputIndex);
     }
-  } else {
-    PRECICE_DEBUG((hasConstraint(CONSISTENT) ? "Map consistent" : "Map scaled-consistent"));
-    size_t const outSize = output()->vertices().size();
-
-    for (size_t i = 0; i < outSize; i++) {
-      int inputIndex = _vertexIndices[i] * valueDimensions;
-
-      for (int dim = 0; dim < valueDimensions; dim++) {
-
-        const int mapOutputIndex = (i * valueDimensions) + dim;
-        const int mapInputIndex  = inputIndex + dim;
-
-        outputValues(mapOutputIndex) = inputValues(mapInputIndex) + _offsetsMatched[i].transpose() * gradientValues.col(mapInputIndex);
-      }
-    }
-    if (hasConstraint(SCALEDCONSISTENT)) {
-      scaleConsistentMapping(inputDataID, outputDataID);
-    }
-
-    PRECICE_DEBUG("Mapped values (with gradient) = {}", utils::previewRange(3, outputValues));
   }
+
+  PRECICE_DEBUG("Mapped values (with gradient) = {}", utils::previewRange(3, outputValues));
+}
+
+void NearestNeighborGradientMapping::mapConservative(DataID /*inputDataID*/, DataID /*outputDataID*/)
+{
+  PRECICE_ASSERT(false, "Not implemented.")
 }
 
 } // namespace mapping

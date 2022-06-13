@@ -7,7 +7,7 @@
 
 using namespace precice;
 
-BOOST_AUTO_TEST_SUITE(PreciceTests)
+BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(Time)
 BOOST_AUTO_TEST_SUITE(Implicit)
@@ -15,7 +15,7 @@ BOOST_AUTO_TEST_SUITE(ParallelCoupling)
 
 /**
  * @brief Test to run a simple coupling with first order waveform subcycling.
- * 
+ *
  * Provides a dt argument to the read function. A first order waveform is used.
  */
 BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
@@ -28,13 +28,13 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
   DataID writeDataID;
   DataID readDataID;
 
-  typedef double (*DataFunction)(double, int);
+  typedef double (*DataFunction)(double);
 
-  DataFunction dataOneFunction = [](double t, int idx) -> double {
-    return (double) (2 + t + idx);
+  DataFunction dataOneFunction = [](double t) -> double {
+    return (double) (2 + t);
   };
-  DataFunction dataTwoFunction = [](double t, int idx) -> double {
-    return (double) (10 + t + idx);
+  DataFunction dataTwoFunction = [](double t) -> double {
+    return (double) (10 + t);
   };
   DataFunction writeFunction;
   DataFunction readFunction;
@@ -54,13 +54,10 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
     readFunction  = dataOneFunction;
   }
 
-  int nVertices = 1;
+  double   writeData, readData;
+  VertexID vertexID;
 
-  std::vector<VertexID> vertexIDs(nVertices, 0);
-  std::vector<double>   writeData(nVertices, 0);
-  std::vector<double>   readData(nVertices, 0);
-
-  vertexIDs[0] = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+  vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
 
   int    nSubsteps = 4; // perform subcycling on solvers. 4 steps happen in each window.
   int    nWindows  = 5; // perform 5 windows.
@@ -76,10 +73,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
   int    iterations;
 
   if (precice.isActionRequired(precice::constants::actionWriteInitialData())) {
-    for (int i = 0; i < nVertices; i++) {
-      writeData[i] = writeFunction(time, i);
-      precice.writeScalarData(writeDataID, vertexIDs[i], writeData[i]);
-    }
+    writeData = writeFunction(time);
+    precice.writeScalarData(writeDataID, vertexID, writeData);
     precice.markActionFulfilled(precice::constants::actionWriteInitialData());
   }
 
@@ -95,40 +90,32 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
     double readTime;
     readTime = time + currentDt;
 
-    BOOST_TEST(readData.size() == nVertices);
     BOOST_TEST(precice.isReadDataAvailable());
-    for (int i = 0; i < nVertices; i++) {
-      if (precice.isReadDataAvailable()) {
-        precice.readScalarData(readDataID, vertexIDs[i], currentDt, readData[i]);
-      }
-      if (iterations == 0) { // in the first iteration of each window, we only have one sample of data. Therefore constant interpolation
-        BOOST_TEST(readData[i] == readFunction(timeCheckpoint, i));
-      } else { // in the following iterations we have two samples of data. Therefore linear interpolation
-        BOOST_TEST(readData[i] == readFunction(readTime, i));
-      }
-      if (precice.isReadDataAvailable()) {
-        precice.readScalarData(readDataID, vertexIDs[i], currentDt / 2, readData[i]);
-      }
-      if (iterations == 0) { // in the first iteration of each window, we only have one sample of data. Therefore constant interpolation
-        BOOST_TEST(readData[i] == readFunction(timeCheckpoint, i));
-      } else { // in the following iterations we have two samples of data. Therefore linear interpolation
-        BOOST_TEST(readData[i] == readFunction(readTime - currentDt / 2, i));
-      }
+    if (precice.isReadDataAvailable()) {
+      precice.readScalarData(readDataID, vertexID, currentDt, readData);
+    }
+    if (iterations == 0) { // in the first iteration of each window, we only have one sample of data. Therefore constant interpolation
+      BOOST_TEST(readData == readFunction(timeCheckpoint));
+    } else { // in the following iterations we have two samples of data. Therefore linear interpolation
+      BOOST_TEST(readData == readFunction(readTime));
+    }
+    if (precice.isReadDataAvailable()) {
+      precice.readScalarData(readDataID, vertexID, currentDt / 2, readData);
+    }
+    if (iterations == 0) { // in the first iteration of each window, we only have one sample of data. Therefore constant interpolation
+      BOOST_TEST(readData == readFunction(timeCheckpoint));
+    } else { // in the following iterations we have two samples of data. Therefore linear interpolation
+      BOOST_TEST(readData == readFunction(readTime - currentDt / 2));
     }
 
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.
     time += currentDt;
     timestep++;
-    for (int i = 0; i < nVertices; i++) {
-      writeData[i] = writeFunction(time, i);
-    }
+    writeData = writeFunction(time);
 
     if (precice.isWriteDataRequired(currentDt)) {
-      BOOST_TEST(writeData.size() == nVertices);
-      for (int i = 0; i < nVertices; i++) {
-        writeData[i] = writeFunction(time, i);
-        precice.writeScalarData(writeDataID, vertexIDs[i], writeData[i]);
-      }
+      writeData = writeFunction(time);
+      precice.writeScalarData(writeDataID, vertexID, writeData);
     }
     maxDt = precice.advance(currentDt);
     if (precice.isActionRequired(precice::constants::actionReadIterationCheckpoint())) {
@@ -144,7 +131,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
   BOOST_TEST(timestep == nWindows * nSubsteps);
 }
 
-BOOST_AUTO_TEST_SUITE_END() // PreciceTests
+BOOST_AUTO_TEST_SUITE_END() // Integration
 BOOST_AUTO_TEST_SUITE_END() // Serial
 BOOST_AUTO_TEST_SUITE_END() // Time
 BOOST_AUTO_TEST_SUITE_END() // Explicit

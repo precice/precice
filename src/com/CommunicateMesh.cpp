@@ -44,49 +44,47 @@ void CommunicateMesh::sendMesh(
       std::copy_n(meshVertices[i].rawCoords().begin(), dim, &coords[i * dim]);
       globalIDs[i] = meshVertices[i].getGlobalIndex();
     }
-    _communication->send(coords, rankReceiver);
-    _communication->send(globalIDs, rankReceiver);
+    _communication->sendRange(coords, rankReceiver);
+    _communication->sendRange(globalIDs, rankReceiver);
   }
 
   const int numberOfEdges = mesh.edges().size();
   _communication->send(numberOfEdges, rankReceiver);
   if (not mesh.edges().empty()) {
-    //we need to send the vertexIDs first such that the right edges can be created later
-    //contrary to the normal sendMesh, this variant must also work for adding delta meshes
+    // we need to send the vertexIDs first such that the right edges can be created later
+    // contrary to the normal sendMesh, this variant must also work for adding delta meshes
     std::vector<int> vertexIDs(numberOfVertices);
     for (int i = 0; i < numberOfVertices; i++) {
       vertexIDs[i] = meshVertices[i].getID();
     }
-    _communication->send(vertexIDs, rankReceiver);
+    _communication->sendRange(vertexIDs, rankReceiver);
 
     std::vector<int> edgeIDs(numberOfEdges * 2);
     for (int i = 0; i < numberOfEdges; i++) {
       edgeIDs[i * 2]     = mesh.edges()[i].vertex(0).getID();
       edgeIDs[i * 2 + 1] = mesh.edges()[i].vertex(1).getID();
     }
-    _communication->send(edgeIDs, rankReceiver);
+    _communication->sendRange(edgeIDs, rankReceiver);
   }
 
-  if (dim == 3) {
-    int numberOfTriangles = mesh.triangles().size();
-    _communication->send(numberOfTriangles, rankReceiver);
-    if (not mesh.triangles().empty()) {
-      //we need to send the edgeIDs first such that the right edges can be created later
-      //contrary to the normal sendMesh, this variant must also work for adding delta meshes
-      std::vector<int> edgeIDs(numberOfEdges);
-      for (int i = 0; i < numberOfEdges; i++) {
-        edgeIDs[i] = mesh.edges()[i].getID();
-      }
-      _communication->send(edgeIDs, rankReceiver);
-
-      std::vector<int> triangleIDs(numberOfTriangles * 3);
-      for (int i = 0; i < numberOfTriangles; i++) {
-        triangleIDs[i * 3]     = mesh.triangles()[i].edge(0).getID();
-        triangleIDs[i * 3 + 1] = mesh.triangles()[i].edge(1).getID();
-        triangleIDs[i * 3 + 2] = mesh.triangles()[i].edge(2).getID();
-      }
-      _communication->send(triangleIDs, rankReceiver);
+  int numberOfTriangles = mesh.triangles().size();
+  _communication->send(numberOfTriangles, rankReceiver);
+  if (not mesh.triangles().empty()) {
+    // we need to send the edgeIDs first such that the right edges can be created later
+    // contrary to the normal sendMesh, this variant must also work for adding delta meshes
+    std::vector<int> edgeIDs(numberOfEdges);
+    for (int i = 0; i < numberOfEdges; i++) {
+      edgeIDs[i] = mesh.edges()[i].getID();
     }
+    _communication->sendRange(edgeIDs, rankReceiver);
+
+    std::vector<int> triangleIDs(numberOfTriangles * 3);
+    for (int i = 0; i < numberOfTriangles; i++) {
+      triangleIDs[i * 3]     = mesh.triangles()[i].edge(0).getID();
+      triangleIDs[i * 3 + 1] = mesh.triangles()[i].edge(1).getID();
+      triangleIDs[i * 3 + 2] = mesh.triangles()[i].edge(2).getID();
+    }
+    _communication->sendRange(triangleIDs, rankReceiver);
   }
 }
 
@@ -104,11 +102,9 @@ void CommunicateMesh::receiveMesh(
   std::vector<mesh::Vertex *> vertices;
   vertices.reserve(numberOfVertices);
   if (numberOfVertices > 0) {
-    std::vector<double> vertexCoords;
-    std::vector<int>    globalIDs;
-    _communication->receive(vertexCoords, rankSender);
-    _communication->receive(globalIDs, rankSender);
-    Eigen::VectorXd coords(dim);
+    std::vector<double> vertexCoords = _communication->receiveRange(rankSender, AsVectorTag<double>{});
+    std::vector<int>    globalIDs    = _communication->receiveRange(rankSender, AsVectorTag<int>{});
+    Eigen::VectorXd     coords(dim);
     for (int i = 0; i < numberOfVertices; i++) {
       for (int d = 0; d < dim; d++) {
         coords[d] = vertexCoords[i * dim + d];
@@ -128,14 +124,12 @@ void CommunicateMesh::receiveMesh(
   vertexMap.reserve(numberOfVertices);
   std::vector<mesh::Edge *> edges;
   if (numberOfEdges > 0) {
-    std::vector<int> vertexIDs;
-    _communication->receive(vertexIDs, rankSender);
+    std::vector<int> vertexIDs = _communication->receiveRange(rankSender, AsVectorTag<int>{});
     for (int i = 0; i < numberOfVertices; i++) {
       vertexMap[vertexIDs[i]] = vertices[i];
     }
 
-    std::vector<int> edgeIDs;
-    _communication->receive(edgeIDs, rankSender);
+    std::vector<int> edgeIDs = _communication->receiveRange(rankSender, AsVectorTag<int>{});
     for (int i = 0; i < numberOfEdges; i++) {
       PRECICE_ASSERT(vertexMap.count((edgeIDs[i * 2])) == 1);
       PRECICE_ASSERT(vertexMap.count(edgeIDs[i * 2 + 1]) == 1);
@@ -145,33 +139,29 @@ void CommunicateMesh::receiveMesh(
     }
   }
 
-  if (dim == 3) {
-    int numberOfTriangles = 0;
-    _communication->receive(numberOfTriangles, rankSender);
-    PRECICE_DEBUG("Number of Triangles to receive: {}", numberOfTriangles);
-    PRECICE_DEBUG("Number of Edges: {}", edges.size());
-    if (numberOfTriangles > 0) {
-      PRECICE_ASSERT((edges.size() > 0) || (numberOfTriangles == 0));
-      std::vector<int> edgeIDs;
-      _communication->receive(edgeIDs, rankSender);
-      boost::container::flat_map<int, mesh::Edge *> edgeMap;
-      edgeMap.reserve(numberOfEdges);
-      for (int i = 0; i < numberOfEdges; i++) {
-        edgeMap[edgeIDs[i]] = edges[i];
-      }
+  int numberOfTriangles = 0;
+  _communication->receive(numberOfTriangles, rankSender);
+  PRECICE_DEBUG("Number of Triangles to receive: {}", numberOfTriangles);
+  PRECICE_DEBUG("Number of Edges: {}", edges.size());
+  if (numberOfTriangles > 0) {
+    PRECICE_ASSERT((edges.size() > 0) || (numberOfTriangles == 0));
+    std::vector<int>                              edgeIDs = _communication->receiveRange(rankSender, AsVectorTag<int>{});
+    boost::container::flat_map<int, mesh::Edge *> edgeMap;
+    edgeMap.reserve(numberOfEdges);
+    for (int i = 0; i < numberOfEdges; i++) {
+      edgeMap[edgeIDs[i]] = edges[i];
+    }
 
-      std::vector<int> triangleIDs;
-      _communication->receive(triangleIDs, rankSender);
+    std::vector<int> triangleIDs = _communication->receiveRange(rankSender, AsVectorTag<int>{});
 
-      for (int i = 0; i < numberOfTriangles; i++) {
-        PRECICE_ASSERT(edgeMap.count(triangleIDs[i * 3]) == 1);
-        PRECICE_ASSERT(edgeMap.count(triangleIDs[i * 3 + 1]) == 1);
-        PRECICE_ASSERT(edgeMap.count(triangleIDs[i * 3 + 2]) == 1);
-        PRECICE_ASSERT(triangleIDs[i * 3] != triangleIDs[i * 3 + 1]);
-        PRECICE_ASSERT(triangleIDs[i * 3 + 1] != triangleIDs[i * 3 + 2]);
-        PRECICE_ASSERT(triangleIDs[i * 3 + 2] != triangleIDs[i * 3]);
-        mesh.createTriangle(*edgeMap[triangleIDs[i * 3]], *edgeMap[triangleIDs[i * 3 + 1]], *edgeMap[triangleIDs[i * 3 + 2]]);
-      }
+    for (int i = 0; i < numberOfTriangles; i++) {
+      PRECICE_ASSERT(edgeMap.count(triangleIDs[i * 3]) == 1);
+      PRECICE_ASSERT(edgeMap.count(triangleIDs[i * 3 + 1]) == 1);
+      PRECICE_ASSERT(edgeMap.count(triangleIDs[i * 3 + 2]) == 1);
+      PRECICE_ASSERT(triangleIDs[i * 3] != triangleIDs[i * 3 + 1]);
+      PRECICE_ASSERT(triangleIDs[i * 3 + 1] != triangleIDs[i * 3 + 2]);
+      PRECICE_ASSERT(triangleIDs[i * 3 + 2] != triangleIDs[i * 3]);
+      mesh.createTriangle(*edgeMap[triangleIDs[i * 3]], *edgeMap[triangleIDs[i * 3 + 1]], *edgeMap[triangleIDs[i * 3 + 2]]);
     }
   }
 }
@@ -198,8 +188,8 @@ void CommunicateMesh::broadcastSendMesh(const mesh::Mesh &mesh)
   int numberOfEdges = mesh.edges().size();
   _communication->broadcast(numberOfEdges);
   if (numberOfEdges > 0) {
-    //we need to send the vertexIDs first such that the right edges can be created later
-    //contrary to the normal sendMesh, this variant must also work for adding delta meshes
+    // we need to send the vertexIDs first such that the right edges can be created later
+    // contrary to the normal sendMesh, this variant must also work for adding delta meshes
     std::vector<int> vertexIDs(numberOfVertices);
     for (int i = 0; i < numberOfVertices; i++) {
       vertexIDs[i] = meshVertices[i].getID();
@@ -215,27 +205,25 @@ void CommunicateMesh::broadcastSendMesh(const mesh::Mesh &mesh)
     _communication->broadcast(edgeIDs);
   }
 
-  if (dim == 3) {
-    int numberOfTriangles = mesh.triangles().size();
-    _communication->broadcast(numberOfTriangles);
-    if (numberOfTriangles > 0) {
-      //we need to send the edgeIDs first such that the right edges can be created later
-      //contrary to the normal sendMesh, this variant must also work for adding delta meshes
-      std::vector<int> edgeIDs(numberOfEdges);
-      for (int i = 0; i < numberOfEdges; i++) {
-        edgeIDs[i] = mesh.edges()[i].getID();
-      }
-      _communication->broadcast(edgeIDs);
-
-      std::vector<int> triangleIDs(numberOfTriangles * 3);
-      const auto &     meshTriangles = mesh.triangles();
-      for (int i = 0; i < numberOfTriangles; i++) {
-        triangleIDs[i * 3]     = meshTriangles[i].edge(0).getID();
-        triangleIDs[i * 3 + 1] = meshTriangles[i].edge(1).getID();
-        triangleIDs[i * 3 + 2] = meshTriangles[i].edge(2).getID();
-      }
-      _communication->broadcast(triangleIDs);
+  int numberOfTriangles = mesh.triangles().size();
+  _communication->broadcast(numberOfTriangles);
+  if (numberOfTriangles > 0) {
+    // we need to send the edgeIDs first such that the right edges can be created later
+    // contrary to the normal sendMesh, this variant must also work for adding delta meshes
+    std::vector<int> edgeIDs(numberOfEdges);
+    for (int i = 0; i < numberOfEdges; i++) {
+      edgeIDs[i] = mesh.edges()[i].getID();
     }
+    _communication->broadcast(edgeIDs);
+
+    std::vector<int> triangleIDs(numberOfTriangles * 3);
+    const auto &     meshTriangles = mesh.triangles();
+    for (int i = 0; i < numberOfTriangles; i++) {
+      triangleIDs[i * 3]     = meshTriangles[i].edge(0).getID();
+      triangleIDs[i * 3 + 1] = meshTriangles[i].edge(1).getID();
+      triangleIDs[i * 3 + 2] = meshTriangles[i].edge(2).getID();
+    }
+    _communication->broadcast(triangleIDs);
   }
 }
 
@@ -289,30 +277,27 @@ void CommunicateMesh::broadcastReceiveMesh(
     }
   }
 
-  if (dim == 3) {
-    int numberOfTriangles = 0;
-    _communication->broadcast(numberOfTriangles, rankBroadcaster);
-    if (numberOfTriangles > 0) {
-      PRECICE_ASSERT((edges.size() > 0) || (numberOfTriangles == 0));
-      std::vector<int> edgeIDs;
-      _communication->broadcast(edgeIDs, rankBroadcaster);
-      std::map<int, mesh::Edge *> edgeMap;
-      for (int i = 0; i < numberOfEdges; i++) {
-        edgeMap[edgeIDs[i]] = edges[i];
-      }
+  int numberOfTriangles = 0;
+  _communication->broadcast(numberOfTriangles, rankBroadcaster);
+  if (numberOfTriangles > 0) {
+    PRECICE_ASSERT((edges.size() > 0) || (numberOfTriangles == 0));
+    std::vector<int> edgeIDs;
+    _communication->broadcast(edgeIDs, rankBroadcaster);
+    std::map<int, mesh::Edge *> edgeMap;
+    for (int i = 0; i < numberOfEdges; i++) {
+      edgeMap[edgeIDs[i]] = edges[i];
+    }
 
-      std::vector<int> triangleIDs;
-      _communication->broadcast(triangleIDs, rankBroadcaster);
-
-      for (int i = 0; i < numberOfTriangles; i++) {
-        PRECICE_ASSERT(edgeMap.find(triangleIDs[i * 3]) != edgeMap.end());
-        PRECICE_ASSERT(edgeMap.find(triangleIDs[i * 3 + 1]) != edgeMap.end());
-        PRECICE_ASSERT(edgeMap.find(triangleIDs[i * 3 + 2]) != edgeMap.end());
-        PRECICE_ASSERT(triangleIDs[i * 3] != triangleIDs[i * 3 + 1]);
-        PRECICE_ASSERT(triangleIDs[i * 3 + 1] != triangleIDs[i * 3 + 2]);
-        PRECICE_ASSERT(triangleIDs[i * 3 + 2] != triangleIDs[i * 3]);
-        mesh.createTriangle(*edgeMap[triangleIDs[i * 3]], *edgeMap[triangleIDs[i * 3 + 1]], *edgeMap[triangleIDs[i * 3 + 2]]);
-      }
+    std::vector<int> triangleIDs;
+    _communication->broadcast(triangleIDs, rankBroadcaster);
+    for (int i = 0; i < numberOfTriangles; i++) {
+      PRECICE_ASSERT(edgeMap.find(triangleIDs[i * 3]) != edgeMap.end());
+      PRECICE_ASSERT(edgeMap.find(triangleIDs[i * 3 + 1]) != edgeMap.end());
+      PRECICE_ASSERT(edgeMap.find(triangleIDs[i * 3 + 2]) != edgeMap.end());
+      PRECICE_ASSERT(triangleIDs[i * 3] != triangleIDs[i * 3 + 1]);
+      PRECICE_ASSERT(triangleIDs[i * 3 + 1] != triangleIDs[i * 3 + 2]);
+      PRECICE_ASSERT(triangleIDs[i * 3 + 2] != triangleIDs[i * 3]);
+      mesh.createTriangle(*edgeMap[triangleIDs[i * 3]], *edgeMap[triangleIDs[i * 3 + 1]], *edgeMap[triangleIDs[i * 3 + 2]]);
     }
   }
 }

@@ -51,17 +51,19 @@ BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
   PRECICE_TEST(1_rank);
   using namespace mesh;
 
+  int dimensions = 3;
+
   std::string path(_pathToTests + "parallel-implicit-cplscheme-relax-const-config.xml");
 
   xml::XMLTag          root = xml::getRootTag();
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
-  dataConfig->setDimensions(3);
+  dataConfig->setDimensions(dimensions);
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
-  meshConfig->setDimensions(3);
+  meshConfig->setDimensions(dimensions);
   m2n::M2NConfiguration::SharedPointer m2nConfig(
       new m2n::M2NConfiguration(root));
   precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
-  participantConfig->setDimensions(3);
+  participantConfig->setDimensions(dimensions);
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
   xml::configure(root, xml::ConfigurationContext{}, path);
@@ -72,19 +74,21 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
 {
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = true;
-  auto m2n                 = context.connectMasters("Participant0", "Participant1", options);
+  options.useOnlyPrimaryCom = true;
+  auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
 
   xml::XMLTag root = xml::getRootTag();
 
+  int dimensions = 3;
+
   // Create a data configuration, to simplify configuration of data
   mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(root));
-  dataConfig->setDimensions(3);
+  dataConfig->setDimensions(dimensions);
   dataConfig->addData("Data0", 1);
   dataConfig->addData("Data1", 3);
 
   mesh::MeshConfiguration meshConfig(root, dataConfig);
-  meshConfig.setDimensions(3);
+  meshConfig.setDimensions(dimensions);
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
   const auto    dataID0 = mesh->createData("Data0", 1, 0_dataID)->getID();
   const auto    dataID1 = mesh->createData("Data1", 3, 1_dataID)->getID();

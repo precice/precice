@@ -2,7 +2,7 @@
 # CTest
 #
 
-set(PRECICE_TEST_TIMEOUT_LONG 60 CACHE STRING "The timeout in seconds for longer tests.")
+set(PRECICE_TEST_TIMEOUT_LONG 120 CACHE STRING "The timeout in seconds for longer tests.")
 set(PRECICE_TEST_TIMEOUT_SHORT 20 CACHE STRING "The timeout in seconds for shorter tests.")
 
 set(PRECICE_TEST_DIR "${preCICE_BINARY_DIR}/TestOutput")
@@ -278,18 +278,8 @@ add_precice_test(
   )
 add_precice_test(
   NAME interface
-  ARGUMENTS "--run_test=PreciceTests:\!PreciceTests/Serial:\!PreciceTests/Parallel"
+  ARGUMENTS "--run_test=PreciceTests"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
-add_precice_test(
-  NAME serial
-  ARGUMENTS "--run_test=PreciceTests/Serial"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
-  )
-add_precice_test(
-  NAME parallel
-  ARGUMENTS "--run_test=PreciceTests/Parallel"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
   )
 add_precice_test(
   NAME query
@@ -311,6 +301,16 @@ add_precice_test(
   ARGUMENTS "--run_test=XML"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   )
+
+# Register integration tests from tests/
+# These are defined in tests/tests.cmake
+foreach(testsuite IN LISTS PRECICE_TEST_SUITES)
+  add_precice_test(
+    NAME "integration.${testsuite}"
+    ARGUMENTS "--run_test=Integration/${testsuite}"
+    TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
+    )
+endforeach()
 
 add_precice_test_build_solverdummy(cpp)
 add_precice_test_build_solverdummy(c)

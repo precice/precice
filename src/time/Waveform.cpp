@@ -2,6 +2,7 @@
 #include <algorithm>
 #include "cplscheme/CouplingScheme.hpp"
 #include "logging/LogMacros.hpp"
+#include "time/Time.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
 namespace precice {
@@ -12,7 +13,7 @@ Waveform::Waveform(
     : _interpolationOrder(interpolationOrder)
 {
   PRECICE_ASSERT(not _storageIsInitialized);
-  PRECICE_ASSERT(0 <= _interpolationOrder && _interpolationOrder <= 2);
+  PRECICE_ASSERT(Time::MIN_INTERPOLATION_ORDER <= _interpolationOrder && _interpolationOrder <= Time::MAX_INTERPOLATION_ORDER);
 }
 
 int Waveform::getInterpolationOrder() const
@@ -21,19 +22,22 @@ int Waveform::getInterpolationOrder() const
 }
 
 void Waveform::initialize(
-    const int valuesSize)
+    const Eigen::VectorXd &values)
 {
   int storageSize;
-  PRECICE_ASSERT(_interpolationOrder >= 0);
+  PRECICE_ASSERT(_interpolationOrder >= Time::MIN_INTERPOLATION_ORDER);
   storageSize            = _interpolationOrder + 1;
-  _timeWindowsStorage    = Eigen::MatrixXd::Zero(valuesSize, storageSize);
+  _timeWindowsStorage    = Eigen::MatrixXd::Zero(values.size(), storageSize);
   _numberOfStoredSamples = 1; // the first sample is automatically initialized as zero and stored.
   _storageIsInitialized  = true;
   PRECICE_ASSERT(this->maxNumberOfStoredSamples() == storageSize);
-  PRECICE_ASSERT(this->valuesSize() == valuesSize);
+  PRECICE_ASSERT(this->valuesSize() == values.size());
+  for (int sampleIndex = 0; sampleIndex < maxNumberOfStoredSamples(); ++sampleIndex) {
+    this->storeAt(values, sampleIndex);
+  }
 }
 
-void Waveform::storeAtFirstSample(const Eigen::VectorXd &values)
+void Waveform::store(const Eigen::VectorXd &values)
 {
   PRECICE_ASSERT(_storageIsInitialized);
   int sampleIndex = 0;
@@ -47,19 +51,33 @@ void Waveform::storeAt(const Eigen::VectorXd values, int sampleIndex)
   this->_timeWindowsStorage.col(sampleIndex) = values;
 }
 
-void Waveform::storeAtAllSamples(const Eigen::VectorXd values)
-{
-  for (int sampleIndex = 0; sampleIndex < maxNumberOfStoredSamples(); ++sampleIndex) {
-    this->storeAt(values, sampleIndex);
-  }
-}
-
 Eigen::VectorXd Waveform::sample(double normalizedDt)
 {
   PRECICE_ASSERT(_storageIsInitialized);
   PRECICE_ASSERT(normalizedDt >= 0, "Sampling outside of valid range!");
   PRECICE_ASSERT(normalizedDt <= 1, "Sampling outside of valid range!");
-  return this->interpolate(normalizedDt);
+
+  const int usedOrder = computeUsedOrder(_interpolationOrder, _numberOfStoredSamples);
+
+  if (usedOrder == 0) {
+    // constant interpolation = just use sample at the end of the window: x(dt) = x^t
+    PRECICE_ASSERT(_numberOfStoredSamples > 0);
+    return this->_timeWindowsStorage.col(0);
+  }
+  Eigen::VectorXd interpolatedValue;
+  if (usedOrder == 1) {
+    // linear interpolation inside window: x(dt) = dt * x^t + (1-dt) * x^(t-1)
+    PRECICE_ASSERT(_numberOfStoredSamples > 1);
+    interpolatedValue = this->_timeWindowsStorage.col(0) * normalizedDt;        // = dt * x^t
+    interpolatedValue += this->_timeWindowsStorage.col(1) * (1 - normalizedDt); // = dt * x^t + (1-dt) * x^(t-1)
+    return interpolatedValue;
+  }
+  PRECICE_ASSERT(usedOrder == 2);
+  // quadratic interpolation inside window: x(dt) = x^t * (dt^2 + dt)/2 + x^(t-1) * (1-dt^2)+ x^(t-2) * (dt^2-dt)/2
+  interpolatedValue = this->_timeWindowsStorage.col(0) * (normalizedDt + 1) * normalizedDt * 0.5;
+  interpolatedValue += this->_timeWindowsStorage.col(1) * (1 - normalizedDt * normalizedDt);
+  interpolatedValue += this->_timeWindowsStorage.col(2) * (normalizedDt - 1) * normalizedDt * 0.5;
+  return interpolatedValue;
 }
 
 void Waveform::moveToNextWindow()
@@ -107,33 +125,6 @@ int Waveform::computeUsedOrder(int requestedOrder, int numberOfAvailableSamples)
     PRECICE_ASSERT(false);
   }
   return usedOrder;
-}
-
-Eigen::VectorXd Waveform::interpolate(const double normalizedDt)
-{
-  const int usedOrder = computeUsedOrder(_interpolationOrder, _numberOfStoredSamples);
-
-  PRECICE_ASSERT(normalizedDt >= 0, "Sampling outside of valid range!");
-  PRECICE_ASSERT(normalizedDt <= 1, "Sampling outside of valid range!");
-  if (usedOrder == 0) {
-    // constant interpolation = just use sample at the end of the window: x(dt) = x^t
-    PRECICE_ASSERT(_numberOfStoredSamples > 0);
-    return this->_timeWindowsStorage.col(0);
-  }
-  Eigen::VectorXd interpolatedValue;
-  if (usedOrder == 1) {
-    // linear interpolation inside window: x(dt) = dt * x^t + (1-dt) * x^(t-1)
-    PRECICE_ASSERT(_numberOfStoredSamples > 1);
-    interpolatedValue = this->_timeWindowsStorage.col(0) * normalizedDt;        // = dt * x^t
-    interpolatedValue += this->_timeWindowsStorage.col(1) * (1 - normalizedDt); // = dt * x^t + (1-dt) * x^(t-1)
-    return interpolatedValue;
-  }
-  PRECICE_ASSERT(usedOrder == 2);
-  // quadratic interpolation inside window: x(dt) = x^t * (dt^2 + dt)/2 + x^(t-1) * (1-dt^2)+ x^(t-2) * (dt^2-dt)/2
-  interpolatedValue = this->_timeWindowsStorage.col(0) * (normalizedDt + 1) * normalizedDt * 0.5;
-  interpolatedValue += this->_timeWindowsStorage.col(1) * (1 - normalizedDt * normalizedDt);
-  interpolatedValue += this->_timeWindowsStorage.col(2) * (normalizedDt - 1) * normalizedDt * 0.5;
-  return interpolatedValue;
 }
 
 } // namespace time

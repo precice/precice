@@ -330,117 +330,6 @@ BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncremental2DCase2)
   BOOST_TEST(outValues(2) == (inValues(0) + inValues(1)) * 0.5 * scaleFactor);
 }
 
-BOOST_AUTO_TEST_CASE(ConsistentNonIncrementalPseudo3D)
-{
-  PRECICE_TEST(1_rank);
-  using namespace mesh;
-  int dimensions = 3;
-
-  // Create mesh to map from
-  PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
-  PtrData inData   = inMesh->createData("InData", 1, 0_dataID);
-  int     inDataID = inData->getID();
-  Vertex &v1       = inMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
-  Vertex &v2       = inMesh->createVertex(Eigen::Vector3d(1.0, 1.0, 0.0));
-  Vertex &v3       = inMesh->createVertex(Eigen::Vector3d(2.0, 2.0, 0.0));
-  Edge &  e12      = inMesh->createEdge(v1, v2);
-  Edge &  e23      = inMesh->createEdge(v2, v3);
-  Edge &  e31      = inMesh->createEdge(v3, v1);
-  inMesh->createTriangle(e12, e23, e31);
-
-  inMesh->allocateDataValues();
-  double           valueVertex1 = 1.0;
-  double           valueVertex2 = 2.0;
-  double           valueVertex3 = 3.0;
-  Eigen::VectorXd &values       = inData->values();
-  values(0)                     = valueVertex1;
-  values(1)                     = valueVertex2;
-  values(2)                     = valueVertex3;
-
-  {
-    // Create mesh to map to
-    PtrMesh outMesh(new Mesh("OutMesh1", dimensions, testing::nextMeshID()));
-    PtrData outData   = outMesh->createData("OutData1", 1, 1_dataID);
-    int     outDataID = outData->getID();
-
-    // Setup mapping with mapping coordinates and geometry used
-    mapping::NearestProjectionMapping mapping(mapping::Mapping::CONSISTENT, dimensions);
-    mapping.setMeshes(inMesh, outMesh);
-    BOOST_TEST(mapping.hasComputedMapping() == false);
-
-    outMesh->createVertex(Eigen::Vector3d(0.5, 0.5, 0.0));
-    outMesh->createVertex(Eigen::Vector3d(-0.5, -0.5, 0.0));
-    outMesh->createVertex(Eigen::Vector3d(1.5, 1.5, 0.0));
-    outMesh->allocateDataValues();
-
-    // Compute and perform mapping
-    mapping.computeMapping();
-    mapping.map(inDataID, outDataID);
-
-    // Validate results
-    BOOST_TEST(mapping.hasComputedMapping() == true);
-    BOOST_TEST_CONTEXT(*inMesh)
-    {
-      BOOST_TEST(outData->values()(0) == (valueVertex1 + valueVertex2) * 0.5);
-      BOOST_TEST(outData->values()(1) == valueVertex1);
-      BOOST_TEST(outData->values()(2) == (valueVertex2 + valueVertex3) * 0.5);
-    }
-
-    // Redo mapping, results should be
-    //assign(outData->values()) = 0.0;
-    outData->values() = Eigen::VectorXd::Constant(outData->values().size(), 0.0);
-
-    mapping.map(inDataID, outDataID);
-    BOOST_TEST_CONTEXT(*inMesh)
-    {
-      BOOST_TEST(outData->values()(0) == (valueVertex1 + valueVertex2) * 0.5);
-      BOOST_TEST(outData->values()(1) == valueVertex1);
-      BOOST_TEST(outData->values()(2) == (valueVertex2 + valueVertex3) * 0.5);
-    }
-  }
-  {
-    // Create mesh to map to
-    PtrMesh outMesh(new Mesh("OutMesh2", dimensions, testing::nextMeshID()));
-    PtrData outData   = outMesh->createData("OutData2", 1, 0_dataID);
-    int     outDataID = outData->getID();
-
-    // Setup mapping with mapping coordinates and geometry used
-    mapping::NearestProjectionMapping mapping(mapping::Mapping::CONSISTENT, dimensions);
-    mapping.setMeshes(inMesh, outMesh);
-    BOOST_TEST(mapping.hasComputedMapping() == false);
-
-    outMesh->createVertex(Eigen::Vector3d(-0.5, -0.5, 0.0));
-    outMesh->createVertex(Eigen::Vector3d(1.5, 1.5, 0.0));
-    outMesh->createVertex(Eigen::Vector3d(0.5, 0.5, 0.0));
-    outMesh->allocateDataValues();
-
-    //assign(outData->values()) = 0.0;
-    outData->values() = Eigen::VectorXd::Constant(outData->values().size(), 0.0);
-
-    mapping.clear();
-    mapping.computeMapping();
-    mapping.map(inDataID, outDataID);
-    BOOST_TEST_CONTEXT(*inMesh)
-    {
-      BOOST_TEST(outData->values()(0) == valueVertex1);
-      BOOST_TEST(outData->values()(1) == (valueVertex2 + valueVertex3) * 0.5);
-      BOOST_TEST(outData->values()(2) == (valueVertex1 + valueVertex2) * 0.5);
-    }
-
-    // Reset output data to zero and redo the mapping
-    //assign(outData->values()) = 0.0;
-    outData->values() = Eigen::VectorXd::Constant(outData->values().size(), 0.0);
-
-    mapping.map(inDataID, outDataID);
-    BOOST_TEST_CONTEXT(*inMesh)
-    {
-      BOOST_TEST(outData->values()(0) == valueVertex1);
-      BOOST_TEST(outData->values()(1) == (valueVertex2 + valueVertex3) * 0.5);
-      BOOST_TEST(outData->values()(2) == (valueVertex1 + valueVertex2) * 0.5);
-    }
-  }
-}
-
 BOOST_AUTO_TEST_CASE(Consistent3DFalbackOnEdges)
 {
   PRECICE_TEST(1_rank);
@@ -573,7 +462,7 @@ BOOST_AUTO_TEST_CASE(AxisAlignedTriangles)
   inMesh->allocateDataValues();
   inData->values() << 1.0, 1.0, 1.0, 1.0;
 
-  // Create mesh to map to with one vertex per defined traingle
+  // Create mesh to map to with one vertex per defined triangle
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
   PtrData outData = outMesh->createData("OutData", 1, 1_dataID);
   outMesh->createVertex(Eigen::Vector3d{0.33, 0.33, 0});

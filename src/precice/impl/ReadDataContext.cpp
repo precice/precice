@@ -13,43 +13,43 @@ ReadDataContext::ReadDataContext(
     int           interpolationOrder)
     : DataContext(data, mesh)
 {
-  _providedWaveform = time::PtrWaveform(new time::Waveform(interpolationOrder));
+  _waveform = time::PtrWaveform(new time::Waveform(interpolationOrder));
 }
 
-void ReadDataContext::configureMapping(const MappingContext &mappingContext, const MeshContext &meshContext)
+void ReadDataContext::appendMappingConfiguration(const MappingContext &mappingContext, const MeshContext &meshContext)
 {
+  PRECICE_ASSERT(!hasReadMapping(), "The read data context must be unique. Otherwise we would have an ambiguous read data operation on the user side.")
   PRECICE_ASSERT(meshContext.mesh->hasDataName(getDataName()));
   mesh::PtrData data = meshContext.mesh->data(getDataName());
   PRECICE_ASSERT(data != _providedData, "Data the read mapping is mapping from needs to be different from _providedData");
-  setMapping(mappingContext, data, _providedData);
+  appendMapping(mappingContext, data, _providedData);
   PRECICE_ASSERT(hasReadMapping());
 }
 
 int ReadDataContext::getInterpolationOrder() const
 {
-  return _providedWaveform->getInterpolationOrder();
+  return _waveform->getInterpolationOrder();
 }
 
-void ReadDataContext::storeDataInWaveformFirstSample()
+void ReadDataContext::storeDataInWaveform()
 {
-  _providedWaveform->storeAtFirstSample(_providedData->values()); // store mapped or received _providedData in the _providedWaveform
+  _waveform->store(_providedData->values()); // store mapped or received _providedData in the _waveform
 }
 
 Eigen::VectorXd ReadDataContext::sampleWaveformAt(double normalizedDt)
 {
-  return _providedWaveform->sample(normalizedDt);
+  return _waveform->sample(normalizedDt);
 }
 
 void ReadDataContext::initializeWaveform()
 {
   PRECICE_ASSERT(not hasWriteMapping(), "Write mapping does not need waveforms.");
-  _providedWaveform->initialize(_providedData->values().size());
-  _providedWaveform->storeAtAllSamples(_providedData->values());
+  _waveform->initialize(_providedData->values());
 }
 
 void ReadDataContext::moveToNextWindow()
 {
-  _providedWaveform->moveToNextWindow();
+  _waveform->moveToNextWindow();
 }
 
 } // namespace impl

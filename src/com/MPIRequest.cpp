@@ -1,6 +1,6 @@
 #ifndef PRECICE_NO_MPI
 
-#include "MPIRequest.hpp"
+#include "com/MPIRequest.hpp"
 
 namespace precice {
 namespace com {

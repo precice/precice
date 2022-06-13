@@ -12,11 +12,6 @@
 namespace precice {
 namespace mesh {
 
-struct ConstEdgeIteratorTypes;
-struct EdgeIteratorTypes;
-template <typename Types>
-class EdgeIterator;
-
 /// Linear edge of a mesh, defined by two Vertex objects.
 class Edge {
 public:

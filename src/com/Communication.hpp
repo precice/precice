@@ -5,8 +5,8 @@
 #include <string>
 #include <vector>
 
-#include "Request.hpp"
 #include "boost/range/irange.hpp"
+#include "com/Request.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "precice/types.hpp"
@@ -14,6 +14,20 @@
 
 namespace precice {
 namespace com {
+
+/** Tag used to specify which type of vector to return
+ * @see Communication::receiveRange()
+ */
+template <typename T>
+struct AsVectorTag {
+};
+
+/* TODO When moving to C++17 use inline variable:
+ *
+ * template<typename T>
+ * inline constexpr auto asVector = Communication::AsVectorTag<T>{};
+ */
+
 /**
  * @brief Interface for all interprocess communication classes.
  *
@@ -45,7 +59,7 @@ namespace com {
  *    sending is happening on the background.
  *
  * @attention All receive methods, that accept a raw array, expect it to be
- * sized appropriatly. Asynchronous receive methods also expect the vector
+ * sized appropriately. Asynchronous receive methods also expect the vector
  * be sized correctly.
  */
 class Communication {
@@ -92,8 +106,8 @@ public:
    * Establishes a 1-to-N communication, whereas the acceptor's side is the "1". Contrary to
    * acceptConnectionAsServer(), the other side needs to be a proper communicator with ranks
    * from 0 to N-1. It is not necessary to know this "N" a-priori on the acceptor's side.
-   * This communication is used for the 1:1 communication between two master ranks
-   * and for the master-slave communication. For the last case, setRankOffset() has to be set.
+   * This communication is used for the 1:1 communication between two primary ranks
+   * and for the intra-participant communication. For the last case, setRankOffset() has to be set.
    *
    * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
@@ -133,8 +147,8 @@ public:
    * Establishes a 1-to-N communication, whereas the requestor's side is the "N". Contrary to
    * requestConnectionAsClient(), this side needs to be a proper communicator with ranks
    * from 0 to N-1. All ranks need to call this function.
-   * This communication is used for the 1:1 communication between two master ranks,
-   * and for the master-slave communication.
+   * This communication is used for the 1:1 communication between two primary ranks,
+   * and for the intra-participant communication.
    *
    * @param[in] acceptorName Name of remote participant to connect to.
    * @param[in] requesterName Name of calling participant.
@@ -168,18 +182,18 @@ public:
                                          std::set<int> const &acceptorRanks,
                                          int                  requesterRank) = 0;
 
-  /** Establishes the Master-Slave connection.
+  /** Establishes the intra-participant communication connection.
    *
    * @param[in] participantName Name of the calling participant.
    * @param[in] tag Tag for establishing this connection
-   * @param[in] rank The current rank in the participant 
+   * @param[in] rank The current rank in the participant
    * @param[in] size Total size of the participant
    *
    */
-  void connectMasterSlaves(std::string const &participantName,
-                           std::string const &tag,
-                           int                rank,
-                           int                size);
+  void connectIntraComm(std::string const &participantName,
+                        std::string const &tag,
+                        int                rank,
+                        int                size);
 
   /**
    * @brief Disconnects from communication space, i.e. participant.
@@ -211,21 +225,21 @@ public:
   /// @name Reduction
   /// @{
 
-  /// Performs a reduce summation on the rank given by rankMaster
-  virtual void reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank rankMaster);
-  /// Performs a reduce summation on the master, every other rank has to call reduceSum
+  /// Performs a reduce summation on the rank given by primaryRank
+  virtual void reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank primaryRank);
+  /// Performs a reduce summation on the primary rank, every other rank has to call reduceSum
   virtual void reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive);
 
-  virtual void reduceSum(int itemToSend, int &itemToReceive, Rank rankMaster);
+  virtual void reduceSum(int itemToSend, int &itemToReceive, Rank primaryRank);
   virtual void reduceSum(int itemsToSend, int &itemsToReceive);
 
-  virtual void allreduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank rankMaster);
+  virtual void allreduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank primaryRank);
   virtual void allreduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive);
 
-  virtual void allreduceSum(double itemToSend, double &itemToReceive, Rank rankMaster);
+  virtual void allreduceSum(double itemToSend, double &itemToReceive, Rank primaryRank);
   virtual void allreduceSum(double itemToSend, double &itemToReceive);
 
-  virtual void allreduceSum(int itemToSend, int &itemToReceive, Rank rankMaster);
+  virtual void allreduceSum(int itemToSend, int &itemToReceive, Rank primaryRank);
   virtual void allreduceSum(int itemToSend, int &itemToReceive);
 
   /// @}
@@ -276,9 +290,6 @@ public:
   /// @attention The caller must guarantee that the lifetime of the item extends to the completion of the request!
   virtual PtrRequest aSend(precice::span<const double> itemsToSend, Rank rankReceiver) = 0;
 
-  /// @attention The caller must guarantee that the lifetime of the item extends to the completion of the request!
-  virtual PtrRequest aSend(std::vector<double> const &itemsToSend, Rank rankReceiver) = 0;
-
   /// Sends a double to process with given rank.
   virtual void send(double itemToSend, Rank rankReceiver) = 0;
 
@@ -288,9 +299,6 @@ public:
 
   /// Sends an int to process with given rank.
   virtual void send(int itemToSend, Rank rankReceiver) = 0;
-
-  /// @attention The caller must guarantee that the lifetime of the item extends to the completion of the request!
-  virtual PtrRequest aSend(std::vector<int> const &itemsToSend, int rankReceiver) = 0;
 
   /// Asynchronously sends an int to process with given rank.
   /// @attention The caller must guarantee that the lifetime of the item extends to the completion of the request!
@@ -320,12 +328,6 @@ public:
   /// Asynchronously receives an array of double values.
   virtual PtrRequest aReceive(precice::span<double> itemsToReceive, int rankSender) = 0;
 
-  /// Asynchronously receives a vector of double values.
-  /*
-   * @attention All asynchronous receives methods require the vector to be appropriately sized
-   */
-  virtual PtrRequest aReceive(std::vector<double> &itemsToReceive, Rank rankSender) = 0;
-
   /// Receives a double from process with given rank.
   virtual void receive(double &itemToReceive, Rank rankSender) = 0;
 
@@ -344,13 +346,22 @@ public:
   /// Asynchronously receives a bool from process with given rank.
   virtual PtrRequest aReceive(bool &itemToReceive, Rank rankSender) = 0;
 
-  virtual void send(std::vector<int> const &v, Rank rankReceiver) = 0;
-  /// Receives an std::vector of ints. The vector will be resized accordingly.
-  virtual void receive(std::vector<int> &v, Rank rankSender) = 0;
+  /// @}
 
-  virtual void send(std::vector<double> const &v, Rank rankReceiver) = 0;
-  /// Receives an std::vector of doubles. The vector will be resized accordingly.
-  virtual void receive(std::vector<double> &v, Rank rankSender) = 0;
+  /// @name Range communication
+  /// @{
+
+  /// Sends a range of doubles (size + content)
+  void sendRange(precice::span<const double> itemsToSend, Rank rankReceiver);
+
+  /// Sends a range of ints (size + content)
+  void sendRange(precice::span<const int> itemsToSend, Rank rankReceiver);
+
+  /// Receives a range of ints as a vector<int>
+  std::vector<int> receiveRange(Rank rankSender, AsVectorTag<int>);
+
+  /// Receives a range of doubles as a vector<double>
+  std::vector<double> receiveRange(Rank rankSender, AsVectorTag<double>);
 
   /// @}
 
@@ -361,7 +372,7 @@ public:
   }
 
 protected:
-  /// Rank offset for masters-slave communication, since ranks are from 0 to size-2
+  /// Rank offset for primaries-secondary communication, since ranks are from 0 to size-2
   int _rankOffset = 0;
 
   bool _isConnected = false;
@@ -372,5 +383,6 @@ protected:
 private:
   logging::Logger _log{"com::Communication"};
 };
+
 } // namespace com
 } // namespace precice

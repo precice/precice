@@ -7,14 +7,14 @@
 
 using namespace precice;
 
-BOOST_AUTO_TEST_SUITE(PreciceTests)
+BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(Time)
 BOOST_AUTO_TEST_SUITE(Implicit)
 BOOST_AUTO_TEST_SUITE(ParallelCoupling)
 /**
  * @brief Test to run a simple coupling with first order waveform subcycling.
- * 
+ *
  * Does not call initializeData and therefore automatically uses 0 initial data.
  * Provides a dt argument to the read function. A first order waveform is used.
  */
@@ -28,13 +28,13 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirstNoInit)
   DataID writeDataID;
   DataID readDataID;
 
-  typedef double (*DataFunction)(double, int);
+  typedef double (*DataFunction)(double);
 
-  DataFunction dataOneFunction = [](double t, int idx) -> double {
-    return (double) (2 + t + idx);
+  DataFunction dataOneFunction = [](double t) -> double {
+    return (double) (2 + t);
   };
-  DataFunction dataTwoFunction = [](double t, int idx) -> double {
-    return (double) (10 + t + idx);
+  DataFunction dataTwoFunction = [](double t) -> double {
+    return (double) (10 + t);
   };
   DataFunction writeFunction;
   DataFunction readFunction;
@@ -54,14 +54,9 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirstNoInit)
     readFunction  = dataOneFunction;
   }
 
-  int nVertices = 2;
-
-  std::vector<VertexID> vertexIDs(nVertices, 0);
-  std::vector<double>   writeData(nVertices, 0);
-  std::vector<double>   readData(nVertices, 0);
-
-  vertexIDs[0] = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
-  vertexIDs[1] = precice.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
+  double   writeData;
+  double   readData = 0; // needs to be initialized, because isReadDataAvailable returns false.
+  VertexID vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
 
   int    nWindows        = 5; // perform 5 windows.
   double maxDt           = precice.initialize();
@@ -90,40 +85,32 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirstNoInit)
     } else {
       BOOST_TEST(precice.isReadDataAvailable());
     }
-    BOOST_TEST(readData.size() == nVertices);
-    for (int i = 0; i < nVertices; i++) {
-      for (int j = 0; j < nSamples; j++) {
-        sampleDt = sampleDts[j];
-        readTime = time + sampleDt;
-        if (precice.isReadDataAvailable()) {
-          precice.readScalarData(readDataID, vertexIDs[i], sampleDt, readData[i]);
-        }
-        if (iterations == 0 && timewindow == 0) { // use zero as initial value in first iteration (no initializeData was called)
-          BOOST_TEST(readData[i] == 0);
-        } else if (iterations == 0 && timewindow > 0) { // always use constant extrapolation in first iteration (from writeData of second participant at end previous window).
-          BOOST_TEST(readData[i] == readFunction(time, i));
-        } else if (iterations > 0 && timewindow == 0) { // use linear interpolation in later iterations (additionally available writeData of second participant at end of this window).
-          // first window is special, because of interpolation between zero initial data and data at end of first window.
-          BOOST_TEST(readData[i] == (readTime) / windowDt * readFunction(windowDt, i)); // self-made linear interpolation.
-        } else if (iterations > 0 && timewindow > 0) {                                  // use linear interpolation in later iterations (additionally available writeData of second participant at end of this window).
-          BOOST_TEST(readData[i] == readFunction(readTime, i));
-        } else {
-          BOOST_TEST(false); // unreachable!
-        }
+    for (int j = 0; j < nSamples; j++) {
+      sampleDt = sampleDts[j];
+      readTime = time + sampleDt;
+      if (precice.isReadDataAvailable()) {
+        precice.readScalarData(readDataID, vertexID, sampleDt, readData);
+      }
+      if (iterations == 0 && timewindow == 0) { // use zero as initial value in first iteration (no initializeData was called)
+        BOOST_TEST(readData == 0);
+      } else if (iterations == 0 && timewindow > 0) { // always use constant extrapolation in first iteration (from writeData of second participant at end previous window).
+        BOOST_TEST(readData == readFunction(time));
+      } else if (iterations > 0 && timewindow == 0) { // use linear interpolation in later iterations (additionally available writeData of second participant at end of this window).
+        // first window is special, because of interpolation between zero initial data and data at end of first window.
+        BOOST_TEST(readData == (readTime) / windowDt * readFunction(windowDt)); // self-made linear interpolation.
+      } else if (iterations > 0 && timewindow > 0) {                            // use linear interpolation in later iterations (additionally available writeData of second participant at end of this window).
+        BOOST_TEST(readData == readFunction(readTime));
+      } else {
+        BOOST_TEST(false); // unreachable!
       }
     }
 
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.
     time += currentDt;
-    for (int i = 0; i < nVertices; i++) {
-      writeData[i] = writeFunction(time, i);
-    }
+    writeData = writeFunction(time);
     if (precice.isWriteDataRequired(currentDt)) {
-      BOOST_TEST(writeData.size() == nVertices);
-      for (int i = 0; i < nVertices; i++) {
-        writeData[i] = writeFunction(time, i);
-        precice.writeScalarData(writeDataID, vertexIDs[i], writeData[i]);
-      }
+      writeData = writeFunction(time);
+      precice.writeScalarData(writeDataID, vertexID, writeData);
     }
     maxDt     = precice.advance(currentDt);
     currentDt = dt > maxDt ? maxDt : dt;
@@ -145,7 +132,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirstNoInit)
   BOOST_TEST(timestep == nWindows);
 }
 
-BOOST_AUTO_TEST_SUITE_END() // PreciceTests
+BOOST_AUTO_TEST_SUITE_END() // Integration
 BOOST_AUTO_TEST_SUITE_END() // Serial
 BOOST_AUTO_TEST_SUITE_END() // Time
 BOOST_AUTO_TEST_SUITE_END() // Implicit

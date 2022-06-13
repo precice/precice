@@ -11,7 +11,7 @@ general, the code development process looks as follows:
 -# Optimize the implementation based on profiling and start from point 2 again.
 
 The important message is that code implementation and code optimization are 
-seperated from each other. This seperation derives from an 80-20 rule, i.e. the 
+separated from each other. This separation derives from an 80-20 rule, i.e. the 
 observation that approximately 80% of the runtime of a program are spent in only 
 about 20% of its implemented code. This implies that optimizations applied at 
 the right place can save a lot of efforts and leave large parts of a program in 

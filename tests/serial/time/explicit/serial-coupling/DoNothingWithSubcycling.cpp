@@ -7,7 +7,7 @@
 
 using namespace precice;
 
-BOOST_AUTO_TEST_SUITE(PreciceTests)
+BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(Time)
 BOOST_AUTO_TEST_SUITE(Explicit)
@@ -15,7 +15,7 @@ BOOST_AUTO_TEST_SUITE(SerialCoupling)
 
 /**
  * @brief Test to run a simple "do nothing" coupling with subcycling solvers.
- * 
+ *
  */
 BOOST_AUTO_TEST_CASE(DoNothingWithSubcycling)
 {
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(DoNothingWithSubcycling)
   }
 }
 
-BOOST_AUTO_TEST_SUITE_END() // PreciceTests
+BOOST_AUTO_TEST_SUITE_END() // Integration
 BOOST_AUTO_TEST_SUITE_END() // Serial
 BOOST_AUTO_TEST_SUITE_END() // Time
 BOOST_AUTO_TEST_SUITE_END() // Explicit
