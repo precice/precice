@@ -330,10 +330,6 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
       //_couplingSchemes[accessor] = scheme;
       _config = Config();
     } else if (_config.type == VALUE_SERIAL_IMPLICIT) {
-      if (_experimental) {
-        int maxAllowedOrder = 0; // serial implicit coupling does not allow waveform iteration yet (see https://github.com/precice/precice/issues/1174#issuecomment-1042823430)
-        checkWaveformOrderReadData(maxAllowedOrder);
-      }
       std::string       accessor(_config.participants[0]);
       PtrCouplingScheme scheme = createSerialImplicitCouplingScheme(accessor);
       addCouplingScheme(scheme, accessor);
