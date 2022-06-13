@@ -375,17 +375,6 @@ public:
   ///@}
 
   /**
-   * @brief Writes a mesh to vtk file.
-   *
-   * The plotting path has to be specified in the configuration of the
-   * accessing participant.
-   *
-   * @param[in] filenameSuffix Suffix of all plotted files
-   */
-  /// @todo make private. See https://github.com/precice/precice/pull/1270
-  void exportMesh(const std::string &filenameSuffix) const;
-
-  /**
    * @brief Allows to access a registered mesh
    */
   /// @todo try to remove or make private. See https://github.com/precice/precice/issues/1269

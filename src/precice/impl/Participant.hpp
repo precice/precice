@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include <boost/range/adaptor/map.hpp>
+#include <cmath>
 #include <memory>
 #include <stddef.h>
 #include <string>
@@ -268,6 +269,26 @@ public:
 
   /// Get a mesh name which uses the given data id.
   std::string getMeshNameFromData(DataID dataID) const;
+  /// @}
+
+  /// @name Exporting interface
+  /// @{
+  /// Exports the initial state of meshes
+  void exportInitial();
+
+  /// Exports the final state of meshes
+  void exportFinal();
+
+  struct IntermediateExport {
+    size_t timewindow;
+    size_t iteration;
+    double time;
+    bool   complete;
+  };
+
+  /// Exports timewindows and iterations of meshes and watchpoints
+  void exportIntermediate(IntermediateExport exp);
+
   /// @}
 
   /// @name Other queries
