@@ -430,7 +430,6 @@ double SolverInterfaceImpl::advance(
 
   if (_couplingScheme->hasTimeWindowSize()) {
     timeWindowSize = _couplingScheme->getTimeWindowSize();
-    PRECICE_ASSERT(not _couplingScheme->solverSetsTimeWindowSize());
   } else if (_couplingScheme->solverSetsTimeWindowSize()) {
     timeWindowSize = computedTimestepLength;
   } else {

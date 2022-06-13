@@ -59,6 +59,13 @@ public:
    */
   bool solverSetsTimeWindowSize() const override final;
 
+protected:
+  /**
+   * @brief Setter for _timeWindowSize
+   * @param timeWindowSize
+   */
+  void setTimeWindowSize(double timeWindowSize);
+
 private:
   logging::Logger _log{"cplschemes::SerialCouplingSchemes"};
 

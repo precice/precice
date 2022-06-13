@@ -36,10 +36,14 @@ SerialCouplingScheme::SerialCouplingScheme(
 {
   if (dtMethod == constants::FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE) {
     if (doesFirstStep()) {
-      _participantSetsTimeWindowSize = true;
+      PRECICE_ASSERT(not _participantReceivesTimeWindowSize);
       setTimeWindowSize(UNDEFINED_TIME_WINDOW_SIZE);
+      _participantSetsTimeWindowSize = true;  // not allowed to call setTimeWindowSize anymore.
+      PRECICE_ASSERT(not hasTimeWindowSize());
     } else {
       _participantReceivesTimeWindowSize = true;
+      PRECICE_ASSERT(not _participantSetsTimeWindowSize);
+      PRECICE_ASSERT(not solverSetsTimeWindowSize());
     }
   }
 }
@@ -48,6 +52,12 @@ bool SerialCouplingScheme::solverSetsTimeWindowSize() const
 {
   PRECICE_ASSERT(not(hasTimeWindowSize() && _participantSetsTimeWindowSize));
   return _participantSetsTimeWindowSize;
+}
+
+void SerialCouplingScheme::setTimeWindowSize(double timeWindowSize)
+{
+  PRECICE_ASSERT(not _participantSetsTimeWindowSize);
+  BaseCouplingScheme::setTimeWindowSize(timeWindowSize);
 }
 
 void SerialCouplingScheme::sendTimeWindowSize()
@@ -66,6 +76,7 @@ void SerialCouplingScheme::receiveAndSetTimeWindowSize()
     double dt = UNDEFINED_TIME_WINDOW_SIZE;
     getM2N()->receive(dt);
     PRECICE_DEBUG("Received time window size of {}.", dt);
+    PRECICE_ASSERT(not _participantSetsTimeWindowSize);
     PRECICE_ASSERT(not math::equals(dt, UNDEFINED_TIME_WINDOW_SIZE));
     PRECICE_ASSERT(not doesFirstStep(), "Only second participant can receive time window size.");
     setTimeWindowSize(dt);
