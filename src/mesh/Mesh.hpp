@@ -77,7 +77,7 @@ public:
   /// Returns modifiable container holding all edges.
   EdgeContainer &edges();
 
-  /// Returns modifiable container holding all edges.
+  /// Returns edge with given id.
   Edge& edge(EdgeID id);
 
   /// Returns const container holding all edges.
