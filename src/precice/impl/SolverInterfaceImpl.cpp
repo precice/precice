@@ -433,7 +433,6 @@ double SolverInterfaceImpl::advance(
     timeWindowComputedPart = timeWindowSize - _couplingScheme->getThisTimeWindowRemainder();
   } else {
     // use time window size provided to advance, only allowed, if this participant sets the time window size for the other participant
-    // PRECICE_ASSERT(_couplingScheme->solverSetsTimeWindowSize());
     timeWindowSize         = computedTimestepLength;
     timeWindowComputedPart = computedTimestepLength;
   }
