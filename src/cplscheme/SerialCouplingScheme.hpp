@@ -54,11 +54,6 @@ public:
       int                           maxIterations      = UNDEFINED_MAX_ITERATIONS,
       int                           extrapolationOrder = UNDEFINED_EXTRAPOLATION_ORDER);
 
-  /**
-   * @brief Returns true, if this solver sets the time window size via the participant first method.
-   */
-  bool solverSetsTimeWindowSize() const override final;
-
 protected:
   /**
    * @brief Setter for _timeWindowSize

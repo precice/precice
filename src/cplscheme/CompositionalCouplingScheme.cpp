@@ -201,18 +201,6 @@ bool CompositionalCouplingScheme::hasTimeWindowSize() const
   return hasIt;
 }
 
-bool CompositionalCouplingScheme::solverSetsTimeWindowSize() const
-{
-  PRECICE_TRACE();
-  PRECICE_ASSERT(hasTimeWindowSize());
-  bool setsIt = false;
-  for (const Scheme &scheme : _couplingSchemes) {
-    setsIt |= scheme.scheme->solverSetsTimeWindowSize();
-  }
-  PRECICE_DEBUG("return {}", setsIt);
-  return setsIt;
-}
-
 double CompositionalCouplingScheme::getTimeWindowSize() const
 {
   PRECICE_TRACE();

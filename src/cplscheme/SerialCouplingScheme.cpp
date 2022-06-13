@@ -38,20 +38,13 @@ SerialCouplingScheme::SerialCouplingScheme(
     if (doesFirstStep()) {
       PRECICE_ASSERT(not _participantReceivesTimeWindowSize);
       setTimeWindowSize(UNDEFINED_TIME_WINDOW_SIZE);
-      _participantSetsTimeWindowSize = true;  // not allowed to call setTimeWindowSize anymore.
+      _participantSetsTimeWindowSize = true; // not allowed to call setTimeWindowSize anymore.
       PRECICE_ASSERT(not hasTimeWindowSize());
     } else {
       _participantReceivesTimeWindowSize = true;
       PRECICE_ASSERT(not _participantSetsTimeWindowSize);
-      PRECICE_ASSERT(not solverSetsTimeWindowSize());
     }
   }
-}
-
-bool SerialCouplingScheme::solverSetsTimeWindowSize() const
-{
-  PRECICE_ASSERT(not(hasTimeWindowSize() && _participantSetsTimeWindowSize));
-  return _participantSetsTimeWindowSize;
 }
 
 void SerialCouplingScheme::setTimeWindowSize(double timeWindowSize)

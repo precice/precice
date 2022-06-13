@@ -144,7 +144,12 @@ public:
 
   /**
    * @brief Function to check whether time window size is defined by coupling scheme.
-   * @returns true, if time window size is prescribed by the coupling scheme.
+   *
+   * There are two reasons why a scheme might have a time window size:
+   * 1) a fixed time window size is given in the scheme
+   * 2) the participant received the time window size from another participant in the scheme
+   *
+   * @returns true, if time window size is available.
    */
   bool hasTimeWindowSize() const override final;
 
@@ -155,13 +160,6 @@ public:
    * hasTimeWindowSize().
    */
   double getTimeWindowSize() const override final;
-
-  /**
-   * @brief Returns true, if this solver sets the time window size via the participant first method.
-   *
-   * This option is only allowed for serial coupling schemes, so it can only return true for serial coupling schemes.
-   */
-  bool solverSetsTimeWindowSize() const override;
 
   /**
    * @brief Returns the remaining timestep length within the current time window.

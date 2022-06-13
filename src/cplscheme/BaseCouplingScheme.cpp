@@ -280,12 +280,6 @@ bool BaseCouplingScheme::hasTimeWindowSize() const
   return not math::equals(_timeWindowSize, UNDEFINED_TIME_WINDOW_SIZE);
 }
 
-bool BaseCouplingScheme::solverSetsTimeWindowSize() const
-{
-  PRECICE_ASSERT(hasTimeWindowSize());
-  return false;
-}
-
 double BaseCouplingScheme::getTimeWindowSize() const
 {
   PRECICE_ASSERT(hasTimeWindowSize());

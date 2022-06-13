@@ -155,15 +155,6 @@ public:
   /**
    * @brief Not implemented.
    */
-  bool solverSetsTimeWindowSize() const override final
-  {
-    PRECICE_ASSERT(false);
-    return false;
-  }
-
-  /**
-   * @brief Not implemented.
-   */
   double getTimeWindowSize() const override final
   {
     PRECICE_ASSERT(false);
