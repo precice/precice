@@ -147,7 +147,7 @@ SolverInterfaceImpl::SolverInterfaceImpl(
     const std::string &configurationFileName,
     int                solverProcessIndex,
     int                solverProcessSize)
-    : SolverInterfaceImpl::SolverInterfaceImpl(std::move(participantName), configurationFileName, solverProcessIndex, solverProcessSize, nullptr)
+    : SolverInterfaceImpl::SolverInterfaceImpl(std::move(participantName), configurationFileName, solverProcessIndex, solverProcessSize, nullptr, true)
 {
 }
 
