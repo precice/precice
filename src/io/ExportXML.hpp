@@ -12,6 +12,7 @@ namespace mesh {
 class Mesh;
 class Edge;
 class Triangle;
+class Tetrahedron;
 } // namespace mesh
 } // namespace precice
 
@@ -36,6 +37,10 @@ public:
 
   static void writeTriangle(
       const mesh::Triangle &triangle,
+      std::ostream &        outFile);
+
+    static void WriteTetrahedron(
+      const mesh::Tetrahedron &tetra,
       std::ostream &        outFile);
 
 private:

@@ -180,6 +180,27 @@ BOOST_AUTO_TEST_CASE(ExportSplitSquare)
   exportVTU.doExport(filename, location, mesh);
 }
 
+BOOST_AUTO_TEST_CASE(ExportOneTetrahedron)
+{
+  PRECICE_TEST(""_on(1_rank).setupIntraComm());
+  int           dim = 3;
+  mesh::Mesh    mesh("MyMesh", dim, testing::nextMeshID());
+  mesh::Vertex &v0 = mesh.createVertex(Eigen::Vector3d::Zero());
+  mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector3d{1.0, 0.0,  0.0});
+  mesh::Vertex &v2 = mesh.createVertex(Eigen::Vector3d{0.0, 1.0,  0.0});
+  mesh::Vertex &v3 = mesh.createVertex(Eigen::Vector3d{0.0, 0.0,  1.0});
+
+  mesh.createTetrahedron(v0, v1, v2, v3);
+
+
+  io::ExportVTU exportVTU;
+  std::string   filename = "io-VTUExport-ExportOneTetrahedron";
+  std::string   location = "";
+  exportVTU.doExport(filename, location, mesh);
+}
+
+
+
 BOOST_AUTO_TEST_SUITE_END() // IOTests
 BOOST_AUTO_TEST_SUITE_END() // VTUExport
 
