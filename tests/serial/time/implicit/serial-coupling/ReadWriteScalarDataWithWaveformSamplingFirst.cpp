@@ -95,9 +95,6 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
       }
       if (context.isNamed("SolverOne") && iterations == 0) { // first participant always uses constant extrapolation in first iteration (from initializeData or writeData of second participant at end previous window).
         BOOST_TEST(readData == readFunction(time));
-      } else if (context.isNamed("SolverTwo") && timewindow == 0) { // @todo: This is a problem, because in the first window the second solver only receives the data from the first solver, but ignores potentially existing initial data
-        // FIX IMPLEMENTATION AND REMOVE THIS BRANCH!
-        BOOST_TEST(readData == readFunction(time + dt));
       } else { // second participant always uses linear interpolation in later windows (additionally available writeData of first participant at end of this window).
         BOOST_TEST(readData == readFunction(readTime));
       }

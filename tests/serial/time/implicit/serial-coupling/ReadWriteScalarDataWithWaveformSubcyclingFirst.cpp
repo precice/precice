@@ -96,9 +96,6 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
     }
     if (context.isNamed("SolverOne") && iterations == 0) { // in the first iteration of each window, we only have one sample of data. Therefore constant interpolation
       BOOST_TEST(readData == readFunction(timeCheckpoint));
-    } else if (context.isNamed("SolverTwo") && timestep < nSubsteps) { // @todo: This is a problem, because in the first window the second solver only receives the data from the first solver, but ignores potentially existing initial data
-      // FIX IMPLEMENTATION AND REMOVE THIS BRANCH!
-      BOOST_TEST(readData == readFunction(timeCheckpoint + windowDt));
     } else { // in the following iterations we have two samples of data. Therefore linear interpolation
       BOOST_TEST(readData == readFunction(readTime));
     }
@@ -107,9 +104,6 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
     }
     if (context.isNamed("SolverOne") && iterations == 0) { // in the first iteration of each window, we only have one sample of data. Therefore constant interpolation
       BOOST_TEST(readData == readFunction(timeCheckpoint));
-    } else if (context.isNamed("SolverTwo") && timestep < nSubsteps) { // @todo: This is a problem, because in the first window the second solver only receives the data from the first solver, but ignores potentially existing initial data
-      // FIX IMPLEMENTATION AND REMOVE THIS BRANCH!
-      BOOST_TEST(readData == readFunction(timeCheckpoint + windowDt));
     } else { // in the following iterations we have two samples of data. Therefore linear interpolation
       BOOST_TEST(readData == readFunction(readTime - currentDt / 2));
     }
