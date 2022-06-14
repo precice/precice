@@ -45,20 +45,15 @@ void testMappingNearestProjection(bool defineEdgesExplicitly, const std::string 
     int idD = interface.setMeshVertex(meshOneID, coordOneD.data());
 
     if (defineEdgesExplicitly) {
-
-      int idAB = interface.setMeshEdge(meshOneID, idA, idB);
-      int idBC = interface.setMeshEdge(meshOneID, idB, idC);
-      int idCD = interface.setMeshEdge(meshOneID, idC, idD);
-      int idDA = interface.setMeshEdge(meshOneID, idD, idA);
-      int idCA = interface.setMeshEdge(meshOneID, idC, idA);
-
-      interface.setMeshTriangle(meshOneID, idAB, idBC, idCA);
-      interface.setMeshTriangle(meshOneID, idCD, idDA, idCA);
-
-    } else {
-      interface.setMeshTriangleWithEdges(meshOneID, idA, idB, idC);
-      interface.setMeshTriangleWithEdges(meshOneID, idC, idD, idA);
+      interface.setMeshEdge(meshOneID, idA, idB);
+      interface.setMeshEdge(meshOneID, idB, idC);
+      interface.setMeshEdge(meshOneID, idC, idD);
+      interface.setMeshEdge(meshOneID, idD, idA);
+      interface.setMeshEdge(meshOneID, idC, idA);
     }
+
+    interface.setMeshTriangle(meshOneID, idA, idB, idC);
+    interface.setMeshTriangle(meshOneID, idC, idD, idA);
 
     // Initialize, thus sending the mesh.
     double maxDt = interface.initialize();
@@ -150,21 +145,21 @@ void testQuadMappingNearestProjection(bool defineEdgesExplicitly, const std::str
     int idD = interface.setMeshVertex(meshOneID, coordOneD.data());
 
     if (defineEdgesExplicitly) {
-
-      int idAB = interface.setMeshEdge(meshOneID, idA, idB);
-      int idBC = interface.setMeshEdge(meshOneID, idB, idC);
-      int idCD = interface.setMeshEdge(meshOneID, idC, idD);
-      int idDA = interface.setMeshEdge(meshOneID, idD, idA);
-
-      interface.setMeshQuad(meshOneID, idAB, idBC, idCD, idDA);
-
-    } else {
-      interface.setMeshQuadWithEdges(meshOneID, idA, idB, idC, idD);
+      interface.setMeshEdge(meshOneID, idA, idB);
+      interface.setMeshEdge(meshOneID, idB, idC);
+      interface.setMeshEdge(meshOneID, idC, idD);
+      interface.setMeshEdge(meshOneID, idD, idA);
     }
+
+    interface.setMeshQuad(meshOneID, idA, idB, idC, idD);
 
     auto &mesh = testing::WhiteboxAccessor::impl(interface).mesh("MeshOne");
     BOOST_REQUIRE(mesh.vertices().size() == 4);
-    BOOST_REQUIRE(mesh.edges().size() == 5);
+    if (defineEdgesExplicitly) {
+      BOOST_REQUIRE(mesh.edges().size() == 9);
+    } else {
+      BOOST_REQUIRE(mesh.edges().size() == 5);
+    }
     BOOST_REQUIRE(mesh.triangles().size() == 2);
 
     // Initialize, thus sending the mesh.
@@ -239,21 +234,21 @@ void testQuadMappingNearestProjectionTallKite(bool defineEdgesExplicitly, const 
     int idD = interface.setMeshVertex(meshOneID, coordOneD.data());
 
     if (defineEdgesExplicitly) {
-
-      int idAB = interface.setMeshEdge(meshOneID, idA, idB);
-      int idBC = interface.setMeshEdge(meshOneID, idB, idC);
-      int idCD = interface.setMeshEdge(meshOneID, idC, idD);
-      int idDA = interface.setMeshEdge(meshOneID, idD, idA);
-
-      interface.setMeshQuad(meshOneID, idAB, idBC, idCD, idDA);
-
-    } else {
-      interface.setMeshQuadWithEdges(meshOneID, idA, idB, idC, idD);
+      interface.setMeshEdge(meshOneID, idA, idB);
+      interface.setMeshEdge(meshOneID, idB, idC);
+      interface.setMeshEdge(meshOneID, idC, idD);
+      interface.setMeshEdge(meshOneID, idD, idA);
     }
+
+    interface.setMeshQuad(meshOneID, idA, idB, idC, idD);
 
     auto &mesh = testing::WhiteboxAccessor::impl(interface).mesh("MeshOne");
     BOOST_REQUIRE(mesh.vertices().size() == 4);
-    BOOST_REQUIRE(mesh.edges().size() == 5);
+    if (defineEdgesExplicitly) {
+      BOOST_REQUIRE(mesh.edges().size() == 9);
+    } else {
+      BOOST_REQUIRE(mesh.edges().size() == 5);
+    }
     BOOST_REQUIRE(mesh.triangles().size() == 2);
 
     for (auto &edge : mesh.edges()) {
@@ -288,21 +283,21 @@ void testQuadMappingNearestProjectionWideKite(bool defineEdgesExplicitly, const 
     int idD = interface.setMeshVertex(meshOneID, coordOneD.data());
 
     if (defineEdgesExplicitly) {
-
-      int idAB = interface.setMeshEdge(meshOneID, idA, idB);
-      int idBC = interface.setMeshEdge(meshOneID, idB, idC);
-      int idCD = interface.setMeshEdge(meshOneID, idC, idD);
-      int idDA = interface.setMeshEdge(meshOneID, idD, idA);
-
-      interface.setMeshQuad(meshOneID, idAB, idCD, idBC, idDA);
-
-    } else {
-      interface.setMeshQuadWithEdges(meshOneID, idA, idB, idD, idC);
+      interface.setMeshEdge(meshOneID, idA, idB);
+      interface.setMeshEdge(meshOneID, idB, idC);
+      interface.setMeshEdge(meshOneID, idC, idD);
+      interface.setMeshEdge(meshOneID, idD, idA);
     }
+
+    interface.setMeshQuad(meshOneID, idA, idB, idD, idC);
 
     auto &mesh = testing::WhiteboxAccessor::impl(interface).mesh("MeshOne");
     BOOST_REQUIRE(mesh.vertices().size() == 4);
-    BOOST_REQUIRE(mesh.edges().size() == 5);
+    if (defineEdgesExplicitly) {
+      BOOST_REQUIRE(mesh.edges().size() == 9);
+    } else {
+      BOOST_REQUIRE(mesh.edges().size() == 5);
+    }
     BOOST_REQUIRE(mesh.triangles().size() == 2);
 
     for (auto &edge : mesh.edges()) {

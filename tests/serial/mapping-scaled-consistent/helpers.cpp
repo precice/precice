@@ -41,12 +41,7 @@ void testQuadMappingScaledConsistent(const std::string configFile, const TestCon
     int idC = interface.setMeshVertex(meshOneID, coordOneC.data());
     int idD = interface.setMeshVertex(meshOneID, coordOneD.data());
 
-    int idAB = interface.setMeshEdge(meshOneID, idA, idB);
-    int idBC = interface.setMeshEdge(meshOneID, idB, idC);
-    int idCD = interface.setMeshEdge(meshOneID, idC, idD);
-    int idDA = interface.setMeshEdge(meshOneID, idD, idA);
-
-    interface.setMeshQuad(meshOneID, idAB, idBC, idCD, idDA);
+    interface.setMeshQuad(meshOneID, idA, idB, idC, idD);
 
     auto &mesh = testing::WhiteboxAccessor::impl(interface).mesh("MeshOne");
     BOOST_REQUIRE(mesh.vertices().size() == 4);
@@ -79,11 +74,7 @@ void testQuadMappingScaledConsistent(const std::string configFile, const TestCon
     int idB = interface.setMeshVertex(meshTwoID, coordTwoB.data());
     int idC = interface.setMeshVertex(meshTwoID, coordTwoC.data());
 
-    int idAB = interface.setMeshEdge(meshTwoID, idA, idB);
-    int idBC = interface.setMeshEdge(meshTwoID, idB, idC);
-    int idAC = interface.setMeshEdge(meshTwoID, idA, idC);
-
-    interface.setMeshTriangle(meshTwoID, idAB, idBC, idAC);
+    interface.setMeshTriangle(meshTwoID, idA, idB, idC);
 
     // Initialize, thus receive the data and map.
     double maxDt = interface.initialize();
