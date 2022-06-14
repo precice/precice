@@ -471,8 +471,7 @@ void BaseCouplingScheme::initializeStorages()
   }
   // Reserve storage for acceleration
   if (_acceleration) {
-    auto accelerationData = getAccelerationData();
-    _acceleration->initialize(accelerationData);
+    _acceleration->initialize(getAccelerationData());
   }
 }
 

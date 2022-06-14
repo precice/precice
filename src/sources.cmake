@@ -283,7 +283,6 @@ target_sources(precice
     src/utils/Helpers.hpp
     src/utils/IntraComm.cpp
     src/utils/IntraComm.hpp
-    src/utils/MPIResult.hpp
     src/utils/MPI_Mock.hpp
     src/utils/ManageUniqueIDs.cpp
     src/utils/ManageUniqueIDs.hpp
