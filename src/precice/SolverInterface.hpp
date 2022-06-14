@@ -1,9 +1,9 @@
 #pragma once
 
 #include <memory>
+#include <precice/types.hpp>
 #include <set>
 #include <string>
-#include <vector>
 
 /**
  * forward declarations.
@@ -356,7 +356,7 @@ public:
    * changes. Only has an effect, if the mapping used is non-stationary and
    * non-incremental.
    */
-  //  void resetMesh ( int meshID );
+  //  void resetMesh ( MeshID meshID );
 
   /**
    * @brief Checks if the mesh with given name is used by a solver.
@@ -374,7 +374,7 @@ public:
    * @param[in] meshName the name of the mesh
    * @returns the id of the corresponding mesh
    */
-  int getMeshID(const std::string &meshName) const;
+  MeshID getMeshID(const std::string &meshName) const;
 
   /**
    * @brief Returns a id-set of all used meshes by this participant.
@@ -384,7 +384,7 @@ public:
    *
    * @returns the set of ids.
    */
-  [[deprecated("Use getMeshID() for specific mesh names instead.")]] std::set<int> getMeshIDs() const;
+  [[deprecated("Use getMeshID() for specific mesh names instead.")]] std::set<MeshID> getMeshIDs() const;
 
   /**
    * @brief Checks if the given mesh requires connectivity.
@@ -396,7 +396,7 @@ public:
    * @param[in] meshID the id of the mesh
    * @returns whether connectivity is required
    */
-  bool isMeshConnectivityRequired(int meshID) const;
+  bool isMeshConnectivityRequired(MeshID meshID) const;
 
   /**
    * @brief Creates a mesh vertex
@@ -410,8 +410,8 @@ public:
    *
    * @see getDimensions()
    */
-  int setMeshVertex(
-      int           meshID,
+  VertexID setMeshVertex(
+      MeshID        meshID,
       const double *position);
 
   /**
@@ -425,7 +425,7 @@ public:
    * if the \p meshID corresponds to a received mesh, since the relevant mesh data
    * is exchanged during the @p initialize() call.
    */
-  int getMeshVertexSize(int meshID) const;
+  Size getMeshVertexSize(MeshID meshID) const;
 
   /**
    * @brief Creates multiple mesh vertices
@@ -445,10 +445,10 @@ public:
    * @see getDimensions()
    */
   void setMeshVertices(
-      int           meshID,
-      int           size,
+      MeshID        meshID,
+      Size          size,
       const double *positions,
-      int *         ids);
+      VertexID *    ids);
 
   /**
    * @brief Get vertex positions for multiple vertex ids from a given mesh
@@ -466,10 +466,10 @@ public:
    * @see getDimensions()
    */
   void getMeshVertices(
-      int        meshID,
-      int        size,
-      const int *ids,
-      double *   positions) const;
+      MeshID          meshID,
+      Size            size,
+      const VertexID *ids,
+      double *        positions) const;
 
   /**
    * @brief Gets mesh vertex IDs from positions.
@@ -487,10 +487,10 @@ public:
    * @note prefer to reuse the IDs returned from calls to setMeshVertex() and setMeshVertices().
    */
   void getMeshVertexIDsFromPositions(
-      int           meshID,
-      int           size,
+      MeshID        meshID,
+      Size          size,
       const double *positions,
-      int *         ids) const;
+      VertexID *    ids) const;
 
   /**
    * @brief Sets mesh edge from vertex IDs, returns edge ID.
@@ -503,10 +503,10 @@ public:
    *
    * @pre vertices with firstVertexID and secondVertexID were added to the mesh with the ID meshID
    */
-  int setMeshEdge(
-      int meshID,
-      int firstVertexID,
-      int secondVertexID);
+  EdgeID setMeshEdge(
+      MeshID   meshID,
+      VertexID firstVertexID,
+      VertexID secondVertexID);
 
   /**
    * @brief Sets mesh triangle from edge IDs
@@ -519,10 +519,10 @@ public:
    * @pre edges with firstEdgeID, secondEdgeID, and thirdEdgeID were added to the mesh with the ID meshID
    */
   void setMeshTriangle(
-      int meshID,
-      int firstEdgeID,
-      int secondEdgeID,
-      int thirdEdgeID);
+      MeshID meshID,
+      EdgeID firstEdgeID,
+      EdgeID secondEdgeID,
+      EdgeID thirdEdgeID);
 
   /**
    * @brief Sets mesh triangle from vertex IDs.
@@ -541,10 +541,10 @@ public:
    * @pre edges with firstVertexID, secondVertexID, and thirdVertexID were added to the mesh with the ID meshID
    */
   void setMeshTriangleWithEdges(
-      int meshID,
-      int firstVertexID,
-      int secondVertexID,
-      int thirdVertexID);
+      MeshID   meshID,
+      VertexID firstVertexID,
+      VertexID secondVertexID,
+      VertexID thirdVertexID);
 
   /**
    * @brief Sets mesh Quad from edge IDs.
@@ -559,11 +559,11 @@ public:
    *
    */
   void setMeshQuad(
-      int meshID,
-      int firstEdgeID,
-      int secondEdgeID,
-      int thirdEdgeID,
-      int fourthEdgeID);
+      MeshID meshID,
+      EdgeID firstEdgeID,
+      EdgeID secondEdgeID,
+      EdgeID thirdEdgeID,
+      EdgeID fourthEdgeID);
 
   /**
    * @brief Sets surface mesh quadrangle from vertex IDs.
@@ -584,11 +584,11 @@ public:
    *
    */
   void setMeshQuadWithEdges(
-      int meshID,
-      int firstVertexID,
-      int secondVertexID,
-      int thirdVertexID,
-      int fourthVertexID);
+      MeshID   meshID,
+      VertexID firstVertexID,
+      VertexID secondVertexID,
+      VertexID thirdVertexID,
+      VertexID fourthVertexID);
 
   ///@}
 
@@ -602,7 +602,7 @@ public:
    * @param[in] meshID the id of the associated mesh
    * @returns whether the mesh is used.
    */
-  bool hasData(const std::string &dataName, int meshID) const;
+  bool hasData(const std::string &dataName, MeshID meshID) const;
 
   /**
    * @brief Returns the ID of the data associated with the given name and mesh.
@@ -612,7 +612,7 @@ public:
    *
    * @returns the id of the corresponding data
    */
-  int getDataID(const std::string &dataName, int meshID) const;
+  DataID getDataID(const std::string &dataName, MeshID meshID) const;
 
   /**
    * @brief Computes and maps all read data mapped to the mesh with given ID.
@@ -624,7 +624,7 @@ public:
    *
    * @pre A mapping to toMeshID was configured.
    */
-  [[deprecated("Will be removed in 3.0.0. See https://github.com/precice/precice/issues/859 and comment, if you need this function.")]] void mapReadDataTo(int toMeshID);
+  [[deprecated("Will be removed in 3.0.0. See https://github.com/precice/precice/issues/859 and comment, if you need this function.")]] void mapReadDataTo(MeshID toMeshID);
 
   /**
    * @brief Computes and maps all write data mapped from the mesh with given ID.
@@ -636,7 +636,7 @@ public:
    *
    * @pre A mapping from fromMeshID was configured.
    */
-  [[deprecated("Will be removed in 3.0.0. See https://github.com/precice/precice/issues/859 and comment, if you need this function.")]] void mapWriteDataFrom(int fromMeshID);
+  [[deprecated("Will be removed in 3.0.0. See https://github.com/precice/precice/issues/859 and comment, if you need this function.")]] void mapWriteDataFrom(MeshID fromMeshID);
 
   /**
    * @brief Writes vector data given as block.
@@ -660,10 +660,10 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void writeBlockVectorData(
-      int           dataID,
-      int           size,
-      const int *   valueIndices,
-      const double *values);
+      DataID          dataID,
+      Size            size,
+      const VertexID *valueIndices,
+      const double *  values);
 
   /**
    * @brief Writes vector data to a vertex
@@ -684,8 +684,8 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void writeVectorData(
-      int           dataID,
-      int           valueIndex,
+      DataID        dataID,
+      VertexID      valueIndex,
       const double *value);
 
   /**
@@ -707,10 +707,10 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void writeBlockScalarData(
-      int           dataID,
-      int           size,
-      const int *   valueIndices,
-      const double *values);
+      DataID          dataID,
+      Size            size,
+      const VertexID *valueIndices,
+      const double *  values);
 
   /**
    * @brief Writes scalar data to a vertex
@@ -726,9 +726,9 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void writeScalarData(
-      int    dataID,
-      int    valueIndex,
-      double value);
+      DataID   dataID,
+      VertexID valueIndex,
+      double   value);
 
   /**
    * @brief Reads vector data values given as block from a mesh. Values correspond to the end of the current time window.
@@ -754,10 +754,10 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void readBlockVectorData(
-      int        dataID,
-      int        size,
-      const int *valueIndices,
-      double *   values) const;
+      DataID          dataID,
+      Size            size,
+      const VertexID *valueIndices,
+      double *        values) const;
 
   /**
    * @brief Reads vector data at a vertex on a mesh. Values correspond to the end of the current time window.
@@ -780,9 +780,9 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void readVectorData(
-      int     dataID,
-      int     valueIndex,
-      double *value) const;
+      DataID   dataID,
+      VertexID valueIndex,
+      double * value) const;
 
   /**
    * @brief Reads scalar data values given as block from a mesh. Values correspond to the end of the current time window.
@@ -805,10 +805,10 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void readBlockScalarData(
-      int        dataID,
-      int        size,
-      const int *valueIndices,
-      double *   values) const;
+      DataID          dataID,
+      Size            size,
+      const VertexID *valueIndices,
+      double *        values) const;
 
   /**
    * @brief Reads scalar data at a vertex on a mesh. Values correspond to the end of the current time window.
@@ -826,9 +826,9 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void readScalarData(
-      int     dataID,
-      int     valueIndex,
-      double &value) const;
+      DataID   dataID,
+      VertexID valueIndex,
+      double & value) const;
 
   ///@}
 
@@ -894,7 +894,7 @@ public:
    * @pre @p initialize() has not yet been called.
    */
   void setMeshAccessRegion(
-      const int     meshID,
+      const MeshID  meshID,
       const double *boundingBox) const;
 
   /**
@@ -918,10 +918,10 @@ public:
    * is exchanged during the @p initialize() call.
    */
   void getMeshVerticesAndIDs(
-      const int meshID,
-      const int size,
-      int *     ids,
-      double *  coordinates) const;
+      const MeshID meshID,
+      const Size   size,
+      VertexID *   ids,
+      double *     coordinates) const;
 
   ///@}
 
@@ -962,11 +962,11 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void readBlockVectorData(
-      int        dataID,
-      int        size,
-      const int *valueIndices,
-      double     relativeReadTime,
-      double *   values) const;
+      DataID          dataID,
+      Size            size,
+      const VertexID *valueIndices,
+      double          relativeReadTime,
+      double *        values) const;
 
   /**
    * @brief Reads vector data at a vertex on a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.
@@ -997,10 +997,10 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void readVectorData(
-      int     dataID,
-      int     valueIndex,
-      double  relativeReadTime,
-      double *value) const;
+      DataID   dataID,
+      VertexID valueIndex,
+      double   relativeReadTime,
+      double * value) const;
 
   /**
    * @brief Reads scalar data values given as block from a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.
@@ -1031,11 +1031,11 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void readBlockScalarData(
-      int        dataID,
-      int        size,
-      const int *valueIndices,
-      double     relativeReadTime,
-      double *   values) const;
+      DataID          dataID,
+      Size            size,
+      const VertexID *valueIndices,
+      double          relativeReadTime,
+      double *        values) const;
 
   /**
    * @brief Reads scalar data at a vertex on a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.
@@ -1061,10 +1061,10 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void readScalarData(
-      int     dataID,
-      int     valueIndex,
-      double  relativeReadTime,
-      double &value) const;
+      DataID   dataID,
+      VertexID valueIndex,
+      double   relativeReadTime,
+      double & value) const;
 
   ///@}
 
@@ -1086,7 +1086,7 @@ public:
    * @param[in] dataID the id of the data
    * @returns whether gradient is required
    */
-  bool isGradientDataRequired(int dataID) const;
+  bool isGradientDataRequired(DataID dataID) const;
 
   /**
    * @brief Writes vector gradient data given as block.
@@ -1138,11 +1138,11 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void writeBlockVectorGradientData(
-      int           dataID,
-      int           size,
-      const int *   valueIndices,
-      const double *gradientValues,
-      bool          rowsFirst = false);
+      DataID          dataID,
+      Size            size,
+      const VertexID *valueIndices,
+      const double *  gradientValues,
+      bool            rowsFirst = false);
 
   /**
    * @brief Writes scalar gradient data to a vertex
@@ -1164,8 +1164,8 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void writeScalarGradientData(
-      int           dataID,
-      int           valueIndex,
+      DataID        dataID,
+      VertexID      valueIndex,
       const double *gradientValues);
 
   /**
@@ -1203,8 +1203,8 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void writeVectorGradientData(
-      int           dataID,
-      int           valueIndex,
+      DataID        dataID,
+      VertexID      valueIndex,
       const double *gradientValues,
       bool          rowsFirst = false);
 
@@ -1243,10 +1243,10 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void writeBlockScalarGradientData(
-      int           dataID,
-      int           size,
-      const int *   valueIndices,
-      const double *gradientValues);
+      DataID          dataID,
+      Size            size,
+      const VertexID *valueIndices,
+      const double *  gradientValues);
 
   ///@}
 

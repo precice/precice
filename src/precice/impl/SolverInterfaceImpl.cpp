@@ -597,7 +597,7 @@ bool SolverInterfaceImpl::hasMesh(
   return _accessor->hasMesh(meshName);
 }
 
-int SolverInterfaceImpl::getMeshID(
+MeshID SolverInterfaceImpl::getMeshID(
     const std::string &meshName) const
 {
   PRECICE_TRACE(meshName);
@@ -630,7 +630,7 @@ bool SolverInterfaceImpl::hasData(
   return _accessor->isDataUsed(dataName, meshID);
 }
 
-int SolverInterfaceImpl::getDataID(
+DataID SolverInterfaceImpl::getDataID(
     const std::string &dataName, MeshID meshID) const
 {
   PRECICE_TRACE(dataName, meshID);
@@ -642,14 +642,14 @@ int SolverInterfaceImpl::getDataID(
   return _accessor->getUsedDataID(dataName, meshID);
 }
 
-bool SolverInterfaceImpl::isMeshConnectivityRequired(int meshID) const
+bool SolverInterfaceImpl::isMeshConnectivityRequired(MeshID meshID) const
 {
   PRECICE_VALIDATE_MESH_ID(meshID);
   MeshContext &context = _accessor->usedMeshContext(meshID);
   return context.meshRequirement == mapping::Mapping::MeshRequirement::FULL;
 }
 
-bool SolverInterfaceImpl::isGradientDataRequired(int dataID) const
+bool SolverInterfaceImpl::isGradientDataRequired(DataID dataID) const
 {
   PRECICE_VALIDATE_DATA_ID(dataID);
   // Read data never requires gradients
@@ -660,7 +660,7 @@ bool SolverInterfaceImpl::isGradientDataRequired(int dataID) const
   return context.providedData()->hasGradient();
 }
 
-int SolverInterfaceImpl::getMeshVertexSize(
+Size SolverInterfaceImpl::getMeshVertexSize(
     MeshID meshID) const
 {
   PRECICE_TRACE(meshID);
@@ -696,8 +696,8 @@ void SolverInterfaceImpl::resetMesh(
   context.mesh->clear();
 }
 
-int SolverInterfaceImpl::setMeshVertex(
-    int           meshID,
+VertexID SolverInterfaceImpl::setMeshVertex(
+    MeshID        meshID,
     const double *position)
 {
   PRECICE_TRACE(meshID);
@@ -715,10 +715,10 @@ int SolverInterfaceImpl::setMeshVertex(
 }
 
 void SolverInterfaceImpl::setMeshVertices(
-    int           meshID,
-    int           size,
+    MeshID        meshID,
+    Size          size,
     const double *positions,
-    int *         ids)
+    VertexID *    ids)
 {
   PRECICE_TRACE(meshID, size);
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
@@ -735,10 +735,10 @@ void SolverInterfaceImpl::setMeshVertices(
 }
 
 void SolverInterfaceImpl::getMeshVertices(
-    int        meshID,
-    size_t     size,
-    const int *ids,
-    double *   positions) const
+    MeshID          meshID,
+    Size            size,
+    const VertexID *ids,
+    double *        positions) const
 {
   PRECICE_TRACE(meshID, size);
   PRECICE_REQUIRE_MESH_USE(meshID);
@@ -757,10 +757,10 @@ void SolverInterfaceImpl::getMeshVertices(
 }
 
 void SolverInterfaceImpl::getMeshVertexIDsFromPositions(
-    int           meshID,
-    size_t        size,
+    MeshID        meshID,
+    Size          size,
     const double *positions,
-    int *         ids) const
+    VertexID *    ids) const
 {
   PRECICE_TRACE(meshID, size);
   PRECICE_REQUIRE_MESH_USE(meshID);
@@ -792,10 +792,10 @@ void SolverInterfaceImpl::getMeshVertexIDsFromPositions(
   }
 }
 
-int SolverInterfaceImpl::setMeshEdge(
-    MeshID meshID,
-    int    firstVertexID,
-    int    secondVertexID)
+EdgeID SolverInterfaceImpl::setMeshEdge(
+    MeshID   meshID,
+    VertexID firstVertexID,
+    VertexID secondVertexID)
 {
   PRECICE_TRACE(meshID, firstVertexID, secondVertexID);
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
@@ -814,9 +814,9 @@ int SolverInterfaceImpl::setMeshEdge(
 
 void SolverInterfaceImpl::setMeshTriangle(
     MeshID meshID,
-    int    firstEdgeID,
-    int    secondEdgeID,
-    int    thirdEdgeID)
+    EdgeID firstEdgeID,
+    EdgeID secondEdgeID,
+    EdgeID thirdEdgeID)
 {
   PRECICE_TRACE(meshID, firstEdgeID,
                 secondEdgeID, thirdEdgeID);
@@ -843,10 +843,10 @@ void SolverInterfaceImpl::setMeshTriangle(
 }
 
 void SolverInterfaceImpl::setMeshTriangleWithEdges(
-    MeshID meshID,
-    int    firstVertexID,
-    int    secondVertexID,
-    int    thirdVertexID)
+    MeshID   meshID,
+    VertexID firstVertexID,
+    VertexID secondVertexID,
+    VertexID thirdVertexID)
 {
   PRECICE_TRACE(meshID, firstVertexID,
                 secondVertexID, thirdVertexID);
@@ -881,10 +881,10 @@ void SolverInterfaceImpl::setMeshTriangleWithEdges(
 
 void SolverInterfaceImpl::setMeshQuad(
     MeshID meshID,
-    int    firstEdgeID,
-    int    secondEdgeID,
-    int    thirdEdgeID,
-    int    fourthEdgeID)
+    EdgeID firstEdgeID,
+    EdgeID secondEdgeID,
+    EdgeID thirdEdgeID,
+    EdgeID fourthEdgeID)
 {
   PRECICE_TRACE(meshID, firstEdgeID, secondEdgeID, thirdEdgeID,
                 fourthEdgeID);
@@ -940,11 +940,11 @@ void SolverInterfaceImpl::setMeshQuad(
 }
 
 void SolverInterfaceImpl::setMeshQuadWithEdges(
-    MeshID meshID,
-    int    firstVertexID,
-    int    secondVertexID,
-    int    thirdVertexID,
-    int    fourthVertexID)
+    MeshID   meshID,
+    VertexID firstVertexID,
+    VertexID secondVertexID,
+    VertexID thirdVertexID,
+    VertexID fourthVertexID)
 {
   PRECICE_TRACE(meshID, firstVertexID,
                 secondVertexID, thirdVertexID, fourthVertexID);
@@ -1002,7 +1002,7 @@ void SolverInterfaceImpl::setMeshQuadWithEdges(
 }
 
 void SolverInterfaceImpl::mapWriteDataFrom(
-    int fromMeshID)
+    MeshID fromMeshID)
 {
   PRECICE_TRACE(fromMeshID);
   PRECICE_VALIDATE_MESH_ID(fromMeshID);
@@ -1033,7 +1033,7 @@ void SolverInterfaceImpl::mapWriteDataFrom(
 }
 
 void SolverInterfaceImpl::mapReadDataTo(
-    int toMeshID)
+    MeshID toMeshID)
 {
   PRECICE_TRACE(toMeshID);
   PRECICE_VALIDATE_MESH_ID(toMeshID);
@@ -1065,10 +1065,10 @@ void SolverInterfaceImpl::mapReadDataTo(
 }
 
 void SolverInterfaceImpl::writeBlockVectorData(
-    int           dataID,
-    int           size,
-    const int *   valueIndices,
-    const double *values)
+    DataID          dataID,
+    Size            size,
+    const VertexID *valueIndices,
+    const double *  values)
 {
   PRECICE_TRACE(dataID, size);
   PRECICE_CHECK(_state != State::Finalized, "writeBlockVectorData(...) cannot be called after finalize().");
@@ -1103,8 +1103,8 @@ void SolverInterfaceImpl::writeBlockVectorData(
 }
 
 void SolverInterfaceImpl::writeVectorData(
-    int           dataID,
-    int           valueIndex,
+    DataID        dataID,
+    VertexID      valueIndex,
     const double *value)
 {
   PRECICE_TRACE(dataID, valueIndex);
@@ -1131,10 +1131,10 @@ void SolverInterfaceImpl::writeVectorData(
 }
 
 void SolverInterfaceImpl::writeBlockScalarData(
-    int           dataID,
-    int           size,
-    const int *   valueIndices,
-    const double *values)
+    DataID          dataID,
+    Size            size,
+    const VertexID *valueIndices,
+    const double *  values)
 {
   PRECICE_TRACE(dataID, size);
   PRECICE_CHECK(_state != State::Finalized, "writeBlockScalarData(...) cannot be called after finalize().");
@@ -1163,9 +1163,9 @@ void SolverInterfaceImpl::writeBlockScalarData(
 }
 
 void SolverInterfaceImpl::writeScalarData(
-    int    dataID,
-    int    valueIndex,
-    double value)
+    DataID   dataID,
+    VertexID valueIndex,
+    double   value)
 {
   PRECICE_TRACE(dataID, valueIndex, value);
   PRECICE_CHECK(_state != State::Finalized, "writeScalarData(...) cannot be called after finalize().");
@@ -1195,8 +1195,8 @@ void SolverInterfaceImpl::writeScalarData(
 }
 
 void SolverInterfaceImpl::writeScalarGradientData(
-    int           dataID,
-    int           valueIndex,
+    DataID        dataID,
+    VertexID      valueIndex,
     const double *gradientValues)
 {
 
@@ -1251,10 +1251,10 @@ void SolverInterfaceImpl::writeScalarGradientData(
 }
 
 void SolverInterfaceImpl::writeBlockScalarGradientData(
-    int           dataID,
-    int           size,
-    const int *   valueIndices,
-    const double *gradientValues)
+    DataID          dataID,
+    Size            size,
+    const VertexID *valueIndices,
+    const double *  gradientValues)
 {
 
   PRECICE_EXPERIMENTAL_API();
@@ -1312,8 +1312,8 @@ void SolverInterfaceImpl::writeBlockScalarGradientData(
 }
 
 void SolverInterfaceImpl::writeVectorGradientData(
-    int           dataID,
-    int           valueIndex,
+    DataID        dataID,
+    VertexID      valueIndex,
     const double *gradientValues,
     bool          rowsFirst)
 {
@@ -1380,11 +1380,11 @@ void SolverInterfaceImpl::writeVectorGradientData(
 }
 
 void SolverInterfaceImpl::writeBlockVectorGradientData(
-    int           dataID,
-    int           size,
-    const int *   valueIndices,
-    const double *gradientValues,
-    bool          rowsFirst)
+    DataID          dataID,
+    Size            size,
+    const VertexID *valueIndices,
+    const double *  gradientValues,
+    bool            rowsFirst)
 {
 
   PRECICE_EXPERIMENTAL_API();
@@ -1462,10 +1462,10 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
 }
 
 void SolverInterfaceImpl::readBlockVectorData(
-    int        dataID,
-    int        size,
-    const int *valueIndices,
-    double *   values) const
+    DataID          dataID,
+    Size            size,
+    const VertexID *valueIndices,
+    double *        values) const
 {
   PRECICE_TRACE(dataID, size);
   double relativeTimeWindowEndTime = _couplingScheme->getThisTimeWindowRemainder(); // samples at end of time window
@@ -1477,11 +1477,11 @@ void SolverInterfaceImpl::readBlockVectorData(
 }
 
 void SolverInterfaceImpl::readBlockVectorData(
-    int        dataID,
-    int        size,
-    const int *valueIndices,
-    double     relativeReadTime,
-    double *   values) const
+    DataID          dataID,
+    Size            size,
+    const VertexID *valueIndices,
+    double          relativeReadTime,
+    double *        values) const
 {
   PRECICE_TRACE(dataID, size);
   PRECICE_EXPERIMENTAL_API();
@@ -1489,11 +1489,11 @@ void SolverInterfaceImpl::readBlockVectorData(
 }
 
 void SolverInterfaceImpl::readBlockVectorDataImpl(
-    int        dataID,
-    int        size,
-    const int *valueIndices,
-    double     relativeReadTime,
-    double *   values) const
+    DataID          dataID,
+    Size            size,
+    const VertexID *valueIndices,
+    double          relativeReadTime,
+    double *        values) const
 {
   PRECICE_CHECK(_state != State::Finalized, "readBlockVectorData(...) cannot be called after finalize().");
   PRECICE_CHECK(relativeReadTime <= _couplingScheme->getThisTimeWindowRemainder(), "readBlockVectorData(...) cannot sample data outside of current time window.");
@@ -1528,9 +1528,9 @@ void SolverInterfaceImpl::readBlockVectorDataImpl(
 }
 
 void SolverInterfaceImpl::readVectorData(
-    int     dataID,
-    int     valueIndex,
-    double *value) const
+    DataID   dataID,
+    VertexID valueIndex,
+    double * value) const
 {
   PRECICE_TRACE(dataID, valueIndex);
   double relativeTimeWindowEndTime = _couplingScheme->getThisTimeWindowRemainder(); // samples at end of time window
@@ -1542,10 +1542,10 @@ void SolverInterfaceImpl::readVectorData(
 }
 
 void SolverInterfaceImpl::readVectorData(
-    int     dataID,
-    int     valueIndex,
-    double  relativeReadTime,
-    double *value) const
+    DataID   dataID,
+    VertexID valueIndex,
+    double   relativeReadTime,
+    double * value) const
 {
   PRECICE_TRACE(dataID, valueIndex);
   PRECICE_EXPERIMENTAL_API();
@@ -1553,10 +1553,10 @@ void SolverInterfaceImpl::readVectorData(
 }
 
 void SolverInterfaceImpl::readVectorDataImpl(
-    int     dataID,
-    int     valueIndex,
-    double  relativeReadTime,
-    double *value) const
+    DataID   dataID,
+    VertexID valueIndex,
+    double   relativeReadTime,
+    double * value) const
 {
   PRECICE_CHECK(_state != State::Finalized, "readVectorData(...) cannot be called after finalize().");
   PRECICE_CHECK(relativeReadTime <= _couplingScheme->getThisTimeWindowRemainder(), "readVectorData(...) cannot sample data outside of current time window.");
@@ -1587,10 +1587,10 @@ void SolverInterfaceImpl::readVectorDataImpl(
 }
 
 void SolverInterfaceImpl::readBlockScalarData(
-    int        dataID,
-    int        size,
-    const int *valueIndices,
-    double *   values) const
+    DataID          dataID,
+    Size            size,
+    const VertexID *valueIndices,
+    double *        values) const
 {
   PRECICE_TRACE(dataID, size);
   PRECICE_REQUIRE_DATA_READ(dataID);
@@ -1603,11 +1603,11 @@ void SolverInterfaceImpl::readBlockScalarData(
 }
 
 void SolverInterfaceImpl::readBlockScalarData(
-    int        dataID,
-    int        size,
-    const int *valueIndices,
-    double     relativeReadTime,
-    double *   values) const
+    DataID          dataID,
+    Size            size,
+    const VertexID *valueIndices,
+    double          relativeReadTime,
+    double *        values) const
 {
   PRECICE_TRACE(dataID, size);
   PRECICE_EXPERIMENTAL_API();
@@ -1615,11 +1615,11 @@ void SolverInterfaceImpl::readBlockScalarData(
 }
 
 void SolverInterfaceImpl::readBlockScalarDataImpl(
-    int        dataID,
-    int        size,
-    const int *valueIndices,
-    double     relativeReadTime,
-    double *   values) const
+    DataID          dataID,
+    Size            size,
+    const VertexID *valueIndices,
+    double          relativeReadTime,
+    double *        values) const
 {
   PRECICE_CHECK(_state != State::Finalized, "readBlockScalarData(...) cannot be called after finalize().");
   PRECICE_CHECK(relativeReadTime <= _couplingScheme->getThisTimeWindowRemainder(), "readBlockScalarData(...) cannot sample data outside of current time window.");
@@ -1651,9 +1651,9 @@ void SolverInterfaceImpl::readBlockScalarDataImpl(
 }
 
 void SolverInterfaceImpl::readScalarData(
-    int     dataID,
-    int     valueIndex,
-    double &value) const
+    DataID   dataID,
+    VertexID valueIndex,
+    double & value) const
 {
   PRECICE_TRACE(dataID, valueIndex);
   double relativeTimeWindowEndTime = _couplingScheme->getThisTimeWindowRemainder(); // samples at end of time window
@@ -1665,10 +1665,10 @@ void SolverInterfaceImpl::readScalarData(
 }
 
 void SolverInterfaceImpl::readScalarData(
-    int     dataID,
-    int     valueIndex,
-    double  relativeReadTime,
-    double &value) const
+    DataID   dataID,
+    VertexID valueIndex,
+    double   relativeReadTime,
+    double & value) const
 {
   PRECICE_TRACE(dataID, valueIndex, value);
   PRECICE_EXPERIMENTAL_API();
@@ -1676,10 +1676,10 @@ void SolverInterfaceImpl::readScalarData(
 }
 
 void SolverInterfaceImpl::readScalarDataImpl(
-    int     dataID,
-    int     valueIndex,
-    double  relativeReadTime,
-    double &value) const
+    DataID   dataID,
+    VertexID valueIndex,
+    double   relativeReadTime,
+    double & value) const
 {
   PRECICE_CHECK(_state != State::Finalized, "readScalarData(...) cannot be called after finalize().");
   PRECICE_CHECK(relativeReadTime <= _couplingScheme->getThisTimeWindowRemainder(), "readScalarData(...) cannot sample data outside of current time window.");
@@ -1708,7 +1708,7 @@ void SolverInterfaceImpl::readScalarDataImpl(
 }
 
 void SolverInterfaceImpl::setMeshAccessRegion(
-    const int     meshID,
+    const MeshID  meshID,
     const double *boundingBox) const
 {
   PRECICE_EXPERIMENTAL_API();
@@ -1742,10 +1742,10 @@ void SolverInterfaceImpl::setMeshAccessRegion(
 }
 
 void SolverInterfaceImpl::getMeshVerticesAndIDs(
-    const int meshID,
-    const int size,
-    int *     ids,
-    double *  coordinates) const
+    const MeshID meshID,
+    const Size   size,
+    VertexID *   ids,
+    double *     coordinates) const
 {
   PRECICE_EXPERIMENTAL_API();
   PRECICE_TRACE(meshID, size);

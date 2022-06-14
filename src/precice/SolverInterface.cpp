@@ -2,6 +2,7 @@
 #include "cplscheme/Constants.hpp"
 #include "precice/impl/SolverInterfaceImpl.hpp"
 #include "precice/impl/versions.hpp"
+#include "precice/types.hpp"
 
 namespace precice {
 
@@ -91,7 +92,7 @@ bool SolverInterface::hasMesh(
   return _impl->hasMesh(meshName);
 }
 
-int SolverInterface::getMeshID(
+MeshID SolverInterface::getMeshID(
     const std::string &meshName) const
 {
   return _impl->getMeshID(meshName);
@@ -102,24 +103,24 @@ std::set<int> SolverInterface::getMeshIDs() const
   return _impl->getMeshIDs();
 }
 
-bool SolverInterface::isMeshConnectivityRequired(int meshID) const
+bool SolverInterface::isMeshConnectivityRequired(MeshID meshID) const
 {
   return _impl->isMeshConnectivityRequired(meshID);
 }
 
-bool SolverInterface::isGradientDataRequired(int dataID) const
+bool SolverInterface::isGradientDataRequired(DataID dataID) const
 {
   return _impl->isGradientDataRequired(dataID);
 }
 
 bool SolverInterface::hasData(
-    const std::string &dataName, int meshID) const
+    const std::string &dataName, MeshID meshID) const
 {
   return _impl->hasData(dataName, meshID);
 }
 
-int SolverInterface::getDataID(
-    const std::string &dataName, int meshID) const
+DataID SolverInterface::getDataID(
+    const std::string &dataName, MeshID meshID) const
 {
   return _impl->getDataID(dataName, meshID);
 }
@@ -136,140 +137,140 @@ bool SolverInterface::hasToEvaluateFineModel() const
 
 //void SolverInterface:: resetMesh
 //(
-//  int meshID )
+//  MeshID meshID )
 //{
 //  _impl->resetMesh(meshID);
 //}
 
-int SolverInterface::setMeshVertex(
-    int           meshID,
+VertexID SolverInterface::setMeshVertex(
+    MeshID        meshID,
     const double *position)
 {
   return _impl->setMeshVertex(meshID, position);
 }
 
-int SolverInterface::getMeshVertexSize(
-    int meshID) const
+Size SolverInterface::getMeshVertexSize(
+    MeshID meshID) const
 {
   return _impl->getMeshVertexSize(meshID);
 }
 
 void SolverInterface::setMeshVertices(
-    int           meshID,
-    int           size,
+    MeshID        meshID,
+    Size          size,
     const double *positions,
-    int *         ids)
+    VertexID *    ids)
 {
   _impl->setMeshVertices(meshID, size, positions, ids);
 }
 
 void SolverInterface::getMeshVertices(
-    int        meshID,
-    int        size,
-    const int *ids,
-    double *   positions) const
+    MeshID          meshID,
+    Size            size,
+    const VertexID *ids,
+    double *        positions) const
 {
   _impl->getMeshVertices(meshID, size, ids, positions);
 }
 
 void SolverInterface::getMeshVertexIDsFromPositions(
-    int           meshID,
-    int           size,
+    MeshID        meshID,
+    Size          size,
     const double *positions,
-    int *         ids) const
+    VertexID *    ids) const
 {
   _impl->getMeshVertexIDsFromPositions(meshID, size, positions, ids);
 }
 
-int SolverInterface::setMeshEdge(
-    int meshID,
-    int firstVertexID,
-    int secondVertexID)
+EdgeID SolverInterface::setMeshEdge(
+    MeshID   meshID,
+    VertexID firstVertexID,
+    VertexID secondVertexID)
 {
   return _impl->setMeshEdge(meshID, firstVertexID, secondVertexID);
 }
 
 void SolverInterface::setMeshTriangle(
-    int meshID,
-    int firstEdgeID,
-    int secondEdgeID,
-    int thirdEdgeID)
+    MeshID meshID,
+    EdgeID firstEdgeID,
+    EdgeID secondEdgeID,
+    EdgeID thirdEdgeID)
 {
   _impl->setMeshTriangle(meshID, firstEdgeID, secondEdgeID, thirdEdgeID);
 }
 
 void SolverInterface::setMeshTriangleWithEdges(
-    int meshID,
-    int firstVertexID,
-    int secondVertexID,
-    int thirdVertexID)
+    MeshID   meshID,
+    VertexID firstVertexID,
+    VertexID secondVertexID,
+    VertexID thirdVertexID)
 {
   _impl->setMeshTriangleWithEdges(meshID, firstVertexID, secondVertexID, thirdVertexID);
 }
 
 void SolverInterface::setMeshQuad(
-    int meshID,
-    int firstEdgeID,
-    int secondEdgeID,
-    int thirdEdgeID,
-    int fourthEdgeID)
+    MeshID meshID,
+    EdgeID firstEdgeID,
+    EdgeID secondEdgeID,
+    EdgeID thirdEdgeID,
+    EdgeID fourthEdgeID)
 {
   _impl->setMeshQuad(meshID, firstEdgeID, secondEdgeID, thirdEdgeID, fourthEdgeID);
 }
 
 void SolverInterface::setMeshQuadWithEdges(
-    int meshID,
-    int firstVertexID,
-    int secondVertexID,
-    int thirdVertexID,
-    int fourthVertexID)
+    MeshID   meshID,
+    VertexID firstVertexID,
+    VertexID secondVertexID,
+    VertexID thirdVertexID,
+    VertexID fourthVertexID)
 {
   _impl->setMeshQuadWithEdges(meshID, firstVertexID, secondVertexID, thirdVertexID,
                               fourthVertexID);
 }
 
 void SolverInterface::mapReadDataTo(
-    int toMeshID)
+    MeshID toMeshID)
 {
   _impl->mapReadDataTo(toMeshID);
 }
 
 void SolverInterface::mapWriteDataFrom(
-    int fromMeshID)
+    MeshID fromMeshID)
 {
   _impl->mapWriteDataFrom(fromMeshID);
 }
 
 void SolverInterface::writeBlockVectorData(
-    int           dataID,
-    int           size,
-    const int *   valueIndices,
-    const double *values)
+    DataID          dataID,
+    Size            size,
+    const VertexID *valueIndices,
+    const double *  values)
 {
   _impl->writeBlockVectorData(dataID, size, valueIndices, values);
 }
 
 void SolverInterface::writeBlockVectorGradientData(
-    int           dataID,
-    int           size,
-    const int *   valueIndices,
-    const double *gradientValues,
-    bool          rowsFirst)
+    DataID          dataID,
+    Size            size,
+    const VertexID *valueIndices,
+    const double *  gradientValues,
+    bool            rowsFirst)
 {
   _impl->writeBlockVectorGradientData(dataID, size, valueIndices, gradientValues, rowsFirst);
 }
 
 void SolverInterface::writeVectorData(
-    int           dataID,
-    int           valueIndex,
+    DataID        dataID,
+    VertexID      valueIndex,
     const double *value)
 {
   _impl->writeVectorData(dataID, valueIndex, value);
 }
 
 void SolverInterface::writeVectorGradientData(
-    int           dataID,
-    int           valueIndex,
+    DataID        dataID,
+    VertexID      valueIndex,
     const double *gradientValues,
     bool          rowsFirst)
 {
@@ -277,122 +278,122 @@ void SolverInterface::writeVectorGradientData(
 }
 
 void SolverInterface::writeBlockScalarData(
-    int           dataID,
-    int           size,
-    const int *   valueIndices,
-    const double *values)
+    DataID          dataID,
+    Size            size,
+    const VertexID *valueIndices,
+    const double *  values)
 {
   _impl->writeBlockScalarData(dataID, size, valueIndices, values);
 }
 
 void SolverInterface::writeBlockScalarGradientData(
-    int           dataID,
-    int           size,
-    const int *   valueIndices,
-    const double *gradientValues)
+    DataID          dataID,
+    Size            size,
+    const VertexID *valueIndices,
+    const double *  gradientValues)
 {
   _impl->writeBlockScalarGradientData(dataID, size, valueIndices, gradientValues);
 }
 
 void SolverInterface::writeScalarData(
-    int    dataID,
-    int    valueIndex,
-    double value)
+    DataID   dataID,
+    VertexID valueIndex,
+    double   value)
 {
   _impl->writeScalarData(dataID, valueIndex, value);
 }
 
 void SolverInterface::writeScalarGradientData(
-    int           dataID,
-    int           valueIndex,
+    DataID        dataID,
+    VertexID      valueIndex,
     const double *gradientValues)
 {
   _impl->writeScalarGradientData(dataID, valueIndex, gradientValues);
 }
 
 void SolverInterface::readBlockVectorData(
-    int        dataID,
-    int        size,
-    const int *valueIndices,
-    double *   values) const
+    DataID          dataID,
+    Size            size,
+    const VertexID *valueIndices,
+    double *        values) const
 {
   _impl->readBlockVectorData(dataID, size, valueIndices, values);
 }
 
 void SolverInterface::readBlockVectorData(
-    int        dataID,
-    int        size,
-    const int *valueIndices,
-    double     relativeReadTime,
-    double *   values) const
+    DataID          dataID,
+    Size            size,
+    const VertexID *valueIndices,
+    double          relativeReadTime,
+    double *        values) const
 {
   _impl->readBlockVectorData(dataID, size, valueIndices, relativeReadTime, values);
 }
 
 void SolverInterface::readVectorData(
-    int     dataID,
-    int     valueIndex,
-    double *value) const
+    DataID   dataID,
+    VertexID valueIndex,
+    double * value) const
 {
   _impl->readVectorData(dataID, valueIndex, value);
 }
 
 void SolverInterface::readVectorData(
-    int     dataID,
-    int     valueIndex,
-    double  relativeReadTime,
-    double *value) const
+    DataID   dataID,
+    VertexID valueIndex,
+    double   relativeReadTime,
+    double * value) const
 {
   // @todo: needs testing!
   _impl->readVectorData(dataID, valueIndex, relativeReadTime, value);
 }
 
 void SolverInterface::readBlockScalarData(
-    int        dataID,
-    int        size,
-    const int *valueIndices,
-    double *   values) const
+    DataID          dataID,
+    Size            size,
+    const VertexID *valueIndices,
+    double *        values) const
 {
   _impl->readBlockScalarData(dataID, size, valueIndices, values);
 }
 
 void SolverInterface::readBlockScalarData(
-    int        dataID,
-    int        size,
-    const int *valueIndices,
-    double     relativeReadTime,
-    double *   values) const
+    DataID          dataID,
+    Size            size,
+    const VertexID *valueIndices,
+    double          relativeReadTime,
+    double *        values) const
 {
   _impl->readBlockScalarData(dataID, size, valueIndices, relativeReadTime, values);
 }
 
 void SolverInterface::readScalarData(
-    int     dataID,
-    int     valueIndex,
-    double &value) const
+    DataID   dataID,
+    VertexID valueIndex,
+    double & value) const
 {
   _impl->readScalarData(dataID, valueIndex, value);
 }
 
 void SolverInterface::readScalarData(
-    int     dataID,
-    int     valueIndex,
-    double  relativeReadTime,
-    double &value) const
+    DataID   dataID,
+    VertexID valueIndex,
+    double   relativeReadTime,
+    double & value) const
 {
   _impl->readScalarData(dataID, valueIndex, relativeReadTime, value);
 }
 
-void SolverInterface::setMeshAccessRegion(const int     meshID,
+void SolverInterface::setMeshAccessRegion(const MeshID  meshID,
                                           const double *boundingBox) const
 {
   _impl->setMeshAccessRegion(meshID, boundingBox);
 }
 
-void SolverInterface::getMeshVerticesAndIDs(const int meshID,
-                                            const int size,
-                                            int *     ids,
-                                            double *  coordinates) const
+void SolverInterface::getMeshVerticesAndIDs(const MeshID meshID,
+                                            const Size   size,
+                                            VertexID *   ids,
+                                            double *     coordinates) const
 {
   _impl->getMeshVerticesAndIDs(meshID, size, ids, coordinates);
 }

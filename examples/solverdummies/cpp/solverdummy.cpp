@@ -1,5 +1,7 @@
 #include <iostream>
 #include <sstream>
+#include <vector>
+
 #include "precice/SolverInterface.hpp"
 
 int main(int argc, char **argv)

@@ -151,81 +151,81 @@ public:
   bool hasMesh(const std::string &meshName) const;
 
   /// @copydoc SolverInterface::hasMesh
-  int getMeshID(const std::string &meshName) const;
+  MeshID getMeshID(const std::string &meshName) const;
 
   /// @copydoc SolverInterface::getMeshIDs
-  std::set<int> getMeshIDs() const;
+  std::set<MeshID> getMeshIDs() const;
 
   /// @copydoc SolverInterface::isMeshConnectivityRequired
-  bool isMeshConnectivityRequired(int meshID) const;
+  bool isMeshConnectivityRequired(MeshID meshID) const;
 
   /// @copydoc SolverInterface::isGradientDataRequired
-  bool isGradientDataRequired(int dataID) const;
+  bool isGradientDataRequired(DataID dataID) const;
 
   /// @copydoc SolverInterface::setMeshVertex
-  int setMeshVertex(
-      int           meshID,
+  VertexID setMeshVertex(
+      MeshID        meshID,
       const double *position);
 
   /// @copydoc SolverInterface::getMeshVertexSize
-  int getMeshVertexSize(MeshID meshID) const;
+  Size getMeshVertexSize(MeshID meshID) const;
 
   /// @copydoc SolverInterface::setMeshVertices
   void setMeshVertices(
-      int           meshID,
-      int           size,
+      MeshID        meshID,
+      Size          size,
       const double *positions,
-      int *         ids);
+      VertexID *    ids);
 
   /// @copydoc SolverInterface::getMeshVertices
   void getMeshVertices(
-      int        meshID,
-      size_t     size,
-      const int *ids,
-      double *   positions) const;
+      MeshID          meshID,
+      Size            size,
+      const VertexID *ids,
+      double *        positions) const;
 
   /// @copydoc SolverInterface::getMeshVertexIDsFromPositions
   void getMeshVertexIDsFromPositions(
-      int           meshID,
-      size_t        size,
+      MeshID        meshID,
+      Size          size,
       const double *positions,
-      int *         ids) const;
+      VertexID *    ids) const;
 
   /// @copydoc SolverInterface::setMeshEdge
-  int setMeshEdge(
-      MeshID meshID,
-      int    firstVertexID,
-      int    secondVertexID);
+  EdgeID setMeshEdge(
+      MeshID   meshID,
+      VertexID firstVertexID,
+      VertexID secondVertexID);
 
   /// @copydoc SolverInterface::setMeshTriangle
   void setMeshTriangle(
       MeshID meshID,
-      int    firstEdgeID,
-      int    secondEdgeID,
-      int    thirdEdgeID);
+      EdgeID firstEdgeID,
+      EdgeID secondEdgeID,
+      EdgeID thirdEdgeID);
 
-  /// @copydoc SolverInterface::setMeshTriangleWithEdges
+  /// @copydoc SolverEdgeIDerface::setMeshTriangleWithEdges
   void setMeshTriangleWithEdges(
-      MeshID meshID,
-      int    firstVertexID,
-      int    secondVertexID,
-      int    thirdVertexID);
+      MeshID   meshID,
+      VertexID firstVertexID,
+      VertexID secondVertexID,
+      VertexID thirdVertexID);
 
-  /// @copydoc SolverInterface::setMeshQuad
+  /// @copydoc SolverEdgeIDerface::setMeshQuad
   void setMeshQuad(
       MeshID meshID,
-      int    firstEdgeID,
-      int    secondEdgeID,
-      int    thirdEdgeID,
-      int    fourthEdgeID);
+      EdgeID firstEdgeID,
+      EdgeID secondEdgeID,
+      EdgeID thirdEdgeID,
+      EdgeID fourthEdgeID);
 
   /// @copydoc SolverInterface::setMeshQuadWithEdges
   void setMeshQuadWithEdges(
-      MeshID meshID,
-      int    firstVertexID,
-      int    secondVertexID,
-      int    thirdVertexID,
-      int    fourthVertexID);
+      MeshID   meshID,
+      VertexID firstVertexID,
+      VertexID secondVertexID,
+      VertexID thirdVertexID,
+      VertexID fourthVertexID);
 
   ///@}
 
@@ -236,123 +236,123 @@ public:
   bool hasData(const std::string &dataName, MeshID meshID) const;
 
   /// @copydoc SolverInterface::getDataID
-  int getDataID(const std::string &dataName, MeshID meshID) const;
+  DataID getDataID(const std::string &dataName, MeshID meshID) const;
 
   /// @copydoc SolverInterface::mapWriteDataFrom
-  void mapWriteDataFrom(int fromMeshID);
+  void mapWriteDataFrom(MeshID fromMeshID);
 
   /// @copydoc SolverInterface::mapReadDataTo
-  void mapReadDataTo(int toMeshID);
+  void mapReadDataTo(MeshID toMeshID);
 
   /// @copydoc SolverInterface::writeBlockVectorData
   void writeBlockVectorData(
-      int           fromDataID,
-      int           size,
-      const int *   valueIndices,
-      const double *values);
+      DataID          fromDataID,
+      Size            size,
+      const VertexID *valueIndices,
+      const double *  values);
 
   /// @copydoc precice::SolverInterface::writeBlockVectorGradientData
   void writeBlockVectorGradientData(
-      int           fromDataID,
-      int           size,
-      const int *   valueIndices,
-      const double *gradientValues,
-      bool          rowsFirst = false);
+      DataID          fromDataID,
+      Size            size,
+      const VertexID *valueIndices,
+      const double *  gradientValues,
+      bool            rowsFirst = false);
 
   /// @copydoc SolverInterface::writeVectorData
   void writeVectorData(
-      int           fromDataID,
-      int           valueIndex,
+      DataID        fromDataID,
+      VertexID      valueIndex,
       const double *value);
 
   /// @copydoc precice::SolverInterface::writeVectorGradientData
   void writeVectorGradientData(
-      int           fromDataID,
-      int           valueIndex,
+      DataID        fromDataID,
+      VertexID      valueIndex,
       const double *gradientValues,
       bool          rowsFirst = false);
 
   /// @copydoc SolverInterface::writeBlockScalarData
   void writeBlockScalarData(
-      int           fromDataID,
-      int           size,
-      const int *   valueIndices,
-      const double *values);
+      DataID          fromDataID,
+      Size            size,
+      const VertexID *valueIndices,
+      const double *  values);
 
   /// @copydoc precice::SolverInterface::writeBlockScalarGradientData
   void writeBlockScalarGradientData(
-      int           fromDataID,
-      int           size,
-      const int *   valueIndices,
-      const double *gradientValues);
+      DataID          fromDataID,
+      Size            size,
+      const VertexID *valueIndices,
+      const double *  gradientValues);
 
   /// @copydoc SolverInterface::writeScalarData
   void writeScalarData(
-      int    fromDataID,
-      int    valueIndex,
-      double value);
+      DataID   fromDataID,
+      VertexID valueIndex,
+      double   value);
 
   /// @copydoc precice::SolverInterface::writeScalarGradientData
   void writeScalarGradientData(
-      int           fromDataID,
-      int           valueIndex,
+      DataID        fromDataID,
+      VertexID      valueIndex,
       const double *gradientValues);
 
   /// @copydoc SolverInterface::readBlockVectorData(int, int, const int*, double*) const
   void readBlockVectorData(
-      int        toDataID,
-      int        size,
-      const int *valueIndices,
-      double *   values) const;
+      DataID          toDataID,
+      Size            size,
+      const VertexID *valueIndices,
+      double *        values) const;
 
   /// @copydoc SolverInterface::readBlockVectorData(int, int, const int*, double, double*) const
   void readBlockVectorData(
-      int        toDataID,
-      int        size,
-      const int *valueIndices,
-      double     relativeReadTime,
-      double *   values) const;
+      DataID          toDataID,
+      Size            size,
+      const VertexID *valueIndices,
+      double          relativeReadTime,
+      double *        values) const;
 
   /// @copydoc SolverInterface::readVectorData(int, int, double*) const
   void readVectorData(
-      int     toDataID,
-      int     valueIndex,
-      double *value) const;
+      DataID   toDataID,
+      VertexID valueIndex,
+      double * value) const;
 
   /// @copydoc SolverInterface::readVectorData(int, int, double, double*) const
   void readVectorData(
-      int     toDataID,
-      int     valueIndex,
-      double  relativeReadTime,
-      double *value) const;
+      DataID   toDataID,
+      VertexID valueIndex,
+      double   relativeReadTime,
+      double * value) const;
 
   /// @copydoc SolverInterface::readBlockScalarData(int, int, const int*, double*) const
   void readBlockScalarData(
-      int        toDataID,
-      int        size,
-      const int *valueIndices,
-      double *   values) const;
+      DataID          toDataID,
+      Size            size,
+      const VertexID *valueIndices,
+      double *        values) const;
 
   /// @copydoc SolverInterface::readBlockScalarData(int, int, const int*, double, double*) const
   void readBlockScalarData(
-      int        toDataID,
-      int        size,
-      const int *valueIndices,
-      double     relativeReadTime,
-      double *   values) const;
+      DataID          toDataID,
+      Size            size,
+      const VertexID *valueIndices,
+      double          relativeReadTime,
+      double *        values) const;
 
   /// @copydoc SolverInterface::readScalarData(int, int, double&) const
   void readScalarData(
-      int     toDataID,
-      int     valueIndex,
-      double &value) const;
+      DataID   toDataID,
+      VertexID valueIndex,
+      double & value) const;
 
   /// @copydoc SolverInterface::readScalarData(int, int, double, double&) const
   void readScalarData(
-      int     toDataID,
-      int     valueIndex,
-      double  relativeReadTime,
-      double &value) const;
+      DataID   toDataID,
+      VertexID valueIndex,
+      double   relativeReadTime,
+      double & value) const;
 
   ///@}
 
@@ -362,15 +362,15 @@ public:
   ///@{
 
   /// @copydoc SolverInterface::setMeshAccessRegion
-  void setMeshAccessRegion(const int     meshID,
+  void setMeshAccessRegion(const MeshID  meshID,
                            const double *boundingBox) const;
 
   /// @copydoc SolverInterface::getMeshVerticesAndIDs
   void getMeshVerticesAndIDs(
-      const int meshID,
-      const int size,
-      int *     ids,
-      double *  coordinates) const;
+      const MeshID meshID,
+      const Size   size,
+      VertexID *   ids,
+      double *     coordinates) const;
 
   ///@}
 
@@ -406,10 +406,10 @@ private:
   /// Spatial dimensions of problem.
   int _dimensions = 0;
 
-  utils::MultiLock<int> _meshLock;
+  utils::MultiLock<MeshID> _meshLock;
 
   /// mesh name to mesh ID mapping.
-  std::map<std::string, int> _meshIDs;
+  std::map<std::string, MeshID> _meshIDs;
 
   std::map<std::string, m2n::BoundM2N> _m2ns;
 
@@ -462,30 +462,30 @@ private:
 
   /// Implementation of read functions.
   void readBlockVectorDataImpl(
-      int        toDataID,
-      int        size,
-      const int *valueIndices,
-      double     relativeReadTime,
-      double *   values) const;
+      DataID          toDataID,
+      Size            size,
+      const VertexID *valueIndices,
+      double          relativeReadTime,
+      double *        values) const;
 
   void readVectorDataImpl(
-      int     toDataID,
-      int     valueIndex,
-      double  relativeReadTime,
-      double *value) const;
+      DataID   toDataID,
+      VertexID valueIndex,
+      double   relativeReadTime,
+      double * value) const;
 
   void readBlockScalarDataImpl(
-      int        toDataID,
-      int        size,
-      const int *valueIndices,
-      double     relativeReadTime,
-      double *   values) const;
+      DataID          toDataID,
+      Size            size,
+      const VertexID *valueIndices,
+      double          relativeReadTime,
+      double *        values) const;
 
   void readScalarDataImpl(
-      int     toDataID,
-      int     valueIndex,
-      double  relativeReadTime,
-      double &value) const;
+      DataID   toDataID,
+      VertexID valueIndex,
+      double   relativeReadTime,
+      double & value) const;
 
   /// Exports meshes with data and watch point data.
   void handleExports();
