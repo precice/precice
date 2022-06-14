@@ -28,13 +28,13 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirstNoInit)
   DataID writeDataID;
   DataID readDataID;
 
-  typedef double (*DataFunction)(double, int);
+  typedef double (*DataFunction)(double);
 
-  DataFunction dataOneFunction = [](double t, int idx) -> double {
-    return (double) (2 + t + idx);
+  DataFunction dataOneFunction = [](double t) -> double {
+    return (double) (2 + t);
   };
-  DataFunction dataTwoFunction = [](double t, int idx) -> double {
-    return (double) (10 + t + idx);
+  DataFunction dataTwoFunction = [](double t) -> double {
+    return (double) (10 + t);
   };
   DataFunction writeFunction;
   DataFunction readFunction;
@@ -54,14 +54,9 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirstNoInit)
     readFunction  = dataOneFunction;
   }
 
-  int nVertices = 2;
-
-  std::vector<VertexID> vertexIDs(nVertices, 0);
-  std::vector<double>   writeData(nVertices, 0);
-  std::vector<double>   readData(nVertices, 0);
-
-  vertexIDs[0] = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
-  vertexIDs[1] = precice.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
+  double   writeData;
+  double   readData = 0; // needs to be initialized, because isReadDataAvailable returns false.
+  VertexID vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
 
   int    nWindows        = 5; // perform 5 windows.
   double maxDt           = precice.initialize();
@@ -85,52 +80,41 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirstNoInit)
       windowStartStep = timestep;
       precice.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
     }
-
     if (context.isNamed("SolverOne") && iterations == 0 && timewindow == 0) {
       BOOST_TEST(!precice.isReadDataAvailable());
     } else {
       BOOST_TEST(precice.isReadDataAvailable());
     }
-    BOOST_TEST(readData.size() == nVertices);
-    for (int i = 0; i < nVertices; i++) {
-      for (int j = 0; j < nSamples; j++) {
-        sampleDt = sampleDts[j];
-        readTime = time + sampleDt;
-        if (precice.isReadDataAvailable()) {
-          precice.readScalarData(readDataID, vertexIDs[i], sampleDt, readData[i]);
-        }
-        if (context.isNamed("SolverOne") && iterations == 0 && timewindow == 0) { // use zero as initial value in first iteration (no initializeData was called)
-          BOOST_TEST(readData[i] == 0);
-        } else if (context.isNamed("SolverOne") && iterations == 0 && timewindow > 0) { // always use constant extrapolation in first iteration (from writeData of second participant at end previous window).
-          BOOST_TEST(readData[i] == readFunction(time, i));
-        } else if (context.isNamed("SolverTwo") && timewindow == 0) {
-          BOOST_TEST(readData[i] == readFunction(windowDt, i)); // @todo: This is actually a problem. SolverTwo should always use zero initial data for interpolation, currently only data from end of window.
-        } else if (((context.isNamed("SolverOne") && iterations > 0) ||
-                    context.isNamed("SolverTwo")) &&
-                   timewindow == 0) {
-          // first window is special, because of interpolation between zero initial data and data at end of first window.
-          BOOST_TEST(readData[i] == (readTime) / windowDt * readFunction(windowDt, i)); // self-made linear interpolation.
-        } else if (((context.isNamed("SolverOne") && iterations > 0) ||                 // SolverOne can only perform interpolation in later iterations
-                    context.isNamed("SolverTwo"))                                       // Always use linear interpolation for SolverTwo
-                   && timewindow > 0) {
-          BOOST_TEST(readData[i] == readFunction(readTime, i));
-        } else {
-          BOOST_TEST(false); // unreachable!
-        }
+    for (int j = 0; j < nSamples; j++) {
+      sampleDt = sampleDts[j];
+      readTime = time + sampleDt;
+      if (precice.isReadDataAvailable()) {
+        precice.readScalarData(readDataID, vertexID, sampleDt, readData);
+      }
+      if (context.isNamed("SolverOne") && iterations == 0 && timewindow == 0) { // use zero as initial value in first iteration (no initializeData was called)
+        BOOST_TEST(readData == 0);
+      } else if (context.isNamed("SolverOne") && iterations == 0 && timewindow > 0) { // always use constant extrapolation in first iteration (from writeData of second participant at end previous window).
+        BOOST_TEST(readData == readFunction(time));
+      } else if (context.isNamed("SolverTwo") && timewindow == 0) {
+        BOOST_TEST(readData == readFunction(windowDt)); // @todo: This is actually a problem. SolverTwo should always use zero initial data for interpolation, currently only data from end of window.
+      } else if (((context.isNamed("SolverOne") && iterations > 0) || context.isNamed("SolverTwo")) && timewindow == 0) {
+        // first window is special, because of interpolation between zero initial data and data at end of first window.
+        BOOST_TEST(readData == (readTime) / windowDt * readFunction(windowDt)); // self-made linear interpolation.
+      } else if (((context.isNamed("SolverOne") && iterations > 0) ||           // SolverOne can only perform interpolation in later iterations
+                  context.isNamed("SolverTwo"))                                 // Always use linear interpolation for SolverTwo
+                 && timewindow > 0) {
+        BOOST_TEST(readData == readFunction(readTime));
+      } else {
+        BOOST_TEST(false); // unreachable!
       }
     }
 
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.
     time += currentDt;
-    for (int i = 0; i < nVertices; i++) {
-      writeData[i] = writeFunction(time, i);
-    }
+    writeData = writeFunction(time);
     if (precice.isWriteDataRequired(currentDt)) {
-      BOOST_TEST(writeData.size() == nVertices);
-      for (int i = 0; i < nVertices; i++) {
-        writeData[i] = writeFunction(time, i);
-        precice.writeScalarData(writeDataID, vertexIDs[i], writeData[i]);
-      }
+      writeData = writeFunction(time);
+      precice.writeScalarData(writeDataID, vertexID, writeData);
     }
     maxDt     = precice.advance(currentDt);
     currentDt = dt > maxDt ? maxDt : dt;

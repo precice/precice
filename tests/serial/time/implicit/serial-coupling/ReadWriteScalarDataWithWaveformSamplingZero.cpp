@@ -29,13 +29,13 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingZero)
   DataID writeDataID;
   DataID readDataID;
 
-  typedef double (*DataFunction)(double, int);
+  typedef double (*DataFunction)(double);
 
-  DataFunction dataOneFunction = [](double t, int idx) -> double {
-    return (double) (2 + t + idx);
+  DataFunction dataOneFunction = [](double t) -> double {
+    return (double) (2 + t);
   };
-  DataFunction dataTwoFunction = [](double t, int idx) -> double {
-    return (double) (10 + t + idx);
+  DataFunction dataTwoFunction = [](double t) -> double {
+    return (double) (10 + t);
   };
   DataFunction writeFunction;
   DataFunction readFunction;
@@ -55,18 +55,11 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingZero)
     readFunction  = dataOneFunction;
   }
 
-  int nVertices = 2;
-
-  std::vector<VertexID> vertexIDs(nVertices, 0);
-  std::vector<double>   writeData(nVertices, 0);
-  std::vector<double>   readData(nVertices, 0);
-
-  vertexIDs[0] = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
-  vertexIDs[1] = precice.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
+  double   writeData, readData;
+  VertexID vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
 
   int    nWindows   = 5; // perform 5 windows.
   double maxDt      = precice.initialize();
-  double windowDt   = maxDt;
   int    timewindow = 0;
   int    timewindowCheckpoint;
   double dt        = maxDt; // Timestep length desired by solver
@@ -81,10 +74,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingZero)
   double readDt;   // dt relative to timestep start for readTime
   double readTime; // time where we are reading from the reference solution
   if (precice.isActionRequired(precice::constants::actionWriteInitialData())) {
-    for (int i = 0; i < nVertices; i++) {
-      writeData[i] = writeFunction(time, i);
-      precice.writeScalarData(writeDataID, vertexIDs[i], writeData[i]);
-    }
+    writeData = writeFunction(time);
+    precice.writeScalarData(writeDataID, vertexID, writeData);
     precice.markActionFulfilled(precice::constants::actionWriteInitialData());
   }
 
@@ -92,52 +83,44 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingZero)
 
   while (precice.isCouplingOngoing()) {
     if (precice.isActionRequired(precice::constants::actionWriteIterationCheckpoint())) {
-      timewindowCheckpoint = timewindow;
       timeCheckpoint       = time;
+      timewindowCheckpoint = timewindow;
       iterations           = 0;
       precice.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
     }
     BOOST_TEST(precice.isReadDataAvailable());
-    BOOST_TEST(readData.size() == nVertices);
-    for (int i = 0; i < nVertices; i++) {
-      for (int j = 0; j < nSamples; j++) {
-        sampleDt = sampleDts[j];
-        readDt   = readDts[j];
-        readTime = time + readDt;
-        if (precice.isReadDataAvailable()) {
-          precice.readScalarData(readDataID, vertexIDs[i], sampleDt, readData[i]);
-        }
-        if (context.isNamed("SolverOne") && iterations == 0) {
-          BOOST_TEST(readData[i] == readFunction(timeCheckpoint, i));
-        } else if (context.isNamed("SolverTwo") || (context.isNamed("SolverOne") && iterations > 0)) {
-          BOOST_TEST(readData[i] == readFunction(timeCheckpoint + windowDt, i));
-        } else {
-          BOOST_TEST(false); // unreachable!
-        }
+    for (int j = 0; j < nSamples; j++) {
+      sampleDt = sampleDts[j];
+      readDt   = readDts[j];
+      readTime = time + readDt;
+      if (precice.isReadDataAvailable()) {
+        precice.readScalarData(readDataID, vertexID, sampleDt, readData);
+      }
+      if (context.isNamed("SolverOne") && iterations == 0) { // Solver One receives initial data / old data in first iteration
+        BOOST_TEST(readData == readFunction(time));
+      } else if (context.isNamed("SolverTwo") || (context.isNamed("SolverOne") && iterations > 0)) {
+        BOOST_TEST(readData == readFunction(readTime));
+      } else {
+        BOOST_TEST(false); // unreachable!
       }
     }
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.
     time += currentDt;
-    for (int i = 0; i < nVertices; i++) {
-      writeData[i] = writeFunction(time, i);
-    }
+    timewindow++;
+    writeData = writeFunction(time);
 
     if (precice.isWriteDataRequired(currentDt)) {
-      BOOST_TEST(writeData.size() == nVertices);
-      for (int i = 0; i < nVertices; i++) {
-        writeData[i] = writeFunction(time, i);
-        precice.writeScalarData(writeDataID, vertexIDs[i], writeData[i]);
-      }
+      writeData = writeFunction(time);
+      precice.writeScalarData(writeDataID, vertexID, writeData);
     }
-    maxDt     = precice.advance(currentDt);
-    currentDt = dt > maxDt ? maxDt : dt;
-    timewindow++;
-    if (precice.isActionRequired(precice::constants::actionReadIterationCheckpoint())) { // at end of window and we have to repeat it.
-      iterations++;
-      timewindow = timewindowCheckpoint;
+    maxDt = precice.advance(currentDt);
+    if (precice.isActionRequired(precice::constants::actionReadIterationCheckpoint())) {
       time       = timeCheckpoint;
-      precice.markActionFulfilled(precice::constants::actionReadIterationCheckpoint()); // this test does not care about checkpointing, but we have to make the action
+      timewindow = timewindowCheckpoint;
+      iterations++;
+      precice.markActionFulfilled(precice::constants::actionReadIterationCheckpoint());
     }
+    currentDt = dt > maxDt ? maxDt : dt;
   }
 
   precice.finalize();

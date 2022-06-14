@@ -28,13 +28,13 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingZero)
   DataID writeDataID;
   DataID readDataID;
 
-  typedef double (*DataFunction)(double, int);
+  typedef double (*DataFunction)(double);
 
-  DataFunction dataOneFunction = [](double t, int idx) -> double {
-    return (double) (2 + t + idx);
+  DataFunction dataOneFunction = [](double t) -> double {
+    return (double) (2 + t);
   };
-  DataFunction dataTwoFunction = [](double t, int idx) -> double {
-    return (double) (10 + t + idx);
+  DataFunction dataTwoFunction = [](double t) -> double {
+    return (double) (10 + t);
   };
   DataFunction writeFunction;
   DataFunction readFunction;
@@ -54,13 +54,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingZero)
     readFunction  = dataOneFunction;
   }
 
-  int nVertices = 1;
-
-  std::vector<VertexID> vertexIDs(nVertices, 0);
-  std::vector<double>   writeData(nVertices, 0);
-  std::vector<double>   readData(nVertices, 0);
-
-  vertexIDs[0] = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+  double   writeData, readData;
+  VertexID vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
 
   int    nSubsteps = 4; // perform subcycling on solvers. 4 steps happen in each window.
   int    nWindows  = 5; // perform 5 windows.
@@ -76,10 +71,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingZero)
   int    iterations;
 
   if (precice.isActionRequired(precice::constants::actionWriteInitialData())) {
-    for (int i = 0; i < nVertices; i++) {
-      writeData[i] = writeFunction(time, i);
-      precice.writeScalarData(writeDataID, vertexIDs[i], writeData[i]);
-    }
+    writeData = writeFunction(time);
+    precice.writeScalarData(writeDataID, vertexID, writeData);
     precice.markActionFulfilled(precice::constants::actionWriteInitialData());
   }
 
@@ -95,40 +88,38 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingZero)
     double readTime;
     readTime = timeCheckpoint + windowDt;
 
-    BOOST_TEST(readData.size() == nVertices);
-    BOOST_TEST(precice.isReadDataAvailable());
-    for (int i = 0; i < nVertices; i++) {
-      if (precice.isReadDataAvailable()) {
-        precice.readScalarData(readDataID, vertexIDs[i], currentDt, readData[i]);
-      }
-      if (context.isNamed("SolverOne") && iterations == 0) { // in the first iteration of each window, use data from previous window.
-        BOOST_TEST(readData[i] == readFunction(timeCheckpoint, i));
-      } else { // in the following iterations, use data at the end of window.
-        BOOST_TEST(readData[i] == readFunction(readTime, i));
-      }
-      if (precice.isReadDataAvailable()) {
-        precice.readScalarData(readDataID, vertexIDs[i], currentDt / 2, readData[i]);
-      }
-      if (context.isNamed("SolverOne") && iterations == 0) { // in the first iteration of each window, use data from previous window.
-        BOOST_TEST(readData[i] == readFunction(timeCheckpoint, i));
-      } else { // in the following iterations, use data at the end of window.
-        BOOST_TEST(readData[i] == readFunction(readTime, i));
-      }
+    bool atWindowBoundary = timestep % nSubsteps == 0;
+
+    if (atWindowBoundary) { // read data is only available at end of window for zeroth order, see also https://github.com/precice/precice/issues/1223
+      BOOST_TEST(precice.isReadDataAvailable());
+    } else {
+      BOOST_TEST(!precice.isReadDataAvailable());
+    }
+    if (precice.isReadDataAvailable()) {
+      precice.readScalarData(readDataID, vertexID, currentDt, readData);
+    }
+    if (context.isNamed("SolverOne") && iterations == 0) { // in the first iteration of each window, use data from previous window.
+      BOOST_TEST(readData == readFunction(timeCheckpoint));
+    } else { // in the following iterations, use data at the end of window.
+      BOOST_TEST(readData == readFunction(readTime));
+    }
+    if (precice.isReadDataAvailable()) {
+      precice.readScalarData(readDataID, vertexID, currentDt / 2, readData);
+    }
+    if (context.isNamed("SolverOne") && iterations == 0) { // in the first iteration of each window, use data from previous window.
+      BOOST_TEST(readData == readFunction(timeCheckpoint));
+    } else { // in the following iterations, use data at the end of window.
+      BOOST_TEST(readData == readFunction(readTime));
     }
 
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.
     time += currentDt;
     timestep++;
-    for (int i = 0; i < nVertices; i++) {
-      writeData[i] = writeFunction(time, i);
-    }
+    writeData = writeFunction(time);
 
     if (precice.isWriteDataRequired(currentDt)) {
-      BOOST_TEST(writeData.size() == nVertices);
-      for (int i = 0; i < nVertices; i++) {
-        writeData[i] = writeFunction(time, i);
-        precice.writeScalarData(writeDataID, vertexIDs[i], writeData[i]);
-      }
+      writeData = writeFunction(time);
+      precice.writeScalarData(writeDataID, vertexID, writeData);
     }
     maxDt = precice.advance(currentDt);
     if (precice.isActionRequired(precice::constants::actionReadIterationCheckpoint())) {
