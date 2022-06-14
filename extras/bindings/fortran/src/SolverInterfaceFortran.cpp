@@ -334,45 +334,23 @@ void precicef_get_vertex_ids_from_positions_(
 void precicef_set_edge_(
     const int *meshID,
     const int *firstVertexID,
-    const int *secondVertexID,
-    int *      edgeID)
+    const int *secondVertexID)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  *edgeID = impl->setMeshEdge(*meshID, *firstVertexID, *secondVertexID);
+  impl->setMeshEdge(*meshID, *firstVertexID, *secondVertexID);
 }
 
 void precicef_set_triangle_(
-    const int *meshID,
-    const int *firstEdgeID,
-    const int *secondEdgeID,
-    const int *thirdEdgeID)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->setMeshTriangle(*meshID, *firstEdgeID, *secondEdgeID, *thirdEdgeID);
-}
-
-void precicef_set_triangle_we_(
     const int *meshID,
     const int *firstVertexID,
     const int *secondVertexID,
     const int *thirdVertexID)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->setMeshTriangleWithEdges(*meshID, *firstVertexID, *secondVertexID, *thirdVertexID);
+  impl->setMeshTriangle(*meshID, *firstVertexID, *secondVertexID, *thirdVertexID);
 }
 
 void precicef_set_quad_(
-    const int *meshID,
-    const int *firstEdgeID,
-    const int *secondEdgeID,
-    const int *thirdEdgeID,
-    const int *fourthEdgeID)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->setMeshQuad(*meshID, *firstEdgeID, *secondEdgeID, *thirdEdgeID, *fourthEdgeID);
-}
-
-void precicef_set_quad_we_(
     const int *meshID,
     const int *firstVertexID,
     const int *secondVertexID,
@@ -380,7 +358,7 @@ void precicef_set_quad_we_(
     const int *fourthVertexID)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->setMeshQuadWithEdges(*meshID, *firstVertexID, *secondVertexID, *thirdVertexID, *fourthVertexID);
+  impl->setMeshQuad(*meshID, *firstVertexID, *secondVertexID, *thirdVertexID, *fourthVertexID);
 }
 
 void precicef_set_tetrahedron(

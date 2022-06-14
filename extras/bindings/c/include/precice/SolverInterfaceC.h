@@ -245,49 +245,19 @@ void precicec_getMeshVertexIDsFromPositions(
  *
  * @return the ID of the edge
  */
-int precicec_setMeshEdge(
+void precicec_setMeshEdge(
     int meshID,
     int firstVertexID,
     int secondVertexID);
 
 /**
- * @brief Sets mesh triangle from edge IDs
- *
- * @param[in] meshID ID of the mesh to add the triangle to
- * @param[in] firstEdgeID ID of the first edge of the triangle
- * @param[in] secondEdgeID ID of the second edge of the triangle
- * @param[in] thirdEdgeID ID of the third edge of the triangle
- */
-void precicec_setMeshTriangle(
-    int meshID,
-    int firstEdgeID,
-    int secondEdgeID,
-    int thirdEdgeID);
-
-/**
  * @brief Sets a triangle from vertex IDs. Creates missing edges.
  */
-void precicec_setMeshTriangleWithEdges(
+void precicec_setMeshTriangle(
     int meshID,
     int firstVertexID,
     int secondVertexID,
     int thirdVertexID);
-
-/**
- * @brief Sets mesh Quad from edge IDs.
- *
- * @param[in] meshID ID of the mesh to add the Quad to
- * @param[in] firstEdgeID ID of the first edge of the Quad
- * @param[in] secondEdgeID ID of the second edge of the Quad
- * @param[in] thirdEdgeID ID of the third edge of the Quad
- * @param[in] fourthEdgeID ID of the forth edge of the Quad
- */
-void precicec_setMeshQuad(
-    int meshID,
-    int firstEdgeID,
-    int secondEdgeID,
-    int thirdEdgeID,
-    int fourthEdgeID);
 
 /**
   * @brief Sets surface mesh quadrangle from vertex IDs.
@@ -298,7 +268,7 @@ void precicec_setMeshQuad(
   * @param[in] thirdVertexID ID of the third vertex of the Quad
   * @param[in] fourthVertexID ID of the fourth vertex of the Quad
  */
-void precicec_setMeshQuadWithEdges(
+void precicec_setMeshQuad(
     int meshID,
     int firstVertexID,
     int secondVertexID,

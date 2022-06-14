@@ -181,51 +181,32 @@ void SolverInterface::getMeshVertexIDsFromPositions(
   _impl->getMeshVertexIDsFromPositions(meshID, size, positions, ids);
 }
 
-int SolverInterface::setMeshEdge(
+void SolverInterface::setMeshEdge(
     int meshID,
     int firstVertexID,
     int secondVertexID)
 {
-  return _impl->setMeshEdge(meshID, firstVertexID, secondVertexID);
+  _impl->setMeshEdge(meshID, firstVertexID, secondVertexID);
 }
 
 void SolverInterface::setMeshTriangle(
-    int meshID,
-    int firstEdgeID,
-    int secondEdgeID,
-    int thirdEdgeID)
-{
-  _impl->setMeshTriangle(meshID, firstEdgeID, secondEdgeID, thirdEdgeID);
-}
-
-void SolverInterface::setMeshTriangleWithEdges(
     int meshID,
     int firstVertexID,
     int secondVertexID,
     int thirdVertexID)
 {
-  _impl->setMeshTriangleWithEdges(meshID, firstVertexID, secondVertexID, thirdVertexID);
+  _impl->setMeshTriangle(meshID, firstVertexID, secondVertexID, thirdVertexID);
 }
 
 void SolverInterface::setMeshQuad(
-    int meshID,
-    int firstEdgeID,
-    int secondEdgeID,
-    int thirdEdgeID,
-    int fourthEdgeID)
-{
-  _impl->setMeshQuad(meshID, firstEdgeID, secondEdgeID, thirdEdgeID, fourthEdgeID);
-}
-
-void SolverInterface::setMeshQuadWithEdges(
     int meshID,
     int firstVertexID,
     int secondVertexID,
     int thirdVertexID,
     int fourthVertexID)
 {
-  _impl->setMeshQuadWithEdges(meshID, firstVertexID, secondVertexID, thirdVertexID,
-                              fourthVertexID);
+  _impl->setMeshQuad(meshID, firstVertexID, secondVertexID, thirdVertexID,
+                     fourthVertexID);
 }
 
 void SolverInterface::setMeshTetrahedron(

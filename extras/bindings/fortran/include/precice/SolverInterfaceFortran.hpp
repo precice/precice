@@ -457,11 +457,10 @@ void precicef_get_vertex_ids_from_positions_(
  * precicef_set_edge(
  *   INTEGER meshID,
  *   INTEGER firstVertexID,
- *   INTEGER secondVertexID,
- *   INTEGER edgeID )
+ *   INTEGER secondVertexID )
  *
  * IN:  meshID, firstVertexID, secondVertexID
- * OUT: edgeID
+ * OUT: -
  *
  * @copydoc precice::SolverInterface::setMeshEdge()
  *
@@ -469,32 +468,11 @@ void precicef_get_vertex_ids_from_positions_(
 void precicef_set_edge_(
     const int *meshID,
     const int *firstVertexID,
-    const int *secondVertexID,
-    int *      edgeID);
+    const int *secondVertexID);
 
 /**
  * Fortran syntax:
- * precicef_set_triangle(
- *   INTEGER meshID,
- *   INTEGER firstEdgeID,
- *   INTEGER secondEdgeID,
- *   INTEGER thirdEdgeID )
- *
- * IN:  meshID, firstEdgeID, secondEdgeID, thirdEdgeID
- * OUT: -
- *
- * @copydoc precice::SolverInterface::setMeshTriangle()
- *
- */
-void precicef_set_triangle_(
-    const int *meshID,
-    const int *firstEdgeID,
-    const int *secondEdgeID,
-    const int *thirdEdgeID);
-
-/**
- * Fortran syntax:
- * precicef_set_triangle_we(
+ * precicef_set_triangle_(
  *   INTEGER meshID,
  *   INTEGER firstVertexID,
  *   INTEGER secondVertexID,
@@ -503,10 +481,10 @@ void precicef_set_triangle_(
  * IN:  meshID, firstVertexID, secondVertexID, thirdVertexID
  * OUT: -
  *
- * @copydoc precice::SolverInterface::setMeshTriangleWithEdges()
+ * @copydoc precice::SolverInterface::setMeshTriangle()
  *
  */
-void precicef_set_triangle_we_(
+void precicef_set_triangle_(
     const int *meshID,
     const int *firstVertexID,
     const int *secondVertexID,
@@ -514,29 +492,7 @@ void precicef_set_triangle_we_(
 
 /**
  * Fortran syntax:
- * precicef_set_quad(
- *   INTEGER meshID,
- *   INTEGER firstEdgeID,
- *   INTEGER secondEdgeID,
- *   INTEGER thirdEdgeID,
- *   INTEGER fourthEdgeID )
- *
- * IN:  meshID, firstEdgeID, secondEdgeID, thirdEdgeID, fourthEdgeID
- * OUT: -
- *
- * @copydoc precice::SolverInterface::setMeshQuad()
- *
- */
-void precicef_set_quad_(
-    const int *meshID,
-    const int *firstEdgeID,
-    const int *secondEdgeID,
-    const int *thirdEdgeID,
-    const int *fourthEdgeID);
-
-/**
- * Fortran syntax:
- * precicef_set_quad_we(
+ * precicef_set_quad_(
  *   INTEGER meshID,
  *   INTEGER firstVertexID,
  *   INTEGER secondVertexID,
@@ -546,10 +502,10 @@ void precicef_set_quad_(
  * IN:  meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID
  * OUT: -
  *
- * @copydoc precice::SolverInterface::setMeshQuadWithEdges()
+ * @copydoc precice::SolverInterface::setMeshQuad()
  *
  */
-void precicef_set_quad_we_(
+void precicef_set_quad_(
     const int *meshID,
     const int *firstVertexID,
     const int *secondVertexID,

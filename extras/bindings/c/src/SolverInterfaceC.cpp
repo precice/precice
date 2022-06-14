@@ -246,47 +246,26 @@ void precicec_getMeshVertexIDsFromPositions(
   impl->getMeshVertexIDsFromPositions(meshID, size, positions, ids);
 }
 
-int precicec_setMeshEdge(
+void precicec_setMeshEdge(
     int meshID,
     int firstVertexID,
     int secondVertexID)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  return impl->setMeshEdge(meshID, firstVertexID, secondVertexID);
+  impl->setMeshEdge(meshID, firstVertexID, secondVertexID);
 }
 
 void precicec_setMeshTriangle(
-    int meshID,
-    int firstEdgeID,
-    int secondEdgeID,
-    int thirdEdgeID)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->setMeshTriangle(meshID, firstEdgeID, secondEdgeID, thirdEdgeID);
-}
-
-void precicec_setMeshTriangleWithEdges(
     int meshID,
     int firstVertexID,
     int secondVertexID,
     int thirdVertexID)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->setMeshTriangleWithEdges(meshID, firstVertexID, secondVertexID, thirdVertexID);
+  impl->setMeshTriangle(meshID, firstVertexID, secondVertexID, thirdVertexID);
 }
 
 void precicec_setMeshQuad(
-    int meshID,
-    int firstEdgeID,
-    int secondEdgeID,
-    int thirdEdgeID,
-    int fourthEdgeID)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->setMeshQuad(meshID, firstEdgeID, secondEdgeID, thirdEdgeID, fourthEdgeID);
-}
-
-void precicec_setMeshQuadWithEdges(
     int meshID,
     int firstVertexID,
     int secondVertexID,
@@ -294,7 +273,7 @@ void precicec_setMeshQuadWithEdges(
     int fourthVertexID)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->setMeshQuadWithEdges(meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
+  impl->setMeshQuad(meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
 }
 
 void precicec_setMeshTetrahedron(

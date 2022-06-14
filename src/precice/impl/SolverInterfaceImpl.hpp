@@ -192,7 +192,7 @@ public:
       int *         ids) const;
 
   /// @copydoc SolverInterface::setMeshEdge
-  int setMeshEdge(
+  void setMeshEdge(
       MeshID meshID,
       int    firstVertexID,
       int    secondVertexID);
@@ -200,27 +200,12 @@ public:
   /// @copydoc SolverInterface::setMeshTriangle
   void setMeshTriangle(
       MeshID meshID,
-      int    firstEdgeID,
-      int    secondEdgeID,
-      int    thirdEdgeID);
-
-  /// @copydoc SolverInterface::setMeshTriangleWithEdges
-  void setMeshTriangleWithEdges(
-      MeshID meshID,
       int    firstVertexID,
       int    secondVertexID,
       int    thirdVertexID);
 
   /// @copydoc SolverInterface::setMeshQuad
   void setMeshQuad(
-      MeshID meshID,
-      int    firstEdgeID,
-      int    secondEdgeID,
-      int    thirdEdgeID,
-      int    fourthEdgeID);
-
-  /// @copydoc SolverInterface::setMeshQuadWithEdges
-  void setMeshQuadWithEdges(
       MeshID meshID,
       int    firstVertexID,
       int    secondVertexID,

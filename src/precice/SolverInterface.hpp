@@ -498,45 +498,21 @@ public:
       int *         ids) const;
 
   /**
-   * @brief Sets mesh edge from vertex IDs, returns edge ID.
+   * @brief Sets a mesh edge from vertex IDs
    *
    * @param[in] meshID ID of the mesh to add the edge to
    * @param[in] firstVertexID ID of the first vertex of the edge
    * @param[in] secondVertexID ID of the second vertex of the edge
    *
-   * @return the ID of the edge
-   *
    * @pre vertices with firstVertexID and secondVertexID were added to the mesh with the ID meshID
    */
-  int setMeshEdge(
+  void setMeshEdge(
       int meshID,
       int firstVertexID,
       int secondVertexID);
 
   /**
-   * @brief Sets mesh triangle from edge IDs
-   *
-   * @param[in] meshID ID of the mesh to add the triangle to
-   * @param[in] firstEdgeID ID of the first edge of the triangle
-   * @param[in] secondEdgeID ID of the second edge of the triangle
-   * @param[in] thirdEdgeID ID of the third edge of the triangle
-   *
-   * @pre edges with firstEdgeID, secondEdgeID, and thirdEdgeID were added to the mesh with the ID meshID
-   */
-  void setMeshTriangle(
-      int meshID,
-      int firstEdgeID,
-      int secondEdgeID,
-      int thirdEdgeID);
-
-  /**
    * @brief Sets mesh triangle from vertex IDs.
-   *
-   * @warning
-   * This routine is supposed to be used, when no edge information is available
-   * per se. Edges are created on the fly within preCICE. This routine is
-   * significantly slower than the one using edge IDs, since it needs to check,
-   * whether an edge is created already or not.
    *
    * @param[in] meshID ID of the mesh to add the triangle to
    * @param[in] firstVertexID ID of the first vertex of the triangle
@@ -545,39 +521,14 @@ public:
    *
    * @pre edges with firstVertexID, secondVertexID, and thirdVertexID were added to the mesh with the ID meshID
    */
-  void setMeshTriangleWithEdges(
+  void setMeshTriangle(
       int meshID,
       int firstVertexID,
       int secondVertexID,
       int thirdVertexID);
 
   /**
-   * @brief Sets mesh Quad from edge IDs.
-   *
-   * @param[in] meshID ID of the mesh to add the Quad to
-   * @param[in] firstEdgeID ID of the first edge of the Quad
-   * @param[in] secondEdgeID ID of the second edge of the Quad
-   * @param[in] thirdEdgeID ID of the third edge of the Quad
-   * @param[in] fourthEdgeID ID of the forth edge of the Quad
-   *
-   * @pre edges with firstEdgeID, secondEdgeID, thirdEdgeID and fourthEdgeID were added to the mesh with the ID meshID.
-   *
-   */
-  void setMeshQuad(
-      int meshID,
-      int firstEdgeID,
-      int secondEdgeID,
-      int thirdEdgeID,
-      int fourthEdgeID);
-
-  /**
    * @brief Sets surface mesh quadrangle from vertex IDs.
-   *
-   * @warning
-   * This routine is supposed to be used, when no edge information is available
-   * per se. Edges are created on the fly within preCICE. This routine is
-   * significantly slower than the one using edge IDs, since it needs to check,
-   * whether an edge is created already or not.
    *
    * @param[in] meshID ID of the mesh to add the Quad to
    * @param[in] firstVertexID ID of the first vertex of the Quad
@@ -588,7 +539,7 @@ public:
    * @pre vertices with firstVertexID, secondVertexID, thirdVertexID, and fourthVertexID were added to the mesh with the ID meshID
    *
    */
-  void setMeshQuadWithEdges(
+  void setMeshQuad(
       int meshID,
       int firstVertexID,
       int secondVertexID,
