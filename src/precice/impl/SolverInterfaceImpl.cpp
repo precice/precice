@@ -1363,18 +1363,8 @@ void SolverInterfaceImpl::writeVectorGradientData(
                   "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                   data.getName(), valueIndex)
 
-    // gradient matrix read rowwise
-    for (int dimSpace = 0; dimSpace < _dimensions; dimSpace++) {
-      for (int dimData = 0; dimData < _dimensions; dimData++) {
-        const int offsetInternal = valueIndex * _dimensions;
-        const int offset         = dimData * _dimensions;
-
-        PRECICE_ASSERT(offset + dimSpace < gradientValuesInternal.cols() * _dimensions,
-                       offset + dimSpace, gradientValuesInternal.cols() * _dimensions);
-
-        gradientValuesInternal(dimSpace, offsetInternal + dimData) = gradientValues[offset + dimSpace];
-      }
-    }
+    Eigen::Map<const Eigen::MatrixXd> gradient(gradientValues, _dimensions, _dimensions);
+    gradientValuesInternal.block(0, _dimensions * valueIndex, _dimensions, _dimensions) = gradient;
   }
 }
 
@@ -1422,6 +1412,7 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
     auto &     gradientValuesInternal = data.gradientValues();
     const auto vertexCount            = gradientValuesInternal.cols() / data.getDimensions();
 
+    Eigen::Map<const Eigen::MatrixXd> gradients(gradientValues, _dimensions, _dimensions * size);
     // gradient matrices input one after the other (read row-wise)
     for (int i = 0; i < size; i++) {
       const auto valueIndex = valueIndices[i];
@@ -1429,9 +1420,7 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
                     "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                     data.getName(), valueIndex);
 
-      const int                         offsetOut = i * _dimensions * _dimensions;
-      Eigen::Map<const Eigen::MatrixXd> gradient(&gradientValues[offsetOut], _dimensions, _dimensions);
-      data.gradientValues().block(0, _dimensions * valueIndex, _dimensions, _dimensions) = gradient;
+      gradientValuesInternal.block(0, _dimensions * valueIndex, _dimensions, _dimensions) = gradients.block(0, i * _dimensions, _dimensions, _dimensions);
     }
   }
 }
