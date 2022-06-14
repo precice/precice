@@ -51,7 +51,7 @@ Mesh::EdgeContainer &Mesh::edges()
   return _edges;
 }
 
-Edge &Mesh::edge(EdgeID id)
+Edge &Mesh::registeredEdge(EdgeID id)
 {
   auto pos = _edgeRegister.find(id);
   PRECICE_ASSERT(pos != _edgeRegister.end())
@@ -104,7 +104,7 @@ Edge &Mesh::createEdge(
   return _edges.back();
 }
 
-std::pair<Edge &, EdgeID> Mesh::createEdgeWithID(
+std::pair<Edge &, EdgeID> Mesh::createRegisteredEdge(
     Vertex &vertexOne,
     Vertex &vertexTwo)
 {
