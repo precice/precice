@@ -39,9 +39,9 @@ public:
       const mesh::Triangle &triangle,
       std::ostream &        outFile);
 
-    static void WriteTetrahedron(
+  static void WriteTetrahedron(
       const mesh::Tetrahedron &tetra,
-      std::ostream &        outFile);
+      std::ostream &           outFile);
 
 private:
   mutable logging::Logger _log{"io::ExportXML"};

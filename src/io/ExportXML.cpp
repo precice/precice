@@ -11,8 +11,8 @@
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "mesh/Triangle.hpp"
 #include "mesh/Tetrahedron.hpp"
+#include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/IntraComm.hpp"
@@ -225,7 +225,7 @@ void ExportXML::writeTriangle(
 
 void ExportXML::WriteTetrahedron(
     const mesh::Tetrahedron &tetra,
-    std::ostream &        outFile)
+    std::ostream &           outFile)
 {
   outFile << tetra.vertex(0).getID() << "  ";
   outFile << tetra.vertex(1).getID() << "  ";
