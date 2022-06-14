@@ -1039,7 +1039,6 @@ void SolverInterfaceImpl::setMeshTetrahedron(
 
     // Also add underlying primitives (4 triangles, 6 edges)
     // Tetra ABCD is made of triangles ABC, ABD, ACD, BCD
-    // Duplicates should get handled in the future
     mesh::Edge &AB = mesh->createEdge(A, B);
     mesh::Edge &BC = mesh->createEdge(B, C);
     mesh::Edge &CD = mesh->createEdge(C, D);
