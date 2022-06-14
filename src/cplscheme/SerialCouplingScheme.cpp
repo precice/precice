@@ -75,21 +75,33 @@ void SerialCouplingScheme::initializeImplementation()
 
 void SerialCouplingScheme::exchangeInitialData()
 {
+  // F: send, receive, S: receive, send
   if (doesFirstStep()) {
-    PRECICE_ASSERT(not sendsInitializedData(), "First participant cannot send data during initialization.");
+    if (sendsInitializedData()) {
+      // Only allowed, if waveform relaxation is used!
+      sendData(getM2N(), getSendData());
+    }
     if (receivesInitializedData()) {
       receiveData(getM2N(), getReceiveData());
       checkInitialDataHasBeenReceived();
     }
   } else { // second participant
-    PRECICE_ASSERT(not receivesInitializedData(), "Only first participant can receive data during initialization.");
+    if (receivesInitializedData()) {
+      // Only allowed, if waveform relaxation is used!
+      receiveData(getM2N(), getReceiveData());  // receive initial data
+      checkInitialDataHasBeenReceived();
+    }
     if (sendsInitializedData()) {
       // The second participant sends the initialized data to the first participant
       // here, which receives the data on call of initialize().
       sendData(getM2N(), getSendData());
       receiveAndSetTimeWindowSize();
+      // Put existing data into buffer before next receive.
+      // TODO: Create a buffer in this coupling scheme and obtain the data later to put it inside the ReadDataContext?
+      storeExtrapolationData();
+      moveToNextWindow();
       // This receive replaces the receive in initialize().
-      receiveData(getM2N(), getReceiveData());
+      receiveData(getM2N(), getReceiveData());  // receive data at end of first participants first timestep
       checkDataHasBeenReceived();
     }
   }
