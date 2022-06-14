@@ -8,12 +8,12 @@
 #include <string>
 #include <vector>
 
-#include "mesh/Tetrahedron.hpp"
 #include "logging/Logger.hpp"
 #include "mesh/BoundingBox.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "mesh/Tetrahedron.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
 #include "precice/types.hpp"
