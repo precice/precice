@@ -50,13 +50,15 @@ void LinearCellInterpolationMapping::computeMapping()
     searchSpace = input();
   }
 
-  const auto &fVertices = origins->vertices();
+  const auto &fVertices           = origins->vertices();
+  bool        missingConnectivity = false;
 
   if (getDimensions() == 2) {
     if (!fVertices.empty() && searchSpace->triangles().empty()) {
       PRECICE_WARN("2D Mesh \"{}\" does not contain triangles. "
                    "Linear cell interpolation falls back to nearest projection mapping.",
                    searchSpace->getName());
+      missingConnectivity = true;
     }
   } else {
     // TODO, shouldn't be reached
@@ -85,10 +87,14 @@ void LinearCellInterpolationMapping::computeMapping()
     }
   }
 
-  if (!fallbackStatistics.empty()) {
-    PRECICE_INFO("Some points are outisde of the domain defined by connectivity. Fall-back on Nearest-Projection occured."
-                 " Projection distances: {}",
-                 fallbackStatistics);
+  if (!fallbackStatistics.empty() && !missingConnectivity) {
+    PRECICE_INFO(
+        "Linear Cell Interpolation is used, but some points from {} don't lie in the domain defined by the {}. "
+        "These points have been projected on the domain boundary. This could come from non-matching discrete geometries or erroneous connectivity information."
+        "If distances seem too large, please check your mesh. "
+        "The projection statistics are: {} ",
+        searchSpace->getName(), getDimensions() == 2 ? "triangles" : "tetrahedra",
+        fallbackStatistics);
   } else {
     PRECICE_INFO("All vertices are inside cells, no fallback to Nearest-Projection required");
   }
