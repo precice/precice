@@ -129,8 +129,7 @@ TetrahedronTraits::Ptr Index::IndexImpl::getTetraRTree(const mesh::Mesh &mesh)
   for (size_t i = 0; i < mesh.tetrahedra().size(); ++i) {
     // Instead of using bg::return_envelope, we compute the BB of the tetra ourself
     // Then pass the bounds to Boost.
-    auto ourBox = mesh.tetrahedra()[i].getBoundingBox();
-    auto box    = makeBox(ourBox.minCorner(), ourBox.maxCorner());
+    auto box = makeBox(mesh.tetrahedra()[i]);
     elements.emplace_back(std::move(box), i);
   }
 

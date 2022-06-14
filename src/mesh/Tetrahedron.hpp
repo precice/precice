@@ -53,9 +53,6 @@ public:
   /// Returns the radius of the sphere enclosing the tetrahedron.
   double getEnclosingRadius() const;
 
-  // Returns the (axis-aligned) Bounding Box enclosing the tetrahedron
-  BoundingBox getBoundingBox() const;
-
   /**
    * @brief Compares two Tetrahedrons for equality
    *

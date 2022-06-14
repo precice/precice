@@ -141,21 +141,5 @@ BOOST_AUTO_TEST_CASE(TetrahedronWKTPrint)
   BOOST_TEST(t1string == stream.str());
 }
 
-BOOST_AUTO_TEST_CASE(TetraBoundingBox)
-{
-  PRECICE_TEST(1_rank);
-  Vertex v1(Eigen::Vector3d(0., 0., 0.), 0);
-  Vertex v2(Eigen::Vector3d(1., 0., 0.), 1);
-  Vertex v3(Eigen::Vector3d(0., 1., 0.), 2);
-  Vertex v4(Eigen::Vector3d(0., 0., 1.), 3);
-
-  Tetrahedron     t1(v1, v2, v3, v4, 0);
-  BoundingBox     aabb = t1.getBoundingBox();
-  Eigen::Vector3d expected_min(0.0, 0.0, 0.0);
-  Eigen::Vector3d expected_max(1.0, 1.0, 1.0);
-  BOOST_TEST(aabb.minCorner() == expected_min);
-  BOOST_TEST(aabb.maxCorner() == expected_max);
-}
-
 BOOST_AUTO_TEST_SUITE_END() // Tetrahedron
 BOOST_AUTO_TEST_SUITE_END() // Mesh
