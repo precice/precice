@@ -1429,19 +1429,9 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
                     "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                     data.getName(), valueIndex);
 
-      for (int dimSpace = 0; dimSpace < _dimensions; dimSpace++) {
-        for (int dimData = 0; dimData < _dimensions; dimData++) {
-
-          const int offsetInternal = valueIndex * _dimensions;
-          const int offsetOut      = i * _dimensions * _dimensions;
-          const int offsetIn       = dimData * _dimensions;
-
-          PRECICE_ASSERT(offsetOut + offsetIn + dimSpace < gradientValuesInternal.cols() * _dimensions,
-                         offsetOut + offsetIn + dimSpace, gradientValuesInternal.cols() * _dimensions);
-
-          gradientValuesInternal(dimSpace, offsetInternal + dimData) = gradientValues[offsetOut + offsetIn + dimSpace];
-        }
-      }
+      const int                         offsetOut = i * _dimensions * _dimensions;
+      Eigen::Map<const Eigen::MatrixXd> gradient(&gradientValues[offsetOut], _dimensions, _dimensions);
+      data.gradientValues().block(0, _dimensions * valueIndex, _dimensions, _dimensions) = gradient;
     }
   }
 }
