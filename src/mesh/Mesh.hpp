@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-#include "Tetrahedron.hpp"
+#include "mesh/Tetrahedron.hpp"
 #include "logging/Logger.hpp"
 #include "mesh/BoundingBox.hpp"
 #include "mesh/Data.hpp"
