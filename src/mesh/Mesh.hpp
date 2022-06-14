@@ -77,8 +77,8 @@ public:
   /// Returns modifiable container holding all edges.
   EdgeContainer &edges();
 
-  /// Returns edge with given id.
-  Edge& edge(EdgeID id);
+  /// Returns a registered edge with given id.
+  Edge& registeredEdge(EdgeID id);
 
   /// Returns const container holding all edges.
   const EdgeContainer &edges() const;
@@ -136,7 +136,7 @@ public:
    * @param[in] vertexOne Reference to first Vertex defining the Edge.
    * @param[in] vertexTwo Reference to second Vertex defining the Edge.
    */
-  std::pair<Edge &, EdgeID> createEdgeWithID(
+  std::pair<Edge &, EdgeID> createRegisteredEdge(
       Vertex &vertexOne,
       Vertex &vertexTwo);
 

@@ -825,7 +825,7 @@ int SolverInterfaceImpl::setMeshEdge(
     PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), errorInvalidVertexID(secondVertexID));
     mesh::Vertex &v0 = mesh->vertices()[firstVertexID];
     mesh::Vertex &v1 = mesh->vertices()[secondVertexID];
-    return mesh->createEdgeWithID(v0, v1).second;
+    return mesh->createRegisteredEdge(v0, v1).second;
   }
   return -1;
 }
@@ -850,9 +850,9 @@ void SolverInterfaceImpl::setMeshTriangle(
     PRECICE_CHECK(utils::unique_elements(utils::make_array(firstEdgeID, secondEdgeID, thirdEdgeID)),
                   "setMeshTriangle() was called with repeated Edge IDs ({}, {}, {}).",
                   firstEdgeID, secondEdgeID, thirdEdgeID);
-    mesh::Edge &e0 = mesh->edge(firstEdgeID);
-    mesh::Edge &e1 = mesh->edge(secondEdgeID);
-    mesh::Edge &e2 = mesh->edge(thirdEdgeID);
+    mesh::Edge &e0 = mesh->registeredEdge(firstEdgeID);
+    mesh::Edge &e1 = mesh->registeredEdge(secondEdgeID);
+    mesh::Edge &e2 = mesh->registeredEdge(thirdEdgeID);
     PRECICE_CHECK(e0.connectedTo(e1) && e1.connectedTo(e2) && e2.connectedTo(e0),
                   "setMeshTriangle() was called with Edge IDs ({}, {}, {}), which identify unconnected Edges.",
                   firstEdgeID, secondEdgeID, thirdEdgeID);
@@ -922,8 +922,8 @@ void SolverInterfaceImpl::setMeshQuad(
                   "The four edge ID's are not unique. Please check that the edges that form the quad are correct.");
 
     auto chain = mesh::asChain(utils::make_array(
-        &mesh->edge(firstEdgeID), &mesh->edge(secondEdgeID),
-        &mesh->edge(thirdEdgeID), &mesh->edge(fourthEdgeID)));
+        &mesh->registeredEdge(firstEdgeID), &mesh->registeredEdge(secondEdgeID),
+        &mesh->registeredEdge(thirdEdgeID), &mesh->registeredEdge(fourthEdgeID)));
     PRECICE_CHECK(chain.connected, "The four edges are not connect. Please check that the edges that form the quad are correct.");
 
     auto coords = mesh::coordsFor(chain.vertices);
