@@ -39,6 +39,7 @@ void ExportVTK::doExport(
   writeHeader(outstream);
   exportMesh(outstream, mesh);
   exportData(outstream, mesh);
+  exportGradient(outstream, mesh);
   outstream.close();
 }
 
@@ -153,6 +154,74 @@ void ExportVTK::exportData(
       outFile << "LOOKUP_TABLE default\n";
       for (const mesh::Vertex &vertex : mesh.vertices()) {
         outFile << values(vertex.getID()) << '\n';
+      }
+      outFile << '\n';
+    }
+  }
+}
+
+void ExportVTK::exportGradient(std::ofstream &outFile, const mesh::Mesh &mesh)
+{
+  const int spaceDim = mesh.getDimensions();
+  for (const mesh::PtrData &data : mesh.data()) { // Plot vertex data
+    if (data->hasGradient()) {
+      auto &gradientValues = data->gradientValues();
+      if (data->getDimensions() == 1) {
+        outFile << "VECTORS " << data->getName() << "_gradient"
+                << " double\n";
+        for (int i = 0; i < gradientValues.cols(); i++) {
+          int j = 0;
+          for (; j < gradientValues.rows(); j++) {
+            outFile << gradientValues.coeff(j, i) << " ";
+          }
+          if (j < 3) {
+            outFile << '0';
+          }
+          outFile << "\n";
+        }
+      } else {
+        outFile << "VECTORS " << data->getName() << "_dx"
+                << " double\n";
+        for (int i = 0; i < gradientValues.cols(); i += spaceDim) {
+          int j = 0;
+          for (; j < gradientValues.rows(); j++) {
+            outFile << gradientValues.coeff(j, i) << " ";
+          }
+          if (j < 3) {
+            outFile << '0';
+          }
+          outFile << "\n";
+        }
+        outFile << "\n";
+
+        outFile << "VECTORS " << data->getName() << "_dy"
+                << " double\n";
+        for (int i = 1; i < gradientValues.cols(); i += spaceDim) {
+          int j = 0;
+          for (; j < gradientValues.rows(); j++) {
+            outFile << gradientValues.coeff(j, i) << " ";
+          }
+          if (j < 3) {
+            outFile << '0';
+          }
+          outFile << "\n";
+        }
+        outFile << "\n";
+
+        if (spaceDim == 3) {
+          outFile << "VECTORS " << data->getName() << "_dz"
+                  << " double\n";
+          for (int i = 2; i < gradientValues.cols(); i += spaceDim) {
+            int j = 0;
+            for (; j < gradientValues.rows(); j++) {
+              outFile << gradientValues.coeff(j, i) << " ";
+            }
+            if (j < 3) {
+              outFile << '0';
+            }
+            outFile << "\n";
+          }
+        }
       }
       outFile << '\n';
     }
