@@ -59,8 +59,8 @@ void CommunicateMesh::sendMesh(
     return;
   }
 
-  // we need to send the vertexIDs first such that the right connectivity can be created later
-  // contrary to the normal sendMesh, this variant must also work for adding delta meshes
+  // We need to send the vertexIDs first. This is required as the receiver will
+  // end up with other vertexIDs after creating vertices.
   std::vector<int> vertexIDs(numberOfVertices);
   for (int i = 0; i < numberOfVertices; ++i) {
     vertexIDs[i] = meshVertices[i].getID();
@@ -134,8 +134,9 @@ void CommunicateMesh::receiveMesh(
     return;
   }
 
-  // we need to receive the vertexIDs first such that the right connectivity can be created later
-  // contrary to the normal receiveMesh, this variant must also work for adding delta meshes
+  // We need to receive the vertexIDs first. This is required as the vertices
+  // created above have different vertexIDs as the original mesh. We need a mapping
+  // from original to new vertexids.
   boost::container::flat_map<int, mesh::Vertex *> vertexMap;
   vertexMap.reserve(numberOfVertices);
   const std::vector<int> vertexIDs = _communication->receiveRange(rankSender, AsVectorTag<int>{});
@@ -199,8 +200,8 @@ void CommunicateMesh::broadcastSendMesh(const mesh::Mesh &mesh)
     return;
   }
 
-  // we need to send the vertexIDs first such that the right connectivity can be created later
-  // contrary to the normal sendMesh, this variant must also work for adding delta meshes
+  // We need to send the vertexIDs first. This is required as the receiver will
+  // end up with other vertexIDs after creating vertices.
   std::vector<int> vertexIDs(numberOfVertices);
   for (int i = 0; i < numberOfVertices; i++) {
     vertexIDs[i] = meshVertices[i].getID();
@@ -269,8 +270,9 @@ void CommunicateMesh::broadcastReceiveMesh(
     return;
   }
 
-  // we need to receive the vertexIDs first such that the right connectivity can be created later
-  // contrary to the normal receiveMesh, this variant must also work for adding delta meshes
+  // We need to receive the vertexIDs first. This is required as the vertices
+  // created above have different vertexIDs as the original mesh. We need a mapping
+  // from original to new vertexids.
   std::vector<int> vertexIDs;
   _communication->broadcast(vertexIDs, rankBroadcaster);
   boost::container::flat_map<VertexID, mesh::Vertex *> vertexMap;
