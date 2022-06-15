@@ -11,10 +11,10 @@ namespace precice {
 namespace mesh {
 
 Tetrahedron::Tetrahedron(
-    Vertex &      vertexOne,
-    Vertex &      vertexTwo,
-    Vertex &      vertexThree,
-    Vertex &      vertexFour)
+    Vertex &vertexOne,
+    Vertex &vertexTwo,
+    Vertex &vertexThree,
+    Vertex &vertexFour)
     : _vertices({&vertexOne, &vertexTwo, &vertexThree, &vertexFour})
 {
   PRECICE_ASSERT(vertexOne.getDimensions() == vertexTwo.getDimensions(),
