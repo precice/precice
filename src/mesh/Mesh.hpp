@@ -78,17 +78,37 @@ public:
   /// Returns const container holding all edges.
   const EdgeContainer &edges() const;
 
+  bool hasEdges() const
+  {
+    return !_edges.empty();
+  }
+
   /// Returns modifiable container holding all triangles.
   TriangleContainer &triangles();
 
   /// Returns const container holding all triangles.
   const TriangleContainer &triangles() const;
 
+  bool hasTriangles() const
+  {
+    return !_triangles.empty();
+  }
+
   /// Returns modifiable container holding all tetrahedra.
   TetraContainer &tetrahedra();
 
   /// Returns const container holding all tetrahedra.
   const TetraContainer &tetrahedra() const;
+
+  bool hasTetrahedra() const
+  {
+    return !_tetrahedra.empty();
+  }
+
+  bool hasConnectivity() const
+  {
+    return hasEdges() || hasTriangles() || hasTetrahedra();
+  }
 
   int getDimensions() const;
 
@@ -126,6 +146,18 @@ public:
       Edge &edgeOne,
       Edge &edgeTwo,
       Edge &edgeThree);
+
+  /**
+   * @brief Creates and initializes a Triangle object.
+   *
+   * @param[in] vertexOne Reference to first edge defining the Triangle.
+   * @param[in] vertexTwo Reference to second edge defining the Triangle.
+   * @param[in] vertexThree Reference to third edge defining the Triangle.
+   */
+  Triangle &createTriangle(
+      Vertex &vertexOne,
+      Vertex &vertexTwo,
+      Vertex &vertexThree);
 
   /**
    * @brief Creates and initializes a Tetrahedron object.
