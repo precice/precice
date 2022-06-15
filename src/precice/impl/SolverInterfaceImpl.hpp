@@ -264,8 +264,7 @@ public:
       int           fromDataID,
       int           size,
       const int *   valueIndices,
-      const double *gradientValues,
-      bool          rowsFirst = false);
+      const double *gradientValues);
 
   /// @copydoc SolverInterface::writeVectorData
   void writeVectorData(
@@ -277,8 +276,7 @@ public:
   void writeVectorGradientData(
       int           fromDataID,
       int           valueIndex,
-      const double *gradientValues,
-      bool          rowsFirst = false);
+      const double *gradientValues);
 
   /// @copydoc SolverInterface::writeBlockScalarData
   void writeBlockScalarData(

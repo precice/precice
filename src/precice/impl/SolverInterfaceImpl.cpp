@@ -1286,9 +1286,8 @@ void SolverInterfaceImpl::writeScalarGradientData(
                   data.getName());
 
     // Values are entered derived in the spatial dimensions (#rows = #spatial dimensions)
-    for (int i = 0; i < _dimensions; i++) {
-      gradientValuesInternal(i, valueIndex) = gradientValues[i];
-    }
+    Eigen::Map<const Eigen::MatrixXd> gradient(gradientValues, _dimensions, 1);
+    gradientValuesInternal.block(0, valueIndex, _dimensions, 1) = gradient;
   }
 }
 
@@ -1333,22 +1332,14 @@ void SolverInterfaceImpl::writeBlockScalarGradientData(
     auto &     gradientValuesInternal = data.gradientValues();
     const auto vertexCount            = gradientValuesInternal.cols() / context.getDataDimensions();
 
-    for (int dim = 0; dim < _dimensions; dim++) {
-      for (int i = 0; i < size; i++) {
+    Eigen::Map<const Eigen::MatrixXd> gradients(gradientValues, _dimensions, size);
 
-        const auto valueIndex = valueIndices[i];
-        PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
-                      "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                      context.getDataName(), valueIndex);
-
-        // Gradient values are entered components derived first
-        const int offset = i * _dimensions;
-
-        PRECICE_ASSERT(offset + dim < gradientValuesInternal.cols() * _dimensions,
-                       offset + dim, gradientValuesInternal.cols() * _dimensions);
-
-        gradientValuesInternal(dim, valueIndex) = gradientValues[offset + dim];
-      }
+    for (auto i = 0; i < size; i++) {
+      const auto valueIndex = valueIndices[i];
+      PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
+                    "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
+                    context.getDataName(), valueIndex);
+      gradientValuesInternal.block(0, valueIndex, _dimensions, 1) = gradients.block(0, i, _dimensions, 1);
     }
   }
 }
@@ -1356,8 +1347,7 @@ void SolverInterfaceImpl::writeBlockScalarGradientData(
 void SolverInterfaceImpl::writeVectorGradientData(
     int           dataID,
     int           valueIndex,
-    const double *gradientValues,
-    bool          rowsFirst)
+    const double *gradientValues)
 {
   PRECICE_EXPERIMENTAL_API();
 
@@ -1394,30 +1384,8 @@ void SolverInterfaceImpl::writeVectorGradientData(
                   "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                   data.getName(), valueIndex)
 
-    for (int dimSpace = 0; dimSpace < _dimensions; dimSpace++) {
-      for (int dimData = 0; dimData < _dimensions; dimData++) {
-
-        const int offsetInternal = valueIndex * _dimensions;
-
-        if (rowsFirst) {
-          // Values are entered derived in spatial dimensions first : gradient matrix read rowwise
-          const int offset = dimData * _dimensions;
-
-          PRECICE_ASSERT(offset + dimSpace < gradientValuesInternal.cols() * _dimensions,
-                         offset + dimSpace, gradientValuesInternal.cols() * _dimensions);
-
-          gradientValuesInternal(dimSpace, offsetInternal + dimData) = gradientValues[offset + dimSpace];
-        } else {
-          // Values are entered derived components first : gradient matrix read columnwise
-          const int offset = dimSpace * _dimensions;
-
-          PRECICE_ASSERT(offset + dimData < gradientValuesInternal.cols() * _dimensions,
-                         offset + dimData, gradientValuesInternal.cols() * _dimensions);
-
-          gradientValuesInternal(dimSpace, offsetInternal + dimData) = gradientValues[offset + dimData];
-        }
-      }
-    }
+    Eigen::Map<const Eigen::MatrixXd> gradient(gradientValues, _dimensions, _dimensions);
+    gradientValuesInternal.block(0, _dimensions * valueIndex, _dimensions, _dimensions) = gradient;
   }
 }
 
@@ -1425,8 +1393,7 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
     int           dataID,
     int           size,
     const int *   valueIndices,
-    const double *gradientValues,
-    bool          rowsFirst)
+    const double *gradientValues)
 {
 
   PRECICE_EXPERIMENTAL_API();
@@ -1466,39 +1433,15 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
     auto &     gradientValuesInternal = data.gradientValues();
     const auto vertexCount            = gradientValuesInternal.cols() / data.getDimensions();
 
-    for (int i = 0; i < size; i++) {
-      for (int dimSpace = 0; dimSpace < _dimensions; dimSpace++) {
-        for (int dimData = 0; dimData < _dimensions; dimData++) {
+    Eigen::Map<const Eigen::MatrixXd> gradients(gradientValues, _dimensions, _dimensions * size);
+    // gradient matrices input one after the other (read row-wise)
+    for (auto i = 0; i < size; i++) {
+      const auto valueIndex = valueIndices[i];
+      PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
+                    "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
+                    data.getName(), valueIndex);
 
-          const auto valueIndex = valueIndices[i];
-          PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
-                        "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                        data.getName(), valueIndex);
-
-          const int offsetInternal = valueIndex * _dimensions;
-
-          if (rowsFirst) {
-            // Values are entered derived in spatial dimensions first : gradient matrices read rowwise
-
-            const int offsetOut = i * _dimensions * _dimensions;
-            const int offsetIn  = dimSpace * _dimensions;
-
-            PRECICE_ASSERT(offsetOut + offsetIn + dimData < gradientValuesInternal.cols() * _dimensions,
-                           offsetOut + offsetIn + dimData, gradientValuesInternal.cols() * _dimensions);
-
-            gradientValuesInternal(dimSpace, offsetInternal + dimData) = gradientValues[offsetOut + offsetIn + dimData];
-          } else {
-            // Values are entered derived components first : gradient matrices input one after the other (read columnwise)
-            const int offsetOut = i * _dimensions * _dimensions;
-            const int offsetIn  = dimData * _dimensions;
-
-            PRECICE_ASSERT(offsetOut + offsetIn + dimSpace < gradientValuesInternal.cols() * _dimensions,
-                           offsetOut + offsetIn + dimSpace, gradientValuesInternal.cols() * _dimensions);
-
-            gradientValuesInternal(dimSpace, offsetInternal + dimData) = gradientValues[offsetOut + offsetIn + dimSpace];
-          }
-        }
-      }
+      gradientValuesInternal.block(0, _dimensions * valueIndex, _dimensions, _dimensions) = gradients.block(0, i * _dimensions, _dimensions, _dimensions);
     }
   }
 }
