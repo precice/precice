@@ -130,6 +130,16 @@ Triangle &Mesh::createTriangle(
   return _triangles.back();
 }
 
+Triangle &Mesh::createTriangle(
+    Vertex &vertexOne,
+    Vertex &vertexTwo,
+    Vertex &vertexThree)
+{
+  auto nextID = _triangles.size();
+  _triangles.emplace_back(vertexOne, vertexTwo, vertexThree, nextID);
+  return _triangles.back();
+}
+
 Tetrahedron &Mesh::createTetrahedron(
     Vertex &vertexOne,
     Vertex &vertexTwo,
