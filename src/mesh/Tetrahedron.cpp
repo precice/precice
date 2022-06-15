@@ -33,6 +33,9 @@ Tetrahedron::Tetrahedron(
           (&vertexTwo != &vertexFour) &&
           (&vertexThree != &vertexFour),
       "Tetrahedron vertices are not unique!");
+
+  std::sort(_vertices.begin(), _vertices.end(),
+            [](const Vertex *lhs, const Vertex *rhs) { return *lhs < *rhs; });
 }
 
 double Tetrahedron::getVolume() const
