@@ -39,7 +39,7 @@ public:
       const mesh::Triangle &triangle,
       std::ostream &        outFile);
 
-  static void WriteTetrahedron(
+  static void writeTetrahedron(
       const mesh::Tetrahedron &tetra,
       std::ostream &           outFile);
 

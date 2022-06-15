@@ -223,7 +223,7 @@ void ExportXML::writeTriangle(
   outFile << triangle.vertex(2).getID() << "  ";
 }
 
-void ExportXML::WriteTetrahedron(
+void ExportXML::writeTetrahedron(
     const mesh::Tetrahedron &tetra,
     std::ostream &           outFile)
 {

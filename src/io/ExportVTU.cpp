@@ -66,7 +66,7 @@ void ExportVTU::exportConnectivity(
     writeLine(edge, outFile);
   }
   for (const mesh::Tetrahedron &tetra : mesh.tetrahedra()) {
-    WriteTetrahedron(tetra, outFile);
+    writeTetrahedron(tetra, outFile);
   }
   outFile << '\n';
   outFile << "            </DataArray> \n";
