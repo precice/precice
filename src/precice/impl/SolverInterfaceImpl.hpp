@@ -227,6 +227,14 @@ public:
       int    thirdVertexID,
       int    fourthVertexID);
 
+  /// @copydoc SolverInterface::setMeshTetrahedron
+  void setMeshTetrahedron(
+      MeshID meshID,
+      int    firstVertexID,
+      int    secondVertexID,
+      int    thirdVertexID,
+      int    fourthVertexID);
+
   ///@}
 
   ///@name Data Access
@@ -256,8 +264,7 @@ public:
       int           fromDataID,
       int           size,
       const int *   valueIndices,
-      const double *gradientValues,
-      bool          rowsFirst = false);
+      const double *gradientValues);
 
   /// @copydoc SolverInterface::writeVectorData
   void writeVectorData(
@@ -269,8 +276,7 @@ public:
   void writeVectorGradientData(
       int           fromDataID,
       int           valueIndex,
-      const double *gradientValues,
-      bool          rowsFirst = false);
+      const double *gradientValues);
 
   /// @copydoc SolverInterface::writeBlockScalarData
   void writeBlockScalarData(
@@ -373,17 +379,6 @@ public:
       double *  coordinates) const;
 
   ///@}
-
-  /**
-   * @brief Writes a mesh to vtk file.
-   *
-   * The plotting path has to be specified in the configuration of the
-   * accessing participant.
-   *
-   * @param[in] filenameSuffix Suffix of all plotted files
-   */
-  /// @todo make private. See https://github.com/precice/precice/pull/1270
-  void exportMesh(const std::string &filenameSuffix) const;
 
   /**
    * @brief Allows to access a registered mesh

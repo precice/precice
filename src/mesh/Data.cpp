@@ -67,14 +67,9 @@ DataID Data::getID() const
 
 void Data::toZero()
 {
-  auto begin = _values.data();
-  auto end   = begin + _values.size();
-  std::fill(begin, end, 0.0);
-
+  _values.setZero();
   if (_hasGradient) {
-    auto beginGradient = _gradientValues.data();
-    auto endGradient   = beginGradient + _gradientValues.size();
-    std::fill(beginGradient, endGradient, 0.0);
+    _gradientValues.setZero();
   }
 }
 

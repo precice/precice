@@ -72,12 +72,21 @@ void ExportVTK::exportMesh(
 
   // Plot triangles
   if (mesh.getDimensions() == 3) {
-    size_t sizeTriangles = mesh.triangles().size();
-    size_t sizeEdges     = mesh.edges().size();
-    size_t sizeElements  = sizeTriangles + sizeEdges;
+    size_t sizeTetrahedra = mesh.tetrahedra().size();
+    size_t sizeTriangles  = mesh.triangles().size();
+    size_t sizeEdges      = mesh.edges().size();
+    size_t sizeElements   = sizeTriangles + sizeEdges + sizeTetrahedra;
 
     outFile << "CELLS " << sizeElements << ' '
-            << sizeTriangles * 4 + sizeEdges * 3 << "\n\n";
+            << sizeTetrahedra * 5 + sizeTriangles * 4 + sizeEdges * 3 << "\n\n";
+    for (auto const &tetra : mesh.tetrahedra()) {
+      int internalIndices[4];
+      internalIndices[0] = tetra.vertex(0).getID();
+      internalIndices[1] = tetra.vertex(1).getID();
+      internalIndices[2] = tetra.vertex(2).getID();
+      internalIndices[3] = tetra.vertex(3).getID();
+      writeTetrahedron(internalIndices, outFile);
+    }
     for (auto const &triangle : mesh.triangles()) {
       int internalIndices[3];
       internalIndices[0] = triangle.vertex(0).getID();
@@ -93,6 +102,10 @@ void ExportVTK::exportMesh(
     }
 
     outFile << "\nCELL_TYPES " << sizeElements << "\n\n";
+    // See VTK reference for CELL_TYPES
+    for (size_t i = 0; i < sizeTetrahedra; i++) {
+      outFile << "10\n";
+    }
     for (size_t i = 0; i < sizeTriangles; i++) {
       outFile << "5\n";
     }
@@ -100,6 +113,7 @@ void ExportVTK::exportMesh(
       outFile << "3\n";
     }
   }
+
   outFile << '\n';
 }
 
@@ -183,6 +197,17 @@ void ExportVTK::writeTriangle(
 {
   outFile << 3 << ' ';
   for (int i = 0; i < 3; i++) {
+    outFile << vertexIndices[i] << ' ';
+  }
+  outFile << '\n';
+}
+
+void ExportVTK::writeTetrahedron(
+    int           vertexIndices[4],
+    std::ostream &outFile)
+{
+  outFile << 4 << ' ';
+  for (int i = 0; i < 4; i++) {
     outFile << vertexIndices[i] << ' ';
   }
   outFile << '\n';

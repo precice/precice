@@ -369,13 +369,7 @@ void SolverInterfaceImpl::initializeData()
   }
   resetWrittenData();
   PRECICE_DEBUG("Plot output");
-  for (const io::ExportContext &context : _accessor->exportContexts()) {
-    if (context.everyNTimeWindows != -1) {
-      std::ostringstream suffix;
-      suffix << _accessorName << ".init";
-      exportMesh(suffix.str());
-    }
-  }
+  _accessor->exportFinal();
   solverInitEvent.start(precice::syncMode);
 
   _hasInitializedData = true;
@@ -492,13 +486,7 @@ void SolverInterfaceImpl::finalize()
     _couplingScheme->finalize();
 
     PRECICE_DEBUG("Handle exports");
-    for (const io::ExportContext &context : _accessor->exportContexts()) {
-      if (context.everyNTimeWindows != -1) {
-        std::ostringstream suffix;
-        suffix << _accessorName << ".final";
-        exportMesh(suffix.str());
-      }
-    }
+    _accessor->exportFinal();
     closeCommunicationChannels(CloseChannels::All);
   }
 
@@ -664,6 +652,10 @@ bool SolverInterfaceImpl::isMeshConnectivityRequired(int meshID) const
 bool SolverInterfaceImpl::isGradientDataRequired(int dataID) const
 {
   PRECICE_VALIDATE_DATA_ID(dataID);
+  // Read data never requires gradients
+  if (!_accessor->isDataWrite(dataID))
+    return false;
+
   WriteDataContext &context = _accessor->writeDataContext(dataID);
   return context.providedData()->hasGradient();
 }
@@ -1009,6 +1001,48 @@ void SolverInterfaceImpl::setMeshQuadWithEdges(
   }
 }
 
+void SolverInterfaceImpl::setMeshTetrahedron(
+    MeshID meshID,
+    int    firstVertexID,
+    int    secondVertexID,
+    int    thirdVertexID,
+    int    fourthVertexID)
+{
+  PRECICE_TRACE(meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
+  PRECICE_REQUIRE_MESH_MODIFY(meshID);
+  PRECICE_CHECK(_dimensions == 3, "setMeshTetrahedron is only possible for 3D cases."
+                                  " Please set the dimension to 3 in the preCICE configuration file.");
+  MeshContext &context = _accessor->usedMeshContext(meshID);
+  if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
+    mesh::PtrMesh &mesh = context.mesh;
+    using impl::errorInvalidVertexID;
+    PRECICE_CHECK(mesh->isValidVertexID(firstVertexID), errorInvalidVertexID(firstVertexID));
+    PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), errorInvalidVertexID(secondVertexID));
+    PRECICE_CHECK(mesh->isValidVertexID(thirdVertexID), errorInvalidVertexID(thirdVertexID));
+    PRECICE_CHECK(mesh->isValidVertexID(fourthVertexID), errorInvalidVertexID(fourthVertexID));
+    mesh::Vertex &A = mesh->vertices()[firstVertexID];
+    mesh::Vertex &B = mesh->vertices()[thirdVertexID];
+    mesh::Vertex &C = mesh->vertices()[firstVertexID];
+    mesh::Vertex &D = mesh->vertices()[fourthVertexID];
+
+    // Also add underlying primitives (4 triangles, 6 edges)
+    // Tetra ABCD is made of triangles ABC, ABD, ACD, BCD
+    mesh::Edge &AB = mesh->createEdge(A, B);
+    mesh::Edge &BC = mesh->createEdge(B, C);
+    mesh::Edge &CD = mesh->createEdge(C, D);
+    mesh::Edge &DA = mesh->createEdge(D, A);
+    mesh::Edge &AC = mesh->createEdge(A, C);
+    mesh::Edge &BD = mesh->createEdge(B, D);
+
+    mesh->createTriangle(AB, BC, AC);
+    mesh->createTriangle(AB, BD, DA);
+    mesh->createTriangle(AC, CD, DA);
+    mesh->createTriangle(BC, CD, BD);
+
+    mesh->createTetrahedron(A, B, C, D);
+  }
+}
+
 void SolverInterfaceImpl::mapWriteDataFrom(
     int fromMeshID)
 {
@@ -1252,9 +1286,8 @@ void SolverInterfaceImpl::writeScalarGradientData(
                   data.getName());
 
     // Values are entered derived in the spatial dimensions (#rows = #spatial dimensions)
-    for (int i = 0; i < _dimensions; i++) {
-      gradientValuesInternal(i, valueIndex) = gradientValues[i];
-    }
+    Eigen::Map<const Eigen::MatrixXd> gradient(gradientValues, _dimensions, 1);
+    gradientValuesInternal.block(0, valueIndex, _dimensions, 1) = gradient;
   }
 }
 
@@ -1299,22 +1332,14 @@ void SolverInterfaceImpl::writeBlockScalarGradientData(
     auto &     gradientValuesInternal = data.gradientValues();
     const auto vertexCount            = gradientValuesInternal.cols() / context.getDataDimensions();
 
-    for (int dim = 0; dim < _dimensions; dim++) {
-      for (int i = 0; i < size; i++) {
+    Eigen::Map<const Eigen::MatrixXd> gradients(gradientValues, _dimensions, size);
 
-        const auto valueIndex = valueIndices[i];
-        PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
-                      "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                      context.getDataName(), valueIndex);
-
-        // Gradient values are entered components derived first
-        const int offset = i * _dimensions;
-
-        PRECICE_ASSERT(offset + dim < gradientValuesInternal.cols() * _dimensions,
-                       offset + dim, gradientValuesInternal.cols() * _dimensions);
-
-        gradientValuesInternal(dim, valueIndex) = gradientValues[offset + dim];
-      }
+    for (auto i = 0; i < size; i++) {
+      const auto valueIndex = valueIndices[i];
+      PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
+                    "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
+                    context.getDataName(), valueIndex);
+      gradientValuesInternal.block(0, valueIndex, _dimensions, 1) = gradients.block(0, i, _dimensions, 1);
     }
   }
 }
@@ -1322,8 +1347,7 @@ void SolverInterfaceImpl::writeBlockScalarGradientData(
 void SolverInterfaceImpl::writeVectorGradientData(
     int           dataID,
     int           valueIndex,
-    const double *gradientValues,
-    bool          rowsFirst)
+    const double *gradientValues)
 {
   PRECICE_EXPERIMENTAL_API();
 
@@ -1360,30 +1384,8 @@ void SolverInterfaceImpl::writeVectorGradientData(
                   "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                   data.getName(), valueIndex)
 
-    for (int dimSpace = 0; dimSpace < _dimensions; dimSpace++) {
-      for (int dimData = 0; dimData < _dimensions; dimData++) {
-
-        const int offsetInternal = valueIndex * _dimensions;
-
-        if (rowsFirst) {
-          // Values are entered derived in spatial dimensions first : gradient matrix read rowwise
-          const int offset = dimData * _dimensions;
-
-          PRECICE_ASSERT(offset + dimSpace < gradientValuesInternal.cols() * _dimensions,
-                         offset + dimSpace, gradientValuesInternal.cols() * _dimensions);
-
-          gradientValuesInternal(dimSpace, offsetInternal + dimData) = gradientValues[offset + dimSpace];
-        } else {
-          // Values are entered derived components first : gradient matrix read columnwise
-          const int offset = dimSpace * _dimensions;
-
-          PRECICE_ASSERT(offset + dimData < gradientValuesInternal.cols() * _dimensions,
-                         offset + dimData, gradientValuesInternal.cols() * _dimensions);
-
-          gradientValuesInternal(dimSpace, offsetInternal + dimData) = gradientValues[offset + dimData];
-        }
-      }
-    }
+    Eigen::Map<const Eigen::MatrixXd> gradient(gradientValues, _dimensions, _dimensions);
+    gradientValuesInternal.block(0, _dimensions * valueIndex, _dimensions, _dimensions) = gradient;
   }
 }
 
@@ -1391,8 +1393,7 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
     int           dataID,
     int           size,
     const int *   valueIndices,
-    const double *gradientValues,
-    bool          rowsFirst)
+    const double *gradientValues)
 {
 
   PRECICE_EXPERIMENTAL_API();
@@ -1432,39 +1433,15 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
     auto &     gradientValuesInternal = data.gradientValues();
     const auto vertexCount            = gradientValuesInternal.cols() / data.getDimensions();
 
-    for (int i = 0; i < size; i++) {
-      for (int dimSpace = 0; dimSpace < _dimensions; dimSpace++) {
-        for (int dimData = 0; dimData < _dimensions; dimData++) {
+    Eigen::Map<const Eigen::MatrixXd> gradients(gradientValues, _dimensions, _dimensions * size);
+    // gradient matrices input one after the other (read row-wise)
+    for (auto i = 0; i < size; i++) {
+      const auto valueIndex = valueIndices[i];
+      PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
+                    "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
+                    data.getName(), valueIndex);
 
-          const auto valueIndex = valueIndices[i];
-          PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
-                        "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                        data.getName(), valueIndex);
-
-          const int offsetInternal = valueIndex * _dimensions;
-
-          if (rowsFirst) {
-            // Values are entered derived in spatial dimensions first : gradient matrices read rowwise
-
-            const int offsetOut = i * _dimensions * _dimensions;
-            const int offsetIn  = dimSpace * _dimensions;
-
-            PRECICE_ASSERT(offsetOut + offsetIn + dimData < gradientValuesInternal.cols() * _dimensions,
-                           offsetOut + offsetIn + dimData, gradientValuesInternal.cols() * _dimensions);
-
-            gradientValuesInternal(dimSpace, offsetInternal + dimData) = gradientValues[offsetOut + offsetIn + dimData];
-          } else {
-            // Values are entered derived components first : gradient matrices input one after the other (read columnwise)
-            const int offsetOut = i * _dimensions * _dimensions;
-            const int offsetIn  = dimData * _dimensions;
-
-            PRECICE_ASSERT(offsetOut + offsetIn + dimSpace < gradientValuesInternal.cols() * _dimensions,
-                           offsetOut + offsetIn + dimSpace, gradientValuesInternal.cols() * _dimensions);
-
-            gradientValuesInternal(dimSpace, offsetInternal + dimData) = gradientValues[offsetOut + offsetIn + dimSpace];
-          }
-        }
-      }
+      gradientValuesInternal.block(0, _dimensions * valueIndex, _dimensions, _dimensions) = gradients.block(0, i * _dimensions, _dimensions, _dimensions);
     }
   }
 }
@@ -1787,19 +1764,6 @@ void SolverInterfaceImpl::getMeshVerticesAndIDs(
   }
 }
 
-void SolverInterfaceImpl::exportMesh(const std::string &filenameSuffix) const
-{
-  PRECICE_TRACE(filenameSuffix);
-  // Export meshes
-  for (const io::ExportContext &context : _accessor->exportContexts()) {
-    for (const MeshContext *meshContext : _accessor->usedMeshContexts()) {
-      std::string name = meshContext->mesh->getName() + "-" + filenameSuffix;
-      PRECICE_DEBUG("Exporting mesh to file \"{}\" at location \"{}\"", name, context.location);
-      context.exporter->doExport(name, context.location, *(meshContext->mesh));
-    }
-  }
-}
-
 void SolverInterfaceImpl::configureM2Ns(
     const m2n::M2NConfiguration::SharedPointer &config)
 {
@@ -2036,35 +2000,12 @@ void SolverInterfaceImpl::performDataActions(
 void SolverInterfaceImpl::handleExports()
 {
   PRECICE_TRACE();
-  //timesteps was already incremented before
-  int timesteps = _couplingScheme->getTimeWindows() - 1;
-
-  for (const io::ExportContext &context : _accessor->exportContexts()) {
-    if (_couplingScheme->isTimeWindowComplete() || context.everyIteration) {
-      if (context.everyNTimeWindows != -1) {
-        if (timesteps % context.everyNTimeWindows == 0) {
-          if (context.everyIteration) {
-            std::ostringstream everySuffix;
-            everySuffix << _accessorName << ".it" << _numberAdvanceCalls;
-            exportMesh(everySuffix.str());
-          }
-          std::ostringstream suffix;
-          suffix << _accessorName << ".dt" << _couplingScheme->getTimeWindows() - 1;
-          exportMesh(suffix.str());
-        }
-      }
-    }
-  }
-
-  if (_couplingScheme->isTimeWindowComplete()) {
-    // Export watch point data
-    for (const PtrWatchPoint &watchPoint : _accessor->watchPoints()) {
-      watchPoint->exportPointData(_couplingScheme->getTime());
-    }
-    for (const PtrWatchIntegral &watchIntegral : _accessor->watchIntegrals()) {
-      watchIntegral->exportIntegralData(_couplingScheme->getTime());
-    }
-  }
+  Participant::IntermediateExport exp;
+  exp.timewindow = _couplingScheme->getTimeWindows() - 1;
+  exp.iteration  = _numberAdvanceCalls;
+  exp.complete   = _couplingScheme->isTimeWindowComplete();
+  exp.time       = _couplingScheme->getTime();
+  _accessor->exportIntermediate(exp);
 }
 
 void SolverInterfaceImpl::resetWrittenData()

@@ -41,6 +41,7 @@ target_sources(testprecice
     tests/parallel/lifecycle/ImplicitFinalize.cpp
     tests/parallel/mapping-nearest-neighbor-gradient/GradientTestParallelScalar.cpp
     tests/parallel/mapping-nearest-neighbor-gradient/GradientTestParallelVector.cpp
+    tests/parallel/mapping-nearest-neighbor-gradient/GradientTestParallelWriteVector.cpp
     tests/parallel/mapping-volume/ParallelSquare1To2.cpp
     tests/parallel/mapping-volume/ParallelSquare2To1.cpp
     tests/parallel/mapping-volume/ParallelSquareConservative1To2.cpp
@@ -91,8 +92,11 @@ target_sources(testprecice
     tests/serial/mapping-nearest-neighbor-gradient/GradientTestBidirectionalReadVector.cpp
     tests/serial/mapping-nearest-neighbor-gradient/GradientTestBidirectionalWriteScalar.cpp
     tests/serial/mapping-nearest-neighbor-gradient/GradientTestBidirectionalWriteVector.cpp
+    tests/serial/mapping-nearest-neighbor-gradient/GradientTestUnidirectionalReadBlockVector.cpp
     tests/serial/mapping-nearest-neighbor-gradient/GradientTestUnidirectionalReadScalar.cpp
     tests/serial/mapping-nearest-neighbor-gradient/GradientTestUnidirectionalReadVector.cpp
+    tests/serial/mapping-nearest-neighbor-gradient/helpers.cpp
+    tests/serial/mapping-nearest-neighbor-gradient/helpers.hpp
     tests/serial/mapping-nearest-projection/MappingNearestProjectionExplicitEdges.cpp
     tests/serial/mapping-nearest-projection/MappingNearestProjectionImplicitEdges.cpp
     tests/serial/mapping-nearest-projection/helpers.cpp

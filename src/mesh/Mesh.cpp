@@ -66,6 +66,16 @@ const Mesh::TriangleContainer &Mesh::triangles() const
   return _triangles;
 }
 
+const Mesh::TetraContainer &Mesh::tetrahedra() const
+{
+  return _tetrahedra;
+}
+
+Mesh::TetraContainer &Mesh::tetrahedra()
+{
+  return _tetrahedra;
+}
+
 int Mesh::getDimensions() const
 {
   return _dimensions;
@@ -120,6 +130,18 @@ Triangle &Mesh::createTriangle(
   return _triangles.back();
 }
 
+Tetrahedron &Mesh::createTetrahedron(
+    Vertex &vertexOne,
+    Vertex &vertexTwo,
+    Vertex &vertexThree,
+    Vertex &vertexFour)
+{
+
+  auto nextID = _tetrahedra.size();
+  _tetrahedra.emplace_back(vertexOne, vertexTwo, vertexThree, vertexFour, nextID);
+  return _tetrahedra.back();
+}
+
 PtrData &Mesh::createData(
     const std::string &name,
     int                dimension,
@@ -134,7 +156,7 @@ PtrData &Mesh::createData(
                   name, _name, name);
   }
   //#rows = dimensions of current mesh #columns = dimensions of corresponding data set
-  PtrData data(new Data(name, id, dimension, _dimensions, true));
+  PtrData data(new Data(name, id, dimension, _dimensions, withGradient));
   _data.push_back(data);
   return _data.back();
 }

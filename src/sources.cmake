@@ -188,6 +188,7 @@ target_sources(precice
     src/mapping/PetRadialBasisFctMapping.hpp
     src/mapping/Polation.cpp
     src/mapping/Polation.hpp
+    src/mapping/RadialBasisFctBaseMapping.hpp
     src/mapping/RadialBasisFctMapping.hpp
     src/mapping/SharedPointer.hpp
     src/mapping/config/MappingConfiguration.cpp
@@ -212,6 +213,8 @@ target_sources(precice
     src/mesh/Mesh.hpp
     src/mesh/RangeAccessor.hpp
     src/mesh/SharedPointer.hpp
+    src/mesh/Tetrahedron.cpp
+    src/mesh/Tetrahedron.hpp
     src/mesh/Triangle.cpp
     src/mesh/Triangle.hpp
     src/mesh/Utils.cpp
@@ -282,6 +285,7 @@ target_sources(precice
     src/utils/Helpers.hpp
     src/utils/IntraComm.cpp
     src/utils/IntraComm.hpp
+    src/utils/MPIResult.hpp
     src/utils/MPI_Mock.hpp
     src/utils/ManageUniqueIDs.cpp
     src/utils/ManageUniqueIDs.hpp

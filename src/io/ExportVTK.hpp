@@ -41,6 +41,10 @@ public:
       int           vertexIndices[3],
       std::ostream &outFile);
 
+  static void writeTetrahedron(
+      int           vertexIndices[4],
+      std::ostream &outFile);
+
 private:
   mutable logging::Logger _log{"io::ExportVTK"};
 

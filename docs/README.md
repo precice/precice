@@ -34,7 +34,6 @@
 **Project Quality**  
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/3895/badge)](https://bestpractices.coreinfrastructure.org/projects/3895)
 [![CodeFactor](https://www.codefactor.io/repository/github/precice/precice/badge)](https://www.codefactor.io/repository/github/precice/precice)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/498adf8b3dcb4543b828e443396eb66c)](https://www.codacy.com/app/fsimonis/precice?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=precice/precice&amp;utm_campaign=Badge_Grade)
 [![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/precice/precice.svg?logo=lgtm&logoWidth=18&label=lgtm%3AC%2B%2B)](https://lgtm.com/projects/g/precice/precice/context:cpp)
 [![codecov](https://codecov.io/gh/precice/precice/branch/develop/graph/badge.svg?token=ixXCTXAZMU)](https://codecov.io/gh/precice/precice)
 
