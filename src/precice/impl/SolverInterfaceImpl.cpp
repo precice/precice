@@ -1256,9 +1256,8 @@ void SolverInterfaceImpl::writeScalarGradientData(
                   data.getName());
 
     // Values are entered derived in the spatial dimensions (#rows = #spatial dimensions)
-    for (int i = 0; i < _dimensions; i++) {
-      gradientValuesInternal(i, valueIndex) = gradientValues[i];
-    }
+    Eigen::Map<const Eigen::MatrixXd> gradient(gradientValues, _dimensions, 1);
+    gradientValuesInternal.block(0, valueIndex, _dimensions, 1) = gradient;
   }
 }
 
@@ -1303,22 +1302,14 @@ void SolverInterfaceImpl::writeBlockScalarGradientData(
     auto &     gradientValuesInternal = data.gradientValues();
     const auto vertexCount            = gradientValuesInternal.cols() / context.getDataDimensions();
 
-    for (int dim = 0; dim < _dimensions; dim++) {
-      for (int i = 0; i < size; i++) {
+    Eigen::Map<const Eigen::MatrixXd> gradients(gradientValues, _dimensions, size);
 
-        const auto valueIndex = valueIndices[i];
-        PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
-                      "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                      context.getDataName(), valueIndex);
-
-        // Gradient values are entered components derived first
-        const int offset = i * _dimensions;
-
-        PRECICE_ASSERT(offset + dim < gradientValuesInternal.cols() * _dimensions,
-                       offset + dim, gradientValuesInternal.cols() * _dimensions);
-
-        gradientValuesInternal(dim, valueIndex) = gradientValues[offset + dim];
-      }
+    for (auto i = 0; i < size; i++) {
+      const auto valueIndex = valueIndices[i];
+      PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
+                    "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
+                    context.getDataName(), valueIndex);
+      gradientValuesInternal.block(0, valueIndex, _dimensions, 1) = gradients.block(0, i, _dimensions, 1);
     }
   }
 }
@@ -1414,7 +1405,7 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
 
     Eigen::Map<const Eigen::MatrixXd> gradients(gradientValues, _dimensions, _dimensions * size);
     // gradient matrices input one after the other (read row-wise)
-    for (int i = 0; i < size; i++) {
+    for (auto i = 0; i < size; i++) {
       const auto valueIndex = valueIndices[i];
       PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                     "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
