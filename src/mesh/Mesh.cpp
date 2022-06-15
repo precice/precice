@@ -132,7 +132,6 @@ Triangle &Mesh::createTriangle(
     Vertex &vertexTwo,
     Vertex &vertexThree)
 {
-  auto nextID = _triangles.size();
   _triangles.emplace_back(vertexOne, vertexTwo, vertexThree);
   return _triangles.back();
 }
@@ -143,9 +142,7 @@ Tetrahedron &Mesh::createTetrahedron(
     Vertex &vertexThree,
     Vertex &vertexFour)
 {
-
-  auto nextID = _tetrahedra.size();
-  _tetrahedra.emplace_back(vertexOne, vertexTwo, vertexThree, vertexFour, nextID);
+  _tetrahedra.emplace_back(vertexOne, vertexTwo, vertexThree, vertexFour);
   return _tetrahedra.back();
 }
 

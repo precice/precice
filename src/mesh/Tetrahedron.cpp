@@ -13,10 +13,8 @@ Tetrahedron::Tetrahedron(
     Vertex &      vertexOne,
     Vertex &      vertexTwo,
     Vertex &      vertexThree,
-    Vertex &      vertexFour,
-    TetrahedronID id)
-    : _vertices({&vertexOne, &vertexTwo, &vertexThree, &vertexFour}),
-      _id(id)
+    Vertex &      vertexFour)
+    : _vertices({&vertexOne, &vertexTwo, &vertexThree, &vertexFour})
 {
   PRECICE_ASSERT(vertexOne.getDimensions() == vertexTwo.getDimensions(),
                  vertexOne.getDimensions(), vertexTwo.getDimensions());
