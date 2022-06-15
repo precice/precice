@@ -283,7 +283,7 @@ void CommunicateMesh::broadcastSendMesh(const mesh::Mesh &mesh)
       tetraIDs[i * 4]     = meshTetrahedra[i].vertex(0).getID();
       tetraIDs[i * 4 + 1] = meshTetrahedra[i].vertex(1).getID();
       tetraIDs[i * 4 + 2] = meshTetrahedra[i].vertex(2).getID();
-      tetraIDs[i * 4 + 3] = meshTetrahedra[i].vertex(2).getID();
+      tetraIDs[i * 4 + 3] = meshTetrahedra[i].vertex(3).getID();
     }
     _communication->broadcast(tetraIDs);
   }
