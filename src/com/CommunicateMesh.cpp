@@ -93,6 +93,23 @@ void CommunicateMesh::sendMesh(
     }
     _communication->sendRange(triangleIDs, rankReceiver);
   }
+
+  // Send Tetrahedra
+  int numberOfTetra = mesh.tetrahedra().size();
+  PRECICE_DEBUG("Number of tetrahedra to send: {}", numberOfTetra);
+  _communication->send(numberOfTetra, rankReceiver);
+
+  if (mesh.hasTetrahedra()) {
+
+    std::vector<int> tetraIDs(numberOfTetra * 4);
+    for (int i = 0; i < numberOfTetra; ++i) {
+      tetraIDs[i * 4]     = mesh.tetrahedra()[i].vertex(0).getID();
+      tetraIDs[i * 4 + 1] = mesh.tetrahedra()[i].vertex(1).getID();
+      tetraIDs[i * 4 + 2] = mesh.tetrahedra()[i].vertex(2).getID();
+      tetraIDs[i * 4 + 3] = mesh.tetrahedra()[i].vertex(3).getID();
+    }
+    _communication->sendRange(tetraIDs, rankReceiver);
+  }
 }
 
 void CommunicateMesh::receiveMesh(
@@ -174,6 +191,26 @@ void CommunicateMesh::receiveMesh(
       mesh.createTriangle(*vertexMap[triangleIDs[i * 3]], *vertexMap[triangleIDs[i * 3 + 1]], *vertexMap[triangleIDs[i * 3 + 2]]);
     }
   }
+
+  // Receveive Tetrahedra
+
+  int numberofTetra = 0;
+  _communication->receive(numberofTetra, rankSender);
+  PRECICE_DEBUG("Number of tetrahedra to receive: {}", numberofTetra);
+
+  if (numberofTetra > 0) {
+    std::vector<int> tetraIDs = _communication->receiveRange(rankSender, AsVectorTag<int>{});
+    PRECICE_ASSERT(tetraIDs.size() == numberofTetra * 4);
+
+    for (int i = 0; i < numberofTetra; i++) {
+      PRECICE_ASSERT(vertexMap.count(tetraIDs[i * 4]) == 1);
+      PRECICE_ASSERT(vertexMap.count(tetraIDs[i * 4 + 1]) == 1);
+      PRECICE_ASSERT(vertexMap.count(tetraIDs[i * 4 + 2]) == 1);
+      PRECICE_ASSERT(vertexMap.count(tetraIDs[i * 4 + 3]) == 1);
+
+      mesh.createTetrahedron(*vertexMap[tetraIDs[i * 4]], *vertexMap[tetraIDs[i * 4 + 1]], *vertexMap[tetraIDs[i * 4 + 2]], *vertexMap[tetraIDs[i * 4 + 3]]);
+    }
+  }
 }
 
 void CommunicateMesh::broadcastSendMesh(const mesh::Mesh &mesh)
@@ -233,6 +270,22 @@ void CommunicateMesh::broadcastSendMesh(const mesh::Mesh &mesh)
       triangleIDs[i * 3 + 2] = meshTriangles[i].vertex(2).getID();
     }
     _communication->broadcast(triangleIDs);
+  }
+
+  // Send Tetrahedra
+  int numberOfTetra = mesh.tetrahedra().size();
+  _communication->broadcast(numberOfTetra);
+
+  if (numberOfTetra > 0) {
+    std::vector<int> tetraIDs(numberOfTetra * 4);
+    const auto &     meshTetrahedra = mesh.tetrahedra();
+    for (int i = 0; i < numberOfTetra; i++) {
+      tetraIDs[i * 4]     = meshTetrahedra[i].vertex(0).getID();
+      tetraIDs[i * 4 + 1] = meshTetrahedra[i].vertex(1).getID();
+      tetraIDs[i * 4 + 2] = meshTetrahedra[i].vertex(2).getID();
+      tetraIDs[i * 4 + 3] = meshTetrahedra[i].vertex(2).getID();
+    }
+    _communication->broadcast(tetraIDs);
   }
 }
 
@@ -309,6 +362,29 @@ void CommunicateMesh::broadcastReceiveMesh(
       PRECICE_ASSERT(triangleIDs[i * 3 + 1] != triangleIDs[i * 3 + 2]);
       PRECICE_ASSERT(triangleIDs[i * 3 + 2] != triangleIDs[i * 3]);
       mesh.createTriangle(*vertexMap[triangleIDs[i * 3]], *vertexMap[triangleIDs[i * 3 + 1]], *vertexMap[triangleIDs[i * 3 + 2]]);
+    }
+  }
+
+  // Receive Tetrahedra
+  int numberOfTetra = 0;
+  _communication->broadcast(numberOfTetra, rankBroadcaster);
+
+  if (numberOfTetra > 0) {
+    std::vector<int> tetraIDs;
+    _communication->broadcast(tetraIDs, rankBroadcaster);
+    for (int i = 0; i < numberOfTetra; i++) {
+      PRECICE_ASSERT(vertexMap.count(tetraIDs[i * 4]) == 1);
+      PRECICE_ASSERT(vertexMap.count(tetraIDs[i * 4 + 1]) == 1);
+      PRECICE_ASSERT(vertexMap.count(tetraIDs[i * 4 + 2]) == 1);
+      PRECICE_ASSERT(vertexMap.count(tetraIDs[i * 4 + 3]) == 1);
+
+      PRECICE_ASSERT(tetraIDs[i * 4] != tetraIDs[i * 4 + 1]);
+      PRECICE_ASSERT(tetraIDs[i * 4 + 1] != tetraIDs[i * 4 + 2]);
+      PRECICE_ASSERT(tetraIDs[i * 4 + 2] != tetraIDs[i * 4]);
+      PRECICE_ASSERT(tetraIDs[i * 4 + 3] != tetraIDs[i * 4]);
+      PRECICE_ASSERT(tetraIDs[i * 4 + 3] != tetraIDs[i * 4 + 1]);
+      PRECICE_ASSERT(tetraIDs[i * 4 + 3] != tetraIDs[i * 4 + 2]);
+      mesh.createTetrahedron(*vertexMap[tetraIDs[i * 4]], *vertexMap[tetraIDs[i * 4 + 1]], *vertexMap[tetraIDs[i * 4 + 2]], *vertexMap[tetraIDs[i * 4 + 3]]);
     }
   }
 }
