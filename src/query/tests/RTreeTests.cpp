@@ -458,7 +458,6 @@ BOOST_AUTO_TEST_CASE(TetraIndexing)
   BOOST_TEST(((match[0] == 0 && match[1] == 1) || (match[0] == 1 && match[1] == 0)));
 }
 
-
 BOOST_AUTO_TEST_SUITE_END() // Tetrahedra
 
 BOOST_AUTO_TEST_SUITE_END() // Mesh
