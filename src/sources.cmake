@@ -173,6 +173,8 @@ target_sources(precice
     src/m2n/config/M2NConfiguration.hpp
     src/mapping/BarycentricBaseMapping.cpp
     src/mapping/BarycentricBaseMapping.hpp
+    src/mapping/LinearCellInterpolationMapping.cpp
+    src/mapping/LinearCellInterpolationMapping.hpp
     src/mapping/Mapping.cpp
     src/mapping/Mapping.hpp
     src/mapping/NearestNeighborBaseMapping.cpp
@@ -283,6 +285,7 @@ target_sources(precice
     src/utils/Helpers.hpp
     src/utils/IntraComm.cpp
     src/utils/IntraComm.hpp
+    src/utils/MPIResult.hpp
     src/utils/MPI_Mock.hpp
     src/utils/ManageUniqueIDs.cpp
     src/utils/ManageUniqueIDs.hpp

@@ -211,6 +211,25 @@ ProjectionMatch Index::findNearestProjection(const Eigen::VectorXd &location, in
   }
 }
 
+ProjectionMatch Index::findCellOrProjection(const Eigen::VectorXd &location, int n)
+{
+  if (_mesh->getDimensions() == 2) {
+    auto matchedTriangles = getClosestTriangles(location, n);
+    for (const auto &match : matchedTriangles) {
+      auto polation = mapping::Polation(location, _mesh->triangles()[match.index]);
+      if (polation.isInterpolation()) {
+        return {polation, 0.0};
+      }
+    }
+
+    // If no triangle is found, fall-back on NP
+    return findNearestProjection(location, n);
+  } else {
+    PRECICE_UNREACHABLE("Volume coupling 3D not  implemented");
+    return findTriangleProjection(location, n);
+  }
+}
+
 ProjectionMatch Index::findVertexProjection(const Eigen::VectorXd &location)
 {
   auto match = getClosestVertex(location);

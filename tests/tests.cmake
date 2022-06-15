@@ -42,6 +42,10 @@ target_sources(testprecice
     tests/parallel/mapping-nearest-neighbor-gradient/GradientTestParallelScalar.cpp
     tests/parallel/mapping-nearest-neighbor-gradient/GradientTestParallelVector.cpp
     tests/parallel/mapping-nearest-neighbor-gradient/GradientTestParallelWriteVector.cpp
+    tests/parallel/mapping-volume/ParallelSquare1To2.cpp
+    tests/parallel/mapping-volume/ParallelSquare2To1.cpp
+    tests/parallel/mapping-volume/ParallelSquareConservative1To2.cpp
+    tests/parallel/mapping-volume/ParallelTriangleConservative2To1.cpp
     tests/parallel/quasi-newton/TestQN1.cpp
     tests/parallel/quasi-newton/TestQN1EmptyPartition.cpp
     tests/parallel/quasi-newton/TestQN2.cpp
@@ -111,6 +115,12 @@ target_sources(testprecice
     tests/serial/mapping-scaled-consistent/helpers.hpp
     tests/serial/mapping-scaled-consistent/testQuadMappingScaledConsistentOnA.cpp
     tests/serial/mapping-scaled-consistent/testQuadMappingScaledConsistentOnB.cpp
+    tests/serial/mapping-volume/OneTriangleConservativeRead.cpp
+    tests/serial/mapping-volume/OneTriangleConservativeWrite.cpp
+    tests/serial/mapping-volume/OneTriangleRead.cpp
+    tests/serial/mapping-volume/OneTriangleWrite.cpp
+    tests/serial/mapping-volume/helpers.cpp
+    tests/serial/mapping-volume/helpers.hpp
     tests/serial/mesh-requirements/NearestNeighborA.cpp
     tests/serial/mesh-requirements/NearestNeighborB.cpp
     tests/serial/mesh-requirements/NearestProjection2DA.cpp

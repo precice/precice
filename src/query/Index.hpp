@@ -86,6 +86,7 @@ public:
    */
   ProjectionMatch findNearestProjection(const Eigen::VectorXd &location, int n);
 
+  ProjectionMatch findCellOrProjection(const Eigen::VectorXd &location, int n);
   /// Clear the index
   void clear();
 
