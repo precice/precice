@@ -66,6 +66,16 @@ const Mesh::TriangleContainer &Mesh::triangles() const
   return _triangles;
 }
 
+const Mesh::TetraContainer &Mesh::tetrahedra() const
+{
+  return _tetrahedra;
+}
+
+Mesh::TetraContainer &Mesh::tetrahedra()
+{
+  return _tetrahedra;
+}
+
 int Mesh::getDimensions() const
 {
   return _dimensions;
@@ -118,6 +128,18 @@ Triangle &Mesh::createTriangle(
   auto nextID = _triangles.size();
   _triangles.emplace_back(edgeOne, edgeTwo, edgeThree, nextID);
   return _triangles.back();
+}
+
+Tetrahedron &Mesh::createTetrahedron(
+    Vertex &vertexOne,
+    Vertex &vertexTwo,
+    Vertex &vertexThree,
+    Vertex &vertexFour)
+{
+
+  auto nextID = _tetrahedra.size();
+  _tetrahedra.emplace_back(vertexOne, vertexTwo, vertexThree, vertexFour, nextID);
+  return _tetrahedra.back();
 }
 
 PtrData &Mesh::createData(

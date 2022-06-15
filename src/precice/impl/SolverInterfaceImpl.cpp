@@ -1001,6 +1001,48 @@ void SolverInterfaceImpl::setMeshQuadWithEdges(
   }
 }
 
+void SolverInterfaceImpl::setMeshTetrahedron(
+    MeshID meshID,
+    int    firstVertexID,
+    int    secondVertexID,
+    int    thirdVertexID,
+    int    fourthVertexID)
+{
+  PRECICE_TRACE(meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
+  PRECICE_REQUIRE_MESH_MODIFY(meshID);
+  PRECICE_CHECK(_dimensions == 3, "setMeshTetrahedron is only possible for 3D cases."
+                                  " Please set the dimension to 3 in the preCICE configuration file.");
+  MeshContext &context = _accessor->usedMeshContext(meshID);
+  if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
+    mesh::PtrMesh &mesh = context.mesh;
+    using impl::errorInvalidVertexID;
+    PRECICE_CHECK(mesh->isValidVertexID(firstVertexID), errorInvalidVertexID(firstVertexID));
+    PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), errorInvalidVertexID(secondVertexID));
+    PRECICE_CHECK(mesh->isValidVertexID(thirdVertexID), errorInvalidVertexID(thirdVertexID));
+    PRECICE_CHECK(mesh->isValidVertexID(fourthVertexID), errorInvalidVertexID(fourthVertexID));
+    mesh::Vertex &A = mesh->vertices()[firstVertexID];
+    mesh::Vertex &B = mesh->vertices()[thirdVertexID];
+    mesh::Vertex &C = mesh->vertices()[firstVertexID];
+    mesh::Vertex &D = mesh->vertices()[fourthVertexID];
+
+    // Also add underlying primitives (4 triangles, 6 edges)
+    // Tetra ABCD is made of triangles ABC, ABD, ACD, BCD
+    mesh::Edge &AB = mesh->createEdge(A, B);
+    mesh::Edge &BC = mesh->createEdge(B, C);
+    mesh::Edge &CD = mesh->createEdge(C, D);
+    mesh::Edge &DA = mesh->createEdge(D, A);
+    mesh::Edge &AC = mesh->createEdge(A, C);
+    mesh::Edge &BD = mesh->createEdge(B, D);
+
+    mesh->createTriangle(AB, BC, AC);
+    mesh->createTriangle(AB, BD, DA);
+    mesh->createTriangle(AC, CD, DA);
+    mesh->createTriangle(BC, CD, BD);
+
+    mesh->createTetrahedron(A, B, C, D);
+  }
+}
+
 void SolverInterfaceImpl::mapWriteDataFrom(
     int fromMeshID)
 {
