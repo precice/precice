@@ -21,10 +21,10 @@ class Tetrahedron {
 public:
   /// Constructor, the order of vertices doesn't matter.
   Tetrahedron(
-      Vertex &      vertexOne,
-      Vertex &      vertexTwo,
-      Vertex &      vertexThree,
-      Vertex &      vertexFour);
+      Vertex &vertexOne,
+      Vertex &vertexTwo,
+      Vertex &vertexThree,
+      Vertex &vertexFour);
 
   /// Returns dimensionalty of space the Tetrahedron is embedded in.
   int getDimensions() const;

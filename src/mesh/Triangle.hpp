@@ -41,15 +41,15 @@ public:
 
   /// Constructor based on 3 edges
   Triangle(
-      Edge &     edgeOne,
-      Edge &     edgeTwo,
-      Edge &     edgeThree);
+      Edge &edgeOne,
+      Edge &edgeTwo,
+      Edge &edgeThree);
 
   /// Constructor based on 3 vertices
   Triangle(
-      Vertex &   VertexOne,
-      Vertex &   VertexTwo,
-      Vertex &   VertexThree);
+      Vertex &VertexOne,
+      Vertex &VertexTwo,
+      Vertex &VertexThree);
 
   /// Returns dimensionalty of space the triangle is embedded in.
   int getDimensions() const;

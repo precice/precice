@@ -78,7 +78,7 @@ public:
   EdgeContainer &edges();
 
   /// Returns a registered edge with given id.
-  Edge& registeredEdge(EdgeID id);
+  Edge &registeredEdge(EdgeID id);
 
   /// Returns const container holding all edges.
   const EdgeContainer &edges() const;
