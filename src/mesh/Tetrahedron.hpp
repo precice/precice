@@ -2,7 +2,6 @@
 
 #include <array>
 #include <iostream>
-#include "mesh/BoundingBox.hpp"
 #include "precice/types.hpp"
 #include "utils/assertion.hpp"
 
