@@ -135,6 +135,69 @@ BOOST_AUTO_TEST_CASE(BroadcastVertexEdgeTriangleMesh)
   }
 }
 
+BOOST_AUTO_TEST_CASE(OneTetraCommunication)
+{
+  PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
+  auto m2n = context.connectPrimaryRanks("A", "B");
+
+  int           dim = 3;
+  mesh::Mesh    sendMesh("Sent Mesh", dim, testing::nextMeshID());
+  mesh::Vertex &v0 = sendMesh.createVertex(Eigen::Vector3d{0.0, 0.0, 0.0});
+  mesh::Vertex &v1 = sendMesh.createVertex(Eigen::Vector3d{1.0, 0.0, 0.0});
+  mesh::Vertex &v2 = sendMesh.createVertex(Eigen::Vector3d{0.0, 1.0, 0.0});
+  mesh::Vertex &v3 = sendMesh.createVertex(Eigen::Vector3d{0.0, 0.0, 1.0});
+
+  mesh::Tetrahedron &t0 = sendMesh.createTetrahedron(v0, v1, v2, v3);
+
+  // Create mesh communicator
+  CommunicateMesh comMesh(m2n->getPrimaryRankCommunication());
+
+  if (context.isNamed("A")) {
+    comMesh.sendMesh(sendMesh, 0);
+  } else {
+    mesh::Mesh recvMesh("Received Mesh", dim, testing::nextMeshID());
+    // receiveMesh can also deal with delta meshes
+    recvMesh.createVertex(Eigen::VectorXd::Constant(dim, 9));
+    comMesh.receiveMesh(recvMesh, 0);
+    BOOST_TEST(recvMesh.vertices().size() == 5); // 4 + 1
+    BOOST_TEST(testing::equals(recvMesh.vertices().at(0).getCoords(), Eigen::VectorXd::Constant(dim, 9)));
+    BOOST_TEST(recvMesh.tetrahedra().size() == 1);
+    BOOST_TEST(testing::equals(recvMesh.tetrahedra()[0].vertex(0).getCoords(), Eigen::Vector3d{0.0, 0.0, 0.0}));
+    BOOST_TEST(recvMesh.tetrahedra()[0] == t0);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(BroadcastTetra)
+{
+  PRECICE_TEST(""_on(2_ranks).setupIntraComm(), Require::Events);
+
+  int           dim = 3;
+  mesh::Mesh    sendMesh("Sent Mesh", dim, testing::nextMeshID());
+  mesh::Vertex &v0 = sendMesh.createVertex(Eigen::Vector3d{0.0, 0.0, 0.0});
+  mesh::Vertex &v1 = sendMesh.createVertex(Eigen::Vector3d{1.0, 0.0, 0.0});
+  mesh::Vertex &v2 = sendMesh.createVertex(Eigen::Vector3d{0.0, 1.0, 0.0});
+  mesh::Vertex &v3 = sendMesh.createVertex(Eigen::Vector3d{0.0, 0.0, 1.0});
+
+  mesh::Tetrahedron &t0 = sendMesh.createTetrahedron(v0, v1, v2, v3);
+
+  // Create mesh communicator
+  CommunicateMesh comMesh(precice::utils::IntraComm::getCommunication());
+
+  if (context.isPrimary()) {
+    comMesh.broadcastSendMesh(sendMesh);
+  } else {
+    mesh::Mesh recvMesh("Received Mesh", dim, testing::nextMeshID());
+    // receiveMesh can also deal with delta meshes
+    recvMesh.createVertex(Eigen::VectorXd::Constant(dim, 9));
+    comMesh.broadcastReceiveMesh(recvMesh);
+    BOOST_TEST(recvMesh.vertices().size() == 5); // 4 + 1
+    BOOST_TEST(testing::equals(recvMesh.vertices().at(0).getCoords(), Eigen::VectorXd::Constant(dim, 9)));
+    BOOST_TEST(recvMesh.tetrahedra().size() == 1);
+    BOOST_TEST(testing::equals(recvMesh.tetrahedra()[0].vertex(0).getCoords(), Eigen::Vector3d{0.0, 0.0, 0.0}));
+    BOOST_TEST(recvMesh.tetrahedra()[0] == t0);
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END() // Mesh
 BOOST_AUTO_TEST_SUITE_END() // Communication
 
