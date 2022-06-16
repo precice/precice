@@ -19,7 +19,7 @@ using namespace precice::mesh;
 BOOST_AUTO_TEST_SUITE(MappingTests)
 BOOST_AUTO_TEST_SUITE(LinearCellInterpolationMapping)
 
-BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
+BOOST_AUTO_TEST_CASE(Consistent)
 {
   PRECICE_TEST(1_rank);
   int dimensions = 2;
