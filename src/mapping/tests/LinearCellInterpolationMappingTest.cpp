@@ -169,30 +169,44 @@ BOOST_AUTO_TEST_CASE(Consistent3D)
   PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
   PtrData inDataScalar   = inMesh->createData("InDataScalar", 1, 0_dataID);
   int     inDataScalarID = inDataScalar->getID();
-/*
-  Vertex &inVertexA = inMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
-  Vertex &inVertexB = inMesh->createVertex(Eigen::Vector2d(1.0, 0.0));
-  Vertex &inVertexC = inMesh->createVertex(Eigen::Vector2d(0.0, 1.0));
+
+  Vertex &inVertexA = inMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+  Vertex &inVertexB = inMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
+  Vertex &inVertexC = inMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 0.0));
+  Vertex &inVertexD = inMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 1.0));
 
   inMesh->allocateDataValues();
 
-  Edge &inEdge0 = inMesh->createEdge(inVertexA, inVertexB);
-  Edge &inEdge1 = inMesh->createEdge(inVertexB, inVertexC);
-  Edge &inEdge2 = inMesh->createEdge(inVertexC, inVertexA);
 
-  inMesh->createTriangle(inEdge0, inEdge1, inEdge2);
+  inMesh->createTetrahedron(inVertexA, inVertexB, inVertexC, inVertexD);
   Eigen::VectorXd &inValuesScalar = inDataScalar->values();
-  inValuesScalar << 1.0, 2.0, 3.0;
+  inValuesScalar << 1.0, 2.0, 3.0, 4.0; //1 + x + 2y + 3z
 
-  BOOST_CHECK(!inMesh->edges().empty());
-
-
-  BOOST_CHECK(!inMesh->triangles().empty());
+  BOOST_CHECK(!inMesh->tetrahedra().empty());
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
   PtrData outDataScalar   = outMesh->createData("OutDataScalar", 1, 2_dataID);
   int     outDataScalarID = outDataScalar->getID();
 
-  // All vertices to test
+
+  // Center and the 4 vertices
+  outMesh->createVertex(Eigen::Vector3d::Constant(0.25));
+  outMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+  outMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
+  outMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 0.0));
+  outMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 1.0));
+
+  // TODO: add cases
+  outMesh->allocateDataValues();
+
+  // Setup mapping with mapping coordinates and geometry used
+  precice::mapping::LinearCellInterpolationMapping mapping(mapping::Mapping::CONSISTENT, dimensions);
+  mapping.setMeshes(inMesh, outMesh);
+  BOOST_TEST(mapping.hasComputedMapping() == false);
+  mapping.computeMapping();
+  mapping.map(inDataScalarID, outDataScalarID);
+  const Eigen::VectorXd &outValuesScalar = outDataScalar->values();
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+  /*// All vertices to test
   // Center of triangle = average
   outMesh->createVertex(Eigen::Vector2d::Constant(1.0 / 3.0));
   // Exact mapping if grid is matching
@@ -209,7 +223,7 @@ BOOST_AUTO_TEST_CASE(Consistent3D)
   outMesh->createVertex(Eigen::Vector2d(2.5, -1.0));
   outMesh->createVertex(Eigen::Vector2d(2.5, 10.0));
 
-  outMesh->allocateDataValues();
+  
 
   // Setup mapping with mapping coordinates and geometry used
   precice::mapping::LinearCellInterpolationMapping mapping(mapping::Mapping::CONSISTENT, dimensions);
