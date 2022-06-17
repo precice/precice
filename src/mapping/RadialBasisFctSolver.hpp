@@ -21,12 +21,15 @@ public:
   // Clear all stored matrices
   void clear();
 
-  Eigen::MatrixXd _matrixA;
+  // Access to the evaluation matrix
+  const Eigen::MatrixXd &getEvaluationMatrix() const;
 
 private:
   precice::logging::Logger _log{"mapping::RadialBasisFctSolver"};
 
   Eigen::ColPivHouseholderQR<Eigen::MatrixXd> _qr;
+
+  Eigen::MatrixXd _matrixA;
 };
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -73,6 +76,11 @@ void RadialBasisFctSolver::clear()
 {
   _matrixA = Eigen::MatrixXd();
   _qr      = Eigen::ColPivHouseholderQR<Eigen::MatrixXd>();
+}
+
+const Eigen::MatrixXd &RadialBasisFctSolver::getEvaluationMatrix() const
+{
+  return _matrixA;
 }
 
 // ------- Non-Member Functions ---------
