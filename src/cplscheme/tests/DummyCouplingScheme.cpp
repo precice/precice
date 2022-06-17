@@ -19,15 +19,24 @@ void DummyCouplingScheme::initialize(
     int    startTimesteps)
 {
   PRECICE_ASSERT(not _isInitialized);
+  PRECICE_ASSERT(not _initializeDataHasBeenCalled);
   _isInitialized = true;
-  _isOngoing     = true;
   _timesteps     = startTimesteps;
   _iterations    = 1;
+}
+
+void DummyCouplingScheme::initializeData()
+{
+  PRECICE_ASSERT(_isInitialized);
+  PRECICE_ASSERT(not _initializeDataHasBeenCalled);
+  _initializeDataHasBeenCalled = true;
+  _isOngoing                   = true;
 }
 
 void DummyCouplingScheme::advance()
 {
   PRECICE_ASSERT(_isInitialized);
+  PRECICE_ASSERT(_initializeDataHasBeenCalled);
   PRECICE_ASSERT(_isOngoing);
   if (_iterations == _numberIterations) {
     if (_timesteps == _maxTimesteps) {
