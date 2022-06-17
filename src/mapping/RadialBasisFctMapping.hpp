@@ -3,11 +3,11 @@
 #include <Eigen/Core>
 #include <Eigen/QR>
 
-#include "RadialBasisFctSolver.h"
 #include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
 #include "impl/BasisFunctions.hpp"
 #include "mapping/RadialBasisFctBaseMapping.hpp"
+#include "mapping/RadialBasisFctSolver.hpp"
 #include "mesh/Filter.hpp"
 #include "precice/types.hpp"
 #include "utils/EigenHelperFunctions.hpp"

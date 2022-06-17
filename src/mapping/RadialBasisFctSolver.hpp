@@ -1,15 +1,13 @@
-#include "impl/BasisFunctions.hpp"
+#include "mapping/impl/BasisFunctions.hpp"
 #include "precice/types.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/Event.hpp"
 
 namespace precice {
-extern bool syncMode;
+namespace mapping {
 
-struct RadialBasisFctSolver {
+class RadialBasisFctSolver {
 public:
-  RadialBasisFctSolver() = default;
-
   /// Assembles the system matrices and computes the decomposition of the interpolation matrix
   template <typename RADIAL_BASIS_FUNCTION_T>
   void computeDecomposition(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const mesh::Mesh &outputMesh, std::vector<bool> deadAxis);
@@ -178,4 +176,5 @@ static Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const
   }
   return matrixA;
 }
+} // namespace mapping
 } // namespace precice
