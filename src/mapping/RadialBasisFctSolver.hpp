@@ -33,10 +33,10 @@ private:
 };
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-static Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, std::vector<bool> deadAxis);
+Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, std::vector<bool> deadAxis);
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-static Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const mesh::Mesh &outputMesh, std::vector<bool> deadAxis);
+Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const mesh::Mesh &outputMesh, std::vector<bool> deadAxis);
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 void RadialBasisFctSolver::computeDecomposition(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const mesh::Mesh &outputMesh, std::vector<bool> deadAxis)
@@ -86,7 +86,7 @@ const Eigen::MatrixXd &RadialBasisFctSolver::getEvaluationMatrix() const
 // ------- Non-Member Functions ---------
 
 /// Deletes all dead directions from fullVector and returns a vector of reduced dimensionality.
-static inline Eigen::VectorXd reduceVector(
+inline Eigen::VectorXd reduceVector(
     const Eigen::VectorXd &  fullVector,
     const std::vector<bool> &deadAxis)
 {
@@ -109,7 +109,7 @@ static inline Eigen::VectorXd reduceVector(
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-static Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, std::vector<bool> deadAxis)
+Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, std::vector<bool> deadAxis)
 {
   int inputSize  = inputMesh.vertices().size();
   int dimensions = inputMesh.getDimensions();
@@ -148,7 +148,7 @@ static Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, con
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-static Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const mesh::Mesh &outputMesh, std::vector<bool> deadAxis)
+Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const mesh::Mesh &outputMesh, std::vector<bool> deadAxis)
 {
   int inputSize  = inputMesh.vertices().size();
   int outputSize = outputMesh.vertices().size();
