@@ -32,57 +32,6 @@ private:
   Eigen::MatrixXd _matrixA;
 };
 
-template <typename RADIAL_BASIS_FUNCTION_T>
-Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, std::vector<bool> deadAxis);
-
-template <typename RADIAL_BASIS_FUNCTION_T>
-Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const mesh::Mesh &outputMesh, std::vector<bool> deadAxis);
-
-template <typename RADIAL_BASIS_FUNCTION_T>
-void RadialBasisFctSolver::computeDecomposition(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const mesh::Mesh &outputMesh, std::vector<bool> deadAxis)
-{
-  // First, assemble the interpolation matrix
-  _qr = buildMatrixCLU(basisFunction, inputMesh, deadAxis).colPivHouseholderQr();
-
-  PRECICE_CHECK(_qr.isInvertible(),
-                "The interpolation matrix of the RBF mapping from mesh {} to mesh {} is not invertable. "
-                "This means that the mapping problem is not well-posed. "
-                "Please check if your coupling meshes are correct. Maybe you need to fix axis-aligned mapping setups "
-                "by marking perpendicular axes as dead?",
-                inputMesh.getName(), outputMesh.getName());
-
-  // Second, assemble evaluation matrix
-  _matrixA = buildMatrixA(basisFunction, inputMesh, outputMesh, deadAxis);
-}
-
-Eigen::VectorXd RadialBasisFctSolver::solveConservative(const Eigen::VectorXd &inputData) const
-{
-  // TODO: Avoid temporary allocations
-  PRECICE_ASSERT(inputData.size() == _matrixA.rows());
-  Eigen::VectorXd Au = _matrixA.transpose() * inputData;
-  PRECICE_ASSERT(Au.size() == _matrixA.cols());
-  return _qr.solve(Au);
-}
-
-Eigen::VectorXd RadialBasisFctSolver::solveConsistent(const Eigen::VectorXd &inputData) const
-{
-  PRECICE_ASSERT(inputData.size() == _matrixA.cols());
-  Eigen::VectorXd p = _qr.solve(inputData);
-  PRECICE_ASSERT(p.size() == _matrixA.cols());
-  return _matrixA * p;
-}
-
-void RadialBasisFctSolver::clear()
-{
-  _matrixA = Eigen::MatrixXd();
-  _qr      = Eigen::ColPivHouseholderQR<Eigen::MatrixXd>();
-}
-
-const Eigen::MatrixXd &RadialBasisFctSolver::getEvaluationMatrix() const
-{
-  return _matrixA;
-}
-
 // ------- Non-Member Functions ---------
 
 /// Deletes all dead directions from fullVector and returns a vector of reduced dimensionality.
@@ -183,6 +132,51 @@ Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::
     matrixA(i, inputSize) = 1.0;
   }
   return matrixA;
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+void RadialBasisFctSolver::computeDecomposition(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const mesh::Mesh &outputMesh, std::vector<bool> deadAxis)
+{
+  // First, assemble the interpolation matrix
+  _qr = buildMatrixCLU(basisFunction, inputMesh, deadAxis).colPivHouseholderQr();
+
+  PRECICE_CHECK(_qr.isInvertible(),
+                "The interpolation matrix of the RBF mapping from mesh {} to mesh {} is not invertable. "
+                "This means that the mapping problem is not well-posed. "
+                "Please check if your coupling meshes are correct. Maybe you need to fix axis-aligned mapping setups "
+                "by marking perpendicular axes as dead?",
+                inputMesh.getName(), outputMesh.getName());
+
+  // Second, assemble evaluation matrix
+  _matrixA = buildMatrixA(basisFunction, inputMesh, outputMesh, deadAxis);
+}
+
+Eigen::VectorXd RadialBasisFctSolver::solveConservative(const Eigen::VectorXd &inputData) const
+{
+  // TODO: Avoid temporary allocations
+  PRECICE_ASSERT(inputData.size() == _matrixA.rows());
+  Eigen::VectorXd Au = _matrixA.transpose() * inputData;
+  PRECICE_ASSERT(Au.size() == _matrixA.cols());
+  return _qr.solve(Au);
+}
+
+Eigen::VectorXd RadialBasisFctSolver::solveConsistent(const Eigen::VectorXd &inputData) const
+{
+  PRECICE_ASSERT(inputData.size() == _matrixA.cols());
+  Eigen::VectorXd p = _qr.solve(inputData);
+  PRECICE_ASSERT(p.size() == _matrixA.cols());
+  return _matrixA * p;
+}
+
+void RadialBasisFctSolver::clear()
+{
+  _matrixA = Eigen::MatrixXd();
+  _qr      = Eigen::ColPivHouseholderQR<Eigen::MatrixXd>();
+}
+
+const Eigen::MatrixXd &RadialBasisFctSolver::getEvaluationMatrix() const
+{
+  return _matrixA;
 }
 } // namespace mapping
 } // namespace precice
