@@ -265,6 +265,7 @@ double SolverInterfaceImpl::initialize()
 {
   PRECICE_TRACE();
   PRECICE_CHECK(_state != State::Finalized, "initialize() cannot be called after finalize().")
+  PRECICE_CHECK(_state != State::InitializedData, "initialize() cannot be called after initializeData().")
   PRECICE_CHECK(_state != State::Initialized, "initialize() may only be called once.");
   PRECICE_ASSERT(not _couplingScheme->isInitialized());
   auto &solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
@@ -354,8 +355,8 @@ double SolverInterfaceImpl::initialize()
 void SolverInterfaceImpl::initializeData()
 {
   PRECICE_TRACE();
-  PRECICE_CHECK(!_hasInitializedData, "initializeData() may only be called once.");
   PRECICE_CHECK(_state != State::Finalized, "initializeData() cannot be called after finalize().")
+  PRECICE_CHECK(_state != State::InitializedData, "initializeData() may only be called once.");
   PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before initializeData()");
   PRECICE_ASSERT(_couplingScheme->isInitialized());
   PRECICE_CHECK(not(_couplingScheme->sendsInitializedData() && isActionRequired(constants::actionWriteInitialData())),
@@ -387,7 +388,7 @@ void SolverInterfaceImpl::initializeData()
   _accessor->exportFinal();
   solverInitEvent.start(precice::syncMode);
 
-  _hasInitializedData = true;
+  _state = State::InitializedData;
 }
 
 double SolverInterfaceImpl::advance(
@@ -405,12 +406,12 @@ double SolverInterfaceImpl::advance(
   Event                    e("advance", precice::syncMode);
   utils::ScopedEventPrefix sep("advance/");
 
-  PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before advance().");
+  PRECICE_CHECK(_state != State::Constructed, "initialize() and initializeData() have to be called before advance().");
+  PRECICE_CHECK(_state != State::Initialized, "initializeData() has to be called before advance().");
   PRECICE_CHECK(_state != State::Finalized, "advance() cannot be called after finalize().")
+  PRECICE_CHECK(_state == State::InitializedData, "initializeData() has to be called before advance().")
   PRECICE_ASSERT(_couplingScheme->isInitialized());
   PRECICE_CHECK(isCouplingOngoing(), "advance() cannot be called when isCouplingOngoing() returns false.");
-  PRECICE_CHECK((not _couplingScheme->receivesInitializedData() && not _couplingScheme->sendsInitializedData()) || (_hasInitializedData),
-                "initializeData() needs to be called before advance if data has to be initialized.");
   PRECICE_CHECK(!math::equals(computedTimestepLength, 0.0), "advance() cannot be called with a timestep size of 0.");
   PRECICE_CHECK(computedTimestepLength > 0.0, "advance() cannot be called with a negative timestep size {}.", computedTimestepLength);
   _numberAdvanceCalls++;
@@ -1715,7 +1716,7 @@ void SolverInterfaceImpl::setMeshAccessRegion(
   PRECICE_TRACE(meshID);
   PRECICE_REQUIRE_MESH_USE(meshID);
   PRECICE_CHECK(_state != State::Finalized, "setMeshAccessRegion() cannot be called after finalize().")
-  PRECICE_CHECK(_state != State::Initialized, "setMeshAccessRegion() needs to be called before initialize().");
+  PRECICE_CHECK(_state != State::Initialized && _state != State::InitializedData, "setMeshAccessRegion() needs to be called before initialize().");
   PRECICE_CHECK(!_accessRegionDefined, "setMeshAccessRegion may only be called once.");
   PRECICE_CHECK(boundingBox != nullptr, "setMeshAccessRegion was called with boundingBox == nullptr.");
 
