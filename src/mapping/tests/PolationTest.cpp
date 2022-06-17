@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(TetrahedronExtrapolation)
   std::vector<double> expectedWeights = {-0.15, 0.25, 0.40, 0.50};
 
   BOOST_TEST(polation.getWeightedElements().size() == 4);
-  BOOST_TEST(polation.isInterpolation());
+  BOOST_TEST(not polation.isInterpolation());
 
   for (size_t i = 0; i < polation.getWeightedElements().size(); ++i) {
 
