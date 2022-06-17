@@ -27,6 +27,7 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
 
     // Initialize the solverinterface
     double dt = interface.initialize();
+    interface.initializeData();
 
     // Create some dummy writeData
     std::vector<double> writeData;
@@ -70,6 +71,7 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
 
     // Initialize the solverinterface
     double dt = interface.initialize();
+    interface.initializeData();
 
     // Somce arbitrary write data
     std::vector<double> writeData{3.4, 5.7, 4.0};

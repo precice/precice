@@ -35,6 +35,7 @@ BOOST_AUTO_TEST_CASE(ParallelTriangleConservative2To1)
     interface.setMeshVertices(meshID, vertexIDs.size(), coords.data(), vertexIDs.data());
 
     dt = interface.initialize();
+    interface.initializeData();
 
     // Run a step and write forces
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant must advance once.");
@@ -58,6 +59,7 @@ BOOST_AUTO_TEST_CASE(ParallelTriangleConservative2To1)
     interface.setMeshTriangleWithEdges(meshID, vertexIDs[0], vertexIDs[1], vertexIDs[2]);
 
     dt = interface.initialize();
+    interface.initializeData();
 
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant must advance once.");
 

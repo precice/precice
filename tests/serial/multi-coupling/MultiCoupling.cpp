@@ -71,6 +71,7 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
     }
 
     precice.initialize();
+    precice.initializeData();
 
     for (size_t i = 0; i < 4; i++) {
       precice.writeVectorData(dataWriteID, vertexIDs.at(i), datas.at(i).data());
@@ -128,6 +129,7 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
     }
 
     precice.initialize();
+    precice.initializeData();
 
     for (size_t i = 0; i < 4; i++) {
       precice.writeVectorData(dataWriteID1, vertexIDs1.at(i), datas.at(i).data());

@@ -49,6 +49,7 @@ void testMappingVolumeOneTriangle(const std::string configFile, const TestContex
 
     // Initialize, write data, advance and finalize
     double dt = interface.initialize();
+    interface.initializeData();
     BOOST_TEST(!mesh.triangles().empty(), "Triangle must still be stored");
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant must advance once.");
 
@@ -70,6 +71,7 @@ void testMappingVolumeOneTriangle(const std::string configFile, const TestContex
 
     // Initialize, read data, advance and finalize. Check expected mapping
     double dt = interface.initialize();
+    interface.initializeData();
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant must advance once.");
 
     // If "read" mapping, check received mesh
@@ -120,6 +122,7 @@ void testMappingVolumeOneTriangleConservative(const std::string configFile, cons
 
     // Initialize, write data, advance and finalize
     double dt = interface.initialize();
+    interface.initializeData();
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant must advance once.");
 
     std::vector<double> values{1.0};
@@ -150,6 +153,7 @@ void testMappingVolumeOneTriangleConservative(const std::string configFile, cons
 
     // Initialize, read data, advance and finalize. Check expected mapping
     double dt = interface.initialize();
+    interface.initializeData();
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant must advance once.");
 
     interface.advance(dt);

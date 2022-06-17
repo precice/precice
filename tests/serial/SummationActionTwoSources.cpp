@@ -38,6 +38,7 @@ BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
 
     // Initialize, the mesh
     double dt = interface.initialize();
+    interface.initializeData();
 
     // Read the summed data from the mesh.
     int    dataAID = interface.getDataID("Target", meshID);

@@ -27,6 +27,7 @@ BOOST_AUTO_TEST_CASE(ExportTimeseries)
 
   double time = 0.0;
   double dt   = interface.initialize();
+  interface.initializeData();
 
   if (context.isNamed("ExporterOne")) {
     const precice::DataID sdataID = interface.getDataID("S", meshID);

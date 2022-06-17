@@ -55,6 +55,7 @@ void testQuadMappingScaledConsistent(const std::string configFile, const TestCon
 
     // Initialize, thus sending the mesh.
     double maxDt = interface.initialize();
+    interface.initializeData();
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant should have to advance once!");
 
     // Write the data to be send.
@@ -87,6 +88,7 @@ void testQuadMappingScaledConsistent(const std::string configFile, const TestCon
 
     // Initialize, thus receive the data and map.
     double maxDt = interface.initialize();
+    interface.initializeData();
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant should have to advance once!");
 
     // Read the mapped data from the mesh.

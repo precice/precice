@@ -25,6 +25,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
     interface.setMeshAccessRegion(otherMeshID, boundingBox.data());
     // Initialize the solverinterface
     double dt = interface.initialize();
+    interface.initializeData();
 
     // Get relevant size, allocate data structures and retrieve coordinates
     const int meshSize = interface.getMeshVertexSize(dataID);
@@ -98,6 +99,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
 
     // Initialize the solverinterface
     double dt = interface.initialize();
+    interface.initializeData();
 
     // Start the time loop
     std::vector<double> readData(size);

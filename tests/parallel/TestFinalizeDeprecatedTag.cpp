@@ -19,6 +19,7 @@ BOOST_AUTO_TEST_CASE(TestFinalizeDeprecatedTag)
     double                   xCoord = 0.0 + context.rank;
     interface.setMeshVertex(meshID, Eigen::Vector3d(xCoord, 0.0, 0.0).data());
     interface.initialize();
+    interface.initializeData();
     BOOST_TEST(precice::testing::WhiteboxAccessor::impl(interface).mesh("MeshOne").vertices().size() == 1);
     BOOST_TEST(precice::testing::WhiteboxAccessor::impl(interface).mesh("MeshTwo").vertices().size() == 1);
     interface.finalize();
@@ -29,6 +30,7 @@ BOOST_AUTO_TEST_CASE(TestFinalizeDeprecatedTag)
     double                   xCoord = 0.0 + context.rank;
     interface.setMeshVertex(meshID, Eigen::Vector3d(xCoord, 0.0, 0.0).data());
     interface.initialize();
+    interface.initializeData();
     BOOST_TEST(precice::testing::WhiteboxAccessor::impl(interface).mesh("MeshTwo").vertices().size() == 1);
     interface.finalize();
   }

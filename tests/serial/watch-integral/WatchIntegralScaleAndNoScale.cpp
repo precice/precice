@@ -34,6 +34,7 @@ BOOST_AUTO_TEST_CASE(WatchIntegralScaleAndNoScale)
 
     // Initialize, the mesh
     double dt = interface.initialize();
+    interface.initializeData();
 
     int    dataAID = interface.getDataID("DataOne", meshID);
     double valueA  = 1.0;
@@ -75,6 +76,7 @@ BOOST_AUTO_TEST_CASE(WatchIntegralScaleAndNoScale)
 
     // Initialize the mesh
     double dt = interface.initialize();
+    interface.initializeData();
 
     int    dataAID = interface.getDataID("DataTwo", meshTwoID);
     double valueA, valueB, valueC;

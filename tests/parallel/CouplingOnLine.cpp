@@ -26,6 +26,7 @@ BOOST_AUTO_TEST_CASE(CouplingOnLine)
                             xCoord, yCoord, 0.4 + offset};
     interface.setMeshVertices(meshID, 4, positions, vertexIDs);
     interface.initialize();
+    interface.initializeData();
     interface.advance(1.0);
     interface.finalize();
   } else {
@@ -46,6 +47,7 @@ BOOST_AUTO_TEST_CASE(CouplingOnLine)
                             xCoord, yCoord, 1.2};
     interface.setMeshVertices(meshID, 10, positions, vertexIDs);
     interface.initialize();
+    interface.initializeData();
     interface.advance(1.0);
     interface.finalize();
   }

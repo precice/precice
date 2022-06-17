@@ -57,6 +57,8 @@ BOOST_AUTO_TEST_CASE(Implicit)
     BOOST_TEST(solverTwoMesh == expectedData);
 
     std::vector<double> readData(ownIDs.size(), -10);
+
+    couplingInterface.initializeData();
     while (couplingInterface.isCouplingOngoing()) {
       if (couplingInterface.isActionRequired(precice::constants::actionWriteIterationCheckpoint())) {
         couplingInterface.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
@@ -109,6 +111,7 @@ BOOST_AUTO_TEST_CASE(Implicit)
     // Allocate data to read
     std::vector<double> readData(ownIDs.size(), -10);
 
+    couplingInterface.initializeData();
     while (couplingInterface.isCouplingOngoing()) {
       if (couplingInterface.isActionRequired(precice::constants::actionWriteIterationCheckpoint())) {
         couplingInterface.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());

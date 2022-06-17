@@ -26,7 +26,8 @@ BOOST_AUTO_TEST_CASE(MultipleReadToMappings)
     int                   dataIDTop      = interface.getDataID("DisplacementTop", meshIDTop);
     int                   dataIDBottom   = interface.getDataID("DisplacementBottom", meshIDBottom);
 
-    double dt              = interface.initialize();
+    double dt = interface.initialize();
+    interface.initializeData();
     double displacementTop = 1.0;
     interface.writeScalarData(dataIDTop, vertexIDTop, displacementTop);
     double displacementBottom = 2.0;
@@ -43,6 +44,7 @@ BOOST_AUTO_TEST_CASE(MultipleReadToMappings)
     int                   topID    = interface.getDataID("DisplacementTop", meshID);
 
     double dt = interface.initialize();
+    interface.initializeData();
     interface.advance(dt);
     double displacementTop    = -1.0;
     double displacementBottom = -3.0;

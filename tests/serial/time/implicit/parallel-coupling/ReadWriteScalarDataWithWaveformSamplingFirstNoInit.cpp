@@ -74,6 +74,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirstNoInit)
   double readTime; // time where we are reading
   double sampleDt; // dt relative to timestep start, where we are sampling
 
+  precice.initializeData();
+
   while (precice.isCouplingOngoing()) {
     if (precice.isActionRequired(precice::constants::actionWriteIterationCheckpoint())) {
       windowStartTime = time;
@@ -91,7 +93,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirstNoInit)
       if (precice.isReadDataAvailable()) {
         precice.readScalarData(readDataID, vertexID, sampleDt, readData);
       }
-      if (iterations == 0 && timewindow == 0) { // use zero as initial value in first iteration (no initializeData was called)
+      if (iterations == 0 && timewindow == 0) { // use zero as initial value in first iteration (no initial data was provided called)
         BOOST_TEST(readData == 0);
       } else if (iterations == 0 && timewindow > 0) { // always use constant extrapolation in first iteration (from writeData of second participant at end previous window).
         BOOST_TEST(readData == readFunction(time));

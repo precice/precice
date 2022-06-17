@@ -687,7 +687,7 @@ int SolverInterfaceImpl::getMeshVertexSize(
   PRECICE_CHECK((_state == State::Initialized) || _accessor->isMeshProvided(meshID), "initialize() has to be called before accessing"
                                                                                      " data of the received mesh \"{}\" on participant \"{}\".",
                 _accessor->getMeshName(meshID), _accessor->getName());
-
+  // @todo: Only allowed when _state == State::Initialized? Also _state == State::InitializedData? Related to https://github.com/precice/precice/issues/1196
   MeshContext &context = _accessor->usedMeshContext(meshID);
   PRECICE_ASSERT(context.mesh.get() != nullptr);
   return context.mesh->vertices().size();

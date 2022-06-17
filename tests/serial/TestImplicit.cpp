@@ -44,6 +44,7 @@ BOOST_AUTO_TEST_CASE(TestImplicit)
     interface.setMeshVertex(meshID, pos);
 
     double maxDt = interface.initialize();
+    interface.initializeData();
     while (interface.isCouplingOngoing()) {
       if (interface.isActionRequired(actionWriteIterationCheckpoint())) {
         interface.markActionFulfilled(actionWriteIterationCheckpoint());
@@ -74,6 +75,7 @@ BOOST_AUTO_TEST_CASE(TestImplicit)
     pos[2] = 0.0;
     interface.setMeshVertex(meshID, pos);
     double maxDt = interface.initialize();
+    interface.initializeData();
     while (interface.isCouplingOngoing()) {
       if (interface.isActionRequired(actionWriteIterationCheckpoint())) {
         interface.markActionFulfilled(actionWriteIterationCheckpoint());

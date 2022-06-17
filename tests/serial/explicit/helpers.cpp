@@ -29,6 +29,7 @@ void runTestExplicit(std::string const &configurationFileName, TestContext const
 
   BOOST_TEST(couplingInterface.getDimensions() == 3);
   double dt = couplingInterface.initialize();
+  couplingInterface.initializeData();
   while (couplingInterface.isCouplingOngoing()) {
     time += dt;
     dt = couplingInterface.advance(dt);

@@ -32,6 +32,7 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithSolverGeometry)
     couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
 
     double dt = couplingInterface.initialize();
+    couplingInterface.initializeData();
     while (couplingInterface.isCouplingOngoing()) {
       time += dt;
       dt = couplingInterface.advance(dt);
@@ -49,6 +50,7 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithSolverGeometry)
     int             e2     = couplingInterface.setMeshEdge(meshID, i2, i0);
     couplingInterface.setMeshTriangle(meshID, e0, e1, e2);
     double dt = couplingInterface.initialize();
+    couplingInterface.initializeData();
 
     int size = couplingInterface.getMeshVertexSize(meshID);
     BOOST_TEST(size == 3);

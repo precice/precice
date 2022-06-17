@@ -31,6 +31,7 @@ BOOST_AUTO_TEST_CASE(MultipleWriteFromMappingsAndData)
     int                   dataIDBottomT  = interface.getDataID("Temperature", meshIDBottom);
 
     double dt = interface.initialize();
+    interface.initializeData();
     interface.advance(dt);
     double pressure    = -1.0;
     double temperature = -1.0;
@@ -56,7 +57,8 @@ BOOST_AUTO_TEST_CASE(MultipleWriteFromMappingsAndData)
     int                   dataIDP   = interface.getDataID("Pressure", meshID);
     int                   dataIDT   = interface.getDataID("Temperature", meshID);
 
-    double dt          = interface.initialize();
+    double dt = interface.initialize();
+    interface.initializeData();
     double pressure    = 1.0;
     double temperature = 331;
     interface.writeScalarData(dataIDP, vertexID1, pressure);

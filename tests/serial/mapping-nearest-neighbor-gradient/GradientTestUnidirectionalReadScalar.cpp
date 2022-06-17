@@ -56,6 +56,7 @@ BOOST_AUTO_TEST_CASE(GradientTestUnidirectionalReadScalar)
 
     // Initialize, thus sending the mesh.
     double maxDt = cplInterface.initialize();
+    cplInterface.initializeData();
     BOOST_TEST(cplInterface.isCouplingOngoing(), "Sending participant should have to advance once!");
 
     double values[2]  = {1.0, 2.0};

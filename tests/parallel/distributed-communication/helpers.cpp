@@ -65,6 +65,7 @@ void runTestDistributedCommunication(std::string const &config, TestContext cons
   }
 
   precice.initialize();
+  precice.initializeData();
 
   if (context.isNamed("Fluid")) { //Fluid
     for (size_t i = 0; i < vertexIDs.size(); i++) {

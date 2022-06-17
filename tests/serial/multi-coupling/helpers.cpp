@@ -26,6 +26,7 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
     int             dataBAID = cplInterface.getDataID("DataBA", meshID);
 
     double maxDt = cplInterface.initialize();
+    cplInterface.initializeData();
     double valueRead;
 
     BOOST_TEST(cplInterface.isCouplingOngoing());
@@ -58,6 +59,7 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
     int             dataBCID  = cplInterface.getDataID("DataBC", meshID2);
 
     double maxDt = cplInterface.initialize();
+    cplInterface.initializeData();
     double valueReadA, valueReadC;
 
     BOOST_TEST(cplInterface.isCouplingOngoing());
@@ -90,6 +92,7 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
     int             dataBCID = cplInterface.getDataID("DataBC", meshID);
 
     double maxDt = cplInterface.initialize();
+    cplInterface.initializeData();
     double valueRead;
 
     BOOST_TEST(cplInterface.isCouplingOngoing());
@@ -128,6 +131,7 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
     int             dataBAID = cplInterface.getDataID("DataBA", meshID);
 
     double maxDt = cplInterface.initialize();
+    cplInterface.initializeData();
     double valueRead;
     double valueWrite = 1.0;
 
@@ -158,6 +162,7 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
     int             dataBCID  = cplInterface.getDataID("DataBC", meshID2);
 
     double maxDt = cplInterface.initialize();
+    cplInterface.initializeData();
     double valueReadA, valueReadC;
     double valueWriteA{1.0}, valueWriteC{1.0};
 
@@ -191,6 +196,7 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
     int             dataDCID  = cplInterface.getDataID("DataDC", meshID2);
 
     double maxDt = cplInterface.initialize();
+    cplInterface.initializeData();
     double valueReadA, valueReadC;
     double valueWriteA{1.0}, valueWriteC{1.0};
 
@@ -219,6 +225,7 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
     int             dataDCID = cplInterface.getDataID("DataDC", meshID);
 
     double maxDt = cplInterface.initialize();
+    cplInterface.initializeData();
     double valueRead;
     double valueWrite = 1.0;
 

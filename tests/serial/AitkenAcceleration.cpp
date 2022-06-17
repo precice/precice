@@ -22,7 +22,8 @@ BOOST_AUTO_TEST_CASE(AitkenAcceleration)
     int                   vertexID = interface.setMeshVertex(meshID, vertex.data());
     int                   dataID   = interface.getDataID("Data", meshID);
 
-    double dt    = interface.initialize();
+    double dt = interface.initialize();
+    interface.initializeData();
     double value = 1.0;
     interface.writeScalarData(dataID, vertexID, value);
 
@@ -40,6 +41,7 @@ BOOST_AUTO_TEST_CASE(AitkenAcceleration)
     int                   dataID   = interface.getDataID("Data", meshID);
 
     double dt = interface.initialize();
+    interface.initializeData();
     interface.markActionFulfilled(actionWriteIterationCheckpoint());
     interface.advance(dt);
 

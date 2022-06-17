@@ -22,6 +22,7 @@ BOOST_AUTO_TEST_CASE(PrimaryRankSockets)
   double                   position[2] = {0, 0};
   interface.setMeshVertex(meshID, position);
   interface.initialize();
+  interface.initializeData();
   interface.advance(1.0);
   interface.finalize();
 }

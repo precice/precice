@@ -43,6 +43,7 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
       std::vector<double> positions = {1.0, 1.0, 2.0, 2., 2., 3.0};
       interface.setMeshVertices(meshID, 2, positions.data(), vertexIDs.data());
       interface.initialize();
+      interface.initializeData();
       Eigen::Vector3d values;
       interface.advance(1.0);
       interface.readBlockVectorData(dataID, 1, &vertexIDs[0], values.data());
@@ -56,6 +57,7 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
       std::vector<double> positions = {4.0, 4.0, 4.0};
       interface.setMeshVertices(meshID, 1, positions.data(), vertexIDs.data());
       interface.initialize();
+      interface.initializeData();
       Eigen::Vector3d values;
       interface.advance(1.0);
       interface.readBlockVectorData(dataID, 1, vertexIDs.data(), values.data());
@@ -73,6 +75,7 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
       std::vector<double> positions = {4.0, 4.0, 4.0, 0.0, 0.4, 0.0, 0.7, 0.7, 1.7, 0.0, 1.0, 0.0};
       interface.setMeshVertices(meshID, 4, positions.data(), vertexIDs.data());
       interface.initialize();
+      interface.initializeData();
       const DataID        dataID = interface.getDataID("Data2", meshID);
       std::vector<double> values = {1.0, 2.0, 3.0,
                                     -1.0, -1.0, -1.0,
@@ -95,6 +98,7 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
       std::vector<double> positions = {2.1, 2.1, 3.1};
       interface.setMeshVertices(meshID, 1, positions.data(), vertexIDs.data());
       interface.initialize();
+      interface.initializeData();
       const DataID        dataID = interface.getDataID("Data2", meshID);
       std::vector<double> values = {2.0, 3.0, 4.0};
 

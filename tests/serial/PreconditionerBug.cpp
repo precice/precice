@@ -26,6 +26,7 @@ BOOST_AUTO_TEST_CASE(PreconditionerBug)
   precice::VertexID vertexID = interface.setMeshVertex(meshID, vertex.data());
 
   interface.initialize();
+  interface.initializeData();
   int numberOfAdvanceCalls = 0;
 
   while (interface.isCouplingOngoing()) {
