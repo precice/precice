@@ -128,6 +128,7 @@ void BaseCouplingScheme::finalize()
   PRECICE_TRACE();
   checkCompletenessRequiredActions();
   PRECICE_ASSERT(_isInitialized, "Called finalize() before initialize().");
+  PRECICE_ASSERT(_initializeDataHasBeenCalled, "Called finalize() before initializeData().");
 }
 
 void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
@@ -208,6 +209,7 @@ void BaseCouplingScheme::advance()
   PRECICE_TRACE(_timeWindows, _time);
   checkCompletenessRequiredActions();
   PRECICE_ASSERT(_isInitialized, "Before calling advance() coupling scheme has to be initialized via initialize().");
+  PRECICE_ASSERT(_initializeDataHasBeenCalled, "Before calling advance() data of coupling scheme has to be initialized via initializeData().");
   _hasDataBeenReceived  = false;
   _isTimeWindowComplete = false;
 
