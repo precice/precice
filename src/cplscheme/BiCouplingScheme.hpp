@@ -126,6 +126,11 @@ private:
 
   /// Second participant name.
   std::string _secondParticipant = "unknown";
+
+  /**
+   * @brief Exchanges data, if it has to be initialized.
+   */
+  void exchangeInitialData() override;
 };
 
 } // namespace cplscheme

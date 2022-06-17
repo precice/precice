@@ -325,6 +325,8 @@ double SolverInterfaceImpl::initialize()
     performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
   }
 
+  // TODO: need to initialize Waveform with zeros, if initializeData is not called.
+
   PRECICE_INFO(_couplingScheme->printCouplingState());
 
   solverInitEvent.start(precice::syncMode);
@@ -362,11 +364,30 @@ void SolverInterfaceImpl::initializeData()
 
   _couplingScheme->initializeData();
 
+  if (_couplingScheme->hasInitialDataBeenReceived()) {
+    performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
+    mapReadData();
+    performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
+
+    // Store initial data in waveform
+    for (auto &context : _accessor->readDataContexts()) {
+      context.moveToNextWindow();
+    }
+  }
+
+  _couplingScheme->initializeDataPost();
+
   if (_couplingScheme->hasDataBeenReceived()) {
     performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
     mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
+
+    // If data was received in initializeDataPost, store it in waveform
+    for (auto &context : _accessor->readDataContexts()) {
+      context.moveToNextWindow();
+    }
   }
+
   resetWrittenData();
   PRECICE_DEBUG("Plot output");
   _accessor->exportFinal();
@@ -402,7 +423,7 @@ double SolverInterfaceImpl::advance(
 
   // This is the first time advance is called. Initializes the waveform with data from initializeData or 0, if initializeData was not called.
   // @todo: Can be moved to the end of initializeData(), if initializeData() becomes mandatory. See https://github.com/precice/precice/issues/1196.
-  if (_numberAdvanceCalls == 1) {
+  if (not _hasInitializedData && _numberAdvanceCalls == 1) {
     for (auto &context : _accessor->readDataContexts()) {
       context.moveToNextWindow();
     }
@@ -541,7 +562,7 @@ bool SolverInterfaceImpl::isReadDataAvailable() const
   PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before isReadDataAvailable().");
   PRECICE_CHECK(_state != State::Finalized, "isReadDataAvailable() cannot be called after finalize().");
   bool available = _couplingScheme->hasDataBeenReceived();
-  available |= (_couplingScheme->hasInitialDataBeenReceived() && _accessor->maxReadWaveformOrder() > 0); // if any read waveform of this participant has order > 1, we return true. Related to https://github.com/precice/precice/issues/1223.
+  available |= _couplingScheme->hasInitialDataBeenReceived(); // if any read waveform of this participant has order > 1, we return true. Related to https://github.com/precice/precice/issues/1223.
   return available;
 }
 

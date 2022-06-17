@@ -260,6 +260,7 @@ void BaseCouplingScheme::advance()
 void BaseCouplingScheme::storeExtrapolationData()
 {
   PRECICE_TRACE(_timeWindows);
+  PRECICE_ASSERT(isImplicitCouplingScheme()); // Extrapolation is only allowed for implicit coupling.
   for (auto &pair : getAllData()) {
     PRECICE_DEBUG("Store data: {}", pair.first);
     pair.second->storeExtrapolationData();
@@ -269,6 +270,7 @@ void BaseCouplingScheme::storeExtrapolationData()
 void BaseCouplingScheme::moveToNextWindow()
 {
   PRECICE_TRACE(_timeWindows);
+  PRECICE_ASSERT(isImplicitCouplingScheme()); // Extrapolation is only allowed for implicit coupling.
   for (auto &pair : getAccelerationData()) {
     PRECICE_DEBUG("Store data: {}", pair.first);
     pair.second->moveToNextWindow();
@@ -326,9 +328,9 @@ bool BaseCouplingScheme::hasDataBeenReceived() const
 
 void BaseCouplingScheme::checkInitialDataHasBeenReceived()
 {
-  PRECICE_ASSERT(not _hasDataBeenReceived, "checkInitialDataHasBeenReceived() may only be called once within one coupling iteration. If this assertion is triggered this probably means that your coupling scheme has a bug.");
+  PRECICE_ASSERT(not _hasInitialDataBeenReceived, "checkInitialDataHasBeenReceived() may only be called once within one coupling iteration. If this assertion is triggered this probably means that your coupling scheme has a bug.");
   _hasInitialDataBeenReceived = true;
-  checkDataHasBeenReceived();
+  //checkDataHasBeenReceived();
 }
 
 void BaseCouplingScheme::checkDataHasBeenReceived()

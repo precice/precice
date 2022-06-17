@@ -66,45 +66,46 @@ void SerialCouplingScheme::initializeImplementation()
   // If the second participant initializes data, the first receive for the
   // second participant is done in initializeData() instead of initialize().
   if (not doesFirstStep() && not sendsInitializedData() && isCouplingOngoing()) {
-    PRECICE_DEBUG("Receiving data");
-    receiveAndSetTimeWindowSize();
-    receiveData(getM2N(), getReceiveData());
-    checkDataHasBeenReceived();
+    receiveResultFromFirstParticipant();
   }
 }
 
-void SerialCouplingScheme::exchangeInitialData()
+void SerialCouplingScheme::initializeDataPost()
 {
-  // F: send, receive, S: receive, send
-  if (doesFirstStep()) {
+  if (not doesFirstStep()) {
     if (sendsInitializedData()) {
-      // Only allowed, if waveform relaxation is used!
-      sendData(getM2N(), getSendData());
-    }
-    if (receivesInitializedData()) {
-      receiveData(getM2N(), getReceiveData());
-      checkInitialDataHasBeenReceived();
-    }
-  } else { // second participant
-    if (receivesInitializedData()) {
-      // Only allowed, if waveform relaxation is used!
-      receiveData(getM2N(), getReceiveData());  // receive initial data
-      checkInitialDataHasBeenReceived();
-    }
-    if (sendsInitializedData()) {
-      // The second participant sends the initialized data to the first participant
-      // here, which receives the data on call of initialize().
-      sendData(getM2N(), getSendData());
-      receiveAndSetTimeWindowSize();
-      // Put existing data into buffer before next receive.
-      // TODO: Create a buffer in this coupling scheme and obtain the data later to put it inside the ReadDataContext?
-      storeExtrapolationData();
-      moveToNextWindow();
-      // This receive replaces the receive in initialize().
-      receiveData(getM2N(), getReceiveData());  // receive data at end of first participants first timestep
-      checkDataHasBeenReceived();
+      receiveResultFromFirstParticipant();
+      if (isImplicitCouplingScheme()) {
+        storeExtrapolationData();
+        moveToNextWindow();
+      }
     }
   }
+}
+
+void SerialCouplingScheme::sendResultToSecondParticipant()
+{
+  std::cout << "F sends in sendResultToSecondParticipant." << std::endl;
+  PRECICE_ASSERT(doesFirstStep());
+  PRECICE_DEBUG("Sending data...");
+  if (_participantSetsTimeWindowSize) {
+    PRECICE_DEBUG("sending time window size of {}", getComputedTimeWindowPart());
+    getM2N()->send(getComputedTimeWindowPart());
+  }
+  sendData(getM2N(), getSendData());
+  std::cout << "F done sending in sendResultToSecondParticipant." << std::endl;
+}
+
+void SerialCouplingScheme::receiveResultFromFirstParticipant()
+{
+  std::cout << "S receives in receiveResultFromFirstParticipant." << std::endl;
+  PRECICE_DEBUG("Receiving data");
+  PRECICE_ASSERT(not doesFirstStep());
+  receiveAndSetTimeWindowSize();
+  PRECICE_DEBUG("Receiving data...");
+  receiveData(getM2N(), getReceiveData());
+  checkDataHasBeenReceived();
+  std::cout << "S done receiving in receiveResultFromFirstParticipant." << std::endl;
 }
 
 bool SerialCouplingScheme::exchangeDataAndAccelerate()
@@ -112,12 +113,7 @@ bool SerialCouplingScheme::exchangeDataAndAccelerate()
   bool convergence = true;
 
   if (doesFirstStep()) { // first participant
-    PRECICE_DEBUG("Sending data...");
-    if (_participantSetsTimeWindowSize) {
-      PRECICE_DEBUG("sending time window size of {}", getComputedTimeWindowPart());
-      getM2N()->send(getComputedTimeWindowPart());
-    }
-    sendData(getM2N(), getSendData());
+    sendResultToSecondParticipant();
     if (isImplicitCouplingScheme()) {
       convergence = receiveConvergence(getM2N());
     }
@@ -134,12 +130,7 @@ bool SerialCouplingScheme::exchangeDataAndAccelerate()
     sendData(getM2N(), getSendData());
     // the second participant does not want new data in the last iteration of the last time window
     if (isCouplingOngoing() || (isImplicitCouplingScheme() && not convergence)) {
-      if (_participantReceivesTimeWindowSize) {
-        receiveAndSetTimeWindowSize();
-      }
-      PRECICE_DEBUG("Receiving data...");
-      receiveData(getM2N(), getReceiveData());
-      checkDataHasBeenReceived();
+      receiveResultFromFirstParticipant();
     }
   }
 

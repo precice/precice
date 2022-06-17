@@ -121,5 +121,35 @@ CouplingData *BiCouplingScheme::getReceiveData(
   return nullptr;
 }
 
+void BiCouplingScheme::exchangeInitialData()
+{
+  // F: send, receive, S: receive, send
+  if (doesFirstStep()) {
+    if (sendsInitializedData()) {
+      std::cout << "F sends." << std::endl;
+      sendData(getM2N(), getSendData());
+      std::cout << "F done sending." << std::endl;
+    }
+    if (receivesInitializedData()) {
+      std::cout << "F receives." << std::endl;
+      receiveData(getM2N(), getReceiveData());
+      checkInitialDataHasBeenReceived();
+      std::cout << "F done receiving." << std::endl;
+    }
+  } else { // second participant
+    if (receivesInitializedData()) {
+      std::cout << "S receives in exchangeInitialData." << std::endl;
+      receiveData(getM2N(), getReceiveData());
+      checkInitialDataHasBeenReceived();
+      std::cout << "S done receiving in exchangeInitialData." << std::endl;
+    }
+    if (sendsInitializedData()) {
+      std::cout << "S sends." << std::endl;
+      sendData(getM2N(), getSendData());
+      std::cout << "S done sending." << std::endl;
+    }
+  }
+}
+
 } // namespace cplscheme
 } // namespace precice

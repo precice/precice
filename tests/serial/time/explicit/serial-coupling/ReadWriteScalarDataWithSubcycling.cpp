@@ -84,14 +84,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     } else {
       readTime = (timewindow + 1) * windowDt; // SolverTwo gets result at end of window from SolverOne
     }
-    if (timestep % nSubsteps == 0) {
-      BOOST_TEST(precice.isReadDataAvailable());
-    } else {
-      BOOST_TEST(!precice.isReadDataAvailable());
-    }
-    if (precice.isReadDataAvailable()) {
-      precice.readScalarData(readDataID, vertexID, readData);
-    }
+    BOOST_TEST(precice.isReadDataAvailable());
+    precice.readScalarData(readDataID, vertexID, readData);
     BOOST_TEST(readData == readFunction(readTime));
 
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.

@@ -87,9 +87,19 @@ private:
   void initializeImplementation() override;
 
   /**
-   * @brief Exchanges data, if it has to be initialized.
+   * @brief Perform another receive after data initialization.
    */
-  void exchangeInitialData() override;
+  void initializeDataPost() override;
+
+  /**
+   * @brief First participant sends data to second participant at end of the time window. This is only relevant for a serial coupling scheme.
+   */
+  void sendResultToSecondParticipant();
+
+  /**
+   * @brief Second participant receives data from first participant at end of the time widnow. This is only relevant for a serial coupling scheme.
+   */
+  void receiveResultFromFirstParticipant();
 };
 
 } // namespace cplscheme

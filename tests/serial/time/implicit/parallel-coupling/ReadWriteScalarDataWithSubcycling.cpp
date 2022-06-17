@@ -87,13 +87,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
       windowStartStep = timestep;
       precice.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
     }
-
-    if (timestep % nSubsteps == 0) {
-      BOOST_TEST(precice.isReadDataAvailable());
-    } else {
-      BOOST_TEST(!precice.isReadDataAvailable());
-    }
-
+    BOOST_TEST(precice.isReadDataAvailable());
     if (precice.isReadDataAvailable()) {
       precice.readScalarData(readDataID, vertexID, readData);
     }

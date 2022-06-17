@@ -95,13 +95,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingMixed)
       readTime = time + currentDt;
     }
 
-    bool atWindowBoundary = timestep % nSubsteps == 0;
-
-    if (atWindowBoundary || context.isNamed("SolverTwo")) { // read data is only available at end of window for zeroth order, see also https://github.com/precice/precice/issues/1223
-      BOOST_TEST(precice.isReadDataAvailable());
-    } else {
-      BOOST_TEST(!precice.isReadDataAvailable());
-    }
+    BOOST_TEST(precice.isReadDataAvailable());
     if (precice.isReadDataAvailable()) {
       precice.readScalarData(readDataID, vertexID, currentDt, readData);
     }

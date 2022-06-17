@@ -98,6 +98,11 @@ public:
    */
   virtual void initializeData() = 0;
 
+  /**
+   * @brief Allows to perform additional receiving after initializeData was called (currently only relevant for SerialCouplingSchemes in combination with Time Interpolation)
+   */
+  virtual void initializeDataPost() {}
+
   /// @brief Adds newly computed time. Has to be called before every advance.
   virtual void addComputedTime(double timeToAdd) = 0;
 

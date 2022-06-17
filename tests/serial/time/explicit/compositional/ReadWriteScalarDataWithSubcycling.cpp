@@ -80,14 +80,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
 
   while (precice.isCouplingOngoing()) {
     double readTime = timewindow * windowDt; // both solvers lag one window behind for parallel-explicit coupling.
-    if (timestep % nSubsteps == 0) {
-      BOOST_TEST(precice.isReadDataAvailable());
-    } else {
-      BOOST_TEST(!precice.isReadDataAvailable());
-    }
-    if (precice.isReadDataAvailable()) {
-      precice.readScalarData(readDataID, vertexID, readData);
-    }
+    BOOST_TEST(precice.isReadDataAvailable());
+    precice.readScalarData(readDataID, vertexID, readData);
     BOOST_TEST(readData == readFunction(readTime));
 
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.
