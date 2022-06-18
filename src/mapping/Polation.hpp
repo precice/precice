@@ -4,6 +4,7 @@
 #include <vector>
 #include "Eigen/Core"
 #include "mesh/Edge.hpp"
+#include "mesh/Tetrahedron.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
 
@@ -30,6 +31,9 @@ public:
 
   /// Calculate projection to a triangle
   Polation(const Eigen::VectorXd &location, const mesh::Triangle &element);
+
+  /// Calculate projection to a tetrahedron
+  Polation(const Eigen::VectorXd &location, const mesh::Tetrahedron &element);
 
   /// Get the weights and indices of the calculated interpolation
   const std::vector<WeightedElement> &getWeightedElements() const;
