@@ -129,6 +129,7 @@ TetrahedronTraits::Ptr Index::IndexImpl::getTetraRTree(const mesh::Mesh &mesh)
   for (size_t i = 0; i < mesh.tetrahedra().size(); ++i) {
     // We use a custom function to compute the AABB, because
     // bg::return_envelope was designed for polygons.
+    // Furthermore, we need customized box to add a safety factor.
     auto box = makeBox(mesh.tetrahedra()[i]);
     elements.emplace_back(std::move(box), i);
   }

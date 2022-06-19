@@ -458,6 +458,35 @@ BOOST_AUTO_TEST_CASE(TetraIndexing)
   BOOST_TEST(((match[0] == 0 && match[1] == 1) || (match[0] == 1 && match[1] == 0)));
 }
 
+BOOST_AUTO_TEST_CASE(TetraWorksOnBoundary)
+{
+  /*
+ Check that the AABB safety factor is high enough. Do all the corners of a tetra fit inside its AABB?
+  */
+  PRECICE_TEST(1_rank);
+  PtrMesh ptr(new Mesh("MyMesh", 3, testing::nextMeshID()));
+  auto &  mesh = *ptr;
+  Index   indexTree(ptr);
+
+  std::vector<Eigen::Vector3d> locations;
+  locations.push_back(Eigen::Vector3d(0, 0, 0));
+  locations.push_back(Eigen::Vector3d(1, 0, 0));
+  locations.push_back(Eigen::Vector3d(0, 1, 0));
+  locations.push_back(Eigen::Vector3d(0, 0, 1));
+
+  // Set containing tetra
+  auto &v00 = mesh.createVertex(Eigen::Vector3d(0, 0, 0));
+  auto &v01 = mesh.createVertex(Eigen::Vector3d(1, 0, 0));
+  auto &v02 = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
+  auto &v03 = mesh.createVertex(Eigen::Vector3d(0, 0, 1));
+  mesh.createTetrahedron(v00, v01, v02, v03);
+
+  for (const auto &vertex : locations) {
+    auto match = indexTree.getEnclosingTetrahedra(vertex);
+    BOOST_TEST(match.size() == 1);
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END() // Tetrahedra
 
 BOOST_AUTO_TEST_SUITE_END() // Mesh
