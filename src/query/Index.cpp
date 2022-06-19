@@ -242,7 +242,7 @@ std::vector<TetrahedronID> Index::getEnclosingTetrahedra(const Eigen::VectorXd &
   const auto &rtree = _pimpl->getTetraRTree(*_mesh);
 
   std::vector<TetrahedronID> matches;
-  rtree->query(bgi::contains(location), boost::make_function_output_iterator([&](TetrahedronTraits::IndexType const &match) {
+  rtree->query(bgi::covers(location), boost::make_function_output_iterator([&](TetrahedronTraits::IndexType const &match) {
                  matches.emplace_back(match.second);
                }));
   return matches;
