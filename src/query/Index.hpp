@@ -76,7 +76,7 @@ public:
   /// Return all the vertices inside a bounding box
   std::vector<VertexID> getVerticesInsideBox(const mesh::BoundingBox &bb);
 
-  /// Return all the tetrahedra whose bounding box contains a vertex
+  /// Return all the tetrahedra whose axis-aligned bounding box contains a vertex
   std::vector<TetrahedronID> getEnclosingTetrahedra(const Eigen::VectorXd &location);
 
   /**
