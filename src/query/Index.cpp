@@ -127,8 +127,8 @@ TetrahedronTraits::Ptr Index::IndexImpl::getTetraRTree(const mesh::Mesh &mesh)
   std::vector<TetrahedronTraits::IndexType> elements;
   elements.reserve(mesh.tetrahedra().size());
   for (size_t i = 0; i < mesh.tetrahedra().size(); ++i) {
-    // Instead of using bg::return_envelope, we compute the BB of the tetra ourself
-    // Then pass the bounds to Boost.
+    // We use a custom function to compute the AABB, because
+    // bg::return_envelope was designed for polygons.
     auto box = makeBox(mesh.tetrahedra()[i]);
     elements.emplace_back(std::move(box), i);
   }
