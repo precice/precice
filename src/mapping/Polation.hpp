@@ -7,7 +7,6 @@
 #include "mesh/Tetrahedron.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
-#include "mesh/Tetrahedron.hpp"
 
 namespace precice {
 namespace mapping {

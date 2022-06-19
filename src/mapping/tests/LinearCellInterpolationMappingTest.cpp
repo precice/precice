@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(Conservative)
   BOOST_CHECK(equals(netForce, outValuesScalar.sum()));
 }
 
-BOOST_AUTO_TEST_CASE(Consistent3D)
+BOOST_AUTO_TEST_CASE(ConsistentOneTetra3D)
 {
   PRECICE_TEST(1_rank);
   int dimensions = 3;
@@ -177,8 +177,11 @@ BOOST_AUTO_TEST_CASE(Consistent3D)
 
   inMesh->allocateDataValues();
 
-
+  // Create a tetra
   inMesh->createTetrahedron(inVertexA, inVertexB, inVertexC, inVertexD);
+  // Create triangle in the plane z = 0
+  inMesh->createTriangle(inVertexA, inVertexB, inVertexC);
+
   Eigen::VectorXd &inValuesScalar = inDataScalar->values();
   inValuesScalar << 1.0, 2.0, 3.0, 4.0; //1 + x + 2y + 3z
 
@@ -187,13 +190,14 @@ BOOST_AUTO_TEST_CASE(Consistent3D)
   PtrData outDataScalar   = outMesh->createData("OutDataScalar", 1, 2_dataID);
   int     outDataScalarID = outDataScalar->getID();
 
-
-  // Center and the 4 vertices
+  // Center and the 4 vertices (expected: average then 4 values)
   outMesh->createVertex(Eigen::Vector3d::Constant(0.25));
   outMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
   outMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
   outMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 0.0));
   outMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 1.0));
+  // Point below the triangle ABC -> fallback to triangle. Expected projection on triangle.
+  outMesh->createVertex(Eigen::Vector3d(1.0 / 3, 1.0 / 3, -0.1));
 
   // TODO: add cases
   outMesh->allocateDataValues();
@@ -206,8 +210,9 @@ BOOST_AUTO_TEST_CASE(Consistent3D)
   mapping.map(inDataScalarID, outDataScalarID);
   const Eigen::VectorXd &outValuesScalar = outDataScalar->values();
   BOOST_TEST(mapping.hasComputedMapping() == true);
-  /*// All vertices to test
-  // Center of triangle = average
+  // All vertices to test
+
+  /*// Center of triangle = average
   outMesh->createVertex(Eigen::Vector2d::Constant(1.0 / 3.0));
   // Exact mapping if grid is matching
   outMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
@@ -221,25 +226,15 @@ BOOST_AUTO_TEST_CASE(Consistent3D)
   // Check fall back on nearest neighbor
   outMesh->createVertex(Eigen::Vector2d(-0.1, -0.1)); // Currently maps to opposite edge
   outMesh->createVertex(Eigen::Vector2d(2.5, -1.0));
-  outMesh->createVertex(Eigen::Vector2d(2.5, 10.0));
+  outMesh->createVertex(Eigen::Vector2d(2.5, 10.0));*/
 
-  
-
-  // Setup mapping with mapping coordinates and geometry used
-  precice::mapping::LinearCellInterpolationMapping mapping(mapping::Mapping::CONSISTENT, dimensions);
-  mapping.setMeshes(inMesh, outMesh);
-  BOOST_TEST(mapping.hasComputedMapping() == false);
-  mapping.computeMapping();
-  mapping.map(inDataScalarID, outDataScalarID);
-  const Eigen::VectorXd &outValuesScalar = outDataScalar->values();
-  BOOST_TEST(mapping.hasComputedMapping() == true);
+  // Center of tetra, expected average = 2.5
 
   // Check expected
   Eigen::VectorXd expected(outMesh->vertices().size());
-  expected << 2.0, 1.0, 2.0, 3.0, 1.49, 2.25, 1.5, 2.5, 2.0, 3.0;
-  BOOST_CHECK(equals(expected, outValuesScalar));*/
+  expected << 2.5, 1.0, 2.0, 3.0, 4.0, 2.0;
+  BOOST_CHECK(equals(expected, outValuesScalar));
 }
-
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
