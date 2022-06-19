@@ -4,6 +4,7 @@
 #include <boost/geometry.hpp>
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
+#include "mesh/Tetrahedron.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/assertion.hpp"
 
@@ -215,6 +216,19 @@ inline RTreeBox makeBox(const Eigen::VectorXd &min, const Eigen::VectorXd &max)
   return {eigenToRaw(min), eigenToRaw(max)};
 }
 
+// Overload for a tetrahedron
+inline RTreeBox makeBox(const precice::mesh::Tetrahedron &tetra)
+{
+
+  precice::mesh::BoundingBox box(tetra.getDimensions());
+  for (int i = 0; i < 4; ++i) {
+    box.expandBy(tetra.vertex(i));
+  }
+
+  // Convert to Boost type
+  return makeBox(box.minCorner(), box.maxCorner());
+}
+
 namespace impl {
 
 /// The general rtree parameter type used in precice
@@ -237,6 +251,11 @@ struct PrimitiveTraits<mesh::Edge> {
 template <>
 struct PrimitiveTraits<mesh::Triangle> {
   using MeshContainer = mesh::Mesh::TriangleContainer;
+};
+
+template <>
+struct PrimitiveTraits<mesh::Tetrahedron> {
+  using MeshContainer = mesh::Mesh::TetraContainer;
 };
 
 /// Makes a utils::PtrVector indexable and thus be usable in boost::geometry::rtree

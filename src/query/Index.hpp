@@ -8,6 +8,7 @@
 #include "mesh/BoundingBox.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "mesh/Tetrahedron.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
 #include "precice/types.hpp"
@@ -44,6 +45,7 @@ using GenericMatch  = MatchType<struct GenericMatchTag>;
 using VertexMatch   = MatchType<struct VertexMatchTag>;
 using EdgeMatch     = MatchType<struct EdgeMatchTag>;
 using TriangleMatch = MatchType<struct TriangleTag>;
+using TetraMatch    = MatchType<struct TetraTag>;
 
 /// Struct representing a projection match
 struct ProjectionMatch {
@@ -73,6 +75,9 @@ public:
 
   /// Return all the vertices inside a bounding box
   std::vector<VertexID> getVerticesInsideBox(const mesh::BoundingBox &bb);
+
+  /// Return all the tetrahedra whose axis-aligned bounding box contains a vertex
+  std::vector<TetrahedronID> getEnclosingTetrahedra(const Eigen::VectorXd &location);
 
   /**
    * @brief Find the closest interpolation element to the given location.
