@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(ConsistentOneTetra3D)
 
   // Check expected
   Eigen::VectorXd expected(outMesh->vertices().size());
-  expected << 2.5, 1.0, 2.0, 3.0, 4.0, 2.0, 3.0, 3.3, 3.6;
+  expected << 2.5, 1.0, 2.0, 3.0, 4.0, 2.0, 3.6, 3.3, 3.6;
   BOOST_CHECK(equals(expected, outValuesScalar));
 }
 
