@@ -1,12 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
-  <log>
-    <sink
-      filter="%Severity% > debug and %Rank% = 0"
-      format="---[precice] %ColorizedSeverity% %Message%"
-      enabled="true" />
-  </log>
-
   <solver-interface dimensions="3">
     <data:scalar name="DataOne" />
 

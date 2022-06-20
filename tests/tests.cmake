@@ -43,6 +43,7 @@ target_sources(testprecice
     tests/parallel/mapping-nearest-neighbor-gradient/GradientTestParallelVector.cpp
     tests/parallel/mapping-nearest-neighbor-gradient/GradientTestParallelWriteVector.cpp
     tests/parallel/mapping-volume/ParallelSquare1To2.cpp
+    tests/parallel/mapping-volume/ParallelCube3To1.cpp
     tests/parallel/mapping-volume/ParallelSquare2To1.cpp
     tests/parallel/mapping-volume/ParallelSquareConservative1To2.cpp
     tests/parallel/mapping-volume/ParallelTriangleConservative2To1.cpp

@@ -18,5 +18,4 @@ BOOST_AUTO_TEST_SUITE_END() // Integration
 BOOST_AUTO_TEST_SUITE_END() // Serial
 BOOST_AUTO_TEST_SUITE_END() // MappingVolume
 
-
 #endif // PRECICE_NO_MPI
