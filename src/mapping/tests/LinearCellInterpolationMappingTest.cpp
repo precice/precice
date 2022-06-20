@@ -19,7 +19,7 @@ using namespace precice::mesh;
 BOOST_AUTO_TEST_SUITE(MappingTests)
 BOOST_AUTO_TEST_SUITE(LinearCellInterpolationMapping)
 
-BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
+BOOST_AUTO_TEST_CASE(Consistent)
 {
   PRECICE_TEST(1_rank);
   int dimensions = 2;
@@ -158,6 +158,71 @@ BOOST_AUTO_TEST_CASE(Conservative)
   // Check expected value, and conservation
   BOOST_CHECK(equals(expected, outValuesScalar));
   BOOST_CHECK(equals(netForce, outValuesScalar.sum()));
+}
+
+BOOST_AUTO_TEST_CASE(ConsistentOneTetra3D)
+{
+  PRECICE_TEST(1_rank);
+  int dimensions = 3;
+  using testing::equals;
+
+  PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
+  PtrData inDataScalar   = inMesh->createData("InDataScalar", 1, 0_dataID);
+  int     inDataScalarID = inDataScalar->getID();
+
+  Vertex &inVertexA = inMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+  Vertex &inVertexB = inMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
+  Vertex &inVertexC = inMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 0.0));
+  Vertex &inVertexD = inMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 1.0));
+
+  inMesh->allocateDataValues();
+
+  // Create a tetra
+  inMesh->createTetrahedron(inVertexA, inVertexB, inVertexC, inVertexD);
+  // Create triangle in the plane z = 0
+  inMesh->createTriangle(inVertexA, inVertexB, inVertexC);
+  // Add edge BD to check fall-back on edge
+  inMesh->createEdge(inVertexB, inVertexD);
+
+  Eigen::VectorXd &inValuesScalar = inDataScalar->values();
+  inValuesScalar << 1.0, 2.0, 3.0, 4.0; //1 + x + 2y + 3z
+
+  BOOST_CHECK(!inMesh->tetrahedra().empty());
+  PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
+  PtrData outDataScalar   = outMesh->createData("OutDataScalar", 1, 2_dataID);
+  int     outDataScalarID = outDataScalar->getID();
+
+  // Center and the 4 vertices (expected: average then 4 values)
+  outMesh->createVertex(Eigen::Vector3d::Constant(0.25));
+  outMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+  outMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
+  outMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 0.0));
+  outMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 1.0));
+  // Point below the triangle ABC -> fallback to triangle. Expected projection on triangle.
+  outMesh->createVertex(Eigen::Vector3d(1.0 / 3, 1.0 / 3, -0.1));
+  // Point close to the triangle ACD (which isn't set!).
+  // Wanted behavior: NN => 3.0. Actual behavior: 3.6 because of fall-back to edge. See issue #1304
+  outMesh->createVertex(Eigen::Vector3d(-0.1, 0.8, 0.5));
+  // Point inside the triangle BCD (not set) -> Check it is inside the tetra. Expected: 0.2*2+0.3*3+0.5*4 = 3.3
+  outMesh->createVertex(Eigen::Vector3d(0.2, 0.3, 0.5));
+  // Point on the the edge BD for fall-back. Expected: 0.4*3 + 0.6*4 = 3.6
+  outMesh->createVertex(Eigen::Vector3d(0, 0.4, 0.6));
+
+  outMesh->allocateDataValues();
+
+  // Setup mapping with mapping coordinates and geometry used
+  precice::mapping::LinearCellInterpolationMapping mapping(mapping::Mapping::CONSISTENT, dimensions);
+  mapping.setMeshes(inMesh, outMesh);
+  BOOST_TEST(mapping.hasComputedMapping() == false);
+  mapping.computeMapping();
+  mapping.map(inDataScalarID, outDataScalarID);
+  const Eigen::VectorXd &outValuesScalar = outDataScalar->values();
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+
+  // Check expected
+  Eigen::VectorXd expected(outMesh->vertices().size());
+  expected << 2.5, 1.0, 2.0, 3.0, 4.0, 2.0, 3.6, 3.3, 3.6;
+  BOOST_CHECK(equals(expected, outValuesScalar));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

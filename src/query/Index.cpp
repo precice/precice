@@ -270,8 +270,17 @@ ProjectionMatch Index::findCellOrProjection(const Eigen::VectorXd &location, int
     // If no triangle is found, fall-back on NP
     return findNearestProjection(location, n);
   } else {
-    PRECICE_UNREACHABLE("Volume coupling 3D not  implemented");
-    return findTriangleProjection(location, n);
+
+    // Find correct tetra, or fall back to NP
+    auto matchedTetra = getEnclosingTetrahedra(location);
+    for (const auto &match : matchedTetra) {
+      // Matches are raw indices, not (indices, distance) pairs
+      auto polation = mapping::Polation(location, _mesh->tetrahedra()[match]);
+      if (polation.isInterpolation()) {
+        return {polation, 0.0};
+      }
+    }
+    return findNearestProjection(location, n);
   }
 }
 
