@@ -213,7 +213,7 @@ void testMappingVolumeOneTetra(const std::string configFile, const TestContext &
 
     // Initialize, write data, advance and finalize
     double dt = interface.initialize();
-    BOOST_TEST(!mesh.triangles().empty(), "Triangle must still be stored");
+    BOOST_TEST(!mesh.tetrahedra().empty(), "Tetrahedra must still be stored");
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant must advance once.");
 
     // Send 1 + 5x - 3y + 9z
