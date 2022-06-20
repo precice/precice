@@ -54,12 +54,12 @@ inline double computeSquaredDifference(
 template <typename RADIAL_BASIS_FUNCTION_T>
 Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, std::array<bool, 3> activeAxis)
 {
-  const unsigned int inputSize      = inputMesh.vertices().size();
+  const auto         inputSize      = inputMesh.vertices().size();
   const unsigned int deadDimensions = std::count(activeAxis.begin(), activeAxis.end(), false);
   // Treat the 2D case as 3D case with dead axis
   const unsigned int dimensions = 3;
   const unsigned int polyparams = 1 + dimensions - deadDimensions;
-  const unsigned int n          = inputSize + polyparams; // Add linear polynom degrees
+  const auto         n          = inputSize + polyparams; // Add linear polynom degrees
 
   PRECICE_ASSERT((inputMesh.getDimensions() == 3) || activeAxis[2] == false);
   PRECICE_ASSERT(inputSize >= 1 + polyparams, inputSize);
@@ -67,8 +67,8 @@ Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh
   Eigen::MatrixXd matrixCLU(n, n);
   matrixCLU.setZero();
 
-  for (unsigned int i = 0; i < inputSize; ++i) {
-    for (unsigned int j = i; j < inputSize; ++j) {
+  for (auto i = 0; i < inputSize; ++i) {
+    for (auto j = i; j < inputSize; ++j) {
       const auto &u                 = inputMesh.vertices()[i].rawCoords();
       const auto &v                 = inputMesh.vertices()[j].rawCoords();
       double      squaredDifference = computeSquaredDifference(u, v, activeAxis);
@@ -95,13 +95,13 @@ Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh
 template <typename RADIAL_BASIS_FUNCTION_T>
 Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const mesh::Mesh &outputMesh, std::array<bool, 3> activeAxis)
 {
-  const unsigned int inputSize      = inputMesh.vertices().size();
-  const unsigned int outputSize     = outputMesh.vertices().size();
+  const auto         inputSize      = inputMesh.vertices().size();
+  const auto         outputSize     = outputMesh.vertices().size();
   const unsigned int deadDimensions = std::count(activeAxis.begin(), activeAxis.end(), false);
   // Treat the 2D case as 3D case with dead axis
   const unsigned int dimensions = 3;
   const unsigned int polyparams = 1 + dimensions - deadDimensions;
-  const unsigned int n          = inputSize + polyparams; // Add linear polynom degrees
+  const auto         n          = inputSize + polyparams; // Add linear polynom degrees
 
   PRECICE_ASSERT((inputMesh.getDimensions() == 3) || activeAxis[2] == false);
   PRECICE_ASSERT(inputSize >= 1 + polyparams, inputSize);
@@ -110,8 +110,9 @@ Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::
   matrixA.setZero();
 
   // Fill _matrixA with values
-  for (unsigned int i = 0; i < outputSize; ++i) {
-    for (unsigned int j = 0; j < inputSize; ++j) {
+
+  for (auto i = 0; i < outputSize; ++i) {
+    for (auto j = 0; j < inputSize; ++j) {
       const auto &u                 = outputMesh.vertices()[i].rawCoords();
       const auto &v                 = inputMesh.vertices()[j].rawCoords();
       double      squaredDifference = computeSquaredDifference(u, v, activeAxis);
