@@ -224,7 +224,7 @@ inline RTreeBox makeBox(const precice::mesh::Tetrahedron &tetra)
   for (int i = 0; i < 4; ++i) {
     box.expandBy(tetra.vertex(i));
   }
-  
+
   // Convert to Boost type
   return makeBox(box.minCorner(), box.maxCorner());
 }
