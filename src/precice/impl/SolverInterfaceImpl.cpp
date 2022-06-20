@@ -1036,8 +1036,8 @@ void SolverInterfaceImpl::setMeshTetrahedron(
     PRECICE_CHECK(mesh->isValidVertexID(thirdVertexID), errorInvalidVertexID(thirdVertexID));
     PRECICE_CHECK(mesh->isValidVertexID(fourthVertexID), errorInvalidVertexID(fourthVertexID));
     mesh::Vertex &A = mesh->vertices()[firstVertexID];
-    mesh::Vertex &B = mesh->vertices()[thirdVertexID];
-    mesh::Vertex &C = mesh->vertices()[firstVertexID];
+    mesh::Vertex &B = mesh->vertices()[secondVertexID];
+    mesh::Vertex &C = mesh->vertices()[thirdVertexID];
     mesh::Vertex &D = mesh->vertices()[fourthVertexID];
 
     // Also add underlying primitives (4 triangles, 6 edges)
