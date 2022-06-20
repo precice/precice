@@ -67,8 +67,8 @@ Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh
   Eigen::MatrixXd matrixCLU(n, n);
   matrixCLU.setZero();
 
-  for (auto i = 0; i < inputSize; ++i) {
-    for (auto j = i; j < inputSize; ++j) {
+  for (auto i : boost::irange<Eigen::Index>(0, inputSize)) {
+    for (auto j : boost::irange<Eigen::Index>(i, inputSize)) {
       const auto &u                 = inputMesh.vertices()[i].rawCoords();
       const auto &v                 = inputMesh.vertices()[j].rawCoords();
       double      squaredDifference = computeSquaredDifference(u, v, activeAxis);
@@ -111,8 +111,8 @@ Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::
 
   // Fill _matrixA with values
 
-  for (auto i = 0; i < outputSize; ++i) {
-    for (auto j = 0; j < inputSize; ++j) {
+  for (auto i : boost::irange<Eigen::Index>(0, outputSize)) {
+    for (auto j : boost::irange<Eigen::Index>(0, inputSize)) {
       const auto &u                 = outputMesh.vertices()[i].rawCoords();
       const auto &v                 = inputMesh.vertices()[j].rawCoords();
       double      squaredDifference = computeSquaredDifference(u, v, activeAxis);
