@@ -11,6 +11,7 @@
 
 #include "Edge.hpp"
 #include "Mesh.hpp"
+#include "Tetrahedron.hpp"
 #include "Triangle.hpp"
 #include "logging/LogMacros.hpp"
 #include "math/geometry.hpp"
@@ -410,6 +411,19 @@ void Mesh::addMesh(
                    (vertexMap.count(vertexIndex2) == 1) &&
                    (vertexMap.count(vertexIndex3) == 1));
     createTriangle(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2], *vertexMap[vertexIndex3]);
+  }
+
+  for (const Tetrahedron &tetra : deltaMesh.tetrahedra()) {
+    VertexID vertexIndex1 = tetra.vertex(0).getID();
+    VertexID vertexIndex2 = tetra.vertex(1).getID();
+    VertexID vertexIndex3 = tetra.vertex(2).getID();
+    VertexID vertexIndex4 = tetra.vertex(3).getID();
+
+    PRECICE_ASSERT((vertexMap.count(vertexIndex1) == 1) &&
+                   (vertexMap.count(vertexIndex2) == 1) &&
+                   (vertexMap.count(vertexIndex3) == 1) &&
+                   (vertexMap.count(vertexIndex4) == 1));
+    createTetrahedron(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2], *vertexMap[vertexIndex3], *vertexMap[vertexIndex4]);
   }
   _index.clear();
 }

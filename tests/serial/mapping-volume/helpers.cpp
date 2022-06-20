@@ -170,7 +170,6 @@ void testMappingVolumeOneTriangleConservative(const std::string configFile, cons
   }
 }
 
-
 void testMappingVolumeOneTetra(const std::string configFile, const TestContext &context)
 {
   using precice::testing::equals;
@@ -194,8 +193,7 @@ void testMappingVolumeOneTetra(const std::string configFile, const TestContext &
     BOOST_TEST(vertexIDs[0] != -1, "Vertex A is invalid");
     BOOST_TEST(vertexIDs[1] != -1, "Vertex B is invalid");
     BOOST_TEST(vertexIDs[2] != -1, "Vertex C is invalid");
-      BOOST_TEST(vertexIDs[3] != -1, "Vertex D is invalid");
-
+    BOOST_TEST(vertexIDs[3] != -1, "Vertex D is invalid");
 
     interface.setMeshTetrahedron(meshID, vertexIDs[0], vertexIDs[1], vertexIDs[2], vertexIDs[3]);
 
@@ -207,7 +205,6 @@ void testMappingVolumeOneTetra(const std::string configFile, const TestContext &
     BOOST_REQUIRE(mesh.edges().size() == 6);
     BOOST_REQUIRE(mesh.triangles().size() == 4);
     BOOST_REQUIRE(mesh.tetrahedra().size() == 1);
-
 
     BOOST_TEST(equals(mesh.tetrahedra()[0].getVolume(), 1.0 / 6), "Tetrahedron volume must be 1/6");
 
@@ -244,7 +241,6 @@ void testMappingVolumeOneTetra(const std::string configFile, const TestContext &
       BOOST_CHECK(mesh.edges().size() == 6);
       BOOST_CHECK(mesh.triangles().size() == 4);
       BOOST_CHECK(mesh.tetrahedra().size() == 1);
-
     }
 
     interface.advance(dt);
