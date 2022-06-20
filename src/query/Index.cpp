@@ -119,7 +119,7 @@ TetrahedronTraits::Ptr Index::IndexImpl::getTetraRTree(const mesh::Mesh &mesh)
     return indices.tetraRTree;
   }
 
-  precice::utils::Event e("query.index.getTetraIndexTree." + mesh.getName());
+  precice::utils::Event e("query.index.getTriangleIndexTree." + mesh.getName());
 
   // We first generate the values for the tetra rtree.
   // The resulting vector is a random access range, which can be passed to the
