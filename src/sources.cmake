@@ -190,7 +190,7 @@ target_sources(precice
     src/mapping/Polation.hpp
     src/mapping/RadialBasisFctBaseMapping.hpp
     src/mapping/RadialBasisFctMapping.hpp
-    src/mapping/RadialBasisFctSolver.h
+    src/mapping/RadialBasisFctSolver.hpp
     src/mapping/SharedPointer.hpp
     src/mapping/config/MappingConfiguration.cpp
     src/mapping/config/MappingConfiguration.hpp
