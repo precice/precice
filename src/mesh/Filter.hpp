@@ -42,7 +42,7 @@ void filterMesh(Mesh &destination, const Mesh &source, UnaryPredicate p)
     }
   }
 
-  // Add all triangles formed by the contributing edges
+  // Add all triangles formed by the contributing vertices
   for (const Triangle &triangle : source.triangles()) {
     VertexID vertexIndex1 = triangle.vertex(0).getID();
     VertexID vertexIndex2 = triangle.vertex(1).getID();
@@ -51,6 +51,20 @@ void filterMesh(Mesh &destination, const Mesh &source, UnaryPredicate p)
         vertexMap.count(vertexIndex2) == 1 &&
         vertexMap.count(vertexIndex3) == 1) {
       destination.createTriangle(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2], *vertexMap[vertexIndex3]);
+    }
+  }
+
+  // Add all tetrahedra formed by the contributing vertices
+  for (const Tetrahedron &tetra : source.tetrahedra()) {
+    VertexID vertexIndex1 = tetra.vertex(0).getID();
+    VertexID vertexIndex2 = tetra.vertex(1).getID();
+    VertexID vertexIndex3 = tetra.vertex(2).getID();
+    VertexID vertexIndex4 = tetra.vertex(3).getID();
+    if (vertexMap.count(vertexIndex1) == 1 &&
+        vertexMap.count(vertexIndex2) == 1 &&
+        vertexMap.count(vertexIndex3) == 1 &&
+        vertexMap.count(vertexIndex4) == 1) {
+      destination.createTetrahedron(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2], *vertexMap[vertexIndex3], *vertexMap[vertexIndex4]);
     }
   }
 }
