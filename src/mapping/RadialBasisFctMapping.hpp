@@ -139,7 +139,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       globalOutMesh.addMesh(*outMesh);
     }
 
-    _rbfSolver.computeDecomposition(this->_basisFunction, globalInMesh, globalOutMesh, this->_deadAxis);
+    _rbfSolver = RadialBasisFctSolver{this->_basisFunction, globalInMesh, globalOutMesh, this->_deadAxis};
   }
   this->_hasComputedMapping = true;
   PRECICE_DEBUG("Compute Mapping is Completed.");

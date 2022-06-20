@@ -8,9 +8,11 @@ namespace mapping {
 
 class RadialBasisFctSolver {
 public:
+  /// Default constructor
+  RadialBasisFctSolver() = default;
   /// Assembles the system matrices and computes the decomposition of the interpolation matrix
   template <typename RADIAL_BASIS_FUNCTION_T>
-  void computeDecomposition(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const mesh::Mesh &outputMesh, std::vector<bool> deadAxis);
+  RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const mesh::Mesh &outputMesh, std::vector<bool> deadAxis);
 
   /// Maps the given input data
   Eigen::VectorXd solveConsistent(const Eigen::VectorXd &inputData) const;
@@ -135,7 +137,7 @@ Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void RadialBasisFctSolver::computeDecomposition(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const mesh::Mesh &outputMesh, std::vector<bool> deadAxis)
+RadialBasisFctSolver::RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const mesh::Mesh &outputMesh, std::vector<bool> deadAxis)
 {
   // First, assemble the interpolation matrix
   _qr = buildMatrixCLU(basisFunction, inputMesh, deadAxis).colPivHouseholderQr();
