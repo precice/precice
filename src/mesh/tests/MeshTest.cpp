@@ -857,8 +857,6 @@ BOOST_AUTO_TEST_CASE(AddMesh)
   subMesh->createEdge(v14, v15);
   subMesh->createTriangle(v11, v13, v15);
   subMesh->createTriangle(v11, v13, v14);
-
-  subMesh->createTetrahedron(v01, v02, v03, v04);
   subMesh->createTetrahedron(v11, v12, v13, v14);
   subMesh->createTetrahedron(v15, v12, v13, v14);
 
