@@ -44,23 +44,11 @@ BOOST_AUTO_TEST_CASE(ParallelCube3To1)
                 1, 0, 0};
       break;
     case 2:
-      coords = {
-          0,
-          0,
-          0,
-          0,
-          1,
-          0,
-          1,
-          1,
-          1,
-          1,
-          1,
-          0,
-          1,
-          0,
-          0,
-      };
+      coords = {0, 0, 0,
+                0, 1, 0,
+                1, 1, 1,
+                1, 1, 0,
+                1, 0, 0};
       break;
     }
 
