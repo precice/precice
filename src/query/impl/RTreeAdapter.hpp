@@ -225,9 +225,6 @@ inline RTreeBox makeBox(const precice::mesh::Tetrahedron &tetra)
     box.expandBy(tetra.vertex(i));
   }
   
-  // Safety factor
-  box.scaleBy(0.1);
-  
   // Convert to Boost type
   return makeBox(box.minCorner(), box.maxCorner());
 }
