@@ -340,7 +340,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inputD
     // For every data dimension, perform mapping
     for (int dim = 0; dim < valueDim; dim++) {
       // Fill input from input data values (last polyparams entries remain zero)
-      for (int i = 0; i < in.size() - this->getPolynomialParameters(); i++) {
+      for (int i = 0; i < this->input()->getGlobalNumberOfVertices(); i++) {
         in[i] = inputValues[i * valueDim + dim];
       }
 
