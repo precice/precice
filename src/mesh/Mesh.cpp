@@ -292,6 +292,7 @@ void Mesh::clear()
   _triangles.clear();
   _edges.clear();
   _vertices.clear();
+  _tetrahedra.clear();
   _index.clear();
 
   for (mesh::PtrData &data : _data) {
