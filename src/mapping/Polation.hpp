@@ -3,6 +3,7 @@
 #include <iosfwd>
 #include <vector>
 #include "Eigen/Core"
+#include "math/differences.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Tetrahedron.hpp"
 #include "mesh/Triangle.hpp"
@@ -39,7 +40,7 @@ public:
   const std::vector<WeightedElement> &getWeightedElements() const;
 
   /// Check whether all the weights are positive, which means it is interpolation
-  bool isInterpolation() const;
+  bool isInterpolation(double tol = math::NUMERICAL_ZERO_DIFFERENCE) const;
 
 private:
   std::vector<WeightedElement> _weightedElements;
