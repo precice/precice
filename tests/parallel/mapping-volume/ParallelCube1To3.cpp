@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(ParallelCube1To3)
     interface.setMeshTetrahedron(meshID, v000, v100, v101, v111);
     interface.setMeshTetrahedron(meshID, v000, v010, v110, v111);
     interface.setMeshTetrahedron(meshID, v000, v100, v110, v111);
-    
+
     auto &mesh = precice::testing::WhiteboxAccessor::impl(interface).mesh("MeshOne");
     BOOST_REQUIRE(mesh.vertices().size() == 8);
     BOOST_REQUIRE(mesh.tetrahedra().size() == 6);
@@ -69,12 +69,12 @@ BOOST_AUTO_TEST_CASE(ParallelCube1To3)
 
     std::vector<double> values;
     values = {d, 
-     a + d,
+     c + d,
      b + d, 
-     a + b + d, 
-     c + d, 
-     c + a + d, 
-     c + b + d,
+     b + c + d, 
+     a + d, 
+     a + c + d, 
+     a + b + d,
      c + a + b + d};
 
 
