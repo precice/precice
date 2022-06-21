@@ -4,6 +4,7 @@
 #include "io/Export.hpp"
 #include "io/ExportVTK.hpp"
 #include "mesh/Mesh.hpp"
+#include "mesh/SharedPointer.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 
@@ -19,6 +20,37 @@ BOOST_AUTO_TEST_SUITE(IOTests)
 BOOST_AUTO_TEST_SUITE(VTKExport)
 
 using namespace precice;
+
+BOOST_AUTO_TEST_CASE(ExportDatawithGradient)
+{
+  PRECICE_TEST(1_rank)
+  int dimensions = 2;
+  // Create mesh to map from
+  mesh::Mesh    mesh("MyMesh", dimensions, testing::nextMeshID());
+  mesh::PtrData dataScalar   = mesh.createData("dataScalar", 1, 0_dataID, true);
+  mesh::PtrData dataVector   = mesh.createData("dataVector", 2, 1_dataID, true);
+  int           dataScalarID = dataScalar->getID();
+  int           dataVectorID = dataVector->getID();
+  mesh::Vertex &vertex0      = mesh.createVertex(Eigen::Vector2d::Constant(0.0));
+  mesh::Vertex &vertex1      = mesh.createVertex(Eigen::Vector2d::Constant(1.0));
+
+  // Create data
+  mesh.allocateDataValues();
+  Eigen::VectorXd &valuesScalar = dataScalar->values();
+  Eigen::VectorXd &valuesVector = dataVector->values();
+  valuesScalar << 1.0, 2.0;
+  valuesVector << 1.0, 2.0, 3.0, 4.0;
+
+  // Create corresponding gradient data (all gradient values = const = 1)
+  Eigen::MatrixXd &inGradValuesScalar = dataScalar->gradientValues();
+  Eigen::MatrixXd &inGradValuesVector = dataVector->gradientValues();
+  inGradValuesScalar.setOnes();
+  inGradValuesVector.setOnes();
+  io::ExportVTK exportVTK;
+  std::string   filename = "io-VTKExport-ExportDatawithGradient";
+  std::string   location = "";
+  exportVTK.doExport(filename, location, mesh);
+}
 
 BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 {
