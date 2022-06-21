@@ -61,7 +61,7 @@ private:
       const mesh::Mesh &mesh);
 
   void exportGradient(
-      std::ofstream    &outFile,
+      std::ofstream &   outFile,
       const mesh::Mesh &mesh);
 };
 
