@@ -276,7 +276,7 @@ ProjectionMatch Index::findCellOrProjection(const Eigen::VectorXd &location, int
     for (const auto &match : matchedTetra) {
       // Matches are raw indices, not (indices, distance) pairs
       auto polation = mapping::Polation(location, _mesh->tetrahedra()[match]);
-      if (polation.isInterpolation(1e-8)) {
+      if (polation.isInterpolation()) {
         return {polation, 0.0};
       }
     }

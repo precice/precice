@@ -70,7 +70,7 @@ const std::vector<WeightedElement> &Polation::getWeightedElements() const
 
 bool Polation::isInterpolation(double tol) const
 {
-  return std::all_of(_weightedElements.begin(), _weightedElements.end(), [tol](const mapping::WeightedElement &elem) { return elem.weight >= -tol; });
+  return std::all_of(_weightedElements.begin(), _weightedElements.end(), [tol](const mapping::WeightedElement &elem) { return precice::math::greaterEquals(elem.weight, 0.0, tol); });
 }
 
 std::ostream &operator<<(std::ostream &os, const WeightedElement &w)
