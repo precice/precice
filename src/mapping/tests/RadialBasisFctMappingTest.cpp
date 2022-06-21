@@ -107,6 +107,8 @@ void getDistributedMesh(const TestContext &      context,
   }
   addGlobalIndex(mesh, globalIndexOffset);
   mesh->allocateDataValues();
+  // All tests use eight vertices
+  mesh->setGlobalNumberOfVertices(8);
   data->values() = d;
 }
 
@@ -1108,6 +1110,7 @@ void perform2DTestConsistentMapping(Mapping &mapping)
   inMesh->createVertex(Vector2d(0.0, 1.0));
   inMesh->allocateDataValues();
   addGlobalIndex(inMesh);
+  inMesh->setGlobalNumberOfVertices(inMesh->vertices().size());
 
   auto &values = inData->values();
   values << 1.0, 2.0, 2.0, 1.0;
@@ -1119,6 +1122,7 @@ void perform2DTestConsistentMapping(Mapping &mapping)
   mesh::Vertex &vertex    = outMesh->createVertex(Vector2d(0, 0));
   outMesh->allocateDataValues();
   addGlobalIndex(outMesh);
+  outMesh->setGlobalNumberOfVertices(outMesh->vertices().size());
 
   // Setup mapping with mapping coordinates and geometry used
   mapping.setMeshes(inMesh, outMesh);
@@ -1203,6 +1207,7 @@ void perform2DTestConsistentMappingVector(Mapping &mapping)
   inMesh->createVertex(Vector2d(0.0, 1.0));
   inMesh->allocateDataValues();
   addGlobalIndex(inMesh);
+  inMesh->setGlobalNumberOfVertices(inMesh->vertices().size());
 
   auto &values = inData->values();
   values << 1.0, 4.0, 2.0, 5.0, 2.0, 5.0, 1.0, 4.0;
@@ -1214,6 +1219,7 @@ void perform2DTestConsistentMappingVector(Mapping &mapping)
   mesh::Vertex &vertex    = outMesh->createVertex(Vector2d(0, 0));
   outMesh->allocateDataValues();
   addGlobalIndex(outMesh);
+  outMesh->setGlobalNumberOfVertices(outMesh->vertices().size());
 
   // Setup mapping with mapping coordinates and geometry used
   mapping.setMeshes(inMesh, outMesh);
@@ -1319,6 +1325,7 @@ void perform3DTestConsistentMapping(Mapping &mapping)
   inMesh->createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
   inMesh->allocateDataValues();
   addGlobalIndex(inMesh);
+  inMesh->setGlobalNumberOfVertices(inMesh->vertices().size());
 
   auto &values = inData->values();
   values << 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0;
@@ -1330,6 +1337,7 @@ void perform3DTestConsistentMapping(Mapping &mapping)
   mesh::Vertex &vertex    = outMesh->createVertex(Eigen::Vector3d::Zero());
   outMesh->allocateDataValues();
   addGlobalIndex(outMesh);
+  outMesh->setGlobalNumberOfVertices(outMesh->vertices().size());
 
   // Setup mapping with mapping coordinates and geometry used
   mapping.setMeshes(inMesh, outMesh);
@@ -1455,6 +1463,7 @@ void perform2DTestScaledConsistentMapping(Mapping &mapping)
 
   inMesh->allocateDataValues();
   addGlobalIndex(inMesh);
+  inMesh->setGlobalNumberOfVertices(inMesh->vertices().size());
 
   auto &inValues = inData->values();
   inValues << 1.0, 2.0, 2.0, 1.0;
@@ -1473,6 +1482,7 @@ void perform2DTestScaledConsistentMapping(Mapping &mapping)
   outMesh->createEdge(outV1, outV4);
   outMesh->allocateDataValues();
   addGlobalIndex(outMesh);
+  outMesh->setGlobalNumberOfVertices(outMesh->vertices().size());
 
   // Setup mapping with mapping coordinates and geometry used
   mapping.setMeshes(inMesh, outMesh);
@@ -1509,6 +1519,7 @@ void perform3DTestScaledConsistentMapping(Mapping &mapping)
 
   inMesh->allocateDataValues();
   addGlobalIndex(inMesh);
+  inMesh->setGlobalNumberOfVertices(inMesh->vertices().size());
 
   auto &inValues = inData->values();
   inValues << 1.0, 2.0, 4.0, 6.0, 8.0, 9.0;
@@ -1527,6 +1538,7 @@ void perform3DTestScaledConsistentMapping(Mapping &mapping)
 
   outMesh->allocateDataValues();
   addGlobalIndex(outMesh);
+  outMesh->setGlobalNumberOfVertices(outMesh->vertices().size());
 
   // Setup mapping with mapping coordinates and geometry used
   mapping.setMeshes(inMesh, outMesh);
@@ -1553,6 +1565,7 @@ void perform2DTestConservativeMapping(Mapping &mapping)
   inMesh->allocateDataValues();
   inData->values() << 1.0, 2.0;
   addGlobalIndex(inMesh);
+  inMesh->setGlobalNumberOfVertices(inMesh->vertices().size());
 
   // Create mesh to map to
   mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
@@ -1564,6 +1577,7 @@ void perform2DTestConservativeMapping(Mapping &mapping)
   outMesh->createVertex(Vector2d(0.0, 1.0));
   outMesh->allocateDataValues();
   addGlobalIndex(outMesh);
+  outMesh->setGlobalNumberOfVertices(outMesh->vertices().size());
 
   auto &values = outData->values();
 
@@ -1621,6 +1635,7 @@ void perform2DTestConservativeMappingVector(Mapping &mapping)
   inMesh->allocateDataValues();
   inData->values() << 1.0, 4.0, 2.0, 5.0;
   addGlobalIndex(inMesh);
+  inMesh->setGlobalNumberOfVertices(inMesh->vertices().size());
 
   // Create mesh to map to
   mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
@@ -1632,6 +1647,7 @@ void perform2DTestConservativeMappingVector(Mapping &mapping)
   outMesh->createVertex(Vector2d(0.0, 1.0));
   outMesh->allocateDataValues();
   addGlobalIndex(outMesh);
+  outMesh->setGlobalNumberOfVertices(outMesh->vertices().size());
 
   auto &values = outData->values();
 
@@ -1693,6 +1709,7 @@ void perform3DTestConservativeMapping(Mapping &mapping)
   inMesh->allocateDataValues();
   inData->values() << 1.0, 2.0;
   addGlobalIndex(inMesh);
+  inMesh->setGlobalNumberOfVertices(inMesh->vertices().size());
 
   // Create mesh to map to
   mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
@@ -1708,6 +1725,7 @@ void perform3DTestConservativeMapping(Mapping &mapping)
   outMesh->createVertex(Vector3d(0.0, 1.0, 1.0));
   outMesh->allocateDataValues();
   addGlobalIndex(outMesh);
+  outMesh->setGlobalNumberOfVertices(outMesh->vertices().size());
 
   auto & values      = outData->values();
   double expectedSum = inData->values().sum();
@@ -1925,6 +1943,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis2)
   inMesh->createVertex(Vector2d(3.0, 1.0));
   inMesh->allocateDataValues();
   addGlobalIndex(inMesh);
+  inMesh->setGlobalNumberOfVertices(inMesh->vertices().size());
 
   auto &values = inData->values();
   values << 1.0, 2.0, 2.0, 1.0;
@@ -1936,6 +1955,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis2)
   mesh::Vertex &vertex    = outMesh->createVertex(Vector2d(0, 0));
   outMesh->allocateDataValues();
   addGlobalIndex(outMesh);
+  outMesh->setGlobalNumberOfVertices(outMesh->vertices().size());
 
   // Setup mapping with mapping coordinates and geometry used
   mapping.setMeshes(inMesh, outMesh);
@@ -1973,6 +1993,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis3D)
   inMesh->createVertex(Vector3d(1.0, 3.0, 1.0));
   inMesh->allocateDataValues();
   addGlobalIndex(inMesh);
+  inMesh->setGlobalNumberOfVertices(inMesh->vertices().size());
 
   auto &values = inData->values();
   values << 1.0, 2.0, 3.0, 4.0;
@@ -1987,6 +2008,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis3D)
   outMesh->createVertex(Vector3d(1.1, 2.9, 1.1));
   outMesh->allocateDataValues();
   addGlobalIndex(outMesh);
+  outMesh->setGlobalNumberOfVertices(outMesh->vertices().size());
 
   // Setup mapping with mapping coordinates and geometry used
   mapping.setMeshes(inMesh, outMesh);

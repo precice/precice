@@ -219,7 +219,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(DataID inpu
 
     // Construct Eigen vectors
     Eigen::Map<Eigen::VectorXd> inputValues(globalInValues.data(), globalInValues.size());
-    Eigen::VectorXd             outputValues((_rbfSolver.getEvaluationMatrix().cols() - this->getPolynomialParameters()) * valueDim);
+    Eigen::VectorXd             outputValues((this->output()->getGlobalNumberOfVertices()) * valueDim);
     Eigen::VectorXd             in(_rbfSolver.getEvaluationMatrix().rows()); // rows == outputSize
     outputValues.setZero();
 
@@ -231,7 +231,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(DataID inpu
       Eigen::VectorXd out = _rbfSolver.solveConservative(in, _polynomial);
 
       // Copy mapped data to output data values
-      for (int i = 0; i < out.size() - this->getPolynomialParameters(); i++) {
+      for (int i = 0; i < this->output()->getGlobalNumberOfVertices(); i++) {
         outputValues[i * valueDim + dim] = out[i];
       }
     }
@@ -299,7 +299,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inputD
 
     int valueDim = this->output()->data(outputDataID)->getDimensions();
 
-    std::vector<double> globalInValues((_rbfSolver.getEvaluationMatrix().cols() - this->getPolynomialParameters()) * valueDim, 0.0);
+    std::vector<double> globalInValues((this->input()->getGlobalNumberOfVertices()) * valueDim, 0.0);
     std::vector<int>    outValuesSize;
 
     if (utils::IntraComm::isPrimary()) { // Parallel case
