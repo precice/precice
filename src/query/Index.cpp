@@ -148,6 +148,7 @@ void Index::IndexImpl::clear()
   indices.vertexRTree.reset();
   indices.edgeRTree.reset();
   indices.triangleRTree.reset();
+  indices.tetraRTree.reset();
 }
 
 //
