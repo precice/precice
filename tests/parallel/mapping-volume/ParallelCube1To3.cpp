@@ -2,10 +2,10 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
-#include "precice/impl/SolverInterfaceImpl.hpp"
-#include <vector>
 #include <iostream>
+#include <precice/SolverInterface.hpp>
+#include <vector>
+#include "precice/impl/SolverInterfaceImpl.hpp"
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_SUITE(MappingVolume)
@@ -63,20 +63,18 @@ BOOST_AUTO_TEST_CASE(ParallelCube1To3)
 
     dt = interface.initialize();
 
-
     // Run a step and write data with f(x) = ax + by + cz + d
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant must advance once.");
 
     std::vector<double> values;
-    values = {d, 
-     c + d,
-     b + d, 
-     b + c + d, 
-     a + d, 
-     a + c + d, 
-     a + b + d,
-     c + a + b + d};
-
+    values = {d,
+              c + d,
+              b + d,
+              b + c + d,
+              a + d,
+              a + c + d,
+              a + b + d,
+              c + a + b + d};
 
     interface.writeBlockScalarData(dataID, values.size(), vertexIDs.data(), values.data());
 
@@ -89,28 +87,61 @@ BOOST_AUTO_TEST_CASE(ParallelCube1To3)
 
     std::vector<double> coords;
 
-    // TODO: add more points
+    const unsigned SAMPLING = 5;
 
-    switch (context.rank)
-    {
+    switch (context.rank) {
     case 0:
-      coords = {0.3, 0.3, 0.3,
-                0.1, 0.1, 0.1};
+      // Sample the sub-region "x,y and z > 0.5"
+      for (int i = 0; i <= SAMPLING; ++i) {
+        for (int j = 0; j <= SAMPLING; ++j) {
+          for (int k = 0; k <= SAMPLING; ++k) {
+            double x = 0.5 + 0.5 * double(i) / SAMPLING;
+            double y = double(j) / SAMPLING;
+            double z = double(k) / SAMPLING;
+            coords.push_back(x);
+            coords.push_back(y);
+            coords.push_back(z);
+          }
+        }
+      }
       break;
     case 1:
-      coords = {0.7, 0.7, 0.7,
-                0.8, 0.9, 0.6};
+      // Sample the sub-region "x > 0.5, y < 0.5, all z"
+      for (int i = 0; i <= SAMPLING; ++i) {
+        for (int j = 0; j <= SAMPLING; ++j) {
+          for (int k = 0; k <= SAMPLING; ++k) {
+            double x = 0.5 + 0.5 * double(i) / SAMPLING;
+            double y = 0.5 * double(j) / SAMPLING;
+            double z = double(k) / SAMPLING;
+            coords.push_back(x);
+            coords.push_back(y);
+            coords.push_back(z);
+          }
+        }
+      }
       break;
     case 2:
-      coords = {0.7, 0.3, 0.3};
+      // Sample the center:  "x, y and z between 0.4 and 0.6"
+      for (int i = 0; i <= SAMPLING; ++i) {
+        for (int j = 0; j <= SAMPLING; ++j) {
+          for (int k = 0; k <= SAMPLING; ++k) {
+            double x = 0.4 + 0.2 * double(i) / SAMPLING;
+            double y = 0.4 + 0.2 * double(j) / SAMPLING;
+            double z = 0.4 + 0.2 * double(k) / SAMPLING;
+            coords.push_back(x);
+            coords.push_back(y);
+            coords.push_back(z);
+          }
+        }
+      }
       break;
     }
 
     vertexIDs.resize(coords.size() / 3);
     interface.setMeshVertices(meshID, vertexIDs.size(), coords.data(), vertexIDs.data());
-     dt = interface.initialize();
+    dt = interface.initialize();
 
-     // Run a step and read data expected to be f(x) = ax + by + cz + d
+    // Run a step and read data expected to be f(x) = ax + by + cz + d
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant must advance once.");
 
     interface.advance(dt);
@@ -119,10 +150,9 @@ BOOST_AUTO_TEST_CASE(ParallelCube1To3)
     // Check expected VS read
     Eigen::VectorXd expected(vertexIDs.size());
     for (int i = 0; i < expected.size(); ++i) {
-      expected(i) = a * coords[3*i] + b * coords[3*i+1] + c * coords[3*i+2] + d;
+      expected(i) = a * coords[3 * i] + b * coords[3 * i + 1] + c * coords[3 * i + 2] + d;
     }
     Eigen::VectorXd readData(vertexIDs.size());
-
 
     interface.readBlockScalarData(dataID, expected.size(), vertexIDs.data(), readData.data());
     BOOST_CHECK(equals(expected, readData));
