@@ -64,6 +64,9 @@ private:
 
   /// @copydoc RadialBasisFctBaseMapping::mapConsistent
   virtual void mapConsistent(DataID inputDataID, DataID outputDataID) override;
+
+  /// Treatment of the polynomial
+  Polynomial _polynomial;
 };
 
 // --------------------------------------------------- HEADER IMPLEMENTATIONS
@@ -75,7 +78,8 @@ RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctMapping(
     RADIAL_BASIS_FUNCTION_T function,
     std::array<bool, 3>     deadAxis,
     Polynomial              polynomial)
-    : RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>(constraint, dimensions, function, deadAxis)
+    : RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>(constraint, dimensions, function, deadAxis),
+      _polynomial(polynomial)
 {
 }
 
@@ -142,7 +146,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       globalOutMesh.addMesh(*outMesh);
     }
 
-    _rbfSolver = RadialBasisFctSolver{this->_basisFunction, globalInMesh, globalOutMesh, this->_deadAxis};
+    _rbfSolver = RadialBasisFctSolver{this->_basisFunction, globalInMesh, globalOutMesh, this->_deadAxis, this->getConstraint(), _polynomial};
   }
   this->_hasComputedMapping = true;
   PRECICE_DEBUG("Compute Mapping is Completed.");
@@ -224,7 +228,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(DataID inpu
         in[i] = inputValues(i * valueDim + dim);
       }
 
-      Eigen::VectorXd out = _rbfSolver.solveConservative(in);
+      Eigen::VectorXd out = _rbfSolver.solveConservative(in, _polynomial);
 
       // Copy mapped data to output data values
       for (int i = 0; i < out.size() - this->getPolynomialParameters(); i++) {
@@ -340,7 +344,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inputD
         in[i] = inputValues[i * valueDim + dim];
       }
 
-      out = _rbfSolver.solveConsistent(in);
+      out = _rbfSolver.solveConsistent(in, _polynomial);
 
       // Copy mapped data to output data values
       for (int i = 0; i < out.size(); i++) {
