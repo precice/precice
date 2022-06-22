@@ -40,7 +40,7 @@ public:
   const std::vector<WeightedElement> &getWeightedElements() const;
 
   /// Check whether all the weights are positive, which means it is interpolation
-  bool isInterpolation(double tol = math::NUMERICAL_ZERO_DIFFERENCE) const;
+  bool isInterpolation() const;
 
 private:
   std::vector<WeightedElement> _weightedElements;
