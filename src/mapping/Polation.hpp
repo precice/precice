@@ -3,7 +3,6 @@
 #include <iosfwd>
 #include <vector>
 #include "Eigen/Core"
-#include "math/differences.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Tetrahedron.hpp"
 #include "mesh/Triangle.hpp"

@@ -1,5 +1,6 @@
 #include "mapping/Polation.hpp"
 #include "math/barycenter.hpp"
+#include "math/differences.hpp"
 
 namespace precice {
 namespace mapping {
