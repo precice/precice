@@ -21,7 +21,7 @@ BOOST_AUTO_TEST_SUITE(VTKExport)
 
 using namespace precice;
 
-BOOST_AUTO_TEST_CASE(ExportDatawithGradient)
+BOOST_AUTO_TEST_CASE(ExportDataWithGradient)
 {
   PRECICE_TEST(1_rank)
   int dimensions = 2;
