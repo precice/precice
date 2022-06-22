@@ -45,6 +45,7 @@ target_sources(testprecice
     tests/parallel/mapping-volume/ParallelCube1To3.cpp
     tests/parallel/mapping-volume/ParallelCube3To1.cpp
     tests/parallel/mapping-volume/ParallelCubeConservative1To3.cpp
+    tests/parallel/mapping-volume/ParallelCubeConservative3To1.cpp
     tests/parallel/mapping-volume/ParallelSquare1To2.cpp
     tests/parallel/mapping-volume/ParallelSquare2To1.cpp
     tests/parallel/mapping-volume/ParallelSquareConservative1To2.cpp
