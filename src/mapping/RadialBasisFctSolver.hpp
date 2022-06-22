@@ -212,7 +212,27 @@ Eigen::VectorXd RadialBasisFctSolver::solveConservative(const Eigen::VectorXd &i
     PRECICE_ASSERT(epsilon.size() == _matrixQ.cols());
 
     // out  = out - solveTranspose tau (sigma in the PETSc impl)
+#if EIGEN_VERSION_AT_LEAST(3, 4, 0)
     out -= static_cast<Eigen::VectorXd>(_qrMatrixQ.transpose().solve(-epsilon));
+#else
+    // Backwards compatible version
+    Eigen::VectorXd    sigma(_matrixQ.rows());
+    const Eigen::Index nonzero_pivots = _qrMatrixQ.nonzeroPivots();
+
+    if (nonzero_pivots == 0) {
+      sigma.setZero();
+    } else {
+      Eigen::VectorXd c(_qrMatrixQ.colsPermutation().transpose() * (-epsilon));
+
+      _qrMatrixQ.matrixQR().topLeftCorner(nonzero_pivots, nonzero_pivots).template triangularView<Eigen::Upper>().transpose().template conjugateIf<true>().solveInPlace(c.topRows(nonzero_pivots));
+
+      sigma.topRows(nonzero_pivots) = c.topRows(nonzero_pivots);
+      sigma.bottomRows(_qrMatrixQ.rows() - nonzero_pivots).setZero();
+
+      sigma.applyOnTheLeft(_qrMatrixQ.householderQ().setLength(nonzero_pivots).template conjugateIf<false>());
+      out -= sigma;
+    }
+#endif
   }
   return out;
 }
