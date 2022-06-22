@@ -224,12 +224,12 @@ Eigen::VectorXd RadialBasisFctSolver::solveConservative(const Eigen::VectorXd &i
     } else {
       Eigen::VectorXd c(_qrMatrixQ.colsPermutation().transpose() * (-epsilon));
 
-      _qrMatrixQ.matrixQR().topLeftCorner(nonzero_pivots, nonzero_pivots).template triangularView<Eigen::Upper>().transpose().template conjugateIf<true>().solveInPlace(c.topRows(nonzero_pivots));
+      _qrMatrixQ.matrixQR().topLeftCorner(nonzero_pivots, nonzero_pivots).template triangularView<Eigen::Upper>().transpose().conjugate().solveInPlace(c.topRows(nonzero_pivots));
 
       sigma.topRows(nonzero_pivots) = c.topRows(nonzero_pivots);
       sigma.bottomRows(_qrMatrixQ.rows() - nonzero_pivots).setZero();
 
-      sigma.applyOnTheLeft(_qrMatrixQ.householderQ().setLength(nonzero_pivots).template conjugateIf<false>());
+      sigma.applyOnTheLeft(_qrMatrixQ.householderQ().setLength(nonzero_pivots));
       out -= sigma;
     }
 #endif
