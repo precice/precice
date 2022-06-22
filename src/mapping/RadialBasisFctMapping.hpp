@@ -146,7 +146,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       globalOutMesh.addMesh(*outMesh);
     }
 
-    _rbfSolver = RadialBasisFctSolver{this->_basisFunction, globalInMesh, globalOutMesh, this->_deadAxis, this->getConstraint(), _polynomial};
+    _rbfSolver = RadialBasisFctSolver{this->_basisFunction, globalInMesh, globalOutMesh, this->_deadAxis, _polynomial};
   }
   this->_hasComputedMapping = true;
   PRECICE_DEBUG("Compute Mapping is Completed.");

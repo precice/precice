@@ -15,7 +15,7 @@ public:
 
   /// Assembles the system matrices and computes the decomposition of the interpolation matrix
   template <typename RADIAL_BASIS_FUNCTION_T>
-  RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const mesh::Mesh &outputMesh, std::vector<bool> deadAxis, Mapping::Constraint constraint, Polynomial polynomial);
+  RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const mesh::Mesh &outputMesh, std::vector<bool> deadAxis, Polynomial polynomial);
 
   /// Maps the given input data
   Eigen::VectorXd solveConsistent(Eigen::VectorXd &inputData, Polynomial polynomial) const;
@@ -34,10 +34,8 @@ private:
 
   Eigen::ColPivHouseholderQR<Eigen::MatrixXd> _qrMatrixC;
 
-  // TODO: Check which matrices to store and the decomposition types
+  // Decomposition of the polynomial
   Eigen::ColPivHouseholderQR<Eigen::MatrixXd> _qrMatrixQ;
-  /// orthogonal decomposed polynomial on the input mesh (tranposed matrix). Only required for conservative mappings
-  Eigen::CompleteOrthogonalDecomposition<Eigen::MatrixXd> _coDMatrixQT;
 
   // TODO: Add max columns and rows in the template parameter
   Eigen::MatrixXd _matrixQ;
@@ -158,7 +156,7 @@ Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-RadialBasisFctSolver::RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const mesh::Mesh &outputMesh, std::vector<bool> deadAxis, Mapping::Constraint constraint, Polynomial polynomial)
+RadialBasisFctSolver::RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const mesh::Mesh &outputMesh, std::vector<bool> deadAxis, Polynomial polynomial)
 {
   // Convert dead axis vector into an active axis array so that we can handle the reduction more easily
   std::array<bool, 3> activeAxis({{false, false, false}});
@@ -189,13 +187,8 @@ RadialBasisFctSolver::RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction
     fillPolynomialEntries(_matrixQ, inputMesh, 0, activeAxis);
     fillPolynomialEntries(_matrixV, outputMesh, 0, activeAxis);
 
-    // 3. compute potential decomposition strategies
-    if (constraint == Mapping::CONSERVATIVE) {
-      Eigen::MatrixXd qTransposed = _matrixQ.transpose().eval();
-      _coDMatrixQT                = qTransposed.completeOrthogonalDecomposition();
-    } else {
-      _qrMatrixQ = _matrixQ.colPivHouseholderQr();
-    }
+    // 3. compute decomposition
+    _qrMatrixQ = _matrixQ.colPivHouseholderQr();
   }
 }
 
@@ -211,19 +204,15 @@ Eigen::VectorXd RadialBasisFctSolver::solveConservative(const Eigen::VectorXd &i
   Eigen::VectorXd out = _qrMatrixC.solve(Au);
 
   if (polynomial == Polynomial::SEPARATE) {
-    const Eigen::VectorXd epsilon = _matrixV.transpose() * inputData;
+    Eigen::VectorXd epsilon = _matrixV.transpose() * inputData;
     PRECICE_ASSERT(epsilon.size() == _matrixV.cols());
 
-    // tau = Q^T * mu - epsilon
-    Eigen::VectorXd tau = _matrixQ.transpose() * out - epsilon;
-    PRECICE_ASSERT(tau.size() == _matrixQ.cols());
+    // epsilon = Q^T * mu - epsilon (tau in the PETSc impl)
+    epsilon -= _matrixQ.transpose() * out;
+    PRECICE_ASSERT(epsilon.size() == _matrixQ.cols());
 
-    // sigma =  solveTranspose tau
-    const Eigen::VectorXd sigma = _coDMatrixQT.solve(tau);
-    PRECICE_ASSERT(sigma.size() == _matrixQ.rows());
-
-    // out = mu - sigma
-    out -= sigma;
+    // out  = out - solveTranspose tau (sigma in the PETSc impl)
+    out -= static_cast<Eigen::VectorXd>(_qrMatrixQ.transpose().solve(-epsilon));
   }
   return out;
 }
