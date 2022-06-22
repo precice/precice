@@ -14,6 +14,7 @@
     <participant name="SolverOne">
       <use-mesh name="MeshOne" provide="on" />
       <write-data name="DataOne" mesh="MeshOne" />
+      <export:vtu />
     </participant>
 
     <participant name="SolverTwo">

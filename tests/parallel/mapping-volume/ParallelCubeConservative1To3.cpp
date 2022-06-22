@@ -21,8 +21,9 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative1To3)
 
   // Apply some forces (geometry described below)
   // They get spread to various ranks and tetra/triangle/edge
-  double forceOnMidABC = 1.0; // Goes to rank2
-  double forceOnMidACD = 0.5; // Goes to rank2
+  double forceOnMidABC       = 1.0; // Goes to rank2
+  double forceOnMidACD       = 0.5; // Goes to rank2
+  double unbalancedForceOnGH = 2.0; // 25% on G, 75% on H
   //double forceOnA = 10; // Could go to any rank's duplicate of A, check the sum is conserved
 
   if (context.isNamed("SolverOneCubeConservative1To3")) {
@@ -32,7 +33,8 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative1To3)
     std::vector<double> coords;
 
     coords = {2. / 3, 1. / 3, 0,
-              1. / 3, 2. / 3, 0.};
+              1. / 3, 2. / 3, 0,
+              0.75, 1, 1};
 
     vertexIDs.resize(coords.size() / 3);
     interface.setMeshVertices(meshID, vertexIDs.size(), coords.data(), vertexIDs.data());
@@ -44,7 +46,8 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative1To3)
 
     std::vector<double> values;
     values = {forceOnMidABC,
-              forceOnMidACD};
+              forceOnMidACD,
+              unbalancedForceOnGH};
 
     interface.writeBlockScalarData(dataID, values.size(), vertexIDs.data(), values.data());
 
@@ -161,11 +164,15 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative1To3)
 
     precice::utils::IntraComm::allreduceSum(forces, totalForces);
 
-    BOOST_CHECK(equals(totalForces[0], 0.5));
-    BOOST_CHECK(equals(totalForces[1], 0.5));
-    BOOST_CHECK(equals(totalForces[2], 0.5));
-    BOOST_CHECK(equals(totalForces[3], 0.5));
-    BOOST_CHECK(equals(totalForces[4], 0.5));
+    BOOST_CHECK(equals(totalForces[0], forceOnMidABC / 3 + forceOnMidACD / 3));
+    BOOST_CHECK(equals(totalForces[1], forceOnMidABC / 3));
+    BOOST_CHECK(equals(totalForces[2], forceOnMidABC / 3 + forceOnMidACD / 3));
+    BOOST_CHECK(equals(totalForces[3], forceOnMidACD / 3));
+    BOOST_CHECK(equals(totalForces[4], 0.0));
+    BOOST_CHECK(equals(totalForces[5], 0.0));
+    BOOST_CHECK(equals(totalForces[6], 0.75 * unbalancedForceOnGH));
+    BOOST_CHECK(equals(totalForces[7], 0.25 * unbalancedForceOnGH));
+
     interface.finalize();
   }
 }
