@@ -21,7 +21,7 @@ namespace io {
 void ExportVTK::doExport(
     const std::string &name,
     const std::string &location,
-    const mesh::Mesh & mesh)
+    const mesh::Mesh  &mesh)
 {
   PRECICE_TRACE(name, location, mesh.getName());
   PRECICE_ASSERT(name != std::string(""));
@@ -44,7 +44,7 @@ void ExportVTK::doExport(
 }
 
 void ExportVTK::exportMesh(
-    std::ofstream &   outFile,
+    std::ofstream    &outFile,
     const mesh::Mesh &mesh)
 {
   PRECICE_TRACE(mesh.getName());
@@ -119,7 +119,7 @@ void ExportVTK::exportMesh(
 }
 
 void ExportVTK::exportData(
-    std::ofstream &   outFile,
+    std::ofstream    &outFile,
     const mesh::Mesh &mesh)
 {
   outFile << "POINT_DATA " << mesh.vertices().size() << "\n\n";
@@ -163,23 +163,23 @@ void ExportVTK::exportData(
 void ExportVTK::exportGradient(std::ofstream &outFile, const mesh::Mesh &mesh)
 {
   const int spaceDim = mesh.getDimensions();
-  for (const mesh::PtrData &data : mesh.data()) { // Plot vertex data
-    if (data->hasGradient()) {
+  for (const mesh::PtrData &data : mesh.data()) {
+    if (data->hasGradient()) { // Check whether this data has gradient
       auto &gradientValues = data->gradientValues();
-      if (data->getDimensions() == 1) {
+      if (data->getDimensions() == 1) { // Scalar data, create a vector <dataname>_gradient
         outFile << "VECTORS " << data->getName() << "_gradient"
                 << " double\n";
         for (int i = 0; i < gradientValues.cols(); i++) {
-          int j = 0;
+          int j = 0; // Dimension counter
           for (; j < gradientValues.rows(); j++) {
             outFile << gradientValues.coeff(j, i) << " ";
           }
-          if (j < 3) {
+          if (j < 3) { // If 2D data add additonal zero as third component
             outFile << '0';
           }
           outFile << "\n";
         }
-      } else {
+      } else { // Vector data, write n vector for n dimension <dataname>_(dx/dy/dz)
         outFile << "VECTORS " << data->getName() << "_dx"
                 << " double\n";
         for (int i = 0; i < gradientValues.cols(); i += spaceDim) {
@@ -187,7 +187,7 @@ void ExportVTK::exportGradient(std::ofstream &outFile, const mesh::Mesh &mesh)
           for (; j < gradientValues.rows(); j++) {
             outFile << gradientValues.coeff(j, i) << " ";
           }
-          if (j < 3) {
+          if (j < 3) { // If 2D data add additonal zero as third component
             outFile << '0';
           }
           outFile << "\n";
@@ -201,14 +201,14 @@ void ExportVTK::exportGradient(std::ofstream &outFile, const mesh::Mesh &mesh)
           for (; j < gradientValues.rows(); j++) {
             outFile << gradientValues.coeff(j, i) << " ";
           }
-          if (j < 3) {
+          if (j < 3) { // If 2D data add additonal zero as third component
             outFile << '0';
           }
           outFile << "\n";
         }
         outFile << "\n";
 
-        if (spaceDim == 3) {
+        if (spaceDim == 3) { // dz is only for 3D data
           outFile << "VECTORS " << data->getName() << "_dz"
                   << " double\n";
           for (int i = 2; i < gradientValues.cols(); i += spaceDim) {
@@ -216,7 +216,7 @@ void ExportVTK::exportGradient(std::ofstream &outFile, const mesh::Mesh &mesh)
             for (; j < gradientValues.rows(); j++) {
               outFile << gradientValues.coeff(j, i) << " ";
             }
-            if (j < 3) {
+            if (j < 3) { // If 2D data add additonal zero as third component
               outFile << '0';
             }
             outFile << "\n";
@@ -231,10 +231,10 @@ void ExportVTK::exportGradient(std::ofstream &outFile, const mesh::Mesh &mesh)
 void ExportVTK::initializeWriting(
     std::ofstream &filestream)
 {
-  //size_t pos = fullFilename.rfind(".vtk");
-  //if ((pos == std::string::npos) || (pos != fullFilename.size()-4)){
-  //  fullFilename += ".vtk";
-  //}
+  // size_t pos = fullFilename.rfind(".vtk");
+  // if ((pos == std::string::npos) || (pos != fullFilename.size()-4)){
+  //   fullFilename += ".vtk";
+  // }
   filestream.setf(std::ios::showpoint);
   filestream.setf(std::ios::scientific);
   filestream << std::setprecision(std::numeric_limits<double>::max_digits10);
@@ -250,7 +250,7 @@ void ExportVTK::writeHeader(
 
 void ExportVTK::writeVertex(
     const Eigen::VectorXd &position,
-    std::ostream &         outFile)
+    std::ostream          &outFile)
 {
   if (position.size() == 2) {
     outFile << position(0) << "  " << position(1) << "  " << 0.0 << '\n';
