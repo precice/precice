@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(ConservativeOneTetra3D)
 
   inMesh->allocateDataValues();
   Eigen::VectorXd &inValuesScalar = inDataScalar->values();
-  inValuesScalar << forceOnMid, forceOnMidAB, forceOnA, forceOnC, unbalancedforceOnBC;
+  inValuesScalar << forceOnMid, forceOnMidAB, forceOnA, forceOnC, unbalancedforceOnBC, unbalancedInternalForce;
 
   // Create output mesh (the tetra ABCD)
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
