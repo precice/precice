@@ -46,8 +46,21 @@ public:
     FULL = 2
   };
 
+  /**
+   * @brief Specifices what kind of integrals to compute for scaled-consistent mapping.
+   * 
+   * Scaled-Consistent mappings conserve integrals, but they must be computed differently 
+   * depending on the nature of the coupling. It can be either SURFACE coupling (e.g. pressure to conserve forces)
+   * or VOLUMETRIC coupling (e.g. density to preserve mass).
+   * 
+   */
+  enum class CouplingKind {
+    SURFACE,
+    VOLUME,
+  };
+
   /// Constructor, takes mapping constraint.
-  Mapping(Constraint constraint, int dimensions, bool requireGradient = false);
+  Mapping(Constraint constraint, int dimensions, bool requireGradient = false, CouplingKind couplingKind = CouplingKind::SURFACE);
 
   Mapping &operator=(Mapping &&) = delete;
 
@@ -168,6 +181,9 @@ private:
 
   /// Requirement on output mesh.
   MeshRequirement _outputRequirement;
+
+  /// Determines whether to use surface integrals or volume integrals if needed
+  CouplingKind _couplingKind;
 
   /// Pointer to input mesh.
   mesh::PtrMesh _input;

@@ -9,16 +9,18 @@ namespace precice {
 namespace mapping {
 
 Mapping::Mapping(
-    Constraint constraint,
-    int        dimensions,
-    bool       requireGradient)
+    Constraint            constraint,
+    int                   dimensions,
+    bool                  requireGradient,
+    Mapping::CouplingKind couplingKind)
     : _requireGradient(requireGradient),
       _constraint(constraint),
       _inputRequirement(MeshRequirement::UNDEFINED),
       _outputRequirement(MeshRequirement::UNDEFINED),
       _input(),
       _output(),
-      _dimensions(dimensions)
+      _dimensions(dimensions),
+      _couplingKind(couplingKind)
 {
 }
 
@@ -138,9 +140,17 @@ void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
   auto &outputValues    = output()->data(outputDataID)->values();
   int   valueDimensions = input()->data(inputDataID)->getDimensions();
 
+  Eigen::VectorXd integralInput;
+  Eigen::VectorXd integralOutput;
+
   // Integral is calculated on each direction separately
-  auto integralInput  = mesh::integrate(input(), input()->data(inputDataID));
-  auto integralOutput = mesh::integrate(output(), output()->data(outputDataID));
+  if (_couplingKind == CouplingKind::SURFACE) {
+    integralInput  = mesh::integrate(input(), input()->data(inputDataID));
+    integralOutput = mesh::integrate(output(), output()->data(outputDataID));
+  } else {
+    integralInput  = mesh::integrateVolume(input(), input()->data(inputDataID));
+    integralOutput = mesh::integrateVolume(output(), output()->data(outputDataID));
+  }
 
   // Create reshape the output values vector to matrix
   Eigen::Map<Eigen::MatrixXd> outputValuesMatrix(outputValues.data(), valueDimensions, outputValues.size() / valueDimensions);
