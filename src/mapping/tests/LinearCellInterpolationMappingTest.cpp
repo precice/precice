@@ -225,5 +225,76 @@ BOOST_AUTO_TEST_CASE(ConsistentOneTetra3D)
   BOOST_CHECK(equals(expected, outValuesScalar));
 }
 
+BOOST_AUTO_TEST_CASE(ConservativeOneTetra3D)
+{
+  PRECICE_TEST(1_rank);
+  int dimensions = 3;
+  using testing::equals;
+
+  /* Send forces on some points, map to a tetra and check correct distribution.
+     We only apply forces inside the tetra or at its boundary.
+     Behavior when projecting is not ideal, see #1304
+   */
+
+  const double forceOnMid              = 1.0;
+  const double forceOnMidAB            = 2.0;
+  const double forceOnA                = 10.0;
+  const double forceOnC                = 7.0;
+  const double unbalancedforceOnBC     = 3.0;  // 75% on B, 25% on C
+  const double unbalancedInternalForce = 11.0; // With barycentric coordinates (0.4, 0.1, 0.2, 0.3)
+  const double netForce                = forceOnMid + forceOnMidAB + forceOnA + forceOnC + unbalancedforceOnBC + unbalancedInternalForce;
+
+  PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
+  PtrData inDataScalar   = inMesh->createData("InDataScalar", 1, 0_dataID);
+  int     inDataScalarID = inDataScalar->getID();
+
+  inMesh->createVertex(Eigen::Vector3d(0.25, 0.25, 0.25)); // Mid
+  inMesh->createVertex(Eigen::Vector3d(0.5, 0.0, 0.0));    // Mid AB
+  inMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));    // A
+  inMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 0.0));    // C
+  inMesh->createVertex(Eigen::Vector3d(0.75, 0.25, 0.0));  // Along BC
+  inMesh->createVertex(Eigen::Vector3d(0.1, 0.2, 0.3));
+
+  inMesh->allocateDataValues();
+  Eigen::VectorXd &inValuesScalar = inDataScalar->values();
+  inValuesScalar << forceOnMid, forceOnMidAB, forceOnA, forceOnC, unbalancedforceOnBC;
+
+  // Create output mesh (the tetra ABCD)
+  PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
+  PtrData outDataScalar   = outMesh->createData("OutDataScalar", 1, 2_dataID);
+  int     outDataScalarID = outDataScalar->getID();
+
+  Vertex &outVertexA = outMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+  Vertex &outVertexB = outMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
+  Vertex &outVertexC = outMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 0.0));
+  Vertex &outVertexD = outMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 1.0));
+
+  outMesh->createTetrahedron(outVertexA, outVertexB, outVertexC, outVertexD);
+  BOOST_CHECK(!outMesh->tetrahedra().empty());
+
+  outMesh->allocateDataValues();
+
+  // Setup mapping with mapping coordinates and geometry used
+  precice::mapping::LinearCellInterpolationMapping mapping(mapping::Mapping::CONSERVATIVE, dimensions);
+  mapping.setMeshes(inMesh, outMesh);
+  BOOST_TEST(mapping.hasComputedMapping() == false);
+  mapping.computeMapping();
+  mapping.map(inDataScalarID, outDataScalarID);
+  const Eigen::VectorXd &outValuesScalar = outDataScalar->values();
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+
+  // Check expected
+  Eigen::VectorXd expected(outMesh->vertices().size());
+  const double    expectedA = forceOnMid / 4 + forceOnMidAB / 2 + forceOnA + 0.4 * unbalancedInternalForce;
+  const double    expectedB = forceOnMid / 4 + forceOnMidAB / 2 + unbalancedforceOnBC * 0.75 + 0.1 * unbalancedInternalForce;
+  const double    expectedC = forceOnMid / 4 + forceOnC + unbalancedforceOnBC * 0.25 + 0.2 * unbalancedInternalForce;
+  const double    expectedD = forceOnMid / 4 + 0.3 * unbalancedInternalForce;
+
+  expected << expectedA, expectedB, expectedC, expectedD;
+  // Check expected value, and conservation
+  BOOST_CHECK(equals(expected, outValuesScalar));
+  BOOST_CHECK(equals(netForce, outValuesScalar.sum()));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
