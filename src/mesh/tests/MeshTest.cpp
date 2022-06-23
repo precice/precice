@@ -829,5 +829,43 @@ BOOST_FIXTURE_TEST_CASE(Integrate3DVectorDataVolume, OneTetraFixture)
 
 BOOST_AUTO_TEST_SUITE_END() // VolumeIntegrals
 
+BOOST_AUTO_TEST_CASE(AddMesh)
+{
+  PRECICE_TEST(1_rank);
+  PtrMesh globalMesh = std::make_shared<Mesh>("Mesh1", 3, testing::nextMeshID());
+  PtrMesh subMesh    = std::make_shared<Mesh>("Mesh2", 3, testing::nextMeshID());
+
+  // Fill globalMesh, then subMesh, then add and check the result is the sul
+  auto &v01 = globalMesh->createVertex(Eigen::Vector3d{0.0, 0.0, 0.0});
+  auto &v02 = globalMesh->createVertex(Eigen::Vector3d{1.0, 0.0, 0.0});
+  auto &v03 = globalMesh->createVertex(Eigen::Vector3d{0.0, 1.0, 0.0});
+  auto &v04 = globalMesh->createVertex(Eigen::Vector3d{0.0, 0.0, 1.0});
+
+  // Add some elements of all kind to global
+  globalMesh->createEdge(v01, v02);
+  globalMesh->createTriangle(v01, v02, v03);
+  globalMesh->createTetrahedron(v01, v02, v03, v04);
+
+  auto &v11 = subMesh->createVertex(Eigen::Vector3d{0.0, 0.0, 0.0});
+  auto &v12 = subMesh->createVertex(Eigen::Vector3d{2.0, 0.0, 0.0});
+  auto &v13 = subMesh->createVertex(Eigen::Vector3d{0.0, 4.0, 0.0});
+  auto &v14 = subMesh->createVertex(Eigen::Vector3d{0.0, 0.0, 3.0});
+  auto &v15 = subMesh->createVertex(Eigen::Vector3d{5.0, 0.0, 1.0});
+
+  // Add some elements of all kind to sub mesh
+  subMesh->createEdge(v11, v12);
+  subMesh->createEdge(v14, v15);
+  subMesh->createTriangle(v11, v13, v15);
+  subMesh->createTriangle(v11, v13, v14);
+  subMesh->createTetrahedron(v11, v12, v13, v14);
+  subMesh->createTetrahedron(v15, v12, v13, v14);
+
+  globalMesh->addMesh(*subMesh);
+  BOOST_TEST(globalMesh->vertices().size() == 9);
+  BOOST_TEST(globalMesh->edges().size() == 3);
+  BOOST_TEST(globalMesh->triangles().size() == 3);
+  BOOST_TEST(globalMesh->tetrahedra().size() == 3);
+}
+
 BOOST_AUTO_TEST_SUITE_END() // Mesh
 BOOST_AUTO_TEST_SUITE_END() // Mesh
