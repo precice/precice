@@ -6,7 +6,6 @@
 #include <vector>
 #include "precice/impl/SolverInterfaceImpl.hpp"
 
-
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_SUITE(MappingVolume)
@@ -39,8 +38,7 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative3To1)
     std::vector<double> values;
 
     // Each rank sends some "forces" on one point
-    switch (context.rank)
-    {
+    switch (context.rank) {
     case 0:
       coords = {2. / 3, 1. / 3, 0,
                 1. / 3, 2. / 3, 0};
@@ -48,15 +46,15 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative3To1)
       break;
     case 1:
       coords = {0.75, 1, 1,
-              0.25, 0.5, 0.75};
+                0.25, 0.5, 0.75};
       values = {unbalancedForceOnGH,
-              forceOnMidAEGH};
+                forceOnMidAEGH};
       break;
     case 2:
       coords = {1.01, 1.01, 0.0,
-              0.3, 0.7, 0.9};
+                0.3, 0.7, 0.9};
       values = {forceNearC,
-              unbalancedForceOnAEGH};
+                unbalancedForceOnAEGH};
       break;
     default:
       break;
@@ -94,7 +92,7 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative3To1)
     interface.setMeshVertices(meshID, vertexIDs.size(), coords.data(), vertexIDs.data());
 
     VertexID v000 = vertexIDs[0];
-    
+
     VertexID v100 = vertexIDs[1];
     VertexID v110 = vertexIDs[2];
     VertexID v010 = vertexIDs[3];

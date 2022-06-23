@@ -21,14 +21,13 @@
         to="MeshTwo"
         constraint="conservative"
         timing="initial" />
-              <export:vtu/>
-
+      <export:vtu />
     </participant>
 
     <participant name="SolverTwoCubeConservative3To1">
       <use-mesh name="MeshTwo" provide="on" />
       <read-data name="DataOne" mesh="MeshTwo" />
-      <export:vtu/>
+      <export:vtu />
     </participant>
 
     <m2n:sockets from="SolverOneCubeConservative3To1" to="SolverTwoCubeConservative3To1" />
@@ -37,7 +36,11 @@
       <participants first="SolverOneCubeConservative3To1" second="SolverTwoCubeConservative3To1" />
       <max-time-windows value="1" />
       <time-window-size value="1.0" />
-      <exchange data="DataOne" mesh="MeshTwo" from="SolverOneCubeConservative3To1" to="SolverTwoCubeConservative3To1" />
+      <exchange
+        data="DataOne"
+        mesh="MeshTwo"
+        from="SolverOneCubeConservative3To1"
+        to="SolverTwoCubeConservative3To1" />
     </coupling-scheme:serial-explicit>
   </solver-interface>
 </precice-configuration>
