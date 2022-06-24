@@ -38,7 +38,7 @@ class ThinPlateSplines : public NoCompactSupportBase {
 public:
   inline double evaluate(double radius) const
   {
-    return std::log(std::max(radius, 1e-14)) * math::pow_int<2>(radius);
+    return std::log(std::max(radius, math::NUMERICAL_ZERO_DIFFERENCE)) * math::pow_int<2>(radius);
   }
 };
 
@@ -189,7 +189,7 @@ public:
     double const p = radius * _r_inv;
     if (p >= 1)
       return 0.0;
-    return 1.0 - 30.0 * math::pow_int<2>(p) - 10.0 * math::pow_int<3>(p) + 45.0 * math::pow_int<4>(p) - 6.0 * math::pow_int<5>(p) - math::pow_int<3>(p) * 60.0 * std::log(std::max(p, 1e-15));
+    return 1.0 - 30.0 * math::pow_int<2>(p) - 10.0 * math::pow_int<3>(p) + 45.0 * math::pow_int<4>(p) - 6.0 * math::pow_int<5>(p) - math::pow_int<3>(p) * 60.0 * std::log(std::max(p, math::NUMERICAL_ZERO_DIFFERENCE));
   }
 
 private:
