@@ -235,5 +235,83 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentNonIncremental)
   BOOST_TEST(inValues(3) * scaleFactor == outValues(3));
 }
 
+BOOST_AUTO_TEST_CASE(ScaledConsistentVolume2D)
+{
+  PRECICE_TEST(1_rank);
+  int dimensions = 2;
+
+  // Create mesh to map from
+  PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
+  PtrData inData    = inMesh->createData("InData", 1, 0_dataID);
+  int     inDataID  = inData->getID();
+
+  // One square with 3 triangles
+  Vertex &inVertex0 = inMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
+  Vertex &inVertex1 = inMesh->createVertex(Eigen::Vector2d{1.0, 0.0});
+  Vertex &inVertex2 = inMesh->createVertex(Eigen::Vector2d{1.0, 1.0});
+  Vertex &inVertex3 = inMesh->createVertex(Eigen::Vector2d{0.0, 1.0});
+  Vertex &inVertex4 = inMesh->createVertex(Eigen::Vector2d{0.5, 1.0});
+
+  inMesh->createTriangle(inVertex0, inVertex1, inVertex4);
+  inMesh->createTriangle(inVertex0, inVertex3, inVertex4);
+  inMesh->createTriangle(inVertex1, inVertex2, inVertex4);
+
+  inMesh->allocateDataValues();
+  Eigen::VectorXd &inValues = inData->values();
+  inValues(0)               = 1.0;
+  inValues(1)               = 2.0;
+  inValues(2)               = 3.0;
+  inValues(3)               = 4.0;
+  inValues(4)               = 5.0;
+
+  // Create mesh to map to
+  PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
+  PtrData outData    = outMesh->createData("OutData", 1, 1_dataID);
+  int     outDataID  = outData->getID();
+
+  // Unit square as 2 triangles
+  Vertex &outVertex0 = outMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
+  Vertex &outVertex1 = outMesh->createVertex(Eigen::Vector2d(1.0, 0.0));
+  Vertex &outVertex2 = outMesh->createVertex(Eigen::Vector2d(1.0, 1.0));
+  Vertex &outVertex3 = outMesh->createVertex(Eigen::Vector2d(0.0, 1.0));
+
+  outMesh->createTriangle(outVertex0, outVertex1, outVertex2);
+  outMesh->createTriangle(outVertex0, outVertex2, outVertex3);
+
+  outMesh->allocateDataValues();
+
+  // Setup mapping with mapping coordinates and geometry used
+  precice::mapping::NearestNeighborMapping mapping(mapping::Mapping::SCALEDCONSISTENT, dimensions);
+
+  mapping.setMeshes(inMesh, outMesh);
+  BOOST_TEST(mapping.hasComputedMapping() == false);
+
+  mapping.computeMapping();
+  mapping.map(inDataID, outDataID);
+
+  Eigen::VectorXd &outValues = outData->values();
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+
+  auto inputIntegral  = mesh::integrateVolume(inMesh, inData);
+  auto outputIntegral = mesh::integrateVolume(outMesh, outData);
+
+  Eigen::VectorXd expectedIntegral(1);
+  expectedIntegral << 3.0;
+
+  BOOST_TEST(inputIntegral(0) == expectedIntegral(0));
+
+  for (int dim = 0; dim < inputIntegral.size(); ++dim) {
+    BOOST_TEST(inputIntegral(dim) == outputIntegral(dim));
+  }
+
+  double scaleFactor = outValues(0) / inValues(0);
+  BOOST_TEST(scaleFactor != 1.0);
+
+  BOOST_TEST(math::equals(inValues(0) * scaleFactor, outValues(0)));
+  BOOST_TEST(inValues(1) * scaleFactor == outValues(1));
+  BOOST_TEST(inValues(2) * scaleFactor == outValues(2));
+  BOOST_TEST(inValues(3) * scaleFactor == outValues(3));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
