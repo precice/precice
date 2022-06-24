@@ -18,11 +18,11 @@ inline int sign(double number)
   return 0;
 }
 
-/// Computes the power of an integer (x^iexp) using recursion, which is much faster than std::pow(x, iexp)
+/// Computes the power of a given number by an integral exponent given at compile time, which is much faster than std::pow(x, iexp)
 template <int iexp, typename T>
 inline constexpr T pow_int(const T x)
 {
-  static_assert(iexp >= 0, "Exponent must be an integer greater zero.");
+  static_assert(iexp >= 0, "Exponent must be an integer greater or equal to zero.");
 
   if (iexp == 0)
     return static_cast<T>(1.);
