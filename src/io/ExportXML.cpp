@@ -24,7 +24,7 @@ namespace io {
 void ExportXML::doExport(
     const std::string &name,
     const std::string &location,
-    const mesh::Mesh & mesh)
+    const mesh::Mesh  &mesh)
 {
   PRECICE_TRACE(name, location, mesh.getName());
   processDataNamesAndDimensions(mesh);
@@ -33,7 +33,7 @@ void ExportXML::doExport(
   if (utils::IntraComm::isPrimary()) {
     writeParallelFile(name, location, mesh);
   }
-  if (mesh.vertices().size() > 0) { //only procs at the coupling interface should write output (for performance reasons)
+  if (mesh.vertices().size() > 0) { // only procs at the coupling interface should write output (for performance reasons)
     writeSubFile(name, location, mesh);
   }
 }
@@ -42,14 +42,26 @@ void ExportXML::processDataNamesAndDimensions(const mesh::Mesh &mesh)
 {
   _vectorDataNames.clear();
   _scalarDataNames.clear();
+  const bool isThreeDim = (mesh.getDimensions() == 3);
   for (const mesh::PtrData &data : mesh.data()) {
-    int dataDimensions = data->getDimensions();
+    int        dataDimensions = data->getDimensions();
+    const bool hasGradient    = data->hasGradient();
     PRECICE_ASSERT(dataDimensions >= 1);
     std::string dataName = data->getName();
     if (dataDimensions == 1) {
       _scalarDataNames.push_back(dataName);
+      if (hasGradient) {
+        _vectorDataNames.push_back(dataName + "_gradient");
+      }
     } else {
       _vectorDataNames.push_back(dataName);
+      if (hasGradient) {
+        _vectorDataNames.push_back(dataName + "_dx");
+        _vectorDataNames.push_back(dataName + "_dy");
+        if (isThreeDim) {
+          _vectorDataNames.push_back(dataName + "_dz");
+        }
+      }
     }
   }
 }
@@ -57,7 +69,7 @@ void ExportXML::processDataNamesAndDimensions(const mesh::Mesh &mesh)
 void ExportXML::writeParallelFile(
     const std::string &name,
     const std::string &location,
-    const mesh::Mesh & mesh) const
+    const mesh::Mesh  &mesh) const
 {
   namespace fs = boost::filesystem;
   fs::path outfile(location);
@@ -88,7 +100,7 @@ void ExportXML::writeParallelFile(
   for (size_t rank : utils::IntraComm::allSecondaryRanks()) {
     PRECICE_ASSERT(rank < offsets.size());
     if (offsets[rank] - offsets[rank - 1] > 0) {
-      //only non-empty subfiles
+      // only non-empty subfiles
       outParallelFile << "      <Piece Source=\"" << name << "_" << rank << getPieceExtension() << "\"/>\n";
     }
   }
@@ -112,7 +124,7 @@ std::string getPieceSuffix()
 void ExportXML::writeSubFile(
     const std::string &name,
     const std::string &location,
-    const mesh::Mesh & mesh) const
+    const mesh::Mesh  &mesh) const
 {
   namespace fs = boost::filesystem;
   fs::path outfile(location);
@@ -143,8 +155,42 @@ void ExportXML::writeSubFile(
   outSubFile.close();
 }
 
+void ExportXML::exportGradient(const mesh::PtrData data, const int spaceDim, std::ostream &outFile) const
+{
+  const auto              &gradientValues = data->gradientValues();
+  const int                dataDimensions = data->getDimensions();
+  std::vector<std::string> suffices;
+  if (dataDimensions == 1) {
+    suffices = {"_gradient"};
+  } else if (spaceDim == 2) {
+    suffices = {"_dx", "_dy"};
+  } else if (spaceDim == 3) {
+    suffices = {"_dx", "_dy", "_dz"};
+  }
+  int counter = 0; // Counter for multicomponent
+  for (const auto &suffix : suffices) {
+    const std::string dataName(data->getName());
+    outFile << "            <DataArray type=\"Float64\" Name=\"" << dataName << suffix << "\" NumberOfComponents=\"" << 3;
+    outFile << "\" format=\"ascii\">\n";
+    outFile << "               ";
+    for (int i = counter; i < gradientValues.cols(); i += spaceDim) { // Loop over vertices
+      int j = 0;
+      for (; j < gradientValues.rows(); j++) { // Loop over components
+        outFile << gradientValues.coeff(j, i) << " ";
+      }
+      if (j < 3) { // If 2D data add additonal zero as third component
+        outFile << "0.0"
+                << " ";
+      }
+    }
+    outFile << '\n'
+            << "            </DataArray>\n";
+    counter++; // Increment coutner for next component
+  }
+}
+
 void ExportXML::exportData(
-    std::ostream &    outFile,
+    std::ostream     &outFile,
     const mesh::Mesh &mesh) const
 {
   outFile << "         <PointData Scalars=\"Rank ";
@@ -166,11 +212,13 @@ void ExportXML::exportData(
   }
   outFile << "\n            </DataArray>\n";
 
+  const int spaceDim = mesh.getDimensions();
   for (const mesh::PtrData &data : mesh.data()) { // Plot vertex data
     Eigen::VectorXd &values         = data->values();
     int              dataDimensions = data->getDimensions();
     std::string      dataName(data->getName());
     int              numberOfComponents = (dataDimensions == 2) ? 3 : dataDimensions;
+    const bool       hasGradient        = data->hasGradient();
     outFile << "            <DataArray type=\"Float64\" Name=\"" << dataName << "\" NumberOfComponents=\"" << numberOfComponents;
     outFile << "\" format=\"ascii\">\n";
     outFile << "               ";
@@ -185,7 +233,7 @@ void ExportXML::exportData(
           outFile << viewTemp[i] << ' ';
         }
         if (dataDimensions == 2) {
-          outFile << "0.0" << ' '; //2D data needs to be 3D for vtk
+          outFile << "0.0" << ' '; // 2D data needs to be 3D for vtk
         }
         outFile << ' ';
       }
@@ -196,27 +244,30 @@ void ExportXML::exportData(
     }
     outFile << '\n'
             << "            </DataArray>\n";
+    if (hasGradient) {
+      exportGradient(data, spaceDim, outFile);
+    }
   }
   outFile << "         </PointData> \n";
 }
 
 void ExportXML::writeVertex(
     const Eigen::VectorXd &position,
-    std::ostream &         outFile)
+    std::ostream          &outFile)
 {
   outFile << "               ";
   for (int i = 0; i < position.size(); i++) {
     outFile << position(i) << "  ";
   }
   if (position.size() == 2) {
-    outFile << 0.0 << "  "; //also for 2D scenario, vtk needs 3D data
+    outFile << 0.0 << "  "; // also for 2D scenario, vtk needs 3D data
   }
   outFile << '\n';
 }
 
 void ExportXML::writeTriangle(
     const mesh::Triangle &triangle,
-    std::ostream &        outFile)
+    std::ostream         &outFile)
 {
   outFile << triangle.vertex(0).getID() << "  ";
   outFile << triangle.vertex(1).getID() << "  ";
@@ -225,7 +276,7 @@ void ExportXML::writeTriangle(
 
 void ExportXML::writeTetrahedron(
     const mesh::Tetrahedron &tetra,
-    std::ostream &           outFile)
+    std::ostream            &outFile)
 {
   outFile << tetra.vertex(0).getID() << "  ";
   outFile << tetra.vertex(1).getID() << "  ";
@@ -235,14 +286,14 @@ void ExportXML::writeTetrahedron(
 
 void ExportXML::writeLine(
     const mesh::Edge &edge,
-    std::ostream &    outFile)
+    std::ostream     &outFile)
 {
   outFile << edge.vertex(0).getID() << "  ";
   outFile << edge.vertex(1).getID() << "  ";
 }
 
 void ExportXML::exportPoints(
-    std::ostream &    outFile,
+    std::ostream     &outFile,
     const mesh::Mesh &mesh) const
 {
   outFile << "         <Points> \n";
