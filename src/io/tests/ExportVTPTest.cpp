@@ -25,6 +25,35 @@ using namespace precice;
 
 BOOST_AUTO_TEST_SUITE(VTPExport)
 
+BOOST_AUTO_TEST_CASE(ExportDataWithGradient)
+{
+  PRECICE_TEST(1_rank)
+  int dimensions = 2;
+  // Create mesh to map from
+  mesh::Mesh    mesh("MyMesh", dimensions, testing::nextMeshID());
+  mesh::PtrData dataScalar = mesh.createData("dataScalar", 1, 0_dataID, true);
+  mesh::PtrData dataVector = mesh.createData("dataVector", 2, 1_dataID, true);
+  mesh.createVertex(Eigen::Vector2d::Constant(0.0));
+  mesh.createVertex(Eigen::Vector2d::Constant(1.0));
+
+  // Create data
+  mesh.allocateDataValues();
+  Eigen::VectorXd &valuesScalar = dataScalar->values();
+  Eigen::VectorXd &valuesVector = dataVector->values();
+  valuesScalar << 1.0, 2.0;
+  valuesVector << 1.0, 2.0, 3.0, 4.0;
+
+  // Create corresponding gradient data (all gradient values = const = 1)
+  Eigen::MatrixXd &gradValuesScalar = dataScalar->gradientValues();
+  Eigen::MatrixXd &gradValuesVector = dataVector->gradientValues();
+  gradValuesScalar.setOnes();
+  gradValuesVector.setOnes();
+  io::ExportVTP exportVTP;
+  std::string   filename = "io-VTKExport-ExportDatawithGradient";
+  std::string   location = "";
+  exportVTP.doExport(filename, location, mesh);
+}
+
 BOOST_AUTO_TEST_CASE(ExportPolygonalMeshSerial)
 {
   PRECICE_TEST(""_on(1_rank).setupIntraComm());
@@ -128,9 +157,9 @@ BOOST_AUTO_TEST_CASE(ExportSplitSquare)
     mesh::Vertex &v1  = mesh.createVertex(Eigen::Vector3d{-1.0, 1.0, 0.0});
     mesh::Vertex &v2  = mesh.createVertex(Eigen::Vector3d{1.0, 1.0, 0.0});
     mesh::Vertex &vo  = mesh.createVertex(Eigen::Vector3d{0.0, 2.0, 0.0});
-    mesh::Edge &  em1 = mesh.createEdge(vm, v1);
-    mesh::Edge &  e12 = mesh.createEdge(v1, v2);
-    mesh::Edge &  e2m = mesh.createEdge(v2, vm);
+    mesh::Edge   &em1 = mesh.createEdge(vm, v1);
+    mesh::Edge   &e12 = mesh.createEdge(v1, v2);
+    mesh::Edge   &e2m = mesh.createEdge(v2, vm);
     mesh.createTriangle(em1, e12, e2m);
     mesh::Edge &eo1 = mesh.createEdge(vo, v1);
     mesh::Edge &e2o = mesh.createEdge(v2, vo);
@@ -141,9 +170,9 @@ BOOST_AUTO_TEST_CASE(ExportSplitSquare)
     mesh::Vertex &v1  = mesh.createVertex(Eigen::Vector3d{1.0, -1.0, 0.0});
     mesh::Vertex &v2  = mesh.createVertex(Eigen::Vector3d{-1.0, -1.0, 0.0});
     mesh::Vertex &vo  = mesh.createVertex(Eigen::Vector3d{0.0, -2.0, 0.0});
-    mesh::Edge &  em1 = mesh.createEdge(vm, v1);
-    mesh::Edge &  e12 = mesh.createEdge(v1, v2);
-    mesh::Edge &  e2m = mesh.createEdge(v2, vm);
+    mesh::Edge   &em1 = mesh.createEdge(vm, v1);
+    mesh::Edge   &e12 = mesh.createEdge(v1, v2);
+    mesh::Edge   &e2m = mesh.createEdge(v2, vm);
     mesh.createTriangle(em1, e12, e2m);
     mesh::Edge &eo1 = mesh.createEdge(vo, v1);
     mesh::Edge &e2o = mesh.createEdge(v2, vo);
@@ -152,9 +181,9 @@ BOOST_AUTO_TEST_CASE(ExportSplitSquare)
     mesh::Vertex &v1  = mesh.createVertex(Eigen::Vector3d{-1.0, 1.0, 0.0});
     mesh::Vertex &v2  = mesh.createVertex(Eigen::Vector3d{-1.0, -1.0, 0.0});
     mesh::Vertex &vo  = mesh.createVertex(Eigen::Vector3d{-2.0, 0.0, 0.0});
-    mesh::Edge &  em1 = mesh.createEdge(vm, v1);
-    mesh::Edge &  e12 = mesh.createEdge(v1, v2);
-    mesh::Edge &  e2m = mesh.createEdge(v2, vm);
+    mesh::Edge   &em1 = mesh.createEdge(vm, v1);
+    mesh::Edge   &e12 = mesh.createEdge(v1, v2);
+    mesh::Edge   &e2m = mesh.createEdge(v2, vm);
     mesh.createTriangle(em1, e12, e2m);
     mesh::Edge &eo1 = mesh.createEdge(vo, v1);
     mesh::Edge &e2o = mesh.createEdge(v2, vo);
@@ -163,9 +192,9 @@ BOOST_AUTO_TEST_CASE(ExportSplitSquare)
     mesh::Vertex &v1  = mesh.createVertex(Eigen::Vector3d{1.0, 1.0, 0.0});
     mesh::Vertex &v2  = mesh.createVertex(Eigen::Vector3d{1.0, -1.0, 0.0});
     mesh::Vertex &vo  = mesh.createVertex(Eigen::Vector3d{2.0, 0.0, 0.0});
-    mesh::Edge &  em1 = mesh.createEdge(vm, v1);
-    mesh::Edge &  e12 = mesh.createEdge(v1, v2);
-    mesh::Edge &  e2m = mesh.createEdge(v2, vm);
+    mesh::Edge   &em1 = mesh.createEdge(vm, v1);
+    mesh::Edge   &e12 = mesh.createEdge(v1, v2);
+    mesh::Edge   &e2m = mesh.createEdge(v2, vm);
     mesh.createTriangle(em1, e12, e2m);
     mesh::Edge &eo1 = mesh.createEdge(vo, v1);
     mesh::Edge &e2o = mesh.createEdge(v2, vo);
