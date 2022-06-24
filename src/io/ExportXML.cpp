@@ -24,7 +24,7 @@ namespace io {
 void ExportXML::doExport(
     const std::string &name,
     const std::string &location,
-    const mesh::Mesh  &mesh)
+    const mesh::Mesh & mesh)
 {
   PRECICE_TRACE(name, location, mesh.getName());
   processDataNamesAndDimensions(mesh);
@@ -69,7 +69,7 @@ void ExportXML::processDataNamesAndDimensions(const mesh::Mesh &mesh)
 void ExportXML::writeParallelFile(
     const std::string &name,
     const std::string &location,
-    const mesh::Mesh  &mesh) const
+    const mesh::Mesh & mesh) const
 {
   namespace fs = boost::filesystem;
   fs::path outfile(location);
@@ -124,7 +124,7 @@ std::string getPieceSuffix()
 void ExportXML::writeSubFile(
     const std::string &name,
     const std::string &location,
-    const mesh::Mesh  &mesh) const
+    const mesh::Mesh & mesh) const
 {
   namespace fs = boost::filesystem;
   fs::path outfile(location);
@@ -157,7 +157,7 @@ void ExportXML::writeSubFile(
 
 void ExportXML::exportGradient(const mesh::PtrData data, const int spaceDim, std::ostream &outFile) const
 {
-  const auto              &gradientValues = data->gradientValues();
+  const auto &             gradientValues = data->gradientValues();
   const int                dataDimensions = data->getDimensions();
   std::vector<std::string> suffices;
   if (dataDimensions == 1) {
@@ -190,7 +190,7 @@ void ExportXML::exportGradient(const mesh::PtrData data, const int spaceDim, std
 }
 
 void ExportXML::exportData(
-    std::ostream     &outFile,
+    std::ostream &    outFile,
     const mesh::Mesh &mesh) const
 {
   outFile << "         <PointData Scalars=\"Rank ";
@@ -253,7 +253,7 @@ void ExportXML::exportData(
 
 void ExportXML::writeVertex(
     const Eigen::VectorXd &position,
-    std::ostream          &outFile)
+    std::ostream &         outFile)
 {
   outFile << "               ";
   for (int i = 0; i < position.size(); i++) {
@@ -267,7 +267,7 @@ void ExportXML::writeVertex(
 
 void ExportXML::writeTriangle(
     const mesh::Triangle &triangle,
-    std::ostream         &outFile)
+    std::ostream &        outFile)
 {
   outFile << triangle.vertex(0).getID() << "  ";
   outFile << triangle.vertex(1).getID() << "  ";
@@ -276,7 +276,7 @@ void ExportXML::writeTriangle(
 
 void ExportXML::writeTetrahedron(
     const mesh::Tetrahedron &tetra,
-    std::ostream            &outFile)
+    std::ostream &           outFile)
 {
   outFile << tetra.vertex(0).getID() << "  ";
   outFile << tetra.vertex(1).getID() << "  ";
@@ -286,14 +286,14 @@ void ExportXML::writeTetrahedron(
 
 void ExportXML::writeLine(
     const mesh::Edge &edge,
-    std::ostream     &outFile)
+    std::ostream &    outFile)
 {
   outFile << edge.vertex(0).getID() << "  ";
   outFile << edge.vertex(1).getID() << "  ";
 }
 
 void ExportXML::exportPoints(
-    std::ostream     &outFile,
+    std::ostream &    outFile,
     const mesh::Mesh &mesh) const
 {
   outFile << "         <Points> \n";
