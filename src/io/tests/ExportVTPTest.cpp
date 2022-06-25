@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(ExportDataWithGradient)
   gradValuesScalar.setOnes();
   gradValuesVector.setOnes();
   io::ExportVTP exportVTP;
-  std::string   filename = "io-VTKExport-ExportDatawithGradient";
+  std::string   filename = "io-VTPExport-ExportDatawithGradient";
   std::string   location = "";
   exportVTP.doExport(filename, location, mesh);
 }
