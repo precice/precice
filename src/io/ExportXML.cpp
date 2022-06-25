@@ -244,8 +244,10 @@ void ExportXML::exportData(
     }
     outFile << '\n'
             << "            </DataArray>\n";
-    if (hasGradient) {
+    if (hasGradient && dataDimensions > 1) {
       exportGradient(data, spaceDim, outFile);
+    } else if (hasGradient && dataDimensions == 1) {
+      exportGradient(data, 1, outFile);
     }
   }
   outFile << "         </PointData> \n";
