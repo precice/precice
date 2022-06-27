@@ -20,7 +20,7 @@ public:
   virtual ~BarycentricBaseMapping() = default;
 
   /// Computes the projections and interpolation relations. Must be done by inherited subclass
-  virtual void computeMapping() = 0;
+  virtual void computeMapping() override = 0;
 
   /// Removes a computed mapping.
   virtual void clear() final;

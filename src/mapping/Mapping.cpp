@@ -19,8 +19,9 @@ Mapping::Mapping(
       _outputRequirement(MeshRequirement::UNDEFINED),
       _input(),
       _output(),
-      _dimensions(dimensions),
-      _couplingKind(couplingKind)
+      _couplingKind(couplingKind),
+      _dimensions(dimensions)
+
 {
 }
 
@@ -118,6 +119,7 @@ void Mapping::map(int inputDataID,
 
 void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
 {
+  logging::Logger _log{"mapping::Mapping"};
   // Only serial participant is supported for scale-consistent mapping
   PRECICE_ASSERT((not utils::IntraComm::isPrimary()) and (not utils::IntraComm::isSecondary()));
 
@@ -130,7 +132,6 @@ void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
   if (not input()->vertices().empty()) {
     if ((requiresEdges and input()->edges().empty()) or
         (requiresTriangles and input()->triangles().empty()) or (requiresTetra and input()->tetrahedra().empty())) {
-      logging::Logger _log{"mapping::Mapping"};
       PRECICE_ERROR("Connectivity information is missing for the mesh {}. "
                     "Scaled consistent mapping requires connectivity information.",
                     input()->getName());
@@ -139,7 +140,6 @@ void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
   if (not output()->vertices().empty()) {
     if ((requiresEdges and output()->edges().empty()) or
         (requiresTriangles and output()->triangles().empty()) or (requiresTetra and output()->tetrahedra().empty())) {
-      logging::Logger _log{"mapping::Mapping"};
       PRECICE_ERROR("Connectivity information is missing for the mesh {}. "
                     "Scaled consistent mapping requires connectivity information.",
                     output()->getName());
@@ -164,11 +164,10 @@ void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
 
   // Create reshape the output values vector to matrix
   Eigen::Map<Eigen::MatrixXd> outputValuesMatrix(outputValues.data(), valueDimensions, outputValues.size() / valueDimensions);
-  logging::Logger             _log{"mapping::Mapping"};
 
   // Scale in each direction
   Eigen::VectorXd scalingFactor = integralInput.array() / integralOutput.array();
-  PRECICE_DEBUG("Scale factor: {}", scalingFactor);
+  PRECICE_DEBUG("Scale factor in scale-consistent mapping: {}", scalingFactor);
   outputValuesMatrix.array().colwise() *= scalingFactor.array();
 }
 
