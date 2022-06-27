@@ -7,6 +7,7 @@
 #include "io/Export.hpp"
 #include "logging/Logger.hpp"
 #include "mesh/SharedPointer.hpp"
+
 namespace precice {
 namespace mesh {
 class Mesh;
