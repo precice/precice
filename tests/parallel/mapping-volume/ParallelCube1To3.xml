@@ -11,14 +11,14 @@
       <use-data name="DataOne" />
     </mesh>
 
-    <participant name="SolverOne1_3">
+    <participant name="SolverOne">
       <use-mesh name="MeshOne" provide="on" />
       <write-data name="DataOne" mesh="MeshOne" />
       <export:vtu />
     </participant>
 
-    <participant name="SolverTwo1_3">
-      <use-mesh name="MeshOne" from="SolverOne1_3" geometric-filter="no-filter" />
+    <participant name="SolverTwo">
+      <use-mesh name="MeshOne" from="SolverOne" geometric-filter="no-filter" />
       <use-mesh name="MeshTwo" provide="on" />
       <mapping:linear-cell-interpolation
         direction="read"
@@ -30,13 +30,13 @@
       <export:vtu />
     </participant>
 
-    <m2n:sockets from="SolverOne1_3" to="SolverTwo1_3" />
+    <m2n:sockets from="SolverOne" to="SolverTwo" />
 
     <coupling-scheme:serial-explicit>
-      <participants first="SolverOne1_3" second="SolverTwo1_3" />
+      <participants first="SolverOne" second="SolverTwo" />
       <max-time-windows value="1" />
       <time-window-size value="1.0" />
-      <exchange data="DataOne" mesh="MeshOne" from="SolverOne1_3" to="SolverTwo1_3" />
+      <exchange data="DataOne" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
     </coupling-scheme:serial-explicit>
   </solver-interface>
 </precice-configuration>

@@ -14,7 +14,7 @@ BOOST_AUTO_TEST_CASE(ParallelCube1To3)
   using precice::VertexID;
   using precice::testing::equals;
 
-  PRECICE_TEST("SolverOne1_3"_on(1_rank), "SolverTwo1_3"_on(3_ranks));
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(3_ranks));
 
   precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
 
@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_CASE(ParallelCube1To3)
   double                dt;
   double                a = 1, b = 2, c = 5, d = 1;
 
-  if (context.isNamed("SolverOne1_3")) {
+  if (context.isNamed("SolverOne")) {
     auto meshID = interface.getMeshID("MeshOne");
     auto dataID = interface.getDataID("DataOne", meshID);
 
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(ParallelCube1To3)
     interface.advance(dt);
     BOOST_TEST(!interface.isCouplingOngoing(), "Sending participant must advance only once.");
     interface.finalize();
-  } else { // SolverTwo1_3
+  } else { // SolverTwo
     auto meshID = interface.getMeshID("MeshTwo");
     auto dataID = interface.getDataID("DataOne", meshID);
 
