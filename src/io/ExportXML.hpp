@@ -95,7 +95,7 @@ private:
       std::ostream &    outFile,
       const mesh::Mesh &mesh) const;
 
-  void exportGradient(const mesh::PtrData data, const int spaceDim, std::ostream &outFile) const;
+  void exportGradient(const mesh::PtrData data, const int dataDim, std::ostream &outFile) const;
 };
 
 } // namespace io
