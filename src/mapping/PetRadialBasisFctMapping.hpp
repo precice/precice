@@ -67,7 +67,8 @@ public:
       std::array<bool, 3>            deadAxis,
       double                         solverRtol    = 1e-9,
       Polynomial                     polynomial    = Polynomial::SEPARATE,
-      Preallocation                  preallocation = Preallocation::TREE);
+      Preallocation                  preallocation = Preallocation::TREE,
+      Mapping::CouplingKind          kind          = Mapping::CouplingKind::SURFACE);
 
   /// Deletes the PETSc objects and the _deadAxis array
   virtual ~PetRadialBasisFctMapping();
@@ -178,8 +179,9 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping(
     std::array<bool, 3>            deadAxis,
     double                         solverRtol,
     Polynomial                     polynomial,
-    Preallocation                  preallocation)
-    : RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>(constraint, dimensions, function, deadAxis),
+    Preallocation                  preallocation,
+    Mapping::CouplingKind          kind)
+    : RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>(constraint, dimensions, function, deadAxis, kind),
       _matrixC("C"),
       _matrixQ("Q"),
       _matrixA("A"),

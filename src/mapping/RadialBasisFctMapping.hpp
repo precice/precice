@@ -45,7 +45,8 @@ public:
       Mapping::Constraint     constraint,
       int                     dimensions,
       RADIAL_BASIS_FUNCTION_T function,
-      std::array<bool, 3>     deadAxis);
+      std::array<bool, 3>     deadAxis,
+      Mapping::CouplingKind   kind = Mapping::CouplingKind::SURFACE);
 
   /// Computes the mapping coefficients from the in- and output mesh.
   virtual void computeMapping() override;
@@ -71,8 +72,9 @@ RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctMapping(
     Mapping::Constraint     constraint,
     int                     dimensions,
     RADIAL_BASIS_FUNCTION_T function,
-    std::array<bool, 3>     deadAxis)
-    : RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>(constraint, dimensions, function, deadAxis)
+    std::array<bool, 3>     deadAxis,
+    Mapping::CouplingKind   kind)
+    : RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>(constraint, dimensions, function, deadAxis, kind)
 {
 }
 

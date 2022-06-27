@@ -163,7 +163,7 @@ void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
 
   // Create reshape the output values vector to matrix
   Eigen::Map<Eigen::MatrixXd> outputValuesMatrix(outputValues.data(), valueDimensions, outputValues.size() / valueDimensions);
-  logging::Logger _log{"mapping::Mapping"};
+  logging::Logger             _log{"mapping::Mapping"};
 
   // Scale in each direction
   Eigen::VectorXd scalingFactor = integralInput.array() / integralOutput.array();

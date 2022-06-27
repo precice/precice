@@ -15,8 +15,8 @@ extern bool syncMode;
 namespace mapping {
 
 NearestNeighborMapping::NearestNeighborMapping(
-    Constraint constraint,
-    int        dimensions,
+    Constraint            constraint,
+    int                   dimensions,
     Mapping::CouplingKind kind)
     : NearestNeighborBaseMapping(constraint, dimensions, false, "NearestNeighborMapping", "nn", kind)
 {

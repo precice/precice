@@ -13,7 +13,7 @@ namespace mapping {
 LinearCellInterpolationMapping::LinearCellInterpolationMapping(
     Constraint constraint,
     int        dimensions)
-    : BarycentricBaseMapping(constraint, dimensions)
+    : BarycentricBaseMapping(constraint, dimensions, Mapping::CouplingKind::VOLUME)
 {
   PRECICE_CHECK(getDimensions() == 2, "Volume mapping not available in 3D.");
   if (constraint == CONSISTENT) {

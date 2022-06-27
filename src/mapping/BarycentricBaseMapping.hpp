@@ -14,7 +14,7 @@ namespace mapping {
  */
 class BarycentricBaseMapping : public Mapping {
 public:
-  BarycentricBaseMapping(Constraint constraint, int dimensions);
+  BarycentricBaseMapping(Constraint constraint, int dimensions, Mapping::CouplingKind kind);
 
   /// Destructor, empty.
   virtual ~BarycentricBaseMapping() = default;

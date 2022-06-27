@@ -24,8 +24,8 @@ extern bool syncMode;
 
 namespace mapping {
 
-BarycentricBaseMapping::BarycentricBaseMapping(Constraint constraint, int dimensions)
-    : Mapping(constraint, dimensions)
+BarycentricBaseMapping::BarycentricBaseMapping(Constraint constraint, int dimensions, Mapping::CouplingKind kind)
+    : Mapping(constraint, dimensions, false, kind)
 {
 }
 

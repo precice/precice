@@ -16,8 +16,8 @@ extern bool syncMode;
 namespace mapping {
 
 NearestNeighborGradientMapping::NearestNeighborGradientMapping(
-    Constraint constraint,
-    int        dimensions,
+    Constraint            constraint,
+    int                   dimensions,
     Mapping::CouplingKind couplingKind)
     : NearestNeighborBaseMapping(constraint, dimensions, true, "NearestNeighborGradientMapping", "nng", couplingKind)
 {

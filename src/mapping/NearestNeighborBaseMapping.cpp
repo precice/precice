@@ -18,11 +18,11 @@ extern bool syncMode;
 namespace mapping {
 
 NearestNeighborBaseMapping::NearestNeighborBaseMapping(
-    Constraint  constraint,
-    int         dimensions,
-    bool        requireGradient,
-    std::string mappingName,
-    std::string mappingNameShort,
+    Constraint            constraint,
+    int                   dimensions,
+    bool                  requireGradient,
+    std::string           mappingName,
+    std::string           mappingNameShort,
     Mapping::CouplingKind kind)
     : Mapping(constraint, dimensions, requireGradient, kind),
       mappingName(mappingName),

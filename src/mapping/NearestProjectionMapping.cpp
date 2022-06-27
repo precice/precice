@@ -27,7 +27,7 @@ namespace mapping {
 NearestProjectionMapping::NearestProjectionMapping(
     Constraint constraint,
     int        dimensions)
-    : BarycentricBaseMapping(constraint, dimensions)
+    : BarycentricBaseMapping(constraint, dimensions, Mapping::CouplingKind::SURFACE)
 {
   if (constraint == CONSISTENT) {
     setInputRequirement(Mapping::MeshRequirement::FULL);
