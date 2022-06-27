@@ -157,7 +157,7 @@ void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
     integralInput  = mesh::integrate(input(), input()->data(inputDataID));
     integralOutput = mesh::integrate(output(), output()->data(outputDataID));
   } else {
-  PRECICE_ASSERT(_couplingKind == CouplingKind::...)
+    PRECICE_ASSERT(_couplingKind == CouplingKind::...)
     integralInput  = mesh::integrateVolume(input(), input()->data(inputDataID));
     integralOutput = mesh::integrateVolume(output(), output()->data(outputDataID));
   }
