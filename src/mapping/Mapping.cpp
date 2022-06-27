@@ -122,19 +122,28 @@ void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
   PRECICE_ASSERT((not utils::IntraComm::isPrimary()) and (not utils::IntraComm::isSecondary()));
 
   // If rank is not empty and do not contain connectivity information, raise error
-  if ((input()->edges().empty() and (not input()->vertices().empty())) or
-      (((input()->getDimensions() == 3) and input()->triangles().empty()) and (not input()->vertices().empty()))) {
-    logging::Logger _log{"mapping::Mapping"};
-    PRECICE_ERROR("Connectivity information is missing for the mesh {}. "
-                  "Scaled consistent mapping requires connectivity information.",
-                  input()->getName());
+  int  spaceDimension    = input()->getDimensions() == 3;
+  bool requiresEdges     = (spaceDimension == 2 and _couplingKind == CouplingKind::SURFACE);
+  bool requiresTriangles = (spaceDimension == 2 and _couplingKind == CouplingKind::VOLUME) or (spaceDimension == 3 and _couplingKind == CouplingKind::SURFACE);
+  bool requiresTetra     = (spaceDimension == 3 and _couplingKind == CouplingKind::VOLUME);
+
+  if (not input()->vertices().empty()) {
+    if ((requiresEdges and input()->edges().empty()) or
+        (requiresTriangles and input()->triangles().empty()) or (requiresTetra and input()->tetrahedra().empty())) {
+      logging::Logger _log{"mapping::Mapping"};
+      PRECICE_ERROR("Connectivity information is missing for the mesh {}. "
+                    "Scaled consistent mapping requires connectivity information.",
+                    input()->getName());
+    }
   }
-  if ((output()->edges().empty() and (not output()->vertices().empty())) or
-      (((output()->getDimensions() == 3) and output()->triangles().empty()) and (not output()->vertices().empty()))) {
-    logging::Logger _log{"mapping::Mapping"};
-    PRECICE_ERROR("Connectivity information is missing for the mesh {}. "
-                  "Scaled consistent mapping requires connectivity information.",
-                  output()->getName());
+  if (not output()->vertices().empty()) {
+    if ((requiresEdges and output()->edges().empty()) or
+        (requiresTriangles and output()->triangles().empty()) or (requiresTetra and output()->tetrahedra().empty())) {
+      logging::Logger _log{"mapping::Mapping"};
+      PRECICE_ERROR("Connectivity information is missing for the mesh {}. "
+                    "Scaled consistent mapping requires connectivity information.",
+                    output()->getName());
+    }
   }
 
   auto &outputValues    = output()->data(outputDataID)->values();
@@ -154,9 +163,11 @@ void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
 
   // Create reshape the output values vector to matrix
   Eigen::Map<Eigen::MatrixXd> outputValuesMatrix(outputValues.data(), valueDimensions, outputValues.size() / valueDimensions);
+  logging::Logger _log{"mapping::Mapping"};
 
   // Scale in each direction
   Eigen::VectorXd scalingFactor = integralInput.array() / integralOutput.array();
+  PRECICE_DEBUG("Scale factor: {}", scalingFactor);
   outputValuesMatrix.array().colwise() *= scalingFactor.array();
 }
 

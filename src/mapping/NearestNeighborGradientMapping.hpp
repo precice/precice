@@ -17,7 +17,7 @@ public:
    * @param[in] constraint Specifies mapping to be consistent or conservative.
    * @param[in] dimensions Dimensionality of the meshes
    */
-  NearestNeighborGradientMapping(Constraint constraint, int dimensions);
+  NearestNeighborGradientMapping(Constraint constraint, int dimensions, Mapping::CouplingKind couplingKind = CouplingKind::SURFACE);
 
   /// Calculates the offsets needed for the gradient mappings after calculating the matched vertices
   void onMappingComputed(mesh::PtrMesh origins, mesh::PtrMesh searchSpace) override;

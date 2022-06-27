@@ -19,7 +19,7 @@ public:
    * @param[in] dimensions Dimensionality of the meshes
    */
   NearestNeighborBaseMapping(Constraint constraint, int dimensions, bool hasGradient, std::string mappingName,
-                             std::string mappingNameShort);
+                             std::string mappingNameShort, Mapping::CouplingKind kind = Mapping::CouplingKind::SURFACE);
 
   /// Destructor, empty.
   virtual ~NearestNeighborBaseMapping() = default;

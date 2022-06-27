@@ -242,8 +242,8 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentVolume2D)
 
   // Create mesh to map from
   PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
-  PtrData inData    = inMesh->createData("InData", 1, 0_dataID);
-  int     inDataID  = inData->getID();
+  PtrData inData   = inMesh->createData("InData", 1, 0_dataID);
+  int     inDataID = inData->getID();
 
   // One square with 3 triangles
   Vertex &inVertex0 = inMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
@@ -266,8 +266,8 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentVolume2D)
 
   // Create mesh to map to
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  PtrData outData    = outMesh->createData("OutData", 1, 1_dataID);
-  int     outDataID  = outData->getID();
+  PtrData outData   = outMesh->createData("OutData", 1, 1_dataID);
+  int     outDataID = outData->getID();
 
   // Unit square as 2 triangles
   Vertex &outVertex0 = outMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
@@ -281,7 +281,7 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentVolume2D)
   outMesh->allocateDataValues();
 
   // Setup mapping with mapping coordinates and geometry used
-  precice::mapping::NearestNeighborMapping mapping(mapping::Mapping::SCALEDCONSISTENT, dimensions);
+  precice::mapping::NearestNeighborMapping mapping(mapping::Mapping::SCALEDCONSISTENT, dimensions, precice::mapping::Mapping::CouplingKind::VOLUME);
 
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);

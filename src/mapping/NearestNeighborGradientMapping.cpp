@@ -17,8 +17,9 @@ namespace mapping {
 
 NearestNeighborGradientMapping::NearestNeighborGradientMapping(
     Constraint constraint,
-    int        dimensions)
-    : NearestNeighborBaseMapping(constraint, dimensions, true, "NearestNeighborGradientMapping", "nng")
+    int        dimensions,
+    Mapping::CouplingKind couplingKind)
+    : NearestNeighborBaseMapping(constraint, dimensions, true, "NearestNeighborGradientMapping", "nng", couplingKind)
 {
   PRECICE_ASSERT(!hasConstraint(CONSERVATIVE));
 

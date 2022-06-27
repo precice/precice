@@ -16,8 +16,9 @@ namespace mapping {
 
 NearestNeighborMapping::NearestNeighborMapping(
     Constraint constraint,
-    int        dimensions)
-    : NearestNeighborBaseMapping(constraint, dimensions, false, "NearestNeighborMapping", "nn")
+    int        dimensions,
+    Mapping::CouplingKind kind)
+    : NearestNeighborBaseMapping(constraint, dimensions, false, "NearestNeighborMapping", "nn", kind)
 {
   if (hasConstraint(SCALEDCONSISTENT)) {
     setInputRequirement(Mapping::MeshRequirement::FULL);

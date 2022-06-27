@@ -22,8 +22,9 @@ NearestNeighborBaseMapping::NearestNeighborBaseMapping(
     int         dimensions,
     bool        requireGradient,
     std::string mappingName,
-    std::string mappingNameShort)
-    : Mapping(constraint, dimensions, requireGradient),
+    std::string mappingNameShort,
+    Mapping::CouplingKind kind)
+    : Mapping(constraint, dimensions, requireGradient, kind),
       mappingName(mappingName),
       mappingNameShort(mappingNameShort)
 {

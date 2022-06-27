@@ -17,7 +17,7 @@ public:
    * @param[in] constraint Specifies mapping to be consistent or conservative.
    * @param[in] dimensions Dimensionality of the meshes
    */
-  NearestNeighborMapping(Constraint constraint, int dimensions);
+  NearestNeighborMapping(Constraint constraint, int dimensions, Mapping::CouplingKind kind = Mapping::CouplingKind::SURFACE);
 
 protected:
   /// @copydoc Mapping::mapConservative
