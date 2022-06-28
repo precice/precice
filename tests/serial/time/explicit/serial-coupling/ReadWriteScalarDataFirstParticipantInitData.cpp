@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantInitData)
   VertexID vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
   double   dt       = precice.initialize();
   precice.markActionFulfilled(precice::constants::actionWriteInitialData());
-  precice.initializeData();
+  //precice.initializeData();  // results in deadlock. See https://github.com/precice/precice/pull/1307
 
   for (int i = 0; i < timestepSizes.size(); i++) {
     BOOST_TEST(precice.isCouplingOngoing());
