@@ -512,6 +512,20 @@ public:
       int secondVertexID);
 
   /**
+   * @brief Sets multiple mesh edge from vertex IDs
+   *
+   * @param[in] meshID ID of the mesh to add the edges to
+   * @param[in] size the amount of edges to set
+   * @param[in] vertices an array containing 2*size vertex IDs
+   *
+   * @pre vertices were added to the mesh with the ID meshID
+   */
+  void setMeshEdges(
+      int        meshID,
+      int        size,
+      const int *vertices);
+
+  /**
    * @brief Sets mesh triangle from vertex IDs.
    *
    * @param[in] meshID ID of the mesh to add the triangle to
@@ -526,6 +540,20 @@ public:
       int firstVertexID,
       int secondVertexID,
       int thirdVertexID);
+
+  /**
+   * @brief Sets multiple mesh triangles from vertex IDs
+   *
+   * @param[in] meshID ID of the mesh to add the triangles to
+   * @param[in] size the amount of triangles to set
+   * @param[in] vertices an array containing 3*size vertex IDs
+   *
+   * @pre vertices were added to the mesh with the ID meshID
+   */
+  void setMeshTriangles(
+      int        meshID,
+      int        size,
+      const int *vertices);
 
   /**
    * @brief Sets surface mesh quadrangle from vertex IDs.
@@ -547,6 +575,20 @@ public:
       int fourthVertexID);
 
   /**
+   * @brief Sets multiple mesh quads from vertex IDs
+   *
+   * @param[in] meshID ID of the mesh to add the quad to
+   * @param[in] size the amount of quads to set
+   * @param[in] vertices an array containing 4*size vertex IDs
+   *
+   * @pre vertices were added to the mesh with the ID meshID
+   */
+  void setMeshQuads(
+      int        meshID,
+      int        size,
+      const int *vertices);
+
+  /**
    * @brief Set tetrahedron in 3D mesh from vertex ID
    *
    * @param[in] meshID ID of the mesh to add the Tetrahedron to
@@ -563,6 +605,20 @@ public:
       int secondVertexID,
       int thirdVertexID,
       int fourthVertexID);
+
+  /**
+   * @brief Sets multiple mesh tetrahedra from vertex IDs
+   *
+   * @param[in] meshID ID of the mesh to add the tetrahedra to
+   * @param[in] size the amount of tetrahedra to set
+   * @param[in] vertices an array containing 4*size vertex IDs
+   *
+   * @pre vertices were added to the mesh with the ID meshID
+   */
+  void setMeshTetrahedra(
+      int        meshID,
+      int        size,
+      const int *vertices);
 
   ///@}
 

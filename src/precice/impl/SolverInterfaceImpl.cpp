@@ -829,6 +829,16 @@ void SolverInterfaceImpl::setMeshEdge(
   }
 }
 
+void SolverInterfaceImpl::setMeshEdges(
+    int        meshID,
+    int        size,
+    const int *vertices)
+{
+  for (int i = 0; i < size; ++i) {
+    setMeshEdge(meshID, vertices[2 * i], vertices[2 * i + 1]);
+  }
+}
+
 void SolverInterfaceImpl::setMeshTriangle(
     MeshID meshID,
     int    firstVertexID,
@@ -863,6 +873,16 @@ void SolverInterfaceImpl::setMeshTriangle(
     edges[2] = &mesh->createEdge(*vertices[2], *vertices[0]);
 
     mesh->createTriangle(*edges[0], *edges[1], *edges[2]);
+  }
+}
+
+void SolverInterfaceImpl::setMeshTriangles(
+    int        meshID,
+    int        size,
+    const int *vertices)
+{
+  for (int i = 0; i < size; ++i) {
+    setMeshTriangle(meshID, vertices[3 * i], vertices[3 * i + 1], vertices[3 * i + 2]);
   }
 }
 
@@ -928,6 +948,16 @@ void SolverInterfaceImpl::setMeshQuad(
   }
 }
 
+void SolverInterfaceImpl::setMeshQuads(
+    int        meshID,
+    int        size,
+    const int *vertices)
+{
+  for (int i = 0; i < size; ++i) {
+    setMeshQuad(meshID, vertices[4 * i], vertices[4 * i + 1], vertices[4 * i + 2], vertices[4 * i + 3]);
+  }
+}
+
 void SolverInterfaceImpl::setMeshTetrahedron(
     MeshID meshID,
     int    firstVertexID,
@@ -967,6 +997,16 @@ void SolverInterfaceImpl::setMeshTetrahedron(
     mesh->createTriangle(BC, CD, BD);
 
     mesh->createTetrahedron(A, B, C, D);
+  }
+}
+
+void SolverInterfaceImpl::setMeshTetrahedra(
+    int        meshID,
+    int        size,
+    const int *vertices)
+{
+  for (int i = 0; i < size; ++i) {
+    setMeshTetrahedron(meshID, vertices[4 * i], vertices[4 * i + 1], vertices[4 * i + 2], vertices[4 * i + 3]);
   }
 }
 

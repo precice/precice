@@ -197,12 +197,24 @@ public:
       int    firstVertexID,
       int    secondVertexID);
 
+  /// @copydoc SolverInterface::setMeshEdges
+  void setMeshEdges(
+      int        meshID,
+      int        size,
+      const int *vertices);
+
   /// @copydoc SolverInterface::setMeshTriangle
   void setMeshTriangle(
       MeshID meshID,
       int    firstVertexID,
       int    secondVertexID,
       int    thirdVertexID);
+
+  /// @copydoc SolverInterface::setMeshTriangles
+  void setMeshTriangles(
+      int        meshID,
+      int        size,
+      const int *vertices);
 
   /// @copydoc SolverInterface::setMeshQuad
   void setMeshQuad(
@@ -212,6 +224,12 @@ public:
       int    thirdVertexID,
       int    fourthVertexID);
 
+  /// @copydoc SolverInterface::setMeshQuads
+  void setMeshQuads(
+      int        meshID,
+      int        size,
+      const int *vertices);
+
   /// @copydoc SolverInterface::setMeshTetrahedron
   void setMeshTetrahedron(
       MeshID meshID,
@@ -219,6 +237,12 @@ public:
       int    secondVertexID,
       int    thirdVertexID,
       int    fourthVertexID);
+
+  /// @copydoc SolverInterface::setMeshTetrahedra
+  void setMeshTetrahedra(
+      int        meshID,
+      int        size,
+      const int *vertices);
 
   ///@}
 

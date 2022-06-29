@@ -189,6 +189,14 @@ void SolverInterface::setMeshEdge(
   _impl->setMeshEdge(meshID, firstVertexID, secondVertexID);
 }
 
+void SolverInterface::setMeshEdges(
+    int        meshID,
+    int        size,
+    const int *vertices)
+{
+  _impl->setMeshEdges(meshID, size, vertices);
+}
+
 void SolverInterface::setMeshTriangle(
     int meshID,
     int firstVertexID,
@@ -196,6 +204,14 @@ void SolverInterface::setMeshTriangle(
     int thirdVertexID)
 {
   _impl->setMeshTriangle(meshID, firstVertexID, secondVertexID, thirdVertexID);
+}
+
+void SolverInterface::setMeshTriangles(
+    int        meshID,
+    int        size,
+    const int *vertices)
+{
+  _impl->setMeshTriangles(meshID, size, vertices);
 }
 
 void SolverInterface::setMeshQuad(
@@ -209,6 +225,14 @@ void SolverInterface::setMeshQuad(
                      fourthVertexID);
 }
 
+void SolverInterface::setMeshQuads(
+    int        meshID,
+    int        size,
+    const int *vertices)
+{
+  _impl->setMeshQuads(meshID, size, vertices);
+}
+
 void SolverInterface::setMeshTetrahedron(
     int meshID,
     int firstVertexID,
@@ -218,6 +242,14 @@ void SolverInterface::setMeshTetrahedron(
 {
   _impl->setMeshTetrahedron(meshID, firstVertexID, secondVertexID, thirdVertexID,
                             fourthVertexID);
+}
+
+void SolverInterface::setMeshTetrahedra(
+    int        meshID,
+    int        size,
+    const int *vertices)
+{
+  _impl->setMeshTetrahedra(meshID, size, vertices);
 }
 
 void SolverInterface::mapReadDataTo(
