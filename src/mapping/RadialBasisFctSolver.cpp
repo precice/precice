@@ -86,5 +86,5 @@ const Eigen::MatrixXd &RadialBasisFctSolver::getEvaluationMatrix() const
 {
   return _matrixA;
 }
-}
-}
+} // namespace mapping
+} // namespace precice
