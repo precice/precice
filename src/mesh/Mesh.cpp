@@ -51,13 +51,6 @@ Mesh::EdgeContainer &Mesh::edges()
   return _edges;
 }
 
-Edge &Mesh::registeredEdge(EdgeID id)
-{
-  auto pos = _edgeRegister.find(id);
-  PRECICE_ASSERT(pos != _edgeRegister.end())
-  return *pos->second;
-}
-
 const Mesh::EdgeContainer &Mesh::edges() const
 {
   return _edges;
@@ -102,16 +95,6 @@ Edge &Mesh::createEdge(
 {
   _edges.emplace_back(vertexOne, vertexTwo);
   return _edges.back();
-}
-
-std::pair<Edge &, EdgeID> Mesh::createRegisteredEdge(
-    Vertex &vertexOne,
-    Vertex &vertexTwo)
-{
-  EdgeID nextID = _edges.size();
-  _edges.emplace_back(vertexOne, vertexTwo);
-  _edgeRegister.emplace(nextID, &_edges.back());
-  return {_edges.back(), nextID};
 }
 
 Triangle &Mesh::createTriangle(
@@ -218,11 +201,6 @@ bool Mesh::isValidVertexID(VertexID vertexID) const
   return (0 <= vertexID) && (static_cast<size_t>(vertexID) < vertices().size());
 }
 
-bool Mesh::isValidEdgeID(EdgeID edgeID) const
-{
-  return _edgeRegister.count(edgeID) == 1;
-}
-
 void Mesh::allocateDataValues()
 {
   PRECICE_TRACE(_vertices.size());
@@ -287,7 +265,6 @@ void Mesh::clear()
   _vertices.clear();
   _tetrahedra.clear();
   _index.clear();
-  _edgeRegister.clear();
 
   for (mesh::PtrData &data : _data) {
     data->values().resize(0);

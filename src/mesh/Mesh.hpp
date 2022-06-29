@@ -77,9 +77,6 @@ public:
   /// Returns modifiable container holding all edges.
   EdgeContainer &edges();
 
-  /// Returns a registered edge with given id.
-  Edge &registeredEdge(EdgeID id);
-
   /// Returns const container holding all edges.
   const EdgeContainer &edges() const;
 
@@ -127,16 +124,6 @@ public:
    * @param[in] vertexTwo Reference to second Vertex defining the Edge.
    */
   Edge &createEdge(
-      Vertex &vertexOne,
-      Vertex &vertexTwo);
-
-  /**
-   * @brief Creates and initializes an Edge object and returns an id.
-   *
-   * @param[in] vertexOne Reference to first Vertex defining the Edge.
-   * @param[in] vertexTwo Reference to second Vertex defining the Edge.
-   */
-  std::pair<Edge &, EdgeID> createRegisteredEdge(
       Vertex &vertexOne,
       Vertex &vertexTwo);
 
@@ -206,9 +193,6 @@ public:
 
   /// Returns true if the given vertexID is valid
   bool isValidVertexID(VertexID vertexID) const;
-
-  /// Returns true if the given edgeID is valid
-  bool isValidEdgeID(EdgeID edgeID) const;
 
   /// Allocates memory for the vertex data values and corresponding gradient values.
   void allocateDataValues();
@@ -367,8 +351,6 @@ private:
   BoundingBox _boundingBox;
 
   query::Index _index;
-
-  std::map<EdgeID, Edge *> _edgeRegister;
 };
 
 std::ostream &operator<<(std::ostream &os, const Mesh &q);
