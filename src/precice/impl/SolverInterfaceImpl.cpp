@@ -489,7 +489,7 @@ double SolverInterfaceImpl::advance(
 void SolverInterfaceImpl::finalize()
 {
   PRECICE_TRACE();
-  PRECICE_CHECK(_state != State::Finalized, "finalize() may only be called once.")
+  PRECICE_CHECK(_state != State::Finalized, "finalize() may only be called once.");
 
   // Events for the solver time, finally stopped here
   auto &solverEvent = EventRegistry::instance().getStoredEvent("solver.advance");
@@ -498,7 +498,7 @@ void SolverInterfaceImpl::finalize()
   Event                    e("finalize"); // no precice::syncMode here as MPI is already finalized at destruction of this event
   utils::ScopedEventPrefix sep("finalize/");
 
-  if (_state == State::InitializedData) {
+  if (_state == State::Initialized || _state == State::InitializedData) {
 
     PRECICE_ASSERT(_couplingScheme->isInitialized());
     PRECICE_DEBUG("Finalize coupling scheme");
