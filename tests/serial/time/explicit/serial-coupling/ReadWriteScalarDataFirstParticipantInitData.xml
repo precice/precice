@@ -44,10 +44,7 @@
       <max-time value="6" />
       <time-window-size method="first-participant" />
       <exchange data="DataOne" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
-      <!-- Causes deadlock. This configuration should be forbidden?
       <exchange data="DataTwo" mesh="MeshOne" from="SolverTwo" to="SolverOne" initialize="true" />
-      -->
-      <exchange data="DataTwo" mesh="MeshOne" from="SolverTwo" to="SolverOne" />
     </coupling-scheme:serial-explicit>
   </solver-interface>
 </precice-configuration>
