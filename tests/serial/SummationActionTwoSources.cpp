@@ -79,6 +79,7 @@ BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
 
     // Initialize, the mesh
     double dt = interface.initialize();
+    interface.initializeData();
 
     int    dataAID = interface.getDataID("SourceOne", meshID);
     double valueA  = 1.0;
@@ -116,6 +117,7 @@ BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
 
     // Initialize, the mesh
     double dt = interface.initialize();
+    interface.initializeData();
 
     int    dataAID = interface.getDataID("SourceTwo", meshID);
     double valueA  = 2.0;

@@ -35,6 +35,7 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataScaling)
       cplInterface.setMeshEdge(meshID, ids.at(i), ids.at((i + 1) % 4));
 
     double dt = cplInterface.initialize();
+    cplInterface.initializeData();
 
     int velocitiesID = cplInterface.getDataID("Velocities", meshID);
     while (cplInterface.isCouplingOngoing()) {
@@ -53,6 +54,7 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataScaling)
       cplInterface.setMeshEdge(meshID, ids.at(i), ids.at((i + 1) % 4));
 
     double dt = cplInterface.initialize();
+    cplInterface.initializeData();
 
     int velocitiesID = cplInterface.getDataID("Velocities", meshID);
     while (cplInterface.isCouplingOngoing()) {

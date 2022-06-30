@@ -35,6 +35,7 @@ BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning)
     double                   positions[12] = {0.0, 0.0, 0.2, 0.0, 0.4, 0.0, 0.6, 0.0, 0.8, 0.0, 1.0, 0.0};
     interface.setMeshVertices(meshID, 6, positions, vertexIDs);
     interface.initialize();
+    interface.initializeData();
     int    dataID    = interface.getDataID("Data2", meshID);
     double values[6] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
     interface.writeBlockScalarData(dataID, 6, vertexIDs, values);
