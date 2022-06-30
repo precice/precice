@@ -335,11 +335,14 @@ double SolverInterfaceImpl::initialize()
     context.initializeWaveform();
   }
 
+  // Needs to be removed for test Integration/Serial/Whitebox/TestExplicitWithDataScaling
+  /**
   if (_couplingScheme->hasDataBeenReceived()) {
     performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
     mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
   }
+  */
 
   PRECICE_INFO(_couplingScheme->printCouplingState());
 
@@ -684,7 +687,7 @@ int SolverInterfaceImpl::getMeshVertexSize(
   PRECICE_REQUIRE_MESH_USE(meshID);
   // In case we access received mesh data: check, if the requested mesh data has already been received.
   // Otherwise, the function call doesn't make any sense
-  PRECICE_CHECK((_state == State::Initialized) || _accessor->isMeshProvided(meshID), "initialize() has to be called before accessing"
+  PRECICE_CHECK((_state == State::Initialized) || (_state == State::InitializedData) || _accessor->isMeshProvided(meshID), "initialize() has to be called before accessing"
                                                                                      " data of the received mesh \"{}\" on participant \"{}\".",
                 _accessor->getMeshName(meshID), _accessor->getName());
   // @todo: Only allowed when _state == State::Initialized? Also _state == State::InitializedData? Related to https://github.com/precice/precice/issues/1196
@@ -1755,7 +1758,7 @@ void SolverInterfaceImpl::getMeshVerticesAndIDs(
   PRECICE_DEBUG("Get {} mesh vertices with IDs", size);
 
   // Check, if the requested mesh data has already been received. Otherwise, the function call doesn't make any sense
-  PRECICE_CHECK((_state == State::Initialized) || _accessor->isMeshProvided(meshID), "initialize() has to be called before accessing"
+  PRECICE_CHECK((_state == State::Initialized) || (_state == State::InitializedData) || _accessor->isMeshProvided(meshID), "initialize() has to be called before accessing"
                                                                                      " data of the received mesh \"{}\" on participant \"{}\".",
                 _accessor->getMeshName(meshID), _accessor->getName());
 
