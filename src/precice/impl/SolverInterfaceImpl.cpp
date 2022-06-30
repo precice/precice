@@ -688,7 +688,7 @@ int SolverInterfaceImpl::getMeshVertexSize(
   // In case we access received mesh data: check, if the requested mesh data has already been received.
   // Otherwise, the function call doesn't make any sense
   PRECICE_CHECK((_state == State::Initialized) || (_state == State::InitializedData) || _accessor->isMeshProvided(meshID), "initialize() has to be called before accessing"
-                                                                                     " data of the received mesh \"{}\" on participant \"{}\".",
+                                                                                                                           " data of the received mesh \"{}\" on participant \"{}\".",
                 _accessor->getMeshName(meshID), _accessor->getName());
   // @todo: Only allowed when _state == State::Initialized? Also _state == State::InitializedData? Related to https://github.com/precice/precice/issues/1196
   MeshContext &context = _accessor->usedMeshContext(meshID);
@@ -1759,7 +1759,7 @@ void SolverInterfaceImpl::getMeshVerticesAndIDs(
 
   // Check, if the requested mesh data has already been received. Otherwise, the function call doesn't make any sense
   PRECICE_CHECK((_state == State::Initialized) || (_state == State::InitializedData) || _accessor->isMeshProvided(meshID), "initialize() has to be called before accessing"
-                                                                                     " data of the received mesh \"{}\" on participant \"{}\".",
+                                                                                                                           " data of the received mesh \"{}\" on participant \"{}\".",
                 _accessor->getMeshName(meshID), _accessor->getName());
 
   if (size == 0)
