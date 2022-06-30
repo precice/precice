@@ -10,7 +10,7 @@ using precice::testing::TestContext;
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
-BOOST_AUTO_TEST_SUITE(SerialGradientMappingTests)
+BOOST_AUTO_TEST_SUITE(MappingNearestNeighborGradient)
 
 // Unidirectional Nearest Neighbor Gradient Read Mapping
 BOOST_AUTO_TEST_CASE(GradientTestUnidirectionalReadBlockVector)
