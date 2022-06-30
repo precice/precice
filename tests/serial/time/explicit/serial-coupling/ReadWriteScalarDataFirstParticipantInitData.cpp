@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_SUITE(SerialCoupling)
  *
  * Ensures that time window sizes are passed correctly and that reading and writing is possible.
  */
-BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantInitData)
+BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantInitData, * boost::unit_test::disabled())
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
