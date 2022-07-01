@@ -78,7 +78,8 @@ void getDistributedMesh(const TestContext &      context,
                         MeshSpecification const &vertices,
                         mesh::PtrMesh &          mesh,
                         mesh::PtrData &          data,
-                        int                      globalIndexOffset = 0)
+                        int                      globalIndexOffset = 0,
+                        bool                     meshIsSmaller     = false)
 {
   Eigen::VectorXd d;
 
@@ -108,7 +109,11 @@ void getDistributedMesh(const TestContext &      context,
   addGlobalIndex(mesh, globalIndexOffset);
   mesh->allocateDataValues();
   // All tests use eight vertices
-  mesh->setGlobalNumberOfVertices(8);
+  if (meshIsSmaller) {
+    mesh->setGlobalNumberOfVertices(7);
+  } else {
+    mesh->setGlobalNumberOfVertices(8);
+  }
   data->values() = d;
 }
 
@@ -117,7 +122,8 @@ void testDistributed(const TestContext &    context,
                      MeshSpecification      inMeshSpec,
                      MeshSpecification      outMeshSpec,
                      ReferenceSpecification referenceSpec,
-                     int                    inGlobalIndexOffset = 0)
+                     int                    inGlobalIndexOffset = 0,
+                     bool                   meshIsSmaller       = false)
 {
   int meshDimension  = inMeshSpec.at(0).position.size();
   int valueDimension = inMeshSpec.at(0).value.size();
@@ -132,7 +138,7 @@ void testDistributed(const TestContext &    context,
   mesh::PtrData outData   = outMesh->createData("OutData", valueDimension, 1_dataID);
   int           outDataID = outData->getID();
 
-  getDistributedMesh(context, outMeshSpec, outMesh, outData);
+  getDistributedMesh(context, outMeshSpec, outMesh, outData, 0, meshIsSmaller);
 
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
@@ -158,346 +164,373 @@ void testDistributed(const TestContext &    context,
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
-  Gaussian                        fct(5.0);
-  RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
+  Gaussian fct(5.0);
 
-  testDistributed(context, mapping,
-                  {// Consistent mapping: The inMesh is communicated
-                   {-1, 0, {0, 0}, {1}},
-                   {-1, 0, {0, 1}, {2}},
-                   {-1, 1, {1, 0}, {3}},
-                   {-1, 1, {1, 1}, {4}},
-                   {-1, 2, {2, 0}, {5}},
-                   {-1, 2, {2, 1}, {6}},
-                   {-1, 3, {3, 0}, {7}},
-                   {-1, 3, {3, 1}, {8}}},
-                  {// The outMesh is local, distributed among all ranks
-                   {0, -1, {0, 0}, {0}},
-                   {0, -1, {0, 1}, {0}},
-                   {1, -1, {1, 0}, {0}},
-                   {1, -1, {1, 1}, {0}},
-                   {2, -1, {2, 0}, {0}},
-                   {2, -1, {2, 1}, {0}},
-                   {3, -1, {3, 0}, {0}},
-                   {3, -1, {3, 1}, {0}}},
-                  {// Tests for {0, 1} on the first rank, {1, 2} on the second, ...
-                   {0, {1}},
-                   {0, {2}},
-                   {1, {3}},
-                   {1, {4}},
-                   {2, {5}},
-                   {2, {6}},
-                   {3, {7}},
-                   {3, {8}}});
+  MeshSpecification in{// Consistent mapping: The inMesh is communicated
+                       {-1, 0, {0, 0}, {1}},
+                       {-1, 0, {0, 1}, {2}},
+                       {-1, 1, {1, 0}, {3}},
+                       {-1, 1, {1, 1}, {4}},
+                       {-1, 2, {2, 0}, {5}},
+                       {-1, 2, {2, 1}, {6}},
+                       {-1, 3, {3, 0}, {7}},
+                       {-1, 3, {3, 1}, {8}}};
+  MeshSpecification out{// The outMesh is local, distributed among all ranks
+                        {0, -1, {0, 0}, {0}},
+                        {0, -1, {0, 1}, {0}},
+                        {1, -1, {1, 0}, {0}},
+                        {1, -1, {1, 1}, {0}},
+                        {2, -1, {2, 0}, {0}},
+                        {2, -1, {2, 1}, {0}},
+                        {3, -1, {3, 0}, {0}},
+                        {3, -1, {3, 1}, {0}}};
+
+  ReferenceSpecification ref{// Tests for {0, 1} on the first rank, {1, 2} on the second, ...
+                             {0, {1}},
+                             {0, {2}},
+                             {1, {3}},
+                             {1, {4}},
+                             {2, {5}},
+                             {2, {6}},
+                             {3, {7}},
+                             {3, {8}}};
+
+  RadialBasisFctMapping<Gaussian> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
+  testDistributed(context, mapping_on, in, out, ref);
+  RadialBasisFctMapping<Gaussian> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  testDistributed(context, mapping_sep, in, out, ref);
+  RadialBasisFctMapping<Gaussian> mapping_off(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  testDistributed(context, mapping_off, in, out, ref);
 }
 
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1Vector)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
-  Gaussian                        fct(5.0);
-  RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
+  Gaussian fct(5.0);
 
-  testDistributed(context, mapping,
-                  {// Consistent mapping: The inMesh is communicated
-                   {-1, 0, {0, 0}, {1, 4}},
-                   {-1, 0, {0, 1}, {2, 5}},
-                   {-1, 1, {1, 0}, {3, 6}},
-                   {-1, 1, {1, 1}, {4, 7}},
-                   {-1, 2, {2, 0}, {5, 8}},
-                   {-1, 2, {2, 1}, {6, 9}},
-                   {-1, 3, {3, 0}, {7, 10}},
-                   {-1, 3, {3, 1}, {8, 11}}},
-                  {// The outMesh is local, distributed among all ranks
-                   {0, -1, {0, 0}, {0, 0}},
-                   {0, -1, {0, 1}, {0, 0}},
-                   {1, -1, {1, 0}, {0, 0}},
-                   {1, -1, {1, 1}, {0, 0}},
-                   {2, -1, {2, 0}, {0, 0}},
-                   {2, -1, {2, 1}, {0, 0}},
-                   {3, -1, {3, 0}, {0, 0}},
-                   {3, -1, {3, 1}, {0, 0}}},
-                  {// Tests for {0, 1} on the first rank, {1, 2} on the second, ...
-                   {0, {1, 4}},
-                   {0, {2, 5}},
-                   {1, {3, 6}},
-                   {1, {4, 7}},
-                   {2, {5, 8}},
-                   {2, {6, 9}},
-                   {3, {7, 10}},
-                   {3, {8, 11}}});
+  MeshSpecification      in{// Consistent mapping: The inMesh is communicated
+                       {-1, 0, {0, 0}, {1, 4}},
+                       {-1, 0, {0, 1}, {2, 5}},
+                       {-1, 1, {1, 0}, {3, 6}},
+                       {-1, 1, {1, 1}, {4, 7}},
+                       {-1, 2, {2, 0}, {5, 8}},
+                       {-1, 2, {2, 1}, {6, 9}},
+                       {-1, 3, {3, 0}, {7, 10}},
+                       {-1, 3, {3, 1}, {8, 11}}};
+  MeshSpecification      out{// The outMesh is local, distributed among all ranks
+                        {0, -1, {0, 0}, {0, 0}},
+                        {0, -1, {0, 1}, {0, 0}},
+                        {1, -1, {1, 0}, {0, 0}},
+                        {1, -1, {1, 1}, {0, 0}},
+                        {2, -1, {2, 0}, {0, 0}},
+                        {2, -1, {2, 1}, {0, 0}},
+                        {3, -1, {3, 0}, {0, 0}},
+                        {3, -1, {3, 1}, {0, 0}}};
+  ReferenceSpecification ref{// Tests for {0, 1} on the first rank, {1, 2} on the second, ...
+                             {0, {1, 4}},
+                             {0, {2, 5}},
+                             {1, {3, 6}},
+                             {1, {4, 7}},
+                             {2, {5, 8}},
+                             {2, {6, 9}},
+                             {3, {7, 10}},
+                             {3, {8, 11}}};
+
+  RadialBasisFctMapping<Gaussian> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
+  testDistributed(context, mapping_on, in, out, ref);
+  RadialBasisFctMapping<Gaussian> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  testDistributed(context, mapping_sep, in, out, ref);
+  RadialBasisFctMapping<Gaussian> mapping_off(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  testDistributed(context, mapping_off, in, out, ref);
 }
 
 /// Using a more heterogeneous distributon of vertices and owner
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
-  Gaussian                        fct(5.0);
-  RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
+  Gaussian fct(5.0);
 
-  testDistributed(context, mapping,
-                  {// Consistent mapping: The inMesh is communicated, rank 2 owns no vertices
-                   {-1, 0, {0, 0}, {1}},
-                   {-1, 0, {0, 1}, {2}},
-                   {-1, 1, {1, 0}, {3}},
-                   {-1, 1, {1, 1}, {4}},
-                   {-1, 1, {2, 0}, {5}},
-                   {-1, 3, {2, 1}, {6}},
-                   {-1, 3, {3, 0}, {7}},
-                   {-1, 3, {3, 1}, {8}}},
-                  {// The outMesh is local, rank 1 is empty
-                   {0, -1, {0, 0}, {0}},
-                   {0, -1, {0, 1}, {0}},
-                   {0, -1, {1, 0}, {0}},
-                   {2, -1, {1, 1}, {0}},
-                   {2, -1, {2, 0}, {0}},
-                   {2, -1, {2, 1}, {0}},
-                   {3, -1, {3, 0}, {0}},
-                   {3, -1, {3, 1}, {0}}},
-                  {// Tests for {0, 1, 2} on the first rank,
-                   // second rank (consistent with the outMesh) is empty, ...
-                   {0, {1}},
-                   {0, {2}},
-                   {0, {3}},
-                   {2, {4}},
-                   {2, {5}},
-                   {2, {6}},
-                   {3, {7}},
-                   {3, {8}}});
+  MeshSpecification               in{// Consistent mapping: The inMesh is communicated, rank 2 owns no vertices
+                       {-1, 0, {0, 0}, {1}},
+                       {-1, 0, {0, 1}, {2}},
+                       {-1, 1, {1, 0}, {3}},
+                       {-1, 1, {1, 1}, {4}},
+                       {-1, 1, {2, 0}, {5}},
+                       {-1, 3, {2, 1}, {6}},
+                       {-1, 3, {3, 0}, {7}},
+                       {-1, 3, {3, 1}, {8}}};
+  MeshSpecification               out{// The outMesh is local, rank 1 is empty
+                        {0, -1, {0, 0}, {0}},
+                        {0, -1, {0, 1}, {0}},
+                        {0, -1, {1, 0}, {0}},
+                        {2, -1, {1, 1}, {0}},
+                        {2, -1, {2, 0}, {0}},
+                        {2, -1, {2, 1}, {0}},
+                        {3, -1, {3, 0}, {0}},
+                        {3, -1, {3, 1}, {0}}};
+  ReferenceSpecification          ref{// Tests for {0, 1, 2} on the first rank,
+                             // second rank (consistent with the outMesh) is empty, ...
+                             {0, {1}},
+                             {0, {2}},
+                             {0, {3}},
+                             {2, {4}},
+                             {2, {5}},
+                             {2, {6}},
+                             {3, {7}},
+                             {3, {8}}};
+  RadialBasisFctMapping<Gaussian> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
+  testDistributed(context, mapping_on, in, out, ref);
+  RadialBasisFctMapping<Gaussian> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  testDistributed(context, mapping_sep, in, out, ref);
+  RadialBasisFctMapping<Gaussian> mapping_off(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  testDistributed(context, mapping_off, in, out, ref);
 }
 
 /// Test with a very heterogeneous distributed and non-continuous ownership
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
-  Gaussian                        fct(5.0);
-  RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
+  Gaussian fct(5.0);
 
   std::vector<int> globalIndexOffsets = {0, 0, 0, 4};
 
-  testDistributed(context, mapping,
-                  {
-                      // Rank 0 has part of the mesh, owns a subpart
-                      {0, 0, {0, 0}, {1}},
-                      {0, 0, {0, 1}, {2}},
-                      {0, 0, {1, 0}, {3}},
-                      {0, -1, {1, 1}, {4}},
-                      {0, -1, {2, 0}, {5}},
-                      {0, -1, {2, 1}, {6}},
-                      // Rank 1 has no vertices
-                      // Rank 2 has the entire mesh, but owns just 3 and 5.
-                      {2, -1, {0, 0}, {1}},
-                      {2, -1, {0, 1}, {2}},
-                      {2, -1, {1, 0}, {3}},
-                      {2, 2, {1, 1}, {4}},
-                      {2, -1, {2, 0}, {5}},
-                      {2, 2, {2, 1}, {6}},
-                      {2, -1, {3, 0}, {7}},
-                      {2, -1, {3, 1}, {8}},
-                      // Rank 3 has the last 4 vertices, owns 4, 6 and 7
-                      {3, 3, {2, 0}, {5}},
-                      {3, -1, {2, 1}, {6}},
-                      {3, 3, {3, 0}, {7}},
-                      {3, 3, {3, 1}, {8}},
-                  },
-                  {// The outMesh is local, rank 1 is empty
-                   {0, -1, {0, 0}, {0}},
-                   {0, -1, {0, 1}, {0}},
-                   {0, -1, {1, 0}, {0}},
-                   {2, -1, {1, 1}, {0}},
-                   {2, -1, {2, 0}, {0}},
-                   {2, -1, {2, 1}, {0}},
-                   {3, -1, {3, 0}, {0}},
-                   {3, -1, {3, 1}, {0}}},
-                  {// Tests for {0, 1, 2} on the first rank,
-                   // second rank (consistent with the outMesh) is empty, ...
-                   {0, {1}},
-                   {0, {2}},
-                   {0, {3}},
-                   {2, {4}},
-                   {2, {5}},
-                   {2, {6}},
-                   {3, {7}},
-                   {3, {8}}},
-                  globalIndexOffsets.at(context.rank));
+  MeshSpecification in{
+      // Rank 0 has part of the mesh, owns a subpart
+      {0, 0, {0, 0}, {1}},
+      {0, 0, {0, 1}, {2}},
+      {0, 0, {1, 0}, {3}},
+      {0, -1, {1, 1}, {4}},
+      {0, -1, {2, 0}, {5}},
+      {0, -1, {2, 1}, {6}},
+      // Rank 1 has no vertices
+      // Rank 2 has the entire mesh, but owns just 3 and 5.
+      {2, -1, {0, 0}, {1}},
+      {2, -1, {0, 1}, {2}},
+      {2, -1, {1, 0}, {3}},
+      {2, 2, {1, 1}, {4}},
+      {2, -1, {2, 0}, {5}},
+      {2, 2, {2, 1}, {6}},
+      {2, -1, {3, 0}, {7}},
+      {2, -1, {3, 1}, {8}},
+      // Rank 3 has the last 4 vertices, owns 4, 6 and 7
+      {3, 3, {2, 0}, {5}},
+      {3, -1, {2, 1}, {6}},
+      {3, 3, {3, 0}, {7}},
+      {3, 3, {3, 1}, {8}},
+  };
+  MeshSpecification      out{// The outMesh is local, rank 1 is empty
+                        {0, -1, {0, 0}, {0}},
+                        {0, -1, {0, 1}, {0}},
+                        {0, -1, {1, 0}, {0}},
+                        {2, -1, {1, 1}, {0}},
+                        {2, -1, {2, 0}, {0}},
+                        {2, -1, {2, 1}, {0}},
+                        {3, -1, {3, 0}, {0}},
+                        {3, -1, {3, 1}, {0}}};
+  ReferenceSpecification ref{// Tests for {0, 1, 2} on the first rank,
+                             // second rank (consistent with the outMesh) is empty, ...
+                             {0, {1}},
+                             {0, {2}},
+                             {0, {3}},
+                             {2, {4}},
+                             {2, {5}},
+                             {2, {6}},
+                             {3, {7}},
+                             {3, {8}}};
+
+  RadialBasisFctMapping<Gaussian> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
+  testDistributed(context, mapping_on, in, out, ref, globalIndexOffsets.at(context.rank));
+  RadialBasisFctMapping<Gaussian> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  testDistributed(context, mapping_sep, in, out, ref, globalIndexOffsets.at(context.rank));
+  RadialBasisFctMapping<Gaussian> mapping_off(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  testDistributed(context, mapping_off, in, out, ref, globalIndexOffsets.at(context.rank));
 }
 
 /// Test with a very heterogeneous distributed and non-continuous ownership
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3Vector)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
-  Gaussian                        fct(5.0);
-  RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
+  Gaussian fct(5.0);
 
   std::vector<int> globalIndexOffsets = {0, 0, 0, 4};
 
-  testDistributed(context, mapping,
-                  {
-                      // Rank 0 has part of the mesh, owns a subpart
-                      {0, 0, {0, 0}, {1, 4}},
-                      {0, 0, {0, 1}, {2, 5}},
-                      {0, 0, {1, 0}, {3, 6}},
-                      {0, -1, {1, 1}, {4, 7}},
-                      {0, -1, {2, 0}, {5, 8}},
-                      {0, -1, {2, 1}, {6, 9}},
-                      // Rank 1 has no vertices
-                      // Rank 2 has the entire mesh, but owns just 3 and 5.
-                      {2, -1, {0, 0}, {1, 4}},
-                      {2, -1, {0, 1}, {2, 5}},
-                      {2, -1, {1, 0}, {3, 6}},
-                      {2, 2, {1, 1}, {4, 7}},
-                      {2, -1, {2, 0}, {5, 8}},
-                      {2, 2, {2, 1}, {6, 9}},
-                      {2, -1, {3, 0}, {7, 10}},
-                      {2, -1, {3, 1}, {8, 11}},
-                      // Rank 3 has the last 4 vertices, owns 4, 6 and 7
-                      {3, 3, {2, 0}, {5, 8}},
-                      {3, -1, {2, 1}, {6, 9}},
-                      {3, 3, {3, 0}, {7, 10}},
-                      {3, 3, {3, 1}, {8, 11}},
-                  },
-                  {// The outMesh is local, rank 1 is empty
-                   {0, -1, {0, 0}, {0, 0}},
-                   {0, -1, {0, 1}, {0, 0}},
-                   {0, -1, {1, 0}, {0, 0}},
-                   {2, -1, {1, 1}, {0, 0}},
-                   {2, -1, {2, 0}, {0, 0}},
-                   {2, -1, {2, 1}, {0, 0}},
-                   {3, -1, {3, 0}, {0, 0}},
-                   {3, -1, {3, 1}, {0, 0}}},
-                  {// Tests for {0, 1, 2} on the first rank,
-                   // second rank (consistent with the outMesh) is empty, ...
-                   {0, {1, 4}},
-                   {0, {2, 5}},
-                   {0, {3, 6}},
-                   {2, {4, 7}},
-                   {2, {5, 8}},
-                   {2, {6, 9}},
-                   {3, {7, 10}},
-                   {3, {8, 11}}},
-                  globalIndexOffsets.at(context.rank));
+  MeshSpecification in{
+      // Rank 0 has part of the mesh, owns a subpart
+      {0, 0, {0, 0}, {1, 4}},
+      {0, 0, {0, 1}, {2, 5}},
+      {0, 0, {1, 0}, {3, 6}},
+      {0, -1, {1, 1}, {4, 7}},
+      {0, -1, {2, 0}, {5, 8}},
+      {0, -1, {2, 1}, {6, 9}},
+      // Rank 1 has no vertices
+      // Rank 2 has the entire mesh, but owns just 3 and 5.
+      {2, -1, {0, 0}, {1, 4}},
+      {2, -1, {0, 1}, {2, 5}},
+      {2, -1, {1, 0}, {3, 6}},
+      {2, 2, {1, 1}, {4, 7}},
+      {2, -1, {2, 0}, {5, 8}},
+      {2, 2, {2, 1}, {6, 9}},
+      {2, -1, {3, 0}, {7, 10}},
+      {2, -1, {3, 1}, {8, 11}},
+      // Rank 3 has the last 4 vertices, owns 4, 6 and 7
+      {3, 3, {2, 0}, {5, 8}},
+      {3, -1, {2, 1}, {6, 9}},
+      {3, 3, {3, 0}, {7, 10}},
+      {3, 3, {3, 1}, {8, 11}},
+  };
+  MeshSpecification               out{// The outMesh is local, rank 1 is empty
+                        {0, -1, {0, 0}, {0, 0}},
+                        {0, -1, {0, 1}, {0, 0}},
+                        {0, -1, {1, 0}, {0, 0}},
+                        {2, -1, {1, 1}, {0, 0}},
+                        {2, -1, {2, 0}, {0, 0}},
+                        {2, -1, {2, 1}, {0, 0}},
+                        {3, -1, {3, 0}, {0, 0}},
+                        {3, -1, {3, 1}, {0, 0}}};
+  ReferenceSpecification          ref{// Tests for {0, 1, 2} on the first rank,
+                             // second rank (consistent with the outMesh) is empty, ...
+                             {0, {1, 4}},
+                             {0, {2, 5}},
+                             {0, {3, 6}},
+                             {2, {4, 7}},
+                             {2, {5, 8}},
+                             {2, {6, 9}},
+                             {3, {7, 10}},
+                             {3, {8, 11}}};
+  RadialBasisFctMapping<Gaussian> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
+  testDistributed(context, mapping_on, in, out, ref, globalIndexOffsets.at(context.rank));
+  RadialBasisFctMapping<Gaussian> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  testDistributed(context, mapping_sep, in, out, ref, globalIndexOffsets.at(context.rank));
+  RadialBasisFctMapping<Gaussian> mapping_off(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  testDistributed(context, mapping_off, in, out, ref, globalIndexOffsets.at(context.rank));
 }
 
 /// Some ranks are empty, does not converge
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
-  ThinPlateSplines                        fct;
-  RadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
+  ThinPlateSplines fct;
 
   std::vector<int> globalIndexOffsets = {0, 0, 0, 0};
 
-  testDistributed(context, mapping,
-                  {
-                      // Rank 0 has no vertices
-                      // Rank 1 has the entire mesh, owns a subpart
-                      {1, 1, {0, 0}, {1.1}},
-                      {1, 1, {0, 1}, {2.5}},
-                      {1, 1, {1, 0}, {3}},
-                      {1, 1, {1, 1}, {4}},
-                      {1, -1, {2, 0}, {5}},
-                      {1, -1, {2, 1}, {6}},
-                      {1, -1, {3, 0}, {7}},
-                      {1, -1, {3, 1}, {8}},
-                      // Rank 2 has the entire mesh, owns a subpart
-                      {2, -1, {0, 0}, {1.1}},
-                      {2, -1, {0, 1}, {2.5}},
-                      {2, -1, {1, 0}, {3}},
-                      {2, -1, {1, 1}, {4}},
-                      {2, 2, {2, 0}, {5}},
-                      {2, 2, {2, 1}, {6}},
-                      {2, 2, {3, 0}, {7}},
-                      {2, 2, {3, 1}, {8}},
-                      // Rank 3 has no vertices
-                  },
-                  {// The outMesh is local, rank 0 and 3 are empty
-                   // not same order as input mesh and vertex (2,0) appears twice
-                   {1, -1, {2, 0}, {0}},
-                   {1, -1, {1, 0}, {0}},
-                   {1, -1, {0, 1}, {0}},
-                   {1, -1, {1, 1}, {0}},
-                   {1, -1, {0, 0}, {0}},
-                   {2, -1, {2, 0}, {0}},
-                   {2, -1, {2, 1}, {0}},
-                   {2, -1, {3, 0}, {0}},
-                   {2, -1, {3, 1}, {0}}},
-                  {{1, {5}},
-                   {1, {3}},
-                   {1, {2.5}},
-                   {1, {4}},
-                   {1, {1.1}},
-                   {2, {5}},
-                   {2, {6}},
-                   {2, {7}},
-                   {2, {8}}},
-                  globalIndexOffsets.at(context.rank));
+  MeshSpecification in{
+      // Rank 0 has no vertices
+      // Rank 1 has the entire mesh, owns a subpart
+      {1, 1, {0, 0}, {1.1}},
+      {1, 1, {0, 1}, {2.5}},
+      {1, 1, {1, 0}, {3}},
+      {1, 1, {1, 1}, {4}},
+      {1, -1, {2, 0}, {5}},
+      {1, -1, {2, 1}, {6}},
+      {1, -1, {3, 0}, {7}},
+      {1, -1, {3, 1}, {8}},
+      // Rank 2 has the entire mesh, owns a subpart
+      {2, -1, {0, 0}, {1.1}},
+      {2, -1, {0, 1}, {2.5}},
+      {2, -1, {1, 0}, {3}},
+      {2, -1, {1, 1}, {4}},
+      {2, 2, {2, 0}, {5}},
+      {2, 2, {2, 1}, {6}},
+      {2, 2, {3, 0}, {7}},
+      {2, 2, {3, 1}, {8}},
+      // Rank 3 has no vertices
+  };
+  MeshSpecification                       out{// The outMesh is local, rank 0 and 3 are empty
+                        // not same order as input mesh and vertex (2,0) appears twice
+                        {1, -1, {2, 0}, {0}},
+                        {1, -1, {1, 0}, {0}},
+                        {1, -1, {0, 1}, {0}},
+                        {1, -1, {1, 1}, {0}},
+                        {1, -1, {0, 0}, {0}},
+                        {2, -1, {2, 0}, {0}},
+                        {2, -1, {2, 1}, {0}},
+                        {2, -1, {3, 0}, {0}},
+                        {2, -1, {3, 1}, {0}}};
+  ReferenceSpecification ref{{1, {5}},
+                             {1, {3}},
+                             {1, {2.5}},
+                             {1, {4}},
+                             {1, {1.1}},
+                             {2, {5}},
+                             {2, {6}},
+                             {2, {7}},
+                             {2, {8}}};
+  RadialBasisFctMapping<ThinPlateSplines> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
+  testDistributed(context, mapping_on, in, out, ref, globalIndexOffsets.at(context.rank));
+  RadialBasisFctMapping<ThinPlateSplines> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  testDistributed(context, mapping_sep, in, out, ref, globalIndexOffsets.at(context.rank));
+  RadialBasisFctMapping<ThinPlateSplines> mapping_off(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  testDistributed(context, mapping_off, in, out, ref, globalIndexOffsets.at(context.rank));
 }
 
 // same as 2DV4, but all ranks have vertices
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
-  ThinPlateSplines                        fct;
-  RadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
+  ThinPlateSplines fct;
 
-  std::vector<int> globalIndexOffsets = {0, 0, 0, 0};
-
-  testDistributed(context, mapping,
-                  {
-                      // Every rank has the entire mesh and owns a subpart
-                      {0, 0, {0, 0}, {1.1}},
-                      {0, 0, {0, 1}, {2.5}},
-                      {0, -1, {1, 0}, {3}},
-                      {0, -1, {1, 1}, {4}},
-                      {0, -1, {2, 0}, {5}},
-                      {0, -1, {2, 1}, {6}},
-                      {0, -1, {3, 0}, {7}},
-                      {0, -1, {3, 1}, {8}},
-                      {1, -1, {0, 0}, {1.1}},
-                      {1, -1, {0, 1}, {2.5}},
-                      {1, 1, {1, 0}, {3}},
-                      {1, 1, {1, 1}, {4}},
-                      {1, -1, {2, 0}, {5}},
-                      {1, -1, {2, 1}, {6}},
-                      {1, -1, {3, 0}, {7}},
-                      {1, -1, {3, 1}, {8}},
-                      {2, -1, {0, 0}, {1.1}},
-                      {2, -1, {0, 1}, {2.5}},
-                      {2, -1, {1, 0}, {3}},
-                      {2, -1, {1, 1}, {4}},
-                      {2, 2, {2, 0}, {5}},
-                      {2, 2, {2, 1}, {6}},
-                      {2, -1, {3, 0}, {7}},
-                      {2, -1, {3, 1}, {8}},
-                      {3, -1, {0, 0}, {1.1}},
-                      {3, -1, {0, 1}, {2.5}},
-                      {3, -1, {1, 0}, {3}},
-                      {3, -1, {1, 1}, {4}},
-                      {3, -1, {2, 0}, {5}},
-                      {3, -1, {2, 1}, {6}},
-                      {3, 3, {3, 0}, {7}},
-                      {3, 3, {3, 1}, {8}},
-                  },
-                  {// The outMesh is local, rank 0 and 3 are empty
-                   // not same order as input mesh and vertex (2,0) appears twice
-                   {1, -1, {2, 0}, {0}},
-                   {1, -1, {1, 0}, {0}},
-                   {1, -1, {0, 1}, {0}},
-                   {1, -1, {1, 1}, {0}},
-                   {1, -1, {0, 0}, {0}},
-                   {2, -1, {2, 0}, {0}},
-                   {2, -1, {2, 1}, {0}},
-                   {2, -1, {3, 0}, {0}},
-                   {2, -1, {3, 1}, {0}}},
-                  {{1, {5}},
-                   {1, {3}},
-                   {1, {2.5}},
-                   {1, {4}},
-                   {1, {1.1}},
-                   {2, {5}},
-                   {2, {6}},
-                   {2, {7}},
-                   {2, {8}}},
-                  globalIndexOffsets.at(context.rank));
+  std::vector<int>  globalIndexOffsets = {0, 0, 0, 0};
+  MeshSpecification in{
+      // Every rank has the entire mesh and owns a subpart
+      {0, 0, {0, 0}, {1.1}},
+      {0, 0, {0, 1}, {2.5}},
+      {0, -1, {1, 0}, {3}},
+      {0, -1, {1, 1}, {4}},
+      {0, -1, {2, 0}, {5}},
+      {0, -1, {2, 1}, {6}},
+      {0, -1, {3, 0}, {7}},
+      {0, -1, {3, 1}, {8}},
+      {1, -1, {0, 0}, {1.1}},
+      {1, -1, {0, 1}, {2.5}},
+      {1, 1, {1, 0}, {3}},
+      {1, 1, {1, 1}, {4}},
+      {1, -1, {2, 0}, {5}},
+      {1, -1, {2, 1}, {6}},
+      {1, -1, {3, 0}, {7}},
+      {1, -1, {3, 1}, {8}},
+      {2, -1, {0, 0}, {1.1}},
+      {2, -1, {0, 1}, {2.5}},
+      {2, -1, {1, 0}, {3}},
+      {2, -1, {1, 1}, {4}},
+      {2, 2, {2, 0}, {5}},
+      {2, 2, {2, 1}, {6}},
+      {2, -1, {3, 0}, {7}},
+      {2, -1, {3, 1}, {8}},
+      {3, -1, {0, 0}, {1.1}},
+      {3, -1, {0, 1}, {2.5}},
+      {3, -1, {1, 0}, {3}},
+      {3, -1, {1, 1}, {4}},
+      {3, -1, {2, 0}, {5}},
+      {3, -1, {2, 1}, {6}},
+      {3, 3, {3, 0}, {7}},
+      {3, 3, {3, 1}, {8}},
+  };
+  MeshSpecification                       out{// The outMesh is local, rank 0 and 3 are empty
+                        // not same order as input mesh and vertex (2,0) appears twice
+                        {1, -1, {2, 0}, {0}},
+                        {1, -1, {1, 0}, {0}},
+                        {1, -1, {0, 1}, {0}},
+                        {1, -1, {1, 1}, {0}},
+                        {1, -1, {0, 0}, {0}},
+                        {2, -1, {2, 0}, {0}},
+                        {2, -1, {2, 1}, {0}},
+                        {2, -1, {3, 0}, {0}},
+                        {2, -1, {3, 1}, {0}}};
+  ReferenceSpecification ref{{1, {5}},
+                             {1, {3}},
+                             {1, {2.5}},
+                             {1, {4}},
+                             {1, {1.1}},
+                             {2, {5}},
+                             {2, {6}},
+                             {2, {7}},
+                             {2, {8}}};
+  RadialBasisFctMapping<ThinPlateSplines> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
+  testDistributed(context, mapping_on, in, out, ref, globalIndexOffsets.at(context.rank));
+  RadialBasisFctMapping<ThinPlateSplines> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  testDistributed(context, mapping_sep, in, out, ref, globalIndexOffsets.at(context.rank));
+  RadialBasisFctMapping<ThinPlateSplines> mapping_off(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  testDistributed(context, mapping_off, in, out, ref, globalIndexOffsets.at(context.rank));
 }
 
 /// same as 2DV4, but strictly linear input values, converges and gives correct results
@@ -505,118 +538,124 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6,
                      *boost::unit_test::tolerance(1e-7))
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
-  ThinPlateSplines                        fct;
-  RadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
-
+  ThinPlateSplines fct;
   std::vector<int> globalIndexOffsets = {0, 0, 0, 0};
 
-  testDistributed(context, mapping,
-                  {
-                      // Rank 0 has no vertices
-                      // Rank 1 has the entire mesh, owns a subpart
-                      {1, 1, {0, 0}, {1}},
-                      {1, 1, {0, 1}, {2}},
-                      {1, 1, {1, 0}, {3}},
-                      {1, 1, {1, 1}, {4}},
-                      {1, -1, {2, 0}, {5}},
-                      {1, -1, {2, 1}, {6}},
-                      {1, -1, {3, 0}, {7}},
-                      {1, -1, {3, 1}, {8}},
-                      // Rank 2 has the entire mesh, owns a subpart
-                      {2, -1, {0, 0}, {1}},
-                      {2, -1, {0, 1}, {2}},
-                      {2, -1, {1, 0}, {3}},
-                      {2, -1, {1, 1}, {4}},
-                      {2, 2, {2, 0}, {5}},
-                      {2, 2, {2, 1}, {6}},
-                      {2, 2, {3, 0}, {7}},
-                      {2, 2, {3, 1}, {8}},
-                      // Rank 3 has no vertices
-                  },
-                  {// The outMesh is local, rank 0 and 3 are empty
-                   // not same order as input mesh and vertex (2,0) appears twice
-                   {1, -1, {2, 0}, {0}},
-                   {1, -1, {1, 0}, {0}},
-                   {1, -1, {0, 1}, {0}},
-                   {1, -1, {1, 1}, {0}},
-                   {1, -1, {0, 0}, {0}},
-                   {2, -1, {2, 0}, {0}},
-                   {2, -1, {2, 1}, {0}},
-                   {2, -1, {3, 0}, {0}},
-                   {2, -1, {3, 1}, {0}}},
-                  {{1, {5}},
-                   {1, {3}},
-                   {1, {2}},
-                   {1, {4}},
-                   {1, {1}},
-                   {2, {5}},
-                   {2, {6}},
-                   {2, {7}},
-                   {2, {8}}},
-                  globalIndexOffsets.at(context.rank));
+  MeshSpecification in{
+      // Rank 0 has no vertices
+      // Rank 1 has the entire mesh, owns a subpart
+      {1, 1, {0, 0}, {1}},
+      {1, 1, {0, 1}, {2}},
+      {1, 1, {1, 0}, {3}},
+      {1, 1, {1, 1}, {4}},
+      {1, -1, {2, 0}, {5}},
+      {1, -1, {2, 1}, {6}},
+      {1, -1, {3, 0}, {7}},
+      {1, -1, {3, 1}, {8}},
+      // Rank 2 has the entire mesh, owns a subpart
+      {2, -1, {0, 0}, {1}},
+      {2, -1, {0, 1}, {2}},
+      {2, -1, {1, 0}, {3}},
+      {2, -1, {1, 1}, {4}},
+      {2, 2, {2, 0}, {5}},
+      {2, 2, {2, 1}, {6}},
+      {2, 2, {3, 0}, {7}},
+      {2, 2, {3, 1}, {8}},
+      // Rank 3 has no vertices
+  };
+  MeshSpecification                       out{// The outMesh is local, rank 0 and 3 are empty
+                        // not same order as input mesh and vertex (2,0) appears twice
+                        {1, -1, {2, 0}, {0}},
+                        {1, -1, {1, 0}, {0}},
+                        {1, -1, {0, 1}, {0}},
+                        {1, -1, {1, 1}, {0}},
+                        {1, -1, {0, 0}, {0}},
+                        {2, -1, {2, 0}, {0}},
+                        {2, -1, {2, 1}, {0}},
+                        {2, -1, {3, 0}, {0}},
+                        {2, -1, {3, 1}, {0}}};
+  ReferenceSpecification ref{{1, {5}},
+                             {1, {3}},
+                             {1, {2}},
+                             {1, {4}},
+                             {1, {1}},
+                             {2, {5}},
+                             {2, {6}},
+                             {2, {7}},
+                             {2, {8}}};
+  RadialBasisFctMapping<ThinPlateSplines> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
+  testDistributed(context, mapping_on, in, out, ref, globalIndexOffsets.at(context.rank));
+  RadialBasisFctMapping<ThinPlateSplines> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  testDistributed(context, mapping_sep, in, out, ref, globalIndexOffsets.at(context.rank));
+  RadialBasisFctMapping<ThinPlateSplines> mapping_off(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  testDistributed(context, mapping_off, in, out, ref, globalIndexOffsets.at(context.rank));
 }
 
 /// Test with a homogeneous distribution of mesh among ranks
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV1)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
-  Gaussian                        fct(5.0);
-  RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
+  Gaussian fct(5.0);
 
-  testDistributed(context, mapping,
-                  {// Conservative mapping: The inMesh is local
-                   {0, -1, {0, 0}, {1}},
-                   {0, -1, {0, 1}, {2}},
-                   {1, -1, {1, 0}, {3}},
-                   {1, -1, {1, 1}, {4}},
-                   {2, -1, {2, 0}, {5}},
-                   {2, -1, {2, 1}, {6}},
-                   {3, -1, {3, 0}, {7}},
-                   {3, -1, {3, 1}, {8}}},
-                  {// The outMesh is distributed
-                   {-1, 0, {0, 0}, {0}},
-                   {-1, 0, {0, 1}, {0}},
-                   {-1, 1, {1, 0}, {0}},
-                   {-1, 1, {1, 1}, {0}},
-                   {-1, 2, {2, 0}, {0}},
-                   {-1, 2, {2, 1}, {0}},
-                   {-1, 3, {3, 0}, {0}},
-                   {-1, 3, {3, 1}, {0}}},
-                  {// Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
-                   // {0, 0, 2, 3, 0, 0, 0, 0} on the second, ...
-                   {0, {1}},
-                   {0, {2}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {1, {0}},
-                   {1, {0}},
-                   {1, {3}},
-                   {1, {4}},
-                   {1, {0}},
-                   {1, {0}},
-                   {1, {0}},
-                   {1, {0}},
-                   {2, {0}},
-                   {2, {0}},
-                   {2, {0}},
-                   {2, {0}},
-                   {2, {5}},
-                   {2, {6}},
-                   {2, {0}},
-                   {2, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {7}},
-                   {3, {8}}},
-                  context.rank * 2);
+  MeshSpecification      in{// Conservative mapping: The inMesh is local
+                       {0, -1, {0, 0}, {1}},
+                       {0, -1, {0, 1}, {2}},
+                       {1, -1, {1, 0}, {3}},
+                       {1, -1, {1, 1}, {4}},
+                       {2, -1, {2, 0}, {5}},
+                       {2, -1, {2, 1}, {6}},
+                       {3, -1, {3, 0}, {7}},
+                       {3, -1, {3, 1}, {8}}};
+  MeshSpecification      out{// The outMesh is distributed
+                        {-1, 0, {0, 0}, {0}},
+                        {-1, 0, {0, 1}, {0}},
+                        {-1, 1, {1, 0}, {0}},
+                        {-1, 1, {1, 1}, {0}},
+                        {-1, 2, {2, 0}, {0}},
+                        {-1, 2, {2, 1}, {0}},
+                        {-1, 3, {3, 0}, {0}},
+                        {-1, 3, {3, 1}, {0}}};
+  ReferenceSpecification ref{// Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
+                             // {0, 0, 2, 3, 0, 0, 0, 0} on the second, ...
+                             {0, {1}},
+                             {0, {2}},
+                             {0, {0}},
+                             {0, {0}},
+                             {0, {0}},
+                             {0, {0}},
+                             {0, {0}},
+                             {0, {0}},
+                             {1, {0}},
+                             {1, {0}},
+                             {1, {3}},
+                             {1, {4}},
+                             {1, {0}},
+                             {1, {0}},
+                             {1, {0}},
+                             {1, {0}},
+                             {2, {0}},
+                             {2, {0}},
+                             {2, {0}},
+                             {2, {0}},
+                             {2, {5}},
+                             {2, {6}},
+                             {2, {0}},
+                             {2, {0}},
+                             {3, {0}},
+                             {3, {0}},
+                             {3, {0}},
+                             {3, {0}},
+                             {3, {0}},
+                             {3, {0}},
+                             {3, {7}},
+                             {3, {8}}};
+
+  RadialBasisFctMapping<Gaussian> mapping_on(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
+  testDistributed(context, mapping_on, in, out, ref, context.rank * 2);
+  RadialBasisFctMapping<Gaussian> mapping_sep(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  testDistributed(context, mapping_sep, in, out, ref, context.rank * 2);
+  RadialBasisFctMapping<Gaussian> mapping_off(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  testDistributed(context, mapping_off, in, out, ref, context.rank * 2);
 }
 
 /// Test with a homogeneous distribution of mesh among ranks
@@ -624,191 +663,200 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1Vector)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   Gaussian                        fct(5.0);
-  RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
-
-  testDistributed(context, mapping,
-                  {// Conservative mapping: The inMesh is local
-                   {0, -1, {0, 0}, {1, 4}},
-                   {0, -1, {0, 1}, {2, 5}},
-                   {1, -1, {1, 0}, {3, 6}},
-                   {1, -1, {1, 1}, {4, 7}},
-                   {2, -1, {2, 0}, {5, 8}},
-                   {2, -1, {2, 1}, {6, 9}},
-                   {3, -1, {3, 0}, {7, 10}},
-                   {3, -1, {3, 1}, {8, 11}}},
-                  {// The outMesh is distributed
-                   {-1, 0, {0, 0}, {0, 0}},
-                   {-1, 0, {0, 1}, {0, 0}},
-                   {-1, 1, {1, 0}, {0, 0}},
-                   {-1, 1, {1, 1}, {0, 0}},
-                   {-1, 2, {2, 0}, {0, 0}},
-                   {-1, 2, {2, 1}, {0, 0}},
-                   {-1, 3, {3, 0}, {0, 0}},
-                   {-1, 3, {3, 1}, {0, 0}}},
-                  {// Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
-                   // {0, 0, 2, 3, 0, 0, 0, 0} on the second, ...
-                   {0, {1, 4}},
-                   {0, {2, 5}},
-                   {0, {0, 0}},
-                   {0, {0, 0}},
-                   {0, {0, 0}},
-                   {0, {0, 0}},
-                   {0, {0, 0}},
-                   {0, {0, 0}},
-                   {1, {0, 0}},
-                   {1, {0, 0}},
-                   {1, {3, 6}},
-                   {1, {4, 7}},
-                   {1, {0, 0}},
-                   {1, {0, 0}},
-                   {1, {0, 0}},
-                   {1, {0, 0}},
-                   {2, {0, 0}},
-                   {2, {0, 0}},
-                   {2, {0, 0}},
-                   {2, {0, 0}},
-                   {2, {5, 8}},
-                   {2, {6, 9}},
-                   {2, {0, 0}},
-                   {2, {0, 0}},
-                   {3, {0, 0}},
-                   {3, {0, 0}},
-                   {3, {0, 0}},
-                   {3, {0, 0}},
-                   {3, {0, 0}},
-                   {3, {0, 0}},
-                   {3, {7, 10}},
-                   {3, {8, 11}}},
-                  context.rank * 2);
+  MeshSpecification               in{// Conservative mapping: The inMesh is local
+                       {0, -1, {0, 0}, {1, 4}},
+                       {0, -1, {0, 1}, {2, 5}},
+                       {1, -1, {1, 0}, {3, 6}},
+                       {1, -1, {1, 1}, {4, 7}},
+                       {2, -1, {2, 0}, {5, 8}},
+                       {2, -1, {2, 1}, {6, 9}},
+                       {3, -1, {3, 0}, {7, 10}},
+                       {3, -1, {3, 1}, {8, 11}}};
+  MeshSpecification               out{// The outMesh is distributed
+                        {-1, 0, {0, 0}, {0, 0}},
+                        {-1, 0, {0, 1}, {0, 0}},
+                        {-1, 1, {1, 0}, {0, 0}},
+                        {-1, 1, {1, 1}, {0, 0}},
+                        {-1, 2, {2, 0}, {0, 0}},
+                        {-1, 2, {2, 1}, {0, 0}},
+                        {-1, 3, {3, 0}, {0, 0}},
+                        {-1, 3, {3, 1}, {0, 0}}};
+  ReferenceSpecification          ref{// Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
+                             // {0, 0, 2, 3, 0, 0, 0, 0} on the second, ...
+                             {0, {1, 4}},
+                             {0, {2, 5}},
+                             {0, {0, 0}},
+                             {0, {0, 0}},
+                             {0, {0, 0}},
+                             {0, {0, 0}},
+                             {0, {0, 0}},
+                             {0, {0, 0}},
+                             {1, {0, 0}},
+                             {1, {0, 0}},
+                             {1, {3, 6}},
+                             {1, {4, 7}},
+                             {1, {0, 0}},
+                             {1, {0, 0}},
+                             {1, {0, 0}},
+                             {1, {0, 0}},
+                             {2, {0, 0}},
+                             {2, {0, 0}},
+                             {2, {0, 0}},
+                             {2, {0, 0}},
+                             {2, {5, 8}},
+                             {2, {6, 9}},
+                             {2, {0, 0}},
+                             {2, {0, 0}},
+                             {3, {0, 0}},
+                             {3, {0, 0}},
+                             {3, {0, 0}},
+                             {3, {0, 0}},
+                             {3, {0, 0}},
+                             {3, {0, 0}},
+                             {3, {7, 10}},
+                             {3, {8, 11}}};
+  RadialBasisFctMapping<Gaussian> mapping_on(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
+  testDistributed(context, mapping_on, in, out, ref, context.rank * 2);
+  RadialBasisFctMapping<Gaussian> mapping_sep(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  testDistributed(context, mapping_sep, in, out, ref, context.rank * 2);
+  RadialBasisFctMapping<Gaussian> mapping_off(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  testDistributed(context, mapping_off, in, out, ref, context.rank * 2);
 }
 
 /// Using a more heterogeneous distribution of vertices and owner
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV2)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm())
-  Gaussian                        fct(5.0);
-  RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
+  Gaussian fct(5.0);
 
   std::vector<int> globalIndexOffsets = {0, 0, 4, 6};
 
-  testDistributed(context, mapping,
-                  {// Conservative mapping: The inMesh is local but rank 0 has no vertices
-                   {1, -1, {0, 0}, {1}},
-                   {1, -1, {0, 1}, {2}},
-                   {1, -1, {1, 0}, {3}},
-                   {1, -1, {1, 1}, {4}},
-                   {2, -1, {2, 0}, {5}},
-                   {2, -1, {2, 1}, {6}},
-                   {3, -1, {3, 0}, {7}},
-                   {3, -1, {3, 1}, {8}}},
-                  {// The outMesh is distributed, rank 0 owns no vertex
-                   {-1, 1, {0, 0}, {0}},
-                   {-1, 1, {0, 1}, {0}},
-                   {-1, 1, {1, 0}, {0}},
-                   {-1, 1, {1, 1}, {0}},
-                   {-1, 2, {2, 0}, {0}},
-                   {-1, 2, {2, 1}, {0}},
-                   {-1, 3, {3, 0}, {0}},
-                   {-1, 3, {3, 1}, {0}}},
-                  {// Tests for {0, 0, 0, 0, 0, 0, 0, 0} on the first rank,
-                   // {1, 2, 2, 3, 0, 0, 0, 0} on the second, ...
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {1, {1}},
-                   {1, {2}},
-                   {1, {3}},
-                   {1, {4}},
-                   {1, {0}},
-                   {1, {0}},
-                   {1, {0}},
-                   {1, {0}},
-                   {2, {0}},
-                   {2, {0}},
-                   {2, {0}},
-                   {2, {0}},
-                   {2, {5}},
-                   {2, {6}},
-                   {2, {0}},
-                   {2, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {7}},
-                   {3, {8}}},
-                  globalIndexOffsets.at(context.rank));
+  MeshSpecification      in{// Conservative mapping: The inMesh is local but rank 0 has no vertices
+                       {1, -1, {0, 0}, {1}},
+                       {1, -1, {0, 1}, {2}},
+                       {1, -1, {1, 0}, {3}},
+                       {1, -1, {1, 1}, {4}},
+                       {2, -1, {2, 0}, {5}},
+                       {2, -1, {2, 1}, {6}},
+                       {3, -1, {3, 0}, {7}},
+                       {3, -1, {3, 1}, {8}}};
+  MeshSpecification      out{// The outMesh is distributed, rank 0 owns no vertex
+                        {-1, 1, {0, 0}, {0}},
+                        {-1, 1, {0, 1}, {0}},
+                        {-1, 1, {1, 0}, {0}},
+                        {-1, 1, {1, 1}, {0}},
+                        {-1, 2, {2, 0}, {0}},
+                        {-1, 2, {2, 1}, {0}},
+                        {-1, 3, {3, 0}, {0}},
+                        {-1, 3, {3, 1}, {0}}};
+  ReferenceSpecification ref{// Tests for {0, 0, 0, 0, 0, 0, 0, 0} on the first rank,
+                             // {1, 2, 2, 3, 0, 0, 0, 0} on the second, ...
+                             {0, {0}},
+                             {0, {0}},
+                             {0, {0}},
+                             {0, {0}},
+                             {0, {0}},
+                             {0, {0}},
+                             {0, {0}},
+                             {0, {0}},
+                             {1, {1}},
+                             {1, {2}},
+                             {1, {3}},
+                             {1, {4}},
+                             {1, {0}},
+                             {1, {0}},
+                             {1, {0}},
+                             {1, {0}},
+                             {2, {0}},
+                             {2, {0}},
+                             {2, {0}},
+                             {2, {0}},
+                             {2, {5}},
+                             {2, {6}},
+                             {2, {0}},
+                             {2, {0}},
+                             {3, {0}},
+                             {3, {0}},
+                             {3, {0}},
+                             {3, {0}},
+                             {3, {0}},
+                             {3, {0}},
+                             {3, {7}},
+                             {3, {8}}};
+
+  RadialBasisFctMapping<Gaussian> mapping_on(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
+  testDistributed(context, mapping_on, in, out, ref, globalIndexOffsets.at(context.rank));
+  RadialBasisFctMapping<Gaussian> mapping_sep(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  testDistributed(context, mapping_sep, in, out, ref, globalIndexOffsets.at(context.rank));
+  RadialBasisFctMapping<Gaussian> mapping_off(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  testDistributed(context, mapping_off, in, out, ref, globalIndexOffsets.at(context.rank));
 }
 
 /// Using meshes of different sizes, inMesh is smaller then outMesh
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV3)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
-  Gaussian                        fct(2.0);
-  RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
-
+  Gaussian         fct(2.0);
   std::vector<int> globalIndexOffsets = {0, 0, 3, 5};
 
-  testDistributed(context, mapping,
-                  {// Conservative mapping: The inMesh is local but rank 0 has no vertices
-                   {1, -1, {0, 0}, {1}},
-                   {1, -1, {1, 0}, {3}},
-                   {1, -1, {1, 1}, {4}},
-                   {2, -1, {2, 0}, {5}},
-                   {2, -1, {2, 1}, {6}},
-                   {3, -1, {3, 0}, {7}},
-                   {3, -1, {3, 1}, {8}}}, // Sum of all vertices is 34
-                  {                       // The outMesh is distributed, rank 0 owns no vertex
-                   {-1, 1, {0, 0}, {0}},
-                   {-1, 1, {0, 1}, {0}},
-                   {-1, 1, {1, 0}, {0}},
-                   {-1, 1, {1, 1}, {0}},
-                   {-1, 2, {2, 0}, {0}},
-                   {-1, 2, {2, 1}, {0}},
-                   {-1, 3, {3, 0}, {0}},
-                   {-1, 3, {3, 1}, {0}}},
-                  {// Tests for {0, 0, 0, 0, 0, 0, 0, 0} on the first rank,
-                   // {1, 2, 2, 3, 0, 0, 0, 0} on the second, ...
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {1, {1}},
-                   {1, {0}},
-                   {1, {3}},
-                   {1, {4}},
-                   {1, {0}},
-                   {1, {0}},
-                   {1, {0}},
-                   {1, {0}},
-                   {2, {0}},
-                   {2, {0}},
-                   {2, {0}},
-                   {2, {0}},
-                   {2, {5}},
-                   {2, {6}},
-                   {2, {0}},
-                   {2, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {7}},
-                   {3, {8}}}, // Sum of reference is also 34
-                  globalIndexOffsets.at(context.rank));
+  MeshSpecification      in{// Conservative mapping: The inMesh is local but rank 0 has no vertices
+                       {1, -1, {0, 0}, {1}},
+                       {1, -1, {1, 0}, {3}},
+                       {1, -1, {1, 1}, {4}},
+                       {2, -1, {2, 0}, {5}},
+                       {2, -1, {2, 1}, {6}},
+                       {3, -1, {3, 0}, {7}},
+                       {3, -1, {3, 1}, {8}}}; // Sum of all vertices is 34
+  MeshSpecification      out{                      // The outMesh is distributed, rank 0 owns no vertex
+                        {-1, 1, {0, 0}, {0}},
+                        {-1, 1, {0, 1}, {0}},
+                        {-1, 1, {1, 0}, {0}},
+                        {-1, 1, {1, 1}, {0}},
+                        {-1, 2, {2, 0}, {0}},
+                        {-1, 2, {2, 1}, {0}},
+                        {-1, 3, {3, 0}, {0}},
+                        {-1, 3, {3, 1}, {0}}};
+  ReferenceSpecification ref{// Tests for {0, 0, 0, 0, 0, 0, 0, 0} on the first rank,
+                             // {1, 2, 2, 3, 0, 0, 0, 0} on the second, ...
+                             {0, {0}},
+                             {0, {0}},
+                             {0, {0}},
+                             {0, {0}},
+                             {0, {0}},
+                             {0, {0}},
+                             {0, {0}},
+                             {0, {0}},
+                             {1, {1}},
+                             {1, {0}},
+                             {1, {3}},
+                             {1, {4}},
+                             {1, {0}},
+                             {1, {0}},
+                             {1, {0}},
+                             {1, {0}},
+                             {2, {0}},
+                             {2, {0}},
+                             {2, {0}},
+                             {2, {0}},
+                             {2, {5}},
+                             {2, {6}},
+                             {2, {0}},
+                             {2, {0}},
+                             {3, {0}},
+                             {3, {0}},
+                             {3, {0}},
+                             {3, {0}},
+                             {3, {0}},
+                             {3, {0}},
+                             {3, {7}},
+                             {3, {8}}};
+  // Sum of reference is also 34
+  RadialBasisFctMapping<Gaussian> mapping_on(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
+  testDistributed(context, mapping_on, in, out, ref, globalIndexOffsets.at(context.rank));
+  RadialBasisFctMapping<Gaussian> mapping_sep(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  testDistributed(context, mapping_sep, in, out, ref, globalIndexOffsets.at(context.rank));
+  RadialBasisFctMapping<Gaussian> mapping_off(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  testDistributed(context, mapping_off, in, out, ref, globalIndexOffsets.at(context.rank));
 }
 
 /// Using meshes of different sizes, outMesh is smaller then inMesh
@@ -816,186 +864,193 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
                      *boost::unit_test::tolerance(1e-6))
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
-  Gaussian                        fct(4.0);
-  RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
-
+  Gaussian         fct(4.0);
   std::vector<int> globalIndexOffsets = {0, 2, 4, 6};
 
-  testDistributed(context, mapping,
-                  {// Conservative mapping: The inMesh is local
-                   {0, -1, {0, 0}, {1}},
-                   {0, -1, {0, 1}, {2}},
-                   {1, -1, {1, 0}, {3}},
-                   {1, -1, {1, 1}, {4}},
-                   {2, -1, {2, 0}, {5}},
-                   {2, -1, {2, 1}, {6}},
-                   {3, -1, {3, 0}, {7}},
-                   {3, -1, {3, 1}, {8}}}, // Sum is 36
-                  {                       // The outMesh is distributed, rank 0 has no vertex at all
-                   {-1, 1, {0, 1}, {0}},
-                   {-1, 1, {1, 0}, {0}},
-                   {-1, 1, {1, 1}, {0}},
-                   {-1, 2, {2, 0}, {0}},
-                   {-1, 2, {2, 1}, {0}},
-                   {-1, 3, {3, 0}, {0}},
-                   {-1, 3, {3, 1}, {0}}},
-                  {// Tests for {0, 0, 0, 0, 0, 0, 0, 0} on the first rank,
-                   // {2, 3, 4, 3, 0, 0, 0, 0} on the second, ...
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {1, {2.4285714526861519}},
-                   {1, {3.61905}},
-                   {1, {4.14286}},
-                   {1, {0}},
-                   {1, {0}},
-                   {1, {0}},
-                   {1, {0}},
-                   {2, {0}},
-                   {2, {0}},
-                   {2, {0}},
-                   {2, {5.333333295}},
-                   {2, {5.85714}},
-                   {2, {0}},
-                   {2, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {7.047619}},
-                   {3, {7.571428}}}, // Sum is ~36
-                  globalIndexOffsets.at(context.rank));
+  MeshSpecification               in{// Conservative mapping: The inMesh is local
+                       {0, -1, {0, 0}, {1}},
+                       {0, -1, {0, 1}, {2}},
+                       {1, -1, {1, 0}, {3}},
+                       {1, -1, {1, 1}, {4}},
+                       {2, -1, {2, 0}, {5}},
+                       {2, -1, {2, 1}, {6}},
+                       {3, -1, {3, 0}, {7}},
+                       {3, -1, {3, 1}, {8}}}; // Sum is 36
+  MeshSpecification               out{                      // The outMesh is distributed, rank 0 has no vertex at all
+                        {-1, 1, {0, 1}, {0}},
+                        {-1, 1, {1, 0}, {0}},
+                        {-1, 1, {1, 1}, {0}},
+                        {-1, 2, {2, 0}, {0}},
+                        {-1, 2, {2, 1}, {0}},
+                        {-1, 3, {3, 0}, {0}},
+                        {-1, 3, {3, 1}, {0}}};
+  ReferenceSpecification          ref{// Tests for {0, 0, 0, 0, 0, 0, 0, 0} on the first rank,
+                             // {2, 3, 4, 3, 0, 0, 0, 0} on the second, ...
+                             {0, {0}},
+                             {0, {0}},
+                             {0, {0}},
+                             {0, {0}},
+                             {0, {0}},
+                             {0, {0}},
+                             {0, {0}},
+                             {1, {2.4285714526861519}},
+                             {1, {3.61905}},
+                             {1, {4.14286}},
+                             {1, {0}},
+                             {1, {0}},
+                             {1, {0}},
+                             {1, {0}},
+                             {2, {0}},
+                             {2, {0}},
+                             {2, {0}},
+                             {2, {5.333333295}},
+                             {2, {5.85714}},
+                             {2, {0}},
+                             {2, {0}},
+                             {3, {0}},
+                             {3, {0}},
+                             {3, {0}},
+                             {3, {0}},
+                             {3, {0}},
+                             {3, {7.047619}},
+                             {3, {7.571428}}}; // Sum is ~36
+  RadialBasisFctMapping<Gaussian> mapping_on(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
+  testDistributed(context, mapping_on, in, out, ref, globalIndexOffsets.at(context.rank), true);
+  RadialBasisFctMapping<Gaussian> mapping_sep(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  testDistributed(context, mapping_sep, in, out, ref, globalIndexOffsets.at(context.rank), true);
+  // Polynomial == ON won't reach the desired accuracy
 }
 
 /// Tests a non-contigous owner distributed at the outMesh
 BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
-  Gaussian                        fct(5.0);
-  RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
+  Gaussian               fct(5.0);
+  MeshSpecification      in{// Conservative mapping: The inMesh is local
+                       {0, -1, {0, 0}, {1}},
+                       {0, -1, {0, 1}, {2}},
+                       {1, -1, {1, 0}, {3}},
+                       {1, -1, {1, 1}, {4}},
+                       {2, -1, {2, 0}, {5}},
+                       {2, -1, {2, 1}, {6}},
+                       {3, -1, {3, 0}, {7}},
+                       {3, -1, {3, 1}, {8}}};
+  MeshSpecification      out{// The outMesh is distributed and non-contigous
+                        {-1, 0, {0, 0}, {0}},
+                        {-1, 1, {0, 1}, {0}},
+                        {-1, 1, {1, 0}, {0}},
+                        {-1, 0, {1, 1}, {0}},
+                        {-1, 2, {2, 0}, {0}},
+                        {-1, 2, {2, 1}, {0}},
+                        {-1, 3, {3, 0}, {0}},
+                        {-1, 3, {3, 1}, {0}}};
+  ReferenceSpecification ref{// Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
+                             // {0, 0, 2, 3, 0, 0, 0, 0} on the second, ...
+                             {0, {1}},
+                             {0, {0}},
+                             {0, {0}},
+                             {0, {4}},
+                             {0, {0}},
+                             {0, {0}},
+                             {0, {0}},
+                             {0, {0}},
+                             {1, {0}},
+                             {1, {2}},
+                             {1, {3}},
+                             {1, {0}},
+                             {1, {0}},
+                             {1, {0}},
+                             {1, {0}},
+                             {1, {0}},
+                             {2, {0}},
+                             {2, {0}},
+                             {2, {0}},
+                             {2, {0}},
+                             {2, {5}},
+                             {2, {6}},
+                             {2, {0}},
+                             {2, {0}},
+                             {3, {0}},
+                             {3, {0}},
+                             {3, {0}},
+                             {3, {0}},
+                             {3, {0}},
+                             {3, {0}},
+                             {3, {7}},
+                             {3, {8}}};
 
-  testDistributed(context, mapping,
-                  {// Conservative mapping: The inMesh is local
-                   {0, -1, {0, 0}, {1}},
-                   {0, -1, {0, 1}, {2}},
-                   {1, -1, {1, 0}, {3}},
-                   {1, -1, {1, 1}, {4}},
-                   {2, -1, {2, 0}, {5}},
-                   {2, -1, {2, 1}, {6}},
-                   {3, -1, {3, 0}, {7}},
-                   {3, -1, {3, 1}, {8}}},
-                  {// The outMesh is distributed and non-contigous
-                   {-1, 0, {0, 0}, {0}},
-                   {-1, 1, {0, 1}, {0}},
-                   {-1, 1, {1, 0}, {0}},
-                   {-1, 0, {1, 1}, {0}},
-                   {-1, 2, {2, 0}, {0}},
-                   {-1, 2, {2, 1}, {0}},
-                   {-1, 3, {3, 0}, {0}},
-                   {-1, 3, {3, 1}, {0}}},
-                  {// Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
-                   // {0, 0, 2, 3, 0, 0, 0, 0} on the second, ...
-                   {0, {1}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {4}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {1, {0}},
-                   {1, {2}},
-                   {1, {3}},
-                   {1, {0}},
-                   {1, {0}},
-                   {1, {0}},
-                   {1, {0}},
-                   {1, {0}},
-                   {2, {0}},
-                   {2, {0}},
-                   {2, {0}},
-                   {2, {0}},
-                   {2, {5}},
-                   {2, {6}},
-                   {2, {0}},
-                   {2, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {7}},
-                   {3, {8}}},
-                  context.rank * 2);
+  RadialBasisFctMapping<Gaussian> mapping_on(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
+  testDistributed(context, mapping_on, in, out, ref, context.rank * 2);
+  RadialBasisFctMapping<Gaussian> mapping_sep(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  testDistributed(context, mapping_sep, in, out, ref, context.rank * 2);
+  RadialBasisFctMapping<Gaussian> mapping_off(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  testDistributed(context, mapping_off, in, out, ref, context.rank * 2);
 }
 
 /// Tests a non-contigous owner distributed at the outMesh
 BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5Vector)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
-  Gaussian                        fct(5.0);
-  RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
+  Gaussian fct(5.0);
 
-  testDistributed(context, mapping,
-                  {// Conservative mapping: The inMesh is local
-                   {0, -1, {0, 0}, {1, 4}},
-                   {0, -1, {0, 1}, {2, 5}},
-                   {1, -1, {1, 0}, {3, 6}},
-                   {1, -1, {1, 1}, {4, 7}},
-                   {2, -1, {2, 0}, {5, 8}},
-                   {2, -1, {2, 1}, {6, 9}},
-                   {3, -1, {3, 0}, {7, 10}},
-                   {3, -1, {3, 1}, {8, 11}}},
-                  {// The outMesh is distributed and non-contigous
-                   {-1, 0, {0, 0}, {0, 0}},
-                   {-1, 1, {0, 1}, {0, 0}},
-                   {-1, 1, {1, 0}, {0, 0}},
-                   {-1, 0, {1, 1}, {0, 0}},
-                   {-1, 2, {2, 0}, {0, 0}},
-                   {-1, 2, {2, 1}, {0, 0}},
-                   {-1, 3, {3, 0}, {0, 0}},
-                   {-1, 3, {3, 1}, {0, 0}}},
-                  {// Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
-                   // {0, 0, 2, 3, 0, 0, 0, 0} on the second, ...
-                   {0, {1, 4}},
-                   {0, {0, 0}},
-                   {0, {0, 0}},
-                   {0, {4, 7}},
-                   {0, {0, 0}},
-                   {0, {0, 0}},
-                   {0, {0, 0}},
-                   {0, {0, 0}},
-                   {1, {0, 0}},
-                   {1, {2, 5}},
-                   {1, {3, 6}},
-                   {1, {0, 0}},
-                   {1, {0, 0}},
-                   {1, {0, 0}},
-                   {1, {0, 0}},
-                   {1, {0, 0}},
-                   {2, {0, 0}},
-                   {2, {0, 0}},
-                   {2, {0, 0}},
-                   {2, {0, 0}},
-                   {2, {5, 8}},
-                   {2, {6, 9}},
-                   {2, {0, 0}},
-                   {2, {0, 0}},
-                   {3, {0, 0}},
-                   {3, {0, 0}},
-                   {3, {0, 0}},
-                   {3, {0, 0}},
-                   {3, {0, 0}},
-                   {3, {0, 0}},
-                   {3, {7, 10}},
-                   {3, {8, 11}}},
-                  context.rank * 2);
+  MeshSpecification               in{// Conservative mapping: The inMesh is local
+                       {0, -1, {0, 0}, {1, 4}},
+                       {0, -1, {0, 1}, {2, 5}},
+                       {1, -1, {1, 0}, {3, 6}},
+                       {1, -1, {1, 1}, {4, 7}},
+                       {2, -1, {2, 0}, {5, 8}},
+                       {2, -1, {2, 1}, {6, 9}},
+                       {3, -1, {3, 0}, {7, 10}},
+                       {3, -1, {3, 1}, {8, 11}}};
+  MeshSpecification               out{// The outMesh is distributed and non-contigous
+                        {-1, 0, {0, 0}, {0, 0}},
+                        {-1, 1, {0, 1}, {0, 0}},
+                        {-1, 1, {1, 0}, {0, 0}},
+                        {-1, 0, {1, 1}, {0, 0}},
+                        {-1, 2, {2, 0}, {0, 0}},
+                        {-1, 2, {2, 1}, {0, 0}},
+                        {-1, 3, {3, 0}, {0, 0}},
+                        {-1, 3, {3, 1}, {0, 0}}};
+  ReferenceSpecification          ref{// Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
+                             // {0, 0, 2, 3, 0, 0, 0, 0} on the second, ...
+                             {0, {1, 4}},
+                             {0, {0, 0}},
+                             {0, {0, 0}},
+                             {0, {4, 7}},
+                             {0, {0, 0}},
+                             {0, {0, 0}},
+                             {0, {0, 0}},
+                             {0, {0, 0}},
+                             {1, {0, 0}},
+                             {1, {2, 5}},
+                             {1, {3, 6}},
+                             {1, {0, 0}},
+                             {1, {0, 0}},
+                             {1, {0, 0}},
+                             {1, {0, 0}},
+                             {1, {0, 0}},
+                             {2, {0, 0}},
+                             {2, {0, 0}},
+                             {2, {0, 0}},
+                             {2, {0, 0}},
+                             {2, {5, 8}},
+                             {2, {6, 9}},
+                             {2, {0, 0}},
+                             {2, {0, 0}},
+                             {3, {0, 0}},
+                             {3, {0, 0}},
+                             {3, {0, 0}},
+                             {3, {0, 0}},
+                             {3, {0, 0}},
+                             {3, {0, 0}},
+                             {3, {7, 10}},
+                             {3, {8, 11}}};
+  RadialBasisFctMapping<Gaussian> mapping_on(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
+  testDistributed(context, mapping_on, in, out, ref, context.rank * 2);
+  RadialBasisFctMapping<Gaussian> mapping_sep(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  testDistributed(context, mapping_sep, in, out, ref, context.rank * 2);
+  RadialBasisFctMapping<Gaussian> mapping_off(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  testDistributed(context, mapping_off, in, out, ref, context.rank * 2);
 }
 
 void testTagging(const TestContext &context,
