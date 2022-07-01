@@ -454,9 +454,6 @@ private:
   /// True, if coupling has been initialized.
   bool _isInitialized = false;
 
-  /// True, if initialize data has been called.
-  bool _initializeDataHasBeenCalled = false;
-
   std::set<std::string> _actions;
 
   /// Responsible for monitoring iteration count over time window.

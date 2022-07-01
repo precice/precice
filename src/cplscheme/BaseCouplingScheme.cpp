@@ -128,9 +128,6 @@ void BaseCouplingScheme::finalize()
   PRECICE_TRACE();
   checkCompletenessRequiredActions();
   PRECICE_ASSERT(_isInitialized, "Called finalize() before initialize().");
-  if (not _initializeDataHasBeenCalled) {
-    PRECICE_WARN("initializeData() should be called before finalize(). This will become mandatory in preCICE 3.0.0.");
-  }
 }
 
 void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
@@ -161,12 +158,7 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
 void BaseCouplingScheme::initializeData()
 {
   // InitializeData uses the template method pattern (https://en.wikipedia.org/wiki/Template_method_pattern).
-  PRECICE_ASSERT(_isInitialized);
-  PRECICE_ASSERT(not _initializeDataHasBeenCalled);
-  _initializeDataHasBeenCalled = true;
   PRECICE_TRACE("initializeData()");
-
-  PRECICE_DEBUG("Initializing Data ...");
 
   _hasDataBeenReceived = false;
 
@@ -189,9 +181,6 @@ void BaseCouplingScheme::advance()
   PRECICE_TRACE(_timeWindows, _time);
   checkCompletenessRequiredActions();
   PRECICE_ASSERT(_isInitialized, "Before calling advance() coupling scheme has to be initialized via initialize().");
-  if (!_initializeDataHasBeenCalled) {
-    PRECICE_WARN("Before calling advance() data of coupling scheme initializeData() should be called. This will become mandatory in preCICE 3.0.0");
-  }
   _hasDataBeenReceived  = false;
   _isTimeWindowComplete = false;
 

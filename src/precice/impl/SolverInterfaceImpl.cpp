@@ -342,13 +342,13 @@ double SolverInterfaceImpl::initialize()
   _meshLock.lockAll();
 
   double dt = _couplingScheme->getNextTimestepMaxLength();
-  //@todo exchange of dt needs to be performed here, if participant first method is used.
 
   performDataActions({action::Action::WRITE_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
   mapWrittenData();
   performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
 
   _couplingScheme->initializeData();
+  dt = _couplingScheme->getNextTimestepMaxLength(); // can change, if second participant and participant-first method for setting time window size is used.
 
   if (_couplingScheme->hasDataBeenReceived()) {
     performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
@@ -362,8 +362,7 @@ double SolverInterfaceImpl::initialize()
 
   _state = State::Initialized;
 
-  return dt;  // results in failing test, because dt has to be exchanged before initializeData is called to work correctly with actions. See above.
-  //return _couplingScheme->getNextTimestepMaxLength();  // incorrect implementation, no failing test.
+  return dt;
 }
 
 double SolverInterfaceImpl::advance(
