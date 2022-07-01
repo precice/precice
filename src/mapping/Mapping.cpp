@@ -17,9 +17,9 @@ Mapping::Mapping(
       _constraint(constraint),
       _inputRequirement(MeshRequirement::UNDEFINED),
       _outputRequirement(MeshRequirement::UNDEFINED),
+      _couplingKind(couplingKind),
       _input(),
       _output(),
-      _couplingKind(couplingKind),
       _dimensions(dimensions)
 
 {
