@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(Consistent)
   outMesh->createVertex(Eigen::Vector2d(2.5 / 3, 1. / 3));
   outMesh->createVertex(Eigen::Vector2d(-10.0, 0.25));
   // Check fall back on nearest neighbor
-  outMesh->createVertex(Eigen::Vector2d(-0.1, -0.1)); // Currently maps to opposite edge
+  outMesh->createVertex(Eigen::Vector2d(-0.1, -0.1)); // Fall back to NN expected
   outMesh->createVertex(Eigen::Vector2d(2.5, -1.0));
   outMesh->createVertex(Eigen::Vector2d(2.5, 10.0));
 
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(Consistent)
 
   // Check expected
   Eigen::VectorXd expected(outMesh->vertices().size());
-  expected << 2.0, 1.0, 2.0, 3.0, 1.49, 2.25, 1.5, 2.5, 2.0, 3.0;
+  expected << 2.0, 1.0, 2.0, 3.0, 1.49, 2.25, 1.5, 1.0, 2.0, 3.0;
   BOOST_CHECK(equals(expected, outValuesScalar));
 }
 

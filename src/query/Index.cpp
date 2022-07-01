@@ -217,7 +217,7 @@ std::vector<VertexID> Index::getVerticesInsideBox(const mesh::Vertex &centerVert
   auto coords    = centerVertex.getCoords();
   auto searchBox = query::makeBox(coords.array() - radius, coords.array() + radius);
 
-  const auto &          rtree = _pimpl->getVertexRTree(*_mesh);
+  const auto           &rtree = _pimpl->getVertexRTree(*_mesh);
   std::vector<VertexID> matches;
   rtree->query(bgi::intersects(searchBox) and bg::index::satisfies([&](size_t const i) { return bg::distance(centerVertex, _mesh->vertices()[i]) <= radius; }),
                std::back_inserter(matches));
@@ -228,7 +228,7 @@ std::vector<VertexID> Index::getVerticesInsideBox(const mesh::BoundingBox &bb)
 {
   PRECICE_TRACE();
   // Add tree to the local cache
-  const auto &          rtree = _pimpl->getVertexRTree(*_mesh);
+  const auto           &rtree = _pimpl->getVertexRTree(*_mesh);
   std::vector<VertexID> matches;
   rtree->query(bgi::intersects(query::makeBox(bb.minCorner(), bb.maxCorner())), std::back_inserter(matches));
   return matches;
@@ -299,13 +299,19 @@ ProjectionMatch Index::findEdgeProjection(const Eigen::VectorXd &location, int n
       candidates.emplace_back(std::move(polation));
     }
   }
+
+  ProjectionMatch vertexProjection = findVertexProjection(location);
   // Pick the smallest candidate by distance
   auto min = std::min_element(candidates.begin(), candidates.end());
   if (min != candidates.end()) {
-    return *min;
+    if (min->polation.distance() < vertexProjection.polation.distance()) {
+      return *min;
+    } else {
+      return vertexProjection;
+    }
   }
   // Could not find edge projection element, fall back to vertex projection
-  return findVertexProjection(location);
+  return vertexProjection;
 }
 
 ProjectionMatch Index::findTriangleProjection(const Eigen::VectorXd &location, int n)
@@ -321,10 +327,16 @@ ProjectionMatch Index::findTriangleProjection(const Eigen::VectorXd &location, i
   // Pick the smallest candidate by distance
   auto min = std::min_element(candidates.begin(), candidates.end());
   if (min != candidates.end()) {
-    return *min;
+    ProjectionMatch vertexProjection = findVertexProjection(location);
+    if (min->polation.distance() < vertexProjection.polation.distance()) {
+      return *min;
+    } else {
+      return vertexProjection;
+    }
   }
 
-  // Could not triangle find projection element, fall back to edge projection
+  // Could not triangle find projection element,
+  // fall back to edge projection (which itself could fall back to a vertex)
   return findEdgeProjection(location, n);
 }
 
