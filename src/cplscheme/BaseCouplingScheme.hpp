@@ -84,24 +84,6 @@ public:
   }
 
   /**
-   * @brief Getter for _sendsInitializedData
-   * @returns _sendsInitializedData
-   */
-  bool sendsInitializedData() const override final
-  {
-    return _sendsInitializedData;
-  }
-
-  /**
-   * @brief Getter for _receivesInitializedData
-   * @returns _receivesInitializedData
-   */
-  bool receivesInitializedData() const override final
-  {
-    return _receivesInitializedData;
-  }
-
-  /**
    * @brief Adds newly computed time. Has to be called before every advance.
    * @param timeToAdd time to be added
    */
@@ -248,6 +230,8 @@ public:
    */
   virtual bool hasAnySendData() = 0;
 
+  virtual void determineInitialDataExchange() = 0;
+
 protected:
   /// Map that links DataID to CouplingData
   typedef std::map<int, PtrCouplingData> DataMap;
@@ -316,6 +300,24 @@ protected:
    * @brief Used to set flag after data has been received using receiveData().
    */
   void checkDataHasBeenReceived();
+
+  /**
+   * @brief Getter for _sendsInitializedData
+   * @returns _sendsInitializedData
+   */
+  bool sendsInitializedData() const
+  {
+    return _sendsInitializedData;
+  }
+
+  /**
+   * @brief Getter for _receivesInitializedData
+   * @returns _receivesInitializedData
+   */
+  bool receivesInitializedData() const
+  {
+    return _receivesInitializedData;
+  }
 
   /**
    * @brief Setter for _timeWindows
@@ -516,13 +518,6 @@ private:
   std::vector<ConvergenceMeasureContext> _convergenceMeasures;
 
   /// Functions needed for initialize()
-
-  /**
-   * @brief implements functionality for initialize in base class.
-   */
-  virtual void initializeImplementation() = 0;
-
-  /// Functions needed for initializeData()
 
   /**
    * @brief implements functionality for initializeData in base class.

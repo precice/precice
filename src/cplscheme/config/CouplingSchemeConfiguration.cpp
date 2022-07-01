@@ -1001,6 +1001,7 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
       PRECICE_ASSERT(_config.type == VALUE_MULTI);
     }
   }
+  scheme.determineInitialDataExchange();
 }
 
 void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
@@ -1033,6 +1034,7 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
       scheme.addDataToReceive(exchange.data, exchange.mesh, initialize, from);
     }
   }
+  scheme.determineInitialDataExchange();
 }
 
 void CouplingSchemeConfiguration::checkIfDataIsExchanged(

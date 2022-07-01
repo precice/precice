@@ -62,7 +62,6 @@ int main(int argc, char **argv)
   interface.setMeshVertices(meshID, numberOfVertices, vertices.data(), vertexIDs.data());
 
   double dt = interface.initialize();
-  interface.initializeData();
 
   while (interface.isCouplingOngoing()) {
 

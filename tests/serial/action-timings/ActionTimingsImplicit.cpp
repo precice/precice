@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(ActionTimingsImplicit)
     interface.markActionFulfilled(cowid);
   }
 
-  interface.initialize();
+  dt = interface.initialize();
   BOOST_TEST(dt == 1.0);
 
   if (context.isNamed("SolverOne")) {

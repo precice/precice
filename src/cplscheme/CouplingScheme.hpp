@@ -72,18 +72,6 @@ public:
   virtual bool isInitialized() const = 0;
 
   /**
-   * @brief Getter for _sendsInitializedData
-   * @returns _sendsInitializedData
-   */
-  virtual bool sendsInitializedData() const = 0;
-
-  /**
-   * @brief Getter for _receivesInitializedData
-   * @returns _receivesInitializedData
-   */
-  virtual bool receivesInitializedData() const = 0;
-
-  /**
    * @brief Initializes the data for first implicit coupling scheme iteration.
    *
    * Has to be called after initialize() and before advance().

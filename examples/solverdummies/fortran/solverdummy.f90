@@ -19,7 +19,7 @@ PROGRAM main
   CALL precicef_action_write_iter_checkp(writeItCheckp)
 
   WRITE (*,*) 'DUMMY: Starting Fortran solver dummy...'
-  
+
   CALL getarg(1, config)
   CALL getarg(2, participantName)
 
@@ -63,19 +63,17 @@ PROGRAM main
   CALL precicef_get_data_id(readDataName,meshID,readDataID)
   CALL precicef_get_data_id(writeDataName,meshID,writeDataID)
 
-  CALL precicef_initialize(dt)
-
   CALL precicef_is_action_required(writeInitialData, bool)
   IF (bool.EQ.1) THEN
     WRITE (*,*) 'DUMMY: Writing initial data'
   ENDIF
-  CALL precicef_initialize_data()
+  CALL precicef_initialize(dt)
 
   CALL precicef_is_coupling_ongoing(ongoing)
   DO WHILE (ongoing.NE.0)
-  
+
     CALL precicef_is_action_required(writeItCheckp, bool)
-    
+
     IF (bool.EQ.1) THEN
       WRITE (*,*) 'DUMMY: Writing iteration checkpoint'
       CALL precicef_mark_action_fulfilled(writeItCheckp)

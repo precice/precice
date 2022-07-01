@@ -447,9 +447,9 @@ private:
 
   /// Represents the various states a SolverInterface can be in.
   enum struct State {
-    Constructed,     // Initial state of SolverInterface
-    Initialized,     // SolverInterface.initialize() triggers transition from State::Constructed to State::Initialized; mandatory
-    Finalized        // SolverInterface.finalize() triggers transition form State::Initialized to State::Finalized; mandatory
+    Constructed, // Initial state of SolverInterface
+    Initialized, // SolverInterface.initialize() triggers transition from State::Constructed to State::Initialized; mandatory
+    Finalized    // SolverInterface.finalize() triggers transition form State::Initialized to State::Finalized; mandatory
   };
 
   /// Are experimental API calls allowed?

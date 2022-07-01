@@ -76,7 +76,6 @@ int main(int argc, char **argv)
   free(vertices);
 
   dt = precicec_initialize();
-  precicec_initialize_data();
 
   while (precicec_isCouplingOngoing()) {
 
