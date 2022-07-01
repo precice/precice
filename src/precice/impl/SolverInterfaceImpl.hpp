@@ -449,8 +449,7 @@ private:
   enum struct State {
     Constructed,     // Initial state of SolverInterface
     Initialized,     // SolverInterface.initialize() triggers transition from State::Constructed to State::Initialized; mandatory
-    InitializedData, // SolverInterface.initializeData()  triggers transition from State::Initialized to State::InitializedData; mandatory
-    Finalized        // SolverInterface.finalize() triggers transition form State::Initialized or State::InitializedData to State::Finalized; mandatory
+    Finalized        // SolverInterface.finalize() triggers transition form State::Initialized to State::Finalized; mandatory
   };
 
   /// Are experimental API calls allowed?

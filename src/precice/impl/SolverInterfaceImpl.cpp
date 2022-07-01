@@ -265,7 +265,6 @@ double SolverInterfaceImpl::initialize()
 {
   PRECICE_TRACE();
   PRECICE_CHECK(_state != State::Finalized, "initialize() cannot be called after finalize().")
-  PRECICE_CHECK(_state != State::InitializedData, "initialize() cannot be called after initializeData().")
   PRECICE_CHECK(_state != State::Initialized, "initialize() may only be called once.");
   PRECICE_ASSERT(not _couplingScheme->isInitialized());
   auto &solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
@@ -339,11 +338,6 @@ double SolverInterfaceImpl::initialize()
 
   _meshLock.lockAll();
 
-  _state = State::Initialized;
-
-  PRECICE_CHECK(_state != State::Finalized, "initializeData() cannot be called after finalize().")
-  PRECICE_CHECK(_state != State::InitializedData, "initializeData() may only be called once.");
-  PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before initializeData()");
   PRECICE_ASSERT(_couplingScheme->isInitialized());
   PRECICE_CHECK(not(_couplingScheme->sendsInitializedData() && isActionRequired(constants::actionWriteInitialData())),
                 "Initial data has to be written to preCICE by calling an appropriate write...Data() function before calling initializeData(). "
@@ -367,7 +361,7 @@ double SolverInterfaceImpl::initialize()
   _accessor->exportFinal();
   solverInitEvent.start(precice::syncMode);
 
-  _state = State::InitializedData;
+  _state = State::Initialized;
 
   return _couplingScheme->getNextTimestepMaxLength();
 }
@@ -392,7 +386,7 @@ double SolverInterfaceImpl::advance(
     PRECICE_WARN("initializeData() should be called before advance(). This will become mandatory in preCICE 3.0.0");
   }
   PRECICE_CHECK(_state != State::Finalized, "advance() cannot be called after finalize().")
-  PRECICE_CHECK(_state == State::InitializedData || _state == State::Initialized, "initializeData() has to be called before advance().")
+  PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before advance().")
   PRECICE_ASSERT(_couplingScheme->isInitialized());
   PRECICE_CHECK(isCouplingOngoing(), "advance() cannot be called when isCouplingOngoing() returns false.");
   PRECICE_CHECK(!math::equals(computedTimestepLength, 0.0), "advance() cannot be called with a timestep size of 0.");
@@ -481,7 +475,7 @@ void SolverInterfaceImpl::finalize()
   Event                    e("finalize"); // no precice::syncMode here as MPI is already finalized at destruction of this event
   utils::ScopedEventPrefix sep("finalize/");
 
-  if (_state == State::Initialized || _state == State::InitializedData) {
+  if (_state == State::Initialized) {
 
     PRECICE_ASSERT(_couplingScheme->isInitialized());
     PRECICE_DEBUG("Finalize coupling scheme");
@@ -581,7 +575,6 @@ void SolverInterfaceImpl::markActionFulfilled(
     const std::string &action)
 {
   PRECICE_TRACE(action);
-  PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before markActionFulfilled(...).");
   PRECICE_CHECK(_state != State::Finalized, "markActionFulfilled(...) cannot be called after finalize().");
   _couplingScheme->markActionFulfilled(action);
 }
@@ -673,10 +666,9 @@ int SolverInterfaceImpl::getMeshVertexSize(
   PRECICE_REQUIRE_MESH_USE(meshID);
   // In case we access received mesh data: check, if the requested mesh data has already been received.
   // Otherwise, the function call doesn't make any sense
-  PRECICE_CHECK((_state == State::Initialized) || (_state == State::InitializedData) || _accessor->isMeshProvided(meshID), "initialize() has to be called before accessing"
+  PRECICE_CHECK((_state == State::Initialized) || _accessor->isMeshProvided(meshID), "initialize() has to be called before accessing"
                                                                                                                            " data of the received mesh \"{}\" on participant \"{}\".",
                 _accessor->getMeshName(meshID), _accessor->getName());
-  // @todo: Only allowed when _state == State::Initialized? Also _state == State::InitializedData? Related to https://github.com/precice/precice/issues/1196
   MeshContext &context = _accessor->usedMeshContext(meshID);
   PRECICE_ASSERT(context.mesh.get() != nullptr);
   return context.mesh->vertices().size();
@@ -1731,7 +1723,7 @@ void SolverInterfaceImpl::setMeshAccessRegion(
   PRECICE_TRACE(meshID);
   PRECICE_REQUIRE_MESH_USE(meshID);
   PRECICE_CHECK(_state != State::Finalized, "setMeshAccessRegion() cannot be called after finalize().")
-  PRECICE_CHECK(_state != State::Initialized && _state != State::InitializedData, "setMeshAccessRegion() needs to be called before initialize().");
+  PRECICE_CHECK(_state != State::Initialized, "setMeshAccessRegion() needs to be called before initialize().");
   PRECICE_CHECK(!_accessRegionDefined, "setMeshAccessRegion may only be called once.");
   PRECICE_CHECK(boundingBox != nullptr, "setMeshAccessRegion was called with boundingBox == nullptr.");
 
@@ -1769,7 +1761,7 @@ void SolverInterfaceImpl::getMeshVerticesAndIDs(
   PRECICE_DEBUG("Get {} mesh vertices with IDs", size);
 
   // Check, if the requested mesh data has already been received. Otherwise, the function call doesn't make any sense
-  PRECICE_CHECK((_state == State::Initialized) || (_state == State::InitializedData) || _accessor->isMeshProvided(meshID), "initialize() has to be called before accessing"
+  PRECICE_CHECK((_state == State::Initialized) || _accessor->isMeshProvided(meshID), "initialize() has to be called before accessing"
                                                                                                                            " data of the received mesh \"{}\" on participant \"{}\".",
                 _accessor->getMeshName(meshID), _accessor->getName());
 
