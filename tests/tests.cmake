@@ -144,6 +144,7 @@ target_sources(testprecice
     tests/serial/stationary-mapping-with-solver-mesh/helpers.hpp
     tests/serial/three-solvers/ThreeSolversExplicitExplicit.cpp
     tests/serial/three-solvers/ThreeSolversExplicitImplicit.cpp
+    tests/serial/three-solvers/ThreeSolversFirstParticipant.cpp
     tests/serial/three-solvers/ThreeSolversImplicitExplicit.cpp
     tests/serial/three-solvers/ThreeSolversImplicitImplicit.cpp
     tests/serial/three-solvers/ThreeSolversParallel.cpp
@@ -151,6 +152,7 @@ target_sources(testprecice
     tests/serial/three-solvers/helpers.hpp
     tests/serial/time/explicit/compositional/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/explicit/parallel-coupling/ReadWriteScalarDataWithSubcycling.cpp
+    tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataFirstParticipant.cpp
     tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithWaveformSamplingFirst.cpp
@@ -159,6 +161,7 @@ target_sources(testprecice
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithWaveformSubcyclingFirst.cpp
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithWaveformSubcyclingMixed.cpp
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithWaveformSubcyclingZero.cpp
+    tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataFirstParticipant.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/watch-integral/WatchIntegralScaleAndNoScale.cpp
     tests/serial/watch-integral/helpers.cpp

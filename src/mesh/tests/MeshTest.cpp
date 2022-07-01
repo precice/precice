@@ -657,5 +657,215 @@ BOOST_AUTO_TEST_CASE(Integrate3DVectorData)
 
 BOOST_AUTO_TEST_SUITE_END() // Utils
 
+BOOST_AUTO_TEST_SUITE(VolumeIntegrals)
+
+struct UnitSquareFixture {
+  Eigen::Vector2d x0{0.0, 0.0};
+  Eigen::Vector2d x1{1.0, 0.0};
+  Eigen::Vector2d x2{1.0, 1.0};
+  Eigen::Vector2d x3{0.0, 1.0};
+};
+
+BOOST_FIXTURE_TEST_CASE(Integrate2DScalarDataVolume, UnitSquareFixture)
+{
+  PRECICE_TEST(1_rank);
+  PtrMesh mesh = std::make_shared<Mesh>("Mesh1", 2, testing::nextMeshID());
+  mesh->createData("Data", 1, 0_dataID);
+
+  auto &v1 = mesh->createVertex(x0);
+  auto &v2 = mesh->createVertex(x1);
+  auto &v3 = mesh->createVertex(x2);
+  auto &v4 = mesh->createVertex(x3);
+  mesh->allocateDataValues();
+
+  auto &e1 = mesh->createEdge(v1, v2);
+  auto &e2 = mesh->createEdge(v2, v3);
+  auto &e3 = mesh->createEdge(v3, v4);
+  auto &e4 = mesh->createEdge(v1, v4);
+  auto &e5 = mesh->createEdge(v1, v3);
+
+  // 2 triangles as halves of a unit square
+  mesh->createTriangle(e1, e2, e5);
+  mesh->createTriangle(e3, e4, e5);
+
+  BOOST_REQUIRE(mesh->triangles()[0].getArea() == 0.5);
+  BOOST_REQUIRE(mesh->triangles()[1].getArea() == 0.5);
+  BOOST_REQUIRE(mesh->triangles().size() == 2);
+
+  // Integrand is 1 + 4x + 2y integrated over unit square: 4
+  mesh->data(0)->values()(0) = 1.0;
+  mesh->data(0)->values()(1) = 3.0;
+  mesh->data(0)->values()(2) = 7.0;
+  mesh->data(0)->values()(3) = 5.0;
+
+  auto   result   = mesh::integrateVolume(mesh, mesh->data(0));
+  double expected = 4.0;
+  BOOST_REQUIRE(result.size() == 1);
+  BOOST_TEST(result(0) == expected);
+}
+
+BOOST_FIXTURE_TEST_CASE(Integrate2DVectorDataVolume, UnitSquareFixture)
+{
+  PRECICE_TEST(1_rank);
+  PtrMesh mesh = std::make_shared<Mesh>("Mesh1", 2, testing::nextMeshID());
+  mesh->createData("Data", 2, 0_dataID);
+
+  auto &v1 = mesh->createVertex(x0);
+  auto &v2 = mesh->createVertex(x1);
+  auto &v3 = mesh->createVertex(x2);
+  auto &v4 = mesh->createVertex(x3);
+  mesh->allocateDataValues();
+
+  auto &e1 = mesh->createEdge(v1, v2);
+  auto &e2 = mesh->createEdge(v2, v3);
+  auto &e3 = mesh->createEdge(v3, v4);
+  auto &e4 = mesh->createEdge(v1, v4);
+  auto &e5 = mesh->createEdge(v1, v3);
+
+  // 2 triangles as halves of a unit square
+  mesh->createTriangle(e1, e2, e5);
+  mesh->createTriangle(e3, e4, e5);
+
+  BOOST_REQUIRE(mesh->triangles()[0].getArea() == 0.5);
+  BOOST_REQUIRE(mesh->triangles()[1].getArea() == 0.5);
+  BOOST_REQUIRE(mesh->triangles().size() == 2);
+
+  // Integrand of 1st component is 1 + 4x + 2y integrated over unit square: 4
+  mesh->data(0)->values()(0) = 1.0;
+  mesh->data(0)->values()(2) = 3.0;
+  mesh->data(0)->values()(4) = 7.0;
+  mesh->data(0)->values()(6) = 5.0;
+  // Integrand of 1st component is 1 + 4x + 2y integrated over unit square: 4
+  mesh->data(0)->values()(1) = 2.0;
+  mesh->data(0)->values()(3) = 4.0;
+  mesh->data(0)->values()(5) = 8.0;
+  mesh->data(0)->values()(7) = 6.0;
+
+  auto            result = mesh::integrateVolume(mesh, mesh->data(0));
+  Eigen::Vector2d expected(4.0, 5.0);
+  BOOST_REQUIRE(result.size() == 2);
+  BOOST_TEST(result(0) == expected(0));
+  BOOST_TEST(result(1) == expected(1));
+}
+
+struct OneTetraFixture {
+  Eigen::Vector3d x1{0.0, 0.0, 0.0};
+  Eigen::Vector3d x2{1.0, 0.0, 0.0};
+  Eigen::Vector3d x3{0.0, 1.0, 0.0};
+  Eigen::Vector3d x4{0.0, 0.0, 1.0};
+};
+
+BOOST_FIXTURE_TEST_CASE(Integrate3DScalarDataVolume, OneTetraFixture)
+{
+  PRECICE_TEST(1_rank);
+  PtrMesh mesh = std::make_shared<Mesh>("Mesh1", 3, testing::nextMeshID());
+  mesh->createData("Data", 1, 0_dataID);
+
+  auto &v1 = mesh->createVertex(x1);
+  auto &v2 = mesh->createVertex(x2);
+  auto &v3 = mesh->createVertex(x3);
+  auto &v4 = mesh->createVertex(x4);
+
+  mesh->allocateDataValues();
+
+  mesh->createTetrahedron(v1, v2, v3, v4);
+
+  BOOST_REQUIRE(mesh->tetrahedra()[0].getVolume() == 1. / 6);
+  BOOST_REQUIRE(mesh->tetrahedra().size() == 1);
+
+  // Integrand is 1 + 2x + 4y + 6z integrated over one tetra
+  mesh->data(0)->values()(0) = 1.0;
+  mesh->data(0)->values()(1) = 3.0;
+  mesh->data(0)->values()(2) = 5.0;
+  mesh->data(0)->values()(3) = 7.0;
+
+  auto   result   = mesh::integrateVolume(mesh, mesh->data(0));
+  double expected = 4.0 / 6;
+  BOOST_REQUIRE(result.size() == 1);
+  BOOST_TEST(result(0) == expected);
+}
+
+BOOST_FIXTURE_TEST_CASE(Integrate3DVectorDataVolume, OneTetraFixture)
+{
+  PRECICE_TEST(1_rank);
+  PtrMesh mesh = std::make_shared<Mesh>("Mesh1", 3, testing::nextMeshID());
+  mesh->createData("Data", 3, 0_dataID);
+
+  auto &v1 = mesh->createVertex(x1);
+  auto &v2 = mesh->createVertex(x2);
+  auto &v3 = mesh->createVertex(x3);
+  auto &v4 = mesh->createVertex(x4);
+
+  mesh->allocateDataValues();
+
+  mesh->createTetrahedron(v1, v2, v3, v4);
+
+  BOOST_REQUIRE(mesh->tetrahedra()[0].getVolume() == 1. / 6);
+  BOOST_REQUIRE(mesh->tetrahedra().size() == 1);
+
+  // Integrand is (1 + 2x + 4y + 6z, 1, 1-x-y-z) integrated over one tetra
+  mesh->data(0)->values()(0 * 3) = 1.0;
+  mesh->data(0)->values()(1 * 3) = 3.0;
+  mesh->data(0)->values()(2 * 3) = 5.0;
+  mesh->data(0)->values()(3 * 3) = 7.0;
+
+  mesh->data(0)->values()(0 * 3 + 1) = 1.0;
+  mesh->data(0)->values()(1 * 3 + 1) = 1.0;
+  mesh->data(0)->values()(2 * 3 + 1) = 1.0;
+  mesh->data(0)->values()(3 * 3 + 1) = 1.0;
+
+  mesh->data(0)->values()(0 * 3 + 2) = 1.0;
+  mesh->data(0)->values()(1 * 3 + 2) = 0.0;
+  mesh->data(0)->values()(2 * 3 + 2) = 0.0;
+  mesh->data(0)->values()(3 * 3 + 2) = 0.0;
+
+  auto            result = mesh::integrateVolume(mesh, mesh->data(0));
+  Eigen::Vector3d expected(4.0 / 6, 1.0 / 6, 1.0 / 24);
+  BOOST_REQUIRE(result.size() == 3);
+  BOOST_TEST(result(0) == expected(0));
+  BOOST_TEST(result(1) == expected(1));
+  BOOST_TEST(result(2) == expected(2));
+}
+
+BOOST_AUTO_TEST_SUITE_END() // VolumeIntegrals
+
+BOOST_AUTO_TEST_CASE(AddMesh)
+{
+  PRECICE_TEST(1_rank);
+  PtrMesh globalMesh = std::make_shared<Mesh>("Mesh1", 3, testing::nextMeshID());
+  PtrMesh subMesh    = std::make_shared<Mesh>("Mesh2", 3, testing::nextMeshID());
+
+  // Fill globalMesh, then subMesh, then add and check the result is the sul
+  auto &v01 = globalMesh->createVertex(Eigen::Vector3d{0.0, 0.0, 0.0});
+  auto &v02 = globalMesh->createVertex(Eigen::Vector3d{1.0, 0.0, 0.0});
+  auto &v03 = globalMesh->createVertex(Eigen::Vector3d{0.0, 1.0, 0.0});
+  auto &v04 = globalMesh->createVertex(Eigen::Vector3d{0.0, 0.0, 1.0});
+
+  // Add some elements of all kind to global
+  globalMesh->createEdge(v01, v02);
+  globalMesh->createTriangle(v01, v02, v03);
+  globalMesh->createTetrahedron(v01, v02, v03, v04);
+
+  auto &v11 = subMesh->createVertex(Eigen::Vector3d{0.0, 0.0, 0.0});
+  auto &v12 = subMesh->createVertex(Eigen::Vector3d{2.0, 0.0, 0.0});
+  auto &v13 = subMesh->createVertex(Eigen::Vector3d{0.0, 4.0, 0.0});
+  auto &v14 = subMesh->createVertex(Eigen::Vector3d{0.0, 0.0, 3.0});
+  auto &v15 = subMesh->createVertex(Eigen::Vector3d{5.0, 0.0, 1.0});
+
+  // Add some elements of all kind to sub mesh
+  subMesh->createEdge(v11, v12);
+  subMesh->createEdge(v14, v15);
+  subMesh->createTriangle(v11, v13, v15);
+  subMesh->createTriangle(v11, v13, v14);
+  subMesh->createTetrahedron(v11, v12, v13, v14);
+  subMesh->createTetrahedron(v15, v12, v13, v14);
+
+  globalMesh->addMesh(*subMesh);
+  BOOST_TEST(globalMesh->vertices().size() == 9);
+  BOOST_TEST(globalMesh->edges().size() == 3);
+  BOOST_TEST(globalMesh->triangles().size() == 3);
+  BOOST_TEST(globalMesh->tetrahedra().size() == 3);
+}
+
 BOOST_AUTO_TEST_SUITE_END() // Mesh
 BOOST_AUTO_TEST_SUITE_END() // Mesh

@@ -49,6 +49,7 @@ target_sources(testprecice
     src/math/tests/BarycenterTest.cpp
     src/math/tests/DifferencesTest.cpp
     src/math/tests/GeometryTest.cpp
+    src/math/tests/MathTest.cpp
     src/mesh/tests/BoundingBoxTest.cpp
     src/mesh/tests/DataConfigurationTest.cpp
     src/mesh/tests/EdgeTest.cpp

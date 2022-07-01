@@ -34,7 +34,7 @@ using precice::testing::TestContext;
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
-BOOST_AUTO_TEST_SUITE(SerialGradientMappingTests)
+BOOST_AUTO_TEST_SUITE(MappingNearestNeighborGradient)
 
 // Read : NN & Vector - Write : NNG & Vector (Parallel Coupling Scheme)
 BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteVector)

@@ -59,6 +59,10 @@ private:
   void exportData(
       std::ofstream &   outFile,
       const mesh::Mesh &mesh);
+
+  void exportGradient(
+      std::ofstream &   outFile,
+      const mesh::Mesh &mesh);
 };
 
 } // namespace io
