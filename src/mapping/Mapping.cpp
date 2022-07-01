@@ -129,20 +129,14 @@ void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
   bool requiresTriangles = (spaceDimension == 2 and _couplingKind == CouplingKind::VOLUME) or (spaceDimension == 3 and _couplingKind == CouplingKind::SURFACE);
   bool requiresTetra     = (spaceDimension == 3 and _couplingKind == CouplingKind::VOLUME);
 
-  if (not input()->vertices().empty()) {
-    if ((requiresEdges and input()->edges().empty()) or
-        (requiresTriangles and input()->triangles().empty()) or (requiresTetra and input()->tetrahedra().empty())) {
-      PRECICE_ERROR("Connectivity information is missing for the mesh {}. "
-                    "Scaled consistent mapping requires connectivity information.",
-                    input()->getName());
-    }
-  }
-  if (not output()->vertices().empty()) {
-    if ((requiresEdges and output()->edges().empty()) or
-        (requiresTriangles and output()->triangles().empty()) or (requiresTetra and output()->tetrahedra().empty())) {
-      PRECICE_ERROR("Connectivity information is missing for the mesh {}. "
-                    "Scaled consistent mapping requires connectivity information.",
-                    output()->getName());
+  for (mesh::PtrMesh mesh : {input(), output()}) {
+    if (not mesh->vertices().empty()) {
+      if ((requiresEdges and mesh->edges().empty()) or
+          (requiresTriangles and mesh->triangles().empty()) or (requiresTetra and mesh->tetrahedra().empty())) {
+        PRECICE_ERROR("Connectivity information is missing for the mesh {}. "
+                      "Scaled consistent mapping requires connectivity information.",
+                      mesh->getName());
+      }
     }
   }
 
