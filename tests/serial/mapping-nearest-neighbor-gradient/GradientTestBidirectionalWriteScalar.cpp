@@ -52,11 +52,11 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteScalar)
     int      meshOneID = cplInterface.getMeshID("MeshOne");
     Vector3d vec1      = Vector3d::Constant(0.1);
     cplInterface.setMeshVertex(meshOneID, vec1.data());
-    int    dataAID = cplInterface.getDataID("DataOne", meshOneID);
-    int    dataBID = cplInterface.getDataID("DataTwo", meshOneID);
+    int dataAID = cplInterface.getDataID("DataOne", meshOneID);
+    int dataBID = cplInterface.getDataID("DataTwo", meshOneID);
 
     double valueDataB = 0.0;
-    double maxDt   = cplInterface.initialize();
+    double maxDt      = cplInterface.initialize();
     cplInterface.readScalarData(dataBID, 0, valueDataB);
     BOOST_TEST(1.3 == valueDataB);
 
@@ -76,8 +76,8 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteScalar)
     Vector3d vec2      = Vector3d::Constant(0.0);
     cplInterface.setMeshVertex(meshTwoID, vec2.data());
 
-    int    dataAID = cplInterface.getDataID("DataOne", meshTwoID);
-    int    dataBID = cplInterface.getDataID("DataTwo", meshTwoID);
+    int dataAID = cplInterface.getDataID("DataOne", meshTwoID);
+    int dataBID = cplInterface.getDataID("DataTwo", meshTwoID);
 
     double   valueDataB = 1.0;
     Vector3d valueGradDataB(1.0, 1.0, 1.0);
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteScalar)
 
     //tell preCICE that data has been written and call initializeData
     cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
-    double maxDt   = cplInterface.initialize();
+    double maxDt = cplInterface.initialize();
 
     Vector3d valueDataA;
     cplInterface.readVectorData(dataAID, 0, valueDataA.data());

@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(Implicit)
   std::vector<double> vertex(dimensions, 0);
   int                 vertexID = couplingInterface.setMeshVertex(meshID, vertex.data());
 
-  double dt = 0;
+  double              dt = 0;
   std::vector<double> writeData(dimensions, writeValue);
   std::vector<double> readData(dimensions, -1);
   const std::string & cowid = actionWriteInitialData();
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(Implicit)
     couplingInterface.markActionFulfilled(cowid);
   }
 
-  dt        = couplingInterface.initialize();
+  dt = couplingInterface.initialize();
 
   while (couplingInterface.isCouplingOngoing()) {
     if (couplingInterface.isActionRequired(actionWriteIterationCheckpoint())) {

@@ -61,14 +61,14 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingZero)
   int    nWindows   = 5; // perform 5 windows.
   int    timewindow = 0;
   int    timewindowCheckpoint;
-  double time      = 0;
+  double time = 0;
   if (precice.isActionRequired(precice::constants::actionWriteInitialData())) {
     writeData = writeFunction(time);
     precice.writeScalarData(writeDataID, vertexID, writeData);
     precice.markActionFulfilled(precice::constants::actionWriteInitialData());
   }
 
-  double maxDt      = precice.initialize();
+  double maxDt     = precice.initialize();
   double dt        = maxDt; // Timestep length desired by solver
   double currentDt = dt;    // Timestep length used by solver
   double timeCheckpoint;

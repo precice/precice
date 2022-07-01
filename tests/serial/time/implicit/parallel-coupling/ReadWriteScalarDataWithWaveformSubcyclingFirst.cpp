@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
   int    nWindows  = 5; // perform 5 windows.
   int    timestep  = 0;
   int    timestepCheckpoint;
-  double time      = 0;
+  double time = 0;
 
   if (precice.isActionRequired(precice::constants::actionWriteInitialData())) {
     writeData = writeFunction(time);
@@ -71,9 +71,9 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
     precice.markActionFulfilled(precice::constants::actionWriteInitialData());
   }
 
-  double maxDt     = precice.initialize();
-  double windowDt  = maxDt;
-  double dt = windowDt / nSubsteps;       // Timestep length desired by solver. E.g. 4 steps  with size 1/4
+  double maxDt    = precice.initialize();
+  double windowDt = maxDt;
+  double dt       = windowDt / nSubsteps; // Timestep length desired by solver. E.g. 4 steps  with size 1/4
   dt += windowDt / nSubsteps / nSubsteps; // increase timestep such that we get a non-matching subcycling. E.g. 3 step with size 5/16 and 1 step with size 1/16.
   double currentDt = dt;                  // Timestep length used by solver
   double timeCheckpoint;

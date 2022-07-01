@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
   int    windowStartStep = 0;
   int    nSamples        = 4;
   int    iterations      = 0;
-  double time = 0;
+  double time            = 0;
 
   if (precice.isActionRequired(precice::constants::actionWriteInitialData())) {
     writeData = writeFunction(time);
@@ -71,11 +71,11 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
     precice.markActionFulfilled(precice::constants::actionWriteInitialData());
   }
 
-  double maxDt           = precice.initialize();
-  double windowDt        = maxDt;
-  double dt              = maxDt; // Timestep length desired by solver
-  double currentDt       = dt;    // Timestep length used by solver
-  double sampleDts[4]    = {0.0, dt / 4.0, dt / 2.0, 3.0 * dt / 4.0};
+  double maxDt        = precice.initialize();
+  double windowDt     = maxDt;
+  double dt           = maxDt; // Timestep length desired by solver
+  double currentDt    = dt;    // Timestep length used by solver
+  double sampleDts[4] = {0.0, dt / 4.0, dt / 2.0, 3.0 * dt / 4.0};
   double readTime; // time where we are reading
   double sampleDt; // dt relative to timestep start, where we are sampling
 

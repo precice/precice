@@ -57,11 +57,11 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
   double   writeData, readData;
   VertexID vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
 
-  int    nSubsteps = 4; // perform subcycling on solvers. 4 steps happen in each window.
-  int    nWindows  = 5; // perform 5 windows.
-  int    timestep      = 0;
-  int    timewindow    = 0;
-  double time = 0;
+  int    nSubsteps  = 4; // perform subcycling on solvers. 4 steps happen in each window.
+  int    nWindows   = 5; // perform 5 windows.
+  int    timestep   = 0;
+  int    timewindow = 0;
+  double time       = 0;
 
   if (precice.isActionRequired(precice::constants::actionWriteInitialData())) {
     writeData = writeFunction(time);
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     precice.markActionFulfilled(precice::constants::actionWriteInitialData());
   }
 
-  double maxDt     = precice.initialize();
+  double maxDt = precice.initialize();
   BOOST_TEST(maxDt == 2.0); // use window size != 1.0 to be able to detect more possible bugs
   double windowDt      = maxDt;
   double dt            = windowDt / (nSubsteps - 0.5);                 // Solver always tries to do a timestep of fixed size.
