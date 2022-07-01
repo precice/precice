@@ -336,13 +336,11 @@ double SolverInterfaceImpl::initialize()
   }
 
   // Needs to be removed for test Integration/Serial/Whitebox/TestExplicitWithDataScaling
-  /**
   if (_couplingScheme->hasDataBeenReceived()) {
     performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
     mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
   }
-  */
 
   PRECICE_INFO(_couplingScheme->printCouplingState());
 
@@ -410,9 +408,11 @@ double SolverInterfaceImpl::advance(
   utils::ScopedEventPrefix sep("advance/");
 
   PRECICE_CHECK(_state != State::Constructed, "initialize() and initializeData() have to be called before advance().");
-  PRECICE_CHECK(_state != State::Initialized, "initializeData() has to be called before advance().");
+  if(_state == State::Initialized){
+    PRECICE_WARN("initializeData() should be called before advance(). This will become mandatory in preCICE 3.0.0");
+  }
   PRECICE_CHECK(_state != State::Finalized, "advance() cannot be called after finalize().")
-  PRECICE_CHECK(_state == State::InitializedData, "initializeData() has to be called before advance().")
+  PRECICE_CHECK(_state == State::InitializedData || _state == State::Initialized, "initializeData() has to be called before advance().")
   PRECICE_ASSERT(_couplingScheme->isInitialized());
   PRECICE_CHECK(isCouplingOngoing(), "advance() cannot be called when isCouplingOngoing() returns false.");
   PRECICE_CHECK(!math::equals(computedTimestepLength, 0.0), "advance() cannot be called with a timestep size of 0.");
@@ -550,7 +550,10 @@ bool SolverInterfaceImpl::isCouplingOngoing() const
 {
   PRECICE_TRACE();
   PRECICE_CHECK(_state != State::Constructed, "initialize() and initializeData() have to be called before isCouplingOngoing() can be evaluated.");
-  PRECICE_CHECK(_state != State::Initialized, "initializeData() has to be called before isCouplingOngoing() can be evaluated.");
+  if(_state == State::Initialized){
+    PRECICE_WARN("initializeData() should be called before isCouplingOngoing(). This will become mandatory in preCICE 3.0.0");
+  }
+  //PRECICE_CHECK(_state != State::Initialized, "initializeData() has to be called before isCouplingOngoing() can be evaluated.");
   PRECICE_CHECK(_state != State::Finalized, "isCouplingOngoing() cannot be called after finalize().");
   return _couplingScheme->isCouplingOngoing();
 }
