@@ -1885,9 +1885,8 @@ BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC6)
 }
 #undef doLocalCode
 
-BOOST_AUTO_TEST_CASE(DeadAxis2)
+void testDeadAxis2d(Polynomial polynomial, Mapping::Constraint constraint)
 {
-  PRECICE_TEST(1_rank);
   using Eigen::Vector2d;
   int dimensions = 2;
 
@@ -1896,8 +1895,8 @@ BOOST_AUTO_TEST_CASE(DeadAxis2)
   bool zDead = false;
 
   ThinPlateSplines                        fct;
-  RadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, dimensions, fct,
-                                                  {{xDead, yDead, zDead}}, Polynomial::ON);
+  RadialBasisFctMapping<ThinPlateSplines> mapping(constraint, dimensions, fct,
+                                                  {{xDead, yDead, zDead}}, polynomial);
 
   // Create mesh to map from
   mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
@@ -1918,7 +1917,10 @@ BOOST_AUTO_TEST_CASE(DeadAxis2)
   mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
   mesh::PtrData outData   = outMesh->createData("OutData", 1, 1_dataID);
   int           outDataID = outData->getID();
-  mesh::Vertex &vertex    = outMesh->createVertex(Vector2d(0, 0));
+  outMesh->createVertex(Vector2d(0, 1.));
+  outMesh->createVertex(Vector2d(3, 1.));
+  outMesh->createVertex(Vector2d(1.3, 1.));
+  outMesh->createVertex(Vector2d(5, 1.));
   outMesh->allocateDataValues();
   addGlobalIndex(outMesh);
   outMesh->setGlobalNumberOfVertices(outMesh->vertices().size());
@@ -1927,17 +1929,25 @@ BOOST_AUTO_TEST_CASE(DeadAxis2)
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
-  vertex.setCoords(Vector2d(0.0, 3.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  double value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(value == 1.0);
+  if (constraint == Mapping::CONSISTENT) {
+    BOOST_TEST(outData->values()(0) == 1.0);
+    BOOST_TEST(outData->values()(1) == 1.0);
+  } else {
+    if (polynomial == Polynomial::OFF) {
+      BOOST_TEST(testing::equals(outData->values()(1), 1.84711, 1e-5));
+    } else if (polynomial == Polynomial::SEPARATE) {
+      BOOST_TEST(testing::equals(outData->values()(1), 1.8236736422730249, 1e-5));
+    } else {
+      BOOST_TEST(testing::equals(outData->values()(1), 1.75872, 1e-5));
+    }
+  }
 }
 
-BOOST_AUTO_TEST_CASE(DeadAxis3D)
+void testDeadAxis3d(Polynomial polynomial, Mapping::Constraint constraint)
 {
-  PRECICE_TEST(1_rank);
   using Eigen::Vector3d;
   int dimensions = 3;
 
@@ -1947,7 +1957,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis3D)
   bool                yDead = true;
   bool                zDead = false;
   using Mapping             = RadialBasisFctMapping<CompactPolynomialC6>;
-  Mapping mapping(Mapping::CONSISTENT, dimensions, fct, {{xDead, yDead, zDead}}, Polynomial::ON);
+  Mapping mapping(constraint, dimensions, fct, {{xDead, yDead, zDead}}, polynomial);
 
   // Create mesh to map from
   mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
@@ -1984,10 +1994,66 @@ BOOST_AUTO_TEST_CASE(DeadAxis3D)
   mapping.map(inDataID, outDataID);
   BOOST_TEST(mapping.hasComputedMapping() == true);
 
-  BOOST_TEST(outData->values()(0) == 1.0);
-  BOOST_TEST(outData->values()(1) == 2.0);
-  BOOST_TEST(outData->values()(2) == 2.9);
-  BOOST_TEST(outData->values()(3) == 4.3);
+  if (constraint == Mapping::CONSISTENT) {
+    if (polynomial == Polynomial::OFF) {
+      const double tolerance = 1e-7;
+      BOOST_TEST(outData->values()(0) == 1.0);
+      BOOST_TEST(testing::equals(outData->values()(1), 1.3748492889679291, tolerance));
+      BOOST_TEST(testing::equals(outData->values()(2), 2.5792185793798259, tolerance));
+      BOOST_TEST(testing::equals(outData->values()(3), 3.4359264424719909, tolerance));
+    } else {
+      BOOST_TEST(outData->values()(0) == 1.0);
+      BOOST_TEST(outData->values()(1) == 2.0);
+      BOOST_TEST(outData->values()(2) == 2.9);
+      BOOST_TEST(outData->values()(3) == 4.3);
+    }
+  } else {
+    if (polynomial == Polynomial::OFF) {
+      const double tolerance = 1e-6;
+      BOOST_TEST(testing::equals(outData->values()(0), 0.99389766786029266, tolerance));
+      BOOST_TEST(testing::equals(outData->values()(1), 1.3712650835377997, tolerance));
+      BOOST_TEST(testing::equals(outData->values()(2), 2.5788300620613707, tolerance));
+      BOOST_TEST(testing::equals(outData->values()(3), 3.4360021036816577, tolerance));
+    } else {
+      const double tolerance = 1e-3;
+      BOOST_TEST(testing::equals(outData->values()(0), 1.4121699119041766, tolerance));
+      BOOST_TEST(testing::equals(outData->values()(1), 1.8694579548131118, tolerance));
+      BOOST_TEST(testing::equals(outData->values()(2), 2.8858741391091303, tolerance));
+      BOOST_TEST(testing::equals(outData->values()(3), 3.8325964228212386, tolerance));
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(DeadAxis2Consistent)
+{
+  PRECICE_TEST(1_rank);
+  testDeadAxis2d(Polynomial::ON, Mapping::CONSISTENT);
+  // testDeadAxis2d(Polynomial::OFF, Mapping::CONSISTENT);
+  testDeadAxis2d(Polynomial::SEPARATE, Mapping::CONSISTENT);
+}
+
+BOOST_AUTO_TEST_CASE(DeadAxis3DConsistent)
+{
+  PRECICE_TEST(1_rank);
+  testDeadAxis3d(Polynomial::ON, Mapping::CONSISTENT);
+  testDeadAxis3d(Polynomial::OFF, Mapping::CONSISTENT);
+  testDeadAxis3d(Polynomial::SEPARATE, Mapping::CONSISTENT);
+}
+
+BOOST_AUTO_TEST_CASE(DeadAxis2Conservative)
+{
+  PRECICE_TEST(1_rank);
+  testDeadAxis2d(Polynomial::ON, Mapping::CONSERVATIVE);
+  testDeadAxis2d(Polynomial::OFF, Mapping::CONSERVATIVE);
+  testDeadAxis2d(Polynomial::SEPARATE, Mapping::CONSERVATIVE);
+}
+
+BOOST_AUTO_TEST_CASE(DeadAxis3DConervative)
+{
+  PRECICE_TEST(1_rank);
+  testDeadAxis3d(Polynomial::ON, Mapping::CONSERVATIVE);
+  testDeadAxis3d(Polynomial::OFF, Mapping::CONSERVATIVE);
+  testDeadAxis3d(Polynomial::SEPARATE, Mapping::CONSERVATIVE);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Serial
