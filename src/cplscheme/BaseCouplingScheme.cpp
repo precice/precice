@@ -128,7 +128,7 @@ void BaseCouplingScheme::finalize()
   PRECICE_TRACE();
   checkCompletenessRequiredActions();
   PRECICE_ASSERT(_isInitialized, "Called finalize() before initialize().");
-  if(not _initializeDataHasBeenCalled){
+  if (not _initializeDataHasBeenCalled) {
     PRECICE_WARN("initializeData() should be called before finalize(). This will become mandatory in preCICE 3.0.0.");
   }
 }
