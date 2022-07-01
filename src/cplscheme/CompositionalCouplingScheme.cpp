@@ -41,14 +41,6 @@ bool CompositionalCouplingScheme::isInitialized() const
   return isInitialized;
 }
 
-void CompositionalCouplingScheme::initializeData()
-{
-  PRECICE_TRACE();
-  for (const Scheme &scheme : _couplingSchemes) {
-    scheme.scheme->initializeData();
-  }
-}
-
 void CompositionalCouplingScheme::addComputedTime(double timeToAdd)
 {
   PRECICE_TRACE(timeToAdd);

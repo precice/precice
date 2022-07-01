@@ -137,8 +137,9 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   PRECICE_ASSERT(not isInitialized());
   PRECICE_ASSERT(math::greaterEquals(startTime, 0.0), startTime);
   PRECICE_ASSERT(startTimeWindow >= 0, startTimeWindow);
-  _time        = startTime;
-  _timeWindows = startTimeWindow;
+  _time                = startTime;
+  _timeWindows         = startTimeWindow;
+  _hasDataBeenReceived = false;
 
   if (isImplicitCouplingScheme()) {
     if (not doesFirstStep()) {
@@ -152,16 +153,6 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
     initializeTXTWriters();
   }
 
-  _isInitialized = true;
-}
-
-void BaseCouplingScheme::initializeData()
-{
-  // InitializeData uses the template method pattern (https://en.wikipedia.org/wiki/Template_method_pattern).
-  PRECICE_TRACE("initializeData()");
-
-  _hasDataBeenReceived = false;
-
   if (isImplicitCouplingScheme()) {
     storeIteration();
   }
@@ -174,6 +165,8 @@ void BaseCouplingScheme::initializeData()
       moveToNextWindow();
     }
   }
+
+  _isInitialized = true;
 }
 
 void BaseCouplingScheme::advance()

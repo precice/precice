@@ -100,7 +100,6 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
 
     if (participantName == std::string("Participant0")) {
       cplScheme->initialize(0.0, 1);
-      cplScheme->initializeData();
       BOOST_TEST(not cplScheme->hasDataBeenReceived());
       BOOST_TEST(not cplScheme->isTimeWindowComplete());
       BOOST_TEST(cplScheme->isCouplingOngoing());
@@ -129,7 +128,6 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
       BOOST_TEST(cplScheme->getNextTimestepMaxLength() > 0.0); // ??
     } else if (participantName == std::string("Participant1")) {
       cplScheme->initialize(0.0, 1);
-      cplScheme->initializeData();
       BOOST_TEST(cplScheme->hasDataBeenReceived());
       BOOST_TEST(not cplScheme->isTimeWindowComplete());
       BOOST_TEST(cplScheme->isCouplingOngoing());
@@ -159,7 +157,6 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
     } else {
       BOOST_TEST(participantName == std::string("Participant2"), participantName);
       cplScheme->initialize(0.0, 1);
-      cplScheme->initializeData();
       BOOST_TEST(cplScheme->hasDataBeenReceived());
       BOOST_TEST(not cplScheme->isTimeWindowComplete());
       BOOST_TEST(cplScheme->isCouplingOngoing());
@@ -222,7 +219,6 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1)
   CompositionalCouplingScheme composition;
   composition.addCouplingScheme(scheme);
   composition.initialize(0.0, 1);
-  composition.initializeData();
   int advances = 0;
   while (composition.isCouplingOngoing()) {
     composition.advance();
@@ -245,7 +241,6 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit1)
   CompositionalCouplingScheme composition;
   composition.addCouplingScheme(scheme);
   composition.initialize(0.0, 1);
-  composition.initializeData();
   int advances = 0;
   while (composition.isCouplingOngoing()) {
     composition.advance();
@@ -273,7 +268,6 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit2)
   composition.addCouplingScheme(scheme1);
   composition.addCouplingScheme(scheme2);
   composition.initialize(0.0, 1);
-  composition.initializeData();
   int advances = 0;
   while (composition.isCouplingOngoing()) {
     composition.advance();
@@ -305,7 +299,6 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit3)
   composition.addCouplingScheme(scheme2);
   composition.addCouplingScheme(scheme3);
   composition.initialize(0.0, 1);
-  composition.initializeData();
   int advances = 0;
   while (composition.isCouplingOngoing()) {
     composition.advance();
@@ -335,7 +328,6 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2)
   composition.addCouplingScheme(scheme1);
   composition.addCouplingScheme(scheme2);
   composition.initialize(0.0, 1);
-  composition.initializeData();
   int advances = 0;
   while (composition.isCouplingOngoing()) {
     composition.advance();
@@ -370,7 +362,6 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2DiffIteration)
   composition.addCouplingScheme(scheme1);
   composition.addCouplingScheme(scheme2);
   composition.initialize(0.0, 1);
-  composition.initializeData();
   int advances = 0;
   while (composition.isCouplingOngoing()) {
     composition.advance();
@@ -409,7 +400,6 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit3)
   composition.addCouplingScheme(scheme2);
   composition.addCouplingScheme(scheme3);
   composition.initialize(0.0, 1);
-  composition.initializeData();
   int advances = 0;
   while (composition.isCouplingOngoing()) {
     composition.advance();
@@ -450,7 +440,6 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit3DiffIteration)
   composition.addCouplingScheme(scheme2);
   composition.addCouplingScheme(scheme3);
   composition.initialize(0.0, 1);
-  composition.initializeData();
   int advances = 0;
   while (composition.isCouplingOngoing()) {
     composition.advance();
@@ -496,7 +485,6 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit2)
   composition.addCouplingScheme(scheme1);
   composition.addCouplingScheme(scheme2);
   composition.initialize(0.0, 1);
-  composition.initializeData();
   int advances = 0;
   while (composition.isCouplingOngoing()) {
     composition.advance();
@@ -531,7 +519,6 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2Explicit1)
   composition.addCouplingScheme(scheme1);
   composition.addCouplingScheme(scheme2);
   composition.initialize(0.0, 1);
-  composition.initializeData();
   int advances = 0;
   while (composition.isCouplingOngoing()) {
     composition.advance();
@@ -568,7 +555,6 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit3)
   composition.addCouplingScheme(scheme1);
   composition.addCouplingScheme(scheme2);
   composition.initialize(0.0, 1);
-  composition.initializeData();
   int advances = 0;
   while (composition.isCouplingOngoing()) {
     composition.advance();
@@ -603,7 +589,6 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit3Explicit1)
   composition.addCouplingScheme(scheme1);
   composition.addCouplingScheme(scheme2);
   composition.initialize(0.0, 1);
-  composition.initializeData();
   int advances = 0;
   while (composition.isCouplingOngoing()) {
     composition.advance();
@@ -640,7 +625,6 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit2Implicit2)
   composition.addCouplingScheme(scheme2);
   composition.addCouplingScheme(scheme3);
   composition.initialize(0.0, 1);
-  composition.initializeData();
   int advances = 0;
   while (composition.isCouplingOngoing()) {
     composition.advance();
@@ -681,7 +665,6 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit2Implicit3)
   composition.addCouplingScheme(scheme2);
   composition.addCouplingScheme(scheme3);
   composition.initialize(0.0, 1);
-  composition.initializeData();
   int advances = 0;
   while (composition.isCouplingOngoing()) {
     composition.advance();
@@ -725,7 +708,6 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2Implicit2Explicit1)
   composition.addCouplingScheme(scheme2);
   composition.addCouplingScheme(scheme3);
   composition.initialize(0.0, 1);
-  composition.initializeData();
   int advances = 0;
   while (composition.isCouplingOngoing()) {
     composition.advance();
@@ -770,7 +752,6 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2Implicit2Explicit1DiffIt
   composition.addCouplingScheme(scheme2);
   composition.addCouplingScheme(scheme3);
   composition.initialize(0.0, 1);
-  composition.initializeData();
   int advances = 0;
   while (composition.isCouplingOngoing()) {
     composition.advance();
@@ -820,7 +801,6 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionUntitled) /// @todo give a better
   composition.addCouplingScheme(scheme2);
   composition.addCouplingScheme(scheme3);
   composition.initialize(0.0, 1);
-  composition.initializeData();
   int advances = 0;
   while (composition.isCouplingOngoing()) {
     composition.advance();

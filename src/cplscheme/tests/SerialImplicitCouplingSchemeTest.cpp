@@ -74,7 +74,6 @@ void runCoupling(
 
   if (nameParticipant == nameParticipant0) {
     cplScheme.initialize(0.0, 1);
-    cplScheme.initializeData();
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
     BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
@@ -139,7 +138,6 @@ void runCoupling(
     BOOST_TEST(testing::equals(computedTimesteps, 3));
   } else if (nameParticipant == nameParticipant1) {
     cplScheme.initialize(0.0, 1);
-    cplScheme.initializeData();
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
     BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
@@ -239,7 +237,6 @@ void runCouplingWithSubcycling(
   if (nameParticipant == nameParticipant0) {
     iterationCount++; // different handling due to subcycling
     cplScheme.initialize(0.0, 1);
-    cplScheme.initializeData();
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
     BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
@@ -319,7 +316,6 @@ void runCouplingWithSubcycling(
   else if (nameParticipant == nameParticipant1) {
     iterationCount++; // different handling due to subcycling
     cplScheme.initialize(0.0, 1);
-    cplScheme.initializeData();
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
     BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
@@ -687,7 +683,6 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
 
   cplScheme.initialize(0.0, 1);
-  cplScheme.initializeData();
 
   Eigen::VectorXd v(1); // buffer for data
 
@@ -887,8 +882,6 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
 
-  cplScheme.initialize(0.0, 1);
-
   Eigen::VectorXd v(1); // buffer for data
 
   // ensure that data is uninitialized
@@ -909,7 +902,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
     BOOST_TEST(testing::equals(mesh->data(sendDataIndex)->values()(0), 4.0));
   }
 
-  cplScheme.initializeData();
+  cplScheme.initialize(0.0, 1);
 
   if (context.isNamed(first)) {
     // first participant receives initial data = 4 (see above)
@@ -1131,7 +1124,6 @@ BOOST_AUTO_TEST_CASE(SecondOrderWithAcceleration)
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
 
   cplScheme.initialize(0.0, 1);
-  cplScheme.initializeData();
 
   Eigen::VectorXd v(1); // buffer for data
 
@@ -1599,8 +1591,6 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
 
-  cplScheme.initialize(0.0, 1);
-
   if (context.isNamed(nameParticipant0)) {
     // ensure that read data is uninitialized
     BOOST_TEST(receiveCouplingData->values().size() == 3);
@@ -1614,7 +1604,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(testing::equals(sendCouplingData->previousIteration()(0), 0.0));
 
     BOOST_TEST(Fixture::isImplicitCouplingScheme(cplScheme));
-    cplScheme.initializeData();
+    cplScheme.initialize(0.0, 1);
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     // ensure that initial data was read
     BOOST_TEST(receiveCouplingData->values().size() == 3);
@@ -1654,7 +1644,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(testing::equals(sendCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
     BOOST_TEST(sendCouplingData->previousIteration().size() == 3); // here, previousIteration is correctly initialized, see above
     BOOST_TEST(testing::equals(sendCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
-    cplScheme.initializeData();
+    cplScheme.initialize(0.0, 1);
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(receiveCouplingData->values().size() == 1);
     BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 4.0));

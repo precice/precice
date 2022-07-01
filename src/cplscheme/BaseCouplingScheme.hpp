@@ -102,7 +102,7 @@ public:
 
   /**
    * @brief getter for _hasInitialDataBeenReceived
-   * @returns true, if data has been received in call of initializeData().
+   * @returns true, if data has been received in call of initialize().
    */
   bool hasInitialDataBeenReceived() const override final;
 
@@ -191,14 +191,6 @@ public:
    * @param[in] startTimeWindow starting counter of time window, from which coupling scheme starts
    */
   void initialize(double startTime, int startTimeWindow) override final;
-
-  /**
-   * @brief Initializes data with written values.
-   *
-   * @pre initialize() has been called.
-   * @pre advance() has NOT yet been called.
-   */
-  void initializeData() override final;
 
   /**
    * @brief Advances the coupling scheme.

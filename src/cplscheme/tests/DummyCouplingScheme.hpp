@@ -49,11 +49,6 @@ public:
   /**
    * @brief Not implemented.
    */
-  void initializeData() override final;
-
-  /**
-   * @brief Not implemented.
-   */
   void addComputedTime(double timeToAdd) override final
   { /* Do nothing */
   }
@@ -227,9 +222,6 @@ private:
 
   /// @brief True, if initialize has been called.
   bool _isInitialized = false;
-
-  /// @brief True, if initializeData has been called.
-  bool _initializeDataHasBeenCalled = false;
 
   /// @brief True, if timesteps are left to be performed.
   bool _isOngoing = false;

@@ -327,17 +327,9 @@ double SolverInterfaceImpl::initialize()
   double time       = 0.0;
   int    timeWindow = 1;
 
-  PRECICE_DEBUG("Initialize coupling schemes");
-  _couplingScheme->initialize(time, timeWindow);
-  PRECICE_ASSERT(_couplingScheme->isInitialized());
-
   for (auto &context : _accessor->readDataContexts()) {
     context.initializeWaveform();
   }
-
-  PRECICE_INFO(_couplingScheme->printCouplingState());
-
-  solverInitEvent.start(precice::syncMode);
 
   _meshLock.lockAll();
 
@@ -347,7 +339,8 @@ double SolverInterfaceImpl::initialize()
   mapWrittenData();
   performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
 
-  _couplingScheme->initializeData();
+  PRECICE_DEBUG("Initialize coupling schemes");
+  _couplingScheme->initialize(time, timeWindow);
   dt = _couplingScheme->getNextTimestepMaxLength(); // can change, if second participant and participant-first method for setting time window size is used.
 
   if (_couplingScheme->hasDataBeenReceived()) {
@@ -361,6 +354,7 @@ double SolverInterfaceImpl::initialize()
   solverInitEvent.start(precice::syncMode);
 
   _state = State::Initialized;
+  PRECICE_INFO(_couplingScheme->printCouplingState());
 
   return dt;
 }
