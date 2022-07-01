@@ -62,7 +62,6 @@ void testMappingNearestProjection(bool defineEdgesExplicitly, const std::string 
 
     // Initialize, thus sending the mesh.
     double maxDt = interface.initialize();
-    interface.initializeData();
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant should have to advance once!");
 
     // Write the data to be send.
@@ -91,7 +90,6 @@ void testMappingNearestProjection(bool defineEdgesExplicitly, const std::string 
 
     // Initialize, thus receive the data and map.
     double maxDt = interface.initialize();
-    interface.initializeData();
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant should have to advance once!");
 
     // Read the mapped data from the mesh.
@@ -171,7 +169,6 @@ void testQuadMappingNearestProjection(bool defineEdgesExplicitly, const std::str
 
     // Initialize, thus sending the mesh.
     double maxDt = interface.initialize();
-    interface.initializeData();
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant should have to advance once!");
 
     // Write the data to be send.
@@ -198,7 +195,6 @@ void testQuadMappingNearestProjection(bool defineEdgesExplicitly, const std::str
 
     // Initialize, thus receive the data and map.
     double maxDt = interface.initialize();
-    interface.initializeData();
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant should have to advance once!");
 
     // Read the mapped data from the mesh.

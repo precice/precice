@@ -56,7 +56,6 @@ BOOST_AUTO_TEST_CASE(ExplicitAndMapping)
     const std::vector<double> expectedData = {0.0, 0.0, 0.0, 0.05, 0.1, 0.1, 0.1, 0.0, 0.5, 0.5};
     BOOST_TEST(solverTwoMesh == expectedData);
 
-    interface.initializeData();
     while (interface.isCouplingOngoing()) {
       // Write data
       interface.writeBlockScalarData(writeDataID, otherMeshSize,
@@ -87,7 +86,6 @@ BOOST_AUTO_TEST_CASE(ExplicitAndMapping)
 
     // Initialize
     double dt = interface.initialize();
-    interface.initializeData();
     while (interface.isCouplingOngoing()) {
 
       interface.writeBlockScalarData(writeDataID, ids.size(),

@@ -29,7 +29,6 @@ BOOST_AUTO_TEST_CASE(MultipleWriteFromMappings)
     int                   dataIDBottom   = interface.getDataID("Pressure", meshIDBottom);
 
     double dt = interface.initialize();
-    interface.initializeData();
     interface.advance(dt);
     double pressure = -1.0;
     interface.readScalarData(dataIDTop, vertexIDTop, pressure);
@@ -48,8 +47,7 @@ BOOST_AUTO_TEST_CASE(MultipleWriteFromMappings)
     int                   vertexID3 = interface.setMeshVertex(meshID, vertex3.data());
     int                   dataID    = interface.getDataID("Pressure", meshID);
 
-    double dt = interface.initialize();
-    interface.initializeData();
+    double dt       = interface.initialize();
     double pressure = 1.0;
     interface.writeScalarData(dataID, vertexID1, pressure);
     pressure = 4.0;

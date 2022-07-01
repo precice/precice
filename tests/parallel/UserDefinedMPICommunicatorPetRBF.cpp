@@ -25,7 +25,6 @@ BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicatorPetRBF)
     double positions[4] = {xCoord, 0.0, xCoord + 0.2, 0.0};
     interface.setMeshVertices(meshID, 2, positions, vertexIDs);
     interface.initialize();
-    interface.initializeData();
     interface.finalize();
   } else {
 
@@ -37,7 +36,6 @@ BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicatorPetRBF)
     double positions[12] = {0.0, 0.0, 0.2, 0.0, 0.4, 0.0, 0.6, 0.0, 0.8, 0.0, 1.0, 0.0};
     interface.setMeshVertices(meshID, 6, positions, vertexIDs);
     interface.initialize();
-    interface.initializeData();
     interface.finalize();
   }
 }

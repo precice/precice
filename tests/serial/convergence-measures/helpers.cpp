@@ -22,7 +22,6 @@ void testConvergenceMeasures(const std::string configFile, TestContext const &co
   VertexID vertexID = interface.setMeshVertex(meshID, vertex.data());
 
   interface.initialize();
-  interface.initializeData();
   int numberOfAdvanceCalls = 0;
   int numberOfIterations   = -1;
   int timestep             = 0;

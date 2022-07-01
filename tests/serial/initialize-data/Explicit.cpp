@@ -27,11 +27,10 @@ BOOST_AUTO_TEST_CASE(Explicit)
   if (context.isNamed("SolverOne")) {
     int meshOneID = cplInterface.getMeshID("MeshOne");
     cplInterface.setMeshVertex(meshOneID, Vector3d(1.0, 2.0, 3.0).data());
-    double maxDt      = cplInterface.initialize();
     int    dataAID    = cplInterface.getDataID("DataOne", meshOneID);
     int    dataBID    = cplInterface.getDataID("DataTwo", meshOneID);
     double valueDataB = 0.0;
-    cplInterface.initializeData();
+    double maxDt      = cplInterface.initialize();
     cplInterface.readScalarData(dataBID, 0, valueDataB);
     BOOST_TEST(2.0 == valueDataB);
     while (cplInterface.isCouplingOngoing()) {
@@ -47,13 +46,12 @@ BOOST_AUTO_TEST_CASE(Explicit)
     int      meshTwoID = cplInterface.getMeshID("MeshTwo");
     Vector3d pos       = Vector3d::Zero();
     cplInterface.setMeshVertex(meshTwoID, pos.data());
-    double maxDt   = cplInterface.initialize();
     int    dataAID = cplInterface.getDataID("DataOne", meshTwoID);
     int    dataBID = cplInterface.getDataID("DataTwo", meshTwoID);
     cplInterface.writeScalarData(dataBID, 0, 2.0);
     //tell preCICE that data has been written and call initializeData
     cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
-    cplInterface.initializeData();
+    double maxDt   = cplInterface.initialize();
     Vector3d valueDataA;
     cplInterface.readVectorData(dataAID, 0, valueDataA.data());
     Vector3d expected(1.0, 1.0, 1.0);

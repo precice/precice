@@ -24,7 +24,6 @@ void testVectorGradientFunctions(const TestContext &context, const bool writeBlo
 
     // Initialize, thus sending the mesh.
     double maxDt = interface.initialize();
-    interface.initializeData();
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant should have to advance once!");
 
     double values[6]  = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
@@ -63,7 +62,6 @@ void testVectorGradientFunctions(const TestContext &context, const bool writeBlo
     interface.setMeshVertex(meshTwoID, posTwo.data());
 
     double maxDt = interface.initialize();
-    interface.initializeData();
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant should have to advance once!");
 
     double valueData[6];

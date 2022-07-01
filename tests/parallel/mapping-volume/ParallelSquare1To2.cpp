@@ -45,7 +45,6 @@ BOOST_AUTO_TEST_CASE(ParallelSquare1To2)
     interface.setMeshTriangle(meshID, CA, CD, DA);
 
     dt = interface.initialize();
-    interface.initializeData();
 
     // Run a step and write data with f(x) = x+2*y
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant must advance once.");
@@ -79,7 +78,6 @@ BOOST_AUTO_TEST_CASE(ParallelSquare1To2)
     interface.setMeshVertices(meshID, vertexIDs.size(), coords.data(), vertexIDs.data());
 
     dt = interface.initialize();
-    interface.initializeData();
 
     // Run a step and read data expected to be f(x) = x+2*y
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant must advance once.");

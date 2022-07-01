@@ -329,17 +329,8 @@ double SolverInterfaceImpl::initialize()
   _couplingScheme->initialize(time, timeWindow);
   PRECICE_ASSERT(_couplingScheme->isInitialized());
 
-  double dt = _couplingScheme->getNextTimestepMaxLength();
-
   for (auto &context : _accessor->readDataContexts()) {
     context.initializeWaveform();
-  }
-
-  // Needs to be removed for test Integration/Serial/Whitebox/TestExplicitWithDataScaling
-  if (_couplingScheme->hasDataBeenReceived()) {
-    performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
-    mapReadData();
-    performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
   }
 
   PRECICE_INFO(_couplingScheme->printCouplingState());
@@ -350,12 +341,6 @@ double SolverInterfaceImpl::initialize()
 
   _state = State::Initialized;
 
-  return _couplingScheme->getNextTimestepMaxLength();
-}
-
-void SolverInterfaceImpl::initializeData()
-{
-  PRECICE_TRACE();
   PRECICE_CHECK(_state != State::Finalized, "initializeData() cannot be called after finalize().")
   PRECICE_CHECK(_state != State::InitializedData, "initializeData() may only be called once.");
   PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before initializeData()");
@@ -364,13 +349,6 @@ void SolverInterfaceImpl::initializeData()
                 "Initial data has to be written to preCICE by calling an appropriate write...Data() function before calling initializeData(). "
                 "Did you forget to call markActionFulfilled(precice::constants::actionWriteInitialData()) after writing initial data?");
 
-  auto &solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
-  solverInitEvent.pause(precice::syncMode);
-
-  Event                    e("initializeData", precice::syncMode);
-  utils::ScopedEventPrefix sep("initializeData/");
-
-  PRECICE_DEBUG("Initialize data");
   double dt = _couplingScheme->getNextTimestepMaxLength();
 
   performDataActions({action::Action::WRITE_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
@@ -390,6 +368,8 @@ void SolverInterfaceImpl::initializeData()
   solverInitEvent.start(precice::syncMode);
 
   _state = State::InitializedData;
+
+  return _couplingScheme->getNextTimestepMaxLength();
 }
 
 double SolverInterfaceImpl::advance(

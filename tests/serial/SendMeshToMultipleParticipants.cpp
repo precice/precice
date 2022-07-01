@@ -32,7 +32,6 @@ BOOST_AUTO_TEST_CASE(SendMeshToMultipleParticipants)
   const precice::VertexID vertexID = interface.setMeshVertex(meshID, vertex.data());
   const precice::DataID   dataID   = interface.getDataID("Data", meshID);
   double                  maxDt    = interface.initialize();
-  interface.initializeData();
 
   if (context.isNamed("SolverOne")) {
     interface.writeScalarData(dataID, vertexID, value);

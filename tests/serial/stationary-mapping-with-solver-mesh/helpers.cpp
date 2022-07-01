@@ -56,7 +56,6 @@ void runTestStationaryMappingWithSolverMesh(std::string const &config, int dim, 
       interface.setMeshVertex(meshDisplID, position.data());
     }
     double maxDt = interface.initialize();
-    interface.initializeData();
 
     BOOST_TEST(interface.isWriteDataRequired(maxDt));
     BOOST_TEST(not interface.isReadDataAvailable());
@@ -102,7 +101,6 @@ void runTestStationaryMappingWithSolverMesh(std::string const &config, int dim, 
       interface.setMeshVertex(meshDisplID, position.data());
     }
     double maxDt = interface.initialize();
-    interface.initializeData();
 
     BOOST_TEST(interface.isWriteDataRequired(maxDt));
     BOOST_TEST(interface.isReadDataAvailable());

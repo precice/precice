@@ -59,22 +59,20 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirstNoInit)
   VertexID vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
 
   int    nWindows        = 5; // perform 5 windows.
-  double maxDt           = precice.initialize();
-  double windowDt        = maxDt;
   int    timestep        = 0;
   int    timewindow      = 0;
   double windowStartTime = 0;
   int    windowStartStep = 0;
+  double time = 0;
+  double maxDt           = precice.initialize();
+  double windowDt        = maxDt;
   double dt              = maxDt; // Timestep length desired by solver
   double currentDt       = dt;    // Timestep length used by solver
-  double time            = timestep * dt;
   double sampleDts[4]    = {0.0, dt / 4.0, dt / 2.0, 3.0 * dt / 4.0};
   int    nSamples        = 4;
   int    iterations      = 0;
   double readTime; // time where we are reading
   double sampleDt; // dt relative to timestep start, where we are sampling
-
-  precice.initializeData();
 
   while (precice.isCouplingOngoing()) {
     if (precice.isActionRequired(precice::constants::actionWriteIterationCheckpoint())) {

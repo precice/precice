@@ -49,7 +49,6 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteVector)
     int      meshOneID = cplInterface.getMeshID("MeshOne");
     Vector3d posOne    = Vector3d::Constant(0.0);
     cplInterface.setMeshVertex(meshOneID, posOne.data());
-    double maxDt   = cplInterface.initialize();
     int    dataAID = cplInterface.getDataID("DataOne", meshOneID);
     int    dataBID = cplInterface.getDataID("DataTwo", meshOneID);
 
@@ -57,7 +56,7 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteVector)
     cplInterface.writeVectorData(dataAID, 0, valueDataA.data());
 
     cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
-    cplInterface.initializeData();
+    double maxDt   = cplInterface.initialize();
 
     Vector2d valueDataB;
     cplInterface.readVectorData(dataBID, 0, valueDataB.data());
@@ -82,7 +81,6 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteVector)
     Vector3d pos       = Vector3d::Constant(1.0);
     cplInterface.setMeshVertex(meshTwoID, pos.data());
 
-    double maxDt   = cplInterface.initialize();
     int    dataAID = cplInterface.getDataID("DataOne", meshTwoID);
     int    dataBID = cplInterface.getDataID("DataTwo", meshTwoID);
 
@@ -94,7 +92,7 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteVector)
 
     //tell preCICE that data has been written and call initializeData
     cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
-    cplInterface.initializeData();
+    double maxDt   = cplInterface.initialize();
 
     Vector3d valueDataA;
     cplInterface.readVectorData(dataAID, 0, valueDataA.data());

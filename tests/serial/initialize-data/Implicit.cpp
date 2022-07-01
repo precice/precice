@@ -12,7 +12,7 @@ BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(InitializeData)
 /**
  * @brief Test simple coupled simulation with iterations, data initialization and without acceleration
- * 
+ *
  */
 BOOST_AUTO_TEST_CASE(Implicit)
 {
@@ -49,7 +49,6 @@ BOOST_AUTO_TEST_CASE(Implicit)
   int                 vertexID = couplingInterface.setMeshVertex(meshID, vertex.data());
 
   double dt = 0;
-  dt        = couplingInterface.initialize();
   std::vector<double> writeData(dimensions, writeValue);
   std::vector<double> readData(dimensions, -1);
   const std::string & cowid = actionWriteInitialData();
@@ -60,7 +59,7 @@ BOOST_AUTO_TEST_CASE(Implicit)
     couplingInterface.markActionFulfilled(cowid);
   }
 
-  couplingInterface.initializeData();
+  dt        = couplingInterface.initialize();
 
   while (couplingInterface.isCouplingOngoing()) {
     if (couplingInterface.isActionRequired(actionWriteIterationCheckpoint())) {

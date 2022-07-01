@@ -92,9 +92,6 @@ public:
   /// @copydoc SolverInterface::initialize
   double initialize();
 
-  /// @copydoc SolverInterface::initializeData
-  void initializeData();
-
   /// @copydoc SolverInterface::advance
   double advance(double computedTimestepLength);
 

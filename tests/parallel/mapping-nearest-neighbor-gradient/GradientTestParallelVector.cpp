@@ -54,7 +54,6 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelVector)
     interface.setMeshVertices(meshID, 2, positions, vertexIDs);
     BOOST_TEST(interface.isGradientDataRequired(dataID1) == false);
     interface.initialize();
-    interface.initializeData();
     BOOST_TEST(interface.isGradientDataRequired(dataID1) == false);
     Eigen::Vector4d values;
     interface.advance(1.0);
@@ -71,7 +70,6 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelVector)
     double          positions[12] = {0.0, 0.0, 0.2, 0.0, 0.4, 0.0, 0.6, 0.0, 0.8, 0.0, 1.0, 0.0};
     interface.setMeshVertices(meshID, 6, positions, vertexIDs);
     interface.initialize();
-    interface.initializeData();
     DataID dataID2    = interface.getDataID("Data2", meshID);
     double values[12] = {1.0, 1.0,
                          2.0, 2.0,

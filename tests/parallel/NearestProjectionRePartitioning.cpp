@@ -18,7 +18,6 @@ BOOST_AUTO_TEST_CASE(NearestProjectionRePartitioning)
 
     if (context.isPrimary()) {
       interface.initialize();
-      interface.initializeData();
       interface.advance(1.0);
       interface.finalize();
     } else {
@@ -99,7 +98,6 @@ BOOST_AUTO_TEST_CASE(NearestProjectionRePartitioning)
       std::vector<int> vertexIDs(numberOfVertices);
       interface.setMeshVertices(meshID, numberOfVertices, positions.data(), vertexIDs.data());
       interface.initialize();
-      interface.initializeData();
       BOOST_TEST(precice::testing::WhiteboxAccessor::impl(interface).mesh("Nodes").triangles().size() == 15);
       interface.advance(1.0);
       interface.finalize();
@@ -171,7 +169,6 @@ BOOST_AUTO_TEST_CASE(NearestProjectionRePartitioning)
     }
 
     interface.initialize();
-    interface.initializeData();
     interface.advance(1.0);
     interface.finalize();
   }

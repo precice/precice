@@ -72,7 +72,6 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitialization)
   }
 
   interface.initialize();
-  interface.initializeData();
 
   if (context.isNamed("Fluid")) {
     for (size_t i = 0; i < vertexIDs.size(); i++) {

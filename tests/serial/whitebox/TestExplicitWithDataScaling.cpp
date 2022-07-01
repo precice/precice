@@ -35,7 +35,6 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataScaling)
       cplInterface.setMeshEdge(meshID, ids.at(i), ids.at((i + 1) % 4));
 
     double dt = cplInterface.initialize();
-    //cplInterface.initializeData();  // @todo: Should be called, but leads to failing test
 
     int velocitiesID = cplInterface.getDataID("Velocities", meshID);
     while (cplInterface.isCouplingOngoing()) {
@@ -54,7 +53,6 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataScaling)
       cplInterface.setMeshEdge(meshID, ids.at(i), ids.at((i + 1) % 4));
 
     double dt = cplInterface.initialize();
-    //cplInterface.initializeData();  // @todo: Should be called, but leads to failing test
 
     int velocitiesID = cplInterface.getDataID("Velocities", meshID);
     while (cplInterface.isCouplingOngoing()) {

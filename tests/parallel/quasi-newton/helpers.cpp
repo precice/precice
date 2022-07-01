@@ -48,7 +48,6 @@ void runTestQN(std::string const &config, TestContext const &context)
   }
 
   interface.initialize();
-  interface.initializeData();
   double inValues[4]  = {0.0, 0.0, 0.0, 0.0};
   double outValues[4] = {0.0, 0.0, 0.0, 0.0};
 
@@ -146,7 +145,6 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
   }
 
   interface.initialize();
-  interface.initializeData();
   double inValues[4]  = {0.0, 0.0, 0.0, 0.0};
   double outValues[4] = {0.0, 0.0, 0.0, 0.0};
 

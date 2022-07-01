@@ -36,7 +36,6 @@ BOOST_AUTO_TEST_CASE(Full)
     interface.writeScalarData(dataid, vertexid, 7.8);
   }
   interface.initialize();
-  interface.initializeData();
   BOOST_TEST(interface.isCouplingOngoing());
   interface.finalize();
 }

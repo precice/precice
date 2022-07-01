@@ -51,7 +51,6 @@ BOOST_AUTO_TEST_CASE(ExplicitRead)
     const std::vector<double> expectedData = positions;
     BOOST_TEST(precice::testing::equals(solverTwoMesh, expectedData));
 
-    couplingInterface.initializeData();
     while (couplingInterface.isCouplingOngoing()) {
 
       dt = couplingInterface.advance(dt);
@@ -76,7 +75,6 @@ BOOST_AUTO_TEST_CASE(ExplicitRead)
 
     // Initialize
     double dt = couplingInterface.initialize();
-    couplingInterface.initializeData();
     while (couplingInterface.isCouplingOngoing()) {
 
       couplingInterface.writeBlockScalarData(dataID, ids.size(),

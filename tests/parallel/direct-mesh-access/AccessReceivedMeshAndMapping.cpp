@@ -36,7 +36,6 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
     interface.setMeshAccessRegion(otherMeshID, boundingBox.data());
 
     double dt = interface.initialize();
-    interface.initializeData();
     // Get the size of the filtered mesh within the bounding box
     // (provided by the coupling participant)
     const int otherMeshSize = interface.getMeshVertexSize(otherMeshID);
@@ -93,7 +92,6 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
 
     // Initialize
     double dt = interface.initialize();
-    interface.initializeData();
     while (interface.isCouplingOngoing()) {
 
       interface.writeBlockScalarData(writeDataID, ids.size(),
