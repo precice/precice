@@ -509,7 +509,7 @@ private:
   /// Functions needed for initialize()
 
   /**
-   * @brief implements functionality for initializeData in base class.
+   * @brief implements functionality for initialize in base class.
    */
   virtual void exchangeInitialData() = 0;
 

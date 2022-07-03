@@ -30,7 +30,7 @@ void testDataInitialization(precice::testing::TestContext context, std::string c
     cplInterface.setMeshVertex(meshTwoID, pos.data());
     int dataID = cplInterface.getDataID("Data", meshTwoID);
     cplInterface.writeScalarData(dataID, 0, 2.0);
-    //tell preCICE that data has been written and call initializeData
+    //tell preCICE that data has been written and call initialize
     cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
     cplInterface.initialize();
     cplInterface.finalize();

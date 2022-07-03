@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
       if (precice.isReadDataAvailable()) {
         precice.readScalarData(readDataID, vertexID, sampleDt, readData);
       }
-      if (iterations == 0) { // always use constant extrapolation in first iteration (from initializeData or writeData of second participant at end previous window).
+      if (iterations == 0) { // always use constant extrapolation in first iteration (from initialize or writeData of second participant at end previous window).
         BOOST_TEST(readData == readFunction(time));
       } else if (iterations > 0) { // use linear interpolation in later iterations (additionally available writeData of second participant at end of this window).
         BOOST_TEST(readData == readFunction(readTime));

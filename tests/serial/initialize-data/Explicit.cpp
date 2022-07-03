@@ -15,7 +15,7 @@ BOOST_AUTO_TEST_SUITE(InitializeData)
  * @brief The second solver initializes the data of the first.
  *
  * A mapping is employed for the second solver, i.e., at the end of
- * initializeData(), the mapping needs to be invoked.
+ * initialize(), the mapping needs to be invoked.
  */
 BOOST_AUTO_TEST_CASE(Explicit)
 {

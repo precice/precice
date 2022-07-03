@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalReadScalar)
     double valueDataB = 1.0;
     cplInterface.writeScalarData(dataBID, 0, valueDataB);
 
-    //tell preCICE that data has been written and call initializeData
+    //tell preCICE that data has been written and call initialize
     cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
     double maxDt = cplInterface.initialize();
 

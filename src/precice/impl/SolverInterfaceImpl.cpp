@@ -383,7 +383,7 @@ double SolverInterfaceImpl::advance(
   PRECICE_CHECK(computedTimestepLength > 0.0, "advance() cannot be called with a negative timestep size {}.", computedTimestepLength);
   _numberAdvanceCalls++;
 
-  // This is the first time advance is called. Initializes the waveform with data from initializeData or 0, if initializeData was not called.
+  // This is the first time advance is called. Initializes the waveform with data from initialize.
   // @todo: Can be moved to the end of initializeData(), if initializeData() becomes mandatory. See https://github.com/precice/precice/issues/1196.
   if (_numberAdvanceCalls == 1) {
     for (auto &context : _accessor->readDataContexts()) {
