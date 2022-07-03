@@ -341,13 +341,18 @@ double SolverInterfaceImpl::initialize()
 
   PRECICE_DEBUG("Initialize coupling schemes");
   _couplingScheme->initialize(time, timeWindow);
-  dt = _couplingScheme->getNextTimestepMaxLength(); // can change, if second participant and participant-first method for setting time window size is used.
+  dt = _couplingScheme->getNextTimestepMaxLength(); // dt can change at this point again, if second participant and participant-first method for setting time window size is used.
 
   if (_couplingScheme->hasDataBeenReceived()) {
     performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
     mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
   }
+
+  for (auto &context : _accessor->readDataContexts()) {
+    context.moveToNextWindow();
+  }
+
   resetWrittenData();
   PRECICE_DEBUG("Plot output");
   _accessor->exportFinal();
@@ -382,14 +387,6 @@ double SolverInterfaceImpl::advance(
   PRECICE_CHECK(!math::equals(computedTimestepLength, 0.0), "advance() cannot be called with a timestep size of 0.");
   PRECICE_CHECK(computedTimestepLength > 0.0, "advance() cannot be called with a negative timestep size {}.", computedTimestepLength);
   _numberAdvanceCalls++;
-
-  // This is the first time advance is called. Initializes the waveform with data from initialize.
-  // @todo: Can be moved to the end of initializeData(), if initializeData() becomes mandatory. See https://github.com/precice/precice/issues/1196.
-  if (_numberAdvanceCalls == 1) {
-    for (auto &context : _accessor->readDataContexts()) {
-      context.moveToNextWindow();
-    }
-  }
 
 #ifndef NDEBUG
   PRECICE_DEBUG("Synchronize timestep length");
