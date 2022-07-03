@@ -318,16 +318,6 @@ int precicec_hasData(const char *dataName, int meshID);
 int precicec_getDataID(const char *dataName, int meshID);
 
 /**
- * @brief Computes and maps all read data mapped to mesh with given ID.
- */
-void precicec_mapReadDataTo(int toMeshID);
-
-/**
- * @brief Computes and maps all write data mapped from mesh with given ID.
- */
-void precicec_mapWriteDataFrom(int fromMeshID);
-
-/**
  * @brief Writes vector data values given as block.
  *
  * The block must contain the vector values in the following form:

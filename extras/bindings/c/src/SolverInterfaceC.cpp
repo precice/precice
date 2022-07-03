@@ -372,18 +372,6 @@ const char *precicec_getVersionInformation()
   return precice::versionInformation;
 }
 
-void precicec_mapWriteDataFrom(int fromMeshID)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->mapWriteDataFrom(fromMeshID);
-}
-
-void precicec_mapReadDataTo(int toMeshID)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->mapReadDataTo(toMeshID);
-}
-
 const char *precicec_actionWriteInitialData()
 {
   return precice::constants::actionWriteInitialData().c_str();

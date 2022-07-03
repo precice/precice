@@ -697,30 +697,6 @@ void precicef_read_sdata_(
     double *   dataValue);
 
 /**
- * Fortran syntax:
- * precicef_map_write_data_from( INTEGER meshID )
- *
- * IN:  meshID
- * OUT: -
- *
- * @copydoc precice::SolverInterface::mapWriteDataFrom()
- *
- */
-void precicef_map_write_data_from_(const int *meshID);
-
-/**
- * Fortran syntax:
- * precicef_map_read_data_to( INTEGER meshID )
- *
- * IN:  meshID
- * OUT: -
- *
- * @copydoc precice::SolverInterface::mapReadDataTo()
- *
- */
-void precicef_map_read_data_to_(const int *meshID);
-
-/**
  * @brief Name of action for writing iteration checkpoint.
  *
  * Fortran syntax:
