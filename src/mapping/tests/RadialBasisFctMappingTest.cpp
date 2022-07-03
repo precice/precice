@@ -1933,15 +1933,20 @@ void testDeadAxis2d(Polynomial polynomial, Mapping::Constraint constraint)
   mapping.map(inDataID, outDataID);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   if (constraint == Mapping::CONSISTENT) {
-    BOOST_TEST(outData->values()(0) == 1.0);
-    BOOST_TEST(outData->values()(1) == 1.0);
+    if (polynomial == Polynomial::OFF) {
+      BOOST_TEST(testing::equals(outData->values()(2), 2.0522549299731567, 1e-7));
+    } else if (polynomial == Polynomial::SEPARATE) {
+      BOOST_TEST(testing::equals(outData->values()(2), 2.0896514371485777, 1e-7));
+    } else {
+      BOOST_TEST(testing::equals(outData->values()(2), 2.1180354377884774, 1e-7));
+    }
   } else {
     if (polynomial == Polynomial::OFF) {
-      BOOST_TEST(testing::equals(outData->values()(1), 1.84711, 1e-5));
+      BOOST_TEST(testing::equals(outData->values()(1), 1.8471144693068295, 1e-7));
     } else if (polynomial == Polynomial::SEPARATE) {
-      BOOST_TEST(testing::equals(outData->values()(1), 1.8236736422730249, 1e-5));
+      BOOST_TEST(testing::equals(outData->values()(1), 1.8236736422730249, 1e-7));
     } else {
-      BOOST_TEST(testing::equals(outData->values()(1), 1.75872, 1e-5));
+      BOOST_TEST(testing::equals(outData->values()(1), 1.7587181970483183, 1e-7));
     }
   }
 }
@@ -2028,7 +2033,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis2Consistent)
 {
   PRECICE_TEST(1_rank);
   testDeadAxis2d(Polynomial::ON, Mapping::CONSISTENT);
-  // testDeadAxis2d(Polynomial::OFF, Mapping::CONSISTENT);
+  testDeadAxis2d(Polynomial::OFF, Mapping::CONSISTENT);
   testDeadAxis2d(Polynomial::SEPARATE, Mapping::CONSISTENT);
 }
 
