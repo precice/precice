@@ -7,6 +7,6 @@
 using namespace precice;
 using precice::testing::TestContext;
 
-void runTestEnforceGatherScatter(std::vector<double> masterPartition, const TestContext &context);
+void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const TestContext &context);
 
 #endif

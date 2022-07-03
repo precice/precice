@@ -24,19 +24,14 @@ public:
   /// Destructor, empty.
   virtual ~NearestNeighborBaseMapping() = default;
 
-  /// Checks if this is a Nearest Neighbor Gradient mapping.
-  bool requireGradient();
-
   /// Computes the mapping coefficients from the in- and output mesh.
   void computeMapping() override;
-
-  /// Returns true, if computeMapping() has been called.
-  bool hasComputedMapping() const override;
 
   /// Removes a computed mapping.
   void clear() override;
 
-  /** Matches the offsets needed for the gradient mapping
+  /**
+   * Matches the offsets needed for the gradient mapping
    * Does nothing by default
    */
   virtual void onMappingComputed(mesh::PtrMesh origins, mesh::PtrMesh searchSpace);
@@ -59,13 +54,6 @@ protected:
 
   /// Computed output vertex indices to map data from input vertices to.
   std::vector<int> _vertexIndices;
-
-private:
-  /// Flag to indicate whether computeMapping() has been called.
-  bool _hasComputedMapping = false;
-
-  /// Flag if the mapping is a gradient mapping or not
-  bool _requireGradient;
 };
 
 } // namespace mapping

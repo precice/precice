@@ -6,7 +6,7 @@
 #include <vector>
 #include "helpers.hpp"
 
-BOOST_AUTO_TEST_SUITE(PreciceTests)
+BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_SUITE(DirectMeshAccess)
 BOOST_AUTO_TEST_CASE(AccessReceivedMeshEmptyPartition)
@@ -19,14 +19,14 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshEmptyPartition)
   // vertices). Filtered vertices are filled with zero data values
 
   PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
-  const std::vector<double> boundingBoxSlave      = std::vector<double>{10.0, 10.0, 13.0, 17};
-  const std::vector<double> expectedPositionSlave = std::vector<double>{};
-  const std::vector<double> writeDataSlave        = std::vector<double>({});
-  const std::vector<double> expectedReadDataSlave = std::vector<double>({3., 0., 0.});
-  runTestAccessReceivedMesh(context, boundingBoxSlave, writeDataSlave, expectedPositionSlave, expectedReadDataSlave, 0);
+  const std::vector<double> boundingBoxSecondaryRank      = std::vector<double>{10.0, 10.0, 13.0, 17};
+  const std::vector<double> expectedPositionSecondaryRank = std::vector<double>{};
+  const std::vector<double> writeDataSecondaryRank        = std::vector<double>({});
+  const std::vector<double> expectedReadDataSecondaryRank = std::vector<double>({3., 0., 0.});
+  runTestAccessReceivedMesh(context, boundingBoxSecondaryRank, writeDataSecondaryRank, expectedPositionSecondaryRank, expectedReadDataSecondaryRank, 0);
 }
 
-BOOST_AUTO_TEST_SUITE_END() // PreciceTests
+BOOST_AUTO_TEST_SUITE_END() // Integration
 BOOST_AUTO_TEST_SUITE_END() // Parallel
 BOOST_AUTO_TEST_SUITE_END() // DirectMeshAccess
 

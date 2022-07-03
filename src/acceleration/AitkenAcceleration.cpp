@@ -13,7 +13,7 @@
 #include "math/math.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/Helpers.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -77,8 +77,8 @@ void AitkenAcceleration::performAcceleration(
     _aitkenFactor = math::sign(_aitkenFactor) * std::min(_initialRelaxation, std::abs(_aitkenFactor));
   } else {
     // compute fraction of aitken factor with residuals and residual deltas
-    double nominator   = utils::MasterSlave::dot(_residuals, residualDeltas);
-    double denominator = utils::MasterSlave::dot(residualDeltas, residualDeltas);
+    double nominator   = utils::IntraComm::dot(_residuals, residualDeltas);
+    double denominator = utils::IntraComm::dot(residualDeltas, residualDeltas);
     _aitkenFactor      = -_aitkenFactor * (nominator / denominator);
   }
 

@@ -119,6 +119,12 @@ public:
   bool willDataBeExchanged(double lastSolverTimestepLength) const override final;
 
   /**
+   * @brief getter for _hasInitialDataBeenReceived
+   * @returns true, if data has been received in call of initializeData().
+   */
+  bool hasInitialDataBeenReceived() const override final;
+
+  /**
    * @brief getter for _hasDataBeenReceived
    * @returns true, if data has been received in last call of advance().
    */
@@ -138,7 +144,12 @@ public:
 
   /**
    * @brief Function to check whether time window size is defined by coupling scheme.
-   * @returns true, if time window size is prescribed by the coupling scheme.
+   *
+   * There are two reasons why a scheme might have a time window size:
+   * 1) a fixed time window size is given in the scheme
+   * 2) the participant received the time window size from another participant in the scheme
+   *
+   * @returns true, if time window size is available.
    */
   bool hasTimeWindowSize() const override final;
 
@@ -297,6 +308,11 @@ protected:
   }
 
   /**
+   * @brief Used to set flag after initialData has been received. Automatically calls checkDataHasBeenReceived().
+   */
+  void checkInitialDataHasBeenReceived();
+
+  /**
    * @brief Used to set flag after data has been received using receiveData().
    */
   void checkDataHasBeenReceived();
@@ -426,6 +442,9 @@ private:
 
   /// True, if this participant has to receive initialized data.
   bool _receivesInitializedData = false;
+
+  /// True, if initialData has been received from other participant. Flag is used to make sure that coupling scheme is implemented and used correctly.
+  bool _hasInitialDataBeenReceived = false;
 
   /// True, if data has been received from other participant. Flag is used to make sure that coupling scheme is implemented and used correctly.
   bool _hasDataBeenReceived = false;

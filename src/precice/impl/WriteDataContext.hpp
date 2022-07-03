@@ -26,14 +26,21 @@ public:
       mesh::PtrMesh mesh);
 
   /**
-   * @brief Links a MappingContext and the MeshContext required by the write to this WriteDataContext.
+   * @brief Get _providedData member.
+   *
+   * @return mesh::PtrData _providedData.
+   */
+  mesh::PtrData providedData();
+
+  /**
+   * @brief Adds a MappingContext and the MeshContext required by the write mapping to the correspnding WriteDataContext data structures.
    *
    * A write mapping maps _providedData to _toData. A WriteDataContext already has _providedData, but additionally requires _toData.
    * 
    * @param[in] mappingContext Context of write mapping
    * @param[in] meshContext Context of mesh this write mapping is mapping to (_toData)
    */
-  void configureMapping(const MappingContext &mappingContext, const MeshContext &meshContext) override;
+  void appendMappingConfiguration(const MappingContext &mappingContext, const MeshContext &meshContext) override;
 
 private:
   static logging::Logger _log;

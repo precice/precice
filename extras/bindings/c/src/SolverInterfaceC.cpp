@@ -49,11 +49,14 @@ void precicec_createSolverInterface(
     int         solverProcessIndex,
     int         solverProcessSize)
 {
-  precicec_createSolverInterface_withCommunicator(participantName,
-                                                  configFileName,
-                                                  solverProcessIndex,
-                                                  solverProcessSize,
-                                                  nullptr);
+  std::string stringAccessorName(participantName);
+  std::string stringConfigFileName(configFileName);
+
+  PRECICE_CHECK(impl == nullptr, errormsgCreate);
+  impl.reset(new precice::SolverInterface(stringAccessorName,
+                                          stringConfigFileName,
+                                          solverProcessIndex,
+                                          solverProcessSize));
 }
 
 double precicec_initialize()

@@ -1,5 +1,6 @@
 #include "mapping/Polation.hpp"
 #include "math/barycenter.hpp"
+#include "math/differences.hpp"
 
 namespace precice {
 namespace mapping {
@@ -42,6 +43,27 @@ Polation::Polation(const Eigen::VectorXd &location, const mesh::Triangle &elemen
   _weightedElements.emplace_back(WeightedElement{C.getID(), bcoords(2)});
 }
 
+Polation::Polation(const Eigen::VectorXd &location, const mesh::Tetrahedron &element)
+{
+  PRECICE_ASSERT(location.size() == element.getDimensions(), location.size(), element.getDimensions());
+  auto &A = element.vertex(0);
+  auto &B = element.vertex(1);
+  auto &C = element.vertex(2);
+  auto &D = element.vertex(3);
+
+  const auto bcoords = math::barycenter::calcBarycentricCoordsForTetrahedron(
+      A.getCoords(),
+      B.getCoords(),
+      C.getCoords(),
+      D.getCoords(),
+      location);
+
+  _weightedElements.emplace_back(WeightedElement{A.getID(), bcoords(0)});
+  _weightedElements.emplace_back(WeightedElement{B.getID(), bcoords(1)});
+  _weightedElements.emplace_back(WeightedElement{C.getID(), bcoords(2)});
+  _weightedElements.emplace_back(WeightedElement{D.getID(), bcoords(3)});
+}
+
 const std::vector<WeightedElement> &Polation::getWeightedElements() const
 {
   return _weightedElements;
@@ -49,7 +71,7 @@ const std::vector<WeightedElement> &Polation::getWeightedElements() const
 
 bool Polation::isInterpolation() const
 {
-  return std::all_of(_weightedElements.begin(), _weightedElements.end(), [](const mapping::WeightedElement &elem) { return elem.weight >= 0.0; });
+  return std::all_of(_weightedElements.begin(), _weightedElements.end(), [](const mapping::WeightedElement &elem) { return precice::math::greaterEquals(elem.weight, 0.0); });
 }
 
 std::ostream &operator<<(std::ostream &os, const WeightedElement &w)

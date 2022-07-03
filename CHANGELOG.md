@@ -2,6 +2,43 @@
 
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://www.precice.org/fundamentals-roadmap.html).
 
+## 2.4.0
+
+- Added API methods for entering gradient data in the solver interface. Methods available are for scalar gradient data, vector gradient data, block scalar gradient data and block vector gradient data. (https://github.com/precice/precice/pull/1169)
+- Added CMake options to enable debug logging, trace logging and assertions in release builds. (https://github.com/precice/precice/pull/1177)
+- Added a pkg-config file for using preCICE directly from the build directory. (https://github.com/precice/precice/pull/1238)
+- Added a warning if the relative convergence measure is set too low. (https://github.com/precice/precice/pull/1266)
+- Added a warning when using `<export:vtk />` in a parallel participant. (https://github.com/precice/precice/pull/1136)
+- Added experimental API functions for waveform interpolation. Currently restricted to parallel-implicit coupling. Refer to the [user documentation](https://precice.org/couple-your-code-waveform.html). (https://github.com/precice/precice/pull/1187)
+- Added export to CSV using `<export:csv />`. (https://github.com/precice/precice/pull/1144)
+- Added export to VTP using `<export:vtp />`. (https://github.com/precice/precice/pull/1137)
+- Added export to VTU using `<export:vtu />`. (https://github.com/precice/precice/pull/1136)
+- Added the `support-radius` as an additional configuration option to the Gaussian RBF mapping configuration. (https://github.com/precice/precice/pull/1163)
+- Added the API header `precice/Tooling.hpp`, which includes utility functions. (https://github.com/precice/precice/pull/1122)
+- Added the command `check` to `binprecice`, which checks a given configuration file for correctness. (https://github.com/precice/precice/pull/1132)
+- Added the command `version` to `binprecice`, which prints the version string of the used preCICE library. (https://github.com/precice/precice/pull/1122)
+- Added tooling to CMake, which simplifies contributing. (https://github.com/precice/precice/pull/1143)
+- Changed baseline from Ubuntu 18.04 LTS to Ubuntu 20.04 LTS. preCICE now requires Boost version `1.71.0` and CMake version `3.16.3`. (https://github.com/precice/precice/pull/1259)
+- Deprecated API functions `mapWriteDataFrom` and `mapReadDataTo`. Note: compiling the tests will trigger this warning. (https://github.com/precice/precice/pull/859)
+- Fixed a bug in ID management, which lead to a crash when reconstructing a SolverInterface. (https://github.com/precice/precice/pull/1190)
+- Fixed a bug in the socket communication back-end, which occasionally lead to crashes. (https://github.com/precice/precice/pull/1262)
+- Fixed a bug which crashed preCICE when explicitly enforcing gather scatter communication using `<m2n:X enforce-gather-scatter=1 />`. (https://github.com/precice/precice/pull/1268)
+- Fixed an incompatibility with Boost 1.79.0 (https://github.com/precice/precice/pull/1250)
+- Fixed missing data pieces in the master pvtu file for empty vertex distributions (e.g. a mesh is not exchanged) (https://github.com/precice/precice/pull/1233)
+- Fixed missing edge connectivity in VTK exports. (https://github.com/precice/precice/pull/1127)
+- Fixed the `format-all-docker` script to change of reformatted files to root. (https://github.com/precice/precice/pull/1210)
+- Fixed the names of experimental direct-access API in the Fortran bindings to `precicef_set_mesh_access_region_` and `precicef_get_mesh_vertices_and_IDs_`. (https://github.com/precice/precice/pull/1129)
+- Fixed the naming scheme of parallel VTU files (`.pvtu` and `.vtu` pieces). Paraview now correctly detects exports of multiple time-steps as a time series. (https://github.com/precice/precice/pull/1126)
+- Fixed the wrong data assignment for multiple read mappings to the same mesh or multiple write mappings from the same mesh. (https://github.com/precice/precice/pull/1267)
+- Improved the efficiency of vertex to edge projections. (https://github.com/precice/precice/pull/1226)
+- Migrated to the [FindPython3](https://cmake.org/cmake/help/v3.16/module/FindPython3.html) module for locating Python3 and NumPy. (https://github.com/precice/precice/pull/1263)
+- Migrated to using the target provided by [FindLibXml2](https://cmake.org/cmake/help/v3.16/module/FindLibXml2.html) (https://github.com/precice/precice/pull/1263)
+- Renamed `binprecice` to `precice-tools` and added a symbolic link for backwards-compatibility. The link will be removed in preCICE version 3.0.0. (https://github.com/precice/precice/pull/1175)
+- Removed meshName from solverdummies input parameters. (https://github.com/precice/precice/pull/1256)
+- Renamed all instances of master to primary and of slave to secondary, along with their plural and joint forms. (https://github.com/precice/precice/pull/1253)
+- Renamed class `MasterSlave` to `IntraComm` and changed all corresponding names. Changed the XML tag `master` to `intra-comm` and changed the XML attributes `on-slaves` and `on-master` to `on-secondary-ranks` and `on-primary-rank` respectively. The tag `master` and attributes `on-slaves` and `on-master` are deprecated. (https://github.com/precice/precice/pull/1274)
+- Upgraded dependencies fmtlib to 8.1.1, json to 3.10.5 and tcbrindle span. (https://github.com/precice/precice/pull/1241)
+
 ## 2.3.0
 
 - Added `isMeshConnectivityRequired(meshID)` to the SolverInterface API. This is useful to generate connectivity information only if required by preCICE.

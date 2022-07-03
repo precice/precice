@@ -9,7 +9,7 @@
 // by another participant (see above). In addition to the direct mesh access
 // and data writing in one direction, an additional mapping (NN) is defined
 // in the other direction.
-BOOST_AUTO_TEST_SUITE(PreciceTests)
+BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_SUITE(DirectMeshAccess)
 BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
@@ -26,12 +26,12 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
     const int     readDataID  = interface.getDataID("Forces", ownMeshID);
     const int     writeDataID = interface.getDataID("Velocities", otherMeshID);
 
-    std::vector<double> positions = context.isMaster() ? std::vector<double>({0.0, 1.0, 0.0, 2.0, 0.0, 3.0}) : std::vector<double>({0.0, 4.0, 0.0, 5.0, 0.0, 6.0});
+    std::vector<double> positions = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 2.0, 0.0, 3.0}) : std::vector<double>({0.0, 4.0, 0.0, 5.0, 0.0, 6.0});
 
     std::vector<int> ownIDs(positions.size() / dim, 0);
     interface.setMeshVertices(ownMeshID, ownIDs.size(), positions.data(), ownIDs.data());
 
-    std::array<double, dim * 2> boundingBox = context.isMaster() ? std::array<double, dim * 2>{0.0, 1.0, 0.0, 3.5} : std::array<double, dim * 2>{0.0, 1.0, 3.5, 5.0};
+    std::array<double, dim * 2> boundingBox = context.isPrimary() ? std::array<double, dim * 2>{0.0, 1.0, 0.0, 3.5} : std::array<double, dim * 2>{0.0, 1.0, 3.5, 5.0};
     // Define region of interest, where we could obtain direct write access
     interface.setMeshAccessRegion(otherMeshID, boundingBox.data());
 
@@ -46,13 +46,13 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
     std::vector<int>    otherIDs(otherMeshSize, 0);
     interface.getMeshVerticesAndIDs(otherMeshID, otherMeshSize, otherIDs.data(), solverTwoMesh.data());
     // Expected data = positions of the other participant's mesh
-    const std::vector<double> expectedData = context.isMaster() ? std::vector<double>({0.0, 1.0, 0.0, 2.0, 0.0, 3.5}) : std::vector<double>({0.0, 3.5, 0.0, 4.0, 0.0, 5.0});
+    const std::vector<double> expectedData = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 2.0, 0.0, 3.5}) : std::vector<double>({0.0, 3.5, 0.0, 4.0, 0.0, 5.0});
     BOOST_TEST(solverTwoMesh == expectedData);
 
     // Some dummy writeData
     std::vector<double> writeData;
     for (int i = 0; i < otherMeshSize; ++i)
-      writeData.emplace_back(i + 5 + (10 * context.isMaster()));
+      writeData.emplace_back(i + 5 + (10 * context.isPrimary()));
 
     std::vector<double> readData(ownIDs.size(), 0);
 
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
 
       // Expected data according to the writeData
       // Values are summed up
-      std::vector<double> expectedData = context.isMaster() ? std::vector<double>({0, 1, 0}) : std::vector<double>({1, 2, 2});
+      std::vector<double> expectedData = context.isPrimary() ? std::vector<double>({0, 1, 0}) : std::vector<double>({1, 2, 2});
       BOOST_TEST(precice::testing::equals(expectedData, readData));
     }
 
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
     precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
     const int                dim = interface.getDimensions();
     BOOST_TEST(context.isNamed("SolverTwo"));
-    std::vector<double> positions = context.isMaster() ? std::vector<double>({0.0, 1.0, 0.0, 2.0}) : std::vector<double>({0.0, 3.5, 0.0, 4.0, 0.0, 5.0});
+    std::vector<double> positions = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 2.0}) : std::vector<double>({0.0, 3.5, 0.0, 4.0, 0.0, 5.0});
     std::vector<int>    ids(positions.size() / dim, 0);
 
     // Query IDs
@@ -101,13 +101,13 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
                                     ids.data(), readData.data());
       // Expected data according to the writeData
       // Values are summed up
-      std::vector<double> expectedData = context.isMaster() ? std::vector<double>({15, 16}) : std::vector<double>({22, 6, 7});
+      std::vector<double> expectedData = context.isPrimary() ? std::vector<double>({15, 16}) : std::vector<double>({22, 6, 7});
       BOOST_TEST(precice::testing::equals(expectedData, readData));
     }
   }
 }
 
-BOOST_AUTO_TEST_SUITE_END() // PreciceTests
+BOOST_AUTO_TEST_SUITE_END() // Integration
 BOOST_AUTO_TEST_SUITE_END() // Parallel
 BOOST_AUTO_TEST_SUITE_END() // DirectMeshAccess
 

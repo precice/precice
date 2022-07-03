@@ -171,6 +171,10 @@ target_sources(precice
     src/m2n/SharedPointer.hpp
     src/m2n/config/M2NConfiguration.cpp
     src/m2n/config/M2NConfiguration.hpp
+    src/mapping/BarycentricBaseMapping.cpp
+    src/mapping/BarycentricBaseMapping.hpp
+    src/mapping/LinearCellInterpolationMapping.cpp
+    src/mapping/LinearCellInterpolationMapping.hpp
     src/mapping/Mapping.cpp
     src/mapping/Mapping.hpp
     src/mapping/NearestNeighborBaseMapping.cpp
@@ -184,7 +188,9 @@ target_sources(precice
     src/mapping/PetRadialBasisFctMapping.hpp
     src/mapping/Polation.cpp
     src/mapping/Polation.hpp
+    src/mapping/RadialBasisFctBaseMapping.hpp
     src/mapping/RadialBasisFctMapping.hpp
+    src/mapping/RadialBasisFctSolver.hpp
     src/mapping/SharedPointer.hpp
     src/mapping/config/MappingConfiguration.cpp
     src/mapping/config/MappingConfiguration.hpp
@@ -208,6 +214,8 @@ target_sources(precice
     src/mesh/Mesh.hpp
     src/mesh/RangeAccessor.hpp
     src/mesh/SharedPointer.hpp
+    src/mesh/Tetrahedron.cpp
+    src/mesh/Tetrahedron.hpp
     src/mesh/Triangle.cpp
     src/mesh/Triangle.hpp
     src/mesh/Utils.cpp
@@ -258,9 +266,12 @@ target_sources(precice
     src/precice/types.hpp
     src/query/Index.cpp
     src/query/Index.hpp
-    src/query/impl/Indexer.cpp
-    src/query/impl/Indexer.hpp
     src/query/impl/RTreeAdapter.hpp
+    src/time/SharedPointer.hpp
+    src/time/Time.cpp
+    src/time/Time.hpp
+    src/time/Waveform.cpp
+    src/time/Waveform.hpp
     src/utils/ArgumentFormatter.hpp
     src/utils/Dimensions.cpp
     src/utils/Dimensions.hpp
@@ -273,11 +284,12 @@ target_sources(precice
     src/utils/EventUtils.hpp
     src/utils/Helpers.cpp
     src/utils/Helpers.hpp
+    src/utils/IntraComm.cpp
+    src/utils/IntraComm.hpp
+    src/utils/MPIResult.hpp
     src/utils/MPI_Mock.hpp
     src/utils/ManageUniqueIDs.cpp
     src/utils/ManageUniqueIDs.hpp
-    src/utils/MasterSlave.cpp
-    src/utils/MasterSlave.hpp
     src/utils/MultiLock.hpp
     src/utils/Parallel.cpp
     src/utils/Parallel.hpp

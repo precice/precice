@@ -24,8 +24,8 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
 
   // Create mesh to map from
   PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
-  PtrData inDataScalar   = inMesh->createDataWithGradient("InDataScalar", 1, dimensions, 0_dataID);
-  PtrData inDataVector   = inMesh->createDataWithGradient("InDataVector", 2, dimensions, 1_dataID);
+  PtrData inDataScalar   = inMesh->createData("InDataScalar", 1, 0_dataID, true);
+  PtrData inDataVector   = inMesh->createData("InDataVector", 2, 1_dataID, true);
   int     inDataScalarID = inDataScalar->getID();
   int     inDataVectorID = inDataVector->getID();
   Vertex &inVertex0      = inMesh->createVertex(Eigen::Vector2d::Constant(0.0));
@@ -113,8 +113,8 @@ BOOST_AUTO_TEST_CASE(ConsistentGradientNotConstant)
 
   // Create mesh to map from
   PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
-  PtrData inDataScalar   = inMesh->createDataWithGradient("InDataScalar", 1, dimensions, 0_dataID);
-  PtrData inDataVector   = inMesh->createDataWithGradient("InDataVector", 2, dimensions, 1_dataID);
+  PtrData inDataScalar   = inMesh->createData("InDataScalar", 1, 0_dataID, true);
+  PtrData inDataVector   = inMesh->createData("InDataVector", 2, 1_dataID, true);
   int     inDataScalarID = inDataScalar->getID();
   int     inDataVectorID = inDataVector->getID();
   Vertex &inVertex0      = inMesh->createVertex(Eigen::Vector2d::Constant(0.0));

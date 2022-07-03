@@ -8,7 +8,7 @@
 
 // Tests SolverInterface() with a user-defined MPI communicator.
 // Since PETSc also uses MPI, we use petrbf mapping here.
-BOOST_AUTO_TEST_SUITE(PreciceTests)
+BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicatorPetRBF)
 {
@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicatorPetRBF)
   if (context.isNamed("SolverOne")) {
 
     MPI_Comm                 myComm = precice::utils::Parallel::current()->comm;
-    precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
+    precice::SolverInterface interface(context.name, context.config(), context.rank, context.size, &myComm);
 
     int    meshID = interface.getMeshID("MeshOne");
     int    vertexIDs[2];
@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicatorPetRBF)
   }
 }
 
-BOOST_AUTO_TEST_SUITE_END() // PreciceTests
+BOOST_AUTO_TEST_SUITE_END() // Integration
 BOOST_AUTO_TEST_SUITE_END() // Parallel
 
 #endif // PRECICE_NO_PETSC

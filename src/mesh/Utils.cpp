@@ -1,7 +1,7 @@
 #include <Eigen/Core>
 #include <mesh/Edge.hpp>
 #include <mesh/Mesh.hpp>
-#include <utils/MasterSlave.hpp>
+#include <utils/IntraComm.hpp>
 
 namespace precice {
 namespace mesh {
@@ -30,6 +30,36 @@ Eigen::VectorXd integrate(const PtrMesh &mesh, const PtrData &data)
 
       for (int dim = 0; dim < valueDimensions; ++dim) {
         integral(dim) += (face.getArea() / 3.0) * (values(vertex1 + dim) + values(vertex2 + dim) + values(vertex3 + dim));
+      }
+    }
+  }
+  return integral;
+}
+
+Eigen::VectorXd integrateVolume(const PtrMesh &mesh, const PtrData &data)
+{
+  const int       valueDimensions = data->getDimensions();
+  const int       meshDimensions  = mesh->getDimensions();
+  const auto &    values          = data->values();
+  Eigen::VectorXd integral        = Eigen::VectorXd::Zero(valueDimensions);
+  if (meshDimensions == 2) {
+    for (const auto &face : mesh->triangles()) {
+      int vertex1 = face.vertex(0).getID() * valueDimensions;
+      int vertex2 = face.vertex(1).getID() * valueDimensions;
+      int vertex3 = face.vertex(2).getID() * valueDimensions;
+      for (int dim = 0; dim < valueDimensions; ++dim) {
+        integral(dim) += (face.getArea() / 3.0) * (values(vertex1 + dim) + values(vertex2 + dim) + values(vertex3 + dim));
+      }
+    }
+  } else {
+    for (const auto &tetra : mesh->tetrahedra()) {
+      int vertex1 = tetra.vertex(0).getID() * valueDimensions;
+      int vertex2 = tetra.vertex(1).getID() * valueDimensions;
+      int vertex3 = tetra.vertex(2).getID() * valueDimensions;
+      int vertex4 = tetra.vertex(3).getID() * valueDimensions;
+
+      for (int dim = 0; dim < valueDimensions; ++dim) {
+        integral(dim) += (tetra.getVolume() / 4.0) * (values(vertex1 + dim) + values(vertex2 + dim) + values(vertex3 + dim) + values(vertex4 + dim));
       }
     }
   }

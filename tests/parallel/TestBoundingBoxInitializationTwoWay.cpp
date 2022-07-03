@@ -5,7 +5,7 @@
 #include <precice/SolverInterface.hpp>
 #include <vector>
 
-BOOST_AUTO_TEST_SUITE(PreciceTests)
+BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_CASE(TestBoundingBoxInitializationTwoWay)
 {
@@ -21,7 +21,7 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitializationTwoWay)
   int i1 = -1, i2 = -1; //indices for data and positions
 
   if (context.isNamed("Fluid")) {
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       i1 = 0;
       i2 = 2;
     } else {
@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitializationTwoWay)
   }
 
   if (context.isNamed("Structure")) {
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       i1 = 2;
       i2 = 4;
     } else {
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitializationTwoWay)
   interface.finalize();
 }
 
-BOOST_AUTO_TEST_SUITE_END() // PreciceTests
+BOOST_AUTO_TEST_SUITE_END() // Integration
 BOOST_AUTO_TEST_SUITE_END() // Parallel
 
 #endif // PRECICE_NO_MPI

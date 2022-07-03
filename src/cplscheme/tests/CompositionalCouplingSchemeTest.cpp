@@ -55,7 +55,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
     m2n::M2NConfiguration::SharedPointer         m2nConfig(new m2n::M2NConfiguration(root));
     precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
     participantConfig->setDimensions(dimensions);
-    CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
+    CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
     const xml::ConfigurationContext ccontext{context.name, 0, 1};
     xml::configure(root, ccontext, configFilename);
@@ -194,12 +194,12 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
   {
     BOOST_TEST(communication);
     BOOST_TEST(not communication->isConnected());
-    useOnlyMasterCom(communication) = true;
+    useOnlyPrimaryCom(communication) = true;
     if (participant0 == localParticipant) {
-      communication->requestMasterConnection(participant1, participant0);
+      communication->requestPrimaryRankConnection(participant1, participant0);
     } else {
       BOOST_TEST(participant1 == localParticipant);
-      communication->acceptMasterConnection(participant1, participant0);
+      communication->acceptPrimaryRankConnection(participant1, participant0);
     }
   }
 };

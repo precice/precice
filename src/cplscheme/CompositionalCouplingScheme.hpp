@@ -126,8 +126,17 @@ public:
    */
   bool willDataBeExchanged(double lastSolverTimestepLength) const final override;
 
-  /// Returns true, if data has been exchanged in last call of advance().
-  virtual bool hasDataBeenReceived() const final override;
+  /**
+   * @brief checks all coupling schemes this coupling scheme is composed of.
+   * @returns true, if data has been received in call of initializeData().
+   */
+  bool hasInitialDataBeenReceived() const override final;
+
+  /**
+   * @brief checks all coupling schemes this coupling scheme is composed of.
+   * @returns true, if data has been exchanged in last call of advance().
+   */
+  bool hasDataBeenReceived() const final override;
 
   /**
    * @brief Returns the currently computed time of the coupling scheme.
@@ -144,7 +153,7 @@ public:
   int getTimeWindows() const final override;
 
   /**
-   * @brief Returns true, if timestep length is prescribed by the cpl scheme.
+   * @brief Returns true, if timestep length by any of the coupling schemes in this compositional coupling scheme.
    *
    * If any of the solvers in the composition has a timestep length limit, this
    * counts as limit.

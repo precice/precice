@@ -4,7 +4,7 @@
 
 #include <precice/SolverInterface.hpp>
 
-BOOST_AUTO_TEST_SUITE(PreciceTests)
+BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(MeshRequirements)
 BOOST_AUTO_TEST_CASE(NearestProjection2DA)
@@ -15,7 +15,7 @@ BOOST_AUTO_TEST_CASE(NearestProjection2DA)
   BOOST_TEST(interface.isMeshConnectivityRequired(meshID));
 }
 
-BOOST_AUTO_TEST_SUITE_END() // PreciceTests
+BOOST_AUTO_TEST_SUITE_END() // Integration
 BOOST_AUTO_TEST_SUITE_END() // Serial
 BOOST_AUTO_TEST_SUITE_END() // MeshRequirements
 

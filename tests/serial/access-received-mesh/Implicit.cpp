@@ -5,7 +5,7 @@
 #include <precice/SolverInterface.hpp>
 #include <vector>
 
-BOOST_AUTO_TEST_SUITE(PreciceTests)
+BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(AccessReceivedMesh)
 // Test case for a direct mesh access on one participant to a mesh defined
@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(Implicit)
   }
 }
 
-BOOST_AUTO_TEST_SUITE_END() // PreciceTests
+BOOST_AUTO_TEST_SUITE_END() // Integration
 BOOST_AUTO_TEST_SUITE_END() // Serial
 BOOST_AUTO_TEST_SUITE_END() // AccessReceivedMesh
 

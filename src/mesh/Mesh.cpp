@@ -11,6 +11,7 @@
 
 #include "Edge.hpp"
 #include "Mesh.hpp"
+#include "Tetrahedron.hpp"
 #include "Triangle.hpp"
 #include "logging/LogMacros.hpp"
 #include "math/geometry.hpp"
@@ -29,18 +30,11 @@ Mesh::Mesh(
     : _name(std::move(name)),
       _dimensions(dimensions),
       _id(id),
-      _boundingBox(dimensions)
+      _boundingBox(dimensions),
+      _index(*this)
 {
   PRECICE_ASSERT((_dimensions == 2) || (_dimensions == 3), _dimensions);
   PRECICE_ASSERT(_name != std::string(""));
-
-  meshChanged.connect([](Mesh &m) { query::clearCache(m); });
-  meshDestroyed.connect([](Mesh &m) { query::clearCache(m); });
-}
-
-Mesh::~Mesh()
-{
-  meshDestroyed(*this); // emit signal
 }
 
 Mesh::VertexContainer &Mesh::vertices()
@@ -71,6 +65,16 @@ Mesh::TriangleContainer &Mesh::triangles()
 const Mesh::TriangleContainer &Mesh::triangles() const
 {
   return _triangles;
+}
+
+const Mesh::TetraContainer &Mesh::tetrahedra() const
+{
+  return _tetrahedra;
+}
+
+Mesh::TetraContainer &Mesh::tetrahedra()
+{
+  return _tetrahedra;
 }
 
 int Mesh::getDimensions() const
@@ -127,10 +131,33 @@ Triangle &Mesh::createTriangle(
   return _triangles.back();
 }
 
+Triangle &Mesh::createTriangle(
+    Vertex &vertexOne,
+    Vertex &vertexTwo,
+    Vertex &vertexThree)
+{
+  auto nextID = _triangles.size();
+  _triangles.emplace_back(vertexOne, vertexTwo, vertexThree, nextID);
+  return _triangles.back();
+}
+
+Tetrahedron &Mesh::createTetrahedron(
+    Vertex &vertexOne,
+    Vertex &vertexTwo,
+    Vertex &vertexThree,
+    Vertex &vertexFour)
+{
+
+  auto nextID = _tetrahedra.size();
+  _tetrahedra.emplace_back(vertexOne, vertexTwo, vertexThree, vertexFour, nextID);
+  return _tetrahedra.back();
+}
+
 PtrData &Mesh::createData(
     const std::string &name,
     int                dimension,
-    DataID             id)
+    DataID             id,
+    bool               withGradient)
 {
   PRECICE_TRACE(name, dimension);
   for (const PtrData &data : _data) {
@@ -139,7 +166,8 @@ PtrData &Mesh::createData(
                   "Please rename or remove one of the use-data tags with name \"{}\".",
                   name, _name, name);
   }
-  PtrData data(new Data(name, id, dimension));
+  //#rows = dimensions of current mesh #columns = dimensions of corresponding data set
+  PtrData data(new Data(name, id, dimension, _dimensions, withGradient));
   _data.push_back(data);
   return _data.back();
 }
@@ -181,26 +209,6 @@ const PtrData &Mesh::data(const std::string &dataName) const
   });
   PRECICE_ASSERT(iter != _data.end(), "Data not found in mesh", dataName, _name);
   return *iter;
-}
-
-PtrData &Mesh::createDataWithGradient(
-    const std::string &name,
-    int                dimension,
-    int                meshDimensions,
-    DataID             id)
-{
-  PRECICE_TRACE(name, dimension);
-  for (const PtrData &data : _data) {
-    PRECICE_CHECK(data->getName() != name,
-                  "Data \"{}\" cannot be created twice for mesh \"{}\". "
-                  "Please rename or remove one of the use-data tags with name \"{}\".",
-                  name, _name, name);
-  }
-
-  //#rows = dimensions of current mesh #columns = dimensions of corresponding data set
-  PtrData data(new Data(name, id, dimension, meshDimensions, true));
-  _data.push_back(data);
-  return _data.back();
 }
 
 const std::string &Mesh::getName() const
@@ -246,7 +254,7 @@ void Mesh::allocateDataValues()
 
     // Allocate gradient data values
     if (data->hasGradient()) {
-      const SizeType spaceDimensions = data->getSpacialDimensions();
+      const SizeType spaceDimensions = data->getSpatialDimensions();
 
       const SizeType expectedColumnSize = expectedCount * data->getDimensions();
       const auto     actualColumnSize   = static_cast<SizeType>(data->gradientValues().cols());
@@ -285,8 +293,8 @@ void Mesh::clear()
   _triangles.clear();
   _edges.clear();
   _vertices.clear();
-
-  meshChanged(*this);
+  _tetrahedra.clear();
+  _index.clear();
 
   for (mesh::PtrData &data : _data) {
     data->values().resize(0);
@@ -385,8 +393,6 @@ void Mesh::addMesh(
     vertexMap[vertex.getID()] = &v;
   }
 
-  boost::container::flat_map<EdgeID, Edge *> edgeMap;
-  edgeMap.reserve(deltaMesh.edges().size());
   // you cannot just take the vertices from the edge and add them,
   // since you need the vertices from the new mesh
   // (which may differ in IDs)
@@ -395,22 +401,32 @@ void Mesh::addMesh(
     VertexID vertexIndex2 = edge.vertex(1).getID();
     PRECICE_ASSERT((vertexMap.count(vertexIndex1) == 1) &&
                    (vertexMap.count(vertexIndex2) == 1));
-    Edge &e               = createEdge(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2]);
-    edgeMap[edge.getID()] = &e;
+    createEdge(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2]);
   }
 
-  if (_dimensions == 3) {
-    for (const Triangle &triangle : deltaMesh.triangles()) {
-      EdgeID edgeIndex1 = triangle.edge(0).getID();
-      EdgeID edgeIndex2 = triangle.edge(1).getID();
-      EdgeID edgeIndex3 = triangle.edge(2).getID();
-      PRECICE_ASSERT((edgeMap.count(edgeIndex1) == 1) &&
-                     (edgeMap.count(edgeIndex2) == 1) &&
-                     (edgeMap.count(edgeIndex3) == 1));
-      createTriangle(*edgeMap[edgeIndex1], *edgeMap[edgeIndex2], *edgeMap[edgeIndex3]);
-    }
+  for (const Triangle &triangle : deltaMesh.triangles()) {
+    VertexID vertexIndex1 = triangle.vertex(0).getID();
+    VertexID vertexIndex2 = triangle.vertex(1).getID();
+    VertexID vertexIndex3 = triangle.vertex(2).getID();
+    PRECICE_ASSERT((vertexMap.count(vertexIndex1) == 1) &&
+                   (vertexMap.count(vertexIndex2) == 1) &&
+                   (vertexMap.count(vertexIndex3) == 1));
+    createTriangle(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2], *vertexMap[vertexIndex3]);
   }
-  meshChanged(*this);
+
+  for (const Tetrahedron &tetra : deltaMesh.tetrahedra()) {
+    VertexID vertexIndex1 = tetra.vertex(0).getID();
+    VertexID vertexIndex2 = tetra.vertex(1).getID();
+    VertexID vertexIndex3 = tetra.vertex(2).getID();
+    VertexID vertexIndex4 = tetra.vertex(3).getID();
+
+    PRECICE_ASSERT((vertexMap.count(vertexIndex1) == 1) &&
+                   (vertexMap.count(vertexIndex2) == 1) &&
+                   (vertexMap.count(vertexIndex3) == 1) &&
+                   (vertexMap.count(vertexIndex4) == 1));
+    createTetrahedron(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2], *vertexMap[vertexIndex3], *vertexMap[vertexIndex4]);
+  }
+  _index.clear();
 }
 
 const BoundingBox &Mesh::getBoundingBox() const

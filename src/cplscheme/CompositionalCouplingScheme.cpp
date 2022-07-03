@@ -136,6 +136,20 @@ bool CompositionalCouplingScheme::willDataBeExchanged(double lastSolverTimestepL
   return willBeExchanged;
 }
 
+bool CompositionalCouplingScheme::hasInitialDataBeenReceived() const
+{
+  PRECICE_TRACE();
+  bool hasBeenReceived = false;
+  // Question: Does it suffice to only check the active ones?
+  for (SchemesIt it = _activeSchemesBegin; it != _activeSchemesEnd; it++) {
+    if (not it->onHold) {
+      hasBeenReceived |= it->scheme->hasInitialDataBeenReceived();
+    }
+  }
+  PRECICE_DEBUG("return {}", hasBeenReceived);
+  return hasBeenReceived;
+}
+
 bool CompositionalCouplingScheme::hasDataBeenReceived() const
 {
   PRECICE_TRACE();
@@ -192,7 +206,7 @@ double CompositionalCouplingScheme::getTimeWindowSize() const
   PRECICE_TRACE();
   double timeWindowSize = std::numeric_limits<double>::max();
   for (const Scheme &scheme : _couplingSchemes) {
-    if (scheme.scheme->getTimeWindowSize() < timeWindowSize) {
+    if (scheme.scheme->hasTimeWindowSize() && scheme.scheme->getTimeWindowSize() < timeWindowSize) {
       timeWindowSize = scheme.scheme->getTimeWindowSize();
     }
   }

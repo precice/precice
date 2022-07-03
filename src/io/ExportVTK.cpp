@@ -12,7 +12,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -25,7 +25,7 @@ void ExportVTK::doExport(
 {
   PRECICE_TRACE(name, location, mesh.getName());
   PRECICE_ASSERT(name != std::string(""));
-  PRECICE_ASSERT(!utils::MasterSlave::isParallel(), "ExportVTK only supports serial participants.");
+  PRECICE_ASSERT(!utils::IntraComm::isParallel(), "ExportVTK only supports serial participants.");
 
   namespace fs = boost::filesystem;
   fs::path outfile(location);
@@ -39,6 +39,7 @@ void ExportVTK::doExport(
   writeHeader(outstream);
   exportMesh(outstream, mesh);
   exportData(outstream, mesh);
+  exportGradient(outstream, mesh);
   outstream.close();
 }
 
@@ -72,12 +73,21 @@ void ExportVTK::exportMesh(
 
   // Plot triangles
   if (mesh.getDimensions() == 3) {
-    size_t sizeTriangles = mesh.triangles().size();
-    size_t sizeEdges     = mesh.edges().size();
-    size_t sizeElements  = sizeTriangles + sizeEdges;
+    size_t sizeTetrahedra = mesh.tetrahedra().size();
+    size_t sizeTriangles  = mesh.triangles().size();
+    size_t sizeEdges      = mesh.edges().size();
+    size_t sizeElements   = sizeTriangles + sizeEdges + sizeTetrahedra;
 
     outFile << "CELLS " << sizeElements << ' '
-            << sizeTriangles * 4 + sizeEdges * 3 << "\n\n";
+            << sizeTetrahedra * 5 + sizeTriangles * 4 + sizeEdges * 3 << "\n\n";
+    for (auto const &tetra : mesh.tetrahedra()) {
+      int internalIndices[4];
+      internalIndices[0] = tetra.vertex(0).getID();
+      internalIndices[1] = tetra.vertex(1).getID();
+      internalIndices[2] = tetra.vertex(2).getID();
+      internalIndices[3] = tetra.vertex(3).getID();
+      writeTetrahedron(internalIndices, outFile);
+    }
     for (auto const &triangle : mesh.triangles()) {
       int internalIndices[3];
       internalIndices[0] = triangle.vertex(0).getID();
@@ -93,6 +103,10 @@ void ExportVTK::exportMesh(
     }
 
     outFile << "\nCELL_TYPES " << sizeElements << "\n\n";
+    // See VTK reference for CELL_TYPES
+    for (size_t i = 0; i < sizeTetrahedra; i++) {
+      outFile << "10\n";
+    }
     for (size_t i = 0; i < sizeTriangles; i++) {
       outFile << "5\n";
     }
@@ -100,6 +114,7 @@ void ExportVTK::exportMesh(
       outFile << "3\n";
     }
   }
+
   outFile << '\n';
 }
 
@@ -145,13 +160,81 @@ void ExportVTK::exportData(
   }
 }
 
+void ExportVTK::exportGradient(std::ofstream &outFile, const mesh::Mesh &mesh)
+{
+  const int spaceDim = mesh.getDimensions();
+  for (const mesh::PtrData &data : mesh.data()) {
+    if (data->hasGradient()) { // Check whether this data has gradient
+      auto &gradientValues = data->gradientValues();
+      if (data->getDimensions() == 1) { // Scalar data, create a vector <dataname>_gradient
+        outFile << "VECTORS " << data->getName() << "_gradient"
+                << " double\n";
+        for (int i = 0; i < gradientValues.cols(); i++) { // Loop over vertices
+          int j = 0;                                      // Dimension counter
+          for (; j < gradientValues.rows(); j++) {        // Loop over space directions
+            outFile << gradientValues.coeff(j, i) << " ";
+          }
+          if (j < 3) { // If 2D data add additonal zero as third component
+            outFile << '0';
+          }
+          outFile << "\n";
+        }
+      } else { // Vector data, write n vector for n dimension <dataname>_(dx/dy/dz)
+        outFile << "VECTORS " << data->getName() << "_dx"
+                << " double\n";
+        for (int i = 0; i < gradientValues.cols(); i += spaceDim) { // Loop over vertices
+          int j = 0;
+          for (; j < gradientValues.rows(); j++) { // Loop over components
+            outFile << gradientValues.coeff(j, i) << " ";
+          }
+          if (j < 3) { // If 2D data add additonal zero as third component
+            outFile << '0';
+          }
+          outFile << "\n";
+        }
+        outFile << "\n";
+
+        outFile << "VECTORS " << data->getName() << "_dy"
+                << " double\n";
+        for (int i = 1; i < gradientValues.cols(); i += spaceDim) { // Loop over vertices
+          int j = 0;
+          for (; j < gradientValues.rows(); j++) { // Loop over components
+            outFile << gradientValues.coeff(j, i) << " ";
+          }
+          if (j < 3) { // If 2D data add additonal zero as third component
+            outFile << '0';
+          }
+          outFile << "\n";
+        }
+        outFile << "\n";
+
+        if (spaceDim == 3) { // dz is only for 3D data
+          outFile << "VECTORS " << data->getName() << "_dz"
+                  << " double\n";
+          for (int i = 2; i < gradientValues.cols(); i += spaceDim) { // Loop over vertices
+            int j = 0;
+            for (; j < gradientValues.rows(); j++) { // Loop over components
+              outFile << gradientValues.coeff(j, i) << " ";
+            }
+            if (j < 3) { // If 2D data add additonal zero as third component
+              outFile << '0';
+            }
+            outFile << "\n";
+          }
+        }
+      }
+      outFile << '\n';
+    }
+  }
+}
+
 void ExportVTK::initializeWriting(
     std::ofstream &filestream)
 {
-  //size_t pos = fullFilename.rfind(".vtk");
-  //if ((pos == std::string::npos) || (pos != fullFilename.size()-4)){
-  //  fullFilename += ".vtk";
-  //}
+  // size_t pos = fullFilename.rfind(".vtk");
+  // if ((pos == std::string::npos) || (pos != fullFilename.size()-4)){
+  //   fullFilename += ".vtk";
+  // }
   filestream.setf(std::ios::showpoint);
   filestream.setf(std::ios::scientific);
   filestream << std::setprecision(std::numeric_limits<double>::max_digits10);
@@ -183,6 +266,17 @@ void ExportVTK::writeTriangle(
 {
   outFile << 3 << ' ';
   for (int i = 0; i < 3; i++) {
+    outFile << vertexIndices[i] << ' ';
+  }
+  outFile << '\n';
+}
+
+void ExportVTK::writeTetrahedron(
+    int           vertexIndices[4],
+    std::ostream &outFile)
+{
+  outFile << 4 << ' ';
+  for (int i = 0; i < 4; i++) {
     outFile << vertexIndices[i] << ' ';
   }
   outFile << '\n';

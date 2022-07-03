@@ -57,6 +57,9 @@ public:
 
   inline bool operator!=(const Vertex &rhs) const;
 
+  /// Implements partial ordering by ID
+  inline bool operator<(const Vertex &rhs) const;
+
 private:
   /// Coordinates of the vertex
   std::array<double, 3> _coords;
@@ -127,6 +130,11 @@ inline bool Vertex::operator==(const Vertex &rhs) const
 inline bool Vertex::operator!=(const Vertex &rhs) const
 {
   return !(*this == rhs);
+}
+
+inline bool Vertex::operator<(const Vertex &rhs) const
+{
+  return _id < rhs._id;
 }
 
 /// Make Vertex printable

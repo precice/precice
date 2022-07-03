@@ -107,6 +107,11 @@ bool SolverInterface::isMeshConnectivityRequired(int meshID) const
   return _impl->isMeshConnectivityRequired(meshID);
 }
 
+bool SolverInterface::isGradientDataRequired(int dataID) const
+{
+  return _impl->isGradientDataRequired(dataID);
+}
+
 bool SolverInterface::hasData(
     const std::string &dataName, int meshID) const
 {
@@ -223,6 +228,17 @@ void SolverInterface::setMeshQuadWithEdges(
                               fourthVertexID);
 }
 
+void SolverInterface::setMeshTetrahedron(
+    int meshID,
+    int firstVertexID,
+    int secondVertexID,
+    int thirdVertexID,
+    int fourthVertexID)
+{
+  _impl->setMeshTetrahedron(meshID, firstVertexID, secondVertexID, thirdVertexID,
+                            fourthVertexID);
+}
+
 void SolverInterface::writeBlockVectorData(
     int           dataID,
     int           size,
@@ -232,12 +248,29 @@ void SolverInterface::writeBlockVectorData(
   _impl->writeBlockVectorData(dataID, size, valueIndices, values);
 }
 
+void SolverInterface::writeBlockVectorGradientData(
+    int           dataID,
+    int           size,
+    const int *   valueIndices,
+    const double *gradientValues)
+{
+  _impl->writeBlockVectorGradientData(dataID, size, valueIndices, gradientValues);
+}
+
 void SolverInterface::writeVectorData(
     int           dataID,
     int           valueIndex,
     const double *value)
 {
   _impl->writeVectorData(dataID, valueIndex, value);
+}
+
+void SolverInterface::writeVectorGradientData(
+    int           dataID,
+    int           valueIndex,
+    const double *gradientValues)
+{
+  _impl->writeVectorGradientData(dataID, valueIndex, gradientValues);
 }
 
 void SolverInterface::writeBlockScalarData(
@@ -249,12 +282,29 @@ void SolverInterface::writeBlockScalarData(
   _impl->writeBlockScalarData(dataID, size, valueIndices, values);
 }
 
+void SolverInterface::writeBlockScalarGradientData(
+    int           dataID,
+    int           size,
+    const int *   valueIndices,
+    const double *gradientValues)
+{
+  _impl->writeBlockScalarGradientData(dataID, size, valueIndices, gradientValues);
+}
+
 void SolverInterface::writeScalarData(
     int    dataID,
     int    valueIndex,
     double value)
 {
   _impl->writeScalarData(dataID, valueIndex, value);
+}
+
+void SolverInterface::writeScalarGradientData(
+    int           dataID,
+    int           valueIndex,
+    const double *gradientValues)
+{
+  _impl->writeScalarGradientData(dataID, valueIndex, gradientValues);
 }
 
 void SolverInterface::readBlockVectorData(
@@ -266,12 +316,32 @@ void SolverInterface::readBlockVectorData(
   _impl->readBlockVectorData(dataID, size, valueIndices, values);
 }
 
+void SolverInterface::readBlockVectorData(
+    int        dataID,
+    int        size,
+    const int *valueIndices,
+    double     relativeReadTime,
+    double *   values) const
+{
+  _impl->readBlockVectorData(dataID, size, valueIndices, relativeReadTime, values);
+}
+
 void SolverInterface::readVectorData(
     int     dataID,
     int     valueIndex,
     double *value) const
 {
-  return _impl->readVectorData(dataID, valueIndex, value);
+  _impl->readVectorData(dataID, valueIndex, value);
+}
+
+void SolverInterface::readVectorData(
+    int     dataID,
+    int     valueIndex,
+    double  relativeReadTime,
+    double *value) const
+{
+  // @todo: needs testing!
+  _impl->readVectorData(dataID, valueIndex, relativeReadTime, value);
 }
 
 void SolverInterface::readBlockScalarData(
@@ -283,12 +353,31 @@ void SolverInterface::readBlockScalarData(
   _impl->readBlockScalarData(dataID, size, valueIndices, values);
 }
 
+void SolverInterface::readBlockScalarData(
+    int        dataID,
+    int        size,
+    const int *valueIndices,
+    double     relativeReadTime,
+    double *   values) const
+{
+  _impl->readBlockScalarData(dataID, size, valueIndices, relativeReadTime, values);
+}
+
 void SolverInterface::readScalarData(
     int     dataID,
     int     valueIndex,
     double &value) const
 {
-  return _impl->readScalarData(dataID, valueIndex, value);
+  _impl->readScalarData(dataID, valueIndex, value);
+}
+
+void SolverInterface::readScalarData(
+    int     dataID,
+    int     valueIndex,
+    double  relativeReadTime,
+    double &value) const
+{
+  _impl->readScalarData(dataID, valueIndex, relativeReadTime, value);
 }
 
 void SolverInterface::setMeshAccessRegion(const int     meshID,

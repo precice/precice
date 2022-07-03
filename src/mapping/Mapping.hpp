@@ -19,8 +19,8 @@ public:
    * rigid body motions are retained. A conservative mapping retains the sum of
    * the values. The scaled-consistent mapping first map the values consistently,
    * then scales the mapped such that the integrals on both sides of the interface
-   * are equal. Values integrated over some area should be mapped conservative or 
-   * scaled-consistent, while area independent values such as pressure or stresses 
+   * are equal. Values integrated over some area should be mapped conservative or
+   * scaled-consistent, while area independent values such as pressure or stresses
    * should be mapped consistent.
    */
   enum Constraint {
@@ -52,7 +52,7 @@ public:
   Mapping &operator=(Mapping &&) = delete;
 
   /// Destructor, empty.
-  virtual ~Mapping() {}
+  virtual ~Mapping() = default;
 
   /**
    * @brief Sets input and output meshes carrying data to be mapped.
@@ -85,7 +85,7 @@ public:
    *
    * After a call to clear(), a computed mapping is removed and false returned.
    */
-  virtual bool hasComputedMapping() const = 0;
+  bool hasComputedMapping() const;
 
   /// Checks whether the mapping has the given constraint or not
   virtual bool hasConstraint(const Constraint &constraint) const;
@@ -102,9 +102,7 @@ public:
    * Post-conditions:
    * - output values are computed from input values
    */
-  virtual void map(
-      int inputDataID,
-      int outputDataID) = 0;
+  void map(int inputDataID, int outputDataID);
 
   /// Method used by partition. Tags vertices that could be owned by this rank.
   virtual void tagMeshFirstRound() = 0;
@@ -116,7 +114,7 @@ public:
    * @brief Scales the consistently mapped output data such that the surface integral
    * of the values on input mesh and output mesh are equal
    *
-   * 
+   *
    * @pre Input and output mesh should have full connectivity information.
    */
   virtual void scaleConsistentMapping(int inputDataID, int outputDataID) const;
@@ -139,6 +137,28 @@ protected:
 
   int getDimensions() const;
 
+  /// Flag to indicate whether computeMapping() has been called.
+  bool _hasComputedMapping = false;
+
+  /// Flag if gradient data is required for the mapping
+  bool _requireGradient;
+
+  /**
+   * @brief Maps data using a conservative constraint
+   *
+   * @param[in] inputDataID Data ID of the input data set
+   * @param[in] outputDataID Data ID of the output data set
+   */
+  virtual void mapConservative(DataID inputDataID, DataID outputDataID) = 0;
+
+  /**
+   * @brief Maps data using a consistent constraint
+   *
+   * @param[in] inputDataID Data ID of the input data set
+   * @param[in] outputDataID Data ID of the output data set
+   */
+  virtual void mapConsistent(DataID inputDataID, DataID outputDataID) = 0;
+
 private:
   /// Determines whether mapping is consistent or conservative.
   Constraint _constraint;
@@ -154,9 +174,6 @@ private:
 
   /// Pointer to output mesh.
   mesh::PtrMesh _output;
-
-  /// Flag if gradient data is required for the mapping
-  bool _requireGradient;
 
   int _dimensions;
 };

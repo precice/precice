@@ -15,7 +15,7 @@
 #include "logging/LogMacros.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/Helpers.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
 //#include "utils/NumericalCompare.hpp"
@@ -137,7 +137,7 @@ void IQNILSAcceleration::computeQNUpdate(const DataMap &cplData, Eigen::VectorXd
   // Calculate QR decomposition of matrix V and solve Rc = -Qr
   Eigen::VectorXd c;
 
-  // for master-slave mode and procs with no vertices,
+  // for procs with no vertices,
   // qrV.cols() = getLSSystemCols() and _qrV.rows() = 0
   auto Q = _qrV.matrixQ();
   auto R = _qrV.matrixR();
@@ -163,33 +163,33 @@ void IQNILSAcceleration::computeQNUpdate(const DataMap &cplData, Eigen::VectorXd
   utils::append(c, Eigen::VectorXd(Eigen::VectorXd::Zero(_local_b.size())));
 
   // compute rhs Q^T*res in parallel
-  if (!utils::MasterSlave::isParallel()) {
+  if (!utils::IntraComm::isParallel()) {
     PRECICE_ASSERT(Q.cols() == getLSSystemCols(), Q.cols(), getLSSystemCols());
     // back substitution
     c = R.triangularView<Eigen::Upper>().solve<Eigen::OnTheLeft>(_local_b);
   } else {
-    PRECICE_ASSERT(utils::MasterSlave::getCommunication() != nullptr);
-    PRECICE_ASSERT(utils::MasterSlave::getCommunication()->isConnected());
+    PRECICE_ASSERT(utils::IntraComm::getCommunication() != nullptr);
+    PRECICE_ASSERT(utils::IntraComm::getCommunication()->isConnected());
     if (_hasNodesOnInterface) {
       PRECICE_ASSERT(Q.cols() == getLSSystemCols(), Q.cols(), getLSSystemCols());
     }
     PRECICE_ASSERT(_local_b.size() == getLSSystemCols(), _local_b.size(), getLSSystemCols());
 
-    if (utils::MasterSlave::isMaster()) {
+    if (utils::IntraComm::isPrimary()) {
       PRECICE_ASSERT(_global_b.size() == 0, _global_b.size());
     }
     utils::append(_global_b, Eigen::VectorXd(Eigen::VectorXd::Zero(_local_b.size())));
 
     // do a reduce operation to sum up all the _local_b vectors
-    utils::MasterSlave::reduceSum(_local_b, _global_b);
+    utils::IntraComm::reduceSum(_local_b, _global_b);
 
-    // back substitution R*c = b only in master node
-    if (utils::MasterSlave::isMaster()) {
+    // back substitution R*c = b only on the primary rank
+    if (utils::IntraComm::isPrimary()) {
       c = R.triangularView<Eigen::Upper>().solve<Eigen::OnTheLeft>(_global_b);
     }
 
-    // broadcast coefficients c to all slaves
-    utils::MasterSlave::broadcast(c);
+    // broadcast coefficients c to all secondary ranks
+    utils::IntraComm::broadcast(c);
   }
 
   PRECICE_DEBUG("   Apply Newton factors");

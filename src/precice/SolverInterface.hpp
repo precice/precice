@@ -41,6 +41,8 @@ public:
   ///@{
 
   /**
+   * @brief Constructs a SolverInterface for the given participant
+   *
    * @param[in] participantName Name of the participant using the interface. Has to
    *        match the name given for a participant in the xml configuration file.
    * @param[in] configurationFileName Name (with path) of the xml configuration file.
@@ -56,6 +58,8 @@ public:
       int                solverProcessSize);
 
   /**
+   * @brief Constructs a SolverInterface for the given participant and a custom MPI communicator.
+   *
    * @param[in] participantName Name of the participant using the interface. Has to
    *        match the name given for a participant in the xml configuration file.
    * @param[in] configurationFileName Name (with path) of the xml configuration file.
@@ -81,6 +85,12 @@ public:
 
   /**
    * @brief Fully initializes preCICE
+   *
+   * - Sets up a connection to the other participants of the coupled simulation.
+   * - Creates all meshes, solver meshes need to be submitted before.
+   * - Receives first coupling data, when the solver is not starting the
+   *   coupled simulation.
+   * - Determines length of the first timestep to be computed.
    *
    * @pre initialize() has not yet bee called.
    *
@@ -124,6 +134,13 @@ public:
   /**
    * @brief Advances preCICE after the solver has computed one timestep.
    *
+   * - Sends and resets coupling data written by solver to coupling partners.
+   * - Receives coupling data read by solver.
+   * - Computes and applies data mappings.
+   * - Computes acceleration of coupling data.
+   * - Exchanges and computes information regarding the state of the coupled
+   *   simulation.
+   *
    * @param[in] computedTimestepLength Length of timestep used by the solver.
    *
    * @pre initialize() has been called successfully.
@@ -147,10 +164,24 @@ public:
   /**
    * @brief Finalizes preCICE.
    *
+   * If initialize() has been called:
+   *
+   * - Synchronizes with remote participants
+   * - handles final exports
+   * - cleans up general state
+   *
+   * Always:
+   *
+   * - flushes and finalizes Events
+   * - finalizes managed PETSc
+   * - finalizes managed MPI
+   *
    * @pre finalize() has not been called.
    *
    * @post Communication channels are closed.
    * @post Meshes and data are deallocated
+   * @post Finalized managed PETSc
+   * @post Finalized managed MPI
    *
    * @see isCouplingOngoing()
    */
@@ -244,6 +275,7 @@ public:
    */
   bool isTimeWindowComplete() const;
 
+  // Will be removed in v3.0.0. See https://github.com/precice/precice/issues/704
   /**
    * @brief Returns whether the solver has to evaluate the surrogate model representation.
    *
@@ -259,6 +291,7 @@ public:
    */
   [[deprecated("The manifold mapping feature is no longer supported.")]] bool hasToEvaluateSurrogateModel() const;
 
+  // Will be removed in v3.0.0. See https://github.com/precice/precice/issues/704
   /**
    * @brief Checks if the solver has to evaluate the fine model representation.
    *
@@ -317,6 +350,8 @@ public:
   /*
    * @brief Resets mesh with given ID.
    *
+   * @experimental
+   *
    * Has to be called, everytime the positions for data to be mapped
    * changes. Only has an effect, if the mapping used is non-stationary and
    * non-incremental.
@@ -333,6 +368,8 @@ public:
 
   /**
    * @brief Returns the ID belonging to the mesh with given name.
+   *
+   * The existing names are determined from the configuration.
    *
    * @param[in] meshName the name of the mesh
    * @returns the id of the corresponding mesh
@@ -553,6 +590,24 @@ public:
       int thirdVertexID,
       int fourthVertexID);
 
+  /**
+   * @brief Set tetrahedron in 3D mesh from vertex ID
+   * 
+   * @param[in] meshID ID of the mesh to add the Tetrahedron to
+   * @param[in] firstVertexID ID of the first vertex of the Tetrahedron
+   * @param[in] secondVertexID ID of the second vertex of the Tetrahedron
+   * @param[in] thirdVertexID ID of the third vertex of the Tetrahedron
+   * @param[in] fourthVertexID ID of the fourth vertex of the Tetrahedron
+   *
+   * @pre vertices with firstVertexID, secondVertexID, thirdVertexID, and fourthVertexID were added to the mesh with the ID meshID
+   */
+  void setMeshTetrahedron(
+      int meshID,
+      int firstVertexID,
+      int secondVertexID,
+      int thirdVertexID,
+      int fourthVertexID);
+
   ///@}
 
   ///@name Data Access
@@ -670,7 +725,7 @@ public:
       double value);
 
   /**
-   * @brief Reads vector data into a provided block.
+   * @brief Reads vector data values given as block from a mesh. Values correspond to the end of the current time window.
    *
    * This function reads values of specified vertices from a dataID.
    * Values are read into a block of continuous memory.
@@ -699,7 +754,7 @@ public:
       double *   values) const;
 
   /**
-   * @brief Reads vector data form a vertex
+   * @brief Reads vector data at a vertex on a mesh. Values correspond to the end of the current time window.
    *
    * This function reads a value of a specified vertex from a dataID.
    * Values are provided as a block of continuous memory.
@@ -724,7 +779,7 @@ public:
       double *value) const;
 
   /**
-   * @brief Reads scalar data as a block.
+   * @brief Reads scalar data values given as block from a mesh. Values correspond to the end of the current time window.
    *
    * This function reads values of specified vertices from a dataID.
    * Values are provided as a block of continuous memory.
@@ -750,7 +805,7 @@ public:
       double *   values) const;
 
   /**
-   * @brief Reads scalar data of a vertex.
+   * @brief Reads scalar data at a vertex on a mesh. Values correspond to the end of the current time window.
    *
    * This function reads a value of a specified vertex from a dataID.
    *
@@ -771,7 +826,7 @@ public:
 
   ///@}
 
-  /** @name Experimental Data Access
+  /** @name Experimental: Direct Access
    * These API functions are \b experimental and may change in future versions.
    */
   ///@{
@@ -841,6 +896,8 @@ public:
    *        interest defined by bounding boxes and reads the corresponding
    *        coordinates omitting the mapping.
    *
+   * @experimental
+   *
    * @param[in]  meshID corresponding mesh ID
    * @param[in]  size return value of @p getMeshVertexSize()
    * @param[out] ids ids corresponding to the coordinates
@@ -859,6 +916,306 @@ public:
       const int size,
       int *     ids,
       double *  coordinates) const;
+
+  ///@}
+
+  /** @name Experimental: Time Interpolation
+   * These API functions are \b experimental and may change in future versions.
+   */
+  ///@{
+
+  /**
+   * @brief Reads vector data values given as block from a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.
+   *
+   * @experimental
+   *
+   * This function reads values of specified vertices from a dataID.
+   * Values are read into a block of continuous memory.
+   * valueIndices contains the indices of the vertices.
+   *
+   * The 2D-format of values is (d0x, d0y, d1x, d1y, ..., dnx, dny)
+   * The 3D-format of values is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
+   *
+   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
+   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
+   * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at
+   * the end of the time step.
+   *
+   * @param[in] dataID ID to read from.
+   * @param[in] size Number n of vertices.
+   * @param[in] valueIndices Indices of the vertices.
+   * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step.
+   * @param[out] values Pointer to read destination.
+   *
+   * @pre count of available elements at values matches the configured dimension * size
+   * @pre count of available elements at valueIndices matches the given size
+   * @pre initialize() has been called
+   *
+   * @post values contain the read data as specified in the above format.
+   *
+   * @see SolverInterface::setMeshVertex()
+   */
+  void readBlockVectorData(
+      int        dataID,
+      int        size,
+      const int *valueIndices,
+      double     relativeReadTime,
+      double *   values) const;
+
+  /**
+   * @brief Reads vector data at a vertex on a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.
+   *
+   * @experimental
+   *
+   * This function reads a value of a specified vertex from a dataID.
+   * Values are provided as a block of continuous memory.
+   *
+   * The 2D-format of value is (x, y)
+   * The 3D-format of value is (x, y, z)
+   *
+   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
+   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
+   * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at
+   * the end of the time step.
+   *
+   * @param[in] dataID ID to read from.
+   * @param[in] valueIndex Index of the vertex.
+   * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step.
+   * @param[out] value Pointer to the vector value.
+   *
+   * @pre count of available elements at value matches the configured dimension
+   * @pre initialize() has been called
+   *
+   * @post value contains the read data as specified in the above format.
+   *
+   * @see SolverInterface::setMeshVertex()
+   */
+  void readVectorData(
+      int     dataID,
+      int     valueIndex,
+      double  relativeReadTime,
+      double *value) const;
+
+  /**
+   * @brief Reads scalar data values given as block from a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.
+   *
+   * @experimental
+   *
+   * This function reads values of specified vertices from a dataID.
+   * Values are provided as a block of continuous memory.
+   * valueIndices contains the indices of the vertices.
+   *
+   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
+   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
+   * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at
+   * the end of the time step.
+   *
+   * @param[in] dataID ID to read from.
+   * @param[in] size Number n of vertices.
+   * @param[in] valueIndices Indices of the vertices.
+   * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step.
+   * @param[out] values Pointer to the read destination.
+   *
+   * @pre count of available elements at values matches the given size
+   * @pre count of available elements at valueIndices matches the given size
+   * @pre initialize() has been called
+   *
+   * @post values contains the read data.
+   *
+   * @see SolverInterface::setMeshVertex()
+   */
+  void readBlockScalarData(
+      int        dataID,
+      int        size,
+      const int *valueIndices,
+      double     relativeReadTime,
+      double *   values) const;
+
+  /**
+   * @brief Reads scalar data at a vertex on a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.
+   *
+   * @experimental
+   *
+   * This function reads a value of a specified vertex from a dataID.
+   *
+   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
+   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
+   * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at
+   * the end of the time step.
+   *
+   * @param[in] dataID ID to read from.
+   * @param[in] valueIndex Index of the vertex.
+   * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step
+   * @param[out] value Read destination of the value.
+   *
+   * @pre initialize() has been called
+   *
+   * @post value contains the read data.
+   *
+   * @see SolverInterface::setMeshVertex()
+   */
+  void readScalarData(
+      int     dataID,
+      int     valueIndex,
+      double  relativeReadTime,
+      double &value) const;
+
+  ///@}
+
+  /** @name Experimental: Gradient Data
+   * These API functions are \b experimental and may change in future versions.
+   */
+  ///@{
+
+  /**
+   * @brief Checks if the given data set requires gradient data.
+   * We check if the data object has been intialized with the gradient flag.
+   *
+   * @experimental
+   *
+   * preCICE may require gradient data information from the solver and
+   * ignores any API calls regarding gradient data if it is not required.
+   * (When applying a nearest-neighbor-gradient mapping)
+   *
+   * @param[in] dataID the id of the data
+   * @returns whether gradient is required
+   */
+  bool isGradientDataRequired(int dataID) const;
+
+  /**
+   * @brief Writes vector gradient data given as block.
+   *
+   * @experimental
+   *
+   * This function writes values of specified vertices to a dataID.
+   * Values are provided as a block of continuous memory.
+   * \p valueIndices contains the indices of the vertices
+   *
+   * The values are passed in the same format applied in \ref writeVectorGradientData() for each data vertex:
+   *
+   * The 2D-format of \p gradientValues is ( v0x_dx, v0y_dx, v0x_dy, v0y_dy,
+   *                                         v1x_dx, v1y_dx, v1x_dy, v1y_dy,
+   *                                         ... ,
+   *                                         vnx_dx, vny_dx, vnx_dy, vny_dy)
+   *
+   * corresponding to the vector data v0 = (v0x, v0y) , v1 = (v1x, v1y), ... , vn = (vnx, vny) differentiated in spatial directions x and y.
+   *
+   *
+   * The 3D-format of \p gradientValues is ( v0x_dx, v0y_dx, v0z_dx, v0x_dy, v0y_dy, v0z_dy, v0x_dz, v0y_dz, v0z_dz,
+   *                                         v1x_dx, v1y_dx, v1z_dx, v1x_dy, v1y_dy, v1z_dy, v1x_dz, v1y_dz, v1z_dz,
+   *                                         ... ,
+   *                                         vnx_dx, vny_dx, vnz_dx, vnx_dy, vny_dy, vnz_dy, vnx_dz, vny_dz, vnz_dz)
+   *
+   * corresponding to the vector data v0 = (v0x, v0y, v0z) , v1 = (v1x, v1y, v1z), ... , vn = (vnx, vny, vnz) differentiated in spatial directions x,y and z.
+   *
+   * @param[in] dataID ID to write to.
+   * @param[in] size Number n of vertices.
+   * @param[in] valueIndices Indices of the vertices.
+   * @param[in] gradientValues Pointer to the gradient values.
+   *
+   * @pre count of available elements at gradient values matches the configured dimension * size
+   * @pre count of available elements at valueIndices matches the given size
+   * @pre initialize() has been called
+   * @pre Data with dataID has attribute hasGradient = true
+   *
+   * @see SolverInterface::setMeshVertex()
+   */
+  void writeBlockVectorGradientData(
+      int           dataID,
+      int           size,
+      const int *   valueIndices,
+      const double *gradientValues);
+
+  /**
+   * @brief Writes scalar gradient data to a vertex
+   *
+   * @experimental
+   *
+   * This function writes a the corresponding gradient value of a specified vertex to a dataID.
+   * Values are provided as a block of continuous memory.
+   *
+   * @param[in] dataID ID to write to.
+   * @param[in] valueIndex Index of the vertex.
+   * @param[in] gradientValues Gradient values differentiated in the spacial direction (dx, dy) for 2D space, (dx, dy, dz) for 3D space
+   *
+   * @pre count of available elements at value matches the configured dimension
+   * @pre initialize() has been called
+   * @pre vertex with dataID exists and contains data
+   * @pre Data with dataID has attribute hasGradient = true
+   *
+   * @see SolverInterface::setMeshVertex()
+   */
+  void writeScalarGradientData(
+      int           dataID,
+      int           valueIndex,
+      const double *gradientValues);
+
+  /**
+   * @brief Writes vector gradient data to a vertex
+   *
+   * @experimental
+   *
+   * This function writes the corresponding gradient matrix value of a specified vertex to a dataID.
+   * Values are provided as a block of continuous memory.
+   *
+   * The gradients need to be provided in the following format:
+   *
+   * The 2D-format of \p gradientValues is (vx_dx, vy_dx, vx_dy, vy_dy) matrix corresponding to the data block v = (vx, vy)
+   * differentiated respectively in x-direction dx and y-direction dy
+   *
+   * The 3D-format of \p gradientValues is (vx_dx, vy_dx, vz_dx, vx_dy, vy_dy, vz_dy, vx_dz, vy_dz, vz_dz) matrix
+   * corresponding to the data block v = (vx, vy, vz) differentiated respectively in spatial directions x-direction dx and y-direction dy and z-direction dz
+   *
+   * @param[in] dataID ID to write to.
+   * @param[in] valueIndex Index of the vertex.
+   * @param[in] gradientValue pointer to the gradient value.
+   *
+   * @pre count of available elements at value matches the configured dimension
+   * @pre initialize() has been called
+   * @pre vertex with dataID exists and contains data
+   * @pre Data with dataID has attribute hasGradient = true
+   *
+   * @see SolverInterface::setMeshVertex()
+   */
+  void writeVectorGradientData(
+      int           dataID,
+      int           valueIndex,
+      const double *gradientValues);
+
+  /**
+   * @brief Writes scalar gradient data given as block.
+   *
+   * @experimental
+   *
+   * This function writes values of specified vertices to a dataID.
+   * Values are provided as a block of continuous memory.
+   * valueIndices contains the indices of the vertices
+   *
+   * The gradients need to be provided in the following format:
+   *
+   * The 2D-format of \p gradientValues is (v0_dx, v0_dy, v1_dx, v1_dy, ... , vn_dx, vn_dy, vn_dz)
+   * corresponding to the scalar data v0, v1, ... , vn differentiated in spatial directions x and y.
+   *
+   * The 3D-format of \p gradientValues is (v0_dx, v0_dy, v0_dz, v1_dx, v1_dy, v1_dz, ... , vn_dx, vn_dy, vn_dz)
+   * corresponding to the scalar data v0, v1, ... , vn differentiated in spatial directions x, y and z.
+   *
+   * @param[in] dataID ID to write to.
+   * @param[in] size Number n of vertices.
+   * @param[in] valueIndices Indices of the vertices.
+   * @param[in] gradientValues Pointer to the gradient values.
+   *
+   * @pre count of available elements at values matches the given size
+   * @pre count of available elements at valueIndices matches the given size
+   * @pre initialize() has been called
+   * @pre Data with dataID has attribute hasGradient = true
+   *
+   * @see SolverInterface::setMeshVertex()
+   */
+  void writeBlockScalarGradientData(
+      int           dataID,
+      int           size,
+      const int *   valueIndices,
+      const double *gradientValues);
 
   ///@}
 

@@ -7,7 +7,7 @@
 #include <stddef.h>
 #include <string>
 
-#include "MPICommunication.hpp"
+#include "com/MPICommunication.hpp"
 #include "logging/Logger.hpp"
 #include "precice/types.hpp"
 
@@ -89,7 +89,7 @@ private:
    * These direct connections connect MPI_COMM_SELF on both sides.
    * The call to establish such a connection is thus not collective.
    *
-   * These connections are required for the Master-Master and Master-Slaves connections.
+   * These connections are required for the primary and the intra-participant communications connections.
    */
   std::map<int, MPI_Comm> _direct;
 

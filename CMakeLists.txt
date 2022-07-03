@@ -1,5 +1,5 @@
-cmake_minimum_required (VERSION 3.10.2)
-project(preCICE VERSION 2.3.0 LANGUAGES CXX)
+cmake_minimum_required (VERSION 3.16.3)
+project(preCICE VERSION 2.4.0 LANGUAGES CXX)
 set(preCICE_SOVERSION ${preCICE_VERSION_MAJOR})
 
 #
@@ -63,6 +63,7 @@ option(BUILD_TESTING "Build tests" ON)
 option(PRECICE_ALWAYS_VALIDATE_LIBS "Validate libraries even after the validatation succeeded." OFF)
 option(PRECICE_ENABLE_C "Enable the native C bindings" ON)
 option(PRECICE_ENABLE_FORTRAN "Enable the native Fortran bindings" ON)
+option(PRECICE_BUILD_TOOLS "Build the \"precice-tools\" executable" ON)
 
 option(PRECICE_RELEASE_WITH_DEBUG_LOG "Enable debug logging in release builds" OFF)
 option(PRECICE_RELEASE_WITH_TRACE_LOG "Enable trace logging in release builds" OFF)
@@ -134,6 +135,15 @@ add_feature_info(FortranBindings PRECICE_ENABLE_FORTRAN
 
    This feature can be enabled/disabled by setting the PRECICE_ENABLE_FORTRAN CMake option.
   ")
+  add_feature_info(PreciceTools PRECICE_BUILD_TOOLS
+  "Build the \"precice-tools\" executable
+
+   preCICE offers in addition to the core library a variety of tools in order to check configuration
+   files or generate xml references. The tools are copmiled into an exectuable called \"precice-tools\".
+
+   This feature can be enabled/disabled by setting the PRECICE_BUILD_TOOLS CMake option.
+  ")
+
 
 feature_summary(WHAT ENABLED_FEATURES  DESCRIPTION "=== ENABLED FEATURES ===" QUIET_ON_EMPTY)
 feature_summary(WHAT DISABLED_FEATURES DESCRIPTION "=== DISABLED FEATURES ===" QUIET_ON_EMPTY)
@@ -153,7 +163,7 @@ if(TPL_ENABLE_BOOST)
   set(Boost_NO_SYSTEM_PATHS ON CACHE BOOL "" FORCE)
   unset(ENV{BOOST_ROOT})
 endif()
-find_package(Boost 1.65.1 REQUIRED
+find_package(Boost 1.71.0 REQUIRED
   COMPONENTS filesystem log log_setup program_options system thread unit_test_framework
   )
 
@@ -166,9 +176,6 @@ find_package(Eigen3 3.2 REQUIRED)
 precice_validate_eigen()
 
 # LibXML2
-if(TPL_ENABLE_LIBXML2)
-  xsdk_tpl_require(LIBXML2 LIBXML2_LIBRARIES LIBXML2_INCLUDE_DIRS)
-endif()
 find_package(LibXml2 REQUIRED)
 precice_validate_libxml2()
 
@@ -218,34 +225,20 @@ endif()
 
 # Option Python
 if (PRECICE_PythonActions)
-  if (TPL_ENABLE_PYTHON)
-    xsdk_tpl_require(PYTHON PYTHON_LIBRARY PYTHON_INCLUDE_DIR NumPy_INCLUDE_DIR)
-    find_package(PythonLibs REQUIRED)
-
-    # Override NumPy
-    # TODO: Incorporate into the FindNumPy module
-    set(NumPy_FOUND True CACHE BOOL "NumPy found?" FORCE)
-    if(NOT TARGET NumPy::NumPy)
-      add_library(NumPy::NumPy INTERFACE IMPORTED)
-      set_property(TARGET NumPy::NumPy PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${NumPy_INCLUDE_DIR}")
-    endif()
-  else()
-    if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.14")
-      find_package(Python3 REQUIRED COMPONENTS Development NumPy)
-    else()
-      # Required for Ubuntu 18.04 LTS
-      find_package(PythonLibs REQUIRED)
-      find_package(NumPy REQUIRED)
-      if(PYTHONLIBS_VERSION_STRING VERSION_LESS 3)
-        message(FATAL_ERROR "Python 2 is not supported (found ${PYTHONLIBS_VERSION_STRING})")
-      endif()
-    endif()
-  endif()
+  find_package(Python3 REQUIRED COMPONENTS Development NumPy)
   precice_validate_libpython()
   precice_validate_numpy()
 else()
   message(STATUS "Python support disabled")
 endif()
+
+
+#
+# Setup miscellaneous features
+#
+
+# Enable glibc++ assertions in debug builds
+add_compile_definitions("$<$<CONFIG:DEBUG>:_GLIBCXX_ASSERTIONS>")
 
 
 #
@@ -255,17 +248,8 @@ endif()
 print_empty()
 print_section("TARGETS & PACKAGES")
 
-# Add a dummy to silence add_library warning for cmake < 3.11.
-set(preCICE_DUMMY "")
-if(CMAKE_VERSION VERSION_LESS "3.11")
-  set(preCICE_DUMMY "${CMAKE_CURRENT_BINARY_DIR}/dummy.cpp")
-  if(NOT EXISTS "${preCICE_DUMMY}")
-    file(WRITE "${preCICE_DUMMY}" "")
-  endif()
-endif()
-
 # Add precice as an empty target
-add_library(precice ${preCICE_DUMMY})
+add_library(precice)
 set_target_properties(precice PROPERTIES
   # precice is a C++14 project
   CXX_STANDARD 14
@@ -311,8 +295,7 @@ target_link_libraries(precice PRIVATE Eigen3::Eigen)
 target_compile_definitions(precice PRIVATE "$<$<CONFIG:DEBUG>:EIGEN_INITIALIZE_MATRICES_BY_NAN>")
 
 # Setup LIBXML2
-target_include_directories(precice PRIVATE ${LIBXML2_INCLUDE_DIR})
-target_link_libraries(precice PRIVATE ${LIBXML2_LIBRARIES})
+target_link_libraries(precice PRIVATE LibXml2::LibXml2)
 
 # Setup JSON
 target_link_libraries(precice PRIVATE JSON fmt-header-only)
@@ -333,14 +316,7 @@ endif()
 
 # Option Python
 if (PRECICE_PythonActions)
-  if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.14")
-    target_link_libraries(precice PRIVATE Python3::NumPy Python3::Python)
-  else()
-    # Required for Ubuntu 18.04 LTS
-    target_link_libraries(precice PRIVATE NumPy::NumPy)
-    target_include_directories(precice PRIVATE ${PYTHON_INCLUDE_DIRS})
-    target_link_libraries(precice PRIVATE ${PYTHON_LIBRARIES})
-  endif()
+  target_link_libraries(precice PRIVATE Python3::NumPy Python3::Python)
   target_compile_definitions(precice PRIVATE NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION)
 else()
   target_compile_definitions(precice PRIVATE PRECICE_NO_PYTHON)
@@ -366,29 +342,30 @@ include(${CMAKE_CURRENT_LIST_DIR}/src/sources.cmake)
 #
 # Configuration of Target precice-tools
 #
+if (PRECICE_BUILD_TOOLS)
+  add_executable(precice-tools "src/drivers/main.cpp")
+  target_link_libraries(precice-tools
+    PRIVATE
+   precice
+   )
+  set_target_properties(precice-tools PROPERTIES
+    # precice is a C++14 project
+    CXX_STANDARD 14
+    CXX_STANDARD_REQUIRED Yes
+    CXX_EXTENSIONS No
+    )
 
-add_executable(precice-tools "src/drivers/main.cpp")
-target_link_libraries(precice-tools
-  PRIVATE
-  precice
-  )
-set_target_properties(precice-tools PROPERTIES
-  # precice is a C++14 project
-  CXX_STANDARD 14
-  CXX_STANDARD_REQUIRED Yes
-  CXX_EXTENSIONS No
-  )
-
-# Add link for backwards compatibility
-# TODO remove in 3.0.0
-add_custom_target(
-  binprecice
-  ALL
-  COMMAND ${CMAKE_COMMAND} -E create_symlink precice-tools binprecice
-  DEPENDS precice-tools
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-  BYPRODUCTS binprecice
-  )
+  # Add link for backwards compatibility
+  # TODO remove in 3.0.0
+  add_custom_target(
+    binprecice
+    ALL
+    COMMAND ${CMAKE_COMMAND} -E create_symlink precice-tools binprecice
+    DEPENDS precice-tools
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    BYPRODUCTS binprecice
+    )
+endif()
 
 #
 # Configuration of Target testprecice
@@ -460,18 +437,24 @@ endif()
 # precice - the library
 # precice-tools - the precice binary
 include(GNUInstallDirs)
-install(TARGETS precice precice-tools
+install(TARGETS precice
   EXPORT preciceTargets
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/precice
   INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/precice
   )
 
-# Install the binprecice link for backwards compatibility
-# TODO remove in 3.0.0
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/binprecice DESTINATION ${CMAKE_INSTALL_BINDIR})
+if(PRECICE_BUILD_TOOLS)
+  install(TARGETS precice-tools
+    EXPORT preciceTargets
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
+
+  # Install the binprecice link for backwards compatibility
+  # TODO remove in 3.0.0
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/binprecice DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
 
 if(BUILD_TESTING AND PRECICE_InstallTest)
   # Install the testprecice target
@@ -565,9 +548,16 @@ else()
   endif()
 endif()
 
-# Configure a pkg-config file
+# Configure the pkg-config file for the binary directory
 configure_file(
-  "${PROJECT_SOURCE_DIR}/tools/releasing/packaging/debian/precice.pc.in"
+  "${PROJECT_SOURCE_DIR}/cmake/binary.pc.in"
+  "libprecice.pc"
+  @ONLY
+  )
+
+# Configure the pkg-config file for the installation
+configure_file(
+  "${PROJECT_SOURCE_DIR}/cmake/install.pc.in"
   "lib/pkgconfig/libprecice.pc"
   @ONLY
   )
@@ -620,23 +610,25 @@ add_custom_target(
   USES_TERMINAL
   )
 
-add_custom_target(
-  format
-  COMMAND tools/formatting/format-all
-  WORKING_DIRECTORY ${preCICE_SOURCE_DIR}
-  USES_TERMINAL
-  )
+if(PRECICE_BUILD_TOOLS)
+  add_custom_target(
+    format
+    COMMAND tools/formatting/format-all
+    WORKING_DIRECTORY ${preCICE_SOURCE_DIR}
+    USES_TERMINAL
+    )
 
-add_custom_target(
-  sourcesIndex
-  COMMAND tools/building/updateSourceFiles.py
-  WORKING_DIRECTORY ${preCICE_SOURCE_DIR}
-  USES_TERMINAL
-  )
+  add_custom_target(
+    sourcesIndex
+    COMMAND tools/building/updateSourceFiles.py
+    WORKING_DIRECTORY ${preCICE_SOURCE_DIR}
+    USES_TERMINAL
+    )
 
-add_custom_target(
-  changelog
-  COMMAND tools/building/createChangelog
-  WORKING_DIRECTORY ${preCICE_SOURCE_DIR}
-  USES_TERMINAL
-  )
+  add_custom_target(
+    changelog
+    COMMAND tools/building/createChangelog
+    WORKING_DIRECTORY ${preCICE_SOURCE_DIR}
+    USES_TERMINAL
+    )
+endif()

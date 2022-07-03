@@ -11,10 +11,11 @@
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "mesh/Tetrahedron.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/Helpers.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -29,8 +30,8 @@ void ExportXML::doExport(
   processDataNamesAndDimensions(mesh);
   if (not location.empty())
     boost::filesystem::create_directories(location);
-  if (utils::MasterSlave::isMaster()) {
-    writeMasterFile(name, location, mesh);
+  if (utils::IntraComm::isPrimary()) {
+    writeParallelFile(name, location, mesh);
   }
   if (mesh.vertices().size() > 0) { //only procs at the coupling interface should write output (for performance reasons)
     writeSubFile(name, location, mesh);
@@ -53,54 +54,58 @@ void ExportXML::processDataNamesAndDimensions(const mesh::Mesh &mesh)
   }
 }
 
-void ExportXML::writeMasterFile(
+void ExportXML::writeParallelFile(
     const std::string &name,
     const std::string &location,
     const mesh::Mesh & mesh) const
 {
   namespace fs = boost::filesystem;
   fs::path outfile(location);
-  outfile = outfile / fs::path(name + getMasterExtension());
-  std::ofstream outMasterFile(outfile.string(), std::ios::trunc);
+  outfile = outfile / fs::path(name + getParallelExtension());
+  std::ofstream outParallelFile(outfile.string(), std::ios::trunc);
 
-  PRECICE_CHECK(outMasterFile, "{} export failed to open master file \"{}\"", getVTKFormat(), outfile);
+  PRECICE_CHECK(outParallelFile, "{} export failed to open primary file \"{}\"", getVTKFormat(), outfile);
 
   const auto formatType = getVTKFormat();
-  outMasterFile << "<?xml version=\"1.0\"?>\n";
-  outMasterFile << "<VTKFile type=\"P" << formatType << "\" version=\"0.1\" byte_order=\"";
-  outMasterFile << (utils::isMachineBigEndian() ? "BigEndian\">" : "LittleEndian\">") << '\n';
-  outMasterFile << "   <P" << formatType << " GhostLevel=\"0\">\n";
+  outParallelFile << "<?xml version=\"1.0\"?>\n";
+  outParallelFile << "<VTKFile type=\"P" << formatType << "\" version=\"0.1\" byte_order=\"";
+  outParallelFile << (utils::isMachineBigEndian() ? "BigEndian\">" : "LittleEndian\">") << '\n';
+  outParallelFile << "   <P" << formatType << " GhostLevel=\"0\">\n";
 
-  outMasterFile << "      <PPoints>\n";
-  outMasterFile << "         <PDataArray type=\"Float64\" Name=\"Position\" NumberOfComponents=\"" << 3 << "\"/>\n";
-  outMasterFile << "      </PPoints>\n";
+  outParallelFile << "      <PPoints>\n";
+  outParallelFile << "         <PDataArray type=\"Float64\" Name=\"Position\" NumberOfComponents=\"" << 3 << "\"/>\n";
+  outParallelFile << "      </PPoints>\n";
 
-  writeMasterCells(outMasterFile);
+  writeParallelCells(outParallelFile);
 
-  writeMasterData(outMasterFile);
+  writeParallelData(outParallelFile);
 
-  const auto &vertexDistribution = mesh.getVertexDistribution();
-  for (int i = 0; i < utils::MasterSlave::getSize(); i++) {
-    auto iter = vertexDistribution.find(i);
-    if (iter != vertexDistribution.end() && iter->second.size() > 0) {
+  const auto &offsets = mesh.getVertexOffsets();
+  PRECICE_ASSERT(offsets.size() > 0);
+  if (offsets[0] > 0) {
+    outParallelFile << "      <Piece Source=\"" << name << "_" << 0 << getPieceExtension() << "\"/>\n";
+  }
+  for (size_t rank : utils::IntraComm::allSecondaryRanks()) {
+    PRECICE_ASSERT(rank < offsets.size());
+    if (offsets[rank] - offsets[rank - 1] > 0) {
       //only non-empty subfiles
-      outMasterFile << "      <Piece Source=\"" << name << "_" << i << getPieceExtension() << "\"/>\n";
+      outParallelFile << "      <Piece Source=\"" << name << "_" << rank << getPieceExtension() << "\"/>\n";
     }
   }
 
-  outMasterFile << "   </P" << formatType << ">\n";
-  outMasterFile << "</VTKFile>\n";
+  outParallelFile << "   </P" << formatType << ">\n";
+  outParallelFile << "</VTKFile>\n";
 
-  outMasterFile.close();
+  outParallelFile.close();
 }
 
 namespace {
 std::string getPieceSuffix()
 {
-  if (!utils::MasterSlave::isParallel()) {
+  if (!utils::IntraComm::isParallel()) {
     return "";
   }
-  return "_" + std::to_string(utils::MasterSlave::getRank());
+  return "_" + std::to_string(utils::IntraComm::getRank());
 }
 } // namespace
 
@@ -114,7 +119,7 @@ void ExportXML::writeSubFile(
   outfile /= fs::path(name + getPieceSuffix() + getPieceExtension());
   std::ofstream outSubFile(outfile.string(), std::ios::trunc);
 
-  PRECICE_CHECK(outSubFile, "{} export failed to open slave file \"{}\"", getVTKFormat(), outfile);
+  PRECICE_CHECK(outSubFile, "{} export failed to open secondary file \"{}\"", getVTKFormat(), outfile);
 
   const auto formatType = getVTKFormat();
   outSubFile << "<?xml version=\"1.0\"?>\n";
@@ -155,7 +160,7 @@ void ExportXML::exportData(
   // Export the current rank
   outFile << "            <DataArray type=\"UInt32\" Name=\"Rank\" NumberOfComponents=\"1\" format=\"ascii\">\n";
   outFile << "               ";
-  const auto rank = utils::MasterSlave::getRank();
+  const auto rank = utils::IntraComm::getRank();
   for (size_t count = 0; count < mesh.vertices().size(); ++count) {
     outFile << rank << ' ';
   }
@@ -218,6 +223,16 @@ void ExportXML::writeTriangle(
   outFile << triangle.vertex(2).getID() << "  ";
 }
 
+void ExportXML::writeTetrahedron(
+    const mesh::Tetrahedron &tetra,
+    std::ostream &           outFile)
+{
+  outFile << tetra.vertex(0).getID() << "  ";
+  outFile << tetra.vertex(1).getID() << "  ";
+  outFile << tetra.vertex(2).getID() << "  ";
+  outFile << tetra.vertex(3).getID() << "  ";
+}
+
 void ExportXML::writeLine(
     const mesh::Edge &edge,
     std::ostream &    outFile)
@@ -239,7 +254,7 @@ void ExportXML::exportPoints(
   outFile << "         </Points> \n\n";
 }
 
-void ExportXML::writeMasterData(std::ostream &out) const
+void ExportXML::writeParallelData(std::ostream &out) const
 {
   // write scalar data names
   out << "      <PPointData Scalars=\"Rank ";

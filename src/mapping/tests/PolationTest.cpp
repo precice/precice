@@ -136,5 +136,107 @@ BOOST_AUTO_TEST_CASE(TriangleExtrapolation)
   }
 }
 
+BOOST_AUTO_TEST_CASE(TetrahedronInterpolation)
+{
+  PRECICE_TEST(1_rank);
+  mesh::Vertex v1(Eigen::Vector3d(1.0, 0.0, 0.0), 0);
+  mesh::Vertex v2(Eigen::Vector3d(0.0, 1.0, 0.0), 1);
+  mesh::Vertex v3(Eigen::Vector3d(0.0, 0.0, 1.0), 2);
+  mesh::Vertex v4(Eigen::Vector3d(0.0, 0.0, 0.0), 3);
+
+  mesh::Tetrahedron tetra(v1, v2, v3, v4, 0);
+
+  Eigen::Vector3d location(0.15, 0.25, 0.40);
+
+  Polation polation(location, tetra);
+
+  std::vector<int>    expectedIndices = {0, 1, 2, 3};
+  std::vector<double> expectedWeights = {0.15, 0.25, 0.40, 0.20};
+
+  BOOST_TEST(polation.getWeightedElements().size() == 4);
+  BOOST_TEST(polation.isInterpolation());
+
+  for (size_t i = 0; i < polation.getWeightedElements().size(); ++i) {
+
+    BOOST_TEST(polation.getWeightedElements().at(i).weight == expectedWeights.at(i));
+    BOOST_TEST(polation.getWeightedElements().at(i).vertexID == expectedIndices.at(i));
+  }
+}
+
+BOOST_AUTO_TEST_CASE(TetrahedronExtrapolation)
+{
+  PRECICE_TEST(1_rank);
+  mesh::Vertex v1(Eigen::Vector3d(1.0, 0.0, 0.0), 0);
+  mesh::Vertex v2(Eigen::Vector3d(0.0, 1.0, 0.0), 1);
+  mesh::Vertex v3(Eigen::Vector3d(0.0, 0.0, 1.0), 2);
+  mesh::Vertex v4(Eigen::Vector3d(0.0, 0.0, 0.0), 3);
+
+  mesh::Tetrahedron tetra(v1, v2, v3, v4, 0);
+
+  Eigen::Vector3d location(-0.15, 0.25, 0.40);
+
+  Polation polation(location, tetra);
+
+  std::vector<int>    expectedIndices = {0, 1, 2, 3};
+  std::vector<double> expectedWeights = {-0.15, 0.25, 0.40, 0.50};
+
+  BOOST_TEST(polation.getWeightedElements().size() == 4);
+  BOOST_TEST(not polation.isInterpolation());
+
+  for (size_t i = 0; i < polation.getWeightedElements().size(); ++i) {
+
+    BOOST_TEST(polation.getWeightedElements().at(i).weight == expectedWeights.at(i));
+    BOOST_TEST(polation.getWeightedElements().at(i).vertexID == expectedIndices.at(i));
+  }
+}
+
+BOOST_AUTO_TEST_CASE(PolationToleranceEdge)
+{
+  PRECICE_TEST(1_rank);
+  mesh::Vertex v1(Eigen::Vector3d(1.0, 0.0, 0.0), 0);
+  mesh::Vertex v2(Eigen::Vector3d(0.0, 1.0, 0.0), 1);
+
+  mesh::Edge edge(v1, v2, 0);
+
+  Eigen::Vector3d location(1 + 1e-15, -1e-16, 0.0);
+
+  Polation polation(location, edge);
+
+  BOOST_TEST(polation.isInterpolation());
+}
+
+BOOST_AUTO_TEST_CASE(PolationToleranceTriangle)
+{
+  PRECICE_TEST(1_rank);
+  mesh::Vertex v1(Eigen::Vector3d(1.0, 0.0, 0.0), 0);
+  mesh::Vertex v2(Eigen::Vector3d(0.0, 1.0, 0.0), 1);
+  mesh::Vertex v3(Eigen::Vector3d(0.0, 0.0, 0.0), 2);
+
+  mesh::Triangle triangle(v1, v2, v3, 0);
+
+  Eigen::Vector3d location(0.5 + 1e-15, 0.5 + 1e-15, 1e-14);
+
+  Polation polation(location, triangle);
+
+  BOOST_TEST(polation.isInterpolation());
+}
+
+BOOST_AUTO_TEST_CASE(PolationToleranceTetra)
+{
+  PRECICE_TEST(1_rank);
+  mesh::Vertex v1(Eigen::Vector3d(1.0, 0.0, 0.0), 0);
+  mesh::Vertex v2(Eigen::Vector3d(0.0, 1.0, 0.0), 1);
+  mesh::Vertex v3(Eigen::Vector3d(0.0, 0.0, 1.0), 2);
+  mesh::Vertex v4(Eigen::Vector3d(0.0, 0.0, 0.0), 3);
+
+  mesh::Tetrahedron tetra(v1, v2, v3, v4, 0);
+
+  Eigen::Vector3d location(1 - 1e-15, -1e-15, -1e-15);
+
+  Polation polation(location, tetra);
+
+  BOOST_TEST(polation.isInterpolation());
+}
+
 BOOST_AUTO_TEST_SUITE_END() // Interpolation
 BOOST_AUTO_TEST_SUITE_END() // Mapping

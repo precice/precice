@@ -66,6 +66,8 @@ void testMappingNearestProjection(bool defineEdgesExplicitly, const std::string 
 
     // Write the data to be send.
     int dataAID = interface.getDataID("DataOne", meshOneID);
+    BOOST_TEST(!interface.isGradientDataRequired(dataAID));
+
     interface.writeScalarData(dataAID, idA, valOneA);
     interface.writeScalarData(dataAID, idB, valOneB);
     interface.writeScalarData(dataAID, idC, valOneC);
@@ -91,7 +93,9 @@ void testMappingNearestProjection(bool defineEdgesExplicitly, const std::string 
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant should have to advance once!");
 
     // Read the mapped data from the mesh.
-    int    dataAID = interface.getDataID("DataOne", meshTwoID);
+    int dataAID = interface.getDataID("DataOne", meshTwoID);
+    BOOST_TEST(!interface.isGradientDataRequired(dataAID));
+
     double valueA, valueB, valueC;
     interface.readScalarData(dataAID, idA, valueA);
     interface.readScalarData(dataAID, idB, valueB);

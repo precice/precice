@@ -26,6 +26,9 @@ public:
   /// Put data in the queue, start processing the queue.
   void dispatch(std::shared_ptr<Socket> sock, boost::asio::const_buffers_1 data, std::function<void()> callback);
 
+  /// Notifies the queue that the last asynchronous send operation has completed.
+  void sendCompleted();
+
 private:
   /// This method can be called arbitrarily many times, but enough times to ensure the queue makes progress.
   void process();
@@ -36,9 +39,12 @@ private:
     std::function<void()>        callback;
   };
 
+  /// The queue, containing items to asynchronously send using boost.asio.
   std::deque<SendItem> _itemQueue;
-  std::mutex           _sendMutex;
-  bool                 _ready = true;
+  /// The mutex protecting access to the queue
+  std::mutex _queueMutex;
+  /// Is the queue allowed to start another asynchronous send?
+  bool _ready = true;
 };
 
 } // namespace com

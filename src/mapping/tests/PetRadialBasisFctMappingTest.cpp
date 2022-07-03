@@ -168,9 +168,9 @@ void testDistributed(const TestContext &    context,
 /// Test with a homogeneous distribution of mesh among ranks
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::PETSc);
   Gaussian                           fct(5.0);
-  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
+  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, {{false, false, false}});
 
   testDistributed(context, mapping,
                   {// Consistent mapping: The inMesh is communicated
@@ -204,9 +204,9 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1)
 
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1Vector)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::PETSc);
   Gaussian                           fct(5.0);
-  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
+  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, {{false, false, false}});
 
   testDistributed(context, mapping,
                   {// Consistent mapping: The inMesh is communicated
@@ -241,9 +241,9 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1Vector)
 /// Using a more heterogeneous distributon of vertices and owner
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::PETSc);
   Gaussian                           fct(5.0);
-  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
+  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, {{false, false, false}});
 
   testDistributed(context, mapping,
                   {// Consistent mapping: The inMesh is communicated, rank 2 owns no vertices
@@ -279,9 +279,9 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2)
 /// Test with a very heterogeneous distributed and non-continuous ownership
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::PETSc);
   Gaussian                           fct(5.0);
-  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
+  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, {{false, false, false}});
 
   std::vector<int> globalIndexOffsets = {0, 0, 0, 4};
 
@@ -335,9 +335,9 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
 /// Test with a very heterogeneous distributed and non-continuous ownership
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3Vector)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::PETSc);
   Gaussian                           fct(5.0);
-  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
+  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, {{false, false, false}});
 
   std::vector<int> globalIndexOffsets = {0, 0, 0, 4};
 
@@ -391,9 +391,9 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3Vector)
 /// Some ranks are empty, does not converge
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::PETSc);
   ThinPlateSplines                           fct;
-  PetRadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
+  PetRadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, 2, fct, {{false, false, false}});
 
   std::vector<int> globalIndexOffsets = {0, 0, 0, 0};
 
@@ -446,9 +446,9 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
 // same as 2DV4, but all ranks have vertices
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::PETSc);
   ThinPlateSplines                           fct;
-  PetRadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
+  PetRadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, 2, fct, {{false, false, false}});
 
   std::vector<int> globalIndexOffsets = {0, 0, 0, 0};
 
@@ -515,9 +515,9 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5)
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6,
                      *boost::unit_test::tolerance(1e-7))
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::PETSc);
   ThinPlateSplines                           fct;
-  PetRadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
+  PetRadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, 2, fct, {{false, false, false}});
 
   std::vector<int> globalIndexOffsets = {0, 0, 0, 0};
 
@@ -570,9 +570,9 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6,
 /// Test with a homogeneous distribution of mesh among ranks
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV1)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::PETSc);
   Gaussian                           fct(5.0);
-  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
+  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}});
 
   testDistributed(context, mapping,
                   {// Conservative mapping: The inMesh is local
@@ -633,9 +633,9 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1)
 /// Test with a homogeneous distribution of mesh among ranks
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV1Vector)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::PETSc);
   Gaussian                           fct(5.0);
-  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
+  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}});
 
   testDistributed(context, mapping,
                   {// Conservative mapping: The inMesh is local
@@ -696,9 +696,9 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1Vector)
 /// Using a more heterogeneous distribution of vertices and owner
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV2)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc)
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::PETSc)
   Gaussian                           fct(5.0);
-  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
+  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}});
 
   std::vector<int> globalIndexOffsets = {0, 0, 4, 6};
 
@@ -761,9 +761,9 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV2)
 /// Using meshes of different sizes, inMesh is smaller then outMesh
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV3)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::PETSc);
   Gaussian                           fct(2.0);
-  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
+  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}});
 
   std::vector<int> globalIndexOffsets = {0, 0, 3, 5};
 
@@ -826,9 +826,9 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV3)
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
                      *boost::unit_test::tolerance(1e-6))
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::PETSc);
   Gaussian                           fct(4.0);
-  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
+  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}});
 
   std::vector<int> globalIndexOffsets = {0, 2, 4, 6};
 
@@ -886,9 +886,9 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
 /// Tests a non-contigous owner distributed at the outMesh
 BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::PETSc);
   Gaussian                           fct(5.0);
-  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
+  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}});
 
   testDistributed(context, mapping,
                   {// Conservative mapping: The inMesh is local
@@ -949,9 +949,9 @@ BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5)
 /// Tests a non-contigous owner distributed at the outMesh
 BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5Vector)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::PETSc);
   Gaussian                           fct(5.0);
-  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
+  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}});
 
   testDistributed(context, mapping,
                   {// Conservative mapping: The inMesh is local
@@ -1034,7 +1034,7 @@ void testTagging(const TestContext &context,
   BOOST_TEST(fct.hasCompactSupport());
 
   Mapping::Constraint                constr = consistent ? Mapping::CONSISTENT : Mapping::CONSERVATIVE;
-  PetRadialBasisFctMapping<Gaussian> mapping(constr, 2, fct, false, false, false);
+  PetRadialBasisFctMapping<Gaussian> mapping(constr, 2, fct, {{false, false, false}});
   inMesh->computeBoundingBox();
   outMesh->computeBoundingBox();
 
@@ -1077,7 +1077,7 @@ void testTagging(const TestContext &context,
 
 BOOST_AUTO_TEST_CASE(TaggingConsistent)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc)
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::PETSc)
   //    *
   //    + <-- owned
   //* * x * *
@@ -1107,7 +1107,7 @@ BOOST_AUTO_TEST_CASE(TaggingConsistent)
 
 BOOST_AUTO_TEST_CASE(TaggingConservative)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc)
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::PETSc)
   //    *
   //    + <-- owned
   //* * x * *
@@ -1773,17 +1773,17 @@ BOOST_AUTO_TEST_CASE(MapThinPlateSplines)
   bool                                       yDead = false;
   bool                                       zDead = false;
   ThinPlateSplines                           fct;
-  PetRadialBasisFctMapping<ThinPlateSplines> consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
+  PetRadialBasisFctMapping<ThinPlateSplines> consistentMap2D(Mapping::CONSISTENT, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestConsistentMapping(consistentMap2D);
-  PetRadialBasisFctMapping<ThinPlateSplines> consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
+  PetRadialBasisFctMapping<ThinPlateSplines> consistentMap3D(Mapping::CONSISTENT, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestConsistentMapping(consistentMap3D);
-  PetRadialBasisFctMapping<ThinPlateSplines> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead);
+  PetRadialBasisFctMapping<ThinPlateSplines> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
-  PetRadialBasisFctMapping<ThinPlateSplines> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead);
+  PetRadialBasisFctMapping<ThinPlateSplines> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
-  PetRadialBasisFctMapping<ThinPlateSplines> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
+  PetRadialBasisFctMapping<ThinPlateSplines> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestConservativeMapping(conservativeMap2D);
-  PetRadialBasisFctMapping<ThinPlateSplines> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
+  PetRadialBasisFctMapping<ThinPlateSplines> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
@@ -1794,21 +1794,21 @@ BOOST_AUTO_TEST_CASE(MapMultiquadrics)
   bool                                    yDead = false;
   bool                                    zDead = false;
   Multiquadrics                           fct(1e-3);
-  PetRadialBasisFctMapping<Multiquadrics> consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
+  PetRadialBasisFctMapping<Multiquadrics> consistentMap2D(Mapping::CONSISTENT, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestConsistentMapping(consistentMap2D);
-  PetRadialBasisFctMapping<Multiquadrics> consistentMap2DVector(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
+  PetRadialBasisFctMapping<Multiquadrics> consistentMap2DVector(Mapping::CONSISTENT, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestConsistentMappingVector(consistentMap2DVector);
-  PetRadialBasisFctMapping<Multiquadrics> consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
+  PetRadialBasisFctMapping<Multiquadrics> consistentMap3D(Mapping::CONSISTENT, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestConsistentMapping(consistentMap3D);
-  PetRadialBasisFctMapping<Multiquadrics> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead);
+  PetRadialBasisFctMapping<Multiquadrics> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
-  PetRadialBasisFctMapping<Multiquadrics> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead);
+  PetRadialBasisFctMapping<Multiquadrics> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
-  PetRadialBasisFctMapping<Multiquadrics> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
+  PetRadialBasisFctMapping<Multiquadrics> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestConservativeMapping(conservativeMap2D);
-  PetRadialBasisFctMapping<Multiquadrics> conservativeMap2DVector(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
+  PetRadialBasisFctMapping<Multiquadrics> conservativeMap2DVector(Mapping::CONSERVATIVE, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestConservativeMappingVector(conservativeMap2DVector);
-  PetRadialBasisFctMapping<Multiquadrics> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
+  PetRadialBasisFctMapping<Multiquadrics> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
@@ -1819,17 +1819,17 @@ BOOST_AUTO_TEST_CASE(MapInverseMultiquadrics)
   bool                                           yDead = false;
   bool                                           zDead = false;
   InverseMultiquadrics                           fct(1e-3);
-  PetRadialBasisFctMapping<InverseMultiquadrics> consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
+  PetRadialBasisFctMapping<InverseMultiquadrics> consistentMap2D(Mapping::CONSISTENT, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestConsistentMapping(consistentMap2D);
-  PetRadialBasisFctMapping<InverseMultiquadrics> consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
+  PetRadialBasisFctMapping<InverseMultiquadrics> consistentMap3D(Mapping::CONSISTENT, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestConsistentMapping(consistentMap3D);
-  PetRadialBasisFctMapping<InverseMultiquadrics> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead);
+  PetRadialBasisFctMapping<InverseMultiquadrics> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
-  PetRadialBasisFctMapping<InverseMultiquadrics> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead);
+  PetRadialBasisFctMapping<InverseMultiquadrics> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
-  PetRadialBasisFctMapping<InverseMultiquadrics> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
+  PetRadialBasisFctMapping<InverseMultiquadrics> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestConservativeMapping(conservativeMap2D);
-  PetRadialBasisFctMapping<InverseMultiquadrics> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
+  PetRadialBasisFctMapping<InverseMultiquadrics> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
@@ -1840,17 +1840,17 @@ BOOST_AUTO_TEST_CASE(MapVolumeSplines)
   bool                                    yDead = false;
   bool                                    zDead = false;
   VolumeSplines                           fct;
-  PetRadialBasisFctMapping<VolumeSplines> consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
+  PetRadialBasisFctMapping<VolumeSplines> consistentMap2D(Mapping::CONSISTENT, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestConsistentMapping(consistentMap2D);
-  PetRadialBasisFctMapping<VolumeSplines> consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
+  PetRadialBasisFctMapping<VolumeSplines> consistentMap3D(Mapping::CONSISTENT, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestConsistentMapping(consistentMap3D);
-  PetRadialBasisFctMapping<VolumeSplines> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead);
+  PetRadialBasisFctMapping<VolumeSplines> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
-  PetRadialBasisFctMapping<VolumeSplines> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead);
+  PetRadialBasisFctMapping<VolumeSplines> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
-  PetRadialBasisFctMapping<VolumeSplines> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
+  PetRadialBasisFctMapping<VolumeSplines> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestConservativeMapping(conservativeMap2D);
-  PetRadialBasisFctMapping<VolumeSplines> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
+  PetRadialBasisFctMapping<VolumeSplines> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
@@ -1861,17 +1861,17 @@ BOOST_AUTO_TEST_CASE(MapGaussian)
   bool                               yDead = false;
   bool                               zDead = false;
   Gaussian                           fct(1.0);
-  PetRadialBasisFctMapping<Gaussian> consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
+  PetRadialBasisFctMapping<Gaussian> consistentMap2D(Mapping::CONSISTENT, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestConsistentMapping(consistentMap2D);
-  PetRadialBasisFctMapping<Gaussian> consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
+  PetRadialBasisFctMapping<Gaussian> consistentMap3D(Mapping::CONSISTENT, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestConsistentMapping(consistentMap3D);
-  PetRadialBasisFctMapping<Gaussian> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead);
+  PetRadialBasisFctMapping<Gaussian> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
-  PetRadialBasisFctMapping<Gaussian> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead);
+  PetRadialBasisFctMapping<Gaussian> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
-  PetRadialBasisFctMapping<Gaussian> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
+  PetRadialBasisFctMapping<Gaussian> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestConservativeMapping(conservativeMap2D);
-  PetRadialBasisFctMapping<Gaussian> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
+  PetRadialBasisFctMapping<Gaussian> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
@@ -1884,17 +1884,17 @@ BOOST_AUTO_TEST_CASE(MapCompactThinPlateSplinesC2)
   bool                      zDead         = false;
   CompactThinPlateSplinesC2 fct(supportRadius);
   using Mapping = PetRadialBasisFctMapping<CompactThinPlateSplinesC2>;
-  Mapping consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
+  Mapping consistentMap2D(Mapping::CONSISTENT, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestConsistentMapping(consistentMap2D);
-  Mapping consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
+  Mapping consistentMap3D(Mapping::CONSISTENT, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestConsistentMapping(consistentMap3D);
-  Mapping scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead);
+  Mapping scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
-  Mapping scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead);
+  Mapping scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
-  Mapping conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
+  Mapping conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestConservativeMapping(conservativeMap2D);
-  Mapping conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
+  Mapping conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
@@ -1907,17 +1907,17 @@ BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC0)
   bool                zDead         = false;
   CompactPolynomialC0 fct(supportRadius);
   using Mapping = PetRadialBasisFctMapping<CompactPolynomialC0>;
-  Mapping consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
+  Mapping consistentMap2D(Mapping::CONSISTENT, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestConsistentMapping(consistentMap2D);
-  Mapping consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
+  Mapping consistentMap3D(Mapping::CONSISTENT, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestConsistentMapping(consistentMap3D);
-  Mapping scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead);
+  Mapping scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
-  Mapping scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead);
+  Mapping scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
-  Mapping conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
+  Mapping conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestConservativeMapping(conservativeMap2D);
-  Mapping conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
+  Mapping conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
@@ -1930,17 +1930,17 @@ BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC6)
   bool                zDead         = false;
   CompactPolynomialC6 fct(supportRadius);
   using Mapping = PetRadialBasisFctMapping<CompactPolynomialC6>;
-  Mapping consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
+  Mapping consistentMap2D(Mapping::CONSISTENT, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestConsistentMapping(consistentMap2D);
-  Mapping consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
+  Mapping consistentMap3D(Mapping::CONSISTENT, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestConsistentMapping(consistentMap3D);
-  Mapping scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead);
+  Mapping scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
-  Mapping scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead);
+  Mapping scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
-  Mapping conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
+  Mapping conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestConservativeMapping(conservativeMap2D);
-  Mapping conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
+  Mapping conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
@@ -1956,7 +1956,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis2)
 
   ThinPlateSplines                           fct;
   PetRadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, dimensions, fct,
-                                                     xDead, yDead, zDead);
+                                                     {{xDead, yDead, zDead}});
 
   // Create mesh to map from
   mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
@@ -2004,7 +2004,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis3D)
   bool                yDead = true;
   bool                zDead = false;
   using Mapping             = PetRadialBasisFctMapping<CompactPolynomialC6>;
-  Mapping mapping(Mapping::CONSISTENT, dimensions, fct, xDead, yDead, zDead);
+  Mapping mapping(Mapping::CONSISTENT, dimensions, fct, {{xDead, yDead, zDead}});
 
   // Create mesh to map from
   mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
@@ -2055,7 +2055,7 @@ BOOST_AUTO_TEST_CASE(SolutionCaching)
 
   ThinPlateSplines                           fct;
   PetRadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, dimensions, fct,
-                                                     xDead, yDead, zDead);
+                                                     {{xDead, yDead, zDead}});
 
   // Create mesh to map from
   mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
@@ -2131,7 +2131,7 @@ BOOST_AUTO_TEST_CASE(ConsistentPolynomialSwitch,
 
   // Test deactivated polynomial
   PetRadialBasisFctMapping<Gaussian> mappingOff(Mapping::CONSISTENT, dimensions, fct,
-                                                xDead, yDead, zDead,
+                                                {{xDead, yDead, zDead}},
                                                 1e-9, Polynomial::OFF);
   mappingOff.setMeshes(inMesh, outMesh);
   mappingOff.computeMapping();
@@ -2141,7 +2141,7 @@ BOOST_AUTO_TEST_CASE(ConsistentPolynomialSwitch,
 
   // Test integrated polynomial
   PetRadialBasisFctMapping<Gaussian> mappingOn(Mapping::CONSISTENT, dimensions, fct,
-                                               xDead, yDead, zDead,
+                                               {{xDead, yDead, zDead}},
                                                1e-9, Polynomial::ON);
 
   mappingOn.setMeshes(inMesh, outMesh);
@@ -2152,7 +2152,7 @@ BOOST_AUTO_TEST_CASE(ConsistentPolynomialSwitch,
 
   // Test separated polynomial
   PetRadialBasisFctMapping<Gaussian> mappingSep(Mapping::CONSISTENT, dimensions, fct,
-                                                xDead, yDead, zDead,
+                                                {{xDead, yDead, zDead}},
                                                 1e-9, Polynomial::SEPARATE);
 
   mappingSep.setMeshes(inMesh, outMesh);
@@ -2198,7 +2198,7 @@ BOOST_AUTO_TEST_CASE(ConservativePolynomialSwitch,
 
   // Test deactivated polynomial
   PetRadialBasisFctMapping<Gaussian> mappingOff(Mapping::CONSERVATIVE, dimensions, fct,
-                                                xDead, yDead, zDead,
+                                                {{xDead, yDead, zDead}},
                                                 1e-9, Polynomial::OFF);
   mappingOff.setMeshes(inMesh, outMesh);
   mappingOff.computeMapping();
@@ -2210,7 +2210,7 @@ BOOST_AUTO_TEST_CASE(ConservativePolynomialSwitch,
 
   // Test integrated polynomial
   PetRadialBasisFctMapping<Gaussian> mappingOn(Mapping::CONSERVATIVE, dimensions, fct,
-                                               xDead, yDead, zDead,
+                                               {{xDead, yDead, zDead}},
                                                1e-9, Polynomial::ON);
 
   mappingOn.setMeshes(inMesh, outMesh);
@@ -2223,7 +2223,7 @@ BOOST_AUTO_TEST_CASE(ConservativePolynomialSwitch,
 
   // Test separated polynomial
   PetRadialBasisFctMapping<Gaussian> mappingSep(Mapping::CONSERVATIVE, dimensions, fct,
-                                                xDead, yDead, zDead,
+                                                {{xDead, yDead, zDead}},
                                                 1e-9, Polynomial::SEPARATE);
 
   mappingSep.setMeshes(inMesh, outMesh);
@@ -2249,7 +2249,7 @@ BOOST_AUTO_TEST_CASE(NoMapping)
   // Call neither computeMapping nor map
   {
     PetRadialBasisFctMapping<ThinPlateSplines> mapping1(Mapping::CONSISTENT, 3, fct,
-                                                        false, false, false);
+                                                        {{false, false, false}});
   }
 
   {
@@ -2267,7 +2267,7 @@ BOOST_AUTO_TEST_CASE(NoMapping)
     addGlobalIndex(outMesh);
 
     PetRadialBasisFctMapping<ThinPlateSplines> mapping2(Mapping::CONSISTENT, 2, fct,
-                                                        false, false, false);
+                                                        {{false, false, false}});
 
     mapping2.setMeshes(inMesh, outMesh);
     mapping2.computeMapping();
@@ -2306,7 +2306,7 @@ BOOST_AUTO_TEST_CASE(TestNonHomongenousGlobalIndex)
   addGlobalIndex(outMesh);
 
   PetRadialBasisFctMapping<Gaussian> mapping1(Mapping::CONSISTENT, dimensions, fct,
-                                              xDead, yDead, zDead);
+                                              {{xDead, yDead, zDead}});
   mapping1.setMeshes(inMesh, outMesh);
   mapping1.computeMapping();
   mapping1.map(inDataID, outDataID);
@@ -2314,7 +2314,7 @@ BOOST_AUTO_TEST_CASE(TestNonHomongenousGlobalIndex)
   BOOST_TEST(outData->values()(0) == 1);
 
   PetRadialBasisFctMapping<Gaussian> mapping2(Mapping::CONSERVATIVE, dimensions, fct,
-                                              xDead, yDead, zDead);
+                                              {{xDead, yDead, zDead}});
   inData->values() << 0, 0, 0, 0; // reset
   outData->values() << 4;         // used as inData here
   mapping2.setMeshes(outMesh, inMesh);

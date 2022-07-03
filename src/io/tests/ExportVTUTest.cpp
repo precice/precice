@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_SUITE(VTUExport)
 
 BOOST_AUTO_TEST_CASE(ExportPolygonalMeshSerial)
 {
-  PRECICE_TEST(""_on(1_rank).setupMasterSlaves());
+  PRECICE_TEST(""_on(1_rank).setupIntraComm());
   int           dim = 2;
   mesh::Mesh    mesh("MyMesh", dim, testing::nextMeshID());
   mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector2d::Zero());
@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMeshSerial)
 
 BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   int        dim = 2;
   mesh::Mesh mesh("MyMesh", dim, testing::nextMeshID());
 
@@ -58,10 +58,8 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
     mesh.createEdge(v1, v2);
     mesh.createEdge(v2, v3);
     mesh.createEdge(v3, v1);
-    mesh.getVertexDistribution()[0] = {0, 1, 2};
-    mesh.getVertexDistribution()[1] = {};
-    mesh.getVertexDistribution()[2] = {3, 4, 5};
-    mesh.getVertexDistribution()[3] = {6};
+    mesh.getVertexOffsets() = {3, 3, 6, 7};
+
   } else if (context.isRank(1)) {
     // nothing
   } else if (context.isRank(2)) {
@@ -84,7 +82,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 
 BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   int        dim = 3;
   mesh::Mesh mesh("MyMesh", dim, testing::nextMeshID());
 
@@ -98,10 +96,8 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
     mesh::Edge &e3 = mesh.createEdge(v3, v1);
     mesh.createTriangle(e1, e2, e3);
 
-    mesh.getVertexDistribution()[0] = {0, 1, 2};
-    mesh.getVertexDistribution()[1] = {};
-    mesh.getVertexDistribution()[2] = {3, 4, 5};
-    mesh.getVertexDistribution()[3] = {6};
+    mesh.getVertexOffsets() = {3, 3, 6, 7};
+
   } else if (context.isRank(1)) {
     // nothing
   } else if (context.isRank(2)) {
@@ -125,7 +121,7 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
 
 BOOST_AUTO_TEST_CASE(ExportSplitSquare)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   int        dim = 3;
   mesh::Mesh mesh("MyMesh", dim, testing::nextMeshID());
 
@@ -141,11 +137,8 @@ BOOST_AUTO_TEST_CASE(ExportSplitSquare)
     mesh::Edge &eo1 = mesh.createEdge(vo, v1);
     mesh::Edge &e2o = mesh.createEdge(v2, vo);
     mesh.createTriangle(eo1, e12, e2o);
+    mesh.getVertexOffsets() = {3, 6, 9, 12};
 
-    mesh.getVertexDistribution()[0] = {0, 1, 2};
-    mesh.getVertexDistribution()[1] = {3, 4, 5};
-    mesh.getVertexDistribution()[2] = {6, 7, 8};
-    mesh.getVertexDistribution()[3] = {9, 10, 11};
   } else if (context.isRank(1)) {
     mesh::Vertex &v1  = mesh.createVertex(Eigen::Vector3d{1.0, -1.0, 0.0});
     mesh::Vertex &v2  = mesh.createVertex(Eigen::Vector3d{-1.0, -1.0, 0.0});
@@ -183,6 +176,69 @@ BOOST_AUTO_TEST_CASE(ExportSplitSquare)
 
   io::ExportVTU exportVTU;
   std::string   filename = "io-ExportVTUTest-Square";
+  std::string   location = "";
+  exportVTU.doExport(filename, location, mesh);
+}
+
+BOOST_AUTO_TEST_CASE(ExportOneTetrahedron)
+{
+  PRECICE_TEST(""_on(1_rank).setupIntraComm());
+  int           dim = 3;
+  mesh::Mesh    mesh("MyMesh", dim, testing::nextMeshID());
+  mesh::Vertex &v0 = mesh.createVertex(Eigen::Vector3d::Zero());
+  mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector3d{1.0, 0.0, 0.0});
+  mesh::Vertex &v2 = mesh.createVertex(Eigen::Vector3d{0.0, 1.0, 0.0});
+  mesh::Vertex &v3 = mesh.createVertex(Eigen::Vector3d{0.0, 0.0, 1.0});
+
+  mesh.createTetrahedron(v0, v1, v2, v3);
+
+  io::ExportVTU exportVTU;
+  std::string   filename = "io-VTUExport-ExportOneTetrahedron";
+  std::string   location = "";
+  exportVTU.doExport(filename, location, mesh);
+}
+
+BOOST_AUTO_TEST_CASE(ExportPartitionedCube)
+{
+  // Unit cube is made of 6 tetrahedra. We have 3 ranks with 2 tetra each
+  // as well as en empty rank. Empty rank is the 3rd
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  int        dim = 3;
+  mesh::Mesh mesh("MyMesh", dim, testing::nextMeshID());
+
+  if (context.isRank(0)) {
+    mesh::Vertex &v000 = mesh.createVertex(Eigen::Vector3d{0.0, 0.0, 0.0});
+    mesh::Vertex &v001 = mesh.createVertex(Eigen::Vector3d{0.0, 0.0, 1.0});
+    mesh::Vertex &v011 = mesh.createVertex(Eigen::Vector3d{0.0, 1.0, 1.0});
+    mesh::Vertex &v111 = mesh.createVertex(Eigen::Vector3d{1.0, 1.0, 1.0});
+    mesh::Vertex &v010 = mesh.createVertex(Eigen::Vector3d{0.0, 1.0, 0.0});
+
+    mesh.createTetrahedron(v000, v001, v011, v111);
+    mesh.createTetrahedron(v000, v010, v011, v111);
+    mesh.getVertexOffsets() = {4, 8, 8, 12};
+
+  } else if (context.isRank(1)) {
+    mesh::Vertex &v000 = mesh.createVertex(Eigen::Vector3d{0.0, 0.0, 0.0});
+    mesh::Vertex &v001 = mesh.createVertex(Eigen::Vector3d{0.0, 0.0, 1.0});
+    mesh::Vertex &v101 = mesh.createVertex(Eigen::Vector3d{1.0, 0.0, 1.0});
+    mesh::Vertex &v111 = mesh.createVertex(Eigen::Vector3d{1.0, 1.0, 1.0});
+    mesh::Vertex &v100 = mesh.createVertex(Eigen::Vector3d{1.0, 0.0, 0.0});
+
+    mesh.createTetrahedron(v000, v001, v101, v111);
+    mesh.createTetrahedron(v000, v100, v101, v111);
+  } else if (context.isRank(3)) {
+    mesh::Vertex &v000 = mesh.createVertex(Eigen::Vector3d{0.0, 0.0, 0.0});
+    mesh::Vertex &v010 = mesh.createVertex(Eigen::Vector3d{0.0, 1.0, 0.0});
+    mesh::Vertex &v100 = mesh.createVertex(Eigen::Vector3d{1.0, 0.0, 0.0});
+    mesh::Vertex &v111 = mesh.createVertex(Eigen::Vector3d{1.0, 1.0, 1.0});
+    mesh::Vertex &v110 = mesh.createVertex(Eigen::Vector3d{1.0, 1.0, 0.0});
+
+    mesh.createTetrahedron(v000, v010, v110, v111);
+    mesh.createTetrahedron(v000, v100, v110, v111);
+  }
+
+  io::ExportVTU exportVTU;
+  std::string   filename = "io-ExportVTUTest-PartitionedCube";
   std::string   location = "";
   exportVTU.doExport(filename, location, mesh);
 }
