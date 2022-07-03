@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalReadVector)
     Vector2d valueDataB(2.0, 3.0);
     cplInterface.writeVectorData(dataBID, 0, valueDataB.data());
 
-    //tell preCICE that data has been written and call initializeData
+    //tell preCICE that data has been written and call initialize
     cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
     double maxDt = cplInterface.initialize();
 
