@@ -11,6 +11,7 @@
 
 #include "Edge.hpp"
 #include "Mesh.hpp"
+#include "Tetrahedron.hpp"
 #include "Triangle.hpp"
 #include "logging/LogMacros.hpp"
 #include "math/geometry.hpp"
@@ -66,6 +67,16 @@ const Mesh::TriangleContainer &Mesh::triangles() const
   return _triangles;
 }
 
+const Mesh::TetraContainer &Mesh::tetrahedra() const
+{
+  return _tetrahedra;
+}
+
+Mesh::TetraContainer &Mesh::tetrahedra()
+{
+  return _tetrahedra;
+}
+
 int Mesh::getDimensions() const
 {
   return _dimensions;
@@ -118,6 +129,28 @@ Triangle &Mesh::createTriangle(
   auto nextID = _triangles.size();
   _triangles.emplace_back(edgeOne, edgeTwo, edgeThree, nextID);
   return _triangles.back();
+}
+
+Triangle &Mesh::createTriangle(
+    Vertex &vertexOne,
+    Vertex &vertexTwo,
+    Vertex &vertexThree)
+{
+  auto nextID = _triangles.size();
+  _triangles.emplace_back(vertexOne, vertexTwo, vertexThree, nextID);
+  return _triangles.back();
+}
+
+Tetrahedron &Mesh::createTetrahedron(
+    Vertex &vertexOne,
+    Vertex &vertexTwo,
+    Vertex &vertexThree,
+    Vertex &vertexFour)
+{
+
+  auto nextID = _tetrahedra.size();
+  _tetrahedra.emplace_back(vertexOne, vertexTwo, vertexThree, vertexFour, nextID);
+  return _tetrahedra.back();
 }
 
 PtrData &Mesh::createData(
@@ -260,6 +293,7 @@ void Mesh::clear()
   _triangles.clear();
   _edges.clear();
   _vertices.clear();
+  _tetrahedra.clear();
   _index.clear();
 
   for (mesh::PtrData &data : _data) {
@@ -359,8 +393,6 @@ void Mesh::addMesh(
     vertexMap[vertex.getID()] = &v;
   }
 
-  boost::container::flat_map<EdgeID, Edge *> edgeMap;
-  edgeMap.reserve(deltaMesh.edges().size());
   // you cannot just take the vertices from the edge and add them,
   // since you need the vertices from the new mesh
   // (which may differ in IDs)
@@ -369,18 +401,30 @@ void Mesh::addMesh(
     VertexID vertexIndex2 = edge.vertex(1).getID();
     PRECICE_ASSERT((vertexMap.count(vertexIndex1) == 1) &&
                    (vertexMap.count(vertexIndex2) == 1));
-    Edge &e               = createEdge(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2]);
-    edgeMap[edge.getID()] = &e;
+    createEdge(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2]);
   }
 
   for (const Triangle &triangle : deltaMesh.triangles()) {
-    EdgeID edgeIndex1 = triangle.edge(0).getID();
-    EdgeID edgeIndex2 = triangle.edge(1).getID();
-    EdgeID edgeIndex3 = triangle.edge(2).getID();
-    PRECICE_ASSERT((edgeMap.count(edgeIndex1) == 1) &&
-                   (edgeMap.count(edgeIndex2) == 1) &&
-                   (edgeMap.count(edgeIndex3) == 1));
-    createTriangle(*edgeMap[edgeIndex1], *edgeMap[edgeIndex2], *edgeMap[edgeIndex3]);
+    VertexID vertexIndex1 = triangle.vertex(0).getID();
+    VertexID vertexIndex2 = triangle.vertex(1).getID();
+    VertexID vertexIndex3 = triangle.vertex(2).getID();
+    PRECICE_ASSERT((vertexMap.count(vertexIndex1) == 1) &&
+                   (vertexMap.count(vertexIndex2) == 1) &&
+                   (vertexMap.count(vertexIndex3) == 1));
+    createTriangle(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2], *vertexMap[vertexIndex3]);
+  }
+
+  for (const Tetrahedron &tetra : deltaMesh.tetrahedra()) {
+    VertexID vertexIndex1 = tetra.vertex(0).getID();
+    VertexID vertexIndex2 = tetra.vertex(1).getID();
+    VertexID vertexIndex3 = tetra.vertex(2).getID();
+    VertexID vertexIndex4 = tetra.vertex(3).getID();
+
+    PRECICE_ASSERT((vertexMap.count(vertexIndex1) == 1) &&
+                   (vertexMap.count(vertexIndex2) == 1) &&
+                   (vertexMap.count(vertexIndex3) == 1) &&
+                   (vertexMap.count(vertexIndex4) == 1));
+    createTetrahedron(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2], *vertexMap[vertexIndex3], *vertexMap[vertexIndex4]);
   }
   _index.clear();
 }

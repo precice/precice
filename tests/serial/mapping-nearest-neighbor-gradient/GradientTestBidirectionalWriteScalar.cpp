@@ -36,7 +36,7 @@ using precice::testing::TestContext;
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
-BOOST_AUTO_TEST_SUITE(SerialGradientMappingTests)
+BOOST_AUTO_TEST_SUITE(MappingNearestNeighborGradient)
 
 // Bidirectional test : Read: Vector & NN - Write: Scalar & NNG (Serial coupling)
 BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteScalar)

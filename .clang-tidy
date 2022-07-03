@@ -1,5 +1,5 @@
 ---
-Checks:          '-*,clang-diagnostic-all,clang-diagnostic-extra,clang-diagnostic-pedantic,clang-analyzer-*,pugprone-*,cppcoreguidelines-*,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,misc-*,-misc-static-assert,modernize-*,mpi-*,performance-*,portability-*,readability-static-accessed-through-instance,readability-identifier-naming,readability-magic-numbers,readability-redundant-*,readability-else-after-return,readability-simplify-subscript-expr'
+Checks:          '-*,clang-diagnostic-all,clang-diagnostic-extra,clang-diagnostic-pedantic,clang-analyzer-*,pugprone-*,cppcoreguidelines-*,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,misc-*,-misc-static-assert,modernize-*,-modernize-use-trailing-return-type,mpi-*,performance-*,portability-*,readability-static-accessed-through-instance,readability-identifier-naming,readability-magic-numbers,readability-redundant-*,readability-else-after-return,readability-simplify-subscript-expr'
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
 AnalyzeTemporaryDtors: false

@@ -388,5 +388,106 @@ BOOST_AUTO_TEST_CASE(ProjectionToTriangle)
 
 BOOST_AUTO_TEST_SUITE_END() // Projection
 
+BOOST_AUTO_TEST_SUITE(Tetrahedra)
+
+BOOST_AUTO_TEST_CASE(CubeBoundingBoxIndex)
+{
+  PRECICE_TEST(1_rank);
+  PtrMesh ptr(new Mesh("MyMesh", 3, testing::nextMeshID()));
+  auto &  mesh = *ptr;
+  Index   indexTree(ptr);
+
+  Eigen::Vector3d  location(0.5, 0.5, 0.5);
+  std::vector<int> expectedIndices = {0, 1};
+  // Set up 2 tetrahedra with the same bounding box
+  auto &v00 = mesh.createVertex(Eigen::Vector3d(0, 0, 0));
+  auto &v01 = mesh.createVertex(Eigen::Vector3d(1, 0, 0));
+  auto &v02 = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
+  auto &v03 = mesh.createVertex(Eigen::Vector3d(1, 0, 1));
+  auto &v04 = mesh.createVertex(Eigen::Vector3d(1, 1, 1));
+
+  mesh.createTetrahedron(v00, v01, v02, v03);
+  mesh.createTetrahedron(v04, v01, v02, v03);
+
+  auto match = indexTree.getEnclosingTetrahedra(location);
+
+  BOOST_TEST(match.size() == 2);
+}
+
+BOOST_AUTO_TEST_CASE(TetraIndexing)
+{
+  /*
+  For a location and 3 tetrahedra such that:
+  - First contains the location
+  - Second doesn't, but its Bounding Box does
+  - Third doesn't and neither does its AABB
+  Check that only 1st and 2nd are found by getEnclosingTetrahedra
+  */
+  PRECICE_TEST(1_rank);
+  PtrMesh ptr(new Mesh("MyMesh", 3, testing::nextMeshID()));
+  auto &  mesh = *ptr;
+  Index   indexTree(ptr);
+
+  Eigen::Vector3d  location(0.2, 0.2, 0.2);
+  std::vector<int> expectedIndices = {0, 1};
+
+  // Set containing tetra
+  auto &v00 = mesh.createVertex(Eigen::Vector3d(0, 0, 0));
+  auto &v01 = mesh.createVertex(Eigen::Vector3d(1, 0, 0));
+  auto &v02 = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
+  auto &v03 = mesh.createVertex(Eigen::Vector3d(0, 0, 1));
+  mesh.createTetrahedron(v00, v01, v02, v03);
+
+  // Set non-containing tetra with containing BB (from 0 to 1 in each direction)
+  auto &v10 = mesh.createVertex(Eigen::Vector3d(1, 1, 1));
+  auto &v11 = mesh.createVertex(Eigen::Vector3d(1, 0, 0));
+  auto &v12 = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
+  auto &v13 = mesh.createVertex(Eigen::Vector3d(0, 0, 1));
+  mesh.createTetrahedron(v10, v11, v12, v13);
+
+  // Set tetra far away
+  auto &v20 = mesh.createVertex(Eigen::Vector3d(1, 1, 1));
+  auto &v21 = mesh.createVertex(Eigen::Vector3d(2, 1, 1));
+  auto &v22 = mesh.createVertex(Eigen::Vector3d(1, 2, 1));
+  auto &v23 = mesh.createVertex(Eigen::Vector3d(1, 1, 2));
+  mesh.createTetrahedron(v20, v21, v22, v23);
+
+  auto match = indexTree.getEnclosingTetrahedra(location);
+
+  BOOST_TEST(match.size() == 2);
+  BOOST_TEST(((match[0] == 0 && match[1] == 1) || (match[0] == 1 && match[1] == 0)));
+}
+
+BOOST_AUTO_TEST_CASE(TetraWorksOnBoundary)
+{
+  /*
+ Check that the AABB safety factor is high enough. Do all the corners of a tetra fit inside its AABB?
+  */
+  PRECICE_TEST(1_rank);
+  PtrMesh ptr(new Mesh("MyMesh", 3, testing::nextMeshID()));
+  auto &  mesh = *ptr;
+  Index   indexTree(ptr);
+
+  std::vector<Eigen::Vector3d> locations;
+  locations.push_back(Eigen::Vector3d(0, 0, 0));
+  locations.push_back(Eigen::Vector3d(1, 0, 0));
+  locations.push_back(Eigen::Vector3d(0, 1, 0));
+  locations.push_back(Eigen::Vector3d(0, 0, 1));
+
+  // Set containing tetra
+  auto &v00 = mesh.createVertex(Eigen::Vector3d(0, 0, 0));
+  auto &v01 = mesh.createVertex(Eigen::Vector3d(1, 0, 0));
+  auto &v02 = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
+  auto &v03 = mesh.createVertex(Eigen::Vector3d(0, 0, 1));
+  mesh.createTetrahedron(v00, v01, v02, v03);
+
+  for (const auto &vertex : locations) {
+    auto match = indexTree.getEnclosingTetrahedra(vertex);
+    BOOST_TEST(match.size() == 1);
+  }
+}
+
+BOOST_AUTO_TEST_SUITE_END() // Tetrahedra
+
 BOOST_AUTO_TEST_SUITE_END() // Mesh
 BOOST_AUTO_TEST_SUITE_END() // Query

@@ -51,7 +51,7 @@ BaseCouplingScheme::BaseCouplingScheme(
                  "Maximum time has to be larger than zero.");
   PRECICE_ASSERT(not((maxTimeWindows != UNDEFINED_TIME_WINDOWS) && (maxTimeWindows < 0)),
                  "Maximum number of time windows has to be larger than zero.");
-  PRECICE_ASSERT(not((timeWindowSize != UNDEFINED_TIME_WINDOW_SIZE) && (timeWindowSize < 0.0)),
+  PRECICE_ASSERT(not(hasTimeWindowSize() && (timeWindowSize < 0.0)),
                  "Time window size has to be larger than zero.");
   PRECICE_ASSERT((validDigits >= 1) && (validDigits < 17),
                  "Valid digits of time window size has to be between 1 and 16.");
@@ -284,7 +284,7 @@ bool BaseCouplingScheme::hasTimeWindowSize() const
 
 double BaseCouplingScheme::getTimeWindowSize() const
 {
-  PRECICE_ASSERT(not math::equals(_timeWindowSize, UNDEFINED_TIME_WINDOW_SIZE));
+  PRECICE_ASSERT(hasTimeWindowSize());
   return _timeWindowSize;
 }
 
@@ -354,7 +354,7 @@ double BaseCouplingScheme::getThisTimeWindowRemainder() const
 {
   PRECICE_TRACE();
   double remainder = 0.0;
-  if (not math::equals(_timeWindowSize, UNDEFINED_TIME_WINDOW_SIZE)) {
+  if (hasTimeWindowSize()) {
     remainder = getNextTimestepMaxLength();
   }
   PRECICE_DEBUG("return {}", remainder);
@@ -363,14 +363,15 @@ double BaseCouplingScheme::getThisTimeWindowRemainder() const
 
 double BaseCouplingScheme::getNextTimestepMaxLength() const
 {
-  if (math::equals(_timeWindowSize, UNDEFINED_TIME_WINDOW_SIZE)) {
+  if (hasTimeWindowSize()) {
+    return _timeWindowSize - _computedTimeWindowPart;
+  } else {
     if (math::equals(_maxTime, UNDEFINED_TIME)) {
       return std::numeric_limits<double>::max();
     } else {
       return _maxTime - _time;
     }
   }
-  return _timeWindowSize - _computedTimeWindowPart;
 }
 
 bool BaseCouplingScheme::isCouplingOngoing() const
@@ -427,10 +428,10 @@ std::string BaseCouplingScheme::printBasicState(
   if (_maxTime != UNDEFINED_TIME) {
     os << " of " << _maxTime;
   }
-  if (_timeWindowSize != UNDEFINED_TIME_WINDOW_SIZE) {
+  if (hasTimeWindowSize()) {
     os << ", time-window-size: " << _timeWindowSize;
   }
-  if ((_timeWindowSize != UNDEFINED_TIME_WINDOW_SIZE) || (_maxTime != UNDEFINED_TIME)) {
+  if (hasTimeWindowSize() || (_maxTime != UNDEFINED_TIME)) {
     os << ", max-timestep-length: " << getNextTimestepMaxLength();
   }
   os << ", ongoing: ";

@@ -36,13 +36,9 @@ struct NoCompactSupportBase {
  */
 class ThinPlateSplines : public NoCompactSupportBase {
 public:
-  double evaluate(double radius) const
+  inline double evaluate(double radius) const
   {
-    double result = 0.0;
-    if (math::greater(radius, 0.0)) {
-      result = std::log(radius) * std::pow(radius, 2);
-    }
-    return result;
+    return std::log(std::max(radius, math::NUMERICAL_ZERO_DIFFERENCE)) * math::pow_int<2>(radius);
   }
 };
 
@@ -58,9 +54,9 @@ public:
   explicit Multiquadrics(double c)
       : _cPow2(std::pow(c, 2)) {}
 
-  double evaluate(double radius) const
+  inline double evaluate(double radius) const
   {
-    return std::sqrt(_cPow2 + std::pow(radius, 2));
+    return std::sqrt(_cPow2 + math::pow_int<2>(radius));
   }
 
 private:
@@ -84,9 +80,9 @@ public:
                   "Shape parameter for radial-basis-function inverse multiquadric has to be larger than zero. Please update the \"shape-parameter\" attribute.");
   }
 
-  double evaluate(double radius) const
+  inline double evaluate(double radius) const
   {
-    return 1.0 / std::sqrt(_cPow2 + std::pow(radius, 2));
+    return 1.0 / std::sqrt(_cPow2 + math::pow_int<2>(radius));
   }
 
 private:
@@ -104,7 +100,7 @@ private:
  */
 class VolumeSplines : public NoCompactSupportBase {
 public:
-  double evaluate(double radius) const
+  inline double evaluate(double radius) const
   {
     return std::abs(radius);
   }
@@ -141,12 +137,12 @@ public:
     return _supportRadius;
   }
 
-  double evaluate(const double radius) const
+  inline double evaluate(const double radius) const
   {
     if (radius > _supportRadius)
       return 0.0;
     else
-      return std::exp(-std::pow(_shape * radius, 2.0)) - _deltaY;
+      return std::exp(-math::pow_int<2>(_shape * radius)) - _deltaY;
   }
 
   /// Below that value the function is supposed to be zero. Defines the support radius if not explicitely given
@@ -177,31 +173,29 @@ private:
 class CompactThinPlateSplinesC2 : public CompactSupportBase {
 public:
   explicit CompactThinPlateSplinesC2(double supportRadius)
-      : _r(supportRadius)
   {
-    PRECICE_CHECK(math::greater(_r, 0.0),
+    PRECICE_CHECK(math::greater(supportRadius, 0.0),
                   "Support radius for radial-basis-function compact thin-plate-splines c2 has to be larger than zero. Please update the \"support-radius\" attribute.");
+    _r_inv = 1. / supportRadius;
   }
 
   double getSupportRadius() const
   {
-    return _r;
+    return 1. / _r_inv;
   }
 
-  double evaluate(double radius) const
+  inline double evaluate(double radius) const
   {
-    if (radius >= _r)
+    double const p = radius * _r_inv;
+    if (p >= 1)
       return 0.0;
-    double const p = radius / _r;
-    using std::log;
-    using std::pow;
-    return 1.0 - 30.0 * pow(p, 2.0) - 10.0 * pow(p, 3.0) + 45.0 * pow(p, 4.0) - 6.0 * pow(p, 5.0) - 60.0 * log(pow(p, pow(p, 3.0)));
+    return 1.0 - 30.0 * math::pow_int<2>(p) - 10.0 * math::pow_int<3>(p) + 45.0 * math::pow_int<4>(p) - 6.0 * math::pow_int<5>(p) - math::pow_int<3>(p) * 60.0 * std::log(std::max(p, math::NUMERICAL_ZERO_DIFFERENCE));
   }
 
 private:
   logging::Logger _log{"mapping::CompactThinPlateSplinesC2"};
 
-  double const _r;
+  double _r_inv;
 };
 
 /**
@@ -217,28 +211,29 @@ private:
 class CompactPolynomialC0 : public CompactSupportBase {
 public:
   explicit CompactPolynomialC0(double supportRadius)
-      : _r(supportRadius)
   {
-    PRECICE_CHECK(math::greater(_r, 0.0),
+    PRECICE_CHECK(math::greater(supportRadius, 0.0),
                   "Support radius for radial-basis-function compact polynomial c0 has to be larger than zero. Please update the \"support-radius\" attribute.");
+    _r_inv = 1. / supportRadius;
   }
 
   double getSupportRadius() const
   {
-    return _r;
+    return 1. / _r_inv;
   }
 
-  double evaluate(double radius) const
+  inline double evaluate(double radius) const
   {
-    if (radius >= _r)
+    double p = radius * _r_inv;
+    if (p >= 1)
       return 0.0;
-    return std::pow(1.0 - radius / _r, 2.0);
+    return math::pow_int<2>(1.0 - p);
   }
 
 private:
   logging::Logger _log{"mapping::CompactPolynomialC0"};
 
-  double const _r;
+  double _r_inv;
 };
 
 /**
@@ -254,30 +249,30 @@ private:
 class CompactPolynomialC6 : public CompactSupportBase {
 public:
   explicit CompactPolynomialC6(double supportRadius)
-      : _r(supportRadius)
   {
-    PRECICE_CHECK(math::greater(_r, 0.0),
+    PRECICE_CHECK(math::greater(supportRadius, 0.0),
                   "Support radius for radial-basis-function compact polynomial c6 has to be larger than zero. Please update the \"support-radius\" attribute.");
+
+    _r_inv = 1. / supportRadius;
   }
 
   double getSupportRadius() const
   {
-    return _r;
+    return 1. / _r_inv;
   }
 
-  double evaluate(double radius) const
+  inline double evaluate(double radius) const
   {
-    if (radius >= _r)
+    double p = radius * _r_inv;
+    if (p >= 1)
       return 0.0;
-    double p = radius / _r;
-    using std::pow;
-    return pow(1.0 - p, 8.0) * (32.0 * pow(p, 3.0) + 25.0 * pow(p, 2.0) + 8.0 * p + 1.0);
+    return math::pow_int<8>(1.0 - p) * (32.0 * math::pow_int<3>(p) + 25.0 * math::pow_int<2>(p) + 8.0 * p + 1.0);
   }
 
 private:
   logging::Logger _log{"mapping::CompactPolynomialC6"};
 
-  double const _r;
+  double _r_inv;
 };
 
 } // namespace mapping

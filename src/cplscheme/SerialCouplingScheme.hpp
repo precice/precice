@@ -54,6 +54,13 @@ public:
       int                           maxIterations      = UNDEFINED_MAX_ITERATIONS,
       int                           extrapolationOrder = UNDEFINED_EXTRAPOLATION_ORDER);
 
+protected:
+  /**
+   * @brief Setter for _timeWindowSize
+   * @param timeWindowSize
+   */
+  void setTimeWindowSize(double timeWindowSize);
+
 private:
   logging::Logger _log{"cplschemes::SerialCouplingSchemes"};
 
@@ -62,6 +69,9 @@ private:
 
   /// Determines, if the time window size is received by the participant.
   bool _participantReceivesTimeWindowSize = false;
+
+  /// Sends time window size, if this participant is the one to send
+  void sendTimeWindowSize();
 
   /// Receives and sets the time window size, if this participant is the one to receive
   void receiveAndSetTimeWindowSize();

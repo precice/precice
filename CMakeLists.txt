@@ -63,6 +63,7 @@ option(BUILD_TESTING "Build tests" ON)
 option(PRECICE_ALWAYS_VALIDATE_LIBS "Validate libraries even after the validatation succeeded." OFF)
 option(PRECICE_ENABLE_C "Enable the native C bindings" ON)
 option(PRECICE_ENABLE_FORTRAN "Enable the native Fortran bindings" ON)
+option(PRECICE_BUILD_TOOLS "Build the \"precice-tools\" executable" ON)
 
 option(PRECICE_RELEASE_WITH_DEBUG_LOG "Enable debug logging in release builds" OFF)
 option(PRECICE_RELEASE_WITH_TRACE_LOG "Enable trace logging in release builds" OFF)
@@ -134,6 +135,15 @@ add_feature_info(FortranBindings PRECICE_ENABLE_FORTRAN
 
    This feature can be enabled/disabled by setting the PRECICE_ENABLE_FORTRAN CMake option.
   ")
+  add_feature_info(PreciceTools PRECICE_BUILD_TOOLS
+  "Build the \"precice-tools\" executable
+
+   preCICE offers in addition to the core library a variety of tools in order to check configuration
+   files or generate xml references. The tools are copmiled into an exectuable called \"precice-tools\".
+
+   This feature can be enabled/disabled by setting the PRECICE_BUILD_TOOLS CMake option.
+  ")
+
 
 feature_summary(WHAT ENABLED_FEATURES  DESCRIPTION "=== ENABLED FEATURES ===" QUIET_ON_EMPTY)
 feature_summary(WHAT DISABLED_FEATURES DESCRIPTION "=== DISABLED FEATURES ===" QUIET_ON_EMPTY)
@@ -332,29 +342,30 @@ include(${CMAKE_CURRENT_LIST_DIR}/src/sources.cmake)
 #
 # Configuration of Target precice-tools
 #
+if (PRECICE_BUILD_TOOLS)
+  add_executable(precice-tools "src/drivers/main.cpp")
+  target_link_libraries(precice-tools
+    PRIVATE
+   precice
+   )
+  set_target_properties(precice-tools PROPERTIES
+    # precice is a C++14 project
+    CXX_STANDARD 14
+    CXX_STANDARD_REQUIRED Yes
+    CXX_EXTENSIONS No
+    )
 
-add_executable(precice-tools "src/drivers/main.cpp")
-target_link_libraries(precice-tools
-  PRIVATE
-  precice
-  )
-set_target_properties(precice-tools PROPERTIES
-  # precice is a C++14 project
-  CXX_STANDARD 14
-  CXX_STANDARD_REQUIRED Yes
-  CXX_EXTENSIONS No
-  )
-
-# Add link for backwards compatibility
-# TODO remove in 3.0.0
-add_custom_target(
-  binprecice
-  ALL
-  COMMAND ${CMAKE_COMMAND} -E create_symlink precice-tools binprecice
-  DEPENDS precice-tools
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-  BYPRODUCTS binprecice
-  )
+  # Add link for backwards compatibility
+  # TODO remove in 3.0.0
+  add_custom_target(
+    binprecice
+    ALL
+    COMMAND ${CMAKE_COMMAND} -E create_symlink precice-tools binprecice
+    DEPENDS precice-tools
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    BYPRODUCTS binprecice
+    )
+endif()
 
 #
 # Configuration of Target testprecice
@@ -426,18 +437,24 @@ endif()
 # precice - the library
 # precice-tools - the precice binary
 include(GNUInstallDirs)
-install(TARGETS precice precice-tools
+install(TARGETS precice
   EXPORT preciceTargets
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/precice
   INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/precice
   )
 
-# Install the binprecice link for backwards compatibility
-# TODO remove in 3.0.0
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/binprecice DESTINATION ${CMAKE_INSTALL_BINDIR})
+if(PRECICE_BUILD_TOOLS)
+  install(TARGETS precice-tools
+    EXPORT preciceTargets
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
+
+  # Install the binprecice link for backwards compatibility
+  # TODO remove in 3.0.0
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/binprecice DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
 
 if(BUILD_TESTING AND PRECICE_InstallTest)
   # Install the testprecice target
@@ -593,23 +610,25 @@ add_custom_target(
   USES_TERMINAL
   )
 
-add_custom_target(
-  format
-  COMMAND tools/formatting/format-all
-  WORKING_DIRECTORY ${preCICE_SOURCE_DIR}
-  USES_TERMINAL
-  )
+if(PRECICE_BUILD_TOOLS)
+  add_custom_target(
+    format
+    COMMAND tools/formatting/format-all
+    WORKING_DIRECTORY ${preCICE_SOURCE_DIR}
+    USES_TERMINAL
+    )
 
-add_custom_target(
-  sourcesIndex
-  COMMAND tools/building/updateSourceFiles.py
-  WORKING_DIRECTORY ${preCICE_SOURCE_DIR}
-  USES_TERMINAL
-  )
+  add_custom_target(
+    sourcesIndex
+    COMMAND tools/building/updateSourceFiles.py
+    WORKING_DIRECTORY ${preCICE_SOURCE_DIR}
+    USES_TERMINAL
+    )
 
-add_custom_target(
-  changelog
-  COMMAND tools/building/createChangelog
-  WORKING_DIRECTORY ${preCICE_SOURCE_DIR}
-  USES_TERMINAL
-  )
+  add_custom_target(
+    changelog
+    COMMAND tools/building/createChangelog
+    WORKING_DIRECTORY ${preCICE_SOURCE_DIR}
+    USES_TERMINAL
+    )
+endif()

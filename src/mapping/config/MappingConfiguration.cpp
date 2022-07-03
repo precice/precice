@@ -7,6 +7,7 @@
 #include <ostream>
 #include <utility>
 #include "logging/LogMacros.hpp"
+#include "mapping/LinearCellInterpolationMapping.hpp"
 #include "mapping/Mapping.hpp"
 #include "mapping/NearestNeighborGradientMapping.hpp"
 #include "mapping/NearestNeighborMapping.hpp"
@@ -130,6 +131,11 @@ MappingConfiguration::MappingConfiguration(
   {
     XMLTag tag(*this, VALUE_NEAREST_NEIGHBOR_GRADIENT, occ, TAG);
     tag.setDocumentation("Nearest-neighbor-gradient mapping which uses nearest-neighbor mapping with an additional linear approximation using gradient data.");
+    tags.push_back(tag);
+  }
+  {
+    XMLTag tag(*this, VALUE_LINEAR_CELL_INTERPOLATION, occ, TAG);
+    tag.setDocumentation("Linear cell interpolation mapping which uses a rstar-spacial index tree to index meshes and locate the nearest cell. Only supports 2D meshes.");
     tags.push_back(tag);
   }
 
@@ -325,6 +331,11 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   } else if (type == VALUE_NEAREST_PROJECTION) {
     configuredMapping.mapping = PtrMapping(
         new NearestProjectionMapping(constraintValue, dimensions));
+    configuredMapping.isRBF = false;
+    return configuredMapping;
+  } else if (type == VALUE_LINEAR_CELL_INTERPOLATION) {
+    configuredMapping.mapping = PtrMapping(
+        new LinearCellInterpolationMapping(constraintValue, dimensions));
     configuredMapping.isRBF = false;
     return configuredMapping;
   } else if (type == VALUE_NEAREST_NEIGHBOR_GRADIENT) {

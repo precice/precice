@@ -104,7 +104,8 @@ BOOST_AUTO_TEST_CASE(TriangleArea)
     b << 0.0, 1.0;
     c << 1.0, 0.0;
     area = geometry::triangleArea(a, b, c);
-    BOOST_TEST(area == -0.5);
+    // Areas are not signed.
+    BOOST_TEST(area == 0.5);
   }
   { // 3D
     Eigen::Vector3d a, b, c;
@@ -115,32 +116,6 @@ BOOST_AUTO_TEST_CASE(TriangleArea)
     area = geometry::triangleArea(a, b, c);
     BOOST_CHECK(area == 0.5 * sqrt(2.0));
   }
-}
-
-BOOST_AUTO_TEST_CASE(SegmentsIntersect)
-{
-  PRECICE_TEST(1_rank);
-  Eigen::Vector2d a(0, 0), b(1, 0), c(0.5, 0), d(0, 0.5);
-  BOOST_CHECK(geometry::segmentsIntersect(a, b, c, d, true));
-  BOOST_CHECK(!geometry::segmentsIntersect(a, b, c, d, false));
-
-  c(1) = -0.2;
-  BOOST_CHECK(geometry::segmentsIntersect(a, b, c, d, false));
-
-  // Test case motivated from bug
-  a << 0.23104429, 1.87753905;
-  b << 0.22608634, 1.88114120;
-  c << 0.23058985, 1.87733882;
-  d << 0.23058985, 1.87846349;
-  BOOST_CHECK(geometry::segmentsIntersect(a, b, c, d, false));
-
-  // Another bug motivated test, T-intersection slightly above numerical accuracy
-  a << 1.0, 1.0;
-  b << 0.0, 1.0;
-  c << 1.0 - (10.0 * NUMERICAL_ZERO_DIFFERENCE), 1.1;
-  d << 1.0 - (10.0 * NUMERICAL_ZERO_DIFFERENCE), 0.9;
-  BOOST_CHECK(geometry::segmentsIntersect(a, b, c, d, false));
-  BOOST_CHECK(geometry::segmentsIntersect(c, d, a, b, false));
 }
 
 BOOST_AUTO_TEST_CASE(SegmentPlaneIntersection)
@@ -233,64 +208,6 @@ BOOST_AUTO_TEST_CASE(ProjectVector)
   vector2D = geometry::projectVector(vector3D, 0);
   vectorExpected << 2.0, 3.0;
   BOOST_CHECK(equals(vector2D, vectorExpected));
-}
-
-BOOST_AUTO_TEST_CASE(ContainedInTriangle)
-{
-  PRECICE_TEST(1_rank);
-  Eigen::Vector2d triangleVertex0(0.0, 0.0);
-  Eigen::Vector2d triangleVertex1(1.0, 0.0);
-  Eigen::Vector2d triangleVertex2(0.0, 1.0);
-  Eigen::Vector2d point(0.25, 0.25);
-
-  // Contained point
-  int result = geometry::containedInTriangle(
-      triangleVertex0, triangleVertex1, triangleVertex2, point);
-  BOOST_TEST(result == geometry::CONTAINED);
-
-  // Not contained points
-  point << -1.0, -1.0;
-  result = geometry::containedInTriangle(
-      triangleVertex0, triangleVertex1, triangleVertex2, point);
-  BOOST_TEST(result == geometry::NOT_CONTAINED);
-  point << 1.0, 1.0;
-  result = geometry::containedInTriangle(
-      triangleVertex0, triangleVertex1, triangleVertex2, point);
-  BOOST_TEST(result == geometry::NOT_CONTAINED);
-  point << 2.0, 0.0;
-  result = geometry::containedInTriangle(
-      triangleVertex0, triangleVertex1, triangleVertex2, point);
-  BOOST_TEST(result == geometry::NOT_CONTAINED);
-  point << 0.0, 2.0;
-  result = geometry::containedInTriangle(
-      triangleVertex0, triangleVertex1, triangleVertex2, point);
-  BOOST_TEST(result == geometry::NOT_CONTAINED);
-
-  // Touching points
-  point << 0.0, 0.0;
-  result = geometry::containedInTriangle(
-      triangleVertex0, triangleVertex1, triangleVertex2, point);
-  BOOST_TEST(result == geometry::TOUCHING);
-  point << 1.0, 0.0;
-  result = geometry::containedInTriangle(
-      triangleVertex0, triangleVertex1, triangleVertex2, point);
-  BOOST_TEST(result == geometry::TOUCHING);
-  point << 0.0, 1.0;
-  result = geometry::containedInTriangle(
-      triangleVertex0, triangleVertex1, triangleVertex2, point);
-  BOOST_TEST(result == geometry::TOUCHING);
-  point << 0.5, 0.0;
-  result = geometry::containedInTriangle(
-      triangleVertex0, triangleVertex1, triangleVertex2, point);
-  BOOST_TEST(result == geometry::TOUCHING);
-  point << 0.0, 0.5;
-  result = geometry::containedInTriangle(
-      triangleVertex0, triangleVertex1, triangleVertex2, point);
-  BOOST_TEST(result == geometry::TOUCHING);
-  point << 0.5, 0.5;
-  result = geometry::containedInTriangle(
-      triangleVertex0, triangleVertex1, triangleVertex2, point);
-  BOOST_TEST(result == geometry::TOUCHING);
 }
 
 BOOST_AUTO_TEST_CASE(ContainedInHyperrectangle)

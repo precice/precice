@@ -13,6 +13,7 @@
 #include "mesh/Data.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "mesh/Tetrahedron.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
 #include "precice/types.hpp"
@@ -40,6 +41,7 @@ public:
   using VertexContainer   = std::deque<Vertex>;
   using EdgeContainer     = std::deque<Edge>;
   using TriangleContainer = std::deque<Triangle>;
+  using TetraContainer    = std::deque<Tetrahedron>;
   using DataContainer     = std::vector<PtrData>;
   using BoundingBoxMap    = std::map<int, BoundingBox>;
 
@@ -76,11 +78,37 @@ public:
   /// Returns const container holding all edges.
   const EdgeContainer &edges() const;
 
+  bool hasEdges() const
+  {
+    return !_edges.empty();
+  }
+
   /// Returns modifiable container holding all triangles.
   TriangleContainer &triangles();
 
   /// Returns const container holding all triangles.
   const TriangleContainer &triangles() const;
+
+  bool hasTriangles() const
+  {
+    return !_triangles.empty();
+  }
+
+  /// Returns modifiable container holding all tetrahedra.
+  TetraContainer &tetrahedra();
+
+  /// Returns const container holding all tetrahedra.
+  const TetraContainer &tetrahedra() const;
+
+  bool hasTetrahedra() const
+  {
+    return !_tetrahedra.empty();
+  }
+
+  bool hasConnectivity() const
+  {
+    return hasEdges() || hasTriangles() || hasTetrahedra();
+  }
 
   int getDimensions() const;
 
@@ -118,6 +146,32 @@ public:
       Edge &edgeOne,
       Edge &edgeTwo,
       Edge &edgeThree);
+
+  /**
+   * @brief Creates and initializes a Triangle object.
+   *
+   * @param[in] vertexOne Reference to first edge defining the Triangle.
+   * @param[in] vertexTwo Reference to second edge defining the Triangle.
+   * @param[in] vertexThree Reference to third edge defining the Triangle.
+   */
+  Triangle &createTriangle(
+      Vertex &vertexOne,
+      Vertex &vertexTwo,
+      Vertex &vertexThree);
+
+  /**
+   * @brief Creates and initializes a Tetrahedron object.
+   *
+   * @param[in] vertexOne Reference to first vertex defining the Tetrahedron.
+   * @param[in] vertexTwo Reference to second vertex defining the Tetrahedron.
+   * @param[in] vertexThree Reference to third vertex defining the Tetrahedron.
+   * @param[in] vertexFour Reference to fourth vertex defining the Tetrahedron.
+   */
+  Tetrahedron &createTetrahedron(
+      Vertex &vertexOne,
+      Vertex &vertexTwo,
+      Vertex &vertexThree,
+      Vertex &vertexFour);
 
   /// Create only data for vertex
   PtrData &createData(const std::string &name,
@@ -242,10 +296,11 @@ private:
   /// The ID of this mesh.
   MeshID _id;
 
-  /// Holds vertices, edges, and triangles.
+  /// Holds vertices, edges, triangles and tetrahedra.
   VertexContainer   _vertices;
   EdgeContainer     _edges;
   TriangleContainer _triangles;
+  TetraContainer    _tetrahedra;
 
   /// Data hold by the vertices of the mesh.
   DataContainer _data;
