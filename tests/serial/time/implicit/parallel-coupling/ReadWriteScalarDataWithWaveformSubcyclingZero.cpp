@@ -94,6 +94,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingZero)
     } else {
       BOOST_TEST(!precice.isReadDataAvailable());
     }
+
     if (precice.isReadDataAvailable()) {
       precice.readScalarData(readDataID, vertexID, currentDt, readData);
     }
