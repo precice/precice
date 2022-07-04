@@ -13,6 +13,12 @@
 namespace precice {
 namespace mapping {
 
+/**
+ * This class assembles and solves an RBF system, given an input mesh and an output mesh with relevant vertex IDs.
+ * The class uses a dense matrix decomposition in order to decompose the resulting system(s) and a backward substitution
+ * in order to solve the system at runtime. The functionality uses Eigen and supports only serial execution. In case
+ * the polynomial="separate" option is used, the polynomial system is solved using a QR decomposition.
+ */
 class RadialBasisFctSolver {
 public:
   /// Default constructor
@@ -31,21 +37,26 @@ public:
   // Clear all stored matrices
   void clear();
 
-  // Access to the evaluation matrix
+  // Access to the evaluation matrix (output x input)
   const Eigen::MatrixXd &getEvaluationMatrix() const;
 
 private:
   precice::logging::Logger _log{"mapping::RadialBasisFctSolver"};
 
+  /// Decomposition of the interpolation matrix
   Eigen::ColPivHouseholderQR<Eigen::MatrixXd> _qrMatrixC;
 
-  // Decomposition of the polynomial
+  /// Decomposition of the polynomial (for separate polynomial)
   Eigen::ColPivHouseholderQR<Eigen::MatrixXd> _qrMatrixQ;
 
   // TODO: Add max columns and rows in the template parameter
+  /// Polynomial matrix of the input mesh (for separate polynomial)
   Eigen::MatrixXd _matrixQ;
+
+  /// Polynomial matrix of the output mesh (for separate polynomial)
   Eigen::MatrixXd _matrixV;
 
+  /// Evaluation matrix (output x input)
   Eigen::MatrixXd _matrixA;
 };
 
@@ -167,7 +178,7 @@ RadialBasisFctSolver::RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction
   // Convert dead axis vector into an active axis array so that we can handle the reduction more easily
   std::array<bool, 3> activeAxis({{false, false, false}});
   std::transform(deadAxis.begin(), deadAxis.end(), activeAxis.begin(), [](const auto ax) { return !ax; });
-  // First, assemble the interpolation matrix
+  // First, assemble the interpolation matrix and check the invertability
   _qrMatrixC = buildMatrixCLU(basisFunction, inputMesh, activeAxis, polynomial).colPivHouseholderQr();
 
   PRECICE_CHECK(_qrMatrixC.isInvertible(),
