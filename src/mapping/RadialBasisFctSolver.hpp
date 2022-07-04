@@ -49,7 +49,6 @@ private:
   /// Decomposition of the polynomial (for separate polynomial)
   Eigen::ColPivHouseholderQR<Eigen::MatrixXd> _qrMatrixQ;
 
-  // TODO: Add max columns and rows in the template parameter
   /// Polynomial matrix of the input mesh (for separate polynomial)
   Eigen::MatrixXd _matrixQ;
 
