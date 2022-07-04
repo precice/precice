@@ -95,10 +95,14 @@ void SerialCouplingScheme::exchangeInitialData()
     if (sendsInitializedData()) {
       sendData(getM2N(), getSendData());
     }
+  }
+}
 
-    // @todo need to store data into waveform here!
-
-    // Second half of second's exchangeDataAndAccelerate
+void SerialCouplingScheme::receiveResultOfFirstAdvance()
+{
+  if (doesFirstStep()) {
+    // do nothing
+  } else { // second participant
     receiveAndSetTimeWindowSize();
     PRECICE_DEBUG("Receiving data...");
     receiveData(getM2N(), getReceiveData());

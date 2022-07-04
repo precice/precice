@@ -192,12 +192,7 @@ public:
    */
   void initialize(double startTime, int startTimeWindow) override final;
 
-  void completeInitialization() override final
-  {
-    if(not hasDataBeenReceived() && hasInitialDataBeenReceived()){
-      checkDataHasBeenReceived();
-    }
-  }
+  void completeInitialization() override final;
 
   /**
    * @brief Advances the coupling scheme.

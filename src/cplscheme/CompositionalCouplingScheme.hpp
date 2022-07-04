@@ -74,19 +74,16 @@ public:
   /**
    * @brief Initializes the coupling scheme and establishes a communication
    *        connection to the coupling partner.
-* @param[in] startTime TODO
-* @param[in] startTimeWindow TODO
-*/
+   * @param[in] startTime TODO
+   * @param[in] startTimeWindow TODO
+   */
   void initialize(
       double startTime,
       int    startTimeWindow) final override;
 
-  void completeInitialization() override final
-  {
-    for (const Scheme &scheme : _couplingSchemes) {
-      scheme.scheme->completeInitialization();
-    }
-  }
+  void receiveResultOfFirstAdvance() override final;
+
+  void completeInitialization() override final;
 
   /// Returns true, if initialize has been called.
   bool isInitialized() const final override;

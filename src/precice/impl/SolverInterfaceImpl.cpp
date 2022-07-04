@@ -341,9 +341,8 @@ double SolverInterfaceImpl::initialize()
 
   PRECICE_DEBUG("Initialize coupling schemes");
   _couplingScheme->initialize(time, timeWindow);
-  dt = _couplingScheme->getNextTimestepMaxLength(); // dt can change at this point again, if second participant and participant-first method for setting time window size is used.
 
-  if (_couplingScheme->hasInitialDataBeenReceived() || _couplingScheme->hasDataBeenReceived()) {
+  if (_couplingScheme->hasInitialDataBeenReceived()) {
     performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
     mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
@@ -351,6 +350,15 @@ double SolverInterfaceImpl::initialize()
 
   for (auto &context : _accessor->readDataContexts()) {
     context.moveToNextWindow();
+  }
+
+  _couplingScheme->receiveResultOfFirstAdvance();
+  dt = _couplingScheme->getNextTimestepMaxLength(); // dt can change at this point again, if second participant and participant-first method for setting time window size is used.
+
+  if (_couplingScheme->hasDataBeenReceived()) {
+    performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
+    mapReadData();
+    performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
   }
 
   resetWrittenData();

@@ -86,7 +86,15 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingZero)
     }
     double readTime;
     readTime = timeCheckpoint + windowDt;
-    BOOST_TEST(precice.isReadDataAvailable());
+
+    bool atWindowBoundary = timestep % nSubsteps == 0;
+
+    if (atWindowBoundary) {
+      BOOST_TEST(precice.isReadDataAvailable());
+    } else {
+      BOOST_TEST(!precice.isReadDataAvailable());
+    }
+
     if (precice.isReadDataAvailable()) {
       precice.readScalarData(readDataID, vertexID, currentDt, readData);
     }

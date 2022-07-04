@@ -169,6 +169,13 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   _isInitialized = true;
 }
 
+void BaseCouplingScheme::completeInitialization()
+{
+  if (not hasDataBeenReceived() && hasInitialDataBeenReceived()) {
+    checkDataHasBeenReceived();
+  }
+}
+
 void BaseCouplingScheme::advance()
 {
   PRECICE_TRACE(_timeWindows, _time);
@@ -299,7 +306,7 @@ void BaseCouplingScheme::checkInitialDataHasBeenReceived()
 void BaseCouplingScheme::checkDataHasBeenReceived()
 {
   PRECICE_ASSERT(not _hasDataBeenReceived, "checkDataHasBeenReceived() may only be called once within one coupling iteration. If this assertion is triggered this probably means that your coupling scheme has a bug.");
-  _hasDataBeenReceived        = true;
+  _hasDataBeenReceived = true;
 }
 
 double BaseCouplingScheme::getTime() const
