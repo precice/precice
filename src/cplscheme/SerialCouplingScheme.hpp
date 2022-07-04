@@ -98,11 +98,6 @@ private:
   {
     return getSendData();
   }
-
-  /**
-   * @brief Exchanges data, if it has to be initialized.
-   */
-  void exchangeInitialData() override;
 };
 
 } // namespace cplscheme

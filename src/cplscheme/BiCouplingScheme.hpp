@@ -111,6 +111,19 @@ protected:
     return _m2n;
   }
 
+  /**
+   * @brief Exchanges data, if it has to be initialized.
+   */
+  void exchangeInitialData() override final;
+
+  /**
+   * @brief Implements part of exchangeDataAndAccelerate common for BiCouplingSchemes
+   *
+   * @return true, if acceleration converged or explicit coupling scheme
+   * @return false, if acceleration not converged
+   */
+  bool exchangeDataAndAccelerateImpl();
+
 private:
   mutable logging::Logger _log{"cplscheme::BiCouplingScheme"};
 
