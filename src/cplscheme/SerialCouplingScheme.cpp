@@ -90,14 +90,13 @@ void SerialCouplingScheme::exchangeInitialData()
   } else { // second participant
     if (receivesInitializedData()) {
       receiveData(getM2N(), getReceiveData());
-      //checkInitialDataHasBeenReceived();  // @todo should be triggered here.
+      checkInitialDataHasBeenReceived();
     }
     if (sendsInitializedData()) {
       sendData(getM2N(), getSendData());
     }
-    // @todo need to store data into waveform here!
 
-    // _hasDataBeenReceived = false;  // do this in BaseCouplingScheme
+    // @todo need to store data into waveform here!
 
     // Second half of second's exchangeDataAndAccelerate
     receiveAndSetTimeWindowSize();

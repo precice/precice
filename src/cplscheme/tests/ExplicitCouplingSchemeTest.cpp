@@ -489,12 +489,14 @@ BOOST_AUTO_TEST_CASE(testSerialDataInitialization)
     BOOST_TEST(not cplScheme.hasDataBeenReceived());
     BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteInitialData()));
     cplScheme.initialize(0.0, 1);
-    BOOST_TEST(cplScheme.hasDataBeenReceived());
+    BOOST_TEST(cplScheme.hasInitialDataBeenReceived());
+    BOOST_TEST(!cplScheme.hasDataBeenReceived());
     BOOST_TEST(testing::equals(dataValues0(0), 0.0));
     BOOST_TEST(testing::equals(dataValues1(0), 1.0));
     dataValues2(0) = 2.0;
     cplScheme.addComputedTime(cplScheme.getNextTimestepMaxLength());
     cplScheme.advance();
+    BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(not cplScheme.isCouplingOngoing());
     cplScheme.finalize();
   } else {
@@ -562,12 +564,14 @@ BOOST_AUTO_TEST_CASE(testParallelDataInitialization)
     dataValues2(0) = 3.0;
     cplScheme.markActionFulfilled(constants::actionWriteInitialData());
     cplScheme.initialize(0.0, 1);
-    BOOST_TEST(cplScheme.hasDataBeenReceived());
+    BOOST_TEST(cplScheme.hasInitialDataBeenReceived());
+    BOOST_TEST(!cplScheme.hasDataBeenReceived());
     BOOST_TEST(testing::equals(dataValues0(0), 0.0));
     BOOST_TEST(testing::equals(dataValues1(0), 1.0));
     dataValues2(0) = 2.0;
     cplScheme.addComputedTime(cplScheme.getNextTimestepMaxLength());
     cplScheme.advance();
+    BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(testing::equals(dataValues0(0), 4.0));
     BOOST_TEST(not cplScheme.isCouplingOngoing());
     cplScheme.finalize();
@@ -578,11 +582,13 @@ BOOST_AUTO_TEST_CASE(testParallelDataInitialization)
     dataValues1(0) = 1.0;
     cplScheme.markActionFulfilled(constants::actionWriteInitialData());
     cplScheme.initialize(0.0, 1);
-    BOOST_TEST(cplScheme.hasDataBeenReceived());
+    BOOST_TEST(cplScheme.hasInitialDataBeenReceived());
+    BOOST_TEST(!cplScheme.hasDataBeenReceived());
     BOOST_TEST(testing::equals(dataValues2(0), 3.0));
     dataValues0(0) = 4.0;
     cplScheme.addComputedTime(cplScheme.getNextTimestepMaxLength());
     cplScheme.advance();
+    BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(testing::equals(dataValues2(0), 2.0));
     BOOST_TEST(not cplScheme.isCouplingOngoing());
     cplScheme.finalize();

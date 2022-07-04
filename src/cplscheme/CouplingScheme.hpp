@@ -68,6 +68,8 @@ public:
       double startTime,
       int    startTimeWindow) = 0;
 
+  virtual void completeInitialization() = 0;
+
   /// Returns true, if initialize has been called.
   virtual bool isInitialized() const = 0;
 

@@ -343,7 +343,7 @@ double SolverInterfaceImpl::initialize()
   _couplingScheme->initialize(time, timeWindow);
   dt = _couplingScheme->getNextTimestepMaxLength(); // dt can change at this point again, if second participant and participant-first method for setting time window size is used.
 
-  if (_couplingScheme->hasDataBeenReceived()) {
+  if (_couplingScheme->hasInitialDataBeenReceived() || _couplingScheme->hasDataBeenReceived()) {
     performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
     mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
@@ -357,6 +357,8 @@ double SolverInterfaceImpl::initialize()
   PRECICE_DEBUG("Plot output");
   _accessor->exportFinal();
   solverInitEvent.start(precice::syncMode);
+
+  _couplingScheme->completeInitialization();
 
   _state = State::Initialized;
   PRECICE_INFO(_couplingScheme->printCouplingState());

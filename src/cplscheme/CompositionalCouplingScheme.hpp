@@ -81,6 +81,13 @@ public:
       double startTime,
       int    startTimeWindow) final override;
 
+  void completeInitialization() override final
+  {
+    for (const Scheme &scheme : _couplingSchemes) {
+      scheme.scheme->completeInitialization();
+    }
+  }
+
   /// Returns true, if initialize has been called.
   bool isInitialized() const final override;
 

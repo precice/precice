@@ -37,6 +37,11 @@ public:
       double startTime,
       int    startTimesteps) override final;
 
+  void completeInitialization() override final
+  {
+    PRECICE_ASSERT(false);
+  }
+
   /**
    * @brief Not implemented.
    */
