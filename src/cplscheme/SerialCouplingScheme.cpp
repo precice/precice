@@ -78,21 +78,30 @@ void SerialCouplingScheme::receiveAndSetTimeWindowSize()
 
 void SerialCouplingScheme::exchangeInitialData()
 {
+  // @todo factor this out into BiCouplingScheme
   if (doesFirstStep()) {
-    PRECICE_ASSERT(not sendsInitializedData(), "First participant cannot send data during initialization.");
+    if (sendsInitializedData()) {
+      sendData(getM2N(), getSendData());
+    }
     if (receivesInitializedData()) {
       receiveData(getM2N(), getReceiveData());
       checkInitialDataHasBeenReceived();
     }
   } else { // second participant
-    PRECICE_ASSERT(not receivesInitializedData(), "Only first participant can receive data during initialization.");
+    if (receivesInitializedData()) {
+      receiveData(getM2N(), getReceiveData());
+      //checkInitialDataHasBeenReceived();  // @todo should be triggered here.
+    }
     if (sendsInitializedData()) {
-      // The second participant sends the initialized data to the first participant
-      // here, which receives the data on call of initialize().
       sendData(getM2N(), getSendData());
     }
+    // @todo need to store data into waveform here!
+
+    // _hasDataBeenReceived = false;  // do this in BaseCouplingScheme
+
+    // Second half of second's exchangeDataAndAccelerate
     receiveAndSetTimeWindowSize();
-    // This receive replaces the receive in initialize().
+    PRECICE_DEBUG("Receiving data...");
     receiveData(getM2N(), getReceiveData());
     checkDataHasBeenReceived();
   }

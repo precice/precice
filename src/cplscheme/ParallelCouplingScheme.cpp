@@ -26,6 +26,7 @@ ParallelCouplingScheme::ParallelCouplingScheme(
 
 void ParallelCouplingScheme::exchangeInitialData()
 {
+  // @todo factor this out into BiCouplingScheme
   // F: send, receive, S: receive, send
   if (doesFirstStep()) {
     if (sendsInitializedData()) {
