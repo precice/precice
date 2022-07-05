@@ -333,20 +333,17 @@ double SolverInterfaceImpl::initialize()
 
   _meshLock.lockAll();
 
-  double dt = _couplingScheme->getNextTimestepMaxLength();
-
-  performDataActions({action::Action::WRITE_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
+  performDataActions({action::Action::WRITE_MAPPING_PRIOR}, 0.0, 0.0, 0.0, 0.0);
   mapWrittenData();
-  performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
+  performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0, 0.0, 0.0, 0.0);
 
   PRECICE_DEBUG("Initialize coupling schemes");
   _couplingScheme->initialize(time, timeWindow);
-  dt = _couplingScheme->getNextTimestepMaxLength(); // dt can change at this point again, if second participant and participant-first method for setting time window size is used.
 
   if (_couplingScheme->hasDataBeenReceived()) {
-    performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
+    performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, 0.0);
     mapReadData();
-    performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
+    performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, 0.0);
   }
 
   for (auto &context : _accessor->readDataContexts()) {
@@ -361,7 +358,8 @@ double SolverInterfaceImpl::initialize()
   _state = State::Initialized;
   PRECICE_INFO(_couplingScheme->printCouplingState());
 
-  return dt;
+  return _couplingScheme->getNextTimestepMaxLength();
+  ;
 }
 
 double SolverInterfaceImpl::advance(
