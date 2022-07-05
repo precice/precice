@@ -96,7 +96,7 @@ jobs:
       OMPI_MCA_rmaps_base_oversubscribe: 1
     steps:
       - name: Restore ccache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ccache
           key: precice-ccache-${{ runner.IMAGE }}-${{ matrix.CONFIG }}-${{ matrix.CXX }}-${{ matrix.TYPE }}
