@@ -4,10 +4,8 @@
 #include <boost/range/irange.hpp>
 #include <numeric>
 #include "mapping/config/MappingConfiguration.hpp"
-#include "mapping/impl/BasisFunctions.hpp"
 #include "mesh/Mesh.hpp"
 #include "precice/types.hpp"
-#include "utils/EigenHelperFunctions.hpp"
 #include "utils/Event.hpp"
 
 namespace precice {
@@ -167,7 +165,6 @@ Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::
   if (polynomial == Polynomial::ON) {
     fillPolynomialEntries(matrixA, outputMesh, inputSize, activeAxis);
   }
-
   return matrixA;
 }
 

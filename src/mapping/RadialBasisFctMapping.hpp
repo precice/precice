@@ -1,17 +1,14 @@
 #pragma once
 
 #include <Eigen/Core>
-#include <Eigen/QR>
 
 #include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
 #include "config/MappingConfiguration.hpp"
-#include "impl/BasisFunctions.hpp"
 #include "mapping/RadialBasisFctBaseMapping.hpp"
 #include "mapping/RadialBasisFctSolver.hpp"
 #include "mesh/Filter.hpp"
 #include "precice/types.hpp"
-#include "utils/EigenHelperFunctions.hpp"
 #include "utils/Event.hpp"
 #include "utils/IntraComm.hpp"
 

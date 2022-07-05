@@ -1,7 +1,6 @@
 #include "mapping/RadialBasisFctSolver.hpp"
 
-#include <numeric>
-#include "mapping/impl/BasisFunctions.hpp"
+#include <Eigen/QR>
 #include "precice/types.hpp"
 #include "utils/Event.hpp"
 
@@ -72,7 +71,6 @@ Eigen::VectorXd RadialBasisFctSolver::solveConsistent(Eigen::VectorXd &inputData
   if (polynomial == Polynomial::SEPARATE) {
     out += (_matrixV * res);
   }
-
   return out;
 }
 
