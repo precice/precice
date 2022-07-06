@@ -333,11 +333,14 @@ double SolverInterfaceImpl::initialize()
 
   _meshLock.lockAll();
 
+  // Actions in initialize use dt = 0.0. This is dangerous, because of the ScaleByDt action, which divides by dt. But there is no other solution. See https://github.com/precice/precice/issues/1358 for details.
+
   performDataActions({action::Action::WRITE_MAPPING_PRIOR}, 0.0, 0.0, 0.0, 0.0);
   mapWrittenData();
   performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0, 0.0, 0.0, 0.0);
 
   PRECICE_DEBUG("Initialize coupling schemes");
+  // result of _couplingScheme->getNextTimestepMaxLength() can change when calling _couplingScheme->initialize(...) and first participant method is used for setting the time window size.
   _couplingScheme->initialize(time, timeWindow);
 
   if (_couplingScheme->hasDataBeenReceived()) {
@@ -358,7 +361,9 @@ double SolverInterfaceImpl::initialize()
   _state = State::Initialized;
   PRECICE_INFO(_couplingScheme->printCouplingState());
 
-  return _couplingScheme->getNextTimestepMaxLength();
+  // determine dt at the very end of the method to get the final value, even if first participant method is used (see above).
+  double dt = _couplingScheme->getNextTimestepMaxLength();
+  return dt;
 }
 
 double SolverInterfaceImpl::advance(

@@ -222,6 +222,11 @@ public:
    */
   virtual bool hasAnySendData() = 0;
 
+  /**
+   * @brief Determines which data is initialized and therefore has to be exchanged during initialize.
+   *
+   * Calls determineInitialSend and determineInitialReceive for all send and receive data of this coupling scheme.
+   */
   virtual void determineInitialDataExchange() = 0;
 
 protected:
