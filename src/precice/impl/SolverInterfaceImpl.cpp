@@ -267,6 +267,9 @@ double SolverInterfaceImpl::initialize()
   PRECICE_CHECK(_state != State::Finalized, "initialize() cannot be called after finalize().")
   PRECICE_CHECK(_state != State::Initialized, "initialize() may only be called once.");
   PRECICE_ASSERT(not _couplingScheme->isInitialized());
+  PRECICE_CHECK(not isActionRequired(constants::actionWriteInitialData()),
+                "Initial data has to be written to preCICE by calling an appropriate write...Data() function before calling initialize(). "
+                "Did you forget to call markActionFulfilled(precice::constants::actionWriteInitialData()) after writing initial data?");
   auto &solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
   solverInitEvent.pause(precice::syncMode);
   Event                    e("initialize", precice::syncMode);
@@ -324,70 +327,39 @@ double SolverInterfaceImpl::initialize()
   double time       = 0.0;
   int    timeWindow = 1;
 
-  PRECICE_DEBUG("Initialize coupling schemes");
-  _couplingScheme->initialize(time, timeWindow);
-  PRECICE_ASSERT(_couplingScheme->isInitialized());
-
-  double dt = _couplingScheme->getNextTimestepMaxLength();
-
   for (auto &context : _accessor->readDataContexts()) {
     context.initializeWaveform();
   }
 
-  if (_couplingScheme->hasDataBeenReceived()) {
-    performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
-    mapReadData();
-    performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
-  }
-
-  PRECICE_INFO(_couplingScheme->printCouplingState());
-
-  solverInitEvent.start(precice::syncMode);
-
   _meshLock.lockAll();
 
-  _state = State::Initialized;
-
-  return _couplingScheme->getNextTimestepMaxLength();
-}
-
-void SolverInterfaceImpl::initializeData()
-{
-  PRECICE_TRACE();
-  PRECICE_CHECK(!_hasInitializedData, "initializeData() may only be called once.");
-  PRECICE_CHECK(_state != State::Finalized, "initializeData() cannot be called after finalize().")
-  PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before initializeData()");
-  PRECICE_ASSERT(_couplingScheme->isInitialized());
-  PRECICE_CHECK(not(_couplingScheme->sendsInitializedData() && isActionRequired(constants::actionWriteInitialData())),
-                "Initial data has to be written to preCICE by calling an appropriate write...Data() function before calling initializeData(). "
-                "Did you forget to call markActionFulfilled(precice::constants::actionWriteInitialData()) after writing initial data?");
-
-  auto &solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
-  solverInitEvent.pause(precice::syncMode);
-
-  Event                    e("initializeData", precice::syncMode);
-  utils::ScopedEventPrefix sep("initializeData/");
-
-  PRECICE_DEBUG("Initialize data");
-  double dt = _couplingScheme->getNextTimestepMaxLength();
-
-  performDataActions({action::Action::WRITE_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
+  performDataActions({action::Action::WRITE_MAPPING_PRIOR}, 0.0, 0.0, 0.0, 0.0);
   mapWrittenData();
-  performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
+  performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0, 0.0, 0.0, 0.0);
 
-  _couplingScheme->initializeData();
+  PRECICE_DEBUG("Initialize coupling schemes");
+  _couplingScheme->initialize(time, timeWindow);
 
   if (_couplingScheme->hasDataBeenReceived()) {
-    performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
+    performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, 0.0);
     mapReadData();
-    performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
+    performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, 0.0);
   }
+
+  for (auto &context : _accessor->readDataContexts()) {
+    context.moveToNextWindow();
+  }
+
   resetWrittenData();
   PRECICE_DEBUG("Plot output");
   _accessor->exportFinal();
   solverInitEvent.start(precice::syncMode);
 
-  _hasInitializedData = true;
+  _state = State::Initialized;
+  PRECICE_INFO(_couplingScheme->printCouplingState());
+
+  return _couplingScheme->getNextTimestepMaxLength();
+  ;
 }
 
 double SolverInterfaceImpl::advance(
@@ -405,23 +377,14 @@ double SolverInterfaceImpl::advance(
   Event                    e("advance", precice::syncMode);
   utils::ScopedEventPrefix sep("advance/");
 
-  PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before advance().");
+  PRECICE_CHECK(_state != State::Constructed, "initialize() and initializeData() have to be called before advance().");
   PRECICE_CHECK(_state != State::Finalized, "advance() cannot be called after finalize().")
+  PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before advance().")
   PRECICE_ASSERT(_couplingScheme->isInitialized());
   PRECICE_CHECK(isCouplingOngoing(), "advance() cannot be called when isCouplingOngoing() returns false.");
-  PRECICE_CHECK((not _couplingScheme->receivesInitializedData() && not _couplingScheme->sendsInitializedData()) || (_hasInitializedData),
-                "initializeData() needs to be called before advance if data has to be initialized.");
   PRECICE_CHECK(!math::equals(computedTimestepLength, 0.0), "advance() cannot be called with a timestep size of 0.");
   PRECICE_CHECK(computedTimestepLength > 0.0, "advance() cannot be called with a negative timestep size {}.", computedTimestepLength);
   _numberAdvanceCalls++;
-
-  // This is the first time advance is called. Initializes the waveform with data from initializeData or 0, if initializeData was not called.
-  // @todo: Can be moved to the end of initializeData(), if initializeData() becomes mandatory. See https://github.com/precice/precice/issues/1196.
-  if (_numberAdvanceCalls == 1) {
-    for (auto &context : _accessor->readDataContexts()) {
-      context.moveToNextWindow();
-    }
-  }
 
 #ifndef NDEBUG
   PRECICE_DEBUG("Synchronize timestep length");
@@ -488,7 +451,7 @@ double SolverInterfaceImpl::advance(
 void SolverInterfaceImpl::finalize()
 {
   PRECICE_TRACE();
-  PRECICE_CHECK(_state != State::Finalized, "finalize() may only be called once.")
+  PRECICE_CHECK(_state != State::Finalized, "finalize() may only be called once.");
 
   // Events for the solver time, finally stopped here
   auto &solverEvent = EventRegistry::instance().getStoredEvent("solver.advance");
@@ -548,8 +511,8 @@ int SolverInterfaceImpl::getDimensions() const
 bool SolverInterfaceImpl::isCouplingOngoing() const
 {
   PRECICE_TRACE();
-  PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before isCouplingOngoing() can be evaluated.");
   PRECICE_CHECK(_state != State::Finalized, "isCouplingOngoing() cannot be called after finalize().");
+  PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before isCouplingOngoing() can be evaluated.");
   return _couplingScheme->isCouplingOngoing();
 }
 
@@ -584,7 +547,6 @@ bool SolverInterfaceImpl::isActionRequired(
     const std::string &action) const
 {
   PRECICE_TRACE(action, _couplingScheme->isActionRequired(action));
-  PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before isActionRequired(...).");
   PRECICE_CHECK(_state != State::Finalized, "isActionRequired(...) cannot be called after finalize().");
   return _couplingScheme->isActionRequired(action);
 }
@@ -593,7 +555,6 @@ void SolverInterfaceImpl::markActionFulfilled(
     const std::string &action)
 {
   PRECICE_TRACE(action);
-  PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before markActionFulfilled(...).");
   PRECICE_CHECK(_state != State::Finalized, "markActionFulfilled(...) cannot be called after finalize().");
   _couplingScheme->markActionFulfilled(action);
 }
@@ -688,7 +649,6 @@ int SolverInterfaceImpl::getMeshVertexSize(
   PRECICE_CHECK((_state == State::Initialized) || _accessor->isMeshProvided(meshID), "initialize() has to be called before accessing"
                                                                                      " data of the received mesh \"{}\" on participant \"{}\".",
                 _accessor->getMeshName(meshID), _accessor->getName());
-
   MeshContext &context = _accessor->usedMeshContext(meshID);
   PRECICE_ASSERT(context.mesh.get() != nullptr);
   return context.mesh->vertices().size();

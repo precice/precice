@@ -84,24 +84,6 @@ public:
   }
 
   /**
-   * @brief Getter for _sendsInitializedData
-   * @returns _sendsInitializedData
-   */
-  bool sendsInitializedData() const override final
-  {
-    return _sendsInitializedData;
-  }
-
-  /**
-   * @brief Getter for _receivesInitializedData
-   * @returns _receivesInitializedData
-   */
-  bool receivesInitializedData() const override final
-  {
-    return _receivesInitializedData;
-  }
-
-  /**
    * @brief Adds newly computed time. Has to be called before every advance.
    * @param timeToAdd time to be added
    */
@@ -120,7 +102,7 @@ public:
 
   /**
    * @brief getter for _hasInitialDataBeenReceived
-   * @returns true, if data has been received in call of initializeData().
+   * @returns true, if data has been received in call of initialize().
    */
   bool hasInitialDataBeenReceived() const override final;
 
@@ -211,14 +193,6 @@ public:
   void initialize(double startTime, int startTimeWindow) override final;
 
   /**
-   * @brief Initializes data with written values.
-   *
-   * @pre initialize() has been called.
-   * @pre advance() has NOT yet been called.
-   */
-  void initializeData() override final;
-
-  /**
    * @brief Advances the coupling scheme.
    */
   void advance() override final;
@@ -247,6 +221,8 @@ public:
    * @returns true, if coupling scheme has any sendData
    */
   virtual bool hasAnySendData() = 0;
+
+  virtual void determineInitialDataExchange() = 0;
 
 protected:
   /// Map that links DataID to CouplingData
@@ -316,6 +292,24 @@ protected:
    * @brief Used to set flag after data has been received using receiveData().
    */
   void checkDataHasBeenReceived();
+
+  /**
+   * @brief Getter for _sendsInitializedData
+   * @returns _sendsInitializedData
+   */
+  bool sendsInitializedData() const
+  {
+    return _sendsInitializedData;
+  }
+
+  /**
+   * @brief Getter for _receivesInitializedData
+   * @returns _receivesInitializedData
+   */
+  bool receivesInitializedData() const
+  {
+    return _receivesInitializedData;
+  }
 
   /**
    * @brief Setter for _timeWindows
@@ -452,9 +446,6 @@ private:
   /// True, if coupling has been initialized.
   bool _isInitialized = false;
 
-  /// True, if initialize data has been called.
-  bool _initializeDataHasBeenCalled = false;
-
   std::set<std::string> _actions;
 
   /// Responsible for monitoring iteration count over time window.
@@ -519,13 +510,6 @@ private:
 
   /**
    * @brief implements functionality for initialize in base class.
-   */
-  virtual void initializeImplementation() = 0;
-
-  /// Functions needed for initializeData()
-
-  /**
-   * @brief implements functionality for initializeData in base class.
    */
   virtual void exchangeInitialData() = 0;
 

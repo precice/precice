@@ -20,9 +20,9 @@ void DummyCouplingScheme::initialize(
 {
   PRECICE_ASSERT(not _isInitialized);
   _isInitialized = true;
-  _isOngoing     = true;
   _timesteps     = startTimesteps;
   _iterations    = 1;
+  _isOngoing     = true;
 }
 
 void DummyCouplingScheme::advance()
@@ -47,6 +47,7 @@ void DummyCouplingScheme::finalize()
 
 bool DummyCouplingScheme::isCouplingOngoing() const
 {
+  PRECICE_ASSERT(_isInitialized);
   if (_timesteps <= _maxTimesteps)
     return true;
   return false;

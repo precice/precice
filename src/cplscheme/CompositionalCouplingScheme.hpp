@@ -84,25 +84,6 @@ public:
   /// Returns true, if initialize has been called.
   bool isInitialized() const final override;
 
-  /**
-   * @brief Getter for _sendsInitializedData
-   * @returns _sendsInitializedData
-   */
-  bool sendsInitializedData() const final override;
-
-  /**
-   * @brief Getter for _receivesInitializedData
-   * @returns _receivesInitializedData
-   */
-  bool receivesInitializedData() const final override;
-
-  /**
-   * @brief Initializes the data for first implicit coupling scheme iteration.
-   *
-   * Has to be called after initialize() and before advance().
-   */
-  void initializeData() final override;
-
   /// Adds newly computed time. Has to be called before every advance.
   void addComputedTime(double timeToAdd) final override;
 
@@ -128,7 +109,7 @@ public:
 
   /**
    * @brief checks all coupling schemes this coupling scheme is composed of.
-   * @returns true, if data has been received in call of initializeData().
+   * @returns true, if data has been received in call of initialize().
    */
   bool hasInitialDataBeenReceived() const override final;
 

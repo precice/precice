@@ -56,16 +56,11 @@ void precicec_createSolverInterface(
 ///@{
 
 /**
- * @brief Initiates the coupling to the coupling supervisor.
+ * @brief Initiates the coupling to the coupling supervisor and initializes coupling data.
  *
  * @return Maximal length of first timestep to be computed by solver.
  */
 double precicec_initialize();
-
-/**
- * @brief Initializes coupling data.
- */
-void precicec_initialize_data();
 
 /**
  * @brief Exchanges data between solver and coupling supervisor.
@@ -433,11 +428,11 @@ void precicec_readScalarData(
     int     valueIndex,
     double *dataValue);
 
-/** 
+/**
  * @brief Returns information on the version of preCICE.
  *
  * Returns a semicolon-separated C-string containing:
- * 
+ *
  * 1) the version of preCICE
  * 2) the revision information of preCICE
  * 3) the configuration of preCICE including MPI, PETSC, PYTHON

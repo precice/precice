@@ -59,7 +59,7 @@ public:
 
   /**
    * @brief Initializes the coupling scheme and establishes a communication
-   *        connection to the coupling partner.
+   *        connection to the coupling partner. Initialized coupling data.
    *
    * @param[in] startTime starting time for coupling @BU correct?
    * @param[in] startTimeWindow counter of time window for coupling @BU correct?
@@ -70,33 +70,6 @@ public:
 
   /// Returns true, if initialize has been called.
   virtual bool isInitialized() const = 0;
-
-  /**
-   * @brief Getter for _sendsInitializedData
-   * @returns _sendsInitializedData
-   */
-  virtual bool sendsInitializedData() const = 0;
-
-  /**
-   * @brief Getter for _receivesInitializedData
-   * @returns _receivesInitializedData
-   */
-  virtual bool receivesInitializedData() const = 0;
-
-  /**
-   * @brief Initializes the data for first implicit coupling scheme iteration.
-   *
-   * Has to be called after initialize() and before advance().
-   * If this method is not used, the first participant has zero initial values
-   * for its read data, before receiving data in advance(). If non-zero values
-   * are needed, this has to be configured in the coupling-scheme XML
-   * exchange-data tags. This method can nevertheless also be called if no
-   * initialization is necessary. Then it is simply skipped.
-   * It has to be called after initialize() and before
-   * advance(). The second participant has to write the initial data values
-   * to preCICE after initialize() and before initializeData().
-   */
-  virtual void initializeData() = 0;
 
   /// @brief Adds newly computed time. Has to be called before every advance.
   virtual void addComputedTime(double timeToAdd) = 0;
@@ -127,7 +100,7 @@ public:
    */
   virtual bool willDataBeExchanged(double lastSolverTimestepLength) const = 0;
 
-  /// @brief Returns true, if data has been received in initializeData().
+  /// @brief Returns true, if initial data has been received in initialize().
   virtual bool hasInitialDataBeenReceived() const = 0;
 
   /// @brief Returns true, if data has been exchanged in last call of advance().

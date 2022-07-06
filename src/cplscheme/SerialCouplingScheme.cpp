@@ -76,22 +76,6 @@ void SerialCouplingScheme::receiveAndSetTimeWindowSize()
   }
 }
 
-void SerialCouplingScheme::initializeImplementation()
-{
-  // determine whether initial data needs to be communicated
-  determineInitialSend(getSendData());
-  determineInitialReceive(getReceiveData());
-
-  // If the second participant initializes data, the first receive for the
-  // second participant is done in initializeData() instead of initialize().
-  if (not doesFirstStep() && not sendsInitializedData() && isCouplingOngoing()) {
-    receiveAndSetTimeWindowSize();
-    PRECICE_DEBUG("Receiving data");
-    receiveData(getM2N(), getReceiveData());
-    checkDataHasBeenReceived();
-  }
-}
-
 void SerialCouplingScheme::exchangeInitialData()
 {
   if (doesFirstStep()) {
@@ -106,11 +90,11 @@ void SerialCouplingScheme::exchangeInitialData()
       // The second participant sends the initialized data to the first participant
       // here, which receives the data on call of initialize().
       sendData(getM2N(), getSendData());
-      receiveAndSetTimeWindowSize();
-      // This receive replaces the receive in initialize().
-      receiveData(getM2N(), getReceiveData());
-      checkDataHasBeenReceived();
     }
+    receiveAndSetTimeWindowSize();
+    // This receive replaces the receive in initialize().
+    receiveData(getM2N(), getReceiveData());
+    checkDataHasBeenReceived();
   }
 }
 

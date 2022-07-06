@@ -49,32 +49,6 @@ public:
   /**
    * @brief Not implemented.
    */
-  bool sendsInitializedData() const override final
-  {
-    PRECICE_ASSERT(false);
-    return false;
-  }
-
-  /**
-   * @brief Not implemented.
-   */
-  bool receivesInitializedData() const override final
-  {
-    PRECICE_ASSERT(false);
-    return false;
-  }
-
-  /**
-   * @brief Not implemented.
-   */
-  void initializeData() override final
-  {
-    PRECICE_ASSERT(false);
-  }
-
-  /**
-   * @brief Not implemented.
-   */
   void addComputedTime(double timeToAdd) override final
   { /* Do nothing */
   }
