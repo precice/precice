@@ -333,19 +333,17 @@ double SolverInterfaceImpl::initialize()
 
   _meshLock.lockAll();
 
-  double dt = _couplingScheme->getNextTimestepMaxLength();
-
-  performDataActions({action::Action::WRITE_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
+  performDataActions({action::Action::WRITE_MAPPING_PRIOR}, 0.0, 0.0, 0.0, 0.0);
   mapWrittenData();
-  performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
+  performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0, 0.0, 0.0, 0.0);
 
   PRECICE_DEBUG("Initialize coupling schemes");
   _couplingScheme->initialize(time, timeWindow);
 
   if (_couplingScheme->hasInitialDataBeenReceived()) {
-    performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
+    performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, 0.0);
     mapReadData();
-    performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
+    performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, 0.0);
   }
 
   for (auto &context : _accessor->readDataContexts()) {
