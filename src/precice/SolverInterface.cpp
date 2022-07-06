@@ -234,18 +234,6 @@ void SolverInterface::setMeshTetrahedron(
                             fourthVertexID);
 }
 
-void SolverInterface::mapReadDataTo(
-    int toMeshID)
-{
-  _impl->mapReadDataTo(toMeshID);
-}
-
-void SolverInterface::mapWriteDataFrom(
-    int fromMeshID)
-{
-  _impl->mapWriteDataFrom(fromMeshID);
-}
-
 void SolverInterface::writeBlockVectorData(
     int           dataID,
     int           size,
