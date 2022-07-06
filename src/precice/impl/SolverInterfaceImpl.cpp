@@ -351,7 +351,7 @@ double SolverInterfaceImpl::initialize()
   }
 
   _couplingScheme->receiveResultOfFirstAdvance();
-  dt = _couplingScheme->getNextTimestepMaxLength(); // dt can change at this point again, if second participant and participant-first method for setting time window size is used.
+  double dt = _couplingScheme->getNextTimestepMaxLength(); // dt can change at this point again, if second participant and participant-first method for setting time window size is used.
 
   if (_couplingScheme->hasDataBeenReceived()) {
     performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
