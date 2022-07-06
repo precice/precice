@@ -1,16 +1,14 @@
 #pragma once
 
 #include <Eigen/Core>
-#include <Eigen/QR>
 
 #include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
-#include "impl/BasisFunctions.hpp"
+#include "config/MappingConfiguration.hpp"
 #include "mapping/RadialBasisFctBaseMapping.hpp"
 #include "mapping/RadialBasisFctSolver.hpp"
 #include "mesh/Filter.hpp"
 #include "precice/types.hpp"
-#include "utils/EigenHelperFunctions.hpp"
 #include "utils/Event.hpp"
 #include "utils/IntraComm.hpp"
 
@@ -45,7 +43,8 @@ public:
       Mapping::Constraint     constraint,
       int                     dimensions,
       RADIAL_BASIS_FUNCTION_T function,
-      std::array<bool, 3>     deadAxis);
+      std::array<bool, 3>     deadAxis,
+      Polynomial              polynomial);
 
   /// Computes the mapping coefficients from the in- and output mesh.
   virtual void computeMapping() override;
@@ -62,6 +61,9 @@ private:
 
   /// @copydoc RadialBasisFctBaseMapping::mapConsistent
   virtual void mapConsistent(DataID inputDataID, DataID outputDataID) override;
+
+  /// Treatment of the polynomial
+  Polynomial _polynomial;
 };
 
 // --------------------------------------------------- HEADER IMPLEMENTATIONS
@@ -71,8 +73,10 @@ RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctMapping(
     Mapping::Constraint     constraint,
     int                     dimensions,
     RADIAL_BASIS_FUNCTION_T function,
-    std::array<bool, 3>     deadAxis)
-    : RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>(constraint, dimensions, function, deadAxis)
+    std::array<bool, 3>     deadAxis,
+    Polynomial              polynomial)
+    : RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>(constraint, dimensions, function, deadAxis),
+      _polynomial(polynomial)
 {
 }
 
@@ -139,7 +143,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       globalOutMesh.addMesh(*outMesh);
     }
 
-    _rbfSolver = RadialBasisFctSolver{this->_basisFunction, globalInMesh, globalOutMesh, this->_deadAxis};
+    _rbfSolver = RadialBasisFctSolver{this->_basisFunction, globalInMesh, globalOutMesh, this->_deadAxis, _polynomial};
   }
   this->_hasComputedMapping = true;
   PRECICE_DEBUG("Compute Mapping is Completed.");
@@ -212,7 +216,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(DataID inpu
 
     // Construct Eigen vectors
     Eigen::Map<Eigen::VectorXd> inputValues(globalInValues.data(), globalInValues.size());
-    Eigen::VectorXd             outputValues((_rbfSolver.getEvaluationMatrix().cols() - this->getPolynomialParameters()) * valueDim);
+    Eigen::VectorXd             outputValues((this->output()->getGlobalNumberOfVertices()) * valueDim);
     Eigen::VectorXd             in(_rbfSolver.getEvaluationMatrix().rows()); // rows == outputSize
     outputValues.setZero();
 
@@ -221,10 +225,10 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(DataID inpu
         in[i] = inputValues(i * valueDim + dim);
       }
 
-      Eigen::VectorXd out = _rbfSolver.solveConservative(in);
+      Eigen::VectorXd out = _rbfSolver.solveConservative(in, _polynomial);
 
       // Copy mapped data to output data values
-      for (int i = 0; i < out.size() - this->getPolynomialParameters(); i++) {
+      for (int i = 0; i < this->output()->getGlobalNumberOfVertices(); i++) {
         outputValues[i * valueDim + dim] = out[i];
       }
     }
@@ -292,7 +296,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inputD
 
     int valueDim = this->output()->data(outputDataID)->getDimensions();
 
-    std::vector<double> globalInValues((_rbfSolver.getEvaluationMatrix().cols() - this->getPolynomialParameters()) * valueDim, 0.0);
+    std::vector<double> globalInValues((this->input()->getGlobalNumberOfVertices()) * valueDim, 0.0);
     std::vector<int>    outValuesSize;
 
     if (utils::IntraComm::isPrimary()) { // Parallel case
@@ -333,11 +337,11 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inputD
     // For every data dimension, perform mapping
     for (int dim = 0; dim < valueDim; dim++) {
       // Fill input from input data values (last polyparams entries remain zero)
-      for (int i = 0; i < in.size() - this->getPolynomialParameters(); i++) {
+      for (int i = 0; i < this->input()->getGlobalNumberOfVertices(); i++) {
         in[i] = inputValues[i * valueDim + dim];
       }
 
-      out = _rbfSolver.solveConsistent(in);
+      out = _rbfSolver.solveConsistent(in, _polynomial);
 
       // Copy mapped data to output data values
       for (int i = 0; i < out.size(); i++) {
