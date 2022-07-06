@@ -359,7 +359,6 @@ double SolverInterfaceImpl::initialize()
   PRECICE_INFO(_couplingScheme->printCouplingState());
 
   return _couplingScheme->getNextTimestepMaxLength();
-  ;
 }
 
 double SolverInterfaceImpl::advance(
