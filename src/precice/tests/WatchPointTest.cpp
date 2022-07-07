@@ -527,7 +527,7 @@ BOOST_AUTO_TEST_CASE(VolumetricInterpolation3D)
   {
     auto result   = readDoublesFromTXTFile(filename1, 5);
     auto expected = std::vector<double>{
-        0.0, 0.25, 0.25, 0.25, 1.75};
+        0.0, 0.25, 0.25, 0.25, 2.5};
     BOOST_TEST(result.size() == expected.size());
     for (size_t i = 0; i < result.size(); ++i) {
       BOOST_TEST_CONTEXT("entry index: " << i)
