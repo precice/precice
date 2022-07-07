@@ -42,6 +42,10 @@ target_sources(testprecice
     tests/parallel/mapping-nearest-neighbor-gradient/GradientTestParallelScalar.cpp
     tests/parallel/mapping-nearest-neighbor-gradient/GradientTestParallelVector.cpp
     tests/parallel/mapping-nearest-neighbor-gradient/GradientTestParallelWriteVector.cpp
+    tests/parallel/mapping-volume/ParallelCube1To3.cpp
+    tests/parallel/mapping-volume/ParallelCube3To1.cpp
+    tests/parallel/mapping-volume/ParallelCubeConservative1To3.cpp
+    tests/parallel/mapping-volume/ParallelCubeConservative3To1.cpp
     tests/parallel/mapping-volume/ParallelSquare1To2.cpp
     tests/parallel/mapping-volume/ParallelSquare2To1.cpp
     tests/parallel/mapping-volume/ParallelSquareConservative1To2.cpp
@@ -115,6 +119,10 @@ target_sources(testprecice
     tests/serial/mapping-scaled-consistent/helpers.hpp
     tests/serial/mapping-scaled-consistent/testQuadMappingScaledConsistentOnA.cpp
     tests/serial/mapping-scaled-consistent/testQuadMappingScaledConsistentOnB.cpp
+    tests/serial/mapping-volume/OneTetraConservativeRead.cpp
+    tests/serial/mapping-volume/OneTetraConservativeWrite.cpp
+    tests/serial/mapping-volume/OneTetraRead.cpp
+    tests/serial/mapping-volume/OneTetraWrite.cpp
     tests/serial/mapping-volume/OneTriangleConservativeRead.cpp
     tests/serial/mapping-volume/OneTriangleConservativeWrite.cpp
     tests/serial/mapping-volume/OneTriangleRead.cpp
@@ -138,10 +146,6 @@ target_sources(testprecice
     tests/serial/multiple-mappings/MultipleWriteFromMappings.cpp
     tests/serial/multiple-mappings/MultipleWriteFromMappingsAndData.cpp
     tests/serial/multiple-mappings/MultipleWriteToMappings.cpp
-    tests/serial/stationary-mapping-with-solver-mesh/StationaryMappingWithSolverMesh2D.cpp
-    tests/serial/stationary-mapping-with-solver-mesh/StationaryMappingWithSolverMesh3D.cpp
-    tests/serial/stationary-mapping-with-solver-mesh/helpers.cpp
-    tests/serial/stationary-mapping-with-solver-mesh/helpers.hpp
     tests/serial/three-solvers/ThreeSolversExplicitExplicit.cpp
     tests/serial/three-solvers/ThreeSolversExplicitImplicit.cpp
     tests/serial/three-solvers/ThreeSolversFirstParticipant.cpp

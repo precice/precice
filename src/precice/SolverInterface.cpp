@@ -52,17 +52,6 @@ bool SolverInterface::isCouplingOngoing() const
   return _impl->isCouplingOngoing();
 }
 
-bool SolverInterface::isReadDataAvailable() const
-{
-  return _impl->isReadDataAvailable();
-}
-
-bool SolverInterface::isWriteDataRequired(
-    double computedTimestepLength) const
-{
-  return _impl->isWriteDataRequired(computedTimestepLength);
-}
-
 bool SolverInterface::isTimeWindowComplete() const
 {
   return _impl->isTimeWindowComplete();
@@ -232,18 +221,6 @@ void SolverInterface::setMeshTetrahedron(
 {
   _impl->setMeshTetrahedron(meshID, firstVertexID, secondVertexID, thirdVertexID,
                             fourthVertexID);
-}
-
-void SolverInterface::mapReadDataTo(
-    int toMeshID)
-{
-  _impl->mapReadDataTo(toMeshID);
-}
-
-void SolverInterface::mapWriteDataFrom(
-    int fromMeshID)
-{
-  _impl->mapWriteDataFrom(fromMeshID);
 }
 
 void SolverInterface::writeBlockVectorData(

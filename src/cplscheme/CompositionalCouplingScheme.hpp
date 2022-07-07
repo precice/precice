@@ -109,12 +109,6 @@ public:
 
   /**
    * @brief checks all coupling schemes this coupling scheme is composed of.
-   * @returns true, if data has been received in call of initialize().
-   */
-  bool hasInitialDataBeenReceived() const override final;
-
-  /**
-   * @brief checks all coupling schemes this coupling scheme is composed of.
    * @returns true, if data has been exchanged in last call of advance().
    */
   bool hasDataBeenReceived() const final override;

@@ -91,20 +91,6 @@ int precicec_getDimensions();
 int precicec_isCouplingOngoing();
 
 /**
- * @brief Returns true (->1), if new data to read is available.
- */
-int precicec_isReadDataAvailable();
-
-/**
- * @brief Checks if new data has to be written before calling advance().
- *
- * @param[in] computedTimestepLength Length of timestep used by the solver.
- *
- * @return true (->1) if new data has to be written.
- */
-int precicec_isWriteDataRequired(double computedTimestepLength);
-
-/**
  * @brief Returns true (->1), if the coupling time window is completed.
  */
 int precicec_isTimeWindowComplete();
@@ -316,16 +302,6 @@ int precicec_hasData(const char *dataName, int meshID);
  * data to and from the coupling mesh.
  */
 int precicec_getDataID(const char *dataName, int meshID);
-
-/**
- * @brief Computes and maps all read data mapped to mesh with given ID.
- */
-void precicec_mapReadDataTo(int toMeshID);
-
-/**
- * @brief Computes and maps all write data mapped from mesh with given ID.
- */
-void precicec_mapWriteDataFrom(int fromMeshID);
 
 /**
  * @brief Writes vector data values given as block.

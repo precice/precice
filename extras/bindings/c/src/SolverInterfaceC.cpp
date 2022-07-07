@@ -120,24 +120,6 @@ int precicec_hasToEvaluateFineModel()
   return 0;
 }
 
-int precicec_isReadDataAvailable()
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  if (impl->isReadDataAvailable()) {
-    return 1;
-  }
-  return 0;
-}
-
-int precicec_isWriteDataRequired(double computedTimestepLength)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  if (impl->isWriteDataRequired(computedTimestepLength)) {
-    return 1;
-  }
-  return 0;
-}
-
 int precicec_isActionRequired(const char *action)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
@@ -370,18 +352,6 @@ void precicec_readScalarData(
 const char *precicec_getVersionInformation()
 {
   return precice::versionInformation;
-}
-
-void precicec_mapWriteDataFrom(int fromMeshID)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->mapWriteDataFrom(fromMeshID);
-}
-
-void precicec_mapReadDataTo(int toMeshID)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->mapReadDataTo(toMeshID);
 }
 
 const char *precicec_actionWriteInitialData()

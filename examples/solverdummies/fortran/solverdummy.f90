@@ -79,19 +79,13 @@ PROGRAM main
       CALL precicef_mark_action_fulfilled(writeItCheckp)
     ENDIF
 
-    CALL precicef_is_read_data_available(bool)
-    IF (bool.EQ.1) THEN
-      CALL precicef_read_bvdata(readDataID, numberOfVertices, vertexIDs, readData)
-    ENDIF
+    CALL precicef_read_bvdata(readDataID, numberOfVertices, vertexIDs, readData)
 
     WRITE (*,*) 'readData: ', readData
 
     writeData = readData + 1
 
-    CALL precicef_is_write_data_required(dt, bool)
-    IF (bool.EQ.1) THEN
-      CALL precicef_write_bvdata(writeDataID, numberOfVertices, vertexIDs, writeData)
-    ENDIF
+    CALL precicef_write_bvdata(writeDataID, numberOfVertices, vertexIDs, writeData)
 
     CALL precicef_advance(dt)
 

@@ -109,12 +109,6 @@ public:
   /// @copydoc SolverInterface::isCouplingOngoing
   bool isCouplingOngoing() const;
 
-  /// @copydoc SolverInterface::isReadDataAvailable
-  bool isReadDataAvailable() const;
-
-  /// @copydoc SolverInterface::isWriteDataRequired
-  bool isWriteDataRequired(double computedTimestepLength) const;
-
   /// @copydoc SolverInterface::isTimeWindowComplete
   bool isTimeWindowComplete() const;
 
@@ -242,12 +236,6 @@ public:
 
   /// @copydoc SolverInterface::getDataID
   int getDataID(const std::string &dataName, MeshID meshID) const;
-
-  /// @copydoc SolverInterface::mapWriteDataFrom
-  void mapWriteDataFrom(int fromMeshID);
-
-  /// @copydoc SolverInterface::mapReadDataTo
-  void mapReadDataTo(int toMeshID);
 
   /// @copydoc SolverInterface::writeBlockVectorData
   void writeBlockVectorData(

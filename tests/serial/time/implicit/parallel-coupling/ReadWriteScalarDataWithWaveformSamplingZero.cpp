@@ -87,14 +87,14 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingZero)
       iterations           = 0;
       precice.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
     }
-    BOOST_TEST(precice.isReadDataAvailable());
+
     for (int j = 0; j < nSamples; j++) {
       sampleDt = sampleDts[j];
       readDt   = readDts[j];
       readTime = time + readDt;
-      if (precice.isReadDataAvailable()) {
-        precice.readScalarData(readDataID, vertexID, sampleDt, readData);
-      }
+
+      precice.readScalarData(readDataID, vertexID, sampleDt, readData);
+
       if (iterations == 0) {
         BOOST_TEST(readData == readFunction(time));
       } else if (iterations > 0) {
@@ -107,11 +107,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingZero)
     time += currentDt;
     timewindow++;
     writeData = writeFunction(time);
-
-    if (precice.isWriteDataRequired(currentDt)) {
-      writeData = writeFunction(time);
-      precice.writeScalarData(writeDataID, vertexID, writeData);
-    }
+    precice.writeScalarData(writeDataID, vertexID, writeData);
     maxDt = precice.advance(currentDt);
     if (precice.isActionRequired(precice::constants::actionReadIterationCheckpoint())) {
       time       = timeCheckpoint;
