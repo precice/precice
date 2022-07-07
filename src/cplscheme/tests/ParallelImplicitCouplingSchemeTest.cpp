@@ -152,8 +152,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     sendCouplingData->values() = Eigen::VectorXd::Constant(1, 4.0);
     cplScheme.markActionFulfilled(constants::actionWriteInitialData());
     cplScheme.initialize(0.0, 0);
-    BOOST_TEST(cplScheme.hasInitialDataBeenReceived());
-    BOOST_TEST(!cplScheme.hasDataBeenReceived());
+    BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(testing::equals(receiveCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
     BOOST_TEST(receiveCouplingData->previousIteration().size() == 3);
     BOOST_TEST(testing::equals(receiveCouplingData->previousIteration(), Eigen::Vector3d(0.0, 0.0, 0.0)));
@@ -184,8 +183,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(sendCouplingData->values().size() == 3);
     BOOST_TEST(sendCouplingData->previousIteration().size() == 3);
     cplScheme.initialize(0.0, 0);
-    BOOST_TEST(cplScheme.hasInitialDataBeenReceived());
-    BOOST_TEST(!cplScheme.hasDataBeenReceived());
+    BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 4.0));
     BOOST_TEST(receiveCouplingData->previousIteration().size() == 1);
     BOOST_TEST(testing::equals(receiveCouplingData->previousIteration()(0), 0.0));

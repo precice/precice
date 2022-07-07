@@ -907,12 +907,11 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
     BOOST_TEST(testing::equals(mesh->data(sendDataIndex)->values()(0), 4.0));
   }
 
-  cplScheme.initialize(0.0, 1);
-  cplScheme.receiveResultOfFirstAdvance();
-
   if (context.isNamed(first)) {
     // first participant receives initial data = 4 (see above)
-    BOOST_TEST(cplScheme.hasInitialDataBeenReceived());
+    cplScheme.initialize(0.0, 1);
+    BOOST_TEST(cplScheme.hasDataBeenReceived());
+    cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(!cplScheme.hasDataBeenReceived());
     BOOST_TEST(mesh->data(receiveDataIndex)->values().size() == 1);
     BOOST_TEST(testing::equals(mesh->data(receiveDataIndex)->values()(0), 4.0));
@@ -921,7 +920,9 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
     BOOST_TEST(testing::equals(mesh->data(sendDataIndex)->values()(0), 0.0));
   } else {
     // second participant result written by first participant in its first window = 1 (see below)
-    BOOST_TEST(!cplScheme.hasInitialDataBeenReceived());
+    cplScheme.initialize(0.0, 1);
+    BOOST_TEST(!cplScheme.hasDataBeenReceived());
+    cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(context.isNamed(second));
     BOOST_TEST(mesh->data(receiveDataIndex)->values().size() == 1);
@@ -1614,10 +1615,8 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
 
     BOOST_TEST(Fixture::isImplicitCouplingScheme(cplScheme));
     cplScheme.initialize(0.0, 1);
-    BOOST_TEST(cplScheme.hasInitialDataBeenReceived());
-    BOOST_TEST(!cplScheme.hasDataBeenReceived());
+    BOOST_TEST(cplScheme.hasDataBeenReceived());
     cplScheme.receiveResultOfFirstAdvance();
-    BOOST_TEST(cplScheme.hasInitialDataBeenReceived());
     BOOST_TEST(!cplScheme.hasDataBeenReceived());
     // ensure that initial data was read
     BOOST_TEST(receiveCouplingData->values().size() == 3);
@@ -1660,10 +1659,8 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(testing::equals(sendCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
     cplScheme.initialize(0.0, 1);
     BOOST_TEST(!cplScheme.hasDataBeenReceived());
-    BOOST_TEST(!cplScheme.hasInitialDataBeenReceived());
     cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(cplScheme.hasDataBeenReceived());
-    BOOST_TEST(!cplScheme.hasInitialDataBeenReceived());
     BOOST_TEST(receiveCouplingData->values().size() == 1);
     BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 4.0));
     BOOST_TEST(receiveCouplingData->previousIteration().size() == 1);

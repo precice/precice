@@ -169,11 +169,11 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   _isInitialized = true;
 }
 
-void BaseCouplingScheme::completeInitialization()
+void BaseCouplingScheme::receiveResultOfFirstAdvance()
 {
-  if (not hasDataBeenReceived() && hasInitialDataBeenReceived()) {
-    checkDataHasBeenReceived();
-  }
+  PRECICE_ASSERT(_isInitialized, "Before calling receiveResultOfFirstAdvance() one has to call initialize().");
+  _hasDataBeenReceived = false;
+  performReceiveOfFirstAdvance();
 }
 
 void BaseCouplingScheme::advance()

@@ -83,8 +83,6 @@ public:
 
   void receiveResultOfFirstAdvance() override final;
 
-  void completeInitialization() override final;
-
   /// Returns true, if initialize has been called.
   bool isInitialized() const final override;
 

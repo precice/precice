@@ -54,14 +54,6 @@ public:
       int                           maxIterations      = UNDEFINED_MAX_ITERATIONS,
       int                           extrapolationOrder = UNDEFINED_EXTRAPOLATION_ORDER);
 
-public:
-  /**
-   * @brief Receives result of first advance, if this has to happen inside SolverInterface::initialize()
-   *
-   * Second participant of a SerialCouplingScheme, receives the result of the first advance of the first participant.
-   */
-  void receiveResultOfFirstAdvance() override final;
-
 protected:
   /**
    * @brief Setter for _timeWindowSize
@@ -83,6 +75,13 @@ private:
 
   /// Receives and sets the time window size, if this participant is the one to receive
   void receiveAndSetTimeWindowSize();
+
+  /**
+   * @brief Receives result of first advance, if this has to happen inside SolverInterface::initialize()
+   *
+   * Second participant of a SerialCouplingScheme, receives the result of the first advance of the first participant.
+   */
+  void performReceiveOfFirstAdvance() override final;
 
   /**
    * @brief Exchanges data between the participants of the SerialCouplingSchemes and applies acceleration.

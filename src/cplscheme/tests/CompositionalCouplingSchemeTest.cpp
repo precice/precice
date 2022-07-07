@@ -129,10 +129,8 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
     } else if (participantName == std::string("Participant1")) {
       cplScheme->initialize(0.0, 1);
       BOOST_TEST(!cplScheme->hasDataBeenReceived());
-      BOOST_TEST(!cplScheme->hasInitialDataBeenReceived());
       cplScheme->receiveResultOfFirstAdvance();
       BOOST_TEST(cplScheme->hasDataBeenReceived());
-      BOOST_TEST(!cplScheme->hasInitialDataBeenReceived());
       BOOST_TEST(not cplScheme->isTimeWindowComplete());
       BOOST_TEST(cplScheme->isCouplingOngoing());
       while (cplScheme->isCouplingOngoing()) {
@@ -162,10 +160,8 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
       BOOST_TEST(participantName == std::string("Participant2"), participantName);
       cplScheme->initialize(0.0, 1);
       BOOST_TEST(!cplScheme->hasDataBeenReceived());
-      BOOST_TEST(!cplScheme->hasInitialDataBeenReceived());
       cplScheme->receiveResultOfFirstAdvance();
       BOOST_TEST(cplScheme->hasDataBeenReceived());
-      BOOST_TEST(!cplScheme->hasInitialDataBeenReceived());
       BOOST_TEST(not cplScheme->isTimeWindowComplete());
       BOOST_TEST(cplScheme->isCouplingOngoing());
       while (cplScheme->isCouplingOngoing()) {

@@ -186,7 +186,7 @@ public:
    */
   void initialize(double startTime, int startTimeWindow) override final;
 
-  void completeInitialization() override final;
+  void receiveResultOfFirstAdvance() override final;
 
   /**
    * @brief Advances the coupling scheme.
@@ -505,6 +505,11 @@ private:
    * @brief implements functionality for initialize in base class.
    */
   virtual void exchangeInitialData() = 0;
+
+  virtual void performReceiveOfFirstAdvance()
+  {
+    return;
+  }
 
   /// Functions needed for advance()
 

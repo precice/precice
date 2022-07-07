@@ -353,15 +353,13 @@ double SolverInterfaceImpl::initialize()
     context.moveToNextWindow();
   }
 
-  // determine dt after initialize the very end of the method to get the final value, even if first participant method is used (see above).
-  double dt = _couplingScheme->getNextTimestepMaxLength(); // dt can change at this point again, if second participant and participant-first method for setting time window size is used.
-
   _couplingScheme->receiveResultOfFirstAdvance();
 
   if (_couplingScheme->hasDataBeenReceived()) {
-    performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
+    // dt will be removed as argument of actions. See https://github.com/precice/precice/issues/1358
+    performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, 0.0);
     mapReadData();
-    performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
+    performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, 0.0);
   }
 
   resetWrittenData();
@@ -369,11 +367,11 @@ double SolverInterfaceImpl::initialize()
   _accessor->exportFinal();
   solverInitEvent.start(precice::syncMode);
 
-  _couplingScheme->completeInitialization();
-
   _state = State::Initialized;
   PRECICE_INFO(_couplingScheme->printCouplingState());
 
+  // determine dt at the very end of the method to get the final value, even if first participant method is used (see above).
+  double dt = _couplingScheme->getNextTimestepMaxLength();
   return dt;
 }
 

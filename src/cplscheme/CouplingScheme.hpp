@@ -76,18 +76,7 @@ public:
    * from the outer scope (usually SolverInterfaceImpl), because the outer scope has to additional actions between
    * CouplingScheme::initialize and CouplingScheme::receiveResultOfFirstAdvance
    */
-  virtual void receiveResultOfFirstAdvance(){
-      //@todo: Add security checks?
-  };
-
-  /**
-   * @brief Performs actions before returning from SolverInterface::initialize()
-   *
-   * Inside SolverInterface::initialize() one has to differentiate between received initial data and received data from
-   * advance. This difference is unimportant as soon as SolverInterface::initialize() and, therefore, cleaned up
-   * by this function.
-   */
-  virtual void completeInitialization() = 0;
+  virtual void receiveResultOfFirstAdvance() = 0;
 
   /// Returns true, if initialize has been called.
   virtual bool isInitialized() const = 0;
