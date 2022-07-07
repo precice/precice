@@ -58,8 +58,7 @@ void runTestQN(std::string const &config, TestContext const &context)
       interface.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
     }
 
-    if (interface.isReadDataAvailable())
-      interface.readBlockScalarData(readDataID, 4, vertexIDs, inValues);
+    interface.readBlockScalarData(readDataID, 4, vertexIDs, inValues);
 
     /*
       Solves the following non-linear equations, which are extended to a fixed-point equation (simply +x)
@@ -155,11 +154,10 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
       interface.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
     }
 
-    if (interface.isReadDataAvailable())
-      if ((context.isNamed("SolverOne") and context.isPrimary()) or
-          (context.isNamed("SolverTwo") and (not context.isPrimary()))) {
-        interface.readBlockScalarData(readDataID, 4, vertexIDs, inValues);
-      }
+    if ((context.isNamed("SolverOne") and context.isPrimary()) or
+        (context.isNamed("SolverTwo") and (not context.isPrimary()))) {
+      interface.readBlockScalarData(readDataID, 4, vertexIDs, inValues);
+    }
 
     /*
       Solves the following non-linear equations, which are extended to a fixed-point equation (simply +x)

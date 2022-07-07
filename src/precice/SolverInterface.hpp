@@ -190,46 +190,6 @@ public:
   bool isCouplingOngoing() const;
 
   /**
-   * @brief Checks if new data to be read is available.
-   *
-   * @returns whether new data is available to be read.
-   *
-   * Data is classified to be new, if it has been received while calling
-   * initialize() and before calling advance(), or in the last call of advance().
-   * This is always true, if a participant does not make use of subcycling, i.e.
-   * choosing smaller timesteps than the limits returned in initialize() and
-   * advance().
-   *
-   * @pre initialize() has been called successfully.
-   *
-   * @note
-   * It is allowed to read data even if this function returns false.
-   * This is not recommended due to performance reasons.
-   * Use this function to prevent unnecessary reads.
-   */
-  bool isReadDataAvailable() const;
-
-  /**
-   * @brief Checks if new data has to be written before calling advance().
-   *
-   * @param[in] computedTimestepLength Length of timestep used by the solver.
-   *
-   * @return whether new data has to be written.
-   *
-   * This is always true, if a participant does not make use of subcycling, i.e.
-   * choosing smaller timesteps than the limits returned in initialize() and
-   * advance().
-   *
-   * @pre initialize() has been called successfully.
-   *
-   * @note
-   * It is allowed to write data even if this function returns false.
-   * This is not recommended due to performance reasons.
-   * Use this function to prevent unnecessary writes.
-   */
-  bool isWriteDataRequired(double computedTimestepLength) const;
-
-  /**
    * @brief Checks if the current coupling window is completed.
    *
    * @returns whether the current coupling window is complete.

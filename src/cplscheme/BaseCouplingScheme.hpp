@@ -101,12 +101,6 @@ public:
   bool willDataBeExchanged(double lastSolverTimestepLength) const override final;
 
   /**
-   * @brief getter for _hasInitialDataBeenReceived
-   * @returns true, if data has been received in call of initialize().
-   */
-  bool hasInitialDataBeenReceived() const override final;
-
-  /**
    * @brief getter for _hasDataBeenReceived
    * @returns true, if data has been received in last call of advance().
    */
@@ -224,6 +218,11 @@ public:
    */
   virtual bool hasAnySendData() = 0;
 
+  /**
+   * @brief Determines which data is initialized and therefore has to be exchanged during initialize.
+   *
+   * Calls determineInitialSend and determineInitialReceive for all send and receive data of this coupling scheme.
+   */
   virtual void determineInitialDataExchange() = 0;
 
 protected:
@@ -284,11 +283,6 @@ protected:
   {
     _doesFirstStep = doesFirstStep;
   }
-
-  /**
-   * @brief Used to set flag after initialData has been received. Automatically calls checkDataHasBeenReceived().
-   */
-  void checkInitialDataHasBeenReceived();
 
   /**
    * @brief Used to set flag after data has been received using receiveData().
@@ -438,9 +432,6 @@ private:
 
   /// True, if this participant has to receive initialized data.
   bool _receivesInitializedData = false;
-
-  /// True, if initialData has been received from other participant. Flag is used to make sure that coupling scheme is implemented and used correctly.
-  bool _hasInitialDataBeenReceived = false;
 
   /// True, if data has been received from other participant. Flag is used to make sure that coupling scheme is implemented and used correctly.
   bool _hasDataBeenReceived = false;

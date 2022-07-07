@@ -333,14 +333,17 @@ double SolverInterfaceImpl::initialize()
 
   _meshLock.lockAll();
 
+  // Actions in initialize use dt = 0.0. This is dangerous, because of the ScaleByDt action, which divides by dt. But there is no other solution. See https://github.com/precice/precice/issues/1358 for details.
+
   performDataActions({action::Action::WRITE_MAPPING_PRIOR}, 0.0, 0.0, 0.0, 0.0);
   mapWrittenData();
   performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0, 0.0, 0.0, 0.0);
 
   PRECICE_DEBUG("Initialize coupling schemes");
+  // result of _couplingScheme->getNextTimestepMaxLength() can change when calling _couplingScheme->initialize(...) and first participant method is used for setting the time window size.
   _couplingScheme->initialize(time, timeWindow);
 
-  if (_couplingScheme->hasInitialDataBeenReceived()) {
+  if (_couplingScheme->hasDataBeenReceived()) {
     performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, 0.0);
     mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, 0.0);
@@ -350,8 +353,10 @@ double SolverInterfaceImpl::initialize()
     context.moveToNextWindow();
   }
 
-  _couplingScheme->receiveResultOfFirstAdvance();
+  // determine dt after initialize the very end of the method to get the final value, even if first participant method is used (see above).
   double dt = _couplingScheme->getNextTimestepMaxLength(); // dt can change at this point again, if second participant and participant-first method for setting time window size is used.
+
+  _couplingScheme->receiveResultOfFirstAdvance();
 
   if (_couplingScheme->hasDataBeenReceived()) {
     performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
@@ -524,25 +529,6 @@ bool SolverInterfaceImpl::isCouplingOngoing() const
   PRECICE_CHECK(_state != State::Finalized, "isCouplingOngoing() cannot be called after finalize().");
   PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before isCouplingOngoing() can be evaluated.");
   return _couplingScheme->isCouplingOngoing();
-}
-
-bool SolverInterfaceImpl::isReadDataAvailable() const
-{
-  PRECICE_TRACE();
-  PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before isReadDataAvailable().");
-  PRECICE_CHECK(_state != State::Finalized, "isReadDataAvailable() cannot be called after finalize().");
-  bool available = _couplingScheme->hasDataBeenReceived();
-  available |= (_couplingScheme->hasInitialDataBeenReceived() && _accessor->maxReadWaveformOrder() > 0); // if any read waveform of this participant has order > 1, we return true. Related to https://github.com/precice/precice/issues/1223.
-  return available;
-}
-
-bool SolverInterfaceImpl::isWriteDataRequired(
-    double computedTimestepLength) const
-{
-  PRECICE_TRACE(computedTimestepLength);
-  PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before isWriteDataRequired().");
-  PRECICE_CHECK(_state != State::Finalized, "isWriteDataRequired() cannot be called after finalize().");
-  return _couplingScheme->willDataBeExchanged(computedTimestepLength);
 }
 
 bool SolverInterfaceImpl::isTimeWindowComplete() const

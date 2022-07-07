@@ -59,7 +59,7 @@ public:
 
   /**
    * @brief Initializes the coupling scheme and establishes a communication
-   *        connection to the coupling partner. Initialized coupling data.
+   *        connection to the coupling partner. Initializes coupling data.
    *
    * @param[in] startTime starting time for coupling @BU correct?
    * @param[in] startTimeWindow counter of time window for coupling @BU correct?
@@ -120,9 +120,6 @@ public:
    *        computed by the solver calling willDataBeExchanged().
    */
   virtual bool willDataBeExchanged(double lastSolverTimestepLength) const = 0;
-
-  /// @brief Returns true, if initial data has been received in initialize().
-  virtual bool hasInitialDataBeenReceived() const = 0;
 
   /// @brief Returns true, if data has been exchanged in last call of advance().
   virtual bool hasDataBeenReceived() const = 0;

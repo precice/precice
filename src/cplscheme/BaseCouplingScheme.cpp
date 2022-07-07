@@ -287,20 +287,9 @@ bool BaseCouplingScheme::willDataBeExchanged(
   return not math::greater(remainder, 0.0, _eps);
 }
 
-bool BaseCouplingScheme::hasInitialDataBeenReceived() const
-{
-  return _hasInitialDataBeenReceived;
-}
-
 bool BaseCouplingScheme::hasDataBeenReceived() const
 {
   return _hasDataBeenReceived;
-}
-
-void BaseCouplingScheme::checkInitialDataHasBeenReceived()
-{
-  PRECICE_ASSERT(not _hasInitialDataBeenReceived, "checkInitialDataHasBeenReceived() may only be called once within one coupling iteration. If this assertion is triggered this probably means that your coupling scheme has a bug.");
-  _hasInitialDataBeenReceived = true;
 }
 
 void BaseCouplingScheme::checkDataHasBeenReceived()
