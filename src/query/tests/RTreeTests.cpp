@@ -386,6 +386,24 @@ BOOST_AUTO_TEST_CASE(ProjectionToTriangle)
   }
 }
 
+BOOST_AUTO_TEST_CASE(CorrectTriangleDistance)
+{
+
+  // Document the issue
+  PRECICE_TEST(1_rank);
+  PtrMesh mesh(new Mesh("MyMesh", 3, testing::nextMeshID()));
+  Index   indexTree(mesh);
+
+  mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+  mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
+  mesh::Vertex &v3 = mesh->createVertex(Eigen::Vector3d(0.0, 1.0, 0.0));
+  mesh->createTriangle(v1, v2, v3);
+
+  auto matches = indexTree.getClosestTriangles(Eigen::Vector3d{0.1, 0.2, 0.3}, 4);
+  BOOST_REQUIRE(matches.size() == 1);
+  BOOST_TEST(matches[0].distance > 0.25);
+}
+
 BOOST_AUTO_TEST_SUITE_END() // Projection
 
 BOOST_AUTO_TEST_SUITE(Tetrahedra)
