@@ -87,15 +87,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
       precice.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
     }
 
-    if (timestep % nSubsteps == 0) {
-      BOOST_TEST(precice.isReadDataAvailable());
-    } else {
-      BOOST_TEST(!precice.isReadDataAvailable());
-    }
+    precice.readScalarData(readDataID, vertexID, readData);
 
-    if (precice.isReadDataAvailable()) {
-      precice.readScalarData(readDataID, vertexID, readData);
-    }
     if (iterations == 0 && timestep == 0) {                                    // special situation: Both solvers are in their very first time windows, first iteration, first time step
       BOOST_TEST(readData == readFunction(startTime));                         // use initial data only.
     } else if (iterations == 0) {                                              // special situation: Both solvers get the old data for all time windows.
@@ -109,10 +102,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.
     BOOST_TEST(currentDt == expectedDts[timestep % nSubsteps]);
     time += currentDt;
-    if (precice.isWriteDataRequired(currentDt)) {
-      writeData = writeFunction(time);
-      precice.writeScalarData(writeDataID, vertexID, writeData);
-    }
+    writeData = writeFunction(time);
+    precice.writeScalarData(writeDataID, vertexID, writeData);
     maxDt     = precice.advance(currentDt);
     currentDt = dt > maxDt ? maxDt : dt;
     timestep++;
