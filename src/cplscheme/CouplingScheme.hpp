@@ -72,9 +72,9 @@ public:
    * @brief Receives result of first advance, if this has to happen inside SolverInterface::initialize()
    *
    * This is only relevant for the second participant of the SerialCouplingScheme, because other coupling schemes only
-   * receive initial data in initialize. This part is implemented as a public function and has to be called explicitly
-   * from the outer scope (usually SolverInterfaceImpl), because the outer scope has to additional actions between
-   * CouplingScheme::initialize and CouplingScheme::receiveResultOfFirstAdvance
+   * receive initial data in initialize. This part is implemented as a public function to be called from
+   * SolverInterfaceImpl. SolverInterfaceImpl has to store data received in CouplingScheme::initialize before calling
+   * CouplingScheme::receiveResultOfFirstAdvance, which will override the data in the receive buffer.
    */
   virtual void receiveResultOfFirstAdvance() = 0;
 
