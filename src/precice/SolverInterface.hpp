@@ -637,30 +637,6 @@ public:
   int getDataID(const std::string &dataName, int meshID) const;
 
   /**
-   * @brief Computes and maps all read data mapped to the mesh with given ID.
-   *
-   * @deprecated Unclear use case and difficult to maintain.
-   *
-   * This is an explicit request to map read data to the Mesh associated with toMeshID.
-   * It also computes the mapping if necessary.
-   *
-   * @pre A mapping to toMeshID was configured.
-   */
-  [[deprecated("Will be removed in 3.0.0. See https://github.com/precice/precice/issues/859 and comment, if you need this function.")]] void mapReadDataTo(int toMeshID);
-
-  /**
-   * @brief Computes and maps all write data mapped from the mesh with given ID.
-   *
-   * @deprecated Unclear use case and difficult to maintain.
-   *
-   * This is an explicit request to map write data from the Mesh associated with fromMeshID.
-   * It also computes the mapping if necessary.
-   *
-   * @pre A mapping from fromMeshID was configured.
-   */
-  [[deprecated("Will be removed in 3.0.0. See https://github.com/precice/precice/issues/859 and comment, if you need this function.")]] void mapWriteDataFrom(int fromMeshID);
-
-  /**
    * @brief Writes vector data given as block.
    *
    * This function writes values of specified vertices to a dataID.
