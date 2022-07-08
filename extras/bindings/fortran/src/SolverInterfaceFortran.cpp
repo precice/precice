@@ -470,20 +470,6 @@ void precicef_read_sdata_(
   impl->readScalarData(*dataID, *valueIndex, *dataValue);
 }
 
-void precicef_map_write_data_from_(
-    const int *meshID)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->mapWriteDataFrom(*meshID);
-}
-
-void precicef_map_read_data_to_(
-    const int *meshID)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->mapReadDataTo(*meshID);
-}
-
 int precice::impl::strippedLength(
     const char *string,
     int         length)
