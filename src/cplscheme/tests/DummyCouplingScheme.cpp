@@ -20,9 +20,9 @@ void DummyCouplingScheme::initialize(
 {
   PRECICE_ASSERT(not _isInitialized);
   _isInitialized = true;
+  _isOngoing     = true;
   _timesteps     = startTimesteps;
   _iterations    = 1;
-  _isOngoing     = true;
 }
 
 void DummyCouplingScheme::advance()
