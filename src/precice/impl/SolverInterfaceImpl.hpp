@@ -112,12 +112,6 @@ public:
   /// @copydoc SolverInterface::isCouplingOngoing
   bool isCouplingOngoing() const;
 
-  /// @copydoc SolverInterface::isReadDataAvailable
-  bool isReadDataAvailable() const;
-
-  /// @copydoc SolverInterface::isWriteDataRequired
-  bool isWriteDataRequired(double computedTimestepLength) const;
-
   /// @copydoc SolverInterface::isTimeWindowComplete
   bool isTimeWindowComplete() const;
 

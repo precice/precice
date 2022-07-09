@@ -127,9 +127,6 @@ public:
    */
   virtual bool willDataBeExchanged(double lastSolverTimestepLength) const = 0;
 
-  /// @brief Returns true, if data has been received in initializeData().
-  virtual bool hasInitialDataBeenReceived() const = 0;
-
   /// @brief Returns true, if data has been exchanged in last call of advance().
   virtual bool hasDataBeenReceived() const = 0;
 
