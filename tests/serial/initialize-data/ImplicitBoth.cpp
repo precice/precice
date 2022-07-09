@@ -55,7 +55,6 @@ BOOST_AUTO_TEST_CASE(ImplicitBoth)
   const std::string & cowid = actionWriteInitialData();
 
   if (couplingInterface.isActionRequired(cowid)) {
-    BOOST_TEST(context.isNamed("SolverTwo"));
     couplingInterface.writeVectorData(writeDataID, vertexID, writeData.data());
     couplingInterface.markActionFulfilled(cowid);
   }
