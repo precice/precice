@@ -96,20 +96,6 @@ int precicec_getDimensions();
 int precicec_isCouplingOngoing();
 
 /**
- * @brief Returns true (->1), if new data to read is available.
- */
-int precicec_isReadDataAvailable();
-
-/**
- * @brief Checks if new data has to be written before calling advance().
- *
- * @param[in] computedTimestepLength Length of timestep used by the solver.
- *
- * @return true (->1) if new data has to be written.
- */
-int precicec_isWriteDataRequired(double computedTimestepLength);
-
-/**
  * @brief Returns true (->1), if the coupling time window is completed.
  */
 int precicec_isTimeWindowComplete();
