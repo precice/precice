@@ -88,24 +88,16 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingZero)
     double readTime;
     readTime = timeCheckpoint + windowDt;
 
-    bool atWindowBoundary = timestep % nSubsteps == 0;
+    precice.readScalarData(readDataID, vertexID, currentDt, readData);
 
-    if (atWindowBoundary) { // read data is only available at end of window for zeroth order, see also https://github.com/precice/precice/issues/1223
-      BOOST_TEST(precice.isReadDataAvailable());
-    } else {
-      BOOST_TEST(!precice.isReadDataAvailable());
-    }
-    if (precice.isReadDataAvailable()) {
-      precice.readScalarData(readDataID, vertexID, currentDt, readData);
-    }
     if (iterations == 0) { // in the first iteration of each window, use data from previous window.
       BOOST_TEST(readData == readFunction(timeCheckpoint));
     } else { // in the following iterations, use data at the end of window.
       BOOST_TEST(readData == readFunction(readTime));
     }
-    if (precice.isReadDataAvailable()) {
-      precice.readScalarData(readDataID, vertexID, currentDt / 2, readData);
-    }
+
+    precice.readScalarData(readDataID, vertexID, currentDt / 2, readData);
+
     if (iterations == 0) { // in the first iteration of each window, use data from previous window.
       BOOST_TEST(readData == readFunction(timeCheckpoint));
     } else { // in the following iterations, use data at the end of window.
@@ -116,11 +108,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingZero)
     time += currentDt;
     timestep++;
     writeData = writeFunction(time);
-
-    if (precice.isWriteDataRequired(currentDt)) {
-      writeData = writeFunction(time);
-      precice.writeScalarData(writeDataID, vertexID, writeData);
-    }
+    precice.writeScalarData(writeDataID, vertexID, writeData);
     maxDt = precice.advance(currentDt);
     if (precice.isActionRequired(precice::constants::actionReadIterationCheckpoint())) {
       time     = timeCheckpoint;
