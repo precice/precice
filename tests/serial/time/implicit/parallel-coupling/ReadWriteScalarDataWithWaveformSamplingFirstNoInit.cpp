@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirstNoInit)
 
       precice.readScalarData(readDataID, vertexID, sampleDt, readData);
 
-      if (iterations == 0 && timewindow == 0) { // use zero as initial value in first iteration (no initializeData was called)
+      if (iterations == 0 && timewindow == 0) { // use zero as initial value in first iteration (no data was initialized in initialize was called)
         BOOST_TEST(readData == 0);
       } else if (iterations == 0 && timewindow > 0) { // always use constant extrapolation in first iteration (from writeData of second participant at end previous window).
         BOOST_TEST(readData == readFunction(time));
