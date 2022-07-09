@@ -109,42 +109,6 @@ void precicef_is_coupling_ongoing_(
   }
 }
 
-void precicef_write_data_required_(
-    const double *computedTimestepLength,
-    int *         isRequired)
-{
-  precicef_is_write_data_required_(computedTimestepLength, isRequired);
-}
-
-void precicef_is_write_data_required_(
-    const double *computedTimestepLength,
-    int *         isRequired)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  if (impl->isWriteDataRequired(*computedTimestepLength)) {
-    *isRequired = 1;
-  } else {
-    *isRequired = 0;
-  }
-}
-
-void precicef_read_data_available_(
-    int *isAvailable)
-{
-  precicef_is_read_data_available_(isAvailable);
-}
-
-void precicef_is_read_data_available_(
-    int *isAvailable)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  if (impl->isReadDataAvailable()) {
-    *isAvailable = 1;
-  } else {
-    *isAvailable = 0;
-  }
-}
-
 void precicef_is_time_window_complete_(
     int *isComplete)
 {

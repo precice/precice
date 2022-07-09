@@ -110,15 +110,6 @@ public:
   /**
    * @brief Not implemented.
    */
-  bool hasInitialDataBeenReceived() const override final
-  {
-    PRECICE_ASSERT(false);
-    return false;
-  }
-
-  /**
-   * @brief Not implemented.
-   */
   bool hasDataBeenReceived() const override final
   {
     PRECICE_ASSERT(false);
