@@ -93,8 +93,8 @@ bool SerialCouplingScheme::exchangeDataAndAccelerate()
   bool convergence = true;
 
   if (doesFirstStep()) { // first participant
-    sendTimeWindowSize();
     PRECICE_DEBUG("Sending data...");
+    sendTimeWindowSize();
     sendData(getM2N(), getSendData());
     PRECICE_DEBUG("Receiving data...");
     if (isImplicitCouplingScheme()) {
@@ -104,7 +104,7 @@ bool SerialCouplingScheme::exchangeDataAndAccelerate()
     checkDataHasBeenReceived();
   } else { // second participant
     if (isImplicitCouplingScheme()) {
-      PRECICE_DEBUG("Perform acceleration (only second participant)...");
+      PRECICE_DEBUG("Test Convergence and accelerate...");
       convergence = doImplicitStep();
       sendConvergence(getM2N(), convergence);
     }
