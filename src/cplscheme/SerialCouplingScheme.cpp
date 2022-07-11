@@ -92,7 +92,6 @@ void SerialCouplingScheme::exchangeInitialData()
       sendData(getM2N(), getSendData());
     }
     receiveAndSetTimeWindowSize();
-    // This receive replaces the receive in initialize().
     receiveData(getM2N(), getReceiveData());
     checkDataHasBeenReceived();
   }
