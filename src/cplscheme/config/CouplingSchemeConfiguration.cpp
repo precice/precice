@@ -540,7 +540,7 @@ void CouplingSchemeConfiguration::addTagExchange(
   tagExchange.addAttribute(participantFrom);
   auto participantTo = XMLAttribute<std::string>(ATTR_TO).setDocumentation("The participant receiving the data.");
   tagExchange.addAttribute(participantTo);
-  auto attrInitialize = XMLAttribute<bool>(ATTR_INITIALIZE, false).setDocumentation("Should this data be initialized during initializeData?");
+  auto attrInitialize = XMLAttribute<bool>(ATTR_INITIALIZE, false).setDocumentation("Should this data be initialized during initialize?");
   tagExchange.addAttribute(attrInitialize);
   tag.addSubtag(tagExchange);
 }
@@ -1000,6 +1000,7 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
       PRECICE_ASSERT(_config.type == VALUE_MULTI);
     }
   }
+  scheme.determineInitialDataExchange();
 }
 
 void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
@@ -1032,6 +1033,7 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
       scheme.addDataToReceive(exchange.data, exchange.mesh, initialize, from);
     }
   }
+  scheme.determineInitialDataExchange();
 }
 
 void CouplingSchemeConfiguration::checkIfDataIsExchanged(
