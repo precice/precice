@@ -9,9 +9,8 @@ namespace action {
 /**
  * @brief Abstract base class for configurable actions on data and/or meshes.
  *
- * Actions are executed on call of precice::SolverInterface::initialize(),
- * precice::SolverInterface::initializeData(), and precice::SolverInterface::advance(). They can change meshes and in particular
- * data values.
+ * Actions are executed on call of precice::SolverInterface::initialize() and precice::SolverInterface::advance().
+ * They can change meshes and in particular data values.
  */
 class Action {
 public:

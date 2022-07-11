@@ -58,16 +58,11 @@ void precicec_createSolverInterface(
 ///@{
 
 /**
- * @brief Initiates the coupling to the coupling supervisor.
+ * @brief Initiates the coupling to the coupling supervisor and initializes coupling data.
  *
  * @return Maximal length of first timestep to be computed by solver.
  */
 double precicec_initialize();
-
-/**
- * @brief Initializes coupling data.
- */
-void precicec_initialize_data();
 
 /**
  * @brief Exchanges data between solver and coupling supervisor.

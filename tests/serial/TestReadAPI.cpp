@@ -26,9 +26,8 @@ BOOST_AUTO_TEST_CASE(TestReadAPI)
     Eigen::VectorXd readPositions(size * 3);
     vertexIDs[0] = cplInterface.setMeshVertex(meshOneID, readPositions.data());
 
-    double maxDt   = cplInterface.initialize();
-    int    dataAID = cplInterface.getDataID("DataOne", meshOneID);
-    int    dataBID = cplInterface.getDataID("DataTwo", meshOneID);
+    int dataAID = cplInterface.getDataID("DataOne", meshOneID);
+    int dataBID = cplInterface.getDataID("DataTwo", meshOneID);
 
     // writeVectorData
     writeDataA[0] = 7.0;
@@ -37,7 +36,7 @@ BOOST_AUTO_TEST_CASE(TestReadAPI)
     cplInterface.writeVectorData(dataAID, vertexIDs[0], writeDataA.data());
 
     cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
-    cplInterface.initializeData();
+    double maxDt = cplInterface.initialize();
 
     // readBlockScalarData without waveform
     cplInterface.readBlockScalarData(dataBID, 1, vertexIDs.data(), readDataB.data());
@@ -121,8 +120,6 @@ BOOST_AUTO_TEST_CASE(TestReadAPI)
     Eigen::VectorXd writePositions(size * 3);
     vertexIDs[0] = cplInterface.setMeshVertex(meshTwoID, writePositions.data());
 
-    double maxDt = cplInterface.initialize();
-
     int dataAID = cplInterface.getDataID("DataOne", meshTwoID);
     int dataBID = cplInterface.getDataID("DataTwo", meshTwoID);
 
@@ -131,7 +128,7 @@ BOOST_AUTO_TEST_CASE(TestReadAPI)
     cplInterface.writeScalarData(dataBID, vertexIDs[0], writeDataB[0]);
 
     cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
-    cplInterface.initializeData();
+    double maxDt = cplInterface.initialize();
 
     // readBlockVectorData without waveform
     cplInterface.readBlockVectorData(dataAID, 1, vertexIDs.data(), readDataA.data());

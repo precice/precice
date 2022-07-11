@@ -137,8 +137,9 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   PRECICE_ASSERT(not isInitialized());
   PRECICE_ASSERT(math::greaterEquals(startTime, 0.0), startTime);
   PRECICE_ASSERT(startTimeWindow >= 0, startTimeWindow);
-  _time        = startTime;
-  _timeWindows = startTimeWindow;
+  _time                = startTime;
+  _timeWindows         = startTimeWindow;
+  _hasDataBeenReceived = false;
 
   if (isImplicitCouplingScheme()) {
     if (not doesFirstStep()) {
@@ -152,55 +153,20 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
     initializeTXTWriters();
   }
 
-  initializeImplementation();
-
-  if (_sendsInitializedData) {
-    requireAction(constants::actionWriteInitialData());
-  }
-
-  // @todo duplicate code also in BaseCouplingScheme::initializeData().
-  if (not _sendsInitializedData && not _receivesInitializedData) {
-    if (isImplicitCouplingScheme()) {
-      if (not doesFirstStep()) {
-        storeExtrapolationData();
-        moveToNextWindow();
-      }
-    }
-  }
-
-  _isInitialized = true;
-}
-
-void BaseCouplingScheme::initializeData()
-{
-  // InitializeData uses the template method pattern (https://en.wikipedia.org/wiki/Template_method_pattern).
-  PRECICE_ASSERT(_isInitialized);
-  PRECICE_ASSERT(not _initializeDataHasBeenCalled);
-  _initializeDataHasBeenCalled = true;
-  PRECICE_TRACE("initializeData()");
-
-  if (not _sendsInitializedData && not _receivesInitializedData) {
-    PRECICE_INFO("initializeData is skipped since no data has to be initialized.");
-    return;
-  }
-
-  PRECICE_DEBUG("Initializing Data ...");
-
-  _hasDataBeenReceived = false;
-
   if (isImplicitCouplingScheme()) {
     storeIteration();
   }
 
   exchangeInitialData();
 
-  // @todo duplicate code also in BaseCouplingScheme::initialize().
   if (isImplicitCouplingScheme()) {
     if (not doesFirstStep()) {
       storeExtrapolationData();
       moveToNextWindow();
     }
   }
+
+  _isInitialized = true;
 }
 
 void BaseCouplingScheme::advance()
@@ -606,6 +572,7 @@ void BaseCouplingScheme::determineInitialSend(BaseCouplingScheme::DataMap &sendD
 {
   if (anyDataRequiresInitialization(sendData)) {
     _sendsInitializedData = true;
+    requireAction(constants::actionWriteInitialData());
   }
 }
 
