@@ -49,15 +49,14 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteVector)
     int      meshOneID = cplInterface.getMeshID("MeshOne");
     Vector3d posOne    = Vector3d::Constant(0.0);
     cplInterface.setMeshVertex(meshOneID, posOne.data());
-    double maxDt   = cplInterface.initialize();
-    int    dataAID = cplInterface.getDataID("DataOne", meshOneID);
-    int    dataBID = cplInterface.getDataID("DataTwo", meshOneID);
+    int dataAID = cplInterface.getDataID("DataOne", meshOneID);
+    int dataBID = cplInterface.getDataID("DataTwo", meshOneID);
 
     Vector3d valueDataA(1.0, 1.0, 1.0);
     cplInterface.writeVectorData(dataAID, 0, valueDataA.data());
 
     cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
-    cplInterface.initializeData();
+    double maxDt = cplInterface.initialize();
 
     Vector2d valueDataB;
     cplInterface.readVectorData(dataBID, 0, valueDataB.data());
@@ -82,9 +81,8 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteVector)
     Vector3d pos       = Vector3d::Constant(1.0);
     cplInterface.setMeshVertex(meshTwoID, pos.data());
 
-    double maxDt   = cplInterface.initialize();
-    int    dataAID = cplInterface.getDataID("DataOne", meshTwoID);
-    int    dataBID = cplInterface.getDataID("DataTwo", meshTwoID);
+    int dataAID = cplInterface.getDataID("DataOne", meshTwoID);
+    int dataBID = cplInterface.getDataID("DataTwo", meshTwoID);
 
     Vector2d                    valueDataB(2.0, 3.0);
     Eigen::Matrix<double, 3, 3> gradient;
@@ -92,9 +90,9 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteVector)
     cplInterface.writeVectorData(dataBID, 0, valueDataB.data());
     cplInterface.writeVectorGradientData(dataBID, 0, gradient.data());
 
-    //tell preCICE that data has been written and call initializeData
+    //tell preCICE that data has been written and call initialize
     cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
-    cplInterface.initializeData();
+    double maxDt = cplInterface.initialize();
 
     Vector3d valueDataA;
     cplInterface.readVectorData(dataAID, 0, valueDataA.data());

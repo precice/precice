@@ -92,9 +92,6 @@ public:
   /// @copydoc SolverInterface::initialize
   double initialize();
 
-  /// @copydoc SolverInterface::initializeData
-  void initializeData();
-
   /// @copydoc SolverInterface::advance
   double advance(double computedTimestepLength);
 
@@ -440,11 +437,8 @@ private:
   enum struct State {
     Constructed, // Initial state of SolverInterface
     Initialized, // SolverInterface.initialize() triggers transition from State::Constructed to State::Initialized; mandatory
-    Finalized    // SolverInterface.finalize() triggers transition form State::Initialized or State::InitializedData to State::Finalized; mandatory
+    Finalized    // SolverInterface.finalize() triggers transition form State::Initialized to State::Finalized; mandatory
   };
-
-  /// SolverInterface.initializeData() triggers transition from false to true.
-  bool _hasInitializedData = false;
 
   /// Are experimental API calls allowed?
   bool _allowsExperimental = false;
