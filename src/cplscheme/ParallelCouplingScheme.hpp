@@ -76,11 +76,6 @@ private:
   }
 
   /**
-   * @brief determine whether data has to be sent/received
-   */
-  void initializeImplementation() override;
-
-  /**
    * @brief Exchanges data, if it has to be initialized.
    */
   void exchangeInitialData() override;

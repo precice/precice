@@ -63,13 +63,11 @@ PROGRAM main
   CALL precicef_get_data_id(readDataName,meshID,readDataID)
   CALL precicef_get_data_id(writeDataName,meshID,writeDataID)
 
-  CALL precicef_initialize(dt)
-
   CALL precicef_is_action_required(writeInitialData, bool)
   IF (bool.EQ.1) THEN
     WRITE (*,*) 'DUMMY: Writing initial data'
   ENDIF
-  CALL precicef_initialize_data()
+  CALL precicef_initialize(dt)
 
   CALL precicef_is_coupling_ongoing(ongoing)
   DO WHILE (ongoing.NE.0)

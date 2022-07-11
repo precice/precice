@@ -49,18 +49,6 @@ void precicef_initialize_(double *timestepLengthLimit);
 
 /**
  * Fortran syntax:
- * precicef_intialize_data()
- *
- * IN: -
- * OUT: -
- *
- * @copydoc precice::SolverInterface::initializeData()
- *
- */
-void precicef_initialize_data_();
-
-/**
- * Fortran syntax:
  * precicef_advance( DOUBLE PRECISION timstepLengthLimit )
  *
  * IN:  timestepLengthLimit

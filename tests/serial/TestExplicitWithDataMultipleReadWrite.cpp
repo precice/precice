@@ -29,10 +29,9 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataMultipleReadWrite)
     Eigen::VectorXd readPositions(size * 3);
     vertexIDs[0] = cplInterface.setMeshVertex(meshOneID, readPositions.data());
 
-    double maxDt   = cplInterface.initialize();
     int    dataAID = cplInterface.getDataID("DataOne", meshOneID);
     int    dataBID = cplInterface.getDataID("DataTwo", meshOneID);
-    cplInterface.initializeData();
+    double maxDt   = cplInterface.initialize();
 
     // multiple readBlockScalarData
     cplInterface.readBlockScalarData(dataBID, 1, vertexIDs.data(), readDataB.data());
@@ -161,9 +160,8 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataMultipleReadWrite)
     Eigen::VectorXd writePositions(size * 3);
     vertexIDs[0] = cplInterface.setMeshVertex(meshTwoID, writePositions.data());
 
-    double maxDt   = cplInterface.initialize();
-    int    dataAID = cplInterface.getDataID("DataOne", meshTwoID);
-    int    dataBID = cplInterface.getDataID("DataTwo", meshTwoID);
+    int dataAID = cplInterface.getDataID("DataOne", meshTwoID);
+    int dataBID = cplInterface.getDataID("DataTwo", meshTwoID);
 
     // multiple writeBlockScalarData
     writeDataB[0] = -2.11;
@@ -212,7 +210,7 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataMultipleReadWrite)
     cplInterface.writeVectorData(dataAID, vertexIDs[0], writeDataA.data());
 
     cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
-    cplInterface.initializeData();
+    double maxDt = cplInterface.initialize();
     while (cplInterface.isCouplingOngoing()) {
       // multiple writeBlockScalarData
       writeDataB[0] = -2.51;
