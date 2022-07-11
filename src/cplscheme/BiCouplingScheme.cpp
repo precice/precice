@@ -86,6 +86,12 @@ void BiCouplingScheme::addDataToReceive(
   }
 }
 
+void BiCouplingScheme::determineInitialDataExchange()
+{
+  determineInitialSend(getSendData());
+  determineInitialReceive(getReceiveData());
+}
+
 std::vector<std::string> BiCouplingScheme::getCouplingPartners() const
 {
   std::vector<std::string> partnerNames;

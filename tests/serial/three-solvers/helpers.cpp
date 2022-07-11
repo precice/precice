@@ -26,12 +26,11 @@ void runTestThreeSolvers(std::string const &config, std::vector<int> expectedCal
     int meshBID = precice.getMeshID("MeshB");
     precice.setMeshVertex(meshAID, Eigen::Vector2d(0, 0).data());
     precice.setMeshVertex(meshBID, Eigen::Vector2d(1, 1).data());
-    double dt = precice.initialize();
 
     if (precice.isActionRequired(writeInitData)) {
       precice.markActionFulfilled(writeInitData);
     }
-    precice.initializeData();
+    double dt = precice.initialize();
 
     while (precice.isCouplingOngoing()) {
       if (precice.isActionRequired(writeIterCheckpoint)) {
@@ -50,12 +49,11 @@ void runTestThreeSolvers(std::string const &config, std::vector<int> expectedCal
 
     MeshID meshID = precice.getMeshID("MeshC");
     precice.setMeshVertex(meshID, Eigen::Vector2d(0, 0).data());
-    double dt = precice.initialize();
 
     if (precice.isActionRequired(writeInitData)) {
       precice.markActionFulfilled(writeInitData);
     }
-    precice.initializeData();
+    double dt = precice.initialize();
 
     while (precice.isCouplingOngoing()) {
       if (precice.isActionRequired(writeIterCheckpoint)) {
@@ -75,12 +73,11 @@ void runTestThreeSolvers(std::string const &config, std::vector<int> expectedCal
 
     MeshID meshID = precice.getMeshID("MeshD");
     precice.setMeshVertex(meshID, Eigen::Vector2d(0, 0).data());
-    double dt = precice.initialize();
 
     if (precice.isActionRequired(writeInitData)) {
       precice.markActionFulfilled(writeInitData);
     }
-    precice.initializeData();
+    double dt = precice.initialize();
 
     while (precice.isCouplingOngoing()) {
       if (precice.isActionRequired(writeIterCheckpoint)) {

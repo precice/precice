@@ -23,12 +23,6 @@ ParallelCouplingScheme::ParallelCouplingScheme(
     : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
                        secondParticipant, localParticipant, std::move(m2n), maxIterations, cplMode, dtMethod, extrapolationOrder) {}
 
-void ParallelCouplingScheme::initializeImplementation()
-{
-  determineInitialSend(getSendData());
-  determineInitialReceive(getReceiveData());
-}
-
 void ParallelCouplingScheme::exchangeInitialData()
 {
   // F: send, receive, S: receive, send
