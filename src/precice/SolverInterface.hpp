@@ -85,52 +85,22 @@ public:
   ///@{
 
   /**
-   * @brief Fully initializes preCICE
+   * @brief Fully initializes preCICE and coupling data.
    *
    * - Sets up a connection to the other participants of the coupled simulation.
    * - Creates all meshes, solver meshes need to be submitted before.
-   * - Receives first coupling data, when the solver is not starting the
-   *   coupled simulation.
+   * - Receives first coupling data. The starting values for coupling data are zero by default.
    * - Determines length of the first timestep to be computed.
    *
-   * @pre initialize() has not yet bee called.
+   * @pre initialize() has not yet been called.
    *
-   * @post Parallel communication to the coupling partner/s is setup.
+   * @post Parallel communication to the coupling partner(s) is setup.
    * @post Meshes are exchanged between coupling partners and the parallel partitions are created.
-   * @post [Serial Coupling Scheme] If the solver is not starting the simulation, coupling data is received
-   * from the coupling partner's first computation.
+   * @post Initial coupling data was exchanged.
    *
    * @return Maximum length of first timestep to be computed by the solver.
    */
   double initialize();
-
-  /**
-   * @brief Initializes coupling data.
-   *
-   * The starting values for coupling data are zero by default.
-   *
-   * To provide custom values, first set the data using the Data Access methods and
-   * call this method to finally exchange the data.
-   *
-   * \par Serial Coupling Scheme
-   * Only the first participant has to call this method, the second participant
-   * receives the values on calling initialize().
-   *
-   * \par Parallel Coupling Scheme
-   * Values in both directions are exchanged.
-   * Both participants need to call initializeData().
-   *
-   * @pre initialize() has been called successfully.
-   * @pre The action WriteInitialData is required
-   * @pre advance() has not yet been called.
-   * @pre finalize() has not yet been called.
-   *
-   * @post Initial coupling data was exchanged.
-   *
-   * @see isActionRequired
-   * @see precice::constants::actionWriteInitialData
-   */
-  void initializeData();
 
   /**
    * @brief Advances preCICE after the solver has computed one timestep.
@@ -145,7 +115,6 @@ public:
    * @param[in] computedTimestepLength Length of timestep used by the solver.
    *
    * @pre initialize() has been called successfully.
-   * @pre initializeData() has been called, if required by configuration.
    * @pre The solver has computed one timestep.
    * @pre The solver has written all coupling data.
    * @pre isCouplngOngoing() returns true.

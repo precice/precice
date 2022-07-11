@@ -669,6 +669,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
       BaseCouplingScheme::Implicit, maxIterations, extrapolationOrder);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
+  cplScheme.determineInitialDataExchange();
 
   // Add acceleration
   acceleration::PtrAcceleration ptrAcceleration(new acceleration::ConstantRelaxationAcceleration(0.5, std::vector<int>({sendDataIndex})));
@@ -868,6 +869,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
       BaseCouplingScheme::Implicit, maxIterations, extrapolationOrder);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, context.isNamed(second));
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, context.isNamed(first));
+  cplScheme.determineInitialDataExchange();
 
   // Add acceleration
   acceleration::PtrAcceleration ptrAcceleration(new acceleration::ConstantRelaxationAcceleration(0.5, std::vector<int>({sendDataIndex})));
@@ -880,8 +882,6 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
   cplScheme.addConvergenceMeasure(convergenceDataIndex, false, false, minIterationConvMeasure1, true);
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
-
-  cplScheme.initialize(0.0, 1);
 
   Eigen::VectorXd v(1); // buffer for data
 
@@ -903,7 +903,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
     BOOST_TEST(testing::equals(mesh->data(sendDataIndex)->values()(0), 4.0));
   }
 
-  cplScheme.initializeData();
+  cplScheme.initialize(0.0, 1);
 
   if (context.isNamed(first)) {
     // first participant receives initial data = 4 (see above)
@@ -1110,6 +1110,7 @@ BOOST_AUTO_TEST_CASE(SecondOrderWithAcceleration)
       BaseCouplingScheme::Implicit, maxIterations, extrapolationOrder);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
+  cplScheme.determineInitialDataExchange();
 
   // Add acceleration
   acceleration::PtrAcceleration ptrAcceleration(new acceleration::ConstantRelaxationAcceleration(0.5, std::vector<int>({sendDataIndex})));
@@ -1339,6 +1340,7 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
       BaseCouplingScheme::Implicit, 100, extrapolationOrder);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
+  cplScheme.determineInitialDataExchange();
 
   double                                 convergenceLimit1 = sqrt(3.0); // when diff_vector = (1.0, 1.0, 1.0)
   cplscheme::impl::PtrConvergenceMeasure absoluteConvMeasure1(
@@ -1444,6 +1446,7 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
       BaseCouplingScheme::Implicit, 100, extrapolationOrder);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
+  cplScheme.determineInitialDataExchange();
 
   // Add convergence measures
   int                                    minIterations = 3;
@@ -1509,6 +1512,7 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
       BaseCouplingScheme::Implicit, 100, extrapolationOrder);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
+  cplScheme.determineInitialDataExchange();
 
   // Add convergence measures
   int                                    minIterations = 3;
@@ -1577,6 +1581,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   CouplingData *sendCouplingData = Fixture::getSendData(cplScheme, sendDataIndex);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, not dataRequiresInitialization);
   CouplingData *receiveCouplingData = Fixture::getReceiveData(cplScheme, receiveDataIndex);
+  cplScheme.determineInitialDataExchange();
 
   // Add convergence measures
   int                                    minIterations = 3;
@@ -1586,8 +1591,6 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
 
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
-
-  cplScheme.initialize(0.0, 1);
 
   if (context.isNamed(nameParticipant0)) {
     // ensure that read data is uninitialized
@@ -1602,7 +1605,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(testing::equals(sendCouplingData->previousIteration()(0), 0.0));
 
     BOOST_TEST(Fixture::isImplicitCouplingScheme(cplScheme));
-    cplScheme.initializeData();
+    cplScheme.initialize(0.0, 1);
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     // ensure that initial data was read
     BOOST_TEST(receiveCouplingData->values().size() == 3);
@@ -1642,7 +1645,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(testing::equals(sendCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
     BOOST_TEST(sendCouplingData->previousIteration().size() == 3); // here, previousIteration is correctly initialized, see above
     BOOST_TEST(testing::equals(sendCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
-    cplScheme.initializeData();
+    cplScheme.initialize(0.0, 1);
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(receiveCouplingData->values().size() == 1);
     BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 4.0));

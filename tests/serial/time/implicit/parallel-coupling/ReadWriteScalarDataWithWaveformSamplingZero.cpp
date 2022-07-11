@@ -59,12 +59,18 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingZero)
   VertexID vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
 
   int    nWindows   = 5; // perform 5 windows.
-  double maxDt      = precice.initialize();
   int    timewindow = 0;
   int    timewindowCheckpoint;
+  double time = 0;
+  if (precice.isActionRequired(precice::constants::actionWriteInitialData())) {
+    writeData = writeFunction(time);
+    precice.writeScalarData(writeDataID, vertexID, writeData);
+    precice.markActionFulfilled(precice::constants::actionWriteInitialData());
+  }
+
+  double maxDt     = precice.initialize();
   double dt        = maxDt; // Timestep length desired by solver
   double currentDt = dt;    // Timestep length used by solver
-  double time      = timewindow * dt;
   double timeCheckpoint;
   double sampleDts[4] = {0.0, dt / 4.0, dt / 2.0, 3.0 * dt / 4.0};
   double readDts[4]   = {currentDt, currentDt, currentDt, currentDt};
@@ -73,13 +79,6 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingZero)
   double sampleDt; // dt relative to timestep start, where we are sampling
   double readDt;   // dt relative to timestep start for readTime
   double readTime; // time where we are reading from the reference solution
-  if (precice.isActionRequired(precice::constants::actionWriteInitialData())) {
-    writeData = writeFunction(time);
-    precice.writeScalarData(writeDataID, vertexID, writeData);
-    precice.markActionFulfilled(precice::constants::actionWriteInitialData());
-  }
-
-  precice.initializeData();
 
   while (precice.isCouplingOngoing()) {
     if (precice.isActionRequired(precice::constants::actionWriteIterationCheckpoint())) {
