@@ -65,12 +65,6 @@ double precicec_initialize()
   return impl->initialize();
 }
 
-void precicec_initialize_data()
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->initializeData();
-}
-
 double precicec_advance(double computedTimestepLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
