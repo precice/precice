@@ -316,6 +316,7 @@ BOOST_AUTO_TEST_CASE(testSimpleExplicitCoupling)
       BaseCouplingScheme::Explicit);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
+  cplScheme.determineInitialDataExchange();
   runSimpleExplicitCoupling(cplScheme, context.name, meshConfig);
 }
 
@@ -485,9 +486,9 @@ BOOST_AUTO_TEST_CASE(testSerialDataInitialization)
   auto &dataValues2 = mesh->data(2)->values();
 
   if (context.isNamed(nameParticipant0)) {
-    cplScheme.initialize(0.0, 1);
+    BOOST_TEST(not cplScheme.hasDataBeenReceived());
     BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteInitialData()));
-    cplScheme.initializeData();
+    cplScheme.initialize(0.0, 1);
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(testing::equals(dataValues0(0), 0.0));
     BOOST_TEST(testing::equals(dataValues1(0), 1.0));
@@ -498,12 +499,11 @@ BOOST_AUTO_TEST_CASE(testSerialDataInitialization)
     cplScheme.finalize();
   } else {
     BOOST_TEST(context.isNamed(nameParticipant1));
-    cplScheme.initialize(0.0, 1);
     BOOST_TEST(not cplScheme.hasDataBeenReceived());
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteInitialData()));
     dataValues1(0) = 1.0;
     cplScheme.markActionFulfilled(constants::actionWriteInitialData());
-    cplScheme.initializeData();
+    cplScheme.initialize(0.0, 1);
     BOOST_TEST(testing::equals(dataValues2(0), 2.0));
     cplScheme.addComputedTime(cplScheme.getNextTimestepMaxLength());
     cplScheme.advance();
@@ -547,6 +547,7 @@ BOOST_AUTO_TEST_CASE(testParallelDataInitialization)
 
   connect(nameParticipant0, nameParticipant1, context.name, m2n);
   CouplingScheme &cplScheme = *cplSchemeConfig.getCouplingScheme(context.name);
+  BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteInitialData()));
 
   BOOST_TEST(meshConfig->meshes().size() == 1);
   mesh::PtrMesh mesh = meshConfig->meshes().at(0);
@@ -556,11 +557,11 @@ BOOST_AUTO_TEST_CASE(testParallelDataInitialization)
   auto &dataValues2 = mesh->data(2)->values();
 
   if (context.isNamed(nameParticipant0)) {
-    cplScheme.initialize(0.0, 1);
+    BOOST_TEST(not cplScheme.hasDataBeenReceived());
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteInitialData()));
     dataValues2(0) = 3.0;
     cplScheme.markActionFulfilled(constants::actionWriteInitialData());
-    cplScheme.initializeData();
+    cplScheme.initialize(0.0, 1);
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(testing::equals(dataValues0(0), 0.0));
     BOOST_TEST(testing::equals(dataValues1(0), 1.0));
@@ -572,12 +573,11 @@ BOOST_AUTO_TEST_CASE(testParallelDataInitialization)
     cplScheme.finalize();
   } else {
     BOOST_TEST(context.isNamed(nameParticipant1));
-    cplScheme.initialize(0.0, 1);
     BOOST_TEST(not cplScheme.hasDataBeenReceived());
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteInitialData()));
     dataValues1(0) = 1.0;
     cplScheme.markActionFulfilled(constants::actionWriteInitialData());
-    cplScheme.initializeData();
+    cplScheme.initialize(0.0, 1);
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(testing::equals(dataValues2(0), 3.0));
     dataValues0(0) = 4.0;
@@ -631,6 +631,7 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingWithSubcycling)
       BaseCouplingScheme::Explicit);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
+  cplScheme.determineInitialDataExchange();
   runExplicitCouplingWithSubcycling(cplScheme, context.name, meshConfig);
 }
 

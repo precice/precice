@@ -35,8 +35,17 @@ MultiCouplingScheme::MultiCouplingScheme(
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
   // Controller participant never does the first step, because it is never the first participant
   setDoesFirstStep(!_isController);
-
   PRECICE_DEBUG("MultiCoupling scheme is created for {}.", localParticipant);
+}
+
+void MultiCouplingScheme::determineInitialDataExchange()
+{
+  for (auto &sendExchange : _sendDataVector) {
+    determineInitialSend(sendExchange.second);
+  }
+  for (auto &receiveExchange : _receiveDataVector) {
+    determineInitialReceive(receiveExchange.second);
+  }
 }
 
 std::vector<std::string> MultiCouplingScheme::getCouplingPartners() const
@@ -48,20 +57,6 @@ std::vector<std::string> MultiCouplingScheme::getCouplingPartners() const
   }
 
   return partnerNames;
-}
-
-void MultiCouplingScheme::initializeImplementation()
-{
-  PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
-
-  PRECICE_DEBUG("MultiCouplingScheme is being initialized.");
-  for (auto &sendExchange : _sendDataVector) {
-    determineInitialSend(sendExchange.second);
-  }
-  for (auto &receiveExchange : _receiveDataVector) {
-    determineInitialReceive(receiveExchange.second);
-  }
-  PRECICE_DEBUG("MultiCouplingScheme is initialized.");
 }
 
 void MultiCouplingScheme::exchangeInitialData()
