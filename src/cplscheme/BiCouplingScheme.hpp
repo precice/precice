@@ -53,6 +53,8 @@ public:
       mesh::PtrMesh        mesh,
       bool                 requiresInitialization);
 
+  void determineInitialDataExchange() override;
+
   /// returns list of all coupling partners
   std::vector<std::string> getCouplingPartners() const override final;
 
