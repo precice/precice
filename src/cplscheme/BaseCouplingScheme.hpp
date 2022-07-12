@@ -186,6 +186,7 @@ public:
    */
   void initialize(double startTime, int startTimeWindow) override final;
 
+  /// Receives result of first advance, if this has to happen inside SolverInterface::initialize(), see CouplingScheme.hpp
   void receiveResultOfFirstAdvance() override final;
 
   /**
