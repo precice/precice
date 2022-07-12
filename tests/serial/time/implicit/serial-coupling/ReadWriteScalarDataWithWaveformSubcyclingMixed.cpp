@@ -11,7 +11,7 @@ BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(Time)
 BOOST_AUTO_TEST_SUITE(Implicit)
-BOOST_AUTO_TEST_SUITE(ParallelCoupling)
+BOOST_AUTO_TEST_SUITE(SerialCoupling)
 
 /**
  * @brief Test to run a simple coupling with zeroth order waveform subcycling.
@@ -60,8 +60,10 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingMixed)
   int    nSubsteps = 4; // perform subcycling on solvers. 4 steps happen in each window.
   int    nWindows  = 5; // perform 5 windows.
   int    timestep  = 0;
+  double time      = 0;
   int    timestepCheckpoint;
-  double time = 0;
+  double timeCheckpoint;
+  int    iterations;
 
   if (precice.isActionRequired(precice::constants::actionWriteInitialData())) {
     writeData = writeFunction(time);
@@ -74,8 +76,6 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingMixed)
   double dt       = windowDt / nSubsteps; // Timestep length desired by solver. E.g. 4 steps  with size 1/4
   dt += windowDt / nSubsteps / nSubsteps; // increase timestep such that we get a non-matching subcycling. E.g. 3 step with size 5/16 and 1 step with size 1/16.
   double currentDt = dt;                  // Timestep length used by solver
-  double timeCheckpoint;
-  int    iterations;
 
   while (precice.isCouplingOngoing()) {
     if (precice.isActionRequired(precice::constants::actionWriteIterationCheckpoint())) {
@@ -95,8 +95,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingMixed)
     }
 
     precice.readScalarData(readDataID, vertexID, currentDt, readData);
-
-    if (iterations == 0) { // in the first iteration of each window, use data from previous window.
+    if (context.isNamed("SolverOne") && iterations == 0) { // in the first iteration of each window, we only have one sample of data. Therefore constant interpolation. Only for first participant with serial coupling.
       BOOST_TEST(readData == readFunction(timeCheckpoint));
     } else {
       BOOST_TEST(readData == readFunction(readTime));
@@ -104,9 +103,9 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingMixed)
 
     precice.readScalarData(readDataID, vertexID, currentDt / 2, readData);
 
-    if (iterations == 0) { // in the first iteration of each window, use data from previous window.
+    if (context.isNamed("SolverOne") && iterations == 0) { // in the first iteration of each window, use data from previous window. Only for first participant with serial coupling.
       BOOST_TEST(readData == readFunction(timeCheckpoint));
-    } else {                              // in the following iterations, use data at the end of window.
+    } else {
       if (context.isNamed("SolverOne")) { // in the following iterations, use data at the end of window.
         BOOST_TEST(readData == readFunction(readTime));
       } else { // in the following iterations we have two samples of data. Therefore linear interpolation
@@ -138,6 +137,6 @@ BOOST_AUTO_TEST_SUITE_END() // Integration
 BOOST_AUTO_TEST_SUITE_END() // Serial
 BOOST_AUTO_TEST_SUITE_END() // Time
 BOOST_AUTO_TEST_SUITE_END() // Explicit
-BOOST_AUTO_TEST_SUITE_END() // ParallelCoupling
+BOOST_AUTO_TEST_SUITE_END() // SerialCoupling
 
 #endif // PRECICE_NO_MPI
