@@ -126,4 +126,26 @@ CouplingData *BiCouplingScheme::getReceiveData(
   return nullptr;
 }
 
+void BiCouplingScheme::exchangeInitialData()
+{
+  // F: send, receive, S: receive, send
+  if (doesFirstStep()) {
+    if (sendsInitializedData()) {
+      sendData(getM2N(), getSendData());
+    }
+    if (receivesInitializedData()) {
+      receiveData(getM2N(), getReceiveData());
+      checkDataHasBeenReceived();
+    }
+  } else { // second participant
+    if (receivesInitializedData()) {
+      receiveData(getM2N(), getReceiveData());
+      checkDataHasBeenReceived();
+    }
+    if (sendsInitializedData()) {
+      sendData(getM2N(), getSendData());
+    }
+  }
+}
+
 } // namespace precice::cplscheme

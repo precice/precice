@@ -329,10 +329,6 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
       //_couplingSchemes[accessor] = scheme;
       _config = Config();
     } else if (_config.type == VALUE_SERIAL_IMPLICIT) {
-      if (_experimental) {
-        int maxAllowedOrder = 0; // serial implicit coupling does not allow waveform iteration yet (see https://github.com/precice/precice/issues/1174#issuecomment-1042823430)
-        checkWaveformOrderReadData(maxAllowedOrder);
-      }
       std::string       accessor(_config.participants[0]);
       PtrCouplingScheme scheme = createSerialImplicitCouplingScheme(accessor);
       addCouplingScheme(scheme, accessor);
@@ -983,18 +979,22 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
     if (from == accessor) {
       scheme.addDataToSend(exchange.data, exchange.mesh, requiresInitialization);
       if (requiresInitialization && (_config.type == VALUE_SERIAL_EXPLICIT || _config.type == VALUE_SERIAL_IMPLICIT)) {
-        PRECICE_CHECK(not scheme.doesFirstStep(),
-                      "In serial coupling only second participant can initialize data and send it. "
-                      "Please check the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" initialize=\"{}\" /> tag in the <coupling-scheme:... /> of your precice-config.xml.",
-                      dataName, meshName, from, to, requiresInitialization);
+        if (not _experimental) {
+          PRECICE_CHECK(not scheme.doesFirstStep(),
+                        "In serial coupling only second participant can initialize data and send it. "
+                        "Please check the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" initialize=\"{}\" /> tag in the <coupling-scheme:... /> of your precice-config.xml. You can bypass this restriction by activating the experimental interface for time interpolation. Please refer to the documentation for more details.",
+                        dataName, meshName, from, to, requiresInitialization);
+        }
       }
     } else if (to == accessor) {
       scheme.addDataToReceive(exchange.data, exchange.mesh, requiresInitialization);
       if (requiresInitialization && (_config.type == VALUE_SERIAL_EXPLICIT || _config.type == VALUE_SERIAL_IMPLICIT)) {
-        PRECICE_CHECK(scheme.doesFirstStep(),
-                      "In serial coupling only first participant can receive initial data. "
-                      "Please check the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" initialize=\"{}\" /> tag in the <coupling-scheme:... /> of your precice-config.xml.",
-                      dataName, meshName, from, to, requiresInitialization);
+        if (not _experimental) {
+          PRECICE_CHECK(scheme.doesFirstStep(),
+                        "In serial coupling only first participant can receive initial data. "
+                        "Please check the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" initialize=\"{}\" /> tag in the <coupling-scheme:... /> of your precice-config.xml. You can bypass this restriction by activating the experimental interface for time interpolation. Please refer to the documentation for more details.",
+                        dataName, meshName, from, to, requiresInitialization);
+        }
       }
     } else {
       PRECICE_ASSERT(_config.type == VALUE_MULTI);
