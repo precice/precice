@@ -270,6 +270,8 @@ private:
   void checkIfDataIsExchanged(
       DataID dataID) const;
 
+  int getWaveformUsedOrder(std::string dataName) const;
+
   void checkWaveformOrderReadData(
       int maxAllowedOrder) const;
 

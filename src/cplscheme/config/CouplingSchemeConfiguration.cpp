@@ -978,8 +978,18 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
 
     const bool requiresInitialization = exchange.requiresInitialization;
     if (from == accessor) {
+      // Checks for a serial coupling scheme, where initial data is sent by second participant.
+      if (scheme.doesFirstStep() && getWaveformUsedOrder(dataName) == 0 && requiresInitialization && (_config.type == VALUE_SERIAL_EXPLICIT || _config.type == VALUE_SERIAL_IMPLICIT)) {
+        PRECICE_WARN("In serial coupling initialized data sent by the first participant will only be used, if waveform order > 0 is set. You can avoid this unnecessary data initialization by setting initialize=\"false\" in the the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" initialize=\"{}\" /> tag in the <coupling-scheme:... /> of your precice-config.xml.",
+                     dataName, meshName, from, to, requiresInitialization);
+      }
       scheme.addDataToSend(exchange.data, exchange.mesh, requiresInitialization);
     } else if (to == accessor) {
+      // Checks for a serial coupling scheme, where initial data is received by first participant.
+      if (!scheme.doesFirstStep() && getWaveformUsedOrder(dataName) == 0 && requiresInitialization && (_config.type == VALUE_SERIAL_EXPLICIT || _config.type == VALUE_SERIAL_IMPLICIT)) {
+        PRECICE_WARN("In serial coupling initialized data received by the second participant will only be used, if waveform order > 0 is set. You can avoid unnecessary data initialization by setting initialize=\"false\" in the the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" initialize=\"{}\" /> tag in the <coupling-scheme:... /> of your precice-config.xml.",
+                     dataName, meshName, from, to, requiresInitialization);
+      }
       scheme.addDataToReceive(exchange.data, exchange.mesh, requiresInitialization);
     } else {
       PRECICE_ASSERT(_config.type == VALUE_MULTI);
@@ -1042,6 +1052,21 @@ void CouplingSchemeConfiguration::checkIfDataIsExchanged(
                 "Data \"{}\" is currently not exchanged over the respective mesh on which it is used for convergence measures and/or iteration acceleration. "
                 "Please check the <exchange ... /> and <...-convergence-measure ... /> tags in the <coupling-scheme:... /> of your precice-config.xml.",
                 dataName);
+}
+
+int CouplingSchemeConfiguration::getWaveformUsedOrder(std::string dataName) const
+{
+  int maxUsedOrder = -1;
+  for (const precice::impl::PtrParticipant &participant : _participantConfig->getParticipants()) {
+    for (auto &dataContext : participant->readDataContexts()) {
+      if (dataContext.getDataName() == dataName) {
+        int usedOrder = dataContext.getInterpolationOrder();
+        PRECICE_ASSERT(usedOrder >= 0); // ensure that usedOrder was set
+        return usedOrder;
+      }
+    }
+  }
+  return maxUsedOrder;
 }
 
 void CouplingSchemeConfiguration::checkWaveformOrderReadData(
