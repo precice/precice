@@ -32,7 +32,6 @@ namespace mapping {
 template <typename RADIAL_BASIS_FUNCTION_T>
 class RadialBasisFctMapping : public RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T> {
 public:
-  typedef typename std::conditional<RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite(), Eigen::LDLT<Eigen::MatrixXd>, Eigen::ColPivHouseholderQR<Eigen::MatrixXd>>::type DecompositionType;
   /**
    * @brief Constructor.
    *
@@ -57,7 +56,7 @@ public:
 private:
   precice::logging::Logger _log{"mapping::RadialBasisFctMapping"};
 
-  RadialBasisFctSolver _rbfSolver;
+  RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T> _rbfSolver;
   /// @copydoc RadialBasisFctBaseMapping::mapConservative
   void mapConservative(DataID inputDataID, DataID outputDataID) final override;
 
@@ -145,7 +144,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       globalOutMesh.addMesh(*outMesh);
     }
 
-    _rbfSolver = RadialBasisFctSolver{this->_basisFunction, globalInMesh, globalOutMesh, this->_deadAxis, _polynomial};
+    _rbfSolver = RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>{this->_basisFunction, globalInMesh, globalOutMesh, this->_deadAxis, _polynomial};
   }
   this->_hasComputedMapping = true;
   PRECICE_DEBUG("Compute Mapping is Completed.");

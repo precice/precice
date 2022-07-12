@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Eigen/Cholesky>
 #include <Eigen/QR>
 #include <boost/range/irange.hpp>
 #include <numeric>
@@ -17,13 +18,15 @@ namespace mapping {
  * in order to solve the system at runtime. The functionality uses Eigen and supports only serial execution. In case
  * the polynomial="separate" option is used, the polynomial system is solved using a QR decomposition.
  */
+template <typename RADIAL_BASIS_FUNCTION_T>
 class RadialBasisFctSolver {
 public:
+  typedef typename std::conditional<RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite(), Eigen::LLT<Eigen::MatrixXd>, Eigen::ColPivHouseholderQR<Eigen::MatrixXd>>::type DecompositionType;
+
   /// Default constructor
   RadialBasisFctSolver() = default;
 
   /// Assembles the system matrices and computes the decomposition of the interpolation matrix
-  template <typename RADIAL_BASIS_FUNCTION_T>
   RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const mesh::Mesh &outputMesh, std::vector<bool> deadAxis, Polynomial polynomial);
 
   /// Maps the given input data
@@ -42,7 +45,7 @@ private:
   precice::logging::Logger _log{"mapping::RadialBasisFctSolver"};
 
   /// Decomposition of the interpolation matrix
-  Eigen::ColPivHouseholderQR<Eigen::MatrixXd> _qrMatrixC;
+  DecompositionType _decMatrixC;
 
   /// Decomposition of the polynomial (for separate polynomial)
   Eigen::ColPivHouseholderQR<Eigen::MatrixXd> _qrMatrixQ;
@@ -169,15 +172,24 @@ Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-RadialBasisFctSolver::RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const mesh::Mesh &outputMesh, std::vector<bool> deadAxis, Polynomial polynomial)
+RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const mesh::Mesh &outputMesh, std::vector<bool> deadAxis, Polynomial polynomial)
 {
+  PRECICE_CHECK(!(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite() && polynomial == Polynomial::ON), "TODO");
   // Convert dead axis vector into an active axis array so that we can handle the reduction more easily
   std::array<bool, 3> activeAxis({{false, false, false}});
   std::transform(deadAxis.begin(), deadAxis.end(), activeAxis.begin(), [](const auto ax) { return !ax; });
-  // First, assemble the interpolation matrix and check the invertability
-  _qrMatrixC = buildMatrixCLU(basisFunction, inputMesh, activeAxis, polynomial).colPivHouseholderQr();
 
-  PRECICE_CHECK(_qrMatrixC.isInvertible(),
+  // First, assemble the interpolation matrix and check the invertability
+  bool decompositionConverged = false;
+  if constexpr (RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite()) {
+    _decMatrixC            = buildMatrixCLU(basisFunction, inputMesh, activeAxis, polynomial).llt();
+    decompositionConverged = _decMatrixC.info() == Eigen::ComputationInfo::Success;
+  } else {
+    _decMatrixC            = buildMatrixCLU(basisFunction, inputMesh, activeAxis, polynomial).colPivHouseholderQr();
+    decompositionConverged = _decMatrixC.isInvertible();
+  }
+
+  PRECICE_CHECK(decompositionConverged,
                 "The interpolation matrix of the RBF mapping from mesh {} to mesh {} is not invertable. "
                 "This means that the mapping problem is not well-posed. "
                 "Please check if your coupling meshes are correct. Maybe you need to fix axis-aligned mapping setups "
@@ -204,5 +216,88 @@ RadialBasisFctSolver::RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction
     _qrMatrixQ = _matrixQ.colPivHouseholderQr();
   }
 }
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConservative(const Eigen::VectorXd &inputData, Polynomial polynomial) const
+{
+  // TODO: Avoid temporary allocations
+  // Au is equal to the eta in our PETSc implementation
+  PRECICE_ASSERT(inputData.size() == _matrixA.rows());
+  Eigen::VectorXd Au = _matrixA.transpose() * inputData;
+  PRECICE_ASSERT(Au.size() == _matrixA.cols());
+
+  // mu in the PETSc implementation
+  Eigen::VectorXd out = _decMatrixC.solve(Au);
+
+  if (polynomial == Polynomial::SEPARATE) {
+    Eigen::VectorXd epsilon = _matrixV.transpose() * inputData;
+    PRECICE_ASSERT(epsilon.size() == _matrixV.cols());
+
+    // epsilon = Q^T * mu - epsilon (tau in the PETSc impl)
+    epsilon -= _matrixQ.transpose() * out;
+    PRECICE_ASSERT(epsilon.size() == _matrixQ.cols());
+
+    // out  = out - solveTranspose tau (sigma in the PETSc impl)
+#if EIGEN_VERSION_AT_LEAST(3, 4, 0)
+    out -= static_cast<Eigen::VectorXd>(_qrMatrixQ.transpose().solve(-epsilon));
+#else
+    // Backwards compatible version
+    Eigen::VectorXd    sigma(_matrixQ.rows());
+    const Eigen::Index nonzero_pivots = _qrMatrixQ.nonzeroPivots();
+
+    if (nonzero_pivots == 0) {
+      sigma.setZero();
+    } else {
+      Eigen::VectorXd c(_qrMatrixQ.colsPermutation().transpose() * (-epsilon));
+
+      _qrMatrixQ.matrixQR().topLeftCorner(nonzero_pivots, nonzero_pivots).template triangularView<Eigen::Upper>().transpose().conjugate().solveInPlace(c.topRows(nonzero_pivots));
+
+      sigma.topRows(nonzero_pivots) = c.topRows(nonzero_pivots);
+      sigma.bottomRows(_qrMatrixQ.rows() - nonzero_pivots).setZero();
+
+      sigma.applyOnTheLeft(_qrMatrixQ.householderQ().setLength(nonzero_pivots));
+      out -= sigma;
+    }
+#endif
+  }
+  return out;
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(Eigen::VectorXd &inputData, Polynomial polynomial) const
+{
+  Eigen::VectorXd res;
+  // Solve polynomial QR and subtract it from the input data
+  if (polynomial == Polynomial::SEPARATE) {
+    res = _qrMatrixQ.solve(inputData);
+    inputData -= (_matrixQ * res);
+  }
+
+  // Integrated polynomial (and separated)
+  PRECICE_ASSERT(inputData.size() == _matrixA.cols());
+  Eigen::VectorXd p = _decMatrixC.solve(inputData);
+  PRECICE_ASSERT(p.size() == _matrixA.cols());
+  Eigen::VectorXd out = _matrixA * p;
+
+  // Add the polynomial part again for separated polynomial
+  if (polynomial == Polynomial::SEPARATE) {
+    out += (_matrixV * res);
+  }
+  return out;
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::clear()
+{
+  _matrixA    = Eigen::MatrixXd();
+  _decMatrixC = DecompositionType();
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+const Eigen::MatrixXd &RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::getEvaluationMatrix() const
+{
+  return _matrixA;
+}
+
 } // namespace mapping
 } // namespace precice

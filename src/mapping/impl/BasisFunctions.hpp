@@ -189,7 +189,7 @@ private:
  * To work around the issue of log(0), the equation is formulated differently in the last term.
  */
 class CompactThinPlateSplinesC2 : public CompactSupportBase,
-                                  public DefiniteFunction<false> {
+                                  public DefiniteFunction<true> {
 public:
   explicit CompactThinPlateSplinesC2(double supportRadius)
   {

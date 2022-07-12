@@ -1837,7 +1837,6 @@ BOOST_AUTO_TEST_CASE(MapInverseMultiquadrics)
 {
   PRECICE_TEST(1_rank);
   InverseMultiquadrics fct(1e-3);
-  doLocalCode(InverseMultiquadrics, fct, Polynomial::ON);
   doLocalCode(InverseMultiquadrics, fct, Polynomial::SEPARATE);
 }
 
@@ -1853,7 +1852,6 @@ BOOST_AUTO_TEST_CASE(MapGaussian)
 {
   PRECICE_TEST(1_rank);
   Gaussian fct(1.0);
-  doLocalCode(Gaussian, fct, Polynomial::ON);
   doLocalCode(Gaussian, fct, Polynomial::SEPARATE);
 }
 
@@ -1862,25 +1860,22 @@ BOOST_AUTO_TEST_CASE(MapCompactThinPlateSplinesC2)
   PRECICE_TEST(1_rank);
   double                    supportRadius = 1.2;
   CompactThinPlateSplinesC2 fct(supportRadius);
-  doLocalCode(CompactThinPlateSplinesC2, fct, Polynomial::ON);
   doLocalCode(CompactThinPlateSplinesC2, fct, Polynomial::SEPARATE);
 }
 
-BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC0)
+BOOST_AUTO_TEST_CASE(MapCompactPolynomialC0)
 {
   PRECICE_TEST(1_rank);
   double              supportRadius = 1.2;
   CompactPolynomialC0 fct(supportRadius);
-  doLocalCode(CompactPolynomialC0, fct, Polynomial::ON);
   doLocalCode(CompactPolynomialC0, fct, Polynomial::SEPARATE);
 }
 
-BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC6)
+BOOST_AUTO_TEST_CASE(MapCompactPolynomialC6)
 {
   PRECICE_TEST(1_rank);
   double              supportRadius = 1.2;
   CompactPolynomialC6 fct(supportRadius);
-  doLocalCode(CompactPolynomialC6, fct, Polynomial::ON);
   doLocalCode(CompactPolynomialC6, fct, Polynomial::SEPARATE);
 }
 #undef doLocalCode
