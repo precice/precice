@@ -167,6 +167,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       }
       cplScheme.addComputedTime(timestepLength);
       cplScheme.advance();
+      BOOST_TEST(cplScheme.hasDataBeenReceived());
     }
   } else {
     BOOST_TEST(context.isNamed(nameParticipant1));
@@ -195,6 +196,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       }
       cplScheme.addComputedTime(timestepLength);
       cplScheme.advance();
+      BOOST_TEST(cplScheme.hasDataBeenReceived());
       if (cplScheme.isActionRequired(readIterationCheckpoint)) {
         cplScheme.markActionFulfilled(readIterationCheckpoint);
       }

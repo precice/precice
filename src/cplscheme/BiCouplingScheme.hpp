@@ -111,6 +111,11 @@ protected:
     return _m2n;
   }
 
+  /**
+   * @brief Exchanges data, if it has to be initialized.
+   */
+  void exchangeInitialData() override final;
+
 private:
   mutable logging::Logger _log{"cplscheme::BiCouplingScheme"};
 
