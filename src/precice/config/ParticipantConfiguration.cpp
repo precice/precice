@@ -546,6 +546,10 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                         "Please add a use-mesh node with name=\"{}\" and provide=\"true\".",
                         participant->getName(), dataContext.getMeshName(), dataContext.getMeshName());
           dataContext.appendMappingConfiguration(mappingContext, meshContext);
+          // Enable gradient data if required
+          if (mappingContext.mapping->requireGradient() == true) {
+            mappingContext.mapping->getInputMesh()->data(dataContext.getDataName())->setDataGradientRequired();
+          }
           dataFound = true;
         }
       }
@@ -567,7 +571,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
       if (mappingContext.toMeshID == toMeshID) {
         // Second we look for the "from" mesh ID
         impl::MeshContext &meshContext = participant->meshContext(mappingContext.fromMeshID);
-        // If this is true, we actually found a proper configuraiton
+        // If this is true, we actually found a proper configuration
         // If it is false, we look for another "from" mesh ID, because we might have multiple read and write mappings
         if (meshContext.mesh->hasDataName(dataContext.getDataName())) {
           // Check, if the toMesh is a provided mesh
@@ -576,6 +580,10 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                         "Please add a use-mesh node with name=\"{}\" and provide=\"true\".",
                         participant->getName(), dataContext.getMeshName(), dataContext.getMeshName());
           dataContext.appendMappingConfiguration(mappingContext, meshContext);
+          // Enable gradient data if required
+          if (mappingContext.mapping->requireGradient() == true) {
+            mappingContext.mapping->getInputMesh()->data(dataContext.getDataName())->setDataGradientRequired();
+          }
           dataFound = true;
         }
       }
