@@ -40,7 +40,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  void receiveResultOfFirstAdvance()
+  void receiveResultOfFirstAdvance() override final
   {
     PRECICE_ASSERT(false);
   }
