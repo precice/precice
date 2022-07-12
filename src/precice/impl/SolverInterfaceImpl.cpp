@@ -353,6 +353,15 @@ double SolverInterfaceImpl::initialize()
     context.moveToNextWindow();
   }
 
+  _couplingScheme->receiveResultOfFirstAdvance();
+
+  if (_couplingScheme->hasDataBeenReceived()) {
+    // dt will be removed as argument of actions. See https://github.com/precice/precice/issues/1358
+    performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, 0.0);
+    mapReadData();
+    performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, 0.0);
+  }
+
   resetWrittenData();
   PRECICE_DEBUG("Plot output");
   _accessor->exportFinal();

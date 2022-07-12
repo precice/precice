@@ -169,6 +169,13 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   _isInitialized = true;
 }
 
+void BaseCouplingScheme::receiveResultOfFirstAdvance()
+{
+  PRECICE_ASSERT(_isInitialized, "Before calling receiveResultOfFirstAdvance() one has to call initialize().");
+  _hasDataBeenReceived = false;
+  performReceiveOfFirstAdvance();
+}
+
 void BaseCouplingScheme::advance()
 {
   PRECICE_TRACE(_timeWindows, _time);
