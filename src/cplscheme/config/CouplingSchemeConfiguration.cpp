@@ -978,11 +978,6 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
 
     const bool requiresInitialization = exchange.requiresInitialization;
     if (from == accessor) {
-      // Checks for a serial coupling scheme, where initial data is sent by second participant.
-      if (scheme.doesFirstStep() && getWaveformUsedOrder(dataName) == 0 && requiresInitialization && (_config.type == VALUE_SERIAL_EXPLICIT || _config.type == VALUE_SERIAL_IMPLICIT)) {
-        PRECICE_WARN("In serial coupling initialized data sent by the first participant will only be used, if waveform order > 0 is set. You can avoid this unnecessary data initialization by setting initialize=\"false\" in the the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" initialize=\"{}\" /> tag in the <coupling-scheme:... /> of your precice-config.xml.",
-                     dataName, meshName, from, to, requiresInitialization);
-      }
       scheme.addDataToSend(exchange.data, exchange.mesh, requiresInitialization);
     } else if (to == accessor) {
       // Checks for a serial coupling scheme, where initial data is received by first participant.
