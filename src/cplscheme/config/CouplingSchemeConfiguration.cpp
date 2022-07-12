@@ -1056,7 +1056,6 @@ void CouplingSchemeConfiguration::checkIfDataIsExchanged(
 
 int CouplingSchemeConfiguration::getWaveformUsedOrder(std::string dataName) const
 {
-  int maxUsedOrder = -1;
   for (const precice::impl::PtrParticipant &participant : _participantConfig->getParticipants()) {
     for (auto &dataContext : participant->readDataContexts()) {
       if (dataContext.getDataName() == dataName) {
@@ -1066,7 +1065,7 @@ int CouplingSchemeConfiguration::getWaveformUsedOrder(std::string dataName) cons
       }
     }
   }
-  return maxUsedOrder;
+  PRECICE_ERROR("Name \"{}\" not found. This is probably a bug. Please report it under https://github.com/precice/precice/issues/new/choose.", dataName);
 }
 
 void CouplingSchemeConfiguration::checkWaveformOrderReadData(
