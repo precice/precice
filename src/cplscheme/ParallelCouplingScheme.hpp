@@ -74,11 +74,6 @@ private:
     PRECICE_ASSERT(!doesFirstStep(), "Only the second participant should do the acceleration.");
     return getAllData();
   }
-
-  /**
-   * @brief Exchanges data, if it has to be initialized.
-   */
-  void exchangeInitialData() override;
 };
 
 } // namespace cplscheme
