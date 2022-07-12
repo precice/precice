@@ -119,6 +119,9 @@ public:
    */
   virtual void scaleConsistentMapping(int inputDataID, int outputDataID) const;
 
+  /// Returns if the mapping needs gradient data
+  bool requireGradient() const;
+
 protected:
   /// Returns pointer to input mesh.
   mesh::PtrMesh input() const;
@@ -131,9 +134,6 @@ protected:
 
   /// Sets the mesh requirement for the output mesh.
   void setOutputRequirement(MeshRequirement requirement);
-
-  /// Returns if the mapping needs gradient data
-  bool requireGradient() const;
 
   int getDimensions() const;
 
