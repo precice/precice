@@ -186,6 +186,9 @@ public:
    */
   void initialize(double startTime, int startTimeWindow) override final;
 
+  /// Receives result of first advance, if this has to happen inside SolverInterface::initialize(), see CouplingScheme.hpp
+  void receiveResultOfFirstAdvance() override final;
+
   /**
    * @brief Advances the coupling scheme.
    */
@@ -503,6 +506,15 @@ private:
    * @brief implements functionality for initialize in base class.
    */
   virtual void exchangeInitialData() = 0;
+
+  /**
+   * @brief implements functionality for receiveResultOfFirstAdvance
+   */
+  virtual void performReceiveOfFirstAdvance()
+  {
+    // noop by default. Will be overridden by child-coupling-schemes, if data has to be received here. See SerialCouplingScheme.
+    return;
+  }
 
   /// Functions needed for advance()
 

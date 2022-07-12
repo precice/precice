@@ -11,7 +11,7 @@ BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(Time)
 BOOST_AUTO_TEST_SUITE(Implicit)
-BOOST_AUTO_TEST_SUITE(ParallelCoupling)
+BOOST_AUTO_TEST_SUITE(SerialCoupling)
 
 /**
  * @brief Test to run a simple coupling with sampling from a zeroth order waveform; no subcycling.
@@ -60,25 +60,25 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingZero)
 
   int    nWindows   = 5; // perform 5 windows.
   int    timewindow = 0;
+  int    nSamples   = 4;
+  int    iterations = 0;
+  double time       = 0;
   int    timewindowCheckpoint;
-  double time = 0;
+  double timeCheckpoint;
+  double sampleDt; // dt relative to timestep start, where we are sampling
+  double readDt;   // dt relative to timestep start for readTime
+  double readTime; // time where we are reading from the reference solution
   if (precice.isActionRequired(precice::constants::actionWriteInitialData())) {
     writeData = writeFunction(time);
     precice.writeScalarData(writeDataID, vertexID, writeData);
     precice.markActionFulfilled(precice::constants::actionWriteInitialData());
   }
 
-  double maxDt     = precice.initialize();
-  double dt        = maxDt; // Timestep length desired by solver
-  double currentDt = dt;    // Timestep length used by solver
-  double timeCheckpoint;
+  double maxDt        = precice.initialize();
+  double dt           = maxDt; // Timestep length desired by solver
+  double currentDt    = dt;    // Timestep length used by solver
   double sampleDts[4] = {0.0, dt / 4.0, dt / 2.0, 3.0 * dt / 4.0};
   double readDts[4]   = {currentDt, currentDt, currentDt, currentDt};
-  int    nSamples     = 4;
-  int    iterations   = 0;
-  double sampleDt; // dt relative to timestep start, where we are sampling
-  double readDt;   // dt relative to timestep start for readTime
-  double readTime; // time where we are reading from the reference solution
 
   while (precice.isCouplingOngoing()) {
     if (precice.isActionRequired(precice::constants::actionWriteIterationCheckpoint())) {
@@ -87,17 +87,14 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingZero)
       iterations           = 0;
       precice.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
     }
-
     for (int j = 0; j < nSamples; j++) {
       sampleDt = sampleDts[j];
       readDt   = readDts[j];
       readTime = time + readDt;
-
       precice.readScalarData(readDataID, vertexID, sampleDt, readData);
-
-      if (iterations == 0) {
+      if (context.isNamed("SolverOne") && iterations == 0) { // Solver One receives initial data / old data in first iteration
         BOOST_TEST(readData == readFunction(time));
-      } else if (iterations > 0) {
+      } else if (context.isNamed("SolverTwo") || (context.isNamed("SolverOne") && iterations > 0)) {
         BOOST_TEST(readData == readFunction(readTime));
       } else {
         BOOST_TEST(false); // unreachable!
@@ -125,7 +122,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingZero)
 BOOST_AUTO_TEST_SUITE_END() // Integration
 BOOST_AUTO_TEST_SUITE_END() // Serial
 BOOST_AUTO_TEST_SUITE_END() // Time
-BOOST_AUTO_TEST_SUITE_END() // Explicit
-BOOST_AUTO_TEST_SUITE_END() // ParallelCoupling
+BOOST_AUTO_TEST_SUITE_END() // Implicit
+BOOST_AUTO_TEST_SUITE_END() // SerialCoupling
 
 #endif // PRECICE_NO_MPI
