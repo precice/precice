@@ -1050,18 +1050,18 @@ void CouplingSchemeConfiguration::checkIfDataIsExchanged(
                 dataName);
 }
 
-int CouplingSchemeConfiguration::getWaveformUsedOrder(std::string dataName) const
+int CouplingSchemeConfiguration::getWaveformUsedOrder(std::string readDataName) const
 {
   for (const precice::impl::PtrParticipant &participant : _participantConfig->getParticipants()) {
     for (auto &dataContext : participant->readDataContexts()) {
-      if (dataContext.getDataName() == dataName) {
+      if (dataContext.getDataName() == readDataName) {
         int usedOrder = dataContext.getInterpolationOrder();
         PRECICE_ASSERT(usedOrder >= 0); // ensure that usedOrder was set
         return usedOrder;
       }
     }
   }
-  PRECICE_ERROR("Name \"{}\" not found. This is probably a bug. Please report it under https://github.com/precice/precice/issues/new/choose.", dataName);
+  PRECICE_ERROR("Name \"{}\" not as read-data for this participant found. This is probably a bug in preCICE. Please report it under https://github.com/precice/precice/issues/new/choose.", dataName);
 }
 
 void CouplingSchemeConfiguration::checkWaveformOrderReadData(
