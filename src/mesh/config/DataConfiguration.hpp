@@ -50,11 +50,10 @@ public:
 private:
   mutable logging::Logger _log{"mesh::DataConfiguration"};
 
-  const std::string TAG               = "data";
-  const std::string ATTR_NAME         = "name";
-  const std::string VALUE_VECTOR      = "vector";
-  const std::string VALUE_SCALAR      = "scalar";
-  const std::string ATTR_HAS_GRADIENT = "gradient";
+  const std::string TAG          = "data";
+  const std::string ATTR_NAME    = "name";
+  const std::string VALUE_VECTOR = "vector";
+  const std::string VALUE_SCALAR = "scalar";
 
   /// Dimension of space.
   int _dimensions = 0;

@@ -15,14 +15,9 @@ DataConfiguration::DataConfiguration(xml::XMLTag &parent)
   auto attrName = XMLAttribute<std::string>(ATTR_NAME)
                       .setDocumentation("Unique name for the data set.");
 
-  auto attrHasGradient = makeXMLAttribute(ATTR_HAS_GRADIENT, false)
-                             .setDocumentation(
-                                 "If this attribute is set to \"on\", the data must have gradient values");
-
   XMLTag tagScalar(*this, VALUE_SCALAR, XMLTag::OCCUR_ARBITRARY, TAG);
   tagScalar.setDocumentation("Defines a scalar data set to be assigned to meshes.");
   tagScalar.addAttribute(attrName);
-  tagScalar.addAttribute(attrHasGradient);
   parent.addSubtag(tagScalar);
 
   XMLTag tagVector(*this, VALUE_VECTOR, XMLTag::OCCUR_ARBITRARY, TAG);
@@ -30,7 +25,6 @@ DataConfiguration::DataConfiguration(xml::XMLTag &parent)
                              "components of each data entry depends on the spatial dimensions set "
                              "in tag <solver-interface>.");
   tagVector.addAttribute(attrName);
-  tagVector.addAttribute(attrHasGradient);
   parent.addSubtag(tagVector);
 }
 
