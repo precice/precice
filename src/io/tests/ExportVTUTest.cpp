@@ -28,30 +28,36 @@ BOOST_AUTO_TEST_SUITE(VTUExport)
 BOOST_AUTO_TEST_CASE(ExportDataWithGradient)
 {
   PRECICE_TEST(1_rank)
-  int dimensions = 2;
-  // Create mesh to map from
-  mesh::Mesh    mesh("MyMesh", dimensions, testing::nextMeshID());
-  mesh::PtrData dataScalar = mesh.createData("dataScalar", 1, 0_dataID, true);
-  mesh::PtrData dataVector = mesh.createData("dataVector", 2, 1_dataID, true);
-  mesh.createVertex(Eigen::Vector2d::Constant(0.0));
-  mesh.createVertex(Eigen::Vector2d::Constant(1.0));
+  std::vector<int> dimensionVector{2, 3};
+  for (const int dimensions : dimensionVector) {
+    // Create mesh to map from
+    mesh::Mesh    mesh("MyMesh", dimensions, testing::nextMeshID());
+    mesh::PtrData dataScalar = mesh.createData("dataScalar", 1, 0_dataID, true);
+    mesh::PtrData dataVector = mesh.createData("dataVector", 2, 1_dataID, true);
+    mesh.createVertex(Eigen::Vector2d::Constant(0.0));
+    mesh.createVertex(Eigen::Vector2d::Constant(1.0));
 
-  // Create data
-  mesh.allocateDataValues();
-  Eigen::VectorXd &valuesScalar = dataScalar->values();
-  Eigen::VectorXd &valuesVector = dataVector->values();
-  valuesScalar << 1.0, 2.0;
-  valuesVector << 1.0, 2.0, 3.0, 4.0;
-
-  // Create corresponding gradient data (all gradient values = const = 1)
-  Eigen::MatrixXd &gradValuesScalar = dataScalar->gradientValues();
-  Eigen::MatrixXd &gradValuesVector = dataVector->gradientValues();
-  gradValuesScalar.setOnes();
-  gradValuesVector.setOnes();
-  io::ExportVTU exportVTU;
-  std::string   filename = "io-VTUExport-ExportDatawithGradient";
-  std::string   location = "";
-  exportVTU.doExport(filename, location, mesh);
+    // Create data
+    mesh.allocateDataValues();
+    Eigen::VectorXd &valuesScalar = dataScalar->values();
+    Eigen::VectorXd &valuesVector = dataVector->values();
+    if (dimensions == 2) {
+      valuesScalar << 1.0, 2.0;
+      valuesVector << 1.0, 2.0, 3.0, 4.0;
+    } else if (dimensions == 3) {
+      valuesScalar << 1.0, 2.0, 3.0;
+      valuesVector << 1.0, 2.0, 3.0, 4.0, 5.0, 6.0;
+    }
+    // Create corresponding gradient data (all gradient values = const = 1)
+    Eigen::MatrixXd &gradValuesScalar = dataScalar->gradientValues();
+    Eigen::MatrixXd &gradValuesVector = dataVector->gradientValues();
+    gradValuesScalar.setOnes();
+    gradValuesVector.setOnes();
+    io::ExportVTU exportVTU;
+    std::string   filename = "io-VTUExport-ExportDatawithGradient" + std::to_string(dimensions);
+    std::string   location = "";
+    exportVTU.doExport(filename, location, mesh);
+  }
 }
 
 BOOST_AUTO_TEST_CASE(ExportPolygonalMeshSerial)
