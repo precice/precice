@@ -25,7 +25,7 @@ using precice::testing::TestContext;
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
-BOOST_AUTO_TEST_SUITE(ParallelGradientMappingTests)
+BOOST_AUTO_TEST_SUITE(MappingNearestNeighborGradient)
 
 // Bidirectional test : Read: Vector & NNG - Write: Scalar & NN
 BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)

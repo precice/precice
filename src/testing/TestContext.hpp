@@ -6,7 +6,6 @@
 #include <utility>
 #include <vector>
 
-#include "m2n/M2N.hpp"
 #include "m2n/SharedPointer.hpp"
 #include "precice/types.hpp"
 #include "utils/Parallel.hpp"

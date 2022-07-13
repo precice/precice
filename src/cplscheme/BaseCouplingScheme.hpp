@@ -144,7 +144,12 @@ public:
 
   /**
    * @brief Function to check whether time window size is defined by coupling scheme.
-   * @returns true, if time window size is prescribed by the coupling scheme.
+   *
+   * There are two reasons why a scheme might have a time window size:
+   * 1) a fixed time window size is given in the scheme
+   * 2) the participant received the time window size from another participant in the scheme
+   *
+   * @returns true, if time window size is available.
    */
   bool hasTimeWindowSize() const override final;
 
