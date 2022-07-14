@@ -44,6 +44,9 @@ public:
   /// returns data value from previous iteration
   const Eigen::VectorXd previousIteration() const;
 
+  /// returns gradient data from previous iteration
+  const Eigen::MatrixXd &previousIterationGradients() const;
+
   /// get ID of this CouplingData's mesh. See Mesh::getID().
   int getMeshID();
 
@@ -83,6 +86,10 @@ private:
 
   /// Data values of previous iteration.
   Eigen::VectorXd _previousIteration;
+
+  /// Gradient data of previous iteration.
+  /// Lazy allocation: only used in case the corresponding data has gradients
+  Eigen::MatrixXd _previousIterationGradients;
 
   /// Data associated with this CouplingData
   mesh::PtrData _data;
