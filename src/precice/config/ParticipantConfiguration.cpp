@@ -548,7 +548,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
           dataContext.appendMappingConfiguration(mappingContext, meshContext);
           // Enable gradient data if required
           if (mappingContext.mapping->requireGradient() == true) {
-            mappingContext.mapping->getInputMesh()->data(dataContext.getDataName())->setDataGradientRequired();
+            mappingContext.enableGradientData(dataContext.getDataName());
           }
           dataFound = true;
         }
@@ -582,7 +582,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
           dataContext.appendMappingConfiguration(mappingContext, meshContext);
           // Enable gradient data if required
           if (mappingContext.mapping->requireGradient() == true) {
-            mappingContext.mapping->getInputMesh()->data(dataContext.getDataName())->setDataGradientRequired();
+            mappingContext.enableGradientData(dataContext.getDataName());
           }
           dataFound = true;
         }

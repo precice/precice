@@ -1,8 +1,8 @@
 #pragma once
 
+#include "mapping/Mapping.hpp"
 #include "mapping/SharedPointer.hpp"
 #include "mapping/config/MappingConfiguration.hpp"
-
 namespace precice {
 namespace impl {
 
@@ -25,6 +25,12 @@ struct MappingContext {
 
   /// True, if data has been mapped already.
   bool hasMappedData = false;
+
+  /// Enables gradient data in the corresponding 'from' data class
+  void enableGradientData(const std::string &dataName)
+  {
+    mapping->getInputMesh()->data(dataName)->setDataGradientRequired();
+  }
 };
 
 } // namespace impl
