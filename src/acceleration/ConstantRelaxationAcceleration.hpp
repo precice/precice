@@ -16,8 +16,6 @@ public:
       double           relaxation,
       std::vector<int> dataIDs);
 
-  virtual ~ConstantRelaxationAcceleration() {}
-
   virtual std::vector<int> getDataIDs() const
   {
     return _dataIDs;

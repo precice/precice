@@ -33,14 +33,23 @@ void ConstantRelaxationAcceleration::initialize(const DataMap &cplData)
 void ConstantRelaxationAcceleration::performAcceleration(const DataMap &cplData)
 {
   PRECICE_TRACE();
+
   double omega         = _relaxation;
   double oneMinusOmega = 1.0 - omega;
   for (const DataMap::value_type &pair : cplData) {
-    auto &      values    = pair.second->values();
-    const auto &oldValues = pair.second->previousIteration();
+    const auto  couplingData = pair.second;
+    auto &      values       = couplingData->values();
+    const auto &oldValues    = couplingData->previousIteration();
     values *= omega;
     values += oldValues * oneMinusOmega;
-    PRECICE_DEBUG("pp values {}", values);
+    PRECICE_DEBUG("accelerated values {}", values);
+    if (couplingData->hasGradient()) {
+      PRECICE_DEBUG("Accelerating the gradients");
+      auto &      gradients    = couplingData->gradientValues();
+      const auto &oldGradients = couplingData->previousIterationGradients();
+      gradients *= omega;
+      gradients += oldGradients * oneMinusOmega;
+    }
   }
 }
 
