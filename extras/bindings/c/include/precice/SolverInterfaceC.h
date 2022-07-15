@@ -433,11 +433,40 @@ void precicec_readScalarData(
     int     valueIndex,
     double *dataValue);
 
-/** 
+/// @copydoc precice::SolverInterface::isGradientDataRequired())
+void precicec_isGradientDataRequired(int dataID);
+
+/// @copydoc precice::SolverInterface::writeScalarGradientData()
+void precicec_writeScalarGradientData(
+    int           dataID,
+    int           valueIndex,
+    const double *gradientValues);
+
+/// @copydoc precice::SolverInterface::writeBlockScalarGradientData
+void precicec_writeBlockScalarGradientData(
+    int           dataID,
+    int           size,
+    const int *   valueIndices,
+    const double *gradientValues);
+
+/// @copydoc precice::SolverInterface::writeVectorGradientData()
+void precicec_writeVectorGradientData(
+    int           dataID,
+    int           valueIndex,
+    const double *gradientValues);
+
+/// @copydoc precice::SolverInterface::writeBlockVectorGradientData())
+void precicec_writeBlockVectorGradientData(
+    int           dataID,
+    int           size,
+    const int *   valueIndices,
+    const double *gradientValues);
+
+/**
  * @brief Returns information on the version of preCICE.
  *
  * Returns a semicolon-separated C-string containing:
- * 
+ *
  * 1) the version of preCICE
  * 2) the revision information of preCICE
  * 3) the configuration of preCICE including MPI, PETSC, PYTHON
