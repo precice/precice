@@ -85,16 +85,7 @@ void AitkenAcceleration::performAcceleration(
   PRECICE_DEBUG("AitkenFactor: {}", _aitkenFactor);
 
   // Perform relaxation with aitken factor
-  double omega         = _aitkenFactor;
-  double oneMinusOmega = 1.0 - omega;
-  for (const DataMap::value_type &pair : cplData) {
-    auto &      values    = pair.second->values();
-    const auto &oldValues = pair.second->previousIteration();
-    values *= omega;
-    for (int i = 0; i < values.size(); i++) {
-      values(i) += oldValues(i) * oneMinusOmega;
-    }
-  }
+  applyRelaxation(_aitkenFactor, cplData);
 
   // Store residuals for next iteration
   _residuals = residuals;
