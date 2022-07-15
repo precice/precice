@@ -548,6 +548,54 @@ void precicef_get_mesh_vertices_and_IDs_(
   impl->getMeshVerticesAndIDs(meshID, size, ids, coordinates);
 }
 
+void precicef_is_gradient_data_required_(const int *dataID, int *required)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  if (impl->isGradientDataRequired(*dataID)) {
+    *required = 1;
+  } else {
+    *required = 0;
+  }
+}
+
+void precicef_write_sgradient_data_(
+    const int *   dataID,
+    const int *   valueIndex,
+    const double *gradientValues)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->writeScalarGradientData(*dataID, *valueIndex, gradientValues);
+}
+
+void precicef_write_bsgradient_data_(
+    const int *   dataID,
+    const int *   size,
+    const int *   valueIndices,
+    const double *gradientValues)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->writeBlockScalarGradientData(*dataID, *size, valueIndices, gradientValues);
+}
+
+void precicef_write_vgradient_data_(
+    const int *   dataID,
+    const int *   valueIndex,
+    const double *gradientValues)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->writeVectorGradientData(*dataID, *valueIndex, gradientValues);
+}
+
+void precicef_write_bvgradient_data_(
+    const int *   dataID,
+    const int *   size,
+    const int *   valueIndices,
+    const double *gradientValues)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->writeBlockVectorGradientData(*dataID, *size, valueIndices, gradientValues);
+}
+
 #ifdef __GNUC__
 #pragma GCC diagnostic pop
 #endif
