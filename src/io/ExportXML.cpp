@@ -212,7 +212,6 @@ void ExportXML::exportData(
   }
   outFile << "\n            </DataArray>\n";
 
-  const int spaceDim = mesh.getDimensions();
   for (const mesh::PtrData &data : mesh.data()) { // Plot vertex data
     Eigen::VectorXd &values         = data->values();
     int              dataDimensions = data->getDimensions();
