@@ -981,7 +981,7 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
       scheme.addDataToSend(exchange.data, exchange.mesh, requiresInitialization);
     } else if (to == accessor) {
       // Checks for a serial coupling scheme, where initial data is received by first participant.
-      if (!scheme.doesFirstStep() && requiresInitialization && (_config.type == VALUE_SERIAL_EXPLICIT || _config.type == VALUE_SERIAL_IMPLICIT) && getWaveformUsedOrder(dataName) == 0) // the order of the statements is crucial! getWaveformUsedOrder should be called last, because it may run into an error, if the data is initialized, but not defined as read data (for example Integration/Serial/AitkenAcceleration)
+      if (!scheme.doesFirstStep() && requiresInitialization && (_config.type == VALUE_SERIAL_EXPLICIT || _config.type == VALUE_SERIAL_IMPLICIT) && getWaveformUsedOrder(accessor, dataName) == 0) // the order of the statements is crucial! getWaveformUsedOrder should be called last, because it may run into an error, if the data is initialized, but not defined as read data (for example Integration/Serial/AitkenAcceleration)
       {
         PRECICE_WARN("In serial coupling, initialized data received by the second participant will only be used if a waveform order > 0 is set. You can avoid unnecessary data initialization by setting initialize=\"false\" in the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" initialize=\"{}\" /> tag in the <coupling-scheme:... /> of your precice-config.xml. If you want to use the initial data, please consider increasing the waveform-order in the <read-data name=\"{}\" mesh=\"{}\" /> tag in the <participant ... /> named \"{}\". ",
                      dataName, meshName, from, to, requiresInitialization, dataName, meshName, to);
@@ -1050,18 +1050,13 @@ void CouplingSchemeConfiguration::checkIfDataIsExchanged(
                 dataName);
 }
 
-int CouplingSchemeConfiguration::getWaveformUsedOrder(std::string readDataName) const
+int CouplingSchemeConfiguration::getWaveformUsedOrder(std::string participantName, std::string readDataName) const
 {
-  for (const precice::impl::PtrParticipant &participant : _participantConfig->getParticipants()) {
-    for (auto &dataContext : participant->readDataContexts()) {
-      if (dataContext.getDataName() == readDataName) {
-        int usedOrder = dataContext.getInterpolationOrder();
-        PRECICE_ASSERT(usedOrder >= 0); // ensure that usedOrder was set
-        return usedOrder;
-      }
-    }
-  }
-  PRECICE_ERROR("Name \"{}\" not as read-data for this participant found. This is probably a bug in preCICE. Please report it under https://github.com/precice/precice/issues/new/choose.", readDataName);
+  auto participant = _participantConfig->getParticipant(participantName);
+  auto dataContext = participant->readDataContext(readDataName);
+  int  usedOrder   = dataContext.getInterpolationOrder();
+  PRECICE_ASSERT(usedOrder >= 0); // ensure that usedOrder was set
+  return usedOrder;
 }
 
 void CouplingSchemeConfiguration::checkWaveformOrderReadData(
