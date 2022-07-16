@@ -156,7 +156,7 @@ MappingConfiguration::MappingConfiguration(
 
   auto attrTiming = makeXMLAttribute(ATTR_TIMING, VALUE_TIMING_INITIAL)
                         .setDocumentation("This allows to defer the mapping of the data to advance or to a manual call to mapReadDataTo and mapWriteDataFrom.")
-                        .setOptions({VALUE_TIMING_INITIAL, VALUE_TIMING_ON_ADVANCE, VALUE_TIMING_ON_DEMAND});
+                        .setOptions({VALUE_TIMING_INITIAL, VALUE_TIMING_ON_ADVANCE});
 
   // Add tags that all mappings use and add to parent tag
   for (XMLTag &tag : tags) {
@@ -497,8 +497,6 @@ MappingConfiguration::Timing MappingConfiguration::getTiming(const std::string &
     return INITIAL;
   } else if (timing == VALUE_TIMING_ON_ADVANCE) {
     return ON_ADVANCE;
-  } else if (timing == VALUE_TIMING_ON_DEMAND) {
-    return ON_DEMAND;
   }
   // We should never reach this point
   PRECICE_UNREACHABLE("Unknown timing value \"{}\".", timing);

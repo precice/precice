@@ -46,8 +46,7 @@ public:
 
   enum Timing {
     INITIAL,
-    ON_ADVANCE,
-    ON_DEMAND
+    ON_ADVANCE
   };
 
   /// Configuration data for one mapping.
@@ -149,7 +148,6 @@ private:
 
   const std::string VALUE_TIMING_INITIAL    = "initial";
   const std::string VALUE_TIMING_ON_ADVANCE = "onadvance";
-  const std::string VALUE_TIMING_ON_DEMAND  = "ondemand";
 
   mesh::PtrMeshConfiguration _meshConfig;
 

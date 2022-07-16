@@ -5,12 +5,6 @@
   <mesh name="TestMeshThree" />
 
   <mapping:nearest-projection
-    direction="write"
-    from="TestMesh"
-    to="TestMeshThree"
-    constraint="conservative"
-    timing="ondemand" />
-  <mapping:nearest-projection
     direction="read"
     from="TestMeshThree"
     to="TestMeshTwo"
