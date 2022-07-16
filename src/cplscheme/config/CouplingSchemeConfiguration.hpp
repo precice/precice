@@ -270,7 +270,7 @@ private:
   void checkIfDataIsExchanged(
       DataID dataID) const;
 
-  // get waveform order for participant's read-data of given name
+  /// Get waveform order for read data of given name. Raises an error if data name is not found in the read data of this participant.
   int getWaveformUsedOrder(std::string participantName, std::string readDataName) const;
 
   void checkWaveformOrderReadData(
