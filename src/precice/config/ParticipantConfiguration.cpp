@@ -399,6 +399,16 @@ ParticipantConfiguration::getParticipants() const
   return _participants;
 }
 
+const impl::PtrParticipant ParticipantConfiguration::getParticipant(std::string participantName) const
+{
+  for (const precice::impl::PtrParticipant &participant : _participants) {
+    if (participant->getName() == participantName) {
+      return participant;
+    }
+  }
+  PRECICE_ASSERT(false, "Did not find participant of given name");
+}
+
 partition::ReceivedPartition::GeometricFilter ParticipantConfiguration::getGeoFilter(const std::string &geoFilter) const
 {
   if (geoFilter == VALUE_FILTER_ON_MASTER || geoFilter == VALUE_FILTER_ON_PRIMARY_RANK) {
