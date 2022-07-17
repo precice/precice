@@ -144,6 +144,16 @@ ReadDataContext &Participant::readDataContext(DataID dataID)
   return it->second;
 }
 
+ReadDataContext &Participant::readDataContext(std::string dataName)
+{
+  for (auto &dataContext : readDataContexts()) {
+    if (dataContext.getDataName() == dataName) {
+      return dataContext;
+    }
+  }
+  PRECICE_ASSERT(false, "ReadData with given name not found.");
+}
+
 const WriteDataContext &Participant::writeDataContext(DataID dataID) const
 {
   auto it = _writeDataContexts.find(dataID);
