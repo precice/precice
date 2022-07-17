@@ -84,6 +84,7 @@ target_sources(testprecice
     tests/serial/explicit/helpers.hpp
     tests/serial/initialize-data/Explicit.cpp
     tests/serial/initialize-data/Implicit.cpp
+    tests/serial/initialize-data/ImplicitBoth.cpp
     tests/serial/initialize-data/ReadMapping.cpp
     tests/serial/initialize-data/WriteMapping.cpp
     tests/serial/initialize-data/helpers.cpp
