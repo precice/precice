@@ -461,7 +461,7 @@ const char *precicec_actionReadIterationCheckpoint();
 ///@{
 
 /// @copydoc precice::SolverInterface::isGradientDataRequired())
-bool precicec_isGradientDataRequired(int dataID);
+int precicec_isGradientDataRequired(int dataID);
 
 /// @copydoc precice::SolverInterface::writeScalarGradientData()
 void precicec_writeScalarGradientData(
