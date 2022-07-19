@@ -256,6 +256,56 @@ private:
   double _r_inv;
 };
 
+class CompactPolynomialC2 : public CompactSupportBase,
+                            public DefiniteFunction<true> {
+public:
+  explicit CompactPolynomialC2(double supportRadius)
+  {
+    _r_inv = 1. / supportRadius;
+  }
+
+  double getSupportRadius() const
+  {
+    return 1. / _r_inv;
+  }
+
+  inline double evaluate(double radius) const
+  {
+    double p = radius * _r_inv;
+    if (p >= 1)
+      return 0.0;
+    return math::pow_int<4>(1.0 - p) * (4 * p + 1);
+  }
+
+private:
+  double _r_inv;
+};
+
+class CompactPolynomialC4 : public CompactSupportBase,
+                            public DefiniteFunction<true> {
+public:
+  explicit CompactPolynomialC4(double supportRadius)
+  {
+    _r_inv = 1. / supportRadius;
+  }
+
+  double getSupportRadius() const
+  {
+    return 1. / _r_inv;
+  }
+
+  inline double evaluate(double radius) const
+  {
+    double p = radius * _r_inv;
+    if (p >= 1)
+      return 0.0;
+    return math::pow_int<6>(1.0 - p) * (35 * math::pow_int<2>(p) + 18 * p + 3);
+  }
+
+private:
+  double _r_inv;
+};
+
 /**
  * @brief Radial basis function with compact support.
  *
@@ -293,6 +343,80 @@ public:
 private:
   logging::Logger _log{"mapping::CompactPolynomialC6"};
 
+  double _r_inv;
+};
+
+class CompactWuC0 : public CompactSupportBase,
+                    public DefiniteFunction<true> {
+public:
+  explicit CompactWuC0(double supportRadius)
+  {
+    _r_inv = 1. / supportRadius;
+  }
+
+  double getSupportRadius() const
+  {
+    return 1. / _r_inv;
+  }
+
+  inline double evaluate(double radius) const
+  {
+    double p = radius * _r_inv;
+    if (p >= 1)
+      return 0.0;
+    return math::pow_int<4>(1.0 - p) * (16 + 29 * p + 20 * math::pow_int<2>(p) + 5 * math::pow_int<3>(p));
+  }
+
+private:
+  double _r_inv;
+};
+
+class CompactWuC2 : public CompactSupportBase,
+                    public DefiniteFunction<true> {
+public:
+  explicit CompactWuC2(double supportRadius)
+  {
+    _r_inv = 1. / supportRadius;
+  }
+
+  double getSupportRadius() const
+  {
+    return 1. / _r_inv;
+  }
+
+  inline double evaluate(double radius) const
+  {
+    double p = radius * _r_inv;
+    if (p >= 1)
+      return 0.0;
+    return math::pow_int<5>(1.0 - p) * (8 + 40 * p + 48 * math::pow_int<2>(p) + 25 * math::pow_int<3>(p) + 5 * math::pow_int<4>(p));
+  }
+
+private:
+  double _r_inv;
+};
+class CompactWuC4 : public CompactSupportBase,
+                    public DefiniteFunction<true> {
+public:
+  explicit CompactWuC4(double supportRadius)
+  {
+    _r_inv = 1. / supportRadius;
+  }
+
+  double getSupportRadius() const
+  {
+    return 1. / _r_inv;
+  }
+
+  inline double evaluate(double radius) const
+  {
+    double p = radius * _r_inv;
+    if (p >= 1)
+      return 0.0;
+    return math::pow_int<6>(1.0 - p) * (6 + 36 * p + 82 * math::pow_int<2>(p) + 72 * math::pow_int<3>(p) + 30 * math::pow_int<4>(p) + 5 * math::pow_int<5>(p));
+  }
+
+private:
   double _r_inv;
 };
 
