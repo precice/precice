@@ -11,8 +11,8 @@ namespace mapping {
 Mapping::Mapping(
     Constraint constraint,
     int        dimensions,
-    bool       requireGradient)
-    : _requireGradient(requireGradient),
+    bool       requiresGradientData)
+    : _requiresGradientData(requiresGradientData),
       _constraint(constraint),
       _inputRequirement(MeshRequirement::UNDEFINED),
       _outputRequirement(MeshRequirement::UNDEFINED),
@@ -82,9 +82,9 @@ int Mapping::getDimensions() const
   return _dimensions;
 }
 
-bool Mapping::requireGradient() const
+bool Mapping::requiresGradientData() const
 {
-  return _requireGradient;
+  return _requiresGradientData;
 }
 
 void Mapping::map(int inputDataID,

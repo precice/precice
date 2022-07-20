@@ -33,8 +33,8 @@ BOOST_AUTO_TEST_CASE(ExportDataWithGradient2D)
   mesh::Mesh    mesh("MyMesh", dimensions, testing::nextMeshID());
   mesh::PtrData dataScalar = mesh.createData("dataScalar", 1, 0_dataID);
   mesh::PtrData dataVector = mesh.createData("dataVector", dimensions, 1_dataID);
-  dataScalar->setDataGradientRequired();
-  dataVector->setDataGradientRequired();
+  dataScalar->requireDataGradient();
+  dataVector->requireDataGradient();
   mesh.createVertex(Eigen::Vector2d::Constant(0.0));
   mesh.createVertex(Eigen::Vector2d::Constant(1.0));
 
@@ -64,8 +64,8 @@ BOOST_AUTO_TEST_CASE(ExportDataWithGradient3D)
   mesh::Mesh    mesh("MyMesh", dimensions, testing::nextMeshID());
   mesh::PtrData dataScalar = mesh.createData("dataScalar", 1, 0_dataID);
   mesh::PtrData dataVector = mesh.createData("dataVector", dimensions, 1_dataID);
-  dataScalar->setDataGradientRequired();
-  dataVector->setDataGradientRequired();
+  dataScalar->requireDataGradient();
+  dataVector->requireDataGradient();
   mesh.createVertex(Eigen::Vector3d::Constant(0.0));
   mesh.createVertex(Eigen::Vector3d::Constant(1.0));
 

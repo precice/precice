@@ -547,8 +547,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                         participant->getName(), dataContext.getMeshName(), dataContext.getMeshName());
           dataContext.appendMappingConfiguration(mappingContext, meshContext);
           // Enable gradient data if required
-          if (mappingContext.mapping->requireGradient() == true) {
-            mappingContext.enableGradientData(dataContext.getDataName());
+          if (mappingContext.mapping->requiresGradientData() == true) {
+            mappingContext.requireGradientData(dataContext.getDataName());
           }
           dataFound = true;
         }
@@ -581,8 +581,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                         participant->getName(), dataContext.getMeshName(), dataContext.getMeshName());
           dataContext.appendMappingConfiguration(mappingContext, meshContext);
           // Enable gradient data if required
-          if (mappingContext.mapping->requireGradient() == true) {
-            mappingContext.enableGradientData(dataContext.getDataName());
+          if (mappingContext.mapping->requiresGradientData() == true) {
+            mappingContext.requireGradientData(dataContext.getDataName());
           }
           dataFound = true;
         }

@@ -100,7 +100,7 @@ private:
   /// Dimensionality of one data value.
   int _dimensions;
 
-  /// Spacial Dimension of one element -> number of rows (only 2, 3 allowed for 2D, 3D).
+  /// Spatial Dimension of one element -> number of rows (only 2, 3 allowed for 2D, 3D).
   int _spatialDimensions;
 
   /// Whether gradient data is available or not

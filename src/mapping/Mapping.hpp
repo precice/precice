@@ -47,7 +47,7 @@ public:
   };
 
   /// Constructor, takes mapping constraint.
-  Mapping(Constraint constraint, int dimensions, bool requireGradient = false);
+  Mapping(Constraint constraint, int dimensions, bool requiresGradientData = false);
 
   Mapping &operator=(Mapping &&) = delete;
 
@@ -141,7 +141,7 @@ protected:
   bool _hasComputedMapping = false;
 
   /// Flag if gradient data is required for the mapping
-  bool _requireGradient;
+  bool _requiresGradientData;
 
   /**
    * @brief Maps data using a conservative constraint

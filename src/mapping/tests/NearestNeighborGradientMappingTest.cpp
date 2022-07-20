@@ -26,8 +26,8 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
   PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
   PtrData inDataScalar = inMesh->createData("InDataScalar", 1, 0_dataID);
   PtrData inDataVector = inMesh->createData("InDataVector", 2, 1_dataID);
-  inDataScalar->setDataGradientRequired();
-  inDataVector->setDataGradientRequired();
+  inDataScalar->requireDataGradient();
+  inDataVector->requireDataGradient();
   int     inDataScalarID = inDataScalar->getID();
   int     inDataVectorID = inDataVector->getID();
   Vertex &inVertex0      = inMesh->createVertex(Eigen::Vector2d::Constant(0.0));
@@ -117,8 +117,8 @@ BOOST_AUTO_TEST_CASE(ConsistentGradientNotConstant)
   PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
   PtrData inDataScalar = inMesh->createData("InDataScalar", 1, 0_dataID);
   PtrData inDataVector = inMesh->createData("InDataVector", 2, 1_dataID);
-  inDataScalar->setDataGradientRequired();
-  inDataVector->setDataGradientRequired();
+  inDataScalar->requireDataGradient();
+  inDataVector->requireDataGradient();
   int     inDataScalarID = inDataScalar->getID();
   int     inDataVectorID = inDataVector->getID();
   Vertex &inVertex0      = inMesh->createVertex(Eigen::Vector2d::Constant(0.0));
@@ -149,8 +149,8 @@ BOOST_AUTO_TEST_CASE(ConsistentGradientNotConstant)
   PtrData outDataVector   = outMesh->createData("OutDataVector", 2, 3_dataID);
   int     outDataScalarID = outDataScalar->getID();
   int     outDataVectorID = outDataVector->getID();
-  Vertex &outVertex0      = outMesh->createVertex(Eigen::Vector2d::Constant(0.1));
-  Vertex &outVertex1      = outMesh->createVertex(Eigen::Vector2d::Constant(1.1));
+  outMesh->createVertex(Eigen::Vector2d::Constant(0.1));
+  outMesh->createVertex(Eigen::Vector2d::Constant(1.1));
   outMesh->allocateDataValues();
 
   // Setup mapping with mapping coordinates and geometry used
