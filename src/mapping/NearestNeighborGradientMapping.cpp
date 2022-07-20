@@ -59,9 +59,8 @@ void NearestNeighborGradientMapping::mapConsistent(DataID inputDataID, DataID ou
   PRECICE_TRACE(inputDataID, outputDataID);
   precice::utils::Event e("map." + mappingNameShort + ".mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
-  PRECICE_CHECK(input()->data(inputDataID)->hasGradient(), "Mesh \"{}\" does not contain gradient data. Using Nearest Neighbor Gradient requires gradient data for all vertices. "
-                                                           "Check if hasGradient flag in the Data object was successfully initialized.",
-                input()->getName());
+  PRECICE_ASSERT(input()->data(inputDataID)->hasGradient(), "Mesh \"{}\" does not contain gradient data. Using Nearest Neighbor Gradient requires gradient data.",
+                 input()->getName());
 
   /// Check if input has gradient data, else send Error
   if (input()->vertices().empty()) {
