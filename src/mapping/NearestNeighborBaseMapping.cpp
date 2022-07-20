@@ -20,10 +20,10 @@ namespace mapping {
 NearestNeighborBaseMapping::NearestNeighborBaseMapping(
     Constraint  constraint,
     int         dimensions,
-    bool        requireGradient,
+    bool        requiresGradientData,
     std::string mappingName,
     std::string mappingNameShort)
-    : Mapping(constraint, dimensions, requireGradient),
+    : Mapping(constraint, dimensions, requiresGradientData),
       mappingName(mappingName),
       mappingNameShort(mappingNameShort)
 {
@@ -86,7 +86,7 @@ void NearestNeighborBaseMapping::clear()
   _vertexIndices.clear();
   _hasComputedMapping = false;
 
-  if (requireGradient())
+  if (requiresGradientData())
     _offsetsMatched.clear();
 
   if (getConstraint() == CONSISTENT) {

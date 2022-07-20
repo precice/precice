@@ -2,7 +2,7 @@
 <precice-configuration>
   <solver-interface dimensions="2" experimental="on">
     <data:scalar name="Data1" />
-    <data:vector name="Data2" gradient="on" />
+    <data:vector name="Data2" />
 
     <mesh name="MeshOne">
       <use-data name="Data1" />

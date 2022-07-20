@@ -176,8 +176,7 @@ public:
   /// Create only data for vertex
   PtrData &createData(const std::string &name,
                       int                dimension,
-                      DataID             id,
-                      bool               withGradient = false);
+                      DataID             id);
 
   /// Allows access to all data
   const DataContainer &data() const;
