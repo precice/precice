@@ -22,12 +22,12 @@ Data::Data(
     std::string name,
     DataID      id,
     int         dimensions,
-    int         spacialDimensions)
+    int         spatialDimensions)
     : _values(),
       _name(std::move(name)),
       _id(id),
       _dimensions(dimensions),
-      _spatialDimensions(spacialDimensions)
+      _spatialDimensions(spatialDimensions)
 {
   PRECICE_ASSERT(dimensions > 0, dimensions);
 }
@@ -75,7 +75,7 @@ bool Data::hasGradient() const
   return _hasGradient;
 }
 
-void Data::setDataGradientRequired()
+void Data::requireDataGradient()
 {
   _hasGradient = true;
 };

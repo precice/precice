@@ -27,7 +27,7 @@ struct MappingContext {
   bool hasMappedData = false;
 
   /// Enables gradient data in the corresponding 'from' data class
-  void enableGradientData(const std::string &dataName)
+  void requireGradientData(const std::string &dataName)
   {
     mapping->getInputMesh()->data(dataName)->setDataGradientRequired();
   }

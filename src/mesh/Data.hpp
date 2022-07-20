@@ -49,7 +49,7 @@ public:
       std::string name,
       DataID      id,
       int         dimension,
-      int         spacialDimensions = -1);
+      int         spatialDimensions = -1);
 
   /// Returns a reference to the data values.
   Eigen::VectorXd &values();
@@ -76,7 +76,7 @@ public:
   bool hasGradient() const;
 
   /// Set the additional requirement of gradient data
-  void setDataGradientRequired();
+  void requireDataGradient();
 
   /// Returns the mesh dimension (i.e., number of rows) of one gradient data value .
   int getSpatialDimensions() const;
@@ -103,7 +103,7 @@ private:
   /// Spacial Dimension of one element -> number of rows (only 2, 3 allowed for 2D, 3D).
   int _spatialDimensions;
 
-  /// Flag if the gradient data is available
+  /// Whether gradient data is available or not
   bool _hasGradient = false;
 };
 

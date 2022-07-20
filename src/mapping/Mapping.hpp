@@ -119,8 +119,8 @@ public:
    */
   virtual void scaleConsistentMapping(int inputDataID, int outputDataID) const;
 
-  /// Returns if the mapping needs gradient data
-  bool requireGradient() const;
+  /// Returns whether the mapping requires gradient data
+  bool requiresGradientData() const;
 
 protected:
   /// Returns pointer to input mesh.
