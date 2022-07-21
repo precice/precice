@@ -64,6 +64,9 @@ protected:
   /// Checks if all dataIDs are contained in cplData
   void checkDataIDs(const DataMap &cplData) const;
 
+  /// Concatenates all coupling data involved into a single vector
+  void concatenateCouplingData(const DataMap &cplData, const std::vector<DataID> &dataIDs, Eigen::VectorXd &targetValues, Eigen::VectorXd &targetOldValues) const;
+
   /// performs a relaxation given a relaxation factor omega
   void applyRelaxation(double omega, const DataMap &cplData) const;
 };

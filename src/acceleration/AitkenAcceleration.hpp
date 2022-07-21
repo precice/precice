@@ -47,6 +47,8 @@ private:
   int _iterationCounter = 0;
 
   Eigen::VectorXd _residuals;
+  Eigen::VectorXd _values;
+  Eigen::VectorXd _oldValues;
 
   /// Preconditioner for data vector if multiple data sets are used.
   impl::PtrPreconditioner _preconditioner;

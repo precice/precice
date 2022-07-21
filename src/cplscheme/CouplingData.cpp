@@ -80,7 +80,7 @@ void CouplingData::storeIteration()
   }
 }
 
-const Eigen::VectorXd CouplingData::previousIteration() const
+const Eigen::VectorXd &CouplingData::previousIteration() const
 {
   return _previousIteration;
 }

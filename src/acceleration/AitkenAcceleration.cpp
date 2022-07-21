@@ -5,6 +5,7 @@
 #include <limits>
 #include <map>
 #include <memory>
+#include <numeric>
 #include <ostream>
 #include <utility>
 
@@ -36,17 +37,12 @@ AitkenAcceleration::AitkenAcceleration(double                  initialRelaxation
 void AitkenAcceleration::initialize(const DataMap &cplData)
 {
   checkDataIDs(cplData);
-  size_t entries = 0;
-  if (_dataIDs.size() == 1) {
-    entries = cplData.at(_dataIDs.at(0))->getSize();
-  } else {
-    PRECICE_ASSERT(_dataIDs.size() == 2);
-    entries = cplData.at(_dataIDs.at(0))->getSize() +
-              cplData.at(_dataIDs.at(1))->getSize();
-  }
-  double          initializer = std::numeric_limits<double>::max();
-  Eigen::VectorXd toAppend    = Eigen::VectorXd::Constant(entries, initializer);
-  utils::append(_residuals, toAppend);
+  // Accumulate number of entries
+  Eigen::Index entries = std::accumulate(_dataIDs.cbegin(), _dataIDs.cend(), static_cast<Eigen::Index>(0), [&cplData](auto &res, const auto &d) { return res + cplData.at(d)->getSize(); });
+  // Allocate memory
+  _residuals = Eigen::VectorXd::Zero(entries);
+  _values    = Eigen::VectorXd::Zero(entries);
+  _oldValues = Eigen::VectorXd::Zero(entries);
 }
 
 void AitkenAcceleration::performAcceleration(
@@ -57,16 +53,11 @@ void AitkenAcceleration::performAcceleration(
   // Compute aitken relaxation factor
   PRECICE_ASSERT(utils::contained(*_dataIDs.begin(), cplData));
 
-  Eigen::VectorXd values;
-  Eigen::VectorXd oldValues;
-  for (int id : _dataIDs) {
-    utils::append(values, cplData.at(id)->values());
-    utils::append(oldValues, Eigen::VectorXd(cplData.at(id)->previousIteration()));
-  }
+  concatenateCouplingData(cplData, _dataIDs, _values, _oldValues);
 
   // Compute current residuals
-  Eigen::VectorXd residuals = values;
-  residuals -= oldValues;
+  Eigen::VectorXd residuals = _values;
+  residuals -= _oldValues;
 
   // Compute residual deltas and temporarily store it in _residuals
   Eigen::VectorXd residualDeltas = _residuals;
