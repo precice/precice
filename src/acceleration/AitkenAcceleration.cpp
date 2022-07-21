@@ -40,9 +40,9 @@ void AitkenAcceleration::initialize(const DataMap &cplData)
   // Accumulate number of entries
   Eigen::Index entries = std::accumulate(_dataIDs.cbegin(), _dataIDs.cend(), static_cast<Eigen::Index>(0), [&cplData](auto &res, const auto &d) { return res + cplData.at(d)->getSize(); });
   // Allocate memory
-  _residuals = Eigen::VectorXd::Zero(entries);
-  _values    = Eigen::VectorXd::Zero(entries);
-  _oldValues = Eigen::VectorXd::Zero(entries);
+  _oldResiduals = Eigen::VectorXd::Zero(entries);
+  _values       = Eigen::VectorXd::Zero(entries);
+  _oldValues    = Eigen::VectorXd::Zero(entries);
 }
 
 void AitkenAcceleration::performAcceleration(
@@ -56,20 +56,17 @@ void AitkenAcceleration::performAcceleration(
   concatenateCouplingData(cplData, _dataIDs, _values, _oldValues);
 
   // Compute current residuals
-  Eigen::VectorXd residuals = _values;
-  residuals -= _oldValues;
+  auto residuals = _values - _oldValues;
 
-  // Compute residual deltas and temporarily store it in _residuals
-  Eigen::VectorXd residualDeltas = _residuals;
-  residualDeltas *= -1.0;
-  residualDeltas += residuals;
+  // Compute residual deltas and temporarily store it in _oldResiduals
+  Eigen::VectorXd residualDeltas = residuals - _oldResiduals;
 
   // Select/compute aitken factor depending on current iteration count
   if (_iterationCounter == 0) {
     _aitkenFactor = math::sign(_aitkenFactor) * std::min(_initialRelaxation, std::abs(_aitkenFactor));
   } else {
     // compute fraction of aitken factor with residuals and residual deltas
-    double nominator   = utils::IntraComm::dot(_residuals, residualDeltas);
+    double nominator   = utils::IntraComm::dot(_oldResiduals, residualDeltas);
     double denominator = utils::IntraComm::dot(residualDeltas, residualDeltas);
     _aitkenFactor      = -_aitkenFactor * (nominator / denominator);
   }
@@ -80,7 +77,7 @@ void AitkenAcceleration::performAcceleration(
   applyRelaxation(_aitkenFactor, cplData);
 
   // Store residuals for next iteration
-  _residuals = residuals;
+  _oldResiduals = residuals;
 
   _iterationCounter++;
 }
@@ -89,7 +86,7 @@ void AitkenAcceleration::iterationsConverged(
     const DataMap &cplData)
 {
   _iterationCounter = 0;
-  _residuals        = Eigen::VectorXd::Constant(_residuals.size(), std::numeric_limits<double>::max());
+  _oldResiduals     = Eigen::VectorXd::Constant(_oldResiduals.size(), std::numeric_limits<double>::max());
 }
 
 } // namespace precice::acceleration

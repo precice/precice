@@ -46,7 +46,7 @@ private:
 
   int _iterationCounter = 0;
 
-  Eigen::VectorXd _residuals;
+  Eigen::VectorXd _oldResiduals;
   Eigen::VectorXd _values;
   Eigen::VectorXd _oldValues;
 
