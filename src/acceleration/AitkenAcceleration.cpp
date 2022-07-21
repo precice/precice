@@ -38,11 +38,18 @@ void AitkenAcceleration::initialize(const DataMap &cplData)
 {
   checkDataIDs(cplData);
   // Accumulate number of entries
-  Eigen::Index entries = std::accumulate(_dataIDs.cbegin(), _dataIDs.cend(), static_cast<Eigen::Index>(0), [&cplData](auto &res, const auto &d) { return res + cplData.at(d)->getSize(); });
+  // Size for each subvector needed for preconditioner
+  std::vector<std::size_t> subVectorSizes;
+  // Gather sizes
+  std::transform(_dataIDs.cbegin(), _dataIDs.cend(), std::back_inserter(subVectorSizes), [&cplData](const auto &d) { return cplData.at(d)->getSize(); });
+  // The accumulated sum
+  Eigen::Index entries = std::accumulate(subVectorSizes.cbegin(), subVectorSizes.cend(), static_cast<Eigen::Index>(0));
+
   // Allocate memory
   _oldResiduals = Eigen::VectorXd::Zero(entries);
   _values       = Eigen::VectorXd::Zero(entries);
   _oldValues    = Eigen::VectorXd::Zero(entries);
+  _preconditioner->initialize(subVectorSizes);
 }
 
 void AitkenAcceleration::performAcceleration(
@@ -55,16 +62,21 @@ void AitkenAcceleration::performAcceleration(
 
   concatenateCouplingData(cplData, _dataIDs, _values, _oldValues);
 
-  // Compute current residuals
+  // Compute current residual = values - oldValues
   auto residuals = _values - _oldValues;
 
-  // Compute residual deltas and temporarily store it in _oldResiduals
+  // Compute residual deltas (= residuals - oldResiduals) and store it in _oldResiduals
   Eigen::VectorXd residualDeltas = residuals - _oldResiduals;
 
   // Select/compute aitken factor depending on current iteration count
   if (_iterationCounter == 0) {
+    // preconditioner not necessary
     _aitkenFactor = math::sign(_aitkenFactor) * std::min(_initialRelaxation, std::abs(_aitkenFactor));
   } else {
+    // Todo: make this conditional for dataIDs > 1
+    _preconditioner->update(false, _values, residuals);
+    _preconditioner->apply(residualDeltas);
+    _preconditioner->apply(_oldResiduals);
     // compute fraction of aitken factor with residuals and residual deltas
     double nominator   = utils::IntraComm::dot(_oldResiduals, residualDeltas);
     double denominator = utils::IntraComm::dot(residualDeltas, residualDeltas);
@@ -77,7 +89,7 @@ void AitkenAcceleration::performAcceleration(
   applyRelaxation(_aitkenFactor, cplData);
 
   // Store residuals for next iteration
-  _oldResiduals = residuals;
+  _oldResiduals = std::move(residuals);
 
   _iterationCounter++;
 }
@@ -86,7 +98,8 @@ void AitkenAcceleration::iterationsConverged(
     const DataMap &cplData)
 {
   _iterationCounter = 0;
-  _oldResiduals     = Eigen::VectorXd::Constant(_oldResiduals.size(), std::numeric_limits<double>::max());
+  _preconditioner->update(true, _values, _oldResiduals);
+  _oldResiduals = Eigen::VectorXd::Constant(_oldResiduals.size(), std::numeric_limits<double>::max());
 }
 
 } // namespace precice::acceleration

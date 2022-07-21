@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include "acceleration/Acceleration.hpp"
+#include "acceleration/impl/Preconditioner.hpp"
 #include "acceleration/impl/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 

@@ -242,7 +242,7 @@ void AccelerationConfiguration::xmlEndTagCallback(
   if (callingTag.getNamespace() == TAG) {
 
     //create preconditioner
-    if (callingTag.getName() == VALUE_IQNILS || callingTag.getName() == VALUE_MVQN) {
+    if (callingTag.getName() == VALUE_IQNILS || callingTag.getName() == VALUE_MVQN || callingTag.getName() == VALUE_AITKEN) {
 
       // if imvj restart-mode is of type RS-SVD, max number of non-const preconditioned time windows is limited by the chunksize
       if (callingTag.getName() == VALUE_MVQN && _config.imvjRestartType > 0)
