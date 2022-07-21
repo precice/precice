@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include "acceleration/Acceleration.hpp"
+#include "acceleration/impl/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 
 namespace precice {
@@ -14,8 +15,9 @@ namespace acceleration {
 class AitkenAcceleration : public Acceleration {
 public:
   AitkenAcceleration(
-      double           initialRelaxationFactor,
-      std::vector<int> dataIDs);
+      double                  initialRelaxationFactor,
+      std::vector<int>        dataIDs,
+      impl::PtrPreconditioner preconditioner);
 
   virtual ~AitkenAcceleration() {}
 
@@ -45,6 +47,9 @@ private:
   int _iterationCounter = 0;
 
   Eigen::VectorXd _residuals;
+
+  /// Preconditioner for data vector if multiple data sets are used.
+  impl::PtrPreconditioner _preconditioner;
 };
 } // namespace acceleration
 } // namespace precice

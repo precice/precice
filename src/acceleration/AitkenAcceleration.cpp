@@ -18,11 +18,13 @@
 
 namespace precice::acceleration {
 
-AitkenAcceleration::AitkenAcceleration(double           initialRelaxation,
-                                       std::vector<int> dataIDs)
+AitkenAcceleration::AitkenAcceleration(double                  initialRelaxation,
+                                       std::vector<int>        dataIDs,
+                                       impl::PtrPreconditioner preconditioner)
     : _initialRelaxation(initialRelaxation),
       _dataIDs(std::move(dataIDs)),
-      _aitkenFactor(initialRelaxation)
+      _aitkenFactor(initialRelaxation),
+      _preconditioner(std::move(preconditioner))
 {
   PRECICE_CHECK((_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),
                 "Initial relaxation factor for Aitken acceleration has to "
