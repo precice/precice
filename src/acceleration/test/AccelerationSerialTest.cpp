@@ -267,7 +267,7 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradient)
   // //init displacements
   displacements->values().resize(4);
   displacements->values() << 1.0, 2.0, 3.0, 4.0;
-  displacements->setDataGradientRequired();
+  displacements->requireDataGradient();
   displacements->gradientValues().resize(dim, 4);
   for (unsigned int r = 0; r < dim; ++r) {
     for (unsigned int c = 0; c < 4; ++c)
@@ -276,7 +276,7 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradient)
   // //init forces
   forces->values().resize(4);
   forces->values() << 0.2, 0.2, 0.2, 0.2;
-  forces->setDataGradientRequired();
+  forces->requireDataGradient();
   forces->gradientValues().resize(dim, 4);
   forces->gradientValues().setConstant(-2);
 
