@@ -84,7 +84,7 @@ void BaseQNAcceleration::initialize(
   }
 
   if (std::any_of(cplData.cbegin(), cplData.cend(), [](const auto &p) { return p.second->hasGradient(); })) {
-    PRECICE_WARN("Gradient data required by the configured mapping is not yet accelerated with quasi-Newton acceleration schemes, which might lead to numerical issues. "
+    PRECICE_WARN("Gradient data, which is required by at least one of the configured data mappings, is not yet compatible with quasi-Newton acceleration. This combination might lead to numerical issues. "
                  "Consider switching to a different acceleration scheme or a different data mapping scheme.");
   }
 
