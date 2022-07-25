@@ -13,7 +13,7 @@ Mapping::Mapping(
     int                   dimensions,
     bool                  requireGradient,
     Mapping::CouplingKind couplingKind)
-    : _requireGradient(requireGradient),
+    : _requireGradientData(requiresGradientData),
       _constraint(constraint),
       _inputRequirement(MeshRequirement::UNDEFINED),
       _outputRequirement(MeshRequirement::UNDEFINED),
@@ -85,9 +85,9 @@ int Mapping::getDimensions() const
   return _dimensions;
 }
 
-bool Mapping::requireGradient() const
+bool Mapping::requiresGradientData() const
 {
-  return _requireGradient;
+  return _requiresGradientData;
 }
 
 void Mapping::map(int inputDataID,

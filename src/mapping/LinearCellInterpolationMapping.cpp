@@ -15,7 +15,6 @@ LinearCellInterpolationMapping::LinearCellInterpolationMapping(
     int        dimensions)
     : BarycentricBaseMapping(constraint, dimensions, Mapping::CouplingKind::VOLUME)
 {
-  PRECICE_CHECK(getDimensions() == 2, "Volume mapping not available in 3D.");
   if (constraint == CONSISTENT) {
     setInputRequirement(Mapping::MeshRequirement::FULL);
     setOutputRequirement(Mapping::MeshRequirement::VERTEX);
@@ -36,7 +35,6 @@ void LinearCellInterpolationMapping::computeMapping()
   PRECICE_TRACE(input()->vertices().size(), output()->vertices().size());
   const std::string     baseEvent = "map.vci.computeMapping.From" + input()->getName() + "To" + output()->getName();
   precice::utils::Event e(baseEvent, precice::syncMode);
-  PRECICE_ASSERT(getDimensions() == 2, "Volume mapping not available in 3D.");
 
   // Setup Direction of Mapping
   mesh::PtrMesh origins, searchSpace;
@@ -61,8 +59,12 @@ void LinearCellInterpolationMapping::computeMapping()
       missingConnectivity = true;
     }
   } else {
-    // TODO, shouldn't be reached
-    PRECICE_ERROR("Linear Cell interpolation in 3D not implemented yet. This line should be unreachable");
+    if (!fVertices.empty() && searchSpace->tetrahedra().empty()) {
+      PRECICE_WARN("3D Mesh \"{}\" does not contain tetrahedra. "
+                   "Linear cell interpolation falls back to nearest projection mapping.",
+                   searchSpace->getName());
+      missingConnectivity = true;
+    }
   }
 
   // Amount of nearest elements to fetch for detailed comparison.

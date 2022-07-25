@@ -27,8 +27,10 @@ BOOST_AUTO_TEST_CASE(ExportDataWithGradient)
   int dimensions = 2;
   // Create mesh to map from
   mesh::Mesh    mesh("MyMesh", dimensions, testing::nextMeshID());
-  mesh::PtrData dataScalar = mesh.createData("dataScalar", 1, 0_dataID, true);
-  mesh::PtrData dataVector = mesh.createData("dataVector", 2, 1_dataID, true);
+  mesh::PtrData dataScalar = mesh.createData("dataScalar", 1, 0_dataID);
+  mesh::PtrData dataVector = mesh.createData("dataVector", 2, 1_dataID);
+  dataScalar->requireDataGradient();
+  dataVector->requireDataGradient();
   mesh.createVertex(Eigen::Vector2d::Constant(0.0));
   mesh.createVertex(Eigen::Vector2d::Constant(1.0));
 

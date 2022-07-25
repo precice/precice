@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
   <solver-interface dimensions="3" experimental="on">
-    <data:vector name="DataOne" gradient="on" />
+    <data:vector name="DataOne" />
     <data:vector name="DataTwo" />
 
     <mesh name="MeshOne">

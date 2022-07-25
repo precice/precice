@@ -60,7 +60,7 @@ public:
   };
 
   /// Constructor, takes mapping constraint.
-  Mapping(Constraint constraint, int dimensions, bool requireGradient = false, CouplingKind couplingKind = CouplingKind::SURFACE);
+  Mapping(Constraint constraint, int dimensions, bool requiresGradientData = false, CouplingKind couplingKind = CouplingKind::SURFACE);
 
   Mapping &operator=(Mapping &&) = delete;
 
@@ -132,6 +132,9 @@ public:
    */
   virtual void scaleConsistentMapping(int inputDataID, int outputDataID) const;
 
+  /// Returns whether the mapping requires gradient data
+  bool requiresGradientData() const;
+
 protected:
   /// Returns pointer to input mesh.
   mesh::PtrMesh input() const;
@@ -145,16 +148,13 @@ protected:
   /// Sets the mesh requirement for the output mesh.
   void setOutputRequirement(MeshRequirement requirement);
 
-  /// Returns if the mapping needs gradient data
-  bool requireGradient() const;
-
   int getDimensions() const;
 
   /// Flag to indicate whether computeMapping() has been called.
   bool _hasComputedMapping = false;
 
   /// Flag if gradient data is required for the mapping
-  bool _requireGradient;
+  bool _requiresGradientData;
 
   /**
    * @brief Maps data using a conservative constraint

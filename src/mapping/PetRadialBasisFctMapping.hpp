@@ -650,6 +650,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inp
       }
 
       VecScale(a, -1);
+      // in = Q * a + in
       MatMultAdd(_matrixQ, a, in, in); // Subtract the polynomial from the input values
     }
 
@@ -695,7 +696,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inp
     }
 
     if (_polynomial == Polynomial::SEPARATE) {
-      ierr = VecScale(a, -1); // scale it back to add the polynomial
+      // scale it back to add the polynomial
+      ierr = VecScale(a, -1);
+      // out = V * a + out
       ierr = MatMultAdd(_matrixV, a, out, out);
       CHKERRV(ierr);
     }
@@ -754,7 +757,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(DataID i
 
     if (_polynomial == Polynomial::SEPARATE) {
       auto epsilon = petsc::Vector::allocate(_matrixV, "epsilon", petsc::Vector::RIGHT);
-      ierr         = MatMultTranspose(_matrixV, in, epsilon);
+      // epsilon = V^T * in
+      ierr = MatMultTranspose(_matrixV, in, epsilon);
       CHKERRV(ierr);
       auto eta = petsc::Vector::allocate(_matrixA, "eta", petsc::Vector::RIGHT);
       ierr     = MatMultTranspose(_matrixA, in, eta);
@@ -763,7 +767,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(DataID i
       _solver.solve(eta, mu);
       VecScale(epsilon, -1);
       auto tau = petsc::Vector::allocate(_matrixQ, "tau", petsc::Vector::RIGHT);
-      ierr     = MatMultTransposeAdd(_matrixQ, mu, epsilon, tau);
+      // tau = Q^T * mu + epsilon
+      ierr = MatMultTransposeAdd(_matrixQ, mu, epsilon, tau);
       CHKERRV(ierr);
       auto sigma = petsc::Vector::allocate(_matrixQ, "sigma", petsc::Vector::LEFT);
 
@@ -788,7 +793,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(DataID i
                       this->input()->getName(), this->output()->getName(), _QRsolver.summaryFor(tau));
         break;
       }
-
+      // out = alpha * sigma + mu.
       VecWAXPY(out, -1, sigma, mu);
     } else {
       ierr = MatMultTranspose(_matrixA, in, au);

@@ -438,12 +438,15 @@ double SolverInterfaceImpl::advance(
   _couplingScheme->addComputedTime(computedTimestepLength);
 
   if (_couplingScheme->hasTimeWindowSize()) {
-    timeWindowSize = _couplingScheme->getTimeWindowSize();
+    timeWindowSize         = _couplingScheme->getTimeWindowSize();
+    timeWindowComputedPart = timeWindowSize - _couplingScheme->getThisTimeWindowRemainder();
   } else {
-    timeWindowSize = computedTimestepLength;
+    // use time window size provided to advance, only allowed, if this participant sets the time window size for the other participant
+    timeWindowSize         = computedTimestepLength;
+    timeWindowComputedPart = computedTimestepLength;
   }
-  timeWindowComputedPart = timeWindowSize - _couplingScheme->getThisTimeWindowRemainder();
-  time                   = _couplingScheme->getTime();
+
+  time = _couplingScheme->getTime();
 
   if (_couplingScheme->willDataBeExchanged(0.0)) {
     performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
@@ -1498,8 +1501,15 @@ void SolverInterfaceImpl::readBlockVectorDataImpl(
   PRECICE_CHECK(_state != State::Finalized, "readBlockVectorData(...) cannot be called after finalize().");
   PRECICE_CHECK(relativeReadTime <= _couplingScheme->getThisTimeWindowRemainder(), "readBlockVectorData(...) cannot sample data outside of current time window.");
   PRECICE_CHECK(relativeReadTime >= 0, "readBlockVectorData(...) cannot sample data before the current time.");
-  double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
-  double readTime      = timeStepStart + relativeReadTime;
+  double normalizedReadTime;
+  if (_couplingScheme->hasTimeWindowSize()) {
+    double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
+    double readTime      = timeStepStart + relativeReadTime;
+    normalizedReadTime   = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
+  } else {                                                                  // if this participant defines time window size through participant-first method
+    PRECICE_CHECK(relativeReadTime == _couplingScheme->getThisTimeWindowRemainder(), "Waveform relaxation is not allowed for solver that sets the time step size");
+    normalizedReadTime = 1; // by default read at end of window.
+  }
   PRECICE_REQUIRE_DATA_READ(dataID);
   if (size == 0)
     return;
@@ -1510,9 +1520,8 @@ void SolverInterfaceImpl::readBlockVectorDataImpl(
                 "You cannot call readBlockVectorData on the scalar data type \"{0}\". "
                 "Use readBlockScalarData or change the data type for \"{0}\" to vector.",
                 context.getDataName());
-  const auto normalizedReadTime = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
-  const auto valuesInternal     = context.sampleWaveformAt(normalizedReadTime);
-  const auto vertexCount        = valuesInternal.size() / context.getDataDimensions();
+  const auto valuesInternal = context.sampleWaveformAt(normalizedReadTime);
+  const auto vertexCount    = valuesInternal.size() / context.getDataDimensions();
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
     PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
@@ -1561,8 +1570,15 @@ void SolverInterfaceImpl::readVectorDataImpl(
   PRECICE_CHECK(_state != State::Finalized, "readVectorData(...) cannot be called after finalize().");
   PRECICE_CHECK(relativeReadTime <= _couplingScheme->getThisTimeWindowRemainder(), "readVectorData(...) cannot sample data outside of current time window.");
   PRECICE_CHECK(relativeReadTime >= 0, "readVectorData(...) cannot sample data before the current time.");
-  double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
-  double readTime      = timeStepStart + relativeReadTime;
+  double normalizedReadTime;
+  if (_couplingScheme->hasTimeWindowSize()) {
+    double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
+    double readTime      = timeStepStart + relativeReadTime;
+    normalizedReadTime   = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
+  } else {                                                                  // if this participant defines time window size through participant-first method
+    PRECICE_CHECK(relativeReadTime == _couplingScheme->getThisTimeWindowRemainder(), "Waveform relaxation is not allowed for solver that sets the time step size");
+    normalizedReadTime = 1; // by default read at end of window.
+  }
   PRECICE_REQUIRE_DATA_READ(dataID);
   ReadDataContext &context = _accessor->readDataContext(dataID);
   PRECICE_CHECK(valueIndex >= -1,
@@ -1572,9 +1588,8 @@ void SolverInterfaceImpl::readVectorDataImpl(
   PRECICE_CHECK(context.getDataDimensions() == _dimensions,
                 "You cannot call readVectorData on the scalar data type \"{0}\". Use readScalarData or change the data type for \"{0}\" to vector.",
                 context.getDataName());
-  const auto normalizedReadTime = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
-  const auto values             = context.sampleWaveformAt(normalizedReadTime);
-  const auto vertexCount        = values.size() / context.getDataDimensions();
+  const auto values      = context.sampleWaveformAt(normalizedReadTime);
+  const auto vertexCount = values.size() / context.getDataDimensions();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                 "Cannot read data \"{}\" to invalid Vertex ID ({}). "
                 "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
@@ -1624,8 +1639,15 @@ void SolverInterfaceImpl::readBlockScalarDataImpl(
   PRECICE_CHECK(_state != State::Finalized, "readBlockScalarData(...) cannot be called after finalize().");
   PRECICE_CHECK(relativeReadTime <= _couplingScheme->getThisTimeWindowRemainder(), "readBlockScalarData(...) cannot sample data outside of current time window.");
   PRECICE_CHECK(relativeReadTime >= 0, "readBlockScalarData(...) cannot sample data before the current time.");
-  double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
-  double readTime      = timeStepStart + relativeReadTime;
+  double normalizedReadTime;
+  if (_couplingScheme->hasTimeWindowSize()) {
+    double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
+    double readTime      = timeStepStart + relativeReadTime;
+    normalizedReadTime   = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
+  } else {                                                                  // if this participant defines time window size through participant-first method
+    PRECICE_CHECK(relativeReadTime == _couplingScheme->getThisTimeWindowRemainder(), "Waveform relaxation is not allowed for solver that sets the time step size");
+    normalizedReadTime = 1; // by default read at end of window.
+  }
   PRECICE_REQUIRE_DATA_READ(dataID);
   if (size == 0)
     return;
@@ -1636,9 +1658,8 @@ void SolverInterfaceImpl::readBlockScalarDataImpl(
                 "You cannot call readBlockScalarData on the vector data type \"{0}\". "
                 "Use readBlockVectorData or change the data type for \"{0}\" to scalar.",
                 context.getDataName());
-  const auto normalizedReadTime = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
-  const auto valuesInternal     = context.sampleWaveformAt(normalizedReadTime);
-  const auto vertexCount        = valuesInternal.size();
+  const auto valuesInternal = context.sampleWaveformAt(normalizedReadTime);
+  const auto vertexCount    = valuesInternal.size();
 
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
@@ -1684,8 +1705,15 @@ void SolverInterfaceImpl::readScalarDataImpl(
   PRECICE_CHECK(_state != State::Finalized, "readScalarData(...) cannot be called after finalize().");
   PRECICE_CHECK(relativeReadTime <= _couplingScheme->getThisTimeWindowRemainder(), "readScalarData(...) cannot sample data outside of current time window.");
   PRECICE_CHECK(relativeReadTime >= 0, "readScalarData(...) cannot sample data before the current time.");
-  double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
-  double readTime      = timeStepStart + relativeReadTime;
+  double normalizedReadTime;
+  if (_couplingScheme->hasTimeWindowSize()) {
+    double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
+    double readTime      = timeStepStart + relativeReadTime;
+    normalizedReadTime   = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
+  } else {                                                                  // if this participant defines time window size through participant-first method
+    PRECICE_CHECK(relativeReadTime == _couplingScheme->getThisTimeWindowRemainder(), "Waveform relaxation is not allowed for solver that sets the time step size");
+    normalizedReadTime = 1; // by default read at end of window.
+  }
   PRECICE_REQUIRE_DATA_READ(dataID);
   ReadDataContext &context = _accessor->readDataContext(dataID);
   PRECICE_CHECK(valueIndex >= -1,
@@ -1696,9 +1724,9 @@ void SolverInterfaceImpl::readScalarDataImpl(
                 "You cannot call readScalarData on the vector data type \"{0}\". "
                 "Use readVectorData or change the data type for \"{0}\" to scalar.",
                 context.getDataName());
-  const auto normalizedReadTime = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
-  const auto values             = context.sampleWaveformAt(normalizedReadTime);
-  const auto vertexCount        = values.size();
+
+  const auto values      = context.sampleWaveformAt(normalizedReadTime);
+  const auto vertexCount = values.size();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                 "Cannot read data \"{}\" from invalid Vertex ID ({}). "
                 "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
