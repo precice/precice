@@ -558,6 +558,28 @@ void precicef_set_quad_we_(
 
 /**
  * Fortran syntax:
+ * precicef_set_tetrahedron(
+ *   INTEGER meshID,
+ *   INTEGER firstVertexID,
+ *   INTEGER secondVertexID,
+ *   INTEGER thirdVertexID,
+ *   INTEGER fourthVertexID )
+ *
+ * IN:  meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID
+ * OUT: -
+ *
+ * @copydoc precice::SolverInterface::setMeshTetrahedron()
+ *
+ */
+void precicef_set_tetrahedron(
+    const int *meshID,
+    const int *firstVertexID,
+    const int *secondVertexID,
+    const int *thirdVertexID,
+    const int *fourthVertexID);
+
+/**
+ * Fortran syntax:
  * precicef_write_bvdata(
  *   INTEGER dataID,
  *   INTEGER size,

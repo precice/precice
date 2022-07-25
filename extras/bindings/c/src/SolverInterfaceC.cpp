@@ -297,6 +297,17 @@ void precicec_setMeshQuadWithEdges(
   impl->setMeshQuadWithEdges(meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
 }
 
+void precicec_setMeshTetrahedron(
+    int meshID,
+    int firstVertexID,
+    int secondVertexID,
+    int thirdVertexID,
+    int fourthVertexID)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->setMeshTetrahedron(meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
+}
+
 void precicec_writeBlockVectorData(
     int           dataID,
     int           size,
