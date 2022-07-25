@@ -354,7 +354,7 @@ void SocketCommunication::send(std::string const &itemToSend, Rank rankReceiver)
     asio::write(*_sockets[rankReceiver], asio::buffer(&size, sizeof(size_t)));
     asio::write(*_sockets[rankReceiver], asio::buffer(itemToSend.c_str(), size));
   } catch (std::exception &e) {
-    PRECICE_ERROR("Send using sockets failed with system error: {}", e.what());
+    PRECICE_ERROR("Send using sockets failed with system error: {}. This often means that another participant exited with an error (look there).", e.what());
   }
 }
 
@@ -370,7 +370,7 @@ void SocketCommunication::send(precice::span<const int> itemsToSend, Rank rankRe
   try {
     asio::write(*_sockets[rankReceiver], asio::buffer(itemsToSend.data(), itemsToSend.size() * sizeof(int)));
   } catch (std::exception &e) {
-    PRECICE_ERROR("Send using sockets failed with system error: {}", e.what());
+    PRECICE_ERROR("Send using sockets failed with system error: {}. This often means that another participant exited with an error (look there).", e.what());
   }
 }
 
@@ -431,7 +431,7 @@ void SocketCommunication::send(precice::span<const double> itemsToSend, Rank ran
   try {
     asio::write(*_sockets[rankReceiver], asio::buffer(itemsToSend.data(), itemsToSend.size() * sizeof(double)));
   } catch (std::exception &e) {
-    PRECICE_ERROR("Send using sockets failed with system error: {}", e.what());
+    PRECICE_ERROR("Send using sockets failed with system error: {}. This often means that another participant exited with an error (look there).", e.what());
   }
 }
 
@@ -466,7 +466,7 @@ void SocketCommunication::send(double itemToSend, Rank rankReceiver)
   try {
     asio::write(*_sockets[rankReceiver], asio::buffer(&itemToSend, sizeof(double)));
   } catch (std::exception &e) {
-    PRECICE_ERROR("Send using sockets failed with system error: {}", e.what());
+    PRECICE_ERROR("Send using sockets failed with system error: {}. This often means that another participant exited with an error (look there).", e.what());
   }
 }
 
@@ -487,7 +487,7 @@ void SocketCommunication::send(int itemToSend, Rank rankReceiver)
   try {
     asio::write(*_sockets[rankReceiver], asio::buffer(&itemToSend, sizeof(int)));
   } catch (std::exception &e) {
-    PRECICE_ERROR("Send using sockets failed with system error: {}", e.what());
+    PRECICE_ERROR("Send using sockets failed with system error: {}. This often means that another participant exited with an error (look there).", e.what());
   }
 }
 
@@ -508,7 +508,7 @@ void SocketCommunication::send(bool itemToSend, Rank rankReceiver)
   try {
     asio::write(*_sockets[rankReceiver], asio::buffer(&itemToSend, sizeof(bool)));
   } catch (std::exception &e) {
-    PRECICE_ERROR("Send using sockets failed with system error: {}", e.what());
+    PRECICE_ERROR("Send using sockets failed with system error: {}. This often means that another participant exited with an error (look there).", e.what());
   }
 }
 
@@ -548,7 +548,7 @@ void SocketCommunication::receive(std::string &itemToReceive, Rank rankSender)
     asio::read(*_sockets[rankSender], asio::buffer(msg.data(), size));
     itemToReceive = msg.data();
   } catch (std::exception &e) {
-    PRECICE_ERROR("Receive using sockets failed with system error: {}", e.what());
+    PRECICE_ERROR("Receive using sockets failed with system error: {}. This often means that another participant exited with an error (look there).", e.what());
   }
 }
 
@@ -564,7 +564,7 @@ void SocketCommunication::receive(precice::span<int> itemsToReceive, Rank rankSe
   try {
     asio::read(*_sockets[rankSender], asio::buffer(itemsToReceive.data(), itemsToReceive.size() * sizeof(int)));
   } catch (std::exception &e) {
-    PRECICE_ERROR("Receive using sockets failed with system error: {}", e.what());
+    PRECICE_ERROR("Receive using sockets failed with system error: {}. This often means that another participant exited with an error (look there).", e.what());
   }
 }
 
@@ -580,7 +580,7 @@ void SocketCommunication::receive(precice::span<double> itemsToReceive, Rank ran
   try {
     asio::read(*_sockets[rankSender], asio::buffer(itemsToReceive.data(), itemsToReceive.size() * sizeof(double)));
   } catch (std::exception &e) {
-    PRECICE_ERROR("Receive using sockets failed with system error: {}", e.what());
+    PRECICE_ERROR("Receive using sockets failed with system error: {}. This often means that another participant exited with an error (look there).", e.what());
   }
 }
 
@@ -603,7 +603,7 @@ PtrRequest SocketCommunication::aReceive(precice::span<double> itemsToReceive,
                        std::static_pointer_cast<SocketRequest>(request)->complete();
                      });
   } catch (std::exception &e) {
-    PRECICE_ERROR("Receive using sockets failed with system error: {}", e.what());
+    PRECICE_ERROR("Receive using sockets failed with system error: {}. This often means that another participant exited with an error (look there).", e.what());
   }
 
   return request;
@@ -621,7 +621,7 @@ void SocketCommunication::receive(double &itemToReceive, Rank rankSender)
   try {
     asio::read(*_sockets[rankSender], asio::buffer(&itemToReceive, sizeof(double)));
   } catch (std::exception &e) {
-    PRECICE_ERROR("Receive using sockets failed with system error: {}", e.what());
+    PRECICE_ERROR("Receive using sockets failed with system error: {}. This often means that another participant exited with an error (look there).", e.what());
   }
 }
 
@@ -642,7 +642,7 @@ void SocketCommunication::receive(int &itemToReceive, Rank rankSender)
   try {
     asio::read(*_sockets[rankSender], asio::buffer(&itemToReceive, sizeof(int)));
   } catch (std::exception &e) {
-    PRECICE_ERROR("Receive using sockets failed with system error: {}", e.what());
+    PRECICE_ERROR("Receive using sockets failed with system error: {}. This often means that another participant exited with an error (look there).", e.what());
   }
 }
 
@@ -665,7 +665,7 @@ PtrRequest SocketCommunication::aReceive(int &itemToReceive, Rank rankSender)
                        std::static_pointer_cast<SocketRequest>(request)->complete();
                      });
   } catch (std::exception &e) {
-    PRECICE_ERROR("Receive using sockets failed with system error: {}", e.what());
+    PRECICE_ERROR("Receive using sockets failed with system error: {}. This often means that another participant exited with an error (look there).", e.what());
   }
 
   return request;
@@ -683,7 +683,7 @@ void SocketCommunication::receive(bool &itemToReceive, Rank rankSender)
   try {
     asio::read(*_sockets[rankSender], asio::buffer(&itemToReceive, sizeof(bool)));
   } catch (std::exception &e) {
-    PRECICE_ERROR("Receive using sockets failed with system error: {}", e.what());
+    PRECICE_ERROR("Receive using sockets failed with system error: {}. This often means that another participant exited with an error (look there).", e.what());
   }
 }
 
@@ -705,7 +705,7 @@ PtrRequest SocketCommunication::aReceive(bool &itemToReceive, Rank rankSender)
                        std::static_pointer_cast<SocketRequest>(request)->complete();
                      });
   } catch (std::exception &e) {
-    PRECICE_ERROR("Receive using sockets failed with system error: {}", e.what());
+    PRECICE_ERROR("Receive using sockets failed with system error: {}. This often means that another participant exited with an error (look there).", e.what());
   }
 
   return request;
