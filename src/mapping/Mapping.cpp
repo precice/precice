@@ -11,9 +11,9 @@ namespace mapping {
 Mapping::Mapping(
     Constraint            constraint,
     int                   dimensions,
-    bool                  requireGradient,
+    bool                  requiresGradientData,
     Mapping::CouplingKind couplingKind)
-    : _requireGradientData(requiresGradientData),
+    : _requiresGradientData(requiresGradientData),
       _constraint(constraint),
       _inputRequirement(MeshRequirement::UNDEFINED),
       _outputRequirement(MeshRequirement::UNDEFINED),
