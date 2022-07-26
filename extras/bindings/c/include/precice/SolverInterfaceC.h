@@ -303,6 +303,22 @@ void precicec_setMeshQuadWithEdges(
     int thirdVertexID,
     int fourthVertexID);
 
+/**
+  * @brief Sets mesh tetrahedron from vertex IDs.
+  *
+  * @param[in] meshID ID of the mesh to add the Tetra to
+  * @param[in] firstVertexID ID of the first vertex of the Tetra
+  * @param[in] secondVertexID ID of the second vertex of the Tetra
+  * @param[in] thirdVertexID ID of the third vertex of the Tetra
+  * @param[in] fourthVertexID ID of the fourth vertex of the Tetra
+ */
+void precicec_setMeshTetrahedron(
+    int meshID,
+    int firstVertexID,
+    int secondVertexID,
+    int thirdVertexID,
+    int fourthVertexID);
+
 ///@}
 
 ///@name Data Access
