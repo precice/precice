@@ -7,7 +7,7 @@ name: Build and Test
 on:
   push:
     branches:
-      - master
+      - main
       - develop
   pull_request:
     paths:
