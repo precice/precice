@@ -16,6 +16,7 @@
 #include "precice/SolverInterface.hpp"
 #include "precice/impl/DataContext.hpp"
 #include "precice/impl/SharedPointer.hpp"
+#include "precice/impl/versions.hpp"
 #include "precice/types.hpp"
 #include "utils/MultiLock.hpp"
 
