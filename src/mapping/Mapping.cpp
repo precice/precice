@@ -106,7 +106,7 @@ void Mapping::map(int inputDataID,
     mapConservative(inputDataID, outputDataID);
   } else if (hasConstraint(CONSISTENT)) {
     mapConsistent(inputDataID, outputDataID);
-  } else if (hasConstraint(SCALEDCONSISTENT)) {
+  } else if (hasConstraint(SCALEDCONSISTENT) || hasConstraint(SCALEDCONSISTENT_VOLUME)) {
     mapConsistent(inputDataID, outputDataID);
     scaleConsistentMapping(inputDataID, outputDataID);
   } else {
