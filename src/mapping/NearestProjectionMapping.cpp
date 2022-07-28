@@ -40,6 +40,8 @@ NearestProjectionMapping::NearestProjectionMapping(
     setInputRequirement(Mapping::MeshRequirement::FULL);
     setOutputRequirement(Mapping::MeshRequirement::FULL);
   }
+
+  PRECICE_CHECK(constraint != SCALEDCONSISTENT_VOLUME, "Nearest-projection can't be used with volume version of the scaled-consistent mapping. Use scaled-consistent instead.");
 }
 
 namespace {
