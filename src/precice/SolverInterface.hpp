@@ -192,7 +192,7 @@ public:
   /**
    * @brief Checks if new data to be read is available.
    *
-   * @deprecated Unclear use case and conflicting with waveform relaxation feature.
+   * @deprecated Removed to simplify extension to waveform relaxation.
    *
    * @returns whether new data is available to be read.
    *
