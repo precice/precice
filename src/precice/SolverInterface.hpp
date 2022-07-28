@@ -214,7 +214,7 @@ public:
   /**
    * @brief Checks if new data has to be written before calling advance().
    *
-   * @deprecated Unclear use case and conflicting with waveform relaxation feature.
+   * @deprecated Removed to simplify extension to waveform relaxation.
    *
    * @param[in] computedTimestepLength Length of timestep used by the solver.
    *
