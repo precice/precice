@@ -106,12 +106,12 @@ void Mapping::map(int inputDataID,
     mapConservative(inputDataID, outputDataID);
   } else if (hasConstraint(CONSISTENT)) {
     mapConsistent(inputDataID, outputDataID);
-  } else if (hasConstraint(SCALEDCONSISTENT)) {
+  } else if (hasConstraint(SCALED_CONSISTENT)) {
     mapConsistent(inputDataID, outputDataID);
-    scaleConsistentMapping(inputDataID, outputDataID, SCALEDCONSISTENT);
-  } else if (hasConstraint(SCALEDCONSISTENT_VOLUME)) {
+    scaleConsistentMapping(inputDataID, outputDataID, SCALED_CONSISTENT);
+  } else if (hasConstraint(SCALED_CONSISTENT_VOLUME)) {
     mapConsistent(inputDataID, outputDataID);
-    scaleConsistentMapping(inputDataID, outputDataID, SCALEDCONSISTENT_VOLUME);
+    scaleConsistentMapping(inputDataID, outputDataID, SCALED_CONSISTENT_VOLUME);
   } else {
     PRECICE_UNREACHABLE("Unknown mapping constraint.")
   }
@@ -119,8 +119,8 @@ void Mapping::map(int inputDataID,
 
 void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID, Mapping::Constraint constraint) const
 {
-  PRECICE_ASSERT(hasConstraint(SCALEDCONSISTENT) || hasConstraint(SCALEDCONSISTENT_VOLUME));
-  bool            volumeMode = hasConstraint(SCALEDCONSISTENT_VOLUME);
+  PRECICE_ASSERT(hasConstraint(SCALED_CONSISTENT) || hasConstraint(SCALED_CONSISTENT_VOLUME));
+  bool            volumeMode = hasConstraint(SCALED_CONSISTENT_VOLUME);
   logging::Logger _log{"mapping::Mapping"};
   // Only serial participant is supported for scale-consistent mapping
   PRECICE_ASSERT((not utils::IntraComm::isPrimary()) and (not utils::IntraComm::isSecondary()));

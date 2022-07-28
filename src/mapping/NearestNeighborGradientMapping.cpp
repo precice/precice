@@ -22,11 +22,11 @@ NearestNeighborGradientMapping::NearestNeighborGradientMapping(
 {
   PRECICE_ASSERT(!hasConstraint(CONSERVATIVE));
 
-  if (hasConstraint(SCALEDCONSISTENT) || hasConstraint(SCALEDCONSISTENT_VOLUME)) {
+  if (hasConstraint(SCALED_CONSISTENT) || hasConstraint(SCALED_CONSISTENT_VOLUME)) {
     PRECICE_WARN("The scaled-consistent mapping hasn't been specifically tested with nearest-neighbor-gradient. Please avoid using it or choose another mapping method. ");
   }
 
-  if (hasConstraint(SCALEDCONSISTENT) || hasConstraint(SCALEDCONSISTENT_VOLUME)) {
+  if (hasConstraint(SCALED_CONSISTENT) || hasConstraint(SCALED_CONSISTENT_VOLUME)) {
     setInputRequirement(Mapping::MeshRequirement::FULL);
     setOutputRequirement(Mapping::MeshRequirement::FULL);
   } else {

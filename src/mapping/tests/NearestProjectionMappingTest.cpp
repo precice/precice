@@ -237,7 +237,7 @@ BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncremental2DCase1)
   int     outDataID = outData->getID();
   auto &  outValues = outData->values();
   // Setup mapping with mapping coordinates and geometry used
-  mapping::NearestProjectionMapping mapping(mapping::Mapping::SCALEDCONSISTENT, dimensions);
+  mapping::NearestProjectionMapping mapping(mapping::Mapping::SCALED_CONSISTENT, dimensions);
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncremental2DCase2)
   auto &  outValues = outData->values();
 
   // Setup mapping with mapping coordinates and geometry used
-  mapping::NearestProjectionMapping mapping(mapping::Mapping::SCALEDCONSISTENT, dimensions);
+  mapping::NearestProjectionMapping mapping(mapping::Mapping::SCALED_CONSISTENT, dimensions);
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
@@ -586,7 +586,7 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentQuery3DFullMesh)
   outData->values() = Eigen::VectorXd::Constant(3, 0.0);
 
   // Setup mapping with mapping coordinates and geometry used
-  precice::mapping::NearestProjectionMapping mapping(mapping::Mapping::SCALEDCONSISTENT, dimensions);
+  precice::mapping::NearestProjectionMapping mapping(mapping::Mapping::SCALED_CONSISTENT, dimensions);
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
 

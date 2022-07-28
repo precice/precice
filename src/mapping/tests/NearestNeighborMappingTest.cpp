@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentNonIncremental)
   outMesh->allocateDataValues();
 
   // Setup mapping with mapping coordinates and geometry used
-  precice::mapping::NearestNeighborMapping mapping(mapping::Mapping::SCALEDCONSISTENT, dimensions);
+  precice::mapping::NearestNeighborMapping mapping(mapping::Mapping::SCALED_CONSISTENT, dimensions);
 
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
@@ -281,7 +281,7 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentVolume2D)
   outMesh->allocateDataValues();
 
   // Setup mapping with mapping coordinates and geometry used
-  precice::mapping::NearestNeighborMapping mapping(mapping::Mapping::SCALEDCONSISTENT_VOLUME, dimensions);
+  precice::mapping::NearestNeighborMapping mapping(mapping::Mapping::SCALED_CONSISTENT_VOLUME, dimensions);
 
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);

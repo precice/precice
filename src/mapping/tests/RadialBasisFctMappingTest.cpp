@@ -1797,24 +1797,24 @@ void perform3DTestConservativeMapping(Mapping &mapping)
 }
 
 #undef doLocalCode
-#define doLocalCode(Type, function, polynomial)                                                                                     \
-  {                                                                                                                                 \
-    RadialBasisFctMapping<Type> consistentMap2D(Mapping::CONSISTENT, 2, function, {{false, false, false}}, polynomial);             \
-    perform2DTestConsistentMapping(consistentMap2D);                                                                                \
-    RadialBasisFctMapping<Type> consistentMap2DVector(Mapping::CONSISTENT, 2, function, {{false, false, false}}, polynomial);       \
-    perform2DTestConsistentMappingVector(consistentMap2DVector);                                                                    \
-    RadialBasisFctMapping<Type> consistentMap3D(Mapping::CONSISTENT, 3, function, {{false, false, false}}, polynomial);             \
-    perform3DTestConsistentMapping(consistentMap3D);                                                                                \
-    RadialBasisFctMapping<Type> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, function, {{false, false, false}}, polynomial); \
-    perform2DTestScaledConsistentMapping(scaledConsistentMap2D);                                                                    \
-    RadialBasisFctMapping<Type> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, function, {{false, false, false}}, polynomial); \
-    perform3DTestScaledConsistentMapping(scaledConsistentMap3D);                                                                    \
-    RadialBasisFctMapping<Type> conservativeMap2D(Mapping::CONSERVATIVE, 2, function, {{false, false, false}}, polynomial);         \
-    perform2DTestConservativeMapping(conservativeMap2D);                                                                            \
-    RadialBasisFctMapping<Type> conservativeMap2DVector(Mapping::CONSERVATIVE, 2, function, {{false, false, false}}, polynomial);   \
-    perform2DTestConservativeMappingVector(conservativeMap2DVector);                                                                \
-    RadialBasisFctMapping<Type> conservativeMap3D(Mapping::CONSERVATIVE, 3, function, {{false, false, false}}, polynomial);         \
-    perform3DTestConservativeMapping(conservativeMap3D);                                                                            \
+#define doLocalCode(Type, function, polynomial)                                                                                      \
+  {                                                                                                                                  \
+    RadialBasisFctMapping<Type> consistentMap2D(Mapping::CONSISTENT, 2, function, {{false, false, false}}, polynomial);              \
+    perform2DTestConsistentMapping(consistentMap2D);                                                                                 \
+    RadialBasisFctMapping<Type> consistentMap2DVector(Mapping::CONSISTENT, 2, function, {{false, false, false}}, polynomial);        \
+    perform2DTestConsistentMappingVector(consistentMap2DVector);                                                                     \
+    RadialBasisFctMapping<Type> consistentMap3D(Mapping::CONSISTENT, 3, function, {{false, false, false}}, polynomial);              \
+    perform3DTestConsistentMapping(consistentMap3D);                                                                                 \
+    RadialBasisFctMapping<Type> scaledConsistentMap2D(Mapping::SCALED_CONSISTENT, 2, function, {{false, false, false}}, polynomial); \
+    perform2DTestScaledConsistentMapping(scaledConsistentMap2D);                                                                     \
+    RadialBasisFctMapping<Type> scaledConsistentMap3D(Mapping::SCALED_CONSISTENT, 3, function, {{false, false, false}}, polynomial); \
+    perform3DTestScaledConsistentMapping(scaledConsistentMap3D);                                                                     \
+    RadialBasisFctMapping<Type> conservativeMap2D(Mapping::CONSERVATIVE, 2, function, {{false, false, false}}, polynomial);          \
+    perform2DTestConservativeMapping(conservativeMap2D);                                                                             \
+    RadialBasisFctMapping<Type> conservativeMap2DVector(Mapping::CONSERVATIVE, 2, function, {{false, false, false}}, polynomial);    \
+    perform2DTestConservativeMappingVector(conservativeMap2DVector);                                                                 \
+    RadialBasisFctMapping<Type> conservativeMap3D(Mapping::CONSERVATIVE, 3, function, {{false, false, false}}, polynomial);          \
+    perform3DTestConservativeMapping(conservativeMap3D);                                                                             \
   }
 
 BOOST_AUTO_TEST_CASE(MapThinPlateSplines)

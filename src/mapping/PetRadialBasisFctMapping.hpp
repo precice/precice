@@ -597,7 +597,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inp
   int const valueDim = this->input()->data(inputDataID)->getDimensions();
   PRECICE_ASSERT(valueDim == this->output()->data(outputDataID)->getDimensions(),
                  valueDim, this->output()->data(outputDataID)->getDimensions());
-  PRECICE_ASSERT(this->hasConstraint(Mapping::CONSISTENT) || this->hasConstraint(Mapping::SCALEDCONSISTENT) || this->hasConstraint(Mapping::SCALEDCONSISTENT_VOLUME));
+  PRECICE_ASSERT(this->hasConstraint(Mapping::CONSISTENT) || this->hasConstraint(Mapping::SCALED_CONSISTENT) || this->hasConstraint(Mapping::SCALED_CONSISTENT_VOLUME));
 
   auto out = petsc::Vector::allocate(_matrixA, "out");
   auto in  = petsc::Vector::allocate(_matrixC, "in");
@@ -850,8 +850,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::printMappingInfo(int inp
   std::string constraintName;
   if (this->hasConstraint(Mapping::CONSISTENT)) {
     constraintName = "consistent";
-  } else if (this->hasConstraint(Mapping::SCALEDCONSISTENT)) {
+  } else if (this->hasConstraint(Mapping::SCALED_CONSISTENT)) {
     constraintName = "scaled-consistent";
+  } else if (this->hasConstraint(Mapping::SCALED_CONSISTENT_VOLUME)) {
+    constraintName = "scaled-consistent-volume";
   } else {
     constraintName = "conservative";
   }

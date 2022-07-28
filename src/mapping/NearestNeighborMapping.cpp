@@ -19,7 +19,7 @@ NearestNeighborMapping::NearestNeighborMapping(
     int        dimensions)
     : NearestNeighborBaseMapping(constraint, dimensions, false, "NearestNeighborMapping", "nn")
 {
-  if (hasConstraint(SCALEDCONSISTENT) || hasConstraint(SCALEDCONSISTENT_VOLUME)) {
+  if (hasConstraint(SCALED_CONSISTENT) || hasConstraint(SCALED_CONSISTENT_VOLUME)) {
     setInputRequirement(Mapping::MeshRequirement::FULL);
     setOutputRequirement(Mapping::MeshRequirement::FULL);
   } else {
