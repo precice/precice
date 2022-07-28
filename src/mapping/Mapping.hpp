@@ -119,7 +119,7 @@ public:
    *
    * @pre Input and output mesh should have full connectivity information.
    */
-  virtual void scaleConsistentMapping(int inputDataID, int outputDataID) const;
+  virtual void scaleConsistentMapping(int inputDataID, int outputDataID, Constraint type) const;
 
   /// Returns whether the mapping requires gradient data
   bool requiresGradientData() const;
