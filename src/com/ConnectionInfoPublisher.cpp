@@ -115,7 +115,7 @@ void ConnectionInfoWriter::write(std::string const &info) const
 
   {
     auto message = "Unable to establish connection as a {}connection file already exists at \"{}\". "
-                   "This is likely a leftover of a previous crash during communication build-up. "
+                   "This is likely a leftover of a previous crash or stop during communication build-up. "
                    "Please remove the \"precice-run\" directory and restart the simulation.";
     PRECICE_CHECK(!bfs::exists(path), message, "", path);
     PRECICE_CHECK(!bfs::exists(tmp), message, "temporary ")
