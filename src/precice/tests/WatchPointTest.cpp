@@ -554,13 +554,13 @@ BOOST_AUTO_TEST_CASE(VolumetricParallel)
   } break;
   case 1: {
     mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
-    mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
+    mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector3d(0.0, 1.0, 0.0));
     mesh->createEdge(v1, v2);
   } break;
   case 2: {
-    mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, -1.0));
-    mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector3d(1.0, 0.0, -1.0));
-    mesh::Vertex &v3 = mesh->createVertex(Eigen::Vector3d(0.0, 1.0, -1.0));
+    mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+    mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector3d(0.0, 1.0, 0.0));
+    mesh::Vertex &v3 = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, 1.0));
     mesh->createTriangle(v1, v2, v3);
   } break;
 
@@ -579,7 +579,7 @@ BOOST_AUTO_TEST_CASE(VolumetricParallel)
   mesh->allocateDataValues();
 
   // Data is (1, 2, 3, 4) on the tetra, other ranks agree on their subset
-  for (int i = 0; i < context.rank; ++i) {
+  for (int i = 0; i <= context.rank; ++i) {
     doubleValues(i) = i + 1;
   }
 
