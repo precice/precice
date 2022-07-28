@@ -2,7 +2,7 @@ name: Build and Test macOS
 on:
   push:
     branches:
-      - master
+      - main
       - develop
   pull_request:
     paths:
