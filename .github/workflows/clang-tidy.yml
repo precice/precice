@@ -1,14 +1,14 @@
 name: clang-tidy
 on:
     push:
-        branches: [ master, develop ]
+        branches: [ main, develop ]
     pull_request:
-        branches: [ master, develop ]
+        branches: [ main, develop ]
 
 jobs:
   clang-tidy:
     runs-on: ubuntu-latest
-    container: 'precice/ci-ubuntu-2004:latest'
+    container: 'precice/ci-ubuntu-2204:latest'
     steps:
       - uses: actions/checkout@v2
       - name: fetch clang

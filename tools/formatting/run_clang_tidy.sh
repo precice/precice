@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# This script runs clang-tidy on the precice code base
+# This script runs clang-tidy on the preCICE code base
 # It generates automatically a new buid directory called "clang-tidy" 
 # where the actual script is executed
 # ------------------------------------------------------------------
@@ -31,7 +31,7 @@ echo "SRC-DIR=$SRC"
 # -BUILD_TESTING: we don't want to analyze the test targets
 # -PRECICE_ENABLE_C: naming conventions are different from the code base
 # -PRECICE_ENABLE_FORTRAN: naming conventions are different from the code base
-ARGS=("-D" "CMAKE_EXPORT_COMPILE_COMMANDS=ON" "-D" "BUILD_TESTING=OFF" "-D" "BUILD_SHARED_LIBS=ON" "-D" "CMAKE_BUILD_TYPE=Debug" "-D" "PRECICE_ENABLE_C=OFF" "-D" "PRECICE_ENABLE_FORTRAN=OFF" "-D" "PRECICE_Packages=OFF" "$@")
+ARGS=("-D" "CMAKE_EXPORT_COMPILE_COMMANDS=ON" "-D" "BUILD_TESTING=OFF" "-D" "BUILD_SHARED_LIBS=ON" "-D" "CMAKE_BUILD_TYPE=Debug" "-D" "PRECICE_ENABLE_C=OFF" "-D" "PRECICE_ENABLE_FORTRAN=OFF" "-D" "PRECICE_MPICommunication=ON" "-D" "PRECICE_PETScMapping=ON" "-D" "PRECICE_PythonActions=ON" "-D" "PRECICE_Packages=OFF" "$@")
 
 
 if ! [ -x "$(command -v run-clang-tidy)" ] || ! [ -x "$(command -v clang++)" ]; then
