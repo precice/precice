@@ -1,9 +1,21 @@
 name: clang-tidy
 on:
-    push:
-        branches: [ main, develop ]
-    pull_request:
-        branches: [ main, develop ]
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    paths:
+      - 'cmake/**'
+      - 'examples/**'
+      - 'src/**'
+      - 'thirdparty/**'
+      - '.github/workflows/clang-tidy.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{github.event_name == 'pull_request'}}
 
 jobs:
   clang-tidy:
