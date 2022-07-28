@@ -319,6 +319,8 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
     constraintValue = Mapping::CONSISTENT;
   } else if (constraint == VALUE_SCALED_CONSISTENT) {
     constraintValue = Mapping::SCALEDCONSISTENT;
+  } else if (constraint == VALUE_SCALED_CONSISTENT_VOLUME) {
+    constraintValue = Mapping::SCALEDCONSISTENT_VOLUME;
   } else {
     PRECICE_UNREACHABLE("Unknown mapping constraint \"{}\".", constraint);
   }
