@@ -11,7 +11,7 @@ BOOST_AUTO_TEST_SUITE(MappingScaledConsistent)
 BOOST_AUTO_TEST_CASE(testQuadMappingScaledConsistentOnA)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
-  testQuadMappingScaledConsistent(context.config(), context);
+  testQuadMappingScaledConsistentVolumetric(context.config(), context);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Integration
