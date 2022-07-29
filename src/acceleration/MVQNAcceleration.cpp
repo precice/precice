@@ -61,7 +61,6 @@ MVQNAcceleration::MVQNAcceleration(
       _imvjRestart(false),
       _chunkSize(chunkSize),
       _RSLSreusedTimeWindows(RSLSreusedTimeWindows),
-      _usedColumnsPerTimeWindow(5),
       _nbRestarts(0),
       _avgRank(0)
 {
