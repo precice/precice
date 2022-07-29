@@ -116,10 +116,10 @@ void testQuadMappingScaledConsistentVolumetric(const std::string configFile, con
   Vector2d coordOneC{1.0, 1.0};
   Vector2d coordOneD{0.0, 1.0};
   Vector2d coordOneExtra{0.5, 1.0};
-  double   valOneA = 4.0;
-  double   valOneB = 3.0;
-  double   valOneC = 2.0;
-  double   valOneD = 1.0;
+  double   valOneA     = 4.0;
+  double   valOneB     = 3.0;
+  double   valOneC     = 2.0;
+  double   valOneD     = 1.0;
   double   valOneExtra = 1.0;
 
   // MeshTwo
@@ -136,16 +136,15 @@ void testQuadMappingScaledConsistentVolumetric(const std::string configFile, con
     const int meshOneID = interface.getMeshID("MeshOne");
 
     // Setup mesh one.
-    int idA = interface.setMeshVertex(meshOneID, coordOneA.data());
-    int idB = interface.setMeshVertex(meshOneID, coordOneB.data());
-    int idC = interface.setMeshVertex(meshOneID, coordOneC.data());
-    int idD = interface.setMeshVertex(meshOneID, coordOneD.data());
+    int idA     = interface.setMeshVertex(meshOneID, coordOneA.data());
+    int idB     = interface.setMeshVertex(meshOneID, coordOneB.data());
+    int idC     = interface.setMeshVertex(meshOneID, coordOneC.data());
+    int idD     = interface.setMeshVertex(meshOneID, coordOneD.data());
     int idExtra = interface.setMeshVertex(meshOneID, coordOneExtra.data());
 
     interface.setMeshTriangleWithEdges(meshOneID, idA, idB, idExtra);
     interface.setMeshTriangleWithEdges(meshOneID, idA, idD, idExtra);
     interface.setMeshTriangleWithEdges(meshOneID, idB, idC, idExtra);
-
 
     auto &mesh = testing::WhiteboxAccessor::impl(interface).mesh("MeshOne");
     BOOST_REQUIRE(mesh.vertices().size() == 5);
@@ -186,7 +185,6 @@ void testQuadMappingScaledConsistentVolumetric(const std::string configFile, con
     interface.setMeshTriangleWithEdges(meshTwoID, idA, idB, idC);
     interface.setMeshTriangleWithEdges(meshTwoID, idA, idD, idC);
 
-
     // Initialize, thus receive the data and map.
     double maxDt = interface.initialize();
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant should have to advance once!");
@@ -198,7 +196,6 @@ void testQuadMappingScaledConsistentVolumetric(const std::string configFile, con
     interface.readScalarData(dataAID, idB, valueB);
     interface.readScalarData(dataAID, idC, valueC);
     interface.readScalarData(dataAID, idD, valueD);
-
 
     double calculatedIntegral = precice::math::geometry::triangleArea(coordTwoA, coordTwoB, coordTwoC) * (valueA + valueB + valueC) / 3.0 +
                                 precice::math::geometry::triangleArea(coordTwoA, coordTwoD, coordTwoC) * (valueA + valueD + valueC) / 3.0;
