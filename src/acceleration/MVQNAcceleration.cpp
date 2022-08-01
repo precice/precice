@@ -594,7 +594,7 @@ void MVQNAcceleration::restartIMVJ()
       if (_filter != Acceleration::NOFILTER) {
         std::vector<int> delIndices(0);
         qr.applyFilter(_singularityLimit, delIndices, _matrixV_RSLS);
-        // start with largest index (as V,W matrices are shrinked and shifted
+        // start with largest index (as V,W matrices are shrunk and shifted
         for (int i = delIndices.size() - 1; i >= 0; i--) {
           removeMatrixColumnRSLS(delIndices[i]);
         }
