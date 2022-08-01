@@ -22,7 +22,7 @@ public:
    * are equal. Values integrated over some area should be mapped conservative or
    * scaled-consistent, while area independent values such as pressure or stresses
    * should be mapped consistent. There is also a volume version 
-   * where volume integrals are preserved instead of area integrals.
+   * where volume integrals are preserved instead of surface integrals.
    */
   enum Constraint {
     CONSISTENT,
