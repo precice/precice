@@ -27,9 +27,6 @@
 <a style="text-decoration: none" href="https://github.com/precice/precice/actions?query=workflow%3A%22Build+and+Test%22+branch%3Adevelop" target="_blank">
     <img src="https://github.com/precice/precice/workflows/Build%20and%20Test/badge.svg" alt="Build status">
 </a>
-<a style="text-decoration: none" href="https://travis-ci.org/github/precice/systemtests/builds" target="_blank">
-    <img src="https://img.shields.io/badge/system%20tests-check-blue" alt="Build status">
-</a>
 
 **Project Quality**  
 [![xSDK Policy Compatibility](https://img.shields.io/badge/xSDK-member-brightgreen)](https://github.com/xsdk-project/xsdk-policy-compatibility/blob/master/precice-policy-compatibility.md)
