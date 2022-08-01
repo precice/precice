@@ -162,7 +162,7 @@ void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID, Mapping:
 
   // Scale in each direction
   Eigen::VectorXd scalingFactor = integralInput.array() / integralOutput.array();
-  PRECICE_DEBUG("Scale factor in scale-consistent mapping: {}", scalingFactor);
+  PRECICE_DEBUG("Scaling factor in scaled-consistent mapping: {}", scalingFactor);
   outputValuesMatrix.array().colwise() *= scalingFactor.array();
 }
 
