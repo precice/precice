@@ -4,6 +4,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include "precice/Version.h"
 
 /**
  * forward declarations.
