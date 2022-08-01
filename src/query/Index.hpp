@@ -25,19 +25,13 @@ constexpr MatchID NO_MATCH{-1};
 using Distance = double;
 constexpr double INVALID_DISTANCE{-1};
 
-/// Struct to hold index and distance information of the closest primitive
+/// Struct to hold the index of a primitive match
 template <class Tag>
 struct MatchType {
-  Distance distance{INVALID_DISTANCE};
-  MatchID  index{NO_MATCH};
+  MatchID index{NO_MATCH};
   MatchType() = default;
-  MatchType(Distance d, MatchID i)
-      : distance(d), index(i){};
-
-  constexpr bool operator<(MatchType const &other) const
-  {
-    return distance < other.distance;
-  };
+  MatchType(MatchID i)
+      : index(i){};
 };
 
 /// Match tags for each primitive type
@@ -51,6 +45,11 @@ using TetraMatch    = MatchType<struct TetraTag>;
 struct ProjectionMatch {
   mapping::Polation polation;
   Distance          distance;
+
+  constexpr bool operator<(ProjectionMatch const &other) const
+  {
+    return distance < other.distance;
+  };
 };
 
 /// Class to query the index trees of the mesh

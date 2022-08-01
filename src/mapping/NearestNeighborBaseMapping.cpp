@@ -61,9 +61,11 @@ void NearestNeighborBaseMapping::computeMapping()
 
   auto &index = searchSpace->index();
   for (size_t i = 0; i < verticesSize; ++i) {
-    const auto &matchedVertex = index.getClosestVertex(sourceVertices[i].getCoords());
+    const auto &sourceCoords  = sourceVertices[i].getCoords();
+    const auto &matchedVertex = index.getClosestVertex(sourceCoords);
     _vertexIndices[i]         = matchedVertex.index;
-    distanceStatistics(matchedVertex.distance);
+    auto distance             = (sourceCoords - searchSpace->vertices()[matchedVertex.index].getCoords()).norm();
+    distanceStatistics(distance);
   }
 
   // For gradient mapping, the calculation of offsets between source and matched vertex necessary

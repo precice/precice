@@ -16,15 +16,17 @@ BOOST_AUTO_TEST_SUITE(Interpolation)
 BOOST_AUTO_TEST_CASE(VertexInterpolation)
 {
   PRECICE_TEST(1_rank);
-  mesh::Vertex vertex(Eigen::Vector3d(1.0, 2.0, 0.0), 0);
+  Eigen::Vector3d location(0.0, 0.0, 0.0);
+  mesh::Vertex    vertex(Eigen::Vector3d(1.0, 2.0, 0.0), 0);
 
-  Polation polation(vertex);
+  Polation polation(location, vertex);
 
   std::vector<int>    expectedIndices = {0};
   std::vector<double> expectedWeights = {1.0};
 
   BOOST_TEST(polation.getWeightedElements().size() == 1);
   BOOST_TEST(polation.isInterpolation());
+  BOOST_TEST(polation.distance() == vertex.getCoords().norm());
 
   for (size_t i = 0; i < polation.getWeightedElements().size(); ++i) {
     BOOST_TEST(polation.getWeightedElements().at(i).weight == expectedWeights.at(i));
@@ -48,6 +50,7 @@ BOOST_AUTO_TEST_CASE(EdgeInterpolation)
 
   BOOST_TEST(polation.getWeightedElements().size() == 2);
   BOOST_TEST(polation.isInterpolation());
+  BOOST_TEST(polation.distance() == 0);
 
   for (size_t i = 0; i < polation.getWeightedElements().size(); ++i) {
     BOOST_TEST(polation.getWeightedElements().at(i).weight == expectedWeights.at(i));
@@ -76,6 +79,7 @@ BOOST_AUTO_TEST_CASE(TriangleInterpolation)
 
   BOOST_TEST(polation.getWeightedElements().size() == 3);
   BOOST_TEST(polation.isInterpolation());
+  BOOST_TEST(polation.distance() == 0);
 
   for (size_t i = 0; i < polation.getWeightedElements().size(); ++i) {
 
@@ -155,6 +159,7 @@ BOOST_AUTO_TEST_CASE(TetrahedronInterpolation)
 
   BOOST_TEST(polation.getWeightedElements().size() == 4);
   BOOST_TEST(polation.isInterpolation());
+  BOOST_TEST(polation.distance() == 0);
 
   for (size_t i = 0; i < polation.getWeightedElements().size(); ++i) {
 

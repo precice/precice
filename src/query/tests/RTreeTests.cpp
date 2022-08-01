@@ -101,7 +101,6 @@ BOOST_AUTO_TEST_CASE(Query2DVertex)
 
   auto result = indexTree.getClosestVertex(location);
   BOOST_TEST(mesh->vertices().at(result.index).getCoords() == Eigen::Vector2d(0, 1));
-  BOOST_TEST(result.distance == 0.28284271247461906);
 }
 
 BOOST_AUTO_TEST_CASE(Query3DVertex)
@@ -113,7 +112,6 @@ BOOST_AUTO_TEST_CASE(Query3DVertex)
 
   auto result = indexTree.getClosestVertex(location);
   BOOST_TEST(mesh->vertices().at(result.index).getCoords() == Eigen::Vector3d(1, 0, 1));
-  BOOST_TEST(result.distance == 0.28284271247461906);
 }
 
 BOOST_AUTO_TEST_CASE(Query3DFullVertex)
@@ -268,8 +266,9 @@ BOOST_AUTO_TEST_CASE(Query3DFullEdge)
   auto            results = indexTree.getClosestEdges(location, 2);
 
   BOOST_TEST(results.size() == 2);
-  BOOST_TEST(results.at(0).index == eld.getID());
-  BOOST_TEST(results.at(1).index == elr.getID());
+  std::set<EdgeID> rset{results.at(0).index, results.at(1).index};
+  BOOST_TEST(rset.count(elr.getID()) == 1);
+  BOOST_TEST(rset.count(eld.getID()) == 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Edge
@@ -310,10 +309,11 @@ BOOST_AUTO_TEST_CASE(Query3DFullTriangle)
 
   auto results = indexTree.getClosestTriangles(location, 3);
   BOOST_TEST(results.size() == 3);
-  BOOST_TEST(results.at(0).index == tlb.getID());
-  BOOST_TEST(results.at(1).index == tlt.getID());
-  BOOST_TEST(results.at(2).index == trt.getID());
-  BOOST_TEST(results.at(2).index != trb.getID());
+
+  std::set<TriangleID> rset{results.at(0).index, results.at(1).index, results.at(2).index};
+  BOOST_TEST(rset.count(tlb.getID()) == 1);
+  BOOST_TEST(rset.count(tlt.getID()) == 1);
+  BOOST_TEST(rset.count(trt.getID()) == 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Triangle
@@ -377,7 +377,7 @@ BOOST_AUTO_TEST_CASE(ProjectionToTriangle)
   auto match = indexTree.findNearestProjection(location, 1);
 
   BOOST_TEST(match.polation.getWeightedElements().size() == 3); // Check number of weights
-  BOOST_TEST(match.distance == 0.0);                            // Check the distance
+  BOOST_TEST(match.distance == 0.1);                            // Check the distance
   BOOST_TEST(match.polation.isInterpolation());
 
   for (int i = 0; i < static_cast<int>(match.polation.getWeightedElements().size()); ++i) {
