@@ -13,7 +13,7 @@ jobs:
       - name: Checkout preCICE
         uses: actions/checkout@v3
       - name: Setup python
-        uses: action/setup-python@v3
+        uses: actions/setup-python@v3
       - name: Install pre-commit
         run: pip install pre-commit
       - name: Run checks
