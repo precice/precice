@@ -155,7 +155,6 @@ auto reorder_array(const std::array<Index, n> &order, const std::array<T, n> &el
 } // namespace utils
 } // namespace precice
 
-template <>
 template <typename Iter>
 struct fmt::formatter<precice::utils::RangePreview<Iter>> : ostream_formatter {
 };

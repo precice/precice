@@ -17,7 +17,6 @@ struct fmt::formatter<Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime
   }
 };
 
-template <>
 template <typename ExpressionType>
 struct fmt::formatter<Eigen::WithFormat<ExpressionType>> : ostream_formatter {
 };
