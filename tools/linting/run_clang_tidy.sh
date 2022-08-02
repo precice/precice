@@ -47,6 +47,7 @@ CC=clang CXX=clang++ cmake "${ARGS[@]}" "$SRC" || (echo "cmake failed!"; false) 
 # Generate versions.cpp file
 cmake --build . --target GitRevision
 
+echo "Running clang-tidy in quiet mode (this may take a while)..."
 # add '-fix' in order to let clang-tidy fix the issues
 run-clang-tidy -p . -quiet -j 2 -header-filter "$SRC/src/precice/impl/*cpp"  2>error.txt >output.txt
 
