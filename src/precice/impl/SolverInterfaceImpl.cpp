@@ -726,7 +726,7 @@ int SolverInterfaceImpl::setMeshVertex(
   int           index   = -1;
   MeshContext & context = _accessor->usedMeshContext(meshID);
   mesh::PtrMesh mesh(context.mesh);
-  PRECICE_DEBUG("MeshRequirement: {}", context.meshRequirement);
+  PRECICE_DEBUG("MeshRequirement: {}", fmt::underlying(context.meshRequirement));
   index = mesh->createVertex(internalPosition).getID();
   mesh->allocateDataValues();
   return index;
