@@ -1,4 +1,4 @@
-name: clang-tidy
+name: Code linting
 on:
   push:
     branches:
@@ -26,4 +26,9 @@ jobs:
       - name: fetch clang
         run: apt update && apt install -y clang && apt install -y clang-tidy
       - name: run clang-tidy
-        run: tools/formatting/run_clang_tidy.sh
+        run: tools/linting/run_clang_tidy.sh
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: clang-tidy.log
+          path: _clang-tidy/clang-tidy.log
