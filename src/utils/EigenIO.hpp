@@ -24,8 +24,3 @@ inline Eigen::IOFormat debug()
 } // namespace eigenio
 } // namespace utils
 } // namespace precice
-
-template <>
-template <typename ExpressionType>
-struct fmt::formatter<Eigen::WithFormat<ExpressionType>> : ostream_formatter {
-};

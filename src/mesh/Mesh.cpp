@@ -2,7 +2,6 @@
 #include <algorithm>
 #include <array>
 #include <boost/container/flat_map.hpp>
-#include <fmt/ostream.h>
 #include <functional>
 #include <memory>
 #include <ostream>
@@ -482,7 +481,3 @@ std::ostream &operator<<(std::ostream &os, const Mesh &m)
 
 } // namespace mesh
 } // namespace precice
-
-template <>
-struct fmt::formatter<precice::mesh::Mesh> : ostream_formatter {
-};
