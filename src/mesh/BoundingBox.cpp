@@ -1,6 +1,5 @@
 #include "BoundingBox.hpp"
 #include <algorithm>
-#include <fmt/ostream.h>
 #include <limits>
 #include <ostream>
 #include <string>
@@ -185,7 +184,3 @@ std::ostream &operator<<(std::ostream &os, const BoundingBox &bb)
 
 } // namespace mesh
 } // namespace precice
-
-// template <>
-// struct fmt::formatter<precice::mesh::BoundingBox> : ostream_formatter {
-// };
