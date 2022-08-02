@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # This script runs clang-tidy on the preCICE code base
-# It generates automatically a new buid directory called "clang-tidy" 
+# It generates automatically a new buid directory called "_clang-tidy"
 # where the actual script is executed
 # ------------------------------------------------------------------
 #
@@ -39,15 +39,15 @@ if ! [ -x "$(command -v run-clang-tidy)" ] || ! [ -x "$(command -v clang++)" ]; 
     exit 3
 fi
 
-mkdir -p "${SRC}"/clang-tidy
-cd "${SRC}"/clang-tidy || exit 4
+mkdir -p "${SRC}"/_clang-tidy
+cd "${SRC}"/_clang-tidy || exit 4
 
 CC=clang CXX=clang++ cmake "${ARGS[@]}" "$SRC" || (echo "cmake failed!"; false) || exit 5
 
 # Generate versions.cpp file
 cmake --build . --target GitRevision
 
-echo "Running clang-tidy in quiet mode (this may take a while)..."
+echo "Running clang-tidy (in the 'precice/_clang-tidy' directory), this may take a while..."
 # add '-fix' in order to let clang-tidy fix the issues
 run-clang-tidy -p . -quiet -j 2 -header-filter "$SRC/src/precice/impl/*cpp"  2>error.txt >output.txt
 
