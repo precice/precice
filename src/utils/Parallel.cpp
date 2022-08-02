@@ -1,5 +1,6 @@
 #include "Parallel.hpp"
 #include <algorithm>
+#include <fmt/ostream.h>
 #include <map>
 #include <memory>
 #include <numeric>
@@ -567,5 +568,9 @@ std::ostream &operator<<(std::ostream &out, const Parallel::CommState &value)
 
 } // namespace utils
 } // namespace precice
+
+template <>
+struct fmt::formatter<precice::utils::Parallel::CommState> : ostream_formatter {
+};
 
 //#endif // not PRECICE_NO_MPI

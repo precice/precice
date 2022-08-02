@@ -7,6 +7,7 @@
 #include <boost/accumulators/statistics/min.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/variance.hpp>
+#include <fmt/ostream.h>
 #include <iosfwd>
 
 namespace precice {
@@ -86,3 +87,7 @@ inline std::ostream &operator<<(std::ostream &out, const DistanceAccumulator &ac
 } // namespace statistics
 } // namespace utils
 } // namespace precice
+
+template <>
+struct fmt::formatter<precice::utils::statistics::DistanceAccumulator> : ostream_formatter {
+};

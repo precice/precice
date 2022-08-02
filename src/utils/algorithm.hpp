@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <fmt/ostream.h>
 #include <functional>
 #include <iterator>
 #include <type_traits>
@@ -153,3 +154,8 @@ auto reorder_array(const std::array<Index, n> &order, const std::array<T, n> &el
 
 } // namespace utils
 } // namespace precice
+
+template <>
+template <typename Iter>
+struct fmt::formatter<precice::utils::RangePreview<Iter>> : ostream_formatter {
+};
