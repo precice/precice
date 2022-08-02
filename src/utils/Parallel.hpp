@@ -56,7 +56,7 @@ public:
     /// A shared pointer to the parent CommState
     CommStatePtr parent = nullptr;
 
-    /// Wether this state owns the communicator and has to free it.
+    /// Whether this state owns the communicator and has to free it.
     bool _owning = true;
 
     /// @name Construction and Destruction

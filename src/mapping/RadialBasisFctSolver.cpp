@@ -55,7 +55,7 @@ Eigen::VectorXd RadialBasisFctSolver::solveConservative(const Eigen::VectorXd &i
 Eigen::VectorXd RadialBasisFctSolver::solveConsistent(Eigen::VectorXd &inputData, Polynomial polynomial) const
 {
   Eigen::VectorXd res;
-  // Solve polynomial QR and substract it form the input data
+  // Solve polynomial QR and subtract it from the input data
   if (polynomial == Polynomial::SEPARATE) {
     res = _qrMatrixQ.solve(inputData);
     inputData -= (_matrixQ * res);

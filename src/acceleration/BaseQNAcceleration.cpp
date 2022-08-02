@@ -416,7 +416,7 @@ void BaseQNAcceleration::applyFilter()
     // do: filtering of least-squares system to maintain good conditioning
     std::vector<int> delIndices(0);
     _qrV.applyFilter(_singularityLimit, delIndices, _matrixV);
-    // start with largest index (as V,W matrices are shrinked and shifted
+    // start with largest index (as V,W matrices are shrunk and shifted
 
     for (int i = delIndices.size() - 1; i >= 0; i--) {
 

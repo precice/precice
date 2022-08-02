@@ -174,7 +174,7 @@ void ExportVTK::exportGradient(std::ofstream &outFile, const mesh::Mesh &mesh)
           for (; j < gradientValues.rows(); j++) {        // Loop over space directions
             outFile << gradientValues.coeff(j, i) << " ";
           }
-          if (j < 3) { // If 2D data add additonal zero as third component
+          if (j < 3) { // If 2D data add additional zero as third component
             outFile << '0';
           }
           outFile << "\n";
@@ -187,7 +187,7 @@ void ExportVTK::exportGradient(std::ofstream &outFile, const mesh::Mesh &mesh)
           for (; j < gradientValues.rows(); j++) { // Loop over components
             outFile << gradientValues.coeff(j, i) << " ";
           }
-          if (j < 3) { // If 2D data add additonal zero as third component
+          if (j < 3) { // If 2D data add additional zero as third component
             outFile << '0';
           }
           outFile << "\n";
@@ -201,7 +201,7 @@ void ExportVTK::exportGradient(std::ofstream &outFile, const mesh::Mesh &mesh)
           for (; j < gradientValues.rows(); j++) { // Loop over components
             outFile << gradientValues.coeff(j, i) << " ";
           }
-          if (j < 3) { // If 2D data add additonal zero as third component
+          if (j < 3) { // If 2D data add additional zero as third component
             outFile << '0';
           }
           outFile << "\n";
@@ -216,7 +216,7 @@ void ExportVTK::exportGradient(std::ofstream &outFile, const mesh::Mesh &mesh)
             for (; j < gradientValues.rows(); j++) { // Loop over components
               outFile << gradientValues.coeff(j, i) << " ";
             }
-            if (j < 3) { // If 2D data add additonal zero as third component
+            if (j < 3) { // If 2D data add additional zero as third component
               outFile << '0';
             }
             outFile << "\n";

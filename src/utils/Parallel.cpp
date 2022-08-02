@@ -216,7 +216,7 @@ void Parallel::initializeMPI(
 #ifndef PRECICE_NO_MPI
   int isMPIInitialized{-1};
   MPI_Initialized(&isMPIInitialized);
-  PRECICE_ASSERT(!isMPIInitialized, "MPI was already initalized.");
+  PRECICE_ASSERT(!isMPIInitialized, "MPI was already initialized.");
   PRECICE_DEBUG("Initialize MPI");
   MPI_Init(argc, argv);
 #endif // not PRECICE_NO_MPI
@@ -246,7 +246,7 @@ void Parallel::finalizeMPI()
   PRECICE_TRACE();
   int isMPIInitialized;
   MPI_Initialized(&isMPIInitialized);
-  PRECICE_ASSERT(isMPIInitialized, "MPI was not initalized.");
+  PRECICE_ASSERT(isMPIInitialized, "MPI was not initialized.");
   PRECICE_DEBUG("Finalize MPI");
   MPI_Finalize();
 #endif // not PRECICE_NO_MPI
