@@ -1,9 +1,4 @@
-# clang-tidy settings to be used with ./tools/formatting/run_clang_tidy.sh
-# Rationale for disabling checks:
-#
-# -cppcoreguidelines-avoid-magic-numbers: This is just an alias for readability-magic-numbers
-# -cppcoreguidelines-avoid-c-arrays: This is just an alias for modernize-avoid-c-arrays
-# -misc-unused-parameters: We have not yet removed all unused parameters from the code base
+# clang-tidy settings to be used with ./tools/linting/run_clang_tidy.sh
 
 Checks:          "-*,modernize-deprecated-headers,modernize-make-shared,modernize-use-bool-literals,modernize-loop-convert,modernize-use-equals-default,modernize-use-emplace,modernize-use-nullptr"
 
