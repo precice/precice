@@ -82,7 +82,7 @@ void DataConfiguration::addData(
                   name);
   }
 
-  _data.push_back({name, dataDimensions});
+  _data.emplace_back(name, dataDimensions);
 }
 
 int DataConfiguration::getDataDimensions(
