@@ -267,11 +267,11 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = MatSetOption(_matrixC, MAT_SYMMETRY_ETERNAL, PETSC_TRUE);
   CHKERRV(ierr);
 
-  // Matrix Q: Dense, holds the input mesh for the polynomial if set to SEPERATE. Zero size otherwise
+  // Matrix Q: Dense, holds the input mesh for the polynomial if set to SEPARATE. Zero size otherwise
   _matrixQ.init(n, PETSC_DETERMINE, PETSC_DETERMINE, sepPolyparams, MATDENSE);
   PRECICE_DEBUG("Set matrix Q to local size {} x {}", n, sepPolyparams);
 
-  // Matrix V: Dense, holds the output mesh for polynomial if set to SEPERATE. Zero size otherwise
+  // Matrix V: Dense, holds the output mesh for polynomial if set to SEPARATE. Zero size otherwise
   _matrixV.init(outputSize, PETSC_DETERMINE, PETSC_DETERMINE, sepPolyparams, MATDENSE);
   PRECICE_DEBUG("Set matrix V to local size {} x {}", outputSize, sepPolyparams);
 

@@ -65,7 +65,7 @@ inline double computeSquaredDifference(
     std::array<double, 3>        v,
     const std::array<bool, 3> &  activeAxis)
 {
-  // Substract the values and multiply out dead dimensions
+  // Subtract the values and multiply out dead dimensions
   for (unsigned int d = 0; d < v.size(); ++d) {
     v[d] = (u[d] - v[d]) * static_cast<int>(activeAxis[d]);
   }

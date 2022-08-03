@@ -357,7 +357,7 @@ public:
    *
    * @experimental
    *
-   * Has to be called, everytime the positions for data to be mapped
+   * Has to be called, every time the positions for data to be mapped
    * changes. Only has an effect, if the mapping used is non-stationary and
    * non-incremental.
    */
@@ -1098,7 +1098,7 @@ public:
 
   /**
    * @brief Checks if the given data set requires gradient data.
-   * We check if the data object has been intialized with the gradient flag.
+   * We check if the data object has been initialized with the gradient flag.
    *
    * @experimental
    *

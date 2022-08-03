@@ -178,14 +178,14 @@ void ExportXML::exportGradient(const mesh::PtrData data, const int spaceDim, std
       for (; j < gradientValues.rows(); j++) { // Loop over components
         outFile << gradientValues.coeff(j, i) << " ";
       }
-      if (j < 3) { // If 2D data add additonal zero as third component
+      if (j < 3) { // If 2D data add additional zero as third component
         outFile << "0.0"
                 << " ";
       }
     }
     outFile << '\n'
             << "            </DataArray>\n";
-    counter++; // Increment coutner for next component
+    counter++; // Increment counter for next component
   }
 }
 

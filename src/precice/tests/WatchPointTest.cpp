@@ -275,7 +275,7 @@ BOOST_AUTO_TEST_CASE(TimeSeriesWithEdgeParallelPoint2)
   testWatchPoint(context, withEdge, watchPointPosition, expected);
 }
 
-BOOST_AUTO_TEST_CASE(Reinitalize)
+BOOST_AUTO_TEST_CASE(Reinitialize)
 {
   PRECICE_TEST(1_rank);
   using namespace mesh;
