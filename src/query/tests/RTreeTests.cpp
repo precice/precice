@@ -333,7 +333,7 @@ BOOST_AUTO_TEST_CASE(ProjectionToVertex)
   auto match = indexTree.findNearestProjection(location, 1);
 
   BOOST_TEST(match.polation.getWeightedElements().size() == 1); // Check number of weights
-  BOOST_TEST(match.distance == 1.0);                            // Check the distance
+  BOOST_TEST(match.polation.distance() == 1.0);                 // Check the distance
   BOOST_TEST(match.polation.isInterpolation());
 
   for (int i = 0; i < static_cast<int>(match.polation.getWeightedElements().size()); ++i) {
@@ -355,7 +355,7 @@ BOOST_AUTO_TEST_CASE(ProjectionToEdge)
   auto match = indexTree.findNearestProjection(location, 1);
 
   BOOST_TEST(match.polation.getWeightedElements().size() == 2); // Check number of weights
-  BOOST_TEST(match.distance == 1.0);                            // Check the distance
+  BOOST_TEST(match.polation.distance() == 1.0);                 // Check the distance
   BOOST_TEST(match.polation.isInterpolation());
 
   for (int i = 0; i < static_cast<int>(match.polation.getWeightedElements().size()); ++i) {
@@ -377,7 +377,7 @@ BOOST_AUTO_TEST_CASE(ProjectionToTriangle)
   auto match = indexTree.findNearestProjection(location, 1);
 
   BOOST_TEST(match.polation.getWeightedElements().size() == 3); // Check number of weights
-  BOOST_TEST(match.distance == 0.1);                            // Check the distance
+  BOOST_TEST(match.polation.distance() == 0.1);                 // Check the distance
   BOOST_TEST(match.polation.isInterpolation());
 
   for (int i = 0; i < static_cast<int>(match.polation.getWeightedElements().size()); ++i) {

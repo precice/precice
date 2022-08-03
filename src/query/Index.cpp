@@ -262,7 +262,7 @@ ProjectionMatch Index::findCellOrProjection(const Eigen::VectorXd &location, int
     for (const auto &match : matchedTriangles) {
       auto polation = mapping::Polation(location, _mesh->triangles()[match.index]);
       if (polation.isInterpolation()) {
-        return {polation, 0.0};
+        return {std::move(polation)};
       }
     }
 
@@ -276,7 +276,7 @@ ProjectionMatch Index::findCellOrProjection(const Eigen::VectorXd &location, int
       // Matches are raw indices, not (indices, distance) pairs
       auto polation = mapping::Polation(location, _mesh->tetrahedra()[match]);
       if (polation.isInterpolation()) {
-        return {polation, 0.0};
+        return {std::move(polation)};
       }
     }
     return findNearestProjection(location, n);
@@ -285,9 +285,8 @@ ProjectionMatch Index::findCellOrProjection(const Eigen::VectorXd &location, int
 
 ProjectionMatch Index::findVertexProjection(const Eigen::VectorXd &location)
 {
-  auto              match = getClosestVertex(location);
-  mapping::Polation polation{location, _mesh->vertices()[match.index]};
-  return {polation, polation.distance()};
+  auto match = getClosestVertex(location);
+  return {mapping::Polation{location, _mesh->vertices()[match.index]}};
 }
 
 ProjectionMatch Index::findEdgeProjection(const Eigen::VectorXd &location, int n)
@@ -297,7 +296,7 @@ ProjectionMatch Index::findEdgeProjection(const Eigen::VectorXd &location, int n
   for (const auto &match : getClosestEdges(location, n)) {
     auto polation = mapping::Polation(location, _mesh->edges()[match.index]);
     if (polation.isInterpolation()) {
-      candidates.push_back({polation, polation.distance()});
+      candidates.emplace_back(std::move(polation));
     }
   }
   // Pick the smallest candidate by distance
@@ -316,7 +315,7 @@ ProjectionMatch Index::findTriangleProjection(const Eigen::VectorXd &location, i
   for (const auto &match : getClosestTriangles(location, n)) {
     auto polation = mapping::Polation(location, _mesh->triangles()[match.index]);
     if (polation.isInterpolation()) {
-      candidates.push_back({polation, polation.distance()});
+      candidates.emplace_back(std::move(polation));
     }
   }
   // Pick the smallest candidate by distance

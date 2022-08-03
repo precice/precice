@@ -43,12 +43,21 @@ using TetraMatch    = MatchType<struct TetraTag>;
 
 /// Struct representing a projection match
 struct ProjectionMatch {
+  ProjectionMatch(const mapping::Polation &p)
+      : polation(p) {}
+  ProjectionMatch(mapping::Polation &&p)
+      : polation(std::move(p)) {}
+
+  ProjectionMatch(const ProjectionMatch &other) = default;
+  ProjectionMatch(ProjectionMatch &&other)      = default;
+  ProjectionMatch &operator=(const ProjectionMatch &other) = default;
+  ProjectionMatch &operator=(ProjectionMatch &&other) = default;
+
   mapping::Polation polation;
-  Distance          distance;
 
   constexpr bool operator<(ProjectionMatch const &other) const
   {
-    return distance < other.distance;
+    return polation.distance() < other.polation.distance();
   };
 };
 
