@@ -89,17 +89,16 @@ ConnectionInfoWriter::~ConnectionInfoWriter()
   if (!bfs::exists(path)) {
     PRECICE_WARN("Cannot clean-up the connection file \"{}\" as it doesn't exist. "
                  "In case of connection problems, please report this to the preCICE developers.",
-                 path);
+                 path.generic_string());
     return;
   }
-  PRECICE_DEBUG("Deleting connection file \"{}\"", path);
+  PRECICE_DEBUG("Deleting connection file \"{}\"", path.generic_string());
   try {
     bfs::remove(path);
-    /// @TODO Check if we need to sleep to let the underlying filesystem synchronize
     if (bfs::exists(path)) {
       PRECICE_WARN("The connection file \"{}\" wasn't properly removed. "
                    "Make sure to delete the \"precice-run\" directory before restarting the simulation.",
-                   path);
+                   path.generic_string());
     }
   } catch (const bfs::filesystem_error &e) {
     PRECICE_WARN("Unable to clean-up connection file due to error: {}. "
@@ -121,11 +120,11 @@ void ConnectionInfoWriter::write(std::string const &info) const
     PRECICE_CHECK(!bfs::exists(tmp), message, "temporary ")
   }
 
-  PRECICE_DEBUG("Writing temporary connection file \"{}\"", tmp);
+  PRECICE_DEBUG("Writing temporary connection file \"{}\"", tmp.generic_string());
   bfs::create_directories(tmp.parent_path());
   {
     std::ofstream ofs(tmp.string());
-    PRECICE_CHECK(ofs, "Unable to establish connection as the temporary connection file \"{}\" couldn't be opened.", tmp);
+    PRECICE_CHECK(ofs, "Unable to establish connection as the temporary connection file \"{}\" couldn't be opened.", tmp.generic_string());
     fmt::print(ofs,
                "{}\nAcceptor: {}, Requester: {}, Tag: {}, Rank: {}",
                info, acceptorName, requesterName, tag, rank);
@@ -133,15 +132,14 @@ void ConnectionInfoWriter::write(std::string const &info) const
   PRECICE_CHECK(bfs::exists(tmp),
                 "Unable to establish connection as the temporary connection file \"{}\" was written, but doesn't exist on disk. "
                 "Please report this bug to the preCICE developers.",
-                tmp);
+                tmp.generic_string());
 
   PRECICE_DEBUG("Publishing connection file \"{}\"", path);
   bfs::rename(tmp, path);
-  /// @TODO Check if we need to sleep to let the underlying filesystem synchronize
   if (bfs::exists(tmp)) {
     PRECICE_WARN("The temporary connection file \"{}\" wasn't properly removed. "
                  "Make sure to delete the \"precice-run\" directory before restarting the simulation.",
-                 tmp);
+                 tmp.generic_string());
   }
   PRECICE_CHECK(bfs::exists(path),
                 "Unable to establish connection as the connection file \"{}\" doesn't exist on disk. "
