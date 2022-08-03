@@ -55,7 +55,7 @@ struct ProjectionMatch {
 
   mapping::Polation polation;
 
-  constexpr bool operator<(ProjectionMatch const &other) const
+  bool operator<(ProjectionMatch const &other) const
   {
     return polation.distance() < other.polation.distance();
   };
