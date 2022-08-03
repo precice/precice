@@ -10,6 +10,9 @@ import pathlib
 """ Files matching this pattern will be filtered out """
 IGNORE_PATTERNS = ["drivers"]
 
+""" Configured files, which should be ignored by git, yet installed by CMake"""
+CONFIGURED_PUBLIC = ["${CMAKE_BINARY_DIR}/src/precice/Version.h"]
+
 """ Configured files, which should be ignored by git """
 CONFIGURED_SOURCES = ["${CMAKE_BINARY_DIR}/src/precice/impl/versions.hpp", "${CMAKE_BINARY_DIR}/src/precice/impl/versions.cpp"]
 
@@ -50,6 +53,7 @@ def get_file_lists(root):
 
     # Find interface headers
     public = glob.glob(os.path.join(src_dir, "precice", "*.hpp"))
+    public += CONFIGURED_PUBLIC
     public = [os.path.relpath(p, root) for p in public]
 
     # Find all test and source cpp files
@@ -165,7 +169,7 @@ def main():
     gitfiles = get_gitfiles()
     if gitfiles:
         not_tracked = list(
-            set(sources + public + utests + itests) - set(gitfiles + CONFIGURED_SOURCES)
+            set(sources + public + utests + itests) - set(gitfiles + CONFIGURED_SOURCES + CONFIGURED_PUBLIC)
         )
         if not_tracked:
             print("The source tree contains files not tracked by git.")

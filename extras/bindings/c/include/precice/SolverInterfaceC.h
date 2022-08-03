@@ -1,5 +1,7 @@
 #pragma once
 
+#include "precice/Version.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif

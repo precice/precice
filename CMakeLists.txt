@@ -327,6 +327,7 @@ endif()
 include(GenerateVersionInformation)
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/DetectGitRevision.cmake)
 configure_file("${PROJECT_SOURCE_DIR}/src/precice/impl/versions.hpp.in" "${PROJECT_BINARY_DIR}/src/precice/impl/versions.hpp" @ONLY)
+configure_file("${PROJECT_SOURCE_DIR}/src/precice/Version.h.in" "${PROJECT_BINARY_DIR}/src/precice/Version.h" @ONLY)
 
 # Includes Configuration
 target_include_directories(precice PUBLIC
@@ -637,4 +638,3 @@ add_custom_target(
   WORKING_DIRECTORY ${preCICE_SOURCE_DIR}
   USES_TERMINAL
   )
-
