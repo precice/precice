@@ -9,6 +9,7 @@ namespace mapping {
 Polation::Polation(const Eigen::VectorXd &location, const mesh::Vertex &element)
 {
   _weightedElements.emplace_back(WeightedElement{element.getID(), 1.0});
+  // The projection in this case is simply the nearest point.
   _distance = (location - element.getCoords()).norm();
 }
 
@@ -74,11 +75,8 @@ Polation::Polation(const Eigen::VectorXd &location, const mesh::Tetrahedron &ele
   _weightedElements.emplace_back(WeightedElement{C.getID(), bcoords(2)});
   _weightedElements.emplace_back(WeightedElement{D.getID(), bcoords(3)});
 
-  Eigen::VectorXd projection = A.getCoords() * bcoords(0) +
-                               B.getCoords() * bcoords(1) +
-                               C.getCoords() * bcoords(2) +
-                               D.getCoords() * bcoords(3);
-  _distance = (location - projection).norm();
+  // There is no projection happing, so the distance is always 0.
+  _distance = 0.0;
 }
 
 const std::vector<WeightedElement> &Polation::getWeightedElements() const
