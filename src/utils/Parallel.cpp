@@ -1,6 +1,5 @@
 #include "Parallel.hpp"
 #include <algorithm>
-#include <fmt/ostream.h>
 #include <map>
 #include <memory>
 #include <numeric>
