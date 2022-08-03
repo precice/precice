@@ -24,7 +24,7 @@ struct WeightedElement {
 class Polation {
 public:
   /// Calculate projection to a vertex. Weight is always 1.0
-  Polation(const mesh::Vertex &element);
+  Polation(const Eigen::VectorXd &location, const mesh::Vertex &element);
 
   /// Calculate projection to an edge
   Polation(const Eigen::VectorXd &location, const mesh::Edge &element);
@@ -41,8 +41,12 @@ public:
   /// Check whether all the weights are positive, which means it is interpolation
   bool isInterpolation() const;
 
+  /// Returns the projection distance
+  double distance() const;
+
 private:
   std::vector<WeightedElement> _weightedElements;
+  double                       _distance;
 };
 
 /// Make the WeightedElement printable

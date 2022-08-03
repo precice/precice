@@ -60,8 +60,8 @@ void WatchPoint::initialize()
 
   if (_mesh->vertices().size() > 0) {
     auto match        = _mesh->index().findCellOrProjection(_point, 4);
-    _interpolation    = std::make_unique<mapping::Polation>(match.polation);
-    _shortestDistance = match.distance;
+    _shortestDistance = match.polation.distance();
+    _interpolation    = std::make_unique<mapping::Polation>(std::move(match.polation));
   }
 
   if (utils::IntraComm::isSecondary()) {
