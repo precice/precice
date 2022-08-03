@@ -30,7 +30,7 @@ template <class Tag>
 struct MatchType {
   MatchID index{NO_MATCH};
   MatchType() = default;
-  MatchType(MatchID i)
+  explicit MatchType(MatchID i)
       : index(i){};
 };
 
