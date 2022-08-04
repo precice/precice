@@ -58,7 +58,7 @@ set(CPACK_SOURCE_IGNORE_FILES
   ".gitignore"
   )
 
-# Build dependecy set
+# Build dependency set
 unset(CPACK_DEBIAN_PACKAGE_DEPENDS)
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6, libboost-dev (>= 1.65), libboost-log-dev (>= 1.65), libboost-thread-dev (>= 1.65), libboost-system-dev (>= 1.65), libboost-filesystem-dev (>= 1.65), libboost-program-options-dev (>= 1.65), libboost-test-dev (>= 1.65), libxml2")
 if(PRECICE_PythonActions)

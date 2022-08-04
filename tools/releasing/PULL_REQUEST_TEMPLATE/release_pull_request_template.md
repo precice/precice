@@ -40,7 +40,7 @@ Only the release manager should update this post (even tickboxes, due to race co
 * [ ] Open PR from `release-vX.Y.Z` to `main` (use [this template](https://github.com/precice/precice/blob/add_PR_template/.github/PULL_REQUEST_TEMPLATE/release_pull_request_template.md))
 * [ ] Do regression tests using the release branch (specific revision) _list below :arrow_down:_ (all)
 * [ ] Fix potential problems in develop (all)
-* [ ] Rebase the relase branch on develop (all)
+* [ ] Rebase the release branch on develop (all)
 * [ ] Commit the version bump
 * [ ] Draft message to mailing list
 * [ ] Write a draft "blog post" on [Discourse](https://precice.discourse.group/)
@@ -53,7 +53,7 @@ Only the release manager should update this post (even tickboxes, due to race co
 * [ ] Merge PR to main ( use `git merge --no-ff release-vX.Y.Z` )
 * [ ] Tag release on main `vX.Y.Z` and verify by running `git describe --tags`
 * [ ] Merge back to develop and verify by running `git describe --tags`
-* [ ] Tripple check that you haven't messed anything up. (You can always discard local changes)
+* [ ] Triple check that you haven't messed anything up. (You can always discard local changes)
 * [ ] Push main and push the `vX.Y.Z` tag
 * [ ] Push develop
 * [ ] Wait for the release pipeline
@@ -119,7 +119,7 @@ Run all these tests manually on your system. If you succeed, please write a comm
 
 ### Release new version for bindings (to ensure compatibility with newest preCICE version)
 
-- [ ] [Fortan module](https://github.com/precice/fortran-module/compare/main...develop)
+- [ ] [Fortran module](https://github.com/precice/fortran-module/compare/main...develop)
 - [ ] [MATLAB bindings](https://github.com/precice/matlab-bindings/blob/develop/docs/ReleaseGuide.md)
 - [ ] [python bindings](https://github.com/precice/python-bindings/blob/develop/docs/ReleaseGuide.md)
 - [ ] [Julia bindings](https://github.com/precice/PreCICE.jl)

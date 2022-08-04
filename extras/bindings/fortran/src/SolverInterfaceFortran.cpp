@@ -29,7 +29,7 @@ static std::string errormsg = "preCICE has not been created properly. Be sure to
 namespace precice {
 namespace impl {
 /**
-     * @brief Returns length of string without trailing whitespaces.
+     * @brief Returns length of string without trailing whitespace.
      */
 int strippedLength(const char *string, int length);
 } // namespace impl

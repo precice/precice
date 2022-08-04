@@ -1,6 +1,6 @@
 ## How to work with this template
 
-* [ ] assign a relase manager, who takes care of the process
+* [ ] assign a release manager, who takes care of the process
 * [ ] assign each point below to a responsible person, before you continue. Use `@member`.
 
 Only the release manager should update this post (even tickboxes, due to race conditions in editing). Everybody else should comment on the PR with the progress.
@@ -43,7 +43,7 @@ Only the release manager should update this post (even tickboxes, due to race co
 * [ ] Merge PR to master ( use `git merge --no-ff hotfix-vX.Y.Z` )
 * [ ] Tag hotfix on master `vX.Y.Z` and verify by running `git describe --tags`
 * [ ] Merge master back to develop and verify by running `git describe --tags`
-* [ ] Tripple check that you haven't messed anything up. (You can always discard local changes)
+* [ ] Triple check that you haven't messed anything up. (You can always discard local changes)
 * [ ] Push master and push the `vX.Y.Z` tag
 * [ ] Push develop
 * [ ] Wait for the release pipeline
@@ -109,7 +109,7 @@ Run all these tests manually on your system. If you succeed, please write a comm
 
 ### release new version for bindings (to ensure compatibility with newest preCICE version)
 
-- [ ] [Fortan module](https://github.com/precice/fortran-module/compare/master...develop)
+- [ ] [Fortran module](https://github.com/precice/fortran-module/compare/master...develop)
 - [ ] [MATLAB bindings](https://github.com/precice/matlab-bindings/blob/develop/docs/hotfixGuide.md)
 - [ ] [python bindings](https://github.com/precice/python-bindings/blob/develop/docs/hotfixGuide.md)
 - [ ] [Julia bindings](https://github.com/precice/PreCICE.jl)
