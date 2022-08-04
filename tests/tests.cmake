@@ -119,6 +119,8 @@ target_sources(testprecice
     tests/serial/mapping-scaled-consistent/helpers.hpp
     tests/serial/mapping-scaled-consistent/testQuadMappingScaledConsistentOnA.cpp
     tests/serial/mapping-scaled-consistent/testQuadMappingScaledConsistentOnB.cpp
+    tests/serial/mapping-scaled-consistent/testTetraOnA.cpp
+    tests/serial/mapping-scaled-consistent/testTetraOnB.cpp
     tests/serial/mapping-scaled-consistent/testVolumetricOnA2D.cpp
     tests/serial/mapping-scaled-consistent/testVolumetricOnB2D.cpp
     tests/serial/mapping-volume/OneTetraConservativeRead.cpp
