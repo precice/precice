@@ -3,7 +3,7 @@
 set -e
 
 USAGE="
-usage: $(basename $0) MAJOR.MINOR.PATCH
+usage: $(basename "$0") MAJOR.MINOR.PATCH
 
 Bumps the version in all required files.
 "
@@ -28,8 +28,8 @@ else
     exit 1
 fi
 
-REPO=`git rev-parse --show-toplevel`
-cd $REPO
+REPO=$(git rev-parse --show-toplevel)
+cd "$REPO"
 echo "Root at $REPO"
 
 echo -n "Checking location ... "
@@ -48,14 +48,14 @@ VERSIONREGEX='[0-9]\+\.[0-9]\+\.[0-9]\+'
 echo " - CMake"
 sed "s/\(project(preCICE\s\+VERSION\s\+\)$VERSIONREGEX/\1$VERSION/" -i CMakeLists.txt
 echo " - Changelog"
-CL_FILES=`find docs/changelog -type f -name "*.md"`
+CL_FILES=$(find docs/changelog -type f -name "*.md")
 CL_CONTENTS="## $VERSION\n"
 echo "   compressing"
 for cl_file in $CL_FILES; do
   # Extract the PR number from the filename
-  cl_name=$(basename $cl_file .md)
+  cl_name=$(basename "$cl_file" .md)
   # Add the PR number to the end of every line in the file
-  cl_entry=$(sed -s "s/$/ (#$cl_name)/" $cl_file)
+  cl_entry=$(sed -s "s/$/ (https:\/\/github.com\/precice\/precice\/pull\/$cl_name)/" "$cl_file")
   if [[ -z "$cl_entry" ]]; then
     echo "WARNING $cl_file is empty"
   else
