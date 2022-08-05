@@ -335,8 +335,7 @@ double SolverInterfaceImpl::initialize()
 
   // Actions in initialize use dt = 0.0. This is dangerous, because of the ScaleByDt action, which divides by dt. But there is no other solution. See https://github.com/precice/precice/issues/1358 for details.
 
-  if (_couplingScheme->sendsInitializedData())
-  {
+  if (_couplingScheme->sendsInitializedData()) {
     performDataActions({action::Action::WRITE_MAPPING_PRIOR}, 0.0, 0.0, 0.0, 0.0);
     mapWrittenData();
     performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0, 0.0, 0.0, 0.0);

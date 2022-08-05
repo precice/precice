@@ -54,7 +54,6 @@ public:
     return false;
   }
 
-
   /**
    * @brief Not implemented.
    */

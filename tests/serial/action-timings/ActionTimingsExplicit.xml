@@ -63,7 +63,12 @@
       <max-time-windows value="10" />
       <time-window-size value="1.0" />
       <exchange data="Forces" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
-      <exchange data="Velocities" mesh="MeshOne" from="SolverTwo" to="SolverOne" initialize="True" />
+      <exchange
+        data="Velocities"
+        mesh="MeshOne"
+        from="SolverTwo"
+        to="SolverOne"
+        initialize="True" />
     </coupling-scheme:serial-explicit>
   </solver-interface>
 </precice-configuration>
