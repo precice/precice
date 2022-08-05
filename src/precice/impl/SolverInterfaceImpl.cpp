@@ -403,23 +403,10 @@ double SolverInterfaceImpl::advance(
   }
 #endif
 
-  double time;                   // Current time
-  double timeWindowSize;         // Length of (full) current time window
-  double timeWindowComputedPart; // Length of computed part of (full) current time window
-
   // Update the coupling scheme time state. Necessary to get correct remainder.
   _couplingScheme->addComputedTime(computedTimestepLength);
-
-  if (_couplingScheme->hasTimeWindowSize()) {
-    timeWindowSize         = _couplingScheme->getTimeWindowSize();
-    timeWindowComputedPart = timeWindowSize - _couplingScheme->getThisTimeWindowRemainder();
-  } else {
-    // use time window size provided to advance, only allowed, if this participant sets the time window size for the other participant
-    timeWindowSize         = computedTimestepLength;
-    timeWindowComputedPart = computedTimestepLength;
-  }
-
-  time = _couplingScheme->getTime();
+  // Current time
+  double time = _couplingScheme->getTime();
 
   if (_couplingScheme->willDataBeExchanged(0.0)) {
     performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time);
