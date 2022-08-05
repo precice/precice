@@ -3,7 +3,7 @@ myTargetData = 0
 
 def performAction(time, sourceData, targetData):
     ''' This function is called first at configured timing. It can be omitted, if not
-    needed. Its parameters are time, time window size, the source data, followed by the target data.
+    needed. Its parameters are time, the source data, followed by the target data.
     Source and target data can be omitted (selectively or both) by not mentioning
     them in the preCICE XML configuration (see the configuration reference).'''
 
