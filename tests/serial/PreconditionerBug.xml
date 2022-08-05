@@ -26,8 +26,7 @@
         direction="write"
         from="MeshTwo"
         to="MeshOne"
-        constraint="consistent"
-        timing="initial" />
+        constraint="consistent" />
       <write-data name="DataOne" mesh="MeshTwo" />
     </participant>
 

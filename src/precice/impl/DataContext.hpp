@@ -61,7 +61,7 @@ public:
   /**
    * @brief Check whether any mapping has to be performed.
    *
-   * Checks whether any mapping exists for this context and the corresponding timing configuration.
+   * Checks whether any mapping exists for this context.
    *
    * @return True, if any mapping has to be performed.
    */

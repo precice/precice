@@ -19,8 +19,7 @@
         direction="write"
         from="MeshOne"
         to="MeshTwo"
-        constraint="consistent"
-        timing="initial" />
+        constraint="consistent" />
     </participant>
 
     <participant name="SolverTwo">

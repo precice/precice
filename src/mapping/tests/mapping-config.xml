@@ -13,6 +13,5 @@
     direction="write"
     from="TestMeshTwo"
     to="TestMesh"
-    constraint="conservative"
-    timing="onadvance" />
+    constraint="conservative" />
 </configuration>

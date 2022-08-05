@@ -24,8 +24,7 @@
         direction="write"
         from="MeshOne"
         to="MeshTwo"
-        constraint="scaled-consistent"
-        timing="initial" />
+        constraint="scaled-consistent" />
     </participant>
 
     <m2n:sockets from="SolverOne" to="SolverTwo" />

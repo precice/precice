@@ -35,12 +35,10 @@ BOOST_AUTO_TEST_CASE(Configuration)
   BOOST_TEST(meshConfig->meshes().size() == 3);
   BOOST_TEST(mappingConfig.mappings().size() == 2);
 
-  BOOST_TEST(mappingConfig.mappings().at(0).timing == MappingConfiguration::INITIAL);
   BOOST_TEST(mappingConfig.mappings().at(0).fromMesh == meshConfig->meshes().at(2));
   BOOST_TEST(mappingConfig.mappings().at(0).toMesh == meshConfig->meshes().at(1));
   BOOST_TEST(mappingConfig.mappings().at(0).direction == MappingConfiguration::READ);
 
-  BOOST_TEST(mappingConfig.mappings().at(1).timing == MappingConfiguration::ON_ADVANCE);
   BOOST_TEST(mappingConfig.mappings().at(1).fromMesh == meshConfig->meshes().at(1));
   BOOST_TEST(mappingConfig.mappings().at(1).toMesh == meshConfig->meshes().at(0));
   BOOST_TEST(mappingConfig.mappings().at(1).direction == MappingConfiguration::WRITE);

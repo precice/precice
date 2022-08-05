@@ -17,9 +17,6 @@ struct MappingContext {
   /// id of mesh to which is mapped
   int toMeshID = -1;
 
-  /// Time of execution of mapping.
-  mapping::MappingConfiguration::Timing timing = mapping::MappingConfiguration::INITIAL;
-
   /// True, if computation and mapping is done repeatedly for single values.
   //bool isIncremental;
 

@@ -27,8 +27,7 @@
         from="MeshOne"
         to="MeshTwo"
         constraint="consistent"
-        z-dead="true"
-        timing="initial" />
+        z-dead="true" />
       <read-data name="DataOne" mesh="MeshTwo" />
     </participant>
 

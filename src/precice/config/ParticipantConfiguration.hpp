@@ -85,7 +85,6 @@ private:
   const std::string ATTR_NAME               = "name";
   const std::string ATTR_SOURCE_DATA        = "source-data";
   const std::string ATTR_TARGET_DATA        = "target-data";
-  const std::string ATTR_TIMING             = "timing";
   const std::string ATTR_LOCAL_OFFSET       = "offset";
   const std::string ATTR_ACTION_TYPE        = "type";
   const std::string ATTR_FROM               = "from";
