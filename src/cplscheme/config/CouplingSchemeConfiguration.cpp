@@ -1050,6 +1050,15 @@ void CouplingSchemeConfiguration::checkIfDataIsExchanged(
                 dataName);
 }
 
+int CouplingSchemeConfiguration::getWaveformUsedOrder(std::string participantName, std::string readDataName) const
+{
+  auto participant = _participantConfig->getParticipant(participantName);
+  auto dataContext = participant->readDataContext(readDataName);
+  int  usedOrder   = dataContext.getInterpolationOrder();
+  PRECICE_ASSERT(usedOrder >= 0); // ensure that usedOrder was set
+  return usedOrder;
+}
+
 void CouplingSchemeConfiguration::checkWaveformOrderReadData(
     int maxAllowedOrder) const
 {
