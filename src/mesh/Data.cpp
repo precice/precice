@@ -13,8 +13,7 @@ Data::Data()
     : _name(""),
       _id(-1),
       _dimensions(0),
-      _spacialDimensions(-1),
-      _hasGradient(false)
+      _spatialDimensions(-1)
 {
   PRECICE_ASSERT(false);
 }
@@ -23,14 +22,12 @@ Data::Data(
     std::string name,
     DataID      id,
     int         dimensions,
-    int         spacialDimensions,
-    bool        hasGradient)
+    int         spatialDimensions)
     : _values(),
       _name(std::move(name)),
       _id(id),
       _dimensions(dimensions),
-      _spacialDimensions(spacialDimensions),
-      _hasGradient(hasGradient)
+      _spatialDimensions(spatialDimensions)
 {
   PRECICE_ASSERT(dimensions > 0, dimensions);
 }
@@ -67,14 +64,9 @@ DataID Data::getID() const
 
 void Data::toZero()
 {
-  auto begin = _values.data();
-  auto end   = begin + _values.size();
-  std::fill(begin, end, 0.0);
-
+  _values.setZero();
   if (_hasGradient) {
-    auto beginGradient = _gradientValues.data();
-    auto endGradient   = beginGradient + _gradientValues.size();
-    std::fill(beginGradient, endGradient, 0.0);
+    _gradientValues.setZero();
   }
 }
 
@@ -83,14 +75,19 @@ bool Data::hasGradient() const
   return _hasGradient;
 }
 
+void Data::requireDataGradient()
+{
+  _hasGradient = true;
+};
+
 int Data::getDimensions() const
 {
   return _dimensions;
 }
 
-int Data::getSpacialDimensions() const
+int Data::getSpatialDimensions() const
 {
-  return _spacialDimensions;
+  return _spatialDimensions;
 }
 
 } // namespace mesh

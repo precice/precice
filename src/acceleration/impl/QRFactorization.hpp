@@ -15,7 +15,7 @@ namespace impl {
 /**
  * @brief Class that provides functionality for a dynamic QR-decomposition, that can be updated
  * in O(mn) flops if a column is inserted or deleted.
- * The new colmn is orthogonalized to the existing columns in Q using a modified GramSchmidt algorithm.
+ * The new column is orthogonalized to the existing columns in Q using a modified GramSchmidt algorithm.
  * The zero-elements are generated using suitable givens-roatations.
  * The Interface provides fnctions such as insertColumn, deleteColumn at arbitrary position an push or pull
  * column at front or back, resp.
@@ -152,7 +152,7 @@ public:
   // @brief optional file-stream for logging output
   void setfstream(std::fstream *stream);
 
-  // @brief set number of global rows for the master-slave case
+  // @brief set number of global rows
   void setGlobalRows(int gr);
 
   // @brief sets the filtering technique to maintain good conditioning of the least squares system

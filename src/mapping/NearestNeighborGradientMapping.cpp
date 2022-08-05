@@ -20,7 +20,7 @@ NearestNeighborGradientMapping::NearestNeighborGradientMapping(
     int        dimensions)
     : NearestNeighborBaseMapping(constraint, dimensions, true, "NearestNeighborGradientMapping", "nng")
 {
-  PRECICE_CHECK(!hasConstraint(CONSERVATIVE), "Nearest-neighbor-gradient mapping is not implemented using a \"conservative\" constraint. Please select constraint=\" consistent\" or a different mapping method.");
+  PRECICE_ASSERT(!hasConstraint(CONSERVATIVE));
 
   if (hasConstraint(SCALEDCONSISTENT)) {
     PRECICE_WARN("The scaled-consistent mapping hasn't been specifically tested with nearest-neighbor-gradient. Please avoid using it or choose another mapping method. ");
@@ -54,38 +54,27 @@ void NearestNeighborGradientMapping::onMappingComputed(mesh::PtrMesh origins, me
   }
 };
 
-void NearestNeighborGradientMapping::map(
-    int inputDataID,
-    int outputDataID)
+void NearestNeighborGradientMapping::mapConsistent(DataID inputDataID, DataID outputDataID)
 {
   PRECICE_TRACE(inputDataID, outputDataID);
-
   precice::utils::Event e("map." + mappingNameShort + ".mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
-  const int valueDimensions = input()->data(inputDataID)->getDimensions(); // Data dimensions (for scalar = 1, for vectors > 1)
-
-  const Eigen::VectorXd &inputValues  = input()->data(inputDataID)->values();
-  Eigen::VectorXd &      outputValues = output()->data(outputDataID)->values();
+  PRECICE_ASSERT(input()->data(inputDataID)->hasGradient(), "Mesh \"{}\" does not contain gradient data. Using Nearest Neighbor Gradient requires gradient data.",
+                 input()->getName());
 
   /// Check if input has gradient data, else send Error
   if (input()->vertices().empty()) {
     PRECICE_WARN("The mesh doesn't contain any vertices.");
   }
 
-  PRECICE_CHECK(input()->data(inputDataID)->hasGradient(), "Mesh \"{}\" does not contain gradient data. Using Nearest Neighbor Gradient requires gradient data for each vertices.",
-                "Check if hasGradient flag in the Data object was successfully initialized.",
-                input()->getName());
-
-  const Eigen::MatrixXd &gradientValues = input()->data(inputDataID)->gradientValues();
-
-  PRECICE_ASSERT(inputValues.size() / valueDimensions == static_cast<int>(input()->vertices().size()),
-                 inputValues.size(), valueDimensions, input()->vertices().size());
-  PRECICE_ASSERT(outputValues.size() / valueDimensions == static_cast<int>(output()->vertices().size()),
-                 outputValues.size(), valueDimensions, output()->vertices().size());
+  const int              valueDimensions = input()->data(inputDataID)->getDimensions(); // Data dimensions (for scalar = 1, for vectors > 1)
+  const Eigen::VectorXd &inputValues     = input()->data(inputDataID)->values();
+  Eigen::VectorXd &      outputValues    = output()->data(outputDataID)->values();
+  const Eigen::MatrixXd &gradientValues  = input()->data(inputDataID)->gradientValues();
 
   //Consistent mapping
   PRECICE_DEBUG((hasConstraint(CONSISTENT) ? "Map consistent" : "Map scaled-consistent"));
-  size_t const outSize = output()->vertices().size();
+  const size_t outSize = output()->vertices().size();
 
   for (size_t i = 0; i < outSize; i++) {
     int inputIndex = _vertexIndices[i] * valueDimensions;
@@ -99,11 +88,12 @@ void NearestNeighborGradientMapping::map(
     }
   }
 
-  if (hasConstraint(SCALEDCONSISTENT)) {
-    scaleConsistentMapping(inputDataID, outputDataID);
-  }
-
   PRECICE_DEBUG("Mapped values (with gradient) = {}", utils::previewRange(3, outputValues));
+}
+
+void NearestNeighborGradientMapping::mapConservative(DataID /*inputDataID*/, DataID /*outputDataID*/)
+{
+  PRECICE_ASSERT(false, "Not implemented.")
 }
 
 } // namespace mapping

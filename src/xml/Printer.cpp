@@ -25,16 +25,22 @@ namespace {
 /// Transforms a given heading into the id of the sanitized GitHub link
 std::string toGHLink(const std::string &heading)
 {
-  std::regex sanitizer{"[^a-zA-Z0-9-]"};
-  std::regex spaces{"\\s"};
+  try {
+    std::regex sanitizer{"[^a-zA-Z0-9-]"};
+    std::regex spaces{"\\s"};
 
-  // sanitize the heading
-  std::string sanitized = std::regex_replace(std::regex_replace(heading, sanitizer, ""), spaces, "-");
+    // sanitize the heading
+    std::string sanitized = std::regex_replace(std::regex_replace(heading, sanitizer, ""), spaces, "-");
 
-  // convert to lowercase
-  std::transform(sanitized.begin(), sanitized.end(), sanitized.begin(),
-                 [](unsigned char c) { return std::tolower(c); });
-  return "#" + sanitized;
+    // convert to lowercase
+    std::transform(sanitized.begin(), sanitized.end(), sanitized.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+    return "#" + sanitized;
+
+  } catch (const std::regex_error &e) {
+    std::cerr << "Error sanitizing link: " << e.what() << '\n';
+    std::exit(-1);
+  }
 }
 
 /// Attribute
@@ -193,8 +199,8 @@ std::ostream &printDTD(std::ostream &out, const XMLTag &tag, bool start = false)
 
 /** Prints an Example of the given XMLTag at a given level of nesting.
  *
- * For the sake of readability, the example depth is trucated.
- * level is used to trucate and for indentation purposes.
+ * For the sake of readability, the example depth is truncated.
+ * level is used to truncate and for indentation purposes.
  */
 std::ostream &printExample(std::ostream &out, const XMLTag &tag, int level)
 {

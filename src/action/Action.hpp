@@ -9,19 +9,18 @@ namespace action {
 /**
  * @brief Abstract base class for configurable actions on data and/or meshes.
  *
- * Actions are executed on call of precice::SolverInterface::initialize(),
- * precice::SolverInterface::initializeData(), and precice::SolverInterface::advance(). They can change meshes and in particular
- * data values.
+ * Actions are executed on call of precice::SolverInterface::initialize() and precice::SolverInterface::advance().
+ * They can change meshes and in particular data values.
  */
 class Action {
 public:
   /// Defines the time and place of application of the action.
   enum Timing {
     ON_TIME_WINDOW_COMPLETE_POST, // On advancing to next time window, after adv. cpl scheme
-    WRITE_MAPPING_PRIOR,          // Everytime, before write mapping
-    WRITE_MAPPING_POST,           // Everytime, after write mapping and before advancing cpl scheme
-    READ_MAPPING_PRIOR,           // Everytime, after advancing cpl scheme and before read mapping
-    READ_MAPPING_POST             // Everytime, after read mapping
+    WRITE_MAPPING_PRIOR,          // Every time, before write mapping
+    WRITE_MAPPING_POST,           // Every time, after write mapping and before advancing cpl scheme
+    READ_MAPPING_PRIOR,           // Every time, after advancing cpl scheme and before read mapping
+    READ_MAPPING_POST             // Every time, after read mapping
   };
 
   Action(

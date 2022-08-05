@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Eigen/Core>
-#include <boost/signals2.hpp>
 #include <deque>
 #include <iosfwd>
 #include <list>
@@ -14,9 +13,11 @@
 #include "mesh/Data.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "mesh/Tetrahedron.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
 #include "precice/types.hpp"
+#include "query/Index.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "utils/PointerVector.hpp"
 #include "utils/assertion.hpp"
@@ -40,6 +41,7 @@ public:
   using VertexContainer   = std::deque<Vertex>;
   using EdgeContainer     = std::deque<Edge>;
   using TriangleContainer = std::deque<Triangle>;
+  using TetraContainer    = std::deque<Tetrahedron>;
   using DataContainer     = std::vector<PtrData>;
   using BoundingBoxMap    = std::map<int, BoundingBox>;
 
@@ -48,12 +50,6 @@ public:
 
   /// A mapping from remote local ranks to the IDs that must be communicated
   using CommunicationMap = std::map<Rank, std::vector<VertexID>>;
-
-  /// Signal is emitted when the mesh is changed
-  boost::signals2::signal<void(Mesh &)> meshChanged;
-
-  /// Signal is emitted when the mesh is destroyed
-  boost::signals2::signal<void(Mesh &)> meshDestroyed;
 
   /// Use if the id of the mesh is not necessary
   static constexpr MeshID MESH_ID_UNDEFINED{-1};
@@ -70,9 +66,6 @@ public:
       int         dimensions,
       MeshID      id);
 
-  /// Destructor, deletes created objects.
-  ~Mesh();
-
   /// Returns modifieable container holding all vertices.
   VertexContainer &vertices();
 
@@ -85,11 +78,37 @@ public:
   /// Returns const container holding all edges.
   const EdgeContainer &edges() const;
 
+  bool hasEdges() const
+  {
+    return !_edges.empty();
+  }
+
   /// Returns modifiable container holding all triangles.
   TriangleContainer &triangles();
 
   /// Returns const container holding all triangles.
   const TriangleContainer &triangles() const;
+
+  bool hasTriangles() const
+  {
+    return !_triangles.empty();
+  }
+
+  /// Returns modifiable container holding all tetrahedra.
+  TetraContainer &tetrahedra();
+
+  /// Returns const container holding all tetrahedra.
+  const TetraContainer &tetrahedra() const;
+
+  bool hasTetrahedra() const
+  {
+    return !_tetrahedra.empty();
+  }
+
+  bool hasConnectivity() const
+  {
+    return hasEdges() || hasTriangles() || hasTetrahedra();
+  }
 
   int getDimensions() const;
 
@@ -128,17 +147,36 @@ public:
       Edge &edgeTwo,
       Edge &edgeThree);
 
+  /**
+   * @brief Creates and initializes a Triangle object.
+   *
+   * @param[in] vertexOne Reference to first edge defining the Triangle.
+   * @param[in] vertexTwo Reference to second edge defining the Triangle.
+   * @param[in] vertexThree Reference to third edge defining the Triangle.
+   */
+  Triangle &createTriangle(
+      Vertex &vertexOne,
+      Vertex &vertexTwo,
+      Vertex &vertexThree);
+
+  /**
+   * @brief Creates and initializes a Tetrahedron object.
+   *
+   * @param[in] vertexOne Reference to first vertex defining the Tetrahedron.
+   * @param[in] vertexTwo Reference to second vertex defining the Tetrahedron.
+   * @param[in] vertexThree Reference to third vertex defining the Tetrahedron.
+   * @param[in] vertexFour Reference to fourth vertex defining the Tetrahedron.
+   */
+  Tetrahedron &createTetrahedron(
+      Vertex &vertexOne,
+      Vertex &vertexTwo,
+      Vertex &vertexThree,
+      Vertex &vertexFour);
+
   /// Create only data for vertex
   PtrData &createData(const std::string &name,
                       int                dimension,
                       DataID             id);
-
-  /// Creates data for vertex with additional gradient data
-  PtrData &createDataWithGradient(
-      const std::string &name,
-      int                dimension,
-      int                meshDimensions,
-      DataID             id);
 
   /// Allows access to all data
   const DataContainer &data() const;
@@ -235,6 +273,16 @@ public:
 
   bool operator!=(const Mesh &other) const;
 
+  const query::Index &index() const
+  {
+    return _index;
+  }
+
+  query::Index &index()
+  {
+    return _index;
+  }
+
 private:
   mutable logging::Logger _log{"mesh::Mesh"};
 
@@ -247,22 +295,23 @@ private:
   /// The ID of this mesh.
   MeshID _id;
 
-  /// Holds vertices, edges, and triangles.
+  /// Holds vertices, edges, triangles and tetrahedra.
   VertexContainer   _vertices;
   EdgeContainer     _edges;
   TriangleContainer _triangles;
+  TetraContainer    _tetrahedra;
 
   /// Data hold by the vertices of the mesh.
   DataContainer _data;
 
   /**
-   * @brief Vertex distribution for the master, holding for each slave all vertex IDs it owns.
+   * @brief Vertex distribution for the primary rank, holding for each secondary rank all vertex IDs it owns.
    *
-   * For slaves, this data structure is empty and should not be used.
+   * For secondary ranks, this data structure is empty and should not be used.
    */
   VertexDistribution _vertexDistribution;
 
-  /// Holds the index of the last vertex for each slave.
+  /// Holds the index of the last vertex for each rank.
   /**
    * The last entry holds the total number of vertices.
    * Needed for the matrix-matrix multiplication of the IMVJ acceleration.
@@ -289,6 +338,8 @@ private:
   CommunicationMap _communicationMap;
 
   BoundingBox _boundingBox;
+
+  query::Index _index;
 };
 
 std::ostream &operator<<(std::ostream &os, const Mesh &q);

@@ -54,6 +54,13 @@ public:
       int                           maxIterations      = UNDEFINED_MAX_ITERATIONS,
       int                           extrapolationOrder = UNDEFINED_EXTRAPOLATION_ORDER);
 
+protected:
+  /**
+   * @brief Setter for _timeWindowSize
+   * @param timeWindowSize
+   */
+  void setTimeWindowSize(double timeWindowSize);
+
 private:
   logging::Logger _log{"cplschemes::SerialCouplingSchemes"};
 
@@ -63,8 +70,18 @@ private:
   /// Determines, if the time window size is received by the participant.
   bool _participantReceivesTimeWindowSize = false;
 
+  /// Sends time window size, if this participant is the one to send
+  void sendTimeWindowSize();
+
   /// Receives and sets the time window size, if this participant is the one to receive
   void receiveAndSetTimeWindowSize();
+
+  /**
+   * @brief Receives result of first advance, if this has to happen inside SolverInterface::initialize()
+   *
+   * Second participant of a SerialCouplingScheme, receives the result of the first advance of the first participant.
+   */
+  void performReceiveOfFirstAdvance() override final;
 
   /**
    * @brief Exchanges data between the participants of the SerialCouplingSchemes and applies acceleration.
@@ -80,16 +97,6 @@ private:
   {
     return getSendData();
   }
-
-  /**
-   * @brief determine whether data has to be sent/received
-   */
-  void initializeImplementation() override;
-
-  /**
-   * @brief Exchanges data, if it has to be initialized.
-   */
-  void exchangeInitialData() override;
 };
 
 } // namespace cplscheme

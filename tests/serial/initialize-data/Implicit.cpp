@@ -7,12 +7,12 @@
 
 using namespace precice;
 
-BOOST_AUTO_TEST_SUITE(PreciceTests)
+BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(InitializeData)
 /**
  * @brief Test simple coupled simulation with iterations, data initialization and without acceleration
- * 
+ *
  */
 BOOST_AUTO_TEST_CASE(Implicit)
 {
@@ -48,8 +48,7 @@ BOOST_AUTO_TEST_CASE(Implicit)
   std::vector<double> vertex(dimensions, 0);
   int                 vertexID = couplingInterface.setMeshVertex(meshID, vertex.data());
 
-  double dt = 0;
-  dt        = couplingInterface.initialize();
+  double              dt = 0;
   std::vector<double> writeData(dimensions, writeValue);
   std::vector<double> readData(dimensions, -1);
   const std::string & cowid = actionWriteInitialData();
@@ -60,7 +59,7 @@ BOOST_AUTO_TEST_CASE(Implicit)
     couplingInterface.markActionFulfilled(cowid);
   }
 
-  couplingInterface.initializeData();
+  dt = couplingInterface.initialize();
 
   while (couplingInterface.isCouplingOngoing()) {
     if (couplingInterface.isActionRequired(actionWriteIterationCheckpoint())) {
@@ -78,7 +77,7 @@ BOOST_AUTO_TEST_CASE(Implicit)
   couplingInterface.finalize();
 }
 
-BOOST_AUTO_TEST_SUITE_END() // PreciceTests
+BOOST_AUTO_TEST_SUITE_END() // Integration
 BOOST_AUTO_TEST_SUITE_END() // Serial
 BOOST_AUTO_TEST_SUITE_END() // InitializeData
 

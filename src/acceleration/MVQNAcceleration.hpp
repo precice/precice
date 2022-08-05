@@ -70,7 +70,7 @@ public:
     * @brief Marks a iteration sequence as converged.
     *
     * called by the iterationsConverged() method in the BaseQNAcceleration class
-    * handles the acceleration sepcific action after the convergence of one iteration
+    * handles the acceleration specific action after the convergence of one iteration
     */
   virtual void specializedIterationsConverged(const DataMap &cplData);
 
@@ -130,9 +130,6 @@ private:
 
   /// @brief: Number of reused time windows at restart if restart-mode = RS-LS
   int _RSLSreusedTimeWindows;
-
-  /// @brief: Number of used columns per time window. Always the first _usedColumnsPerTwindow are used.
-  int _usedColumnsPerTimeWindow;
 
   /// @brief tracks the number of restarts of IMVJ
   int _nbRestarts;

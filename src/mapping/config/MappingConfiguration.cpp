@@ -7,6 +7,7 @@
 #include <ostream>
 #include <utility>
 #include "logging/LogMacros.hpp"
+#include "mapping/LinearCellInterpolationMapping.hpp"
 #include "mapping/Mapping.hpp"
 #include "mapping/NearestNeighborGradientMapping.hpp"
 #include "mapping/NearestNeighborMapping.hpp"
@@ -82,8 +83,11 @@ MappingConfiguration::MappingConfiguration(
   }
   {
     XMLTag tag(*this, VALUE_RBF_GAUSSIAN, occ, TAG);
-    tag.setDocumentation("Local radial-basis-function mapping based on the Gaussian RBF with a cut-off threshold.");
-    tag.addAttribute(attrShapeParam);
+    tag.setDocumentation("Local radial-basis-function mapping based on the Gaussian RBF using a cut-off threshold.");
+    tag.addAttribute(makeXMLAttribute<double>(ATTR_SHAPE_PARAM, std::numeric_limits<double>::quiet_NaN())
+                         .setDocumentation("Specific shape parameter for RBF basis function."));
+    tag.addAttribute(makeXMLAttribute(ATTR_SUPPORT_RADIUS, std::numeric_limits<double>::quiet_NaN())
+                         .setDocumentation("Support radius of each RBF basis function (global choice)."));
     tags.push_back(tag);
   }
   {
@@ -126,7 +130,12 @@ MappingConfiguration::MappingConfiguration(
   }
   {
     XMLTag tag(*this, VALUE_NEAREST_NEIGHBOR_GRADIENT, occ, TAG);
-    tag.setDocumentation("Nearest-neighbour mapping which uses a rstar-spacial index tree to index meshes and run nearest-neighbour queries with a gradient optimization.");
+    tag.setDocumentation("Nearest-neighbor-gradient mapping which uses nearest-neighbor mapping with an additional linear approximation using gradient data.");
+    tags.push_back(tag);
+  }
+  {
+    XMLTag tag(*this, VALUE_LINEAR_CELL_INTERPOLATION, occ, TAG);
+    tag.setDocumentation("Linear cell interpolation mapping which uses a rstar-spacial index tree to index meshes and locate the nearest cell. Only supports 2D meshes.");
     tags.push_back(tag);
   }
 
@@ -172,8 +181,8 @@ void MappingConfiguration::xmlTagCallback(
     std::string   type           = tag.getName();
     std::string   constraint     = tag.getStringAttributeValue(ATTR_CONSTRAINT);
     Timing        timing         = getTiming(tag.getStringAttributeValue(ATTR_TIMING));
-    double        shapeParameter = 0.0;
-    double        supportRadius  = 0.0;
+    double        shapeParameter = std::numeric_limits<double>::quiet_NaN();
+    double        supportRadius  = std::numeric_limits<double>::quiet_NaN();
     double        solverRtol     = 1e-9;
     bool          xDead = false, yDead = false, zDead = false;
     bool          useLU         = false;
@@ -224,10 +233,24 @@ void MappingConfiguration::xmlTagCallback(
         preallocation = Preallocation::OFF;
     }
 
+    RBFParameter rbfParameter;
+    // Check valid combinations for the Gaussian RBF input
+    if (type == VALUE_RBF_GAUSSIAN || type == VALUE_RBF_INV_MULTIQUADRICS || type == VALUE_RBF_MULTIQUADRICS || type == VALUE_RBF_CTPS_C2 || type == VALUE_RBF_CPOLYNOMIAL_C0 || type == VALUE_RBF_CPOLYNOMIAL_C6) {
+      const bool exactlyOneSet = (std::isfinite(supportRadius) && !std::isfinite(shapeParameter)) ||
+                                 (std::isfinite(shapeParameter) && !std::isfinite(supportRadius));
+      PRECICE_CHECK(exactlyOneSet, "The specified parameters for the Gaussian RBF mapping are invalid. Please specify either a \"shape-parameter\" or a \"support-radius\".");
+      if (std::isfinite(shapeParameter)) {
+        rbfParameter.type  = RBFParameter::Type::ShapeParameter;
+        rbfParameter.value = shapeParameter;
+      } else {
+        rbfParameter.type  = RBFParameter::Type::SupportRadius;
+        rbfParameter.value = supportRadius;
+      }
+    }
     ConfiguredMapping configuredMapping = createMapping(context,
                                                         dir, type, constraint,
                                                         fromMesh, toMesh, timing,
-                                                        shapeParameter, supportRadius, solverRtol,
+                                                        rbfParameter, solverRtol,
                                                         xDead, yDead, zDead,
                                                         useLU,
                                                         polynomial, preallocation);
@@ -254,8 +277,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
     const std::string &              fromMeshName,
     const std::string &              toMeshName,
     Timing                           timing,
-    double                           shapeParameter,
-    double                           supportRadius,
+    const RBFParameter &             rbfParameter,
     double                           solverRtol,
     bool                             xDead,
     bool                             yDead,
@@ -264,7 +286,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
     Polynomial                       polynomial,
     Preallocation                    preallocation) const
 {
-  PRECICE_TRACE(direction, type, timing, shapeParameter, supportRadius);
+  PRECICE_TRACE(direction, type, timing, rbfParameter.value);
   using namespace mapping;
   ConfiguredMapping configuredMapping;
   mesh::PtrMesh     fromMesh(_meshConfig->getMesh(fromMeshName));
@@ -311,7 +333,18 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
         new NearestProjectionMapping(constraintValue, dimensions));
     configuredMapping.isRBF = false;
     return configuredMapping;
+  } else if (type == VALUE_LINEAR_CELL_INTERPOLATION) {
+    configuredMapping.mapping = PtrMapping(
+        new LinearCellInterpolationMapping(constraintValue, dimensions));
+    configuredMapping.isRBF = false;
+    return configuredMapping;
   } else if (type == VALUE_NEAREST_NEIGHBOR_GRADIENT) {
+
+    // NNG is not applicable with the conservative constraint
+    PRECICE_CHECK(constraintValue != Mapping::CONSERVATIVE,
+                  "Nearest-neighbor-gradient mapping is not implemented using a \"conservative\" constraint. "
+                  "Please select constraint=\" consistent\" or a different mapping method.");
+
     configuredMapping.mapping = PtrMapping(
         new NearestNeighborGradientMapping(constraintValue, dimensions));
     configuredMapping.isRBF = false;
@@ -345,34 +378,44 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
     PRECICE_DEBUG("Eigen RBF is used");
     if (type == VALUE_RBF_TPS) {
       configuredMapping.mapping = PtrMapping(
-          new RadialBasisFctMapping<ThinPlateSplines>(constraintValue, dimensions, ThinPlateSplines(), xDead, yDead, zDead));
+          new RadialBasisFctMapping<ThinPlateSplines>(constraintValue, dimensions, ThinPlateSplines(), {{xDead, yDead, zDead}}, polynomial));
     } else if (type == VALUE_RBF_MULTIQUADRICS) {
+      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::ShapeParameter)
       configuredMapping.mapping = PtrMapping(
           new RadialBasisFctMapping<Multiquadrics>(
-              constraintValue, dimensions, Multiquadrics(shapeParameter), xDead, yDead, zDead));
+              constraintValue, dimensions, Multiquadrics(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial));
     } else if (type == VALUE_RBF_INV_MULTIQUADRICS) {
+      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::ShapeParameter)
       configuredMapping.mapping = PtrMapping(
           new RadialBasisFctMapping<InverseMultiquadrics>(
-              constraintValue, dimensions, InverseMultiquadrics(shapeParameter), xDead, yDead, zDead));
+              constraintValue, dimensions, InverseMultiquadrics(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial));
     } else if (type == VALUE_RBF_VOLUME_SPLINES) {
       configuredMapping.mapping = PtrMapping(
-          new RadialBasisFctMapping<VolumeSplines>(constraintValue, dimensions, VolumeSplines(), xDead, yDead, zDead));
+          new RadialBasisFctMapping<VolumeSplines>(constraintValue, dimensions, VolumeSplines(), {{xDead, yDead, zDead}}, polynomial));
     } else if (type == VALUE_RBF_GAUSSIAN) {
+      double shapeParameter = rbfParameter.value;
+      if (rbfParameter.type == RBFParameter::Type::SupportRadius) {
+        // Compute shape parameter from the support radius
+        shapeParameter = std::sqrt(-std::log(Gaussian::cutoffThreshold)) / rbfParameter.value;
+      }
       configuredMapping.mapping = PtrMapping(
           new RadialBasisFctMapping<Gaussian>(
-              constraintValue, dimensions, Gaussian(shapeParameter), xDead, yDead, zDead));
+              constraintValue, dimensions, Gaussian(shapeParameter), {{xDead, yDead, zDead}}, polynomial));
     } else if (type == VALUE_RBF_CTPS_C2) {
+      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::SupportRadius)
       configuredMapping.mapping = PtrMapping(
           new RadialBasisFctMapping<CompactThinPlateSplinesC2>(
-              constraintValue, dimensions, CompactThinPlateSplinesC2(supportRadius), xDead, yDead, zDead));
+              constraintValue, dimensions, CompactThinPlateSplinesC2(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial));
     } else if (type == VALUE_RBF_CPOLYNOMIAL_C0) {
+      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::SupportRadius)
       configuredMapping.mapping = PtrMapping(
           new RadialBasisFctMapping<CompactPolynomialC0>(
-              constraintValue, dimensions, CompactPolynomialC0(supportRadius), xDead, yDead, zDead));
+              constraintValue, dimensions, CompactPolynomialC0(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial));
     } else if (type == VALUE_RBF_CPOLYNOMIAL_C6) {
+      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::SupportRadius)
       configuredMapping.mapping = PtrMapping(
           new RadialBasisFctMapping<CompactPolynomialC6>(
-              constraintValue, dimensions, CompactPolynomialC6(supportRadius), xDead, yDead, zDead));
+              constraintValue, dimensions, CompactPolynomialC6(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial));
     } else {
       PRECICE_ERROR("Unknown mapping type!");
     }
@@ -385,35 +428,45 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
     if (type == VALUE_RBF_TPS) {
       configuredMapping.mapping = PtrMapping(
           new PetRadialBasisFctMapping<ThinPlateSplines>(constraintValue, dimensions, ThinPlateSplines(),
-                                                         xDead, yDead, zDead, solverRtol, polynomial, preallocation));
+                                                         {{xDead, yDead, zDead}}, solverRtol, polynomial, preallocation));
     } else if (type == VALUE_RBF_MULTIQUADRICS) {
+      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::ShapeParameter)
       configuredMapping.mapping = PtrMapping(
-          new PetRadialBasisFctMapping<Multiquadrics>(constraintValue, dimensions, Multiquadrics(shapeParameter),
-                                                      xDead, yDead, zDead, solverRtol, polynomial, preallocation));
+          new PetRadialBasisFctMapping<Multiquadrics>(constraintValue, dimensions, Multiquadrics(rbfParameter.value),
+                                                      {{xDead, yDead, zDead}}, solverRtol, polynomial, preallocation));
     } else if (type == VALUE_RBF_INV_MULTIQUADRICS) {
+      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::ShapeParameter)
       configuredMapping.mapping = PtrMapping(
-          new PetRadialBasisFctMapping<InverseMultiquadrics>(constraintValue, dimensions, InverseMultiquadrics(shapeParameter),
-                                                             xDead, yDead, zDead, solverRtol, polynomial, preallocation));
+          new PetRadialBasisFctMapping<InverseMultiquadrics>(constraintValue, dimensions, InverseMultiquadrics(rbfParameter.value),
+                                                             {{xDead, yDead, zDead}}, solverRtol, polynomial, preallocation));
     } else if (type == VALUE_RBF_VOLUME_SPLINES) {
       configuredMapping.mapping = PtrMapping(
           new PetRadialBasisFctMapping<VolumeSplines>(constraintValue, dimensions, VolumeSplines(),
-                                                      xDead, yDead, zDead, solverRtol, polynomial, preallocation));
+                                                      {{xDead, yDead, zDead}}, solverRtol, polynomial, preallocation));
     } else if (type == VALUE_RBF_GAUSSIAN) {
+      double shapeParameter = rbfParameter.value;
+      if (rbfParameter.type == RBFParameter::Type::SupportRadius) {
+        // Compute shape parameter from the support radius
+        shapeParameter = std::sqrt(-std::log(Gaussian::cutoffThreshold)) / rbfParameter.value;
+      }
       configuredMapping.mapping = PtrMapping(
           new PetRadialBasisFctMapping<Gaussian>(constraintValue, dimensions, Gaussian(shapeParameter),
-                                                 xDead, yDead, zDead, solverRtol, polynomial, preallocation));
+                                                 {{xDead, yDead, zDead}}, solverRtol, polynomial, preallocation));
     } else if (type == VALUE_RBF_CTPS_C2) {
+      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::SupportRadius)
       configuredMapping.mapping = PtrMapping(
-          new PetRadialBasisFctMapping<CompactThinPlateSplinesC2>(constraintValue, dimensions, CompactThinPlateSplinesC2(supportRadius),
-                                                                  xDead, yDead, zDead, solverRtol, polynomial, preallocation));
+          new PetRadialBasisFctMapping<CompactThinPlateSplinesC2>(constraintValue, dimensions, CompactThinPlateSplinesC2(rbfParameter.value),
+                                                                  {{xDead, yDead, zDead}}, solverRtol, polynomial, preallocation));
     } else if (type == VALUE_RBF_CPOLYNOMIAL_C0) {
+      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::SupportRadius)
       configuredMapping.mapping = PtrMapping(
-          new PetRadialBasisFctMapping<CompactPolynomialC0>(constraintValue, dimensions, CompactPolynomialC0(supportRadius),
-                                                            xDead, yDead, zDead, solverRtol, polynomial, preallocation));
+          new PetRadialBasisFctMapping<CompactPolynomialC0>(constraintValue, dimensions, CompactPolynomialC0(rbfParameter.value),
+                                                            {{xDead, yDead, zDead}}, solverRtol, polynomial, preallocation));
     } else if (type == VALUE_RBF_CPOLYNOMIAL_C6) {
+      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::SupportRadius)
       configuredMapping.mapping = PtrMapping(
-          new PetRadialBasisFctMapping<CompactPolynomialC6>(constraintValue, dimensions, CompactPolynomialC6(supportRadius),
-                                                            xDead, yDead, zDead, solverRtol, polynomial, preallocation));
+          new PetRadialBasisFctMapping<CompactPolynomialC6>(constraintValue, dimensions, CompactPolynomialC6(rbfParameter.value),
+                                                            {{xDead, yDead, zDead}}, solverRtol, polynomial, preallocation));
     } else {
       PRECICE_ERROR("Unknown mapping type!");
     }

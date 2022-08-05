@@ -1,0 +1,6 @@
+Name: preCICE
+Description: preCICE coupling library from binary dir
+Version: @preCICE_VERSION@
+URL: https://www.precice.org
+Libs: -L@PROJECT_BINARY_DIR@ -lprecice
+Cflags: -I@PROJECT_SOURCE_DIR@/src -I@PROJECT_BINARY_DIR@/src

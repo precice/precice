@@ -1,6 +1,7 @@
 #include "Participant.hpp"
 #include <algorithm>
 #include <ostream>
+#include <string>
 #include <utility>
 
 #include "MappingContext.hpp"
@@ -8,6 +9,7 @@
 #include "WatchIntegral.hpp"
 #include "WatchPoint.hpp"
 #include "action/Action.hpp"
+#include "io/Export.hpp"
 #include "logging/LogMacros.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
@@ -17,6 +19,7 @@
 #include "precice/types.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "utils/assertion.hpp"
+#include "utils/fmt.hpp"
 
 namespace precice {
 namespace impl {
@@ -48,9 +51,9 @@ void Participant::addAction(action::PtrAction &&action)
   _actions.push_back(std::move(action));
 }
 
-void Participant::setUseMaster(bool useMaster)
+void Participant::setUsePrimaryRank(bool useIntraComm)
 {
-  _useMaster = useMaster;
+  _useIntraComm = useIntraComm;
 }
 
 void Participant::addWatchPoint(
@@ -108,10 +111,11 @@ void Participant::addWriteData(
 
 void Participant::addReadData(
     const mesh::PtrData &data,
-    const mesh::PtrMesh &mesh)
+    const mesh::PtrMesh &mesh,
+    int                  interpolationOrder)
 {
   checkDuplicatedData(data, mesh->getName());
-  _readDataContexts.emplace(data->getID(), ReadDataContext(data, mesh));
+  _readDataContexts.emplace(data->getID(), ReadDataContext(data, mesh, interpolationOrder));
 }
 
 void Participant::addReadMappingContext(
@@ -141,17 +145,27 @@ ReadDataContext &Participant::readDataContext(DataID dataID)
   return it->second;
 }
 
+ReadDataContext &Participant::readDataContext(std::string dataName)
+{
+  for (auto &dataContext : readDataContexts()) {
+    if (dataContext.getDataName() == dataName) {
+      return dataContext;
+    }
+  }
+  PRECICE_ASSERT(false, "ReadData with given name not found.");
+}
+
 const WriteDataContext &Participant::writeDataContext(DataID dataID) const
 {
   auto it = _writeDataContexts.find(dataID);
-  PRECICE_CHECK(it != _writeDataContexts.end(), "DataID does not exist.")
+  PRECICE_CHECK(it != _writeDataContexts.end(), "DataID \"{}\" does not exist in write direction.", dataID)
   return it->second;
 }
 
 WriteDataContext &Participant::writeDataContext(DataID dataID)
 {
   auto it = _writeDataContexts.find(dataID);
-  PRECICE_CHECK(it != _writeDataContexts.end(), "DataID does not exist.")
+  PRECICE_CHECK(it != _writeDataContexts.end(), "DataID \"{}\" does not exist in write direction.", dataID)
   return it->second;
 }
 
@@ -388,14 +402,77 @@ std::vector<PtrWatchIntegral> &Participant::watchIntegrals()
   return _watchIntegrals;
 }
 
-bool Participant::useMaster() const
+bool Participant::useIntraComm() const
 {
-  return _useMaster;
+  return _useIntraComm;
 }
 
 const std::string &Participant::getName() const
 {
   return _name;
+}
+
+void Participant::exportInitial()
+{
+  for (const io::ExportContext &context : exportContexts()) {
+    if (context.everyNTimeWindows < 1) {
+      continue;
+    }
+
+    for (const MeshContext *meshContext : usedMeshContexts()) {
+      auto &mesh = *meshContext->mesh;
+      PRECICE_DEBUG("Exporting initial mesh {} to location \"{}\"", mesh.getName(), context.location);
+      context.exporter->doExport(fmt::format("{}-{}.init", mesh.getName(), getName()), context.location, mesh);
+    }
+  }
+}
+
+void Participant::exportFinal()
+{
+  for (const io::ExportContext &context : exportContexts()) {
+    if (context.everyNTimeWindows < 1) {
+      continue;
+    }
+
+    for (const MeshContext *meshContext : usedMeshContexts()) {
+      auto &mesh = *meshContext->mesh;
+      PRECICE_DEBUG("Exporting final mesh {} to location \"{}\"", mesh.getName(), context.location);
+      context.exporter->doExport(fmt::format("{}-{}.final", mesh.getName(), getName()), context.location, mesh);
+    }
+  }
+}
+
+void Participant::exportIntermediate(IntermediateExport exp)
+{
+  for (const io::ExportContext &context : exportContexts()) {
+    if (exp.complete && (context.everyNTimeWindows > 0) && (exp.timewindow % context.everyNTimeWindows == 0)) {
+      for (const MeshContext *meshContext : usedMeshContexts()) {
+        auto &mesh = *meshContext->mesh;
+        PRECICE_DEBUG("Exporting mesh {} for timewindow {} to location \"{}\"", mesh.getName(), exp.timewindow, context.location);
+        context.exporter->doExport(fmt::format("{}-{}.dt{}", mesh.getName(), getName(), exp.timewindow), context.location, mesh);
+      }
+    }
+
+    if (context.everyIteration) {
+      for (const MeshContext *meshContext : usedMeshContexts()) {
+        auto &mesh = *meshContext->mesh;
+        PRECICE_DEBUG("Exporting mesh {} for iteration {} to location \"{}\"", meshContext->mesh->getName(), exp.iteration, context.location);
+        /// @todo this is the global iteration count. Shouldn't this be local to the timestep? example .dtN.itM or similar
+        context.exporter->doExport(fmt::format("{}-{}.it{}", mesh.getName(), getName(), exp.iteration), context.location, mesh);
+      }
+    }
+  }
+
+  if (exp.complete) {
+    // Export watch point data
+    for (const PtrWatchPoint &watchPoint : watchPoints()) {
+      watchPoint->exportPointData(exp.time);
+    }
+
+    for (const PtrWatchIntegral &watchIntegral : watchIntegrals()) {
+      watchIntegral->exportIntegralData(exp.time);
+    }
+  }
 }
 
 // private

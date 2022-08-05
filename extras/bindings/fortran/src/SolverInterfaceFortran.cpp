@@ -65,12 +65,6 @@ void precicef_initialize_(
   *timestepLengthLimit = impl->initialize();
 }
 
-void precicef_initialize_data_()
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->initializeData();
-}
-
 void precicef_advance_(
     double *timestepLengthLimit)
 {
@@ -106,42 +100,6 @@ void precicef_is_coupling_ongoing_(
     *isOngoing = 1;
   } else {
     *isOngoing = 0;
-  }
-}
-
-void precicef_write_data_required_(
-    const double *computedTimestepLength,
-    int *         isRequired)
-{
-  precicef_is_write_data_required_(computedTimestepLength, isRequired);
-}
-
-void precicef_is_write_data_required_(
-    const double *computedTimestepLength,
-    int *         isRequired)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  if (impl->isWriteDataRequired(*computedTimestepLength)) {
-    *isRequired = 1;
-  } else {
-    *isRequired = 0;
-  }
-}
-
-void precicef_read_data_available_(
-    int *isAvailable)
-{
-  precicef_is_read_data_available_(isAvailable);
-}
-
-void precicef_is_read_data_available_(
-    int *isAvailable)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  if (impl->isReadDataAvailable()) {
-    *isAvailable = 1;
-  } else {
-    *isAvailable = 0;
   }
 }
 
@@ -385,6 +343,17 @@ void precicef_set_quad_we_(
   impl->setMeshQuadWithEdges(*meshID, *firstVertexID, *secondVertexID, *thirdVertexID, *fourthVertexID);
 }
 
+void precicef_set_tetrahedron(
+    const int *meshID,
+    const int *firstVertexID,
+    const int *secondVertexID,
+    const int *thirdVertexID,
+    const int *fourthVertexID)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->setMeshTetrahedron(*meshID, *firstVertexID, *secondVertexID, *thirdVertexID, *fourthVertexID);
+}
+
 void precicef_write_bvdata_(
     const int *dataID,
     const int *size,
@@ -459,20 +428,6 @@ void precicef_read_sdata_(
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->readScalarData(*dataID, *valueIndex, *dataValue);
-}
-
-void precicef_map_write_data_from_(
-    const int *meshID)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->mapWriteDataFrom(*meshID);
-}
-
-void precicef_map_read_data_to_(
-    const int *meshID)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->mapReadDataTo(*meshID);
 }
 
 int precice::impl::strippedLength(

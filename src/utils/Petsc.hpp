@@ -72,7 +72,7 @@ public:
    */
   Vector(const Vector &other);
 
-  /** Copy assignement
+  /** Copy assignment
    * Destroys the current vector and takes ownership of the other.
    */
   Vector &operator=(const Vector &other);
@@ -82,7 +82,7 @@ public:
    */
   Vector(Vector &&other) noexcept;
 
-  /** Move assignement
+  /** Move assignment
    * Destroys the current vector and takes ownership of the other.
    */
   Vector &operator=(Vector &&other) noexcept;
@@ -135,7 +135,7 @@ public:
 
   void fillWithRandoms();
 
-  /// Sorts the LOCAL partion of the vector
+  /// Sorts the LOCAL partition of the vector
   void sort();
 
   void assemble();

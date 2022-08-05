@@ -13,7 +13,7 @@
 
 #include "com/SharedPointer.hpp"
 #include "logging/LogConfiguration.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/Parallel.hpp"
 
 namespace precice {
@@ -60,12 +60,12 @@ int main(int argc, char *argv[])
   int       retCode  = boost::unit_test::unit_test_main(&init_unit_test, argc, argv);
   const int testsRan = countEnabledTests();
 
-  // Override the return code if the slaves have nothing to test
+  // Override the return code if the secondary ranks have nothing to test
   if ((testsRan == 0) && (rank != 0)) {
     retCode = EXIT_SUCCESS;
   }
 
-  utils::MasterSlave::getCommunication() = nullptr;
+  utils::IntraComm::getCommunication() = nullptr;
   utils::Parallel::finalizeMPI();
   return retCode;
 }

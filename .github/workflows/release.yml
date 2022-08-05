@@ -20,15 +20,15 @@ jobs:
           with:
             draft: True
 
-  package-ubuntu:
+  package-deb:
     needs: release-draft
-    name: 'Package Ubuntu ${{ matrix.UBUNTU }}'
+    name: 'Package ${{ matrix.TARGET }}'
     runs-on: ubuntu-latest
-    container: 'ubuntu:${{ matrix.UBUNTU }}'
+    container: '${{ matrix.TARGET }}'
     strategy:
       fail-fast: true
       matrix:
-        UBUNTU: ["18.04", "20.04", "21.04", "21.10"]
+        TARGET: ["ubuntu:20.04", "ubuntu:21.04", "ubuntu:21.10", "ubuntu:22.04", "debian:11"]
     steps:
       - uses: actions/checkout@v2
       - name: Generate build directory
@@ -40,20 +40,12 @@ jobs:
         run: |
           apt update
           apt -y upgrade
-          apt -y install git build-essential lsb-release cmake libeigen3-dev libxml2-dev libboost-all-dev python3-dev python3-numpy
-      - name: Install PETSc
-        if: ${{ matrix.UBUNTU != '18.04' }}
-        env:
-          DEBIAN_FRONTEND: noninteractive
-        run: |
-          apt install -y petsc-dev
+          apt -y install git build-essential lsb-release cmake libeigen3-dev libxml2-dev libboost-all-dev python3-dev python3-numpy petsc-dev
       - name: Configure
         working-directory: build
-        env:
-          PETSc: ${{ matrix.UBUNTU != '18.04' }}
         run: |
           cmake --version
-          cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DCPACK_GENERATOR="DEB" -DPRECICE_PETScMapping=${{ env.PETSc }} -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=ON ..
+          cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DCPACK_GENERATOR="DEB" -DPRECICE_PETScMapping=ON -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=ON ..
       - name: Compile
         working-directory: build
         run: make -j $(nproc)
@@ -82,17 +74,17 @@ jobs:
           strip_v: true
       - uses: actions/checkout@v2
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
       - name: Login to DockerHub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         with:
           username: ${{ env.docker_username }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build and push Dockerfile
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           push: true
           file: "./tools/releasing/packaging/docker/Dockerfile"
           tags: ${{ env.docker_username }}/precice:${{ steps.tag.outputs.tag }},${{ env.docker_username }}/precice:latest
           build-args: |
-            version=${{ steps.tag.outputs.tag }}
+            version=v${{ steps.tag.outputs.tag }}

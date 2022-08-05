@@ -2,7 +2,7 @@
 # CTest
 #
 
-set(PRECICE_TEST_TIMEOUT_LONG 60 CACHE STRING "The timeout in seconds for longer tests.")
+set(PRECICE_TEST_TIMEOUT_LONG 120 CACHE STRING "The timeout in seconds for longer tests.")
 set(PRECICE_TEST_TIMEOUT_SHORT 20 CACHE STRING "The timeout in seconds for shorter tests.")
 
 set(PRECICE_TEST_DIR "${preCICE_BINARY_DIR}/TestOutput")
@@ -273,7 +273,7 @@ add_precice_test(
   )
 add_precice_test(
   NAME interface
-  ARGUMENTS "--run_test=PreciceTests:\!PreciceTests/Serial:\!PreciceTests/Parallel"
+  ARGUMENTS "--run_test=PreciceTests"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   )
 add_precice_test(
@@ -297,19 +297,12 @@ add_precice_test(
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   )
 
-# Remove the parallel suite once the migration to the new test structure is finished
-add_precice_test(
-  NAME parallel
-  ARGUMENTS "--run_test=PreciceTests/Parallel"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
-  )
-
 # Register integration tests from tests/
 # These are defined in tests/tests.cmake
 foreach(testsuite IN LISTS PRECICE_TEST_SUITES)
   add_precice_test(
     NAME "integration.${testsuite}"
-    ARGUMENTS "--run_test=PreciceTests/${testsuite}"
+    ARGUMENTS "--run_test=Integration/${testsuite}"
     TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
     )
 endforeach()
@@ -328,78 +321,80 @@ add_precice_test_run_solverdummies(c fortran)
 
 # Add tests for precice-tools
 
-function(add_tools_test)
-  cmake_parse_arguments(PARSE_ARGV 0 PAT "WILL_FAIL" "NAME;MATCH" "COMMAND")
-  set(PAT_FULL_NAME "precice.tools.${PAT_NAME}")
-  message(STATUS "Test ${PAT_FULL_NAME}")
-  add_test(
-    NAME ${PAT_FULL_NAME}
-    COMMAND ${PAT_COMMAND}
+if(PRECICE_BUILD_TOOLS)
+  function(add_tools_test)
+    cmake_parse_arguments(PARSE_ARGV 0 PAT "WILL_FAIL" "NAME;MATCH" "COMMAND")
+    set(PAT_FULL_NAME "precice.tools.${PAT_NAME}")
+    message(STATUS "Test ${PAT_FULL_NAME}")
+    add_test(
+      NAME ${PAT_FULL_NAME}
+      COMMAND ${PAT_COMMAND}
+      )
+    set_tests_properties(${PAT_FULL_NAME} PROPERTIES TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT} LABELS "tools;bin")
+    if(PAT_WILL_FAIL)
+      set_tests_properties(${PAT_FULL_NAME} PROPERTIES WILL_FAIL YES)
+    endif()
+    if(PAT_MATCH)
+      set_tests_properties(${PAT_FULL_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "${PAT_MATCH}")
+    endif()
+  endfunction()
+
+
+  add_tools_test(
+    NAME noarg
+    COMMAND precice-tools
+    WILL_FAIL)
+
+  add_tools_test(
+    NAME invalidcmd
+    COMMAND precice-tools invalidcommand
+    WILL_FAIL)
+
+  add_tools_test(
+    NAME version
+    COMMAND precice-tools version
+    MATCH "${CMAKE_PROJECT_VERSION}"
     )
-  set_tests_properties(${PAT_FULL_NAME} PROPERTIES TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT} LABELS "tools;bin")
-  if(PAT_WILL_FAIL)
-    set_tests_properties(${PAT_FULL_NAME} PROPERTIES WILL_FAIL YES)
-  endif()
-  if(PAT_MATCH)
-    set_tests_properties(${PAT_FULL_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "${PAT_MATCH}")
-  endif()
-endfunction()
 
+  add_tools_test(
+    NAME versionopt
+    COMMAND precice-tools --version
+    MATCH "${CMAKE_PROJECT_VERSION}"
+    )
 
-add_tools_test(
-  NAME noarg
-  COMMAND precice-tools
-  WILL_FAIL)
+  add_tools_test(
+    NAME markdown
+    COMMAND precice-tools md
+    MATCH "# precice-configuration"
+    )
 
-add_tools_test(
-  NAME invalidcmd
-  COMMAND precice-tools invalidcommand
-  WILL_FAIL)
+  add_tools_test(
+    NAME xml
+    COMMAND precice-tools xml
+    MATCH "<!-- TAG precice-configuration"
+    )
 
-add_tools_test(
-  NAME version
-  COMMAND precice-tools version
-  MATCH "${CMAKE_PROJECT_VERSION}"
-  )
+  add_tools_test(
+    NAME dtd
+    COMMAND precice-tools dtd
+    MATCH "<!ELEMENT precice-configuration"
+    )
 
-add_tools_test(
-  NAME versionopt
-  COMMAND precice-tools --version
-  MATCH "${CMAKE_PROJECT_VERSION}"
-  )
+  add_tools_test(
+    NAME check.file
+    COMMAND precice-tools check ${CMAKE_SOURCE_DIR}/src/precice/tests/config-checker.xml
+    )
 
-add_tools_test(
-  NAME markdown
-  COMMAND precice-tools md
-  MATCH "# precice-configuration"
-  )
+  add_tools_test(
+    NAME check.file+name
+    COMMAND precice-tools check ${CMAKE_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo
+    )
 
-add_tools_test(
-  NAME xml
-  COMMAND precice-tools xml
-  MATCH "<!-- TAG precice-configuration"
-  )
-
-add_tools_test(
-  NAME dtd
-  COMMAND precice-tools dtd
-  MATCH "<!ELEMENT precice-configuration"
-  )
-
-add_tools_test(
-  NAME check.file
-  COMMAND precice-tools check ${CMAKE_SOURCE_DIR}/src/precice/tests/config-checker.xml
-  )
-
-add_tools_test(
-  NAME check.file+name
-  COMMAND precice-tools check ${CMAKE_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo
-  )
-
-add_tools_test(
-  NAME check.file+name+size
-  COMMAND precice-tools check ${CMAKE_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo 2
-  )
+  add_tools_test(
+    NAME check.file+name+size
+    COMMAND precice-tools check ${CMAKE_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo 2
+    )
+endif()
 
 # Add a separate target to test only the base
 add_custom_target(

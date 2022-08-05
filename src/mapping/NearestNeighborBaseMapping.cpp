@@ -1,4 +1,3 @@
-
 #include "NearestNeighborBaseMapping.hpp"
 
 #include <boost/container/flat_set.hpp>
@@ -8,7 +7,6 @@
 #include "mapping/Mapping.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Vertex.hpp"
-#include "query/Index.hpp"
 #include "utils/Event.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Statistics.hpp"
@@ -22,19 +20,13 @@ namespace mapping {
 NearestNeighborBaseMapping::NearestNeighborBaseMapping(
     Constraint  constraint,
     int         dimensions,
-    bool        requireGradient,
+    bool        requiresGradientData,
     std::string mappingName,
     std::string mappingNameShort)
-    : Mapping(constraint, dimensions, requireGradient),
+    : Mapping(constraint, dimensions, requiresGradientData),
       mappingName(mappingName),
-      mappingNameShort(mappingNameShort),
-      _requireGradient(requireGradient)
+      mappingNameShort(mappingNameShort)
 {
-}
-
-bool NearestNeighborBaseMapping::requireGradient()
-{
-  return _requireGradient;
 }
 
 void NearestNeighborBaseMapping::computeMapping()
@@ -59,11 +51,6 @@ void NearestNeighborBaseMapping::computeMapping()
     searchSpace = input();
   }
 
-  // For log ouputs
-  precice::utils::Event e2(baseEvent + ".getIndexOnVertices", precice::syncMode);
-  query::Index          indexTree(searchSpace);
-  e2.stop();
-
   // Set up of output arrays
   const size_t verticesSize   = origins->vertices().size();
   const auto & sourceVertices = origins->vertices();
@@ -72,10 +59,16 @@ void NearestNeighborBaseMapping::computeMapping()
   // Needed for error calculations
   utils::statistics::DistanceAccumulator distanceStatistics;
 
+  auto &index = searchSpace->index();
   for (size_t i = 0; i < verticesSize; ++i) {
-    const auto &matchedVertex = indexTree.getClosestVertex(sourceVertices[i].getCoords());
+    const auto &sourceCoords  = sourceVertices[i].getCoords();
+    const auto &matchedVertex = index.getClosestVertex(sourceCoords);
     _vertexIndices[i]         = matchedVertex.index;
-    distanceStatistics(matchedVertex.distance);
+
+    // Compute distance between input and output vertiex for the stats
+    const auto &matchCoords = searchSpace->vertices()[matchedVertex.index].getCoords();
+    auto        distance    = (sourceCoords - matchCoords).norm();
+    distanceStatistics(distance);
   }
 
   // For gradient mapping, the calculation of offsets between source and matched vertex necessary
@@ -92,25 +85,19 @@ void NearestNeighborBaseMapping::computeMapping()
   _hasComputedMapping = true;
 }
 
-bool NearestNeighborBaseMapping::hasComputedMapping() const
-{
-  PRECICE_TRACE(_hasComputedMapping);
-  return _hasComputedMapping;
-}
-
 void NearestNeighborBaseMapping::clear()
 {
   PRECICE_TRACE();
   _vertexIndices.clear();
   _hasComputedMapping = false;
 
-  if (requireGradient())
+  if (requiresGradientData())
     _offsetsMatched.clear();
 
   if (getConstraint() == CONSISTENT) {
-    query::clearCache(input()->getID());
+    input()->index().clear();
   } else {
-    query::clearCache(output()->getID());
+    output()->index().clear();
   }
 }
 

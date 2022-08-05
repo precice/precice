@@ -66,6 +66,17 @@ public:
     bool isRBF;
   };
 
+  struct RBFParameter {
+
+    enum struct Type {
+      ShapeParameter,
+      SupportRadius
+    };
+
+    Type   type{};
+    double value{};
+  };
+
   MappingConfiguration(
       xml::XMLTag &              parent,
       mesh::PtrMeshConfiguration meshConfiguration);
@@ -121,8 +132,10 @@ private:
   const std::string VALUE_CONSERVATIVE      = "conservative";
   const std::string VALUE_SCALED_CONSISTENT = "scaled-consistent";
 
-  const std::string VALUE_NEAREST_NEIGHBOR      = "nearest-neighbor";
-  const std::string VALUE_NEAREST_PROJECTION    = "nearest-projection";
+  const std::string VALUE_NEAREST_NEIGHBOR          = "nearest-neighbor";
+  const std::string VALUE_NEAREST_PROJECTION        = "nearest-projection";
+  const std::string VALUE_LINEAR_CELL_INTERPOLATION = "linear-cell-interpolation";
+
   const std::string VALUE_RBF_TPS               = "rbf-thin-plate-splines";
   const std::string VALUE_RBF_MULTIQUADRICS     = "rbf-multiquadrics";
   const std::string VALUE_RBF_INV_MULTIQUADRICS = "rbf-inverse-multiquadrics";
@@ -150,8 +163,7 @@ private:
       const std::string &              fromMeshName,
       const std::string &              toMeshName,
       Timing                           timing,
-      double                           shapeParameter,
-      double                           supportRadius,
+      const RBFParameter &             rbfParameter,
       double                           solverRtol,
       bool                             xDead,
       bool                             yDead,

@@ -20,31 +20,6 @@ enum ResultConstants {
 };
 
 /**
- * @brief Determines, if to line segments intersect properly or inproperly
- *
- * Works only for Dim2.
- * The method first checks, if one of the segment end points lies on the
- * other segment. If yes, this is inproper intersection, and considered
- * to be valid.
- * Then, it checks, if it is true for both segments, that one point of
- * the other segment lies right of the segment and the other point left
- * of it. Then, the segments do intersect each other properly.
- *
- * @param[in] a First point of line segment 1
- * @param[in] b Second point of line segement 1
- * @param[in] c First point of line segment 2
- * @param[in] d Second point of line segment 2
- *
- * @return True, if interseting. False, otherwise
- */
-bool segmentsIntersect(
-    const Eigen::Ref<const Eigen::Vector2d> &a,
-    const Eigen::Ref<const Eigen::Vector2d> &b,
-    const Eigen::Ref<const Eigen::Vector2d> &c,
-    const Eigen::Ref<const Eigen::Vector2d> &d,
-    bool                                     countTouchingAsIntersection);
-
-/**
  * @brief Determines the intersection point of two lines, if one exists.
  *
  * Works only for Dim2.
@@ -155,20 +130,6 @@ double tetraVolume(
 Eigen::Vector2d projectVector(
     const Eigen::Vector3d &vector,
     const int              indexDimensionToRemove);
-
-/**
- * @brief Tests if a vertex is contained in a triangle.
- *
- * @return One of:
- *         - CONTAINED
- *         - NOT_CONTAINED
- *         - TOUCHING
- */
-int containedInTriangle(
-    const Eigen::Vector2d &triangleVertex0,
-    const Eigen::Vector2d &triangleVertex1,
-    const Eigen::Vector2d &triangleVertex2,
-    const Eigen::Vector2d &testPoint);
 
 /**
  * @brief Tests, if a vertex is contained in a hyperrectangle.

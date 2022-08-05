@@ -45,8 +45,8 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
 
     auto attrNetwork = makeXMLAttribute("network", utils::networking::loopbackInterfaceName())
                            .setDocumentation(
-                               "Interface name to be used for socket communiation. "
-                               "Default is the cannonical name of the loopback interface of your platform. "
+                               "Interface name to be used for socket communication. "
+                               "Default is the canonical name of the loopback interface of your platform. "
                                "Might be different on supercomputing systems, e.g. \"ib0\" "
                                "for the InfiniBand on SuperMUC. ");
     tag.addAttribute(attrNetwork);
@@ -158,7 +158,7 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, 
       throw std::runtime_error{std::string{"A gather-scatter m2n communication cannot use two-level initialization. Please switch either "} + "\"" + ATTR_ENFORCE_GATHER_SCATTER + "\" or \"" + ATTR_USE_TWO_LEVEL_INIT + "\" off."};
     }
     if (context.size == 1 && useTwoLevelInit) {
-      throw std::runtime_error{"To use two-level initialization, both participants need to run in parallel. If you want to run in serial please switch two-level intialization off."};
+      throw std::runtime_error{"To use two-level initialization, both participants need to run in parallel. If you want to run in serial please switch two-level initialization off."};
     }
 
     com::PtrCommunicationFactory comFactory;
@@ -181,7 +181,7 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, 
                     "Either switch to a \"sockets\" communication or recompile preCICE with \"PRECICE_MPICommunication=ON\".");
 #else
 #ifdef OMPI_MAJOR_VERSION
-      PRECICE_WARN("preCICE was compiled with OpenMPI and configured to use <m2n:mpi-multiple-ports />, which can cause issues in connection build-up. Consider switching to sockets if you encounter problems.");
+      PRECICE_WARN("preCICE was compiled with OpenMPI and configured to use <m2n:mpi-multiple-ports />, which can cause issues in connection build-up. Consider switching to sockets if you encounter problems. Ignore this warning if participants find each other and the simulation starts.");
 #endif
       comFactory = std::make_shared<com::MPIPortsCommunicationFactory>(dir);
       com        = comFactory->newCommunication();
@@ -197,7 +197,7 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, 
                     tagName);
 #else
 #ifdef OMPI_MAJOR_VERSION
-      PRECICE_WARN("preCICE was compiled with OpenMPI and configured to use <m2n:{} />, which can cause issues in connection build-up. Consider switching to sockets if you encounter problems.", tagName);
+      PRECICE_WARN("preCICE was compiled with OpenMPI and configured to use <m2n:{} />, which can cause issues in connection build-up. Consider switching to sockets if you encounter problems. Ignore this warning if participants find each other and the simulation starts.", tagName);
 #endif
       comFactory = std::make_shared<com::MPISinglePortsCommunicationFactory>(dir);
       com        = comFactory->newCommunication();

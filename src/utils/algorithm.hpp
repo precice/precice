@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <fmt/ostream.h>
 #include <functional>
 #include <iterator>
 #include <type_traits>
@@ -143,6 +144,7 @@ const RangePreview<Iter> previewRange(Size n, const Range &range)
 template <typename T, typename Index, size_t n>
 auto reorder_array(const std::array<Index, n> &order, const std::array<T, n> &elements) -> std::array<T, n>
 {
+  static_assert(n > 0, "Reodering nothing is pointless");
   std::array<T, n> reordered;
   for (std::size_t i = 0; i < n; ++i) {
     reordered[i] = elements[order[i]];
@@ -152,3 +154,7 @@ auto reorder_array(const std::array<Index, n> &order, const std::array<T, n> &el
 
 } // namespace utils
 } // namespace precice
+
+template <typename Iter>
+struct fmt::formatter<precice::utils::RangePreview<Iter>> : ostream_formatter {
+};

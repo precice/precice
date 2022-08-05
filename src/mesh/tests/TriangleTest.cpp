@@ -43,15 +43,6 @@ BOOST_AUTO_TEST_CASE(DirectionalEdges)
   Vertex &v3ref = triangle.vertex(2);
   BOOST_TEST(v3ref.getID() == v3.getID());
 
-  Edge &e1ref = triangle.edge(0);
-  BOOST_TEST(e1ref.getID() == e1.getID());
-
-  Edge &e2ref = triangle.edge(1);
-  BOOST_TEST(e2ref.getID() == e2.getID());
-
-  Edge &e3ref = triangle.edge(2);
-  BOOST_TEST(e3ref.getID() == e3.getID());
-
   int id = triangle.getID();
   BOOST_TEST(id == 0);
 
@@ -94,15 +85,6 @@ BOOST_AUTO_TEST_CASE(SecondFlipped)
 
   Vertex &v3ref = triangle.vertex(2);
   BOOST_TEST(v3ref.getID() == v3.getID());
-
-  Edge &e1ref = triangle.edge(0);
-  BOOST_TEST(e1ref.getID() == e1.getID());
-
-  Edge &e2ref = triangle.edge(1);
-  BOOST_TEST(e2ref.getID() == e2.getID());
-
-  Edge &e3ref = triangle.edge(2);
-  BOOST_TEST(e3ref.getID() == e3.getID());
 
   int id = triangle.getID();
   BOOST_TEST(id == 0);
@@ -148,15 +130,6 @@ BOOST_AUTO_TEST_CASE(ReversedFirstFlipped)
   Vertex &v3ref = triangle.vertex(2);
   BOOST_TEST(v3ref.getID() == v3.getID());
 
-  Edge &e1ref = triangle.edge(0);
-  BOOST_TEST(e1ref.getID() == e1.getID());
-
-  Edge &e2ref = triangle.edge(1);
-  BOOST_TEST(e2ref.getID() == e2.getID());
-
-  Edge &e3ref = triangle.edge(2);
-  BOOST_TEST(e3ref.getID() == e3.getID());
-
   int id = triangle.getID();
   BOOST_TEST(id == 0);
 
@@ -193,22 +166,13 @@ BOOST_AUTO_TEST_CASE(ReversedLastFlipped)
   Triangle triangle(e1, e3, e2, 0);
 
   Vertex &v1ref = triangle.vertex(0);
-  BOOST_TEST(v1ref.getID() == v2.getID());
+  BOOST_TEST(v1ref.getID() == v1.getID());
 
   Vertex &v2ref = triangle.vertex(1);
-  BOOST_TEST(v2ref.getID() == v1.getID());
+  BOOST_TEST(v2ref.getID() == v2.getID());
 
   Vertex &v3ref = triangle.vertex(2);
   BOOST_TEST(v3ref.getID() == v3.getID());
-
-  Edge &e1ref = triangle.edge(0);
-  BOOST_TEST(e1ref.getID() == e1.getID());
-
-  Edge &e2ref = triangle.edge(1);
-  BOOST_TEST(e2ref.getID() == e3.getID());
-
-  Edge &e3ref = triangle.edge(2);
-  BOOST_TEST(e3ref.getID() == e2.getID());
 
   int id = triangle.getID();
   BOOST_TEST(id == 0);

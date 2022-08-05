@@ -216,7 +216,7 @@ void Parallel::initializeMPI(
 #ifndef PRECICE_NO_MPI
   int isMPIInitialized{-1};
   MPI_Initialized(&isMPIInitialized);
-  PRECICE_ASSERT(!isMPIInitialized, "MPI was already initalized.");
+  PRECICE_ASSERT(!isMPIInitialized, "MPI was already initialized.");
   PRECICE_DEBUG("Initialize MPI");
   MPI_Init(argc, argv);
 #endif // not PRECICE_NO_MPI
@@ -246,7 +246,7 @@ void Parallel::finalizeMPI()
   PRECICE_TRACE();
   int isMPIInitialized;
   MPI_Initialized(&isMPIInitialized);
-  PRECICE_ASSERT(isMPIInitialized, "MPI was not initalized.");
+  PRECICE_ASSERT(isMPIInitialized, "MPI was not initialized.");
   PRECICE_DEBUG("Finalize MPI");
   MPI_Finalize();
 #endif // not PRECICE_NO_MPI
@@ -279,7 +279,7 @@ void Parallel::splitCommunicator(const std::string &groupName)
   std::vector<AccessorGroup>  accessorGroups;
   com::MPIDirectCommunication com;
 
-  if (rank == 0) { // Master
+  if (rank == 0) { // Primary rank
     // Step 1 receive groupNames from Salves and setup accessorGroups
     std::map<std::string, int> groupMap; // map from names to group ID
     groupMap[groupName] = 0;
@@ -304,14 +304,14 @@ void Parallel::splitCommunicator(const std::string &groupName)
         accessorGroups[groupMap[name]].size++;
       }
     }
-    // Step 2 send groupCount to Master
+    // Step 2 send groupCount to Primary rank
     auto groupCount = static_cast<int>(accessorGroups.size());
     MPI_Bcast(&groupCount, 1, MPI_INT, 0, globalComm);
     PRECICE_ASSERT(groupCount > 1, "Calling split with a single group is not permitted!");
 
-    // Step 3 send AccessorGroups to Slaves
+    // Step 3 send AccessorGroups to SecondaryRanks
     for (const AccessorGroup &group : accessorGroups) {
-      // @TODO can we use broadcast as the master sends this to everyone else?
+      // @TODO can we use broadcast as the primary rank sends this to everyone else?
       for (int i = 1; i < size; i++) {
         com.send(group.name, i);
         com.send(group.leaderRank, i);
@@ -320,14 +320,14 @@ void Parallel::splitCommunicator(const std::string &groupName)
       }
     }
   } else { // rank != 0
-    // Step 1 send groupName to Master
+    // Step 1 send groupName to Primary rank
     com.send(groupName, 0);
-    // Step 2 receive groupCount from Master
+    // Step 2 receive groupCount from Primary rank
     int groupCount = -1;
     MPI_Bcast(&groupCount, 1, MPI_INT, 0, globalComm);
     PRECICE_ASSERT(groupCount > 1, "Calling split with a single group is not permitted!");
 
-    // Step 3 receive AccessorGroups from Master
+    // Step 3 receive AccessorGroups from Primary rank
     for (int i = 0; i < groupCount; i++) {
       AccessorGroup newGroup;
       com.receive(newGroup.name, 0);

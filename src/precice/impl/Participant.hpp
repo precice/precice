@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include <boost/range/adaptor/map.hpp>
+#include <cmath>
 #include <memory>
 #include <stddef.h>
 #include <string>
@@ -20,8 +21,8 @@
 #include "precice/impl/ReadDataContext.hpp"
 #include "precice/impl/WriteDataContext.hpp"
 #include "precice/types.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/ManageUniqueIDs.hpp"
-#include "utils/MasterSlave.hpp"
 #include "utils/PointerVector.hpp"
 
 namespace precice {
@@ -32,12 +33,14 @@ struct MappingContext;
 } // namespace precice
 
 // Forward declaration to friend the boost test struct
-namespace PreciceTests {
+namespace Integration {
 namespace Serial {
+namespace Whitebox {
 struct TestConfigurationPeano;
 struct TestConfigurationComsol;
+} // namespace Whitebox
 } // namespace Serial
-} // namespace PreciceTests
+} // namespace Integration
 
 namespace precice {
 namespace utils {
@@ -76,7 +79,8 @@ public:
   /// Adds a configured read \ref Data to the Participant
   void addReadData(
       const mesh::PtrData &data,
-      const mesh::PtrMesh &mesh);
+      const mesh::PtrMesh &mesh,
+      int                  interpolationOrder);
 
   /// Adds a configured read \ref Mapping to the Participant
   void addReadMappingContext(MappingContext *mappingContext);
@@ -91,7 +95,7 @@ public:
   void addWatchIntegral(const PtrWatchIntegral &watchIntegral);
 
   /// Sets weather the participant was configured with a master tag
-  void setUseMaster(bool useMaster);
+  void setUsePrimaryRank(bool useIntraComm);
 
   /// Sets the manager responsible for providing unique IDs to meshes.
   void setMeshIdManager(std::unique_ptr<utils::ManageUniqueIDs> &&idm)
@@ -128,6 +132,12 @@ public:
    */
   ReadDataContext &readDataContext(DataID dataID);
 
+  /**
+   * Provides access to \ref ReadDataContext
+   * @pre there exists a \ref ReadDataContext for \ref dataName
+   */
+  ReadDataContext &readDataContext(std::string dataName);
+
   /** Provides access to \ref WriteDataContext
    * @pre there exists a \ref WriteDataContext for \ref dataID
    */
@@ -152,6 +162,17 @@ public:
   auto readDataContexts()
   {
     return _readDataContexts | boost::adaptors::map_values;
+  }
+
+  /** @brief Determines and returns the maximum order of all read waveforms of this participant
+   */
+  int maxReadWaveformOrder() const
+  {
+    int maxOrder = -1;
+    for (auto &context : _readDataContexts | boost::adaptors::map_values) {
+      maxOrder = std::max(maxOrder, context.getInterpolationOrder());
+    }
+    return maxOrder;
   }
 
   /// Is the dataID know to preCICE?
@@ -256,13 +277,33 @@ public:
   std::string getMeshNameFromData(DataID dataID) const;
   /// @}
 
+  /// @name Exporting interface
+  /// @{
+  /// Exports the initial state of meshes
+  void exportInitial();
+
+  /// Exports the final state of meshes
+  void exportFinal();
+
+  struct IntermediateExport {
+    size_t timewindow;
+    size_t iteration;
+    double time;
+    bool   complete;
+  };
+
+  /// Exports timewindows and iterations of meshes and watchpoints
+  void exportIntermediate(IntermediateExport exp);
+
+  /// @}
+
   /// @name Other queries
   /// @{
   /// Returns the name of the participant.
   const std::string &getName() const;
 
   /// Returns true, if the participant uses a master tag.
-  bool useMaster() const;
+  bool useIntraComm() const;
 
   /// Provided access to all read \ref MappingContext
   const utils::ptr_vector<MappingContext> &readMappingContexts() const;
@@ -316,7 +357,7 @@ private:
 
   std::map<DataID, ReadDataContext> _readDataContexts;
 
-  bool _useMaster = false;
+  bool _useIntraComm = false;
 
   std::unique_ptr<utils::ManageUniqueIDs> _meshIdManager;
 
@@ -330,8 +371,8 @@ private:
   void checkDuplicatedData(const mesh::PtrData &data, const std::string &meshName);
 
   /// To allow white box tests.
-  friend struct PreciceTests::Serial::TestConfigurationPeano;
-  friend struct PreciceTests::Serial::TestConfigurationComsol;
+  friend struct Integration::Serial::Whitebox::TestConfigurationPeano;
+  friend struct Integration::Serial::Whitebox::TestConfigurationComsol;
 };
 
 // --------------------------------------------------------- HEADER DEFINITIONS

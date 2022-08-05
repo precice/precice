@@ -20,7 +20,7 @@
 #include "precice/types.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/Event.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
 using precice::cplscheme::PtrCouplingData;
@@ -61,7 +61,6 @@ MVQNAcceleration::MVQNAcceleration(
       _imvjRestart(false),
       _chunkSize(chunkSize),
       _RSLSreusedTimeWindows(RSLSreusedTimeWindows),
-      _usedColumnsPerTimeWindow(5),
       _nbRestarts(0),
       _avgRank(0)
 {
@@ -90,7 +89,7 @@ void MVQNAcceleration::initialize(
   int entries  = _residuals.size();
   int global_n = 0;
 
-  if (!utils::MasterSlave::isParallel()) {
+  if (!utils::IntraComm::isParallel()) {
     global_n = entries;
   } else {
     global_n = _dimOffsets.back();
@@ -109,7 +108,7 @@ void MVQNAcceleration::initialize(
   }
   _Wtil = Eigen::MatrixXd::Zero(entries, 0);
 
-  if (utils::MasterSlave::isMaster() || !utils::MasterSlave::isParallel()) {
+  if (utils::IntraComm::isPrimary() || !utils::IntraComm::isParallel()) {
     _infostringstream << " IMVJ restart mode: " << _imvjRestart << "\n chunk size: " << _chunkSize << "\n trunc eps: " << _svdJ.getThreshold() << "\n R_RS: " << _RSLSreusedTimeWindows << "\n--------\n"
                       << '\n';
   }
@@ -181,11 +180,9 @@ void MVQNAcceleration::updateDifferenceMatrices(
 
           // store columns if restart mode = RS-LS
           if (_imvjRestartType == RS_LS) {
-            if (_matrixCols_RSLS.front() < _usedColumnsPerTimeWindow) {
-              utils::appendFront(_matrixV_RSLS, v);
-              utils::appendFront(_matrixW_RSLS, w);
-              _matrixCols_RSLS.front()++;
-            }
+            utils::appendFront(_matrixV_RSLS, v);
+            utils::appendFront(_matrixW_RSLS, w);
+            _matrixCols_RSLS.front()++;
           }
 
           // imvj without restart is used, but efficient update, i.e. no Jacobian assembly in each iteration
@@ -559,7 +556,7 @@ void MVQNAcceleration::restartIMVJ()
     PRECICE_DEBUG("MVJ-RESTART, mode=SVD. Rank of truncated SVD of Jacobian {}, new modes: {}, truncated modes: {} avg rank: {}", rankAfter, rankAfter - rankBefore, waste, _avgRank / _nbRestarts);
 
     //double percentage = 100.0*used_storage/(double)theoreticalJ_storage;
-    if (utils::MasterSlave::isMaster() || !utils::MasterSlave::isParallel()) {
+    if (utils::IntraComm::isPrimary() || !utils::IntraComm::isParallel()) {
       _infostringstream << " - MVJ-RESTART " << _nbRestarts << ", mode= SVD -\n  new modes: " << rankAfter - rankBefore << "\n  rank svd: " << rankAfter << "\n  avg rank: " << _avgRank / _nbRestarts << "\n  truncated modes: " << waste << "\n"
                         << '\n';
     }
@@ -571,7 +568,7 @@ void MVQNAcceleration::restartIMVJ()
     _pseudoInverseChunk.clear();
 
     if (_matrixV_RSLS.cols() > 0) {
-      // avoid that the syste mis getting too squared
+      // avoid that the system is getting too squared
       while (_matrixV_RSLS.cols() * 2 >= getLSSystemRows()) {
         removeMatrixColumnRSLS(_matrixV_RSLS.cols() - 1);
       }
@@ -597,7 +594,7 @@ void MVQNAcceleration::restartIMVJ()
       if (_filter != Acceleration::NOFILTER) {
         std::vector<int> delIndices(0);
         qr.applyFilter(_singularityLimit, delIndices, _matrixV_RSLS);
-        // start with largest index (as V,W matrices are shrinked and shifted
+        // start with largest index (as V,W matrices are shrunk and shifted
         for (int i = delIndices.size() - 1; i >= 0; i--) {
           removeMatrixColumnRSLS(delIndices[i]);
         }
@@ -637,7 +634,7 @@ void MVQNAcceleration::restartIMVJ()
     }
 
     PRECICE_DEBUG("MVJ-RESTART, mode=LS. Restart with {} columns from {} time windows.", _matrixV_RSLS.cols(), _RSLSreusedTimeWindows);
-    if (utils::MasterSlave::isMaster() || !utils::MasterSlave::isParallel()) {
+    if (utils::IntraComm::isPrimary() || !utils::IntraComm::isParallel()) {
       _infostringstream << " - MVJ-RESTART" << _nbRestarts << ", mode= LS -\n  used cols: " << _matrixV_RSLS.cols() << "\n  R_RS: " << _RSLSreusedTimeWindows << "\n"
                         << '\n';
     }
@@ -652,7 +649,7 @@ void MVQNAcceleration::restartIMVJ()
 
   } else if (_imvjRestartType == MVQNAcceleration::RS_SLIDE) {
 
-    // re-compute Wtil -- compensate for dropping of Wtil_0 ond Z_0:
+    // re-compute Wtil -- compensate for dropping of Wtil_0 and Z_0:
     //                    Wtil_q <-- Wtil_q +  Wtil^0 * (Z^0*V_q)
     for (int i = static_cast<int>(_WtilChunk.size()) - 1; i >= 1; i--) {
 

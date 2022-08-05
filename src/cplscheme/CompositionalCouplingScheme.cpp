@@ -30,6 +30,13 @@ void CompositionalCouplingScheme::initialize(
   determineActiveCouplingSchemes();
 }
 
+void CompositionalCouplingScheme::receiveResultOfFirstAdvance()
+{
+  for (const Scheme &scheme : _couplingSchemes) {
+    scheme.scheme->receiveResultOfFirstAdvance();
+  }
+}
+
 bool CompositionalCouplingScheme::isInitialized() const
 {
   PRECICE_TRACE();
@@ -39,36 +46,6 @@ bool CompositionalCouplingScheme::isInitialized() const
   }
   PRECICE_DEBUG("return {}", isInitialized);
   return isInitialized;
-}
-
-bool CompositionalCouplingScheme::sendsInitializedData() const
-{
-  PRECICE_TRACE();
-  bool sendsInitializedData = false;
-  for (const Scheme &scheme : _couplingSchemes) {
-    sendsInitializedData |= scheme.scheme->sendsInitializedData();
-  }
-  PRECICE_DEBUG("return {}", sendsInitializedData);
-  return sendsInitializedData;
-}
-
-bool CompositionalCouplingScheme::receivesInitializedData() const
-{
-  PRECICE_TRACE();
-  bool receivesInitializedData = false;
-  for (const Scheme &scheme : _couplingSchemes) {
-    receivesInitializedData |= scheme.scheme->receivesInitializedData();
-  }
-  PRECICE_DEBUG("return {}", receivesInitializedData);
-  return receivesInitializedData;
-}
-
-void CompositionalCouplingScheme::initializeData()
-{
-  PRECICE_TRACE();
-  for (const Scheme &scheme : _couplingSchemes) {
-    scheme.scheme->initializeData();
-  }
 }
 
 void CompositionalCouplingScheme::addComputedTime(double timeToAdd)
@@ -192,7 +169,7 @@ double CompositionalCouplingScheme::getTimeWindowSize() const
   PRECICE_TRACE();
   double timeWindowSize = std::numeric_limits<double>::max();
   for (const Scheme &scheme : _couplingSchemes) {
-    if (scheme.scheme->getTimeWindowSize() < timeWindowSize) {
+    if (scheme.scheme->hasTimeWindowSize() && scheme.scheme->getTimeWindowSize() < timeWindowSize) {
       timeWindowSize = scheme.scheme->getTimeWindowSize();
     }
   }

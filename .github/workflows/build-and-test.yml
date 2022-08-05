@@ -7,7 +7,7 @@ name: Build and Test
 on:
   push:
     branches:
-      - master
+      - main
       - develop
   pull_request:
     paths:
@@ -19,6 +19,10 @@ on:
       - 'extras/bindings/**'
       - '.github/workflows/build-and-test.yml'
   workflow_dispatch:
+
+concurrency:
+  group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{github.event_name == 'pull_request'}}
 
 jobs:
   build:
@@ -32,34 +36,34 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - IMAGE: 'ubuntu-1804'
+          - IMAGE: 'ubuntu-2004'
             CONFIG: Bare
             CXX: 'g++'
             TYPE: Debug
             COVFLAGS: '--coverage'
-          - IMAGE: 'ubuntu-1804'
+          - IMAGE: 'ubuntu-2004'
             CONFIG: MPI
             CXX: 'g++'
             TYPE: Debug
             COVFLAGS: '--coverage'
-          - IMAGE: 'ubuntu-1804'
+          - IMAGE: 'ubuntu-2004'
             CONFIG: MPIPETSc
             CXX: 'g++'
             TYPE: Debug
             COVFLAGS: '--coverage'
-          - IMAGE: 'ubuntu-1804'
+          - IMAGE: 'ubuntu-2004'
             CONFIG: Bare
-            CXX: 'g++'
-            TYPE: Release
-          - IMAGE: 'ubuntu-1804'
-            CONFIG: MPI
-            CXX: 'g++'
-            TYPE: Release
-          - IMAGE: 'ubuntu-1804'
-            CONFIG: MPIPETSc
             CXX: 'g++'
             TYPE: Release
           - IMAGE: 'ubuntu-2004'
+            CONFIG: MPI
+            CXX: 'g++'
+            TYPE: Release
+          - IMAGE: 'ubuntu-2004'
+            CONFIG: MPIPETSc
+            CXX: 'g++'
+            TYPE: Release
+          - IMAGE: 'ubuntu-2204'
             CONFIG: MPIPETSc
             CXX: 'g++'
             TYPE: Debug
@@ -92,7 +96,7 @@ jobs:
       OMPI_MCA_rmaps_base_oversubscribe: 1
     steps:
       - name: Restore ccache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ccache
           key: precice-ccache-${{ runner.IMAGE }}-${{ matrix.CONFIG }}-${{ matrix.CXX }}-${{ matrix.TYPE }}
@@ -109,17 +113,17 @@ jobs:
         run: |
           cmake --version
           cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=${{ matrix.TYPE }} -DPRECICE_MPICommunication=${{ env.MPI }} -DPRECICE_PETScMapping=${{ env.PETSc }} -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_EXE_LINKER_FLAGS="${{ matrix.COVFLAGS }}" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         if: failure()
         with:
           name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CMakeCache 
           path: build/CMakeCache.txt
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         if: failure()
         with:
           name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CMakeLogs 
           path: 'build/CMakeFiles/*.log'
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         if: failure()
         with:
           name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CompileCommands 
@@ -145,9 +149,9 @@ jobs:
         run: |
           lcov --capture --directory . --output-file coverage.info
           lcov --remove coverage.info '/usr/*' "/opt/*" --output-file coverage.info # filter system-files and local-dependencies
-      - uses: codecov/codecov-action@v1
+      - uses: codecov/codecov-action@v3
         with:
-          file: ./build/coverage.info
+          files: ./build/coverage.info
         if: ${{ matrix.COVFLAGS }} 
       - name: Check packages
         working-directory: build
@@ -155,7 +159,7 @@ jobs:
         run: |
           cpack
           lintian -i --suppress-tags control-file-has-bad-permissions *.deb
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         if: failure()
         with:
           name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} TestOutput 

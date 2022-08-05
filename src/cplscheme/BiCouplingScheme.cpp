@@ -59,9 +59,9 @@ void BiCouplingScheme::addDataToSend(
   if (!utils::contained(id, _sendData)) {
     PRECICE_ASSERT(_sendData.count(id) == 0, "Key already exists!");
     if (isExplicitCouplingScheme()) {
-      _sendData.emplace(id, PtrCouplingData(new CouplingData(data, std::move(mesh), requiresInitialization)));
+      _sendData.emplace(id, std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization));
     } else {
-      _sendData.emplace(id, PtrCouplingData(new CouplingData(data, std::move(mesh), requiresInitialization, getExtrapolationOrder())));
+      _sendData.emplace(id, std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, getExtrapolationOrder()));
     }
   } else {
     PRECICE_ERROR("Data \"{0}\" cannot be added twice for sending. Please remove any duplicate <exchange data=\"{0}\" .../> tags", data->getName());
@@ -78,13 +78,19 @@ void BiCouplingScheme::addDataToReceive(
   if (!utils::contained(id, _receiveData)) {
     PRECICE_ASSERT(_receiveData.count(id) == 0, "Key already exists!");
     if (isExplicitCouplingScheme()) {
-      _receiveData.emplace(id, PtrCouplingData(new CouplingData(data, std::move(mesh), requiresInitialization)));
+      _receiveData.emplace(id, std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization));
     } else {
-      _receiveData.emplace(id, PtrCouplingData(new CouplingData(data, std::move(mesh), requiresInitialization, getExtrapolationOrder())));
+      _receiveData.emplace(id, std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, getExtrapolationOrder()));
     }
   } else {
     PRECICE_ERROR("Data \"{0}\" cannot be added twice for receiving. Please remove any duplicate <exchange data=\"{0}\" ... /> tags", data->getName());
   }
+}
+
+void BiCouplingScheme::determineInitialDataExchange()
+{
+  determineInitialSend(getSendData());
+  determineInitialReceive(getReceiveData());
 }
 
 std::vector<std::string> BiCouplingScheme::getCouplingPartners() const
@@ -119,6 +125,28 @@ CouplingData *BiCouplingScheme::getReceiveData(
     return &(*(iter->second));
   }
   return nullptr;
+}
+
+void BiCouplingScheme::exchangeInitialData()
+{
+  // F: send, receive, S: receive, send
+  if (doesFirstStep()) {
+    if (sendsInitializedData()) {
+      sendData(getM2N(), getSendData());
+    }
+    if (receivesInitializedData()) {
+      receiveData(getM2N(), getReceiveData());
+      checkDataHasBeenReceived();
+    }
+  } else { // second participant
+    if (receivesInitializedData()) {
+      receiveData(getM2N(), getReceiveData());
+      checkDataHasBeenReceived();
+    }
+    if (sendsInitializedData()) {
+      sendData(getM2N(), getSendData());
+    }
+  }
 }
 
 } // namespace cplscheme

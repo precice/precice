@@ -42,7 +42,7 @@ public:
   }
 
   /**
-    * @brief Returns const interator to first element in vector.
+    * @brief Returns const iterator to first element in vector.
     */
   const_iterator begin() const
   {

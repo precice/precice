@@ -84,24 +84,6 @@ public:
   }
 
   /**
-   * @brief Getter for _sendsInitializedData
-   * @returns _sendsInitializedData
-   */
-  bool sendsInitializedData() const override final
-  {
-    return _sendsInitializedData;
-  }
-
-  /**
-   * @brief Getter for _receivesInitializedData
-   * @returns _receivesInitializedData
-   */
-  bool receivesInitializedData() const override final
-  {
-    return _receivesInitializedData;
-  }
-
-  /**
    * @brief Adds newly computed time. Has to be called before every advance.
    * @param timeToAdd time to be added
    */
@@ -138,7 +120,12 @@ public:
 
   /**
    * @brief Function to check whether time window size is defined by coupling scheme.
-   * @returns true, if time window size is prescribed by the coupling scheme.
+   *
+   * There are two reasons why a scheme might have a time window size:
+   * 1) a fixed time window size is given in the scheme
+   * 2) the participant received the time window size from another participant in the scheme
+   *
+   * @returns true, if time window size is available.
    */
   bool hasTimeWindowSize() const override final;
 
@@ -199,13 +186,8 @@ public:
    */
   void initialize(double startTime, int startTimeWindow) override final;
 
-  /**
-   * @brief Initializes data with written values.
-   *
-   * @pre initialize() has been called.
-   * @pre advance() has NOT yet been called.
-   */
-  void initializeData() override final;
+  /// Receives result of first advance, if this has to happen inside SolverInterface::initialize(), see CouplingScheme.hpp
+  void receiveResultOfFirstAdvance() override final;
 
   /**
    * @brief Advances the coupling scheme.
@@ -236,6 +218,13 @@ public:
    * @returns true, if coupling scheme has any sendData
    */
   virtual bool hasAnySendData() = 0;
+
+  /**
+   * @brief Determines which data is initialized and therefore has to be exchanged during initialize.
+   *
+   * Calls determineInitialSend and determineInitialReceive for all send and receive data of this coupling scheme.
+   */
+  virtual void determineInitialDataExchange() = 0;
 
 protected:
   /// Map that links DataID to CouplingData
@@ -300,6 +289,24 @@ protected:
    * @brief Used to set flag after data has been received using receiveData().
    */
   void checkDataHasBeenReceived();
+
+  /**
+   * @brief Getter for _sendsInitializedData
+   * @returns _sendsInitializedData
+   */
+  bool sendsInitializedData() const
+  {
+    return _sendsInitializedData;
+  }
+
+  /**
+   * @brief Getter for _receivesInitializedData
+   * @returns _receivesInitializedData
+   */
+  bool receivesInitializedData() const
+  {
+    return _receivesInitializedData;
+  }
 
   /**
    * @brief Setter for _timeWindows
@@ -433,9 +440,6 @@ private:
   /// True, if coupling has been initialized.
   bool _isInitialized = false;
 
-  /// True, if initialize data has been called.
-  bool _initializeDataHasBeenCalled = false;
-
   std::set<std::string> _actions;
 
   /// Responsible for monitoring iteration count over time window.
@@ -501,14 +505,16 @@ private:
   /**
    * @brief implements functionality for initialize in base class.
    */
-  virtual void initializeImplementation() = 0;
-
-  /// Functions needed for initializeData()
+  virtual void exchangeInitialData() = 0;
 
   /**
-   * @brief implements functionality for initializeData in base class.
+   * @brief implements functionality for receiveResultOfFirstAdvance
    */
-  virtual void exchangeInitialData() = 0;
+  virtual void performReceiveOfFirstAdvance()
+  {
+    // noop by default. Will be overridden by child-coupling-schemes, if data has to be received here. See SerialCouplingScheme.
+    return;
+  }
 
   /// Functions needed for advance()
 
@@ -563,7 +569,7 @@ private:
 
   /**
    * @brief Measure whether coupling scheme has converged or not
-   * @return Whether coupling schem has converged
+   * @return Whether coupling scheme has converged
    */
   bool measureConvergence();
 

@@ -1,12 +1,16 @@
 #include "mapping/Polation.hpp"
+#include <Eigen/src/Core/Matrix.h>
 #include "math/barycenter.hpp"
+#include "math/differences.hpp"
 
 namespace precice {
 namespace mapping {
 
-Polation::Polation(const mesh::Vertex &element)
+Polation::Polation(const Eigen::VectorXd &location, const mesh::Vertex &element)
 {
   _weightedElements.emplace_back(WeightedElement{element.getID(), 1.0});
+  // The projection in this case is simply the nearest point.
+  _distance = (location - element.getCoords()).norm();
 }
 
 Polation::Polation(const Eigen::VectorXd &location, const mesh::Edge &element)
@@ -22,6 +26,10 @@ Polation::Polation(const Eigen::VectorXd &location, const mesh::Edge &element)
 
   _weightedElements.emplace_back(WeightedElement{A.getID(), bcoords(0)});
   _weightedElements.emplace_back(WeightedElement{B.getID(), bcoords(1)});
+
+  Eigen::VectorXd projection = A.getCoords() * bcoords(0) +
+                               B.getCoords() * bcoords(1);
+  _distance = (location - projection).norm();
 }
 
 Polation::Polation(const Eigen::VectorXd &location, const mesh::Triangle &element)
@@ -40,6 +48,35 @@ Polation::Polation(const Eigen::VectorXd &location, const mesh::Triangle &elemen
   _weightedElements.emplace_back(WeightedElement{A.getID(), bcoords(0)});
   _weightedElements.emplace_back(WeightedElement{B.getID(), bcoords(1)});
   _weightedElements.emplace_back(WeightedElement{C.getID(), bcoords(2)});
+
+  Eigen::VectorXd projection = A.getCoords() * bcoords(0) +
+                               B.getCoords() * bcoords(1) +
+                               C.getCoords() * bcoords(2);
+  _distance = (location - projection).norm();
+}
+
+Polation::Polation(const Eigen::VectorXd &location, const mesh::Tetrahedron &element)
+{
+  PRECICE_ASSERT(location.size() == element.getDimensions(), location.size(), element.getDimensions());
+  auto &A = element.vertex(0);
+  auto &B = element.vertex(1);
+  auto &C = element.vertex(2);
+  auto &D = element.vertex(3);
+
+  const auto bcoords = math::barycenter::calcBarycentricCoordsForTetrahedron(
+      A.getCoords(),
+      B.getCoords(),
+      C.getCoords(),
+      D.getCoords(),
+      location);
+
+  _weightedElements.emplace_back(WeightedElement{A.getID(), bcoords(0)});
+  _weightedElements.emplace_back(WeightedElement{B.getID(), bcoords(1)});
+  _weightedElements.emplace_back(WeightedElement{C.getID(), bcoords(2)});
+  _weightedElements.emplace_back(WeightedElement{D.getID(), bcoords(3)});
+
+  // There is no projection happing, so the distance is always 0.
+  _distance = 0.0;
 }
 
 const std::vector<WeightedElement> &Polation::getWeightedElements() const
@@ -49,7 +86,12 @@ const std::vector<WeightedElement> &Polation::getWeightedElements() const
 
 bool Polation::isInterpolation() const
 {
-  return std::all_of(_weightedElements.begin(), _weightedElements.end(), [](const mapping::WeightedElement &elem) { return elem.weight >= 0.0; });
+  return std::all_of(_weightedElements.begin(), _weightedElements.end(), [](const mapping::WeightedElement &elem) { return precice::math::greaterEquals(elem.weight, 0.0); });
+}
+
+double Polation::distance() const
+{
+  return _distance;
 }
 
 std::ostream &operator<<(std::ostream &os, const WeightedElement &w)

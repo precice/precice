@@ -49,23 +49,20 @@ void precicec_createSolverInterface(
     int         solverProcessIndex,
     int         solverProcessSize)
 {
-  precicec_createSolverInterface_withCommunicator(participantName,
-                                                  configFileName,
-                                                  solverProcessIndex,
-                                                  solverProcessSize,
-                                                  nullptr);
+  std::string stringAccessorName(participantName);
+  std::string stringConfigFileName(configFileName);
+
+  PRECICE_CHECK(impl == nullptr, errormsgCreate);
+  impl.reset(new precice::SolverInterface(stringAccessorName,
+                                          stringConfigFileName,
+                                          solverProcessIndex,
+                                          solverProcessSize));
 }
 
 double precicec_initialize()
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   return impl->initialize();
-}
-
-void precicec_initialize_data()
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->initializeData();
 }
 
 double precicec_advance(double computedTimestepLength)
@@ -118,24 +115,6 @@ int precicec_hasToEvaluateFineModel()
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   if (impl->hasToEvaluateFineModel()) {
-    return 1;
-  }
-  return 0;
-}
-
-int precicec_isReadDataAvailable()
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  if (impl->isReadDataAvailable()) {
-    return 1;
-  }
-  return 0;
-}
-
-int precicec_isWriteDataRequired(double computedTimestepLength)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  if (impl->isWriteDataRequired(computedTimestepLength)) {
     return 1;
   }
   return 0;
@@ -294,6 +273,17 @@ void precicec_setMeshQuadWithEdges(
   impl->setMeshQuadWithEdges(meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
 }
 
+void precicec_setMeshTetrahedron(
+    int meshID,
+    int firstVertexID,
+    int secondVertexID,
+    int thirdVertexID,
+    int fourthVertexID)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->setMeshTetrahedron(meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
+}
+
 void precicec_writeBlockVectorData(
     int           dataID,
     int           size,
@@ -373,18 +363,6 @@ void precicec_readScalarData(
 const char *precicec_getVersionInformation()
 {
   return precice::versionInformation;
-}
-
-void precicec_mapWriteDataFrom(int fromMeshID)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->mapWriteDataFrom(fromMeshID);
-}
-
-void precicec_mapReadDataTo(int toMeshID)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->mapReadDataTo(toMeshID);
 }
 
 const char *precicec_actionWriteInitialData()
