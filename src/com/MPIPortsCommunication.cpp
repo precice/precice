@@ -243,7 +243,7 @@ void MPIPortsCommunication::prepareEstablishment(std::string const &acceptorName
 {
   using namespace boost::filesystem;
   path dir = com::impl::localDirectory(acceptorName, requesterName, _addressDirectory);
-  PRECICE_DEBUG("Creating connection exchange directory {}", dir);
+  PRECICE_DEBUG("Creating connection exchange directory {}", dir.generic_string());
   try {
     create_directories(dir);
   } catch (const boost::filesystem::filesystem_error &e) {
@@ -256,7 +256,7 @@ void MPIPortsCommunication::cleanupEstablishment(std::string const &acceptorName
 {
   using namespace boost::filesystem;
   path dir = com::impl::localDirectory(acceptorName, requesterName, _addressDirectory);
-  PRECICE_DEBUG("Removing connection exchange directory {}", dir);
+  PRECICE_DEBUG("Removing connection exchange directory {}", dir.generic_string());
   try {
     remove_all(dir);
   } catch (const boost::filesystem::filesystem_error &e) {

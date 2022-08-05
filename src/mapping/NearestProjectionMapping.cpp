@@ -42,21 +42,6 @@ NearestProjectionMapping::NearestProjectionMapping(
   }
 }
 
-namespace {
-struct MatchType {
-  double distance;
-  int    index;
-
-  MatchType() = default;
-  MatchType(double d, int i)
-      : distance(d), index(i){};
-  constexpr bool operator<(MatchType const &other) const
-  {
-    return distance < other.distance;
-  };
-};
-} // namespace
-
 void NearestProjectionMapping::computeMapping()
 {
   PRECICE_TRACE(input()->vertices().size(), output()->vertices().size());
@@ -107,8 +92,8 @@ void NearestProjectionMapping::computeMapping()
     // Nearest projection element is edge for 2d if exists, if not, it is the nearest vertex
     // Nearest projection element is triangle for 3d if exists, if not the edge and at the worst case it is the nearest vertex
     auto match = index.findNearestProjection(fVertex.getCoords(), nnearest);
+    distanceStatistics(match.polation.distance());
     _interpolations.push_back(std::move(match.polation));
-    distanceStatistics(match.distance);
   }
 
   if (distanceStatistics.empty()) {

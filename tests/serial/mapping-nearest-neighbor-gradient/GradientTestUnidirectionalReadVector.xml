@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
   <solver-interface dimensions="3" experimental="on">
-    <data:vector name="DataA" gradient="on" />
+    <data:vector name="DataA" />
     <data:scalar name="DataB" />
 
     <mesh name="MeshA">

@@ -13,8 +13,7 @@ Data::Data()
     : _name(""),
       _id(-1),
       _dimensions(0),
-      _spatialDimensions(-1),
-      _hasGradient(false)
+      _spatialDimensions(-1)
 {
   PRECICE_ASSERT(false);
 }
@@ -23,14 +22,12 @@ Data::Data(
     std::string name,
     DataID      id,
     int         dimensions,
-    int         spacialDimensions,
-    bool        hasGradient)
+    int         spatialDimensions)
     : _values(),
       _name(std::move(name)),
       _id(id),
       _dimensions(dimensions),
-      _spatialDimensions(spacialDimensions),
-      _hasGradient(hasGradient)
+      _spatialDimensions(spatialDimensions)
 {
   PRECICE_ASSERT(dimensions > 0, dimensions);
 }
@@ -77,6 +74,11 @@ bool Data::hasGradient() const
 {
   return _hasGradient;
 }
+
+void Data::requireDataGradient()
+{
+  _hasGradient = true;
+};
 
 int Data::getDimensions() const
 {

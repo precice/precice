@@ -25,6 +25,72 @@ using namespace precice;
 
 BOOST_AUTO_TEST_SUITE(VTUExport)
 
+BOOST_AUTO_TEST_CASE(ExportDataWithGradient2D)
+{
+  PRECICE_TEST(1_rank)
+
+  // Create mesh to map from
+  int           dimensions = 2;
+  mesh::Mesh    mesh("MyMesh", dimensions, testing::nextMeshID());
+  mesh::PtrData dataScalar = mesh.createData("dataScalar", 1, 0_dataID);
+  mesh::PtrData dataVector = mesh.createData("dataVector", dimensions, 1_dataID);
+  dataScalar->requireDataGradient();
+  dataVector->requireDataGradient();
+
+  mesh.createVertex(Eigen::Vector2d::Constant(0.0));
+  mesh.createVertex(Eigen::Vector2d::Constant(1.0));
+
+  // Create data
+  mesh.allocateDataValues();
+  Eigen::VectorXd &valuesScalar = dataScalar->values();
+  Eigen::VectorXd &valuesVector = dataVector->values();
+  valuesScalar.setLinSpaced(1., 5.);
+  valuesVector.setLinSpaced(1., 5.);
+
+  // Create corresponding gradient data (all gradient values = const = 1)
+  Eigen::MatrixXd &gradValuesScalar = dataScalar->gradientValues();
+  Eigen::MatrixXd &gradValuesVector = dataVector->gradientValues();
+  gradValuesScalar.setOnes();
+  gradValuesVector.setOnes();
+  io::ExportVTU exportVTU;
+  std::string   filename = "io-VTUExport-ExportDatawithGradient" + std::to_string(dimensions);
+  std::string   location = "";
+  exportVTU.doExport(filename, location, mesh);
+}
+
+BOOST_AUTO_TEST_CASE(ExportDataWithGradient3D)
+{
+  PRECICE_TEST(1_rank)
+  int dimensions = 3;
+  // Create mesh to map from
+  mesh::Mesh    mesh("MyMesh", dimensions, testing::nextMeshID());
+  mesh::PtrData dataScalar = mesh.createData("dataScalar", 1, 0_dataID);
+  mesh::PtrData dataVector = mesh.createData("dataVector", dimensions, 1_dataID);
+  dataScalar->requireDataGradient();
+  dataVector->requireDataGradient();
+
+  mesh.createVertex(Eigen::Vector3d::Constant(0.0));
+  mesh.createVertex(Eigen::Vector3d::Constant(1.0));
+
+  // Create data
+  mesh.allocateDataValues();
+  Eigen::VectorXd &valuesScalar = dataScalar->values();
+  Eigen::VectorXd &valuesVector = dataVector->values();
+
+  valuesScalar.setLinSpaced(1., 5.);
+  valuesVector.setLinSpaced(1., 5.);
+
+  // Create corresponding gradient data (all gradient values = const = 1)
+  Eigen::MatrixXd &gradValuesScalar = dataScalar->gradientValues();
+  Eigen::MatrixXd &gradValuesVector = dataVector->gradientValues();
+  gradValuesScalar.setOnes();
+  gradValuesVector.setOnes();
+  io::ExportVTU exportVTU;
+  std::string   filename = "io-VTUExport-ExportDatawithGradient" + std::to_string(dimensions);
+  std::string   location = "";
+  exportVTU.doExport(filename, location, mesh);
+}
+
 BOOST_AUTO_TEST_CASE(ExportPolygonalMeshSerial)
 {
   PRECICE_TEST(""_on(1_rank).setupIntraComm());

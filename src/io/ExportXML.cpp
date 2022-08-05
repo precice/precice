@@ -33,7 +33,7 @@ void ExportXML::doExport(
   if (utils::IntraComm::isPrimary()) {
     writeParallelFile(name, location, mesh);
   }
-  if (mesh.vertices().size() > 0) { //only procs at the coupling interface should write output (for performance reasons)
+  if (mesh.vertices().size() > 0) { // only procs at the coupling interface should write output (for performance reasons)
     writeSubFile(name, location, mesh);
   }
 }
@@ -42,14 +42,26 @@ void ExportXML::processDataNamesAndDimensions(const mesh::Mesh &mesh)
 {
   _vectorDataNames.clear();
   _scalarDataNames.clear();
+  const bool isThreeDim = (mesh.getDimensions() == 3);
   for (const mesh::PtrData &data : mesh.data()) {
-    int dataDimensions = data->getDimensions();
+    int        dataDimensions = data->getDimensions();
+    const bool hasGradient    = data->hasGradient();
     PRECICE_ASSERT(dataDimensions >= 1);
     std::string dataName = data->getName();
     if (dataDimensions == 1) {
       _scalarDataNames.push_back(dataName);
+      if (hasGradient) {
+        _vectorDataNames.push_back(dataName + "_gradient");
+      }
     } else {
       _vectorDataNames.push_back(dataName);
+      if (hasGradient) {
+        _vectorDataNames.push_back(dataName + "_dx");
+        _vectorDataNames.push_back(dataName + "_dy");
+        if (isThreeDim) {
+          _vectorDataNames.push_back(dataName + "_dz");
+        }
+      }
     }
   }
 }
@@ -64,7 +76,7 @@ void ExportXML::writeParallelFile(
   outfile = outfile / fs::path(name + getParallelExtension());
   std::ofstream outParallelFile(outfile.string(), std::ios::trunc);
 
-  PRECICE_CHECK(outParallelFile, "{} export failed to open primary file \"{}\"", getVTKFormat(), outfile);
+  PRECICE_CHECK(outParallelFile, "{} export failed to open primary file \"{}\"", getVTKFormat(), outfile.generic_string());
 
   const auto formatType = getVTKFormat();
   outParallelFile << "<?xml version=\"1.0\"?>\n";
@@ -88,7 +100,7 @@ void ExportXML::writeParallelFile(
   for (size_t rank : utils::IntraComm::allSecondaryRanks()) {
     PRECICE_ASSERT(rank < offsets.size());
     if (offsets[rank] - offsets[rank - 1] > 0) {
-      //only non-empty subfiles
+      // only non-empty subfiles
       outParallelFile << "      <Piece Source=\"" << name << "_" << rank << getPieceExtension() << "\"/>\n";
     }
   }
@@ -119,7 +131,7 @@ void ExportXML::writeSubFile(
   outfile /= fs::path(name + getPieceSuffix() + getPieceExtension());
   std::ofstream outSubFile(outfile.string(), std::ios::trunc);
 
-  PRECICE_CHECK(outSubFile, "{} export failed to open secondary file \"{}\"", getVTKFormat(), outfile);
+  PRECICE_CHECK(outSubFile, "{} export failed to open secondary file \"{}\"", getVTKFormat(), outfile.generic_string());
 
   const auto formatType = getVTKFormat();
   outSubFile << "<?xml version=\"1.0\"?>\n";
@@ -141,6 +153,40 @@ void ExportXML::writeSubFile(
   outSubFile << "</VTKFile>\n";
 
   outSubFile.close();
+}
+
+void ExportXML::exportGradient(const mesh::PtrData data, const int spaceDim, std::ostream &outFile) const
+{
+  const auto &             gradientValues = data->gradientValues();
+  const int                dataDimensions = data->getDimensions();
+  std::vector<std::string> suffices;
+  if (dataDimensions == 1) {
+    suffices = {"_gradient"};
+  } else if (spaceDim == 2) {
+    suffices = {"_dx", "_dy"};
+  } else if (spaceDim == 3) {
+    suffices = {"_dx", "_dy", "_dz"};
+  }
+  int counter = 0; // Counter for multicomponent
+  for (const auto &suffix : suffices) {
+    const std::string dataName(data->getName());
+    outFile << "            <DataArray type=\"Float64\" Name=\"" << dataName << suffix << "\" NumberOfComponents=\"" << 3;
+    outFile << "\" format=\"ascii\">\n";
+    outFile << "               ";
+    for (int i = counter; i < gradientValues.cols(); i += spaceDim) { // Loop over vertices
+      int j = 0;
+      for (; j < gradientValues.rows(); j++) { // Loop over components
+        outFile << gradientValues.coeff(j, i) << " ";
+      }
+      if (j < 3) { // If 2D data add additional zero as third component
+        outFile << "0.0"
+                << " ";
+      }
+    }
+    outFile << '\n'
+            << "            </DataArray>\n";
+    counter++; // Increment counter for next component
+  }
 }
 
 void ExportXML::exportData(
@@ -171,6 +217,7 @@ void ExportXML::exportData(
     int              dataDimensions = data->getDimensions();
     std::string      dataName(data->getName());
     int              numberOfComponents = (dataDimensions == 2) ? 3 : dataDimensions;
+    const bool       hasGradient        = data->hasGradient();
     outFile << "            <DataArray type=\"Float64\" Name=\"" << dataName << "\" NumberOfComponents=\"" << numberOfComponents;
     outFile << "\" format=\"ascii\">\n";
     outFile << "               ";
@@ -185,7 +232,7 @@ void ExportXML::exportData(
           outFile << viewTemp[i] << ' ';
         }
         if (dataDimensions == 2) {
-          outFile << "0.0" << ' '; //2D data needs to be 3D for vtk
+          outFile << "0.0" << ' '; // 2D data needs to be 3D for vtk
         }
         outFile << ' ';
       }
@@ -196,6 +243,9 @@ void ExportXML::exportData(
     }
     outFile << '\n'
             << "            </DataArray>\n";
+    if (hasGradient) {
+      exportGradient(data, dataDimensions, outFile);
+    }
   }
   outFile << "         </PointData> \n";
 }
@@ -209,7 +259,7 @@ void ExportXML::writeVertex(
     outFile << position(i) << "  ";
   }
   if (position.size() == 2) {
-    outFile << 0.0 << "  "; //also for 2D scenario, vtk needs 3D data
+    outFile << 0.0 << "  "; // also for 2D scenario, vtk needs 3D data
   }
   outFile << '\n';
 }

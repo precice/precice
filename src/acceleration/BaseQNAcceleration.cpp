@@ -83,6 +83,11 @@ void BaseQNAcceleration::initialize(
                    pair.second->values().size(), pair.second->previousIteration().size());
   }
 
+  if (std::any_of(cplData.cbegin(), cplData.cend(), [](const auto &p) { return p.second->hasGradient(); })) {
+    PRECICE_WARN("Gradient data, which is required by at least one of the configured data mappings, is not yet compatible with quasi-Newton acceleration. This combination might lead to numerical issues. "
+                 "Consider switching to a different acceleration scheme or a different data mapping scheme.");
+  }
+
   checkDataIDs(cplData);
   size_t              entries = 0;
   std::vector<size_t> subVectorSizes; //needed for preconditioner
@@ -411,7 +416,7 @@ void BaseQNAcceleration::applyFilter()
     // do: filtering of least-squares system to maintain good conditioning
     std::vector<int> delIndices(0);
     _qrV.applyFilter(_singularityLimit, delIndices, _matrixV);
-    // start with largest index (as V,W matrices are shrinked and shifted
+    // start with largest index (as V,W matrices are shrunk and shifted
 
     for (int i = delIndices.size() - 1; i >= 0; i--) {
 

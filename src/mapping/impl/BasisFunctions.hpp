@@ -145,7 +145,7 @@ public:
       return std::exp(-math::pow_int<2>(_shape * radius)) - _deltaY;
   }
 
-  /// Below that value the function is supposed to be zero. Defines the support radius if not explicitely given
+  /// Below that value the function is supposed to be zero. Defines the support radius if not explicitly given
   static constexpr double cutoffThreshold = 1e-9;
 
 private:

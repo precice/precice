@@ -343,6 +343,17 @@ void precicef_set_quad_we_(
   impl->setMeshQuadWithEdges(*meshID, *firstVertexID, *secondVertexID, *thirdVertexID, *fourthVertexID);
 }
 
+void precicef_set_tetrahedron(
+    const int *meshID,
+    const int *firstVertexID,
+    const int *secondVertexID,
+    const int *thirdVertexID,
+    const int *fourthVertexID)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->setMeshTetrahedron(*meshID, *firstVertexID, *secondVertexID, *thirdVertexID, *fourthVertexID);
+}
+
 void precicef_write_bvdata_(
     const int *dataID,
     const int *size,

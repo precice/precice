@@ -27,9 +27,6 @@
 <a style="text-decoration: none" href="https://github.com/precice/precice/actions?query=workflow%3A%22Build+and+Test%22+branch%3Adevelop" target="_blank">
     <img src="https://github.com/precice/precice/workflows/Build%20and%20Test/badge.svg" alt="Build status">
 </a>
-<a style="text-decoration: none" href="https://travis-ci.org/github/precice/systemtests/builds" target="_blank">
-    <img src="https://img.shields.io/badge/system%20tests-check-blue" alt="Build status">
-</a>
 
 **Project Quality**  
 [![xSDK Policy Compatibility](https://img.shields.io/badge/xSDK-member-brightgreen)](https://github.com/xsdk-project/xsdk-policy-compatibility/blob/master/precice-policy-compatibility.md)
@@ -40,7 +37,7 @@
 
 preCICE stands for Precise Code Interaction Coupling Environment. Its main component is a library that can be used by simulation programs to be coupled together in a partitioned way, enabling multi-physics simulations, such as fluid-structure interaction.
 
-If you are new to preCICE, please have a look at our [documentation](https://www.precice.org/docs.html) and at [precice.org](https://www.precice.org). You may also prefer to [get and install a binary package for the latest release](https://github.com/precice/precice/releases/latest) ([master branch](https://github.com/precice/precice/tree/master)).
+If you are new to preCICE, please have a look at our [documentation](https://www.precice.org/docs.html) and at [precice.org](https://www.precice.org). You may also prefer to [get and install a binary package for the latest release](https://github.com/precice/precice/releases/latest) ([main branch](https://github.com/precice/precice/tree/main)).
 
 <div align="center" style="margin-bottom:30px">
 <img src="https://github.com/precice/precice.github.io/blob/master/material/overview/precice-overview.png" alt="preCICE overview" style="max-height: 100%; max-width: 100%">

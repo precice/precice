@@ -53,8 +53,10 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelVector)
     double positions[4] = {xCoord, 0.0, xCoord + 0.2, 0.0};
     interface.setMeshVertices(meshID, 2, positions, vertexIDs);
     BOOST_TEST(interface.isGradientDataRequired(dataID1) == false);
+    BOOST_TEST(interface.isGradientDataRequired(dataID2) == false);
     interface.initialize();
     BOOST_TEST(interface.isGradientDataRequired(dataID1) == false);
+    BOOST_TEST(interface.isGradientDataRequired(dataID2) == false);
     Eigen::Vector4d values;
     interface.advance(1.0);
     interface.readBlockVectorData(dataID2, 2, vertexIDs, values.data());
@@ -69,8 +71,13 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelVector)
     int             vertexIDs[6];
     double          positions[12] = {0.0, 0.0, 0.2, 0.0, 0.4, 0.0, 0.6, 0.0, 0.8, 0.0, 1.0, 0.0};
     interface.setMeshVertices(meshID, 6, positions, vertexIDs);
+
+    DataID dataID1 = interface.getDataID("Data1", meshID);
+    DataID dataID2 = interface.getDataID("Data2", meshID);
+    BOOST_TEST(interface.isGradientDataRequired(dataID1) == false);
+    BOOST_TEST(interface.isGradientDataRequired(dataID2) == true);
+
     interface.initialize();
-    DataID dataID2    = interface.getDataID("Data2", meshID);
     double values[12] = {1.0, 1.0,
                          2.0, 2.0,
                          3.0, 3.0,
@@ -80,6 +87,7 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelVector)
 
     interface.writeBlockVectorData(dataID2, 6, vertexIDs, values);
 
+    BOOST_TEST(interface.isGradientDataRequired(dataID1) == false);
     BOOST_TEST(interface.isGradientDataRequired(dataID2) == true);
 
     if (interface.isGradientDataRequired(dataID2)) {
