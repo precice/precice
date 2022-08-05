@@ -1,7 +1,9 @@
 #include "precice/Tooling.hpp"
 
+#include "fmt/color.h"
 #include "precice/config/Configuration.hpp"
 #include "precice/impl/versions.hpp"
+#include "utils/fmt.hpp"
 #include "xml/Printer.hpp"
 
 namespace precice {
@@ -34,6 +36,7 @@ void checkConfiguration(const std::string &filename, const std::string &particip
       0,
       size};
   xml::configure(config.getXMLTag(), context, filename);
+  fmt::print("{}: {}\n", filename, fmt::styled("correct", fmt::emphasis::bold | fg(fmt::color::green)));
 }
 
 } // namespace tooling
