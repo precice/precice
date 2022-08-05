@@ -3,7 +3,7 @@
 /**
  * MPI Mock
  *
- * Inlines because of getting multiple definitons from the compiler otherwise.
+ * Inlines because of getting multiple definitions from the compiler otherwise.
  */
 
 using MPI_Comm     = std::nullptr_t;

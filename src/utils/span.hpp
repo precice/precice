@@ -385,7 +385,8 @@ public:
 
     template <typename OtherElementType, std::size_t OtherExtent,
               typename std::enable_if<
-                  (Extent == OtherExtent || Extent == dynamic_extent) &&
+                  (Extent == dynamic_extent || OtherExtent == dynamic_extent ||
+                   Extent == OtherExtent) &&
                       std::is_convertible<OtherElementType (*)[],
                                           ElementType (*)[]>::value,
                   int>::type = 0>

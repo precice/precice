@@ -37,7 +37,7 @@ public:
   int getInterpolationOrder() const;
 
   /**
-   * @brief Adds a MappingContext and the MeshContext required by the read mapping to the correspnding ReadDataContext data structures.
+   * @brief Adds a MappingContext and the MeshContext required by the read mapping to the corresponding ReadDataContext data structures.
    *
    * A read mapping maps _fromData to _providedData. A ReadDataContext already has _providedData, but additionally requires _fromData.
    *
