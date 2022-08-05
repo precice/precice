@@ -31,11 +31,6 @@ double SolverInterface::initialize()
   return _impl->initialize();
 }
 
-void SolverInterface::initializeData()
-{
-  _impl->initializeData();
-}
-
 double SolverInterface::advance(
     double computedTimestepLength)
 {
@@ -55,17 +50,6 @@ int SolverInterface::getDimensions() const
 bool SolverInterface::isCouplingOngoing() const
 {
   return _impl->isCouplingOngoing();
-}
-
-bool SolverInterface::isReadDataAvailable() const
-{
-  return _impl->isReadDataAvailable();
-}
-
-bool SolverInterface::isWriteDataRequired(
-    double computedTimestepLength) const
-{
-  return _impl->isWriteDataRequired(computedTimestepLength);
 }
 
 bool SolverInterface::isTimeWindowComplete() const
@@ -237,18 +221,6 @@ void SolverInterface::setMeshTetrahedron(
 {
   _impl->setMeshTetrahedron(meshID, firstVertexID, secondVertexID, thirdVertexID,
                             fourthVertexID);
-}
-
-void SolverInterface::mapReadDataTo(
-    int toMeshID)
-{
-  _impl->mapReadDataTo(toMeshID);
-}
-
-void SolverInterface::mapWriteDataFrom(
-    int fromMeshID)
-{
-  _impl->mapWriteDataFrom(fromMeshID);
 }
 
 void SolverInterface::writeBlockVectorData(

@@ -75,30 +75,18 @@ public:
       int                           extrapolationOrder);
 
   /**
+   * @brief Getter for _sendsInitializedData
+   * @returns _sendsInitializedData
+   */
+  bool sendsInitializedData() const override final;
+
+  /**
    * @brief getter for _isInitialized
    * @returns true, if initialize has been called.
    */
   bool isInitialized() const override final
   {
     return _isInitialized;
-  }
-
-  /**
-   * @brief Getter for _sendsInitializedData
-   * @returns _sendsInitializedData
-   */
-  bool sendsInitializedData() const override final
-  {
-    return _sendsInitializedData;
-  }
-
-  /**
-   * @brief Getter for _receivesInitializedData
-   * @returns _receivesInitializedData
-   */
-  bool receivesInitializedData() const override final
-  {
-    return _receivesInitializedData;
   }
 
   /**
@@ -117,12 +105,6 @@ public:
    *        computed by the solver calling willDataBeExchanged().
    */
   bool willDataBeExchanged(double lastSolverTimestepLength) const override final;
-
-  /**
-   * @brief getter for _hasInitialDataBeenReceived
-   * @returns true, if data has been received in call of initializeData().
-   */
-  bool hasInitialDataBeenReceived() const override final;
 
   /**
    * @brief getter for _hasDataBeenReceived
@@ -210,13 +192,8 @@ public:
    */
   void initialize(double startTime, int startTimeWindow) override final;
 
-  /**
-   * @brief Initializes data with written values.
-   *
-   * @pre initialize() has been called.
-   * @pre advance() has NOT yet been called.
-   */
-  void initializeData() override final;
+  /// Receives result of first advance, if this has to happen inside SolverInterface::initialize(), see CouplingScheme.hpp
+  void receiveResultOfFirstAdvance() override final;
 
   /**
    * @brief Advances the coupling scheme.
@@ -247,6 +224,13 @@ public:
    * @returns true, if coupling scheme has any sendData
    */
   virtual bool hasAnySendData() = 0;
+
+  /**
+   * @brief Determines which data is initialized and therefore has to be exchanged during initialize.
+   *
+   * Calls determineInitialSend and determineInitialReceive for all send and receive data of this coupling scheme.
+   */
+  virtual void determineInitialDataExchange() = 0;
 
 protected:
   /// Map that links DataID to CouplingData
@@ -308,14 +292,18 @@ protected:
   }
 
   /**
-   * @brief Used to set flag after initialData has been received. Automatically calls checkDataHasBeenReceived().
-   */
-  void checkInitialDataHasBeenReceived();
-
-  /**
    * @brief Used to set flag after data has been received using receiveData().
    */
   void checkDataHasBeenReceived();
+
+  /**
+   * @brief Getter for _receivesInitializedData
+   * @returns _receivesInitializedData
+   */
+  bool receivesInitializedData() const
+  {
+    return _receivesInitializedData;
+  }
 
   /**
    * @brief Setter for _timeWindows
@@ -443,17 +431,11 @@ private:
   /// True, if this participant has to receive initialized data.
   bool _receivesInitializedData = false;
 
-  /// True, if initialData has been received from other participant. Flag is used to make sure that coupling scheme is implemented and used correctly.
-  bool _hasInitialDataBeenReceived = false;
-
   /// True, if data has been received from other participant. Flag is used to make sure that coupling scheme is implemented and used correctly.
   bool _hasDataBeenReceived = false;
 
   /// True, if coupling has been initialized.
   bool _isInitialized = false;
-
-  /// True, if initialize data has been called.
-  bool _initializeDataHasBeenCalled = false;
 
   std::set<std::string> _actions;
 
@@ -520,14 +502,16 @@ private:
   /**
    * @brief implements functionality for initialize in base class.
    */
-  virtual void initializeImplementation() = 0;
-
-  /// Functions needed for initializeData()
+  virtual void exchangeInitialData() = 0;
 
   /**
-   * @brief implements functionality for initializeData in base class.
+   * @brief implements functionality for receiveResultOfFirstAdvance
    */
-  virtual void exchangeInitialData() = 0;
+  virtual void performReceiveOfFirstAdvance()
+  {
+    // noop by default. Will be overridden by child-coupling-schemes, if data has to be received here. See SerialCouplingScheme.
+    return;
+  }
 
   /// Functions needed for advance()
 

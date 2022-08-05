@@ -126,6 +126,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   CouplingData *sendCouplingData = Fixture::getSendData(cplScheme, sendDataIndex);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, dataRequiresInitialization);
   CouplingData *receiveCouplingData = Fixture::getReceiveData(cplScheme, receiveDataIndex);
+  cplScheme.determineInitialDataExchange();
 
   // Add convergence measures
   int                                    minIterations = 3;
@@ -139,8 +140,6 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
 
-  cplScheme.initialize(0.0, 0);
-
   if (context.isNamed(nameParticipant0)) {
     BOOST_TEST(testing::equals(receiveCouplingData->values(), Eigen::Vector3d(0.0, 0.0, 0.0)));
     BOOST_TEST(receiveCouplingData->values().size() == 3);
@@ -152,7 +151,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteInitialData()));
     sendCouplingData->values() = Eigen::VectorXd::Constant(1, 4.0);
     cplScheme.markActionFulfilled(constants::actionWriteInitialData());
-    cplScheme.initializeData();
+    cplScheme.initialize(0.0, 0);
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(testing::equals(receiveCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
     BOOST_TEST(receiveCouplingData->previousIteration().size() == 3);
@@ -168,6 +167,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       }
       cplScheme.addComputedTime(timestepLength);
       cplScheme.advance();
+      BOOST_TEST(cplScheme.hasDataBeenReceived());
     }
   } else {
     BOOST_TEST(context.isNamed(nameParticipant1));
@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(testing::equals(sendCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
     BOOST_TEST(sendCouplingData->values().size() == 3);
     BOOST_TEST(sendCouplingData->previousIteration().size() == 3);
-    cplScheme.initializeData();
+    cplScheme.initialize(0.0, 0);
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 4.0));
     BOOST_TEST(receiveCouplingData->previousIteration().size() == 1);
@@ -196,6 +196,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       }
       cplScheme.addComputedTime(timestepLength);
       cplScheme.advance();
+      BOOST_TEST(cplScheme.hasDataBeenReceived());
       if (cplScheme.isActionRequired(readIterationCheckpoint)) {
         cplScheme.markActionFulfilled(readIterationCheckpoint);
       }

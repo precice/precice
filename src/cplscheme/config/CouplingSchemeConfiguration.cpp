@@ -330,10 +330,6 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
       //_couplingSchemes[accessor] = scheme;
       _config = Config();
     } else if (_config.type == VALUE_SERIAL_IMPLICIT) {
-      if (_experimental) {
-        int maxAllowedOrder = 0; // serial implicit coupling does not allow waveform iteration yet (see https://github.com/precice/precice/issues/1174#issuecomment-1042823430)
-        checkWaveformOrderReadData(maxAllowedOrder);
-      }
       std::string       accessor(_config.participants[0]);
       PtrCouplingScheme scheme = createSerialImplicitCouplingScheme(accessor);
       addCouplingScheme(scheme, accessor);
@@ -541,7 +537,7 @@ void CouplingSchemeConfiguration::addTagExchange(
   tagExchange.addAttribute(participantFrom);
   auto participantTo = XMLAttribute<std::string>(ATTR_TO).setDocumentation("The participant receiving the data.");
   tagExchange.addAttribute(participantTo);
-  auto attrInitialize = XMLAttribute<bool>(ATTR_INITIALIZE, false).setDocumentation("Should this data be initialized during initializeData?");
+  auto attrInitialize = XMLAttribute<bool>(ATTR_INITIALIZE, false).setDocumentation("Should this data be initialized during initialize?");
   tagExchange.addAttribute(attrInitialize);
   tag.addSubtag(tagExchange);
 }
@@ -983,24 +979,19 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
     const bool requiresInitialization = exchange.requiresInitialization;
     if (from == accessor) {
       scheme.addDataToSend(exchange.data, exchange.mesh, requiresInitialization);
-      if (requiresInitialization && (_config.type == VALUE_SERIAL_EXPLICIT || _config.type == VALUE_SERIAL_IMPLICIT)) {
-        PRECICE_CHECK(not scheme.doesFirstStep(),
-                      "In serial coupling only second participant can initialize data and send it. "
-                      "Please check the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" initialize=\"{}\" /> tag in the <coupling-scheme:... /> of your precice-config.xml.",
-                      dataName, meshName, from, to, requiresInitialization);
-      }
     } else if (to == accessor) {
-      scheme.addDataToReceive(exchange.data, exchange.mesh, requiresInitialization);
-      if (requiresInitialization && (_config.type == VALUE_SERIAL_EXPLICIT || _config.type == VALUE_SERIAL_IMPLICIT)) {
-        PRECICE_CHECK(scheme.doesFirstStep(),
-                      "In serial coupling only first participant can receive initial data. "
-                      "Please check the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" initialize=\"{}\" /> tag in the <coupling-scheme:... /> of your precice-config.xml.",
-                      dataName, meshName, from, to, requiresInitialization);
+      // Checks for a serial coupling scheme, where initial data is received by first participant.
+      if (!scheme.doesFirstStep() && requiresInitialization && (_config.type == VALUE_SERIAL_EXPLICIT || _config.type == VALUE_SERIAL_IMPLICIT) && getWaveformUsedOrder(accessor, dataName) == 0) // the order of the statements is crucial! getWaveformUsedOrder should be called last, because it may run into an error, if the data is initialized, but not defined as read data (for example Integration/Serial/AitkenAcceleration)
+      {
+        PRECICE_WARN("In serial coupling, initialized data received by the second participant will only be used if a waveform order > 0 is set. You can avoid unnecessary data initialization by setting initialize=\"false\" in the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" initialize=\"{}\" /> tag in the <coupling-scheme:... /> of your precice-config.xml. If you want to use the initial data, please consider increasing the waveform-order in the <read-data name=\"{}\" mesh=\"{}\" /> tag in the <participant ... /> named \"{}\". ",
+                     dataName, meshName, from, to, requiresInitialization, dataName, meshName, to);
       }
+      scheme.addDataToReceive(exchange.data, exchange.mesh, requiresInitialization);
     } else {
       PRECICE_ASSERT(_config.type == VALUE_MULTI);
     }
   }
+  scheme.determineInitialDataExchange();
 }
 
 void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
@@ -1033,6 +1024,7 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
       scheme.addDataToReceive(exchange.data, exchange.mesh, initialize, from);
     }
   }
+  scheme.determineInitialDataExchange();
 }
 
 void CouplingSchemeConfiguration::checkIfDataIsExchanged(
@@ -1056,6 +1048,15 @@ void CouplingSchemeConfiguration::checkIfDataIsExchanged(
                 "Data \"{}\" is currently not exchanged over the respective mesh on which it is used for convergence measures and/or iteration acceleration. "
                 "Please check the <exchange ... /> and <...-convergence-measure ... /> tags in the <coupling-scheme:... /> of your precice-config.xml.",
                 dataName);
+}
+
+int CouplingSchemeConfiguration::getWaveformUsedOrder(std::string participantName, std::string readDataName) const
+{
+  auto participant = _participantConfig->getParticipant(participantName);
+  auto dataContext = participant->readDataContext(readDataName);
+  int  usedOrder   = dataContext.getInterpolationOrder();
+  PRECICE_ASSERT(usedOrder >= 0); // ensure that usedOrder was set
+  return usedOrder;
 }
 
 void CouplingSchemeConfiguration::checkWaveformOrderReadData(

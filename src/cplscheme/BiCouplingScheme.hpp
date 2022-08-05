@@ -53,6 +53,8 @@ public:
       mesh::PtrMesh        mesh,
       bool                 requiresInitialization);
 
+  void determineInitialDataExchange() override;
+
   /// returns list of all coupling partners
   std::vector<std::string> getCouplingPartners() const override final;
 
@@ -108,6 +110,11 @@ protected:
     PRECICE_ASSERT(_m2n);
     return _m2n;
   }
+
+  /**
+   * @brief Exchanges data, if it has to be initialized.
+   */
+  void exchangeInitialData() override final;
 
 private:
   mutable logging::Logger _log{"cplscheme::BiCouplingScheme"};

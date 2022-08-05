@@ -58,16 +58,11 @@ void precicec_createSolverInterface(
 ///@{
 
 /**
- * @brief Initiates the coupling to the coupling supervisor.
+ * @brief Initiates the coupling to the coupling supervisor and initializes coupling data.
  *
  * @return Maximal length of first timestep to be computed by solver.
  */
 double precicec_initialize();
-
-/**
- * @brief Initializes coupling data.
- */
-void precicec_initialize_data();
 
 /**
  * @brief Exchanges data between solver and coupling supervisor.
@@ -96,20 +91,6 @@ int precicec_getDimensions();
  * @brief Returns true (->1), if the coupled simulation is ongoing
  */
 int precicec_isCouplingOngoing();
-
-/**
- * @brief Returns true (->1), if new data to read is available.
- */
-int precicec_isReadDataAvailable();
-
-/**
- * @brief Checks if new data has to be written before calling advance().
- *
- * @param[in] computedTimestepLength Length of timestep used by the solver.
- *
- * @return true (->1) if new data has to be written.
- */
-int precicec_isWriteDataRequired(double computedTimestepLength);
 
 /**
  * @brief Returns true (->1), if the coupling time window is completed.
@@ -341,16 +322,6 @@ int precicec_hasData(const char *dataName, int meshID);
 int precicec_getDataID(const char *dataName, int meshID);
 
 /**
- * @brief Computes and maps all read data mapped to mesh with given ID.
- */
-void precicec_mapReadDataTo(int toMeshID);
-
-/**
- * @brief Computes and maps all write data mapped from mesh with given ID.
- */
-void precicec_mapWriteDataFrom(int fromMeshID);
-
-/**
  * @brief Writes vector data values given as block.
  *
  * The block must contain the vector values in the following form:
@@ -451,11 +422,11 @@ void precicec_readScalarData(
     int     valueIndex,
     double *dataValue);
 
-/** 
+/**
  * @brief Returns information on the version of preCICE.
  *
  * Returns a semicolon-separated C-string containing:
- * 
+ *
  * 1) the version of preCICE
  * 2) the revision information of preCICE
  * 3) the configuration of preCICE including MPI, PETSC, PYTHON

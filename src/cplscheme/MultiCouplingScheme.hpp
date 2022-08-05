@@ -64,6 +64,8 @@ public:
       bool                 initialize,
       const std::string &  from);
 
+  void determineInitialDataExchange() override;
+
   /// returns list of all coupling partners
   std::vector<std::string> getCouplingPartners() const override final;
 
@@ -124,11 +126,6 @@ private:
   {
     return getAllData();
   }
-
-  /**
-   * @brief Initialization of MultiCouplingScheme is similar to ParallelCouplingScheme. We only have to iterate over all pieces of data in _sendDataVector and _receiveDataVector.
-   */
-  void initializeImplementation() override;
 
   /**
    * @brief Exchanges data, if it has to be initialized.
