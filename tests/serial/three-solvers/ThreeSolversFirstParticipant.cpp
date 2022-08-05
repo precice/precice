@@ -23,11 +23,11 @@ BOOST_AUTO_TEST_CASE(ThreeSolversFirstParticipant)
     int meshID = precice.getMeshID("MeshOne");
     precice.setMeshVertex(meshID, Eigen::Vector2d(0, 0).data());
 
-    double dt = precice.initialize();
+    precice.initialize();
 
-    for (int i = 0; i < timestepSizes.size(); i++) {
+    for (auto dt : timestepSizes) {
       BOOST_TEST(precice.isCouplingOngoing());
-      dt = precice.advance(timestepSizes.at(i));
+      precice.advance(dt);
     }
     BOOST_TEST(not precice.isCouplingOngoing());
     precice.finalize();
@@ -41,9 +41,9 @@ BOOST_AUTO_TEST_CASE(ThreeSolversFirstParticipant)
 
     double dt = precice.initialize();
 
-    for (int i = 0; i < timestepSizes.size(); i++) {
+    for (auto expected_dt : timestepSizes) {
       BOOST_TEST(precice.isCouplingOngoing());
-      BOOST_TEST(dt == timestepSizes.at(i));
+      BOOST_TEST(dt == expected_dt);
       dt = precice.advance(dt);
     }
 
@@ -58,9 +58,9 @@ BOOST_AUTO_TEST_CASE(ThreeSolversFirstParticipant)
 
     double dt = precice.initialize();
 
-    for (int i = 0; i < timestepSizes.size(); i++) {
+    for (auto expected_dt : timestepSizes) {
       BOOST_TEST(precice.isCouplingOngoing());
-      BOOST_TEST(dt == timestepSizes.at(i));
+      BOOST_TEST(dt == expected_dt);
       dt = precice.advance(dt);
     }
     BOOST_TEST(not precice.isCouplingOngoing());

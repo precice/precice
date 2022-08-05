@@ -57,16 +57,16 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipant)
     precice.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
   }
 
-  for (int i = 0; i < timestepSizes.size(); i++) {
+  for (auto iterationSizes : timestepSizes) {
     for (int it = 0; it < maxIterations; it++) {
 
       BOOST_TEST(precice.isCouplingOngoing());
       precice.writeScalarData(writeDataID, vertexID, expectedDataValue);
 
       if (context.isNamed("SolverOne")) {
-        precice.advance(timestepSizes.at(i).at(it));
+        precice.advance(iterationSizes.at(it));
       } else if (context.isNamed("SolverTwo")) {
-        BOOST_TEST(dt == timestepSizes.at(i).at(it));
+        BOOST_TEST(dt == iterationSizes.at(it));
         dt = precice.advance(dt);
       }
 

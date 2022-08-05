@@ -59,6 +59,8 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithSolverGeometry)
       timesteps++;
     }
     couplingInterface.finalize();
+    BOOST_TEST(time == 0.05);
+    BOOST_TEST(timesteps == 5);
   }
 }
 
