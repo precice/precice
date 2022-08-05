@@ -51,8 +51,7 @@ public:
     *
     * @param[in] time the current total simulation time.
     */
-  virtual void performAction(
-      double time) = 0;
+  virtual void performAction(double time) = 0;
 
   /// Returns the timing of the action.
   Timing getTiming() const

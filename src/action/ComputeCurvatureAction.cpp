@@ -22,8 +22,7 @@ ComputeCurvatureAction::ComputeCurvatureAction(
 {
 }
 
-void ComputeCurvatureAction::performAction(
-    double time)
+void ComputeCurvatureAction::performAction(double time)
 {
   PRECICE_TRACE();
   auto &dataValues = _data->values();
