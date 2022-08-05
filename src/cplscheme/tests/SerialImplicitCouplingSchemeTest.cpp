@@ -311,6 +311,7 @@ void runCouplingWithSubcycling(
     cplScheme.finalize(); // Ends the coupling scheme
     BOOST_TEST(testing::equals(computedTime, 0.3));
     BOOST_TEST(testing::equals(computedTimesteps, 3));
+    BOOST_TEST(stepsizeData0 == 5.0);
   }
 
   else if (nameParticipant == nameParticipant1) {
