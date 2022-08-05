@@ -403,9 +403,9 @@ double SolverInterfaceImpl::advance(
   }
 #endif
 
-  double timeWindowSize         = 0.0; // Length of (full) current time window
-  double timeWindowComputedPart = 0.0; // Length of computed part of (full) current time window
-  double time                   = 0.0; // Current time
+  double time;                   // Current time
+  double timeWindowSize;         // Length of (full) current time window
+  double timeWindowComputedPart; // Length of computed part of (full) current time window
 
   // Update the coupling scheme time state. Necessary to get correct remainder.
   _couplingScheme->addComputedTime(computedTimestepLength);
