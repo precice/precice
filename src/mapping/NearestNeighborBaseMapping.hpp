@@ -21,14 +21,11 @@ public:
   NearestNeighborBaseMapping(Constraint constraint, int dimensions, bool hasGradient, std::string mappingName,
                              std::string mappingNameShort);
 
-  /// Destructor, empty.
-  virtual ~NearestNeighborBaseMapping() = default;
-
   /// Computes the mapping coefficients from the in- and output mesh.
-  void computeMapping() override;
+  void computeMapping() final override;
 
   /// Removes a computed mapping.
-  void clear() override;
+  void clear() final override;
 
   /**
    * Matches the offsets needed for the gradient mapping
@@ -36,8 +33,8 @@ public:
    */
   virtual void onMappingComputed(mesh::PtrMesh origins, mesh::PtrMesh searchSpace);
 
-  void tagMeshFirstRound() override;
-  void tagMeshSecondRound() override;
+  void tagMeshFirstRound() final override;
+  void tagMeshSecondRound() final override;
 
 protected:
   /// NearestNeighborMapping or NearestNeighborGradientMapping

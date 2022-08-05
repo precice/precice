@@ -47,20 +47,20 @@ public:
       Polynomial              polynomial);
 
   /// Computes the mapping coefficients from the in- and output mesh.
-  virtual void computeMapping() override;
+  void computeMapping() final override;
 
   /// Removes a computed mapping.
-  virtual void clear() override;
+  void clear() final override;
 
 private:
   precice::logging::Logger _log{"mapping::RadialBasisFctMapping"};
 
   RadialBasisFctSolver _rbfSolver;
   /// @copydoc RadialBasisFctBaseMapping::mapConservative
-  virtual void mapConservative(DataID inputDataID, DataID outputDataID) override;
+  void mapConservative(DataID inputDataID, DataID outputDataID) final override;
 
   /// @copydoc RadialBasisFctBaseMapping::mapConsistent
-  virtual void mapConsistent(DataID inputDataID, DataID outputDataID) override;
+  void mapConsistent(DataID inputDataID, DataID outputDataID) final override;
 
   /// Treatment of the polynomial
   Polynomial _polynomial;

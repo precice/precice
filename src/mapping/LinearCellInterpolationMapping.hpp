@@ -16,7 +16,7 @@ public:
   LinearCellInterpolationMapping(Constraint constraint, int dimensions);
 
   /// Computes the projections and interpolation relations.
-  void computeMapping() override;
+  void computeMapping() final override;
 
 private:
   logging::Logger _log{"mapping::LinearCellInterpolationMappingMapping"};
