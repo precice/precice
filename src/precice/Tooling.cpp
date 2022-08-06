@@ -29,6 +29,7 @@ void printConfigReference(std::ostream &out, ConfigReferenceType reftype)
 
 void checkConfiguration(const std::string &filename, const std::string &participant, int size)
 {
+  fmt::print("Checking {} for syntax and basic setup issues...\n", filename);
   config::Configuration config;
   logging::setMPIRank(0);
   xml::ConfigurationContext context{
@@ -36,7 +37,7 @@ void checkConfiguration(const std::string &filename, const std::string &particip
       0,
       size};
   xml::configure(config.getXMLTag(), context, filename);
-  fmt::print("{}: {}\n", filename, fmt::styled("correct", fmt::emphasis::bold | fg(fmt::color::green)));
+  fmt::print(fmt::emphasis::bold | fg(fmt::color::green), "No major issues detected\n", filename);
 }
 
 } // namespace tooling
