@@ -333,12 +333,10 @@ double SolverInterfaceImpl::initialize()
 
   _meshLock.lockAll();
 
-  // Actions in initialize use dt = 0.0. This is dangerous, because of the ScaleByDt action, which divides by dt. But there is no other solution. See https://github.com/precice/precice/issues/1358 for details.
-
   if (_couplingScheme->sendsInitializedData()) {
-    performDataActions({action::Action::WRITE_MAPPING_PRIOR}, 0.0, 0.0, 0.0, 0.0);
+    performDataActions({action::Action::WRITE_MAPPING_PRIOR}, 0.0);
     mapWrittenData();
-    performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0, 0.0, 0.0, 0.0);
+    performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0);
   }
 
   PRECICE_DEBUG("Initialize coupling schemes");
@@ -346,9 +344,9 @@ double SolverInterfaceImpl::initialize()
   _couplingScheme->initialize(time, timeWindow);
 
   if (_couplingScheme->hasDataBeenReceived()) {
-    performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, 0.0);
+    performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0);
     mapReadData();
-    performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, 0.0);
+    performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
   }
 
   for (auto &context : _accessor->readDataContexts()) {
@@ -358,10 +356,9 @@ double SolverInterfaceImpl::initialize()
   _couplingScheme->receiveResultOfFirstAdvance();
 
   if (_couplingScheme->hasDataBeenReceived()) {
-    // dt will be removed as argument of actions. See https://github.com/precice/precice/issues/1358
-    performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, 0.0);
+    performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0);
     mapReadData();
-    performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, 0.0);
+    performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
   }
 
   resetWrittenData();
@@ -408,28 +405,15 @@ double SolverInterfaceImpl::advance(
   }
 #endif
 
-  double timeWindowSize         = 0.0; // Length of (full) current time window
-  double timeWindowComputedPart = 0.0; // Length of computed part of (full) current time window
-  double time                   = 0.0; // Current time
-
   // Update the coupling scheme time state. Necessary to get correct remainder.
   _couplingScheme->addComputedTime(computedTimestepLength);
-
-  if (_couplingScheme->hasTimeWindowSize()) {
-    timeWindowSize         = _couplingScheme->getTimeWindowSize();
-    timeWindowComputedPart = timeWindowSize - _couplingScheme->getThisTimeWindowRemainder();
-  } else {
-    // use time window size provided to advance, only allowed, if this participant sets the time window size for the other participant
-    timeWindowSize         = computedTimestepLength;
-    timeWindowComputedPart = computedTimestepLength;
-  }
-
-  time = _couplingScheme->getTime();
+  // Current time
+  double time = _couplingScheme->getTime();
 
   if (_couplingScheme->willDataBeExchanged(0.0)) {
-    performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
+    performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time);
     mapWrittenData();
-    performDataActions({action::Action::WRITE_MAPPING_POST}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
+    performDataActions({action::Action::WRITE_MAPPING_POST}, time);
   }
 
   PRECICE_DEBUG("Advance coupling scheme");
@@ -442,13 +426,13 @@ double SolverInterfaceImpl::advance(
   }
 
   if (_couplingScheme->hasDataBeenReceived()) {
-    performDataActions({action::Action::READ_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
+    performDataActions({action::Action::READ_MAPPING_PRIOR}, time);
     mapReadData();
-    performDataActions({action::Action::READ_MAPPING_POST}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
+    performDataActions({action::Action::READ_MAPPING_POST}, time);
   }
 
   if (_couplingScheme->isTimeWindowComplete()) {
-    performDataActions({action::Action::ON_TIME_WINDOW_COMPLETE_POST}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
+    performDataActions({action::Action::ON_TIME_WINDOW_COMPLETE_POST}, time);
   }
 
   PRECICE_INFO(_couplingScheme->printCouplingState());
@@ -1920,15 +1904,12 @@ void SolverInterfaceImpl::mapReadData()
 
 void SolverInterfaceImpl::performDataActions(
     const std::set<action::Action::Timing> &timings,
-    double                                  time,
-    double                                  timeStepSize,
-    double                                  computedTimeWindowPart,
-    double                                  timeWindowSize)
+    double                                  time)
 {
   PRECICE_TRACE();
   for (action::PtrAction &action : _accessor->actions()) {
     if (timings.find(action->getTiming()) != timings.end()) {
-      action->performAction(time, timeStepSize, computedTimeWindowPart, timeWindowSize);
+      action->performAction(time);
     }
   }
 }
