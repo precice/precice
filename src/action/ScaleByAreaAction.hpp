@@ -41,11 +41,7 @@ public:
   /**
    * @brief Scales data on mesh nodes according to selected scaling type.
    */
-  virtual void performAction(
-      double time,
-      double timeStepSize,
-      double computedTimeWindowPart,
-      double timeWindowSize);
+  virtual void performAction(double time) override;
 
 private:
   logging::Logger _log{"action::ScaleByAreaAction"};

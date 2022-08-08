@@ -529,16 +529,10 @@ private:
    *
    * @param[in] timings the timings of the action.
    * @param[in] time the current total simulation time.
-   * @param[in] timeStepSize Length of last time step computed.
-   * @param[in] computedTimeWindowPart Sum of all time steps within current time window, i.e. part that is already computed.
-   * @param[in] timeWindowSize Current time window size.
    */
   void performDataActions(
       const std::set<action::Action::Timing> &timings,
-      double                                  time,
-      double                                  timeStepSize,
-      double                                  computedTimeWindowPart,
-      double                                  timeWindowSize);
+      double                                  time);
 
   /// Resets written data, displacements and mesh neighbors to export.
   void resetWrittenData();
