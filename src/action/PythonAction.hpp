@@ -25,11 +25,7 @@ public:
 
   virtual ~PythonAction();
 
-  virtual void performAction(
-      double time,
-      double timeStepSize,
-      double computedTimeWindowPart,
-      double timeWindowSize);
+  virtual void performAction(double time) override;
 
 private:
   logging::Logger _log{"action::PythonAction"};
@@ -42,7 +38,7 @@ private:
 
   mesh::PtrData _sourceData;
 
-  int _numberArguments = 2;
+  int _numberArguments = 1;
 
   bool _isInitialized = false;
 
