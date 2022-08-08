@@ -22,18 +22,11 @@ public:
       const mesh::PtrMesh &mesh);
 
   /// Records the invocation and appends it to the records
-  void performAction(
-      double time,
-      double timeStepSize,
-      double computedTimeWindowPart,
-      double timeWindowSize) override;
+  virtual void performAction(double time) override;
 
   struct Record {
     Timing timing;
     double time;
-    double timeStepSize;
-    double computedTimeWindowPart;
-    double timeWindowSize;
   };
 
   /// resets the saved records.
