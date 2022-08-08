@@ -78,6 +78,13 @@ public:
    */
   virtual void receiveResultOfFirstAdvance() = 0;
 
+  /**
+   * @brief Returns whether this participant of the coupling scheme sends initialized data.
+   *
+   * @returns true, if this participant of the coupling scheme sends initialized data
+   */
+  virtual bool sendsInitializedData() const = 0;
+
   /// Returns true, if initialize has been called.
   virtual bool isInitialized() const = 0;
 

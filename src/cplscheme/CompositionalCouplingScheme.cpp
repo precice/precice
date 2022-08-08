@@ -36,6 +36,17 @@ void CompositionalCouplingScheme::receiveResultOfFirstAdvance()
   }
 }
 
+bool CompositionalCouplingScheme::sendsInitializedData() const
+{
+  PRECICE_TRACE();
+  bool sendsInitializedData = false;
+  for (const Scheme &scheme : _couplingSchemes) {
+    sendsInitializedData |= scheme.scheme->sendsInitializedData();
+  }
+  PRECICE_DEBUG("return {}", sendsInitializedData);
+  return sendsInitializedData;
+}
+
 bool CompositionalCouplingScheme::isInitialized() const
 {
   PRECICE_TRACE();

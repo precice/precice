@@ -333,9 +333,11 @@ double SolverInterfaceImpl::initialize()
 
   _meshLock.lockAll();
 
-  performDataActions({action::Action::WRITE_MAPPING_PRIOR}, 0.0);
-  mapWrittenData();
-  performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0);
+  if (_couplingScheme->sendsInitializedData()) {
+    performDataActions({action::Action::WRITE_MAPPING_PRIOR}, 0.0);
+    mapWrittenData();
+    performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0);
+  }
 
   PRECICE_DEBUG("Initialize coupling schemes");
   // result of _couplingScheme->getNextTimestepMaxLength() can change when calling _couplingScheme->initialize(...) and first participant method is used for setting the time window size.
