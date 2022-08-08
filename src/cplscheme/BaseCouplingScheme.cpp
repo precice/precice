@@ -175,6 +175,11 @@ void BaseCouplingScheme::receiveResultOfFirstAdvance()
   performReceiveOfFirstAdvance();
 }
 
+bool BaseCouplingScheme::sendsInitializedData() const
+{
+  return _sendsInitializedData;
+}
+
 void BaseCouplingScheme::advance()
 {
   PRECICE_TRACE(_timeWindows, _time);
