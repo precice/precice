@@ -75,6 +75,12 @@ public:
       int                           extrapolationOrder);
 
   /**
+   * @brief Getter for _sendsInitializedData
+   * @returns _sendsInitializedData
+   */
+  bool sendsInitializedData() const override final;
+
+  /**
    * @brief getter for _isInitialized
    * @returns true, if initialize has been called.
    */
@@ -289,15 +295,6 @@ protected:
    * @brief Used to set flag after data has been received using receiveData().
    */
   void checkDataHasBeenReceived();
-
-  /**
-   * @brief Getter for _sendsInitializedData
-   * @returns _sendsInitializedData
-   */
-  bool sendsInitializedData() const
-  {
-    return _sendsInitializedData;
-  }
 
   /**
    * @brief Getter for _receivesInitializedData

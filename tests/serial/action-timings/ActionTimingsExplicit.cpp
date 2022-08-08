@@ -62,8 +62,8 @@ BOOST_AUTO_TEST_CASE(ActionTimingsExplicit)
 
   if (context.isNamed("SolverOne")) {
     BOOST_TEST(action::RecorderAction::records.size() == 2);
-    BOOST_TEST(action::RecorderAction::records.at(0).timing == action::Action::WRITE_MAPPING_PRIOR);
-    BOOST_TEST(action::RecorderAction::records.at(1).timing == action::Action::WRITE_MAPPING_POST);
+    BOOST_TEST(action::RecorderAction::records.at(0).timing == action::Action::READ_MAPPING_PRIOR);
+    BOOST_TEST(action::RecorderAction::records.at(1).timing == action::Action::READ_MAPPING_POST);
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
     BOOST_TEST(action::RecorderAction::records.size() == 4);

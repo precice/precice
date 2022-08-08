@@ -83,6 +83,9 @@ public:
 
   void receiveResultOfFirstAdvance() override final;
 
+  /// Returns true, if any of the composed coupling schemes sendsInitializedData for this participant
+  bool sendsInitializedData() const override final;
+
   /// Returns true, if initialize has been called.
   bool isInitialized() const final override;
 
