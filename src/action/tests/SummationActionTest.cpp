@@ -52,21 +52,7 @@ BOOST_AUTO_TEST_CASE(SummationOneDimensional)
   action::SummationAction sum(
       action::SummationAction::WRITE_MAPPING_PRIOR, sourceDataIDs, targetDataID, mesh);
 
-  sum.performAction(0.0, 0.25, 0.0, 0.25);
-  BOOST_TEST(sourceValues1(0) == 2.0);
-  BOOST_TEST(sourceValues1(1) == 3.0);
-  BOOST_TEST(sourceValues1(2) == 4.0);
-  BOOST_TEST(sourceValues2(0) == 1.0);
-  BOOST_TEST(sourceValues2(1) == 2.0);
-  BOOST_TEST(sourceValues2(2) == 3.0);
-  BOOST_TEST(sourceValues3(0) == 2.0);
-  BOOST_TEST(sourceValues3(1) == 3.0);
-  BOOST_TEST(sourceValues3(2) == 4.0);
-  BOOST_TEST(targetValues(0) == 5.0);
-  BOOST_TEST(targetValues(1) == 8.0);
-  BOOST_TEST(targetValues(2) == 11.0);
-
-  sum.performAction(0.0, 0.25, 0.25, 0.25);
+  sum.performAction(0.0);
   BOOST_TEST(sourceValues1(0) == 2.0);
   BOOST_TEST(sourceValues1(1) == 3.0);
   BOOST_TEST(sourceValues1(2) == 4.0);
@@ -106,7 +92,7 @@ BOOST_AUTO_TEST_CASE(SummationThreeDimensional)
   action::SummationAction sum(
       action::SummationAction::WRITE_MAPPING_PRIOR, sourceDataIDs, targetDataID, mesh);
 
-  sum.performAction(0.0, 0.25, 0.0, 0.25);
+  sum.performAction(0.0);
   BOOST_TEST(sourceValues1(0) == 1.0);
   BOOST_TEST(sourceValues2(0) == 2.0);
   BOOST_TEST(targetValues(0) == 3.0);

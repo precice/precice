@@ -28,11 +28,7 @@ SummationAction::SummationAction(
   }
 }
 
-void SummationAction::performAction(
-    double time,
-    double timeStepSize,
-    double computedTimeWindowPart,
-    double timeWindowSize)
+void SummationAction::performAction(double time)
 {
   PRECICE_TRACE();
 
