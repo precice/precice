@@ -251,8 +251,8 @@ print_section("TARGETS & PACKAGES")
 # Add precice as an empty target
 add_library(precice)
 set_target_properties(precice PROPERTIES
-  # precice is a C++14 project
-  CXX_STANDARD 14
+  # precice is a C++17 project
+  CXX_STANDARD 17
   CXX_STANDARD_REQUIRED Yes
   CXX_EXTENSIONS No
   VERSION ${preCICE_VERSION}
@@ -350,8 +350,8 @@ if (PRECICE_BUILD_TOOLS)
    precice
    )
   set_target_properties(precice-tools PROPERTIES
-    # precice is a C++14 project
-    CXX_STANDARD 14
+    # precice is a C++17 project
+    CXX_STANDARD 17
     CXX_STANDARD_REQUIRED Yes
     CXX_EXTENSIONS No
     )
@@ -389,8 +389,8 @@ IF (BUILD_TESTING)
     Boost::unit_test_framework
     )
   set_target_properties(testprecice PROPERTIES
-    # precice is a C++14 project
-    CXX_STANDARD 14
+    # precice is a C++17 project
+    CXX_STANDARD 17
     CXX_STANDARD_REQUIRED Yes
     CXX_EXTENSIONS No
     )
