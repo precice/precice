@@ -70,22 +70,22 @@ public:
       Preallocation                  preallocation = Preallocation::TREE);
 
   /// Deletes the PETSc objects and the _deadAxis array
-  virtual ~PetRadialBasisFctMapping();
+  ~PetRadialBasisFctMapping() override;
 
   /// Computes the mapping coefficients from the in- and output mesh.
-  virtual void computeMapping() override;
+  void computeMapping() final override;
 
   /// Removes a computed mapping.
-  virtual void clear() override;
+  void clear() final override;
 
   friend struct MappingTests::PetRadialBasisFunctionMapping::Serial::SolutionCaching;
 
 private:
   /// @copydoc RadialBasisFctBaseMapping::mapConservative
-  virtual void mapConservative(DataID inputDataID, DataID outputDataID) override;
+  void mapConservative(DataID inputDataID, DataID outputDataID) final override;
 
   /// @copydoc RadialBasisFctBaseMapping::mapConsistent
-  virtual void mapConsistent(DataID inputDataID, DataID outputDataID) override;
+  void mapConsistent(DataID inputDataID, DataID outputDataID) final override;
 
   /// Stores col -> value for each row. Used to return the already computed values from the preconditioning
   using VertexData = std::vector<std::vector<std::pair<int, double>>>;

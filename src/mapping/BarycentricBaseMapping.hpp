@@ -16,17 +16,11 @@ class BarycentricBaseMapping : public Mapping {
 public:
   BarycentricBaseMapping(Constraint constraint, int dimensions);
 
-  /// Destructor, empty.
-  virtual ~BarycentricBaseMapping() = default;
-
-  /// Computes the projections and interpolation relations. Must be done by inherited subclass
-  virtual void computeMapping() = 0;
-
   /// Removes a computed mapping.
-  virtual void clear() final;
+  void clear() final override;
 
-  virtual void tagMeshFirstRound() final;
-  virtual void tagMeshSecondRound() final;
+  void tagMeshFirstRound() final override;
+  void tagMeshSecondRound() final override;
 
 private:
   logging::Logger _log{"mapping::BarycentricBaseMapping"};

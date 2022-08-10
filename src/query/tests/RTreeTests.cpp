@@ -314,6 +314,7 @@ BOOST_AUTO_TEST_CASE(Query3DFullTriangle)
   BOOST_TEST(rset.count(tlb.getID()) == 1);
   BOOST_TEST(rset.count(tlt.getID()) == 1);
   BOOST_TEST(rset.count(trt.getID()) == 1);
+  BOOST_TEST(rset.count(trb.getID()) == 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Triangle

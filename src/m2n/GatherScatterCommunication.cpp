@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cstddef>
 #include <map>
 #include <memory>
 #include <ostream>
@@ -119,7 +120,7 @@ void GatherScatterCommunication::receive(precice::span<double> itemsToReceive, i
     PRECICE_DEBUG("Global Size = {}", globalSize);
 
     globalItemsToReceive = _com->receiveRange(0, com::AsVectorTag<double>{});
-    PRECICE_ASSERT(globalItemsToReceive.size() == globalSize);
+    PRECICE_ASSERT(globalItemsToReceive.size() == static_cast<std::size_t>(globalSize));
   }
 
   // Scatter data
