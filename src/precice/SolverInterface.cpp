@@ -228,6 +228,17 @@ void SolverInterface::setMeshQuadWithEdges(
                               fourthVertexID);
 }
 
+void SolverInterface::setMeshTetrahedron(
+    int meshID,
+    int firstVertexID,
+    int secondVertexID,
+    int thirdVertexID,
+    int fourthVertexID)
+{
+  _impl->setMeshTetrahedron(meshID, firstVertexID, secondVertexID, thirdVertexID,
+                            fourthVertexID);
+}
+
 void SolverInterface::mapReadDataTo(
     int toMeshID)
 {
@@ -253,10 +264,9 @@ void SolverInterface::writeBlockVectorGradientData(
     int           dataID,
     int           size,
     const int *   valueIndices,
-    const double *gradientValues,
-    bool          rowsFirst)
+    const double *gradientValues)
 {
-  _impl->writeBlockVectorGradientData(dataID, size, valueIndices, gradientValues, rowsFirst);
+  _impl->writeBlockVectorGradientData(dataID, size, valueIndices, gradientValues);
 }
 
 void SolverInterface::writeVectorData(
@@ -270,10 +280,9 @@ void SolverInterface::writeVectorData(
 void SolverInterface::writeVectorGradientData(
     int           dataID,
     int           valueIndex,
-    const double *gradientValues,
-    bool          rowsFirst)
+    const double *gradientValues)
 {
-  _impl->writeVectorGradientData(dataID, valueIndex, gradientValues, rowsFirst);
+  _impl->writeVectorGradientData(dataID, valueIndex, gradientValues);
 }
 
 void SolverInterface::writeBlockScalarData(

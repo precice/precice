@@ -27,20 +27,17 @@
 <a style="text-decoration: none" href="https://github.com/precice/precice/actions?query=workflow%3A%22Build+and+Test%22+branch%3Adevelop" target="_blank">
     <img src="https://github.com/precice/precice/workflows/Build%20and%20Test/badge.svg" alt="Build status">
 </a>
-<a style="text-decoration: none" href="https://travis-ci.org/github/precice/systemtests/builds" target="_blank">
-    <img src="https://img.shields.io/badge/system%20tests-check-blue" alt="Build status">
-</a>
 
 **Project Quality**  
+[![xSDK Policy Compatibility](https://img.shields.io/badge/xSDK-member-brightgreen)](https://github.com/xsdk-project/xsdk-policy-compatibility/blob/master/precice-policy-compatibility.md)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/3895/badge)](https://bestpractices.coreinfrastructure.org/projects/3895)
 [![CodeFactor](https://www.codefactor.io/repository/github/precice/precice/badge)](https://www.codefactor.io/repository/github/precice/precice)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/498adf8b3dcb4543b828e443396eb66c)](https://www.codacy.com/app/fsimonis/precice?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=precice/precice&amp;utm_campaign=Badge_Grade)
 [![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/precice/precice.svg?logo=lgtm&logoWidth=18&label=lgtm%3AC%2B%2B)](https://lgtm.com/projects/g/precice/precice/context:cpp)
 [![codecov](https://codecov.io/gh/precice/precice/branch/develop/graph/badge.svg?token=ixXCTXAZMU)](https://codecov.io/gh/precice/precice)
 
 preCICE stands for Precise Code Interaction Coupling Environment. Its main component is a library that can be used by simulation programs to be coupled together in a partitioned way, enabling multi-physics simulations, such as fluid-structure interaction.
 
-If you are new to preCICE, please have a look at our [documentation](https://www.precice.org/docs.html) and at [precice.org](https://www.precice.org). You may also prefer to [get and install a binary package for the latest release](https://github.com/precice/precice/releases/latest) ([master branch](https://github.com/precice/precice/tree/master)).
+If you are new to preCICE, please have a look at our [documentation](https://www.precice.org/docs.html) and at [precice.org](https://www.precice.org). You may also prefer to [get and install a binary package for the latest release](https://github.com/precice/precice/releases/latest) ([main branch](https://github.com/precice/precice/tree/main)).
 
 <div align="center" style="margin-bottom:30px">
 <img src="https://github.com/precice/precice.github.io/blob/master/material/overview/precice-overview.png" alt="preCICE overview" style="max-height: 100%; max-width: 100%">

@@ -101,7 +101,6 @@ BOOST_AUTO_TEST_CASE(Query2DVertex)
 
   auto result = indexTree.getClosestVertex(location);
   BOOST_TEST(mesh->vertices().at(result.index).getCoords() == Eigen::Vector2d(0, 1));
-  BOOST_TEST(result.distance == 0.28284271247461906);
 }
 
 BOOST_AUTO_TEST_CASE(Query3DVertex)
@@ -113,7 +112,6 @@ BOOST_AUTO_TEST_CASE(Query3DVertex)
 
   auto result = indexTree.getClosestVertex(location);
   BOOST_TEST(mesh->vertices().at(result.index).getCoords() == Eigen::Vector3d(1, 0, 1));
-  BOOST_TEST(result.distance == 0.28284271247461906);
 }
 
 BOOST_AUTO_TEST_CASE(Query3DFullVertex)
@@ -268,8 +266,9 @@ BOOST_AUTO_TEST_CASE(Query3DFullEdge)
   auto            results = indexTree.getClosestEdges(location, 2);
 
   BOOST_TEST(results.size() == 2);
-  BOOST_TEST(results.at(0).index == eld.getID());
-  BOOST_TEST(results.at(1).index == elr.getID());
+  std::set<EdgeID> rset{results.at(0).index, results.at(1).index};
+  BOOST_TEST(rset.count(elr.getID()) == 1);
+  BOOST_TEST(rset.count(eld.getID()) == 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Edge
@@ -310,10 +309,12 @@ BOOST_AUTO_TEST_CASE(Query3DFullTriangle)
 
   auto results = indexTree.getClosestTriangles(location, 3);
   BOOST_TEST(results.size() == 3);
-  BOOST_TEST(results.at(0).index == tlb.getID());
-  BOOST_TEST(results.at(1).index == tlt.getID());
-  BOOST_TEST(results.at(2).index == trt.getID());
-  BOOST_TEST(results.at(2).index != trb.getID());
+
+  std::set<TriangleID> rset{results.at(0).index, results.at(1).index, results.at(2).index};
+  BOOST_TEST(rset.count(tlb.getID()) == 1);
+  BOOST_TEST(rset.count(tlt.getID()) == 1);
+  BOOST_TEST(rset.count(trt.getID()) == 1);
+  BOOST_TEST(rset.count(trb.getID()) == 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Triangle
@@ -333,7 +334,7 @@ BOOST_AUTO_TEST_CASE(ProjectionToVertex)
   auto match = indexTree.findNearestProjection(location, 1);
 
   BOOST_TEST(match.polation.getWeightedElements().size() == 1); // Check number of weights
-  BOOST_TEST(match.distance == 1.0);                            // Check the distance
+  BOOST_TEST(match.polation.distance() == 1.0);                 // Check the distance
   BOOST_TEST(match.polation.isInterpolation());
 
   for (int i = 0; i < static_cast<int>(match.polation.getWeightedElements().size()); ++i) {
@@ -355,7 +356,7 @@ BOOST_AUTO_TEST_CASE(ProjectionToEdge)
   auto match = indexTree.findNearestProjection(location, 1);
 
   BOOST_TEST(match.polation.getWeightedElements().size() == 2); // Check number of weights
-  BOOST_TEST(match.distance == 1.0);                            // Check the distance
+  BOOST_TEST(match.polation.distance() == 1.0);                 // Check the distance
   BOOST_TEST(match.polation.isInterpolation());
 
   for (int i = 0; i < static_cast<int>(match.polation.getWeightedElements().size()); ++i) {
@@ -377,7 +378,7 @@ BOOST_AUTO_TEST_CASE(ProjectionToTriangle)
   auto match = indexTree.findNearestProjection(location, 1);
 
   BOOST_TEST(match.polation.getWeightedElements().size() == 3); // Check number of weights
-  BOOST_TEST(match.distance == 0.0);                            // Check the distance
+  BOOST_TEST(match.polation.distance() == 0.1);                 // Check the distance
   BOOST_TEST(match.polation.isInterpolation());
 
   for (int i = 0; i < static_cast<int>(match.polation.getWeightedElements().size()); ++i) {
@@ -387,6 +388,107 @@ BOOST_AUTO_TEST_CASE(ProjectionToTriangle)
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Projection
+
+BOOST_AUTO_TEST_SUITE(Tetrahedra)
+
+BOOST_AUTO_TEST_CASE(CubeBoundingBoxIndex)
+{
+  PRECICE_TEST(1_rank);
+  PtrMesh ptr(new Mesh("MyMesh", 3, testing::nextMeshID()));
+  auto &  mesh = *ptr;
+  Index   indexTree(ptr);
+
+  Eigen::Vector3d  location(0.5, 0.5, 0.5);
+  std::vector<int> expectedIndices = {0, 1};
+  // Set up 2 tetrahedra with the same bounding box
+  auto &v00 = mesh.createVertex(Eigen::Vector3d(0, 0, 0));
+  auto &v01 = mesh.createVertex(Eigen::Vector3d(1, 0, 0));
+  auto &v02 = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
+  auto &v03 = mesh.createVertex(Eigen::Vector3d(1, 0, 1));
+  auto &v04 = mesh.createVertex(Eigen::Vector3d(1, 1, 1));
+
+  mesh.createTetrahedron(v00, v01, v02, v03);
+  mesh.createTetrahedron(v04, v01, v02, v03);
+
+  auto match = indexTree.getEnclosingTetrahedra(location);
+
+  BOOST_TEST(match.size() == 2);
+}
+
+BOOST_AUTO_TEST_CASE(TetraIndexing)
+{
+  /*
+  For a location and 3 tetrahedra such that:
+  - First contains the location
+  - Second doesn't, but its Bounding Box does
+  - Third doesn't and neither does its AABB
+  Check that only 1st and 2nd are found by getEnclosingTetrahedra
+  */
+  PRECICE_TEST(1_rank);
+  PtrMesh ptr(new Mesh("MyMesh", 3, testing::nextMeshID()));
+  auto &  mesh = *ptr;
+  Index   indexTree(ptr);
+
+  Eigen::Vector3d  location(0.2, 0.2, 0.2);
+  std::vector<int> expectedIndices = {0, 1};
+
+  // Set containing tetra
+  auto &v00 = mesh.createVertex(Eigen::Vector3d(0, 0, 0));
+  auto &v01 = mesh.createVertex(Eigen::Vector3d(1, 0, 0));
+  auto &v02 = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
+  auto &v03 = mesh.createVertex(Eigen::Vector3d(0, 0, 1));
+  mesh.createTetrahedron(v00, v01, v02, v03);
+
+  // Set non-containing tetra with containing BB (from 0 to 1 in each direction)
+  auto &v10 = mesh.createVertex(Eigen::Vector3d(1, 1, 1));
+  auto &v11 = mesh.createVertex(Eigen::Vector3d(1, 0, 0));
+  auto &v12 = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
+  auto &v13 = mesh.createVertex(Eigen::Vector3d(0, 0, 1));
+  mesh.createTetrahedron(v10, v11, v12, v13);
+
+  // Set tetra far away
+  auto &v20 = mesh.createVertex(Eigen::Vector3d(1, 1, 1));
+  auto &v21 = mesh.createVertex(Eigen::Vector3d(2, 1, 1));
+  auto &v22 = mesh.createVertex(Eigen::Vector3d(1, 2, 1));
+  auto &v23 = mesh.createVertex(Eigen::Vector3d(1, 1, 2));
+  mesh.createTetrahedron(v20, v21, v22, v23);
+
+  auto match = indexTree.getEnclosingTetrahedra(location);
+
+  BOOST_TEST(match.size() == 2);
+  BOOST_TEST(((match[0] == 0 && match[1] == 1) || (match[0] == 1 && match[1] == 0)));
+}
+
+BOOST_AUTO_TEST_CASE(TetraWorksOnBoundary)
+{
+  /*
+ Check that the AABB safety factor is high enough. Do all the corners of a tetra fit inside its AABB?
+  */
+  PRECICE_TEST(1_rank);
+  PtrMesh ptr(new Mesh("MyMesh", 3, testing::nextMeshID()));
+  auto &  mesh = *ptr;
+  Index   indexTree(ptr);
+
+  std::vector<Eigen::Vector3d> locations;
+  locations.push_back(Eigen::Vector3d(0, 0, 0));
+  locations.push_back(Eigen::Vector3d(1, 0, 0));
+  locations.push_back(Eigen::Vector3d(0, 1, 0));
+  locations.push_back(Eigen::Vector3d(0, 0, 1));
+
+  // Set containing tetra
+  auto &v00 = mesh.createVertex(Eigen::Vector3d(0, 0, 0));
+  auto &v01 = mesh.createVertex(Eigen::Vector3d(1, 0, 0));
+  auto &v02 = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
+  auto &v03 = mesh.createVertex(Eigen::Vector3d(0, 0, 1));
+  mesh.createTetrahedron(v00, v01, v02, v03);
+
+  for (const auto &vertex : locations) {
+    auto match = indexTree.getEnclosingTetrahedra(vertex);
+    BOOST_TEST(match.size() == 1);
+  }
+}
+
+BOOST_AUTO_TEST_SUITE_END() // Tetrahedra
 
 BOOST_AUTO_TEST_SUITE_END() // Mesh
 BOOST_AUTO_TEST_SUITE_END() // Query

@@ -29,7 +29,7 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
 
   std::vector<double> values;
   const unsigned int  nCoords = 12;
-  for (uint i = 0; i < nCoords; ++i)
+  for (unsigned int i = 0; i < nCoords; ++i)
     values.emplace_back(std::pow(i + 1, 2));
   // MeshTwo
   Vector3d coordTwoA{0.0, 0.0, z}; // Maps to vertex A
@@ -63,9 +63,10 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
     // Initialize, thus sending the mesh.
     double maxDt = interface.initialize();
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant should have to advance once!");
-
     // Write the data to be send.
     int dataAID = interface.getDataID("DataOne", meshOneID);
+    BOOST_TEST(!interface.isGradientDataRequired(dataAID));
+
     interface.writeBlockScalarData(dataAID, nCoords, ids.data(), values.data());
 
     // Advance, thus send the data to the receiving partner.
@@ -88,7 +89,9 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant should have to advance once!");
 
     // Read the mapped data from the mesh.
-    int    dataAID = interface.getDataID("DataOne", meshTwoID);
+    int dataAID = interface.getDataID("DataOne", meshTwoID);
+    BOOST_TEST(!interface.isGradientDataRequired(dataAID));
+
     double valueA, valueB, valueC;
     interface.readScalarData(dataAID, idA, valueA);
     interface.readScalarData(dataAID, idB, valueB);

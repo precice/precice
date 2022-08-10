@@ -85,11 +85,16 @@ SolverInterfaceImpl::SolverInterfaceImpl(
     const std::string &configurationFileName,
     int                solverProcessIndex,
     int                solverProcessSize,
-    void *             communicator)
+    void *             communicator,
+    bool               allowNullptr)
     : _accessorName(std::move(participantName)),
       _accessorProcessRank(solverProcessIndex),
       _accessorCommunicatorSize(solverProcessSize)
 {
+  if (!allowNullptr) {
+    PRECICE_CHECK(communicator != nullptr,
+                  "Passing \"nullptr\" as \"communicator\" to SolverInterface constructor is not allowed. Please use the SolverInterface constructor without the \"communicator\" argument, if you don't want to pass an MPI communicator.");
+  }
   PRECICE_CHECK(!_accessorName.empty(),
                 "This participant's name is an empty string. "
                 "When constructing a preCICE interface you need to pass the name of the "
@@ -142,7 +147,17 @@ SolverInterfaceImpl::SolverInterfaceImpl(
     const std::string &configurationFileName,
     int                solverProcessIndex,
     int                solverProcessSize)
-    : SolverInterfaceImpl::SolverInterfaceImpl(std::move(participantName), configurationFileName, solverProcessIndex, solverProcessSize, nullptr)
+    : SolverInterfaceImpl::SolverInterfaceImpl(std::move(participantName), configurationFileName, solverProcessIndex, solverProcessSize, nullptr, true)
+{
+}
+
+SolverInterfaceImpl::SolverInterfaceImpl(
+    std::string        participantName,
+    const std::string &configurationFileName,
+    int                solverProcessIndex,
+    int                solverProcessSize,
+    void *             communicator)
+    : SolverInterfaceImpl::SolverInterfaceImpl(std::move(participantName), configurationFileName, solverProcessIndex, solverProcessSize, communicator, false)
 {
 }
 
@@ -369,13 +384,7 @@ void SolverInterfaceImpl::initializeData()
   }
   resetWrittenData();
   PRECICE_DEBUG("Plot output");
-  for (const io::ExportContext &context : _accessor->exportContexts()) {
-    if (context.everyNTimeWindows != -1) {
-      std::ostringstream suffix;
-      suffix << _accessorName << ".init";
-      exportMesh(suffix.str());
-    }
-  }
+  _accessor->exportFinal();
   solverInitEvent.start(precice::syncMode);
 
   _hasInitializedData = true;
@@ -429,12 +438,15 @@ double SolverInterfaceImpl::advance(
   _couplingScheme->addComputedTime(computedTimestepLength);
 
   if (_couplingScheme->hasTimeWindowSize()) {
-    timeWindowSize = _couplingScheme->getTimeWindowSize();
+    timeWindowSize         = _couplingScheme->getTimeWindowSize();
+    timeWindowComputedPart = timeWindowSize - _couplingScheme->getThisTimeWindowRemainder();
   } else {
-    timeWindowSize = computedTimestepLength;
+    // use time window size provided to advance, only allowed, if this participant sets the time window size for the other participant
+    timeWindowSize         = computedTimestepLength;
+    timeWindowComputedPart = computedTimestepLength;
   }
-  timeWindowComputedPart = timeWindowSize - _couplingScheme->getThisTimeWindowRemainder();
-  time                   = _couplingScheme->getTime();
+
+  time = _couplingScheme->getTime();
 
   if (_couplingScheme->willDataBeExchanged(0.0)) {
     performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
@@ -492,13 +504,7 @@ void SolverInterfaceImpl::finalize()
     _couplingScheme->finalize();
 
     PRECICE_DEBUG("Handle exports");
-    for (const io::ExportContext &context : _accessor->exportContexts()) {
-      if (context.everyNTimeWindows != -1) {
-        std::ostringstream suffix;
-        suffix << _accessorName << ".final";
-        exportMesh(suffix.str());
-      }
-    }
+    _accessor->exportFinal();
     closeCommunicationChannels(CloseChannels::All);
   }
 
@@ -664,6 +670,10 @@ bool SolverInterfaceImpl::isMeshConnectivityRequired(int meshID) const
 bool SolverInterfaceImpl::isGradientDataRequired(int dataID) const
 {
   PRECICE_VALIDATE_DATA_ID(dataID);
+  // Read data never requires gradients
+  if (!_accessor->isDataWrite(dataID))
+    return false;
+
   WriteDataContext &context = _accessor->writeDataContext(dataID);
   return context.providedData()->hasGradient();
 }
@@ -716,7 +726,7 @@ int SolverInterfaceImpl::setMeshVertex(
   int           index   = -1;
   MeshContext & context = _accessor->usedMeshContext(meshID);
   mesh::PtrMesh mesh(context.mesh);
-  PRECICE_DEBUG("MeshRequirement: {}", context.meshRequirement);
+  PRECICE_DEBUG("MeshRequirement: {}", fmt::streamed(context.meshRequirement));
   index = mesh->createVertex(internalPosition).getID();
   mesh->allocateDataValues();
   return index;
@@ -828,8 +838,7 @@ void SolverInterfaceImpl::setMeshTriangle(
 {
   PRECICE_TRACE(meshID, firstEdgeID,
                 secondEdgeID, thirdEdgeID);
-  PRECICE_CHECK(_dimensions == 3, "setMeshTriangle is only possible for 3D cases."
-                                  " Please set the dimension to 3 in the preCICE configuration file.");
+
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->usedMeshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
@@ -859,8 +868,7 @@ void SolverInterfaceImpl::setMeshTriangleWithEdges(
 {
   PRECICE_TRACE(meshID, firstVertexID,
                 secondVertexID, thirdVertexID);
-  PRECICE_CHECK(_dimensions == 3, "setMeshTriangleWithEdges is only possible for 3D cases."
-                                  " Please set the dimension to 3 in the preCICE configuration file.");
+
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->usedMeshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
@@ -1008,6 +1016,48 @@ void SolverInterfaceImpl::setMeshQuadWithEdges(
       mesh.createTriangle(edge3, edge0, diag);
       mesh.createTriangle(edge1, edge2, diag);
     }
+  }
+}
+
+void SolverInterfaceImpl::setMeshTetrahedron(
+    MeshID meshID,
+    int    firstVertexID,
+    int    secondVertexID,
+    int    thirdVertexID,
+    int    fourthVertexID)
+{
+  PRECICE_TRACE(meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
+  PRECICE_REQUIRE_MESH_MODIFY(meshID);
+  PRECICE_CHECK(_dimensions == 3, "setMeshTetrahedron is only possible for 3D cases."
+                                  " Please set the dimension to 3 in the preCICE configuration file.");
+  MeshContext &context = _accessor->usedMeshContext(meshID);
+  if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
+    mesh::PtrMesh &mesh = context.mesh;
+    using impl::errorInvalidVertexID;
+    PRECICE_CHECK(mesh->isValidVertexID(firstVertexID), errorInvalidVertexID(firstVertexID));
+    PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), errorInvalidVertexID(secondVertexID));
+    PRECICE_CHECK(mesh->isValidVertexID(thirdVertexID), errorInvalidVertexID(thirdVertexID));
+    PRECICE_CHECK(mesh->isValidVertexID(fourthVertexID), errorInvalidVertexID(fourthVertexID));
+    mesh::Vertex &A = mesh->vertices()[firstVertexID];
+    mesh::Vertex &B = mesh->vertices()[secondVertexID];
+    mesh::Vertex &C = mesh->vertices()[thirdVertexID];
+    mesh::Vertex &D = mesh->vertices()[fourthVertexID];
+
+    // Also add underlying primitives (4 triangles, 6 edges)
+    // Tetra ABCD is made of triangles ABC, ABD, ACD, BCD
+    mesh::Edge &AB = mesh->createEdge(A, B);
+    mesh::Edge &BC = mesh->createEdge(B, C);
+    mesh::Edge &CD = mesh->createEdge(C, D);
+    mesh::Edge &DA = mesh->createEdge(D, A);
+    mesh::Edge &AC = mesh->createEdge(A, C);
+    mesh::Edge &BD = mesh->createEdge(B, D);
+
+    mesh->createTriangle(AB, BC, AC);
+    mesh->createTriangle(AB, BD, DA);
+    mesh->createTriangle(AC, CD, DA);
+    mesh->createTriangle(BC, CD, BD);
+
+    mesh->createTetrahedron(A, B, C, D);
   }
 }
 
@@ -1254,9 +1304,8 @@ void SolverInterfaceImpl::writeScalarGradientData(
                   data.getName());
 
     // Values are entered derived in the spatial dimensions (#rows = #spatial dimensions)
-    for (int i = 0; i < _dimensions; i++) {
-      gradientValuesInternal(i, valueIndex) = gradientValues[i];
-    }
+    Eigen::Map<const Eigen::MatrixXd> gradient(gradientValues, _dimensions, 1);
+    gradientValuesInternal.block(0, valueIndex, _dimensions, 1) = gradient;
   }
 }
 
@@ -1301,22 +1350,14 @@ void SolverInterfaceImpl::writeBlockScalarGradientData(
     auto &     gradientValuesInternal = data.gradientValues();
     const auto vertexCount            = gradientValuesInternal.cols() / context.getDataDimensions();
 
-    for (int dim = 0; dim < _dimensions; dim++) {
-      for (int i = 0; i < size; i++) {
+    Eigen::Map<const Eigen::MatrixXd> gradients(gradientValues, _dimensions, size);
 
-        const auto valueIndex = valueIndices[i];
-        PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
-                      "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                      context.getDataName(), valueIndex);
-
-        // Gradient values are entered components derived first
-        const int offset = i * _dimensions;
-
-        PRECICE_ASSERT(offset + dim < gradientValuesInternal.cols() * _dimensions,
-                       offset + dim, gradientValuesInternal.cols() * _dimensions);
-
-        gradientValuesInternal(dim, valueIndex) = gradientValues[offset + dim];
-      }
+    for (auto i = 0; i < size; i++) {
+      const auto valueIndex = valueIndices[i];
+      PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
+                    "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
+                    context.getDataName(), valueIndex);
+      gradientValuesInternal.block(0, valueIndex, _dimensions, 1) = gradients.block(0, i, _dimensions, 1);
     }
   }
 }
@@ -1324,8 +1365,7 @@ void SolverInterfaceImpl::writeBlockScalarGradientData(
 void SolverInterfaceImpl::writeVectorGradientData(
     int           dataID,
     int           valueIndex,
-    const double *gradientValues,
-    bool          rowsFirst)
+    const double *gradientValues)
 {
   PRECICE_EXPERIMENTAL_API();
 
@@ -1362,30 +1402,8 @@ void SolverInterfaceImpl::writeVectorGradientData(
                   "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                   data.getName(), valueIndex)
 
-    for (int dimSpace = 0; dimSpace < _dimensions; dimSpace++) {
-      for (int dimData = 0; dimData < _dimensions; dimData++) {
-
-        const int offsetInternal = valueIndex * _dimensions;
-
-        if (rowsFirst) {
-          // Values are entered derived in spatial dimensions first : gradient matrix read rowwise
-          const int offset = dimData * _dimensions;
-
-          PRECICE_ASSERT(offset + dimSpace < gradientValuesInternal.cols() * _dimensions,
-                         offset + dimSpace, gradientValuesInternal.cols() * _dimensions);
-
-          gradientValuesInternal(dimSpace, offsetInternal + dimData) = gradientValues[offset + dimSpace];
-        } else {
-          // Values are entered derived components first : gradient matrix read columnwise
-          const int offset = dimSpace * _dimensions;
-
-          PRECICE_ASSERT(offset + dimData < gradientValuesInternal.cols() * _dimensions,
-                         offset + dimData, gradientValuesInternal.cols() * _dimensions);
-
-          gradientValuesInternal(dimSpace, offsetInternal + dimData) = gradientValues[offset + dimData];
-        }
-      }
-    }
+    Eigen::Map<const Eigen::MatrixXd> gradient(gradientValues, _dimensions, _dimensions);
+    gradientValuesInternal.block(0, _dimensions * valueIndex, _dimensions, _dimensions) = gradient;
   }
 }
 
@@ -1393,8 +1411,7 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
     int           dataID,
     int           size,
     const int *   valueIndices,
-    const double *gradientValues,
-    bool          rowsFirst)
+    const double *gradientValues)
 {
 
   PRECICE_EXPERIMENTAL_API();
@@ -1434,39 +1451,15 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
     auto &     gradientValuesInternal = data.gradientValues();
     const auto vertexCount            = gradientValuesInternal.cols() / data.getDimensions();
 
-    for (int i = 0; i < size; i++) {
-      for (int dimSpace = 0; dimSpace < _dimensions; dimSpace++) {
-        for (int dimData = 0; dimData < _dimensions; dimData++) {
+    Eigen::Map<const Eigen::MatrixXd> gradients(gradientValues, _dimensions, _dimensions * size);
+    // gradient matrices input one after the other (read row-wise)
+    for (auto i = 0; i < size; i++) {
+      const auto valueIndex = valueIndices[i];
+      PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
+                    "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
+                    data.getName(), valueIndex);
 
-          const auto valueIndex = valueIndices[i];
-          PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
-                        "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                        data.getName(), valueIndex);
-
-          const int offsetInternal = valueIndex * _dimensions;
-
-          if (rowsFirst) {
-            // Values are entered derived in spatial dimensions first : gradient matrices read rowwise
-
-            const int offsetOut = i * _dimensions * _dimensions;
-            const int offsetIn  = dimSpace * _dimensions;
-
-            PRECICE_ASSERT(offsetOut + offsetIn + dimData < gradientValuesInternal.cols() * _dimensions,
-                           offsetOut + offsetIn + dimData, gradientValuesInternal.cols() * _dimensions);
-
-            gradientValuesInternal(dimSpace, offsetInternal + dimData) = gradientValues[offsetOut + offsetIn + dimData];
-          } else {
-            // Values are entered derived components first : gradient matrices input one after the other (read columnwise)
-            const int offsetOut = i * _dimensions * _dimensions;
-            const int offsetIn  = dimData * _dimensions;
-
-            PRECICE_ASSERT(offsetOut + offsetIn + dimSpace < gradientValuesInternal.cols() * _dimensions,
-                           offsetOut + offsetIn + dimSpace, gradientValuesInternal.cols() * _dimensions);
-
-            gradientValuesInternal(dimSpace, offsetInternal + dimData) = gradientValues[offsetOut + offsetIn + dimSpace];
-          }
-        }
-      }
+      gradientValuesInternal.block(0, _dimensions * valueIndex, _dimensions, _dimensions) = gradients.block(0, i * _dimensions, _dimensions, _dimensions);
     }
   }
 }
@@ -1508,8 +1501,15 @@ void SolverInterfaceImpl::readBlockVectorDataImpl(
   PRECICE_CHECK(_state != State::Finalized, "readBlockVectorData(...) cannot be called after finalize().");
   PRECICE_CHECK(relativeReadTime <= _couplingScheme->getThisTimeWindowRemainder(), "readBlockVectorData(...) cannot sample data outside of current time window.");
   PRECICE_CHECK(relativeReadTime >= 0, "readBlockVectorData(...) cannot sample data before the current time.");
-  double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
-  double readTime      = timeStepStart + relativeReadTime;
+  double normalizedReadTime;
+  if (_couplingScheme->hasTimeWindowSize()) {
+    double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
+    double readTime      = timeStepStart + relativeReadTime;
+    normalizedReadTime   = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
+  } else {                                                                  // if this participant defines time window size through participant-first method
+    PRECICE_CHECK(relativeReadTime == _couplingScheme->getThisTimeWindowRemainder(), "Waveform relaxation is not allowed for solver that sets the time step size");
+    normalizedReadTime = 1; // by default read at end of window.
+  }
   PRECICE_REQUIRE_DATA_READ(dataID);
   if (size == 0)
     return;
@@ -1520,9 +1520,8 @@ void SolverInterfaceImpl::readBlockVectorDataImpl(
                 "You cannot call readBlockVectorData on the scalar data type \"{0}\". "
                 "Use readBlockScalarData or change the data type for \"{0}\" to vector.",
                 context.getDataName());
-  const auto normalizedReadTime = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
-  const auto valuesInternal     = context.sampleWaveformAt(normalizedReadTime);
-  const auto vertexCount        = valuesInternal.size() / context.getDataDimensions();
+  const auto valuesInternal = context.sampleWaveformAt(normalizedReadTime);
+  const auto vertexCount    = valuesInternal.size() / context.getDataDimensions();
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
     PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
@@ -1571,8 +1570,15 @@ void SolverInterfaceImpl::readVectorDataImpl(
   PRECICE_CHECK(_state != State::Finalized, "readVectorData(...) cannot be called after finalize().");
   PRECICE_CHECK(relativeReadTime <= _couplingScheme->getThisTimeWindowRemainder(), "readVectorData(...) cannot sample data outside of current time window.");
   PRECICE_CHECK(relativeReadTime >= 0, "readVectorData(...) cannot sample data before the current time.");
-  double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
-  double readTime      = timeStepStart + relativeReadTime;
+  double normalizedReadTime;
+  if (_couplingScheme->hasTimeWindowSize()) {
+    double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
+    double readTime      = timeStepStart + relativeReadTime;
+    normalizedReadTime   = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
+  } else {                                                                  // if this participant defines time window size through participant-first method
+    PRECICE_CHECK(relativeReadTime == _couplingScheme->getThisTimeWindowRemainder(), "Waveform relaxation is not allowed for solver that sets the time step size");
+    normalizedReadTime = 1; // by default read at end of window.
+  }
   PRECICE_REQUIRE_DATA_READ(dataID);
   ReadDataContext &context = _accessor->readDataContext(dataID);
   PRECICE_CHECK(valueIndex >= -1,
@@ -1582,9 +1588,8 @@ void SolverInterfaceImpl::readVectorDataImpl(
   PRECICE_CHECK(context.getDataDimensions() == _dimensions,
                 "You cannot call readVectorData on the scalar data type \"{0}\". Use readScalarData or change the data type for \"{0}\" to vector.",
                 context.getDataName());
-  const auto normalizedReadTime = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
-  const auto values             = context.sampleWaveformAt(normalizedReadTime);
-  const auto vertexCount        = values.size() / context.getDataDimensions();
+  const auto values      = context.sampleWaveformAt(normalizedReadTime);
+  const auto vertexCount = values.size() / context.getDataDimensions();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                 "Cannot read data \"{}\" to invalid Vertex ID ({}). "
                 "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
@@ -1634,8 +1639,15 @@ void SolverInterfaceImpl::readBlockScalarDataImpl(
   PRECICE_CHECK(_state != State::Finalized, "readBlockScalarData(...) cannot be called after finalize().");
   PRECICE_CHECK(relativeReadTime <= _couplingScheme->getThisTimeWindowRemainder(), "readBlockScalarData(...) cannot sample data outside of current time window.");
   PRECICE_CHECK(relativeReadTime >= 0, "readBlockScalarData(...) cannot sample data before the current time.");
-  double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
-  double readTime      = timeStepStart + relativeReadTime;
+  double normalizedReadTime;
+  if (_couplingScheme->hasTimeWindowSize()) {
+    double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
+    double readTime      = timeStepStart + relativeReadTime;
+    normalizedReadTime   = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
+  } else {                                                                  // if this participant defines time window size through participant-first method
+    PRECICE_CHECK(relativeReadTime == _couplingScheme->getThisTimeWindowRemainder(), "Waveform relaxation is not allowed for solver that sets the time step size");
+    normalizedReadTime = 1; // by default read at end of window.
+  }
   PRECICE_REQUIRE_DATA_READ(dataID);
   if (size == 0)
     return;
@@ -1646,9 +1658,8 @@ void SolverInterfaceImpl::readBlockScalarDataImpl(
                 "You cannot call readBlockScalarData on the vector data type \"{0}\". "
                 "Use readBlockVectorData or change the data type for \"{0}\" to scalar.",
                 context.getDataName());
-  const auto normalizedReadTime = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
-  const auto valuesInternal     = context.sampleWaveformAt(normalizedReadTime);
-  const auto vertexCount        = valuesInternal.size();
+  const auto valuesInternal = context.sampleWaveformAt(normalizedReadTime);
+  const auto vertexCount    = valuesInternal.size();
 
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
@@ -1694,8 +1705,15 @@ void SolverInterfaceImpl::readScalarDataImpl(
   PRECICE_CHECK(_state != State::Finalized, "readScalarData(...) cannot be called after finalize().");
   PRECICE_CHECK(relativeReadTime <= _couplingScheme->getThisTimeWindowRemainder(), "readScalarData(...) cannot sample data outside of current time window.");
   PRECICE_CHECK(relativeReadTime >= 0, "readScalarData(...) cannot sample data before the current time.");
-  double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
-  double readTime      = timeStepStart + relativeReadTime;
+  double normalizedReadTime;
+  if (_couplingScheme->hasTimeWindowSize()) {
+    double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
+    double readTime      = timeStepStart + relativeReadTime;
+    normalizedReadTime   = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
+  } else {                                                                  // if this participant defines time window size through participant-first method
+    PRECICE_CHECK(relativeReadTime == _couplingScheme->getThisTimeWindowRemainder(), "Waveform relaxation is not allowed for solver that sets the time step size");
+    normalizedReadTime = 1; // by default read at end of window.
+  }
   PRECICE_REQUIRE_DATA_READ(dataID);
   ReadDataContext &context = _accessor->readDataContext(dataID);
   PRECICE_CHECK(valueIndex >= -1,
@@ -1706,9 +1724,9 @@ void SolverInterfaceImpl::readScalarDataImpl(
                 "You cannot call readScalarData on the vector data type \"{0}\". "
                 "Use readVectorData or change the data type for \"{0}\" to scalar.",
                 context.getDataName());
-  const auto normalizedReadTime = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
-  const auto values             = context.sampleWaveformAt(normalizedReadTime);
-  const auto vertexCount        = values.size();
+
+  const auto values      = context.sampleWaveformAt(normalizedReadTime);
+  const auto vertexCount = values.size();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                 "Cannot read data \"{}\" from invalid Vertex ID ({}). "
                 "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
@@ -1786,19 +1804,6 @@ void SolverInterfaceImpl::getMeshVerticesAndIDs(
     PRECICE_ASSERT(i < vertices.size(), i, vertices.size());
     ids[i]           = vertices[i].getID();
     posMatrix.col(i) = vertices[i].getCoords();
-  }
-}
-
-void SolverInterfaceImpl::exportMesh(const std::string &filenameSuffix) const
-{
-  PRECICE_TRACE(filenameSuffix);
-  // Export meshes
-  for (const io::ExportContext &context : _accessor->exportContexts()) {
-    for (const MeshContext *meshContext : _accessor->usedMeshContexts()) {
-      std::string name = meshContext->mesh->getName() + "-" + filenameSuffix;
-      PRECICE_DEBUG("Exporting mesh to file \"{}\" at location \"{}\"", name, context.location);
-      context.exporter->doExport(name, context.location, *(meshContext->mesh));
-    }
   }
 }
 
@@ -2038,35 +2043,12 @@ void SolverInterfaceImpl::performDataActions(
 void SolverInterfaceImpl::handleExports()
 {
   PRECICE_TRACE();
-  //timesteps was already incremented before
-  int timesteps = _couplingScheme->getTimeWindows() - 1;
-
-  for (const io::ExportContext &context : _accessor->exportContexts()) {
-    if (_couplingScheme->isTimeWindowComplete() || context.everyIteration) {
-      if (context.everyNTimeWindows != -1) {
-        if (timesteps % context.everyNTimeWindows == 0) {
-          if (context.everyIteration) {
-            std::ostringstream everySuffix;
-            everySuffix << _accessorName << ".it" << _numberAdvanceCalls;
-            exportMesh(everySuffix.str());
-          }
-          std::ostringstream suffix;
-          suffix << _accessorName << ".dt" << _couplingScheme->getTimeWindows() - 1;
-          exportMesh(suffix.str());
-        }
-      }
-    }
-  }
-
-  if (_couplingScheme->isTimeWindowComplete()) {
-    // Export watch point data
-    for (const PtrWatchPoint &watchPoint : _accessor->watchPoints()) {
-      watchPoint->exportPointData(_couplingScheme->getTime());
-    }
-    for (const PtrWatchIntegral &watchIntegral : _accessor->watchIntegrals()) {
-      watchIntegral->exportIntegralData(_couplingScheme->getTime());
-    }
-  }
+  Participant::IntermediateExport exp;
+  exp.timewindow = _couplingScheme->getTimeWindows() - 1;
+  exp.iteration  = _numberAdvanceCalls;
+  exp.complete   = _couplingScheme->isTimeWindowComplete();
+  exp.time       = _couplingScheme->getTime();
+  _accessor->exportIntermediate(exp);
 }
 
 void SolverInterfaceImpl::resetWrittenData()

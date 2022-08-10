@@ -20,10 +20,10 @@ namespace mapping {
 NearestNeighborBaseMapping::NearestNeighborBaseMapping(
     Constraint  constraint,
     int         dimensions,
-    bool        requireGradient,
+    bool        requiresGradientData,
     std::string mappingName,
     std::string mappingNameShort)
-    : Mapping(constraint, dimensions, requireGradient),
+    : Mapping(constraint, dimensions, requiresGradientData),
       mappingName(mappingName),
       mappingNameShort(mappingNameShort)
 {
@@ -61,9 +61,14 @@ void NearestNeighborBaseMapping::computeMapping()
 
   auto &index = searchSpace->index();
   for (size_t i = 0; i < verticesSize; ++i) {
-    const auto &matchedVertex = index.getClosestVertex(sourceVertices[i].getCoords());
+    const auto &sourceCoords  = sourceVertices[i].getCoords();
+    const auto &matchedVertex = index.getClosestVertex(sourceCoords);
     _vertexIndices[i]         = matchedVertex.index;
-    distanceStatistics(matchedVertex.distance);
+
+    // Compute distance between input and output vertiex for the stats
+    const auto &matchCoords = searchSpace->vertices()[matchedVertex.index].getCoords();
+    auto        distance    = (sourceCoords - matchCoords).norm();
+    distanceStatistics(distance);
   }
 
   // For gradient mapping, the calculation of offsets between source and matched vertex necessary
@@ -80,19 +85,13 @@ void NearestNeighborBaseMapping::computeMapping()
   _hasComputedMapping = true;
 }
 
-bool NearestNeighborBaseMapping::hasComputedMapping() const
-{
-  PRECICE_TRACE(_hasComputedMapping);
-  return _hasComputedMapping;
-}
-
 void NearestNeighborBaseMapping::clear()
 {
   PRECICE_TRACE();
   _vertexIndices.clear();
   _hasComputedMapping = false;
 
-  if (requireGradient())
+  if (requiresGradientData())
     _offsetsMatched.clear();
 
   if (getConstraint() == CONSISTENT) {

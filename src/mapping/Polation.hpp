@@ -4,6 +4,7 @@
 #include <vector>
 #include "Eigen/Core"
 #include "mesh/Edge.hpp"
+#include "mesh/Tetrahedron.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
 
@@ -23,7 +24,7 @@ struct WeightedElement {
 class Polation {
 public:
   /// Calculate projection to a vertex. Weight is always 1.0
-  Polation(const mesh::Vertex &element);
+  Polation(const Eigen::VectorXd &location, const mesh::Vertex &element);
 
   /// Calculate projection to an edge
   Polation(const Eigen::VectorXd &location, const mesh::Edge &element);
@@ -31,14 +32,21 @@ public:
   /// Calculate projection to a triangle
   Polation(const Eigen::VectorXd &location, const mesh::Triangle &element);
 
+  /// Calculate projection to a tetrahedron
+  Polation(const Eigen::VectorXd &location, const mesh::Tetrahedron &element);
+
   /// Get the weights and indices of the calculated interpolation
   const std::vector<WeightedElement> &getWeightedElements() const;
 
   /// Check whether all the weights are positive, which means it is interpolation
   bool isInterpolation() const;
 
+  /// Returns the projection distance
+  double distance() const;
+
 private:
   std::vector<WeightedElement> _weightedElements;
+  double                       _distance;
 };
 
 /// Make the WeightedElement printable

@@ -388,7 +388,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
     BOOST_TEST(receivedGlobalBB.at(2) == compareBB.at(2));
 
     std::vector<int> connectedRanks = {0, 1, 2};
-    m2n->getPrimaryRankCommunication()->send(connectedRanks, 0);
+    m2n->getPrimaryRankCommunication()->sendRange(connectedRanks, 0);
 
     // construct connection map
     std::map<int, std::vector<int>> connectionMap;
@@ -482,7 +482,7 @@ BOOST_AUTO_TEST_CASE(TestSendBoundingBoxes3D)
 
     //send empty dummy list of connected ranks as feedback
     std::vector<int> connectedRanksList;
-    m2n->getPrimaryRankCommunication()->send(connectedRanksList, 0);
+    m2n->getPrimaryRankCommunication()->sendRange(connectedRanksList, 0);
   }
 }
 

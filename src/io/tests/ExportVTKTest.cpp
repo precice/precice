@@ -4,6 +4,7 @@
 #include "io/Export.hpp"
 #include "io/ExportVTK.hpp"
 #include "mesh/Mesh.hpp"
+#include "mesh/SharedPointer.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 
@@ -19,6 +20,37 @@ BOOST_AUTO_TEST_SUITE(IOTests)
 BOOST_AUTO_TEST_SUITE(VTKExport)
 
 using namespace precice;
+
+BOOST_AUTO_TEST_CASE(ExportDataWithGradient)
+{
+  PRECICE_TEST(1_rank)
+  int dimensions = 2;
+  // Create mesh to map from
+  mesh::Mesh    mesh("MyMesh", dimensions, testing::nextMeshID());
+  mesh::PtrData dataScalar = mesh.createData("dataScalar", 1, 0_dataID);
+  mesh::PtrData dataVector = mesh.createData("dataVector", 2, 1_dataID);
+  dataScalar->requireDataGradient();
+  dataVector->requireDataGradient();
+  mesh.createVertex(Eigen::Vector2d::Constant(0.0));
+  mesh.createVertex(Eigen::Vector2d::Constant(1.0));
+
+  // Create data
+  mesh.allocateDataValues();
+  Eigen::VectorXd &valuesScalar = dataScalar->values();
+  Eigen::VectorXd &valuesVector = dataVector->values();
+  valuesScalar << 1.0, 2.0;
+  valuesVector << 1.0, 2.0, 3.0, 4.0;
+
+  // Create corresponding gradient data (all gradient values = const = 1)
+  Eigen::MatrixXd &gradValuesScalar = dataScalar->gradientValues();
+  Eigen::MatrixXd &gradValuesVector = dataVector->gradientValues();
+  gradValuesScalar.setOnes();
+  gradValuesVector.setOnes();
+  io::ExportVTK exportVTK;
+  std::string   filename = "io-VTKExport-ExportDatawithGradient";
+  std::string   location = "";
+  exportVTK.doExport(filename, location, mesh);
+}
 
 BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 {
@@ -55,6 +87,24 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
 
   io::ExportVTK exportVTK;
   std::string   filename = "io-VTKExport-ExportTriangulatedMesh";
+  std::string   location = "";
+  exportVTK.doExport(filename, location, mesh);
+}
+
+BOOST_AUTO_TEST_CASE(ExportTetrahedron)
+{
+  PRECICE_TEST(1_rank);
+  int           dim = 3;
+  mesh::Mesh    mesh("MyMesh", dim, testing::nextMeshID());
+  mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector3d::Constant(0.0));
+  mesh::Vertex &v2 = mesh.createVertex(Eigen::Vector3d{1.0, 0.0, 0.0});
+  mesh::Vertex &v3 = mesh.createVertex(Eigen::Vector3d{0.0, 1.0, 0.0});
+  mesh::Vertex &v4 = mesh.createVertex(Eigen::Vector3d{0.0, 0.0, 1.0});
+
+  mesh.createTetrahedron(v1, v2, v3, v4);
+
+  io::ExportVTK exportVTK;
+  std::string   filename = "io-VTKExport-ExportTetrahedron";
   std::string   location = "";
   exportVTK.doExport(filename, location, mesh);
 }

@@ -1,6 +1,7 @@
 #include <Eigen/Core>
 #include <algorithm>
-#include <math.h>
+#include <boost/geometry.hpp>
+#include <cmath>
 #include <ostream>
 #include <vector>
 #include "logging/Logger.hpp"

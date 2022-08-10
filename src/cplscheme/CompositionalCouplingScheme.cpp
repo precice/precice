@@ -206,7 +206,7 @@ double CompositionalCouplingScheme::getTimeWindowSize() const
   PRECICE_TRACE();
   double timeWindowSize = std::numeric_limits<double>::max();
   for (const Scheme &scheme : _couplingSchemes) {
-    if (scheme.scheme->getTimeWindowSize() < timeWindowSize) {
+    if (scheme.scheme->hasTimeWindowSize() && scheme.scheme->getTimeWindowSize() < timeWindowSize) {
       timeWindowSize = scheme.scheme->getTimeWindowSize();
     }
   }

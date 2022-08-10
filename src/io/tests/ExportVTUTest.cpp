@@ -25,6 +25,72 @@ using namespace precice;
 
 BOOST_AUTO_TEST_SUITE(VTUExport)
 
+BOOST_AUTO_TEST_CASE(ExportDataWithGradient2D)
+{
+  PRECICE_TEST(1_rank)
+
+  // Create mesh to map from
+  int           dimensions = 2;
+  mesh::Mesh    mesh("MyMesh", dimensions, testing::nextMeshID());
+  mesh::PtrData dataScalar = mesh.createData("dataScalar", 1, 0_dataID);
+  mesh::PtrData dataVector = mesh.createData("dataVector", dimensions, 1_dataID);
+  dataScalar->requireDataGradient();
+  dataVector->requireDataGradient();
+
+  mesh.createVertex(Eigen::Vector2d::Constant(0.0));
+  mesh.createVertex(Eigen::Vector2d::Constant(1.0));
+
+  // Create data
+  mesh.allocateDataValues();
+  Eigen::VectorXd &valuesScalar = dataScalar->values();
+  Eigen::VectorXd &valuesVector = dataVector->values();
+  valuesScalar.setLinSpaced(1., 5.);
+  valuesVector.setLinSpaced(1., 5.);
+
+  // Create corresponding gradient data (all gradient values = const = 1)
+  Eigen::MatrixXd &gradValuesScalar = dataScalar->gradientValues();
+  Eigen::MatrixXd &gradValuesVector = dataVector->gradientValues();
+  gradValuesScalar.setOnes();
+  gradValuesVector.setOnes();
+  io::ExportVTU exportVTU;
+  std::string   filename = "io-VTUExport-ExportDatawithGradient" + std::to_string(dimensions);
+  std::string   location = "";
+  exportVTU.doExport(filename, location, mesh);
+}
+
+BOOST_AUTO_TEST_CASE(ExportDataWithGradient3D)
+{
+  PRECICE_TEST(1_rank)
+  int dimensions = 3;
+  // Create mesh to map from
+  mesh::Mesh    mesh("MyMesh", dimensions, testing::nextMeshID());
+  mesh::PtrData dataScalar = mesh.createData("dataScalar", 1, 0_dataID);
+  mesh::PtrData dataVector = mesh.createData("dataVector", dimensions, 1_dataID);
+  dataScalar->requireDataGradient();
+  dataVector->requireDataGradient();
+
+  mesh.createVertex(Eigen::Vector3d::Constant(0.0));
+  mesh.createVertex(Eigen::Vector3d::Constant(1.0));
+
+  // Create data
+  mesh.allocateDataValues();
+  Eigen::VectorXd &valuesScalar = dataScalar->values();
+  Eigen::VectorXd &valuesVector = dataVector->values();
+
+  valuesScalar.setLinSpaced(1., 5.);
+  valuesVector.setLinSpaced(1., 5.);
+
+  // Create corresponding gradient data (all gradient values = const = 1)
+  Eigen::MatrixXd &gradValuesScalar = dataScalar->gradientValues();
+  Eigen::MatrixXd &gradValuesVector = dataVector->gradientValues();
+  gradValuesScalar.setOnes();
+  gradValuesVector.setOnes();
+  io::ExportVTU exportVTU;
+  std::string   filename = "io-VTUExport-ExportDatawithGradient" + std::to_string(dimensions);
+  std::string   location = "";
+  exportVTU.doExport(filename, location, mesh);
+}
+
 BOOST_AUTO_TEST_CASE(ExportPolygonalMeshSerial)
 {
   PRECICE_TEST(""_on(1_rank).setupIntraComm());
@@ -176,6 +242,69 @@ BOOST_AUTO_TEST_CASE(ExportSplitSquare)
 
   io::ExportVTU exportVTU;
   std::string   filename = "io-ExportVTUTest-Square";
+  std::string   location = "";
+  exportVTU.doExport(filename, location, mesh);
+}
+
+BOOST_AUTO_TEST_CASE(ExportOneTetrahedron)
+{
+  PRECICE_TEST(""_on(1_rank).setupIntraComm());
+  int           dim = 3;
+  mesh::Mesh    mesh("MyMesh", dim, testing::nextMeshID());
+  mesh::Vertex &v0 = mesh.createVertex(Eigen::Vector3d::Zero());
+  mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector3d{1.0, 0.0, 0.0});
+  mesh::Vertex &v2 = mesh.createVertex(Eigen::Vector3d{0.0, 1.0, 0.0});
+  mesh::Vertex &v3 = mesh.createVertex(Eigen::Vector3d{0.0, 0.0, 1.0});
+
+  mesh.createTetrahedron(v0, v1, v2, v3);
+
+  io::ExportVTU exportVTU;
+  std::string   filename = "io-VTUExport-ExportOneTetrahedron";
+  std::string   location = "";
+  exportVTU.doExport(filename, location, mesh);
+}
+
+BOOST_AUTO_TEST_CASE(ExportPartitionedCube)
+{
+  // Unit cube is made of 6 tetrahedra. We have 3 ranks with 2 tetra each
+  // as well as en empty rank. Empty rank is the 3rd
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  int        dim = 3;
+  mesh::Mesh mesh("MyMesh", dim, testing::nextMeshID());
+
+  if (context.isRank(0)) {
+    mesh::Vertex &v000 = mesh.createVertex(Eigen::Vector3d{0.0, 0.0, 0.0});
+    mesh::Vertex &v001 = mesh.createVertex(Eigen::Vector3d{0.0, 0.0, 1.0});
+    mesh::Vertex &v011 = mesh.createVertex(Eigen::Vector3d{0.0, 1.0, 1.0});
+    mesh::Vertex &v111 = mesh.createVertex(Eigen::Vector3d{1.0, 1.0, 1.0});
+    mesh::Vertex &v010 = mesh.createVertex(Eigen::Vector3d{0.0, 1.0, 0.0});
+
+    mesh.createTetrahedron(v000, v001, v011, v111);
+    mesh.createTetrahedron(v000, v010, v011, v111);
+    mesh.getVertexOffsets() = {4, 8, 8, 12};
+
+  } else if (context.isRank(1)) {
+    mesh::Vertex &v000 = mesh.createVertex(Eigen::Vector3d{0.0, 0.0, 0.0});
+    mesh::Vertex &v001 = mesh.createVertex(Eigen::Vector3d{0.0, 0.0, 1.0});
+    mesh::Vertex &v101 = mesh.createVertex(Eigen::Vector3d{1.0, 0.0, 1.0});
+    mesh::Vertex &v111 = mesh.createVertex(Eigen::Vector3d{1.0, 1.0, 1.0});
+    mesh::Vertex &v100 = mesh.createVertex(Eigen::Vector3d{1.0, 0.0, 0.0});
+
+    mesh.createTetrahedron(v000, v001, v101, v111);
+    mesh.createTetrahedron(v000, v100, v101, v111);
+  } else if (context.isRank(3)) {
+    mesh::Vertex &v000 = mesh.createVertex(Eigen::Vector3d{0.0, 0.0, 0.0});
+    mesh::Vertex &v010 = mesh.createVertex(Eigen::Vector3d{0.0, 1.0, 0.0});
+    mesh::Vertex &v100 = mesh.createVertex(Eigen::Vector3d{1.0, 0.0, 0.0});
+    mesh::Vertex &v111 = mesh.createVertex(Eigen::Vector3d{1.0, 1.0, 1.0});
+    mesh::Vertex &v110 = mesh.createVertex(Eigen::Vector3d{1.0, 1.0, 0.0});
+
+    mesh.createTetrahedron(v000, v010, v110, v111);
+    mesh.createTetrahedron(v000, v100, v110, v111);
+  }
+
+  io::ExportVTU exportVTU;
+  std::string   filename = "io-ExportVTUTest-PartitionedCube";
   std::string   location = "";
   exportVTU.doExport(filename, location, mesh);
 }

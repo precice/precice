@@ -227,6 +227,14 @@ public:
       int    thirdVertexID,
       int    fourthVertexID);
 
+  /// @copydoc SolverInterface::setMeshTetrahedron
+  void setMeshTetrahedron(
+      MeshID meshID,
+      int    firstVertexID,
+      int    secondVertexID,
+      int    thirdVertexID,
+      int    fourthVertexID);
+
   ///@}
 
   ///@name Data Access
@@ -256,8 +264,7 @@ public:
       int           fromDataID,
       int           size,
       const int *   valueIndices,
-      const double *gradientValues,
-      bool          rowsFirst = false);
+      const double *gradientValues);
 
   /// @copydoc SolverInterface::writeVectorData
   void writeVectorData(
@@ -269,8 +276,7 @@ public:
   void writeVectorGradientData(
       int           fromDataID,
       int           valueIndex,
-      const double *gradientValues,
-      bool          rowsFirst = false);
+      const double *gradientValues);
 
   /// @copydoc SolverInterface::writeBlockScalarData
   void writeBlockScalarData(
@@ -375,17 +381,6 @@ public:
   ///@}
 
   /**
-   * @brief Writes a mesh to vtk file.
-   *
-   * The plotting path has to be specified in the configuration of the
-   * accessing participant.
-   *
-   * @param[in] filenameSuffix Suffix of all plotted files
-   */
-  /// @todo make private. See https://github.com/precice/precice/pull/1270
-  void exportMesh(const std::string &filenameSuffix) const;
-
-  /**
    * @brief Allows to access a registered mesh
    */
   /// @todo try to remove or make private. See https://github.com/precice/precice/issues/1269
@@ -404,6 +399,30 @@ public:
   SolverInterfaceImpl &operator=(SolverInterfaceImpl &&) = delete;
 
 private:
+  /**
+   * @brief Generic constructor for SolverInterfaceImpl.
+   *
+   * Use the parameter communicator to specify a custom global MPI communicator.
+   * Pass a null pointer to signal preCICE to use MPI_COMM_WORLD.
+   *
+   * @param[in] participantName Name of the participant using the interface. Has to
+   *        match the name given for a participant in the xml configuration file.
+   * @param[in] configurationFileName Name (with path) of the xml configuration file.
+   * @param[in] solverProcessIndex If the solver code runs with several processes,
+   *        each process using preCICE has to specify its index, which has to start
+   *        from 0 and end with solverProcessSize - 1.
+   * @param[in] solverProcessSize The number of solver processes using preCICE.
+   * @param[in] communicator A pointer to an MPI_Comm to use as communicator.
+   * @param[in] allowNullptr    Accept nullptr for communicator.
+   */
+  SolverInterfaceImpl(
+      std::string        participantName,
+      const std::string &configurationFileName,
+      int                solverProcessIndex,
+      int                solverProcessSize,
+      void *             communicator,
+      bool               allowNullptr);
+
   mutable logging::Logger _log{"impl::SolverInterfaceImpl"};
 
   std::string _accessorName;

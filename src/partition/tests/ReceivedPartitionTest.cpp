@@ -410,7 +410,7 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFGlobal2D)
 
     mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(
         new mapping::PetRadialBasisFctMapping<mapping::ThinPlateSplines>(mapping::Mapping::CONSISTENT, dimensions,
-                                                                         mapping::ThinPlateSplines(), false, false, false));
+                                                                         mapping::ThinPlateSplines(), {{false, false, false}}));
     mapping::PtrMapping boundingToMapping = mapping::PtrMapping(
         new mapping::NearestNeighborMapping(mapping::Mapping::CONSERVATIVE, dimensions));
     boundingFromMapping->setMeshes(pSolidzMesh, pNastinMesh);
@@ -495,7 +495,7 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D1)
 
     mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(
         new mapping::PetRadialBasisFctMapping<mapping::CompactThinPlateSplinesC2>(mapping::Mapping::CONSISTENT, dimensions,
-                                                                                  mapping::CompactThinPlateSplinesC2(supportRadius), false, false, false));
+                                                                                  mapping::CompactThinPlateSplinesC2(supportRadius), {{false, false, false}}));
     mapping::PtrMapping boundingToMapping = mapping::PtrMapping(
         new mapping::NearestNeighborMapping(mapping::Mapping::CONSERVATIVE, dimensions));
     boundingFromMapping->setMeshes(pSolidzMesh, pNastinMesh);
@@ -568,7 +568,7 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D2)
 
     mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(
         new mapping::PetRadialBasisFctMapping<mapping::CompactThinPlateSplinesC2>(mapping::Mapping::CONSISTENT, dimensions,
-                                                                                  mapping::CompactThinPlateSplinesC2(supportRadius), false, false, false));
+                                                                                  mapping::CompactThinPlateSplinesC2(supportRadius), {{false, false, false}}));
     mapping::PtrMapping boundingToMapping = mapping::PtrMapping(
         new mapping::NearestNeighborMapping(mapping::Mapping::CONSERVATIVE, dimensions));
     boundingFromMapping->setMeshes(pSolidzMesh, pNastinMesh);
@@ -648,10 +648,10 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal3D)
 
     mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(
         new mapping::PetRadialBasisFctMapping<mapping::CompactThinPlateSplinesC2>(mapping::Mapping::CONSISTENT, dimensions,
-                                                                                  mapping::CompactThinPlateSplinesC2(supportRadius1), false, false, false));
+                                                                                  mapping::CompactThinPlateSplinesC2(supportRadius1), {{false, false, false}}));
     mapping::PtrMapping boundingToMapping = mapping::PtrMapping(
         new mapping::PetRadialBasisFctMapping<mapping::CompactThinPlateSplinesC2>(mapping::Mapping::CONSERVATIVE, dimensions,
-                                                                                  mapping::CompactThinPlateSplinesC2(supportRadius2), false, false, false));
+                                                                                  mapping::CompactThinPlateSplinesC2(supportRadius2), {{false, false, false}}));
     boundingFromMapping->setMeshes(pSolidzMesh, pNastinMesh);
     boundingToMapping->setMeshes(pNastinMesh, pSolidzMesh);
 
@@ -941,14 +941,13 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
   }
 
   if (context.isNamed("SOLIDZ")) {
-    std::vector<int>                connectedRanksList;
     int                             connectionMapSize = 0;
     std::map<int, std::vector<int>> receivedConnectionMap;
     mesh::PtrMesh                   pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
     m2n->getPrimaryRankCommunication()->send(3, 0);
     com::CommunicateBoundingBox(m2n->getPrimaryRankCommunication()).sendBoundingBoxMap(sendGlobalBB, 0);
-    m2n->getPrimaryRankCommunication()->receive(connectedRanksList, 0);
-    connectionMapSize = connectedRanksList.size();
+    std::vector<int> connectedRanksList = m2n->getPrimaryRankCommunication()->receiveRange(0, com::AsVectorTag<int>{});
+    connectionMapSize                   = connectedRanksList.size();
     BOOST_TEST_REQUIRE(connectionMapSize == 2);
 
     std::vector<int> connectedRanks;
@@ -1010,14 +1009,13 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D)
   }
 
   if (context.isNamed("SOLIDZ")) {
-    std::vector<int>                connectedRanksList;
     int                             connectionMapSize = 0;
     std::map<int, std::vector<int>> receivedConnectionMap;
     mesh::PtrMesh                   pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
     m2n->getPrimaryRankCommunication()->send(3, 0);
     com::CommunicateBoundingBox(m2n->getPrimaryRankCommunication()).sendBoundingBoxMap(sendGlobalBB, 0);
-    m2n->getPrimaryRankCommunication()->receive(connectedRanksList, 0);
-    connectionMapSize = connectedRanksList.size();
+    std::vector<int> connectedRanksList = m2n->getPrimaryRankCommunication()->receiveRange(0, com::AsVectorTag<int>{});
+    connectionMapSize                   = connectedRanksList.size();
     BOOST_TEST(connectionMapSize == 2);
 
     std::vector<int> connectedRanks;
@@ -1093,8 +1091,8 @@ BOOST_AUTO_TEST_CASE(parallelSetOwnerInformationVertexCount)
 {
   /*
     This test examines an edge case for parallel setOwnerinformation function in receivedpartition.cpp
-    for 2LI. The provided mesh includes a vertex at point (0, 0). Initially, all receiving ranks receive 
-    this vertex, but only one of them can own it. Since the rank 2, has the lowest number of vertices, 
+    for 2LI. The provided mesh includes a vertex at point (0, 0). Initially, all receiving ranks receive
+    this vertex, but only one of them can own it. Since the rank 2, has the lowest number of vertices,
     this vertex must belong only to it finally.
   */
   PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::Events);
@@ -1186,8 +1184,8 @@ BOOST_AUTO_TEST_CASE(parallelSetOwnerInformationLowerRank)
 {
   /*
     This test examines an edge case for parallel setOwnerinformation function in receivedpartition.cpp
-    for 2LI. The provided mesh includes a vertices at point (0, 0, 0) and (0, 0, 1). Initially, all 
-    receiving ranks receive this vertex, but only one of them can own it. Since the rank 0, has the lowest 
+    for 2LI. The provided mesh includes a vertices at point (0, 0, 0) and (0, 0, 1). Initially, all
+    receiving ranks receive this vertex, but only one of them can own it. Since the rank 0, has the lowest
     rank number, this vertex must belong only to this rank.
    */
   PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::Events);
@@ -1339,8 +1337,8 @@ BOOST_AUTO_TEST_CASE(parallelSetOwnerInformationEmptyPartition)
 {
   /*
     This test examines an edge case for parallel setOwnerinformation function in receivedpartition.cpp
-    for 2LI. The provided mesh includes vertices at points (0, 0, 0) and (0, 0, 1). Rank 2 has an 
-    empty mesh partition. Initially, all ranks (except rank 2) receive this vertex, but only one of them 
+    for 2LI. The provided mesh includes vertices at points (0, 0, 0) and (0, 0, 1). Rank 2 has an
+    empty mesh partition. Initially, all ranks (except rank 2) receive this vertex, but only one of them
     can own it. Since the rank 0, has the lowest rank number, this vertex must belong only to this rank.
    */
   PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::Events);

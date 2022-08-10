@@ -8,7 +8,7 @@ std::string loopbackInterfaceName()
 {
 #if defined(__linux__)
   return "lo";
-#elif defined(__APPLE__)
+#elif defined(__APPLE__) || defined(BSD)
   return "lo0";
 #elif defined(__WIN32)
   // Not required as we directly use the 127.0.0.1 under Windows

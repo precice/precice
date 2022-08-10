@@ -44,7 +44,7 @@ MeshConfiguration::MeshConfiguration(
                       .setDocumentation("Unique name for the mesh.");
   tag.addAttribute(attrName);
 
-  auto attrFlipNormals = makeXMLAttribute(ATTR_FLIP_NORMALS, false).setDocumentation("Deprectated.");
+  auto attrFlipNormals = makeXMLAttribute(ATTR_FLIP_NORMALS, false).setDocumentation("Deprecated.");
   tag.addAttribute(attrFlipNormals);
 
   XMLTag subtagData(*this, TAG_DATA, XMLTag::OCCUR_ARBITRARY);
@@ -86,7 +86,7 @@ void MeshConfiguration::xmlTagCallback(
     bool        found = false;
     for (const DataConfiguration::ConfiguredData &data : _dataConfig->data()) {
       if (data.name == name) {
-        _meshes.back()->createData(data.name, data.dimensions, _dataIDManager.getFreeID(), data.hasGradient);
+        _meshes.back()->createData(data.name, data.dimensions, _dataIDManager.getFreeID());
         found = true;
         break;
       }

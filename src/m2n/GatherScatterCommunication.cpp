@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cstddef>
 #include <map>
 #include <memory>
 #include <ostream>
@@ -103,7 +104,7 @@ void GatherScatterCommunication::send(precice::span<double const> itemsToSend, i
     }
 
     // Send data to other primary
-    _com->send(globalItemsToSend, 0);
+    _com->sendRange(globalItemsToSend, 0);
   }
 }
 
@@ -117,15 +118,17 @@ void GatherScatterCommunication::receive(precice::span<double> itemsToReceive, i
   if (not utils::IntraComm::isSecondary()) {
     int globalSize = _mesh->getGlobalNumberOfVertices() * valueDimension;
     PRECICE_DEBUG("Global Size = {}", globalSize);
-    globalItemsToReceive.resize(globalSize);
-    _com->receive(globalItemsToReceive, 0);
+
+    globalItemsToReceive = _com->receiveRange(0, com::AsVectorTag<double>{});
+    PRECICE_ASSERT(globalItemsToReceive.size() == static_cast<std::size_t>(globalSize));
   }
 
   // Scatter data
   if (utils::IntraComm::isSecondary()) { // Secondary rank
     if (!itemsToReceive.empty()) {
       PRECICE_DEBUG("itemsToRec[0] = {}", itemsToReceive[0]);
-      utils::IntraComm::getCommunication()->receive(itemsToReceive, 0);
+      auto received = utils::IntraComm::getCommunication()->receiveRange(0, com::AsVectorTag<double>{});
+      std::copy(received.begin(), received.end(), itemsToReceive.begin());
       PRECICE_DEBUG("itemsToRec[0] = {}", itemsToReceive[0]);
     }
   } else { // Primary rank or coupling mode
@@ -153,7 +156,7 @@ void GatherScatterCommunication::receive(precice::span<double> itemsToReceive, i
             secondaryRankValues[i * valueDimension + j] = globalItemsToReceive[vertexDistribution[secondaryRank][i] * valueDimension + j];
           }
         }
-        utils::IntraComm::getCommunication()->send(secondaryRankValues, secondaryRank);
+        utils::IntraComm::getCommunication()->sendRange(secondaryRankValues, secondaryRank);
         PRECICE_DEBUG("secondaryRankValues[0] = {}", secondaryRankValues[0]);
       }
     }

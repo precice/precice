@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <memory>
 #include <ostream>
+#include <vector>
 
 #include "Communication.hpp"
 #include "Request.hpp"
@@ -25,13 +26,13 @@ void Communication::connectIntraComm(std::string const &participantName,
   constexpr Rank rankOffset         = 1;
   int            secondaryRanksSize = size - rankOffset;
   if (rank == 0) {
-    PRECICE_INFO("Connecting Primary rank to {} SecondaryRanks", secondaryRanksSize);
+    PRECICE_INFO("Connecting Primary rank to {} Secondary ranks", secondaryRanksSize);
     prepareEstablishment(primaryName, secondaryName);
     acceptConnection(primaryName, secondaryName, tag, rank, rankOffset);
     cleanupEstablishment(primaryName, secondaryName);
   } else {
     int secondaryRank = rank - rankOffset;
-    PRECICE_INFO("Connecting Secondary rank #{} to Primary", secondaryRank);
+    PRECICE_INFO("Connecting Secondary rank #{} to Primary rank", secondaryRank);
     requestConnection(primaryName, secondaryName, tag, secondaryRank, secondaryRanksSize);
   }
 }
@@ -311,6 +312,50 @@ void Communication::broadcast(std::vector<double> &v, Rank rankBroadcaster)
   v.clear();
   v.resize(size);
   broadcast(precice::span<double>{v}, rankBroadcaster);
+}
+
+void Communication::sendRange(precice::span<const double> itemsToSend, Rank rankReceiver)
+{
+  int size = itemsToSend.size();
+  send(size, rankReceiver);
+  if (size > 0) {
+    send(itemsToSend, rankReceiver);
+  }
+}
+
+void Communication::sendRange(precice::span<const int> itemsToSend, Rank rankReceiver)
+{
+  int size = itemsToSend.size();
+  send(size, rankReceiver);
+  if (size > 0) {
+    send(itemsToSend, rankReceiver);
+  }
+}
+
+std::vector<int> Communication::receiveRange(Rank rankSender, AsVectorTag<int>)
+{
+  int size{-1};
+  receive(size, rankSender);
+  PRECICE_ASSERT(size >= 0);
+  std::vector<int> result;
+  if (size > 0) {
+    result.resize(size);
+    receive(result, rankSender);
+  }
+  return result;
+}
+
+std::vector<double> Communication::receiveRange(Rank rankSender, AsVectorTag<double>)
+{
+  int size{-1};
+  receive(size, rankSender);
+  PRECICE_ASSERT(size >= 0);
+  std::vector<double> result;
+  if (size > 0) {
+    result.resize(size);
+    receive(result, rankSender);
+  }
+  return result;
 }
 
 int Communication::adjustRank(Rank rank) const

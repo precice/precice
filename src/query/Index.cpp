@@ -19,21 +19,24 @@ precice::logging::Logger Index::_log{"query::Index"};
 namespace bg  = boost::geometry;
 namespace bgi = boost::geometry::index;
 
-using VertexTraits   = impl::RTreeTraits<mesh::Vertex>;
-using EdgeTraits     = impl::RTreeTraits<mesh::Edge>;
-using TriangleTraits = impl::RTreeTraits<mesh::Triangle>;
+using VertexTraits      = impl::RTreeTraits<mesh::Vertex>;
+using EdgeTraits        = impl::RTreeTraits<mesh::Edge>;
+using TriangleTraits    = impl::RTreeTraits<mesh::Triangle>;
+using TetrahedronTraits = impl::RTreeTraits<mesh::Tetrahedron>;
 
 struct MeshIndices {
-  VertexTraits::Ptr   vertexRTree;
-  EdgeTraits::Ptr     edgeRTree;
-  TriangleTraits::Ptr triangleRTree;
+  VertexTraits::Ptr      vertexRTree;
+  EdgeTraits::Ptr        edgeRTree;
+  TriangleTraits::Ptr    triangleRTree;
+  TetrahedronTraits::Ptr tetraRTree;
 };
 
 class Index::IndexImpl {
 public:
-  VertexTraits::Ptr   getVertexRTree(const mesh::Mesh &mesh);
-  EdgeTraits::Ptr     getEdgeRTree(const mesh::Mesh &mesh);
-  TriangleTraits::Ptr getTriangleRTree(const mesh::Mesh &mesh);
+  VertexTraits::Ptr      getVertexRTree(const mesh::Mesh &mesh);
+  EdgeTraits::Ptr        getEdgeRTree(const mesh::Mesh &mesh);
+  TriangleTraits::Ptr    getTriangleRTree(const mesh::Mesh &mesh);
+  TetrahedronTraits::Ptr getTetraRTree(const mesh::Mesh &mesh);
 
   void clear();
 
@@ -110,11 +113,42 @@ TriangleTraits::Ptr Index::IndexImpl::getTriangleRTree(const mesh::Mesh &mesh)
   return indices.triangleRTree;
 }
 
+TetrahedronTraits::Ptr Index::IndexImpl::getTetraRTree(const mesh::Mesh &mesh)
+{
+  if (indices.tetraRTree) {
+    return indices.tetraRTree;
+  }
+
+  precice::utils::Event e("query.index.getTetraIndexTree." + mesh.getName());
+
+  // We first generate the values for the tetra rtree.
+  // The resulting vector is a random access range, which can be passed to the
+  // constructor of the rtree for more efficient indexing.
+  std::vector<TetrahedronTraits::IndexType> elements;
+  elements.reserve(mesh.tetrahedra().size());
+  for (size_t i = 0; i < mesh.tetrahedra().size(); ++i) {
+    // We use a custom function to compute the AABB, because
+    // bg::return_envelope was designed for polygons.
+    auto box = makeBox(mesh.tetrahedra()[i]);
+    elements.emplace_back(std::move(box), i);
+  }
+
+  // Generating the rtree is expensive, so passing everything in the ctor is
+  // the best we can do.
+  impl::RTreeParameters          params;
+  TetrahedronTraits::IndexGetter ind;
+
+  auto tree          = std::make_shared<TetrahedronTraits::RTree>(elements, params, ind);
+  indices.tetraRTree = std::move(tree);
+  return indices.tetraRTree;
+}
+
 void Index::IndexImpl::clear()
 {
   indices.vertexRTree.reset();
   indices.edgeRTree.reset();
   indices.triangleRTree.reset();
+  indices.tetraRTree.reset();
 }
 
 //
@@ -144,7 +178,7 @@ VertexMatch Index::getClosestVertex(const Eigen::VectorXd &sourceCoord)
   VertexMatch match;
   const auto &rtree = _pimpl->getVertexRTree(*_mesh);
   rtree->query(bgi::nearest(sourceCoord, 1), boost::make_function_output_iterator([&](size_t matchID) {
-                 match = VertexMatch(bg::distance(sourceCoord, _mesh->vertices()[matchID]), matchID);
+                 match = VertexMatch(matchID);
                }));
   return match;
 }
@@ -157,9 +191,8 @@ std::vector<EdgeMatch> Index::getClosestEdges(const Eigen::VectorXd &sourceCoord
 
   std::vector<EdgeMatch> matches;
   rtree->query(bgi::nearest(sourceCoord, n), boost::make_function_output_iterator([&](size_t matchID) {
-                 matches.emplace_back(bg::distance(sourceCoord, _mesh->edges()[matchID]), matchID);
+                 matches.emplace_back(matchID);
                }));
-  std::sort(matches.begin(), matches.end());
   return matches;
 }
 
@@ -171,9 +204,8 @@ std::vector<TriangleMatch> Index::getClosestTriangles(const Eigen::VectorXd &sou
   std::vector<TriangleMatch> matches;
   rtree->query(bgi::nearest(sourceCoord, n),
                boost::make_function_output_iterator([&](TriangleTraits::IndexType const &match) {
-                 matches.emplace_back(bg::distance(sourceCoord, _mesh->triangles()[match.second]), match.second);
+                 matches.emplace_back(match.second);
                }));
-  std::sort(matches.begin(), matches.end());
   return matches;
 }
 
@@ -202,6 +234,18 @@ std::vector<VertexID> Index::getVerticesInsideBox(const mesh::BoundingBox &bb)
   return matches;
 }
 
+std::vector<TetrahedronID> Index::getEnclosingTetrahedra(const Eigen::VectorXd &location)
+{
+  PRECICE_TRACE();
+  const auto &rtree = _pimpl->getTetraRTree(*_mesh);
+
+  std::vector<TetrahedronID> matches;
+  rtree->query(bgi::covers(location), boost::make_function_output_iterator([&](TetrahedronTraits::IndexType const &match) {
+                 matches.emplace_back(match.second);
+               }));
+  return matches;
+}
+
 ProjectionMatch Index::findNearestProjection(const Eigen::VectorXd &location, int n)
 {
   if (_mesh->getDimensions() == 2) {
@@ -211,20 +255,54 @@ ProjectionMatch Index::findNearestProjection(const Eigen::VectorXd &location, in
   }
 }
 
+ProjectionMatch Index::findCellOrProjection(const Eigen::VectorXd &location, int n)
+{
+  if (_mesh->getDimensions() == 2) {
+    auto matchedTriangles = getClosestTriangles(location, n);
+    for (const auto &match : matchedTriangles) {
+      auto polation = mapping::Polation(location, _mesh->triangles()[match.index]);
+      if (polation.isInterpolation()) {
+        return {std::move(polation)};
+      }
+    }
+
+    // If no triangle is found, fall-back on NP
+    return findNearestProjection(location, n);
+  } else {
+
+    // Find correct tetra, or fall back to NP
+    auto matchedTetra = getEnclosingTetrahedra(location);
+    for (const auto &match : matchedTetra) {
+      // Matches are raw indices, not (indices, distance) pairs
+      auto polation = mapping::Polation(location, _mesh->tetrahedra()[match]);
+      if (polation.isInterpolation()) {
+        return {std::move(polation)};
+      }
+    }
+    return findNearestProjection(location, n);
+  }
+}
+
 ProjectionMatch Index::findVertexProjection(const Eigen::VectorXd &location)
 {
   auto match = getClosestVertex(location);
-  return {mapping::Polation{_mesh->vertices()[match.index]}, match.distance};
+  return {mapping::Polation{location, _mesh->vertices()[match.index]}};
 }
 
 ProjectionMatch Index::findEdgeProjection(const Eigen::VectorXd &location, int n)
 {
-  auto matchedEdges = getClosestEdges(location, n);
-  for (const auto &match : matchedEdges) {
+  std::vector<ProjectionMatch> candidates;
+  candidates.reserve(n);
+  for (const auto &match : getClosestEdges(location, n)) {
     auto polation = mapping::Polation(location, _mesh->edges()[match.index]);
     if (polation.isInterpolation()) {
-      return {polation, match.distance};
+      candidates.emplace_back(std::move(polation));
     }
+  }
+  // Pick the smallest candidate by distance
+  auto min = std::min_element(candidates.begin(), candidates.end());
+  if (min != candidates.end()) {
+    return *min;
   }
   // Could not find edge projection element, fall back to vertex projection
   return findVertexProjection(location);
@@ -232,12 +310,18 @@ ProjectionMatch Index::findEdgeProjection(const Eigen::VectorXd &location, int n
 
 ProjectionMatch Index::findTriangleProjection(const Eigen::VectorXd &location, int n)
 {
-  auto matchedTriangles = getClosestTriangles(location, n);
-  for (const auto &match : matchedTriangles) {
+  std::vector<ProjectionMatch> candidates;
+  candidates.reserve(n);
+  for (const auto &match : getClosestTriangles(location, n)) {
     auto polation = mapping::Polation(location, _mesh->triangles()[match.index]);
     if (polation.isInterpolation()) {
-      return {polation, match.distance};
+      candidates.emplace_back(std::move(polation));
     }
+  }
+  // Pick the smallest candidate by distance
+  auto min = std::min_element(candidates.begin(), candidates.end());
+  if (min != candidates.end()) {
+    return *min;
   }
 
   // Could not triangle find projection element, fall back to edge projection

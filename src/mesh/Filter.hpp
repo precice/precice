@@ -32,33 +32,39 @@ void filterMesh(Mesh &destination, const Mesh &source, UnaryPredicate p)
     }
   }
 
-  // Create a flat_map which can contain all edges of the original mesh.
-  // This prevents resizes during the map build-up.
-  boost::container::flat_map<EdgeID, Edge *> edgeMap;
-  edgeMap.reserve(source.edges().size());
-
   // Add all edges formed by the contributing vertices
   for (const Edge &edge : source.edges()) {
     VertexID vertexIndex1 = edge.vertex(0).getID();
     VertexID vertexIndex2 = edge.vertex(1).getID();
     if (vertexMap.count(vertexIndex1) == 1 &&
         vertexMap.count(vertexIndex2) == 1) {
-      Edge &e               = destination.createEdge(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2]);
-      edgeMap[edge.getID()] = &e;
+      destination.createEdge(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2]);
     }
   }
 
-  // Add all triangles formed by the contributing edges
-  if (source.getDimensions() == 3) {
-    for (const Triangle &triangle : source.triangles()) {
-      EdgeID edgeIndex1 = triangle.edge(0).getID();
-      EdgeID edgeIndex2 = triangle.edge(1).getID();
-      EdgeID edgeIndex3 = triangle.edge(2).getID();
-      if (edgeMap.count(edgeIndex1) == 1 &&
-          edgeMap.count(edgeIndex2) == 1 &&
-          edgeMap.count(edgeIndex3) == 1) {
-        destination.createTriangle(*edgeMap[edgeIndex1], *edgeMap[edgeIndex2], *edgeMap[edgeIndex3]);
-      }
+  // Add all triangles formed by the contributing vertices
+  for (const Triangle &triangle : source.triangles()) {
+    VertexID vertexIndex1 = triangle.vertex(0).getID();
+    VertexID vertexIndex2 = triangle.vertex(1).getID();
+    VertexID vertexIndex3 = triangle.vertex(2).getID();
+    if (vertexMap.count(vertexIndex1) == 1 &&
+        vertexMap.count(vertexIndex2) == 1 &&
+        vertexMap.count(vertexIndex3) == 1) {
+      destination.createTriangle(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2], *vertexMap[vertexIndex3]);
+    }
+  }
+
+  // Add all tetrahedra formed by the contributing vertices
+  for (const Tetrahedron &tetra : source.tetrahedra()) {
+    VertexID vertexIndex1 = tetra.vertex(0).getID();
+    VertexID vertexIndex2 = tetra.vertex(1).getID();
+    VertexID vertexIndex3 = tetra.vertex(2).getID();
+    VertexID vertexIndex4 = tetra.vertex(3).getID();
+    if (vertexMap.count(vertexIndex1) == 1 &&
+        vertexMap.count(vertexIndex2) == 1 &&
+        vertexMap.count(vertexIndex3) == 1 &&
+        vertexMap.count(vertexIndex4) == 1) {
+      destination.createTetrahedron(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2], *vertexMap[vertexIndex3], *vertexMap[vertexIndex4]);
     }
   }
 }

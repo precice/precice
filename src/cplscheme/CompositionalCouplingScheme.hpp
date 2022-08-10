@@ -153,7 +153,7 @@ public:
   int getTimeWindows() const final override;
 
   /**
-   * @brief Returns true, if timestep length is prescribed by the cpl scheme.
+   * @brief Returns true, if timestep length by any of the coupling schemes in this compositional coupling scheme.
    *
    * If any of the solvers in the composition has a timestep length limit, this
    * counts as limit.
