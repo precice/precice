@@ -93,7 +93,7 @@ def testarg(arg):
     checkTestName(name)
     [checkTestSuite(d) for d in dirs]
 
-    # If the given path is inside the tests dir, then use the realtive path
+    # If the given path is inside the tests dir, then use the relative path
     full = pathlib.Path(arg).absolute()
     tests = find_precice_root().joinpath("tests")
     try:

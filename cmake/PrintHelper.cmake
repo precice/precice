@@ -1,4 +1,4 @@
-# Prints a varaible VAR with a description DESC
+# Prints a variable VAR with a description DESC
 function(print_variable VAR DESC)
   if(DEFINED ${VAR})
     if("${${VAR}}" STREQUAL "")

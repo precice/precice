@@ -49,7 +49,7 @@ void precicef_initialize_(double *timestepLengthLimit);
 
 /**
  * Fortran syntax:
- * precicef_intialize_data()
+ * precicef_initialize_data()
  *
  * IN: -
  * OUT: -

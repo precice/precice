@@ -1,6 +1,6 @@
 # Communication dummies
 
-These dummies test the m2n communication, both intialization and execution.
+These dummies test the m2n communication, both initialization and execution.
 
 This example is described in the master thesis of Alexander Shukaev [1].
 A smaller example is also implemented as a unit test in `src/m2n/tests`.

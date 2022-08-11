@@ -6,7 +6,7 @@
 # Imported Targets
 # ^^^^^^^^^^^^^^^^
 # 
-# This module defines the followwing IMPORTED target:
+# This module defines the following IMPORTED target:
 #
 #  PETSc::PETSc        - the PETSc library
 #
@@ -76,7 +76,7 @@ macro(_petsc_print_pkg_env)
 endmacro()
 
 
-# Message macro which respects the QUIET arguemnt of the package
+# Message macro which respects the QUIET argument of the package
 macro(_message)
   if(NOT PETSc_FIND_QUIETLY)
     message(${ARGV})

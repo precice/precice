@@ -75,7 +75,7 @@ Polation::Polation(const Eigen::VectorXd &location, const mesh::Tetrahedron &ele
   _weightedElements.emplace_back(WeightedElement{C.getID(), bcoords(2)});
   _weightedElements.emplace_back(WeightedElement{D.getID(), bcoords(3)});
 
-  // There is no projection happing, so the distance is always 0.
+  // There is no projection happening, so the distance is always 0.
   _distance = 0.0;
 }
 
