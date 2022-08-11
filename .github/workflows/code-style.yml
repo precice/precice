@@ -5,6 +5,7 @@ on:
       - '**.[ch]pp'
       - '**.[ch]'
       - '**.xml'
+      - '.github/**'
 
 jobs:
   formatting:

@@ -10,7 +10,7 @@ on:
       - 'examples/**'
       - 'src/**'
       - 'thirdparty/**'
-      - '.github/workflows/clang-tidy.yml'
+      - '.github/workflows/code-linting.yml'
   workflow_dispatch:
 
 concurrency:
