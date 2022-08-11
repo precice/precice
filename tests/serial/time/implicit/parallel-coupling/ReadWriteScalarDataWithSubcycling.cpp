@@ -89,13 +89,11 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
 
     precice.readScalarData(readDataID, vertexID, readData);
 
-    if (iterations == 0 && timestep == 0) {                                    // special situation: Both solvers are in their very first time windows, first iteration, first time step
-      BOOST_TEST(readData == readFunction(startTime));                         // use initial data only.
-    } else if (iterations == 0) {                                              // special situation: Both solvers get the old data for all time windows.
-      BOOST_TEST(readData == readFunction(startTime + timewindow * windowDt)); // data at end of window was written by other solver.
+    if (iterations == 0) {                                   // special situation: Both solvers get the old data for all time windows (or initial data)
+      BOOST_TEST(readData == readFunction(windowStartTime)); // data at end of previous window was written by other solver.
     } else if (iterations > 0) {
-      BOOST_TEST(readData == readFunction(startTime + (timewindow + 1) * windowDt));
-    } else { // we should not enter this branch, because this would skip all tests.
+      BOOST_TEST(readData == readFunction(windowStartTime + windowDt)); // read data at end of time step (because subcycling for both participants exactly matches)
+    } else {                                                            // we should not enter this branch, because this would skip all tests.
       BOOST_TEST(false);
     }
 
