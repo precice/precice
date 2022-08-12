@@ -21,7 +21,7 @@ namespace mapping {
 template <typename RADIAL_BASIS_FUNCTION_T>
 class RadialBasisFctSolver {
 public:
-  typedef typename std::conditional<RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite(), Eigen::LLT<Eigen::MatrixXd>, Eigen::ColPivHouseholderQR<Eigen::MatrixXd>>::type DecompositionType;
+  using DecompositionType = std::conditional_t<RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite(), Eigen::LLT<Eigen::MatrixXd>, Eigen::ColPivHouseholderQR<Eigen::MatrixXd>>;
 
   /// Default constructor
   RadialBasisFctSolver() = default;
@@ -174,7 +174,7 @@ Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::
 template <typename RADIAL_BASIS_FUNCTION_T>
 RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const mesh::Mesh &outputMesh, std::vector<bool> deadAxis, Polynomial polynomial)
 {
-  PRECICE_CHECK(!(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite() && polynomial == Polynomial::ON), "The integrated polynomial (polynomial=\"on\") is not supported for the selected radial-basis function. Please select another radial-basis function or change the polynomial configuration.");
+  PRECICE_ASSERT(!(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite() && polynomial == Polynomial::ON), "The integrated polynomial (polynomial=\"on\") is not supported for the selected radial-basis function. Please select another radial-basis function or change the polynomial configuration.");
   // Convert dead axis vector into an active axis array so that we can handle the reduction more easily
   std::array<bool, 3> activeAxis({{false, false, false}});
   std::transform(deadAxis.begin(), deadAxis.end(), activeAxis.begin(), [](const auto ax) { return !ax; });
@@ -238,6 +238,7 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConservative
     PRECICE_ASSERT(epsilon.size() == _matrixQ.cols());
 
     // out  = out - solveTranspose tau (sigma in the PETSc impl)
+    // Newer version of eigen provide the solve() for transpose() matrix decopmositions
 #if EIGEN_VERSION_AT_LEAST(3, 4, 0)
     out -= static_cast<Eigen::VectorXd>(_qrMatrixQ.transpose().solve(-epsilon));
 #else
@@ -266,11 +267,11 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConservative
 template <typename RADIAL_BASIS_FUNCTION_T>
 Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(Eigen::VectorXd &inputData, Polynomial polynomial) const
 {
-  Eigen::VectorXd res;
+  Eigen::VectorXd polynomialContribution;
   // Solve polynomial QR and subtract it from the input data
   if (polynomial == Polynomial::SEPARATE) {
-    res = _qrMatrixQ.solve(inputData);
-    inputData -= (_matrixQ * res);
+    polynomialContribution = _qrMatrixQ.solve(inputData);
+    inputData -= (_matrixQ * polynomialContribution);
   }
 
   // Integrated polynomial (and separated)
@@ -281,7 +282,7 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
 
   // Add the polynomial part again for separated polynomial
   if (polynomial == Polynomial::SEPARATE) {
-    out += (_matrixV * res);
+    out += (_matrixV * polynomialContribution);
   }
   return out;
 }
