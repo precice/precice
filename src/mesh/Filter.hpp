@@ -11,7 +11,7 @@ namespace mesh {
 /** filters the source Mesh and adds it to the destination Mesh
  * @param[inout] destination the destination mesh to append the filtered Mesh to
  * @param[in] source the source Mesh to filter
- * @param[in] p the filter as a UnaryPredicate on mesh::Vertex 
+ * @param[in] p the filter as a UnaryPredicate on mesh::Vertex
  */
 template <typename UnaryPredicate>
 void filterMesh(Mesh &destination, const Mesh &source, UnaryPredicate p)

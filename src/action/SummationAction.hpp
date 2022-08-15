@@ -14,11 +14,11 @@ class SummationAction : public Action {
 public:
   /**
 	 * @brief Constructor
-	 * 
+	 *
 	 * @param[in] Timing When to apply the action
 	 * @param[in] sourceDataIDs Data indexes which are to be added
 	 * @param[in] targetDataID Data in which the action will be applied
-	 * 
+	 *
 	 */
   SummationAction(
       Timing                  timing,
