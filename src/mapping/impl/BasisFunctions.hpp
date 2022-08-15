@@ -50,7 +50,7 @@ struct DefiniteFunction {
 class ThinPlateSplines : public NoCompactSupportBase,
                          public DefiniteFunction<false> {
 public:
-  inline double evaluate(double radius) const
+  double evaluate(double radius) const
   {
     return std::log(std::max(radius, math::NUMERICAL_ZERO_DIFFERENCE)) * math::pow_int<2>(radius);
   }
@@ -69,7 +69,7 @@ public:
   explicit Multiquadrics(double c)
       : _cPow2(std::pow(c, 2)) {}
 
-  inline double evaluate(double radius) const
+  double evaluate(double radius) const
   {
     return std::sqrt(_cPow2 + math::pow_int<2>(radius));
   }
@@ -96,7 +96,7 @@ public:
                   "Shape parameter for radial-basis-function inverse multiquadric has to be larger than zero. Please update the \"shape-parameter\" attribute.");
   }
 
-  inline double evaluate(double radius) const
+  double evaluate(double radius) const
   {
     return 1.0 / std::sqrt(_cPow2 + math::pow_int<2>(radius));
   }
@@ -117,7 +117,7 @@ private:
 class VolumeSplines : public NoCompactSupportBase,
                       public DefiniteFunction<false> {
 public:
-  inline double evaluate(double radius) const
+  double evaluate(double radius) const
   {
     return std::abs(radius);
   }
@@ -155,7 +155,7 @@ public:
     return _supportRadius;
   }
 
-  inline double evaluate(const double radius) const
+  double evaluate(const double radius) const
   {
     if (radius > _supportRadius)
       return 0.0;
@@ -203,7 +203,7 @@ public:
     return 1. / _r_inv;
   }
 
-  inline double evaluate(double radius) const
+  double evaluate(double radius) const
   {
     double const p = radius * _r_inv;
     if (p >= 1)
@@ -243,7 +243,7 @@ public:
     return 1. / _r_inv;
   }
 
-  inline double evaluate(double radius) const
+  double evaluate(double radius) const
   {
     double p = radius * _r_inv;
     if (p >= 1)
@@ -281,7 +281,7 @@ public:
     return 1. / _r_inv;
   }
 
-  inline double evaluate(double radius) const
+  double evaluate(double radius) const
   {
     double p = radius * _r_inv;
     if (p >= 1)
@@ -319,7 +319,7 @@ public:
     return 1. / _r_inv;
   }
 
-  inline double evaluate(double radius) const
+  double evaluate(double radius) const
   {
     double p = radius * _r_inv;
     if (p >= 1)
@@ -358,7 +358,7 @@ public:
     return 1. / _r_inv;
   }
 
-  inline double evaluate(double radius) const
+  double evaluate(double radius) const
   {
     double p = radius * _r_inv;
     if (p >= 1)

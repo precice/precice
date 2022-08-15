@@ -1869,6 +1869,22 @@ BOOST_AUTO_TEST_CASE(MapCompactPolynomialC0)
   doLocalCode(CompactPolynomialC0, fct, Polynomial::SEPARATE);
 }
 
+BOOST_AUTO_TEST_CASE(MapCompactPolynomialC2)
+{
+  PRECICE_TEST(1_rank);
+  double              supportRadius = 1.2;
+  CompactPolynomialC2 fct(supportRadius);
+  doLocalCode(CompactPolynomialC2, fct, Polynomial::SEPARATE);
+}
+
+BOOST_AUTO_TEST_CASE(MapCompactPolynomialC4)
+{
+  PRECICE_TEST(1_rank);
+  double              supportRadius = 1.2;
+  CompactPolynomialC4 fct(supportRadius);
+  doLocalCode(CompactPolynomialC4, fct, Polynomial::SEPARATE);
+}
+
 BOOST_AUTO_TEST_CASE(MapCompactPolynomialC6)
 {
   PRECICE_TEST(1_rank);
