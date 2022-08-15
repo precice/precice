@@ -460,10 +460,10 @@ const char *precicec_actionReadIterationCheckpoint();
  */
 ///@{
 
-/// @copydoc precice::SolverInterface::isGradientDataRequired())
+/// @copydoc precice::SolverInterface::isGradientDataRequired
 int precicec_isGradientDataRequired(int dataID);
 
-/// @copydoc precice::SolverInterface::writeScalarGradientData()
+/// @copydoc precice::SolverInterface::writeScalarGradientData
 void precicec_writeScalarGradientData(
     int           dataID,
     int           valueIndex,
@@ -476,13 +476,13 @@ void precicec_writeBlockScalarGradientData(
     const int *   valueIndices,
     const double *gradientValues);
 
-/// @copydoc precice::SolverInterface::writeVectorGradientData()
+/// @copydoc precice::SolverInterface::writeVectorGradientData
 void precicec_writeVectorGradientData(
     int           dataID,
     int           valueIndex,
     const double *gradientValues);
 
-/// @copydoc precice::SolverInterface::writeBlockVectorGradientData())
+/// @copydoc precice::SolverInterface::writeBlockVectorGradientData
 void precicec_writeBlockVectorGradientData(
     int           dataID,
     int           size,

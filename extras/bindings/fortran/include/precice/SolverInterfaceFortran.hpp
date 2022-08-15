@@ -780,7 +780,7 @@ void precicef_get_version_information_(
  * IN:  dataID
  * OUT: required(1:true, 0:false)
  *
- * @copydoc precice::SolverInterface::isGradientDataRequired()
+ * @copydoc precice::SolverInterface::isGradientDataRequired
  */
 void precicef_is_gradient_data_required_(const int *dataID, int *required);
 
@@ -794,7 +794,7 @@ void precicef_is_gradient_data_required_(const int *dataID, int *required);
  * IN:  dataID, valueIndex, gradientValues
  * OUT: -
  *
- * @copydoc precice::SolverInterface::writeScalarGradientData()
+ * @copydoc precice::SolverInterface::writeScalarGradientData
  */
 void precicef_write_sgradient_data_(
     const int *   dataID,
@@ -830,7 +830,7 @@ void precicef_write_bsgradient_data_(
  * IN:  dataID, valueIndex, gradientValues
  * OUT: -
  *
- * @copydoc precice::SolverInterface::writeVectorGradientData()
+ * @copydoc precice::SolverInterface::writeVectorGradientData
  */
 void precicef_write_vgradient_data_(
     const int *   dataID,
@@ -848,7 +848,7 @@ void precicef_write_vgradient_data_(
  * IN:  dataID, size, valueIndices, gradientValues
  * OUT: -
  *
- * @copydoc precice::SolverInterface::writeBlockVectorGradientData()
+ * @copydoc precice::SolverInterface::writeBlockVectorGradientData
  */
 void precicef_write_bvgradient_data_(
     const int *   dataID,
