@@ -265,7 +265,8 @@ private:
  * Evaluates to: (1 - rn)^4 * ( 4rn + 1),
  * where rn is the radius r normalized over the support radius sr: rn = r/sr.
  */
-class CompactPolynomialC2 : public CompactSupportBase {
+class CompactPolynomialC2 : public CompactSupportBase,
+                            public DefiniteFunction<true> {
 public:
   explicit CompactPolynomialC2(double supportRadius)
   {
@@ -303,7 +304,8 @@ private:
  * Evaluates to: (1 - rn)^6 * ( 35 * (rn)^2 + 18rn + 3),
  * where rn is the radius r normalized over the support radius sr: rn = r/sr.
  */
-class CompactPolynomialC4 : public CompactSupportBase {
+class CompactPolynomialC4 : public CompactSupportBase,
+                            public DefiniteFunction<true> {
 public:
   explicit CompactPolynomialC4(double supportRadius)
   {
