@@ -105,9 +105,11 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
 
   PRECICE_ASSERT(maxStoredDt() == 1.0); // sampling is only allowed, if a window is complete.
 
+  // @todo do we need to explicitly differentiate between piecewise and non-piecewise interplation below?
   if (usedOrder == 0) {
     // constant interpolation = just use sample at the end of the window: x(dt) = x^t
-    return Eigen::VectorXd(this->_timeStepsStorage[1.0]);
+    // At beginning of window use result from last window x(0) = x^(t-1)
+    return Eigen::VectorXd(this->_timeStepsStorage[findTimeAfter(normalizedDt)]);
   }
   Eigen::VectorXd interpolatedValue;
   if (usedOrder == 1) {
@@ -169,6 +171,40 @@ int Waveform::computeUsedOrder(int requestedOrder, int numberOfAvailableSamples)
     PRECICE_ASSERT(false);
   }
   return usedOrder;
+}
+
+// @todo improve efficiency by using some ordered list to store times.
+double Waveform::findTimeBefore(double normalizedDt)
+{
+  PRECICE_ASSERT(0.0 <= normalizedDt);
+  PRECICE_ASSERT(normalizedDt <= 1.0);
+
+  double timeBefore = 0.0;
+
+  for (auto timeStep : _timeStepsStorage) {
+    if (timeBefore <= timeStep.first && timeStep.first <= normalizedDt) { // current timeStep is before normalizedDt and later than current timeBefore
+      timeBefore = timeStep.first;
+    }
+  }
+
+  return timeBefore;
+}
+
+// @todo improve efficiency by using some ordered list to store times.
+double Waveform::findTimeAfter(double normalizedDt)
+{
+  PRECICE_ASSERT(0.0 <= normalizedDt);
+  PRECICE_ASSERT(normalizedDt <= 1.0);
+
+  double timeAfter = 1.0;
+
+  for (auto timeStep : _timeStepsStorage) {
+    if (normalizedDt <= timeStep.first && timeStep.first <= timeAfter) { // current timeStep is after normalizedDt and earlier than current timeAfter
+      timeAfter = timeStep.first;
+    }
+  }
+
+  return timeAfter;
 }
 
 } // namespace time
