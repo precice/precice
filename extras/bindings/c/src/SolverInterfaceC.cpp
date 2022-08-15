@@ -384,6 +384,53 @@ void precicec_readScalarData(
   impl->readScalarData(dataID, valueIndex, *dataValue);
 }
 
+int precicec_isGradientDataRequired(int dataID)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  if (impl->isGradientDataRequired(dataID)) {
+    return 1;
+  }
+  return 0;
+}
+
+void precicec_writeScalarGradientData(
+    int           dataID,
+    int           valueIndex,
+    const double *gradientValues)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->writeScalarGradientData(dataID, valueIndex, gradientValues);
+}
+
+void precicec_writeBlockScalarGradientData(
+    int           dataID,
+    int           size,
+    const int *   valueIndices,
+    const double *gradientValues)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->writeBlockScalarGradientData(dataID, size, valueIndices, gradientValues);
+}
+
+void precicec_writeVectorGradientData(
+    int           dataID,
+    int           valueIndex,
+    const double *gradientValues)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->writeVectorGradientData(dataID, valueIndex, gradientValues);
+}
+
+void precicec_writeBlockVectorGradientData(
+    int           dataID,
+    int           size,
+    const int *   valueIndices,
+    const double *gradientValues)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->writeBlockVectorGradientData(dataID, size, valueIndices, gradientValues);
+}
+
 const char *precicec_getVersionInformation()
 {
   return precice::versionInformation;
