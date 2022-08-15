@@ -21,8 +21,7 @@ int Waveform::getInterpolationOrder() const
   return _interpolationOrder;
 }
 
-void Waveform::initialize(
-    const Eigen::VectorXd &values)
+void Waveform::initialize(const Eigen::VectorXd &values)
 {
   int storageSize;
   _timeStepsStorage = std::map<double, Eigen::VectorXd>{};
@@ -52,9 +51,12 @@ void Waveform::store(const Eigen::VectorXd &values, double normalizedDt)
 
 void Waveform::clearTimeStepsStorage()
 {
-  for(auto timeStep:_timeStepsStorage){
-    if (timeStep.first > 0.0) {
-      _timeStepsStorage.erase(timeStep.first);
+  // see https://stackoverflow.com/a/8234813, erase elements from map we are iterating over
+  for (auto timeStep = _timeStepsStorage.begin(); timeStep != _timeStepsStorage.end();) {
+    if (timeStep->first > 0.0) {
+      timeStep = _timeStepsStorage.erase(timeStep);
+    } else {
+      ++timeStep;
     }
   }
 }
