@@ -164,7 +164,7 @@ void testDistributed(const TestContext &    context,
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
-  Gaussian fct(5.0);
+  Multiquadrics fct(5.0);
 
   MeshSpecification in{// Consistent mapping: The inMesh is communicated
                        {-1, 0, {0, 0}, {1}},
@@ -195,18 +195,18 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1)
                              {3, {7}},
                              {3, {8}}};
 
-  RadialBasisFctMapping<Gaussian> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
+  RadialBasisFctMapping<Multiquadrics> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
   testDistributed(context, mapping_on, in, out, ref);
-  RadialBasisFctMapping<Gaussian> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  RadialBasisFctMapping<Multiquadrics> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
   testDistributed(context, mapping_sep, in, out, ref);
-  RadialBasisFctMapping<Gaussian> mapping_off(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  RadialBasisFctMapping<Multiquadrics> mapping_off(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::OFF);
   testDistributed(context, mapping_off, in, out, ref);
 }
 
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1Vector)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
-  Gaussian fct(5.0);
+  Multiquadrics fct(5.0);
 
   MeshSpecification      in{// Consistent mapping: The inMesh is communicated
                        {-1, 0, {0, 0}, {1, 4}},
@@ -236,11 +236,11 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1Vector)
                              {3, {7, 10}},
                              {3, {8, 11}}};
 
-  RadialBasisFctMapping<Gaussian> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
+  RadialBasisFctMapping<Multiquadrics> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
   testDistributed(context, mapping_on, in, out, ref);
-  RadialBasisFctMapping<Gaussian> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  RadialBasisFctMapping<Multiquadrics> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
   testDistributed(context, mapping_sep, in, out, ref);
-  RadialBasisFctMapping<Gaussian> mapping_off(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  RadialBasisFctMapping<Multiquadrics> mapping_off(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::OFF);
   testDistributed(context, mapping_off, in, out, ref);
 }
 
@@ -248,9 +248,9 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1Vector)
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
-  Gaussian fct(5.0);
+  Multiquadrics fct(5.0);
 
-  MeshSpecification               in{// Consistent mapping: The inMesh is communicated, rank 2 owns no vertices
+  MeshSpecification                    in{// Consistent mapping: The inMesh is communicated, rank 2 owns no vertices
                        {-1, 0, {0, 0}, {1}},
                        {-1, 0, {0, 1}, {2}},
                        {-1, 1, {1, 0}, {3}},
@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2)
                        {-1, 3, {2, 1}, {6}},
                        {-1, 3, {3, 0}, {7}},
                        {-1, 3, {3, 1}, {8}}};
-  MeshSpecification               out{// The outMesh is local, rank 1 is empty
+  MeshSpecification                    out{// The outMesh is local, rank 1 is empty
                         {0, -1, {0, 0}, {0}},
                         {0, -1, {0, 1}, {0}},
                         {0, -1, {1, 0}, {0}},
@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2)
                         {2, -1, {2, 1}, {0}},
                         {3, -1, {3, 0}, {0}},
                         {3, -1, {3, 1}, {0}}};
-  ReferenceSpecification          ref{// Tests for {0, 1, 2} on the first rank,
+  ReferenceSpecification               ref{// Tests for {0, 1, 2} on the first rank,
                              // second rank (consistent with the outMesh) is empty, ...
                              {0, {1}},
                              {0, {2}},
@@ -278,11 +278,11 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2)
                              {2, {6}},
                              {3, {7}},
                              {3, {8}}};
-  RadialBasisFctMapping<Gaussian> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
+  RadialBasisFctMapping<Multiquadrics> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
   testDistributed(context, mapping_on, in, out, ref);
-  RadialBasisFctMapping<Gaussian> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  RadialBasisFctMapping<Multiquadrics> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
   testDistributed(context, mapping_sep, in, out, ref);
-  RadialBasisFctMapping<Gaussian> mapping_off(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  RadialBasisFctMapping<Multiquadrics> mapping_off(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::OFF);
   testDistributed(context, mapping_off, in, out, ref);
 }
 
@@ -290,7 +290,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2)
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
-  Gaussian fct(5.0);
+  Multiquadrics fct(5.0);
 
   std::vector<int> globalIndexOffsets = {0, 0, 0, 4};
 
@@ -338,11 +338,11 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
                              {3, {7}},
                              {3, {8}}};
 
-  RadialBasisFctMapping<Gaussian> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
+  RadialBasisFctMapping<Multiquadrics> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
   testDistributed(context, mapping_on, in, out, ref, globalIndexOffsets.at(context.rank));
-  RadialBasisFctMapping<Gaussian> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  RadialBasisFctMapping<Multiquadrics> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
   testDistributed(context, mapping_sep, in, out, ref, globalIndexOffsets.at(context.rank));
-  RadialBasisFctMapping<Gaussian> mapping_off(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  RadialBasisFctMapping<Multiquadrics> mapping_off(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::OFF);
   testDistributed(context, mapping_off, in, out, ref, globalIndexOffsets.at(context.rank));
 }
 
@@ -350,7 +350,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3Vector)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
-  Gaussian fct(5.0);
+  Multiquadrics fct(5.0);
 
   std::vector<int> globalIndexOffsets = {0, 0, 0, 4};
 
@@ -378,7 +378,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3Vector)
       {3, 3, {3, 0}, {7, 10}},
       {3, 3, {3, 1}, {8, 11}},
   };
-  MeshSpecification               out{// The outMesh is local, rank 1 is empty
+  MeshSpecification                    out{// The outMesh is local, rank 1 is empty
                         {0, -1, {0, 0}, {0, 0}},
                         {0, -1, {0, 1}, {0, 0}},
                         {0, -1, {1, 0}, {0, 0}},
@@ -387,7 +387,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3Vector)
                         {2, -1, {2, 1}, {0, 0}},
                         {3, -1, {3, 0}, {0, 0}},
                         {3, -1, {3, 1}, {0, 0}}};
-  ReferenceSpecification          ref{// Tests for {0, 1, 2} on the first rank,
+  ReferenceSpecification               ref{// Tests for {0, 1, 2} on the first rank,
                              // second rank (consistent with the outMesh) is empty, ...
                              {0, {1, 4}},
                              {0, {2, 5}},
@@ -397,11 +397,11 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3Vector)
                              {2, {6, 9}},
                              {3, {7, 10}},
                              {3, {8, 11}}};
-  RadialBasisFctMapping<Gaussian> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
+  RadialBasisFctMapping<Multiquadrics> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
   testDistributed(context, mapping_on, in, out, ref, globalIndexOffsets.at(context.rank));
-  RadialBasisFctMapping<Gaussian> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  RadialBasisFctMapping<Multiquadrics> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
   testDistributed(context, mapping_sep, in, out, ref, globalIndexOffsets.at(context.rank));
-  RadialBasisFctMapping<Gaussian> mapping_off(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  RadialBasisFctMapping<Multiquadrics> mapping_off(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::OFF);
   testDistributed(context, mapping_off, in, out, ref, globalIndexOffsets.at(context.rank));
 }
 
@@ -595,7 +595,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6,
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV1)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
-  Gaussian fct(5.0);
+  Multiquadrics fct(5.0);
 
   MeshSpecification      in{// Conservative mapping: The inMesh is local
                        {0, -1, {0, 0}, {1}},
@@ -650,11 +650,11 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1)
                              {3, {7}},
                              {3, {8}}};
 
-  RadialBasisFctMapping<Gaussian> mapping_on(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
+  RadialBasisFctMapping<Multiquadrics> mapping_on(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
   testDistributed(context, mapping_on, in, out, ref, context.rank * 2);
-  RadialBasisFctMapping<Gaussian> mapping_sep(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  RadialBasisFctMapping<Multiquadrics> mapping_sep(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
   testDistributed(context, mapping_sep, in, out, ref, context.rank * 2);
-  RadialBasisFctMapping<Gaussian> mapping_off(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  RadialBasisFctMapping<Multiquadrics> mapping_off(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::OFF);
   testDistributed(context, mapping_off, in, out, ref, context.rank * 2);
 }
 
@@ -662,8 +662,8 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1)
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV1Vector)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
-  Gaussian                        fct(5.0);
-  MeshSpecification               in{// Conservative mapping: The inMesh is local
+  Multiquadrics                        fct(5.0);
+  MeshSpecification                    in{// Conservative mapping: The inMesh is local
                        {0, -1, {0, 0}, {1, 4}},
                        {0, -1, {0, 1}, {2, 5}},
                        {1, -1, {1, 0}, {3, 6}},
@@ -672,7 +672,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1Vector)
                        {2, -1, {2, 1}, {6, 9}},
                        {3, -1, {3, 0}, {7, 10}},
                        {3, -1, {3, 1}, {8, 11}}};
-  MeshSpecification               out{// The outMesh is distributed
+  MeshSpecification                    out{// The outMesh is distributed
                         {-1, 0, {0, 0}, {0, 0}},
                         {-1, 0, {0, 1}, {0, 0}},
                         {-1, 1, {1, 0}, {0, 0}},
@@ -681,7 +681,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1Vector)
                         {-1, 2, {2, 1}, {0, 0}},
                         {-1, 3, {3, 0}, {0, 0}},
                         {-1, 3, {3, 1}, {0, 0}}};
-  ReferenceSpecification          ref{// Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
+  ReferenceSpecification               ref{// Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
                              // {0, 0, 2, 3, 0, 0, 0, 0} on the second, ...
                              {0, {1, 4}},
                              {0, {2, 5}},
@@ -715,11 +715,11 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1Vector)
                              {3, {0, 0}},
                              {3, {7, 10}},
                              {3, {8, 11}}};
-  RadialBasisFctMapping<Gaussian> mapping_on(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
+  RadialBasisFctMapping<Multiquadrics> mapping_on(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
   testDistributed(context, mapping_on, in, out, ref, context.rank * 2);
-  RadialBasisFctMapping<Gaussian> mapping_sep(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  RadialBasisFctMapping<Multiquadrics> mapping_sep(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
   testDistributed(context, mapping_sep, in, out, ref, context.rank * 2);
-  RadialBasisFctMapping<Gaussian> mapping_off(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  RadialBasisFctMapping<Multiquadrics> mapping_off(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::OFF);
   testDistributed(context, mapping_off, in, out, ref, context.rank * 2);
 }
 
@@ -727,7 +727,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1Vector)
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV2)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm())
-  Gaussian fct(5.0);
+  Multiquadrics fct(5.0);
 
   std::vector<int> globalIndexOffsets = {0, 0, 4, 6};
 
@@ -784,11 +784,11 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV2)
                              {3, {7}},
                              {3, {8}}};
 
-  RadialBasisFctMapping<Gaussian> mapping_on(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
+  RadialBasisFctMapping<Multiquadrics> mapping_on(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
   testDistributed(context, mapping_on, in, out, ref, globalIndexOffsets.at(context.rank));
-  RadialBasisFctMapping<Gaussian> mapping_sep(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  RadialBasisFctMapping<Multiquadrics> mapping_sep(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
   testDistributed(context, mapping_sep, in, out, ref, globalIndexOffsets.at(context.rank));
-  RadialBasisFctMapping<Gaussian> mapping_off(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  RadialBasisFctMapping<Multiquadrics> mapping_off(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::OFF);
   testDistributed(context, mapping_off, in, out, ref, globalIndexOffsets.at(context.rank));
 }
 
@@ -796,7 +796,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV2)
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV3)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
-  Gaussian         fct(2.0);
+  Multiquadrics    fct(2.0);
   std::vector<int> globalIndexOffsets = {0, 0, 3, 5};
 
   MeshSpecification      in{// Conservative mapping: The inMesh is local but rank 0 has no vertices
@@ -851,11 +851,11 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV3)
                              {3, {7}},
                              {3, {8}}};
   // Sum of reference is also 34
-  RadialBasisFctMapping<Gaussian> mapping_on(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
+  RadialBasisFctMapping<Multiquadrics> mapping_on(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
   testDistributed(context, mapping_on, in, out, ref, globalIndexOffsets.at(context.rank));
-  RadialBasisFctMapping<Gaussian> mapping_sep(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  RadialBasisFctMapping<Multiquadrics> mapping_sep(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
   testDistributed(context, mapping_sep, in, out, ref, globalIndexOffsets.at(context.rank));
-  RadialBasisFctMapping<Gaussian> mapping_off(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  RadialBasisFctMapping<Multiquadrics> mapping_off(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::OFF);
   testDistributed(context, mapping_off, in, out, ref, globalIndexOffsets.at(context.rank));
 }
 
@@ -864,10 +864,10 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
                      *boost::unit_test::tolerance(1e-6))
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
-  Gaussian         fct(4.0);
+  ThinPlateSplines fct;
   std::vector<int> globalIndexOffsets = {0, 2, 4, 6};
 
-  MeshSpecification               in{// Conservative mapping: The inMesh is local
+  MeshSpecification                       in{// Conservative mapping: The inMesh is local
                        {0, -1, {0, 0}, {1}},
                        {0, -1, {0, 1}, {2}},
                        {1, -1, {1, 0}, {3}},
@@ -876,7 +876,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
                        {2, -1, {2, 1}, {6}},
                        {3, -1, {3, 0}, {7}},
                        {3, -1, {3, 1}, {8}}}; // Sum is 36
-  MeshSpecification               out{                      // The outMesh is distributed, rank 0 has no vertex at all
+  MeshSpecification                       out{                      // The outMesh is distributed, rank 0 has no vertex at all
                         {-1, 1, {0, 1}, {0}},
                         {-1, 1, {1, 0}, {0}},
                         {-1, 1, {1, 1}, {0}},
@@ -884,7 +884,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
                         {-1, 2, {2, 1}, {0}},
                         {-1, 3, {3, 0}, {0}},
                         {-1, 3, {3, 1}, {0}}};
-  ReferenceSpecification          ref{// Tests for {0, 0, 0, 0, 0, 0, 0, 0} on the first rank,
+  ReferenceSpecification                  ref{// Tests for {0, 0, 0, 0, 0, 0, 0, 0} on the first rank,
                              // {2, 3, 4, 3, 0, 0, 0, 0} on the second, ...
                              {0, {0}},
                              {0, {0}},
@@ -893,9 +893,9 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
                              {0, {0}},
                              {0, {0}},
                              {0, {0}},
-                             {1, {2.4285714526861519}},
-                             {1, {3.61905}},
-                             {1, {4.14286}},
+                             {1, {3.1307987056295525}},
+                             {1, {4.0734031184906971}},
+                             {1, {3.0620533966233006}},
                              {1, {0}},
                              {1, {0}},
                              {1, {0}},
@@ -903,8 +903,8 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
                              {2, {0}},
                              {2, {0}},
                              {2, {0}},
-                             {2, {5.333333295}},
-                             {2, {5.85714}},
+                             {2, {4.4582564956060873}},
+                             {2, {5.8784343572772633}},
                              {2, {0}},
                              {2, {0}},
                              {3, {0}},
@@ -912,20 +912,18 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
                              {3, {0}},
                              {3, {0}},
                              {3, {0}},
-                             {3, {7.047619}},
-                             {3, {7.571428}}}; // Sum is ~36
-  RadialBasisFctMapping<Gaussian> mapping_on(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
-  testDistributed(context, mapping_on, in, out, ref, globalIndexOffsets.at(context.rank), true);
-  RadialBasisFctMapping<Gaussian> mapping_sep(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+                             {3, {7.4683403859032156}},
+                             {3, {7.9287135404698859}}}; // Sum is ~36
+  RadialBasisFctMapping<ThinPlateSplines> mapping_sep(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
   testDistributed(context, mapping_sep, in, out, ref, globalIndexOffsets.at(context.rank), true);
-  // Polynomial == ON won't reach the desired accuracy
+  // Polynomial == OFF won't reach the desired accuracy
 }
 
 /// Tests a non-contigous owner distributed at the outMesh
 BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
-  Gaussian               fct(5.0);
+  Multiquadrics          fct(5.0);
   MeshSpecification      in{// Conservative mapping: The inMesh is local
                        {0, -1, {0, 0}, {1}},
                        {0, -1, {0, 1}, {2}},
@@ -979,11 +977,11 @@ BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5)
                              {3, {7}},
                              {3, {8}}};
 
-  RadialBasisFctMapping<Gaussian> mapping_on(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
+  RadialBasisFctMapping<Multiquadrics> mapping_on(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
   testDistributed(context, mapping_on, in, out, ref, context.rank * 2);
-  RadialBasisFctMapping<Gaussian> mapping_sep(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  RadialBasisFctMapping<Multiquadrics> mapping_sep(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
   testDistributed(context, mapping_sep, in, out, ref, context.rank * 2);
-  RadialBasisFctMapping<Gaussian> mapping_off(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  RadialBasisFctMapping<Multiquadrics> mapping_off(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::OFF);
   testDistributed(context, mapping_off, in, out, ref, context.rank * 2);
 }
 
@@ -991,9 +989,9 @@ BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5)
 BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5Vector)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
-  Gaussian fct(5.0);
+  Multiquadrics fct(5.0);
 
-  MeshSpecification               in{// Conservative mapping: The inMesh is local
+  MeshSpecification                    in{// Conservative mapping: The inMesh is local
                        {0, -1, {0, 0}, {1, 4}},
                        {0, -1, {0, 1}, {2, 5}},
                        {1, -1, {1, 0}, {3, 6}},
@@ -1002,7 +1000,7 @@ BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5Vector)
                        {2, -1, {2, 1}, {6, 9}},
                        {3, -1, {3, 0}, {7, 10}},
                        {3, -1, {3, 1}, {8, 11}}};
-  MeshSpecification               out{// The outMesh is distributed and non-contigous
+  MeshSpecification                    out{// The outMesh is distributed and non-contigous
                         {-1, 0, {0, 0}, {0, 0}},
                         {-1, 1, {0, 1}, {0, 0}},
                         {-1, 1, {1, 0}, {0, 0}},
@@ -1011,7 +1009,7 @@ BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5Vector)
                         {-1, 2, {2, 1}, {0, 0}},
                         {-1, 3, {3, 0}, {0, 0}},
                         {-1, 3, {3, 1}, {0, 0}}};
-  ReferenceSpecification          ref{// Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
+  ReferenceSpecification               ref{// Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
                              // {0, 0, 2, 3, 0, 0, 0, 0} on the second, ...
                              {0, {1, 4}},
                              {0, {0, 0}},
@@ -1045,11 +1043,11 @@ BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5Vector)
                              {3, {0, 0}},
                              {3, {7, 10}},
                              {3, {8, 11}}};
-  RadialBasisFctMapping<Gaussian> mapping_on(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
+  RadialBasisFctMapping<Multiquadrics> mapping_on(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
   testDistributed(context, mapping_on, in, out, ref, context.rank * 2);
-  RadialBasisFctMapping<Gaussian> mapping_sep(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  RadialBasisFctMapping<Multiquadrics> mapping_sep(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
   testDistributed(context, mapping_sep, in, out, ref, context.rank * 2);
-  RadialBasisFctMapping<Gaussian> mapping_off(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  RadialBasisFctMapping<Multiquadrics> mapping_off(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::OFF);
   testDistributed(context, mapping_off, in, out, ref, context.rank * 2);
 }
 
@@ -1073,7 +1071,7 @@ void testTagging(const TestContext &context,
 
   Gaussian                        fct(4.5); //Support radius approx. 1
   Mapping::Constraint             constr = consistent ? Mapping::CONSISTENT : Mapping::CONSERVATIVE;
-  RadialBasisFctMapping<Gaussian> mapping(constr, 2, fct, {{false, false, false}}, Polynomial::ON);
+  RadialBasisFctMapping<Gaussian> mapping(constr, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
   inMesh->computeBoundingBox();
   outMesh->computeBoundingBox();
 
@@ -1837,7 +1835,6 @@ BOOST_AUTO_TEST_CASE(MapInverseMultiquadrics)
 {
   PRECICE_TEST(1_rank);
   InverseMultiquadrics fct(1e-3);
-  doLocalCode(InverseMultiquadrics, fct, Polynomial::ON);
   doLocalCode(InverseMultiquadrics, fct, Polynomial::SEPARATE);
 }
 
@@ -1853,7 +1850,6 @@ BOOST_AUTO_TEST_CASE(MapGaussian)
 {
   PRECICE_TEST(1_rank);
   Gaussian fct(1.0);
-  doLocalCode(Gaussian, fct, Polynomial::ON);
   doLocalCode(Gaussian, fct, Polynomial::SEPARATE);
 }
 
@@ -1862,25 +1858,22 @@ BOOST_AUTO_TEST_CASE(MapCompactThinPlateSplinesC2)
   PRECICE_TEST(1_rank);
   double                    supportRadius = 1.2;
   CompactThinPlateSplinesC2 fct(supportRadius);
-  doLocalCode(CompactThinPlateSplinesC2, fct, Polynomial::ON);
   doLocalCode(CompactThinPlateSplinesC2, fct, Polynomial::SEPARATE);
 }
 
-BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC0)
+BOOST_AUTO_TEST_CASE(MapCompactPolynomialC0)
 {
   PRECICE_TEST(1_rank);
   double              supportRadius = 1.2;
   CompactPolynomialC0 fct(supportRadius);
-  doLocalCode(CompactPolynomialC0, fct, Polynomial::ON);
   doLocalCode(CompactPolynomialC0, fct, Polynomial::SEPARATE);
 }
 
-BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC6)
+BOOST_AUTO_TEST_CASE(MapCompactPolynomialC6)
 {
   PRECICE_TEST(1_rank);
   double              supportRadius = 1.2;
   CompactPolynomialC6 fct(supportRadius);
-  doLocalCode(CompactPolynomialC6, fct, Polynomial::ON);
   doLocalCode(CompactPolynomialC6, fct, Polynomial::SEPARATE);
 }
 #undef doLocalCode
@@ -1956,12 +1949,11 @@ void testDeadAxis3d(Polynomial polynomial, Mapping::Constraint constraint)
   using Eigen::Vector3d;
   int dimensions = 3;
 
-  double              supportRadius = 1.2;
-  CompactPolynomialC6 fct(supportRadius);
-  bool                xDead = false;
-  bool                yDead = true;
-  bool                zDead = false;
-  using Mapping             = RadialBasisFctMapping<CompactPolynomialC6>;
+  ThinPlateSplines fct;
+  bool             xDead = false;
+  bool             yDead = true;
+  bool             zDead = false;
+  using Mapping          = RadialBasisFctMapping<ThinPlateSplines>;
   Mapping mapping(constraint, dimensions, fct, {{xDead, yDead, zDead}}, polynomial);
 
   // Create mesh to map from
@@ -2003,9 +1995,9 @@ void testDeadAxis3d(Polynomial polynomial, Mapping::Constraint constraint)
     if (polynomial == Polynomial::OFF) {
       const double tolerance = 1e-7;
       BOOST_TEST(outData->values()(0) == 1.0);
-      BOOST_TEST(testing::equals(outData->values()(1), 1.3748492889679291, tolerance));
-      BOOST_TEST(testing::equals(outData->values()(2), 2.5792185793798259, tolerance));
-      BOOST_TEST(testing::equals(outData->values()(3), 3.4359264424719909, tolerance));
+      BOOST_TEST(testing::equals(outData->values()(1), -0.454450524334, tolerance));
+      BOOST_TEST(testing::equals(outData->values()(2), 0.99146426249, tolerance));
+      BOOST_TEST(testing::equals(outData->values()(3), 6.98958304876, tolerance));
     } else {
       BOOST_TEST(outData->values()(0) == 1.0);
       BOOST_TEST(outData->values()(1) == 2.0);
@@ -2015,16 +2007,22 @@ void testDeadAxis3d(Polynomial polynomial, Mapping::Constraint constraint)
   } else {
     if (polynomial == Polynomial::OFF) {
       const double tolerance = 1e-6;
-      BOOST_TEST(testing::equals(outData->values()(0), 0.99389766786029266, tolerance));
-      BOOST_TEST(testing::equals(outData->values()(1), 1.3712650835377997, tolerance));
-      BOOST_TEST(testing::equals(outData->values()(2), 2.5788300620613707, tolerance));
-      BOOST_TEST(testing::equals(outData->values()(3), 3.4360021036816577, tolerance));
+      BOOST_TEST(testing::equals(outData->values()(0), 1.17251596926, tolerance));
+      BOOST_TEST(testing::equals(outData->values()(1), 4.10368825944, tolerance));
+      BOOST_TEST(testing::equals(outData->values()(2), 3.56931954192, tolerance));
+      BOOST_TEST(testing::equals(outData->values()(3), 3.40160932341, tolerance));
+    } else if (polynomial == Polynomial::ON) {
+      const double tolerance = 1e-6;
+      BOOST_TEST(testing::equals(outData->values()(0), 0.856701171969, tolerance));
+      BOOST_TEST(testing::equals(outData->values()(1), 2.38947124326, tolerance));
+      BOOST_TEST(testing::equals(outData->values()(2), 3.34078733786, tolerance));
+      BOOST_TEST(testing::equals(outData->values()(3), 3.41304024691, tolerance));
     } else {
-      const double tolerance = 1e-3;
-      BOOST_TEST(testing::equals(outData->values()(0), 1.4121699119041766, tolerance));
-      BOOST_TEST(testing::equals(outData->values()(1), 1.8694579548131118, tolerance));
-      BOOST_TEST(testing::equals(outData->values()(2), 2.8858741391091303, tolerance));
-      BOOST_TEST(testing::equals(outData->values()(3), 3.8325964228212386, tolerance));
+      const double tolerance = 1e-6;
+      BOOST_TEST(testing::equals(outData->values()(0), 0.380480856704, tolerance));
+      BOOST_TEST(testing::equals(outData->values()(1), 2.83529451713, tolerance));
+      BOOST_TEST(testing::equals(outData->values()(2), 3.73088270249, tolerance));
+      BOOST_TEST(testing::equals(outData->values()(3), 3.05334192368, tolerance));
     }
   }
 }
