@@ -98,13 +98,25 @@ MappingConfiguration::MappingConfiguration(
   }
   {
     XMLTag tag(*this, VALUE_RBF_CPOLYNOMIAL_C0, occ, TAG);
-    tag.setDocumentation("Local radial-basis-function mapping based on the C0-polynomial RBF.");
+    tag.setDocumentation("Local radial-basis-function mapping based on the Wendland C0-polynomial RBF.");
+    tag.addAttribute(attrSupportRadius);
+    tags.push_back(tag);
+  }
+  {
+    XMLTag tag(*this, VALUE_RBF_CPOLYNOMIAL_C2, occ, TAG);
+    tag.setDocumentation("Local radial-basis-function mapping based on the Wendland C2-polynomial RBF.");
+    tag.addAttribute(attrSupportRadius);
+    tags.push_back(tag);
+  }
+  {
+    XMLTag tag(*this, VALUE_RBF_CPOLYNOMIAL_C4, occ, TAG);
+    tag.setDocumentation("Local radial-basis-function mapping based on the Wendland C4-polynomial RBF.");
     tag.addAttribute(attrSupportRadius);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_RBF_CPOLYNOMIAL_C6, occ, TAG);
-    tag.setDocumentation("Local radial-basis-function mapping based on the C6-polynomial RBF.");
+    tag.setDocumentation("Local radial-basis-function mapping based on the Wendland C6-polynomial RBF.");
     tag.addAttribute(attrSupportRadius);
     tags.push_back(tag);
   }
@@ -235,7 +247,7 @@ void MappingConfiguration::xmlTagCallback(
 
     RBFParameter rbfParameter;
     // Check valid combinations for the Gaussian RBF input
-    if (type == VALUE_RBF_GAUSSIAN || type == VALUE_RBF_INV_MULTIQUADRICS || type == VALUE_RBF_MULTIQUADRICS || type == VALUE_RBF_CTPS_C2 || type == VALUE_RBF_CPOLYNOMIAL_C0 || type == VALUE_RBF_CPOLYNOMIAL_C6) {
+    if (type == VALUE_RBF_GAUSSIAN || type == VALUE_RBF_INV_MULTIQUADRICS || type == VALUE_RBF_MULTIQUADRICS || type == VALUE_RBF_CTPS_C2 || type == VALUE_RBF_CPOLYNOMIAL_C0 || type == VALUE_RBF_CPOLYNOMIAL_C6 || type == VALUE_RBF_CPOLYNOMIAL_C2 || type == VALUE_RBF_CPOLYNOMIAL_C4) {
       const bool exactlyOneSet = (std::isfinite(supportRadius) && !std::isfinite(shapeParameter)) ||
                                  (std::isfinite(shapeParameter) && !std::isfinite(supportRadius));
       PRECICE_CHECK(exactlyOneSet, "The specified parameters for the Gaussian RBF mapping are invalid. Please specify either a \"shape-parameter\" or a \"support-radius\".");
@@ -411,6 +423,16 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
       configuredMapping.mapping = PtrMapping(
           new RadialBasisFctMapping<CompactPolynomialC0>(
               constraintValue, dimensions, CompactPolynomialC0(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial));
+    } else if (type == VALUE_RBF_CPOLYNOMIAL_C2) {
+      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::SupportRadius)
+      configuredMapping.mapping = PtrMapping(
+          new RadialBasisFctMapping<CompactPolynomialC2>(
+              constraintValue, dimensions, CompactPolynomialC2(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial));
+    } else if (type == VALUE_RBF_CPOLYNOMIAL_C4) {
+      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::SupportRadius)
+      configuredMapping.mapping = PtrMapping(
+          new RadialBasisFctMapping<CompactPolynomialC4>(
+              constraintValue, dimensions, CompactPolynomialC4(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial));
     } else if (type == VALUE_RBF_CPOLYNOMIAL_C6) {
       PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::SupportRadius)
       configuredMapping.mapping = PtrMapping(
