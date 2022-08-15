@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingZero)
   double currentDt = dt;    // Timestep length used by solver
   double timeCheckpoint;
   double sampleDts[4] = {0.0, dt / 4.0, dt / 2.0, 3.0 * dt / 4.0};
-  double readDts[4]   = {currentDt, currentDt, currentDt, currentDt};
+  double readDts[4]   = {0.0, currentDt, currentDt, currentDt};
   int    nSamples     = 4;
   int    iterations   = 0;
   double sampleDt; // dt relative to timestep start, where we are sampling

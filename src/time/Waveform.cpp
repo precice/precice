@@ -128,16 +128,16 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
 void Waveform::moveToNextWindow()
 {
   PRECICE_ASSERT(_storageIsInitialized);
-  PRECICE_ASSERT(maxNumberOfStoredWindows() <= 2);  // other options are currently not implemented or supported.
+  PRECICE_ASSERT(maxNumberOfStoredWindows() <= 2); // other options are currently not implemented or supported.
 
   if (maxNumberOfStoredWindows() == 2) {
-    _numberOfStoredSamples = 3;
+    _numberOfStoredSamples        = 3;
     this->_timeStepsStorage[-1.0] = Eigen::VectorXd(this->_timeStepsStorage[0.0]); // store values from past windows
   }
   auto initialGuess = this->sample(1.0); // use value at end of window as initial guess for next
   this->clearTimeStepsStorage();         // clear storage before entering next window
   _timeStepsStorage[0.0] = Eigen::VectorXd(initialGuess);
-  _timeStepsStorage[1.0] = Eigen::VectorXd(initialGuess);  // initial guess is always constant extrapolation
+  _timeStepsStorage[1.0] = Eigen::VectorXd(initialGuess); // initial guess is always constant extrapolation
 }
 
 int Waveform::valuesSize()

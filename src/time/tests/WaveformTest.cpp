@@ -60,14 +60,14 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataZerothOrder)
   value(0) = 1.0;
   waveform.store(value);
 
-  BOOST_TEST(testing::equals(waveform.sample(0.0)(0), 1.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.0)(0), 0.0));
   BOOST_TEST(testing::equals(waveform.sample(0.5)(0), 1.0));
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 1.0));
 
   value(0) = 2.0;
   waveform.store(value);
 
-  BOOST_TEST(testing::equals(waveform.sample(0.0)(0), 2.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.0)(0), 0.0));
   BOOST_TEST(testing::equals(waveform.sample(0.5)(0), 2.0));
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 2.0));
 
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataZerothOrder)
   value(0) = 3.0;
   waveform.store(value);
 
-  BOOST_TEST(testing::equals(waveform.sample(0.0)(0), 3.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.0)(0), 2.0));
   BOOST_TEST(testing::equals(waveform.sample(0.5)(0), 3.0));
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 3.0));
 }
@@ -221,8 +221,8 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataFirstOrderVector)
   waveform.store(value);
 
   for (int i = 0; i < valuesSize; i++) {
-    BOOST_TEST(testing::equals(waveform.sample(0.0)(i), 0*value[i]));
-    BOOST_TEST(testing::equals(waveform.sample(0.5)(i), 0.5*value[i]));
+    BOOST_TEST(testing::equals(waveform.sample(0.0)(i), 0 * value[i]));
+    BOOST_TEST(testing::equals(waveform.sample(0.5)(i), 0.5 * value[i]));
     BOOST_TEST(testing::equals(waveform.sample(1.0)(i), value[i]));
   }
 
@@ -230,8 +230,8 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataFirstOrderVector)
   waveform.store(value);
 
   for (int i = 0; i < valuesSize; i++) {
-    BOOST_TEST(testing::equals(waveform.sample(0.0)(i), 0*value[i]));
-    BOOST_TEST(testing::equals(waveform.sample(0.5)(i), 0.5*value[i]));
+    BOOST_TEST(testing::equals(waveform.sample(0.0)(i), 0 * value[i]));
+    BOOST_TEST(testing::equals(waveform.sample(0.5)(i), 0.5 * value[i]));
     BOOST_TEST(testing::equals(waveform.sample(1.0)(i), value[i]));
   }
 
