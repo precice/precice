@@ -43,16 +43,23 @@ public:
   int getInterpolationOrder() const;
 
   /**
-   * @brief Used to initialize _timeWindowsStorage according to required size and initializes Waveform as constant with given values.
+   * @brief Used to initialize _timeStepsStorage according to required size and initializes Waveform as constant with given values.
    * @param values Defines constant initial value of waveform and its size
    */
   void initialize(const Eigen::VectorXd &values);
 
   /**
-   * @brief Updates first entry in _timeWindows with given values.
-   * @param values Sample for this time window
+   * @brief Updates first entry in _timeWindows with given value.
+   * @param values Sample at end of this time window
    */
   void store(const Eigen::VectorXd &values);
+
+  /**
+   * @brief Updates an entry for dt in _timeWindows with given value.
+   * @param values Sample at dt in this time window
+   * @param normalizedDt normalizedDt associated with this value. Only allows values between 0 and 1. 0 refers to the beginning of the window and 1 to the end.
+   */
+  void store(const Eigen::VectorXd &values, double normalizedDt);
 
   /**
    * @brief Shifts all entries in _timeWindows. The new entry is initialized as the value from the last window (= constant extrapolation). Called when moving to the next time window.
@@ -62,7 +69,7 @@ public:
   /**
    * @brief Evaluate waveform at specific point in time. Uses interpolation if necessary.
    *
-   * Interpolates values inside current time window using _timeWindowsStorage and an interpolation scheme of the order of this Waveform.
+   * Interpolates values inside current time window using _timeStepsStorage and an interpolation scheme of the order of this Waveform.
    *
    * @param normalizedDt Time where the sampling inside the window happens. Only allows values between 0 and 1. 0 refers to the beginning of the window and 1 to the end.
    * @return Value of Waveform at time normalizedDt.
@@ -73,13 +80,13 @@ private:
   /// Set by initialize. Used for consistency checks.
   bool _storageIsInitialized = false;
 
-  /// Stores values for several time windows.
-  Eigen::MatrixXd _timeWindowsStorage;
+  /// Stores values on the current window.
+  std::map<double, Eigen::VectorXd> _timeStepsStorage;
 
   /// interpolation order for this waveform
   const int _interpolationOrder;
 
-  /// number of stored samples in _timeWindowsStorage
+  /// number of stored samples in _timeStepsStorage
   int _numberOfStoredSamples;
 
   mutable logging::Logger _log{"time::Waveform"};
@@ -91,17 +98,34 @@ private:
   int valuesSize();
 
   /**
+   * @brief Removes all data stored in _timeStepsStorage
+   *
+   * Used to clear time steps storage before a new window is entered or a window is repeated
+   *
+   */
+  void clearTimeStepsStorage();
+
+  /**
    * @brief Get maximum number of samples in time this waveform can store.
    * @return Maximum number of samples.
    */
-  int maxNumberOfStoredSamples();
+  int maxNumberOfStoredWindows();
 
   /**
-   * @brief Updates entry in _timeWindowsStorage corresponding to a given sampleIndex with given values.
-   * @param values Input sample.
-   * @param sampleIndex Index of sample to be updated to given input sample.
+   * @brief Get maximum dt that is stored in this waveform.
+   *
+   * Used to check whether a user is trying to add a sample associated with a dt that is smaller than the maximum dt. This is forbidden, because the waveform is locked for times that are smaller than the maximum dt.
+   *
+   * @return the maximum dt from _timeStepsStorage
    */
-  void storeAt(const Eigen::VectorXd values, int sampleIndex);
+  double maxStoredDt();
+
+  /**
+   * @brief Updates entry in _timeStepsStorage corresponding to a given sampleIndex with given values.
+   * @param values Input sample.
+   * @param dt dt associated with this value. Only allows values between 0 and 1. 0 refers to the beginning of the window and 1 to the end.
+   */
+  void storeAt(const Eigen::VectorXd values, double dt);
 
   /**
    * @brief Computes which order may be used for interpolation.

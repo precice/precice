@@ -25,30 +25,72 @@ void Waveform::initialize(
     const Eigen::VectorXd &values)
 {
   int storageSize;
+  _timeStepsStorage = std::map<double, Eigen::VectorXd>{};
   PRECICE_ASSERT(_interpolationOrder >= Time::MIN_INTERPOLATION_ORDER);
-  storageSize            = _interpolationOrder + 1;
-  _timeWindowsStorage    = Eigen::MatrixXd::Zero(values.size(), storageSize);
-  _numberOfStoredSamples = 1; // the first sample is automatically initialized as zero and stored.
+  _timeStepsStorage[0.0] = Eigen::VectorXd(values);
+  _timeStepsStorage[1.0] = Eigen::VectorXd(values);
+  _numberOfStoredSamples = 2; // the first sample is automatically initialized as zero and stored.
   _storageIsInitialized  = true;
-  PRECICE_ASSERT(this->maxNumberOfStoredSamples() == storageSize);
   PRECICE_ASSERT(this->valuesSize() == values.size());
-  for (int sampleIndex = 0; sampleIndex < maxNumberOfStoredSamples(); ++sampleIndex) {
-    this->storeAt(values, sampleIndex);
-  }
 }
 
 void Waveform::store(const Eigen::VectorXd &values)
 {
   PRECICE_ASSERT(_storageIsInitialized);
-  int sampleIndex = 0;
-  this->storeAt(values, sampleIndex);
+  double normalizedDtForEnd = 1.0; // use dt associated with end of window
+  this->store(values, normalizedDtForEnd);
 }
 
-void Waveform::storeAt(const Eigen::VectorXd values, int sampleIndex)
+void Waveform::store(const Eigen::VectorXd &values, double normalizedDt)
 {
-  PRECICE_ASSERT(_timeWindowsStorage.cols() > sampleIndex, maxNumberOfStoredSamples(), sampleIndex);
+  PRECICE_ASSERT(_storageIsInitialized);
+  // dt has to be in interval (0.0, 1.0]
+  PRECICE_ASSERT(normalizedDt > 0.0); // cannot override value at beginning of window. It is locked!
+  PRECICE_ASSERT(normalizedDt <= 1.0);
+  this->storeAt(values, normalizedDt);
+}
+
+void Waveform::clearTimeStepsStorage()
+{
+  for(auto timeStep:_timeStepsStorage){
+    if (timeStep.first > 0.0) {
+      _timeStepsStorage.erase(timeStep.first);
+    }
+  }
+}
+
+int Waveform::maxNumberOfStoredWindows()
+{
+  PRECICE_ASSERT(_storageIsInitialized);
+  if (_interpolationOrder > 0) {
+    return _interpolationOrder;
+  } else { // also for zeroth order interpolation we store one window (this window)
+    return 1;
+  }
+}
+
+double Waveform::maxStoredDt()
+{
+  double maxDt = -1;
+  for (auto timeStep : _timeStepsStorage) {
+    if (timeStep.first > maxDt) {
+      maxDt = timeStep.first;
+    }
+  }
+  PRECICE_ASSERT(maxDt >= 0);
+  return maxDt;
+}
+
+void Waveform::storeAt(const Eigen::VectorXd values, double dt)
+{
+  if (maxStoredDt() < 1.0) { // did not reach end of window yet, so dt has to strictly increase
+    PRECICE_ASSERT(dt > maxStoredDt());
+  } else {                                // reached end of window and trying to write new data from next window. Clearing window first.
+    auto startValues = this->sample(0.0); // use value at beginning of this window (= end of last window)
+    this->clearTimeStepsStorage();        // clear storage for data with dt > 0.0 before redoing this window
+  }
   PRECICE_ASSERT(values.size() == this->valuesSize(), values.size(), this->valuesSize());
-  this->_timeWindowsStorage.col(sampleIndex) = values;
+  this->_timeStepsStorage[dt] = Eigen::VectorXd(values);
 }
 
 Eigen::VectorXd Waveform::sample(double normalizedDt)
@@ -59,47 +101,47 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
 
   const int usedOrder = computeUsedOrder(_interpolationOrder, _numberOfStoredSamples);
 
+  PRECICE_ASSERT(maxStoredDt() == 1.0); // sampling is only allowed, if a window is complete.
+
   if (usedOrder == 0) {
     // constant interpolation = just use sample at the end of the window: x(dt) = x^t
-    PRECICE_ASSERT(_numberOfStoredSamples > 0);
-    return this->_timeWindowsStorage.col(0);
+    return Eigen::VectorXd(this->_timeStepsStorage[1.0]);
   }
   Eigen::VectorXd interpolatedValue;
   if (usedOrder == 1) {
     // linear interpolation inside window: x(dt) = dt * x^t + (1-dt) * x^(t-1)
     PRECICE_ASSERT(_numberOfStoredSamples > 1);
-    interpolatedValue = this->_timeWindowsStorage.col(0) * normalizedDt;        // = dt * x^t
-    interpolatedValue += this->_timeWindowsStorage.col(1) * (1 - normalizedDt); // = dt * x^t + (1-dt) * x^(t-1)
+    interpolatedValue = this->_timeStepsStorage[1.0] * normalizedDt;        // = dt * x^t
+    interpolatedValue += this->_timeStepsStorage[0.0] * (1 - normalizedDt); // = dt * x^t + (1-dt) * x^(t-1)
     return interpolatedValue;
   }
   PRECICE_ASSERT(usedOrder == 2);
   // quadratic interpolation inside window: x(dt) = x^t * (dt^2 + dt)/2 + x^(t-1) * (1-dt^2)+ x^(t-2) * (dt^2-dt)/2
-  interpolatedValue = this->_timeWindowsStorage.col(0) * (normalizedDt + 1) * normalizedDt * 0.5;
-  interpolatedValue += this->_timeWindowsStorage.col(1) * (1 - normalizedDt * normalizedDt);
-  interpolatedValue += this->_timeWindowsStorage.col(2) * (normalizedDt - 1) * normalizedDt * 0.5;
+  interpolatedValue = this->_timeStepsStorage[1.0] * (normalizedDt + 1) * normalizedDt * 0.5;
+  interpolatedValue += this->_timeStepsStorage[0.0] * (1 - normalizedDt * normalizedDt);
+  interpolatedValue += this->_timeStepsStorage[-1.0] * (normalizedDt - 1) * normalizedDt * 0.5;
   return interpolatedValue;
 }
 
 void Waveform::moveToNextWindow()
 {
   PRECICE_ASSERT(_storageIsInitialized);
-  auto initialGuess = _timeWindowsStorage.col(0);                // use value from last window as initial guess for next
-  utils::shiftSetFirst(this->_timeWindowsStorage, initialGuess); // archive old samples and store initial guess
-  if (_numberOfStoredSamples < maxNumberOfStoredSamples()) {     // together with the initial guess the number of stored samples increases
-    _numberOfStoredSamples++;
-  }
-}
+  PRECICE_ASSERT(maxNumberOfStoredWindows() <= 2);  // other options are currently not implemented or supported.
 
-int Waveform::maxNumberOfStoredSamples()
-{
-  PRECICE_ASSERT(_storageIsInitialized);
-  return _timeWindowsStorage.cols();
+  if (maxNumberOfStoredWindows() == 2) {
+    _numberOfStoredSamples = 3;
+    this->_timeStepsStorage[-1.0] = Eigen::VectorXd(this->_timeStepsStorage[0.0]); // store values from past windows
+  }
+  auto initialGuess = this->sample(1.0); // use value at end of window as initial guess for next
+  this->clearTimeStepsStorage();         // clear storage before entering next window
+  _timeStepsStorage[0.0] = Eigen::VectorXd(initialGuess);
+  _timeStepsStorage[1.0] = Eigen::VectorXd(initialGuess);  // initial guess is always constant extrapolation
 }
 
 int Waveform::valuesSize()
 {
   PRECICE_ASSERT(_storageIsInitialized);
-  return _timeWindowsStorage.rows();
+  return _timeStepsStorage[0.0].size();
 }
 
 int Waveform::computeUsedOrder(int requestedOrder, int numberOfAvailableSamples)
