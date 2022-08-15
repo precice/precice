@@ -12,7 +12,7 @@ BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(InitializeData)
 /**
  * @brief Test simple coupled simulation with iterations, data initialization and without acceleration
- * 
+ *
  */
 BOOST_AUTO_TEST_CASE(Implicit)
 {

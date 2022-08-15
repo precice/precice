@@ -1,4 +1,4 @@
-# Dockerfile to build a ubuntu image containing the installed Debian package of a release 
+# Dockerfile to build a ubuntu image containing the installed Debian package of a release
 
 FROM ubuntu:20.04
 # Fix the installation of tzdata for Ubuntu 20.04

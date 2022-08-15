@@ -57,9 +57,9 @@ Quick Setup:
 - `cd $PRECICE_ROOT`
 
 How to use:
-- Inspect a single file:  
+- Inspect a single file:
     `clang-tidy -p ~/tmp/precice/ src/precice/impl/SolverInterfaceImpl.cpp` ( -p sets the dir where to find the file compile_commands.json)
--  Inspect the entire source tree or apply fixes:  
+-  Inspect the entire source tree or apply fixes:
     Use the `run-clang-tidy.py` to prevent header overlap etc.
     Installed as `/usr/share/clang/run-clang-tidy.py` or from the [mirror](https://github.com/llvm-mirror/clang-tools-extra/blob/master/clang-tidy/tool/run-clang-tidy.py).
 
@@ -90,7 +90,7 @@ $ cmake \
    $PRECICE_ROOT
 $ make -j $(nproc)
 ```
-As this build will run for a very long time, it may be a good idea to save the output to a log file. 
+As this build will run for a very long time, it may be a good idea to save the output to a log file.
 ```
 $ make -j $(nproc) 2>&1 | tee staticanalysis.log
 ```

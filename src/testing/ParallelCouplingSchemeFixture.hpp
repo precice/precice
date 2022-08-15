@@ -7,7 +7,7 @@ namespace testing {
 /*
  * @brief A fixture that is used to access private functions of the ParallelCouplingScheme class.
  *
- * The fixture can be used to call private functions for individual testing. 
+ * The fixture can be used to call private functions for individual testing.
  */
 struct ParallelCouplingSchemeFixture {
   static bool isImplicitCouplingScheme(cplscheme::ParallelCouplingScheme &cplscheme);

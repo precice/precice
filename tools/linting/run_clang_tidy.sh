@@ -26,7 +26,7 @@ if test ! -d "$SRC/src" -o ! -d "$SRC/tools" -o ! -d "$SRC/examples" -o ! -f "$S
 fi
 echo "SRC-DIR=$SRC"
 
-# Specify the correct compile commands: 
+# Specify the correct compile commands:
 # -EXPORT_COMPILE_COMMANDS: is required for clang itself
 # -BUILD_TESTING: we don't want to analyze the test targets
 # -PRECICE_ENABLE_C: naming conventions are different from the code base
@@ -62,4 +62,3 @@ fi
 
 echo "All passed"
 exit 0
-

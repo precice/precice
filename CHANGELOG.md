@@ -156,7 +156,7 @@ All notable changes to this project will be documented in this file. For future 
 - Fixed an occasional issue solving the system matrix in PETSc-based RBF mappings.
 - Fixed boost log_level issues on MacOS.
 - Fixed compilation error emitted by intel compilers.
-- Fixed cryptic assertion for forgetting the max-iterations tag. Now max-iterations is enforced in the configuration. 
+- Fixed cryptic assertion for forgetting the max-iterations tag. Now max-iterations is enforced in the configuration.
 - Fixed indexing bug in solverdummies.
 - Fixed input checks for data access functions.
 - Fixed interleaved assertion output.
@@ -164,7 +164,7 @@ All notable changes to this project will be documented in this file. For future 
 - Fixed parsing error on systems without locales installed. This fixes issues when running preCICE in minimal docker containers.
 - Fixed syntax of the Fortran function `precicef_get_mesh_vertex_size_`, which lead to incorrect name de-mangling.
 - Fixed the data type and precision in exported VTK files.
-- Fixed two wrong assertions in QR factorization, which did not allow meshes with only a single partition. 
+- Fixed two wrong assertions in QR factorization, which did not allow meshes with only a single partition.
 - Improved checks of configuration related to data access.
 - Improved compiler compatibility of assertion.
 - Improved the error message for not exchanging data over the same mesh used for convergence measures.
@@ -189,7 +189,7 @@ All notable changes to this project will be documented in this file. For future 
 - Added check to prevent `<use-mesh>` from the same participant.
 - Added control flow checks to C bingings.
 - Added many tests for the communication abstraction.
-- Added option to make a convergence measure strict. It has to converge then and leads to a premature simulation stop if not. 
+- Added option to make a convergence measure strict. It has to converge then and leads to a premature simulation stop if not.
 - Added parallel support for Eigen RBF mapping.
 - Added platform-specific defaults of the loopback interface name to the `network` attribute of socket connections.
 - Added reset of written data 0 in `advance()` to simplify detection of missing write data calls.
@@ -205,7 +205,7 @@ All notable changes to this project will be documented in this file. For future 
 - Changed the minimum required PETSc version to 3.12, which delivers consistent results across platforms.
 - Disabled tests based on MPIPorts and MPISinglePorts when using Open MPI.
 - Enabled RBF-based tests in partiton unit-tests and serial integration tests.
-- Extended iteration logging by total and dropped quasi-Newton columns. 
+- Extended iteration logging by total and dropped quasi-Newton columns.
 - Extended title headers of convergence and iteration files by measure abbreviation.
 - Fixed MPIPorts and MPISinglePorts not always closing ports.
 - Fixed SocketCommunication setting up a port and writing connection info even if there are no requesters.
@@ -445,7 +445,7 @@ All notable changes to this project will be documented in this file. For future 
 - Added an (experimental) Fortran 2003 solver dummy.
 
 ## 1.3.0
-- Update of build procedure for python bindings (see [`precice/src/bindings/python/README.md`](https://github.com/precice/precice/blob/develop/src/precice/bindings/python/README.md) for instructions). Note: you do not have to add `PySolverInterface.so` to `PYTHONPATH` manually anymore, if you want to use it in your adapter. Python should be able to find it automatically.   
+- Update of build procedure for python bindings (see [`precice/src/bindings/python/README.md`](https://github.com/precice/precice/blob/develop/src/precice/bindings/python/README.md) for instructions). Note: you do not have to add `PySolverInterface.so` to `PYTHONPATH` manually anymore, if you want to use it in your adapter. Python should be able to find it automatically.
 - Make naming of log files consistent, following the pattern `precice-SOLVERNAME-logtype.log`, example: `precice-FLUID-eventTimings.log`
 - Enable boost.geometry based preallocation. Speeds up initialization of PetRBF based mapping.
 - Actions can now specify a `MeshRequirement`, such as the `ScaleByAreaAction`.

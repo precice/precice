@@ -4,7 +4,7 @@
 #
 # Returns
 # 0 on success
-# 2 is clang-format 8 could not be found 
+# 2 is clang-format 8 could not be found
 
 # Detect clang-format version
 if command -v clang-format-8 > /dev/null; then

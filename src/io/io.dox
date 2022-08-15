@@ -2,7 +2,7 @@
 
 @dir io
 
-This directory defines classes to import and export the data structures of 
+This directory defines classes to import and export the data structures of
 component container into and from files. The main interfaces of the component are
 given by Export and Import. The following functionalities are
 currently implemented:
