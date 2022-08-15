@@ -180,16 +180,16 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
   std::transform(deadAxis.begin(), deadAxis.end(), activeAxis.begin(), [](const auto ax) { return !ax; });
 
   // First, assemble the interpolation matrix and check the invertability
-  bool decompositionConverged = false;
+  bool decompositionSuccessful = false;
   if constexpr (RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite()) {
-    _decMatrixC            = buildMatrixCLU(basisFunction, inputMesh, activeAxis, polynomial).llt();
-    decompositionConverged = _decMatrixC.info() == Eigen::ComputationInfo::Success;
+    _decMatrixC             = buildMatrixCLU(basisFunction, inputMesh, activeAxis, polynomial).llt();
+    decompositionSuccessful = _decMatrixC.info() == Eigen::ComputationInfo::Success;
   } else {
-    _decMatrixC            = buildMatrixCLU(basisFunction, inputMesh, activeAxis, polynomial).colPivHouseholderQr();
-    decompositionConverged = _decMatrixC.isInvertible();
+    _decMatrixC             = buildMatrixCLU(basisFunction, inputMesh, activeAxis, polynomial).colPivHouseholderQr();
+    decompositionSuccessful = _decMatrixC.isInvertible();
   }
 
-  PRECICE_CHECK(decompositionConverged,
+  PRECICE_CHECK(decompositionSuccessful,
                 "The interpolation matrix of the RBF mapping from mesh {} to mesh {} is not invertable. "
                 "This means that the mapping problem is not well-posed. "
                 "Please check if your coupling meshes are correct. Maybe you need to fix axis-aligned mapping setups "
