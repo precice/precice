@@ -27,7 +27,6 @@ public:
 
   /// Map from data ID to data values.
   using DataMap   = std::map<int, cplscheme::PtrCouplingData>;
-  using ValuesMap = std::map<int, Eigen::VectorXd>;
 
   virtual ~Acceleration() {}
 
