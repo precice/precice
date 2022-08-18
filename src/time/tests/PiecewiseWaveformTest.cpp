@@ -75,7 +75,6 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataZerothOrder)
   BOOST_TEST(testing::equals(waveform.sample(0.75)(0), 3.0));
   BOOST_TEST(testing::equals(waveform.sample(1.00)(0), 3.0));
 
-
   value(0) = 1.5;
   waveform.store(value, 0.5);
 
@@ -152,7 +151,6 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataFirstOrder)
   BOOST_TEST(testing::equals(waveform.sample(0.75)(0), 2.75));
   BOOST_TEST(testing::equals(waveform.sample(1.00)(0), 3.00));
 
-
   value(0) = 1.5;
   waveform.store(value, 0.5);
 
@@ -165,7 +163,6 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataFirstOrder)
   BOOST_TEST(testing::equals(waveform.sample(0.75)(0), 2.75));
   BOOST_TEST(testing::equals(waveform.sample(1.00)(0), 4.00));
 }
-
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()

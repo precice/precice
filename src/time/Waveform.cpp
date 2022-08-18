@@ -95,6 +95,14 @@ void Waveform::storeAt(const Eigen::VectorXd values, double dt)
   this->_timeStepsStorage[dt] = Eigen::VectorXd(values);
 }
 
+// helper function to compute x(t) from given (x0,t0) and (x1,t1) via linear interpolation
+Eigen::VectorXd linearInterpolationAt(double t, double t0, double t1, Eigen::VectorXd x0, Eigen::VectorXd x1)
+{
+  double dt = t1 - t0;
+  PRECICE_ASSERT(dt > 0);
+  return x1 * (t - t0) / dt + x0 * (t1 - t) / dt;
+}
+
 Eigen::VectorXd Waveform::sample(double normalizedDt)
 {
   PRECICE_ASSERT(_storageIsInitialized);
@@ -115,8 +123,14 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
   if (usedOrder == 1) {
     // linear interpolation inside window: x(dt) = dt * x^t + (1-dt) * x^(t-1)
     PRECICE_ASSERT(_numberOfStoredSamples > 1);
-    interpolatedValue = this->_timeStepsStorage[1.0] * normalizedDt;        // = dt * x^t
-    interpolatedValue += this->_timeStepsStorage[0.0] * (1 - normalizedDt); // = dt * x^t + (1-dt) * x^(t-1)
+    double piecewiseT0 = findTimeBefore(normalizedDt);
+    double piecewiseT1 = findTimeAfter(normalizedDt);
+    if ((piecewiseT0 == normalizedDt) && (piecewiseT1 == normalizedDt)) { // no need for interpolation, sample directly from _timeStepsStorage
+      // TODO: Simpler implementation: Check in _timeStepsStorage for key normalizedDt, if it exists: Sample.
+      interpolatedValue = _timeStepsStorage[normalizedDt];
+    } else {
+      interpolatedValue = linearInterpolationAt(normalizedDt, piecewiseT0, piecewiseT1, this->_timeStepsStorage[piecewiseT0], this->_timeStepsStorage[piecewiseT1]);
+    }
     return interpolatedValue;
   }
   PRECICE_ASSERT(usedOrder == 2);
