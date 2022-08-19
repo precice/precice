@@ -103,6 +103,18 @@ Eigen::VectorXd linearInterpolationAt(double t, double t0, double t1, Eigen::Vec
   return x1 * (t - t0) / dt + x0 * (t1 - t) / dt;
 }
 
+// helper function to compute x(t) from given (x0,t0), (x1,t1) and (x2,t2) via quadratic interpolation. Derived from Lagrange polynomials (see https://en.wikipedia.org/wiki/Lagrange_polynomial)
+Eigen::VectorXd quadraticInterpolationAt(double t, double t0, double t1, double t2, Eigen::VectorXd x0, Eigen::VectorXd x1, Eigen::VectorXd x2)
+{
+  PRECICE_ASSERT((t0 < t1) && (t1 < t2));
+  // compute value of n-th Lagrange polynomial
+  double l0 = ((t - t1) / (t0 - t1)) * ((t - t2) / (t0 - t2));
+  double l1 = ((t - t0) / (t1 - t0)) * ((t - t2) / (t1 - t2));
+  double l2 = ((t - t0) / (t2 - t0)) * ((t - t1) / (t2 - t1));
+  // multiply Lagrange polynomials by sample values and sum them up
+  return x0 * l0 + x1 * l1 + x2 * l2;
+}
+
 // helper function to compute x(t) from given data (x0,t0), (x1,t1), ..., (xn,tn) via cubic degree spline interpolation
 Eigen::VectorXd cubicSplineInterpolationAt(double t, std::vector<double> ts, std::vector<Eigen::VectorXd> xs)
 {
@@ -119,7 +131,7 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
 
   PRECICE_ASSERT(maxStoredDt() == 1.0); // sampling is only allowed, if a window is complete.
 
-  // @todo do we need to explicitly differentiate between piecewise and non-piecewise interplation below?
+  // @TODO do we need to explicitly differentiate between piecewise and non-piecewise interplation below?
   if (usedOrder == 0) {
     // constant interpolation = just use sample at the end of the window: x(dt) = x^t
     // At beginning of window use result from last window x(0) = x^(t-1)
@@ -148,14 +160,18 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
 
     bool usePastWindow = true;
 
-    // possibility 1
-    // quadratic interpolation inside window: x(dt) = x^t * (dt^2 + dt)/2 + x^(t-1) * (1-dt^2)+ x^(t-2) * (dt^2-dt)/2
     if (usePastWindow) {
-      interpolatedValue = this->_timeStepsStorage[1.0] * (normalizedDt + 1) * normalizedDt * 0.5;
-      interpolatedValue += this->_timeStepsStorage[0.0] * (1 - normalizedDt * normalizedDt);
-      interpolatedValue += this->_timeStepsStorage[-1.0] * (normalizedDt - 1) * normalizedDt * 0.5;
+      // possibility 1
+      // quadratic interpolation inside window: x(dt) = x^t * (dt^2 + dt)/2 + x^(t-1) * (1-dt^2)+ x^(t-2) * (dt^2-dt)/2
+      // @TODO do we need to offer this option? Use-case is unclear.
+      interpolatedValue = quadraticInterpolationAt(normalizedDt, -1, 0, 1, this->_timeStepsStorage[-1.0], this->_timeStepsStorage[0.0], this->_timeStepsStorage[1.0]);
       return interpolatedValue;
     } else {
+      // @TODO do we want to make this configurable or just use it as a fallback, if third order is used?
+      // Choosing this option is only reasonable, if there are exactly three samples in the current window!
+      // @TODO fix value below
+      double inbetween  = 0.5; // wrong value! Needs to be determined somehow...
+      interpolatedValue = quadraticInterpolationAt(normalizedDt, 0, inbetween, 1, this->_timeStepsStorage[0.0], this->_timeStepsStorage[inbetween], this->_timeStepsStorage[1.0]);
       PRECICE_ASSERT(false);
     }
   }
@@ -169,7 +185,8 @@ void Waveform::moveToNextWindow()
   PRECICE_ASSERT(maxNumberOfStoredWindows() <= 2); // other options are currently not implemented or supported.
 
   if (maxNumberOfStoredWindows() == 2) {
-    _numberOfStoredSamples        = 3;
+    _numberOfStoredSamples = 3;
+    // @TODO do we really want to store values from old windows? Use-case unclear and initialization difficult.
     this->_timeStepsStorage[-1.0] = Eigen::VectorXd(this->_timeStepsStorage[0.0]); // store values from past windows
   }
   auto initialGuess = this->sample(1.0); // use value at end of window as initial guess for next
