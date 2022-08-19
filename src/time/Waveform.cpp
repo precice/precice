@@ -5,6 +5,8 @@
 #include "time/Time.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
+#include <eigen3/unsupported/Eigen/Splines>
+
 namespace precice {
 namespace time {
 
@@ -103,22 +105,39 @@ Eigen::VectorXd linearInterpolationAt(double t, double t0, double t1, Eigen::Vec
   return x1 * (t - t0) / dt + x0 * (t1 - t) / dt;
 }
 
-// helper function to compute x(t) from given (x0,t0), (x1,t1) and (x2,t2) via quadratic interpolation. Derived from Lagrange polynomials (see https://en.wikipedia.org/wiki/Lagrange_polynomial)
-Eigen::VectorXd quadraticInterpolationAt(double t, double t0, double t1, double t2, Eigen::VectorXd x0, Eigen::VectorXd x1, Eigen::VectorXd x2)
+// helper function to compute x(t) from given data (x0,t0), (x1,t1), ..., (xn,tn) via third degree B-spline interpolation (implemented using Eigen). Alternatives are cubic spline interpolation (see https://en.wikipedia.org/wiki/Spline_interpolation#Algorithm_to_find_the_interpolating_cubic_spline), but this is not offered by Eigen or Boost.
+Eigen::VectorXd bSplineInterpolationAt(double t, Eigen::VectorXd ts, Eigen::MatrixXd xs, int splineDegree)
 {
-  PRECICE_ASSERT((t0 < t1) && (t1 < t2));
-  // compute value of n-th Lagrange polynomial
-  double l0 = ((t - t1) / (t0 - t1)) * ((t - t2) / (t0 - t2));
-  double l1 = ((t - t0) / (t1 - t0)) * ((t - t2) / (t1 - t2));
-  double l2 = ((t - t0) / (t2 - t0)) * ((t - t1) / (t2 - t1));
-  // multiply Lagrange polynomials by sample values and sum them up
-  return x0 * l0 + x1 * l1 + x2 * l2;
-}
+  // organize data in columns. Each column represents one sample in time.
+  PRECICE_ASSERT(xs.cols() == ts.size());
+  const int ndofs = xs.rows(); // number of dofs. Each dof needs it's own interpolant.
 
-// helper function to compute x(t) from given data (x0,t0), (x1,t1), ..., (xn,tn) via cubic degree spline interpolation
-Eigen::VectorXd cubicSplineInterpolationAt(double t, std::vector<double> ts, std::vector<Eigen::VectorXd> xs)
-{
-  PRECICE_ASSERT(false);
+  Eigen::VectorXd interpolated(ndofs);
+
+  const int splineDimension = 2;
+
+  for (int i = 0; i < ndofs; i++) {
+    // need to provide 2d coordinates (t,x) to make all points unique (0,0,1) is forbidden ((0,0), (0.5,0), (1,1)) is allowed
+    Eigen::MatrixXd data(2, xs.cols());
+    for (int j = 0; j < xs.cols(); j++) {
+      data.row(0)[j] = ts[j] + 1;
+      data.row(1)[j] = xs.row(i)[j];
+    }
+
+    // create know vector
+    Eigen::VectorXd knots(ts.size());
+    double          tmin = ts[0];
+    double          tmax = ts[ts.size() - 1];
+    for (int j = 0; j < xs.cols(); j++) {
+      knots[j] = (ts[j] - tmin) / (tmax - tmin); // scale knots to interval [0,1];
+    }
+
+    double tScaled  = (t - tmin) / (tmax - tmin); // scale sampling time to interval [0,1];
+    auto   spline   = Eigen::SplineFitting<Eigen::Spline<double, splineDimension>>::Interpolate(data, splineDegree, knots);
+    interpolated[i] = spline(tScaled)[1]; // get component of spline associated with xs.row(i)
+  }
+
+  return interpolated;
 }
 
 Eigen::VectorXd Waveform::sample(double normalizedDt)
@@ -144,39 +163,38 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
     double piecewiseT0 = findTimeBefore(normalizedDt);
     double piecewiseT1 = findTimeAfter(normalizedDt);
     if ((piecewiseT0 == normalizedDt) && (piecewiseT1 == normalizedDt)) { // no need for interpolation, sample directly from _timeStepsStorage
-      // TODO: Simpler implementation: Check in _timeStepsStorage for key normalizedDt, if it exists: Sample.
+      // @TODO: Simpler implementation: Check in _timeStepsStorage for key normalizedDt, if it exists: Sample.
+      // @TODO: Move this branch up all the way: as long as we don't do fitting this strategy is always good: If key exists, just use the value and don't interpolate.
       interpolatedValue = _timeStepsStorage[normalizedDt];
     } else {
       interpolatedValue = linearInterpolationAt(normalizedDt, piecewiseT0, piecewiseT1, this->_timeStepsStorage[piecewiseT0], this->_timeStepsStorage[piecewiseT1]);
     }
     return interpolatedValue;
   }
-  if (usedOrder == 2) {
-    /** @TODO for quadratic interpolation there are several possibilities:
-     * 1. Use data from this window and last window. Then we do not need to consider any samples from subcycling
-     * 2. Use data from this window. Requires at least 2 substeps in window. Note: For 3 or more substeps we will directly apply cubic spline interpolation, because this is the natural choice and piecewise quadratic spline interpolation is very academic.
-     * 3. Use data from this window, but perform a least squares fit. If we don't do subcycling the system is underdetermined, if we do 2 substeps this option is identical to option 2. If we do 3 or more substeps we will get a least squares fit. Important: Might lead to discontinuities at the window boundary!
-     **/
 
-    bool usePastWindow = true;
+  /** @TODO for quadratic interpolation there are several possibilities:
+   * 1. Use data from this window and last window. Then we do not need to consider any samples from subcycling
+   * 2. Use data from this window. Requires at least 2 substeps in window. Note: For 3 or more substeps we will directly apply cubic spline interpolation, because this is the natural choice and piecewise quadratic spline interpolation is very academic.
+   * 3. Use data from this window, but perform a least squares fit. If we don't do subcycling the system is underdetermined, if we do 2 substeps this option is identical to option 2. If we do 3 or more substeps we will get a least squares fit. Important: Might lead to discontinuities at the window boundary!
+   **/
 
-    if (usePastWindow) {
-      // possibility 1
-      // quadratic interpolation inside window: x(dt) = x^t * (dt^2 + dt)/2 + x^(t-1) * (1-dt^2)+ x^(t-2) * (dt^2-dt)/2
-      // @TODO do we need to offer this option? Use-case is unclear.
-      interpolatedValue = quadraticInterpolationAt(normalizedDt, -1, 0, 1, this->_timeStepsStorage[-1.0], this->_timeStepsStorage[0.0], this->_timeStepsStorage[1.0]);
-      return interpolatedValue;
-    } else {
-      // @TODO do we want to make this configurable or just use it as a fallback, if third order is used?
-      // Choosing this option is only reasonable, if there are exactly three samples in the current window!
-      // @TODO fix value below
-      double inbetween  = 0.5; // wrong value! Needs to be determined somehow...
-      interpolatedValue = quadraticInterpolationAt(normalizedDt, 0, inbetween, 1, this->_timeStepsStorage[0.0], this->_timeStepsStorage[inbetween], this->_timeStepsStorage[1.0]);
-      PRECICE_ASSERT(false);
-    }
+  bool   usePastWindow = true;
+  double low           = 0.0;
+  double high          = 1.0;
+  if (usePastWindow) { // this just helps us to use quadratic interpolation without subcycling, as well. Use-Case unclear.
+    low = -1.0;
   }
-  PRECICE_ASSERT(usedOrder == 3);
-  return cubicSplineInterpolationAt(normalizedDt, std::vector<double>(), std::vector<Eigen::VectorXd>());
+  auto            timesVec = getTimesAscending(low, high);
+  Eigen::VectorXd timesAscending(timesVec.size());
+  Eigen::MatrixXd dataAscending(this->_timeStepsStorage[0.0].size(), timesVec.size());
+  int             i = 0;
+  for (int i = 0; i < timesVec.size(); i++) {
+    timesAscending[i]    = timesVec[i];
+    dataAscending.col(i) = this->_timeStepsStorage[timesVec[i]];
+  }
+
+  PRECICE_ASSERT(usedOrder >= 2);
+  return bSplineInterpolationAt(normalizedDt, timesAscending, dataAscending, usedOrder);
 }
 
 void Waveform::moveToNextWindow()
@@ -203,6 +221,7 @@ int Waveform::valuesSize()
 
 int Waveform::computeUsedOrder(int requestedOrder, int numberOfAvailableSamples)
 {
+  // @todo simplify?
   int usedOrder = -1;
   if (requestedOrder == 0) {
     usedOrder = 0;
@@ -220,10 +239,38 @@ int Waveform::computeUsedOrder(int requestedOrder, int numberOfAvailableSamples)
     } else {
       usedOrder = 2;
     }
+  } else if (requestedOrder == 3) {
+    if (numberOfAvailableSamples < 2) {
+      usedOrder = 0;
+    } else if (numberOfAvailableSamples < 3) {
+      usedOrder = 1;
+    } else if (numberOfAvailableSamples < 4) {
+      usedOrder = 2;
+    } else {
+      usedOrder = 3;
+    }
   } else {
     PRECICE_ASSERT(false);
   }
   return usedOrder;
+}
+
+std::vector<double> Waveform::getTimesAscending(double low, double high)
+{
+  // create std::vector with all keys
+  std::vector<double> times;
+  for (auto timeStep : _timeStepsStorage) {
+    times.push_back(timeStep.first);
+  }
+  std::vector<double> timesFiltered;
+  std::copy_if(times.begin(), times.end(), std::back_inserter(timesFiltered), [low](double e) { return e >= low; }); // remove elements below lower bound
+  times = timesFiltered;
+  timesFiltered.clear();
+  std::copy_if(times.begin(), times.end(), std::back_inserter(timesFiltered), [high](double e) { return e <= high; }); // remove elements above higher bound
+  times = timesFiltered;
+  timesFiltered.clear();
+  std::sort(times.begin(), times.end()); // sort vector
+  return times;
 }
 
 // @todo improve efficiency by using some ordered list to store times.

@@ -80,6 +80,10 @@ private:
   /// Set by initialize. Used for consistency checks.
   bool _storageIsInitialized = false;
 
+  /** @TODO Idea for more efficient data structure and redesign (do this when functionality is working and tested!)
+   *   1. use Eigen::MatrixXd instead of map for _timeStepsStorage.
+   *   2. create a member std::map<double, int> _timeSteps where (unique) time is mapped to column index of _timeStepsStorage that holds the corresponding sample. (Alternative: Use another Eigen::VectorXd to store times, but this enforces maintaining a consistent order for _timeSteps and _timeStepsStorage. This sounds complicated.)
+   */
   /// Stores values on the current window.
   std::map<double, Eigen::VectorXd> _timeStepsStorage;
 
@@ -154,6 +158,15 @@ private:
    * @return double point in time after normalizedDt in _timeStepsStorage
    */
   double findTimeAfter(double normalizedDt);
+
+  /**
+   * @brief Get keys of _timeStepsStorage in ascending order. Starting from low to high.
+   *
+   * @param low lower bound.
+   * @param high upper bound.
+   * @return std::vector<double>
+   */
+  std::vector<double> getTimesAscending(double low, double high);
 };
 
 } // namespace time

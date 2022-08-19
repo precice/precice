@@ -9,6 +9,7 @@ using namespace precice;
 using namespace precice::time;
 
 BOOST_AUTO_TEST_SUITE(TimeTests)
+// @TODO rename to SubcyclingWaveformTests?
 BOOST_AUTO_TEST_SUITE(PiecewiseWaveformTests)
 BOOST_AUTO_TEST_SUITE(InterpolationTests)
 
@@ -162,6 +163,28 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataFirstOrder)
   BOOST_TEST(testing::equals(waveform.sample(0.50)(0), 1.50));
   BOOST_TEST(testing::equals(waveform.sample(0.75)(0), 2.75));
   BOOST_TEST(testing::equals(waveform.sample(1.00)(0), 4.00));
+}
+
+BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataThirdOrder)
+{
+  PRECICE_TEST(1_rank);
+
+  testing::WaveformFixture fixture;
+
+  // Test zeroth order interpolation
+  const int interpolationOrder = 3;
+  Waveform  waveform(interpolationOrder);
+  const int valuesSize = 1;
+
+  waveform.initialize(Eigen::VectorXd::Zero(valuesSize));
+
+  BOOST_TEST(fixture.valuesSize(waveform) == valuesSize);
+  BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 2);
+  BOOST_TEST(testing::equals(waveform.sample(0.00)(0), 0.00));
+  BOOST_TEST(testing::equals(waveform.sample(0.25)(0), 0.00));
+  BOOST_TEST(testing::equals(waveform.sample(0.50)(0), 0.00));
+  BOOST_TEST(testing::equals(waveform.sample(0.75)(0), 0.00));
+  BOOST_TEST(testing::equals(waveform.sample(1.00)(0), 0.00));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
