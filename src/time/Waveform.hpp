@@ -49,17 +49,11 @@ public:
   void initialize(const Eigen::VectorXd &values);
 
   /**
-   * @brief Updates first entry in _timeWindows with given value.
-   * @param values Sample at end of this time window
-   */
-  void store(const Eigen::VectorXd &values);
-
-  /**
    * @brief Updates an entry for dt in _timeWindows with given value.
    * @param values Sample at dt in this time window
    * @param normalizedDt normalizedDt associated with this value. Only allows values between 0 and 1. 0 refers to the beginning of the window and 1 to the end.
    */
-  void store(const Eigen::VectorXd &values, double normalizedDt);
+  void store(const Eigen::VectorXd &values, double normalizedDt = 1.0);
 
   /**
    * @brief Shifts all entries in _timeWindows. The new entry is initialized as the value from the last window (= constant extrapolation). Called when moving to the next time window.
@@ -77,9 +71,6 @@ public:
   Eigen::VectorXd sample(const double normalizedDt);
 
 private:
-  /// Set by initialize. Used for consistency checks.
-  bool _storageIsInitialized = false;
-
   /** @TODO Idea for more efficient data structure and redesign (do this when functionality is working and tested!)
    *   1. use Eigen::MatrixXd instead of map for _timeStepsStorage.
    *   2. create a member std::map<double, int> _timeSteps where (unique) time is mapped to column index of _timeStepsStorage that holds the corresponding sample. (Alternative: Use another Eigen::VectorXd to store times, but this enforces maintaining a consistent order for _timeSteps and _timeStepsStorage. This sounds complicated.)
@@ -90,16 +81,7 @@ private:
   /// interpolation order for this waveform
   const int _interpolationOrder;
 
-  /// number of stored samples in _timeStepsStorage
-  int _numberOfStoredSamples;
-
   mutable logging::Logger _log{"time::Waveform"};
-
-  /**
-   * @brief Get number of values per sample in time stored by this waveform.
-   * @return Number of values per sample.
-   */
-  int valuesSize();
 
   /**
    * @brief Get maximum dt that is stored in this waveform.
@@ -109,13 +91,6 @@ private:
    * @return the maximum dt from _timeStepsStorage
    */
   double maxStoredDt();
-
-  /**
-   * @brief Updates entry in _timeStepsStorage corresponding to a given sampleIndex with given values.
-   * @param values Input sample.
-   * @param dt dt associated with this value. Only allows values between 0 and 1. 0 refers to the beginning of the window and 1 to the end.
-   */
-  void storeAt(const Eigen::VectorXd values, double dt);
 
   /**
    * @brief Computes which order may be used for interpolation.

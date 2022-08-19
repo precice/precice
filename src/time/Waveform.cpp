@@ -13,7 +13,7 @@ Waveform::Waveform(
     const int interpolationOrder)
     : _interpolationOrder(interpolationOrder)
 {
-  PRECICE_ASSERT(not _storageIsInitialized);
+  PRECICE_ASSERT(_timeStepsStorage.size() == 0);
   PRECICE_ASSERT(Time::MIN_INTERPOLATION_ORDER <= _interpolationOrder && _interpolationOrder <= Time::MAX_INTERPOLATION_ORDER);
 }
 
@@ -29,25 +29,24 @@ void Waveform::initialize(const Eigen::VectorXd &values)
   PRECICE_ASSERT(_interpolationOrder >= Time::MIN_INTERPOLATION_ORDER);
   _timeStepsStorage[0.0] = Eigen::VectorXd(values);
   _timeStepsStorage[1.0] = Eigen::VectorXd(values);
-  _numberOfStoredSamples = 2; // the first sample is automatically initialized as zero and stored.
-  _storageIsInitialized  = true;
-  PRECICE_ASSERT(this->valuesSize() == values.size());
-}
-
-void Waveform::store(const Eigen::VectorXd &values)
-{
-  PRECICE_ASSERT(_storageIsInitialized);
-  double normalizedDtForEnd = 1.0; // use dt associated with end of window
-  this->store(values, normalizedDtForEnd);
 }
 
 void Waveform::store(const Eigen::VectorXd &values, double normalizedDt)
 {
-  PRECICE_ASSERT(_storageIsInitialized);
+  PRECICE_ASSERT(_timeStepsStorage.size() > 0);
   // dt has to be in interval (0.0, 1.0]
   PRECICE_ASSERT(normalizedDt > 0.0); // cannot override value at beginning of window. It is locked!
   PRECICE_ASSERT(normalizedDt <= 1.0);
-  this->storeAt(values, normalizedDt);
+
+  if (maxStoredDt() < 1.0) { // did not reach end of window yet, so dt has to strictly increase
+    PRECICE_ASSERT(normalizedDt > maxStoredDt());
+  } else {                                         // reached end of window and trying to write new data from next window. Clearing window first.
+    Eigen::VectorXd keep = _timeStepsStorage[0.0]; // we keep data at _timeStepsStorage[0.0]
+    _timeStepsStorage.clear();
+    _timeStepsStorage[0.0] = keep;
+  }
+  PRECICE_ASSERT(values.size() == _timeStepsStorage[0.0].size());
+  this->_timeStepsStorage[normalizedDt] = Eigen::VectorXd(values);
 }
 
 double Waveform::maxStoredDt()
@@ -62,22 +61,7 @@ double Waveform::maxStoredDt()
   return maxDt;
 }
 
-void Waveform::storeAt(const Eigen::VectorXd values, double dt)
-{
-  if (maxStoredDt() < 1.0) { // did not reach end of window yet, so dt has to strictly increase
-    PRECICE_ASSERT(dt > maxStoredDt());
-  } else {                                         // reached end of window and trying to write new data from next window. Clearing window first.
-    Eigen::VectorXd keep = _timeStepsStorage[0.0]; // we keep data at _timeStepsStorage[0.0]
-    _timeStepsStorage.clear();
-    _timeStepsStorage[0.0] = keep;
-    _numberOfStoredSamples = 1;
-  }
-  PRECICE_ASSERT(values.size() == this->valuesSize(), values.size(), this->valuesSize());
-  this->_timeStepsStorage[dt] = Eigen::VectorXd(values);
-  _numberOfStoredSamples++;
-}
-
-// helper function to compute x(t) from given data (x0,t0), (x1,t1), ..., (xn,tn) via third degree B-spline interpolation (implemented using Eigen). Alternatives are cubic spline interpolation (see https://en.wikipedia.org/wiki/Spline_interpolation#Algorithm_to_find_the_interpolating_cubic_spline), but this is not offered by Eigen or Boost.
+// helper function to compute x(t) from given data (x0,t0), (x1,t1), ..., (xn,tn) via B-spline interpolation (implemented using Eigen).
 Eigen::VectorXd bSplineInterpolationAt(double t, Eigen::VectorXd ts, Eigen::MatrixXd xs, int splineDegree)
 {
   // organize data in columns. Each column represents one sample in time.
@@ -98,11 +82,11 @@ Eigen::VectorXd bSplineInterpolationAt(double t, Eigen::VectorXd ts, Eigen::Matr
 
 Eigen::VectorXd Waveform::sample(double normalizedDt)
 {
-  PRECICE_ASSERT(_storageIsInitialized);
+  PRECICE_ASSERT(_timeStepsStorage.size() > 0);
   PRECICE_ASSERT(normalizedDt >= 0, "Sampling outside of valid range!");
   PRECICE_ASSERT(normalizedDt <= 1, "Sampling outside of valid range!");
 
-  const int usedOrder = computeUsedOrder(_interpolationOrder, _numberOfStoredSamples);
+  const int usedOrder = computeUsedOrder(_interpolationOrder, _timeStepsStorage.size());
 
   PRECICE_ASSERT(maxStoredDt() == 1.0); // sampling is only allowed, if a window is complete.
 
@@ -138,18 +122,11 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
 
 void Waveform::moveToNextWindow()
 {
-  PRECICE_ASSERT(_storageIsInitialized);
+  PRECICE_ASSERT(_timeStepsStorage.size() > 0);
   auto initialGuess = this->sample(1.0); // use value at end of window as initial guess for next
   _timeStepsStorage.clear();
   _timeStepsStorage[0.0] = Eigen::VectorXd(initialGuess);
   _timeStepsStorage[1.0] = Eigen::VectorXd(initialGuess); // initial guess is always constant extrapolation
-  _numberOfStoredSamples = 2;
-}
-
-int Waveform::valuesSize()
-{
-  PRECICE_ASSERT(_storageIsInitialized);
-  return _timeStepsStorage[0.0].size();
 }
 
 int Waveform::computeUsedOrder(int requestedOrder, int numberOfAvailableSamples)
