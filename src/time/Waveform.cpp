@@ -103,6 +103,12 @@ Eigen::VectorXd linearInterpolationAt(double t, double t0, double t1, Eigen::Vec
   return x1 * (t - t0) / dt + x0 * (t1 - t) / dt;
 }
 
+// helper function to compute x(t) from given data (x0,t0), (x1,t1), ..., (xn,tn) via cubic degree spline interpolation
+Eigen::VectorXd cubicSplineInterpolationAt(double t, std::vector<double> ts, std::vector<Eigen::VectorXd> xs)
+{
+  PRECICE_ASSERT(false);
+}
+
 Eigen::VectorXd Waveform::sample(double normalizedDt)
 {
   PRECICE_ASSERT(_storageIsInitialized);
@@ -133,12 +139,28 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
     }
     return interpolatedValue;
   }
-  PRECICE_ASSERT(usedOrder == 2);
-  // quadratic interpolation inside window: x(dt) = x^t * (dt^2 + dt)/2 + x^(t-1) * (1-dt^2)+ x^(t-2) * (dt^2-dt)/2
-  interpolatedValue = this->_timeStepsStorage[1.0] * (normalizedDt + 1) * normalizedDt * 0.5;
-  interpolatedValue += this->_timeStepsStorage[0.0] * (1 - normalizedDt * normalizedDt);
-  interpolatedValue += this->_timeStepsStorage[-1.0] * (normalizedDt - 1) * normalizedDt * 0.5;
-  return interpolatedValue;
+  if (usedOrder == 2) {
+    /** @TODO for quadratic interpolation there are several possibilities:
+     * 1. Use data from this window and last window. Then we do not need to consider any samples from subcycling
+     * 2. Use data from this window. Requires at least 2 substeps in window. Note: For 3 or more substeps we will directly apply cubic spline interpolation, because this is the natural choice and piecewise quadratic spline interpolation is very academic.
+     * 3. Use data from this window, but perform a least squares fit. If we don't do subcycling the system is underdetermined, if we do 2 substeps this option is identical to option 2. If we do 3 or more substeps we will get a least squares fit. Important: Might lead to discontinuities at the window boundary!
+     **/
+
+    bool usePastWindow = true;
+
+    // possibility 1
+    // quadratic interpolation inside window: x(dt) = x^t * (dt^2 + dt)/2 + x^(t-1) * (1-dt^2)+ x^(t-2) * (dt^2-dt)/2
+    if (usePastWindow) {
+      interpolatedValue = this->_timeStepsStorage[1.0] * (normalizedDt + 1) * normalizedDt * 0.5;
+      interpolatedValue += this->_timeStepsStorage[0.0] * (1 - normalizedDt * normalizedDt);
+      interpolatedValue += this->_timeStepsStorage[-1.0] * (normalizedDt - 1) * normalizedDt * 0.5;
+      return interpolatedValue;
+    } else {
+      PRECICE_ASSERT(false);
+    }
+  }
+  PRECICE_ASSERT(usedOrder == 3);
+  return cubicSplineInterpolationAt(normalizedDt, std::vector<double>(), std::vector<Eigen::VectorXd>());
 }
 
 void Waveform::moveToNextWindow()
