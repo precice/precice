@@ -102,20 +102,6 @@ private:
   int valuesSize();
 
   /**
-   * @brief Removes all data stored in _timeStepsStorage
-   *
-   * Used to clear time steps storage before a new window is entered or a window is repeated
-   *
-   */
-  void clearTimeStepsStorage();
-
-  /**
-   * @brief Get maximum number of samples in time this waveform can store.
-   * @return Maximum number of samples.
-   */
-  int maxNumberOfStoredWindows();
-
-  /**
    * @brief Get maximum dt that is stored in this waveform.
    *
    * Used to check whether a user is trying to add a sample associated with a dt that is smaller than the maximum dt. This is forbidden, because the waveform is locked for times that are smaller than the maximum dt.

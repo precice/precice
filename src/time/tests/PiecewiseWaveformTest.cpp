@@ -188,65 +188,80 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataThirdOrder)
 
   // linearly increasing values
   Eigen::VectorXd value(1);
-  for(double t : std::vector<double>{0.25, 0.5, 0.75, 1}) {
+  for (double t : std::vector<double>{0.25, 0.5, 0.75, 1}) {
     value(0) = t;
     waveform.store(value, t);
   }
 
-  for(double t: std::vector<double>{0.1,0.2,0.3,0.5,0.6,0.7,0.8,0.9,1.0}) {
+  BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 5);
+
+  for (double t : std::vector<double>{0.1, 0.2, 0.3, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0}) {
     BOOST_TEST(testing::equals(waveform.sample(t)(0), t));
   }
 
   // quadratically increasing values
-  for(double t : std::vector<double>{0.25, 0.5, 0.75, 1}) {
-    value(0) = t*t;
+  for (double t : std::vector<double>{0.25, 0.5, 0.75, 1}) {
+    value(0) = t * t;
     waveform.store(value, t);
   }
 
   // interpolates given values
-  for(double t : std::vector<double>{0.25, 0.5, 0.75, 1}) {
-    BOOST_TEST(testing::equals(waveform.sample(t)(0), t*t));
+  for (double t : std::vector<double>{0.25, 0.5, 0.75, 1}) {
+    BOOST_TEST(testing::equals(waveform.sample(t)(0), t * t));
   }
 
-  // introduces approximation error w.r.t function
-  // @TODO: Potential optimization. Use a different parametrization. E.g. chord length? Should try to minimize error.
-  for(double t: std::vector<double>{0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0}) {
-    BOOST_TEST(testing::equals(waveform.sample(t)(0), t*t));
+  // introduces no approximation error w.r.t function
+  for (double t : std::vector<double>{0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0}) {
+    BOOST_TEST(testing::equals(waveform.sample(t)(0), t * t));
   }
 
   // cubically increasing values
-  for(double t : std::vector<double>{0.25, 0.5, 0.75, 1}) {
-    value(0) = t*t*t;
+  for (double t : std::vector<double>{0.25, 0.5, 0.75, 1}) {
+    value(0) = t * t * t;
     waveform.store(value, t);
   }
 
   // interpolates given values
-  for(double t : std::vector<double>{0.25, 0.5, 0.75, 1}) {
-    BOOST_TEST(testing::equals(waveform.sample(t)(0), t*t*t));
+  for (double t : std::vector<double>{0.25, 0.5, 0.75, 1}) {
+    BOOST_TEST(testing::equals(waveform.sample(t)(0), t * t * t));
   }
 
-  // introduces approximation error w.r.t function
-  for(double t: std::vector<double>{0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0}) {
-    BOOST_TEST(testing::equals(waveform.sample(t)(0), t*t*t));
+  // introduces no approximation error w.r.t function
+  for (double t : std::vector<double>{0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0}) {
+    BOOST_TEST(testing::equals(waveform.sample(t)(0), t * t * t));
   }
 
   // cubically increasing values, but with non-uniform spacing
-  for(double t : std::vector<double>{0.01, 0.1, 0.2, 1}) {
-    value(0) = t*t*t;
+  for (double t : std::vector<double>{0.01, 0.1, 0.2, 1}) {
+    value(0) = t * t * t;
     waveform.store(value, t);
   }
 
   // interpolates given values
-  for(double t : std::vector<double>{0.01, 0.1, 0.2, 1}) {
-    BOOST_TEST(testing::equals(waveform.sample(t)(0), t*t*t));
+  for (double t : std::vector<double>{0.01, 0.1, 0.2, 1}) {
+    BOOST_TEST(testing::equals(waveform.sample(t)(0), t * t * t));
+  }
+
+  // introduces no approximation error w.r.t function
+  for (double t : std::vector<double>{0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0}) {
+    BOOST_TEST(testing::equals(waveform.sample(t)(0), t * t * t));
+  }
+
+  // quartically increasing values, but with non-uniform spacing
+  for (double t : std::vector<double>{0.25, 0.5, 0.75, 1}) {
+    value(0) = t * t * t * t;
+    waveform.store(value, t);
+  }
+
+  // interpolates given values
+  for (double t : std::vector<double>{0.25, 0.5, 0.75, 1}) {
+    BOOST_TEST(testing::equals(waveform.sample(t)(0), t * t * t * t));
   }
 
   // introduces approximation error w.r.t function
-  for(double t: std::vector<double>{0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0}) {
-    // 0.885212!=0.729 @ t = 0.9 without given knots (and sometimes not even interpolating above); looks like this is equal to method (3) with chord length parametrization.
-    // 0.8760!=0.729 @ t = 0.9 with knots (w.r.t ts; method (1))
-    // 0.6032!=0.729 @ t = 0.9 with knots (w.r.t uniform; method (2))
-    BOOST_TEST(testing::equals(waveform.sample(t)(0), t*t*t));
+  for (double t : std::vector<double>{0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0}) {
+    double tol = 0.015625; // error < h**3 = 0.015625
+    BOOST_TEST(testing::equals(waveform.sample(t)(0), t * t * t * t, tol));
   }
 }
 

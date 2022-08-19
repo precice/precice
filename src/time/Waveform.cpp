@@ -1,12 +1,10 @@
 #include "time/Waveform.hpp"
 #include <algorithm>
+#include <eigen3/unsupported/Eigen/Splines>
 #include "cplscheme/CouplingScheme.hpp"
 #include "logging/LogMacros.hpp"
 #include "time/Time.hpp"
 #include "utils/EigenHelperFunctions.hpp"
-
-#include <eigen3/unsupported/Eigen/Splines>
-#include <cmath>
 
 namespace precice {
 namespace time {
@@ -52,28 +50,6 @@ void Waveform::store(const Eigen::VectorXd &values, double normalizedDt)
   this->storeAt(values, normalizedDt);
 }
 
-void Waveform::clearTimeStepsStorage()
-{
-  // see https://stackoverflow.com/a/8234813, erase elements from map we are iterating over
-  for (auto timeStep = _timeStepsStorage.begin(); timeStep != _timeStepsStorage.end();) {
-    if (timeStep->first > 0.0) {
-      timeStep = _timeStepsStorage.erase(timeStep);
-    } else {
-      ++timeStep;
-    }
-  }
-}
-
-int Waveform::maxNumberOfStoredWindows()
-{
-  PRECICE_ASSERT(_storageIsInitialized);
-  if (_interpolationOrder > 0) {
-    return _interpolationOrder;
-  } else { // also for zeroth order interpolation we store one window (this window)
-    return 1;
-  }
-}
-
 double Waveform::maxStoredDt()
 {
   double maxDt = -1;
@@ -90,80 +66,43 @@ void Waveform::storeAt(const Eigen::VectorXd values, double dt)
 {
   if (maxStoredDt() < 1.0) { // did not reach end of window yet, so dt has to strictly increase
     PRECICE_ASSERT(dt > maxStoredDt());
-  } else {                                // reached end of window and trying to write new data from next window. Clearing window first.
-    auto startValues = this->sample(0.0); // use value at beginning of this window (= end of last window)
-    this->clearTimeStepsStorage();        // clear storage for data with dt > 0.0 before redoing this window
+  } else {                                         // reached end of window and trying to write new data from next window. Clearing window first.
+    Eigen::VectorXd keep = _timeStepsStorage[0.0]; // we keep data at _timeStepsStorage[0.0]
+    _timeStepsStorage.clear();
+    _timeStepsStorage[0.0] = keep;
+    _numberOfStoredSamples = 1;
   }
   PRECICE_ASSERT(values.size() == this->valuesSize(), values.size(), this->valuesSize());
   this->_timeStepsStorage[dt] = Eigen::VectorXd(values);
+  _numberOfStoredSamples++;
 }
 
 // helper function to compute x(t) from given data (x0,t0), (x1,t1), ..., (xn,tn) via third degree B-spline interpolation (implemented using Eigen). Alternatives are cubic spline interpolation (see https://en.wikipedia.org/wiki/Spline_interpolation#Algorithm_to_find_the_interpolating_cubic_spline), but this is not offered by Eigen or Boost.
 Eigen::VectorXd bSplineInterpolationAt(double t, Eigen::VectorXd ts, Eigen::MatrixXd xs, int splineDegree)
 {
-  std::cout << "use degree:" << splineDegree << std::endl;
   // organize data in columns. Each column represents one sample in time.
   PRECICE_ASSERT(xs.cols() == ts.size());
   const int ndofs = xs.rows(); // number of dofs. Each dof needs it's own interpolant.
 
   Eigen::VectorXd interpolated(ndofs);
 
-
+  // need to provide 2d coordinates (t,x) to make all points unique (0,0,1) is forbidden ((0,0), (0.5,0), (1,1)) is allowed
   const int splineDimension = 2;
-
   for (int i = 0; i < ndofs; i++) {
-    // need to provide 2d coordinates (t,x) to make all points unique (0,0,1) is forbidden ((0,0), (0.5,0), (1,1)) is allowed
     Eigen::MatrixXd data(2, xs.cols());
-
-    int method = 1;
-    // only needed for method (3)
-    Eigen::VectorXd chordLength(xs.cols()-1);
-    double chordLengthSum = 0;
-
     for (int j = 0; j < xs.cols(); j++) {
       data.row(0)[j] = ts[j];
       data.row(1)[j] = xs.row(i)[j];
-      if(method == 3) {
-        if(j>0){
-          double dts = ts[j]-ts[j-1];
-          double dxs = xs.row(i)[j] - xs.row(i)[j-1];
-          chordLength[j-1] = sqrt(dts*dts + dxs*dxs);
-          chordLengthSum += chordLength[j-1];
-        }
-      }
     }
-
     // create know vector
     Eigen::VectorXd knots(ts.size());
     double          tmin = ts[0];
     double          tmax = ts[ts.size() - 1];
     for (int j = 0; j < xs.cols(); j++) {
-      if(method == 1) {
-        knots[j] = (ts[j] - tmin) / (tmax - tmin); // scale knots to interval [0,1]. Use ts as reference point.
-      }
-      if(method == 2) {  // uniform (see https://pages.mtu.edu/%7Eshene/COURSES/cs3621/NOTES/INT-APP/PARA-uniform.html)
-        knots[j] = ((double)j)/(xs.cols()-1);
-      }
-      if(method == 3) {  //  chord length (see https://pages.mtu.edu/%7Eshene/COURSES/cs3621/NOTES/INT-APP/PARA-chord-length.html)
-        if (j==0) {
-          knots[j] = 0;
-        } else if (j==xs.cols()-1) {
-          knots[j] = 1;
-        } else {
-          knots[j] = 0;
-        }
-        for (int k = 0; k < j; k++) {
-          knots[j] += chordLength[k];
-        }
-        knots[j] /= chordLengthSum;
-      }
+      knots[j] = (ts[j] - tmin) / (tmax - tmin); // scale knots to interval [0,1]. Use ts as reference point.
     }
-
     double tScaled  = (t - tmin) / (tmax - tmin); // scale sampling time to interval [0,1];
     auto   spline   = Eigen::SplineFitting<Eigen::Spline<double, splineDimension>>::Interpolate(data, splineDegree, knots);
-
-    std::cout << "(t,x) = (" << spline(tScaled)[0] << "," << spline(tScaled)[1] << ")" << std::endl;
-
     interpolated[i] = spline(tScaled)[1]; // get component of spline associated with xs.row(i)
   }
 
@@ -196,12 +135,8 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
    * 3. Use data from this window, but perform a least squares fit. If we don't do subcycling the system is underdetermined, if we do 2 substeps this option is identical to option 2. If we do 3 or more substeps we will get a least squares fit. Important: Might lead to discontinuities at the window boundary!
    **/
 
-  bool   usePastWindow = true;
-  double low           = 0.0;
-  double high          = 1.0;
-  if (usePastWindow) { // this just helps us to use quadratic interpolation without subcycling, as well. Use-Case unclear.
-    low = -1.0;  // If we remove this, we can also assume that all our samples live on t in [0,1]. This simplifies the knot vector in the BSpline.
-  }
+  double          low      = 0.0;
+  double          high     = 1.0;
   auto            timesVec = getTimesAscending(low, high);
   Eigen::VectorXd timesAscending(timesVec.size());
   Eigen::MatrixXd dataAscending(this->_timeStepsStorage[0.0].size(), timesVec.size());
@@ -216,17 +151,11 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
 void Waveform::moveToNextWindow()
 {
   PRECICE_ASSERT(_storageIsInitialized);
-  PRECICE_ASSERT(maxNumberOfStoredWindows() <= 2); // other options are currently not implemented or supported.
-
-  if (maxNumberOfStoredWindows() == 2) {
-    _numberOfStoredSamples = 3;
-    // @TODO do we really want to store values from old windows? Use-case unclear and initialization difficult.
-    this->_timeStepsStorage[-1.0] = Eigen::VectorXd(this->_timeStepsStorage[0.0]); // store values from past windows
-  }
   auto initialGuess = this->sample(1.0); // use value at end of window as initial guess for next
-  this->clearTimeStepsStorage();         // clear storage before entering next window
+  _timeStepsStorage.clear();
   _timeStepsStorage[0.0] = Eigen::VectorXd(initialGuess);
   _timeStepsStorage[1.0] = Eigen::VectorXd(initialGuess); // initial guess is always constant extrapolation
+  _numberOfStoredSamples = 2;
 }
 
 int Waveform::valuesSize()
@@ -237,36 +166,18 @@ int Waveform::valuesSize()
 
 int Waveform::computeUsedOrder(int requestedOrder, int numberOfAvailableSamples)
 {
-  // @todo simplify?
   int usedOrder = -1;
-  if (requestedOrder == 0) {
+  PRECICE_ASSERT(requestedOrder <= 3);
+  if (requestedOrder == 0 || numberOfAvailableSamples < 2) {
     usedOrder = 0;
-  } else if (requestedOrder == 1) {
-    if (numberOfAvailableSamples < 2) {
-      usedOrder = 0;
-    } else {
-      usedOrder = 1;
-    }
-  } else if (requestedOrder == 2) {
-    if (numberOfAvailableSamples < 2) {
-      usedOrder = 0;
-    } else if (numberOfAvailableSamples < 3) {
-      usedOrder = 1;
-    } else {
-      usedOrder = 2;
-    }
-  } else if (requestedOrder == 3) {
-    if (numberOfAvailableSamples < 2) {
-      usedOrder = 0;
-    } else if (numberOfAvailableSamples < 3) {
-      usedOrder = 1;
-    } else if (numberOfAvailableSamples < 4) {
-      usedOrder = 2;
-    } else {
-      usedOrder = 3;
-    }
+  } else if (requestedOrder == 1 || numberOfAvailableSamples < 3) {
+    usedOrder = 1;
+  } else if (requestedOrder == 2 || numberOfAvailableSamples < 4) {
+    usedOrder = 2;
+  } else if (requestedOrder == 3 || numberOfAvailableSamples < 5) {
+    usedOrder = 3;
   } else {
-    PRECICE_ASSERT(false);
+    PRECICE_ASSERT(false); // not supported
   }
   return usedOrder;
 }
