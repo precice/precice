@@ -6,6 +6,7 @@
 #include "utils/EigenHelperFunctions.hpp"
 
 #include <eigen3/unsupported/Eigen/Splines>
+#include <cmath>
 
 namespace precice {
 namespace time {
@@ -97,31 +98,39 @@ void Waveform::storeAt(const Eigen::VectorXd values, double dt)
   this->_timeStepsStorage[dt] = Eigen::VectorXd(values);
 }
 
-// helper function to compute x(t) from given (x0,t0) and (x1,t1) via linear interpolation
-Eigen::VectorXd linearInterpolationAt(double t, double t0, double t1, Eigen::VectorXd x0, Eigen::VectorXd x1)
-{
-  double dt = t1 - t0;
-  PRECICE_ASSERT(dt > 0);
-  return x1 * (t - t0) / dt + x0 * (t1 - t) / dt;
-}
-
 // helper function to compute x(t) from given data (x0,t0), (x1,t1), ..., (xn,tn) via third degree B-spline interpolation (implemented using Eigen). Alternatives are cubic spline interpolation (see https://en.wikipedia.org/wiki/Spline_interpolation#Algorithm_to_find_the_interpolating_cubic_spline), but this is not offered by Eigen or Boost.
 Eigen::VectorXd bSplineInterpolationAt(double t, Eigen::VectorXd ts, Eigen::MatrixXd xs, int splineDegree)
 {
+  std::cout << "use degree:" << splineDegree << std::endl;
   // organize data in columns. Each column represents one sample in time.
   PRECICE_ASSERT(xs.cols() == ts.size());
   const int ndofs = xs.rows(); // number of dofs. Each dof needs it's own interpolant.
 
   Eigen::VectorXd interpolated(ndofs);
 
+
   const int splineDimension = 2;
 
   for (int i = 0; i < ndofs; i++) {
     // need to provide 2d coordinates (t,x) to make all points unique (0,0,1) is forbidden ((0,0), (0.5,0), (1,1)) is allowed
     Eigen::MatrixXd data(2, xs.cols());
+
+    int method = 1;
+    // only needed for method (3)
+    Eigen::VectorXd chordLength(xs.cols()-1);
+    double chordLengthSum = 0;
+
     for (int j = 0; j < xs.cols(); j++) {
-      data.row(0)[j] = ts[j] + 1;
+      data.row(0)[j] = ts[j];
       data.row(1)[j] = xs.row(i)[j];
+      if(method == 3) {
+        if(j>0){
+          double dts = ts[j]-ts[j-1];
+          double dxs = xs.row(i)[j] - xs.row(i)[j-1];
+          chordLength[j-1] = sqrt(dts*dts + dxs*dxs);
+          chordLengthSum += chordLength[j-1];
+        }
+      }
     }
 
     // create know vector
@@ -129,11 +138,32 @@ Eigen::VectorXd bSplineInterpolationAt(double t, Eigen::VectorXd ts, Eigen::Matr
     double          tmin = ts[0];
     double          tmax = ts[ts.size() - 1];
     for (int j = 0; j < xs.cols(); j++) {
-      knots[j] = (ts[j] - tmin) / (tmax - tmin); // scale knots to interval [0,1];
+      if(method == 1) {
+        knots[j] = (ts[j] - tmin) / (tmax - tmin); // scale knots to interval [0,1]. Use ts as reference point.
+      }
+      if(method == 2) {  // uniform (see https://pages.mtu.edu/%7Eshene/COURSES/cs3621/NOTES/INT-APP/PARA-uniform.html)
+        knots[j] = ((double)j)/(xs.cols()-1);
+      }
+      if(method == 3) {  //  chord length (see https://pages.mtu.edu/%7Eshene/COURSES/cs3621/NOTES/INT-APP/PARA-chord-length.html)
+        if (j==0) {
+          knots[j] = 0;
+        } else if (j==xs.cols()-1) {
+          knots[j] = 1;
+        } else {
+          knots[j] = 0;
+        }
+        for (int k = 0; k < j; k++) {
+          knots[j] += chordLength[k];
+        }
+        knots[j] /= chordLengthSum;
+      }
     }
 
     double tScaled  = (t - tmin) / (tmax - tmin); // scale sampling time to interval [0,1];
     auto   spline   = Eigen::SplineFitting<Eigen::Spline<double, splineDimension>>::Interpolate(data, splineDegree, knots);
+
+    std::cout << "(t,x) = (" << spline(tScaled)[0] << "," << spline(tScaled)[1] << ")" << std::endl;
+
     interpolated[i] = spline(tScaled)[1]; // get component of spline associated with xs.row(i)
   }
 
@@ -150,27 +180,15 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
 
   PRECICE_ASSERT(maxStoredDt() == 1.0); // sampling is only allowed, if a window is complete.
 
-  // @TODO do we need to explicitly differentiate between piecewise and non-piecewise interplation below?
-  if (usedOrder == 0) {
+  // @TODO: Improve efficiency: Check whether key = normalizedDt is in _timeStepsStorage. If yes, just get value and return. No need for interpolation.
+
+  if (_interpolationOrder == 0) {
     // constant interpolation = just use sample at the end of the window: x(dt) = x^t
     // At beginning of window use result from last window x(0) = x^(t-1)
     return Eigen::VectorXd(this->_timeStepsStorage[findTimeAfter(normalizedDt)]);
   }
-  Eigen::VectorXd interpolatedValue;
-  if (usedOrder == 1) {
-    // linear interpolation inside window: x(dt) = dt * x^t + (1-dt) * x^(t-1)
-    PRECICE_ASSERT(_numberOfStoredSamples > 1);
-    double piecewiseT0 = findTimeBefore(normalizedDt);
-    double piecewiseT1 = findTimeAfter(normalizedDt);
-    if ((piecewiseT0 == normalizedDt) && (piecewiseT1 == normalizedDt)) { // no need for interpolation, sample directly from _timeStepsStorage
-      // @TODO: Simpler implementation: Check in _timeStepsStorage for key normalizedDt, if it exists: Sample.
-      // @TODO: Move this branch up all the way: as long as we don't do fitting this strategy is always good: If key exists, just use the value and don't interpolate.
-      interpolatedValue = _timeStepsStorage[normalizedDt];
-    } else {
-      interpolatedValue = linearInterpolationAt(normalizedDt, piecewiseT0, piecewiseT1, this->_timeStepsStorage[piecewiseT0], this->_timeStepsStorage[piecewiseT1]);
-    }
-    return interpolatedValue;
-  }
+
+  PRECICE_ASSERT(usedOrder >= 1);
 
   /** @TODO for quadratic interpolation there are several possibilities:
    * 1. Use data from this window and last window. Then we do not need to consider any samples from subcycling
@@ -182,7 +200,7 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
   double low           = 0.0;
   double high          = 1.0;
   if (usePastWindow) { // this just helps us to use quadratic interpolation without subcycling, as well. Use-Case unclear.
-    low = -1.0;
+    low = -1.0;  // If we remove this, we can also assume that all our samples live on t in [0,1]. This simplifies the knot vector in the BSpline.
   }
   auto            timesVec = getTimesAscending(low, high);
   Eigen::VectorXd timesAscending(timesVec.size());
@@ -192,8 +210,6 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
     timesAscending[i]    = timesVec[i];
     dataAscending.col(i) = this->_timeStepsStorage[timesVec[i]];
   }
-
-  PRECICE_ASSERT(usedOrder >= 2);
   return bSplineInterpolationAt(normalizedDt, timesAscending, dataAscending, usedOrder);
 }
 
@@ -271,23 +287,6 @@ std::vector<double> Waveform::getTimesAscending(double low, double high)
   timesFiltered.clear();
   std::sort(times.begin(), times.end()); // sort vector
   return times;
-}
-
-// @todo improve efficiency by using some ordered list to store times.
-double Waveform::findTimeBefore(double normalizedDt)
-{
-  PRECICE_ASSERT(0.0 <= normalizedDt);
-  PRECICE_ASSERT(normalizedDt <= 1.0);
-
-  double timeBefore = 0.0;
-
-  for (auto timeStep : _timeStepsStorage) {
-    if (timeBefore <= timeStep.first && timeStep.first <= normalizedDt) { // current timeStep is before normalizedDt and later than current timeBefore
-      timeBefore = timeStep.first;
-    }
-  }
-
-  return timeBefore;
 }
 
 // @todo improve efficiency by using some ordered list to store times.
