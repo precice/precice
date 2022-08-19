@@ -165,6 +165,42 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataFirstOrder)
   BOOST_TEST(testing::equals(waveform.sample(1.00)(0), 4.00));
 }
 
+BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataSecondOrder)
+{
+  PRECICE_TEST(1_rank);
+
+  testing::WaveformFixture fixture;
+
+  // Test zeroth order interpolation
+  const int interpolationOrder = 2;
+  Waveform  waveform(interpolationOrder);
+  const int valuesSize = 1;
+
+  waveform.initialize(Eigen::VectorXd::Zero(valuesSize));
+
+  BOOST_TEST(fixture.valuesSize(waveform) == valuesSize);
+  BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 2);
+  BOOST_TEST(testing::equals(waveform.sample(0.00)(0), 0.00));
+  BOOST_TEST(testing::equals(waveform.sample(0.25)(0), 0.00));
+  BOOST_TEST(testing::equals(waveform.sample(0.50)(0), 0.00));
+  BOOST_TEST(testing::equals(waveform.sample(0.75)(0), 0.00));
+  BOOST_TEST(testing::equals(waveform.sample(1.00)(0), 0.00));
+
+  Eigen::VectorXd value(1);
+  value(0) = 0;
+  waveform.store(value, 0.5);
+
+  value(0) = 2;
+  waveform.store(value, 1.0);
+
+  BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 3);
+  BOOST_TEST(testing::equals(waveform.sample(0.00)(0), 0.00));
+  BOOST_TEST(testing::equals(waveform.sample(0.25)(0), -0.25));
+  BOOST_TEST(testing::equals(waveform.sample(0.50)(0), 0.00));
+  BOOST_TEST(testing::equals(waveform.sample(0.75)(0), 0.75));
+  BOOST_TEST(testing::equals(waveform.sample(1.00)(0), 2.00));
+}
+
 BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataThirdOrder)
 {
   PRECICE_TEST(1_rank);

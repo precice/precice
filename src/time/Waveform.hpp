@@ -130,14 +130,6 @@ private:
   int computeUsedOrder(int requestedOrder, int numberOfAvailableSamples);
 
   /**
-   * @brief Returns point the closest time stored in _timeStepsStorage that is before normalizedDt
-   *
-   * @param normalizedDt point in time
-   * @return double point in time before normalizedDt in _timeStepsStorage
-   */
-  double findTimeBefore(double normalizedDt);
-
-  /**
    * @brief Returns point the closest time stored in _timeStepsStorage that is after normalizedDt
    *
    * @param normalizedDt point in time
@@ -148,11 +140,9 @@ private:
   /**
    * @brief Get keys of _timeStepsStorage in ascending order. Starting from low to high.
    *
-   * @param low lower bound.
-   * @param high upper bound.
-   * @return std::vector<double>
+   * @return Eigen::VectorXd
    */
-  std::vector<double> getTimesAscending(double low, double high);
+  Eigen::VectorXd getTimesAscending();
 };
 
 } // namespace time
