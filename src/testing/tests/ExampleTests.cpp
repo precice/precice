@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(TwoProcTestsWithPETSc)
  * where each participant uses it own communicator, i.e. each participant should not see that he is
  * part of a test.
  * In this case, you can simply create the participants and create a solverinterface.
- * The context-object is of type TestContext and provides access to the name of the current context and the rank and size of its communicator.  
+ * The context-object is of type TestContext and provides access to the name of the current context and the rank and size of its communicator.
  */
 BOOST_AUTO_TEST_CASE(IntegrationTestsWithTwoParticipants)
 {

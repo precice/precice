@@ -12,7 +12,7 @@ In order to get your contributions into the code base as smoothly as possible, p
 * Create a feature branch, based on `develop`, from where you want to base your work. For simplicity, prefix the branch name either with `add-` or `fix-`.
 * Make commits of logical units.  
   Write [good commit messages][commit].
-  Check for unnecessary whitespace with `git diff --check` before committing. 
+  Check for unnecessary whitespace with `git diff --check` before committing.
 * Write tests to assure your feature works as expected and prevent it from getting broken in the future.  
   See our example tests in `src/testing/tests/ExampleTests.cpp` and the [documentation of boost.test][boosttest] for more information.
 * Run _all_ the tests to assure nothing else accidentally broke.

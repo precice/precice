@@ -5,7 +5,7 @@
 namespace precice {
 namespace mesh {
 /** random-access iterator over an indexable Source.
- * 
+ *
  * @tparam Source the underlying container to index into
  * @tparam Value the resulting value
  *

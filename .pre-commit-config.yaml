@@ -12,6 +12,9 @@ repos:
   - id: check-xml
   - id: check-merge-conflict
   - id: mixed-line-ending
+  - id: trailing-whitespace
+    args: [--markdown-linebreak-ext=md]
+  - id: end-of-file-fixer
 # Custom repo for the preCICE configuration formatter
 - repo: https://github.com/precice/precice-pre-commit-hooks
   rev: 'v2.1'

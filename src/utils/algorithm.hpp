@@ -48,9 +48,9 @@ bool unique_elements(const Container &c, BinaryPredicate p = {})
 }
 
 /** intersperse a the range [first, last[ with a given element.
- * 
+ *
  * This results in a range [first, elem, first+1, elem, ... , elem, last[
- * 
+ *
  * \tparam InputIter the type of the input iterators
  * \tparam ElemT the type of the element to intersperse
  */

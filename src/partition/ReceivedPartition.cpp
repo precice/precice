@@ -519,12 +519,12 @@ void ReceivedPartition::createOwnerInformation()
   if (m2n().usesTwoLevelInitialization()) {
     /*
     This function ensures that each vertex is owned by only a single rank and
-    is not shared among ranks. Initially, the vertices are checked against the 
-    bounding box of each rank. If a vertex fits into only a single bounding box, 
-    the vertex is assigned to that rank. If it fits to various bbs, the rank with the 
-    lowest number of vertices gets ownership to keep the load as balanced as 
-    possible. 
-    
+    is not shared among ranks. Initially, the vertices are checked against the
+    bounding box of each rank. If a vertex fits into only a single bounding box,
+    the vertex is assigned to that rank. If it fits to various bbs, the rank with the
+    lowest number of vertices gets ownership to keep the load as balanced as
+    possible.
+
     Following steps are taken:
 
     1- receive local bb map from primary rank
@@ -676,7 +676,7 @@ void ReceivedPartition::createOwnerInformation()
     // #5: Second round assignment according to the number of owned vertices
 
     /* In case that a vertex can be shared between two ranks, the rank with lower
-       vertex count will own the vertex. 
+       vertex count will own the vertex.
        If both ranks have same vertex count, the lower rank will own the vertex.
     */
 

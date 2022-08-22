@@ -93,7 +93,7 @@ install(FILES tools/releasing/packaging/debian/copyright
 
 # Install lintian override
 file(WRITE "${PRECICE_PACKAGING_DIR}/lintian-override" "${CPACK_PACKAGE_NAME} binary: non-dev-pkg-with-shlib-symlink")
-install(FILES "${PRECICE_PACKAGING_DIR}/lintian-override" 
+install(FILES "${PRECICE_PACKAGING_DIR}/lintian-override"
   DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/lintian/overrides
   RENAME ${CPACK_PACKAGE_NAME}
   )

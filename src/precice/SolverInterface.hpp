@@ -522,7 +522,7 @@ public:
 
   /**
    * @brief Set tetrahedron in 3D mesh from vertex ID
-   * 
+   *
    * @param[in] meshID ID of the mesh to add the Tetrahedron to
    * @param[in] firstVertexID ID of the first vertex of the Tetrahedron
    * @param[in] secondVertexID ID of the second vertex of the Tetrahedron
