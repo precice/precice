@@ -32,4 +32,3 @@ def postAction():
     global mySourceData # Make global data set in performAction visible
     global myTargetData
     # Do something ...
-
