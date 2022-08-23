@@ -152,7 +152,7 @@ void BackendConfiguration::setOption(std::string key, std::string value)
 
 void setupLogging(LoggingConfiguration configs, bool enabled)
 {
-  if (_precice_logging_config_lock)
+  if (getGlobalLoggingConfig().locked)
     return;
 
   namespace bl = boost::log;
@@ -172,16 +172,24 @@ void setupLogging(LoggingConfiguration configs, bool enabled)
       << bl::expressions::attr<std::string>("Function") << ": "
       << bl::expressions::message;
 
-  // Reset
-  bl::core::get()->remove_all_sinks();
-  bl::core::get()->reset_filter();
+  // Remove active sinks
+  using sink_t   = typename boost::log::sinks::synchronous_sink<StreamBackend>;
+  using sink_ptr = typename boost::shared_ptr<sink_t>;
 
-  bl::core::get()->set_logging_enabled(enabled);
+  static std::vector<sink_ptr> activeSinks;
+  //remove active sinks
+  for (auto &sink : activeSinks) {
+    boost::log::core::get()->remove_sink(sink);
+    sink->flush();
+    sink.reset();
+  }
+  activeSinks.clear();
 
   // Add the default config
   if (configs.empty())
     configs.emplace_back();
 
+  // Create new sinks
   for (const auto &config : configs) {
     boost::shared_ptr<StreamBackend> backend;
     if (config.type == "file")
@@ -194,11 +202,12 @@ void setupLogging(LoggingConfiguration configs, bool enabled)
     }
     PRECICE_ASSERT(backend != nullptr, "The logging backend was not initialized properly. Check your log config.");
     backend->auto_flush(true);
-    using sink_t = boost::log::sinks::synchronous_sink<StreamBackend>;
     boost::shared_ptr<sink_t> sink(new sink_t(backend));
     sink->set_formatter(boost::log::parse_formatter(config.format));
-    sink->set_filter(boost::log::parse_filter(config.filter));
+    // We extend the filter here to remove all log entries not originating from preCICE.
+    sink->set_filter(boost::log::parse_filter("( " + config.filter + " ) and %preCICE%"));
     boost::log::core::get()->add_sink(sink);
+    activeSinks.emplace_back(std::move(sink));
   }
 }
 
@@ -209,19 +218,23 @@ void setupLogging(std::string const &logConfigFile)
 
 void setMPIRank(int const rank)
 {
-  boost::log::attribute_cast<boost::log::attributes::mutable_constant<int>>(boost::log::core::get()->get_global_attributes()["Rank"]).set(rank);
+  getGlobalLoggingConfig().rank = rank;
 }
 
 void setParticipant(std::string const &participant)
 {
-  boost::log::attribute_cast<boost::log::attributes::mutable_constant<std::string>>(boost::log::core::get()->get_global_attributes()["Participant"]).set(participant);
+  getGlobalLoggingConfig().participant = participant;
 }
 
-bool _precice_logging_config_lock{false};
+GlobalLoggingConfig &getGlobalLoggingConfig()
+{
+  static GlobalLoggingConfig instance;
+  return instance;
+}
 
 void lockConf()
 {
-  _precice_logging_config_lock = true;
+  getGlobalLoggingConfig().locked = true;
 }
 
 } // namespace precice::logging
