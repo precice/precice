@@ -177,6 +177,7 @@ void setupLogging(LoggingConfiguration configs, bool enabled)
   using sink_ptr = typename boost::shared_ptr<sink_t>;
 
   static std::vector<sink_ptr> activeSinks;
+
   //remove active sinks
   for (auto &sink : activeSinks) {
     boost::log::core::get()->remove_sink(sink);
@@ -185,9 +186,15 @@ void setupLogging(LoggingConfiguration configs, bool enabled)
   }
   activeSinks.clear();
 
+  // If logging sinks are disabled, then we are done
+  if (!enabled) {
+    return;
+  }
+
   // Add the default config
-  if (configs.empty())
+  if (configs.empty()) {
     configs.emplace_back();
+  }
 
   // Create new sinks
   for (const auto &config : configs) {
