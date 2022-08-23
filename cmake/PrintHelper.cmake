@@ -41,7 +41,7 @@ endfunction(print_section)
 
 # Prints a fixed set of general cmake configuration variables and additional variables
 # invoke: to print the configuration only
-#         print_configuration() 
+#         print_configuration()
 # invoke: to print additional variables
 #         print_configuration(ADDITIONAL "VAR1:DESC1" "VAR2:DESC2")
 function(print_configuration)

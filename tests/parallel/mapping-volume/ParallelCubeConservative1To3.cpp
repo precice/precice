@@ -68,8 +68,8 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative1To3)
 
     std::vector<double> coords;
 
-    /* 
-    Let the cube be ABCDEFGH with A in 0,0,0, B in 1,0,0, C in 1,1,0, D in 0,1,0 
+    /*
+    Let the cube be ABCDEFGH with A in 0,0,0, B in 1,0,0, C in 1,1,0, D in 0,1,0
     and the rest similar but with z=1.
     Each rank consists of a pentahedron made of 2 tetra each. All contain A and G
     Rank 0 owns ADEGH

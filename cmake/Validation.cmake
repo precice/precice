@@ -5,14 +5,14 @@
 # a minimalisitic exectutable.
 # They report their activity as STATUS messages.
 # A failing validation is reported as a FATAL_ERROR.
-# 
+#
 # Variables
 #  PRECICE_ALWAYS_VALIDATE_LIBS - Always actively validates the libs.
 #
 
 # General function to validate a given library
 # precice_validate_lib( <code-to-compile> NAME <name> [LINK_LIBRARIES <lib> ...] [COMPILE_DEFINITIONS <def> ... ]
-# 
+#
 # Caches on success to speed up development. Set PRECICE_ALWAYS_VALIDATE_LIBS to disable this behaviour.
 #
 function(precice_validate_lib ARG_CODE)

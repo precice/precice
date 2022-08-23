@@ -36,4 +36,3 @@ def postAction():
     for i in range(myTargetData.size):
         myTargetData[i] -= myIteration
     myIteration += 1
-

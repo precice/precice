@@ -63,7 +63,7 @@ int Extrapolation::valuesSize()
 
 /**
  * @brief Computes which order may be used for extrapolation.
- * 
+ *
  * Order of extrapolation is determined by number of stored samples and maximum order defined by the user.
  * Example: If only two samples are available, the maximum order we may use is 1, even if the user demands order 2.
  *
