@@ -17,12 +17,13 @@ LogConfiguration::LogConfiguration(
   tagLog.setDocumentation("Configures logging sinks based on Boost log.");
 
   auto attrLogEnabled = makeXMLAttribute("enabled", true)
-                            .setDocumentation("Enables logging");
+                            .setDocumentation("Enables the creation of log sinks. Disable sinks if you plan to setup Boost.log in your application.");
   tagLog.addAttribute(attrLogEnabled);
 
   XMLTag tagSink(*this, "sink", XMLTag::OCCUR_ARBITRARY);
   tagSink.setDocumentation("Contains the configuration of a single log sink, which allows fine grained control of what to log where. "
-                           "Available attributes in filter and format strings are `%Severity%`, `%ColorizedSeverity%`, `%File%`, `%Line%`, `%Function%`, `%Module%`, `%Rank%`, and `%Participant%`");
+                           "Available attributes in filter and format strings are `%TimeStamp%`, `%Runtime%`, `%Severity%`, `%ColorizedSeverity%`, `%File%`, `%Line%`, `%Function%`, `%Module%`, `%Rank%`, and `%Participant%`. "
+                           "The boolean attribute `%preCICE%` is `true` for all log entries originating from preCICE.");
   auto attrType = XMLAttribute<std::string>("type")
                       .setDocumentation("The type of sink.")
                       .setOptions({"stream", "file"})
