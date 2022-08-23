@@ -43,16 +43,17 @@ public:
   int getInterpolationOrder() const;
 
   /**
-   * @brief Used to initialize _timeWindowsStorage according to required size and initializes Waveform as constant with given values.
+   * @brief Used to initialize _timeStepsStorage according to required size and initializes Waveform as constant with given values.
    * @param values Defines constant initial value of waveform and its size
    */
   void initialize(const Eigen::VectorXd &values);
 
   /**
-   * @brief Updates first entry in _timeWindows with given values.
-   * @param values Sample for this time window
+   * @brief Updates an entry for dt in _timeWindows with given value.
+   * @param values Sample at dt in this time window
+   * @param normalizedDt normalizedDt associated with this value. Only allows values between 0 and 1. 0 refers to the beginning of the window and 1 to the end.
    */
-  void store(const Eigen::VectorXd &values);
+  void store(const Eigen::VectorXd &values, double normalizedDt = 1.0);
 
   /**
    * @brief Shifts all entries in _timeWindows. The new entry is initialized as the value from the last window (= constant extrapolation). Called when moving to the next time window.
@@ -62,7 +63,7 @@ public:
   /**
    * @brief Evaluate waveform at specific point in time. Uses interpolation if necessary.
    *
-   * Interpolates values inside current time window using _timeWindowsStorage and an interpolation scheme of the order of this Waveform.
+   * Interpolates values inside current time window using _timeStepsStorage and an interpolation scheme of the order of this Waveform.
    *
    * @param normalizedDt Time where the sampling inside the window happens. Only allows values between 0 and 1. 0 refers to the beginning of the window and 1 to the end.
    * @return Value of Waveform at time normalizedDt.
@@ -70,38 +71,26 @@ public:
   Eigen::VectorXd sample(const double normalizedDt);
 
 private:
-  /// Set by initialize. Used for consistency checks.
-  bool _storageIsInitialized = false;
-
-  /// Stores values for several time windows.
-  Eigen::MatrixXd _timeWindowsStorage;
+  /** @TODO Idea for more efficient data structure and redesign (do this when functionality is working and tested!)
+   *   1. use Eigen::MatrixXd instead of map for _timeStepsStorage.
+   *   2. create a member std::map<double, int> _timeSteps where (unique) time is mapped to column index of _timeStepsStorage that holds the corresponding sample. (Alternative: Use another Eigen::VectorXd to store times, but this enforces maintaining a consistent order for _timeSteps and _timeStepsStorage. This sounds complicated.)
+   */
+  /// Stores values on the current window.
+  std::map<double, Eigen::VectorXd> _timeStepsStorage;
 
   /// interpolation order for this waveform
   const int _interpolationOrder;
 
-  /// number of stored samples in _timeWindowsStorage
-  int _numberOfStoredSamples;
-
   mutable logging::Logger _log{"time::Waveform"};
 
   /**
-   * @brief Get number of values per sample in time stored by this waveform.
-   * @return Number of values per sample.
+   * @brief Get maximum dt that is stored in this waveform.
+   *
+   * Used to check whether a user is trying to add a sample associated with a dt that is smaller than the maximum dt. This is forbidden, because the waveform is locked for times that are smaller than the maximum dt.
+   *
+   * @return the maximum dt from _timeStepsStorage
    */
-  int valuesSize();
-
-  /**
-   * @brief Get maximum number of samples in time this waveform can store.
-   * @return Maximum number of samples.
-   */
-  int maxNumberOfStoredSamples();
-
-  /**
-   * @brief Updates entry in _timeWindowsStorage corresponding to a given sampleIndex with given values.
-   * @param values Input sample.
-   * @param sampleIndex Index of sample to be updated to given input sample.
-   */
-  void storeAt(const Eigen::VectorXd values, int sampleIndex);
+  double maxStoredDt();
 
   /**
    * @brief Computes which order may be used for interpolation.
@@ -114,6 +103,21 @@ private:
    * @return Order that may be used.
    */
   int computeUsedOrder(int requestedOrder, int numberOfAvailableSamples);
+
+  /**
+   * @brief Returns point the closest time stored in _timeStepsStorage that is after normalizedDt
+   *
+   * @param normalizedDt point in time
+   * @return double point in time after normalizedDt in _timeStepsStorage
+   */
+  double findTimeAfter(double normalizedDt);
+
+  /**
+   * @brief Get keys of _timeStepsStorage in ascending order. Starting from low to high.
+   *
+   * @return Eigen::VectorXd
+   */
+  Eigen::VectorXd getTimesAscending();
 };
 
 } // namespace time

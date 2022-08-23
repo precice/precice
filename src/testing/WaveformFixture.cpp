@@ -5,22 +5,12 @@ namespace testing {
 
 int WaveformFixture::numberOfStoredSamples(time::Waveform &waveform)
 {
-  return waveform._numberOfStoredSamples;
-}
-
-int WaveformFixture::maxNumberOfStoredSamples(time::Waveform &waveform)
-{
-  return waveform.maxNumberOfStoredSamples();
+  return waveform._timeStepsStorage.size();
 }
 
 int WaveformFixture::valuesSize(time::Waveform &waveform)
 {
-  return waveform.valuesSize();
-}
-
-double WaveformFixture::getValue(time::Waveform &waveform, int valueID, int sampleID)
-{
-  return waveform._timeWindowsStorage(valueID, sampleID);
+  return waveform._timeStepsStorage[0.0].size();
 }
 
 } // namespace testing

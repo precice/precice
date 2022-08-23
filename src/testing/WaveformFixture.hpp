@@ -13,11 +13,7 @@ class WaveformFixture {
 public:
   int numberOfStoredSamples(time::Waveform &waveform);
 
-  int maxNumberOfStoredSamples(time::Waveform &waveform);
-
   int valuesSize(time::Waveform &waveform);
-
-  double getValue(time::Waveform &waveform, int valueID, int sampleID);
 };
 
 } // namespace testing
