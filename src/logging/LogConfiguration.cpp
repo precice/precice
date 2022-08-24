@@ -172,7 +172,7 @@ void setupLogging(LoggingConfiguration configs, bool enabled)
       << bl::expressions::attr<std::string>("Function") << ": "
       << bl::expressions::message;
 
-  // Remove active sinks
+  // Remove active preCICE sinks
   using sink_t   = typename boost::log::sinks::synchronous_sink<StreamBackend>;
   using sink_ptr = typename boost::shared_ptr<sink_t>;
 
