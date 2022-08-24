@@ -21,11 +21,6 @@ public:
   using char_type       = typename BaseT::char_type;
   using threading_model = typename BaseT::threading_model;
 
-  precice_feature()                             = default;
-  precice_feature(const precice_feature &other) = default;
-  template <typename ArgsT>
-  precice_feature(ArgsT const &args){};
-
   using open_record_lock = typename boost::log::strictest_lock<
       boost::lock_guard<threading_model>,
       typename BaseT::open_record_lock,
