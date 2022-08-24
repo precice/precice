@@ -77,15 +77,15 @@ boost::log::record precice_feature<BaseT>::open_record_unlocked(ArgsT const &arg
   using boost::log::attributes::constant;
   boost::log::attribute_set &attrs = BaseT::attributes();
   {
-    auto res = BaseT::add_attribute_unlocked("Line", constant<int>(line_value));
+    [[maybe_unused]] auto res = BaseT::add_attribute_unlocked("Line", constant<int>(line_value));
     PRECICE_ASSERT(res.second);
   }
   {
-    auto res = BaseT::add_attribute_unlocked("File", constant<std::string>(file_value));
+    [[maybe_unused]] auto res = BaseT::add_attribute_unlocked("File", constant<std::string>(file_value));
     PRECICE_ASSERT(res.second);
   }
   {
-    auto res = BaseT::add_attribute_unlocked("Function", constant<std::string>(func_value));
+    [[maybe_unused]] auto res = BaseT::add_attribute_unlocked("Function", constant<std::string>(func_value));
     PRECICE_ASSERT(res.second);
   }
 
