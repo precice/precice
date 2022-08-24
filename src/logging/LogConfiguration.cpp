@@ -187,6 +187,8 @@ void setupLogging(LoggingConfiguration configs, bool enabled)
   activeSinks.clear();
 
   // If logging sinks are disabled, then we are done
+  // We need to exit after the sink removal as the default sink exists before
+  // the log configuration is parsed.
   if (!enabled) {
     return;
   }
