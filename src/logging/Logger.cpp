@@ -40,20 +40,6 @@ BOOST_PARAMETER_KEYWORD(file_ns, file);
 BOOST_PARAMETER_KEYWORD(func_ns, func);
 } // namespace keywords
 
-namespace {
-/// Runs the function F on end of lifetime.
-template <class F>
-struct ScopeExit {
-  F _f;
-  ScopeExit(F f)
-      : _f(f){};
-  ~ScopeExit()
-  {
-    _f();
-  }
-};
-} // namespace
-
 /// Adds log attributes to the current logger based on the \ref LogLocation info
 template <typename BaseT>
 template <typename ArgsT>
@@ -84,14 +70,15 @@ boost::log::record precice_feature<BaseT>::open_record_unlocked(ArgsT const &arg
     PRECICE_ASSERT(res.second);
   }
 
-  ScopeExit guard([&attrs] {
-    attrs.erase("Line");
-    attrs.erase("File");
-    attrs.erase("Function");
-  });
-
   // Forward the call to the base feature
-  return BaseT::open_record_unlocked(args);
+  auto &&record = BaseT::open_record_unlocked(args);
+
+  // cleanup
+  attrs.erase("Line");
+  attrs.erase("File");
+  attrs.erase("Function");
+
+  return std::move(record);
 }
 
 /// Required by \ref BoostLogger to use \ref precice_feature
