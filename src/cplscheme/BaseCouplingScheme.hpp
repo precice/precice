@@ -351,6 +351,13 @@ protected:
   void storeExtrapolationData();
 
   /**
+   * @brief stores current time step data in buffer for later
+   *
+   * @param relativeDt relative dt associated with the data.
+   */
+  virtual void storeTimeStepData(double relativeDt) = 0;
+
+  /**
    * @brief finalizes this window's data and initializes data for next window.
    */
   void moveToNextWindow();

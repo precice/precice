@@ -92,6 +92,20 @@ void MultiCouplingScheme::exchangeInitialData()
   PRECICE_DEBUG("Initial data is exchanged in MultiCouplingScheme");
 }
 
+void MultiCouplingScheme::storeTimeStepData(double relativeDt)
+{
+  PRECICE_ASSERT(relativeDt > 0);
+  PRECICE_ASSERT(relativeDt <= 1.0);
+  DataMap allSendData;
+  for (auto &sendData : _sendDataVector) {
+    allSendData.insert(sendData.second.begin(), sendData.second.end());
+  }
+
+  for (auto &aSendData : allSendData) {
+    aSendData.second->storeDataAtTime(relativeDt);
+  }
+}
+
 bool MultiCouplingScheme::exchangeDataAndAccelerate()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");

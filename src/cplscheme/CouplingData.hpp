@@ -10,7 +10,8 @@
 namespace precice {
 namespace cplscheme {
 
-class CouplingData {
+class
+    CouplingData {
 public:
   CouplingData(
       mesh::PtrData data,
@@ -68,6 +69,18 @@ public:
   /// store current value in _extrapolation
   void storeExtrapolationData();
 
+  /// returns number of items in _timeStepsStorage.
+  int getNumberOfStoredTimesteps();
+
+  /// returns keys in _timeStepsStorage in ascending order.
+  std::vector<double> getStoredTimesAscending();
+
+  /// clears _timeStepsStorage. Called after data was written or before data is received.
+  void clearTimeStepsStorage();
+
+  /// stores _data->values() at key relativeDt in _timeStepsStorage for later use.
+  void storeDataAtTime(double relativeDt);
+
 private:
   /**
    * @brief Default constructor, not to be used!
@@ -90,8 +103,22 @@ private:
   /// Mesh associated with this CouplingData
   mesh::PtrMesh _mesh;
 
+  /// Map to store time steps in the current time Window
+  std::map<double, Eigen::VectorXd> _timeStepsStorage;
+
   /// Extrapolation associated with this CouplingData
   cplscheme::impl::Extrapolation _extrapolation;
+
+  /**
+   * @brief Get maximum dt that is stored in the _timeStepsStorage.
+   *
+   * Used to check whether a user is trying to add a sample associated with a dt that is smaller than the maximum dt. This is forbidden, because the _timeStepsStorage is locked for times that are smaller than the maximum dt.
+   *
+   * @TODO: Duplicate of Waveform::maxStoredDt. Maybe try to put all functionality around _timeStepsStorage into an independent class?
+   *
+   * @return the maximum dt from _timeStepsStorage, returns -1, if _timeStepsStorage is empty.
+   */
+  double maxStoredDt();
 };
 
 } // namespace cplscheme

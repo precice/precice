@@ -116,6 +116,13 @@ protected:
    */
   void exchangeInitialData() override final;
 
+  /**
+   * @brief stores current time step data in buffer for later
+   *
+   * @param relativeDt relative dt associated with the data.
+   */
+  void storeTimeStepData(double relativeDt) override final;
+
 private:
   mutable logging::Logger _log{"cplscheme::BiCouplingScheme"};
 

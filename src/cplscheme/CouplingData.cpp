@@ -113,5 +113,48 @@ void CouplingData::storeExtrapolationData()
   _extrapolation.store(values());
 }
 
+int CouplingData::getNumberOfStoredTimesteps()
+{
+  return _timeStepsStorage.size();
+}
+
+std::vector<double> CouplingData::getStoredTimesAscending()
+{
+  // create std::vector with all keys
+  std::vector<double> keys;
+  for (auto timeStep : _timeStepsStorage) {
+    keys.push_back(timeStep.first);
+  }
+
+  // sort vector
+  std::sort(keys.begin(), keys.end());
+
+  return keys;
+}
+
+void CouplingData::clearTimeStepsStorage()
+{
+  _timeStepsStorage.clear();
+}
+
+double CouplingData::maxStoredDt()
+{
+  double maxDt = -1;
+  for (auto timeStep : _timeStepsStorage) {
+    if (timeStep.first > maxDt) {
+      maxDt = timeStep.first;
+    }
+  }
+  return maxDt;
+}
+
+void CouplingData::storeDataAtTime(double relativeDt)
+{
+  PRECICE_ASSERT(relativeDt > 0.0);
+  PRECICE_ASSERT(relativeDt > maxStoredDt());
+  PRECICE_ASSERT(relativeDt <= 1.0);
+  _timeStepsStorage[relativeDt] = _data->values();
+}
+
 } // namespace cplscheme
 } // namespace precice

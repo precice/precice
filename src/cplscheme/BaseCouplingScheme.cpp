@@ -94,6 +94,8 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
       m2n->send(pair.second->gradientValues(), pair.second->getMeshID(), pair.second->getDimensions() * pair.second->meshDimensions());
     }
 
+    pair.second->clearTimeStepsStorage();
+
     sentDataIDs.push_back(pair.first);
   }
   PRECICE_DEBUG("Number of sent data sets = {}", sentDataIDs.size());
@@ -106,6 +108,9 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
   PRECICE_ASSERT(m2n.get());
   PRECICE_ASSERT(m2n->isConnected());
   for (const DataMap::value_type &pair : receiveData) {
+
+    pair.second->clearTimeStepsStorage();
+
     // Data is only received on ranks with size>0, which is checked in the derived class implementation
     m2n->receive(pair.second->values(), pair.second->getMeshID(), pair.second->getDimensions());
 
@@ -190,6 +195,37 @@ void BaseCouplingScheme::advance()
   _isTimeWindowComplete = false;
 
   PRECICE_ASSERT(_couplingMode != Undefined);
+
+  double relativeDt                 = -1;
+  bool   usesFirstParticipantMethod = (_timeWindowSize == -1);
+
+  if (isImplicitCouplingScheme()) {
+    // store data from writeDataContext in buffer, when advance is called.
+    PRECICE_ASSERT(_computedTimeWindowPart > 0);
+    if (not usesFirstParticipantMethod) {
+      relativeDt = _computedTimeWindowPart / _timeWindowSize;
+      PRECICE_ASSERT(math::smallerEquals(relativeDt, 1.0, 10e-9), relativeDt, _computedTimeWindowPart, _timeWindowSize);
+      PRECICE_ASSERT(relativeDt > 0, relativeDt, _computedTimeWindowPart, _timeWindowSize);
+      if (relativeDt > 1.0) {
+        PRECICE_ASSERT(math::smallerEquals(relativeDt, 1.0, 10e-9), relativeDt);
+        relativeDt = 1.0;
+      }
+      storeTimeStepData(relativeDt);
+    } else {
+      // We don't support subcycling here, because this is complicated. Therefore, use same strategy like for explicit coupling and just use a single value at end of window.
+      // Possible solution: Don't scale times to [0,1], but leave them as they are. Then we would also allow times > 1. We then have two options:
+      // 1) scale the times back later when the time window size is known (to still benefit from the simpler handling, if all times are scaled to [0,1]).
+      // 2) generally use times in the interval [0, timeWindowSize]. This makes the implementation probably a bit more complicated, but also more consistent.
+      if (reachedEndOfTimeWindow()) { // only necessary to trigger at end of time window.
+        storeTimeStepData(1.0);       // only write data at end of window
+      }
+    }
+  } else {
+    // work-around for explicit coupling, because it does not support waveform relaxation.
+    if (reachedEndOfTimeWindow()) { // only necessary to trigger at end of time window.
+      storeTimeStepData(1.0);       // only write data at end of window
+    }
+  }
 
   if (reachedEndOfTimeWindow()) {
 

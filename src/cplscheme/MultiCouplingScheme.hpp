@@ -77,6 +77,14 @@ public:
     return std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(), [](const auto &sendExchange) { return not sendExchange.second.empty(); });
   }
 
+protected:
+  /**
+   * @brief stores current time step data in buffer for later
+   *
+   * @param relativeDt relative dt associated with the data.
+   */
+  void storeTimeStepData(double relativeDt) override final;
+
 private:
   /**
    * @brief A vector of m2ns. A m2n is a communication device to the other coupling participant.
