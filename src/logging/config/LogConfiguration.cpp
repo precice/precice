@@ -17,7 +17,9 @@ LogConfiguration::LogConfiguration(
   tagLog.setDocumentation("Configures logging sinks based on Boost log.");
 
   auto attrLogEnabled = makeXMLAttribute("enabled", true)
-                            .setDocumentation("Enables the creation of log sinks. Disable sinks if you plan to setup Boost.log in your application.");
+                            .setDocumentation("Enables the creation of log sinks. "
+                                              "Disable sinks if you prefer to handle preCICE logs in your application using boost.log.");
+
   tagLog.addAttribute(attrLogEnabled);
 
   XMLTag tagSink(*this, "sink", XMLTag::OCCUR_ARBITRARY);
