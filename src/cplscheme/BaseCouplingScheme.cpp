@@ -81,7 +81,7 @@ BaseCouplingScheme::BaseCouplingScheme(
 
 void sendNumberOfTimeSteps(const m2n::PtrM2N &m2n, const int numberOfTimeSteps)
 {
-  m2n->send((double)numberOfTimeSteps); // @todo need to cast to double. Looks like a bug in preCICE
+  m2n->send(numberOfTimeSteps);
 }
 
 void sendTimes(const m2n::PtrM2N &m2n, const Eigen::VectorXd times)
@@ -120,10 +120,9 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
 
 int receiveNumberOfTimeSteps(const m2n::PtrM2N &m2n)
 {
-  // @todo: Breaks with int. Looks like a bug in preCICE
-  double numberOfTimeSteps;
+  int numberOfTimeSteps;
   m2n->receive(numberOfTimeSteps);
-  return (int)numberOfTimeSteps;
+  return numberOfTimeSteps;
 }
 
 Eigen::VectorXd receiveTimes(const m2n::PtrM2N &m2n, int nTimeSteps)
