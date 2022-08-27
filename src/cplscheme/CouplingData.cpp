@@ -113,12 +113,12 @@ void CouplingData::storeExtrapolationData()
   _extrapolation.store(values());
 }
 
-int CouplingData::getNumberOfStoredTimesteps()
+int CouplingData::getNumberOfStoredTimeSteps()
 {
   return _timeStepsStorage.size();
 }
 
-std::vector<double> CouplingData::getStoredTimesAscending()
+Eigen::VectorXd CouplingData::getStoredTimesAscending()
 {
   // create std::vector with all keys
   std::vector<double> keys;
@@ -129,7 +129,12 @@ std::vector<double> CouplingData::getStoredTimesAscending()
   // sort vector
   std::sort(keys.begin(), keys.end());
 
-  return keys;
+  // copy data into Eigen::VectorXd to return
+  auto times = Eigen::VectorXd(keys.size());
+  for (int i = 0; i < keys.size(); i++) {
+    times[i] = keys[i];
+  }
+  return times;
 }
 
 void CouplingData::clearTimeStepsStorage()

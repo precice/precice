@@ -70,10 +70,10 @@ public:
   void storeExtrapolationData();
 
   /// returns number of items in _timeStepsStorage.
-  int getNumberOfStoredTimesteps();
+  int getNumberOfStoredTimeSteps();
 
   /// returns keys in _timeStepsStorage in ascending order.
-  std::vector<double> getStoredTimesAscending();
+  Eigen::VectorXd getStoredTimesAscending();
 
   /// clears _timeStepsStorage. Called after data was written or before data is received.
   void clearTimeStepsStorage();

@@ -79,6 +79,18 @@ BaseCouplingScheme::BaseCouplingScheme(
   }
 }
 
+void sendNumberOfTimeSteps(const m2n::PtrM2N &m2n, const int numberOfTimeSteps)
+{
+  m2n->send((double)numberOfTimeSteps); // @todo need to cast to double. Looks like a bug in preCICE
+}
+
+void sendTimes(const m2n::PtrM2N &m2n, const Eigen::VectorXd times)
+{
+  for (int i = 0; i < times.size(); i++) {
+    m2n->send(times(i));
+  }
+}
+
 void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendData)
 {
   PRECICE_TRACE();
@@ -87,6 +99,11 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
   PRECICE_ASSERT(m2n->isConnected());
 
   for (const DataMap::value_type &pair : sendData) {
+    int nTimeSteps = pair.second->getNumberOfStoredTimeSteps();
+    sendNumberOfTimeSteps(m2n, nTimeSteps);
+    auto timesAscending = pair.second->getStoredTimesAscending();
+    sendTimes(m2n, timesAscending);
+
     // Data is actually only send if size>0, which is checked in the derived classes implementation
     m2n->send(pair.second->values(), pair.second->getMeshID(), pair.second->getDimensions());
 
@@ -101,6 +118,24 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
   PRECICE_DEBUG("Number of sent data sets = {}", sentDataIDs.size());
 }
 
+int receiveNumberOfTimeSteps(const m2n::PtrM2N &m2n)
+{
+  // @todo: Breaks with int. Looks like a bug in preCICE
+  double numberOfTimeSteps;
+  m2n->receive(numberOfTimeSteps);
+  return (int)numberOfTimeSteps;
+}
+
+Eigen::VectorXd receiveTimes(const m2n::PtrM2N &m2n, int nTimeSteps)
+{
+  auto times = Eigen::VectorXd(nTimeSteps);
+  for (int i = 0; i < nTimeSteps; i++) {
+    m2n->receive(times(i));
+  }
+  return times;
+}
+
+
 void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData)
 {
   PRECICE_TRACE();
@@ -110,6 +145,9 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
   for (const DataMap::value_type &pair : receiveData) {
 
     pair.second->clearTimeStepsStorage();
+
+    int nTimeSteps = receiveNumberOfTimeSteps(m2n);
+    auto times = receiveTimes(m2n, nTimeSteps);
 
     // Data is only received on ranks with size>0, which is checked in the derived class implementation
     m2n->receive(pair.second->values(), pair.second->getMeshID(), pair.second->getDimensions());
