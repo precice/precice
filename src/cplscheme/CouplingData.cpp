@@ -156,9 +156,17 @@ double CouplingData::maxStoredDt()
 void CouplingData::storeDataAtTime(double relativeDt)
 {
   PRECICE_ASSERT(relativeDt > 0.0);
-  PRECICE_ASSERT(relativeDt > maxStoredDt());
+  //PRECICE_ASSERT(relativeDt > maxStoredDt());  // generally a nice security check, but currently we have to override some data after acceleration was performed.
   PRECICE_ASSERT(relativeDt <= 1.0);
   _timeStepsStorage[relativeDt] = _data->values();
+}
+
+Eigen::VectorXd CouplingData::getDataAtTime(double relativeDt)
+{
+  PRECICE_ASSERT(relativeDt > 0.0);
+  PRECICE_ASSERT(relativeDt <= 1.0);
+  PRECICE_ASSERT(_timeStepsStorage.count(relativeDt) > 0);
+  return _timeStepsStorage[relativeDt];
 }
 
 } // namespace cplscheme

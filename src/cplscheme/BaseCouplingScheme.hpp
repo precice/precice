@@ -236,8 +236,16 @@ protected:
   /// Map that links DataID to CouplingData
   typedef std::map<int, PtrCouplingData> DataMap;
 
+  void sendNumberOfTimeSteps(const m2n::PtrM2N &m2n, const int numberOfTimeSteps);
+
+  void sendTimes(const m2n::PtrM2N &m2n, const Eigen::VectorXd times);
+
   /// Sends data sendDataIDs given in mapCouplingData with communication.
   void sendData(const m2n::PtrM2N &m2n, const DataMap &sendData);
+
+  int receiveNumberOfTimeSteps(const m2n::PtrM2N &m2n);
+
+  Eigen::VectorXd receiveTimes(const m2n::PtrM2N &m2n, int nTimeSteps);
 
   /// Receives data receiveDataIDs given in mapCouplingData with communication.
   void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData);

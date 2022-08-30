@@ -234,6 +234,7 @@ void M2N::send(
 
 void M2N::send(bool itemToSend)
 {
+  PRECICE_DEBUG("send(bool): {}", itemToSend);
   PRECICE_TRACE(utils::IntraComm::getRank());
   if (not utils::IntraComm::isSecondary()) {
     _intraComm->send(itemToSend, 0);
@@ -242,6 +243,7 @@ void M2N::send(bool itemToSend)
 
 void M2N::send(double itemToSend)
 {
+  PRECICE_DEBUG("send(double): {}", itemToSend);
   PRECICE_TRACE(utils::IntraComm::getRank());
   if (not utils::IntraComm::isSecondary()) {
     _intraComm->send(itemToSend, 0);
@@ -250,6 +252,7 @@ void M2N::send(double itemToSend)
 
 void M2N::send(int itemToSend)
 {
+  PRECICE_DEBUG("send(int): {}", itemToSend);
   PRECICE_TRACE(utils::IntraComm::getRank());
   if (not utils::IntraComm::isSecondary()) {
     _intraComm->send(itemToSend, 0);

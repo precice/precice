@@ -79,13 +79,17 @@ BaseCouplingScheme::BaseCouplingScheme(
   }
 }
 
-void sendNumberOfTimeSteps(const m2n::PtrM2N &m2n, const int numberOfTimeSteps)
+void BaseCouplingScheme::sendNumberOfTimeSteps(const m2n::PtrM2N &m2n, const int numberOfTimeSteps)
 {
+  PRECICE_TRACE();
+  PRECICE_DEBUG("Sending number or time steps {}...", numberOfTimeSteps);
   m2n->send(numberOfTimeSteps);
 }
 
-void sendTimes(const m2n::PtrM2N &m2n, const Eigen::VectorXd times)
+void BaseCouplingScheme::sendTimes(const m2n::PtrM2N &m2n, const Eigen::VectorXd times)
 {
+  PRECICE_TRACE();
+  PRECICE_DEBUG("Sending times...");
   for (int i = 0; i < times.size(); i++) {
     m2n->send(times(i));
   }
@@ -102,10 +106,25 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
     int nTimeSteps = pair.second->getNumberOfStoredTimeSteps();
     sendNumberOfTimeSteps(m2n, nTimeSteps);
     auto timesAscending = pair.second->getStoredTimesAscending();
+    PRECICE_ASSERT(timesAscending.size() == nTimeSteps);
     sendTimes(m2n, timesAscending);
 
+    PRECICE_ASSERT(timesAscending(timesAscending.size() - 1) == 1.0); // assert that last element is 1.0
+
+    // @todo put serialization into CouplingData & test it!
+    int  nValues           = pair.second->values().size();
+    auto serializedSamples = Eigen::VectorXd(nTimeSteps * nValues);
+
+    for (int timeId = 0; timeId < nTimeSteps; timeId++) {
+      auto time  = timesAscending(timeId);
+      auto slice = pair.second->getDataAtTime(time);
+      for (int valueId = 0; valueId < nValues; valueId++) {
+        serializedSamples(valueId * nTimeSteps + timeId) = slice(valueId);
+      }
+    }
+
     // Data is actually only send if size>0, which is checked in the derived classes implementation
-    m2n->send(pair.second->values(), pair.second->getMeshID(), pair.second->getDimensions());
+    m2n->send(serializedSamples, pair.second->getMeshID(), pair.second->getDimensions() * nTimeSteps);
 
     if (pair.second->hasGradient()) {
       m2n->send(pair.second->gradientValues(), pair.second->getMeshID(), pair.second->getDimensions() * pair.second->meshDimensions());
@@ -118,22 +137,25 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
   PRECICE_DEBUG("Number of sent data sets = {}", sentDataIDs.size());
 }
 
-int receiveNumberOfTimeSteps(const m2n::PtrM2N &m2n)
+int BaseCouplingScheme::receiveNumberOfTimeSteps(const m2n::PtrM2N &m2n)
 {
+  PRECICE_TRACE();
+  PRECICE_DEBUG("Receiving number of time steps...");
   int numberOfTimeSteps;
   m2n->receive(numberOfTimeSteps);
   return numberOfTimeSteps;
 }
 
-Eigen::VectorXd receiveTimes(const m2n::PtrM2N &m2n, int nTimeSteps)
+Eigen::VectorXd BaseCouplingScheme::receiveTimes(const m2n::PtrM2N &m2n, int nTimeSteps)
 {
+  PRECICE_TRACE();
+  PRECICE_DEBUG("Receiving times....");
   auto times = Eigen::VectorXd(nTimeSteps);
   for (int i = 0; i < nTimeSteps; i++) {
     m2n->receive(times(i));
   }
   return times;
 }
-
 
 void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData)
 {
@@ -146,10 +168,28 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
     pair.second->clearTimeStepsStorage();
 
     int nTimeSteps = receiveNumberOfTimeSteps(m2n);
-    auto times = receiveTimes(m2n, nTimeSteps);
+
+    PRECICE_ASSERT(nTimeSteps > 0);
+    auto timesAscending = receiveTimes(m2n, nTimeSteps);
+
+    int  nValues           = pair.second->values().size();
+    auto serializedSamples = Eigen::VectorXd(nTimeSteps * nValues);
 
     // Data is only received on ranks with size>0, which is checked in the derived class implementation
-    m2n->receive(pair.second->values(), pair.second->getMeshID(), pair.second->getDimensions());
+    m2n->receive(serializedSamples, pair.second->getMeshID(), pair.second->getDimensions() * nTimeSteps);
+
+    // @todo put deserialization into CouplingData & test it!
+    for (int timeId = 0; timeId < nTimeSteps; timeId++) {
+      auto slice = Eigen::VectorXd(nValues);
+      for (int valueId = 0; valueId < nValues; valueId++) {
+        slice(valueId) = serializedSamples(valueId * nTimeSteps + timeId);
+      }
+      auto time = timesAscending(timeId);
+      PRECICE_ASSERT(time > 0.0 && time <= 1.0); // time <= 0 or time > 1 is not allowed.
+      pair.second->values() = slice;
+      pair.second->storeDataAtTime(time);
+    }
+    pair.second->values() = pair.second->getDataAtTime(1.0);
 
     if (pair.second->hasGradient()) {
       m2n->receive(pair.second->gradientValues(), pair.second->getMeshID(), pair.second->getDimensions() * pair.second->meshDimensions());
@@ -197,6 +237,11 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
 
   if (isImplicitCouplingScheme()) {
     storeIteration();
+  }
+
+  // For simple initialization initialize as constant.
+  if (sendsInitializedData()) {
+    storeTimeStepData(1.0);
   }
 
   exchangeInitialData();
@@ -713,6 +758,9 @@ bool BaseCouplingScheme::doImplicitStep()
 
   // Store data for conv. measurement, acceleration
   storeIteration();
+
+  // Override data with accelerated data.
+  storeTimeStepData(1.0);
 
   return convergence;
 }
