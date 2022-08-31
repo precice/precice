@@ -22,7 +22,7 @@ LinearCellInterpolationMapping::LinearCellInterpolationMapping(
     setInputRequirement(Mapping::MeshRequirement::VERTEX);
     setOutputRequirement(Mapping::MeshRequirement::FULL);
   } else {
-    PRECICE_ASSERT(constraint == SCALED_CONSISTENT || constraint == SCALED_CONSISTENT_VOLUME, constraint);
+    PRECICE_ASSERT(isScaledConsistent(), constraint);
     setInputRequirement(Mapping::MeshRequirement::FULL);
     setOutputRequirement(Mapping::MeshRequirement::FULL);
   }
