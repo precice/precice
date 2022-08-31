@@ -76,7 +76,7 @@ void ExportXML::writeParallelFile(
   outfile = outfile / fs::path(name + getParallelExtension());
   std::ofstream outParallelFile(outfile.string(), std::ios::trunc);
 
-  PRECICE_CHECK(outParallelFile, "{} export failed to open primary file \"{}\"", getVTKFormat(), outfile);
+  PRECICE_CHECK(outParallelFile, "{} export failed to open primary file \"{}\"", getVTKFormat(), outfile.generic_string());
 
   const auto formatType = getVTKFormat();
   outParallelFile << "<?xml version=\"1.0\"?>\n";
@@ -131,7 +131,7 @@ void ExportXML::writeSubFile(
   outfile /= fs::path(name + getPieceSuffix() + getPieceExtension());
   std::ofstream outSubFile(outfile.string(), std::ios::trunc);
 
-  PRECICE_CHECK(outSubFile, "{} export failed to open secondary file \"{}\"", getVTKFormat(), outfile);
+  PRECICE_CHECK(outSubFile, "{} export failed to open secondary file \"{}\"", getVTKFormat(), outfile.generic_string());
 
   const auto formatType = getVTKFormat();
   outSubFile << "<?xml version=\"1.0\"?>\n";
@@ -178,14 +178,14 @@ void ExportXML::exportGradient(const mesh::PtrData data, const int spaceDim, std
       for (; j < gradientValues.rows(); j++) { // Loop over components
         outFile << gradientValues.coeff(j, i) << " ";
       }
-      if (j < 3) { // If 2D data add additonal zero as third component
+      if (j < 3) { // If 2D data add additional zero as third component
         outFile << "0.0"
                 << " ";
       }
     }
     outFile << '\n'
             << "            </DataArray>\n";
-    counter++; // Increment coutner for next component
+    counter++; // Increment counter for next component
   }
 }
 

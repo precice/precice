@@ -379,7 +379,7 @@ void SocketCommunication::prepareEstablishment(std::string const &acceptorName,
 {
   using namespace boost::filesystem;
   path dir = com::impl::localDirectory(acceptorName, requesterName, _addressDirectory);
-  PRECICE_DEBUG("Creating connection exchange directory {}", dir);
+  PRECICE_DEBUG("Creating connection exchange directory {}", dir.generic_string());
   try {
     create_directories(dir);
   } catch (const boost::filesystem::filesystem_error &e) {
@@ -392,7 +392,7 @@ void SocketCommunication::cleanupEstablishment(std::string const &acceptorName,
 {
   using namespace boost::filesystem;
   path dir = com::impl::localDirectory(acceptorName, requesterName, _addressDirectory);
-  PRECICE_DEBUG("Removing connection exchange directory {}", dir);
+  PRECICE_DEBUG("Removing connection exchange directory {}", dir.generic_string());
   try {
     remove_all(dir);
   } catch (const boost::filesystem::filesystem_error &e) {
@@ -777,7 +777,7 @@ std::string SocketCommunication::getIpAddress()
   auto pos = std::find_if(interfaces.begin(), interfaces.end(),
                           [&](Interface const &interface) { return interface.name == _networkName; });
   if (pos == interfaces.end()) {
-    PRECICE_DEBUG("There  NOTHING");
+    PRECICE_DEBUG("There's NOTHING");
     std::ostringstream err;
     err << "Cannot find network interface \"" << _networkName << "\". Available interfaces are: ";
     for (const auto &interface : interfaces) {

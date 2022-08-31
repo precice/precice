@@ -34,10 +34,10 @@ using new_signature = PetscErrorCode(PetscOptions, const char[], const char[]);
 using old_signature = PetscErrorCode(const char[], const char[]);
 
 /**
- * @brief Fix for compatibility with PETSc < 3.7. 
- * 
+ * @brief Fix for compatibility with PETSc < 3.7.
+ *
  * This enables to call PetscOptionsSetValue with proper number of arguments.
- * This instantiates only the template, that specifies correct function signature, whilst 
+ * This instantiates only the template, that specifies correct function signature, whilst
  * the other one is discarded ( https://en.cppreference.com/w/cpp/language/sfinae )
  */
 template <typename curr_signature = decltype(PetscOptionsSetValue)>
@@ -49,10 +49,10 @@ PetscErrorCode PetscOptionsSetValueWrapper(const char name[], const char value[]
 }
 
 /**
- * @brief Fix for compatibility with PETSc < 3.7. 
- * 
+ * @brief Fix for compatibility with PETSc < 3.7.
+ *
  * This enables to call PetscOptionsSetValue with proper number of arguments.
- * This instantiates only the template, that specifies correct function signature, whilst 
+ * This instantiates only the template, that specifies correct function signature, whilst
  * the other one is discarded ( https://en.cppreference.com/w/cpp/language/sfinae )
  */
 template <typename curr_signature = decltype(PetscOptionsSetValue)>

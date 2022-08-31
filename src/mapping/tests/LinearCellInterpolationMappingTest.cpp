@@ -44,9 +44,9 @@ BOOST_AUTO_TEST_CASE(Consistent)
   inValuesScalar << 1.0, 2.0, 3.0;
 
   BOOST_CHECK(!inMesh->edges().empty());
-  /* 
+  /*
   Should pass: triangles are discarded when the mapping doesn't require the in SolverInterface::setMeshTriangle,
-  but Mesh::createTriangle doesn't check it. This is not an integration test! 
+  but Mesh::createTriangle doesn't check it. This is not an integration test!
   */
 
   BOOST_CHECK(!inMesh->triangles().empty());

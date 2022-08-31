@@ -59,7 +59,7 @@ public:
   virtual void specializedIterationsConverged(const DataMap &cplData);
 
 private:
-  // remove this ofter debugging, not useful
+  // remove this after debugging, not useful
   // ---------------------------------------
   std::fstream f;
   //----------------------------------------

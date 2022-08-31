@@ -119,10 +119,10 @@ BOOST_AUTO_TEST_CASE(ConsistentGradientNotConstant)
   PtrData inDataVector = inMesh->createData("InDataVector", 2, 1_dataID);
   inDataScalar->requireDataGradient();
   inDataVector->requireDataGradient();
-  int     inDataScalarID = inDataScalar->getID();
-  int     inDataVectorID = inDataVector->getID();
-  Vertex &inVertex0      = inMesh->createVertex(Eigen::Vector2d::Constant(0.0));
-  Vertex &inVertex1      = inMesh->createVertex(Eigen::Vector2d::Constant(1.0));
+  int inDataScalarID = inDataScalar->getID();
+  int inDataVectorID = inDataVector->getID();
+  inMesh->createVertex(Eigen::Vector2d::Constant(0.0));
+  inMesh->createVertex(Eigen::Vector2d::Constant(1.0));
 
   // Create data
   inMesh->allocateDataValues();

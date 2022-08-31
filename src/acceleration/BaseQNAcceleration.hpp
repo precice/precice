@@ -133,9 +133,9 @@ public:
 
   /** @brief: computes number of cols in least squares system, i.e, number of cols in
     *  _matrixV, _matrixW, _qrV, etc..
-    *	 This is only necessary if some procs do not have any nodes on the coupling 
-    *  interface. In this case, the matrices are not constructed and we have no 
-    *  information about the number of cols. This info is needed for 
+    *	 This is only necessary if some procs do not have any nodes on the coupling
+    *  interface. In this case, the matrices are not constructed and we have no
+    *  information about the number of cols. This info is needed for
     *  intra-participant communication. Number of its =! _cols in general.
     */
   virtual int getLSSystemCols() const;

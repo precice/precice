@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_CASE(Vertices2D)
 
   auto &v0 = dest.createVertex(Vector2d::Constant(4.0)); // Add dummy data to check additivity
   auto &v1 = src.createVertex(Vector2d::Constant(3.0));
-  auto &v2 = src.createVertex(Vector2d::Constant(2.0));
+  src.createVertex(Vector2d::Constant(2.0));
 
   v1.tag();
 
@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(Vertices3D)
 
   auto &v0 = dest.createVertex(Vector3d::Constant(4.0)); // Add dummy data to check additivity
   auto &v1 = src.createVertex(Vector3d::Constant(3.0));
-  auto &v2 = src.createVertex(Vector3d::Constant(2.0));
+  src.createVertex(Vector3d::Constant(2.0));
 
   v1.tag();
 
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(Edges)
   auto &v3 = src.createVertex(Vector3d::Constant(2.0));
 
   auto &e0 = src.createEdge(v1, v2);
-  auto &e1 = src.createEdge(v2, v3);
+  src.createEdge(v2, v3);
 
   v1.tag();
   v2.tag();
@@ -98,14 +98,14 @@ BOOST_AUTO_TEST_CASE(Triangles)
   mesh::Mesh dest("3D dest", 3, testing::nextMeshID());
   mesh::Mesh src("3D src", 3, testing::nextMeshID());
 
-  auto &v0 = dest.createVertex(Vector3d::Constant(4.0)); // Add dummy data to check additivity
+  dest.createVertex(Vector3d::Constant(4.0)); // Add dummy data to check additivity
   auto &v1 = src.createVertex(Vector3d::Constant(0.0));
   auto &v2 = src.createVertex(Vector3d{1.0, 0.0, 0.0});
   auto &v3 = src.createVertex(Vector3d{0.0, 1.0, 0.0});
   auto &v4 = src.createVertex(Vector3d{0.0, 0.0, 1.0});
 
   auto &t1 = src.createTriangle(v1, v2, v3);
-  auto &t2 = src.createTriangle(v2, v3, v4);
+  src.createTriangle(v2, v3, v4);
 
   v1.tag();
   v2.tag();
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(Tetrahedra)
   mesh::Mesh dest("3D dest", 3, testing::nextMeshID());
   mesh::Mesh src("3D src", 3, testing::nextMeshID());
 
-  auto &v0 = dest.createVertex(Vector3d::Constant(4.0)); // Add dummy data to check additivity
+  dest.createVertex(Vector3d::Constant(4.0)); // Add dummy data to check additivity
   auto &v1 = src.createVertex(Vector3d::Constant(0.0));
   auto &v2 = src.createVertex(Vector3d{1.0, 0.0, 0.0});
   auto &v3 = src.createVertex(Vector3d{0.0, 1.0, 0.0});
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(Tetrahedra)
   auto &v5 = src.createVertex(Vector3d{0.0, 2.0, 1.0});
 
   auto &t1 = src.createTetrahedron(v1, v2, v3, v4);
-  auto &t2 = src.createTetrahedron(v2, v3, v4, v5);
+  src.createTetrahedron(v2, v3, v4, v5);
 
   v1.tag();
   v2.tag();

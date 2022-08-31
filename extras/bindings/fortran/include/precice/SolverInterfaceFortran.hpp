@@ -49,7 +49,7 @@ void precicef_initialize_(double *timestepLengthLimit);
 
 /**
  * Fortran syntax:
- * precicef_intialize_data()
+ * precicef_initialize_data()
  *
  * IN: -
  * OUT: -
@@ -792,6 +792,91 @@ void precicef_get_version_information_(
  * These API functions are \b experimental and may change in future versions.
  */
 ///@{
+
+/**
+ * Fortran syntax:
+ * precicef_is_gradient_data_required_(
+ *   INTEGER dataID,
+ *   INTEGER required )
+ *
+ * IN:  dataID
+ * OUT: required(1:true, 0:false)
+ *
+ * @copydoc precice::SolverInterface::isGradientDataRequired
+ */
+void precicef_is_gradient_data_required_(const int *dataID, int *required);
+
+/**
+ * Fortran syntax:
+ * precicef_write_sgradient_data_(
+ *   INTEGER dataID,
+ *   INTEGER valueIndex,
+ *   DOUBLE PRECISION gradientValues )
+ *
+ * IN:  dataID, valueIndex, gradientValues
+ * OUT: -
+ *
+ * @copydoc precice::SolverInterface::writeScalarGradientData
+ */
+void precicef_write_sgradient_data_(
+    const int *   dataID,
+    const int *   valueIndex,
+    const double *gradientValues);
+
+/**
+ * Fortran syntax:
+ * precicef_write_bsgradient_data_(
+ *   INTEGER dataID,
+ *   INTEGER size,
+ *   INTEGER valueIndices,
+ *   DOUBLE PRECISION gradientValues )
+ *
+ * IN:  dataID, size, valueIndices, gradientValues
+ * OUT: -
+ *
+ * @copydoc precice::SolverInterface::writeBlockScalarGradientData
+ */
+void precicef_write_bsgradient_data_(
+    const int *   dataID,
+    const int *   size,
+    const int *   valueIndices,
+    const double *gradientValues);
+
+/**
+ * Fortran syntax:
+ * precicef_write_vgradient_data_(
+ *   INTEGER dataID,
+ *   INTEGER valueIndex,
+ *   DOUBLE PRECISION gradientValues )
+ *
+ * IN:  dataID, valueIndex, gradientValues
+ * OUT: -
+ *
+ * @copydoc precice::SolverInterface::writeVectorGradientData
+ */
+void precicef_write_vgradient_data_(
+    const int *   dataID,
+    const int *   valueIndex,
+    const double *gradientValues);
+
+/**
+ * Fortran syntax:
+ * precicef_write_bvgradient_data_(
+ *   INTEGER dataID,
+ *   INTEGER size,
+ *   INTEGER valueIndices,
+ *   DOUBLE PRECISION gradientValues )
+ *
+ * IN:  dataID, size, valueIndices, gradientValues
+ * OUT: -
+ *
+ * @copydoc precice::SolverInterface::writeBlockVectorGradientData
+ */
+void precicef_write_bvgradient_data_(
+    const int *   dataID,
+    const int *   size,
+    const int *   valueIndices,
+    const double *gradientValues);
 
 /**
  * Fortran syntax:

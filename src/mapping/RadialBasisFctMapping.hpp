@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Eigen/Cholesky>
 #include <Eigen/Core>
 
 #include "com/CommunicateMesh.hpp"
@@ -47,20 +48,20 @@ public:
       Polynomial              polynomial);
 
   /// Computes the mapping coefficients from the in- and output mesh.
-  virtual void computeMapping() override;
+  void computeMapping() final override;
 
   /// Removes a computed mapping.
-  virtual void clear() override;
+  void clear() final override;
 
 private:
   precice::logging::Logger _log{"mapping::RadialBasisFctMapping"};
 
-  RadialBasisFctSolver _rbfSolver;
+  RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T> _rbfSolver;
   /// @copydoc RadialBasisFctBaseMapping::mapConservative
-  virtual void mapConservative(DataID inputDataID, DataID outputDataID) override;
+  void mapConservative(DataID inputDataID, DataID outputDataID) final override;
 
   /// @copydoc RadialBasisFctBaseMapping::mapConsistent
-  virtual void mapConsistent(DataID inputDataID, DataID outputDataID) override;
+  void mapConsistent(DataID inputDataID, DataID outputDataID) final override;
 
   /// Treatment of the polynomial
   Polynomial _polynomial;
@@ -78,6 +79,7 @@ RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctMapping(
     : RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>(constraint, dimensions, function, deadAxis),
       _polynomial(polynomial)
 {
+  PRECICE_CHECK(!(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite() && polynomial == Polynomial::ON), "The integrated polynomial (polynomial=\"on\") is not supported for the selected radial-basis function. Please select another radial-basis function or change the polynomial configuration.");
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -143,7 +145,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       globalOutMesh.addMesh(*outMesh);
     }
 
-    _rbfSolver = RadialBasisFctSolver{this->_basisFunction, globalInMesh, globalOutMesh, this->_deadAxis, _polynomial};
+    _rbfSolver = RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>{this->_basisFunction, globalInMesh, globalOutMesh, this->_deadAxis, _polynomial};
   }
   this->_hasComputedMapping = true;
   PRECICE_DEBUG("Compute Mapping is Completed.");

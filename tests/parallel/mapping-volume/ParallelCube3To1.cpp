@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(ParallelCube3To1)
 
     std::vector<double> values;
     // Sample the function ax + by + cz + d
-    for (int i = 0; i < vertexIDs.size(); ++i) {
+    for (std::size_t i = 0; i < vertexIDs.size(); ++i) {
       values.push_back(d + a * coords[3 * i] + b * coords[3 * i + 1] + c * coords[3 * i + 2]);
     }
 
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(ParallelCube3To1)
     // For completion, we sample points in each direction.
     std::vector<double> coords;
     std::vector<double> values;
-    const unsigned      SAMPLING = 5;
+    const int           SAMPLING = 5;
     for (int i = 0; i <= SAMPLING; ++i) {
       for (int j = 0; j <= SAMPLING; ++j) {
         for (int k = 0; k <= SAMPLING; ++k) {

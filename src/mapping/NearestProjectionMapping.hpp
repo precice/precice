@@ -16,11 +16,8 @@ public:
   /// Constructor, taking mapping constraint.
   NearestProjectionMapping(Constraint constraint, int dimensions);
 
-  /// Destructor, empty.
-  virtual ~NearestProjectionMapping() {}
-
   /// Computes the projections and interpolation relations.
-  virtual void computeMapping() override;
+  void computeMapping() final override;
 
 private:
   logging::Logger _log{"mapping::NearestNeighborProjectionMapping"};

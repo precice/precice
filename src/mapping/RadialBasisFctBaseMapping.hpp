@@ -63,7 +63,7 @@ protected:
   /**
  * @brief Computes the number of polynomial degrees of freedom based on the problem dimension and the dead axis
  *
- * @note This function does not take the handling of the polynomial (ON, OFF, SEPARETE) into account.
+ * @note This function does not take the handling of the polynomial (ON, OFF, SEPARATE) into account.
  *
  * @return int the polynomial degrees of freedom of the RBF system
  */

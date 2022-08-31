@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(ParallelCube1To3)
 
     std::vector<double> coords;
 
-    const unsigned SAMPLING = 5;
+    const int SAMPLING = 5;
 
     switch (context.rank) {
     case 0:

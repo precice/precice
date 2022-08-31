@@ -5,8 +5,8 @@
 #
 # Imported Targets
 # ^^^^^^^^^^^^^^^^
-# 
-# This module defines the followwing IMPORTED target:
+#
+# This module defines the following IMPORTED target:
 #
 #  PETSc::PETSc        - the PETSc library
 #
@@ -22,12 +22,12 @@
 #  PETSc_VERSION_MAJOR  - the MAJOR part of PETSc_VERSION
 #  PETSc_VERSION_MINOR  - the MINOR part of PETSc_VERSION
 #  PETSc_VERSION_PATCH  - the PATCH part of PETSc_VERSION
-# 
+#
 # Variables for locating PETSc
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # Additional CMake variables for locating PETSc
-#  PETSc_DIR            - the path to the root directory of PETSc 
+#  PETSc_DIR            - the path to the root directory of PETSc
 #  PETSc_ARCH           - the PETSc architecture
 #  PETSc_NO_ENV         - instructs the module not to use the environment variables 'PETSC_DIR' and 'PETSC_ENV' to find PETSc
 #
@@ -76,7 +76,7 @@ macro(_petsc_print_pkg_env)
 endmacro()
 
 
-# Message macro which respects the QUIET arguemnt of the package
+# Message macro which respects the QUIET argument of the package
 macro(_message)
   if(NOT PETSc_FIND_QUIETLY)
     message(${ARGV})
@@ -114,7 +114,7 @@ if(PKG_CONFIG_FOUND)
     if(EXISTS "${prefix}/lib/pkgconfig")
       _message(STATUS "Detected ${prefix}")
       list(APPEND _petsc_prefixes "${prefix}")
-    else()          
+    else()
       list(APPEND _petsc_skipped_prefixes "${prefix}")
     endif()
   endforeach()

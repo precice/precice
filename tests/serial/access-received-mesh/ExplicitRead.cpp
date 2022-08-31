@@ -9,7 +9,7 @@ BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(AccessReceivedMesh)
 // Test case for a direct mesh access on one participant to a mesh defined
-// by another participant. The region of interest is defined thorugh a
+// by another participant. The region of interest is defined through a
 // boundingBox. The test case here is the most basic variant in order
 // use such a feature. SolverTwo defines the mesh whereas SolverOne reads
 // directly from this mesh.

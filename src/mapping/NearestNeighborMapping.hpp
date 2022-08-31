@@ -21,10 +21,10 @@ public:
 
 protected:
   /// @copydoc Mapping::mapConservative
-  void mapConservative(DataID inputDataID, DataID outputDataID) override;
+  void mapConservative(DataID inputDataID, DataID outputDataID) final override;
 
   /// @copydoc Mapping::mapConsistent
-  void mapConsistent(DataID inputDataID, DataID outputDataID) override;
+  void mapConsistent(DataID inputDataID, DataID outputDataID) final override;
 };
 
 } // namespace mapping

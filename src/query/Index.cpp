@@ -178,7 +178,7 @@ VertexMatch Index::getClosestVertex(const Eigen::VectorXd &sourceCoord)
   VertexMatch match;
   const auto &rtree = _pimpl->getVertexRTree(*_mesh);
   rtree->query(bgi::nearest(sourceCoord, 1), boost::make_function_output_iterator([&](size_t matchID) {
-                 match = VertexMatch(bg::distance(sourceCoord, _mesh->vertices()[matchID]), matchID);
+                 match = VertexMatch(matchID);
                }));
   return match;
 }
@@ -191,9 +191,8 @@ std::vector<EdgeMatch> Index::getClosestEdges(const Eigen::VectorXd &sourceCoord
 
   std::vector<EdgeMatch> matches;
   rtree->query(bgi::nearest(sourceCoord, n), boost::make_function_output_iterator([&](size_t matchID) {
-                 matches.emplace_back(bg::distance(sourceCoord, _mesh->edges()[matchID]), matchID);
+                 matches.emplace_back(matchID);
                }));
-  std::sort(matches.begin(), matches.end());
   return matches;
 }
 
@@ -205,9 +204,8 @@ std::vector<TriangleMatch> Index::getClosestTriangles(const Eigen::VectorXd &sou
   std::vector<TriangleMatch> matches;
   rtree->query(bgi::nearest(sourceCoord, n),
                boost::make_function_output_iterator([&](TriangleTraits::IndexType const &match) {
-                 matches.emplace_back(bg::distance(sourceCoord, _mesh->triangles()[match.second]), match.second);
+                 matches.emplace_back(match.second);
                }));
-  std::sort(matches.begin(), matches.end());
   return matches;
 }
 
@@ -264,7 +262,7 @@ ProjectionMatch Index::findCellOrProjection(const Eigen::VectorXd &location, int
     for (const auto &match : matchedTriangles) {
       auto polation = mapping::Polation(location, _mesh->triangles()[match.index]);
       if (polation.isInterpolation()) {
-        return {polation, 0.0};
+        return {std::move(polation)};
       }
     }
 
@@ -278,7 +276,7 @@ ProjectionMatch Index::findCellOrProjection(const Eigen::VectorXd &location, int
       // Matches are raw indices, not (indices, distance) pairs
       auto polation = mapping::Polation(location, _mesh->tetrahedra()[match]);
       if (polation.isInterpolation()) {
-        return {polation, 0.0};
+        return {std::move(polation)};
       }
     }
     return findNearestProjection(location, n);
@@ -288,17 +286,23 @@ ProjectionMatch Index::findCellOrProjection(const Eigen::VectorXd &location, int
 ProjectionMatch Index::findVertexProjection(const Eigen::VectorXd &location)
 {
   auto match = getClosestVertex(location);
-  return {mapping::Polation{_mesh->vertices()[match.index]}, match.distance};
+  return {mapping::Polation{location, _mesh->vertices()[match.index]}};
 }
 
 ProjectionMatch Index::findEdgeProjection(const Eigen::VectorXd &location, int n)
 {
-  auto matchedEdges = getClosestEdges(location, n);
-  for (const auto &match : matchedEdges) {
+  std::vector<ProjectionMatch> candidates;
+  candidates.reserve(n);
+  for (const auto &match : getClosestEdges(location, n)) {
     auto polation = mapping::Polation(location, _mesh->edges()[match.index]);
     if (polation.isInterpolation()) {
-      return {polation, match.distance};
+      candidates.emplace_back(std::move(polation));
     }
+  }
+  // Pick the smallest candidate by distance
+  auto min = std::min_element(candidates.begin(), candidates.end());
+  if (min != candidates.end()) {
+    return *min;
   }
   // Could not find edge projection element, fall back to vertex projection
   return findVertexProjection(location);
@@ -306,12 +310,18 @@ ProjectionMatch Index::findEdgeProjection(const Eigen::VectorXd &location, int n
 
 ProjectionMatch Index::findTriangleProjection(const Eigen::VectorXd &location, int n)
 {
-  auto matchedTriangles = getClosestTriangles(location, n);
-  for (const auto &match : matchedTriangles) {
+  std::vector<ProjectionMatch> candidates;
+  candidates.reserve(n);
+  for (const auto &match : getClosestTriangles(location, n)) {
     auto polation = mapping::Polation(location, _mesh->triangles()[match.index]);
     if (polation.isInterpolation()) {
-      return {polation, match.distance};
+      candidates.emplace_back(std::move(polation));
     }
+  }
+  // Pick the smallest candidate by distance
+  auto min = std::min_element(candidates.begin(), candidates.end());
+  if (min != candidates.end()) {
+    return *min;
   }
 
   // Could not triangle find projection element, fall back to edge projection
