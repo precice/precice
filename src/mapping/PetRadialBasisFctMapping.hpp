@@ -597,7 +597,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inp
   int const valueDim = this->input()->data(inputDataID)->getDimensions();
   PRECICE_ASSERT(valueDim == this->output()->data(outputDataID)->getDimensions(),
                  valueDim, this->output()->data(outputDataID)->getDimensions());
-  PRECICE_ASSERT(this->hasConstraint(Mapping::CONSISTENT) || this->hasConstraint(Mapping::SCALED_CONSISTENT) || this->hasConstraint(Mapping::SCALED_CONSISTENT_VOLUME));
+  PRECICE_ASSERT(this->hasConstraint(Mapping::CONSISTENT) || this->isScaledConsistent());
 
   auto out = petsc::Vector::allocate(_matrixA, "out");
   auto in  = petsc::Vector::allocate(_matrixC, "in");
