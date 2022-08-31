@@ -92,6 +92,9 @@ public:
   /// Checks whether the mapping has the given constraint or not
   virtual bool hasConstraint(const Constraint &constraint) const;
 
+  /// Returns true if mapping is a form of scaled consistent mapping
+  bool isScaledConsistent() const;
+
   /// Removes a computed mapping.
   virtual void clear() = 0;
 

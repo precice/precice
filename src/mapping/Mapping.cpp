@@ -176,6 +176,11 @@ bool Mapping::hasComputedMapping() const
   return _hasComputedMapping;
 }
 
+bool Mapping::isScaledConsistent() const
+{
+  return (hasConstraint(SCALED_CONSISTENT) || hasConstraint(SCALED_CONSISTENT_VOLUME));
+}
+
 bool operator<(Mapping::MeshRequirement lhs, Mapping::MeshRequirement rhs)
 {
   switch (lhs) {
