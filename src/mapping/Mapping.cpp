@@ -132,7 +132,7 @@ void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID, Mapping:
     if (not mesh->vertices().empty()) {
       if ((requiresEdges and mesh->edges().empty()) or
           (requiresTriangles and mesh->triangles().empty()) or (requiresTetra and mesh->tetrahedra().empty())) {
-        PRECICE_ERROR("Connectivity information is missing for the mesh {}. "
+        PRECICE_ERROR("Connectivity information is missing for the mesh \"{}\". "
                       "Scaled consistent mapping requires connectivity information.",
                       mesh->getName());
       }
