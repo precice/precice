@@ -850,7 +850,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::printMappingInfo(int inp
   std::string constraintName;
   if (this->hasConstraint(Mapping::CONSISTENT)) {
     constraintName = "consistent";
-  } else if (this->hasConstraint(Mapping::SCALED_CONSISTENT)) {
+  } else if (this->hasConstraint(Mapping::SCALED_CONSISTENT_SURFACE)) {
     constraintName = "scaled-consistent";
   } else if (this->hasConstraint(Mapping::SCALED_CONSISTENT_VOLUME)) {
     constraintName = "scaled-consistent-volume";

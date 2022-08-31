@@ -106,12 +106,9 @@ void Mapping::map(int inputDataID,
     mapConservative(inputDataID, outputDataID);
   } else if (hasConstraint(CONSISTENT)) {
     mapConsistent(inputDataID, outputDataID);
-  } else if (hasConstraint(SCALED_CONSISTENT)) {
+  } else if (isScaledConsistent()) {
     mapConsistent(inputDataID, outputDataID);
-    scaleConsistentMapping(inputDataID, outputDataID, SCALED_CONSISTENT);
-  } else if (hasConstraint(SCALED_CONSISTENT_VOLUME)) {
-    mapConsistent(inputDataID, outputDataID);
-    scaleConsistentMapping(inputDataID, outputDataID, SCALED_CONSISTENT_VOLUME);
+    scaleConsistentMapping(inputDataID, outputDataID, getConstraint());
   } else {
     PRECICE_UNREACHABLE("Unknown mapping constraint.")
   }
@@ -178,7 +175,7 @@ bool Mapping::hasComputedMapping() const
 
 bool Mapping::isScaledConsistent() const
 {
-  return (hasConstraint(SCALED_CONSISTENT) || hasConstraint(SCALED_CONSISTENT_VOLUME));
+  return (hasConstraint(SCALED_CONSISTENT_SURFACE) || hasConstraint(SCALED_CONSISTENT_VOLUME));
 }
 
 bool operator<(Mapping::MeshRequirement lhs, Mapping::MeshRequirement rhs)
