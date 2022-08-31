@@ -119,7 +119,7 @@ void Mapping::map(int inputDataID,
 
 void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID, Mapping::Constraint constraint) const
 {
-  PRECICE_ASSERT(hasConstraint(SCALED_CONSISTENT) || hasConstraint(SCALED_CONSISTENT_VOLUME));
+  PRECICE_ASSERT(isScaledConsistent());
   bool            volumeMode = hasConstraint(SCALED_CONSISTENT_VOLUME);
   logging::Logger _log{"mapping::Mapping"};
   // Only serial participant is supported for scale-consistent mapping
