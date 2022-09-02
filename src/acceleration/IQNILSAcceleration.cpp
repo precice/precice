@@ -213,9 +213,9 @@ void IQNILSAcceleration::computeQNUpdate(const DataMap &cplData, Eigen::VectorXd
     auto &          values = data->values();
     PRECICE_ASSERT(_secondaryMatricesW[id].cols() == c.size(), _secondaryMatricesW[id].cols(), c.size());
     values = _secondaryMatricesW[id] * c;
-    PRECICE_ASSERT(values.size() == data->previousIteration().size(), values.size(), data->previousIteration().size());
+    PRECICE_ASSERT(data->getSize() == data->getPreviousIterationSize(), data->getSize(), data->getPreviousIterationSize());
     values += data->previousIteration();
-    PRECICE_ASSERT(values.size() == _secondaryResiduals[id].size(), values.size(), _secondaryResiduals[id].size());
+    PRECICE_ASSERT(data->getSize() == _secondaryResiduals[id].size(), data->getSize(), _secondaryResiduals[id].size());
     values += _secondaryResiduals[id];
   }
 
