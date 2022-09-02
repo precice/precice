@@ -83,8 +83,8 @@ public:
   /// clears _timeStepsStorage. Called after data was written or before data is received.
   void clearTimeStepsStorage();
 
-  /// stores _data->values() at key relativeDt in _timeStepsStorage for later use.
-  void storeDataAtTime(double relativeDt);
+  /// stores data at key relativeDt in _timeStepsStorage for later use.
+  void storeDataAtTime(Eigen::VectorXd data, double relativeDt);
 
   /// returns data for a given key. Assumes that this data exists under the key.
   Eigen::VectorXd getDataAtTime(double relativeDt);

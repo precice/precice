@@ -186,8 +186,7 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
       }
       auto time = timesAscending(timeId);
       PRECICE_ASSERT(time > 0.0 && time <= 1.0); // time <= 0 or time > 1 is not allowed.
-      pair.second->values() = slice;
-      pair.second->storeDataAtTime(time);
+      pair.second->storeDataAtTime(slice, time);
     }
     pair.second->values() = pair.second->getDataAtTime(1.0);
 

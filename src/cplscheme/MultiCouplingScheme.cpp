@@ -96,10 +96,10 @@ void MultiCouplingScheme::storeTimeStepData(double relativeDt)
 {
   PRECICE_ASSERT(relativeDt > 0);
   PRECICE_ASSERT(relativeDt <= 1.0);
-  DataMap allSendData;
   for (auto &sendDataVector : _sendDataVector) {
     for (auto &aSendData : sendDataVector.second) {
-      aSendData.second->storeDataAtTime(relativeDt);
+      auto theData = aSendData.second->values();
+      aSendData.second->storeDataAtTime(theData, relativeDt);
     }
   }
 }

@@ -154,7 +154,8 @@ void BiCouplingScheme::storeTimeStepData(double relativeDt)
   PRECICE_ASSERT(relativeDt > 0);
   PRECICE_ASSERT(relativeDt <= 1.0, relativeDt);
   for (auto &aSendData : getSendData()) {
-    aSendData.second->storeDataAtTime(relativeDt);
+    auto theData = aSendData.second->values();
+    aSendData.second->storeDataAtTime(theData, relativeDt);
   }
 }
 

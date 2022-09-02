@@ -164,12 +164,12 @@ double CouplingData::maxStoredDt()
   return maxDt;
 }
 
-void CouplingData::storeDataAtTime(double relativeDt)
+void CouplingData::storeDataAtTime(Eigen::VectorXd data, double relativeDt)
 {
   PRECICE_ASSERT(relativeDt > 0.0);
   //PRECICE_ASSERT(relativeDt > maxStoredDt());  // generally a nice security check, but currently we have to override some data after acceleration was performed.
   PRECICE_ASSERT(relativeDt <= 1.0);
-  _timeStepsStorage[relativeDt] = _data->values();
+  _timeStepsStorage[relativeDt] = data;
 }
 
 Eigen::VectorXd CouplingData::getDataAtTime(double relativeDt)
