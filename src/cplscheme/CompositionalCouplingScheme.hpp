@@ -118,7 +118,6 @@ public:
    */
   bool hasDataBeenReceived() const final override;
 
-  // @todo find a better name. This is too low level.
   /**
    * @brief stores current time step data in buffer for later
    *
@@ -126,7 +125,6 @@ public:
    */
   void storeTimeStepSendData(double relativeDt) final override;
 
-  // @todo find a better name. This is too low level.
   /**
    * @brief stores current time step data in buffer for later
    *
@@ -134,7 +132,6 @@ public:
    */
   void storeTimeStepReceiveData(double relativeDt) final override;
 
-  // @todo find a better name. This is too low level.
   /**
    * @brief retreives time step data from CouplingData into mesh values
    *
@@ -147,7 +144,7 @@ public:
    *
    * @return std::vector containing all times (as relative times)
    */
-  std::vector<double> getTimes() final override;
+  std::vector<double> getReceiveTimes() final override;
 
   /**
    * @brief Returns the currently computed time of the coupling scheme.

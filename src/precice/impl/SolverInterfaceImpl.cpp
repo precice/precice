@@ -410,11 +410,10 @@ double SolverInterfaceImpl::advance(
   // Current time
   double time = _couplingScheme->getTime();
 
-  if (_couplingScheme->willDataBeExchanged(0.0)) {
-    performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time);
-    mapWrittenData();
-    performDataActions({action::Action::WRITE_MAPPING_POST}, time);
-  }
+  // always perform mapping, because we will store all mapped data, if subcycling is used.
+  performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time);
+  mapWrittenData();
+  performDataActions({action::Action::WRITE_MAPPING_POST}, time);
 
   PRECICE_DEBUG("Advance coupling scheme");
   _couplingScheme->advance();
@@ -1892,7 +1891,7 @@ void SolverInterfaceImpl::mapReadData()
 {
   PRECICE_TRACE();
   computeMappings(_accessor->readMappingContexts(), "read");
-  for (auto time : _couplingScheme->getTimes()) {
+  for (auto time : _couplingScheme->getReceiveTimes()) {
     _couplingScheme->retreiveTimeStepReceiveData(time); // @todo loads data into ALL read data. Would be better to only perform this for read data with name context.getDataName()
     for (auto &context : _accessor->readDataContexts()) {
       if (context.isMappingRequired()) {

@@ -178,11 +178,19 @@ void BiCouplingScheme::retreiveTimeStepReceiveData(double relativeDt)
   }
 }
 
-std::vector<double> BiCouplingScheme::getTimes()
+std::vector<double> BiCouplingScheme::getReceiveTimes()
 {
-  //@todo stub implementation. Should walk over all receive data, get times and ensure that all times vectors actually hold the same times (since otherwise we would have to get times individually per data)
-  auto times = std::vector<double>({1.0});
-  return times;
+  //@todo Should ensure that all times vectors actually hold the same times (since otherwise we would have to get times individually per data), but for BiCouplingScheme this should be fine.
+  auto times = std::vector<double>();
+  for(auto &data: getReceiveData()){
+    auto timesVec = data.second->getStoredTimesAscending();
+    PRECICE_ASSERT(timesVec.size() > 0, timesVec.size());
+    for(int i = 0; i < timesVec.size(); i++) {
+      times.push_back(timesVec(i));
+    }
+    return times;
+  }
+  PRECICE_ASSERT(false);
 }
 
 } // namespace cplscheme

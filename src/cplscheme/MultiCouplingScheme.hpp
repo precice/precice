@@ -103,7 +103,7 @@ public:
    *
    * @return std::vector containing all times (as relative times)
    */
-  std::vector<double> getTimes() override final;
+  std::vector<double> getReceiveTimes() override final;
 
 private:
   /**

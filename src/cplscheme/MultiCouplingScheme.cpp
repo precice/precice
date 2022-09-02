@@ -128,7 +128,7 @@ void MultiCouplingScheme::retreiveTimeStepReceiveData(double relativeDt)
   }
 }
 
-std::vector<double> MultiCouplingScheme::getTimes()
+std::vector<double> MultiCouplingScheme::getReceiveTimes()
 {
   //@todo stub implementation. Should walk over all receive data, get times and ensure that all times vectors actually hold the same times (since otherwise we would have to get times individually per data)
   //@todo subcycling is not supported for MultiCouplingScheme, because this needs a complicated interplay of picking the right data in time and mapping this data. This is hard to realize with the current implementation.

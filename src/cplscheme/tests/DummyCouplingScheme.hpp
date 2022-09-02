@@ -110,7 +110,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  void storeTimeStepSendData(double relativeDt) final override
+  void storeTimeStepSendData(double relativeDt) override final
   {
     PRECICE_ASSERT(false);
   }
@@ -118,7 +118,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  void storeTimeStepReceiveData(double relativeDt) final override
+  void storeTimeStepReceiveData(double relativeDt) override final
   {
     PRECICE_ASSERT(false);
   }
@@ -126,7 +126,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  void retreiveTimeStepReceiveData(double relativeDt) final override
+  void retreiveTimeStepReceiveData(double relativeDt) override final
   {
     PRECICE_ASSERT(false);
   }
@@ -134,7 +134,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  std::vector<double> getTimes() override final
+  std::vector<double> getReceiveTimes() override final
   {
     PRECICE_ASSERT(false);
     return std::vector<double>();
