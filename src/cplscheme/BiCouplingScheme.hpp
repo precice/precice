@@ -75,11 +75,32 @@ public:
   }
 
   /**
+   * @brief stores current time step data in buffer for later
+   *
+   * @param relativeDt relative dt associated with the data.
+   */
+  void storeTimeStepSendData(double relativeDt) override final;
+
+  /**
+   * @brief stores current time step data in buffer for later
+   *
+   * @param relativeDt relative dt associated with the data.
+   */
+  void storeTimeStepReceiveData(double relativeDt) override final;
+
+  /**
    * @brief retreives time step data from CouplingData into mesh values
    *
    * @param relativeDt relative dt associated with the data.
    */
-  void retreiveTimeStepData(double relativeDt) override final;
+  void retreiveTimeStepReceiveData(double relativeDt) override final;
+
+  /**
+   * @brief Get the times associated with time steps in ascending order
+   *
+   * @return std::vector containing all times (as relative times)
+   */
+  std::vector<double> getTimes() override final;
 
 protected:
   /// Returns all data to be sent.
@@ -122,13 +143,6 @@ protected:
    * @brief Exchanges data, if it has to be initialized.
    */
   void exchangeInitialData() override final;
-
-  /**
-   * @brief stores current time step data in buffer for later
-   *
-   * @param relativeDt relative dt associated with the data.
-   */
-  void storeTimeStepData(double relativeDt) override final;
 
 private:
   mutable logging::Logger _log{"cplscheme::BiCouplingScheme"};

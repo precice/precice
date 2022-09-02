@@ -120,6 +120,37 @@ public:
   /// @brief Returns true, if data has been exchanged in last call of advance().
   virtual bool hasDataBeenReceived() const = 0;
 
+  // @todo find a better name. This is too low level.
+  /**
+   * @brief stores current time step data in buffer for later
+   *
+   * @param relativeDt relative dt associated with the data.
+   */
+  virtual void storeTimeStepSendData(double relativeDt) = 0;
+
+  // @todo find a better name. This is too low level.
+  /**
+   * @brief stores current time step data in buffer for later
+   *
+   * @param relativeDt relative dt associated with the data.
+   */
+  virtual void storeTimeStepReceiveData(double relativeDt) = 0;
+
+  // @todo find a better name. This is too low level.
+  /**
+   * @brief retreives time step data from CouplingData into mesh values
+   *
+   * @param relativeDt relative dt associated with the data.
+   */
+  virtual void retreiveTimeStepReceiveData(double relativeDt) = 0;
+
+  /**
+   * @brief Get the times associated with time steps in ascending order
+   *
+   * @return std::vector containing all times (as relative times)
+   */
+  virtual std::vector<double> getTimes() = 0;
+
   /// Returns the currently computed time of the coupling scheme.
   virtual double getTime() const = 0;
 

@@ -110,6 +110,39 @@ public:
   /**
    * @brief Not implemented.
    */
+  void storeTimeStepSendData(double relativeDt) final override
+  {
+    PRECICE_ASSERT(false);
+  }
+
+  /**
+   * @brief Not implemented.
+   */
+  void storeTimeStepReceiveData(double relativeDt) final override
+  {
+    PRECICE_ASSERT(false);
+  }
+
+  /**
+   * @brief Not implemented.
+   */
+  void retreiveTimeStepReceiveData(double relativeDt) final override
+  {
+    PRECICE_ASSERT(false);
+  }
+
+  /**
+   * @brief Not implemented.
+   */
+  std::vector<double> getTimes() override final
+  {
+    PRECICE_ASSERT(false);
+    return std::vector<double>();
+  }
+
+  /**
+   * @brief Not implemented.
+   */
   double getTime() const override final
   {
     PRECICE_ASSERT(false);

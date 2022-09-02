@@ -521,7 +521,9 @@ private:
   /// Computes, performs, and resets all suitable write mappings.
   void mapWrittenData();
 
-  /// Computes, performs, and resets all suitable read mappings.
+  /**
+   * @brief Computes, performs, and resets all suitable read mappings. Stores data in read waveform.
+   */
   void mapReadData();
 
   /**

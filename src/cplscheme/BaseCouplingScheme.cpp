@@ -239,13 +239,13 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
 
   // For simple initialization initialize as constant.
   if (sendsInitializedData()) {
-    storeTimeStepData(1.0);
+    storeTimeStepSendData(1.0);
   }
 
   exchangeInitialData();
 
   if (receivesInitializedData()) {
-    retreiveTimeStepData(1.0); // might be moved into SolverInterfaceImpl.
+    retreiveTimeStepReceiveData(1.0); // might be moved into SolverInterfaceImpl.
   }
 
   if (isImplicitCouplingScheme()) {
@@ -294,20 +294,20 @@ void BaseCouplingScheme::advance()
         PRECICE_ASSERT(math::smallerEquals(relativeDt, 1.0, 10e-9), relativeDt);
         relativeDt = 1.0;
       }
-      storeTimeStepData(relativeDt);
+      storeTimeStepSendData(relativeDt);
     } else {
       // We don't support subcycling here, because this is complicated. Therefore, use same strategy like for explicit coupling and just use a single value at end of window.
       // Possible solution: Don't scale times to [0,1], but leave them as they are. Then we would also allow times > 1. We then have two options:
       // 1) scale the times back later when the time window size is known (to still benefit from the simpler handling, if all times are scaled to [0,1]).
       // 2) generally use times in the interval [0, timeWindowSize]. This makes the implementation probably a bit more complicated, but also more consistent.
       if (reachedEndOfTimeWindow()) { // only necessary to trigger at end of time window.
-        storeTimeStepData(1.0);       // only write data at end of window
+        storeTimeStepSendData(1.0);       // only write data at end of window
       }
     }
   } else {
     // work-around for explicit coupling, because it does not support waveform relaxation.
     if (reachedEndOfTimeWindow()) { // only necessary to trigger at end of time window.
-      storeTimeStepData(1.0);       // only write data at end of window
+      storeTimeStepSendData(1.0);       // only write data at end of window
     }
   }
 
@@ -316,7 +316,7 @@ void BaseCouplingScheme::advance()
     _timeWindows += 1; // increment window counter. If not converged, will be decremented again later.
 
     bool convergence = exchangeDataAndAccelerate();
-    retreiveTimeStepData(1.0); // might be moved into SolverInterfaceImpl.
+    retreiveTimeStepReceiveData(1.0); // might be moved into SolverInterfaceImpl.
 
     if (isImplicitCouplingScheme()) { // check convergence
       if (not convergence) {          // repeat window
@@ -732,9 +732,28 @@ bool BaseCouplingScheme::anyDataRequiresInitialization(BaseCouplingScheme::DataM
   return false;
 }
 
+void BaseCouplingScheme::storeTimeStepAccelerationData(double relativeDt)
+{
+  PRECICE_ASSERT(relativeDt > 0);
+  PRECICE_ASSERT(relativeDt <= 1.0, relativeDt);
+  for (auto &anAccelerationData : getAccelerationData()) {
+    auto theData = anAccelerationData.second->values();
+    anAccelerationData.second->storeDataAtTime(theData, relativeDt);
+  }
+}
+
+void BaseCouplingScheme::retreiveTimeStepAccelerationData(double relativeDt)
+{
+  PRECICE_ASSERT(relativeDt > 0);
+  PRECICE_ASSERT(relativeDt <= 1.0, relativeDt);
+  for (auto &anAccelerationData : getAccelerationData()) {
+    anAccelerationData.second->values() = anAccelerationData.second->getDataAtTime(relativeDt);
+  }
+}
+
 bool BaseCouplingScheme::doImplicitStep()
 {
-  retreiveTimeStepData(1.0); // will be needed by acceleration
+  retreiveTimeStepAccelerationData(1.0); // will be needed by acceleration
   storeExtrapolationData();
 
   PRECICE_DEBUG("measure convergence of the coupling iteration");
@@ -764,7 +783,7 @@ bool BaseCouplingScheme::doImplicitStep()
   storeIteration();
 
   // Override data with accelerated data
-  storeTimeStepData(1.0);
+  storeTimeStepAccelerationData(1.0);
 
   return convergence;
 }

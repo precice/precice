@@ -232,13 +232,6 @@ public:
    */
   virtual void determineInitialDataExchange() = 0;
 
-  /**
-   * @brief retreives time step data from CouplingData into mesh values
-   *
-   * @param relativeDt relative dt associated with the data.
-   */
-  virtual void retreiveTimeStepData(double relativeDt) = 0;
-
 protected:
   /// Map that links DataID to CouplingData
   typedef std::map<int, PtrCouplingData> DataMap;
@@ -364,13 +357,6 @@ protected:
    * @brief stores current data in buffer for extrapolation
    */
   void storeExtrapolationData();
-
-  /**
-   * @brief stores current time step data in buffer for later
-   *
-   * @param relativeDt relative dt associated with the data.
-   */
-  virtual void storeTimeStepData(double relativeDt) = 0;
 
   /**
    * @brief finalizes this window's data and initializes data for next window.
@@ -603,6 +589,20 @@ private:
    * @return true, if any CouplingData in dataMap requires initialization
    */
   bool anyDataRequiresInitialization(DataMap &dataMap) const;
+
+  /**
+   * @brief stores current time step data in buffer for later
+   *
+   * @param relativeDt relative dt associated with the data.
+   */
+  void storeTimeStepAccelerationData(double relativeDt);
+
+  /**
+   * @brief retreives time step data from CouplingData into mesh values
+   *
+   * @param relativeDt relative dt associated with the data.
+   */
+  void retreiveTimeStepAccelerationData(double relativeDt);
 };
 } // namespace cplscheme
 } // namespace precice

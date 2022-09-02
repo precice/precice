@@ -78,19 +78,32 @@ public:
   }
 
   /**
-   * @brief retreives time step data from CouplingData into mesh values
+   * @brief stores current time step data in buffer for later
    *
    * @param relativeDt relative dt associated with the data.
    */
-  void retreiveTimeStepData(double relativeDt) override final;
+  void storeTimeStepSendData(double relativeDt) override final;
 
-protected:
   /**
    * @brief stores current time step data in buffer for later
    *
    * @param relativeDt relative dt associated with the data.
    */
-  void storeTimeStepData(double relativeDt) override final;
+  void storeTimeStepReceiveData(double relativeDt) override final;
+
+  /**
+   * @brief retreives time step data from CouplingData into mesh values
+   *
+   * @param relativeDt relative dt associated with the data.
+   */
+  void retreiveTimeStepReceiveData(double relativeDt) override final;
+
+  /**
+   * @brief Get the times associated with time steps in ascending order
+   *
+   * @return std::vector containing all times (as relative times)
+   */
+  std::vector<double> getTimes() override final;
 
 private:
   /**

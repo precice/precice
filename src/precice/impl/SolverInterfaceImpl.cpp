@@ -1892,12 +1892,15 @@ void SolverInterfaceImpl::mapReadData()
 {
   PRECICE_TRACE();
   computeMappings(_accessor->readMappingContexts(), "read");
-  for (auto &context : _accessor->readDataContexts()) {
-    if (context.isMappingRequired()) {
-      PRECICE_DEBUG("Map read data \"{}\" to mesh \"{}\"", context.getDataName(), context.getMeshName());
-      context.mapData();
+  for (auto time : _couplingScheme->getTimes()) {
+    _couplingScheme->retreiveTimeStepReceiveData(time); // @todo loads data into ALL read data. Would be better to only perform this for read data with name context.getDataName()
+    for (auto &context : _accessor->readDataContexts()) {
+      if (context.isMappingRequired()) {
+        PRECICE_DEBUG("Map read data \"{}\" to mesh \"{}\"", context.getDataName(), context.getMeshName());
+        context.mapData();
+      }
+      context.storeDataInWaveform(time);
     }
-    context.storeDataInWaveform();
   }
   clearMappings(_accessor->readMappingContexts());
 }
@@ -1907,6 +1910,7 @@ void SolverInterfaceImpl::performDataActions(
     double                                  time)
 {
   PRECICE_TRACE();
+  _couplingScheme->retreiveTimeStepData(1.0);
   for (action::PtrAction &action : _accessor->actions()) {
     if (timings.find(action->getTiming()) != timings.end()) {
       action->performAction(time);

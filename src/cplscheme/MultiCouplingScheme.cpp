@@ -92,7 +92,7 @@ void MultiCouplingScheme::exchangeInitialData()
   PRECICE_DEBUG("Initial data is exchanged in MultiCouplingScheme");
 }
 
-void MultiCouplingScheme::storeTimeStepData(double relativeDt)
+void MultiCouplingScheme::storeTimeStepSendData(double relativeDt)
 {
   PRECICE_ASSERT(relativeDt > 0);
   PRECICE_ASSERT(relativeDt <= 1.0);
@@ -104,8 +104,21 @@ void MultiCouplingScheme::storeTimeStepData(double relativeDt)
   }
 }
 
-void MultiCouplingScheme::retreiveTimeStepData(double relativeDt)
+void MultiCouplingScheme::storeTimeStepReceiveData(double relativeDt)
 {
+  PRECICE_ASSERT(relativeDt > 0);
+  PRECICE_ASSERT(relativeDt <= 1.0);
+  for (auto &receiveDataVector : _receiveDataVector) {
+    for (auto &aReceiveData : receiveDataVector.second) {
+      auto theData = aReceiveData.second->values();
+      aReceiveData.second->storeDataAtTime(theData, relativeDt);
+    }
+  }
+}
+
+void MultiCouplingScheme::retreiveTimeStepReceiveData(double relativeDt)
+{
+  // @todo breaks, if different receiveData live on different time-meshes. This is a realistic use-case for multi coupling! Should use a different signature here to individually retreiveTimeStepData from receiveData. Would also be helpful for mapping.
   PRECICE_ASSERT(relativeDt > 0);
   PRECICE_ASSERT(relativeDt <= 1.0, relativeDt);
   for (auto &receiveDataVector : _receiveDataVector) {
@@ -113,6 +126,14 @@ void MultiCouplingScheme::retreiveTimeStepData(double relativeDt)
       aReceiveData.second->values() = aReceiveData.second->getDataAtTime(relativeDt);
     }
   }
+}
+
+std::vector<double> MultiCouplingScheme::getTimes()
+{
+  //@todo stub implementation. Should walk over all receive data, get times and ensure that all times vectors actually hold the same times (since otherwise we would have to get times individually per data)
+  //@todo subcycling is not supported for MultiCouplingScheme, because this needs a complicated interplay of picking the right data in time and mapping this data. This is hard to realize with the current implementation.
+  auto times = std::vector<double>({1.0});
+  return times;
 }
 
 bool MultiCouplingScheme::exchangeDataAndAccelerate()

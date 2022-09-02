@@ -66,9 +66,11 @@ public:
   void moveToNextWindow();
 
   /**
-   * @brief Stores _providedData as first sample of _waveform.
+   * @brief Stores _providedData in _waveform. Uses provided relativeDt to label data.
+   *
+   * @param[in] relativeDt relativeDt in waveform the data will be associated with.
    */
-  void storeDataInWaveform();
+  void storeDataInWaveform(double relativeDt);
 
 private:
   static logging::Logger _log;
