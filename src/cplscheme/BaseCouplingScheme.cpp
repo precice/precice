@@ -353,7 +353,7 @@ void BaseCouplingScheme::advance()
       _isTimeWindowComplete = true;
     }
     if (isCouplingOngoing()) {
-      PRECICE_ASSERT(_hasDataBeenReceived);
+      //PRECICE_ASSERT(_hasDataBeenReceived);  // actually incorrect. Data is not necessarily received, if scheme is only sending.
     }
     _computedTimeWindowPart = 0.0; // reset window
   }
