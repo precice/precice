@@ -439,6 +439,9 @@ private:
   /// True, if this participant has to receive initialized data.
   bool _receivesInitializedData = false;
 
+  /// True, if at least one receive was receiving data.
+  bool _atLeastOneWasReceived = false;
+
   /// True, if data has been received from other participant. Flag is used to make sure that coupling scheme is implemented and used correctly.
   bool _hasDataBeenReceived = false;
 

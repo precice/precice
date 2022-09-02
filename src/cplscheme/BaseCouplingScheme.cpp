@@ -196,6 +196,9 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
     receivedDataIDs.push_back(pair.first);
   }
   PRECICE_DEBUG("Number of received data sets = {}", receivedDataIDs.size());
+  if(receivedDataIDs.size() > 0) {
+    _atLeastOneWasReceived = true;
+  }
 }
 
 void BaseCouplingScheme::setTimeWindowSize(double timeWindowSize)
@@ -421,7 +424,10 @@ bool BaseCouplingScheme::hasDataBeenReceived() const
 void BaseCouplingScheme::checkDataHasBeenReceived()
 {
   PRECICE_ASSERT(not _hasDataBeenReceived, "checkDataHasBeenReceived() may only be called once within one coupling iteration. If this assertion is triggered this probably means that your coupling scheme has a bug.");
-  _hasDataBeenReceived = true;
+  if(_atLeastOneWasReceived) {
+    _hasDataBeenReceived = true;
+    _atLeastOneWasReceived = false;
+  }
 }
 
 double BaseCouplingScheme::getTime() const
