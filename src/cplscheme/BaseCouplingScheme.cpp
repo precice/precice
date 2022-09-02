@@ -112,7 +112,7 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
     PRECICE_ASSERT(timesAscending(timesAscending.size() - 1) == 1.0); // assert that last element is 1.0
 
     // @todo put serialization into CouplingData & test it!
-    int  nValues           = pair.second->values().size();
+    int  nValues           = pair.second->getSize();
     auto serializedSamples = Eigen::VectorXd(nTimeSteps * nValues);
 
     for (int timeId = 0; timeId < nTimeSteps; timeId++) {
@@ -172,7 +172,7 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
     PRECICE_ASSERT(nTimeSteps > 0);
     auto timesAscending = receiveTimes(m2n, nTimeSteps);
 
-    int  nValues           = pair.second->values().size();
+    int  nValues           = pair.second->getSize();
     auto serializedSamples = Eigen::VectorXd(nTimeSteps * nValues);
 
     // Data is only received on ranks with size>0, which is checked in the derived class implementation

@@ -37,11 +37,11 @@ void AitkenAcceleration::initialize(const DataMap &cplData)
   checkDataIDs(cplData);
   size_t entries = 0;
   if (_dataIDs.size() == 1) {
-    entries = cplData.at(_dataIDs.at(0))->values().size();
+    entries = cplData.at(_dataIDs.at(0))->getSize();
   } else {
     PRECICE_ASSERT(_dataIDs.size() == 2);
-    entries = cplData.at(_dataIDs.at(0))->values().size() +
-              cplData.at(_dataIDs.at(1))->values().size();
+    entries = cplData.at(_dataIDs.at(0))->getSize() +
+              cplData.at(_dataIDs.at(1))->getSize();
   }
   double          initializer = std::numeric_limits<double>::max();
   Eigen::VectorXd toAppend    = Eigen::VectorXd::Constant(entries, initializer);

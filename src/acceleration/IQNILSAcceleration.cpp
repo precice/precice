@@ -48,7 +48,7 @@ void IQNILSAcceleration::initialize(
   // Fetch secondary data IDs, to be relaxed with same coefficients from IQN-ILS
   for (const DataMap::value_type &pair : cplData) {
     if (not utils::contained(pair.first, _dataIDs)) {
-      int secondaryEntries = pair.second->values().size();
+      int secondaryEntries = pair.second->getSize();
       utils::append(_secondaryOldXTildes[pair.first], Eigen::VectorXd(Eigen::VectorXd::Zero(secondaryEntries)));
     }
   }
@@ -61,8 +61,8 @@ void IQNILSAcceleration::updateDifferenceMatrices(
   for (int id : _secondaryDataIDs) {
     Eigen::VectorXd &secResiduals = _secondaryResiduals[id];
     PtrCouplingData  data         = cplData.at(id);
-    PRECICE_ASSERT(secResiduals.size() == data->values().size(),
-                   secResiduals.size(), data->values().size());
+    PRECICE_ASSERT(secResiduals.size() == data->getSize(),
+                   secResiduals.size(), data->getSize());
     secResiduals = data->values();
     secResiduals -= data->previousIteration();
   }
@@ -89,7 +89,7 @@ void IQNILSAcceleration::updateDifferenceMatrices(
       // Compute delta_x_tilde for secondary data
       for (int id : _secondaryDataIDs) {
         Eigen::MatrixXd &secW = _secondaryMatricesW[id];
-        PRECICE_ASSERT(secW.rows() == cplData.at(id)->values().size(), secW.rows(), cplData.at(id)->values().size());
+        PRECICE_ASSERT(secW.rows() == cplData.at(id)->getSize(), secW.rows(), cplData.at(id)->getSize());
         secW.col(0) = cplData.at(id)->values();
         secW.col(0) -= _secondaryOldXTildes[id];
       }
@@ -97,8 +97,8 @@ void IQNILSAcceleration::updateDifferenceMatrices(
 
     // Store x_tildes for secondary data
     for (int id : _secondaryDataIDs) {
-      PRECICE_ASSERT(_secondaryOldXTildes[id].size() == cplData.at(id)->values().size(),
-                     _secondaryOldXTildes[id].size(), cplData.at(id)->values().size());
+      PRECICE_ASSERT(_secondaryOldXTildes[id].size() == cplData.at(id)->getSize(),
+                     _secondaryOldXTildes[id].size(), cplData.at(id)->getSize());
       _secondaryOldXTildes[id] = cplData.at(id)->values();
     }
   }
@@ -112,8 +112,8 @@ void IQNILSAcceleration::computeUnderrelaxationSecondaryData(
 {
   //Store x_tildes for secondary data
   for (int id : _secondaryDataIDs) {
-    PRECICE_ASSERT(_secondaryOldXTildes.at(id).size() == cplData.at(id)->values().size(),
-                   _secondaryOldXTildes.at(id).size(), cplData.at(id)->values().size());
+    PRECICE_ASSERT(_secondaryOldXTildes.at(id).size() == cplData.at(id)->getSize(),
+                   _secondaryOldXTildes.at(id).size(), cplData.at(id)->getSize());
     _secondaryOldXTildes[id] = cplData.at(id)->values();
   }
 
