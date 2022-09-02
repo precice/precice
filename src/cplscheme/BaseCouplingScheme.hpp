@@ -232,6 +232,13 @@ public:
    */
   virtual void determineInitialDataExchange() = 0;
 
+  /**
+   * @brief retreives time step data from CouplingData into mesh values
+   *
+   * @param relativeDt relative dt associated with the data.
+   */
+  virtual void retreiveTimeStepData(double relativeDt) = 0;
+
 protected:
   /// Map that links DataID to CouplingData
   typedef std::map<int, PtrCouplingData> DataMap;

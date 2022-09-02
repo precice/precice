@@ -159,5 +159,14 @@ void BiCouplingScheme::storeTimeStepData(double relativeDt)
   }
 }
 
+void BiCouplingScheme::retreiveTimeStepData(double relativeDt)
+{
+  PRECICE_ASSERT(relativeDt > 0);
+  PRECICE_ASSERT(relativeDt <= 1.0, relativeDt);
+  for (auto &aReceiveData : getReceiveData()) {
+    aReceiveData.second->values() = aReceiveData.second->getDataAtTime(relativeDt);
+  }
+}
+
 } // namespace cplscheme
 } // namespace precice

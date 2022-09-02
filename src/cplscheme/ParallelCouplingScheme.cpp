@@ -49,7 +49,6 @@ bool ParallelCouplingScheme::exchangeDataAndAccelerate()
     PRECICE_DEBUG("Sending data...");
     sendData(getM2N(), getSendData());
   }
-
   return convergence;
 }
 

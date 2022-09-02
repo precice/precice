@@ -188,7 +188,6 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
       PRECICE_ASSERT(time > 0.0 && time <= 1.0); // time <= 0 or time > 1 is not allowed.
       pair.second->storeDataAtTime(slice, time);
     }
-    pair.second->values() = pair.second->getDataAtTime(1.0);
 
     if (pair.second->hasGradient()) {
       m2n->receive(pair.second->gradientValues(), pair.second->getMeshID(), pair.second->getDimensions() * pair.second->meshDimensions());
@@ -244,6 +243,10 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   }
 
   exchangeInitialData();
+
+  if (receivesInitializedData()) {
+    retreiveTimeStepData(1.0); // might be moved into SolverInterfaceImpl.
+  }
 
   if (isImplicitCouplingScheme()) {
     if (not doesFirstStep()) {
@@ -313,6 +316,7 @@ void BaseCouplingScheme::advance()
     _timeWindows += 1; // increment window counter. If not converged, will be decremented again later.
 
     bool convergence = exchangeDataAndAccelerate();
+    retreiveTimeStepData(1.0); // might be moved into SolverInterfaceImpl.
 
     if (isImplicitCouplingScheme()) { // check convergence
       if (not convergence) {          // repeat window
@@ -730,6 +734,7 @@ bool BaseCouplingScheme::anyDataRequiresInitialization(BaseCouplingScheme::DataM
 
 bool BaseCouplingScheme::doImplicitStep()
 {
+  retreiveTimeStepData(1.0); // will be needed by acceleration
   storeExtrapolationData();
 
   PRECICE_DEBUG("measure convergence of the coupling iteration");
@@ -758,7 +763,7 @@ bool BaseCouplingScheme::doImplicitStep()
   // Store data for conv. measurement, acceleration
   storeIteration();
 
-  // Override data with accelerated data.
+  // Override data with accelerated data
   storeTimeStepData(1.0);
 
   return convergence;

@@ -77,6 +77,13 @@ public:
     return std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(), [](const auto &sendExchange) { return not sendExchange.second.empty(); });
   }
 
+  /**
+   * @brief retreives time step data from CouplingData into mesh values
+   *
+   * @param relativeDt relative dt associated with the data.
+   */
+  void retreiveTimeStepData(double relativeDt) override final;
+
 protected:
   /**
    * @brief stores current time step data in buffer for later

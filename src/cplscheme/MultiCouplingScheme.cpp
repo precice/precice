@@ -104,6 +104,17 @@ void MultiCouplingScheme::storeTimeStepData(double relativeDt)
   }
 }
 
+void MultiCouplingScheme::retreiveTimeStepData(double relativeDt)
+{
+  PRECICE_ASSERT(relativeDt > 0);
+  PRECICE_ASSERT(relativeDt <= 1.0, relativeDt);
+  for (auto &receiveDataVector : _receiveDataVector) {
+    for (auto &aReceiveData : receiveDataVector.second) {
+      aReceiveData.second->values() = aReceiveData.second->getDataAtTime(relativeDt);
+    }
+  }
+}
+
 bool MultiCouplingScheme::exchangeDataAndAccelerate()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
