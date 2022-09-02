@@ -84,22 +84,13 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingMixed)
       iterations         = 0;
       precice.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
     }
-    double readTime;
-    if (context.isNamed("SolverOne")) {
-      // zeroth order corresponds to end of window
-      readTime = timeCheckpoint + windowDt;
-    } else {
-      BOOST_TEST(context.isNamed("SolverTwo"));
-      // first order reads from interpolant inside window
-      readTime = time + currentDt;
-    }
 
     precice.readScalarData(readDataID, vertexID, currentDt, readData);
 
     if (iterations == 0) { // in the first iteration of each window, use data from previous window.
       BOOST_TEST(readData == readFunction(timeCheckpoint));
     } else {
-      BOOST_TEST(readData == readFunction(readTime));
+      BOOST_TEST(readData == readFunction(time + currentDt));
     }
 
     precice.readScalarData(readDataID, vertexID, currentDt / 2, readData);
@@ -108,10 +99,10 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingMixed)
       BOOST_TEST(readData == readFunction(timeCheckpoint));
     } else {                              // in the following iterations, use data at the end of window.
       if (context.isNamed("SolverOne")) { // in the following iterations, use data at the end of window.
-        BOOST_TEST(readData == readFunction(readTime));
+        BOOST_TEST(readData == readFunction(time + currentDt));
       } else { // in the following iterations we have two samples of data. Therefore linear interpolation
         BOOST_TEST(context.isNamed("SolverTwo"));
-        BOOST_TEST(readData == readFunction(readTime - currentDt / 2));
+        BOOST_TEST(readData == readFunction(time + currentDt / 2));
       }
     }
 

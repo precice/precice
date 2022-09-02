@@ -84,15 +84,12 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingZero)
       iterations         = 0;
       precice.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
     }
-    double readTime;
-    readTime = timeCheckpoint + windowDt;
-
     precice.readScalarData(readDataID, vertexID, currentDt, readData);
 
     if (iterations == 0) { // in the first iteration of each window, use data from previous window.
       BOOST_TEST(readData == readFunction(timeCheckpoint));
     } else { // in the following iterations, use data at the end of window.
-      BOOST_TEST(readData == readFunction(readTime));
+      BOOST_TEST(readData == readFunction(time + currentDt));
     }
 
     precice.readScalarData(readDataID, vertexID, currentDt / 2, readData);
@@ -100,7 +97,15 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingZero)
     if (iterations == 0) { // in the first iteration of each window, use data from previous window.
       BOOST_TEST(readData == readFunction(timeCheckpoint));
     } else { // in the following iterations, use data at the end of window.
-      BOOST_TEST(readData == readFunction(readTime));
+      BOOST_TEST(readData == readFunction(time + currentDt));
+    }
+
+    precice.readScalarData(readDataID, vertexID, 0, readData);
+
+    if (iterations == 0) { // in the first iteration of each window, use data from previous window.
+      BOOST_TEST(readData == readFunction(timeCheckpoint));
+    } else { // in the following iterations, use data at the end of window.
+      BOOST_TEST(readData == readFunction(time));
     }
 
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.
