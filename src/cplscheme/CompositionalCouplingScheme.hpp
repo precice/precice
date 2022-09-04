@@ -217,6 +217,11 @@ public:
   bool isTimeWindowComplete() const final override;
 
   /**
+   * @brief Returns true, moveing to next window has to be performed before mapping is performed.
+   */
+  bool moveWindowBeforeMapping() const final override;
+
+  /**
    * @brief Returns true, if the given action has to be performed by the accessor.
    *
    * True, if any of the composed coupling schemes requires the action.

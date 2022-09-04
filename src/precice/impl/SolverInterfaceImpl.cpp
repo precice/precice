@@ -418,7 +418,11 @@ double SolverInterfaceImpl::advance(
   PRECICE_DEBUG("Advance coupling scheme");
   _couplingScheme->advance();
 
-  if (_couplingScheme->isTimeWindowComplete()) {
+  if (_couplingScheme->isTimeWindowComplete() && _couplingScheme->moveWindowBeforeMapping()) { /*
+     * move to next window before mapping, if second in serial coupling.
+     * Reason:
+     * Window is complete, but first participant has already performed an iteration in the new window and the data just received is already from the new window. So we want to use it, but before doing this we have to use the data from the old window to initialize the waveform at 0.0.
+     */
     for (auto &context : _accessor->readDataContexts()) {
       context.moveToNextWindow();
     }
@@ -428,6 +432,17 @@ double SolverInterfaceImpl::advance(
     performDataActions({action::Action::READ_MAPPING_PRIOR}, time);
     mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, time);
+  }
+
+  if (_couplingScheme->isTimeWindowComplete() && !_couplingScheme->moveWindowBeforeMapping()) {
+    /*
+     * move to next window after mapping, if first in serial coupling or any in parallel coupling
+     * Reason:
+     * Window is complete. So all data received by other participant is from old window. We need to discard all data and use the data at 1.0 to initialize the waveform for the next window
+     */
+    for (auto &context : _accessor->readDataContexts()) {
+      context.moveToNextWindow();
+    }
   }
 
   if (_couplingScheme->isTimeWindowComplete()) {

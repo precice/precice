@@ -165,6 +165,11 @@ public:
   /// Returns true, when the accessor can advance to the next time window.
   bool isTimeWindowComplete() const override final;
 
+  /**
+   * @brief Returns true, moveing to next window has to be performed before mapping is performed.
+   */
+  bool moveWindowBeforeMapping() const override;
+
   /// Returns true, if the given action has to be performed by the accessor.
   bool isActionRequired(const std::string &actionName) const override final;
 
@@ -440,7 +445,7 @@ private:
   bool _receivesInitializedData = false;
 
   /// True, if at least one receive was receiving data.
-  bool _atLeastOneWasReceived = false;
+  bool _atLeastOneWasReceived = false; // @todo this is an ugly work-around that we need, because otherwise getting the times will fail, if no data was received. We could probably remove it, when we determine the times on a per-dataset basis. See BiCouplingScheme::getReceiveTimes
 
   /// True, if data has been received from other participant. Flag is used to make sure that coupling scheme is implemented and used correctly.
   bool _hasDataBeenReceived = false;

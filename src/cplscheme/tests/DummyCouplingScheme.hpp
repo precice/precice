@@ -211,6 +211,15 @@ public:
   /**
    * @brief Not implemented.
    */
+  bool moveWindowBeforeMapping() const override final
+  {
+    PRECICE_ASSERT(false);
+    return false;
+  }
+
+  /**
+   * @brief Not implemented.
+   */
   bool isActionRequired(const std::string &actionName) const override final;
 
   /**

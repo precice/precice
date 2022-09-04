@@ -196,7 +196,7 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
     receivedDataIDs.push_back(pair.first);
   }
   PRECICE_DEBUG("Number of received data sets = {}", receivedDataIDs.size());
-  if(receivedDataIDs.size() > 0) {
+  if (receivedDataIDs.size() > 0) {
     _atLeastOneWasReceived = true;
   }
 }
@@ -304,13 +304,13 @@ void BaseCouplingScheme::advance()
       // 1) scale the times back later when the time window size is known (to still benefit from the simpler handling, if all times are scaled to [0,1]).
       // 2) generally use times in the interval [0, timeWindowSize]. This makes the implementation probably a bit more complicated, but also more consistent.
       if (reachedEndOfTimeWindow()) { // only necessary to trigger at end of time window.
-        storeTimeStepSendData(1.0);       // only write data at end of window
+        storeTimeStepSendData(1.0);   // only write data at end of window
       }
     }
   } else {
     // work-around for explicit coupling, because it does not support waveform relaxation.
     if (reachedEndOfTimeWindow()) { // only necessary to trigger at end of time window.
-      storeTimeStepSendData(1.0);       // only write data at end of window
+      storeTimeStepSendData(1.0);   // only write data at end of window
     }
   }
 
@@ -424,8 +424,8 @@ bool BaseCouplingScheme::hasDataBeenReceived() const
 void BaseCouplingScheme::checkDataHasBeenReceived()
 {
   PRECICE_ASSERT(not _hasDataBeenReceived, "checkDataHasBeenReceived() may only be called once within one coupling iteration. If this assertion is triggered this probably means that your coupling scheme has a bug.");
-  if(_atLeastOneWasReceived) {
-    _hasDataBeenReceived = true;
+  if (_atLeastOneWasReceived) {
+    _hasDataBeenReceived   = true;
     _atLeastOneWasReceived = false;
   }
 }
@@ -474,6 +474,11 @@ bool BaseCouplingScheme::isCouplingOngoing() const
 bool BaseCouplingScheme::isTimeWindowComplete() const
 {
   return _isTimeWindowComplete;
+}
+
+bool BaseCouplingScheme::moveWindowBeforeMapping() const
+{
+  return false; // by default coupling schemes have to move to the next window after performing the mapping
 }
 
 bool BaseCouplingScheme::isActionRequired(

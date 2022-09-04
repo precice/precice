@@ -193,6 +193,9 @@ public:
   /// Returns true, when the accessor can advance to the next time window.
   virtual bool isTimeWindowComplete() const = 0;
 
+  /// Returns true, when the accessor can advance to the next time window.
+  virtual bool moveWindowBeforeMapping() const = 0;
+
   /// Returns true, if the given action has to be performed by the accessor.
   virtual bool isActionRequired(const std::string &actionName) const = 0;
 

@@ -47,6 +47,15 @@ SerialCouplingScheme::SerialCouplingScheme(
   }
 }
 
+bool SerialCouplingScheme::moveWindowBeforeMapping() const
+{
+  if (doesFirstStep()) {
+    return false;
+  } else {
+    return true;
+  }
+}
+
 void SerialCouplingScheme::setTimeWindowSize(double timeWindowSize)
 {
   PRECICE_ASSERT(not _participantSetsTimeWindowSize);

@@ -138,28 +138,32 @@ bool CompositionalCouplingScheme::hasDataBeenReceived() const
   return hasBeenReceived;
 }
 
-void CompositionalCouplingScheme::storeTimeStepSendData(double relativeDt) {
+void CompositionalCouplingScheme::storeTimeStepSendData(double relativeDt)
+{
   PRECICE_TRACE();
   for (SchemesIt it = _activeSchemesBegin; it != _activeSchemesEnd; it++) {
     it->scheme->storeTimeStepSendData(relativeDt);
   }
 }
 
-void CompositionalCouplingScheme::storeTimeStepReceiveData(double relativeDt) {
+void CompositionalCouplingScheme::storeTimeStepReceiveData(double relativeDt)
+{
   PRECICE_TRACE();
   for (SchemesIt it = _activeSchemesBegin; it != _activeSchemesEnd; it++) {
     it->scheme->storeTimeStepReceiveData(relativeDt);
   }
 }
 
-void CompositionalCouplingScheme::retreiveTimeStepReceiveData(double relativeDt) {
+void CompositionalCouplingScheme::retreiveTimeStepReceiveData(double relativeDt)
+{
   PRECICE_TRACE();
   for (SchemesIt it = _activeSchemesBegin; it != _activeSchemesEnd; it++) {
     it->scheme->retreiveTimeStepReceiveData(relativeDt);
   }
 }
 
-std::vector<double> CompositionalCouplingScheme::getReceiveTimes() {
+std::vector<double> CompositionalCouplingScheme::getReceiveTimes()
+{
   //@todo stub implementation. Should walk over all receive data, get times and ensure that all times vectors actually hold the same times (since otherwise we would have to get times individually per data)
   //@todo As for MultiCouplingScheme subcycling is not supported for CompositionalCouplingScheme, because this needs a complicated interplay of picking the right data in time and mapping this data. This is hard to realize with the current implementation.
   auto times = std::vector<double>({1.0});
@@ -264,6 +268,12 @@ bool CompositionalCouplingScheme::isTimeWindowComplete() const
   }
   PRECICE_DEBUG("return {}", isComplete);
   return isComplete;
+}
+
+bool CompositionalCouplingScheme::moveWindowBeforeMapping() const
+{
+  // @todo: What's the correct treatment here?
+  return false;
 }
 
 bool CompositionalCouplingScheme::isActionRequired(
