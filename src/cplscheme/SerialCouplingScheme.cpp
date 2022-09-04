@@ -94,7 +94,7 @@ void SerialCouplingScheme::performReceiveOfFirstAdvance()
     PRECICE_DEBUG("Receiving data...");
     receiveData(getM2N(), getReceiveData());
     checkDataHasBeenReceived();
-    retreiveTimeStepReceiveData(1.0); // might be moved into SolverInterfaceImpl.
+    retreiveTimeStepReceiveDataEndOfWindow();
   }
 }
 

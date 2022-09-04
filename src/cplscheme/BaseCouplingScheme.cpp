@@ -109,7 +109,7 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
     PRECICE_ASSERT(timesAscending.size() == nTimeSteps);
     sendTimes(m2n, timesAscending);
 
-    PRECICE_ASSERT(timesAscending(timesAscending.size() - 1) == 1.0); // assert that last element is 1.0
+    PRECICE_ASSERT(math::equals(timesAscending(timesAscending.size() - 1), 1.0), timesAscending(timesAscending.size() - 1)); // assert that last element is 1.0
 
     // @todo put serialization into CouplingData & test it!
     int  nValues           = pair.second->getSize();
@@ -248,7 +248,7 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   exchangeInitialData();
 
   if (receivesInitializedData()) {
-    retreiveTimeStepReceiveData(1.0); // might be moved into SolverInterfaceImpl.
+    retreiveTimeStepReceiveDataEndOfWindow(); // might be moved into SolverInterfaceImpl.
   }
 
   if (isImplicitCouplingScheme()) {
@@ -319,7 +319,7 @@ void BaseCouplingScheme::advance()
     _timeWindows += 1; // increment window counter. If not converged, will be decremented again later.
 
     bool convergence = exchangeDataAndAccelerate();
-    retreiveTimeStepReceiveData(1.0); // might be moved into SolverInterfaceImpl.
+    retreiveTimeStepReceiveDataEndOfWindow(); // might be moved into SolverInterfaceImpl.
 
     if (isImplicitCouplingScheme()) { // check convergence
       if (not convergence) {          // repeat window
@@ -479,6 +479,28 @@ bool BaseCouplingScheme::isTimeWindowComplete() const
 bool BaseCouplingScheme::moveWindowBeforeMapping() const
 {
   return false; // by default coupling schemes have to move to the next window after performing the mapping
+}
+
+void BaseCouplingScheme::storeTimeStepReceiveDataEndOfWindow()
+{
+  if (hasDataBeenReceived()) {
+    // needed to avoid problems with round-off-errors.
+    auto times       = getReceiveTimes();
+    auto largestTime = times.at(times.size() - 1);
+    PRECICE_ASSERT(math::equals(largestTime, 1.0), largestTime);
+    storeTimeStepReceiveData(largestTime); // might be moved into SolverInterfaceImpl.
+  }
+}
+
+void BaseCouplingScheme::retreiveTimeStepReceiveDataEndOfWindow()
+{
+  if (hasDataBeenReceived()) {
+    // needed to avoid problems with round-off-errors.
+    auto times       = getReceiveTimes();
+    auto largestTime = times.at(times.size() - 1);
+    PRECICE_ASSERT(math::equals(largestTime, 1.0), largestTime);
+    retreiveTimeStepReceiveData(largestTime); // might be moved into SolverInterfaceImpl.
+  }
 }
 
 bool BaseCouplingScheme::isActionRequired(
@@ -762,9 +784,33 @@ void BaseCouplingScheme::retreiveTimeStepAccelerationData(double relativeDt)
   }
 }
 
+std::vector<double> BaseCouplingScheme::getAccelerationTimes()
+{
+  //@todo Should ensure that all times vectors actually hold the same times (since otherwise we would have to get times individually per data), but for BiCouplingScheme this should be fine.
+  auto times = std::vector<double>();
+  for (auto &data : getAccelerationData()) {
+    auto timesVec = data.second->getStoredTimesAscending();
+    PRECICE_ASSERT(timesVec.size() > 0, timesVec.size());
+    for (int i = 0; i < timesVec.size(); i++) {
+      times.push_back(timesVec(i));
+    }
+    return times;
+  }
+  PRECICE_ASSERT(false);
+}
+
+void BaseCouplingScheme::retreiveTimeStepAccelerationDataEndOfWindow()
+{
+  // needed to avoid problems with round-off-errors.
+  auto times       = getAccelerationTimes();
+  auto largestTime = times.at(times.size() - 1);
+  PRECICE_ASSERT(math::equals(largestTime, 1.0), largestTime);
+  retreiveTimeStepAccelerationData(largestTime);
+}
+
 bool BaseCouplingScheme::doImplicitStep()
 {
-  retreiveTimeStepAccelerationData(1.0); // will be needed by acceleration
+  retreiveTimeStepAccelerationDataEndOfWindow(); // will be needed by acceleration
   storeExtrapolationData();
 
   PRECICE_DEBUG("measure convergence of the coupling iteration");

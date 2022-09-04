@@ -176,7 +176,7 @@ Eigen::VectorXd CouplingData::getDataAtTime(double relativeDt)
 {
   PRECICE_ASSERT(relativeDt > 0.0);
   PRECICE_ASSERT(relativeDt <= 1.0);
-  PRECICE_ASSERT(_timeStepsStorage.count(relativeDt) > 0);
+  PRECICE_ASSERT(_timeStepsStorage.count(relativeDt) > 0, relativeDt);
   return _timeStepsStorage[relativeDt];
 }
 

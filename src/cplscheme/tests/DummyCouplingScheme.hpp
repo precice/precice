@@ -220,6 +220,22 @@ public:
   /**
    * @brief Not implemented.
    */
+  void storeTimeStepReceiveDataEndOfWindow() override final
+  {
+    PRECICE_ASSERT(false);
+  }
+
+  /**
+   * @brief Not implemented.
+   */
+  void retreiveTimeStepReceiveDataEndOfWindow() override final
+  {
+    PRECICE_ASSERT(false);
+  }
+
+  /**
+   * @brief Not implemented.
+   */
   bool isActionRequired(const std::string &actionName) const override final;
 
   /**

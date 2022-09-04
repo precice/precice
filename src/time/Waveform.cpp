@@ -3,6 +3,7 @@
 #include <eigen3/unsupported/Eigen/Splines>
 #include "cplscheme/CouplingScheme.hpp"
 #include "logging/LogMacros.hpp"
+#include "math/differences.hpp"
 #include "time/Time.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
@@ -38,12 +39,12 @@ void Waveform::store(const Eigen::VectorXd &values, double normalizedDt)
   PRECICE_ASSERT(normalizedDt > 0.0); // cannot override value at beginning of window. It is locked!
   PRECICE_ASSERT(normalizedDt <= 1.0);
 
-  if (maxStoredDt() < 1.0) { // did not reach end of window yet, so dt has to strictly increase
-    PRECICE_ASSERT(normalizedDt > maxStoredDt());
-  } else {                                         // reached end of window and trying to write new data from next window. Clearing window first.
+  if (math::equals(maxStoredDt(), 1.0)) {          // reached end of window and trying to write new data from next window. Clearing window first.
     Eigen::VectorXd keep = _timeStepsStorage[0.0]; // we keep data at _timeStepsStorage[0.0]
     _timeStepsStorage.clear();
     _timeStepsStorage[0.0] = keep;
+  } else { // did not reach end of window yet, so dt has to strictly increase
+    PRECICE_ASSERT(normalizedDt > maxStoredDt(), normalizedDt, maxStoredDt());
   }
   PRECICE_ASSERT(values.size() == _timeStepsStorage[0.0].size());
   this->_timeStepsStorage[normalizedDt] = Eigen::VectorXd(values);
@@ -88,7 +89,7 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
 
   const int usedOrder = computeUsedOrder(_interpolationOrder, _timeStepsStorage.size());
 
-  PRECICE_ASSERT(maxStoredDt() == 1.0); // sampling is only allowed, if a window is complete.
+  PRECICE_ASSERT(math::equals(maxStoredDt(), 1.0), maxStoredDt()); // sampling is only allowed, if a window is complete.
 
   // @TODO: Improve efficiency: Check whether key = normalizedDt is in _timeStepsStorage. If yes, just get value and return. No need for interpolation.
 
@@ -110,8 +111,8 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
   auto timesAscending = getTimesAscending();
   auto nTimes         = timesAscending.size();
   auto nDofs          = this->_timeStepsStorage[0.0].size();
-  PRECICE_ASSERT(timesAscending[0] == 0.0);
-  PRECICE_ASSERT(timesAscending[nTimes - 1] == 1.0);
+  PRECICE_ASSERT(math::equals(timesAscending[0], 0.0));
+  PRECICE_ASSERT(math::equals(timesAscending[nTimes - 1], 1.0));
   Eigen::MatrixXd dataAscending(nDofs, nTimes);
   int             i = 0;
   for (int i = 0; i < nTimes; i++) {
@@ -123,7 +124,7 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
 void Waveform::moveToNextWindow()
 {
   PRECICE_ASSERT(_timeStepsStorage.size() > 0);
-  auto initialGuess = this->sample(1.0); // use value at end of window as initial guess for next
+  auto initialGuess = this->sample(maxStoredDt()); // use value at end of window as initial guess for next
   _timeStepsStorage.clear();
   _timeStepsStorage[0.0] = Eigen::VectorXd(initialGuess);
   _timeStepsStorage[1.0] = Eigen::VectorXd(initialGuess); // initial guess is always constant extrapolation

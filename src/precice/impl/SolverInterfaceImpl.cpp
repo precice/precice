@@ -1927,7 +1927,7 @@ void SolverInterfaceImpl::performDataActions(
   // for actions we need to load and write back data from/to time steps storage. Only supported without subcycling.
   // @todo: Actions would need similar treatment like mapping: Perform action for all time samples that are available for each mesh
   if (_couplingScheme->hasDataBeenReceived()) {
-    _couplingScheme->retreiveTimeStepReceiveData(1.0);
+    _couplingScheme->retreiveTimeStepReceiveDataEndOfWindow();
   }
   for (action::PtrAction &action : _accessor->actions()) {
     if (timings.find(action->getTiming()) != timings.end()) {
@@ -1935,7 +1935,7 @@ void SolverInterfaceImpl::performDataActions(
     }
   }
   if (_couplingScheme->hasDataBeenReceived()) {
-    _couplingScheme->storeTimeStepReceiveData(1.0);
+    _couplingScheme->storeTimeStepReceiveDataEndOfWindow();
   }
 }
 

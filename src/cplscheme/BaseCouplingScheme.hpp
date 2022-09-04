@@ -170,6 +170,10 @@ public:
    */
   bool moveWindowBeforeMapping() const override;
 
+  void storeTimeStepReceiveDataEndOfWindow() override final;
+
+  void retreiveTimeStepReceiveDataEndOfWindow() override final;
+
   /// Returns true, if the given action has to be performed by the accessor.
   bool isActionRequired(const std::string &actionName) const override final;
 
@@ -349,6 +353,10 @@ protected:
    * @returns convergence bool
    */
   bool receiveConvergence(const m2n::PtrM2N &m2n);
+
+  std::vector<double> getAccelerationTimes();
+
+  void retreiveTimeStepAccelerationDataEndOfWindow();
 
   /**
    * @brief perform a coupling iteration

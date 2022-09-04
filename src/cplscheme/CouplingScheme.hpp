@@ -136,6 +136,8 @@ public:
    */
   virtual void storeTimeStepReceiveData(double relativeDt) = 0;
 
+  virtual void storeTimeStepReceiveDataEndOfWindow() = 0;
+
   // @todo find a better name. This is too low level.
   /**
    * @brief retreives time step data from CouplingData into mesh values
@@ -143,6 +145,8 @@ public:
    * @param relativeDt relative dt associated with the data.
    */
   virtual void retreiveTimeStepReceiveData(double relativeDt) = 0;
+
+  virtual void retreiveTimeStepReceiveDataEndOfWindow() = 0;
 
   /**
    * @brief Get the times associated with time steps in ascending order

@@ -221,6 +221,22 @@ public:
    */
   bool moveWindowBeforeMapping() const final override;
 
+  void storeTimeStepReceiveDataEndOfWindow() override final
+  {
+    PRECICE_TRACE();
+    for (const Scheme &scheme : _couplingSchemes) {
+      scheme.scheme->storeTimeStepReceiveDataEndOfWindow();
+    }
+  }
+
+  void retreiveTimeStepReceiveDataEndOfWindow() override final
+  {
+    PRECICE_TRACE();
+    for (const Scheme &scheme : _couplingSchemes) {
+      scheme.scheme->retreiveTimeStepReceiveDataEndOfWindow();
+    }
+  }
+
   /**
    * @brief Returns true, if the given action has to be performed by the accessor.
    *
