@@ -14,9 +14,9 @@ BOOST_AUTO_TEST_SUITE(Implicit)
 BOOST_AUTO_TEST_SUITE(ParallelCoupling)
 
 /**
- * @brief Test to run a simple coupling with zeroth order waveform subcycling.
+ * @brief Test to run a simple coupling with third order waveform subcycling.
  */
-BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingZero)
+BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingThird)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
@@ -28,11 +28,12 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingZero)
 
   typedef double (*DataFunction)(double);
 
+  // use third degree function to test third order waveforms
   DataFunction dataOneFunction = [](double t) -> double {
-    return (double) (2 + t);
+    return (double) (2 + t * t * t);
   };
   DataFunction dataTwoFunction = [](double t) -> double {
-    return (double) (10 + t);
+    return (double) (10 + t * t * t);
   };
   DataFunction writeFunction;
   DataFunction readFunction;
@@ -95,7 +96,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingZero)
     if (iterations == 0) { // in the first iteration of each window, use data from previous window.
       BOOST_TEST(readData == readFunction(timeCheckpoint));
     } else { // in the following iterations, use data at the end of window.
-      BOOST_TEST(readData == readFunction(time + currentDt));
+      BOOST_TEST(readData == readFunction(time + currentDt / 2));
     }
 
     precice.readScalarData(readDataID, vertexID, 0, readData);

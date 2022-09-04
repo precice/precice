@@ -15,8 +15,6 @@ BOOST_AUTO_TEST_SUITE(SerialCoupling)
 
 /**
  * @brief Test to run a simple coupling with zeroth order waveform subcycling.
- *
- * Provides a dt argument to the read function, but since a zeroth order waveform is used the result should be identical to the case without waveform relaxation
  */
 BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingZero)
 {
