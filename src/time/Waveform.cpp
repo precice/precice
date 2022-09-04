@@ -102,12 +102,6 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
 
   PRECICE_ASSERT(usedOrder >= 1);
 
-  /** @TODO for higher-order quadratic interpolation there are several possibilities:
-   * 1. Use data from this window and last window. Then we do not need to consider any samples from subcycling
-   * 2. Use data from this window. Requires at least polynomial degree p substeps in window to create BSpline.
-   * 3. Use data from this window, but perform a p-th least squares fit. If we don't do subcycling the system is underdetermined, if we do 2 substeps this option is identical to option 2. If we do 3 or more substeps we will get a least squares fit. Important: Might lead to discontinuities at the window boundary!
-   **/
-
   auto timesAscending = getTimesAscending();
   auto nTimes         = timesAscending.size();
   auto nDofs          = this->_timeStepsStorage[0.0].size();
