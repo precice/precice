@@ -3,6 +3,7 @@
 #include <eigen3/unsupported/Eigen/Splines>
 #include "cplscheme/CouplingScheme.hpp"
 #include "logging/LogMacros.hpp"
+#include "math/differences.hpp"
 #include "time/Time.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
@@ -38,12 +39,12 @@ void Waveform::store(const Eigen::VectorXd &values, double normalizedDt)
   PRECICE_ASSERT(normalizedDt > 0.0); // cannot override value at beginning of window. It is locked!
   PRECICE_ASSERT(normalizedDt <= 1.0);
 
-  if (maxStoredDt() < 1.0) { // did not reach end of window yet, so dt has to strictly increase
-    PRECICE_ASSERT(normalizedDt > maxStoredDt());
-  } else {                                         // reached end of window and trying to write new data from next window. Clearing window first.
+  if (math::equals(maxStoredDt(), 1.0)) {          // reached end of window and trying to write new data from next window. Clearing window first.
     Eigen::VectorXd keep = _timeStepsStorage[0.0]; // we keep data at _timeStepsStorage[0.0]
     _timeStepsStorage.clear();
     _timeStepsStorage[0.0] = keep;
+  } else { // did not reach end of window yet, so dt has to strictly increase
+    PRECICE_ASSERT(normalizedDt > maxStoredDt(), normalizedDt, maxStoredDt());
   }
   PRECICE_ASSERT(values.size() == _timeStepsStorage[0.0].size());
   this->_timeStepsStorage[normalizedDt] = Eigen::VectorXd(values);
@@ -88,7 +89,7 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
 
   const int usedOrder = computeUsedOrder(_interpolationOrder, _timeStepsStorage.size());
 
-  PRECICE_ASSERT(maxStoredDt() == 1.0); // sampling is only allowed, if a window is complete.
+  PRECICE_ASSERT(math::equals(maxStoredDt(), 1.0), maxStoredDt()); // sampling is only allowed, if a window is complete.
 
   // @TODO: Improve efficiency: Check whether key = normalizedDt is in _timeStepsStorage. If yes, just get value and return. No need for interpolation.
 
@@ -101,17 +102,11 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
 
   PRECICE_ASSERT(usedOrder >= 1);
 
-  /** @TODO for higher-order quadratic interpolation there are several possibilities:
-   * 1. Use data from this window and last window. Then we do not need to consider any samples from subcycling
-   * 2. Use data from this window. Requires at least polynomial degree p substeps in window to create BSpline.
-   * 3. Use data from this window, but perform a p-th least squares fit. If we don't do subcycling the system is underdetermined, if we do 2 substeps this option is identical to option 2. If we do 3 or more substeps we will get a least squares fit. Important: Might lead to discontinuities at the window boundary!
-   **/
-
   auto timesAscending = getTimesAscending();
   auto nTimes         = timesAscending.size();
   auto nDofs          = this->_timeStepsStorage[0.0].size();
-  PRECICE_ASSERT(timesAscending[0] == 0.0);
-  PRECICE_ASSERT(timesAscending[nTimes - 1] == 1.0);
+  PRECICE_ASSERT(math::equals(timesAscending[0], 0.0));
+  PRECICE_ASSERT(math::equals(timesAscending[nTimes - 1], 1.0));
   Eigen::MatrixXd dataAscending(nDofs, nTimes);
   int             i = 0;
   for (int i = 0; i < nTimes; i++) {
@@ -123,7 +118,7 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
 void Waveform::moveToNextWindow()
 {
   PRECICE_ASSERT(_timeStepsStorage.size() > 0);
-  auto initialGuess = this->sample(1.0); // use value at end of window as initial guess for next
+  auto initialGuess = this->sample(maxStoredDt()); // use value at end of window as initial guess for next
   _timeStepsStorage.clear();
   _timeStepsStorage[0.0] = Eigen::VectorXd(initialGuess);
   _timeStepsStorage[1.0] = Eigen::VectorXd(initialGuess); // initial guess is always constant extrapolation
