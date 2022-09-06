@@ -145,9 +145,11 @@ void BackendConfiguration::setOption(std::string key, std::string value)
     filter = value;
   if (key == "format")
     format = value;
-  if (key == "enabled") {
-    enabled = utils::convertStringToBool(value);
-  }
+}
+
+void BackendConfiguration::setEnabled(bool enabled)
+{
+  this->enabled = enabled;
 }
 
 void setupLogging(LoggingConfiguration configs, bool enabled)
@@ -200,6 +202,10 @@ void setupLogging(LoggingConfiguration configs, bool enabled)
 
   // Create new sinks
   for (const auto &config : configs) {
+    if (!config.enabled) {
+      continue;
+    }
+
     boost::shared_ptr<StreamBackend> backend;
     if (config.type == "file")
       backend = boost::make_shared<StreamBackend>(boost::shared_ptr<std::ostream>(new std::ofstream(config.output)));

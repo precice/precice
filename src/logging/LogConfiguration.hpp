@@ -21,6 +21,9 @@ struct BackendConfiguration {
 
   /// Sets on option, overwrites default values.
   void setOption(std::string key, std::string value);
+
+  /// Sets weather the sink is enabled or disabled
+  void setEnabled(bool enabled);
 };
 
 /// Holds the configuration of the logging system
