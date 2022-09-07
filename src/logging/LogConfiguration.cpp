@@ -179,8 +179,6 @@ void setupLogging(LoggingConfiguration configs, bool enabled)
   using sink_ptr = typename boost::shared_ptr<sink_t>;
 
   static std::vector<sink_ptr> activeSinks;
-
-  //remove active sinks
   for (auto &sink : activeSinks) {
     boost::log::core::get()->remove_sink(sink);
     sink->flush();
@@ -195,7 +193,7 @@ void setupLogging(LoggingConfiguration configs, bool enabled)
     return;
   }
 
-  // Add the default config
+  // Add the default config in case no sinks are configured
   if (configs.empty()) {
     configs.emplace_back();
   }
@@ -206,6 +204,7 @@ void setupLogging(LoggingConfiguration configs, bool enabled)
       continue;
     }
 
+    // Setup backend of sink
     boost::shared_ptr<StreamBackend> backend;
     if (config.type == "file")
       backend = boost::make_shared<StreamBackend>(boost::shared_ptr<std::ostream>(new std::ofstream(config.output)));
@@ -217,7 +216,9 @@ void setupLogging(LoggingConfiguration configs, bool enabled)
     }
     PRECICE_ASSERT(backend != nullptr, "The logging backend was not initialized properly. Check your log config.");
     backend->auto_flush(true);
-    boost::shared_ptr<sink_t> sink(new sink_t(backend));
+
+    // Setup sink
+    auto sink = boost::make_shared<sink_t>(backend);
     sink->set_formatter(boost::log::parse_formatter(config.format));
 
     if (config.filter.empty()) {
@@ -226,6 +227,7 @@ void setupLogging(LoggingConfiguration configs, bool enabled)
       // We extend the filter here to filter all log entries not originating from preCICE.
       sink->set_filter(boost::log::parse_filter("%preCICE% & ( " + config.filter + " )"));
     }
+
     boost::log::core::get()->add_sink(sink);
     activeSinks.emplace_back(std::move(sink));
   }
