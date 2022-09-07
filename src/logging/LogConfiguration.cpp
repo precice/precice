@@ -219,8 +219,13 @@ void setupLogging(LoggingConfiguration configs, bool enabled)
     backend->auto_flush(true);
     boost::shared_ptr<sink_t> sink(new sink_t(backend));
     sink->set_formatter(boost::log::parse_formatter(config.format));
-    // We extend the filter here to filter all log entries not originating from preCICE.
-    sink->set_filter(boost::log::parse_filter("( " + config.filter + " ) and %preCICE%"));
+
+    if (config.filter.empty()) {
+      sink->set_filter(boost::log::expressions::attr<bool>("preCICE") == true);
+    } else {
+      // We extend the filter here to filter all log entries not originating from preCICE.
+      sink->set_filter(boost::log::parse_filter("%preCICE% & ( " + config.filter + " )"));
+    }
     boost::log::core::get()->add_sink(sink);
     activeSinks.emplace_back(std::move(sink));
   }
