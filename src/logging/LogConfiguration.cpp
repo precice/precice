@@ -4,6 +4,7 @@
 #include <boost/log/attributes/mutable_constant.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/expressions.hpp>
+#include <boost/log/sinks/sink.hpp>
 #include <boost/log/support/date_time.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/utility/setup/console.hpp>
@@ -72,13 +73,39 @@ public:
   }
 };
 
+/// A custom sink that does nothing. It is used to disable the default sink of boost.Log
+class NullSink final : public boost::log::sinks::sink {
+public:
+  NullSink()
+      : boost::log::sinks::sink(false) {}
+
+  bool will_consume(boost::log::attribute_value_set const &) override
+  {
+    return false;
+  }
+
+  void consume(boost::log::record_view const &) override {}
+
+  bool try_consume(boost::log::record_view const &) override
+  {
+    return false;
+  }
+
+  void flush() override {}
+
+  bool is_cross_thread() const noexcept
+  {
+    return false;
+  }
+};
+
 /// A simple backends that outputs the message to a stream
 /**
  * Rationale: The original text_ostream_backend from boost suffered from the great amount of code that lies
  * between the printing of the message and the endline. This leads to high probability that a process switch
  * occurs and the message is severed from the endline.
  */
-class StreamBackend : public boost::log::sinks::text_ostream_backend {
+class StreamBackend final : public boost::log::sinks::text_ostream_backend {
 private:
   boost::shared_ptr<std::ostream> _ostream;
 
@@ -175,7 +202,7 @@ void setupLogging(LoggingConfiguration configs, bool enabled)
       << bl::expressions::message;
 
   // Remove active preCICE sinks
-  using sink_t   = typename boost::log::sinks::synchronous_sink<StreamBackend>;
+  using sink_t   = typename boost::log::sinks::sink;
   using sink_ptr = typename boost::shared_ptr<sink_t>;
 
   static std::vector<sink_ptr> activeSinks;
@@ -186,10 +213,14 @@ void setupLogging(LoggingConfiguration configs, bool enabled)
   }
   activeSinks.clear();
 
-  // If logging sinks are disabled, then we are done
+  // If logging sinks are disabled, then we need to disable the default sink.
+  // We do this by adding a NullSink.
   // We need to exit after the sink removal as the default sink exists before
   // the log configuration is parsed.
   if (!enabled) {
+    auto sink = boost::make_shared<NullSink>();
+    boost::log::core::get()->add_sink(sink);
+    activeSinks.emplace_back(std::move(sink));
     return;
   }
 
@@ -218,7 +249,7 @@ void setupLogging(LoggingConfiguration configs, bool enabled)
     backend->auto_flush(true);
 
     // Setup sink
-    auto sink = boost::make_shared<sink_t>(backend);
+    auto sink = boost::make_shared<boost::log::sinks::synchronous_sink<StreamBackend>>(backend);
     sink->set_formatter(boost::log::parse_formatter(config.format));
 
     if (config.filter.empty()) {
