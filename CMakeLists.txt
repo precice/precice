@@ -174,7 +174,7 @@ if(TPL_ENABLE_EIGEN3)
   xsdk_tpl_require(EIGEN3 EIGEN3_INCLUDE_DIR)
 endif()
 find_package(Eigen3 3.2 REQUIRED)
-message(STATUS "Found Eigen ${Eigen3_VERSION}")
+message(STATUS "Found Eigen ${EIGEN3_VERSION}")
 precice_validate_eigen()
 
 # LibXML2
