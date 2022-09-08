@@ -166,6 +166,7 @@ endif()
 find_package(Boost 1.71.0 REQUIRED
   COMPONENTS filesystem log log_setup program_options system thread unit_test_framework
   )
+message(STATUS "Found Boost ${Boost_VERSION}")
 
 # Eigen
 if(TPL_ENABLE_EIGEN3)
@@ -173,10 +174,12 @@ if(TPL_ENABLE_EIGEN3)
   xsdk_tpl_require(EIGEN3 EIGEN3_INCLUDE_DIR)
 endif()
 find_package(Eigen3 3.2 REQUIRED)
+message(STATUS "Found Eigen ${Eigen3_VERSION}")
 precice_validate_eigen()
 
 # LibXML2
 find_package(LibXml2 REQUIRED)
+message(STATUS "Found LibXml2 ${LIBXML2_VERSION_STRING}")
 precice_validate_libxml2()
 
 # nlohmann/JSON
@@ -219,6 +222,7 @@ if (PRECICE_PETScMapping)
   endif()
   find_package(PETSc 3.12 REQUIRED)
   # No validation required as PETSc does this internally
+  message(STATUS "Found PETSc ${PETSc_VERSION}")
 else()
   message(STATUS "PETSc support disabled")
 endif()
@@ -226,6 +230,7 @@ endif()
 # Option Python
 if (PRECICE_PythonActions)
   find_package(Python3 REQUIRED COMPONENTS Development NumPy)
+  message(STATUS "Found Python ${Python3_VERSION} with NumPy ${Python3_NumPy_VERSION}")
   precice_validate_libpython()
   precice_validate_numpy()
 else()
