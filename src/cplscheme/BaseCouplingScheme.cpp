@@ -103,34 +103,21 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
   PRECICE_ASSERT(m2n->isConnected());
 
   for (const DataMap::value_type &pair : sendData) {
-    int nTimeSteps = pair.second->getNumberOfStoredTimeSteps();
-    sendNumberOfTimeSteps(m2n, nTimeSteps);
     auto timesAscending = pair.second->getStoredTimesAscending();
-    PRECICE_ASSERT(timesAscending.size() == nTimeSteps);
+    sendNumberOfTimeSteps(m2n, timesAscending.size());
     sendTimes(m2n, timesAscending);
 
     PRECICE_ASSERT(math::equals(timesAscending(timesAscending.size() - 1), 1.0), timesAscending(timesAscending.size() - 1)); // assert that last element is 1.0
 
-    // @todo put serialization into CouplingData & test it!
-    int  nValues           = pair.second->getSize();
-    auto serializedSamples = Eigen::VectorXd(nTimeSteps * nValues);
-
-    for (int timeId = 0; timeId < nTimeSteps; timeId++) {
-      auto time  = timesAscending(timeId);
-      auto slice = pair.second->getDataAtTime(time);
-      for (int valueId = 0; valueId < nValues; valueId++) {
-        serializedSamples(valueId * nTimeSteps + timeId) = slice(valueId);
-      }
-    }
+    auto serializedSamples = pair.second->getSerialized();
+    pair.second->clearTimeStepsStorage();
 
     // Data is actually only send if size>0, which is checked in the derived classes implementation
-    m2n->send(serializedSamples, pair.second->getMeshID(), pair.second->getDimensions() * nTimeSteps);
+    m2n->send(serializedSamples, pair.second->getMeshID(), pair.second->getDimensions() * timesAscending.size());
 
     if (pair.second->hasGradient()) {
       m2n->send(pair.second->gradientValues(), pair.second->getMeshID(), pair.second->getDimensions() * pair.second->meshDimensions());
     }
-
-    pair.second->clearTimeStepsStorage();
 
     sentDataIDs.push_back(pair.first);
   }
@@ -164,30 +151,17 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
   PRECICE_ASSERT(m2n.get());
   PRECICE_ASSERT(m2n->isConnected());
   for (const DataMap::value_type &pair : receiveData) {
-
-    pair.second->clearTimeStepsStorage();
-
     int nTimeSteps = receiveNumberOfTimeSteps(m2n);
 
     PRECICE_ASSERT(nTimeSteps > 0);
     auto timesAscending = receiveTimes(m2n, nTimeSteps);
 
-    int  nValues           = pair.second->getSize();
-    auto serializedSamples = Eigen::VectorXd(nTimeSteps * nValues);
-
+    auto serializedSamples = Eigen::VectorXd(nTimeSteps * pair.second->getSize());
     // Data is only received on ranks with size>0, which is checked in the derived class implementation
     m2n->receive(serializedSamples, pair.second->getMeshID(), pair.second->getDimensions() * nTimeSteps);
 
-    // @todo put deserialization into CouplingData & test it!
-    for (int timeId = 0; timeId < nTimeSteps; timeId++) {
-      auto slice = Eigen::VectorXd(nValues);
-      for (int valueId = 0; valueId < nValues; valueId++) {
-        slice(valueId) = serializedSamples(valueId * nTimeSteps + timeId);
-      }
-      auto time = timesAscending(timeId);
-      PRECICE_ASSERT(time > 0.0 && time <= 1.0); // time <= 0 or time > 1 is not allowed.
-      pair.second->storeDataAtTime(slice, time);
-    }
+    pair.second->clearTimeStepsStorage();
+    pair.second->storeFromSerialized(timesAscending, serializedSamples);
 
     if (pair.second->hasGradient()) {
       m2n->receive(pair.second->gradientValues(), pair.second->getMeshID(), pair.second->getDimensions() * pair.second->meshDimensions());

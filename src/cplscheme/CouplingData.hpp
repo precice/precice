@@ -5,6 +5,7 @@
 #include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/impl/Extrapolation.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "time/Storage.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -74,9 +75,6 @@ public:
   /// store current value in _extrapolation
   void storeExtrapolationData();
 
-  /// returns number of items in _timeStepsStorage.
-  int getNumberOfStoredTimeSteps();
-
   /// returns keys in _timeStepsStorage in ascending order.
   Eigen::VectorXd getStoredTimesAscending();
 
@@ -88,6 +86,23 @@ public:
 
   /// returns data for a given key. Assumes that this data exists under the key.
   Eigen::VectorXd getDataAtTime(double relativeDt);
+
+  /**
+   * @brief Returns all time steps stored in this coupling data in a serialized fashion
+   *
+   * Serialization of the data is performed per mesh node. The dimension of one node is then geometrical dimension * number of time steps.
+   *
+   * @return Eigen::VectorXd a vector containing all data for all time steps in serialized fashion.
+   */
+  Eigen::VectorXd getSerialized();
+
+  /**
+   * @brief accepts serialized data and stores it in this coupling data
+   *
+   * @param timesAscending times associated with data
+   * @param serializedData data in serialized form
+   */
+  void storeFromSerialized(Eigen::VectorXd timesAscending, Eigen::VectorXd serializedData);
 
 private:
   /**
@@ -111,22 +126,11 @@ private:
   /// Mesh associated with this CouplingData
   mesh::PtrMesh _mesh;
 
-  /// Map to store time steps in the current time Window
-  std::map<double, Eigen::VectorXd> _timeStepsStorage;
+  /// Stores time steps in the current time window
+  time::Storage _timeStepsStorage;
 
   /// Extrapolation associated with this CouplingData
   cplscheme::impl::Extrapolation _extrapolation;
-
-  /**
-   * @brief Get maximum dt that is stored in the _timeStepsStorage.
-   *
-   * Used to check whether a user is trying to add a sample associated with a dt that is smaller than the maximum dt. This is forbidden, because the _timeStepsStorage is locked for times that are smaller than the maximum dt.
-   *
-   * @TODO: Duplicate of Waveform::maxStoredDt. Maybe try to put all functionality around _timeStepsStorage into an independent class?
-   *
-   * @return the maximum dt from _timeStepsStorage, returns -1, if _timeStepsStorage is empty.
-   */
-  double maxStoredDt();
 };
 
 } // namespace cplscheme

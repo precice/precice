@@ -124,28 +124,9 @@ void CouplingData::storeExtrapolationData()
   _extrapolation.store(values());
 }
 
-int CouplingData::getNumberOfStoredTimeSteps()
-{
-  return _timeStepsStorage.size();
-}
-
 Eigen::VectorXd CouplingData::getStoredTimesAscending()
 {
-  // create std::vector with all keys
-  std::vector<double> keys;
-  for (auto timeStep : _timeStepsStorage) {
-    keys.push_back(timeStep.first);
-  }
-
-  // sort vector
-  std::sort(keys.begin(), keys.end());
-
-  // copy data into Eigen::VectorXd to return
-  auto times = Eigen::VectorXd(keys.size());
-  for (int i = 0; i < keys.size(); i++) {
-    times[i] = keys[i];
-  }
-  return times;
+  return _timeStepsStorage.getTimes();
 }
 
 void CouplingData::clearTimeStepsStorage()
@@ -153,31 +134,48 @@ void CouplingData::clearTimeStepsStorage()
   _timeStepsStorage.clear();
 }
 
-double CouplingData::maxStoredDt()
-{
-  double maxDt = -1;
-  for (auto timeStep : _timeStepsStorage) {
-    if (timeStep.first > maxDt) {
-      maxDt = timeStep.first;
-    }
-  }
-  return maxDt;
-}
-
 void CouplingData::storeDataAtTime(Eigen::VectorXd data, double relativeDt)
 {
   PRECICE_ASSERT(relativeDt > 0.0);
-  //PRECICE_ASSERT(relativeDt > maxStoredDt());  // generally a nice security check, but currently we have to override some data after acceleration was performed.
+  //PRECICE_ASSERT(relativeDt > _timeStepsStorage.maxTime());  // generally a nice security check, but currently we have to override some data after acceleration was performed.
   PRECICE_ASSERT(relativeDt <= 1.0);
-  _timeStepsStorage[relativeDt] = data;
+  _timeStepsStorage.setValueAtTime(relativeDt, data);
 }
 
 Eigen::VectorXd CouplingData::getDataAtTime(double relativeDt)
 {
-  PRECICE_ASSERT(relativeDt > 0.0);
-  PRECICE_ASSERT(relativeDt <= 1.0);
-  PRECICE_ASSERT(_timeStepsStorage.count(relativeDt) > 0, relativeDt);
-  return _timeStepsStorage[relativeDt];
+  return _timeStepsStorage.getValueAtTime(relativeDt);
+}
+
+Eigen::VectorXd CouplingData::getSerialized()
+{
+  int  nValues        = getSize();
+  int  nTimeSteps     = _timeStepsStorage.nTimes();
+  auto serializedData = Eigen::VectorXd(nTimeSteps * nValues);
+  auto timesAscending = this->getStoredTimesAscending();
+
+  for (int timeId = 0; timeId < nTimeSteps; timeId++) {
+    auto time  = timesAscending(timeId);
+    auto slice = _timeStepsStorage.getValueAtTime(time);
+    for (int valueId = 0; valueId < nValues; valueId++) {
+      serializedData(valueId * nTimeSteps + timeId) = slice(valueId);
+    }
+  }
+  return serializedData;
+}
+
+void CouplingData::storeFromSerialized(Eigen::VectorXd timesAscending, Eigen::VectorXd serializedData)
+{
+  PRECICE_ASSERT(timesAscending.size() * getSize() == serializedData.size());
+  for (int timeId = 0; timeId < timesAscending.size(); timeId++) {
+    auto slice = Eigen::VectorXd(getSize());
+    for (int valueId = 0; valueId < slice.size(); valueId++) {
+      slice(valueId) = serializedData(valueId * timesAscending.size() + timeId);
+    }
+    auto time = timesAscending(timeId);
+    PRECICE_ASSERT(time > 0.0 && time <= 1.0); // time <= 0 or time > 1 is not allowed.
+    this->storeDataAtTime(slice, time);
+  }
 }
 
 } // namespace cplscheme

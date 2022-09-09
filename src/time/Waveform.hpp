@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include "logging/Logger.hpp"
+#include "time/Storage.hpp"
 
 namespace precice {
 
@@ -71,26 +72,13 @@ public:
   Eigen::VectorXd sample(const double normalizedDt);
 
 private:
-  /** @TODO Idea for more efficient data structure and redesign (do this when functionality is working and tested!)
-   *   1. use Eigen::MatrixXd instead of map for _timeStepsStorage.
-   *   2. create a member std::map<double, int> _timeSteps where (unique) time is mapped to column index of _timeStepsStorage that holds the corresponding sample. (Alternative: Use another Eigen::VectorXd to store times, but this enforces maintaining a consistent order for _timeSteps and _timeStepsStorage. This sounds complicated.)
-   */
   /// Stores values on the current window.
-  std::map<double, Eigen::VectorXd> _timeStepsStorage;
+  Storage _timeStepsStorage;
 
   /// interpolation order for this waveform
   const int _interpolationOrder;
 
   mutable logging::Logger _log{"time::Waveform"};
-
-  /**
-   * @brief Get maximum dt that is stored in this waveform.
-   *
-   * Used to check whether a user is trying to add a sample associated with a dt that is smaller than the maximum dt. This is forbidden, because the waveform is locked for times that are smaller than the maximum dt.
-   *
-   * @return the maximum dt from _timeStepsStorage
-   */
-  double maxStoredDt();
 
   /**
    * @brief Computes which order may be used for interpolation.
@@ -103,21 +91,6 @@ private:
    * @return Order that may be used.
    */
   int computeUsedOrder(int requestedOrder, int numberOfAvailableSamples);
-
-  /**
-   * @brief Returns point the closest time stored in _timeStepsStorage that is after normalizedDt
-   *
-   * @param normalizedDt point in time
-   * @return double point in time after normalizedDt in _timeStepsStorage
-   */
-  double findTimeAfter(double normalizedDt);
-
-  /**
-   * @brief Get keys of _timeStepsStorage in ascending order. Starting from low to high.
-   *
-   * @return Eigen::VectorXd
-   */
-  Eigen::VectorXd getTimesAscending();
 };
 
 } // namespace time
