@@ -455,17 +455,6 @@ bool BaseCouplingScheme::moveWindowBeforeMapping() const
   return false; // by default coupling schemes have to move to the next window after performing the mapping
 }
 
-void BaseCouplingScheme::storeTimeStepReceiveDataEndOfWindow()
-{
-  if (hasDataBeenReceived()) {
-    // needed to avoid problems with round-off-errors.
-    auto times       = getReceiveTimes();
-    auto largestTime = times.at(times.size() - 1);
-    PRECICE_ASSERT(math::equals(largestTime, 1.0), largestTime);
-    storeTimeStepReceiveData(largestTime); // might be moved into SolverInterfaceImpl.
-  }
-}
-
 void BaseCouplingScheme::retreiveTimeStepReceiveDataEndOfWindow()
 {
   if (hasDataBeenReceived()) {
@@ -739,22 +728,11 @@ bool BaseCouplingScheme::anyDataRequiresInitialization(BaseCouplingScheme::DataM
   return false;
 }
 
-void BaseCouplingScheme::storeTimeStepAccelerationData(double relativeDt)
+void BaseCouplingScheme::storeTimeStepAccelerationDataEndOfWindow()
 {
-  PRECICE_ASSERT(relativeDt > 0);
-  PRECICE_ASSERT(relativeDt <= 1.0, relativeDt);
   for (auto &anAccelerationData : getAccelerationData()) {
     auto theData = anAccelerationData.second->values();
-    anAccelerationData.second->storeDataAtTime(theData, relativeDt);
-  }
-}
-
-void BaseCouplingScheme::retreiveTimeStepAccelerationData(double relativeDt)
-{
-  PRECICE_ASSERT(relativeDt > 0);
-  PRECICE_ASSERT(relativeDt <= 1.0, relativeDt);
-  for (auto &anAccelerationData : getAccelerationData()) {
-    anAccelerationData.second->values() = anAccelerationData.second->getDataAtTime(relativeDt);
+    anAccelerationData.second->storeDataAtTime(theData, 1.0);
   }
 }
 
@@ -779,7 +757,9 @@ void BaseCouplingScheme::retreiveTimeStepAccelerationDataEndOfWindow()
   auto times       = getAccelerationTimes();
   auto largestTime = times.at(times.size() - 1);
   PRECICE_ASSERT(math::equals(largestTime, 1.0), largestTime);
-  retreiveTimeStepAccelerationData(largestTime);
+  for (auto &anAccelerationData : getAccelerationData()) {
+    anAccelerationData.second->values() = anAccelerationData.second->getDataAtTime(largestTime);
+  }
 }
 
 bool BaseCouplingScheme::doImplicitStep()
@@ -814,7 +794,7 @@ bool BaseCouplingScheme::doImplicitStep()
   storeIteration();
 
   // Override data with accelerated data
-  storeTimeStepAccelerationData(1.0);
+  storeTimeStepAccelerationDataEndOfWindow();
 
   return convergence;
 }

@@ -120,17 +120,8 @@ public:
 
   /**
    * @brief stores current time step data in buffer for later
-   *
-   * @param relativeDt relative dt associated with the data.
    */
-  void storeTimeStepSendData(double relativeDt) final override;
-
-  /**
-   * @brief stores current time step data in buffer for later
-   *
-   * @param relativeDt relative dt associated with the data.
-   */
-  void storeTimeStepReceiveData(double relativeDt) final override;
+  void storeTimeStepReceiveDataEndOfWindow() final override;
 
   /**
    * @brief retreives time step data from CouplingData into mesh values
@@ -220,14 +211,6 @@ public:
    * @brief Returns true, moveing to next window has to be performed before mapping is performed.
    */
   bool moveWindowBeforeMapping() const final override;
-
-  void storeTimeStepReceiveDataEndOfWindow() override final
-  {
-    PRECICE_TRACE();
-    for (const Scheme &scheme : _couplingSchemes) {
-      scheme.scheme->storeTimeStepReceiveDataEndOfWindow();
-    }
-  }
 
   void retreiveTimeStepReceiveDataEndOfWindow() override final
   {

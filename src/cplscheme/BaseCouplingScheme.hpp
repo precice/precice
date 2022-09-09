@@ -170,8 +170,6 @@ public:
    */
   bool moveWindowBeforeMapping() const override;
 
-  void storeTimeStepReceiveDataEndOfWindow() override final;
-
   void retreiveTimeStepReceiveDataEndOfWindow() override final;
 
   /// Returns true, if the given action has to be performed by the accessor.
@@ -404,6 +402,14 @@ protected:
    */
   int getExtrapolationOrder();
 
+  // @todo find a better name. This is too low level.
+  /**
+   * @brief stores current time step data in buffer for later
+   *
+   * @param relativeDt relative dt associated with the data.
+   */
+  virtual void storeTimeStepSendData(double relativeDt) = 0;
+
 private:
   /// Coupling mode used by coupling scheme.
   CouplingMode _couplingMode = Undefined;
@@ -608,17 +614,8 @@ private:
 
   /**
    * @brief stores current time step data in buffer for later
-   *
-   * @param relativeDt relative dt associated with the data.
    */
-  void storeTimeStepAccelerationData(double relativeDt);
-
-  /**
-   * @brief retreives time step data from CouplingData into mesh values
-   *
-   * @param relativeDt relative dt associated with the data.
-   */
-  void retreiveTimeStepAccelerationData(double relativeDt);
+  void storeTimeStepAccelerationDataEndOfWindow();
 };
 } // namespace cplscheme
 } // namespace precice

@@ -86,10 +86,8 @@ public:
 
   /**
    * @brief stores current time step data in buffer for later
-   *
-   * @param relativeDt relative dt associated with the data.
    */
-  void storeTimeStepReceiveData(double relativeDt) override final;
+  void storeTimeStepReceiveDataEndOfWindow() override final;
 
   /**
    * @brief retreives time step data from CouplingData into mesh values

@@ -123,19 +123,7 @@ public:
   // @todo find a better name. This is too low level.
   /**
    * @brief stores current time step data in buffer for later
-   *
-   * @param relativeDt relative dt associated with the data.
    */
-  virtual void storeTimeStepSendData(double relativeDt) = 0;
-
-  // @todo find a better name. This is too low level.
-  /**
-   * @brief stores current time step data in buffer for later
-   *
-   * @param relativeDt relative dt associated with the data.
-   */
-  virtual void storeTimeStepReceiveData(double relativeDt) = 0;
-
   virtual void storeTimeStepReceiveDataEndOfWindow() = 0;
 
   // @todo find a better name. This is too low level.
