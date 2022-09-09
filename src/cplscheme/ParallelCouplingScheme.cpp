@@ -5,8 +5,7 @@
 #include "cplscheme/BiCouplingScheme.hpp"
 #include "logging/LogMacros.hpp"
 
-namespace precice {
-namespace cplscheme {
+namespace precice::cplscheme {
 
 ParallelCouplingScheme::ParallelCouplingScheme(
     double                        maxTime,
@@ -81,5 +80,4 @@ bool ParallelCouplingScheme::exchangeDataAndAccelerate()
   return convergence;
 }
 
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme

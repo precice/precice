@@ -16,8 +16,7 @@
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 
-namespace precice {
-namespace cplscheme {
+namespace precice::cplscheme {
 
 MultiCouplingScheme::MultiCouplingScheme(
     double                             maxTime,
@@ -159,5 +158,4 @@ void MultiCouplingScheme::addDataToReceive(
   _receiveDataVector[from].emplace(id, ptrCplData);
 }
 
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme

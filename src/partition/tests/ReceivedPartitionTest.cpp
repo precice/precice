@@ -36,11 +36,9 @@
 #include "testing/Testing.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 class Edge;
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh
 
 using namespace precice;
 using namespace partition;

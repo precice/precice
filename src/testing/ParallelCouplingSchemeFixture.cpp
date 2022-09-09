@@ -1,7 +1,6 @@
 #include "testing/ParallelCouplingSchemeFixture.hpp"
 
-namespace precice {
-namespace testing {
+namespace precice::testing {
 
 bool ParallelCouplingSchemeFixture::isImplicitCouplingScheme(cplscheme::ParallelCouplingScheme &cplscheme)
 {
@@ -17,5 +16,4 @@ cplscheme::CouplingData *ParallelCouplingSchemeFixture::getSendData(cplscheme::P
 {
   return cplscheme.getSendData(dataID);
 }
-} // namespace testing
-} // namespace precice
+} // namespace precice::testing

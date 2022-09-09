@@ -25,8 +25,7 @@
 #include "xml/XMLAttribute.hpp"
 #include "xml/XMLTag.hpp"
 
-namespace precice {
-namespace mapping {
+namespace precice::mapping {
 
 MappingConfiguration::MappingConfiguration(
     xml::XMLTag &              parent,
@@ -526,5 +525,4 @@ MappingConfiguration::Timing MappingConfiguration::getTiming(const std::string &
   PRECICE_UNREACHABLE("Unknown timing value \"{}\".", timing);
 }
 
-} // namespace mapping
-} // namespace precice
+} // namespace precice::mapping

@@ -5,8 +5,7 @@
 #include "time/Time.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
-namespace precice {
-namespace time {
+namespace precice::time {
 
 Waveform::Waveform(
     const int interpolationOrder)
@@ -127,5 +126,4 @@ int Waveform::computeUsedOrder(int requestedOrder, int numberOfAvailableSamples)
   return usedOrder;
 }
 
-} // namespace time
-} // namespace precice
+} // namespace precice::time

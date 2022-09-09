@@ -25,8 +25,7 @@
 
 using precice::cplscheme::PtrCouplingData;
 
-namespace precice {
-namespace acceleration {
+namespace precice::acceleration {
 
 // ==================================================================================
 MVQNAcceleration::MVQNAcceleration(
@@ -825,7 +824,6 @@ void MVQNAcceleration::removeMatrixColumnRSLS(
   }
 }
 
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration
 
 #endif

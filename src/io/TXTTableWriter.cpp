@@ -5,8 +5,7 @@
 #include "utils/Helpers.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace io {
+namespace precice::io {
 
 TXTTableWriter::TXTTableWriter(
     const std::string &filename)
@@ -144,5 +143,4 @@ void TXTTableWriter::reset()
   _writeIterator = _data.end();
 }
 
-} // namespace io
-} // namespace precice
+} // namespace precice::io

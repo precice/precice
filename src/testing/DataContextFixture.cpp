@@ -1,7 +1,6 @@
 #include "testing/DataContextFixture.hpp"
 
-namespace precice {
-namespace testing {
+namespace precice::testing {
 
 std::vector<impl::MappingContext> DataContextFixture::mappingContexts(precice::impl::DataContext &dataContext)
 {
@@ -38,5 +37,4 @@ bool DataContextFixture::hasWriteMapping(precice::impl::DataContext &dataContext
   return dataContext.hasWriteMapping();
 }
 
-} // namespace testing
-} // namespace precice
+} // namespace precice::testing

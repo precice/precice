@@ -7,8 +7,7 @@
 #include "utils/assertion.hpp"
 #include "xml/ConfigParser.hpp"
 
-namespace precice {
-namespace xml {
+namespace precice::xml {
 
 XMLTag::XMLTag(
     Listener &  listener,
@@ -376,8 +375,7 @@ std::string XMLTag::getOccurrenceString(XMLTag::Occurrence occurrence)
   }
   return "";
 }
-} // namespace xml
-} // namespace precice
+} // namespace precice::xml
 
 //std::ostream& operator<<
 //(

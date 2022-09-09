@@ -26,14 +26,12 @@ static precice::logging::Logger _log("SolverInterfaceFortran");
 
 static std::string errormsg = "preCICE has not been created properly. Be sure to call \"precicef_create\" before any other call to preCICE.";
 
-namespace precice {
-namespace impl {
+namespace precice::impl {
 /**
      * @brief Returns length of string without trailing whitespace.
      */
 int strippedLength(const char *string, int length);
-} // namespace impl
-} // namespace precice
+} // namespace precice::impl
 
 void precicef_create_(
     const char *participantName,

@@ -3,8 +3,7 @@
 #include "math/barycenter.hpp"
 #include "math/differences.hpp"
 
-namespace precice {
-namespace mapping {
+namespace precice::mapping {
 
 Polation::Polation(const Eigen::VectorXd &location, const mesh::Vertex &element)
 {
@@ -108,5 +107,4 @@ std::ostream &operator<<(std::ostream &os, const Polation &p)
   return os;
 }
 
-} // namespace mapping
-} // namespace precice
+} // namespace precice::mapping

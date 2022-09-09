@@ -8,12 +8,10 @@
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 class Edge;
 class Vertex;
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh
 
 BOOST_AUTO_TEST_SUITE(IOTests)
 

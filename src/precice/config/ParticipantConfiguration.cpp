@@ -35,8 +35,7 @@
 #include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 
-namespace precice {
-namespace config {
+namespace precice::config {
 
 ParticipantConfiguration::ParticipantConfiguration(
     xml::XMLTag &              parent,
@@ -739,5 +738,4 @@ void ParticipantConfiguration::checkIllDefinedMappings(
   }
 }
 
-} // namespace config
-} // namespace precice
+} // namespace precice::config

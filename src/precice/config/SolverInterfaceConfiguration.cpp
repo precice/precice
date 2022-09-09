@@ -18,8 +18,7 @@
 #include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 
-namespace precice {
-namespace config {
+namespace precice::config {
 
 SolverInterfaceConfiguration::SolverInterfaceConfiguration(xml::XMLTag &parent)
 {
@@ -104,5 +103,4 @@ SolverInterfaceConfiguration::getParticipantConfiguration() const
   return _participantConfiguration;
 }
 
-} // namespace config
-} // namespace precice
+} // namespace precice::config
