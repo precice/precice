@@ -125,18 +125,7 @@ private:
    * @brief BiCouplingScheme has _sendData and _receiveData
    * @returns DataMap with all data
    */
-  const DataMap getAllData() override
-  {
-    DataMap allData;
-    // @todo user C++17 std::map::merge
-    for (auto &sendData : _sendDataVector) {
-      allData.insert(sendData.second.begin(), sendData.second.end());
-    }
-    for (auto &receiveData : _receiveDataVector) {
-      allData.insert(receiveData.second.begin(), receiveData.second.end());
-    }
-    return allData;
-  }
+  const DataMap getAllData() override;
 
   /**
    * @brief Exchanges all data between the participants of the MultiCouplingScheme and applies acceleration.

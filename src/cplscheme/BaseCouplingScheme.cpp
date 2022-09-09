@@ -717,6 +717,13 @@ int BaseCouplingScheme::getExtrapolationOrder()
   return _extrapolationOrder;
 }
 
+void BaseCouplingScheme::retreiveTimeStepForData(double relativeDt, DataID dataId)
+{
+  auto allData   = getAllData();
+  auto data      = allData[dataId];
+  data->values() = data->getDataAtTime(relativeDt);
+}
+
 bool BaseCouplingScheme::anyDataRequiresInitialization(BaseCouplingScheme::DataMap &dataMap) const
 {
   /// @todo implement this function using https://en.cppreference.com/w/cpp/algorithm/all_any_none_of
@@ -758,7 +765,7 @@ void BaseCouplingScheme::retreiveTimeStepAccelerationDataEndOfWindow()
   auto largestTime = times.at(times.size() - 1);
   PRECICE_ASSERT(math::equals(largestTime, 1.0), largestTime);
   for (auto &anAccelerationData : getAccelerationData()) {
-    anAccelerationData.second->values() = anAccelerationData.second->getDataAtTime(largestTime);
+    retreiveTimeStepForData(largestTime, anAccelerationData.second->getDataID());
   }
 }
 

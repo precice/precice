@@ -128,6 +128,7 @@ void MultiCouplingScheme::retreiveTimeStepReceiveData(double relativeDt)
   for (auto &receiveDataVector : _receiveDataVector) {
     for (auto &aReceiveData : receiveDataVector.second) {
       aReceiveData.second->values() = aReceiveData.second->getDataAtTime(relativeDt);
+      //retreiveTimeStepForData(relativeDt, aReceiveData.second->getDataID());  // @todo: Causes problems. Why? Because DataID is not unique for MultiCouplingScheme's allData.
     }
   }
 }
@@ -138,6 +139,34 @@ std::vector<double> MultiCouplingScheme::getReceiveTimes()
   //@todo subcycling is not supported for MultiCouplingScheme, because this needs a complicated interplay of picking the right data in time and mapping this data. This is hard to realize with the current implementation.
   auto times = std::vector<double>({1.0});
   return times;
+}
+
+typedef std::map<int, PtrCouplingData> DataMap;
+
+const DataMap MultiCouplingScheme::getAllData()
+{
+  DataMap allData;
+  PRECICE_INFO("##### assembling allData() #####");
+  // @todo user C++17 std::map::merge
+  for (auto &sendData : _sendDataVector) {
+    for (auto &aSendData : sendData.second) {
+      PRECICE_INFO("DataID: {} {}", aSendData.first, aSendData.second->getDataID());
+    }
+    allData.insert(sendData.second.begin(), sendData.second.end());
+  }
+  for (auto &receiveData : _receiveDataVector) {
+    for (auto &aReceiveData : receiveData.second) {
+      PRECICE_INFO("DataID: {} {}", aReceiveData.first, aReceiveData.second->getDataID());
+    }
+    allData.insert(receiveData.second.begin(), receiveData.second.end());
+  }PRECICE_INFO("##### assembling allData() done #####");
+
+  PRECICE_INFO("##### checking allData() #####");
+  for (auto &aData : allData) {
+    PRECICE_INFO("DataID: {} {}", aData.first, aData.second->getDataID());
+  }
+  PRECICE_INFO("##### checking allData() done #####");
+  return allData;
 }
 
 bool MultiCouplingScheme::exchangeDataAndAccelerate()

@@ -1907,8 +1907,9 @@ void SolverInterfaceImpl::mapReadData()
   PRECICE_TRACE();
   computeMappings(_accessor->readMappingContexts(), "read");
   for (auto time : _couplingScheme->getReceiveTimes()) {
-    _couplingScheme->retreiveTimeStepReceiveData(time); // @todo loads data into ALL read data. Would be better to only perform this for read data with name context.getDataName()
+    _couplingScheme->retreiveTimeStepReceiveData(time); // @todo loads data into ALL read data. Would be better to only perform this for read data with name context.getDataName
     for (auto &context : _accessor->readDataContexts()) {
+      // context.retreiveTimeStepData(time);  // @todo try to retreive data via context. But complicated: DataContext needs a connection to associated CouplingData...
       if (context.isMappingRequired()) {
         PRECICE_DEBUG("Map read data \"{}\" to mesh \"{}\"", context.getDataName(), context.getMeshName());
         context.mapData();

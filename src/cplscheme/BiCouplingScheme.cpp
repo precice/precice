@@ -105,6 +105,15 @@ std::vector<std::string> BiCouplingScheme::getCouplingPartners() const
   return partnerNames;
 }
 
+typedef std::map<int, PtrCouplingData> DataMap;
+
+const DataMap BiCouplingScheme::getAllData()
+{
+  DataMap allData{_sendData};
+  allData.insert(_receiveData.begin(), _receiveData.end());
+  return allData;
+}
+
 CouplingData *BiCouplingScheme::getSendData(
     DataID dataID)
 {
@@ -178,7 +187,7 @@ void BiCouplingScheme::retreiveTimeStepReceiveData(double relativeDt)
   PRECICE_ASSERT(relativeDt > 0);
   PRECICE_ASSERT(relativeDt <= 1.0, relativeDt);
   for (auto &aReceiveData : getReceiveData()) {
-    aReceiveData.second->values() = aReceiveData.second->getDataAtTime(relativeDt);
+    retreiveTimeStepForData(relativeDt, aReceiveData.second->getDataID());
   }
 }
 

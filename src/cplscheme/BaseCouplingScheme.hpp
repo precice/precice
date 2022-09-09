@@ -410,6 +410,8 @@ protected:
    */
   virtual void storeTimeStepSendData(double relativeDt) = 0;
 
+  virtual void retreiveTimeStepForData(double relativeDt, DataID dataId);
+
 private:
   /// Coupling mode used by coupling scheme.
   CouplingMode _couplingMode = Undefined;
