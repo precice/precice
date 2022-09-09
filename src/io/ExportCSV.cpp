@@ -16,8 +16,7 @@
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace io {
+namespace precice::io {
 
 namespace {
 struct StridedAccess {
@@ -117,5 +116,4 @@ void ExportCSV::doExport(
   }
 }
 
-} // namespace io
-} // namespace precice
+} // namespace precice::io

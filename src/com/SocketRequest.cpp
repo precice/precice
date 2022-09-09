@@ -1,7 +1,6 @@
 #include "SocketRequest.hpp"
 
-namespace precice {
-namespace com {
+namespace precice::com {
 SocketRequest::SocketRequest()
     : _complete(false)
 {
@@ -31,5 +30,4 @@ void SocketRequest::wait()
 
   _completeCondition.wait(lock, [this] { return _complete; });
 }
-} // namespace com
-} // namespace precice
+} // namespace precice::com

@@ -7,8 +7,7 @@
 #include "mesh/Mesh.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace action {
+namespace precice::action {
 
 ScaleByDtAction::ScaleByDtAction(
     Timing               timing,
@@ -57,5 +56,4 @@ void ScaleByDtAction::performAction(
   }
 }
 
-} // namespace action
-} // namespace precice
+} // namespace precice::action

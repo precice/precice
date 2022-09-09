@@ -2,9 +2,7 @@
 #include "../Constants.hpp"
 #include "logging/LogMacros.hpp"
 
-namespace precice {
-namespace cplscheme {
-namespace tests {
+namespace precice::cplscheme::tests {
 
 DummyCouplingScheme::DummyCouplingScheme(
     int numberIterations,
@@ -72,6 +70,4 @@ bool DummyCouplingScheme::isActionRequired(
   return false;
 }
 
-} // namespace tests
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme::tests

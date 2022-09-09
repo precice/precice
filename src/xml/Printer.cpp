@@ -15,8 +15,7 @@
 #include "xml/XMLAttribute.hpp"
 #include "xml/XMLTag.hpp"
 
-namespace precice {
-namespace xml {
+namespace precice::xml {
 
 namespace {
 
@@ -471,5 +470,4 @@ void toDocumentation(std::ostream &out, const XMLTag &tag)
   printDocumentation(out, tag, 0);
 }
 
-} // namespace xml
-} // namespace precice
+} // namespace precice::xml

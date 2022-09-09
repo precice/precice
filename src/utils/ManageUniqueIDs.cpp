@@ -1,8 +1,7 @@
 #include "utils/ManageUniqueIDs.hpp"
 #include <boost/container/detail/flat_tree.hpp>
 
-namespace precice {
-namespace utils {
+namespace precice::utils {
 
 int ManageUniqueIDs::getFreeID()
 {
@@ -33,5 +32,4 @@ void ManageUniqueIDs::resetIDs()
   _lowerLimit = 0;
 }
 
-} // namespace utils
-} // namespace precice
+} // namespace precice::utils

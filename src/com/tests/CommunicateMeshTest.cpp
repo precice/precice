@@ -11,13 +11,11 @@
 #include "testing/Testing.hpp"
 #include "utils/IntraComm.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 class Edge;
 class Triangle;
 class Vertex;
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh
 
 using namespace precice;
 using namespace precice::com;

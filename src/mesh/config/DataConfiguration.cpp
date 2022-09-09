@@ -5,8 +5,7 @@
 #include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 
 DataConfiguration::DataConfiguration(xml::XMLTag &parent)
 {
@@ -97,5 +96,4 @@ int DataConfiguration::getDataDimensions(
   PRECICE_UNREACHABLE("Unknown data type \"{}\".", typeName);
 }
 
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh

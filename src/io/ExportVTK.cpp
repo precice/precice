@@ -15,8 +15,7 @@
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace io {
+namespace precice::io {
 
 void ExportVTK::doExport(
     const std::string &name,
@@ -293,5 +292,4 @@ void ExportVTK::writeLine(
   outFile << '\n';
 }
 
-} // namespace io
-} // namespace precice
+} // namespace precice::io

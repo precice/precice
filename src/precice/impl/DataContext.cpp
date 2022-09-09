@@ -2,8 +2,7 @@
 #include <memory>
 #include "utils/EigenHelperFunctions.hpp"
 
-namespace precice {
-namespace impl {
+namespace precice::impl {
 
 logging::Logger DataContext::_log{"impl::DataContext"};
 
@@ -127,5 +126,4 @@ bool DataContext::hasWriteMapping() const
   return std::any_of(_fromData.begin(), _fromData.end(), [this](auto &data) { return data == _providedData; });
 }
 
-} // namespace impl
-} // namespace precice
+} // namespace precice::impl

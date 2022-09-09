@@ -5,8 +5,7 @@
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 
-namespace precice {
-namespace io {
+namespace precice::io {
 
 std::string ExportVTP::getVTKFormat() const
 {
@@ -81,5 +80,4 @@ void ExportVTP::exportConnectivity(
   outFile << "            </DataArray>\n";
   outFile << "         </Polys>\n";
 }
-} // namespace io
-} // namespace precice
+} // namespace precice::io

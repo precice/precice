@@ -12,8 +12,7 @@
 #include "logging/Logger.hpp"
 #include "xml/XMLTag.hpp"
 
-namespace precice {
-namespace xml {
+namespace precice::xml {
 
 std::string decodeXML(std::string xml)
 {
@@ -231,5 +230,4 @@ void ConfigParser::OnTextSection(const std::string &)
 {
   // This page intentionally left blank
 }
-} // namespace xml
-} // namespace precice
+} // namespace precice::xml

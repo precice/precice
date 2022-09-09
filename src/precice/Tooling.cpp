@@ -6,9 +6,7 @@
 #include "utils/fmt.hpp"
 #include "xml/Printer.hpp"
 
-namespace precice {
-
-namespace tooling {
+namespace precice::tooling {
 
 void printConfigReference(std::ostream &out, ConfigReferenceType reftype)
 {
@@ -40,6 +38,4 @@ void checkConfiguration(const std::string &filename, const std::string &particip
   fmt::print(fmt::emphasis::bold | fg(fmt::color::green), "No major issues detected\n", filename);
 }
 
-} // namespace tooling
-
-} // namespace precice
+} // namespace precice::tooling
