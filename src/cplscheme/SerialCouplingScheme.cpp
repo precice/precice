@@ -8,7 +8,6 @@
 #include "acceleration/Acceleration.hpp"
 #include "acceleration/SharedPointer.hpp"
 #include "cplscheme/BaseCouplingScheme.hpp"
-#include "cplscheme/BiCouplingScheme.hpp"
 #include "cplscheme/CouplingScheme.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/M2N.hpp"
@@ -31,9 +30,16 @@ SerialCouplingScheme::SerialCouplingScheme(
     CouplingMode                  cplMode,
     int                           maxIterations,
     int                           extrapolationOrder)
-    : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
-                       secondParticipant, localParticipant, std::move(m2n), maxIterations, cplMode, dtMethod, extrapolationOrder)
+    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, localParticipant, secondParticipant, maxIterations, cplMode, dtMethod, extrapolationOrder)
 {
+  PRECICE_ASSERT(firstParticipant != _controller, "First participant and second participant must have different names.");
+
+  if (_localParticipant == firstParticipant) {
+    _m2ns[_controller] = m2n;
+  } else {
+    _m2ns[firstParticipant] = m2n;
+  }
+
   if (dtMethod == constants::FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE) {
     if (doesFirstStep()) {
       PRECICE_ASSERT(not _participantReceivesTimeWindowSize);
@@ -47,6 +53,11 @@ SerialCouplingScheme::SerialCouplingScheme(
   }
 }
 
+bool SerialCouplingScheme::hasSendData(DataID dataID)
+{
+  return getSendData(dataID) != nullptr;
+}
+
 void SerialCouplingScheme::setTimeWindowSize(double timeWindowSize)
 {
   PRECICE_ASSERT(not _participantSetsTimeWindowSize);
@@ -58,7 +69,9 @@ void SerialCouplingScheme::sendTimeWindowSize()
   PRECICE_TRACE();
   if (_participantSetsTimeWindowSize) {
     PRECICE_DEBUG("sending time window size of {}", getComputedTimeWindowPart());
-    getM2N()->send(getComputedTimeWindowPart());
+    for (auto &exchange : _m2ns) {
+      exchange.second->send(getComputedTimeWindowPart());
+    }
   }
 }
 
@@ -67,7 +80,9 @@ void SerialCouplingScheme::receiveAndSetTimeWindowSize()
   PRECICE_TRACE();
   if (_participantReceivesTimeWindowSize) {
     double dt = UNDEFINED_TIME_WINDOW_SIZE;
-    getM2N()->receive(dt);
+    for (auto &exchange : _m2ns) {
+      exchange.second->receive(dt);
+    }
     PRECICE_DEBUG("Received time window size of {}.", dt);
     PRECICE_ASSERT(not _participantSetsTimeWindowSize);
     PRECICE_ASSERT(not math::equals(dt, UNDEFINED_TIME_WINDOW_SIZE));
@@ -83,8 +98,40 @@ void SerialCouplingScheme::performReceiveOfFirstAdvance()
   } else { // second participant
     receiveAndSetTimeWindowSize();
     PRECICE_DEBUG("Receiving data...");
-    receiveData(getM2N(), getReceiveData());
+    for (auto &receiveExchange : _receiveDataVector) {
+      receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
+    }
     checkDataHasBeenReceived();
+  }
+}
+
+void SerialCouplingScheme::exchangeInitialData()
+{
+  // F: send, receive, S: receive, send
+  if (doesFirstStep()) {
+    if (sendsInitializedData()) {
+      for (auto &sendExchange : _sendDataVector) {
+        sendData(_m2ns[sendExchange.first], sendExchange.second);
+      }
+    }
+    if (receivesInitializedData()) {
+      for (auto &receiveExchange : _receiveDataVector) {
+        receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
+      }
+      checkDataHasBeenReceived();
+    }
+  } else { // second participant
+    if (receivesInitializedData()) {
+      for (auto &receiveExchange : _receiveDataVector) {
+        receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
+      }
+      checkDataHasBeenReceived();
+    }
+    if (sendsInitializedData()) {
+      for (auto &sendExchange : _sendDataVector) {
+        sendData(_m2ns[sendExchange.first], sendExchange.second);
+      }
+    }
   }
 }
 
@@ -95,31 +142,52 @@ bool SerialCouplingScheme::exchangeDataAndAccelerate()
   if (doesFirstStep()) { // first participant
     PRECICE_DEBUG("Sending data...");
     sendTimeWindowSize();
-    sendData(getM2N(), getSendData());
+    for (auto &sendExchange : _sendDataVector) {
+      sendData(_m2ns[sendExchange.first], sendExchange.second);
+    }
     PRECICE_DEBUG("Receiving data...");
     if (isImplicitCouplingScheme()) {
-      convergence = receiveConvergence(getM2N());
+      convergence = receiveConvergence(_m2ns[_controller]);
     }
-    receiveData(getM2N(), getReceiveData());
+    for (auto &receiveExchange : _receiveDataVector) {
+      receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
+    }
     checkDataHasBeenReceived();
   } else { // second participant
     if (isImplicitCouplingScheme()) {
       PRECICE_DEBUG("Test Convergence and accelerate...");
       convergence = doImplicitStep();
-      sendConvergence(getM2N(), convergence);
+      for (const auto &m2nPair : _m2ns) {
+        sendConvergence(m2nPair.second, convergence);
+      }
     }
     PRECICE_DEBUG("Sending data...");
-    sendData(getM2N(), getSendData());
+    for (auto &sendExchange : _sendDataVector) {
+      sendData(_m2ns[sendExchange.first], sendExchange.second);
+    }
     // the second participant does not want new data in the last iteration of the last time window
     if (isCouplingOngoing() || (isImplicitCouplingScheme() && not convergence)) {
       receiveAndSetTimeWindowSize();
       PRECICE_DEBUG("Receiving data...");
-      receiveData(getM2N(), getReceiveData());
+      for (auto &receiveExchange : _receiveDataVector) {
+        receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
+      }
       checkDataHasBeenReceived();
     }
   }
-
   return convergence;
+}
+
+typedef std::map<int, PtrCouplingData> DataMap;
+
+const DataMap SerialCouplingScheme::getAccelerationData()
+{
+  DataMap accelerationData;
+  for (auto &data : allSendCouplingData()) {
+    PRECICE_ASSERT(accelerationData.count(data->getDataID()) == 0);
+    accelerationData[data->getDataID()] = data;
+  }
+  return accelerationData;
 }
 
 } // namespace cplscheme

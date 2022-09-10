@@ -69,6 +69,7 @@ public:
       double                        timeWindowSize,
       int                           validDigits,
       std::string                   localParticipant,
+      std::string                   controller,
       int                           maxIterations,
       CouplingMode                  cplMode,
       constants::TimesteppingMethod dtMethod,
@@ -200,6 +201,9 @@ public:
    */
   void advance() override final;
 
+  /// Returns list of all coupling partners.
+  std::vector<std::string> getCouplingPartners() const override final;
+
   /// Adds a measure to determine the convergence of coupling iterations.
   void addConvergenceMeasure(
       int                         dataID,
@@ -223,18 +227,51 @@ public:
   /**
    * @returns true, if coupling scheme has any sendData
    */
-  virtual bool hasAnySendData() = 0;
+  bool hasAnySendData();
+
+  /// Adds data to be sent on data exchange and possibly be modified during coupling iterations.
+  void addDataToSend(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization, const std::string &to);
+
+  /// Adds data to be received on data exchange.
+  void addDataToReceive(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization, const std::string &from);
 
   /**
    * @brief Determines which data is initialized and therefore has to be exchanged during initialize.
    *
    * Calls determineInitialSend and determineInitialReceive for all send and receive data of this coupling scheme.
    */
-  virtual void determineInitialDataExchange() = 0;
+  void determineInitialDataExchange();
 
 protected:
   /// Map that links DataID to CouplingData
   typedef std::map<int, PtrCouplingData> DataMap;
+
+  /// Local participant name.
+  std::string _localParticipant = "unknown";
+
+  /// name of the controller participant ( = second participant in serial bi coupling scheme)
+  std::string _controller = "unknown";
+
+  /**
+   * @brief A vector of m2ns. A m2n is a communication device to the other coupling participant.
+   */
+  std::map<std::string, m2n::PtrM2N> _m2ns;
+
+  /**
+   * @brief A vector of all data to be received.
+   */
+  std::map<std::string, DataMap> _receiveDataVector;
+
+  /**
+   * @brief A vector of all data to be sent.
+   */
+  std::map<std::string, DataMap> _sendDataVector;
+
+  /// Sets the values
+  CouplingData *getSendData(DataID dataID);
+
+  /// Returns all data to be received with data ID as given.
+  CouplingData *getReceiveData(DataID dataID);
 
   /// Sends data sendDataIDs given in mapCouplingData with communication.
   void sendData(const m2n::PtrM2N &m2n, const DataMap &sendData);
@@ -242,11 +279,13 @@ protected:
   /// Receives data receiveDataIDs given in mapCouplingData with communication.
   void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData);
 
-  /**
-   * @brief interface to provide all CouplingData, depending on coupling scheme being used
-   * @return DataMap containing all CouplingData
-   */
-  virtual const DataMap getAllData() = 0;
+  std::vector<PtrCouplingData> allCouplingData();
+
+  std::vector<PtrCouplingData> allSendCouplingData();
+
+  std::vector<PtrCouplingData> allReceiveCouplingData();
+
+  std::vector<PtrCouplingData> allCouplingDataWithId(DataID dataId);
 
   /**
    * @brief Function to determine whether coupling scheme is an explicit coupling scheme
@@ -281,14 +320,6 @@ protected:
   double getComputedTimeWindowPart()
   {
     return _computedTimeWindowPart;
-  }
-
-  /**
-   * @brief Setter for _doesFirstStep
-   */
-  void setDoesFirstStep(bool doesFirstStep)
-  {
-    _doesFirstStep = doesFirstStep;
   }
 
   /**
@@ -358,25 +389,19 @@ protected:
   /**
    * @brief used for storing all Data at end of doImplicitStep for later reference.
    */
-  void storeIteration()
-  {
-    PRECICE_ASSERT(isImplicitCouplingScheme());
-    for (const DataMap::value_type &pair : getAllData()) {
-      pair.second->storeIteration();
-    }
-  }
+  void storeIteration();
 
   /**
    * @brief Sets _sendsInitializedData, if sendData requires initialization
    * @param sendData CouplingData being checked
    */
-  void determineInitialSend(DataMap &sendData);
+  void determineInitialSend(std::vector<PtrCouplingData> sendData);
 
   /**
    * @brief Sets _receivesInitializedData, if receiveData requires initialization
    * @param receiveData CouplingData being checked
    */
-  void determineInitialReceive(DataMap &receiveData);
+  void determineInitialReceive(std::vector<PtrCouplingData> receiveData);
 
   /**
    * @brief getter for _extrapolationOrder
@@ -444,9 +469,6 @@ private:
 
   /// Writes out coupling convergence within all time windows.
   std::shared_ptr<io::TXTTableWriter> _convergenceWriter;
-
-  /// Local participant name.
-  std::string _localParticipant = "unknown";
 
   /**
    * Order of predictor of interface values for first participant.
@@ -576,11 +598,11 @@ private:
   void newConvergenceMeasurements();
 
   /**
-   * @brief Checks whether any CouplingData in dataMap requires initialization
-   * @param dataMap map containing CouplingData
-   * @return true, if any CouplingData in dataMap requires initialization
+   * @brief Checks whether any CouplingData in vector requires initialization
+   * @param datas vector containing multiple PtrCouplingData
+   * @return true, if any CouplingData in vector requires initialization
    */
-  bool anyDataRequiresInitialization(DataMap &dataMap) const;
+  bool anyDataRequiresInitialization(std::vector<PtrCouplingData> datas) const;
 };
 } // namespace cplscheme
 } // namespace precice

@@ -75,7 +75,16 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
   options.useOnlyPrimaryCom = true;
-  auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
+  std::string participant0("Participant0");
+  std::string participant1("Participant1");
+  auto        m2n = context.connectPrimaryRanks(participant0, participant1, options);
+
+  std::map<std::string, m2n::PtrM2N> m2ns;
+  if (context.name == participant0) {
+    m2ns[participant1] = m2n;
+  } else {
+    m2ns[participant0] = m2n;
+  }
 
   xml::XMLTag root = xml::getRootTag();
 
@@ -98,10 +107,12 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
 
   // Create all parameters necessary to create a ParallelImplicitCouplingScheme object
   double      maxTime        = 1.0;
-  int         maxTimesteps   = 3;
-  double      timestepLength = 0.1;
+  int         maxTimeWindows = 3;
+  double      timeWindowSize = 0.1;
   std::string nameParticipant0("Participant0");
   std::string nameParticipant1("Participant1");
+  std::string from;
+  std::string to;
   int         sendDataIndex              = -1;
   int         receiveDataIndex           = -1;
   bool        dataRequiresInitialization = false;
@@ -110,21 +121,24 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     sendDataIndex              = dataID0;
     receiveDataIndex           = dataID1;
     dataRequiresInitialization = true;
+    from                       = nameParticipant1;
+    to                         = nameParticipant1;
   } else {
     sendDataIndex              = dataID1;
     receiveDataIndex           = dataID0;
     dataRequiresInitialization = true;
+    from                       = nameParticipant0;
+    to                         = nameParticipant0;
   }
 
   // Create the coupling scheme object
   ParallelCouplingScheme cplScheme(
-      maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
-      context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, 100, extrapolationOrder);
+      maxTime, maxTimeWindows, timeWindowSize, 16, context.name, m2ns, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, nameParticipant1, 100, extrapolationOrder);
 
   using Fixture = testing::ParallelCouplingSchemeFixture;
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, dataRequiresInitialization);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, dataRequiresInitialization, to);
   CouplingData *sendCouplingData = Fixture::getSendData(cplScheme, sendDataIndex);
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, dataRequiresInitialization);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, dataRequiresInitialization, from);
   CouplingData *receiveCouplingData = Fixture::getReceiveData(cplScheme, receiveDataIndex);
   cplScheme.determineInitialDataExchange();
 
@@ -165,7 +179,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       if (cplScheme.isActionRequired(readIterationCheckpoint)) {
         cplScheme.markActionFulfilled(readIterationCheckpoint);
       }
-      cplScheme.addComputedTime(timestepLength);
+      cplScheme.addComputedTime(timeWindowSize);
       cplScheme.advance();
       BOOST_TEST(cplScheme.hasDataBeenReceived());
     }
@@ -194,7 +208,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       if (cplScheme.isActionRequired(writeIterationCheckpoint)) {
         cplScheme.markActionFulfilled(writeIterationCheckpoint);
       }
-      cplScheme.addComputedTime(timestepLength);
+      cplScheme.addComputedTime(timeWindowSize);
       cplScheme.advance();
       BOOST_TEST(cplScheme.hasDataBeenReceived());
       if (cplScheme.isActionRequired(readIterationCheckpoint)) {

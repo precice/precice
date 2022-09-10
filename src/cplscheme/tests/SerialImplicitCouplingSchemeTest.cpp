@@ -462,6 +462,7 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   std::string           first        = "First";
   std::string           second       = "Second";
   std::string           accessor     = second;
+  std::string           to           = first;
   com::PtrCommunication com(new com::MPIDirectCommunication());
   m2n::PtrM2N           globalCom(new m2n::M2N(com, m2n::DistributedComFactory::SharedPointer()));
   const int             maxIterations      = 1;
@@ -474,7 +475,7 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
 
   using Fixture = testing::SerialCouplingSchemeFixture;
 
-  scheme.addDataToSend(data, mesh, true);
+  scheme.addDataToSend(data, mesh, true, to);
   Fixture::initializeStorages(scheme);
   CouplingData *cplData = Fixture::getSendData(scheme, dataID);
   BOOST_CHECK(cplData); // no nullptr
@@ -539,6 +540,7 @@ BOOST_AUTO_TEST_CASE(SecondOrder)
   std::string           first        = "First";
   std::string           second       = "Second";
   std::string           accessor     = second;
+  std::string           to           = first;
   com::PtrCommunication com(new com::MPIDirectCommunication());
   m2n::PtrM2N           globalCom(new m2n::M2N(com, m2n::DistributedComFactory::SharedPointer()));
   const int             maxIterations      = 1;
@@ -549,7 +551,7 @@ BOOST_AUTO_TEST_CASE(SecondOrder)
 
   using Fixture = testing::SerialCouplingSchemeFixture;
 
-  scheme.addDataToSend(data, mesh, true);
+  scheme.addDataToSend(data, mesh, true, to);
   Fixture::initializeStorages(scheme);
   CouplingData *cplData = Fixture::getSendData(scheme, dataID);
   BOOST_CHECK(cplData); // no nullptr
@@ -649,6 +651,8 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
   const double timestepLength     = timeWindowSize;
   std::string  first("Participant0");
   std::string  second("Participant1");
+  std::string  from;
+  std::string  to;
   int          sendDataIndex        = -1;
   int          receiveDataIndex     = -1;
   int          convergenceDataIndex = -1;
@@ -660,10 +664,14 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
     sendDataIndex        = dataID0;
     receiveDataIndex     = dataID1;
     convergenceDataIndex = receiveDataIndex;
+    from                 = second;
+    to                   = second;
   } else {
     sendDataIndex        = dataID1;
     receiveDataIndex     = dataID0;
     convergenceDataIndex = sendDataIndex;
+    from                 = first;
+    to                   = first;
   }
 
   // Create the coupling scheme object
@@ -671,8 +679,8 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
       maxTime, maxTimeWindows, timeWindowSize, 16, first, second,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, maxIterations, extrapolationOrder);
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, to);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, from);
   cplScheme.determineInitialDataExchange();
 
   // Add acceleration
@@ -850,6 +858,8 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
   const double timestepLength     = timeWindowSize;
   std::string  first("Participant0");
   std::string  second("Participant1");
+  std::string  from;
+  std::string  to;
   int          sendDataIndex        = -1;
   int          receiveDataIndex     = -1;
   int          convergenceDataIndex = -1;
@@ -861,10 +871,14 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
     sendDataIndex        = dataID0;
     receiveDataIndex     = dataID1;
     convergenceDataIndex = receiveDataIndex;
+    from                 = second;
+    to                   = second;
   } else {
     sendDataIndex        = dataID1;
     receiveDataIndex     = dataID0;
     convergenceDataIndex = sendDataIndex;
+    from                 = first;
+    to                   = first;
   }
 
   // Create the coupling scheme object
@@ -872,8 +886,8 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
       maxTime, maxTimeWindows, timeWindowSize, 16, first, second,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, maxIterations, extrapolationOrder);
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, context.isNamed(second));
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, context.isNamed(first));
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, context.isNamed(second), to);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, context.isNamed(first), from);
   cplScheme.determineInitialDataExchange();
 
   // Add acceleration
@@ -1095,6 +1109,8 @@ BOOST_AUTO_TEST_CASE(SecondOrderWithAcceleration)
   const double timestepLength     = timeWindowSize;
   std::string  first("Participant0");
   std::string  second("Participant1");
+  std::string  from;
+  std::string  to;
   int          sendDataIndex        = -1;
   int          receiveDataIndex     = -1;
   int          convergenceDataIndex = -1;
@@ -1106,10 +1122,14 @@ BOOST_AUTO_TEST_CASE(SecondOrderWithAcceleration)
     sendDataIndex        = dataID0;
     receiveDataIndex     = dataID1;
     convergenceDataIndex = receiveDataIndex;
+    from                 = second;
+    to                   = second;
   } else {
     sendDataIndex        = dataID1;
     receiveDataIndex     = dataID0;
     convergenceDataIndex = sendDataIndex;
+    from                 = first;
+    to                   = first;
   }
 
   // Create the coupling scheme object
@@ -1117,8 +1137,8 @@ BOOST_AUTO_TEST_CASE(SecondOrderWithAcceleration)
       maxTime, maxTimeWindows, timeWindowSize, 16, first, second,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, maxIterations, extrapolationOrder);
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, to);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, from);
   cplScheme.determineInitialDataExchange();
 
   // Add acceleration
@@ -1329,6 +1349,8 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
   double      timestepLength = 0.1;
   std::string nameParticipant0("Participant0");
   std::string nameParticipant1("Participant1");
+  std::string from;
+  std::string to;
   int         sendDataIndex        = -1;
   int         receiveDataIndex     = -1;
   int         convergenceDataIndex = -1;
@@ -1337,10 +1359,14 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
     sendDataIndex        = 0;
     receiveDataIndex     = 1;
     convergenceDataIndex = receiveDataIndex;
+    from                 = nameParticipant1;
+    to                   = nameParticipant1;
   } else {
     sendDataIndex        = 1;
     receiveDataIndex     = 0;
     convergenceDataIndex = sendDataIndex;
+    from                 = nameParticipant0;
+    to                   = nameParticipant0;
   }
 
   // Create the coupling scheme object
@@ -1348,8 +1374,8 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0,
       nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, 100, extrapolationOrder);
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, to);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, from);
   cplScheme.determineInitialDataExchange();
 
   double                                 convergenceLimit1 = sqrt(3.0); // when diff_vector = (1.0, 1.0, 1.0)
@@ -1435,6 +1461,8 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
   double      timestepLength = 0.1;
   std::string nameParticipant0("Participant0");
   std::string nameParticipant1("Participant1");
+  std::string from;
+  std::string to;
   int         sendDataIndex        = -1;
   int         receiveDataIndex     = -1;
   int         convergenceDataIndex = -1;
@@ -1443,10 +1471,14 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
     sendDataIndex        = 0;
     receiveDataIndex     = 1;
     convergenceDataIndex = receiveDataIndex;
+    from                 = nameParticipant1;
+    to                   = nameParticipant1;
   } else {
     sendDataIndex        = 1;
     receiveDataIndex     = 0;
     convergenceDataIndex = sendDataIndex;
+    from                 = nameParticipant0;
+    to                   = nameParticipant0;
   }
 
   // Create the coupling scheme object
@@ -1454,8 +1486,8 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, 100, extrapolationOrder);
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, to);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, from);
   cplScheme.determineInitialDataExchange();
 
   // Add convergence measures
@@ -1498,6 +1530,8 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
   double           timestepLength = 0.1;
   std::string      nameParticipant0("Participant0");
   std::string      nameParticipant1("Participant1");
+  std::string      from;
+  std::string      to;
   int              sendDataIndex        = -1;
   int              receiveDataIndex     = -1;
   int              convergenceDataIndex = -1;
@@ -1508,11 +1542,15 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
     receiveDataIndex     = 1;
     validIterations      = {3, 3, 3};
     convergenceDataIndex = receiveDataIndex;
+    from                 = nameParticipant1;
+    to                   = nameParticipant1;
   } else {
     sendDataIndex        = 1;
     receiveDataIndex     = 0;
     validIterations      = {3, 3, 3};
     convergenceDataIndex = sendDataIndex;
+    from                 = nameParticipant0;
+    to                   = nameParticipant0;
   }
 
   // Create the coupling scheme object
@@ -1520,8 +1558,8 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, 100, extrapolationOrder);
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, to);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, from);
   cplScheme.determineInitialDataExchange();
 
   // Add convergence measures
@@ -1564,6 +1602,8 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   double      timestepLength = 0.1;
   std::string nameParticipant0("Participant0");
   std::string nameParticipant1("Participant1");
+  std::string from;
+  std::string to;
   int         sendDataIndex              = -1;
   int         receiveDataIndex           = -1;
   bool        dataRequiresInitialization = false;
@@ -1573,11 +1613,15 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     sendDataIndex        = dataID0;
     receiveDataIndex     = dataID1;
     convergenceDataIndex = receiveDataIndex;
+    from                 = nameParticipant1;
+    to                   = nameParticipant1;
   } else {
     sendDataIndex              = dataID1;
     receiveDataIndex           = dataID0;
     dataRequiresInitialization = true;
     convergenceDataIndex       = sendDataIndex;
+    from                       = nameParticipant0;
+    to                         = nameParticipant0;
   }
 
   // Create the coupling scheme object
@@ -1587,9 +1631,9 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       BaseCouplingScheme::Implicit, 100, extrapolationOrder);
   using Fixture = testing::SerialCouplingSchemeFixture;
 
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, dataRequiresInitialization);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, dataRequiresInitialization, to);
   CouplingData *sendCouplingData = Fixture::getSendData(cplScheme, sendDataIndex);
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, not dataRequiresInitialization);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, not dataRequiresInitialization, from);
   CouplingData *receiveCouplingData = Fixture::getReceiveData(cplScheme, receiveDataIndex);
   cplScheme.determineInitialDataExchange();
 

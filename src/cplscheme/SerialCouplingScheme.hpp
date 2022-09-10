@@ -2,7 +2,6 @@
 
 #include <string>
 #include "BaseCouplingScheme.hpp"
-#include "BiCouplingScheme.hpp"
 #include "cplscheme/Constants.hpp"
 #include "logging/Logger.hpp"
 #include "m2n/SharedPointer.hpp"
@@ -21,7 +20,7 @@ namespace cplscheme {
  * For more information, look into Benjamin's thesis, Section 3.5.
  * https://mediatum.ub.tum.de/doc/1320661/document.pdf
  */
-class SerialCouplingScheme : public BiCouplingScheme {
+class SerialCouplingScheme : public BaseCouplingScheme {
   friend struct testing::SerialCouplingSchemeFixture; // Make the fixture friend of this class
 public:
   /**
@@ -54,6 +53,11 @@ public:
       int                           maxIterations      = UNDEFINED_MAX_ITERATIONS,
       int                           extrapolationOrder = UNDEFINED_EXTRAPOLATION_ORDER);
 
+  /**
+   * @returns true, if coupling scheme has sendData with given DataID
+   */
+  bool hasSendData(DataID dataID);
+
 protected:
   /**
    * @brief Setter for _timeWindowSize
@@ -84,19 +88,21 @@ private:
   void performReceiveOfFirstAdvance() override final;
 
   /**
+   * @brief Exchanges data, if it has to be initialized.
+   */
+  void exchangeInitialData() override final;
+
+  /**
    * @brief Exchanges data between the participants of the SerialCouplingSchemes and applies acceleration.
    * @returns true, if iteration converged
    */
-  bool exchangeDataAndAccelerate() override;
+  bool exchangeDataAndAccelerate() override final;
 
   /**
    * @brief SerialCouplingSchemes applies acceleration to send data
    * @returns DataMap being accelerated
    */
-  const DataMap getAccelerationData() override
-  {
-    return getSendData();
-  }
+  const DataMap getAccelerationData() override final;
 };
 
 } // namespace cplscheme

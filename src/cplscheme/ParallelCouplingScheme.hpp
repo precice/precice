@@ -1,12 +1,14 @@
 #pragma once
 
+#include <map>
 #include <string>
-#include "BiCouplingScheme.hpp"
-#include "cplscheme/BaseCouplingScheme.hpp"
+#include <vector>
+#include "BaseCouplingScheme.hpp"
 #include "cplscheme/Constants.hpp"
 #include "logging/Logger.hpp"
 #include "m2n/SharedPointer.hpp"
-#include "utils/assertion.hpp"
+#include "mesh/SharedPointer.hpp"
+#include "utils/Helpers.hpp"
 
 namespace precice {
 
@@ -16,45 +18,46 @@ struct ParallelCouplingSchemeFixture;
 } // namespace testing
 
 namespace cplscheme {
+class CouplingData;
+struct ExchangeData;
 
 /**
- * @brief Coupling scheme for parallel coupling, i.e. simultaneous execution of two coupled participants
+ * @brief A coupling scheme with multiple participants.
  *
- * For more information, look into Benjamin's thesis, Section 3.5.
- * https://mediatum.ub.tum.de/doc/1320661/document.pdf
+ * ! General description
+ * A ParallelCouplingScheme couples multiple participants in a fully implicit fashion.
+ * It is a specialization of BaseCouplingScheme.
+ *
  */
-class ParallelCouplingScheme : public BiCouplingScheme {
+class ParallelCouplingScheme : public BaseCouplingScheme {
   friend struct testing::ParallelCouplingSchemeFixture; // Make the fixture friend of this class
 public:
   /**
-   * @brief Constructor.
-   *
-   * @param[in] maxTime Simulation time limit, or UNDEFINED_TIME.
-   * @param[in] maxTimeWindows Simulation time windows limit, or UNDEFINED_TIMEWINDOWS.
-   * @param[in] timeWindowSize Simulation time window size.
-   * @param[in] validDigits valid digits for computation of the remainder of a time window
-   * @param[in] firstParticipant Name of participant starting simulation.
-   * @param[in] secondParticipant Name of second participant in coupling.
-   * @param[in] localParticipant Name of participant using this coupling scheme.
-   * @param[in] m2n Communication object for com. between participants.
-   * @param[in] dtMethod Method used for determining the time window size, see https://www.precice.org/couple-your-code-timestep-sizes.html
-   * @param[in] cplMode Set implicit or explicit coupling
-   * @param[in] maxIterations maximum number of coupling iterations allowed for implicit coupling per time window
-   * @param[in] extrapolationOrder order used for extrapolation
-   */
+ * @brief Constructor.
+ *
+ * @param[in] maxTime Simulation time limit, or UNDEFINED_TIME.
+ * @param[in] maxTimeWindows Simulation time windows limit, or UNDEFINED_TIMEWINDOWS.
+ * @param[in] timeWindowSize Simulation time window size.
+ * @param[in] validDigits valid digits for computation of the remainder of a time window
+ * @param[in] localParticipant Name of participant using this coupling scheme.
+ * @param[in] m2ns M2N communications to all other participants of coupling scheme.
+ * @param[in] dtMethod Method used for determining the time window size, see https://www.precice.org/couple-your-code-timestep-sizes.html
+ * @param[in] cplMode Set implicit or explicit coupling
+ * @param[in] maxIterations maximum number of coupling sub-iterations allowed.
+ * @param[in] extrapolationOrder order used for extrapolation
+ */
   ParallelCouplingScheme(
-      double                        maxTime,
-      int                           maxTimeWindows,
-      double                        timeWindowSize,
-      int                           validDigits,
-      const std::string &           firstParticipant,
-      const std::string &           secondParticipant,
-      const std::string &           localParticipant,
-      m2n::PtrM2N                   m2n,
-      constants::TimesteppingMethod dtMethod,
-      CouplingMode                  cplMode,
-      int                           maxIterations      = UNDEFINED_MAX_ITERATIONS,
-      int                           extrapolationOrder = UNDEFINED_EXTRAPOLATION_ORDER);
+      double                             maxTime,
+      int                                maxTimeWindows,
+      double                             timeWindowSize,
+      int                                validDigits,
+      const std::string &                localParticipant,
+      std::map<std::string, m2n::PtrM2N> m2ns,
+      constants::TimesteppingMethod      dtMethod,
+      CouplingMode                       cplMode,
+      const std::string &                controller,
+      int                                maxIterations      = UNDEFINED_MAX_ITERATIONS,
+      int                                extrapolationOrder = UNDEFINED_MAX_ITERATIONS);
 
 private:
   logging::Logger _log{"cplscheme::ParallelCouplingScheme"};
@@ -69,11 +72,12 @@ private:
    * @brief ParallelCouplingScheme applies acceleration to all CouplingData
    * @returns DataMap being accelerated
    */
-  const DataMap getAccelerationData() override
-  {
-    PRECICE_ASSERT(!doesFirstStep(), "Only the second participant should do the acceleration.");
-    return getAllData();
-  }
+  const DataMap getAccelerationData() override;
+
+  /**
+   * @brief Exchanges data, if it has to be initialized.
+   */
+  void exchangeInitialData() override;
 };
 
 } // namespace cplscheme

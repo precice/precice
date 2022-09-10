@@ -308,22 +308,28 @@ BOOST_AUTO_TEST_CASE(testSimpleExplicitCoupling)
   double      timestepLength = 0.1;
   std::string nameParticipant0("Participant0");
   std::string nameParticipant1("Participant1");
+  std::string from;
+  std::string to;
   int         sendDataIndex    = -1;
   int         receiveDataIndex = -1;
 
   if (context.isNamed(nameParticipant0)) {
     sendDataIndex    = 0;
     receiveDataIndex = 1;
+    from             = nameParticipant1;
+    to               = nameParticipant1;
   } else {
     sendDataIndex    = 1;
     receiveDataIndex = 0;
+    from             = nameParticipant0;
+    to               = nameParticipant0;
   }
   cplscheme::SerialCouplingScheme cplScheme(
       maxTime, maxTimesteps, timestepLength, 12, nameParticipant0,
       nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Explicit);
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, to);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, from);
   cplScheme.determineInitialDataExchange();
   runSimpleExplicitCoupling(cplScheme, context.name, meshConfig);
 }
@@ -640,21 +646,27 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingWithSubcycling)
   double      timestepLength = 0.1;
   std::string nameParticipant0("Participant0");
   std::string nameParticipant1("Participant1");
+  std::string from;
+  std::string to;
   int         sendDataIndex    = -1;
   int         receiveDataIndex = -1;
   if (context.isNamed(nameParticipant0)) {
     sendDataIndex    = 0;
     receiveDataIndex = 1;
+    from             = nameParticipant1;
+    to               = nameParticipant1;
   } else {
     sendDataIndex    = 1;
     receiveDataIndex = 0;
+    from             = nameParticipant0;
+    to               = nameParticipant0;
   }
   cplscheme::SerialCouplingScheme cplScheme(
       maxTime, maxTimesteps, timestepLength, 12, nameParticipant0,
       nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Explicit);
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, to);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, from);
   cplScheme.determineInitialDataExchange();
   runExplicitCouplingWithSubcycling(cplScheme, context.name, meshConfig);
 }

@@ -8,7 +8,7 @@
 #include "acceleration/SharedPointer.hpp"
 #include "cplscheme/Constants.hpp"
 #include "cplscheme/CouplingScheme.hpp"
-#include "cplscheme/MultiCouplingScheme.hpp"
+#include "cplscheme/ParallelCouplingScheme.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "cplscheme/impl/SharedPointer.hpp"
 #include "logging/Logger.hpp"
@@ -22,7 +22,6 @@
 namespace precice {
 namespace cplscheme {
 class CompositionalCouplingScheme;
-class BiCouplingScheme;
 } // namespace cplscheme
 } // namespace precice
 
@@ -39,7 +38,7 @@ struct testParseConfigurationWithRelaxation;
 // ----------------------------------------------------------- CLASS DEFINITION
 namespace precice {
 namespace cplscheme {
-class MultiCouplingScheme;
+class ParallelCouplingScheme;
 
 /// Configuration for coupling schemes.
 class CouplingSchemeConfiguration : public xml::XMLTag::Listener {
@@ -248,7 +247,7 @@ private:
   PtrCouplingScheme createParallelImplicitCouplingScheme(
       const std::string &accessor) const;
 
-  PtrCouplingScheme createMultiCouplingScheme(
+  PtrCouplingScheme createParallelMultiCouplingScheme(
       const std::string &accessor) const;
 
   constants::TimesteppingMethod getTimesteppingMethod(
@@ -256,16 +255,8 @@ private:
 
   /// Adds configured exchange data to be sent or received to scheme.
   void addDataToBeExchanged(
-      BiCouplingScheme & scheme,
-      const std::string &accessor) const;
-
-  /**
-   * @brief Adds configured exchange data to be sent or received to scheme.
-   * Only used specifically for MultiCouplingScheme
-   */
-  void addMultiDataToBeExchanged(
-      MultiCouplingScheme &scheme,
-      const std::string &  accessor) const;
+      BaseCouplingScheme &scheme,
+      const std::string & accessor) const;
 
   void checkIfDataIsExchanged(
       DataID dataID) const;

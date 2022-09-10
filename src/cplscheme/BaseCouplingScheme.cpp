@@ -20,6 +20,7 @@
 #include "mesh/Mesh.hpp"
 #include "precice/types.hpp"
 #include "utils/EigenHelperFunctions.hpp"
+#include "utils/Helpers.hpp"
 #include "utils/IntraComm.hpp"
 
 namespace precice {
@@ -31,6 +32,7 @@ BaseCouplingScheme::BaseCouplingScheme(
     double                        timeWindowSize,
     int                           validDigits,
     std::string                   localParticipant,
+    std::string                   controller,
     int                           maxIterations,
     CouplingMode                  cplMode,
     constants::TimesteppingMethod dtMethod,
@@ -44,6 +46,7 @@ BaseCouplingScheme::BaseCouplingScheme(
       _iterations(1),
       _totalIterations(1),
       _localParticipant(std::move(localParticipant)),
+      _controller(std::move(controller)),
       _extrapolationOrder(extrapolationOrder),
       _eps(std::pow(10.0, -1 * validDigits))
 {
@@ -63,6 +66,13 @@ BaseCouplingScheme::BaseCouplingScheme(
   PRECICE_ASSERT((maxIterations > 0) || (maxIterations == UNDEFINED_MAX_ITERATIONS),
                  "Maximal iteration limit has to be larger than zero.");
 
+  if (_controller == _localParticipant) {
+    // Controller participant never does the first step, because it is never the first participant
+    _doesFirstStep = false;
+  } else {
+    _doesFirstStep = true;
+  }
+
   if (isExplicitCouplingScheme()) {
     PRECICE_ASSERT(maxIterations == UNDEFINED_MAX_ITERATIONS);
   } else {
@@ -77,6 +87,34 @@ BaseCouplingScheme::BaseCouplingScheme(
     PRECICE_CHECK((_extrapolationOrder == 0) || (_extrapolationOrder == 1) || (_extrapolationOrder == 2),
                   "Extrapolation order has to be  0, 1, or 2.");
   }
+}
+
+typedef std::map<int, PtrCouplingData> DataMap;
+
+CouplingData *BaseCouplingScheme::getSendData(
+    DataID dataID)
+{
+  PRECICE_TRACE(dataID);
+  for (auto &aSendData : _sendDataVector) {
+    DataMap::iterator iter = aSendData.second.find(dataID);
+    if (iter != aSendData.second.end()) {
+      return &(*(iter->second));
+    }
+  }
+  return nullptr;
+}
+
+CouplingData *BaseCouplingScheme::getReceiveData(
+    DataID dataID)
+{
+  PRECICE_TRACE(dataID);
+  for (auto &aReceiveData : _receiveDataVector) {
+    DataMap::iterator iter = aReceiveData.second.find(dataID);
+    if (iter != aReceiveData.second.end()) {
+      return &(*(iter->second));
+    }
+  }
+  return nullptr;
 }
 
 void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendData)
@@ -235,12 +273,22 @@ void BaseCouplingScheme::advance()
   }
 }
 
+std::vector<std::string> BaseCouplingScheme::getCouplingPartners() const
+{
+  std::vector<std::string> partnerNames;
+
+  for (const auto &m2nPair : _m2ns) {
+    partnerNames.emplace_back(m2nPair.first);
+  }
+
+  return partnerNames;
+}
+
 void BaseCouplingScheme::storeExtrapolationData()
 {
   PRECICE_TRACE(_timeWindows);
-  for (auto &pair : getAllData()) {
-    PRECICE_DEBUG("Store data: {}", pair.first);
-    pair.second->storeExtrapolationData();
+  for (auto &data : allCouplingData()) {
+    data->storeExtrapolationData();
   }
 }
 
@@ -250,6 +298,14 @@ void BaseCouplingScheme::moveToNextWindow()
   for (auto &pair : getAccelerationData()) {
     PRECICE_DEBUG("Store data: {}", pair.first);
     pair.second->moveToNextWindow();
+  }
+}
+
+void BaseCouplingScheme::storeIteration()
+{
+  PRECICE_ASSERT(isImplicitCouplingScheme());
+  for (auto &data : allCouplingData()) {
+    data->storeIteration();
   }
 }
 
@@ -432,8 +488,8 @@ void BaseCouplingScheme::initializeStorages()
 {
   PRECICE_TRACE();
   // Reserve storage for all data
-  for (auto &pair : getAllData()) {
-    pair.second->initializeExtrapolation();
+  for (auto &data : allCouplingData()) {
+    data->initializeExtrapolation();
   }
   // Reserve storage for acceleration
   if (_acceleration) {
@@ -446,6 +502,121 @@ void BaseCouplingScheme::setAcceleration(
 {
   PRECICE_ASSERT(acceleration.get() != nullptr);
   _acceleration = acceleration;
+}
+
+bool BaseCouplingScheme::hasAnySendData()
+{
+  return std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(), [](const auto &sendExchange) { return not sendExchange.second.empty(); });
+}
+
+void BaseCouplingScheme::addDataToSend(
+    const mesh::PtrData &data,
+    mesh::PtrMesh        mesh,
+    bool                 requiresInitialization,
+    const std::string &  to)
+{
+  PRECICE_TRACE();
+  PRECICE_ASSERT(to != _localParticipant);
+  int id = data->getID();
+  if (!utils::contained(id, _sendDataVector[to])) {
+    PRECICE_ASSERT(_sendDataVector[to].count(id) == 0, "Key already exists!");
+    PtrCouplingData ptrCplData;
+    if (isExplicitCouplingScheme()) {
+      ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization);
+    } else {
+      ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, getExtrapolationOrder());
+    }
+    _sendDataVector[to].emplace(id, ptrCplData);
+  } else {
+    PRECICE_ERROR("Data \"{0}\" cannot be added twice for sending. Please remove any duplicate <exchange data=\"{0}\" .../> tags", data->getName());
+  }
+}
+
+void BaseCouplingScheme::addDataToReceive(
+    const mesh::PtrData &data,
+    mesh::PtrMesh        mesh,
+    bool                 requiresInitialization,
+    const std::string &  from)
+{
+  PRECICE_TRACE();
+  PRECICE_ASSERT(from != _localParticipant);
+  int id = data->getID();
+  if (!utils::contained(id, _receiveDataVector[from])) {
+    PRECICE_ASSERT(_receiveDataVector[from].count(id) == 0, "Key already exists!");
+    PtrCouplingData ptrCplData;
+    if (isExplicitCouplingScheme()) {
+      ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization);
+    } else {
+      ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, getExtrapolationOrder());
+    }
+    _receiveDataVector[from].emplace(id, ptrCplData);
+  } else {
+    PRECICE_ERROR("Data \"{0}\" cannot be added twice for receiving. Please remove any duplicate <exchange data=\"{0}\" ... /> tags", data->getName());
+  }
+}
+
+std::vector<PtrCouplingData> BaseCouplingScheme::allCouplingData()
+{
+  std::vector<PtrCouplingData> couplingDataVector;
+  for (auto &dataMap : _sendDataVector) {
+    for (auto &aData : dataMap.second) {
+      couplingDataVector.push_back(aData.second);
+    }
+  }
+  for (auto &dataMap : _receiveDataVector) {
+    for (auto &aData : dataMap.second) {
+      couplingDataVector.push_back(aData.second);
+    }
+  }
+  return couplingDataVector;
+}
+
+std::vector<PtrCouplingData> BaseCouplingScheme::allSendCouplingData()
+{
+  std::vector<PtrCouplingData> couplingDataVector;
+  for (auto &dataMap : _sendDataVector) {
+    for (auto &aData : dataMap.second) {
+      couplingDataVector.push_back(aData.second);
+    }
+  }
+  return couplingDataVector;
+}
+
+std::vector<PtrCouplingData> BaseCouplingScheme::allReceiveCouplingData()
+{
+  std::vector<PtrCouplingData> couplingDataVector;
+  for (auto &dataMap : _receiveDataVector) {
+    for (auto &aData : dataMap.second) {
+      couplingDataVector.push_back(aData.second);
+    }
+  }
+  return couplingDataVector;
+}
+
+std::vector<PtrCouplingData> BaseCouplingScheme::allCouplingDataWithId(DataID dataId)
+{
+  std::vector<PtrCouplingData> dataWithId;
+  for (auto &sendData : _sendDataVector) {
+    for (auto &aSendData : sendData.second) {
+      if (aSendData.first == dataId) {
+        dataWithId.emplace_back(aSendData.second);
+      }
+    }
+  }
+  for (auto &receiveData : _receiveDataVector) {
+    for (auto &aReceiveData : receiveData.second) {
+      if (aReceiveData.first == dataId) {
+        dataWithId.emplace_back(aReceiveData.second);
+      }
+    }
+  }
+  return dataWithId;
+}
+
+void BaseCouplingScheme::determineInitialDataExchange()
+{
+  determineInitialSend(allSendCouplingData());
+  determineInitialReceive(allReceiveCouplingData());
 }
 
 void BaseCouplingScheme::newConvergenceMeasurements()
@@ -464,15 +635,17 @@ void BaseCouplingScheme::addConvergenceMeasure(
     impl::PtrConvergenceMeasure measure,
     bool                        doesLogging)
 {
-  ConvergenceMeasureContext convMeasure;
-  auto                      allData = getAllData();
-  PRECICE_ASSERT(allData.count(dataID) == 1, "Data with given data ID must exist!");
-  convMeasure.couplingData = allData.at(dataID);
-  convMeasure.suffices     = suffices;
-  convMeasure.strict       = strict;
-  convMeasure.measure      = std::move(measure);
-  convMeasure.doesLogging  = doesLogging;
-  _convergenceMeasures.push_back(convMeasure);
+  auto dataWithId = allCouplingDataWithId(dataID);
+  PRECICE_ASSERT(dataWithId.size() >= 1, "Data with given data ID must exist!");
+  for (auto &data : dataWithId) {
+    ConvergenceMeasureContext convMeasure;
+    convMeasure.couplingData = data;
+    convMeasure.suffices     = suffices;
+    convMeasure.strict       = strict;
+    convMeasure.measure      = std::move(measure);
+    convMeasure.doesLogging  = doesLogging;
+    _convergenceMeasures.push_back(convMeasure);
+  }
 }
 
 bool BaseCouplingScheme::measureConvergence()
@@ -580,7 +753,7 @@ bool BaseCouplingScheme::reachedEndOfTimeWindow()
   return math::equals(getThisTimeWindowRemainder(), 0.0, _eps);
 }
 
-void BaseCouplingScheme::determineInitialSend(BaseCouplingScheme::DataMap &sendData)
+void BaseCouplingScheme::determineInitialSend(std::vector<PtrCouplingData> sendData)
 {
   if (anyDataRequiresInitialization(sendData)) {
     _sendsInitializedData = true;
@@ -588,7 +761,7 @@ void BaseCouplingScheme::determineInitialSend(BaseCouplingScheme::DataMap &sendD
   }
 }
 
-void BaseCouplingScheme::determineInitialReceive(BaseCouplingScheme::DataMap &receiveData)
+void BaseCouplingScheme::determineInitialReceive(std::vector<PtrCouplingData> receiveData)
 {
   if (anyDataRequiresInitialization(receiveData)) {
     _receivesInitializedData = true;
@@ -600,11 +773,11 @@ int BaseCouplingScheme::getExtrapolationOrder()
   return _extrapolationOrder;
 }
 
-bool BaseCouplingScheme::anyDataRequiresInitialization(BaseCouplingScheme::DataMap &dataMap) const
+bool BaseCouplingScheme::anyDataRequiresInitialization(std::vector<PtrCouplingData> datas) const
 {
   /// @todo implement this function using https://en.cppreference.com/w/cpp/algorithm/all_any_none_of
-  for (DataMap::value_type &pair : dataMap) {
-    if (pair.second->requiresInitialization) {
+  for (auto &data : datas) {
+    if (data->requiresInitialization) {
       return true;
     }
   }
