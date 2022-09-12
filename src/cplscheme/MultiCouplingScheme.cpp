@@ -159,7 +159,8 @@ const DataMap MultiCouplingScheme::getAllData()
       PRECICE_INFO("DataID: {} {}", aReceiveData.first, aReceiveData.second->getDataID());
     }
     allData.insert(receiveData.second.begin(), receiveData.second.end());
-  }PRECICE_INFO("##### assembling allData() done #####");
+  }
+  PRECICE_INFO("##### assembling allData() done #####");
 
   PRECICE_INFO("##### checking allData() #####");
   for (auto &aData : allData) {
