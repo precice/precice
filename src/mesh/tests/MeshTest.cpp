@@ -548,7 +548,7 @@ BOOST_AUTO_TEST_CASE(Integrate2DScalarData)
   mesh->data(0)->values()(2) = 5.0;
   mesh->data(0)->values()(3) = 7.0;
 
-  auto   result   = mesh::integrate(mesh, mesh->data(0));
+  auto   result   = mesh::integrateSurface(mesh, mesh->data(0));
   double expected = 17.0;
   BOOST_REQUIRE(result.size() == 1);
   BOOST_TEST(result(0) == expected);
@@ -579,7 +579,7 @@ BOOST_AUTO_TEST_CASE(Integrate2DVectorData)
   mesh->data(0)->values()(6) = 7.0;
   mesh->data(0)->values()(7) = 8.0;
 
-  auto            result = mesh::integrate(mesh, mesh->data(0));
+  auto            result = mesh::integrateSurface(mesh, mesh->data(0));
   Eigen::Vector2d expected(17.0, 20.5);
   BOOST_REQUIRE(result.size() == 2);
   BOOST_TEST(result(0) == expected(0));
@@ -612,7 +612,7 @@ BOOST_AUTO_TEST_CASE(Integrate3DScalarData)
   mesh->data(0)->values()(2) = 5.0;
   mesh->data(0)->values()(3) = 7.0;
 
-  auto   result   = mesh::integrate(mesh, mesh->data(0));
+  auto   result   = mesh::integrateSurface(mesh, mesh->data(0));
   double expected = 70.0;
   BOOST_REQUIRE(result.size() == 1);
   BOOST_TEST(result(0) == expected);
@@ -648,7 +648,7 @@ BOOST_AUTO_TEST_CASE(Integrate3DVectorData)
   mesh->data(0)->values()(6) = 7.0;
   mesh->data(0)->values()(7) = 8.0;
 
-  auto            result = mesh::integrate(mesh, mesh->data(0));
+  auto            result = mesh::integrateSurface(mesh, mesh->data(0));
   Eigen::Vector2d expected(70.0, 88.0);
   BOOST_REQUIRE(result.size() == 2);
   BOOST_TEST(result(0) == expected(0));

@@ -147,8 +147,8 @@ void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID, Mapping:
 
   // Integral is calculated on each direction separately
   if (!volumeMode) {
-    integralInput  = mesh::integrate(input(), input()->data(inputDataID));
-    integralOutput = mesh::integrate(output(), output()->data(outputDataID));
+    integralInput  = mesh::integrateSurface(input(), input()->data(inputDataID));
+    integralOutput = mesh::integrateSurface(output(), output()->data(outputDataID));
   } else {
     integralInput  = mesh::integrateVolume(input(), input()->data(inputDataID));
     integralOutput = mesh::integrateVolume(output(), output()->data(outputDataID));

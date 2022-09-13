@@ -7,7 +7,7 @@ namespace precice {
 namespace mesh {
 
 /// Given the data and the mesh, this function returns the surface integral. Assumes no overlap exists for the mesh
-Eigen::VectorXd integrate(const PtrMesh &mesh, const PtrData &data)
+Eigen::VectorXd integrateSurface(const PtrMesh &mesh, const PtrData &data)
 {
   const int       valueDimensions = data->getDimensions();
   const int       meshDimensions  = mesh->getDimensions();

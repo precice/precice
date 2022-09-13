@@ -219,8 +219,8 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentNonIncremental)
   Eigen::VectorXd &outValues = outData->values();
   BOOST_TEST(mapping.hasComputedMapping() == true);
 
-  auto inputIntegral  = mesh::integrate(inMesh, inData);
-  auto outputIntegral = mesh::integrate(outMesh, outData);
+  auto inputIntegral  = mesh::integrateSurface(inMesh, inData);
+  auto outputIntegral = mesh::integrateSurface(outMesh, outData);
 
   for (int dim = 0; dim < inputIntegral.size(); ++dim) {
     BOOST_TEST(inputIntegral(dim) == outputIntegral(dim));

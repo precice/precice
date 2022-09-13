@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncremental2DCase1)
   inValues(0)                   = valueVertex1;
   inValues(1)                   = valueVertex2;
 
-  auto inputIntegral = mesh::integrate(inMesh, inData);
+  auto inputIntegral = mesh::integrateSurface(inMesh, inData);
   // Create mesh to map to
   PtrMesh outMesh(new Mesh("OutMesh0", dimensions, testing::nextMeshID()));
   PtrData outData   = outMesh->createData("OutData", 1, 1_dataID);
@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncremental2DCase1)
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
 
-  auto   outputIntegral = mesh::integrate(outMesh, outData);
+  auto   outputIntegral = mesh::integrateSurface(outMesh, outData);
   double scaleFactor    = outValues(1) / inValues(0);
   BOOST_TEST(scaleFactor != 1.0);
 
@@ -289,7 +289,7 @@ BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncremental2DCase2)
   inValues(0)                   = valueVertex1;
   inValues(1)                   = valueVertex2;
 
-  auto inputIntegral = mesh::integrate(inMesh, inData);
+  auto inputIntegral = mesh::integrateSurface(inMesh, inData);
 
   // Create mesh to map to
   PtrMesh outMesh(new Mesh("OutMesh1", dimensions, testing::nextMeshID()));
@@ -316,7 +316,7 @@ BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncremental2DCase2)
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
 
-  auto   outputIntegral = mesh::integrate(outMesh, outData);
+  auto   outputIntegral = mesh::integrateSurface(outMesh, outData);
   double scaleFactor    = outValues(0) / inValues(0);
   BOOST_TEST(scaleFactor != 1.0);
 
@@ -595,8 +595,8 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentQuery3DFullMesh)
 
   mapping.map(inData->getID(), outData->getID());
 
-  auto inputIntegral  = mesh::integrate(inMesh, inData);
-  auto outputIntegral = mesh::integrate(outMesh, outData);
+  auto inputIntegral  = mesh::integrateSurface(inMesh, inData);
+  auto outputIntegral = mesh::integrateSurface(outMesh, outData);
 
   for (int dim = 0; dim < inputIntegral.size(); ++dim) {
     BOOST_TEST(inputIntegral(dim) == outputIntegral(dim));
