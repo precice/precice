@@ -17,12 +17,12 @@ public:
    *
    * A consistent mapping retains mean values. When mapping displacements, e.g.
    * rigid body motions are retained. A conservative mapping retains the sum of
-   * the values. The scaled-consistent mapping first map the values consistently,
-   * then scales the mapped such that the integrals on both sides of the interface
-   * are equal. Values integrated over some area should be mapped conservative or
-   * scaled-consistent, while area independent values such as pressure or stresses
-   * should be mapped consistent. There is also a volume version 
-   * where volume integrals are preserved instead of surface integrals.
+   * the values. The scaled-consistent-surface/volume mappings first map the values consistently,
+   * then scales the mapped such that the integrals on both meshes are equal.
+   * Integrals are either done on surfaces or volumes depending on the mode.
+   * - Continuous fields such as displacements or temperatures should use consistent maps.
+   * - Quantities whose sum is preserved such as forces should use conservative maps.
+   * - Continuous fields whose integral matters, such as pressure or heat fluxes should be consistent or scaled-consistent.
    */
   enum Constraint {
     CONSISTENT,
