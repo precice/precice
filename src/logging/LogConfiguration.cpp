@@ -217,7 +217,8 @@ void setupLogging(LoggingConfiguration configs, bool enabled)
   // We do this by adding a NullSink.
   // We need to exit after the sink removal as the default sink exists before
   // the log configuration is parsed.
-  if (!enabled) {
+  if (auto noconfigs = std::none_of(configs.begin(), configs.end(), [](const auto &config) { return config.enabled; });
+      !enabled || noconfigs) {
     auto sink = boost::make_shared<NullSink>();
     boost::log::core::get()->add_sink(sink);
     activeSinks.emplace_back(std::move(sink));
