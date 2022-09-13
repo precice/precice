@@ -123,7 +123,7 @@ void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID, Mapping:
   PRECICE_ASSERT((not utils::IntraComm::isPrimary()) and (not utils::IntraComm::isSecondary()));
 
   // If rank is not empty and do not contain connectivity information, raise error
-  int  spaceDimension    = input()->getDimensions() == 3;
+  int  spaceDimension    = input()->getDimensions();
   bool requiresEdges     = (spaceDimension == 2 and !volumeMode);
   bool requiresTriangles = (spaceDimension == 2 and volumeMode) or (spaceDimension == 3 and !volumeMode);
   bool requiresTetra     = (spaceDimension == 3 and volumeMode);
