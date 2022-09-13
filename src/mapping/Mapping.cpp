@@ -147,30 +147,29 @@ void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID, Mapping:
       }
     }
   }
-}
 
-auto &outputValues    = output() -> data(outputDataID) -> values();
-int   valueDimensions = input()->data(inputDataID)->getDimensions();
+  auto &outputValues    = output()->data(outputDataID)->values();
+  int   valueDimensions = input()->data(inputDataID)->getDimensions();
 
-Eigen::VectorXd integralInput;
-Eigen::VectorXd integralOutput;
+  Eigen::VectorXd integralInput;
+  Eigen::VectorXd integralOutput;
 
-// Integral is calculated on each direction separately
-if (!volumeMode) {
-  integralInput  = mesh::integrateSurface(input(), input()->data(inputDataID));
-  integralOutput = mesh::integrateSurface(output(), output()->data(outputDataID));
-} else {
-  integralInput  = mesh::integrateVolume(input(), input()->data(inputDataID));
-  integralOutput = mesh::integrateVolume(output(), output()->data(outputDataID));
-}
+  // Integral is calculated on each direction separately
+  if (!volumeMode) {
+    integralInput  = mesh::integrateSurface(input(), input()->data(inputDataID));
+    integralOutput = mesh::integrateSurface(output(), output()->data(outputDataID));
+  } else {
+    integralInput  = mesh::integrateVolume(input(), input()->data(inputDataID));
+    integralOutput = mesh::integrateVolume(output(), output()->data(outputDataID));
+  }
 
-// Create reshape the output values vector to matrix
-Eigen::Map<Eigen::MatrixXd> outputValuesMatrix(outputValues.data(), valueDimensions, outputValues.size() / valueDimensions);
+  // Create reshape the output values vector to matrix
+  Eigen::Map<Eigen::MatrixXd> outputValuesMatrix(outputValues.data(), valueDimensions, outputValues.size() / valueDimensions);
 
-// Scale in each direction
-Eigen::VectorXd scalingFactor = integralInput.array() / integralOutput.array();
-PRECICE_DEBUG("Scaling factor in scaled-consistent mapping: {}", scalingFactor);
-outputValuesMatrix.array().colwise() *= scalingFactor.array();
+  // Scale in each direction
+  Eigen::VectorXd scalingFactor = integralInput.array() / integralOutput.array();
+  PRECICE_DEBUG("Scaling factor in scaled-consistent mapping: {}", scalingFactor);
+  outputValuesMatrix.array().colwise() *= scalingFactor.array();
 } // namespace mapping
 
 bool Mapping::hasConstraint(const Constraint &constraint) const
@@ -219,5 +218,5 @@ std::ostream &operator<<(std::ostream &out, Mapping::MeshRequirement val)
   return out;
 }
 
-} // namespace precice
+} // namespace mapping
 } // namespace precice
