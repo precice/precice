@@ -478,15 +478,11 @@ install(TARGETS ${precice_install_targets}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
   PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/precice
   INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/precice
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   )
 unset(precice_install_targets)
 
 if(PRECICE_BUILD_TOOLS)
-  install(TARGETS precice-tools
-    EXPORT preciceTargets
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    )
-
   # Install the binprecice link for backwards compatibility
   # TODO remove in 3.0.0
   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/binprecice DESTINATION ${CMAKE_INSTALL_BINDIR})
