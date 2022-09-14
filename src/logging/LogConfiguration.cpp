@@ -202,8 +202,7 @@ void setupLogging(LoggingConfiguration configs, bool enabled)
       << bl::expressions::message;
 
   // Remove active preCICE sinks
-  using sink_t   = typename boost::log::sinks::sink;
-  using sink_ptr = typename boost::shared_ptr<sink_t>;
+  using sink_ptr = typename boost::shared_ptr<boost::log::sinks::sink>;
 
   static std::vector<sink_ptr> activeSinks;
   for (auto &sink : activeSinks) {
