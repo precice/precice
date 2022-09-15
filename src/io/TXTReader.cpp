@@ -1,8 +1,7 @@
 #include "TXTReader.hpp"
 #include "logging/LogMacros.hpp"
 
-namespace precice {
-namespace io {
+namespace precice::io {
 
 TXTReader::TXTReader(
     const std::string &filename)
@@ -15,5 +14,4 @@ TXTReader::TXTReader(
   //_file << std::setprecision(16);
 }
 
-} // namespace io
-} // namespace precice
+} // namespace precice::io

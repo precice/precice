@@ -9,8 +9,7 @@
 #include "logging/LogMacros.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace cplscheme {
+namespace precice::cplscheme {
 
 void CompositionalCouplingScheme::addCouplingScheme(
     const PtrCouplingScheme &couplingScheme)
@@ -383,5 +382,4 @@ void CompositionalCouplingScheme::advanceActiveCouplingSchemes()
   PRECICE_ASSERT(_activeSchemesBegin != _activeSchemesEnd);
 }
 
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme

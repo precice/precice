@@ -10,8 +10,7 @@
 #include "mesh/Vertex.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace action {
+namespace precice::action {
 
 ComputeCurvatureAction::ComputeCurvatureAction(
     Timing               timing,
@@ -67,5 +66,4 @@ void ComputeCurvatureAction::performAction(double time)
   }
 }
 
-} // namespace action
-} // namespace precice
+} // namespace precice::action

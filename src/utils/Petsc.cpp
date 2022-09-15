@@ -23,8 +23,7 @@
 
 #endif // not PRECICE_NO_PETSC
 
-namespace precice {
-namespace utils {
+namespace precice::utils {
 
 #ifndef PRECICE_NO_PETSC
 
@@ -101,8 +100,7 @@ void Petsc::finalize()
   }
 #endif // not PRECICE_NO_PETSC
 }
-} // namespace utils
-} // namespace precice
+} // namespace precice::utils
 
 #ifndef PRECICE_NO_PETSC
 
@@ -111,9 +109,7 @@ void Petsc::finalize()
 #include "petscdraw.h"
 #include "petscviewer.h"
 
-namespace precice {
-namespace utils {
-namespace petsc {
+namespace precice::utils::petsc {
 
 struct Viewer {
   Viewer(const std::string &filename, VIEWERFORMAT format, MPI_Comm comm)
@@ -776,8 +772,6 @@ void destroy(AO *ao)
   }
 }
 
-} // namespace petsc
-} // namespace utils
-} // namespace precice
+} // namespace precice::utils::petsc
 
 #endif // PRECICE_NO_PETSC

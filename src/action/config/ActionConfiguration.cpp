@@ -18,8 +18,7 @@
 #include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 
-namespace precice {
-namespace action {
+namespace precice::action {
 
 ActionConfiguration::ActionConfiguration(
     xml::XMLTag &              parent,
@@ -281,5 +280,4 @@ action::Action::Timing ActionConfiguration::getTiming() const
   return timing;
 }
 
-} // namespace action
-} // namespace precice
+} // namespace precice::action

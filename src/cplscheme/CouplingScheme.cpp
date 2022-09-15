@@ -1,7 +1,6 @@
 #include "CouplingScheme.hpp"
 
-namespace precice {
-namespace cplscheme {
+namespace precice::cplscheme {
 
 const double CouplingScheme::UNDEFINED_TIME = -1.0;
 
@@ -13,5 +12,4 @@ const int CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER = -1;
 
 const int CouplingScheme::UNDEFINED_MAX_ITERATIONS = -1;
 
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme

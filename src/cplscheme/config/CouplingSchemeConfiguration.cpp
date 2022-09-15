@@ -36,8 +36,7 @@
 #include "xml/XMLAttribute.hpp"
 #include "xml/XMLTag.hpp"
 
-namespace precice {
-namespace cplscheme {
+namespace precice::cplscheme {
 
 CouplingSchemeConfiguration::CouplingSchemeConfiguration(
     xml::XMLTag &                        parent,
@@ -1157,5 +1156,4 @@ void CouplingSchemeConfiguration::setParallelAcceleration(
   }
 }
 
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme

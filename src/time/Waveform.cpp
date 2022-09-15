@@ -7,8 +7,7 @@
 #include "time/Time.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
-namespace precice {
-namespace time {
+namespace precice::time {
 
 Waveform::Waveform(
     const int interpolationOrder)
@@ -178,5 +177,4 @@ double Waveform::findTimeAfter(double normalizedDt)
   return timeAfter;
 }
 
-} // namespace time
-} // namespace precice
+} // namespace precice::time

@@ -14,8 +14,7 @@
 #include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 
 MeshConfiguration::MeshConfiguration(
     xml::XMLTag &        parent,
@@ -169,5 +168,4 @@ void MeshConfiguration::addNeededMesh(
   }
 }
 
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh

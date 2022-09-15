@@ -13,8 +13,7 @@
 #include "utils/EigenIO.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 
 BOOST_CONCEPT_ASSERT((boost::RandomAccessIteratorConcept<Triangle::iterator>) );
 BOOST_CONCEPT_ASSERT((boost::RandomAccessIteratorConcept<Triangle::const_iterator>) );
@@ -125,5 +124,4 @@ std::ostream &operator<<(std::ostream &os, const Triangle &t)
             << t.vertex(0).getCoords().transpose().format(wkt()) << "))";
 }
 
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh

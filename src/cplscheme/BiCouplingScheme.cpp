@@ -16,8 +16,7 @@
 #include "precice/types.hpp"
 #include "utils/Helpers.hpp"
 
-namespace precice {
-namespace cplscheme {
+namespace precice::cplscheme {
 
 BiCouplingScheme::BiCouplingScheme(
     double                        maxTime,
@@ -149,5 +148,4 @@ void BiCouplingScheme::exchangeInitialData()
   }
 }
 
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme

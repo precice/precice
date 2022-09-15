@@ -2,8 +2,7 @@
 #include "EventUtils.hpp"
 #include "logging/LogMacros.hpp"
 
-namespace precice {
-namespace utils {
+namespace precice::utils {
 
 Event::Event(const std::string &eventName, Clock::duration initialDuration)
     : name(EventRegistry::instance().prefix + eventName),
@@ -97,5 +96,4 @@ ScopedEventPrefix::~ScopedEventPrefix()
   EventRegistry::instance().prefix = previousName;
 }
 
-} // namespace utils
-} // namespace precice
+} // namespace precice::utils

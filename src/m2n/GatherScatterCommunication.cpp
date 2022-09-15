@@ -14,8 +14,7 @@
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace m2n {
+namespace precice::m2n {
 GatherScatterCommunication::GatherScatterCommunication(
     com::PtrCommunication com,
     mesh::PtrMesh         mesh)
@@ -212,5 +211,4 @@ void GatherScatterCommunication::completeSecondaryRanksConnection()
   PRECICE_ASSERT(false, "Not available for GatherScatterCommunication.");
 }
 
-} // namespace m2n
-} // namespace precice
+} // namespace precice::m2n

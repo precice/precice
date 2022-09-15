@@ -3,9 +3,7 @@
 #include "acceleration/impl/ParallelMatrixOperations.hpp"
 #include "utils/IntraComm.hpp"
 
-namespace precice {
-namespace acceleration {
-namespace impl {
+namespace precice::acceleration::impl {
 
 void ParallelMatrixOperations::initialize(const bool needCyclicComm)
 {
@@ -82,8 +80,6 @@ void ParallelMatrixOperations::closeCircularCommunication()
   _cyclicCommLeft  = nullptr;
 }
 
-} // namespace impl
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration::impl
 
 #endif

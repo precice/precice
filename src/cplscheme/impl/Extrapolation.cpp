@@ -4,9 +4,7 @@
 #include "logging/LogMacros.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
-namespace precice {
-namespace cplscheme {
-namespace impl {
+namespace precice::cplscheme::impl {
 
 Extrapolation::Extrapolation(
     const int extrapolationOrder)
@@ -123,6 +121,4 @@ Eigen::VectorXd Extrapolation::extrapolate()
   return extrapolatedValue;
 }
 
-} // namespace impl
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme::impl

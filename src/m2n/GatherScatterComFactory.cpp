@@ -4,8 +4,7 @@
 
 #include <utility>
 
-namespace precice {
-namespace m2n {
+namespace precice::m2n {
 GatherScatterComFactory::GatherScatterComFactory(
     com::PtrCommunication intraComm)
     : _intraComm(std::move(intraComm))
@@ -18,5 +17,4 @@ GatherScatterComFactory::newDistributedCommunication(mesh::PtrMesh mesh)
   return DistributedCommunication::SharedPointer(
       new GatherScatterCommunication(_intraComm, mesh));
 }
-} // namespace m2n
-} // namespace precice
+} // namespace precice::m2n

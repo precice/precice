@@ -19,8 +19,7 @@
 #include "utils/String.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace logging {
+namespace precice::logging {
 
 /// A custom formatter that handles the TimeStamp format string
 class timestamp_formatter_factory : public boost::log::basic_formatter_factory<char, boost::posix_time::ptime> {
@@ -225,5 +224,4 @@ void lockConf()
   _precice_logging_config_lock = true;
 }
 
-} // namespace logging
-} // namespace precice
+} // namespace precice::logging

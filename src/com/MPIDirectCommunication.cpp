@@ -10,8 +10,7 @@
 #include "utils/assertion.hpp"
 #include "utils/span_tools.hpp"
 
-namespace precice {
-namespace com {
+namespace precice::com {
 MPIDirectCommunication::MPIDirectCommunication()
     : _commState(utils::Parallel::current())
 {
@@ -223,7 +222,6 @@ int MPIDirectCommunication::adjustRank(Rank rank) const
   return rank;
 }
 
-} // namespace com
-} // namespace precice
+} // namespace precice::com
 
 #endif // not PRECICE_NO_MPI
