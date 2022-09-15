@@ -14,8 +14,7 @@
 
 using precice::utils::MPIResult;
 
-namespace precice {
-namespace com {
+namespace precice::com {
 MPIPortsCommunication::MPIPortsCommunication(std::string addressDirectory)
     : _addressDirectory(std::move(addressDirectory))
 {
@@ -276,7 +275,6 @@ int MPIPortsCommunication::rank(Rank rank)
   return 0;
 }
 
-} // namespace com
-} // namespace precice
+} // namespace precice::com
 
 #endif // not PRECICE_NO_MPI

@@ -11,8 +11,7 @@
 #include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
 
-namespace precice {
-namespace utils {
+namespace precice::utils {
 
 logging::Logger Parallel::_log("utils::Parallel");
 
@@ -565,7 +564,6 @@ std::ostream &operator<<(std::ostream &out, const Parallel::CommState &value)
   return out;
 }
 
-} // namespace utils
-} // namespace precice
+} // namespace precice::utils
 
 //#endif // not PRECICE_NO_MPI

@@ -1,7 +1,6 @@
 #include "testing/ExtrapolationFixture.hpp"
 
-namespace precice {
-namespace testing {
+namespace precice::testing {
 
 int ExtrapolationFixture::numberOfStoredSamples(cplscheme::impl::Extrapolation &extrapolation)
 {
@@ -23,5 +22,4 @@ double ExtrapolationFixture::getValue(cplscheme::impl::Extrapolation &extrapolat
   return extrapolation._timeWindowsStorage(valueID, sampleID);
 }
 
-} // namespace testing
-} // namespace precice
+} // namespace precice::testing

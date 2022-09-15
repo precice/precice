@@ -6,8 +6,7 @@
 #include "com/SharedPointer.hpp"
 #include "utils/networking.hpp"
 
-namespace precice {
-namespace com {
+namespace precice::com {
 SocketCommunicationFactory::SocketCommunicationFactory(
     unsigned short portNumber,
     bool           reuseAddress,
@@ -39,5 +38,4 @@ std::string SocketCommunicationFactory::addressDirectory()
 {
   return _addressDirectory;
 }
-} // namespace com
-} // namespace precice
+} // namespace precice::com

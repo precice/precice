@@ -23,8 +23,7 @@
 #include "utils/Helpers.hpp"
 #include "utils/IntraComm.hpp"
 
-namespace precice {
-namespace cplscheme {
+namespace precice::cplscheme {
 
 BaseCouplingScheme::BaseCouplingScheme(
     double                        maxTime,
@@ -831,5 +830,4 @@ bool BaseCouplingScheme::receiveConvergence(const m2n::PtrM2N &m2n)
   return convergence;
 }
 
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme

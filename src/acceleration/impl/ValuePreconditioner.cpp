@@ -4,9 +4,7 @@
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace acceleration {
-namespace impl {
+namespace precice::acceleration::impl {
 
 ValuePreconditioner::ValuePreconditioner(
     int maxNonConstTimeWindows)
@@ -47,6 +45,4 @@ void ValuePreconditioner::_update_(bool                   timeWindowComplete,
   }
 }
 
-} // namespace impl
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration::impl

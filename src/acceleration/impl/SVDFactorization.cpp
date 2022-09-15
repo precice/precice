@@ -7,9 +7,7 @@
 
 #include "utils/IntraComm.hpp"
 
-namespace precice {
-namespace acceleration {
-namespace impl {
+namespace precice::acceleration::impl {
 
 SVDFactorization::SVDFactorization(
     double            eps,
@@ -170,7 +168,7 @@ void SVDFactorization::computeQRdecomposition(
       if (rho_orth * theta <= rho0 + omega * norm_coefficients) {
         // exit to fail if too many iterations
         if (its >= 4) {
-          PRECICE_WARN("Matrix Q is not sufficiently orthogonal. Failed to rorthogonalize new column after 4 iterations. New column will be discarded.");
+          PRECICE_WARN("Matrix Q is not sufficiently orthogonal. Failed to orthogonalize new column after 4 iterations. New column will be discarded.");
           orthogonalized = false;
           termination    = true;
         }
@@ -300,8 +298,6 @@ Rank SVDFactorization::rank()
   return _cols;
 }
 
-} // namespace impl
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration::impl
 
 #endif // PRECICE_NO_MPI

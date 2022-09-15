@@ -16,8 +16,7 @@
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 
-namespace precice {
-namespace cplscheme {
+namespace precice::cplscheme {
 
 ParallelCouplingScheme::ParallelCouplingScheme(
     double                             maxTime,
@@ -108,6 +107,7 @@ bool ParallelCouplingScheme::exchangeDataAndAccelerate()
     }
     checkDataHasBeenReceived();
   }
+
   return convergence;
 }
 
@@ -123,5 +123,5 @@ const DataMap ParallelCouplingScheme::getAccelerationData()
   return accelerationData;
 }
 
-} // namespace cplscheme
+} // namespace precice::cplscheme
 } // namespace precice

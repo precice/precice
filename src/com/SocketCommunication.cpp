@@ -14,8 +14,7 @@
 #include "utils/networking.hpp"
 #include "utils/span_tools.hpp"
 
-namespace precice {
-namespace com {
+namespace precice::com {
 
 namespace asio = boost::asio;
 
@@ -795,5 +794,4 @@ std::string SocketCommunication::getIpAddress()
 #endif
 }
 
-} // namespace com
-} // namespace precice
+} // namespace precice::com

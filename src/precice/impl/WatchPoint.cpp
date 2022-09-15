@@ -19,8 +19,7 @@
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace impl {
+namespace precice::impl {
 
 WatchPoint::WatchPoint(
     Eigen::VectorXd    pointCoords,
@@ -153,5 +152,4 @@ void WatchPoint::getValue(
   }
 }
 
-} // namespace impl
-} // namespace precice
+} // namespace precice::impl

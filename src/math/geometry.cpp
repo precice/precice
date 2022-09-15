@@ -9,9 +9,7 @@
 #include "utils/Helpers.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace math {
-namespace geometry {
+namespace precice::math::geometry {
 
 logging::Logger _log("math::geometry");
 
@@ -220,6 +218,4 @@ ConvexityResult isConvexQuad(std::array<Eigen::VectorXd, 4> coords)
   return result;
 }
 
-} // namespace geometry
-} // namespace math
-} // namespace precice
+} // namespace precice::math::geometry

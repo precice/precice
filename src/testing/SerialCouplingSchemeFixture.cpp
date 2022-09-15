@@ -1,7 +1,6 @@
 #include "testing/SerialCouplingSchemeFixture.hpp"
 
-namespace precice {
-namespace testing {
+namespace precice::testing {
 
 bool SerialCouplingSchemeFixture::isImplicitCouplingScheme(cplscheme::SerialCouplingScheme &cplscheme)
 {
@@ -42,5 +41,4 @@ void SerialCouplingSchemeFixture::moveToNextWindow(cplscheme::SerialCouplingSche
 {
   cplscheme.moveToNextWindow();
 }
-} // namespace testing
-} // namespace precice
+} // namespace precice::testing

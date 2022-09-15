@@ -34,8 +34,7 @@
 #include "xml/XMLAttribute.hpp"
 #include "xml/XMLTag.hpp"
 
-namespace precice {
-namespace cplscheme {
+namespace precice::cplscheme {
 
 CouplingSchemeConfiguration::CouplingSchemeConfiguration(
     xml::XMLTag &                        parent,
@@ -860,7 +859,6 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingSch
     const std::string &accessor) const
 {
   PRECICE_TRACE(accessor);
-
   m2n::PtrM2N m2n = _m2nConfig->getM2N(
       _config.participants[0], _config.participants[1]);
   std::map<std::string, m2n::PtrM2N> m2ns;
@@ -1125,5 +1123,4 @@ void CouplingSchemeConfiguration::setParallelAcceleration(
   }
 }
 
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme

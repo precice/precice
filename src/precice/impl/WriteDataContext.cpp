@@ -1,7 +1,6 @@
 #include "WriteDataContext.hpp"
 
-namespace precice {
-namespace impl {
+namespace precice::impl {
 
 logging::Logger WriteDataContext::_log{"impl::WriteDataContext"};
 
@@ -27,5 +26,4 @@ void WriteDataContext::appendMappingConfiguration(const MappingContext &mappingC
   PRECICE_ASSERT(hasWriteMapping());
 }
 
-} // namespace impl
-} // namespace precice
+} // namespace precice::impl
