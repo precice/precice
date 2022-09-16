@@ -124,4 +124,3 @@ const DataMap ParallelCouplingScheme::getAccelerationData()
 }
 
 } // namespace precice::cplscheme
-} // namespace precice
