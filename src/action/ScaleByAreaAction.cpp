@@ -10,8 +10,7 @@
 #include "mesh/Vertex.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace action {
+namespace precice::action {
 
 ScaleByAreaAction::ScaleByAreaAction(
     Timing               timing,
@@ -66,5 +65,4 @@ void ScaleByAreaAction::performAction(double time)
   }
 }
 
-} // namespace action
-} // namespace precice
+} // namespace precice::action

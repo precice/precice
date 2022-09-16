@@ -1,7 +1,6 @@
 #include "testing/WaveformFixture.hpp"
 
-namespace precice {
-namespace testing {
+namespace precice::testing {
 
 int WaveformFixture::numberOfStoredSamples(time::Waveform &waveform)
 {
@@ -13,5 +12,4 @@ int WaveformFixture::valuesSize(time::Waveform &waveform)
   return waveform._timeStepsStorage.nDofs();
 }
 
-} // namespace testing
-} // namespace precice
+} // namespace precice::testing

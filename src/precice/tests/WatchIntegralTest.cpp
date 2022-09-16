@@ -15,11 +15,9 @@
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 class Vertex;
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh
 
 using namespace precice;
 

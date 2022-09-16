@@ -10,8 +10,7 @@
 #include "mesh/Vertex.hpp"
 #include "utils/IntraComm.hpp"
 
-namespace precice {
-namespace impl {
+namespace precice::impl {
 
 WatchIntegral::WatchIntegral(
     mesh::PtrMesh      meshToWatch,
@@ -142,5 +141,4 @@ double WatchIntegral::calculateSurfaceArea() const
   return surfaceArea;
 }
 
-} // namespace impl
-} // namespace precice
+} // namespace precice::impl

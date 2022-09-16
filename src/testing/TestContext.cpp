@@ -26,8 +26,7 @@
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
 
-namespace precice {
-namespace testing {
+namespace precice::testing {
 
 using Par = utils::Parallel;
 
@@ -277,5 +276,4 @@ std::string TestContext::describe() const
   return os.str();
 }
 
-} // namespace testing
-} // namespace precice
+} // namespace precice::testing

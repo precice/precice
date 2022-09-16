@@ -17,9 +17,7 @@
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace acceleration {
-namespace impl {
+namespace precice::acceleration::impl {
 
 QRFactorization::QRFactorization(
     Eigen::MatrixXd Q,
@@ -779,6 +777,4 @@ void QRFactorization::setFilter(int filter)
   _filter = filter;
 }
 
-} // namespace impl
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration::impl

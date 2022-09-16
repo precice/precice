@@ -7,9 +7,7 @@
 
 #include "utils/IntraComm.hpp"
 
-namespace precice {
-namespace acceleration {
-namespace impl {
+namespace precice::acceleration::impl {
 
 SVDFactorization::SVDFactorization(
     double            eps,
@@ -300,8 +298,6 @@ Rank SVDFactorization::rank()
   return _cols;
 }
 
-} // namespace impl
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration::impl
 
 #endif // PRECICE_NO_MPI

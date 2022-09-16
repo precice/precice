@@ -25,8 +25,7 @@
 #include "xml/XMLAttribute.hpp"
 #include "xml/XMLTag.hpp"
 
-namespace precice {
-namespace acceleration {
+namespace precice::acceleration {
 
 using namespace precice::acceleration::impl;
 
@@ -549,5 +548,4 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     PRECICE_ERROR("Acceleration of type \"{}\" is unknown. Please choose a valid acceleration scheme or check the spelling in the configuration file.", tag.getName());
   }
 }
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration

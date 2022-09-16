@@ -15,8 +15,7 @@
 #include "math/differences.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace cplscheme {
+namespace precice::cplscheme {
 
 SerialCouplingScheme::SerialCouplingScheme(
     double                        maxTime,
@@ -128,8 +127,8 @@ bool SerialCouplingScheme::exchangeDataAndAccelerate()
       checkDataHasBeenReceived();
     }
   }
+
   return convergence;
 }
 
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme

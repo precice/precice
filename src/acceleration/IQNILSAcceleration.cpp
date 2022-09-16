@@ -22,8 +22,7 @@
 
 using precice::cplscheme::PtrCouplingData;
 
-namespace precice {
-namespace acceleration {
+namespace precice::acceleration {
 
 IQNILSAcceleration::IQNILSAcceleration(
     double                  initialRelaxation,
@@ -275,5 +274,4 @@ void IQNILSAcceleration::removeMatrixColumn(
 
   BaseQNAcceleration::removeMatrixColumn(columnIndex);
 }
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration

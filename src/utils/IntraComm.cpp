@@ -14,8 +14,7 @@
 #include "utils/assertion.hpp"
 #include "utils/span_tools.hpp"
 
-namespace precice {
-namespace utils {
+namespace precice::utils {
 
 Rank                  IntraComm::_rank            = -1;
 int                   IntraComm::_size            = -1;
@@ -359,5 +358,4 @@ void IntraComm::broadcast(int &value)
   }
 }
 
-} // namespace utils
-} // namespace precice
+} // namespace precice::utils

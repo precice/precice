@@ -2,8 +2,7 @@
 
 #include "com/MPIRequest.hpp"
 
-namespace precice {
-namespace com {
+namespace precice::com {
 MPIRequest::MPIRequest(MPI_Request request)
     : _request(request)
 {
@@ -22,7 +21,6 @@ void MPIRequest::wait()
 {
   MPI_Wait(&_request, MPI_STATUS_IGNORE);
 }
-} // namespace com
-} // namespace precice
+} // namespace precice::com
 
 #endif // not PRECICE_NO_MPI

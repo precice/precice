@@ -2,9 +2,7 @@
 #include "logging/LogMacros.hpp"
 #include "math/differences.hpp"
 
-namespace precice {
-namespace cplscheme {
-namespace impl {
+namespace precice::cplscheme::impl {
 
 AbsoluteConvergenceMeasure::AbsoluteConvergenceMeasure(double convergenceLimit)
     : _convergenceLimit(convergenceLimit)
@@ -13,6 +11,4 @@ AbsoluteConvergenceMeasure::AbsoluteConvergenceMeasure(double convergenceLimit)
                  "Absolute convergence limit has to be greater than zero!");
 }
 
-} // namespace impl
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme::impl

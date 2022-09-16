@@ -21,8 +21,7 @@
 #include "utils/assertion.hpp"
 #include "utils/fmt.hpp"
 
-namespace precice {
-namespace impl {
+namespace precice::impl {
 
 Participant::Participant(
     std::string                 name,
@@ -494,5 +493,4 @@ void Participant::checkDuplicatedData(const mesh::PtrData &data, const std::stri
                 _name, meshName, data->getName());
 }
 
-} // namespace impl
-} // namespace precice
+} // namespace precice::impl

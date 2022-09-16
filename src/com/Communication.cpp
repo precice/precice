@@ -9,8 +9,7 @@
 #include "precice/types.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace com {
+namespace precice::com {
 
 void Communication::connectIntraComm(std::string const &participantName,
                                      std::string const &tag,
@@ -363,5 +362,4 @@ int Communication::adjustRank(Rank rank) const
   return rank - _rankOffset;
 }
 
-} // namespace com
-} // namespace precice
+} // namespace precice::com

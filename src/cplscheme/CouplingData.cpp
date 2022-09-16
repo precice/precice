@@ -6,8 +6,7 @@
 #include "mesh/Mesh.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
-namespace precice {
-namespace cplscheme {
+namespace precice::cplscheme {
 
 CouplingData::CouplingData(
     mesh::PtrData data,
@@ -178,5 +177,4 @@ void CouplingData::storeFromSerialized(Eigen::VectorXd timesAscending, Eigen::Ve
   }
 }
 
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme

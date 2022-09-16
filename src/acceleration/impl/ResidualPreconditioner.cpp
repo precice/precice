@@ -4,9 +4,7 @@
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace acceleration {
-namespace impl {
+namespace precice::acceleration::impl {
 
 ResidualPreconditioner::ResidualPreconditioner(int maxNonConstTimeWindows)
     : Preconditioner(maxNonConstTimeWindows)
@@ -44,6 +42,4 @@ void ResidualPreconditioner::_update_(bool                   timeWindowComplete,
   }
 }
 
-} // namespace impl
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration::impl

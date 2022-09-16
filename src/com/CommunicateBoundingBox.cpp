@@ -9,8 +9,7 @@
 #include "precice/types.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace com {
+namespace precice::com {
 CommunicateBoundingBox::CommunicateBoundingBox(
     com::PtrCommunication communication)
     : _communication(std::move(communication))
@@ -145,5 +144,4 @@ void CommunicateBoundingBox::broadcastReceiveConnectionMap(
   }
 }
 
-} // namespace com
-} // namespace precice
+} // namespace precice::com

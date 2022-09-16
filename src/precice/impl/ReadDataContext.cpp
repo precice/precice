@@ -2,8 +2,7 @@
 
 #include "time/Waveform.hpp"
 
-namespace precice {
-namespace impl {
+namespace precice::impl {
 
 logging::Logger ReadDataContext::_log{"impl::ReadDataContext"};
 
@@ -52,5 +51,4 @@ void ReadDataContext::moveToNextWindow()
   _waveform->moveToNextWindow();
 }
 
-} // namespace impl
-} // namespace precice
+} // namespace precice::impl

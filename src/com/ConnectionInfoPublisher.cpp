@@ -15,8 +15,7 @@
 
 namespace bfs = boost::filesystem;
 
-namespace precice {
-namespace com {
+namespace precice::com {
 
 std::string impl::hashedFilePath(const std::string &acceptorName, const std::string &requesterName, const std::string &tag, Rank rank)
 {
@@ -147,5 +146,4 @@ void ConnectionInfoWriter::write(std::string const &info) const
                 path);
 }
 
-} // namespace com
-} // namespace precice
+} // namespace precice::com

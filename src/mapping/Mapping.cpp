@@ -5,8 +5,7 @@
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace mapping {
+namespace precice::mapping {
 
 Mapping::Mapping(
     Constraint constraint,
@@ -191,5 +190,4 @@ std::ostream &operator<<(std::ostream &out, Mapping::MeshRequirement val)
   return out;
 }
 
-} // namespace mapping
-} // namespace precice
+} // namespace precice::mapping

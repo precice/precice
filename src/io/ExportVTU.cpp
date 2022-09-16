@@ -17,8 +17,7 @@
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace io {
+namespace precice::io {
 
 std::string ExportVTU::getVTKFormat() const
 {
@@ -100,5 +99,4 @@ void ExportVTU::exportConnectivity(
   outFile << "            </DataArray>\n";
   outFile << "         </Cells>\n";
 }
-} // namespace io
-} // namespace precice
+} // namespace precice::io

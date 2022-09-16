@@ -16,8 +16,7 @@
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace acceleration {
+namespace precice::acceleration {
 
 AitkenAcceleration::AitkenAcceleration(double           initialRelaxation,
                                        std::vector<int> dataIDs)
@@ -109,5 +108,4 @@ void AitkenAcceleration::iterationsConverged(
   _residuals        = Eigen::VectorXd::Constant(_residuals.size(), std::numeric_limits<double>::max());
 }
 
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration

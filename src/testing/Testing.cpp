@@ -10,8 +10,7 @@
 #include "testing/Testing.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace testing {
+namespace precice::testing {
 
 std::string getPathToRepository()
 {
@@ -46,5 +45,4 @@ std::string getTestName()
   return boost::unit_test::framework::current_test_case().p_name;
 }
 
-} // namespace testing
-} // namespace precice
+} // namespace precice::testing

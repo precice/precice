@@ -19,8 +19,7 @@
 #include "precice/types.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace com {
+namespace precice::com {
 CommunicateMesh::CommunicateMesh(
     com::PtrCommunication communication)
     : _communication(std::move(communication))
@@ -389,5 +388,4 @@ void CommunicateMesh::broadcastReceiveMesh(
   }
 }
 
-} // namespace com
-} // namespace precice
+} // namespace precice::com

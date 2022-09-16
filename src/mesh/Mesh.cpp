@@ -20,8 +20,7 @@
 #include "query/Index.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 
 Mesh::Mesh(
     std::string name,
@@ -479,5 +478,4 @@ std::ostream &operator<<(std::ostream &os, const Mesh &m)
   return os;
 }
 
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh

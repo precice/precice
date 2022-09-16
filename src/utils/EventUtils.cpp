@@ -16,8 +16,7 @@
 #include "utils/Event.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace utils {
+namespace precice::utils {
 
 using sys_clk  = std::chrono::system_clock;
 using stdy_clk = std::chrono::steady_clock;
@@ -576,5 +575,4 @@ std::pair<sys_clk::time_point, sys_clk::time_point> EventRegistry::findFirstAndL
   return std::make_pair(first->initializedAt, last->finalizedAt);
 }
 
-} // namespace utils
-} // namespace precice
+} // namespace precice::utils

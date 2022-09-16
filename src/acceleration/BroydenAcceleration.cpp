@@ -13,8 +13,7 @@
 #include "logging/LogMacros.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace acceleration {
+namespace precice::acceleration {
 
 using namespace precice::acceleration::impl;
 
@@ -124,5 +123,4 @@ void BroydenAcceleration::specializedIterationsConverged(
   // store old Jacobian
   _oldInvJacobian = _invJacobian;
 }
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration

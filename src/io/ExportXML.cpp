@@ -18,8 +18,7 @@
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace io {
+namespace precice::io {
 
 void ExportXML::doExport(
     const std::string &name,
@@ -330,5 +329,4 @@ void ExportXML::writeParallelData(std::ostream &out) const
   out << "      </PPointData>\n";
 }
 
-} // namespace io
-} // namespace precice
+} // namespace precice::io

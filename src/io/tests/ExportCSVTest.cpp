@@ -12,12 +12,10 @@
 #include "testing/Testing.hpp"
 #include "utils/Parallel.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 class Edge;
 class Vertex;
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh
 
 BOOST_AUTO_TEST_SUITE(IOTests)
 

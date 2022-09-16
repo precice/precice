@@ -6,8 +6,7 @@
 #include "precice/types.hpp"
 #include "utils/EigenIO.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 
 Edge::Edge(
     Vertex &vertexOne,
@@ -66,5 +65,4 @@ std::ostream &operator<<(std::ostream &stream, const Edge &edge)
                 << ')';
 }
 
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh
