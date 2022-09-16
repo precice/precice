@@ -84,7 +84,6 @@ void Petsc::initialize(
     ierr = PetscInitialize(argc, argv, "", nullptr);
     CHKERRV(ierr);
     weInitialized = true;
-    PetscPushErrorHandler(&PetscMPIAbortErrorHandler, nullptr);
   }
 #endif // not PRECICE_NO_PETSC
 }
