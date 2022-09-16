@@ -3,8 +3,7 @@
 #include <Eigen/Core>
 #include "logging/Logger.hpp"
 
-namespace precice {
-namespace time {
+namespace precice::time {
 
 class Storage {
 public:
@@ -97,5 +96,4 @@ private:
   mutable logging::Logger _log{"time::Storage"};
 };
 
-} // namespace time
-} // namespace precice
+} // namespace precice::time
