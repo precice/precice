@@ -75,7 +75,7 @@ private:
    *   1. use Eigen::MatrixXd instead of map for _timeStepsStorage.
    *   2. create a member std::map<double, int> _timeSteps where (unique) time is mapped to column index of _timeStepsStorage that holds the corresponding sample. (Alternative: Use another Eigen::VectorXd to store times, but this enforces maintaining a consistent order for _timeSteps and _timeStepsStorage. This sounds complicated.)
    */
-  /// Stores values on the current window.
+  /// Stores values on the current window associated with normalized dt.
   std::map<double, Eigen::VectorXd> _timeStepsStorage;
 
   /// interpolation order for this waveform
