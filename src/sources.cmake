@@ -266,6 +266,8 @@ target_sources(precice
     src/query/Index.hpp
     src/query/impl/RTreeAdapter.hpp
     src/time/SharedPointer.hpp
+    src/time/Storage.cpp
+    src/time/Storage.hpp
     src/time/Time.cpp
     src/time/Time.hpp
     src/time/Waveform.cpp

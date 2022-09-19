@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include "logging/Logger.hpp"
+#include "time/Storage.hpp"
 
 namespace precice {
 
@@ -71,26 +72,13 @@ public:
   Eigen::VectorXd sample(const double normalizedDt);
 
 private:
-  /** @TODO Idea for more efficient data structure and redesign (do this when functionality is working and tested!)
-   *   1. use Eigen::MatrixXd instead of map for _timeStepsStorage.
-   *   2. create a member std::map<double, int> _timeSteps where (unique) time is mapped to column index of _timeStepsStorage that holds the corresponding sample. (Alternative: Use another Eigen::VectorXd to store times, but this enforces maintaining a consistent order for _timeSteps and _timeStepsStorage. This sounds complicated.)
-   */
-  /// Stores values on the current window associated with normalized dt.
-  std::map<double, Eigen::VectorXd> _timeStepsStorage;
+  /// Stores values on the current window.
+  Storage _timeStepsStorage;
 
   /// interpolation order for this waveform
   const int _interpolationOrder;
 
   mutable logging::Logger _log{"time::Waveform"};
-
-  /**
-   * @brief Get maximum normalized dt that is stored in this waveform.
-   *
-   * Used to check whether a user is trying to add a sample associated with a normalized dt that is smaller than the maximum normalized dt. This is forbidden, because the waveform is locked for times that are smaller than the maximum normalized dt.
-   *
-   * @return the maximum normalized dt from _timeStepsStorage
-   */
-  double maxStoredNormalizedDt();
 
   /**
    * @brief Computes which order may be used for interpolation.
@@ -103,21 +91,6 @@ private:
    * @return Order that may be used.
    */
   int computeUsedOrder(int requestedOrder, int numberOfAvailableSamples);
-
-  /**
-   * @brief Returns closest point in time in _timeStepsStorage after normalizedDt
-   *
-   * @param normalizedDt point in time
-   * @return double closest point in time
-   */
-  double findTimeAfter(double normalizedDt);
-
-  /**
-   * @brief Get keys of _timeStepsStorage in ascending order. Starting from low to high.
-   *
-   * @return Eigen::VectorXd containing normalized dts stored in this waveform.
-   */
-  Eigen::VectorXd getTimesAscending();
 };
 
 } // namespace time
