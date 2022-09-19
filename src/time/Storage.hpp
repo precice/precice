@@ -20,14 +20,6 @@ public:
   void initialize(Eigen::VectorXd values);
 
   /**
-   * @brief Get the Value stored at time
-   *
-   * @param time time for which we are requesting a stored value
-   * @return Eigen::VectorXd value associated with time
-   */
-  Eigen::VectorXd getValueAtTime(double time);
-
-  /**
    * @brief Store a value in at a specific time.
    *
    * @param time the time associated with the value
@@ -43,14 +35,14 @@ public:
   double maxStoredNormalizedDt();
 
   /**
-   * @brief Returns the stored time closest to "before" contained in this Storage.
+   * @brief Returns the value at time following "before" contained in this Storage.
    *
-   * The stored normalized dt is larger or equal than "before". If "before" is a normalized dt stored in this Storage, this function returns "before"
+   * The stored normalized dt is larger or equal than "before". If "before" is a normalized dt stored in this Storage, this function returns the value at "before"
    *
    * @param before a double, where we want to find a normalized dt that comes directly after this one
-   * @return double a normalized dt in this Storage which is larger or equal to "before"
+   * @return Eigen::VectorXd a value in this Storage at or directly after "before"
    */
-  double getClosestTimeAfter(double before);
+  Eigen::VectorXd getValueAtTimeAfter(double before);
 
   /**
    * @brief Get all normalized dts stored in this Storage sorted ascending.
@@ -58,6 +50,13 @@ public:
    * @return Eigen::VectorXd containing all stored normalized dts in ascending order.
    */
   Eigen::VectorXd getTimes();
+
+  /**
+   * @brief Get all normalized dts and values in ascending order (with respect to normalized dts)
+   *
+   * @return std::pair<Eigen::VectorXd, Eigen::MatrixXd> containing all stored times and values in ascending order (with respect to normalized dts).
+   */
+  std::pair<Eigen::VectorXd, Eigen::MatrixXd> getTimesAndValues();
 
   /**
    * @brief Number of stored times
@@ -91,7 +90,7 @@ private:
    *   2. create a member std::map<double, int> _timeSteps where (unique) time is mapped to column index of _timeStepsStorage that holds the corresponding sample. (Alternative: Use another Eigen::VectorXd to store times, but this enforces maintaining a consistent order for _timeSteps and _timeStepsStorage. This sounds complicated.)
    */
   /// Stores values on the current window associated with normalized dt.
-  std::map<double, Eigen::VectorXd> _storageDict;
+  std::vector<std::pair<double, Eigen::VectorXd>> _sampleStorage;
 
   mutable logging::Logger _log{"time::Storage"};
 };

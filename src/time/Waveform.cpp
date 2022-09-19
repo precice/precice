@@ -31,16 +31,9 @@ void Waveform::initialize(const Eigen::VectorXd &values)
 
 void Waveform::store(const Eigen::VectorXd &values, double normalizedDt)
 {
-  PRECICE_ASSERT(_timeStepsStorage.nTimes() > 0);
-  // dt has to be in interval (0.0, 1.0]
-  PRECICE_ASSERT(normalizedDt > 0.0); // cannot override value at beginning of window. It is locked!
-  PRECICE_ASSERT(normalizedDt <= 1.0);
-
   if (math::equals(_timeStepsStorage.maxStoredNormalizedDt(), 1.0)) { // reached end of window and trying to write new data from next window. Clearing window first.
     bool keepZero = true;
     _timeStepsStorage.clear(keepZero);
-  } else { // did not reach end of window yet, so dt has to strictly increase
-    PRECICE_ASSERT(normalizedDt > _timeStepsStorage.maxStoredNormalizedDt(), normalizedDt, _timeStepsStorage.maxStoredNormalizedDt());
   }
   PRECICE_ASSERT(values.size() == _timeStepsStorage.nDofs());
   _timeStepsStorage.setValueAtTime(normalizedDt, values);
@@ -67,10 +60,6 @@ Eigen::VectorXd bSplineInterpolationAt(double t, Eigen::VectorXd ts, Eigen::Matr
 
 Eigen::VectorXd Waveform::sample(double normalizedDt)
 {
-  PRECICE_ASSERT(_timeStepsStorage.nTimes() > 0);
-  PRECICE_ASSERT(normalizedDt >= 0, "Sampling outside of valid range!");
-  PRECICE_ASSERT(normalizedDt <= 1, "Sampling outside of valid range!");
-
   const int usedOrder = computeUsedOrder(_interpolationOrder, _timeStepsStorage.nTimes());
 
   PRECICE_ASSERT(math::equals(this->_timeStepsStorage.maxStoredNormalizedDt(), 1.0), this->_timeStepsStorage.maxStoredNormalizedDt()); // sampling is only allowed, if a window is complete.
@@ -81,23 +70,14 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
     // @TODO: Remove constant interpolation in preCICE v3.0? Usecase is unclear and does not generalize well with BSpline interpolation. It's also not 100% clear what to do at the jump.
     // constant interpolation = just use sample at the end of the window: x(dt) = x^t
     // At beginning of window use result from last window x(0) = x^(t-1)
-    auto closestAfter = _timeStepsStorage.getClosestTimeAfter(normalizedDt);
-    return this->_timeStepsStorage.getValueAtTime(closestAfter);
+    return this->_timeStepsStorage.getValueAtTimeAfter(normalizedDt);
   }
 
   PRECICE_ASSERT(usedOrder >= 1);
 
-  auto timesAscending = _timeStepsStorage.getTimes();
-  auto nTimes         = _timeStepsStorage.nTimes();
-  auto nDofs          = _timeStepsStorage.nDofs();
-  PRECICE_ASSERT(math::equals(timesAscending[0], 0.0));
-  PRECICE_ASSERT(math::equals(timesAscending[nTimes - 1], 1.0));
-  Eigen::MatrixXd dataAscending(nDofs, nTimes);
-  int             i = 0;
-  for (int i = 0; i < nTimes; i++) {
-    dataAscending.col(i) = this->_timeStepsStorage.getValueAtTime(timesAscending[i]);
-  }
-  return bSplineInterpolationAt(normalizedDt, timesAscending, dataAscending, usedOrder);
+  auto data = _timeStepsStorage.getTimesAndValues();
+
+  return bSplineInterpolationAt(normalizedDt, data.first, data.second, usedOrder);
 }
 
 void Waveform::moveToNextWindow()
