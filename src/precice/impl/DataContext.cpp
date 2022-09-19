@@ -26,7 +26,7 @@ void DataContext::resetData()
   _providedData->toZero();
   if (hasMapping()) {
     PRECICE_ASSERT(hasWriteMapping());
-    // PRECICE_ASSERT(!hasReadMapping());  // we also need this assertion, because currently we also reset toData from read mappings, if a data context has a read and write mapping! Is this what we want?
+    PRECICE_ASSERT(!hasReadMapping());
     std::for_each(_mappingContexts.begin(), _mappingContexts.end(), [](auto &context) { context.toData->toZero(); });
   }
 }
