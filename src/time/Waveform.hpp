@@ -84,13 +84,13 @@ private:
   mutable logging::Logger _log{"time::Waveform"};
 
   /**
-   * @brief Get maximum dt that is stored in this waveform.
+   * @brief Get maximum normalized dt that is stored in this waveform.
    *
-   * Used to check whether a user is trying to add a sample associated with a dt that is smaller than the maximum dt. This is forbidden, because the waveform is locked for times that are smaller than the maximum dt.
+   * Used to check whether a user is trying to add a sample associated with a normalized dt that is smaller than the maximum normalized dt. This is forbidden, because the waveform is locked for times that are smaller than the maximum normalized dt.
    *
-   * @return the maximum dt from _timeStepsStorage
+   * @return the maximum normalized dt from _timeStepsStorage
    */
-  double maxStoredDt();
+  double maxStoredNormalizedDt();
 
   /**
    * @brief Computes which order may be used for interpolation.
@@ -115,7 +115,7 @@ private:
   /**
    * @brief Get keys of _timeStepsStorage in ascending order. Starting from low to high.
    *
-   * @return Eigen::VectorXd
+   * @return Eigen::VectorXd containing normalized dts stored in this waveform.
    */
   Eigen::VectorXd getTimesAscending();
 };

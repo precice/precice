@@ -38,18 +38,18 @@ void Waveform::store(const Eigen::VectorXd &values, double normalizedDt)
   PRECICE_ASSERT(normalizedDt > 0.0); // cannot override value at beginning of window. It is locked!
   PRECICE_ASSERT(normalizedDt <= 1.0);
 
-  if (math::equals(maxStoredDt(), 1.0)) {          // reached end of window and trying to write new data from next window. Clearing window first.
-    Eigen::VectorXd keep = _timeStepsStorage[0.0]; // we keep data at _timeStepsStorage[0.0]
+  if (math::equals(maxStoredNormalizedDt(), 1.0)) { // reached end of window and trying to write new data from next window. Clearing window first.
+    Eigen::VectorXd keep = _timeStepsStorage[0.0];  // we keep data at _timeStepsStorage[0.0]
     _timeStepsStorage.clear();
     _timeStepsStorage[0.0] = keep;
   } else { // did not reach end of window yet, so dt has to strictly increase
-    PRECICE_ASSERT(normalizedDt > maxStoredDt(), normalizedDt, maxStoredDt());
+    PRECICE_ASSERT(normalizedDt > maxStoredNormalizedDt(), normalizedDt, maxStoredNormalizedDt());
   }
   PRECICE_ASSERT(values.size() == _timeStepsStorage[0.0].size());
   this->_timeStepsStorage[normalizedDt] = Eigen::VectorXd(values);
 }
 
-double Waveform::maxStoredDt()
+double Waveform::maxStoredNormalizedDt()
 {
   double maxDt = -1;
   for (auto timeStep : _timeStepsStorage) {
@@ -88,7 +88,7 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
 
   const int usedOrder = computeUsedOrder(_interpolationOrder, _timeStepsStorage.size());
 
-  PRECICE_ASSERT(math::equals(maxStoredDt(), 1.0), maxStoredDt()); // sampling is only allowed, if a window is complete.
+  PRECICE_ASSERT(math::equals(maxStoredNormalizedDt(), 1.0), maxStoredNormalizedDt()); // sampling is only allowed, if a window is complete.
 
   // @TODO: Improve efficiency: Check whether key = normalizedDt is in _timeStepsStorage. If yes, just get value and return. No need for interpolation.
 
@@ -117,7 +117,7 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
 void Waveform::moveToNextWindow()
 {
   PRECICE_ASSERT(_timeStepsStorage.size() > 0);
-  auto initialGuess = this->sample(maxStoredDt()); // use value at end of window as initial guess for next
+  auto initialGuess = this->sample(maxStoredNormalizedDt()); // use value at end of window as initial guess for next
   _timeStepsStorage.clear();
   _timeStepsStorage[0.0] = Eigen::VectorXd(initialGuess);
   _timeStepsStorage[1.0] = Eigen::VectorXd(initialGuess); // initial guess is always constant extrapolation
