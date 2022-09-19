@@ -66,7 +66,7 @@ Eigen::VectorXd bSplineInterpolationAt(double t, Eigen::VectorXd ts, Eigen::Matr
 {
   // organize data in columns. Each column represents one sample in time.
   PRECICE_ASSERT(xs.cols() == ts.size());
-  const int ndofs = xs.rows(); // number of dofs. Each dof needs it's own interpolant.
+  const int ndofs = xs.rows(); // number of dofs. Each dof needs its own interpolant.
 
   Eigen::VectorXd interpolated(ndofs);
 
