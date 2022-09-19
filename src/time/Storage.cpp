@@ -1,8 +1,7 @@
 #include "time/Storage.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace time {
+namespace precice::time {
 
 Storage::Storage()
     : _storageDict{} {}
@@ -104,5 +103,4 @@ Eigen::VectorXd Storage::getTimes()
   return times;
 }
 
-} // namespace time
-} // namespace precice
+} // namespace precice::time
