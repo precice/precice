@@ -1,15 +1,17 @@
 #pragma once
 
-#include <vector>
-#include "logging/Logger.hpp"
 #include "mapping/Mapping.hpp"
+#include "logging/Logger.hpp"
+#include <vector>
 
 namespace precice {
 namespace mapping {
 
 /// Geometric multiscale mapping in axial direction
-class AxialGeoMultiscaleMapping : public Mapping {
+class AxialGeoMultiscaleMapping : public Mapping
+{
 public:
+
   /**
    * @brief Geometric multiscale nature of the mapping (spread or collect).
    *
@@ -29,7 +31,7 @@ public:
    * @param[in] type Geometric multiscale type of the mapping
    * @param[in] radius Radius of the 1D solver "tube"
    */
-  AxialGeoMultiscaleMapping(Constraint constraint, int dimensions, MultiscaleType type, double radius);
+  AxialGeoMultiscaleMapping ( Constraint constraint, int dimensions, MultiscaleType type, double radius );
 
   /// Destructor, empty.
   virtual ~AxialGeoMultiscaleMapping() {}
@@ -61,11 +63,16 @@ protected:
 private:
   mutable logging::Logger _log{"mapping::AxialGeoMultiscaleMapping"};
 
+  /// Flag to indicate whether computeMapping() has been called.
+  bool _hasComputedMapping = false;
+
   MultiscaleType _type;
 
-  /// radius of the "tube" from or to which the data is mapped, i.e., radius of the circular interface between the two participants
+  /// radius of the 1D "tube" from or to which the data is mapped
   double _radius;
+
+  /// scaling to make up for difference between max and avg value for a certain shape function
+  double _scaling = 0.0;
 };
 
-} // namespace mapping
-} // namespace precice
+}} // namespace precice, mapping
