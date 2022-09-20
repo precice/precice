@@ -71,8 +71,8 @@ void Storage::clear(bool keepZero)
 Eigen::VectorXd Storage::getValueAtTimeAfter(double before)
 {
   for (auto &sample : _sampleStorage) {
-    if (math::greaterEquals(_sampleStorage.first, before)) {
-      return _sampleStorage.second;
+    if (math::greaterEquals(sample.first, before)) {
+      return sample.second;
     }
   }
   PRECICE_ASSERT(false, "no value found!");
