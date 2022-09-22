@@ -33,5 +33,5 @@ Please contact the maintainers before integrating non-trivial amount of code fro
 [boosttest]: https://www.boost.org/doc/libs/1_65_1/libs/test/doc/html/index.html
 [commit]: http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
 [pullrequest]: https://help.github.com/articles/creating-a-pull-request
-[style]: https://ipvs.informatik.uni-stuttgart.de/sgs/precice/docs/develop/conventions.html
+[style]: https://precice.org/dev-docs-dev-conventions.html
 [workflow]: https://help.github.com/categories/collaborating-with-issues-and-pull-requests
