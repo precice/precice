@@ -9,6 +9,11 @@ class Storage {
 public:
   /**
    * @brief Stores data samples in time and provides corresponding convenience functions.
+   *
+   * The Storage must be initialized before it can be used. Then values can be stored in the Storage. It is only allowed to store samples with increasing times. Overwriting existing samples or writing samples with a time smaller then the maximum stored time is forbidden.
+   * The Storage is considered complete, when a sample with time 1.0 is provided. Then one can only sample or clear the storage, but not add any further samples.
+   *
+   * This Storage is used in the context of Waveform relaxation where samples in time are provided. Starting at the beginning of the window with time 0.0 and reaching the end of the window with time 1.0.
    */
   Storage();
 
@@ -21,6 +26,8 @@ public:
 
   /**
    * @brief Store a value at a specific time.
+   *
+   * It is only allowed to store values in time that come after values that were already stored. Therefore, time has to be larger than maxStoredNormalizedDt. Overwriting existing values is forbidden. The function clear() should be used to clear the storage and provide new values.
    *
    * @param time the time associated with the value
    * @param value stored value

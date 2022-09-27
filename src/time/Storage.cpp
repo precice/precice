@@ -19,7 +19,7 @@ void Storage::setValueAtTime(double time, Eigen::VectorXd value)
 {
   PRECICE_ASSERT(math::greater(time, 0.0), "Setting value outside of valid range!");
   PRECICE_ASSERT(math::smallerEquals(time, 1.0), "Sampling outside of valid range!");
-  PRECICE_ASSERT(math::smaller(maxStoredNormalizedDt(), time));
+  PRECICE_ASSERT(math::smaller(maxStoredNormalizedDt(), time), "Trying to overwrite existing values or to write values with a time that is too small. Please use clear(), if you want to reset the storage.");
   _sampleStorage.emplace_back(std::make_pair(time, value));
 }
 
