@@ -78,7 +78,7 @@ public:
   void move();
 
   /**
-   * @brief Clear this Storage by deleting all values. If keepZero is true, keeps Value associated with 0.0.
+   * @brief Clear this Storage by deleting all values. If keepZero is true, keep values associated with 0.0.
    *
    * @param keepZero if true, keep value associated with 0.0.
    */
