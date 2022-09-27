@@ -25,6 +25,7 @@ void Storage::setValueAtTime(double time, Eigen::VectorXd value)
 
 double Storage::maxStoredNormalizedDt()
 {
+  PRECICE_ASSERT(_sampleStorage.size() > 0);
   return _sampleStorage.back().first;
 }
 
@@ -35,6 +36,7 @@ int Storage::nTimes()
 
 int Storage::nDofs()
 {
+  PRECICE_ASSERT(_sampleStorage.size() > 0);
   return _sampleStorage[0].second.size();
 }
 
