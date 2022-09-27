@@ -70,7 +70,7 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
     // @TODO: Remove constant interpolation in preCICE v3.0? Usecase is unclear and does not generalize well with BSpline interpolation. It's also not 100% clear what to do at the jump.
     // constant interpolation = just use sample at the end of the window: x(dt) = x^t
     // At beginning of window use result from last window x(0) = x^(t-1)
-    return this->_timeStepsStorage.getValueAtTimeAfter(normalizedDt);
+    return this->_timeStepsStorage.getValueAtOrAfter(normalizedDt);
   }
 
   PRECICE_ASSERT(usedOrder >= 1);

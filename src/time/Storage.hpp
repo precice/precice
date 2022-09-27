@@ -42,7 +42,7 @@ public:
    * @param before a double, where we want to find a normalized dt that comes directly after this one
    * @return Eigen::VectorXd a value in this Storage at or directly after "before"
    */
-  Eigen::VectorXd getValueAtTimeAfter(double before);
+  Eigen::VectorXd getValueAtOrAfter(double before);
 
   /**
    * @brief Get all normalized dts stored in this Storage sorted ascending.

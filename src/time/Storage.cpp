@@ -68,7 +68,7 @@ void Storage::clear(bool keepZero)
   }
 }
 
-Eigen::VectorXd Storage::getValueAtTimeAfter(double before)
+Eigen::VectorXd Storage::getValueAtOrAfter(double before)
 {
   for (auto &sample : _sampleStorage) {
     if (math::greaterEquals(sample.first, before)) {
