@@ -92,10 +92,6 @@ public:
   void clear(bool keepZero = false);
 
 private:
-  /** @TODO Idea for more efficient data structure and redesign (do this when functionality is working and tested!)
-   *   1. use Eigen::MatrixXd instead of map for _timeStepsStorage.
-   *   2. create a member std::map<double, int> _timeSteps where (unique) time is mapped to column index of _timeStepsStorage that holds the corresponding sample. (Alternative: Use another Eigen::VectorXd to store times, but this enforces maintaining a consistent order for _timeSteps and _timeStepsStorage. This sounds complicated.)
-   */
   /// Stores values on the current window associated with normalized dt.
   std::vector<std::pair<double, Eigen::VectorXd>> _sampleStorage;
 
