@@ -24,19 +24,19 @@ int Waveform::getInterpolationOrder() const
 void Waveform::initialize(const Eigen::VectorXd &values)
 {
   int storageSize;
-  PRECICE_ASSERT(_timeStepsStorage.nTimes() == 0);
-  _timeStepsStorage.initialize(values);
+  PRECICE_ASSERT(_storage.nTimes() == 0);
+  _storage.initialize(values);
   PRECICE_ASSERT(_interpolationOrder >= Time::MIN_INTERPOLATION_ORDER);
 }
 
 void Waveform::store(const Eigen::VectorXd &values, double normalizedDt)
 {
-  if (math::equals(_timeStepsStorage.maxStoredNormalizedDt(), 1.0)) { // reached end of window and trying to write new data from next window. Clearing window first.
+  if (math::equals(_storage.maxStoredNormalizedDt(), 1.0)) { // reached end of window and trying to write new data from next window. Clearing window first.
     bool keepZero = true;
-    _timeStepsStorage.clear(keepZero);
+    _storage.clear(keepZero);
   }
-  PRECICE_ASSERT(values.size() == _timeStepsStorage.nDofs());
-  _timeStepsStorage.setValueAtTime(normalizedDt, values);
+  PRECICE_ASSERT(values.size() == _storage.nDofs());
+  _storage.setValueAtTime(normalizedDt, values);
 }
 
 // helper function to compute x(t) from given data (x0,t0), (x1,t1), ..., (xn,tn) via B-spline interpolation (implemented using Eigen).
@@ -60,29 +60,29 @@ Eigen::VectorXd bSplineInterpolationAt(double t, Eigen::VectorXd ts, Eigen::Matr
 
 Eigen::VectorXd Waveform::sample(double normalizedDt)
 {
-  const int usedOrder = computeUsedOrder(_interpolationOrder, _timeStepsStorage.nTimes());
+  const int usedOrder = computeUsedOrder(_interpolationOrder, _storage.nTimes());
 
-  PRECICE_ASSERT(math::equals(this->_timeStepsStorage.maxStoredNormalizedDt(), 1.0), this->_timeStepsStorage.maxStoredNormalizedDt()); // sampling is only allowed, if a window is complete.
+  PRECICE_ASSERT(math::equals(this->_storage.maxStoredNormalizedDt(), 1.0), this->_storage.maxStoredNormalizedDt()); // sampling is only allowed, if a window is complete.
 
-  // @TODO: Improve efficiency: Check whether key = normalizedDt is in _timeStepsStorage. If yes, just get value and return. No need for interpolation.
+  // @TODO: Improve efficiency: Check whether key = normalizedDt is in _storage. If yes, just get value and return. No need for interpolation.
 
   if (_interpolationOrder == 0) {
     // @TODO: Remove constant interpolation in preCICE v3.0? Usecase is unclear and does not generalize well with BSpline interpolation. It's also not 100% clear what to do at the jump.
     // constant interpolation = just use sample at the end of the window: x(dt) = x^t
     // At beginning of window use result from last window x(0) = x^(t-1)
-    return this->_timeStepsStorage.getValueAtOrAfter(normalizedDt);
+    return this->_storage.getValueAtOrAfter(normalizedDt);
   }
 
   PRECICE_ASSERT(usedOrder >= 1);
 
-  auto data = _timeStepsStorage.getTimesAndValues();
+  auto data = _storage.getTimesAndValues();
 
   return bSplineInterpolationAt(normalizedDt, data.first, data.second, usedOrder);
 }
 
 void Waveform::moveToNextWindow()
 {
-  _timeStepsStorage.move();
+  _storage.move();
 }
 
 int Waveform::computeUsedOrder(int requestedOrder, int numberOfAvailableSamples)

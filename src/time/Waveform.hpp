@@ -44,7 +44,7 @@ public:
   int getInterpolationOrder() const;
 
   /**
-   * @brief Used to initialize _timeStepsStorage according to required size and initializes Waveform as constant with given values.
+   * @brief Used to initialize _storage according to required size and initializes Waveform as constant with given values.
    * @param values Defines constant initial value of waveform and its size
    */
   void initialize(const Eigen::VectorXd &values);
@@ -64,7 +64,7 @@ public:
   /**
    * @brief Evaluate waveform at specific point in time. Uses interpolation if necessary.
    *
-   * Interpolates values inside current time window using _timeStepsStorage and an interpolation scheme of the order of this Waveform.
+   * Interpolates values inside current time window using _storage and an interpolation scheme of the order of this Waveform.
    *
    * @param normalizedDt Time where the sampling inside the window happens. Only allows values between 0 and 1. 0 refers to the beginning of the window and 1 to the end.
    * @return Value of Waveform at time normalizedDt.
@@ -73,7 +73,7 @@ public:
 
 private:
   /// Stores values on the current window.
-  Storage _timeStepsStorage;
+  Storage _storage;
 
   /// interpolation order for this waveform
   const int _interpolationOrder;
