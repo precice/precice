@@ -15,16 +15,6 @@ void Storage::initialize(Eigen::VectorXd values)
   _sampleStorage.emplace_back(std::make_pair(1.0, values));
 }
 
-int findTime(std::vector<std::pair<double, Eigen::VectorXd>> storage, double time)
-{
-  for (int i; i < storage.size(); ++i) {
-    if (math::equals(storage[i].first, time)) {
-      return i;
-    }
-  }
-  return -1;
-}
-
 void Storage::setValueAtTime(double time, Eigen::VectorXd value)
 {
   PRECICE_ASSERT(math::greater(time, 0.0), "Setting value outside of valid range!");
