@@ -20,7 +20,7 @@ public:
   void initialize(Eigen::VectorXd values);
 
   /**
-   * @brief Store a value in at a specific time.
+   * @brief Store a value at a specific time.
    *
    * @param time the time associated with the value
    * @param value stored value
