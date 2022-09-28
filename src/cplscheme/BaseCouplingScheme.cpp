@@ -738,7 +738,7 @@ void BaseCouplingScheme::storeTimeStepAccelerationDataEndOfWindow()
 {
   for (auto &anAccelerationData : getAccelerationData()) {
     auto theData = anAccelerationData.second->values();
-    anAccelerationData.second->storeDataAtTime(theData, 1.0);
+    anAccelerationData.second->overrideDataAtEndWindowTime(theData);
   }
 }
 

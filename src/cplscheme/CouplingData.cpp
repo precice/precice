@@ -135,10 +135,15 @@ void CouplingData::clearTimeStepsStorage()
 
 void CouplingData::storeDataAtTime(Eigen::VectorXd data, double relativeDt)
 {
-  PRECICE_ASSERT(relativeDt > 0.0);
-  //PRECICE_ASSERT(relativeDt > _timeStepsStorage.maxTime());  // generally a nice security check, but currently we have to override some data after acceleration was performed.
-  PRECICE_ASSERT(relativeDt <= 1.0);
+  PRECICE_ASSERT(relativeDt > 0.0, relativeDt);
+  PRECICE_ASSERT(relativeDt > _timeStepsStorage.maxStoredNormalizedDt(), relativeDt, _timeStepsStorage.maxStoredNormalizedDt());
+  PRECICE_ASSERT(relativeDt <= 1.0, relativeDt);
   _timeStepsStorage.setValueAtTime(relativeDt, data);
+}
+
+void CouplingData::overrideDataAtEndWindowTime(Eigen::VectorXd data)
+{
+  _timeStepsStorage.overrideDataAtEndWindowTime(data);
 }
 
 Eigen::VectorXd CouplingData::getDataAtTime(double relativeDt)

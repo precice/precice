@@ -170,13 +170,9 @@ void BiCouplingScheme::storeTimeStepSendData(double relativeDt)
 void BiCouplingScheme::storeTimeStepReceiveDataEndOfWindow()
 {
   if (hasDataBeenReceived()) {
-    // needed to avoid problems with round-off-errors.
-    auto times       = getReceiveTimes();
-    auto largestTime = times.at(times.size() - 1);
-    PRECICE_ASSERT(math::equals(largestTime, 1.0), largestTime);
     for (auto &aReceiveData : getReceiveData()) {
       auto theData = aReceiveData.second->values();
-      aReceiveData.second->storeDataAtTime(theData, largestTime);
+      aReceiveData.second->overrideDataAtEndWindowTime(theData);
     }
   }
 }

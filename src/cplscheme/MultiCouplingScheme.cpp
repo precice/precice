@@ -106,14 +106,10 @@ void MultiCouplingScheme::storeTimeStepSendData(double relativeDt)
 void MultiCouplingScheme::storeTimeStepReceiveDataEndOfWindow()
 {
   if (hasDataBeenReceived()) {
-    // needed to avoid problems with round-off-errors.
-    auto times       = getReceiveTimes();
-    auto largestTime = times.at(times.size() - 1);
-    PRECICE_ASSERT(math::equals(largestTime, 1.0), largestTime);
     for (auto &receiveDataVector : _receiveDataVector) {
       for (auto &aReceiveData : receiveDataVector.second) {
         auto theData = aReceiveData.second->values();
-        aReceiveData.second->storeDataAtTime(theData, largestTime);
+        aReceiveData.second->overrideDataAtEndWindowTime(theData);
       }
     }
   }

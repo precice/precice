@@ -1,105 +1,117 @@
 #include "time/Storage.hpp"
+#include "math/differences.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice::time {
 
 Storage::Storage()
-    : _storageDict{} {}
+    : _sampleStorage{}
+{
+}
 
 void Storage::initialize(Eigen::VectorXd values)
 {
-  _storageDict[1.0] = Eigen::VectorXd(values);
-  _storageDict[0.0] = Eigen::VectorXd(values);
+  _sampleStorage.emplace_back(std::make_pair(0.0, values));
+  _sampleStorage.emplace_back(std::make_pair(1.0, values));
 }
 
 Eigen::VectorXd Storage::getValueAtTime(double time)
 {
-  PRECICE_ASSERT(time >= 0, "Sampling outside of valid range!");
-  PRECICE_ASSERT(time <= 1, "Sampling outside of valid range!");
-  PRECICE_ASSERT(_storageDict.count(time) > 0, time);
-  return _storageDict[time];
+  for (auto &sample : _sampleStorage) {
+    if (math::equals(sample.first, time)) {
+      return sample.second;
+    }
+  }
+  PRECICE_ASSERT(false, "no value found!", time);
 }
 
 void Storage::setValueAtTime(double time, Eigen::VectorXd value)
 {
-  PRECICE_ASSERT(time > 0, "Setting value outside of valid range!");
-  PRECICE_ASSERT(time <= 1, "Sampling outside of valid range!");
-  _storageDict[time] = value;
+  PRECICE_ASSERT(math::greater(time, 0.0), "Setting value outside of valid range!");
+  PRECICE_ASSERT(math::smallerEquals(time, 1.0), "Sampling outside of valid range!");
+  PRECICE_ASSERT(math::smaller(maxStoredNormalizedDt(), time), maxStoredNormalizedDt(), time, "Trying to overwrite existing values or to write values with a time that is too small. Please use clear(), if you want to reset the storage.");
+  _sampleStorage.emplace_back(std::make_pair(time, value));
 }
 
-double Storage::maxTime()
+void Storage::overrideDataAtEndWindowTime(Eigen::VectorXd data)
 {
-  double theMaxKey = -1 * std::numeric_limits<double>::infinity();
-  for (auto pair : _storageDict) {
-    if (pair.first > theMaxKey) {
-      theMaxKey = pair.first;
-    }
+  double endWindowTime = 1.0;
+  if (_sampleStorage.size() == 0) {
+    _sampleStorage.emplace_back(std::make_pair(endWindowTime, data));
+  } else {
+    PRECICE_ASSERT(math::equals(_sampleStorage.back().first, endWindowTime), "Unexpected!", _sampleStorage.back().first);
+    _sampleStorage.back().second = data;
   }
-  PRECICE_ASSERT(theMaxKey > -1 * std::numeric_limits<double>::infinity());
-  return theMaxKey;
+}
+
+double Storage::maxStoredNormalizedDt()
+{
+  if (_sampleStorage.size() == 0) {
+    return 0; // @todo better return something that is clearly invalid or raise an error.
+  } else {
+    return _sampleStorage.back().first;
+  }
 }
 
 int Storage::nTimes()
 {
-  return _storageDict.size();
+  return _sampleStorage.size();
 }
 
 int Storage::nDofs()
 {
-  return _storageDict[0.0].size();
+  PRECICE_ASSERT(_sampleStorage.size() > 0);
+  return _sampleStorage[0].second.size();
 }
 
 void Storage::move()
 {
   PRECICE_ASSERT(nTimes() > 0);
-  auto initialGuess = _storageDict[maxTime()]; // use value at end of window as initial guess for next
-  _storageDict.clear();
-  _storageDict[0.0] = Eigen::VectorXd(initialGuess);
-  _storageDict[1.0] = Eigen::VectorXd(initialGuess); // initial guess is always constant extrapolation
+  auto initialGuess = _sampleStorage.back().second; // use value at end of window as initial guess for next
+  _sampleStorage.clear();
+  initialize(initialGuess);
 }
 
 void Storage::clear(bool keepZero)
 {
   Eigen::VectorXd keep;
   if (keepZero) {
-    keep = _storageDict[0.0]; // we keep data at _storageDict[0.0]
+    keep = _sampleStorage.front().second; // we keep data at _storageDict[0.0]
   }
-  _storageDict.clear();
+  _sampleStorage.clear();
   if (keepZero) {
-    _storageDict[0.0] = keep;
+    _sampleStorage.emplace_back(std::make_pair(0.0, keep));
   }
 }
 
-double Storage::getClosestTimeAfter(double before)
+Eigen::VectorXd Storage::getValueAtOrAfter(double before)
 {
-  double directlyAfter = std::numeric_limits<double>::infinity();
-
-  for (auto pair : _storageDict) {
-    if (before <= pair.first && pair.first <= directlyAfter) { // pair.first is after "before" and earlier than current "directlyAfter"
-      directlyAfter = pair.first;
+  for (auto &sample : _sampleStorage) {
+    if (math::greaterEquals(sample.first, before)) {
+      return sample.second;
     }
   }
-
-  return directlyAfter;
+  PRECICE_ASSERT(false, "no value found!", before);
 }
 
 Eigen::VectorXd Storage::getTimes()
 {
-  // create std::vector with all keys
-  std::vector<double> keys;
-  for (auto timeStep : _storageDict) {
-    keys.push_back(timeStep.first);
-  }
-
-  // sort vector
-  std::sort(keys.begin(), keys.end());
-
-  // copy data into Eigen::VectorXd to return
-  auto times = Eigen::VectorXd(keys.size());
-  for (int i = 0; i < keys.size(); i++) {
-    times[i] = keys[i];
+  auto times = Eigen::VectorXd(nTimes());
+  for (int i = 0; i < times.size(); i++) {
+    times[i] = _sampleStorage[i].first;
   }
   return times;
+}
+
+std::pair<Eigen::VectorXd, Eigen::MatrixXd> Storage::getTimesAndValues()
+{
+  auto times  = Eigen::VectorXd(nTimes());
+  auto values = Eigen::MatrixXd(nDofs(), nTimes());
+  for (int i = 0; i < times.size(); i++) {
+    times[i]      = _sampleStorage[i].first;
+    values.col(i) = _sampleStorage[i].second;
+  }
+  return std::make_pair(times, values);
 }
 
 } // namespace precice::time
