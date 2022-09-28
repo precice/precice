@@ -156,11 +156,13 @@ Eigen::VectorXd CouplingData::getSerialized()
   int  nValues        = getSize();
   int  nTimeSteps     = _timeStepsStorage.nTimes();
   auto serializedData = Eigen::VectorXd(nTimeSteps * nValues);
-  auto timesAscending = this->getStoredTimesAscending();
+  auto timesAndValues = _timeStepsStorage.getTimesAndValues();
+  auto times          = timesAndValues.first;
+  auto values         = timesAndValues.second;
 
   for (int timeId = 0; timeId < nTimeSteps; timeId++) {
-    auto time  = timesAscending(timeId);
-    auto slice = _timeStepsStorage.getValueAtTime(time);
+    auto time  = times(timeId);
+    auto slice = values.col(timeId);
     for (int valueId = 0; valueId < nValues; valueId++) {
       serializedData(valueId * nTimeSteps + timeId) = slice(valueId);
     }
@@ -180,6 +182,7 @@ void CouplingData::storeFromSerialized(Eigen::VectorXd timesAscending, Eigen::Ve
     PRECICE_ASSERT(time > 0.0 && time <= 1.0); // time <= 0 or time > 1 is not allowed.
     this->storeDataAtTime(slice, time);
   }
+  this->values() = this->getDataAtTime(_timeStepsStorage.maxStoredNormalizedDt()); // store data in values to make this non-breaking.
 }
 
 } // namespace precice::cplscheme
