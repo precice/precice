@@ -478,8 +478,8 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   Fixture::initializeStorages(scheme);
   CouplingData *cplData = Fixture::getSendData(scheme, dataID);
   BOOST_CHECK(cplData); // no nullptr
-  BOOST_TEST(cplData->values().size() == 1);
-  BOOST_TEST(cplData->previousIteration().size() == 1);
+  BOOST_TEST(cplData->getSize() == 1);
+  BOOST_TEST(cplData->getPreviousIterationSize() == 1);
 
   Fixture::moveToNextWindow(scheme);
 
@@ -553,8 +553,8 @@ BOOST_AUTO_TEST_CASE(SecondOrder)
   Fixture::initializeStorages(scheme);
   CouplingData *cplData = Fixture::getSendData(scheme, dataID);
   BOOST_CHECK(cplData); // no nullptr
-  BOOST_TEST(cplData->values().size() == 1);
-  BOOST_TEST(cplData->previousIteration().size() == 1);
+  BOOST_TEST(cplData->getSize() == 1);
+  BOOST_TEST(cplData->getPreviousIterationSize() == 1);
 
   Fixture::moveToNextWindow(scheme);
 
@@ -1604,14 +1604,14 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
 
   if (context.isNamed(nameParticipant0)) {
     // ensure that read data is uninitialized
-    BOOST_TEST(receiveCouplingData->values().size() == 3);
+    BOOST_TEST(receiveCouplingData->getSize() == 3);
     BOOST_TEST(testing::equals(receiveCouplingData->values(), Eigen::Vector3d(0.0, 0.0, 0.0)));
-    BOOST_TEST(receiveCouplingData->previousIteration().size() == 3);
+    BOOST_TEST(receiveCouplingData->getPreviousIterationSize() == 3);
     BOOST_TEST(testing::equals(receiveCouplingData->previousIteration(), Eigen::Vector3d(0.0, 0.0, 0.0)));
     // ensure that write data is uninitialized
-    BOOST_TEST(sendCouplingData->values().size() == 1);
+    BOOST_TEST(sendCouplingData->getSize() == 1);
     BOOST_TEST(testing::equals(sendCouplingData->values()(0), 0.0));
-    BOOST_TEST(sendCouplingData->previousIteration().size() == 1);
+    BOOST_TEST(sendCouplingData->getPreviousIterationSize() == 1);
     BOOST_TEST(testing::equals(sendCouplingData->previousIteration()(0), 0.0));
 
     BOOST_TEST(Fixture::isImplicitCouplingScheme(cplScheme));
@@ -1620,18 +1620,18 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(!cplScheme.hasDataBeenReceived());
     // ensure that initial data was read
-    BOOST_TEST(receiveCouplingData->values().size() == 3);
+    BOOST_TEST(receiveCouplingData->getSize() == 3);
     BOOST_TEST(testing::equals(receiveCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
-    BOOST_TEST(receiveCouplingData->previousIteration().size() == 3);
+    BOOST_TEST(receiveCouplingData->getPreviousIterationSize() == 3);
     BOOST_TEST(testing::equals(receiveCouplingData->previousIteration(), Eigen::Vector3d(0.0, 0.0, 0.0)));
     // ensure that write data is still uninitialized
-    BOOST_TEST(sendCouplingData->values().size() == 1);
+    BOOST_TEST(sendCouplingData->getSize() == 1);
     BOOST_TEST(testing::equals(sendCouplingData->values()(0), 0.0));
-    BOOST_TEST(sendCouplingData->previousIteration().size() == 1);
+    BOOST_TEST(sendCouplingData->getPreviousIterationSize() == 1);
     BOOST_TEST(testing::equals(sendCouplingData->previousIteration()(0), 0.0));
-    BOOST_TEST(sendCouplingData->previousIteration().size() == 1);
+    BOOST_TEST(sendCouplingData->getPreviousIterationSize() == 1);
     // set write data
-    sendCouplingData->values() = Eigen::VectorXd::Constant(sendCouplingData->values().size(), 4.0);
+    sendCouplingData->values() = Eigen::VectorXd::Constant(sendCouplingData->getSize(), 4.0);
     while (cplScheme.isCouplingOngoing()) {
       if (cplScheme.isActionRequired(writeIterationCheckpoint)) {
         cplScheme.markActionFulfilled(writeIterationCheckpoint);
@@ -1650,25 +1650,25 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     v << 1.0, 2.0, 3.0;
     sendCouplingData->values() = v;
     cplScheme.markActionFulfilled(constants::actionWriteInitialData());
-    BOOST_TEST(receiveCouplingData->values().size() == 1);
+    BOOST_TEST(receiveCouplingData->getSize() == 1);
     BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 0.0));
-    BOOST_TEST(receiveCouplingData->previousIteration().size() == 1);
-    BOOST_TEST(receiveCouplingData->previousIteration().size() == 1); // here, previousIteration is correctly initialized, see above
-    BOOST_TEST(sendCouplingData->values().size() == 3);
+    BOOST_TEST(receiveCouplingData->getPreviousIterationSize() == 1);
+    BOOST_TEST(receiveCouplingData->getPreviousIterationSize() == 1); // here, previousIteration is correctly initialized, see above
+    BOOST_TEST(sendCouplingData->getSize() == 3);
     BOOST_TEST(testing::equals(sendCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
-    BOOST_TEST(sendCouplingData->previousIteration().size() == 3); // here, previousIteration is correctly initialized, see above
+    BOOST_TEST(sendCouplingData->getPreviousIterationSize() == 3); // here, previousIteration is correctly initialized, see above
     BOOST_TEST(testing::equals(sendCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
     cplScheme.initialize(0.0, 1);
     BOOST_TEST(!cplScheme.hasDataBeenReceived());
     cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(cplScheme.hasDataBeenReceived());
-    BOOST_TEST(receiveCouplingData->values().size() == 1);
+    BOOST_TEST(receiveCouplingData->getSize() == 1);
     BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 4.0));
-    BOOST_TEST(receiveCouplingData->previousIteration().size() == 1);
+    BOOST_TEST(receiveCouplingData->getPreviousIterationSize() == 1);
     BOOST_TEST(testing::equals(receiveCouplingData->previousIteration()(0), 0.0));
-    BOOST_TEST(sendCouplingData->values().size() == 3);
+    BOOST_TEST(sendCouplingData->getSize() == 3);
     BOOST_TEST(testing::equals(sendCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
-    BOOST_TEST(sendCouplingData->previousIteration().size() == 3);
+    BOOST_TEST(sendCouplingData->getPreviousIterationSize() == 3);
     BOOST_TEST(testing::equals(sendCouplingData->previousIteration(), Eigen::Vector3d(1.0, 2.0, 3.0)));
     while (cplScheme.isCouplingOngoing()) {
       if (cplScheme.isActionRequired(writeIterationCheckpoint)) {
