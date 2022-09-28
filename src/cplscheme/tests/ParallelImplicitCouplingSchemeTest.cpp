@@ -143,10 +143,10 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   if (context.isNamed(nameParticipant0)) {
     BOOST_TEST(testing::equals(receiveCouplingData->values(), Eigen::Vector3d(0.0, 0.0, 0.0)));
     BOOST_TEST(receiveCouplingData->values().size() == 3);
-    BOOST_TEST(receiveCouplingData->previousIteration().size() == 3);
+    BOOST_TEST(receiveCouplingData->getPreviousIterationSize() == 3);
     BOOST_TEST(testing::equals(sendCouplingData->values()(0), 0.0));
     BOOST_TEST(sendCouplingData->values().size() == 1);
-    BOOST_TEST(sendCouplingData->previousIteration().size() == 1);
+    BOOST_TEST(sendCouplingData->getPreviousIterationSize() == 1);
     BOOST_TEST(Fixture::isImplicitCouplingScheme(cplScheme));
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteInitialData()));
     sendCouplingData->values() = Eigen::VectorXd::Constant(1, 4.0);
@@ -154,9 +154,9 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     cplScheme.initialize(0.0, 0);
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(testing::equals(receiveCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
-    BOOST_TEST(receiveCouplingData->previousIteration().size() == 3);
+    BOOST_TEST(receiveCouplingData->getPreviousIterationSize() == 3);
     BOOST_TEST(testing::equals(receiveCouplingData->previousIteration(), Eigen::Vector3d(0.0, 0.0, 0.0)));
-    BOOST_TEST(sendCouplingData->previousIteration().size() == 1);
+    BOOST_TEST(sendCouplingData->getPreviousIterationSize() == 1);
     BOOST_TEST(testing::equals(sendCouplingData->previousIteration()(0), 4.0));
     while (cplScheme.isCouplingOngoing()) {
       if (cplScheme.isActionRequired(writeIterationCheckpoint)) {
@@ -178,17 +178,17 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     cplScheme.markActionFulfilled(constants::actionWriteInitialData());
     BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 0.0));
     BOOST_TEST(receiveCouplingData->values().size() == 1);
-    BOOST_TEST(receiveCouplingData->previousIteration().size() == 1);
+    BOOST_TEST(receiveCouplingData->getPreviousIterationSize() == 1);
     BOOST_TEST(testing::equals(sendCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
     BOOST_TEST(sendCouplingData->values().size() == 3);
-    BOOST_TEST(sendCouplingData->previousIteration().size() == 3);
+    BOOST_TEST(sendCouplingData->getPreviousIterationSize() == 3);
     cplScheme.initialize(0.0, 0);
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 4.0));
-    BOOST_TEST(receiveCouplingData->previousIteration().size() == 1);
+    BOOST_TEST(receiveCouplingData->getPreviousIterationSize() == 1);
     BOOST_TEST(testing::equals(receiveCouplingData->previousIteration()(0), 0.0));
     BOOST_TEST(testing::equals(sendCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
-    BOOST_TEST(sendCouplingData->previousIteration().size() == 3);
+    BOOST_TEST(sendCouplingData->getPreviousIterationSize() == 3);
     BOOST_TEST(testing::equals(sendCouplingData->previousIteration(), Eigen::Vector3d(1.0, 2.0, 3.0)));
     while (cplScheme.isCouplingOngoing()) {
       if (cplScheme.isActionRequired(writeIterationCheckpoint)) {
