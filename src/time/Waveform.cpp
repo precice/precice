@@ -23,7 +23,6 @@ int Waveform::getInterpolationOrder() const
 
 void Waveform::initialize(const Eigen::VectorXd &values)
 {
-  int storageSize;
   PRECICE_ASSERT(_storage.nTimes() == 0);
   _storage.initialize(values);
   PRECICE_ASSERT(_interpolationOrder >= Time::MIN_INTERPOLATION_ORDER);
