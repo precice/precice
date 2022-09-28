@@ -64,12 +64,7 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
 
   PRECICE_ASSERT(math::equals(this->_storage.maxStoredNormalizedDt(), 1.0), this->_storage.maxStoredNormalizedDt()); // sampling is only allowed, if a window is complete.
 
-  // @TODO: Improve efficiency: Check whether key = normalizedDt is in _storage. If yes, just get value and return. No need for interpolation.
-
   if (_interpolationOrder == 0) {
-    // @TODO: Remove constant interpolation in preCICE v3.0? Usecase is unclear and does not generalize well with BSpline interpolation. It's also not 100% clear what to do at the jump.
-    // constant interpolation = just use sample at the end of the window: x(dt) = x^t
-    // At beginning of window use result from last window x(0) = x^(t-1)
     return this->_storage.getValueAtOrAfter(normalizedDt);
   }
 
