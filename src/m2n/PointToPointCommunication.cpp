@@ -15,6 +15,7 @@
 #include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
 #include "com/CommunicationFactory.hpp"
+#include "com/ErrorHandling.hpp"
 #include "com/Request.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/DistributedCommunication.hpp"
@@ -600,7 +601,7 @@ void PointToPointCommunication::send(precice::span<double const> itemsToSend, in
       }
     }
     auto request = _communication->aSend(span<const double>{*buffer}, mapping.remoteRank);
-    bufferedRequests.emplace_back(request, buffer);
+    bufferedRequests.push_back({std::move(request), std::move(buffer)});
   }
   checkBufferedRequests(false);
 }
@@ -620,6 +621,7 @@ void PointToPointCommunication::receive(precice::span<double> itemsToReceive, in
 
   for (auto &mapping : _mappings) {
     mapping.request->wait();
+    com::checkErrorCode(mapping.request->errorCode(), _log);
 
     int i = 0;
     for (auto index : mapping.indices) {
@@ -681,12 +683,14 @@ void PointToPointCommunication::checkBufferedRequests(bool blocking)
 {
   PRECICE_TRACE(bufferedRequests.size());
   do {
-    for (auto it = bufferedRequests.begin(); it != bufferedRequests.end();) {
-      if (it->first->test())
-        it = bufferedRequests.erase(it);
-      else
-        ++it;
-    }
+    auto first_completed = std::partition(bufferedRequests.begin(), bufferedRequests.end(),
+                                          [](auto &br) { return !br.request->test(); });
+    std::for_each(first_completed, bufferedRequests.end(),
+                  [&](auto &br) {
+                    com::checkErrorCode(br.request->errorCode(), _log);
+                  });
+    bufferedRequests.erase(first_completed, bufferedRequests.end());
+
     if (bufferedRequests.empty())
       return;
     if (blocking)

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <boost/asio.hpp>
+#include <boost/system/error_code.hpp>
 #include <deque>
 #include <functional>
 #include <memory>
@@ -17,6 +18,8 @@ class SocketSendQueue {
 public:
   using Socket = boost::asio::ip::tcp::socket;
 
+  using Callback = std::function<void(boost::system::error_code)>;
+
   SocketSendQueue() = default;
   ~SocketSendQueue();
 
@@ -24,7 +27,7 @@ public:
   SocketSendQueue &operator=(SocketSendQueue const &) = delete;
 
   /// Put data in the queue, start processing the queue.
-  void dispatch(std::shared_ptr<Socket> sock, boost::asio::const_buffers_1 data, std::function<void()> callback);
+  void dispatch(std::shared_ptr<Socket> sock, boost::asio::const_buffers_1 data, Callback callback);
 
   /// Notifies the queue that the last asynchronous send operation has completed.
   void sendCompleted();
@@ -36,7 +39,7 @@ private:
   struct SendItem {
     std::shared_ptr<Socket>      sock;
     boost::asio::const_buffers_1 data;
-    std::function<void()>        callback;
+    Callback                     callback;
   };
 
   /// The queue, containing items to asynchronously send using boost.asio.

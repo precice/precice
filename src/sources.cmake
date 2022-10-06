@@ -64,6 +64,8 @@ target_sources(precice
     src/com/CommunicationFactory.hpp
     src/com/ConnectionInfoPublisher.cpp
     src/com/ConnectionInfoPublisher.hpp
+    src/com/ErrorHandling.cpp
+    src/com/ErrorHandling.hpp
     src/com/MPICommunication.cpp
     src/com/MPICommunication.hpp
     src/com/MPIDirectCommunication.cpp

@@ -8,6 +8,7 @@
 #include "com/CommunicateBoundingBox.hpp"
 #include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
+#include "com/ErrorHandling.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/M2N.hpp"
@@ -642,6 +643,7 @@ void ReceivedPartition::createOwnerInformation()
     // wait until all aReceives are complete.
     for (auto &rqst : vertexNumberRequests) {
       rqst->wait();
+      com::checkErrorCode(rqst->errorCode(), _log);
     }
 
     // Exchange list of shared vertices with the neighbor
@@ -671,6 +673,7 @@ void ReceivedPartition::createOwnerInformation()
     // wait until all aSends are complete.
     for (auto &rqst : vertexListRequests) {
       rqst->wait();
+      com::checkErrorCode(rqst->errorCode(), _log);
     }
 
     // #5: Second round assignment according to the number of owned vertices

@@ -14,8 +14,14 @@ public:
 
   void wait() override;
 
+  boost::system::error_code errorCode() const noexcept override
+  {
+    return _ec;
+  }
+
 private:
-  MPI_Request _request;
+  boost::system::error_code _ec;
+  MPI_Request               _request;
 };
 } // namespace com
 } // namespace precice

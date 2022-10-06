@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "com/Communication.hpp"
+#include "com/ErrorHandling.hpp"
 #include "com/MPIPortsCommunication.hpp"
 #include "com/Request.hpp"
 #include "com/SharedPointer.hpp"
@@ -172,10 +173,14 @@ private:
     for (int cycle = 1; cycle < utils::IntraComm::getSize(); cycle++) {
 
       // wait until W_til from previous processor is fully received
-      if (requestSend != NULL)
+      if (requestSend) {
         requestSend->wait();
-      if (requestRcv != NULL)
+        com::checkErrorCode(requestSend->errorCode(), _log);
+      }
+      if (requestRcv) {
         requestRcv->wait();
+        com::checkErrorCode(requestRcv->errorCode(), _log);
+      }
 
       // leftMatrix (leftMatrix_rcv) is available - needed for local multiplication and hand over to next proc
       Eigen::MatrixXd leftMatrix_copy(leftMatrix_rcv);
@@ -201,8 +206,10 @@ private:
           requestRcv = _cyclicCommLeft->aReceive(leftMatrix_rcv, 0);
       }
 
-      if (requestSend != NULL)
+      if (requestSend) {
         requestSend->wait();
+        com::checkErrorCode(requestSend->errorCode(), _log);
+      }
       // compute block with new local data
       Eigen::MatrixXd block(rows_rcv, rightMatrix.cols());
       block.noalias() = leftMatrix_copy * rightMatrix;

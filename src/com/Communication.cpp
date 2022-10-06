@@ -5,6 +5,7 @@
 
 #include "Communication.hpp"
 #include "Request.hpp"
+#include "com/ErrorHandling.hpp"
 #include "logging/LogMacros.hpp"
 #include "precice/types.hpp"
 #include "utils/assertion.hpp"
@@ -51,6 +52,7 @@ void Communication::reduceSum(precice::span<double const> itemsToSend, precice::
   for (Rank rank : remoteCommunicatorRanks()) {
     auto request = aReceive(received, rank + _rankOffset);
     request->wait();
+    checkErrorCode(request->errorCode(), _log);
     for (size_t i = 0; i < itemsToReceive.size(); i++) {
       itemsToReceive[i] += received[i];
     }
@@ -64,6 +66,7 @@ void Communication::reduceSum(precice::span<double const> itemsToSend, precice::
 
   auto request = aSend(itemsToSend, primaryRank);
   request->wait();
+  checkErrorCode(request->errorCode(), _log);
 }
 
 void Communication::reduceSum(int itemToSend, int &itemToReceive)
@@ -76,6 +79,7 @@ void Communication::reduceSum(int itemToSend, int &itemToReceive)
   for (Rank rank : remoteCommunicatorRanks()) {
     auto request = aReceive(itemToSend, rank + _rankOffset);
     request->wait();
+    checkErrorCode(request->errorCode(), _log);
     itemToReceive += itemToSend;
   }
 }
@@ -86,6 +90,7 @@ void Communication::reduceSum(int itemToSend, int &itemToReceive, Rank primaryRa
 
   auto request = aSend(itemToSend, primaryRank);
   request->wait();
+  checkErrorCode(request->errorCode(), _log);
 }
 
 /**
@@ -130,6 +135,7 @@ void Communication::allreduceSum(double itemToSend, double &itemToReceive)
   for (Rank rank : remoteCommunicatorRanks()) {
     auto request = aReceive(itemToSend, rank + _rankOffset);
     request->wait();
+    checkErrorCode(request->errorCode(), _log);
     itemToReceive += itemToSend;
   }
 
@@ -148,6 +154,7 @@ void Communication::allreduceSum(double itemToSend, double &itemsToReceive, Rank
 
   auto request = aSend(itemToSend, primaryRank);
   request->wait();
+  checkErrorCode(request->errorCode(), _log);
   // receive reduced data from primary rank
   receive(itemsToReceive, primaryRank + _rankOffset);
 }
@@ -162,6 +169,7 @@ void Communication::allreduceSum(int itemToSend, int &itemToReceive)
   for (Rank rank : remoteCommunicatorRanks()) {
     auto request = aReceive(itemToSend, rank + _rankOffset);
     request->wait();
+    checkErrorCode(request->errorCode(), _log);
     itemToReceive += itemToSend;
   }
 
@@ -180,6 +188,7 @@ void Communication::allreduceSum(int itemToSend, int &itemToReceive, Rank primar
 
   auto request = aSend(itemToSend, primaryRank);
   request->wait();
+  checkErrorCode(request->errorCode(), _log);
   // receive reduced data from primary rank
   receive(itemToReceive, primaryRank + _rankOffset);
 }

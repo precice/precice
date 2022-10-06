@@ -181,9 +181,12 @@ private:
 
   bool _isConnected = false;
 
-  std::list<std::pair<std::shared_ptr<com::Request>,
-                      std::shared_ptr<std::vector<double>>>>
-      bufferedRequests;
+  struct BufferedRequest {
+    std::shared_ptr<com::Request>        request;
+    std::shared_ptr<std::vector<double>> buffer;
+  };
+
+  std::vector<BufferedRequest> bufferedRequests;
 };
 } // namespace m2n
 } // namespace precice

@@ -6,12 +6,13 @@ SocketRequest::SocketRequest()
 {
 }
 
-void SocketRequest::complete()
+void SocketRequest::complete(boost::system::error_code ec)
 {
   {
     std::lock_guard<std::mutex> lock(_completeMutex);
 
     _complete = true;
+    _ec       = ec;
   }
 
   _completeCondition.notify_one();

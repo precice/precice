@@ -8,6 +8,7 @@
 #include "ConnectionInfoPublisher.hpp"
 #include "SocketCommunication.hpp"
 #include "SocketRequest.hpp"
+#include "com/ErrorHandling.hpp"
 #include "logging/LogMacros.hpp"
 #include "precice/types.hpp"
 #include "utils/assertion.hpp"
@@ -25,18 +26,15 @@ void checked_read(Stream &s, const Buffer &b, logging::Logger &_log)
   while (true) {
     boost::system::error_code ec;
     asio::read(s, b, ec);
+    checkErrorCode(ec, _log);
     switch (ec.value()) {
     case boost::system::errc::success:
       return;
     case boost::system::errc::interrupted:
       PRECICE_DEBUG("Socket read was interrupted by EINTR, retrying.");
       continue;
-    case boost::system::errc::connection_reset:
-      PRECICE_ERROR("Connection was reset by another participant, which most likely exited unexpectedly (look there).");
-      break;
     default:
-      PRECICE_ERROR("Receiving data from another participant (using sockets) failed with a system error: {}.", ec.message());
-      break;
+      checkErrorCode(ec, _log);
     }
   }
 }
@@ -53,12 +51,8 @@ void checked_write(Stream &s, const Buffer &b, logging::Logger &_log)
     case boost::system::errc::interrupted:
       PRECICE_DEBUG("Socket write was interrupted by EINTR, retrying.");
       continue;
-    case boost::system::errc::connection_reset:
-      PRECICE_ERROR("Connection was reset by another participant, which most likely exited unexpectedly (look there).");
-      break;
     default:
-      PRECICE_ERROR("Sending data to another participant (using sockets) failed with a system error: {}.", ec.message());
-      break;
+      checkErrorCode(ec, _log);
     }
   }
 }
@@ -451,8 +445,8 @@ PtrRequest SocketCommunication::aSend(precice::span<const int> itemsToSend, Rank
 
   _queue.dispatch(_sockets[rankReceiver],
                   asio::buffer(itemsToSend.data(), itemsToSend.size() * sizeof(int)),
-                  [request] {
-                    std::static_pointer_cast<SocketRequest>(request)->complete();
+                  [request](boost::system::error_code ec) {
+                    std::static_pointer_cast<SocketRequest>(request)->complete(ec);
                   });
   return request;
 }
@@ -482,8 +476,8 @@ PtrRequest SocketCommunication::aSend(precice::span<const double> itemsToSend, R
 
   _queue.dispatch(_sockets[rankReceiver],
                   asio::buffer(itemsToSend.data(), itemsToSend.size() * sizeof(double)),
-                  [request] {
-                    std::static_pointer_cast<SocketRequest>(request)->complete();
+                  [request](boost::system::error_code ec) {
+                    std::static_pointer_cast<SocketRequest>(request)->complete(ec);
                   });
   return request;
 }
@@ -547,8 +541,8 @@ PtrRequest SocketCommunication::aSend(const bool &itemToSend, Rank rankReceiver)
 
   _queue.dispatch(_sockets[rankReceiver],
                   asio::buffer(&itemToSend, sizeof(bool)),
-                  [request] {
-                    std::static_pointer_cast<SocketRequest>(request)->complete();
+                  [request](boost::system::error_code ec) {
+                    std::static_pointer_cast<SocketRequest>(request)->complete(ec);
                   });
   return request;
 }
@@ -609,8 +603,8 @@ PtrRequest SocketCommunication::aReceive(precice::span<double> itemsToReceive,
   try {
     asio::async_read(*_sockets[rankSender],
                      asio::buffer(itemsToReceive.data(), itemsToReceive.size() * sizeof(double)),
-                     [request](boost::system::error_code const &, std::size_t) {
-                       std::static_pointer_cast<SocketRequest>(request)->complete();
+                     [request](boost::system::error_code const &ec, std::size_t) {
+                       std::static_pointer_cast<SocketRequest>(request)->complete(ec);
                      });
   } catch (std::exception &e) {
     PRECICE_ERROR("Receiving data from another participant (using sockets) failed with a system error: {}. This often means that the other participant exited with an error (look there).", e.what());
@@ -663,8 +657,8 @@ PtrRequest SocketCommunication::aReceive(int &itemToReceive, Rank rankSender)
   try {
     asio::async_read(*_sockets[rankSender],
                      asio::buffer(&itemToReceive, sizeof(int)),
-                     [request](boost::system::error_code const &, std::size_t) {
-                       std::static_pointer_cast<SocketRequest>(request)->complete();
+                     [request](boost::system::error_code const &ec, std::size_t) {
+                       std::static_pointer_cast<SocketRequest>(request)->complete(ec);
                      });
   } catch (std::exception &e) {
     PRECICE_ERROR("Receiving data from another participant (using sockets) failed with a system error: {}. This often means that the other participant exited with an error (look there).", e.what());
@@ -699,8 +693,8 @@ PtrRequest SocketCommunication::aReceive(bool &itemToReceive, Rank rankSender)
   try {
     asio::async_read(*_sockets[rankSender],
                      asio::buffer(&itemToReceive, sizeof(bool)),
-                     [request](boost::system::error_code const &, std::size_t) {
-                       std::static_pointer_cast<SocketRequest>(request)->complete();
+                     [request](boost::system::error_code const &ec, std::size_t) {
+                       std::static_pointer_cast<SocketRequest>(request)->complete(ec);
                      });
   } catch (std::exception &e) {
     PRECICE_ERROR("Receiving data from another participant (using sockets) failed with a system error: {}. This often means that the other participant exited with an error (look there).", e.what());

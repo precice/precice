@@ -20,7 +20,7 @@ SocketSendQueue::~SocketSendQueue()
 
 void SocketSendQueue::dispatch(std::shared_ptr<Socket>      sock,
                                boost::asio::const_buffers_1 data,
-                               std::function<void()>        callback)
+                               Callback                     callback)
 {
   std::lock_guard<std::mutex> lock(_queueMutex);
   _itemQueue.push_back({std::move(sock), std::move(data), std::move(callback)});
@@ -45,8 +45,8 @@ void SocketSendQueue::process()
   _ready = false;
   asio::async_write(*(item.sock),
                     item.data,
-                    [item, this](boost::system::error_code const &, std::size_t) {
-                      item.callback();
+                    [item, this](boost::system::error_code const &ec, std::size_t) {
+                      item.callback(ec);
                       this->sendCompleted();
                     });
 }

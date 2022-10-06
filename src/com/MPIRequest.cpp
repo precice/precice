@@ -10,16 +10,31 @@ MPIRequest::MPIRequest(MPI_Request request)
 
 bool MPIRequest::test()
 {
-  int complete = 0;
+  int        complete = 0;
+  MPI_Status status;
+  MPI_Test(&_request, &complete, &status);
 
-  MPI_Test(&_request, &complete, MPI_STATUS_IGNORE);
+  if (complete) {
+    int cancelled = 0;
+    MPI_Test_cancelled(&status, &cancelled);
+
+    _ec = boost::system::errc::make_error_code(
+        cancelled ? boost::system::errc::operation_canceled : boost::system::errc::success);
+  }
 
   return complete;
 }
 
 void MPIRequest::wait()
 {
-  MPI_Wait(&_request, MPI_STATUS_IGNORE);
+  MPI_Status status;
+  MPI_Wait(&_request, &status);
+
+  int cancelled = 0;
+  MPI_Test_cancelled(&status, &cancelled);
+
+  _ec = boost::system::errc::make_error_code(
+      cancelled ? boost::system::errc::operation_canceled : boost::system::errc::success);
 }
 } // namespace precice::com
 
