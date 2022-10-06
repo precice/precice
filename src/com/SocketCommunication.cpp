@@ -18,6 +18,52 @@ namespace precice::com {
 
 namespace asio = boost::asio;
 
+namespace {
+template <typename Stream, typename Buffer>
+void checked_read(Stream &s, const Buffer &b, logging::Logger &_log)
+{
+  while (true) {
+    boost::system::error_code ec;
+    asio::read(s, b, ec);
+    switch (ec.value()) {
+    case boost::system::errc::success:
+      return;
+    case boost::system::errc::interrupted:
+      PRECICE_DEBUG("Socket read was interrupted by EINTR, retrying.");
+      continue;
+    case boost::system::errc::connection_reset:
+      PRECICE_ERROR("Connection was reset by another participant, which most likely exited unexpectedly (look there).");
+      break;
+    default:
+      PRECICE_ERROR("Receiving data from another participant (using sockets) failed with a system error: {}.", ec.message());
+      break;
+    }
+  }
+}
+
+template <typename Stream, typename Buffer>
+void checked_write(Stream &s, const Buffer &b, logging::Logger &_log)
+{
+  while (true) {
+    boost::system::error_code ec;
+    asio::write(s, b, ec);
+    switch (ec.value()) {
+    case boost::system::errc::success:
+      return;
+    case boost::system::errc::interrupted:
+      PRECICE_DEBUG("Socket write was interrupted by EINTR, retrying.");
+      continue;
+    case boost::system::errc::connection_reset:
+      PRECICE_ERROR("Connection was reset by another participant, which most likely exited unexpectedly (look there).");
+      break;
+    default:
+      PRECICE_ERROR("Sending data to another participant (using sockets) failed with a system error: {}.", ec.message());
+      break;
+    }
+  }
+}
+} // namespace
+
 SocketCommunication::SocketCommunication(unsigned short portNumber,
                                          bool           reuseAddress,
                                          std::string    networkName,
@@ -98,7 +144,7 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
 
       int requesterRank = -1;
 
-      asio::read(*socket, asio::buffer(&requesterRank, sizeof(int)));
+      checked_read(*socket, asio::buffer(&requesterRank, sizeof(int)), _log);
 
       PRECICE_ASSERT(_sockets.count(requesterRank) == 0,
                      "Rank {} has already been connected. Duplicate requests are not allowed.", requesterRank);
@@ -182,7 +228,7 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
       _isConnected = true;
 
       int requesterRank;
-      asio::read(*socket, asio::buffer(&requesterRank, sizeof(int)));
+      checked_read(*socket, asio::buffer(&requesterRank, sizeof(int)), _log);
       _sockets[requesterRank] = socket;
     }
 
@@ -238,10 +284,10 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
 
     PRECICE_DEBUG("Requested connection to {}", address);
 
-    asio::write(*socket, asio::buffer(&requesterRank, sizeof(int)));
+    checked_write(*socket, asio::buffer(&requesterRank, sizeof(int)), _log);
 
     int acceptorRank = -1;
-    asio::read(*socket, asio::buffer(&acceptorRank, sizeof(int)));
+    checked_read(*socket, asio::buffer(&acceptorRank, sizeof(int)), _log);
     _sockets[0] = socket; // should be acceptorRank instead of 0, likewise all communication below
 
     send(requesterCommunicatorSize, 0);
@@ -349,12 +395,9 @@ void SocketCommunication::send(std::string const &itemToSend, Rank rankReceiver)
   PRECICE_ASSERT(isConnected());
 
   size_t size = itemToSend.size() + 1;
-  try {
-    asio::write(*_sockets[rankReceiver], asio::buffer(&size, sizeof(size_t)));
-    asio::write(*_sockets[rankReceiver], asio::buffer(itemToSend.c_str(), size));
-  } catch (std::exception &e) {
-    PRECICE_ERROR("Sending data to another participant (using sockets) failed with a system error: {}. This often means that the other participant exited with an error (look there).", e.what());
-  }
+
+  checked_write(*_sockets[rankReceiver], asio::buffer(&size, sizeof(size_t)), _log);
+  checked_write(*_sockets[rankReceiver], asio::buffer(itemToSend.c_str(), size), _log);
 }
 
 void SocketCommunication::send(precice::span<const int> itemsToSend, Rank rankReceiver)
@@ -366,11 +409,7 @@ void SocketCommunication::send(precice::span<const int> itemsToSend, Rank rankRe
   PRECICE_ASSERT(rankReceiver >= 0, rankReceiver);
   PRECICE_ASSERT(isConnected());
 
-  try {
-    asio::write(*_sockets[rankReceiver], asio::buffer(itemsToSend.data(), itemsToSend.size() * sizeof(int)));
-  } catch (std::exception &e) {
-    PRECICE_ERROR("Sending data to another participant (using sockets) failed with a system error: {}. This often means that the other participant exited with an error (look there).", e.what());
-  }
+  checked_write(*_sockets[rankReceiver], asio::buffer(itemsToSend.data(), itemsToSend.size() * sizeof(int)), _log);
 }
 
 void SocketCommunication::prepareEstablishment(std::string const &acceptorName,
@@ -427,11 +466,7 @@ void SocketCommunication::send(precice::span<const double> itemsToSend, Rank ran
   PRECICE_ASSERT(rankReceiver >= 0, rankReceiver);
   PRECICE_ASSERT(isConnected());
 
-  try {
-    asio::write(*_sockets[rankReceiver], asio::buffer(itemsToSend.data(), itemsToSend.size() * sizeof(double)));
-  } catch (std::exception &e) {
-    PRECICE_ERROR("Sending data to another participant (using sockets) failed with a system error: {}. This often means that the other participant exited with an error (look there).", e.what());
-  }
+  checked_write(*_sockets[rankReceiver], asio::buffer(itemsToSend.data(), itemsToSend.size() * sizeof(double)), _log);
 }
 
 PtrRequest SocketCommunication::aSend(precice::span<const double> itemsToSend, Rank rankReceiver)
@@ -462,11 +497,7 @@ void SocketCommunication::send(double itemToSend, Rank rankReceiver)
   PRECICE_ASSERT(rankReceiver >= 0, rankReceiver);
   PRECICE_ASSERT(isConnected());
 
-  try {
-    asio::write(*_sockets[rankReceiver], asio::buffer(&itemToSend, sizeof(double)));
-  } catch (std::exception &e) {
-    PRECICE_ERROR("Sending data to another participant (using sockets) failed with a system error: {}. This often means that the other participant exited with an error (look there).", e.what());
-  }
+  checked_write(*_sockets[rankReceiver], asio::buffer(&itemToSend, sizeof(double)), _log);
 }
 
 PtrRequest SocketCommunication::aSend(const double &itemToSend, Rank rankReceiver)
@@ -483,11 +514,7 @@ void SocketCommunication::send(int itemToSend, Rank rankReceiver)
   PRECICE_ASSERT(rankReceiver >= 0, rankReceiver)
   PRECICE_ASSERT(isConnected());
 
-  try {
-    asio::write(*_sockets[rankReceiver], asio::buffer(&itemToSend, sizeof(int)));
-  } catch (std::exception &e) {
-    PRECICE_ERROR("Sending data to another participant (using sockets) failed with a system error: {}. This often means that the other participant exited with an error (look there).", e.what());
-  }
+  checked_write(*_sockets[rankReceiver], asio::buffer(&itemToSend, sizeof(int)), _log);
 }
 
 PtrRequest SocketCommunication::aSend(const int &itemToSend, Rank rankReceiver)
@@ -504,11 +531,7 @@ void SocketCommunication::send(bool itemToSend, Rank rankReceiver)
   PRECICE_ASSERT(rankReceiver >= 0, rankReceiver);
   PRECICE_ASSERT(isConnected());
 
-  try {
-    asio::write(*_sockets[rankReceiver], asio::buffer(&itemToSend, sizeof(bool)));
-  } catch (std::exception &e) {
-    PRECICE_ERROR("Sending data to another participant (using sockets) failed with a system error: {}. This often means that the other participant exited with an error (look there).", e.what());
-  }
+  checked_write(*_sockets[rankReceiver], asio::buffer(&itemToSend, sizeof(bool)), _log);
 }
 
 PtrRequest SocketCommunication::aSend(const bool &itemToSend, Rank rankReceiver)
@@ -541,14 +564,10 @@ void SocketCommunication::receive(std::string &itemToReceive, Rank rankSender)
 
   size_t size = 0;
 
-  try {
-    asio::read(*_sockets[rankSender], asio::buffer(&size, sizeof(size_t)));
-    std::vector<char> msg(size);
-    asio::read(*_sockets[rankSender], asio::buffer(msg.data(), size));
-    itemToReceive = msg.data();
-  } catch (std::exception &e) {
-    PRECICE_ERROR("Receiving data from another participant (using sockets) failed with a system error: {}. This often means that the other participant exited with an error (look there).", e.what());
-  }
+  checked_read(*_sockets[rankSender], asio::buffer(&size, sizeof(size_t)), _log);
+  std::vector<char> msg(size);
+  checked_read(*_sockets[rankSender], asio::buffer(msg.data(), size), _log);
+  itemToReceive = msg.data();
 }
 
 void SocketCommunication::receive(precice::span<int> itemsToReceive, Rank rankSender)
@@ -560,11 +579,7 @@ void SocketCommunication::receive(precice::span<int> itemsToReceive, Rank rankSe
   PRECICE_ASSERT(rankSender >= 0, rankSender);
   PRECICE_ASSERT(isConnected());
 
-  try {
-    asio::read(*_sockets[rankSender], asio::buffer(itemsToReceive.data(), itemsToReceive.size() * sizeof(int)));
-  } catch (std::exception &e) {
-    PRECICE_ERROR("Receiving data from another participant (using sockets) failed with a system error: {}. This often means that the other participant exited with an error (look there).", e.what());
-  }
+  checked_read(*_sockets[rankSender], asio::buffer(itemsToReceive.data(), itemsToReceive.size() * sizeof(int)), _log);
 }
 
 void SocketCommunication::receive(precice::span<double> itemsToReceive, Rank rankSender)
@@ -576,11 +591,7 @@ void SocketCommunication::receive(precice::span<double> itemsToReceive, Rank ran
   PRECICE_ASSERT(rankSender >= 0, rankSender);
   PRECICE_ASSERT(isConnected());
 
-  try {
-    asio::read(*_sockets[rankSender], asio::buffer(itemsToReceive.data(), itemsToReceive.size() * sizeof(double)));
-  } catch (std::exception &e) {
-    PRECICE_ERROR("Receiving data from another participant (using sockets) failed with a system error: {}. This often means that the other participant exited with an error (look there).", e.what());
-  }
+  checked_read(*_sockets[rankSender], asio::buffer(itemsToReceive.data(), itemsToReceive.size() * sizeof(double)), _log);
 }
 
 PtrRequest SocketCommunication::aReceive(precice::span<double> itemsToReceive,
@@ -617,11 +628,7 @@ void SocketCommunication::receive(double &itemToReceive, Rank rankSender)
   PRECICE_ASSERT(rankSender >= 0, rankSender);
   PRECICE_ASSERT(isConnected());
 
-  try {
-    asio::read(*_sockets[rankSender], asio::buffer(&itemToReceive, sizeof(double)));
-  } catch (std::exception &e) {
-    PRECICE_ERROR("Receiving data from another participant (using sockets) failed with a system error: {}. This often means that the other participant exited with an error (look there).", e.what());
-  }
+  checked_read(*_sockets[rankSender], asio::buffer(&itemToReceive, sizeof(double)), _log);
 }
 
 PtrRequest SocketCommunication::aReceive(double &itemToReceive, Rank rankSender)
@@ -638,11 +645,7 @@ void SocketCommunication::receive(int &itemToReceive, Rank rankSender)
   PRECICE_ASSERT(rankSender >= 0, rankSender);
   PRECICE_ASSERT(isConnected());
 
-  try {
-    asio::read(*_sockets[rankSender], asio::buffer(&itemToReceive, sizeof(int)));
-  } catch (std::exception &e) {
-    PRECICE_ERROR("Receiving data from another participant (using sockets) failed with a system error: {}. This often means that the other participant exited with an error (look there).", e.what());
-  }
+  checked_read(*_sockets[rankSender], asio::buffer(&itemToReceive, sizeof(int)), _log);
 }
 
 PtrRequest SocketCommunication::aReceive(int &itemToReceive, Rank rankSender)
@@ -679,11 +682,7 @@ void SocketCommunication::receive(bool &itemToReceive, Rank rankSender)
   PRECICE_ASSERT(rankSender >= 0, rankSender);
   PRECICE_ASSERT(isConnected());
 
-  try {
-    asio::read(*_sockets[rankSender], asio::buffer(&itemToReceive, sizeof(bool)));
-  } catch (std::exception &e) {
-    PRECICE_ERROR("Receiving data from another participant (using sockets) failed with a system error: {}. This often means that the other participant exited with an error (look there).", e.what());
-  }
+  checked_read(*_sockets[rankSender], asio::buffer(&itemToReceive, sizeof(bool)), _log);
 }
 
 PtrRequest SocketCommunication::aReceive(bool &itemToReceive, Rank rankSender)
