@@ -81,7 +81,7 @@ void Petsc::initialize(
   if (not petscIsInitialized) {
     PETSC_COMM_WORLD = comm;
     // Disable the default signal handler
-    PetscOptionsSetValue(NULL, "-no_signal_handler", NULL);
+    PetscOptionsSetValue(nullptr, "-no_signal_handler", nullptr);
     PetscErrorCode ierr;
     ierr = PetscInitialize(argc, argv, "", nullptr);
     CHKERRV(ierr);
