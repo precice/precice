@@ -23,16 +23,16 @@ int main(int argc, char **argv)
   const char *writeDataName;
   const char *readDataName;
 
-  const char *configFileName  = argv[1];
-  const char *participantName = argv[2];
-
   if (argc != 3) {
-    printf("Usage: ./solverdummy configFile solverName\n\n");
+    printf("The solverdummy was called without arguments. Usage: ./solverdummy configFile solverName\n\n");
     printf("Parameter description\n");
     printf("  configurationFile: Path and filename of preCICE configuration\n");
     printf("  solverName:        SolverDummy participant name in preCICE configuration\n");
     return 1;
   }
+
+  const char *configFileName  = argv[1];
+  const char *participantName = argv[2];
 
   printf("DUMMY: Running solver dummy with preCICE config file \"%s\" and participant name \"%s\".\n",
          configFileName, participantName);
