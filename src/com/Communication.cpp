@@ -362,4 +362,41 @@ int Communication::adjustRank(Rank rank) const
   return rank - _rankOffset;
 }
 
+void connectCircularComm(
+    std::string const & participantName,
+    std::string const & tag,
+    int                 rank,
+    int                 size,
+    com::Communication &left,
+    com::Communication &right)
+{
+  PRECICE_ASSERT(!left.isConnected());
+  PRECICE_ASSERT(!right.isConnected());
+  PRECICE_ASSERT(rank < size);
+
+  if (size == 1) {
+    return;
+  }
+
+  const int prevProc = (rank - 1 + size) % size;
+  const int nextProc = (rank + 1) % size;
+
+  std::string prevName = participantName + std::to_string(prevProc);
+  std::string thisName = participantName + std::to_string(rank);
+  std::string nextName = participantName + std::to_string(nextProc);
+  if ((rank % 2) == 0) {
+    left.prepareEstablishment(prevName, thisName);
+    left.acceptConnection(prevName, thisName, tag, 0);
+    left.cleanupEstablishment(prevName, thisName);
+
+    right.requestConnection(thisName, nextName, tag, 0, 1);
+  } else {
+    right.requestConnection(thisName, nextName, tag, 0, 1);
+
+    left.prepareEstablishment(prevName, thisName);
+    left.acceptConnection(prevName, thisName, tag, 0);
+    left.cleanupEstablishment(prevName, thisName);
+  }
+}
+
 } // namespace precice::com
