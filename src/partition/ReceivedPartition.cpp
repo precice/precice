@@ -414,14 +414,15 @@ void ReceivedPartition::compareBoundingBoxes()
     std::vector<int>                connectedRanksList; // local ranks with any connection
 
     // connected ranks for primary rank
-    _mesh->getConnectedRanks().clear();
+    std::vector<Rank> connectedRanks;
     for (auto &remoteBB : remoteBBMap) {
       if (_bb.overlapping(remoteBB.second)) {
-        _mesh->getConnectedRanks().push_back(remoteBB.first); //connected remote ranks for this rank
+        connectedRanks.push_back(remoteBB.first); //connected remote ranks for this rank
       }
     }
-    if (not _mesh->getConnectedRanks().empty()) {
-      connectionMap[0] = _mesh->getConnectedRanks();
+    _mesh->setConnectedRanks(connectedRanks);
+    if (not connectedRanks.empty()) {
+      connectionMap[0] = connectedRanks;
       connectedRanksList.push_back(0);
     }
 
@@ -445,15 +446,16 @@ void ReceivedPartition::compareBoundingBoxes()
   } else {
     PRECICE_ASSERT(utils::IntraComm::isSecondary());
 
-    _mesh->getConnectedRanks().clear();
+    std::vector<Rank> connectedRanks;
     for (const auto &remoteBB : remoteBBMap) {
       if (_bb.overlapping(remoteBB.second)) {
-        _mesh->getConnectedRanks().push_back(remoteBB.first);
+        connectedRanks.push_back(remoteBB.first);
       }
     }
+    _mesh->setConnectedRanks(connectedRanks);
 
     // send connected ranks to primary rank
-    utils::IntraComm::getCommunication()->sendRange(_mesh->getConnectedRanks(), 0);
+    utils::IntraComm::getCommunication()->sendRange(connectedRanks, 0);
   }
 }
 

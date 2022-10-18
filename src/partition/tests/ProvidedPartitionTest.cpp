@@ -514,7 +514,7 @@ BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions)
       mesh->createEdge(v3, v4);
       mesh->createEdge(v4, v1);
 
-      mesh->getConnectedRanks().push_back(0);
+      mesh->setConnectedRanks({0});
 
     } else {
       Eigen::VectorXd position(dimensions);
@@ -531,14 +531,14 @@ BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions)
       mesh->createEdge(v3, v4);
       mesh->createEdge(v4, v1);
 
-      mesh->getConnectedRanks().push_back(1);
+      mesh->setConnectedRanks({1});
     }
   } else {
     BOOST_TEST(context.isNamed("Fluid"));
     if (context.isPrimary()) {
-      mesh->getConnectedRanks().push_back(0);
+      mesh->setConnectedRanks({0});
     } else {
-      mesh->getConnectedRanks().push_back(1);
+      mesh->setConnectedRanks({1});
     }
   }
   mesh->computeBoundingBox();

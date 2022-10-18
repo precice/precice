@@ -247,9 +247,15 @@ public:
   void tagAll();
 
   /// Returns a vector of connected ranks
-  std::vector<Rank> &getConnectedRanks()
+  const std::vector<Rank> &getConnectedRanks() const
   {
     return _connectedRanks;
+  }
+
+  /// Returns a vector of connected ranks
+  void setConnectedRanks(const std::vector<Rank> ranks)
+  {
+    _connectedRanks = ranks;
   }
 
   /// Returns a mapping from remote local connected ranks to the corresponding vertex IDs

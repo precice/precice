@@ -290,14 +290,17 @@ void ProvidedPartition::compareBoundingBoxes()
     }
 
     // primary rank checks which ranks are connected to it
-    _mesh->getConnectedRanks().clear();
-    for (auto &remoteRank : remoteConnectionMap) {
-      for (auto &includedRank : remoteRank.second) {
-        if (utils::IntraComm::getRank() == includedRank) {
-          _mesh->getConnectedRanks().push_back(remoteRank.first);
+    _mesh->setConnectedRanks([&] {
+      std::vector<Rank> ranks;
+      for (auto &remoteRank : remoteConnectionMap) {
+        for (auto &includedRank : remoteRank.second) {
+          if (utils::IntraComm::getRank() == includedRank) {
+            ranks.push_back(remoteRank.first);
+          }
         }
       }
-    }
+      return ranks;
+    }());
 
   } else { // Secondary rank
     std::vector<int> connectedRanksList;
@@ -311,14 +314,17 @@ void ProvidedPartition::compareBoundingBoxes()
       com::CommunicateBoundingBox(utils::IntraComm::getCommunication()).broadcastReceiveConnectionMap(remoteConnectionMap);
     }
 
-    _mesh->getConnectedRanks().clear();
-    for (const auto &remoteRank : remoteConnectionMap) {
-      for (int includedRanks : remoteRank.second) {
-        if (utils::IntraComm::getRank() == includedRanks) {
-          _mesh->getConnectedRanks().push_back(remoteRank.first);
+    _mesh->setConnectedRanks([&] {
+      std::vector<Rank> ranks;
+      for (const auto &remoteRank : remoteConnectionMap) {
+        for (int includedRanks : remoteRank.second) {
+          if (utils::IntraComm::getRank() == includedRanks) {
+            ranks.push_back(remoteRank.first);
+          }
         }
       }
-    }
+      return ranks;
+    }());
   }
 }
 
