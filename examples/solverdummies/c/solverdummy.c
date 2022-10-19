@@ -24,7 +24,7 @@ int main(int argc, char **argv)
   const char *readDataName;
 
   if (argc != 3) {
-    printf("The solverdummy was called without arguments. Usage: ./solverdummy configFile solverName\n\n");
+    printf("The solverdummy was called with an incorrect number of arguments. Usage: ./solverdummy configFile solverName\n\n");
     printf("Parameter description\n");
     printf("  configurationFile: Path and filename of preCICE configuration\n");
     printf("  solverName:        SolverDummy participant name in preCICE configuration\n");

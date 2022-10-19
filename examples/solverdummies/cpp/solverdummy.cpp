@@ -11,7 +11,7 @@ int main(int argc, char **argv)
   using namespace precice::constants;
 
   if (argc != 3) {
-    std::cout << "The solverdummy was called without arguments. Usage: ./solverdummy configFile solverName\n\n";
+    std::cout << "The solverdummy was called with an incorrect number of arguments. Usage: ./solverdummy configFile solverName\n\n";
     std::cout << "Parameter description\n";
     std::cout << "  configurationFile: Path and filename of preCICE configuration\n";
     std::cout << "  solverName:        SolverDummy participant name in preCICE configuration\n";
