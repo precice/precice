@@ -124,7 +124,8 @@ void ReceivedPartition::compute()
       _mesh->getVertexDistribution()[0].push_back(vertexCounter);
       vertexCounter++;
     }
-    _mesh->getVertexOffsets().push_back(vertexCounter);
+    PRECICE_ASSERT(_mesh->getVertexOffsets().empty());
+    _mesh->setVertexOffsets({vertexCounter});
     return;
   }
 
@@ -230,25 +231,31 @@ void ReceivedPartition::compute()
     int numberOfVertices = _mesh->vertices().size();
     utils::IntraComm::getCommunication()->send(numberOfVertices, 0);
 
-    // set vertex offsets
-    utils::IntraComm::getCommunication()->broadcast(_mesh->getVertexOffsets(), 0);
-    PRECICE_DEBUG("My vertex offsets: {}", _mesh->getVertexOffsets());
+    // receive vertex offsets
+    std::vector<int> vertexOffsets;
+    utils::IntraComm::getCommunication()->broadcast(vertexOffsets, 0);
+    PRECICE_DEBUG("My vertex offsets: {}", vertexOffsets);
+    PRECICE_ASSERT(_mesh->getVertexOffsets().empty());
+    _mesh->setVertexOffsets(std::move(vertexOffsets));
 
   } else if (utils::IntraComm::isPrimary()) {
 
-    _mesh->getVertexOffsets().resize(utils::IntraComm::getSize());
-    _mesh->getVertexOffsets()[0] = _mesh->vertices().size();
+    std::vector<int> vertexOffsets(utils::IntraComm::getSize());
+    vertexOffsets[0] = _mesh->vertices().size();
 
     // receive number of secondary vertices and fill vertex offsets
     for (int secondaryRank : utils::IntraComm::allSecondaryRanks()) {
       int numberOfSecondaryRankVertices = -1;
       utils::IntraComm::getCommunication()->receive(numberOfSecondaryRankVertices, secondaryRank);
-      _mesh->getVertexOffsets()[secondaryRank] = numberOfSecondaryRankVertices + _mesh->getVertexOffsets()[secondaryRank - 1];
+      PRECICE_ASSERT(numberOfSecondaryRankVertices >= 0);
+      vertexOffsets[secondaryRank] = numberOfSecondaryRankVertices + vertexOffsets[secondaryRank - 1];
     }
 
     // broadcast vertex offsets
-    PRECICE_DEBUG("My vertex offsets: {}", _mesh->getVertexOffsets());
-    utils::IntraComm::getCommunication()->broadcast(_mesh->getVertexOffsets());
+    PRECICE_DEBUG("My vertex offsets: {}", vertexOffsets);
+    utils::IntraComm::getCommunication()->broadcast(vertexOffsets);
+    PRECICE_ASSERT(_mesh->getVertexOffsets().empty());
+    _mesh->setVertexOffsets(std::move(vertexOffsets));
   }
 }
 

@@ -68,6 +68,7 @@ void GatherScatterCommunication::send(precice::span<double const> itemsToSend, i
   // Gather data
   if (utils::IntraComm::isSecondary()) { // Secondary rank
     if (!itemsToSend.empty()) {
+      PRECICE_DEBUG("Gathering {} elements", itemsToSend.size());
       utils::IntraComm::getCommunication()->send(itemsToSend, 0);
     }
   } else { // Primary rank or coupling mode
@@ -83,9 +84,11 @@ void GatherScatterCommunication::send(precice::span<double const> itemsToSend, i
         globalItemsToSend[vertexDistribution[0][i] * valueDimension + j] += itemsToSend[i * valueDimension + j];
       }
     }
+    PRECICE_DEBUG("Items to send so far ({}) {}", globalItemsToSend.size(), globalItemsToSend);
 
-    // Secondary ranks data
+    // Gather data from secondary ranks
     for (Rank secondaryRank : utils::IntraComm::allSecondaryRanks()) {
+      PRECICE_DEBUG("START {}", secondaryRank);
       PRECICE_ASSERT(utils::IntraComm::getCommunication() != nullptr);
       PRECICE_ASSERT(utils::IntraComm::getCommunication()->isConnected());
 

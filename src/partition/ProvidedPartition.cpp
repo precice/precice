@@ -67,8 +67,10 @@ void ProvidedPartition::communicate()
       }
 
       // the min and max of global vertex IDs of this rank's partition
-      int minGlobalVertexID = _mesh->getVertexOffsets()[utils::IntraComm::getRank()] - _mesh->vertices().size();
-      int maxGlobalVertexID = _mesh->getVertexOffsets()[utils::IntraComm::getRank()] - 1;
+      PRECICE_ASSERT(_mesh->getVertexOffsets().size() == static_cast<decltype(_mesh->getVertexOffsets().size())>(utils::IntraComm::getSize()));
+      int vertexOffset      = _mesh->getVertexOffsets()[utils::IntraComm::getRank()];
+      int minGlobalVertexID = vertexOffset - _mesh->vertices().size();
+      int maxGlobalVertexID = vertexOffset - 1;
 
       // each rank sends its min/max global vertex index to connected remote ranks
       _m2ns[0]->broadcastSend(minGlobalVertexID, *_mesh);
@@ -131,18 +133,20 @@ void ProvidedPartition::prepare()
       _mesh->vertices()[i].setGlobalIndex(i);
     }
 
-    _mesh->getVertexOffsets().resize(utils::IntraComm::getSize());
-    _mesh->getVertexOffsets()[0] = numberOfVertices;
-    int globalNumberOfVertices   = numberOfVertices;
+    std::vector<int> vertexOffsets(utils::IntraComm::getSize());
+    vertexOffsets[0]           = numberOfVertices;
+    int globalNumberOfVertices = numberOfVertices;
 
     // receive number of secondary vertices and fill vertex offsets
     for (Rank secondaryRank : utils::IntraComm::allSecondaryRanks()) {
       int numberOfSecondaryRankVertices = -1;
       utils::IntraComm::getCommunication()->receive(numberOfSecondaryRankVertices, secondaryRank);
-      _mesh->getVertexOffsets()[secondaryRank] = numberOfSecondaryRankVertices + _mesh->getVertexOffsets()[secondaryRank - 1];
+      vertexOffsets[secondaryRank] = numberOfSecondaryRankVertices + vertexOffsets[secondaryRank - 1];
       utils::IntraComm::getCommunication()->send(globalNumberOfVertices, secondaryRank);
       globalNumberOfVertices += numberOfSecondaryRankVertices;
     }
+    PRECICE_ASSERT(_mesh->getVertexOffsets().empty());
+    _mesh->setVertexOffsets(vertexOffsets);
 
     // set and broadcast global number of vertices
     _mesh->setGlobalNumberOfVertices(globalNumberOfVertices);
@@ -150,21 +154,21 @@ void ProvidedPartition::prepare()
     utils::IntraComm::getCommunication()->broadcast(globalNumberOfVertices);
 
     // broadcast vertex offsets
-    PRECICE_DEBUG("My vertex offsets: {}", _mesh->getVertexOffsets());
-    utils::IntraComm::getCommunication()->broadcast(_mesh->getVertexOffsets());
+    PRECICE_DEBUG("My vertex offsets: {}", vertexOffsets);
+    utils::IntraComm::getCommunication()->broadcast(vertexOffsets);
 
     // fill vertex distribution
     if (std::any_of(_m2ns.begin(), _m2ns.end(), [](const m2n::PtrM2N &m2n) { return not m2n->usesTwoLevelInitialization(); })) {
       if (utils::IntraComm::isPrimary()) {
         PRECICE_DEBUG("Fill vertex distribution");
         auto &localIds = _mesh->getVertexDistribution()[0];
-        for (int i = 0; i < _mesh->getVertexOffsets()[0]; i++) {
+        for (int i = 0; i < vertexOffsets[0]; i++) {
           localIds.push_back(i);
         }
         for (Rank secondaryRank : utils::IntraComm::allSecondaryRanks()) {
           // This always creates an entry for each secondary rank
           auto &secondaryIds = _mesh->getVertexDistribution()[secondaryRank];
-          for (int i = _mesh->getVertexOffsets()[secondaryRank - 1]; i < _mesh->getVertexOffsets()[secondaryRank]; i++) {
+          for (int i = vertexOffsets[secondaryRank - 1]; i < vertexOffsets[secondaryRank]; i++) {
             secondaryIds.push_back(i);
           }
         }
@@ -191,9 +195,12 @@ void ProvidedPartition::prepare()
     PRECICE_ASSERT(globalNumberOfVertices != -1);
     _mesh->setGlobalNumberOfVertices(globalNumberOfVertices);
 
-    // set vertex offsets
-    utils::IntraComm::getCommunication()->broadcast(_mesh->getVertexOffsets(), 0);
-    PRECICE_DEBUG("My vertex offsets: {}", _mesh->getVertexOffsets());
+    // receive set vertex offsets
+    std::vector<int> vertexOffsets;
+    utils::IntraComm::getCommunication()->broadcast(vertexOffsets, 0);
+    PRECICE_DEBUG("My vertex offsets: {}", vertexOffsets);
+    PRECICE_ASSERT(_mesh->getVertexOffsets().empty());
+    _mesh->setVertexOffsets(std::move(vertexOffsets));
 
   } else { // Coupling mode
 
@@ -201,7 +208,8 @@ void ProvidedPartition::prepare()
       _mesh->getVertexDistribution()[0].push_back(i);
       _mesh->vertices()[i].setGlobalIndex(i);
     }
-    _mesh->getVertexOffsets().push_back(numberOfVertices);
+    PRECICE_ASSERT(_mesh->getVertexOffsets().empty());
+    _mesh->setVertexOffsets({numberOfVertices});
     _mesh->setGlobalNumberOfVertices(numberOfVertices);
   }
 

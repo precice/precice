@@ -229,16 +229,25 @@ public:
 
   VertexDistribution const &getVertexDistribution() const;
 
-  std::vector<int> &getVertexOffsets();
+  std::vector<int> const &getVertexOffsets() const
+  {
+    return _vertexOffsets;
+  }
 
-  const std::vector<int> &getVertexOffsets() const;
+  void setVertexOffsets(const std::vector<int> &vertexOffsets)
+  {
+    _vertexOffsets = vertexOffsets;
+  }
 
-  /// Only used for tests
-  void setVertexOffsets(std::vector<int> &vertexOffsets);
+  int getGlobalNumberOfVertices() const
+  {
+    return _globalNumberOfVertices;
+  }
 
-  int getGlobalNumberOfVertices() const;
-
-  void setGlobalNumberOfVertices(int num);
+  void setGlobalNumberOfVertices(int num)
+  {
+    _globalNumberOfVertices = num;
+  }
 
   // Get the data of owned vertices for given data ID
   Eigen::VectorXd getOwnedVertexData(DataID dataID);
