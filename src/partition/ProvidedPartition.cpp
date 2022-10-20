@@ -145,6 +145,7 @@ void ProvidedPartition::prepare()
       utils::IntraComm::getCommunication()->send(globalNumberOfVertices, secondaryRank);
       globalNumberOfVertices += numberOfSecondaryRankVertices;
     }
+    PRECICE_ASSERT(std::all_of(vertexOffsets.begin(), vertexOffsets.end(), [](auto i) { return i >= 0; }));
     PRECICE_ASSERT(_mesh->getVertexOffsets().empty());
     _mesh->setVertexOffsets(vertexOffsets);
 
@@ -153,27 +154,29 @@ void ProvidedPartition::prepare()
     PRECICE_DEBUG("Broadcast global number of vertices: {}", globalNumberOfVertices);
     utils::IntraComm::getCommunication()->broadcast(globalNumberOfVertices);
 
-    // broadcast vertex offsets
+    // broadcast vertex offsets to secondary ranks
     PRECICE_DEBUG("My vertex offsets: {}", vertexOffsets);
     utils::IntraComm::getCommunication()->broadcast(vertexOffsets);
 
     // fill vertex distribution
-    if (std::any_of(_m2ns.begin(), _m2ns.end(), [](const m2n::PtrM2N &m2n) { return not m2n->usesTwoLevelInitialization(); })) {
-      if (utils::IntraComm::isPrimary()) {
-        PRECICE_DEBUG("Fill vertex distribution");
-        auto &localIds = _mesh->getVertexDistribution()[0];
-        for (int i = 0; i < vertexOffsets[0]; i++) {
-          localIds.push_back(i);
-        }
-        for (Rank secondaryRank : utils::IntraComm::allSecondaryRanks()) {
-          // This always creates an entry for each secondary rank
-          auto &secondaryIds = _mesh->getVertexDistribution()[secondaryRank];
-          for (int i = vertexOffsets[secondaryRank - 1]; i < vertexOffsets[secondaryRank]; i++) {
-            secondaryIds.push_back(i);
-          }
-        }
-        PRECICE_ASSERT(_mesh->getVertexDistribution().size() == static_cast<decltype(_mesh->getVertexDistribution().size())>(utils::IntraComm::getSize()));
+    if (std::any_of(_m2ns.begin(), _m2ns.end(), [](const m2n::PtrM2N &m2n) { return not m2n->usesTwoLevelInitialization(); }) && utils::IntraComm::isPrimary()) {
+      PRECICE_DEBUG("Fill vertex distribution");
+      PRECICE_ASSERT(_mesh->getVertexDistribution().empty());
+      /// @TODO are these distributions allowed to contain verices already?
+      mesh::Mesh::VertexDistribution vertexDistribution;
+      auto &                         localIds = vertexDistribution[0];
+      for (int i = 0; i < vertexOffsets[0]; i++) {
+        localIds.push_back(i);
       }
+      for (Rank secondaryRank : utils::IntraComm::allSecondaryRanks()) {
+        // This always creates an entry for each secondary rank
+        auto &secondaryIds = vertexDistribution[secondaryRank];
+        for (int i = vertexOffsets[secondaryRank - 1]; i < vertexOffsets[secondaryRank]; i++) {
+          secondaryIds.push_back(i);
+        }
+      }
+      PRECICE_ASSERT(vertexDistribution.size() == static_cast<mesh::Mesh::VertexDistribution::size_type>(utils::IntraComm::getSize()));
+      _mesh->setVertexDistribution(std::move(vertexDistribution));
     }
   } else if (utils::IntraComm::isSecondary()) {
 
@@ -204,10 +207,16 @@ void ProvidedPartition::prepare()
 
   } else { // Coupling mode
 
-    for (int i = 0; i < numberOfVertices; i++) {
-      _mesh->getVertexDistribution()[0].push_back(i);
-      _mesh->vertices()[i].setGlobalIndex(i);
-    }
+    // The only rank of the participant contains all vertices
+    PRECICE_ASSERT(_mesh->getVertexDistribution().empty());
+    _mesh->setVertexDistribution([&] {
+      mesh::Mesh::VertexDistribution vertexDistribution;
+      for (int i = 0; i < numberOfVertices; i++) {
+        vertexDistribution[0].push_back(i);
+        _mesh->vertices()[i].setGlobalIndex(i);
+      }
+      return vertexDistribution;
+    }());
     PRECICE_ASSERT(_mesh->getVertexOffsets().empty());
     _mesh->setVertexOffsets({numberOfVertices});
     _mesh->setGlobalNumberOfVertices(numberOfVertices);
@@ -298,6 +307,7 @@ void ProvidedPartition::compareBoundingBoxes()
     }
 
     // primary rank checks which ranks are connected to it
+    PRECICE_ASSERT(_mesh->getConnectedRanks().empty());
     _mesh->setConnectedRanks([&] {
       std::vector<Rank> ranks;
       for (auto &remoteRank : remoteConnectionMap) {
@@ -322,6 +332,7 @@ void ProvidedPartition::compareBoundingBoxes()
       com::CommunicateBoundingBox(utils::IntraComm::getCommunication()).broadcastReceiveConnectionMap(remoteConnectionMap);
     }
 
+    PRECICE_ASSERT(_mesh->getConnectedRanks().empty());
     _mesh->setConnectedRanks([&] {
       std::vector<Rank> ranks;
       for (const auto &remoteRank : remoteConnectionMap) {

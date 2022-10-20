@@ -224,16 +224,23 @@ public:
   /// Clears the partitioning information
   void clearPartitioning();
 
-  /// Returns a mapping from rank to used (not necessarily owned) vertex IDs
-  VertexDistribution &getVertexDistribution();
+  void setVertexDistribution(const VertexDistribution &vd)
+  {
+    _vertexDistribution = vd;
+  }
 
-  VertexDistribution const &getVertexDistribution() const;
+  /// Returns a mapping from rank to used (not necessarily owned) vertex IDs
+  VertexDistribution const &getVertexDistribution() const
+  {
+    return _vertexDistribution;
+  }
 
   std::vector<int> const &getVertexOffsets() const
   {
     return _vertexOffsets;
   }
 
+  /// Only used for tests
   void setVertexOffsets(const std::vector<int> &vertexOffsets)
   {
     _vertexOffsets = vertexOffsets;

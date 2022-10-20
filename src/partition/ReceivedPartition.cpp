@@ -118,12 +118,15 @@ void ReceivedPartition::compute()
       _mesh->addMesh(filteredMesh);
     }
 
-    int vertexCounter = 0;
+    mesh::Mesh::VertexDistribution vertexDistribution;
+    int                            vertexCounter = 0;
     for (mesh::Vertex &v : _mesh->vertices()) {
       v.setOwner(true);
-      _mesh->getVertexDistribution()[0].push_back(vertexCounter);
+      vertexDistribution[0].push_back(vertexCounter);
       vertexCounter++;
     }
+    PRECICE_ASSERT(_mesh->getVertexDistribution().empty());
+    _mesh->setVertexDistribution(std::move(vertexDistribution));
     PRECICE_ASSERT(_mesh->getVertexOffsets().empty());
     _mesh->setVertexOffsets({vertexCounter});
     return;
@@ -208,17 +211,21 @@ void ReceivedPartition::compute()
       PRECICE_DEBUG("Send partition feedback to primary rank");
       utils::IntraComm::getCommunication()->sendRange(vertexIDs, 0);
     } else { // Primary
-      int              numberOfVertices = _mesh->vertices().size();
-      std::vector<int> vertexIDs(numberOfVertices, -1);
+
+      mesh::Mesh::VertexDistribution vertexDistribution;
+      int                            numberOfVertices = _mesh->vertices().size();
+      std::vector<int>               vertexIDs(numberOfVertices, -1);
       for (int i = 0; i < numberOfVertices; i++) {
         vertexIDs[i] = _mesh->vertices()[i].getGlobalIndex();
       }
-      _mesh->getVertexDistribution()[0] = std::move(vertexIDs);
+      vertexDistribution[0] = std::move(vertexIDs);
 
       for (int secondaryRank : utils::IntraComm::allSecondaryRanks()) {
         PRECICE_DEBUG("Receive partition feedback from slave rank {}", secondaryRank);
-        _mesh->getVertexDistribution()[secondaryRank] = utils::IntraComm::getCommunication()->receiveRange(secondaryRank, com::AsVectorTag<int>{});
+        vertexDistribution[secondaryRank] = utils::IntraComm::getCommunication()->receiveRange(secondaryRank, com::AsVectorTag<int>{});
       }
+      PRECICE_ASSERT(_mesh->getVertexDistribution().empty());
+      _mesh->setVertexDistribution(std::move(vertexDistribution));
     }
   }
 
@@ -427,6 +434,7 @@ void ReceivedPartition::compareBoundingBoxes()
         connectedRanks.push_back(remoteBB.first); //connected remote ranks for this rank
       }
     }
+    PRECICE_ASSERT(_mesh->getConnectedRanks().empty());
     _mesh->setConnectedRanks(connectedRanks);
     if (not connectedRanks.empty()) {
       connectionMap[0] = connectedRanks;
@@ -459,6 +467,7 @@ void ReceivedPartition::compareBoundingBoxes()
         connectedRanks.push_back(remoteBB.first);
       }
     }
+    PRECICE_ASSERT(_mesh->getConnectedRanks().empty());
     _mesh->setConnectedRanks(connectedRanks);
 
     // send connected ranks to primary rank

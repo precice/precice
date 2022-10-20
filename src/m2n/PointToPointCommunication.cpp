@@ -313,8 +313,8 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_ASSERT(not isConnected(), "Already connected.");
 
-  mesh::Mesh::VertexDistribution &vertexDistribution = _mesh->getVertexDistribution();
-  mesh::Mesh::VertexDistribution  requesterVertexDistribution;
+  mesh::Mesh::VertexDistribution vertexDistribution = _mesh->getVertexDistribution();
+  mesh::Mesh::VertexDistribution requesterVertexDistribution;
 
   if (not utils::IntraComm::isSecondary()) {
     PRECICE_DEBUG("Exchange vertex distribution between both primary ranks");
@@ -332,6 +332,9 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
   PRECICE_DEBUG("Broadcast vertex distributions");
   Event e1("m2n.broadcastVertexDistributions", precice::syncMode);
   m2n::broadcast(vertexDistribution);
+  if (utils::IntraComm::isSecondary()) {
+    _mesh->setVertexDistribution(vertexDistribution);
+  }
   m2n::broadcast(requesterVertexDistribution);
   e1.stop();
 
@@ -437,8 +440,8 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_ASSERT(not isConnected(), "Already connected.");
 
-  mesh::Mesh::VertexDistribution &vertexDistribution = _mesh->getVertexDistribution();
-  mesh::Mesh::VertexDistribution  acceptorVertexDistribution;
+  mesh::Mesh::VertexDistribution vertexDistribution = _mesh->getVertexDistribution();
+  mesh::Mesh::VertexDistribution acceptorVertexDistribution;
 
   if (not utils::IntraComm::isSecondary()) {
     PRECICE_DEBUG("Exchange vertex distribution between both primary ranks");
@@ -457,6 +460,9 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
   PRECICE_DEBUG("Broadcast vertex distributions");
   Event e1("m2n.broadcastVertexDistributions", precice::syncMode);
   m2n::broadcast(vertexDistribution);
+  if (utils::IntraComm::isSecondary()) {
+    _mesh->setVertexDistribution(vertexDistribution);
+  }
   m2n::broadcast(acceptorVertexDistribution);
   e1.stop();
 

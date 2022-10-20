@@ -12,6 +12,7 @@
 #include "com/SharedPointer.hpp"
 #include "com/SocketCommunication.hpp"
 #include "com/SocketCommunicationFactory.hpp"
+#include "logging/LogConfiguration.hpp"
 #include "m2n/DistributedComFactory.hpp"
 #include "m2n/GatherScatterComFactory.hpp"
 #include "m2n/M2N.hpp"
@@ -184,6 +185,8 @@ void TestContext::initializeIntraComm()
   // Establish a consistent state for all tests
   utils::IntraComm::configure(rank, size);
   utils::IntraComm::getCommunication().reset();
+  logging::setMPIRank(rank);
+  logging::setParticipant(name);
 
   if (!_initIntraComm || hasSize(1))
     return;

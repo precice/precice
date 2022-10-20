@@ -309,16 +309,6 @@ void Mesh::clearPartitioning()
   _globalNumberOfVertices = 0;
 }
 
-Mesh::VertexDistribution &Mesh::getVertexDistribution()
-{
-  return _vertexDistribution;
-}
-
-const Mesh::VertexDistribution &Mesh::getVertexDistribution() const
-{
-  return _vertexDistribution;
-}
-
 Eigen::VectorXd Mesh::getOwnedVertexData(DataID dataID)
 {
 

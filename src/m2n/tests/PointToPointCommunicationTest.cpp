@@ -58,17 +58,7 @@ void runP2PComTest1(const TestContext &context, com::PtrCommunicationFactory cf)
     if (context.isPrimary()) {
       mesh->setGlobalNumberOfVertices(10);
 
-      mesh->getVertexDistribution()[0].push_back(0);
-      mesh->getVertexDistribution()[0].push_back(1);
-      mesh->getVertexDistribution()[0].push_back(3);
-      mesh->getVertexDistribution()[0].push_back(5);
-      mesh->getVertexDistribution()[0].push_back(7);
-
-      mesh->getVertexDistribution()[1].push_back(1);
-      mesh->getVertexDistribution()[1].push_back(2);
-      mesh->getVertexDistribution()[1].push_back(4);
-      mesh->getVertexDistribution()[1].push_back(5);
-      mesh->getVertexDistribution()[1].push_back(6);
+      mesh->setVertexDistribution({{0, {0, 1, 3, 5, 7}}, {1, {1, 2, 4, 5, 6}}});
 
       data         = {10, 20, 40, 60, 80};
       expectedData = {10 + 2, 4 * 20 + 3, 40 + 2, 4 * 60 + 3, 80 + 2};
@@ -81,17 +71,7 @@ void runP2PComTest1(const TestContext &context, com::PtrCommunicationFactory cf)
     if (context.isPrimary()) {
       mesh->setGlobalNumberOfVertices(10);
 
-      mesh->getVertexDistribution()[0].push_back(1);
-      mesh->getVertexDistribution()[0].push_back(2);
-      mesh->getVertexDistribution()[0].push_back(5);
-      mesh->getVertexDistribution()[0].push_back(6);
-
-      mesh->getVertexDistribution()[1].push_back(0);
-      mesh->getVertexDistribution()[1].push_back(1);
-      mesh->getVertexDistribution()[1].push_back(3);
-      mesh->getVertexDistribution()[1].push_back(4);
-      mesh->getVertexDistribution()[1].push_back(5);
-      mesh->getVertexDistribution()[1].push_back(7);
+      mesh->setVertexDistribution({{0, {1, 2, 5, 6}}, {1, {0, 1, 3, 4, 5, 7}}});
 
       data.assign(4, -1);
       expectedData = {2 * 20, 30, 2 * 60, 70};
@@ -134,17 +114,7 @@ void runP2PComTest2(const TestContext &context, com::PtrCommunicationFactory cf)
     if (context.isPrimary()) {
       mesh->setGlobalNumberOfVertices(10);
 
-      mesh->getVertexDistribution()[0].push_back(0);
-      mesh->getVertexDistribution()[0].push_back(1);
-      mesh->getVertexDistribution()[0].push_back(3);
-      mesh->getVertexDistribution()[0].push_back(5);
-      mesh->getVertexDistribution()[0].push_back(7);
-
-      mesh->getVertexDistribution()[1].push_back(1);
-      mesh->getVertexDistribution()[1].push_back(2);
-      mesh->getVertexDistribution()[1].push_back(4);
-      mesh->getVertexDistribution()[1].push_back(5);
-      mesh->getVertexDistribution()[1].push_back(6);
+      mesh->setVertexDistribution({{0, {0, 1, 3, 5, 7}}, {1, {1, 2, 4, 5, 6}}});
 
       data         = {10, 20, 40, 60, 80};
       expectedData = {10 + 2, 4 * 20 + 3, 2 * 40 + 3, 4 * 60 + 3, 80 + 2};
@@ -157,17 +127,7 @@ void runP2PComTest2(const TestContext &context, com::PtrCommunicationFactory cf)
     if (context.isPrimary()) {
       mesh->setGlobalNumberOfVertices(10);
 
-      mesh->getVertexDistribution()[0].push_back(1);
-      mesh->getVertexDistribution()[0].push_back(3);
-      mesh->getVertexDistribution()[0].push_back(5);
-      mesh->getVertexDistribution()[0].push_back(6);
-
-      mesh->getVertexDistribution()[1].push_back(0);
-      mesh->getVertexDistribution()[1].push_back(1);
-      mesh->getVertexDistribution()[1].push_back(3);
-      mesh->getVertexDistribution()[1].push_back(4);
-      mesh->getVertexDistribution()[1].push_back(5);
-      mesh->getVertexDistribution()[1].push_back(7);
+      mesh->setVertexDistribution({{0, {1, 3, 5, 6}}, {1, {0, 1, 3, 4, 5, 7}}});
 
       data.assign(4, -1);
       expectedData = {2 * 20, 40, 2 * 60, 70};
