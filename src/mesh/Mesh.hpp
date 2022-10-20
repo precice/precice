@@ -224,9 +224,9 @@ public:
   /// Clears the partitioning information
   void clearPartitioning();
 
-  void setVertexDistribution(const VertexDistribution &vd)
+  void setVertexDistribution(VertexDistribution vd)
   {
-    _vertexDistribution = vd;
+    _vertexDistribution = std::move(vd);
   }
 
   /// Returns a mapping from rank to used (not necessarily owned) vertex IDs
@@ -241,9 +241,9 @@ public:
   }
 
   /// Only used for tests
-  void setVertexOffsets(const std::vector<int> &vertexOffsets)
+  void setVertexOffsets(std::vector<int> vertexOffsets)
   {
-    _vertexOffsets = vertexOffsets;
+    _vertexOffsets = std::move(vertexOffsets);
   }
 
   int getGlobalNumberOfVertices() const
@@ -269,9 +269,9 @@ public:
   }
 
   /// Returns a vector of connected ranks
-  void setConnectedRanks(const std::vector<Rank> ranks)
+  void setConnectedRanks(std::vector<Rank> ranks)
   {
-    _connectedRanks = ranks;
+    _connectedRanks = std::move(ranks);
   }
 
   /// Returns a mapping from remote local connected ranks to the corresponding vertex IDs
