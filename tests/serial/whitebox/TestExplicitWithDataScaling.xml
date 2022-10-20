@@ -27,7 +27,7 @@
 
     <participant name="SolverTwo">
       <provide-mesh name="Test-Square-Two" />
-      <use-mesh name="Test-Square-One" from="SolverOne" />
+      <receive-mesh name="Test-Square-One" from="SolverOne" />
       <write-data name="Forces" mesh="Test-Square-Two" />
       <read-data name="Velocities" mesh="Test-Square-Two" />
       <mapping:nearest-neighbor

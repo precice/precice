@@ -25,7 +25,7 @@
     </participant>
 
     <participant name="ExporterTwo">
-      <use-mesh name="A" from="ExporterOne" />
+      <receive-mesh name="A" from="ExporterOne" />
       <provide-mesh name="B" />
       <read-data name="S" mesh="B" />
       <read-data name="V" mesh="B" />

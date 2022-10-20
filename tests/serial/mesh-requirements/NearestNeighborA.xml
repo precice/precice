@@ -19,7 +19,7 @@
     </participant>
 
     <participant name="B">
-      <use-mesh name="MeshA" from="A" />
+      <receive-mesh name="MeshA" from="A" />
       <provide-mesh name="MeshB" />
       <read-data name="Data" mesh="MeshB" />
       <mapping:nearest-neighbor constraint="consistent" direction="read" from="MeshA" to="MeshB" />

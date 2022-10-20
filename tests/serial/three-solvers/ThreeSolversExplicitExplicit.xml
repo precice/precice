@@ -26,7 +26,7 @@
     </participant>
 
     <participant name="SolverTwo">
-      <use-mesh name="MeshA" from="SolverOne" />
+      <receive-mesh name="MeshA" from="SolverOne" />
       <provide-mesh name="MeshC" />
       <read-data name="Data" mesh="MeshC" />
       <mapping:nearest-neighbor
@@ -37,7 +37,7 @@
     </participant>
 
     <participant name="SolverThree">
-      <use-mesh name="MeshB" from="SolverOne" />
+      <receive-mesh name="MeshB" from="SolverOne" />
       <provide-mesh name="MeshD" />
       <read-data name="Data" mesh="MeshD" />
       <mapping:nearest-neighbor

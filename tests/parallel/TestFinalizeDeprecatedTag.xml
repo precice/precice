@@ -16,7 +16,7 @@
 
     <participant name="SolverOne">
       <master:mpi-single />
-      <use-mesh name="MeshTwo" from="SolverTwo" />
+      <receive-mesh name="MeshTwo" from="SolverTwo" />
       <provide-mesh name="MeshOne" />
       <mapping:nearest-neighbor
         direction="write"

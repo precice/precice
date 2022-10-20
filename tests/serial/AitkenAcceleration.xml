@@ -16,7 +16,7 @@
 
     <participant name="A">
       <provide-mesh name="A-Mesh" />
-      <use-mesh name="B-Mesh" from="B" />
+      <receive-mesh name="B-Mesh" from="B" />
       <write-data name="Data" mesh="A-Mesh" />
       <mapping:nearest-neighbor
         direction="write"

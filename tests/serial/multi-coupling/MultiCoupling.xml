@@ -48,9 +48,9 @@
       <provide-mesh name="NASTIN_Mesh1" />
       <provide-mesh name="NASTIN_Mesh2" />
       <provide-mesh name="NASTIN_Mesh3" />
-      <use-mesh name="SOLIDZ_Mesh1" from="SOLIDZ1" />
-      <use-mesh name="SOLIDZ_Mesh2" from="SOLIDZ2" />
-      <use-mesh name="SOLIDZ_Mesh3" from="SOLIDZ3" />
+      <receive-mesh name="SOLIDZ_Mesh1" from="SOLIDZ1" />
+      <receive-mesh name="SOLIDZ_Mesh2" from="SOLIDZ2" />
+      <receive-mesh name="SOLIDZ_Mesh3" from="SOLIDZ3" />
       <write-data name="Forces1" mesh="NASTIN_Mesh1" />
       <write-data name="Forces2" mesh="NASTIN_Mesh2" />
       <write-data name="Forces3" mesh="NASTIN_Mesh3" />

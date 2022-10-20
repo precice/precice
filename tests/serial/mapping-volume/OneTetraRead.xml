@@ -24,7 +24,7 @@
     </participant>
 
     <participant name="SolverTwo">
-      <use-mesh name="MeshOne" from="SolverOne" />
+      <receive-mesh name="MeshOne" from="SolverOne" />
       <provide-mesh name="MeshTwo" />
       <mapping:linear-cell-interpolation
         direction="read"

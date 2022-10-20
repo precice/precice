@@ -30,16 +30,16 @@
 
     <participant name="SolverA">
       <provide-mesh name="MeshA" />
-      <use-mesh name="MeshC" from="SolverC" />
-      <use-mesh name="MeshB1" from="SolverB" />
-      <use-mesh name="MeshB2" from="SolverB" />
+      <receive-mesh name="MeshC" from="SolverC" />
+      <receive-mesh name="MeshB1" from="SolverB" />
+      <receive-mesh name="MeshB2" from="SolverB" />
       <write-data name="DataAB" mesh="MeshA" />
       <read-data name="DataBA" mesh="MeshA" />
     </participant>
 
     <participant name="SolverB">
-      <use-mesh name="MeshA" from="SolverA" />
-      <use-mesh name="MeshC" from="SolverC" />
+      <receive-mesh name="MeshA" from="SolverA" />
+      <receive-mesh name="MeshC" from="SolverC" />
       <provide-mesh name="MeshB1" />
       <provide-mesh name="MeshB2" />
       <write-data name="DataBA" mesh="MeshB1" />
@@ -70,7 +70,7 @@
 
     <participant name="SolverC">
       <provide-mesh name="MeshC" />
-      <use-mesh name="MeshA" from="SolverA" />
+      <receive-mesh name="MeshA" from="SolverA" />
       <write-data name="DataCB" mesh="MeshC" />
       <read-data name="DataBC" mesh="MeshC" />
     </participant>

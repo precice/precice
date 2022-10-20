@@ -19,7 +19,7 @@
 
     <participant name="Structure">
       <provide-mesh name="StructureMesh" />
-      <use-mesh name="FluidMesh" from="Fluid" />
+      <receive-mesh name="FluidMesh" from="Fluid" />
       <read-data name="Forces" mesh="StructureMesh" />
       <mapping:nearest-neighbor
         direction="read"

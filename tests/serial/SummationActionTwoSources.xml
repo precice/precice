@@ -31,7 +31,7 @@
 
     <participant name="SolverSourceOne">
       <provide-mesh name="MeshOne" />
-      <use-mesh name="MeshTarget" from="SolverTarget" />
+      <receive-mesh name="MeshTarget" from="SolverTarget" />
       <mapping:nearest-neighbor
         direction="write"
         from="MeshOne"
@@ -42,7 +42,7 @@
 
     <participant name="SolverSourceTwo">
       <provide-mesh name="MeshTwo" />
-      <use-mesh name="MeshTarget" from="SolverTarget" />
+      <receive-mesh name="MeshTarget" from="SolverTarget" />
       <mapping:nearest-neighbor
         direction="write"
         from="MeshTwo"

@@ -16,7 +16,7 @@
 
     <participant name="SolverOne">
       <intra-comm:mpi-single />
-      <use-mesh name="MeshTwo" from="SolverTwo" />
+      <receive-mesh name="MeshTwo" from="SolverTwo" />
       <provide-mesh name="MeshOne" />
       <mapping:rbf-thin-plate-splines
         direction="write"

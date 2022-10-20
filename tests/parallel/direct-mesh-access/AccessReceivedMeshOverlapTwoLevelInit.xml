@@ -8,7 +8,7 @@
     </mesh>
 
     <participant name="SolverOne">
-      <use-mesh name="MeshTwo" from="SolverTwo" direct-access="true" />
+      <receive-mesh name="MeshTwo" from="SolverTwo" direct-access="true" />
       <write-data name="Velocities" mesh="MeshTwo" />
     </participant>
 

@@ -12,7 +12,7 @@
     </mesh>
 
     <participant name="Ateles">
-      <use-mesh name="FASTEST_Mesh" from="FASTEST" />
+      <receive-mesh name="FASTEST_Mesh" from="FASTEST" />
       <provide-mesh name="Ateles_Mesh" />
       <mapping:nearest-neighbor
         direction="read"

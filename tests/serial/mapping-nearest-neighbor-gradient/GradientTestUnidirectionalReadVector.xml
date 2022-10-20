@@ -21,7 +21,7 @@
 
     <participant name="B">
       <provide-mesh name="MeshB" />
-      <use-mesh name="MeshA" from="A" />
+      <receive-mesh name="MeshA" from="A" />
       <mapping:nearest-neighbor-gradient
         constraint="consistent"
         direction="read"

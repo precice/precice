@@ -25,8 +25,8 @@
     <participant name="SolverA">
       <provide-mesh name="MeshDisplacementsA" />
       <provide-mesh name="MeshForcesA" />
-      <use-mesh name="MeshForcesB" from="SolverB" />
-      <use-mesh name="MeshDisplacementsB" from="SolverB" />
+      <receive-mesh name="MeshForcesB" from="SolverB" />
+      <receive-mesh name="MeshDisplacementsB" from="SolverB" />
       <mapping:rbf-thin-plate-splines
         direction="write"
         constraint="conservative"

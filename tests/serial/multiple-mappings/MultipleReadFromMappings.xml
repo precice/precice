@@ -18,7 +18,7 @@
     <participant name="A">
       <provide-mesh name="MeshATop" />
       <provide-mesh name="MeshABottom" />
-      <use-mesh name="MeshB" from="B" />
+      <receive-mesh name="MeshB" from="B" />
       <read-data name="Pressure" mesh="MeshATop" />
       <read-data name="Pressure" mesh="MeshABottom" />
       <mapping:nearest-neighbor

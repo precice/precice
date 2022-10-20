@@ -14,7 +14,7 @@
     <participant name="FluidSolver">
       <intra-comm:mpi-single />
       <provide-mesh name="CellCenters" />
-      <use-mesh name="Nodes" from="SolidSolver" safety-factor="0.5" />
+      <receive-mesh name="Nodes" from="SolidSolver" safety-factor="0.5" />
       <mapping:nearest-projection
         direction="read"
         from="Nodes"

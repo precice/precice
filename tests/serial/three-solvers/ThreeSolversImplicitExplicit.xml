@@ -38,7 +38,7 @@
     </participant>
 
     <participant name="SolverTwo">
-      <use-mesh name="MeshA" from="SolverOne" />
+      <receive-mesh name="MeshA" from="SolverOne" />
       <write-data name="Data1" mesh="MeshC" />
       <read-data name="Data0" mesh="MeshC" />
       <provide-mesh name="MeshC" />
@@ -50,7 +50,7 @@
     </participant>
 
     <participant name="SolverThree">
-      <use-mesh name="MeshB" from="SolverOne" />
+      <receive-mesh name="MeshB" from="SolverOne" />
       <write-data name="Data2" mesh="MeshD" />
       <read-data name="Data0" mesh="MeshD" />
       <provide-mesh name="MeshD" />

@@ -13,7 +13,7 @@
 
     <participant name="SolverOneCubeConservative1To3">
       <provide-mesh name="MeshOne" />
-      <use-mesh name="MeshTwo" from="SolverTwoCubeConservative1To3" />
+      <receive-mesh name="MeshTwo" from="SolverTwoCubeConservative1To3" />
       <write-data name="DataOne" mesh="MeshOne" />
       <mapping:linear-cell-interpolation
         direction="write"
