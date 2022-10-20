@@ -78,7 +78,7 @@ void GatherScatterCommunication::send(precice::span<double const> itemsToSend, i
   // Primary rank or coupling mode
   PRECICE_ASSERT(utils::IntraComm::getRank() == 0);
   const auto &vertexDistribution = _mesh->getVertexDistribution();
-  int         globalSize         = _mesh->getGlobalNumberOfVertices() * valueDimension;
+  const int   globalSize         = _mesh->getGlobalNumberOfVertices() * valueDimension;
   PRECICE_DEBUG("Gathering data on primary ({} elements)", globalSize);
   std::vector<double> globalItemsToSend(globalSize);
 
@@ -136,7 +136,7 @@ void GatherScatterCommunication::receive(precice::span<double> itemsToReceive, i
   // Primary rank receives and scatters the data
   PRECICE_ASSERT(not utils::IntraComm::isSecondary());
 
-  int globalSize = _mesh->getGlobalNumberOfVertices() * valueDimension;
+  const int globalSize = _mesh->getGlobalNumberOfVertices() * valueDimension;
   PRECICE_DEBUG("Receiving {} elements from other participant to scatter", globalSize);
 
   auto globalItemsToReceive = _com->receiveRange(0, com::AsVectorTag<double>{});
