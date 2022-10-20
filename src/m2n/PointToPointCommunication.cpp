@@ -637,7 +637,7 @@ void PointToPointCommunication::receive(precice::span<double> itemsToReceive, in
   }
 }
 
-void PointToPointCommunication::broadcastSend(const int &itemToSend)
+void PointToPointCommunication::broadcastSend(int itemToSend)
 {
   for (auto &connectionData : _connectionDataVector) {
     _communication->send(itemToSend, connectionData.remoteRank);

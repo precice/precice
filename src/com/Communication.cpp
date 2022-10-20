@@ -372,7 +372,7 @@ void connectCircularComm(
 {
   PRECICE_ASSERT(!left.isConnected());
   PRECICE_ASSERT(!right.isConnected());
-  PRECICE_ASSERT(rank < size);
+  PRECICE_ASSERT(rank >= 0 && rank < size && size > 0);
 
   if (size == 1) {
     return;

@@ -192,7 +192,7 @@ void GatherScatterCommunication::requestPreConnection(
   PRECICE_ASSERT(false, "Not available for GatherScatterCommunication.");
 }
 
-void GatherScatterCommunication::broadcastSend(const int &itemToSend)
+void GatherScatterCommunication::broadcastSend(int itemToSend)
 {
   PRECICE_ASSERT(false, "Not available for GatherScatterCommunication.");
 }

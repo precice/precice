@@ -170,7 +170,7 @@ public:
   void scatterAllCommunicationMap(std::map<int, std::vector<int>> &localCommunicationMap, mesh::Mesh &mesh);
 
   /// Broadcasts an int to connected ranks on remote participant (concerning the given mesh)
-  void broadcastSend(int &itemToSend, mesh::Mesh &mesh);
+  void broadcastSend(int itemToSend, mesh::Mesh &mesh);
 
   /// All ranks receive an array of doubles (different for each rank).
   /// The values received can be gradient data

@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <map>
 #include <memory>
+#include <numeric>
 #include <ostream>
 #include <utility>
 #include <vector>
@@ -68,9 +69,9 @@ void ProvidedPartition::communicate()
 
       // the min and max of global vertex IDs of this rank's partition
       PRECICE_ASSERT(_mesh->getVertexOffsets().size() == static_cast<decltype(_mesh->getVertexOffsets().size())>(utils::IntraComm::getSize()));
-      int vertexOffset      = _mesh->getVertexOffsets()[utils::IntraComm::getRank()];
-      int minGlobalVertexID = vertexOffset - _mesh->vertices().size();
-      int maxGlobalVertexID = vertexOffset - 1;
+      const int vertexOffset      = _mesh->getVertexOffsets()[utils::IntraComm::getRank()];
+      const int minGlobalVertexID = vertexOffset - _mesh->vertices().size();
+      const int maxGlobalVertexID = vertexOffset - 1;
 
       // each rank sends its min/max global vertex index to connected remote ranks
       _m2ns[0]->broadcastSend(minGlobalVertexID, *_mesh);
@@ -165,9 +166,9 @@ void ProvidedPartition::prepare()
       /// @TODO are these distributions allowed to contain verices already?
       mesh::Mesh::VertexDistribution vertexDistribution;
       auto &                         localIds = vertexDistribution[0];
-      for (int i = 0; i < vertexOffsets[0]; i++) {
-        localIds.push_back(i);
-      }
+      localIds.resize(vertexOffsets[0]);
+      std::iota(localIds.begin(), localIds.end(), 0);
+
       for (Rank secondaryRank : utils::IntraComm::allSecondaryRanks()) {
         // This always creates an entry for each secondary rank
         auto &secondaryIds = vertexDistribution[secondaryRank];
@@ -310,8 +311,8 @@ void ProvidedPartition::compareBoundingBoxes()
     PRECICE_ASSERT(_mesh->getConnectedRanks().empty());
     _mesh->setConnectedRanks([&] {
       std::vector<Rank> ranks;
-      for (auto &remoteRank : remoteConnectionMap) {
-        for (auto &includedRank : remoteRank.second) {
+      for (const auto &remoteRank : remoteConnectionMap) {
+        for (const auto &includedRank : remoteRank.second) {
           if (utils::IntraComm::getRank() == includedRank) {
             ranks.push_back(remoteRank.first);
           }
