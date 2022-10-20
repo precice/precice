@@ -109,15 +109,15 @@ public:
   /// Adds a configured \ref ExportContext to export meshes and data.
   void addExportContext(const io::ExportContext &context);
 
-  /// Adds a mesh to be used by the participant.
-  void useMesh(const mesh::PtrMesh &                         mesh,
-               const Eigen::VectorXd &                       localOffset,
-               bool                                          remote,
-               const std::string &                           fromParticipant,
-               double                                        safetyFactor,
-               bool                                          provideMesh,
-               partition::ReceivedPartition::GeometricFilter geoFilter,
-               const bool                                    allowDirectAccess);
+  /// Adds a mesh to be provided by the participant.
+  void provideMesh(const mesh::PtrMesh &mesh);
+
+  /// Adds a mesh to be received by the participant.
+  void receiveMesh(const mesh::PtrMesh &                         mesh,
+                   const std::string &                           fromParticipant,
+                   double                                        safetyFactor,
+                   partition::ReceivedPartition::GeometricFilter geoFilter,
+                   const bool                                    allowDirectAccess);
   /// @}
 
   /// @name Data queries

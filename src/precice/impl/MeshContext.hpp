@@ -14,11 +14,6 @@ namespace impl {
 
 /// Stores a mesh and related objects and data.
 struct MeshContext {
-  MeshContext(int dimensions)
-      : localOffset(Eigen::VectorXd::Zero(dimensions))
-  {
-  }
-
   /** Upgrades the mesh requirement to a more specific level.
     * @param[in] requirement The requirement to upgrade to.
     */
@@ -48,9 +43,6 @@ struct MeshContext {
 
   /// type of geometric filter
   partition::ReceivedPartition::GeometricFilter geoFilter = partition::ReceivedPartition::GeometricFilter::UNDEFINED;
-
-  /// Offset only applied to meshes local to the accessor.
-  Eigen::VectorXd localOffset;
 
   /// Partition creating the parallel decomposition of the mesh
   partition::PtrPartition partition;

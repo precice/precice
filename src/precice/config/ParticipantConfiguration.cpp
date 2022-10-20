@@ -128,17 +128,23 @@ ParticipantConfiguration::ParticipantConfiguration(
   tagWatchIntegral.addAttribute(attrScaleWitConn);
   tag.addSubtag(tagWatchIntegral);
 
-  XMLTag tagUseMesh(*this, TAG_USE_MESH, XMLTag::OCCUR_ARBITRARY);
-  doc = "Makes a mesh (see tag <mesh> available to a participant.";
-  tagUseMesh.setDocumentation(doc);
-  attrName.setDocumentation("Name of the mesh.");
-  tagUseMesh.addAttribute(attrName);
+  XMLTag tagProvideMesh(*this, TAG_PROVIDE_MESH, XMLTag::OCCUR_ARBITRARY);
+  doc = "Provide a mesh (see tag <mesh>) to other participants.";
+  tagProvideMesh.setDocumentation(doc);
+  attrName.setDocumentation("Name of the mesh to provide.");
+  tagProvideMesh.addAttribute(attrName);
+
+  XMLTag tagReceiveMesh(*this, TAG_RECEIVE_MESH, XMLTag::OCCUR_ARBITRARY);
+  doc = "Makes a remote mesh (see tag <mesh>) available to this participant.";
+  tagReceiveMesh.setDocumentation(doc);
+  attrName.setDocumentation("Name of the mesh to receive.");
+  tagReceiveMesh.addAttribute(attrName);
   //  XMLAttribute<Eigen::VectorXd> attrLocalOffset(ATTR_LOCAL_OFFSET);
   //  doc = "The mesh can have an offset only applied for the local participant. ";
   //  doc += "Vector-valued example: '1.0; 0.0; 0.0'";
   //  attrLocalOffset.setDocumentation(doc);
   //  attrLocalOffset.setDefaultValue(Eigen::VectorXd::Constant(3, 0));
-  //  tagUseMesh.addAttribute(attrLocalOffset);
+  //  tagReceiveMesh.addAttribute(attrLocalOffset);
 
   auto attrFrom = XMLAttribute<std::string>(ATTR_FROM, "")
                       .setDocumentation(
@@ -146,7 +152,7 @@ ParticipantConfiguration::ParticipantConfiguration(
                           "another solver, this attribute has to specify the creating participant's"
                           " name. The creator has to use the attribute \"provide\" to signal he is "
                           "providing the mesh geometry.");
-  tagUseMesh.addAttribute(attrFrom);
+  tagReceiveMesh.addAttribute(attrFrom);
   auto attrSafetyFactor = makeXMLAttribute(ATTR_SAFETY_FACTOR, 0.5)
                               .setDocumentation(
                                   "If a mesh is received from another partipant (see tag <from>), it needs to be"
@@ -154,7 +160,7 @@ ParticipantConfiguration::ParticipantConfiguration(
                                   "a geometric filter (see tag <geometric-filter>), i.e. filtering by bounding boxes around the local mesh, can be used. "
                                   "This safety factor defines by which factor this local information is "
                                   "increased. An example: 0.5 means that the bounding box is 150% of its original size.");
-  tagUseMesh.addAttribute(attrSafetyFactor);
+  tagReceiveMesh.addAttribute(attrSafetyFactor);
 
   auto attrGeoFilter = XMLAttribute<std::string>(ATTR_GEOMETRIC_FILTER)
                            .setDocumentation(
@@ -169,7 +175,7 @@ ParticipantConfiguration::ParticipantConfiguration(
                                "For very asymmetric cases, the filter can also be switched off completely (\"no-filter\").")
                            .setOptions({VALUE_FILTER_ON_MASTER, VALUE_FILTER_ON_SLAVES, VALUE_NO_FILTER, VALUE_FILTER_ON_PRIMARY_RANK, VALUE_FILTER_ON_SECONDARY_RANKS})
                            .setDefaultValue(VALUE_FILTER_ON_SECONDARY_RANKS);
-  tagUseMesh.addAttribute(attrGeoFilter);
+  tagReceiveMesh.addAttribute(attrGeoFilter);
 
   auto attrDirectAccess = makeXMLAttribute(ATTR_DIRECT_ACCESS, false)
                               .setDocumentation(
@@ -181,15 +187,9 @@ ParticipantConfiguration::ParticipantConfiguration(
                                   "mesh, since no mesh needs to be provided by the participant. For this purpose, bounding "
                                   "boxes can be defined (see API function \"setMeshAccessRegion\") and used by selecting "
                                   "the option direct-access=\"true\".");
+  tagReceiveMesh.addAttribute(attrDirectAccess);
 
-  tagUseMesh.addAttribute(attrDirectAccess);
-
-  auto attrProvide = makeXMLAttribute(ATTR_PROVIDE, false)
-                         .setDocumentation(
-                             "If this attribute is set to \"on\", the "
-                             "participant has to create the mesh geometry before initializing preCICE.");
-  tagUseMesh.addAttribute(attrProvide);
-  tag.addSubtag(tagUseMesh);
+  tag.addSubtag(tagReceiveMesh);
 
   std::list<XMLTag>  intraCommTags;
   XMLTag::Occurrence intraCommOcc = XMLTag::OCCUR_NOT_OR_ONCE;
@@ -279,16 +279,29 @@ void ParticipantConfiguration::xmlTagCallback(
     const std::string &  name = tag.getStringAttributeValue(ATTR_NAME);
     impl::PtrParticipant p(new impl::Participant(name, _meshConfig));
     _participants.push_back(p);
-  } else if (tag.getName() == TAG_USE_MESH) {
+  } else if (tag.getName() == TAG_PROVIDE_MESH) {
     PRECICE_ASSERT(_dimensions != 0); // setDimensions() has been called
-    std::string     name = tag.getStringAttributeValue(ATTR_NAME);
-    Eigen::VectorXd offset(_dimensions);
-    /// @todo offset currently not supported
-    //offset = tag.getEigenVectorXdAttributeValue(ATTR_LOCAL_OFFSET, _dimensions);
+    std::string name = tag.getStringAttributeValue(ATTR_NAME);
+
+    mesh::PtrMesh mesh = _meshConfig->getMesh(name);
+    PRECICE_CHECK(mesh,
+                  "Participant \"{}\" provides mesh \"{}\" which is not defined. "
+                  "Please check the provide-mesh node with name=\"{}\" or define the mesh.",
+                  _participants.back()->getName(), name, name);
+
+    _participants.back()->provideMesh(mesh);
+  } else if (tag.getName() == TAG_RECEIVE_MESH) {
+    PRECICE_ASSERT(_dimensions != 0); // setDimensions() has been called
+    std::string                                   name              = tag.getStringAttributeValue(ATTR_NAME);
     std::string                                   from              = tag.getStringAttributeValue(ATTR_FROM);
     double                                        safetyFactor      = tag.getDoubleAttributeValue(ATTR_SAFETY_FACTOR);
     partition::ReceivedPartition::GeometricFilter geoFilter         = getGeoFilter(tag.getStringAttributeValue(ATTR_GEOMETRIC_FILTER));
     const bool                                    allowDirectAccess = tag.getBooleanAttributeValue(ATTR_DIRECT_ACCESS);
+
+    PRECICE_CHECK(!from.empty(),
+                  "Participant \"{}\" receives mesh \"{}\", but doesn't specify where from (no \"from\"). "
+                  "Please extend the receive-mesh tag as follows: <receive-mesh name=\"{}\" from=\"(other participant)\" ... />",
+                  context.name, name, name)
 
     if (allowDirectAccess) {
       if (!_experimental) {
@@ -297,38 +310,23 @@ void ParticipantConfiguration::xmlTagCallback(
       PRECICE_WARN("You configured the received mesh \"{}\" to use the option access-direct=\"true\", which is currently still experimental. Use with care.", name);
     }
 
+    PRECICE_CHECK(_participants.back()->getName() != from,
+                  "Participant \"{}\" cannot receive mesh \"{}\" from itself. "
+                  "To provide a mesh, use <provide-mesh name=\"{}\" /> instead.",
+                  context.name, name, name);
+
     PRECICE_CHECK(safetyFactor >= 0,
-                  "Participant \"{}\" uses mesh \"{}\" with safety-factor=\"{}\". "
+                  "Participant \"{}\" receives mesh \"{}\" with safety-factor=\"{}\". "
                   "Please use a positive or zero safety-factor instead.",
                   context.name, name, safetyFactor);
 
-    bool provide = tag.getBooleanAttributeValue(ATTR_PROVIDE);
-    if (_participants.back()->getName() == from) {
-      PRECICE_CHECK(provide,
-                    "Participant \"{}\" cannot use mesh \"{}\" from itself. "
-                    "Use the \"from\"-field to specify which participant has to communicate the mesh to \"{}\".",
-                    context.name, name, context.name);
-    }
     mesh::PtrMesh mesh = _meshConfig->getMesh(name);
     PRECICE_CHECK(mesh,
-                  "Participant \"{}\" uses mesh \"{}\" which is not defined. "
-                  "Please check the use-mesh node with name=\"{}\" or define the mesh.",
-                  _participants.back()->getName(), name, name);
-    if ((geoFilter != partition::ReceivedPartition::GeometricFilter::ON_SECONDARY_RANKS || safetyFactor != 0.5) && from == "") {
-      PRECICE_ERROR(
-          "Participant \"{}\" uses mesh \"{}\", which is not received (no \"from\"), but has a geometric-filter and/or a safety factor defined. "
-          "Please extend the use-mesh tag as follows: <use-mesh name=\"{}\" from=\"(other participant)\" />",
-          _participants.back()->getName(), name, name);
-    }
-
-    PRECICE_CHECK(!(allowDirectAccess && from.empty()),
-                  "Participant \"{}\" uses mesh \"{}\", which is not received (no \"from\"), but has a direct access defined. "
-                  "This combination of options is not allowed. "
-                  "Please extend the use-mesh tag as follows: <use-mesh name=\"{}\" from=\"(other participant)\" />"
-                  " or remove the direct access option.",
+                  "Participant \"{}\" attempts to receive mesh \"{}\", which is not defined. "
+                  "Please check the receive-mesh node with name=\"{}\" or define the mesh (see <mesh>).",
                   _participants.back()->getName(), name, name);
 
-    _participants.back()->useMesh(mesh, offset, false, from, safetyFactor, provide, geoFilter, allowDirectAccess);
+    _participants.back()->receiveMesh(mesh, from, safetyFactor, geoFilter, allowDirectAccess);
   } else if (tag.getName() == TAG_WRITE) {
     const std::string &dataName = tag.getStringAttributeValue(ATTR_NAME);
     std::string        meshName = tag.getStringAttributeValue(ATTR_MESH);

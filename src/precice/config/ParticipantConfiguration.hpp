@@ -73,7 +73,8 @@ private:
   const std::string TAG_WRITE          = "write-data";
   const std::string TAG_READ           = "read-data";
   const std::string TAG_DATA_ACTION    = "data-action";
-  const std::string TAG_USE_MESH       = "use-mesh";
+  const std::string TAG_PROVIDE_MESH   = "provide-mesh";
+  const std::string TAG_RECEIVE_MESH   = "receive-mesh";
   const std::string TAG_WATCH_INTEGRAL = "watch-integral";
   const std::string TAG_WATCH_POINT    = "watch-point";
   const std::string TAG_MASTER         = "master";
