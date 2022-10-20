@@ -24,22 +24,23 @@
  *
  * @attention Do not use this macro directly!
  */
-#define PRECICE_REQUIRE_MESH_USE_IMPL(id)                                                              \
-  PRECICE_VALIDATE_MESH_ID_IMPL(id)                                                                    \
-  PRECICE_CHECK(_accessor->isMeshUsed(id),                                                             \
-                "This participant does not use the mesh \"{0}\", but attempted to access it. "         \
-                "Please define <use-mesh name=\"{0}\" /> in the configuration of participant \" {1}.", \
+#define PRECICE_REQUIRE_MESH_USE_IMPL(id)                                                                      \
+  PRECICE_VALIDATE_MESH_ID_IMPL(id)                                                                            \
+  PRECICE_CHECK(_accessor->isMeshUsed(id),                                                                     \
+                "This participant does not use the mesh \"{0}\", but attempted to access it. "                 \
+                "Please define a <provide-mesh name=\"{0}\" /> or <receive-mesh name=\"{0}\" from=\"...\" /> " \
+                "tag in the configuration of participant \" {1}.",                                             \
                 _accessor->getMeshName(id), _accessorName);
 
 /** Implementation of PRECICE_REQUIRE_MESH_PROVIDE()
  *
  * @attention Do not use this macro directly!
  */
-#define PRECICE_REQUIRE_MESH_PROVIDE_IMPL(id)                                                           \
-  PRECICE_REQUIRE_MESH_USE_IMPL(id)                                                                     \
-  PRECICE_CHECK(_accessor->isMeshProvided(id),                                                          \
-                "This participant does not provide Mesh \"{0}\", but attempted to modify it. "          \
-                "Please extend the use-mesh tag as follows <use-mesh name=\"{0}\" provide=\"yes\" />.", \
+#define PRECICE_REQUIRE_MESH_PROVIDE_IMPL(id)                                                  \
+  PRECICE_REQUIRE_MESH_USE_IMPL(id)                                                            \
+  PRECICE_CHECK(_accessor->isMeshProvided(id),                                                 \
+                "This participant does not provide Mesh \"{0}\", but attempted to modify it. " \
+                "Please add a provide-mesh tag as follows <provide-mesh name=\"{0}\" />.",     \
                 _accessor->getMeshName(id));
 
 /** Implementation of PRECICE_REQUIRE_MESH_MODIFY()

@@ -261,7 +261,7 @@ public:
   int getUsedMeshID(const std::string &meshName) const;
 
   /// Returns whether we are allowed to access a received mesh direct
-  /// which requires the config tag <use-mesh ... direct-access="true"
+  /// which requires the config tag <receive-mesh ... direct-access="true"
   bool isDirectAccessAllowed(const int meshID) const;
 
   /// Get the name of a mesh given by its id.

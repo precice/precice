@@ -133,19 +133,13 @@ ParticipantConfiguration::ParticipantConfiguration(
   tagProvideMesh.setDocumentation(doc);
   attrName.setDocumentation("Name of the mesh to provide.");
   tagProvideMesh.addAttribute(attrName);
+  tag.addSubtag(tagProvideMesh);
 
   XMLTag tagReceiveMesh(*this, TAG_RECEIVE_MESH, XMLTag::OCCUR_ARBITRARY);
   doc = "Makes a remote mesh (see tag <mesh>) available to this participant.";
   tagReceiveMesh.setDocumentation(doc);
   attrName.setDocumentation("Name of the mesh to receive.");
   tagReceiveMesh.addAttribute(attrName);
-  //  XMLAttribute<Eigen::VectorXd> attrLocalOffset(ATTR_LOCAL_OFFSET);
-  //  doc = "The mesh can have an offset only applied for the local participant. ";
-  //  doc += "Vector-valued example: '1.0; 0.0; 0.0'";
-  //  attrLocalOffset.setDocumentation(doc);
-  //  attrLocalOffset.setDefaultValue(Eigen::VectorXd::Constant(3, 0));
-  //  tagReceiveMesh.addAttribute(attrLocalOffset);
-
   auto attrFrom = XMLAttribute<std::string>(ATTR_FROM, "")
                       .setDocumentation(
                           "If a created mesh should be used by "
@@ -332,7 +326,7 @@ void ParticipantConfiguration::xmlTagCallback(
     std::string        meshName = tag.getStringAttributeValue(ATTR_MESH);
     mesh::PtrMesh      mesh     = _meshConfig->getMesh(meshName);
     PRECICE_CHECK(mesh,
-                  "Participant \"{}\" has to use mesh \"{}\" in order to write data to it. Please add a use-mesh node with name=\"{}\".",
+                  "Participant \"{}\" has to provide mesh \"{}\" in order to write data to it. Please add a provide-mesh node with name=\"{}\".",
                   _participants.back()->getName(), meshName, meshName);
     mesh::PtrData data = getData(mesh, dataName);
     _participants.back()->addWriteData(data, mesh);
@@ -341,7 +335,7 @@ void ParticipantConfiguration::xmlTagCallback(
     std::string        meshName = tag.getStringAttributeValue(ATTR_MESH);
     mesh::PtrMesh      mesh     = _meshConfig->getMesh(meshName);
     PRECICE_CHECK(mesh,
-                  "Participant \"{}\" has to use mesh \"{}\" in order to read data from it. Please add a use-mesh node with name=\"{}\".",
+                  "Participant \"{}\" has to receive mesh \"{}\" in order to read data from it. Please add a receive-mesh node with name=\"{}\".",
                   _participants.back()->getName(), meshName, meshName);
     mesh::PtrData data          = getData(mesh, dataName);
     int           waveformOrder = tag.getIntAttributeValue(ATTR_ORDER);
@@ -442,15 +436,15 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
     PRECICE_CHECK(participant->isMeshUsed(fromMeshID),
                   "Participant \"{}\" has mapping from mesh \"{}\", without using this mesh. "
-                  "Please add a use-mesh tag with name=\"{}\"",
+                  "Please add a provide-mesh or receive-mesh tag with name=\"{}\"",
                   participant->getName(), confMapping.fromMesh->getName(), confMapping.fromMesh->getName());
     PRECICE_CHECK(participant->isMeshUsed(toMeshID),
                   "Participant \"{}\" has mapping to mesh \"{}\", without using this mesh. "
-                  "Please add a use-mesh tag with name=\"{}\"",
+                  "Please add a provide-mesh or receive-mesh tag with name=\"{}\"",
                   participant->getName(), confMapping.toMesh->getName(), confMapping.toMesh->getName());
     PRECICE_CHECK((participant->isMeshProvided(fromMeshID) || participant->isMeshProvided(toMeshID)),
-                  "Participant \"{}\" has mapping from mesh \"{}\",  to mesh \"{}\", but neither are provided. "
-                  "Please mark the mesh provided by this participant by configuring its use-mesh tag with provided=\"true\".",
+                  "Participant \"{}\" has mapping from mesh \"{}\", to mesh \"{}\", but neither are provided. "
+                  "Please mark the mesh provided by this participant using the provide-mesh tag.",
                   participant->getName(), confMapping.fromMesh->getName(), confMapping.toMesh->getName());
 
     if (context.size > 1) {
@@ -470,21 +464,21 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
     if (confMapping.direction == mapping::MappingConfiguration::READ) {
       PRECICE_CHECK(toMeshContext.provideMesh,
-                    "A read mapping of participant \"{}\" needs to map TO a provided mesh. Mesh \"{}\" is not provided. "
-                    "Please add a provide=\"yes\" attribute to the participant's use-mesh tag.",
+                    "A read mapping of participant \"{}\" needs to map TO a provided mesh. Mesh \"{1}\" is not provided. "
+                    "Please add the tag <provide-mesh name=\"{1}\" /> to the participant.",
                     participant->getName(), confMapping.toMesh->getName());
       PRECICE_CHECK(not fromMeshContext.receiveMeshFrom.empty(),
-                    "A read mapping of participant \"{}\" needs to map FROM a received mesh. Mesh \"{}\" is not received. "
-                    "Please add a from=\"(participant)\" attribute to the participant's use-mesh tag.",
-                    participant->getName(), confMapping.fromMesh->getName());
+                    "A read mapping of participant \"{}\" needs to map FROM a received mesh. Mesh \"{1}\" is not received. "
+                    "Please add the tag <receive-mesh name=\"{1}\" /> to the participant.",
+                    participant->getName(), confMapping.toMesh->getName());
     } else {
       PRECICE_CHECK(fromMeshContext.provideMesh,
-                    "A write mapping of participant \"{}\" needs to map FROM a provided mesh. Mesh \"{}\" is not provided. "
-                    "Please add a provide=\"yes\" attribute to the participant's use-mesh tag.",
+                    "A write mapping of participant \"{}\" needs to map FROM a provided mesh. Mesh \"{1}\" is not provided. "
+                    "Please add the tag <provide-mesh name=\"{1}\" /> to the participant.",
                     participant->getName(), confMapping.fromMesh->getName());
       PRECICE_CHECK(not toMeshContext.receiveMeshFrom.empty(),
-                    "A write mapping of participant \"{}\" needs to map TO a received mesh. Mesh \"{}\" is not received. "
-                    "Please add a from=\"(participant)\" attribute to the participant's use-mesh tag.",
+                    "A write mapping of participant \"{}\" needs to map TO a received mesh. Mesh \"{1}\" is not received. "
+                    "Please add the tag <receive-mesh name=\"{1}\" /> to the participant.",
                     participant->getName(), confMapping.toMesh->getName());
     }
 
@@ -539,8 +533,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
         if (meshContext.mesh->hasDataName(dataContext.getDataName())) {
           // Check, if the fromMesh is a provided mesh
           PRECICE_CHECK(participant->isMeshProvided(fromMeshID),
-                        "Participant \"{}\" has to use and provide mesh \"{}\" to be able to write data to it. "
-                        "Please add a use-mesh node with name=\"{}\" and provide=\"true\".",
+                        "Participant \"{}\" has to provide mesh \"{}\" to be able to write data to it. "
+                        "Please add a provide-mesh node with name=\"{}\".",
                         participant->getName(), dataContext.getMeshName(), dataContext.getMeshName());
           dataContext.appendMappingConfiguration(mappingContext, meshContext);
           // Enable gradient data if required
@@ -573,8 +567,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
         if (meshContext.mesh->hasDataName(dataContext.getDataName())) {
           // Check, if the toMesh is a provided mesh
           PRECICE_CHECK(participant->isMeshProvided(toMeshID),
-                        "Participant \"{}\" has to use and provide mesh \"{}\" in order to read data from it. "
-                        "Please add a use-mesh node with name=\"{}\" and provide=\"true\".",
+                        "Participant \"{}\" has to receive mesh \"{}\" in order to read data from it. "
+                        "Please add a receive-mesh node with name=\"{}\".",
                         participant->getName(), dataContext.getMeshName(), dataContext.getMeshName());
           dataContext.appendMappingConfiguration(mappingContext, meshContext);
           // Enable gradient data if required
@@ -597,7 +591,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     bool used = _participants.back()->isMeshUsed(action->getMesh()->getID());
     PRECICE_CHECK(used,
                   "Data action of participant \"{}\" uses mesh \"{}\", which is not used by the participant. "
-                  "Please add a use-mesh node with name=\"{}\".",
+                  "Please add a provide-mesh or receive-mesh node with name=\"{}\".",
                   _participants.back()->getName(), action->getMesh()->getName(), action->getMesh()->getName());
   }
   for (action::PtrAction &action : _actionConfig->extractActions()) {
@@ -640,8 +634,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   // Create watch points
   for (const WatchPointConfig &config : _watchPointConfigs) {
     PRECICE_CHECK(participant->isMeshUsed(config.nameMesh),
-                  "Participant \"{}\" defines watchpoint \"{}\" for mesh \"{}\" which is not used by the participant. "
-                  "Please add a use-mesh node with name=\"{}\".",
+                  "Participant \"{}\" defines watchpoint \"{}\" for mesh \"{}\" which is not provided by the participant. "
+                  "Please add <provide-mesh name=\"{}\" /> to the participant.",
                   participant->getName(), config.name, config.nameMesh, config.nameMesh);
     const auto &meshContext = participant->usedMeshContext(config.nameMesh);
     PRECICE_CHECK(meshContext.provideMesh,
@@ -659,7 +653,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   for (const WatchIntegralConfig &config : _watchIntegralConfigs) {
     PRECICE_CHECK(participant->isMeshUsed(config.nameMesh),
                   "Participant \"{}\" defines watch integral \"{}\" for mesh \"{}\" which is not used by the participant. "
-                  "Please add a use-mesh node with name=\"{}\".",
+                  "Please add a provide-mesh node with name=\"{}\".",
                   participant->getName(), config.name, config.nameMesh, config.nameMesh);
     const auto &meshContext = participant->usedMeshContext(config.nameMesh);
     PRECICE_CHECK(meshContext.provideMesh,

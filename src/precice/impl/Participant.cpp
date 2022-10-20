@@ -475,7 +475,7 @@ void Participant::checkDuplicatedUse(const mesh::PtrMesh &mesh)
   PRECICE_ASSERT((int) _meshContexts.size() > mesh->getID());
   PRECICE_CHECK(_meshContexts[mesh->getID()] == nullptr,
                 "Mesh \"{} cannot be used twice by participant {}. "
-                "Please remove one of the use-mesh nodes with name=\"{}\"./>",
+                "Please remove one of the provide/receive-mesh nodes with name=\"{}\"./>",
                 mesh->getName(), _name, mesh->getName());
 }
 

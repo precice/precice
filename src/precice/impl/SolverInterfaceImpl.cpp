@@ -625,7 +625,7 @@ int SolverInterfaceImpl::getMeshID(
                 meshName);
   PRECICE_CHECK(_accessor->isMeshUsed(meshName),
                 "The given mesh name \"{0}\" is not used by the participant \"{1}\". "
-                "Please define a <use-mesh name=\"{0}\"/> node for the particpant \"{1}\".",
+                "Please define a <provide-mesh name=\"{0}\"/> or a <receive-mesh name=\"{0}\" from=\"...\" /> node for the particpant \"{1}\".",
                 meshName, _accessorName);
   return _accessor->getUsedMeshID(meshName);
 }
@@ -1868,17 +1868,16 @@ void SolverInterfaceImpl::configurePartitions(
           }
         }
       }
-      /// @todo support offset??
 
     } else { // Accessor receives mesh
       PRECICE_CHECK(not context->receiveMeshFrom.empty(),
-                    "Participant \"{}\" must either provide or receive the mesh \"{}\". "
-                    "Please define either a \"from\" or a \"provide\" attribute in the <use-mesh name=\"{}\"/> node of \"{}\".",
-                    _accessorName, context->mesh->getName(), context->mesh->getName(), _accessorName);
+                    "Participant \"{0}\" must either provide or receive the mesh \"{1}\". "
+                    "Please define either a <provide-mesh name=\"{1}\"/> or a <receive-mesh name=\"{1}\" from=\"...\" /> for particpant \"{0}\".",
+                    _accessorName, context->mesh->getName());
       PRECICE_CHECK(not context->provideMesh,
-                    "Participant \"{}\" cannot provide and receive mesh \"{}\" at the same time. "
-                    "Please check your \"from\" and \"provide\" attributes in the <use-mesh name=\"{}\"/> node of \"{}\".",
-                    _accessorName, context->mesh->getName(), context->mesh->getName(), _accessorName);
+                    "Participant \"{0}\" cannot provide and receive mesh \"{1}\" at the same time. "
+                    "Please check your <provide-mesh name=\"{1}\"/> and <receive-mesh name=\"{1}\" /> tags for the  particpant \"{0}\".",
+                    _accessorName, context->mesh->getName());
       std::string receiver(_accessorName);
       std::string provider(context->receiveMeshFrom);
 
