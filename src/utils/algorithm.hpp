@@ -152,14 +152,10 @@ auto reorder_array(const std::array<Index, n> &order, const std::array<T, n> &el
   return reordered;
 }
 
-template <class InputIt, class Size, class OutputIt>
-void add_n(InputIt first, Size count, OutputIt result)
+template <class InputIt, class Size, class InOutIt>
+void add_n(InputIt first, Size count, InOutIt result)
 {
-  while (count-- > 0) {
-    *result += *first;
-    ++result;
-    ++first;
-  }
+  std::transform(first, std::next(first, count), result, result, std::plus{});
 }
 
 } // namespace utils
