@@ -14,7 +14,7 @@
     </mesh>
 
     <participant name="SolverOne">
-      <use-mesh name="MeshOne" provide="yes" />
+      <provide-mesh name="MeshOne" />
       <use-mesh name="MeshTwo" from="SolverTwo" />
       <mapping:nearest-projection
         direction="write"
@@ -25,7 +25,7 @@
     </participant>
 
     <participant name="SolverTwo">
-      <use-mesh name="MeshTwo" provide="yes" />
+      <provide-mesh name="MeshTwo" />
       <read-data name="DataTwo" mesh="MeshTwo" />
       <watch-integral name="WatchIntegral" mesh="MeshTwo" scale-with-connectivity="yes" />
       <watch-integral name="WatchIntegralNoScale" mesh="MeshTwo" scale-with-connectivity="no" />

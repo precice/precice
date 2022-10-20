@@ -23,8 +23,8 @@
     <m2n:sockets from="SolverA" to="SolverB" />
 
     <participant name="SolverA">
-      <use-mesh name="MeshDisplacementsA" provide="yes" />
-      <use-mesh name="MeshForcesA" provide="yes" />
+      <provide-mesh name="MeshDisplacementsA" />
+      <provide-mesh name="MeshForcesA" />
       <use-mesh name="MeshForcesB" from="SolverB" />
       <use-mesh name="MeshDisplacementsB" from="SolverB" />
       <mapping:rbf-thin-plate-splines
@@ -46,8 +46,8 @@
     </participant>
 
     <participant name="SolverB">
-      <use-mesh name="MeshDisplacementsB" provide="yes" />
-      <use-mesh name="MeshForcesB" provide="yes" />
+      <provide-mesh name="MeshDisplacementsB" />
+      <provide-mesh name="MeshForcesB" />
       <write-data name="Displacements" mesh="MeshDisplacementsB" />
       <read-data name="Forces" mesh="MeshForcesB" />
     </participant>

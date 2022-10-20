@@ -14,7 +14,7 @@
     </mesh>
 
     <participant name="SolverOne">
-      <use-mesh name="MeshOne" provide="yes" />
+      <provide-mesh name="MeshOne" />
       <use-mesh name="MeshTwo" from="SolverTwo" safety-factor="0" direct-access="true" />
       <write-data name="Velocities" mesh="MeshTwo" />
       <read-data name="Forces" mesh="MeshOne" />
@@ -26,7 +26,7 @@
     </participant>
 
     <participant name="SolverTwo">
-      <use-mesh name="MeshTwo" provide="yes" />
+      <provide-mesh name="MeshTwo" />
       <read-data name="Velocities" mesh="MeshTwo" />
       <write-data name="Forces" mesh="MeshTwo" />
     </participant>

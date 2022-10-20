@@ -15,7 +15,7 @@
     </mesh>
 
     <participant name="ExporterOne">
-      <use-mesh name="A" provide="on" />
+      <provide-mesh name="A" />
       <write-data name="S" mesh="A" />
       <write-data name="V" mesh="A" />
       <export:vtk directory="timeseries" />
@@ -26,7 +26,7 @@
 
     <participant name="ExporterTwo">
       <use-mesh name="A" from="ExporterOne" />
-      <use-mesh name="B" provide="on" />
+      <provide-mesh name="B" />
       <read-data name="S" mesh="B" />
       <read-data name="V" mesh="B" />
       <mapping:nearest-neighbor direction="read" from="A" to="B" constraint="consistent" />

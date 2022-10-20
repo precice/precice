@@ -13,7 +13,7 @@
     </participant>
 
     <participant name="SolverTwo">
-      <use-mesh name="MeshTwo" provide="yes" />
+      <provide-mesh name="MeshTwo" />
       <write-data name="Velocities" mesh="MeshTwo" />
     </participant>
 

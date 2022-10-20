@@ -15,14 +15,14 @@
     </mesh>
 
     <participant name="SolverOne">
-      <use-mesh name="MeshOne" provide="yes" />
+      <provide-mesh name="MeshOne" />
       <write-data name="Data1" mesh="MeshOne" />
       <read-data name="Data2" mesh="MeshOne" />
     </participant>
 
     <participant name="SolverTwo">
       <use-mesh name="MeshOne" from="SolverOne" />
-      <use-mesh name="MeshTwo" provide="yes" />
+      <provide-mesh name="MeshTwo" />
       <mapping:nearest-neighbor
         direction="read"
         from="MeshOne"

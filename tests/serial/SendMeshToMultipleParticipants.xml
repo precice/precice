@@ -16,13 +16,13 @@
     </mesh>
 
     <participant name="SolverOne">
-      <use-mesh name="MeshA" provide="yes" />
+      <provide-mesh name="MeshA" />
       <write-data name="Data" mesh="MeshA" />
     </participant>
 
     <participant name="SolverTwo">
       <use-mesh name="MeshA" from="SolverOne" />
-      <use-mesh name="MeshB" provide="yes" />
+      <provide-mesh name="MeshB" />
       <read-data name="Data" mesh="MeshB" />
       <mapping:nearest-neighbor
         direction="read"
@@ -33,7 +33,7 @@
 
     <participant name="SolverThree">
       <use-mesh name="MeshA" from="SolverOne" />
-      <use-mesh name="MeshC" provide="yes" />
+      <provide-mesh name="MeshC" />
       <read-data name="Data" mesh="MeshC" />
       <mapping:nearest-neighbor
         direction="read"

@@ -12,7 +12,7 @@
     </mesh>
 
     <participant name="SolverOneCubeConservative1To3">
-      <use-mesh name="MeshOne" provide="on" />
+      <provide-mesh name="MeshOne" />
       <use-mesh name="MeshTwo" from="SolverTwoCubeConservative1To3" />
       <write-data name="DataOne" mesh="MeshOne" />
       <mapping:linear-cell-interpolation
@@ -25,7 +25,7 @@
     </participant>
 
     <participant name="SolverTwoCubeConservative1To3">
-      <use-mesh name="MeshTwo" provide="on" />
+      <provide-mesh name="MeshTwo" />
       <read-data name="DataOne" mesh="MeshTwo" />
     </participant>
 

@@ -15,7 +15,7 @@
     </mesh>
 
     <participant name="ParallelSolver">
-      <use-mesh name="ParallelMesh" provide="yes" />
+      <provide-mesh name="ParallelMesh" />
       <use-mesh name="SerialMesh" from="SerialSolver" safety-factor="2" />
       <write-data name="MyData1" mesh="ParallelMesh" />
       <read-data name="MyData2" mesh="ParallelMesh" />
@@ -27,7 +27,7 @@
     </participant>
 
     <participant name="SerialSolver">
-      <use-mesh name="SerialMesh" provide="yes" />
+      <provide-mesh name="SerialMesh" />
       <use-mesh name="ParallelMesh" from="ParallelSolver" />
       <read-data name="MyData1" mesh="SerialMesh" />
       <write-data name="MyData2" mesh="SerialMesh" />

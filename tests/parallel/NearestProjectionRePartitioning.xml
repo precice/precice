@@ -13,7 +13,7 @@
 
     <participant name="FluidSolver">
       <intra-comm:mpi-single />
-      <use-mesh name="CellCenters" provide="yes" />
+      <provide-mesh name="CellCenters" />
       <use-mesh name="Nodes" from="SolidSolver" safety-factor="0.5" />
       <mapping:nearest-projection
         direction="read"
@@ -25,7 +25,7 @@
     </participant>
 
     <participant name="SolidSolver">
-      <use-mesh name="Nodes" provide="yes" />
+      <provide-mesh name="Nodes" />
       <write-data name="Data1" mesh="Nodes" />
       <export:vtk />
     </participant>

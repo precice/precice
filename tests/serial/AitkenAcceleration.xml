@@ -15,7 +15,7 @@
     </mesh>
 
     <participant name="A">
-      <use-mesh name="A-Mesh" provide="yes" />
+      <provide-mesh name="A-Mesh" />
       <use-mesh name="B-Mesh" from="B" />
       <write-data name="Data" mesh="A-Mesh" />
       <mapping:nearest-neighbor
@@ -26,7 +26,7 @@
     </participant>
 
     <participant name="B">
-      <use-mesh name="B-Mesh" provide="yes" />
+      <provide-mesh name="B-Mesh" />
       <read-data name="Data" mesh="B-Mesh" />
     </participant>
 

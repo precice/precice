@@ -12,12 +12,12 @@
     </mesh>
 
     <participant name="SolverTwo">
-      <use-mesh name="MeshTwo" provide="on" />
+      <provide-mesh name="MeshTwo" />
       <read-data name="DataOne" mesh="MeshTwo" />
     </participant>
 
     <participant name="SolverOne">
-      <use-mesh name="MeshOne" provide="on" />
+      <provide-mesh name="MeshOne" />
       <use-mesh name="MeshTwo" from="SolverTwo" />
       <write-data name="DataOne" mesh="MeshOne" />
       <mapping:nearest-projection

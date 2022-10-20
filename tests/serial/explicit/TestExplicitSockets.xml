@@ -16,7 +16,7 @@
 
     <participant name="SolverOne">
       <use-mesh name="Test-Square" from="SolverTwo" />
-      <use-mesh name="MeshOne" provide="yes" />
+      <provide-mesh name="MeshOne" />
       <mapping:nearest-neighbor
         direction="write"
         from="MeshOne"
@@ -33,7 +33,7 @@
     </participant>
 
     <participant name="SolverTwo">
-      <use-mesh name="Test-Square" provide="yes" />
+      <provide-mesh name="Test-Square" />
       <write-data name="Velocities" mesh="Test-Square" />
       <read-data name="Forces" mesh="Test-Square" />
     </participant>

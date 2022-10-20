@@ -17,14 +17,14 @@
     </mesh>
 
     <participant name="SolverOne">
-      <use-mesh name="Square" provide="yes" />
+      <provide-mesh name="Square" />
       <write-data name="Forces" mesh="Square" />
       <read-data name="Velocities" mesh="Square" />
     </participant>
 
     <participant name="SolverTwo">
       <use-mesh name="Square" from="SolverOne" />
-      <use-mesh name="SquareTwo" provide="yes" />
+      <provide-mesh name="SquareTwo" />
       <mapping:nearest-neighbor
         direction="write"
         from="SquareTwo"

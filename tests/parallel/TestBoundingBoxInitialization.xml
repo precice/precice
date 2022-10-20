@@ -13,13 +13,13 @@
     </mesh>
 
     <participant name="Fluid">
-      <use-mesh name="FluidMesh" provide="yes" />
+      <provide-mesh name="FluidMesh" />
       <write-data name="Forces" mesh="FluidMesh" />
     </participant>
 
     <participant name="Structure">
-      <use-mesh name="StructureMesh" provide="yes" />
-      <use-mesh name="FluidMesh" provide="no" from="Fluid" />
+      <provide-mesh name="StructureMesh" />
+      <use-mesh name="FluidMesh" from="Fluid" />
       <read-data name="Forces" mesh="StructureMesh" />
       <mapping:nearest-neighbor
         direction="read"
