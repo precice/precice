@@ -232,12 +232,12 @@ public:
   }
 
   /// Returns a mapping from rank to used (not necessarily owned) vertex IDs
-  VertexDistribution const &getVertexDistribution() const
+  const VertexDistribution &getVertexDistribution() const
   {
     return _vertexDistribution;
   }
 
-  VertexOffsets const &getVertexOffsets() const
+  const VertexOffsets &getVertexOffsets() const
   {
     return _vertexOffsets;
   }
