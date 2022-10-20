@@ -51,6 +51,8 @@ public:
   /// A mapping from remote local ranks to the IDs that must be communicated
   using CommunicationMap = std::map<Rank, std::vector<VertexID>>;
 
+  using VertexOffsets = std::vector<int>;
+
   /// Use if the id of the mesh is not necessary
   static constexpr MeshID MESH_ID_UNDEFINED{-1};
 
@@ -235,13 +237,13 @@ public:
     return _vertexDistribution;
   }
 
-  std::vector<int> const &getVertexOffsets() const
+  VertexOffsets const &getVertexOffsets() const
   {
     return _vertexOffsets;
   }
 
   /// Only used for tests
-  void setVertexOffsets(std::vector<int> vertexOffsets)
+  void setVertexOffsets(VertexOffsets vertexOffsets)
   {
     _vertexOffsets = std::move(vertexOffsets);
   }
@@ -338,7 +340,7 @@ private:
    * The last entry holds the total number of vertices.
    * Needed for the matrix-matrix multiplication of the IMVJ acceleration.
    */
-  std::vector<int> _vertexOffsets;
+  VertexOffsets _vertexOffsets;
 
   /**
    * @brief Number of unique vertices for complete distributed mesh.

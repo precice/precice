@@ -5,6 +5,7 @@
 #include <ostream>
 #include <utility>
 #include <vector>
+
 #include "com/CommunicateBoundingBox.hpp"
 #include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
@@ -18,6 +19,7 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "partition/Partition.hpp"
+#include "precice/types.hpp"
 #include "utils/Event.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
@@ -182,7 +184,7 @@ void ReceivedPartition::compute()
     // remoteCommunicationMap: connectedRank -> {remote local vertex index}
     // _mesh->getCommunicationMap(): connectedRank -> {this rank's local vertex index}
     // A vertex belongs to a specific connected rank if its global vertex ID lies within the ranks min and max.
-    std::map<int, std::vector<int>> remoteCommunicationMap;
+    mesh::Mesh::CommunicationMap remoteCommunicationMap;
 
     for (size_t vertexIndex = 0; vertexIndex < _mesh->vertices().size(); ++vertexIndex) {
       for (size_t rankIndex = 0; rankIndex < _mesh->getConnectedRanks().size(); ++rankIndex) {
@@ -203,8 +205,8 @@ void ReceivedPartition::compute()
     PRECICE_INFO("Feedback distribution for mesh {}", _mesh->getName());
     Event e6("partition.feedbackMesh." + _mesh->getName(), precice::syncMode);
     if (utils::IntraComm::isSecondary()) {
-      int              numberOfVertices = _mesh->vertices().size();
-      std::vector<int> vertexIDs(numberOfVertices, -1);
+      int                   numberOfVertices = _mesh->vertices().size();
+      std::vector<VertexID> vertexIDs(numberOfVertices, -1);
       for (int i = 0; i < numberOfVertices; i++) {
         vertexIDs[i] = _mesh->vertices()[i].getGlobalIndex();
       }
@@ -214,7 +216,7 @@ void ReceivedPartition::compute()
 
       mesh::Mesh::VertexDistribution vertexDistribution;
       int                            numberOfVertices = _mesh->vertices().size();
-      std::vector<int>               vertexIDs(numberOfVertices, -1);
+      std::vector<VertexID>          vertexIDs(numberOfVertices, -1);
       for (int i = 0; i < numberOfVertices; i++) {
         vertexIDs[i] = _mesh->vertices()[i].getGlobalIndex();
       }
@@ -222,7 +224,7 @@ void ReceivedPartition::compute()
 
       for (int secondaryRank : utils::IntraComm::allSecondaryRanks()) {
         PRECICE_DEBUG("Receive partition feedback from slave rank {}", secondaryRank);
-        vertexDistribution[secondaryRank] = utils::IntraComm::getCommunication()->receiveRange(secondaryRank, com::AsVectorTag<int>{});
+        vertexDistribution[secondaryRank] = utils::IntraComm::getCommunication()->receiveRange(secondaryRank, com::AsVectorTag<VertexID>{});
       }
       PRECICE_ASSERT(_mesh->getVertexDistribution().empty());
       _mesh->setVertexDistribution(std::move(vertexDistribution));
@@ -239,7 +241,7 @@ void ReceivedPartition::compute()
     utils::IntraComm::getCommunication()->send(numberOfVertices, 0);
 
     // receive vertex offsets
-    std::vector<int> vertexOffsets;
+    mesh::Mesh::VertexOffsets vertexOffsets;
     utils::IntraComm::getCommunication()->broadcast(vertexOffsets, 0);
     PRECICE_DEBUG("My vertex offsets: {}", vertexOffsets);
     PRECICE_ASSERT(_mesh->getVertexOffsets().empty());
@@ -247,7 +249,7 @@ void ReceivedPartition::compute()
 
   } else if (utils::IntraComm::isPrimary()) {
 
-    std::vector<int> vertexOffsets(utils::IntraComm::getSize());
+    mesh::Mesh::VertexOffsets vertexOffsets(utils::IntraComm::getSize());
     vertexOffsets[0] = _mesh->vertices().size();
 
     // receive number of secondary vertices and fill vertex offsets
@@ -423,9 +425,9 @@ void ReceivedPartition::compareBoundingBoxes()
   // prepare local bounding box
   prepareBoundingBox();
 
-  if (utils::IntraComm::isPrimary()) {                  // Primary
-    std::map<int, std::vector<int>> connectionMap;      //local ranks -> {remote ranks}
-    std::vector<int>                connectedRanksList; // local ranks with any connection
+  if (utils::IntraComm::isPrimary()) {               // Primary
+    mesh::Mesh::CommunicationMap connectionMap;      //local ranks -> {remote ranks}
+    std::vector<Rank>            connectedRanksList; // local ranks with any connection
 
     // connected ranks for primary rank
     std::vector<Rank> connectedRanks;
@@ -443,7 +445,7 @@ void ReceivedPartition::compareBoundingBoxes()
 
     // receive connected ranks from secondary ranks and add them to the connection map
     for (int rank : utils::IntraComm::allSecondaryRanks()) {
-      std::vector<int> secondaryConnectedRanks = utils::IntraComm::getCommunication()->receiveRange(rank, com::AsVectorTag<int>{});
+      std::vector<Rank> secondaryConnectedRanks = utils::IntraComm::getCommunication()->receiveRange(rank, com::AsVectorTag<Rank>{});
       if (!secondaryConnectedRanks.empty()) {
         connectedRanksList.push_back(rank);
         connectionMap[rank] = secondaryConnectedRanks;
@@ -566,15 +568,15 @@ void ReceivedPartition::createOwnerInformation()
     // store global IDs and list of possible shared vertices
 
     // Global IDs to be saved in:
-    std::vector<int> sharedVerticesGlobalIDs;
+    std::vector<VertexID> sharedVerticesGlobalIDs;
     // Local IDs to be saved in:
-    std::vector<int> sharedVerticesLocalIDs;
+    std::vector<VertexID> sharedVerticesLocalIDs;
 
     // store possible shared vertices in a map to communicate with neighbors, map: rank -> vertex_global_id
-    std::map<int, std::vector<int>> sharedVerticesSendMap;
+    mesh::Mesh::CommunicationMap sharedVerticesSendMap;
 
     // receive list of possible shared vertices from neighboring ranks
-    std::map<int, std::vector<int>> sharedVerticesReceiveMap;
+    mesh::Mesh::CommunicationMap sharedVerticesReceiveMap;
 
     if (utils::IntraComm::isPrimary()) {
 
@@ -608,9 +610,9 @@ void ReceivedPartition::createOwnerInformation()
     // #3: check vertices and keep only those that fit into the current rank's bb
     const int numberOfVertices = _mesh->vertices().size();
     PRECICE_DEBUG("Tag vertices, number of vertices {}", numberOfVertices);
-    std::vector<int> tags(numberOfVertices, -1);
-    std::vector<int> globalIDs(numberOfVertices, -1);
-    int              ownedVerticesCount = 0; // number of vertices owned by this rank
+    std::vector<int>      tags(numberOfVertices, -1);
+    std::vector<VertexID> globalIDs(numberOfVertices, -1);
+    int                   ownedVerticesCount = 0; // number of vertices owned by this rank
     for (int i = 0; i < numberOfVertices; i++) {
       globalIDs[i] = _mesh->vertices()[i].getGlobalIndex();
       if (_mesh->vertices()[i].isTagged()) {
@@ -750,9 +752,9 @@ void ReceivedPartition::createOwnerInformation()
 
       if (numberOfVertices != 0) {
         PRECICE_DEBUG("Tag vertices, number of vertices {}", numberOfVertices);
-        std::vector<int> tags(numberOfVertices, -1);
-        std::vector<int> globalIDs(numberOfVertices, -1);
-        bool             atInterface = false;
+        std::vector<int>      tags(numberOfVertices, -1);
+        std::vector<VertexID> globalIDs(numberOfVertices, -1);
+        bool                  atInterface = false;
         for (int i = 0; i < numberOfVertices; i++) {
           globalIDs[i] = _mesh->vertices()[i].getGlobalIndex();
           if (_mesh->vertices()[i].isTagged()) {
@@ -770,7 +772,7 @@ void ReceivedPartition::createOwnerInformation()
         utils::IntraComm::getCommunication()->send(atInterface, 0);
 
         PRECICE_DEBUG("Receive owner information");
-        std::vector<int> ownerVec = utils::IntraComm::getCommunication()->receiveRange(0, com::AsVectorTag<int>{});
+        std::vector<VertexID> ownerVec = utils::IntraComm::getCommunication()->receiveRange(0, com::AsVectorTag<VertexID>{});
         PRECICE_DEBUG("My owner information: {}", ownerVec);
         PRECICE_ASSERT(ownerVec.size() == static_cast<std::size_t>(numberOfVertices));
         setOwnerInformation(ownerVec);
@@ -779,11 +781,11 @@ void ReceivedPartition::createOwnerInformation()
 
     else if (utils::IntraComm::isPrimary()) {
       // To temporary store which vertices already have an owner
-      std::vector<int> globalOwnerVec(_mesh->getGlobalNumberOfVertices(), 0);
+      std::vector<VertexID> globalOwnerVec(_mesh->getGlobalNumberOfVertices(), 0);
       // The same per rank
-      std::vector<std::vector<int>> secondaryOwnerVecs(utils::IntraComm::getSize());
+      std::vector<std::vector<VertexID>> secondaryOwnerVecs(utils::IntraComm::getSize());
       // Global IDs per rank
-      std::vector<std::vector<int>> secondaryGlobalIDs(utils::IntraComm::getSize());
+      std::vector<std::vector<VertexID>> secondaryGlobalIDs(utils::IntraComm::getSize());
       // Tag information per rank
       std::vector<std::vector<int>> secondaryTags(utils::IntraComm::getSize());
 
@@ -818,7 +820,7 @@ void ReceivedPartition::createOwnerInformation()
         if (localNumberOfVertices != 0) {
           PRECICE_DEBUG("Receive tags from secondary rank {}", rank);
           secondaryTags[rank]      = utils::IntraComm::getCommunication()->receiveRange(rank, com::AsVectorTag<int>{});
-          secondaryGlobalIDs[rank] = utils::IntraComm::getCommunication()->receiveRange(rank, com::AsVectorTag<int>{});
+          secondaryGlobalIDs[rank] = utils::IntraComm::getCommunication()->receiveRange(rank, com::AsVectorTag<VertexID>{});
           PRECICE_DEBUG("Rank {} has tags {}", rank, secondaryTags[rank]);
           PRECICE_DEBUG("Rank {} has global IDs {}", rank, secondaryGlobalIDs[rank]);
           bool atInterface = false;

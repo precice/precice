@@ -134,7 +134,7 @@ void ProvidedPartition::prepare()
       _mesh->vertices()[i].setGlobalIndex(i);
     }
 
-    std::vector<int> vertexOffsets(utils::IntraComm::getSize());
+    mesh::Mesh::VertexOffsets vertexOffsets(utils::IntraComm::getSize());
     vertexOffsets[0]           = numberOfVertices;
     int globalNumberOfVertices = numberOfVertices;
 
@@ -200,7 +200,7 @@ void ProvidedPartition::prepare()
     _mesh->setGlobalNumberOfVertices(globalNumberOfVertices);
 
     // receive set vertex offsets
-    std::vector<int> vertexOffsets;
+    mesh::Mesh::VertexOffsets vertexOffsets;
     utils::IntraComm::getCommunication()->broadcast(vertexOffsets, 0);
     PRECICE_DEBUG("My vertex offsets: {}", vertexOffsets);
     PRECICE_ASSERT(_mesh->getVertexOffsets().empty());
@@ -290,10 +290,10 @@ void ProvidedPartition::compareBoundingBoxes()
 
     // primary rank receives feedback map (map of other participant ranks -> connected ranks at this participant)
     // from other participants primary rank
-    std::vector<int> connectedRanksList = _m2ns[0]->getPrimaryRankCommunication()->receiveRange(0, com::AsVectorTag<int>{});
-    remoteConnectionMapSize             = connectedRanksList.size();
+    std::vector<Rank> connectedRanksList = _m2ns[0]->getPrimaryRankCommunication()->receiveRange(0, com::AsVectorTag<Rank>{});
+    remoteConnectionMapSize              = connectedRanksList.size();
 
-    std::map<int, std::vector<int>> remoteConnectionMap;
+    mesh::Mesh::CommunicationMap remoteConnectionMap;
     for (auto &rank : connectedRanksList) {
       remoteConnectionMap[rank] = {-1};
     }
@@ -322,10 +322,10 @@ void ProvidedPartition::compareBoundingBoxes()
     }());
 
   } else { // Secondary rank
-    std::vector<int> connectedRanksList;
+    std::vector<Rank> connectedRanksList;
     utils::IntraComm::getCommunication()->broadcast(connectedRanksList, 0);
 
-    std::map<int, std::vector<int>> remoteConnectionMap;
+    mesh::Mesh::CommunicationMap remoteConnectionMap;
     if (!connectedRanksList.empty()) {
       for (Rank rank : connectedRanksList) {
         remoteConnectionMap[rank] = {-1};
