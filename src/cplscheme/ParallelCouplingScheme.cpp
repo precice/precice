@@ -23,6 +23,7 @@ ParallelCouplingScheme::ParallelCouplingScheme(
     : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
                        secondParticipant, localParticipant, std::move(m2n), maxIterations, cplMode, dtMethod, extrapolationOrder) {}
 
+#if 0
 bool ParallelCouplingScheme::exchangeDataAndAccelerate()
 {
   bool convergence = true;
@@ -51,6 +52,7 @@ bool ParallelCouplingScheme::exchangeDataAndAccelerate()
 
   return convergence;
 }
+#endif
 
 void ParallelCouplingScheme::exchangeFirstData()
 {

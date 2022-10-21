@@ -87,6 +87,7 @@ void SerialCouplingScheme::performReceiveOfFirstAdvance()
   }
 }
 
+#if 0
 bool SerialCouplingScheme::exchangeDataAndAccelerate()
 {
   bool convergence = true;
@@ -120,6 +121,7 @@ bool SerialCouplingScheme::exchangeDataAndAccelerate()
 
   return convergence;
 }
+#endif
 
 void SerialCouplingScheme::exchangeFirstData()
 {
