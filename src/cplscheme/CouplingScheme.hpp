@@ -112,7 +112,7 @@ public:
 
   virtual void firstExchange() = 0;
 
-  virtual ChangedMeshes secondSynchronization(const ChangedMeshes &changes) = 0;
+  virtual ChangedMeshes secondSynchronization() = 0;
 
   virtual void secondExchange() = 0;
 
