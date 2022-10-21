@@ -108,12 +108,35 @@ public:
 
   using ChangedMeshes = std::vector<MeshID>;
 
+  /** Synchronizes mesh changes with remote participants.
+   *
+   * @param[in] changes MeshIDs of locally changed meshes
+   *
+   * @returns MeshIDs of remotely changed meshes.
+   */
   virtual ChangedMeshes firstSynchronization(const ChangedMeshes &changes) = 0;
 
+  /** Exchanges the first set of data.
+   *
+   * @pre \ref firstSynchronization() was called
+   */
   virtual void firstExchange() = 0;
 
+  /** Receive mesh changes from remote participants in the second step.
+   * This is necessary as serial coupling schemes may have changed the mesh by now.
+   *
+   * @note local changes are covered by \ref firstSynchronization()
+   *
+   * @returns MeshIDs of remotely changed meshes.
+   *
+   * @pre \ref firstExchange() was called
+   */
   virtual ChangedMeshes secondSynchronization() = 0;
 
+  /** Exchanges the second set of data.
+   *
+   * @pre \ref secondSynchronization() was called
+   */
   virtual void secondExchange() = 0;
 
   /// Finalizes the coupling and disconnects communication.
