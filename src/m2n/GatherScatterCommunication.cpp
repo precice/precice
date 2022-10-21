@@ -62,6 +62,41 @@ void GatherScatterCommunication::closeConnection()
   _isConnected = false;
 }
 
+namespace {
+template <class Indices, class Src, class Dst, class Size>
+void add_to_indirect_blocks(
+    const Src &    src,
+    const Indices &indices,
+    Size           blockSize,
+    Dst &          dst)
+{
+  for (size_t i = 0; i < indices.size(); ++i) {
+    auto srcfirst = blockSize * i;
+    auto dstfirst = blockSize * indices[i];
+    PRECICE_ASSERT(srcfirst >= 0 && static_cast<size_t>(srcfirst + blockSize) <= src.size(), srcfirst, blockSize, src.size());
+    PRECICE_ASSERT(dstfirst >= 0 && static_cast<size_t>(dstfirst + blockSize) <= dst.size(), dstfirst, blockSize, dst.size());
+    utils::add_n(&src[srcfirst], blockSize, &dst[dstfirst]);
+  }
+}
+
+template <class Indices, class Src, class Dst, class Size>
+void copy_from_indirect_blocks(
+    const Src &    src,
+    const Indices &indices,
+    Size           blockSize,
+    Dst &          dst)
+{
+  for (size_t i = 0; i < indices.size(); ++i) {
+    auto srcfirst = blockSize * indices[i];
+    auto dstfirst = blockSize * i;
+    PRECICE_ASSERT(srcfirst >= 0 && static_cast<size_t>(srcfirst + blockSize) <= src.size(), srcfirst, blockSize, src.size());
+    PRECICE_ASSERT(dstfirst >= 0 && static_cast<size_t>(dstfirst + blockSize) <= dst.size(), dstfirst, blockSize, dst.size());
+    std::copy_n(&src[srcfirst], blockSize, &dst[dstfirst]);
+  }
+}
+
+} // namespace
+
 void GatherScatterCommunication::send(precice::span<double const> itemsToSend, int valueDimension)
 {
   PRECICE_TRACE(itemsToSend.size());
@@ -85,9 +120,7 @@ void GatherScatterCommunication::send(precice::span<double const> itemsToSend, i
   // Directly copy primary rank data
   PRECICE_ASSERT(vertexDistribution.count(0) > 0);
   const auto &primaryDistribution = vertexDistribution.at(0);
-  for (size_t i = 0; i < primaryDistribution.size(); ++i) {
-    utils::add_n(&itemsToSend[i * valueDimension], valueDimension, &globalItemsToSend[primaryDistribution[i] * valueDimension]);
-  }
+  add_to_indirect_blocks(itemsToSend, primaryDistribution, valueDimension, globalItemsToSend);
   PRECICE_DEBUG("Directly gathered {} entries from primary", primaryDistribution.size() * valueDimension);
 
   // Gather data from secondary ranks
@@ -108,9 +141,7 @@ void GatherScatterCommunication::send(precice::span<double const> itemsToSend, i
     }
     std::vector<double> secondaryRankValues(secondaryRankSize);
     utils::IntraComm::getCommunication()->receive(span<double>{secondaryRankValues}, secondaryRank);
-    for (size_t i = 0; i < secondaryDistribution.size(); ++i) {
-      utils::add_n(&secondaryRankValues[i * valueDimension], valueDimension, &globalItemsToSend[secondaryDistribution[i] * valueDimension]);
-    }
+    add_to_indirect_blocks(secondaryRankValues, secondaryDistribution, valueDimension, globalItemsToSend);
   }
 
   // Send data to other primary
@@ -147,9 +178,8 @@ void GatherScatterCommunication::receive(precice::span<double> itemsToReceive, i
   // Directly copy primary rank data
   PRECICE_ASSERT(vertexDistribution.count(0) > 0);
   const auto &primaryDistribution = vertexDistribution.at(0);
-  for (size_t i = 0; i < primaryDistribution.size(); ++i) {
-    std::copy_n(&globalItemsToReceive[primaryDistribution[i] * valueDimension], valueDimension, &itemsToReceive[i * valueDimension]);
-  }
+  copy_from_indirect_blocks(globalItemsToReceive, primaryDistribution, valueDimension, itemsToReceive);
+
   PRECICE_DEBUG("Directly extracted {} data entries for primary", primaryDistribution.size() * valueDimension);
 
   // Extract and scatter data to secondary ranks
@@ -170,9 +200,7 @@ void GatherScatterCommunication::receive(precice::span<double> itemsToReceive, i
     }
 
     std::vector<double> secondaryRankValues(secondarySize);
-    for (size_t i = 0; i < secondaryDistribution.size(); ++i) {
-      std::copy_n(&globalItemsToReceive[secondaryDistribution[i] * valueDimension], valueDimension, &secondaryRankValues[i * valueDimension]);
-    }
+    copy_from_indirect_blocks(globalItemsToReceive, secondaryDistribution, valueDimension, secondaryRankValues);
     PRECICE_DEBUG("Scattering data starting with {} to rank {}", secondaryRankValues[0], secondaryRank);
     utils::IntraComm::getCommunication()->sendRange(secondaryRankValues, secondaryRank);
   }
