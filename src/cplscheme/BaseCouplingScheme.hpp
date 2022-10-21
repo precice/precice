@@ -528,7 +528,13 @@ private:
     return exchangeSecondDataAndAccelerate();
   }
 
-  virtual void exchangeFirstData()               = 0;
+  /// Exchanges the first set of data
+  virtual void exchangeFirstData() = 0;
+
+  /** Exchanges the second set of data and accelerate in case of an implicit scheme
+   *
+   * @returns true, if iteration converged
+   */
   virtual bool exchangeSecondDataAndAccelerate() = 0;
 
   /**
