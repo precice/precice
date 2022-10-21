@@ -91,6 +91,7 @@ void MultiCouplingScheme::exchangeInitialData()
   PRECICE_DEBUG("Initial data is exchanged in MultiCouplingScheme");
 }
 
+#if 0
 bool MultiCouplingScheme::exchangeDataAndAccelerate()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
@@ -128,6 +129,7 @@ bool MultiCouplingScheme::exchangeDataAndAccelerate()
   }
   return convergence;
 }
+#endif
 
 void MultiCouplingScheme::exchangeFirstData()
 {
