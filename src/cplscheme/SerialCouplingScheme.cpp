@@ -87,42 +87,6 @@ void SerialCouplingScheme::performReceiveOfFirstAdvance()
   }
 }
 
-#if 0
-bool SerialCouplingScheme::exchangeDataAndAccelerate()
-{
-  bool convergence = true;
-
-  if (doesFirstStep()) { // first participant
-    PRECICE_DEBUG("Sending data...");
-    sendTimeWindowSize();
-    sendData(getM2N(), getSendData());
-    PRECICE_DEBUG("Receiving data...");
-    if (isImplicitCouplingScheme()) {
-      convergence = receiveConvergence(getM2N());
-    }
-    receiveData(getM2N(), getReceiveData());
-    checkDataHasBeenReceived();
-  } else { // second participant
-    if (isImplicitCouplingScheme()) {
-      PRECICE_DEBUG("Test Convergence and accelerate...");
-      convergence = doImplicitStep();
-      sendConvergence(getM2N(), convergence);
-    }
-    PRECICE_DEBUG("Sending data...");
-    sendData(getM2N(), getSendData());
-    // the second participant does not want new data in the last iteration of the last time window
-    if (isCouplingOngoing() || (isImplicitCouplingScheme() && not convergence)) {
-      receiveAndSetTimeWindowSize();
-      PRECICE_DEBUG("Receiving data...");
-      receiveData(getM2N(), getReceiveData());
-      checkDataHasBeenReceived();
-    }
-  }
-
-  return convergence;
-}
-#endif
-
 void SerialCouplingScheme::exchangeFirstData()
 {
   _converged = true;
@@ -135,11 +99,6 @@ void SerialCouplingScheme::exchangeFirstData()
     if (isImplicitCouplingScheme()) {
       _converged = receiveConvergence(getM2N());
     }
-    /*
-    PRECICE_DEBUG("Receiving data...");
-    receiveData(getM2N(), getReceiveData());
-    checkDataHasBeenReceived();
-    */
   } else { // second participant
     if (isImplicitCouplingScheme()) {
       PRECICE_DEBUG("Test Convergence and accelerate...");
@@ -148,18 +107,7 @@ void SerialCouplingScheme::exchangeFirstData()
     }
     PRECICE_DEBUG("Sending data...");
     sendData(getM2N(), getSendData());
-    /*
-    // the second participant does not want new data in the last iteration of the last time window
-    if (isCouplingOngoing() || (isImplicitCouplingScheme() && not _converged)) {
-      receiveAndSetTimeWindowSize();
-      PRECICE_DEBUG("Receiving data...");
-      receiveData(getM2N(), getReceiveData());
-      checkDataHasBeenReceived();
-    }
-    */
   }
-
-  //return convergence;
 }
 
 bool SerialCouplingScheme::exchangeSecondDataAndAccelerate()
