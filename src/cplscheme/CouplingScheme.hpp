@@ -100,7 +100,11 @@ public:
    *
    * Does not necessarily advance in time.
    */
-  virtual void advance() = 0;
+  void advance()
+  {
+    firstExchange();
+    secondExchange();
+  }
 
   using ChangedMeshes = std::vector<MeshID>;
 

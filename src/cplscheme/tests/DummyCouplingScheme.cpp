@@ -24,6 +24,7 @@ void DummyCouplingScheme::initialize(
   _iterations    = 1;
 }
 
+#if 0
 void DummyCouplingScheme::advance()
 {
   PRECICE_ASSERT(_isInitialized);
@@ -37,6 +38,7 @@ void DummyCouplingScheme::advance()
   }
   _iterations++;
 }
+#endif
 
 CouplingScheme::ChangedMeshes DummyCouplingScheme::firstSynchronization(const CouplingScheme::ChangedMeshes &changes)
 {
