@@ -198,13 +198,13 @@ public:
   /// Receives result of first advance, if this has to happen inside SolverInterface::initialize(), see CouplingScheme.hpp
   void receiveResultOfFirstAdvance() override final;
 
-  ChangedMeshes firstSynchronization(const ChangedMeshes &changes) override;
+  ChangedMeshes firstSynchronization(const ChangedMeshes &changes) override final;
 
-  void firstExchange() override;
+  void firstExchange() override final;
 
-  ChangedMeshes secondSynchronization(const ChangedMeshes &changes) override;
+  ChangedMeshes secondSynchronization() override final;
 
-  void secondExchange() override;
+  void secondExchange() override final;
 
   /// Adds a measure to determine the convergence of coupling iterations.
   void addConvergenceMeasure(

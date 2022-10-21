@@ -263,10 +263,9 @@ void BaseCouplingScheme::firstExchange()
   }
 }
 
-CouplingScheme::ChangedMeshes BaseCouplingScheme::secondSynchronization(const CouplingScheme::ChangedMeshes &changes)
+CouplingScheme::ChangedMeshes BaseCouplingScheme::secondSynchronization()
 {
-  PRECICE_ASSERT(changes.empty());
-  return changes;
+  return {};
 }
 
 void BaseCouplingScheme::secondExchange()

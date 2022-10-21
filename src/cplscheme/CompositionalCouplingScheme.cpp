@@ -120,10 +120,9 @@ void CompositionalCouplingScheme::firstExchange()
   _lastAddedTime = 0.0;
 }
 
-CouplingScheme::ChangedMeshes CompositionalCouplingScheme::secondSynchronization(const CouplingScheme::ChangedMeshes &changes)
+CouplingScheme::ChangedMeshes CompositionalCouplingScheme::secondSynchronization()
 {
-  PRECICE_ASSERT(changes.empty());
-  return changes;
+  return {};
 }
 
 void CompositionalCouplingScheme::secondExchange()
