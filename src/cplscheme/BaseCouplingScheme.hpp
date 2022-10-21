@@ -200,6 +200,14 @@ public:
    */
   void advance() override final;
 
+  ChangedMeshes firstSynchronization(const ChangedMeshes &changes) override;
+
+  void firstExchange() override;
+
+  ChangedMeshes secondSynchronization(const ChangedMeshes &changes) override;
+
+  void secondExchange() override;
+
   /// Adds a measure to determine the convergence of coupling iterations.
   void addConvergenceMeasure(
       int                         dataID,
@@ -520,6 +528,9 @@ private:
    * @returns true, if iteration converged
    */
   virtual bool exchangeDataAndAccelerate() = 0;
+
+  virtual void exchangeFirstData()               = 0;
+  virtual bool exchangeSecondDataAndAccelerate() = 0;
 
   /**
    * @brief interface to provide accelerated data, depending on coupling scheme being used

@@ -75,6 +75,14 @@ public:
    */
   void advance() override final;
 
+  ChangedMeshes firstSynchronization(const ChangedMeshes &changes) override;
+
+  void firstExchange() override;
+
+  ChangedMeshes secondSynchronization(const ChangedMeshes &changes) override;
+
+  void secondExchange() override;
+
   /**
    * @brief
    */
