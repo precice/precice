@@ -99,7 +99,7 @@ public:
 
   void firstExchange() override;
 
-  ChangedMeshes secondSynchronization(const ChangedMeshes &changes) override;
+  ChangedMeshes secondSynchronization() override;
 
   void secondExchange() override;
 

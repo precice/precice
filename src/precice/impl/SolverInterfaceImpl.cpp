@@ -416,7 +416,9 @@ double SolverInterfaceImpl::advance(
   }
 
   PRECICE_DEBUG("Advance coupling scheme");
-  _couplingScheme->advance();
+  [[maybe_unused]] auto changes1 = _couplingScheme->firstSynchronization({});
+  _couplingScheme->firstExchange();
+  [[maybe_unused]] auto changes2 = _couplingScheme->secondSynchronization();
 
   if (_couplingScheme->isTimeWindowComplete()) {
     for (auto &context : _accessor->readDataContexts()) {

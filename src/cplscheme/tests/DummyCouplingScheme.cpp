@@ -54,12 +54,11 @@ void DummyCouplingScheme::firstExchange()
   PRECICE_ASSERT(_isOngoing);
 }
 
-CouplingScheme::ChangedMeshes DummyCouplingScheme::secondSynchronization(const CouplingScheme::ChangedMeshes &changes)
+CouplingScheme::ChangedMeshes DummyCouplingScheme::secondSynchronization()
 {
   PRECICE_ASSERT(_isInitialized);
   PRECICE_ASSERT(_isOngoing);
-  PRECICE_ASSERT(changes.empty());
-  return changes;
+  return {};
 }
 
 void DummyCouplingScheme::secondExchange()
