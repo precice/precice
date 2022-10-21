@@ -3,7 +3,9 @@
 #include <map>
 #include <string>
 #include <vector>
+
 #include "com/SharedPointer.hpp"
+#include "precice/types.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -99,6 +101,16 @@ public:
    * Does not necessarily advance in time.
    */
   virtual void advance() = 0;
+
+  using ChangedMeshes = std::vector<MeshID>;
+
+  virtual ChangedMeshes firstSynchronization(const ChangedMeshes &changes) = 0;
+
+  virtual void firstExchange() = 0;
+
+  virtual ChangedMeshes secondSynchronization(const ChangedMeshes &changes) = 0;
+
+  virtual void secondExchange() = 0;
 
   /// Finalizes the coupling and disconnects communication.
   virtual void finalize() = 0;

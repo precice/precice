@@ -52,4 +52,40 @@ bool ParallelCouplingScheme::exchangeDataAndAccelerate()
   return convergence;
 }
 
+void ParallelCouplingScheme::exchangeFirstData()
+{
+  if (doesFirstStep()) { // first participant
+    PRECICE_DEBUG("Sending data...");
+    sendData(getM2N(), getSendData());
+  } else { // second participant
+    PRECICE_DEBUG("Receiving data...");
+    receiveData(getM2N(), getReceiveData());
+    checkDataHasBeenReceived();
+  }
+}
+
+bool ParallelCouplingScheme::exchangeSecondDataAndAccelerate()
+{
+  bool convergence = true;
+
+  if (doesFirstStep()) { // first participant
+    PRECICE_DEBUG("Receiving data...");
+    if (isImplicitCouplingScheme()) {
+      convergence = receiveConvergence(getM2N());
+    }
+    receiveData(getM2N(), getReceiveData());
+    checkDataHasBeenReceived();
+  } else { // second participant
+    if (isImplicitCouplingScheme()) {
+      PRECICE_DEBUG("Perform acceleration (only second participant)...");
+      convergence = doImplicitStep();
+      sendConvergence(getM2N(), convergence);
+    }
+    PRECICE_DEBUG("Sending data...");
+    sendData(getM2N(), getSendData());
+  }
+
+  return convergence;
+}
+
 } // namespace precice::cplscheme

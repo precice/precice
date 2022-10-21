@@ -95,6 +95,14 @@ public:
   /// Exchanges data and updates the state of the coupling scheme.
   void advance() final override;
 
+  ChangedMeshes firstSynchronization(const ChangedMeshes &changes) override;
+
+  void firstExchange() override;
+
+  ChangedMeshes secondSynchronization(const ChangedMeshes &changes) override;
+
+  void secondExchange() override;
+
   /// Finalizes the coupling and disconnects communication.
   void finalize() final override;
 

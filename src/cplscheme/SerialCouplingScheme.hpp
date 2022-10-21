@@ -89,6 +89,9 @@ private:
    */
   bool exchangeDataAndAccelerate() override;
 
+  void exchangeFirstData() override;
+  bool exchangeSecondDataAndAccelerate() override;
+
   /**
    * @brief SerialCouplingSchemes applies acceleration to send data
    * @returns DataMap being accelerated
@@ -97,6 +100,8 @@ private:
   {
     return getSendData();
   }
+
+  bool _converged = false;
 };
 
 } // namespace cplscheme

@@ -1,5 +1,6 @@
 #include "DummyCouplingScheme.hpp"
 #include "../Constants.hpp"
+#include "cplscheme/CouplingScheme.hpp"
 #include "logging/LogMacros.hpp"
 
 namespace precice::cplscheme::tests {
@@ -24,6 +25,42 @@ void DummyCouplingScheme::initialize(
 }
 
 void DummyCouplingScheme::advance()
+{
+  PRECICE_ASSERT(_isInitialized);
+  PRECICE_ASSERT(_isOngoing);
+  if (_iterations == _numberIterations) {
+    if (_timesteps == _maxTimesteps) {
+      _isOngoing = false;
+    }
+    _timesteps++;
+    _iterations = 0;
+  }
+  _iterations++;
+}
+
+CouplingScheme::ChangedMeshes DummyCouplingScheme::firstSynchronization(const CouplingScheme::ChangedMeshes &changes)
+{
+  PRECICE_ASSERT(_isInitialized);
+  PRECICE_ASSERT(_isOngoing);
+  PRECICE_ASSERT(changes.empty());
+  return changes;
+}
+
+void DummyCouplingScheme::firstExchange()
+{
+  PRECICE_ASSERT(_isInitialized);
+  PRECICE_ASSERT(_isOngoing);
+}
+
+CouplingScheme::ChangedMeshes DummyCouplingScheme::secondSynchronization(const CouplingScheme::ChangedMeshes &changes)
+{
+  PRECICE_ASSERT(_isInitialized);
+  PRECICE_ASSERT(_isOngoing);
+  PRECICE_ASSERT(changes.empty());
+  return changes;
+}
+
+void DummyCouplingScheme::secondExchange()
 {
   PRECICE_ASSERT(_isInitialized);
   PRECICE_ASSERT(_isOngoing);

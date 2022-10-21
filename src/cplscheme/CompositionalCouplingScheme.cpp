@@ -90,6 +90,44 @@ void CompositionalCouplingScheme::advance()
   _lastAddedTime = 0.0;
 }
 
+CouplingScheme::ChangedMeshes CompositionalCouplingScheme::firstSynchronization(const CouplingScheme::ChangedMeshes &changes)
+{
+  PRECICE_ASSERT(changes.empty());
+  return changes;
+}
+
+void CompositionalCouplingScheme::firstExchange()
+{
+  // TODO implement correctly
+  PRECICE_TRACE();
+  bool moreSchemesToHandle = false;
+  do {
+    for (SchemesIt it = _activeSchemesBegin; it != _activeSchemesEnd; it++) {
+      if (not it->onHold) {
+        it->scheme->advance();
+      }
+    }
+    moreSchemesToHandle = determineActiveCouplingSchemes();
+    if (moreSchemesToHandle) {
+      // The new schemes to be handled in this advance also need the time that
+      // has been computed so far. This time can't be added in the solver call
+      // to addComputedTime(), since there the schemes are not active yet.
+      addComputedTime(_lastAddedTime);
+    }
+  } while (moreSchemesToHandle);
+  _lastAddedTime = 0.0;
+}
+
+CouplingScheme::ChangedMeshes CompositionalCouplingScheme::secondSynchronization(const CouplingScheme::ChangedMeshes &changes)
+{
+  PRECICE_ASSERT(changes.empty());
+  return changes;
+}
+
+void CompositionalCouplingScheme::secondExchange()
+{
+}
+
 void CompositionalCouplingScheme::finalize()
 {
   PRECICE_TRACE();
