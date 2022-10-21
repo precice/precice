@@ -70,6 +70,7 @@ void CompositionalCouplingScheme::addComputedTime(double timeToAdd)
 }
 
 #if 0
+// We keep this around as this is not working properly as of yet
 void CompositionalCouplingScheme::advance()
 {
   PRECICE_TRACE();
@@ -100,7 +101,10 @@ CouplingScheme::ChangedMeshes CompositionalCouplingScheme::firstSynchronization(
 
 void CompositionalCouplingScheme::firstExchange()
 {
-  // TODO implement correctly
+  // The iteration prevents the split into 4 steps.
+  // Conceptually, this only works if
+  // 1. all explicit schemes are handled first
+  // 2. (if present) only one implicit schemes is handled at the end
   PRECICE_TRACE();
   bool moreSchemesToHandle = false;
   do {

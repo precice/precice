@@ -24,22 +24,6 @@ void DummyCouplingScheme::initialize(
   _iterations    = 1;
 }
 
-#if 0
-void DummyCouplingScheme::advance()
-{
-  PRECICE_ASSERT(_isInitialized);
-  PRECICE_ASSERT(_isOngoing);
-  if (_iterations == _numberIterations) {
-    if (_timesteps == _maxTimesteps) {
-      _isOngoing = false;
-    }
-    _timesteps++;
-    _iterations = 0;
-  }
-  _iterations++;
-}
-#endif
-
 CouplingScheme::ChangedMeshes DummyCouplingScheme::firstSynchronization(const CouplingScheme::ChangedMeshes &changes)
 {
   PRECICE_ASSERT(_isInitialized);
