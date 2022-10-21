@@ -63,7 +63,7 @@ private:
    * @brief Exchanges all data between the participants of the ParallelCouplingScheme and applies acceleration.
    * @returns true, if iteration converged
    */
-  bool exchangeDataAndAccelerate() override;
+  // bool exchangeDataAndAccelerate() override;
 
   void exchangeFirstData() override;
   bool exchangeSecondDataAndAccelerate() override;

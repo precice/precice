@@ -527,7 +527,11 @@ private:
    * @brief implements functionality for advance in base class.
    * @returns true, if iteration converged
    */
-  virtual bool exchangeDataAndAccelerate() = 0;
+  bool exchangeDataAndAccelerate()
+  {
+    exchangeFirstData();
+    return exchangeSecondDataAndAccelerate();
+  }
 
   virtual void exchangeFirstData()               = 0;
   virtual bool exchangeSecondDataAndAccelerate() = 0;
