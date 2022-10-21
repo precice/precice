@@ -198,11 +198,6 @@ public:
   /// Receives result of first advance, if this has to happen inside SolverInterface::initialize(), see CouplingScheme.hpp
   void receiveResultOfFirstAdvance() override final;
 
-  /**
-   * @brief Advances the coupling scheme.
-   */
-  void advance() override final;
-
   ChangedMeshes firstSynchronization(const ChangedMeshes &changes) override;
 
   void firstExchange() override;

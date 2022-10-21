@@ -69,6 +69,7 @@ void CompositionalCouplingScheme::addComputedTime(double timeToAdd)
   _lastAddedTime += timeToAdd;
 }
 
+#if 0
 void CompositionalCouplingScheme::advance()
 {
   PRECICE_TRACE();
@@ -89,6 +90,7 @@ void CompositionalCouplingScheme::advance()
   } while (moreSchemesToHandle);
   _lastAddedTime = 0.0;
 }
+#endif
 
 CouplingScheme::ChangedMeshes CompositionalCouplingScheme::firstSynchronization(const CouplingScheme::ChangedMeshes &changes)
 {

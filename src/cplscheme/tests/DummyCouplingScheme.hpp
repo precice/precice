@@ -73,7 +73,7 @@ public:
   /**
    * @brief
    */
-  void advance() override final;
+  //void advance() override final;
 
   ChangedMeshes firstSynchronization(const ChangedMeshes &changes) override;
 

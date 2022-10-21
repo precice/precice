@@ -183,6 +183,7 @@ bool BaseCouplingScheme::sendsInitializedData() const
   return _sendsInitializedData;
 }
 
+#if 0
 void BaseCouplingScheme::advance()
 {
   PRECICE_TRACE(_timeWindows, _time);
@@ -236,6 +237,7 @@ void BaseCouplingScheme::advance()
     _computedTimeWindowPart = 0.0; // reset window
   }
 }
+#endif
 
 CouplingScheme::ChangedMeshes BaseCouplingScheme::firstSynchronization(const CouplingScheme::ChangedMeshes &changes)
 {
@@ -275,7 +277,6 @@ void BaseCouplingScheme::secondExchange()
   PRECICE_ASSERT(_couplingMode != Undefined);
 
   // from first phase
-  PRECICE_ASSERT(!_hasDataBeenReceived);
   PRECICE_ASSERT(!_isTimeWindowComplete);
 
   if (reachedEndOfTimeWindow()) {
