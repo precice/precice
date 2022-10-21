@@ -420,9 +420,12 @@ double SolverInterfaceImpl::advance(
   }
 
   PRECICE_DEBUG("Advance coupling scheme");
-  [[maybe_unused]] auto changes1 = _couplingScheme->firstSynchronization({});
+  // Orchestrate local and remote mesh changes
+  std::vector<MeshID>   localChanges;
+  [[maybe_unused]] auto remoteChanges1 = _couplingScheme->firstSynchronization(localChanges);
   _couplingScheme->firstExchange();
-  [[maybe_unused]] auto changes2 = _couplingScheme->secondSynchronization();
+  // Orchestrate remote mesh changes (local ones were handled in the first sync)
+  [[maybe_unused]] auto remoteChanges2 = _couplingScheme->secondSynchronization();
   _couplingScheme->secondExchange();
 
   if (_couplingScheme->isTimeWindowComplete()) {
