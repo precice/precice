@@ -129,6 +129,53 @@ bool MultiCouplingScheme::exchangeDataAndAccelerate()
   return convergence;
 }
 
+void MultiCouplingScheme::exchangeFirstData()
+{
+  PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
+  // @todo implement MultiCouplingScheme for explicit coupling
+
+  PRECICE_DEBUG("Computed full length of iteration");
+
+  if (_isController) {
+    for (auto &receiveExchange : _receiveDataVector) {
+      receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
+    }
+    checkDataHasBeenReceived();
+
+  } else {
+    for (auto &sendExchange : _sendDataVector) {
+      sendData(_m2ns[sendExchange.first], sendExchange.second);
+    }
+  }
+}
+
+bool MultiCouplingScheme::exchangeSecondDataAndAccelerate()
+{
+  PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
+  // @todo implement MultiCouplingScheme for explicit coupling
+
+  bool convergence = true;
+
+  if (_isController) {
+    convergence = doImplicitStep();
+    for (const auto &m2nPair : _m2ns) {
+      sendConvergence(m2nPair.second, convergence);
+    }
+
+    for (auto &sendExchange : _sendDataVector) {
+      sendData(_m2ns[sendExchange.first], sendExchange.second);
+    }
+  } else {
+    convergence = receiveConvergence(_m2ns[_controller]);
+
+    for (auto &receiveExchange : _receiveDataVector) {
+      receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
+    }
+    checkDataHasBeenReceived();
+  }
+  return convergence;
+}
+
 void MultiCouplingScheme::addDataToSend(
     const mesh::PtrData &data,
     mesh::PtrMesh        mesh,

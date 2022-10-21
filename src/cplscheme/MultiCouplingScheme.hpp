@@ -118,6 +118,9 @@ private:
    */
   bool exchangeDataAndAccelerate() override;
 
+  void exchangeFirstData() override;
+  bool exchangeSecondDataAndAccelerate() override;
+
   /**
    * @brief MultiCouplingScheme applies acceleration to all CouplingData
    * @returns DataMap being accelerated
