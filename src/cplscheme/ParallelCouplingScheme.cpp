@@ -23,37 +23,6 @@ ParallelCouplingScheme::ParallelCouplingScheme(
     : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
                        secondParticipant, localParticipant, std::move(m2n), maxIterations, cplMode, dtMethod, extrapolationOrder) {}
 
-#if 0
-bool ParallelCouplingScheme::exchangeDataAndAccelerate()
-{
-  bool convergence = true;
-
-  if (doesFirstStep()) { // first participant
-    PRECICE_DEBUG("Sending data...");
-    sendData(getM2N(), getSendData());
-    PRECICE_DEBUG("Receiving data...");
-    if (isImplicitCouplingScheme()) {
-      convergence = receiveConvergence(getM2N());
-    }
-    receiveData(getM2N(), getReceiveData());
-    checkDataHasBeenReceived();
-  } else { // second participant
-    PRECICE_DEBUG("Receiving data...");
-    receiveData(getM2N(), getReceiveData());
-    checkDataHasBeenReceived();
-    if (isImplicitCouplingScheme()) {
-      PRECICE_DEBUG("Perform acceleration (only second participant)...");
-      convergence = doImplicitStep();
-      sendConvergence(getM2N(), convergence);
-    }
-    PRECICE_DEBUG("Sending data...");
-    sendData(getM2N(), getSendData());
-  }
-
-  return convergence;
-}
-#endif
-
 void ParallelCouplingScheme::exchangeFirstData()
 {
   if (doesFirstStep()) { // first participant
