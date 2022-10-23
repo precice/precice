@@ -21,12 +21,6 @@ BOOST_AUTO_TEST_SUITE(AxialGeoMultiscaleMapping)
 
 BOOST_AUTO_TEST_CASE(testConsistentSpread)
 {
-  /*  The following test works by creating two dimensionally heterogeneous meshes, namely 1D and 3D.
-      Then, the data is mapped from the single vertex of the 1D mesh to defined vertices on the circular inlet of the 3D mesh (hence, SPREAD).
-      The defined vertices are at certain distances from the center, which enables to predict the expected behavior for Hagen-Poiseuille flow.
-      Finally, this expected behavior is tested.  
-  */
-
   PRECICE_TEST(1_rank);
   int dimensions = 3;
   using testing::equals;
@@ -40,7 +34,7 @@ BOOST_AUTO_TEST_CASE(testConsistentSpread)
   Eigen::VectorXd &inValues = inData->values();
   inValues << 0.0, 0.0, 2.0;
 
-  double radius = 1.0; // radius of the "tube" from or to which the data is mapped, i.e., radius of the circular interface between the two participants
+  double radius = 1.0;
 
   // Create mesh to map to
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
@@ -78,66 +72,58 @@ BOOST_AUTO_TEST_CASE(testConsistentSpread)
 
 BOOST_AUTO_TEST_CASE(testConsistentCollect)
 {
-  /*  The following test works by creating two dimensionally heterogeneous meshes, namely 1D and 3D.
-      Then, the data is mapped from multiple defined vertices on the circular inlet of the 3D mesh to the single vertex of the 1D mesh (hence, COLLECT).
-      The defined vertices are at certain distances from the center, which enables to predict the expected behavior for Hagen-Poiseuille flow.
-      Finally, this expected behavior is tested.  
-  */
-
   PRECICE_TEST(1_rank);
   int dimensions = 3;
   using testing::equals;
 
   // Create mesh to map from
   PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
-  PtrData inData    = inMesh->createData("InData", 3, 0_dataID);
-  int     inDataID  = inData->getID();
-  Vertex &inVertex0 = inMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // center
-  Vertex &inVertex1 = inMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0)); // distance of 1.0 = r to center
-  Vertex &inVertex2 = inMesh->createVertex(Eigen::Vector3d(0.0, 0.5, 0.0)); // distance of 0.5 = r/2 to center
+  PtrData inDataScalar   = inMesh->createData("InDataScalar", 1, 0_dataID);
+  PtrData inDataVector   = inMesh->createData("InDataVector", 3, 1_dataID);
+  int     inDataScalarID = inDataScalar->getID();
+  int     inDataVectorID = inDataVector->getID();
+  Vertex &inVertex0      = inMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // center
+  Vertex &inVertex1      = inMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0)); // distance of 1.0 = r to center (if circle in x-y plane?)
+  Vertex &inVertex2      = inMesh->createVertex(Eigen::Vector3d(0.0, 0.5, 0.0)); // distance of 0.5 = r/2 to center
   inMesh->allocateDataValues();
-  Eigen::VectorXd &inValues = inData->values();
-  inValues << 0.0, 0.0, 4.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0;
-
-  double radius = 1.0; // radius of the "tube" from or to which the data is mapped, i.e., radius of the circular interface between the two participants
+  Eigen::VectorXd &inValuesScalar = inDataScalar->values();
+  Eigen::VectorXd &inValuesVector = inDataVector->values();
+  inValuesScalar << 1.0, 2.0, 3.0;
+  inValuesVector << 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0;
+  double radius = 1.0;
 
   // Create mesh to map to
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  PtrData outData    = outMesh->createData("OutData", 3, 2_dataID);
-  int     outDataID  = outData->getID();
-  Vertex &outVertex0 = outMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // equal to center of incoming mesh
+  PtrData outDataScalar   = outMesh->createData("OutDataScalar", 1, 2_dataID);
+  PtrData outDataVector   = outMesh->createData("OutDataVector", 3, 3_dataID);
+  int     outDataScalarID = outDataScalar->getID();
+  int     outDataVectorID = outDataVector->getID();
+  Vertex &outVertex0      = outMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // equal to center of incoming mesh
   outMesh->allocateDataValues();
 
   // Setup mapping with mapping coordinates and geometry used
-  precice::mapping::AxialGeoMultiscaleMapping mapping(mapping::Mapping::CONSISTENT, dimensions, mapping::AxialGeoMultiscaleMapping::COLLECT, radius);
+  precice::mapping::AxialGeoMultiscaleMapping mapping(mapping::Mapping::CONSISTENT, dimensions, mapping::AxialGeoMultiscaleMapping::SPREAD, radius);
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
   // Map data
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  const Eigen::VectorXd &outValues = outData->values();
+  mapping.map(inDataScalarID, outDataScalarID);
+  mapping.map(inDataVectorID, outDataVectorID);
+  const Eigen::VectorXd &outValuesScalar = outDataScalar->values();
+  const Eigen::VectorXd &outValuesVector = outDataVector->values();
 
-  // Check if data is averaged at center node
+  // Check if scalar data is equal and vector data is halved at center node
   BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(outValues(0) == (1 / 3.0) * (inValues(0) + inValues(3) + inValues(6)));
-  BOOST_TEST(outValues(1) == (1 / 3.0) * (inValues(1) + inValues(4) + inValues(7)));
-  BOOST_TEST(outValues(2) == (1 / 3.0) * (inValues(2) + inValues(5) + inValues(8)));
+  BOOST_TEST(outValuesScalar(0) == inValuesScalar(0));
+  BOOST_TEST(outValuesVector(0) == 0.5 * inValuesVector(0));
+  BOOST_TEST(outValuesVector(1) == 0.5 * inValuesVector(1));
+  BOOST_TEST(outValuesVector(2) == 0.5 * inValuesVector(2));
 
-  /*  Due to the nature of the implementation, i.e., not inverting the profile for the mapping but averaging over
-      all values on the circular interface to obtain the average velocity, the below tests fail for small numbers of vertices 
-      and the tests above are used instead. If COLLECT mapping with inversion of Hagen-Poiseuille profile gets implemented,
-      these tests can be used.
-      
-  BOOST_TEST(outValues(0) == 0.5 * inValues(0));
-  BOOST_TEST(outValues(1) == 0.5 * inValues(1));
-  BOOST_TEST(outValues(2) == 0.5 * inValues(2));
-
-  // Check if data at distance = r/2 is 2/3 times outvalue data
-  BOOST_TEST(outValues(0) == (2 / 3.0) * inValues(3));
-  BOOST_TEST(outValues(1) == (2 / 3.0) * inValues(4));
-  BOOST_TEST(outValues(2) == (2 / 3.0) * inValues(5));
-  */
+  // Check if invalue vector data at distance = r/2 is 2/3 times outvalue vector data
+  BOOST_TEST(outValuesVector(6) == (2 / 3) * inValuesVector(0));
+  BOOST_TEST(outValuesVector(7) == (2 / 3) * inValuesVector(1));
+  BOOST_TEST(outValuesVector(8) == (2 / 3) * inValuesVector(2));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -16,7 +16,6 @@
 #include "mapping/PetRadialBasisFctMapping.hpp"
 #include "mapping/RadialBasisFctMapping.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
-#include "mapping/AxialGeoMultiscaleMapping.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
@@ -60,10 +59,10 @@ MappingConfiguration::MappingConfiguration(
                        .setDocumentation("If set to true, QR decomposition is used to solve the RBF system");
 
   auto attrRadius = XMLAttribute<double>("radius")
-                              .setDocumentation("Radius for 1D participants in a geometric multiscale mapping.");
+                        .setDocumentation("Radius for 1D participants in a geometric multiscale mapping.");
   auto attrMultiscaleType = XMLAttribute<std::string>("type")
-                              .setDocumentation("Type of a geometric multiscale mapping (spread or collect).")
-                              .setOptions({"spread", "collect"});
+                                .setDocumentation("Type of a geometric multiscale mapping (spread or collect).")
+                                .setOptions({"spread", "collect"});
 
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
   std::list<XMLTag>  tags;
@@ -200,11 +199,11 @@ void MappingConfiguration::xmlTagCallback(
     double        supportRadius  = std::numeric_limits<double>::quiet_NaN();
     double        solverRtol     = 1e-9;
     bool          xDead = false, yDead = false, zDead = false;
-    bool          useLU         = false;
-    Polynomial    polynomial    = Polynomial::ON;
-    Preallocation preallocation = Preallocation::TREE;
-    double radius = 0.0;
-    std::string multiscaleType = "undefined";
+    bool          useLU          = false;
+    Polynomial    polynomial     = Polynomial::ON;
+    Preallocation preallocation  = Preallocation::TREE;
+    double        radius         = 0.0;
+    std::string   multiscaleType = "undefined";
 
     if (tag.hasAttribute(ATTR_SHAPE_PARAM)) {
       shapeParameter = tag.getDoubleAttributeValue(ATTR_SHAPE_PARAM);
@@ -276,7 +275,7 @@ void MappingConfiguration::xmlTagCallback(
                                                         rbfParameter, solverRtol,
                                                         xDead, yDead, zDead,
                                                         useLU,
-                                                        polynomial, preallocation, 
+                                                        polynomial, preallocation,
                                                         radius, multiscaleType);
     checkDuplicates(configuredMapping);
     _mappings.push_back(configuredMapping);
@@ -310,7 +309,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
     Polynomial                       polynomial,
     Preallocation                    preallocation,
     double                           radius,
-    const std::string&               multiscaleType) const
+    const std::string &              multiscaleType) const
 {
   PRECICE_TRACE(direction, type, timing, rbfParameter.value);
   using namespace mapping;
@@ -442,22 +441,20 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
       configuredMapping.mapping = PtrMapping(
           new RadialBasisFctMapping<CompactPolynomialC6>(
               constraintValue, dimensions, CompactPolynomialC6(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial));
-    } else if (type == VALUE_AXIAL_GEOMETRIC_MULTISCALE){
+    } else if (type == VALUE_AXIAL_GEOMETRIC_MULTISCALE) {
 
-    AxialGeoMultiscaleMapping::MultiscaleType multiscaleTypeValue;
-    if (multiscaleType == "spread"){
-      multiscaleTypeValue = AxialGeoMultiscaleMapping::SPREAD;
-    }
-    else if (multiscaleType == "collect"){
-      multiscaleTypeValue = AxialGeoMultiscaleMapping::COLLECT;
-    }
-    else {
-      PRECICE_ERROR("Unknown geometric multiscale type \"{}\". Known types are \"spread\" and \"collect\".", multiscaleTypeValue);
-    }
-    configuredMapping.mapping = PtrMapping (
-      new AxialGeoMultiscaleMapping(constraintValue, dimensions, multiscaleTypeValue, radius) );
-    configuredMapping.isRBF = false;
-  } else {
+      AxialGeoMultiscaleMapping::MultiscaleType multiscaleTypeValue;
+      if (multiscaleType == "spread") {
+        multiscaleTypeValue = AxialGeoMultiscaleMapping::SPREAD;
+      } else if (multiscaleType == "collect") {
+        multiscaleTypeValue = AxialGeoMultiscaleMapping::COLLECT;
+      } else {
+        PRECICE_ERROR("Unknown geometric multiscale type \"{}\". Known types are \"spread\" and \"collect\".", multiscaleTypeValue);
+      }
+      configuredMapping.mapping = PtrMapping(
+          new AxialGeoMultiscaleMapping(constraintValue, dimensions, multiscaleTypeValue, radius));
+      configuredMapping.isRBF = false;
+    } else {
       PRECICE_ERROR("Unknown mapping type!");
     }
   }
