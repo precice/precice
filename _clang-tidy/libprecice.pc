@@ -1,0 +1,6 @@
+Name: preCICE
+Description: preCICE coupling library from binary dir
+Version: 2.4.0
+URL: https://www.precice.org
+Libs: -L/home/elia/university/preCICE_new/precice/_clang-tidy -lprecice
+Cflags: -I/home/elia/university/preCICE_new/precice/src -I/home/elia/university/preCICE_new/precice/_clang-tidy/src
