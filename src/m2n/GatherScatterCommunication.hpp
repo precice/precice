@@ -88,7 +88,7 @@ public:
   void receive(precice::span<double> itemsToReceive, int valueDimension) override;
 
   /// Broadcasts an int to connected ranks on remote participant. Not available for GatherScatterCommunication.
-  void broadcastSend(const int &itemToSend) override;
+  void broadcastSend(int itemToSend) override;
 
   /**
    * @brief Receives an int per connected rank on remote participant. Not available for GatherScatterCommunication.
