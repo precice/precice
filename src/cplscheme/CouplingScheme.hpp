@@ -102,8 +102,11 @@ public:
    */
   void advance()
   {
-    firstExchange();
-    secondExchange();
+    bool done = false;
+    while (!done) {
+      firstExchange();
+      done = secondExchange();
+    }
   }
 
   using ChangedMeshes = std::vector<MeshID>;
@@ -135,9 +138,14 @@ public:
 
   /** Exchanges the second set of data.
    *
+   * If the step isn't done, this function returns false.
+   * This requires the frist Synchronization to be called again.
+   *
+   * @returns true if the step is done.
+   *
    * @pre \ref secondSynchronization() was called
    */
-  virtual void secondExchange() = 0;
+  virtual bool secondExchange() = 0;
 
   /// Finalizes the coupling and disconnects communication.
   virtual void finalize() = 0;
