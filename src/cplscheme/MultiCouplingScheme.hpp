@@ -119,7 +119,7 @@ private:
   //bool exchangeDataAndAccelerate() override;
 
   void exchangeFirstData() override;
-  bool exchangeSecondDataAndAccelerate() override;
+  void exchangeSecondData() override;
 
   /**
    * @brief MultiCouplingScheme applies acceleration to all CouplingData
