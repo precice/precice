@@ -201,7 +201,7 @@ public:
 
   ChangedMeshes secondSynchronization() override final;
 
-  void secondExchange() override final;
+  bool secondExchange() override final;
 
   /// Adds a measure to determine the convergence of coupling iterations.
   void addConvergenceMeasure(

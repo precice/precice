@@ -101,7 +101,7 @@ public:
 
   ChangedMeshes secondSynchronization() override;
 
-  void secondExchange() override;
+  bool secondExchange() override;
 
   /// Finalizes the coupling and disconnects communication.
   void finalize() final override;
