@@ -35,28 +35,24 @@ void ParallelCouplingScheme::exchangeFirstData()
   }
 }
 
-bool ParallelCouplingScheme::exchangeSecondDataAndAccelerate()
+void ParallelCouplingScheme::exchangeSecondData()
 {
-  bool convergence = true;
-
   if (doesFirstStep()) { // first participant
     PRECICE_DEBUG("Receiving data...");
     if (isImplicitCouplingScheme()) {
-      convergence = receiveConvergence(getM2N());
+      receiveConvergence(getM2N());
     }
     receiveData(getM2N(), getReceiveData());
     checkDataHasBeenReceived();
   } else { // second participant
     if (isImplicitCouplingScheme()) {
       PRECICE_DEBUG("Perform acceleration (only second participant)...");
-      convergence = doImplicitStep();
-      sendConvergence(getM2N(), convergence);
+      doImplicitStep();
+      sendConvergence(getM2N());
     }
     PRECICE_DEBUG("Sending data...");
     sendData(getM2N(), getSendData());
   }
-
-  return convergence;
 }
 
 } // namespace precice::cplscheme

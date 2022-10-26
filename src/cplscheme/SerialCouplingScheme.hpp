@@ -88,9 +88,8 @@ private:
 
   /**
    * @brief Exchanges the second set of data between the participants of the SerialCouplingSchemes
-   * @returns true, if iteration converged
    */
-  bool exchangeSecondDataAndAccelerate() override;
+  void exchangeSecondData() override;
 
   /**
    * @brief SerialCouplingSchemes applies acceleration to send data
@@ -100,8 +99,6 @@ private:
   {
     return getSendData();
   }
-
-  bool _converged = false;
 };
 
 } // namespace cplscheme

@@ -89,28 +89,26 @@ void SerialCouplingScheme::performReceiveOfFirstAdvance()
 
 void SerialCouplingScheme::exchangeFirstData()
 {
-  _converged = true;
-
   if (doesFirstStep()) { // first participant
     PRECICE_DEBUG("Sending data...");
     sendTimeWindowSize();
     sendData(getM2N(), getSendData());
     PRECICE_DEBUG("Receiving convergence data...");
     if (isImplicitCouplingScheme()) {
-      _converged = receiveConvergence(getM2N());
+      receiveConvergence(getM2N());
     }
   } else { // second participant
     if (isImplicitCouplingScheme()) {
       PRECICE_DEBUG("Test Convergence and accelerate...");
-      _converged = doImplicitStep();
-      sendConvergence(getM2N(), _converged);
+      doImplicitStep();
+      sendConvergence(getM2N());
     }
     PRECICE_DEBUG("Sending data...");
     sendData(getM2N(), getSendData());
   }
 }
 
-bool SerialCouplingScheme::exchangeSecondDataAndAccelerate()
+void SerialCouplingScheme::exchangeSecondData()
 {
   if (doesFirstStep()) { // first participant
     PRECICE_DEBUG("Receiving data...");
@@ -118,15 +116,13 @@ bool SerialCouplingScheme::exchangeSecondDataAndAccelerate()
     checkDataHasBeenReceived();
   } else { // second participant
     // the second participant does not want new data in the last iteration of the last time window
-    if (isCouplingOngoing() || (isImplicitCouplingScheme() && not _converged)) {
+    if (isCouplingOngoing() || (isImplicitCouplingScheme() && not hasConverged())) {
       receiveAndSetTimeWindowSize();
       PRECICE_DEBUG("Receiving data...");
       receiveData(getM2N(), getReceiveData());
       checkDataHasBeenReceived();
     }
   }
-
-  return _converged;
 }
 
 } // namespace precice::cplscheme
