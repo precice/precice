@@ -1,5 +1,6 @@
 #include "CompositionalCouplingScheme.hpp"
 #include <algorithm>
+#include <functional>
 #include <limits>
 #include <memory>
 #include <ostream>
@@ -95,42 +96,64 @@ void CompositionalCouplingScheme::advance()
 
 CouplingScheme::ChangedMeshes CompositionalCouplingScheme::firstSynchronization(const CouplingScheme::ChangedMeshes &changes)
 {
+  PRECICE_TRACE();
   PRECICE_ASSERT(changes.empty());
-  return changes;
+  CouplingScheme::ChangedMeshes totalChanges;
+  for (SchemesIt it = _activeSchemesBegin; it != _activeSchemesEnd; it++) {
+    if (not it->onHold) {
+      auto remoteChanges = it->scheme->firstSynchronization(changes);
+      totalChanges.insert(totalChanges.end(), remoteChanges.begin(), remoteChanges.end());
+    }
+  }
+  return totalChanges;
 }
 
 void CompositionalCouplingScheme::firstExchange()
+{
+  PRECICE_TRACE();
+  std::for_each(_activeSchemesBegin, _activeSchemesEnd, [](auto &active) {
+    if (not active.onHold) {
+      active.scheme->firstExchange();
+    }
+  });
+}
+
+CouplingScheme::ChangedMeshes CompositionalCouplingScheme::secondSynchronization()
+{
+  PRECICE_TRACE();
+  CouplingScheme::ChangedMeshes totalChanges;
+  std::for_each(_activeSchemesBegin, _activeSchemesEnd, [&](auto &active) {
+    if (not active.onHold) {
+      auto remoteChanges = active.scheme->secondSynchronization();
+      totalChanges.insert(totalChanges.end(), remoteChanges.begin(), remoteChanges.end());
+    }
+  });
+  return totalChanges;
+}
+
+bool CompositionalCouplingScheme::secondExchange()
 {
   // The iteration prevents the split into 4 steps.
   // Conceptually, this only works if
   // 1. all explicit schemes are handled first
   // 2. (if present) only one implicit schemes is handled at the end
   PRECICE_TRACE();
-  bool moreSchemesToHandle = false;
-  do {
-    for (SchemesIt it = _activeSchemesBegin; it != _activeSchemesEnd; it++) {
-      if (not it->onHold) {
-        it->scheme->advance();
-      }
+  std::for_each(_activeSchemesBegin, _activeSchemesEnd, [&](auto &active) {
+    if (not active.onHold) {
+      [[maybe_unused]] auto ret = active.scheme->secondExchange();
+      PRECICE_ASSERT(ret);
     }
-    moreSchemesToHandle = determineActiveCouplingSchemes();
-    if (moreSchemesToHandle) {
-      // The new schemes to be handled in this advance also need the time that
-      // has been computed so far. This time can't be added in the solver call
-      // to addComputedTime(), since there the schemes are not active yet.
-      addComputedTime(_lastAddedTime);
-    }
-  } while (moreSchemesToHandle);
-  _lastAddedTime = 0.0;
-}
-
-CouplingScheme::ChangedMeshes CompositionalCouplingScheme::secondSynchronization()
-{
-  return {};
-}
-
-void CompositionalCouplingScheme::secondExchange()
-{
+  });
+  auto moreSchemesToHandle = determineActiveCouplingSchemes();
+  if (moreSchemesToHandle) {
+    // The new schemes to be handled in this advance also need the time that
+    // has been computed so far. This time can't be added in the solver call
+    // to addComputedTime(), since there the schemes are not active yet.
+    addComputedTime(_lastAddedTime);
+  } else {
+    _lastAddedTime = 0.0;
+  }
+  return !moreSchemesToHandle;
 }
 
 void CompositionalCouplingScheme::finalize()

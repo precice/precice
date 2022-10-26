@@ -45,7 +45,7 @@ CouplingScheme::ChangedMeshes DummyCouplingScheme::secondSynchronization()
   return {};
 }
 
-void DummyCouplingScheme::secondExchange()
+bool DummyCouplingScheme::secondExchange()
 {
   PRECICE_ASSERT(_isInitialized);
   PRECICE_ASSERT(_isOngoing);
@@ -57,6 +57,7 @@ void DummyCouplingScheme::secondExchange()
     _iterations = 0;
   }
   _iterations++;
+  return true;
 }
 
 void DummyCouplingScheme::finalize()

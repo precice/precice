@@ -265,7 +265,7 @@ CouplingScheme::ChangedMeshes BaseCouplingScheme::secondSynchronization()
   return {};
 }
 
-void BaseCouplingScheme::secondExchange()
+bool BaseCouplingScheme::secondExchange()
 {
   PRECICE_TRACE(_timeWindows, _time);
   checkCompletenessRequiredActions();
@@ -315,6 +315,7 @@ void BaseCouplingScheme::secondExchange()
     }
     _computedTimeWindowPart = 0.0; // reset window
   }
+  return true;
 }
 
 void BaseCouplingScheme::storeExtrapolationData()
