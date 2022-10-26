@@ -329,24 +329,33 @@ protected:
   /**
    * @brief sends convergence to other participant via m2n
    * @param m2n used for sending
-   * @param convergence bool that is being sent
    */
-  void sendConvergence(const m2n::PtrM2N &m2n, bool convergence);
+  void sendConvergence(const m2n::PtrM2N &m2n);
 
   /**
    * @brief receives convergence from other participant via m2n
    * @param m2n used for receiving
    * @returns convergence bool
    */
-  bool receiveConvergence(const m2n::PtrM2N &m2n);
+  void receiveConvergence(const m2n::PtrM2N &m2n);
 
   /**
    * @brief perform a coupling iteration
-   * @returns whether this iteration has converged or not
+   * @see hasConverged
    *
    * This function is called from the child classes
    */
-  bool doImplicitStep();
+  void doImplicitStep();
+
+  /**
+   * @brief Checks if the implicit cplscheme has converged
+   *
+   * @pre \ref doImplicitStep() or \ref receiveConvergence() has been called
+   */
+  bool hasConverged() const
+  {
+    return _hasConverged;
+  }
 
   /**
    * @brief stores current data in buffer for extrapolation
@@ -440,6 +449,9 @@ private:
   /// True, if coupling has been initialized.
   bool _isInitialized = false;
 
+  /// True if implicit scheme converged
+  bool _hasConverged = false;
+
   std::set<std::string> _actions;
 
   /// Responsible for monitoring iteration count over time window.
@@ -525,17 +537,15 @@ private:
   bool exchangeDataAndAccelerate()
   {
     exchangeFirstData();
-    return exchangeSecondDataAndAccelerate();
+    exchangeSecondData();
+    return hasConverged();
   }
 
   /// Exchanges the first set of data
   virtual void exchangeFirstData() = 0;
 
-  /** Exchanges the second set of data and accelerate in case of an implicit scheme
-   *
-   * @returns true, if iteration converged
-   */
-  virtual bool exchangeSecondDataAndAccelerate() = 0;
+  /// Exchanges the second set of data
+  virtual void exchangeSecondData() = 0;
 
   /**
    * @brief interface to provide accelerated data, depending on coupling scheme being used
