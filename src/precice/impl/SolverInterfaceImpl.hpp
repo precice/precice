@@ -550,6 +550,9 @@ private:
   /// Initializes intra-participant communication.
   void initializeIntraCommunication();
 
+  /// Advances the coupling schemes
+  void advanceCouplingSchemes();
+
   /// Syncs the timestep between all ranks (all timesteps should be the same!)
   void syncTimestep(double computedTimestepLength);
 
