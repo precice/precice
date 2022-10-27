@@ -118,7 +118,12 @@ private:
    */
   //bool exchangeDataAndAccelerate() override;
 
+  CouplingScheme::ChangedMeshes firstSynchronization(const CouplingScheme::ChangedMeshes &changes) final;
+
   void exchangeFirstData() override;
+
+  CouplingScheme::ChangedMeshes secondSynchronization() final;
+
   void exchangeSecondData() override;
 
   /**
@@ -140,6 +145,10 @@ private:
 
   /// if this is the controller or not
   bool _isController;
+
+  void sendLocalChanges(const CouplingScheme::ChangedMeshes &changes);
+
+  CouplingScheme::ChangedMeshes receiveRemoteChanges();
 };
 
 } // namespace cplscheme

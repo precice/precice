@@ -195,11 +195,7 @@ public:
   /// Receives result of first advance, if this has to happen inside SolverInterface::initialize(), see CouplingScheme.hpp
   void receiveResultOfFirstAdvance() override final;
 
-  ChangedMeshes firstSynchronization(const ChangedMeshes &changes) override final;
-
   void firstExchange() override final;
-
-  ChangedMeshes secondSynchronization() override final;
 
   bool secondExchange() override final;
 
@@ -528,19 +524,6 @@ private:
     return;
   }
 
-  /// Functions needed for advance()
-
-  /**
-   * @brief implements functionality for advance in base class.
-   * @returns true, if iteration converged
-   */
-  bool exchangeDataAndAccelerate()
-  {
-    exchangeFirstData();
-    exchangeSecondData();
-    return hasConverged();
-  }
-
   /// Exchanges the first set of data
   virtual void exchangeFirstData() = 0;
 
@@ -558,12 +541,14 @@ private:
    */
   void checkCompletenessRequiredActions();
 
+public:
   /**
    * @brief Function to check whether end of time window is reached. Does not check for convergence
    * @returns true if end time of time window is reached.
    */
   bool reachedEndOfTimeWindow();
 
+private:
   /**
    * @brief Initialize txt writers for iterations and convergence tracking
    */

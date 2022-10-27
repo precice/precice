@@ -104,7 +104,9 @@ public:
   {
     bool done = false;
     while (!done) {
+      firstSynchronization({});
       firstExchange();
+      secondSynchronization();
       done = secondExchange();
     }
   }
