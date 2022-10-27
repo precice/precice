@@ -11,8 +11,7 @@
 #include "logging/LogConfiguration.hpp"
 #include "logging/Logger.hpp"
 
-namespace precice {
-namespace logging {
+namespace precice::logging {
 
 /// A feature that adds \ref LogLocation info to log attributes
 template <class BaseT>
@@ -197,5 +196,4 @@ void Logger::trace(LogLocation loc, const std::string &mess) noexcept
 
 #undef PRECICE_LOG_IMPL
 
-} // namespace logging
-} // namespace precice
+} // namespace precice::logging
