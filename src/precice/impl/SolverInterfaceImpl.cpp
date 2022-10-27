@@ -416,18 +416,7 @@ double SolverInterfaceImpl::advance(
     performDataActions({action::Action::WRITE_MAPPING_POST}, time);
   }
 
-  PRECICE_DEBUG("Advance coupling scheme");
-  // Orchestrate local and remote mesh changes
-  std::vector<MeshID> localChanges;
-
-  bool done = false;
-  while (!done) {
-    [[maybe_unused]] auto remoteChanges1 = _couplingScheme->firstSynchronization(localChanges);
-    _couplingScheme->firstExchange();
-    // Orchestrate remote mesh changes (local ones were handled in the first sync)
-    [[maybe_unused]] auto remoteChanges2 = _couplingScheme->secondSynchronization();
-    done                                 = _couplingScheme->secondExchange();
-  }
+  advanceCouplingSchemes();
 
   if (_couplingScheme->isTimeWindowComplete()) {
     for (auto &context : _accessor->readDataContexts()) {
@@ -1982,6 +1971,22 @@ void SolverInterfaceImpl::syncTimestep(double computedTimestepLength)
                     "Found ambiguous values for the timestep length passed to preCICE in \"advance\". On rank {}, the value is {}, while on rank 0, the value is {}.",
                     secondaryRank, dt, computedTimestepLength);
     }
+  }
+}
+
+void SolverInterfaceImpl::advanceCouplingSchemes()
+{
+  PRECICE_DEBUG("Advance coupling scheme");
+  // Orchestrate local and remote mesh changes
+  std::vector<MeshID> localChanges;
+
+  bool done = false;
+  while (!done) {
+    [[maybe_unused]] auto remoteChanges1 = _couplingScheme->firstSynchronization(localChanges);
+    _couplingScheme->firstExchange();
+    // Orchestrate remote mesh changes (local ones were handled in the first sync)
+    [[maybe_unused]] auto remoteChanges2 = _couplingScheme->secondSynchronization();
+    done                                 = _couplingScheme->secondExchange();
   }
 }
 
