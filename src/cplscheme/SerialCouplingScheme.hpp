@@ -83,8 +83,12 @@ private:
    */
   void performReceiveOfFirstAdvance() override final;
 
+  CouplingScheme::ChangedMeshes firstSynchronization(const CouplingScheme::ChangedMeshes &changes) final;
+
   /// Exchanges the first set of data between the participants of the SerialCouplingSchemes
   void exchangeFirstData() override;
+
+  CouplingScheme::ChangedMeshes secondSynchronization() final;
 
   /**
    * @brief Exchanges the second set of data between the participants of the SerialCouplingSchemes

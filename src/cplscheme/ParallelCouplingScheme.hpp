@@ -59,8 +59,12 @@ public:
 private:
   logging::Logger _log{"cplscheme::ParallelCouplingScheme"};
 
+  ChangedMeshes firstSynchronization(const ChangedMeshes &changes) final;
+
   /// Exchanges first set of data between the participants of the ParallelCouplingScheme
   void exchangeFirstData() override;
+
+  ChangedMeshes secondSynchronization() final;
 
   /**
    * @brief Exchanges the second set of data between the participants of the ParallelCouplingScheme and applies acceleration.
