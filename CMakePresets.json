@@ -1,0 +1,77 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "BUILD_SHARED_LIBS": "ON"
+      }
+    },
+    {
+      "name": "production",
+      "inherits": "base",
+      "displayName": "Production release",
+      "description": "Default release configuration as preCICE is intended to be used in production.",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_INTERPROCEDURAL_OPTIMIZATION": "ON"
+      }
+    },
+    {
+      "name": "develop",
+      "inherits": "base",
+      "displayName": "Development config",
+      "description": "Development config with default settings",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_FLAGS": "-Wall -Wextra -Wno-unused-parameter"
+      },
+      "warnings": {
+        "dev": true,
+        "deprecated": true,
+        "uninitialized": true
+      }
+    },
+    {
+      "name": "debpkg",
+      "inherits": "production",
+      "displayName": "Debian package",
+      "description": "Build for the generation of Debian packages",
+      "cacheVariables": {
+        "CMAKE_INSTALL_PREFIX": "/usr",
+        "CPACK_GENERATOR": "DEB",
+        "BUILD_TESTING": "OFF"
+      }
+    },
+    {
+      "name": "bigrelease",
+      "inherits": "production",
+      "displayName": "Big release",
+      "description": "Release build with log and assertions enabled",
+      "cacheVariables": {
+        "PRECICE_RELEASE_WITH_ASSERTIONS": "ON",
+        "PRECICE_RELEASE_WITH_DEBUG_LOG": "ON"
+      }
+    },
+    {
+      "name": "localinstall",
+      "inherits": "production",
+      "displayName": "Locally installed release",
+      "description": "Release build with local installation to ./installation",
+      "installDir": "${sourceDir}/installation"
+    },
+    {
+      "name": "profiling",
+      "inherits": "develop",
+      "displayName": "Profiling",
+      "description": "Profiling configuration",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_INTERPROCEDURAL_OPTIMIZATION": "ON",
+        "CMAKE_CXX_FLAGS": "-Wall -Wextra -Wno-unused-parameter -fno-omit-frame-pointer"
+      }
+    }
+  ]
+}
