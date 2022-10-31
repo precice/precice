@@ -4,6 +4,10 @@
 
 namespace precice::time {
 
+const double Storage::WINDOW_START = 0.0;
+
+const double Storage::WINDOW_END = 1.0;
+
 Storage::Storage()
     : _sampleStorage{}
 {
@@ -11,8 +15,8 @@ Storage::Storage()
 
 void Storage::initialize(Eigen::VectorXd values)
 {
-  _sampleStorage.emplace_back(std::make_pair(0.0, values));
-  _sampleStorage.emplace_back(std::make_pair(1.0, values));
+  _sampleStorage.emplace_back(std::make_pair(WINDOW_START, values));
+  _sampleStorage.emplace_back(std::make_pair(WINDOW_END, values));
 }
 
 Eigen::VectorXd Storage::getValueAtTime(double time)
@@ -27,19 +31,18 @@ Eigen::VectorXd Storage::getValueAtTime(double time)
 
 void Storage::setValueAtTime(double time, Eigen::VectorXd value)
 {
-  PRECICE_ASSERT(math::greater(time, 0.0), "Setting value outside of valid range!");
-  PRECICE_ASSERT(math::smallerEquals(time, 1.0), "Sampling outside of valid range!");
+  PRECICE_ASSERT(math::greater(time, WINDOW_START), "Setting value outside of valid range!");
+  PRECICE_ASSERT(math::smallerEquals(time, WINDOW_END), "Sampling outside of valid range!");
   PRECICE_ASSERT(math::smaller(maxStoredNormalizedDt(), time), maxStoredNormalizedDt(), time, "Trying to overwrite existing values or to write values with a time that is too small. Please use clear(), if you want to reset the storage.");
   _sampleStorage.emplace_back(std::make_pair(time, value));
 }
 
 void Storage::overrideDataAtEndWindowTime(Eigen::VectorXd data)
 {
-  double endWindowTime = 1.0;
   if (_sampleStorage.size() == 0) {
-    _sampleStorage.emplace_back(std::make_pair(endWindowTime, data));
+    _sampleStorage.emplace_back(std::make_pair(WINDOW_END, data));
   } else {
-    PRECICE_ASSERT(math::equals(_sampleStorage.back().first, endWindowTime), "Unexpected!", _sampleStorage.back().first);
+    PRECICE_ASSERT(math::equals(_sampleStorage.back().first, WINDOW_END), "Unexpected!", _sampleStorage.back().first);
     _sampleStorage.back().second = data;
   }
 }
@@ -80,7 +83,7 @@ void Storage::clear(bool keepZero)
   }
   _sampleStorage.clear();
   if (keepZero) {
-    _sampleStorage.emplace_back(std::make_pair(0.0, keep));
+    _sampleStorage.emplace_back(std::make_pair(WINDOW_START, keep));
   }
 }
 

@@ -159,8 +159,8 @@ void BiCouplingScheme::exchangeInitialData()
 
 void BiCouplingScheme::storeTimeStepSendData(double relativeDt)
 {
-  PRECICE_ASSERT(relativeDt > 0);
-  PRECICE_ASSERT(relativeDt <= 1.0, relativeDt);
+  PRECICE_ASSERT(relativeDt > time::Storage::WINDOW_START, relativeDt);
+  PRECICE_ASSERT(relativeDt <= time::Storage::WINDOW_END, relativeDt);
   for (auto &sendData : getSendData()) {
     auto values = sendData.second->values();
     sendData.second->storeDataAtTime(values, relativeDt);
@@ -179,10 +179,10 @@ void BiCouplingScheme::storeTimeStepReceiveDataEndOfWindow()
 
 void BiCouplingScheme::retreiveTimeStepReceiveData(double relativeDt)
 {
-  PRECICE_ASSERT(relativeDt > 0);
-  PRECICE_ASSERT(relativeDt <= 1.0, relativeDt);
-  for (auto &aReceiveData : getReceiveData()) {
-    retreiveTimeStepForData(relativeDt, aReceiveData.second->getDataID());
+  PRECICE_ASSERT(relativeDt > time::Storage::WINDOW_START, relativeDt);
+  PRECICE_ASSERT(relativeDt <= time::Storage::WINDOW_END, relativeDt);
+  for (auto &receiveData : getReceiveData()) {
+    retreiveTimeStepForData(relativeDt, receiveData.second->getDataID());
   }
 }
 

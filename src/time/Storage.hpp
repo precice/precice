@@ -7,6 +7,12 @@ namespace precice::time {
 
 class Storage {
 public:
+  /// Fixed time associated with beginning of window
+  static const double WINDOW_START;
+
+  /// Fixed time associated with end of window
+  static const double WINDOW_END;
+
   /**
    * @brief Stores data samples in time and provides corresponding convenience functions.
    *

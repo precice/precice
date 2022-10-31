@@ -7,6 +7,7 @@
 #include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
+#include "time/Storage.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice::cplscheme {
@@ -157,7 +158,7 @@ std::vector<double> CompositionalCouplingScheme::getReceiveTimes()
 {
   //@todo stub implementation. Should walk over all receive data, get times and ensure that all times vectors actually hold the same times (since otherwise we would have to get times individually per data)
   //@todo As for MultiCouplingScheme subcycling is not supported for CompositionalCouplingScheme, because this needs a complicated interplay of picking the right data in time and mapping this data. This is hard to realize with the current implementation.
-  auto times = std::vector<double>({1.0});
+  auto times = std::vector<double>({time::Storage::WINDOW_END});
   return times;
 }
 

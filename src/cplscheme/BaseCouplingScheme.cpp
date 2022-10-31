@@ -106,7 +106,7 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
     sendNumberOfTimeSteps(m2n, timesAscending.size());
     sendTimes(m2n, timesAscending);
 
-    PRECICE_ASSERT(math::equals(timesAscending(timesAscending.size() - 1), 1.0), timesAscending(timesAscending.size() - 1)); // assert that last element is 1.0
+    PRECICE_ASSERT(math::equals(timesAscending(timesAscending.size() - 1), time::Storage::WINDOW_END), timesAscending(timesAscending.size() - 1)); // assert that last element is time::Storage::WINDOW_END
 
     auto serializedSamples = pair.second->getSerialized();
     pair.second->clearTimeStepsStorage();
@@ -215,7 +215,7 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
 
   // For simple initialization initialize as constant.
   if (sendsInitializedData()) {
-    storeTimeStepSendData(1.0);
+    storeTimeStepSendData(time::Storage::WINDOW_END);
   }
 
   exchangeInitialData();
@@ -264,22 +264,22 @@ void BaseCouplingScheme::advance()
     PRECICE_ASSERT(_computedTimeWindowPart > 0);
     if (not usesFirstParticipantMethod) {
       relativeDt = _computedTimeWindowPart / _timeWindowSize;
-      PRECICE_ASSERT(math::smallerEquals(relativeDt, 1.0), relativeDt, _computedTimeWindowPart, _timeWindowSize);
-      PRECICE_ASSERT(relativeDt > 0, relativeDt, _computedTimeWindowPart, _timeWindowSize);
+      PRECICE_ASSERT(math::smallerEquals(relativeDt, time::Storage::WINDOW_END), relativeDt, _computedTimeWindowPart, _timeWindowSize);
+      PRECICE_ASSERT(relativeDt > time::Storage::WINDOW_START, relativeDt, _computedTimeWindowPart, _timeWindowSize);
       storeTimeStepSendData(relativeDt);
     } else {
       // We don't support subcycling here, because this is complicated. Therefore, use same strategy like for explicit coupling and just use a single value at end of window.
       // Possible solution: Don't scale times to [0,1], but leave them as they are. Then we would also allow times > 1. We then have two options:
       // 1) scale the times back later when the time window size is known (to still benefit from the simpler handling, if all times are scaled to [0,1]).
       // 2) generally use times in the interval [0, timeWindowSize]. This makes the implementation probably a bit more complicated, but also more consistent.
-      if (reachedEndOfTimeWindow()) { // only necessary to trigger at end of time window.
-        storeTimeStepSendData(1.0);   // only write data at end of window
+      if (reachedEndOfTimeWindow()) {                     // only necessary to trigger at end of time window.
+        storeTimeStepSendData(time::Storage::WINDOW_END); // only write data at end of window
       }
     }
   } else {
     // work-around for explicit coupling, because it does not support waveform relaxation.
-    if (reachedEndOfTimeWindow()) { // only necessary to trigger at end of time window.
-      storeTimeStepSendData(1.0);   // only write data at end of window
+    if (reachedEndOfTimeWindow()) {                     // only necessary to trigger at end of time window.
+      storeTimeStepSendData(time::Storage::WINDOW_END); // only write data at end of window
     }
   }
 
@@ -456,7 +456,7 @@ void BaseCouplingScheme::retreiveTimeStepReceiveDataEndOfWindow()
     // needed to avoid problems with round-off-errors.
     auto times       = getReceiveTimes();
     auto largestTime = times.at(times.size() - 1);
-    PRECICE_ASSERT(math::equals(largestTime, 1.0), largestTime);
+    PRECICE_ASSERT(math::equals(largestTime, time::Storage::WINDOW_END), largestTime);
     retreiveTimeStepReceiveData(largestTime); // might be moved into SolverInterfaceImpl.
   }
 }
@@ -758,7 +758,7 @@ void BaseCouplingScheme::retreiveTimeStepAccelerationDataEndOfWindow()
   // needed to avoid problems with round-off-errors.
   auto times       = getAccelerationTimes();
   auto largestTime = times.at(times.size() - 1);
-  PRECICE_ASSERT(math::equals(largestTime, 1.0), largestTime);
+  PRECICE_ASSERT(math::equals(largestTime, time::Storage::WINDOW_END), largestTime);
   for (auto &anAccelerationData : getAccelerationData()) {
     retreiveTimeStepForData(largestTime, anAccelerationData.second->getDataID());
   }
