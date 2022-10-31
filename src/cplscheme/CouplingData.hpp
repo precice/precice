@@ -91,9 +91,9 @@ public:
   Eigen::VectorXd getDataAtTime(double relativeDt);
 
   /**
-   * @brief Returns all time steps stored in this coupling data in a serialized fashion
+   * @brief Returns the values of all time steps stored in this coupling data in a serialized fashion
    *
-   * Serialization of the data is performed per mesh node. The dimension of one node is then geometrical dimension * number of time steps.
+   * Serialization of the data is performed per mesh node. The dimension of one node is then data dimension (scalar or vector) * number of time steps.
    *
    * @return Eigen::VectorXd a vector containing all data for all time steps in serialized fashion.
    */

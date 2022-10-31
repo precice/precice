@@ -191,7 +191,7 @@ public:
   /// All ranks receive a double (the same for each rank).
   void receive(double &itemToReceive);
 
-  /// All ranks receive am int (the same for each rank).
+  /// All ranks receive an int (the same for each rank).
   void receive(int &itemToReceive);
 
   /// Receive mesh partitions per connected rank on remote participant (concerning the given mesh)
