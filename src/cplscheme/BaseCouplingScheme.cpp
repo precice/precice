@@ -264,12 +264,8 @@ void BaseCouplingScheme::advance()
     PRECICE_ASSERT(_computedTimeWindowPart > 0);
     if (not usesFirstParticipantMethod) {
       relativeDt = _computedTimeWindowPart / _timeWindowSize;
-      PRECICE_ASSERT(math::smallerEquals(relativeDt, 1.0, 10e-9), relativeDt, _computedTimeWindowPart, _timeWindowSize);
+      PRECICE_ASSERT(math::smallerEquals(relativeDt, 1.0), relativeDt, _computedTimeWindowPart, _timeWindowSize);
       PRECICE_ASSERT(relativeDt > 0, relativeDt, _computedTimeWindowPart, _timeWindowSize);
-      if (relativeDt > 1.0) {
-        PRECICE_ASSERT(math::smallerEquals(relativeDt, 1.0, 10e-9), relativeDt);
-        relativeDt = 1.0;
-      }
       storeTimeStepSendData(relativeDt);
     } else {
       // We don't support subcycling here, because this is complicated. Therefore, use same strategy like for explicit coupling and just use a single value at end of window.
