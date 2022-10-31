@@ -95,10 +95,10 @@ void MultiCouplingScheme::storeTimeStepSendData(double relativeDt)
 {
   PRECICE_ASSERT(relativeDt > 0);
   PRECICE_ASSERT(relativeDt <= 1.0);
-  for (auto &sendDataVector : _sendDataVector) {
-    for (auto &aSendData : sendDataVector.second) {
-      auto theData = aSendData.second->values();
-      aSendData.second->storeDataAtTime(theData, relativeDt);
+  for (auto &sendExchange : _sendDataVector) {
+    for (auto &sendData : sendExchange.second) {
+      auto values = sendData.second->values();
+      sendData.second->storeDataAtTime(values, relativeDt);
     }
   }
 }
@@ -106,10 +106,10 @@ void MultiCouplingScheme::storeTimeStepSendData(double relativeDt)
 void MultiCouplingScheme::storeTimeStepReceiveDataEndOfWindow()
 {
   if (hasDataBeenReceived()) {
-    for (auto &receiveDataVector : _receiveDataVector) {
-      for (auto &aReceiveData : receiveDataVector.second) {
-        auto theData = aReceiveData.second->values();
-        aReceiveData.second->overrideDataAtEndWindowTime(theData);
+    for (auto &receiveExchange : _receiveDataVector) {
+      for (auto &receiveData : receiveExchange.second) {
+        auto values = receiveData.second->values();
+        receiveData.second->overrideDataAtEndWindowTime(values);
       }
     }
   }
@@ -120,10 +120,10 @@ void MultiCouplingScheme::retreiveTimeStepReceiveData(double relativeDt)
   // @todo breaks, if different receiveData live on different time-meshes. This is a realistic use-case for multi coupling! Should use a different signature here to individually retreiveTimeStepData from receiveData. Would also be helpful for mapping.
   PRECICE_ASSERT(relativeDt > 0);
   PRECICE_ASSERT(relativeDt <= 1.0, relativeDt);
-  for (auto &receiveDataVector : _receiveDataVector) {
-    for (auto &aReceiveData : receiveDataVector.second) {
-      aReceiveData.second->values() = aReceiveData.second->getDataAtTime(relativeDt);
-      //retreiveTimeStepForData(relativeDt, aReceiveData.second->getDataID());  // @todo: Causes problems. Why? Because DataID is not unique for MultiCouplingScheme's allData.
+  for (auto &receiveExchange : _receiveDataVector) {
+    for (auto &receiveData : receiveExchange.second) {
+      receiveData.second->values() = receiveData.second->getDataAtTime(relativeDt);
+      //retreiveTimeStepForData(relativeDt, receiveData.second->getDataID());  // @todo: Causes problems. Why? Because DataID is not unique for MultiCouplingScheme's allData.
     }
   }
 }
@@ -143,17 +143,17 @@ const DataMap MultiCouplingScheme::getAllData()
   DataMap allData;
   PRECICE_INFO("##### assembling allData() #####");
   // @todo user C++17 std::map::merge
-  for (auto &sendData : _sendDataVector) {
-    for (auto &aSendData : sendData.second) {
-      PRECICE_INFO("DataID: {} {}", aSendData.first, aSendData.second->getDataID());
+  for (auto &sendExchange : _sendDataVector) {
+    for (auto &sendData : sendExchange.second) {
+      PRECICE_INFO("DataID: {} {}", sendData.first, sendData.second->getDataID());
     }
-    allData.insert(sendData.second.begin(), sendData.second.end());
+    allData.insert(sendExchange.second.begin(), sendExchange.second.end());
   }
-  for (auto &receiveData : _receiveDataVector) {
-    for (auto &aReceiveData : receiveData.second) {
-      PRECICE_INFO("DataID: {} {}", aReceiveData.first, aReceiveData.second->getDataID());
+  for (auto &receiveExchange : _receiveDataVector) {
+    for (auto &receiveData : receiveExchange.second) {
+      PRECICE_INFO("DataID: {} {}", receiveData.first, receiveData.second->getDataID());
     }
-    allData.insert(receiveData.second.begin(), receiveData.second.end());
+    allData.insert(receiveExchange.second.begin(), receiveExchange.second.end());
   }
   PRECICE_INFO("##### assembling allData() done #####");
 

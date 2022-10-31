@@ -161,18 +161,18 @@ void BiCouplingScheme::storeTimeStepSendData(double relativeDt)
 {
   PRECICE_ASSERT(relativeDt > 0);
   PRECICE_ASSERT(relativeDt <= 1.0, relativeDt);
-  for (auto &aSendData : getSendData()) {
-    auto theData = aSendData.second->values();
-    aSendData.second->storeDataAtTime(theData, relativeDt);
+  for (auto &sendData : getSendData()) {
+    auto values = sendData.second->values();
+    sendData.second->storeDataAtTime(values, relativeDt);
   }
 }
 
 void BiCouplingScheme::storeTimeStepReceiveDataEndOfWindow()
 {
   if (hasDataBeenReceived()) {
-    for (auto &aReceiveData : getReceiveData()) {
-      auto theData = aReceiveData.second->values();
-      aReceiveData.second->overrideDataAtEndWindowTime(theData);
+    for (auto &receiveData : getReceiveData()) {
+      auto values = receiveData.second->values();
+      receiveData.second->overrideDataAtEndWindowTime(values);
     }
   }
 }
