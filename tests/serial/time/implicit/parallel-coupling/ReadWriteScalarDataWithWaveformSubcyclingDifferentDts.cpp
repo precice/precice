@@ -41,14 +41,16 @@ double matchTimeFromOtherSolver(double thisTime, int windowCounter, int otherSub
 // helper to map a time on the time grid of solver two to the corresponding time on the time grid of solver one. Helps to determine the expected value in the constant interpolation
 double solverOneTime(double time, int windowCounter)
 {
-  double relativeDts[solverOneNSubsteps] = {5.0 / 16.0, 10.0 / 16.0, 15.0 / 16.0, 16.0 / 16.0};
+  BOOST_TEST(solverOneNSubsteps == 4);
+  double relativeDts[4] = {5.0 / 16.0, 10.0 / 16.0, 15.0 / 16.0, 16.0 / 16.0};
   return matchTimeFromOtherSolver(time, windowCounter, solverOneNSubsteps, relativeDts);
 }
 
 // helper to map a time on the time grid of solver one to the corresponding time on the time grid of solver two. Helps to determine the expected value in the constant interpolation
 double solverTwoTime(double time, int windowCounter)
 {
-  double relativeDts[solverTwoNSubsteps] = {4.0 / 9.0, 8.0 / 9.0, 9.0 / 9.0};
+  BOOST_TEST(solverTwoNSubsteps == 3);
+  double relativeDts[3] = {4.0 / 9.0, 8.0 / 9.0, 9.0 / 9.0};
   return matchTimeFromOtherSolver(time, windowCounter, solverTwoNSubsteps, relativeDts);
 }
 
