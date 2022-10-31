@@ -208,7 +208,7 @@ public:
   bool isTimeWindowComplete() const final override;
 
   /**
-   * @brief Returns true, moveing to next window has to be performed before mapping is performed.
+   * @brief Returns true, if moving to next window has to be performed before mapping is performed.
    */
   bool moveWindowBeforeMapping() const final override;
 

@@ -55,7 +55,7 @@ public:
       int                           extrapolationOrder = UNDEFINED_EXTRAPOLATION_ORDER);
 
   /**
-   * @brief Returns true, moveing to next window has to be performed before mapping is performed.
+   * @brief Returns true, if moving to next window has to be performed before mapping is performed.
    *
    * There is an exception for serial coupling schemes compared to other coupling schemes: Second participant needs to move to the next window before the mapping, because it will already receive new data in the mapping when the window is complete.
    */
