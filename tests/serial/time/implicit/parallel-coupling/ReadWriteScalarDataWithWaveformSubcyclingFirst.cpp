@@ -86,8 +86,6 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
       iterations         = 0;
       precice.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
     }
-    double readTime;
-    readTime = time + currentDt;
 
     precice.readScalarData(readDataID, vertexID, currentDt, readData);
 

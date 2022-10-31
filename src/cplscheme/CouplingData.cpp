@@ -157,11 +157,9 @@ Eigen::VectorXd CouplingData::getSerialized()
   int  nTimeSteps     = _timeStepsStorage.nTimes();
   auto serializedData = Eigen::VectorXd(nTimeSteps * nValues);
   auto timesAndValues = _timeStepsStorage.getTimesAndValues();
-  auto times          = timesAndValues.first;
   auto values         = timesAndValues.second;
 
   for (int timeId = 0; timeId < nTimeSteps; timeId++) {
-    auto time  = times(timeId);
     auto slice = values.col(timeId);
     for (int valueId = 0; valueId < nValues; valueId++) {
       serializedData(valueId * nTimeSteps + timeId) = slice(valueId);
