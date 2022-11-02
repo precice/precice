@@ -2,6 +2,7 @@
 # CTest
 #
 
+set(PRECICE_TEST_TIMEOUT_DEBUG 300 CACHE STRING "The timeout in seconds for very long tests, should only be used for debugging.")
 set(PRECICE_TEST_TIMEOUT_LONG 120 CACHE STRING "The timeout in seconds for longer tests.")
 set(PRECICE_TEST_TIMEOUT_SHORT 20 CACHE STRING "The timeout in seconds for shorter tests.")
 
@@ -303,7 +304,7 @@ foreach(testsuite IN LISTS PRECICE_TEST_SUITES)
   add_precice_test(
     NAME "integration.${testsuite}"
     ARGUMENTS "--run_test=Integration/${testsuite}"
-    TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
+    TIMEOUT ${PRECICE_TEST_TIMEOUT_DEBUG}
     )
 endforeach()
 
