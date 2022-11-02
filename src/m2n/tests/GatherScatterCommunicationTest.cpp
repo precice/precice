@@ -31,12 +31,7 @@ BOOST_AUTO_TEST_CASE(GatherScatterTest)
     m2n->createDistributedCommunication(pMesh);
 
     pMesh->setGlobalNumberOfVertices(numberOfVertices);
-    pMesh->getVertexDistribution()[0].push_back(0);
-    pMesh->getVertexDistribution()[0].push_back(1);
-    pMesh->getVertexDistribution()[0].push_back(2);
-    pMesh->getVertexDistribution()[0].push_back(3);
-    pMesh->getVertexDistribution()[0].push_back(4);
-    pMesh->getVertexDistribution()[0].push_back(5);
+    pMesh->setVertexDistribution({{0, {0, 1, 2, 3, 4, 5}}});
 
     m2n->acceptSecondaryRanksConnection("Part1", "Part2");
     Eigen::VectorXd values = Eigen::VectorXd::Zero(numberOfVertices);
@@ -58,13 +53,7 @@ BOOST_AUTO_TEST_CASE(GatherScatterTest)
 
     if (context.isPrimary()) {
       pMesh->setGlobalNumberOfVertices(numberOfVertices);
-      pMesh->getVertexDistribution()[0].push_back(0);
-      pMesh->getVertexDistribution()[0].push_back(1);
-      pMesh->getVertexDistribution()[0].push_back(3);
-      pMesh->getVertexDistribution()[2].push_back(2);
-      pMesh->getVertexDistribution()[2].push_back(3);
-      pMesh->getVertexDistribution()[2].push_back(4);
-      pMesh->getVertexDistribution()[2].push_back(5);
+      pMesh->setVertexDistribution({{0, {0, 1, 3}}, {2, {2, 3, 4, 5}}});
 
       Eigen::Vector3d values(0.0, 0.0, 0.0);
       m2n->receive(values, pMesh->getID(), valueDimension);

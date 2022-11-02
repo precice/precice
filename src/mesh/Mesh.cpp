@@ -309,41 +309,6 @@ void Mesh::clearPartitioning()
   _globalNumberOfVertices = 0;
 }
 
-Mesh::VertexDistribution &Mesh::getVertexDistribution()
-{
-  return _vertexDistribution;
-}
-
-const Mesh::VertexDistribution &Mesh::getVertexDistribution() const
-{
-  return _vertexDistribution;
-}
-
-std::vector<int> &Mesh::getVertexOffsets()
-{
-  return _vertexOffsets;
-}
-
-const std::vector<int> &Mesh::getVertexOffsets() const
-{
-  return _vertexOffsets;
-}
-
-void Mesh::setVertexOffsets(std::vector<int> &vertexOffsets)
-{
-  _vertexOffsets = vertexOffsets;
-}
-
-int Mesh::getGlobalNumberOfVertices() const
-{
-  return _globalNumberOfVertices;
-}
-
-void Mesh::setGlobalNumberOfVertices(int num)
-{
-  _globalNumberOfVertices = num;
-}
-
 Eigen::VectorXd Mesh::getOwnedVertexData(DataID dataID)
 {
 

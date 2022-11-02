@@ -117,7 +117,7 @@ public:
   using CommunicationMap = std::map<int, std::vector<int>>;
 
   /// Broadcasts an int to connected ranks on remote participant
-  virtual void broadcastSend(const int &itemToSend) = 0;
+  virtual void broadcastSend(int itemToSend) = 0;
 
   /**
    * @brief Receives an int per connected rank on remote participant

@@ -10,19 +10,19 @@ int main(int argc, char **argv)
   using namespace precice;
   using namespace precice::constants;
 
+  if (argc != 3) {
+    std::cout << "The solverdummy was called with an incorrect number of arguments. Usage: ./solverdummy configFile solverName\n\n";
+    std::cout << "Parameter description\n";
+    std::cout << "  configurationFile: Path and filename of preCICE configuration\n";
+    std::cout << "  solverName:        SolverDummy participant name in preCICE configuration\n";
+    return EXIT_FAILURE;
+  }
+
   std::string configFileName(argv[1]);
   std::string solverName(argv[2]);
   std::string meshName;
   std::string dataWriteName;
   std::string dataReadName;
-
-  if (argc != 3) {
-    std::cout << "Usage: ./solverdummy configFile solverName\n\n";
-    std::cout << "Parameter description\n";
-    std::cout << "  configurationFile: Path and filename of preCICE configuration\n";
-    std::cout << "  solverName:        SolverDummy participant name in preCICE configuration\n";
-    return 1;
-  }
 
   std::cout << "DUMMY: Running solver dummy with preCICE config file \"" << configFileName << "\" and participant name \"" << solverName << "\".\n";
 

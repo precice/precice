@@ -102,7 +102,7 @@ public:
   void receive(precice::span<double> itemsToReceive, int valueDimension = 1) override;
 
   /// Broadcasts an int to connected ranks on remote participant
-  void broadcastSend(const int &itemToSend) override;
+  void broadcastSend(int itemToSend) override;
 
   /**
    * @brief Receives an int per connected rank on remote participant

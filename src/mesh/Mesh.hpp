@@ -51,6 +51,8 @@ public:
   /// A mapping from remote local ranks to the IDs that must be communicated
   using CommunicationMap = std::map<Rank, std::vector<VertexID>>;
 
+  using VertexOffsets = std::vector<int>;
+
   /// Use if the id of the mesh is not necessary
   static constexpr MeshID MESH_ID_UNDEFINED{-1};
 
@@ -224,21 +226,37 @@ public:
   /// Clears the partitioning information
   void clearPartitioning();
 
+  void setVertexDistribution(VertexDistribution vd)
+  {
+    _vertexDistribution = std::move(vd);
+  }
+
   /// Returns a mapping from rank to used (not necessarily owned) vertex IDs
-  VertexDistribution &getVertexDistribution();
+  const VertexDistribution &getVertexDistribution() const
+  {
+    return _vertexDistribution;
+  }
 
-  VertexDistribution const &getVertexDistribution() const;
-
-  std::vector<int> &getVertexOffsets();
-
-  const std::vector<int> &getVertexOffsets() const;
+  const VertexOffsets &getVertexOffsets() const
+  {
+    return _vertexOffsets;
+  }
 
   /// Only used for tests
-  void setVertexOffsets(std::vector<int> &vertexOffsets);
+  void setVertexOffsets(VertexOffsets vertexOffsets)
+  {
+    _vertexOffsets = std::move(vertexOffsets);
+  }
 
-  int getGlobalNumberOfVertices() const;
+  int getGlobalNumberOfVertices() const
+  {
+    return _globalNumberOfVertices;
+  }
 
-  void setGlobalNumberOfVertices(int num);
+  void setGlobalNumberOfVertices(int num)
+  {
+    _globalNumberOfVertices = num;
+  }
 
   // Get the data of owned vertices for given data ID
   Eigen::VectorXd getOwnedVertexData(DataID dataID);
@@ -247,9 +265,15 @@ public:
   void tagAll();
 
   /// Returns a vector of connected ranks
-  std::vector<Rank> &getConnectedRanks()
+  const std::vector<Rank> &getConnectedRanks() const
   {
     return _connectedRanks;
+  }
+
+  /// Returns a vector of connected ranks
+  void setConnectedRanks(std::vector<Rank> ranks)
+  {
+    _connectedRanks = std::move(ranks);
   }
 
   /// Returns a mapping from remote local connected ranks to the corresponding vertex IDs
@@ -316,7 +340,7 @@ private:
    * The last entry holds the total number of vertices.
    * Needed for the matrix-matrix multiplication of the IMVJ acceleration.
    */
-  std::vector<int> _vertexOffsets;
+  VertexOffsets _vertexOffsets;
 
   /**
    * @brief Number of unique vertices for complete distributed mesh.

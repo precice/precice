@@ -152,6 +152,12 @@ auto reorder_array(const std::array<Index, n> &order, const std::array<T, n> &el
   return reordered;
 }
 
+template <class InputIt, class Size, class InOutIt>
+void add_n(InputIt first, Size count, InOutIt result)
+{
+  std::transform(first, std::next(first, count), result, result, std::plus{});
+}
+
 } // namespace utils
 } // namespace precice
 
