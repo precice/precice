@@ -1,3 +1,4 @@
+#include "com/Communication.hpp"
 #ifndef PRECICE_NO_MPI
 
 #include "acceleration/impl/ParallelMatrixOperations.hpp"
@@ -35,28 +36,9 @@ void ParallelMatrixOperations::establishCircularCommunication()
   com::PtrCommunication cyclicCommLeft  = com::PtrCommunication(new com::MPIPortsCommunication("."));
   com::PtrCommunication cyclicCommRight = com::PtrCommunication(new com::MPIPortsCommunication("."));
 
-  const auto size     = utils::IntraComm::getSize();
-  const auto rank     = utils::IntraComm::getRank();
-  const int  prevProc = (rank - 1 + size) % size;
-  const int  nextProc = (rank + 1) % size;
-
-  std::string prefix   = "MVQNCyclicComm";
-  std::string prevName = prefix + std::to_string(prevProc);
-  std::string thisName = prefix + std::to_string(rank);
-  std::string nextName = prefix + std::to_string(nextProc);
-  if ((rank % 2) == 0) {
-    cyclicCommLeft->prepareEstablishment(prevName, thisName);
-    cyclicCommLeft->acceptConnection(prevName, thisName, "", 0);
-    cyclicCommLeft->cleanupEstablishment(prevName, thisName);
-
-    cyclicCommRight->requestConnection(thisName, nextName, "", 0, 1);
-  } else {
-    cyclicCommRight->requestConnection(thisName, nextName, "", 0, 1);
-
-    cyclicCommLeft->prepareEstablishment(prevName, thisName);
-    cyclicCommLeft->acceptConnection(prevName, thisName, "", 0);
-    cyclicCommLeft->cleanupEstablishment(prevName, thisName);
-  }
+  const auto size = utils::IntraComm::getSize();
+  const auto rank = utils::IntraComm::getRank();
+  com::connectCircularComm("MVQNCyclicComm", "", rank, size, *cyclicCommLeft, *cyclicCommRight);
 
   _cyclicCommLeft  = std::move(cyclicCommLeft);
   _cyclicCommRight = std::move(cyclicCommRight);

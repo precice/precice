@@ -202,7 +202,7 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
   }
 
   PRECICE_CHECK(decompositionSuccessful,
-                "The interpolation matrix of the RBF mapping from mesh {} to mesh {} is not invertable. "
+                "The interpolation matrix of the RBF mapping from mesh \"{}\" to mesh \"{}\" is not invertable. "
                 "This means that the mapping problem is not well-posed. "
                 "Please check if your coupling meshes are correct. Maybe you need to fix axis-aligned mapping setups "
                 "by marking perpendicular axes as dead?",
