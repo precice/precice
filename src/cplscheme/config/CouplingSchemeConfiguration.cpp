@@ -347,10 +347,6 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
       addCouplingScheme(scheme, accessor);
       _config = Config();
     } else if (_config.type == VALUE_MULTI) {
-      if (_experimental) {
-        int maxAllowedOrder = 0; // multi coupling scheme does not allow waveform iteration
-        checkWaveformOrderReadData(maxAllowedOrder);
-      }
       PRECICE_CHECK(_config.setController,
                     "One controller per MultiCoupling needs to be defined. "
                     "Please check the <participant name=... /> tags in the <coupling-scheme:... /> of your precice-config.xml. "
