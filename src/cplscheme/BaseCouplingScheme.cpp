@@ -183,62 +183,6 @@ bool BaseCouplingScheme::sendsInitializedData() const
   return _sendsInitializedData;
 }
 
-#if 0
-void BaseCouplingScheme::advance()
-{
-  PRECICE_TRACE(_timeWindows, _time);
-  checkCompletenessRequiredActions();
-  PRECICE_ASSERT(_isInitialized, "Before calling advance() coupling scheme has to be initialized via initialize().");
-  _hasDataBeenReceived  = false;
-  _isTimeWindowComplete = false;
-
-  PRECICE_ASSERT(_couplingMode != Undefined);
-
-  if (reachedEndOfTimeWindow()) {
-
-    _timeWindows += 1; // increment window counter. If not converged, will be decremented again later.
-
-    bool convergence = exchangeDataAndAccelerate();
-
-    if (isImplicitCouplingScheme()) { // check convergence
-      if (not convergence) {          // repeat window
-        PRECICE_DEBUG("No convergence achieved");
-        requireAction(constants::actionReadIterationCheckpoint());
-        // The computed time window part equals the time window size, since the
-        // time window remainder is zero. Subtract the time window size and do another
-        // coupling iteration.
-        PRECICE_ASSERT(math::greater(_computedTimeWindowPart, 0.0));
-        _time = _time - _computedTimeWindowPart;
-        _timeWindows -= 1;
-      } else { // write output, prepare for next window
-        PRECICE_DEBUG("Convergence achieved");
-        advanceTXTWriters();
-        PRECICE_INFO("Time window completed");
-        _isTimeWindowComplete = true;
-        if (isCouplingOngoing()) {
-          PRECICE_DEBUG("Setting require create checkpoint");
-          requireAction(constants::actionWriteIterationCheckpoint());
-        }
-      }
-      // update iterations
-      _totalIterations++;
-      if (not convergence) {
-        _iterations++;
-      } else {
-        _iterations = 1;
-      }
-    } else {
-      PRECICE_INFO("Time window completed");
-      _isTimeWindowComplete = true;
-    }
-    if (isCouplingOngoing()) {
-      PRECICE_ASSERT(_hasDataBeenReceived);
-    }
-    _computedTimeWindowPart = 0.0; // reset window
-  }
-}
-#endif
-
 CouplingScheme::ChangedMeshes BaseCouplingScheme::firstSynchronization(const CouplingScheme::ChangedMeshes &changes)
 {
   PRECICE_ASSERT(changes.empty());

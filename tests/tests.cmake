@@ -150,7 +150,6 @@ target_sources(testprecice
     tests/serial/three-solvers/ThreeSolversExplicitImplicit.cpp
     tests/serial/three-solvers/ThreeSolversFirstParticipant.cpp
     tests/serial/three-solvers/ThreeSolversImplicitExplicit.cpp
-    tests/serial/three-solvers/ThreeSolversImplicitImplicit.cpp
     tests/serial/three-solvers/ThreeSolversParallel.cpp
     tests/serial/three-solvers/helpers.cpp
     tests/serial/three-solvers/helpers.hpp

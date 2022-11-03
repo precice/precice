@@ -242,10 +242,20 @@ public:
    * @brief Function to determine whether coupling scheme is an implicit coupling scheme
    * @returns true, if coupling scheme is implicit
    */
-  bool isImplicitCouplingScheme()
+  bool isImplicitCouplingScheme() const override
   {
     PRECICE_ASSERT(_couplingMode != Undefined);
     return _couplingMode == Implicit;
+  }
+
+  /**
+   * @brief Checks if the implicit cplscheme has converged
+   *
+   * @pre \ref doImplicitStep() or \ref receiveConvergence() has been called
+   */
+  bool hasConverged() const override
+  {
+    return _hasConverged;
   }
 
 protected:
@@ -349,16 +359,6 @@ protected:
    * This function is called from the child classes
    */
   void doImplicitStep();
-
-  /**
-   * @brief Checks if the implicit cplscheme has converged
-   *
-   * @pre \ref doImplicitStep() or \ref receiveConvergence() has been called
-   */
-  bool hasConverged() const
-  {
-    return _hasConverged;
-  }
 
   /**
    * @brief stores current data in buffer for extrapolation
