@@ -235,6 +235,16 @@ public:
    */
   virtual void determineInitialDataExchange() = 0;
 
+  /**
+   * @brief Function to determine whether coupling scheme is an implicit coupling scheme
+   * @returns true, if coupling scheme is implicit
+   */
+  bool isImplicitCouplingScheme()
+  {
+    PRECICE_ASSERT(_couplingMode != Undefined);
+    return _couplingMode == Implicit;
+  }
+
 protected:
   /// Map that links DataID to CouplingData
   typedef std::map<int, PtrCouplingData> DataMap;
@@ -259,16 +269,6 @@ protected:
   {
     PRECICE_ASSERT(_couplingMode != Undefined);
     return _couplingMode == Explicit;
-  }
-
-  /**
-   * @brief Function to determine whether coupling scheme is an implicit coupling scheme
-   * @returns true, if coupling scheme is implicit
-   */
-  bool isImplicitCouplingScheme()
-  {
-    PRECICE_ASSERT(_couplingMode != Undefined);
-    return _couplingMode == Implicit;
   }
 
   /**
