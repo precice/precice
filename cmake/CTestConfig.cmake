@@ -2,9 +2,8 @@
 # CTest
 #
 
-set(PRECICE_TEST_TIMEOUT_DEBUG 300 CACHE STRING "The timeout in seconds for very long tests, should only be used for debugging.")
-set(PRECICE_TEST_TIMEOUT_LONG 120 CACHE STRING "The timeout in seconds for longer tests.")
-set(PRECICE_TEST_TIMEOUT_SHORT 60 CACHE STRING "The timeout in seconds for shorter tests.")
+set(PRECICE_TEST_TIMEOUT_LONG 180 CACHE STRING "The timeout in seconds for longer tests.")
+set(PRECICE_TEST_TIMEOUT_SHORT 20 CACHE STRING "The timeout in seconds for shorter tests.")
 
 set(PRECICE_TEST_DIR "${preCICE_BINARY_DIR}/TestOutput")
 mark_as_advanced(PRECICE_TEST_DIR)
@@ -226,7 +225,7 @@ add_precice_test(
 add_precice_test(
   NAME cplscheme
   ARGUMENTS "--run_test=CplSchemeTests"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+  TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
   )
 add_precice_test(
   NAME io
@@ -304,7 +303,7 @@ foreach(testsuite IN LISTS PRECICE_TEST_SUITES)
   add_precice_test(
     NAME "integration.${testsuite}"
     ARGUMENTS "--run_test=Integration/${testsuite}"
-    TIMEOUT ${PRECICE_TEST_TIMEOUT_DEBUG}
+    TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
     )
 endforeach()
 
