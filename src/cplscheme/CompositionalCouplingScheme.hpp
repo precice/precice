@@ -212,63 +212,31 @@ public:
   /// Returns a string representation of the current coupling state.
   std::string printCouplingState() const final override;
 
+  /// True if one cplscheme is an implicit scheme
+  bool isImplicitCouplingScheme() const final;
+
+  /// True if the implicit scheme has converged or no implicit scheme is defined
+  bool hasConverged() const final;
+
 private:
   mutable logging::Logger _log{"cplscheme::CompositionalCouplingScheme"};
 
-  /// Groups a coupling scheme with additional associated variables.
-  struct Scheme {
+  using Schemes = std::vector<PtrCouplingScheme>;
 
-    /// The actual coupling scheme
-    PtrCouplingScheme scheme;
+  /// Explicit coupling schemes to be executed
+  Schemes _explicitSchemes;
 
-    // @brief Excludes converged implicit schemes from some operations.
-    //
-    // When several implicit schemes are iterating their point of convergence
-    // will be different in general. Converged schemes are automatically advanced
-    // to the next timestep and are put on hold until all schemes are converged.
-    //
-    // This assumes that a once converged scheme does not leave the convergence
-    // region again.
-    bool onHold;
+  /// The optional implicit scheme to be handled last
+  PtrCouplingScheme _implicitScheme;
 
-    Scheme(PtrCouplingScheme scheme)
-        : scheme(scheme), onHold(false) {}
-  };
+  /// Is the implicit scheme still iterating?
+  bool _iterating = false;
 
-  typedef std::list<Scheme>           Schemes;
-  typedef std::list<Scheme>::iterator SchemesIt;
-  //typedef std::list<PtrCouplingScheme>::const_iterator ConstSchemesIt;
+  /// Returns all schemes at the beginning of a timestep or the implicit one until convergence
+  std::vector<CouplingScheme *> schemesToRun() const;
 
-  /// Coupling schemes to be executed in parallel.
-  Schemes _couplingSchemes;
-
-  //Schemes _activeCouplingSchemes;
-
-  /// Iterator to begin of coupling schemes currently active.
-  SchemesIt _activeSchemesBegin = _couplingSchemes.end();
-
-  /// Iterator to behind the end of coupling schemes currently active.
-  SchemesIt _activeSchemesEnd = _couplingSchemes.end();
-
-  /// Stores time added since last call of advance.
-  double _lastAddedTime = 0;
-
-  /**
-   * @brief Determines the current set of active coupling schemes.
-   *
-   * Is called in advance, after all active sub-schemes are advanced.
-   *
-   * @return True, if active schemes have changed and should be treated within
-   *         the same call of advance().
-   */
-  bool determineActiveCouplingSchemes();
-
-  /**
-   * @brief Advances the active set of coupling schemes.
-   *
-   * Helper function for determineActiveCouplingSchemes().
-   */
-  void advanceActiveCouplingSchemes();
+  /// Returns all schemes
+  std::vector<CouplingScheme *> allSchemes() const;
 };
 
 } // namespace cplscheme

@@ -104,7 +104,9 @@ public:
   {
     bool done = false;
     while (!done) {
+      firstSynchronization({});
       firstExchange();
+      secondSynchronization();
       done = secondExchange();
     }
   }
@@ -220,6 +222,12 @@ public:
 
   /// Returns a string representation of the current coupling state.
   virtual std::string printCouplingState() const = 0;
+
+  /// Returns true if the scheme or one subscheme is implicit
+  virtual bool isImplicitCouplingScheme() const = 0;
+
+  /// Returns false if the scheme is implicit and hasnt converged
+  virtual bool hasConverged() const = 0;
 };
 
 } // namespace cplscheme
