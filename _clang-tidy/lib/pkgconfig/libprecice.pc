@@ -1,9 +1,0 @@
-includedir=/usr/local/include
-libdir=/usr/local/lib
-
-Name: preCICE
-Description: preCICE coupling library
-Version: 2.4.0
-URL: https://www.precice.org
-Libs: -L${libdir} -lprecice
-Cflags: -I${includedir}
