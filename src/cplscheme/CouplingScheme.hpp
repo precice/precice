@@ -102,13 +102,10 @@ public:
    */
   void advance()
   {
-    bool done = false;
-    while (!done) {
-      firstSynchronization({});
-      firstExchange();
-      secondSynchronization();
-      done = secondExchange();
-    }
+    firstSynchronization({});
+    firstExchange();
+    secondSynchronization();
+    secondExchange();
   }
 
   using ChangedMeshes = std::vector<MeshID>;
@@ -147,7 +144,7 @@ public:
    *
    * @pre \ref secondSynchronization() was called
    */
-  virtual bool secondExchange() = 0;
+  virtual void secondExchange() = 0;
 
   /// Finalizes the coupling and disconnects communication.
   virtual void finalize() = 0;

@@ -1969,14 +1969,11 @@ void SolverInterfaceImpl::advanceCouplingSchemes()
   // Orchestrate local and remote mesh changes
   std::vector<MeshID> localChanges;
 
-  bool done = false;
-  while (!done) {
-    [[maybe_unused]] auto remoteChanges1 = _couplingScheme->firstSynchronization(localChanges);
-    _couplingScheme->firstExchange();
-    // Orchestrate remote mesh changes (local ones were handled in the first sync)
-    [[maybe_unused]] auto remoteChanges2 = _couplingScheme->secondSynchronization();
-    done                                 = _couplingScheme->secondExchange();
-  }
+  [[maybe_unused]] auto remoteChanges1 = _couplingScheme->firstSynchronization(localChanges);
+  _couplingScheme->firstExchange();
+  // Orchestrate remote mesh changes (local ones were handled in the first sync)
+  [[maybe_unused]] auto remoteChanges2 = _couplingScheme->secondSynchronization();
+  _couplingScheme->secondExchange();
 }
 
 void SolverInterfaceImpl::closeCommunicationChannels(CloseChannels close)
