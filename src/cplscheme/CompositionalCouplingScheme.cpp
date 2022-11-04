@@ -103,7 +103,7 @@ CouplingScheme::ChangedMeshes CompositionalCouplingScheme::secondSynchronization
   return totalChanges;
 }
 
-bool CompositionalCouplingScheme::secondExchange()
+void CompositionalCouplingScheme::secondExchange()
 {
   PRECICE_TRACE();
   for (const auto scheme : schemesToRun()) {
@@ -112,7 +112,6 @@ bool CompositionalCouplingScheme::secondExchange()
   if (_implicitScheme) {
     _iterating = !_implicitScheme->hasConverged();
   }
-  return true;
 }
 
 void CompositionalCouplingScheme::finalize()

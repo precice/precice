@@ -81,7 +81,7 @@ public:
 
   ChangedMeshes secondSynchronization() override;
 
-  bool secondExchange() override;
+  void secondExchange() final;
 
   /**
    * @brief
