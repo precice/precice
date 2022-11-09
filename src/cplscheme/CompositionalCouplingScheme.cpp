@@ -290,7 +290,7 @@ std::string CompositionalCouplingScheme::printCouplingState() const
 std::vector<CouplingScheme *> CompositionalCouplingScheme::schemesToRun() const
 {
   if (_iterating) {
-    PRECICE_DEBUG("Rerunning implcit scheme");
+    PRECICE_DEBUG("Rerunning implicit scheme");
     return {_implicitScheme.get()};
   }
   PRECICE_DEBUG("Running all schemes");
