@@ -275,7 +275,7 @@ public:
    *   than the time window.
    * - An implicit coupling iteration is not yet converged.
    *
-   * A coupling window is complete if neither reason holds: If we reach the
+   * A time window is complete if neither reason holds: If we reach the
    * end of the time window in the last implicit coupling iteration.
    *
    * For implicit coupling this condition is equivalent with the requirement to
