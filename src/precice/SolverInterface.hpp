@@ -266,15 +266,21 @@ public:
   [[deprecated("Will be removed in 3.0.0. See https://github.com/precice/precice/issues/1223 and comment, if you need this function.")]] bool isWriteDataRequired(double computedTimestepLength) const;
 
   /**
-   * @brief Checks if the current coupling window is completed.
+   * @brief Checks if the current time window is completed.
    *
-   * @returns whether the current coupling window is complete.
+   * @returns whether the current time window is complete.
    *
-   * The following reasons require several solver time steps per time window
-   * step:
+   * The following reasons require several solver time steps per time window:
    * - A solver chooses to perform subcycling, i.e. using a smaller timestep
-   *   than the time window..
+   *   than the time window.
    * - An implicit coupling iteration is not yet converged.
+   *
+   * A coupling window is complete if neither reason holds: If we reach the
+   * end of the time window in the last implicit coupling iteration.
+   *
+   * For implicit coupling this condition is equivalent with the requirement to
+   * write an iteration checkpoint. This is, however, not the case for explicit
+   * coupling.
    *
    * @pre initialize() has been called successfully.
    */
