@@ -198,9 +198,6 @@ void BaseQNAcceleration::updateDifferenceMatrices(
   _residuals = _values;
   _residuals -= _oldValues;
 
-  //PRECICE_INFO("_values: {}", _values);
-  //PRECICE_INFO("_residuals: {}", _residuals);
-
   if (math::equals(utils::MasterSlave::l2norm(_residuals), 0.0)) {
     PRECICE_WARN("The coupling residual equals almost zero. There is maybe something wrong in your adapter. "
                  "Maybe you always write the same data or you call advance without "
@@ -361,7 +358,7 @@ void BaseQNAcceleration::performAcceleration(
 
     if (_preconditioner->requireNewQR()) {
       if ((not(_filter == Acceleration::QR2FILTER) && not(_filter == Acceleration::QR3FILTER))) { //for QR2 and QR3 (Fast filter) filter, there is no need to do this twice
-        PRECICE_DEBUG("  QR Reset");
+        PRECICE_DEBUG("  QR Decomposition will be reset ");
         _qrV.reset(_matrixV, getLSSystemRows());
       }
       _preconditioner->newQRfulfilled();
@@ -376,7 +373,8 @@ void BaseQNAcceleration::performAcceleration(
     applyFilter();
     applyingFilter.stop();
 
-    _preconditioner->updatedWeightsReset(); // Reset the check for the pre-scaling weights.
+    // Reset the check for the pre-scaling weights so that they are not updated each iteration.
+    _preconditioner->updatedWeightsReset(); 
     // revert scaling of V, in computeQNUpdate all data objects are unscaled.
     _preconditioner->revert(_matrixV);
 
