@@ -372,20 +372,6 @@ void BaseQNAcceleration::performAcceleration(
       _nbDropCols = 0;
     }
 
-    // apply the configured filter to the LS system. Automatically delete the first column if a zero vector occurs.
-    // Automatic deletion can only occur in the first time window.
-    //if (its == 2 && tWindows == 0) {
-    //if (_deleteFirstColumn) {
-    // Only remove a column if it exists, i.e. at least 2 columns are present
-    //if ((_matrixV.cols() - 1) == 1) {
-    //PRECICE_INFO("  Automatically removing the first column in Matrices V and W due to an initial zero sub-vector.");
-    //removeMatrixColumn(_matrixV.cols() - 1);
-    //_qrV.deleteColumn(_matrixV.cols() - 1);
-    //}
-    //}
-    //_deleteFirstColumn = false;
-    //}
-
     utils::Event applyingFilter("ApplyFilter");
     applyFilter();
     applyingFilter.stop();
