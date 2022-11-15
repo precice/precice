@@ -518,14 +518,6 @@ void MVQNAcceleration::restartIMVJ()
     // truncated SVD, i.e., Wtil^0 = \phi, Z^0 = S\psi^T, this should not be added to the SVD.
     int q = _svdJ.isSVDinitialized() ? 1 : 0;
 
-    // If the preconditioner weights have been reset, then the old SVD must be discarded as the
-    // new chunk cannot be added to the old chunk
-    if (_preconditioner->svdWeightsSet()){
-      PRECICE_INFO("  Resetting SVD due to pre-scaling weights.");
-      _svdJ.reset();
-      _preconditioner->svdReset();
-    }
-
     // perform M-1 rank-1 updates of the truncated SVD-dec of the Jacobian
     for (; q < static_cast<int>(_WtilChunk.size()); q++) {
       // update SVD, i.e., PSI * SIGMA * PHI^T <-- PSI * SIGMA * PHI^T + Wtil^q * Z^q
