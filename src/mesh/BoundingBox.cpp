@@ -13,6 +13,32 @@ namespace precice::mesh {
 
 logging::Logger BoundingBox::_log{"mesh::BoundingBox"};
 
+BoundingBox::BoundingBox(Vertex boundMin, Vertex boundMax)
+{
+  // PRECICE_ASSERT 1
+  const int& dimMin= boundMin.getDimensions();
+  const int& dimMax= boundMax.getDimensions();
+  PRECICE_ASSERT(dimMin==dimMax,"Dimension of min and max vertices should be the same.", dimMin, dimMax);
+  
+  // PRECICE_ASSERT 2
+  const auto& boundMinCoords = boundMin.rawCoords();
+  const auto& boundMaxCoords = boundMax.rawCoords();
+  bool isMinLessThanMax = true;
+  for (int i= 0; i < dimMin; i++) {
+    if(boundMinCoords[i] >= boundMaxCoords[i])
+    {
+      isMinLessThanMax = false;
+      break;
+    }
+  }
+  PRECICE_ASSERT(isMinLessThanMax,"Each component of min vertex must be less than that of max vertex in the same axis direction.", boundMinCoords, boundMaxCoords);
+ 	
+  // Assign private members
+  _boundMin = std::move(boundMin);
+  _boundMax = std::move(boundMax);
+  _dimensions = dimMin;
+}
+
 BoundingBox::BoundingBox(std::vector<double> bounds)
 {
   PRECICE_ASSERT((int) bounds.size() == 4 || (int) bounds.size() == 6, "Dimension of a bounding box can only be 2 or 3.", bounds.size() / 2);
