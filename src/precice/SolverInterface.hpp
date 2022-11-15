@@ -280,38 +280,6 @@ public:
    */
   bool isTimeWindowComplete() const;
 
-  // Will be removed in v3.0.0. See https://github.com/precice/precice/issues/704
-  /**
-   * @brief Returns whether the solver has to evaluate the surrogate model representation.
-   *
-   * @deprecated
-   * Was necessary for deleted manifold mapping. Always returns false.
-   *
-   * @returns whether the surrogate model has to be evaluated.
-   *
-   * @note
-   * The solver may still have to evaluate the fine model representation.
-   *
-   * @see hasToEvaluateFineModel()
-   */
-  [[deprecated("The manifold mapping feature is no longer supported.")]] bool hasToEvaluateSurrogateModel() const;
-
-  // Will be removed in v3.0.0. See https://github.com/precice/precice/issues/704
-  /**
-   * @brief Checks if the solver has to evaluate the fine model representation.
-   *
-   * @deprecated
-   * Was necessary for deprecated manifold mapping. Always returns true.
-   *
-   * @returns whether the fine model has to be evaluated.
-   *
-   * @note
-   * The solver may still have to evaluate the surrogate model representation.
-   *
-   * @see hasToEvaluateSurrogateModel()
-   */
-  [[deprecated("The manifold mapping feature is no longer supported.")]] bool hasToEvaluateFineModel() const;
-
   ///@}
 
   ///@name Action Methods

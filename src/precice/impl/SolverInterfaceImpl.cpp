@@ -598,16 +598,6 @@ void SolverInterfaceImpl::markActionFulfilled(
   _couplingScheme->markActionFulfilled(action);
 }
 
-bool SolverInterfaceImpl::hasToEvaluateSurrogateModel() const
-{
-  return false;
-}
-
-bool SolverInterfaceImpl::hasToEvaluateFineModel() const
-{
-  return true;
-}
-
 bool SolverInterfaceImpl::hasMesh(
     const std::string &meshName) const
 {
