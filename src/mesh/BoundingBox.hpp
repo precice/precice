@@ -108,6 +108,12 @@ private:
 
   /// Container of min and max points in each dimension
   std::vector<double> _bounds;
+
+  /// Container of a vertex of a bounding box with min components in each dimension
+  Vertex _boundMin;
+  
+  /// Container of a vertex of a bounding box with max components in each dimension
+  Vertex _boundMax;
 };
 
 std::ostream &operator<<(std::ostream &, const BoundingBox &);
