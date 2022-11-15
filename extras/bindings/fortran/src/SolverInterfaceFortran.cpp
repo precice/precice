@@ -154,28 +154,6 @@ void precicef_is_time_window_complete_(
   }
 }
 
-void precicef_has_to_evaluate_surrogate_model_(
-    int *hasToEvaluate)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  if (impl->hasToEvaluateSurrogateModel()) {
-    *hasToEvaluate = 1;
-  } else {
-    *hasToEvaluate = 0;
-  }
-}
-
-void precicef_has_to_evaluate_fine_model_(
-    int *hasToEvaluate)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  if (impl->hasToEvaluateFineModel()) {
-    *hasToEvaluate = 1;
-  } else {
-    *hasToEvaluate = 0;
-  }
-}
-
 void precicef_action_required_(
     const char *action,
     int *       isRequired,

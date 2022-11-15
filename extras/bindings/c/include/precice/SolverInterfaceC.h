@@ -116,16 +116,6 @@ int precicec_isWriteDataRequired(double computedTimestepLength);
  */
 int precicec_isTimeWindowComplete();
 
-/**
- * @brief Returns whether the solver has to evaluate the surrogate model representation.
- */
-int precicec_hasToEvaluateSurrogateModel();
-
-/**
- * @brief Returns whether the solver has to evaluate the fine model representation.
- */
-int precicec_hasToEvaluateFineModel();
-
 ///@}
 
 ///@name Action Methods

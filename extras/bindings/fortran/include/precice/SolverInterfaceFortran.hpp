@@ -191,30 +191,6 @@ void precicef_is_read_data_available_(int *isAvailable);
 void precicef_is_time_window_complete_(int *isComplete);
 
 /**
- * Fortran syntax:
- * precicef_has_to_evaluate_surrogate_model( INTEGER hasToEvaluate );
- *
- * IN:  -
- * OUT: hasToEvaluate(1:true, 0:false)
- *
- * @copydoc precice::SolverInterface::hasToEvaluateSurrogateModel()
- *
- */
-void precicef_has_to_evaluate_surrogate_model_(int *hasToEvaluate);
-
-/**
- * Fortran syntax:
- * precicef_has_to_evaluate_fine_model( INTEGER hasToEvaluate );
- *
- * IN:  -
- * OUT: hasToEvaluate(1:true, 0:false)
- *
- * @copydoc precice::SolverInterface::hasToEvaluateFineModel()
- *
- */
-void precicef_has_to_evaluate_fine_model_(int *hasToEvaluate);
-
-/**
  * @deprecated Forwards to precicef_is_action_required_
  *
  * Fortran syntax:
