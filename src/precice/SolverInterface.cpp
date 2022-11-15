@@ -406,11 +406,6 @@ void SolverInterface::getMeshVerticesAndIDs(const int meshID,
   _impl->getMeshVerticesAndIDs(meshID, size, ids, coordinates);
 }
 
-std::string getVersionInformation()
-{
-  return {precice::versionInformation};
-}
-
 namespace constants {
 
 const std::string &actionWriteInitialData()
