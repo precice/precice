@@ -480,12 +480,6 @@ void BaseQNAcceleration::concatenateCouplingData(
       _values(i + offset)    = values(i);
       _oldValues(i + offset) = oldValues(i);
     }
-    // Delete column if the input values of solver is zero
-    double _normValues = utils::MasterSlave::l2norm(values);
-    if (_firstIteration && (_normValues == 0)) {
-      _deleteFirstColumn = true;
-      PRECICE_DEBUG("Data with ID: {} in has a zero input vector.", id);
-    }
     offset += size;
   }
 }
