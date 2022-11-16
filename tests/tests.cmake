@@ -82,6 +82,7 @@ target_sources(testprecice
     tests/serial/action-timings/ActionTimingsSerialImplicit.cpp
     tests/serial/circular/Explicit.cpp
     tests/serial/circular/helper.hpp
+    tests/serial/compositional/TwoActivatedMuscles.cpp
     tests/serial/convergence-measures/helpers.cpp
     tests/serial/convergence-measures/helpers.hpp
     tests/serial/convergence-measures/testConvergenceMeasures1.cpp
