@@ -159,6 +159,13 @@ private:
     std::vector<ConvergenceMeasureDefintion> convergenceMeasureDefinitions;
     int                                      maxIterations      = -1;
     int                                      extrapolationOrder = 0;
+
+    bool hasExchange(const Exchange &totest) const
+    {
+      return std::any_of(exchanges.begin(), exchanges.end(), [&totest](const auto &ex) {
+        return ex.from == totest.from && ex.to == totest.to && ex.data->getName() == totest.data->getName() && ex.mesh->getName() == totest.mesh->getName();
+      });
+    }
   } _config;
 
   mesh::PtrMeshConfiguration _meshConfig;

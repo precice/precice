@@ -193,49 +193,23 @@ public:
   /**
    * @brief Checks if the current coupling window is completed.
    *
-   * @returns whether the current coupling window is complete.
+   * @returns whether the current time window is complete.
    *
-   * The following reasons require several solver time steps per time window
-   * step:
+   * The following reasons require several solver time steps per time window:
    * - A solver chooses to perform subcycling, i.e. using a smaller timestep
-   *   than the time window..
+   *   than the time window.
    * - An implicit coupling iteration is not yet converged.
+   *
+   * Hence, a time window is complete if we reach the end of the time window
+   * and the implicit coupling has converged.
+   *
+   * For implicit coupling this condition is equivalent with the requirement to
+   * write an iteration checkpoint. This is, however, not the case for explicit
+   * coupling.
    *
    * @pre initialize() has been called successfully.
    */
   bool isTimeWindowComplete() const;
-
-  // Will be removed in v3.0.0. See https://github.com/precice/precice/issues/704
-  /**
-   * @brief Returns whether the solver has to evaluate the surrogate model representation.
-   *
-   * @deprecated
-   * Was necessary for deleted manifold mapping. Always returns false.
-   *
-   * @returns whether the surrogate model has to be evaluated.
-   *
-   * @note
-   * The solver may still have to evaluate the fine model representation.
-   *
-   * @see hasToEvaluateFineModel()
-   */
-  [[deprecated("The manifold mapping feature is no longer supported.")]] bool hasToEvaluateSurrogateModel() const;
-
-  // Will be removed in v3.0.0. See https://github.com/precice/precice/issues/704
-  /**
-   * @brief Checks if the solver has to evaluate the fine model representation.
-   *
-   * @deprecated
-   * Was necessary for deprecated manifold mapping. Always returns true.
-   *
-   * @returns whether the fine model has to be evaluated.
-   *
-   * @note
-   * The solver may still have to evaluate the surrogate model representation.
-   *
-   * @see hasToEvaluateSurrogateModel()
-   */
-  [[deprecated("The manifold mapping feature is no longer supported.")]] bool hasToEvaluateFineModel() const;
 
   ///@}
 
@@ -1162,17 +1136,6 @@ private:
   // @brief To allow white box tests.
   friend struct testing::WhiteboxAccessor;
 };
-
-/**
- * @brief Returns information on the version of preCICE.
- *
- * Returns a semicolon-separated C-string containing:
- *
- * 1) the version of preCICE
- * 2) the revision information of preCICE
- * 3) the configuration of preCICE including MPI, PETSC, PYTHON
- */
-std::string getVersionInformation();
 
 namespace constants {
 

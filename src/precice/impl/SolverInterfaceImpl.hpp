@@ -112,12 +112,6 @@ public:
   /// @copydoc SolverInterface::isTimeWindowComplete
   bool isTimeWindowComplete() const;
 
-  /// @copydoc SolverInterface::hasToEvaluateSurrogateModel
-  bool hasToEvaluateSurrogateModel() const;
-
-  /// @copydoc SolverInterface::hasToEvaluateFineModel
-  bool hasToEvaluateFineModel() const;
-
   ///@}
 
   ///@name Action Methods
