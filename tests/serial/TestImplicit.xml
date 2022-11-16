@@ -6,12 +6,12 @@
 
     <m2n:sockets from="SolverOne" to="SolverTwo" />
 
-    <mesh name="Square" flip-normals="inside">
+    <mesh name="Square">
       <use-data name="Forces" />
       <use-data name="Velocities" />
     </mesh>
 
-    <mesh name="SquareTwo" flip-normals="inside">
+    <mesh name="SquareTwo">
       <use-data name="Forces" />
       <use-data name="Velocities" />
     </mesh>

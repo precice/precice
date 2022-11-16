@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <configuration>
-  <export:vtk every-n-time-windows="10" normals="on" directory="./" />
+  <export:vtk every-n-time-windows="10" directory="./" />
 </configuration>
