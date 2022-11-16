@@ -56,7 +56,7 @@ public:
     /// A shared pointer to the parent CommState
     CommStatePtr parent = nullptr;
 
-    /// Wether this state owns the communicator and has to free it.
+    /// Whether this state owns the communicator and has to free it.
     bool _owning = true;
 
     /// @name Construction and Destruction
@@ -202,7 +202,7 @@ public:
    * Unrequired Communicators will be automatically freed.
    *
    * @postcondition cureent() == CommState::world()
-   * 
+   *
    */
   static void resetCommState();
 
@@ -283,7 +283,7 @@ public:
   /** Returns an owning pointer to the global CommState, being the parent of the current CommState
    *
    * @note Calling this on World returns World.
-   * 
+   *
    * @see getLocalCommunicator()
    */
   static const CommStatePtr getGlobalCommState();
@@ -328,3 +328,7 @@ std::ostream &operator<<(std::ostream &out, const Parallel::CommState &value);
 
 } // namespace utils
 } // namespace precice
+
+template <>
+struct fmt::formatter<precice::utils::Parallel::CommState> : ostream_formatter {
+};

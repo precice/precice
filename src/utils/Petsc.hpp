@@ -72,7 +72,7 @@ public:
    */
   Vector(const Vector &other);
 
-  /** Copy assignement
+  /** Copy assignment
    * Destroys the current vector and takes ownership of the other.
    */
   Vector &operator=(const Vector &other);
@@ -82,7 +82,7 @@ public:
    */
   Vector(Vector &&other) noexcept;
 
-  /** Move assignement
+  /** Move assignment
    * Destroys the current vector and takes ownership of the other.
    */
   Vector &operator=(Vector &&other) noexcept;
@@ -135,12 +135,12 @@ public:
 
   void fillWithRandoms();
 
-  /// Sorts the LOCAL partion of the vector
+  /// Sorts the LOCAL partition of the vector
   void sort();
 
   void assemble();
 
-  /// Returns a pair that mark the beginning and end of the vectors ownership range. Use first und second to access.
+  /// Returns a pair that mark the beginning and end of the vectors ownership range. Use first and second to access.
   std::pair<PetscInt, PetscInt> ownerRange() const;
 
   /// Writes the vector to file.
@@ -164,7 +164,7 @@ public:
 
   /// Delete copy and assignment constructor
   /** Copying and assignment of this class would involve copying the pointer to
-      the PETSc object and finallly cause double destruction of it.
+      the PETSc object and finally cause double destruction of it.
   */
   Matrix(const Matrix &) = delete;
   Matrix &operator=(const Matrix &) = delete;
@@ -238,7 +238,7 @@ public:
 
   /// Delete copy and assignment constructor
   /** Copying and assignment of this class would involve copying the pointer to
-      the PETSc object and finallly cause double destruction of it.
+      the PETSc object and finally cause double destruction of it.
   */
   KSPSolver(const KSPSolver &) = delete;
   KSPSolver &operator=(const KSPSolver &) = delete;

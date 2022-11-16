@@ -22,8 +22,7 @@
 #include <mpi.h>
 #endif
 
-namespace precice {
-namespace m2n {
+namespace precice::m2n {
 M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
 {
   using namespace xml;
@@ -232,5 +231,4 @@ void M2NConfiguration::checkDuplicates(
   PRECICE_CHECK(!alreadyAdded, "Multiple m2n communications between participant \"" + from + "\" and \"" + to + "\" are not allowed. Please remove redundant <m2n /> tags between them.");
 }
 
-} // namespace m2n
-} // namespace precice
+} // namespace precice::m2n

@@ -26,14 +26,12 @@ static precice::logging::Logger _log("SolverInterfaceFortran");
 
 static std::string errormsg = "preCICE has not been created properly. Be sure to call \"precicef_create\" before any other call to preCICE.";
 
-namespace precice {
-namespace impl {
+namespace precice::impl {
 /**
-     * @brief Returns length of string without trailing whitespaces.
+     * @brief Returns length of string without trailing whitespace.
      */
 int strippedLength(const char *string, int length);
-} // namespace impl
-} // namespace precice
+} // namespace precice::impl
 
 void precicef_create_(
     const char *participantName,
@@ -153,28 +151,6 @@ void precicef_is_time_window_complete_(
     *isComplete = 1;
   } else {
     *isComplete = 0;
-  }
-}
-
-void precicef_has_to_evaluate_surrogate_model_(
-    int *hasToEvaluate)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  if (impl->hasToEvaluateSurrogateModel()) {
-    *hasToEvaluate = 1;
-  } else {
-    *hasToEvaluate = 0;
-  }
-}
-
-void precicef_has_to_evaluate_fine_model_(
-    int *hasToEvaluate)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  if (impl->hasToEvaluateFineModel()) {
-    *hasToEvaluate = 1;
-  } else {
-    *hasToEvaluate = 0;
   }
 }
 
@@ -385,6 +361,17 @@ void precicef_set_quad_we_(
   impl->setMeshQuadWithEdges(*meshID, *firstVertexID, *secondVertexID, *thirdVertexID, *fourthVertexID);
 }
 
+void precicef_set_tetrahedron(
+    const int *meshID,
+    const int *firstVertexID,
+    const int *secondVertexID,
+    const int *thirdVertexID,
+    const int *fourthVertexID)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->setMeshTetrahedron(*meshID, *firstVertexID, *secondVertexID, *thirdVertexID, *fourthVertexID);
+}
+
 void precicef_write_bvdata_(
     const int *dataID,
     const int *size,
@@ -546,6 +533,54 @@ void precicef_get_mesh_vertices_and_IDs_(
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->getMeshVerticesAndIDs(meshID, size, ids, coordinates);
+}
+
+void precicef_is_gradient_data_required_(const int *dataID, int *required)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  if (impl->isGradientDataRequired(*dataID)) {
+    *required = 1;
+  } else {
+    *required = 0;
+  }
+}
+
+void precicef_write_sgradient_data_(
+    const int *   dataID,
+    const int *   valueIndex,
+    const double *gradientValues)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->writeScalarGradientData(*dataID, *valueIndex, gradientValues);
+}
+
+void precicef_write_bsgradient_data_(
+    const int *   dataID,
+    const int *   size,
+    const int *   valueIndices,
+    const double *gradientValues)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->writeBlockScalarGradientData(*dataID, *size, valueIndices, gradientValues);
+}
+
+void precicef_write_vgradient_data_(
+    const int *   dataID,
+    const int *   valueIndex,
+    const double *gradientValues)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->writeVectorGradientData(*dataID, *valueIndex, gradientValues);
+}
+
+void precicef_write_bvgradient_data_(
+    const int *   dataID,
+    const int *   size,
+    const int *   valueIndices,
+    const double *gradientValues)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->writeBlockVectorGradientData(*dataID, *size, valueIndices, gradientValues);
 }
 
 #ifdef __GNUC__

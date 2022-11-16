@@ -143,6 +143,8 @@ private:
   const std::string VALUE_RBF_GAUSSIAN          = "rbf-gaussian";
   const std::string VALUE_RBF_CTPS_C2           = "rbf-compact-tps-c2";
   const std::string VALUE_RBF_CPOLYNOMIAL_C0    = "rbf-compact-polynomial-c0";
+  const std::string VALUE_RBF_CPOLYNOMIAL_C2    = "rbf-compact-polynomial-c2";
+  const std::string VALUE_RBF_CPOLYNOMIAL_C4    = "rbf-compact-polynomial-c4";
   const std::string VALUE_RBF_CPOLYNOMIAL_C6    = "rbf-compact-polynomial-c6";
 
   const std::string VALUE_NEAREST_NEIGHBOR_GRADIENT = "nearest-neighbor-gradient";

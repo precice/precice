@@ -6,9 +6,7 @@
 #include "math/geometry.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace math {
-namespace barycenter {
+namespace precice::math::barycenter {
 
 Eigen::Vector2d calcBarycentricCoordsForEdge(
     const Eigen::VectorXd &a,
@@ -146,6 +144,4 @@ Eigen::Vector4d calcBarycentricCoordsForTetrahedron(
   return barycentricCoords;
 }
 
-} // namespace barycenter
-} // namespace math
-} // namespace precice
+} // namespace precice::math::barycenter

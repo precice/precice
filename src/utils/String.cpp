@@ -6,8 +6,7 @@
 #include "boost/algorithm/string/split.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace utils {
+namespace precice::utils {
 
 std::string wrapText(
     const std::string &text,
@@ -75,5 +74,4 @@ std::string truncate_wstring_to_string(std::wstring wstr, char fill)
   return converted;
 }
 
-} // namespace utils
-} // namespace precice
+} // namespace precice::utils

@@ -11,8 +11,7 @@
 #include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
 
-namespace precice {
-namespace utils {
+namespace precice::utils {
 
 logging::Logger Parallel::_log("utils::Parallel");
 
@@ -216,7 +215,7 @@ void Parallel::initializeMPI(
 #ifndef PRECICE_NO_MPI
   int isMPIInitialized{-1};
   MPI_Initialized(&isMPIInitialized);
-  PRECICE_ASSERT(!isMPIInitialized, "MPI was already initalized.");
+  PRECICE_ASSERT(!isMPIInitialized, "MPI was already initialized.");
   PRECICE_DEBUG("Initialize MPI");
   MPI_Init(argc, argv);
 #endif // not PRECICE_NO_MPI
@@ -246,7 +245,7 @@ void Parallel::finalizeMPI()
   PRECICE_TRACE();
   int isMPIInitialized;
   MPI_Initialized(&isMPIInitialized);
-  PRECICE_ASSERT(isMPIInitialized, "MPI was not initalized.");
+  PRECICE_ASSERT(isMPIInitialized, "MPI was not initialized.");
   PRECICE_DEBUG("Finalize MPI");
   MPI_Finalize();
 #endif // not PRECICE_NO_MPI
@@ -565,7 +564,6 @@ std::ostream &operator<<(std::ostream &out, const Parallel::CommState &value)
   return out;
 }
 
-} // namespace utils
-} // namespace precice
+} // namespace precice::utils
 
 //#endif // not PRECICE_NO_MPI

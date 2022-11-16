@@ -4,6 +4,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include "precice/Version.h"
 
 /**
  * forward declarations.
@@ -223,6 +224,8 @@ public:
   /**
    * @brief Checks if new data to be read is available.
    *
+   * @deprecated Removed to simplify extension to waveform relaxation.
+   *
    * @returns whether new data is available to be read.
    *
    * Data is classified to be new, if it has been received while calling
@@ -238,10 +241,12 @@ public:
    * This is not recommended due to performance reasons.
    * Use this function to prevent unnecessary reads.
    */
-  bool isReadDataAvailable() const;
+  [[deprecated("Will be removed in 3.0.0. See https://github.com/precice/precice/issues/1223 and comment, if you need this function.")]] bool isReadDataAvailable() const;
 
   /**
    * @brief Checks if new data has to be written before calling advance().
+   *
+   * @deprecated Removed to simplify extension to waveform relaxation.
    *
    * @param[in] computedTimestepLength Length of timestep used by the solver.
    *
@@ -258,7 +263,7 @@ public:
    * This is not recommended due to performance reasons.
    * Use this function to prevent unnecessary writes.
    */
-  bool isWriteDataRequired(double computedTimestepLength) const;
+  [[deprecated("Will be removed in 3.0.0. See https://github.com/precice/precice/issues/1223 and comment, if you need this function.")]] bool isWriteDataRequired(double computedTimestepLength) const;
 
   /**
    * @brief Checks if the current coupling window is completed.
@@ -274,38 +279,6 @@ public:
    * @pre initialize() has been called successfully.
    */
   bool isTimeWindowComplete() const;
-
-  // Will be removed in v3.0.0. See https://github.com/precice/precice/issues/704
-  /**
-   * @brief Returns whether the solver has to evaluate the surrogate model representation.
-   *
-   * @deprecated
-   * Was necessary for deleted manifold mapping. Always returns false.
-   *
-   * @returns whether the surrogate model has to be evaluated.
-   *
-   * @note
-   * The solver may still have to evaluate the fine model representation.
-   *
-   * @see hasToEvaluateFineModel()
-   */
-  [[deprecated("The manifold mapping feature is no longer supported.")]] bool hasToEvaluateSurrogateModel() const;
-
-  // Will be removed in v3.0.0. See https://github.com/precice/precice/issues/704
-  /**
-   * @brief Checks if the solver has to evaluate the fine model representation.
-   *
-   * @deprecated
-   * Was necessary for deprecated manifold mapping. Always returns true.
-   *
-   * @returns whether the fine model has to be evaluated.
-   *
-   * @note
-   * The solver may still have to evaluate the surrogate model representation.
-   *
-   * @see hasToEvaluateSurrogateModel()
-   */
-  [[deprecated("The manifold mapping feature is no longer supported.")]] bool hasToEvaluateFineModel() const;
 
   ///@}
 
@@ -352,7 +325,7 @@ public:
    *
    * @experimental
    *
-   * Has to be called, everytime the positions for data to be mapped
+   * Has to be called, every time the positions for data to be mapped
    * changes. Only has an effect, if the mapping used is non-stationary and
    * non-incremental.
    */
@@ -592,7 +565,7 @@ public:
 
   /**
    * @brief Set tetrahedron in 3D mesh from vertex ID
-   * 
+   *
    * @param[in] meshID ID of the mesh to add the Tetrahedron to
    * @param[in] firstVertexID ID of the first vertex of the Tetrahedron
    * @param[in] secondVertexID ID of the second vertex of the Tetrahedron
@@ -1093,7 +1066,7 @@ public:
 
   /**
    * @brief Checks if the given data set requires gradient data.
-   * We check if the data object has been intialized with the gradient flag.
+   * We check if the data object has been initialized with the gradient flag.
    *
    * @experimental
    *
@@ -1256,17 +1229,6 @@ private:
   // @brief To allow white box tests.
   friend struct testing::WhiteboxAccessor;
 };
-
-/**
- * @brief Returns information on the version of preCICE.
- *
- * Returns a semicolon-separated C-string containing:
- *
- * 1) the version of preCICE
- * 2) the revision information of preCICE
- * 3) the configuration of preCICE including MPI, PETSC, PYTHON
- */
-std::string getVersionInformation();
 
 namespace constants {
 

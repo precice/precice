@@ -35,7 +35,7 @@ function(add_precice_test)
   # We always prefix our tests
   set(PAT_FULL_NAME "precice.${PAT_NAME}")
 
-  # Are direct dependencies fullfilled?
+  # Are direct dependencies fulfilled?
   if( (NOT PRECICE_MPICommunication) OR (PAT_PETSC AND NOT PRECICE_PETScMapping) )
     message(STATUS "Test ${PAT_FULL_NAME} - skipped")
     return()

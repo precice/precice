@@ -7,8 +7,7 @@
 #include "mesh/Vertex.hpp"
 #include "utils/EigenIO.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 
 Tetrahedron::Tetrahedron(
     Vertex &      vertexOne,
@@ -91,5 +90,4 @@ std::ostream &operator<<(std::ostream &os, const Tetrahedron &t)
             << ")";
 }
 
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh

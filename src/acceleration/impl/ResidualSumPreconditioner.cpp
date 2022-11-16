@@ -6,9 +6,7 @@
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace acceleration {
-namespace impl {
+namespace precice::acceleration::impl {
 
 ResidualSumPreconditioner::ResidualSumPreconditioner(
     int maxNonConstTimeWindows)
@@ -86,6 +84,4 @@ void ResidualSumPreconditioner::_update_(bool                   timeWindowComple
   }
 }
 
-} // namespace impl
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration::impl

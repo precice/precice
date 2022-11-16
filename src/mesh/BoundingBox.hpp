@@ -1,5 +1,6 @@
 #pragma once
 #include <Eigen/Core>
+#include <fmt/ostream.h>
 #include <iosfwd>
 #include <vector>
 #include "logging/Logger.hpp"
@@ -105,3 +106,7 @@ std::ostream &operator<<(std::ostream &, const BoundingBox &);
 
 } // namespace mesh
 } // namespace precice
+
+template <>
+struct fmt::formatter<precice::mesh::BoundingBox> : ostream_formatter {
+};

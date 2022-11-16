@@ -2,8 +2,7 @@
 
 #include "time/Waveform.hpp"
 
-namespace precice {
-namespace impl {
+namespace precice::impl {
 
 logging::Logger ReadDataContext::_log{"impl::ReadDataContext"};
 
@@ -13,7 +12,7 @@ ReadDataContext::ReadDataContext(
     int           interpolationOrder)
     : DataContext(data, mesh)
 {
-  _waveform = time::PtrWaveform(new time::Waveform(interpolationOrder));
+  _waveform = std::make_shared<time::Waveform>(interpolationOrder);
 }
 
 void ReadDataContext::appendMappingConfiguration(const MappingContext &mappingContext, const MeshContext &meshContext)
@@ -52,5 +51,4 @@ void ReadDataContext::moveToNextWindow()
   _waveform->moveToNextWindow();
 }
 
-} // namespace impl
-} // namespace precice
+} // namespace precice::impl

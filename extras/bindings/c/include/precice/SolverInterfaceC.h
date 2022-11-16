@@ -1,5 +1,7 @@
 #pragma once
 
+#include "precice/Version.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -113,16 +115,6 @@ int precicec_isWriteDataRequired(double computedTimestepLength);
  * @brief Returns true (->1), if the coupling time window is completed.
  */
 int precicec_isTimeWindowComplete();
-
-/**
- * @brief Returns whether the solver has to evaluate the surrogate model representation.
- */
-int precicec_hasToEvaluateSurrogateModel();
-
-/**
- * @brief Returns whether the solver has to evaluate the fine model representation.
- */
-int precicec_hasToEvaluateFineModel();
 
 ///@}
 
@@ -303,6 +295,22 @@ void precicec_setMeshQuadWithEdges(
     int thirdVertexID,
     int fourthVertexID);
 
+/**
+  * @brief Sets mesh tetrahedron from vertex IDs.
+  *
+  * @param[in] meshID ID of the mesh to add the Tetra to
+  * @param[in] firstVertexID ID of the first vertex of the Tetra
+  * @param[in] secondVertexID ID of the second vertex of the Tetra
+  * @param[in] thirdVertexID ID of the third vertex of the Tetra
+  * @param[in] fourthVertexID ID of the fourth vertex of the Tetra
+ */
+void precicec_setMeshTetrahedron(
+    int meshID,
+    int firstVertexID,
+    int secondVertexID,
+    int thirdVertexID,
+    int fourthVertexID);
+
 ///@}
 
 ///@name Data Access
@@ -433,11 +441,11 @@ void precicec_readScalarData(
     int     valueIndex,
     double *dataValue);
 
-/** 
+/**
  * @brief Returns information on the version of preCICE.
  *
  * Returns a semicolon-separated C-string containing:
- * 
+ *
  * 1) the version of preCICE
  * 2) the revision information of preCICE
  * 3) the configuration of preCICE including MPI, PETSC, PYTHON
@@ -459,6 +467,35 @@ const char *precicec_actionReadIterationCheckpoint();
  * These API functions are \b experimental and may change in future versions.
  */
 ///@{
+
+/// @copydoc precice::SolverInterface::isGradientDataRequired
+int precicec_isGradientDataRequired(int dataID);
+
+/// @copydoc precice::SolverInterface::writeScalarGradientData
+void precicec_writeScalarGradientData(
+    int           dataID,
+    int           valueIndex,
+    const double *gradientValues);
+
+/// @copydoc precice::SolverInterface::writeBlockScalarGradientData
+void precicec_writeBlockScalarGradientData(
+    int           dataID,
+    int           size,
+    const int *   valueIndices,
+    const double *gradientValues);
+
+/// @copydoc precice::SolverInterface::writeVectorGradientData
+void precicec_writeVectorGradientData(
+    int           dataID,
+    int           valueIndex,
+    const double *gradientValues);
+
+/// @copydoc precice::SolverInterface::writeBlockVectorGradientData
+void precicec_writeBlockVectorGradientData(
+    int           dataID,
+    int           size,
+    const int *   valueIndices,
+    const double *gradientValues);
 
 /**
  * @brief See precice::SolverInterface::setMeshAccessRegion().

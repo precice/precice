@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <fmt/ostream.h>
 #include <functional>
 #include <iterator>
 #include <type_traits>
@@ -47,9 +48,9 @@ bool unique_elements(const Container &c, BinaryPredicate p = {})
 }
 
 /** intersperse a the range [first, last[ with a given element.
- * 
+ *
  * This results in a range [first, elem, first+1, elem, ... , elem, last[
- * 
+ *
  * \tparam InputIter the type of the input iterators
  * \tparam ElemT the type of the element to intersperse
  */
@@ -151,5 +152,15 @@ auto reorder_array(const std::array<Index, n> &order, const std::array<T, n> &el
   return reordered;
 }
 
+template <class InputIt, class Size, class InOutIt>
+void add_n(InputIt first, Size count, InOutIt result)
+{
+  std::transform(first, std::next(first, count), result, result, std::plus{});
+}
+
 } // namespace utils
 } // namespace precice
+
+template <typename Iter>
+struct fmt::formatter<precice::utils::RangePreview<Iter>> : ostream_formatter {
+};

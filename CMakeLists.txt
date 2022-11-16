@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.16.3)
-project(preCICE VERSION 2.4.0 LANGUAGES CXX)
+project(preCICE VERSION 2.5.0 LANGUAGES CXX)
 set(preCICE_SOVERSION ${preCICE_VERSION_MAJOR})
 
 #
@@ -139,7 +139,7 @@ add_feature_info(FortranBindings PRECICE_ENABLE_FORTRAN
   "Build the \"precice-tools\" executable
 
    preCICE offers in addition to the core library a variety of tools in order to check configuration
-   files or generate xml references. The tools are copmiled into an exectuable called \"precice-tools\".
+   files or generate xml references. The tools are copmiled into an executable called \"precice-tools\".
 
    This feature can be enabled/disabled by setting the PRECICE_BUILD_TOOLS CMake option.
   ")
@@ -166,6 +166,7 @@ endif()
 find_package(Boost 1.71.0 REQUIRED
   COMPONENTS filesystem log log_setup program_options system thread unit_test_framework
   )
+message(STATUS "Found Boost ${Boost_VERSION}")
 
 # Eigen
 if(TPL_ENABLE_EIGEN3)
@@ -173,10 +174,12 @@ if(TPL_ENABLE_EIGEN3)
   xsdk_tpl_require(EIGEN3 EIGEN3_INCLUDE_DIR)
 endif()
 find_package(Eigen3 3.2 REQUIRED)
+message(STATUS "Found Eigen ${EIGEN3_VERSION}")
 precice_validate_eigen()
 
 # LibXML2
 find_package(LibXml2 REQUIRED)
+message(STATUS "Found LibXml2 ${LIBXML2_VERSION_STRING}")
 precice_validate_libxml2()
 
 # nlohmann/JSON
@@ -219,6 +222,7 @@ if (PRECICE_PETScMapping)
   endif()
   find_package(PETSc 3.12 REQUIRED)
   # No validation required as PETSc does this internally
+  message(STATUS "Found PETSc ${PETSc_VERSION}")
 else()
   message(STATUS "PETSc support disabled")
 endif()
@@ -226,6 +230,7 @@ endif()
 # Option Python
 if (PRECICE_PythonActions)
   find_package(Python3 REQUIRED COMPONENTS Development NumPy)
+  message(STATUS "Found Python ${Python3_VERSION} with NumPy ${Python3_NumPy_VERSION}")
   precice_validate_libpython()
   precice_validate_numpy()
 else()
@@ -251,8 +256,8 @@ print_section("TARGETS & PACKAGES")
 # Add precice as an empty target
 add_library(precice)
 set_target_properties(precice PROPERTIES
-  # precice is a C++14 project
-  CXX_STANDARD 14
+  # precice is a C++17 project
+  CXX_STANDARD 17
   CXX_STANDARD_REQUIRED Yes
   CXX_EXTENSIONS No
   VERSION ${preCICE_VERSION}
@@ -327,6 +332,7 @@ endif()
 include(GenerateVersionInformation)
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/DetectGitRevision.cmake)
 configure_file("${PROJECT_SOURCE_DIR}/src/precice/impl/versions.hpp.in" "${PROJECT_BINARY_DIR}/src/precice/impl/versions.hpp" @ONLY)
+configure_file("${PROJECT_SOURCE_DIR}/src/precice/Version.h.in" "${PROJECT_BINARY_DIR}/src/precice/Version.h" @ONLY)
 
 # Includes Configuration
 target_include_directories(precice PUBLIC
@@ -349,8 +355,8 @@ if (PRECICE_BUILD_TOOLS)
    precice
    )
   set_target_properties(precice-tools PROPERTIES
-    # precice is a C++14 project
-    CXX_STANDARD 14
+    # precice is a C++17 project
+    CXX_STANDARD 17
     CXX_STANDARD_REQUIRED Yes
     CXX_EXTENSIONS No
     )
@@ -363,7 +369,6 @@ if (PRECICE_BUILD_TOOLS)
     COMMAND ${CMAKE_COMMAND} -E create_symlink precice-tools binprecice
     DEPENDS precice-tools
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    BYPRODUCTS binprecice
     )
 endif()
 
@@ -388,8 +393,8 @@ IF (BUILD_TESTING)
     Boost::unit_test_framework
     )
   set_target_properties(testprecice PROPERTIES
-    # precice is a C++14 project
-    CXX_STANDARD 14
+    # precice is a C++17 project
+    CXX_STANDARD 17
     CXX_STANDARD_REQUIRED Yes
     CXX_EXTENSIONS No
     )
@@ -610,25 +615,30 @@ add_custom_target(
   USES_TERMINAL
   )
 
-if(PRECICE_BUILD_TOOLS)
-  add_custom_target(
-    format
-    COMMAND tools/formatting/format-all
-    WORKING_DIRECTORY ${preCICE_SOURCE_DIR}
-    USES_TERMINAL
-    )
+add_custom_target(
+  format
+  COMMAND tools/formatting/format-all
+  WORKING_DIRECTORY ${preCICE_SOURCE_DIR}
+  USES_TERMINAL
+  )
 
-  add_custom_target(
-    sourcesIndex
-    COMMAND tools/building/updateSourceFiles.py
-    WORKING_DIRECTORY ${preCICE_SOURCE_DIR}
-    USES_TERMINAL
-    )
+add_custom_target(
+  sourcesIndex
+  COMMAND tools/building/updateSourceFiles.py
+  WORKING_DIRECTORY ${preCICE_SOURCE_DIR}
+  USES_TERMINAL
+  )
 
-  add_custom_target(
-    changelog
-    COMMAND tools/building/createChangelog
-    WORKING_DIRECTORY ${preCICE_SOURCE_DIR}
-    USES_TERMINAL
-    )
-endif()
+add_custom_target(
+  changelog
+  COMMAND tools/building/createChangelog
+  WORKING_DIRECTORY ${preCICE_SOURCE_DIR}
+  USES_TERMINAL
+  )
+
+add_custom_target(
+  tidy
+  COMMAND tools/linting/run_clang_tidy.sh
+  WORKING_DIRECTORY ${preCICE_SOURCE_DIR}
+  USES_TERMINAL
+  )

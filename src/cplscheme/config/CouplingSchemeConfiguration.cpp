@@ -36,8 +36,7 @@
 #include "xml/XMLAttribute.hpp"
 #include "xml/XMLTag.hpp"
 
-namespace precice {
-namespace cplscheme {
+namespace precice::cplscheme {
 
 CouplingSchemeConfiguration::CouplingSchemeConfiguration(
     xml::XMLTag &                        parent,
@@ -276,9 +275,14 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     mesh::PtrData exchangeData = exchangeMesh->data(nameData);
     PRECICE_ASSERT(exchangeData);
 
+    Config::Exchange newExchange{exchangeData, exchangeMesh, nameParticipantFrom, nameParticipantTo, initialize};
+    PRECICE_CHECK(!_config.hasExchange(newExchange),
+                  R"(Data "{}" of mesh "{}" cannot be exchanged multiple times between participants "{}" and "{}". Please remove one of the exchange tags.)",
+                  nameData, nameMesh, nameParticipantFrom, nameParticipantTo);
+
     _meshConfig->addNeededMesh(nameParticipantFrom, nameMesh);
     _meshConfig->addNeededMesh(nameParticipantTo, nameMesh);
-    _config.exchanges.emplace_back(Config::Exchange{exchangeData, exchangeMesh, nameParticipantFrom, nameParticipantTo, initialize});
+    _config.exchanges.emplace_back(std::move(newExchange));
   } else if (tag.getName() == TAG_MAX_ITERATIONS) {
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
     _config.maxIterations = tag.getIntAttributeValue(ATTR_VALUE);
@@ -1156,5 +1160,4 @@ void CouplingSchemeConfiguration::setParallelAcceleration(
   }
 }
 
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme

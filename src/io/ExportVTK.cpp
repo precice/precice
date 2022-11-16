@@ -15,8 +15,7 @@
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace io {
+namespace precice::io {
 
 void ExportVTK::doExport(
     const std::string &name,
@@ -33,7 +32,7 @@ void ExportVTK::doExport(
     fs::create_directories(outfile);
   outfile = outfile / fs::path(name + ".vtk");
   std::ofstream outstream(outfile.string(), std::ios::trunc);
-  PRECICE_CHECK(outstream, "VTK export failed to open destination file \"{}\"", outfile);
+  PRECICE_CHECK(outstream, "VTK export failed to open destination file \"{}\"", outfile.generic_string());
 
   initializeWriting(outstream);
   writeHeader(outstream);
@@ -174,7 +173,7 @@ void ExportVTK::exportGradient(std::ofstream &outFile, const mesh::Mesh &mesh)
           for (; j < gradientValues.rows(); j++) {        // Loop over space directions
             outFile << gradientValues.coeff(j, i) << " ";
           }
-          if (j < 3) { // If 2D data add additonal zero as third component
+          if (j < 3) { // If 2D data add additional zero as third component
             outFile << '0';
           }
           outFile << "\n";
@@ -187,7 +186,7 @@ void ExportVTK::exportGradient(std::ofstream &outFile, const mesh::Mesh &mesh)
           for (; j < gradientValues.rows(); j++) { // Loop over components
             outFile << gradientValues.coeff(j, i) << " ";
           }
-          if (j < 3) { // If 2D data add additonal zero as third component
+          if (j < 3) { // If 2D data add additional zero as third component
             outFile << '0';
           }
           outFile << "\n";
@@ -201,7 +200,7 @@ void ExportVTK::exportGradient(std::ofstream &outFile, const mesh::Mesh &mesh)
           for (; j < gradientValues.rows(); j++) { // Loop over components
             outFile << gradientValues.coeff(j, i) << " ";
           }
-          if (j < 3) { // If 2D data add additonal zero as third component
+          if (j < 3) { // If 2D data add additional zero as third component
             outFile << '0';
           }
           outFile << "\n";
@@ -216,7 +215,7 @@ void ExportVTK::exportGradient(std::ofstream &outFile, const mesh::Mesh &mesh)
             for (; j < gradientValues.rows(); j++) { // Loop over components
               outFile << gradientValues.coeff(j, i) << " ";
             }
-            if (j < 3) { // If 2D data add additonal zero as third component
+            if (j < 3) { // If 2D data add additional zero as third component
               outFile << '0';
             }
             outFile << "\n";
@@ -293,5 +292,4 @@ void ExportVTK::writeLine(
   outFile << '\n';
 }
 
-} // namespace io
-} // namespace precice
+} // namespace precice::io

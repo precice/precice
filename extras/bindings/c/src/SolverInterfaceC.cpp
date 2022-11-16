@@ -108,24 +108,6 @@ int precicec_isTimeWindowComplete()
   return 0;
 }
 
-int precicec_hasToEvaluateSurrogateModel()
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  if (impl->hasToEvaluateSurrogateModel()) {
-    return 1;
-  }
-  return 0;
-}
-
-int precicec_hasToEvaluateFineModel()
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  if (impl->hasToEvaluateFineModel()) {
-    return 1;
-  }
-  return 0;
-}
-
 int precicec_isReadDataAvailable()
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
@@ -297,6 +279,17 @@ void precicec_setMeshQuadWithEdges(
   impl->setMeshQuadWithEdges(meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
 }
 
+void precicec_setMeshTetrahedron(
+    int meshID,
+    int firstVertexID,
+    int secondVertexID,
+    int thirdVertexID,
+    int fourthVertexID)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->setMeshTetrahedron(meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
+}
+
 void precicec_writeBlockVectorData(
     int           dataID,
     int           size,
@@ -371,6 +364,53 @@ void precicec_readScalarData(
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->readScalarData(dataID, valueIndex, *dataValue);
+}
+
+int precicec_isGradientDataRequired(int dataID)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  if (impl->isGradientDataRequired(dataID)) {
+    return 1;
+  }
+  return 0;
+}
+
+void precicec_writeScalarGradientData(
+    int           dataID,
+    int           valueIndex,
+    const double *gradientValues)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->writeScalarGradientData(dataID, valueIndex, gradientValues);
+}
+
+void precicec_writeBlockScalarGradientData(
+    int           dataID,
+    int           size,
+    const int *   valueIndices,
+    const double *gradientValues)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->writeBlockScalarGradientData(dataID, size, valueIndices, gradientValues);
+}
+
+void precicec_writeVectorGradientData(
+    int           dataID,
+    int           valueIndex,
+    const double *gradientValues)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->writeVectorGradientData(dataID, valueIndex, gradientValues);
+}
+
+void precicec_writeBlockVectorGradientData(
+    int           dataID,
+    int           size,
+    const int *   valueIndices,
+    const double *gradientValues)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->writeBlockVectorGradientData(dataID, size, valueIndices, gradientValues);
 }
 
 const char *precicec_getVersionInformation()

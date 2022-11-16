@@ -42,4 +42,15 @@ void checkConfiguration(const std::string &filename, const std::string &particip
 
 } // namespace tooling
 
+/**
+ * @brief Returns information on the version of preCICE.
+ *
+ * Returns a semicolon-separated C-string containing:
+ *
+ * 1) the version of preCICE
+ * 2) the revision information of preCICE
+ * 3) the configuration of preCICE including MPI, PETSC, PYTHON
+ */
+std::string getVersionInformation();
+
 } // namespace precice

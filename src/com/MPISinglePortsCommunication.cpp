@@ -18,8 +18,7 @@
 
 using precice::utils::MPIResult;
 
-namespace precice {
-namespace com {
+namespace precice::com {
 MPISinglePortsCommunication::MPISinglePortsCommunication(std::string addressDirectory)
     : _addressDirectory(std::move(addressDirectory))
 {
@@ -271,7 +270,7 @@ void MPISinglePortsCommunication::prepareEstablishment(std::string const &accept
 {
   using namespace boost::filesystem;
   path dir = com::impl::localDirectory(acceptorName, requesterName, _addressDirectory);
-  PRECICE_DEBUG("Creating connection exchange directory {}", dir);
+  PRECICE_DEBUG("Creating connection exchange directory {}", dir.generic_string());
   try {
     create_directories(dir);
   } catch (const boost::filesystem::filesystem_error &e) {
@@ -284,7 +283,7 @@ void MPISinglePortsCommunication::cleanupEstablishment(std::string const &accept
 {
   using namespace boost::filesystem;
   path dir = com::impl::localDirectory(acceptorName, requesterName, _addressDirectory);
-  PRECICE_DEBUG("Removing connection exchange directory {}", dir);
+  PRECICE_DEBUG("Removing connection exchange directory {}", dir.generic_string());
   try {
     remove_all(dir);
   } catch (const boost::filesystem::filesystem_error &e) {
@@ -292,7 +291,6 @@ void MPISinglePortsCommunication::cleanupEstablishment(std::string const &accept
   }
 }
 
-} // namespace com
-} // namespace precice
+} // namespace precice::com
 
 #endif // not PRECICE_NO_MPI

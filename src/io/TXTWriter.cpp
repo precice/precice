@@ -2,8 +2,7 @@
 #include <iomanip>
 #include "logging/LogMacros.hpp"
 
-namespace precice {
-namespace io {
+namespace precice::io {
 
 TXTWriter::TXTWriter(
     const std::string &filename)
@@ -32,5 +31,4 @@ void TXTWriter::write(const Eigen::MatrixXd &matrix)
   _file << '\n';
 }
 
-} // namespace io
-} // namespace precice
+} // namespace precice::io

@@ -50,14 +50,14 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipant)
   VertexID vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
   double   dt       = precice.initialize();
 
-  for (int i = 0; i < timestepSizes.size(); i++) {
+  for (auto prescribed_dt : timestepSizes) {
     BOOST_TEST(precice.isCouplingOngoing());
     precice.writeScalarData(writeDataID, vertexID, expectedDataValue);
 
     if (context.isNamed("SolverOne")) {
-      precice.advance(timestepSizes.at(i));
+      precice.advance(prescribed_dt);
     } else if (context.isNamed("SolverTwo")) {
-      BOOST_TEST(dt == timestepSizes.at(i));
+      BOOST_TEST(dt == prescribed_dt);
       dt = precice.advance(dt);
     }
 

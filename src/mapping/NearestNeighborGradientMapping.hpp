@@ -20,14 +20,14 @@ public:
   NearestNeighborGradientMapping(Constraint constraint, int dimensions);
 
   /// Calculates the offsets needed for the gradient mappings after calculating the matched vertices
-  void onMappingComputed(mesh::PtrMesh origins, mesh::PtrMesh searchSpace) override;
+  void onMappingComputed(mesh::PtrMesh origins, mesh::PtrMesh searchSpace) final override;
 
 protected:
   /// @copydoc Mapping::mapConservative
-  void mapConservative(DataID inputDataID, DataID outputDataID) override;
+  void mapConservative(DataID inputDataID, DataID outputDataID) final override;
 
   /// @copydoc Mapping::mapConsistent
-  void mapConsistent(DataID inputDataID, DataID outputDataID) override;
+  void mapConsistent(DataID inputDataID, DataID outputDataID) final override;
 };
 
 } // namespace mapping

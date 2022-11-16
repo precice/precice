@@ -1,7 +1,6 @@
 #include "testing/WaveformFixture.hpp"
 
-namespace precice {
-namespace testing {
+namespace precice::testing {
 
 int WaveformFixture::numberOfStoredSamples(time::Waveform &waveform)
 {
@@ -23,5 +22,4 @@ double WaveformFixture::getValue(time::Waveform &waveform, int valueID, int samp
   return waveform._timeWindowsStorage(valueID, sampleID);
 }
 
-} // namespace testing
-} // namespace precice
+} // namespace precice::testing

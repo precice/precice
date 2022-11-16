@@ -3,8 +3,7 @@
 #include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 
-namespace precice {
-namespace config {
+namespace precice::config {
 
 LogConfiguration::LogConfiguration(
     xml::XMLTag &parent)
@@ -79,5 +78,4 @@ void LogConfiguration::xmlEndTagCallback(
     precice::logging::setupLogging(_logconfig, tag.getBooleanAttributeValue("enabled"));
 }
 
-} // namespace config
-} // namespace precice
+} // namespace precice::config

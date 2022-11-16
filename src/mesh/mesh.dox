@@ -9,16 +9,16 @@ from PropertyContainer, which allows to dynamically assign data values. Hence, t
 class Data does not hold the data values, but only give information about them. The
 actual values are stored in the vertex objects via the PropertyContainer
 implementation.
-    
+
 An example on how to create a triangulated mesh data structure is given here:
-    
-@code        
+
+@code
 #include "mesh/Vertex.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Mesh.hpp"
 #include "utils/Dimensions.hpp" // defines utils::Vector
- 
+
 // A mesh is the simplest way to create all needed objects
 Mesh mesh ( "MyMesh" );
 

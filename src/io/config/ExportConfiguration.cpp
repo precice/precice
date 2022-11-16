@@ -3,8 +3,7 @@
 #include "xml/XMLAttribute.hpp"
 #include "xml/XMLTag.hpp"
 
-namespace precice {
-namespace io {
+namespace precice::io {
 
 ExportConfiguration::ExportConfiguration(xml::XMLTag &parent)
 {
@@ -72,5 +71,4 @@ void ExportConfiguration::xmlTagCallback(
   }
 }
 
-} // namespace io
-} // namespace precice
+} // namespace precice::io

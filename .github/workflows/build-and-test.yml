@@ -7,7 +7,7 @@ name: Build and Test
 on:
   push:
     branches:
-      - master
+      - main
       - develop
   pull_request:
     paths:
@@ -100,7 +100,7 @@ jobs:
         with:
           path: ccache
           key: precice-ccache-${{ runner.IMAGE }}-${{ matrix.CONFIG }}-${{ matrix.CXX }}-${{ matrix.TYPE }}
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Generate build directory
         run: mkdir -p build
       - name: Configure
@@ -116,17 +116,17 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CMakeCache 
+          name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CMakeCache
           path: build/CMakeCache.txt
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CMakeLogs 
+          name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CMakeLogs
           path: 'build/CMakeFiles/*.log'
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CompileCommands 
+          name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CompileCommands
           path: build/compile_commands.json
       - name: Enable compiler annotations
         uses: electronjoe/gcc-problem-matcher@v1
@@ -152,7 +152,7 @@ jobs:
       - uses: codecov/codecov-action@v3
         with:
           files: ./build/coverage.info
-        if: ${{ matrix.COVFLAGS }} 
+        if: ${{ matrix.COVFLAGS }}
       - name: Check packages
         working-directory: build
         if: ${{ contains(matrix.IMAGE, 'ubuntu') }}
@@ -162,5 +162,5 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} TestOutput 
+          name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} TestOutput
           path: build/TestOutput/

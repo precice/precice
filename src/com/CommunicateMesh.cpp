@@ -19,8 +19,7 @@
 #include "precice/types.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace com {
+namespace precice::com {
 CommunicateMesh::CommunicateMesh(
     com::PtrCommunication communication)
     : _communication(std::move(communication))
@@ -181,7 +180,7 @@ void CommunicateMesh::receiveMesh(
   PRECICE_DEBUG("Number of triangles to receive: {}", numberOfTriangles);
   if (numberOfTriangles > 0) {
     std::vector<int> triangleIDs = _communication->receiveRange(rankSender, AsVectorTag<int>{});
-    PRECICE_ASSERT(triangleIDs.size() == numberOfTriangles * 3);
+    PRECICE_ASSERT(triangleIDs.size() == static_cast<std::size_t>(numberOfTriangles * 3));
 
     for (int i = 0; i < numberOfTriangles; i++) {
       PRECICE_ASSERT(vertexMap.count(triangleIDs[i * 3]) == 1);
@@ -200,7 +199,7 @@ void CommunicateMesh::receiveMesh(
 
   if (numberofTetra > 0) {
     std::vector<int> tetraIDs = _communication->receiveRange(rankSender, AsVectorTag<int>{});
-    PRECICE_ASSERT(tetraIDs.size() == numberofTetra * 4);
+    PRECICE_ASSERT(tetraIDs.size() == static_cast<std::size_t>(numberofTetra * 4));
 
     for (int i = 0; i < numberofTetra; i++) {
       PRECICE_ASSERT(vertexMap.count(tetraIDs[i * 4]) == 1);
@@ -389,5 +388,4 @@ void CommunicateMesh::broadcastReceiveMesh(
   }
 }
 
-} // namespace com
-} // namespace precice
+} // namespace precice::com

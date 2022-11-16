@@ -19,8 +19,7 @@
 #include "utils/String.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace logging {
+namespace precice::logging {
 
 /// A custom formatter that handles the TimeStamp format string
 class timestamp_formatter_factory : public boost::log::basic_formatter_factory<char, boost::posix_time::ptime> {
@@ -76,7 +75,7 @@ public:
 /// A simple backends that outputs the message to a stream
 /**
  * Rationale: The original text_ostream_backend from boost suffered from the great amount of code that lies
- * between the printing of the message and the endline. This leads to high probability that a process switch 
+ * between the printing of the message and the endline. This leads to high probability that a process switch
  * occurs and the message is severed from the endline.
  */
 class StreamBackend : public boost::log::sinks::text_ostream_backend {
@@ -225,5 +224,4 @@ void lockConf()
   _precice_logging_config_lock = true;
 }
 
-} // namespace logging
-} // namespace precice
+} // namespace precice::logging

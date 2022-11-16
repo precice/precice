@@ -190,7 +190,6 @@ target_sources(precice
     src/mapping/Polation.hpp
     src/mapping/RadialBasisFctBaseMapping.hpp
     src/mapping/RadialBasisFctMapping.hpp
-    src/mapping/RadialBasisFctSolver.cpp
     src/mapping/RadialBasisFctSolver.hpp
     src/mapping/SharedPointer.hpp
     src/mapping/config/MappingConfiguration.cpp
@@ -331,6 +330,7 @@ target_sources(precice
 #
 
 set_property(TARGET precice PROPERTY PUBLIC_HEADER
+    ${CMAKE_BINARY_DIR}/src/precice/Version.h
     src/precice/SolverInterface.hpp
     src/precice/Tooling.hpp
     src/precice/types.hpp

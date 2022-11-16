@@ -17,7 +17,7 @@ inline bool isTruncated(In in)
          (In(-1) < In(0) && in < std::numeric_limits<Out>::min());
 }
 
-/// Returns true if the argument represents a vaild port
+/// Returns true if the argument represents a valid port
 inline bool isValidPort(int port)
 {
   return (port >= 0) && !utils::isTruncated<unsigned short>(port);

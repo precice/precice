@@ -3,8 +3,7 @@
 #include "action/Action.hpp"
 #include "mesh/SharedPointer.hpp"
 
-namespace precice {
-namespace action {
+namespace precice::action {
 
 RecorderAction::RecorderAction(
     Timing               timing,
@@ -28,5 +27,4 @@ void RecorderAction::reset()
   records.clear();
 }
 
-} // namespace action
-} // namespace precice
+} // namespace precice::action

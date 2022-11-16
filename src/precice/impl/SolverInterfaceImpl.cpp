@@ -598,16 +598,6 @@ void SolverInterfaceImpl::markActionFulfilled(
   _couplingScheme->markActionFulfilled(action);
 }
 
-bool SolverInterfaceImpl::hasToEvaluateSurrogateModel() const
-{
-  return false;
-}
-
-bool SolverInterfaceImpl::hasToEvaluateFineModel() const
-{
-  return true;
-}
-
 bool SolverInterfaceImpl::hasMesh(
     const std::string &meshName) const
 {
@@ -726,7 +716,7 @@ int SolverInterfaceImpl::setMeshVertex(
   int           index   = -1;
   MeshContext & context = _accessor->usedMeshContext(meshID);
   mesh::PtrMesh mesh(context.mesh);
-  PRECICE_DEBUG("MeshRequirement: {}", context.meshRequirement);
+  PRECICE_DEBUG("MeshRequirement: {}", fmt::streamed(context.meshRequirement));
   index = mesh->createVertex(internalPosition).getID();
   mesh->allocateDataValues();
   return index;

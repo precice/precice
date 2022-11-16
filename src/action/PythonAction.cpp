@@ -21,8 +21,7 @@
 #include "utils/String.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace action {
+namespace precice::action {
 
 namespace {
 std::string python_error_as_string()
@@ -282,7 +281,6 @@ int PythonAction::makeNumPyArraysAvailable()
   return 1;
 }
 
-} // namespace action
-} // namespace precice
+} // namespace precice::action
 
 #endif

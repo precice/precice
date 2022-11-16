@@ -10,8 +10,7 @@
 #include "utils/Helpers.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace acceleration {
+namespace precice::acceleration {
 
 ConstantRelaxationAcceleration::ConstantRelaxationAcceleration(
     double           relaxation,
@@ -36,5 +35,4 @@ void ConstantRelaxationAcceleration::performAcceleration(const DataMap &cplData)
   applyRelaxation(_relaxation, cplData);
 }
 
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration

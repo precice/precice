@@ -14,8 +14,7 @@
 #include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 
 MeshConfiguration::MeshConfiguration(
     xml::XMLTag &        parent,
@@ -44,7 +43,7 @@ MeshConfiguration::MeshConfiguration(
                       .setDocumentation("Unique name for the mesh.");
   tag.addAttribute(attrName);
 
-  auto attrFlipNormals = makeXMLAttribute(ATTR_FLIP_NORMALS, false).setDocumentation("Deprectated.");
+  auto attrFlipNormals = makeXMLAttribute(ATTR_FLIP_NORMALS, false).setDocumentation("Deprecated.");
   tag.addAttribute(attrFlipNormals);
 
   XMLTag subtagData(*this, TAG_DATA, XMLTag::OCCUR_ARBITRARY);
@@ -169,5 +168,4 @@ void MeshConfiguration::addNeededMesh(
   }
 }
 
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh

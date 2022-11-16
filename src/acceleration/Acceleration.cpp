@@ -2,8 +2,7 @@
 #include "cplscheme/CouplingData.hpp"
 #include "utils/Helpers.hpp"
 
-namespace precice {
-namespace acceleration {
+namespace precice::acceleration {
 
 void Acceleration::checkDataIDs(const DataMap &cplData) const
 {
@@ -31,6 +30,4 @@ void Acceleration::applyRelaxation(double omega, const DataMap &cplData) const
     }
   }
 }
-
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration

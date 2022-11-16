@@ -6,8 +6,7 @@
 #include "precice/types.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 
 Data::Data()
     : _name(""),
@@ -90,5 +89,4 @@ int Data::getSpatialDimensions() const
   return _spatialDimensions;
 }
 
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh

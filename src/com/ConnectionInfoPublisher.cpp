@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <boost/algorithm/string/trim.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/uuid/name_generator.hpp>
 #include <boost/uuid/string_generator.hpp>
@@ -7,17 +8,17 @@
 #include <fstream>
 #include <thread>
 
-#include "ConnectionInfoPublisher.hpp"
+#include "com/ConnectionInfoPublisher.hpp"
 #include "logging/LogMacros.hpp"
 #include "precice/types.hpp"
+#include "utils/assertion.hpp"
 
-namespace precice {
-namespace com {
+namespace bfs = boost::filesystem;
+
+namespace precice::com {
 
 std::string impl::hashedFilePath(const std::string &acceptorName, const std::string &requesterName, const std::string &tag, Rank rank)
 {
-  using namespace boost::filesystem;
-
   constexpr int                  firstLevelLen = 2;
   boost::uuids::string_generator ns_gen;
   auto                           ns = ns_gen("af7ce8f2-a9ee-46cb-38ee-71c318aa3580"); // md5 hash of precice.org as namespace
@@ -27,17 +28,16 @@ std::string impl::hashedFilePath(const std::string &acceptorName, const std::str
   std::string                  hash = boost::uuids::to_string(gen(s));
   hash.erase(std::remove(hash.begin(), hash.end(), '-'), hash.end());
 
-  path p = path(hash.substr(0, firstLevelLen)) / hash.substr(firstLevelLen);
+  auto p = bfs::path(hash.substr(0, firstLevelLen)) / hash.substr(firstLevelLen);
 
   return p.string();
 }
 
 std::string impl::localDirectory(const std::string &acceptorName, const std::string &requesterName, const std::string &addressDirectory)
 {
-  using namespace boost::filesystem;
   std::string directional = acceptorName + "-" + requesterName;
 
-  path p = path(addressDirectory) / path("precice-run") / path(directional);
+  auto p = bfs::path(addressDirectory) / "precice-run" / directional;
 
   return p.string();
 }
@@ -49,57 +49,101 @@ std::string ConnectionInfoPublisher::getLocalDirectory() const
 
 std::string ConnectionInfoPublisher::getFilename() const
 {
-  using namespace boost::filesystem;
-
   auto local  = getLocalDirectory();
   auto hashed = impl::hashedFilePath(acceptorName, requesterName, tag, rank);
-  path p      = path(getLocalDirectory()) / path(hashed);
+  auto p      = bfs::path(getLocalDirectory()) / hashed;
 
   return p.string();
 }
 
 std::string ConnectionInfoReader::read() const
 {
-  std::ifstream ifs;
-  auto          path = getFilename();
-  PRECICE_DEBUG("Waiting for connection file {}", path);
-  do {
-    ifs.open(path, std::ifstream::in);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-  } while (not ifs);
-  PRECICE_DEBUG("Found connection file {}", path);
+  auto path = getFilename();
 
+  PRECICE_DEBUG("Waiting for connection file \"{}\"", path);
+  const auto waitdelay = std::chrono::milliseconds(1);
+  while (!bfs::exists(path)) {
+    std::this_thread::sleep_for(waitdelay);
+  }
+  PRECICE_ASSERT(bfs::exists(path));
+  PRECICE_DEBUG("Found connection file \"{}\"", path);
+
+  std::ifstream ifs(path);
+  PRECICE_CHECK(ifs,
+                "Unable to establish connection as the connection file \"{}\" couldn't be opened.",
+                path);
   std::string addressData;
-  ifs >> addressData;
+  std::getline(ifs, addressData);
+  PRECICE_CHECK(!addressData.empty(),
+                "Unable to establish connection as the connection file \"{}\" is empty. "
+                "Please report this bug to the preCICE developers.",
+                path);
+  boost::algorithm::trim_right(addressData);
   return addressData;
 }
 
 ConnectionInfoWriter::~ConnectionInfoWriter()
 {
-  namespace fs = boost::filesystem;
+  bfs::path path(getFilename());
+  if (!bfs::exists(path)) {
+    PRECICE_WARN("Cannot clean-up the connection file \"{}\" as it doesn't exist. "
+                 "In case of connection problems, please report this to the preCICE developers.",
+                 path.generic_string());
+    return;
+  }
+  PRECICE_DEBUG("Deleting connection file \"{}\"", path.generic_string());
   try {
-    fs::path p(getFilename());
-    PRECICE_DEBUG("Deleting connection file {}", p.string());
-    fs::remove(p);
-  } catch (const fs::filesystem_error &e) {
-    PRECICE_WARN("Unable to delete connection file due to error: {}", e.what());
+    bfs::remove(path);
+    if (bfs::exists(path)) {
+      PRECICE_WARN("The connection file \"{}\" wasn't properly removed. "
+                   "Make sure to delete the \"precice-run\" directory before restarting the simulation.",
+                   path.generic_string());
+    }
+  } catch (const bfs::filesystem_error &e) {
+    PRECICE_WARN("Unable to clean-up connection file due to error: {}. "
+                 "Make sure to delete the \"precice-run\" directory before restarting the simulation.",
+                 e.what());
   }
 }
 
 void ConnectionInfoWriter::write(std::string const &info) const
 {
-  namespace fs = boost::filesystem;
-  auto path    = getFilename();
-  auto tmp     = fs::path(path + "~");
-  PRECICE_DEBUG("Writing connection file {}", path);
-  fs::create_directories(tmp.parent_path());
+  auto path = getFilename();
+  auto tmp  = bfs::path(path + "~");
+
   {
-    std::ofstream ofs(tmp.string(), std::ofstream::out);
-    ofs << info << "\n";
-    ofs << "Acceptor: " << acceptorName << ", Requester: " << requesterName << ", Tag: " << tag << ", Rank: " << rank << "\n";
+    auto message = "Unable to establish connection as a {}connection file already exists at \"{}\". "
+                   "This is likely a leftover of a previous crash or stop during communication build-up. "
+                   "Please remove the \"precice-run\" directory and restart the simulation.";
+    PRECICE_CHECK(!bfs::exists(path), message, "", path);
+    PRECICE_CHECK(!bfs::exists(tmp), message, "temporary ")
   }
-  fs::rename(tmp, path);
+
+  PRECICE_DEBUG("Writing temporary connection file \"{}\"", tmp.generic_string());
+  bfs::create_directories(tmp.parent_path());
+  {
+    std::ofstream ofs(tmp.string());
+    PRECICE_CHECK(ofs, "Unable to establish connection as the temporary connection file \"{}\" couldn't be opened.", tmp.generic_string());
+    fmt::print(ofs,
+               "{}\nAcceptor: {}, Requester: {}, Tag: {}, Rank: {}",
+               info, acceptorName, requesterName, tag, rank);
+  }
+  PRECICE_CHECK(bfs::exists(tmp),
+                "Unable to establish connection as the temporary connection file \"{}\" was written, but doesn't exist on disk. "
+                "Please report this bug to the preCICE developers.",
+                tmp.generic_string());
+
+  PRECICE_DEBUG("Publishing connection file \"{}\"", path);
+  bfs::rename(tmp, path);
+  if (bfs::exists(tmp)) {
+    PRECICE_WARN("The temporary connection file \"{}\" wasn't properly removed. "
+                 "Make sure to delete the \"precice-run\" directory before restarting the simulation.",
+                 tmp.generic_string());
+  }
+  PRECICE_CHECK(bfs::exists(path),
+                "Unable to establish connection as the connection file \"{}\" doesn't exist on disk. "
+                "Please report this bug to the preCICE developers.",
+                path);
 }
 
-} // namespace com
-} // namespace precice
+} // namespace precice::com

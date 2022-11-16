@@ -131,9 +131,6 @@ private:
   /// @brief: Number of reused time windows at restart if restart-mode = RS-LS
   int _RSLSreusedTimeWindows;
 
-  /// @brief: Number of used columns per time window. Always the first _usedColumnsPerTwindow are used.
-  int _usedColumnsPerTimeWindow;
-
   /// @brief tracks the number of restarts of IMVJ
   int _nbRestarts;
 
