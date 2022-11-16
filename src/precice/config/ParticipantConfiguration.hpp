@@ -98,7 +98,6 @@ private:
   const std::string ATTR_SCALE_WITH_CONN    = "scale-with-connectivity";
   const std::string ATTR_ORDER              = "waveform-order";
 
-  const std::string VALUE_FILTER_ON_SLAVES          = "on-slaves";
   const std::string VALUE_FILTER_ON_SECONDARY_RANKS = "on-secondary-ranks";
   const std::string VALUE_FILTER_ON_PRIMARY_RANK    = "on-primary-rank";
   const std::string VALUE_NO_FILTER                 = "no-filter";
