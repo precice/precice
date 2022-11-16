@@ -124,16 +124,6 @@ int SolverInterface::getDataID(
   return _impl->getDataID(dataName, meshID);
 }
 
-bool SolverInterface::hasToEvaluateSurrogateModel() const
-{
-  return _impl->hasToEvaluateSurrogateModel();
-}
-
-bool SolverInterface::hasToEvaluateFineModel() const
-{
-  return _impl->hasToEvaluateFineModel();
-}
-
 //void SolverInterface:: resetMesh
 //(
 //  int meshID )

@@ -108,24 +108,6 @@ int precicec_isTimeWindowComplete()
   return 0;
 }
 
-int precicec_hasToEvaluateSurrogateModel()
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  if (impl->hasToEvaluateSurrogateModel()) {
-    return 1;
-  }
-  return 0;
-}
-
-int precicec_hasToEvaluateFineModel()
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  if (impl->hasToEvaluateFineModel()) {
-    return 1;
-  }
-  return 0;
-}
-
 int precicec_isReadDataAvailable()
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
