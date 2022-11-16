@@ -116,13 +116,13 @@ void Participant::addReadData(
 }
 
 void Participant::addReadMappingContext(
-    MappingContext mappingContext)
+    const MappingContext &mappingContext)
 {
   _readMappingContexts.push_back(mappingContext);
 }
 
 void Participant::addWriteMappingContext(
-    MappingContext mappingContext)
+    const MappingContext &mappingContext)
 {
   _writeMappingContexts.push_back(mappingContext);
 }

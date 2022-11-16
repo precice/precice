@@ -1974,7 +1974,7 @@ void SolverInterfaceImpl::computeMappings(std::vector<MappingContext> &contexts,
   }
 }
 
-void SolverInterfaceImpl::clearMappings(std::vector<MappingContext> contexts)
+void SolverInterfaceImpl::clearMappings(std::vector<MappingContext> &contexts)
 {
   PRECICE_TRACE();
   // Clear non-stationary, non-incremental mappings

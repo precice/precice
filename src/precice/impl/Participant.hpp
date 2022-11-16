@@ -83,10 +83,10 @@ public:
       int                  interpolationOrder);
 
   /// Adds a configured read \ref Mapping to the Participant
-  void addReadMappingContext(MappingContext mappingContext);
+  void addReadMappingContext(const MappingContext &mappingContext);
 
   /// Adds a configured write \ref Mapping to the Participant
-  void addWriteMappingContext(MappingContext mappingContext);
+  void addWriteMappingContext(const MappingContext &mappingContext);
 
   /// Adds a configured \ref WatchPoint to the Participant
   void addWatchPoint(const PtrWatchPoint &watchPoint);
