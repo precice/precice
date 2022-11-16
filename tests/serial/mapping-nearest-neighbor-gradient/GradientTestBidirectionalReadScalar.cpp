@@ -48,12 +48,11 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalReadScalar)
     int      meshOneID = cplInterface.getMeshID("MeshOne");
     Vector3d vec1      = Vector3d::Constant(0.1);
     cplInterface.setMeshVertex(meshOneID, vec1.data());
-    double maxDt   = cplInterface.initialize();
-    int    dataAID = cplInterface.getDataID("DataOne", meshOneID);
-    int    dataBID = cplInterface.getDataID("DataTwo", meshOneID);
+    int dataAID = cplInterface.getDataID("DataOne", meshOneID);
+    int dataBID = cplInterface.getDataID("DataTwo", meshOneID);
 
     double valueDataB = 0.0;
-    cplInterface.initializeData();
+    double maxDt      = cplInterface.initialize();
     cplInterface.readScalarData(dataBID, 0, valueDataB);
     BOOST_TEST(valueDataB == 1.0);
 
@@ -77,16 +76,15 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalReadScalar)
     Vector3d vec2      = Vector3d::Constant(0.0);
     cplInterface.setMeshVertex(meshTwoID, vec2.data());
 
-    double maxDt   = cplInterface.initialize();
-    int    dataAID = cplInterface.getDataID("DataOne", meshTwoID);
-    int    dataBID = cplInterface.getDataID("DataTwo", meshTwoID);
+    int dataAID = cplInterface.getDataID("DataOne", meshTwoID);
+    int dataBID = cplInterface.getDataID("DataTwo", meshTwoID);
     BOOST_TEST(cplInterface.isGradientDataRequired(dataBID) == false);
     double valueDataB = 1.0;
     cplInterface.writeScalarData(dataBID, 0, valueDataB);
 
-    //tell preCICE that data has been written and call initializeData
+    //tell preCICE that data has been written and call initialize
     cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
-    cplInterface.initializeData();
+    double maxDt = cplInterface.initialize();
 
     while (cplInterface.isCouplingOngoing()) {
       cplInterface.writeScalarData(dataBID, 0, 1.5);

@@ -40,7 +40,7 @@ public:
    * @param[in] mappingContext Context of write mapping
    * @param[in] meshContext Context of mesh this write mapping is mapping to (_toData)
    */
-  void appendMappingConfiguration(const MappingContext &mappingContext, const MeshContext &meshContext) override;
+  void appendMappingConfiguration(MappingContext &mappingContext, const MeshContext &meshContext) override;
 
 private:
   static logging::Logger _log;

@@ -1,5 +1,5 @@
 
-def performAction(time, timeWindowSize):
+def performAction(time):
     pass
 
 #def vertexCallback(id, coords, normal):

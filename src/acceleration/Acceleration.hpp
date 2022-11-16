@@ -26,8 +26,7 @@ public:
   static const int PODFILTER     = 4;
 
   /// Map from data ID to data values.
-  using DataMap   = std::map<int, cplscheme::PtrCouplingData>;
-  using ValuesMap = std::map<int, Eigen::VectorXd>;
+  using DataMap = std::map<int, cplscheme::PtrCouplingData>;
 
   virtual ~Acceleration() = default;
 

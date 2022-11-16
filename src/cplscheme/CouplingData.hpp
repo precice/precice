@@ -20,6 +20,8 @@ public:
 
   int getDimensions() const;
 
+  int getSize() const;
+
   /// Returns a reference to the data values.
   Eigen::VectorXd &values();
 
@@ -46,6 +48,9 @@ public:
 
   /// returns gradient data from previous iteration
   const Eigen::MatrixXd &previousIterationGradients() const;
+
+  /// returns size of previous iteration
+  int getPreviousIterationSize() const;
 
   /// get ID of this CouplingData's mesh. See Mesh::getID().
   int getMeshID();

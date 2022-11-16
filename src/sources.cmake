@@ -48,8 +48,6 @@ target_sources(precice
     src/action/RecorderAction.hpp
     src/action/ScaleByAreaAction.cpp
     src/action/ScaleByAreaAction.hpp
-    src/action/ScaleByDtAction.cpp
-    src/action/ScaleByDtAction.hpp
     src/action/SharedPointer.hpp
     src/action/SummationAction.cpp
     src/action/SummationAction.hpp
@@ -268,6 +266,8 @@ target_sources(precice
     src/query/Index.hpp
     src/query/impl/RTreeAdapter.hpp
     src/time/SharedPointer.hpp
+    src/time/Storage.cpp
+    src/time/Storage.hpp
     src/time/Time.cpp
     src/time/Time.hpp
     src/time/Waveform.cpp

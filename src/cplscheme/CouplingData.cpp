@@ -19,7 +19,7 @@ CouplingData::CouplingData(
       _extrapolation(extrapolationOrder)
 {
   PRECICE_ASSERT(_data != nullptr);
-  _previousIteration = Eigen::VectorXd::Zero(_data->values().size());
+  _previousIteration = Eigen::VectorXd::Zero(getSize());
   PRECICE_ASSERT(_mesh != nullptr);
   PRECICE_ASSERT(_mesh.use_count() > 0);
 }
@@ -28,6 +28,12 @@ int CouplingData::getDimensions() const
 {
   PRECICE_ASSERT(_data != nullptr);
   return _data->getDimensions();
+}
+
+int CouplingData::getSize() const
+{
+  PRECICE_ASSERT(_data != nullptr);
+  return values().size();
 }
 
 Eigen::VectorXd &CouplingData::values()
@@ -84,6 +90,11 @@ const Eigen::MatrixXd &CouplingData::previousIterationGradients() const
   return _previousIterationGradients;
 }
 
+int CouplingData::getPreviousIterationSize() const
+{
+  return previousIteration().size();
+}
+
 int CouplingData::getMeshID()
 {
   return _mesh->getID();
@@ -106,7 +117,7 @@ std::vector<int> CouplingData::getVertexOffsets()
 
 void CouplingData::initializeExtrapolation()
 {
-  _extrapolation.initialize(values().size());
+  _extrapolation.initialize(getSize());
   storeIteration();
 }
 

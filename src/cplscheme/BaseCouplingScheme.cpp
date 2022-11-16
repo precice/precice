@@ -136,8 +136,9 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   PRECICE_ASSERT(not isInitialized());
   PRECICE_ASSERT(math::greaterEquals(startTime, 0.0), startTime);
   PRECICE_ASSERT(startTimeWindow >= 0, startTimeWindow);
-  _time        = startTime;
-  _timeWindows = startTimeWindow;
+  _time                = startTime;
+  _timeWindows         = startTimeWindow;
+  _hasDataBeenReceived = false;
 
   if (isImplicitCouplingScheme()) {
     if (not doesFirstStep()) {
@@ -151,55 +152,32 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
     initializeTXTWriters();
   }
 
-  initializeImplementation();
-
-  if (_sendsInitializedData) {
-    requireAction(constants::actionWriteInitialData());
-  }
-
-  // @todo duplicate code also in BaseCouplingScheme::initializeData().
-  if (not _sendsInitializedData && not _receivesInitializedData) {
-    if (isImplicitCouplingScheme()) {
-      if (not doesFirstStep()) {
-        storeExtrapolationData();
-        moveToNextWindow();
-      }
-    }
-  }
-
-  _isInitialized = true;
-}
-
-void BaseCouplingScheme::initializeData()
-{
-  // InitializeData uses the template method pattern (https://en.wikipedia.org/wiki/Template_method_pattern).
-  PRECICE_ASSERT(_isInitialized);
-  PRECICE_ASSERT(not _initializeDataHasBeenCalled);
-  _initializeDataHasBeenCalled = true;
-  PRECICE_TRACE("initializeData()");
-
-  if (not _sendsInitializedData && not _receivesInitializedData) {
-    PRECICE_INFO("initializeData is skipped since no data has to be initialized.");
-    return;
-  }
-
-  PRECICE_DEBUG("Initializing Data ...");
-
-  _hasDataBeenReceived = false;
-
   if (isImplicitCouplingScheme()) {
     storeIteration();
   }
 
   exchangeInitialData();
 
-  // @todo duplicate code also in BaseCouplingScheme::initialize().
   if (isImplicitCouplingScheme()) {
     if (not doesFirstStep()) {
       storeExtrapolationData();
       moveToNextWindow();
     }
   }
+
+  _isInitialized = true;
+}
+
+void BaseCouplingScheme::receiveResultOfFirstAdvance()
+{
+  PRECICE_ASSERT(_isInitialized, "Before calling receiveResultOfFirstAdvance() one has to call initialize().");
+  _hasDataBeenReceived = false;
+  performReceiveOfFirstAdvance();
+}
+
+bool BaseCouplingScheme::sendsInitializedData() const
+{
+  return _sendsInitializedData;
 }
 
 void BaseCouplingScheme::advance()
@@ -313,28 +291,15 @@ bool BaseCouplingScheme::willDataBeExchanged(
   return not math::greater(remainder, 0.0, _eps);
 }
 
-bool BaseCouplingScheme::hasInitialDataBeenReceived() const
-{
-  return _hasInitialDataBeenReceived;
-}
-
 bool BaseCouplingScheme::hasDataBeenReceived() const
 {
   return _hasDataBeenReceived;
 }
 
-void BaseCouplingScheme::checkInitialDataHasBeenReceived()
-{
-  PRECICE_ASSERT(not _hasDataBeenReceived, "checkInitialDataHasBeenReceived() may only be called once within one coupling iteration. If this assertion is triggered this probably means that your coupling scheme has a bug.");
-  _hasInitialDataBeenReceived = true;
-  checkDataHasBeenReceived();
-}
-
 void BaseCouplingScheme::checkDataHasBeenReceived()
 {
   PRECICE_ASSERT(not _hasDataBeenReceived, "checkDataHasBeenReceived() may only be called once within one coupling iteration. If this assertion is triggered this probably means that your coupling scheme has a bug.");
-  _hasDataBeenReceived        = true;
-  _hasInitialDataBeenReceived = true; // If any data has been received, this counts as initial data. Important for waveform relaxation & subcycling.
+  _hasDataBeenReceived = true;
 }
 
 double BaseCouplingScheme::getTime() const
@@ -618,6 +583,7 @@ void BaseCouplingScheme::determineInitialSend(BaseCouplingScheme::DataMap &sendD
 {
   if (anyDataRequiresInitialization(sendData)) {
     _sendsInitializedData = true;
+    requireAction(constants::actionWriteInitialData());
   }
 }
 

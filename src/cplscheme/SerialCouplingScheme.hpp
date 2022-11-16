@@ -77,6 +77,13 @@ private:
   void receiveAndSetTimeWindowSize();
 
   /**
+   * @brief Receives result of first advance, if this has to happen inside SolverInterface::initialize()
+   *
+   * Second participant of a SerialCouplingScheme, receives the result of the first advance of the first participant.
+   */
+  void performReceiveOfFirstAdvance() override final;
+
+  /**
    * @brief Exchanges data between the participants of the SerialCouplingSchemes and applies acceleration.
    * @returns true, if iteration converged
    */
@@ -90,16 +97,6 @@ private:
   {
     return getSendData();
   }
-
-  /**
-   * @brief determine whether data has to be sent/received
-   */
-  void initializeImplementation() override;
-
-  /**
-   * @brief Exchanges data, if it has to be initialized.
-   */
-  void exchangeInitialData() override;
 };
 
 } // namespace cplscheme
