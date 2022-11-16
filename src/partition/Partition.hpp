@@ -21,7 +21,7 @@ namespace partition {
  * them.
  *
  * A Partition can come in two flavors: Either defined by a participant
- * provide-mesh or received from another participant receive-mesh.
+ * (provide-mesh) or received from another participant (receive-mesh).
  *
  * Access to the associated mesh, to both mappings (from and to this mesh),
  * and to an m2n communication to another participant is necessary.
