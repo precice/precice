@@ -193,37 +193,37 @@ ParticipantConfiguration::ParticipantConfiguration(
 
   std::list<XMLTag>  intraCommTags;
   XMLTag::Occurrence intraCommOcc = XMLTag::OCCUR_NOT_OR_ONCE;
-    {
-      XMLTag tagIntraComm(*this, "sockets", intraCommOcc, TAG_INTRA_COMM);
-      doc = "A solver in parallel needs a communication between its ranks. ";
-      doc += "By default, the participant's MPI_COM_WORLD is reused.";
-      doc += "Use this tag to use TCP/IP sockets instead.";
-      tagIntraComm.setDocumentation(doc);
+  {
+    XMLTag tagIntraComm(*this, "sockets", intraCommOcc, TAG_INTRA_COMM);
+    doc = "A solver in parallel needs a communication between its ranks. ";
+    doc += "By default, the participant's MPI_COM_WORLD is reused.";
+    doc += "Use this tag to use TCP/IP sockets instead.";
+    tagIntraComm.setDocumentation(doc);
 
-      auto attrPort = makeXMLAttribute("port", 0)
-                          .setDocumentation(
-                              "Port number (16-bit unsigned integer) to be used for socket "
-                              "communication. The default is \"0\", what means that OS will "
-                              "dynamically search for a free port (if at least one exists) and "
-                              "bind it automatically.");
-      tagIntraComm.addAttribute(attrPort);
+    auto attrPort = makeXMLAttribute("port", 0)
+                        .setDocumentation(
+                            "Port number (16-bit unsigned integer) to be used for socket "
+                            "communication. The default is \"0\", what means that OS will "
+                            "dynamically search for a free port (if at least one exists) and "
+                            "bind it automatically.");
+    tagIntraComm.addAttribute(attrPort);
 
-      auto attrNetwork = makeXMLAttribute(ATTR_NETWORK, utils::networking::loopbackInterfaceName())
-                              .setDocumentation(
-                                  "Interface name to be used for socket communication. "
-                                  "Default is the canonical name of the loopback interface of your platform. "
-                                  "Might be different on supercomputing systems, e.g. \"ib0\" "
-                                  "for the InfiniBand on SuperMUC. ");
-      tagIntraComm.addAttribute(attrNetwork);
+    auto attrNetwork = makeXMLAttribute(ATTR_NETWORK, utils::networking::loopbackInterfaceName())
+                           .setDocumentation(
+                               "Interface name to be used for socket communication. "
+                               "Default is the canonical name of the loopback interface of your platform. "
+                               "Might be different on supercomputing systems, e.g. \"ib0\" "
+                               "for the InfiniBand on SuperMUC. ");
+    tagIntraComm.addAttribute(attrNetwork);
 
-      auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
-                                        .setDocumentation(
-                                            "Directory where connection information is exchanged. By default, the "
-                                            "directory of startup is chosen.");
-      tagIntraComm.addAttribute(attrExchangeDirectory);
+    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
+                                     .setDocumentation(
+                                         "Directory where connection information is exchanged. By default, the "
+                                         "directory of startup is chosen.");
+    tagIntraComm.addAttribute(attrExchangeDirectory);
 
-      intraCommTags.push_back(tagIntraComm);
-    }
+    intraCommTags.push_back(tagIntraComm);
+  }
   {
     XMLTag tagIntraComm(*this, "mpi", intraCommOcc, TAG_INTRA_COMM);
     doc = "A solver in parallel needs a communication between its ranks. ";
@@ -232,9 +232,9 @@ ParticipantConfiguration::ParticipantConfiguration(
     tagIntraComm.setDocumentation(doc);
 
     auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
-                                      .setDocumentation(
-                                          "Directory where connection information is exchanged. By default, the "
-                                          "directory of startup is chosen.");
+                                     .setDocumentation(
+                                         "Directory where connection information is exchanged. By default, the "
+                                         "directory of startup is chosen.");
     tagIntraComm.addAttribute(attrExchangeDirectory);
 
     intraCommTags.push_back(tagIntraComm);
