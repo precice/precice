@@ -28,15 +28,7 @@ void testMappingVolumeOneTriangle(const std::string configFile, const TestContex
     BOOST_TEST(vertexIDs[1] != -1, "Vertex B is invalid");
     BOOST_TEST(vertexIDs[2] != -1, "Vertex C is invalid");
 
-    int edgeAB = interface.setMeshEdge(meshID, vertexIDs[0], vertexIDs[1]);
-    int edgeBC = interface.setMeshEdge(meshID, vertexIDs[1], vertexIDs[2]);
-    int edgeCA = interface.setMeshEdge(meshID, vertexIDs[2], vertexIDs[0]);
-
-    BOOST_TEST(edgeAB != -1, "Edge AB is invalid");
-    BOOST_TEST(edgeBC != -1, "Edge BC is invalid");
-    BOOST_TEST(edgeCA != -1, "Edge CA is invalid");
-
-    interface.setMeshTriangle(meshID, edgeAB, edgeBC, edgeCA);
+    interface.setMeshTriangle(meshID, vertexIDs[0], vertexIDs[1], vertexIDs[2]);
 
     BOOST_CHECK(interface.getMeshVertexSize(meshID) == 3);
 
@@ -138,15 +130,7 @@ void testMappingVolumeOneTriangleConservative(const std::string configFile, cons
 
     interface.setMeshVertices(meshID, vertexIDs.size(), coords.data(), vertexIDs.data());
 
-    int edgeAB = interface.setMeshEdge(meshID, vertexIDs[0], vertexIDs[1]);
-    int edgeBC = interface.setMeshEdge(meshID, vertexIDs[1], vertexIDs[2]);
-    int edgeCA = interface.setMeshEdge(meshID, vertexIDs[2], vertexIDs[0]);
-
-    BOOST_TEST(edgeAB != -1, "Edge AB is invalid");
-    BOOST_TEST(edgeBC != -1, "Edge BC is invalid");
-    BOOST_TEST(edgeCA != -1, "Edge CA is invalid");
-
-    interface.setMeshTriangle(meshID, edgeAB, edgeBC, edgeCA);
+    interface.setMeshTriangle(meshID, vertexIDs[0], vertexIDs[1], vertexIDs[2]);
 
     // Initialize, read data, advance and finalize. Check expected mapping
     double dt = interface.initialize();

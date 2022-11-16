@@ -265,9 +265,14 @@ BOOST_AUTO_TEST_CASE(Query3DFullEdge)
   Eigen::Vector3d location(0.8, 0.5, 0.0);
   auto            results = indexTree.getClosestEdges(location, 2);
 
-  BOOST_TEST(results.size() == 2);
-  BOOST_TEST(mesh->edges().at(results.at(0).index) == eld);
-  BOOST_TEST(mesh->edges().at(results.at(1).index) == elr);
+  std::set<mesh::Edge *> matches{
+      &mesh->edges().at(results.at(0).index),
+      &mesh->edges().at(results.at(1).index),
+  };
+  std::set<mesh::Edge *> expected{&elr, &eld};
+
+  BOOST_TEST(matches.size() == 2);
+  BOOST_TEST(matches == expected, boost::test_tools::per_element());
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Edge
@@ -308,10 +313,15 @@ BOOST_AUTO_TEST_CASE(Query3DFullTriangle)
 
   auto results = indexTree.getClosestTriangles(location, 3);
   BOOST_TEST(results.size() == 3);
-  BOOST_TEST(mesh->triangles().at(results.at(0).index) == tlb);
-  BOOST_TEST(mesh->triangles().at(results.at(1).index) == tlt);
-  BOOST_TEST(mesh->triangles().at(results.at(2).index) == trt);
-  BOOST_TEST(mesh->triangles().at(results.at(2).index) != trb);
+
+  std::set<mesh::Triangle *> matches{
+      &mesh->triangles().at(results.at(0).index),
+      &mesh->triangles().at(results.at(1).index),
+      &mesh->triangles().at(results.at(2).index)};
+  std::set<mesh::Triangle *> expected{&tlb, &tlt, &trt};
+
+  BOOST_TEST(matches.size() == 3);
+  BOOST_TEST(matches == expected, boost::test_tools::per_element());
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Triangle

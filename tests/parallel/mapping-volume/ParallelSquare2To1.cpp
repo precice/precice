@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(ParallelSquare2To1)
 
     vertexIDs.resize(coords.size() / 2);
     interface.setMeshVertices(meshID, 3, coords.data(), vertexIDs.data());
-    interface.setMeshTriangleWithEdges(meshID, vertexIDs[0], vertexIDs[1], vertexIDs[2]);
+    interface.setMeshTriangle(meshID, vertexIDs[0], vertexIDs[1], vertexIDs[2]);
 
     dt = interface.initialize();
 
