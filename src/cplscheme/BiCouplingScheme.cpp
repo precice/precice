@@ -86,6 +86,12 @@ void BiCouplingScheme::addDataToReceive(
   }
 }
 
+void BiCouplingScheme::determineInitialDataExchange()
+{
+  determineInitialSend(getSendData());
+  determineInitialReceive(getReceiveData());
+}
+
 std::vector<std::string> BiCouplingScheme::getCouplingPartners() const
 {
   std::vector<std::string> partnerNames;
@@ -118,6 +124,28 @@ CouplingData *BiCouplingScheme::getReceiveData(
     return &(*(iter->second));
   }
   return nullptr;
+}
+
+void BiCouplingScheme::exchangeInitialData()
+{
+  // F: send, receive, S: receive, send
+  if (doesFirstStep()) {
+    if (sendsInitializedData()) {
+      sendData(getM2N(), getSendData());
+    }
+    if (receivesInitializedData()) {
+      receiveData(getM2N(), getReceiveData());
+      checkDataHasBeenReceived();
+    }
+  } else { // second participant
+    if (receivesInitializedData()) {
+      receiveData(getM2N(), getReceiveData());
+      checkDataHasBeenReceived();
+    }
+    if (sendsInitializedData()) {
+      sendData(getM2N(), getSendData());
+    }
+  }
 }
 
 } // namespace precice::cplscheme

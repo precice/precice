@@ -49,18 +49,6 @@ void precicef_initialize_(double *timestepLengthLimit);
 
 /**
  * Fortran syntax:
- * precicef_initialize_data()
- *
- * IN: -
- * OUT: -
- *
- * @copydoc precice::SolverInterface::initializeData()
- *
- */
-void precicef_initialize_data_();
-
-/**
- * Fortran syntax:
  * precicef_advance( DOUBLE PRECISION timstepLengthLimit )
  *
  * IN:  timestepLengthLimit
@@ -117,66 +105,6 @@ void precicef_get_dims_(int *dimensions);
  *
  */
 void precicef_is_coupling_ongoing_(int *isOngoing);
-
-/**
- * @deprecated Forwards to precicef_is_write_data_required_
- *
- * Fortran syntax:
- * precicef_write_data_required(
- *  DOUBLE PRECISION computedTimestepLength,
- *  INTEGER          isRequired )
- *
- * IN:  computedTimestepLength
- * OUT: isRequired(1:true, 0:false)
- *
- * @copydoc precice::SolverInterface::isWriteDataRequired()
- *
- */
-[[deprecated("Use precicef_is_write_data_required_(...) with the same arguments instead.")]] void precicef_write_data_required_(
-    const double *computedTimestepLength,
-    int *         isRequired);
-
-/**
- * Fortran syntax:
- * precicef_is_write_data_required(
- *  DOUBLE PRECISION computedTimestepLength,
- *  INTEGER          isRequired )
- *
- * IN:  computedTimestepLength
- * OUT: isRequired(1:true, 0:false)
- *
- * @copydoc precice::SolverInterface::isWriteDataRequired()
- *
- */
-void precicef_is_write_data_required_(
-    const double *computedTimestepLength,
-    int *         isRequired);
-
-/**
- * @deprecated Forwards to precicef_is_read_data_available_
- *
- * Fortran syntax:
- * precicef_read_data_available( INTEGER isAvailable );
- *
- * IN:  -
- * OUT: isAvailable(1:true, 0:false)
- *
- * @copydoc precice::SolverInterface::isReadDataAvailable()
- *
- */
-[[deprecated("Use precicef_is_read_data_available_() instead.")]] void precicef_read_data_available_(int *isAvailable);
-
-/**
- * Fortran syntax:
- * precicef_is_read_data_available( INTEGER isAvailable );
- *
- * IN:  -
- * OUT: isAvailable(1:true, 0:false)
- *
- * @copydoc precice::SolverInterface::isReadDataAvailable()
- *
- */
-void precicef_is_read_data_available_(int *isAvailable);
 
 /**
  * Fortran syntax:
@@ -705,30 +633,6 @@ void precicef_read_sdata_(
     const int *dataID,
     const int *valueIndex,
     double *   dataValue);
-
-/**
- * Fortran syntax:
- * precicef_map_write_data_from( INTEGER meshID )
- *
- * IN:  meshID
- * OUT: -
- *
- * @copydoc precice::SolverInterface::mapWriteDataFrom()
- *
- */
-void precicef_map_write_data_from_(const int *meshID);
-
-/**
- * Fortran syntax:
- * precicef_map_read_data_to( INTEGER meshID )
- *
- * IN:  meshID
- * OUT: -
- *
- * @copydoc precice::SolverInterface::mapReadDataTo()
- *
- */
-void precicef_map_read_data_to_(const int *meshID);
 
 /**
  * @brief Name of action for writing iteration checkpoint.

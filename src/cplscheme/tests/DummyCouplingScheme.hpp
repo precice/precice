@@ -40,6 +40,14 @@ public:
   /**
    * @brief Not implemented.
    */
+  void receiveResultOfFirstAdvance() override final
+  {
+    PRECICE_ASSERT(false);
+  }
+
+  /**
+   * @brief Not implemented.
+   */
   bool isInitialized() const override final
   {
     PRECICE_ASSERT(false);
@@ -53,23 +61,6 @@ public:
   {
     PRECICE_ASSERT(false);
     return false;
-  }
-
-  /**
-   * @brief Not implemented.
-   */
-  bool receivesInitializedData() const override final
-  {
-    PRECICE_ASSERT(false);
-    return false;
-  }
-
-  /**
-   * @brief Not implemented.
-   */
-  void initializeData() override final
-  {
-    PRECICE_ASSERT(false);
   }
 
   /**
@@ -102,15 +93,6 @@ public:
    * @brief Not implemented.
    */
   bool willDataBeExchanged(double lastSolverTimestepLength) const override final
-  {
-    PRECICE_ASSERT(false);
-    return false;
-  }
-
-  /**
-   * @brief Not implemented.
-   */
-  bool hasInitialDataBeenReceived() const override final
   {
     PRECICE_ASSERT(false);
     return false;

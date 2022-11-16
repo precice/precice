@@ -45,6 +45,7 @@ void DummyCouplingScheme::finalize()
 
 bool DummyCouplingScheme::isCouplingOngoing() const
 {
+  PRECICE_ASSERT(_isInitialized);
   if (_timesteps <= _maxTimesteps)
     return true;
   return false;

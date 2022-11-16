@@ -54,6 +54,9 @@ public:
   /// Returns all configured participants.
   const std::vector<impl::PtrParticipant> &getParticipants() const;
 
+  /// Returns a participant with the given name
+  const impl::PtrParticipant getParticipant(std::string participantName) const;
+
 private:
   struct WatchPointConfig {
     std::string     name;

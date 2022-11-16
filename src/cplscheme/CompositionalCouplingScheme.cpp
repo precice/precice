@@ -29,15 +29,11 @@ void CompositionalCouplingScheme::initialize(
   determineActiveCouplingSchemes();
 }
 
-bool CompositionalCouplingScheme::isInitialized() const
+void CompositionalCouplingScheme::receiveResultOfFirstAdvance()
 {
-  PRECICE_TRACE();
-  bool isInitialized = true;
   for (const Scheme &scheme : _couplingSchemes) {
-    isInitialized &= scheme.scheme->isInitialized();
+    scheme.scheme->receiveResultOfFirstAdvance();
   }
-  PRECICE_DEBUG("return {}", isInitialized);
-  return isInitialized;
 }
 
 bool CompositionalCouplingScheme::sendsInitializedData() const
@@ -51,23 +47,15 @@ bool CompositionalCouplingScheme::sendsInitializedData() const
   return sendsInitializedData;
 }
 
-bool CompositionalCouplingScheme::receivesInitializedData() const
+bool CompositionalCouplingScheme::isInitialized() const
 {
   PRECICE_TRACE();
-  bool receivesInitializedData = false;
+  bool isInitialized = true;
   for (const Scheme &scheme : _couplingSchemes) {
-    receivesInitializedData |= scheme.scheme->receivesInitializedData();
+    isInitialized &= scheme.scheme->isInitialized();
   }
-  PRECICE_DEBUG("return {}", receivesInitializedData);
-  return receivesInitializedData;
-}
-
-void CompositionalCouplingScheme::initializeData()
-{
-  PRECICE_TRACE();
-  for (const Scheme &scheme : _couplingSchemes) {
-    scheme.scheme->initializeData();
-  }
+  PRECICE_DEBUG("return {}", isInitialized);
+  return isInitialized;
 }
 
 void CompositionalCouplingScheme::addComputedTime(double timeToAdd)
@@ -133,20 +121,6 @@ bool CompositionalCouplingScheme::willDataBeExchanged(double lastSolverTimestepL
   }
   PRECICE_DEBUG("return {}", willBeExchanged);
   return willBeExchanged;
-}
-
-bool CompositionalCouplingScheme::hasInitialDataBeenReceived() const
-{
-  PRECICE_TRACE();
-  bool hasBeenReceived = false;
-  // Question: Does it suffice to only check the active ones?
-  for (SchemesIt it = _activeSchemesBegin; it != _activeSchemesEnd; it++) {
-    if (not it->onHold) {
-      hasBeenReceived |= it->scheme->hasInitialDataBeenReceived();
-    }
-  }
-  PRECICE_DEBUG("return {}", hasBeenReceived);
-  return hasBeenReceived;
 }
 
 bool CompositionalCouplingScheme::hasDataBeenReceived() const
