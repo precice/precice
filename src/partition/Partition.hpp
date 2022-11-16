@@ -20,7 +20,7 @@ namespace partition {
  * structures that describe the decomposition (if not the mesh) and compute
  * them.
  *
- * A Partition can come in two flavors: Either defined by a participants
+ * A Partition can come in two flavors: Either defined by a participant
  * provide-mesh or received from another participant receive-mesh.
  *
  * Access to the associated mesh, to both mappings (from and to this mesh),
