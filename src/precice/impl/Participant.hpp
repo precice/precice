@@ -83,10 +83,10 @@ public:
       int                  interpolationOrder);
 
   /// Adds a configured read \ref Mapping to the Participant
-  void addReadMappingContext(MappingContext *mappingContext);
+  void addReadMappingContext(MappingContext mappingContext);
 
   /// Adds a configured write \ref Mapping to the Participant
-  void addWriteMappingContext(MappingContext *mappingContext);
+  void addWriteMappingContext(MappingContext mappingContext);
 
   /// Adds a configured \ref WatchPoint to the Participant
   void addWatchPoint(const PtrWatchPoint &watchPoint);
@@ -300,10 +300,10 @@ public:
   bool useIntraComm() const;
 
   /// Provided access to all read \ref MappingContext
-  const utils::ptr_vector<MappingContext> &readMappingContexts() const;
+  std::vector<MappingContext> &readMappingContexts();
 
   /// Provided access to all write \ref MappingContext
-  const utils::ptr_vector<MappingContext> &writeMappingContexts() const;
+  std::vector<MappingContext> &writeMappingContexts();
 
   /// Provided access to all \ref WatchPoints
   std::vector<PtrWatchPoint> &watchPoints();
@@ -339,10 +339,10 @@ private:
   std::vector<MeshContext *> _meshContexts; // @todo use map here!
 
   /// Read mapping contexts used by the participant.
-  utils::ptr_vector<MappingContext> _readMappingContexts;
+  std::vector<MappingContext> _readMappingContexts;
 
   /// Write mapping contexts used by the participant.
-  utils::ptr_vector<MappingContext> _writeMappingContexts;
+  std::vector<MappingContext> _writeMappingContexts;
 
   /// Mesh contexts used by the participant.
   std::vector<MeshContext *> _usedMeshContexts;

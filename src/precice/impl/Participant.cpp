@@ -37,8 +37,6 @@ Participant::~Participant()
     delete context;
   }
   _usedMeshContexts.clear();
-  _readMappingContexts.deleteElements();
-  _writeMappingContexts.deleteElements();
 }
 
 /// Configuration interface
@@ -118,13 +116,13 @@ void Participant::addReadData(
 }
 
 void Participant::addReadMappingContext(
-    MappingContext *mappingContext)
+    MappingContext mappingContext)
 {
   _readMappingContexts.push_back(mappingContext);
 }
 
 void Participant::addWriteMappingContext(
-    MappingContext *mappingContext)
+    MappingContext mappingContext)
 {
   _writeMappingContexts.push_back(mappingContext);
 }
@@ -350,12 +348,12 @@ std::string Participant::getMeshNameFromData(DataID dataID) const
 
 // Other queries
 
-const utils::ptr_vector<MappingContext> &Participant::readMappingContexts() const
+std::vector<MappingContext> &Participant::readMappingContexts()
 {
   return _readMappingContexts;
 }
 
-const utils::ptr_vector<MappingContext> &Participant::writeMappingContexts() const
+std::vector<MappingContext> &Participant::writeMappingContexts()
 {
   return _writeMappingContexts;
 }
