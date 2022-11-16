@@ -94,7 +94,7 @@ public:
   /// Adds a configured \ref WatchIntegral to the Participant
   void addWatchIntegral(const PtrWatchIntegral &watchIntegral);
 
-  /// Sets weather the participant was configured with a master tag
+  /// Sets weather the participant was configured with a primary tag
   void setUsePrimaryRank(bool useIntraComm);
 
   /// Sets the manager responsible for providing unique IDs to meshes.
@@ -296,7 +296,7 @@ public:
   /// Returns the name of the participant.
   const std::string &getName() const;
 
-  /// Returns true, if the participant uses a master tag.
+  /// Returns true, if the participant uses a primary tag.
   bool useIntraComm() const;
 
   /// Provided access to all read \ref MappingContext

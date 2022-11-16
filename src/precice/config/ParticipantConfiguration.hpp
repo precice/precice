@@ -76,7 +76,6 @@ private:
   const std::string TAG_USE_MESH       = "use-mesh";
   const std::string TAG_WATCH_INTEGRAL = "watch-integral";
   const std::string TAG_WATCH_POINT    = "watch-point";
-  const std::string TAG_MASTER         = "master";
   const std::string TAG_INTRA_COMM     = "intra-comm";
 
   const std::string ATTR_NAME               = "name";
@@ -101,7 +100,6 @@ private:
 
   const std::string VALUE_FILTER_ON_SLAVES          = "on-slaves";
   const std::string VALUE_FILTER_ON_SECONDARY_RANKS = "on-secondary-ranks";
-  const std::string VALUE_FILTER_ON_MASTER          = "on-master";
   const std::string VALUE_FILTER_ON_PRIMARY_RANK    = "on-primary-rank";
   const std::string VALUE_NO_FILTER                 = "no-filter";
 

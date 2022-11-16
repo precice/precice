@@ -161,13 +161,13 @@ ParticipantConfiguration::ParticipantConfiguration(
                                "If a mesh is received from another partipant (see tag <from>), it needs to be"
                                "decomposed at the receiving participant. To speed up this process, "
                                "a geometric filter, i.e. filtering by bounding boxes around the local mesh, can be used. "
-                               "Two different variants are implemented: a filter \"on-master\" strategy, "
+                               "Two different variants are implemented: a filter \"on-primary\" strategy, "
                                "which is beneficial for a huge mesh and a low number of processors, and a filter "
-                               "\"on-slaves\" strategy, which performs better for a very high number of "
+                               "\"on-slave\" strategy, which performs better for a very high number of "
                                "processors. Both result in the same distribution (if the safety factor is sufficiently large). "
-                               "\"on-master\" is not supported if you use two-level initialization. "
+                               "\"on-primary\" is not supported if you use two-level initialization. "
                                "For very asymmetric cases, the filter can also be switched off completely (\"no-filter\").")
-                           .setOptions({VALUE_FILTER_ON_MASTER, VALUE_FILTER_ON_SLAVES, VALUE_NO_FILTER, VALUE_FILTER_ON_PRIMARY_RANK, VALUE_FILTER_ON_SECONDARY_RANKS})
+                           .setOptions({VALUE_FILTER_ON_SLAVES, VALUE_NO_FILTER, VALUE_FILTER_ON_PRIMARY_RANK, VALUE_FILTER_ON_SECONDARY_RANKS})
                            .setDefaultValue(VALUE_FILTER_ON_SECONDARY_RANKS);
   tagUseMesh.addAttribute(attrGeoFilter);
 
@@ -193,7 +193,7 @@ ParticipantConfiguration::ParticipantConfiguration(
 
   std::list<XMLTag>  intraCommTags;
   XMLTag::Occurrence intraCommOcc = XMLTag::OCCUR_NOT_OR_ONCE;
-  for (std::string tag_name : {TAG_MASTER, TAG_INTRA_COMM}) {
+  for (std::string tag_name : {TAG_INTRA_COMM}) {
     {
       XMLTag tagIntraComm(*this, "sockets", intraCommOcc, tag_name);
       doc = "A solver in parallel needs a communication between its ranks. ";
@@ -371,10 +371,7 @@ void ParticipantConfiguration::xmlTagCallback(
     config.nameMesh    = tag.getStringAttributeValue(ATTR_MESH);
     config.isScalingOn = tag.getBooleanAttributeValue(ATTR_SCALE_WITH_CONN);
     _watchIntegralConfigs.push_back(config);
-  } else if (tag.getNamespace() == TAG_MASTER || tag.getNamespace() == TAG_INTRA_COMM) {
-    if (tag.getNamespace() == TAG_MASTER) {
-      PRECICE_WARN("Tag \"{}\" is deprecated and will be removed in v3.0.0. Please use \"{}\".", TAG_MASTER, TAG_INTRA_COMM);
-    }
+  } else if (tag.getNamespace() == TAG_INTRA_COMM) {
     com::CommunicationConfiguration comConfig;
     com::PtrCommunication           com  = comConfig.createCommunication(tag);
     utils::IntraComm::getCommunication() = com;
@@ -400,10 +397,7 @@ ParticipantConfiguration::getParticipants() const
 
 partition::ReceivedPartition::GeometricFilter ParticipantConfiguration::getGeoFilter(const std::string &geoFilter) const
 {
-  if (geoFilter == VALUE_FILTER_ON_MASTER || geoFilter == VALUE_FILTER_ON_PRIMARY_RANK) {
-    if (geoFilter == VALUE_FILTER_ON_MASTER) {
-      PRECICE_WARN("Value \"{}\" is deprecated and will be removed in v3.0.0. Please use \"{}\"", VALUE_FILTER_ON_MASTER, VALUE_FILTER_ON_PRIMARY_RANK);
-    }
+  if (geoFilter == VALUE_FILTER_ON_PRIMARY_RANK) {
     return partition::ReceivedPartition::GeometricFilter::ON_PRIMARY_RANK;
   } else if (geoFilter == VALUE_FILTER_ON_SLAVES || geoFilter == VALUE_FILTER_ON_SECONDARY_RANKS) {
     if (geoFilter == VALUE_FILTER_ON_SLAVES) {
