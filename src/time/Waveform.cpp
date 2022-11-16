@@ -61,6 +61,10 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
 {
   const int usedOrder = computeUsedOrder(_interpolationOrder, _storage.nTimes());
 
+  if (usedOrder < _interpolationOrder) {
+    PRECICE_WARN("usedOrder {} is lower than requestedOrder {}", usedOrder, _interpolationOrder);
+  }
+
   PRECICE_ASSERT(math::equals(this->_storage.maxStoredNormalizedDt(), 1.0), this->_storage.maxStoredNormalizedDt()); // sampling is only allowed, if a window is complete.
 
   if (_interpolationOrder == 0) {
