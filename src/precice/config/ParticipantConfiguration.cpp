@@ -193,7 +193,7 @@ ParticipantConfiguration::ParticipantConfiguration(
 
   std::list<XMLTag>  intraCommTags;
   XMLTag::Occurrence intraCommOcc = XMLTag::OCCUR_NOT_OR_ONCE;
-  {
+
     XMLTag tagIntraComm(*this, "sockets", intraCommOcc, tag_name);
     doc = "A solver in parallel needs a communication between its ranks. ";
     doc += "By default, the participant's MPI_COM_WORLD is reused.";
@@ -223,7 +223,7 @@ ParticipantConfiguration::ParticipantConfiguration(
     tagIntraComm.addAttribute(attrExchangeDirectory);
 
     intraCommTags.push_back(tagIntraComm);
-  }
+  
   {
     XMLTag tagIntraComm(*this, "mpi", intraCommOcc, tag_name);
     doc = "A solver in parallel needs a communication between its ranks. ";
@@ -250,7 +250,7 @@ ParticipantConfiguration::ParticipantConfiguration(
   }
   for (XMLTag &tagIntraComm : intraCommTags) {
     tag.addSubtag(tagIntraComm);
-  }
+
   parent.addSubtag(tag);
 }
 
