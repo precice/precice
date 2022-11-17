@@ -135,7 +135,7 @@ public:
    * Provides access to \ref ReadDataContext
    * @pre there exists a \ref ReadDataContext for \ref dataName
    */
-  ReadDataContext &readDataContext(std::string dataName);
+  ReadDataContext &readDataContext(const std::string &dataName);
 
   /** Provides access to \ref WriteDataContext
    * @pre there exists a \ref WriteDataContext for \ref dataID

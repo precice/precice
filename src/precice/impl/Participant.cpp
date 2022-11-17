@@ -142,14 +142,12 @@ ReadDataContext &Participant::readDataContext(DataID dataID)
   return it->second;
 }
 
-ReadDataContext &Participant::readDataContext(std::string dataName)
+ReadDataContext &Participant::readDataContext(const std::string &dataName)
 {
-  for (auto &dataContext : readDataContexts()) {
-    if (dataContext.getDataName() == dataName) {
-      return dataContext;
-    }
-  }
-  PRECICE_ASSERT(false, "ReadData with given name not found.");
+  auto dataContext = std::find_if(readDataContexts().begin(), readDataContexts().end(), [&dataName](const auto &d) { return d.getDataName() == dataName; });
+  PRECICE_ASSERT(dataContext != readDataContexts().end(), "Did not find read data \"{}\".", dataName);
+
+  return *dataContext;
 }
 
 const WriteDataContext &Participant::writeDataContext(DataID dataID) const
