@@ -72,7 +72,6 @@ private:
 
   const std::string TAG;
   const std::string ATTR_NAME;
-  const std::string ATTR_FLIP_NORMALS;
   const std::string TAG_DATA;
   const std::string ATTR_SIDE_INDEX;
 
