@@ -13,7 +13,7 @@
       "name": "production",
       "inherits": "base",
       "displayName": "Production release",
-      "description": "Default release configuration as preCICE is intended to be used in production.",
+      "description": "Release configuration for preCICE used in production.",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_INTERPROCEDURAL_OPTIMIZATION": "ON"
@@ -58,7 +58,7 @@
     {
       "name": "profiling",
       "inherits": "develop",
-      "displayName": "Profiling",
+      "displayName": "Profiling config",
       "description": "Profiling configuration",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
