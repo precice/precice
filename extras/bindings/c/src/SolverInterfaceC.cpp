@@ -255,6 +255,15 @@ void precicec_setMeshEdge(
   impl->setMeshEdge(meshID, firstVertexID, secondVertexID);
 }
 
+void precicec_setMeshEdges(
+    int        meshID,
+    int        size,
+    const int *vertices)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->setMeshEdges(meshID, size, vertices);
+}
+
 void precicec_setMeshTriangle(
     int meshID,
     int firstVertexID,
@@ -263,6 +272,15 @@ void precicec_setMeshTriangle(
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->setMeshTriangle(meshID, firstVertexID, secondVertexID, thirdVertexID);
+}
+
+void precicec_setMeshTriangles(
+    int        meshID,
+    int        size,
+    const int *vertices)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->setMeshTriangles(meshID, size, vertices);
 }
 
 void precicec_setMeshQuad(
@@ -276,6 +294,15 @@ void precicec_setMeshQuad(
   impl->setMeshQuad(meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
 }
 
+void precicec_setMeshQuads(
+    int        meshID,
+    int        size,
+    const int *vertices)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->setMeshQuads(meshID, size, vertices);
+}
+
 void precicec_setMeshTetrahedron(
     int meshID,
     int firstVertexID,
@@ -285,6 +312,15 @@ void precicec_setMeshTetrahedron(
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->setMeshTetrahedron(meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
+}
+
+void precicec_setMeshTetrahedra(
+    int        meshID,
+    int        size,
+    const int *vertices)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->setMeshTetrahedra(meshID, size, vertices);
 }
 
 void precicec_writeBlockVectorData(

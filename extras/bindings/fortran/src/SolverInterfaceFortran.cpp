@@ -28,8 +28,8 @@ static std::string errormsg = "preCICE has not been created properly. Be sure to
 
 namespace precice::impl {
 /**
-     * @brief Returns length of string without trailing whitespace.
-     */
+ * @brief Returns length of string without trailing whitespace.
+ */
 int strippedLength(const char *string, int length);
 } // namespace precice::impl
 
@@ -41,16 +41,16 @@ void precicef_create_(
     int         lengthAccessorName,
     int         lengthConfigFileName)
 {
-  //cout << "lengthAccessorName: " << lengthAccessorName << '\n';
-  //cout << "lengthConfigFileName: " << lengthConfigFileName << '\n';
-  //cout << "solverProcessIndex: " << *solverProcessIndex << '\n';
-  //cout << "solverProcessSize: " << *solverProcessSize << '\n';
+  // cout << "lengthAccessorName: " << lengthAccessorName << '\n';
+  // cout << "lengthConfigFileName: " << lengthConfigFileName << '\n';
+  // cout << "solverProcessIndex: " << *solverProcessIndex << '\n';
+  // cout << "solverProcessSize: " << *solverProcessSize << '\n';
   int    strippedLength = precice::impl::strippedLength(participantName, lengthAccessorName);
   string stringAccessorName(participantName, strippedLength);
   strippedLength = precice::impl::strippedLength(configFileName, lengthConfigFileName);
   string stringConfigFileName(configFileName, strippedLength);
-  //cout << "Accessor: " << stringAccessorName << "!" << '\n';
-  //cout << "Config  : " << stringConfigFileName << "!" << '\n';
+  // cout << "Accessor: " << stringAccessorName << "!" << '\n';
+  // cout << "Config  : " << stringConfigFileName << "!" << '\n';
   impl.reset(new precice::SolverInterface(stringAccessorName,
                                           stringConfigFileName,
                                           *solverProcessIndex, *solverProcessSize));
@@ -190,16 +190,16 @@ void precicef_is_action_required_(
     int         lengthAction)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  //PRECICE_ASSERT(lengthAction > 1);
-  //std::cout << "lengthAction: " << lengthAction << '\n';
-  //std::cout << "Action:";
-  //for (int i=0; i < lengthAction; i++){
-  //  std::cout << " a[" << i << "]=\"" << action[i] << "\"";
-  //}
-  //std::cout << '\n';
+  // PRECICE_ASSERT(lengthAction > 1);
+  // std::cout << "lengthAction: " << lengthAction << '\n';
+  // std::cout << "Action:";
+  // for (int i=0; i < lengthAction; i++){
+  //   std::cout << " a[" << i << "]=\"" << action[i] << "\"";
+  // }
+  // std::cout << '\n';
   int strippedLength = precice::impl::strippedLength(action, lengthAction);
-  //std::cout << "strippedLength: " << strippedLength << '\n';
-  //PRECICE_ASSERT(strippedLength > 1);
+  // std::cout << "strippedLength: " << strippedLength << '\n';
+  // PRECICE_ASSERT(strippedLength > 1);
   string stringAction(action, strippedLength);
   if (impl->isActionRequired(stringAction)) {
     *isRequired = 1;
@@ -340,6 +340,15 @@ void precicef_set_edge_(
   impl->setMeshEdge(*meshID, *firstVertexID, *secondVertexID);
 }
 
+void precicef_set_mesh_edges_(
+    const int *meshID,
+    const int *size,
+    const int *vertices)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->setMeshEdges(*meshID, *size, vertices);
+}
+
 void precicef_set_triangle_(
     const int *meshID,
     const int *firstVertexID,
@@ -348,6 +357,15 @@ void precicef_set_triangle_(
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->setMeshTriangle(*meshID, *firstVertexID, *secondVertexID, *thirdVertexID);
+}
+
+void precicef_set_mesh_triangles(
+    const int *meshID,
+    const int *size,
+    const int *vertices)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->setMeshTriangles(*meshID, *size, vertices);
 }
 
 void precicef_set_quad_(
@@ -361,6 +379,15 @@ void precicef_set_quad_(
   impl->setMeshQuad(*meshID, *firstVertexID, *secondVertexID, *thirdVertexID, *fourthVertexID);
 }
 
+void precicef_set_mesh_quads(
+    const int *meshID,
+    const int *size,
+    const int *vertices)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->setMeshQuads(*meshID, *size, vertices);
+}
+
 void precicef_set_tetrahedron(
     const int *meshID,
     const int *firstVertexID,
@@ -370,6 +397,15 @@ void precicef_set_tetrahedron(
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->setMeshTetrahedron(*meshID, *firstVertexID, *secondVertexID, *thirdVertexID, *fourthVertexID);
+}
+
+void precicef_set_mesh_tetrahedra(
+    const int *meshID,
+    const int *size,
+    const int *vertices)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->setMeshTetrahedra(*meshID, *size, vertices);
 }
 
 void precicef_write_bvdata_(

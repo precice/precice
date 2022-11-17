@@ -251,6 +251,20 @@ void precicec_setMeshEdge(
     int secondVertexID);
 
 /**
+   * @brief Sets multiple mesh edge from vertex IDs
+   *
+   * @param[in] meshID ID of the mesh to add the edges to
+   * @param[in] size the amount of edges to set
+   * @param[in] vertices an array containing 2*size vertex IDs
+   *
+   * @pre vertices were added to the mesh with the ID meshID
+   */
+void precicec_setMeshEdges(
+    int        meshID,
+    int        size,
+    const int *vertices);
+
+/**
  * @brief Sets a triangle from vertex IDs. Creates missing edges.
  */
 void precicec_setMeshTriangle(
@@ -258,6 +272,20 @@ void precicec_setMeshTriangle(
     int firstVertexID,
     int secondVertexID,
     int thirdVertexID);
+
+/**
+   * @brief Sets multiple mesh triangles from vertex IDs
+   *
+   * @param[in] meshID ID of the mesh to add the triangles to
+   * @param[in] size the amount of triangles to set
+   * @param[in] vertices an array containing 3*size vertex IDs
+   *
+   * @pre vertices were added to the mesh with the ID meshID
+   */
+void precicec_setMeshTriangles(
+    int        meshID,
+    int        size,
+    const int *vertices);
 
 /**
   * @brief Sets surface mesh quadrangle from vertex IDs.
@@ -276,6 +304,20 @@ void precicec_setMeshQuad(
     int fourthVertexID);
 
 /**
+   * @brief Sets multiple mesh quads from vertex IDs
+   *
+   * @param[in] meshID ID of the mesh to add the quad to
+   * @param[in] size the amount of quads to set
+   * @param[in] vertices an array containing 4*size vertex IDs
+   *
+   * @pre vertices were added to the mesh with the ID meshID
+   */
+void precicec_setMeshQuads(
+    int        meshID,
+    int        size,
+    const int *vertices);
+
+/**
   * @brief Sets mesh tetrahedron from vertex IDs.
   *
   * @param[in] meshID ID of the mesh to add the Tetra to
@@ -290,6 +332,20 @@ void precicec_setMeshTetrahedron(
     int secondVertexID,
     int thirdVertexID,
     int fourthVertexID);
+
+/**
+   * @brief Sets multiple mesh tetrahedra from vertex IDs
+   *
+   * @param[in] meshID ID of the mesh to add the tetrahedra to
+   * @param[in] size the amount of tetrahedra to set
+   * @param[in] vertices an array containing 4*size vertex IDs
+   *
+   * @pre vertices were added to the mesh with the ID meshID
+   */
+void precicec_setMeshTetrahedra(
+    int        meshID,
+    int        size,
+    const int *vertices);
 
 ///@}
 
