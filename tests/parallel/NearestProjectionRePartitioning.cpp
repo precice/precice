@@ -2,6 +2,7 @@
 
 #include "testing/Testing.hpp"
 
+#include <boost/test/data/test_case.hpp>
 #include <precice/SolverInterface.hpp>
 #include <precice/impl/SolverInterfaceImpl.hpp>
 #include <vector>
@@ -9,7 +10,9 @@
 /// This testcase is based on a bug documented in issue #371
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
-BOOST_AUTO_TEST_CASE(NearestProjectionRePartitioning)
+BOOST_DATA_TEST_CASE(NearestProjectionRePartitioning,
+                     boost::unit_test::data::make({true, false}),
+                     useBulkFunctions)
 {
   PRECICE_TEST("FluidSolver"_on(3_ranks), "SolidSolver"_on(1_rank));
 
@@ -153,12 +156,28 @@ BOOST_AUTO_TEST_CASE(NearestProjectionRePartitioning)
 
     const int numberOfCells = numberOfVertices / 2 - 1;
 
-    for (int i = 0; i < numberOfCells; i++) {
-      //left-diag-bottom
-      interface.setMeshTriangle(meshID, vertexIDs.at(i * 2), vertexIDs.at(i * 2 + 1), vertexIDs.at(i * 2 + 3));
+    if (useBulkFunctions) {
+      std::vector<int> ids;
+      for (int i = 0; i < numberOfCells; i++) {
+        // left-diag-bottom
+        ids.push_back(vertexIDs.at(i * 2));
+        ids.push_back(vertexIDs.at(i * 2 + 1));
+        ids.push_back(vertexIDs.at(i * 2 + 3));
 
-      //top-diag-right
-      interface.setMeshTriangle(meshID, vertexIDs.at(i * 2), vertexIDs.at(i * 2 + 2), vertexIDs.at(i * 2 + 3));
+        // top-diag-right
+        ids.push_back(vertexIDs.at(i * 2));
+        ids.push_back(vertexIDs.at(i * 2 + 2));
+        ids.push_back(vertexIDs.at(i * 2 + 3));
+      }
+      interface.setMeshTriangles(meshID, numberOfCells, ids.data());
+    } else {
+      for (int i = 0; i < numberOfCells; i++) {
+        // left-diag-bottom
+        interface.setMeshTriangle(meshID, vertexIDs.at(i * 2), vertexIDs.at(i * 2 + 1), vertexIDs.at(i * 2 + 3));
+
+        // top-diag-right
+        interface.setMeshTriangle(meshID, vertexIDs.at(i * 2), vertexIDs.at(i * 2 + 2), vertexIDs.at(i * 2 + 3));
+      }
     }
 
     interface.initialize();
