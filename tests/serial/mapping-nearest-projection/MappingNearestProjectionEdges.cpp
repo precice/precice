@@ -5,17 +5,18 @@
 #include <precice/SolverInterface.hpp>
 #include "helpers.hpp"
 
-/**
- * @brief Tests the Nearest Projection Mapping between two participants with explicit definition of edges from a quad to a triangle
- */
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(MappingNearestProjection)
-BOOST_AUTO_TEST_CASE(testQuadMappingNearestProjectionExplicitEdges)
+BOOST_AUTO_TEST_CASE(MappingNearestProjectionEdges)
 {
+  /**
+ * @brief Tests the Nearest Projection Mapping between two participants with explicit definition of edges
+ *
+ */
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
   bool defineEdgesExplicitly = true;
-  testQuadMappingNearestProjection(defineEdgesExplicitly, context.config(), context);
+  testMappingNearestProjection(defineEdgesExplicitly, context.config(), context);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Integration

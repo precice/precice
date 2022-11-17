@@ -11,7 +11,7 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(MappingNearestProjection)
-BOOST_AUTO_TEST_CASE(testQuadMappingDiagonalNearestProjectionExplicitEdgesTallKite)
+BOOST_AUTO_TEST_CASE(QuadMappingDiagonalNearestProjectionEdgesTallKite)
 {
   PRECICE_TEST("SolverOne"_on(1_rank));
   bool defineEdgesExplicitly = true;
