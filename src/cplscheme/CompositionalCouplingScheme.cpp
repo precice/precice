@@ -24,9 +24,7 @@ void CompositionalCouplingScheme::addCouplingScheme(
     return;
   }
 
-  PRECICE_CHECK(_implicitScheme == nullptr,
-                "You attempted to define a second implicit coupling-scheme for a participant, which is not allowed. "
-                "Please use a multi coupling-scheme for true implicit coupling of multiple participants.");
+  PRECICE_ASSERT(_implicitScheme == nullptr);
   _implicitScheme = couplingScheme;
 }
 
