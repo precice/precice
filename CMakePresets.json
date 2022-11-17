@@ -20,9 +20,19 @@
       }
     },
     {
+      "name": "production-audit",
+      "inherits": "production",
+      "displayName": "Production release with assertions",
+      "description": "Release build assertions enabled for auditting a specific run.",
+      "cacheVariables": {
+        "PRECICE_RELEASE_WITH_ASSERTIONS": "ON",
+        "PRECICE_RELEASE_WITH_DEBUG_LOG": "ON"
+      }
+    },
+    {
       "name": "develop",
       "inherits": "base",
-      "displayName": "Development config",
+      "displayName": "Development",
       "description": "Development config with default settings",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
@@ -46,19 +56,21 @@
       }
     },
     {
-      "name": "bigrelease",
-      "inherits": "production",
-      "displayName": "Big release",
-      "description": "Release build with log and assertions enabled",
+      "name": "optimized-debug",
+      "inherits": "base",
+      "displayName": "Optimized debug",
+      "description": "Optimized debug build log and assertions enabled",
       "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "PRECICE_RELEASE_WITH_ASSERTIONS": "ON",
-        "PRECICE_RELEASE_WITH_DEBUG_LOG": "ON"
+        "PRECICE_RELEASE_WITH_DEBUG_LOG": "ON",
+        "CMAKE_CXX_FLAGS": "-fno-omit-frame-pointer"
       }
     },
     {
       "name": "profiling",
       "inherits": "develop",
-      "displayName": "Profiling config",
+      "displayName": "Profiling",
       "description": "Profiling configuration",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
