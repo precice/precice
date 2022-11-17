@@ -7,7 +7,7 @@
 #include "precice/SolverInterface.hpp"
 #include "precice/impl/SolverInterfaceImpl.hpp"
 
-void testMappingNearestProjection(bool defineEdgesExplicitly, const std::string configFile, const TestContext &context)
+void testMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFunctions, const std::string configFile, const TestContext &context)
 {
   using Eigen::Vector3d;
 
@@ -45,15 +45,25 @@ void testMappingNearestProjection(bool defineEdgesExplicitly, const std::string 
     int idD = interface.setMeshVertex(meshOneID, coordOneD.data());
 
     if (defineEdgesExplicitly) {
-      interface.setMeshEdge(meshOneID, idA, idB);
-      interface.setMeshEdge(meshOneID, idB, idC);
-      interface.setMeshEdge(meshOneID, idC, idD);
-      interface.setMeshEdge(meshOneID, idD, idA);
-      interface.setMeshEdge(meshOneID, idC, idA);
+      if (useBulkFunctions) {
+        std::vector ids{idA, idB, idB, idC, idC, idD, idD, idA, idC, idA};
+        interface.setMeshEdges(meshOneID, 5, ids.data());
+      } else {
+        interface.setMeshEdge(meshOneID, idA, idB);
+        interface.setMeshEdge(meshOneID, idB, idC);
+        interface.setMeshEdge(meshOneID, idC, idD);
+        interface.setMeshEdge(meshOneID, idD, idA);
+        interface.setMeshEdge(meshOneID, idC, idA);
+      }
     }
 
-    interface.setMeshTriangle(meshOneID, idA, idB, idC);
-    interface.setMeshTriangle(meshOneID, idC, idD, idA);
+    if (useBulkFunctions) {
+      std::vector ids{idA, idB, idC, idC, idD, idA};
+      interface.setMeshTriangles(meshOneID, 2, ids.data());
+    } else {
+      interface.setMeshTriangle(meshOneID, idA, idB, idC);
+      interface.setMeshTriangle(meshOneID, idC, idD, idA);
+    }
 
     // Initialize, thus sending the mesh.
     double maxDt = interface.initialize();
@@ -107,7 +117,7 @@ void testMappingNearestProjection(bool defineEdgesExplicitly, const std::string 
   }
 }
 
-void testQuadMappingNearestProjection(bool defineEdgesExplicitly, const std::string configFile, const TestContext &context)
+void testQuadMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFunctions, const std::string configFile, const TestContext &context)
 {
   using Eigen::Vector3d;
 
@@ -145,13 +155,23 @@ void testQuadMappingNearestProjection(bool defineEdgesExplicitly, const std::str
     int idD = interface.setMeshVertex(meshOneID, coordOneD.data());
 
     if (defineEdgesExplicitly) {
-      interface.setMeshEdge(meshOneID, idA, idB);
-      interface.setMeshEdge(meshOneID, idB, idC);
-      interface.setMeshEdge(meshOneID, idC, idD);
-      interface.setMeshEdge(meshOneID, idD, idA);
+      if (useBulkFunctions) {
+        std::vector ids{idA, idB, idB, idC, idC, idD, idD, idA};
+        interface.setMeshEdges(meshOneID, 4, ids.data());
+      } else {
+        interface.setMeshEdge(meshOneID, idA, idB);
+        interface.setMeshEdge(meshOneID, idB, idC);
+        interface.setMeshEdge(meshOneID, idC, idD);
+        interface.setMeshEdge(meshOneID, idD, idA);
+      }
     }
 
-    interface.setMeshQuad(meshOneID, idA, idB, idC, idD);
+    if (useBulkFunctions) {
+      std::vector ids{idA, idB, idC, idD};
+      interface.setMeshQuads(meshOneID, 1, ids.data());
+    } else {
+      interface.setMeshQuad(meshOneID, idA, idB, idC, idD);
+    }
 
     auto &mesh = testing::WhiteboxAccessor::impl(interface).mesh("MeshOne");
     BOOST_REQUIRE(mesh.vertices().size() == 4);
@@ -210,7 +230,7 @@ void testQuadMappingNearestProjection(bool defineEdgesExplicitly, const std::str
   }
 }
 
-void testQuadMappingNearestProjectionTallKite(bool defineEdgesExplicitly, const std::string configFile, const TestContext &context)
+void testQuadMappingNearestProjectionTallKite(bool defineEdgesExplicitly, bool useBulkFunctions, const std::string configFile, const TestContext &context)
 {
   using Eigen::Vector3d;
 
@@ -234,13 +254,23 @@ void testQuadMappingNearestProjectionTallKite(bool defineEdgesExplicitly, const 
     int idD = interface.setMeshVertex(meshOneID, coordOneD.data());
 
     if (defineEdgesExplicitly) {
-      interface.setMeshEdge(meshOneID, idA, idB);
-      interface.setMeshEdge(meshOneID, idB, idC);
-      interface.setMeshEdge(meshOneID, idC, idD);
-      interface.setMeshEdge(meshOneID, idD, idA);
+      if (useBulkFunctions) {
+        std::vector ids{idA, idB, idB, idC, idC, idD, idD, idA};
+        interface.setMeshEdges(meshOneID, 4, ids.data());
+      } else {
+        interface.setMeshEdge(meshOneID, idA, idB);
+        interface.setMeshEdge(meshOneID, idB, idC);
+        interface.setMeshEdge(meshOneID, idC, idD);
+        interface.setMeshEdge(meshOneID, idD, idA);
+      }
     }
 
-    interface.setMeshQuad(meshOneID, idA, idB, idC, idD);
+    if (useBulkFunctions) {
+      std::vector ids{idA, idB, idC, idD};
+      interface.setMeshQuads(meshOneID, 1, ids.data());
+    } else {
+      interface.setMeshQuad(meshOneID, idA, idB, idC, idD);
+    }
 
     auto &mesh = testing::WhiteboxAccessor::impl(interface).mesh("MeshOne");
     BOOST_REQUIRE(mesh.vertices().size() == 4);
@@ -259,7 +289,7 @@ void testQuadMappingNearestProjectionTallKite(bool defineEdgesExplicitly, const 
   }
 }
 
-void testQuadMappingNearestProjectionWideKite(bool defineEdgesExplicitly, const std::string configFile, const TestContext &context)
+void testQuadMappingNearestProjectionWideKite(bool defineEdgesExplicitly, bool useBulkFunctions, const std::string configFile, const TestContext &context)
 {
   using Eigen::Vector3d;
 
@@ -283,13 +313,23 @@ void testQuadMappingNearestProjectionWideKite(bool defineEdgesExplicitly, const 
     int idD = interface.setMeshVertex(meshOneID, coordOneD.data());
 
     if (defineEdgesExplicitly) {
-      interface.setMeshEdge(meshOneID, idA, idB);
-      interface.setMeshEdge(meshOneID, idB, idC);
-      interface.setMeshEdge(meshOneID, idC, idD);
-      interface.setMeshEdge(meshOneID, idD, idA);
+      if (useBulkFunctions) {
+        std::vector ids{idA, idB, idB, idC, idC, idD, idD, idA};
+        interface.setMeshEdges(meshOneID, 4, ids.data());
+      } else {
+        interface.setMeshEdge(meshOneID, idA, idB);
+        interface.setMeshEdge(meshOneID, idB, idC);
+        interface.setMeshEdge(meshOneID, idC, idD);
+        interface.setMeshEdge(meshOneID, idD, idA);
+      }
     }
 
-    interface.setMeshQuad(meshOneID, idA, idB, idD, idC);
+    if (useBulkFunctions) {
+      std::vector ids{idA, idB, idD, idC};
+      interface.setMeshQuads(meshOneID, 1, ids.data());
+    } else {
+      interface.setMeshQuad(meshOneID, idA, idB, idD, idC);
+    }
 
     auto &mesh = testing::WhiteboxAccessor::impl(interface).mesh("MeshOne");
     BOOST_REQUIRE(mesh.vertices().size() == 4);
