@@ -40,8 +40,8 @@ BOOST_AUTO_TEST_CASE(OneActivatedMuscle)
     auto stretchMeshID = interface.getMeshID("Stretch_M1SM_Mesh");
     interface.setMeshVertices(stretchMeshID, 1, signalCoords.data(), stretchVertexIDs.data());
 
-    activationDataID   = interface.getDataID("Activation1", activationMeshID);
-    stretchDataID      = interface.getDataID("Stretch1", stretchMeshID);
+    activationDataID    = interface.getDataID("Activation1", activationMeshID);
+    stretchDataID       = interface.getDataID("Stretch1", stretchMeshID);
     displacement1DataID = interface.getDataID("Displacement1", surfaceMeshID);
     traction1DataID     = interface.getDataID("Traction1", surfaceMeshID);
 
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(OneActivatedMuscle)
     auto stretchMeshID = interface.getMeshID("Stretch_M2SM_Mesh");
     interface.setMeshVertices(stretchMeshID, 1, signalCoords.data(), stretchVertexIDs.data());
 
-    stretchDataID      = interface.getDataID("Stretch2", stretchMeshID);
+    stretchDataID       = interface.getDataID("Stretch2", stretchMeshID);
     displacement2DataID = interface.getDataID("Displacement2", surfaceMeshID);
     traction2DataID     = interface.getDataID("Traction2", surfaceMeshID);
 
@@ -86,7 +86,6 @@ BOOST_AUTO_TEST_CASE(OneActivatedMuscle)
 
     displacement2DataID = interface.getDataID("Displacement2", surface2MeshID);
     traction2DataID     = interface.getDataID("Traction2", surface2MeshID);
-
   }
 
   std::cout << "Before initialize" << std::endl;
@@ -117,7 +116,7 @@ BOOST_AUTO_TEST_CASE(OneActivatedMuscle)
       BOOST_TEST(context.isNamed("M1"));
     }
 
-    std::cout << "Before advance" << std::endl;   
+    std::cout << "Before advance" << std::endl;
     interface.advance(timestepSize);
   }
 }

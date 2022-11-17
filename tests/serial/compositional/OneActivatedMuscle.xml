@@ -150,9 +150,9 @@
     </coupling-scheme:serial-explicit>
 
     <coupling-scheme:multi>
-      <participant name="Tendon" control="yes"/>
-      <participant name="M1SM"/>
-      <participant name="M2SM"/>
+      <participant name="Tendon" control="yes" />
+      <participant name="M1SM" />
+      <participant name="M2SM" />
       <time-window-size value="1" />
       <max-time-windows value="2" />
       <exchange data="Displacement1" mesh="SurfaceTendon_Mesh1" from="M1SM" to="Tendon" />
@@ -165,8 +165,5 @@
         data="Displacement2"
         mesh="SurfaceTendon_Mesh2" />
     </coupling-scheme:multi>
-
-
   </solver-interface>
-
 </precice-configuration>
