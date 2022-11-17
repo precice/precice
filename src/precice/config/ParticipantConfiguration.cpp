@@ -140,12 +140,9 @@ ParticipantConfiguration::ParticipantConfiguration(
   tagReceiveMesh.setDocumentation(doc);
   attrName.setDocumentation("Name of the mesh to receive.");
   tagReceiveMesh.addAttribute(attrName);
-  auto attrFrom = XMLAttribute<std::string>(ATTR_FROM, "")
-                      .setDocumentation(
-                          "If a created mesh should be used by "
-                          "another solver, this attribute has to specify the creating participant's"
-                          " name. The creator has to use the attribute \"provide\" to signal he is "
-                          "providing the mesh geometry.");
+  auto attrFrom = XMLAttribute<std::string>(ATTR_FROM)
+                      .setDocumentation("The name of the participant to receive the mesh from. "
+                                        "This participant needs to provide the mesh using <provide-mesh />.");
   tagReceiveMesh.addAttribute(attrFrom);
   auto attrSafetyFactor = makeXMLAttribute(ATTR_SAFETY_FACTOR, 0.5)
                               .setDocumentation(
@@ -293,8 +290,8 @@ void ParticipantConfiguration::xmlTagCallback(
     const bool                                    allowDirectAccess = tag.getBooleanAttributeValue(ATTR_DIRECT_ACCESS);
 
     PRECICE_CHECK(!from.empty(),
-                  "Participant \"{}\" receives mesh \"{}\", but doesn't specify where from (no \"from\"). "
-                  "Please extend the receive-mesh tag as follows: <receive-mesh name=\"{}\" from=\"(other participant)\" ... />",
+                  "Participant \"{}\" receives mesh \"{}\", but doesn't specify where from. "
+                  "Please add the name of the other participant to the receive-mesh tag: <receive-mesh name=\"{}\" from=\"(other participant)\" ... />",
                   context.name, name, name)
 
     if (allowDirectAccess) {
