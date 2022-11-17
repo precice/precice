@@ -23,7 +23,6 @@
 #include "precice/types.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/ManageUniqueIDs.hpp"
-#include "utils/PointerVector.hpp"
 
 namespace precice {
 namespace impl {

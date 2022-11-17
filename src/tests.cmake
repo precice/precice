@@ -94,7 +94,6 @@ target_sources(testprecice
     src/utils/tests/ManageUniqueIDsTest.cpp
     src/utils/tests/MultiLockTest.cpp
     src/utils/tests/ParallelTest.cpp
-    src/utils/tests/PointerVectorTest.cpp
     src/utils/tests/StatisticsTest.cpp
     src/utils/tests/StringTest.cpp
     src/xml/tests/ParserTest.cpp

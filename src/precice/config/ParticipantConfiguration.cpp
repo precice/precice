@@ -29,7 +29,6 @@
 #include "precice/impl/WatchIntegral.hpp"
 #include "precice/impl/WatchPoint.hpp"
 #include "utils/IntraComm.hpp"
-#include "utils/PointerVector.hpp"
 #include "utils/assertion.hpp"
 #include "utils/networking.hpp"
 #include "xml/ConfigParser.hpp"
