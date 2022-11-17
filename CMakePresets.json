@@ -35,7 +35,7 @@
       }
     },
     {
-      "name": "debpkg",
+      "name": "debian-package",
       "inherits": "production",
       "displayName": "Debian package",
       "description": "Build for the generation of Debian packages",
@@ -54,13 +54,6 @@
         "PRECICE_RELEASE_WITH_ASSERTIONS": "ON",
         "PRECICE_RELEASE_WITH_DEBUG_LOG": "ON"
       }
-    },
-    {
-      "name": "localinstall",
-      "inherits": "production",
-      "displayName": "Locally installed release",
-      "description": "Release build with local installation to ./installation",
-      "installDir": "${sourceDir}/installation"
     },
     {
       "name": "profiling",
