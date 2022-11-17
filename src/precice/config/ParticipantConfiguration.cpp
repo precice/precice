@@ -29,7 +29,6 @@
 #include "precice/impl/WatchIntegral.hpp"
 #include "precice/impl/WatchPoint.hpp"
 #include "utils/IntraComm.hpp"
-#include "utils/PointerVector.hpp"
 #include "utils/assertion.hpp"
 #include "utils/networking.hpp"
 #include "xml/ConfigParser.hpp"
@@ -282,7 +281,7 @@ void ParticipantConfiguration::xmlTagCallback(
     std::string     name = tag.getStringAttributeValue(ATTR_NAME);
     Eigen::VectorXd offset(_dimensions);
     /// @todo offset currently not supported
-    //offset = tag.getEigenVectorXdAttributeValue(ATTR_LOCAL_OFFSET, _dimensions);
+    // offset = tag.getEigenVectorXdAttributeValue(ATTR_LOCAL_OFFSET, _dimensions);
     std::string                                   from              = tag.getStringAttributeValue(ATTR_FROM);
     double                                        safetyFactor      = tag.getDoubleAttributeValue(ATTR_SAFETY_FACTOR);
     partition::ReceivedPartition::GeometricFilter geoFilter         = getGeoFilter(tag.getStringAttributeValue(ATTR_GEOMETRIC_FILTER));
@@ -494,12 +493,12 @@ void ParticipantConfiguration::finishParticipantConfiguration(
       toMeshContext.geoFilter   = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
     }
 
-    precice::impl::MappingContext *mappingContext = new precice::impl::MappingContext();
-    mappingContext->fromMeshID                    = fromMeshID;
-    mappingContext->toMeshID                      = toMeshID;
-    mappingContext->timing                        = confMapping.timing;
+    precice::impl::MappingContext mappingContext;
+    mappingContext.fromMeshID = fromMeshID;
+    mappingContext.toMeshID   = toMeshID;
+    mappingContext.timing     = confMapping.timing;
 
-    mapping::PtrMapping &map = mappingContext->mapping;
+    mapping::PtrMapping &map = mappingContext.mapping;
     PRECICE_ASSERT(map.get() == nullptr);
     map = confMapping.mapping;
 
@@ -520,8 +519,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     toMeshContext.meshRequirement = std::max(
         toMeshContext.meshRequirement, map->getOutputRequirement());
 
-    fromMeshContext.fromMappingContexts.push_back(*mappingContext);
-    toMeshContext.toMappingContexts.push_back(*mappingContext);
+    fromMeshContext.fromMappingContexts.push_back(mappingContext);
+    toMeshContext.toMappingContexts.push_back(mappingContext);
   }
   _mappingConfig->resetMappings();
 

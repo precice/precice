@@ -19,7 +19,6 @@
 #include "precice/types.hpp"
 #include "query/Index.hpp"
 #include "utils/ManageUniqueIDs.hpp"
-#include "utils/PointerVector.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {

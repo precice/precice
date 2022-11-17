@@ -507,10 +507,10 @@ private:
   void computePartitions();
 
   /// Helper for mapWrittenData and mapReadData
-  void computeMappings(const utils::ptr_vector<MappingContext> &contexts, const std::string &mappingType);
+  void computeMappings(std::vector<MappingContext> &contexts, const std::string &mappingType);
 
   /// Helper for mapWrittenData and mapReadData
-  void clearMappings(utils::ptr_vector<MappingContext> contexts);
+  void clearMappings(std::vector<MappingContext> &contexts);
 
   /// Computes, performs, and resets all suitable write mappings.
   void mapWrittenData();
