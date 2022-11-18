@@ -65,7 +65,7 @@ Eigen::VectorXd Storage::getValueAtOrAfter(double before)
   auto sample = std::find_if(_sampleStorage.begin(), _sampleStorage.end(), [&before](const auto &s) { return math::greaterEquals(s.first, before); });
   PRECICE_ASSERT(sample != _sampleStorage.end(), "no value found!");
 
-  return (*sample).second;
+  return sample->second;
 }
 
 Eigen::VectorXd Storage::getTimes()
