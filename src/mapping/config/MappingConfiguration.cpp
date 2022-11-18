@@ -483,6 +483,16 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
       configuredMapping.mapping = PtrMapping(
           new PetRadialBasisFctMapping<CompactPolynomialC0>(constraintValue, dimensions, CompactPolynomialC0(rbfParameter.value),
                                                             {{xDead, yDead, zDead}}, solverRtol, polynomial, preallocation));
+    } else if (type == VALUE_RBF_CPOLYNOMIAL_C2) {
+      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::SupportRadius)
+      configuredMapping.mapping = PtrMapping(
+          new PetRadialBasisFctMapping<CompactPolynomialC2>(constraintValue, dimensions, CompactPolynomialC2(rbfParameter.value),
+                                                            {{xDead, yDead, zDead}}, solverRtol, polynomial, preallocation));
+    } else if (type == VALUE_RBF_CPOLYNOMIAL_C4) {
+      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::SupportRadius)
+      configuredMapping.mapping = PtrMapping(
+          new PetRadialBasisFctMapping<CompactPolynomialC4>(constraintValue, dimensions, CompactPolynomialC4(rbfParameter.value),
+                                                            {{xDead, yDead, zDead}}, solverRtol, polynomial, preallocation));
     } else if (type == VALUE_RBF_CPOLYNOMIAL_C6) {
       PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::SupportRadius)
       configuredMapping.mapping = PtrMapping(
