@@ -305,7 +305,7 @@ ProjectionMatch Index::findEdgeProjection(const Eigen::VectorXd &location, int n
     return closestVertex;
   }
 
-  // Prefer the closet vertex if it closer than the closest edge
+  // Prefer the closest vertex if it closer than the closest edge
   auto min = std::min_element(candidates.begin(), candidates.end());
   if (min->polation.distance() > closestVertex.polation.distance()) {
     return closestVertex;
