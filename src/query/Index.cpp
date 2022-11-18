@@ -217,7 +217,7 @@ std::vector<VertexID> Index::getVerticesInsideBox(const mesh::Vertex &centerVert
   auto coords    = centerVertex.getCoords();
   auto searchBox = query::makeBox(coords.array() - radius, coords.array() + radius);
 
-  const auto           &rtree = _pimpl->getVertexRTree(*_mesh);
+  const auto &          rtree = _pimpl->getVertexRTree(*_mesh);
   std::vector<VertexID> matches;
   rtree->query(bgi::intersects(searchBox) and bg::index::satisfies([&](size_t const i) { return bg::distance(centerVertex, _mesh->vertices()[i]) <= radius; }),
                std::back_inserter(matches));
@@ -228,7 +228,7 @@ std::vector<VertexID> Index::getVerticesInsideBox(const mesh::BoundingBox &bb)
 {
   PRECICE_TRACE();
   // Add tree to the local cache
-  const auto           &rtree = _pimpl->getVertexRTree(*_mesh);
+  const auto &          rtree = _pimpl->getVertexRTree(*_mesh);
   std::vector<VertexID> matches;
   rtree->query(bgi::intersects(query::makeBox(bb.minCorner(), bb.maxCorner())), std::back_inserter(matches));
   return matches;
@@ -249,9 +249,9 @@ std::vector<TetrahedronID> Index::getEnclosingTetrahedra(const Eigen::VectorXd &
 ProjectionMatch Index::findNearestProjection(const Eigen::VectorXd &location, int n)
 {
   if (_mesh->getDimensions() == 2) {
-    return findEdgeProjection(location, n);
+    return findEdgeProjection(location, n, findVertexProjection(location));
   } else {
-    return findTriangleProjection(location, n);
+    return findTriangleProjection(location, n, findVertexProjection(location));
   }
 }
 
@@ -289,7 +289,7 @@ ProjectionMatch Index::findVertexProjection(const Eigen::VectorXd &location)
   return {mapping::Polation{location, _mesh->vertices()[match.index]}};
 }
 
-ProjectionMatch Index::findEdgeProjection(const Eigen::VectorXd &location, int n)
+ProjectionMatch Index::findEdgeProjection(const Eigen::VectorXd &location, int n, ProjectionMatch closestVertex)
 {
   std::vector<ProjectionMatch> candidates;
   candidates.reserve(n);
@@ -300,21 +300,20 @@ ProjectionMatch Index::findEdgeProjection(const Eigen::VectorXd &location, int n
     }
   }
 
-  ProjectionMatch vertexProjection = findVertexProjection(location);
-  // Pick the smallest candidate by distance
-  auto min = std::min_element(candidates.begin(), candidates.end());
-  if (min != candidates.end()) {
-    if (min->polation.distance() < vertexProjection.polation.distance()) {
-      return *min;
-    } else {
-      return vertexProjection;
-    }
-  }
   // Could not find edge projection element, fall back to vertex projection
-  return vertexProjection;
+  if (candidates.empty()) {
+    return closestVertex;
+  }
+
+  // Prefer the closet vertex if it closer than the closest edge
+  auto min = std::min_element(candidates.begin(), candidates.end());
+  if (min->polation.distance() > closestVertex.polation.distance()) {
+    return closestVertex;
+  }
+  return *min;
 }
 
-ProjectionMatch Index::findTriangleProjection(const Eigen::VectorXd &location, int n)
+ProjectionMatch Index::findTriangleProjection(const Eigen::VectorXd &location, int n, ProjectionMatch closestVertex)
 {
   std::vector<ProjectionMatch> candidates;
   candidates.reserve(n);
@@ -324,20 +323,19 @@ ProjectionMatch Index::findTriangleProjection(const Eigen::VectorXd &location, i
       candidates.emplace_back(std::move(polation));
     }
   }
-  // Pick the smallest candidate by distance
-  auto min = std::min_element(candidates.begin(), candidates.end());
-  if (min != candidates.end()) {
-    ProjectionMatch vertexProjection = findVertexProjection(location);
-    if (min->polation.distance() < vertexProjection.polation.distance()) {
-      return *min;
-    } else {
-      return vertexProjection;
-    }
+
+  // Could not find triangle projection element, fall back to edge projection
+  if (candidates.empty()) {
+    return findEdgeProjection(location, n, std::move(closestVertex));
   }
 
-  // Could not triangle find projection element,
-  // fall back to edge projection (which itself could fall back to a vertex)
-  return findEdgeProjection(location, n);
+  // Fallback to edge projection if a vertex is closer than the best triangle match
+  auto min = std::min_element(candidates.begin(), candidates.end());
+  if (min->polation.distance() > closestVertex.polation.distance()) {
+    return findEdgeProjection(location, n, std::move(closestVertex));
+  }
+
+  return *min;
 }
 
 void Index::clear()
