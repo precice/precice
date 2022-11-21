@@ -44,6 +44,14 @@ public:
    */
   explicit BoundingBox(Vertex boundMin, Vertex boundMax);
 
+/**
+ * @brief Construct a new Bounding Box:: Bounding Box object
+ * 
+ * @param boundMin 
+ * @param boundMax 
+ */
+  BoundingBox::BoundingBox(Eigen::VectorXd boundMin, Eigen::VectorXd boundMax);
+
   /// Special Members
   BoundingBox(const BoundingBox &) = default;
   BoundingBox(BoundingBox &&)      = default;
@@ -109,11 +117,11 @@ private:
   /// Container of min and max points in each dimension
   std::vector<double> _bounds;
 
-  /// Container of a vertex of a bounding box with min components in each dimension
-  Vertex _boundMin;
+  /// Container of a Eigen::VectorXd of a bounding box with min components in each dimension
+  Eigen::VectorXd _boundMin;
   
-  /// Container of a vertex of a bounding box with max components in each dimension
-  Vertex _boundMax;
+  /// Container of a Eigen::VectorXd of a bounding box with max components in each dimension
+  Eigen::VectorXd _boundMax;
 };
 
 std::ostream &operator<<(std::ostream &, const BoundingBox &);
