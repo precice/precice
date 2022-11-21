@@ -54,18 +54,19 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
     readFunction  = dataOneFunction;
   }
 
-  double   writeData, readData;
+  double   writeData = 0;
+  double   readData  = 0;
   VertexID vertexID;
 
   vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
 
-  int    nSubsteps = 4; // perform subcycling on solvers. 4 steps happen in each window.
-  int    nWindows  = 5; // perform 5 windows.
-  int    timestep  = 0;
-  double time      = 0;
-  int    timestepCheckpoint;
-  double timeCheckpoint;
-  int    iterations;
+  int    nSubsteps          = 4; // perform subcycling on solvers. 4 steps happen in each window.
+  int    nWindows           = 5; // perform 5 windows.
+  int    timestep           = 0;
+  double time               = 0;
+  int    timestepCheckpoint = timestep;
+  double timeCheckpoint     = time;
+  int    iterations         = 0;
 
   if (precice.isActionRequired(precice::constants::actionWriteInitialData())) {
     writeData = writeFunction(time);
