@@ -108,7 +108,7 @@ PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::PartitionOfUnityMapping(
   PRECICE_CHECK(_relativeOverlap < 1, "The relative overlap has to be smaller than one.");
   PRECICE_CHECK(_verticesPerPartition > 0, "The number of vertices per partition has to be greater zero.");
 
-  if (constraint == SCALEDCONSISTENT) {
+  if (isScaledConsistent()) {
     setInputRequirement(Mapping::MeshRequirement::FULL);
     setOutputRequirement(Mapping::MeshRequirement::FULL);
   } else {
