@@ -20,11 +20,11 @@
       <use-mesh name="MeshOne" provide="on" />
       <use-mesh name="MeshTwo" from="SolverTwo" />
       <write-data name="DataOne" mesh="MeshOne" />
-      <mapping:nearest-projection
+      <mapping:nearest-neighbor
         direction="write"
         from="MeshOne"
         to="MeshTwo"
-        constraint="scaled-consistent-surface"
+        constraint="scaled-consistent-volume"
         timing="initial" />
     </participant>
 
