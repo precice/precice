@@ -116,10 +116,10 @@ private:
   ProjectionMatch findVertexProjection(const Eigen::VectorXd &location);
 
   /// Find closest edge interpolation element. If cannot be found, it falls back to vertex projection
-  ProjectionMatch findEdgeProjection(const Eigen::VectorXd &location, int n);
+  ProjectionMatch findEdgeProjection(const Eigen::VectorXd &location, int n, ProjectionMatch closestVertex);
 
   /// Find closest face interpolation element. If cannot be found, it falls back to first edge interpolation element, then vertex if necessary
-  ProjectionMatch findTriangleProjection(const Eigen::VectorXd &location, int n);
+  ProjectionMatch findTriangleProjection(const Eigen::VectorXd &location, int n, ProjectionMatch closestVertex);
 };
 
 } // namespace query

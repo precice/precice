@@ -655,7 +655,8 @@ BOOST_AUTO_TEST_CASE(AvoidClosestTriangle)
 
   const auto &values = runNPMapping(mapping::Mapping::CONSISTENT, inMesh, inData, outMesh, outData);
 
-  BOOST_TEST(values(0) == 1.0);
+  // Interpolatin triangle is further than NN => fall back on NN
+  BOOST_TEST(values(0) == 0.0);
 }
 
 BOOST_AUTO_TEST_CASE(PickClosestTriangle)
@@ -699,7 +700,7 @@ BOOST_AUTO_TEST_CASE(PreferTriangleOverEdge)
 
   PtrMesh inMesh(new mesh::Mesh("InMesh", 3, testing::nextMeshID()));
   PtrData inData = inMesh->createData("InData", 1, 0_dataID);
-  // Close edge
+  // Close edge ->
   auto &vc0 = inMesh->createVertex(Eigen::Vector3d(0, 0, 0));
   auto &vc1 = inMesh->createVertex(Eigen::Vector3d(0, 2, 0));
   inMesh->createEdge(vc0, vc1);
@@ -711,7 +712,7 @@ BOOST_AUTO_TEST_CASE(PreferTriangleOverEdge)
   makeTriangle(inMesh, vf0, vf1, vf2);
 
   inMesh->allocateDataValues();
-  inData->values() << 0, 0, 1, 1, 1;
+  inData->values() << 0, 1, 2, 2, 2;
 
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
   PtrData outData = outMesh->createData("OutData", 1, 1_dataID);
@@ -721,7 +722,9 @@ BOOST_AUTO_TEST_CASE(PreferTriangleOverEdge)
 
   const auto &values = runNPMapping(mapping::Mapping::CONSISTENT, inMesh, inData, outMesh, outData);
 
-  BOOST_TEST(values(0) == 1.0);
+  // Distance to triangle > distance to NN > distance to edge => Interpolation on edge
+  // Projection is on the middle of the edge => (0+1)/2 = 0.5
+  BOOST_TEST(values(0) == 0.5);
 }
 
 BOOST_AUTO_TEST_CASE(TriangleDistances)
