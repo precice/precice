@@ -620,6 +620,56 @@ if (PRECICE_BINDINGS_FORTRAN)
   # include((${CMAKE_CURRENT_LIST_DIR}/extras/bindings/fortran/CMakeLists.txt)
   add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/extras/bindings/fortran)
 endif()
+
+# Build benchmarks if enabled
+option(PRECICE_ENABLE_BENCHMARKS "Build the preCICE benchmarks" OFF)
+if(PRECICE_ENABLE_BENCHMARKS)
+  find_package(benchmark REQUIRED)
+
+  file(GLOB _bench_sources benchmarks/*.cpp)
+  add_executable(benchprecice ${_bench_sources})
+  unset(_bench_sources)
+  target_link_libraries(benchprecice
+    PRIVATE
+    Threads::Threads
+    precice
+    Eigen3::Eigen
+    fmt-header-only
+    Boost::boost
+    Boost::filesystem
+    Boost::log
+    Boost::log_setup
+    Boost::program_options
+    Boost::system
+    Boost::thread
+    Boost::unit_test_framework
+    benchmark::benchmark
+    )
+  set_target_properties(benchprecice PROPERTIES
+    # precice is a C++17 project
+    CXX_STANDARD 17
+    CXX_STANDARD_REQUIRED Yes
+    CXX_EXTENSIONS No
+    )
+  target_include_directories(benchprecice PRIVATE
+    ${preCICE_SOURCE_DIR}/src
+    ${preCICE_SOURCE_DIR}/benchmark
+    )
+  # Copy needed properties from the lib to the executatble. This is necessary as
+  # this executable uses the library source, not only the interface.
+  copy_target_property(precice benchprecice COMPILE_DEFINITIONS)
+  copy_target_property(precice benchprecice COMPILE_OPTIONS)
+
+  # benchprecice fully depends on MPI and PETSc.
+  if(PRECICE_MPICommunication)
+    target_link_libraries(benchprecice PRIVATE MPI::MPI_CXX)
+  endif()
+  if(PRECICE_MPICommunication AND PRECICE_PETScMapping)
+    target_link_libraries(benchprecice PRIVATE PETSc::PETSc)
+  endif()
+endif()
+
+
 #
 # Install Targets for precice
 #
