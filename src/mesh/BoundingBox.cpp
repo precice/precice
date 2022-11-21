@@ -13,6 +13,30 @@ namespace precice::mesh {
 
 logging::Logger BoundingBox::_log{"mesh::BoundingBox"};
 
+BoundingBox::BoundingBox(Eigen::VectorXd boundMin, Eigen::VectorXd boundMax)
+{
+  // PRECICE_ASSERT 1
+  const int& dimMin= boundMin.size();
+  const int& dimMax= boundMax.size();
+  PRECICE_ASSERT(dimMin==dimMax,"Dimension of min and max vertices should be the same.", dimMin, dimMax);
+  
+  // PRECICE_ASSERT 2
+  bool isMinLessThanMax = true;
+  for (int i= 0; i < dimMin; i++) {
+    if(boundMin[i] >= boundMax[i])
+    {
+      isMinLessThanMax = false;
+      break;
+    }
+  }
+  PRECICE_ASSERT(isMinLessThanMax,"Each component of min vertex must be less than that of max vertex in the same axis direction.", boundMin, boundMax);
+ 	
+  // Assign private members
+  _boundMin = std::move(boundMin);
+  _boundMax = std::move(boundMax);
+  _dimensions = dimMin;
+}
+
 BoundingBox::BoundingBox(Vertex boundMin, Vertex boundMax)
 {
   // PRECICE_ASSERT 1
