@@ -12,7 +12,6 @@ target_sources(testprecice
     tests/parallel/TestBoundingBoxInitialization.cpp
     tests/parallel/TestBoundingBoxInitializationTwoWay.cpp
     tests/parallel/TestFinalize.cpp
-    tests/parallel/TestFinalizeDeprecatedTag.cpp
     tests/parallel/UserDefinedMPICommunicator.cpp
     tests/parallel/UserDefinedMPICommunicatorPetRBF.cpp
     tests/parallel/direct-mesh-access/AccessReceivedMeshAndMapping.cpp
@@ -120,6 +119,10 @@ target_sources(testprecice
     tests/serial/mapping-scaled-consistent/helpers.hpp
     tests/serial/mapping-scaled-consistent/testQuadMappingScaledConsistentOnA.cpp
     tests/serial/mapping-scaled-consistent/testQuadMappingScaledConsistentOnB.cpp
+    tests/serial/mapping-scaled-consistent/testTetraOnA.cpp
+    tests/serial/mapping-scaled-consistent/testTetraOnB.cpp
+    tests/serial/mapping-scaled-consistent/testVolumetricOnA2D.cpp
+    tests/serial/mapping-scaled-consistent/testVolumetricOnB2D.cpp
     tests/serial/mapping-volume/OneTetraConservativeRead.cpp
     tests/serial/mapping-volume/OneTetraConservativeWrite.cpp
     tests/serial/mapping-volume/OneTetraRead.cpp

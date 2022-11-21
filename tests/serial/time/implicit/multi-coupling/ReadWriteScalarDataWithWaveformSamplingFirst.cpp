@@ -63,8 +63,9 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
     readDataPairs.push_back(std::make_pair(dataOneId, dataOneFunction));
   }
 
-  double   writeData, readData;
-  VertexID vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+  double   writeData = 0;
+  double   readData  = 0;
+  VertexID vertexID  = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
 
   int    nWindows        = 5; // perform 5 windows.
   int    timestep        = 0;
@@ -100,7 +101,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
       sampleDt = sampleDts[j];
       readTime = time + sampleDt;
 
-      for (auto readDataPair : readDataPairs) {
+      for (auto &readDataPair : readDataPairs) {
         auto readDataID   = readDataPair.first;
         auto readFunction = readDataPair.second;
 

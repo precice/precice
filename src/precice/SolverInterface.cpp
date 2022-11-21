@@ -108,16 +108,6 @@ int SolverInterface::getDataID(
   return _impl->getDataID(dataName, meshID);
 }
 
-bool SolverInterface::hasToEvaluateSurrogateModel() const
-{
-  return _impl->hasToEvaluateSurrogateModel();
-}
-
-bool SolverInterface::hasToEvaluateFineModel() const
-{
-  return _impl->hasToEvaluateFineModel();
-}
-
 //void SolverInterface:: resetMesh
 //(
 //  int meshID )
@@ -376,11 +366,6 @@ void SolverInterface::getMeshVerticesAndIDs(const int meshID,
                                             double *  coordinates) const
 {
   _impl->getMeshVerticesAndIDs(meshID, size, ids, coordinates);
-}
-
-std::string getVersionInformation()
-{
-  return {precice::versionInformation};
 }
 
 namespace constants {

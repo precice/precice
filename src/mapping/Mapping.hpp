@@ -17,16 +17,18 @@ public:
    *
    * A consistent mapping retains mean values. When mapping displacements, e.g.
    * rigid body motions are retained. A conservative mapping retains the sum of
-   * the values. The scaled-consistent mapping first map the values consistently,
-   * then scales the mapped such that the integrals on both sides of the interface
-   * are equal. Values integrated over some area should be mapped conservative or
-   * scaled-consistent, while area independent values such as pressure or stresses
-   * should be mapped consistent.
+   * the values. The scaled-consistent-surface/volume mappings first map the values consistently,
+   * then scales the mapped such that the integrals on both meshes are equal.
+   * Integrals are either done on surfaces or volumes depending on the mode.
+   * - Continuous fields such as displacements or temperatures should use consistent maps.
+   * - Quantities whose sum is preserved such as forces should use conservative maps.
+   * - Continuous fields whose integral matters, such as pressure or heat fluxes should be consistent or scaled-consistent.
    */
   enum Constraint {
     CONSISTENT,
     CONSERVATIVE,
-    SCALEDCONSISTENT
+    SCALED_CONSISTENT_SURFACE,
+    SCALED_CONSISTENT_VOLUME
   };
 
   /**
@@ -90,6 +92,9 @@ public:
   /// Checks whether the mapping has the given constraint or not
   virtual bool hasConstraint(const Constraint &constraint) const;
 
+  /// Returns true if mapping is a form of scaled consistent mapping
+  bool isScaledConsistent() const;
+
   /// Removes a computed mapping.
   virtual void clear() = 0;
 
@@ -117,7 +122,7 @@ public:
    *
    * @pre Input and output mesh should have full connectivity information.
    */
-  virtual void scaleConsistentMapping(int inputDataID, int outputDataID) const;
+  virtual void scaleConsistentMapping(int inputDataID, int outputDataID, Constraint type) const;
 
   /// Returns whether the mapping requires gradient data
   bool requiresGradientData() const;

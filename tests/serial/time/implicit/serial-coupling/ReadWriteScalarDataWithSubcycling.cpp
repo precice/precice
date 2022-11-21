@@ -54,8 +54,9 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     readFunction  = dataOneFunction;
   }
 
-  double   writeData, readData;
-  VertexID vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+  double   writeData = 0;
+  double   readData  = 0;
+  VertexID vertexID  = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
 
   int    nSubsteps       = 4; // perform subcycling on solvers. 4 steps happen in each window.
   int    nWindows        = 5; // perform 5 windows.

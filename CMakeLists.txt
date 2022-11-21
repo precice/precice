@@ -369,7 +369,6 @@ if (PRECICE_BUILD_TOOLS)
     COMMAND ${CMAKE_COMMAND} -E create_symlink precice-tools binprecice
     DEPENDS precice-tools
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    BYPRODUCTS binprecice
     )
 endif()
 

@@ -105,49 +105,68 @@ void Mapping::map(int inputDataID,
     mapConservative(inputDataID, outputDataID);
   } else if (hasConstraint(CONSISTENT)) {
     mapConsistent(inputDataID, outputDataID);
-  } else if (hasConstraint(SCALEDCONSISTENT)) {
+  } else if (isScaledConsistent()) {
     mapConsistent(inputDataID, outputDataID);
-    scaleConsistentMapping(inputDataID, outputDataID);
+    scaleConsistentMapping(inputDataID, outputDataID, getConstraint());
   } else {
     PRECICE_UNREACHABLE("Unknown mapping constraint.")
   }
 }
 
-void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
+void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID, Mapping::Constraint constraint) const
 {
+  PRECICE_ASSERT(isScaledConsistent());
+  bool            volumeMode = hasConstraint(SCALED_CONSISTENT_VOLUME);
+  logging::Logger _log{"mapping::Mapping"};
   // Only serial participant is supported for scale-consistent mapping
   PRECICE_ASSERT((not utils::IntraComm::isPrimary()) and (not utils::IntraComm::isSecondary()));
 
   // If rank is not empty and do not contain connectivity information, raise error
-  if ((input()->edges().empty() and (not input()->vertices().empty())) or
-      (((input()->getDimensions() == 3) and input()->triangles().empty()) and (not input()->vertices().empty()))) {
-    logging::Logger _log{"mapping::Mapping"};
-    PRECICE_ERROR("Connectivity information is missing for the mesh {}. "
-                  "Scaled consistent mapping requires connectivity information.",
-                  input()->getName());
-  }
-  if ((output()->edges().empty() and (not output()->vertices().empty())) or
-      (((output()->getDimensions() == 3) and output()->triangles().empty()) and (not output()->vertices().empty()))) {
-    logging::Logger _log{"mapping::Mapping"};
-    PRECICE_ERROR("Connectivity information is missing for the mesh {}. "
-                  "Scaled consistent mapping requires connectivity information.",
-                  output()->getName());
+  int  spaceDimension    = input()->getDimensions();
+  bool requiresEdges     = (spaceDimension == 2 and !volumeMode);
+  bool requiresTriangles = (spaceDimension == 2 and volumeMode) or (spaceDimension == 3 and !volumeMode);
+  bool requiresTetra     = (spaceDimension == 3 and volumeMode);
+
+  for (mesh::PtrMesh mesh : {input(), output()}) {
+    if (not mesh->vertices().empty()) {
+
+      PRECICE_CHECK(!(requiresEdges && mesh->edges().empty()), "Edges connectivity information is missing for the mesh \"{}\". "
+                                                               "Scaled consistent mapping requires connectivity information.",
+                    mesh->getName());
+
+      PRECICE_CHECK(!(requiresTriangles && mesh->triangles().empty()), "Triangles connectivity information is missing for the mesh \"{}\". "
+                                                                       "Scaled consistent mapping requires connectivity information.",
+                    mesh->getName());
+
+      PRECICE_CHECK(!(requiresTetra && mesh->tetrahedra().empty()), "Tetrahedra connectivity information is missing for the mesh \"{}\". "
+                                                                    "Scaled consistent mapping requires connectivity information.",
+                    mesh->getName());
+    }
   }
 
   auto &outputValues    = output()->data(outputDataID)->values();
   int   valueDimensions = input()->data(inputDataID)->getDimensions();
 
+  Eigen::VectorXd integralInput;
+  Eigen::VectorXd integralOutput;
+
   // Integral is calculated on each direction separately
-  auto integralInput  = mesh::integrate(input(), input()->data(inputDataID));
-  auto integralOutput = mesh::integrate(output(), output()->data(outputDataID));
+  if (!volumeMode) {
+    integralInput  = mesh::integrateSurface(input(), input()->data(inputDataID));
+    integralOutput = mesh::integrateSurface(output(), output()->data(outputDataID));
+  } else {
+    integralInput  = mesh::integrateVolume(input(), input()->data(inputDataID));
+    integralOutput = mesh::integrateVolume(output(), output()->data(outputDataID));
+  }
 
   // Create reshape the output values vector to matrix
   Eigen::Map<Eigen::MatrixXd> outputValuesMatrix(outputValues.data(), valueDimensions, outputValues.size() / valueDimensions);
 
   // Scale in each direction
   Eigen::VectorXd scalingFactor = integralInput.array() / integralOutput.array();
+  PRECICE_DEBUG("Scaling factor in scaled-consistent mapping: {}", scalingFactor);
   outputValuesMatrix.array().colwise() *= scalingFactor.array();
-}
+} // namespace mapping
 
 bool Mapping::hasConstraint(const Constraint &constraint) const
 {
@@ -157,6 +176,11 @@ bool Mapping::hasConstraint(const Constraint &constraint) const
 bool Mapping::hasComputedMapping() const
 {
   return _hasComputedMapping;
+}
+
+bool Mapping::isScaledConsistent() const
+{
+  return (hasConstraint(SCALED_CONSISTENT_SURFACE) || hasConstraint(SCALED_CONSISTENT_VOLUME));
 }
 
 bool operator<(Mapping::MeshRequirement lhs, Mapping::MeshRequirement rhs)

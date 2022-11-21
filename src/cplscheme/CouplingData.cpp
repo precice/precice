@@ -74,11 +74,20 @@ int CouplingData::meshDimensions() const
 void CouplingData::storeIteration()
 {
   _previousIteration = this->values();
+  if (this->hasGradient()) {
+    PRECICE_ASSERT(this->gradientValues().size() > 0);
+    _previousIterationGradients = this->gradientValues();
+  }
 }
 
 const Eigen::VectorXd CouplingData::previousIteration() const
 {
   return _previousIteration;
+}
+
+const Eigen::MatrixXd &CouplingData::previousIterationGradients() const
+{
+  return _previousIterationGradients;
 }
 
 int CouplingData::getPreviousIterationSize() const

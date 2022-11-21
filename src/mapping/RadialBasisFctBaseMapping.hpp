@@ -87,7 +87,7 @@ RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctBaseMapping(
     : Mapping(constraint, dimensions),
       _basisFunction(function)
 {
-  if (constraint == SCALEDCONSISTENT) {
+  if (isScaledConsistent()) {
     setInputRequirement(Mapping::MeshRequirement::FULL);
     setOutputRequirement(Mapping::MeshRequirement::FULL);
   } else {

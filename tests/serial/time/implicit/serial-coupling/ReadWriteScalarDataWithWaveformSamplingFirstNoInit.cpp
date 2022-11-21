@@ -54,9 +54,9 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirstNoInit)
     readFunction  = dataOneFunction;
   }
 
-  double   writeData;
-  double   readData;
-  VertexID vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+  double   writeData = 0;
+  double   readData  = 0;
+  VertexID vertexID  = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
 
   int    nWindows        = 5; // perform 5 windows.
   double maxDt           = precice.initialize();

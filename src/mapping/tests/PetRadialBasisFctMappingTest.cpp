@@ -43,8 +43,8 @@ void addGlobalIndex(mesh::PtrMesh &mesh, int offset = 0)
 
 void testSerialScaledConsistent(mesh::PtrMesh inMesh, mesh::PtrMesh outMesh, PtrData inData, PtrData outData)
 {
-  auto inputIntegral  = mesh::integrate(inMesh, inData);
-  auto outputIntegral = mesh::integrate(outMesh, outData);
+  auto inputIntegral  = mesh::integrateSurface(inMesh, inData);
+  auto outputIntegral = mesh::integrateSurface(outMesh, outData);
 
   for (int dim = 0; dim < inputIntegral.size(); ++dim) {
     BOOST_TEST(inputIntegral(dim) == outputIntegral(dim));
@@ -1777,9 +1777,9 @@ BOOST_AUTO_TEST_CASE(MapThinPlateSplines)
   perform2DTestConsistentMapping(consistentMap2D);
   PetRadialBasisFctMapping<ThinPlateSplines> consistentMap3D(Mapping::CONSISTENT, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestConsistentMapping(consistentMap3D);
-  PetRadialBasisFctMapping<ThinPlateSplines> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, {{xDead, yDead, zDead}});
+  PetRadialBasisFctMapping<ThinPlateSplines> scaledConsistentMap2D(Mapping::SCALED_CONSISTENT_SURFACE, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
-  PetRadialBasisFctMapping<ThinPlateSplines> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, {{xDead, yDead, zDead}});
+  PetRadialBasisFctMapping<ThinPlateSplines> scaledConsistentMap3D(Mapping::SCALED_CONSISTENT_SURFACE, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
   PetRadialBasisFctMapping<ThinPlateSplines> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestConservativeMapping(conservativeMap2D);
@@ -1800,9 +1800,9 @@ BOOST_AUTO_TEST_CASE(MapMultiquadrics)
   perform2DTestConsistentMappingVector(consistentMap2DVector);
   PetRadialBasisFctMapping<Multiquadrics> consistentMap3D(Mapping::CONSISTENT, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestConsistentMapping(consistentMap3D);
-  PetRadialBasisFctMapping<Multiquadrics> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, {{xDead, yDead, zDead}});
+  PetRadialBasisFctMapping<Multiquadrics> scaledConsistentMap2D(Mapping::SCALED_CONSISTENT_SURFACE, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
-  PetRadialBasisFctMapping<Multiquadrics> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, {{xDead, yDead, zDead}});
+  PetRadialBasisFctMapping<Multiquadrics> scaledConsistentMap3D(Mapping::SCALED_CONSISTENT_SURFACE, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
   PetRadialBasisFctMapping<Multiquadrics> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestConservativeMapping(conservativeMap2D);
@@ -1823,9 +1823,9 @@ BOOST_AUTO_TEST_CASE(MapInverseMultiquadrics)
   perform2DTestConsistentMapping(consistentMap2D);
   PetRadialBasisFctMapping<InverseMultiquadrics> consistentMap3D(Mapping::CONSISTENT, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestConsistentMapping(consistentMap3D);
-  PetRadialBasisFctMapping<InverseMultiquadrics> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, {{xDead, yDead, zDead}});
+  PetRadialBasisFctMapping<InverseMultiquadrics> scaledConsistentMap2D(Mapping::SCALED_CONSISTENT_SURFACE, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
-  PetRadialBasisFctMapping<InverseMultiquadrics> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, {{xDead, yDead, zDead}});
+  PetRadialBasisFctMapping<InverseMultiquadrics> scaledConsistentMap3D(Mapping::SCALED_CONSISTENT_SURFACE, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
   PetRadialBasisFctMapping<InverseMultiquadrics> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestConservativeMapping(conservativeMap2D);
@@ -1844,9 +1844,9 @@ BOOST_AUTO_TEST_CASE(MapVolumeSplines)
   perform2DTestConsistentMapping(consistentMap2D);
   PetRadialBasisFctMapping<VolumeSplines> consistentMap3D(Mapping::CONSISTENT, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestConsistentMapping(consistentMap3D);
-  PetRadialBasisFctMapping<VolumeSplines> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, {{xDead, yDead, zDead}});
+  PetRadialBasisFctMapping<VolumeSplines> scaledConsistentMap2D(Mapping::SCALED_CONSISTENT_SURFACE, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
-  PetRadialBasisFctMapping<VolumeSplines> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, {{xDead, yDead, zDead}});
+  PetRadialBasisFctMapping<VolumeSplines> scaledConsistentMap3D(Mapping::SCALED_CONSISTENT_SURFACE, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
   PetRadialBasisFctMapping<VolumeSplines> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestConservativeMapping(conservativeMap2D);
@@ -1865,9 +1865,9 @@ BOOST_AUTO_TEST_CASE(MapGaussian)
   perform2DTestConsistentMapping(consistentMap2D);
   PetRadialBasisFctMapping<Gaussian> consistentMap3D(Mapping::CONSISTENT, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestConsistentMapping(consistentMap3D);
-  PetRadialBasisFctMapping<Gaussian> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, {{xDead, yDead, zDead}});
+  PetRadialBasisFctMapping<Gaussian> scaledConsistentMap2D(Mapping::SCALED_CONSISTENT_SURFACE, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
-  PetRadialBasisFctMapping<Gaussian> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, {{xDead, yDead, zDead}});
+  PetRadialBasisFctMapping<Gaussian> scaledConsistentMap3D(Mapping::SCALED_CONSISTENT_SURFACE, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
   PetRadialBasisFctMapping<Gaussian> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestConservativeMapping(conservativeMap2D);
@@ -1888,9 +1888,9 @@ BOOST_AUTO_TEST_CASE(MapCompactThinPlateSplinesC2)
   perform2DTestConsistentMapping(consistentMap2D);
   Mapping consistentMap3D(Mapping::CONSISTENT, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestConsistentMapping(consistentMap3D);
-  Mapping scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, {{xDead, yDead, zDead}});
+  Mapping scaledConsistentMap2D(Mapping::SCALED_CONSISTENT_SURFACE, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
-  Mapping scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, {{xDead, yDead, zDead}});
+  Mapping scaledConsistentMap3D(Mapping::SCALED_CONSISTENT_SURFACE, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
   Mapping conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestConservativeMapping(conservativeMap2D);
@@ -1911,9 +1911,9 @@ BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC0)
   perform2DTestConsistentMapping(consistentMap2D);
   Mapping consistentMap3D(Mapping::CONSISTENT, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestConsistentMapping(consistentMap3D);
-  Mapping scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, {{xDead, yDead, zDead}});
+  Mapping scaledConsistentMap2D(Mapping::SCALED_CONSISTENT_SURFACE, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
-  Mapping scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, {{xDead, yDead, zDead}});
+  Mapping scaledConsistentMap3D(Mapping::SCALED_CONSISTENT_SURFACE, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
   Mapping conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestConservativeMapping(conservativeMap2D);
@@ -1934,9 +1934,9 @@ BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC6)
   perform2DTestConsistentMapping(consistentMap2D);
   Mapping consistentMap3D(Mapping::CONSISTENT, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestConsistentMapping(consistentMap3D);
-  Mapping scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, {{xDead, yDead, zDead}});
+  Mapping scaledConsistentMap2D(Mapping::SCALED_CONSISTENT_SURFACE, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
-  Mapping scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, {{xDead, yDead, zDead}});
+  Mapping scaledConsistentMap3D(Mapping::SCALED_CONSISTENT_SURFACE, 3, fct, {{xDead, yDead, zDead}});
   perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
   Mapping conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, {{xDead, yDead, zDead}});
   perform2DTestConservativeMapping(conservativeMap2D);

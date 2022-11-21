@@ -65,7 +65,6 @@
 #include "utils/IntraComm.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
-#include "utils/PointerVector.hpp"
 #include "utils/algorithm.hpp"
 #include "utils/assertion.hpp"
 #include "xml/XMLTag.hpp"
@@ -551,16 +550,6 @@ void SolverInterfaceImpl::markActionFulfilled(
   PRECICE_TRACE(action);
   PRECICE_CHECK(_state != State::Finalized, "markActionFulfilled(...) cannot be called after finalize().");
   _couplingScheme->markActionFulfilled(action);
-}
-
-bool SolverInterfaceImpl::hasToEvaluateSurrogateModel() const
-{
-  return false;
-}
-
-bool SolverInterfaceImpl::hasToEvaluateFineModel() const
-{
-  return true;
 }
 
 bool SolverInterfaceImpl::hasMesh(
@@ -1165,7 +1154,7 @@ void SolverInterfaceImpl::writeScalarGradientData(
     PRECICE_ASSERT(context.providedData() != nullptr);
     mesh::Data &data = *context.providedData();
 
-    //Check if data has been initialized to include gradient data
+    // Check if data has been initialized to include gradient data
     PRECICE_CHECK(data.hasGradient(), "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", data.getName())
 
     // Size of the gradient data input : must be spaceDimensions * dataDimensions -> here spaceDimensions (since for scalar: dataDimensions = 1)
@@ -1178,7 +1167,7 @@ void SolverInterfaceImpl::writeScalarGradientData(
     auto &     gradientValuesInternal = data.gradientValues();
     const auto vertexCount            = gradientValuesInternal.cols() / context.getDataDimensions();
 
-    //Check if the index and dimensions are valid
+    // Check if the index and dimensions are valid
     PRECICE_CHECK(valueIndex >= -1,
                   "Invalid value index ({}) when writing gradient scalar data. Value index must be >= 0. "
                   "Please check the value index for {}",
@@ -1812,9 +1801,9 @@ void SolverInterfaceImpl::compareBoundingBoxes()
 
 void SolverInterfaceImpl::computePartitions()
 {
-  //We need to do this in two loops: First, communicate the mesh and later compute the partition.
-  //Originally, this was done in one loop. This however gave deadlock if two meshes needed to be communicated cross-wise.
-  //Both loops need a different sorting
+  // We need to do this in two loops: First, communicate the mesh and later compute the partition.
+  // Originally, this was done in one loop. This however gave deadlock if two meshes needed to be communicated cross-wise.
+  // Both loops need a different sorting
 
   auto &contexts = _accessor->usedMeshContexts();
 
@@ -1852,12 +1841,12 @@ void SolverInterfaceImpl::computePartitions()
       meshContext->mesh->computeBoundingBox();
     }
 
-    //This allocates gradient values here too if available
+    // This allocates gradient values here too if available
     meshContext->mesh->allocateDataValues();
   }
 }
 
-void SolverInterfaceImpl::computeMappings(const utils::ptr_vector<MappingContext> &contexts, const std::string &mappingType)
+void SolverInterfaceImpl::computeMappings(std::vector<MappingContext> &contexts, const std::string &mappingType)
 {
   PRECICE_TRACE();
   using namespace mapping;
@@ -1875,7 +1864,7 @@ void SolverInterfaceImpl::computeMappings(const utils::ptr_vector<MappingContext
   }
 }
 
-void SolverInterfaceImpl::clearMappings(utils::ptr_vector<MappingContext> contexts)
+void SolverInterfaceImpl::clearMappings(std::vector<MappingContext> &contexts)
 {
   PRECICE_TRACE();
   // Clear non-stationary, non-incremental mappings

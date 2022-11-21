@@ -55,16 +55,17 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingZero)
     readFunction  = dataOneFunction;
   }
 
-  double   writeData, readData;
-  VertexID vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+  double   writeData = 0;
+  double   readData  = 0;
+  VertexID vertexID  = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
 
-  int    nWindows   = 5; // perform 5 windows.
-  int    timewindow = 0;
-  int    nSamples   = 4;
-  int    iterations = 0;
-  double time       = 0;
-  int    timewindowCheckpoint;
-  double timeCheckpoint;
+  int    nWindows             = 5; // perform 5 windows.
+  int    timewindow           = 0;
+  int    nSamples             = 4;
+  int    iterations           = 0;
+  double time                 = 0;
+  int    timewindowCheckpoint = timewindow;
+  double timeCheckpoint       = time;
   double sampleDt; // dt relative to timestep start, where we are sampling
   double readDt;   // dt relative to timestep start for readTime
   double readTime; // time where we are reading from the reference solution
