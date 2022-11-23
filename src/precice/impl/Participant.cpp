@@ -323,6 +323,22 @@ bool Participant::isMeshProvided(MeshID meshID) const
   return (context != nullptr) && context->provideMesh;
 }
 
+bool Participant::isMeshReceived(const std::string &meshName) const
+{
+  if (!hasMesh(meshName)) {
+    return false;
+  }
+  return !usedMeshContext(meshName).provideMesh;
+}
+
+bool Participant::isMeshProvided(const std::string &meshName) const
+{
+  if (!hasMesh(meshName)) {
+    return false;
+  }
+  return usedMeshContext(meshName).provideMesh;
+}
+
 int Participant::getUsedMeshID(const std::string &meshName) const
 {
   return usedMeshContext(meshName).mesh->getID();

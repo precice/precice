@@ -276,8 +276,7 @@ void ParticipantConfiguration::xmlTagCallback(
 
     mesh::PtrMesh mesh = _meshConfig->getMesh(name);
     PRECICE_CHECK(mesh,
-                  "Participant \"{}\" provides mesh \"{}\" which is not defined. "
-                  "Please check the provide-mesh node with name=\"{}\" or define the mesh.",
+                  R"(Participant "{}" attempts to provide an unknown mesh "{}". Mesh "{}" needs to be defined first.)",
                   _participants.back()->getName(), name, name);
 
     _participants.back()->provideMesh(mesh);
@@ -289,8 +288,15 @@ void ParticipantConfiguration::xmlTagCallback(
     partition::ReceivedPartition::GeometricFilter geoFilter         = getGeoFilter(tag.getStringAttributeValue(ATTR_GEOMETRIC_FILTER));
     const bool                                    allowDirectAccess = tag.getBooleanAttributeValue(ATTR_DIRECT_ACCESS);
 
+    // Start with defining the mesh
+    mesh::PtrMesh mesh = _meshConfig->getMesh(name);
+    PRECICE_CHECK(mesh,
+                  R"(Participant "{}" attempts to provide an unknown mesh "{}". Mesh "{}" needs to be defined first.)",
+                  _participants.back()->getName(), name, name);
+
+    // Then check the attributes
     PRECICE_CHECK(!from.empty(),
-                  "Participant \"{}\" receives mesh \"{}\", but doesn't specify where from. "
+                  R"(Participant "{}" receives mesh "{}", but doesn't specify where from. )"
                   "Please add the name of the other participant to the receive-mesh tag: <receive-mesh name=\"{}\" from=\"(other participant)\" ... />",
                   context.name, name, name)
 
@@ -311,20 +317,14 @@ void ParticipantConfiguration::xmlTagCallback(
                   "Please use a positive or zero safety-factor instead.",
                   context.name, name, safetyFactor);
 
-    mesh::PtrMesh mesh = _meshConfig->getMesh(name);
-    PRECICE_CHECK(mesh,
-                  "Participant \"{}\" attempts to receive mesh \"{}\", which is not defined. "
-                  "Please check the receive-mesh node with name=\"{}\" or define the mesh (see <mesh>).",
-                  _participants.back()->getName(), name, name);
-
     _participants.back()->receiveMesh(mesh, from, safetyFactor, geoFilter, allowDirectAccess);
   } else if (tag.getName() == TAG_WRITE) {
     const std::string &dataName = tag.getStringAttributeValue(ATTR_NAME);
     std::string        meshName = tag.getStringAttributeValue(ATTR_MESH);
     mesh::PtrMesh      mesh     = _meshConfig->getMesh(meshName);
     PRECICE_CHECK(mesh,
-                  "Participant \"{}\" has to provide mesh \"{}\" in order to write data to it. Please add a provide-mesh node with name=\"{}\".",
-                  _participants.back()->getName(), meshName, meshName);
+                  R"(Participant "{}" attempts to read data "{}" from an unknown mesh "{}". Mesh "{}" needs to be defined first.)",
+                  _participants.back()->getName(), dataName, meshName, meshName);
     mesh::PtrData data = getData(mesh, dataName);
     _participants.back()->addWriteData(data, mesh);
   } else if (tag.getName() == TAG_READ) {
@@ -332,8 +332,8 @@ void ParticipantConfiguration::xmlTagCallback(
     std::string        meshName = tag.getStringAttributeValue(ATTR_MESH);
     mesh::PtrMesh      mesh     = _meshConfig->getMesh(meshName);
     PRECICE_CHECK(mesh,
-                  "Participant \"{}\" has to receive mesh \"{}\" in order to read data from it. Please add a receive-mesh node with name=\"{}\".",
-                  _participants.back()->getName(), meshName, meshName);
+                  R"(Participant "{}" attempts to write data "{}" to an unknown mesh "{}". Mesh "{}" needs to be defined first.)",
+                  _participants.back()->getName(), dataName, meshName, meshName);
     mesh::PtrData data          = getData(mesh, dataName);
     int           waveformOrder = tag.getIntAttributeValue(ATTR_ORDER);
     if (waveformOrder != time::Time::DEFAULT_INTERPOLATION_ORDER) {
@@ -428,21 +428,30 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
     checkIllDefinedMappings(confMapping, participant);
 
-    int fromMeshID = confMapping.fromMesh->getID();
-    int toMeshID   = confMapping.toMesh->getID();
+    auto fromMesh = confMapping.fromMesh->getName();
+    auto toMesh   = confMapping.toMesh->getName();
 
-    PRECICE_CHECK(participant->isMeshUsed(fromMeshID),
-                  "Participant \"{}\" has mapping from mesh \"{}\", without using this mesh. "
-                  "Please add a provide-mesh or receive-mesh tag with name=\"{}\"",
-                  participant->getName(), confMapping.fromMesh->getName(), confMapping.fromMesh->getName());
-    PRECICE_CHECK(participant->isMeshUsed(toMeshID),
-                  "Participant \"{}\" has mapping to mesh \"{}\", without using this mesh. "
-                  "Please add a provide-mesh or receive-mesh tag with name=\"{}\"",
-                  participant->getName(), confMapping.toMesh->getName(), confMapping.toMesh->getName());
-    PRECICE_CHECK((participant->isMeshProvided(fromMeshID) || participant->isMeshProvided(toMeshID)),
-                  "Participant \"{}\" has mapping from mesh \"{}\", to mesh \"{}\", but neither are provided. "
-                  "Please mark the mesh provided by this participant using the provide-mesh tag.",
-                  participant->getName(), confMapping.fromMesh->getName(), confMapping.toMesh->getName());
+    if (confMapping.direction == mapping::MappingConfiguration::Direction::READ) {
+      /// A read mapping maps from received to provided
+      PRECICE_CHECK(participant->isMeshReceived(fromMesh),
+                    "Participant \"{}\" has a read mapping from mesh \"{}\", without receiving it. "
+                    "Please add a receive-mesh tag with name=\"{}\"",
+                    participant->getName(), fromMesh, fromMesh);
+      PRECICE_CHECK(participant->isMeshProvided(toMesh),
+                    "Participant \"{}\" has a read mapping to mesh \"{}\", without providing it. "
+                    "Please add a provide-mesh tag with name=\"{}\"",
+                    participant->getName(), toMesh, toMesh);
+    } else {
+      // A write mapping maps from provided to received
+      PRECICE_CHECK(participant->isMeshProvided(fromMesh),
+                    "Participant \"{}\" has a write mapping from mesh \"{}\", without providing it. "
+                    "Please add a provided-mesh tag with name=\"{}\"",
+                    participant->getName(), fromMesh, fromMesh);
+      PRECICE_CHECK(participant->isMeshReceived(toMesh),
+                    "Participant \"{}\" has a write mapping to mesh \"{}\", without receiving it. "
+                    "Please add a receive-mesh tag with name=\"{}\"",
+                    participant->getName(), toMesh, toMesh);
+    }
 
     if (context.size > 1) {
       if ((confMapping.direction == mapping::MappingConfiguration::WRITE &&
@@ -456,6 +465,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
       }
     }
 
+    auto               fromMeshID      = confMapping.fromMesh->getID();
+    auto               toMeshID        = confMapping.toMesh->getID();
     impl::MeshContext &fromMeshContext = participant->meshContext(fromMeshID);
     impl::MeshContext &toMeshContext   = participant->meshContext(toMeshID);
 
@@ -564,8 +575,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
         if (meshContext.mesh->hasDataName(dataContext.getDataName())) {
           // Check, if the toMesh is a provided mesh
           PRECICE_CHECK(participant->isMeshProvided(toMeshID),
-                        "Participant \"{}\" has to receive mesh \"{}\" in order to read data from it. "
-                        "Please add a receive-mesh node with name=\"{}\".",
+                        "Participant \"{}\" has to provide mesh \"{}\" in order to read data from it. "
+                        "Please add a provide-mesh node with name=\"{}\".",
                         participant->getName(), dataContext.getMeshName(), dataContext.getMeshName());
           dataContext.appendMappingConfiguration(mappingContext, meshContext);
           // Enable gradient data if required

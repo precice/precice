@@ -257,6 +257,12 @@ public:
   /// Is a mesh with this id provided?
   bool isMeshProvided(MeshID meshID) const;
 
+  /// Is a mesh with this name provided by this participant?
+  bool isMeshProvided(const std::string &meshName) const;
+
+  /// Is a mesh with this name received by this participant?
+  bool isMeshReceived(const std::string &meshName) const;
+
   /// Get the used mesh id of a mesh with this name.
   int getUsedMeshID(const std::string &meshName) const;
 

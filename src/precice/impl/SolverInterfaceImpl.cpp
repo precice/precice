@@ -1870,14 +1870,6 @@ void SolverInterfaceImpl::configurePartitions(
       }
 
     } else { // Accessor receives mesh
-      PRECICE_CHECK(not context->receiveMeshFrom.empty(),
-                    "Participant \"{0}\" must either provide or receive the mesh \"{1}\". "
-                    "Please define either a <provide-mesh name=\"{1}\"/> or a <receive-mesh name=\"{1}\" from=\"...\" /> for particpant \"{0}\".",
-                    _accessorName, context->mesh->getName());
-      PRECICE_CHECK(not context->provideMesh,
-                    "Participant \"{0}\" cannot provide and receive mesh \"{1}\" at the same time. "
-                    "Please check your <provide-mesh name=\"{1}\"/> and <receive-mesh name=\"{1}\" /> tags for the  particpant \"{0}\".",
-                    _accessorName, context->mesh->getName());
       std::string receiver(_accessorName);
       std::string provider(context->receiveMeshFrom);
 
