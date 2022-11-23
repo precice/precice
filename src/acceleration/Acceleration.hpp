@@ -26,10 +26,9 @@ public:
   static const int PODFILTER     = 4;
 
   /// Map from data ID to data values.
-  using DataMap   = std::map<int, cplscheme::PtrCouplingData>;
-  using ValuesMap = std::map<int, Eigen::VectorXd>;
+  using DataMap = std::map<int, cplscheme::PtrCouplingData>;
 
-  virtual ~Acceleration() {}
+  virtual ~Acceleration() = default;
 
   virtual std::vector<int> getDataIDs() const = 0;
 
@@ -64,6 +63,9 @@ public:
 protected:
   /// Checks if all dataIDs are contained in cplData
   void checkDataIDs(const DataMap &cplData) const;
+
+  /// performs a relaxation given a relaxation factor omega
+  void applyRelaxation(double omega, const DataMap &cplData) const;
 };
 } // namespace acceleration
 } // namespace precice

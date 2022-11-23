@@ -384,5 +384,18 @@ private:
   logging::Logger _log{"com::Communication"};
 };
 
+/** Establishes a circular communication for the given participant.
+ *
+ * rank "0" connects left to rank "size-1"
+ * rank "size" connects right to rank "0"
+ */
+void connectCircularComm(
+    std::string const & participantName,
+    std::string const & tag,
+    int                 rank,
+    int                 size,
+    com::Communication &left,
+    com::Communication &right);
+
 } // namespace com
 } // namespace precice

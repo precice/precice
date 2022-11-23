@@ -228,14 +228,14 @@ BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncremental2DCase1)
   inValues(0)                   = valueVertex1;
   inValues(1)                   = valueVertex2;
 
-  auto inputIntegral = mesh::integrate(inMesh, inData);
+  auto inputIntegral = mesh::integrateSurface(inMesh, inData);
   // Create mesh to map to
   PtrMesh outMesh(new Mesh("OutMesh0", dimensions, testing::nextMeshID()));
   PtrData outData   = outMesh->createData("OutData", 1, 1_dataID);
   int     outDataID = outData->getID();
   auto &  outValues = outData->values();
   // Setup mapping with mapping coordinates and geometry used
-  mapping::NearestProjectionMapping mapping(mapping::Mapping::SCALEDCONSISTENT, dimensions);
+  mapping::NearestProjectionMapping mapping(mapping::Mapping::SCALED_CONSISTENT_SURFACE, dimensions);
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
@@ -253,7 +253,7 @@ BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncremental2DCase1)
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
 
-  auto   outputIntegral = mesh::integrate(outMesh, outData);
+  auto   outputIntegral = mesh::integrateSurface(outMesh, outData);
   double scaleFactor    = outValues(1) / inValues(0);
   BOOST_TEST(scaleFactor != 1.0);
 
@@ -287,7 +287,7 @@ BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncremental2DCase2)
   inValues(0)                   = valueVertex1;
   inValues(1)                   = valueVertex2;
 
-  auto inputIntegral = mesh::integrate(inMesh, inData);
+  auto inputIntegral = mesh::integrateSurface(inMesh, inData);
 
   // Create mesh to map to
   PtrMesh outMesh(new Mesh("OutMesh1", dimensions, testing::nextMeshID()));
@@ -296,7 +296,7 @@ BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncremental2DCase2)
   auto &  outValues = outData->values();
 
   // Setup mapping with mapping coordinates and geometry used
-  mapping::NearestProjectionMapping mapping(mapping::Mapping::SCALEDCONSISTENT, dimensions);
+  mapping::NearestProjectionMapping mapping(mapping::Mapping::SCALED_CONSISTENT_SURFACE, dimensions);
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
@@ -314,7 +314,7 @@ BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncremental2DCase2)
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
 
-  auto   outputIntegral = mesh::integrate(outMesh, outData);
+  auto   outputIntegral = mesh::integrateSurface(outMesh, outData);
   double scaleFactor    = outValues(0) / inValues(0);
   BOOST_TEST(scaleFactor != 1.0);
 
@@ -584,7 +584,7 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentQuery3DFullMesh)
   outData->values() = Eigen::VectorXd::Constant(3, 0.0);
 
   // Setup mapping with mapping coordinates and geometry used
-  precice::mapping::NearestProjectionMapping mapping(mapping::Mapping::SCALEDCONSISTENT, dimensions);
+  precice::mapping::NearestProjectionMapping mapping(mapping::Mapping::SCALED_CONSISTENT_SURFACE, dimensions);
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
@@ -593,8 +593,8 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentQuery3DFullMesh)
 
   mapping.map(inData->getID(), outData->getID());
 
-  auto inputIntegral  = mesh::integrate(inMesh, inData);
-  auto outputIntegral = mesh::integrate(outMesh, outData);
+  auto inputIntegral  = mesh::integrateSurface(inMesh, inData);
+  auto outputIntegral = mesh::integrateSurface(outMesh, outData);
 
   for (int dim = 0; dim < inputIntegral.size(); ++dim) {
     BOOST_TEST(inputIntegral(dim) == outputIntegral(dim));
@@ -655,7 +655,8 @@ BOOST_AUTO_TEST_CASE(AvoidClosestTriangle)
 
   const auto &values = runNPMapping(mapping::Mapping::CONSISTENT, inMesh, inData, outMesh, outData);
 
-  BOOST_TEST(values(0) == 1.0);
+  // Interpolatin triangle is further than NN => fall back on NN
+  BOOST_TEST(values(0) == 0.0);
 }
 
 BOOST_AUTO_TEST_CASE(PickClosestTriangle)
@@ -699,7 +700,7 @@ BOOST_AUTO_TEST_CASE(PreferTriangleOverEdge)
 
   PtrMesh inMesh(new mesh::Mesh("InMesh", 3, testing::nextMeshID()));
   PtrData inData = inMesh->createData("InData", 1, 0_dataID);
-  // Close edge
+  // Close edge ->
   auto &vc0 = inMesh->createVertex(Eigen::Vector3d(0, 0, 0));
   auto &vc1 = inMesh->createVertex(Eigen::Vector3d(0, 2, 0));
   inMesh->createEdge(vc0, vc1);
@@ -711,7 +712,7 @@ BOOST_AUTO_TEST_CASE(PreferTriangleOverEdge)
   makeTriangle(inMesh, vf0, vf1, vf2);
 
   inMesh->allocateDataValues();
-  inData->values() << 0, 0, 1, 1, 1;
+  inData->values() << 0, 1, 2, 2, 2;
 
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
   PtrData outData = outMesh->createData("OutData", 1, 1_dataID);
@@ -721,7 +722,9 @@ BOOST_AUTO_TEST_CASE(PreferTriangleOverEdge)
 
   const auto &values = runNPMapping(mapping::Mapping::CONSISTENT, inMesh, inData, outMesh, outData);
 
-  BOOST_TEST(values(0) == 1.0);
+  // Distance to triangle > distance to NN > distance to edge => Interpolation on edge
+  // Projection is on the middle of the edge => (0+1)/2 = 0.5
+  BOOST_TEST(values(0) == 0.5);
 }
 
 BOOST_AUTO_TEST_CASE(TriangleDistances)

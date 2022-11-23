@@ -21,11 +21,7 @@ public:
   virtual ~ComputeCurvatureAction() {}
 
   /// Computes the curvature of the mesh geometry.
-  virtual void performAction(
-      double time,
-      double timeStepSize,
-      double computedTimeWindowPart,
-      double timeWindowSize);
+  virtual void performAction(double time) override;
 
 private:
   logging::Logger _log{"action::ComputeCurvatureAction"};

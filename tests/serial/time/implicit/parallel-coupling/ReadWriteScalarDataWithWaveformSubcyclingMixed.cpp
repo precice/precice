@@ -59,16 +59,9 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingMixed)
 
   int    nSubsteps = 4; // perform subcycling on solvers. 4 steps happen in each window.
   int    nWindows  = 5; // perform 5 windows.
-  double maxDt     = precice.initialize();
-  double windowDt  = maxDt;
   int    timestep  = 0;
   int    timestepCheckpoint;
-  double dt = windowDt / nSubsteps;       // Timestep length desired by solver. E.g. 4 steps  with size 1/4
-  dt += windowDt / nSubsteps / nSubsteps; // increase timestep such that we get a non-matching subcycling. E.g. 3 step with size 5/16 and 1 step with size 1/16.
-  double currentDt = dt;                  // Timestep length used by solver
-  double time      = timestep * dt;
-  double timeCheckpoint;
-  int    iterations;
+  double time = 0;
 
   if (precice.isActionRequired(precice::constants::actionWriteInitialData())) {
     writeData = writeFunction(time);
@@ -76,7 +69,13 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingMixed)
     precice.markActionFulfilled(precice::constants::actionWriteInitialData());
   }
 
-  precice.initializeData();
+  double maxDt    = precice.initialize();
+  double windowDt = maxDt;
+  double dt       = windowDt / nSubsteps; // Timestep length desired by solver. E.g. 4 steps  with size 1/4
+  dt += windowDt / nSubsteps / nSubsteps; // increase timestep such that we get a non-matching subcycling. E.g. 3 step with size 5/16 and 1 step with size 1/16.
+  double currentDt = dt;                  // Timestep length used by solver
+  double timeCheckpoint;
+  int    iterations;
 
   while (precice.isCouplingOngoing()) {
     if (precice.isActionRequired(precice::constants::actionWriteIterationCheckpoint())) {
@@ -95,24 +94,16 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingMixed)
       readTime = time + currentDt;
     }
 
-    bool atWindowBoundary = timestep % nSubsteps == 0;
+    precice.readScalarData(readDataID, vertexID, currentDt, readData);
 
-    if (atWindowBoundary || context.isNamed("SolverTwo")) { // read data is only available at end of window for zeroth order, see also https://github.com/precice/precice/issues/1223
-      BOOST_TEST(precice.isReadDataAvailable());
-    } else {
-      BOOST_TEST(!precice.isReadDataAvailable());
-    }
-    if (precice.isReadDataAvailable()) {
-      precice.readScalarData(readDataID, vertexID, currentDt, readData);
-    }
     if (iterations == 0) { // in the first iteration of each window, use data from previous window.
       BOOST_TEST(readData == readFunction(timeCheckpoint));
     } else {
       BOOST_TEST(readData == readFunction(readTime));
     }
-    if (precice.isReadDataAvailable()) {
-      precice.readScalarData(readDataID, vertexID, currentDt / 2, readData);
-    }
+
+    precice.readScalarData(readDataID, vertexID, currentDt / 2, readData);
+
     if (iterations == 0) { // in the first iteration of each window, use data from previous window.
       BOOST_TEST(readData == readFunction(timeCheckpoint));
     } else {                              // in the following iterations, use data at the end of window.
@@ -128,11 +119,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingMixed)
     time += currentDt;
     timestep++;
     writeData = writeFunction(time);
-
-    if (precice.isWriteDataRequired(currentDt)) {
-      writeData = writeFunction(time);
-      precice.writeScalarData(writeDataID, vertexID, writeData);
-    }
+    precice.writeScalarData(writeDataID, vertexID, writeData);
     maxDt = precice.advance(currentDt);
     if (precice.isActionRequired(precice::constants::actionReadIterationCheckpoint())) {
       time     = timeCheckpoint;
@@ -151,6 +138,6 @@ BOOST_AUTO_TEST_SUITE_END() // Integration
 BOOST_AUTO_TEST_SUITE_END() // Serial
 BOOST_AUTO_TEST_SUITE_END() // Time
 BOOST_AUTO_TEST_SUITE_END() // Explicit
-BOOST_AUTO_TEST_SUITE_END() // SerialCoupling
+BOOST_AUTO_TEST_SUITE_END() // ParallelCoupling
 
 #endif // PRECICE_NO_MPI

@@ -74,34 +74,20 @@ public:
   /**
    * @brief Initializes the coupling scheme and establishes a communication
    *        connection to the coupling partner.
-* @param[in] startTime TODO
-* @param[in] startTimeWindow TODO
-*/
+   * @param[in] startTime TODO
+   * @param[in] startTimeWindow TODO
+   */
   void initialize(
       double startTime,
       int    startTimeWindow) final override;
 
+  void receiveResultOfFirstAdvance() override final;
+
+  /// Returns true, if any of the composed coupling schemes sendsInitializedData for this participant
+  bool sendsInitializedData() const override final;
+
   /// Returns true, if initialize has been called.
   bool isInitialized() const final override;
-
-  /**
-   * @brief Getter for _sendsInitializedData
-   * @returns _sendsInitializedData
-   */
-  bool sendsInitializedData() const final override;
-
-  /**
-   * @brief Getter for _receivesInitializedData
-   * @returns _receivesInitializedData
-   */
-  bool receivesInitializedData() const final override;
-
-  /**
-   * @brief Initializes the data for first implicit coupling scheme iteration.
-   *
-   * Has to be called after initialize() and before advance().
-   */
-  void initializeData() final override;
 
   /// Adds newly computed time. Has to be called before every advance.
   void addComputedTime(double timeToAdd) final override;
@@ -125,12 +111,6 @@ public:
    *        computed by the solver calling willDataBeExchanged().
    */
   bool willDataBeExchanged(double lastSolverTimestepLength) const final override;
-
-  /**
-   * @brief checks all coupling schemes this coupling scheme is composed of.
-   * @returns true, if data has been received in call of initializeData().
-   */
-  bool hasInitialDataBeenReceived() const override final;
 
   /**
    * @brief checks all coupling schemes this coupling scheme is composed of.

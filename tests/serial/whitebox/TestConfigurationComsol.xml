@@ -6,14 +6,14 @@
     <data:vector name="Displacements" />
     <data:vector name="VelocityDeltas" />
 
-    <mesh name="PeanoNodes" flip-normals="no">
+    <mesh name="PeanoNodes">
       <use-data name="Forces" />
       <use-data name="Velocities" />
       <use-data name="Displacements" />
       <use-data name="VelocityDeltas" />
     </mesh>
 
-    <mesh name="ComsolNodes" flip-normals="no">
+    <mesh name="ComsolNodes">
       <use-data name="Forces" />
       <use-data name="Velocities" />
       <use-data name="Displacements" />

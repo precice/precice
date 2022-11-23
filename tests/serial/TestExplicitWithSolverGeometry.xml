@@ -13,7 +13,7 @@
       <use-data name="Displacements" />
     </mesh>
 
-    <mesh name="SolverGeometry" flip-normals="inside">
+    <mesh name="SolverGeometry">
       <use-data name="Forces" />
       <use-data name="Velocities" />
       <use-data name="Displacements" />

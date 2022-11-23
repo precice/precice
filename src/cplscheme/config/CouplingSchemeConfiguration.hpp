@@ -159,6 +159,13 @@ private:
     std::vector<ConvergenceMeasureDefintion> convergenceMeasureDefinitions;
     int                                      maxIterations      = -1;
     int                                      extrapolationOrder = 0;
+
+    bool hasExchange(const Exchange &totest) const
+    {
+      return std::any_of(exchanges.begin(), exchanges.end(), [&totest](const auto &ex) {
+        return ex.from == totest.from && ex.to == totest.to && ex.data->getName() == totest.data->getName() && ex.mesh->getName() == totest.mesh->getName();
+      });
+    }
   } _config;
 
   mesh::PtrMeshConfiguration _meshConfig;
@@ -269,6 +276,9 @@ private:
 
   void checkIfDataIsExchanged(
       DataID dataID) const;
+
+  /// Get waveform order for read data of given name. Raises an error if data name is not found in the read data of this participant.
+  int getWaveformUsedOrder(std::string participantName, std::string readDataName) const;
 
   void checkWaveformOrderReadData(
       int maxAllowedOrder) const;

@@ -80,11 +80,12 @@ void Petsc::initialize(
   PetscInitialized(&petscIsInitialized);
   if (not petscIsInitialized) {
     PETSC_COMM_WORLD = comm;
+    // Disable the default signal handler
+    PetscOptionsSetValue(nullptr, "-no_signal_handler", nullptr);
     PetscErrorCode ierr;
     ierr = PetscInitialize(argc, argv, "", nullptr);
     CHKERRV(ierr);
     weInitialized = true;
-    PetscPushErrorHandler(&PetscMPIAbortErrorHandler, nullptr);
   }
 #endif // not PRECICE_NO_PETSC
 }

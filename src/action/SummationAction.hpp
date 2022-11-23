@@ -29,11 +29,7 @@ public:
   virtual ~SummationAction() {}
 
   /// Adding data and applying them to target
-  virtual void performAction(
-      double time,
-      double timeStepSize,
-      double computedTimeWindowPart,
-      double timeWindowSize);
+  virtual void performAction(double time) override;
 
 private:
   logging::Logger _log{"action::SummationAction"};

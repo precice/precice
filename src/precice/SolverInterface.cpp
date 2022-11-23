@@ -31,11 +31,6 @@ double SolverInterface::initialize()
   return _impl->initialize();
 }
 
-void SolverInterface::initializeData()
-{
-  _impl->initializeData();
-}
-
 double SolverInterface::advance(
     double computedTimestepLength)
 {
@@ -55,17 +50,6 @@ int SolverInterface::getDimensions() const
 bool SolverInterface::isCouplingOngoing() const
 {
   return _impl->isCouplingOngoing();
-}
-
-bool SolverInterface::isReadDataAvailable() const
-{
-  return _impl->isReadDataAvailable();
-}
-
-bool SolverInterface::isWriteDataRequired(
-    double computedTimestepLength) const
-{
-  return _impl->isWriteDataRequired(computedTimestepLength);
 }
 
 bool SolverInterface::isTimeWindowComplete() const
@@ -122,16 +106,6 @@ int SolverInterface::getDataID(
     const std::string &dataName, int meshID) const
 {
   return _impl->getDataID(dataName, meshID);
-}
-
-bool SolverInterface::hasToEvaluateSurrogateModel() const
-{
-  return _impl->hasToEvaluateSurrogateModel();
-}
-
-bool SolverInterface::hasToEvaluateFineModel() const
-{
-  return _impl->hasToEvaluateFineModel();
 }
 
 //void SolverInterface:: resetMesh
@@ -237,18 +211,6 @@ void SolverInterface::setMeshTetrahedron(
 {
   _impl->setMeshTetrahedron(meshID, firstVertexID, secondVertexID, thirdVertexID,
                             fourthVertexID);
-}
-
-void SolverInterface::mapReadDataTo(
-    int toMeshID)
-{
-  _impl->mapReadDataTo(toMeshID);
-}
-
-void SolverInterface::mapWriteDataFrom(
-    int fromMeshID)
-{
-  _impl->mapWriteDataFrom(fromMeshID);
 }
 
 void SolverInterface::writeBlockVectorData(
@@ -404,11 +366,6 @@ void SolverInterface::getMeshVerticesAndIDs(const int meshID,
                                             double *  coordinates) const
 {
   _impl->getMeshVerticesAndIDs(meshID, size, ids, coordinates);
-}
-
-std::string getVersionInformation()
-{
-  return {precice::versionInformation};
 }
 
 namespace constants {

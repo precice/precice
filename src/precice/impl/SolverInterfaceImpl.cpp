@@ -65,7 +65,6 @@
 #include "utils/IntraComm.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
-#include "utils/PointerVector.hpp"
 #include "utils/algorithm.hpp"
 #include "utils/assertion.hpp"
 #include "xml/XMLTag.hpp"
@@ -267,6 +266,9 @@ double SolverInterfaceImpl::initialize()
   PRECICE_CHECK(_state != State::Finalized, "initialize() cannot be called after finalize().")
   PRECICE_CHECK(_state != State::Initialized, "initialize() may only be called once.");
   PRECICE_ASSERT(not _couplingScheme->isInitialized());
+  PRECICE_CHECK(not isActionRequired(constants::actionWriteInitialData()),
+                "Initial data has to be written to preCICE by calling an appropriate write...Data() function before calling initialize(). "
+                "Did you forget to call markActionFulfilled(precice::constants::actionWriteInitialData()) after writing initial data?");
   auto &solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
   solverInitEvent.pause(precice::syncMode);
   Event                    e("initialize", precice::syncMode);
@@ -324,70 +326,51 @@ double SolverInterfaceImpl::initialize()
   double time       = 0.0;
   int    timeWindow = 1;
 
-  PRECICE_DEBUG("Initialize coupling schemes");
-  _couplingScheme->initialize(time, timeWindow);
-  PRECICE_ASSERT(_couplingScheme->isInitialized());
-
-  double dt = _couplingScheme->getNextTimestepMaxLength();
-
   for (auto &context : _accessor->readDataContexts()) {
     context.initializeWaveform();
   }
 
-  if (_couplingScheme->hasDataBeenReceived()) {
-    performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
-    mapReadData();
-    performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
-  }
-
-  PRECICE_INFO(_couplingScheme->printCouplingState());
-
-  solverInitEvent.start(precice::syncMode);
-
   _meshLock.lockAll();
 
-  _state = State::Initialized;
+  if (_couplingScheme->sendsInitializedData()) {
+    performDataActions({action::Action::WRITE_MAPPING_PRIOR}, 0.0);
+    mapWrittenData();
+    performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0);
+  }
 
-  return _couplingScheme->getNextTimestepMaxLength();
-}
-
-void SolverInterfaceImpl::initializeData()
-{
-  PRECICE_TRACE();
-  PRECICE_CHECK(!_hasInitializedData, "initializeData() may only be called once.");
-  PRECICE_CHECK(_state != State::Finalized, "initializeData() cannot be called after finalize().")
-  PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before initializeData()");
-  PRECICE_ASSERT(_couplingScheme->isInitialized());
-  PRECICE_CHECK(not(_couplingScheme->sendsInitializedData() && isActionRequired(constants::actionWriteInitialData())),
-                "Initial data has to be written to preCICE by calling an appropriate write...Data() function before calling initializeData(). "
-                "Did you forget to call markActionFulfilled(precice::constants::actionWriteInitialData()) after writing initial data?");
-
-  auto &solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
-  solverInitEvent.pause(precice::syncMode);
-
-  Event                    e("initializeData", precice::syncMode);
-  utils::ScopedEventPrefix sep("initializeData/");
-
-  PRECICE_DEBUG("Initialize data");
-  double dt = _couplingScheme->getNextTimestepMaxLength();
-
-  performDataActions({action::Action::WRITE_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
-  mapWrittenData();
-  performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
-
-  _couplingScheme->initializeData();
+  PRECICE_DEBUG("Initialize coupling schemes");
+  // result of _couplingScheme->getNextTimestepMaxLength() can change when calling _couplingScheme->initialize(...) and first participant method is used for setting the time window size.
+  _couplingScheme->initialize(time, timeWindow);
 
   if (_couplingScheme->hasDataBeenReceived()) {
-    performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
+    performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0);
     mapReadData();
-    performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
+    performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
   }
+
+  for (auto &context : _accessor->readDataContexts()) {
+    context.moveToNextWindow();
+  }
+
+  _couplingScheme->receiveResultOfFirstAdvance();
+
+  if (_couplingScheme->hasDataBeenReceived()) {
+    performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0);
+    mapReadData();
+    performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
+  }
+
   resetWrittenData();
   PRECICE_DEBUG("Plot output");
   _accessor->exportFinal();
   solverInitEvent.start(precice::syncMode);
 
-  _hasInitializedData = true;
+  _state = State::Initialized;
+  PRECICE_INFO(_couplingScheme->printCouplingState());
+
+  // determine dt at the very end of the method to get the final value, even if first participant method is used (see above).
+  double dt = _couplingScheme->getNextTimestepMaxLength();
+  return dt;
 }
 
 double SolverInterfaceImpl::advance(
@@ -407,21 +390,12 @@ double SolverInterfaceImpl::advance(
 
   PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before advance().");
   PRECICE_CHECK(_state != State::Finalized, "advance() cannot be called after finalize().")
+  PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before advance().")
   PRECICE_ASSERT(_couplingScheme->isInitialized());
   PRECICE_CHECK(isCouplingOngoing(), "advance() cannot be called when isCouplingOngoing() returns false.");
-  PRECICE_CHECK((not _couplingScheme->receivesInitializedData() && not _couplingScheme->sendsInitializedData()) || (_hasInitializedData),
-                "initializeData() needs to be called before advance if data has to be initialized.");
   PRECICE_CHECK(!math::equals(computedTimestepLength, 0.0), "advance() cannot be called with a timestep size of 0.");
   PRECICE_CHECK(computedTimestepLength > 0.0, "advance() cannot be called with a negative timestep size {}.", computedTimestepLength);
   _numberAdvanceCalls++;
-
-  // This is the first time advance is called. Initializes the waveform with data from initializeData or 0, if initializeData was not called.
-  // @todo: Can be moved to the end of initializeData(), if initializeData() becomes mandatory. See https://github.com/precice/precice/issues/1196.
-  if (_numberAdvanceCalls == 1) {
-    for (auto &context : _accessor->readDataContexts()) {
-      context.moveToNextWindow();
-    }
-  }
 
 #ifndef NDEBUG
   PRECICE_DEBUG("Synchronize timestep length");
@@ -430,28 +404,15 @@ double SolverInterfaceImpl::advance(
   }
 #endif
 
-  double timeWindowSize         = 0.0; // Length of (full) current time window
-  double timeWindowComputedPart = 0.0; // Length of computed part of (full) current time window
-  double time                   = 0.0; // Current time
-
   // Update the coupling scheme time state. Necessary to get correct remainder.
   _couplingScheme->addComputedTime(computedTimestepLength);
-
-  if (_couplingScheme->hasTimeWindowSize()) {
-    timeWindowSize         = _couplingScheme->getTimeWindowSize();
-    timeWindowComputedPart = timeWindowSize - _couplingScheme->getThisTimeWindowRemainder();
-  } else {
-    // use time window size provided to advance, only allowed, if this participant sets the time window size for the other participant
-    timeWindowSize         = computedTimestepLength;
-    timeWindowComputedPart = computedTimestepLength;
-  }
-
-  time = _couplingScheme->getTime();
+  // Current time
+  double time = _couplingScheme->getTime();
 
   if (_couplingScheme->willDataBeExchanged(0.0)) {
-    performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
+    performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time);
     mapWrittenData();
-    performDataActions({action::Action::WRITE_MAPPING_POST}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
+    performDataActions({action::Action::WRITE_MAPPING_POST}, time);
   }
 
   PRECICE_DEBUG("Advance coupling scheme");
@@ -464,13 +425,13 @@ double SolverInterfaceImpl::advance(
   }
 
   if (_couplingScheme->hasDataBeenReceived()) {
-    performDataActions({action::Action::READ_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
+    performDataActions({action::Action::READ_MAPPING_PRIOR}, time);
     mapReadData();
-    performDataActions({action::Action::READ_MAPPING_POST}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
+    performDataActions({action::Action::READ_MAPPING_POST}, time);
   }
 
   if (_couplingScheme->isTimeWindowComplete()) {
-    performDataActions({action::Action::ON_TIME_WINDOW_COMPLETE_POST}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
+    performDataActions({action::Action::ON_TIME_WINDOW_COMPLETE_POST}, time);
   }
 
   PRECICE_INFO(_couplingScheme->printCouplingState());
@@ -488,7 +449,7 @@ double SolverInterfaceImpl::advance(
 void SolverInterfaceImpl::finalize()
 {
   PRECICE_TRACE();
-  PRECICE_CHECK(_state != State::Finalized, "finalize() may only be called once.")
+  PRECICE_CHECK(_state != State::Finalized, "finalize() may only be called once.");
 
   // Events for the solver time, finally stopped here
   auto &solverEvent = EventRegistry::instance().getStoredEvent("solver.advance");
@@ -548,28 +509,9 @@ int SolverInterfaceImpl::getDimensions() const
 bool SolverInterfaceImpl::isCouplingOngoing() const
 {
   PRECICE_TRACE();
-  PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before isCouplingOngoing() can be evaluated.");
   PRECICE_CHECK(_state != State::Finalized, "isCouplingOngoing() cannot be called after finalize().");
+  PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before isCouplingOngoing() can be evaluated.");
   return _couplingScheme->isCouplingOngoing();
-}
-
-bool SolverInterfaceImpl::isReadDataAvailable() const
-{
-  PRECICE_TRACE();
-  PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before isReadDataAvailable().");
-  PRECICE_CHECK(_state != State::Finalized, "isReadDataAvailable() cannot be called after finalize().");
-  bool available = _couplingScheme->hasDataBeenReceived();
-  available |= (_couplingScheme->hasInitialDataBeenReceived() && _accessor->maxReadWaveformOrder() > 0); // if any read waveform of this participant has order > 1, we return true. Related to https://github.com/precice/precice/issues/1223.
-  return available;
-}
-
-bool SolverInterfaceImpl::isWriteDataRequired(
-    double computedTimestepLength) const
-{
-  PRECICE_TRACE(computedTimestepLength);
-  PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before isWriteDataRequired().");
-  PRECICE_CHECK(_state != State::Finalized, "isWriteDataRequired() cannot be called after finalize().");
-  return _couplingScheme->willDataBeExchanged(computedTimestepLength);
 }
 
 bool SolverInterfaceImpl::isTimeWindowComplete() const
@@ -584,7 +526,6 @@ bool SolverInterfaceImpl::isActionRequired(
     const std::string &action) const
 {
   PRECICE_TRACE(action, _couplingScheme->isActionRequired(action));
-  PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before isActionRequired(...).");
   PRECICE_CHECK(_state != State::Finalized, "isActionRequired(...) cannot be called after finalize().");
   return _couplingScheme->isActionRequired(action);
 }
@@ -593,19 +534,8 @@ void SolverInterfaceImpl::markActionFulfilled(
     const std::string &action)
 {
   PRECICE_TRACE(action);
-  PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before markActionFulfilled(...).");
   PRECICE_CHECK(_state != State::Finalized, "markActionFulfilled(...) cannot be called after finalize().");
   _couplingScheme->markActionFulfilled(action);
-}
-
-bool SolverInterfaceImpl::hasToEvaluateSurrogateModel() const
-{
-  return false;
-}
-
-bool SolverInterfaceImpl::hasToEvaluateFineModel() const
-{
-  return true;
 }
 
 bool SolverInterfaceImpl::hasMesh(
@@ -688,7 +618,6 @@ int SolverInterfaceImpl::getMeshVertexSize(
   PRECICE_CHECK((_state == State::Initialized) || _accessor->isMeshProvided(meshID), "initialize() has to be called before accessing"
                                                                                      " data of the received mesh \"{}\" on participant \"{}\".",
                 _accessor->getMeshName(meshID), _accessor->getName());
-
   MeshContext &context = _accessor->usedMeshContext(meshID);
   PRECICE_ASSERT(context.mesh.get() != nullptr);
   return context.mesh->vertices().size();
@@ -1061,69 +990,6 @@ void SolverInterfaceImpl::setMeshTetrahedron(
   }
 }
 
-void SolverInterfaceImpl::mapWriteDataFrom(
-    int fromMeshID)
-{
-  PRECICE_TRACE(fromMeshID);
-  PRECICE_VALIDATE_MESH_ID(fromMeshID);
-  impl::MeshContext &context = _accessor->usedMeshContext(fromMeshID);
-
-  PRECICE_CHECK(not context.fromMappingContexts.empty(),
-                "You attempt to \"mapWriteDataFrom\" mesh {}, but there is no mapping from this mesh configured. Maybe you don't want to call this function at all or you forgot to configure the mapping.",
-                context.mesh->getName());
-
-  double time = _couplingScheme->getTime();
-  performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time, 0.0, 0.0, 0.0);
-
-  for (impl::MappingContext &mappingContext : context.fromMappingContexts) {
-    if (not mappingContext.mapping->hasComputedMapping()) {
-      PRECICE_DEBUG("Compute mapping from mesh \"{}\"", context.mesh->getName());
-      mappingContext.mapping->computeMapping();
-    }
-    for (auto &context : _accessor->writeDataContexts()) {
-      if (context.getMeshID() != fromMeshID) {
-        continue;
-      }
-      PRECICE_DEBUG("Map write data \"{}\" from mesh \"{}\"", context.getDataName(), context.getMeshName());
-      context.mapData();
-    }
-    mappingContext.hasMappedData = true;
-  }
-  performDataActions({action::Action::WRITE_MAPPING_POST}, time, 0.0, 0.0, 0.0);
-}
-
-void SolverInterfaceImpl::mapReadDataTo(
-    int toMeshID)
-{
-  PRECICE_TRACE(toMeshID);
-  PRECICE_VALIDATE_MESH_ID(toMeshID);
-  impl::MeshContext &context = _accessor->usedMeshContext(toMeshID);
-
-  PRECICE_CHECK(not context.toMappingContexts.empty(),
-                "You attempt to \"mapReadDataTo\" mesh {}, but there is no mapping to this mesh configured. Maybe you don't want to call this function at all or you forgot to configure the mapping.",
-                context.mesh->getName());
-
-  double time = _couplingScheme->getTime();
-  performDataActions({action::Action::READ_MAPPING_PRIOR}, time, 0.0, 0.0, 0.0);
-
-  for (impl::MappingContext &mappingContext : context.toMappingContexts) {
-    if (not mappingContext.mapping->hasComputedMapping()) {
-      PRECICE_DEBUG("Compute mapping from mesh \"{}\"", context.mesh->getName());
-      mappingContext.mapping->computeMapping();
-    }
-    for (auto &context : _accessor->readDataContexts()) {
-      if (context.getMeshID() != toMeshID) {
-        continue;
-      }
-      PRECICE_DEBUG("Map read data \"{}\" to mesh \"{}\"", context.getDataName(), context.getMeshName());
-      context.mapData();
-      context.storeDataInWaveform();
-    }
-    mappingContext.hasMappedData = true;
-  }
-  performDataActions({action::Action::READ_MAPPING_POST}, time, 0.0, 0.0, 0.0);
-}
-
 void SolverInterfaceImpl::writeBlockVectorData(
     int           dataID,
     int           size,
@@ -1274,7 +1140,7 @@ void SolverInterfaceImpl::writeScalarGradientData(
     PRECICE_ASSERT(context.providedData() != nullptr);
     mesh::Data &data = *context.providedData();
 
-    //Check if data has been initialized to include gradient data
+    // Check if data has been initialized to include gradient data
     PRECICE_CHECK(data.hasGradient(), "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", data.getName())
 
     // Size of the gradient data input : must be spaceDimensions * dataDimensions -> here spaceDimensions (since for scalar: dataDimensions = 1)
@@ -1287,7 +1153,7 @@ void SolverInterfaceImpl::writeScalarGradientData(
     auto &     gradientValuesInternal = data.gradientValues();
     const auto vertexCount            = gradientValuesInternal.cols() / context.getDataDimensions();
 
-    //Check if the index and dimensions are valid
+    // Check if the index and dimensions are valid
     PRECICE_CHECK(valueIndex >= -1,
                   "Invalid value index ({}) when writing gradient scalar data. Value index must be >= 0. "
                   "Please check the value index for {}",
@@ -1912,9 +1778,9 @@ void SolverInterfaceImpl::compareBoundingBoxes()
 
 void SolverInterfaceImpl::computePartitions()
 {
-  //We need to do this in two loops: First, communicate the mesh and later compute the partition.
-  //Originally, this was done in one loop. This however gave deadlock if two meshes needed to be communicated cross-wise.
-  //Both loops need a different sorting
+  // We need to do this in two loops: First, communicate the mesh and later compute the partition.
+  // Originally, this was done in one loop. This however gave deadlock if two meshes needed to be communicated cross-wise.
+  // Both loops need a different sorting
 
   auto &contexts = _accessor->usedMeshContexts();
 
@@ -1952,12 +1818,12 @@ void SolverInterfaceImpl::computePartitions()
       meshContext->mesh->computeBoundingBox();
     }
 
-    //This allocates gradient values here too if available
+    // This allocates gradient values here too if available
     meshContext->mesh->allocateDataValues();
   }
 }
 
-void SolverInterfaceImpl::computeMappings(const utils::ptr_vector<MappingContext> &contexts, const std::string &mappingType)
+void SolverInterfaceImpl::computeMappings(std::vector<MappingContext> &contexts, const std::string &mappingType)
 {
   PRECICE_TRACE();
   using namespace mapping;
@@ -1975,7 +1841,7 @@ void SolverInterfaceImpl::computeMappings(const utils::ptr_vector<MappingContext
   }
 }
 
-void SolverInterfaceImpl::clearMappings(utils::ptr_vector<MappingContext> contexts)
+void SolverInterfaceImpl::clearMappings(std::vector<MappingContext> &contexts)
 {
   PRECICE_TRACE();
   // Clear non-stationary, non-incremental mappings
@@ -2018,15 +1884,12 @@ void SolverInterfaceImpl::mapReadData()
 
 void SolverInterfaceImpl::performDataActions(
     const std::set<action::Action::Timing> &timings,
-    double                                  time,
-    double                                  timeStepSize,
-    double                                  computedTimeWindowPart,
-    double                                  timeWindowSize)
+    double                                  time)
 {
   PRECICE_TRACE();
   for (action::PtrAction &action : _accessor->actions()) {
     if (timings.find(action->getTiming()) != timings.end()) {
-      action->performAction(time, timeStepSize, computedTimeWindowPart, timeWindowSize);
+      action->performAction(time);
     }
   }
 }

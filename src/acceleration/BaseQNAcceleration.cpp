@@ -79,8 +79,8 @@ void BaseQNAcceleration::initialize(
 {
   PRECICE_TRACE(cplData.size());
   for (const DataMap::value_type &pair : cplData) {
-    PRECICE_ASSERT(pair.second->values().size() == pair.second->previousIteration().size(), "current and previousIteration have to be initialized and of identical size.",
-                   pair.second->values().size(), pair.second->previousIteration().size());
+    PRECICE_ASSERT(pair.second->getSize() == pair.second->getPreviousIterationSize(), "current and previousIteration have to be initialized and of identical size.",
+                   pair.second->getSize(), pair.second->getPreviousIterationSize());
   }
 
   if (std::any_of(cplData.cbegin(), cplData.cend(), [](const auto &p) { return p.second->hasGradient(); })) {
@@ -93,8 +93,8 @@ void BaseQNAcceleration::initialize(
   std::vector<size_t> subVectorSizes; //needed for preconditioner
 
   for (auto &elem : _dataIDs) {
-    entries += cplData.at(elem)->values().size();
-    subVectorSizes.push_back(cplData.at(elem)->values().size());
+    entries += cplData.at(elem)->getSize();
+    subVectorSizes.push_back(cplData.at(elem)->getSize());
   }
 
   _matrixCols.push_front(0);
@@ -156,7 +156,7 @@ void BaseQNAcceleration::initialize(
   for (const DataMap::value_type &pair : cplData) {
     if (not utils::contained(pair.first, _dataIDs)) {
       _secondaryDataIDs.push_back(pair.first);
-      int secondaryEntries            = pair.second->values().size();
+      int secondaryEntries            = pair.second->getSize();
       _secondaryResiduals[pair.first] = Eigen::VectorXd::Zero(secondaryEntries);
     }
   }
@@ -435,7 +435,7 @@ void BaseQNAcceleration::concatenateCouplingData(
 
   int offset = 0;
   for (int id : _dataIDs) {
-    int         size      = cplData.at(id)->values().size();
+    int         size      = cplData.at(id)->getSize();
     auto &      values    = cplData.at(id)->values();
     const auto &oldValues = cplData.at(id)->previousIteration();
     for (int i = 0; i < size; i++) {
@@ -453,7 +453,7 @@ void BaseQNAcceleration::splitCouplingData(
 
   int offset = 0;
   for (int id : _dataIDs) {
-    int   size       = cplData.at(id)->values().size();
+    int   size       = cplData.at(id)->getSize();
     auto &valuesPart = cplData.at(id)->values();
     for (int i = 0; i < size; i++) {
       valuesPart(i) = _values(i + offset);

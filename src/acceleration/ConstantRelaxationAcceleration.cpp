@@ -32,15 +32,7 @@ void ConstantRelaxationAcceleration::initialize(const DataMap &cplData)
 void ConstantRelaxationAcceleration::performAcceleration(const DataMap &cplData)
 {
   PRECICE_TRACE();
-  double omega         = _relaxation;
-  double oneMinusOmega = 1.0 - omega;
-  for (const DataMap::value_type &pair : cplData) {
-    auto &      values    = pair.second->values();
-    const auto &oldValues = pair.second->previousIteration();
-    values *= omega;
-    values += oldValues * oneMinusOmega;
-    PRECICE_DEBUG("pp values {}", values);
-  }
+  applyRelaxation(_relaxation, cplData);
 }
 
 } // namespace precice::acceleration
