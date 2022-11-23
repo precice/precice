@@ -22,9 +22,6 @@ struct MeshContext {
   /// Mesh holding the geometry data structure.
   mesh::PtrMesh mesh;
 
-  /// Data IDs of properties the geometry does possess.
-  std::vector<int> associatedData;
-
   /// Determines which mesh type has to be provided by the accessor.
   mapping::Mapping::MeshRequirement meshRequirement = mapping::Mapping::MeshRequirement::UNDEFINED;
 
