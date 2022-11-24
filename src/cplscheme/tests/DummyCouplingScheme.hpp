@@ -180,6 +180,11 @@ public:
    */
   bool isActionRequired(const std::string &actionName) const override final;
 
+  bool isActionFulfilled(const std::string &actionName) const override final
+  {
+    return true;
+  }
+
   /**
    * @brief Not implemented.
    */

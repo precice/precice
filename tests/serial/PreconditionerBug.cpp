@@ -15,7 +15,6 @@ BOOST_AUTO_TEST_CASE(PreconditionerBug)
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
   using Eigen::Vector2d;
-  using namespace precice::constants;
 
   std::string              meshName = context.isNamed("SolverOne") ? "MeshOne" : "MeshTwo";
   precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
@@ -29,11 +28,9 @@ BOOST_AUTO_TEST_CASE(PreconditionerBug)
   int numberOfAdvanceCalls = 0;
 
   while (interface.isCouplingOngoing()) {
-    if (interface.isActionRequired(actionWriteIterationCheckpoint()))
-      interface.markActionFulfilled(actionWriteIterationCheckpoint());
-    if (interface.isActionRequired(actionReadIterationCheckpoint()))
-      interface.markActionFulfilled(actionReadIterationCheckpoint());
-
+    if (interface.requiresWritingCheckpoint()) {
+      // nothing
+    }
     if (context.isNamed("SolverTwo")) {
       precice::DataID dataID = interface.getDataID("DataOne", meshID);
       // to get convergence in first timestep (everything 0), but not in second timestep
@@ -41,6 +38,10 @@ BOOST_AUTO_TEST_CASE(PreconditionerBug)
       interface.writeVectorData(dataID, vertexID, value.data());
     }
     interface.advance(1.0);
+
+    if (interface.requiresReadingCheckpoint()) {
+      // nothing
+    }
     ++numberOfAdvanceCalls;
   }
   interface.finalize();

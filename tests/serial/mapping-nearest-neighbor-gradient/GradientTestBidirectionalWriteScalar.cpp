@@ -42,7 +42,6 @@ BOOST_AUTO_TEST_SUITE(MappingNearestNeighborGradient)
 BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteScalar)
 {
 
-  //precice.isActionRequired(precice::constants::actionWriteInitialData()
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
   using Eigen::Vector2d;
   using Eigen::Vector3d;
@@ -78,6 +77,7 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteScalar)
 
     int dataAID = cplInterface.getDataID("DataOne", meshTwoID);
     int dataBID = cplInterface.getDataID("DataTwo", meshTwoID);
+    BOOST_REQUIRE(cplInterface.requiresInitialData());
 
     double   valueDataB = 1.0;
     Vector3d valueGradDataB(1.0, 1.0, 1.0);
@@ -85,7 +85,6 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteScalar)
     cplInterface.writeScalarGradientData(dataBID, 0, valueGradDataB.data());
 
     //tell preCICE that data has been written and call initialize
-    cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
     double maxDt = cplInterface.initialize();
 
     Vector3d valueDataA;

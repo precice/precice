@@ -195,6 +195,9 @@ public:
    */
   bool isActionRequired(const std::string &actionName) const final override;
 
+  /// Returns true, if the given action has been performed by the accessor.
+  bool isActionFulfilled(const std::string &actionName) const final override;
+
   /// Tells the coupling scheme that the accessor has performed the given action.
   void markActionFulfilled(const std::string &actionName) final override;
 

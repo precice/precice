@@ -65,10 +65,9 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
   int    iterations      = 0;
   double time            = 0;
 
-  if (precice.isActionRequired(precice::constants::actionWriteInitialData())) {
+  if (precice.requiresInitialData()) {
     writeData = writeFunction(time);
     precice.writeScalarData(writeDataID, vertexID, writeData);
-    precice.markActionFulfilled(precice::constants::actionWriteInitialData());
   }
 
   double maxDt        = precice.initialize();
@@ -80,10 +79,9 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
   double sampleDt; // dt relative to timestep start, where we are sampling
 
   while (precice.isCouplingOngoing()) {
-    if (precice.isActionRequired(precice::constants::actionWriteIterationCheckpoint())) {
+    if (precice.requiresWritingCheckpoint()) {
       windowStartTime = time;
       windowStartStep = timestep;
-      precice.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
     }
 
     for (int j = 0; j < nSamples; j++) {
@@ -109,11 +107,10 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
     currentDt = dt > maxDt ? maxDt : dt;
     BOOST_CHECK(currentDt == windowDt); // no subcycling.
     timestep++;
-    if (precice.isActionRequired(precice::constants::actionReadIterationCheckpoint())) { // at end of window and we have to repeat it.
+    if (precice.requiresReadingCheckpoint()) { // at end of window and we have to repeat it.
       iterations++;
       timestep = windowStartStep;
       time     = windowStartTime;
-      precice.markActionFulfilled(precice::constants::actionReadIterationCheckpoint()); // this test does not care about checkpointing, but we have to make the action
     }
     if (precice.isTimeWindowComplete()) {
       timewindow++;

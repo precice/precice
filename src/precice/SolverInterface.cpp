@@ -57,16 +57,19 @@ bool SolverInterface::isTimeWindowComplete() const
   return _impl->isTimeWindowComplete();
 }
 
-bool SolverInterface::isActionRequired(
-    const std::string &action) const
+bool SolverInterface::requiresInitialData()
 {
-  return _impl->isActionRequired(action);
+  return _impl->requiresInitialData();
 }
 
-void SolverInterface::markActionFulfilled(
-    const std::string &action)
+bool SolverInterface::requiresReadingCheckpoint()
 {
-  _impl->markActionFulfilled(action);
+  return _impl->requiresReadingCheckpoint();
+}
+
+bool SolverInterface::requiresWritingCheckpoint()
+{
+  return _impl->requiresWritingCheckpoint();
 }
 
 bool SolverInterface::hasMesh(
@@ -380,24 +383,5 @@ void SolverInterface::getMeshVerticesAndIDs(const int meshID,
 {
   _impl->getMeshVerticesAndIDs(meshID, size, ids, coordinates);
 }
-
-namespace constants {
-
-const std::string &actionWriteInitialData()
-{
-  return cplscheme::constants::actionWriteInitialData();
-}
-
-const std::string &actionWriteIterationCheckpoint()
-{
-  return cplscheme::constants::actionWriteIterationCheckpoint();
-}
-
-const std::string &actionReadIterationCheckpoint()
-{
-  return cplscheme::constants::actionReadIterationCheckpoint();
-}
-
-} // namespace constants
 
 } // namespace precice

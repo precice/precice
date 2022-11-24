@@ -18,8 +18,6 @@ BOOST_AUTO_TEST_CASE(Implicit)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
-  using namespace precice::constants;
-
   SolverInterface couplingInterface(context.name, context.config(), 0, 1);
 
   int         dimensions = couplingInterface.getDimensions();
@@ -51,27 +49,23 @@ BOOST_AUTO_TEST_CASE(Implicit)
   double              dt = 0;
   std::vector<double> writeData(dimensions, writeValue);
   std::vector<double> readData(dimensions, -1);
-  const std::string & cowid = actionWriteInitialData();
 
-  if (couplingInterface.isActionRequired(cowid)) {
+  if (couplingInterface.requiresInitialData()) {
     BOOST_TEST(context.isNamed("SolverTwo"));
     couplingInterface.writeVectorData(writeDataID, vertexID, writeData.data());
-    couplingInterface.markActionFulfilled(cowid);
   }
 
   dt = couplingInterface.initialize();
 
   while (couplingInterface.isCouplingOngoing()) {
-    if (couplingInterface.isActionRequired(actionWriteIterationCheckpoint())) {
-      couplingInterface.markActionFulfilled(actionWriteIterationCheckpoint());
+    if (couplingInterface.requiresWritingCheckpoint()) {
     }
     couplingInterface.readVectorData(readDataID, vertexID, readData.data());
     BOOST_TEST(expectedReadValue == readData.at(0));
     BOOST_TEST(expectedReadValue == readData.at(1));
     couplingInterface.writeVectorData(writeDataID, vertexID, writeData.data());
     dt = couplingInterface.advance(dt);
-    if (couplingInterface.isActionRequired(actionReadIterationCheckpoint())) {
-      couplingInterface.markActionFulfilled(actionReadIterationCheckpoint());
+    if (couplingInterface.requiresReadingCheckpoint()) {
     }
   }
   couplingInterface.finalize();

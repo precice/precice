@@ -114,14 +114,17 @@ public:
 
   ///@}
 
-  ///@name Action Methods
+  ///@name Requirements
   ///@{
 
-  /// @copydoc SolverInterface::isActionRequired
-  bool isActionRequired(const std::string &action) const;
+  /// @copydoc SolverInterface::requiresInitialData
+  bool requiresInitialData();
 
-  /// @copydoc SolverInterface::markActionFulfilled
-  void markActionFulfilled(const std::string &action);
+  /// @copydoc SolverInterface::requiresReadingCheckpoint
+  bool requiresReadingCheckpoint();
+
+  /// @copydoc SolverInterface::requiresWritingCheckpoint
+  bool requiresWritingCheckpoint();
 
   ///@}
 

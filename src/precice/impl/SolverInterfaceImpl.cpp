@@ -15,6 +15,7 @@
 #include "action/SharedPointer.hpp"
 #include "com/Communication.hpp"
 #include "com/SharedPointer.hpp"
+#include "cplscheme/Constants.hpp"
 #include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "io/Export.hpp"
@@ -266,9 +267,12 @@ double SolverInterfaceImpl::initialize()
   PRECICE_CHECK(_state != State::Finalized, "initialize() cannot be called after finalize().")
   PRECICE_CHECK(_state != State::Initialized, "initialize() may only be called once.");
   PRECICE_ASSERT(not _couplingScheme->isInitialized());
-  PRECICE_CHECK(not isActionRequired(constants::actionWriteInitialData()),
-                "Initial data has to be written to preCICE by calling an appropriate write...Data() function before calling initialize(). "
-                "Did you forget to call markActionFulfilled(precice::constants::actionWriteInitialData()) after writing initial data?");
+
+  bool failedToInitialize = _couplingScheme->isActionRequired(cplscheme::constants::actionWriteInitialData()) && not _couplingScheme->isActionFulfilled(cplscheme::constants::actionWriteInitialData());
+  PRECICE_CHECK(not failedToInitialize,
+                "Initial data has to be written to preCICE before calling initialize(). "
+                "After defining your mesh, call requiresInitialData() to check if the participant is required to write initial data using an appropriate write...Data() function.");
+
   auto &solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
   solverInitEvent.pause(precice::syncMode);
   Event                    e("initialize", precice::syncMode);
@@ -522,20 +526,37 @@ bool SolverInterfaceImpl::isTimeWindowComplete() const
   return _couplingScheme->isTimeWindowComplete();
 }
 
-bool SolverInterfaceImpl::isActionRequired(
-    const std::string &action) const
+bool SolverInterfaceImpl::requiresInitialData()
 {
-  PRECICE_TRACE(action, _couplingScheme->isActionRequired(action));
-  PRECICE_CHECK(_state != State::Finalized, "isActionRequired(...) cannot be called after finalize().");
-  return _couplingScheme->isActionRequired(action);
+  PRECICE_TRACE();
+  PRECICE_CHECK(_state == State::Constructed, "requiresInitialData() has to be called before initialize().");
+  bool required = _couplingScheme->isActionRequired(cplscheme::constants::actionWriteInitialData());
+  if (required) {
+    _couplingScheme->markActionFulfilled(cplscheme::constants::actionWriteInitialData());
+  }
+  return required;
 }
 
-void SolverInterfaceImpl::markActionFulfilled(
-    const std::string &action)
+bool SolverInterfaceImpl::requiresWritingCheckpoint()
 {
-  PRECICE_TRACE(action);
-  PRECICE_CHECK(_state != State::Finalized, "markActionFulfilled(...) cannot be called after finalize().");
-  _couplingScheme->markActionFulfilled(action);
+  PRECICE_TRACE();
+  PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before requiresWritingCheckpoint().");
+  bool required = _couplingScheme->isActionRequired(cplscheme::constants::actionWriteIterationCheckpoint());
+  if (required) {
+    _couplingScheme->markActionFulfilled(cplscheme::constants::actionWriteIterationCheckpoint());
+  }
+  return required;
+}
+
+bool SolverInterfaceImpl::requiresReadingCheckpoint()
+{
+  PRECICE_TRACE();
+  PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before requiresReadingCheckpoint().");
+  bool required = _couplingScheme->isActionRequired(cplscheme::constants::actionReadIterationCheckpoint());
+  if (required) {
+    _couplingScheme->markActionFulfilled(cplscheme::constants::actionReadIterationCheckpoint());
+  }
+  return required;
 }
 
 bool SolverInterfaceImpl::hasMesh(

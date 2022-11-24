@@ -121,54 +121,43 @@ PRECICE_API void precicef_is_coupling_ongoing_(int *isOngoing);
 PRECICE_API void precicef_is_time_window_complete_(int *isComplete);
 
 /**
- * @deprecated Forwards to precicef_is_action_required_
- *
  * Fortran syntax:
- * precicef_action_required(
- *   CHARACTER action(*),
+ * precicef_requires_initial_data_(
  *   INTEGER   isRequired )
  *
- * IN:  action
+ * IN:  -
  * OUT: isRequired(1:true, 0:false)
  *
- * @copydoc precice::SolverInterface::isActionRequired()
- *
+ * @copydoc precice::SolverInterface::requiresInitialData()
  */
-[[deprecated("Use precicef_is_action_required_(...) with the same arguments instead.")]] void precicef_action_required_(
-    const char *action,
-    int *       isRequired,
-    int         lengthAction);
+PRECICE_API void precicef_requires_initial_data_(
+    int *isRequired);
 
 /**
  * Fortran syntax:
- * precicef_is_action_required(
- *   CHARACTER action(*),
+ * precicef_requires_reading_checkpoint_(
  *   INTEGER   isRequired )
  *
- * IN:  action
+ * IN:  -
  * OUT: isRequired(1:true, 0:false)
  *
- * @copydoc precice::SolverInterface::isActionRequired()
- *
+ * @copydoc precice::SolverInterface::requiresReadingCheckpoint()
  */
-PRECICE_API void precicef_is_action_required_(
-    const char *action,
-    int *       isRequired,
-    int         lengthAction);
+PRECICE_API void precicef_requires_reading_checkpoint_(
+    int *isRequired);
 
 /**
  * Fortran syntax:
- * precicef_mark_action_fulfilled( CHARACTER action(*) )
+ * precicef_requires_writing_checkpoint_(
+ *   INTEGER   isRequired )
  *
- * IN:  action
- * OUT: -
+ * IN:  -
+ * OUT: isRequired(1:true, 0:false)
  *
- * @copydoc precice::SolverInterface::markActionFulfilled()
- *
+ * @copydoc precice::SolverInterface::requiresWritingCheckpoint()
  */
-PRECICE_API void precicef_mark_action_fulfilled_(
-    const char *action,
-    int         lengthAction);
+PRECICE_API void precicef_requires_writing_checkpoint_(
+    int *isRequired);
 
 /**
  * Fortran syntax:
@@ -663,36 +652,6 @@ PRECICE_API void precicef_read_sdata_(
     const int *dataID,
     const int *valueIndex,
     double *   dataValue);
-
-/**
- * @brief Name of action for writing iteration checkpoint.
- *
- * Fortran syntax:
- * precicef_action_write_iter_checkpoint( CHARACTER nameAction(*) )
- */
-PRECICE_API void precicef_action_write_iter_checkp_(
-    char *nameAction,
-    int   lengthNameAction);
-
-/**
- * @brief Name of action for writing initial data.
- *
- * FortranSyntax:
- * precicef_action_write_initial_data( CHARACTER nameAction(*) )
- */
-PRECICE_API void precicef_action_write_initial_data_(
-    char *nameAction,
-    int   lengthNameAction);
-
-/**
- * @brief Name of action for reading iteration checkpoint.
- *
- * Fortran syntax:
- * precicef_action_read_iter_checkpoint( CHARACTER nameAction(*) )
- */
-PRECICE_API void precicef_action_read_iter_checkp_(
-    char *nameAction,
-    int   lengthNameAction);
 
 PRECICE_API void precicef_get_version_information_(
     char *versionInfo,

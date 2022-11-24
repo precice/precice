@@ -83,7 +83,7 @@ void runCoupling(
     // Tells coupling scheme, that a checkpoint has been created.
     // All required actions have to be performed before calling advance().
     cplScheme.markActionFulfilled(constants::actionWriteIterationCheckpoint());
-    BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+    BOOST_TEST(cplScheme.isActionFulfilled(constants::actionWriteIterationCheckpoint()));
 
     while (cplScheme.isCouplingOngoing()) {
       dataValues0(index) += stepsizeData0;
@@ -107,7 +107,7 @@ void runCoupling(
         if (cplScheme.isCouplingOngoing()) {
           BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
           cplScheme.markActionFulfilled(constants::actionWriteIterationCheckpoint());
-          BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+          BOOST_TEST(cplScheme.isActionFulfilled(constants::actionWriteIterationCheckpoint()));
         } else {
           BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
           BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
@@ -125,7 +125,7 @@ void runCoupling(
         BOOST_TEST(iterationCount < *iterValidIterations);
         BOOST_TEST(cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
         cplScheme.markActionFulfilled(constants::actionReadIterationCheckpoint());
-        BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
+        BOOST_TEST(cplScheme.isActionFulfilled(constants::actionReadIterationCheckpoint()));
         // The written data value is decreased in a regular manner, in order
         // to achieve a predictable convergence.
         stepsizeData0 -= 1.0;
@@ -148,7 +148,7 @@ void runCoupling(
     // Tells coupling scheme, that a checkpoint has been created.
     // All required actions have to be performed before calling advance().
     cplScheme.markActionFulfilled(constants::actionWriteIterationCheckpoint());
-    BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+    BOOST_TEST(cplScheme.isActionFulfilled(constants::actionWriteIterationCheckpoint()));
 
     while (cplScheme.isCouplingOngoing()) {
       Eigen::VectorXd currentData(3);
@@ -175,7 +175,7 @@ void runCoupling(
         if (cplScheme.isCouplingOngoing()) {
           BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
           cplScheme.markActionFulfilled(constants::actionWriteIterationCheckpoint());
-          BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+          BOOST_TEST(cplScheme.isActionFulfilled(constants::actionWriteIterationCheckpoint()));
         } else {
           BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
           BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
@@ -195,7 +195,7 @@ void runCoupling(
         // The load checkpoint action requires to fallback to the cplScheme of the
         // first implicit iteration of the current timestep/time.
         cplScheme.markActionFulfilled(constants::actionReadIterationCheckpoint());
-        BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
+        BOOST_TEST(cplScheme.isActionFulfilled(constants::actionReadIterationCheckpoint()));
         // The written data value is decreased in a regular manner, in order
         // to achieve a predictable convergence.
         //stepsizeData1 -= 1.0;
@@ -248,7 +248,7 @@ void runCouplingWithSubcycling(
     // Tells coupling scheme, that a checkpoint has been created.
     // All required actions have to be performed before calling advance().
     cplScheme.markActionFulfilled(constants::actionWriteIterationCheckpoint());
-    BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+    BOOST_TEST(cplScheme.isActionFulfilled(constants::actionWriteIterationCheckpoint()));
 
     double maxTimestepLength      = cplScheme.getNextTimestepMaxLength();
     double computedTimestepLength = maxTimestepLength / 2.0;
@@ -273,7 +273,7 @@ void runCouplingWithSubcycling(
         if (cplScheme.isCouplingOngoing()) {
           BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
           cplScheme.markActionFulfilled(constants::actionWriteIterationCheckpoint());
-          BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+          BOOST_TEST(cplScheme.isActionFulfilled(constants::actionWriteIterationCheckpoint()));
         } else {
           BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
           BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
@@ -296,7 +296,7 @@ void runCouplingWithSubcycling(
           BOOST_TEST(cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
           BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
           cplScheme.markActionFulfilled(constants::actionReadIterationCheckpoint());
-          BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
+          BOOST_TEST(cplScheme.isActionFulfilled(constants::actionReadIterationCheckpoint()));
           // The written data value is decreased in a regular manner, in order
           // to achieve a predictable convergence.
           stepsizeData0 -= 1.0;
@@ -329,7 +329,7 @@ void runCouplingWithSubcycling(
     // Tells coupling scheme, that a checkpoint has been created.
     // All required actions have to be performed before calling advance().
     cplScheme.markActionFulfilled(constants::actionWriteIterationCheckpoint());
-    BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+    BOOST_TEST(cplScheme.isActionFulfilled(constants::actionWriteIterationCheckpoint()));
 
     double maxTimestepLength       = cplScheme.getNextTimestepMaxLength();
     double preferredTimestepLength = maxTimestepLength / 2.5;
@@ -359,7 +359,7 @@ void runCouplingWithSubcycling(
         if (cplScheme.isCouplingOngoing()) {
           BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
           cplScheme.markActionFulfilled(constants::actionWriteIterationCheckpoint());
-          BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+          BOOST_TEST(cplScheme.isActionFulfilled(constants::actionWriteIterationCheckpoint()));
         } else {
           BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
           BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
@@ -382,7 +382,7 @@ void runCouplingWithSubcycling(
           BOOST_TEST(cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
           BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
           cplScheme.markActionFulfilled(constants::actionReadIterationCheckpoint());
-          BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
+          BOOST_TEST(cplScheme.isActionFulfilled(constants::actionReadIterationCheckpoint()));
           // The written data value is decreased in a regular manner, in order
           // to achieve a predictable convergence.
           stepsizeData1.array() -= 1.0;

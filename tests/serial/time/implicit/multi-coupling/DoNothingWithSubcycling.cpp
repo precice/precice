@@ -51,17 +51,15 @@ BOOST_AUTO_TEST_CASE(DoNothingWithSubcycling)
   double currentDt = dt;                   // Timestep length used by solver
 
   while (precice.isCouplingOngoing()) {
-    if (precice.isActionRequired(precice::constants::actionWriteIterationCheckpoint())) {
+    if (precice.requiresWritingCheckpoint()) {
       totalCompletedTimesteps += timestepsInThisWindow;
       timestepsInThisWindow = 0;
-      precice.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
     }
     maxDt     = precice.advance(currentDt);
     currentDt = dt > maxDt ? maxDt : dt;
     totalSolves++;
     timestepsInThisWindow++;
-    if (precice.isActionRequired(precice::constants::actionReadIterationCheckpoint())) {
-      precice.markActionFulfilled(precice::constants::actionReadIterationCheckpoint());
+    if (precice.requiresReadingCheckpoint()) {
       timestepsInThisWindow = 0;
     }
   }
