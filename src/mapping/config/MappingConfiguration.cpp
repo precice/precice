@@ -455,6 +455,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
           new AxialGeoMultiscaleMapping(constraintValue, dimensions, multiscaleTypeValue, radius));
       configuredMapping.isRBF = false;
     } else {
+      std::cout << type;
       PRECICE_ERROR("Unknown mapping type!");
     }
   }
@@ -505,6 +506,19 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
       configuredMapping.mapping = PtrMapping(
           new PetRadialBasisFctMapping<CompactPolynomialC6>(constraintValue, dimensions, CompactPolynomialC6(rbfParameter.value),
                                                             {{xDead, yDead, zDead}}, solverRtol, polynomial, preallocation));
+    } else if (type == VALUE_AXIAL_GEOMETRIC_MULTISCALE) {
+
+      AxialGeoMultiscaleMapping::MultiscaleType multiscaleTypeValue;
+      if (multiscaleType == "spread") {
+        multiscaleTypeValue = AxialGeoMultiscaleMapping::SPREAD;
+      } else if (multiscaleType == "collect") {
+        multiscaleTypeValue = AxialGeoMultiscaleMapping::COLLECT;
+      } else {
+        PRECICE_ERROR("Unknown geometric multiscale type \"{}\". Known types are \"spread\" and \"collect\".", multiscaleTypeValue);
+      }
+      configuredMapping.mapping = PtrMapping(
+          new AxialGeoMultiscaleMapping(constraintValue, dimensions, multiscaleTypeValue, radius));
+      configuredMapping.isRBF = false;
     } else {
       PRECICE_ERROR("Unknown mapping type!");
     }
