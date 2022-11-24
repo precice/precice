@@ -331,17 +331,13 @@ bool Participant::isMeshProvided(MeshID meshID) const
 
 bool Participant::isMeshReceived(const std::string &meshName) const
 {
-  if (!hasMesh(meshName)) {
-    return false;
-  }
+  PRECICE_ASSERT(hasMesh(meshName));
   return !usedMeshContext(meshName).provideMesh;
 }
 
 bool Participant::isMeshProvided(const std::string &meshName) const
 {
-  if (!hasMesh(meshName)) {
-    return false;
-  }
+  PRECICE_ASSERT(hasMesh(meshName));
   return usedMeshContext(meshName).provideMesh;
 }
 
