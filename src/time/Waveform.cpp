@@ -1,6 +1,6 @@
 #include "time/Waveform.hpp"
 #include <algorithm>
-#include <eigen3/unsupported/Eigen/Splines>
+#include <unsupported/Eigen/Splines>
 #include "cplscheme/CouplingScheme.hpp"
 #include "logging/LogMacros.hpp"
 #include "math/differences.hpp"
