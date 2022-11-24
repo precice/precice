@@ -273,7 +273,7 @@ void ParticipantConfiguration::xmlTagCallback(
 
     mesh::PtrMesh mesh = _meshConfig->getMesh(name);
     PRECICE_CHECK(mesh,
-                  R"(Participant "{}" attempts to provide an unknown mesh "{}". Mesh "{}" needs to be defined first.)",
+                  R"(Participant "{}" attempts to provide an unknown mesh "{}". <mesh name="{}"> needs to be defined first.)",
                   _participants.back()->getName(), name, name);
 
     _participants.back()->provideMesh(mesh);
@@ -288,7 +288,7 @@ void ParticipantConfiguration::xmlTagCallback(
     // Start with defining the mesh
     mesh::PtrMesh mesh = _meshConfig->getMesh(name);
     PRECICE_CHECK(mesh,
-                  R"(Participant "{}" attempts to provide an unknown mesh "{}". Mesh "{}" needs to be defined first.)",
+                  R"(Participant "{}" attempts to provide an unknown mesh "{}". <mesh name="{}"> needs to be defined first.)",
                   _participants.back()->getName(), name, name);
 
     // Then check the attributes
@@ -320,7 +320,7 @@ void ParticipantConfiguration::xmlTagCallback(
     std::string        meshName = tag.getStringAttributeValue(ATTR_MESH);
     mesh::PtrMesh      mesh     = _meshConfig->getMesh(meshName);
     PRECICE_CHECK(mesh,
-                  R"(Participant "{}" attempts to read data "{}" from an unknown mesh "{}". Mesh "{}" needs to be defined first.)",
+                  R"(Participant "{}" attempts to read data "{}" from an unknown mesh "{}". <mesh name="{}"> needs to be defined first.)",
                   _participants.back()->getName(), dataName, meshName, meshName);
     mesh::PtrData data = getData(mesh, dataName);
     _participants.back()->addWriteData(data, mesh);
@@ -329,7 +329,7 @@ void ParticipantConfiguration::xmlTagCallback(
     std::string        meshName = tag.getStringAttributeValue(ATTR_MESH);
     mesh::PtrMesh      mesh     = _meshConfig->getMesh(meshName);
     PRECICE_CHECK(mesh,
-                  R"(Participant "{}" attempts to write data "{}" to an unknown mesh "{}". Mesh "{}" needs to be defined first.)",
+                  R"(Participant "{}" attempts to write data "{}" to an unknown mesh "{}". <mesh name="{}"> needs to be defined first.)",
                   _participants.back()->getName(), dataName, meshName, meshName);
     mesh::PtrData data          = getData(mesh, dataName);
     int           waveformOrder = tag.getIntAttributeValue(ATTR_ORDER);
