@@ -36,9 +36,6 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
   data << 4.0, 5.0;
   datas.push_back(data);
 
-  std::string writeIterCheckpoint(precice::constants::actionWriteIterationCheckpoint());
-  std::string readIterCheckpoint(precice::constants::actionReadIterationCheckpoint());
-
   if (context.isNamed("SOLIDZ1") ||
       context.isNamed("SOLIDZ2") ||
       context.isNamed("SOLIDZ3")) {
@@ -76,12 +73,10 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
       precice.writeVectorData(dataWriteID, vertexIDs.at(i), datas.at(i).data());
     }
 
-    if (precice.isActionRequired(writeIterCheckpoint)) {
-      precice.markActionFulfilled(writeIterCheckpoint);
+    if (precice.requiresWritingCheckpoint()) {
     }
     precice.advance(0.0001);
-    if (precice.isActionRequired(readIterCheckpoint)) {
-      precice.markActionFulfilled(readIterCheckpoint);
+    if (precice.requiresReadingCheckpoint()) {
     }
 
     for (size_t i = 0; i < 4; i++) {
@@ -135,12 +130,10 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
       precice.writeVectorData(dataWriteID3, vertexIDs3.at(i), datas.at(i).data());
     }
 
-    if (precice.isActionRequired(writeIterCheckpoint)) {
-      precice.markActionFulfilled(writeIterCheckpoint);
+    if (precice.requiresWritingCheckpoint()) {
     }
     precice.advance(0.0001);
-    if (precice.isActionRequired(readIterCheckpoint)) {
-      precice.markActionFulfilled(readIterCheckpoint);
+    if (precice.requiresReadingCheckpoint()) {
     }
 
     precice.finalize();

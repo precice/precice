@@ -112,46 +112,25 @@ void precicef_is_time_window_complete_(
   }
 }
 
-void precicef_action_required_(
-    const char *action,
-    int *       isRequired,
-    int         lengthAction)
-{
-  precicef_is_action_required_(action, isRequired, lengthAction);
-}
-
-void precicef_is_action_required_(
-    const char *action,
-    int *       isRequired,
-    int         lengthAction)
+void precicef_requires_initial_data_(
+    int *isRequired)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  // PRECICE_ASSERT(lengthAction > 1);
-  // std::cout << "lengthAction: " << lengthAction << '\n';
-  // std::cout << "Action:";
-  // for (int i=0; i < lengthAction; i++){
-  //   std::cout << " a[" << i << "]=\"" << action[i] << "\"";
-  // }
-  // std::cout << '\n';
-  int strippedLength = precice::impl::strippedLength(action, lengthAction);
-  // std::cout << "strippedLength: " << strippedLength << '\n';
-  // PRECICE_ASSERT(strippedLength > 1);
-  string stringAction(action, strippedLength);
-  if (impl->isActionRequired(stringAction)) {
-    *isRequired = 1;
-  } else {
-    *isRequired = 0;
-  }
+  *isRequired = impl->requiresInitialData() ? 1 : 0;
 }
 
-void precicef_mark_action_fulfilled_(
-    const char *action,
-    int         lengthAction)
+void precicef_requires_writing_checkpoint_(
+    int *isRequired)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  int    strippedLength = precice::impl::strippedLength(action, lengthAction);
-  string stringAction(action, strippedLength);
-  impl->markActionFulfilled(stringAction);
+  *isRequired = impl->requiresWritingCheckpoint() ? 1 : 0;
+}
+
+void precicef_requires_reading_checkpoint_(
+    int *isRequired)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  *isRequired = impl->requiresReadingCheckpoint() ? 1 : 0;
 }
 
 void precicef_has_mesh_(
@@ -429,39 +408,6 @@ int precice::impl::strippedLength(
     i--;
   }
   return i + 1;
-}
-
-void precicef_action_write_iter_checkp_(
-    char *nameAction,
-    int   lengthNameAction)
-{
-  const std::string &name = precice::constants::actionWriteIterationCheckpoint();
-  PRECICE_ASSERT(name.size() < (size_t) lengthNameAction, name.size(), lengthNameAction);
-  for (size_t i = 0; i < name.size(); i++) {
-    nameAction[i] = name[i];
-  }
-}
-
-void precicef_action_write_initial_data_(
-    char *nameAction,
-    int   lengthNameAction)
-{
-  const std::string &name = precice::constants::actionWriteInitialData();
-  PRECICE_ASSERT(name.size() < (size_t) lengthNameAction, name.size(), lengthNameAction);
-  for (size_t i = 0; i < name.size(); i++) {
-    nameAction[i] = name[i];
-  }
-}
-
-void precicef_action_read_iter_checkp_(
-    char *nameAction,
-    int   lengthNameAction)
-{
-  const std::string &name = precice::constants::actionReadIterationCheckpoint();
-  PRECICE_ASSERT(name.size() < (size_t) lengthNameAction, name.size(), lengthNameAction);
-  for (size_t i = 0; i < name.size(); i++) {
-    nameAction[i] = name[i];
-  }
 }
 
 void precicef_get_version_information_(

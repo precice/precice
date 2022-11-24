@@ -58,8 +58,7 @@ BOOST_AUTO_TEST_CASE(Implicit)
 
     std::vector<double> readData(ownIDs.size(), -10);
     while (couplingInterface.isCouplingOngoing()) {
-      if (couplingInterface.isActionRequired(precice::constants::actionWriteIterationCheckpoint())) {
-        couplingInterface.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
+      if (couplingInterface.requiresWritingCheckpoint()) {
       }
 
       // Write data
@@ -68,8 +67,7 @@ BOOST_AUTO_TEST_CASE(Implicit)
       dt = couplingInterface.advance(dt);
       couplingInterface.readBlockScalarData(ownDataID, ownIDs.size(),
                                             ownIDs.data(), readData.data());
-      if (couplingInterface.isActionRequired(precice::constants::actionReadIterationCheckpoint())) {
-        couplingInterface.markActionFulfilled(precice::constants::actionReadIterationCheckpoint());
+      if (couplingInterface.requiresReadingCheckpoint()) {
       }
 
       // Expected data according to the writeData
@@ -110,8 +108,7 @@ BOOST_AUTO_TEST_CASE(Implicit)
     std::vector<double> readData(ownIDs.size(), -10);
 
     while (couplingInterface.isCouplingOngoing()) {
-      if (couplingInterface.isActionRequired(precice::constants::actionWriteIterationCheckpoint())) {
-        couplingInterface.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
+      if (couplingInterface.requiresWritingCheckpoint()) {
       }
 
       // Write data
@@ -120,8 +117,7 @@ BOOST_AUTO_TEST_CASE(Implicit)
       dt = couplingInterface.advance(dt);
       couplingInterface.readBlockScalarData(ownDataID, ownIDs.size(),
                                             ownIDs.data(), readData.data());
-      if (couplingInterface.isActionRequired(precice::constants::actionReadIterationCheckpoint())) {
-        couplingInterface.markActionFulfilled(precice::constants::actionReadIterationCheckpoint());
+      if (couplingInterface.requiresReadingCheckpoint()) {
       }
 
       // Expected data according to the writeData

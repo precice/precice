@@ -160,6 +160,8 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataMultipleReadWrite)
     Eigen::VectorXd writePositions(size * 3);
     vertexIDs[0] = cplInterface.setMeshVertex(meshTwoID, writePositions.data());
 
+    BOOST_REQUIRE(cplInterface.requiresInitialData());
+
     int dataAID = cplInterface.getDataID("DataOne", meshTwoID);
     int dataBID = cplInterface.getDataID("DataTwo", meshTwoID);
 
@@ -209,7 +211,6 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataMultipleReadWrite)
     BOOST_TEST(Vector3d(7.0, 7.0, 7.0) == writeDataA);
     cplInterface.writeVectorData(dataAID, vertexIDs[0], writeDataA.data());
 
-    cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
     double maxDt = cplInterface.initialize();
     while (cplInterface.isCouplingOngoing()) {
       // multiple writeBlockScalarData

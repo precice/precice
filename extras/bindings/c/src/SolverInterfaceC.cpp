@@ -102,21 +102,22 @@ int precicec_isTimeWindowComplete()
   return 0;
 }
 
-int precicec_isActionRequired(const char *action)
+int precicec_requiresInitialData()
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  PRECICE_ASSERT(action != nullptr);
-  if (impl->isActionRequired(std::string(action))) {
-    return 1;
-  }
-  return 0;
+  return impl->requiresInitialData() ? 1 : 0;
 }
 
-void precicec_markActionFulfilled(const char *action)
+int precicec_requiresWritingCheckpoint()
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  PRECICE_ASSERT(action != nullptr);
-  impl->markActionFulfilled(std::string(action));
+  return impl->requiresWritingCheckpoint() ? 1 : 0;
+}
+
+int precicec_requiresReadingCheckpoint()
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  return impl->requiresReadingCheckpoint() ? 1 : 0;
 }
 
 int precicec_hasMesh(const char *meshName)
@@ -407,21 +408,6 @@ void precicec_writeBlockVectorGradientData(
 const char *precicec_getVersionInformation()
 {
   return precice::versionInformation;
-}
-
-const char *precicec_actionWriteInitialData()
-{
-  return precice::constants::actionWriteInitialData().c_str();
-}
-
-const char *precicec_actionWriteIterationCheckpoint()
-{
-  return precice::constants::actionWriteIterationCheckpoint().c_str();
-}
-
-const char *precicec_actionReadIterationCheckpoint()
-{
-  return precice::constants::actionReadIterationCheckpoint().c_str();
 }
 
 void precicec_setMeshAccessRegion(

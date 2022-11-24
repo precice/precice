@@ -251,13 +251,29 @@ bool CompositionalCouplingScheme::isActionRequired(
   return isRequired;
 }
 
+bool CompositionalCouplingScheme::isActionFulfilled(
+    const std::string &actionName) const
+{
+  PRECICE_TRACE(actionName);
+  bool isFulfilled = false;
+  for (const Scheme &scheme : _couplingSchemes) {
+    if (not scheme.onHold) {
+      isFulfilled |= scheme.scheme->isActionFulfilled(actionName);
+    }
+  }
+  PRECICE_DEBUG("return {}", isFulfilled);
+  return isFulfilled;
+}
+
 void CompositionalCouplingScheme::markActionFulfilled(
     const std::string &actionName)
 {
   PRECICE_TRACE(actionName);
   for (const Scheme &scheme : _couplingSchemes) {
     if (not scheme.onHold) {
-      scheme.scheme->markActionFulfilled(actionName);
+      if (scheme.scheme->isActionRequired(actionName)) {
+        scheme.scheme->markActionFulfilled(actionName);
+      }
     }
   }
 }

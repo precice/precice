@@ -165,6 +165,9 @@ public:
   /// Returns true, if the given action has to be performed by the accessor.
   virtual bool isActionRequired(const std::string &actionName) const = 0;
 
+  /// Returns true, if the given action has already been performed by the accessor.
+  virtual bool isActionFulfilled(const std::string &actionName) const = 0;
+
   /// Tells the coupling scheme that the accessor has performed the given action.
   virtual void markActionFulfilled(const std::string &actionName) = 0;
 

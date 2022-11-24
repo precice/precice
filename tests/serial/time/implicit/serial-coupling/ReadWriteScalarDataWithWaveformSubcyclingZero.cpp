@@ -66,10 +66,9 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingZero)
   double timeCheckpoint     = time;
   int    iterations         = 0;
 
-  if (precice.isActionRequired(precice::constants::actionWriteInitialData())) {
+  if (precice.requiresInitialData()) {
     writeData = writeFunction(time);
     precice.writeScalarData(writeDataID, vertexID, writeData);
-    precice.markActionFulfilled(precice::constants::actionWriteInitialData());
   }
 
   double maxDt    = precice.initialize();
@@ -79,11 +78,10 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingZero)
   double currentDt = dt;                  // Timestep length used by solver
 
   while (precice.isCouplingOngoing()) {
-    if (precice.isActionRequired(precice::constants::actionWriteIterationCheckpoint())) {
+    if (precice.requiresWritingCheckpoint()) {
       timeCheckpoint     = time;
       timestepCheckpoint = timestep;
       iterations         = 0;
-      precice.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
     }
     double readTime;
     readTime = timeCheckpoint + windowDt;
@@ -108,11 +106,10 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingZero)
     writeData = writeFunction(time);
     precice.writeScalarData(writeDataID, vertexID, writeData);
     maxDt = precice.advance(currentDt);
-    if (precice.isActionRequired(precice::constants::actionReadIterationCheckpoint())) {
+    if (precice.requiresReadingCheckpoint()) {
       time     = timeCheckpoint;
       timestep = timestepCheckpoint;
       iterations++;
-      precice.markActionFulfilled(precice::constants::actionReadIterationCheckpoint());
     }
     currentDt = dt > maxDt ? maxDt : dt;
   }

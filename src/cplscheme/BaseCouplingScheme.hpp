@@ -168,6 +168,9 @@ public:
   /// Returns true, if the given action has to be performed by the accessor.
   bool isActionRequired(const std::string &actionName) const override final;
 
+  /// Returns true, if the given action has to be performed by the accessor.
+  bool isActionFulfilled(const std::string &actionName) const override final;
+
   /// Tells the coupling scheme that the accessor has performed the given action.
   void markActionFulfilled(const std::string &actionName) override final;
 
@@ -437,7 +440,9 @@ private:
   /// True, if coupling has been initialized.
   bool _isInitialized = false;
 
-  std::set<std::string> _actions;
+  std::set<std::string> _requiredActions;
+
+  std::set<std::string> _fulfilledActions;
 
   /// Responsible for monitoring iteration count over time window.
   std::shared_ptr<io::TXTTableWriter> _iterationsWriter;

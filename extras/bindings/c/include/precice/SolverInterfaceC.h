@@ -103,22 +103,14 @@ PRECICE_API int precicec_isTimeWindowComplete();
 ///@name Action Methods
 ///@{
 
-/**
- * @brief Checks if the provided action is required.
- * @param[in] action the name of the action
- * @returns whether the action is required
- */
-PRECICE_API int precicec_isActionRequired(const char *action);
+/// @copydoc precice::SolverInterface::requiresInitialData()
+PRECICE_API int precicec_requiresInitialData();
 
-/**
- * @brief Indicates preCICE that a required action has been fulfilled by a solver.
- * @pre The solver fulfilled the specified action.
- *
- * @param[in] action the name of the action
- */
-PRECICE_API void precicec_markActionFulfilled(const char *action);
+/// @copydoc precice::SolverInterface::requiresWritingCheckpoint()
+PRECICE_API int precicec_requiresWritingCheckpoint();
 
-///@}
+/// @copydoc precice::SolverInterface::requiresReadingCheckpoint()
+PRECICE_API int precicec_requiresReadingCheckpoint();
 
 ///@name Mesh Access
 ///@anchor precice-mesh-access
@@ -449,15 +441,6 @@ PRECICE_API void precicec_readScalarData(
  * 3) the configuration of preCICE including MPI, PETSC, PYTHON
  */
 PRECICE_API const char *precicec_getVersionInformation();
-
-// @brief Name of action for writing initial data.
-PRECICE_API const char *precicec_actionWriteInitialData();
-
-// @brief Name of action for writing iteration checkpoint
-PRECICE_API const char *precicec_actionWriteIterationCheckpoint();
-
-// @brief Name of action for reading iteration checkpoint.
-PRECICE_API const char *precicec_actionReadIterationCheckpoint();
 
 ///@}
 
