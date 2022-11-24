@@ -87,7 +87,7 @@ void AxialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID outputD
       difference = v0.getCoords();
       difference -= output()->vertices()[i].getCoords();
       double distance = difference.norm() / _radius;
-      PRECICE_CHECK(distance <= 1.05, "Output mesh has vertices that do not coincide with the geometric multiscale interface defined by the input mesh.");
+      PRECICE_CHECK(distance <= 1.05, "Output mesh has vertices that do not coincide with the geometric multiscale interface defined by the input mesh. Ratio of vertex distance to radius is {}.", distance);
       for (int dim = 0; dim < valueDimensions; dim++) {
         outputValues((i * valueDimensions) + dim) = 2 * inputValues(dim) * (1 - distance * distance);
       }

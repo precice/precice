@@ -455,6 +455,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
           new AxialGeoMultiscaleMapping(constraintValue, dimensions, multiscaleTypeValue, radius));
       configuredMapping.isRBF = false;
     } else {
+      std::cout << type;
       PRECICE_ERROR("Unknown mapping type!");
     }
   }
