@@ -472,6 +472,24 @@ void precicef_set_edge_(
 
 /**
  * Fortran syntax:
+ * precicef_set_mesh_edges_(
+ *   INTEGER meshID,
+ *   INTEGER size,
+ *   INTEGER vertices(size*2) )
+ *
+ * IN:  meshID, size, vertices
+ * OUT: -
+ *
+ * @copydoc precice::SolverInterface::setMeshEdges()
+ *
+ */
+void precicef_set_mesh_edges_(
+    const int *meshID,
+    const int *size,
+    const int *vertices);
+
+/**
+ * Fortran syntax:
  * precicef_set_triangle_(
  *   INTEGER meshID,
  *   INTEGER firstVertexID,
@@ -489,6 +507,24 @@ void precicef_set_triangle_(
     const int *firstVertexID,
     const int *secondVertexID,
     const int *thirdVertexID);
+
+/**
+ * Fortran syntax:
+ * precicef_set_mesh_triangles_(
+ *   INTEGER meshID,
+ *   INTEGER size,
+ *   INTEGER vertices(size*3) )
+ *
+ * IN:  meshID, size, vertices
+ * OUT: -
+ *
+ * @copydoc precice::SolverInterface::setMeshTriangles()
+ *
+ */
+void precicef_set_mesh_edges_(
+    const int *meshID,
+    const int *size,
+    const int *vertices);
 
 /**
  * Fortran syntax:
@@ -514,6 +550,24 @@ void precicef_set_quad_(
 
 /**
  * Fortran syntax:
+ * precicef_set_mesh_quads(
+ *   INTEGER meshID,
+ *   INTEGER size,
+ *   INTEGER vertices(size*4) )
+ *
+ * IN:  meshID, size, vertices
+ * OUT: -
+ *
+ * @copydoc precice::SolverInterface::setMeshQuads()
+ *
+ */
+void precicef_set_mesh_quads_(
+    const int *meshID,
+    const int *size,
+    const int *vertices);
+
+/**
+ * Fortran syntax:
  * precicef_set_tetrahedron(
  *   INTEGER meshID,
  *   INTEGER firstVertexID,
@@ -533,6 +587,24 @@ void precicef_set_tetrahedron(
     const int *secondVertexID,
     const int *thirdVertexID,
     const int *fourthVertexID);
+
+/**
+ * Fortran syntax:
+ * precicef_set_mesh_tetrahedra_(
+ *   INTEGER meshID,
+ *   INTEGER size,
+ *   INTEGER vertices(size*4) )
+ *
+ * IN:  meshID, size, vertices
+ * OUT: -
+ *
+ * @copydoc precice::SolverInterface::setMeshTetrahedra()
+ *
+ */
+void precicef_set_mesh_tetrahedra_(
+    const int *meshID,
+    const int *size,
+    const int *vertices);
 
 /**
  * Fortran syntax:

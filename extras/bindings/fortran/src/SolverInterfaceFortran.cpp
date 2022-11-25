@@ -359,7 +359,7 @@ void precicef_set_triangle_(
   impl->setMeshTriangle(*meshID, *firstVertexID, *secondVertexID, *thirdVertexID);
 }
 
-void precicef_set_mesh_triangles(
+void precicef_set_mesh_triangles_(
     const int *meshID,
     const int *size,
     const int *vertices)
@@ -379,7 +379,7 @@ void precicef_set_quad_(
   impl->setMeshQuad(*meshID, *firstVertexID, *secondVertexID, *thirdVertexID, *fourthVertexID);
 }
 
-void precicef_set_mesh_quads(
+void precicef_set_mesh_quads_(
     const int *meshID,
     const int *size,
     const int *vertices)
@@ -399,7 +399,7 @@ void precicef_set_tetrahedron(
   impl->setMeshTetrahedron(*meshID, *firstVertexID, *secondVertexID, *thirdVertexID, *fourthVertexID);
 }
 
-void precicef_set_mesh_tetrahedra(
+void precicef_set_mesh_tetrahedra_(
     const int *meshID,
     const int *size,
     const int *vertices)
