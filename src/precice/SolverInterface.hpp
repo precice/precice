@@ -348,9 +348,26 @@ public:
 
   ///@}
 
-  ///@name Mesh Access
-  ///@anchor precice-mesh-access
-  ///@{
+  /** @name Mesh Access
+   * @anchor precice-mesh-access
+   *
+   * Connectivity is optional.
+   * Use isMeshConnectivityRequired() to check if the current participant can make use of the connectivity.
+   *
+   *
+   * Always set the mesh connectivity of the highest dimensionality available.
+   * preCICE ensures the existence of hierarchical entries for the projection fallback.
+   * Prefer to use bulk versions, as they allows preCICE to efficiently avoid duplicates.
+   * preCICE removes all connectivity duplicates in initialize().
+   *
+   * Examples:
+   *
+   * - setting triangle ABC ensures the existence of edges AB, BC, and AC.
+   * - setting triangles ABC and BCD separately will result in duplicate BC edges.
+   * - setting quad ABCD ensures the existence of triangles ABC ABD ACD BCD and edges AB AC AD BC BD CD.
+   *
+   *@{
+   */
 
   /*
    * @brief Resets mesh with given ID.
@@ -580,7 +597,9 @@ public:
       const int *vertices);
 
   /**
-   * @brief Sets surface mesh quadrangle from vertex IDs.
+   * @brief Sets a planar surface mesh quadrangle from vertex IDs.
+   *
+   * The planar quad will be triangulated, maximizing area-to-circumference.
    *
    * @warning The order of vertices does not matter, however, only planar quads are allowed.
    *
@@ -608,6 +627,8 @@ public:
    *
    * vertices contain quadruples of vertex indices for each quad to define.
    * The format follows: q1a, q1b, q1c, q1d, q2a, q2b, q2c, q2d, ...
+   *
+   * Each planar quad will be triangulated, maximizing area-to-circumference.
    *
    * @warning The order of vertices per quad does not matter, however, only planar quads are allowed.
    *
