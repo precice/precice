@@ -58,7 +58,7 @@ public:
   bool operator!=(const Edge &other) const;
 
 private:
-  /// Pointers to Vertex objects defining the edge.
+  /// Pointers to Vertex objects defining the edge, ordered by Vertex::getID().
   std::array<Vertex *, 2> _vertices;
 };
 

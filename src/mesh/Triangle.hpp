@@ -45,7 +45,11 @@ public:
       Edge &edgeTwo,
       Edge &edgeThree);
 
-  /// Constructor based on 3 vertices
+  /** Constructor based on 3 vertices
+   *
+   * The vertices will be sorted by Vertex::getID().
+   * This allows to weakly order triangles.
+   */
   Triangle(
       Vertex &VertexOne,
       Vertex &VertexTwo,
@@ -119,7 +123,7 @@ public:
   bool operator!=(const Triangle &other) const;
 
 private:
-  /// Vertices defining the triangle.
+  /// Vertices defining the triangle, sorted by Vertex::getID()
   std::array<Vertex *, 3> _vertices;
 };
 

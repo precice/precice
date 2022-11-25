@@ -19,7 +19,11 @@ namespace mesh {
 /// Tetrahedron of a mesh, defined by 4 vertices
 class Tetrahedron {
 public:
-  /// Constructor, the order of vertices doesn't matter.
+  /** Constructor based on 4 vertices
+   *
+   * The vertices will be sorted by Vertex::getID().
+   * This allows to weakly order tetrahedra.
+   */
   Tetrahedron(
       Vertex &vertexOne,
       Vertex &vertexTwo,
