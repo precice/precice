@@ -895,7 +895,7 @@ void SolverInterfaceImpl::setMeshQuad(
 {
   PRECICE_TRACE(meshID, firstVertexID,
                 secondVertexID, thirdVertexID, fourthVertexID);
-  PRECICE_CHECK(_dimensions == 3, "setMeshQuadis only possible for 3D cases."
+  PRECICE_CHECK(_dimensions == 3, "setMeshQuad is only possible for 3D cases."
                                   " Please set the dimension to 3 in the preCICE configuration file.");
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->usedMeshContext(meshID);
