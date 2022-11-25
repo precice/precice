@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(MeshWKTPrint)
       "Mesh \"WKTMesh\", dimensionality = 3:\n"
       "GEOMETRYCOLLECTION(\n"
       "POINT (0 0 0), POINT (1 0 0), POINT (0 0 1), POINT (1 0 1),\n"
-      "LINESTRING (0 0 0, 1 0 0), LINESTRING (1 0 0, 0 0 1), LINESTRING (0 0 1, 0 0 0), LINESTRING (1 0 0, 1 0 1), LINESTRING (1 0 1, 0 0 1),\n"
+      "LINESTRING (0 0 0, 1 0 0), LINESTRING (1 0 0, 0 0 1), LINESTRING (0 0 0, 0 0 1), LINESTRING (1 0 0, 1 0 1), LINESTRING (0 0 1, 1 0 1),\n"
       "POLYGON ((0 0 0, 1 0 0, 0 0 1, 0 0 0))\n"
       ")");
   BOOST_TEST(reference == sstream.str());

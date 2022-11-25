@@ -13,6 +13,9 @@ Edge::Edge(
     Vertex &vertexTwo)
     : _vertices({&vertexOne, &vertexTwo})
 {
+  if (*_vertices[1] < *_vertices[0]) {
+    std::swap(_vertices[0], _vertices[1]);
+  }
   PRECICE_ASSERT(vertexOne.getDimensions() == vertexTwo.getDimensions(),
                  vertexOne.getDimensions(), vertexTwo.getDimensions());
 }
