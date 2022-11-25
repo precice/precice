@@ -81,8 +81,6 @@ public:
       double startTime,
       int    startTimeWindow) final override;
 
-  void receiveResultOfFirstAdvance() override final;
-
   /// Returns true, if any of the composed coupling schemes sendsInitializedData for this participant
   bool sendsInitializedData() const override final;
 

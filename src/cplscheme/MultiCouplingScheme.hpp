@@ -127,6 +127,8 @@ private:
    */
   const DataMap getAllData() override;
 
+  void performReceiveOfFirstAdvance() override final;
+
   /**
    * @brief Exchanges all data between the participants of the MultiCouplingScheme and applies acceleration.
    * @returns true, if iteration converged

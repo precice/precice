@@ -199,9 +199,6 @@ public:
    */
   void initialize(double startTime, int startTimeWindow) override final;
 
-  /// Receives result of first advance, if this has to happen inside SolverInterface::initialize(), see CouplingScheme.hpp
-  void receiveResultOfFirstAdvance() override final;
-
   /**
    * @brief Advances the coupling scheme.
    */
@@ -537,13 +534,12 @@ private:
   virtual void exchangeInitialData() = 0;
 
   /**
-   * @brief implements functionality for receiveResultOfFirstAdvance
+   * @brief Receives result of first advance, if this has to happen inside BaseCouplingScheme::initialize()
+   *
+   * This is only relevant for the second participant of the SerialCouplingScheme, because other coupling schemes only
+   * receive initial data in initialize.
    */
-  virtual void performReceiveOfFirstAdvance()
-  {
-    // noop by default. Will be overridden by child-coupling-schemes, if data has to be received here. See SerialCouplingScheme.
-    return;
-  }
+  virtual void performReceiveOfFirstAdvance() = 0;
 
   /// Functions needed for advance()
 

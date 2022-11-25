@@ -143,11 +143,17 @@ void BiCouplingScheme::exchangeInitialData()
       sendData(getM2N(), getSendData());
     }
     if (receivesInitializedData()) {
+      for (const DataMap::value_type &pair : getReceiveData()) {
+        pair.second->clearTimeStepsStorage();
+      }
       receiveData(getM2N(), getReceiveData());
       checkDataHasBeenReceived();
     }
   } else { // second participant
     if (receivesInitializedData()) {
+      for (const DataMap::value_type &pair : getReceiveData()) {
+        pair.second->clearTimeStepsStorage();
+      }
       receiveData(getM2N(), getReceiveData());
       checkDataHasBeenReceived();
     }
@@ -159,8 +165,8 @@ void BiCouplingScheme::exchangeInitialData()
 
 void BiCouplingScheme::storeTimeStepSendData(double relativeDt)
 {
-  PRECICE_ASSERT(relativeDt > time::Storage::WINDOW_START, relativeDt);
-  PRECICE_ASSERT(relativeDt <= time::Storage::WINDOW_END, relativeDt);
+  PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
+  PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
   for (auto &sendData : getSendData()) {
     auto values = sendData.second->values();
     sendData.second->storeDataAtTime(values, relativeDt);
@@ -179,7 +185,7 @@ void BiCouplingScheme::storeTimeStepReceiveDataEndOfWindow()
 
 void BiCouplingScheme::retreiveTimeStepReceiveData(double relativeDt)
 {
-  PRECICE_ASSERT(relativeDt > time::Storage::WINDOW_START, relativeDt);
+  PRECICE_ASSERT(relativeDt >= time::Storage::WINDOW_START, relativeDt);
   PRECICE_ASSERT(relativeDt <= time::Storage::WINDOW_END, relativeDt);
   for (auto &receiveData : getReceiveData()) {
     retreiveTimeStepForData(relativeDt, receiveData.second->getDataID());

@@ -142,11 +142,16 @@ void CouplingData::clearTimeStepsStorage()
   _timeStepsStorage.clear();
 }
 
+void CouplingData::moveTimeStepsStorage()
+{
+  _timeStepsStorage.move();
+}
+
 void CouplingData::storeDataAtTime(Eigen::VectorXd data, double relativeDt)
 {
-  PRECICE_ASSERT(relativeDt > time::Storage::WINDOW_START, relativeDt);
-  PRECICE_ASSERT(relativeDt > _timeStepsStorage.maxStoredNormalizedDt(), relativeDt, _timeStepsStorage.maxStoredNormalizedDt());
-  PRECICE_ASSERT(relativeDt <= time::Storage::WINDOW_END, relativeDt);
+  PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
+  PRECICE_ASSERT(math::greaterEquals(relativeDt, _timeStepsStorage.maxStoredNormalizedDt()), relativeDt, _timeStepsStorage.maxStoredNormalizedDt());
+  PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
   _timeStepsStorage.setValueAtTime(relativeDt, data);
 }
 
@@ -186,7 +191,7 @@ void CouplingData::storeFromSerialized(Eigen::VectorXd timesAscending, Eigen::Ve
       slice(valueId) = serializedData(valueId * timesAscending.size() + timeId);
     }
     auto time = timesAscending(timeId);
-    PRECICE_ASSERT(time > time::Storage::WINDOW_START && time <= time::Storage::WINDOW_END); // time <= 0 or time > 1 is not allowed.
+    PRECICE_ASSERT(math::greaterEquals(time, time::Storage::WINDOW_START) && math::greaterEquals(time::Storage::WINDOW_END, time)); // time < 0 or time > 1 is not allowed.
     this->storeDataAtTime(slice, time);
   }
   this->values() = this->getDataAtTime(_timeStepsStorage.maxStoredNormalizedDt()); // store data in values to make this non-breaking.

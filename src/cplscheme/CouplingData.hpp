@@ -84,6 +84,9 @@ public:
   /// clears _timeStepsStorage. Called after data was written or before data is received.
   void clearTimeStepsStorage();
 
+  /// moves _timeStepsStorage. Called after converged data was received.
+  void moveTimeStepsStorage();
+
   /// stores data at key relativeDt in _timeStepsStorage for later use.
   void storeDataAtTime(Eigen::VectorXd data, double relativeDt);
 

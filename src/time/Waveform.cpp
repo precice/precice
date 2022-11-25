@@ -31,10 +31,12 @@ void Waveform::initialize(const Eigen::VectorXd &values)
 void Waveform::store(const Eigen::VectorXd &values, double normalizedDt)
 {
   if (math::equals(_storage.maxStoredNormalizedDt(), 1.0)) { // reached end of window and trying to write new data from next window. Clearing window first.
-    bool keepZero = true;
+    bool keepZero = false;                                   // @todo might have to change this again, but need to store at zero for initialization.
     _storage.clear(keepZero);
   }
-  PRECICE_ASSERT(values.size() == _storage.nDofs());
+  if (_storage.nTimes() > 0) {
+    PRECICE_ASSERT(values.size() == _storage.nDofs());
+  }
   _storage.setValueAtTime(normalizedDt, values);
 }
 

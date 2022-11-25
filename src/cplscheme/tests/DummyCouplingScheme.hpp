@@ -40,14 +40,6 @@ public:
   /**
    * @brief Not implemented.
    */
-  void receiveResultOfFirstAdvance() override final
-  {
-    PRECICE_ASSERT(false);
-  }
-
-  /**
-   * @brief Not implemented.
-   */
   bool isInitialized() const override final
   {
     PRECICE_ASSERT(false);

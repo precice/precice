@@ -66,6 +66,9 @@ void MultiCouplingScheme::exchangeInitialData()
   if (_isController) {
     if (receivesInitializedData()) {
       for (auto &receiveExchange : _receiveDataVector) {
+        for (const DataMap::value_type &pair : receiveExchange.second) {
+          pair.second->clearTimeStepsStorage();
+        }
         receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
       }
       checkDataHasBeenReceived();
@@ -83,6 +86,9 @@ void MultiCouplingScheme::exchangeInitialData()
     }
     if (receivesInitializedData()) {
       for (auto &receiveExchange : _receiveDataVector) {
+        for (const DataMap::value_type &pair : receiveExchange.second) {
+          pair.second->clearTimeStepsStorage();
+        }
         receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
       }
       checkDataHasBeenReceived();
@@ -165,6 +171,16 @@ const DataMap MultiCouplingScheme::getAllData()
   return allData;
 }
 
+void MultiCouplingScheme::performReceiveOfFirstAdvance()
+{
+  for (auto &receiveExchange : _receiveDataVector) {
+    // receive nothing by default do constant extrapolation instead
+    for (const DataMap::value_type &pair : receiveExchange.second) {
+      pair.second->moveTimeStepsStorage();
+    }
+  }
+}
+
 bool MultiCouplingScheme::exchangeDataAndAccelerate()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
@@ -176,6 +192,9 @@ bool MultiCouplingScheme::exchangeDataAndAccelerate()
 
   if (_isController) {
     for (auto &receiveExchange : _receiveDataVector) {
+      for (const DataMap::value_type &pair : receiveExchange.second) {
+        pair.second->clearTimeStepsStorage();
+      }
       receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
     }
     checkDataHasBeenReceived();
@@ -196,6 +215,9 @@ bool MultiCouplingScheme::exchangeDataAndAccelerate()
     convergence = receiveConvergence(_m2ns[_controller]);
 
     for (auto &receiveExchange : _receiveDataVector) {
+      for (const DataMap::value_type &pair : receiveExchange.second) {
+        pair.second->clearTimeStepsStorage();
+      }
       receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
     }
     checkDataHasBeenReceived();

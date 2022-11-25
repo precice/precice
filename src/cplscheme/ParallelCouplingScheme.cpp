@@ -23,6 +23,14 @@ ParallelCouplingScheme::ParallelCouplingScheme(
     : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
                        secondParticipant, localParticipant, std::move(m2n), maxIterations, cplMode, dtMethod, extrapolationOrder) {}
 
+void ParallelCouplingScheme::performReceiveOfFirstAdvance()
+{
+  // receive nothing by default do constant extrapolation instead
+  for (const DataMap::value_type &pair : getReceiveData()) {
+    pair.second->moveTimeStepsStorage();
+  }
+}
+
 bool ParallelCouplingScheme::exchangeDataAndAccelerate()
 {
   bool convergence = true;
@@ -34,10 +42,20 @@ bool ParallelCouplingScheme::exchangeDataAndAccelerate()
     if (isImplicitCouplingScheme()) {
       convergence = receiveConvergence(getM2N());
     }
+
+    for (const DataMap::value_type &pair : getReceiveData()) {
+      pair.second->clearTimeStepsStorage();
+    }
+
     receiveData(getM2N(), getReceiveData());
     checkDataHasBeenReceived();
   } else { // second participant
     PRECICE_DEBUG("Receiving data...");
+
+    for (const DataMap::value_type &pair : getReceiveData()) {
+      pair.second->clearTimeStepsStorage();
+    }
+
     receiveData(getM2N(), getReceiveData());
     checkDataHasBeenReceived();
     if (isImplicitCouplingScheme()) {

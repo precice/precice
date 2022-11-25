@@ -159,7 +159,6 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
     // Data is only received on ranks with size>0, which is checked in the derived class implementation
     m2n->receive(serializedSamples, pair.second->getMeshID(), pair.second->getDimensions() * nTimeSteps);
 
-    pair.second->clearTimeStepsStorage();
     pair.second->storeFromSerialized(timesAscending, serializedSamples);
 
     if (pair.second->hasGradient()) {
@@ -213,15 +212,14 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
     storeIteration();
   }
 
-  // For simple initialization initialize as constant.
   if (sendsInitializedData()) {
-    storeTimeStepSendData(time::Storage::WINDOW_END);
+    storeTimeStepSendData(time::Storage::WINDOW_START);
   }
 
   exchangeInitialData();
 
   if (receivesInitializedData()) {
-    retreiveTimeStepReceiveDataEndOfWindow(); // might be moved into SolverInterfaceImpl.
+    retreiveTimeStepReceiveData(time::Storage::WINDOW_START);
   }
 
   if (isImplicitCouplingScheme()) {
@@ -231,14 +229,9 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
     }
   }
 
-  _isInitialized = true;
-}
-
-void BaseCouplingScheme::receiveResultOfFirstAdvance()
-{
-  PRECICE_ASSERT(_isInitialized, "Before calling receiveResultOfFirstAdvance() one has to call initialize().");
-  _hasDataBeenReceived = false;
   performReceiveOfFirstAdvance();
+
+  _isInitialized = true;
 }
 
 bool BaseCouplingScheme::sendsInitializedData() const

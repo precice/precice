@@ -31,7 +31,7 @@ Eigen::VectorXd Storage::getValueAtTime(double time)
 
 void Storage::setValueAtTime(double time, Eigen::VectorXd value)
 {
-  PRECICE_ASSERT(math::greater(time, WINDOW_START), "Setting value outside of valid range!");
+  PRECICE_ASSERT(math::smallerEquals(WINDOW_START, time), "Setting value outside of valid range!");
   PRECICE_ASSERT(math::smallerEquals(time, WINDOW_END), "Sampling outside of valid range!");
   PRECICE_ASSERT(math::smaller(maxStoredNormalizedDt(), time), maxStoredNormalizedDt(), time, "Trying to overwrite existing values or to write values with a time that is too small. Please use clear(), if you want to reset the storage.");
   _sampleStorage.emplace_back(std::make_pair(time, value));
@@ -50,7 +50,7 @@ void Storage::overrideDataAtEndWindowTime(Eigen::VectorXd data)
 double Storage::maxStoredNormalizedDt()
 {
   if (_sampleStorage.size() == 0) {
-    return 0; // @todo better return something that is clearly invalid or raise an error.
+    return -1; // invalid return
   } else {
     return _sampleStorage.back().first;
   }
