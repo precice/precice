@@ -526,6 +526,8 @@ public:
    * @param[in] vertices an array containing 2*size vertex IDs
    *
    * @pre vertices were added to the mesh with the ID meshID
+   *
+   * @see isMeshConnectivityRequired()
    */
   void setMeshEdges(
       int        meshID,
@@ -535,7 +537,11 @@ public:
   /**
    * @brief Sets mesh triangle from vertex IDs.
    *
+   *
+   *
    * @note The order of vertices does not matter.
+   *
+   * @warning For setting multiple triangle, prefer the vastly more efficient setMeshTriangles().
    *
    * @param[in] meshID ID of the mesh to add the triangle to
    * @param[in] firstVertexID ID of the first vertex of the triangle
@@ -543,6 +549,8 @@ public:
    * @param[in] thirdVertexID ID of the third vertex of the triangle
    *
    * @pre edges with firstVertexID, secondVertexID, and thirdVertexID were added to the mesh with the ID meshID
+   *
+   * @see isMeshConnectivityRequired()
    */
   void setMeshTriangle(
       int meshID,
@@ -563,6 +571,8 @@ public:
    * @param[in] vertices an array containing 3*size vertex IDs
    *
    * @pre vertices were added to the mesh with the ID meshID
+   *
+   * @see isMeshConnectivityRequired()
    */
   void setMeshTriangles(
       int        meshID,
@@ -574,6 +584,8 @@ public:
    *
    * @warning The order of vertices does not matter, however, only planar quads are allowed.
    *
+   * @warning For setting multiple quads, prefer the vastly more efficient setMeshQuads().
+   *
    * @param[in] meshID ID of the mesh to add the Quad to
    * @param[in] firstVertexID ID of the first vertex of the Quad
    * @param[in] secondVertexID ID of the second vertex of the Quad
@@ -582,6 +594,7 @@ public:
    *
    * @pre vertices with firstVertexID, secondVertexID, thirdVertexID, and fourthVertexID were added to the mesh with the ID meshID
    *
+   * @see isMeshConnectivityRequired()
    */
   void setMeshQuad(
       int meshID,
@@ -603,6 +616,8 @@ public:
    * @param[in] vertices an array containing 4*size vertex IDs
    *
    * @pre vertices were added to the mesh with the ID meshID
+   *
+   * @see isMeshConnectivityRequired()
    */
   void setMeshQuads(
       int        meshID,
@@ -614,6 +629,8 @@ public:
    *
    * @note The order of vertices does not matter.
    *
+   * @warning For setting multiple tetrahedra, prefer the vastly more efficient setMeshTetrahedra().
+   *
    * @param[in] meshID ID of the mesh to add the Tetrahedron to
    * @param[in] firstVertexID ID of the first vertex of the Tetrahedron
    * @param[in] secondVertexID ID of the second vertex of the Tetrahedron
@@ -621,6 +638,8 @@ public:
    * @param[in] fourthVertexID ID of the fourth vertex of the Tetrahedron
    *
    * @pre vertices with firstVertexID, secondVertexID, thirdVertexID, and fourthVertexID were added to the mesh with the ID meshID
+   *
+   * @see isMeshConnectivityRequired()
    */
   void setMeshTetrahedron(
       int meshID,
@@ -642,6 +661,8 @@ public:
    * @param[in] vertices an array containing 4*size vertex IDs
    *
    * @pre vertices were added to the mesh with the ID meshID
+   *
+   * @see isMeshConnectivityRequired()
    */
   void setMeshTetrahedra(
       int        meshID,
