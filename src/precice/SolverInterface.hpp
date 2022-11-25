@@ -500,6 +500,8 @@ public:
   /**
    * @brief Sets a mesh edge from vertex IDs
    *
+   * @note The order of vertices does not matter.
+   *
    * @param[in] meshID ID of the mesh to add the edge to
    * @param[in] firstVertexID ID of the first vertex of the edge
    * @param[in] secondVertexID ID of the second vertex of the edge
@@ -514,6 +516,11 @@ public:
   /**
    * @brief Sets multiple mesh edge from vertex IDs
    *
+   * vertices contain pairs of vertex indices for each edge to define.
+   * The format follows: e1a, e1b, e2a, e2b, ...
+   *
+   * @note The order of vertices per edge does not matter.
+   *
    * @param[in] meshID ID of the mesh to add the edges to
    * @param[in] size the amount of edges to set
    * @param[in] vertices an array containing 2*size vertex IDs
@@ -527,6 +534,8 @@ public:
 
   /**
    * @brief Sets mesh triangle from vertex IDs.
+   *
+   * @note The order of vertices does not matter.
    *
    * @param[in] meshID ID of the mesh to add the triangle to
    * @param[in] firstVertexID ID of the first vertex of the triangle
@@ -544,6 +553,11 @@ public:
   /**
    * @brief Sets multiple mesh triangles from vertex IDs
    *
+   * vertices contain triples of vertex indices for each triangle to define.
+   * The format follows: t1a, t1b, t1c, t2a, t2b, t2c, ...
+   *
+   * @note The order of vertices per triangle does not matter.
+   *
    * @param[in] meshID ID of the mesh to add the triangles to
    * @param[in] size the amount of triangles to set
    * @param[in] vertices an array containing 3*size vertex IDs
@@ -557,6 +571,8 @@ public:
 
   /**
    * @brief Sets surface mesh quadrangle from vertex IDs.
+   *
+   * @warning The order of vertices does not matter, however, only planar quads are allowed.
    *
    * @param[in] meshID ID of the mesh to add the Quad to
    * @param[in] firstVertexID ID of the first vertex of the Quad
@@ -577,6 +593,11 @@ public:
   /**
    * @brief Sets multiple mesh quads from vertex IDs
    *
+   * vertices contain quadruples of vertex indices for each quad to define.
+   * The format follows: q1a, q1b, q1c, q1d, q2a, q2b, q2c, q2d, ...
+   *
+   * @warning The order of vertices per quad does not matter, however, only planar quads are allowed.
+   *
    * @param[in] meshID ID of the mesh to add the quad to
    * @param[in] size the amount of quads to set
    * @param[in] vertices an array containing 4*size vertex IDs
@@ -590,6 +611,8 @@ public:
 
   /**
    * @brief Set tetrahedron in 3D mesh from vertex ID
+   *
+   * @note The order of vertices does not matter.
    *
    * @param[in] meshID ID of the mesh to add the Tetrahedron to
    * @param[in] firstVertexID ID of the first vertex of the Tetrahedron
@@ -608,6 +631,11 @@ public:
 
   /**
    * @brief Sets multiple mesh tetrahedra from vertex IDs
+   *
+   * vertices contain quadruples of vertex indices for each tetrahedron to define.
+   * The format follows: t1a, t1b, t1c, t1d, t2a, t2b, t2c, t2d, ...
+   *
+   * @note The order of vertices per tetrahedron does not matter.
    *
    * @param[in] meshID ID of the mesh to add the tetrahedra to
    * @param[in] size the amount of tetrahedra to set
