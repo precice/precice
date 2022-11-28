@@ -60,9 +60,9 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteVector)
     cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
     double maxDt = cplInterface.initialize();
 
-    Vector2d valueDataB;
+    Vector3d valueDataB;
     cplInterface.readVectorData(dataBID, 0, valueDataB.data());
-    Vector2d expected(-1.0, 0.0);
+    Vector3d expected(-1.0, 0.0, 1.0);
     BOOST_TEST(valueDataB == expected);
 
     while (cplInterface.isCouplingOngoing()) {
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteVector)
       maxDt = cplInterface.advance(maxDt);
 
       cplInterface.readVectorData(dataBID, 0, valueDataB.data());
-      expected << -0.5, 0.5;
+      expected << -0.5, 0.5, 1.5;
       BOOST_TEST(valueDataB == expected);
     }
     cplInterface.finalize();
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteVector)
     BOOST_TEST(cplInterface.isGradientDataRequired(dataAID) == false);
     BOOST_TEST(cplInterface.isGradientDataRequired(dataBID) == true);
 
-    Vector2d                    valueDataB(2.0, 3.0);
+    Vector3d                    valueDataB(2.0, 3.0, 4.0);
     Eigen::Matrix<double, 3, 3> gradient;
     gradient << 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0;
     cplInterface.writeVectorData(dataBID, 0, valueDataB.data());
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteVector)
 
     while (cplInterface.isCouplingOngoing()) {
 
-      valueDataB << 2.5, 3.5;
+      valueDataB << 2.5, 3.5, 4.5;
       cplInterface.writeVectorData(dataBID, 0, valueDataB.data());
       cplInterface.writeVectorGradientData(dataBID, 0, gradient.data());
 
