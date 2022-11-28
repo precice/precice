@@ -24,7 +24,7 @@
         direction="write"
         from="MeshOne"
         to="MeshTwo"
-        constraint="scaled-consistent"
+        constraint="scaled-consistent-surface"
         timing="initial" />
     </participant>
 

@@ -86,6 +86,7 @@ target_sources(testprecice
     src/testing/WaveformFixture.hpp
     src/testing/main.cpp
     src/testing/tests/ExampleTests.cpp
+    src/time/tests/StorageTest.cpp
     src/time/tests/WaveformTest.cpp
     src/utils/tests/AlgorithmTest.cpp
     src/utils/tests/DimensionsTest.cpp
@@ -94,7 +95,6 @@ target_sources(testprecice
     src/utils/tests/ManageUniqueIDsTest.cpp
     src/utils/tests/MultiLockTest.cpp
     src/utils/tests/ParallelTest.cpp
-    src/utils/tests/PointerVectorTest.cpp
     src/utils/tests/StatisticsTest.cpp
     src/utils/tests/StringTest.cpp
     src/xml/tests/ParserTest.cpp

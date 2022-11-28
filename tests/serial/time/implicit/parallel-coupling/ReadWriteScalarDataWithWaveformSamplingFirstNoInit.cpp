@@ -15,7 +15,7 @@ BOOST_AUTO_TEST_SUITE(ParallelCoupling)
 /**
  * @brief Test to run a simple coupling with first order waveform subcycling.
  *
- * Does not call initializeData and therefore automatically uses 0 initial data.
+ * Does not write initial data and therefore automatically uses 0 initial data.
  * Provides a dt argument to the read function. A first order waveform is used.
  */
 BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirstNoInit)
@@ -55,19 +55,19 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirstNoInit)
   }
 
   double   writeData;
-  double   readData = 0; // needs to be initialized, because isReadDataAvailable returns false.
+  double   readData;
   VertexID vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
 
   int    nWindows        = 5; // perform 5 windows.
-  double maxDt           = precice.initialize();
-  double windowDt        = maxDt;
   int    timestep        = 0;
   int    timewindow      = 0;
   double windowStartTime = 0;
   int    windowStartStep = 0;
+  double time            = 0;
+  double maxDt           = precice.initialize();
+  double windowDt        = maxDt;
   double dt              = maxDt; // Timestep length desired by solver
   double currentDt       = dt;    // Timestep length used by solver
-  double time            = timestep * dt;
   double sampleDts[4]    = {0.0, dt / 4.0, dt / 2.0, 3.0 * dt / 4.0};
   int    nSamples        = 4;
   int    iterations      = 0;
@@ -80,18 +80,13 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirstNoInit)
       windowStartStep = timestep;
       precice.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
     }
-    if (iterations == 0 && timewindow == 0) {
-      BOOST_TEST(!precice.isReadDataAvailable());
-    } else {
-      BOOST_TEST(precice.isReadDataAvailable());
-    }
     for (int j = 0; j < nSamples; j++) {
       sampleDt = sampleDts[j];
       readTime = time + sampleDt;
-      if (precice.isReadDataAvailable()) {
-        precice.readScalarData(readDataID, vertexID, sampleDt, readData);
-      }
-      if (iterations == 0 && timewindow == 0) { // use zero as initial value in first iteration (no initializeData was called)
+
+      precice.readScalarData(readDataID, vertexID, sampleDt, readData);
+
+      if (iterations == 0 && timewindow == 0) { // use zero as initial value in first iteration (no data was initialized in initialize was called)
         BOOST_TEST(readData == 0);
       } else if (iterations == 0 && timewindow > 0) { // always use constant extrapolation in first iteration (from writeData of second participant at end previous window).
         BOOST_TEST(readData == readFunction(time));
@@ -108,10 +103,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirstNoInit)
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.
     time += currentDt;
     writeData = writeFunction(time);
-    if (precice.isWriteDataRequired(currentDt)) {
-      writeData = writeFunction(time);
-      precice.writeScalarData(writeDataID, vertexID, writeData);
-    }
+    precice.writeScalarData(writeDataID, vertexID, writeData);
     maxDt     = precice.advance(currentDt);
     currentDt = dt > maxDt ? maxDt : dt;
     BOOST_CHECK(currentDt == windowDt); // no subcycling.

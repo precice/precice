@@ -46,16 +46,6 @@ BOOST_AUTO_TEST_CASE(ActionTimingsExplicit)
 
   double dt = -1;
   BOOST_TEST(action::RecorderAction::records.empty());
-  dt = interface.initialize();
-  BOOST_TEST(dt == 1.0);
-  if (context.isNamed("SolverOne")) {
-    BOOST_TEST(action::RecorderAction::records.empty());
-  } else {
-    BOOST_TEST(context.isNamed("SolverTwo"));
-    BOOST_TEST(action::RecorderAction::records.size() == 2);
-    BOOST_TEST(action::RecorderAction::records.at(0).timing == action::Action::READ_MAPPING_PRIOR);
-    BOOST_TEST(action::RecorderAction::records.at(1).timing == action::Action::READ_MAPPING_POST);
-  }
   action::RecorderAction::reset();
   std::vector<double> writeData(dimensions, writeValue);
   std::vector<double> readData(dimensions, -1);
@@ -67,11 +57,13 @@ BOOST_AUTO_TEST_CASE(ActionTimingsExplicit)
     interface.markActionFulfilled(cowid);
   }
 
-  interface.initializeData();
+  dt = interface.initialize();
+  BOOST_TEST(dt == 1.0);
+
   if (context.isNamed("SolverOne")) {
     BOOST_TEST(action::RecorderAction::records.size() == 2);
-    BOOST_TEST(action::RecorderAction::records.at(0).timing == action::Action::WRITE_MAPPING_PRIOR);
-    BOOST_TEST(action::RecorderAction::records.at(1).timing == action::Action::WRITE_MAPPING_POST);
+    BOOST_TEST(action::RecorderAction::records.at(0).timing == action::Action::READ_MAPPING_PRIOR);
+    BOOST_TEST(action::RecorderAction::records.at(1).timing == action::Action::READ_MAPPING_POST);
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
     BOOST_TEST(action::RecorderAction::records.size() == 4);

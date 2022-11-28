@@ -4,22 +4,12 @@ namespace precice::testing {
 
 int WaveformFixture::numberOfStoredSamples(time::Waveform &waveform)
 {
-  return waveform._numberOfStoredSamples;
-}
-
-int WaveformFixture::maxNumberOfStoredSamples(time::Waveform &waveform)
-{
-  return waveform.maxNumberOfStoredSamples();
+  return waveform._storage.nTimes();
 }
 
 int WaveformFixture::valuesSize(time::Waveform &waveform)
 {
-  return waveform.valuesSize();
-}
-
-double WaveformFixture::getValue(time::Waveform &waveform, int valueID, int sampleID)
-{
-  return waveform._timeWindowsStorage(valueID, sampleID);
+  return waveform._storage.nDofs();
 }
 
 } // namespace precice::testing

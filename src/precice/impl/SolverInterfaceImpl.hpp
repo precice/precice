@@ -92,9 +92,6 @@ public:
   /// @copydoc SolverInterface::initialize
   double initialize();
 
-  /// @copydoc SolverInterface::initializeData
-  void initializeData();
-
   /// @copydoc SolverInterface::advance
   double advance(double computedTimestepLength);
 
@@ -112,20 +109,8 @@ public:
   /// @copydoc SolverInterface::isCouplingOngoing
   bool isCouplingOngoing() const;
 
-  /// @copydoc SolverInterface::isReadDataAvailable
-  bool isReadDataAvailable() const;
-
-  /// @copydoc SolverInterface::isWriteDataRequired
-  bool isWriteDataRequired(double computedTimestepLength) const;
-
   /// @copydoc SolverInterface::isTimeWindowComplete
   bool isTimeWindowComplete() const;
-
-  /// @copydoc SolverInterface::hasToEvaluateSurrogateModel
-  bool hasToEvaluateSurrogateModel() const;
-
-  /// @copydoc SolverInterface::hasToEvaluateFineModel
-  bool hasToEvaluateFineModel() const;
 
   ///@}
 
@@ -254,12 +239,6 @@ public:
 
   /// @copydoc SolverInterface::getDataID
   int getDataID(const std::string &dataName, MeshID meshID) const;
-
-  /// @copydoc SolverInterface::mapWriteDataFrom
-  void mapWriteDataFrom(int fromMeshID);
-
-  /// @copydoc SolverInterface::mapReadDataTo
-  void mapReadDataTo(int toMeshID);
 
   /// @copydoc SolverInterface::writeBlockVectorData
   void writeBlockVectorData(
@@ -461,11 +440,8 @@ private:
   enum struct State {
     Constructed, // Initial state of SolverInterface
     Initialized, // SolverInterface.initialize() triggers transition from State::Constructed to State::Initialized; mandatory
-    Finalized    // SolverInterface.finalize() triggers transition form State::Initialized or State::InitializedData to State::Finalized; mandatory
+    Finalized    // SolverInterface.finalize() triggers transition form State::Initialized to State::Finalized; mandatory
   };
-
-  /// SolverInterface.initializeData() triggers transition from false to true.
-  bool _hasInitializedData = false;
 
   /// Are experimental API calls allowed?
   bool _allowsExperimental = false;
@@ -540,10 +516,10 @@ private:
   void computePartitions();
 
   /// Helper for mapWrittenData and mapReadData
-  void computeMappings(const utils::ptr_vector<MappingContext> &contexts, const std::string &mappingType);
+  void computeMappings(std::vector<MappingContext> &contexts, const std::string &mappingType);
 
   /// Helper for mapWrittenData and mapReadData
-  void clearMappings(utils::ptr_vector<MappingContext> contexts);
+  void clearMappings(std::vector<MappingContext> &contexts);
 
   /// Computes, performs, and resets all suitable write mappings.
   void mapWrittenData();
@@ -556,16 +532,10 @@ private:
    *
    * @param[in] timings the timings of the action.
    * @param[in] time the current total simulation time.
-   * @param[in] timeStepSize Length of last time step computed.
-   * @param[in] computedTimeWindowPart Sum of all time steps within current time window, i.e. part that is already computed.
-   * @param[in] timeWindowSize Current time window size.
    */
   void performDataActions(
       const std::set<action::Action::Timing> &timings,
-      double                                  time,
-      double                                  timeStepSize,
-      double                                  computedTimeWindowPart,
-      double                                  timeWindowSize);
+      double                                  time);
 
   /// Resets written data, displacements and mesh neighbors to export.
   void resetWrittenData();

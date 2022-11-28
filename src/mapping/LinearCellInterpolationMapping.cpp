@@ -22,12 +22,12 @@ LinearCellInterpolationMapping::LinearCellInterpolationMapping(
     setInputRequirement(Mapping::MeshRequirement::VERTEX);
     setOutputRequirement(Mapping::MeshRequirement::FULL);
   } else {
-    PRECICE_ASSERT(constraint == SCALEDCONSISTENT, constraint);
+    PRECICE_ASSERT(isScaledConsistent(), constraint);
     setInputRequirement(Mapping::MeshRequirement::FULL);
     setOutputRequirement(Mapping::MeshRequirement::FULL);
   }
 
-  PRECICE_CHECK(constraint != SCALEDCONSISTENT, "Volume mapping doesn't support scaled-consistent mappings.");
+  PRECICE_CHECK(constraint != SCALED_CONSISTENT_SURFACE, "Volume mapping doesn't support scaled-consistent-surface mappings. Use \"scaled-consistent-volume\" instead.");
 }
 
 void LinearCellInterpolationMapping::computeMapping()

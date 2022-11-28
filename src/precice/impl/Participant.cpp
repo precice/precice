@@ -37,8 +37,6 @@ Participant::~Participant()
     delete context;
   }
   _usedMeshContexts.clear();
-  _readMappingContexts.deleteElements();
-  _writeMappingContexts.deleteElements();
 }
 
 /// Configuration interface
@@ -118,13 +116,13 @@ void Participant::addReadData(
 }
 
 void Participant::addReadMappingContext(
-    MappingContext *mappingContext)
+    const MappingContext &mappingContext)
 {
   _readMappingContexts.push_back(mappingContext);
 }
 
 void Participant::addWriteMappingContext(
-    MappingContext *mappingContext)
+    const MappingContext &mappingContext)
 {
   _writeMappingContexts.push_back(mappingContext);
 }
@@ -142,6 +140,14 @@ ReadDataContext &Participant::readDataContext(DataID dataID)
   auto it = _readDataContexts.find(dataID);
   PRECICE_CHECK(it != _readDataContexts.end(), "DataID does not exist.")
   return it->second;
+}
+
+ReadDataContext &Participant::readDataContext(const std::string &dataName)
+{
+  auto dataContext = std::find_if(readDataContexts().begin(), readDataContexts().end(), [&dataName](const auto &d) { return d.getDataName() == dataName; });
+  PRECICE_ASSERT(dataContext != readDataContexts().end(), "Did not find read data \"{}\".", dataName);
+
+  return *dataContext;
 }
 
 const WriteDataContext &Participant::writeDataContext(DataID dataID) const
@@ -350,12 +356,12 @@ std::string Participant::getMeshNameFromData(DataID dataID) const
 
 // Other queries
 
-const utils::ptr_vector<MappingContext> &Participant::readMappingContexts() const
+std::vector<MappingContext> &Participant::readMappingContexts()
 {
   return _readMappingContexts;
 }
 
-const utils::ptr_vector<MappingContext> &Participant::writeMappingContexts() const
+std::vector<MappingContext> &Participant::writeMappingContexts()
 {
   return _writeMappingContexts;
 }

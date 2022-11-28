@@ -4,7 +4,7 @@
 #include <string>
 #include <type_traits>
 
-#include "precice/SolverInterface.hpp"
+#include "precice/Tooling.hpp"
 #include "precice/Version.h"
 #include "testing/Testing.hpp"
 #include "utils/assertion.hpp"
