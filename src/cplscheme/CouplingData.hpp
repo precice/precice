@@ -3,7 +3,6 @@
 #include <Eigen/Core>
 #include <vector>
 #include "cplscheme/CouplingScheme.hpp"
-#include "cplscheme/impl/Extrapolation.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "time/Storage.hpp"
 #include "utils/assertion.hpp"
@@ -69,14 +68,8 @@ public:
   ///  True, if the data values of this CouplingData require to be initialized by this participant.
   const bool requiresInitialization;
 
-  /// initialize _extrapolation
-  void initializeExtrapolation();
-
-  /// move to next window and initialize data via extrapolation
+  /// move to next window
   void moveToNextWindow();
-
-  /// store current value in _extrapolation
-  void storeExtrapolationData();
 
   /// returns keys in _timeStepsStorage in ascending order.
   Eigen::VectorXd getStoredTimesAscending();
@@ -120,8 +113,7 @@ private:
    * Necessary when compiler creates template code for std::map::operator[].
    */
   CouplingData()
-      : requiresInitialization(false),
-        _extrapolation(CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER)
+      : requiresInitialization(false)
   {
     PRECICE_ASSERT(false);
   }
@@ -141,9 +133,6 @@ private:
 
   /// Stores time steps in the current time window
   time::Storage _timeStepsStorage;
-
-  /// Extrapolation associated with this CouplingData
-  cplscheme::impl::Extrapolation _extrapolation;
 };
 
 } // namespace cplscheme

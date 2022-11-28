@@ -73,8 +73,8 @@ BaseCouplingScheme::BaseCouplingScheme(
     PRECICE_ASSERT(_extrapolationOrder == UNDEFINED_EXTRAPOLATION_ORDER, "Extrapolation is not allowed for explicit coupling");
   } else {
     PRECICE_ASSERT(isImplicitCouplingScheme());
-    PRECICE_CHECK((_extrapolationOrder == 0) || (_extrapolationOrder == 1) || (_extrapolationOrder == 2),
-                  "Extrapolation order has to be  0, 1, or 2.");
+    PRECICE_CHECK((_extrapolationOrder == 0) || (_extrapolationOrder == 1),
+                  "Extrapolation order has to be  0 or 1.");
   }
 }
 
@@ -224,7 +224,6 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
 
   if (isImplicitCouplingScheme()) {
     if (not doesFirstStep()) {
-      storeExtrapolationData();
       moveToNextWindow();
     }
   }
@@ -318,15 +317,6 @@ void BaseCouplingScheme::advance()
       //PRECICE_ASSERT(_hasDataBeenReceived);  // actually incorrect. Data is not necessarily received, if scheme is only sending.
     }
     _computedTimeWindowPart = 0.0; // reset window
-  }
-}
-
-void BaseCouplingScheme::storeExtrapolationData()
-{
-  PRECICE_TRACE(_timeWindows);
-  for (auto &pair : getAllData()) {
-    PRECICE_DEBUG("Store data: {}", pair.first);
-    pair.second->storeExtrapolationData();
   }
 }
 
@@ -536,10 +526,6 @@ void BaseCouplingScheme::checkCompletenessRequiredActions()
 void BaseCouplingScheme::initializeStorages()
 {
   PRECICE_TRACE();
-  // Reserve storage for all data
-  for (auto &pair : getAllData()) {
-    pair.second->initializeExtrapolation();
-  }
   // Reserve storage for acceleration
   if (_acceleration) {
     _acceleration->initialize(getAccelerationData());
@@ -760,7 +746,6 @@ void BaseCouplingScheme::retreiveTimeStepAccelerationDataEndOfWindow()
 bool BaseCouplingScheme::doImplicitStep()
 {
   retreiveTimeStepAccelerationDataEndOfWindow(); // will be needed by acceleration
-  storeExtrapolationData();
 
   PRECICE_DEBUG("measure convergence of the coupling iteration");
   bool convergence = measureConvergence();

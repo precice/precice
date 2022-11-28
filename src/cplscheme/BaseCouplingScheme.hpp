@@ -362,11 +362,6 @@ protected:
   bool doImplicitStep();
 
   /**
-   * @brief stores current data in buffer for extrapolation
-   */
-  void storeExtrapolationData();
-
-  /**
    * @brief finalizes this window's data and initializes data for next window.
    */
   void moveToNextWindow();
@@ -487,9 +482,7 @@ private:
    *
    * The standard predictor is of order zero, i.e., simply the converged values
    * of the last time windows are taken as initial guess for the coupling iterations.
-   * Currently, an order 1 predictor (linear extrapolation) and order 2 predictor
-   * (see https://doi.org/10.1016/j.compstruc.2008.11.013, p.796, Algorithm line 1 )
-   * is implement besides that.
+   * Currently, an order 1 predictor (linear extrapolation) is implement besides that.
    */
   const int _extrapolationOrder;
 

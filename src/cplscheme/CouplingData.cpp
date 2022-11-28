@@ -15,9 +15,9 @@ CouplingData::CouplingData(
     int           extrapolationOrder)
     : requiresInitialization(requiresInitialization),
       _data(std::move(data)),
-      _mesh(std::move(mesh)),
-      _extrapolation(extrapolationOrder)
+      _mesh(std::move(mesh))
 {
+  // @todo store extrapolation order in Waveform?
   PRECICE_ASSERT(_data != nullptr);
   _previousIteration = Eigen::VectorXd::Zero(getSize());
   PRECICE_ASSERT(_mesh != nullptr);
@@ -115,21 +115,10 @@ std::vector<int> CouplingData::getVertexOffsets()
   return _mesh->getVertexOffsets();
 }
 
-void CouplingData::initializeExtrapolation()
-{
-  _extrapolation.initialize(getSize());
-  storeIteration();
-}
-
 void CouplingData::moveToNextWindow()
 {
-  _extrapolation.moveToNextWindow();
-  values() = _extrapolation.getInitialGuess();
-}
-
-void CouplingData::storeExtrapolationData()
-{
-  _extrapolation.store(values());
+  // @todo should take care of move to next window here.
+  // _timeStepsStorage...
 }
 
 Eigen::VectorXd CouplingData::getStoredTimesAscending()

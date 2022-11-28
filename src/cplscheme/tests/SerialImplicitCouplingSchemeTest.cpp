@@ -486,7 +486,6 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   // start first window
   cplData->values()(0) = 1.0; // data provided at end of first window
   Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
-  Fixture::storeExtrapolationData(scheme);
   BOOST_TEST(testing::equals(cplData->values()(0), 1.0));
 
   // go to second window
@@ -497,7 +496,6 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
   cplData->values()(0) = 4.0; // data provided at end of second window
   Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
-  Fixture::storeExtrapolationData(scheme);
 
   // go to third window
   Fixture::moveToNextWindow(scheme); // uses first order extrapolation (maximum allowed) at end of second window
@@ -507,7 +505,6 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 7.0));
   cplData->values()(0) = 10.0; // data provided at end of third window
   Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
-  Fixture::storeExtrapolationData(scheme);
 
   // go to fourth window
   Fixture::moveToNextWindow(scheme); // uses first order extrapolation (maximum allowed) at end of third window
@@ -561,7 +558,6 @@ BOOST_AUTO_TEST_CASE(SecondOrder)
   // start first window
   cplData->values()(0) = 1.0; // data provided at end of first window
   Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
-  Fixture::storeExtrapolationData(scheme);
 
   // go to second window
   Fixture::moveToNextWindow(scheme); // uses first order extrapolation at end of first window
@@ -571,7 +567,6 @@ BOOST_AUTO_TEST_CASE(SecondOrder)
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
   cplData->values()(0) = 4.0; // data provided at end of second window
   Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
-  Fixture::storeExtrapolationData(scheme);
 
   //go to third window
   Fixture::moveToNextWindow(scheme); // uses second order extrapolation at end of second window
@@ -581,7 +576,6 @@ BOOST_AUTO_TEST_CASE(SecondOrder)
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 8.0));
   cplData->values()(0) = 4.0; // data provided at end of third window
   Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
-  Fixture::storeExtrapolationData(scheme);
 
   // go to fourth window
   Fixture::moveToNextWindow(scheme); // uses second order extrapolation at end of third window
