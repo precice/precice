@@ -133,9 +133,9 @@ void testQuadMappingScaledConsistentVolumetric(const std::string configFile, con
     int idD     = interface.setMeshVertex(meshOneID, coordOneD.data());
     int idExtra = interface.setMeshVertex(meshOneID, coordOneExtra.data());
 
-    interface.setMeshTriangleWithEdges(meshOneID, idA, idB, idExtra);
-    interface.setMeshTriangleWithEdges(meshOneID, idA, idD, idExtra);
-    interface.setMeshTriangleWithEdges(meshOneID, idB, idC, idExtra);
+    interface.setMeshTriangle(meshOneID, idA, idB, idExtra);
+    interface.setMeshTriangle(meshOneID, idA, idD, idExtra);
+    interface.setMeshTriangle(meshOneID, idB, idC, idExtra);
 
     auto &mesh = testing::WhiteboxAccessor::impl(interface).mesh("MeshOne");
     BOOST_REQUIRE(mesh.vertices().size() == 5);
@@ -169,12 +169,12 @@ void testQuadMappingScaledConsistentVolumetric(const std::string configFile, con
     int idC = interface.setMeshVertex(meshTwoID, coordTwoC.data());
     int idD = interface.setMeshVertex(meshTwoID, coordTwoD.data());
 
-    int idAB = interface.setMeshEdge(meshTwoID, idA, idB);
-    int idBC = interface.setMeshEdge(meshTwoID, idB, idC);
-    int idAC = interface.setMeshEdge(meshTwoID, idA, idC);
+    interface.setMeshEdge(meshTwoID, idA, idB);
+    interface.setMeshEdge(meshTwoID, idB, idC);
+    interface.setMeshEdge(meshTwoID, idA, idC);
 
-    interface.setMeshTriangleWithEdges(meshTwoID, idA, idB, idC);
-    interface.setMeshTriangleWithEdges(meshTwoID, idA, idD, idC);
+    interface.setMeshTriangle(meshTwoID, idA, idB, idC);
+    interface.setMeshTriangle(meshTwoID, idA, idD, idC);
 
     // Initialize, thus receive the data and map.
     double maxDt = interface.initialize();
