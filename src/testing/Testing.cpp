@@ -2,6 +2,7 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/test/framework.hpp>
+#include <boost/test/tree/test_unit.hpp>
 #include <cstdlib>
 #include <string>
 
@@ -42,7 +43,13 @@ std::string getTestPath()
 
 std::string getTestName()
 {
-  return boost::unit_test::framework::current_test_case().p_name;
+  std::string name = boost::unit_test::framework::current_test_case().p_name;
+  // check for data tests
+  if (name[0] != '_') {
+    return name;
+  }
+  auto parent = boost::unit_test::framework::current_test_case().p_parent_id;
+  return boost::unit_test::framework::get<boost::unit_test::test_suite>(parent).p_name;
 }
 
 } // namespace precice::testing

@@ -35,14 +35,8 @@ BOOST_AUTO_TEST_CASE(ParallelSquare1To2)
     interface.setMeshVertices(meshID, vertexIDs.size(), coords.data(), vertexIDs.data());
 
     // Square ABCD in counter-clockwise order. A is the origin, B on the right
-    auto AB = interface.setMeshEdge(meshID, vertexIDs[0], vertexIDs[1]);
-    auto BC = interface.setMeshEdge(meshID, vertexIDs[1], vertexIDs[2]);
-    auto CD = interface.setMeshEdge(meshID, vertexIDs[2], vertexIDs[3]);
-    auto DA = interface.setMeshEdge(meshID, vertexIDs[3], vertexIDs[0]);
-    auto CA = interface.setMeshEdge(meshID, vertexIDs[2], vertexIDs[0]);
-
-    interface.setMeshTriangle(meshID, AB, BC, CA);
-    interface.setMeshTriangle(meshID, CA, CD, DA);
+    interface.setMeshTriangle(meshID, vertexIDs[0], vertexIDs[1], vertexIDs[2]);
+    interface.setMeshTriangle(meshID, vertexIDs[0], vertexIDs[2], vertexIDs[3]);
 
     dt = interface.initialize();
 

@@ -101,16 +101,12 @@ target_sources(testprecice
     tests/serial/mapping-nearest-neighbor-gradient/GradientTestUnidirectionalReadVector.cpp
     tests/serial/mapping-nearest-neighbor-gradient/helpers.cpp
     tests/serial/mapping-nearest-neighbor-gradient/helpers.hpp
-    tests/serial/mapping-nearest-projection/MappingNearestProjectionExplicitEdges.cpp
-    tests/serial/mapping-nearest-projection/MappingNearestProjectionImplicitEdges.cpp
+    tests/serial/mapping-nearest-projection/MappingNearestProjectionEdges.cpp
+    tests/serial/mapping-nearest-projection/QuadMappingDiagonalNearestProjectionEdgesTallKite.cpp
+    tests/serial/mapping-nearest-projection/QuadMappingDiagonalNearestProjectionEdgesWideKite.cpp
+    tests/serial/mapping-nearest-projection/QuadMappingNearestProjectionEdges.cpp
     tests/serial/mapping-nearest-projection/helpers.cpp
     tests/serial/mapping-nearest-projection/helpers.hpp
-    tests/serial/mapping-nearest-projection/testQuadMappingDiagonalNearestProjectionExplicitEdgesTallKite.cpp
-    tests/serial/mapping-nearest-projection/testQuadMappingDiagonalNearestProjectionExplicitEdgesWideKite.cpp
-    tests/serial/mapping-nearest-projection/testQuadMappingDiagonalNearestProjectionImplicitEdgesTallKite.cpp
-    tests/serial/mapping-nearest-projection/testQuadMappingDiagonalNearestProjectionImplicitEdgesWideKite.cpp
-    tests/serial/mapping-nearest-projection/testQuadMappingNearestProjectionExplicitEdges.cpp
-    tests/serial/mapping-nearest-projection/testQuadMappingNearestProjectionImplicitEdges.cpp
     tests/serial/mapping-rbf-gaussian/GaussianShapeParameter.cpp
     tests/serial/mapping-rbf-gaussian/GaussianSupportRadius.cpp
     tests/serial/mapping-rbf-gaussian/helpers.cpp

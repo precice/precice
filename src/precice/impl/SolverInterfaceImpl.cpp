@@ -739,7 +739,7 @@ void SolverInterfaceImpl::getMeshVertexIDsFromPositions(
   }
 }
 
-int SolverInterfaceImpl::setMeshEdge(
+void SolverInterfaceImpl::setMeshEdge(
     MeshID meshID,
     int    firstVertexID,
     int    secondVertexID)
@@ -754,42 +754,21 @@ int SolverInterfaceImpl::setMeshEdge(
     PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), errorInvalidVertexID(secondVertexID));
     mesh::Vertex &v0 = mesh->vertices()[firstVertexID];
     mesh::Vertex &v1 = mesh->vertices()[secondVertexID];
-    return mesh->createEdge(v0, v1).getID();
+    mesh->createEdge(v0, v1);
   }
-  return -1;
+}
+
+void SolverInterfaceImpl::setMeshEdges(
+    int        meshID,
+    int        size,
+    const int *vertices)
+{
+  for (int i = 0; i < size; ++i) {
+    setMeshEdge(meshID, vertices[2 * i], vertices[2 * i + 1]);
+  }
 }
 
 void SolverInterfaceImpl::setMeshTriangle(
-    MeshID meshID,
-    int    firstEdgeID,
-    int    secondEdgeID,
-    int    thirdEdgeID)
-{
-  PRECICE_TRACE(meshID, firstEdgeID,
-                secondEdgeID, thirdEdgeID);
-
-  PRECICE_REQUIRE_MESH_MODIFY(meshID);
-  MeshContext &context = _accessor->usedMeshContext(meshID);
-  if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
-    mesh::PtrMesh &mesh = context.mesh;
-    using impl::errorInvalidEdgeID;
-    PRECICE_CHECK(mesh->isValidEdgeID(firstEdgeID), errorInvalidEdgeID(firstEdgeID));
-    PRECICE_CHECK(mesh->isValidEdgeID(secondEdgeID), errorInvalidEdgeID(secondEdgeID));
-    PRECICE_CHECK(mesh->isValidEdgeID(thirdEdgeID), errorInvalidEdgeID(thirdEdgeID));
-    PRECICE_CHECK(utils::unique_elements(utils::make_array(firstEdgeID, secondEdgeID, thirdEdgeID)),
-                  "setMeshTriangle() was called with repeated Edge IDs ({}, {}, {}).",
-                  firstEdgeID, secondEdgeID, thirdEdgeID);
-    mesh::Edge &e0 = mesh->edges()[firstEdgeID];
-    mesh::Edge &e1 = mesh->edges()[secondEdgeID];
-    mesh::Edge &e2 = mesh->edges()[thirdEdgeID];
-    PRECICE_CHECK(e0.connectedTo(e1) && e1.connectedTo(e2) && e2.connectedTo(e0),
-                  "setMeshTriangle() was called with Edge IDs ({}, {}, {}), which identify unconnected Edges.",
-                  firstEdgeID, secondEdgeID, thirdEdgeID);
-    mesh->createTriangle(e0, e1, e2);
-  }
-}
-
-void SolverInterfaceImpl::setMeshTriangleWithEdges(
     MeshID meshID,
     int    firstVertexID,
     int    secondVertexID,
@@ -807,7 +786,7 @@ void SolverInterfaceImpl::setMeshTriangleWithEdges(
     PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), errorInvalidVertexID(secondVertexID));
     PRECICE_CHECK(mesh->isValidVertexID(thirdVertexID), errorInvalidVertexID(thirdVertexID));
     PRECICE_CHECK(utils::unique_elements(utils::make_array(firstVertexID, secondVertexID, thirdVertexID)),
-                  "setMeshTriangleWithEdges() was called with repeated Vertex IDs ({}, {}, {}).",
+                  "setMeshTriangle() was called with repeated Vertex IDs ({}, {}, {}).",
                   firstVertexID, secondVertexID, thirdVertexID);
     mesh::Vertex *vertices[3];
     vertices[0] = &mesh->vertices()[firstVertexID];
@@ -815,78 +794,28 @@ void SolverInterfaceImpl::setMeshTriangleWithEdges(
     vertices[2] = &mesh->vertices()[thirdVertexID];
     PRECICE_CHECK(utils::unique_elements(utils::make_array(vertices[0]->getCoords(),
                                                            vertices[1]->getCoords(), vertices[2]->getCoords())),
-                  "setMeshTriangleWithEdges() was called with vertices located at identical coordinates (IDs: {}, {}, {}).",
+                  "setMeshTriangle() was called with vertices located at identical coordinates (IDs: {}, {}, {}).",
                   firstVertexID, secondVertexID, thirdVertexID);
     mesh::Edge *edges[3];
-    edges[0] = &mesh->createUniqueEdge(*vertices[0], *vertices[1]);
-    edges[1] = &mesh->createUniqueEdge(*vertices[1], *vertices[2]);
-    edges[2] = &mesh->createUniqueEdge(*vertices[2], *vertices[0]);
+    edges[0] = &mesh->createEdge(*vertices[0], *vertices[1]);
+    edges[1] = &mesh->createEdge(*vertices[1], *vertices[2]);
+    edges[2] = &mesh->createEdge(*vertices[2], *vertices[0]);
 
     mesh->createTriangle(*edges[0], *edges[1], *edges[2]);
   }
 }
 
-void SolverInterfaceImpl::setMeshQuad(
-    MeshID meshID,
-    int    firstEdgeID,
-    int    secondEdgeID,
-    int    thirdEdgeID,
-    int    fourthEdgeID)
+void SolverInterfaceImpl::setMeshTriangles(
+    int        meshID,
+    int        size,
+    const int *vertices)
 {
-  PRECICE_TRACE(meshID, firstEdgeID, secondEdgeID, thirdEdgeID,
-                fourthEdgeID);
-  PRECICE_CHECK(_dimensions == 3, "setMeshQuad is only possible for 3D cases. "
-                                  "Please set the dimension to 3 in the preCICE configuration file.");
-  PRECICE_REQUIRE_MESH_MODIFY(meshID);
-  MeshContext &context = _accessor->usedMeshContext(meshID);
-  if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
-    mesh::PtrMesh &mesh = context.mesh;
-    using impl::errorInvalidEdgeID;
-    PRECICE_CHECK(mesh->isValidEdgeID(firstEdgeID), errorInvalidEdgeID(firstEdgeID));
-    PRECICE_CHECK(mesh->isValidEdgeID(secondEdgeID), errorInvalidEdgeID(secondEdgeID));
-    PRECICE_CHECK(mesh->isValidEdgeID(thirdEdgeID), errorInvalidEdgeID(thirdEdgeID));
-    PRECICE_CHECK(mesh->isValidEdgeID(fourthEdgeID), errorInvalidEdgeID(fourthEdgeID));
-
-    PRECICE_CHECK(utils::unique_elements(utils::make_array(firstEdgeID, secondEdgeID, thirdEdgeID, fourthEdgeID)),
-                  "The four edge ID's are not unique. Please check that the edges that form the quad are correct.");
-
-    auto chain = mesh::asChain(utils::make_array(
-        &mesh->edges()[firstEdgeID], &mesh->edges()[secondEdgeID],
-        &mesh->edges()[thirdEdgeID], &mesh->edges()[fourthEdgeID]));
-    PRECICE_CHECK(chain.connected, "The four edges are not connect. Please check that the edges that form the quad are correct.");
-
-    auto coords = mesh::coordsFor(chain.vertices);
-    PRECICE_CHECK(utils::unique_elements(coords),
-                  "The four vertices that form the quad are not unique. "
-                  "The resulting shape may be a point, line or triangle."
-                  "Please check that the adapter sends the four unique vertices that form the quad, or that the mesh on the interface "
-                  "is composed of planar quads.");
-
-    auto convexity = math::geometry::isConvexQuad(coords);
-    PRECICE_CHECK(convexity.convex,
-                  "The given quad is not convex. "
-                  "Please check that the adapter send the four correct vertices or that the interface is composed of planar quads.");
-
-    // Use the shortest diagonal to split the quad into 2 triangles.
-    // The diagonal to be used with edges (1, 2) and (0, 3) of the chain
-    double distance1 = (coords[0] - coords[2]).norm();
-    // The diagonal to be used with edges (0, 1) and (2, 3) of the chain
-    double distance2 = (coords[1] - coords[3]).norm();
-
-    // The new edge, e[4], is the shortest diagonal of the quad
-    if (distance1 <= distance2) {
-      auto &diag = mesh->createUniqueEdge(*chain.vertices[0], *chain.vertices[2]);
-      mesh->createTriangle(*chain.edges[3], *chain.edges[0], diag);
-      mesh->createTriangle(*chain.edges[1], *chain.edges[2], diag);
-    } else {
-      auto &diag = mesh->createUniqueEdge(*chain.vertices[1], *chain.vertices[3]);
-      mesh->createTriangle(*chain.edges[0], *chain.edges[1], diag);
-      mesh->createTriangle(*chain.edges[2], *chain.edges[3], diag);
-    }
+  for (int i = 0; i < size; ++i) {
+    setMeshTriangle(meshID, vertices[3 * i], vertices[3 * i + 1], vertices[3 * i + 2]);
   }
 }
 
-void SolverInterfaceImpl::setMeshQuadWithEdges(
+void SolverInterfaceImpl::setMeshQuad(
     MeshID meshID,
     int    firstVertexID,
     int    secondVertexID,
@@ -895,7 +824,7 @@ void SolverInterfaceImpl::setMeshQuadWithEdges(
 {
   PRECICE_TRACE(meshID, firstVertexID,
                 secondVertexID, thirdVertexID, fourthVertexID);
-  PRECICE_CHECK(_dimensions == 3, "setMeshQuadWithEdges is only possible for 3D cases."
+  PRECICE_CHECK(_dimensions == 3, "setMeshQuad is only possible for 3D cases."
                                   " Please set the dimension to 3 in the preCICE configuration file.");
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->usedMeshContext(meshID);
@@ -925,10 +854,10 @@ void SolverInterfaceImpl::setMeshQuadWithEdges(
 
     // Vertices are now in the order: V0-V1-V2-V3-V0.
     // The order now identifies all outer edges of the quad.
-    auto &edge0 = mesh.createUniqueEdge(*reordered[0], *reordered[1]);
-    auto &edge1 = mesh.createUniqueEdge(*reordered[1], *reordered[2]);
-    auto &edge2 = mesh.createUniqueEdge(*reordered[2], *reordered[3]);
-    auto &edge3 = mesh.createUniqueEdge(*reordered[3], *reordered[0]);
+    auto &edge0 = mesh.createEdge(*reordered[0], *reordered[1]);
+    auto &edge1 = mesh.createEdge(*reordered[1], *reordered[2]);
+    auto &edge2 = mesh.createEdge(*reordered[2], *reordered[3]);
+    auto &edge3 = mesh.createEdge(*reordered[3], *reordered[0]);
 
     // Use the shortest diagonal to split the quad into 2 triangles.
     // Vertices are now in V0-V1-V2-V3-V0 order. The new edge, e[4] is either 0-2 or 1-3
@@ -937,14 +866,24 @@ void SolverInterfaceImpl::setMeshQuadWithEdges(
 
     // The new edge, e[4], is the shortest diagonal of the quad
     if (distance1 <= distance2) {
-      auto &diag = mesh.createUniqueEdge(*reordered[0], *reordered[2]);
+      auto &diag = mesh.createEdge(*reordered[0], *reordered[2]);
       mesh.createTriangle(edge0, edge1, diag);
       mesh.createTriangle(edge2, edge3, diag);
     } else {
-      auto &diag = mesh.createUniqueEdge(*reordered[1], *reordered[3]);
+      auto &diag = mesh.createEdge(*reordered[1], *reordered[3]);
       mesh.createTriangle(edge3, edge0, diag);
       mesh.createTriangle(edge1, edge2, diag);
     }
+  }
+}
+
+void SolverInterfaceImpl::setMeshQuads(
+    int        meshID,
+    int        size,
+    const int *vertices)
+{
+  for (int i = 0; i < size; ++i) {
+    setMeshQuad(meshID, vertices[4 * i], vertices[4 * i + 1], vertices[4 * i + 2], vertices[4 * i + 3]);
   }
 }
 
@@ -987,6 +926,16 @@ void SolverInterfaceImpl::setMeshTetrahedron(
     mesh->createTriangle(BC, CD, BD);
 
     mesh->createTetrahedron(A, B, C, D);
+  }
+}
+
+void SolverInterfaceImpl::setMeshTetrahedra(
+    int        meshID,
+    int        size,
+    const int *vertices)
+{
+  for (int i = 0; i < size; ++i) {
+    setMeshTetrahedron(meshID, vertices[4 * i], vertices[4 * i + 1], vertices[4 * i + 2], vertices[4 * i + 3]);
   }
 }
 
