@@ -154,7 +154,7 @@ void QRFactorization::applyFilter(double singularityLimit, std::vector<int> &del
     } else {
       for (size_t i = index; i > 1; i--) {
         Eigen::VectorXd v    = V.col(i);
-        double          rho0 = utils::MasterSlave::l2norm(v);
+        double          rho0 = utils::IntraComm::l2norm(v);
         if (std::fabs(_R(i, i)) < rho0 * singularityLimit) {
           resetFilter(singularityLimit, delIndices, V);
           break;
