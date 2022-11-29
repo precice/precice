@@ -62,6 +62,7 @@ AccelerationConfiguration::AccelerationConfiguration(
       VALUE_QR1FILTER("QR1"),
       VALUE_QR1_ABSFILTER("QR1-absolute"),
       VALUE_QR2FILTER("QR2"),
+      VALUE_QR3FILTER("QR3"),
       VALUE_CONSTANT_PRECONDITIONER("constant"),
       VALUE_VALUE_PRECONDITIONER("value"),
       VALUE_RESIDUAL_PRECONDITIONER("residual"),
@@ -197,6 +198,8 @@ void AccelerationConfiguration::xmlTagCallback(
       _config.filter = Acceleration::QR1FILTER_ABS;
     } else if (f == VALUE_QR2FILTER) {
       _config.filter = Acceleration::QR2FILTER;
+    } else if (f == VALUE_QR3FILTER) {
+      _config.filter = Acceleration::QR3FILTER;
     } else {
       PRECICE_ASSERT(false);
     }
@@ -366,7 +369,8 @@ void AccelerationConfiguration::addCommonIQNSubtags(xml::XMLTag &tag)
   auto attrFilterName = XMLAttribute<std::string>(ATTR_TYPE)
                             .setOptions({VALUE_QR1FILTER,
                                          VALUE_QR1_ABSFILTER,
-                                         VALUE_QR2FILTER})
+                                         VALUE_QR2FILTER,
+                                         VALUE_QR3FILTER})
                             .setDocumentation("Type of the filter.");
   tagFilter.addAttribute(attrFilterName);
   tag.addSubtag(tagFilter);
