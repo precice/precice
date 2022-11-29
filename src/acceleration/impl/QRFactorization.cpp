@@ -142,22 +142,51 @@ void QRFactorization::applyFilter(double singularityLimit, std::vector<int> &del
       }
     }
   } else if (_filter == Acceleration::QR2FILTER) {
-    _Q.resize(0, 0);
-    _R.resize(0, 0);
-    _cols = 0;
-    _rows = V.rows();
-    // starting with the most recent input/output information, i.e., the latest column
-    // which is at position 0 in _matrixV (latest information is never filtered out!)
-    for (int k = 0; k < V.cols(); k++) {
-      Eigen::VectorXd v = V.col(k);
-      // this is the same as pushBack(v) as _cols grows within the insertion process
-      bool inserted = insertColumn(_cols, v, singularityLimit);
-      if (!inserted) {
-        delIndices.push_back(k);
+
+    resetFilter(singularityLimit, delIndices, V);
+
+  } else if (_filter == Acceleration::QR3FILTER) {
+    int index = cols() - 1;
+    // Iterate from the last column to the 2nd column from the left
+    if (computeQR2 == true) {
+      PRECICE_DEBUG("  Pre-scaling weights were reset. Reverting to QR2 and rebuilding QR.");
+      resetFilter(singularityLimit, delIndices, V);
+    } else {
+      for (size_t i = index; i > 1; i--) {
+        Eigen::VectorXd v    = V.col(i);
+        double          rho0 = utils::MasterSlave::l2norm(v);
+        if (std::fabs(_R(i, i)) < rho0 * singularityLimit) {
+          resetFilter(singularityLimit, delIndices, V);
+          break;
+        }
       }
     }
+    computeQR2Filter = false;
+    PRECICE_DEBUG("Deleting {} columns in QR3 Filter", delIndices.size());
   }
   std::sort(delIndices.begin(), delIndices.end());
+}
+
+/**
+ * Recomputes QR factorization using the QR2 filter
+ * Returns Q and R.
+ */
+void QRFactorization::resetFilter(double singularityLimit, std::vector<int> &delIndices, Eigen::MatrixXd &V)
+{
+  _Q.resize(0, 0);
+  _R.resize(0, 0);
+  _cols = 0;
+  _rows = V.rows();
+  // starting with the most recent input/output information, i.e., the latest column
+  // which is at position 0 in _matrixV (latest information is never filtered out!)
+  for (int k = 0; k < V.cols(); k++) {
+    Eigen::VectorXd v = V.col(k);
+    // this is the same as pushBack(v) as _cols grows within the insertion process
+    bool inserted = insertColumn(_cols, v, singularityLimit);
+    if (!inserted) {
+      delIndices.push_back(k);
+    }
+  }
 }
 
 /**
