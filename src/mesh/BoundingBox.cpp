@@ -40,17 +40,25 @@ BoundingBox::BoundingBox(std::vector<double> bounds)
 {
   PRECICE_ASSERT((int) bounds.size() == 4 || (int) bounds.size() == 6, "Dimension of a bounding box can only be 2 or 3.", bounds.size() / 2);
   _dimensions = _bounds.size() / 2;
-  _boundMin   = Eigen::Map<Eigen::VectorXd>(&bounds, _dimensions);
-  _boundMax   = Eigen::Map<Eigen::VectorXd>(&bounds + _dimensions, _dimensions);
+  _boundMin   = Eigen::Map<Eigen::VectorXd>(bounds.data(), _dimensions);
+  _boundMax   = Eigen::Map<Eigen::VectorXd>(bounds.data() + _dimensions, _dimensions);
 }
 
+// TODO: use more proper way to assign _boundMin & _boundMax
 BoundingBox::BoundingBox(int dimension)
     : _dimensions(dimension)
 {
   PRECICE_ASSERT(dimension == 2 || dimension == 3, "Dimension of a bounding box can only be 2 or 3.", dimension);
-  for (int i = 0; i < _dimensions; ++i) {
-    _boundMin << std::numeric_limits<double>::max();
-    _boundMax << std::numeric_limits<double>::lowest();
+  double min = std::numeric_limits<double>::lowest();
+  double max = std::numeric_limits<double>::max();
+
+  if (dimension == 2) {
+    _boundMin << min, min;
+    _boundMax << max, max;
+  }
+  else {
+    _boundMin << min, min, min;
+    _boundMax << max, max, max;
   }
 }
 
