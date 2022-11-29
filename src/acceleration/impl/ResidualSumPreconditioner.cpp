@@ -23,7 +23,6 @@ void ResidualSumPreconditioner::initialize(std::vector<size_t> &svs)
 
   _residualSum.resize(_subVectorSizes.size(), 0.0);
   _previousResidualSum.resize(_subVectorSizes.size(), 0.0);
-
 }
 
 void ResidualSumPreconditioner::_update_(bool                   timeWindowComplete,
@@ -35,7 +34,7 @@ void ResidualSumPreconditioner::_update_(bool                   timeWindowComple
 
     double sum = 0.0;
 
-    int offset = 0;
+    int  offset       = 0;
     bool resetWeights = false; // True if pre-scaling weights must be reset
     for (size_t k = 0; k < _subVectorSizes.size(); k++) {
       Eigen::VectorXd part = Eigen::VectorXd::Zero(_subVectorSizes[k]);

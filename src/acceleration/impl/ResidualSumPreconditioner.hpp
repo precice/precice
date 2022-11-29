@@ -37,8 +37,7 @@ private:
 
   std::vector<double> _residualSum;
   std::vector<double> _previousResidualSum;
-  int timeWindowPreconditioner = 0;
-  
+  int                 timeWindowPreconditioner = 0;
 };
 
 } // namespace impl
