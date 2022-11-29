@@ -36,6 +36,9 @@ private:
   logging::Logger _log{"acceleration::ResidualSumPreconditioner"};
 
   std::vector<double> _residualSum;
+  std::vector<double> _previousResidualSum;
+  int timeWindowPreconditioner = 0;
+  
 };
 
 } // namespace impl

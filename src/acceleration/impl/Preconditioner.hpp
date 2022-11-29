@@ -186,6 +186,18 @@ public:
     return _requireNewQR;
   }
 
+  /// returns true if pre-scaling weights were updated in the current iteration
+  bool areWeightsUpdated()
+  {
+    return _areWeightsUpdated;
+  }
+
+  /// to tell that the QR decomposition has been reset due to updated pre-scaling weights
+  void updatedWeightsReset()
+  {
+    _areWeightsUpdated = false;
+  }
+
   /// to tell the preconditioner that QR-decomposition has been recomputed
   void newQRfulfilled()
   {
@@ -222,6 +234,9 @@ protected:
 
   /// True if a QR decomposition from scratch is necessary
   bool _requireNewQR = false;
+
+  /// True if pre-scaling weights were updated in the iteration, and a QR decomposition is required
+  bool _areWeightsUpdated = false;
 
   /// True if _nbNonConstTimeWindows >= _maxNonConstTimeWindows, i.e., preconditioner is not updated any more.
   bool _frozen = false;
