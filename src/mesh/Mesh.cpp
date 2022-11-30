@@ -1,7 +1,6 @@
 #include <Eigen/Core>
 #include <algorithm>
 #include <array>
-#include <bits/utility.h>
 #include <boost/container/flat_map.hpp>
 #include <functional>
 #include <memory>
