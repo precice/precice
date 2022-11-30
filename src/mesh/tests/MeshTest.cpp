@@ -1,12 +1,11 @@
 #include <Eigen/Core>
-#include <Eigen/src/Core/Matrix.h>
 #include <algorithm>
-#include <boost/test/tools/old/interface.hpp>
 #include <deque>
 #include <iosfwd>
 #include <memory>
 #include <string>
 #include <vector>
+
 #include "logging/Logger.hpp"
 #include "mesh/BoundingBox.hpp"
 #include "mesh/Data.hpp"
