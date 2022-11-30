@@ -10,13 +10,11 @@
 namespace precice::mesh {
 
 Tetrahedron::Tetrahedron(
-    Vertex &      vertexOne,
-    Vertex &      vertexTwo,
-    Vertex &      vertexThree,
-    Vertex &      vertexFour,
-    TetrahedronID id)
-    : _vertices({&vertexOne, &vertexTwo, &vertexThree, &vertexFour}),
-      _id(id)
+    Vertex &vertexOne,
+    Vertex &vertexTwo,
+    Vertex &vertexThree,
+    Vertex &vertexFour)
+    : _vertices({&vertexOne, &vertexTwo, &vertexThree, &vertexFour})
 {
   PRECICE_ASSERT(vertexOne.getDimensions() == vertexTwo.getDimensions(),
                  vertexOne.getDimensions(), vertexTwo.getDimensions());
@@ -34,6 +32,9 @@ Tetrahedron::Tetrahedron(
           (&vertexTwo != &vertexFour) &&
           (&vertexThree != &vertexFour),
       "Tetrahedron vertices are not unique!");
+
+  std::sort(_vertices.begin(), _vertices.end(),
+            [](const Vertex *lhs, const Vertex *rhs) { return *lhs < *rhs; });
 }
 
 double Tetrahedron::getVolume() const

@@ -127,16 +127,6 @@ public:
       Vertex &vertexTwo);
 
   /**
-   * @brief Creates and initializes an Edge object or returns an already existing one.
-   *
-   * @param[in] vertexOne Reference to first Vertex defining the Edge.
-   * @param[in] vertexTwo Reference to second Vertex defining the Edge.
-   */
-  Edge &createUniqueEdge(
-      Vertex &vertexOne,
-      Vertex &vertexTwo);
-
-  /**
    * @brief Creates and initializes a Triangle object.
    *
    * @param[in] edgeOne Reference to first edge defining the Triangle.
@@ -202,9 +192,6 @@ public:
 
   /// Returns true if the given vertexID is valid
   bool isValidVertexID(VertexID vertexID) const;
-
-  /// Returns true if the given edgeID is valid
-  bool isValidEdgeID(EdgeID edgeID) const;
 
   /// Allocates memory for the vertex data values and corresponding gradient values.
   void allocateDataValues();

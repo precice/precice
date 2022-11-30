@@ -19,13 +19,16 @@ namespace mesh {
 /// Tetrahedron of a mesh, defined by 4 vertices
 class Tetrahedron {
 public:
-  /// Constructor, the order of vertices doesn't matter.
+  /** Constructor based on 4 vertices
+   *
+   * The vertices will be sorted by Vertex::getID().
+   * This allows to weakly order tetrahedra.
+   */
   Tetrahedron(
-      Vertex &      vertexOne,
-      Vertex &      vertexTwo,
-      Vertex &      vertexThree,
-      Vertex &      vertexFour,
-      TetrahedronID id);
+      Vertex &vertexOne,
+      Vertex &vertexTwo,
+      Vertex &vertexThree,
+      Vertex &vertexFour);
 
   /// Returns dimensionalty of space the Tetrahedron is embedded in.
   int getDimensions() const;
@@ -39,9 +42,6 @@ public:
    * @brief Returns const tetrahedron vertex with index 0, 1, 2 or 3.
    */
   const Vertex &vertex(int i) const;
-
-  /// Returns a among Tetrahedrons globally unique ID.
-  TetrahedronID getID() const;
 
   /// Returns the unsigned volume of the tetrahedron
   double getVolume() const;
@@ -65,9 +65,6 @@ public:
 private:
   /// Vertices defining the Tetrahedron.
   std::array<Vertex *, 4> _vertices;
-
-  /// ID of the Tetrahedron.
-  TetrahedronID _id;
 };
 
 // --------------------------------------------------------- HEADER DEFINITIONS
@@ -82,11 +79,6 @@ inline const Vertex &Tetrahedron::vertex(int i) const
 {
   PRECICE_ASSERT((i >= 0) && (i < 4), i);
   return *_vertices[i];
-}
-
-inline TetrahedronID Tetrahedron::getID() const
-{
-  return _id;
 }
 
 std::ostream &operator<<(std::ostream &os, const Tetrahedron &t);

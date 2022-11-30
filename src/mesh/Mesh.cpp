@@ -93,27 +93,8 @@ Edge &Mesh::createEdge(
     Vertex &vertexOne,
     Vertex &vertexTwo)
 {
-  auto nextID = _edges.size();
-  _edges.emplace_back(vertexOne, vertexTwo, nextID);
+  _edges.emplace_back(vertexOne, vertexTwo);
   return _edges.back();
-}
-
-Edge &Mesh::createUniqueEdge(
-    Vertex &vertexOne,
-    Vertex &vertexTwo)
-{
-  const std::array<VertexID, 2> vids{vertexOne.getID(), vertexTwo.getID()};
-  const auto                    eend = edges().end();
-  auto                          pos  = std::find_if(edges().begin(), eend,
-                          [&vids](const Edge &e) -> bool {
-                            const std::array<VertexID, 2> eids{e.vertex(0).getID(), e.vertex(1).getID()};
-                            return std::is_permutation(vids.begin(), vids.end(), eids.begin());
-                          });
-  if (pos != eend) {
-    return *pos;
-  } else {
-    return createEdge(vertexOne, vertexTwo);
-  }
 }
 
 Triangle &Mesh::createTriangle(
@@ -125,8 +106,7 @@ Triangle &Mesh::createTriangle(
       edgeOne.connectedTo(edgeTwo) &&
       edgeTwo.connectedTo(edgeThree) &&
       edgeThree.connectedTo(edgeOne));
-  auto nextID = _triangles.size();
-  _triangles.emplace_back(edgeOne, edgeTwo, edgeThree, nextID);
+  _triangles.emplace_back(edgeOne, edgeTwo, edgeThree);
   return _triangles.back();
 }
 
@@ -135,8 +115,7 @@ Triangle &Mesh::createTriangle(
     Vertex &vertexTwo,
     Vertex &vertexThree)
 {
-  auto nextID = _triangles.size();
-  _triangles.emplace_back(vertexOne, vertexTwo, vertexThree, nextID);
+  _triangles.emplace_back(vertexOne, vertexTwo, vertexThree);
   return _triangles.back();
 }
 
@@ -146,9 +125,7 @@ Tetrahedron &Mesh::createTetrahedron(
     Vertex &vertexThree,
     Vertex &vertexFour)
 {
-
-  auto nextID = _tetrahedra.size();
-  _tetrahedra.emplace_back(vertexOne, vertexTwo, vertexThree, vertexFour, nextID);
+  _tetrahedra.emplace_back(vertexOne, vertexTwo, vertexThree, vertexFour);
   return _tetrahedra.back();
 }
 
@@ -222,11 +199,6 @@ MeshID Mesh::getID() const
 bool Mesh::isValidVertexID(VertexID vertexID) const
 {
   return (0 <= vertexID) && (static_cast<size_t>(vertexID) < vertices().size());
-}
-
-bool Mesh::isValidEdgeID(EdgeID edgeID) const
-{
-  return (0 <= edgeID) && (static_cast<size_t>(edgeID) < edges().size());
 }
 
 void Mesh::allocateDataValues()

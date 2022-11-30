@@ -148,30 +148,14 @@ BOOST_AUTO_TEST_CASE(Demonstration)
     Edge &e2 = mesh.createEdge(v2, v0);
 
     BOOST_TEST(mesh.hasEdges());
+    BOOST_TEST(mesh.edges().size() == 3);
     BOOST_TEST(!mesh.hasTriangles());
-
-    // Validate mesh edges state
-    index = 0;
-    for (Edge &edge : mesh.edges()) {
-      if (index == 0) {
-        BOOST_TEST(edge.getID() == e0.getID());
-      } else if (index == 1) {
-        BOOST_TEST(edge.getID() == e1.getID());
-      } else if (index == 2) {
-        BOOST_TEST(edge.getID() == e2.getID());
-      } else {
-        BOOST_TEST(false);
-      }
-      index++;
-    }
 
     Triangle *t = nullptr;
     if (dim == 3) {
       // Create triangle
       t = &mesh.createTriangle(e0, e1, e2);
 
-      // Validate mesh triangle
-      BOOST_TEST((*mesh.triangles().begin()).getID() == t->getID());
       BOOST_TEST(mesh.hasTriangles());
     } else {
       BOOST_TEST(!mesh.hasTriangles());
@@ -260,40 +244,10 @@ BOOST_AUTO_TEST_CASE(MeshWKTPrint)
       "Mesh \"WKTMesh\", dimensionality = 3:\n"
       "GEOMETRYCOLLECTION(\n"
       "POINT (0 0 0), POINT (1 0 0), POINT (0 0 1), POINT (1 0 1),\n"
-      "LINESTRING (0 0 0, 1 0 0), LINESTRING (1 0 0, 0 0 1), LINESTRING (0 0 1, 0 0 0), LINESTRING (1 0 0, 1 0 1), LINESTRING (1 0 1, 0 0 1),\n"
+      "LINESTRING (0 0 0, 1 0 0), LINESTRING (1 0 0, 0 0 1), LINESTRING (0 0 0, 0 0 1), LINESTRING (1 0 0, 1 0 1), LINESTRING (0 0 1, 1 0 1),\n"
       "POLYGON ((0 0 0, 1 0 0, 0 0 1, 0 0 0))\n"
       ")");
   BOOST_TEST(reference == sstream.str());
-}
-
-BOOST_AUTO_TEST_CASE(CreateUniqueEdge)
-{
-  PRECICE_TEST(1_rank);
-  int             dim = 3;
-  Mesh            mesh1("Mesh1", dim, testing::nextMeshID());
-  auto &          mesh = mesh1;
-  Eigen::VectorXd coords0(dim);
-  Eigen::VectorXd coords1(dim);
-  Eigen::VectorXd coords2(dim);
-  coords0 << 0.0, 0.0, 0.0;
-  coords1 << 1.0, 0.0, 0.0;
-  coords2 << 0.0, 0.0, 1.0;
-  Vertex &v0 = mesh.createVertex(coords0);
-  Vertex &v1 = mesh.createVertex(coords1);
-  Vertex &v2 = mesh.createVertex(coords2);
-
-  Edge &e01a = mesh.createEdge(v0, v1); // LINESTRING (0 0 0, 1 0 0)
-  mesh.createEdge(v0, v1);              // LINESTRING (0 0 0, 1 0 0)
-  BOOST_TEST(mesh.edges().size() == 2);
-
-  Edge &e01c = mesh.createUniqueEdge(v0, v1); // LINESTRING (0 0 0, 1 0 0)
-  BOOST_TEST(mesh.edges().size() == 2);
-  BOOST_TEST(e01a == e01c);
-
-  mesh.createUniqueEdge(v1, v2); // LINESTRING (0 0 0, 1 0 0)
-  BOOST_TEST(mesh.edges().size() == 3);
-  mesh.createUniqueEdge(v1, v2); // LINESTRING (0 0 0, 1 0 0)
-  BOOST_TEST(mesh.edges().size() == 3);
 }
 
 BOOST_AUTO_TEST_CASE(ResizeDataGrow)
@@ -439,7 +393,7 @@ BOOST_AUTO_TEST_CASE(EdgeLength)
   coords1 << 0.0, 1.0, 0.0;
   Vertex v0{coords0, 0};
   Vertex v1{coords1, 1};
-  Edge   e(v0, v1, 0);
+  Edge   e(v0, v1);
   BOOST_TEST(edgeLength(e) == std::sqrt(2));
 }
 
