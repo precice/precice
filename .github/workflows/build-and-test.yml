@@ -107,7 +107,8 @@ jobs:
         working-directory: build
         env:
           CXX: ${{ matrix.CXX }}
-          CXXFLAGS: "-Wall -Wextra -Wno-unused-parameter -fsanitize=undefined -fsanitize=address ${{ matrix.COVFLAGS }}"
+          CXXFLAGS: "-Wall -Wextra -Wno-unused-parameter -fsanitize=undefined,address ${{ matrix.COVFLAGS }}"
+          LDFLAGS: "-lubsan" # required for running the C solverdummy
           MPI: ${{ contains(matrix.CONFIG, 'MPI') }}
           PETSc: ${{ contains(matrix.CONFIG, 'PETSc') }}
         run: |
