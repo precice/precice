@@ -12,8 +12,8 @@
     </mesh>
 
     <participant name="Ateles">
-      <use-mesh name="FASTEST_Mesh" from="FASTEST" />
-      <use-mesh name="Ateles_Mesh" provide="yes" />
+      <receive-mesh name="FASTEST_Mesh" from="FASTEST" />
+      <provide-mesh name="Ateles_Mesh" />
       <mapping:nearest-neighbor
         direction="read"
         from="FASTEST_Mesh"
@@ -23,7 +23,7 @@
     </participant>
 
     <participant name="FASTEST">
-      <use-mesh name="FASTEST_Mesh" provide="yes" />
+      <provide-mesh name="FASTEST_Mesh" />
       <write-data name="Pressure" mesh="FASTEST_Mesh" />
     </participant>
 

@@ -32,10 +32,10 @@ MeshConfiguration::MeshConfiguration(
   using namespace xml;
   std::string doc;
   XMLTag      tag(*this, TAG, xml::XMLTag::OCCUR_ONCE_OR_MORE);
-  doc = "Surface mesh consisting of vertices and (optional) of edges and ";
-  doc += "triangles (only in 3D). The vertices of a mesh can carry data, ";
-  doc += "configured by tag <use-data>. The mesh coordinates have to be ";
-  doc += "defined by a participant (see tag <use-mesh>).";
+  doc = "Surface mesh consisting of vertices and optional connectivity information. "
+        "The vertices of a mesh can carry data, "
+        "configured by tags <use-data>. The mesh coordinates have to be "
+        "defined by a participant (see tag <provide-mesh>).";
   tag.setDocumentation(doc);
 
   auto attrName = XMLAttribute<std::string>(ATTR_NAME)

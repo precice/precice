@@ -11,7 +11,7 @@
   </mesh>
 
   <participant name="Participant0">
-    <use-mesh name="Mesh" provide="on" />
+    <provide-mesh name="Mesh" />
 
     <write-data name="Data0" mesh="Mesh" />
 
@@ -19,7 +19,7 @@
   </participant>
 
   <participant name="Participant1">
-    <use-mesh name="Mesh" provide="on" />
+    <provide-mesh name="Mesh" />
 
     <write-data name="Data1" mesh="Mesh" />
 
@@ -28,7 +28,7 @@
   </participant>
 
   <participant name="Participant2">
-    <use-mesh name="Mesh" provide="on" />
+    <provide-mesh name="Mesh" />
 
     <write-data name="Data2" mesh="Mesh" />
 

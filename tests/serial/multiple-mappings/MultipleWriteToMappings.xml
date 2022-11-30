@@ -24,9 +24,9 @@
     </mesh>
 
     <participant name="A">
-      <use-mesh name="MeshATop" provide="yes" />
-      <use-mesh name="MeshABottom" provide="yes" />
-      <use-mesh name="MeshB" from="B" />
+      <provide-mesh name="MeshATop" />
+      <provide-mesh name="MeshABottom" />
+      <receive-mesh name="MeshB" from="B" />
       <action:summation timing="write-mapping-post" mesh="MeshB">
         <source-data name="DisplacementTop" />
         <source-data name="DisplacementBottom" />
@@ -47,7 +47,7 @@
     </participant>
 
     <participant name="B">
-      <use-mesh name="MeshB" provide="yes" />
+      <provide-mesh name="MeshB" />
       <read-data name="DisplacementSum" mesh="MeshB" />
     </participant>
 

@@ -22,16 +22,16 @@
     </mesh>
 
     <participant name="A">
-      <use-mesh name="MeshATop" provide="yes" />
-      <use-mesh name="MeshABottom" provide="yes" />
+      <provide-mesh name="MeshATop" />
+      <provide-mesh name="MeshABottom" />
       <write-data name="DisplacementTop" mesh="MeshATop" />
       <write-data name="DisplacementBottom" mesh="MeshABottom" />
     </participant>
 
     <participant name="B">
-      <use-mesh name="MeshB" provide="yes" />
-      <use-mesh name="MeshATop" from="A" />
-      <use-mesh name="MeshABottom" from="A" />
+      <provide-mesh name="MeshB" />
+      <receive-mesh name="MeshATop" from="A" />
+      <receive-mesh name="MeshABottom" from="A" />
       <read-data name="DisplacementTop" mesh="MeshB" />
       <read-data name="DisplacementBottom" mesh="MeshB" />
       <mapping:nearest-neighbor

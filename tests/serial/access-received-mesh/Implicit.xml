@@ -13,15 +13,15 @@
     </mesh>
 
     <participant name="SolverOne">
-      <use-mesh name="MeshOne" provide="yes" />
-      <use-mesh name="MeshTwo" from="SolverTwo" direct-access="true" />
+      <provide-mesh name="MeshOne" />
+      <receive-mesh name="MeshTwo" from="SolverTwo" direct-access="true" />
       <write-data name="Velocities" mesh="MeshTwo" />
       <read-data name="Forces" mesh="MeshOne" />
     </participant>
 
     <participant name="SolverTwo">
-      <use-mesh name="MeshOne" from="SolverOne" direct-access="true" />
-      <use-mesh name="MeshTwo" provide="yes" />
+      <receive-mesh name="MeshOne" from="SolverOne" direct-access="true" />
+      <provide-mesh name="MeshTwo" />
       <write-data name="Forces" mesh="MeshOne" />
       <read-data name="Velocities" mesh="MeshTwo" />
     </participant>

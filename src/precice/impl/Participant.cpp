@@ -65,37 +65,41 @@ void Participant::addWatchIntegral(
   _watchIntegrals.push_back(watchIntegral);
 }
 
-void Participant::useMesh(const mesh::PtrMesh &                         mesh,
-                          const Eigen::VectorXd &                       localOffset,
-                          bool                                          remote,
-                          const std::string &                           fromParticipant,
-                          double                                        safetyFactor,
-                          bool                                          provideMesh,
-                          partition::ReceivedPartition::GeometricFilter geoFilter,
-                          const bool                                    allowDirectAccess)
+void Participant::provideMesh(const mesh::PtrMesh &mesh)
+{
+  PRECICE_TRACE(_name, mesh->getName(), mesh->getID());
+  checkDuplicatedUse(mesh);
+
+  PRECICE_ASSERT(mesh->getID() < (int) _meshContexts.size());
+  auto context                 = new MeshContext();
+  context->mesh                = mesh;
+  context->provideMesh         = true;
+  _meshContexts[mesh->getID()] = context;
+  _usedMeshContexts.push_back(context);
+}
+
+void Participant::receiveMesh(const mesh::PtrMesh &                         mesh,
+                              const std::string &                           fromParticipant,
+                              double                                        safetyFactor,
+                              partition::ReceivedPartition::GeometricFilter geoFilter,
+                              const bool                                    allowDirectAccess)
 {
   PRECICE_TRACE(_name, mesh->getName(), mesh->getID());
   checkDuplicatedUse(mesh);
   PRECICE_ASSERT(mesh->getID() < (int) _meshContexts.size());
-  auto context         = new MeshContext(mesh->getDimensions());
-  context->mesh        = mesh;
-  context->localOffset = localOffset;
-  PRECICE_ASSERT(mesh->getDimensions() == context->localOffset.size(),
-                 mesh->getDimensions(), context->localOffset.size());
+  PRECICE_ASSERT(!fromParticipant.empty());
+  PRECICE_ASSERT(safetyFactor >= 0);
+  auto context               = new MeshContext();
+  context->mesh              = mesh;
   context->receiveMeshFrom   = fromParticipant;
   context->safetyFactor      = safetyFactor;
-  context->provideMesh       = provideMesh;
+  context->provideMesh       = false;
   context->geoFilter         = geoFilter;
   context->allowDirectAccess = allowDirectAccess;
 
   _meshContexts[mesh->getID()] = context;
 
   _usedMeshContexts.push_back(context);
-
-  PRECICE_CHECK(fromParticipant.empty() || (!provideMesh),
-                "Participant \"{}\" cannot receive and provide mesh \"{}\" at the same time. "
-                "Please remove all but one of the \"from\" and \"provide\" attributes in the <use-mesh name=\"{}\"/> node of {}.",
-                _name, mesh->getName(), mesh->getName(), _name);
 }
 
 void Participant::addWriteData(
@@ -325,6 +329,18 @@ bool Participant::isMeshProvided(MeshID meshID) const
   return (context != nullptr) && context->provideMesh;
 }
 
+bool Participant::isMeshReceived(const std::string &meshName) const
+{
+  PRECICE_ASSERT(hasMesh(meshName));
+  return !usedMeshContext(meshName).provideMesh;
+}
+
+bool Participant::isMeshProvided(const std::string &meshName) const
+{
+  PRECICE_ASSERT(hasMesh(meshName));
+  return usedMeshContext(meshName).provideMesh;
+}
+
 int Participant::getUsedMeshID(const std::string &meshName) const
 {
   return usedMeshContext(meshName).mesh->getID();
@@ -477,7 +493,7 @@ void Participant::checkDuplicatedUse(const mesh::PtrMesh &mesh)
   PRECICE_ASSERT((int) _meshContexts.size() > mesh->getID());
   PRECICE_CHECK(_meshContexts[mesh->getID()] == nullptr,
                 "Mesh \"{} cannot be used twice by participant {}. "
-                "Please remove one of the use-mesh nodes with name=\"{}\"./>",
+                "Please remove one of the provide/receive-mesh nodes with name=\"{}\"./>",
                 mesh->getName(), _name, mesh->getName());
 }
 

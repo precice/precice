@@ -814,7 +814,7 @@ public:
 
   /**
    * @brief setMeshAccessRegion Define a region of interest on a received mesh
-   *        (<use-mesh ... from="otherParticipant />") in order to receive
+   *        (<receive-mesh ... from="otherParticipant />") in order to receive
    *        only a certain mesh region. Have a look at the website under
    *        https://precice.org/couple-your-code-direct-access.html or
    *        navigate manually to the page  Docs->Couple your code
