@@ -1,9 +1,11 @@
-#include "CompositionalCouplingScheme.hpp"
 #include <algorithm>
 #include <functional>
 #include <limits>
 #include <memory>
+#include <numeric>
 #include <ostream>
+
+#include "CompositionalCouplingScheme.hpp"
 #include "Constants.hpp"
 #include "cplscheme/BaseCouplingScheme.hpp"
 #include "cplscheme/CouplingScheme.hpp"
@@ -11,6 +13,15 @@
 #include "cplscheme/tests/DummyCouplingScheme.hpp"
 #include "logging/LogMacros.hpp"
 #include "utils/assertion.hpp"
+
+namespace {
+/// Required by STL algos, which get confused by std::min overloads
+template <typename T>
+T min(T a, T b)
+{
+  return std::min(a, b);
+}
+} // namespace
 
 namespace precice::cplscheme {
 
@@ -65,6 +76,7 @@ bool CompositionalCouplingScheme::isInitialized() const
 void CompositionalCouplingScheme::addComputedTime(double timeToAdd)
 {
   PRECICE_TRACE(timeToAdd);
+
   for (const auto scheme : schemesToRun()) {
     scheme->addComputedTime(timeToAdd);
   }
@@ -155,10 +167,11 @@ double CompositionalCouplingScheme::getTime() const
 {
   PRECICE_TRACE();
   auto schemes = allSchemes();
-  auto time    = std::numeric_limits<double>::max();
-  for (auto scheme : allSchemes()) {
-    time = std::min(time, scheme->getTime());
-  }
+  auto time    = std::transform_reduce(
+      schemes.begin(), schemes.end(),
+      std::numeric_limits<double>::max(),
+      ::min<double>,
+      std::mem_fn(&CouplingScheme::getTime));
   PRECICE_DEBUG("return {}", time);
   return time;
 }
@@ -166,10 +179,12 @@ double CompositionalCouplingScheme::getTime() const
 int CompositionalCouplingScheme::getTimeWindows() const
 {
   PRECICE_TRACE();
-  int timeWindows = std::numeric_limits<int>::max();
-  for (auto scheme : allSchemes()) {
-    timeWindows = std::min(timeWindows, scheme->getTimeWindows());
-  }
+  auto schemes     = allSchemes();
+  auto timeWindows = std::transform_reduce(
+      schemes.begin(), schemes.end(),
+      std::numeric_limits<int>::max(),
+      ::min<int>,
+      std::mem_fn(&CouplingScheme::getTimeWindows));
   PRECICE_DEBUG("return {}", timeWindows);
   return timeWindows;
 }
@@ -186,12 +201,11 @@ bool CompositionalCouplingScheme::hasTimeWindowSize() const
 double CompositionalCouplingScheme::getTimeWindowSize() const
 {
   PRECICE_TRACE();
-  double timeWindowSize = std::numeric_limits<double>::max();
-  for (auto scheme : allSchemes()) {
-    if (scheme->hasTimeWindowSize()) {
-      timeWindowSize = std::min(timeWindowSize, scheme->getTimeWindowSize());
-    }
-  }
+  auto   schemes        = allSchemes();
+  double timeWindowSize = std::transform_reduce(
+      schemes.begin(), schemes.end(), std::numeric_limits<double>::max(),
+      ::min<double>,
+      std::mem_fn(&CouplingScheme::getTimeWindowSize));
   PRECICE_DEBUG("return {}", timeWindowSize);
   return timeWindowSize;
 }
@@ -199,10 +213,11 @@ double CompositionalCouplingScheme::getTimeWindowSize() const
 double CompositionalCouplingScheme::getThisTimeWindowRemainder() const
 {
   PRECICE_TRACE();
-  double maxRemainder = 0.0;
-  for (auto scheme : allSchemes()) {
-    maxRemainder = std::max(maxRemainder, scheme->getThisTimeWindowRemainder());
-  }
+  auto   schemes      = allSchemes();
+  double maxRemainder = std::transform_reduce(
+      schemes.begin(), schemes.end(), 0.0,
+      ::min<double>,
+      std::mem_fn(&CouplingScheme::getThisTimeWindowRemainder));
   PRECICE_DEBUG("return {}", maxRemainder);
   return maxRemainder;
 }
@@ -210,10 +225,11 @@ double CompositionalCouplingScheme::getThisTimeWindowRemainder() const
 double CompositionalCouplingScheme::getNextTimestepMaxLength() const
 {
   PRECICE_TRACE();
-  double maxLength = std::numeric_limits<double>::max();
-  for (auto scheme : allSchemes()) {
-    maxLength = std::min(maxLength, scheme->getNextTimestepMaxLength());
-  }
+  auto   schemes   = allSchemes();
+  double maxLength = std::transform_reduce(
+      schemes.begin(), schemes.end(), std::numeric_limits<double>::max(),
+      ::min<double>,
+      std::mem_fn(&CouplingScheme::getNextTimestepMaxLength));
   PRECICE_DEBUG("return {}", maxLength);
   return maxLength;
 }
