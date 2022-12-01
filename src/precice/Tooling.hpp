@@ -2,6 +2,7 @@
 
 #include <iosfwd>
 #include <string>
+#include "precice/export.h"
 
 namespace precice {
 
@@ -35,10 +36,10 @@ enum struct ConfigReferenceType {
  *
  * @see \ref precice::tooling::ConfigReferenceType
  */
-void printConfigReference(std::ostream &out, ConfigReferenceType reftype);
+PRECICE_API void printConfigReference(std::ostream &out, ConfigReferenceType reftype);
 
 /// @brief Checks a given configuration
-void checkConfiguration(const std::string &filename, const std::string &participant, int size);
+PRECICE_API void checkConfiguration(const std::string &filename, const std::string &participant, int size);
 
 } // namespace tooling
 
@@ -51,6 +52,6 @@ void checkConfiguration(const std::string &filename, const std::string &particip
  * 2) the revision information of preCICE
  * 3) the configuration of preCICE including MPI, PETSC, PYTHON
  */
-std::string getVersionInformation();
+PRECICE_API std::string getVersionInformation();
 
 } // namespace precice
