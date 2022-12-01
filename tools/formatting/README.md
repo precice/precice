@@ -12,6 +12,10 @@ This bash-script checks the format of every c(pp) & h(pp) file in the current an
 It returns 0 if everything is formatted correctly.
 Otherwise, it displays the list of files that do not match the format and returns 1.
 
+## cofig-formatter
+
+This Python script formats preCICE configuration files (XML) and prints it on the terminal. Use as `python3 config-formatter precice-config.xml`.
+
 ## format-all
 
 This bash-script applies the format of a parent `.clang-format` to every c(pp) & h(pp) file in the current and child directories. To format the complete codebase, run the script from the root directory.
