@@ -14,7 +14,7 @@ Otherwise, it displays the list of files that do not match the format and return
 
 ## cofig-formatter
 
-This Python script formats preCICE configuration files (XML) and prints it on the terminal. Use as `python3 config-formatter precice-config.xml`.
+This Python script formats preCICE configuration files (XML). Use as `python3 config-formatter -i precice-config.xml` to format `precice-config.xml` inline.
 
 ## format-all
 
