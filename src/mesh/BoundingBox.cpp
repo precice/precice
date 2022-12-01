@@ -132,7 +132,7 @@ int BoundingBox::getDimension() const
 
 const std::vector<double> BoundingBox::dataVector() const
 {
-  std::vector<double> _bounds{_boundMin[0], boundMax[0], _boundMin[1], boundMax[1], _boundMin[2], boundMax[2]};
+  std::vector<double> _bounds{_boundMin[0], _boundMax[0], _boundMin[1], _boundMax[1], _boundMin[2], _boundMax[2]};
   return _bounds;
 }
 
