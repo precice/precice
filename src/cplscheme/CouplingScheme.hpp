@@ -112,6 +112,9 @@ public:
 
   /** Synchronizes mesh changes with remote participants.
    *
+   * At this point, both participants may have changed the meshes.
+   * Thus, we need to send local changes and receive remote changes.
+   *
    * @param[in] changes MeshIDs of locally changed meshes
    *
    * @returns MeshIDs of remotely changed meshes.
@@ -125,7 +128,10 @@ public:
   virtual void firstExchange() = 0;
 
   /** Receive mesh changes from remote participants in the second step.
-   * This is necessary as serial coupling schemes may have changed the mesh by now.
+   *
+   * At this point, the remote participant may have changed the meshes if
+   * is coupled using a serial coupling scheme.
+   * So we only need to receive the remote changes here.
    *
    * @note local changes are covered by \ref firstSynchronization()
    *
@@ -137,10 +143,7 @@ public:
 
   /** Exchanges the second set of data.
    *
-   * If the step isn't done, this function returns false.
-   * This requires the frist Synchronization to be called again.
-   *
-   * @returns true if the step is done.
+   * This concludes the step of the coupling scheme
    *
    * @pre \ref secondSynchronization() was called
    */
