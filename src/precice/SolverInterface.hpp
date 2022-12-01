@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include "precice/Version.h"
+#include "precice/export.h"
 
 /**
  * forward declarations.
@@ -36,7 +37,7 @@ namespace precice {
  *  We use solver, simulation code, and participant as synonyms.
  *  The preferred name in the documentation is participant.
  */
-class SolverInterface {
+class PRECICE_API SolverInterface {
 public:
   ///@name Construction and Configuration
   ///@{
@@ -1217,13 +1218,13 @@ private:
 namespace constants {
 
 // @brief Name of action for writing initial data.
-const std::string &actionWriteInitialData();
+PRECICE_API const std::string &actionWriteInitialData();
 
 // @brief Name of action for writing iteration checkpoint
-const std::string &actionWriteIterationCheckpoint();
+PRECICE_API const std::string &actionWriteIterationCheckpoint();
 
 // @brief Name of action for reading iteration checkpoint.
-const std::string &actionReadIterationCheckpoint();
+PRECICE_API const std::string &actionReadIterationCheckpoint();
 
 } // namespace constants
 

@@ -261,6 +261,8 @@ set_target_properties(preciceCore PROPERTIES
   CXX_STANDARD_REQUIRED Yes
   CXX_EXTENSIONS No
   POSITION_INDEPENDENT_CODE YES
+  CXX_VISIBILITY_PRESET hidden
+  VISIBILITY_INLINES_HIDDEN YES
   )
 
 # Setup release override options
@@ -338,6 +340,8 @@ add_library(precice)
 set_target_properties(precice PROPERTIES
   VERSION ${preCICE_VERSION}
   SOVERSION ${preCICE_SOVERSION}
+  CXX_VISIBILITY_PRESET hidden
+  VISIBILITY_INLINES_HIDDEN YES
   )
 
 target_include_directories(precice PUBLIC
@@ -356,6 +360,19 @@ include(GenerateVersionInformation)
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/DetectGitRevision.cmake)
 configure_file("${PROJECT_SOURCE_DIR}/src/precice/impl/versions.hpp.in" "${PROJECT_BINARY_DIR}/src/precice/impl/versions.hpp" @ONLY)
 configure_file("${PROJECT_SOURCE_DIR}/src/precice/Version.h.in" "${PROJECT_BINARY_DIR}/src/precice/Version.h" @ONLY)
+
+# Setup export header
+include(GenerateExportHeader)
+GENERATE_EXPORT_HEADER(preciceCore
+  EXPORT_FILE_NAME "src/precice/export.h"
+  BASE_NAME PRECICE
+  EXPORT_MACRO_NAME PRECICE_API
+  INCLUDE_GUARD_NAME PRECICE_EXPORT
+  )
+
+# Add the export header to the public headers of the preCICE lib
+set_property(TARGET precice PROPERTY PUBLIC_HEADER
+    ${CMAKE_BINARY_DIR}/src/precice/export.h)
 
 #
 # Configuration of Target precice-tools
