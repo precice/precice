@@ -12,7 +12,7 @@ This bash-script checks the format of every c(pp) & h(pp) file in the current an
 It returns 0 if everything is formatted correctly.
 Otherwise, it displays the list of files that do not match the format and returns 1.
 
-## cofig-formatter
+## config-formatter
 
 This Python script formats preCICE configuration files (XML). Use as `python3 config-formatter -i precice-config.xml` to format `precice-config.xml` inline.
 
