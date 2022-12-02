@@ -173,6 +173,14 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
   }
 }
 
+void BaseCouplingScheme::initializeZeroReceiveData(const DataMap &receiveData)
+{
+  for (const DataMap::value_type &pair : receiveData) {
+    auto values = pair.second->values();
+    pair.second->storeDataAtTime(values, 0.0);
+  }
+}
+
 void BaseCouplingScheme::setTimeWindowSize(double timeWindowSize)
 {
   _timeWindowSize = timeWindowSize;

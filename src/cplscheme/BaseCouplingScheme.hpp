@@ -251,8 +251,22 @@ protected:
 
   Eigen::VectorXd receiveTimes(const m2n::PtrM2N &m2n, int nTimeSteps);
 
-  /// Receives data receiveDataIDs given in mapCouplingData with communication.
+  /**
+   * @brief Receives data receiveDataIDs given in mapCouplingData with communication.
+   *
+   * @param m2n M2N used for communication
+   * @param receiveData DataMap associated with received data
+   */
   void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData);
+
+  /**
+   * @brief Initialized receiveData with zero values.
+   *
+   * This function is called instead of receive data, if no initial data is received to initialize data with zero
+   *
+   * @param receiveData DataMap associated with received data
+   */
+  void initializeZeroReceiveData(const DataMap &receiveData);
 
   /**
    * @brief interface to provide all CouplingData, depending on coupling scheme being used
