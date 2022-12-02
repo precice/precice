@@ -74,6 +74,8 @@ public:
     return getSendData(dataID) != nullptr;
   }
 
+  void moveToNextWindow() override final;
+
   /**
    * @brief stores current time step data in buffer for later
    *

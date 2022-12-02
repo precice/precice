@@ -364,7 +364,7 @@ protected:
   /**
    * @brief finalizes this window's data and initializes data for next window.
    */
-  void moveToNextWindow();
+  virtual void moveToNextWindow() = 0;
 
   /**
    * @brief used for storing all Data at end of doImplicitStep for later reference.

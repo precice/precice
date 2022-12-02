@@ -163,6 +163,14 @@ void BiCouplingScheme::exchangeInitialData()
   }
 }
 
+void BiCouplingScheme::moveToNextWindow()
+{
+  for (auto &pair : getReceiveData()) {
+    PRECICE_DEBUG("Store data: {}", pair.first);
+    pair.second->moveToNextWindow();
+  }
+}
+
 void BiCouplingScheme::storeTimeStepSendData(double relativeDt)
 {
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);

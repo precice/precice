@@ -77,6 +77,8 @@ public:
     return std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(), [](const auto &sendExchange) { return not sendExchange.second.empty(); });
   }
 
+  void moveToNextWindow() override final;
+
   /**
    * @brief stores current time step data in buffer for later
    *

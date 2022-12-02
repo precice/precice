@@ -97,6 +97,15 @@ void MultiCouplingScheme::exchangeInitialData()
   PRECICE_DEBUG("Initial data is exchanged in MultiCouplingScheme");
 }
 
+void MultiCouplingScheme::moveToNextWindow()
+{
+  for (auto &receiveExchange : _receiveDataVector) {
+    for (auto &receiveData : receiveExchange.second) {
+      receiveData.second->moveToNextWindow();
+    }
+  }
+}
+
 void MultiCouplingScheme::storeTimeStepSendData(double relativeDt)
 {
   PRECICE_ASSERT(relativeDt > time::Storage::WINDOW_START);
@@ -193,7 +202,7 @@ bool MultiCouplingScheme::exchangeDataAndAccelerate()
   if (_isController) {
     for (auto &receiveExchange : _receiveDataVector) {
       for (const DataMap::value_type &pair : receiveExchange.second) {
-        pair.second->clearTimeStepsStorage();
+        pair.second->clearTimeStepsStorage(true);
       }
       receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
     }
@@ -216,7 +225,7 @@ bool MultiCouplingScheme::exchangeDataAndAccelerate()
 
     for (auto &receiveExchange : _receiveDataVector) {
       for (const DataMap::value_type &pair : receiveExchange.second) {
-        pair.second->clearTimeStepsStorage();
+        pair.second->clearTimeStepsStorage(true);
       }
       receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
     }

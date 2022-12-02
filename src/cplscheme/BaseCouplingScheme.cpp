@@ -217,17 +217,6 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   }
 
   exchangeInitialData();
-
-  if (receivesInitializedData()) {
-    retreiveTimeStepReceiveData(time::Storage::WINDOW_START);
-  }
-
-  if (isImplicitCouplingScheme()) {
-    if (not doesFirstStep()) {
-      moveToNextWindow();
-    }
-  }
-
   performReceiveOfFirstAdvance();
 
   _isInitialized = true;
@@ -317,15 +306,6 @@ void BaseCouplingScheme::advance()
       //PRECICE_ASSERT(_hasDataBeenReceived);  // actually incorrect. Data is not necessarily received, if scheme is only sending.
     }
     _computedTimeWindowPart = 0.0; // reset window
-  }
-}
-
-void BaseCouplingScheme::moveToNextWindow()
-{
-  PRECICE_TRACE(_timeWindows);
-  for (auto &pair : getAccelerationData()) {
-    PRECICE_DEBUG("Store data: {}", pair.first);
-    pair.second->moveToNextWindow();
   }
 }
 

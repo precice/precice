@@ -116,10 +116,15 @@ bool SerialCouplingScheme::exchangeDataAndAccelerate()
     }
 
     for (const DataMap::value_type &pair : getReceiveData()) {
-      pair.second->clearTimeStepsStorage();
+      pair.second->clearTimeStepsStorage(true);
     }
 
     receiveData(getM2N(), getReceiveData());
+    if (convergence) {
+      for (const DataMap::value_type &pair : getReceiveData()) {
+        pair.second->moveToNextWindow();
+      }
+    }
     checkDataHasBeenReceived();
   } else { // second participant
     if (isImplicitCouplingScheme()) {
@@ -133,8 +138,17 @@ bool SerialCouplingScheme::exchangeDataAndAccelerate()
     if (isCouplingOngoing() || (isImplicitCouplingScheme() && not convergence)) {
       receiveAndSetTimeWindowSize();
       PRECICE_DEBUG("Receiving data...");
+      if (convergence) {
+        // will receive first iteration of next window
+        // need to move storage to store data from past window at beginning of next window.
+        for (const DataMap::value_type &pair : getReceiveData()) {
+          pair.second->moveToNextWindow();
+        }
+      } else {
+        // will receive next iteration of this window
+      }
       for (const DataMap::value_type &pair : getReceiveData()) {
-        pair.second->clearTimeStepsStorage();
+        pair.second->clearTimeStepsStorage(true);
       }
       receiveData(getM2N(), getReceiveData());
       checkDataHasBeenReceived();

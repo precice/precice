@@ -117,8 +117,7 @@ std::vector<int> CouplingData::getVertexOffsets()
 
 void CouplingData::moveToNextWindow()
 {
-  // @todo should take care of move to next window here.
-  // _timeStepsStorage...
+  _timeStepsStorage.move();
 }
 
 Eigen::VectorXd CouplingData::getStoredTimesAscending()
@@ -126,9 +125,9 @@ Eigen::VectorXd CouplingData::getStoredTimesAscending()
   return _timeStepsStorage.getTimes();
 }
 
-void CouplingData::clearTimeStepsStorage()
+void CouplingData::clearTimeStepsStorage(bool keepZero)
 {
-  _timeStepsStorage.clear();
+  _timeStepsStorage.clear(keepZero);
 }
 
 void CouplingData::moveTimeStepsStorage()

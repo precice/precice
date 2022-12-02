@@ -44,7 +44,7 @@ bool ParallelCouplingScheme::exchangeDataAndAccelerate()
     }
 
     for (const DataMap::value_type &pair : getReceiveData()) {
-      pair.second->clearTimeStepsStorage();
+      pair.second->clearTimeStepsStorage(true);
     }
 
     receiveData(getM2N(), getReceiveData());
@@ -53,7 +53,7 @@ bool ParallelCouplingScheme::exchangeDataAndAccelerate()
     PRECICE_DEBUG("Receiving data...");
 
     for (const DataMap::value_type &pair : getReceiveData()) {
-      pair.second->clearTimeStepsStorage();
+      pair.second->clearTimeStepsStorage(true);
     }
 
     receiveData(getM2N(), getReceiveData());
