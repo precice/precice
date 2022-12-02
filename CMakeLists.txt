@@ -631,18 +631,7 @@ if(PRECICE_ENABLE_BENCHMARKS)
   unset(_bench_sources)
   target_link_libraries(benchprecice
     PRIVATE
-    Threads::Threads
-    precice
-    Eigen3::Eigen
-    fmt-header-only
-    Boost::boost
-    Boost::filesystem
-    Boost::log
-    Boost::log_setup
-    Boost::program_options
-    Boost::system
-    Boost::thread
-    Boost::unit_test_framework
+    preciceCore
     benchmark::benchmark
     )
   set_target_properties(benchprecice PROPERTIES
@@ -655,18 +644,6 @@ if(PRECICE_ENABLE_BENCHMARKS)
     ${preCICE_SOURCE_DIR}/src
     ${preCICE_SOURCE_DIR}/benchmark
     )
-  # Copy needed properties from the lib to the executatble. This is necessary as
-  # this executable uses the library source, not only the interface.
-  copy_target_property(precice benchprecice COMPILE_DEFINITIONS)
-  copy_target_property(precice benchprecice COMPILE_OPTIONS)
-
-  # benchprecice fully depends on MPI and PETSc.
-  if(PRECICE_MPICommunication)
-    target_link_libraries(benchprecice PRIVATE MPI::MPI_CXX)
-  endif()
-  if(PRECICE_MPICommunication AND PRECICE_PETScMapping)
-    target_link_libraries(benchprecice PRIVATE PETSc::PETSc)
-  endif()
 endif()
 
 
