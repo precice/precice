@@ -89,9 +89,9 @@ std::set<int> SolverInterface::getMeshIDs() const
   return _impl->getMeshIDs();
 }
 
-bool SolverInterface::isMeshConnectivityRequired(int meshID) const
+bool SolverInterface::requiresMeshConnectivityFor(int meshID) const
 {
-  return _impl->isMeshConnectivityRequired(meshID);
+  return _impl->requiresMeshConnectivityFor(meshID);
 }
 
 bool SolverInterface::isGradientDataRequired(int dataID) const

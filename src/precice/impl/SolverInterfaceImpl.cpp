@@ -611,7 +611,7 @@ int SolverInterfaceImpl::getDataID(
   return _accessor->getUsedDataID(dataName, meshID);
 }
 
-bool SolverInterfaceImpl::isMeshConnectivityRequired(int meshID) const
+bool SolverInterfaceImpl::requiresMeshConnectivityFor(int meshID) const
 {
   PRECICE_VALIDATE_MESH_ID(meshID);
   MeshContext &context = _accessor->usedMeshContext(meshID);
