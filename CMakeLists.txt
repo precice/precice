@@ -626,9 +626,9 @@ option(PRECICE_ENABLE_BENCHMARKS "Build the preCICE benchmarks" OFF)
 if(PRECICE_ENABLE_BENCHMARKS)
   find_package(benchmark REQUIRED)
 
-  file(GLOB _bench_sources benchmarks/*.cpp)
-  add_executable(benchprecice ${_bench_sources})
-  unset(_bench_sources)
+  add_executable(benchprecice)
+  include(${CMAKE_CURRENT_LIST_DIR}/benchmarks/sources.cmake)
+
   target_link_libraries(benchprecice
     PRIVATE
     preciceCore
