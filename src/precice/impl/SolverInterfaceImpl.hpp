@@ -147,8 +147,8 @@ public:
   /// @copydoc SolverInterface::requiresMeshConnectivityFor
   bool requiresMeshConnectivityFor(int meshID) const;
 
-  /// @copydoc SolverInterface::isGradientDataRequired
-  bool isGradientDataRequired(int dataID) const;
+  /// @copydoc SolverInterface::requiresGradientDataFor
+  bool requiresGradientDataFor(int dataID) const;
 
   /// @copydoc SolverInterface::setMeshVertex
   int setMeshVertex(

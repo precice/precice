@@ -439,10 +439,10 @@ void precicef_get_mesh_vertices_and_IDs_(
   impl->getMeshVerticesAndIDs(meshID, size, ids, coordinates);
 }
 
-void precicef_is_gradient_data_required_(const int *dataID, int *required)
+void precicef_requires_gradient_data_for_(const int *dataID, int *required)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  if (impl->isGradientDataRequired(*dataID)) {
+  if (impl->requiresGradientDataFor(*dataID)) {
     *required = 1;
   } else {
     *required = 0;

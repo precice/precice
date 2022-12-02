@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalReadScalar)
 
       cplInterface.writeScalarData(dataAID, 0, 3.0);
       Vector3d valueGradDataA(1.0, 2.0, 3.0);
-      BOOST_TEST(cplInterface.isGradientDataRequired(dataAID));
+      BOOST_TEST(cplInterface.requiresGradientDataFor(dataAID));
       cplInterface.writeScalarGradientData(dataAID, 0, valueGradDataA.data());
 
       maxDt = cplInterface.advance(maxDt);
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalReadScalar)
     int dataAID = cplInterface.getDataID("DataOne", meshTwoID);
     int dataBID = cplInterface.getDataID("DataTwo", meshTwoID);
     BOOST_REQUIRE(cplInterface.requiresInitialData());
-    BOOST_TEST(cplInterface.isGradientDataRequired(dataBID) == false);
+    BOOST_TEST(cplInterface.requiresGradientDataFor(dataBID) == false);
 
     double valueDataB = 1.0;
     cplInterface.writeScalarData(dataBID, 0, valueDataB);
