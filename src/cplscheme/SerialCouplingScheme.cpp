@@ -121,6 +121,7 @@ bool SerialCouplingScheme::exchangeDataAndAccelerate()
 
     receiveData(getM2N(), getReceiveData());
     if (convergence) {
+      // received converged result of this window, trigger move
       for (const DataMap::value_type &pair : getReceiveData()) {
         pair.second->moveToNextWindow();
       }
@@ -144,8 +145,6 @@ bool SerialCouplingScheme::exchangeDataAndAccelerate()
         for (const DataMap::value_type &pair : getReceiveData()) {
           pair.second->moveToNextWindow();
         }
-      } else {
-        // will receive next iteration of this window
       }
       for (const DataMap::value_type &pair : getReceiveData()) {
         pair.second->clearTimeStepsStorage(true);

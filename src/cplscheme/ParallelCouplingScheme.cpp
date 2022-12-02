@@ -48,6 +48,12 @@ bool ParallelCouplingScheme::exchangeDataAndAccelerate()
     }
 
     receiveData(getM2N(), getReceiveData());
+    if (convergence) {
+      // received converged result of this window, trigger move
+      for (const DataMap::value_type &pair : getReceiveData()) {
+        pair.second->moveToNextWindow();
+      }
+    }
     checkDataHasBeenReceived();
   } else { // second participant
     PRECICE_DEBUG("Receiving data...");
@@ -62,6 +68,12 @@ bool ParallelCouplingScheme::exchangeDataAndAccelerate()
       PRECICE_DEBUG("Perform acceleration (only second participant)...");
       convergence = doImplicitStep();
       sendConvergence(getM2N(), convergence);
+    }
+    if (convergence) {
+      // received converged result of this window, trigger move
+      for (const DataMap::value_type &pair : getReceiveData()) {
+        pair.second->moveToNextWindow();
+      }
     }
     PRECICE_DEBUG("Sending data...");
     sendData(getM2N(), getSendData());
