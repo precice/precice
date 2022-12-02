@@ -187,12 +187,12 @@ void precicef_get_data_id_(
   *dataID = impl->getDataID(stringDataName, *meshID);
 }
 
-void precicef_is_mesh_connectivity_required_(
+void precicef_requires_mesh_connectivity_for_(
     const int *meshID,
     int *      required)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  if (impl->isMeshConnectivityRequired(*meshID)) {
+  if (impl->requiresMeshConnectivityFor(*meshID)) {
     *required = 1;
   } else {
     *required = 0;

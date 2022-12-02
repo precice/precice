@@ -144,8 +144,8 @@ public:
   /// @copydoc SolverInterface::getMeshIDs
   std::set<int> getMeshIDs() const;
 
-  /// @copydoc SolverInterface::isMeshConnectivityRequired
-  bool isMeshConnectivityRequired(int meshID) const;
+  /// @copydoc SolverInterface::requiresMeshConnectivityFor
+  bool requiresMeshConnectivityFor(int meshID) const;
 
   /// @copydoc SolverInterface::isGradientDataRequired
   bool isGradientDataRequired(int dataID) const;

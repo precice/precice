@@ -151,10 +151,10 @@ int precicec_getDataID(const char *dataName, int meshID)
   return impl->getDataID(stringDataName, meshID);
 }
 
-int precicec_isMeshConnectivityRequired(int meshID)
+int precicec_requiresMeshConnectivityFor(int meshID)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  if (impl->isMeshConnectivityRequired(meshID)) {
+  if (impl->requiresMeshConnectivityFor(meshID)) {
     return 1;
   }
   return 0;

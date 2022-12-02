@@ -262,7 +262,7 @@ public:
    * @anchor precice-mesh-access
    *
    * Connectivity is optional.
-   * Use isMeshConnectivityRequired() to check if the current participant can make use of the connectivity.
+   * Use requiresMeshConnectivityFor() to check if the current participant can make use of the connectivity.
    *
    *
    * Always set the mesh connectivity of the highest dimensionality available.
@@ -328,7 +328,7 @@ public:
    * @param[in] meshID the id of the mesh
    * @returns whether connectivity is required
    */
-  bool isMeshConnectivityRequired(int meshID) const;
+  bool requiresMeshConnectivityFor(int meshID) const;
 
   /**
    * @brief Creates a mesh vertex
@@ -454,7 +454,7 @@ public:
    *
    * @pre vertices were added to the mesh with the ID meshID
    *
-   * @see isMeshConnectivityRequired()
+   * @see requiresMeshConnectivityFor()
    */
   void setMeshEdges(
       int        meshID,
@@ -477,7 +477,7 @@ public:
    *
    * @pre edges with firstVertexID, secondVertexID, and thirdVertexID were added to the mesh with the ID meshID
    *
-   * @see isMeshConnectivityRequired()
+   * @see requiresMeshConnectivityFor()
    */
   void setMeshTriangle(
       int meshID,
@@ -499,7 +499,7 @@ public:
    *
    * @pre vertices were added to the mesh with the ID meshID
    *
-   * @see isMeshConnectivityRequired()
+   * @see requiresMeshConnectivityFor()
    */
   void setMeshTriangles(
       int        meshID,
@@ -523,7 +523,7 @@ public:
    *
    * @pre vertices with firstVertexID, secondVertexID, thirdVertexID, and fourthVertexID were added to the mesh with the ID meshID
    *
-   * @see isMeshConnectivityRequired()
+   * @see requiresMeshConnectivityFor()
    */
   void setMeshQuad(
       int meshID,
@@ -548,7 +548,7 @@ public:
    *
    * @pre vertices were added to the mesh with the ID meshID
    *
-   * @see isMeshConnectivityRequired()
+   * @see requiresMeshConnectivityFor()
    */
   void setMeshQuads(
       int        meshID,
@@ -570,7 +570,7 @@ public:
    *
    * @pre vertices with firstVertexID, secondVertexID, thirdVertexID, and fourthVertexID were added to the mesh with the ID meshID
    *
-   * @see isMeshConnectivityRequired()
+   * @see requiresMeshConnectivityFor()
    */
   void setMeshTetrahedron(
       int meshID,
@@ -593,7 +593,7 @@ public:
    *
    * @pre vertices were added to the mesh with the ID meshID
    *
-   * @see isMeshConnectivityRequired()
+   * @see requiresMeshConnectivityFor()
    */
   void setMeshTetrahedra(
       int        meshID,

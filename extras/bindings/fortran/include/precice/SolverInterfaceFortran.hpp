@@ -247,9 +247,9 @@ PRECICE_API void precicef_get_data_id_(
  * IN:  meshID
  * OUT: required(1:true, 0:false)
  *
- * @copydoc precice::SolverInterface::isMeshConnectivityRequired()
+ * @copydoc precice::SolverInterface::requiresMeshConnectivityFor()
  */
-PRECICE_API void precicef_is_mesh_connectivity_required_(
+PRECICE_API void precicef_requires_mesh_connectivity_for_(
     const int *meshID,
     int *      required);
 
