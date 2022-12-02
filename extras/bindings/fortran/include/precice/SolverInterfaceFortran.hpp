@@ -664,16 +664,16 @@ PRECICE_API void precicef_get_version_information_(
 
 /**
  * Fortran syntax:
- * precicef_is_gradient_data_required_(
+ * precicef_requires_gradient_data_for_(
  *   INTEGER dataID,
  *   INTEGER required )
  *
  * IN:  dataID
  * OUT: required(1:true, 0:false)
  *
- * @copydoc precice::SolverInterface::isGradientDataRequired
+ * @copydoc precice::SolverInterface::requiresGradientDataFor
  */
-PRECICE_API void precicef_is_gradient_data_required_(const int *dataID, int *required);
+PRECICE_API void precicef_requires_gradient_data_for_(const int *dataID, int *required);
 
 /**
  * Fortran syntax:

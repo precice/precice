@@ -358,10 +358,10 @@ void precicec_readScalarData(
   impl->readScalarData(dataID, valueIndex, *dataValue);
 }
 
-int precicec_isGradientDataRequired(int dataID)
+int precicec_requiresGradientDataFor(int dataID)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  if (impl->isGradientDataRequired(dataID)) {
+  if (impl->requiresGradientDataFor(dataID)) {
     return 1;
   }
   return 0;

@@ -94,9 +94,9 @@ bool SolverInterface::requiresMeshConnectivityFor(int meshID) const
   return _impl->requiresMeshConnectivityFor(meshID);
 }
 
-bool SolverInterface::isGradientDataRequired(int dataID) const
+bool SolverInterface::requiresGradientDataFor(int dataID) const
 {
-  return _impl->isGradientDataRequired(dataID);
+  return _impl->requiresGradientDataFor(dataID);
 }
 
 bool SolverInterface::hasData(

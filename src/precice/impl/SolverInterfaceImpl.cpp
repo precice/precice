@@ -618,7 +618,7 @@ bool SolverInterfaceImpl::requiresMeshConnectivityFor(int meshID) const
   return context.meshRequirement == mapping::Mapping::MeshRequirement::FULL;
 }
 
-bool SolverInterfaceImpl::isGradientDataRequired(int dataID) const
+bool SolverInterfaceImpl::requiresGradientDataFor(int dataID) const
 {
   PRECICE_VALIDATE_DATA_ID(dataID);
   // Read data never requires gradients
@@ -1102,7 +1102,7 @@ void SolverInterfaceImpl::writeScalarGradientData(
   PRECICE_CHECK(_state != State::Finalized, "writeScalarGradientData(...) cannot be called after finalize().")
   PRECICE_REQUIRE_DATA_WRITE(dataID);
 
-  if (isGradientDataRequired(dataID)) {
+  if (requiresGradientDataFor(dataID)) {
     PRECICE_DEBUG("Gradient value = {}", Eigen::Map<const Eigen::VectorXd>(gradientValues, _dimensions).format(utils::eigenio::debug()));
     PRECICE_CHECK(gradientValues != nullptr, "writeScalarGradientData() was called with gradientValues == nullptr");
 
@@ -1161,7 +1161,7 @@ void SolverInterfaceImpl::writeBlockScalarGradientData(
   if (size == 0)
     return;
 
-  if (isGradientDataRequired(dataID)) {
+  if (requiresGradientDataFor(dataID)) {
 
     PRECICE_CHECK(valueIndices != nullptr, "writeBlockScalarGradientData() was called with valueIndices == nullptr");
     PRECICE_CHECK(gradientValues != nullptr, "writeBlockScalarGradientData() was called with gradientValues == nullptr");
@@ -1209,7 +1209,7 @@ void SolverInterfaceImpl::writeVectorGradientData(
   PRECICE_CHECK(_state != State::Finalized, "writeVectorGradientData(...) cannot be called after finalize().")
   PRECICE_REQUIRE_DATA_WRITE(dataID);
 
-  if (isGradientDataRequired(dataID)) {
+  if (requiresGradientDataFor(dataID)) {
 
     PRECICE_CHECK(gradientValues != nullptr, "writeVectorGradientData() was called with gradientValue == nullptr");
 
@@ -1259,7 +1259,7 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
   if (size == 0)
     return;
 
-  if (isGradientDataRequired(dataID)) {
+  if (requiresGradientDataFor(dataID)) {
 
     PRECICE_CHECK(valueIndices != nullptr, "writeBlockVectorGradientData() was called with valueIndices == nullptr");
     PRECICE_CHECK(gradientValues != nullptr, "writeBlockVectorGradientData() was called with gradientValues == nullptr");

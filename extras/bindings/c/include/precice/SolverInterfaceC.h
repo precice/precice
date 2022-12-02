@@ -449,8 +449,8 @@ PRECICE_API const char *precicec_getVersionInformation();
  */
 ///@{
 
-/// @copydoc precice::SolverInterface::isGradientDataRequired
-PRECICE_API int precicec_isGradientDataRequired(int dataID);
+/// @copydoc precice::SolverInterface::requiresGradientDataFor
+PRECICE_API int precicec_requiresGradientDataFor(int dataID);
 
 /// @copydoc precice::SolverInterface::writeScalarGradientData
 PRECICE_API void precicec_writeScalarGradientData(

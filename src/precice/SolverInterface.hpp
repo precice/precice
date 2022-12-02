@@ -1072,7 +1072,7 @@ public:
    * @param[in] dataID the id of the data
    * @returns whether gradient is required
    */
-  bool isGradientDataRequired(int dataID) const;
+  bool requiresGradientDataFor(int dataID) const;
 
   /**
    * @brief Writes vector gradient data given as block.
