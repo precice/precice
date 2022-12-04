@@ -73,8 +73,8 @@ BaseCouplingScheme::BaseCouplingScheme(
     PRECICE_ASSERT(_extrapolationOrder == UNDEFINED_EXTRAPOLATION_ORDER, "Extrapolation is not allowed for explicit coupling");
   } else {
     PRECICE_ASSERT(isImplicitCouplingScheme());
-    PRECICE_CHECK((_extrapolationOrder == 0) || (_extrapolationOrder == 1) || (_extrapolationOrder == 2),
-                  "Extrapolation order has to be  0, 1, or 2.");
+    PRECICE_CHECK((_extrapolationOrder == 0) || (_extrapolationOrder == 1),
+                  "Extrapolation order has to be  0 or 1.");
   }
 }
 
