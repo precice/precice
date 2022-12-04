@@ -128,7 +128,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
       BOOST_TEST(cplScheme->getNextTimestepMaxLength() > 0.0); // ??
     } else if (participantName == std::string("Participant1")) {
       cplScheme->initialize(0.0, 1);
-      BOOST_TEST(!cplScheme->hasDataBeenReceived());
+      BOOST_TEST(cplScheme->hasDataBeenReceived());
       BOOST_TEST(not cplScheme->isTimeWindowComplete());
       BOOST_TEST(cplScheme->isCouplingOngoing());
       while (cplScheme->isCouplingOngoing()) {
