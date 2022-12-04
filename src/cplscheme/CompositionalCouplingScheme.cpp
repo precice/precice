@@ -29,13 +29,6 @@ void CompositionalCouplingScheme::initialize(
   determineActiveCouplingSchemes();
 }
 
-void CompositionalCouplingScheme::receiveResultOfFirstAdvance()
-{
-  for (const Scheme &scheme : _couplingSchemes) {
-    scheme.scheme->receiveResultOfFirstAdvance();
-  }
-}
-
 bool CompositionalCouplingScheme::sendsInitializedData() const
 {
   PRECICE_TRACE();
@@ -135,6 +128,14 @@ bool CompositionalCouplingScheme::hasDataBeenReceived() const
   }
   PRECICE_DEBUG("return {}", hasBeenReceived);
   return hasBeenReceived;
+}
+
+void CompositionalCouplingScheme::retreiveTimeStepReceiveData(double relativeDt)
+{
+  PRECICE_TRACE();
+  for (SchemesIt it = _activeSchemesBegin; it != _activeSchemesEnd; it++) {
+    it->scheme->retreiveTimeStepReceiveData(relativeDt);
+  }
 }
 
 double CompositionalCouplingScheme::getTime() const

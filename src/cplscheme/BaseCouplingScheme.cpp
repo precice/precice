@@ -107,6 +107,7 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
   for (const DataMap::value_type &pair : receiveData) {
     // Data is only received on ranks with size>0, which is checked in the derived class implementation
     m2n->receive(pair.second->values(), pair.second->getMeshID(), pair.second->getDimensions());
+    pair.second->storeDataAtTime(pair.second->values(), time::Storage::WINDOW_END);
 
     if (pair.second->hasGradient()) {
       m2n->receive(pair.second->gradientValues(), pair.second->getMeshID(), pair.second->getDimensions() * pair.second->meshDimensions());
@@ -115,6 +116,14 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
     receivedDataIDs.push_back(pair.first);
   }
   PRECICE_DEBUG("Number of received data sets = {}", receivedDataIDs.size());
+}
+
+void BaseCouplingScheme::initializeZeroReceiveData(const DataMap &receiveData)
+{
+  for (const DataMap::value_type &pair : receiveData) {
+    auto values = pair.second->values();
+    pair.second->storeDataAtTime(values, time::Storage::WINDOW_START);
+  }
 }
 
 void BaseCouplingScheme::setTimeWindowSize(double timeWindowSize)
@@ -157,22 +166,9 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   }
 
   exchangeInitialData();
-
-  if (isImplicitCouplingScheme()) {
-    if (not doesFirstStep()) {
-      storeExtrapolationData();
-      moveToNextWindow();
-    }
-  }
+  performReceiveOfFirstAdvance();
 
   _isInitialized = true;
-}
-
-void BaseCouplingScheme::receiveResultOfFirstAdvance()
-{
-  PRECICE_ASSERT(_isInitialized, "Before calling receiveResultOfFirstAdvance() one has to call initialize().");
-  _hasDataBeenReceived = false;
-  performReceiveOfFirstAdvance();
 }
 
 bool BaseCouplingScheme::sendsInitializedData() const

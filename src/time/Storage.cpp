@@ -4,6 +4,10 @@
 
 namespace precice::time {
 
+const double Storage::WINDOW_START = 0.0;
+
+const double Storage::WINDOW_END = 1.0;
+
 Storage::Storage()
     : _sampleStorage{}
 {
@@ -11,22 +15,35 @@ Storage::Storage()
 
 void Storage::initialize(Eigen::VectorXd values)
 {
-  _sampleStorage.emplace_back(std::make_pair(0.0, values));
-  _sampleStorage.emplace_back(std::make_pair(1.0, values));
+  _sampleStorage.emplace_back(std::make_pair(WINDOW_START, values));
+  _sampleStorage.emplace_back(std::make_pair(WINDOW_END, values));
+}
+
+Eigen::VectorXd Storage::getValueAtTime(double time)
+{
+  for (auto &sample : _sampleStorage) {
+    if (math::equals(sample.first, time)) {
+      return sample.second;
+    }
+  }
+  PRECICE_ASSERT(false, "no value found!", time);
 }
 
 void Storage::setValueAtTime(double time, Eigen::VectorXd value)
 {
-  PRECICE_ASSERT(math::greater(time, 0.0), "Setting value outside of valid range!");
-  PRECICE_ASSERT(math::smallerEquals(time, 1.0), "Sampling outside of valid range!");
-  PRECICE_ASSERT(math::smaller(maxStoredNormalizedDt(), time), "Trying to overwrite existing values or to write values with a time that is too small. Please use clear(), if you want to reset the storage.");
+  PRECICE_ASSERT(math::smallerEquals(WINDOW_START, time), "Setting value outside of valid range!");
+  PRECICE_ASSERT(math::smallerEquals(time, WINDOW_END), "Sampling outside of valid range!");
+  PRECICE_ASSERT(math::smaller(maxStoredNormalizedDt(), time), maxStoredNormalizedDt(), time, "Trying to overwrite existing values or to write values with a time that is too small. Please use clear(), if you want to reset the storage.");
   _sampleStorage.emplace_back(std::make_pair(time, value));
 }
 
 double Storage::maxStoredNormalizedDt()
 {
-  PRECICE_ASSERT(_sampleStorage.size() > 0);
-  return _sampleStorage.back().first;
+  if (_sampleStorage.size() == 0) {
+    return -1; // invalid return
+  } else {
+    return _sampleStorage.back().first;
+  }
 }
 
 int Storage::nTimes()
@@ -56,7 +73,7 @@ void Storage::clear(bool keepZero)
   }
   _sampleStorage.clear();
   if (keepZero) {
-    _sampleStorage.emplace_back(std::make_pair(0.0, keep));
+    _sampleStorage.emplace_back(std::make_pair(WINDOW_START, keep));
   }
 }
 

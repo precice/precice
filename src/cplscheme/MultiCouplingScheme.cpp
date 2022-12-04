@@ -66,9 +66,19 @@ void MultiCouplingScheme::exchangeInitialData()
   if (_isController) {
     if (receivesInitializedData()) {
       for (auto &receiveExchange : _receiveDataVector) {
+        for (const DataMap::value_type &pair : receiveExchange.second) {
+          pair.second->clearTimeStepsStorage(false);
+        }
         receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
+        for (const DataMap::value_type &pair : receiveExchange.second) {
+          pair.second->moveTimeStepsStorage();
+        }
       }
       checkDataHasBeenReceived();
+    } else {
+      for (auto &receiveExchange : _receiveDataVector) {
+        initializeZeroReceiveData(receiveExchange.second);
+      }
     }
     if (sendsInitializedData()) {
       for (auto &sendExchange : _sendDataVector) {
@@ -83,12 +93,72 @@ void MultiCouplingScheme::exchangeInitialData()
     }
     if (receivesInitializedData()) {
       for (auto &receiveExchange : _receiveDataVector) {
+        for (const DataMap::value_type &pair : receiveExchange.second) {
+          pair.second->clearTimeStepsStorage(false);
+        }
         receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
+        for (const DataMap::value_type &pair : receiveExchange.second) {
+          pair.second->moveTimeStepsStorage();
+        }
       }
       checkDataHasBeenReceived();
+    } else {
+      for (auto &receiveExchange : _receiveDataVector) {
+        initializeZeroReceiveData(receiveExchange.second);
+      }
     }
   }
   PRECICE_DEBUG("Initial data is exchanged in MultiCouplingScheme");
+}
+
+void MultiCouplingScheme::retreiveTimeStepReceiveData(double relativeDt)
+{
+  PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
+  PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
+  for (auto &receiveExchange : _receiveDataVector) {
+    for (auto &receiveData : receiveExchange.second) {
+      receiveData.second->values() = receiveData.second->getDataAtTime(relativeDt);
+    }
+  }
+}
+
+typedef std::map<int, PtrCouplingData> DataMap;
+
+const DataMap MultiCouplingScheme::getAllData()
+{
+  DataMap allData;
+  PRECICE_INFO("##### assembling allData() #####");
+  // @todo user C++17 std::map::merge
+  for (auto &sendExchange : _sendDataVector) {
+    for (auto &sendData : sendExchange.second) {
+      PRECICE_INFO("DataID: {} {}", sendData.first, sendData.second->getDataID());
+    }
+    allData.insert(sendExchange.second.begin(), sendExchange.second.end());
+  }
+  for (auto &receiveExchange : _receiveDataVector) {
+    for (auto &receiveData : receiveExchange.second) {
+      PRECICE_INFO("DataID: {} {}", receiveData.first, receiveData.second->getDataID());
+    }
+    allData.insert(receiveExchange.second.begin(), receiveExchange.second.end());
+  }
+  PRECICE_INFO("##### assembling allData() done #####");
+
+  PRECICE_INFO("##### checking allData() #####");
+  for (auto &aData : allData) {
+    PRECICE_INFO("DataID: {} {}", aData.first, aData.second->getDataID());
+  }
+  PRECICE_INFO("##### checking allData() done #####");
+  return allData;
+}
+
+void MultiCouplingScheme::performReceiveOfFirstAdvance()
+{
+  for (auto &receiveExchange : _receiveDataVector) {
+    // receive nothing by default do constant extrapolation instead
+    for (const DataMap::value_type &pair : receiveExchange.second) {
+      pair.second->moveTimeStepsStorage();
+    }
+  }
 }
 
 bool MultiCouplingScheme::exchangeDataAndAccelerate()
@@ -102,6 +172,9 @@ bool MultiCouplingScheme::exchangeDataAndAccelerate()
 
   if (_isController) {
     for (auto &receiveExchange : _receiveDataVector) {
+      for (const DataMap::value_type &pair : receiveExchange.second) {
+        pair.second->clearTimeStepsStorage(true);
+      }
       receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
     }
     checkDataHasBeenReceived();
@@ -122,6 +195,9 @@ bool MultiCouplingScheme::exchangeDataAndAccelerate()
     convergence = receiveConvergence(_m2ns[_controller]);
 
     for (auto &receiveExchange : _receiveDataVector) {
+      for (const DataMap::value_type &pair : receiveExchange.second) {
+        pair.second->clearTimeStepsStorage(true);
+      }
       receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
     }
     checkDataHasBeenReceived();

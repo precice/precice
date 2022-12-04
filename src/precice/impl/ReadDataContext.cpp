@@ -32,20 +32,14 @@ int ReadDataContext::getInterpolationOrder() const
   return _waveform->getInterpolationOrder();
 }
 
-void ReadDataContext::storeDataInWaveform()
+void ReadDataContext::storeDataInWaveform(double relativeDt)
 {
-  _waveform->store(_providedData->values()); // store mapped or received _providedData in the _waveform
+  _waveform->store(_providedData->values(), relativeDt); // store mapped or received _providedData in the _waveform
 }
 
 Eigen::VectorXd ReadDataContext::sampleWaveformAt(double normalizedDt)
 {
   return _waveform->sample(normalizedDt);
-}
-
-void ReadDataContext::initializeWaveform()
-{
-  PRECICE_ASSERT(not hasWriteMapping(), "Write mapping does not need waveforms.");
-  _waveform->initialize(_providedData->values());
 }
 
 void ReadDataContext::moveToNextWindow()

@@ -81,8 +81,6 @@ public:
       double startTime,
       int    startTimeWindow) final override;
 
-  void receiveResultOfFirstAdvance() override final;
-
   /// Returns true, if any of the composed coupling schemes sendsInitializedData for this participant
   bool sendsInitializedData() const override final;
 
@@ -117,6 +115,13 @@ public:
    * @returns true, if data has been exchanged in last call of advance().
    */
   bool hasDataBeenReceived() const final override;
+
+  /**
+   * @brief retreives time step data from CouplingData into mesh values
+   *
+   * @param relativeDt relative dt associated with the data.
+   */
+  void retreiveTimeStepReceiveData(double relativeDt) final override;
 
   /**
    * @brief Returns the currently computed time of the coupling scheme.

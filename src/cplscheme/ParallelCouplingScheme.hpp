@@ -59,6 +59,8 @@ public:
 private:
   logging::Logger _log{"cplscheme::ParallelCouplingScheme"};
 
+  void performReceiveOfFirstAdvance() override final;
+
   /**
    * @brief Exchanges all data between the participants of the ParallelCouplingScheme and applies acceleration.
    * @returns true, if iteration converged

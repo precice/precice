@@ -192,9 +192,6 @@ public:
    */
   void initialize(double startTime, int startTimeWindow) override final;
 
-  /// Receives result of first advance, if this has to happen inside SolverInterface::initialize(), see CouplingScheme.hpp
-  void receiveResultOfFirstAdvance() override final;
-
   /**
    * @brief Advances the coupling scheme.
    */
@@ -236,11 +233,30 @@ protected:
   /// Map that links DataID to CouplingData
   typedef std::map<int, PtrCouplingData> DataMap;
 
-  /// Sends data sendDataIDs given in mapCouplingData with communication.
+  /**
+   * @brief Sends data sendDataIDs given in mapCouplingData with communication.
+   *
+   * @param m2n M2N used for communication
+   * @param sendData DataMap associated with sent data
+   */
   void sendData(const m2n::PtrM2N &m2n, const DataMap &sendData);
 
-  /// Receives data receiveDataIDs given in mapCouplingData with communication.
+  /**
+   * @brief Receives data receiveDataIDs given in mapCouplingData with communication.
+   *
+   * @param m2n M2N used for communication
+   * @param receiveData DataMap associated with received data
+   */
   void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData);
+
+  /**
+   * @brief Initialized receiveData with zero values.
+   *
+   * This function is called instead of receive data, if no initial data is received to initialize data with zero
+   *
+   * @param receiveData DataMap associated with received data
+   */
+  void initializeZeroReceiveData(const DataMap &receiveData);
 
   /**
    * @brief interface to provide all CouplingData, depending on coupling scheme being used
@@ -505,13 +521,12 @@ private:
   virtual void exchangeInitialData() = 0;
 
   /**
-   * @brief implements functionality for receiveResultOfFirstAdvance
+   * @brief Receives result of first advance, if this has to happen inside BaseCouplingScheme::initialize()
+   *
+   * This is only relevant for the second participant of the SerialCouplingScheme, because other coupling schemes only
+   * receive initial data in initialize.
    */
-  virtual void performReceiveOfFirstAdvance()
-  {
-    // noop by default. Will be overridden by child-coupling-schemes, if data has to be received here. See SerialCouplingScheme.
-    return;
-  }
+  virtual void performReceiveOfFirstAdvance() = 0;
 
   /// Functions needed for advance()
 

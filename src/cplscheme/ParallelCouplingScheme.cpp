@@ -23,6 +23,14 @@ ParallelCouplingScheme::ParallelCouplingScheme(
     : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
                        secondParticipant, localParticipant, std::move(m2n), maxIterations, cplMode, dtMethod, extrapolationOrder) {}
 
+void ParallelCouplingScheme::performReceiveOfFirstAdvance()
+{
+  // receive nothing by default do constant extrapolation instead
+  for (const DataMap::value_type &pair : getReceiveData()) {
+    pair.second->moveTimeStepsStorage();
+  }
+}
+
 bool ParallelCouplingScheme::exchangeDataAndAccelerate()
 {
   bool convergence = true;
@@ -34,16 +42,34 @@ bool ParallelCouplingScheme::exchangeDataAndAccelerate()
     if (isImplicitCouplingScheme()) {
       convergence = receiveConvergence(getM2N());
     }
+    for (const DataMap::value_type &pair : getReceiveData()) {
+      pair.second->clearTimeStepsStorage(true);
+    }
     receiveData(getM2N(), getReceiveData());
+    if (convergence) {
+      // received converged result of this window, trigger move
+      for (const DataMap::value_type &pair : getReceiveData()) {
+        pair.second->moveTimeStepsStorage();
+      }
+    }
     checkDataHasBeenReceived();
   } else { // second participant
     PRECICE_DEBUG("Receiving data...");
+    for (const DataMap::value_type &pair : getReceiveData()) {
+      pair.second->clearTimeStepsStorage(true);
+    }
     receiveData(getM2N(), getReceiveData());
     checkDataHasBeenReceived();
     if (isImplicitCouplingScheme()) {
       PRECICE_DEBUG("Perform acceleration (only second participant)...");
       convergence = doImplicitStep();
       sendConvergence(getM2N(), convergence);
+    }
+    if (convergence) {
+      // received converged result of this window, trigger move
+      for (const DataMap::value_type &pair : getReceiveData()) {
+        pair.second->moveTimeStepsStorage();
+      }
     }
     PRECICE_DEBUG("Sending data...");
     sendData(getM2N(), getSendData());

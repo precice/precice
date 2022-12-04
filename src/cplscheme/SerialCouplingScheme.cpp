@@ -78,12 +78,20 @@ void SerialCouplingScheme::receiveAndSetTimeWindowSize()
 void SerialCouplingScheme::performReceiveOfFirstAdvance()
 {
   if (doesFirstStep()) {
-    // do nothing
+    // do constant extrapolation
+    for (const DataMap::value_type &pair : getReceiveData()) {
+      pair.second->moveTimeStepsStorage();
+    }
   } else { // second participant
     receiveAndSetTimeWindowSize();
     PRECICE_DEBUG("Receiving data...");
+    for (const DataMap::value_type &pair : getReceiveData()) {
+      pair.second->clearTimeStepsStorage(true);
+    }
     receiveData(getM2N(), getReceiveData());
-    checkDataHasBeenReceived();
+    if (not hasDataBeenReceived()) {
+      checkDataHasBeenReceived();
+    }
   }
 }
 
@@ -99,7 +107,18 @@ bool SerialCouplingScheme::exchangeDataAndAccelerate()
     if (isImplicitCouplingScheme()) {
       convergence = receiveConvergence(getM2N());
     }
+
+    for (const DataMap::value_type &pair : getReceiveData()) {
+      pair.second->clearTimeStepsStorage(true);
+    }
+
     receiveData(getM2N(), getReceiveData());
+    if (convergence) {
+      // received converged result of this window, trigger move
+      for (const DataMap::value_type &pair : getReceiveData()) {
+        pair.second->moveTimeStepsStorage();
+      }
+    }
     checkDataHasBeenReceived();
   } else { // second participant
     if (isImplicitCouplingScheme()) {
@@ -113,6 +132,16 @@ bool SerialCouplingScheme::exchangeDataAndAccelerate()
     if (isCouplingOngoing() || (isImplicitCouplingScheme() && not convergence)) {
       receiveAndSetTimeWindowSize();
       PRECICE_DEBUG("Receiving data...");
+      if (convergence) {
+        // will receive first iteration of next window
+        // need to move storage to store data from past window at beginning of next window.
+        for (const DataMap::value_type &pair : getReceiveData()) {
+          pair.second->moveTimeStepsStorage();
+        }
+      }
+      for (const DataMap::value_type &pair : getReceiveData()) {
+        pair.second->clearTimeStepsStorage(true);
+      }
       receiveData(getM2N(), getReceiveData());
       checkDataHasBeenReceived();
     }

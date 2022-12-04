@@ -69,16 +69,6 @@ public:
       int    startTimeWindow) = 0;
 
   /**
-   * @brief Receives result of first advance, if this has to happen inside SolverInterface::initialize()
-   *
-   * This is only relevant for the second participant of the SerialCouplingScheme, because other coupling schemes only
-   * receive initial data in initialize. This part is implemented as a public function to be called from
-   * SolverInterfaceImpl. SolverInterfaceImpl has to store data received in CouplingScheme::initialize before calling
-   * CouplingScheme::receiveResultOfFirstAdvance, which will override the data in the receive buffer.
-   */
-  virtual void receiveResultOfFirstAdvance() = 0;
-
-  /**
    * @brief Returns whether this participant of the coupling scheme sends initialized data.
    *
    * @returns true, if this participant of the coupling scheme sends initialized data
@@ -119,6 +109,14 @@ public:
 
   /// @brief Returns true, if data has been exchanged in last call of advance().
   virtual bool hasDataBeenReceived() const = 0;
+
+  // @todo find a better name. This is too low level.
+  /**
+   * @brief retreives time step data from CouplingData into mesh values
+   *
+   * @param relativeDt relative dt associated with the data.
+   */
+  virtual void retreiveTimeStepReceiveData(double relativeDt) = 0;
 
   /// Returns the currently computed time of the coupling scheme.
   virtual double getTime() const = 0;

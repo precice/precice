@@ -326,10 +326,6 @@ double SolverInterfaceImpl::initialize()
   double time       = 0.0;
   int    timeWindow = 1;
 
-  for (auto &context : _accessor->readDataContexts()) {
-    context.initializeWaveform();
-  }
-
   _meshLock.lockAll();
 
   if (_couplingScheme->sendsInitializedData()) {
@@ -342,23 +338,10 @@ double SolverInterfaceImpl::initialize()
   // result of _couplingScheme->getNextTimestepMaxLength() can change when calling _couplingScheme->initialize(...) and first participant method is used for setting the time window size.
   _couplingScheme->initialize(time, timeWindow);
 
-  if (_couplingScheme->hasDataBeenReceived()) {
-    performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0);
-    mapReadData();
-    performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
-  }
-
-  for (auto &context : _accessor->readDataContexts()) {
-    context.moveToNextWindow();
-  }
-
-  _couplingScheme->receiveResultOfFirstAdvance();
-
-  if (_couplingScheme->hasDataBeenReceived()) {
-    performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0);
-    mapReadData();
-    performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
-  }
+  performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0);
+  std::vector<double> receiveTimes{time::Storage::WINDOW_START, time::Storage::WINDOW_END};
+  mapReadData(receiveTimes);
+  performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
 
   resetWrittenData();
   PRECICE_DEBUG("Plot output");
@@ -426,7 +409,8 @@ double SolverInterfaceImpl::advance(
 
   if (_couplingScheme->hasDataBeenReceived()) {
     performDataActions({action::Action::READ_MAPPING_PRIOR}, time);
-    mapReadData();
+    std::vector<double> receiveTimes{time::Storage::WINDOW_END};
+    mapReadData(receiveTimes);
     performDataActions({action::Action::READ_MAPPING_POST}, time);
   }
 
@@ -1817,16 +1801,20 @@ void SolverInterfaceImpl::mapWrittenData()
   clearMappings(_accessor->writeMappingContexts());
 }
 
-void SolverInterfaceImpl::mapReadData()
+void SolverInterfaceImpl::mapReadData(std::vector<double> receiveTimes)
 {
   PRECICE_TRACE();
   computeMappings(_accessor->readMappingContexts(), "read");
-  for (auto &context : _accessor->readDataContexts()) {
-    if (context.isMappingRequired()) {
-      PRECICE_DEBUG("Map read data \"{}\" to mesh \"{}\"", context.getDataName(), context.getMeshName());
-      context.mapData();
+  for (auto time : receiveTimes) {
+    _couplingScheme->retreiveTimeStepReceiveData(time); // @todo loads data into ALL read data. Would be better to only perform this for read data with name context.getDataName
+    for (auto &context : _accessor->readDataContexts()) {
+      // context.retreiveTimeStepData(time);  // @todo try to retreive data via context. But complicated: DataContext needs a connection to associated CouplingData...
+      if (context.isMappingRequired()) {
+        PRECICE_DEBUG("Map read data \"{}\" to mesh \"{}\"", context.getDataName(), context.getMeshName());
+        context.mapData();
+      }
+      context.storeDataInWaveform(time);
     }
-    context.storeDataInWaveform();
   }
   clearMappings(_accessor->readMappingContexts());
 }

@@ -525,7 +525,7 @@ private:
   void mapWrittenData();
 
   /// Computes, performs, and resets all suitable read mappings.
-  void mapReadData();
+  void mapReadData(std::vector<double> receiveTimes);
 
   /**
    * @brief Performs all data actions with given timing.

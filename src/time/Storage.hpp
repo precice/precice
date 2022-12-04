@@ -7,6 +7,12 @@ namespace precice::time {
 
 class Storage {
 public:
+  /// Fixed time associated with beginning of window
+  static const double WINDOW_START;
+
+  /// Fixed time associated with end of window
+  static const double WINDOW_END;
+
   /**
    * @brief Stores data samples in time and provides corresponding convenience functions.
    *
@@ -40,6 +46,15 @@ public:
    * @return the maximum normalized dt from this Storage
    */
   double maxStoredNormalizedDt();
+
+  // @todo try to remove this function. In most cases we could use Eigen::VectorXd Storage::getValueAtEndOfWindow() instead (more efficient and robust).
+  /**
+   * @brief Returns the value at given time contained in this Storage.
+   *
+   * @param time a double, the value in the Storage is associated with
+   * @return Eigen::VectorXd a value in this Storage
+   */
+  Eigen::VectorXd getValueAtTime(double time);
 
   /**
    * @brief Returns the value at time following "before" contained in this Storage.

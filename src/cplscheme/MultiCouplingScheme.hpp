@@ -77,6 +77,13 @@ public:
     return std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(), [](const auto &sendExchange) { return not sendExchange.second.empty(); });
   }
 
+  /**
+   * @brief retreives time step data from CouplingData into mesh values
+   *
+   * @param relativeDt relative dt associated with the data.
+   */
+  void retreiveTimeStepReceiveData(double relativeDt) override final;
+
 private:
   /**
    * @brief A vector of m2ns. A m2n is a communication device to the other coupling participant.
@@ -99,18 +106,9 @@ private:
    * @brief BiCouplingScheme has _sendData and _receiveData
    * @returns DataMap with all data
    */
-  const DataMap getAllData() override
-  {
-    DataMap allData;
-    // @todo user C++17 std::map::merge
-    for (auto &sendData : _sendDataVector) {
-      allData.insert(sendData.second.begin(), sendData.second.end());
-    }
-    for (auto &receiveData : _receiveDataVector) {
-      allData.insert(receiveData.second.begin(), receiveData.second.end());
-    }
-    return allData;
-  }
+  const DataMap getAllData() override;
+
+  void performReceiveOfFirstAdvance() override final;
 
   /**
    * @brief Exchanges all data between the participants of the MultiCouplingScheme and applies acceleration.

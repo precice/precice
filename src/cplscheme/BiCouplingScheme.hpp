@@ -74,6 +74,13 @@ public:
     return getSendData(dataID) != nullptr;
   }
 
+  /**
+   * @brief retreives time step data from CouplingData into mesh values
+   *
+   * @param relativeDt relative dt associated with the data.
+   */
+  void retreiveTimeStepReceiveData(double relativeDt) override final;
+
 protected:
   /// Returns all data to be sent.
   DataMap &getSendData()

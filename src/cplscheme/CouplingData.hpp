@@ -5,6 +5,7 @@
 #include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/impl/Extrapolation.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "time/Storage.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -71,10 +72,22 @@ public:
   void initializeExtrapolation();
 
   /// move to next window and initialize data via extrapolation
-  void moveToNextWindow();
+  void moveToNextWindow(); // @todo very easy to mix up with moveTimeStepsStorage. Try to rename or merge!
 
   /// store current value in _extrapolation
   void storeExtrapolationData();
+
+  /// clears _timeStepsStorage. Called after data was written or before data is received.
+  void clearTimeStepsStorage(bool keepZero);
+
+  /// moves _timeStepsStorage. Called after converged data was received.
+  void moveTimeStepsStorage(); // @todo very easy to mix up with moveToNextWindow. Try to rename or merge!
+
+  /// stores data at key relativeDt in _timeStepsStorage for later use.
+  void storeDataAtTime(Eigen::VectorXd data, double relativeDt);
+
+  /// returns data for a given key. Assumes that this data exists under the key.
+  Eigen::VectorXd getDataAtTime(double relativeDt);
 
 private:
   /**
@@ -104,6 +117,9 @@ private:
 
   /// Extrapolation associated with this CouplingData
   cplscheme::impl::Extrapolation _extrapolation;
+
+  /// Stores time steps in the current time window
+  time::Storage _timeStepsStorage;
 };
 
 } // namespace cplscheme
