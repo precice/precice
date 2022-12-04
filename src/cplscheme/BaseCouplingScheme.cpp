@@ -109,7 +109,7 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
     PRECICE_ASSERT(math::equals(timesAscending(timesAscending.size() - 1), time::Storage::WINDOW_END), timesAscending(timesAscending.size() - 1)); // assert that last element is time::Storage::WINDOW_END
 
     auto serializedSamples = pair.second->getSerialized();
-    pair.second->clearTimeStepsStorage();
+    pair.second->clearTimeStepsStorage(false);
 
     // Data is actually only send if size>0, which is checked in the derived classes implementation
     m2n->send(serializedSamples, pair.second->getMeshID(), pair.second->getDimensions() * timesAscending.size());

@@ -144,7 +144,7 @@ void BiCouplingScheme::exchangeInitialData()
     }
     if (receivesInitializedData()) {
       for (const DataMap::value_type &pair : getReceiveData()) {
-        pair.second->clearTimeStepsStorage();
+        pair.second->clearTimeStepsStorage(false);
       }
       receiveData(getM2N(), getReceiveData());
       checkDataHasBeenReceived();
@@ -154,7 +154,7 @@ void BiCouplingScheme::exchangeInitialData()
   } else { // second participant
     if (receivesInitializedData()) {
       for (const DataMap::value_type &pair : getReceiveData()) {
-        pair.second->clearTimeStepsStorage();
+        pair.second->clearTimeStepsStorage(false);
       }
       receiveData(getM2N(), getReceiveData());
       checkDataHasBeenReceived();

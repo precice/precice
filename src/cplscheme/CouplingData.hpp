@@ -75,7 +75,7 @@ public:
   Eigen::VectorXd getStoredTimesAscending();
 
   /// clears _timeStepsStorage. Called after data was written or before data is received.
-  void clearTimeStepsStorage(bool keepZero = false);
+  void clearTimeStepsStorage(bool keepZero);
 
   /// moves _timeStepsStorage. Called after converged data was received.
   void moveTimeStepsStorage();

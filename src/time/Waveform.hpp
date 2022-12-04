@@ -42,17 +42,11 @@ public:
   int getInterpolationOrder() const;
 
   /**
-   * @brief Used to initialize _storage according to required size and initializes Waveform as constant with given values.
-   * @param values Defines constant initial value of waveform and its size
-   */
-  void initialize(const Eigen::VectorXd &values);
-
-  /**
    * @brief Updates an entry for normalizedDt in _timeWindows with given value.
    * @param values Sample at normalizedDt in this time window
    * @param normalizedDt normalizedDt associated with this value. Only allows values between 0 and 1. 0 refers to the beginning of the window and 1 to the end.
    */
-  void store(const Eigen::VectorXd &values, double normalizedDt = 1.0);
+  void store(const Eigen::VectorXd &values, double normalizedDt);
 
   /**
    * @brief Shifts all entries in _timeWindows. The new entry is initialized as the value from the last window (= constant extrapolation). Called when moving to the next time window.

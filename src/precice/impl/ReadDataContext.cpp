@@ -45,7 +45,8 @@ Eigen::VectorXd ReadDataContext::sampleWaveformAt(double normalizedDt)
 void ReadDataContext::initializeWaveform()
 {
   PRECICE_ASSERT(not hasWriteMapping(), "Write mapping does not need waveforms.");
-  _waveform->initialize(_providedData->values());
+  _waveform->store(_providedData->values(), time::Storage::WINDOW_START);
+  _waveform->store(_providedData->values(), time::Storage::WINDOW_END);
 }
 
 void ReadDataContext::moveToNextWindow()

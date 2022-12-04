@@ -67,7 +67,7 @@ void MultiCouplingScheme::exchangeInitialData()
     if (receivesInitializedData()) {
       for (auto &receiveExchange : _receiveDataVector) {
         for (const DataMap::value_type &pair : receiveExchange.second) {
-          pair.second->clearTimeStepsStorage();
+          pair.second->clearTimeStepsStorage(false);
         }
         receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
       }
@@ -91,7 +91,7 @@ void MultiCouplingScheme::exchangeInitialData()
     if (receivesInitializedData()) {
       for (auto &receiveExchange : _receiveDataVector) {
         for (const DataMap::value_type &pair : receiveExchange.second) {
-          pair.second->clearTimeStepsStorage();
+          pair.second->clearTimeStepsStorage(false);
         }
         receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
       }

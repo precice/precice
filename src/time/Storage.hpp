@@ -111,7 +111,7 @@ public:
    *
    * @param keepZero if true, keep value associated with 0.0.
    */
-  void clear(bool keepZero = false);
+  void clear(bool keepZero);
 
 private:
   /// Stores values on the current window associated with normalized dt.
