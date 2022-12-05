@@ -90,7 +90,10 @@ void runCoupling(
       // The max timestep length is required to be obeyed.
       double maxLengthTimestep = cplScheme.getNextTimestepMaxLength();
       cplScheme.addComputedTime(maxLengthTimestep);
-      cplScheme.advance();
+      cplScheme.firstSynchronization({});
+      cplScheme.firstExchange();
+      cplScheme.secondSynchronization();
+      cplScheme.secondExchange();
       iterationCount++;
       // A coupling timestep is complete, when the coupling iterations are
       // globally converged and if subcycling steps have filled one global
@@ -158,7 +161,10 @@ void runCoupling(
       // The max timestep length is required to be obeyed.
       double maxLengthTimestep = cplScheme.getNextTimestepMaxLength();
       cplScheme.addComputedTime(maxLengthTimestep);
-      cplScheme.advance();
+      cplScheme.firstSynchronization({});
+      cplScheme.firstExchange();
+      cplScheme.secondSynchronization();
+      cplScheme.secondExchange();
       iterationCount++;
       // A coupling timestep is complete, when the coupling iterations are
       // globally converged and if subcycling steps have filled one global
@@ -257,7 +263,10 @@ void runCouplingWithSubcycling(
     // Main coupling loop
     while (cplScheme.isCouplingOngoing()) {
       cplScheme.addComputedTime(computedTimestepLength);
-      cplScheme.advance();
+      cplScheme.firstSynchronization({});
+      cplScheme.firstExchange();
+      cplScheme.secondSynchronization();
+      cplScheme.secondExchange();
       // A coupling timestep is complete, when the coupling iterations are
       // globally converged and if subcycling steps have filled one global
       // timestep.
@@ -339,7 +348,10 @@ void runCouplingWithSubcycling(
     // Main coupling loop
     while (cplScheme.isCouplingOngoing()) {
       cplScheme.addComputedTime(computedTimestepLength);
-      cplScheme.advance();
+      cplScheme.firstSynchronization({});
+      cplScheme.firstExchange();
+      cplScheme.secondSynchronization();
+      cplScheme.secondExchange();
       computedTimestepLength =
           cplScheme.getNextTimestepMaxLength() < preferredTimestepLength
               ? cplScheme.getNextTimestepMaxLength()
@@ -735,7 +747,10 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
     mesh->data(sendDataIndex)->values() = v;
     cplScheme.addComputedTime(timestepLength);
 
-    cplScheme.advance();
+    cplScheme.firstSynchronization({});
+    cplScheme.firstExchange();
+    cplScheme.secondSynchronization();
+    cplScheme.secondExchange();
 
     if (i < maxIterations - 1) {
       BOOST_TEST(not cplScheme.isTimeWindowComplete());
@@ -779,7 +794,10 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
     mesh->data(sendDataIndex)->values() = v;
     cplScheme.addComputedTime(timestepLength);
 
-    cplScheme.advance();
+    cplScheme.firstSynchronization({});
+    cplScheme.firstExchange();
+    cplScheme.secondSynchronization();
+    cplScheme.secondExchange();
 
     if (i < maxIterations - 1) {
       BOOST_TEST(not cplScheme.isTimeWindowComplete());
@@ -973,7 +991,10 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
     mesh->data(sendDataIndex)->values() = v;
     cplScheme.addComputedTime(timestepLength);
 
-    cplScheme.advance();
+    cplScheme.firstSynchronization({});
+    cplScheme.firstExchange();
+    cplScheme.secondSynchronization();
+    cplScheme.secondExchange();
 
     if (i < maxIterations - 1) {
       BOOST_TEST(not cplScheme.isTimeWindowComplete());
@@ -1017,7 +1038,10 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
     mesh->data(sendDataIndex)->values() = v;
     cplScheme.addComputedTime(timestepLength);
 
-    cplScheme.advance();
+    cplScheme.firstSynchronization({});
+    cplScheme.firstExchange();
+    cplScheme.secondSynchronization();
+    cplScheme.secondExchange();
 
     if (i < maxIterations - 1) {
       BOOST_TEST(not cplScheme.isTimeWindowComplete());
@@ -1181,7 +1205,10 @@ BOOST_AUTO_TEST_CASE(SecondOrderWithAcceleration)
     mesh->data(sendDataIndex)->values() = v;
     cplScheme.addComputedTime(timestepLength);
 
-    cplScheme.advance();
+    cplScheme.firstSynchronization({});
+    cplScheme.firstExchange();
+    cplScheme.secondSynchronization();
+    cplScheme.secondExchange();
 
     if (i < maxIterations - 1) {
       BOOST_TEST(not cplScheme.isTimeWindowComplete());
@@ -1225,7 +1252,10 @@ BOOST_AUTO_TEST_CASE(SecondOrderWithAcceleration)
     mesh->data(sendDataIndex)->values() = v;
     cplScheme.addComputedTime(timestepLength);
 
-    cplScheme.advance();
+    cplScheme.firstSynchronization({});
+    cplScheme.firstExchange();
+    cplScheme.secondSynchronization();
+    cplScheme.secondExchange();
 
     if (i < maxIterations - 1) {
       BOOST_TEST(not cplScheme.isTimeWindowComplete());
@@ -1269,7 +1299,10 @@ BOOST_AUTO_TEST_CASE(SecondOrderWithAcceleration)
     mesh->data(sendDataIndex)->values() = v;
     cplScheme.addComputedTime(timestepLength);
 
-    cplScheme.advance();
+    cplScheme.firstSynchronization({});
+    cplScheme.firstExchange();
+    cplScheme.secondSynchronization();
+    cplScheme.secondExchange();
 
     if (i < maxIterations - 1) {
       BOOST_TEST(not cplScheme.isTimeWindowComplete());
@@ -1640,7 +1673,10 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
         cplScheme.markActionFulfilled(readIterationCheckpoint);
       }
       cplScheme.addComputedTime(timestepLength);
-      cplScheme.advance();
+      cplScheme.firstSynchronization({});
+      cplScheme.firstExchange();
+      cplScheme.secondSynchronization();
+      cplScheme.secondExchange();
       BOOST_TEST(cplScheme.hasDataBeenReceived());
     }
   } else {
@@ -1675,7 +1711,10 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
         cplScheme.markActionFulfilled(writeIterationCheckpoint);
       }
       cplScheme.addComputedTime(timestepLength);
-      cplScheme.advance();
+      cplScheme.firstSynchronization({});
+      cplScheme.firstExchange();
+      cplScheme.secondSynchronization();
+      cplScheme.secondExchange();
       if (cplScheme.isCouplingOngoing()) {
         BOOST_TEST(cplScheme.hasDataBeenReceived());
       }

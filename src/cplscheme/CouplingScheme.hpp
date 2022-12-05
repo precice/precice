@@ -32,8 +32,8 @@ namespace cplscheme {
  * -# query and fulfill required actions
  * -# compute data to be sent (possibly taking into account received data from
  *    initialize())
- * -# advance the coupling scheme with advance(); where the maximum timestep
- *    length (= time window size) needs to be obeyed
+ * -# advance the coupling scheme in 4 steps:
+ *    firstSynchronization, firstExchange, secondSynchronization, secondExchange;
  * -# ....
  * -# when the method isCouplingOngoing() returns false, call finalize() to
  *    stop the coupling scheme
@@ -90,23 +90,14 @@ public:
   /// Returns true, if initialize has been called.
   virtual bool isInitialized() const = 0;
 
+  /** @name Advancing
+   *
+   * Advancing the couplingscheme
+   * @{
+   */
+
   /// @brief Adds newly computed time. Has to be called before every advance.
   virtual void addComputedTime(double timeToAdd) = 0;
-
-  /**
-   * @brief Exchanges data and updates the state of the coupling scheme.
-   *
-   * @pre initialize() has been called.
-   *
-   * Does not necessarily advance in time.
-   */
-  void advance()
-  {
-    firstSynchronization({});
-    firstExchange();
-    secondSynchronization();
-    secondExchange();
-  }
 
   using ChangedMeshes = std::vector<MeshID>;
 
@@ -150,6 +141,8 @@ public:
    * @pre \ref secondSynchronization() was called
    */
   virtual void secondExchange() = 0;
+
+  ///@}
 
   /// Finalizes the coupling and disconnects communication.
   virtual void finalize() = 0;
