@@ -419,7 +419,7 @@ double SolverInterfaceImpl::advance(
     performDataActions({action::Action::WRITE_MAPPING_POST}, time);
   }
 
-  advanceCouplingSchemes();
+  advanceCouplingScheme();
 
   if (_couplingScheme->isTimeWindowComplete()) {
     for (auto &context : _accessor->readDataContexts()) {
@@ -1924,7 +1924,7 @@ void SolverInterfaceImpl::syncTimestep(double computedTimestepLength)
   }
 }
 
-void SolverInterfaceImpl::advanceCouplingSchemes()
+void SolverInterfaceImpl::advanceCouplingScheme()
 {
   PRECICE_DEBUG("Advance coupling scheme");
   // Orchestrate local and remote mesh changes
