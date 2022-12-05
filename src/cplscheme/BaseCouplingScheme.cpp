@@ -166,7 +166,15 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   }
 
   exchangeInitialData();
-  performReceiveOfFirstAdvance();
+
+  if (isImplicitCouplingScheme()) {
+    if (not doesFirstStep()) {
+      storeExtrapolationData();
+      moveToNextWindow();
+    }
+  }
+
+  performReveiveOfFirstAdvance();
 
   _isInitialized = true;
 }
