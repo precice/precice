@@ -93,10 +93,6 @@ void SerialCouplingScheme::exchangeFirstData()
     PRECICE_DEBUG("Sending data...");
     sendTimeWindowSize();
     sendData(getM2N(), getSendData());
-    PRECICE_DEBUG("Receiving convergence data...");
-    if (isImplicitCouplingScheme()) {
-      receiveConvergence(getM2N());
-    }
   } else { // second participant
     if (isImplicitCouplingScheme()) {
       PRECICE_DEBUG("Test Convergence and accelerate...");
@@ -111,6 +107,10 @@ void SerialCouplingScheme::exchangeFirstData()
 void SerialCouplingScheme::exchangeSecondData()
 {
   if (doesFirstStep()) { // first participant
+    PRECICE_DEBUG("Receiving convergence data...");
+    if (isImplicitCouplingScheme()) {
+      receiveConvergence(getM2N());
+    }
     PRECICE_DEBUG("Receiving data...");
     receiveData(getM2N(), getReceiveData());
     checkDataHasBeenReceived();
