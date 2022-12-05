@@ -50,7 +50,7 @@ public:
  * @param boundMin 
  * @param boundMax 
  */
-  BoundingBox::BoundingBox(Eigen::VectorXd boundMin, Eigen::VectorXd boundMax);
+  explicit BoundingBox::BoundingBox(Eigen::VectorXd boundMin, Eigen::VectorXd boundMax);
 
   /// Special Members
   BoundingBox(const BoundingBox &) = default;

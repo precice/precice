@@ -31,7 +31,7 @@ BoundingBox::BoundingBox(Eigen::VectorXd boundMin, Eigen::VectorXd boundMax)
   PRECICE_ASSERT(isMinLessThanMax, "Each component of min vertex must be less than that of max vertex in the same axis direction.", boundMin, boundMax);
 
   // Assign private members
-  _boundMin   = std::move(boundMin);
+  _boundMin   = std::move(boundMin); // converts lval to rval
   _boundMax   = std::move(boundMax);
   _dimensions = dimMin;
 }
@@ -53,7 +53,7 @@ BoundingBox::BoundingBox(int dimension)
   double max = std::numeric_limits<double>::max();
 
   if (dimension == 2) {
-    _boundMin << min, min;
+    _boundMin = Eigen::VectorXd{min,min};
     _boundMax << max, max;
   }
   else {
