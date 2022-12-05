@@ -130,8 +130,10 @@ public:
   /** Receive mesh changes from remote participants in the second step.
    *
    * At this point, the remote participant may have changed the meshes if
-   * is coupled using a serial coupling scheme.
-   * So we only need to receive the remote changes here.
+   * it is using a serial coupling scheme.
+   * In contrast, the local participant has already communicated local changes
+   * to the remote participant during @ref firstSynchronization().
+   * Hence we only need to receive remote changes here.
    *
    * @note local changes are covered by \ref firstSynchronization()
    *
