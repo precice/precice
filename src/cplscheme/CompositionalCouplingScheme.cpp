@@ -253,12 +253,12 @@ bool CompositionalCouplingScheme::isTimeWindowComplete() const
 }
 
 bool CompositionalCouplingScheme::isActionRequired(
-    const std::string &actionName) const
+    Action action) const
 {
-  PRECICE_TRACE(actionName);
+  PRECICE_TRACE();
   bool isRequired = false;
   for (auto scheme : allSchemes()) {
-    if (scheme->isActionRequired(actionName)) {
+    if (scheme->isActionRequired(action)) {
       isRequired = true;
       break;
     }
@@ -268,12 +268,12 @@ bool CompositionalCouplingScheme::isActionRequired(
 }
 
 bool CompositionalCouplingScheme::isActionFulfilled(
-    const std::string &actionName) const
+    Action action) const
 {
-  PRECICE_TRACE(actionName);
+  PRECICE_TRACE();
   bool isFulfilled = false;
   for (auto scheme : allSchemes()) {
-    if (scheme->isActionFulfilled(actionName)) {
+    if (scheme->isActionFulfilled(action)) {
       isFulfilled = true;
       break;
     }
@@ -283,22 +283,22 @@ bool CompositionalCouplingScheme::isActionFulfilled(
 }
 
 void CompositionalCouplingScheme::markActionFulfilled(
-    const std::string &actionName)
+    Action action)
 {
-  PRECICE_TRACE(actionName);
+  PRECICE_TRACE();
   for (auto scheme : allSchemes()) {
-    if (scheme->isActionRequired(actionName)) {
-      scheme->markActionFulfilled(actionName);
+    if (scheme->isActionRequired(action)) {
+      scheme->markActionFulfilled(action);
     }
   }
 }
 
 void CompositionalCouplingScheme::requireAction(
-    const std::string &actionName)
+    Action action)
 {
-  PRECICE_TRACE(actionName);
+  PRECICE_TRACE();
   for (auto scheme : schemesToRun()) {
-    scheme->requireAction(actionName);
+    scheme->requireAction(action);
   }
 }
 
