@@ -274,7 +274,7 @@ bool CompositionalCouplingScheme::isActionFulfilled(
   bool isFulfilled = false;
   for (auto scheme : allSchemes()) {
     if (scheme->isActionFulfilled(actionName)) {
-      isFulfilled  = true;
+      isFulfilled = true;
       break;
     }
   }
@@ -287,7 +287,9 @@ void CompositionalCouplingScheme::markActionFulfilled(
 {
   PRECICE_TRACE(actionName);
   for (auto scheme : allSchemes()) {
-    scheme->markActionFulfilled(actionName);
+    if (scheme->isActionRequired(actionName)) {
+      scheme->markActionFulfilled(actionName);
+    }
   }
 }
 
@@ -295,7 +297,7 @@ void CompositionalCouplingScheme::requireAction(
     const std::string &actionName)
 {
   PRECICE_TRACE(actionName);
-  for (auto scheme : allSchemes()) {
+  for (auto scheme : schemesToRun()) {
     scheme->requireAction(actionName);
   }
 }
