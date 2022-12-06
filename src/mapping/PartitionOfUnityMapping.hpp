@@ -190,7 +190,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   auto [averagePartitionRadius_, centerCandidates] = partitioner::createUniformBlockPartitioning(inMesh, outMesh, _relativeOverlap, _verticesPerPartition, _projectToInput);
 
   averagePartitionRadius = averagePartitionRadius_;
-  PRECICE_ASSERT(averagePartitionRadius > 0);
+  PRECICE_ASSERT(averagePartitionRadius > 0 || inMesh->vertices().size() == 0 || outMesh->vertices().size() == 0);
 
   // Step 2: check, which of the resulting partitions are be non-empty (in term sof the output vertices) and register the partition centers in a mesh
   mesh::Mesh centerMesh("partitionCentersMesh", this->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
@@ -210,13 +210,16 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     }
   }
   // Log the average number of resulting partitions
-  unsigned int nVertices   = std::accumulate(_partitions.begin(), _partitions.end(), static_cast<unsigned int>(0), [](auto &acc, auto &val) { return acc += val.getNumberOfInputVertices(); });
-  unsigned int maxVertices = std::max_element(_partitions.begin(), _partitions.end(), [](auto &v1, auto &v2) { return v1.getNumberOfInputVertices() < v2.getNumberOfInputVertices(); })->getNumberOfInputVertices();
-  unsigned int minVertices = std::min_element(_partitions.begin(), _partitions.end(), [](auto &v1, auto &v2) { return v1.getNumberOfInputVertices() < v2.getNumberOfInputVertices(); })->getNumberOfInputVertices();
-  PRECICE_INFO("Average number of vertices per partition {}", nVertices / _partitions.size());
-  PRECICE_INFO("Maximum number of vertices per partition {}", maxVertices);
-  PRECICE_INFO("Minimum number of vertices per partition {}", minVertices);
   PRECICE_INFO("Number of total partitions (final): {}", _partitions.size());
+
+  if (_partitions.size() > 0) {
+    unsigned int nVertices   = std::accumulate(_partitions.begin(), _partitions.end(), static_cast<unsigned int>(0), [](auto &acc, auto &val) { return acc += val.getNumberOfInputVertices(); });
+    unsigned int maxVertices = std::max_element(_partitions.begin(), _partitions.end(), [](auto &v1, auto &v2) { return v1.getNumberOfInputVertices() < v2.getNumberOfInputVertices(); })->getNumberOfInputVertices();
+    unsigned int minVertices = std::min_element(_partitions.begin(), _partitions.end(), [](auto &v1, auto &v2) { return v1.getNumberOfInputVertices() < v2.getNumberOfInputVertices(); })->getNumberOfInputVertices();
+    PRECICE_INFO("Average number of vertices per partition {}", nVertices / _partitions.size());
+    PRECICE_INFO("Maximum number of vertices per partition {}", maxVertices);
+    PRECICE_INFO("Minimum number of vertices per partition {}", minVertices);
+  }
 
   // Log a bounding box of the center mesh
   centerMesh.computeBoundingBox();
@@ -238,7 +241,6 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     }
     _partMap.emplace_back(indices);
   }
-
   // Consistency check
   PRECICE_ASSERT(_partMap.size() == outMesh->vertices().size());
 

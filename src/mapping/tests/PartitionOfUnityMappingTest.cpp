@@ -1161,6 +1161,45 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2D)
   testDistributed(context, consistentMap2D, in, out, ref, globalIndexOffsets.at(context.rank));
 }
 
+// Same as above, but including empty ranks not participating
+BOOST_AUTO_TEST_CASE(DistributedConsistent2DEmptyRank)
+{
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  std::vector<int> globalIndexOffsets = {0, 0, 0, 0};
+
+  MeshSpecification in{// Consistent mapping: The inMesh is communicated
+                       {-1, 0, {0, 0}, {1}},
+                       {-1, 0, {0, 1}, {2}},
+                       {-1, 1, {1, 0}, {3}},
+                       {-1, 1, {1, 1}, {4}},
+                       {-1, 2, {2, 0}, {5}},
+                       {-1, 2, {2, 1}, {6}},
+                       {-1, 3, {3, 0}, {7}},
+                       {-1, 3, {3, 1}, {8}}};
+  MeshSpecification out{// The outMesh is local, distributed among all ranks
+                        {0, 0, {0, 0}, {0}},
+                        {0, 0, {0, 1}, {0}},
+                        {1, 1, {1, 0}, {0}},
+                        {1, 1, {1, 1}, {0}},
+                        {2, 2, {2, 0}, {0}},
+                        {2, 2, {2, 1}, {0}},
+                        {2, 2, {3, 0}, {0}},
+                        {2, 2, {3, 1}, {0}}};
+
+  ReferenceSpecification ref{// Tests for {0, 1} on the first rank, {1, 2} on the second, ...
+                             {0, {1}},
+                             {0, {2}},
+                             {1, {3}},
+                             {1, {4}},
+                             {2, {5}},
+                             {2, {6}},
+                             {2, {7}},
+                             {2, {8}}};
+
+  mapping::PartitionOfUnityMapping<CompactPolynomialC6> consistentMap2D(Mapping::CONSISTENT, 2, 3., Polynomial::SEPARATE, 5, 0.3, false);
+  testDistributed(context, consistentMap2D, in, out, ref, globalIndexOffsets.at(context.rank));
+}
+
 BOOST_AUTO_TEST_SUITE_END() // Parallel
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -230,11 +230,15 @@ inline std::tuple<double, Vertices> createUniformBlockPartitioning(mesh::PtrMesh
                                                                    double relativeOverlap, unsigned int verticesPerPartition,
                                                                    bool projectPartitionsToInput)
 {
+  PRECICE_TRACE();
   PRECICE_ASSERT(relativeOverlap < 1);
   PRECICE_ASSERT(verticesPerPartition > 0);
   PRECICE_ASSERT(inMesh->getDimensions() == outMesh->getDimensions());
-  PRECICE_ASSERT(!outMesh->vertices().empty());
-  PRECICE_DEBUG("Creating uniform block partitioning");
+
+  if (inMesh->vertices().size() == 0 || outMesh->vertices().size() == 0)
+    return {double{}, Vertices{}};
+
+  PRECICE_ASSERT(!outMesh->vertices().empty() && !inMesh->vertices().empty());
 
   // startGridAtEdge boolean switch in order to decide either to start the partitioning at the edge of the bounding box in each direction
   // (true) or start the partitioning inside the bounding box (edge + 0.5 radius). The latter approach leads to fewer partitions,
