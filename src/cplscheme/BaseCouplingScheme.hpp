@@ -198,10 +198,13 @@ public:
   /// Receives result of first advance, if this has to happen inside SolverInterface::initialize(), see CouplingScheme.hpp
   void receiveResultOfFirstAdvance() override final;
 
-  /**
-   * @brief Advances the coupling scheme.
-   */
-  void advance() override final;
+  ChangedMeshes firstSynchronization(const ChangedMeshes &changes) override final;
+
+  void firstExchange() override final;
+
+  ChangedMeshes secondSynchronization() override final;
+
+  void secondExchange() override final;
 
   /// Adds a measure to determine the convergence of coupling iterations.
   void addConvergenceMeasure(
@@ -235,6 +238,26 @@ public:
    */
   virtual void determineInitialDataExchange() = 0;
 
+  /**
+   * @brief Function to determine whether coupling scheme is an implicit coupling scheme
+   * @returns true, if coupling scheme is implicit
+   */
+  bool isImplicitCouplingScheme() const override
+  {
+    PRECICE_ASSERT(_couplingMode != Undefined);
+    return _couplingMode == Implicit;
+  }
+
+  /**
+   * @brief Checks if the implicit cplscheme has converged
+   *
+   * @pre \ref doImplicitStep() or \ref receiveConvergence() has been called
+   */
+  bool hasConverged() const override
+  {
+    return _hasConverged;
+  }
+
 protected:
   /// Map that links DataID to CouplingData
   typedef std::map<int, PtrCouplingData> DataMap;
@@ -259,16 +282,6 @@ protected:
   {
     PRECICE_ASSERT(_couplingMode != Undefined);
     return _couplingMode == Explicit;
-  }
-
-  /**
-   * @brief Function to determine whether coupling scheme is an implicit coupling scheme
-   * @returns true, if coupling scheme is implicit
-   */
-  bool isImplicitCouplingScheme()
-  {
-    PRECICE_ASSERT(_couplingMode != Undefined);
-    return _couplingMode == Implicit;
   }
 
   /**
@@ -329,24 +342,23 @@ protected:
   /**
    * @brief sends convergence to other participant via m2n
    * @param m2n used for sending
-   * @param convergence bool that is being sent
    */
-  void sendConvergence(const m2n::PtrM2N &m2n, bool convergence);
+  void sendConvergence(const m2n::PtrM2N &m2n);
 
   /**
    * @brief receives convergence from other participant via m2n
    * @param m2n used for receiving
    * @returns convergence bool
    */
-  bool receiveConvergence(const m2n::PtrM2N &m2n);
+  void receiveConvergence(const m2n::PtrM2N &m2n);
 
   /**
    * @brief perform a coupling iteration
-   * @returns whether this iteration has converged or not
+   * @see hasConverged
    *
    * This function is called from the child classes
    */
-  bool doImplicitStep();
+  void doImplicitStep();
 
   /**
    * @brief stores current data in buffer for extrapolation
@@ -444,6 +456,9 @@ private:
 
   std::set<std::string> _fulfilledActions;
 
+  /// True if implicit scheme converged
+  bool _hasConverged = false;
+
   /// Responsible for monitoring iteration count over time window.
   std::shared_ptr<io::TXTTableWriter> _iterationsWriter;
 
@@ -524,7 +539,18 @@ private:
    * @brief implements functionality for advance in base class.
    * @returns true, if iteration converged
    */
-  virtual bool exchangeDataAndAccelerate() = 0;
+  bool exchangeDataAndAccelerate()
+  {
+    exchangeFirstData();
+    exchangeSecondData();
+    return hasConverged();
+  }
+
+  /// Exchanges the first set of data
+  virtual void exchangeFirstData() = 0;
+
+  /// Exchanges the second set of data
+  virtual void exchangeSecondData() = 0;
 
   /**
    * @brief interface to provide accelerated data, depending on coupling scheme being used

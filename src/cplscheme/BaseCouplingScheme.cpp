@@ -183,7 +183,13 @@ bool BaseCouplingScheme::sendsInitializedData() const
   return _sendsInitializedData;
 }
 
-void BaseCouplingScheme::advance()
+CouplingScheme::ChangedMeshes BaseCouplingScheme::firstSynchronization(const CouplingScheme::ChangedMeshes &changes)
+{
+  PRECICE_ASSERT(changes.empty());
+  return changes;
+}
+
+void BaseCouplingScheme::firstExchange()
 {
   PRECICE_TRACE(_timeWindows, _time);
   checkCompletenessRequiredActions();
@@ -197,10 +203,31 @@ void BaseCouplingScheme::advance()
 
     _timeWindows += 1; // increment window counter. If not converged, will be decremented again later.
 
-    bool convergence = exchangeDataAndAccelerate();
+    exchangeFirstData();
+  }
+}
+
+CouplingScheme::ChangedMeshes BaseCouplingScheme::secondSynchronization()
+{
+  return {};
+}
+
+void BaseCouplingScheme::secondExchange()
+{
+  PRECICE_TRACE(_timeWindows, _time);
+  checkCompletenessRequiredActions();
+  PRECICE_ASSERT(_isInitialized, "Before calling advance() coupling scheme has to be initialized via initialize().");
+  PRECICE_ASSERT(_couplingMode != Undefined);
+
+  // from first phase
+  PRECICE_ASSERT(!_isTimeWindowComplete);
+
+  if (reachedEndOfTimeWindow()) {
+
+    exchangeSecondData();
 
     if (isImplicitCouplingScheme()) { // check convergence
-      if (not convergence) {          // repeat window
+      if (not hasConverged()) {       // repeat window
         PRECICE_DEBUG("No convergence achieved");
         requireAction(constants::actionReadIterationCheckpoint());
         // The computed time window part equals the time window size, since the
@@ -219,9 +246,9 @@ void BaseCouplingScheme::advance()
           requireAction(constants::actionWriteIterationCheckpoint());
         }
       }
-      // update iterations
+      //update iterations
       _totalIterations++;
-      if (not convergence) {
+      if (not hasConverged()) {
         _iterations++;
       } else {
         _iterations = 1;
@@ -628,7 +655,7 @@ bool BaseCouplingScheme::anyDataRequiresInitialization(BaseCouplingScheme::DataM
   return false;
 }
 
-bool BaseCouplingScheme::doImplicitStep()
+void BaseCouplingScheme::doImplicitStep()
 {
   storeExtrapolationData();
 
@@ -658,21 +685,21 @@ bool BaseCouplingScheme::doImplicitStep()
   // Store data for conv. measurement, acceleration
   storeIteration();
 
-  return convergence;
+  _hasConverged = convergence;
 }
 
-void BaseCouplingScheme::sendConvergence(const m2n::PtrM2N &m2n, bool convergence)
+void BaseCouplingScheme::sendConvergence(const m2n::PtrM2N &m2n)
 {
+  PRECICE_ASSERT(isImplicitCouplingScheme());
   PRECICE_ASSERT(not doesFirstStep(), "For convergence information the sending participant is never the first one.");
-  m2n->send(convergence);
+  m2n->send(_hasConverged);
 }
 
-bool BaseCouplingScheme::receiveConvergence(const m2n::PtrM2N &m2n)
+void BaseCouplingScheme::receiveConvergence(const m2n::PtrM2N &m2n)
 {
+  PRECICE_ASSERT(isImplicitCouplingScheme());
   PRECICE_ASSERT(doesFirstStep(), "For convergence information the receiving participant is always the first one.");
-  bool convergence;
-  m2n->receive(convergence);
-  return convergence;
+  m2n->receive(_hasConverged);
 }
 
 } // namespace precice::cplscheme

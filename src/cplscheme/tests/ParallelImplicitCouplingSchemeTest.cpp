@@ -166,7 +166,10 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
         cplScheme.markActionFulfilled(readIterationCheckpoint);
       }
       cplScheme.addComputedTime(timestepLength);
-      cplScheme.advance();
+      cplScheme.firstSynchronization({});
+      cplScheme.firstExchange();
+      cplScheme.secondSynchronization();
+      cplScheme.secondExchange();
       BOOST_TEST(cplScheme.hasDataBeenReceived());
     }
   } else {
@@ -195,7 +198,10 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
         cplScheme.markActionFulfilled(writeIterationCheckpoint);
       }
       cplScheme.addComputedTime(timestepLength);
-      cplScheme.advance();
+      cplScheme.firstSynchronization({});
+      cplScheme.firstExchange();
+      cplScheme.secondSynchronization();
+      cplScheme.secondExchange();
       BOOST_TEST(cplScheme.hasDataBeenReceived());
       if (cplScheme.isActionRequired(readIterationCheckpoint)) {
         cplScheme.markActionFulfilled(readIterationCheckpoint);
