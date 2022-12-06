@@ -21,24 +21,24 @@
     </mesh>
 
     <participant name="A">
-      <use-mesh name="MA" provide="yes" />
-      <use-mesh name="MB" from="B" />
+      <provide-mesh name="MA" />
+      <receive-mesh name="MB" from="B" />
       <read-data name="DCA" mesh="MA" />
       <write-data name="DAB" mesh="MA" />
       <mapping:nearest-neighbor direction="write" from="MA" to="MB" constraint="consistent" />
     </participant>
 
     <participant name="B">
-      <use-mesh name="MB" provide="yes" />
-      <use-mesh name="MC" from="C" />
+      <provide-mesh name="MB" />
+      <receive-mesh name="MC" from="C" />
       <read-data name="DAB" mesh="MB" />
       <write-data name="DBC" mesh="MB" />
       <mapping:nearest-neighbor direction="write" from="MB" to="MC" constraint="consistent" />
     </participant>
 
     <participant name="C">
-      <use-mesh name="MC" provide="yes" />
-      <use-mesh name="MA" from="A" />
+      <provide-mesh name="MC" />
+      <receive-mesh name="MA" from="A" />
       <read-data name="DBC" mesh="MC" />
       <write-data name="DCA" mesh="MC" />
       <mapping:nearest-neighbor direction="write" from="MC" to="MA" constraint="consistent" />
