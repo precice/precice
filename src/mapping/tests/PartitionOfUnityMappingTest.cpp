@@ -1159,7 +1159,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2D)
 }
 
 // Same as above, but including empty ranks not participating
-BOOST_AUTO_TEST_CASE(DistributedConsistent2DEmptyRank)
+BOOST_AUTO_TEST_CASE(DistributedConsistent2DEmptyOut)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   std::vector<int> globalIndexOffsets = {0, 0, 0, 0};
@@ -1192,6 +1192,40 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DEmptyRank)
                              {2, {6}},
                              {2, {7}},
                              {2, {8}}};
+
+  mapping::PartitionOfUnityMapping<CompactPolynomialC6> consistentMap2D(Mapping::CONSISTENT, 2, 3., Polynomial::SEPARATE, 5, 0.3, false);
+  testDistributed(context, consistentMap2D, in, out, ref, globalIndexOffsets.at(context.rank));
+}
+
+// Same as above, but including empty ranks not participating
+BOOST_AUTO_TEST_CASE(DistributedConsistent2DEmptyRank)
+{
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  std::vector<int> globalIndexOffsets = {0, 0, 0, 0};
+
+  MeshSpecification in{// Consistent mapping: The inMesh is communicated
+                       {-1, 0, {0, 0}, {1}},
+                       {-1, 0, {0, 1}, {2}},
+                       {-1, 1, {1, 0}, {3}},
+                       {-1, 1, {1, 1}, {4}},
+                       {-1, 2, {2, 0}, {5}},
+                       {-1, 2, {2, 1}, {6}}};
+
+  MeshSpecification out{// The outMesh is local, distributed among all ranks
+                        {0, 0, {0, 0}, {0}},
+                        {0, 0, {0, 1}, {0}},
+                        {1, 1, {1, 0}, {0}},
+                        {1, 1, {1, 1}, {0}},
+                        {2, 2, {2, 0}, {0}},
+                        {2, 2, {2, 1}, {0}}};
+
+  ReferenceSpecification ref{// Tests for {0, 1} on the first rank, {1, 2} on the second, ...
+                             {0, {1}},
+                             {0, {2}},
+                             {1, {3}},
+                             {1, {4}},
+                             {2, {5}},
+                             {2, {6}}};
 
   mapping::PartitionOfUnityMapping<CompactPolynomialC6> consistentMap2D(Mapping::CONSISTENT, 2, 3., Polynomial::SEPARATE, 5, 0.3, false);
   testDistributed(context, consistentMap2D, in, out, ref, globalIndexOffsets.at(context.rank));
@@ -1235,11 +1269,11 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2D)
   testDistributed(context, conservativeMap2D, in, out, ref, globalIndexOffsets.at(context.rank));
 }
 
-// Same as above, but including empty ranks not participating
+// Same as above, but checking with empty ranks
 BOOST_AUTO_TEST_CASE(DistributedConservative2DEmptyRank)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
-  std::vector<int> globalIndexOffsets = {0, 0, 0, 0};
+  std::vector<int> globalIndexOffsets = {0, 2, 4, 6};
 
   MeshSpecification in{// Conservative mapping: The inMesh is local
                        {0, -1, {0, 0}, {1}},
@@ -1251,24 +1285,95 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DEmptyRank)
                        {2, -1, {3, 0}, {7}},
                        {2, -1, {3, 1}, {8}}};
   MeshSpecification out{// The outMesh is remote, distributed among all ranks
-                        {0, 0, {0, 0}, {0}},
-                        {0, 0, {0, 1}, {0}},
-                        {1, 1, {1, 0}, {0}},
-                        {1, 1, {1, 1}, {0}},
-                        {2, 2, {2, 0}, {0}},
-                        {2, 2, {2, 1}, {0}},
-                        {3, 3, {3, 0}, {0}},
-                        {3, 3, {3, 1}, {0}}};
+                        {-1, 0, {0, 0}, {0}},
+                        {-1, 0, {0, 1}, {0}},
+                        {-1, 1, {1, 0}, {0}},
+                        {-1, 1, {1, 1}, {0}},
+                        {-1, 2, {2, 0}, {0}},
+                        {-1, 2, {2, 1}, {0}},
+                        {-1, 3, {3, 0}, {0}},
+                        {-1, 3, {3, 1}, {0}}};
 
   ReferenceSpecification ref{// Tests for {0, 1} on the first rank, {1, 2} on the second, ...
                              {0, {1}},
                              {0, {2}},
+                             {0, {0}},
+                             {0, {0}},
+                             {0, {0}},
+                             {0, {0}},
+                             {0, {0}},
+                             {0, {0}},
+                             {1, {0}},
+                             {1, {0}},
                              {1, {3}},
                              {1, {4}},
+                             {1, {0}},
+                             {1, {0}},
+                             {1, {0}},
+                             {1, {0}},
+                             {2, {0}},
+                             {2, {0}},
+                             {2, {0}},
+                             {2, {0}},
                              {2, {5}},
                              {2, {6}},
                              {2, {7}},
-                             {2, {8}}};
+                             {2, {8}},
+                             {3, {0}},
+                             {3, {0}},
+                             {3, {0}},
+                             {3, {0}},
+                             {3, {0}},
+                             {3, {0}},
+                             {3, {0}},
+                             {3, {0}}};
+
+  mapping::PartitionOfUnityMapping<CompactPolynomialC6> conservativeMap2D(Mapping::CONSERVATIVE, 2, 3., Polynomial::SEPARATE, 5, 0.3, false);
+  testDistributed(context, conservativeMap2D, in, out, ref, globalIndexOffsets.at(context.rank));
+}
+
+// Same as above, but checking the primary rank for all output vertices
+BOOST_AUTO_TEST_CASE(DistributedConservative2DTwoRanks)
+{
+  PRECICE_TEST(""_on(2_ranks).setupIntraComm());
+  std::vector<int> globalIndexOffsets = {0, 2};
+
+  MeshSpecification in{// Conservative mapping: The inMesh is local
+                       {0, -1, {0, 0}, {1}},
+                       {0, -1, {0, 1}, {2}},
+                       {0, -1, {1, 0}, {3}},
+                       {0, -1, {1, 1}, {4}},
+                       {1, -1, {2, 0}, {5}},
+                       {1, -1, {2, 1}, {6}},
+                       {1, -1, {3, 0}, {7}},
+                       {1, -1, {3, 1}, {8}}};
+  MeshSpecification out{// The outMesh is remote, distributed among all ranks
+                        {-1, 0, {0, 0}, {0}},
+                        {-1, 0, {0, 1}, {0}},
+                        {-1, 0, {1, 0}, {0}},
+                        {-1, 0, {1, 1}, {0}},
+                        {-1, 0, {2, 0}, {0}},
+                        {-1, 0, {2, 1}, {0}},
+                        {-1, 0, {3, 0}, {0}},
+                        {-1, 0, {3, 1}, {0}}};
+
+  ReferenceSpecification ref{// Tests for {0, 1} on the first rank, {1, 2} on the second, ...
+                             {0, {1}},
+                             {0, {2}},
+                             {0, {3}},
+                             {0, {4}},
+                             {0, {0}},
+                             {0, {0}},
+                             {0, {0}},
+                             {0, {0}},
+                             {1, {0}},
+                             {1, {0}},
+                             {1, {0}},
+                             {1, {0}},
+                             {1, {5}},
+                             {1, {6}},
+                             {1, {7}},
+                             {1, {8}}};
 
   mapping::PartitionOfUnityMapping<CompactPolynomialC6> conservativeMap2D(Mapping::CONSERVATIVE, 2, 3., Polynomial::SEPARATE, 5, 0.3, false);
   testDistributed(context, conservativeMap2D, in, out, ref, globalIndexOffsets.at(context.rank));

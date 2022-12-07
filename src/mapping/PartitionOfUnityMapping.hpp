@@ -340,6 +340,8 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inpu
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::exportPartitionCentersAsVTU(mesh::Mesh &centerMesh)
 {
+  PRECICE_TRACE();
+
   auto dataRadius      = centerMesh.createData("radius", 1, -1);
   auto dataCardinality = centerMesh.createData("partition-size", 1, -1);
   centerMesh.allocateDataValues();
