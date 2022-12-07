@@ -8,7 +8,6 @@
 void testConvergenceMeasures(const std::string configFile, TestContext const &context, std::vector<int> &expectedIterations)
 {
   using Eigen::Vector2d;
-  using namespace precice::constants;
 
   std::string meshName = context.isNamed("SolverOne") ? "MeshOne" : "MeshTwo";
 
@@ -27,9 +26,8 @@ void testConvergenceMeasures(const std::string configFile, TestContext const &co
   int timestep             = 0;
 
   while (interface.isCouplingOngoing()) {
-    if (interface.isActionRequired(actionWriteIterationCheckpoint())) {
+    if (interface.requiresWritingCheckpoint()) {
       numberOfIterations = 0;
-      interface.markActionFulfilled(actionWriteIterationCheckpoint());
     }
 
     if (context.isNamed("SolverTwo")) {
@@ -41,8 +39,7 @@ void testConvergenceMeasures(const std::string configFile, TestContext const &co
     ++numberOfAdvanceCalls;
     ++numberOfIterations;
 
-    if (interface.isActionRequired(actionReadIterationCheckpoint())) {
-      interface.markActionFulfilled(actionReadIterationCheckpoint());
+    if (interface.requiresReadingCheckpoint()) {
     } else { //converged
       BOOST_TEST(numberOfIterations == expectedIterations.at(timestep));
       ++timestep;

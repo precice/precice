@@ -54,8 +54,7 @@ void runTestQN(std::string const &config, TestContext const &context)
   int iterations = 0;
 
   while (interface.isCouplingOngoing()) {
-    if (interface.isActionRequired(precice::constants::actionWriteIterationCheckpoint())) {
-      interface.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
+    if (interface.requiresWritingCheckpoint()) {
     }
 
     interface.readBlockScalarData(readDataID, 4, vertexIDs, inValues);
@@ -67,7 +66,7 @@ void runTestQN(std::string const &config, TestContext const &context)
       x_3^2 - 4 = 0
       x_4^2 - 4 = 0
 
-      Analyical solutions are (+/-2, 0, +/-2, +/-2).
+      Analytical solutions are (+/-2, 0, +/-2, +/-2).
       Assumably due to the initial relaxation the iteration always converges to the solution in the negative quadrant.
     */
 
@@ -85,8 +84,7 @@ void runTestQN(std::string const &config, TestContext const &context)
     interface.writeBlockScalarData(writeDataID, 4, vertexIDs, outValues);
     interface.advance(1.0);
 
-    if (interface.isActionRequired(precice::constants::actionReadIterationCheckpoint())) {
-      interface.markActionFulfilled(precice::constants::actionReadIterationCheckpoint());
+    if (interface.requiresReadingCheckpoint()) {
     }
     iterations++;
   }
@@ -150,8 +148,7 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
   int iterations = 0;
 
   while (interface.isCouplingOngoing()) {
-    if (interface.isActionRequired(precice::constants::actionWriteIterationCheckpoint())) {
-      interface.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
+    if (interface.requiresWritingCheckpoint()) {
     }
 
     if ((context.isNamed("SolverOne") and context.isPrimary()) or
@@ -187,8 +184,7 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
     }
     interface.advance(1.0);
 
-    if (interface.isActionRequired(precice::constants::actionReadIterationCheckpoint())) {
-      interface.markActionFulfilled(precice::constants::actionReadIterationCheckpoint());
+    if (interface.requiresReadingCheckpoint()) {
     }
     iterations++;
   }

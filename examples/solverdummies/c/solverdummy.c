@@ -37,9 +37,6 @@ int main(int argc, char **argv)
   printf("DUMMY: Running solver dummy with preCICE config file \"%s\" and participant name \"%s\".\n",
          configFileName, participantName);
 
-  const char *writeItCheckp = precicec_actionWriteIterationCheckpoint();
-  const char *readItCheckp  = precicec_actionReadIterationCheckpoint();
-
   precicec_createSolverInterface(participantName, configFileName, solverProcessIndex, solverProcessSize);
 
   if (strcmp(participantName, "SolverOne") == 0) {
@@ -75,13 +72,16 @@ int main(int argc, char **argv)
 
   free(vertices);
 
+  if (precicec_requiresInitialData()) {
+    printf("DUMMY: Writing initial data\n");
+  }
+
   dt = precicec_initialize();
 
   while (precicec_isCouplingOngoing()) {
 
-    if (precicec_isActionRequired(writeItCheckp)) {
+    if (precicec_requiresWritingCheckpoint()) {
       printf("DUMMY: Writing iteration checkpoint \n");
-      precicec_markActionFulfilled(writeItCheckp);
     }
 
     precicec_readBlockVectorData(readDataID, numberOfVertices, vertexIDs, readData);
@@ -94,9 +94,8 @@ int main(int argc, char **argv)
 
     dt = precicec_advance(dt);
 
-    if (precicec_isActionRequired(readItCheckp)) {
+    if (precicec_requiresReadingCheckpoint()) {
       printf("DUMMY: Reading iteration checkpoint \n");
-      precicec_markActionFulfilled(readItCheckp);
     } else {
       printf("DUMMY: Advancing in time \n");
     }

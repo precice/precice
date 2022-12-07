@@ -52,11 +52,11 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelVector)
     double xCoord       = context.rank * 0.4 + 0.05;
     double positions[4] = {xCoord, 0.0, xCoord + 0.2, 0.0};
     interface.setMeshVertices(meshID, 2, positions, vertexIDs);
-    BOOST_TEST(interface.isGradientDataRequired(dataID1) == false);
-    BOOST_TEST(interface.isGradientDataRequired(dataID2) == false);
+    BOOST_TEST(interface.requiresGradientDataFor(dataID1) == false);
+    BOOST_TEST(interface.requiresGradientDataFor(dataID2) == false);
     interface.initialize();
-    BOOST_TEST(interface.isGradientDataRequired(dataID1) == false);
-    BOOST_TEST(interface.isGradientDataRequired(dataID2) == false);
+    BOOST_TEST(interface.requiresGradientDataFor(dataID1) == false);
+    BOOST_TEST(interface.requiresGradientDataFor(dataID2) == false);
     Eigen::Vector4d values;
     interface.advance(1.0);
     interface.readBlockVectorData(dataID2, 2, vertexIDs, values.data());
@@ -74,8 +74,8 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelVector)
 
     DataID dataID1 = interface.getDataID("Data1", meshID);
     DataID dataID2 = interface.getDataID("Data2", meshID);
-    BOOST_TEST(interface.isGradientDataRequired(dataID1) == false);
-    BOOST_TEST(interface.isGradientDataRequired(dataID2) == true);
+    BOOST_TEST(interface.requiresGradientDataFor(dataID1) == false);
+    BOOST_TEST(interface.requiresGradientDataFor(dataID2) == true);
 
     interface.initialize();
     double values[12] = {1.0, 1.0,
@@ -87,10 +87,10 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelVector)
 
     interface.writeBlockVectorData(dataID2, 6, vertexIDs, values);
 
-    BOOST_TEST(interface.isGradientDataRequired(dataID1) == false);
-    BOOST_TEST(interface.isGradientDataRequired(dataID2) == true);
+    BOOST_TEST(interface.requiresGradientDataFor(dataID1) == false);
+    BOOST_TEST(interface.requiresGradientDataFor(dataID2) == true);
 
-    if (interface.isGradientDataRequired(dataID2)) {
+    if (interface.requiresGradientDataFor(dataID2)) {
       double gradientValues[36];
       for (int i = 0; i < 36; i++) {
         gradientValues[i] = 1.0;

@@ -161,14 +161,12 @@ void MultiCouplingScheme::performReceiveOfFirstAdvance()
   }
 }
 
-bool MultiCouplingScheme::exchangeDataAndAccelerate()
+void MultiCouplingScheme::exchangeFirstData()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
   // @todo implement MultiCouplingScheme for explicit coupling
 
   PRECICE_DEBUG("Computed full length of iteration");
-
-  bool convergence = true;
 
   if (_isController) {
     for (auto &receiveExchange : _receiveDataVector) {
@@ -179,20 +177,29 @@ bool MultiCouplingScheme::exchangeDataAndAccelerate()
     }
     checkDataHasBeenReceived();
 
-    convergence = doImplicitStep();
+  } else {
+    for (auto &sendExchange : _sendDataVector) {
+      sendData(_m2ns[sendExchange.first], sendExchange.second);
+    }
+  }
+}
+
+void MultiCouplingScheme::exchangeSecondData()
+{
+  PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
+  // @todo implement MultiCouplingScheme for explicit coupling
+
+  if (_isController) {
+    doImplicitStep();
     for (const auto &m2nPair : _m2ns) {
-      sendConvergence(m2nPair.second, convergence);
+      sendConvergence(m2nPair.second);
     }
 
     for (auto &sendExchange : _sendDataVector) {
       sendData(_m2ns[sendExchange.first], sendExchange.second);
     }
   } else {
-    for (auto &sendExchange : _sendDataVector) {
-      sendData(_m2ns[sendExchange.first], sendExchange.second);
-    }
-
-    convergence = receiveConvergence(_m2ns[_controller]);
+    receiveConvergence(_m2ns[_controller]);
 
     for (auto &receiveExchange : _receiveDataVector) {
       for (const DataMap::value_type &pair : receiveExchange.second) {
@@ -202,7 +209,6 @@ bool MultiCouplingScheme::exchangeDataAndAccelerate()
     }
     checkDataHasBeenReceived();
   }
-  return convergence;
 }
 
 void MultiCouplingScheme::addDataToSend(

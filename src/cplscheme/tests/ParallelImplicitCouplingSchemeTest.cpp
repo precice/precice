@@ -168,7 +168,10 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
         cplScheme.markActionFulfilled(readIterationCheckpoint);
       }
       cplScheme.addComputedTime(timestepLength);
-      cplScheme.advance();
+      cplScheme.firstSynchronization({});
+      cplScheme.firstExchange();
+      cplScheme.secondSynchronization();
+      cplScheme.secondExchange();
       BOOST_TEST(cplScheme.hasDataBeenReceived());
     }
   } else {
@@ -197,7 +200,10 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
         cplScheme.markActionFulfilled(writeIterationCheckpoint);
       }
       cplScheme.addComputedTime(timestepLength);
-      cplScheme.advance();
+      cplScheme.firstSynchronization({});
+      cplScheme.firstExchange();
+      cplScheme.secondSynchronization();
+      cplScheme.secondExchange();
       BOOST_TEST(cplScheme.hasDataBeenReceived());
       if (cplScheme.isActionRequired(readIterationCheckpoint)) {
         cplScheme.markActionFulfilled(readIterationCheckpoint);
@@ -391,7 +397,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
 
     if (context.isNamed(first)) {
       if (i == 0) {
-        // data is uninitialized for first participant
+        // data is uninitialized
         BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 0);
       } else if (i == 1) {
         // accelerated data from second participant: 0.5 * 0 + 0.5 * 2 = 1
@@ -401,8 +407,16 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
         BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 1.5);
       }
     } else if (context.isNamed(second)) {
-      // data from first participant
-      BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 1);
+      if (i == 0) {
+        // data is uninitialized
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 0);
+      } else if (i == 1) {
+        // accelerated data from first participant: 0.5 * 0 + 0.5 * 1 = 0.5
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 0.5);
+      } else if (i == 2) {
+        // accelerated data from first participant: 0.5 * 0.5 + 0.5 * 1 = 0.75
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 0.75);
+      }
     }
 
     if (i == 0) {
@@ -424,7 +438,10 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
     mesh->data(sendDataIndex)->values() = v;
     cplScheme.addComputedTime(timestepLength);
 
-    cplScheme.advance();
+    cplScheme.firstSynchronization({});
+    cplScheme.firstExchange();
+    cplScheme.secondSynchronization();
+    cplScheme.secondExchange();
 
     if (i < maxIterations - 1) {
       BOOST_TEST(not cplScheme.isTimeWindowComplete());
@@ -450,8 +467,16 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
         BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3.25); // = 0.5 * 3.5 + 0.5 * 3
       }
     } else if (context.isNamed(second)) {
-      // extrapolation only applied to accelerated data. So data written by first participant.
-      BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3);
+      if (i == 0) {
+        // first order extrapolation
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 2); // = 2*1 - 0
+      } else if (i == 1) {
+        // accelerated data from first participant
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 2.5); // = 0.5 * 2 + 0.5 * 3
+      } else if (i == 2) {
+        // accelerated data from first participant
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 2.75); // = 0.5 * 2.5 + 0.5 * 3
+      }
     }
 
     if (i == 0) {
@@ -468,7 +493,10 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
     mesh->data(sendDataIndex)->values() = v;
     cplScheme.addComputedTime(timestepLength);
 
-    cplScheme.advance();
+    cplScheme.firstSynchronization({});
+    cplScheme.firstExchange();
+    cplScheme.secondSynchronization();
+    cplScheme.secondExchange();
 
     if (i < maxIterations - 1) {
       BOOST_TEST(not cplScheme.isTimeWindowComplete());
@@ -483,8 +511,8 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
     // first order extrapolation
     BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4); // = 2*3 - 2
   } else if (context.isNamed(second)) {
-    // extrapolation only applied to accelerated data. So data written by first participant.
-    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3);
+    // first order extrapolation
+    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 5); // = 2*3 - 1
   }
 
   // reached end of simulation, ready to finalize
@@ -607,12 +635,12 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
     BOOST_TEST(mesh->data(sendDataIndex)->values().size() == 1);
     BOOST_TEST(testing::equals(mesh->data(sendDataIndex)->values()(0), 0.0));
   } else {
-    // second participant result written by first participant in its first window = 1 (see below)
+    // second participant result no initial data = 0
     cplScheme.initialize(0.0, 1);
-    BOOST_TEST(cplScheme.hasDataBeenReceived());
+    BOOST_TEST(not cplScheme.hasDataBeenReceived());
     BOOST_TEST(context.isNamed(second));
     BOOST_TEST(mesh->data(receiveDataIndex)->values().size() == 1);
-    BOOST_TEST(testing::equals(mesh->data(receiveDataIndex)->values()(0), 1.0));
+    BOOST_TEST(testing::equals(mesh->data(receiveDataIndex)->values()(0), 0.0));
     // second participant has send data above (should remain untouched)
     BOOST_TEST(mesh->data(sendDataIndex)->values().size() == 1);
     BOOST_TEST(testing::equals(mesh->data(sendDataIndex)->values()(0), 4.0));
@@ -625,7 +653,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
 
     if (context.isNamed(first)) {
       if (i == 0) {
-        // data is uninitialized for first participant
+        // data is initialized for first participant
         BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4);
       } else if (i == 1) {
         // accelerated data from second participant
@@ -635,8 +663,16 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
         BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 2.5); // = 0.5 * 3 + 0.5 * 2
       }
     } else if (context.isNamed(second)) {
-      // data from first participant
-      BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 1);
+      if (i == 0) {
+        // data is uninitialized for second participant
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 0);
+      } else if (i == 1) {
+        // accelerated data from first participant
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 0.5); // = 0.5 * 0 + 0.5 * 1
+      } else if (i == 2) {
+        // accelerated data from first participant
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 0.75); // = 0.5 * 0.5 + 0.5 * 1
+      }
     }
 
     if (i == 0) {
@@ -658,7 +694,10 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
     mesh->data(sendDataIndex)->values() = v;
     cplScheme.addComputedTime(timestepLength);
 
-    cplScheme.advance();
+    cplScheme.firstSynchronization({});
+    cplScheme.firstExchange();
+    cplScheme.secondSynchronization();
+    cplScheme.secondExchange();
 
     if (i < maxIterations - 1) {
       BOOST_TEST(not cplScheme.isTimeWindowComplete());
@@ -684,8 +723,16 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
         BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 2.25); // = 0.5 * 1.5 + 0.5 * 3
       }
     } else if (context.isNamed(second)) {
-      // extrapolation only applied to accelerated data. So data written by first participant.
-      BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3);
+      if (i == 0) {
+        // first order extrapolation uses initial data and final value from last window.
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 2); // = 2*1 - 0
+      } else if (i == 1) {
+        // accelerated data from first participant
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 2.5); // = 0.5 * 2 + 0.5 * 3
+      } else if (i == 2) {
+        // accelerated data from first participant
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 2.75); // = 0.5 * 2.5 + 0.5 * 3
+      }
     }
 
     if (i == 0) {
@@ -702,7 +749,10 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
     mesh->data(sendDataIndex)->values() = v;
     cplScheme.addComputedTime(timestepLength);
 
-    cplScheme.advance();
+    cplScheme.firstSynchronization({});
+    cplScheme.firstExchange();
+    cplScheme.secondSynchronization();
+    cplScheme.secondExchange();
 
     if (i < maxIterations - 1) {
       BOOST_TEST(not cplScheme.isTimeWindowComplete());
@@ -717,8 +767,8 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
     // first order extrapolation
     BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4); // = 2*3 - 2
   } else if (context.isNamed(second)) {
-    // extrapolation only applied to accelerated data. So data written by first participant.
-    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3);
+    // first order extrapolation
+    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 5); // = 2*3 - 1
   }
 
   // reached end of simulation, ready to finalize

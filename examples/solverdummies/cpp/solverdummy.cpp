@@ -8,7 +8,6 @@ int main(int argc, char **argv)
   int commSize = 1;
 
   using namespace precice;
-  using namespace precice::constants;
 
   if (argc != 3) {
     std::cout << "The solverdummy was called with an incorrect number of arguments. Usage: ./solverdummy configFile solverName\n\n";
@@ -61,13 +60,16 @@ int main(int argc, char **argv)
 
   interface.setMeshVertices(meshID, numberOfVertices, vertices.data(), vertexIDs.data());
 
+  if (interface.requiresInitialData()) {
+    std::cout << "DUMMY: Writing initial data\n";
+  }
+
   double dt = interface.initialize();
 
   while (interface.isCouplingOngoing()) {
 
-    if (interface.isActionRequired(actionWriteIterationCheckpoint())) {
+    if (interface.requiresWritingCheckpoint()) {
       std::cout << "DUMMY: Writing iteration checkpoint\n";
-      interface.markActionFulfilled(actionWriteIterationCheckpoint());
     }
 
     interface.readBlockVectorData(readDataID, numberOfVertices, vertexIDs.data(), readData.data());
@@ -80,9 +82,8 @@ int main(int argc, char **argv)
 
     dt = interface.advance(dt);
 
-    if (interface.isActionRequired(actionReadIterationCheckpoint())) {
+    if (interface.requiresReadingCheckpoint()) {
       std::cout << "DUMMY: Reading iteration checkpoint\n";
-      interface.markActionFulfilled(actionReadIterationCheckpoint());
     } else {
       std::cout << "DUMMY: Advancing in time\n";
     }

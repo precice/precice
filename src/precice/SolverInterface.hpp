@@ -214,37 +214,47 @@ public:
 
   ///@}
 
-  ///@name Action Methods
+  ///@name Requirements
   ///@{
 
-  /**
-   * @brief Checks if the provided action is required.
+  /** Checks if the participant is required to provide initial data.
    *
-   * @param[in] action the name of the action
-   * @returns whether the action is required
+   * If true, then the participant needs to write initial data to defined vertices
+   * prior to calling initialize().
    *
-   * Some features of preCICE require a solver to perform specific actions, in
-   * order to be in valid state for a coupled simulation. A solver is made
-   * eligible to use those features, by querying for the required actions,
-   * performing them on demand, and calling markActionFulfilled() to signalize
-   * preCICE the correct behavior of the solver.
-   *
-   * @see markActionFulfilled()
-   * @see cplscheme::constants
+   * @pre initialize() has not yet been called
    */
-  bool isActionRequired(const std::string &action) const;
+  bool requiresInitialData();
 
-  /**
-   * @brief Indicates preCICE that a required action has been fulfilled by a solver.
+  /** Checks if the participant is required to write an iteration checkpoint.
    *
-   * @pre The solver fulfilled the specified action.
+   * If true, the participant is required to write an iteration checkpoint before
+   * calling advance().
    *
-   * @param[in] action the name of the action
+   * preCICE refuses to proceed if writing a checkpoint is required,
+   * but this method isn't called prior to advance().
    *
-   * @see requireAction()
-   * @see cplscheme::constants
+   * @pre initialize() has been called
+   *
+   * @see requiresReadingCheckpoint()
    */
-  void markActionFulfilled(const std::string &action);
+  bool requiresWritingCheckpoint();
+
+  /** Checks if the participant is required to read an iteration checkpoint.
+   *
+   * If true, the participant is required to read an iteration checkpoint before
+   * calling advance().
+   *
+   * preCICE refuses to proceed if reading a checkpoint is required,
+   * but this method isn't called prior to advance().
+   *
+   * @note This function returns false before the first call to advance().
+   *
+   * @pre initialize() has been called
+   *
+   * @see requiresWritingCheckpoint()
+   */
+  bool requiresReadingCheckpoint();
 
   ///@}
 
@@ -252,7 +262,7 @@ public:
    * @anchor precice-mesh-access
    *
    * Connectivity is optional.
-   * Use isMeshConnectivityRequired() to check if the current participant can make use of the connectivity.
+   * Use requiresMeshConnectivityFor() to check if the current participant can make use of the connectivity.
    *
    *
    * Always set the mesh connectivity of the highest dimensionality available.
@@ -318,7 +328,7 @@ public:
    * @param[in] meshID the id of the mesh
    * @returns whether connectivity is required
    */
-  bool isMeshConnectivityRequired(int meshID) const;
+  bool requiresMeshConnectivityFor(int meshID) const;
 
   /**
    * @brief Creates a mesh vertex
@@ -444,7 +454,7 @@ public:
    *
    * @pre vertices were added to the mesh with the ID meshID
    *
-   * @see isMeshConnectivityRequired()
+   * @see requiresMeshConnectivityFor()
    */
   void setMeshEdges(
       int        meshID,
@@ -467,7 +477,7 @@ public:
    *
    * @pre edges with firstVertexID, secondVertexID, and thirdVertexID were added to the mesh with the ID meshID
    *
-   * @see isMeshConnectivityRequired()
+   * @see requiresMeshConnectivityFor()
    */
   void setMeshTriangle(
       int meshID,
@@ -489,7 +499,7 @@ public:
    *
    * @pre vertices were added to the mesh with the ID meshID
    *
-   * @see isMeshConnectivityRequired()
+   * @see requiresMeshConnectivityFor()
    */
   void setMeshTriangles(
       int        meshID,
@@ -513,7 +523,7 @@ public:
    *
    * @pre vertices with firstVertexID, secondVertexID, thirdVertexID, and fourthVertexID were added to the mesh with the ID meshID
    *
-   * @see isMeshConnectivityRequired()
+   * @see requiresMeshConnectivityFor()
    */
   void setMeshQuad(
       int meshID,
@@ -538,7 +548,7 @@ public:
    *
    * @pre vertices were added to the mesh with the ID meshID
    *
-   * @see isMeshConnectivityRequired()
+   * @see requiresMeshConnectivityFor()
    */
   void setMeshQuads(
       int        meshID,
@@ -560,7 +570,7 @@ public:
    *
    * @pre vertices with firstVertexID, secondVertexID, thirdVertexID, and fourthVertexID were added to the mesh with the ID meshID
    *
-   * @see isMeshConnectivityRequired()
+   * @see requiresMeshConnectivityFor()
    */
   void setMeshTetrahedron(
       int meshID,
@@ -583,7 +593,7 @@ public:
    *
    * @pre vertices were added to the mesh with the ID meshID
    *
-   * @see isMeshConnectivityRequired()
+   * @see requiresMeshConnectivityFor()
    */
   void setMeshTetrahedra(
       int        meshID,
@@ -1062,7 +1072,7 @@ public:
    * @param[in] dataID the id of the data
    * @returns whether gradient is required
    */
-  bool isGradientDataRequired(int dataID) const;
+  bool requiresGradientDataFor(int dataID) const;
 
   /**
    * @brief Writes vector gradient data given as block.
@@ -1214,18 +1224,5 @@ private:
   // @brief To allow white box tests.
   friend struct testing::WhiteboxAccessor;
 };
-
-namespace constants {
-
-// @brief Name of action for writing initial data.
-PRECICE_API const std::string &actionWriteInitialData();
-
-// @brief Name of action for writing iteration checkpoint
-PRECICE_API const std::string &actionWriteIterationCheckpoint();
-
-// @brief Name of action for reading iteration checkpoint.
-PRECICE_API const std::string &actionReadIterationCheckpoint();
-
-} // namespace constants
 
 } // namespace precice
