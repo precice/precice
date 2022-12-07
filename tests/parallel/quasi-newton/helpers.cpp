@@ -61,7 +61,7 @@ void runTestQN(std::string const &config, TestContext const &context)
     interface.readBlockScalarData(readDataID, 4, vertexIDs, inValues);
 
     /*
-      Solves the following non-linear equations, which are extended to a fixed-point equation (simply +x)
+      Solves the following non-linear equations, which are extended to a fixed-point equation (simply +x_1)
       2 * x_1^2 - x_2 * x_3 - 8 = 0
       x_1^2 * x_2 + 2 * x_1 * x_2 * x_3 + x_2 * x_3^2 + x_2 = 0
       x_3^2 - 4 = 0
