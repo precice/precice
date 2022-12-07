@@ -3,7 +3,7 @@
 #include "testing/Testing.hpp"
 
 #include <iostream>
-#include <precice/SolverInterface.hpp>
+#include <precice/precice.hpp>
 #include <vector>
 #include "precice/impl/SolverInterfaceImpl.hpp"
 BOOST_AUTO_TEST_SUITE(Integration)

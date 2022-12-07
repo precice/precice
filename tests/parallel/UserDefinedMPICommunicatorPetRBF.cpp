@@ -3,7 +3,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/precice.hpp>
 #include <vector>
 
 // Tests SolverInterface() with a user-defined MPI communicator.

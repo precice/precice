@@ -261,6 +261,7 @@ target_sources(preciceCore
     src/precice/impl/WatchPoint.hpp
     src/precice/impl/WriteDataContext.cpp
     src/precice/impl/WriteDataContext.hpp
+    src/precice/precice.hpp
     src/precice/types.hpp
     src/query/Index.cpp
     src/query/Index.hpp
@@ -332,5 +333,6 @@ set_property(TARGET precice PROPERTY PUBLIC_HEADER
     ${CMAKE_BINARY_DIR}/src/precice/Version.h
     src/precice/SolverInterface.hpp
     src/precice/Tooling.hpp
+    src/precice/precice.hpp
     src/precice/types.hpp
     )

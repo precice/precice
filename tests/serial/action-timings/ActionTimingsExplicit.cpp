@@ -3,7 +3,7 @@
 #include "testing/Testing.hpp"
 
 #include <action/RecorderAction.hpp>
-#include <precice/SolverInterface.hpp>
+#include <precice/precice.hpp>
 #include <vector>
 
 /**

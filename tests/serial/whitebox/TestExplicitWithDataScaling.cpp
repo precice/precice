@@ -3,7 +3,7 @@
 #include "precice/impl/SolverInterfaceImpl.hpp"
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/precice.hpp>
 #include <vector>
 
 using namespace precice;
