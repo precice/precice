@@ -9,7 +9,6 @@ using precice::testing::TestContext;
 
 namespace tests::serial {
 void runTestQN(std::string const &config, TestContext const &context);
-void runTestQNEmptyPartition(std::string const &config, TestContext const &context);
 } // namespace tests::serial
 
 #endif
