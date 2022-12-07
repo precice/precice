@@ -16,4 +16,29 @@ cplscheme::CouplingData *ParallelCouplingSchemeFixture::getSendData(cplscheme::P
 {
   return cplscheme.getSendData(dataID);
 }
+
+void ParallelCouplingSchemeFixture::setTimeWindows(cplscheme::ParallelCouplingScheme &cplscheme, int timeWindows)
+{
+  cplscheme.setTimeWindows(timeWindows);
+}
+
+void ParallelCouplingSchemeFixture::storeIteration(cplscheme::ParallelCouplingScheme &cplscheme)
+{
+  cplscheme.storeIteration();
+}
+
+void ParallelCouplingSchemeFixture::initializeStorages(cplscheme::ParallelCouplingScheme &cplscheme)
+{
+  cplscheme.initializeStorages();
+}
+
+void ParallelCouplingSchemeFixture::storeExtrapolationData(cplscheme::ParallelCouplingScheme &cplscheme)
+{
+  cplscheme.storeExtrapolationData();
+}
+
+void ParallelCouplingSchemeFixture::moveToNextWindow(cplscheme::ParallelCouplingScheme &cplscheme)
+{
+  cplscheme.moveToNextWindow();
+}
 } // namespace precice::testing
