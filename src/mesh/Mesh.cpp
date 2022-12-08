@@ -401,7 +401,7 @@ void Mesh::removeDuplicates()
   auto lastEdge = std::unique(_edges.begin(), _edges.end());
   _edges        = EdgeContainer{_edges.begin(), lastEdge};
 
-  PRECICE_DEBUG("Deduplication removed {} tetrahedra ({} to {}), {} triangles ({} to {}), and {} edges ({} to {})",
+  PRECICE_DEBUG("Compression removed {} tetrahedra ({} to {}), {} triangles ({} to {}), and {} edges ({} to {})",
                 tetrahedraCnt - _tetrahedra.size(), tetrahedraCnt, _tetrahedra.size(),
                 triangleCnt - _triangles.size(), triangleCnt, _triangles.size(),
                 edgeCnt - _edges.size(), edgeCnt, _edges.size());
