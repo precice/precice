@@ -264,12 +264,11 @@ public:
    * Connectivity is optional.
    * Use requiresMeshConnectivityFor() to check if the current participant can make use of the connectivity.
    *
-   *
-   * Only set the mesh connectivity that you require.
+   * Only set the mesh connectivity that you require and use the face/cell elements that your solver provides.
    * preCICE removes all connectivity duplicates in initialize() and ensures
    * the existence of hierarchical entries for the projection fallback.
    *
-   * Examples:
+   * Examples for hierarchical entries:
    *
    * - setting triangle ABC ensures the existence of edges AB, BC, and AC.
    * - setting triangles ABC and BCD separately will result in duplicate BC edges.
