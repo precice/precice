@@ -55,6 +55,7 @@ endif()
 
 option(PRECICE_MPICommunication "Enables MPI-based communication and running coupling tests." ON)
 option(PRECICE_PETScMapping "Enable use of the PETSc linear algebra library." ON)
+option(PRECICE_GinkgoParallelization "Enable use of the Ginkgo linear algebra library for parallelization." ON)
 option(PRECICE_PythonActions "Python support" ON)
 option(PRECICE_Packages "Configure package generation." ON)
 option(BUILD_SHARED_LIBS "Build shared instead of static libraries" ON)
@@ -223,6 +224,23 @@ if (PRECICE_PETScMapping)
   message(STATUS "Found PETSc ${PETSc_VERSION}")
 else()
   message(STATUS "PETSc support disabled")
+endif()
+
+# Option: Ginkgo
+if (PRECICE_GinkgoParallelization)
+
+  # Enable CUDA
+  enable_language(CUDA)
+  set(CMAKE_CUDA_STANDARD 17)
+  set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+  set(CMAKE_CUDA_FLAGS "--allow-unsupported-compiler --expt-extended-lambda -Xcompiler -fopenmp -Wall")
+
+  # Enable Ginkgo
+  set(Ginkgo_Exp_Path "" CACHE STRING "Path to the experimental Ginkgo Repository of branch a195f856e.") # TODO: Remove as soon as GPU feature is in main branch
+  find_package(Ginkgo REQUIRED HINTS "${Ginkgo_Exp_Path}/build" NO_CMAKE_SYSTEM_PATH)
+  include_directories(SYSTEM "${Ginkgo_Exp_Path}/include")
+  file(GLOB ginkgo_lib "${Ginkgo_Exp_Path}/build/lib/*")
+  include(${Ginkgo_Exp_Path}/cmake/unified_kernels.cmake)
 endif()
 
 # Option Python
