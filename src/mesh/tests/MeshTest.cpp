@@ -821,7 +821,9 @@ BOOST_AUTO_TEST_CASE(AddMesh)
   BOOST_TEST(globalMesh->tetrahedra().size() == 3);
 }
 
-BOOST_AUTO_TEST_CASE(RemoveDuplicates)
+BOOST_AUTO_TEST_SUITE(PreProcess);
+
+BOOST_AUTO_TEST_CASE(DuplicateEdges)
 {
   PRECICE_TEST(1_rank);
   Mesh mesh{"Mesh1", 3, 0};
@@ -844,33 +846,18 @@ BOOST_AUTO_TEST_CASE(RemoveDuplicates)
   };
   BOOST_TEST(mesh.edges().size() == 1004);
 
-  mesh.createTriangle(v1, v2, v3);
-  mesh.createTriangle(v2, v3, v4);
-  for (int i = 0; i < 1000; ++i) {
-    mesh.createTriangle(v2, v3, v4);
-  };
-  BOOST_TEST(mesh.triangles().size() == 1002);
-
-  // creates edges 1-3 and 2-4
   mesh.preprocess();
 
-  BOOST_TEST(mesh.edges().size() == 5);
-  BOOST_TEST(mesh.triangles().size() == 2);
+  BOOST_TEST(mesh.edges().size() == 3);
+  BOOST_TEST(mesh.triangles().empty());
+  BOOST_TEST(mesh.tetrahedra().empty());
 
-  std::vector<Edge> expectedEdges{{v1, v2}, {v1, v3}, {v2, v3}, {v3, v4}, {v2, v4}};
+  std::vector<Edge> expectedEdges{{v1, v2}, {v2, v3}, {v3, v4}};
   for (auto &e : expectedEdges) {
     auto cnt = std::count(mesh.edges().begin(), mesh.edges().end(), e);
     BOOST_TEST(cnt == 1);
   }
-
-  std::vector<Triangle> expectedTriangles{{v1, v2, v3}, {v2, v3, v4}};
-  for (auto &t : expectedTriangles) {
-    auto cnt = std::count(mesh.triangles().begin(), mesh.triangles().end(), t);
-    BOOST_TEST(cnt == 1);
-  }
 }
-
-BOOST_AUTO_TEST_SUITE(PreProcess);
 
 BOOST_AUTO_TEST_CASE(SingleTriangle)
 {
@@ -1054,7 +1041,7 @@ BOOST_AUTO_TEST_CASE(Mixed)
   BOOST_TEST(mesh.tetrahedra().size() == 1);
 }
 
-BOOST_AUTO_TEST_CASE(RemoveDuplicates)
+BOOST_AUTO_TEST_CASE(Complex)
 {
   PRECICE_TEST(1_rank);
   Mesh mesh{"Mesh1", 3, 0};
