@@ -235,12 +235,6 @@ if (PRECICE_GinkgoParallelization)
   set(CMAKE_CUDA_STANDARD_REQUIRED ON)
   set(CMAKE_CUDA_FLAGS "--allow-unsupported-compiler --expt-extended-lambda -Xcompiler -fopenmp -Wall")
 
-  # Enable Ginkgo
-  set(Ginkgo_Exp_Path "" CACHE STRING "Path to the experimental Ginkgo Repository of branch a195f856e.") # TODO: Remove as soon as GPU feature is in main branch
-  find_package(Ginkgo REQUIRED HINTS "${Ginkgo_Exp_Path}/build" NO_CMAKE_SYSTEM_PATH)
-  include_directories(SYSTEM "${Ginkgo_Exp_Path}/include")
-  file(GLOB ginkgo_lib "${Ginkgo_Exp_Path}/build/lib/*")
-  include(${Ginkgo_Exp_Path}/cmake/unified_kernels.cmake)
 endif()
 
 # Option Python
@@ -338,7 +332,14 @@ endif()
 
 # Setup Ginkgo
 if (PRECICE_GinkgoParallelization)
+  # Enable Ginkgo
+  set(Ginkgo_Exp_Path "" CACHE STRING "Path to the experimental Ginkgo Repository of branch a195f856e.") # TODO: Remove as soon as GPU feature is in main branch
+  find_package(Ginkgo REQUIRED HINTS "${Ginkgo_Exp_Path}/build" NO_CMAKE_SYSTEM_PATH)
+  target_include_directories(preciceCore PUBLIC "${Ginkgo_Exp_Path}/include")
+  file(GLOB ginkgo_lib "${Ginkgo_Exp_Path}/build/lib/*")
+  include(${Ginkgo_Exp_Path}/cmake/unified_kernels.cmake)
   target_link_libraries(preciceCore PUBLIC ${ginkgo_lib} cublas cusolver)
+  ginkgo_add_unified_kernels(preciceCore src/mapping/ginkgo_kernels/GinkgoRBFKernels.cpp)
 else()
   target_compile_definitions(preciceCore PUBLIC PRECICE_NO_GINKGO)
 endif()

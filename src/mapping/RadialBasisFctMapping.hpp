@@ -6,6 +6,7 @@
 #include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
 #include "config/MappingConfiguration.hpp"
+#include "mapping/GinkgoRadialBasisFctSolver.hpp"
 #include "mapping/RadialBasisFctBaseMapping.hpp"
 #include "mapping/RadialBasisFctSolver.hpp"
 #include "mesh/Filter.hpp"
