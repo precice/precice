@@ -173,6 +173,18 @@ void for_each_unique(InputIt first, InputIt last, Unary func)
   });
 }
 
+/// Finds the first range in [first, last[ that fulfills a predicate
+template <class InputIt, class Predicate>
+std::pair<InputIt, InputIt> find_first_range(InputIt first, InputIt last, Predicate p)
+{
+  auto start = std::find_if(first, last, p);
+  if (start == last) { // nothing found
+    return {last, last};
+  }
+  auto stop = std::find_if_not(start, last, p);
+  return {start, stop};
+}
+
 } // namespace utils
 } // namespace precice
 

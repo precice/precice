@@ -799,9 +799,15 @@ void SolverInterfaceImpl::setMeshEdges(
   }
 
   mesh::PtrMesh &mesh = context.mesh;
-  utils::for_each_unique(vertices, vertices + size, [&_log = _log, &mesh](VertexID vid) {
-    PRECICE_CHECK(mesh->isValidVertexID(vid), impl::errorInvalidVertexID(vid));
-  });
+  {
+    auto [first, last] = utils::find_first_range(vertices, vertices + size * 2, [&mesh](VertexID vid) {
+      return !mesh->isValidVertexID(vid);
+    });
+    PRECICE_CHECK(first == last,
+                  impl::errorInvalidVertexIDRange,
+                  std::distance(vertices, first),
+                  std::distance(vertices, last));
+  }
 
   for (int i = 0; i < size; ++i) {
     auto aid = vertices[2 * i];
@@ -860,9 +866,15 @@ void SolverInterfaceImpl::setMeshTriangles(
   }
 
   mesh::PtrMesh &mesh = context.mesh;
-  utils::for_each_unique(vertices, vertices + size, [&_log = _log, &mesh](VertexID vid) {
-    PRECICE_CHECK(mesh->isValidVertexID(vid), impl::errorInvalidVertexID(vid));
-  });
+  {
+    auto [first, last] = utils::find_first_range(vertices, vertices + size * 3, [&mesh](VertexID vid) {
+      return !mesh->isValidVertexID(vid);
+    });
+    PRECICE_CHECK(first == last,
+                  impl::errorInvalidVertexIDRange,
+                  std::distance(vertices, first),
+                  std::distance(vertices, last));
+  }
 
   for (int i = 0; i < size; ++i) {
     auto aid = vertices[3 * i];
@@ -941,9 +953,15 @@ void SolverInterfaceImpl::setMeshQuads(
   }
 
   mesh::Mesh &mesh = *(context.mesh);
-  utils::for_each_unique(vertices, vertices + size, [&_log = _log, &mesh](VertexID vid) {
-    PRECICE_CHECK(mesh.isValidVertexID(vid), impl::errorInvalidVertexID(vid));
-  });
+  {
+    auto [first, last] = utils::find_first_range(vertices, vertices + size * 4, [&mesh](VertexID vid) {
+      return !mesh.isValidVertexID(vid);
+    });
+    PRECICE_CHECK(first == last,
+                  impl::errorInvalidVertexIDRange,
+                  std::distance(vertices, first),
+                  std::distance(vertices, last));
+  }
 
   for (int i = 0; i < size; ++i) {
     auto aid = vertices[4 * i];
@@ -1024,9 +1042,15 @@ void SolverInterfaceImpl::setMeshTetrahedra(
   }
 
   mesh::PtrMesh &mesh = context.mesh;
-  utils::for_each_unique(vertices, vertices + size, [&_log = _log, &mesh](VertexID vid) {
-    PRECICE_CHECK(mesh->isValidVertexID(vid), impl::errorInvalidVertexID(vid));
-  });
+  {
+    auto [first, last] = utils::find_first_range(vertices, vertices + size * 4, [&mesh](VertexID vid) {
+      return !mesh->isValidVertexID(vid);
+    });
+    PRECICE_CHECK(first == last,
+                  impl::errorInvalidVertexIDRange,
+                  std::distance(vertices, first),
+                  std::distance(vertices, last));
+  }
 
   for (int i = 0; i < size; ++i) {
     auto aid = vertices[4 * i];
