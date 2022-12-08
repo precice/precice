@@ -336,6 +336,13 @@ else()
   target_compile_definitions(preciceCore PUBLIC PRECICE_NO_PETSC)
 endif()
 
+# Setup Ginkgo
+if (PRECICE_GinkgoParallelization)
+  target_link_libraries(preciceCore PUBLIC ${ginkgo_lib} cublas cusolver)
+else()
+  target_compile_definitions(preciceCore PUBLIC PRECICE_NO_GINKGO)
+endif()
+
 # Option Python
 if (PRECICE_PythonActions)
   target_link_libraries(preciceCore PUBLIC Python3::NumPy Python3::Python)
