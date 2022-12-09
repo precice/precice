@@ -139,9 +139,6 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   cplScheme.addConvergenceMeasure(dataID1, false, false, minIterationConvMeasure1, true);
   cplScheme.addConvergenceMeasure(dataID0, false, false, minIterationConvMeasure2, true);
 
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
-  std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
-
   if (context.isNamed(nameParticipant0)) {
     BOOST_TEST(testing::equals(receiveCouplingData->values(), Eigen::Vector3d(0.0, 0.0, 0.0)));
     BOOST_TEST(receiveCouplingData->values().size() == 3);
@@ -150,9 +147,9 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(sendCouplingData->values().size() == 1);
     BOOST_TEST(sendCouplingData->getPreviousIterationSize() == 1);
     BOOST_TEST(Fixture::isImplicitCouplingScheme(cplScheme));
-    BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteInitialData()));
+    BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::InitializeData));
     sendCouplingData->values() = Eigen::VectorXd::Constant(1, 4.0);
-    cplScheme.markActionFulfilled(constants::actionWriteInitialData());
+    cplScheme.markActionFulfilled(CouplingScheme::Action::InitializeData);
     cplScheme.initialize(0.0, 0);
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(testing::equals(receiveCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
@@ -161,11 +158,11 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(sendCouplingData->getPreviousIterationSize() == 1);
     BOOST_TEST(testing::equals(sendCouplingData->previousIteration()(0), 4.0));
     while (cplScheme.isCouplingOngoing()) {
-      if (cplScheme.isActionRequired(writeIterationCheckpoint)) {
-        cplScheme.markActionFulfilled(writeIterationCheckpoint);
+      if (cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint)) {
+        cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
       }
-      if (cplScheme.isActionRequired(readIterationCheckpoint)) {
-        cplScheme.markActionFulfilled(readIterationCheckpoint);
+      if (cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint)) {
+        cplScheme.markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
       }
       cplScheme.addComputedTime(timestepLength);
       cplScheme.firstSynchronization({});
@@ -176,11 +173,11 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     }
   } else {
     BOOST_TEST(context.isNamed(nameParticipant1));
-    BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteInitialData()));
+    BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::InitializeData));
     Eigen::VectorXd v(3);
     v << 1.0, 2.0, 3.0;
     sendCouplingData->values() = v;
-    cplScheme.markActionFulfilled(constants::actionWriteInitialData());
+    cplScheme.markActionFulfilled(CouplingScheme::Action::InitializeData);
     BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 0.0));
     BOOST_TEST(receiveCouplingData->values().size() == 1);
     BOOST_TEST(receiveCouplingData->getPreviousIterationSize() == 1);
@@ -196,8 +193,8 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(sendCouplingData->getPreviousIterationSize() == 3);
     BOOST_TEST(testing::equals(sendCouplingData->previousIteration(), Eigen::Vector3d(1.0, 2.0, 3.0)));
     while (cplScheme.isCouplingOngoing()) {
-      if (cplScheme.isActionRequired(writeIterationCheckpoint)) {
-        cplScheme.markActionFulfilled(writeIterationCheckpoint);
+      if (cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint)) {
+        cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
       }
       cplScheme.addComputedTime(timestepLength);
       cplScheme.firstSynchronization({});
@@ -205,8 +202,8 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       cplScheme.secondSynchronization();
       cplScheme.secondExchange();
       BOOST_TEST(cplScheme.hasDataBeenReceived());
-      if (cplScheme.isActionRequired(readIterationCheckpoint)) {
-        cplScheme.markActionFulfilled(readIterationCheckpoint);
+      if (cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint)) {
+        cplScheme.markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
       }
     }
   }

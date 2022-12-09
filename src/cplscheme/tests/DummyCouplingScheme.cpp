@@ -83,19 +83,19 @@ bool DummyCouplingScheme::isCouplingOngoing() const
 }
 
 bool DummyCouplingScheme::isActionRequired(
-    const std::string &actionName) const
+    Action action) const
 {
   if (!isImplicitCouplingScheme()) {
     PRECICE_DEBUG("return false (explicit)");
     return false;
   }
-  if (actionName == constants::actionWriteIterationCheckpoint()) {
+  if (action == CouplingScheme::Action::WriteCheckpoint) {
     if (_iterations == 1) {
       PRECICE_DEBUG("return true");
       return true;
     }
   }
-  if (actionName == constants::actionReadIterationCheckpoint()) {
+  if (action == CouplingScheme::Action::ReadCheckpoint) {
     if (_iterations != 1) {
       PRECICE_DEBUG("return true");
       return true;

@@ -92,9 +92,6 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
     BOOST_TEST(mesh->data().size() == 3);
     BOOST_TEST(mesh->vertices().size() > 0);
 
-    std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
-    std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
-
     double computedTime      = 0.0;
     int    computedTimesteps = 0;
 
@@ -106,16 +103,16 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
       while (cplScheme->isCouplingOngoing()) {
         BOOST_REQUIRE(computedTime < 1.1);
         BOOST_TEST(testing::equals(0.1, cplScheme->getNextTimestepMaxLength()));
-        if (cplScheme->isActionRequired(writeIterationCheckpoint)) {
-          cplScheme->markActionFulfilled(writeIterationCheckpoint);
+        if (cplScheme->isActionRequired(CouplingScheme::Action::WriteCheckpoint)) {
+          cplScheme->markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
         }
         cplScheme->addComputedTime(cplScheme->getNextTimestepMaxLength());
         cplScheme->firstSynchronization({});
         cplScheme->firstExchange();
         cplScheme->secondSynchronization();
         cplScheme->secondExchange();
-        if (cplScheme->isActionRequired(readIterationCheckpoint)) {
-          cplScheme->markActionFulfilled(readIterationCheckpoint);
+        if (cplScheme->isActionRequired(CouplingScheme::Action::ReadCheckpoint)) {
+          cplScheme->markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
         } else {
           BOOST_TEST(cplScheme->isTimeWindowComplete());
           computedTime += cplScheme->getNextTimestepMaxLength();
@@ -140,16 +137,16 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
       while (cplScheme->isCouplingOngoing()) {
         BOOST_REQUIRE(computedTime < 1.1);
         BOOST_TEST(testing::equals(0.1, cplScheme->getNextTimestepMaxLength()));
-        if (cplScheme->isActionRequired(writeIterationCheckpoint)) {
-          cplScheme->markActionFulfilled(writeIterationCheckpoint);
+        if (cplScheme->isActionRequired(CouplingScheme::Action::WriteCheckpoint)) {
+          cplScheme->markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
         }
         cplScheme->addComputedTime(cplScheme->getNextTimestepMaxLength());
         cplScheme->firstSynchronization({});
         cplScheme->firstExchange();
         cplScheme->secondSynchronization();
         cplScheme->secondExchange();
-        if (cplScheme->isActionRequired(readIterationCheckpoint)) {
-          cplScheme->markActionFulfilled(readIterationCheckpoint);
+        if (cplScheme->isActionRequired(CouplingScheme::Action::ReadCheckpoint)) {
+          cplScheme->markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
         } else {
           BOOST_TEST(cplScheme->isTimeWindowComplete());
           computedTime += cplScheme->getNextTimestepMaxLength();
@@ -175,16 +172,16 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
       while (cplScheme->isCouplingOngoing()) {
         BOOST_REQUIRE(computedTime < 1.1);
         BOOST_TEST(testing::equals(0.1, cplScheme->getNextTimestepMaxLength()));
-        if (cplScheme->isActionRequired(writeIterationCheckpoint)) {
-          cplScheme->markActionFulfilled(writeIterationCheckpoint);
+        if (cplScheme->isActionRequired(CouplingScheme::Action::WriteCheckpoint)) {
+          cplScheme->markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
         }
         cplScheme->addComputedTime(cplScheme->getNextTimestepMaxLength());
         cplScheme->firstSynchronization({});
         cplScheme->firstExchange();
         cplScheme->secondSynchronization();
         cplScheme->secondExchange();
-        if (cplScheme->isActionRequired(readIterationCheckpoint)) {
-          cplScheme->markActionFulfilled(readIterationCheckpoint);
+        if (cplScheme->isActionRequired(CouplingScheme::Action::ReadCheckpoint)) {
+          cplScheme->markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
         } else {
           BOOST_TEST(cplScheme->isTimeWindowComplete());
           computedTime += cplScheme->getNextTimestepMaxLength();
@@ -226,9 +223,6 @@ BOOST_AUTO_TEST_SUITE(DummySchemeCompositionTests)
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit2)
 {
   PRECICE_TEST(1_rank, Require::Events);
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
-  std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
-
   int               numberIterations = 1;
   int               maxTimesteps     = 10;
   PtrCouplingScheme scheme1(
@@ -257,9 +251,6 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit2)
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit3)
 {
   PRECICE_TEST(1_rank, Require::Events);
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
-  std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
-
   int               numberIterations = 1;
   int               maxTimesteps     = 10;
   PtrCouplingScheme scheme1(
@@ -292,9 +283,6 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit3)
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit2)
 {
   PRECICE_TEST(1_rank, Require::Events);
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
-  std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
-
   int               numberIterations = 1;
   int               maxTimesteps     = 10;
   PtrCouplingScheme scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
@@ -319,10 +307,10 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit2)
       BOOST_TEST_MESSAGE("Expl " << scheme1->getTimeWindows());
       BOOST_TEST_MESSAGE("Impl " << scheme2->getTimeWindows());
       if (advances % 2 == 0) {
-        BOOST_TEST(scheme2->isActionRequired(writeIterationCheckpoint));
+        BOOST_TEST(scheme2->isActionRequired(CouplingScheme::Action::WriteCheckpoint));
         BOOST_TEST(scheme1->getTimeWindows() - 1 == advances / 2);
       } else {
-        BOOST_TEST(scheme2->isActionRequired(readIterationCheckpoint));
+        BOOST_TEST(scheme2->isActionRequired(CouplingScheme::Action::ReadCheckpoint));
         BOOST_TEST(scheme1->getTimeWindows() - 1 == (advances + 1) / 2);
       }
     }
@@ -337,9 +325,6 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit2)
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2Explicit1)
 {
   PRECICE_TEST(1_rank, Require::Events);
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
-  std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
-
   int               numberIterations = 2;
   int               maxTimesteps     = 10;
   PtrCouplingScheme scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
@@ -357,10 +342,10 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2Explicit1)
     composition.secondExchange();
     advances++;
     if (advances % 2 == 0) {
-      BOOST_TEST(scheme1->isActionRequired(writeIterationCheckpoint));
+      BOOST_TEST(scheme1->isActionRequired(CouplingScheme::Action::WriteCheckpoint));
       BOOST_TEST(scheme1->getTimeWindows() - 1 == advances / 2);
     } else {
-      BOOST_TEST(scheme1->isActionRequired(readIterationCheckpoint));
+      BOOST_TEST(scheme1->isActionRequired(CouplingScheme::Action::ReadCheckpoint));
       BOOST_TEST(scheme1->getTimeWindows() - 1 == (advances - 1) / 2);
     }
   }
@@ -374,9 +359,6 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2Explicit1)
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit3)
 {
   PRECICE_TEST(1_rank, Require::Events);
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
-  std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
-
   int               numberIterations = 1;
   int               maxTimesteps     = 10;
   PtrCouplingScheme scheme1(
@@ -396,10 +378,10 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit3)
     composition.secondExchange();
     advances++;
     if (advances % 3 == 0) {
-      BOOST_TEST(scheme2->isActionRequired(writeIterationCheckpoint));
+      BOOST_TEST(scheme2->isActionRequired(CouplingScheme::Action::WriteCheckpoint));
       BOOST_TEST(scheme1->getTimeWindows() - 1 == advances / 3);
     } else {
-      BOOST_TEST(scheme2->isActionRequired(readIterationCheckpoint));
+      BOOST_TEST(scheme2->isActionRequired(CouplingScheme::Action::ReadCheckpoint));
       BOOST_TEST(scheme1->getTimeWindows() - 1 == (advances + (3 - advances % 3)) / 3);
     }
   }
@@ -413,9 +395,6 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit3)
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit3Explicit1)
 {
   PRECICE_TEST(1_rank, Require::Events);
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
-  std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
-
   int               numberIterations = 3;
   int               maxTimesteps     = 10;
   PtrCouplingScheme scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
@@ -433,10 +412,10 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit3Explicit1)
     composition.secondExchange();
     advances++;
     if (advances % 3 == 0) {
-      BOOST_TEST(scheme1->isActionRequired(writeIterationCheckpoint));
+      BOOST_TEST(scheme1->isActionRequired(CouplingScheme::Action::WriteCheckpoint));
       BOOST_TEST(scheme1->getTimeWindows() - 1 == advances / 3);
     } else {
-      BOOST_TEST(scheme1->isActionRequired(readIterationCheckpoint));
+      BOOST_TEST(scheme1->isActionRequired(CouplingScheme::Action::ReadCheckpoint));
       BOOST_TEST(scheme1->getTimeWindows() - 1 == (advances - (advances % 3)) / 3);
     }
   }
