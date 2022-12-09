@@ -139,41 +139,36 @@ BOOST_AUTO_TEST_CASE(Demonstration)
       index++;
     }
 
+    BOOST_TEST(!mesh.hasEdges());
+    BOOST_TEST(!mesh.hasTriangles());
+
     // Create mesh edges
     Edge &e0 = mesh.createEdge(v0, v1);
     Edge &e1 = mesh.createEdge(v1, v2);
     Edge &e2 = mesh.createEdge(v2, v0);
 
-    // Validate mesh edges state
-    index = 0;
-    for (Edge &edge : mesh.edges()) {
-      if (index == 0) {
-        BOOST_TEST(edge.getID() == e0.getID());
-      } else if (index == 1) {
-        BOOST_TEST(edge.getID() == e1.getID());
-      } else if (index == 2) {
-        BOOST_TEST(edge.getID() == e2.getID());
-      } else {
-        BOOST_TEST(false);
-      }
-      index++;
-    }
+    BOOST_TEST(mesh.hasEdges());
+    BOOST_TEST(mesh.edges().size() == 3);
+    BOOST_TEST(!mesh.hasTriangles());
 
     Triangle *t = nullptr;
     if (dim == 3) {
       // Create triangle
       t = &mesh.createTriangle(e0, e1, e2);
 
-      // Validate mesh triangle
-      BOOST_TEST((*mesh.triangles().begin()).getID() == t->getID());
+      BOOST_TEST(mesh.hasTriangles());
+    } else {
+      BOOST_TEST(!mesh.hasTriangles());
     }
+
+    BOOST_TEST(mesh.hasEdges());
 
     // Create vertex data
     std::string dataName("MyData");
     int         dataDimensions = dim;
     // Add a data set to the mesh. Every data value is associated to a vertex in
     // the mesh via the vertex ID.
-    PtrData data = mesh.createData(dataName, dataDimensions);
+    PtrData data = mesh.createData(dataName, dataDimensions, 0_dataID);
 
     // Validate data state
     BOOST_TEST(data->getName() == dataName);
@@ -249,47 +244,17 @@ BOOST_AUTO_TEST_CASE(MeshWKTPrint)
       "Mesh \"WKTMesh\", dimensionality = 3:\n"
       "GEOMETRYCOLLECTION(\n"
       "POINT (0 0 0), POINT (1 0 0), POINT (0 0 1), POINT (1 0 1),\n"
-      "LINESTRING (0 0 0, 1 0 0), LINESTRING (1 0 0, 0 0 1), LINESTRING (0 0 1, 0 0 0), LINESTRING (1 0 0, 1 0 1), LINESTRING (1 0 1, 0 0 1),\n"
+      "LINESTRING (0 0 0, 1 0 0), LINESTRING (1 0 0, 0 0 1), LINESTRING (0 0 0, 0 0 1), LINESTRING (1 0 0, 1 0 1), LINESTRING (0 0 1, 1 0 1),\n"
       "POLYGON ((0 0 0, 1 0 0, 0 0 1, 0 0 0))\n"
       ")");
   BOOST_TEST(reference == sstream.str());
-}
-
-BOOST_AUTO_TEST_CASE(CreateUniqueEdge)
-{
-  PRECICE_TEST(1_rank);
-  int             dim = 3;
-  Mesh            mesh1("Mesh1", dim, testing::nextMeshID());
-  auto &          mesh = mesh1;
-  Eigen::VectorXd coords0(dim);
-  Eigen::VectorXd coords1(dim);
-  Eigen::VectorXd coords2(dim);
-  coords0 << 0.0, 0.0, 0.0;
-  coords1 << 1.0, 0.0, 0.0;
-  coords2 << 0.0, 0.0, 1.0;
-  Vertex &v0 = mesh.createVertex(coords0);
-  Vertex &v1 = mesh.createVertex(coords1);
-  Vertex &v2 = mesh.createVertex(coords2);
-
-  Edge &e01a = mesh.createEdge(v0, v1); // LINESTRING (0 0 0, 1 0 0)
-  mesh.createEdge(v0, v1);              // LINESTRING (0 0 0, 1 0 0)
-  BOOST_TEST(mesh.edges().size() == 2);
-
-  Edge &e01c = mesh.createUniqueEdge(v0, v1); // LINESTRING (0 0 0, 1 0 0)
-  BOOST_TEST(mesh.edges().size() == 2);
-  BOOST_TEST(e01a == e01c);
-
-  mesh.createUniqueEdge(v1, v2); // LINESTRING (0 0 0, 1 0 0)
-  BOOST_TEST(mesh.edges().size() == 3);
-  mesh.createUniqueEdge(v1, v2); // LINESTRING (0 0 0, 1 0 0)
-  BOOST_TEST(mesh.edges().size() == 3);
 }
 
 BOOST_AUTO_TEST_CASE(ResizeDataGrow)
 {
   PRECICE_TEST(1_rank);
   precice::mesh::Mesh mesh("MyMesh", 3, testing::nextMeshID());
-  const auto &        values = mesh.createData("Data", 1)->values();
+  const auto &        values = mesh.createData("Data", 1, 0_dataID)->values();
 
   // Create mesh
   mesh.createVertex(Vector3d(0.0, 0.0, 0.0));
@@ -312,7 +277,7 @@ BOOST_AUTO_TEST_CASE(ResizeDataShrink)
 {
   PRECICE_TEST(1_rank);
   precice::mesh::Mesh mesh("MyMesh", 3, testing::nextMeshID());
-  const auto &        values = mesh.createData("Data", 1)->values();
+  const auto &        values = mesh.createData("Data", 1, 0_dataID)->values();
 
   // Create mesh
   mesh.createVertex(Vector3d(0.0, 0.0, 0.0));
@@ -339,7 +304,7 @@ BOOST_AUTO_TEST_CASE(AsChain)
 {
   PRECICE_TEST(1_rank);
   Mesh mesh("Mesh1", 3, testing::nextMeshID());
-  mesh.createData("Data", 1);
+  mesh.createData("Data", 1, 0_dataID);
 
   Eigen::Vector3d coords0;
   Eigen::Vector3d coords1;
@@ -382,7 +347,7 @@ BOOST_AUTO_TEST_CASE(ShareVertex)
 {
   PRECICE_TEST(1_rank);
   Mesh mesh("Mesh1", 3, testing::nextMeshID());
-  mesh.createData("Data", 1);
+  mesh.createData("Data", 1, 0_dataID);
 
   Eigen::Vector3d coords0;
   Eigen::Vector3d coords1;
@@ -409,7 +374,7 @@ BOOST_AUTO_TEST_CASE(ShareVertex)
   BOOST_TEST(sharedVertex(e2, e3) == v3);
   BOOST_TEST(sharedVertex(e3, e0) == v0);
 
-  // not connnected
+  // not connected
   BOOST_TEST((sharedVertex(e0, e2) == nullptr));
   BOOST_TEST((sharedVertex(e1, e3) == nullptr));
 
@@ -428,7 +393,7 @@ BOOST_AUTO_TEST_CASE(EdgeLength)
   coords1 << 0.0, 1.0, 0.0;
   Vertex v0{coords0, 0};
   Vertex v1{coords1, 1};
-  Edge   e(v0, v1, 0);
+  Edge   e(v0, v1);
   BOOST_TEST(edgeLength(e) == std::sqrt(2));
 }
 
@@ -436,7 +401,7 @@ BOOST_AUTO_TEST_CASE(VertexPtrsFor)
 {
   PRECICE_TEST(1_rank);
   Mesh mesh("Mesh1", 3, testing::nextMeshID());
-  mesh.createData("Data", 1);
+  mesh.createData("Data", 1, 0_dataID);
 
   Eigen::Vector3d coords0;
   Eigen::Vector3d coords1;
@@ -464,7 +429,7 @@ BOOST_AUTO_TEST_CASE(CoordsForIDs)
 {
   PRECICE_TEST(1_rank);
   Mesh mesh("Mesh1", 3, testing::nextMeshID());
-  mesh.createData("Data", 1);
+  mesh.createData("Data", 1, 0_dataID);
 
   Eigen::Vector3d coords0;
   Eigen::Vector3d coords1;
@@ -492,7 +457,7 @@ BOOST_AUTO_TEST_CASE(CoordsForPtrs)
 {
   PRECICE_TEST(1_rank);
   Mesh mesh("Mesh1", 3, testing::nextMeshID());
-  mesh.createData("Data", 1);
+  mesh.createData("Data", 1, 0_dataID);
 
   Eigen::Vector3d coords0;
   Eigen::Vector3d coords1;
@@ -520,7 +485,7 @@ BOOST_AUTO_TEST_CASE(Integrate2DScalarData)
 {
   PRECICE_TEST(1_rank);
   PtrMesh mesh = std::make_shared<Mesh>("Mesh1", 2, testing::nextMeshID());
-  mesh->createData("Data", 1);
+  mesh->createData("Data", 1, 0_dataID);
 
   auto &v1 = mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
   auto &v2 = mesh->createVertex(Eigen::Vector2d(0.0, 0.5));
@@ -537,7 +502,7 @@ BOOST_AUTO_TEST_CASE(Integrate2DScalarData)
   mesh->data(0)->values()(2) = 5.0;
   mesh->data(0)->values()(3) = 7.0;
 
-  auto   result   = mesh::integrate(mesh, mesh->data(0));
+  auto   result   = mesh::integrateSurface(mesh, mesh->data(0));
   double expected = 17.0;
   BOOST_REQUIRE(result.size() == 1);
   BOOST_TEST(result(0) == expected);
@@ -547,7 +512,7 @@ BOOST_AUTO_TEST_CASE(Integrate2DVectorData)
 {
   PRECICE_TEST(1_rank);
   PtrMesh mesh = std::make_shared<Mesh>("Mesh1", 2, testing::nextMeshID());
-  mesh->createData("Data", 2);
+  mesh->createData("Data", 2, 0_dataID);
 
   auto &v1 = mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
   auto &v2 = mesh->createVertex(Eigen::Vector2d(0.0, 0.5));
@@ -568,7 +533,7 @@ BOOST_AUTO_TEST_CASE(Integrate2DVectorData)
   mesh->data(0)->values()(6) = 7.0;
   mesh->data(0)->values()(7) = 8.0;
 
-  auto            result = mesh::integrate(mesh, mesh->data(0));
+  auto            result = mesh::integrateSurface(mesh, mesh->data(0));
   Eigen::Vector2d expected(17.0, 20.5);
   BOOST_REQUIRE(result.size() == 2);
   BOOST_TEST(result(0) == expected(0));
@@ -579,7 +544,7 @@ BOOST_AUTO_TEST_CASE(Integrate3DScalarData)
 {
   PRECICE_TEST(1_rank);
   PtrMesh mesh = std::make_shared<Mesh>("Mesh1", 3, testing::nextMeshID());
-  mesh->createData("Data", 1);
+  mesh->createData("Data", 1, 0_dataID);
 
   auto &v1 = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
   auto &v2 = mesh->createVertex(Eigen::Vector3d(3.0, 0.0, 0.0));
@@ -601,7 +566,7 @@ BOOST_AUTO_TEST_CASE(Integrate3DScalarData)
   mesh->data(0)->values()(2) = 5.0;
   mesh->data(0)->values()(3) = 7.0;
 
-  auto   result   = mesh::integrate(mesh, mesh->data(0));
+  auto   result   = mesh::integrateSurface(mesh, mesh->data(0));
   double expected = 70.0;
   BOOST_REQUIRE(result.size() == 1);
   BOOST_TEST(result(0) == expected);
@@ -611,7 +576,7 @@ BOOST_AUTO_TEST_CASE(Integrate3DVectorData)
 {
   PRECICE_TEST(1_rank);
   PtrMesh mesh = std::make_shared<Mesh>("Mesh1", 3, testing::nextMeshID());
-  mesh->createData("Data", 2);
+  mesh->createData("Data", 2, 0_dataID);
 
   auto &v1 = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
   auto &v2 = mesh->createVertex(Eigen::Vector3d(3.0, 0.0, 0.0));
@@ -637,7 +602,7 @@ BOOST_AUTO_TEST_CASE(Integrate3DVectorData)
   mesh->data(0)->values()(6) = 7.0;
   mesh->data(0)->values()(7) = 8.0;
 
-  auto            result = mesh::integrate(mesh, mesh->data(0));
+  auto            result = mesh::integrateSurface(mesh, mesh->data(0));
   Eigen::Vector2d expected(70.0, 88.0);
   BOOST_REQUIRE(result.size() == 2);
   BOOST_TEST(result(0) == expected(0));
@@ -645,6 +610,216 @@ BOOST_AUTO_TEST_CASE(Integrate3DVectorData)
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Utils
+
+BOOST_AUTO_TEST_SUITE(VolumeIntegrals)
+
+struct UnitSquareFixture {
+  Eigen::Vector2d x0{0.0, 0.0};
+  Eigen::Vector2d x1{1.0, 0.0};
+  Eigen::Vector2d x2{1.0, 1.0};
+  Eigen::Vector2d x3{0.0, 1.0};
+};
+
+BOOST_FIXTURE_TEST_CASE(Integrate2DScalarDataVolume, UnitSquareFixture)
+{
+  PRECICE_TEST(1_rank);
+  PtrMesh mesh = std::make_shared<Mesh>("Mesh1", 2, testing::nextMeshID());
+  mesh->createData("Data", 1, 0_dataID);
+
+  auto &v1 = mesh->createVertex(x0);
+  auto &v2 = mesh->createVertex(x1);
+  auto &v3 = mesh->createVertex(x2);
+  auto &v4 = mesh->createVertex(x3);
+  mesh->allocateDataValues();
+
+  auto &e1 = mesh->createEdge(v1, v2);
+  auto &e2 = mesh->createEdge(v2, v3);
+  auto &e3 = mesh->createEdge(v3, v4);
+  auto &e4 = mesh->createEdge(v1, v4);
+  auto &e5 = mesh->createEdge(v1, v3);
+
+  // 2 triangles as halves of a unit square
+  mesh->createTriangle(e1, e2, e5);
+  mesh->createTriangle(e3, e4, e5);
+
+  BOOST_REQUIRE(mesh->triangles()[0].getArea() == 0.5);
+  BOOST_REQUIRE(mesh->triangles()[1].getArea() == 0.5);
+  BOOST_REQUIRE(mesh->triangles().size() == 2);
+
+  // Integrand is 1 + 4x + 2y integrated over unit square: 4
+  mesh->data(0)->values()(0) = 1.0;
+  mesh->data(0)->values()(1) = 3.0;
+  mesh->data(0)->values()(2) = 7.0;
+  mesh->data(0)->values()(3) = 5.0;
+
+  auto   result   = mesh::integrateVolume(mesh, mesh->data(0));
+  double expected = 4.0;
+  BOOST_REQUIRE(result.size() == 1);
+  BOOST_TEST(result(0) == expected);
+}
+
+BOOST_FIXTURE_TEST_CASE(Integrate2DVectorDataVolume, UnitSquareFixture)
+{
+  PRECICE_TEST(1_rank);
+  PtrMesh mesh = std::make_shared<Mesh>("Mesh1", 2, testing::nextMeshID());
+  mesh->createData("Data", 2, 0_dataID);
+
+  auto &v1 = mesh->createVertex(x0);
+  auto &v2 = mesh->createVertex(x1);
+  auto &v3 = mesh->createVertex(x2);
+  auto &v4 = mesh->createVertex(x3);
+  mesh->allocateDataValues();
+
+  auto &e1 = mesh->createEdge(v1, v2);
+  auto &e2 = mesh->createEdge(v2, v3);
+  auto &e3 = mesh->createEdge(v3, v4);
+  auto &e4 = mesh->createEdge(v1, v4);
+  auto &e5 = mesh->createEdge(v1, v3);
+
+  // 2 triangles as halves of a unit square
+  mesh->createTriangle(e1, e2, e5);
+  mesh->createTriangle(e3, e4, e5);
+
+  BOOST_REQUIRE(mesh->triangles()[0].getArea() == 0.5);
+  BOOST_REQUIRE(mesh->triangles()[1].getArea() == 0.5);
+  BOOST_REQUIRE(mesh->triangles().size() == 2);
+
+  // Integrand of 1st component is 1 + 4x + 2y integrated over unit square: 4
+  mesh->data(0)->values()(0) = 1.0;
+  mesh->data(0)->values()(2) = 3.0;
+  mesh->data(0)->values()(4) = 7.0;
+  mesh->data(0)->values()(6) = 5.0;
+  // Integrand of 1st component is 1 + 4x + 2y integrated over unit square: 4
+  mesh->data(0)->values()(1) = 2.0;
+  mesh->data(0)->values()(3) = 4.0;
+  mesh->data(0)->values()(5) = 8.0;
+  mesh->data(0)->values()(7) = 6.0;
+
+  auto            result = mesh::integrateVolume(mesh, mesh->data(0));
+  Eigen::Vector2d expected(4.0, 5.0);
+  BOOST_REQUIRE(result.size() == 2);
+  BOOST_TEST(result(0) == expected(0));
+  BOOST_TEST(result(1) == expected(1));
+}
+
+struct OneTetraFixture {
+  Eigen::Vector3d x1{0.0, 0.0, 0.0};
+  Eigen::Vector3d x2{1.0, 0.0, 0.0};
+  Eigen::Vector3d x3{0.0, 1.0, 0.0};
+  Eigen::Vector3d x4{0.0, 0.0, 1.0};
+};
+
+BOOST_FIXTURE_TEST_CASE(Integrate3DScalarDataVolume, OneTetraFixture)
+{
+  PRECICE_TEST(1_rank);
+  PtrMesh mesh = std::make_shared<Mesh>("Mesh1", 3, testing::nextMeshID());
+  mesh->createData("Data", 1, 0_dataID);
+
+  auto &v1 = mesh->createVertex(x1);
+  auto &v2 = mesh->createVertex(x2);
+  auto &v3 = mesh->createVertex(x3);
+  auto &v4 = mesh->createVertex(x4);
+
+  mesh->allocateDataValues();
+
+  mesh->createTetrahedron(v1, v2, v3, v4);
+
+  BOOST_REQUIRE(mesh->tetrahedra()[0].getVolume() == 1. / 6);
+  BOOST_REQUIRE(mesh->tetrahedra().size() == 1);
+
+  // Integrand is 1 + 2x + 4y + 6z integrated over one tetra
+  mesh->data(0)->values()(0) = 1.0;
+  mesh->data(0)->values()(1) = 3.0;
+  mesh->data(0)->values()(2) = 5.0;
+  mesh->data(0)->values()(3) = 7.0;
+
+  auto   result   = mesh::integrateVolume(mesh, mesh->data(0));
+  double expected = 4.0 / 6;
+  BOOST_REQUIRE(result.size() == 1);
+  BOOST_TEST(result(0) == expected);
+}
+
+BOOST_FIXTURE_TEST_CASE(Integrate3DVectorDataVolume, OneTetraFixture)
+{
+  PRECICE_TEST(1_rank);
+  PtrMesh mesh = std::make_shared<Mesh>("Mesh1", 3, testing::nextMeshID());
+  mesh->createData("Data", 3, 0_dataID);
+
+  auto &v1 = mesh->createVertex(x1);
+  auto &v2 = mesh->createVertex(x2);
+  auto &v3 = mesh->createVertex(x3);
+  auto &v4 = mesh->createVertex(x4);
+
+  mesh->allocateDataValues();
+
+  mesh->createTetrahedron(v1, v2, v3, v4);
+
+  BOOST_REQUIRE(mesh->tetrahedra()[0].getVolume() == 1. / 6);
+  BOOST_REQUIRE(mesh->tetrahedra().size() == 1);
+
+  // Integrand is (1 + 2x + 4y + 6z, 1, 1-x-y-z) integrated over one tetra
+  mesh->data(0)->values()(0 * 3) = 1.0;
+  mesh->data(0)->values()(1 * 3) = 3.0;
+  mesh->data(0)->values()(2 * 3) = 5.0;
+  mesh->data(0)->values()(3 * 3) = 7.0;
+
+  mesh->data(0)->values()(0 * 3 + 1) = 1.0;
+  mesh->data(0)->values()(1 * 3 + 1) = 1.0;
+  mesh->data(0)->values()(2 * 3 + 1) = 1.0;
+  mesh->data(0)->values()(3 * 3 + 1) = 1.0;
+
+  mesh->data(0)->values()(0 * 3 + 2) = 1.0;
+  mesh->data(0)->values()(1 * 3 + 2) = 0.0;
+  mesh->data(0)->values()(2 * 3 + 2) = 0.0;
+  mesh->data(0)->values()(3 * 3 + 2) = 0.0;
+
+  auto            result = mesh::integrateVolume(mesh, mesh->data(0));
+  Eigen::Vector3d expected(4.0 / 6, 1.0 / 6, 1.0 / 24);
+  BOOST_REQUIRE(result.size() == 3);
+  BOOST_TEST(result(0) == expected(0));
+  BOOST_TEST(result(1) == expected(1));
+  BOOST_TEST(result(2) == expected(2));
+}
+
+BOOST_AUTO_TEST_SUITE_END() // VolumeIntegrals
+
+BOOST_AUTO_TEST_CASE(AddMesh)
+{
+  PRECICE_TEST(1_rank);
+  PtrMesh globalMesh = std::make_shared<Mesh>("Mesh1", 3, testing::nextMeshID());
+  PtrMesh subMesh    = std::make_shared<Mesh>("Mesh2", 3, testing::nextMeshID());
+
+  // Fill globalMesh, then subMesh, then add and check the result is the sul
+  auto &v01 = globalMesh->createVertex(Eigen::Vector3d{0.0, 0.0, 0.0});
+  auto &v02 = globalMesh->createVertex(Eigen::Vector3d{1.0, 0.0, 0.0});
+  auto &v03 = globalMesh->createVertex(Eigen::Vector3d{0.0, 1.0, 0.0});
+  auto &v04 = globalMesh->createVertex(Eigen::Vector3d{0.0, 0.0, 1.0});
+
+  // Add some elements of all kind to global
+  globalMesh->createEdge(v01, v02);
+  globalMesh->createTriangle(v01, v02, v03);
+  globalMesh->createTetrahedron(v01, v02, v03, v04);
+
+  auto &v11 = subMesh->createVertex(Eigen::Vector3d{0.0, 0.0, 0.0});
+  auto &v12 = subMesh->createVertex(Eigen::Vector3d{2.0, 0.0, 0.0});
+  auto &v13 = subMesh->createVertex(Eigen::Vector3d{0.0, 4.0, 0.0});
+  auto &v14 = subMesh->createVertex(Eigen::Vector3d{0.0, 0.0, 3.0});
+  auto &v15 = subMesh->createVertex(Eigen::Vector3d{5.0, 0.0, 1.0});
+
+  // Add some elements of all kind to sub mesh
+  subMesh->createEdge(v11, v12);
+  subMesh->createEdge(v14, v15);
+  subMesh->createTriangle(v11, v13, v15);
+  subMesh->createTriangle(v11, v13, v14);
+  subMesh->createTetrahedron(v11, v12, v13, v14);
+  subMesh->createTetrahedron(v15, v12, v13, v14);
+
+  globalMesh->addMesh(*subMesh);
+  BOOST_TEST(globalMesh->vertices().size() == 9);
+  BOOST_TEST(globalMesh->edges().size() == 3);
+  BOOST_TEST(globalMesh->triangles().size() == 3);
+  BOOST_TEST(globalMesh->tetrahedra().size() == 3);
+}
 
 BOOST_AUTO_TEST_SUITE_END() // Mesh
 BOOST_AUTO_TEST_SUITE_END() // Mesh

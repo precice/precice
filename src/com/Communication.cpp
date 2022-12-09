@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <memory>
 #include <ostream>
+#include <vector>
 
 #include "Communication.hpp"
 #include "Request.hpp"
@@ -8,31 +9,30 @@
 #include "precice/types.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace com {
+namespace precice::com {
 
-void Communication::connectMasterSlaves(std::string const &participantName,
-                                        std::string const &tag,
-                                        int                rank,
-                                        int                size)
+void Communication::connectIntraComm(std::string const &participantName,
+                                     std::string const &tag,
+                                     int                rank,
+                                     int                size)
 {
   if (size == 1)
     return;
 
-  std::string masterName = participantName + "Master";
-  std::string slaveName  = participantName + "Slave";
+  std::string primaryName   = participantName + "Primary";
+  std::string secondaryName = participantName + "Secondary";
 
-  constexpr Rank rankOffset = 1;
-  int            slavesSize = size - rankOffset;
+  constexpr Rank rankOffset         = 1;
+  int            secondaryRanksSize = size - rankOffset;
   if (rank == 0) {
-    PRECICE_INFO("Connecting Master to {} Slaves", slavesSize);
-    prepareEstablishment(masterName, slaveName);
-    acceptConnection(masterName, slaveName, tag, rank, rankOffset);
-    cleanupEstablishment(masterName, slaveName);
+    PRECICE_INFO("Connecting Primary rank to {} Secondary ranks", secondaryRanksSize);
+    prepareEstablishment(primaryName, secondaryName);
+    acceptConnection(primaryName, secondaryName, tag, rank, rankOffset);
+    cleanupEstablishment(primaryName, secondaryName);
   } else {
-    int slaveRank = rank - rankOffset;
-    PRECICE_INFO("Connecting Slave #{} to Master", slaveRank);
-    requestConnection(masterName, slaveName, tag, slaveRank, slavesSize);
+    int secondaryRank = rank - rankOffset;
+    PRECICE_INFO("Connecting Secondary rank #{} to Primary rank", secondaryRank);
+    requestConnection(primaryName, secondaryName, tag, secondaryRank, secondaryRanksSize);
   }
 }
 
@@ -47,7 +47,7 @@ void Communication::reduceSum(precice::span<double const> itemsToSend, precice::
   std::copy(itemsToSend.begin(), itemsToSend.end(), itemsToReceive.begin());
 
   std::vector<double> received(itemsToReceive.size());
-  // receive local results from slaves
+  // receive local results from secondary ranks
   for (Rank rank : remoteCommunicatorRanks()) {
     auto request = aReceive(received, rank + _rankOffset);
     request->wait();
@@ -57,12 +57,12 @@ void Communication::reduceSum(precice::span<double const> itemsToSend, precice::
   }
 }
 
-void Communication::reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank rankMaster)
+void Communication::reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank primaryRank)
 {
   PRECICE_TRACE(itemsToSend.size(), itemsToReceive.size());
   PRECICE_ASSERT(itemsToSend.size() == itemsToReceive.size());
 
-  auto request = aSend(itemsToSend, rankMaster);
+  auto request = aSend(itemsToSend, primaryRank);
   request->wait();
 }
 
@@ -72,7 +72,7 @@ void Communication::reduceSum(int itemToSend, int &itemToReceive)
 
   itemToReceive = itemToSend;
 
-  // receive local results from slaves
+  // receive local results from secondary ranks
   for (Rank rank : remoteCommunicatorRanks()) {
     auto request = aReceive(itemToSend, rank + _rankOffset);
     request->wait();
@@ -80,11 +80,11 @@ void Communication::reduceSum(int itemToSend, int &itemToReceive)
   }
 }
 
-void Communication::reduceSum(int itemToSend, int &itemToReceive, Rank rankMaster)
+void Communication::reduceSum(int itemToSend, int &itemToReceive, Rank primaryRank)
 {
   PRECICE_TRACE();
 
-  auto request = aSend(itemToSend, rankMaster);
+  auto request = aSend(itemToSend, primaryRank);
   request->wait();
 }
 
@@ -98,7 +98,7 @@ void Communication::allreduceSum(precice::span<double const> itemsToSend, precic
 
   reduceSum(itemsToSend, itemsToReceive);
 
-  // send reduced result to all slaves
+  // send reduced result to all secondary ranks
   std::vector<PtrRequest> requests;
   requests.reserve(getRemoteCommunicatorSize());
   for (Rank rank : remoteCommunicatorRanks()) {
@@ -110,14 +110,14 @@ void Communication::allreduceSum(precice::span<double const> itemsToSend, precic
 /**
  * @attention This method modifies the input buffer.
  */
-void Communication::allreduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank rankMaster)
+void Communication::allreduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank primaryRank)
 {
   PRECICE_TRACE(itemsToSend.size(), itemsToReceive.size());
   PRECICE_ASSERT(itemsToSend.size() == itemsToReceive.size());
 
-  reduceSum(itemsToSend, itemsToReceive, rankMaster);
-  // receive reduced data from master
-  receive(itemsToReceive, rankMaster + _rankOffset);
+  reduceSum(itemsToSend, itemsToReceive, primaryRank);
+  // receive reduced data from primary rank
+  receive(itemsToReceive, primaryRank + _rankOffset);
 }
 
 void Communication::allreduceSum(double itemToSend, double &itemToReceive)
@@ -126,14 +126,14 @@ void Communication::allreduceSum(double itemToSend, double &itemToReceive)
 
   itemToReceive = itemToSend;
 
-  // receive local results from slaves
+  // receive local results from secondary ranks
   for (Rank rank : remoteCommunicatorRanks()) {
     auto request = aReceive(itemToSend, rank + _rankOffset);
     request->wait();
     itemToReceive += itemToSend;
   }
 
-  // send reduced result to all slaves
+  // send reduced result to all secondary ranks
   std::vector<PtrRequest> requests(getRemoteCommunicatorSize());
   for (Rank rank : remoteCommunicatorRanks()) {
     auto request   = aSend(itemToReceive, rank + _rankOffset);
@@ -142,14 +142,14 @@ void Communication::allreduceSum(double itemToSend, double &itemToReceive)
   Request::wait(requests);
 }
 
-void Communication::allreduceSum(double itemToSend, double &itemsToReceive, Rank rankMaster)
+void Communication::allreduceSum(double itemToSend, double &itemsToReceive, Rank primaryRank)
 {
   PRECICE_TRACE();
 
-  auto request = aSend(itemToSend, rankMaster);
+  auto request = aSend(itemToSend, primaryRank);
   request->wait();
-  // receive reduced data from master
-  receive(itemsToReceive, rankMaster + _rankOffset);
+  // receive reduced data from primary rank
+  receive(itemsToReceive, primaryRank + _rankOffset);
 }
 
 void Communication::allreduceSum(int itemToSend, int &itemToReceive)
@@ -158,14 +158,14 @@ void Communication::allreduceSum(int itemToSend, int &itemToReceive)
 
   itemToReceive = itemToSend;
 
-  // receive local results from slaves
+  // receive local results from secondary ranks
   for (Rank rank : remoteCommunicatorRanks()) {
     auto request = aReceive(itemToSend, rank + _rankOffset);
     request->wait();
     itemToReceive += itemToSend;
   }
 
-  // send reduced result to all slaves
+  // send reduced result to all secondary ranks
   std::vector<PtrRequest> requests(getRemoteCommunicatorSize());
   for (Rank rank : remoteCommunicatorRanks()) {
     auto request   = aSend(itemToReceive, rank + _rankOffset);
@@ -174,14 +174,14 @@ void Communication::allreduceSum(int itemToSend, int &itemToReceive)
   Request::wait(requests);
 }
 
-void Communication::allreduceSum(int itemToSend, int &itemToReceive, Rank rankMaster)
+void Communication::allreduceSum(int itemToSend, int &itemToReceive, Rank primaryRank)
 {
   PRECICE_TRACE();
 
-  auto request = aSend(itemToSend, rankMaster);
+  auto request = aSend(itemToSend, primaryRank);
   request->wait();
-  // receive reduced data from master
-  receive(itemToReceive, rankMaster + _rankOffset);
+  // receive reduced data from primary rank
+  receive(itemToReceive, primaryRank + _rankOffset);
 }
 
 void Communication::broadcast(precice::span<const int> itemsToSend)
@@ -313,10 +313,90 @@ void Communication::broadcast(std::vector<double> &v, Rank rankBroadcaster)
   broadcast(precice::span<double>{v}, rankBroadcaster);
 }
 
+void Communication::sendRange(precice::span<const double> itemsToSend, Rank rankReceiver)
+{
+  int size = itemsToSend.size();
+  send(size, rankReceiver);
+  if (size > 0) {
+    send(itemsToSend, rankReceiver);
+  }
+}
+
+void Communication::sendRange(precice::span<const int> itemsToSend, Rank rankReceiver)
+{
+  int size = itemsToSend.size();
+  send(size, rankReceiver);
+  if (size > 0) {
+    send(itemsToSend, rankReceiver);
+  }
+}
+
+std::vector<int> Communication::receiveRange(Rank rankSender, AsVectorTag<int>)
+{
+  int size{-1};
+  receive(size, rankSender);
+  PRECICE_ASSERT(size >= 0);
+  std::vector<int> result;
+  if (size > 0) {
+    result.resize(size);
+    receive(result, rankSender);
+  }
+  return result;
+}
+
+std::vector<double> Communication::receiveRange(Rank rankSender, AsVectorTag<double>)
+{
+  int size{-1};
+  receive(size, rankSender);
+  PRECICE_ASSERT(size >= 0);
+  std::vector<double> result;
+  if (size > 0) {
+    result.resize(size);
+    receive(result, rankSender);
+  }
+  return result;
+}
+
 int Communication::adjustRank(Rank rank) const
 {
   return rank - _rankOffset;
 }
 
-} // namespace com
-} // namespace precice
+void connectCircularComm(
+    std::string const & participantName,
+    std::string const & tag,
+    int                 rank,
+    int                 size,
+    com::Communication &left,
+    com::Communication &right)
+{
+  PRECICE_ASSERT(!left.isConnected());
+  PRECICE_ASSERT(!right.isConnected());
+  PRECICE_ASSERT(rank >= 0 && rank < size && size > 0);
+
+  if (size == 1) {
+    return;
+  }
+
+  const int prevProc = (rank - 1 + size) % size;
+  const int nextProc = (rank + 1) % size;
+
+  std::string prevName = participantName + std::to_string(prevProc);
+  std::string thisName = participantName + std::to_string(rank);
+  std::string nextName = participantName + std::to_string(nextProc);
+  if ((rank % 2) == 0) {
+    left.prepareEstablishment(prevName, thisName);
+    left.acceptConnection(prevName, thisName, tag, 0);
+    left.cleanupEstablishment(prevName, thisName);
+
+    right.requestConnection(thisName, nextName, tag, 0, 1);
+  } else {
+    right.requestConnection(thisName, nextName, tag, 0, 1);
+
+    left.prepareEstablishment(prevName, thisName);
+    left.acceptConnection(prevName, thisName, tag, 0);
+    left.cleanupEstablishment(prevName, thisName);
+  }
+}
+
+} // namespace precice::com

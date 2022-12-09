@@ -1,4 +1,7 @@
 name: coverity-scan
+# Runs the coverity-scan tool on the develop branch at a fixed schedule.
+#
+# See https://scan.coverity.com/projects/precice-precice
 on:
   workflow_dispatch:
   schedule:
@@ -18,7 +21,7 @@ jobs:
           TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
 
       - name: Checkout preCICE
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: 'precice'
 

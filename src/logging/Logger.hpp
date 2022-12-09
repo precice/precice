@@ -3,8 +3,7 @@
 #include <memory>
 #include <string>
 
-namespace precice {
-namespace logging {
+namespace precice::logging {
 
 /// Struct used to capture the original location of a log request
 struct LogLocation {
@@ -13,11 +12,11 @@ struct LogLocation {
   const char *func;
 };
 
-/// This class provides a leightweight logger.
+/// This class provides a lightweight logger.
 class Logger {
 public:
   /** Creates a logger for a given module.
-   * @param[in] the name of the module 
+   * @param[in] the name of the module
    */
   explicit Logger(std::string module);
 
@@ -45,8 +44,7 @@ private:
   std::unique_ptr<LoggerImpl> _impl;
 };
 
-} // namespace logging
-} // namespace precice
+} // namespace precice::logging
 
 // Include LogMacros here, because using it works only together with a Logger
 #include "LogMacros.hpp"

@@ -1,8 +1,8 @@
 #pragma once
 
+#include "mapping/Mapping.hpp"
 #include "mapping/SharedPointer.hpp"
 #include "mapping/config/MappingConfiguration.hpp"
-
 namespace precice {
 namespace impl {
 
@@ -12,10 +12,16 @@ struct MappingContext {
   mapping::PtrMapping mapping;
 
   /// id of mesh from which is mapped
-  int fromMeshID = -1;
+  MeshID fromMeshID = -1;
 
   /// id of mesh to which is mapped
-  int toMeshID = -1;
+  MeshID toMeshID = -1;
+
+  /// data which is mapped from mesh
+  mesh::PtrData fromData = nullptr;
+
+  /// data which is mapped to mesh
+  mesh::PtrData toData = nullptr;
 
   /// Time of execution of mapping.
   mapping::MappingConfiguration::Timing timing = mapping::MappingConfiguration::INITIAL;
@@ -25,6 +31,12 @@ struct MappingContext {
 
   /// True, if data has been mapped already.
   bool hasMappedData = false;
+
+  /// Enables gradient data in the corresponding 'from' data class
+  void requireGradientData(const std::string &dataName)
+  {
+    mapping->getInputMesh()->data(dataName)->requireDataGradient();
+  }
 };
 
 } // namespace impl

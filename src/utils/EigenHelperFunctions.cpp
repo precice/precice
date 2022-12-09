@@ -7,8 +7,7 @@
 
 #include "EigenHelperFunctions.hpp"
 
-namespace precice {
-namespace utils {
+namespace precice::utils {
 
 void shiftSetFirst(
     Eigen::MatrixXd &A, const Eigen::VectorXd &v)
@@ -55,27 +54,4 @@ void append(
   v(n) = value;
 }
 
-Eigen::VectorXd reduceVector(
-    const Eigen::VectorXd &  fullVector,
-    const std::vector<bool> &deadAxis)
-{
-  int deadDimensions = 0;
-  int dimensions     = deadAxis.size();
-  for (int d = 0; d < dimensions; d++) {
-    if (deadAxis[d])
-      deadDimensions += 1;
-  }
-  PRECICE_ASSERT(dimensions > deadDimensions, dimensions, deadDimensions);
-  Eigen::VectorXd reducedVector(dimensions - deadDimensions);
-  int             k = 0;
-  for (int d = 0; d < dimensions; d++) {
-    if (not deadAxis[d]) {
-      reducedVector[k] = fullVector[d];
-      k++;
-    }
-  }
-  return reducedVector;
-}
-
-} // namespace utils
-} // namespace precice
+} // namespace precice::utils

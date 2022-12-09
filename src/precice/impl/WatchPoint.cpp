@@ -16,12 +16,10 @@
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
 #include "precice/types.hpp"
-#include "query/Index.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace impl {
+namespace precice::impl {
 
 WatchPoint::WatchPoint(
     Eigen::VectorXd    pointCoords,
@@ -60,34 +58,34 @@ void WatchPoint::initialize()
   PRECICE_TRACE();
 
   if (_mesh->vertices().size() > 0) {
-    auto match        = query::Index{_mesh}.findNearestProjection(_point, 4);
-    _interpolation    = std::make_unique<mapping::Polation>(match.polation);
-    _shortestDistance = match.distance;
+    auto match        = _mesh->index().findCellOrProjection(_point, 4);
+    _shortestDistance = match.polation.distance();
+    _interpolation    = std::make_unique<mapping::Polation>(std::move(match.polation));
   }
 
-  if (utils::MasterSlave::isSlave()) {
-    utils::MasterSlave::_communication->send(_shortestDistance, 0);
-    utils::MasterSlave::_communication->receive(_isClosest, 0);
+  if (utils::IntraComm::isSecondary()) {
+    utils::IntraComm::getCommunication()->send(_shortestDistance, 0);
+    utils::IntraComm::getCommunication()->receive(_isClosest, 0);
   }
 
-  if (utils::MasterSlave::isMaster()) {
+  if (utils::IntraComm::isPrimary()) {
     int    closestRank           = 0;
     double closestDistanceGlobal = _shortestDistance;
     double closestDistanceLocal  = std::numeric_limits<double>::max();
-    for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
-      utils::MasterSlave::_communication->receive(closestDistanceLocal, rankSlave);
+    for (Rank secondaryRank : utils::IntraComm::allSecondaryRanks()) {
+      utils::IntraComm::getCommunication()->receive(closestDistanceLocal, secondaryRank);
       if (closestDistanceLocal < closestDistanceGlobal) {
         closestDistanceGlobal = closestDistanceLocal;
-        closestRank           = rankSlave;
+        closestRank           = secondaryRank;
       }
     }
     _isClosest = closestRank == 0;
-    for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
-      utils::MasterSlave::_communication->send(closestRank == rankSlave, rankSlave);
+    for (Rank secondaryRank : utils::IntraComm::allSecondaryRanks()) {
+      utils::IntraComm::getCommunication()->send(closestRank == secondaryRank, secondaryRank);
     }
   }
 
-  PRECICE_DEBUG("Rank: {}, isClosest: {}", utils::MasterSlave::getRank(), _isClosest);
+  PRECICE_DEBUG("Rank: {}, isClosest: {}", utils::IntraComm::getRank(), _isClosest);
 }
 
 void WatchPoint::exportPointData(
@@ -97,7 +95,6 @@ void WatchPoint::exportPointData(
     return;
   }
 
-  //PRECICE_ASSERT(_vertices.size() == _weights.size());
   _txtWriter.writeData("Time", time);
   // Export watch point coordinates
   Eigen::VectorXd coords = Eigen::VectorXd::Constant(_mesh->getDimensions(), 0.0);
@@ -155,5 +152,4 @@ void WatchPoint::getValue(
   }
 }
 
-} // namespace impl
-} // namespace precice
+} // namespace precice::impl

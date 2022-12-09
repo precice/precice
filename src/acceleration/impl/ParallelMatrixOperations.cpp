@@ -1,17 +1,16 @@
+#include "com/Communication.hpp"
 #ifndef PRECICE_NO_MPI
 
 #include "acceleration/impl/ParallelMatrixOperations.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 
-namespace precice {
-namespace acceleration {
-namespace impl {
+namespace precice::acceleration::impl {
 
 void ParallelMatrixOperations::initialize(const bool needCyclicComm)
 {
   PRECICE_TRACE();
 
-  if (needCyclicComm && utils::MasterSlave::isParallel()) {
+  if (needCyclicComm && utils::IntraComm::isParallel()) {
     _needCyclicComm = true;
     establishCircularCommunication();
   } else {
@@ -37,28 +36,9 @@ void ParallelMatrixOperations::establishCircularCommunication()
   com::PtrCommunication cyclicCommLeft  = com::PtrCommunication(new com::MPIPortsCommunication("."));
   com::PtrCommunication cyclicCommRight = com::PtrCommunication(new com::MPIPortsCommunication("."));
 
-  const auto size     = utils::MasterSlave::getSize();
-  const auto rank     = utils::MasterSlave::getRank();
-  const int  prevProc = (rank - 1 + size) % size;
-  const int  nextProc = (rank + 1) % size;
-
-  std::string prefix   = "MVQNCyclicComm";
-  std::string prevName = prefix + std::to_string(prevProc);
-  std::string thisName = prefix + std::to_string(rank);
-  std::string nextName = prefix + std::to_string(nextProc);
-  if ((rank % 2) == 0) {
-    cyclicCommLeft->prepareEstablishment(prevName, thisName);
-    cyclicCommLeft->acceptConnection(prevName, thisName, "", 0);
-    cyclicCommLeft->cleanupEstablishment(prevName, thisName);
-
-    cyclicCommRight->requestConnection(thisName, nextName, "", 0, 1);
-  } else {
-    cyclicCommRight->requestConnection(thisName, nextName, "", 0, 1);
-
-    cyclicCommLeft->prepareEstablishment(prevName, thisName);
-    cyclicCommLeft->acceptConnection(prevName, thisName, "", 0);
-    cyclicCommLeft->cleanupEstablishment(prevName, thisName);
-  }
+  const auto size = utils::IntraComm::getSize();
+  const auto rank = utils::IntraComm::getRank();
+  com::connectCircularComm("MVQNCyclicComm", "", rank, size, *cyclicCommLeft, *cyclicCommRight);
 
   _cyclicCommLeft  = std::move(cyclicCommLeft);
   _cyclicCommRight = std::move(cyclicCommRight);
@@ -70,7 +50,7 @@ void ParallelMatrixOperations::closeCircularCommunication()
   PRECICE_ASSERT(static_cast<bool>(_cyclicCommLeft) == static_cast<bool>(_cyclicCommRight));
   PRECICE_ASSERT(_needCyclicComm);
 
-  if ((utils::MasterSlave::getRank() % 2) == 0) {
+  if ((utils::IntraComm::getRank() % 2) == 0) {
     _cyclicCommLeft->closeConnection();
     _cyclicCommRight->closeConnection();
   } else {
@@ -82,8 +62,6 @@ void ParallelMatrixOperations::closeCircularCommunication()
   _cyclicCommLeft  = nullptr;
 }
 
-} // namespace impl
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration::impl
 
 #endif

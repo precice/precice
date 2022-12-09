@@ -10,8 +10,8 @@ You can use the provided `CMakeLists.txt` to build with CMake.
 # Run
 
 You can test the dummy solver by coupling two instances with each other. Open two terminals and run
- * `./solverdummy ../precice-config.xml SolverOne MeshOne`
- * `./solverdummy ../precice-config.xml SolverTwo MeshTwo`
+ * `./solverdummy ../precice-config.xml SolverOne`
+ * `./solverdummy ../precice-config.xml SolverTwo`
 
 # Next Steps
 

@@ -66,6 +66,17 @@ public:
     bool isRBF;
   };
 
+  struct RBFParameter {
+
+    enum struct Type {
+      ShapeParameter,
+      SupportRadius
+    };
+
+    Type   type{};
+    double value{};
+  };
+
   MappingConfiguration(
       xml::XMLTag &              parent,
       mesh::PtrMeshConfiguration meshConfiguration);
@@ -115,14 +126,17 @@ private:
   const std::string ATTR_Z_DEAD         = "z-dead";
   const std::string ATTR_USE_QR         = "use-qr-decomposition";
 
-  const std::string VALUE_WRITE             = "write";
-  const std::string VALUE_READ              = "read";
-  const std::string VALUE_CONSISTENT        = "consistent";
-  const std::string VALUE_CONSERVATIVE      = "conservative";
-  const std::string VALUE_SCALED_CONSISTENT = "scaled-consistent";
+  const std::string VALUE_WRITE                     = "write";
+  const std::string VALUE_READ                      = "read";
+  const std::string VALUE_CONSISTENT                = "consistent";
+  const std::string VALUE_CONSERVATIVE              = "conservative";
+  const std::string VALUE_SCALED_CONSISTENT_SURFACE = "scaled-consistent-surface";
+  const std::string VALUE_SCALED_CONSISTENT_VOLUME  = "scaled-consistent-volume";
 
-  const std::string VALUE_NEAREST_NEIGHBOR      = "nearest-neighbor";
-  const std::string VALUE_NEAREST_PROJECTION    = "nearest-projection";
+  const std::string VALUE_NEAREST_NEIGHBOR          = "nearest-neighbor";
+  const std::string VALUE_NEAREST_PROJECTION        = "nearest-projection";
+  const std::string VALUE_LINEAR_CELL_INTERPOLATION = "linear-cell-interpolation";
+
   const std::string VALUE_RBF_TPS               = "rbf-thin-plate-splines";
   const std::string VALUE_RBF_MULTIQUADRICS     = "rbf-multiquadrics";
   const std::string VALUE_RBF_INV_MULTIQUADRICS = "rbf-inverse-multiquadrics";
@@ -130,7 +144,11 @@ private:
   const std::string VALUE_RBF_GAUSSIAN          = "rbf-gaussian";
   const std::string VALUE_RBF_CTPS_C2           = "rbf-compact-tps-c2";
   const std::string VALUE_RBF_CPOLYNOMIAL_C0    = "rbf-compact-polynomial-c0";
+  const std::string VALUE_RBF_CPOLYNOMIAL_C2    = "rbf-compact-polynomial-c2";
+  const std::string VALUE_RBF_CPOLYNOMIAL_C4    = "rbf-compact-polynomial-c4";
   const std::string VALUE_RBF_CPOLYNOMIAL_C6    = "rbf-compact-polynomial-c6";
+
+  const std::string VALUE_NEAREST_NEIGHBOR_GRADIENT = "nearest-neighbor-gradient";
 
   const std::string VALUE_TIMING_INITIAL    = "initial";
   const std::string VALUE_TIMING_ON_ADVANCE = "onadvance";
@@ -148,8 +166,7 @@ private:
       const std::string &              fromMeshName,
       const std::string &              toMeshName,
       Timing                           timing,
-      double                           shapeParameter,
-      double                           supportRadius,
+      const RBFParameter &             rbfParameter,
       double                           solverRtol,
       bool                             xDead,
       bool                             yDead,

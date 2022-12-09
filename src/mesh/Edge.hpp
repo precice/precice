@@ -12,11 +12,6 @@
 namespace precice {
 namespace mesh {
 
-struct ConstEdgeIteratorTypes;
-struct EdgeIteratorTypes;
-template <typename Types>
-class EdgeIterator;
-
 /// Linear edge of a mesh, defined by two Vertex objects.
 class Edge {
 public:
@@ -25,12 +20,10 @@ public:
    *
    * @param[in] vertexOne First Vertex object defining the edge.
    * @param[in] vertexTwo Second Vertex object defining the edge.
-   * @param[in] id Unique (among edges in one mesh) ID.
    */
   Edge(
       Vertex &vertexOne,
-      Vertex &vertexTwo,
-      EdgeID  id);
+      Vertex &vertexTwo);
 
   /// Returns number of spatial dimensions (2 or 3) the edge is embedded to.
   int getDimensions() const;
@@ -40,12 +33,6 @@ public:
 
   /// Returns the edge's vertex as const object with index 0 or 1.
   const Vertex &vertex(int i) const;
-
-  /// Computes the normal of the edge
-  Eigen::VectorXd computeNormal() const;
-
-  /// Returns the (among edges) unique ID of the edge.
-  EdgeID getID() const;
 
   /// Returns the length of the edge
   double getLength() const;
@@ -71,11 +58,8 @@ public:
   bool operator!=(const Edge &other) const;
 
 private:
-  /// Pointers to Vertex objects defining the edge.
+  /// Pointers to Vertex objects defining the edge, ordered by Vertex::getID().
   std::array<Vertex *, 2> _vertices;
-
-  /// Unique (among edges) ID of the edge.
-  int _id;
 };
 
 // ------------------------------------------------------ HEADER IMPLEMENTATION

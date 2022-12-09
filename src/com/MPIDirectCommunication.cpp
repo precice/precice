@@ -1,17 +1,16 @@
-#include <cstddef>
 #ifndef PRECICE_NO_MPI
 
+#include <cstddef>
 #include <memory>
 
-#include "MPIDirectCommunication.hpp"
+#include "com/MPIDirectCommunication.hpp"
 #include "logging/LogMacros.hpp"
 #include "precice/types.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/assertion.hpp"
 #include "utils/span_tools.hpp"
 
-namespace precice {
-namespace com {
+namespace precice::com {
 MPIDirectCommunication::MPIDirectCommunication()
     : _commState(utils::Parallel::current())
 {
@@ -40,14 +39,14 @@ void MPIDirectCommunication::acceptConnection(std::string const &acceptorName,
 {
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_ASSERT(not isConnected());
-  // MPI Direct Comm only supports MasterSlave connections
-  PRECICE_ASSERT(rankOffset == 1, "MPIDirectCommunication only supports MasterSlave Communications!");
+  // MPI Direct Comm only supports IntraComm connections
+  PRECICE_ASSERT(rankOffset == 1, "MPIDirectCommunication only supports IntraComm Communications!");
   setRankOffset(rankOffset);
 
   _commState   = utils::Parallel::current();
   _isConnected = true;
 
-  PRECICE_ASSERT(acceptorRank == 0, "The Acceptor/Master has to be rank 0!");
+  PRECICE_ASSERT(acceptorRank == 0, "The Acceptor/Primary rank has to be rank 0!");
   PRECICE_ASSERT(_commState->rank() == acceptorRank, "The given acceptor rank does not match the communicator rank!");
 }
 
@@ -86,11 +85,11 @@ void MPIDirectCommunication::reduceSum(precice::span<double const> itemsToSend, 
   MPI_Reduce(const_cast<double *>(itemsToSend.data()), itemsToReceive.data(), itemsToSend.size(), MPI_DOUBLE, MPI_SUM, rank, _commState->comm);
 }
 
-void MPIDirectCommunication::reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank rankMaster)
+void MPIDirectCommunication::reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank primaryRank)
 {
   PRECICE_TRACE(itemsToSend.size());
   PRECICE_ASSERT(itemsToSend.size() == itemsToReceive.size());
-  MPI_Reduce(const_cast<double *>(itemsToSend.data()), itemsToReceive.data(), itemsToSend.size(), MPI_DOUBLE, MPI_SUM, rankMaster, _commState->comm);
+  MPI_Reduce(const_cast<double *>(itemsToSend.data()), itemsToReceive.data(), itemsToSend.size(), MPI_DOUBLE, MPI_SUM, primaryRank, _commState->comm);
 }
 
 void MPIDirectCommunication::reduceSum(int itemToSend, int &itemsToReceive)
@@ -100,10 +99,10 @@ void MPIDirectCommunication::reduceSum(int itemToSend, int &itemsToReceive)
   MPI_Reduce(&itemToSend, &itemsToReceive, 1, MPI_INT, MPI_SUM, rank, _commState->comm);
 }
 
-void MPIDirectCommunication::reduceSum(int itemToSend, int &itemsToReceive, Rank rankMaster)
+void MPIDirectCommunication::reduceSum(int itemToSend, int &itemsToReceive, Rank primaryRank)
 {
   PRECICE_TRACE();
-  MPI_Reduce(&itemToSend, &itemsToReceive, 1, MPI_INT, MPI_SUM, rankMaster, _commState->comm);
+  MPI_Reduce(&itemToSend, &itemsToReceive, 1, MPI_INT, MPI_SUM, primaryRank, _commState->comm);
 }
 
 void MPIDirectCommunication::allreduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive)
@@ -113,7 +112,7 @@ void MPIDirectCommunication::allreduceSum(precice::span<double const> itemsToSen
   MPI_Allreduce(const_cast<double *>(itemsToSend.data()), itemsToReceive.data(), itemsToSend.size(), MPI_DOUBLE, MPI_SUM, _commState->comm);
 }
 
-void MPIDirectCommunication::allreduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank rankMaster)
+void MPIDirectCommunication::allreduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank primaryRank)
 {
   PRECICE_TRACE(itemsToSend.size());
   PRECICE_ASSERT(itemsToSend.size() == itemsToReceive.size());
@@ -126,7 +125,7 @@ void MPIDirectCommunication::allreduceSum(double itemToSend, double &itemToRecei
   MPI_Allreduce(&itemToSend, &itemToReceive, 1, MPI_DOUBLE, MPI_SUM, _commState->comm);
 }
 
-void MPIDirectCommunication::allreduceSum(double itemToSend, double &itemToReceive, Rank rankMaster)
+void MPIDirectCommunication::allreduceSum(double itemToSend, double &itemToReceive, Rank primaryRank)
 {
   PRECICE_TRACE();
   MPI_Allreduce(&itemToSend, &itemToReceive, 1, MPI_DOUBLE, MPI_SUM, _commState->comm);
@@ -138,7 +137,7 @@ void MPIDirectCommunication::allreduceSum(int itemToSend, int &itemToReceive)
   MPI_Allreduce(&itemToSend, &itemToReceive, 1, MPI_INT, MPI_SUM, _commState->comm);
 }
 
-void MPIDirectCommunication::allreduceSum(int itemToSend, int &itemToReceive, Rank rankMaster)
+void MPIDirectCommunication::allreduceSum(int itemToSend, int &itemToReceive, Rank primaryRank)
 {
   PRECICE_TRACE();
   MPI_Allreduce(&itemToSend, &itemToReceive, 1, MPI_INT, MPI_SUM, _commState->comm);
@@ -214,7 +213,7 @@ MPI_Comm &MPIDirectCommunication::communicator(Rank rank)
 
 int MPIDirectCommunication::rank(Rank rank)
 {
-  // Correct _rankOffset if we are on master
+  // Correct _rankOffset if we are on the primary rank
   return rank;
 }
 
@@ -223,7 +222,6 @@ int MPIDirectCommunication::adjustRank(Rank rank) const
   return rank;
 }
 
-} // namespace com
-} // namespace precice
+} // namespace precice::com
 
 #endif // not PRECICE_NO_MPI

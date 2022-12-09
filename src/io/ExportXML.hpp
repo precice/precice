@@ -6,12 +6,14 @@
 #include <vector>
 #include "io/Export.hpp"
 #include "logging/Logger.hpp"
+#include "mesh/SharedPointer.hpp"
 
 namespace precice {
 namespace mesh {
 class Mesh;
 class Edge;
 class Triangle;
+class Tetrahedron;
 } // namespace mesh
 } // namespace precice
 
@@ -38,6 +40,10 @@ public:
       const mesh::Triangle &triangle,
       std::ostream &        outFile);
 
+  static void writeTetrahedron(
+      const mesh::Tetrahedron &tetra,
+      std::ostream &           outFile);
+
 private:
   mutable logging::Logger _log{"io::ExportXML"};
 
@@ -48,31 +54,31 @@ private:
   std::vector<std::string> _vectorDataNames;
 
   virtual std::string getVTKFormat() const                             = 0;
-  virtual std::string getMasterExtension() const                       = 0;
+  virtual std::string getParallelExtension() const                     = 0;
   virtual std::string getPieceExtension() const                        = 0;
   virtual std::string getPieceAttributes(const mesh::Mesh &mesh) const = 0;
 
   /**
-    * @brief Stores scalar and vector data names in string vectors
-    * Needed for writing master file and sub files
-    */
+   * @brief Stores scalar and vector data names in string vectors
+   * Needed for writing primary file and sub files
+   */
   void processDataNamesAndDimensions(const mesh::Mesh &mesh);
 
   /**
-    * @brief Writes the master file (called only by the master rank)
-    */
-  void writeMasterFile(
+   * @brief Writes the primary file (called only by the primary rank)
+   */
+  void writeParallelFile(
       const std::string &name,
       const std::string &location,
       const mesh::Mesh & mesh) const;
 
-  virtual void writeMasterCells(std::ostream &out) const = 0;
+  virtual void writeParallelCells(std::ostream &out) const = 0;
 
-  void writeMasterData(std::ostream &out) const;
+  void writeParallelData(std::ostream &out) const;
 
   /**
-    * @brief Writes the sub file for each rank
-    */
+   * @brief Writes the sub file for each rank
+   */
   void writeSubFile(
       const std::string &name,
       const std::string &location,
@@ -89,6 +95,8 @@ private:
   void exportData(
       std::ostream &    outFile,
       const mesh::Mesh &mesh) const;
+
+  void exportGradient(const mesh::PtrData data, const int dataDim, std::ostream &outFile) const;
 };
 
 } // namespace io

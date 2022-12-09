@@ -9,7 +9,6 @@
 #include "action/PythonAction.hpp"
 #include "action/RecorderAction.hpp"
 #include "action/ScaleByAreaAction.hpp"
-#include "action/ScaleByDtAction.hpp"
 #include "action/SummationAction.hpp"
 #include "logging/LogMacros.hpp"
 #include "mesh/Data.hpp"
@@ -19,17 +18,13 @@
 #include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 
-namespace precice {
-namespace action {
+namespace precice::action {
 
 ActionConfiguration::ActionConfiguration(
     xml::XMLTag &              parent,
     mesh::PtrMeshConfiguration meshConfig)
     : NAME_DIVIDE_BY_AREA("divide-by-area"),
       NAME_MULTIPLY_BY_AREA("multiply-by-area"),
-      NAME_SCALING_BY_TIME_STEP_TO_TIME_WINDOW_RATIO("scale-by-computed-dt-ratio"),       //@todo rename this, breaking change!
-      NAME_SCALING_BY_COMPUTED_TIME_WINDOW_PART_RATIO("scale-by-computed-dt-part-ratio"), //@todo rename this, breaking change!
-      NAME_SCALING_BY_TIME_WINDOW_SIZE("scale-by-dt"),                                    //@todo rename this, breaking change!, currently misleading. See https://github.com/precice/precice/issues/934
       NAME_SUMMATION("summation"),
       NAME_COMPUTE_CURVATURE("compute-curvature"),
       NAME_PYTHON("python"),
@@ -75,30 +70,6 @@ ActionConfiguration::ActionConfiguration(
   {
     XMLTag tag(*this, NAME_DIVIDE_BY_AREA, occ, TAG);
     tag.setDocumentation("Divides data values by mesh area associated to vertex holding the value.");
-    tag.addSubtag(tagTargetData);
-    tags.push_back(tag);
-  }
-  {
-    XMLTag tag(*this, NAME_SCALING_BY_TIME_STEP_TO_TIME_WINDOW_RATIO, occ, TAG);
-    tag.setDocumentation("Multiplies source data values by ratio of last time step size / time window size,"
-                         " and writes the result into target data.");
-    tag.addSubtag(tagSourceData);
-    tag.addSubtag(tagTargetData);
-    tags.push_back(tag);
-  }
-  {
-    XMLTag tag(*this, NAME_SCALING_BY_COMPUTED_TIME_WINDOW_PART_RATIO, occ, TAG);
-    tag.setDocumentation("Multiplies source data values by ratio of computed time window part / time window size,"
-                         " and writes the result into target data.");
-    tag.addSubtag(tagSourceData);
-    tag.addSubtag(tagTargetData);
-    tags.push_back(tag);
-  }
-  {
-    XMLTag tag(*this, NAME_SCALING_BY_TIME_WINDOW_SIZE, occ, TAG);
-    tag.setDocumentation("Multiplies source data values by the time window size, and writes the "
-                         "result into target data.");
-    tag.addSubtag(tagSourceData);
     tag.addSubtag(tagTargetData);
     tags.push_back(tag);
   }
@@ -249,18 +220,6 @@ void ActionConfiguration::createAction()
     action = action::PtrAction(
         new action::ScaleByAreaAction(timing, targetDataID,
                                       mesh, action::ScaleByAreaAction::SCALING_DIVIDE_BY_AREA));
-  } else if (_configuredAction.type == NAME_SCALING_BY_TIME_STEP_TO_TIME_WINDOW_RATIO) {
-    action = action::PtrAction(
-        new action::ScaleByDtAction(timing, sourceDataIDs.back(), targetDataID,
-                                    mesh, action::ScaleByDtAction::SCALING_BY_TIME_STEP_TO_TIME_WINDOW_RATIO));
-  } else if (_configuredAction.type == NAME_SCALING_BY_COMPUTED_TIME_WINDOW_PART_RATIO) {
-    action = action::PtrAction(
-        new action::ScaleByDtAction(timing, sourceDataIDs.back(), targetDataID,
-                                    mesh, action::ScaleByDtAction::SCALING_BY_COMPUTED_TIME_WINDOW_PART_RATIO));
-  } else if (_configuredAction.type == NAME_SCALING_BY_TIME_WINDOW_SIZE) {
-    action = action::PtrAction(
-        new action::ScaleByDtAction(timing, sourceDataIDs.back(), targetDataID,
-                                    mesh, action::ScaleByDtAction::SCALING_BY_TIME_WINDOW_SIZE));
   } else if (_configuredAction.type == NAME_COMPUTE_CURVATURE) {
     action = action::PtrAction(
         new action::ComputeCurvatureAction(timing, targetDataID,
@@ -321,5 +280,4 @@ action::Action::Timing ActionConfiguration::getTiming() const
   return timing;
 }
 
-} // namespace action
-} // namespace precice
+} // namespace precice::action

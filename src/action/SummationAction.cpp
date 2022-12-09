@@ -8,8 +8,7 @@
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 
-namespace precice {
-namespace action {
+namespace precice::action {
 
 SummationAction::SummationAction(
     Timing                  timing,
@@ -28,11 +27,7 @@ SummationAction::SummationAction(
   }
 }
 
-void SummationAction::performAction(
-    double time,
-    double timeStepSize,
-    double computedTimeWindowPart,
-    double timeWindowSize)
+void SummationAction::performAction(double time)
 {
   PRECICE_TRACE();
 
@@ -44,5 +39,4 @@ void SummationAction::performAction(
   }
 }
 
-} // namespace action
-} // namespace precice
+} // namespace precice::action

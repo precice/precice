@@ -2,6 +2,86 @@
 
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://www.precice.org/fundamentals-roadmap.html).
 
+## 2.5.0
+
+- Added 3D support to Linear Cell Interpolation mapping (`<mapping:linear-cell-interpolation >/`) using tetrahedra. (https://github.com/precice/precice/pull/1337)
+- Added C and Fortran bindings for setMeshTetrahedron (`precicec_setMeshTetrahedron` and `precicef_set_tetrahedron`). (https://github.com/precice/precice/pull/1382)
+- Added a clang-tidy CI and enforced the updated clang-tidy format. (https://github.com/precice/precice/pull/999)
+- Added a new interface file `precice/Version.h`, which provides version macros `PRECICE_VERSION_MAJOR`, `PRECICE_VERSION_MINOR`, `PRECICE_VERSION_PATCH` as well as the stringified version `PRECICE_VERSION`. Use the convenience macro `PRECICE_VERSION_GREATER_EQUAL(2,4,0)` to check for compatibility. `SolverInterface.hpp` and `SolverInterfaceC.h` now include `Version.h` to simplify macro usage on older version lacking the header. (https://github.com/precice/precice/pull/1392)
+- Added checks during the establishment of inter-participant communication in order to safeguard against common issues. (https://github.com/precice/precice/pull/1290)
+- Added checks of MPI ports functions and descriptive error messages. (https://github.com/precice/precice/pull/1292)
+- Added default network interface for BSD-flavored operating systems. (https://github.com/precice/precice/pull/1332)
+- Added pre-commit configuration, which drastically simplifies contributing. Required formatting tools will now be installed by pre-commit. (https://github.com/precice/precice/pull/1359)
+- Added support for "Linear Cell Interpolation" data mapping in 2D. (https://github.com/precice/precice/pull/1297)
+- Added success statement to `precice-tools check valid-config.xml`, which used to output nothing. ((https://github.com/precice/precice/pull/1406)
+- Added support for polynomial="separate" and polynomial="off" for Eigen based RBF mappings (use-qr-decomposition="true"). (https://github.com/precice/precice/pull/1335)
+- Added support for tetrahedral meshes with `setMeshTetrahedron`. (https://github.com/precice/precice/pull/1314)
+- Added support for triangles in 2D meshes. (https://github.com/precice/precice/pull/1286)
+- Added support in VTK and VTU exporters for exporting tetrahedral elements. (https://github.com/precice/precice/pull/1314)
+- Added support to export gradient data in VTK exporting. Scalar gradients are written to a vector `<ScalarDataname>_gradient` (`v0_dx,v0_dy,v0_dz,v1_dx ...`), vector gradients are written to multiple vectors `<VectorDataname>_dx/dy/dz` (`v0x_dx,v0y_dx,v0z_dz, ...`). (https://github.com/precice/precice/pull/1315)
+- Added support to export gradient data in XML based exporting, VTU, VTP. (https://github.com/precice/precice/pull/1340)
+- Added tetrahedron communication. (https://github.com/precice/precice/pull/1325)
+- Added the `PRECICE_BUILD_TOOLS` (ON by default) CMake variable in order to enable/disable the generation of the `precice-tools` executable. (https://github.com/precice/precice/pull/1344)
+- Changed behavior of "Watchpoints" to look for cell interpolation instead of boundary interpolation, if possible. (https://github.com/precice/precice/pull/1361)
+- Deprecated API functions `isReadDataAvailable()` and `isWriteDataRequired()` to simplify implementation of waveform iteration. (https://github.com/precice/precice/pull/1224)
+- Fixed a bug leading to large whitespace sections in logs when using MPI ports. (https://github.com/precice/precice/pull/1292)
+- Fixed data type of 'uint' to compatible 'unsigned int' type in RBF test. (https://github.com/precice/precice/pull/1298)
+- Fixed erroneous behavior of first-participant timestepping in compositional coupling schemes.  (https://github.com/precice/precice/pull/1307)
+- Fixed inconsistency between `writeVectorGradientData` and `writeBlockScalarGradientData` and cleaned-up doxygen documentation of gradient API functions. (https://github.com/precice/precice/pull/1302)
+- Fixed the API function `isGradientDataRequired` to behave as documented. (https://github.com/precice/precice/pull/1295)
+- Fixed the git revision detection picking up revisions of super-projects. (https://github.com/precice/precice/pull/1398)
+- Fixed the triangle-to-point distance calculation leading to erroneous projections in corner cases of the nearest-projection mapping. (https://github.com/precice/precice/pull/1395)
+- Improved efficienty of mesh filtering and communication. (https://github.com/precice/precice/pull/1311)
+- Improved the basis function implementation of RBF mappings for faster evaluations. (https://github.com/precice/precice/pull/1338)
+- Improved the memory footprint of triangles in meshes. (https://github.com/precice/precice/pull/1311)
+- Improved the runtime of the Eigen based RBF matrix assembly (use-qr-decomposition="true"). (https://github.com/precice/precice/pull/1320)
+- Passing `nullptr` to the `SolverInterface` as `communicator` is now forbidden. Use the `SolverInterface` constructor without the `communicator` argument, if you don't want to provide a custom MPI communicator. (https://github.com/precice/precice/pull/1261)
+- Refactored RBF mappings to share a common base class (https://github.com/precice/precice/pull/1279)
+- Refactored RBF system assembly and RBF system solving into a dedicated class. (https://github.com/precice/precice/pull/1319)
+- Refactored mapping class interface into mapConsistent and mapConservative. (https://github.com/precice/precice/pull/1301)
+- Removed argument 'rowsFirst' in `writeVectorGradientData` and `writeBlockVectorGradientData`. The functions have now the signature `writeVectorGradientData( int dataID, int valueIndex, const double *gradientValues)` with the gradient format `(vx_dx, vy_dx, vx_dy, vy_dy)`. `writeBlockVectorGradientData` allows to pass data for multiple vertices point-wise in the same format. (https://github.com/precice/precice/pull/1302)
+- Removed restriction to only use 5 iterations in the `RS_LS` restart mode of the IQN-IMVJ acceleration method. (https://github.com/precice/precice/pull/1257)
+- Removed the explicit gradient data flag (`<data: ... gradient="on" />`) for nearest-neighbor-gradient mapping. The gradient data requirement is now deduced automatically by preCICE. (https://github.com/precice/precice/pull/1371)
+- Renamed preCICE's `master` branch to `main` branch. (https://github.com/precice/precice/pull/1385)
+- Upgraded fmt to 9.0.0, json to 3.11.1 and tcbrindle span. (https://github.com/precice/precice/pull/1396)
+
+## 2.4.0
+
+- Added API methods for entering gradient data in the solver interface. Methods available are for scalar gradient data, vector gradient data, block scalar gradient data and block vector gradient data. (https://github.com/precice/precice/pull/1169)
+- Added CMake options to enable debug logging, trace logging and assertions in release builds. (https://github.com/precice/precice/pull/1177)
+- Added a pkg-config file for using preCICE directly from the build directory. (https://github.com/precice/precice/pull/1238)
+- Added a warning if the relative convergence measure is set too low. (https://github.com/precice/precice/pull/1266)
+- Added a warning when using `<export:vtk />` in a parallel participant. (https://github.com/precice/precice/pull/1136)
+- Added experimental API functions for waveform interpolation. Currently restricted to parallel-implicit coupling. Refer to the [user documentation](https://precice.org/couple-your-code-waveform.html). (https://github.com/precice/precice/pull/1187)
+- Added export to CSV using `<export:csv />`. (https://github.com/precice/precice/pull/1144)
+- Added export to VTP using `<export:vtp />`. (https://github.com/precice/precice/pull/1137)
+- Added export to VTU using `<export:vtu />`. (https://github.com/precice/precice/pull/1136)
+- Added the `support-radius` as an additional configuration option to the Gaussian RBF mapping configuration. (https://github.com/precice/precice/pull/1163)
+- Added the API header `precice/Tooling.hpp`, which includes utility functions. (https://github.com/precice/precice/pull/1122)
+- Added the command `check` to `binprecice`, which checks a given configuration file for correctness. (https://github.com/precice/precice/pull/1132)
+- Added the command `version` to `binprecice`, which prints the version string of the used preCICE library. (https://github.com/precice/precice/pull/1122)
+- Added tooling to CMake, which simplifies contributing. (https://github.com/precice/precice/pull/1143)
+- Changed baseline from Ubuntu 18.04 LTS to Ubuntu 20.04 LTS. preCICE now requires Boost version `1.71.0` and CMake version `3.16.3`. (https://github.com/precice/precice/pull/1259)
+- Deprecated API functions `mapWriteDataFrom` and `mapReadDataTo`. Note: compiling the tests will trigger this warning. (https://github.com/precice/precice/pull/859)
+- Fixed a bug in ID management, which lead to a crash when reconstructing a SolverInterface. (https://github.com/precice/precice/pull/1190)
+- Fixed a bug in the socket communication back-end, which occasionally lead to crashes. (https://github.com/precice/precice/pull/1262)
+- Fixed a bug which crashed preCICE when explicitly enforcing gather scatter communication using `<m2n:X enforce-gather-scatter=1 />`. (https://github.com/precice/precice/pull/1268)
+- Fixed an incompatibility with Boost 1.79.0 (https://github.com/precice/precice/pull/1250)
+- Fixed missing data pieces in the master pvtu file for empty vertex distributions (e.g. a mesh is not exchanged) (https://github.com/precice/precice/pull/1233)
+- Fixed missing edge connectivity in VTK exports. (https://github.com/precice/precice/pull/1127)
+- Fixed the `format-all-docker` script to change of reformatted files to root. (https://github.com/precice/precice/pull/1210)
+- Fixed the names of experimental direct-access API in the Fortran bindings to `precicef_set_mesh_access_region_` and `precicef_get_mesh_vertices_and_IDs_`. (https://github.com/precice/precice/pull/1129)
+- Fixed the naming scheme of parallel VTU files (`.pvtu` and `.vtu` pieces). Paraview now correctly detects exports of multiple time-steps as a time series. (https://github.com/precice/precice/pull/1126)
+- Fixed the wrong data assignment for multiple read mappings to the same mesh or multiple write mappings from the same mesh. (https://github.com/precice/precice/pull/1267)
+- Improved the efficiency of vertex to edge projections. (https://github.com/precice/precice/pull/1226)
+- Migrated to the [FindPython3](https://cmake.org/cmake/help/v3.16/module/FindPython3.html) module for locating Python3 and NumPy. (https://github.com/precice/precice/pull/1263)
+- Migrated to using the target provided by [FindLibXml2](https://cmake.org/cmake/help/v3.16/module/FindLibXml2.html) (https://github.com/precice/precice/pull/1263)
+- Renamed `binprecice` to `precice-tools` and added a symbolic link for backwards-compatibility. The link will be removed in preCICE version 3.0.0. (https://github.com/precice/precice/pull/1175)
+- Removed meshName from solverdummies input parameters. (https://github.com/precice/precice/pull/1256)
+- Renamed all instances of master to primary and of slave to secondary, along with their plural and joint forms. (https://github.com/precice/precice/pull/1253)
+- Renamed class `MasterSlave` to `IntraComm` and changed all corresponding names. Changed the XML tag `master` to `intra-comm` and changed the XML attributes `on-slaves` and `on-master` to `on-secondary-ranks` and `on-primary-rank` respectively. The tag `master` and attributes `on-slaves` and `on-master` are deprecated. (https://github.com/precice/precice/pull/1274)
+- Upgraded dependencies fmtlib to 8.1.1, json to 3.10.5 and tcbrindle span. (https://github.com/precice/precice/pull/1241)
+
 ## 2.3.0
 
 - Added `isMeshConnectivityRequired(meshID)` to the SolverInterface API. This is useful to generate connectivity information only if required by preCICE.
@@ -76,7 +156,7 @@ All notable changes to this project will be documented in this file. For future 
 - Fixed an occasional issue solving the system matrix in PETSc-based RBF mappings.
 - Fixed boost log_level issues on MacOS.
 - Fixed compilation error emitted by intel compilers.
-- Fixed cryptic assertion for forgetting the max-iterations tag. Now max-iterations is enforced in the configuration. 
+- Fixed cryptic assertion for forgetting the max-iterations tag. Now max-iterations is enforced in the configuration.
 - Fixed indexing bug in solverdummies.
 - Fixed input checks for data access functions.
 - Fixed interleaved assertion output.
@@ -84,7 +164,7 @@ All notable changes to this project will be documented in this file. For future 
 - Fixed parsing error on systems without locales installed. This fixes issues when running preCICE in minimal docker containers.
 - Fixed syntax of the Fortran function `precicef_get_mesh_vertex_size_`, which lead to incorrect name de-mangling.
 - Fixed the data type and precision in exported VTK files.
-- Fixed two wrong assertions in QR factorization, which did not allow meshes with only a single partition. 
+- Fixed two wrong assertions in QR factorization, which did not allow meshes with only a single partition.
 - Improved checks of configuration related to data access.
 - Improved compiler compatibility of assertion.
 - Improved the error message for not exchanging data over the same mesh used for convergence measures.
@@ -109,7 +189,7 @@ All notable changes to this project will be documented in this file. For future 
 - Added check to prevent `<use-mesh>` from the same participant.
 - Added control flow checks to C bingings.
 - Added many tests for the communication abstraction.
-- Added option to make a convergence measure strict. It has to converge then and leads to a premature simulation stop if not. 
+- Added option to make a convergence measure strict. It has to converge then and leads to a premature simulation stop if not.
 - Added parallel support for Eigen RBF mapping.
 - Added platform-specific defaults of the loopback interface name to the `network` attribute of socket connections.
 - Added reset of written data 0 in `advance()` to simplify detection of missing write data calls.
@@ -125,7 +205,7 @@ All notable changes to this project will be documented in this file. For future 
 - Changed the minimum required PETSc version to 3.12, which delivers consistent results across platforms.
 - Disabled tests based on MPIPorts and MPISinglePorts when using Open MPI.
 - Enabled RBF-based tests in partiton unit-tests and serial integration tests.
-- Extended iteration logging by total and dropped quasi-Newton columns. 
+- Extended iteration logging by total and dropped quasi-Newton columns.
 - Extended title headers of convergence and iteration files by measure abbreviation.
 - Fixed MPIPorts and MPISinglePorts not always closing ports.
 - Fixed SocketCommunication setting up a port and writing connection info even if there are no requesters.
@@ -365,7 +445,7 @@ All notable changes to this project will be documented in this file. For future 
 - Added an (experimental) Fortran 2003 solver dummy.
 
 ## 1.3.0
-- Update of build procedure for python bindings (see [`precice/src/bindings/python/README.md`](https://github.com/precice/precice/blob/develop/src/precice/bindings/python/README.md) for instructions). Note: you do not have to add `PySolverInterface.so` to `PYTHONPATH` manually anymore, if you want to use it in your adapter. Python should be able to find it automatically.   
+- Update of build procedure for python bindings (see [`precice/src/bindings/python/README.md`](https://github.com/precice/precice/blob/develop/src/precice/bindings/python/README.md) for instructions). Note: you do not have to add `PySolverInterface.so` to `PYTHONPATH` manually anymore, if you want to use it in your adapter. Python should be able to find it automatically.
 - Make naming of log files consistent, following the pattern `precice-SOLVERNAME-logtype.log`, example: `precice-FLUID-eventTimings.log`
 - Enable boost.geometry based preallocation. Speeds up initialization of PetRBF based mapping.
 - Actions can now specify a `MeshRequirement`, such as the `ScaleByAreaAction`.

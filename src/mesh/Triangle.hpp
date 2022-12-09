@@ -22,7 +22,7 @@ class Vertex;
 namespace precice {
 namespace mesh {
 
-/// Triangle of a mesh, defined by three edges (and vertices).
+/// Triangle of a mesh, defined by three vertices.
 class Triangle {
 public:
   /// Type of the read-only const random-access iterator over Vertex coords
@@ -39,12 +39,21 @@ public:
   /// Fix for the Boost.Test versions 1.65.1 - 1.67
   using value_type = Vertex::RawCoords;
 
-  /// Constructor, the order of edges defines the outer normal direction.
+  /// Constructor based on 3 edges
   Triangle(
-      Edge &     edgeOne,
-      Edge &     edgeTwo,
-      Edge &     edgeThree,
-      TriangleID id);
+      Edge &edgeOne,
+      Edge &edgeTwo,
+      Edge &edgeThree);
+
+  /** Constructor based on 3 vertices
+   *
+   * The vertices will be sorted by Vertex::getID().
+   * This allows to weakly order triangles.
+   */
+  Triangle(
+      Vertex &VertexOne,
+      Vertex &VertexTwo,
+      Vertex &VertexThree);
 
   /// Returns dimensionalty of space the triangle is embedded in.
   int getDimensions() const;
@@ -66,12 +75,6 @@ public:
    * is determined on construction of the triangle.
    */
   const Vertex &vertex(int i) const;
-
-  /// Returns triangle edge with index 0, 1 or 2.
-  Edge &edge(int i);
-
-  /// Returns const triangle edge with index 0, 1 or 2.
-  const Edge &edge(int i) const;
 
   ///@name Iterators
   ///@{
@@ -99,9 +102,6 @@ public:
   /// Computes the normal of the triangle.
   Eigen::VectorXd computeNormal() const;
 
-  /// Returns a among triangles globally unique ID.
-  TriangleID getID() const;
-
   /// Returns the surface area of the triangle
   double getArea() const;
 
@@ -114,8 +114,8 @@ public:
   /**
    * @brief Compares two Triangles for equality
    *
-   * Two Triangles are equal if their normal vector is equal AND
-   * if the three edges are equal, whereas the order of edges is NOT important.
+   * Two Triangles are equal if the three edges are equal,
+   * whereas the order of edges is NOT important.
    */
   bool operator==(const Triangle &other) const;
 
@@ -123,14 +123,8 @@ public:
   bool operator!=(const Triangle &other) const;
 
 private:
-  /// Edges defining the triangle.
-  std::array<Edge *, 3> _edges;
-
-  /// Decider for choosing unique vertices from _edges.
-  std::array<bool, 3> _vertexMap;
-
-  /// ID of the triangle.
-  TriangleID _id;
+  /// Vertices defining the triangle, sorted by Vertex::getID()
+  std::array<Vertex *, 3> _vertices;
 };
 
 // --------------------------------------------------------- HEADER DEFINITIONS
@@ -138,23 +132,13 @@ private:
 inline Vertex &Triangle::vertex(int i)
 {
   PRECICE_ASSERT((i >= 0) && (i < 3), i);
-  return edge(i).vertex(_vertexMap[i]);
+  return *_vertices[i];
 }
 
 inline const Vertex &Triangle::vertex(int i) const
 {
   PRECICE_ASSERT((i >= 0) && (i < 3), i);
-  return edge(i).vertex(_vertexMap[i]);
-}
-
-inline Edge &Triangle::edge(int i)
-{
-  return *_edges[i];
-}
-
-inline const Edge &Triangle::edge(int i) const
-{
-  return *_edges[i];
+  return *_vertices[i];
 }
 
 inline Triangle::iterator Triangle::begin()
@@ -185,11 +169,6 @@ inline Triangle::const_iterator Triangle::cbegin() const
 inline Triangle::const_iterator Triangle::cend() const
 {
   return end();
-}
-
-inline TriangleID Triangle::getID() const
-{
-  return _id;
 }
 
 std::ostream &operator<<(std::ostream &os, const Triangle &t);

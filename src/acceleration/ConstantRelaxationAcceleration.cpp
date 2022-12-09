@@ -10,8 +10,7 @@
 #include "utils/Helpers.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace acceleration {
+namespace precice::acceleration {
 
 ConstantRelaxationAcceleration::ConstantRelaxationAcceleration(
     double           relaxation,
@@ -25,24 +24,15 @@ ConstantRelaxationAcceleration::ConstantRelaxationAcceleration(
                 relaxation);
 }
 
-void ConstantRelaxationAcceleration::initialize(DataMap &cplData)
+void ConstantRelaxationAcceleration::initialize(const DataMap &cplData)
 {
   checkDataIDs(cplData);
 }
 
-void ConstantRelaxationAcceleration::performAcceleration(DataMap &cplData)
+void ConstantRelaxationAcceleration::performAcceleration(const DataMap &cplData)
 {
   PRECICE_TRACE();
-  double omega         = _relaxation;
-  double oneMinusOmega = 1.0 - omega;
-  for (DataMap::value_type &pair : cplData) {
-    auto &      values    = pair.second->values();
-    const auto &oldValues = pair.second->previousIteration();
-    values *= omega;
-    values += oldValues * oneMinusOmega;
-    PRECICE_DEBUG("pp values {}", values);
-  }
+  applyRelaxation(_relaxation, cplData);
 }
 
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration

@@ -14,7 +14,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 
 namespace precice {
 namespace mesh {
@@ -26,7 +26,7 @@ class Parallel;
 } // namespace precice
 
 using precice::testing::TestContext;
-using precice::utils::MasterSlave;
+using precice::utils::IntraComm;
 using precice::utils::Parallel;
 
 using std::vector;
@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_SUITE(M2NTests)
 void process(vector<double> &data)
 {
   for (auto &elem : data) {
-    elem += MasterSlave::getRank() + 1;
+    elem += IntraComm::getRank() + 1;
   }
 }
 
@@ -55,43 +55,23 @@ void runP2PComTest1(const TestContext &context, com::PtrCommunicationFactory cf)
   vector<double> expectedData;
 
   if (context.isNamed("A")) {
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       mesh->setGlobalNumberOfVertices(10);
 
-      mesh->getVertexDistribution()[0].push_back(0);
-      mesh->getVertexDistribution()[0].push_back(1);
-      mesh->getVertexDistribution()[0].push_back(3);
-      mesh->getVertexDistribution()[0].push_back(5);
-      mesh->getVertexDistribution()[0].push_back(7);
-
-      mesh->getVertexDistribution()[1].push_back(1);
-      mesh->getVertexDistribution()[1].push_back(2);
-      mesh->getVertexDistribution()[1].push_back(4);
-      mesh->getVertexDistribution()[1].push_back(5);
-      mesh->getVertexDistribution()[1].push_back(6);
+      mesh->setVertexDistribution({{0, {0, 1, 3, 5, 7}}, {1, {1, 2, 4, 5, 6}}});
 
       data         = {10, 20, 40, 60, 80};
       expectedData = {10 + 2, 4 * 20 + 3, 40 + 2, 4 * 60 + 3, 80 + 2};
-    } else { // A Slave
+    } else { // A Secondary rank
       data         = {20, 30, 50, 60, 70};
       expectedData = {4 * 20 + 3, 30 + 1, 50 + 2, 4 * 60 + 3, 70 + 1};
     }
   } else {
     BOOST_TEST(context.isNamed("B"));
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       mesh->setGlobalNumberOfVertices(10);
 
-      mesh->getVertexDistribution()[0].push_back(1);
-      mesh->getVertexDistribution()[0].push_back(2);
-      mesh->getVertexDistribution()[0].push_back(5);
-      mesh->getVertexDistribution()[0].push_back(6);
-
-      mesh->getVertexDistribution()[1].push_back(0);
-      mesh->getVertexDistribution()[1].push_back(1);
-      mesh->getVertexDistribution()[1].push_back(3);
-      mesh->getVertexDistribution()[1].push_back(4);
-      mesh->getVertexDistribution()[1].push_back(5);
-      mesh->getVertexDistribution()[1].push_back(7);
+      mesh->setVertexDistribution({{0, {1, 2, 5, 6}}, {1, {0, 1, 3, 4, 5, 7}}});
 
       data.assign(4, -1);
       expectedData = {2 * 20, 30, 2 * 60, 70};
@@ -131,20 +111,10 @@ void runP2PComTest2(const TestContext &context, com::PtrCommunicationFactory cf)
   vector<double> expectedData;
 
   if (context.isNamed("A")) {
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       mesh->setGlobalNumberOfVertices(10);
 
-      mesh->getVertexDistribution()[0].push_back(0);
-      mesh->getVertexDistribution()[0].push_back(1);
-      mesh->getVertexDistribution()[0].push_back(3);
-      mesh->getVertexDistribution()[0].push_back(5);
-      mesh->getVertexDistribution()[0].push_back(7);
-
-      mesh->getVertexDistribution()[1].push_back(1);
-      mesh->getVertexDistribution()[1].push_back(2);
-      mesh->getVertexDistribution()[1].push_back(4);
-      mesh->getVertexDistribution()[1].push_back(5);
-      mesh->getVertexDistribution()[1].push_back(6);
+      mesh->setVertexDistribution({{0, {0, 1, 3, 5, 7}}, {1, {1, 2, 4, 5, 6}}});
 
       data         = {10, 20, 40, 60, 80};
       expectedData = {10 + 2, 4 * 20 + 3, 2 * 40 + 3, 4 * 60 + 3, 80 + 2};
@@ -154,20 +124,10 @@ void runP2PComTest2(const TestContext &context, com::PtrCommunicationFactory cf)
     }
   } else {
     BOOST_TEST(context.isNamed("B"));
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       mesh->setGlobalNumberOfVertices(10);
 
-      mesh->getVertexDistribution()[0].push_back(1);
-      mesh->getVertexDistribution()[0].push_back(3);
-      mesh->getVertexDistribution()[0].push_back(5);
-      mesh->getVertexDistribution()[0].push_back(6);
-
-      mesh->getVertexDistribution()[1].push_back(0);
-      mesh->getVertexDistribution()[1].push_back(1);
-      mesh->getVertexDistribution()[1].push_back(3);
-      mesh->getVertexDistribution()[1].push_back(4);
-      mesh->getVertexDistribution()[1].push_back(5);
-      mesh->getVertexDistribution()[1].push_back(7);
+      mesh->setVertexDistribution({{0, {1, 3, 5, 6}}, {1, {0, 1, 3, 4, 5, 7}}});
 
       data.assign(4, -1);
       expectedData = {2 * 20, 40, 2 * 60, 70};
@@ -203,21 +163,21 @@ void runSameConnectionTest(const TestContext &context, com::PtrCommunicationFact
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, testing::nextMeshID()));
 
   if (context.isNamed("A")) {
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
 
-      mesh->getConnectedRanks().push_back(0);
+      mesh->setConnectedRanks({0});
     } else {
 
-      mesh->getConnectedRanks().push_back(1);
+      mesh->setConnectedRanks({1});
     }
   } else {
     BOOST_TEST(context.isNamed("B"));
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
 
-      mesh->getConnectedRanks().push_back(0);
+      mesh->setConnectedRanks({0});
     } else {
 
-      mesh->getConnectedRanks().push_back(1);
+      mesh->setConnectedRanks({1});
     }
   }
 
@@ -226,7 +186,7 @@ void runSameConnectionTest(const TestContext &context, com::PtrCommunicationFact
   std::vector<int> receiveData;
 
   if (context.isNamed("A")) {
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
 
       c.requestPreConnection("Solid", "Fluid");
       int sendData = 5;
@@ -242,7 +202,7 @@ void runSameConnectionTest(const TestContext &context, com::PtrCommunicationFact
     c.acceptPreConnection("Solid", "Fluid");
     c.broadcastReceiveAll(receiveData);
 
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       BOOST_TEST(receiveData.at(0) == 5);
     } else {
       BOOST_TEST(receiveData.at(0) == 10);
@@ -259,21 +219,21 @@ void runCrossConnectionTest(const TestContext &context, com::PtrCommunicationFac
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, testing::nextMeshID()));
 
   if (context.isNamed("A")) {
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
 
-      mesh->getConnectedRanks().push_back(1);
+      mesh->setConnectedRanks({1});
     } else {
 
-      mesh->getConnectedRanks().push_back(0);
+      mesh->setConnectedRanks({0});
     }
   } else {
     BOOST_TEST(context.isNamed("B"));
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
 
-      mesh->getConnectedRanks().push_back(1);
+      mesh->setConnectedRanks({1});
     } else {
 
-      mesh->getConnectedRanks().push_back(0);
+      mesh->setConnectedRanks({0});
     }
   }
 
@@ -282,7 +242,7 @@ void runCrossConnectionTest(const TestContext &context, com::PtrCommunicationFac
   std::vector<int> receiveData;
 
   if (context.isNamed("A")) {
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
 
       c.requestPreConnection("Solid", "Fluid");
       int sendData = 5;
@@ -298,7 +258,7 @@ void runCrossConnectionTest(const TestContext &context, com::PtrCommunicationFac
     c.acceptPreConnection("Solid", "Fluid");
     c.broadcastReceiveAll(receiveData);
 
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       BOOST_TEST(receiveData.at(0) == 10);
     } else {
       BOOST_TEST(receiveData.at(0) == 5);
@@ -314,16 +274,16 @@ void runEmptyConnectionTest(const TestContext &context, com::PtrCommunicationFac
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, testing::nextMeshID()));
 
   if (context.isNamed("A")) {
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
 
-      mesh->getConnectedRanks().push_back(0);
+      mesh->setConnectedRanks({0});
 
     } else {
     }
   } else {
     BOOST_TEST(context.isNamed("B"));
-    if (context.isMaster()) {
-      mesh->getConnectedRanks().push_back(0);
+    if (context.isPrimary()) {
+      mesh->setConnectedRanks({0});
 
     } else {
     }
@@ -341,7 +301,7 @@ void runEmptyConnectionTest(const TestContext &context, com::PtrCommunicationFac
     c.acceptPreConnection("Solid", "Fluid");
     c.broadcastReceiveAll(receiveData);
 
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       BOOST_TEST(receiveData.at(0) == 5);
 
     } else {
@@ -358,7 +318,7 @@ void runP2PMeshBroadcastTest(const TestContext &context, com::PtrCommunicationFa
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, testing::nextMeshID()));
 
   if (context.isNamed("A")) {
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       Eigen::VectorXd position(dimensions);
       position << 5.5, 0.0;
       mesh::Vertex &v1 = mesh->createVertex(position);
@@ -366,7 +326,7 @@ void runP2PMeshBroadcastTest(const TestContext &context, com::PtrCommunicationFa
       mesh::Vertex &v2 = mesh->createVertex(position);
       mesh->createEdge(v1, v2);
 
-      mesh->getConnectedRanks().push_back(0);
+      mesh->setConnectedRanks({0});
 
     } else {
       Eigen::VectorXd position(dimensions);
@@ -376,15 +336,15 @@ void runP2PMeshBroadcastTest(const TestContext &context, com::PtrCommunicationFa
       mesh::Vertex &v2 = mesh->createVertex(position);
       mesh->createEdge(v1, v2);
 
-      mesh->getConnectedRanks().push_back(1);
+      mesh->setConnectedRanks({1});
     }
   } else {
     BOOST_TEST(context.isNamed("B"));
-    if (context.isMaster()) {
-      mesh->getConnectedRanks().push_back(0);
+    if (context.isPrimary()) {
+      mesh->setConnectedRanks({0});
 
     } else {
-      mesh->getConnectedRanks().push_back(1);
+      mesh->setConnectedRanks({1});
     }
   }
 
@@ -399,15 +359,15 @@ void runP2PMeshBroadcastTest(const TestContext &context, com::PtrCommunicationFa
     c.acceptPreConnection("Solid", "Fluid");
     c.broadcastReceiveAllMesh();
 
-    if (context.isMaster()) {
-      // This rank should receive the mesh from rank 0 (fluid master)
+    if (context.isPrimary()) {
+      // This rank should receive the mesh from rank 0 (fluid primary)
       BOOST_TEST(mesh->vertices().size() == 2);
       BOOST_TEST(mesh->vertices().at(0).getCoords()(0) == 5.50);
       BOOST_TEST(mesh->vertices().at(0).getCoords()(1) == 0.0);
       BOOST_TEST(mesh->vertices().at(1).getCoords()(0) == 1.0);
       BOOST_TEST(mesh->vertices().at(1).getCoords()(1) == 2.0);
     } else {
-      // This rank should receive the mesh from rank 1 (fluid slave)
+      // This rank should receive the mesh from rank 1 (fluid secondary)
       BOOST_TEST(mesh->vertices().size() == 2);
       BOOST_TEST(mesh->vertices().at(0).getCoords()(0) == 1.50);
       BOOST_TEST(mesh->vertices().at(0).getCoords()(1) == 0.0);
@@ -427,11 +387,11 @@ void runP2PComLocalCommunicationMapTest(const TestContext &context, com::PtrComm
   std::map<int, std::vector<int>> localCommunicationMap;
 
   if (context.isNamed("A")) {
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
 
       // The numbers are chosen in this way to make it easy to test weather
       // correct values are communicated or not!
-      mesh->getConnectedRanks().push_back(0);
+      mesh->setConnectedRanks({0});
       localCommunicationMap[0].push_back(102);
       localCommunicationMap[0].push_back(1022);
       localCommunicationMap[0].push_back(10222);
@@ -443,7 +403,7 @@ void runP2PComLocalCommunicationMapTest(const TestContext &context, com::PtrComm
 
       // The numbers are chosen in this way to make it easy to test weather
       // correct values are communicated or not!
-      mesh->getConnectedRanks().push_back(1);
+      mesh->setConnectedRanks({1});
       localCommunicationMap[0].push_back(112);
       localCommunicationMap[0].push_back(1122);
       localCommunicationMap[0].push_back(11222);
@@ -453,13 +413,13 @@ void runP2PComLocalCommunicationMapTest(const TestContext &context, com::PtrComm
     }
   } else {
     BOOST_TEST(context.isNamed("B"));
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
 
-      mesh->getConnectedRanks().push_back(0);
+      mesh->setConnectedRanks({0});
 
     } else {
 
-      mesh->getConnectedRanks().push_back(1);
+      mesh->setConnectedRanks({1});
     }
   }
 
@@ -478,7 +438,7 @@ void runP2PComLocalCommunicationMapTest(const TestContext &context, com::PtrComm
   }
 
   if (context.isNamed("B")) {
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       // The numbers are chosen in this way to make it easy to test weather
       // correct values are communicated or not!
       BOOST_TEST(localCommunicationMap.size() == 1);
@@ -503,49 +463,49 @@ BOOST_AUTO_TEST_SUITE(Sockets)
 
 BOOST_AUTO_TEST_CASE(P2PComTest1)
 {
-  PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  PRECICE_TEST("A"_on(2_ranks).setupIntraComm(), "B"_on(2_ranks).setupIntraComm(), Require::Events);
   com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
   runP2PComTest1(context, cf);
 }
 
 BOOST_AUTO_TEST_CASE(P2PComTest2)
 {
-  PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  PRECICE_TEST("A"_on(2_ranks).setupIntraComm(), "B"_on(2_ranks).setupIntraComm(), Require::Events);
   com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
   runP2PComTest2(context, cf);
 }
 
 BOOST_AUTO_TEST_CASE(TestSameConnection)
 {
-  PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  PRECICE_TEST("A"_on(2_ranks).setupIntraComm(), "B"_on(2_ranks).setupIntraComm(), Require::Events);
   com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
   runSameConnectionTest(context, cf);
 }
 
 BOOST_AUTO_TEST_CASE(TestCrossConnection)
 {
-  PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  PRECICE_TEST("A"_on(2_ranks).setupIntraComm(), "B"_on(2_ranks).setupIntraComm(), Require::Events);
   com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
   runCrossConnectionTest(context, cf);
 }
 
 BOOST_AUTO_TEST_CASE(EmptyConnectionTest)
 {
-  PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  PRECICE_TEST("A"_on(2_ranks).setupIntraComm(), "B"_on(2_ranks).setupIntraComm(), Require::Events);
   com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
   runEmptyConnectionTest(context, cf);
 }
 
 BOOST_AUTO_TEST_CASE(P2PMeshBroadcastTest)
 {
-  PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  PRECICE_TEST("A"_on(2_ranks).setupIntraComm(), "B"_on(2_ranks).setupIntraComm(), Require::Events);
   com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
   runP2PMeshBroadcastTest(context, cf);
 }
 
 BOOST_AUTO_TEST_CASE(P2PComLocalCommunicationMapTest)
 {
-  PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  PRECICE_TEST("A"_on(2_ranks).setupIntraComm(), "B"_on(2_ranks).setupIntraComm(), Require::Events);
   com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
   runP2PComLocalCommunicationMapTest(context, cf);
 }
@@ -556,35 +516,35 @@ BOOST_AUTO_TEST_SUITE(MPIPorts, *boost::unit_test::label("MPI_Ports"))
 
 BOOST_AUTO_TEST_CASE(P2PComTest1)
 {
-  PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  PRECICE_TEST("A"_on(2_ranks).setupIntraComm(), "B"_on(2_ranks).setupIntraComm(), Require::Events);
   com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
   runP2PComTest1(context, cf);
 }
 
 BOOST_AUTO_TEST_CASE(P2PComTest2)
 {
-  PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  PRECICE_TEST("A"_on(2_ranks).setupIntraComm(), "B"_on(2_ranks).setupIntraComm(), Require::Events);
   com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
   runP2PComTest2(context, cf);
 }
 
 BOOST_AUTO_TEST_CASE(TestSameConnection)
 {
-  PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  PRECICE_TEST("A"_on(2_ranks).setupIntraComm(), "B"_on(2_ranks).setupIntraComm(), Require::Events);
   com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
   runSameConnectionTest(context, cf);
 }
 
 BOOST_AUTO_TEST_CASE(TestCrossConnection)
 {
-  PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  PRECICE_TEST("A"_on(2_ranks).setupIntraComm(), "B"_on(2_ranks).setupIntraComm(), Require::Events);
   com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
   runCrossConnectionTest(context, cf);
 }
 
 BOOST_AUTO_TEST_CASE(EmptyConnectionTest)
 {
-  PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  PRECICE_TEST("A"_on(2_ranks).setupIntraComm(), "B"_on(2_ranks).setupIntraComm(), Require::Events);
   com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
   runEmptyConnectionTest(context, cf);
 }

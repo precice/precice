@@ -8,8 +8,7 @@
 #include "logging/LogMacros.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace com {
+namespace precice::com {
 namespace asio = boost::asio;
 
 /// If items are left in the queue upon destruction, something went really wrong.
@@ -23,15 +22,24 @@ void SocketSendQueue::dispatch(std::shared_ptr<Socket>      sock,
                                boost::asio::const_buffers_1 data,
                                std::function<void()>        callback)
 {
+  std::lock_guard<std::mutex> lock(_queueMutex);
   _itemQueue.push_back({std::move(sock), std::move(data), std::move(callback)});
+  process(); // if queue was previously empty, start it now.
+}
+
+void SocketSendQueue::sendCompleted()
+{
+  std::lock_guard<std::mutex> lock(_queueMutex);
+  _ready = true;
   process(); // if queue was previously empty, start it now.
 }
 
 void SocketSendQueue::process()
 {
-  std::lock_guard<std::mutex> lock(_sendMutex);
-  if (!_ready || _itemQueue.empty())
+  if (!_ready || _itemQueue.empty()) {
     return;
+  }
+
   auto item = _itemQueue.front();
   _itemQueue.pop_front();
   _ready = false;
@@ -39,10 +47,8 @@ void SocketSendQueue::process()
                     item.data,
                     [item, this](boost::system::error_code const &, std::size_t) {
                       item.callback();
-                      this->_ready = true;
-                      this->process();
+                      this->sendCompleted();
                     });
 }
 
-} // namespace com
-} // namespace precice
+} // namespace precice::com

@@ -26,18 +26,17 @@ public:
   static const int PODFILTER     = 4;
 
   /// Map from data ID to data values.
-  using DataMap   = std::map<int, cplscheme::PtrCouplingData>;
-  using ValuesMap = std::map<int, Eigen::VectorXd>;
+  using DataMap = std::map<int, cplscheme::PtrCouplingData>;
 
-  virtual ~Acceleration() {}
+  virtual ~Acceleration() = default;
 
   virtual std::vector<int> getDataIDs() const = 0;
 
-  virtual void initialize(DataMap &cpldata) = 0;
+  virtual void initialize(const DataMap &cpldata) = 0;
 
-  virtual void performAcceleration(DataMap &cpldata) = 0;
+  virtual void performAcceleration(const DataMap &cpldata) = 0;
 
-  virtual void iterationsConverged(DataMap &cpldata) = 0;
+  virtual void iterationsConverged(const DataMap &cpldata) = 0;
 
   virtual void exportState(io::TXTWriter &writer) {}
 
@@ -63,7 +62,10 @@ public:
 
 protected:
   /// Checks if all dataIDs are contained in cplData
-  void checkDataIDs(DataMap const &cplData) const;
+  void checkDataIDs(const DataMap &cplData) const;
+
+  /// performs a relaxation given a relaxation factor omega
+  void applyRelaxation(double omega, const DataMap &cplData) const;
 };
 } // namespace acceleration
 } // namespace precice

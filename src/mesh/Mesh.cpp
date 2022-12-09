@@ -11,6 +11,7 @@
 
 #include "Edge.hpp"
 #include "Mesh.hpp"
+#include "Tetrahedron.hpp"
 #include "Triangle.hpp"
 #include "logging/LogMacros.hpp"
 #include "math/geometry.hpp"
@@ -19,8 +20,7 @@
 #include "query/Index.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 
 Mesh::Mesh(
     std::string name,
@@ -29,18 +29,11 @@ Mesh::Mesh(
     : _name(std::move(name)),
       _dimensions(dimensions),
       _id(id),
-      _boundingBox(dimensions)
+      _boundingBox(dimensions),
+      _index(*this)
 {
   PRECICE_ASSERT((_dimensions == 2) || (_dimensions == 3), _dimensions);
   PRECICE_ASSERT(_name != std::string(""));
-
-  meshChanged.connect([](Mesh &m) { query::clearCache(m); });
-  meshDestroyed.connect([](Mesh &m) { query::clearCache(m); });
-}
-
-Mesh::~Mesh()
-{
-  meshDestroyed(*this); // emit signal
 }
 
 Mesh::VertexContainer &Mesh::vertices()
@@ -73,6 +66,16 @@ const Mesh::TriangleContainer &Mesh::triangles() const
   return _triangles;
 }
 
+const Mesh::TetraContainer &Mesh::tetrahedra() const
+{
+  return _tetrahedra;
+}
+
+Mesh::TetraContainer &Mesh::tetrahedra()
+{
+  return _tetrahedra;
+}
+
 int Mesh::getDimensions() const
 {
   return _dimensions;
@@ -90,27 +93,8 @@ Edge &Mesh::createEdge(
     Vertex &vertexOne,
     Vertex &vertexTwo)
 {
-  auto nextID = _edges.size();
-  _edges.emplace_back(vertexOne, vertexTwo, nextID);
+  _edges.emplace_back(vertexOne, vertexTwo);
   return _edges.back();
-}
-
-Edge &Mesh::createUniqueEdge(
-    Vertex &vertexOne,
-    Vertex &vertexTwo)
-{
-  const std::array<VertexID, 2> vids{vertexOne.getID(), vertexTwo.getID()};
-  const auto                    eend = edges().end();
-  auto                          pos  = std::find_if(edges().begin(), eend,
-                          [&vids](const Edge &e) -> bool {
-                            const std::array<VertexID, 2> eids{e.vertex(0).getID(), e.vertex(1).getID()};
-                            return std::is_permutation(vids.begin(), vids.end(), eids.begin());
-                          });
-  if (pos != eend) {
-    return *pos;
-  } else {
-    return createEdge(vertexOne, vertexTwo);
-  }
 }
 
 Triangle &Mesh::createTriangle(
@@ -122,14 +106,33 @@ Triangle &Mesh::createTriangle(
       edgeOne.connectedTo(edgeTwo) &&
       edgeTwo.connectedTo(edgeThree) &&
       edgeThree.connectedTo(edgeOne));
-  auto nextID = _triangles.size();
-  _triangles.emplace_back(edgeOne, edgeTwo, edgeThree, nextID);
+  _triangles.emplace_back(edgeOne, edgeTwo, edgeThree);
   return _triangles.back();
+}
+
+Triangle &Mesh::createTriangle(
+    Vertex &vertexOne,
+    Vertex &vertexTwo,
+    Vertex &vertexThree)
+{
+  _triangles.emplace_back(vertexOne, vertexTwo, vertexThree);
+  return _triangles.back();
+}
+
+Tetrahedron &Mesh::createTetrahedron(
+    Vertex &vertexOne,
+    Vertex &vertexTwo,
+    Vertex &vertexThree,
+    Vertex &vertexFour)
+{
+  _tetrahedra.emplace_back(vertexOne, vertexTwo, vertexThree, vertexFour);
+  return _tetrahedra.back();
 }
 
 PtrData &Mesh::createData(
     const std::string &name,
-    int                dimension)
+    int                dimension,
+    DataID             id)
 {
   PRECICE_TRACE(name, dimension);
   for (const PtrData &data : _data) {
@@ -138,8 +141,8 @@ PtrData &Mesh::createData(
                   "Please rename or remove one of the use-data tags with name \"{}\".",
                   name, _name, name);
   }
-  int     id = Data::getDataCount();
-  PtrData data(new Data(name, id, dimension));
+  //#rows = dimensions of current mesh #columns = dimensions of corresponding data set
+  PtrData data(new Data(name, id, dimension, _dimensions));
   _data.push_back(data);
   return _data.back();
 }
@@ -198,17 +201,14 @@ bool Mesh::isValidVertexID(VertexID vertexID) const
   return (0 <= vertexID) && (static_cast<size_t>(vertexID) < vertices().size());
 }
 
-bool Mesh::isValidEdgeID(EdgeID edgeID) const
-{
-  return (0 <= edgeID) && (static_cast<size_t>(edgeID) < edges().size());
-}
-
 void Mesh::allocateDataValues()
 {
   PRECICE_TRACE(_vertices.size());
   const auto expectedCount = _vertices.size();
   using SizeType           = std::remove_cv<decltype(expectedCount)>::type;
   for (PtrData &data : _data) {
+
+    // Allocate data values
     const SizeType expectedSize = expectedCount * data->getDimensions();
     const auto     actualSize   = static_cast<SizeType>(data->values().size());
     // Shrink Buffer
@@ -221,6 +221,26 @@ void Mesh::allocateDataValues()
       utils::append(data->values(), Eigen::VectorXd(Eigen::VectorXd::Zero(leftToAllocate)));
     }
     PRECICE_DEBUG("Data {} now has {} values", data->getName(), data->values().size());
+
+    // Allocate gradient data values
+    if (data->hasGradient()) {
+      const SizeType spaceDimensions = data->getSpatialDimensions();
+
+      const SizeType expectedColumnSize = expectedCount * data->getDimensions();
+      const auto     actualColumnSize   = static_cast<SizeType>(data->gradientValues().cols());
+
+      // Shrink Buffer
+      if (expectedColumnSize < actualColumnSize) {
+        data->gradientValues().resize(spaceDimensions, expectedColumnSize);
+      }
+
+      // Enlarge Buffer
+      if (expectedColumnSize > actualColumnSize) {
+        const auto columnLeftToAllocate = expectedColumnSize - actualColumnSize;
+        utils::append(data->gradientValues(), Eigen::MatrixXd(Eigen::MatrixXd::Zero(spaceDimensions, columnLeftToAllocate)));
+      }
+      PRECICE_DEBUG("Gradient Data {} now has {} x {} values", data->getName(), data->gradientValues().rows(), data->gradientValues().cols());
+    }
   }
 }
 
@@ -243,15 +263,15 @@ void Mesh::clear()
   _triangles.clear();
   _edges.clear();
   _vertices.clear();
-
-  meshChanged(*this);
+  _tetrahedra.clear();
+  _index.clear();
 
   for (mesh::PtrData &data : _data) {
     data->values().resize(0);
   }
 }
 
-/// @todo this should be handled by the Parition
+/// @todo this should be handled by the Partition
 void Mesh::clearPartitioning()
 {
   _connectedRanks.clear();
@@ -259,41 +279,6 @@ void Mesh::clearPartitioning()
   _vertexDistribution.clear();
   _vertexOffsets.clear();
   _globalNumberOfVertices = 0;
-}
-
-Mesh::VertexDistribution &Mesh::getVertexDistribution()
-{
-  return _vertexDistribution;
-}
-
-const Mesh::VertexDistribution &Mesh::getVertexDistribution() const
-{
-  return _vertexDistribution;
-}
-
-std::vector<int> &Mesh::getVertexOffsets()
-{
-  return _vertexOffsets;
-}
-
-const std::vector<int> &Mesh::getVertexOffsets() const
-{
-  return _vertexOffsets;
-}
-
-void Mesh::setVertexOffsets(std::vector<int> &vertexOffsets)
-{
-  _vertexOffsets = vertexOffsets;
-}
-
-int Mesh::getGlobalNumberOfVertices() const
-{
-  return _globalNumberOfVertices;
-}
-
-void Mesh::setGlobalNumberOfVertices(int num)
-{
-  _globalNumberOfVertices = num;
 }
 
 Eigen::VectorXd Mesh::getOwnedVertexData(DataID dataID)
@@ -343,8 +328,6 @@ void Mesh::addMesh(
     vertexMap[vertex.getID()] = &v;
   }
 
-  boost::container::flat_map<EdgeID, Edge *> edgeMap;
-  edgeMap.reserve(deltaMesh.edges().size());
   // you cannot just take the vertices from the edge and add them,
   // since you need the vertices from the new mesh
   // (which may differ in IDs)
@@ -353,22 +336,32 @@ void Mesh::addMesh(
     VertexID vertexIndex2 = edge.vertex(1).getID();
     PRECICE_ASSERT((vertexMap.count(vertexIndex1) == 1) &&
                    (vertexMap.count(vertexIndex2) == 1));
-    Edge &e               = createEdge(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2]);
-    edgeMap[edge.getID()] = &e;
+    createEdge(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2]);
   }
 
-  if (_dimensions == 3) {
-    for (const Triangle &triangle : deltaMesh.triangles()) {
-      EdgeID edgeIndex1 = triangle.edge(0).getID();
-      EdgeID edgeIndex2 = triangle.edge(1).getID();
-      EdgeID edgeIndex3 = triangle.edge(2).getID();
-      PRECICE_ASSERT((edgeMap.count(edgeIndex1) == 1) &&
-                     (edgeMap.count(edgeIndex2) == 1) &&
-                     (edgeMap.count(edgeIndex3) == 1));
-      createTriangle(*edgeMap[edgeIndex1], *edgeMap[edgeIndex2], *edgeMap[edgeIndex3]);
-    }
+  for (const Triangle &triangle : deltaMesh.triangles()) {
+    VertexID vertexIndex1 = triangle.vertex(0).getID();
+    VertexID vertexIndex2 = triangle.vertex(1).getID();
+    VertexID vertexIndex3 = triangle.vertex(2).getID();
+    PRECICE_ASSERT((vertexMap.count(vertexIndex1) == 1) &&
+                   (vertexMap.count(vertexIndex2) == 1) &&
+                   (vertexMap.count(vertexIndex3) == 1));
+    createTriangle(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2], *vertexMap[vertexIndex3]);
   }
-  meshChanged(*this);
+
+  for (const Tetrahedron &tetra : deltaMesh.tetrahedra()) {
+    VertexID vertexIndex1 = tetra.vertex(0).getID();
+    VertexID vertexIndex2 = tetra.vertex(1).getID();
+    VertexID vertexIndex3 = tetra.vertex(2).getID();
+    VertexID vertexIndex4 = tetra.vertex(3).getID();
+
+    PRECICE_ASSERT((vertexMap.count(vertexIndex1) == 1) &&
+                   (vertexMap.count(vertexIndex2) == 1) &&
+                   (vertexMap.count(vertexIndex3) == 1) &&
+                   (vertexMap.count(vertexIndex4) == 1));
+    createTetrahedron(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2], *vertexMap[vertexIndex3], *vertexMap[vertexIndex4]);
+  }
+  _index.clear();
 }
 
 const BoundingBox &Mesh::getBoundingBox() const
@@ -422,5 +415,4 @@ std::ostream &operator<<(std::ostream &os, const Mesh &m)
   return os;
 }
 
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh

@@ -5,15 +5,14 @@
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 
-namespace precice {
-namespace io {
+namespace precice::io {
 
 std::string ExportVTP::getVTKFormat() const
 {
   return "PolyData";
 }
 
-std::string ExportVTP::getMasterExtension() const
+std::string ExportVTP::getParallelExtension() const
 {
   return ".pvtp";
 }
@@ -32,7 +31,7 @@ std::string ExportVTP::getPieceAttributes(const mesh::Mesh &mesh) const
   return oss.str();
 }
 
-void ExportVTP::writeMasterCells(std::ostream &out) const
+void ExportVTP::writeParallelCells(std::ostream &out) const
 {
   out << "      <PLines>\n";
   out << "         <PDataArray type=\"Int32\" Name=\"connectivity\" NumberOfComponents=\"1\"/>\n";
@@ -81,5 +80,4 @@ void ExportVTP::exportConnectivity(
   outFile << "            </DataArray>\n";
   outFile << "         </Polys>\n";
 }
-} // namespace io
-} // namespace precice
+} // namespace precice::io

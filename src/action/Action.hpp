@@ -9,19 +9,18 @@ namespace action {
 /**
  * @brief Abstract base class for configurable actions on data and/or meshes.
  *
- * Actions are executed on call of precice::SolverInterface::initialize(),
- * precice::SolverInterface::initializeData(), and precice::SolverInterface::advance(). They can change meshes and in particular
- * data values.
+ * Actions are executed on call of precice::SolverInterface::initialize() and precice::SolverInterface::advance().
+ * They can change meshes and in particular data values.
  */
 class Action {
 public:
   /// Defines the time and place of application of the action.
   enum Timing {
     ON_TIME_WINDOW_COMPLETE_POST, // On advancing to next time window, after adv. cpl scheme
-    WRITE_MAPPING_PRIOR,          // Everytime, before write mapping
-    WRITE_MAPPING_POST,           // Everytime, after write mapping and before advancing cpl scheme
-    READ_MAPPING_PRIOR,           // Everytime, after advancing cpl scheme and before read mapping
-    READ_MAPPING_POST             // Everytime, after read mapping
+    WRITE_MAPPING_PRIOR,          // Every time, before write mapping
+    WRITE_MAPPING_POST,           // Every time, after write mapping and before advancing cpl scheme
+    READ_MAPPING_PRIOR,           // Every time, after advancing cpl scheme and before read mapping
+    READ_MAPPING_POST             // Every time, after read mapping
   };
 
   Action(
@@ -51,15 +50,8 @@ public:
     * @brief Performs the action, to be overwritten by subclasses.
     *
     * @param[in] time the current total simulation time.
-    * @param[in] timeStepSize Length of last time step computed.
-    * @param[in] computedTimeWindowPart Sum of all time steps within current time window, i.e. part that is already computed.
-    * @param[in] timeWindowSize Current time window size.
     */
-  virtual void performAction(
-      double time,
-      double timeStepSize,
-      double computedTimeWindowPart,
-      double timeWindowSize) = 0;
+  virtual void performAction(double time) = 0;
 
   /// Returns the timing of the action.
   Timing getTiming() const

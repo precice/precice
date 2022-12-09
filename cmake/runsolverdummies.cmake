@@ -31,5 +31,5 @@ execute_process(
 # Check the return codes/statuses of the solvers
 if(NOT (DUMMY_RESULT EQUAL 0))
   # Fail in case we encounter another error code/condition other than 0
-  message(FATAL_ERROR "An error occured running the solverdummies! Return code : \"${DUMMY_RESULT}\"")
+  message(FATAL_ERROR "An error occurred running the solverdummies! Return code : \"${DUMMY_RESULT}\"")
 endif()

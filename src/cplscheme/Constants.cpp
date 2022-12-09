@@ -1,8 +1,6 @@
 #include "Constants.hpp"
 
-namespace precice {
-namespace cplscheme {
-namespace constants {
+namespace precice::cplscheme::constants {
 
 const std::string &actionWriteIterationCheckpoint()
 {
@@ -22,6 +20,4 @@ const std::string &actionWriteInitialData()
   return actionWriteInitialData;
 }
 
-} // namespace constants
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme::constants

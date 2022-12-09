@@ -9,8 +9,7 @@
 #include "mesh/Vertex.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 
 logging::Logger BoundingBox::_log{"mesh::BoundingBox"};
 
@@ -182,5 +181,4 @@ std::ostream &operator<<(std::ostream &os, const BoundingBox &bb)
   return os;
 }
 
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh

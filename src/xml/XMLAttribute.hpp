@@ -213,7 +213,7 @@ XMLAttribute<ATTRIBUTE_T>::set(
 }
 
 /** creates an XMLAttribute given a name and a default value.
- *  
+ *
  *  @param[in] name the name of the attribute
  *  @param[in] defaultValue the default value of the attribute
  *  @return an XMLAttribute with the above settings
@@ -224,7 +224,7 @@ inline XMLAttribute<std::string> makeXMLAttribute(std::string name, const char *
 }
 
 /** creates an XMLAttribute given a name and a default value.
- *  
+ *
  *  @param[in] name the name of the attribute
  *  @param[in] defaultValue the default value of the attribute
  *  @return an XMLAttribute with the above settings

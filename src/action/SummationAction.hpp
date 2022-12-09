@@ -14,11 +14,11 @@ class SummationAction : public Action {
 public:
   /**
 	 * @brief Constructor
-	 * 
+	 *
 	 * @param[in] Timing When to apply the action
 	 * @param[in] sourceDataIDs Data indexes which are to be added
 	 * @param[in] targetDataID Data in which the action will be applied
-	 * 
+	 *
 	 */
   SummationAction(
       Timing                  timing,
@@ -29,11 +29,7 @@ public:
   virtual ~SummationAction() {}
 
   /// Adding data and applying them to target
-  virtual void performAction(
-      double time,
-      double timeStepSize,
-      double computedTimeWindowPart,
-      double timeWindowSize);
+  virtual void performAction(double time) override;
 
 private:
   logging::Logger _log{"action::SummationAction"};

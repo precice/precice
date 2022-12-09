@@ -1,5 +1,6 @@
 #include <Eigen/Core>
 #include <algorithm>
+#include <boost/test/tools/old/interface.hpp>
 #include <iterator>
 #include <memory>
 #include <string>
@@ -30,6 +31,7 @@
 #include "mesh/Vertex.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
+#include "precice/config/ParticipantConfiguration.hpp"
 #include "testing/SerialCouplingSchemeFixture.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
@@ -48,10 +50,12 @@ void runCoupling(
     const mesh::MeshConfiguration &meshConfig,
     const std::vector<int> &       validIterations)
 {
-  BOOST_TEST(meshConfig.meshes().size() == 1);
+  BOOST_REQUIRE(meshConfig.meshes().size() == 1);
   mesh::PtrMesh mesh = meshConfig.meshes().at(0);
-  BOOST_TEST(mesh->data().size() == 2);
-  BOOST_TEST(mesh->vertices().size() > 0);
+  BOOST_REQUIRE(mesh->data().size() == 2);
+  BOOST_REQUIRE(!mesh->vertices().empty());
+  BOOST_REQUIRE(!validIterations.empty());
+
   mesh::Vertex &  vertex               = mesh->vertices().at(0);
   int             index                = vertex.getID();
   auto &          dataValues0          = mesh->data(0)->values();
@@ -70,6 +74,7 @@ void runCoupling(
 
   if (nameParticipant == nameParticipant0) {
     cplScheme.initialize(0.0, 1);
+    cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
     BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
@@ -134,6 +139,7 @@ void runCoupling(
     BOOST_TEST(testing::equals(computedTimesteps, 3));
   } else if (nameParticipant == nameParticipant1) {
     cplScheme.initialize(0.0, 1);
+    cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
     BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
@@ -211,10 +217,12 @@ void runCouplingWithSubcycling(
     const mesh::MeshConfiguration &meshConfig,
     const std::vector<int> &       validIterations)
 {
-  BOOST_TEST(meshConfig.meshes().size() == 1);
+  BOOST_REQUIRE(meshConfig.meshes().size() == 1);
   mesh::PtrMesh mesh = meshConfig.meshes().at(0);
-  BOOST_TEST(mesh->data().size() == 2);
-  BOOST_TEST(mesh->vertices().size() > 0);
+  BOOST_REQUIRE(mesh->data().size() == 2);
+  BOOST_REQUIRE(!mesh->vertices().empty());
+  BOOST_REQUIRE(!validIterations.empty());
+
   double          initialStepsizeData0 = 5.0;
   double          stepsizeData0        = 5.0;
   Eigen::Vector3d initialStepsizeData1 = Eigen::Vector3d::Constant(5.0);
@@ -231,6 +239,7 @@ void runCouplingWithSubcycling(
   if (nameParticipant == nameParticipant0) {
     iterationCount++; // different handling due to subcycling
     cplScheme.initialize(0.0, 1);
+    cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
     BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
@@ -305,11 +314,13 @@ void runCouplingWithSubcycling(
     cplScheme.finalize(); // Ends the coupling scheme
     BOOST_TEST(testing::equals(computedTime, 0.3));
     BOOST_TEST(testing::equals(computedTimesteps, 3));
+    BOOST_TEST(stepsizeData0 == 5.0);
   }
 
   else if (nameParticipant == nameParticipant1) {
     iterationCount++; // different handling due to subcycling
     cplScheme.initialize(0.0, 1);
+    cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
     BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
@@ -408,16 +419,20 @@ BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
   PRECICE_TEST(1_rank);
   using namespace mesh;
 
+  int dimensions = 3;
+
   std::string path(_pathToTests + "serial-implicit-cplscheme-relax-const-config.xml");
 
   xml::XMLTag          root = xml::getRootTag();
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
-  dataConfig->setDimensions(3);
+  dataConfig->setDimensions(dimensions);
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
-  meshConfig->setDimensions(3);
+  meshConfig->setDimensions(dimensions);
   m2n::M2NConfiguration::SharedPointer m2nConfig(
       new m2n::M2NConfiguration(root));
-  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
+  precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
+  participantConfig->setDimensions(dimensions);
+  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
   xml::configure(root, xml::ConfigurationContext{}, path);
   BOOST_CHECK(cplSchemeConfig.getData("Data0", "Mesh") != cplSchemeConfig.getData("Data1", "Mesh"));
@@ -435,7 +450,7 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   using namespace mesh;
 
   PtrMesh mesh(new Mesh("MyMesh", 3, testing::nextMeshID()));
-  PtrData data   = mesh->createData("MyData", 1);
+  PtrData data   = mesh->createData("MyData", 1, 0_dataID);
   int     dataID = data->getID();
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
@@ -463,8 +478,8 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   Fixture::initializeStorages(scheme);
   CouplingData *cplData = Fixture::getSendData(scheme, dataID);
   BOOST_CHECK(cplData); // no nullptr
-  BOOST_TEST(cplData->values().size() == 1);
-  BOOST_TEST(cplData->previousIteration().size() == 1);
+  BOOST_TEST(cplData->getSize() == 1);
+  BOOST_TEST(cplData->getPreviousIterationSize() == 1);
 
   Fixture::moveToNextWindow(scheme);
 
@@ -512,7 +527,7 @@ BOOST_AUTO_TEST_CASE(SecondOrder)
   using namespace mesh;
 
   PtrMesh mesh(new Mesh("MyMesh", 3, testing::nextMeshID()));
-  PtrData data   = mesh->createData("MyData", 1);
+  PtrData data   = mesh->createData("MyData", 1, 0_dataID);
   int     dataID = data->getID();
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
@@ -538,8 +553,8 @@ BOOST_AUTO_TEST_CASE(SecondOrder)
   Fixture::initializeStorages(scheme);
   CouplingData *cplData = Fixture::getSendData(scheme, dataID);
   BOOST_CHECK(cplData); // no nullptr
-  BOOST_TEST(cplData->values().size() == 1);
-  BOOST_TEST(cplData->previousIteration().size() == 1);
+  BOOST_TEST(cplData->getSize() == 1);
+  BOOST_TEST(cplData->getPreviousIterationSize() == 1);
 
   Fixture::moveToNextWindow(scheme);
 
@@ -585,15 +600,15 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
 {
   /**
    * Perform first order and constant relaxation acceleration
-   * 
-   * Do two time windows with three iterations each. 
-   * 
+   *
+   * Do two time windows with three iterations each.
+   *
    * Each participant writes dummy data to other participant, received data is checked.
-   * 
+   *
    * Make sure that the following happens, if NOT converged (first two iterations):
    * 1. acceleration is performed
    * 2. participants receive correct (accelerated) data
-   * 
+   *
    * Make sure that the following happens, if converged (end of third iteration):
    * 1. old data is stored (we cannot access this from the coupling scheme, but we can deduct this from the extrapolated value)
    * 2. we move to the next window
@@ -602,8 +617,8 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
 
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = true;
-  auto m2n                 = context.connectMasters("Participant0", "Participant1", options);
+  options.useOnlyPrimaryCom = true;
+  auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
 
   xml::XMLTag root = xml::getRootTag();
 
@@ -619,8 +634,8 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
   mesh::MeshConfiguration meshConfig(root, dataConfig);
   meshConfig.setDimensions(3);
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", geometrical_dimensions, testing::nextMeshID()));
-  const auto    dataID0 = mesh->createData("Data0", data_dimensions)->getID();
-  const auto    dataID1 = mesh->createData("Data1", data_dimensions)->getID();
+  const auto    dataID0 = mesh->createData("Data0", data_dimensions, 0_dataID)->getID();
+  const auto    dataID1 = mesh->createData("Data1", data_dimensions, 1_dataID)->getID();
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
   meshConfig.addMesh(mesh);
@@ -658,6 +673,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
       BaseCouplingScheme::Implicit, maxIterations, extrapolationOrder);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
+  cplScheme.determineInitialDataExchange();
 
   // Add acceleration
   acceleration::PtrAcceleration ptrAcceleration(new acceleration::ConstantRelaxationAcceleration(0.5, std::vector<int>({sendDataIndex})));
@@ -672,6 +688,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
 
   cplScheme.initialize(0.0, 1);
+  cplScheme.receiveResultOfFirstAdvance();
 
   Eigen::VectorXd v(1); // buffer for data
 
@@ -792,17 +809,17 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
 {
   /**
    * Perform first order extrapolation and use initialization
-   * 
-   * Do two time windows with three iterations each. 
-   * 
+   *
+   * Do two time windows with three iterations each.
+   *
    * Each participant writes dummy data to other participant, received data is checked.
-   * 
+   *
    **/
 
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = true;
-  auto m2n                 = context.connectMasters("Participant0", "Participant1", options);
+  options.useOnlyPrimaryCom = true;
+  auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
 
   xml::XMLTag root = xml::getRootTag();
 
@@ -818,8 +835,8 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
   mesh::MeshConfiguration meshConfig(root, dataConfig);
   meshConfig.setDimensions(3);
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", geometrical_dimensions, testing::nextMeshID()));
-  const auto    dataID0 = mesh->createData("Data0", data_dimensions)->getID();
-  const auto    dataID1 = mesh->createData("Data1", data_dimensions)->getID();
+  const auto    dataID0 = mesh->createData("Data0", data_dimensions, 0_dataID)->getID();
+  const auto    dataID1 = mesh->createData("Data1", data_dimensions, 1_dataID)->getID();
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
   meshConfig.addMesh(mesh);
@@ -857,6 +874,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
       BaseCouplingScheme::Implicit, maxIterations, extrapolationOrder);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, context.isNamed(second));
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, context.isNamed(first));
+  cplScheme.determineInitialDataExchange();
 
   // Add acceleration
   acceleration::PtrAcceleration ptrAcceleration(new acceleration::ConstantRelaxationAcceleration(0.5, std::vector<int>({sendDataIndex})));
@@ -869,8 +887,6 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
   cplScheme.addConvergenceMeasure(convergenceDataIndex, false, false, minIterationConvMeasure1, true);
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
-
-  cplScheme.initialize(0.0, 1);
 
   Eigen::VectorXd v(1); // buffer for data
 
@@ -892,20 +908,24 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
     BOOST_TEST(testing::equals(mesh->data(sendDataIndex)->values()(0), 4.0));
   }
 
-  cplScheme.initializeData();
-
   if (context.isNamed(first)) {
     // first participant receives initial data = 4 (see above)
+    cplScheme.initialize(0.0, 1);
     BOOST_TEST(cplScheme.hasDataBeenReceived());
+    cplScheme.receiveResultOfFirstAdvance();
+    BOOST_TEST(!cplScheme.hasDataBeenReceived());
     BOOST_TEST(mesh->data(receiveDataIndex)->values().size() == 1);
     BOOST_TEST(testing::equals(mesh->data(receiveDataIndex)->values()(0), 4.0));
     // first participant does not send any data here
     BOOST_TEST(mesh->data(sendDataIndex)->values().size() == 1);
     BOOST_TEST(testing::equals(mesh->data(sendDataIndex)->values()(0), 0.0));
   } else {
-    // second participant receives initial data written by first participant in it's first window = 1 (see below)
-    BOOST_TEST(context.isNamed(second));
+    // second participant result written by first participant in its first window = 1 (see below)
+    cplScheme.initialize(0.0, 1);
+    BOOST_TEST(!cplScheme.hasDataBeenReceived());
+    cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(cplScheme.hasDataBeenReceived());
+    BOOST_TEST(context.isNamed(second));
     BOOST_TEST(mesh->data(receiveDataIndex)->values().size() == 1);
     BOOST_TEST(testing::equals(mesh->data(receiveDataIndex)->values()(0), 1.0));
     // second participant has send data above (should remain untouched)
@@ -1026,15 +1046,15 @@ BOOST_AUTO_TEST_CASE(SecondOrderWithAcceleration)
 {
   /**
    * Perform second order extrapolation and constant relaxation acceleration
-   * 
-   * Do three time windows with three iterations each. 
-   * 
+   *
+   * Do three time windows with three iterations each.
+   *
    * Each participant writes dummy data to other participant, received data is checked.
-   * 
+   *
    * Make sure that the following happens, if NOT converged (first two iterations):
    * 1. acceleration is performed
    * 2. participants receive correct (accelerated) data
-   * 
+   *
    * Make sure that the following happens, if converged (end of third iteration):
    * 1. old data is stored (we cannot access this from the coupling scheme, but we can deduct this from the extrapolated value)
    * 2. we move to the next window
@@ -1043,8 +1063,8 @@ BOOST_AUTO_TEST_CASE(SecondOrderWithAcceleration)
 
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = true;
-  auto m2n                 = context.connectMasters("Participant0", "Participant1", options);
+  options.useOnlyPrimaryCom = true;
+  auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
 
   xml::XMLTag root = xml::getRootTag();
 
@@ -1060,8 +1080,8 @@ BOOST_AUTO_TEST_CASE(SecondOrderWithAcceleration)
   mesh::MeshConfiguration meshConfig(root, dataConfig);
   meshConfig.setDimensions(3);
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", geometrical_dimensions, testing::nextMeshID()));
-  const auto    dataID0 = mesh->createData("Data0", data_dimensions)->getID();
-  const auto    dataID1 = mesh->createData("Data1", data_dimensions)->getID();
+  const auto    dataID0 = mesh->createData("Data0", data_dimensions, 0_dataID)->getID();
+  const auto    dataID1 = mesh->createData("Data1", data_dimensions, 1_dataID)->getID();
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
   meshConfig.addMesh(mesh);
@@ -1099,6 +1119,7 @@ BOOST_AUTO_TEST_CASE(SecondOrderWithAcceleration)
       BaseCouplingScheme::Implicit, maxIterations, extrapolationOrder);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
+  cplScheme.determineInitialDataExchange();
 
   // Add acceleration
   acceleration::PtrAcceleration ptrAcceleration(new acceleration::ConstantRelaxationAcceleration(0.5, std::vector<int>({sendDataIndex})));
@@ -1113,6 +1134,7 @@ BOOST_AUTO_TEST_CASE(SecondOrderWithAcceleration)
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
 
   cplScheme.initialize(0.0, 1);
+  cplScheme.receiveResultOfFirstAdvance();
 
   Eigen::VectorXd v(1); // buffer for data
 
@@ -1278,23 +1300,25 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
 {
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = true;
-  auto m2n                 = context.connectMasters("Participant0", "Participant1", options);
+  options.useOnlyPrimaryCom = true;
+  auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
 
   using namespace mesh;
+
+  int dimensions = 3;
 
   xml::XMLTag root = xml::getRootTag();
   // Create a data configuration, to simplify configuration of data
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
-  dataConfig->setDimensions(3);
+  dataConfig->setDimensions(dimensions);
   dataConfig->addData("data0", 1);
   dataConfig->addData("data1", 3);
 
   MeshConfiguration meshConfig(root, dataConfig);
-  meshConfig.setDimensions(3);
+  meshConfig.setDimensions(dimensions);
   mesh::PtrMesh mesh(new Mesh("Mesh", 3, testing::nextMeshID()));
-  mesh->createData("data0", 1);
-  mesh->createData("data1", 3);
+  mesh->createData("data0", 1, 0_dataID);
+  mesh->createData("data1", 3, 1_dataID);
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
   meshConfig.addMesh(mesh);
@@ -1326,6 +1350,7 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
       BaseCouplingScheme::Implicit, 100, extrapolationOrder);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
+  cplScheme.determineInitialDataExchange();
 
   double                                 convergenceLimit1 = sqrt(3.0); // when diff_vector = (1.0, 1.0, 1.0)
   cplscheme::impl::PtrConvergenceMeasure absoluteConvMeasure1(
@@ -1343,20 +1368,24 @@ BOOST_AUTO_TEST_CASE(testConfiguredAbsConvergenceMeasureSynchronized)
 
   using namespace mesh;
 
+  int dimensions = 3;
+
   std::string configurationPath(
       _pathToTests + "serial-implicit-cplscheme-absolute-config.xml");
 
   xml::XMLTag          root = xml::getRootTag();
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
-  dataConfig->setDimensions(3);
+  dataConfig->setDimensions(dimensions);
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
-  meshConfig->setDimensions(3);
-  m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
-  CouplingSchemeConfiguration          cplSchemeConfig(root, meshConfig, m2nConfig);
+  meshConfig->setDimensions(dimensions);
+  m2n::M2NConfiguration::SharedPointer         m2nConfig(new m2n::M2NConfiguration(root));
+  precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
+  participantConfig->setDimensions(dimensions);
+  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
   xml::configure(root, xml::ConfigurationContext{}, configurationPath);
-  m2n::PtrM2N m2n       = m2nConfig->getM2N("Participant0", "Participant1");
-  useOnlyMasterCom(m2n) = true;
+  m2n::PtrM2N m2n        = m2nConfig->getM2N("Participant0", "Participant1");
+  useOnlyPrimaryCom(m2n) = true;
 
   // some dummy mesh
   meshConfig->meshes().at(0)->createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
@@ -1368,9 +1397,9 @@ BOOST_AUTO_TEST_CASE(testConfiguredAbsConvergenceMeasureSynchronized)
   std::vector<int> validIterations = {5, 5, 5};
 
   if (context.isNamed("Participant0")) {
-    m2n->requestMasterConnection("Participant1", "Participant0");
+    m2n->requestPrimaryRankConnection("Participant1", "Participant0");
   } else {
-    m2n->acceptMasterConnection("Participant1", "Participant0");
+    m2n->acceptPrimaryRankConnection("Participant1", "Participant0");
   }
 
   runCoupling(*cplSchemeConfig.getCouplingScheme(context.name),
@@ -1381,8 +1410,8 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
 {
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = true;
-  auto m2n                 = context.connectMasters("Participant0", "Participant1", options);
+  options.useOnlyPrimaryCom = true;
+  auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
 
   xml::XMLTag root = xml::getRootTag();
   // Create a data configuration, to simplify configuration of data
@@ -1394,8 +1423,8 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
   mesh::MeshConfiguration meshConfig(root, dataConfig);
   meshConfig.setDimensions(3);
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
-  mesh->createData("data0", 1);
-  mesh->createData("data1", 3);
+  mesh->createData("data0", 1, 0_dataID);
+  mesh->createData("data1", 3, 1_dataID);
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
   meshConfig.addMesh(mesh);
@@ -1427,6 +1456,7 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
       BaseCouplingScheme::Implicit, 100, extrapolationOrder);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
+  cplScheme.determineInitialDataExchange();
 
   // Add convergence measures
   int                                    minIterations = 3;
@@ -1443,8 +1473,8 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
 {
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = true;
-  auto m2n                 = context.connectMasters("Participant0", "Participant1", options);
+  options.useOnlyPrimaryCom = true;
+  auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
 
   xml::XMLTag root = xml::getRootTag();
   // Create a data configuration, to simplify configuration of data
@@ -1456,8 +1486,8 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
   mesh::MeshConfiguration meshConfig(root, dataConfig);
   meshConfig.setDimensions(3);
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
-  mesh->createData("data0", 1);
-  mesh->createData("data1", 3);
+  mesh->createData("data0", 1, 0_dataID);
+  mesh->createData("data1", 3, 1_dataID);
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
   meshConfig.addMesh(mesh);
@@ -1492,6 +1522,7 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
       BaseCouplingScheme::Implicit, 100, extrapolationOrder);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
+  cplScheme.determineInitialDataExchange();
 
   // Add convergence measures
   int                                    minIterations = 3;
@@ -1506,8 +1537,8 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
 {
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = true;
-  auto m2n                 = context.connectMasters("Participant0", "Participant1", options);
+  options.useOnlyPrimaryCom = true;
+  auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
 
   xml::XMLTag root = xml::getRootTag();
 
@@ -1521,8 +1552,8 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   mesh::MeshConfiguration meshConfig(root, dataConfig);
   meshConfig.setDimensions(3);
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
-  const auto    dataID0 = mesh->createData("Data0", 1)->getID();
-  const auto    dataID1 = mesh->createData("Data1", 3)->getID();
+  const auto    dataID0 = mesh->createData("Data0", 1, 0_dataID)->getID();
+  const auto    dataID1 = mesh->createData("Data1", 3, 1_dataID)->getID();
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
   meshConfig.addMesh(mesh);
@@ -1560,6 +1591,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   CouplingData *sendCouplingData = Fixture::getSendData(cplScheme, sendDataIndex);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, not dataRequiresInitialization);
   CouplingData *receiveCouplingData = Fixture::getReceiveData(cplScheme, receiveDataIndex);
+  cplScheme.determineInitialDataExchange();
 
   // Add convergence measures
   int                                    minIterations = 3;
@@ -1570,36 +1602,36 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
 
-  cplScheme.initialize(0.0, 1);
-
   if (context.isNamed(nameParticipant0)) {
     // ensure that read data is uninitialized
-    BOOST_TEST(receiveCouplingData->values().size() == 3);
+    BOOST_TEST(receiveCouplingData->getSize() == 3);
     BOOST_TEST(testing::equals(receiveCouplingData->values(), Eigen::Vector3d(0.0, 0.0, 0.0)));
-    BOOST_TEST(receiveCouplingData->previousIteration().size() == 3);
+    BOOST_TEST(receiveCouplingData->getPreviousIterationSize() == 3);
     BOOST_TEST(testing::equals(receiveCouplingData->previousIteration(), Eigen::Vector3d(0.0, 0.0, 0.0)));
     // ensure that write data is uninitialized
-    BOOST_TEST(sendCouplingData->values().size() == 1);
+    BOOST_TEST(sendCouplingData->getSize() == 1);
     BOOST_TEST(testing::equals(sendCouplingData->values()(0), 0.0));
-    BOOST_TEST(sendCouplingData->previousIteration().size() == 1);
+    BOOST_TEST(sendCouplingData->getPreviousIterationSize() == 1);
     BOOST_TEST(testing::equals(sendCouplingData->previousIteration()(0), 0.0));
 
     BOOST_TEST(Fixture::isImplicitCouplingScheme(cplScheme));
-    cplScheme.initializeData();
+    cplScheme.initialize(0.0, 1);
     BOOST_TEST(cplScheme.hasDataBeenReceived());
+    cplScheme.receiveResultOfFirstAdvance();
+    BOOST_TEST(!cplScheme.hasDataBeenReceived());
     // ensure that initial data was read
-    BOOST_TEST(receiveCouplingData->values().size() == 3);
+    BOOST_TEST(receiveCouplingData->getSize() == 3);
     BOOST_TEST(testing::equals(receiveCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
-    BOOST_TEST(receiveCouplingData->previousIteration().size() == 3);
+    BOOST_TEST(receiveCouplingData->getPreviousIterationSize() == 3);
     BOOST_TEST(testing::equals(receiveCouplingData->previousIteration(), Eigen::Vector3d(0.0, 0.0, 0.0)));
     // ensure that write data is still uninitialized
-    BOOST_TEST(sendCouplingData->values().size() == 1);
+    BOOST_TEST(sendCouplingData->getSize() == 1);
     BOOST_TEST(testing::equals(sendCouplingData->values()(0), 0.0));
-    BOOST_TEST(sendCouplingData->previousIteration().size() == 1);
+    BOOST_TEST(sendCouplingData->getPreviousIterationSize() == 1);
     BOOST_TEST(testing::equals(sendCouplingData->previousIteration()(0), 0.0));
-    BOOST_TEST(sendCouplingData->previousIteration().size() == 1);
+    BOOST_TEST(sendCouplingData->getPreviousIterationSize() == 1);
     // set write data
-    sendCouplingData->values() = Eigen::VectorXd::Constant(sendCouplingData->values().size(), 4.0);
+    sendCouplingData->values() = Eigen::VectorXd::Constant(sendCouplingData->getSize(), 4.0);
     while (cplScheme.isCouplingOngoing()) {
       if (cplScheme.isActionRequired(writeIterationCheckpoint)) {
         cplScheme.markActionFulfilled(writeIterationCheckpoint);
@@ -1609,6 +1641,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       }
       cplScheme.addComputedTime(timestepLength);
       cplScheme.advance();
+      BOOST_TEST(cplScheme.hasDataBeenReceived());
     }
   } else {
     BOOST_TEST(context.isNamed(nameParticipant1));
@@ -1617,23 +1650,25 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     v << 1.0, 2.0, 3.0;
     sendCouplingData->values() = v;
     cplScheme.markActionFulfilled(constants::actionWriteInitialData());
-    BOOST_TEST(receiveCouplingData->values().size() == 1);
+    BOOST_TEST(receiveCouplingData->getSize() == 1);
     BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 0.0));
-    BOOST_TEST(receiveCouplingData->previousIteration().size() == 1);
-    BOOST_TEST(receiveCouplingData->previousIteration().size() == 1); // here, previousIteration is correctly initialized, see above
-    BOOST_TEST(sendCouplingData->values().size() == 3);
+    BOOST_TEST(receiveCouplingData->getPreviousIterationSize() == 1);
+    BOOST_TEST(receiveCouplingData->getPreviousIterationSize() == 1); // here, previousIteration is correctly initialized, see above
+    BOOST_TEST(sendCouplingData->getSize() == 3);
     BOOST_TEST(testing::equals(sendCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
-    BOOST_TEST(sendCouplingData->previousIteration().size() == 3); // here, previousIteration is correctly initialized, see above
+    BOOST_TEST(sendCouplingData->getPreviousIterationSize() == 3); // here, previousIteration is correctly initialized, see above
     BOOST_TEST(testing::equals(sendCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
-    cplScheme.initializeData();
+    cplScheme.initialize(0.0, 1);
+    BOOST_TEST(!cplScheme.hasDataBeenReceived());
+    cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(cplScheme.hasDataBeenReceived());
-    BOOST_TEST(receiveCouplingData->values().size() == 1);
+    BOOST_TEST(receiveCouplingData->getSize() == 1);
     BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 4.0));
-    BOOST_TEST(receiveCouplingData->previousIteration().size() == 1);
+    BOOST_TEST(receiveCouplingData->getPreviousIterationSize() == 1);
     BOOST_TEST(testing::equals(receiveCouplingData->previousIteration()(0), 0.0));
-    BOOST_TEST(sendCouplingData->values().size() == 3);
+    BOOST_TEST(sendCouplingData->getSize() == 3);
     BOOST_TEST(testing::equals(sendCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
-    BOOST_TEST(sendCouplingData->previousIteration().size() == 3);
+    BOOST_TEST(sendCouplingData->getPreviousIterationSize() == 3);
     BOOST_TEST(testing::equals(sendCouplingData->previousIteration(), Eigen::Vector3d(1.0, 2.0, 3.0)));
     while (cplScheme.isCouplingOngoing()) {
       if (cplScheme.isActionRequired(writeIterationCheckpoint)) {
@@ -1641,6 +1676,9 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       }
       cplScheme.addComputedTime(timestepLength);
       cplScheme.advance();
+      if (cplScheme.isCouplingOngoing()) {
+        BOOST_TEST(cplScheme.hasDataBeenReceived());
+      }
       if (cplScheme.isActionRequired(readIterationCheckpoint)) {
         cplScheme.markActionFulfilled(readIterationCheckpoint);
       }

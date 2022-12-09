@@ -1,12 +1,10 @@
 #include "acceleration/impl/ValuePreconditioner.hpp"
 #include <cstddef>
 #include <vector>
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace acceleration {
-namespace impl {
+namespace precice::acceleration::impl {
 
 ValuePreconditioner::ValuePreconditioner(
     int maxNonConstTimeWindows)
@@ -28,7 +26,7 @@ void ValuePreconditioner::_update_(bool                   timeWindowComplete,
       for (size_t i = 0; i < _subVectorSizes[k]; i++) {
         part(i) = oldValues(i + offset);
       }
-      norms[k] = utils::MasterSlave::l2norm(part);
+      norms[k] = utils::IntraComm::l2norm(part);
       offset += _subVectorSizes[k];
       PRECICE_ASSERT(norms[k] > 0.0);
     }
@@ -47,6 +45,4 @@ void ValuePreconditioner::_update_(bool                   timeWindowComplete,
   }
 }
 
-} // namespace impl
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration::impl

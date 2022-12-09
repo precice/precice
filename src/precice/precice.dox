@@ -29,17 +29,17 @@ while ( interface.isCouplingOngoing() ){
    // Read data written by other solvers, if available.
    if ( interface.isReadDataAvailable() ){
       // ...
-      double temperatureValue;  // Container for data to be read 
-      interface.readScalarData ( temperatureDataID, solverNodeCoordinates, 
+      double temperatureValue;  // Container for data to be read
+      interface.readScalarData ( temperatureDataID, solverNodeCoordinates,
                                  temperatureValue );
       // ...
    }
 
    // Examplary computation of one boundary data entry
    double* forceValue = solverComputeForce();
-   
+
    // ...
-   
+
    if ( interface.isWriteDataRequired(computedTimestepLength) ) {
       // ...
       interface.writeVectorData ( forceDataID, solverNodeCoords, forceValue );
@@ -47,7 +47,7 @@ while ( interface.isCouplingOngoing() ){
    }
 
    // When all data values are written, the simulation can be advanced.
-   // preCICE automatically exchanges data between coupled solvers and 
+   // preCICE automatically exchanges data between coupled solvers and
    // computes the current state of the simulation. It uses the timestep length
    // of the solver timestep for that, and returns an upper limit for the next
    // timestep of the solver.

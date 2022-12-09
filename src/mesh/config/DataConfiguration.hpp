@@ -4,6 +4,7 @@
 #include <vector>
 #include "logging/Logger.hpp"
 #include "mesh/Data.hpp"
+#include "utils/ManageUniqueIDs.hpp"
 #include "xml/XMLTag.hpp"
 
 namespace precice {
@@ -41,11 +42,10 @@ public:
   /**
    * @brief Adds data manually.
    *
-   * @param[in] name Unqiue name of the data.
+   * @param[in] name Unique name of the data.
    * @param[in] dataDimensions Dimensionality (1: scalar, 2,3: vector) of data.
    */
-  void addData(const std::string &name,
-               int                dataDimensions);
+  void addData(const std::string &name, int dataDimensions);
 
 private:
   mutable logging::Logger _log{"mesh::DataConfiguration"};

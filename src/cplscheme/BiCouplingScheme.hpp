@@ -8,6 +8,7 @@
 #include "logging/Logger.hpp"
 #include "m2n/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "precice/impl/SharedPointer.hpp"
 #include "precice/types.hpp"
 #include "utils/assertion.hpp"
 
@@ -52,6 +53,8 @@ public:
       mesh::PtrMesh        mesh,
       bool                 requiresInitialization);
 
+  void determineInitialDataExchange() override;
+
   /// returns list of all coupling partners
   std::vector<std::string> getCouplingPartners() const override final;
 
@@ -84,6 +87,17 @@ protected:
     return _receiveData;
   }
 
+  /**
+   * @brief BiCouplingScheme has _sendData and _receiveData
+   * @returns DataMap with all data
+   */
+  const DataMap getAllData() override
+  {
+    DataMap allData{_sendData};
+    allData.insert(_receiveData.begin(), _receiveData.end());
+    return allData;
+  }
+
   /// Sets the values
   CouplingData *getSendData(DataID dataID);
 
@@ -96,6 +110,11 @@ protected:
     PRECICE_ASSERT(_m2n);
     return _m2n;
   }
+
+  /**
+   * @brief Exchanges data, if it has to be initialized.
+   */
+  void exchangeInitialData() override final;
 
 private:
   mutable logging::Logger _log{"cplscheme::BiCouplingScheme"};

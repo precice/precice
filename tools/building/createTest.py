@@ -93,7 +93,7 @@ def testarg(arg):
     checkTestName(name)
     [checkTestSuite(d) for d in dirs]
 
-    # If the given path is inside the tests dir, then use the realtive path
+    # If the given path is inside the tests dir, then use the relative path
     full = pathlib.Path(arg).absolute()
     tests = find_precice_root().joinpath("tests")
     try:
@@ -141,7 +141,7 @@ def generateTestSource(name, suite, filepath):
     includes = [
         "<precice/SolverInterface.hpp>", "<vector>", '"testing/Testing.hpp"'
     ]
-    suites = ["PreciceTests"] + suite
+    suites = ["Integration"] + suite
     space = [""]
     lines = ["#ifndef PRECICE_NO_MPI"]
     lines += space
@@ -200,6 +200,7 @@ def main():
     print("Create test config {}".format(config))
     if not args.dry_run:
         generateTestConfig(args.test.name, args.test.suites, configPath)
+    print("Remember to run tools/building/updateSourceFiles.py or make sourcesIndex")
 
 
 if __name__ == '__main__':

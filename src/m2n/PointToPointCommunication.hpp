@@ -79,8 +79,8 @@ public:
   void requestPreConnection(std::string const &acceptorName,
                             std::string const &requesterName) override;
 
-  /// Completes the slaves connections for both acceptor and requester by updating the vertex list in _mappings
-  void completeSlavesConnection() override;
+  /// Completes the secondary connections for both acceptor and requester by updating the vertex list in _mappings
+  void completeSecondaryRanksConnection() override;
 
   /**
    * @brief Disconnects from communication space, i.e. participant.
@@ -102,7 +102,7 @@ public:
   void receive(precice::span<double> itemsToReceive, int valueDimension = 1) override;
 
   /// Broadcasts an int to connected ranks on remote participant
-  void broadcastSend(const int &itemToSend) override;
+  void broadcastSend(int itemToSend) override;
 
   /**
    * @brief Receives an int per connected rank on remote participant

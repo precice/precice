@@ -34,7 +34,7 @@ set(CPACK_PACKAGE_VENDOR "precice.org")
 set(CPACK_PACKAGE_CONTACT "The precice developers <precice@mailman.informatik.uni-stuttgart.de>")
 set(CPACK_PACKAGE_DESCRIPTION "preCICE (Precise Code Interaction Coupling Environment) is a coupling library for partitioned multi-physics simulations, including, but not restricted to fluid-structure interaction and conjugate heat transfer simulations. Partitioned means that preCICE couples existing programs (solvers) capable of simulating a subpart of the complete physics involved in a simulation. This allows for the high flexibility that is needed to keep a decent time-to-solution for complex multi-physics scenarios.")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Precise Code Interaction Coupling Environment")
-set(CPACK_PACKAGE_EXECUTABLES "testprecice;binprecice")
+set(CPACK_PACKAGE_EXECUTABLES "testprecice;precice-tools")
 set(CPACK_PACKAGE_HOMEPAGE_URL "www.precice.org")
 #set(CPACK_PACKAGE_ICON "")
 set(CPACK_PACKAGE_CHECKSUM "SHA256")
@@ -58,7 +58,7 @@ set(CPACK_SOURCE_IGNORE_FILES
   ".gitignore"
   )
 
-# Build dependecy set
+# Build dependency set
 unset(CPACK_DEBIAN_PACKAGE_DEPENDS)
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6, libboost-dev (>= 1.65), libboost-log-dev (>= 1.65), libboost-thread-dev (>= 1.65), libboost-system-dev (>= 1.65), libboost-filesystem-dev (>= 1.65), libboost-program-options-dev (>= 1.65), libboost-test-dev (>= 1.65), libxml2")
 if(PRECICE_PythonActions)
@@ -93,7 +93,7 @@ install(FILES tools/releasing/packaging/debian/copyright
 
 # Install lintian override
 file(WRITE "${PRECICE_PACKAGING_DIR}/lintian-override" "${CPACK_PACKAGE_NAME} binary: non-dev-pkg-with-shlib-symlink")
-install(FILES "${PRECICE_PACKAGING_DIR}/lintian-override" 
+install(FILES "${PRECICE_PACKAGING_DIR}/lintian-override"
   DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/lintian/overrides
   RENAME ${CPACK_PACKAGE_NAME}
   )

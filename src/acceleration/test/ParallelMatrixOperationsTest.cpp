@@ -15,7 +15,7 @@
 #include "com/SharedPointer.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 
 BOOST_AUTO_TEST_SUITE(AccelerationTests)
 
@@ -46,7 +46,7 @@ void validate_result_equals_reference(
 
 BOOST_AUTO_TEST_CASE(ParVectorOperations)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   int              n_global = 10;
   int              n_local;
   double           a = 0;
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(ParVectorOperations)
 
   // <vec1, vec2> = 7.069617899295469
 
-  if (context.isMaster()) {
+  if (context.isPrimary()) {
     n_local = 3;
     a       = 1;
   } else if (context.isRank(1)) {
@@ -106,19 +106,19 @@ BOOST_AUTO_TEST_CASE(ParVectorOperations)
   int    iaa   = (int) a;
   int    ires1 = 0, ires2 = 0;
 
-  utils::MasterSlave::allreduceSum(a, res1);
-  utils::MasterSlave::allreduceSum(iaa, ires2);
-  utils::MasterSlave::allreduceSum(aa, res2);
+  utils::IntraComm::allreduceSum(a, res1);
+  utils::IntraComm::allreduceSum(iaa, ires2);
+  utils::IntraComm::allreduceSum(aa, res2);
 
-  utils::MasterSlave::reduceSum(aa, res3);
-  utils::MasterSlave::reduceSum(iaa, ires1);
+  utils::IntraComm::reduceSum(aa, res3);
+  utils::IntraComm::reduceSum(iaa, ires1);
 
   BOOST_TEST(testing::equals(res1, 10.));
   BOOST_TEST(testing::equals(ires2, 10));
   BOOST_TEST(testing::equals(res2.at(0), 10.));
   BOOST_TEST(testing::equals(res2.at(1), 10.));
 
-  if (utils::MasterSlave::isMaster()) {
+  if (utils::IntraComm::isPrimary()) {
     BOOST_TEST(testing::equals(res3.at(0), 10.));
     BOOST_TEST(testing::equals(res3.at(1), 10.));
     BOOST_TEST(testing::equals(ires1, 10));
@@ -135,9 +135,9 @@ BOOST_AUTO_TEST_CASE(ParVectorOperations)
     vec2_local(i) = vec2(i + off);
   }
 
-  double normVec1   = utils::MasterSlave::l2norm(vec1_local);
-  double normVec2   = utils::MasterSlave::l2norm(vec2_local);
-  double dotproduct = utils::MasterSlave::dot(vec1_local, vec2_local);
+  double normVec1   = utils::IntraComm::l2norm(vec1_local);
+  double normVec2   = utils::IntraComm::l2norm(vec2_local);
+  double dotproduct = utils::IntraComm::dot(vec1_local, vec2_local);
 
   //  std::cout<<"l2norm vec1: "<<normVec1<<'\n';
   //  std::cout<<"l2norm vec2: "<<normVec2<<'\n';
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(ParVectorOperations)
 
 BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOp)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
 
   int              n_global = 10, m_global = 5;
   int              n_local;
@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOp)
       1.803781441584700,
       1.462976489192458;
 
-  if (context.isMaster()) {
+  if (context.isPrimary()) {
     n_local = 3;
   } else if (context.isRank(1)) {
     n_local = 4;

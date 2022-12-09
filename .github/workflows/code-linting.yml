@@ -1,0 +1,34 @@
+name: Code linting
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    paths:
+      - 'cmake/**'
+      - 'examples/**'
+      - 'src/**'
+      - 'thirdparty/**'
+      - '.github/workflows/code-linting.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{github.event_name == 'pull_request'}}
+
+jobs:
+  clang-tidy:
+    runs-on: ubuntu-latest
+    container: 'precice/ci-ubuntu-2204:latest'
+    steps:
+      - uses: actions/checkout@v3
+      - name: fetch clang
+        run: apt update && apt install -y clang && apt install -y clang-tidy
+      - name: run clang-tidy
+        run: tools/linting/run_clang_tidy.sh
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: clang-tidy.log
+          path: _clang-tidy/clang-tidy.log

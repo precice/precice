@@ -7,7 +7,6 @@
 #include <stddef.h>
 #include <string>
 #include <thread>
-#include <vector>
 
 #include "com/Communication.hpp"
 #include "com/SharedPointer.hpp"
@@ -73,8 +72,6 @@ public:
   /// Asynchronously sends an array of double values.
   virtual PtrRequest aSend(precice::span<const double> itemsToSend, Rank rankReceiver) override;
 
-  virtual PtrRequest aSend(std::vector<double> const &itemsToSend, Rank rankReceiver) override;
-
   /// Sends a double to process with given rank.
   virtual void send(double itemToSend, Rank rankReceiver) override;
 
@@ -86,8 +83,6 @@ public:
 
   /// Asynchronously sends an int to process with given rank.
   virtual PtrRequest aSend(const int &itemToSend, Rank rankReceiver) override;
-
-  virtual PtrRequest aSend(std::vector<int> const &itemsToSend, int rankReceiver) override;
 
   /// Sends a bool to process with given rank.
   virtual void send(bool itemToSend, Rank rankReceiver) override;
@@ -108,8 +103,6 @@ public:
   virtual PtrRequest aReceive(precice::span<double> itemsToReceive,
                               int                   rankSender) override;
 
-  virtual PtrRequest aReceive(std::vector<double> &itemsToReceive, Rank rankSender) override;
-
   /// Receives a double from process with given rank.
   virtual void receive(double &itemToReceive, Rank rankSender) override;
 
@@ -127,12 +120,6 @@ public:
 
   /// Asynchronously receives a bool from process with given rank.
   virtual PtrRequest aReceive(bool &itemToReceive, Rank rankSender) override;
-
-  void send(std::vector<int> const &v, Rank rankReceiver) override;
-  void receive(std::vector<int> &v, Rank rankSender) override;
-
-  void send(std::vector<double> const &v, Rank rankReceiver) override;
-  void receive(std::vector<double> &v, Rank rankSender) override;
 
   virtual void prepareEstablishment(std::string const &acceptorName,
                                     std::string const &requesterName) override;

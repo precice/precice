@@ -48,8 +48,6 @@ target_sources(precice
     src/action/RecorderAction.hpp
     src/action/ScaleByAreaAction.cpp
     src/action/ScaleByAreaAction.hpp
-    src/action/ScaleByDtAction.cpp
-    src/action/ScaleByDtAction.hpp
     src/action/SharedPointer.hpp
     src/action/SummationAction.cpp
     src/action/SummationAction.hpp
@@ -125,6 +123,8 @@ target_sources(precice
     src/cplscheme/impl/ResidualRelativeConvergenceMeasure.hpp
     src/cplscheme/impl/SharedPointer.hpp
     src/io/Export.hpp
+    src/io/ExportCSV.cpp
+    src/io/ExportCSV.hpp
     src/io/ExportContext.hpp
     src/io/ExportVTK.cpp
     src/io/ExportVTK.hpp
@@ -169,8 +169,16 @@ target_sources(precice
     src/m2n/SharedPointer.hpp
     src/m2n/config/M2NConfiguration.cpp
     src/m2n/config/M2NConfiguration.hpp
+    src/mapping/BarycentricBaseMapping.cpp
+    src/mapping/BarycentricBaseMapping.hpp
+    src/mapping/LinearCellInterpolationMapping.cpp
+    src/mapping/LinearCellInterpolationMapping.hpp
     src/mapping/Mapping.cpp
     src/mapping/Mapping.hpp
+    src/mapping/NearestNeighborBaseMapping.cpp
+    src/mapping/NearestNeighborBaseMapping.hpp
+    src/mapping/NearestNeighborGradientMapping.cpp
+    src/mapping/NearestNeighborGradientMapping.hpp
     src/mapping/NearestNeighborMapping.cpp
     src/mapping/NearestNeighborMapping.hpp
     src/mapping/NearestProjectionMapping.cpp
@@ -178,7 +186,9 @@ target_sources(precice
     src/mapping/PetRadialBasisFctMapping.hpp
     src/mapping/Polation.cpp
     src/mapping/Polation.hpp
+    src/mapping/RadialBasisFctBaseMapping.hpp
     src/mapping/RadialBasisFctMapping.hpp
+    src/mapping/RadialBasisFctSolver.hpp
     src/mapping/SharedPointer.hpp
     src/mapping/config/MappingConfiguration.cpp
     src/mapping/config/MappingConfiguration.hpp
@@ -202,6 +212,8 @@ target_sources(precice
     src/mesh/Mesh.hpp
     src/mesh/RangeAccessor.hpp
     src/mesh/SharedPointer.hpp
+    src/mesh/Tetrahedron.cpp
+    src/mesh/Tetrahedron.hpp
     src/mesh/Triangle.cpp
     src/mesh/Triangle.hpp
     src/mesh/Utils.cpp
@@ -237,6 +249,8 @@ target_sources(precice
     src/precice/impl/MeshContext.hpp
     src/precice/impl/Participant.cpp
     src/precice/impl/Participant.hpp
+    src/precice/impl/ReadDataContext.cpp
+    src/precice/impl/ReadDataContext.hpp
     src/precice/impl/SharedPointer.hpp
     src/precice/impl/SolverInterfaceImpl.cpp
     src/precice/impl/SolverInterfaceImpl.hpp
@@ -245,12 +259,19 @@ target_sources(precice
     src/precice/impl/WatchIntegral.hpp
     src/precice/impl/WatchPoint.cpp
     src/precice/impl/WatchPoint.hpp
+    src/precice/impl/WriteDataContext.cpp
+    src/precice/impl/WriteDataContext.hpp
     src/precice/types.hpp
     src/query/Index.cpp
     src/query/Index.hpp
-    src/query/impl/Indexer.cpp
-    src/query/impl/Indexer.hpp
     src/query/impl/RTreeAdapter.hpp
+    src/time/SharedPointer.hpp
+    src/time/Storage.cpp
+    src/time/Storage.hpp
+    src/time/Time.cpp
+    src/time/Time.hpp
+    src/time/Waveform.cpp
+    src/time/Waveform.hpp
     src/utils/ArgumentFormatter.hpp
     src/utils/Dimensions.cpp
     src/utils/Dimensions.hpp
@@ -263,17 +284,17 @@ target_sources(precice
     src/utils/EventUtils.hpp
     src/utils/Helpers.cpp
     src/utils/Helpers.hpp
+    src/utils/IntraComm.cpp
+    src/utils/IntraComm.hpp
+    src/utils/MPIResult.hpp
     src/utils/MPI_Mock.hpp
     src/utils/ManageUniqueIDs.cpp
     src/utils/ManageUniqueIDs.hpp
-    src/utils/MasterSlave.cpp
-    src/utils/MasterSlave.hpp
     src/utils/MultiLock.hpp
     src/utils/Parallel.cpp
     src/utils/Parallel.hpp
     src/utils/Petsc.cpp
     src/utils/Petsc.hpp
-    src/utils/PointerVector.hpp
     src/utils/Statistics.hpp
     src/utils/String.cpp
     src/utils/String.hpp
@@ -308,6 +329,7 @@ target_sources(precice
 #
 
 set_property(TARGET precice PROPERTY PUBLIC_HEADER
+    ${CMAKE_BINARY_DIR}/src/precice/Version.h
     src/precice/SolverInterface.hpp
     src/precice/Tooling.hpp
     src/precice/types.hpp

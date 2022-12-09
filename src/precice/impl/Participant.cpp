@@ -1,14 +1,15 @@
 #include "Participant.hpp"
 #include <algorithm>
 #include <ostream>
+#include <string>
 #include <utility>
 
-#include "DataContext.hpp"
 #include "MappingContext.hpp"
 #include "MeshContext.hpp"
 #include "WatchIntegral.hpp"
 #include "WatchPoint.hpp"
 #include "action/Action.hpp"
+#include "io/Export.hpp"
 #include "logging/LogMacros.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
@@ -18,16 +19,15 @@
 #include "precice/types.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "utils/assertion.hpp"
+#include "utils/fmt.hpp"
 
-namespace precice {
-namespace impl {
+namespace precice::impl {
 
 Participant::Participant(
     std::string                 name,
     mesh::PtrMeshConfiguration &meshConfig)
     : _name(std::move(name)),
-      _meshContexts(meshConfig->meshes().size(), nullptr),
-      _dataContexts(meshConfig->getDataConfiguration()->data().size() * meshConfig->meshes().size(), nullptr)
+      _meshContexts(meshConfig->meshes().size(), nullptr)
 {
 }
 
@@ -37,10 +37,6 @@ Participant::~Participant()
     delete context;
   }
   _usedMeshContexts.clear();
-  _readDataContexts.deleteElements();
-  _writeDataContexts.deleteElements();
-  _readMappingContexts.deleteElements();
-  _writeMappingContexts.deleteElements();
 }
 
 /// Configuration interface
@@ -52,9 +48,9 @@ void Participant::addAction(action::PtrAction &&action)
   _actions.push_back(std::move(action));
 }
 
-void Participant::setUseMaster(bool useMaster)
+void Participant::setUsePrimaryRank(bool useIntraComm)
 {
-  _useMaster = useMaster;
+  _useIntraComm = useIntraComm;
 }
 
 void Participant::addWatchPoint(
@@ -106,71 +102,66 @@ void Participant::addWriteData(
     const mesh::PtrData &data,
     const mesh::PtrMesh &mesh)
 {
-  checkDuplicatedData(data);
-  PRECICE_ASSERT(data->getID() < (int) _dataContexts.size());
-  auto context                 = new DataContext(data, mesh);
-  _dataContexts[data->getID()] = context;
-  _writeDataContexts.push_back(context);
+  checkDuplicatedData(data, mesh->getName());
+  _writeDataContexts.emplace(data->getID(), WriteDataContext(data, mesh));
 }
 
 void Participant::addReadData(
     const mesh::PtrData &data,
-    const mesh::PtrMesh &mesh)
+    const mesh::PtrMesh &mesh,
+    int                  interpolationOrder)
 {
-  checkDuplicatedData(data);
-  PRECICE_ASSERT(data->getID() < (int) _dataContexts.size());
-  auto context                 = new DataContext(data, mesh);
-  _dataContexts[data->getID()] = context;
-  _readDataContexts.push_back(context);
+  checkDuplicatedData(data, mesh->getName());
+  _readDataContexts.emplace(data->getID(), ReadDataContext(data, mesh, interpolationOrder));
 }
 
 void Participant::addReadMappingContext(
-    MappingContext *mappingContext)
+    const MappingContext &mappingContext)
 {
   _readMappingContexts.push_back(mappingContext);
 }
 
 void Participant::addWriteMappingContext(
-    MappingContext *mappingContext)
+    const MappingContext &mappingContext)
 {
   _writeMappingContexts.push_back(mappingContext);
 }
 
 // Data queries
-
-const DataContext &Participant::dataContext(DataID dataID) const
+const ReadDataContext &Participant::readDataContext(DataID dataID) const
 {
-  PRECICE_ASSERT((dataID >= 0) && (dataID < (int) _dataContexts.size()));
-  PRECICE_ASSERT(_dataContexts[dataID] != nullptr);
-  return *_dataContexts[dataID];
+  auto it = _readDataContexts.find(dataID);
+  PRECICE_CHECK(it != _readDataContexts.end(), "DataID does not exist.")
+  return it->second;
 }
 
-DataContext &Participant::dataContext(DataID dataID)
+ReadDataContext &Participant::readDataContext(DataID dataID)
 {
-  PRECICE_TRACE(dataID, _dataContexts.size());
-  PRECICE_ASSERT((dataID >= 0) && (dataID < (int) _dataContexts.size()));
-  PRECICE_ASSERT(_dataContexts[dataID] != nullptr);
-  return *_dataContexts[dataID];
+  auto it = _readDataContexts.find(dataID);
+  PRECICE_CHECK(it != _readDataContexts.end(), "DataID does not exist.")
+  return it->second;
 }
 
-const utils::ptr_vector<DataContext> &Participant::writeDataContexts() const
+ReadDataContext &Participant::readDataContext(const std::string &dataName)
 {
-  return _writeDataContexts;
+  auto dataContext = std::find_if(readDataContexts().begin(), readDataContexts().end(), [&dataName](const auto &d) { return d.getDataName() == dataName; });
+  PRECICE_ASSERT(dataContext != readDataContexts().end(), "Did not find read data \"{}\".", dataName);
+
+  return *dataContext;
 }
 
-utils::ptr_vector<DataContext> &Participant::writeDataContexts()
+const WriteDataContext &Participant::writeDataContext(DataID dataID) const
 {
-  return _writeDataContexts;
+  auto it = _writeDataContexts.find(dataID);
+  PRECICE_CHECK(it != _writeDataContexts.end(), "DataID \"{}\" does not exist in write direction.", dataID)
+  return it->second;
 }
 
-const utils::ptr_vector<DataContext> &Participant::readDataContexts() const
+WriteDataContext &Participant::writeDataContext(DataID dataID)
 {
-  return _readDataContexts;
-}
-
-utils::ptr_vector<DataContext> &Participant::readDataContexts()
-{
-  return _readDataContexts;
+  auto it = _writeDataContexts.find(dataID);
+  PRECICE_CHECK(it != _writeDataContexts.end(), "DataID \"{}\" does not exist in write direction.", dataID)
+  return it->second;
 }
 
 bool Participant::hasData(DataID dataID) const
@@ -195,24 +186,14 @@ bool Participant::isDataUsed(const std::string &dataName, MeshID meshID) const
   return match != meshData.end();
 }
 
-bool Participant::isDataUsed(DataID dataID) const
-{
-  PRECICE_ASSERT((dataID >= 0) && (dataID < (int) _dataContexts.size()), dataID, (int) _dataContexts.size());
-  return _dataContexts[dataID] != nullptr;
-}
-
 bool Participant::isDataRead(DataID dataID) const
 {
-  return std::any_of(_readDataContexts.begin(), _readDataContexts.end(), [dataID](const DataContext &context) {
-    return context.getProvidedDataID() == dataID;
-  });
+  return _readDataContexts.count(dataID) > 0;
 }
 
 bool Participant::isDataWrite(DataID dataID) const
 {
-  return std::any_of(_writeDataContexts.begin(), _writeDataContexts.end(), [dataID](const DataContext &context) {
-    return context.getProvidedDataID() == dataID;
-  });
+  return _writeDataContexts.count(dataID) > 0;
 }
 
 int Participant::getUsedDataID(const std::string &dataName, MeshID meshID) const
@@ -375,12 +356,12 @@ std::string Participant::getMeshNameFromData(DataID dataID) const
 
 // Other queries
 
-const utils::ptr_vector<MappingContext> &Participant::readMappingContexts() const
+std::vector<MappingContext> &Participant::readMappingContexts()
 {
   return _readMappingContexts;
 }
 
-const utils::ptr_vector<MappingContext> &Participant::writeMappingContexts() const
+std::vector<MappingContext> &Participant::writeMappingContexts()
 {
   return _writeMappingContexts;
 }
@@ -416,14 +397,77 @@ std::vector<PtrWatchIntegral> &Participant::watchIntegrals()
   return _watchIntegrals;
 }
 
-bool Participant::useMaster() const
+bool Participant::useIntraComm() const
 {
-  return _useMaster;
+  return _useIntraComm;
 }
 
 const std::string &Participant::getName() const
 {
   return _name;
+}
+
+void Participant::exportInitial()
+{
+  for (const io::ExportContext &context : exportContexts()) {
+    if (context.everyNTimeWindows < 1) {
+      continue;
+    }
+
+    for (const MeshContext *meshContext : usedMeshContexts()) {
+      auto &mesh = *meshContext->mesh;
+      PRECICE_DEBUG("Exporting initial mesh {} to location \"{}\"", mesh.getName(), context.location);
+      context.exporter->doExport(fmt::format("{}-{}.init", mesh.getName(), getName()), context.location, mesh);
+    }
+  }
+}
+
+void Participant::exportFinal()
+{
+  for (const io::ExportContext &context : exportContexts()) {
+    if (context.everyNTimeWindows < 1) {
+      continue;
+    }
+
+    for (const MeshContext *meshContext : usedMeshContexts()) {
+      auto &mesh = *meshContext->mesh;
+      PRECICE_DEBUG("Exporting final mesh {} to location \"{}\"", mesh.getName(), context.location);
+      context.exporter->doExport(fmt::format("{}-{}.final", mesh.getName(), getName()), context.location, mesh);
+    }
+  }
+}
+
+void Participant::exportIntermediate(IntermediateExport exp)
+{
+  for (const io::ExportContext &context : exportContexts()) {
+    if (exp.complete && (context.everyNTimeWindows > 0) && (exp.timewindow % context.everyNTimeWindows == 0)) {
+      for (const MeshContext *meshContext : usedMeshContexts()) {
+        auto &mesh = *meshContext->mesh;
+        PRECICE_DEBUG("Exporting mesh {} for timewindow {} to location \"{}\"", mesh.getName(), exp.timewindow, context.location);
+        context.exporter->doExport(fmt::format("{}-{}.dt{}", mesh.getName(), getName(), exp.timewindow), context.location, mesh);
+      }
+    }
+
+    if (context.everyIteration) {
+      for (const MeshContext *meshContext : usedMeshContexts()) {
+        auto &mesh = *meshContext->mesh;
+        PRECICE_DEBUG("Exporting mesh {} for iteration {} to location \"{}\"", meshContext->mesh->getName(), exp.iteration, context.location);
+        /// @todo this is the global iteration count. Shouldn't this be local to the timestep? example .dtN.itM or similar
+        context.exporter->doExport(fmt::format("{}-{}.it{}", mesh.getName(), getName(), exp.iteration), context.location, mesh);
+      }
+    }
+  }
+
+  if (exp.complete) {
+    // Export watch point data
+    for (const PtrWatchPoint &watchPoint : watchPoints()) {
+      watchPoint->exportPointData(exp.time);
+    }
+
+    for (const PtrWatchIntegral &watchIntegral : watchIntegrals()) {
+      watchIntegral->exportIntegralData(exp.time);
+    }
+  }
 }
 
 // private
@@ -437,15 +481,12 @@ void Participant::checkDuplicatedUse(const mesh::PtrMesh &mesh)
                 mesh->getName(), _name, mesh->getName());
 }
 
-void Participant::checkDuplicatedData(const mesh::PtrData &data)
+void Participant::checkDuplicatedData(const mesh::PtrData &data, const std::string &meshName)
 {
-  PRECICE_TRACE(data->getID(), _dataContexts.size());
-  PRECICE_ASSERT(data->getID() < (int) _dataContexts.size(), data->getID(), _dataContexts.size());
-  PRECICE_CHECK(_dataContexts[data->getID()] == nullptr,
-                "Participant \"{}\" can read/write data \"{}\" only once. "
+  PRECICE_CHECK(!isDataWrite(data->getID()) && !isDataRead(data->getID()),
+                "Participant \"{}\" can read/write data \"{}\" from/to mesh \"{}\" only once. "
                 "Please remove any duplicate instances of write-data/read-data nodes.",
-                _name, data->getName());
+                _name, meshName, data->getName());
 }
 
-} // namespace impl
-} // namespace precice
+} // namespace precice::impl

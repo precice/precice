@@ -72,7 +72,6 @@ private:
 
   const std::string TAG;
   const std::string ATTR_NAME;
-  const std::string ATTR_FLIP_NORMALS;
   const std::string TAG_DATA;
   const std::string ATTR_SIDE_INDEX;
 
@@ -88,6 +87,8 @@ private:
   std::map<std::string, std::vector<std::string>> _neededMeshes;
 
   std::unique_ptr<utils::ManageUniqueIDs> _meshIdManager;
+
+  utils::ManageUniqueIDs _dataIDManager;
 };
 
 } // namespace mesh

@@ -9,76 +9,9 @@
 #include "utils/Helpers.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace math {
-namespace geometry {
+namespace precice::math::geometry {
 
 logging::Logger _log("math::geometry");
-
-bool segmentsIntersect(
-    const Eigen::Ref<const Eigen::Vector2d> &a,
-    const Eigen::Ref<const Eigen::Vector2d> &b,
-    const Eigen::Ref<const Eigen::Vector2d> &c,
-    const Eigen::Ref<const Eigen::Vector2d> &d,
-    bool                                     countTouchingAsIntersection)
-{
-  PRECICE_ASSERT(a.size() == 2, a.size());
-  PRECICE_ASSERT(b.size() == 2, b.size());
-  PRECICE_ASSERT(c.size() == 2, c.size());
-  PRECICE_ASSERT(d.size() == 2, d.size());
-
-  if (countTouchingAsIntersection) {
-    if (between(a, b, c)) {
-      return true;
-    } else if (between(a, b, d)) {
-      return true;
-    } else if (between(c, d, a)) {
-      return true;
-    } else if (between(c, d, b)) {
-      return true;
-    }
-  }
-
-  double abc = triangleArea(a, b, c);
-  double abd = triangleArea(a, b, d);
-  double cda = triangleArea(c, d, a);
-  double cdb = triangleArea(c, d, b);
-
-  double circABC = (a - b).norm() + (b - c).norm() + (c - a).norm();
-  double circABD = (a - b).norm() + (b - d).norm() + (d - a).norm();
-  double circCDA = (c - d).norm() + (d - a).norm() + (a - c).norm();
-  double circCDB = (c - d).norm() + (d - b).norm() + (b - c).norm();
-
-  abc /= circABC;
-  abd /= circABD;
-  cda /= circCDA;
-  cdb /= circCDB;
-
-  // Check, if one point lies on line defined by segment and the other not (-> xor).
-  // If true, either one point is between, which means the segments are
-  // touching only, or the segments are neither touching nor intersecting
-  // (-> false). This case of touching segments is detected in the beginning
-  // of this function, if countTouchingAsIntersection is true. Otherwise,
-  // it should not be counted (-> false).
-  using utils::xOR;
-
-  if (xOR(std::abs(abc) <= math::NUMERICAL_ZERO_DIFFERENCE,
-          std::abs(abd) <= math::NUMERICAL_ZERO_DIFFERENCE)) {
-    return false;
-  }
-  if (xOR(std::abs(cda) <= math::NUMERICAL_ZERO_DIFFERENCE,
-          std::abs(cdb) <= math::NUMERICAL_ZERO_DIFFERENCE)) {
-    return false;
-  }
-
-  // Check, whether the segments are intersecting in the real sense.
-  bool isFirstSegmentBetween  = xOR(abc > -math::NUMERICAL_ZERO_DIFFERENCE,
-                                   abd > -math::NUMERICAL_ZERO_DIFFERENCE);
-  bool isSecondSegmentBetween = xOR(cda > -math::NUMERICAL_ZERO_DIFFERENCE,
-                                    cdb > -math::NUMERICAL_ZERO_DIFFERENCE);
-
-  return isFirstSegmentBetween && isSecondSegmentBetween;
-}
 
 bool lineIntersection(
     const Eigen::Ref<const Eigen::Vector2d> &a,
@@ -120,7 +53,7 @@ ResultConstants segmentPlaneIntersection(
   double d = pointOnPlane.dot(planeNormal);
 
   // The segment is represented by:
-  // firstPointSegment + (secondPointSegment - firstPointSegement) * t (2)
+  // firstPointSegment + (secondPointSegment - firstPointSegment) * t (2)
   // We insert (2) into (1) and reorder for t. The resulting equations reads
   // t = (d - firstPointSegment dot planeNormal) /
   //     ((secondPointSegment - firstPointSegment) dot planeNormal). (3)
@@ -169,7 +102,7 @@ double triangleArea(
     A -= a;
     Eigen::Vector2d B = c;
     B -= a;
-    return 0.5 * (A(0) * B(1) - A(1) * B(0));
+    return 0.5 * std::fabs(A(0) * B(1) - A(1) * B(0));
   } else {
     PRECICE_ASSERT(a.size() == 3, a.size());
     Eigen::Vector3d A = b;
@@ -205,47 +138,6 @@ Eigen::Vector2d projectVector(
     reducedDim++;
   }
   return projectedVector;
-}
-
-int containedInTriangle(
-    const Eigen::Vector2d &triangleVertex0,
-    const Eigen::Vector2d &triangleVertex1,
-    const Eigen::Vector2d &triangleVertex2,
-    const Eigen::Vector2d &testPoint)
-{
-  double area0 = triangleArea(triangleVertex0, triangleVertex1, testPoint);
-  double area1 = triangleArea(triangleVertex1, triangleVertex2, testPoint);
-  double area2 = triangleArea(triangleVertex2, triangleVertex0, testPoint);
-
-  double length01 = (triangleVertex0 - triangleVertex1).norm();
-  double length12 = (triangleVertex1 - triangleVertex2).norm();
-  double length20 = (triangleVertex2 - triangleVertex0).norm();
-  double length1t = (triangleVertex1 - testPoint).norm();
-  double length2t = (triangleVertex2 - testPoint).norm();
-  double length0t = (triangleVertex0 - testPoint).norm();
-  double scale0   = length01 + length1t + length0t;
-  double scale1   = length12 + length2t + length1t;
-  double scale2   = length20 + length0t + length2t;
-  area0 /= scale0;
-  area1 /= scale1;
-  area2 /= scale2;
-
-  int sign0       = math::sign(area0);
-  int sign1       = math::sign(area1);
-  int sign2       = math::sign(area2);
-  int absSumSigns = std::abs(sign0 + sign1 + sign2);
-  if (absSumSigns == 3) {
-    // In triangle
-    return CONTAINED;
-  } else if (absSumSigns == 2) {
-    // On triangle edge
-    return TOUCHING;
-  } else if (std::abs(sign0) + std::abs(sign1) + std::abs(sign2) == 1) {
-    // On triangle vertex
-    return TOUCHING;
-  }
-  // Outside of triangle
-  return NOT_CONTAINED;
 }
 
 ConvexityResult isConvexQuad(std::array<Eigen::VectorXd, 4> coords)
@@ -326,6 +218,4 @@ ConvexityResult isConvexQuad(std::array<Eigen::VectorXd, 4> coords)
   return result;
 }
 
-} // namespace geometry
-} // namespace math
-} // namespace precice
+} // namespace precice::math::geometry

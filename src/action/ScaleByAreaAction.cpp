@@ -10,8 +10,7 @@
 #include "mesh/Vertex.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace action {
+namespace precice::action {
 
 ScaleByAreaAction::ScaleByAreaAction(
     Timing               timing,
@@ -24,11 +23,7 @@ ScaleByAreaAction::ScaleByAreaAction(
 {
 }
 
-void ScaleByAreaAction::performAction(
-    double time,
-    double timeStepSize,
-    double computedTimeWindowPart,
-    double timeWindowSize)
+void ScaleByAreaAction::performAction(double time)
 {
   PRECICE_TRACE();
   const int       meshDimensions  = getMesh()->getDimensions();
@@ -70,5 +65,4 @@ void ScaleByAreaAction::performAction(
   }
 }
 
-} // namespace action
-} // namespace precice
+} // namespace precice::action

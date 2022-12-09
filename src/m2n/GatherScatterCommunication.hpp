@@ -13,8 +13,8 @@ namespace m2n {
 
 /**
  * @brief Implements DistributedCommunication by using a gathering/scattering methodology.
- * Arrays of data are always gathered and scattered at the master. No direct communication
- * between slaves is used.
+ * Arrays of data are always gathered and scattered at the primary. No direct communication
+ * between secondary ranks is used.
  * For more details see m2n/DistributedCommunication.hpp
  */
 class GatherScatterCommunication : public DistributedCommunication {
@@ -71,8 +71,8 @@ public:
       std::string const &acceptorName,
       std::string const &requesterName) override;
 
-  /// Completes the slaves connections for both acceptor and requester by updating the vertex list in _mappings
-  void completeSlavesConnection() override;
+  /// Completes the secondary connections for both acceptor and requester by updating the vertex list in _mappings
+  void completeSecondaryRanksConnection() override;
 
   /**
    * @brief Disconnects from communication space, i.e. participant.
@@ -81,14 +81,14 @@ public:
    */
   void closeConnection() override;
 
-  /// Sends an array of double values from all slaves (different for each slave).
+  /// Sends an array of double values from all ranks (different for each rank).
   void send(precice::span<double const> itemsToSend, int valueDimension) override;
 
-  /// All slaves receive an array of doubles (different for each slave).
+  /// All ranks receive an array of doubles (different for each rank).
   void receive(precice::span<double> itemsToReceive, int valueDimension) override;
 
   /// Broadcasts an int to connected ranks on remote participant. Not available for GatherScatterCommunication.
-  void broadcastSend(const int &itemToSend) override;
+  void broadcastSend(int itemToSend) override;
 
   /**
    * @brief Receives an int per connected rank on remote participant. Not available for GatherScatterCommunication.
@@ -111,7 +111,7 @@ public:
 private:
   logging::Logger _log{"m2n::GatherScatterCommunication"};
 
-  /// master to master basic communication
+  /// primary to primary basic communication
   com::PtrCommunication _com;
 
   /// Global communication is set up or not

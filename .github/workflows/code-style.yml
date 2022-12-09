@@ -1,17 +1,30 @@
-name: code-style
+name: Code Style
 on:
   pull_request:
     paths:
       - '**.[ch]pp'
       - '**.[ch]'
       - '**.xml'
+      - '.github/**'
 
 jobs:
   formatting:
     runs-on: ubuntu-latest
-    container: precice/ci-formatting:latest
     steps:
       - name: Checkout preCICE
-        uses: actions/checkout@v2
-      - name: Check formatting
-        run: tools/formatting/check-format
+        uses: actions/checkout@v3
+      - name: Setup python
+        uses: actions/setup-python@v4
+        with:
+         python-version: '3.10'
+         check-latest: true
+      - name: Install pre-commit
+        run: pip install pre-commit
+      - name: Run checks
+        run: pre-commit run -a -v
+      - name: Git status
+        if: always()
+        run: git status
+      - name: Full diff
+        if: always()
+        run: git diff

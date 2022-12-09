@@ -17,7 +17,7 @@ class Extrapolation {
   friend class testing::ExtrapolationFixture; // Make the fixture friend of this class
 public:
   /**
-   * @brief Extrapolation object which stores values of current and past time windows for performing extrapolation. 
+   * @brief Extrapolation object which stores values of current and past time windows for performing extrapolation.
    *
    * Storage still needs to be initialized with Extrapolation::initialize, before the Extrapolation can be used.
    *
@@ -58,7 +58,7 @@ private:
   int _extrapolationOrder; // @todo make const! Possible, if extrapolation order is set at configuration of data.
 
   /// number of stored samples in _timeWindowsStorage
-  int _numberOfStoredSamples;
+  int _numberOfStoredSamples = 0;
 
   mutable logging::Logger _log{"cplscheme::Extrapolation"};
 
@@ -73,8 +73,8 @@ private:
   int valuesSize();
 
   /**
-   * @brief Extrapolates values from _timeWindowsStorage using an extrapolation scheme of given order. 
-   * 
+   * @brief Extrapolates values from _timeWindowsStorage using an extrapolation scheme of given order.
+   *
    * If the order condition cannot be satisfied, since there are not enough samples available, the order is automatically reduced.
    * If order two is required, but only two samples are available, the extrapolation order is automatically reduced to one.
    */

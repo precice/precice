@@ -9,8 +9,7 @@
 #include "utils/assertion.hpp"
 #include "xml/XMLTag.hpp"
 
-namespace precice {
-namespace com {
+namespace precice::com {
 PtrCommunication CommunicationConfiguration::createCommunication(
     const xml::XMLTag &tag) const
 {
@@ -46,5 +45,4 @@ PtrCommunication CommunicationConfiguration::createCommunication(
   return com;
 }
 
-} // namespace com
-} // namespace precice
+} // namespace precice::com

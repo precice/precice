@@ -5,8 +5,7 @@
 #include "cplscheme/BiCouplingScheme.hpp"
 #include "logging/LogMacros.hpp"
 
-namespace precice {
-namespace cplscheme {
+namespace precice::cplscheme {
 
 ParallelCouplingScheme::ParallelCouplingScheme(
     double                        maxTime,
@@ -24,39 +23,11 @@ ParallelCouplingScheme::ParallelCouplingScheme(
     : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
                        secondParticipant, localParticipant, std::move(m2n), maxIterations, cplMode, dtMethod, extrapolationOrder) {}
 
-void ParallelCouplingScheme::initializeImplementation()
-{
-  determineInitialSend(getSendData());
-  determineInitialReceive(getReceiveData());
-}
-
-void ParallelCouplingScheme::exchangeInitialData()
-{
-  // F: send, receive, S: receive, send
-  if (doesFirstStep()) {
-    if (sendsInitializedData()) {
-      sendData(getM2N(), getSendData());
-    }
-    if (receivesInitializedData()) {
-      receiveData(getM2N(), getReceiveData());
-      checkDataHasBeenReceived();
-    }
-  } else { // second participant
-    if (receivesInitializedData()) {
-      receiveData(getM2N(), getReceiveData());
-      checkDataHasBeenReceived();
-    }
-    if (sendsInitializedData()) {
-      sendData(getM2N(), getSendData());
-    }
-  }
-}
-
 bool ParallelCouplingScheme::exchangeDataAndAccelerate()
 {
   bool convergence = true;
 
-  if (doesFirstStep()) { //first participant
+  if (doesFirstStep()) { // first participant
     PRECICE_DEBUG("Sending data...");
     sendData(getM2N(), getSendData());
     PRECICE_DEBUG("Receiving data...");
@@ -65,7 +36,7 @@ bool ParallelCouplingScheme::exchangeDataAndAccelerate()
     }
     receiveData(getM2N(), getReceiveData());
     checkDataHasBeenReceived();
-  } else { //second participant
+  } else { // second participant
     PRECICE_DEBUG("Receiving data...");
     receiveData(getM2N(), getReceiveData());
     checkDataHasBeenReceived();
@@ -81,5 +52,4 @@ bool ParallelCouplingScheme::exchangeDataAndAccelerate()
   return convergence;
 }
 
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme

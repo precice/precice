@@ -2,24 +2,33 @@
 
 #include <Eigen/Core>
 #include <boost/test/unit_test.hpp>
+#include <limits>
 #include <string>
 #include <type_traits>
 #include "math/differences.hpp"
 #include "math/math.hpp"
 #include "testing/TestContext.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/ManageUniqueIDs.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace testing {
 
 namespace bt = boost::unit_test;
 
+constexpr DataID operator"" _dataID(unsigned long long n)
+{
+  PRECICE_ASSERT(n < std::numeric_limits<DataID>::max(), "DataID is too big");
+  return static_cast<DataID>(n);
+}
+
 namespace inject {
 using precice::testing::Require;
 using precice::testing::operator""_rank;
 using precice::testing::operator""_ranks;
 using precice::testing::operator""_on;
+using precice::testing::operator""_dataID;
 } // namespace inject
 
 #define PRECICE_TEST(...)                             \
@@ -28,7 +37,8 @@ using precice::testing::operator""_on;
   if (context.invalid) {                              \
     return;                                           \
   }                                                   \
-  BOOST_TEST_MESSAGE(context.describe());
+  BOOST_TEST_MESSAGE(context.describe());             \
+  boost::unit_test::framework::add_context(BOOST_TEST_LAZY_MSG(context.describe()), true);
 
 /// Boost.Test decorator that unconditionally deletes the test.
 class Deleted : public bt::decorator::base {
@@ -120,7 +130,7 @@ std::string getPathToTests();
 /// Returns the name of the current test.
 std::string getTestName();
 
-/// Returns the full path to the file containting the current test.
+/// Returns the full path to the file containing the current test.
 std::string getTestPath();
 
 /** Generates a new mesh id for use in tests.

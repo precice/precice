@@ -11,7 +11,7 @@ namespace com {
 namespace impl {
 /// Returns the file name for the connection information.
 /**
-   * It has the form first two letters from hash of 
+   * It has the form first two letters from hash of
    * (acceptorName, requesterName, mesh, rank)/rest of hash.
    */
 std::string hashedFilePath(const std::string &acceptorName, const std::string &requesterName, const std::string &meshName, Rank rank);

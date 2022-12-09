@@ -14,12 +14,10 @@
 #include "com/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
 #include "precice/types.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace acceleration {
-namespace impl {
+namespace precice::acceleration::impl {
 
 QRFactorization::QRFactorization(
     Eigen::MatrixXd Q,
@@ -227,7 +225,7 @@ bool QRFactorization::insertColumn(int k, const Eigen::VectorXd &vec, double sin
   Eigen::VectorXd u(_cols);
   double          rho_orth = 0., rho0 = 0.;
   if (applyFilter)
-    rho0 = utils::MasterSlave::l2norm(v);
+    rho0 = utils::IntraComm::l2norm(v);
 
   int err = orthogonalize(v, u, rho_orth, _cols - 1);
 
@@ -320,7 +318,7 @@ int QRFactorization::orthogonalize(
 {
   PRECICE_TRACE();
 
-  if (!utils::MasterSlave::isParallel()) {
+  if (!utils::IntraComm::isParallel()) {
     PRECICE_ASSERT(_globalRows == _rows, _globalRows, _rows);
   }
 
@@ -331,7 +329,7 @@ int QRFactorization::orthogonalize(
   Eigen::VectorXd s = Eigen::VectorXd::Zero(colNum);
   r                 = Eigen::VectorXd::Zero(_cols);
 
-  rho   = utils::MasterSlave::l2norm(v); // distributed l2norm
+  rho   = utils::IntraComm::l2norm(v); // distributed l2norm
   rho0  = rho;
   int k = 0;
   while (!termination) {
@@ -344,7 +342,7 @@ int QRFactorization::orthogonalize(
       Eigen::VectorXd Qc = _Q.col(j);
 
       // dot product <_Q(:,j), v> =: r_ij
-      double r_ij = utils::MasterSlave::dot(Qc, v);
+      double r_ij = utils::IntraComm::dot(Qc, v);
       // save r_ij in s(j) = column of R
       s(j) = r_ij;
       // u is the sum of projections r_ij * _Q(:,j) =  _Q(:,j) * <_Q(:,j), v>
@@ -359,14 +357,14 @@ int QRFactorization::orthogonalize(
       v(i) = v(i) - u(i);
     }
     // rho1 = norm of orthogonalized new column v_tilde (though not normalized)
-    rho1 = utils::MasterSlave::l2norm(v); // distributed l2norm
+    rho1 = utils::IntraComm::l2norm(v); // distributed l2norm
 
     // t = norm of r_(:,j) with j = colNum-1
-    double norm_coefficients = utils::MasterSlave::l2norm(s); // distributed l2norm
+    double norm_coefficients = utils::IntraComm::l2norm(s); // distributed l2norm
     k++;
 
     // treat the special case m=n
-    // Attention (Master-Slave): Here, we need to compare the global _rows with colNum and NOT the local
+    // Attention (intra-participant communication): Here, we need to compare the global _rows with colNum and NOT the local
     // rows on the processor.
     if (_globalRows == colNum) {
       PRECICE_WARN("The least-squares system matrix is quadratic, i.e., the new column cannot be orthogonalized (and thus inserted) to the LS-system.\nOld columns need to be removed.");
@@ -398,7 +396,7 @@ int QRFactorization::orthogonalize(
     if (rho1 * _theta <= rho0 + _omega * norm_coefficients) {
       // exit to fail if too many iterations
       if (k >= 4) {
-        PRECICE_WARN("Matrix Q is not sufficiently orthogonal. Failed to rorthogonalize new column after 4 iterations. New column will be discarded. The least-squares system is very bad conditioned and the quasi-Newton will most probably fail to converge.");
+        PRECICE_WARN("Matrix Q is not sufficiently orthogonal. Failed to orthogonalize new column after 4 iterations. New column will be discarded. The least-squares system is very bad conditioned and the quasi-Newton will most probably fail to converge.");
         return -1;
       }
       rho0 = rho1;
@@ -436,7 +434,7 @@ int QRFactorization::orthogonalize_stable(
   PRECICE_TRACE();
 
   // serial case
-  if (!utils::MasterSlave::isParallel()) {
+  if (!utils::IntraComm::isParallel()) {
     PRECICE_ASSERT(_globalRows == _rows, _globalRows, _rows);
   }
 
@@ -449,7 +447,7 @@ int QRFactorization::orthogonalize_stable(
   Eigen::VectorXd s = Eigen::VectorXd::Zero(colNum);
   r                 = Eigen::VectorXd::Zero(_cols);
 
-  rho   = utils::MasterSlave::l2norm(v); // distributed l2norm
+  rho   = utils::IntraComm::l2norm(v); // distributed l2norm
   rho0  = rho;
   int k = 0;
   while (!termination) {
@@ -463,7 +461,7 @@ int QRFactorization::orthogonalize_stable(
       Eigen::VectorXd Qc = _Q.col(j);
 
       // dot product <_Q(:,j), v> =: r_ij
-      double ss = utils::MasterSlave::dot(Qc, v);
+      double ss = utils::IntraComm::dot(Qc, v);
       t         = ss;
       // save r_ij in s(j) = column of R
       s(j) = t;
@@ -483,14 +481,14 @@ int QRFactorization::orthogonalize_stable(
       v(i) = v(i) - u(i);
     }
     // rho1 = norm of orthogonalized new column v_tilde (though not normalized)
-    rho1 = utils::MasterSlave::l2norm(v); // distributed l2norm
+    rho1 = utils::IntraComm::l2norm(v); // distributed l2norm
 
     // t = norm of r_(:,j) with j = colNum-1
-    t = utils::MasterSlave::l2norm(s); // distributed l2norm
+    t = utils::IntraComm::l2norm(s); // distributed l2norm
     k++;
 
     // treat the special case m=n
-    // Attention (Master-Slave): Here, we need to compare the global _rows with colNum and NOT the local
+    // Attention (intra-participant communication): Here, we need to compare the global _rows with colNum and NOT the local
     // rows on the processor.
     if (_globalRows == colNum) {
       PRECICE_WARN("The least-squares system matrix is quadratic, i.e., the new column cannot be orthogonalized (and thus inserted) to the LS-system.\nOld columns need to be removed.");
@@ -516,7 +514,7 @@ int QRFactorization::orthogonalize_stable(
       if (k >= 4) {
         std::cout
             << "\ntoo many iterations in orthogonalize, termination failed\n";
-        PRECICE_WARN("Matrix Q is not sufficiently orthogonal. Failed to rorthogonalize new column after 4 iterations. New column will be discarded. The least-squares system is very bad conditioned and the quasi-Newton will most probably fail to converge.");
+        PRECICE_WARN("Matrix Q is not sufficiently orthogonal. Failed to orthogonalize new column after 4 iterations. New column will be discarded. The least-squares system is very bad conditioned and the quasi-Newton will most probably fail to converge.");
         return -1;
       }
 
@@ -545,7 +543,7 @@ int QRFactorization::orthogonalize_stable(
         }
         t = 2;
 
-        // ATTENTION: maybe in the following is something wrong in master-slave mode
+        // ATTENTION: maybe in the following is something wrong @todo: fix this comment
 
         for (int i = 0; i < _rows; i++) {
           if (u(i) < t) {
@@ -560,18 +558,18 @@ int QRFactorization::orthogonalize_stable(
         double global_uk = 0.;
         int    rank      = 0;
 
-        if (utils::MasterSlave::isSlave()) {
-          utils::MasterSlave::_communication->send(k, 0);
-          utils::MasterSlave::_communication->send(u(k), 0);
+        if (utils::IntraComm::isSecondary()) {
+          utils::IntraComm::getCommunication()->send(k, 0);
+          utils::IntraComm::getCommunication()->send(u(k), 0);
         }
 
-        if (utils::MasterSlave::isMaster()) {
+        if (utils::IntraComm::isPrimary()) {
           global_uk = u(k);
-          for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
-            utils::MasterSlave::_communication->receive(local_k, rankSlave);
-            utils::MasterSlave::_communication->receive(local_uk, rankSlave);
+          for (Rank secondaryRank : utils::IntraComm::allSecondaryRanks()) {
+            utils::IntraComm::getCommunication()->receive(local_k, secondaryRank);
+            utils::IntraComm::getCommunication()->receive(local_uk, secondaryRank);
             if (local_uk < global_uk) {
-              rank      = rankSlave;
+              rank      = secondaryRank;
               global_uk = local_uk;
               global_k  = local_k;
             }
@@ -589,10 +587,10 @@ int QRFactorization::orthogonalize_stable(
         v = Eigen::VectorXd::Zero(_rows);
 
         // insert rho1 at position k with smallest u(i) = Q(i,:) * Q(i,:)
-        if (!utils::MasterSlave::isParallel()) {
+        if (!utils::IntraComm::isParallel()) {
           v(k) = rho1;
         } else {
-          if (utils::MasterSlave::getRank() == rank)
+          if (utils::IntraComm::getRank() == rank)
             v(global_k) = rho1;
         }
         k = 0;
@@ -779,6 +777,4 @@ void QRFactorization::setFilter(int filter)
   _filter = filter;
 }
 
-} // namespace impl
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration::impl

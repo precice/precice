@@ -9,8 +9,7 @@
 #include "logging/LogMacros.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace cplscheme {
+namespace precice::cplscheme {
 
 void CompositionalCouplingScheme::addCouplingScheme(
     const PtrCouplingScheme &couplingScheme)
@@ -30,15 +29,11 @@ void CompositionalCouplingScheme::initialize(
   determineActiveCouplingSchemes();
 }
 
-bool CompositionalCouplingScheme::isInitialized() const
+void CompositionalCouplingScheme::receiveResultOfFirstAdvance()
 {
-  PRECICE_TRACE();
-  bool isInitialized = true;
   for (const Scheme &scheme : _couplingSchemes) {
-    isInitialized &= scheme.scheme->isInitialized();
+    scheme.scheme->receiveResultOfFirstAdvance();
   }
-  PRECICE_DEBUG("return {}", isInitialized);
-  return isInitialized;
 }
 
 bool CompositionalCouplingScheme::sendsInitializedData() const
@@ -52,23 +47,15 @@ bool CompositionalCouplingScheme::sendsInitializedData() const
   return sendsInitializedData;
 }
 
-bool CompositionalCouplingScheme::receivesInitializedData() const
+bool CompositionalCouplingScheme::isInitialized() const
 {
   PRECICE_TRACE();
-  bool receivesInitializedData = false;
+  bool isInitialized = true;
   for (const Scheme &scheme : _couplingSchemes) {
-    receivesInitializedData |= scheme.scheme->receivesInitializedData();
+    isInitialized &= scheme.scheme->isInitialized();
   }
-  PRECICE_DEBUG("return {}", receivesInitializedData);
-  return receivesInitializedData;
-}
-
-void CompositionalCouplingScheme::initializeData()
-{
-  PRECICE_TRACE();
-  for (const Scheme &scheme : _couplingSchemes) {
-    scheme.scheme->initializeData();
-  }
+  PRECICE_DEBUG("return {}", isInitialized);
+  return isInitialized;
 }
 
 void CompositionalCouplingScheme::addComputedTime(double timeToAdd)
@@ -192,7 +179,7 @@ double CompositionalCouplingScheme::getTimeWindowSize() const
   PRECICE_TRACE();
   double timeWindowSize = std::numeric_limits<double>::max();
   for (const Scheme &scheme : _couplingSchemes) {
-    if (scheme.scheme->getTimeWindowSize() < timeWindowSize) {
+    if (scheme.scheme->hasTimeWindowSize() && scheme.scheme->getTimeWindowSize() < timeWindowSize) {
       timeWindowSize = scheme.scheme->getTimeWindowSize();
     }
   }
@@ -395,5 +382,4 @@ void CompositionalCouplingScheme::advanceActiveCouplingSchemes()
   PRECICE_ASSERT(_activeSchemesBegin != _activeSchemesEnd);
 }
 
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme

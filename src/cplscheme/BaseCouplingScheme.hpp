@@ -75,30 +75,18 @@ public:
       int                           extrapolationOrder);
 
   /**
+   * @brief Getter for _sendsInitializedData
+   * @returns _sendsInitializedData
+   */
+  bool sendsInitializedData() const override final;
+
+  /**
    * @brief getter for _isInitialized
    * @returns true, if initialize has been called.
    */
   bool isInitialized() const override final
   {
     return _isInitialized;
-  }
-
-  /**
-   * @brief Getter for _sendsInitializedData
-   * @returns _sendsInitializedData
-   */
-  bool sendsInitializedData() const override final
-  {
-    return _sendsInitializedData;
-  }
-
-  /**
-   * @brief Getter for _receivesInitializedData
-   * @returns _receivesInitializedData
-   */
-  bool receivesInitializedData() const override final
-  {
-    return _receivesInitializedData;
   }
 
   /**
@@ -138,7 +126,12 @@ public:
 
   /**
    * @brief Function to check whether time window size is defined by coupling scheme.
-   * @returns true, if time window size is prescribed by the coupling scheme.
+   *
+   * There are two reasons why a scheme might have a time window size:
+   * 1) a fixed time window size is given in the scheme
+   * 2) the participant received the time window size from another participant in the scheme
+   *
+   * @returns true, if time window size is available.
    */
   bool hasTimeWindowSize() const override final;
 
@@ -199,13 +192,8 @@ public:
    */
   void initialize(double startTime, int startTimeWindow) override final;
 
-  /**
-   * @brief Initializes data with written values.
-   *
-   * @pre initialize() has been called.
-   * @pre advance() has NOT yet been called.
-   */
-  void initializeData() override final;
+  /// Receives result of first advance, if this has to happen inside SolverInterface::initialize(), see CouplingScheme.hpp
+  void receiveResultOfFirstAdvance() override final;
 
   /**
    * @brief Advances the coupling scheme.
@@ -237,18 +225,28 @@ public:
    */
   virtual bool hasAnySendData() = 0;
 
+  /**
+   * @brief Determines which data is initialized and therefore has to be exchanged during initialize.
+   *
+   * Calls determineInitialSend and determineInitialReceive for all send and receive data of this coupling scheme.
+   */
+  virtual void determineInitialDataExchange() = 0;
+
 protected:
   /// Map that links DataID to CouplingData
   typedef std::map<int, PtrCouplingData> DataMap;
-
-  /// Map from data ID -> all data (receive and send) with that ID
-  DataMap _allData;
 
   /// Sends data sendDataIDs given in mapCouplingData with communication.
   void sendData(const m2n::PtrM2N &m2n, const DataMap &sendData);
 
   /// Receives data receiveDataIDs given in mapCouplingData with communication.
   void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData);
+
+  /**
+   * @brief interface to provide all CouplingData, depending on coupling scheme being used
+   * @return DataMap containing all CouplingData
+   */
+  virtual const DataMap getAllData() = 0;
 
   /**
    * @brief Function to determine whether coupling scheme is an explicit coupling scheme
@@ -297,6 +295,15 @@ protected:
    * @brief Used to set flag after data has been received using receiveData().
    */
   void checkDataHasBeenReceived();
+
+  /**
+   * @brief Getter for _receivesInitializedData
+   * @returns _receivesInitializedData
+   */
+  bool receivesInitializedData() const
+  {
+    return _receivesInitializedData;
+  }
 
   /**
    * @brief Setter for _timeWindows
@@ -354,7 +361,7 @@ protected:
   void storeIteration()
   {
     PRECICE_ASSERT(isImplicitCouplingScheme());
-    for (DataMap::value_type &pair : _allData) {
+    for (const DataMap::value_type &pair : getAllData()) {
       pair.second->storeIteration();
     }
   }
@@ -409,22 +416,6 @@ private:
   /// Number of total iterations performed.
   int _totalIterations = -1;
 
-  /**
-   * Order of predictor of interface values for first participant.
-   *
-   * The first participant in the implicit coupling scheme has to take some
-   * initial guess for the interface values computed by the second participant.
-   * In order to improve this initial guess, an extrapolation from previous
-   * time windows can be performed.
-   *
-   * The standard predictor is of order zero, i.e., simply the converged values
-   * of the last time windows are taken as initial guess for the coupling iterations.
-   * Currently, an order 1 predictor (linear extrapolation) and order 2 predictor
-   * (see https://doi.org/10.1016/j.compstruc.2008.11.013, p.796, Algorithm line 1 )
-   * is implement besides that.
-   */
-  const int _extrapolationOrder;
-
   /// True, if local participant is the one starting the explicit scheme.
   bool _doesFirstStep = false;
 
@@ -446,9 +437,6 @@ private:
   /// True, if coupling has been initialized.
   bool _isInitialized = false;
 
-  /// True, if initialize data has been called.
-  bool _initializeDataHasBeenCalled = false;
-
   std::set<std::string> _actions;
 
   /// Responsible for monitoring iteration count over time window.
@@ -459,6 +447,22 @@ private:
 
   /// Local participant name.
   std::string _localParticipant = "unknown";
+
+  /**
+   * Order of predictor of interface values for first participant.
+   *
+   * The first participant in the implicit coupling scheme has to take some
+   * initial guess for the interface values computed by the second participant.
+   * In order to improve this initial guess, an extrapolation from previous
+   * time windows can be performed.
+   *
+   * The standard predictor is of order zero, i.e., simply the converged values
+   * of the last time windows are taken as initial guess for the coupling iterations.
+   * Currently, an order 1 predictor (linear extrapolation) and order 2 predictor
+   * (see https://doi.org/10.1016/j.compstruc.2008.11.013, p.796, Algorithm line 1 )
+   * is implement besides that.
+   */
+  const int _extrapolationOrder;
 
   /// Smallest number, taking validDigits into account: eps = std::pow(10.0, -1 * validDigits)
   const double _eps;
@@ -473,7 +477,7 @@ private:
    * @param doesLogging Whether this measure is logged in the convergence file
    */
   struct ConvergenceMeasureContext {
-    CouplingData *              couplingData;
+    PtrCouplingData             couplingData;
     bool                        suffices;
     bool                        strict;
     impl::PtrConvergenceMeasure measure;
@@ -498,14 +502,16 @@ private:
   /**
    * @brief implements functionality for initialize in base class.
    */
-  virtual void initializeImplementation() = 0;
-
-  /// Functions needed for initializeData()
+  virtual void exchangeInitialData() = 0;
 
   /**
-   * @brief implements functionality for initializeData in base class.
+   * @brief implements functionality for receiveResultOfFirstAdvance
    */
-  virtual void exchangeInitialData() = 0;
+  virtual void performReceiveOfFirstAdvance()
+  {
+    // noop by default. Will be overridden by child-coupling-schemes, if data has to be received here. See SerialCouplingScheme.
+    return;
+  }
 
   /// Functions needed for advance()
 
@@ -519,7 +525,7 @@ private:
    * @brief interface to provide accelerated data, depending on coupling scheme being used
    * @return data being accelerated
    */
-  virtual DataMap &getAccelerationData() = 0;
+  virtual const DataMap getAccelerationData() = 0;
 
   /**
    * @brief If any required actions are open, an error message is issued.
@@ -560,7 +566,7 @@ private:
 
   /**
    * @brief Measure whether coupling scheme has converged or not
-   * @return Whether coupling schem has converged
+   * @return Whether coupling scheme has converged
    */
   bool measureConvergence();
 
@@ -568,15 +574,6 @@ private:
    * @brief Reset all convergence measurements after convergence
    */
   void newConvergenceMeasurements();
-
-  /**
-   * @brief Needed for setting up convergence measures, implemented in child class
-   * @param convMeasure Convergence measure to which the data field is assigned to
-   * @param dataID Data field to be assigned
-   */
-  void assignDataToConvergenceMeasure(
-      ConvergenceMeasureContext *convMeasure,
-      int                        dataID);
 
   /**
    * @brief Checks whether any CouplingData in dataMap requires initialization

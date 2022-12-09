@@ -12,14 +12,12 @@
 #include "precice/impl/SharedPointer.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 class Vertex;
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh
 
 using namespace precice;
 
@@ -54,7 +52,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataNoConnectivity)
   mesh->createVertex(Eigen::Vector2d(1.0, 0.0));
   mesh->createVertex(Eigen::Vector2d(1.0, 1.0));
 
-  PtrData doubleData   = mesh->createData("DoubleData", 1);
+  PtrData doubleData   = mesh->createData("DoubleData", 1, 0_dataID);
   auto &  doubleValues = doubleData->values();
 
   mesh->allocateDataValues();
@@ -117,7 +115,7 @@ BOOST_AUTO_TEST_CASE(VectorDataNoConnectivity)
   mesh->createVertex(Eigen::Vector2d(1.0, 0.0));
   mesh->createVertex(Eigen::Vector2d(1.0, 1.0));
 
-  PtrData doubleData   = mesh->createData("DoubleData", 2);
+  PtrData doubleData   = mesh->createData("DoubleData", 2, 0_dataID);
   auto &  doubleValues = doubleData->values();
 
   mesh->allocateDataValues();
@@ -190,7 +188,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivity)
   mesh->createEdge(v1, v2);
   mesh->createEdge(v2, v3);
 
-  PtrData doubleData   = mesh->createData("DoubleData", 1);
+  PtrData doubleData   = mesh->createData("DoubleData", 1, 0_dataID);
   auto &  doubleValues = doubleData->values();
 
   mesh->allocateDataValues();
@@ -253,7 +251,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivityNoScale)
   mesh->createEdge(v1, v2);
   mesh->createEdge(v2, v3);
 
-  PtrData doubleData   = mesh->createData("DoubleData", 1);
+  PtrData doubleData   = mesh->createData("DoubleData", 1, 0_dataID);
   auto &  doubleValues = doubleData->values();
 
   mesh->allocateDataValues();
@@ -316,7 +314,7 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivity)
   mesh->createEdge(v1, v2);
   mesh->createEdge(v2, v3);
 
-  PtrData doubleData   = mesh->createData("DoubleData", 2);
+  PtrData doubleData   = mesh->createData("DoubleData", 2, 0_dataID);
   auto &  doubleValues = doubleData->values();
 
   mesh->allocateDataValues();
@@ -353,7 +351,7 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivity)
   // File Format: Time  DoubleData0 DoubleData1  SurfaceArea
   BOOST_TEST_CONTEXT("Validating WatchIntegral VectorData EdgeConnectivity")
   {
-    if (utils::MasterSlave::isMaster()) {
+    if (utils::IntraComm::isPrimary()) {
       auto result   = readDoublesFromTXTFile(fileName, 4);
       auto expected = std::vector<double>{
           0.0, 10.0, 13.0, 3.0,
@@ -387,7 +385,7 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivityNoScale)
   mesh->createEdge(v1, v2);
   mesh->createEdge(v2, v3);
 
-  PtrData doubleData   = mesh->createData("DoubleData", 2);
+  PtrData doubleData   = mesh->createData("DoubleData", 2, 0_dataID);
   auto &  doubleValues = doubleData->values();
 
   mesh->allocateDataValues();
@@ -424,7 +422,7 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivityNoScale)
   // File Format: Time  DoubleData0 DoubleData1  SurfaceArea
   BOOST_TEST_CONTEXT("Validating WatchIntegral VectorData EdgeConnectivity NoScale")
   {
-    if (utils::MasterSlave::isMaster()) {
+    if (utils::IntraComm::isPrimary()) {
       auto result   = readDoublesFromTXTFile(fileName, 4);
       auto expected = std::vector<double>{
           0.0, 9.0, 12.0, 3.0,
@@ -465,7 +463,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivity)
   mesh->createTriangle(e1, e2, e5);
   mesh->createTriangle(e3, e4, e5);
 
-  PtrData doubleData   = mesh->createData("DoubleData", 1);
+  PtrData doubleData   = mesh->createData("DoubleData", 1, 0_dataID);
   auto &  doubleValues = doubleData->values();
 
   mesh->allocateDataValues();
@@ -537,7 +535,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivityNoScale)
   mesh->createTriangle(e1, e2, e5);
   mesh->createTriangle(e3, e4, e5);
 
-  PtrData doubleData   = mesh->createData("DoubleData", 1);
+  PtrData doubleData   = mesh->createData("DoubleData", 1, 0_dataID);
   auto &  doubleValues = doubleData->values();
 
   mesh->allocateDataValues();
@@ -609,7 +607,7 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivity)
   mesh->createTriangle(e1, e2, e5);
   mesh->createTriangle(e3, e4, e5);
 
-  PtrData doubleData   = mesh->createData("DoubleData", 2);
+  PtrData doubleData   = mesh->createData("DoubleData", 2, 0_dataID);
   auto &  doubleValues = doubleData->values();
 
   mesh->allocateDataValues();
@@ -689,7 +687,7 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivityNoScale)
   mesh->createTriangle(e1, e2, e5);
   mesh->createTriangle(e3, e4, e5);
 
-  PtrData doubleData   = mesh->createData("DoubleData", 2);
+  PtrData doubleData   = mesh->createData("DoubleData", 2, 0_dataID);
   auto &  doubleValues = doubleData->values();
 
   mesh->allocateDataValues();
@@ -769,7 +767,7 @@ BOOST_AUTO_TEST_CASE(MeshChangeFaceConnectivity)
   mesh->createTriangle(e1, e2, e5);
   mesh->createTriangle(e3, e4, e5);
 
-  PtrData doubleData   = mesh->createData("DoubleData", 1);
+  PtrData doubleData   = mesh->createData("DoubleData", 1, 0_dataID);
   auto &  doubleValues = doubleData->values();
 
   mesh->allocateDataValues();
@@ -817,16 +815,16 @@ BOOST_AUTO_TEST_CASE(MeshChangeFaceConnectivity)
 
 BOOST_AUTO_TEST_CASE(ScalarDataNoConnectivityParallel)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   using namespace mesh;
   // Setup geometry
   std::string name("rectangle");
   int         dimensions = 2;
   PtrMesh     mesh(new Mesh(name, dimensions, testing::nextMeshID()));
-  PtrData     doubleData   = mesh->createData("DoubleData", 1);
+  PtrData     doubleData   = mesh->createData("DoubleData", 1, 0_dataID);
   auto &      doubleValues = doubleData->values();
 
-  if (utils::MasterSlave::isMaster()) {
+  if (utils::IntraComm::isPrimary()) {
     mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
     mesh->createVertex(Eigen::Vector2d(0.0, 1.0));
   } else if (context.isRank(1)) {
@@ -842,7 +840,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataNoConnectivityParallel)
 
   mesh->allocateDataValues();
 
-  if (utils::MasterSlave::isMaster()) {
+  if (utils::IntraComm::isPrimary()) {
     doubleValues(0) = 1.0;
     doubleValues(1) = 2.0;
   } else if (context.isRank(1)) {
@@ -866,7 +864,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataNoConnectivityParallel)
     watchIntegral.exportIntegralData(0.0);
 
     // Change data (next timestep)
-    if (utils::MasterSlave::isMaster()) {
+    if (utils::IntraComm::isPrimary()) {
       doubleValues(0) = 2.0;
       doubleValues(1) = 3.0;
     } else if (context.isRank(1)) {
@@ -888,7 +886,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataNoConnectivityParallel)
   // File Format: Time  DoubleData
   BOOST_TEST_CONTEXT("Validating WatchIntegral ScalarData NoConnectivity Parallel")
   {
-    if (utils::MasterSlave::isMaster()) {
+    if (utils::IntraComm::isPrimary()) {
       auto result   = readDoublesFromTXTFile(fileName, 2);
       auto expected = std::vector<double>{
           0.0, 36.0,
@@ -908,16 +906,16 @@ BOOST_AUTO_TEST_CASE(ScalarDataNoConnectivityParallel)
 
 BOOST_AUTO_TEST_CASE(VectorDataNoConnectivityParallel)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   using namespace mesh;
   // Setup geometry
   std::string name("rectangle");
   int         dimensions = 2;
   PtrMesh     mesh(new Mesh(name, dimensions, testing::nextMeshID()));
-  PtrData     doubleData   = mesh->createData("DoubleData", 2);
+  PtrData     doubleData   = mesh->createData("DoubleData", 2, 0_dataID);
   auto &      doubleValues = doubleData->values();
 
-  if (utils::MasterSlave::isMaster()) {
+  if (utils::IntraComm::isPrimary()) {
     mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
     mesh->createVertex(Eigen::Vector2d(0.0, 1.0));
   } else if (context.isRank(1)) {
@@ -933,7 +931,7 @@ BOOST_AUTO_TEST_CASE(VectorDataNoConnectivityParallel)
 
   mesh->allocateDataValues();
 
-  if (utils::MasterSlave::isMaster()) {
+  if (utils::IntraComm::isPrimary()) {
     doubleValues(0) = 1.0;
     doubleValues(1) = 2.0;
     doubleValues(2) = 3.0;
@@ -965,7 +963,7 @@ BOOST_AUTO_TEST_CASE(VectorDataNoConnectivityParallel)
     watchIntegral.exportIntegralData(0.0);
 
     // Change data (next timestep)
-    if (utils::MasterSlave::isMaster()) {
+    if (utils::IntraComm::isPrimary()) {
       doubleValues(0) = 2.0;
       doubleValues(1) = 3.0;
       doubleValues(2) = 4.0;
@@ -995,7 +993,7 @@ BOOST_AUTO_TEST_CASE(VectorDataNoConnectivityParallel)
   // File Format: Time  DoubleData
   BOOST_TEST_CONTEXT("Validating WatchIntegral VectorData NoConnectivity Parallel")
   {
-    if (utils::MasterSlave::isMaster()) {
+    if (utils::IntraComm::isPrimary()) {
       auto result   = readDoublesFromTXTFile(fileName, 3);
       auto expected = std::vector<double>{
           0.0, 64.0, 72.0,
@@ -1015,14 +1013,14 @@ BOOST_AUTO_TEST_CASE(VectorDataNoConnectivityParallel)
 
 BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivityParallel)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   using namespace mesh;
   // Setup geometry
   std::string name("rectangle");
   int         dimensions = 2;
   PtrMesh     mesh(new Mesh(name, dimensions, testing::nextMeshID()));
 
-  if (utils::MasterSlave::isMaster()) {
+  if (utils::IntraComm::isPrimary()) {
     mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
     mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector2d(1.0, 0.0));
     mesh->createEdge(v1, v2);
@@ -1043,12 +1041,12 @@ BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivityParallel)
     mesh->createEdge(v7, v8);
   }
 
-  PtrData doubleData   = mesh->createData("DoubleData", 1);
+  PtrData doubleData   = mesh->createData("DoubleData", 1, 0_dataID);
   auto &  doubleValues = doubleData->values();
 
   mesh->allocateDataValues();
 
-  if (utils::MasterSlave::isMaster()) {
+  if (utils::IntraComm::isPrimary()) {
     doubleValues(0) = 1.0;
     doubleValues(1) = 2.0;
   }
@@ -1075,7 +1073,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivityParallel)
     watchIntegral.exportIntegralData(0.0);
 
     // Change data (next timestep)
-    if (utils::MasterSlave::isMaster()) {
+    if (utils::IntraComm::isPrimary()) {
       doubleValues(0) = 2.0;
       doubleValues(1) = 3.0;
     }
@@ -1100,7 +1098,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivityParallel)
   // File Format: Time  DoubleData  SurfaceArea
   BOOST_TEST_CONTEXT("Validating WatchIntegral ScalarData EdgeConnectivity Parallel")
   {
-    if (utils::MasterSlave::isMaster()) {
+    if (utils::IntraComm::isPrimary()) {
       auto result   = readDoublesFromTXTFile(fileName, 3);
       auto expected = std::vector<double>{
           0.0, 25.5, 5.0,
@@ -1120,14 +1118,14 @@ BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivityParallel)
 
 BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivityParallel)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   using namespace mesh;
   // Setup geometry
   std::string name("rectangle");
   int         dimensions = 2;
   PtrMesh     mesh(new Mesh(name, dimensions, testing::nextMeshID()));
 
-  if (utils::MasterSlave::isMaster()) {
+  if (utils::IntraComm::isPrimary()) {
     mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
     mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector2d(1.0, 0.0));
     mesh->createEdge(v1, v2);
@@ -1148,12 +1146,12 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivityParallel)
     mesh->createEdge(v7, v8);
   }
 
-  PtrData doubleData   = mesh->createData("DoubleData", 2);
+  PtrData doubleData   = mesh->createData("DoubleData", 2, 0_dataID);
   auto &  doubleValues = doubleData->values();
 
   mesh->allocateDataValues();
 
-  if (utils::MasterSlave::isMaster()) {
+  if (utils::IntraComm::isPrimary()) {
     doubleValues(0) = 1.0;
     doubleValues(1) = 2.0;
     doubleValues(2) = 3.0;
@@ -1188,7 +1186,7 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivityParallel)
     watchIntegral.exportIntegralData(0.0);
 
     // Change data (next timestep)
-    if (utils::MasterSlave::isMaster()) {
+    if (utils::IntraComm::isPrimary()) {
       doubleValues(0) = 2.0;
       doubleValues(1) = 3.0;
       doubleValues(2) = 4.0;
@@ -1221,7 +1219,7 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivityParallel)
   // File Format: Time  DoubleData0 DoubleData1  SurfaceArea
   BOOST_TEST_CONTEXT("Validating WatchIntegral VectorData EdgeConnectivity Parallel")
   {
-    if (utils::MasterSlave::isMaster()) {
+    if (utils::IntraComm::isPrimary()) {
       auto result   = readDoublesFromTXTFile(fileName, 4);
       auto expected = std::vector<double>{
           0.0, 46.0, 51.0, 5.0,
@@ -1241,14 +1239,14 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivityParallel)
 
 BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivityParallel)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   using namespace mesh;
   // Setup geometry
   std::string name("rectangle");
   int         dimensions = 3;
   PtrMesh     mesh(new Mesh(name, dimensions, testing::nextMeshID()));
 
-  if (utils::MasterSlave::isMaster()) {
+  if (utils::IntraComm::isPrimary()) {
     mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
     mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector3d(3.0, 0.0, 0.0));
     mesh::Vertex &v3 = mesh->createVertex(Eigen::Vector3d(3.0, 4.0, 0.0));
@@ -1271,12 +1269,12 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivityParallel)
     mesh->createTriangle(e3, e4, e5);
   }
 
-  PtrData doubleData   = mesh->createData("DoubleData", 1);
+  PtrData doubleData   = mesh->createData("DoubleData", 1, 0_dataID);
   auto &  doubleValues = doubleData->values();
 
   mesh->allocateDataValues();
 
-  if (utils::MasterSlave::isMaster()) {
+  if (utils::IntraComm::isPrimary()) {
     doubleValues(0) = 1.0;
     doubleValues(1) = 2.0;
     doubleValues(2) = 3.0;
@@ -1301,7 +1299,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivityParallel)
     watchIntegral.exportIntegralData(0.0);
 
     // Change data (next timestep)
-    if (utils::MasterSlave::isMaster()) {
+    if (utils::IntraComm::isPrimary()) {
       doubleValues(0) = 2.0;
       doubleValues(1) = 3.0;
       doubleValues(2) = 4.0;
@@ -1324,7 +1322,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivityParallel)
   // File Format: Time  DoubleData SurfaceArea
   BOOST_TEST_CONTEXT("Validating WatchIntegral ScalarData FaceConnectivity Parallel")
   {
-    if (utils::MasterSlave::isMaster()) {
+    if (utils::IntraComm::isPrimary()) {
       auto result   = readDoublesFromTXTFile(fileName, 3);
       auto expected = std::vector<double>{
           0.0, 28.0, 12.0,
@@ -1344,14 +1342,14 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivityParallel)
 
 BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivityParallel)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   using namespace mesh;
   // Setup geometry
   std::string name("rectangle");
   int         dimensions = 3;
   PtrMesh     mesh(new Mesh(name, dimensions, testing::nextMeshID()));
 
-  if (utils::MasterSlave::isMaster()) {
+  if (utils::IntraComm::isPrimary()) {
     mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
     mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector3d(3.0, 0.0, 0.0));
     mesh::Vertex &v3 = mesh->createVertex(Eigen::Vector3d(3.0, 4.0, 0.0));
@@ -1374,12 +1372,12 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivityParallel)
     mesh->createTriangle(e3, e4, e5);
   }
 
-  PtrData doubleData   = mesh->createData("DoubleData", 2);
+  PtrData doubleData   = mesh->createData("DoubleData", 2, 0_dataID);
   auto &  doubleValues = doubleData->values();
 
   mesh->allocateDataValues();
 
-  if (utils::MasterSlave::isMaster()) {
+  if (utils::IntraComm::isPrimary()) {
     doubleValues(0) = 1.0;
     doubleValues(1) = 2.0;
     doubleValues(2) = 3.0;
@@ -1410,7 +1408,7 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivityParallel)
     watchIntegral.exportIntegralData(0.0);
 
     // Change data (next timestep)
-    if (utils::MasterSlave::isMaster()) {
+    if (utils::IntraComm::isPrimary()) {
       doubleValues(0) = 2.0;
       doubleValues(1) = 3.0;
       doubleValues(2) = 4.0;
@@ -1439,7 +1437,7 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivityParallel)
   // File Format: Time  DoubleData SurfaceArea
   BOOST_TEST_CONTEXT("Validating WatchIntegral VectorData FaceConnectivity Parallel")
   {
-    if (utils::MasterSlave::isMaster()) {
+    if (utils::IntraComm::isPrimary()) {
       auto result   = readDoublesFromTXTFile(fileName, 4);
       auto expected = std::vector<double>{
           0.0, 44.0, 56.0, 12.0,

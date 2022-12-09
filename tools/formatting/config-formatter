@@ -173,7 +173,7 @@ def main():
     try:
         xml = parseXML(content)
     except Exception as e:
-        print("Error occured while parsing file: " + args.infile)
+        print("Error occurred while parsing file: " + args.infile)
         raise e
 
     # Write content

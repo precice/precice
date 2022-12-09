@@ -16,8 +16,7 @@
 #include "precice/types.hpp"
 #include "utils/Helpers.hpp"
 
-namespace precice {
-namespace cplscheme {
+namespace precice::cplscheme {
 
 BiCouplingScheme::BiCouplingScheme(
     double                        maxTime,
@@ -57,16 +56,12 @@ void BiCouplingScheme::addDataToSend(
   PRECICE_TRACE();
   int id = data->getID();
   if (!utils::contained(id, _sendData)) {
-    DataMap::value_type pair = std::make_pair(id, nullptr);
+    PRECICE_ASSERT(_sendData.count(id) == 0, "Key already exists!");
     if (isExplicitCouplingScheme()) {
-      pair.second = PtrCouplingData(new CouplingData(data, std::move(mesh), requiresInitialization));
+      _sendData.emplace(id, std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization));
     } else {
-      pair.second = PtrCouplingData(new CouplingData(data, std::move(mesh), requiresInitialization, getExtrapolationOrder()));
+      _sendData.emplace(id, std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, getExtrapolationOrder()));
     }
-    PRECICE_ASSERT(_sendData.count(pair.first) == 0, "Key already exists!");
-    _sendData.insert(pair);
-    PRECICE_ASSERT(_allData.count(pair.first) == 0, "Key already exists!");
-    _allData.insert(pair);
   } else {
     PRECICE_ERROR("Data \"{0}\" cannot be added twice for sending. Please remove any duplicate <exchange data=\"{0}\" .../> tags", data->getName());
   }
@@ -80,19 +75,21 @@ void BiCouplingScheme::addDataToReceive(
   PRECICE_TRACE();
   int id = data->getID();
   if (!utils::contained(id, _receiveData)) {
-    DataMap::value_type pair = std::make_pair(id, nullptr);
+    PRECICE_ASSERT(_receiveData.count(id) == 0, "Key already exists!");
     if (isExplicitCouplingScheme()) {
-      pair.second = PtrCouplingData(new CouplingData(data, std::move(mesh), requiresInitialization));
+      _receiveData.emplace(id, std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization));
     } else {
-      pair.second = PtrCouplingData(new CouplingData(data, std::move(mesh), requiresInitialization, getExtrapolationOrder()));
+      _receiveData.emplace(id, std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, getExtrapolationOrder()));
     }
-    PRECICE_ASSERT(_receiveData.count(pair.first) == 0, "Key already exists!");
-    _receiveData.insert(pair);
-    PRECICE_ASSERT(_allData.count(pair.first) == 0, "Key already exists!");
-    _allData.insert(pair);
   } else {
     PRECICE_ERROR("Data \"{0}\" cannot be added twice for receiving. Please remove any duplicate <exchange data=\"{0}\" ... /> tags", data->getName());
   }
+}
+
+void BiCouplingScheme::determineInitialDataExchange()
+{
+  determineInitialSend(getSendData());
+  determineInitialReceive(getReceiveData());
 }
 
 std::vector<std::string> BiCouplingScheme::getCouplingPartners() const
@@ -129,5 +126,26 @@ CouplingData *BiCouplingScheme::getReceiveData(
   return nullptr;
 }
 
-} // namespace cplscheme
-} // namespace precice
+void BiCouplingScheme::exchangeInitialData()
+{
+  // F: send, receive, S: receive, send
+  if (doesFirstStep()) {
+    if (sendsInitializedData()) {
+      sendData(getM2N(), getSendData());
+    }
+    if (receivesInitializedData()) {
+      receiveData(getM2N(), getReceiveData());
+      checkDataHasBeenReceived();
+    }
+  } else { // second participant
+    if (receivesInitializedData()) {
+      receiveData(getM2N(), getReceiveData());
+      checkDataHasBeenReceived();
+    }
+    if (sendsInitializedData()) {
+      sendData(getM2N(), getSendData());
+    }
+  }
+}
+
+} // namespace precice::cplscheme

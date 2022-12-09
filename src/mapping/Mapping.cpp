@@ -2,16 +2,17 @@
 #include <boost/config.hpp>
 #include <ostream>
 #include "mesh/Utils.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace mapping {
+namespace precice::mapping {
 
 Mapping::Mapping(
     Constraint constraint,
-    int        dimensions)
-    : _constraint(constraint),
+    int        dimensions,
+    bool       requiresGradientData)
+    : _requiresGradientData(requiresGradientData),
+      _constraint(constraint),
       _inputRequirement(MeshRequirement::UNDEFINED),
       _outputRequirement(MeshRequirement::UNDEFINED),
       _input(),
@@ -80,45 +81,106 @@ int Mapping::getDimensions() const
   return _dimensions;
 }
 
-void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
+bool Mapping::requiresGradientData() const
 {
+  return _requiresGradientData;
+}
+
+void Mapping::map(int inputDataID,
+                  int outputDataID)
+{
+  PRECICE_ASSERT(_hasComputedMapping);
+  PRECICE_ASSERT(input()->getDimensions() == output()->getDimensions(),
+                 input()->getDimensions(), output()->getDimensions());
+  PRECICE_ASSERT(getDimensions() == output()->getDimensions(),
+                 getDimensions(), output()->getDimensions());
+  PRECICE_ASSERT(input()->data(inputDataID)->getDimensions() == output()->data(outputDataID)->getDimensions(),
+                 input()->data(inputDataID)->getDimensions(), output()->data(outputDataID)->getDimensions());
+  PRECICE_ASSERT(input()->data(inputDataID)->values().size() / input()->data(inputDataID)->getDimensions() == static_cast<int>(input()->vertices().size()),
+                 input()->data(inputDataID)->values().size(), input()->data(inputDataID)->getDimensions(), input()->vertices().size());
+  PRECICE_ASSERT(output()->data(outputDataID)->values().size() / output()->data(outputDataID)->getDimensions() == static_cast<int>(output()->vertices().size()),
+                 output()->data(outputDataID)->values().size(), output()->data(outputDataID)->getDimensions(), output()->vertices().size());
+
+  if (hasConstraint(CONSERVATIVE)) {
+    mapConservative(inputDataID, outputDataID);
+  } else if (hasConstraint(CONSISTENT)) {
+    mapConsistent(inputDataID, outputDataID);
+  } else if (isScaledConsistent()) {
+    mapConsistent(inputDataID, outputDataID);
+    scaleConsistentMapping(inputDataID, outputDataID, getConstraint());
+  } else {
+    PRECICE_UNREACHABLE("Unknown mapping constraint.")
+  }
+}
+
+void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID, Mapping::Constraint constraint) const
+{
+  PRECICE_ASSERT(isScaledConsistent());
+  bool            volumeMode = hasConstraint(SCALED_CONSISTENT_VOLUME);
+  logging::Logger _log{"mapping::Mapping"};
   // Only serial participant is supported for scale-consistent mapping
-  PRECICE_ASSERT((not utils::MasterSlave::isMaster()) and (not utils::MasterSlave::isSlave()));
+  PRECICE_ASSERT((not utils::IntraComm::isPrimary()) and (not utils::IntraComm::isSecondary()));
 
   // If rank is not empty and do not contain connectivity information, raise error
-  if ((input()->edges().empty() and (not input()->vertices().empty())) or
-      (((input()->getDimensions() == 3) and input()->triangles().empty()) and (not input()->vertices().empty()))) {
-    logging::Logger _log{"mapping::Mapping"};
-    PRECICE_ERROR("Connectivity information is missing for the mesh {}. "
-                  "Scaled consistent mapping requires connectivity information.",
-                  input()->getName());
-  }
-  if ((output()->edges().empty() and (not output()->vertices().empty())) or
-      (((output()->getDimensions() == 3) and output()->triangles().empty()) and (not output()->vertices().empty()))) {
-    logging::Logger _log{"mapping::Mapping"};
-    PRECICE_ERROR("Connectivity information is missing for the mesh {}. "
-                  "Scaled consistent mapping requires connectivity information.",
-                  output()->getName());
+  int  spaceDimension    = input()->getDimensions();
+  bool requiresEdges     = (spaceDimension == 2 and !volumeMode);
+  bool requiresTriangles = (spaceDimension == 2 and volumeMode) or (spaceDimension == 3 and !volumeMode);
+  bool requiresTetra     = (spaceDimension == 3 and volumeMode);
+
+  for (mesh::PtrMesh mesh : {input(), output()}) {
+    if (not mesh->vertices().empty()) {
+
+      PRECICE_CHECK(!(requiresEdges && mesh->edges().empty()), "Edges connectivity information is missing for the mesh \"{}\". "
+                                                               "Scaled consistent mapping requires connectivity information.",
+                    mesh->getName());
+
+      PRECICE_CHECK(!(requiresTriangles && mesh->triangles().empty()), "Triangles connectivity information is missing for the mesh \"{}\". "
+                                                                       "Scaled consistent mapping requires connectivity information.",
+                    mesh->getName());
+
+      PRECICE_CHECK(!(requiresTetra && mesh->tetrahedra().empty()), "Tetrahedra connectivity information is missing for the mesh \"{}\". "
+                                                                    "Scaled consistent mapping requires connectivity information.",
+                    mesh->getName());
+    }
   }
 
   auto &outputValues    = output()->data(outputDataID)->values();
   int   valueDimensions = input()->data(inputDataID)->getDimensions();
 
+  Eigen::VectorXd integralInput;
+  Eigen::VectorXd integralOutput;
+
   // Integral is calculated on each direction separately
-  auto integralInput  = mesh::integrate(input(), input()->data(inputDataID));
-  auto integralOutput = mesh::integrate(output(), output()->data(outputDataID));
+  if (!volumeMode) {
+    integralInput  = mesh::integrateSurface(input(), input()->data(inputDataID));
+    integralOutput = mesh::integrateSurface(output(), output()->data(outputDataID));
+  } else {
+    integralInput  = mesh::integrateVolume(input(), input()->data(inputDataID));
+    integralOutput = mesh::integrateVolume(output(), output()->data(outputDataID));
+  }
 
   // Create reshape the output values vector to matrix
   Eigen::Map<Eigen::MatrixXd> outputValuesMatrix(outputValues.data(), valueDimensions, outputValues.size() / valueDimensions);
 
   // Scale in each direction
   Eigen::VectorXd scalingFactor = integralInput.array() / integralOutput.array();
+  PRECICE_DEBUG("Scaling factor in scaled-consistent mapping: {}", scalingFactor);
   outputValuesMatrix.array().colwise() *= scalingFactor.array();
-}
+} // namespace mapping
 
 bool Mapping::hasConstraint(const Constraint &constraint) const
 {
   return (getConstraint() == constraint);
+}
+
+bool Mapping::hasComputedMapping() const
+{
+  return _hasComputedMapping;
+}
+
+bool Mapping::isScaledConsistent() const
+{
+  return (hasConstraint(SCALED_CONSISTENT_SURFACE) || hasConstraint(SCALED_CONSISTENT_VOLUME));
 }
 
 bool operator<(Mapping::MeshRequirement lhs, Mapping::MeshRequirement rhs)
@@ -152,5 +214,4 @@ std::ostream &operator<<(std::ostream &out, Mapping::MeshRequirement val)
   return out;
 }
 
-} // namespace mapping
-} // namespace precice
+} // namespace precice::mapping

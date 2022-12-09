@@ -18,8 +18,7 @@
 #include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 
-namespace precice {
-namespace config {
+namespace precice::config {
 
 SolverInterfaceConfiguration::SolverInterfaceConfiguration(xml::XMLTag &parent)
 {
@@ -43,8 +42,7 @@ SolverInterfaceConfiguration::SolverInterfaceConfiguration(xml::XMLTag &parent)
   _participantConfiguration = std::make_shared<ParticipantConfiguration>(
       tag, _meshConfiguration);
   _couplingSchemeConfiguration = std::make_shared<cplscheme::CouplingSchemeConfiguration>(
-      tag, _meshConfiguration,
-      _m2nConfiguration);
+      tag, _meshConfiguration, _m2nConfiguration, _participantConfiguration);
 
   parent.addSubtag(tag);
 }
@@ -60,6 +58,8 @@ void SolverInterfaceConfiguration::xmlTagCallback(
     _meshConfiguration->setDimensions(_dimensions);
     _participantConfiguration->setDimensions(_dimensions);
     _experimental = tag.getBooleanAttributeValue("experimental");
+    _couplingSchemeConfiguration->setExperimental(_experimental);
+    _participantConfiguration->setExperimental(_experimental);
   } else {
     PRECICE_UNREACHABLE("Received callback from unknown tag '{}'.", tag.getName());
   }
@@ -103,5 +103,4 @@ SolverInterfaceConfiguration::getParticipantConfiguration() const
   return _participantConfiguration;
 }
 
-} // namespace config
-} // namespace precice
+} // namespace precice::config

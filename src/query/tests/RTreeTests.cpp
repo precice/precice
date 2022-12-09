@@ -7,6 +7,7 @@
 #include <set>
 #include <utility>
 #include <vector>
+
 #include "logging/Logger.hpp"
 #include "math/geometry.hpp"
 #include "mesh/Data.hpp"
@@ -16,16 +17,12 @@
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
 #include "query/Index.hpp"
-#include "query/impl/Indexer.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 
 using namespace precice;
 using namespace precice::mesh;
 using namespace precice::query;
-
-namespace bg  = boost::geometry;
-namespace bgi = boost::geometry::index;
 
 namespace {
 PtrMesh fullMesh()
@@ -104,7 +101,6 @@ BOOST_AUTO_TEST_CASE(Query2DVertex)
 
   auto result = indexTree.getClosestVertex(location);
   BOOST_TEST(mesh->vertices().at(result.index).getCoords() == Eigen::Vector2d(0, 1));
-  BOOST_TEST(result.distance == 0.28284271247461906);
 }
 
 BOOST_AUTO_TEST_CASE(Query3DVertex)
@@ -116,7 +112,6 @@ BOOST_AUTO_TEST_CASE(Query3DVertex)
 
   auto result = indexTree.getClosestVertex(location);
   BOOST_TEST(mesh->vertices().at(result.index).getCoords() == Eigen::Vector3d(1, 0, 1));
-  BOOST_TEST(result.distance == 0.28284271247461906);
 }
 
 BOOST_AUTO_TEST_CASE(Query3DFullVertex)
@@ -172,8 +167,6 @@ BOOST_AUTO_TEST_CASE(QueryWithBox2Matches)
   PRECICE_TEST(1_rank);
   auto  mesh = vertexMesh3D();
   Index indexTree(mesh);
-  auto  tree = impl::Indexer::instance()->getVertexRTree(mesh);
-  BOOST_TEST(tree->size() == 8);
 
   mesh::Vertex searchVertex(Eigen::Vector3d(0.8, 1, 0), 0);
   double       radius = 0.81; // Two vertices in radius
@@ -190,8 +183,6 @@ BOOST_AUTO_TEST_CASE(QueryWithBoxEverything)
   PRECICE_TEST(1_rank);
   auto  mesh = vertexMesh3D();
   Index indexTree(mesh);
-  auto  tree = impl::Indexer::instance()->getVertexRTree(mesh);
-  BOOST_TEST(tree->size() == 8);
 
   mesh::Vertex searchVertex(Eigen::Vector3d(0.8, 1, 0), 0);
   double       radius = std::numeric_limits<double>::max();
@@ -274,9 +265,14 @@ BOOST_AUTO_TEST_CASE(Query3DFullEdge)
   Eigen::Vector3d location(0.8, 0.5, 0.0);
   auto            results = indexTree.getClosestEdges(location, 2);
 
-  BOOST_TEST(results.size() == 2);
-  BOOST_TEST(results.at(0).index == eld.getID());
-  BOOST_TEST(results.at(1).index == elr.getID());
+  std::set<mesh::Edge *> matches{
+      &mesh->edges().at(results.at(0).index),
+      &mesh->edges().at(results.at(1).index),
+  };
+  std::set<mesh::Edge *> expected{&elr, &eld};
+
+  BOOST_TEST(matches.size() == 2);
+  BOOST_TEST(matches == expected, boost::test_tools::per_element());
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Edge
@@ -317,91 +313,18 @@ BOOST_AUTO_TEST_CASE(Query3DFullTriangle)
 
   auto results = indexTree.getClosestTriangles(location, 3);
   BOOST_TEST(results.size() == 3);
-  BOOST_TEST(results.at(0).index == tlb.getID());
-  BOOST_TEST(results.at(1).index == tlt.getID());
-  BOOST_TEST(results.at(2).index == trt.getID());
-  BOOST_TEST(results.at(2).index != trb.getID());
+
+  std::set<mesh::Triangle *> matches{
+      &mesh->triangles().at(results.at(0).index),
+      &mesh->triangles().at(results.at(1).index),
+      &mesh->triangles().at(results.at(2).index)};
+  std::set<mesh::Triangle *> expected{&tlb, &tlt, &trt};
+
+  BOOST_TEST(matches.size() == 3);
+  BOOST_TEST(matches == expected, boost::test_tools::per_element());
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Triangle
-
-BOOST_AUTO_TEST_SUITE(Cache)
-
-BOOST_AUTO_TEST_CASE(ClearOnChange)
-{
-  PRECICE_TEST(1_rank);
-  PtrMesh mesh(new precice::mesh::Mesh("MyMesh", 2, precice::testing::nextMeshID()));
-  mesh->createVertex(Eigen::Vector2d(0, 0));
-
-  // The Cache should clear whenever a mesh changes
-  auto vTree = query::impl::Indexer::instance()->getVertexRTree(mesh);
-  BOOST_TEST(query::impl::Indexer::instance()->getCacheSize() == 1);
-  mesh->meshChanged(*mesh); // Emit signal, that mesh has changed
-  BOOST_TEST(query::impl::Indexer::instance()->getCacheSize() == 0);
-}
-
-BOOST_AUTO_TEST_CASE(ClearOnDestruction)
-{
-  PRECICE_TEST(1_rank);
-  PtrMesh mesh(new precice::mesh::Mesh("MyMesh", 2, precice::testing::nextMeshID()));
-  mesh->createVertex(Eigen::Vector2d(0, 0));
-
-  // The Cache should clear whenever we destroy the Mesh
-  auto vTree = query::impl::Indexer::instance()->getVertexRTree(mesh);
-  BOOST_TEST(query::impl::Indexer::instance()->getCacheSize() == 1);
-  mesh.reset(); // Destroy mesh object, signal is emitted to clear cache
-  BOOST_TEST(query::impl::Indexer::instance()->getCacheSize() == 0);
-}
-
-BOOST_AUTO_TEST_CASE(CacheVertices)
-{
-  PRECICE_TEST(1_rank);
-  auto ptr = fullMesh();
-
-  auto vt1 = impl::Indexer::instance()->getVertexRTree(ptr);
-  auto vt2 = impl::Indexer::instance()->getVertexRTree(ptr);
-  BOOST_TEST(vt1 == vt2);
-}
-
-BOOST_AUTO_TEST_CASE(CacheEdges)
-{
-  PRECICE_TEST(1_rank);
-  auto ptr = fullMesh();
-
-  auto et1 = impl::Indexer::instance()->getEdgeRTree(ptr);
-  auto et2 = impl::Indexer::instance()->getEdgeRTree(ptr);
-  BOOST_TEST(et1 == et2);
-}
-
-BOOST_AUTO_TEST_CASE(CacheTriangles)
-{
-  PRECICE_TEST(1_rank);
-  auto ptr = fullMesh();
-
-  auto tt1 = impl::Indexer::instance()->getTriangleRTree(ptr);
-  auto tt2 = impl::Indexer::instance()->getTriangleRTree(ptr);
-  BOOST_TEST(tt1 == tt2);
-}
-
-BOOST_AUTO_TEST_CASE(CacheAll)
-{
-  PRECICE_TEST(1_rank);
-  auto ptr = fullMesh();
-
-  auto vt1 = impl::Indexer::instance()->getVertexRTree(ptr);
-  auto et1 = impl::Indexer::instance()->getEdgeRTree(ptr);
-  auto tt1 = impl::Indexer::instance()->getTriangleRTree(ptr);
-
-  auto vt2 = impl::Indexer::instance()->getVertexRTree(ptr);
-  auto et2 = impl::Indexer::instance()->getEdgeRTree(ptr);
-  auto tt2 = impl::Indexer::instance()->getTriangleRTree(ptr);
-
-  BOOST_TEST(vt1 == vt2);
-  BOOST_TEST(et1 == et2);
-  BOOST_TEST(tt1 == tt2);
-}
-
-BOOST_AUTO_TEST_SUITE_END() // Cache
 
 BOOST_AUTO_TEST_SUITE(Projection)
 
@@ -418,10 +341,10 @@ BOOST_AUTO_TEST_CASE(ProjectionToVertex)
   auto match = indexTree.findNearestProjection(location, 1);
 
   BOOST_TEST(match.polation.getWeightedElements().size() == 1); // Check number of weights
-  BOOST_TEST(match.distance == 1.0);                            // Check the distance
+  BOOST_TEST(match.polation.distance() == 1.0);                 // Check the distance
   BOOST_TEST(match.polation.isInterpolation());
 
-  for (int i = 0; i < match.polation.getWeightedElements().size(); ++i) {
+  for (int i = 0; i < static_cast<int>(match.polation.getWeightedElements().size()); ++i) {
     BOOST_TEST(match.polation.getWeightedElements().at(i).vertexID == expectedIndices.at(i)); // Check index
     BOOST_TEST(match.polation.getWeightedElements().at(i).weight == expectedWeights.at(i));   // Check the weight
   }
@@ -440,10 +363,10 @@ BOOST_AUTO_TEST_CASE(ProjectionToEdge)
   auto match = indexTree.findNearestProjection(location, 1);
 
   BOOST_TEST(match.polation.getWeightedElements().size() == 2); // Check number of weights
-  BOOST_TEST(match.distance == 1.0);                            // Check the distance
+  BOOST_TEST(match.polation.distance() == 1.0);                 // Check the distance
   BOOST_TEST(match.polation.isInterpolation());
 
-  for (int i = 0; i < match.polation.getWeightedElements().size(); ++i) {
+  for (int i = 0; i < static_cast<int>(match.polation.getWeightedElements().size()); ++i) {
     BOOST_TEST(match.polation.getWeightedElements().at(i).vertexID == expectedIndices.at(i)); // Check index
     BOOST_TEST(match.polation.getWeightedElements().at(i).weight == expectedWeights.at(i));   // Check the weight
   }
@@ -462,16 +385,117 @@ BOOST_AUTO_TEST_CASE(ProjectionToTriangle)
   auto match = indexTree.findNearestProjection(location, 1);
 
   BOOST_TEST(match.polation.getWeightedElements().size() == 3); // Check number of weights
-  BOOST_TEST(match.distance == 0.0);                            // Check the distance
+  BOOST_TEST(match.polation.distance() == 0.1);                 // Check the distance
   BOOST_TEST(match.polation.isInterpolation());
 
-  for (int i = 0; i < match.polation.getWeightedElements().size(); ++i) {
+  for (int i = 0; i < static_cast<int>(match.polation.getWeightedElements().size()); ++i) {
     BOOST_TEST(match.polation.getWeightedElements().at(i).vertexID == expectedIndices.at(i)); // Check index
     BOOST_TEST(match.polation.getWeightedElements().at(i).weight == expectedWeights.at(i));   // Check the weight
   }
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Projection
+
+BOOST_AUTO_TEST_SUITE(Tetrahedra)
+
+BOOST_AUTO_TEST_CASE(CubeBoundingBoxIndex)
+{
+  PRECICE_TEST(1_rank);
+  PtrMesh ptr(new Mesh("MyMesh", 3, testing::nextMeshID()));
+  auto &  mesh = *ptr;
+  Index   indexTree(ptr);
+
+  Eigen::Vector3d  location(0.5, 0.5, 0.5);
+  std::vector<int> expectedIndices = {0, 1};
+  // Set up 2 tetrahedra with the same bounding box
+  auto &v00 = mesh.createVertex(Eigen::Vector3d(0, 0, 0));
+  auto &v01 = mesh.createVertex(Eigen::Vector3d(1, 0, 0));
+  auto &v02 = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
+  auto &v03 = mesh.createVertex(Eigen::Vector3d(1, 0, 1));
+  auto &v04 = mesh.createVertex(Eigen::Vector3d(1, 1, 1));
+
+  mesh.createTetrahedron(v00, v01, v02, v03);
+  mesh.createTetrahedron(v04, v01, v02, v03);
+
+  auto match = indexTree.getEnclosingTetrahedra(location);
+
+  BOOST_TEST(match.size() == 2);
+}
+
+BOOST_AUTO_TEST_CASE(TetraIndexing)
+{
+  /*
+  For a location and 3 tetrahedra such that:
+  - First contains the location
+  - Second doesn't, but its Bounding Box does
+  - Third doesn't and neither does its AABB
+  Check that only 1st and 2nd are found by getEnclosingTetrahedra
+  */
+  PRECICE_TEST(1_rank);
+  PtrMesh ptr(new Mesh("MyMesh", 3, testing::nextMeshID()));
+  auto &  mesh = *ptr;
+  Index   indexTree(ptr);
+
+  Eigen::Vector3d  location(0.2, 0.2, 0.2);
+  std::vector<int> expectedIndices = {0, 1};
+
+  // Set containing tetra
+  auto &v00 = mesh.createVertex(Eigen::Vector3d(0, 0, 0));
+  auto &v01 = mesh.createVertex(Eigen::Vector3d(1, 0, 0));
+  auto &v02 = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
+  auto &v03 = mesh.createVertex(Eigen::Vector3d(0, 0, 1));
+  mesh.createTetrahedron(v00, v01, v02, v03);
+
+  // Set non-containing tetra with containing BB (from 0 to 1 in each direction)
+  auto &v10 = mesh.createVertex(Eigen::Vector3d(1, 1, 1));
+  auto &v11 = mesh.createVertex(Eigen::Vector3d(1, 0, 0));
+  auto &v12 = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
+  auto &v13 = mesh.createVertex(Eigen::Vector3d(0, 0, 1));
+  mesh.createTetrahedron(v10, v11, v12, v13);
+
+  // Set tetra far away
+  auto &v20 = mesh.createVertex(Eigen::Vector3d(1, 1, 1));
+  auto &v21 = mesh.createVertex(Eigen::Vector3d(2, 1, 1));
+  auto &v22 = mesh.createVertex(Eigen::Vector3d(1, 2, 1));
+  auto &v23 = mesh.createVertex(Eigen::Vector3d(1, 1, 2));
+  mesh.createTetrahedron(v20, v21, v22, v23);
+
+  auto match = indexTree.getEnclosingTetrahedra(location);
+
+  BOOST_TEST(match.size() == 2);
+  BOOST_TEST(((match[0] == 0 && match[1] == 1) || (match[0] == 1 && match[1] == 0)));
+}
+
+BOOST_AUTO_TEST_CASE(TetraWorksOnBoundary)
+{
+  /*
+ Check that the AABB safety factor is high enough. Do all the corners of a tetra fit inside its AABB?
+  */
+  PRECICE_TEST(1_rank);
+  PtrMesh ptr(new Mesh("MyMesh", 3, testing::nextMeshID()));
+  auto &  mesh = *ptr;
+  Index   indexTree(ptr);
+
+  std::vector<Eigen::Vector3d> locations;
+  locations.push_back(Eigen::Vector3d(0, 0, 0));
+  locations.push_back(Eigen::Vector3d(1, 0, 0));
+  locations.push_back(Eigen::Vector3d(0, 1, 0));
+  locations.push_back(Eigen::Vector3d(0, 0, 1));
+
+  // Set containing tetra
+  auto &v00 = mesh.createVertex(Eigen::Vector3d(0, 0, 0));
+  auto &v01 = mesh.createVertex(Eigen::Vector3d(1, 0, 0));
+  auto &v02 = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
+  auto &v03 = mesh.createVertex(Eigen::Vector3d(0, 0, 1));
+  mesh.createTetrahedron(v00, v01, v02, v03);
+
+  for (const auto &vertex : locations) {
+    auto match = indexTree.getEnclosingTetrahedra(vertex);
+    BOOST_TEST(match.size() == 1);
+  }
+}
+
+BOOST_AUTO_TEST_SUITE_END() // Tetrahedra
 
 BOOST_AUTO_TEST_SUITE_END() // Mesh
 BOOST_AUTO_TEST_SUITE_END() // Query

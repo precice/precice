@@ -2,9 +2,7 @@
 #include "../Constants.hpp"
 #include "logging/LogMacros.hpp"
 
-namespace precice {
-namespace cplscheme {
-namespace tests {
+namespace precice::cplscheme::tests {
 
 DummyCouplingScheme::DummyCouplingScheme(
     int numberIterations,
@@ -47,6 +45,7 @@ void DummyCouplingScheme::finalize()
 
 bool DummyCouplingScheme::isCouplingOngoing() const
 {
+  PRECICE_ASSERT(_isInitialized);
   if (_timesteps <= _maxTimesteps)
     return true;
   return false;
@@ -72,6 +71,4 @@ bool DummyCouplingScheme::isActionRequired(
   return false;
 }
 
-} // namespace tests
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme::tests

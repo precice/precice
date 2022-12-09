@@ -22,5 +22,7 @@ src/Eigen/
 docs/source-code-documentation/
 CMakeFiles
 Makefile
-src/versions.hpp
+src/precice/impl/versions.hpp
+src/precice/Version.h
 .idea
+CMakeUserPresets.json

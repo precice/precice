@@ -21,8 +21,7 @@
 #include "utils/String.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace action {
+namespace precice::action {
 
 namespace {
 std::string python_error_as_string()
@@ -129,29 +128,24 @@ PythonAction::~PythonAction()
   }
 }
 
-void PythonAction::performAction(double time,
-                                 double timeStepSize,
-                                 double computedTimeWindowPart,
-                                 double timeWindowSize)
+void PythonAction::performAction(double time)
 {
-  PRECICE_TRACE(time, timeStepSize, computedTimeWindowPart, timeWindowSize);
+  PRECICE_TRACE(time);
 
   if (not _isInitialized)
     initialize();
 
   PyObject *dataArgs = PyTuple_New(_numberArguments);
   if (_performAction != nullptr) {
-    PyObject *pythonTime           = PyFloat_FromDouble(time);
-    PyObject *pythonTimeWindowSize = PyFloat_FromDouble(timeWindowSize);
+    PyObject *pythonTime = PyFloat_FromDouble(time);
     PyTuple_SetItem(dataArgs, 0, pythonTime);
-    PyTuple_SetItem(dataArgs, 1, pythonTimeWindowSize);
     if (_sourceData) {
       npy_intp sourceDim[]  = {_sourceData->values().size()};
       double * sourceValues = _sourceData->values().data();
       //PRECICE_ASSERT(_sourceValues == NULL);
       _sourceValues = PyArray_SimpleNewFromData(1, sourceDim, NPY_DOUBLE, sourceValues);
       PRECICE_CHECK(_sourceValues != nullptr, "Creating python source values failed. Please check that the source data name is used by the mesh in action:python.");
-      PyTuple_SetItem(dataArgs, 2, _sourceValues);
+      PyTuple_SetItem(dataArgs, 1, _sourceValues);
     }
     if (_targetData) {
       npy_intp targetDim[]  = {_targetData->values().size()};
@@ -160,7 +154,7 @@ void PythonAction::performAction(double time,
       _targetValues =
           PyArray_SimpleNewFromData(1, targetDim, NPY_DOUBLE, targetValues);
       PRECICE_CHECK(_targetValues != nullptr, "Creating python target values failed. Please check that the target data name is used by the mesh in action:python.");
-      int argumentIndex = _sourceData ? 3 : 2;
+      int argumentIndex = _sourceData ? 2 : 1;
       PyTuple_SetItem(dataArgs, argumentIndex, _targetValues);
     }
     PyObject_CallObject(_performAction, dataArgs);
@@ -282,7 +276,6 @@ int PythonAction::makeNumPyArraysAvailable()
   return 1;
 }
 
-} // namespace action
-} // namespace precice
+} // namespace precice::action
 
 #endif

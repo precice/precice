@@ -7,7 +7,7 @@
 #include <stddef.h>
 #include <string>
 
-#include "MPICommunication.hpp"
+#include "com/MPICommunication.hpp"
 #include "logging/Logger.hpp"
 #include "precice/types.hpp"
 
@@ -31,7 +31,7 @@ namespace com {
  *
  * The latter, in contrast, is only called from m2n::PointToPointCommunication, due to that the p2p class was also heavily modified. But this connection method is the most important, because it does the m2n heavy lifiting.
  *
- * If we agree, that acceptConnection / requestConnection just does 1:1 connection, we can rewrite and simplifiy the code.
+ * If we agree, that acceptConnection / requestConnection just does 1:1 connection, we can rewrite and simplify the code.
 **/
 class MPISinglePortsCommunication : public MPICommunication {
 public:
@@ -89,7 +89,7 @@ private:
    * These direct connections connect MPI_COMM_SELF on both sides.
    * The call to establish such a connection is thus not collective.
    *
-   * These connections are required for the Master-Master and Master-Slaves connections.
+   * These connections are required for the primary and the intra-participant communications connections.
    */
   std::map<int, MPI_Comm> _direct;
 

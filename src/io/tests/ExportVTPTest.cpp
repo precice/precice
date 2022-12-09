@@ -12,12 +12,10 @@
 #include "testing/Testing.hpp"
 #include "utils/Parallel.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 class Edge;
 class Vertex;
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh
 
 BOOST_AUTO_TEST_SUITE(IOTests)
 
@@ -25,9 +23,72 @@ using namespace precice;
 
 BOOST_AUTO_TEST_SUITE(VTPExport)
 
+BOOST_AUTO_TEST_CASE(ExportDataWithGradient2D)
+{
+  PRECICE_TEST(1_rank)
+  const int dimensions = 2;
+  // Create mesh to map from
+  mesh::Mesh    mesh("MyMesh", dimensions, testing::nextMeshID());
+  mesh::PtrData dataScalar = mesh.createData("dataScalar", 1, 0_dataID);
+  mesh::PtrData dataVector = mesh.createData("dataVector", dimensions, 1_dataID);
+  dataScalar->requireDataGradient();
+  dataVector->requireDataGradient();
+  mesh.createVertex(Eigen::Vector2d::Constant(0.0));
+  mesh.createVertex(Eigen::Vector2d::Constant(1.0));
+
+  // Create data
+  mesh.allocateDataValues();
+  Eigen::VectorXd &valuesScalar = dataScalar->values();
+  Eigen::VectorXd &valuesVector = dataVector->values();
+  valuesScalar.setLinSpaced(1., 5.);
+  valuesVector.setLinSpaced(1., 5.);
+
+  // Create corresponding gradient data (all gradient values = const = 1)
+  Eigen::MatrixXd &gradValuesScalar = dataScalar->gradientValues();
+  Eigen::MatrixXd &gradValuesVector = dataVector->gradientValues();
+  gradValuesScalar.setOnes();
+  gradValuesVector.setOnes();
+  io::ExportVTP exportVTP;
+  std::string   filename = "io-VTPExport-ExportDatawithGradient" + std::to_string(dimensions);
+  std::string   location = "";
+  exportVTP.doExport(filename, location, mesh);
+}
+
+BOOST_AUTO_TEST_CASE(ExportDataWithGradient3D)
+{
+  PRECICE_TEST(1_rank)
+  const int dimensions = 3;
+  // Create mesh to map from
+  mesh::Mesh    mesh("MyMesh", dimensions, testing::nextMeshID());
+  mesh::PtrData dataScalar = mesh.createData("dataScalar", 1, 0_dataID);
+  mesh::PtrData dataVector = mesh.createData("dataVector", dimensions, 1_dataID);
+  dataScalar->requireDataGradient();
+  dataVector->requireDataGradient();
+  mesh.createVertex(Eigen::Vector3d::Constant(0.0));
+  mesh.createVertex(Eigen::Vector3d::Constant(1.0));
+
+  // Create data
+  mesh.allocateDataValues();
+  Eigen::VectorXd &valuesScalar = dataScalar->values();
+  Eigen::VectorXd &valuesVector = dataVector->values();
+
+  valuesScalar.setLinSpaced(1., 5.);
+  valuesVector.setLinSpaced(1., 5.);
+
+  // Create corresponding gradient data (all gradient values = const = 1)
+  Eigen::MatrixXd &gradValuesScalar = dataScalar->gradientValues();
+  Eigen::MatrixXd &gradValuesVector = dataVector->gradientValues();
+  gradValuesScalar.setOnes();
+  gradValuesVector.setOnes();
+  io::ExportVTP exportVTP;
+  std::string   filename = "io-VTPExport-ExportDatawithGradient" + std::to_string(dimensions);
+  std::string   location = "";
+  exportVTP.doExport(filename, location, mesh);
+}
+
 BOOST_AUTO_TEST_CASE(ExportPolygonalMeshSerial)
 {
-  PRECICE_TEST(""_on(1_rank).setupMasterSlaves());
+  PRECICE_TEST(""_on(1_rank).setupIntraComm());
   int           dim = 2;
   mesh::Mesh    mesh("MyMesh", dim, testing::nextMeshID());
   mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector2d::Zero());
@@ -46,7 +107,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMeshSerial)
 
 BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   int        dim = 2;
   mesh::Mesh mesh("MyMesh", dim, testing::nextMeshID());
 
@@ -58,10 +119,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
     mesh.createEdge(v1, v2);
     mesh.createEdge(v2, v3);
     mesh.createEdge(v3, v1);
-    mesh.getVertexDistribution()[0] = {0, 1, 2};
-    mesh.getVertexDistribution()[1] = {};
-    mesh.getVertexDistribution()[2] = {3, 4, 5};
-    mesh.getVertexDistribution()[3] = {6};
+    mesh.setVertexOffsets({3, 3, 6, 7});
   } else if (context.isRank(1)) {
     // nothing
   } else if (context.isRank(2)) {
@@ -84,7 +142,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 
 BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   int        dim = 3;
   mesh::Mesh mesh("MyMesh", dim, testing::nextMeshID());
 
@@ -97,11 +155,8 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
     mesh::Edge &e2 = mesh.createEdge(v2, v3);
     mesh::Edge &e3 = mesh.createEdge(v3, v1);
     mesh.createTriangle(e1, e2, e3);
+    mesh.setVertexOffsets({3, 3, 6, 7});
 
-    mesh.getVertexDistribution()[0] = {0, 1, 2};
-    mesh.getVertexDistribution()[1] = {};
-    mesh.getVertexDistribution()[2] = {3, 4, 5};
-    mesh.getVertexDistribution()[3] = {6};
   } else if (context.isRank(1)) {
     // nothing
   } else if (context.isRank(2)) {
@@ -125,7 +180,7 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
 
 BOOST_AUTO_TEST_CASE(ExportSplitSquare)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   int        dim = 3;
   mesh::Mesh mesh("MyMesh", dim, testing::nextMeshID());
 
@@ -142,10 +197,7 @@ BOOST_AUTO_TEST_CASE(ExportSplitSquare)
     mesh::Edge &e2o = mesh.createEdge(v2, vo);
     mesh.createTriangle(eo1, e12, e2o);
 
-    mesh.getVertexDistribution()[0] = {0, 1, 2};
-    mesh.getVertexDistribution()[1] = {3, 4, 5};
-    mesh.getVertexDistribution()[2] = {6, 7, 8};
-    mesh.getVertexDistribution()[3] = {9, 10, 11};
+    mesh.setVertexOffsets({3, 6, 9, 12});
   } else if (context.isRank(1)) {
     mesh::Vertex &v1  = mesh.createVertex(Eigen::Vector3d{1.0, -1.0, 0.0});
     mesh::Vertex &v2  = mesh.createVertex(Eigen::Vector3d{-1.0, -1.0, 0.0});

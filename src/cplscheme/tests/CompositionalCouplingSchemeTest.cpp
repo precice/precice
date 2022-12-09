@@ -18,6 +18,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
+#include "precice/config/ParticipantConfiguration.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "xml/XMLTag.hpp"
@@ -44,14 +45,17 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
     std::string nameParticipant0("Participant0");
     std::string nameParticipant1("Participant1");
     std::string nameParticipant2("Participant2");
+    int         dimensions = 3;
 
     xml::XMLTag          root = xml::getRootTag();
     PtrDataConfiguration dataConfig(new DataConfiguration(root));
-    dataConfig->setDimensions(3);
+    dataConfig->setDimensions(dimensions);
     PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
-    meshConfig->setDimensions(3);
-    m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
-    CouplingSchemeConfiguration          cplSchemeConfig(root, meshConfig, m2nConfig);
+    meshConfig->setDimensions(dimensions);
+    m2n::M2NConfiguration::SharedPointer         m2nConfig(new m2n::M2NConfiguration(root));
+    precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
+    participantConfig->setDimensions(dimensions);
+    CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
     const xml::ConfigurationContext ccontext{context.name, 0, 1};
     xml::configure(root, ccontext, configFilename);
@@ -124,6 +128,8 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
       BOOST_TEST(cplScheme->getNextTimestepMaxLength() > 0.0); // ??
     } else if (participantName == std::string("Participant1")) {
       cplScheme->initialize(0.0, 1);
+      BOOST_TEST(!cplScheme->hasDataBeenReceived());
+      cplScheme->receiveResultOfFirstAdvance();
       BOOST_TEST(cplScheme->hasDataBeenReceived());
       BOOST_TEST(not cplScheme->isTimeWindowComplete());
       BOOST_TEST(cplScheme->isCouplingOngoing());
@@ -153,6 +159,8 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
     } else {
       BOOST_TEST(participantName == std::string("Participant2"), participantName);
       cplScheme->initialize(0.0, 1);
+      BOOST_TEST(!cplScheme->hasDataBeenReceived());
+      cplScheme->receiveResultOfFirstAdvance();
       BOOST_TEST(cplScheme->hasDataBeenReceived());
       BOOST_TEST(not cplScheme->isTimeWindowComplete());
       BOOST_TEST(cplScheme->isCouplingOngoing());
@@ -190,12 +198,12 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
   {
     BOOST_TEST(communication);
     BOOST_TEST(not communication->isConnected());
-    useOnlyMasterCom(communication) = true;
+    useOnlyPrimaryCom(communication) = true;
     if (participant0 == localParticipant) {
-      communication->requestMasterConnection(participant1, participant0);
+      communication->requestPrimaryRankConnection(participant1, participant0);
     } else {
       BOOST_TEST(participant1 == localParticipant);
-      communication->acceptMasterConnection(participant1, participant0);
+      communication->acceptPrimaryRankConnection(participant1, participant0);
     }
   }
 };

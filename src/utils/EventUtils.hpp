@@ -104,15 +104,15 @@ struct GlobalEventStats {
 };
 
 /// High level object that stores data of all events.
-/** Call EventRegistry::intialize at the beginning of your application and
-EventRegistry::finalize at the end. Event timings will be usuable without calling this
+/** Call EventRegistry::initialize at the beginning of your application and
+EventRegistry::finalize at the end. Event timings will be usable without calling this
 function at all, but global timings as well as percentages do not work this way.  */
 class EventRegistry {
 public:
   /// Deleted copy operator for singleton pattern
   EventRegistry(EventRegistry const &) = delete;
 
-  /// Deleted assigment operator for singleton pattern
+  /// Deleted assignment operator for singleton pattern
   void operator=(EventRegistry const &) = delete;
 
   /// Returns the only instance (singleton) of the EventRegistry class

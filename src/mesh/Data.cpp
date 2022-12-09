@@ -2,18 +2,17 @@
 #include <algorithm>
 #include <utility>
 
+#include "SharedPointer.hpp"
 #include "precice/types.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace mesh {
-
-size_t Data::_dataCount = 0;
+namespace precice::mesh {
 
 Data::Data()
     : _name(""),
       _id(-1),
-      _dimensions(0)
+      _dimensions(0),
+      _spatialDimensions(-1)
 {
   PRECICE_ASSERT(false);
 }
@@ -21,19 +20,15 @@ Data::Data()
 Data::Data(
     std::string name,
     DataID      id,
-    int         dimensions)
+    int         dimensions,
+    int         spatialDimensions)
     : _values(),
       _name(std::move(name)),
       _id(id),
-      _dimensions(dimensions)
+      _dimensions(dimensions),
+      _spatialDimensions(spatialDimensions)
 {
   PRECICE_ASSERT(dimensions > 0, dimensions);
-  _dataCount++;
-}
-
-Data::~Data()
-{
-  _dataCount--;
 }
 
 Eigen::VectorXd &Data::values()
@@ -44,6 +39,16 @@ Eigen::VectorXd &Data::values()
 const Eigen::VectorXd &Data::values() const
 {
   return _values;
+}
+
+Eigen::MatrixXd &Data::gradientValues()
+{
+  return _gradientValues;
+}
+
+const Eigen::MatrixXd &Data::gradientValues() const
+{
+  return _gradientValues;
 }
 
 const std::string &Data::getName() const
@@ -58,25 +63,30 @@ DataID Data::getID() const
 
 void Data::toZero()
 {
-  auto begin = _values.data();
-  auto end   = begin + _values.size();
-  std::fill(begin, end, 0.0);
+  _values.setZero();
+  if (_hasGradient) {
+    _gradientValues.setZero();
+  }
 }
+
+bool Data::hasGradient() const
+{
+  return _hasGradient;
+}
+
+void Data::requireDataGradient()
+{
+  _hasGradient = true;
+};
 
 int Data::getDimensions() const
 {
   return _dimensions;
 }
 
-size_t Data::getDataCount()
+int Data::getSpatialDimensions() const
 {
-  return _dataCount;
+  return _spatialDimensions;
 }
 
-void Data::resetDataCount()
-{
-  _dataCount = 0;
-}
-
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh

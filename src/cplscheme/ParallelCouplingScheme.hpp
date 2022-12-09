@@ -20,7 +20,7 @@ namespace cplscheme {
 /**
  * @brief Coupling scheme for parallel coupling, i.e. simultaneous execution of two coupled participants
  *
- * For more information, look into Benjamin's thesis, Section 3.5. 
+ * For more information, look into Benjamin's thesis, Section 3.5.
  * https://mediatum.ub.tum.de/doc/1320661/document.pdf
  */
 class ParallelCouplingScheme : public BiCouplingScheme {
@@ -66,24 +66,14 @@ private:
   bool exchangeDataAndAccelerate() override;
 
   /**
-   * @brief ParallelCouplingScheme applies acceleration to _allData
+   * @brief ParallelCouplingScheme applies acceleration to all CouplingData
    * @returns DataMap being accelerated
    */
-  DataMap &getAccelerationData() override
+  const DataMap getAccelerationData() override
   {
     PRECICE_ASSERT(!doesFirstStep(), "Only the second participant should do the acceleration.");
-    return _allData;
+    return getAllData();
   }
-
-  /**
-   * @brief determine whether data has to be sent/received
-   */
-  void initializeImplementation() override;
-
-  /**
-   * @brief Exchanges data, if it has to be initialized.
-   */
-  void exchangeInitialData() override;
 };
 
 } // namespace cplscheme

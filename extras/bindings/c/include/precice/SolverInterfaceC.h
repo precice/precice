@@ -1,5 +1,7 @@
 #pragma once
 
+#include "precice/Version.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -56,16 +58,11 @@ void precicec_createSolverInterface(
 ///@{
 
 /**
- * @brief Initiates the coupling to the coupling supervisor.
+ * @brief Initiates the coupling to the coupling supervisor and initializes coupling data.
  *
  * @return Maximal length of first timestep to be computed by solver.
  */
 double precicec_initialize();
-
-/**
- * @brief Initializes coupling data.
- */
-void precicec_initialize_data();
 
 /**
  * @brief Exchanges data between solver and coupling supervisor.
@@ -96,33 +93,9 @@ int precicec_getDimensions();
 int precicec_isCouplingOngoing();
 
 /**
- * @brief Returns true (->1), if new data to read is available.
- */
-int precicec_isReadDataAvailable();
-
-/**
- * @brief Checks if new data has to be written before calling advance().
- *
- * @param[in] computedTimestepLength Length of timestep used by the solver.
- *
- * @return true (->1) if new data has to be written.
- */
-int precicec_isWriteDataRequired(double computedTimestepLength);
-
-/**
  * @brief Returns true (->1), if the coupling time window is completed.
  */
 int precicec_isTimeWindowComplete();
-
-/**
- * @brief Returns whether the solver has to evaluate the surrogate model representation.
- */
-int precicec_hasToEvaluateSurrogateModel();
-
-/**
- * @brief Returns whether the solver has to evaluate the fine model representation.
- */
-int precicec_hasToEvaluateFineModel();
 
 ///@}
 
@@ -243,49 +216,47 @@ void precicec_getMeshVertexIDsFromPositions(
  *
  * @return the ID of the edge
  */
-int precicec_setMeshEdge(
+void precicec_setMeshEdge(
     int meshID,
     int firstVertexID,
     int secondVertexID);
 
 /**
- * @brief Sets mesh triangle from edge IDs
- *
- * @param[in] meshID ID of the mesh to add the triangle to
- * @param[in] firstEdgeID ID of the first edge of the triangle
- * @param[in] secondEdgeID ID of the second edge of the triangle
- * @param[in] thirdEdgeID ID of the third edge of the triangle
- */
-void precicec_setMeshTriangle(
-    int meshID,
-    int firstEdgeID,
-    int secondEdgeID,
-    int thirdEdgeID);
+   * @brief Sets multiple mesh edge from vertex IDs
+   *
+   * @param[in] meshID ID of the mesh to add the edges to
+   * @param[in] size the amount of edges to set
+   * @param[in] vertices an array containing 2*size vertex IDs
+   *
+   * @pre vertices were added to the mesh with the ID meshID
+   */
+void precicec_setMeshEdges(
+    int        meshID,
+    int        size,
+    const int *vertices);
 
 /**
  * @brief Sets a triangle from vertex IDs. Creates missing edges.
  */
-void precicec_setMeshTriangleWithEdges(
+void precicec_setMeshTriangle(
     int meshID,
     int firstVertexID,
     int secondVertexID,
     int thirdVertexID);
 
 /**
- * @brief Sets mesh Quad from edge IDs.
- *
- * @param[in] meshID ID of the mesh to add the Quad to
- * @param[in] firstEdgeID ID of the first edge of the Quad
- * @param[in] secondEdgeID ID of the second edge of the Quad
- * @param[in] thirdEdgeID ID of the third edge of the Quad
- * @param[in] fourthEdgeID ID of the forth edge of the Quad
- */
-void precicec_setMeshQuad(
-    int meshID,
-    int firstEdgeID,
-    int secondEdgeID,
-    int thirdEdgeID,
-    int fourthEdgeID);
+   * @brief Sets multiple mesh triangles from vertex IDs
+   *
+   * @param[in] meshID ID of the mesh to add the triangles to
+   * @param[in] size the amount of triangles to set
+   * @param[in] vertices an array containing 3*size vertex IDs
+   *
+   * @pre vertices were added to the mesh with the ID meshID
+   */
+void precicec_setMeshTriangles(
+    int        meshID,
+    int        size,
+    const int *vertices);
 
 /**
   * @brief Sets surface mesh quadrangle from vertex IDs.
@@ -296,12 +267,56 @@ void precicec_setMeshQuad(
   * @param[in] thirdVertexID ID of the third vertex of the Quad
   * @param[in] fourthVertexID ID of the fourth vertex of the Quad
  */
-void precicec_setMeshQuadWithEdges(
+void precicec_setMeshQuad(
     int meshID,
     int firstVertexID,
     int secondVertexID,
     int thirdVertexID,
     int fourthVertexID);
+
+/**
+   * @brief Sets multiple mesh quads from vertex IDs
+   *
+   * @param[in] meshID ID of the mesh to add the quad to
+   * @param[in] size the amount of quads to set
+   * @param[in] vertices an array containing 4*size vertex IDs
+   *
+   * @pre vertices were added to the mesh with the ID meshID
+   */
+void precicec_setMeshQuads(
+    int        meshID,
+    int        size,
+    const int *vertices);
+
+/**
+  * @brief Sets mesh tetrahedron from vertex IDs.
+  *
+  * @param[in] meshID ID of the mesh to add the Tetra to
+  * @param[in] firstVertexID ID of the first vertex of the Tetra
+  * @param[in] secondVertexID ID of the second vertex of the Tetra
+  * @param[in] thirdVertexID ID of the third vertex of the Tetra
+  * @param[in] fourthVertexID ID of the fourth vertex of the Tetra
+ */
+void precicec_setMeshTetrahedron(
+    int meshID,
+    int firstVertexID,
+    int secondVertexID,
+    int thirdVertexID,
+    int fourthVertexID);
+
+/**
+   * @brief Sets multiple mesh tetrahedra from vertex IDs
+   *
+   * @param[in] meshID ID of the mesh to add the tetrahedra to
+   * @param[in] size the amount of tetrahedra to set
+   * @param[in] vertices an array containing 4*size vertex IDs
+   *
+   * @pre vertices were added to the mesh with the ID meshID
+   */
+void precicec_setMeshTetrahedra(
+    int        meshID,
+    int        size,
+    const int *vertices);
 
 ///@}
 
@@ -321,16 +336,6 @@ int precicec_hasData(const char *dataName, int meshID);
  * data to and from the coupling mesh.
  */
 int precicec_getDataID(const char *dataName, int meshID);
-
-/**
- * @brief Computes and maps all read data mapped to mesh with given ID.
- */
-void precicec_mapReadDataTo(int toMeshID);
-
-/**
- * @brief Computes and maps all write data mapped from mesh with given ID.
- */
-void precicec_mapWriteDataFrom(int fromMeshID);
 
 /**
  * @brief Writes vector data values given as block.
@@ -433,11 +438,11 @@ void precicec_readScalarData(
     int     valueIndex,
     double *dataValue);
 
-/** 
+/**
  * @brief Returns information on the version of preCICE.
  *
  * Returns a semicolon-separated C-string containing:
- * 
+ *
  * 1) the version of preCICE
  * 2) the revision information of preCICE
  * 3) the configuration of preCICE including MPI, PETSC, PYTHON
@@ -459,6 +464,35 @@ const char *precicec_actionReadIterationCheckpoint();
  * These API functions are \b experimental and may change in future versions.
  */
 ///@{
+
+/// @copydoc precice::SolverInterface::isGradientDataRequired
+int precicec_isGradientDataRequired(int dataID);
+
+/// @copydoc precice::SolverInterface::writeScalarGradientData
+void precicec_writeScalarGradientData(
+    int           dataID,
+    int           valueIndex,
+    const double *gradientValues);
+
+/// @copydoc precice::SolverInterface::writeBlockScalarGradientData
+void precicec_writeBlockScalarGradientData(
+    int           dataID,
+    int           size,
+    const int *   valueIndices,
+    const double *gradientValues);
+
+/// @copydoc precice::SolverInterface::writeVectorGradientData
+void precicec_writeVectorGradientData(
+    int           dataID,
+    int           valueIndex,
+    const double *gradientValues);
+
+/// @copydoc precice::SolverInterface::writeBlockVectorGradientData
+void precicec_writeBlockVectorGradientData(
+    int           dataID,
+    int           size,
+    const int *   valueIndices,
+    const double *gradientValues);
 
 /**
  * @brief See precice::SolverInterface::setMeshAccessRegion().

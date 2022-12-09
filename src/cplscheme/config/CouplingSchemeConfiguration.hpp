@@ -49,12 +49,16 @@ public:
    *
    * @param[in] parent  Used to add subtags to hierarchical XML structure.
    * @param[in] meshConfig For checking if a used mesh is defined.
-   * @param[in] comConfig For checking if a communication between participants to be coupled is defined.
+   * @param[in] m2nConfig For checking if a communication between participants to be coupled is defined.
+   * @param[in] participantConfig For checking waveform order.
    */
   CouplingSchemeConfiguration(
       xml::XMLTag &                        parent,
       mesh::PtrMeshConfiguration           meshConfig,
-      m2n::M2NConfiguration::SharedPointer m2nConfig);
+      m2n::M2NConfiguration::SharedPointer m2nConfig,
+      config::PtrParticipantConfiguration  participantConfig);
+
+  void setExperimental(bool experimental);
 
   /// Destructor, empty.
   virtual ~CouplingSchemeConfiguration() {}
@@ -121,6 +125,8 @@ private:
   const std::string VALUE_FIXED;
   const std::string VALUE_FIRST_PARTICIPANT;
 
+  bool _experimental = false;
+
   struct ConvergenceMeasureDefintion {
     mesh::PtrData               data;
     bool                        suffices;
@@ -153,6 +159,13 @@ private:
     std::vector<ConvergenceMeasureDefintion> convergenceMeasureDefinitions;
     int                                      maxIterations      = -1;
     int                                      extrapolationOrder = 0;
+
+    bool hasExchange(const Exchange &totest) const
+    {
+      return std::any_of(exchanges.begin(), exchanges.end(), [&totest](const auto &ex) {
+        return ex.from == totest.from && ex.to == totest.to && ex.data->getName() == totest.data->getName() && ex.mesh->getName() == totest.mesh->getName();
+      });
+    }
   } _config;
 
   mesh::PtrMeshConfiguration _meshConfig;
@@ -160,6 +173,8 @@ private:
   m2n::M2NConfiguration::SharedPointer _m2nConfig;
 
   acceleration::PtrAccelerationConfiguration _accelerationConfig;
+
+  precice::config::PtrParticipantConfiguration _participantConfig;
 
   /// Map from participant name to coupling scheme (composition).
   std::map<std::string, PtrCouplingScheme> _couplingSchemes;
@@ -261,6 +276,12 @@ private:
 
   void checkIfDataIsExchanged(
       DataID dataID) const;
+
+  /// Get waveform order for read data of given name. Raises an error if data name is not found in the read data of this participant.
+  int getWaveformUsedOrder(std::string participantName, std::string readDataName) const;
+
+  void checkWaveformOrderReadData(
+      int maxAllowedOrder) const;
 
   void checkSerialImplicitAccelerationData(
       DataID dataID, const std::string &first, const std::string &second) const;

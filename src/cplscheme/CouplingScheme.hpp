@@ -59,7 +59,7 @@ public:
 
   /**
    * @brief Initializes the coupling scheme and establishes a communication
-   *        connection to the coupling partner.
+   *        connection to the coupling partner. Initializes coupling data.
    *
    * @param[in] startTime starting time for coupling @BU correct?
    * @param[in] startTimeWindow counter of time window for coupling @BU correct?
@@ -68,35 +68,25 @@ public:
       double startTime,
       int    startTimeWindow) = 0;
 
-  /// Returns true, if initialize has been called.
-  virtual bool isInitialized() const = 0;
+  /**
+   * @brief Receives result of first advance, if this has to happen inside SolverInterface::initialize()
+   *
+   * This is only relevant for the second participant of the SerialCouplingScheme, because other coupling schemes only
+   * receive initial data in initialize. This part is implemented as a public function to be called from
+   * SolverInterfaceImpl. SolverInterfaceImpl has to store data received in CouplingScheme::initialize before calling
+   * CouplingScheme::receiveResultOfFirstAdvance, which will override the data in the receive buffer.
+   */
+  virtual void receiveResultOfFirstAdvance() = 0;
 
   /**
-   * @brief Getter for _sendsInitializedData
-   * @returns _sendsInitializedData
+   * @brief Returns whether this participant of the coupling scheme sends initialized data.
+   *
+   * @returns true, if this participant of the coupling scheme sends initialized data
    */
   virtual bool sendsInitializedData() const = 0;
 
-  /**
-   * @brief Getter for _receivesInitializedData
-   * @returns _receivesInitializedData
-   */
-  virtual bool receivesInitializedData() const = 0;
-
-  /**
-   * @brief Initializes the data for first implicit coupling scheme iteration.
-   *
-   * Has to be called after initialize() and before advance().
-   * If this method is not used, the first participant has zero initial values
-   * for its read data, before receiving data in advance(). If non-zero values
-   * are needed, this has to be configured in the coupling-scheme XML
-   * exchange-data tags. This method can nevertheless also be called if no
-   * initialization is necessary. Then it is simply skipped.
-   * It has to be called after initialize() and before
-   * advance(). The second participant has to write the initial data values
-   * to preCICE after initialize() and before initializeData().
-   */
-  virtual void initializeData() = 0;
+  /// Returns true, if initialize has been called.
+  virtual bool isInitialized() const = 0;
 
   /// @brief Adds newly computed time. Has to be called before every advance.
   virtual void addComputedTime(double timeToAdd) = 0;
@@ -128,7 +118,6 @@ public:
   virtual bool willDataBeExchanged(double lastSolverTimestepLength) const = 0;
 
   /// @brief Returns true, if data has been exchanged in last call of advance().
-  /// actually, this only means that data has been received, data is always sent
   virtual bool hasDataBeenReceived() const = 0;
 
   /// Returns the currently computed time of the coupling scheme.

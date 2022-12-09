@@ -4,9 +4,7 @@
 #include "logging/LogMacros.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
-namespace precice {
-namespace cplscheme {
-namespace impl {
+namespace precice::cplscheme::impl {
 
 Extrapolation::Extrapolation(
     const int extrapolationOrder)
@@ -63,7 +61,7 @@ int Extrapolation::valuesSize()
 
 /**
  * @brief Computes which order may be used for extrapolation.
- * 
+ *
  * Order of extrapolation is determined by number of stored samples and maximum order defined by the user.
  * Example: If only two samples are available, the maximum order we may use is 1, even if the user demands order 2.
  *
@@ -123,6 +121,4 @@ Eigen::VectorXd Extrapolation::extrapolate()
   return extrapolatedValue;
 }
 
-} // namespace impl
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme::impl
