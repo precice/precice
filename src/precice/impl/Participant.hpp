@@ -108,15 +108,15 @@ public:
   /// Adds a configured \ref ExportContext to export meshes and data.
   void addExportContext(const io::ExportContext &context);
 
-  /// Adds a mesh to be used by the participant.
-  void useMesh(const mesh::PtrMesh &                         mesh,
-               const Eigen::VectorXd &                       localOffset,
-               bool                                          remote,
-               const std::string &                           fromParticipant,
-               double                                        safetyFactor,
-               bool                                          provideMesh,
-               partition::ReceivedPartition::GeometricFilter geoFilter,
-               const bool                                    allowDirectAccess);
+  /// Adds a mesh to be provided by the participant.
+  void provideMesh(const mesh::PtrMesh &mesh);
+
+  /// Adds a mesh to be received by the participant.
+  void receiveMesh(const mesh::PtrMesh &                         mesh,
+                   const std::string &                           fromParticipant,
+                   double                                        safetyFactor,
+                   partition::ReceivedPartition::GeometricFilter geoFilter,
+                   const bool                                    allowDirectAccess);
   /// @}
 
   /// @name Data queries
@@ -262,11 +262,17 @@ public:
   /// Is a mesh with this id provided?
   bool isMeshProvided(MeshID meshID) const;
 
+  /// Is a mesh with this name provided by this participant?
+  bool isMeshProvided(const std::string &meshName) const;
+
+  /// Is a mesh with this name received by this participant?
+  bool isMeshReceived(const std::string &meshName) const;
+
   /// Get the used mesh id of a mesh with this name.
   int getUsedMeshID(const std::string &meshName) const;
 
   /// Returns whether we are allowed to access a received mesh direct
-  /// which requires the config tag <use-mesh ... direct-access="true"
+  /// which requires the config tag <receive-mesh ... direct-access="true"
   bool isDirectAccessAllowed(const int meshID) const;
 
   /// Get the name of a mesh given by its id.

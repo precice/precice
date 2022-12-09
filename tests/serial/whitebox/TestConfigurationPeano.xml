@@ -23,8 +23,8 @@
     <m2n:sockets from="Comsol" to="Peano" />
 
     <participant name="Peano">
-      <use-mesh name="PeanoNodes" provide="yes" />
-      <use-mesh name="ComsolNodes" from="Comsol" />
+      <provide-mesh name="PeanoNodes" />
+      <receive-mesh name="ComsolNodes" from="Comsol" />
       <mapping:nearest-projection
         direction="write"
         from="PeanoNodes"
@@ -47,7 +47,7 @@
     </participant>
 
     <participant name="Comsol">
-      <use-mesh name="ComsolNodes" provide="yes" />
+      <provide-mesh name="ComsolNodes" />
       <write-data name="Displacements" mesh="ComsolNodes" />
       <write-data name="Velocities" mesh="ComsolNodes" />
       <write-data name="VelocityDeltas" mesh="ComsolNodes" />

@@ -68,10 +68,9 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
   int    iterations      = 0;
   double time            = 0;
 
-  if (precice.isActionRequired(precice::constants::actionWriteInitialData())) {
+  if (precice.requiresInitialData()) {
     writeData = writeFunction(time);
     precice.writeScalarData(writeDataID, vertexID, writeData);
-    precice.markActionFulfilled(precice::constants::actionWriteInitialData());
   }
 
   double maxDt = precice.initialize();
@@ -82,10 +81,9 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
   double currentDt     = dt > maxDt ? maxDt : dt;                      // determine actual timestep length; must fit into remaining time in window
 
   while (precice.isCouplingOngoing()) {
-    if (precice.isActionRequired(precice::constants::actionWriteIterationCheckpoint())) {
+    if (precice.requiresWritingCheckpoint()) {
       windowStartTime = time;
       windowStartStep = timestep;
-      precice.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
     }
 
     precice.readScalarData(readDataID, vertexID, readData);
@@ -104,11 +102,10 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     maxDt     = precice.advance(currentDt);
     currentDt = dt > maxDt ? maxDt : dt;
     timestep++;
-    if (precice.isActionRequired(precice::constants::actionReadIterationCheckpoint())) { // at end of window and we have to repeat it.
+    if (precice.requiresReadingCheckpoint()) { // at end of window and we have to repeat it.
       iterations++;
       timestep = windowStartStep;
       time     = windowStartTime;
-      precice.markActionFulfilled(precice::constants::actionReadIterationCheckpoint()); // this test does not care about checkpointing, but we have to make the action
     }
     if (precice.isTimeWindowComplete()) {
       iterations++;

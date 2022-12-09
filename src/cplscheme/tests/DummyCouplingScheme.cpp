@@ -1,5 +1,6 @@
 #include "DummyCouplingScheme.hpp"
 #include "../Constants.hpp"
+#include "cplscheme/CouplingScheme.hpp"
 #include "logging/LogMacros.hpp"
 
 namespace precice::cplscheme::tests {
@@ -23,18 +24,48 @@ void DummyCouplingScheme::initialize(
   _iterations    = 1;
 }
 
-void DummyCouplingScheme::advance()
+CouplingScheme::ChangedMeshes DummyCouplingScheme::firstSynchronization(const CouplingScheme::ChangedMeshes &changes)
 {
   PRECICE_ASSERT(_isInitialized);
   PRECICE_ASSERT(_isOngoing);
-  if (_iterations == _numberIterations) {
+  PRECICE_ASSERT(changes.empty());
+  return changes;
+}
+
+void DummyCouplingScheme::firstExchange()
+{
+  PRECICE_ASSERT(_isInitialized);
+  PRECICE_ASSERT(_isOngoing);
+}
+
+CouplingScheme::ChangedMeshes DummyCouplingScheme::secondSynchronization()
+{
+  PRECICE_ASSERT(_isInitialized);
+  PRECICE_ASSERT(_isOngoing);
+  return {};
+}
+
+void DummyCouplingScheme::secondExchange()
+{
+  PRECICE_ASSERT(_isInitialized);
+  PRECICE_ASSERT(_isOngoing);
+  // Imagine we compute the convergence measure here
+  _hasConverged = _iterations == _numberIterations;
+
+  if (_hasConverged) {
     if (_timesteps == _maxTimesteps) {
       _isOngoing = false;
     }
     _timesteps++;
-    _iterations = 0;
+    _iterations = 1;
+  } else {
+    _iterations++;
   }
-  _iterations++;
+  if (isImplicitCouplingScheme()) {
+    PRECICE_DEBUG("advanced to {}-{}/{} (ongoing {})", _timesteps, _iterations, _numberIterations, _isOngoing);
+  } else {
+    PRECICE_DEBUG("advanced to {} (ongoing {})", _timesteps, _isOngoing);
+  }
 }
 
 void DummyCouplingScheme::finalize()
@@ -54,21 +85,29 @@ bool DummyCouplingScheme::isCouplingOngoing() const
 bool DummyCouplingScheme::isActionRequired(
     const std::string &actionName) const
 {
-  if (_numberIterations > 1) {
-    if (actionName == constants::actionWriteIterationCheckpoint()) {
-      if (_iterations == 1) {
-        PRECICE_DEBUG("return true");
-        return true;
-      }
-    } else if (actionName == constants::actionReadIterationCheckpoint()) {
-      if (_iterations != 1) {
-        PRECICE_DEBUG("return true");
-        return true;
-      }
+  if (!isImplicitCouplingScheme()) {
+    PRECICE_DEBUG("return false (explicit)");
+    return false;
+  }
+  if (actionName == constants::actionWriteIterationCheckpoint()) {
+    if (_iterations == 1) {
+      PRECICE_DEBUG("return true");
+      return true;
+    }
+  }
+  if (actionName == constants::actionReadIterationCheckpoint()) {
+    if (_iterations != 1) {
+      PRECICE_DEBUG("return true");
+      return true;
     }
   }
   PRECICE_DEBUG("return false");
   return false;
+}
+
+bool DummyCouplingScheme::hasConverged() const
+{
+  return _hasConverged;
 }
 
 } // namespace precice::cplscheme::tests

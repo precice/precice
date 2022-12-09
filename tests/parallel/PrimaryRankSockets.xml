@@ -16,8 +16,8 @@
 
     <participant name="ParallelSolver">
       <intra-comm:sockets />
-      <use-mesh name="ParallelMesh" provide="yes" />
-      <use-mesh name="SerialMesh" from="SerialSolver" />
+      <provide-mesh name="ParallelMesh" />
+      <receive-mesh name="SerialMesh" from="SerialSolver" />
       <write-data name="MyData1" mesh="ParallelMesh" />
       <read-data name="MyData2" mesh="ParallelMesh" />
       <mapping:nearest-neighbor
@@ -35,7 +35,7 @@
     </participant>
 
     <participant name="SerialSolver">
-      <use-mesh name="SerialMesh" provide="yes" />
+      <provide-mesh name="SerialMesh" />
       <read-data name="MyData1" mesh="SerialMesh" />
       <write-data name="MyData2" mesh="SerialMesh" />
     </participant>

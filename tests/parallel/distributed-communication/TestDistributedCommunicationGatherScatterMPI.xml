@@ -16,8 +16,8 @@
 
     <participant name="Fluid">
       <intra-comm:mpi-single />
-      <use-mesh name="FluidMesh" provide="yes" />
-      <use-mesh name="StructureMesh" from="Structure" />
+      <provide-mesh name="FluidMesh" />
+      <receive-mesh name="StructureMesh" from="Structure" />
       <write-data name="Forces" mesh="FluidMesh" />
       <read-data name="Velocities" mesh="FluidMesh" />
       <mapping:nearest-neighbor
@@ -36,7 +36,7 @@
 
     <participant name="Structure">
       <intra-comm:mpi-single />
-      <use-mesh name="StructureMesh" provide="yes" />
+      <provide-mesh name="StructureMesh" />
       <write-data name="Velocities" mesh="StructureMesh" />
       <read-data name="Forces" mesh="StructureMesh" />
     </participant>

@@ -53,8 +53,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipant)
   VertexID vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
   double   dt       = precice.initialize();
 
-  if (precice.isActionRequired(precice::constants::actionWriteIterationCheckpoint())) {
-    precice.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
+  if (precice.requiresWritingCheckpoint()) {
   }
 
   for (auto iterationSizes : timestepSizes) {
@@ -70,11 +69,9 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipant)
         dt = precice.advance(dt);
       }
 
-      if (precice.isActionRequired(precice::constants::actionReadIterationCheckpoint())) {
-        precice.markActionFulfilled(precice::constants::actionReadIterationCheckpoint());
+      if (precice.requiresReadingCheckpoint()) {
       }
-      if (precice.isActionRequired(precice::constants::actionWriteIterationCheckpoint())) {
-        precice.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
+      if (precice.requiresWritingCheckpoint()) {
       }
 
       precice.readScalarData(readDataID, vertexID, actualDataValue);

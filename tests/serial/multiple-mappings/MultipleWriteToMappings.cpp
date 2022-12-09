@@ -13,7 +13,6 @@ BOOST_AUTO_TEST_CASE(MultipleWriteToMappings)
   PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank));
 
   using Eigen::Vector2d;
-  using namespace precice::constants;
 
   precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
   Vector2d                 vertex{0.0, 0.0};

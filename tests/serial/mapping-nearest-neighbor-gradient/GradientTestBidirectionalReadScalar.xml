@@ -15,15 +15,15 @@
     </mesh>
 
     <participant name="SolverOne">
-      <use-mesh name="MeshOne" provide="on" />
+      <provide-mesh name="MeshOne" />
       <write-data name="DataOne" mesh="MeshOne" />
       <read-data name="DataTwo" mesh="MeshOne" />
     </participant>
 
     <participant name="SolverTwo">
       <!-- <intra-comm:mpi-single /> -->
-      <use-mesh name="MeshOne" from="SolverOne" />
-      <use-mesh name="MeshTwo" provide="on" />
+      <receive-mesh name="MeshOne" from="SolverOne" />
+      <provide-mesh name="MeshTwo" />
       <mapping:nearest-neighbor
         direction="write"
         from="MeshTwo"

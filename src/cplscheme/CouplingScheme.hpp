@@ -3,7 +3,9 @@
 #include <map>
 #include <string>
 #include <vector>
+
 #include "com/SharedPointer.hpp"
+#include "precice/types.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -30,8 +32,8 @@ namespace cplscheme {
  * -# query and fulfill required actions
  * -# compute data to be sent (possibly taking into account received data from
  *    initialize())
- * -# advance the coupling scheme with advance(); where the maximum timestep
- *    length (= time window size) needs to be obeyed
+ * -# advance the coupling scheme in 4 steps:
+ *    firstSynchronization, firstExchange, secondSynchronization, secondExchange;
  * -# ....
  * -# when the method isCouplingOngoing() returns false, call finalize() to
  *    stop the coupling scheme
@@ -88,17 +90,59 @@ public:
   /// Returns true, if initialize has been called.
   virtual bool isInitialized() const = 0;
 
+  /** @name Advancing
+   *
+   * Advancing the couplingscheme
+   * @{
+   */
+
   /// @brief Adds newly computed time. Has to be called before every advance.
   virtual void addComputedTime(double timeToAdd) = 0;
 
-  /**
-   * @brief Exchanges data and updates the state of the coupling scheme.
+  using ChangedMeshes = std::vector<MeshID>;
+
+  /** Synchronizes mesh changes with remote participants.
    *
-   * @pre initialize() has been called.
+   * At this point, both participants may have changed the meshes.
+   * Thus, we need to send local changes and receive remote changes.
    *
-   * Does not necessarily advance in time.
+   * @param[in] changes MeshIDs of locally changed meshes
+   *
+   * @returns MeshIDs of remotely changed meshes.
    */
-  virtual void advance() = 0;
+  virtual ChangedMeshes firstSynchronization(const ChangedMeshes &changes) = 0;
+
+  /** Exchanges the first set of data.
+   *
+   * @pre \ref firstSynchronization() was called
+   */
+  virtual void firstExchange() = 0;
+
+  /** Receive mesh changes from remote participants in the second step.
+   *
+   * At this point, the remote participant may have changed the meshes if
+   * it is using a serial coupling scheme.
+   * In contrast, the local participant has already communicated local changes
+   * to the remote participant during @ref firstSynchronization().
+   * Hence we only need to receive remote changes here.
+   *
+   * @note local changes are covered by \ref firstSynchronization()
+   *
+   * @returns MeshIDs of remotely changed meshes.
+   *
+   * @pre \ref firstExchange() was called
+   */
+  virtual ChangedMeshes secondSynchronization() = 0;
+
+  /** Exchanges the second set of data.
+   *
+   * This concludes the step of the coupling scheme
+   *
+   * @pre \ref secondSynchronization() was called
+   */
+  virtual void secondExchange() = 0;
+
+  ///@}
 
   /// Finalizes the coupling and disconnects communication.
   virtual void finalize() = 0;
@@ -165,6 +209,9 @@ public:
   /// Returns true, if the given action has to be performed by the accessor.
   virtual bool isActionRequired(const std::string &actionName) const = 0;
 
+  /// Returns true, if the given action has already been performed by the accessor.
+  virtual bool isActionFulfilled(const std::string &actionName) const = 0;
+
   /// Tells the coupling scheme that the accessor has performed the given action.
   virtual void markActionFulfilled(const std::string &actionName) = 0;
 
@@ -173,6 +220,12 @@ public:
 
   /// Returns a string representation of the current coupling state.
   virtual std::string printCouplingState() const = 0;
+
+  /// Returns true if the scheme or one subscheme is implicit
+  virtual bool isImplicitCouplingScheme() const = 0;
+
+  /// Returns false if the scheme is implicit and hasn't converged
+  virtual bool hasConverged() const = 0;
 };
 
 } // namespace cplscheme

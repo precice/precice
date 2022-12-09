@@ -114,14 +114,17 @@ public:
 
   ///@}
 
-  ///@name Action Methods
+  ///@name Requirements
   ///@{
 
-  /// @copydoc SolverInterface::isActionRequired
-  bool isActionRequired(const std::string &action) const;
+  /// @copydoc SolverInterface::requiresInitialData
+  bool requiresInitialData();
 
-  /// @copydoc SolverInterface::markActionFulfilled
-  void markActionFulfilled(const std::string &action);
+  /// @copydoc SolverInterface::requiresReadingCheckpoint
+  bool requiresReadingCheckpoint();
+
+  /// @copydoc SolverInterface::requiresWritingCheckpoint
+  bool requiresWritingCheckpoint();
 
   ///@}
 
@@ -141,11 +144,11 @@ public:
   /// @copydoc SolverInterface::getMeshIDs
   std::set<int> getMeshIDs() const;
 
-  /// @copydoc SolverInterface::isMeshConnectivityRequired
-  bool isMeshConnectivityRequired(int meshID) const;
+  /// @copydoc SolverInterface::requiresMeshConnectivityFor
+  bool requiresMeshConnectivityFor(int meshID) const;
 
-  /// @copydoc SolverInterface::isGradientDataRequired
-  bool isGradientDataRequired(int dataID) const;
+  /// @copydoc SolverInterface::requiresGradientDataFor
+  bool requiresGradientDataFor(int dataID) const;
 
   /// @copydoc SolverInterface::setMeshVertex
   int setMeshVertex(
@@ -546,6 +549,9 @@ private:
 
   /// Initializes intra-participant communication.
   void initializeIntraCommunication();
+
+  /// Advances the coupling schemes
+  void advanceCouplingScheme();
 
   /// Syncs the timestep between all ranks (all timesteps should be the same!)
   void syncTimestep(double computedTimestepLength);

@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(testDataContextWriteMapping)
   ptrToMesh->createVertex(Eigen::Vector3d(1.0, 0.1, 0.0));
   ptrToMesh->createVertex(Eigen::Vector3d(0.0, 0.1, 1.0));
 
-  MeshContext toMeshContext(dimensions);
+  MeshContext toMeshContext;
   toMeshContext.mesh = ptrToMesh;
 
   WriteDataContext dataContext(ptrFromData, ptrFromMesh);
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(testDataContextMultipleWriteMapping)
   ptrToMesh->createVertex(Eigen::Vector3d(1.0, 0.1, 0.0));
   ptrToMesh->createVertex(Eigen::Vector3d(0.0, 0.1, 1.0));
 
-  MeshContext toMeshContext1(dimensions);
+  MeshContext toMeshContext1;
   toMeshContext1.mesh = ptrToMesh;
 
   WriteDataContext dataContext(ptrFromData, ptrFromMesh);
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(testDataContextMultipleWriteMapping)
   ptrToMesh2->createVertex(Eigen::Vector3d(2.0, 1.1, 0.0));
   ptrToMesh2->createVertex(Eigen::Vector3d(0.0, 2.1, 4.0));
 
-  MeshContext toMeshContext2(dimensions);
+  MeshContext toMeshContext2;
   toMeshContext2.mesh = ptrToMesh2;
 
   MappingContext mappingContext2;
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(testDataContextReadMapping)
   ptrFromMesh->createVertex(Eigen::Vector3d(1.0, 0.1, 0.0));
   ptrFromMesh->createVertex(Eigen::Vector3d(0.0, 0.1, 1.0));
 
-  MeshContext fromMeshContext(dimensions);
+  MeshContext fromMeshContext;
   fromMeshContext.mesh = ptrFromMesh;
 
   ReadDataContext dataContext(ptrToData, ptrToMesh);

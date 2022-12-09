@@ -18,7 +18,6 @@ BOOST_AUTO_TEST_CASE(TestImplicit)
   double initialStateChange = 5.0;
   double stateChange        = initialStateChange;
   int    computedTimesteps  = 0;
-  using namespace precice::constants;
 
   precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
 
@@ -45,13 +44,11 @@ BOOST_AUTO_TEST_CASE(TestImplicit)
 
     double maxDt = interface.initialize();
     while (interface.isCouplingOngoing()) {
-      if (interface.isActionRequired(actionWriteIterationCheckpoint())) {
-        interface.markActionFulfilled(actionWriteIterationCheckpoint());
+      if (interface.requiresWritingCheckpoint()) {
         checkpoint     = state;
         iterationCount = 1;
       }
-      if (interface.isActionRequired(actionReadIterationCheckpoint())) {
-        interface.markActionFulfilled(actionReadIterationCheckpoint());
+      if (interface.requiresReadingCheckpoint()) {
         state = checkpoint;
       }
       iterationCount++;
@@ -75,13 +72,11 @@ BOOST_AUTO_TEST_CASE(TestImplicit)
     interface.setMeshVertex(meshID, pos);
     double maxDt = interface.initialize();
     while (interface.isCouplingOngoing()) {
-      if (interface.isActionRequired(actionWriteIterationCheckpoint())) {
-        interface.markActionFulfilled(actionWriteIterationCheckpoint());
+      if (interface.requiresWritingCheckpoint()) {
         checkpoint     = state;
         iterationCount = 1;
       }
-      if (interface.isActionRequired(actionReadIterationCheckpoint())) {
-        interface.markActionFulfilled(actionReadIterationCheckpoint());
+      if (interface.requiresReadingCheckpoint()) {
         state = checkpoint;
         iterationCount++;
       }
