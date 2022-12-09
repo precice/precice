@@ -74,7 +74,7 @@ BaseCouplingScheme::BaseCouplingScheme(
   } else {
     PRECICE_ASSERT(isImplicitCouplingScheme());
     PRECICE_CHECK((_extrapolationOrder == 0) || (_extrapolationOrder == 1),
-                  "Extrapolation order has to be  0 or 1.");
+                  "Extrapolation order has to be 0 or 1.");
   }
 }
 
