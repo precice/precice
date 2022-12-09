@@ -12,7 +12,7 @@ BOOST_AUTO_TEST_CASE(NearestProjection2DB)
   PRECICE_TEST(1_rank);
   precice::SolverInterface interface("B", context.config(), 0, 1);
   auto                     meshID = interface.getMeshID("MeshB");
-  BOOST_TEST(!interface.isMeshConnectivityRequired(meshID));
+  BOOST_TEST(!interface.requiresMeshConnectivityFor(meshID));
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Integration

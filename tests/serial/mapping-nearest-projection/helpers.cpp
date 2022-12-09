@@ -71,7 +71,7 @@ void testMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFuncti
 
     // Write the data to be send.
     int dataAID = interface.getDataID("DataOne", meshOneID);
-    BOOST_TEST(!interface.isGradientDataRequired(dataAID));
+    BOOST_TEST(!interface.requiresGradientDataFor(dataAID));
 
     interface.writeScalarData(dataAID, idA, valOneA);
     interface.writeScalarData(dataAID, idB, valOneB);
@@ -99,7 +99,7 @@ void testMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFuncti
 
     // Read the mapped data from the mesh.
     int dataAID = interface.getDataID("DataOne", meshTwoID);
-    BOOST_TEST(!interface.isGradientDataRequired(dataAID));
+    BOOST_TEST(!interface.requiresGradientDataFor(dataAID));
 
     double valueA, valueB, valueC;
     interface.readScalarData(dataAID, idA, valueA);

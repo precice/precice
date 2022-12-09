@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
       interface.advance(1.0);
       interface.readBlockVectorData(dataID, 1, &vertexIDs[0], values.data());
       Eigen::Vector3d expected(21.1, 24.8, 28.5);
-      BOOST_TEST(interface.isGradientDataRequired(dataID) == false);
+      BOOST_TEST(interface.requiresGradientDataFor(dataID) == false);
       BOOST_TEST(testing::equals(values, expected));
       interface.readBlockVectorData(dataID, 1, &vertexIDs[1], values.data());
       Eigen::Vector3d expected2(2.3, 4.2, 6.1);
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
       interface.advance(1.0);
       interface.readBlockVectorData(dataID, 1, vertexIDs.data(), values.data());
       Eigen::Vector3d expected(1., 2., 3.);
-      BOOST_TEST(interface.isGradientDataRequired(dataID) == false);
+      BOOST_TEST(interface.requiresGradientDataFor(dataID) == false);
       BOOST_TEST(testing::equals(values, expected));
     }
     interface.finalize();
@@ -81,9 +81,9 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
 
       interface.writeBlockVectorData(dataID, 4, vertexIDs.data(), values.data());
 
-      BOOST_TEST(interface.isGradientDataRequired(dataID) == true);
+      BOOST_TEST(interface.requiresGradientDataFor(dataID) == true);
 
-      if (interface.isGradientDataRequired(dataID)) {
+      if (interface.requiresGradientDataFor(dataID)) {
         std::vector<double> gradientValues;
         for (unsigned int i = 0; i < 36; ++i) {
           gradientValues.emplace_back(i);
@@ -100,9 +100,9 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
 
       interface.writeBlockVectorData(dataID, 1, vertexIDs.data(), values.data());
 
-      BOOST_TEST(interface.isGradientDataRequired(dataID) == true);
+      BOOST_TEST(interface.requiresGradientDataFor(dataID) == true);
 
-      if (interface.isGradientDataRequired(dataID)) {
+      if (interface.requiresGradientDataFor(dataID)) {
         std::vector<double> gradientValues;
         for (int i = 0; i < 9; ++i) {
           gradientValues.emplace_back(-i);

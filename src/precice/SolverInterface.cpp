@@ -57,16 +57,19 @@ bool SolverInterface::isTimeWindowComplete() const
   return _impl->isTimeWindowComplete();
 }
 
-bool SolverInterface::isActionRequired(
-    const std::string &action) const
+bool SolverInterface::requiresInitialData()
 {
-  return _impl->isActionRequired(action);
+  return _impl->requiresInitialData();
 }
 
-void SolverInterface::markActionFulfilled(
-    const std::string &action)
+bool SolverInterface::requiresReadingCheckpoint()
 {
-  _impl->markActionFulfilled(action);
+  return _impl->requiresReadingCheckpoint();
+}
+
+bool SolverInterface::requiresWritingCheckpoint()
+{
+  return _impl->requiresWritingCheckpoint();
 }
 
 bool SolverInterface::hasMesh(
@@ -86,14 +89,14 @@ std::set<int> SolverInterface::getMeshIDs() const
   return _impl->getMeshIDs();
 }
 
-bool SolverInterface::isMeshConnectivityRequired(int meshID) const
+bool SolverInterface::requiresMeshConnectivityFor(int meshID) const
 {
-  return _impl->isMeshConnectivityRequired(meshID);
+  return _impl->requiresMeshConnectivityFor(meshID);
 }
 
-bool SolverInterface::isGradientDataRequired(int dataID) const
+bool SolverInterface::requiresGradientDataFor(int dataID) const
 {
-  return _impl->isGradientDataRequired(dataID);
+  return _impl->requiresGradientDataFor(dataID);
 }
 
 bool SolverInterface::hasData(
@@ -380,24 +383,5 @@ void SolverInterface::getMeshVerticesAndIDs(const int meshID,
 {
   _impl->getMeshVerticesAndIDs(meshID, size, ids, coordinates);
 }
-
-namespace constants {
-
-const std::string &actionWriteInitialData()
-{
-  return cplscheme::constants::actionWriteInitialData();
-}
-
-const std::string &actionWriteIterationCheckpoint()
-{
-  return cplscheme::constants::actionWriteIterationCheckpoint();
-}
-
-const std::string &actionReadIterationCheckpoint()
-{
-  return cplscheme::constants::actionReadIterationCheckpoint();
-}
-
-} // namespace constants
 
 } // namespace precice

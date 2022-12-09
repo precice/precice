@@ -12,4 +12,14 @@ const int CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER = -1;
 
 const int CouplingScheme::UNDEFINED_MAX_ITERATIONS = -1;
 
+std::string CouplingScheme::toString(Action action)
+{
+  static const std::map<CouplingScheme::Action, const char *> actionNames{
+      {CouplingScheme::Action::WriteCheckpoint, "write-iteration-checkpoint"},
+      {CouplingScheme::Action::ReadCheckpoint, "read-iteration-checkpoint"},
+      {CouplingScheme::Action::InitializeData, "write-initial-data"}};
+
+  return actionNames.at(action);
+}
+
 } // namespace precice::cplscheme

@@ -83,11 +83,13 @@ private:
    */
   void performReceiveOfFirstAdvance() override final;
 
+  /// Exchanges the first set of data between the participants of the SerialCouplingSchemes
+  void exchangeFirstData() override;
+
   /**
-   * @brief Exchanges data between the participants of the SerialCouplingSchemes and applies acceleration.
-   * @returns true, if iteration converged
+   * @brief Exchanges the second set of data between the participants of the SerialCouplingSchemes
    */
-  bool exchangeDataAndAccelerate() override;
+  void exchangeSecondData() override;
 
   /**
    * @brief SerialCouplingSchemes applies acceleration to send data

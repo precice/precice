@@ -103,22 +103,14 @@ PRECICE_API int precicec_isTimeWindowComplete();
 ///@name Action Methods
 ///@{
 
-/**
- * @brief Checks if the provided action is required.
- * @param[in] action the name of the action
- * @returns whether the action is required
- */
-PRECICE_API int precicec_isActionRequired(const char *action);
+/// @copydoc precice::SolverInterface::requiresInitialData()
+PRECICE_API int precicec_requiresInitialData();
 
-/**
- * @brief Indicates preCICE that a required action has been fulfilled by a solver.
- * @pre The solver fulfilled the specified action.
- *
- * @param[in] action the name of the action
- */
-PRECICE_API void precicec_markActionFulfilled(const char *action);
+/// @copydoc precice::SolverInterface::requiresWritingCheckpoint()
+PRECICE_API int precicec_requiresWritingCheckpoint();
 
-///@}
+/// @copydoc precice::SolverInterface::requiresReadingCheckpoint()
+PRECICE_API int precicec_requiresReadingCheckpoint();
 
 ///@name Mesh Access
 ///@anchor precice-mesh-access
@@ -137,8 +129,8 @@ PRECICE_API int precicec_hasMesh(const char *meshName);
  */
 PRECICE_API int precicec_getMeshID(const char *meshName);
 
-/// @copydoc precice::SolverInterface::isMeshConnectivityRequired()
-PRECICE_API int precicec_isMeshConnectivityRequired(int meshID);
+/// @copydoc precice::SolverInterface::requiresMeshConnectivityFor()
+PRECICE_API int precicec_requiresMeshConnectivityFor(int meshID);
 
 /**
  * @brief Creates a mesh vertex
@@ -450,15 +442,6 @@ PRECICE_API void precicec_readScalarData(
  */
 PRECICE_API const char *precicec_getVersionInformation();
 
-// @brief Name of action for writing initial data.
-PRECICE_API const char *precicec_actionWriteInitialData();
-
-// @brief Name of action for writing iteration checkpoint
-PRECICE_API const char *precicec_actionWriteIterationCheckpoint();
-
-// @brief Name of action for reading iteration checkpoint.
-PRECICE_API const char *precicec_actionReadIterationCheckpoint();
-
 ///@}
 
 /** @name Experimental Data Access
@@ -466,8 +449,8 @@ PRECICE_API const char *precicec_actionReadIterationCheckpoint();
  */
 ///@{
 
-/// @copydoc precice::SolverInterface::isGradientDataRequired
-PRECICE_API int precicec_isGradientDataRequired(int dataID);
+/// @copydoc precice::SolverInterface::requiresGradientDataFor
+PRECICE_API int precicec_requiresGradientDataFor(int dataID);
 
 /// @copydoc precice::SolverInterface::writeScalarGradientData
 PRECICE_API void precicec_writeScalarGradientData(

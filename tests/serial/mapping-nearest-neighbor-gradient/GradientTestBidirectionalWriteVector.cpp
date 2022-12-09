@@ -51,13 +51,13 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteVector)
     cplInterface.setMeshVertex(meshOneID, posOne.data());
     int dataAID = cplInterface.getDataID("DataOne", meshOneID);
     int dataBID = cplInterface.getDataID("DataTwo", meshOneID);
-    BOOST_TEST(cplInterface.isGradientDataRequired(dataAID) == false);
-    BOOST_TEST(cplInterface.isGradientDataRequired(dataBID) == false);
+    BOOST_TEST(cplInterface.requiresGradientDataFor(dataAID) == false);
+    BOOST_TEST(cplInterface.requiresGradientDataFor(dataBID) == false);
+    BOOST_REQUIRE(cplInterface.requiresInitialData());
 
     Vector3d valueDataA(1.0, 1.0, 1.0);
     cplInterface.writeVectorData(dataAID, 0, valueDataA.data());
 
-    cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
     double maxDt = cplInterface.initialize();
 
     Vector3d valueDataB;
@@ -85,8 +85,9 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteVector)
 
     int dataAID = cplInterface.getDataID("DataOne", meshTwoID);
     int dataBID = cplInterface.getDataID("DataTwo", meshTwoID);
-    BOOST_TEST(cplInterface.isGradientDataRequired(dataAID) == false);
-    BOOST_TEST(cplInterface.isGradientDataRequired(dataBID) == true);
+    BOOST_TEST(cplInterface.requiresGradientDataFor(dataAID) == false);
+    BOOST_TEST(cplInterface.requiresGradientDataFor(dataBID) == true);
+    BOOST_REQUIRE(cplInterface.requiresInitialData());
 
     Vector3d                    valueDataB(2.0, 3.0, 4.0);
     Eigen::Matrix<double, 3, 3> gradient;
@@ -95,7 +96,6 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteVector)
     cplInterface.writeVectorGradientData(dataBID, 0, gradient.data());
 
     //tell preCICE that data has been written and call initialize
-    cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
     double maxDt = cplInterface.initialize();
 
     Vector3d valueDataA;

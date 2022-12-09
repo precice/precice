@@ -15,6 +15,7 @@
 #include "action/SharedPointer.hpp"
 #include "com/Communication.hpp"
 #include "com/SharedPointer.hpp"
+#include "cplscheme/Constants.hpp"
 #include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "io/Export.hpp"
@@ -266,9 +267,12 @@ double SolverInterfaceImpl::initialize()
   PRECICE_CHECK(_state != State::Finalized, "initialize() cannot be called after finalize().")
   PRECICE_CHECK(_state != State::Initialized, "initialize() may only be called once.");
   PRECICE_ASSERT(not _couplingScheme->isInitialized());
-  PRECICE_CHECK(not isActionRequired(constants::actionWriteInitialData()),
-                "Initial data has to be written to preCICE by calling an appropriate write...Data() function before calling initialize(). "
-                "Did you forget to call markActionFulfilled(precice::constants::actionWriteInitialData()) after writing initial data?");
+
+  bool failedToInitialize = _couplingScheme->isActionRequired(cplscheme::CouplingScheme::Action::InitializeData) && not _couplingScheme->isActionFulfilled(cplscheme::CouplingScheme::Action::InitializeData);
+  PRECICE_CHECK(not failedToInitialize,
+                "Initial data has to be written to preCICE before calling initialize(). "
+                "After defining your mesh, call requiresInitialData() to check if the participant is required to write initial data using an appropriate write...Data() function.");
+
   auto &solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
   solverInitEvent.pause(precice::syncMode);
   Event                    e("initialize", precice::syncMode);
@@ -415,8 +419,7 @@ double SolverInterfaceImpl::advance(
     performDataActions({action::Action::WRITE_MAPPING_POST}, time);
   }
 
-  PRECICE_DEBUG("Advance coupling scheme");
-  _couplingScheme->advance();
+  advanceCouplingScheme();
 
   if (_couplingScheme->isTimeWindowComplete()) {
     for (auto &context : _accessor->readDataContexts()) {
@@ -522,20 +525,37 @@ bool SolverInterfaceImpl::isTimeWindowComplete() const
   return _couplingScheme->isTimeWindowComplete();
 }
 
-bool SolverInterfaceImpl::isActionRequired(
-    const std::string &action) const
+bool SolverInterfaceImpl::requiresInitialData()
 {
-  PRECICE_TRACE(action, _couplingScheme->isActionRequired(action));
-  PRECICE_CHECK(_state != State::Finalized, "isActionRequired(...) cannot be called after finalize().");
-  return _couplingScheme->isActionRequired(action);
+  PRECICE_TRACE();
+  PRECICE_CHECK(_state == State::Constructed, "requiresInitialData() has to be called before initialize().");
+  bool required = _couplingScheme->isActionRequired(cplscheme::CouplingScheme::Action::InitializeData);
+  if (required) {
+    _couplingScheme->markActionFulfilled(cplscheme::CouplingScheme::Action::InitializeData);
+  }
+  return required;
 }
 
-void SolverInterfaceImpl::markActionFulfilled(
-    const std::string &action)
+bool SolverInterfaceImpl::requiresWritingCheckpoint()
 {
-  PRECICE_TRACE(action);
-  PRECICE_CHECK(_state != State::Finalized, "markActionFulfilled(...) cannot be called after finalize().");
-  _couplingScheme->markActionFulfilled(action);
+  PRECICE_TRACE();
+  PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before requiresWritingCheckpoint().");
+  bool required = _couplingScheme->isActionRequired(cplscheme::CouplingScheme::Action::WriteCheckpoint);
+  if (required) {
+    _couplingScheme->markActionFulfilled(cplscheme::CouplingScheme::Action::WriteCheckpoint);
+  }
+  return required;
+}
+
+bool SolverInterfaceImpl::requiresReadingCheckpoint()
+{
+  PRECICE_TRACE();
+  PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before requiresReadingCheckpoint().");
+  bool required = _couplingScheme->isActionRequired(cplscheme::CouplingScheme::Action::ReadCheckpoint);
+  if (required) {
+    _couplingScheme->markActionFulfilled(cplscheme::CouplingScheme::Action::ReadCheckpoint);
+  }
+  return required;
 }
 
 bool SolverInterfaceImpl::hasMesh(
@@ -590,14 +610,14 @@ int SolverInterfaceImpl::getDataID(
   return _accessor->getUsedDataID(dataName, meshID);
 }
 
-bool SolverInterfaceImpl::isMeshConnectivityRequired(int meshID) const
+bool SolverInterfaceImpl::requiresMeshConnectivityFor(int meshID) const
 {
   PRECICE_VALIDATE_MESH_ID(meshID);
   MeshContext &context = _accessor->usedMeshContext(meshID);
   return context.meshRequirement == mapping::Mapping::MeshRequirement::FULL;
 }
 
-bool SolverInterfaceImpl::isGradientDataRequired(int dataID) const
+bool SolverInterfaceImpl::requiresGradientDataFor(int dataID) const
 {
   PRECICE_VALIDATE_DATA_ID(dataID);
   // Read data never requires gradients
@@ -1081,7 +1101,7 @@ void SolverInterfaceImpl::writeScalarGradientData(
   PRECICE_CHECK(_state != State::Finalized, "writeScalarGradientData(...) cannot be called after finalize().")
   PRECICE_REQUIRE_DATA_WRITE(dataID);
 
-  if (isGradientDataRequired(dataID)) {
+  if (requiresGradientDataFor(dataID)) {
     PRECICE_DEBUG("Gradient value = {}", Eigen::Map<const Eigen::VectorXd>(gradientValues, _dimensions).format(utils::eigenio::debug()));
     PRECICE_CHECK(gradientValues != nullptr, "writeScalarGradientData() was called with gradientValues == nullptr");
 
@@ -1140,7 +1160,7 @@ void SolverInterfaceImpl::writeBlockScalarGradientData(
   if (size == 0)
     return;
 
-  if (isGradientDataRequired(dataID)) {
+  if (requiresGradientDataFor(dataID)) {
 
     PRECICE_CHECK(valueIndices != nullptr, "writeBlockScalarGradientData() was called with valueIndices == nullptr");
     PRECICE_CHECK(gradientValues != nullptr, "writeBlockScalarGradientData() was called with gradientValues == nullptr");
@@ -1188,7 +1208,7 @@ void SolverInterfaceImpl::writeVectorGradientData(
   PRECICE_CHECK(_state != State::Finalized, "writeVectorGradientData(...) cannot be called after finalize().")
   PRECICE_REQUIRE_DATA_WRITE(dataID);
 
-  if (isGradientDataRequired(dataID)) {
+  if (requiresGradientDataFor(dataID)) {
 
     PRECICE_CHECK(gradientValues != nullptr, "writeVectorGradientData() was called with gradientValue == nullptr");
 
@@ -1238,7 +1258,7 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
   if (size == 0)
     return;
 
-  if (isGradientDataRequired(dataID)) {
+  if (requiresGradientDataFor(dataID)) {
 
     PRECICE_CHECK(valueIndices != nullptr, "writeBlockVectorGradientData() was called with valueIndices == nullptr");
     PRECICE_CHECK(gradientValues != nullptr, "writeBlockVectorGradientData() was called with gradientValues == nullptr");
@@ -1902,6 +1922,19 @@ void SolverInterfaceImpl::syncTimestep(double computedTimestepLength)
                     secondaryRank, dt, computedTimestepLength);
     }
   }
+}
+
+void SolverInterfaceImpl::advanceCouplingScheme()
+{
+  PRECICE_DEBUG("Advance coupling scheme");
+  // Orchestrate local and remote mesh changes
+  std::vector<MeshID> localChanges;
+
+  [[maybe_unused]] auto remoteChanges1 = _couplingScheme->firstSynchronization(localChanges);
+  _couplingScheme->firstExchange();
+  // Orchestrate remote mesh changes (local ones were handled in the first sync)
+  [[maybe_unused]] auto remoteChanges2 = _couplingScheme->secondSynchronization();
+  _couplingScheme->secondExchange();
 }
 
 void SolverInterfaceImpl::closeCommunicationChannels(CloseChannels close)

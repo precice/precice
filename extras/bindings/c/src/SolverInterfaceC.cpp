@@ -102,21 +102,22 @@ int precicec_isTimeWindowComplete()
   return 0;
 }
 
-int precicec_isActionRequired(const char *action)
+int precicec_requiresInitialData()
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  PRECICE_ASSERT(action != nullptr);
-  if (impl->isActionRequired(std::string(action))) {
-    return 1;
-  }
-  return 0;
+  return impl->requiresInitialData() ? 1 : 0;
 }
 
-void precicec_markActionFulfilled(const char *action)
+int precicec_requiresWritingCheckpoint()
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  PRECICE_ASSERT(action != nullptr);
-  impl->markActionFulfilled(std::string(action));
+  return impl->requiresWritingCheckpoint() ? 1 : 0;
+}
+
+int precicec_requiresReadingCheckpoint()
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  return impl->requiresReadingCheckpoint() ? 1 : 0;
 }
 
 int precicec_hasMesh(const char *meshName)
@@ -150,10 +151,10 @@ int precicec_getDataID(const char *dataName, int meshID)
   return impl->getDataID(stringDataName, meshID);
 }
 
-int precicec_isMeshConnectivityRequired(int meshID)
+int precicec_requiresMeshConnectivityFor(int meshID)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  if (impl->isMeshConnectivityRequired(meshID)) {
+  if (impl->requiresMeshConnectivityFor(meshID)) {
     return 1;
   }
   return 0;
@@ -357,10 +358,10 @@ void precicec_readScalarData(
   impl->readScalarData(dataID, valueIndex, *dataValue);
 }
 
-int precicec_isGradientDataRequired(int dataID)
+int precicec_requiresGradientDataFor(int dataID)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  if (impl->isGradientDataRequired(dataID)) {
+  if (impl->requiresGradientDataFor(dataID)) {
     return 1;
   }
   return 0;
@@ -407,21 +408,6 @@ void precicec_writeBlockVectorGradientData(
 const char *precicec_getVersionInformation()
 {
   return precice::versionInformation;
-}
-
-const char *precicec_actionWriteInitialData()
-{
-  return precice::constants::actionWriteInitialData().c_str();
-}
-
-const char *precicec_actionWriteIterationCheckpoint()
-{
-  return precice::constants::actionWriteIterationCheckpoint().c_str();
-}
-
-const char *precicec_actionReadIterationCheckpoint()
-{
-  return precice::constants::actionReadIterationCheckpoint().c_str();
 }
 
 void precicec_setMeshAccessRegion(

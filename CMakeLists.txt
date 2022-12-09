@@ -57,7 +57,6 @@ option(PRECICE_MPICommunication "Enables MPI-based communication and running cou
 option(PRECICE_PETScMapping "Enable use of the PETSc linear algebra library." ON)
 option(PRECICE_PythonActions "Python support" ON)
 option(PRECICE_Packages "Configure package generation." ON)
-option(PRECICE_InstallTest "Add test binary and necessary files to install target." OFF)
 option(BUILD_SHARED_LIBS "Build shared instead of static libraries" ON)
 option(BUILD_TESTING "Build tests" ON)
 option(PRECICE_ALWAYS_VALIDATE_LIBS "Validate libraries even after the validatation succeeded." OFF)
@@ -86,7 +85,6 @@ include(PrintHelper)
 print_configuration(
   ADDITIONAL
   "PRECICE_Packages;Configure package generation"
-  "PRECICE_InstallTest;Install tests/testfiles"
   "PRECICE_CTEST_MPI_FLAGS;Additional CTest MPI Flags"
   )
 print_empty()
@@ -466,26 +464,6 @@ if(PRECICE_BUILD_TOOLS)
   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/binprecice DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
-if(BUILD_TESTING AND PRECICE_InstallTest)
-  # Install the testprecice target
-  install(TARGETS testprecice
-    EXPORT preciceTargets
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    )
-
-  # Install the resources necessary for the tests
-  install(DIRECTORY src
-    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/precice
-    FILES_MATCHING
-    PATTERN "*.xml"
-    )
-  install(DIRECTORY src/action/tests/
-    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/precice/src/action/tests
-    FILES_MATCHING
-    PATTERN "*.py"
-    )
-endif()
-
 # Install examples
 install(DIRECTORY examples
   DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/precice
@@ -531,9 +509,6 @@ find_program(GZIP_EXE gzip DOC "The gzip executable")
 if(GZIP_EXE)
   # Process manpages for binaries
   file(COPY docs/man/man1/precice-tools.1 DESTINATION packaging/man1)
-  if(PRECICE_InstallTest)
-    file(COPY docs/man/man1/testprecice.1 DESTINATION packaging/man1)
-  endif()
   file(GLOB PRECICE_MAN_PAGES "${PRECICE_PACKAGING_DIR}/man1/*.1")
   foreach(manpage ${PRECICE_MAN_PAGES})
     message(STATUS "Compressing manpage: ${manpage}")
@@ -550,12 +525,6 @@ else()
   install(DIRECTORY docs/man/man1
     DESTINATION ${CMAKE_INSTALL_MANDIR}
     )
-
-  if(BUILD_TESTING AND PRECICE_InstallTest)
-    install(FILES docs/man/man1/testprecice.1
-      DESTINATION share/man
-      )
-  endif()
 endif()
 
 # Configure the pkg-config file for the binary directory

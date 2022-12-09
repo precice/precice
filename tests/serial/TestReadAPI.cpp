@@ -1,3 +1,4 @@
+#include <boost/test/tools/old/interface.hpp>
 #ifndef PRECICE_NO_MPI
 
 #include "testing/Testing.hpp"
@@ -29,13 +30,14 @@ BOOST_AUTO_TEST_CASE(TestReadAPI)
     int dataAID = cplInterface.getDataID("DataOne", meshOneID);
     int dataBID = cplInterface.getDataID("DataTwo", meshOneID);
 
+    BOOST_REQUIRE(cplInterface.requiresInitialData());
+
     // writeVectorData
     writeDataA[0] = 7.0;
     writeDataA[1] = 7.0;
     writeDataA[2] = 7.0;
     cplInterface.writeVectorData(dataAID, vertexIDs[0], writeDataA.data());
 
-    cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
     double maxDt = cplInterface.initialize();
 
     // readBlockScalarData without waveform
@@ -65,11 +67,9 @@ BOOST_AUTO_TEST_CASE(TestReadAPI)
     readDataB[0] = 0;
 
     while (cplInterface.isCouplingOngoing()) {
-      if (cplInterface.isActionRequired(precice::constants::actionWriteIterationCheckpoint())) {
-        cplInterface.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
+      if (cplInterface.requiresWritingCheckpoint()) {
       }
-      if (cplInterface.isActionRequired(precice::constants::actionReadIterationCheckpoint())) {
-        cplInterface.markActionFulfilled(precice::constants::actionReadIterationCheckpoint());
+      if (cplInterface.requiresReadingCheckpoint()) {
       }
 
       // writeVectorData
@@ -123,11 +123,12 @@ BOOST_AUTO_TEST_CASE(TestReadAPI)
     int dataAID = cplInterface.getDataID("DataOne", meshTwoID);
     int dataBID = cplInterface.getDataID("DataTwo", meshTwoID);
 
+    BOOST_REQUIRE(cplInterface.requiresInitialData());
+
     // writeScalarData
     writeDataB[0] = 3.0;
     cplInterface.writeScalarData(dataBID, vertexIDs[0], writeDataB[0]);
 
-    cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
     double maxDt = cplInterface.initialize();
 
     // readBlockVectorData without waveform
@@ -165,11 +166,9 @@ BOOST_AUTO_TEST_CASE(TestReadAPI)
     readDataA[2] = 0;
 
     while (cplInterface.isCouplingOngoing()) {
-      if (cplInterface.isActionRequired(precice::constants::actionWriteIterationCheckpoint())) {
-        cplInterface.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
+      if (cplInterface.requiresWritingCheckpoint()) {
       }
-      if (cplInterface.isActionRequired(precice::constants::actionReadIterationCheckpoint())) {
-        cplInterface.markActionFulfilled(precice::constants::actionReadIterationCheckpoint());
+      if (cplInterface.requiresReadingCheckpoint()) {
       }
 
       // writeScalarData

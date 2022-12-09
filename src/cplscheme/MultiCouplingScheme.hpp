@@ -112,11 +112,9 @@ private:
     return allData;
   }
 
-  /**
-   * @brief Exchanges all data between the participants of the MultiCouplingScheme and applies acceleration.
-   * @returns true, if iteration converged
-   */
-  bool exchangeDataAndAccelerate() override;
+  void exchangeFirstData() override;
+
+  void exchangeSecondData() override;
 
   /**
    * @brief MultiCouplingScheme applies acceleration to all CouplingData

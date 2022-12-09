@@ -377,7 +377,12 @@ void CouplingSchemeConfiguration::addCouplingScheme(
     if (utils::contained(participantName, _couplingSchemeCompositions)) {
       PRECICE_DEBUG("Coupling scheme composition exists already for participant");
       // Fetch the composition and add the new scheme.
-      PRECICE_ASSERT(_couplingSchemeCompositions[participantName] != nullptr);
+      PRECICE_ASSERT(_couplingSchemeCompositions.count(participantName) == 1);
+      auto composition = _couplingSchemeCompositions.at(participantName);
+      PRECICE_CHECK(!cplScheme->isImplicitCouplingScheme() || !composition->isImplicitCouplingScheme(),
+                    "You attempted to define a second implicit coupling-scheme for the participant \"{}\", which is not allowed. "
+                    "Please use a multi coupling-scheme for true implicit coupling of multiple participants.",
+                    participantName);
       _couplingSchemeCompositions[participantName]->addCouplingScheme(cplScheme);
     } else {
       PRECICE_DEBUG("No composition exists for the participant");
@@ -385,9 +390,6 @@ void CouplingSchemeConfiguration::addCouplingScheme(
       // Create a new composition, add the already existing and new scheme, and
       // overwrite the existing scheme with the composition.
       CompositionalCouplingScheme *composition = new CompositionalCouplingScheme();
-      PRECICE_CHECK(nullptr == dynamic_cast<MultiCouplingScheme *>(_couplingSchemes[participantName].get()),
-                    "A Multi Coupling Scheme cannot yet be combined with any other coupling scheme. "
-                    "Try to include all participants within one multi coupling scheme instead.");
       composition->addCouplingScheme(_couplingSchemes[participantName]);
       composition->addCouplingScheme(cplScheme);
       _couplingSchemes[participantName] = PtrCouplingScheme(composition);

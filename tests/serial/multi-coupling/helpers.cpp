@@ -11,8 +11,6 @@ using namespace precice;
 void multiCouplingThreeSolvers(const std::string configFile, const TestContext &context)
 {
   Eigen::Vector2d coordOneA{0.0, 0.0};
-  std::string     writeIterCheckpoint(constants::actionWriteIterationCheckpoint());
-  std::string     readIterCheckpoint(constants::actionReadIterationCheckpoint());
 
   double valueA = 1.0;
   double valueB = 2.0;
@@ -31,14 +29,12 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
     BOOST_TEST(cplInterface.isCouplingOngoing());
     while (cplInterface.isCouplingOngoing()) {
       cplInterface.writeScalarData(dataABID, vertexID, valueA);
-      if (cplInterface.isActionRequired(writeIterCheckpoint)) {
-        cplInterface.markActionFulfilled(writeIterCheckpoint);
+      if (cplInterface.requiresWritingCheckpoint()) {
       }
 
       cplInterface.advance(maxDt);
 
-      if (cplInterface.isActionRequired(readIterCheckpoint)) {
-        cplInterface.markActionFulfilled(readIterCheckpoint);
+      if (cplInterface.requiresReadingCheckpoint()) {
       }
       cplInterface.readScalarData(dataBAID, vertexID, valueRead);
     }
@@ -64,14 +60,12 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
     while (cplInterface.isCouplingOngoing()) {
       cplInterface.writeScalarData(dataBAID, vertexID1, valueB);
       cplInterface.writeScalarData(dataBCID, vertexID2, valueB);
-      if (cplInterface.isActionRequired(writeIterCheckpoint)) {
-        cplInterface.markActionFulfilled(writeIterCheckpoint);
+      if (cplInterface.requiresWritingCheckpoint()) {
       }
 
       cplInterface.advance(maxDt);
 
-      if (cplInterface.isActionRequired(readIterCheckpoint)) {
-        cplInterface.markActionFulfilled(readIterCheckpoint);
+      if (cplInterface.requiresReadingCheckpoint()) {
       }
       cplInterface.readScalarData(dataABID, vertexID1, valueReadA);
       cplInterface.readScalarData(dataCBID, vertexID2, valueReadC);
@@ -96,14 +90,12 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
     while (cplInterface.isCouplingOngoing()) {
 
       cplInterface.writeScalarData(dataCBID, vertexID, valueC);
-      if (cplInterface.isActionRequired(writeIterCheckpoint)) {
-        cplInterface.markActionFulfilled(writeIterCheckpoint);
+      if (cplInterface.requiresWritingCheckpoint()) {
       }
 
       cplInterface.advance(maxDt);
 
-      if (cplInterface.isActionRequired(readIterCheckpoint)) {
-        cplInterface.markActionFulfilled(readIterCheckpoint);
+      if (cplInterface.requiresReadingCheckpoint()) {
       }
       cplInterface.readScalarData(dataBCID, vertexID, valueRead);
     }
@@ -117,8 +109,6 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
 void multiCouplingFourSolvers(const std::string configFile, const TestContext &context)
 {
   Eigen::Vector2d coordOneA{0.0, 0.0};
-  std::string     writeIterCheckpoint(constants::actionWriteIterationCheckpoint());
-  std::string     readIterCheckpoint(constants::actionReadIterationCheckpoint());
 
   if (context.isNamed("SolverA")) {
     SolverInterface cplInterface("SolverA", configFile, 0, 1);
@@ -134,14 +124,12 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
     BOOST_TEST(cplInterface.isCouplingOngoing());
     while (cplInterface.isCouplingOngoing()) {
       cplInterface.writeScalarData(dataABID, vertexID, valueWrite);
-      if (cplInterface.isActionRequired(writeIterCheckpoint)) {
-        cplInterface.markActionFulfilled(writeIterCheckpoint);
+      if (cplInterface.requiresWritingCheckpoint()) {
       }
 
       cplInterface.advance(maxDt);
 
-      if (cplInterface.isActionRequired(readIterCheckpoint)) {
-        cplInterface.markActionFulfilled(readIterCheckpoint);
+      if (cplInterface.requiresReadingCheckpoint()) {
       }
       cplInterface.readScalarData(dataBAID, vertexID, valueRead);
     }
@@ -165,14 +153,12 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
     while (cplInterface.isCouplingOngoing()) {
       cplInterface.writeScalarData(dataBAID, vertexID1, valueWriteA);
       cplInterface.writeScalarData(dataBCID, vertexID2, valueWriteC);
-      if (cplInterface.isActionRequired(writeIterCheckpoint)) {
-        cplInterface.markActionFulfilled(writeIterCheckpoint);
+      if (cplInterface.requiresWritingCheckpoint()) {
       }
 
       cplInterface.advance(maxDt);
 
-      if (cplInterface.isActionRequired(readIterCheckpoint)) {
-        cplInterface.markActionFulfilled(readIterCheckpoint);
+      if (cplInterface.requiresReadingCheckpoint()) {
       }
       cplInterface.readScalarData(dataABID, vertexID1, valueReadA);
       cplInterface.readScalarData(dataCBID, vertexID2, valueReadC);
@@ -198,14 +184,12 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
     while (cplInterface.isCouplingOngoing()) {
       cplInterface.writeScalarData(dataCBID, vertexID1, valueWriteA);
       cplInterface.writeScalarData(dataCDID, vertexID2, valueWriteC);
-      if (cplInterface.isActionRequired(writeIterCheckpoint)) {
-        cplInterface.markActionFulfilled(writeIterCheckpoint);
+      if (cplInterface.requiresWritingCheckpoint()) {
       }
 
       cplInterface.advance(maxDt);
 
-      if (cplInterface.isActionRequired(readIterCheckpoint)) {
-        cplInterface.markActionFulfilled(readIterCheckpoint);
+      if (cplInterface.requiresReadingCheckpoint()) {
       }
       cplInterface.readScalarData(dataBCID, vertexID1, valueReadA);
       cplInterface.readScalarData(dataDCID, vertexID2, valueReadC);
@@ -225,14 +209,12 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
     BOOST_TEST(cplInterface.isCouplingOngoing());
     while (cplInterface.isCouplingOngoing()) {
       cplInterface.writeScalarData(dataDCID, vertexID, valueWrite);
-      if (cplInterface.isActionRequired(writeIterCheckpoint)) {
-        cplInterface.markActionFulfilled(writeIterCheckpoint);
+      if (cplInterface.requiresWritingCheckpoint()) {
       }
 
       cplInterface.advance(maxDt);
 
-      if (cplInterface.isActionRequired(readIterCheckpoint)) {
-        cplInterface.markActionFulfilled(readIterCheckpoint);
+      if (cplInterface.requiresReadingCheckpoint()) {
       }
       cplInterface.readScalarData(dataCDID, vertexID, valueRead);
     }
