@@ -104,20 +104,11 @@ Eigen::VectorXd Extrapolation::extrapolate()
     return _timeWindowsStorage.col(0);
   }
   Eigen::VectorXd extrapolatedValue;
-  if (usedOrder == 1) { //timesteps is increased before extrapolate is called
-    PRECICE_DEBUG("Performing first order extrapolation");
-    PRECICE_ASSERT(_numberOfStoredSamples > 1);
-    extrapolatedValue = _timeWindowsStorage.col(0) * 2.0; // = 2*x^t
-    extrapolatedValue -= _timeWindowsStorage.col(1);      // = 2*x^t - x^(t-1)
-    return extrapolatedValue;
-  }
-  PRECICE_ASSERT(usedOrder == 2);
-  // uses formula given in https://doi.org/10.1016/j.compstruc.2008.11.013, p.796, Algorithm line 1
-  PRECICE_DEBUG("Performing second order extrapolation");
-  PRECICE_ASSERT(_numberOfStoredSamples > 2);
-  extrapolatedValue = _timeWindowsStorage.col(0) * 2.5;  // = 2.5*x^t
-  extrapolatedValue -= _timeWindowsStorage.col(1) * 2.0; // = 2.5*x^t - 2*x^(t-1)
-  extrapolatedValue += _timeWindowsStorage.col(2) * 0.5; // = 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2)
+  PRECICE_ASSERT(usedOrder == 1);
+  PRECICE_DEBUG("Performing first order extrapolation");
+  PRECICE_ASSERT(_numberOfStoredSamples > 1);
+  extrapolatedValue = _timeWindowsStorage.col(0) * 2.0; // = 2*x^t
+  extrapolatedValue -= _timeWindowsStorage.col(1);      // = 2*x^t - x^(t-1)
   return extrapolatedValue;
 }
 
