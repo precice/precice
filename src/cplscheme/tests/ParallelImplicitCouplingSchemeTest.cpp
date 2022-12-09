@@ -377,8 +377,6 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
   cplscheme::impl::PtrConvergenceMeasure minIterationConvMeasure1(
       new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
   cplScheme.addConvergenceMeasure(convergenceDataIndex, false, false, minIterationConvMeasure1, true);
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
-  std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
 
   cplScheme.initialize(0.0, 1);
 
@@ -417,13 +415,13 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
     }
 
     if (i == 0) {
-      BOOST_TEST(cplScheme.isActionRequired(writeIterationCheckpoint));
-      cplScheme.markActionFulfilled(writeIterationCheckpoint);
-      BOOST_TEST(not cplScheme.isActionRequired(readIterationCheckpoint));
+      BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
+      cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
+      BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
     } else {
-      BOOST_TEST(not cplScheme.isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(cplScheme.isActionRequired(readIterationCheckpoint));
-      cplScheme.markActionFulfilled(readIterationCheckpoint);
+      BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
+      BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
+      cplScheme.markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
     }
 
     // write data to mesh
@@ -477,13 +475,13 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
     }
 
     if (i == 0) {
-      BOOST_TEST(cplScheme.isActionRequired(writeIterationCheckpoint));
-      cplScheme.markActionFulfilled(writeIterationCheckpoint);
-      BOOST_TEST(not cplScheme.isActionRequired(readIterationCheckpoint));
+      BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
+      cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
+      BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
     } else {
-      BOOST_TEST(not cplScheme.isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(cplScheme.isActionRequired(readIterationCheckpoint));
-      cplScheme.markActionFulfilled(readIterationCheckpoint);
+      BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
+      BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
+      cplScheme.markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
     }
 
     v << 3.0;
@@ -599,8 +597,6 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
   cplscheme::impl::PtrConvergenceMeasure minIterationConvMeasure1(
       new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
   cplScheme.addConvergenceMeasure(convergenceDataIndex, false, false, minIterationConvMeasure1, true);
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
-  std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
 
   Eigen::VectorXd v(1); // buffer for data
 
@@ -611,13 +607,13 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
   BOOST_TEST(testing::equals(mesh->data(sendDataIndex)->values()(0), 0.0));
 
   if (context.isNamed(first)) {
-    BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteInitialData()));
+    BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::InitializeData));
   } else {
     BOOST_TEST(context.isNamed(second));
-    BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteInitialData()));
+    BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::InitializeData));
     v << 4.0;
     mesh->data(sendDataIndex)->values() = v;
-    cplScheme.markActionFulfilled(constants::actionWriteInitialData());
+    cplScheme.markActionFulfilled(CouplingScheme::Action::InitializeData);
     BOOST_TEST(mesh->data(sendDataIndex)->values().size() == 1);
     BOOST_TEST(testing::equals(mesh->data(sendDataIndex)->values()(0), 4.0));
   }
@@ -673,13 +669,13 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
     }
 
     if (i == 0) {
-      BOOST_TEST(cplScheme.isActionRequired(writeIterationCheckpoint));
-      cplScheme.markActionFulfilled(writeIterationCheckpoint);
-      BOOST_TEST(not cplScheme.isActionRequired(readIterationCheckpoint));
+      BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
+      cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
+      BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
     } else {
-      BOOST_TEST(not cplScheme.isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(cplScheme.isActionRequired(readIterationCheckpoint));
-      cplScheme.markActionFulfilled(readIterationCheckpoint);
+      BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
+      BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
+      cplScheme.markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
     }
 
     // write data to mesh
@@ -733,13 +729,13 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
     }
 
     if (i == 0) {
-      BOOST_TEST(cplScheme.isActionRequired(writeIterationCheckpoint));
-      cplScheme.markActionFulfilled(writeIterationCheckpoint);
-      BOOST_TEST(not cplScheme.isActionRequired(readIterationCheckpoint));
+      BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
+      cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
+      BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
     } else {
-      BOOST_TEST(not cplScheme.isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(cplScheme.isActionRequired(readIterationCheckpoint));
-      cplScheme.markActionFulfilled(readIterationCheckpoint);
+      BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
+      BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
+      cplScheme.markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
     }
 
     v << 3.0;
