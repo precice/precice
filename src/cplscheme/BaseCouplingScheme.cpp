@@ -160,7 +160,7 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
       // reserve memory and initialize data with zero
       initializeStorages();
     }
-    requireAction(constants::actionWriteIterationCheckpoint());
+    requireAction(CouplingScheme::Action::WriteCheckpoint);
     initializeTXTWriters();
   }
 
@@ -233,7 +233,7 @@ void BaseCouplingScheme::secondExchange()
     if (isImplicitCouplingScheme()) { // check convergence
       if (not hasConverged()) {       // repeat window
         PRECICE_DEBUG("No convergence achieved");
-        requireAction(constants::actionReadIterationCheckpoint());
+        requireAction(CouplingScheme::Action::ReadCheckpoint);
         // The computed time window part equals the time window size, since the
         // time window remainder is zero. Subtract the time window size and do another
         // coupling iteration.
@@ -247,7 +247,7 @@ void BaseCouplingScheme::secondExchange()
         _isTimeWindowComplete = true;
         if (isCouplingOngoing()) {
           PRECICE_DEBUG("Setting require create checkpoint");
-          requireAction(constants::actionWriteIterationCheckpoint());
+          requireAction(CouplingScheme::Action::WriteCheckpoint);
         }
       }
       //update iterations
@@ -383,28 +383,28 @@ bool BaseCouplingScheme::isTimeWindowComplete() const
 }
 
 bool BaseCouplingScheme::isActionRequired(
-    const std::string &actionName) const
+    Action action) const
 {
-  return _requiredActions.count(actionName) == 1;
+  return _requiredActions.count(action) == 1;
 }
 
 bool BaseCouplingScheme::isActionFulfilled(
-    const std::string &actionName) const
+    Action action) const
 {
-  return _fulfilledActions.count(actionName) == 1;
+  return _fulfilledActions.count(action) == 1;
 }
 
 void BaseCouplingScheme::markActionFulfilled(
-    const std::string &actionName)
+    Action action)
 {
-  PRECICE_ASSERT(isActionRequired(actionName));
-  _fulfilledActions.insert(actionName);
+  PRECICE_ASSERT(isActionRequired(action));
+  _fulfilledActions.insert(action);
 }
 
 void BaseCouplingScheme::requireAction(
-    const std::string &actionName)
+    Action action)
 {
-  _requiredActions.insert(actionName);
+  _requiredActions.insert(action);
 }
 
 std::string BaseCouplingScheme::printCouplingState() const
@@ -447,8 +447,8 @@ std::string BaseCouplingScheme::printBasicState(
 std::string BaseCouplingScheme::printActionsState() const
 {
   std::ostringstream os;
-  for (const std::string &actionName : _requiredActions) {
-    os << actionName << ' ';
+  for (auto action : _requiredActions) {
+    os << toString(action) << ' ';
   }
   return os.str();
 }
@@ -456,17 +456,17 @@ std::string BaseCouplingScheme::printActionsState() const
 void BaseCouplingScheme::checkCompletenessRequiredActions()
 {
   PRECICE_TRACE();
-  std::vector<std::string> missing;
+  std::vector<Action> missing;
   std::set_difference(_requiredActions.begin(), _requiredActions.end(),
                       _fulfilledActions.begin(), _fulfilledActions.end(),
                       std::back_inserter(missing));
   if (not missing.empty()) {
     std::ostringstream stream;
-    for (const std::string &action : missing) {
+    for (auto action : missing) {
       if (not stream.str().empty()) {
         stream << ", ";
       }
-      stream << action;
+      stream << toString(action);
     }
     PRECICE_ERROR("The required actions {} are not fulfilled. "
                   "Did you forget to call \"requiresReadingCheckpoint()\" or \"requiresWritingCheckpoint()\"?",
@@ -632,7 +632,7 @@ void BaseCouplingScheme::determineInitialSend(BaseCouplingScheme::DataMap &sendD
 {
   if (anyDataRequiresInitialization(sendData)) {
     _sendsInitializedData = true;
-    requireAction(constants::actionWriteInitialData());
+    requireAction(CouplingScheme::Action::InitializeData);
   }
 }
 

@@ -55,6 +55,15 @@ public:
   /// To be used, when the number of max iterations is not defined (for explicit coupling).
   static const int UNDEFINED_MAX_ITERATIONS;
 
+  /// Actions that are required by CouplingSchemes
+  enum struct Action {
+    InitializeData, ///< Is the initialization of coupling data required?
+    ReadCheckpoint, ///< Is the participant required to read a previously written checkpoint?
+    WriteCheckpoint ///< Is the participant required to write a checkpoint?
+  };
+
+  static std::string toString(Action action);
+
   CouplingScheme &operator=(CouplingScheme &&) = delete;
 
   virtual ~CouplingScheme() {}
@@ -205,16 +214,16 @@ public:
   virtual bool isTimeWindowComplete() const = 0;
 
   /// Returns true, if the given action has to be performed by the accessor.
-  virtual bool isActionRequired(const std::string &actionName) const = 0;
+  virtual bool isActionRequired(Action action) const = 0;
 
   /// Returns true, if the given action has already been performed by the accessor.
-  virtual bool isActionFulfilled(const std::string &actionName) const = 0;
+  virtual bool isActionFulfilled(Action action) const = 0;
 
   /// Tells the coupling scheme that the accessor has performed the given action.
-  virtual void markActionFulfilled(const std::string &actionName) = 0;
+  virtual void markActionFulfilled(Action action) = 0;
 
   /// Sets an action required to be performed by the accessor.
-  virtual void requireAction(const std::string &actionName) = 0;
+  virtual void requireAction(Action action) = 0;
 
   /// Returns a string representation of the current coupling state.
   virtual std::string printCouplingState() const = 0;

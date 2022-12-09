@@ -206,16 +206,16 @@ public:
    *
    * True, if any of the composed coupling schemes requires the action.
    */
-  bool isActionRequired(const std::string &actionName) const final override;
+  bool isActionRequired(Action action) const final override;
 
   /// Returns true, if the given action has been performed by the accessor.
-  bool isActionFulfilled(const std::string &actionName) const final override;
+  bool isActionFulfilled(Action action) const final override;
 
   /// Tells the coupling scheme that the accessor has performed the given action.
-  void markActionFulfilled(const std::string &actionName) final override;
+  void markActionFulfilled(Action action) final override;
 
   /// Sets an action required to be performed by the accessor.
-  void requireAction(const std::string &actionName) final override;
+  void requireAction(Action action) final override;
 
   /// Returns a string representation of the current coupling state.
   std::string printCouplingState() const final override;

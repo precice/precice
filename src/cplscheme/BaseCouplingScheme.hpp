@@ -166,16 +166,16 @@ public:
   bool isTimeWindowComplete() const override final;
 
   /// Returns true, if the given action has to be performed by the accessor.
-  bool isActionRequired(const std::string &actionName) const override final;
+  bool isActionRequired(Action action) const override final;
 
   /// Returns true, if the given action has to be performed by the accessor.
-  bool isActionFulfilled(const std::string &actionName) const override final;
+  bool isActionFulfilled(Action action) const override final;
 
   /// Tells the coupling scheme that the accessor has performed the given action.
-  void markActionFulfilled(const std::string &actionName) override final;
+  void markActionFulfilled(Action action) override final;
 
   /// Sets an action required to be performed by the accessor.
-  void requireAction(const std::string &actionName) override final;
+  void requireAction(Action action) override final;
 
   /**
    * @brief Returns coupling state information.
@@ -468,9 +468,9 @@ private:
   /// True, if coupling has been initialized.
   bool _isInitialized = false;
 
-  std::set<std::string> _requiredActions;
+  std::set<Action> _requiredActions;
 
-  std::set<std::string> _fulfilledActions;
+  std::set<Action> _fulfilledActions;
 
   /// True if implicit scheme converged
   bool _hasConverged = false;

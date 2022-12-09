@@ -268,7 +268,7 @@ double SolverInterfaceImpl::initialize()
   PRECICE_CHECK(_state != State::Initialized, "initialize() may only be called once.");
   PRECICE_ASSERT(not _couplingScheme->isInitialized());
 
-  bool failedToInitialize = _couplingScheme->isActionRequired(cplscheme::constants::actionWriteInitialData()) && not _couplingScheme->isActionFulfilled(cplscheme::constants::actionWriteInitialData());
+  bool failedToInitialize = _couplingScheme->isActionRequired(cplscheme::CouplingScheme::Action::InitializeData) && not _couplingScheme->isActionFulfilled(cplscheme::CouplingScheme::Action::InitializeData);
   PRECICE_CHECK(not failedToInitialize,
                 "Initial data has to be written to preCICE before calling initialize(). "
                 "After defining your mesh, call requiresInitialData() to check if the participant is required to write initial data using an appropriate write...Data() function.");
@@ -513,9 +513,9 @@ bool SolverInterfaceImpl::requiresInitialData()
 {
   PRECICE_TRACE();
   PRECICE_CHECK(_state == State::Constructed, "requiresInitialData() has to be called before initialize().");
-  bool required = _couplingScheme->isActionRequired(cplscheme::constants::actionWriteInitialData());
+  bool required = _couplingScheme->isActionRequired(cplscheme::CouplingScheme::Action::InitializeData);
   if (required) {
-    _couplingScheme->markActionFulfilled(cplscheme::constants::actionWriteInitialData());
+    _couplingScheme->markActionFulfilled(cplscheme::CouplingScheme::Action::InitializeData);
   }
   return required;
 }
@@ -524,9 +524,9 @@ bool SolverInterfaceImpl::requiresWritingCheckpoint()
 {
   PRECICE_TRACE();
   PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before requiresWritingCheckpoint().");
-  bool required = _couplingScheme->isActionRequired(cplscheme::constants::actionWriteIterationCheckpoint());
+  bool required = _couplingScheme->isActionRequired(cplscheme::CouplingScheme::Action::WriteCheckpoint);
   if (required) {
-    _couplingScheme->markActionFulfilled(cplscheme::constants::actionWriteIterationCheckpoint());
+    _couplingScheme->markActionFulfilled(cplscheme::CouplingScheme::Action::WriteCheckpoint);
   }
   return required;
 }
@@ -535,9 +535,9 @@ bool SolverInterfaceImpl::requiresReadingCheckpoint()
 {
   PRECICE_TRACE();
   PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before requiresReadingCheckpoint().");
-  bool required = _couplingScheme->isActionRequired(cplscheme::constants::actionReadIterationCheckpoint());
+  bool required = _couplingScheme->isActionRequired(cplscheme::CouplingScheme::Action::ReadCheckpoint);
   if (required) {
-    _couplingScheme->markActionFulfilled(cplscheme::constants::actionReadIterationCheckpoint());
+    _couplingScheme->markActionFulfilled(cplscheme::CouplingScheme::Action::ReadCheckpoint);
   }
   return required;
 }
