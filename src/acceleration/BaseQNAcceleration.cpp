@@ -216,42 +216,43 @@ void BaseQNAcceleration::updateDifferenceMatrices(
         residualMagnitude /= utils::IntraComm::l2norm(_values);
       }
 
-      PRECICE_CHECK(not math::equals(residualMagnitude, 0.0),
-                    "Attempting to add a zero vector to the quasi-Newton V matrix. This means that the residuals "
-                    "in two consecutive iterations are identical. If a relative convergence limit was selected, "
-                    "consider increasing the convergence threshold.");
+      if (math::equals(residualMagnitude, 0.0)) {
+        _forceUnderRelaxationStep = true;
+      }
 
       bool columnLimitReached = getLSSystemCols() == _maxIterationsUsed;
       bool overdetermined     = getLSSystemCols() <= getLSSystemRows();
-      if (not columnLimitReached && overdetermined) {
+      if (not _forceUnderRelaxationStep) {
+        if (not columnLimitReached && overdetermined) {
 
-        utils::appendFront(_matrixV, deltaR);
-        utils::appendFront(_matrixW, deltaXTilde);
+          utils::appendFront(_matrixV, deltaR);
+          utils::appendFront(_matrixW, deltaXTilde);
 
-        // insert column deltaR = _residuals - _oldResiduals at pos. 0 (front) into the
-        // QR decomposition and update decomposition
+          // insert column deltaR = _residuals - _oldResiduals at pos. 0 (front) into the
+          // QR decomposition and update decomposition
 
-        //apply scaling here
-        _preconditioner->apply(deltaR);
-        _qrV.pushFront(deltaR);
+          //apply scaling here
+          _preconditioner->apply(deltaR);
+          _qrV.pushFront(deltaR);
 
-        _matrixCols.front()++;
-      } else {
-        utils::shiftSetFirst(_matrixV, deltaR);
-        utils::shiftSetFirst(_matrixW, deltaXTilde);
+          _matrixCols.front()++;
+        } else {
+          utils::shiftSetFirst(_matrixV, deltaR);
+          utils::shiftSetFirst(_matrixW, deltaXTilde);
 
-        // inserts column deltaR at pos. 0 to the QR decomposition and deletes the last column
-        // the QR decomposition of V is updated
-        _preconditioner->apply(deltaR);
-        _qrV.pushFront(deltaR);
-        _qrV.popBack();
+          // inserts column deltaR at pos. 0 to the QR decomposition and deletes the last column
+          // the QR decomposition of V is updated
+          _preconditioner->apply(deltaR);
+          _qrV.pushFront(deltaR);
+          _qrV.popBack();
 
-        _matrixCols.front()++;
-        _matrixCols.back()--;
-        if (_matrixCols.back() == 0) {
-          _matrixCols.pop_back();
+          _matrixCols.front()++;
+          _matrixCols.back()--;
+          if (_matrixCols.back() == 0) {
+            _matrixCols.pop_back();
+          }
+          _nbDropCols++;
         }
-        _nbDropCols++;
       }
     }
     _oldResiduals = _residuals; // Store residuals
@@ -289,7 +290,7 @@ void BaseQNAcceleration::performAcceleration(
    */
   updateDifferenceMatrices(cplData);
 
-  if (_firstIteration && (_firstTimeWindow || _forceInitialRelaxation)) {
+  if (_firstIteration && (_firstTimeWindow || _forceInitialRelaxation) || _forceUnderRelaxationStep) {
     PRECICE_DEBUG("   Performing underrelaxation");
     _oldXTilde    = _values;    // Store x tilde
     _oldResiduals = _residuals; // Store current residual
@@ -399,6 +400,8 @@ void BaseQNAcceleration::performAcceleration(
                     "filter or increase its threshold (larger epsilon).");
     }
   }
+
+  _forceUnderRelaxationStep = false;
 
   splitCouplingData(cplData);
   // number of iterations (usually equals number of columns in LS-system)

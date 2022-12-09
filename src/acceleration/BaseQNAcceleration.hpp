@@ -293,6 +293,9 @@ private:
 
   /// Number of dropped columns in this time window (old time window out of scope)
   int _nbDropCols = 0;
+
+  /// True if an under-relaxation step must be performed instead of IQN update
+  bool _forceUnderRelaxationStep = false;
 };
 } // namespace acceleration
 } // namespace precice
