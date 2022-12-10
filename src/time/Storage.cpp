@@ -41,9 +41,9 @@ void Storage::setValueAtTime(double time, Eigen::VectorXd value, bool mustOverri
     auto sample = std::find_if(_sampleStorage.begin(), _sampleStorage.end(), [&time](const auto &s) { return math::equals(s.first, time); });
     PRECICE_ASSERT(sample != _sampleStorage.end(), time, "Key does not exist, cannot override value.");
     // override value at "time"
-    for (int sampleId = 0; sampleId < _sampleStorage.size(); sampleId++) {
-      if (math::equals(_sampleStorage[sampleId].first, time)) {
-        _sampleStorage[sampleId].second = value;
+    for (auto &sample : _sampleStorage) {
+      if (math::equals(sample.first, time)) {
+        sample.second = value;
         return;
       }
     }
