@@ -80,24 +80,28 @@ void MultiCouplingScheme::exchangeInitialData()
         initializeZeroReceiveData(receiveExchange.second);
       }
     }
+    // @todo not needed, but we do it to make send and receive data more consistent.
+    for (auto &sendExchange : _sendDataVector) {
+      for (const DataMap::value_type &pair : sendExchange.second) {
+        pair.second->clearTimeStepsStorage(false);
+        pair.second->storeDataAtTime(pair.second->values(), time::Storage::WINDOW_END);
+      }
+    }
     if (sendsInitializedData()) {
       for (auto &sendExchange : _sendDataVector) {
-        // @todo not needed, but we do it to make send and receive data more consistent.
-        for (const DataMap::value_type &pair : sendExchange.second) {
-          pair.second->clearTimeStepsStorage(false);
-          pair.second->storeDataAtTime(pair.second->values(), time::Storage::WINDOW_END);
-        }
         sendData(_m2ns[sendExchange.first], sendExchange.second);
       }
     }
   } else {
+    // @todo not needed, but we do it to make send and receive data more consistent.
+    for (auto &sendExchange : _sendDataVector) {
+      for (const DataMap::value_type &pair : sendExchange.second) {
+        pair.second->clearTimeStepsStorage(false);
+        pair.second->storeDataAtTime(pair.second->values(), time::Storage::WINDOW_END);
+      }
+    }
     if (sendsInitializedData()) {
       for (auto &sendExchange : _sendDataVector) {
-        // @todo not needed, but we do it to make send and receive data more consistent.
-        for (const DataMap::value_type &pair : sendExchange.second) {
-          pair.second->clearTimeStepsStorage(false);
-          pair.second->storeDataAtTime(pair.second->values(), time::Storage::WINDOW_END);
-        }
         sendData(_m2ns[sendExchange.first], sendExchange.second);
       }
     }
