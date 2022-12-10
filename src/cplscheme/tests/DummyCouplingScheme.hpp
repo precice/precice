@@ -110,6 +110,14 @@ public:
   /**
    * @brief Not implemented.
    */
+  void storeTimeStepReceiveData(double relativeDt) override final
+  {
+    PRECICE_ASSERT(false);
+  }
+
+  /**
+   * @brief Not implemented.
+   */
   void retreiveTimeStepReceiveData(double relativeDt) override final
   {
     PRECICE_ASSERT(false);

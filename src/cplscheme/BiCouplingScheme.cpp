@@ -174,6 +174,19 @@ void BiCouplingScheme::exchangeInitialData()
   }
 }
 
+void BiCouplingScheme::storeTimeStepReceiveData(double relativeDt)
+{
+  PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
+  PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
+  if (hasDataBeenReceived()) {
+    for (auto &receiveData : getReceiveData()) {
+      auto values       = receiveData.second->values();
+      bool mustOverride = true;
+      receiveData.second->storeDataAtTime(values, relativeDt, mustOverride);
+    }
+  }
+}
+
 void BiCouplingScheme::retreiveTimeStepReceiveData(double relativeDt)
 {
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);

@@ -1844,10 +1844,18 @@ void SolverInterfaceImpl::performDataActions(
     double                                  time)
 {
   PRECICE_TRACE();
+  // for actions we need to load and write back data from/to time steps storage.
+  // Actions would need similar treatment like mapping.
+  if (_couplingScheme->hasDataBeenReceived()) {
+    _couplingScheme->retreiveTimeStepReceiveData(time::Storage::WINDOW_END);
+  }
   for (action::PtrAction &action : _accessor->actions()) {
     if (timings.find(action->getTiming()) != timings.end()) {
       action->performAction(time);
     }
+  }
+  if (_couplingScheme->hasDataBeenReceived()) {
+    _couplingScheme->storeTimeStepReceiveData(time::Storage::WINDOW_END);
   }
 }
 

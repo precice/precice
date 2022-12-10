@@ -156,6 +156,14 @@ bool CompositionalCouplingScheme::hasDataBeenReceived() const
   return hasBeenReceived;
 }
 
+void CompositionalCouplingScheme::storeTimeStepReceiveData(double relativeDt)
+{
+  PRECICE_TRACE();
+  for (auto scheme : allSchemes()) {
+    scheme->storeTimeStepReceiveData(relativeDt);
+  }
+}
+
 void CompositionalCouplingScheme::retreiveTimeStepReceiveData(double relativeDt)
 {
   PRECICE_TRACE();

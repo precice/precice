@@ -164,6 +164,9 @@ public:
   virtual bool hasDataBeenReceived() const = 0;
 
   // @todo find a better name. This is too low level.
+  virtual void storeTimeStepReceiveData(double relativeDt) = 0;
+
+  // @todo find a better name. This is too low level.
   /**
    * @brief retreives time step data from CouplingData into mesh values
    *

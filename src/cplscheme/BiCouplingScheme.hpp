@@ -74,6 +74,8 @@ public:
     return getSendData(dataID) != nullptr;
   }
 
+  void storeTimeStepReceiveData(double relativeDt) override final;
+
   /**
    * @brief retreives time step data from CouplingData into mesh values
    *

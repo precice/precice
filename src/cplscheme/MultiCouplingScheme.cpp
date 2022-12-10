@@ -125,6 +125,18 @@ void MultiCouplingScheme::exchangeInitialData()
   PRECICE_DEBUG("Initial data is exchanged in MultiCouplingScheme");
 }
 
+void MultiCouplingScheme::storeTimeStepReceiveData(double relativeDt)
+{
+  PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
+  PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
+  for (auto &receiveExchange : _receiveDataVector) {
+    for (auto &receiveData : receiveExchange.second) {
+      bool mustOverride = true;
+      receiveData.second->storeDataAtTime(receiveData.second->values(), relativeDt, mustOverride);
+    }
+  }
+}
+
 void MultiCouplingScheme::retreiveTimeStepReceiveData(double relativeDt)
 {
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);

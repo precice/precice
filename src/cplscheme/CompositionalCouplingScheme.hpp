@@ -124,6 +124,8 @@ public:
    */
   bool hasDataBeenReceived() const final override;
 
+  void storeTimeStepReceiveData(double relativeDt) override final;
+
   /**
    * @brief retreives time step data from CouplingData into mesh values
    *
