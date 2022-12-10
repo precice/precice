@@ -38,7 +38,7 @@ public:
    * @param time the time associated with the value
    * @param value stored value
    */
-  void setValueAtTime(double time, Eigen::VectorXd value);
+  void setValueAtTime(double time, Eigen::VectorXd value, bool mustOverrideExisting = false);
 
   /**
    * @brief Get maximum normalized dt that is stored in this Storage.

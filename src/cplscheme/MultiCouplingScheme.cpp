@@ -82,12 +82,22 @@ void MultiCouplingScheme::exchangeInitialData()
     }
     if (sendsInitializedData()) {
       for (auto &sendExchange : _sendDataVector) {
+        // @todo not needed, but we do it to make send and receive data more consistent.
+        for (const DataMap::value_type &pair : sendExchange.second) {
+          pair.second->clearTimeStepsStorage(false);
+          pair.second->storeDataAtTime(pair.second->values(), time::Storage::WINDOW_END);
+        }
         sendData(_m2ns[sendExchange.first], sendExchange.second);
       }
     }
   } else {
     if (sendsInitializedData()) {
       for (auto &sendExchange : _sendDataVector) {
+        // @todo not needed, but we do it to make send and receive data more consistent.
+        for (const DataMap::value_type &pair : sendExchange.second) {
+          pair.second->clearTimeStepsStorage(false);
+          pair.second->storeDataAtTime(pair.second->values(), time::Storage::WINDOW_END);
+        }
         sendData(_m2ns[sendExchange.first], sendExchange.second);
       }
     }
@@ -179,6 +189,11 @@ void MultiCouplingScheme::exchangeFirstData()
 
   } else {
     for (auto &sendExchange : _sendDataVector) {
+      // @todo not needed, but we do it to make send and receive data more consistent.
+      for (const DataMap::value_type &pair : sendExchange.second) {
+        pair.second->clearTimeStepsStorage(true);
+        pair.second->storeDataAtTime(pair.second->values(), time::Storage::WINDOW_END);
+      }
       sendData(_m2ns[sendExchange.first], sendExchange.second);
     }
   }
@@ -190,6 +205,14 @@ void MultiCouplingScheme::exchangeSecondData()
   // @todo implement MultiCouplingScheme for explicit coupling
 
   if (_isController) {
+    for (auto &sendExchange : _sendDataVector) {
+      // IMPORTANT: needed, because acceleration might also deal with send data (for parallel coupling)
+      for (const DataMap::value_type &pair : sendExchange.second) {
+        pair.second->clearTimeStepsStorage(true);
+        pair.second->storeDataAtTime(pair.second->values(), time::Storage::WINDOW_END);
+      }
+    }
+
     doImplicitStep();
     for (const auto &m2nPair : _m2ns) {
       sendConvergence(m2nPair.second);

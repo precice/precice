@@ -29,12 +29,26 @@ Eigen::VectorXd Storage::getValueAtTime(double time)
   PRECICE_ASSERT(false, "no value found!", time);
 }
 
-void Storage::setValueAtTime(double time, Eigen::VectorXd value)
+void Storage::setValueAtTime(double time, Eigen::VectorXd value, bool mustOverrideExisting)
 {
   PRECICE_ASSERT(math::smallerEquals(WINDOW_START, time), "Setting value outside of valid range!");
   PRECICE_ASSERT(math::smallerEquals(time, WINDOW_END), "Sampling outside of valid range!");
-  PRECICE_ASSERT(math::smaller(maxStoredNormalizedDt(), time), maxStoredNormalizedDt(), time, "Trying to overwrite existing values or to write values with a time that is too small. Please use clear(), if you want to reset the storage.");
-  _sampleStorage.emplace_back(std::make_pair(time, value));
+  if (!mustOverrideExisting) {
+    PRECICE_ASSERT(math::smaller(maxStoredNormalizedDt(), time), maxStoredNormalizedDt(), time, "Trying to overwrite existing values or to write values with a time that is too small. Please use clear(), if you want to reset the storage.");
+    _sampleStorage.emplace_back(std::make_pair(time, value));
+  } else {
+    // check that key "time" exists.
+    auto sample = std::find_if(_sampleStorage.begin(), _sampleStorage.end(), [&time](const auto &s) { return math::equals(s.first, time); });
+    PRECICE_ASSERT(sample != _sampleStorage.end(), time, "Key does not exist, cannot override value.");
+    // override value at "time"
+    for (int sampleId = 0; sampleId < _sampleStorage.size(); sampleId++) {
+      if (math::equals(_sampleStorage[sampleId].first, time)) {
+        _sampleStorage[sampleId].second = value;
+        return;
+      }
+    }
+    PRECICE_ASSERT(false, "unreachable!");
+  }
 }
 
 double Storage::maxStoredNormalizedDt()
@@ -69,6 +83,7 @@ void Storage::clear(bool keepZero)
 {
   Eigen::VectorXd keep;
   if (keepZero) {
+    PRECICE_ASSERT(nTimes() > 0, "Storage does not contain any data!");
     keep = _sampleStorage.front().second; // we keep data at _storageDict[0.0]
   }
   _sampleStorage.clear();

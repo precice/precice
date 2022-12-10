@@ -100,8 +100,18 @@ void SerialCouplingScheme::exchangeFirstData()
   if (doesFirstStep()) { // first participant
     PRECICE_DEBUG("Sending data...");
     sendTimeWindowSize();
+    // @todo not needed, but we do it to make send and receive data more consistent.
+    for (const DataMap::value_type &pair : getSendData()) {
+      pair.second->clearTimeStepsStorage(true);
+      pair.second->storeDataAtTime(pair.second->values(), time::Storage::WINDOW_END);
+    }
     sendData(getM2N(), getSendData());
   } else { // second participant
+    // IMPORTANT: needed, because acceleration might also deal with send data (for parallel coupling)
+    for (const DataMap::value_type &pair : getSendData()) {
+      pair.second->clearTimeStepsStorage(true);
+      pair.second->storeDataAtTime(pair.second->values(), time::Storage::WINDOW_END);
+    }
     if (isImplicitCouplingScheme()) {
       PRECICE_DEBUG("Test Convergence and accelerate...");
       doImplicitStep();
