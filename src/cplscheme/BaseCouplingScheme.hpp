@@ -531,17 +531,6 @@ private:
 
   /// Functions needed for advance()
 
-  /**
-   * @brief implements functionality for advance in base class.
-   * @returns true, if iteration converged
-   */
-  bool exchangeDataAndAccelerate()
-  {
-    exchangeFirstData();
-    exchangeSecondData();
-    return hasConverged();
-  }
-
   /// Exchanges the first set of data
   virtual void exchangeFirstData() = 0;
 
