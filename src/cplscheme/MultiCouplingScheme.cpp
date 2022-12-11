@@ -216,6 +216,14 @@ void MultiCouplingScheme::exchangeSecondData()
     for (const auto &m2nPair : _m2ns) {
       sendConvergence(m2nPair.second);
     }
+    if (hasConverged()) {
+      for (auto &receiveExchange : _receiveDataVector) {
+        // received converged result of this window, trigger move
+        for (const DataMap::value_type &pair : receiveExchange.second) {
+          pair.second->moveTimeStepsStorage();
+        }
+      }
+    }
 
     for (auto &sendExchange : _sendDataVector) {
       sendData(_m2ns[sendExchange.first], sendExchange.second);
@@ -228,6 +236,12 @@ void MultiCouplingScheme::exchangeSecondData()
         pair.second->clearTimeStepsStorage(true);
       }
       receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
+      if (hasConverged()) {
+        // received converged result of this window, trigger move
+        for (const DataMap::value_type &pair : receiveExchange.second) {
+          pair.second->moveTimeStepsStorage();
+        }
+      }
     }
     checkDataHasBeenReceived();
   }
