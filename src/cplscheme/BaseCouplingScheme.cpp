@@ -168,6 +168,8 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
     storeIteration();
   }
 
+  bool keepZero = false; // need to initialize Storage at WINDOW_START and WINDOW_END
+  moveSendDataToStorage(keepZero);
   exchangeInitialData();
 
   if (isImplicitCouplingScheme()) {
@@ -205,8 +207,9 @@ void BaseCouplingScheme::firstExchange()
 
   if (reachedEndOfTimeWindow()) {
 
-    _timeWindows += 1; // increment window counter. If not converged, will be decremented again later.
-
+    _timeWindows += 1;               // increment window counter. If not converged, will be decremented again later.
+    bool keepZero = true;            // keep data at WINDOW_START, override data at WINDOW_END
+    moveSendDataToStorage(keepZero); // store data at end of window in Storage to prepare for acceleration and exchange
     exchangeFirstData();
   }
 }

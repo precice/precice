@@ -120,6 +120,8 @@ protected:
     return _m2n;
   }
 
+  void moveSendDataToStorage(bool keepZero) override;
+
   /**
    * @brief Exchanges data, if it has to be initialized.
    */

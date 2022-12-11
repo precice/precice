@@ -130,11 +130,6 @@ void BiCouplingScheme::exchangeInitialData()
 {
   // F: send, receive, S: receive, send
   if (doesFirstStep()) {
-    // @todo not needed, but we do it to make send and receive data more consistent.
-    for (const DataMap::value_type &pair : getSendData()) {
-      pair.second->clearTimeStepsStorage(false);
-      pair.second->storeDataAtTime(pair.second->values(), time::Storage::WINDOW_END);
-    }
     if (sendsInitializedData()) {
       sendData(getM2N(), getSendData());
     }
@@ -162,11 +157,6 @@ void BiCouplingScheme::exchangeInitialData()
       checkDataHasBeenReceived();
     } else {
       initializeZeroReceiveData(getReceiveData());
-    }
-    // @todo not needed, but we do it to make send and receive data more consistent.
-    for (const DataMap::value_type &pair : getSendData()) {
-      pair.second->clearTimeStepsStorage(false);
-      pair.second->storeDataAtTime(pair.second->values(), time::Storage::WINDOW_END);
     }
     if (sendsInitializedData()) {
       sendData(getM2N(), getSendData());
@@ -196,6 +186,14 @@ void BiCouplingScheme::retreiveTimeStepReceiveData(double relativeDt)
     auto allData   = getAllData();
     auto data      = allData[dataId];
     data->values() = data->getDataAtTime(relativeDt);
+  }
+}
+
+void BiCouplingScheme::moveSendDataToStorage(bool keepZero)
+{
+  for (const DataMap::value_type &pair : getSendData()) {
+    pair.second->clearTimeStepsStorage(keepZero);
+    pair.second->storeDataAtTime(pair.second->values(), time::Storage::WINDOW_END);
   }
 }
 

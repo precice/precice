@@ -125,6 +125,8 @@ private:
     return getAllData();
   }
 
+  void moveSendDataToStorage(bool keepZero) override;
+
   /**
    * @brief Exchanges data, if it has to be initialized.
    */

@@ -382,6 +382,13 @@ protected:
   void storeExtrapolationData();
 
   /**
+   * @brief Stores send data in storage of CouplingData
+   *
+   * @param keepZero if true, data at WINDOW_START will be kept
+   */
+  virtual void moveSendDataToStorage(bool keepZero) = 0;
+
+  /**
    * @brief finalizes this window's data and initializes data for next window.
    */
   void moveToNextWindow();
