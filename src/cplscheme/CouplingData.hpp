@@ -86,8 +86,8 @@ public:
   /// stores data at key relativeDt in _timeStepsStorage for later use.
   void storeDataAtTime(double relativeDt, bool mustOverrideExisting = false);
 
-  /// returns data for a given key. Assumes that this data exists under the key.
-  Eigen::VectorXd getDataAtTime(double relativeDt);
+  /// stores data for a given key into _data. Assumes that this data exists under the key.
+  void retreiveDataAtTime(double relativeDt);
 
 private:
   /**
