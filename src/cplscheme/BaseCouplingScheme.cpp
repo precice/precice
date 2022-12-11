@@ -90,7 +90,7 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
 
   for (const DataMap::value_type &pair : sendData) {
     // Data is actually only send if size>0, which is checked in the derived classes implementation
-    m2n->send(pair.second->values(), pair.second->getMeshID(), pair.second->getDimensions());
+    m2n->send(pair.second->values(), pair.second->getMeshID(), pair.second->getDimensions()); // @todo don't send pair.second->values(), but get data from Storage.
 
     if (pair.second->hasGradient()) {
       m2n->send(pair.second->gradientValues(), pair.second->getMeshID(), pair.second->getDimensions() * pair.second->meshDimensions());
@@ -109,7 +109,7 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
   PRECICE_ASSERT(m2n->isConnected());
   for (const DataMap::value_type &pair : receiveData) {
     // Data is only received on ranks with size>0, which is checked in the derived class implementation
-    m2n->receive(pair.second->values(), pair.second->getMeshID(), pair.second->getDimensions());
+    m2n->receive(pair.second->values(), pair.second->getMeshID(), pair.second->getDimensions()); // @todo don't receive into pair.second->values(), but receive data into Storage.
     pair.second->storeDataAtTime(pair.second->values(), time::Storage::WINDOW_END);
 
     if (pair.second->hasGradient()) {
