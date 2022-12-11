@@ -84,7 +84,7 @@ public:
   void moveTimeStepsStorage(); // @todo very easy to mix up with moveToNextWindow. Try to rename or merge!
 
   /// stores data at key relativeDt in _timeStepsStorage for later use.
-  void storeDataAtTime(Eigen::VectorXd data, double relativeDt, bool mustOverrideExisting = false);
+  void storeDataAtTime(double relativeDt, bool mustOverrideExisting = false);
 
   /// returns data for a given key. Assumes that this data exists under the key.
   Eigen::VectorXd getDataAtTime(double relativeDt);

@@ -64,7 +64,7 @@ void MultiCouplingScheme::moveSendDataToStorage(bool keepZero)
   for (auto &sendExchange : _sendDataVector) {
     for (const DataMap::value_type &pair : sendExchange.second) {
       pair.second->clearTimeStepsStorage(keepZero);
-      pair.second->storeDataAtTime(pair.second->values(), time::Storage::WINDOW_END);
+      pair.second->storeDataAtTime(time::Storage::WINDOW_END);
     }
   }
 }
@@ -128,7 +128,7 @@ void MultiCouplingScheme::storeTimeStepReceiveData(double relativeDt)
   for (auto &receiveExchange : _receiveDataVector) {
     for (auto &receiveData : receiveExchange.second) {
       bool mustOverride = true;
-      receiveData.second->storeDataAtTime(receiveData.second->values(), relativeDt, mustOverride);
+      receiveData.second->storeDataAtTime(relativeDt, mustOverride);
     }
   }
 }
@@ -139,7 +139,7 @@ void MultiCouplingScheme::retreiveTimeStepReceiveData(double relativeDt)
   PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
   for (auto &receiveExchange : _receiveDataVector) {
     for (auto &receiveData : receiveExchange.second) {
-      receiveData.second->values() = receiveData.second->getDataAtTime(relativeDt);
+      receiveData.second->retreiveDataAtTime(relativeDt);
     }
   }
 }

@@ -110,7 +110,7 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
   for (const DataMap::value_type &pair : receiveData) {
     // Data is only received on ranks with size>0, which is checked in the derived class implementation
     m2n->receive(pair.second->values(), pair.second->getMeshID(), pair.second->getDimensions()); // @todo don't receive into pair.second->values(), but receive data into Storage.
-    pair.second->storeDataAtTime(pair.second->values(), time::Storage::WINDOW_END);
+    pair.second->storeDataAtTime(time::Storage::WINDOW_END);
 
     if (pair.second->hasGradient()) {
       m2n->receive(pair.second->gradientValues(), pair.second->getMeshID(), pair.second->getDimensions() * pair.second->meshDimensions());
@@ -124,8 +124,7 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
 void BaseCouplingScheme::initializeZeroReceiveData(const DataMap &receiveData)
 {
   for (const DataMap::value_type &pair : receiveData) {
-    auto values = pair.second->values();
-    pair.second->storeDataAtTime(values, time::Storage::WINDOW_START);
+    pair.second->storeDataAtTime(time::Storage::WINDOW_START);
   }
 }
 
@@ -697,7 +696,7 @@ void BaseCouplingScheme::doImplicitStep()
       // @todo For other Acceleration schemes as described in "Rüth, B, Uekermann, B, Mehl, M, Birken, P, Monge, A, Bungartz, H-J. Quasi-Newton waveform iteration for partitioned surface-coupled multiphysics applications. Int J Numer Methods Eng. 2021; 122: 5236– 5257. https://doi.org/10.1002/nme.6443" we need a more elaborate implementation.
       for (auto &pair : getAccelerationData()) {
         bool override = true;
-        pair.second->storeDataAtTime(pair.second->values(), time::Storage::WINDOW_END, override);
+        pair.second->storeDataAtTime(time::Storage::WINDOW_END, override);
       }
     }
   }
