@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(ActionTimingsImplicit)
   BOOST_TEST(dt == 1.0);
   if (context.isNamed("SolverOne")) {
     // BOOST_TEST(action::RecorderAction::records.empty());
-    // @todo Needed change because always maping in initialize.
+    // @todo Needed change because always mapping in initialize.
     BOOST_TEST(action::RecorderAction::records.size() == 2);
     BOOST_TEST(action::RecorderAction::records.at(0).timing == action::Action::READ_MAPPING_PRIOR);
     BOOST_TEST(action::RecorderAction::records.at(1).timing == action::Action::READ_MAPPING_POST);
