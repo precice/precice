@@ -30,7 +30,7 @@ void Waveform::initialize(const Eigen::VectorXd &values)
 
 void Waveform::store(const Eigen::VectorXd &values, double normalizedDt)
 {
-  if (math::equals(_storage.maxStoredNormalizedDt(), 1.0)) { // reached end of window and trying to write new data from next window. Clearing window first.
+  if (math::equals(_storage.maxStoredNormalizedDt(), time::Storage::WINDOW_END)) { // reached end of window and trying to write new data from next window. Clearing window first.
     _storage.clear();
   }
   if (_storage.nTimes() > 0) {

@@ -100,7 +100,7 @@ public:
   void move();
 
   /**
-   * @brief Clear this Storage by deleting all values. If keepZero is true, keep values associated with 0.0.
+   * @brief Clear this Storage by deleting all values except values associated with 0.0.
    */
   void clear();
 
