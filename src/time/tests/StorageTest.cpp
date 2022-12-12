@@ -37,12 +37,10 @@ BOOST_AUTO_TEST_CASE(testClear)
   BOOST_TEST(storage.nDofs() == nValues);
   BOOST_TEST(storage.nTimes() == 2);
   BOOST_TEST(storage.maxStoredNormalizedDt() == 1.0);
-  storage.clear(true);
+  storage.clear();
   BOOST_TEST(storage.nDofs() == nValues);
   BOOST_TEST(storage.nTimes() == 1);
   BOOST_TEST(storage.maxStoredNormalizedDt() == 0.0);
-  storage.clear(false);
-  BOOST_TEST(storage.nTimes() == 0);
 }
 
 // create storage, add some values and then move to next window.
@@ -56,7 +54,7 @@ BOOST_AUTO_TEST_CASE(testMove)
   BOOST_TEST(storage.nDofs() == nValues);
   BOOST_TEST(storage.nTimes() == 2);
   BOOST_TEST(storage.maxStoredNormalizedDt() == 1.0);
-  storage.clear(true);
+  storage.clear();
   BOOST_TEST(storage.nTimes() == 1);
   storage.setValueAtTime(0.5, Eigen::VectorXd::Ones(nValues));
   BOOST_TEST(storage.nTimes() == 2);
@@ -86,7 +84,7 @@ BOOST_AUTO_TEST_CASE(testGetTimesAndValues)
   auto storage = Storage();
   int  nValues = 3;
   storage.initialize(Eigen::VectorXd::Ones(nValues));
-  storage.clear(true);
+  storage.clear();
   storage.setValueAtTime(0.5, Eigen::VectorXd::Ones(nValues));
   storage.setValueAtTime(1.0, Eigen::VectorXd::Zero(nValues));
   auto times = storage.getTimes();
