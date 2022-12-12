@@ -29,21 +29,8 @@ CommunicateMesh::CommunicateMesh(
 
 namespace {
 
-struct SerializedMesh {
-  /// contains the dimension, followed by the numbers of vertices, edges, triangles, and tetrahedra
-  std::vector<int> sizes;
-
-  /// sizes[0] * dimension coordinates for vertices
-  std::vector<double> coords;
-
-  // if no connectivity ( sum(sizes[1-3]) == 0)
-  // then contains sizes[0] global IDs
-  // else contains sizes[0] pairs of (global id, local id)
-  //      followed by sizes[1] pairs of local ids defining edges
-  //      followed by sizes[2] triples of local ids defining triangles
-  //      followed by sizes[3] quadruples of local ids defining tetrahedra
-  std::vector<int> ids;
-
+class SerializedMesh {
+public:
   void assertValid() const
   {
     PRECICE_ASSERT(sizes.size() == 5);
@@ -188,85 +175,108 @@ struct SerializedMesh {
           *vertices.at(ids[idx + 3]));
     }
   }
+
+  static SerializedMesh serialize(const mesh::Mesh &mesh)
+  {
+    const auto &meshVertices   = mesh.vertices();
+    const auto &meshEdges      = mesh.edges();
+    const auto &meshTriangles  = mesh.triangles();
+    const auto &meshTetrahedra = mesh.tetrahedra();
+
+    const auto numberOfVertices   = meshVertices.size();
+    const auto numberOfEdges      = meshEdges.size();
+    const auto numberOfTriangles  = meshTriangles.size();
+    const auto numberOfTetrahedra = meshTetrahedra.size();
+
+    SerializedMesh result;
+
+    result.sizes = {
+        mesh.getDimensions(),
+        static_cast<int>(numberOfVertices),
+        static_cast<int>(numberOfEdges),
+        static_cast<int>(numberOfTriangles),
+        static_cast<int>(numberOfTetrahedra)};
+
+    // Empty mesh
+    if (numberOfVertices == 0) {
+      return result;
+    }
+
+    auto dim = static_cast<size_t>(mesh.getDimensions());
+
+    // we always need to send globalIDs
+    auto       totalIDs        = numberOfVertices;
+    const bool hasConnectivity = mesh.hasConnectivity();
+    if (hasConnectivity) {
+      totalIDs += numberOfVertices          // ids for reconstruction, then connectivity
+                  + numberOfEdges * 2       // 2 vertices per edge
+                  + numberOfTriangles * 3   // 3 vertices per triangle
+                  + numberOfTetrahedra * 4; // 4 vertices per tetrahedron
+    }
+    result.ids.reserve(totalIDs);
+
+    result.coords.resize(numberOfVertices * dim);
+    for (size_t i = 0; i < numberOfVertices; ++i) {
+      auto &v = meshVertices[i];
+      std::copy_n(v.rawCoords().begin(), dim, &result.coords[i * dim]);
+      result.ids.push_back(v.getGlobalIndex());
+      // local ids are only interleaved if required
+      if (hasConnectivity) {
+        result.ids.push_back(v.getID());
+      }
+    }
+
+    // Mesh without connectivity information
+    if (!hasConnectivity) {
+      PRECICE_ASSERT(result.ids.size() == numberOfVertices);
+      return result;
+    }
+
+    auto pushVID = [&result](const auto &element, auto... id) {
+      (result.ids.push_back(element.vertex(id).getID()), ...);
+    };
+
+    for (const auto &e : meshEdges) {
+      pushVID(e, 0, 1);
+    }
+
+    for (const auto &e : meshTriangles) {
+      pushVID(e, 0, 1, 2);
+    }
+
+    for (const auto &e : meshTetrahedra) {
+      pushVID(e, 0, 1, 2, 3);
+    }
+
+    result.assertValid();
+
+    // Mesh with connectivity information
+    return result;
+  }
+
+private:
+  SerializedMesh() = default;
+
+  /// contains the dimension, followed by the numbers of vertices, edges, triangles, and tetrahedra
+  std::vector<int> sizes;
+
+  /// sizes[0] * dimension coordinates for vertices
+  std::vector<double> coords;
+
+  // if no connectivity ( sum(sizes[1-3]) == 0)
+  // then contains sizes[0] global IDs
+  // else contains sizes[0] pairs of (global id, local id)
+  //      followed by sizes[1] pairs of local ids defining edges
+  //      followed by sizes[2] triples of local ids defining triangles
+  //      followed by sizes[3] quadruples of local ids defining tetrahedra
+  std::vector<int> ids;
 };
 
 SerializedMesh serialize(const mesh::Mesh &mesh)
 {
-  const auto &meshVertices   = mesh.vertices();
-  const auto &meshEdges      = mesh.edges();
-  const auto &meshTriangles  = mesh.triangles();
-  const auto &meshTetrahedra = mesh.tetrahedra();
-
-  const auto numberOfVertices   = meshVertices.size();
-  const auto numberOfEdges      = meshEdges.size();
-  const auto numberOfTriangles  = meshTriangles.size();
-  const auto numberOfTetrahedra = meshTetrahedra.size();
-
-  SerializedMesh result;
-
-  result.sizes = {
-      mesh.getDimensions(),
-      static_cast<int>(numberOfVertices),
-      static_cast<int>(numberOfEdges),
-      static_cast<int>(numberOfTriangles),
-      static_cast<int>(numberOfTetrahedra)};
-
-  // Empty mesh
-  if (numberOfVertices == 0) {
-    return result;
-  }
-
-  auto dim = static_cast<size_t>(mesh.getDimensions());
-
-  // we always need to send globalIDs
-  auto       totalIDs        = numberOfVertices;
-  const bool hasConnectivity = mesh.hasConnectivity();
-  if (hasConnectivity) {
-    totalIDs += numberOfVertices          // ids for reconstruction, then connectivity
-                + numberOfEdges * 2       // 2 vertices per edge
-                + numberOfTriangles * 3   // 3 vertices per triangle
-                + numberOfTetrahedra * 4; // 4 vertices per tetrahedron
-  }
-  result.ids.reserve(totalIDs);
-
-  result.coords.resize(numberOfVertices * dim);
-  for (size_t i = 0; i < numberOfVertices; ++i) {
-    auto &v = meshVertices[i];
-    std::copy_n(v.rawCoords().begin(), dim, &result.coords[i * dim]);
-    result.ids.push_back(v.getGlobalIndex());
-    // local ids are only interleaved if required
-    if (hasConnectivity) {
-      result.ids.push_back(v.getID());
-    }
-  }
-
-  // Mesh without connectivity information
-  if (!hasConnectivity) {
-    PRECICE_ASSERT(result.ids.size() == numberOfVertices);
-    return result;
-  }
-
-  auto pushVID = [&result](const auto &element, auto... id) {
-    (result.ids.push_back(element.vertex(id).getID()), ...);
-  };
-
-  for (const auto &e : meshEdges) {
-    pushVID(e, 0, 1);
-  }
-
-  for (const auto &e : meshTriangles) {
-    pushVID(e, 0, 1, 2);
-  }
-
-  for (const auto &e : meshTetrahedra) {
-    pushVID(e, 0, 1, 2, 3);
-  }
-
-  result.assertValid();
-
-  // Mesh with connectivity information
-  return result;
+  return SerializedMesh::serialize(mesh);
 }
+
 } // namespace
 
 void CommunicateMesh::sendMesh(
