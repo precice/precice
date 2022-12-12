@@ -122,11 +122,10 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
 
     // will be changed via https://github.com/precice/precice/pull/1414
     if (recvInitialData) {
-      pair.second->clearTimeStepsStorage(false);
       pair.second->storeValuesAtTime(time::Storage::WINDOW_START, recvBuffer);
       pair.second->storeValuesAtTime(time::Storage::WINDOW_END, recvBuffer);
     } else {
-      pair.second->clearTimeStepsStorage(true);
+      pair.second->clearTimeStepsStorage();
       pair.second->storeValuesAtTime(time::Storage::WINDOW_END, recvBuffer);
     }
 

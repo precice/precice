@@ -132,9 +132,9 @@ void CouplingData::storeExtrapolationData()
   _extrapolation.store(values());
 }
 
-void CouplingData::clearTimeStepsStorage(bool keepZero)
+void CouplingData::clearTimeStepsStorage()
 {
-  _timeStepsStorage.clear(keepZero);
+  _timeStepsStorage.clear();
 }
 
 void CouplingData::moveTimeStepsStorage()

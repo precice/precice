@@ -63,8 +63,7 @@ void MultiCouplingScheme::clearTimeStepSendStorage()
 {
   for (auto &sendExchange : _sendDataVector) {
     for (const DataMap::value_type &pair : sendExchange.second) {
-      bool keepZero = true;
-      pair.second->clearTimeStepsStorage(keepZero);
+      pair.second->clearTimeStepsStorage();
     }
   }
 }

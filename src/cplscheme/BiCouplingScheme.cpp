@@ -181,8 +181,7 @@ void BiCouplingScheme::retreiveTimeStepReceiveData(double relativeDt)
 void BiCouplingScheme::clearTimeStepSendStorage()
 {
   for (const DataMap::value_type &pair : getSendData()) {
-    bool keepZero = true;
-    pair.second->clearTimeStepsStorage(keepZero);
+    pair.second->clearTimeStepsStorage();
   }
 }
 

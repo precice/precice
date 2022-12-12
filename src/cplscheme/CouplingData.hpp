@@ -78,7 +78,7 @@ public:
   void storeExtrapolationData();
 
   /// clears _timeStepsStorage. Called after data was written or before data is received.
-  void clearTimeStepsStorage(bool keepZero);
+  void clearTimeStepsStorage();
 
   /// moves _timeStepsStorage. Called after converged data was received.
   void moveTimeStepsStorage(); // @todo very easy to mix up with moveToNextWindow. Try to rename or merge!
