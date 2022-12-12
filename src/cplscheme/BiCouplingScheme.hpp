@@ -120,7 +120,9 @@ protected:
     return _m2n;
   }
 
-  void moveSendDataToStorage(bool keepZero) override;
+  void clearTimeStepSendStorage() override;
+
+  void storeTimeStepSendData(double relativeDt) override;
 
   /**
    * @brief Exchanges data, if it has to be initialized.

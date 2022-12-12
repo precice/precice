@@ -77,17 +77,10 @@ void SerialCouplingScheme::receiveAndSetTimeWindowSize()
 
 void SerialCouplingScheme::performReceiveOfFirstAdvance()
 {
-  if (doesFirstStep()) {
-    // do constant extrapolation
-    for (const DataMap::value_type &pair : getReceiveData()) {
-      pair.second->moveTimeStepsStorage();
-    }
-  } else { // second participant
+  if (!doesFirstStep()) { // second participant
+    // similar to SerialCouplingScheme::exchangeSecondData()
     receiveAndSetTimeWindowSize();
     PRECICE_DEBUG("Receiving data...");
-    for (const DataMap::value_type &pair : getReceiveData()) {
-      pair.second->clearTimeStepsStorage(true);
-    }
     receiveData(getM2N(), getReceiveData());
     if (not hasDataBeenReceived()) {
       checkDataHasBeenReceived();
@@ -121,9 +114,6 @@ void SerialCouplingScheme::exchangeSecondData()
     }
 
     PRECICE_DEBUG("Receiving data...");
-    for (const DataMap::value_type &pair : getReceiveData()) {
-      pair.second->clearTimeStepsStorage(true);
-    }
     receiveData(getM2N(), getReceiveData());
     if (hasConverged()) {
       // received converged result of this window, trigger move
@@ -143,9 +133,6 @@ void SerialCouplingScheme::exchangeSecondData()
         for (const DataMap::value_type &pair : getReceiveData()) {
           pair.second->moveTimeStepsStorage();
         }
-      }
-      for (const DataMap::value_type &pair : getReceiveData()) {
-        pair.second->clearTimeStepsStorage(true);
       }
       receiveData(getM2N(), getReceiveData());
       checkDataHasBeenReceived();

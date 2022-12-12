@@ -125,7 +125,9 @@ private:
     return getAllData();
   }
 
-  void moveSendDataToStorage(bool keepZero) override;
+  void clearTimeStepSendStorage() override;
+
+  void storeTimeStepSendData(double relativeDt) override;
 
   /**
    * @brief Exchanges data, if it has to be initialized.

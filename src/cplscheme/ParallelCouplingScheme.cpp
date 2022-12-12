@@ -25,10 +25,7 @@ ParallelCouplingScheme::ParallelCouplingScheme(
 
 void ParallelCouplingScheme::performReceiveOfFirstAdvance()
 {
-  // receive nothing by default do constant extrapolation instead
-  for (const DataMap::value_type &pair : getReceiveData()) {
-    pair.second->moveTimeStepsStorage();
-  }
+  return; // no action needed.
 }
 
 void ParallelCouplingScheme::exchangeFirstData()
@@ -38,9 +35,6 @@ void ParallelCouplingScheme::exchangeFirstData()
     sendData(getM2N(), getSendData());
   } else { // second participant
     PRECICE_DEBUG("Receiving data...");
-    for (const DataMap::value_type &pair : getReceiveData()) {
-      pair.second->clearTimeStepsStorage(true);
-    }
     receiveData(getM2N(), getReceiveData());
     checkDataHasBeenReceived();
   }
@@ -52,9 +46,6 @@ void ParallelCouplingScheme::exchangeSecondData()
     PRECICE_DEBUG("Receiving data...");
     if (isImplicitCouplingScheme()) {
       receiveConvergence(getM2N());
-    }
-    for (const DataMap::value_type &pair : getReceiveData()) {
-      pair.second->clearTimeStepsStorage(true);
     }
     receiveData(getM2N(), getReceiveData());
     if (hasConverged()) {

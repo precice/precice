@@ -264,16 +264,18 @@ protected:
    *
    * @param m2n M2N used for communication
    * @param sendData DataMap associated with sent data
+   * @param sendInitialData if true, will send data from WINDOW_START, else data from WINDOW_END
    */
-  void sendData(const m2n::PtrM2N &m2n, const DataMap &sendData);
+  void sendData(const m2n::PtrM2N &m2n, const DataMap &sendData, bool sendInitialData = false);
 
   /**
    * @brief Receives data receiveDataIDs given in mapCouplingData with communication.
    *
    * @param m2n M2N used for communication
    * @param receiveData DataMap associated with received data
+   * @param recvInitialData if true, will store received data for WINDOW_START, else store received data for WINDOW_END
    */
-  void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData);
+  void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData, bool recvInitialData = false);
 
   /**
    * @brief Initialized receiveData with zero values.
@@ -381,12 +383,14 @@ protected:
    */
   void storeExtrapolationData();
 
+  virtual void clearTimeStepSendStorage() = 0;
+
   /**
-   * @brief Stores send data in storage of CouplingData
+   * @brief Stores send data in storage of CouplingData at given time
    *
-   * @param keepZero if true, data at WINDOW_START will be kept
+   * @param relativeDt time where data is stored
    */
-  virtual void moveSendDataToStorage(bool keepZero) = 0;
+  virtual void storeTimeStepSendData(double relativeDt) = 0;
 
   /**
    * @brief finalizes this window's data and initializes data for next window.

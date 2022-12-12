@@ -81,7 +81,7 @@ BaseCouplingScheme::BaseCouplingScheme(
   }
 }
 
-void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendData)
+void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendData, bool sendInitialData)
 {
   PRECICE_TRACE();
   std::vector<int> sentDataIDs;
@@ -89,8 +89,16 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
   PRECICE_ASSERT(m2n->isConnected());
 
   for (const DataMap::value_type &pair : sendData) {
+    // will be changed via https://github.com/precice/precice/pull/1414
+    double sendTime;
+    if (sendInitialData) {
+      sendTime = time::Storage::WINDOW_START;
+    } else {
+      sendTime = time::Storage::WINDOW_END;
+    }
+    auto sendBuffer = pair.second->getValuesAtTime(sendTime);
     // Data is actually only send if size>0, which is checked in the derived classes implementation
-    m2n->send(pair.second->values(), pair.second->getMeshID(), pair.second->getDimensions()); // @todo don't send pair.second->values(), but get data from Storage.
+    m2n->send(sendBuffer, pair.second->getMeshID(), pair.second->getDimensions());
 
     if (pair.second->hasGradient()) {
       m2n->send(pair.second->gradientValues(), pair.second->getMeshID(), pair.second->getDimensions() * pair.second->meshDimensions());
@@ -101,7 +109,7 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
   PRECICE_DEBUG("Number of sent data sets = {}", sentDataIDs.size());
 }
 
-void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData)
+void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData, bool recvInitialData)
 {
   PRECICE_TRACE();
   std::vector<int> receivedDataIDs;
@@ -109,8 +117,20 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
   PRECICE_ASSERT(m2n->isConnected());
   for (const DataMap::value_type &pair : receiveData) {
     // Data is only received on ranks with size>0, which is checked in the derived class implementation
-    m2n->receive(pair.second->values(), pair.second->getMeshID(), pair.second->getDimensions()); // @todo don't receive into pair.second->values(), but receive data into Storage.
-    pair.second->storeDataAtTime(time::Storage::WINDOW_END);
+    auto recvBuffer = Eigen::VectorXd(pair.second->getSize());
+    m2n->receive(recvBuffer, pair.second->getMeshID(), pair.second->getDimensions());
+
+    // will be changed via https://github.com/precice/precice/pull/1414
+    if (recvInitialData) {
+      pair.second->clearTimeStepsStorage(false);
+      pair.second->storeValuesAtTime(time::Storage::WINDOW_START, recvBuffer);
+      pair.second->storeValuesAtTime(time::Storage::WINDOW_END, recvBuffer);
+    } else {
+      pair.second->clearTimeStepsStorage(true);
+      pair.second->storeValuesAtTime(time::Storage::WINDOW_END, recvBuffer);
+    }
+
+    pair.second->values() = recvBuffer; // @todo should happen somewhere else!
 
     if (pair.second->hasGradient()) {
       m2n->receive(pair.second->gradientValues(), pair.second->getMeshID(), pair.second->getDimensions() * pair.second->meshDimensions());
@@ -124,7 +144,9 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
 void BaseCouplingScheme::initializeZeroReceiveData(const DataMap &receiveData)
 {
   for (const DataMap::value_type &pair : receiveData) {
-    pair.second->storeDataAtTime(time::Storage::WINDOW_START);
+    auto zeroData = Eigen::VectorXd::Zero(pair.second->getSize());
+    pair.second->storeValuesAtTime(time::Storage::WINDOW_START, zeroData);
+    pair.second->storeValuesAtTime(time::Storage::WINDOW_END, zeroData);
   }
 }
 
@@ -167,8 +189,7 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
     storeIteration();
   }
 
-  bool keepZero = false; // need to initialize Storage at WINDOW_START and WINDOW_END
-  moveSendDataToStorage(keepZero);
+  storeTimeStepSendData(time::Storage::WINDOW_START);
   exchangeInitialData();
 
   if (isImplicitCouplingScheme()) {
@@ -206,9 +227,9 @@ void BaseCouplingScheme::firstExchange()
 
   if (reachedEndOfTimeWindow()) {
 
-    _timeWindows += 1;               // increment window counter. If not converged, will be decremented again later.
-    bool keepZero = true;            // keep data at WINDOW_START, override data at WINDOW_END
-    moveSendDataToStorage(keepZero); // store data at end of window in Storage to prepare for acceleration and exchange
+    _timeWindows += 1; // increment window counter. If not converged, will be decremented again later.
+    clearTimeStepSendStorage();
+    storeTimeStepSendData(time::Storage::WINDOW_END);
     exchangeFirstData();
   }
 }
@@ -695,8 +716,8 @@ void BaseCouplingScheme::doImplicitStep()
        */
       // @todo For other Acceleration schemes as described in "Rüth, B, Uekermann, B, Mehl, M, Birken, P, Monge, A, Bungartz, H-J. Quasi-Newton waveform iteration for partitioned surface-coupled multiphysics applications. Int J Numer Methods Eng. 2021; 122: 5236– 5257. https://doi.org/10.1002/nme.6443" we need a more elaborate implementation.
       for (auto &pair : getAccelerationData()) {
-        bool override = true;
-        pair.second->storeDataAtTime(time::Storage::WINDOW_END, override);
+        bool mustOverride = true;
+        pair.second->storeValuesAtTime(time::Storage::WINDOW_END, pair.second->values(), mustOverride);
       }
     }
   }
