@@ -3,7 +3,7 @@
 #include <Eigen/Core>
 #include <algorithm>
 #include <memory>
-#include "com/CommunicateMesh.hpp"
+#include "com/SerializeMesh.hpp"
 #include "com/SharedPointer.hpp"
 #include "m2n/M2N.hpp"
 #include "mesh/Mesh.hpp"

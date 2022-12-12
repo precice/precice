@@ -7,8 +7,8 @@
 #include <vector>
 
 #include "com/CommunicateBoundingBox.hpp"
-#include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
+#include "com/SerializeMesh.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/M2N.hpp"

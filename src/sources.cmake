@@ -55,8 +55,6 @@ target_sources(preciceCore
     src/action/config/ActionConfiguration.hpp
     src/com/CommunicateBoundingBox.cpp
     src/com/CommunicateBoundingBox.hpp
-    src/com/CommunicateMesh.cpp
-    src/com/CommunicateMesh.hpp
     src/com/Communication.cpp
     src/com/Communication.hpp
     src/com/CommunicationFactory.hpp
@@ -78,6 +76,8 @@ target_sources(preciceCore
     src/com/MPISinglePortsCommunicationFactory.hpp
     src/com/Request.cpp
     src/com/Request.hpp
+    src/com/SerializeMesh.cpp
+    src/com/SerializeMesh.hpp
     src/com/SharedPointer.hpp
     src/com/SocketCommunication.cpp
     src/com/SocketCommunication.hpp

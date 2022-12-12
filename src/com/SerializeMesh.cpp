@@ -10,8 +10,8 @@
 #include <utility>
 #include <vector>
 
-#include "CommunicateMesh.hpp"
 #include "Communication.hpp"
+#include "SerializeMesh.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
 #include "mesh/Edge.hpp"

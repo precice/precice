@@ -12,10 +12,10 @@
 #include <vector>
 
 #include "PointToPointCommunication.hpp"
-#include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
 #include "com/CommunicationFactory.hpp"
 #include "com/Request.hpp"
+#include "com/SerializeMesh.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/DistributedCommunication.hpp"
 #include "mesh/Mesh.hpp"

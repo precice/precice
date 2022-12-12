@@ -3,8 +3,8 @@
 #include <Eigen/Cholesky>
 #include <Eigen/Core>
 
-#include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
+#include "com/SerializeMesh.hpp"
 #include "config/MappingConfiguration.hpp"
 #include "mapping/RadialBasisFctBaseMapping.hpp"
 #include "mapping/RadialBasisFctSolver.hpp"
