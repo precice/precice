@@ -73,7 +73,7 @@ void ReceivedPartition::communicate()
 
     if (not utils::IntraComm::isSecondary()) {
       // a ReceivedPartition can only have one communication, @todo nicer design
-      com::CommunicateMesh(m2n().getPrimaryRankCommunication()).receiveMesh(*_mesh, 0);
+      com::receiveMesh(*(m2n().getPrimaryRankCommunication()), 0, *_mesh);
       _mesh->setGlobalNumberOfVertices(_mesh->vertices().size());
     }
   }
@@ -95,7 +95,7 @@ void ReceivedPartition::compute()
   PRECICE_TRACE();
 
   // handle coupling mode first (i.e. serial participant)
-  if (!utils::IntraComm::isParallel()) { //coupling mode
+  if (!utils::IntraComm::isParallel()) { // coupling mode
     PRECICE_DEBUG("Handle partition data structures for serial participant");
 
     if (_allowDirectAccess) {
@@ -191,8 +191,8 @@ void ReceivedPartition::compute()
         int globalVertexIndex = _mesh->vertices()[vertexIndex].getGlobalIndex();
         if (globalVertexIndex <= _remoteMaxGlobalVertexIDs[rankIndex] && globalVertexIndex >= _remoteMinGlobalVertexIDs[rankIndex]) {
           int remoteRank = _mesh->getConnectedRanks()[rankIndex];
-          remoteCommunicationMap[remoteRank].push_back(globalVertexIndex - _remoteMinGlobalVertexIDs[rankIndex]); //remote local vertex index
-          _mesh->getCommunicationMap()[remoteRank].push_back(vertexIndex);                                        //this rank's local vertex index
+          remoteCommunicationMap[remoteRank].push_back(globalVertexIndex - _remoteMinGlobalVertexIDs[rankIndex]); // remote local vertex index
+          _mesh->getCommunicationMap()[remoteRank].push_back(vertexIndex);                                        // this rank's local vertex index
         }
       }
     }
@@ -298,7 +298,7 @@ void ReceivedPartition::filterByBoundingBox()
 
   prepareBoundingBox();
 
-  if (_geometricFilter == ON_PRIMARY_RANK) { //filter on primary rank and communicate reduced mesh then
+  if (_geometricFilter == ON_PRIMARY_RANK) { // filter on primary rank and communicate reduced mesh then
 
     PRECICE_ASSERT(not m2n().usesTwoLevelInitialization());
     PRECICE_INFO("Pre-filter mesh {} by bounding box on primary rank", _mesh->getName());
@@ -308,7 +308,7 @@ void ReceivedPartition::filterByBoundingBox()
       PRECICE_DEBUG("Send bounding box to primary rank");
       com::CommunicateBoundingBox(utils::IntraComm::getCommunication()).sendBoundingBox(_bb, 0);
       PRECICE_DEBUG("Receive filtered mesh");
-      com::CommunicateMesh(utils::IntraComm::getCommunication()).receiveMesh(*_mesh, 0);
+      com::receiveMesh(*utils::IntraComm::getCommunication(), 0, *_mesh);
 
       if (isAnyProvidedMeshNonEmpty()) {
         PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName(), utils::IntraComm::getRank()));
@@ -326,7 +326,7 @@ void ReceivedPartition::filterByBoundingBox()
         mesh::Mesh secondaryMesh("SecondaryMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
         mesh::filterMesh(secondaryMesh, *_mesh, [&secondaryBB](const mesh::Vertex &v) { return secondaryBB.contains(v); });
         PRECICE_DEBUG("Send filtered mesh to secondary rank: {}", secondaryRank);
-        com::CommunicateMesh(utils::IntraComm::getCommunication()).sendMesh(secondaryMesh, secondaryRank);
+        com::sendMesh(*utils::IntraComm::getCommunication(), secondaryRank, secondaryMesh);
       }
 
       // Now also filter the remaining primary mesh
@@ -349,10 +349,10 @@ void ReceivedPartition::filterByBoundingBox()
       Event e("partition.broadcastMesh." + _mesh->getName(), precice::syncMode);
 
       if (utils::IntraComm::isSecondary()) {
-        com::CommunicateMesh(utils::IntraComm::getCommunication()).broadcastReceiveMesh(*_mesh);
+        com::broadcastReceiveMesh(*utils::IntraComm::getCommunication(), *_mesh);
       } else { // Primary
         PRECICE_ASSERT(utils::IntraComm::isPrimary());
-        com::CommunicateMesh(utils::IntraComm::getCommunication()).broadcastSendMesh(*_mesh);
+        com::broadcastSendMesh(*utils::IntraComm::getCommunication(), *_mesh);
       }
     }
     if (_geometricFilter == ON_SECONDARY_RANKS) {
@@ -426,14 +426,14 @@ void ReceivedPartition::compareBoundingBoxes()
   prepareBoundingBox();
 
   if (utils::IntraComm::isPrimary()) {               // Primary
-    mesh::Mesh::CommunicationMap connectionMap;      //local ranks -> {remote ranks}
+    mesh::Mesh::CommunicationMap connectionMap;      // local ranks -> {remote ranks}
     std::vector<Rank>            connectedRanksList; // local ranks with any connection
 
     // connected ranks for primary rank
     std::vector<Rank> connectedRanks;
     for (auto &remoteBB : remoteBBMap) {
       if (_bb.overlapping(remoteBB.second)) {
-        connectedRanks.push_back(remoteBB.first); //connected remote ranks for this rank
+        connectedRanks.push_back(remoteBB.first); // connected remote ranks for this rank
       }
     }
     PRECICE_ASSERT(_mesh->getConnectedRanks().empty());

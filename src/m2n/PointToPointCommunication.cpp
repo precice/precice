@@ -657,14 +657,14 @@ void PointToPointCommunication::broadcastReceiveAll(std::vector<int> &itemToRece
 void PointToPointCommunication::broadcastSendMesh()
 {
   for (auto &connectionData : _connectionDataVector) {
-    com::CommunicateMesh(_communication).sendMesh(*_mesh, connectionData.remoteRank);
+    com::sendMesh(*_communication, connectionData.remoteRank, *_mesh);
   }
 }
 
 void PointToPointCommunication::broadcastReceiveAllMesh()
 {
   for (auto &connectionData : _connectionDataVector) {
-    com::CommunicateMesh(_communication).receiveMesh(*_mesh, connectionData.remoteRank);
+    com::receiveMesh(*_communication, connectionData.remoteRank, *_mesh);
   }
 }
 

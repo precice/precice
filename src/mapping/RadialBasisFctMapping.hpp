@@ -112,8 +112,8 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     mesh::filterMesh(filteredInMesh, *inMesh, [&](const mesh::Vertex &v) { return v.isOwner(); });
 
     // Send the mesh
-    com::CommunicateMesh(utils::IntraComm::getCommunication()).sendMesh(filteredInMesh, 0);
-    com::CommunicateMesh(utils::IntraComm::getCommunication()).sendMesh(*outMesh, 0);
+    com::sendMesh(*utils::IntraComm::getCommunication(), 0, filteredInMesh);
+    com::sendMesh(*utils::IntraComm::getCommunication(), 0, *outMesh);
 
   } else { // Parallel Primary rank or Serial
 
@@ -132,11 +132,11 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       // Receive mesh
       for (Rank secondaryRank : utils::IntraComm::allSecondaryRanks()) {
         mesh::Mesh secondaryInMesh(inMesh->getName(), inMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
-        com::CommunicateMesh(utils::IntraComm::getCommunication()).receiveMesh(secondaryInMesh, secondaryRank);
+        com::receiveMesh(*utils::IntraComm::getCommunication(), secondaryRank, secondaryInMesh);
         globalInMesh.addMesh(secondaryInMesh);
 
         mesh::Mesh secondaryOutMesh(outMesh->getName(), outMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
-        com::CommunicateMesh(utils::IntraComm::getCommunication()).receiveMesh(secondaryOutMesh, secondaryRank);
+        com::receiveMesh(*utils::IntraComm::getCommunication(), secondaryRank, secondaryOutMesh);
         globalOutMesh.addMesh(secondaryOutMesh);
       }
 

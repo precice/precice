@@ -83,7 +83,7 @@ void ProvidedPartition::communicate()
     } else {
 
       if (not hasMeshBeenGathered) {
-        //Gather mesh
+        // Gather mesh
         Event e("partition.gatherMesh." + _mesh->getName(), precice::syncMode);
         if (not utils::IntraComm::isSecondary()) {
           globalMesh.addMesh(*_mesh); // Add local primary mesh to global mesh
@@ -94,12 +94,12 @@ void ProvidedPartition::communicate()
           PRECICE_ASSERT(utils::IntraComm::getSize() > 1);
 
           for (Rank secondaryRank : utils::IntraComm::allSecondaryRanks()) {
-            com::CommunicateMesh(utils::IntraComm::getCommunication()).receiveMesh(globalMesh, secondaryRank);
+            com::receiveMesh(*utils::IntraComm::getCommunication(), secondaryRank, globalMesh);
             PRECICE_DEBUG("Received sub-mesh, from secondary rank: {}, global vertexCount: {}", secondaryRank, globalMesh.vertices().size());
           }
         }
         if (utils::IntraComm::isSecondary()) {
-          com::CommunicateMesh(utils::IntraComm::getCommunication()).sendMesh(*_mesh, 0);
+          com::sendMesh(*utils::IntraComm::getCommunication(), 0, *_mesh);
         }
         hasMeshBeenGathered = true;
       }
@@ -112,7 +112,7 @@ void ProvidedPartition::communicate()
         PRECICE_CHECK(globalMesh.vertices().size() > 0,
                       "The provided mesh \"{}\" is empty. Please set the mesh using setMeshXXX() prior to calling initialize().",
                       globalMesh.getName());
-        com::CommunicateMesh(m2n->getPrimaryRankCommunication()).sendMesh(globalMesh, 0);
+        com::sendMesh(*m2n->getPrimaryRankCommunication(), 0, globalMesh);
       }
     }
   }
@@ -257,7 +257,7 @@ void ProvidedPartition::compareBoundingBoxes()
     return;
 
   // each secondary rank sends its bb to the primary rank
-  if (utils::IntraComm::isSecondary()) { //secondary
+  if (utils::IntraComm::isSecondary()) { // secondary
     PRECICE_ASSERT(_mesh->getBoundingBox().getDimension() == _mesh->getDimensions(), "The boundingbox of the local mesh is invalid!");
     com::CommunicateBoundingBox(utils::IntraComm::getCommunication()).sendBoundingBox(_mesh->getBoundingBox(), 0);
   } else { // Primary
