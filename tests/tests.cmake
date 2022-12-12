@@ -148,11 +148,6 @@ target_sources(testprecice
     tests/serial/multiple-mappings/MultipleWriteFromMappings.cpp
     tests/serial/multiple-mappings/MultipleWriteFromMappingsAndData.cpp
     tests/serial/multiple-mappings/MultipleWriteToMappings.cpp
-    tests/serial/quasi-newton/TestQN1.cpp
-    tests/serial/quasi-newton/TestQN2.cpp
-    tests/serial/quasi-newton/TestQN3.cpp
-    tests/serial/quasi-newton/helpers.cpp
-    tests/serial/quasi-newton/helpers.hpp
     tests/serial/three-solvers/ThreeSolversExplicitExplicit.cpp
     tests/serial/three-solvers/ThreeSolversExplicitImplicit.cpp
     tests/serial/three-solvers/ThreeSolversFirstParticipant.cpp
