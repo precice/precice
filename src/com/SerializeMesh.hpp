@@ -1,45 +1,52 @@
 #pragma once
 
-#include <string>
-#include "com/SharedPointer.hpp"
-#include "logging/Logger.hpp"
-#include "mesh/Mesh.hpp"
+#include <vector>
 
 namespace precice {
 namespace mesh {
 class Mesh;
 } // namespace mesh
-
 namespace com {
+class Communication;
 
-/// Copies a Mesh object from a sender to a receiver.
-class CommunicateMesh {
+namespace serialize {
+
+class SerializedMesh {
 public:
-  /// Constructor, takes communication to be used in transfer.
-  explicit CommunicateMesh(
-      com::PtrCommunication communication);
+  static SerializedMesh serialize(const mesh::Mesh &mesh);
+  void                  addToMesh(mesh::Mesh &mesh) const;
 
-  /// Sends a constructed mesh to the receiver with given rank.
-  void sendMesh(
-      const mesh::Mesh &mesh,
-      int               rankReceiver);
+  void assertValid() const;
 
-  /// Receives a mesh from the sender with given rank. Adds received mesh to mesh.
-  void receiveMesh(
-      mesh::Mesh &mesh,
-      int         rankSender);
+  void                  sendTo(Communication &communication, int rankReceiver);
+  static SerializedMesh receiveFrom(Communication &communication, int rankSender);
 
-  void broadcastSendMesh(
-      const mesh::Mesh &mesh);
-
-  void broadcastReceiveMesh(
-      mesh::Mesh &mesh);
+  void                  broadcastSend(Communication &communication);
+  static SerializedMesh broadcastReceive(Communication &communication);
 
 private:
-  logging::Logger _log{"com::CommunicateMesh"};
+  SerializedMesh() = default;
 
-  /// Communication means used for the transfer of the geometry.
-  com::PtrCommunication _communication;
+  /// contains the dimension, followed by the numbers of vertices, edges, triangles, and tetrahedra
+  std::vector<int> sizes;
+
+  /// sizes[0] * dimension coordinates for vertices
+  std::vector<double> coords;
+
+  // if no connectivity ( sum(sizes[1-3]) == 0)
+  // then contains sizes[0] global IDs
+  // else contains sizes[0] pairs of (global id, local id)
+  //      followed by sizes[1] pairs of local ids defining edges
+  //      followed by sizes[2] triples of local ids defining triangles
+  //      followed by sizes[3] quadruples of local ids defining tetrahedra
+  std::vector<int> ids;
 };
+
+inline SerializedMesh serialize(const mesh::Mesh &mesh)
+{
+  return SerializedMesh::serialize(mesh);
+}
+
+} // namespace serialize
 } // namespace com
 } // namespace precice
