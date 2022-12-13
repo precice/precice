@@ -115,25 +115,22 @@ void SerialCouplingScheme::exchangeSecondData()
 
     PRECICE_DEBUG("Receiving data...");
     receiveData(getM2N(), getReceiveData());
-    if (hasConverged()) {
-      // received converged result of this window, trigger move
-      for (const DataMap::value_type &pair : getReceiveData()) {
-        pair.second->moveTimeStepsStorage();
-      }
-    }
     checkDataHasBeenReceived();
-  } else { // second participant
+  }
+
+  if (hasConverged() && isCouplingOngoing()) {
+    // first participant received converged result of this window
+    // second participant will receive result for next window
+    for (const DataMap::value_type &pair : getAllData()) {
+      pair.second->moveTimeStepsStorage();
+    }
+  }
+
+  if (!doesFirstStep()) { // second participant
     // the second participant does not want new data in the last iteration of the last time window
     if (isCouplingOngoing() || (isImplicitCouplingScheme() && not hasConverged())) {
       receiveAndSetTimeWindowSize();
       PRECICE_DEBUG("Receiving data...");
-      if (hasConverged()) {
-        // will receive first iteration of next window
-        // need to move storage to store data from past window at beginning of next window.
-        for (const DataMap::value_type &pair : getReceiveData()) {
-          pair.second->moveTimeStepsStorage();
-        }
-      }
       receiveData(getM2N(), getReceiveData());
       checkDataHasBeenReceived();
     }

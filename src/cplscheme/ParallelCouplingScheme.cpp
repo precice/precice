@@ -48,12 +48,6 @@ void ParallelCouplingScheme::exchangeSecondData()
       receiveConvergence(getM2N());
     }
     receiveData(getM2N(), getReceiveData());
-    if (hasConverged()) {
-      // received converged result of this window, trigger move
-      for (const DataMap::value_type &pair : getReceiveData()) {
-        pair.second->moveTimeStepsStorage();
-      }
-    }
     checkDataHasBeenReceived();
   } else { // second participant
     if (isImplicitCouplingScheme()) {
@@ -61,14 +55,13 @@ void ParallelCouplingScheme::exchangeSecondData()
       doImplicitStep();
       sendConvergence(getM2N());
     }
-    if (hasConverged()) {
-      // received converged result of this window, trigger move
-      for (const DataMap::value_type &pair : getReceiveData()) {
-        pair.second->moveTimeStepsStorage();
-      }
-    }
     PRECICE_DEBUG("Sending data...");
     sendData(getM2N(), getSendData());
+  }
+  if (hasConverged()) {
+    for (const DataMap::value_type &pair : getAllData()) {
+      pair.second->moveTimeStepsStorage();
+    }
   }
 }
 
