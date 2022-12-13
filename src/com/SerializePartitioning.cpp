@@ -36,7 +36,7 @@ SerializedConnectionMap SerializedConnectionMap::serialize(const ConnectionMap &
   return scm;
 }
 
-ConnectionMap SerializedConnectionMap::toConnectionMap() const
+SerializedConnectionMap::ConnectionMap SerializedConnectionMap::toConnectionMap() const
 {
   auto begin      = content.begin();
   int  numEntries = *begin;
@@ -150,7 +150,7 @@ SerializedBoundingBoxMap SerializedBoundingBoxMap::serialize(const BoundingBoxMa
   return sbbm;
 }
 
-BoundingBoxMap SerializedBoundingBoxMap::toBoundingBoxMap() const
+SerializedBoundingBoxMap::BoundingBoxMap SerializedBoundingBoxMap::toBoundingBoxMap() const
 {
   if (info.size() == 1) {
     return {};

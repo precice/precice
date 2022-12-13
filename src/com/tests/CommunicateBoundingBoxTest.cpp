@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "com/CommunicateBoundingBox.hpp"
+#include "com/SerializePartitioning.hpp"
 #include "com/SharedPointer.hpp"
 #include "m2n/M2N.hpp"
 #include "mesh/BoundingBox.hpp"
@@ -64,10 +65,10 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveBoundingBoxMap)
       bbm.emplace(rank, mesh::BoundingBox(bounds));
     }
 
-    CommunicateBoundingBox comBB(m2n->getPrimaryRankCommunication());
+    auto &comm = *m2n->getPrimaryRankCommunication();
 
     if (context.isNamed("A")) {
-      comBB.sendBoundingBoxMap(bbm, 0);
+      com::sendBoundingBoxMap(comm, 0, bbm);
     } else {
       BOOST_TEST(context.isNamed("B"));
 
@@ -78,7 +79,7 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveBoundingBoxMap)
         bbmCompare.emplace(i, bbCompare);
       }
 
-      comBB.receiveBoundingBoxMap(bbmCompare, 0);
+      com::receiveBoundingBoxMap(comm, 0, bbmCompare);
 
       for (Rank rank = 0; rank < 3; rank++) {
         BOOST_TEST(bbm.at(rank) == bbmCompare.at(rank));
@@ -103,10 +104,10 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveBoundingBoxMap)
     bbm.emplace(rank, mesh::BoundingBox(bounds));
   }
 
-  CommunicateBoundingBox comBB(utils::IntraComm::getCommunication());
+  auto &comm = *utils::IntraComm::getCommunication();
 
   if (context.isPrimary()) {
-    comBB.broadcastSendBoundingBoxMap(bbm);
+    com::broadcastSendBoundingBoxMap(comm, bbm);
   } else {
 
     mesh::BoundingBox          bbCompare{dimension};
@@ -115,7 +116,7 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveBoundingBoxMap)
     for (int i = 0; i < 3; i++) {
       bbmCompare.emplace(i, bbCompare);
     }
-    comBB.broadcastReceiveBoundingBoxMap(bbmCompare);
+    com::broadcastReceiveBoundingBoxMap(comm, bbmCompare);
     BOOST_TEST((int) bbmCompare.size() == 3);
     for (Rank rank = 0; rank < 3; rank++) {
       BOOST_TEST(bbm.at(rank) == bbmCompare.at(rank));
@@ -141,10 +142,10 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveConnectionMap)
     fb.clear();
   }
 
-  CommunicateBoundingBox comBB(m2n->getPrimaryRankCommunication());
+  auto &comm = *m2n->getPrimaryRankCommunication();
 
   if (context.isNamed("A")) {
-    comBB.sendConnectionMap(fbm, 0);
+    com::sendConnectionMap(comm, 0, fbm);
   } else if (context.isNamed("B")) {
 
     std::vector<int>                fbCompare;
@@ -160,7 +161,7 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveConnectionMap)
       fbCompare.clear();
     }
 
-    comBB.receiveConnectionMap(fbmCompare, 0);
+    com::receiveConnectionMap(comm, 0, fbmCompare);
 
     for (Rank rank = 0; rank < 3; rank++) {
 
@@ -186,10 +187,10 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveConnectionMap)
     fb.clear();
   }
 
-  CommunicateBoundingBox comBB(utils::IntraComm::getCommunication());
+  auto &comm = *utils::IntraComm::getCommunication();
 
   if (context.isPrimary()) {
-    comBB.broadcastSendConnectionMap(fbm);
+    com::broadcastSendConnectionMap(comm, fbm);
   } else {
 
     std::vector<int>                fbCompare;
@@ -203,7 +204,7 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveConnectionMap)
       fbCompare.clear();
     }
 
-    comBB.broadcastReceiveConnectionMap(fbmCompare);
+    com::broadcastReceiveConnectionMap(comm, fbmCompare);
 
     for (Rank rank = 0; rank < 3; rank++) {
 

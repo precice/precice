@@ -9,6 +9,7 @@
 #include "com/CommunicateBoundingBox.hpp"
 #include "com/Communication.hpp"
 #include "com/SerializeMesh.hpp"
+#include "com/SerializePartitioning.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/M2N.hpp"
@@ -280,7 +281,7 @@ void ProvidedPartition::compareBoundingBoxes()
 
     // primary rank sends number of ranks and bbm to the other primary rank
     _m2ns[0]->getPrimaryRankCommunication()->send(utils::IntraComm::getSize(), 0);
-    com::CommunicateBoundingBox(_m2ns[0]->getPrimaryRankCommunication()).sendBoundingBoxMap(bbm, 0);
+    com::sendBoundingBoxMap(*_m2ns[0]->getPrimaryRankCommunication(), 0, bbm);
   }
 
   // size of the feedbackmap
@@ -298,13 +299,13 @@ void ProvidedPartition::compareBoundingBoxes()
       remoteConnectionMap[rank] = {-1};
     }
     if (remoteConnectionMapSize != 0) {
-      com::CommunicateBoundingBox(_m2ns[0]->getPrimaryRankCommunication()).receiveConnectionMap(remoteConnectionMap, 0);
+      com::receiveConnectionMap(*_m2ns[0]->getPrimaryRankCommunication(), 0, remoteConnectionMap);
     }
 
     // broadcast the received feedbackMap
     utils::IntraComm::getCommunication()->broadcast(connectedRanksList);
     if (remoteConnectionMapSize != 0) {
-      com::CommunicateBoundingBox(utils::IntraComm::getCommunication()).broadcastSendConnectionMap(remoteConnectionMap);
+      com::broadcastSendConnectionMap(*utils::IntraComm::getCommunication(), remoteConnectionMap);
     }
 
     // primary rank checks which ranks are connected to it
@@ -330,7 +331,7 @@ void ProvidedPartition::compareBoundingBoxes()
       for (Rank rank : connectedRanksList) {
         remoteConnectionMap[rank] = {-1};
       }
-      com::CommunicateBoundingBox(utils::IntraComm::getCommunication()).broadcastReceiveConnectionMap(remoteConnectionMap);
+      com::broadcastReceiveConnectionMap(*utils::IntraComm::getCommunication(), remoteConnectionMap);
     }
 
     PRECICE_ASSERT(_mesh->getConnectedRanks().empty());

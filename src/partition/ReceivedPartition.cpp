@@ -9,6 +9,7 @@
 #include "com/CommunicateBoundingBox.hpp"
 #include "com/Communication.hpp"
 #include "com/SerializeMesh.hpp"
+#include "com/SerializePartitioning.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/M2N.hpp"
@@ -415,11 +416,11 @@ void ReceivedPartition::compareBoundingBoxes()
 
   // receive and broadcast remote bounding box map
   if (utils::IntraComm::isPrimary()) {
-    com::CommunicateBoundingBox(m2n().getPrimaryRankCommunication()).receiveBoundingBoxMap(remoteBBMap, 0);
-    com::CommunicateBoundingBox(utils::IntraComm::getCommunication()).broadcastSendBoundingBoxMap(remoteBBMap);
+    com::receiveBoundingBoxMap(*m2n().getPrimaryRankCommunication(), 0, remoteBBMap);
+    com::broadcastSendBoundingBoxMap(*utils::IntraComm::getCommunication(), remoteBBMap);
   } else {
     PRECICE_ASSERT(utils::IntraComm::isSecondary());
-    com::CommunicateBoundingBox(utils::IntraComm::getCommunication()).broadcastReceiveBoundingBoxMap(remoteBBMap);
+    com::broadcastReceiveBoundingBoxMap(*utils::IntraComm::getCommunication(), remoteBBMap);
   }
 
   // prepare local bounding box
@@ -459,7 +460,7 @@ void ReceivedPartition::compareBoundingBoxes()
                   "Check that both mapped meshes are describing the same geometry. "
                   "If you deal with very different mesh resolutions, consider increasing the safety-factor in the <receive-mesh /> tag.",
                   _mesh->getName());
-    com::CommunicateBoundingBox(m2n().getPrimaryRankCommunication()).sendConnectionMap(connectionMap, 0);
+    com::sendConnectionMap(*m2n().getPrimaryRankCommunication(), 0, connectionMap);
   } else {
     PRECICE_ASSERT(utils::IntraComm::isSecondary());
 
@@ -589,12 +590,12 @@ void ReceivedPartition::createOwnerInformation()
       }
 
       // primary rank broadcast localBBMap to all secondary ranks
-      com::CommunicateBoundingBox(utils::IntraComm::getCommunication()).broadcastSendBoundingBoxMap(localBBMap);
+      com::broadcastSendBoundingBoxMap(*utils::IntraComm::getCommunication(), localBBMap);
     } else if (utils::IntraComm::isSecondary()) {
       // secondary ranks send local bb to primary rank
       com::CommunicateBoundingBox(utils::IntraComm::getCommunication()).sendBoundingBox(_bb, 0);
       // secondary ranks receive localBBMap from primary rank
-      com::CommunicateBoundingBox(utils::IntraComm::getCommunication()).broadcastReceiveBoundingBoxMap(localBBMap);
+      com::broadcastReceiveBoundingBoxMap(*utils::IntraComm::getCommunication(), localBBMap);
     }
 
     // #2: filter bb map to keep the connected ranks
