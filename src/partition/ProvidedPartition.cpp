@@ -8,8 +8,7 @@
 
 #include "com/CommunicateBoundingBox.hpp"
 #include "com/Communication.hpp"
-#include "com/SerializeMesh.hpp"
-#include "com/SerializePartitioning.hpp"
+#include "com/Extra.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/M2N.hpp"

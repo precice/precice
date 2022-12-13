@@ -60,6 +60,8 @@ target_sources(preciceCore
     src/com/CommunicationFactory.hpp
     src/com/ConnectionInfoPublisher.cpp
     src/com/ConnectionInfoPublisher.hpp
+    src/com/Extra.cpp
+    src/com/Extra.hpp
     src/com/MPICommunication.cpp
     src/com/MPICommunication.hpp
     src/com/MPIDirectCommunication.cpp

@@ -7,8 +7,7 @@
 #include "mesh/Vertex.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice::com {
-namespace serialize {
+namespace precice::com::serialize {
 
 void SerializedMesh ::assertValid() const
 {
@@ -233,26 +232,4 @@ SerializedMesh SerializedMesh::serialize(const mesh::Mesh &mesh)
   return result;
 }
 
-} // namespace serialize
-
-void sendMesh(Communication &communication, int rankReceiver, const mesh::Mesh &mesh)
-{
-  serialize::SerializedMesh::serialize(mesh).sendTo(communication, rankReceiver);
-}
-
-void receiveMesh(Communication &communication, int rankSender, mesh::Mesh &mesh)
-{
-  serialize::SerializedMesh::receiveFrom(communication, rankSender).addToMesh(mesh);
-}
-
-void broadcastSendMesh(Communication &communication, const mesh::Mesh &mesh)
-{
-  serialize::SerializedMesh::serialize(mesh).broadcastSend(communication);
-}
-
-void broadcastReceiveMesh(Communication &communication, mesh::Mesh &mesh)
-{
-  serialize::SerializedMesh::broadcastReceive(communication).addToMesh(mesh);
-}
-
-} // namespace precice::com
+} // namespace precice::com::serialize

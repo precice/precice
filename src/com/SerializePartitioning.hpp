@@ -75,20 +75,4 @@ private:
 
 } // namespace serialize
 
-void sendConnectionMap(Communication &communication, int rankReceiver, const mesh::Mesh::ConnectionMap &cm);
-
-void receiveConnectionMap(Communication &communication, int rankSender, mesh::Mesh::ConnectionMap &cm);
-
-void broadcastSendConnectionMap(Communication &communication, const mesh::Mesh::ConnectionMap &cm);
-
-void broadcastReceiveConnectionMap(Communication &communication, mesh::Mesh::ConnectionMap &cm);
-
-void sendBoundingBoxMap(Communication &communication, int rankReceiver, const mesh::Mesh::BoundingBoxMap &bbm);
-
-void receiveBoundingBoxMap(Communication &communication, int rankSender, mesh::Mesh::BoundingBoxMap &bbm);
-
-void broadcastSendBoundingBoxMap(Communication &communication, const mesh::Mesh::BoundingBoxMap &bbm);
-
-void broadcastReceiveBoundingBoxMap(Communication &communication, mesh::Mesh::BoundingBoxMap &bbm);
-
 } // namespace precice::com

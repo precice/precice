@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "com/CommunicateBoundingBox.hpp"
-#include "com/SerializePartitioning.hpp"
+#include "com/Extra.hpp"
 #include "com/SharedPointer.hpp"
 #include "m2n/M2N.hpp"
 #include "mesh/BoundingBox.hpp"

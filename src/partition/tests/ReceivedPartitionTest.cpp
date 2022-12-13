@@ -9,7 +9,7 @@
 
 #include "com/CommunicateBoundingBox.hpp"
 #include "com/Communication.hpp"
-#include "com/SerializePartitioning.hpp"
+#include "com/Extra.hpp"
 #include "com/SharedPointer.hpp"
 #include "com/SocketCommunication.hpp"
 #include "com/SocketCommunicationFactory.hpp"

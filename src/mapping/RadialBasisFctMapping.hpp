@@ -4,7 +4,7 @@
 #include <Eigen/Core>
 
 #include "com/Communication.hpp"
-#include "com/SerializeMesh.hpp"
+#include "com/Extra.hpp"
 #include "config/MappingConfiguration.hpp"
 #include "mapping/RadialBasisFctBaseMapping.hpp"
 #include "mapping/RadialBasisFctSolver.hpp"

@@ -43,14 +43,5 @@ private:
 };
 
 } // namespace serialize
-
-void sendMesh(Communication &communication, int rankReceiver, const mesh::Mesh &mesh);
-
-void receiveMesh(Communication &communication, int rankSender, mesh::Mesh &mesh);
-
-void broadcastSendMesh(Communication &communication, const mesh::Mesh &mesh);
-
-void broadcastReceiveMesh(Communication &communication, mesh::Mesh &mesh);
-
 } // namespace com
 } // namespace precice
