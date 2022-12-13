@@ -12,7 +12,6 @@ BOOST_AUTO_TEST_CASE(AitkenAcceleration)
   PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank));
 
   using Eigen::Vector2d;
-  using namespace precice::constants;
 
   precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
   Vector2d                 vertex{0.0, 0.0};
@@ -26,10 +25,14 @@ BOOST_AUTO_TEST_CASE(AitkenAcceleration)
     double value = 1.0;
     interface.writeScalarData(dataID, vertexID, value);
 
-    interface.markActionFulfilled(actionWriteIterationCheckpoint());
+    interface.requiresWritingCheckpoint();
     interface.advance(dt);
-    interface.markActionFulfilled(actionReadIterationCheckpoint());
+    interface.requiresReadingCheckpoint();
+
+    interface.requiresWritingCheckpoint();
     interface.advance(dt);
+    interface.requiresReadingCheckpoint();
+
     BOOST_TEST(not interface.isCouplingOngoing());
     interface.finalize();
 
@@ -40,15 +43,18 @@ BOOST_AUTO_TEST_CASE(AitkenAcceleration)
     int                   dataID   = interface.getDataID("Data", meshID);
 
     double dt = interface.initialize();
-    interface.markActionFulfilled(actionWriteIterationCheckpoint());
+    interface.requiresWritingCheckpoint();
     interface.advance(dt);
+    interface.requiresReadingCheckpoint();
 
     double value = -1.0;
     interface.readScalarData(dataID, vertexID, value);
     BOOST_TEST(value == 0.1); // due to initial underrelaxation
 
-    interface.markActionFulfilled(actionReadIterationCheckpoint());
+    interface.requiresWritingCheckpoint();
     interface.advance(dt);
+    interface.requiresReadingCheckpoint();
+
     BOOST_TEST(not interface.isCouplingOngoing());
     interface.finalize();
   }

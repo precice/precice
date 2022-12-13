@@ -114,14 +114,17 @@ public:
 
   ///@}
 
-  ///@name Action Methods
+  ///@name Requirements
   ///@{
 
-  /// @copydoc SolverInterface::isActionRequired
-  bool isActionRequired(const std::string &action) const;
+  /// @copydoc SolverInterface::requiresInitialData
+  bool requiresInitialData();
 
-  /// @copydoc SolverInterface::markActionFulfilled
-  void markActionFulfilled(const std::string &action);
+  /// @copydoc SolverInterface::requiresReadingCheckpoint
+  bool requiresReadingCheckpoint();
+
+  /// @copydoc SolverInterface::requiresWritingCheckpoint
+  bool requiresWritingCheckpoint();
 
   ///@}
 
@@ -141,11 +144,11 @@ public:
   /// @copydoc SolverInterface::getMeshIDs
   std::set<int> getMeshIDs() const;
 
-  /// @copydoc SolverInterface::isMeshConnectivityRequired
-  bool isMeshConnectivityRequired(int meshID) const;
+  /// @copydoc SolverInterface::requiresMeshConnectivityFor
+  bool requiresMeshConnectivityFor(int meshID) const;
 
-  /// @copydoc SolverInterface::isGradientDataRequired
-  bool isGradientDataRequired(int dataID) const;
+  /// @copydoc SolverInterface::requiresGradientDataFor
+  bool requiresGradientDataFor(int dataID) const;
 
   /// @copydoc SolverInterface::setMeshVertex
   int setMeshVertex(
@@ -177,40 +180,43 @@ public:
       int *         ids) const;
 
   /// @copydoc SolverInterface::setMeshEdge
-  int setMeshEdge(
+  void setMeshEdge(
       MeshID meshID,
       int    firstVertexID,
       int    secondVertexID);
 
+  /// @copydoc SolverInterface::setMeshEdges
+  void setMeshEdges(
+      int        meshID,
+      int        size,
+      const int *vertices);
+
   /// @copydoc SolverInterface::setMeshTriangle
   void setMeshTriangle(
-      MeshID meshID,
-      int    firstEdgeID,
-      int    secondEdgeID,
-      int    thirdEdgeID);
-
-  /// @copydoc SolverInterface::setMeshTriangleWithEdges
-  void setMeshTriangleWithEdges(
       MeshID meshID,
       int    firstVertexID,
       int    secondVertexID,
       int    thirdVertexID);
 
+  /// @copydoc SolverInterface::setMeshTriangles
+  void setMeshTriangles(
+      int        meshID,
+      int        size,
+      const int *vertices);
+
   /// @copydoc SolverInterface::setMeshQuad
   void setMeshQuad(
-      MeshID meshID,
-      int    firstEdgeID,
-      int    secondEdgeID,
-      int    thirdEdgeID,
-      int    fourthEdgeID);
-
-  /// @copydoc SolverInterface::setMeshQuadWithEdges
-  void setMeshQuadWithEdges(
       MeshID meshID,
       int    firstVertexID,
       int    secondVertexID,
       int    thirdVertexID,
       int    fourthVertexID);
+
+  /// @copydoc SolverInterface::setMeshQuads
+  void setMeshQuads(
+      int        meshID,
+      int        size,
+      const int *vertices);
 
   /// @copydoc SolverInterface::setMeshTetrahedron
   void setMeshTetrahedron(
@@ -219,6 +225,12 @@ public:
       int    secondVertexID,
       int    thirdVertexID,
       int    fourthVertexID);
+
+  /// @copydoc SolverInterface::setMeshTetrahedra
+  void setMeshTetrahedra(
+      int        meshID,
+      int        size,
+      const int *vertices);
 
   ///@}
 
@@ -537,6 +549,9 @@ private:
 
   /// Initializes intra-participant communication.
   void initializeIntraCommunication();
+
+  /// Advances the coupling schemes
+  void advanceCouplingScheme();
 
   /// Syncs the timestep between all ranks (all timesteps should be the same!)
   void syncTimestep(double computedTimestepLength);

@@ -13,7 +13,7 @@ namespace tests {
 /**
  * @brief Used to test CompositionalCouplingScheme.
  */
-class DummyCouplingScheme : public CouplingScheme {
+class DummyCouplingScheme final : public CouplingScheme {
 public:
   /**
    * @brief Constructor.
@@ -28,7 +28,7 @@ public:
   /**
    * @brief Destructor, empty.
    */
-  virtual ~DummyCouplingScheme() {}
+  //virtual ~DummyCouplingScheme() {}
 
   /**
    * @brief
@@ -73,7 +73,15 @@ public:
   /**
    * @brief
    */
-  void advance() override final;
+  //void advance() override final;
+
+  ChangedMeshes firstSynchronization(const ChangedMeshes &changes) override;
+
+  void firstExchange() override;
+
+  ChangedMeshes secondSynchronization() override;
+
+  void secondExchange() final;
 
   /**
    * @brief
@@ -178,12 +186,17 @@ public:
   /**
    * @brief Not implemented.
    */
-  bool isActionRequired(const std::string &actionName) const override final;
+  bool isActionRequired(Action action) const override final;
+
+  bool isActionFulfilled(Action action) const override final
+  {
+    return true;
+  }
 
   /**
    * @brief Not implemented.
    */
-  void markActionFulfilled(const std::string &actionName) override final
+  void markActionFulfilled(Action action) override final
   {
     PRECICE_ASSERT(false);
   }
@@ -200,7 +213,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  void requireAction(const std::string &actionName) override final
+  void requireAction(Action action) override final
   {
     PRECICE_ASSERT(false);
   }
@@ -212,6 +225,13 @@ public:
   {
     return std::string();
   }
+
+  bool isImplicitCouplingScheme() const override
+  {
+    return _numberIterations > 1;
+  }
+
+  bool hasConverged() const override;
 
 private:
   mutable logging::Logger _log{"cplscheme::tests::DummyCouplingScheme"};
@@ -233,6 +253,9 @@ private:
 
   /// @brief True, if timesteps are left to be performed.
   bool _isOngoing = false;
+
+  /// @brief False, if iterations are left to be performed.
+  bool _hasConverged = false;
 };
 
 } // namespace tests

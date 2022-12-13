@@ -65,7 +65,7 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant should have to advance once!");
     // Write the data to be send.
     int dataAID = interface.getDataID("DataOne", meshOneID);
-    BOOST_TEST(!interface.isGradientDataRequired(dataAID));
+    BOOST_TEST(!interface.requiresGradientDataFor(dataAID));
 
     interface.writeBlockScalarData(dataAID, nCoords, ids.data(), values.data());
 
@@ -90,7 +90,7 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
 
     // Read the mapped data from the mesh.
     int dataAID = interface.getDataID("DataOne", meshTwoID);
-    BOOST_TEST(!interface.isGradientDataRequired(dataAID));
+    BOOST_TEST(!interface.requiresGradientDataFor(dataAID));
 
     double valueA, valueB, valueC;
     interface.readScalarData(dataAID, idA, valueA);

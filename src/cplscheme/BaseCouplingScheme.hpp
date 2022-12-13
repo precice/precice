@@ -166,13 +166,16 @@ public:
   bool isTimeWindowComplete() const override final;
 
   /// Returns true, if the given action has to be performed by the accessor.
-  bool isActionRequired(const std::string &actionName) const override final;
+  bool isActionRequired(Action action) const override final;
+
+  /// Returns true, if the given action has to be performed by the accessor.
+  bool isActionFulfilled(Action action) const override final;
 
   /// Tells the coupling scheme that the accessor has performed the given action.
-  void markActionFulfilled(const std::string &actionName) override final;
+  void markActionFulfilled(Action action) override final;
 
   /// Sets an action required to be performed by the accessor.
-  void requireAction(const std::string &actionName) override final;
+  void requireAction(Action action) override final;
 
   /**
    * @brief Returns coupling state information.
@@ -195,10 +198,13 @@ public:
   /// Receives result of first advance, if this has to happen inside SolverInterface::initialize(), see CouplingScheme.hpp
   void receiveResultOfFirstAdvance() override final;
 
-  /**
-   * @brief Advances the coupling scheme.
-   */
-  void advance() override final;
+  ChangedMeshes firstSynchronization(const ChangedMeshes &changes) override final;
+
+  void firstExchange() override final;
+
+  ChangedMeshes secondSynchronization() override final;
+
+  void secondExchange() override final;
 
   /// Adds a measure to determine the convergence of coupling iterations.
   void addConvergenceMeasure(
@@ -232,6 +238,26 @@ public:
    */
   virtual void determineInitialDataExchange() = 0;
 
+  /**
+   * @brief Function to determine whether coupling scheme is an implicit coupling scheme
+   * @returns true, if coupling scheme is implicit
+   */
+  bool isImplicitCouplingScheme() const override
+  {
+    PRECICE_ASSERT(_couplingMode != Undefined);
+    return _couplingMode == Implicit;
+  }
+
+  /**
+   * @brief Checks if the implicit cplscheme has converged
+   *
+   * @pre \ref doImplicitStep() or \ref receiveConvergence() has been called
+   */
+  bool hasConverged() const override
+  {
+    return _hasConverged;
+  }
+
 protected:
   /// Map that links DataID to CouplingData
   typedef std::map<int, PtrCouplingData> DataMap;
@@ -256,16 +282,6 @@ protected:
   {
     PRECICE_ASSERT(_couplingMode != Undefined);
     return _couplingMode == Explicit;
-  }
-
-  /**
-   * @brief Function to determine whether coupling scheme is an implicit coupling scheme
-   * @returns true, if coupling scheme is implicit
-   */
-  bool isImplicitCouplingScheme()
-  {
-    PRECICE_ASSERT(_couplingMode != Undefined);
-    return _couplingMode == Implicit;
   }
 
   /**
@@ -326,24 +342,23 @@ protected:
   /**
    * @brief sends convergence to other participant via m2n
    * @param m2n used for sending
-   * @param convergence bool that is being sent
    */
-  void sendConvergence(const m2n::PtrM2N &m2n, bool convergence);
+  void sendConvergence(const m2n::PtrM2N &m2n);
 
   /**
    * @brief receives convergence from other participant via m2n
    * @param m2n used for receiving
    * @returns convergence bool
    */
-  bool receiveConvergence(const m2n::PtrM2N &m2n);
+  void receiveConvergence(const m2n::PtrM2N &m2n);
 
   /**
    * @brief perform a coupling iteration
-   * @returns whether this iteration has converged or not
+   * @see hasConverged
    *
    * This function is called from the child classes
    */
-  bool doImplicitStep();
+  void doImplicitStep();
 
   /**
    * @brief stores current data in buffer for extrapolation
@@ -437,7 +452,12 @@ private:
   /// True, if coupling has been initialized.
   bool _isInitialized = false;
 
-  std::set<std::string> _actions;
+  std::set<Action> _requiredActions;
+
+  std::set<Action> _fulfilledActions;
+
+  /// True if implicit scheme converged
+  bool _hasConverged = false;
 
   /// Responsible for monitoring iteration count over time window.
   std::shared_ptr<io::TXTTableWriter> _iterationsWriter;
@@ -453,14 +473,10 @@ private:
    *
    * The first participant in the implicit coupling scheme has to take some
    * initial guess for the interface values computed by the second participant.
-   * In order to improve this initial guess, an extrapolation from previous
-   * time windows can be performed.
+   * There are two possibilities to determine an initial guess:
    *
-   * The standard predictor is of order zero, i.e., simply the converged values
-   * of the last time windows are taken as initial guess for the coupling iterations.
-   * Currently, an order 1 predictor (linear extrapolation) and order 2 predictor
-   * (see https://doi.org/10.1016/j.compstruc.2008.11.013, p.796, Algorithm line 1 )
-   * is implement besides that.
+   * 1) Simply use the converged values of the last time window (constant extrapolation).
+   * 2) Compute a linear function from the values of the last two time windows and use it to determine the initial guess (linear extrapolation)
    */
   const int _extrapolationOrder;
 
@@ -515,11 +531,11 @@ private:
 
   /// Functions needed for advance()
 
-  /**
-   * @brief implements functionality for advance in base class.
-   * @returns true, if iteration converged
-   */
-  virtual bool exchangeDataAndAccelerate() = 0;
+  /// Exchanges the first set of data
+  virtual void exchangeFirstData() = 0;
+
+  /// Exchanges the second set of data
+  virtual void exchangeSecondData() = 0;
 
   /**
    * @brief interface to provide accelerated data, depending on coupling scheme being used

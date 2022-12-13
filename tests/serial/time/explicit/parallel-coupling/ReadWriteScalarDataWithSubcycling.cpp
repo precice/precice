@@ -64,10 +64,9 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
   int    timewindow = 0;
   double time       = 0;
 
-  if (precice.isActionRequired(precice::constants::actionWriteInitialData())) {
+  if (precice.requiresInitialData()) {
     writeData = writeFunction(time);
     precice.writeScalarData(writeDataID, vertexID, writeData);
-    precice.markActionFulfilled(precice::constants::actionWriteInitialData());
   }
 
   double maxDt = precice.initialize();

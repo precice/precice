@@ -66,8 +66,9 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     nSubsteps = 3;
   }
 
-  double   writeData, readData;
-  VertexID vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+  double   writeData = 0;
+  double   readData  = 0;
+  VertexID vertexID  = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
 
   int    nWindows        = 5; // perform 5 windows.
   int    timestep        = 0;
@@ -78,10 +79,9 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
   int    iterations      = 0;
   double time            = 0;
 
-  if (precice.isActionRequired(precice::constants::actionWriteInitialData())) {
+  if (precice.requiresInitialData()) {
     writeData = writeFunction(time);
     precice.writeScalarData(writeDataID, vertexID, writeData);
-    precice.markActionFulfilled(precice::constants::actionWriteInitialData());
   }
 
   double maxDt     = precice.initialize();
@@ -90,13 +90,12 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
   double currentDt = dt;                   // Timestep length used by solver
 
   while (precice.isCouplingOngoing()) {
-    if (precice.isActionRequired(precice::constants::actionWriteIterationCheckpoint())) {
+    if (precice.requiresWritingCheckpoint()) {
       windowStartTime = time;
       windowStartStep = timestep;
-      precice.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
     }
 
-    for (auto readDataPair : readDataPairs) {
+    for (auto &readDataPair : readDataPairs) {
       auto readDataID   = readDataPair.first;
       auto readFunction = readDataPair.second;
 
@@ -120,11 +119,10 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     currentDt = dt > maxDt ? maxDt : dt;
     BOOST_CHECK(currentDt == windowDt / nSubsteps); // no subcycling.
     timestep++;
-    if (precice.isActionRequired(precice::constants::actionReadIterationCheckpoint())) { // at end of window and we have to repeat it.
+    if (precice.requiresReadingCheckpoint()) { // at end of window and we have to repeat it.
       iterations++;
       timestep = windowStartStep;
       time     = windowStartTime;
-      precice.markActionFulfilled(precice::constants::actionReadIterationCheckpoint()); // this test does not care about checkpointing, but we have to make the action
     }
     if (precice.isTimeWindowComplete()) {
       timewindow++;

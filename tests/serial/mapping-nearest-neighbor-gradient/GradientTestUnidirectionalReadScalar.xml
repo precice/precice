@@ -15,13 +15,13 @@
     <m2n:sockets from="A" to="B" />
 
     <participant name="A">
-      <use-mesh name="MeshA" provide="yes" />
+      <provide-mesh name="MeshA" />
       <write-data name="DataA" mesh="MeshA" />
     </participant>
 
     <participant name="B">
-      <use-mesh name="MeshB" provide="yes" />
-      <use-mesh name="MeshA" provide="no" from="A" />
+      <provide-mesh name="MeshB" />
+      <receive-mesh name="MeshA" from="A" />
       <mapping:nearest-neighbor-gradient
         constraint="consistent"
         direction="read"

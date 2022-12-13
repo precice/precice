@@ -29,6 +29,21 @@ void printConfigReference(std::ostream &out, ConfigReferenceType reftype)
 
 void checkConfiguration(const std::string &filename, const std::string &participant, int size)
 {
+  logging::setupLogging({[] {
+    logging::BackendConfiguration config;
+
+    // Console output
+    config.format = "precice-tools: %ColorizedSeverity%%Message%";
+    config.filter = "%Severity% >= info";
+    config.type   = "stream";
+    config.output = "stdout";
+
+    return config;
+  }()});
+
+  // Lock the logging configuration to prevent the parser from changing it
+  logging::lockConf();
+
   fmt::print("Checking {} for syntax and basic setup issues...\n", filename);
   config::Configuration config;
   logging::setMPIRank(0);

@@ -59,11 +59,13 @@ public:
 private:
   logging::Logger _log{"cplscheme::ParallelCouplingScheme"};
 
+  /// Exchanges first set of data between the participants of the ParallelCouplingScheme
+  void exchangeFirstData() override;
+
   /**
-   * @brief Exchanges all data between the participants of the ParallelCouplingScheme and applies acceleration.
-   * @returns true, if iteration converged
+   * @brief Exchanges the second set of data between the participants of the ParallelCouplingScheme and applies acceleration.
    */
-  bool exchangeDataAndAccelerate() override;
+  void exchangeSecondData() override;
 
   /**
    * @brief ParallelCouplingScheme applies acceleration to all CouplingData

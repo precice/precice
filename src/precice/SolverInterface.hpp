@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include "precice/Version.h"
+#include "precice/export.h"
 
 /**
  * forward declarations.
@@ -36,7 +37,7 @@ namespace precice {
  *  We use solver, simulation code, and participant as synonyms.
  *  The preferred name in the documentation is participant.
  */
-class SolverInterface {
+class PRECICE_API SolverInterface {
 public:
   ///@name Construction and Configuration
   ///@{
@@ -213,43 +214,70 @@ public:
 
   ///@}
 
-  ///@name Action Methods
+  ///@name Requirements
   ///@{
 
-  /**
-   * @brief Checks if the provided action is required.
+  /** Checks if the participant is required to provide initial data.
    *
-   * @param[in] action the name of the action
-   * @returns whether the action is required
+   * If true, then the participant needs to write initial data to defined vertices
+   * prior to calling initialize().
    *
-   * Some features of preCICE require a solver to perform specific actions, in
-   * order to be in valid state for a coupled simulation. A solver is made
-   * eligible to use those features, by querying for the required actions,
-   * performing them on demand, and calling markActionFulfilled() to signalize
-   * preCICE the correct behavior of the solver.
-   *
-   * @see markActionFulfilled()
-   * @see cplscheme::constants
+   * @pre initialize() has not yet been called
    */
-  bool isActionRequired(const std::string &action) const;
+  bool requiresInitialData();
 
-  /**
-   * @brief Indicates preCICE that a required action has been fulfilled by a solver.
+  /** Checks if the participant is required to write an iteration checkpoint.
    *
-   * @pre The solver fulfilled the specified action.
+   * If true, the participant is required to write an iteration checkpoint before
+   * calling advance().
    *
-   * @param[in] action the name of the action
+   * preCICE refuses to proceed if writing a checkpoint is required,
+   * but this method isn't called prior to advance().
    *
-   * @see requireAction()
-   * @see cplscheme::constants
+   * @pre initialize() has been called
+   *
+   * @see requiresReadingCheckpoint()
    */
-  void markActionFulfilled(const std::string &action);
+  bool requiresWritingCheckpoint();
+
+  /** Checks if the participant is required to read an iteration checkpoint.
+   *
+   * If true, the participant is required to read an iteration checkpoint before
+   * calling advance().
+   *
+   * preCICE refuses to proceed if reading a checkpoint is required,
+   * but this method isn't called prior to advance().
+   *
+   * @note This function returns false before the first call to advance().
+   *
+   * @pre initialize() has been called
+   *
+   * @see requiresWritingCheckpoint()
+   */
+  bool requiresReadingCheckpoint();
 
   ///@}
 
-  ///@name Mesh Access
-  ///@anchor precice-mesh-access
-  ///@{
+  /** @name Mesh Access
+   * @anchor precice-mesh-access
+   *
+   * Connectivity is optional.
+   * Use requiresMeshConnectivityFor() to check if the current participant can make use of the connectivity.
+   *
+   *
+   * Always set the mesh connectivity of the highest dimensionality available.
+   * preCICE ensures the existence of hierarchical entries for the projection fallback.
+   * Prefer to use bulk versions, as they allows preCICE to efficiently avoid duplicates.
+   * preCICE removes all connectivity duplicates in initialize().
+   *
+   * Examples:
+   *
+   * - setting triangle ABC ensures the existence of edges AB, BC, and AC.
+   * - setting triangles ABC and BCD separately will result in duplicate BC edges.
+   * - setting quad ABCD ensures the existence of triangles ABC ABD ACD BCD and edges AB AC AD BC BD CD.
+   *
+   *@{
+   */
 
   /*
    * @brief Resets mesh with given ID.
@@ -300,7 +328,7 @@ public:
    * @param[in] meshID the id of the mesh
    * @returns whether connectivity is required
    */
-  bool isMeshConnectivityRequired(int meshID) const;
+  bool requiresMeshConnectivityFor(int meshID) const;
 
   /**
    * @brief Creates a mesh vertex
@@ -397,45 +425,50 @@ public:
       int *         ids) const;
 
   /**
-   * @brief Sets mesh edge from vertex IDs, returns edge ID.
+   * @brief Sets a mesh edge from vertex IDs
+   *
+   * @note The order of vertices does not matter.
    *
    * @param[in] meshID ID of the mesh to add the edge to
    * @param[in] firstVertexID ID of the first vertex of the edge
    * @param[in] secondVertexID ID of the second vertex of the edge
    *
-   * @return the ID of the edge
-   *
    * @pre vertices with firstVertexID and secondVertexID were added to the mesh with the ID meshID
    */
-  int setMeshEdge(
+  void setMeshEdge(
       int meshID,
       int firstVertexID,
       int secondVertexID);
 
   /**
-   * @brief Sets mesh triangle from edge IDs
+   * @brief Sets multiple mesh edge from vertex IDs
    *
-   * @param[in] meshID ID of the mesh to add the triangle to
-   * @param[in] firstEdgeID ID of the first edge of the triangle
-   * @param[in] secondEdgeID ID of the second edge of the triangle
-   * @param[in] thirdEdgeID ID of the third edge of the triangle
+   * vertices contain pairs of vertex indices for each edge to define.
+   * The format follows: e1a, e1b, e2a, e2b, ...
    *
-   * @pre edges with firstEdgeID, secondEdgeID, and thirdEdgeID were added to the mesh with the ID meshID
+   * @note The order of vertices per edge does not matter.
+   *
+   * @param[in] meshID ID of the mesh to add the edges to
+   * @param[in] size the amount of edges to set
+   * @param[in] vertices an array containing 2*size vertex IDs
+   *
+   * @pre vertices were added to the mesh with the ID meshID
+   *
+   * @see requiresMeshConnectivityFor()
    */
-  void setMeshTriangle(
-      int meshID,
-      int firstEdgeID,
-      int secondEdgeID,
-      int thirdEdgeID);
+  void setMeshEdges(
+      int        meshID,
+      int        size,
+      const int *vertices);
 
   /**
    * @brief Sets mesh triangle from vertex IDs.
    *
-   * @warning
-   * This routine is supposed to be used, when no edge information is available
-   * per se. Edges are created on the fly within preCICE. This routine is
-   * significantly slower than the one using edge IDs, since it needs to check,
-   * whether an edge is created already or not.
+   *
+   *
+   * @note The order of vertices does not matter.
+   *
+   * @warning For setting multiple triangle, prefer the vastly more efficient setMeshTriangles().
    *
    * @param[in] meshID ID of the mesh to add the triangle to
    * @param[in] firstVertexID ID of the first vertex of the triangle
@@ -443,40 +476,44 @@ public:
    * @param[in] thirdVertexID ID of the third vertex of the triangle
    *
    * @pre edges with firstVertexID, secondVertexID, and thirdVertexID were added to the mesh with the ID meshID
+   *
+   * @see requiresMeshConnectivityFor()
    */
-  void setMeshTriangleWithEdges(
+  void setMeshTriangle(
       int meshID,
       int firstVertexID,
       int secondVertexID,
       int thirdVertexID);
 
   /**
-   * @brief Sets mesh Quad from edge IDs.
+   * @brief Sets multiple mesh triangles from vertex IDs
    *
-   * @param[in] meshID ID of the mesh to add the Quad to
-   * @param[in] firstEdgeID ID of the first edge of the Quad
-   * @param[in] secondEdgeID ID of the second edge of the Quad
-   * @param[in] thirdEdgeID ID of the third edge of the Quad
-   * @param[in] fourthEdgeID ID of the forth edge of the Quad
+   * vertices contain triples of vertex indices for each triangle to define.
+   * The format follows: t1a, t1b, t1c, t2a, t2b, t2c, ...
    *
-   * @pre edges with firstEdgeID, secondEdgeID, thirdEdgeID and fourthEdgeID were added to the mesh with the ID meshID.
+   * @note The order of vertices per triangle does not matter.
    *
+   * @param[in] meshID ID of the mesh to add the triangles to
+   * @param[in] size the amount of triangles to set
+   * @param[in] vertices an array containing 3*size vertex IDs
+   *
+   * @pre vertices were added to the mesh with the ID meshID
+   *
+   * @see requiresMeshConnectivityFor()
    */
-  void setMeshQuad(
-      int meshID,
-      int firstEdgeID,
-      int secondEdgeID,
-      int thirdEdgeID,
-      int fourthEdgeID);
+  void setMeshTriangles(
+      int        meshID,
+      int        size,
+      const int *vertices);
 
   /**
-   * @brief Sets surface mesh quadrangle from vertex IDs.
+   * @brief Sets a planar surface mesh quadrangle from vertex IDs.
    *
-   * @warning
-   * This routine is supposed to be used, when no edge information is available
-   * per se. Edges are created on the fly within preCICE. This routine is
-   * significantly slower than the one using edge IDs, since it needs to check,
-   * whether an edge is created already or not.
+   * The planar quad will be triangulated, maximizing area-to-circumference.
+   *
+   * @warning The order of vertices does not matter, however, only planar quads are allowed.
+   *
+   * @warning For setting multiple quads, prefer the vastly more efficient setMeshQuads().
    *
    * @param[in] meshID ID of the mesh to add the Quad to
    * @param[in] firstVertexID ID of the first vertex of the Quad
@@ -486,8 +523,9 @@ public:
    *
    * @pre vertices with firstVertexID, secondVertexID, thirdVertexID, and fourthVertexID were added to the mesh with the ID meshID
    *
+   * @see requiresMeshConnectivityFor()
    */
-  void setMeshQuadWithEdges(
+  void setMeshQuad(
       int meshID,
       int firstVertexID,
       int secondVertexID,
@@ -495,7 +533,34 @@ public:
       int fourthVertexID);
 
   /**
+   * @brief Sets multiple mesh quads from vertex IDs
+   *
+   * vertices contain quadruples of vertex indices for each quad to define.
+   * The format follows: q1a, q1b, q1c, q1d, q2a, q2b, q2c, q2d, ...
+   *
+   * Each planar quad will be triangulated, maximizing area-to-circumference.
+   *
+   * @warning The order of vertices per quad does not matter, however, only planar quads are allowed.
+   *
+   * @param[in] meshID ID of the mesh to add the quad to
+   * @param[in] size the amount of quads to set
+   * @param[in] vertices an array containing 4*size vertex IDs
+   *
+   * @pre vertices were added to the mesh with the ID meshID
+   *
+   * @see requiresMeshConnectivityFor()
+   */
+  void setMeshQuads(
+      int        meshID,
+      int        size,
+      const int *vertices);
+
+  /**
    * @brief Set tetrahedron in 3D mesh from vertex ID
+   *
+   * @note The order of vertices does not matter.
+   *
+   * @warning For setting multiple tetrahedra, prefer the vastly more efficient setMeshTetrahedra().
    *
    * @param[in] meshID ID of the mesh to add the Tetrahedron to
    * @param[in] firstVertexID ID of the first vertex of the Tetrahedron
@@ -504,6 +569,8 @@ public:
    * @param[in] fourthVertexID ID of the fourth vertex of the Tetrahedron
    *
    * @pre vertices with firstVertexID, secondVertexID, thirdVertexID, and fourthVertexID were added to the mesh with the ID meshID
+   *
+   * @see requiresMeshConnectivityFor()
    */
   void setMeshTetrahedron(
       int meshID,
@@ -511,6 +578,27 @@ public:
       int secondVertexID,
       int thirdVertexID,
       int fourthVertexID);
+
+  /**
+   * @brief Sets multiple mesh tetrahedra from vertex IDs
+   *
+   * vertices contain quadruples of vertex indices for each tetrahedron to define.
+   * The format follows: t1a, t1b, t1c, t1d, t2a, t2b, t2c, t2d, ...
+   *
+   * @note The order of vertices per tetrahedron does not matter.
+   *
+   * @param[in] meshID ID of the mesh to add the tetrahedra to
+   * @param[in] size the amount of tetrahedra to set
+   * @param[in] vertices an array containing 4*size vertex IDs
+   *
+   * @pre vertices were added to the mesh with the ID meshID
+   *
+   * @see requiresMeshConnectivityFor()
+   */
+  void setMeshTetrahedra(
+      int        meshID,
+      int        size,
+      const int *vertices);
 
   ///@}
 
@@ -737,7 +825,7 @@ public:
 
   /**
    * @brief setMeshAccessRegion Define a region of interest on a received mesh
-   *        (<use-mesh ... from="otherParticipant />") in order to receive
+   *        (<receive-mesh ... from="otherParticipant />") in order to receive
    *        only a certain mesh region. Have a look at the website under
    *        https://precice.org/couple-your-code-direct-access.html or
    *        navigate manually to the page  Docs->Couple your code
@@ -984,7 +1072,7 @@ public:
    * @param[in] dataID the id of the data
    * @returns whether gradient is required
    */
-  bool isGradientDataRequired(int dataID) const;
+  bool requiresGradientDataFor(int dataID) const;
 
   /**
    * @brief Writes vector gradient data given as block.
@@ -1136,18 +1224,5 @@ private:
   // @brief To allow white box tests.
   friend struct testing::WhiteboxAccessor;
 };
-
-namespace constants {
-
-// @brief Name of action for writing initial data.
-const std::string &actionWriteInitialData();
-
-// @brief Name of action for writing iteration checkpoint
-const std::string &actionWriteIterationCheckpoint();
-
-// @brief Name of action for reading iteration checkpoint.
-const std::string &actionReadIterationCheckpoint();
-
-} // namespace constants
 
 } // namespace precice

@@ -25,3 +25,4 @@ Makefile
 src/precice/impl/versions.hpp
 src/precice/Version.h
 .idea
+CMakeUserPresets.json

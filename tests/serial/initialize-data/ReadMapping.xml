@@ -12,8 +12,8 @@
     </mesh>
 
     <participant name="SolverOne">
-      <use-mesh name="MeshOne" provide="on" />
-      <use-mesh name="MeshTwo" from="SolverTwo" />
+      <provide-mesh name="MeshOne" />
+      <receive-mesh name="MeshTwo" from="SolverTwo" />
       <mapping:nearest-neighbor
         direction="read"
         from="MeshTwo"
@@ -24,7 +24,7 @@
     </participant>
 
     <participant name="SolverTwo">
-      <use-mesh name="MeshTwo" provide="on" />
+      <provide-mesh name="MeshTwo" />
       <write-data name="Data" mesh="MeshTwo" />
     </participant>
 

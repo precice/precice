@@ -57,16 +57,19 @@ bool SolverInterface::isTimeWindowComplete() const
   return _impl->isTimeWindowComplete();
 }
 
-bool SolverInterface::isActionRequired(
-    const std::string &action) const
+bool SolverInterface::requiresInitialData()
 {
-  return _impl->isActionRequired(action);
+  return _impl->requiresInitialData();
 }
 
-void SolverInterface::markActionFulfilled(
-    const std::string &action)
+bool SolverInterface::requiresReadingCheckpoint()
 {
-  _impl->markActionFulfilled(action);
+  return _impl->requiresReadingCheckpoint();
+}
+
+bool SolverInterface::requiresWritingCheckpoint()
+{
+  return _impl->requiresWritingCheckpoint();
 }
 
 bool SolverInterface::hasMesh(
@@ -86,14 +89,14 @@ std::set<int> SolverInterface::getMeshIDs() const
   return _impl->getMeshIDs();
 }
 
-bool SolverInterface::isMeshConnectivityRequired(int meshID) const
+bool SolverInterface::requiresMeshConnectivityFor(int meshID) const
 {
-  return _impl->isMeshConnectivityRequired(meshID);
+  return _impl->requiresMeshConnectivityFor(meshID);
 }
 
-bool SolverInterface::isGradientDataRequired(int dataID) const
+bool SolverInterface::requiresGradientDataFor(int dataID) const
 {
-  return _impl->isGradientDataRequired(dataID);
+  return _impl->requiresGradientDataFor(dataID);
 }
 
 bool SolverInterface::hasData(
@@ -155,51 +158,56 @@ void SolverInterface::getMeshVertexIDsFromPositions(
   _impl->getMeshVertexIDsFromPositions(meshID, size, positions, ids);
 }
 
-int SolverInterface::setMeshEdge(
+void SolverInterface::setMeshEdge(
     int meshID,
     int firstVertexID,
     int secondVertexID)
 {
-  return _impl->setMeshEdge(meshID, firstVertexID, secondVertexID);
+  _impl->setMeshEdge(meshID, firstVertexID, secondVertexID);
+}
+
+void SolverInterface::setMeshEdges(
+    int        meshID,
+    int        size,
+    const int *vertices)
+{
+  _impl->setMeshEdges(meshID, size, vertices);
 }
 
 void SolverInterface::setMeshTriangle(
-    int meshID,
-    int firstEdgeID,
-    int secondEdgeID,
-    int thirdEdgeID)
-{
-  _impl->setMeshTriangle(meshID, firstEdgeID, secondEdgeID, thirdEdgeID);
-}
-
-void SolverInterface::setMeshTriangleWithEdges(
     int meshID,
     int firstVertexID,
     int secondVertexID,
     int thirdVertexID)
 {
-  _impl->setMeshTriangleWithEdges(meshID, firstVertexID, secondVertexID, thirdVertexID);
+  _impl->setMeshTriangle(meshID, firstVertexID, secondVertexID, thirdVertexID);
+}
+
+void SolverInterface::setMeshTriangles(
+    int        meshID,
+    int        size,
+    const int *vertices)
+{
+  _impl->setMeshTriangles(meshID, size, vertices);
 }
 
 void SolverInterface::setMeshQuad(
-    int meshID,
-    int firstEdgeID,
-    int secondEdgeID,
-    int thirdEdgeID,
-    int fourthEdgeID)
-{
-  _impl->setMeshQuad(meshID, firstEdgeID, secondEdgeID, thirdEdgeID, fourthEdgeID);
-}
-
-void SolverInterface::setMeshQuadWithEdges(
     int meshID,
     int firstVertexID,
     int secondVertexID,
     int thirdVertexID,
     int fourthVertexID)
 {
-  _impl->setMeshQuadWithEdges(meshID, firstVertexID, secondVertexID, thirdVertexID,
-                              fourthVertexID);
+  _impl->setMeshQuad(meshID, firstVertexID, secondVertexID, thirdVertexID,
+                     fourthVertexID);
+}
+
+void SolverInterface::setMeshQuads(
+    int        meshID,
+    int        size,
+    const int *vertices)
+{
+  _impl->setMeshQuads(meshID, size, vertices);
 }
 
 void SolverInterface::setMeshTetrahedron(
@@ -211,6 +219,14 @@ void SolverInterface::setMeshTetrahedron(
 {
   _impl->setMeshTetrahedron(meshID, firstVertexID, secondVertexID, thirdVertexID,
                             fourthVertexID);
+}
+
+void SolverInterface::setMeshTetrahedra(
+    int        meshID,
+    int        size,
+    const int *vertices)
+{
+  _impl->setMeshTetrahedra(meshID, size, vertices);
 }
 
 void SolverInterface::writeBlockVectorData(
@@ -367,24 +383,5 @@ void SolverInterface::getMeshVerticesAndIDs(const int meshID,
 {
   _impl->getMeshVerticesAndIDs(meshID, size, ids, coordinates);
 }
-
-namespace constants {
-
-const std::string &actionWriteInitialData()
-{
-  return cplscheme::constants::actionWriteInitialData();
-}
-
-const std::string &actionWriteIterationCheckpoint()
-{
-  return cplscheme::constants::actionWriteIterationCheckpoint();
-}
-
-const std::string &actionReadIterationCheckpoint()
-{
-  return cplscheme::constants::actionReadIterationCheckpoint();
-}
-
-} // namespace constants
 
 } // namespace precice

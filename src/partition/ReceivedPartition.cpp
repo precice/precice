@@ -277,9 +277,9 @@ auto errorMeshFilteredOut(const std::string &meshName, const int rank)
                      "not match geometry-wise. Please check your geometry setup again. Small overlaps or "
                      "gaps are no problem. If your geometry setup is correct and if you have very different "
                      "mesh resolutions on both sides, you may want to increase the safety-factor: "
-                     "\"<use-mesh mesh=\"{0} \" ... safety-factor=\"N\"/> (default value is 0.5) of the "
+                     "\"<receive-mesh mesh=\"{0} \" ... safety-factor=\"N\"/> (default value is 0.5) of the "
                      "decomposition strategy or disable the filtering completely: "
-                     "\"<use-mesh mesh=\"{0}\" ... geometric-filter=\"no-filter\" />",
+                     "\"<receive-mesh mesh=\"{0}\" ... geometric-filter=\"no-filter\" />",
                      meshName, rank);
 }
 } // namespace
@@ -457,7 +457,7 @@ void ReceivedPartition::compareBoundingBoxes()
     PRECICE_CHECK(not connectionMap.empty(),
                   "The mesh \"{}\" of this participant seems to have no partitions at the coupling interface. "
                   "Check that both mapped meshes are describing the same geometry. "
-                  "If you deal with very different mesh resolutions, consider increasing the safety-factor in the <use-mesh /> tag.",
+                  "If you deal with very different mesh resolutions, consider increasing the safety-factor in the <receive-mesh /> tag.",
                   _mesh->getName());
     com::CommunicateBoundingBox(m2n().getPrimaryRankCommunication()).sendConnectionMap(connectionMap, 0);
   } else {

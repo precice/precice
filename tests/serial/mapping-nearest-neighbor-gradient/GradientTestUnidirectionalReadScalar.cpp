@@ -62,9 +62,9 @@ BOOST_AUTO_TEST_CASE(GradientTestUnidirectionalReadScalar)
     int    indices[2] = {0, 1};
     cplInterface.writeBlockScalarData(dataID, 2, indices, values);
 
-    BOOST_TEST(cplInterface.isGradientDataRequired(dataID) == true);
+    BOOST_TEST(cplInterface.requiresGradientDataFor(dataID) == true);
 
-    if (cplInterface.isGradientDataRequired(dataID)) {
+    if (cplInterface.requiresGradientDataFor(dataID)) {
       double gradientValues[6] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
       cplInterface.writeBlockScalarGradientData(dataID, 2, indices, gradientValues);
     }

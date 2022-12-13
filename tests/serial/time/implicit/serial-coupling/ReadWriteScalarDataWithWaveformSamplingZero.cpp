@@ -55,23 +55,23 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingZero)
     readFunction  = dataOneFunction;
   }
 
-  double   writeData, readData;
-  VertexID vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+  double   writeData = 0;
+  double   readData  = 0;
+  VertexID vertexID  = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
 
-  int    nWindows   = 5; // perform 5 windows.
-  int    timewindow = 0;
-  int    nSamples   = 4;
-  int    iterations = 0;
-  double time       = 0;
-  int    timewindowCheckpoint;
-  double timeCheckpoint;
+  int    nWindows             = 5; // perform 5 windows.
+  int    timewindow           = 0;
+  int    nSamples             = 4;
+  int    iterations           = 0;
+  double time                 = 0;
+  int    timewindowCheckpoint = timewindow;
+  double timeCheckpoint       = time;
   double sampleDt; // dt relative to timestep start, where we are sampling
   double readDt;   // dt relative to timestep start for readTime
   double readTime; // time where we are reading from the reference solution
-  if (precice.isActionRequired(precice::constants::actionWriteInitialData())) {
+  if (precice.requiresInitialData()) {
     writeData = writeFunction(time);
     precice.writeScalarData(writeDataID, vertexID, writeData);
-    precice.markActionFulfilled(precice::constants::actionWriteInitialData());
   }
 
   double maxDt        = precice.initialize();
@@ -81,11 +81,10 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingZero)
   double readDts[4]   = {0.0, currentDt, currentDt, currentDt};
 
   while (precice.isCouplingOngoing()) {
-    if (precice.isActionRequired(precice::constants::actionWriteIterationCheckpoint())) {
+    if (precice.requiresWritingCheckpoint()) {
       timeCheckpoint       = time;
       timewindowCheckpoint = timewindow;
       iterations           = 0;
-      precice.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
     }
     for (int j = 0; j < nSamples; j++) {
       sampleDt = sampleDts[j];
@@ -106,11 +105,10 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingZero)
     writeData = writeFunction(time);
     precice.writeScalarData(writeDataID, vertexID, writeData);
     maxDt = precice.advance(currentDt);
-    if (precice.isActionRequired(precice::constants::actionReadIterationCheckpoint())) {
+    if (precice.requiresReadingCheckpoint()) {
       time       = timeCheckpoint;
       timewindow = timewindowCheckpoint;
       iterations++;
-      precice.markActionFulfilled(precice::constants::actionReadIterationCheckpoint());
     }
     currentDt = dt > maxDt ? maxDt : dt;
   }

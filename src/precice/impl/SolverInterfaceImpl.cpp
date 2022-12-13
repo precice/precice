@@ -15,6 +15,7 @@
 #include "action/SharedPointer.hpp"
 #include "com/Communication.hpp"
 #include "com/SharedPointer.hpp"
+#include "cplscheme/Constants.hpp"
 #include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "io/Export.hpp"
@@ -266,9 +267,12 @@ double SolverInterfaceImpl::initialize()
   PRECICE_CHECK(_state != State::Finalized, "initialize() cannot be called after finalize().")
   PRECICE_CHECK(_state != State::Initialized, "initialize() may only be called once.");
   PRECICE_ASSERT(not _couplingScheme->isInitialized());
-  PRECICE_CHECK(not isActionRequired(constants::actionWriteInitialData()),
-                "Initial data has to be written to preCICE by calling an appropriate write...Data() function before calling initialize(). "
-                "Did you forget to call markActionFulfilled(precice::constants::actionWriteInitialData()) after writing initial data?");
+
+  bool failedToInitialize = _couplingScheme->isActionRequired(cplscheme::CouplingScheme::Action::InitializeData) && not _couplingScheme->isActionFulfilled(cplscheme::CouplingScheme::Action::InitializeData);
+  PRECICE_CHECK(not failedToInitialize,
+                "Initial data has to be written to preCICE before calling initialize(). "
+                "After defining your mesh, call requiresInitialData() to check if the participant is required to write initial data using an appropriate write...Data() function.");
+
   auto &solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
   solverInitEvent.pause(precice::syncMode);
   Event                    e("initialize", precice::syncMode);
@@ -415,8 +419,7 @@ double SolverInterfaceImpl::advance(
     performDataActions({action::Action::WRITE_MAPPING_POST}, time);
   }
 
-  PRECICE_DEBUG("Advance coupling scheme");
-  _couplingScheme->advance();
+  advanceCouplingScheme();
 
   if (_couplingScheme->isTimeWindowComplete()) {
     for (auto &context : _accessor->readDataContexts()) {
@@ -522,20 +525,37 @@ bool SolverInterfaceImpl::isTimeWindowComplete() const
   return _couplingScheme->isTimeWindowComplete();
 }
 
-bool SolverInterfaceImpl::isActionRequired(
-    const std::string &action) const
+bool SolverInterfaceImpl::requiresInitialData()
 {
-  PRECICE_TRACE(action, _couplingScheme->isActionRequired(action));
-  PRECICE_CHECK(_state != State::Finalized, "isActionRequired(...) cannot be called after finalize().");
-  return _couplingScheme->isActionRequired(action);
+  PRECICE_TRACE();
+  PRECICE_CHECK(_state == State::Constructed, "requiresInitialData() has to be called before initialize().");
+  bool required = _couplingScheme->isActionRequired(cplscheme::CouplingScheme::Action::InitializeData);
+  if (required) {
+    _couplingScheme->markActionFulfilled(cplscheme::CouplingScheme::Action::InitializeData);
+  }
+  return required;
 }
 
-void SolverInterfaceImpl::markActionFulfilled(
-    const std::string &action)
+bool SolverInterfaceImpl::requiresWritingCheckpoint()
 {
-  PRECICE_TRACE(action);
-  PRECICE_CHECK(_state != State::Finalized, "markActionFulfilled(...) cannot be called after finalize().");
-  _couplingScheme->markActionFulfilled(action);
+  PRECICE_TRACE();
+  PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before requiresWritingCheckpoint().");
+  bool required = _couplingScheme->isActionRequired(cplscheme::CouplingScheme::Action::WriteCheckpoint);
+  if (required) {
+    _couplingScheme->markActionFulfilled(cplscheme::CouplingScheme::Action::WriteCheckpoint);
+  }
+  return required;
+}
+
+bool SolverInterfaceImpl::requiresReadingCheckpoint()
+{
+  PRECICE_TRACE();
+  PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before requiresReadingCheckpoint().");
+  bool required = _couplingScheme->isActionRequired(cplscheme::CouplingScheme::Action::ReadCheckpoint);
+  if (required) {
+    _couplingScheme->markActionFulfilled(cplscheme::CouplingScheme::Action::ReadCheckpoint);
+  }
+  return required;
 }
 
 bool SolverInterfaceImpl::hasMesh(
@@ -555,7 +575,7 @@ int SolverInterfaceImpl::getMeshID(
                 meshName);
   PRECICE_CHECK(_accessor->isMeshUsed(meshName),
                 "The given mesh name \"{0}\" is not used by the participant \"{1}\". "
-                "Please define a <use-mesh name=\"{0}\"/> node for the particpant \"{1}\".",
+                "Please define a <provide-mesh name=\"{0}\"/> or a <receive-mesh name=\"{0}\" from=\"...\" /> node for the particpant \"{1}\".",
                 meshName, _accessorName);
   return _accessor->getUsedMeshID(meshName);
 }
@@ -590,14 +610,14 @@ int SolverInterfaceImpl::getDataID(
   return _accessor->getUsedDataID(dataName, meshID);
 }
 
-bool SolverInterfaceImpl::isMeshConnectivityRequired(int meshID) const
+bool SolverInterfaceImpl::requiresMeshConnectivityFor(int meshID) const
 {
   PRECICE_VALIDATE_MESH_ID(meshID);
   MeshContext &context = _accessor->usedMeshContext(meshID);
   return context.meshRequirement == mapping::Mapping::MeshRequirement::FULL;
 }
 
-bool SolverInterfaceImpl::isGradientDataRequired(int dataID) const
+bool SolverInterfaceImpl::requiresGradientDataFor(int dataID) const
 {
   PRECICE_VALIDATE_DATA_ID(dataID);
   // Read data never requires gradients
@@ -739,7 +759,7 @@ void SolverInterfaceImpl::getMeshVertexIDsFromPositions(
   }
 }
 
-int SolverInterfaceImpl::setMeshEdge(
+void SolverInterfaceImpl::setMeshEdge(
     MeshID meshID,
     int    firstVertexID,
     int    secondVertexID)
@@ -754,42 +774,21 @@ int SolverInterfaceImpl::setMeshEdge(
     PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), errorInvalidVertexID(secondVertexID));
     mesh::Vertex &v0 = mesh->vertices()[firstVertexID];
     mesh::Vertex &v1 = mesh->vertices()[secondVertexID];
-    return mesh->createEdge(v0, v1).getID();
+    mesh->createEdge(v0, v1);
   }
-  return -1;
+}
+
+void SolverInterfaceImpl::setMeshEdges(
+    int        meshID,
+    int        size,
+    const int *vertices)
+{
+  for (int i = 0; i < size; ++i) {
+    setMeshEdge(meshID, vertices[2 * i], vertices[2 * i + 1]);
+  }
 }
 
 void SolverInterfaceImpl::setMeshTriangle(
-    MeshID meshID,
-    int    firstEdgeID,
-    int    secondEdgeID,
-    int    thirdEdgeID)
-{
-  PRECICE_TRACE(meshID, firstEdgeID,
-                secondEdgeID, thirdEdgeID);
-
-  PRECICE_REQUIRE_MESH_MODIFY(meshID);
-  MeshContext &context = _accessor->usedMeshContext(meshID);
-  if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
-    mesh::PtrMesh &mesh = context.mesh;
-    using impl::errorInvalidEdgeID;
-    PRECICE_CHECK(mesh->isValidEdgeID(firstEdgeID), errorInvalidEdgeID(firstEdgeID));
-    PRECICE_CHECK(mesh->isValidEdgeID(secondEdgeID), errorInvalidEdgeID(secondEdgeID));
-    PRECICE_CHECK(mesh->isValidEdgeID(thirdEdgeID), errorInvalidEdgeID(thirdEdgeID));
-    PRECICE_CHECK(utils::unique_elements(utils::make_array(firstEdgeID, secondEdgeID, thirdEdgeID)),
-                  "setMeshTriangle() was called with repeated Edge IDs ({}, {}, {}).",
-                  firstEdgeID, secondEdgeID, thirdEdgeID);
-    mesh::Edge &e0 = mesh->edges()[firstEdgeID];
-    mesh::Edge &e1 = mesh->edges()[secondEdgeID];
-    mesh::Edge &e2 = mesh->edges()[thirdEdgeID];
-    PRECICE_CHECK(e0.connectedTo(e1) && e1.connectedTo(e2) && e2.connectedTo(e0),
-                  "setMeshTriangle() was called with Edge IDs ({}, {}, {}), which identify unconnected Edges.",
-                  firstEdgeID, secondEdgeID, thirdEdgeID);
-    mesh->createTriangle(e0, e1, e2);
-  }
-}
-
-void SolverInterfaceImpl::setMeshTriangleWithEdges(
     MeshID meshID,
     int    firstVertexID,
     int    secondVertexID,
@@ -807,7 +806,7 @@ void SolverInterfaceImpl::setMeshTriangleWithEdges(
     PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), errorInvalidVertexID(secondVertexID));
     PRECICE_CHECK(mesh->isValidVertexID(thirdVertexID), errorInvalidVertexID(thirdVertexID));
     PRECICE_CHECK(utils::unique_elements(utils::make_array(firstVertexID, secondVertexID, thirdVertexID)),
-                  "setMeshTriangleWithEdges() was called with repeated Vertex IDs ({}, {}, {}).",
+                  "setMeshTriangle() was called with repeated Vertex IDs ({}, {}, {}).",
                   firstVertexID, secondVertexID, thirdVertexID);
     mesh::Vertex *vertices[3];
     vertices[0] = &mesh->vertices()[firstVertexID];
@@ -815,78 +814,28 @@ void SolverInterfaceImpl::setMeshTriangleWithEdges(
     vertices[2] = &mesh->vertices()[thirdVertexID];
     PRECICE_CHECK(utils::unique_elements(utils::make_array(vertices[0]->getCoords(),
                                                            vertices[1]->getCoords(), vertices[2]->getCoords())),
-                  "setMeshTriangleWithEdges() was called with vertices located at identical coordinates (IDs: {}, {}, {}).",
+                  "setMeshTriangle() was called with vertices located at identical coordinates (IDs: {}, {}, {}).",
                   firstVertexID, secondVertexID, thirdVertexID);
     mesh::Edge *edges[3];
-    edges[0] = &mesh->createUniqueEdge(*vertices[0], *vertices[1]);
-    edges[1] = &mesh->createUniqueEdge(*vertices[1], *vertices[2]);
-    edges[2] = &mesh->createUniqueEdge(*vertices[2], *vertices[0]);
+    edges[0] = &mesh->createEdge(*vertices[0], *vertices[1]);
+    edges[1] = &mesh->createEdge(*vertices[1], *vertices[2]);
+    edges[2] = &mesh->createEdge(*vertices[2], *vertices[0]);
 
     mesh->createTriangle(*edges[0], *edges[1], *edges[2]);
   }
 }
 
-void SolverInterfaceImpl::setMeshQuad(
-    MeshID meshID,
-    int    firstEdgeID,
-    int    secondEdgeID,
-    int    thirdEdgeID,
-    int    fourthEdgeID)
+void SolverInterfaceImpl::setMeshTriangles(
+    int        meshID,
+    int        size,
+    const int *vertices)
 {
-  PRECICE_TRACE(meshID, firstEdgeID, secondEdgeID, thirdEdgeID,
-                fourthEdgeID);
-  PRECICE_CHECK(_dimensions == 3, "setMeshQuad is only possible for 3D cases. "
-                                  "Please set the dimension to 3 in the preCICE configuration file.");
-  PRECICE_REQUIRE_MESH_MODIFY(meshID);
-  MeshContext &context = _accessor->usedMeshContext(meshID);
-  if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
-    mesh::PtrMesh &mesh = context.mesh;
-    using impl::errorInvalidEdgeID;
-    PRECICE_CHECK(mesh->isValidEdgeID(firstEdgeID), errorInvalidEdgeID(firstEdgeID));
-    PRECICE_CHECK(mesh->isValidEdgeID(secondEdgeID), errorInvalidEdgeID(secondEdgeID));
-    PRECICE_CHECK(mesh->isValidEdgeID(thirdEdgeID), errorInvalidEdgeID(thirdEdgeID));
-    PRECICE_CHECK(mesh->isValidEdgeID(fourthEdgeID), errorInvalidEdgeID(fourthEdgeID));
-
-    PRECICE_CHECK(utils::unique_elements(utils::make_array(firstEdgeID, secondEdgeID, thirdEdgeID, fourthEdgeID)),
-                  "The four edge ID's are not unique. Please check that the edges that form the quad are correct.");
-
-    auto chain = mesh::asChain(utils::make_array(
-        &mesh->edges()[firstEdgeID], &mesh->edges()[secondEdgeID],
-        &mesh->edges()[thirdEdgeID], &mesh->edges()[fourthEdgeID]));
-    PRECICE_CHECK(chain.connected, "The four edges are not connect. Please check that the edges that form the quad are correct.");
-
-    auto coords = mesh::coordsFor(chain.vertices);
-    PRECICE_CHECK(utils::unique_elements(coords),
-                  "The four vertices that form the quad are not unique. "
-                  "The resulting shape may be a point, line or triangle."
-                  "Please check that the adapter sends the four unique vertices that form the quad, or that the mesh on the interface "
-                  "is composed of planar quads.");
-
-    auto convexity = math::geometry::isConvexQuad(coords);
-    PRECICE_CHECK(convexity.convex,
-                  "The given quad is not convex. "
-                  "Please check that the adapter send the four correct vertices or that the interface is composed of planar quads.");
-
-    // Use the shortest diagonal to split the quad into 2 triangles.
-    // The diagonal to be used with edges (1, 2) and (0, 3) of the chain
-    double distance1 = (coords[0] - coords[2]).norm();
-    // The diagonal to be used with edges (0, 1) and (2, 3) of the chain
-    double distance2 = (coords[1] - coords[3]).norm();
-
-    // The new edge, e[4], is the shortest diagonal of the quad
-    if (distance1 <= distance2) {
-      auto &diag = mesh->createUniqueEdge(*chain.vertices[0], *chain.vertices[2]);
-      mesh->createTriangle(*chain.edges[3], *chain.edges[0], diag);
-      mesh->createTriangle(*chain.edges[1], *chain.edges[2], diag);
-    } else {
-      auto &diag = mesh->createUniqueEdge(*chain.vertices[1], *chain.vertices[3]);
-      mesh->createTriangle(*chain.edges[0], *chain.edges[1], diag);
-      mesh->createTriangle(*chain.edges[2], *chain.edges[3], diag);
-    }
+  for (int i = 0; i < size; ++i) {
+    setMeshTriangle(meshID, vertices[3 * i], vertices[3 * i + 1], vertices[3 * i + 2]);
   }
 }
 
-void SolverInterfaceImpl::setMeshQuadWithEdges(
+void SolverInterfaceImpl::setMeshQuad(
     MeshID meshID,
     int    firstVertexID,
     int    secondVertexID,
@@ -895,7 +844,7 @@ void SolverInterfaceImpl::setMeshQuadWithEdges(
 {
   PRECICE_TRACE(meshID, firstVertexID,
                 secondVertexID, thirdVertexID, fourthVertexID);
-  PRECICE_CHECK(_dimensions == 3, "setMeshQuadWithEdges is only possible for 3D cases."
+  PRECICE_CHECK(_dimensions == 3, "setMeshQuad is only possible for 3D cases."
                                   " Please set the dimension to 3 in the preCICE configuration file.");
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->usedMeshContext(meshID);
@@ -925,10 +874,10 @@ void SolverInterfaceImpl::setMeshQuadWithEdges(
 
     // Vertices are now in the order: V0-V1-V2-V3-V0.
     // The order now identifies all outer edges of the quad.
-    auto &edge0 = mesh.createUniqueEdge(*reordered[0], *reordered[1]);
-    auto &edge1 = mesh.createUniqueEdge(*reordered[1], *reordered[2]);
-    auto &edge2 = mesh.createUniqueEdge(*reordered[2], *reordered[3]);
-    auto &edge3 = mesh.createUniqueEdge(*reordered[3], *reordered[0]);
+    auto &edge0 = mesh.createEdge(*reordered[0], *reordered[1]);
+    auto &edge1 = mesh.createEdge(*reordered[1], *reordered[2]);
+    auto &edge2 = mesh.createEdge(*reordered[2], *reordered[3]);
+    auto &edge3 = mesh.createEdge(*reordered[3], *reordered[0]);
 
     // Use the shortest diagonal to split the quad into 2 triangles.
     // Vertices are now in V0-V1-V2-V3-V0 order. The new edge, e[4] is either 0-2 or 1-3
@@ -937,14 +886,24 @@ void SolverInterfaceImpl::setMeshQuadWithEdges(
 
     // The new edge, e[4], is the shortest diagonal of the quad
     if (distance1 <= distance2) {
-      auto &diag = mesh.createUniqueEdge(*reordered[0], *reordered[2]);
+      auto &diag = mesh.createEdge(*reordered[0], *reordered[2]);
       mesh.createTriangle(edge0, edge1, diag);
       mesh.createTriangle(edge2, edge3, diag);
     } else {
-      auto &diag = mesh.createUniqueEdge(*reordered[1], *reordered[3]);
+      auto &diag = mesh.createEdge(*reordered[1], *reordered[3]);
       mesh.createTriangle(edge3, edge0, diag);
       mesh.createTriangle(edge1, edge2, diag);
     }
+  }
+}
+
+void SolverInterfaceImpl::setMeshQuads(
+    int        meshID,
+    int        size,
+    const int *vertices)
+{
+  for (int i = 0; i < size; ++i) {
+    setMeshQuad(meshID, vertices[4 * i], vertices[4 * i + 1], vertices[4 * i + 2], vertices[4 * i + 3]);
   }
 }
 
@@ -987,6 +946,16 @@ void SolverInterfaceImpl::setMeshTetrahedron(
     mesh->createTriangle(BC, CD, BD);
 
     mesh->createTetrahedron(A, B, C, D);
+  }
+}
+
+void SolverInterfaceImpl::setMeshTetrahedra(
+    int        meshID,
+    int        size,
+    const int *vertices)
+{
+  for (int i = 0; i < size; ++i) {
+    setMeshTetrahedron(meshID, vertices[4 * i], vertices[4 * i + 1], vertices[4 * i + 2], vertices[4 * i + 3]);
   }
 }
 
@@ -1132,7 +1101,7 @@ void SolverInterfaceImpl::writeScalarGradientData(
   PRECICE_CHECK(_state != State::Finalized, "writeScalarGradientData(...) cannot be called after finalize().")
   PRECICE_REQUIRE_DATA_WRITE(dataID);
 
-  if (isGradientDataRequired(dataID)) {
+  if (requiresGradientDataFor(dataID)) {
     PRECICE_DEBUG("Gradient value = {}", Eigen::Map<const Eigen::VectorXd>(gradientValues, _dimensions).format(utils::eigenio::debug()));
     PRECICE_CHECK(gradientValues != nullptr, "writeScalarGradientData() was called with gradientValues == nullptr");
 
@@ -1191,7 +1160,7 @@ void SolverInterfaceImpl::writeBlockScalarGradientData(
   if (size == 0)
     return;
 
-  if (isGradientDataRequired(dataID)) {
+  if (requiresGradientDataFor(dataID)) {
 
     PRECICE_CHECK(valueIndices != nullptr, "writeBlockScalarGradientData() was called with valueIndices == nullptr");
     PRECICE_CHECK(gradientValues != nullptr, "writeBlockScalarGradientData() was called with gradientValues == nullptr");
@@ -1239,7 +1208,7 @@ void SolverInterfaceImpl::writeVectorGradientData(
   PRECICE_CHECK(_state != State::Finalized, "writeVectorGradientData(...) cannot be called after finalize().")
   PRECICE_REQUIRE_DATA_WRITE(dataID);
 
-  if (isGradientDataRequired(dataID)) {
+  if (requiresGradientDataFor(dataID)) {
 
     PRECICE_CHECK(gradientValues != nullptr, "writeVectorGradientData() was called with gradientValue == nullptr");
 
@@ -1289,7 +1258,7 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
   if (size == 0)
     return;
 
-  if (isGradientDataRequired(dataID)) {
+  if (requiresGradientDataFor(dataID)) {
 
     PRECICE_CHECK(valueIndices != nullptr, "writeBlockVectorGradientData() was called with valueIndices == nullptr");
     PRECICE_CHECK(gradientValues != nullptr, "writeBlockVectorGradientData() was called with gradientValues == nullptr");
@@ -1734,17 +1703,8 @@ void SolverInterfaceImpl::configurePartitions(
           }
         }
       }
-      /// @todo support offset??
 
     } else { // Accessor receives mesh
-      PRECICE_CHECK(not context->receiveMeshFrom.empty(),
-                    "Participant \"{}\" must either provide or receive the mesh \"{}\". "
-                    "Please define either a \"from\" or a \"provide\" attribute in the <use-mesh name=\"{}\"/> node of \"{}\".",
-                    _accessorName, context->mesh->getName(), context->mesh->getName(), _accessorName);
-      PRECICE_CHECK(not context->provideMesh,
-                    "Participant \"{}\" cannot provide and receive mesh \"{}\" at the same time. "
-                    "Please check your \"from\" and \"provide\" attributes in the <use-mesh name=\"{}\"/> node of \"{}\".",
-                    _accessorName, context->mesh->getName(), context->mesh->getName(), _accessorName);
       std::string receiver(_accessorName);
       std::string provider(context->receiveMeshFrom);
 
@@ -1962,6 +1922,19 @@ void SolverInterfaceImpl::syncTimestep(double computedTimestepLength)
                     secondaryRank, dt, computedTimestepLength);
     }
   }
+}
+
+void SolverInterfaceImpl::advanceCouplingScheme()
+{
+  PRECICE_DEBUG("Advance coupling scheme");
+  // Orchestrate local and remote mesh changes
+  std::vector<MeshID> localChanges;
+
+  [[maybe_unused]] auto remoteChanges1 = _couplingScheme->firstSynchronization(localChanges);
+  _couplingScheme->firstExchange();
+  // Orchestrate remote mesh changes (local ones were handled in the first sync)
+  [[maybe_unused]] auto remoteChanges2 = _couplingScheme->secondSynchronization();
+  _couplingScheme->secondExchange();
 }
 
 void SolverInterfaceImpl::closeCommunicationChannels(CloseChannels close)

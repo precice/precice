@@ -24,7 +24,7 @@
     </mesh>
 
     <participant name="SolverOne">
-      <use-mesh name="MeshOne" provide="yes" />
+      <provide-mesh name="MeshOne" />
       <write-data name="Forces" mesh="MeshOne" />
       <read-data name="Velocities" mesh="MeshOne" />
       <action:recorder timing="on-time-window-complete-post" mesh="MeshOne" />
@@ -35,8 +35,8 @@
     </participant>
 
     <participant name="SolverTwo">
-      <use-mesh name="MeshOne" from="SolverOne" />
-      <use-mesh name="MeshTwo" provide="yes" />
+      <receive-mesh name="MeshOne" from="SolverOne" />
+      <provide-mesh name="MeshTwo" />
       <mapping:nearest-neighbor
         direction="write"
         from="MeshTwo"

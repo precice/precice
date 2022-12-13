@@ -16,9 +16,9 @@
     </mesh>
 
     <participant name="A">
-      <use-mesh name="MeshATop" provide="yes" />
-      <use-mesh name="MeshABottom" provide="yes" />
-      <use-mesh name="MeshB" from="B" />
+      <provide-mesh name="MeshATop" />
+      <provide-mesh name="MeshABottom" />
+      <receive-mesh name="MeshB" from="B" />
       <read-data name="Pressure" mesh="MeshATop" />
       <read-data name="Pressure" mesh="MeshABottom" />
       <mapping:nearest-neighbor
@@ -34,7 +34,7 @@
     </participant>
 
     <participant name="B">
-      <use-mesh name="MeshB" provide="yes" />
+      <provide-mesh name="MeshB" />
       <write-data name="Pressure" mesh="MeshB" />
     </participant>
 

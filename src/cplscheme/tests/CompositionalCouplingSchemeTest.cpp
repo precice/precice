@@ -92,9 +92,6 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
     BOOST_TEST(mesh->data().size() == 3);
     BOOST_TEST(mesh->vertices().size() > 0);
 
-    std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
-    std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
-
     double computedTime      = 0.0;
     int    computedTimesteps = 0;
 
@@ -104,14 +101,18 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
       BOOST_TEST(not cplScheme->isTimeWindowComplete());
       BOOST_TEST(cplScheme->isCouplingOngoing());
       while (cplScheme->isCouplingOngoing()) {
+        BOOST_REQUIRE(computedTime < 1.1);
         BOOST_TEST(testing::equals(0.1, cplScheme->getNextTimestepMaxLength()));
-        if (cplScheme->isActionRequired(writeIterationCheckpoint)) {
-          cplScheme->markActionFulfilled(writeIterationCheckpoint);
+        if (cplScheme->isActionRequired(CouplingScheme::Action::WriteCheckpoint)) {
+          cplScheme->markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
         }
         cplScheme->addComputedTime(cplScheme->getNextTimestepMaxLength());
-        cplScheme->advance();
-        if (cplScheme->isActionRequired(readIterationCheckpoint)) {
-          cplScheme->markActionFulfilled(readIterationCheckpoint);
+        cplScheme->firstSynchronization({});
+        cplScheme->firstExchange();
+        cplScheme->secondSynchronization();
+        cplScheme->secondExchange();
+        if (cplScheme->isActionRequired(CouplingScheme::Action::ReadCheckpoint)) {
+          cplScheme->markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
         } else {
           BOOST_TEST(cplScheme->isTimeWindowComplete());
           computedTime += cplScheme->getNextTimestepMaxLength();
@@ -134,14 +135,18 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
       BOOST_TEST(not cplScheme->isTimeWindowComplete());
       BOOST_TEST(cplScheme->isCouplingOngoing());
       while (cplScheme->isCouplingOngoing()) {
+        BOOST_REQUIRE(computedTime < 1.1);
         BOOST_TEST(testing::equals(0.1, cplScheme->getNextTimestepMaxLength()));
-        if (cplScheme->isActionRequired(writeIterationCheckpoint)) {
-          cplScheme->markActionFulfilled(writeIterationCheckpoint);
+        if (cplScheme->isActionRequired(CouplingScheme::Action::WriteCheckpoint)) {
+          cplScheme->markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
         }
         cplScheme->addComputedTime(cplScheme->getNextTimestepMaxLength());
-        cplScheme->advance();
-        if (cplScheme->isActionRequired(readIterationCheckpoint)) {
-          cplScheme->markActionFulfilled(readIterationCheckpoint);
+        cplScheme->firstSynchronization({});
+        cplScheme->firstExchange();
+        cplScheme->secondSynchronization();
+        cplScheme->secondExchange();
+        if (cplScheme->isActionRequired(CouplingScheme::Action::ReadCheckpoint)) {
+          cplScheme->markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
         } else {
           BOOST_TEST(cplScheme->isTimeWindowComplete());
           computedTime += cplScheme->getNextTimestepMaxLength();
@@ -165,14 +170,18 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
       BOOST_TEST(not cplScheme->isTimeWindowComplete());
       BOOST_TEST(cplScheme->isCouplingOngoing());
       while (cplScheme->isCouplingOngoing()) {
+        BOOST_REQUIRE(computedTime < 1.1);
         BOOST_TEST(testing::equals(0.1, cplScheme->getNextTimestepMaxLength()));
-        if (cplScheme->isActionRequired(writeIterationCheckpoint)) {
-          cplScheme->markActionFulfilled(writeIterationCheckpoint);
+        if (cplScheme->isActionRequired(CouplingScheme::Action::WriteCheckpoint)) {
+          cplScheme->markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
         }
         cplScheme->addComputedTime(cplScheme->getNextTimestepMaxLength());
-        cplScheme->advance();
-        if (cplScheme->isActionRequired(readIterationCheckpoint)) {
-          cplScheme->markActionFulfilled(readIterationCheckpoint);
+        cplScheme->firstSynchronization({});
+        cplScheme->firstExchange();
+        cplScheme->secondSynchronization();
+        cplScheme->secondExchange();
+        if (cplScheme->isActionRequired(CouplingScheme::Action::ReadCheckpoint)) {
+          cplScheme->markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
         } else {
           BOOST_TEST(cplScheme->isTimeWindowComplete());
           computedTime += cplScheme->getNextTimestepMaxLength();
@@ -210,58 +219,10 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
 
 BOOST_AUTO_TEST_SUITE(DummySchemeCompositionTests)
 
-/// Test one explicit dummy coupling scheme
-BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1)
-{
-  PRECICE_TEST(1_rank, Require::Events);
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
-  std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
-
-  int                         numberIterations = 1;
-  int                         maxTimesteps     = 10;
-  PtrCouplingScheme           scheme(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
-  CompositionalCouplingScheme composition;
-  composition.addCouplingScheme(scheme);
-  composition.initialize(0.0, 1);
-  int advances = 0;
-  while (composition.isCouplingOngoing()) {
-    composition.advance();
-    advances++;
-  }
-  composition.finalize();
-  BOOST_TEST(advances == 10);
-  BOOST_TEST(scheme->getTimeWindows() - 1 == 10);
-}
-
-// Test one implicit dummy coupling scheme
-BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit1)
-{
-  PRECICE_TEST(1_rank, Require::Events);
-  std::string                 writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
-  std::string                 readIterationCheckpoint(constants::actionReadIterationCheckpoint());
-  int                         numberIterations = 2;
-  int                         maxTimesteps     = 10;
-  PtrCouplingScheme           scheme(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
-  CompositionalCouplingScheme composition;
-  composition.addCouplingScheme(scheme);
-  composition.initialize(0.0, 1);
-  int advances = 0;
-  while (composition.isCouplingOngoing()) {
-    composition.advance();
-    advances++;
-  }
-  composition.finalize();
-  BOOST_TEST(advances == 20);
-  BOOST_TEST(scheme->getTimeWindows() - 1 == 10);
-}
-
 // Test two explicit dummy coupling schemes
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit2)
 {
   PRECICE_TEST(1_rank, Require::Events);
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
-  std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
-
   int               numberIterations = 1;
   int               maxTimesteps     = 10;
   PtrCouplingScheme scheme1(
@@ -274,7 +235,10 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit2)
   composition.initialize(0.0, 1);
   int advances = 0;
   while (composition.isCouplingOngoing()) {
-    composition.advance();
+    composition.firstSynchronization({});
+    composition.firstExchange();
+    composition.secondSynchronization();
+    composition.secondExchange();
     advances++;
   }
   composition.finalize();
@@ -287,9 +251,6 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit2)
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit3)
 {
   PRECICE_TEST(1_rank, Require::Events);
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
-  std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
-
   int               numberIterations = 1;
   int               maxTimesteps     = 10;
   PtrCouplingScheme scheme1(
@@ -305,7 +266,10 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit3)
   composition.initialize(0.0, 1);
   int advances = 0;
   while (composition.isCouplingOngoing()) {
-    composition.advance();
+    composition.firstSynchronization({});
+    composition.firstExchange();
+    composition.secondSynchronization();
+    composition.secondExchange();
     advances++;
   }
   composition.finalize();
@@ -315,171 +279,10 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit3)
   BOOST_TEST(scheme3->getTimeWindows() - 1 == 10);
 }
 
-// Test two implicit dummy coupling schemes
-BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2)
-{
-  PRECICE_TEST(1_rank, Require::Events);
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
-  std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
-
-  int               numberIterations = 2;
-  int               maxTimesteps     = 10;
-  PtrCouplingScheme scheme1(
-      new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
-  PtrCouplingScheme scheme2(
-      new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
-  CompositionalCouplingScheme composition;
-  composition.addCouplingScheme(scheme1);
-  composition.addCouplingScheme(scheme2);
-  composition.initialize(0.0, 1);
-  int advances = 0;
-  while (composition.isCouplingOngoing()) {
-    composition.advance();
-    advances++;
-    if (advances % 2 == 1) {
-      BOOST_TEST(scheme1->isActionRequired(readIterationCheckpoint));
-      BOOST_TEST(scheme2->isActionRequired(readIterationCheckpoint));
-    } else if (advances % 2 == 0) {
-      BOOST_TEST(scheme1->isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(scheme2->isActionRequired(writeIterationCheckpoint));
-    }
-  }
-  composition.finalize();
-  BOOST_TEST(advances == 20);
-  BOOST_TEST(scheme1->getTimeWindows() - 1 == 10);
-  BOOST_TEST(scheme2->getTimeWindows() - 1 == 10);
-}
-
-// Test two implicit dummy coupling schemes with different iteration number
-BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2DiffIteration)
-{
-  PRECICE_TEST(1_rank, Require::Events);
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
-  std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
-
-  int               numberIterations = 2;
-  int               maxTimesteps     = 10;
-  PtrCouplingScheme scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
-  numberIterations = 3;
-  PtrCouplingScheme           scheme2(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
-  CompositionalCouplingScheme composition;
-  composition.addCouplingScheme(scheme1);
-  composition.addCouplingScheme(scheme2);
-  composition.initialize(0.0, 1);
-  int advances = 0;
-  while (composition.isCouplingOngoing()) {
-    composition.advance();
-    advances++;
-    if (advances % 3 == 2) {
-      BOOST_TEST(scheme1->isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(scheme2->isActionRequired(readIterationCheckpoint));
-    } else if (advances % 3 == 1) {
-      BOOST_TEST(scheme1->isActionRequired(readIterationCheckpoint));
-      BOOST_TEST(scheme2->isActionRequired(readIterationCheckpoint));
-    } else if (advances % 3 == 0) {
-      BOOST_TEST(scheme1->isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(scheme2->isActionRequired(writeIterationCheckpoint));
-    }
-  }
-  composition.finalize();
-  BOOST_TEST(advances == 30);
-  BOOST_TEST(scheme1->getTimeWindows() - 1 == 10);
-  BOOST_TEST(scheme2->getTimeWindows() - 1 == 10);
-}
-
-// Test three implicit dummy coupling schemes
-BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit3)
-{
-  PRECICE_TEST(1_rank, Require::Events);
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
-  std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
-
-  int                         numberIterations = 2;
-  int                         maxTimesteps     = 10;
-  PtrCouplingScheme           scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
-  PtrCouplingScheme           scheme2(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
-  PtrCouplingScheme           scheme3(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
-  CompositionalCouplingScheme composition;
-  composition.addCouplingScheme(scheme1);
-  composition.addCouplingScheme(scheme2);
-  composition.addCouplingScheme(scheme3);
-  composition.initialize(0.0, 1);
-  int advances = 0;
-  while (composition.isCouplingOngoing()) {
-    composition.advance();
-    advances++;
-    if (advances % 2 == 0) {
-      BOOST_TEST(scheme1->isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(scheme2->isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(scheme3->isActionRequired(writeIterationCheckpoint));
-    } else {
-      BOOST_TEST(scheme1->isActionRequired(readIterationCheckpoint));
-      BOOST_TEST(scheme2->isActionRequired(readIterationCheckpoint));
-      BOOST_TEST(scheme3->isActionRequired(readIterationCheckpoint));
-    }
-  }
-  composition.finalize();
-  BOOST_TEST(advances == 20);
-  BOOST_TEST(scheme1->getTimeWindows() - 1 == 10);
-  BOOST_TEST(scheme2->getTimeWindows() - 1 == 10);
-  BOOST_TEST(scheme3->getTimeWindows() - 1 == 10);
-}
-
-// Test three implicit dummy coupling schemes with different iteration number
-BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit3DiffIteration)
-{
-  PRECICE_TEST(1_rank, Require::Events);
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
-  std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
-
-  int               numberIterations = 3;
-  int               maxTimesteps     = 10;
-  PtrCouplingScheme scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
-  numberIterations = 4;
-  PtrCouplingScheme scheme2(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
-  numberIterations = 2;
-  PtrCouplingScheme           scheme3(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
-  CompositionalCouplingScheme composition;
-  composition.addCouplingScheme(scheme1);
-  composition.addCouplingScheme(scheme2);
-  composition.addCouplingScheme(scheme3);
-  composition.initialize(0.0, 1);
-  int advances = 0;
-  while (composition.isCouplingOngoing()) {
-    composition.advance();
-    advances++;
-    if (advances % 4 == 0) {
-      BOOST_TEST(scheme1->isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(scheme2->isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(scheme3->isActionRequired(writeIterationCheckpoint));
-    } else if (advances % 4 == 1) {
-      BOOST_TEST(scheme1->isActionRequired(readIterationCheckpoint));
-      BOOST_TEST(scheme2->isActionRequired(readIterationCheckpoint));
-      BOOST_TEST(scheme3->isActionRequired(readIterationCheckpoint));
-    } else if (advances % 4 == 2) {
-      BOOST_TEST(scheme1->isActionRequired(readIterationCheckpoint));
-      BOOST_TEST(scheme2->isActionRequired(readIterationCheckpoint));
-      BOOST_TEST(scheme3->isActionRequired(writeIterationCheckpoint));
-    } else if (advances % 4 == 3) {
-      BOOST_TEST(scheme1->isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(scheme2->isActionRequired(readIterationCheckpoint));
-      BOOST_TEST(scheme3->isActionRequired(writeIterationCheckpoint));
-    }
-  }
-  composition.finalize();
-  BOOST_TEST(advances == 40);
-  BOOST_TEST(scheme1->getTimeWindows() - 1 == 10);
-  BOOST_TEST(scheme2->getTimeWindows() - 1 == 10);
-  BOOST_TEST(scheme3->getTimeWindows() - 1 == 10);
-}
-
 // Test E, I(2)
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit2)
 {
   PRECICE_TEST(1_rank, Require::Events);
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
-  std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
-
   int               numberIterations = 1;
   int               maxTimesteps     = 10;
   PtrCouplingScheme scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
@@ -490,15 +293,26 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit2)
   composition.addCouplingScheme(scheme2);
   composition.initialize(0.0, 1);
   int advances = 0;
+  BOOST_TEST_MESSAGE("Init Expl " << scheme1->getTimeWindows());
+  BOOST_TEST_MESSAGE("Init Impl " << scheme2->getTimeWindows());
   while (composition.isCouplingOngoing()) {
-    composition.advance();
+    composition.firstSynchronization({});
+    composition.firstExchange();
+    composition.secondSynchronization();
+    composition.secondExchange();
     advances++;
-    if (advances % 2 == 0) {
-      BOOST_TEST(scheme2->isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(scheme1->getTimeWindows() - 1 == advances / 2);
-    } else {
-      BOOST_TEST(scheme2->isActionRequired(readIterationCheckpoint));
-      BOOST_TEST(scheme1->getTimeWindows() - 1 == (advances + 1) / 2);
+    // a 1, e 2, i 2
+    BOOST_TEST_CONTEXT("Advance Nr " << advances)
+    {
+      BOOST_TEST_MESSAGE("Expl " << scheme1->getTimeWindows());
+      BOOST_TEST_MESSAGE("Impl " << scheme2->getTimeWindows());
+      if (advances % 2 == 0) {
+        BOOST_TEST(scheme2->isActionRequired(CouplingScheme::Action::WriteCheckpoint));
+        BOOST_TEST(scheme1->getTimeWindows() - 1 == advances / 2);
+      } else {
+        BOOST_TEST(scheme2->isActionRequired(CouplingScheme::Action::ReadCheckpoint));
+        BOOST_TEST(scheme1->getTimeWindows() - 1 == (advances + 1) / 2);
+      }
     }
   }
   composition.finalize();
@@ -511,9 +325,6 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit2)
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2Explicit1)
 {
   PRECICE_TEST(1_rank, Require::Events);
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
-  std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
-
   int               numberIterations = 2;
   int               maxTimesteps     = 10;
   PtrCouplingScheme scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
@@ -525,13 +336,16 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2Explicit1)
   composition.initialize(0.0, 1);
   int advances = 0;
   while (composition.isCouplingOngoing()) {
-    composition.advance();
+    composition.firstSynchronization({});
+    composition.firstExchange();
+    composition.secondSynchronization();
+    composition.secondExchange();
     advances++;
     if (advances % 2 == 0) {
-      BOOST_TEST(scheme1->isActionRequired(writeIterationCheckpoint));
+      BOOST_TEST(scheme1->isActionRequired(CouplingScheme::Action::WriteCheckpoint));
       BOOST_TEST(scheme1->getTimeWindows() - 1 == advances / 2);
     } else {
-      BOOST_TEST(scheme1->isActionRequired(readIterationCheckpoint));
+      BOOST_TEST(scheme1->isActionRequired(CouplingScheme::Action::ReadCheckpoint));
       BOOST_TEST(scheme1->getTimeWindows() - 1 == (advances - 1) / 2);
     }
   }
@@ -545,9 +359,6 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2Explicit1)
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit3)
 {
   PRECICE_TEST(1_rank, Require::Events);
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
-  std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
-
   int               numberIterations = 1;
   int               maxTimesteps     = 10;
   PtrCouplingScheme scheme1(
@@ -561,13 +372,16 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit3)
   composition.initialize(0.0, 1);
   int advances = 0;
   while (composition.isCouplingOngoing()) {
-    composition.advance();
+    composition.firstSynchronization({});
+    composition.firstExchange();
+    composition.secondSynchronization();
+    composition.secondExchange();
     advances++;
     if (advances % 3 == 0) {
-      BOOST_TEST(scheme2->isActionRequired(writeIterationCheckpoint));
+      BOOST_TEST(scheme2->isActionRequired(CouplingScheme::Action::WriteCheckpoint));
       BOOST_TEST(scheme1->getTimeWindows() - 1 == advances / 3);
     } else {
-      BOOST_TEST(scheme2->isActionRequired(readIterationCheckpoint));
+      BOOST_TEST(scheme2->isActionRequired(CouplingScheme::Action::ReadCheckpoint));
       BOOST_TEST(scheme1->getTimeWindows() - 1 == (advances + (3 - advances % 3)) / 3);
     }
   }
@@ -581,9 +395,6 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit3)
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit3Explicit1)
 {
   PRECICE_TEST(1_rank, Require::Events);
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
-  std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
-
   int               numberIterations = 3;
   int               maxTimesteps     = 10;
   PtrCouplingScheme scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
@@ -595,13 +406,16 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit3Explicit1)
   composition.initialize(0.0, 1);
   int advances = 0;
   while (composition.isCouplingOngoing()) {
-    composition.advance();
+    composition.firstSynchronization({});
+    composition.firstExchange();
+    composition.secondSynchronization();
+    composition.secondExchange();
     advances++;
     if (advances % 3 == 0) {
-      BOOST_TEST(scheme1->isActionRequired(writeIterationCheckpoint));
+      BOOST_TEST(scheme1->isActionRequired(CouplingScheme::Action::WriteCheckpoint));
       BOOST_TEST(scheme1->getTimeWindows() - 1 == advances / 3);
     } else {
-      BOOST_TEST(scheme1->isActionRequired(readIterationCheckpoint));
+      BOOST_TEST(scheme1->isActionRequired(CouplingScheme::Action::ReadCheckpoint));
       BOOST_TEST(scheme1->getTimeWindows() - 1 == (advances - (advances % 3)) / 3);
     }
   }
@@ -609,220 +423,6 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit3Explicit1)
   BOOST_TEST(advances == 30);
   BOOST_TEST(scheme1->getTimeWindows() - 1 == 10);
   BOOST_TEST(scheme2->getTimeWindows() - 1 == 10);
-}
-
-// Test E, I(2), I(2)
-BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit2Implicit2)
-{
-  PRECICE_TEST(1_rank, Require::Events);
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
-  std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
-
-  int               numberIterations = 1;
-  int               maxTimesteps     = 10;
-  PtrCouplingScheme scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
-  numberIterations = 2;
-  PtrCouplingScheme           scheme2(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
-  PtrCouplingScheme           scheme3(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
-  CompositionalCouplingScheme composition;
-  composition.addCouplingScheme(scheme1);
-  composition.addCouplingScheme(scheme2);
-  composition.addCouplingScheme(scheme3);
-  composition.initialize(0.0, 1);
-  int advances = 0;
-  while (composition.isCouplingOngoing()) {
-    composition.advance();
-    advances++;
-    if (advances % 2 == 0) {
-      BOOST_TEST(scheme2->isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(scheme3->isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(scheme1->getTimeWindows() - 1 == advances / 2);
-    } else {
-      BOOST_TEST(scheme2->isActionRequired(readIterationCheckpoint));
-      BOOST_TEST(scheme3->isActionRequired(readIterationCheckpoint));
-      BOOST_TEST(scheme1->getTimeWindows() - 1 == (advances + 1) / 2);
-    }
-  }
-  composition.finalize();
-  BOOST_TEST(advances == 20);
-  BOOST_TEST(scheme1->getTimeWindows() - 1 == 10);
-  BOOST_TEST(scheme2->getTimeWindows() - 1 == 10);
-  BOOST_TEST(scheme3->getTimeWindows() - 1 == 10);
-}
-
-// Test E, I(2), I(3)
-BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit2Implicit3)
-{
-  PRECICE_TEST(1_rank, Require::Events);
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
-  std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
-
-  int               numberIterations = 1;
-  int               maxTimesteps     = 10;
-  PtrCouplingScheme scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
-  numberIterations = 2;
-  PtrCouplingScheme scheme2(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
-  numberIterations = 3;
-  PtrCouplingScheme           scheme3(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
-  CompositionalCouplingScheme composition;
-  composition.addCouplingScheme(scheme1);
-  composition.addCouplingScheme(scheme2);
-  composition.addCouplingScheme(scheme3);
-  composition.initialize(0.0, 1);
-  int advances = 0;
-  while (composition.isCouplingOngoing()) {
-    composition.advance();
-    advances++;
-    if (advances % 3 == 0) {
-      BOOST_TEST(scheme1->getTimeWindows() - 1 == advances / 3);
-      BOOST_TEST(scheme2->isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(scheme3->isActionRequired(writeIterationCheckpoint));
-    } else if (advances % 3 == 1) {
-      BOOST_TEST(scheme2->isActionRequired(readIterationCheckpoint));
-      BOOST_TEST(scheme3->isActionRequired(readIterationCheckpoint));
-      BOOST_TEST(scheme1->getTimeWindows() - 1 == (advances + 2) / 3);
-    } else if (advances % 3 == 2) {
-      BOOST_TEST(scheme2->isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(scheme3->isActionRequired(readIterationCheckpoint));
-      BOOST_TEST(scheme1->getTimeWindows() - 1 == (advances + 1) / 3);
-    }
-  }
-  composition.finalize();
-  BOOST_TEST(advances == 30);
-  BOOST_TEST(scheme1->getTimeWindows() - 1 == 10);
-  BOOST_TEST(scheme2->getTimeWindows() - 1 == 10);
-  BOOST_TEST(scheme3->getTimeWindows() - 1 == 10);
-}
-
-// Test I(2), I(2), E
-BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2Implicit2Explicit1)
-{
-  PRECICE_TEST(1_rank, Require::Events);
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
-  std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
-
-  int               numberIterations = 2;
-  int               maxTimesteps     = 10;
-  PtrCouplingScheme scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
-  PtrCouplingScheme scheme2(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
-  numberIterations = 1;
-  PtrCouplingScheme           scheme3(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
-  CompositionalCouplingScheme composition;
-  composition.addCouplingScheme(scheme1);
-  composition.addCouplingScheme(scheme2);
-  composition.addCouplingScheme(scheme3);
-  composition.initialize(0.0, 1);
-  int advances = 0;
-  while (composition.isCouplingOngoing()) {
-    composition.advance();
-    advances++;
-    if (advances % 2 == 0) {
-      BOOST_TEST(scheme1->isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(scheme2->isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(scheme1->getTimeWindows() - 1 == advances / 2);
-      BOOST_TEST(scheme2->getTimeWindows() - 1 == advances / 2);
-      BOOST_TEST(scheme3->getTimeWindows() - 1 == advances / 2);
-    } else {
-      BOOST_TEST(scheme1->isActionRequired(readIterationCheckpoint));
-      BOOST_TEST(scheme2->isActionRequired(readIterationCheckpoint));
-      BOOST_TEST(scheme1->getTimeWindows() - 1 == (advances - 1) / 2);
-      BOOST_TEST(scheme2->getTimeWindows() - 1 == (advances - 1) / 2);
-      BOOST_TEST(scheme3->getTimeWindows() - 1 == (advances - 1) / 2);
-    }
-  }
-  composition.finalize();
-  BOOST_TEST(advances == 20);
-  BOOST_TEST(scheme1->getTimeWindows() - 1 == 10);
-  BOOST_TEST(scheme2->getTimeWindows() - 1 == 10);
-  BOOST_TEST(scheme3->getTimeWindows() - 1 == 10);
-}
-
-// Test I(2), I(2), E
-BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2Implicit2Explicit1DiffIterations)
-{
-  PRECICE_TEST(1_rank, Require::Events);
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
-  std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
-
-  int               numberIterations = 3;
-  int               maxTimesteps     = 10;
-  PtrCouplingScheme scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
-  numberIterations = 2;
-  PtrCouplingScheme scheme2(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
-  numberIterations = 1;
-  PtrCouplingScheme           scheme3(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
-  CompositionalCouplingScheme composition;
-  composition.addCouplingScheme(scheme1);
-  composition.addCouplingScheme(scheme2);
-  composition.addCouplingScheme(scheme3);
-  composition.initialize(0.0, 1);
-  int advances = 0;
-  while (composition.isCouplingOngoing()) {
-    composition.advance();
-    advances++;
-    if (advances % 3 == 0) {
-      BOOST_TEST(scheme1->isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(scheme2->isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(scheme1->getTimeWindows() - 1 == advances / 3);
-      BOOST_TEST(scheme2->getTimeWindows() - 1 == advances / 3);
-      BOOST_TEST(scheme3->getTimeWindows() - 1 == advances / 3);
-    } else if (advances % 3 == 1) {
-      BOOST_TEST(scheme1->isActionRequired(readIterationCheckpoint));
-      BOOST_TEST(scheme2->isActionRequired(readIterationCheckpoint));
-      BOOST_TEST(scheme1->getTimeWindows() - 1 == (advances - 1) / 3);
-      BOOST_TEST(scheme2->getTimeWindows() - 1 == (advances - 1) / 3);
-      BOOST_TEST(scheme3->getTimeWindows() - 1 == (advances - 1) / 3);
-    } else if (advances % 3 == 2) {
-      BOOST_TEST(scheme1->isActionRequired(readIterationCheckpoint));
-      BOOST_TEST(scheme2->isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(scheme1->getTimeWindows() - 1 == (advances - 2) / 3);
-      BOOST_TEST(scheme2->getTimeWindows() - 1 == (advances + 1) / 3);
-      BOOST_TEST(scheme3->getTimeWindows() - 1 == (advances - 2) / 3);
-    }
-  }
-  composition.finalize();
-  BOOST_TEST(advances == 30);
-  BOOST_TEST(scheme1->getTimeWindows() - 1 == 10);
-  BOOST_TEST(scheme2->getTimeWindows() - 1 == 10);
-  BOOST_TEST(scheme3->getTimeWindows() - 1 == 10);
-}
-
-BOOST_AUTO_TEST_CASE(testDummySchemeCompositionUntitled) /// @todo give a better name, what is this test doing?
-{
-  PRECICE_TEST(1_rank, Require::Events);
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
-  std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
-
-  int               numberIterations = 3;
-  int               maxTimesteps     = 10;
-  PtrCouplingScheme scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
-  numberIterations = 1;
-  PtrCouplingScheme scheme2(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
-  numberIterations = 2;
-  PtrCouplingScheme           scheme3(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
-  CompositionalCouplingScheme composition;
-  composition.addCouplingScheme(scheme1);
-  composition.addCouplingScheme(scheme2);
-  composition.addCouplingScheme(scheme3);
-  composition.initialize(0.0, 1);
-  int advances = 0;
-  while (composition.isCouplingOngoing()) {
-    composition.advance();
-    advances++;
-    if (advances % 4 >= 3) {
-      BOOST_TEST(scheme1->isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(scheme1->getTimeWindows() - 1 == (advances - (advances % 4) + 4) / 4);
-    } else if (advances % 4 != 0) {
-      BOOST_TEST(scheme1->isActionRequired(readIterationCheckpoint));
-    }
-    BOOST_TEST(scheme2->getTimeWindows() - 1 == (advances + 1) / 4);
-    BOOST_TEST(scheme2->getTimeWindows() - 1 == (advances + 1) / 4);
-  }
-  composition.finalize();
-  BOOST_TEST(advances == 40);
-  BOOST_TEST(scheme1->getTimeWindows() - 1 == 10);
-  BOOST_TEST(scheme2->getTimeWindows() - 1 == 10);
-  BOOST_TEST(scheme3->getTimeWindows() - 1 == 10);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -835,15 +435,6 @@ BOOST_AUTO_TEST_CASE(testExplicitSchemeComposition1)
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), "Participant2"_on(1_rank), Require::Events);
 
   std::string configPath(_pathToTests + "multi-solver-coupling-1.xml");
-  setupAndRunThreeSolverCoupling(configPath, context);
-}
-
-/// Test that runs on 3 processors.
-BOOST_AUTO_TEST_CASE(testImplicitSchemeComposition)
-{
-  PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), "Participant2"_on(1_rank), Require::Events);
-
-  std::string configPath(_pathToTests + "multi-solver-coupling-2.xml");
   setupAndRunThreeSolverCoupling(configPath, context);
 }
 

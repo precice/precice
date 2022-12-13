@@ -30,9 +30,9 @@ void testVectorGradientFunctions(const TestContext &context, const bool writeBlo
     int    indices[2] = {0, 1};
     interface.writeBlockVectorData(dataID, 2, indices, values);
 
-    BOOST_TEST(interface.isGradientDataRequired(dataID) == true);
+    BOOST_TEST(interface.requiresGradientDataFor(dataID) == true);
 
-    if (interface.isGradientDataRequired(dataID)) {
+    if (interface.requiresGradientDataFor(dataID)) {
 
       std::vector<double> gradientValues({1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0,
                                           10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0});
@@ -62,7 +62,7 @@ void testVectorGradientFunctions(const TestContext &context, const bool writeBlo
     interface.setMeshVertex(meshTwoID, posTwo.data());
 
     double maxDt = interface.initialize();
-    BOOST_TEST(interface.isGradientDataRequired(dataID) == false);
+    BOOST_TEST(interface.requiresGradientDataFor(dataID) == false);
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant should have to advance once!");
 
     double valueData[6];

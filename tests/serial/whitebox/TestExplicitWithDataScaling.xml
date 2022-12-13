@@ -17,7 +17,7 @@
     <m2n:sockets from="SolverOne" to="SolverTwo" />
 
     <participant name="SolverOne">
-      <use-mesh name="Test-Square-One" provide="yes" />
+      <provide-mesh name="Test-Square-One" />
       <write-data name="Velocities" mesh="Test-Square-One" />
       <read-data name="Forces" mesh="Test-Square-One" />
       <action:divide-by-area timing="on-exchange-post" mesh="Test-Square-One">
@@ -26,8 +26,8 @@
     </participant>
 
     <participant name="SolverTwo">
-      <use-mesh name="Test-Square-Two" provide="yes" />
-      <use-mesh name="Test-Square-One" from="SolverOne" />
+      <provide-mesh name="Test-Square-Two" />
+      <receive-mesh name="Test-Square-One" from="SolverOne" />
       <write-data name="Forces" mesh="Test-Square-Two" />
       <read-data name="Velocities" mesh="Test-Square-Two" />
       <mapping:nearest-neighbor

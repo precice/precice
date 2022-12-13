@@ -104,7 +104,7 @@ SOURCES_BASE = """#
 # This file lists all sources that will be compiles into the precice library
 #
 
-target_sources(precice
+target_sources(preciceCore
     PRIVATE
     {}
     )
