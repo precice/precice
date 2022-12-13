@@ -686,13 +686,13 @@ void BaseCouplingScheme::doImplicitStep()
   storeExtrapolationData();
 
   PRECICE_DEBUG("measure convergence of the coupling iteration");
-  bool convergence = measureConvergence();
+  _hasConverged = measureConvergence();
   // Stop, when maximal iteration count (given in config) is reached
   if (_iterations == _maxIterations)
-    convergence = true;
+    _hasConverged = true;
 
   // coupling iteration converged for current time window. Advance in time.
-  if (convergence) {
+  if (_hasConverged) {
     if (_acceleration) {
       _acceleration->iterationsConverged(getAccelerationData());
     }
@@ -720,15 +720,12 @@ void BaseCouplingScheme::doImplicitStep()
       }
     }
   }
-
-  if (convergence) {
+  // @todo move this part into another function where we also trigger the move for the storage?
+  if (_hasConverged) {
     moveToNextWindow();
   }
-
   // Store data for conv. measurement, acceleration
   storeIteration();
-
-  _hasConverged = convergence;
 }
 
 void BaseCouplingScheme::sendConvergence(const m2n::PtrM2N &m2n)
