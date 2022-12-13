@@ -1,4 +1,5 @@
 #include <cstddef>
+#include <iterator>
 #include <memory>
 #include <numeric>
 #include <utility>
@@ -133,37 +134,152 @@ private:
   std::vector<int> content;
 };
 
-#if 0
-
 class SerializedBoundingBoxMap {
 public:
   using BoundingBoxMap = std::map<Rank, mesh::BoundingBox>;
 
-  static SerializedBoundingBoxMap serialize(const BoundingBoxMap &bbm);
-  BoundingBoxMap                  toBoundingBoxMap() const;
+  static SerializedBoundingBoxMap serialize(const BoundingBoxMap &bbm)
+  {
+    if (bbm.empty()) {
+      SerializedBoundingBoxMap sbbm;
+      sbbm.info = {0};
+      return sbbm;
+    }
 
-  void assertValid() const;
+    SerializedBoundingBoxMap sbbm;
+    auto &                   info   = sbbm.info;
+    auto &                   coords = sbbm.coords;
 
-  void                            sendTo(Communication &communication, int rankReceiver);
-  static SerializedBoundingBoxMap receiveFrom(Communication &communication, int rankSender);
+    // Entries, dimensions, ranks
+    auto size = bbm.size();
+    info.reserve(2 + size);
+    const auto dims = bbm.begin()->second.getDimension();
+    PRECICE_ASSERT(dims == 2 || dims == 3);
+    info.push_back(size);
+    info.push_back(dims);
+    coords.reserve(size * dims);
 
-  void                            broadcastSend(Communication &communication);
-  static SerializedBoundingBoxMap broadcastReceive(Communication &communication);
+    for (const auto &[rank, bb] : bbm) {
+      info.push_back(rank);
+      auto min = bb.minCorner();
+      std::copy_n(min.data(), dims, std::back_inserter(coords));
+      auto max = bb.maxCorner();
+      std::copy_n(max.data(), dims, std::back_inserter(coords));
+    }
+    sbbm.assertValid();
+    return sbbm;
+  }
+
+  BoundingBoxMap toBoundingBoxMap() const
+  {
+    if (info.size() == 1) {
+      return {};
+    }
+
+    auto size = info[0];
+    auto dims = info[1];
+
+    BoundingBoxMap bbm;
+
+    ///@todo replace the coord mess after refactoring of AABB to min and max points
+    std::vector<double> buffer(dims * 2);
+
+    auto rankIter  = std::next(info.begin(), 2);
+    auto coordIter = coords.begin();
+    for (int entry = 0; entry < size; ++entry) {
+      // Copy coords into buffer
+      // Input:  minX, minY, minZ, maxX, maxY, maxZ
+      // Output: minX, maxX minY, maxY, minZ, maxZ
+      for (int d = 0; d < dims; ++d) {
+        auto offset        = d * 2;
+        buffer[offset]     = coordIter[d];        // min
+        buffer[offset + 1] = coordIter[d + dims]; // max
+      }
+      bbm.emplace(*rankIter, mesh::BoundingBox(buffer));
+
+      // advance the input iterators
+      std::advance(rankIter, 1);
+      std::advance(coordIter, dims * 2);
+    }
+    return bbm;
+  }
+
+  void assertValid() const
+  {
+    PRECICE_ASSERT(!info.empty());
+    if (info.size() == 1) {
+      PRECICE_ASSERT(info.front() == 0);
+      PRECICE_ASSERT(coords.empty());
+      return;
+    }
+
+    auto numEntries = info[0];
+    PRECICE_ASSERT(static_cast<size_t>(numEntries) + 2 == info.size());
+    auto dims = info[1];
+    PRECICE_ASSERT(dims == 2 || dims == 3);
+
+    PRECICE_ASSERT(coords.size() == static_cast<size_t>(numEntries * dims * 2));
+    for (int entry = 0; entry < numEntries; ++entry) {
+      PRECICE_ASSERT(info[2 + entry] >= 0);
+    }
+  }
+
+  void sendTo(Communication &communication, int rankReceiver)
+  {
+    communication.sendRange(info, rankReceiver);
+    if (info.size() > 1) {
+      communication.sendRange(coords, rankReceiver);
+    }
+  }
+
+  static SerializedBoundingBoxMap receiveFrom(Communication &communication, int rankSender)
+  {
+    SerializedBoundingBoxMap sbbm;
+    sbbm.info = communication.receiveRange(rankSender, AsVectorTag<int>{});
+    if (sbbm.info.size() > 1) {
+      sbbm.coords = communication.receiveRange(rankSender, AsVectorTag<double>{});
+    }
+    sbbm.assertValid();
+    return sbbm;
+  }
+
+  void broadcastSend(Communication &communication)
+  {
+    communication.broadcast(info);
+    if (info.size() > 1) {
+      communication.broadcast(coords);
+    }
+  }
+
+  static SerializedBoundingBoxMap broadcastReceive(Communication &communication)
+  {
+    SerializedBoundingBoxMap sbbm;
+    communication.broadcast(sbbm.info, 0);
+    if (sbbm.info.size() > 1) {
+      communication.broadcast(sbbm.coords, 0);
+    }
+    sbbm.assertValid();
+    return sbbm;
+  }
 
 private:
   SerializedBoundingBoxMap() = default;
 
-  /// Num entries, Rank0, Rank1, ...
-  std::vector<int> ranks;
+  /** Num entries, Dimensions, Rank0, Rank1, ...
+   *
+   * If there are no entries, then the serialization cannot deduce the amount of dimensions.
+   * In this case the serialization will only contain 0!
+   */
 
-  /** Dimensions followed by AABB coords
+  std::vector<int> info;
+
+  /** AABB coords
    * For 2D: 2, MinX0, MinY0, MaxX0, MaxY0, ...
    * For 3D: 3, MinX0, MinY0, MinZ0, MaxX0, MaxY0, MaxZ0, ...
    */
   std::vector<double> coords;
 };
 
-#endif
 } // namespace precice::com::serialize
 
 namespace precice::com {
@@ -197,11 +313,7 @@ void CommunicateBoundingBox::sendBoundingBoxMap(
 {
 
   PRECICE_TRACE(rankReceiver);
-  _communication->send(static_cast<int>(bbm.size()), rankReceiver);
-
-  for (const auto &bb : bbm) {
-    sendBoundingBox(bb.second, rankReceiver);
-  }
+  serialize::SerializedBoundingBoxMap::serialize(bbm).sendTo(*_communication, rankReceiver);
 }
 
 void CommunicateBoundingBox::receiveBoundingBoxMap(
@@ -209,14 +321,8 @@ void CommunicateBoundingBox::receiveBoundingBoxMap(
     int                         rankSender)
 {
   PRECICE_TRACE(rankSender);
-  int sizeOfReceivingMap;
-  _communication->receive(sizeOfReceivingMap, rankSender);
 
-  PRECICE_ASSERT(sizeOfReceivingMap == (int) bbm.size(), "Incoming size of map is not compatible");
-
-  for (auto &bb : bbm) {
-    receiveBoundingBox(bb.second, rankSender);
-  }
+  bbm = serialize::SerializedBoundingBoxMap::receiveFrom(*_communication, rankSender).toBoundingBoxMap();
 }
 
 void CommunicateBoundingBox::sendConnectionMap(
@@ -240,28 +346,16 @@ void CommunicateBoundingBox::broadcastSendBoundingBoxMap(
     mesh::Mesh::BoundingBoxMap &bbm)
 {
   PRECICE_TRACE();
-  _communication->broadcast(static_cast<int>(bbm.size()));
 
-  for (const auto &rank : bbm) {
-    _communication->broadcast(rank.second.dataVector());
-  }
+  serialize::SerializedBoundingBoxMap::serialize(bbm).broadcastSend(*_communication);
 }
 
 void CommunicateBoundingBox::broadcastReceiveBoundingBoxMap(
     mesh::Mesh::BoundingBoxMap &bbm)
 {
   PRECICE_TRACE();
-  int sizeOfReceivingMap;
-  _communication->broadcast(sizeOfReceivingMap, 0);
-  PRECICE_ASSERT(sizeOfReceivingMap == (int) bbm.size());
 
-  std::vector<double> receivedData;
-
-  for (int i = 0; i < sizeOfReceivingMap; ++i) {
-    _communication->broadcast(receivedData, 0);
-    mesh::BoundingBox tempBB(receivedData);
-    bbm.at(i) = std::move(tempBB);
-  }
+  bbm = serialize::SerializedBoundingBoxMap::broadcastReceive(*_communication).toBoundingBoxMap();
 }
 
 void CommunicateBoundingBox::broadcastSendConnectionMap(
