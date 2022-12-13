@@ -1,0 +1,94 @@
+#pragma once
+
+#include <map>
+#include <vector>
+
+#include "logging/Logger.hpp"
+#include "mesh/Mesh.hpp"
+
+namespace precice::com {
+class Communication;
+
+namespace serialize {
+
+class SerializedConnectionMap {
+public:
+  using ConnectionMap = std::map<Rank, std::vector<VertexID>>;
+
+  static SerializedConnectionMap serialize(const ConnectionMap &cm);
+
+  ConnectionMap toConnectionMap() const;
+
+  void assertValid() const;
+
+  void sendTo(Communication &communication, int rankReceiver) const;
+
+  static SerializedConnectionMap receiveFrom(Communication &communication, int rankSender);
+
+  void broadcastSend(Communication &communication) const;
+
+  static SerializedConnectionMap broadcastReceive(Communication &communication);
+
+private:
+  SerializedConnectionMap() = default;
+
+  /// Num entries, Rank0, Size0, Entries0, Rank1, Size1, Entries0 ...
+  /// @TODO move to size_t once we changed VertexIDs to size_t
+  std::vector<int> content;
+};
+
+class SerializedBoundingBoxMap {
+public:
+  using BoundingBoxMap = std::map<Rank, mesh::BoundingBox>;
+
+  static SerializedBoundingBoxMap serialize(const BoundingBoxMap &bbm);
+
+  BoundingBoxMap toBoundingBoxMap() const;
+
+  void assertValid() const;
+
+  void sendTo(Communication &communication, int rankReceiver);
+
+  static SerializedBoundingBoxMap receiveFrom(Communication &communication, int rankSender);
+
+  void broadcastSend(Communication &communication);
+
+  static SerializedBoundingBoxMap broadcastReceive(Communication &communication);
+
+private:
+  SerializedBoundingBoxMap() = default;
+
+  /** Num entries, Dimensions, Rank0, Rank1, ...
+   *
+   * If there are no entries, then the serialization cannot deduce the amount of dimensions.
+   * In this case the serialization will only contain 0!
+   */
+
+  std::vector<int> info;
+
+  /** AABB coords
+   * For 2D: 2, MinX0, MinY0, MaxX0, MaxY0, ...
+   * For 3D: 3, MinX0, MinY0, MinZ0, MaxX0, MaxY0, MaxZ0, ...
+   */
+  std::vector<double> coords;
+};
+
+} // namespace serialize
+
+void sendConnectionMap(Communication &communication, int rankReceiver, const mesh::Mesh::ConnectionMap &cm);
+
+void receiveConnectionMap(Communication &communication, int rankSender, mesh::Mesh::ConnectionMap &cm);
+
+void broadcastSendConnectionMap(Communication &communication, const mesh::Mesh::ConnectionMap &cm);
+
+void broadcastReceiveConnectionMap(Communication &communication, mesh::Mesh::ConnectionMap &cm);
+
+void sendBoundingBoxMap(Communication &communication, int rankReceiver, const mesh::Mesh::BoundingBoxMap &bbm);
+
+void receiveBoundingBoxMap(Communication &communication, int rankSender, mesh::Mesh::BoundingBoxMap &bbm);
+
+void broadcastSendBoundingBoxMap(Communication &communication, const mesh::Mesh::BoundingBoxMap &bbm);
+
+void broadcastReceiveBoundingBoxMap(Communication &communication, mesh::Mesh::BoundingBoxMap &bbm);
+
+} // namespace precice::com

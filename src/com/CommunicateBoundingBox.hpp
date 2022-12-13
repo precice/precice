@@ -1,10 +1,9 @@
 #pragma once
-#include <map>
-#include <string>
+
 #include <vector>
+
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
-#include "mesh/Mesh.hpp"
 
 namespace precice {
 namespace mesh {
@@ -27,36 +26,6 @@ public:
   void receiveBoundingBox(
       mesh::BoundingBox &bb,
       int                rankSender);
-
-  void sendBoundingBoxMap(
-      mesh::Mesh::BoundingBoxMap &bbm,
-      int                         rankReceiver);
-
-  void receiveBoundingBoxMap(
-      mesh::Mesh::BoundingBoxMap &bbm,
-      int                         rankSender);
-
-  void sendConnectionMap(
-      std::map<int, std::vector<int>> const &fbm,
-      int                                    rankReceiver);
-
-  void receiveConnectionMap(
-      std::map<int, std::vector<int>> &fbm,
-      int                              rankSender);
-
-  /// This method broadcasts the set of bounding boxes (gathered in the primary rank) to the secondary ranks.
-  void broadcastSendBoundingBoxMap(
-      mesh::Mesh::BoundingBoxMap &bbm);
-
-  /// Secondary ranks call this method to receive the set of bounding boxes sent by the primary rank.
-  void broadcastReceiveBoundingBoxMap(
-      mesh::Mesh::BoundingBoxMap &bbm);
-
-  void broadcastSendConnectionMap(
-      std::map<int, std::vector<int>> const &fbm);
-
-  void broadcastReceiveConnectionMap(
-      std::map<int, std::vector<int>> &fbm);
 
 private:
   logging::Logger _log{"com::CommunicateBoundingBox"};
