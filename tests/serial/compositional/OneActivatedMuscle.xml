@@ -54,10 +54,10 @@
     </mesh>
 
     <participant name="M1SM">
-      <use-mesh name="Surface_Mesh1" provide="yes" />
-      <use-mesh name="SurfaceTendon_Mesh1" from="Tendon" />
-      <use-mesh name="Activation_M1SM_Mesh" provide="yes" />
-      <use-mesh name="Stretch_M1SM_Mesh" provide="yes" />
+      <provide-mesh name="Surface_Mesh1" />
+      <receive-mesh name="SurfaceTendon_Mesh1" from="Tendon" />
+      <provide-mesh name="Activation_M1SM_Mesh" />
+      <provide-mesh name="Stretch_M1SM_Mesh" />
       <mapping:nearest-neighbor
         direction="write"
         from="Surface_Mesh1"
@@ -75,9 +75,9 @@
     </participant>
 
     <participant name="M2SM">
-      <use-mesh name="Surface_Mesh2" provide="yes" />
-      <use-mesh name="SurfaceTendon_Mesh2" from="Tendon" />
-      <use-mesh name="Stretch_M2SM_Mesh" provide="yes" />
+      <provide-mesh name="Surface_Mesh2" />
+      <receive-mesh name="SurfaceTendon_Mesh2" from="Tendon" />
+      <provide-mesh name="Stretch_M2SM_Mesh" />
       <mapping:nearest-neighbor
         direction="write"
         from="Surface_Mesh2"
@@ -94,8 +94,8 @@
     </participant>
 
     <participant name="Tendon">
-      <use-mesh name="SurfaceTendon_Mesh1" provide="yes" />
-      <use-mesh name="SurfaceTendon_Mesh2" provide="yes" />
+      <provide-mesh name="SurfaceTendon_Mesh1" />
+      <provide-mesh name="SurfaceTendon_Mesh2" />
       <read-data name="Displacement1" mesh="SurfaceTendon_Mesh1" />
       <write-data name="Traction1" mesh="SurfaceTendon_Mesh1" />
       <write-data name="Displacement2" mesh="SurfaceTendon_Mesh2" />

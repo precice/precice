@@ -59,8 +59,8 @@
     </mesh>
 
     <participant name="M1SM">
-      <use-mesh name="Surface_Mesh1" provide="yes" />
-      <use-mesh name="Surface_Mesh2" from="M2SM" />
+      <provide-mesh name="Surface_Mesh1" />
+      <receive-mesh name="Surface_Mesh2" from="M2SM" />
       <mapping:nearest-neighbor
         direction="write"
         from="Surface_Mesh1"
@@ -71,8 +71,8 @@
         from="Surface_Mesh2"
         to="Surface_Mesh1"
         constraint="consistent" />
-      <use-mesh name="Activation_M1SM_Mesh" provide="yes" />
-      <use-mesh name="Stretch_M1SM_Mesh" provide="yes" />
+      <provide-mesh name="Activation_M1SM_Mesh" />
+      <provide-mesh name="Stretch_M1SM_Mesh" />
       <read-data name="Activation1" mesh="Activation_M1SM_Mesh" />
       <write-data name="Stretch1" mesh="Stretch_M1SM_Mesh" />
       <write-data name="Displacement" mesh="Surface_Mesh1" />
@@ -80,9 +80,9 @@
     </participant>
 
     <participant name="M2SM">
-      <use-mesh name="Surface_Mesh2" provide="yes" />
-      <use-mesh name="Activation_M2SM_Mesh" provide="yes" />
-      <use-mesh name="Stretch_M2SM_Mesh" provide="yes" />
+      <provide-mesh name="Surface_Mesh2" />
+      <provide-mesh name="Activation_M2SM_Mesh" />
+      <provide-mesh name="Stretch_M2SM_Mesh" />
       <read-data name="Activation2" mesh="Activation_M2SM_Mesh" />
       <write-data name="Stretch2" mesh="Stretch_M2SM_Mesh" />
       <write-data name="Traction" mesh="Surface_Mesh2" />
@@ -90,22 +90,22 @@
     </participant>
 
     <participant name="M1">
-      <use-mesh name="Activation_M1_Mesh" provide="yes" />
-      <use-mesh name="Activation_M1SM_Mesh" from="M1SM" />
+      <provide-mesh name="Activation_M1_Mesh" />
+      <receive-mesh name="Activation_M1SM_Mesh" from="M1SM" />
       <mapping:nearest-neighbor
         direction="write"
         from="Activation_M1_Mesh"
         to="Activation_M1SM_Mesh"
         constraint="consistent" />
-      <use-mesh name="Stretch_M1_Mesh" provide="yes" />
-      <use-mesh name="Stretch_M1_Cross_Mesh" provide="yes" />
-      <use-mesh name="Stretch_M1SM_Mesh" from="M1SM" />
+      <provide-mesh name="Stretch_M1_Mesh" />
+      <provide-mesh name="Stretch_M1_Cross_Mesh" />
+      <receive-mesh name="Stretch_M1SM_Mesh" from="M1SM" />
       <mapping:nearest-neighbor
         direction="read"
         to="Stretch_M1_Mesh"
         from="Stretch_M1SM_Mesh"
         constraint="consistent" />
-      <use-mesh name="Stretch_M2SM_Mesh" from="M2SM" />
+      <receive-mesh name="Stretch_M2SM_Mesh" from="M2SM" />
       <mapping:nearest-neighbor
         direction="read"
         from="Stretch_M2SM_Mesh"
@@ -117,22 +117,22 @@
     </participant>
 
     <participant name="M2">
-      <use-mesh name="Activation_M2_Mesh" provide="yes" />
-      <use-mesh name="Activation_M2SM_Mesh" from="M1SM" />
+      <provide-mesh name="Activation_M2_Mesh" />
+      <receive-mesh name="Activation_M2SM_Mesh" from="M1SM" />
       <mapping:nearest-neighbor
         direction="write"
         from="Activation_M2_Mesh"
         to="Activation_M2SM_Mesh"
         constraint="consistent" />
-      <use-mesh name="Stretch_M2_Mesh" provide="yes" />
-      <use-mesh name="Stretch_M2_Cross_Mesh" provide="yes" />
-      <use-mesh name="Stretch_M2SM_Mesh" from="M2SM" />
+      <provide-mesh name="Stretch_M2_Mesh" />
+      <provide-mesh name="Stretch_M2_Cross_Mesh" />
+      <receive-mesh name="Stretch_M2SM_Mesh" from="M2SM" />
       <mapping:nearest-neighbor
         direction="read"
         to="Stretch_M2_Mesh"
         from="Stretch_M2SM_Mesh"
         constraint="consistent" />
-      <use-mesh name="Stretch_M1SM_Mesh" from="M1SM" />
+      <receive-mesh name="Stretch_M1SM_Mesh" from="M1SM" />
       <mapping:nearest-neighbor
         direction="read"
         from="Stretch_M1SM_Mesh"
