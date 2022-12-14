@@ -264,15 +264,19 @@ public:
    * Connectivity is optional.
    * Use requiresMeshConnectivityFor() to check if the current participant can make use of the connectivity.
    *
-   * Only set the mesh connectivity that you require and use the face/cell elements that your solver provides.
-   * preCICE removes all connectivity duplicates in initialize() and ensures
-   * the existence of hierarchical entries for the projection fallback.
+   * Only set the mesh connectivity that you require for your use-case and use the face/cell elements that your solver provides.
+   * preCICE removes all connectivity duplicates in initialize().
    *
-   * Examples for hierarchical entries:
+   * We recommend you to do the following depending on your case:
    *
-   * - setting triangle ABC ensures the existence of edges AB, BC, and AC.
-   * - setting triangles ABC and BCD separately will result in duplicate BC edges.
-   * - setting quad ABCD ensures the existence of triangles ABC ABD ACD BCD and edges AB AC AD BC BD CD.
+   * - **2D surface coupling:** Use setMeshEdge() and setMeshEdges() to specify the coupling interface.
+   * - **2D volume coupling:** Use setMeshTriangle() and setMeshTriangles() to specify the coupling area.
+   * - **3D surface coupling:** Use setMeshTriangle() and setMeshTriangles() to specify the coupling interface.
+   * - **3D volume coupling:** Use setMeshTetrahedron() and setMeshTetrahedra() to specify the coupling volume.
+   *
+   * As an alternative to triangles, preCICE supports **planar** quads using setMeshQuad() and setMeshQuads().
+   * These quads will be triangulated by preCICE, hence specifying triangles is generally preferred.
+   * Before using quads, we recommended to check if your solver provides a way to traverse triangulated faces.
    *
    *@{
    */

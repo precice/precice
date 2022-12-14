@@ -418,6 +418,10 @@ auto sortedVertexPtrsForImpl(Primitive &p, std::integer_sequence<int, Indices...
 }
 
 /** returns a tuple of Vertex* sorted by ptr of the Primitive
+ *
+ * This uniquely identifies a primitive, provides a weak order to allow sorting,
+ * and allows to directly fetch each Vertex to later create the primitive in the mesh.
+ *
  * Requires Primitive to provide static constexpr vertexCount.
  * Generates an integer sequence based on the vertexCount, which is then expanded to fill the array.
  */
