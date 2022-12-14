@@ -278,14 +278,14 @@ double SolverInterfaceImpl::initialize()
   Event                    e("initialize", precice::syncMode);
   utils::ScopedEventPrefix sep("initialize/");
 
-  PRECICE_DEBUG("Compressing provided meshes");
-  Event e1("mesh compression", precice::syncMode);
+  PRECICE_DEBUG("Preprocessing provided meshes");
   for (MeshContext *meshContext : _accessor->usedMeshContexts()) {
     if (meshContext->provideMesh) {
+      auto &mesh = *(meshContext->mesh);
+      Event e("preprocess." + mesh.getName(), precice::syncMode);
       meshContext->mesh->preprocess();
     }
   }
-  e1.stop();
 
   // Setup communication
 
