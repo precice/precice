@@ -914,13 +914,11 @@ void SolverInterfaceImpl::setMeshQuad(
     auto coords = mesh::coordsFor(mesh, vertexIDs);
     PRECICE_CHECK(utils::unique_elements(coords),
                   "The four vertices that form the quad are not unique. The resulting shape may be a point, line or triangle."
-                  "Please check that the adapter sends the four unique vertices that form the quad, or that the mesh on the interface "
-                  "is composed of quads. A mix of triangles and quads are not supported.");
+                  "Please check that the adapter sends the four unique vertices that form the quad, or that the mesh on the interface is composed of quads.");
 
     auto convexity = math::geometry::isConvexQuad(coords);
     PRECICE_CHECK(convexity.convex, "The given quad is not convex. "
-                                    "Please check that the adapter send the four correct vertices or that the interface is composed of quads. "
-                                    "A mix of triangles and quads are not supported.");
+                                    "Please check that the adapter send the four correct vertices or that the interface is composed of quads.");
     auto reordered = utils::reorder_array(convexity.vertexOrder, mesh::vertexPtrsFor(mesh, vertexIDs));
 
     // Vertices are now in the order: V0-V1-V2-V3-V0.
@@ -975,14 +973,12 @@ void SolverInterfaceImpl::setMeshQuads(
     auto coords = mesh::coordsFor(mesh, vertexIDs);
     PRECICE_CHECK(utils::unique_elements(coords),
                   "The four vertices that form the quad nr {} are not unique. The resulting shape may be a point, line or triangle."
-                  "Please check that the adapter sends the four unique vertices that form the quad, or that the mesh on the interface "
-                  "is composed of quads. A mix of triangles and quads are not supported.",
+                  "Please check that the adapter sends the four unique vertices that form the quad, or that the mesh on the interface is composed of quads.",
                   i);
 
     auto convexity = math::geometry::isConvexQuad(coords);
     PRECICE_CHECK(convexity.convex, "The given quad nr {} is not convex. "
-                                    "Please check that the adapter send the four correct vertices or that the interface is composed of quads. "
-                                    "A mix of triangles and quads are not supported.",
+                                    "Please check that the adapter send the four correct vertices or that the interface is composed of quads.",
                   i);
     auto reordered = utils::reorder_array(convexity.vertexOrder, mesh::vertexPtrsFor(mesh, vertexIDs));
 
