@@ -488,6 +488,7 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   BOOST_CHECK(cplData); // no nullptr
   BOOST_TEST(cplData->getSize() == 1);
   BOOST_TEST(cplData->getPreviousIterationSize() == 1);
+  cplData->storeValuesAtTime(time::Storage::WINDOW_START, cplData->values());
 
   Fixture::moveToNextWindow(scheme);
 

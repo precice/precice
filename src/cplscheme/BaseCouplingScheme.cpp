@@ -305,6 +305,8 @@ void BaseCouplingScheme::moveToNextWindow()
   for (auto &pair : getAccelerationData()) {
     PRECICE_DEBUG("Store data: {}", pair.first);
     pair.second->moveToNextWindow();
+    pair.second->clearTimeStepsStorage();
+    pair.second->storeValuesAtTime(time::Storage::WINDOW_END, pair.second->values());
   }
 }
 
@@ -697,6 +699,7 @@ void BaseCouplingScheme::doImplicitStep()
       _acceleration->iterationsConverged(getAccelerationData());
     }
     newConvergenceMeasurements();
+    moveToNextWindow();
   } else {
     // no convergence achieved for the coupling iteration within the current time window
     if (_acceleration) {
@@ -719,10 +722,6 @@ void BaseCouplingScheme::doImplicitStep()
         pair.second->storeValuesAtTime(time::Storage::WINDOW_END, pair.second->values(), mustOverride);
       }
     }
-  }
-  // @todo move this part into another function where we also trigger the move for the storage?
-  if (_hasConverged) {
-    moveToNextWindow();
   }
   // Store data for conv. measurement, acceleration
   storeIteration();
