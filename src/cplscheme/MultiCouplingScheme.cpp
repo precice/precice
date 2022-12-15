@@ -147,7 +147,6 @@ typedef std::map<int, PtrCouplingData> DataMap;
 const DataMap MultiCouplingScheme::getAllData()
 {
   DataMap allData;
-  PRECICE_INFO("##### assembling allData() #####");
   // @todo user C++17 std::map::merge
   for (auto &sendExchange : _sendDataVector) {
     for (auto &sendData : sendExchange.second) {
@@ -161,13 +160,6 @@ const DataMap MultiCouplingScheme::getAllData()
     }
     allData.insert(receiveExchange.second.begin(), receiveExchange.second.end());
   }
-  PRECICE_INFO("##### assembling allData() done #####");
-
-  PRECICE_INFO("##### checking allData() #####");
-  for (auto &aData : allData) {
-    PRECICE_INFO("DataID: {} {}", aData.first, aData.second->getDataID());
-  }
-  PRECICE_INFO("##### checking allData() done #####");
   return allData;
 }
 
