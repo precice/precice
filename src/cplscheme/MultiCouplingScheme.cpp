@@ -91,6 +91,21 @@ void MultiCouplingScheme::exchangeInitialData()
   PRECICE_DEBUG("Initial data is exchanged in MultiCouplingScheme");
 }
 
+typedef std::map<int, PtrCouplingData> DataMap;
+
+const DataMap MultiCouplingScheme::getAllData()
+{
+  DataMap allData;
+  // @todo use C++17 std::map::merge
+  for (auto &sendData : _sendDataVector) {
+    allData.insert(sendData.second.begin(), sendData.second.end());
+  }
+  for (auto &receiveData : _receiveDataVector) {
+    allData.insert(receiveData.second.begin(), receiveData.second.end());
+  }
+  return allData;
+}
+
 void MultiCouplingScheme::exchangeFirstData()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
