@@ -262,10 +262,20 @@ protected:
   /// Map that links DataID to CouplingData
   typedef std::map<int, PtrCouplingData> DataMap;
 
-  /// Sends data sendDataIDs given in mapCouplingData with communication.
+  /**
+   * @brief Sends data sendDataIDs given in mapCouplingData with communication.
+   *
+   * @param m2n M2N used for communication
+   * @param sendData DataMap associated with sent data
+   */
   void sendData(const m2n::PtrM2N &m2n, const DataMap &sendData);
 
-  /// Receives data receiveDataIDs given in mapCouplingData with communication.
+  /**
+   * @brief Receives data receiveDataIDs given in mapCouplingData with communication.
+   *
+   * @param m2n M2N used for communication
+   * @param receiveData DataMap associated with received data
+   */
   void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData);
 
   /**
