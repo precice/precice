@@ -1,7 +1,18 @@
 #pragma once
 
+#include <array>
 #include "logging/Logger.hpp"
 #include "math/math.hpp"
+
+#ifndef PRECICE_NO_GINKGO
+
+#include <cuda.h>
+#include <cuda_runtime.h>
+#include "mapping/impl/DeviceBasisFunctions.cuh"
+
+#define SHARED_HOST_DEVICE_FUNCTION __host__ __device__
+
+#endif
 
 namespace precice {
 namespace mapping {
@@ -54,6 +65,30 @@ public:
   {
     return std::log(std::max(radius, math::NUMERICAL_ZERO_DIFFERENCE)) * math::pow_int<2>(radius);
   }
+
+#ifndef PRECICE_NO_GINKGO
+
+  std::array<double, 3> getFunctionParameters()
+  {
+    return _params;
+  }
+
+  const std::string getName() const
+  {
+    return this->_name;
+  }
+
+  const ThinPlateSplinesFunctor getFunctor() const
+  {
+    return this->_functor;
+  }
+
+private:
+  std::array<double, 3>         _params;
+  const std::string             _name = "ThinPlateSplines";
+  const ThinPlateSplinesFunctor _functor{};
+
+#endif
 };
 
 /**
@@ -73,6 +108,31 @@ public:
   {
     return std::sqrt(_cPow2 + math::pow_int<2>(radius));
   }
+
+#ifndef PRECICE_NO_GINKGO
+
+  std::array<double, 3> getFunctionParameters()
+  {
+    _params.at(0) = _cPow2;
+    return _params;
+  }
+
+  const std::string getName() const
+  {
+    return this->_name;
+  }
+
+  const MultiQuadraticsFunctor getFunctor() const
+  {
+    return this->_functor;
+  }
+
+private:
+  std::array<double, 3>        _params;
+  const std::string            _name = "Multiquadratics";
+  const MultiQuadraticsFunctor _functor{};
+
+#endif
 
 private:
   double _cPow2;
@@ -101,6 +161,31 @@ public:
     return 1.0 / std::sqrt(_cPow2 + math::pow_int<2>(radius));
   }
 
+#ifndef PRECICE_NO_GINKGO
+
+  std::array<double, 3> getFunctionParameters()
+  {
+    _params.at(0) = _cPow2;
+    return _params;
+  }
+
+  const std::string getName() const
+  {
+    return this->_name;
+  }
+
+  const InverseMultiquadricsFunctor getFunctor() const
+  {
+    return this->_functor;
+  }
+
+private:
+  std::array<double, 3>             _params;
+  const std::string                 _name = "InverseMultiquadratics";
+  const InverseMultiquadricsFunctor _functor{};
+
+#endif
+
 private:
   logging::Logger _log{"mapping::InverseMultiQuadrics"};
 
@@ -121,6 +206,30 @@ public:
   {
     return std::abs(radius);
   }
+
+#ifndef PRECICE_NO_GINKGO
+
+  std::array<double, 3> getFunctionParameters()
+  {
+    return _params;
+  }
+
+  const std::string getName() const
+  {
+    return this->_name;
+  }
+
+  const VolumeSplinesFunctor getFunctor() const
+  {
+    return this->_functor;
+  }
+
+private:
+  std::array<double, 3>      _params;
+  const std::string          _name = "VolumeSplines";
+  const VolumeSplinesFunctor _functor{};
+
+#endif
 };
 
 /**
@@ -163,6 +272,34 @@ public:
       return std::exp(-math::pow_int<2>(_shape * radius)) - _deltaY;
   }
 
+#ifndef PRECICE_NO_GINKGO
+
+  // TODO: Make precomputed
+  std::array<double, 3> getFunctionParameters()
+  {
+    _params.at(0) = _shape;
+    _params.at(1) = _supportRadius;
+    _params.at(2) = _deltaY;
+    return _params;
+  };
+
+  const std::string getName() const
+  {
+    return this->_name;
+  }
+
+  const GaussianFunctor getFunctor() const
+  {
+    return this->_functor;
+  }
+
+private:
+  std::array<double, 3> _params;
+  const std::string     _name = "Gaussian";
+  const GaussianFunctor _functor{};
+
+#endif
+public:
   /// Below that value the function is supposed to be zero. Defines the support radius if not explicitly given
   static constexpr double cutoffThreshold = 1e-9;
 
@@ -211,6 +348,31 @@ public:
     return 1.0 - 30.0 * math::pow_int<2>(p) - 10.0 * math::pow_int<3>(p) + 45.0 * math::pow_int<4>(p) - 6.0 * math::pow_int<5>(p) - math::pow_int<3>(p) * 60.0 * std::log(std::max(p, math::NUMERICAL_ZERO_DIFFERENCE));
   }
 
+#ifndef PRECICE_NO_GINKGO
+
+  std::array<double, 3> getFunctionParameters()
+  {
+    _params.at(0) = _r_inv;
+    return _params;
+  }
+
+  const std::string getName() const
+  {
+    return this->_name;
+  }
+
+  const CompactThinPlateSplinesC2Functor getFunctor() const
+  {
+    return this->_functor;
+  }
+
+private:
+  std::array<double, 3>                  _params;
+  const std::string                      _name = "CompactThinPlateSplinesC2";
+  const CompactThinPlateSplinesC2Functor _functor{};
+
+#endif
+
 private:
   logging::Logger _log{"mapping::CompactThinPlateSplinesC2"};
 
@@ -251,6 +413,31 @@ public:
     return math::pow_int<2>(1.0 - p);
   }
 
+#ifndef PRECICE_NO_GINKGO
+
+  std::array<double, 3> getFunctionParameters()
+  {
+    _params.at(0) = _r_inv;
+    return _params;
+  }
+
+  const std::string getName() const
+  {
+    return this->_name;
+  }
+
+  const CompactPolynomialC0Functor getFunctor() const
+  {
+    return this->_functor;
+  }
+
+private:
+  std::array<double, 3>            _params;
+  const std::string                _name = "CompactPolynomialC0";
+  const CompactPolynomialC0Functor _functor{};
+
+#endif
+
 private:
   double _r_inv;
 };
@@ -289,6 +476,31 @@ public:
       return 0.0;
     return math::pow_int<4>(1.0 - p) * (4 * p + 1);
   }
+
+#ifndef PRECICE_NO_GINKGO
+
+  std::array<double, 3> getFunctionParameters()
+  {
+    _params.at(0) = _r_inv;
+    return _params;
+  }
+
+  const std::string getName() const
+  {
+    return this->_name;
+  }
+
+  const CompactPolynomialC2Functor getFunctor() const
+  {
+    return this->_functor;
+  }
+
+private:
+  std::array<double, 3>            _params;
+  const std::string                _name = "CompactPolynomialC2";
+  const CompactPolynomialC2Functor _functor{};
+
+#endif
 
 private:
   double _r_inv;
@@ -329,6 +541,31 @@ public:
     return math::pow_int<6>(1.0 - p) * (35 * math::pow_int<2>(p) + 18 * p + 3);
   }
 
+#ifndef PRECICE_NO_GINKGO
+
+  std::array<double, 3> getFunctionParameters()
+  {
+    _params.at(0) = _r_inv;
+    return _params;
+  }
+
+  const std::string getName() const
+  {
+    return this->_name;
+  }
+
+  const CompactPolynomialC4Functor getFunctor() const
+  {
+    return this->_functor;
+  }
+
+private:
+  std::array<double, 3>            _params;
+  const std::string                _name = "CompactPolynomialC4";
+  const CompactPolynomialC4Functor _functor{};
+
+#endif
+
 private:
   double _r_inv;
 };
@@ -367,6 +604,31 @@ public:
       return 0.0;
     return math::pow_int<8>(1.0 - p) * (32.0 * math::pow_int<3>(p) + 25.0 * math::pow_int<2>(p) + 8.0 * p + 1.0);
   }
+
+#ifndef PRECICE_NO_GINKGO
+
+  std::array<double, 3> getFunctionParameters()
+  {
+    _params.at(0) = _r_inv;
+    return _params;
+  }
+
+  const std::string getName() const
+  {
+    return this->_name;
+  }
+
+  const CompactPolynomialC6Functor getFunctor() const
+  {
+    return this->_functor;
+  }
+
+private:
+  std::array<double, 3>            _params;
+  const std::string                _name = "CompactPolynomialC6";
+  const CompactPolynomialC6Functor _functor{};
+
+#endif
 
 private:
   double _r_inv;

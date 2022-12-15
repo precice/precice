@@ -14,6 +14,14 @@
 #include "utils/Event.hpp"
 #include "utils/IntraComm.hpp"
 
+#ifndef PRECICE_NO_GINKGO
+
+#include <ginkgo/ginkgo.hpp>
+using GinkgoVector = gko::matrix::Dense<double>;
+using GinkgoMatrix = gko::matrix::Dense<double>;
+
+#endif
+
 namespace precice {
 extern bool syncMode;
 
@@ -57,7 +65,11 @@ public:
 private:
   precice::logging::Logger _log{"mapping::RadialBasisFctMapping"};
 
+#ifndef PRECICE_NO_GINKGO
+  GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T> _rbfSolver;
+#else
   RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T> _rbfSolver;
+#endif
   /// @copydoc RadialBasisFctBaseMapping::mapConservative
   void mapConservative(DataID inputDataID, DataID outputDataID) final override;
 
@@ -146,8 +158,14 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       globalOutMesh.addMesh(*outMesh);
     }
 
+#ifndef PRECICE_NO_GINKGO
+    _rbfSolver.~GinkgoRadialBasisFctSolver();
+    new (&_rbfSolver) GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>{this->_basisFunction, globalInMesh, boost::irange<Eigen::Index>(0, globalInMesh.vertices().size()),
+                                                                          globalOutMesh, boost::irange<Eigen::Index>(0, globalOutMesh.vertices().size()), this->_deadAxis, _polynomial};
+#else
     _rbfSolver = RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>{this->_basisFunction, globalInMesh, boost::irange<Eigen::Index>(0, globalInMesh.vertices().size()),
                                                                globalOutMesh, boost::irange<Eigen::Index>(0, globalOutMesh.vertices().size()), this->_deadAxis, _polynomial};
+#endif
   }
   this->_hasComputedMapping = true;
   PRECICE_DEBUG("Compute Mapping is Completed.");
@@ -221,7 +239,11 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(DataID inpu
     // Construct Eigen vectors
     Eigen::Map<Eigen::VectorXd> inputValues(globalInValues.data(), globalInValues.size());
     Eigen::VectorXd             outputValues((this->output()->getGlobalNumberOfVertices()) * valueDim);
-    Eigen::VectorXd             in(_rbfSolver.getEvaluationMatrix().rows()); // rows == outputSize
+#ifndef PRECICE_NO_GINKGO
+    Eigen::VectorXd in(_rbfSolver.getEvaluationMatrix()->get_size()[0]); // rows == outputSize
+#else
+    Eigen::VectorXd in(_rbfSolver.getEvaluationMatrix().rows()); // rows == outputSize
+#endif
     outputValues.setZero();
 
     for (int dim = 0; dim < valueDim; dim++) {
@@ -327,14 +349,21 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inputD
       std::copy(localInData.data(), localInData.data() + localInData.size(), globalInValues.begin());
       outValuesSize.push_back(this->output()->data(outputDataID)->values().size());
     }
-
+#ifndef PRECICE_NO_GINKGO
+    Eigen::VectorXd in(_rbfSolver.getEvaluationMatrix()->get_size()[1]); // rows == n
+#else
     Eigen::VectorXd in(_rbfSolver.getEvaluationMatrix().cols()); // rows == n
+#endif
     in.setZero();
 
     // Construct Eigen vectors
     Eigen::Map<Eigen::VectorXd> inputValues(globalInValues.data(), globalInValues.size());
 
+#ifndef PRECICE_NO_GINKGO
+    Eigen::VectorXd outputValues((_rbfSolver.getEvaluationMatrix()->get_size()[0]) * valueDim); // TODO: Check for more memory efficient possibility
+#else
     Eigen::VectorXd outputValues((_rbfSolver.getEvaluationMatrix().rows()) * valueDim);
+#endif
     Eigen::VectorXd out;
     outputValues.setZero();
 

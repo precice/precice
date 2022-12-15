@@ -30,10 +30,17 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************<GINKGO LICENSE>*******************************/
 
+#include <cuda.h>
+#include <cuda_runtime.h>
+#include "mapping/impl/DeviceBasisFunctions.cuh" // TODO: Fix include
+
+#include <functional>
 #include <ginkgo/ginkgo.hpp>
 #include <stdio.h>
 
 #include <ginkgo/kernels/kernel_launch.hpp>
+
+#define SHARED_HOST_DEVICE_FUNCTION __host__ __device__
 
 namespace GKO_DEVICE_NAMESPACE {
 
@@ -41,61 +48,78 @@ using namespace gko::kernels::GKO_DEVICE_NAMESPACE;
 using vec = gko::matrix::Dense<double>;
 using mat = gko::matrix::Dense<double>;
 
-template <typename ValueType>
+template <typename ValueType, typename EvalFunctionType>
 void create_rbf_system_matrix(std::shared_ptr<const DefaultExecutor> exec,
-                              const std::size_t n1, const std::size_t n2, const ValueType rbf_shape,
-                              const ValueType support_radius, ValueType *mtx, ValueType *support_points,
-                              ValueType *target_points, const bool add_polynomial, const unsigned int extra_dims = 0)
+                              const std::size_t n1, const std::size_t n2, ValueType *mtx, ValueType *supportPoints,
+                              ValueType *targetPoints, EvalFunctionType f, const std::array<ValueType, 3> rbf_params, const bool addPolynomial, const unsigned int extraDims = 0)
 {
   run_kernel(
       exec,
-      GKO_KERNEL(auto i, auto j, auto N, auto mtx, auto support_points, auto target_points, auto support_radius, auto rbf_shape, auto add_polynomial, auto extra_dims) {
-        const unsigned int dim                  = 3;
-        const unsigned int row_length           = N + extra_dims;
-        const unsigned int center_coords_offset = 3 * j;
-        const unsigned int eval_coords_offset   = 3 * i;
-        float              dist                 = 0;
+      GKO_KERNEL(auto i, auto j, auto N, auto mtx, auto supportPoints, auto targetPoints, auto f, auto rbf_params, auto addPolynomial, auto extraDims) {
+        const unsigned int dim                = 3;
+        const unsigned int rowLength          = N + extraDims;
+        const unsigned int supportPointOffset = dim * j; // Point of current column
+        const unsigned int evalPointOffset    = dim * i; // Point of current row
+        double             dist               = 0;
 
         // Make each entry zero if polynomial is on since not every entry will be adjusted below
-        if (add_polynomial) {
-          mtx[i * row_length + j] = 0;
+        if (addPolynomial) {
+          mtx[i * rowLength + j] = 0;
         }
 
+        // Loop over each dimension and calculate euclidian distance
         for (size_t k = 0; k < dim; ++k) {
-          dist += (support_points[center_coords_offset + k] - target_points[eval_coords_offset + k]) * (support_points[center_coords_offset + k] - target_points[eval_coords_offset + k]);
+          dist += std::pow(supportPoints[supportPointOffset + k] - targetPoints[evalPointOffset + k], 2);
         }
 
-        dist         = sqrt(dist);
-        float result = 0.f;
-        if (dist <= support_radius) {
-          result = exp(-(rbf_shape * dist) * (rbf_shape * dist));
-        }
-        mtx[i * row_length + j] = result;
+        dist = std::sqrt(dist);
 
-        // Give first column responsibility for adding additional polynomial part (TODO: Optimize for GPU)
-        if (add_polynomial) {
-          if (j == 0) {
-            for (std::size_t k = 0; k < extra_dims - 1; ++k) {
-              mtx[i * row_length + N + k]              = target_points[eval_coords_offset + k];
-              mtx[N * row_length + k * row_length + i] = target_points[eval_coords_offset + k];
-            }
-            mtx[i * row_length + N + extra_dims - 1] = 1;
-            mtx[(row_length - 1) * row_length + i]   = 1;
-          }
-
-          // Fill lower right block of 0's (PAY ATTENTION TO BLOCKS!)
-          if (i == 0 && j < extra_dims) {
-            for (std::size_t k = 0; k < extra_dims; ++k) {
-              mtx[N * row_length + j * row_length + N + k] = 0;
-            }
-          }
-        }
+        mtx[i * rowLength + j] = f(dist, rbf_params);
       },
-      gko::dim<2>{n1, n2}, n2, mtx, support_points, target_points, support_radius, rbf_shape, add_polynomial, extra_dims);
+      gko::dim<2>{n1, n2}, n2, mtx, supportPoints, targetPoints, f, rbf_params, addPolynomial, extraDims);
 }
 
-template void create_rbf_system_matrix<double>(std::shared_ptr<const DefaultExecutor>, const std::size_t, const std::size_t,
-                                               const double, const double, double *, double *, double *, const bool, const unsigned int);
+// Here, we need to instantiate all possible variants for each basis function
+
+template void create_rbf_system_matrix<double, precice::mapping::ThinPlateSplinesFunctor>(std::shared_ptr<const DefaultExecutor>, const std::size_t, const std::size_t,
+                                                                                          double *, double *, double *, precice::mapping::ThinPlateSplinesFunctor, const std::array<double, 3>,
+                                                                                          const bool, const unsigned int);
+
+template void create_rbf_system_matrix<double, precice::mapping::MultiQuadraticsFunctor>(std::shared_ptr<const DefaultExecutor>, const std::size_t, const std::size_t,
+                                                                                         double *, double *, double *, precice::mapping::MultiQuadraticsFunctor, const std::array<double, 3>,
+                                                                                         const bool, const unsigned int);
+
+template void create_rbf_system_matrix<double, precice::mapping::InverseMultiquadricsFunctor>(std::shared_ptr<const DefaultExecutor>, const std::size_t, const std::size_t,
+                                                                                              double *, double *, double *, precice::mapping::InverseMultiquadricsFunctor, const std::array<double, 3>,
+                                                                                              const bool, const unsigned int);
+
+template void create_rbf_system_matrix<double, precice::mapping::VolumeSplinesFunctor>(std::shared_ptr<const DefaultExecutor>, const std::size_t, const std::size_t,
+                                                                                       double *, double *, double *, precice::mapping::VolumeSplinesFunctor, const std::array<double, 3>,
+                                                                                       const bool, const unsigned int);
+
+template void create_rbf_system_matrix<double, precice::mapping::GaussianFunctor>(std::shared_ptr<const DefaultExecutor>, const std::size_t, const std::size_t,
+                                                                                  double *, double *, double *, precice::mapping::GaussianFunctor, const std::array<double, 3>,
+                                                                                  const bool, const unsigned int);
+
+template void create_rbf_system_matrix<double, precice::mapping::CompactThinPlateSplinesC2Functor>(std::shared_ptr<const DefaultExecutor>, const std::size_t, const std::size_t,
+                                                                                                   double *, double *, double *, precice::mapping::CompactThinPlateSplinesC2Functor, const std::array<double, 3>,
+                                                                                                   const bool, const unsigned int);
+
+template void create_rbf_system_matrix<double, precice::mapping::CompactPolynomialC0Functor>(std::shared_ptr<const DefaultExecutor>, const std::size_t, const std::size_t,
+                                                                                             double *, double *, double *, precice::mapping::CompactPolynomialC0Functor, const std::array<double, 3>,
+                                                                                             const bool, const unsigned int);
+
+template void create_rbf_system_matrix<double, precice::mapping::CompactPolynomialC2Functor>(std::shared_ptr<const DefaultExecutor>, const std::size_t, const std::size_t,
+                                                                                             double *, double *, double *, precice::mapping::CompactPolynomialC2Functor, const std::array<double, 3>,
+                                                                                             const bool, const unsigned int);
+
+template void create_rbf_system_matrix<double, precice::mapping::CompactPolynomialC4Functor>(std::shared_ptr<const DefaultExecutor>, const std::size_t, const std::size_t,
+                                                                                             double *, double *, double *, precice::mapping::CompactPolynomialC4Functor, const std::array<double, 3>,
+                                                                                             const bool, const unsigned int);
+
+template void create_rbf_system_matrix<double, precice::mapping::CompactPolynomialC6Functor>(std::shared_ptr<const DefaultExecutor>, const std::size_t, const std::size_t,
+                                                                                             double *, double *, double *, precice::mapping::CompactPolynomialC6Functor, const std::array<double, 3>,
+                                                                                             const bool, const unsigned int);
 
 template <typename ValueType>
 void fill_polynomial_matrix(std::shared_ptr<const DefaultExecutor> exec,
@@ -104,9 +128,9 @@ void fill_polynomial_matrix(std::shared_ptr<const DefaultExecutor> exec,
   run_kernel(
       exec,
       GKO_KERNEL(auto i, auto j, auto N1, auto N2, auto mtx, auto x, auto dims) {
-        const unsigned int center_coords_offset = 3 * i;
+        const unsigned int supportPointOffset = 3 * i;
         if (j < dims - 1) {
-          mtx[i * dims + j] = x[center_coords_offset + j];
+          mtx[i * dims + j] = x[supportPointOffset + j];
         } else {
           mtx[i * dims + j] = 1;
         }
