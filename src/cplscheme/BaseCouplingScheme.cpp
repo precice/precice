@@ -660,7 +660,7 @@ void BaseCouplingScheme::doImplicitStep()
   storeExtrapolationData();
 
   PRECICE_DEBUG("measure convergence of the coupling iteration");
-  bool _hasConverged = measureConvergence();
+  _hasConverged = measureConvergence();
   // Stop, when maximal iteration count (given in config) is reached
   if (_iterations == _maxIterations)
     _hasConverged = true;
