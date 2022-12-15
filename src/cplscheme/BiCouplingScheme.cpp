@@ -104,6 +104,15 @@ std::vector<std::string> BiCouplingScheme::getCouplingPartners() const
   return partnerNames;
 }
 
+typedef std::map<int, PtrCouplingData> DataMap;
+
+const DataMap BiCouplingScheme::getAllData()
+{
+  DataMap allData{_sendData};
+  allData.insert(_receiveData.begin(), _receiveData.end());
+  return allData;
+}
+
 CouplingData *BiCouplingScheme::getSendData(
     DataID dataID)
 {

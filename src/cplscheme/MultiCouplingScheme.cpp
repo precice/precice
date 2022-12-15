@@ -147,18 +147,12 @@ typedef std::map<int, PtrCouplingData> DataMap;
 const DataMap MultiCouplingScheme::getAllData()
 {
   DataMap allData;
-  // @todo user C++17 std::map::merge
-  for (auto &sendExchange : _sendDataVector) {
-    for (auto &sendData : sendExchange.second) {
-      PRECICE_INFO("DataID: {} {}", sendData.first, sendData.second->getDataID());
-    }
-    allData.insert(sendExchange.second.begin(), sendExchange.second.end());
+  // @todo use C++17 std::map::merge
+  for (auto &sendData : _sendDataVector) {
+    allData.insert(sendData.second.begin(), sendData.second.end());
   }
-  for (auto &receiveExchange : _receiveDataVector) {
-    for (auto &receiveData : receiveExchange.second) {
-      PRECICE_INFO("DataID: {} {}", receiveData.first, receiveData.second->getDataID());
-    }
-    allData.insert(receiveExchange.second.begin(), receiveExchange.second.end());
+  for (auto &receiveData : _receiveDataVector) {
+    allData.insert(receiveData.second.begin(), receiveData.second.end());
   }
   return allData;
 }
@@ -198,11 +192,13 @@ void MultiCouplingScheme::exchangeSecondData()
     for (const auto &m2nPair : _m2ns) {
       sendConvergence(m2nPair.second);
     }
+
     for (auto &sendExchange : _sendDataVector) {
       sendData(_m2ns[sendExchange.first], sendExchange.second);
     }
   } else {
     receiveConvergence(_m2ns[_controller]);
+
     for (auto &receiveExchange : _receiveDataVector) {
       receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
     }
