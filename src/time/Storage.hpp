@@ -97,7 +97,7 @@ public:
   int nDofs();
 
   /**
-   * @brief Move this Storage by storing the value at the end of the Storage at 0.0 and clearing the storage. Time 1.0 is initialized as value at 0.0
+   * @brief Move this Storage by storing the value at the end of the Storage at 0.0 and clearing the storage. Time 1.0 is initialized with extrapolated value
    */
   void move();
 

@@ -136,6 +136,7 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
     }
 
     receivedDataIDs.push_back(pair.first);
+    pair.second->values() = pair.second->getValuesAtTime(time::Storage::WINDOW_END); // store received value at window end in mesh data.
   }
   PRECICE_DEBUG("Number of received data sets = {}", receivedDataIDs.size());
 }
@@ -190,14 +191,6 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
 
   storeTimeStepSendData(time::Storage::WINDOW_START);
   exchangeInitialData();
-
-  if (isImplicitCouplingScheme()) {
-    if (not doesFirstStep()) {
-      storeExtrapolationData();
-      moveToNextWindow();
-    }
-  }
-
   performReceiveOfFirstAdvance();
 
   _isInitialized = true;
@@ -287,26 +280,6 @@ void BaseCouplingScheme::secondExchange()
       PRECICE_ASSERT(_hasDataBeenReceived);
     }
     _computedTimeWindowPart = 0.0; // reset window
-  }
-}
-
-void BaseCouplingScheme::storeExtrapolationData()
-{
-  PRECICE_TRACE(_timeWindows);
-  for (auto &pair : getAllData()) {
-    PRECICE_DEBUG("Store data: {}", pair.first);
-    pair.second->storeExtrapolationData();
-  }
-}
-
-void BaseCouplingScheme::moveToNextWindow()
-{
-  PRECICE_TRACE(_timeWindows);
-  for (auto &pair : getAccelerationData()) {
-    PRECICE_DEBUG("Store data: {}", pair.first);
-    pair.second->moveToNextWindow();
-    pair.second->clearTimeStepsStorage();
-    pair.second->storeValuesAtTime(time::Storage::WINDOW_END, pair.second->values());
   }
 }
 
@@ -685,8 +658,6 @@ bool BaseCouplingScheme::anyDataRequiresInitialization(BaseCouplingScheme::DataM
 
 void BaseCouplingScheme::doImplicitStep()
 {
-  storeExtrapolationData();
-
   PRECICE_DEBUG("measure convergence of the coupling iteration");
   _hasConverged = measureConvergence();
   // Stop, when maximal iteration count (given in config) is reached
@@ -699,7 +670,6 @@ void BaseCouplingScheme::doImplicitStep()
       _acceleration->iterationsConverged(getAccelerationData());
     }
     newConvergenceMeasurements();
-    moveToNextWindow();
   } else {
     // no convergence achieved for the coupling iteration within the current time window
     if (_acceleration) {
@@ -723,8 +693,6 @@ void BaseCouplingScheme::doImplicitStep()
       }
     }
   }
-  // Store data for conv. measurement, acceleration
-  storeIteration();
 }
 
 void BaseCouplingScheme::sendConvergence(const m2n::PtrM2N &m2n)

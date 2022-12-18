@@ -32,13 +32,10 @@ void ParallelCouplingSchemeFixture::initializeStorages(cplscheme::ParallelCoupli
   cplscheme.initializeStorages();
 }
 
-void ParallelCouplingSchemeFixture::storeExtrapolationData(cplscheme::ParallelCouplingScheme &cplscheme)
-{
-  cplscheme.storeExtrapolationData();
-}
-
 void ParallelCouplingSchemeFixture::moveToNextWindow(cplscheme::ParallelCouplingScheme &cplscheme)
 {
-  cplscheme.moveToNextWindow();
+  for (const cplscheme::ParallelCouplingScheme::DataMap::value_type &pair : cplscheme.getAllData()) {
+    pair.second->moveTimeStepsStorage();
+  }
 }
 } // namespace precice::testing

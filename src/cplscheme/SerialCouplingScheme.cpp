@@ -118,12 +118,15 @@ void SerialCouplingScheme::exchangeSecondData()
     checkDataHasBeenReceived();
   }
 
-  if (hasConverged() && isCouplingOngoing()) {
+  if (hasConverged()) {
     // first participant received converged result of this window
     // second participant will receive result for next window
     for (const DataMap::value_type &pair : getAllData()) {
       pair.second->moveTimeStepsStorage();
     }
+  }
+  if (isImplicitCouplingScheme()) {
+    storeIteration();
   }
 
   if (!doesFirstStep()) { // second participant

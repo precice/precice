@@ -63,6 +63,9 @@ void ParallelCouplingScheme::exchangeSecondData()
       pair.second->moveTimeStepsStorage();
     }
   }
+  if (isImplicitCouplingScheme()) {
+    storeIteration();
+  }
 }
 
 } // namespace precice::cplscheme

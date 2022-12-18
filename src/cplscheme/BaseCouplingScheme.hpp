@@ -378,11 +378,6 @@ protected:
    */
   void doImplicitStep();
 
-  /**
-   * @brief stores current data in buffer for extrapolation
-   */
-  void storeExtrapolationData();
-
   virtual void clearTimeStepSendStorage() = 0;
 
   /**
@@ -391,11 +386,6 @@ protected:
    * @param relativeDt time where data is stored
    */
   virtual void storeTimeStepSendData(double relativeDt) = 0;
-
-  /**
-   * @brief finalizes this window's data and initializes data for next window.
-   */
-  void moveToNextWindow();
 
   /**
    * @brief used for storing all Data at end of doImplicitStep for later reference.

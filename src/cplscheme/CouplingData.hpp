@@ -3,7 +3,6 @@
 #include <Eigen/Core>
 #include <vector>
 #include "cplscheme/CouplingScheme.hpp"
-#include "cplscheme/impl/Extrapolation.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "time/Storage.hpp"
 #include "utils/assertion.hpp"
@@ -71,17 +70,11 @@ public:
   /// initialize _extrapolation
   void initializeExtrapolation();
 
-  /// move to next window and initialize data via extrapolation
-  void moveToNextWindow(); // @todo very easy to mix up with moveTimeStepsStorage. Try to rename or merge!
-
-  /// store current value in _extrapolation
-  void storeExtrapolationData();
-
   /// clears _timeStepsStorage. Called after data was written or before data is received.
   void clearTimeStepsStorage();
 
   /// moves _timeStepsStorage. Called after converged data was received.
-  void moveTimeStepsStorage(); // @todo very easy to mix up with moveToNextWindow. Try to rename or merge!
+  void moveTimeStepsStorage();
 
   /// stores data at key relativeDt in _timeStepsStorage for later use.
   void storeValuesAtTime(double relativeDt, Eigen::VectorXd data, bool mustOverrideExisting = false);
@@ -96,8 +89,7 @@ private:
    * Necessary when compiler creates template code for std::map::operator[].
    */
   CouplingData()
-      : requiresInitialization(false),
-        _extrapolation(CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER)
+      : requiresInitialization(false)
   {
     PRECICE_ASSERT(false);
   }
@@ -114,9 +106,6 @@ private:
 
   /// Mesh associated with this CouplingData
   mesh::PtrMesh _mesh;
-
-  /// Extrapolation associated with this CouplingData
-  cplscheme::impl::Extrapolation _extrapolation;
 
   /// Stores time steps in the current time window
   time::Storage _timeStepsStorage;

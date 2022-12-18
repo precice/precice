@@ -198,7 +198,6 @@ void MultiCouplingScheme::exchangeSecondData()
     }
   } else {
     receiveConvergence(_m2ns[_controller]);
-
     for (auto &receiveExchange : _receiveDataVector) {
       receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
     }
@@ -208,6 +207,9 @@ void MultiCouplingScheme::exchangeSecondData()
     for (const DataMap::value_type &data : getAllData()) {
       data.second->moveTimeStepsStorage();
     }
+  }
+  if (isImplicitCouplingScheme()) {
+    storeIteration();
   }
 }
 

@@ -22,8 +22,6 @@ struct ParallelCouplingSchemeFixture {
 
   static void initializeStorages(cplscheme::ParallelCouplingScheme &cplscheme);
 
-  static void storeExtrapolationData(cplscheme::ParallelCouplingScheme &cplscheme);
-
   static void moveToNextWindow(cplscheme::ParallelCouplingScheme &cplscheme);
 };
 } // namespace testing

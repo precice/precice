@@ -32,13 +32,10 @@ void SerialCouplingSchemeFixture::initializeStorages(cplscheme::SerialCouplingSc
   cplscheme.initializeStorages();
 }
 
-void SerialCouplingSchemeFixture::storeExtrapolationData(cplscheme::SerialCouplingScheme &cplscheme)
-{
-  cplscheme.storeExtrapolationData();
-}
-
 void SerialCouplingSchemeFixture::moveToNextWindow(cplscheme::SerialCouplingScheme &cplscheme)
 {
-  cplscheme.moveToNextWindow();
+  for (const cplscheme::SerialCouplingScheme::DataMap::value_type &pair : cplscheme.getAllData()) {
+    pair.second->moveTimeStepsStorage();
+  }
 }
 } // namespace precice::testing

@@ -489,6 +489,7 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   BOOST_TEST(cplData->getSize() == 1);
   BOOST_TEST(cplData->getPreviousIterationSize() == 1);
   cplData->storeValuesAtTime(time::Storage::WINDOW_START, cplData->values());
+  cplData->storeValuesAtTime(time::Storage::WINDOW_END, cplData->values());
 
   Fixture::moveToNextWindow(scheme);
 
@@ -497,9 +498,10 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 0.0));
 
   // start first window
+  cplData->clearTimeStepsStorage();
   cplData->values()(0) = 1.0; // data provided at end of first window
+  cplData->storeValuesAtTime(time::Storage::WINDOW_END, cplData->values());
   Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
-  Fixture::storeExtrapolationData(scheme);
   BOOST_TEST(testing::equals(cplData->values()(0), 1.0));
 
   // go to second window
@@ -508,9 +510,10 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   Fixture::storeIteration(scheme);
   BOOST_TEST(testing::equals(cplData->values()(0), 2.0)); // = 2*1 - 0
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
+  cplData->clearTimeStepsStorage();
   cplData->values()(0) = 4.0; // data provided at end of second window
+  cplData->storeValuesAtTime(time::Storage::WINDOW_END, cplData->values());
   Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
-  Fixture::storeExtrapolationData(scheme);
 
   // go to third window
   Fixture::moveToNextWindow(scheme); // uses first order extrapolation (maximum allowed) at end of second window
@@ -518,9 +521,10 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   Fixture::storeIteration(scheme);
   BOOST_TEST(testing::equals(cplData->values()(0), 7.0)); // = 2*4 - 1
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 7.0));
+  cplData->clearTimeStepsStorage();
   cplData->values()(0) = 10.0; // data provided at end of third window
+  cplData->storeValuesAtTime(time::Storage::WINDOW_END, cplData->values());
   Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
-  Fixture::storeExtrapolationData(scheme);
 
   // go to fourth window
   Fixture::moveToNextWindow(scheme); // uses first order extrapolation (maximum allowed) at end of third window
@@ -732,8 +736,8 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
     // first order extrapolation
     BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4); // = 2*3 - 2
   } else if (context.isNamed(second)) {
-    // extrapolation only applied to accelerated data. So data written by first participant.
-    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3);
+    // first order extrapolation
+    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 5); // = 2*3 - 1
   }
 
   // reached end of simulation, ready to finalize
@@ -970,8 +974,8 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
     // first order extrapolation
     BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4); // = 2*3 - 2
   } else if (context.isNamed(second)) {
-    // extrapolation only applied to accelerated data. So data written by first participant.
-    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3);
+    // first order extrapolation
+    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 5); // = 2*3 - 1
   }
 
   // reached end of simulation, ready to finalize

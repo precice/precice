@@ -16,7 +16,6 @@ CouplingData::CouplingData(
     : requiresInitialization(requiresInitialization),
       _data(std::move(data)),
       _mesh(std::move(mesh)),
-      _extrapolation(extrapolationOrder),
       _timeStepsStorage(extrapolationOrder)
 {
   PRECICE_ASSERT(_data != nullptr);
@@ -118,19 +117,7 @@ std::vector<int> CouplingData::getVertexOffsets()
 
 void CouplingData::initializeExtrapolation()
 {
-  _extrapolation.initialize(getSize());
   storeIteration();
-}
-
-void CouplingData::moveToNextWindow()
-{
-  _extrapolation.moveToNextWindow();
-  values() = _extrapolation.getInitialGuess();
-}
-
-void CouplingData::storeExtrapolationData()
-{
-  _extrapolation.store(values());
 }
 
 void CouplingData::clearTimeStepsStorage()
@@ -141,6 +128,7 @@ void CouplingData::clearTimeStepsStorage()
 void CouplingData::moveTimeStepsStorage()
 {
   _timeStepsStorage.move();
+  values() = _timeStepsStorage.getValueAtTime(time::Storage::WINDOW_END);
 }
 
 void CouplingData::storeValuesAtTime(double relativeDt, Eigen::VectorXd data, bool mustOverrideExisting)
