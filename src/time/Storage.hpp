@@ -20,8 +20,10 @@ public:
    * The Storage is considered complete, when a sample with time 1.0 is provided. Then one can only sample or clear the storage, but not add any further samples.
    *
    * This Storage is used in the context of Waveform relaxation where samples in time are provided. Starting at the beginning of the window with time 0.0 and reaching the end of the window with time 1.0.
+   *
+   * @param extrapolationOrder defines the extrapolation this storage will use when it Storage::move() is called.
    */
-  Storage();
+  Storage(int extrapolationOrder = 0);
 
   /**
    * @brief Initialize storage by storing given value at time 0.0 and 1.0.
@@ -109,6 +111,15 @@ private:
   std::vector<std::pair<double, Eigen::VectorXd>> _sampleStorage;
 
   mutable logging::Logger _log{"time::Storage"};
+
+  /// extrapolation order for this extrapolation
+  const int _extrapolationOrder;
+
+  Eigen::VectorXd computeExtrapolation();
+
+  Eigen::VectorXd getValueAtBeginning();
+
+  Eigen::VectorXd getValueAtEnd();
 };
 
 } // namespace precice::time

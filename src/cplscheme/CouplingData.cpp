@@ -16,7 +16,8 @@ CouplingData::CouplingData(
     : requiresInitialization(requiresInitialization),
       _data(std::move(data)),
       _mesh(std::move(mesh)),
-      _extrapolation(extrapolationOrder)
+      _extrapolation(extrapolationOrder),
+      _timeStepsStorage(extrapolationOrder)
 {
   PRECICE_ASSERT(_data != nullptr);
   _previousIteration = Eigen::VectorXd::Zero(getSize());

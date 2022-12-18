@@ -8,8 +8,8 @@ const double Storage::WINDOW_START = 0.0;
 
 const double Storage::WINDOW_END = 1.0;
 
-Storage::Storage()
-    : _sampleStorage{}
+Storage::Storage(int extrapolationOrder)
+    : _sampleStorage{}, _extrapolationOrder(extrapolationOrder)
 {
 }
 
@@ -74,15 +74,17 @@ int Storage::nDofs()
 void Storage::move()
 {
   PRECICE_ASSERT(nTimes() > 0);
-  auto initialGuess = _sampleStorage.back().second; // use value at end of window as initial guess for next
+  auto valueAtBeginning = getValueAtEnd();
+  auto valueAtEnd       = computeExtrapolation();
   _sampleStorage.clear();
-  initialize(initialGuess);
+  _sampleStorage.emplace_back(std::make_pair(WINDOW_START, valueAtBeginning));
+  _sampleStorage.emplace_back(std::make_pair(WINDOW_END, valueAtEnd));
 }
 
 void Storage::clear()
 {
   PRECICE_ASSERT(nTimes() > 0, "Storage does not contain any data!");
-  Eigen::VectorXd keep = _sampleStorage.front().second; // we keep data at _storageDict[0.0]
+  Eigen::VectorXd keep = getValueAtBeginning(); // we keep data at _storageDict[0.0]
   _sampleStorage.clear();
   _sampleStorage.emplace_back(std::make_pair(WINDOW_START, keep));
 }
@@ -113,6 +115,28 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> Storage::getTimesAndValues()
     values.col(i) = _sampleStorage[i].second;
   }
   return std::make_pair(times, values);
+}
+
+Eigen::VectorXd Storage::computeExtrapolation()
+{
+  if (_extrapolationOrder == 0) {
+    return getValueAtEnd(); // use value at end of window as initial guess for next
+  } else if (_extrapolationOrder == 1) {
+    return 2 * getValueAtEnd() - getValueAtBeginning(); // use linear extrapolation from window at beginning and end of window.
+  }
+  PRECICE_UNREACHABLE("Invalid _extrapolationOrder")
+}
+
+Eigen::VectorXd Storage::getValueAtBeginning()
+{
+  PRECICE_ASSERT(_sampleStorage.front().first == WINDOW_START, _sampleStorage.front().first);
+  return _sampleStorage.front().second;
+}
+
+Eigen::VectorXd Storage::getValueAtEnd()
+{
+  PRECICE_ASSERT(_sampleStorage.back().first == WINDOW_END, _sampleStorage.back().first);
+  return _sampleStorage.back().second;
 }
 
 } // namespace precice::time
