@@ -36,7 +36,7 @@ void Waveform::store(const Eigen::VectorXd &values, double normalizedDt)
   if (_storage.nTimes() > 0) {
     PRECICE_ASSERT(values.size() == _storage.nDofs());
   }
-  _storage.setValueAtTime(normalizedDt, values);
+  _storage.setValuesAtTime(normalizedDt, values);
 }
 
 // helper function to compute x(t) from given data (x0,t0), (x1,t1), ..., (xn,tn) via B-spline interpolation (implemented using Eigen).
@@ -65,7 +65,7 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
   PRECICE_ASSERT(math::equals(this->_storage.maxStoredNormalizedDt(), time::Storage::WINDOW_END), this->_storage.maxStoredNormalizedDt()); // sampling is only allowed, if a window is complete.
 
   if (_interpolationOrder == 0) {
-    return this->_storage.getValueAtOrAfter(normalizedDt);
+    return this->_storage.getValuesAtOrAfter(normalizedDt);
   }
 
   PRECICE_ASSERT(usedOrder >= 1);

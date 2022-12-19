@@ -147,12 +147,12 @@ void CouplingData::storeValuesAtTime(double relativeDt, Eigen::VectorXd data, bo
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
   PRECICE_ASSERT(math::greaterEquals(relativeDt, _timeStepsStorage.maxStoredNormalizedDt()), relativeDt, _timeStepsStorage.maxStoredNormalizedDt());
   PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
-  _timeStepsStorage.setValueAtTime(relativeDt, data, mustOverrideExisting);
+  _timeStepsStorage.setValuesAtTime(relativeDt, data, mustOverrideExisting);
 }
 
 Eigen::VectorXd CouplingData::getValuesAtTime(double relativeDt)
 {
-  return _timeStepsStorage.getValueAtTime(relativeDt);
+  return _timeStepsStorage.getValuesAtTime(relativeDt);
 }
 
 } // namespace precice::cplscheme
