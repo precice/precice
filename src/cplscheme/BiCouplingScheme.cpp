@@ -138,28 +138,27 @@ CouplingData *BiCouplingScheme::getReceiveData(
 void BiCouplingScheme::exchangeInitialData()
 {
   // F: send, receive, S: receive, send
-  bool recvInitialData = true;
-  bool sendInitialData = true;
+  bool initialCommunication = true;
 
   if (doesFirstStep()) {
     if (sendsInitializedData()) {
-      sendData(getM2N(), getSendData(), sendInitialData);
+      sendData(getM2N(), getSendData(), initialCommunication);
     }
     if (receivesInitializedData()) {
-      receiveData(getM2N(), getReceiveData(), recvInitialData);
+      receiveData(getM2N(), getReceiveData(), initialCommunication);
       checkDataHasBeenReceived();
     } else {
       initializeZeroReceiveData(getReceiveData());
     }
   } else { // second participant
     if (receivesInitializedData()) {
-      receiveData(getM2N(), getReceiveData(), recvInitialData);
+      receiveData(getM2N(), getReceiveData(), initialCommunication);
       checkDataHasBeenReceived();
     } else {
       initializeZeroReceiveData(getReceiveData());
     }
     if (sendsInitializedData()) {
-      sendData(getM2N(), getSendData(), sendInitialData);
+      sendData(getM2N(), getSendData(), initialCommunication);
     }
   }
 }

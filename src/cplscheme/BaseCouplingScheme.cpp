@@ -81,7 +81,7 @@ BaseCouplingScheme::BaseCouplingScheme(
   }
 }
 
-void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendData, bool sendInitialData)
+void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendData, bool initialCommunication)
 {
   PRECICE_TRACE();
   std::vector<int> sentDataIDs;
@@ -91,7 +91,7 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
   for (const DataMap::value_type &pair : sendData) {
     // will be changed via https://github.com/precice/precice/pull/1414
     double sendTime;
-    if (sendInitialData) {
+    if (initialCommunication) {
       sendTime = time::Storage::WINDOW_START;
     } else {
       sendTime = time::Storage::WINDOW_END;
@@ -109,7 +109,7 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
   PRECICE_DEBUG("Number of sent data sets = {}", sentDataIDs.size());
 }
 
-void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData, bool recvInitialData)
+void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData, bool initialCommunication)
 {
   PRECICE_TRACE();
   std::vector<int> receivedDataIDs;
@@ -121,7 +121,7 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
     m2n->receive(recvBuffer, pair.second->getMeshID(), pair.second->getDimensions());
 
     // will be changed via https://github.com/precice/precice/pull/1414
-    if (recvInitialData) {
+    if (initialCommunication) {
       pair.second->storeValuesAtTime(time::Storage::WINDOW_START, recvBuffer);
       pair.second->storeValuesAtTime(time::Storage::WINDOW_END, recvBuffer);
     } else {
