@@ -67,9 +67,6 @@ public:
   ///  True, if the data values of this CouplingData require to be initialized by this participant.
   const bool requiresInitialization;
 
-  /// initialize _extrapolation
-  void initializeExtrapolation();
-
   /// clears _timeStepsStorage. Called after data was written or before data is received.
   void clearTimeStepsStorage();
 

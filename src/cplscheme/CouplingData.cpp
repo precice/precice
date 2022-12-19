@@ -115,11 +115,6 @@ std::vector<int> CouplingData::getVertexOffsets()
   return _mesh->getVertexOffsets();
 }
 
-void CouplingData::initializeExtrapolation()
-{
-  storeIteration();
-}
-
 void CouplingData::clearTimeStepsStorage()
 {
   _timeStepsStorage.clear();

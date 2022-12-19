@@ -1,4 +1,6 @@
 #include "testing/SerialCouplingSchemeFixture.hpp"
+#include "acceleration/Acceleration.hpp"
+#include "acceleration/SharedPointer.hpp"
 
 namespace precice::testing {
 
@@ -27,9 +29,11 @@ void SerialCouplingSchemeFixture::storeIteration(cplscheme::SerialCouplingScheme
   cplscheme.storeIteration();
 }
 
-void SerialCouplingSchemeFixture::initializeStorages(cplscheme::SerialCouplingScheme &cplscheme)
+void SerialCouplingSchemeFixture::initializeAcceleration(cplscheme::SerialCouplingScheme &cplscheme)
 {
-  cplscheme.initializeStorages();
+  if (cplscheme._acceleration) {
+    cplscheme._acceleration->initialize(cplscheme.getAccelerationData());
+  }
 }
 
 void SerialCouplingSchemeFixture::moveToNextWindow(cplscheme::SerialCouplingScheme &cplscheme)

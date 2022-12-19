@@ -174,19 +174,18 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   _hasDataBeenReceived = false;
 
   if (isImplicitCouplingScheme()) {
+    storeIteration();
     if (not doesFirstStep()) {
       PRECICE_CHECK(not _convergenceMeasures.empty(),
                     "At least one convergence measure has to be defined for "
                     "an implicit coupling scheme.");
       // reserve memory and initialize data with zero
-      initializeStorages();
+      if (_acceleration) {
+        _acceleration->initialize(getAccelerationData());
+      }
     }
     requireAction(CouplingScheme::Action::WriteCheckpoint);
     initializeTXTWriters();
-  }
-
-  if (isImplicitCouplingScheme()) {
-    storeIteration();
   }
 
   storeTimeStepSendData(time::Storage::WINDOW_START);
@@ -471,19 +470,6 @@ void BaseCouplingScheme::checkCompletenessRequiredActions()
   }
   _requiredActions.clear();
   _fulfilledActions.clear();
-}
-
-void BaseCouplingScheme::initializeStorages()
-{
-  PRECICE_TRACE();
-  // Reserve storage for all data
-  for (auto &pair : getAllData()) {
-    pair.second->initializeExtrapolation();
-  }
-  // Reserve storage for acceleration
-  if (_acceleration) {
-    _acceleration->initialize(getAccelerationData());
-  }
 }
 
 void BaseCouplingScheme::setAcceleration(

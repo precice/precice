@@ -20,7 +20,7 @@ struct ParallelCouplingSchemeFixture {
 
   static void storeIteration(cplscheme::ParallelCouplingScheme &cplscheme);
 
-  static void initializeStorages(cplscheme::ParallelCouplingScheme &cplscheme);
+  static void initializeAcceleration(cplscheme::ParallelCouplingScheme &cplscheme);
 
   static void moveToNextWindow(cplscheme::ParallelCouplingScheme &cplscheme);
 };

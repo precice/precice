@@ -20,7 +20,7 @@ struct SerialCouplingSchemeFixture {
 
   static void storeIteration(cplscheme::SerialCouplingScheme &cplscheme);
 
-  static void initializeStorages(cplscheme::SerialCouplingScheme &cplscheme);
+  static void initializeAcceleration(cplscheme::SerialCouplingScheme &cplscheme);
 
   static void moveToNextWindow(cplscheme::SerialCouplingScheme &cplscheme);
 };

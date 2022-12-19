@@ -259,6 +259,9 @@ protected:
   /// Map that links DataID to CouplingData
   typedef std::map<int, PtrCouplingData> DataMap;
 
+  /// Acceleration method to speedup iteration convergence.
+  acceleration::PtrAcceleration _acceleration;
+
   /**
    * @brief Sends data sendDataIDs given in mapCouplingData with communication.
    *
@@ -351,11 +354,6 @@ protected:
   {
     _timeWindows = timeWindows;
   }
-
-  /**
-   * @brief Reserves memory to store data values from previous iterations and time windows in coupling data and acceleration, and initializes with zero.
-   */
-  void initializeStorages();
 
   /**
    * @brief sends convergence to other participant via m2n
@@ -453,9 +451,6 @@ private:
 
   /// True, if _computedTimeWindowPart == _timeWindowSize and (coupling has converged or _iterations == _maxIterations)
   bool _isTimeWindowComplete = false;
-
-  /// Acceleration method to speedup iteration convergence.
-  acceleration::PtrAcceleration _acceleration;
 
   /// True, if this participant has to send initialized data.
   bool _sendsInitializedData = false;
