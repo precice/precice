@@ -278,7 +278,7 @@ protected:
   void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData, bool recvInitialData = false);
 
   /**
-   * @brief Initialized receiveData with zero values.
+   * @brief Initializes receiveData with zero values.
    *
    * This function is called instead of receive data, if no initial data is received to initialize data with zero
    *
