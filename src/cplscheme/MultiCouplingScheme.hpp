@@ -105,7 +105,7 @@ private:
   logging::Logger _log{"cplscheme::MultiCouplingScheme"};
 
   /**
-   * @brief BiCouplingScheme has _sendData and _receiveData
+   * @brief MultiCouplingScheme has to collect all send data and receive data from _sendDataVector and _receiveDataVector
    * @returns DataMap with all data
    */
   const DataMap getAllData() override;

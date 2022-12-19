@@ -129,7 +129,7 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
       pair.second->storeValuesAtTime(time::Storage::WINDOW_END, recvBuffer);
     }
 
-    pair.second->values() = recvBuffer; // @todo should happen somewhere else!
+    pair.second->values() = recvBuffer; // @todo Better do this just before returning to SolverInterfaceImpl.
 
     if (pair.second->hasGradient()) {
       m2n->receive(pair.second->gradientValues(), pair.second->getMeshID(), pair.second->getDimensions() * pair.second->meshDimensions());
@@ -703,9 +703,9 @@ void BaseCouplingScheme::doImplicitStep()
   } else {
     // no convergence achieved for the coupling iteration within the current time window
     if (_acceleration) {
-      _acceleration->performAcceleration(getAccelerationData());
       /**
-       * Acceleration changes CouplingData::values(), so we must overwrite the data in CouplingData::_timeStepsStorage.
+       * Acceleration works on CouplingData::values(), so we retreive the data from the storage, perform the acceleration and then put the data back into the storage.
+       *
        * There are generally two possibilities:
        *
        * 1) Only overwrite the data in CouplingData::_timeStepsStorage that is part of the receive data
@@ -717,6 +717,11 @@ void BaseCouplingScheme::doImplicitStep()
        * track of _timeStepsStorage for subcycling. So it will become simpler as soon as subcycling is fully implemented.
        */
       // @todo For other Acceleration schemes as described in "Rüth, B, Uekermann, B, Mehl, M, Birken, P, Monge, A, Bungartz, H-J. Quasi-Newton waveform iteration for partitioned surface-coupled multiphysics applications. Int J Numer Methods Eng. 2021; 122: 5236– 5257. https://doi.org/10.1002/nme.6443" we need a more elaborate implementation.
+      // Put values into pair.second->values() for acceleration
+      for (auto &pair : getAccelerationData()) {
+        pair.second->values() = pair.second->getValuesAtTime(time::Storage::WINDOW_END);
+      }
+      _acceleration->performAcceleration(getAccelerationData());
       for (auto &pair : getAccelerationData()) {
         bool mustOverwrite = true;
         pair.second->storeValuesAtTime(time::Storage::WINDOW_END, pair.second->values(), mustOverwrite);
