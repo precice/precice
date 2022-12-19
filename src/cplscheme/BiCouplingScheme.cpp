@@ -163,7 +163,7 @@ void BiCouplingScheme::exchangeInitialData()
   }
 }
 
-void BiCouplingScheme::storeTimeStepReceiveData(double relativeDt)
+void BiCouplingScheme::storeReceiveData(double relativeDt)
 {
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
   PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
@@ -173,7 +173,7 @@ void BiCouplingScheme::storeTimeStepReceiveData(double relativeDt)
   }
 }
 
-void BiCouplingScheme::retreiveTimeStepReceiveData(double relativeDt)
+void BiCouplingScheme::loadReceiveDataFromStorage(double relativeDt)
 {
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
   PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
