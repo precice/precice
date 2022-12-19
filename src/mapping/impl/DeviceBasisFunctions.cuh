@@ -1,12 +1,20 @@
 #pragma once
 #ifndef PRECICE_NO_GINKGO
 
-#include <array>
+#ifdef __CUDACC__
+
 #include <cuda.h>
 #include <cuda_runtime.h>
-#include <string>
-
 #define SHARED_HOST_DEVICE_FUNCTION __host__ __device__
+
+#else
+
+#define SHARED_HOST_DEVICE_FUNCTION
+
+#endif
+
+#include <array>
+#include <string>
 
 namespace precice {
 namespace mapping {

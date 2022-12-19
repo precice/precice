@@ -30,8 +30,6 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************<GINKGO LICENSE>*******************************/
 
-#include <cuda.h>
-#include <cuda_runtime.h>
 #include "mapping/impl/DeviceBasisFunctions.cuh" // TODO: Fix include
 
 #include <functional>
