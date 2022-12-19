@@ -168,11 +168,9 @@ void BiCouplingScheme::storeTimeStepReceiveData(double relativeDt)
 {
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
   PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
-  if (hasDataBeenReceived()) {
-    for (auto &receiveData : getReceiveData()) {
-      bool mustOverride = true;
-      receiveData.second->storeValuesAtTime(relativeDt, receiveData.second->values(), mustOverride);
-    }
+  for (auto &receiveData : getReceiveData()) {
+    bool mustOverride = true;
+    receiveData.second->storeValuesAtTime(relativeDt, receiveData.second->values(), mustOverride);
   }
 }
 
