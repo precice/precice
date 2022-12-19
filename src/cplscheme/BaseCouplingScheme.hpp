@@ -267,21 +267,21 @@ protected:
    *
    * @param m2n M2N used for communication
    * @param sendData DataMap associated with sent data
-   * @param sendInitialData if true, will send data from WINDOW_START, else data from WINDOW_END
+   * @param initialCommunication if true, will send data from WINDOW_START, else data from WINDOW_END
    */
-  void sendData(const m2n::PtrM2N &m2n, const DataMap &sendData, bool sendInitialData = false);
+  void sendData(const m2n::PtrM2N &m2n, const DataMap &sendData, bool initialCommunication = false);
 
   /**
    * @brief Receives data receiveDataIDs given in mapCouplingData with communication.
    *
    * @param m2n M2N used for communication
    * @param receiveData DataMap associated with received data
-   * @param recvInitialData if true, will store received data for WINDOW_START, else store received data for WINDOW_END
+   * @param initialCommunication if true, will store received data for WINDOW_START, else store received data for WINDOW_END
    */
-  void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData, bool recvInitialData = false);
+  void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData, bool initialCommunication = false);
 
   /**
-   * @brief Initialized receiveData with zero values.
+   * @brief Initializes receiveData with zero values.
    *
    * This function is called instead of receive data, if no initial data is received to initialize data with zero
    *

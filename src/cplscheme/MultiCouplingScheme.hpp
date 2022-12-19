@@ -77,14 +77,11 @@ public:
     return std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(), [](const auto &sendExchange) { return not sendExchange.second.empty(); });
   }
 
-  void storeTimeStepReceiveData(double relativeDt) override final;
+  /// @copydoc CouplingScheme::storeReceiveData
+  void storeReceiveData(double relativeDt) override final;
 
-  /**
-   * @brief retreives time step data from CouplingData into mesh values
-   *
-   * @param relativeDt relative dt associated with the data.
-   */
-  void retreiveTimeStepReceiveData(double relativeDt) override final;
+  /// @copydoc CouplingScheme::loadReceiveDataFromStorage
+  void loadReceiveDataFromStorage(double relativeDt) override final;
 
 private:
   /**
@@ -105,7 +102,7 @@ private:
   logging::Logger _log{"cplscheme::MultiCouplingScheme"};
 
   /**
-   * @brief BiCouplingScheme has _sendData and _receiveData
+   * @brief MultiCouplingScheme has to collect all send data and receive data from _sendDataVector and _receiveDataVector
    * @returns DataMap with all data
    */
   const DataMap getAllData() override;

@@ -80,13 +80,12 @@ void MultiCouplingScheme::storeTimeStepSendData(double relativeDt)
 void MultiCouplingScheme::exchangeInitialData()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
-  bool recvInitialData = true;
-  bool sendInitialData = true;
+  bool initialCommunication = true;
 
   if (_isController) {
     if (receivesInitializedData()) {
       for (auto &receiveExchange : _receiveDataVector) {
-        receiveData(_m2ns[receiveExchange.first], receiveExchange.second, recvInitialData);
+        receiveData(_m2ns[receiveExchange.first], receiveExchange.second, initialCommunication);
       }
       checkDataHasBeenReceived();
     } else {
@@ -96,18 +95,18 @@ void MultiCouplingScheme::exchangeInitialData()
     }
     if (sendsInitializedData()) {
       for (auto &sendExchange : _sendDataVector) {
-        sendData(_m2ns[sendExchange.first], sendExchange.second, sendInitialData);
+        sendData(_m2ns[sendExchange.first], sendExchange.second, initialCommunication);
       }
     }
   } else {
     if (sendsInitializedData()) {
       for (auto &sendExchange : _sendDataVector) {
-        sendData(_m2ns[sendExchange.first], sendExchange.second, sendInitialData);
+        sendData(_m2ns[sendExchange.first], sendExchange.second, initialCommunication);
       }
     }
     if (receivesInitializedData()) {
       for (auto &receiveExchange : _receiveDataVector) {
-        receiveData(_m2ns[receiveExchange.first], receiveExchange.second, recvInitialData);
+        receiveData(_m2ns[receiveExchange.first], receiveExchange.second, initialCommunication);
       }
       checkDataHasBeenReceived();
     } else {
@@ -119,7 +118,7 @@ void MultiCouplingScheme::exchangeInitialData()
   PRECICE_DEBUG("Initial data is exchanged in MultiCouplingScheme");
 }
 
-void MultiCouplingScheme::storeTimeStepReceiveData(double relativeDt)
+void MultiCouplingScheme::storeReceiveData(double relativeDt)
 {
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
   PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
@@ -131,7 +130,7 @@ void MultiCouplingScheme::storeTimeStepReceiveData(double relativeDt)
   }
 }
 
-void MultiCouplingScheme::retreiveTimeStepReceiveData(double relativeDt)
+void MultiCouplingScheme::loadReceiveDataFromStorage(double relativeDt)
 {
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
   PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);

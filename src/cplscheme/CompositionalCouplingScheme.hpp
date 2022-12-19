@@ -124,14 +124,11 @@ public:
    */
   bool hasDataBeenReceived() const final override;
 
-  void storeTimeStepReceiveData(double relativeDt) override final;
+  /// @copydoc CouplingScheme::storeReceiveData
+  void storeReceiveData(double relativeDt) override final;
 
-  /**
-   * @brief retreives time step data from CouplingData into mesh values
-   *
-   * @param relativeDt relative dt associated with the data.
-   */
-  void retreiveTimeStepReceiveData(double relativeDt) final override;
+  /// @copydoc CouplingScheme::loadReceiveDataFromStorage
+  void loadReceiveDataFromStorage(double relativeDt) final override;
 
   /**
    * @brief Returns the currently computed time of the coupling scheme.

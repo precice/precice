@@ -20,9 +20,9 @@ BOOST_AUTO_TEST_CASE(testInitialize)
   BOOST_TEST(storage.nDofs() == nValues);
   BOOST_TEST(storage.nTimes() == 2);
   for (int i = 0; i < nValues; i++) {
-    BOOST_TEST(storage.getValueAtOrAfter(0)(i) == 1);
-    BOOST_TEST(storage.getValueAtOrAfter(0.5)(i) == 1);
-    BOOST_TEST(storage.getValueAtOrAfter(1)(i) == 1);
+    BOOST_TEST(storage.getValuesAtOrAfter(0)(i) == 1);
+    BOOST_TEST(storage.getValuesAtOrAfter(0.5)(i) == 1);
+    BOOST_TEST(storage.getValuesAtOrAfter(1)(i) == 1);
   }
 }
 
@@ -56,24 +56,24 @@ BOOST_AUTO_TEST_CASE(testMove)
   BOOST_TEST(storage.maxStoredNormalizedDt() == 1.0);
   storage.clear();
   BOOST_TEST(storage.nTimes() == 1);
-  storage.setValueAtTime(0.5, Eigen::VectorXd::Ones(nValues));
+  storage.setValuesAtTime(0.5, Eigen::VectorXd::Ones(nValues));
   BOOST_TEST(storage.nTimes() == 2);
   BOOST_TEST(storage.maxStoredNormalizedDt() == 0.5);
-  storage.setValueAtTime(1.0, Eigen::VectorXd::Zero(nValues));
+  storage.setValuesAtTime(1.0, Eigen::VectorXd::Zero(nValues));
   BOOST_TEST(storage.nTimes() == 3);
   BOOST_TEST(storage.maxStoredNormalizedDt() == 1.0);
   for (int i = 0; i < nValues; i++) {
-    BOOST_TEST(storage.getValueAtOrAfter(0)(i) == 1);
-    BOOST_TEST(storage.getValueAtOrAfter(0.5)(i) == 1);
-    BOOST_TEST(storage.getValueAtOrAfter(1)(i) == 0);
+    BOOST_TEST(storage.getValuesAtOrAfter(0)(i) == 1);
+    BOOST_TEST(storage.getValuesAtOrAfter(0.5)(i) == 1);
+    BOOST_TEST(storage.getValuesAtOrAfter(1)(i) == 0);
   }
   storage.move();
   BOOST_TEST(storage.nDofs() == nValues);
   BOOST_TEST(storage.nTimes() == 2);
   BOOST_TEST(storage.maxStoredNormalizedDt() == 1.0);
   for (int i = 0; i < nValues; i++) {
-    BOOST_TEST(storage.getValueAtOrAfter(0)(i) == 0);
-    BOOST_TEST(storage.getValueAtOrAfter(1)(i) == 0);
+    BOOST_TEST(storage.getValuesAtOrAfter(0)(i) == 0);
+    BOOST_TEST(storage.getValuesAtOrAfter(1)(i) == 0);
   }
 }
 
@@ -85,8 +85,8 @@ BOOST_AUTO_TEST_CASE(testGetTimesAndValues)
   int  nValues = 3;
   storage.initialize(Eigen::VectorXd::Ones(nValues));
   storage.clear();
-  storage.setValueAtTime(0.5, Eigen::VectorXd::Ones(nValues));
-  storage.setValueAtTime(1.0, Eigen::VectorXd::Zero(nValues));
+  storage.setValuesAtTime(0.5, Eigen::VectorXd::Ones(nValues));
+  storage.setValuesAtTime(1.0, Eigen::VectorXd::Zero(nValues));
   auto times = storage.getTimes();
   BOOST_TEST(times[0] == 0.0);
   BOOST_TEST(times[1] == 0.5);
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateDataZerothOrder)
   BOOST_TEST(timesAndValues.second.col(1)(0) == 0.0);
 
   storage.clear();
-  storage.setValueAtTime(1.0, Eigen::VectorXd::Ones(nValues));
+  storage.setValuesAtTime(1.0, Eigen::VectorXd::Ones(nValues));
 
   times = storage.getTimes();
   BOOST_TEST(times[0] == 0.0);
@@ -143,8 +143,8 @@ BOOST_AUTO_TEST_CASE(testExtrapolateDataZerothOrder)
 
   // make sure that subcycling is ignored for extrapolation
   storage.clear();
-  storage.setValueAtTime(0.5, 2 * Eigen::VectorXd::Ones(nValues));
-  storage.setValueAtTime(1.0, 3 * Eigen::VectorXd::Ones(nValues));
+  storage.setValuesAtTime(0.5, 2 * Eigen::VectorXd::Ones(nValues));
+  storage.setValuesAtTime(1.0, 3 * Eigen::VectorXd::Ones(nValues));
   storage.move();
 
   timesAndValues = storage.getTimesAndValues();
@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateDataFirstOrder)
   BOOST_TEST(timesAndValues.second.col(1)(0) == 0.0);
 
   storage.clear();
-  storage.setValueAtTime(1.0, Eigen::VectorXd::Ones(nValues));
+  storage.setValuesAtTime(1.0, Eigen::VectorXd::Ones(nValues));
 
   times = storage.getTimes();
   BOOST_TEST(times[0] == 0.0);
@@ -191,8 +191,8 @@ BOOST_AUTO_TEST_CASE(testExtrapolateDataFirstOrder)
 
   // make sure that subcycling is ignored for extrapolation
   storage.clear();
-  storage.setValueAtTime(0.5, 2 * Eigen::VectorXd::Ones(nValues));
-  storage.setValueAtTime(1.0, 3 * Eigen::VectorXd::Ones(nValues));
+  storage.setValuesAtTime(0.5, 2 * Eigen::VectorXd::Ones(nValues));
+  storage.setValuesAtTime(1.0, 3 * Eigen::VectorXd::Ones(nValues));
   storage.move();
 
   timesAndValues = storage.getTimesAndValues();

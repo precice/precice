@@ -138,52 +138,47 @@ CouplingData *BiCouplingScheme::getReceiveData(
 void BiCouplingScheme::exchangeInitialData()
 {
   // F: send, receive, S: receive, send
-  bool recvInitialData = true;
-  bool sendInitialData = true;
+  bool initialCommunication = true;
 
   if (doesFirstStep()) {
     if (sendsInitializedData()) {
-      sendData(getM2N(), getSendData(), sendInitialData);
+      sendData(getM2N(), getSendData(), initialCommunication);
     }
     if (receivesInitializedData()) {
-      receiveData(getM2N(), getReceiveData(), recvInitialData);
+      receiveData(getM2N(), getReceiveData(), initialCommunication);
       checkDataHasBeenReceived();
     } else {
       initializeZeroReceiveData(getReceiveData());
     }
   } else { // second participant
     if (receivesInitializedData()) {
-      receiveData(getM2N(), getReceiveData(), recvInitialData);
+      receiveData(getM2N(), getReceiveData(), initialCommunication);
       checkDataHasBeenReceived();
     } else {
       initializeZeroReceiveData(getReceiveData());
     }
     if (sendsInitializedData()) {
-      sendData(getM2N(), getSendData(), sendInitialData);
+      sendData(getM2N(), getSendData(), initialCommunication);
     }
   }
 }
 
-void BiCouplingScheme::storeTimeStepReceiveData(double relativeDt)
-{
-  PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
-  PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
-  if (hasDataBeenReceived()) {
-    for (auto &receiveData : getReceiveData()) {
-      bool mustOverride = true;
-      receiveData.second->storeValuesAtTime(relativeDt, receiveData.second->values(), mustOverride);
-    }
-  }
-}
-
-void BiCouplingScheme::retreiveTimeStepReceiveData(double relativeDt)
+void BiCouplingScheme::storeReceiveData(double relativeDt)
 {
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
   PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
   for (auto &receiveData : getReceiveData()) {
-    auto dataId               = receiveData.second->getDataID();
-    auto allData              = getAllData();
-    allData[dataId]->values() = allData[dataId]->getValuesAtTime(relativeDt);
+    bool mustOverride = true;
+    receiveData.second->storeValuesAtTime(relativeDt, receiveData.second->values(), mustOverride);
+  }
+}
+
+void BiCouplingScheme::loadReceiveDataFromStorage(double relativeDt)
+{
+  PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
+  PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
+  for (auto &receiveData : getReceiveData()) {
+    receiveData.second->values() = receiveData.second->getValuesAtTime(relativeDt);
   }
 }
 

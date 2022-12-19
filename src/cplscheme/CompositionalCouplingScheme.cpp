@@ -156,19 +156,19 @@ bool CompositionalCouplingScheme::hasDataBeenReceived() const
   return hasBeenReceived;
 }
 
-void CompositionalCouplingScheme::storeTimeStepReceiveData(double relativeDt)
+void CompositionalCouplingScheme::storeReceiveData(double relativeDt)
 {
   PRECICE_TRACE();
   for (auto scheme : allSchemes()) {
-    scheme->storeTimeStepReceiveData(relativeDt);
+    scheme->storeReceiveData(relativeDt);
   }
 }
 
-void CompositionalCouplingScheme::retreiveTimeStepReceiveData(double relativeDt)
+void CompositionalCouplingScheme::loadReceiveDataFromStorage(double relativeDt)
 {
   PRECICE_TRACE();
   for (auto scheme : allSchemes()) {
-    scheme->retreiveTimeStepReceiveData(relativeDt);
+    scheme->loadReceiveDataFromStorage(relativeDt);
   }
 }
 

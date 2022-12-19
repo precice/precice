@@ -1826,7 +1826,7 @@ void SolverInterfaceImpl::mapReadData(std::vector<double> receiveTimes)
   PRECICE_TRACE();
   computeMappings(_accessor->readMappingContexts(), "read");
   for (auto time : receiveTimes) {
-    _couplingScheme->retreiveTimeStepReceiveData(time); // @todo loads data into ALL read data. Would be better to only perform this for read data with name context.getDataName
+    _couplingScheme->loadReceiveDataFromStorage(time); // @todo loads data into ALL read data. Would be better to only perform this for read data with name context.getDataName
     for (auto &context : _accessor->readDataContexts()) {
       // context.retreiveTimeStepData(time);  // @todo try to retreive data via context. But complicated: DataContext needs a connection to associated CouplingData...
       if (context.isMappingRequired()) {
@@ -1847,7 +1847,7 @@ void SolverInterfaceImpl::performDataActions(
   // for actions we need to load and write back data from/to time steps storage.
   // Actions would need similar treatment like mapping.
   if (_couplingScheme->hasDataBeenReceived()) {
-    _couplingScheme->retreiveTimeStepReceiveData(time::Storage::WINDOW_END);
+    _couplingScheme->loadReceiveDataFromStorage(time::Storage::WINDOW_END);
   }
   for (action::PtrAction &action : _accessor->actions()) {
     if (timings.find(action->getTiming()) != timings.end()) {
@@ -1855,7 +1855,7 @@ void SolverInterfaceImpl::performDataActions(
     }
   }
   if (_couplingScheme->hasDataBeenReceived()) {
-    _couplingScheme->storeTimeStepReceiveData(time::Storage::WINDOW_END);
+    _couplingScheme->storeReceiveData(time::Storage::WINDOW_END);
   }
 }
 

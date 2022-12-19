@@ -26,21 +26,22 @@ public:
   Storage(int extrapolationOrder = 0);
 
   /**
-   * @brief Initialize storage by storing given value at time 0.0 and 1.0.
+   * @brief Initialize storage by storing given values at time 0.0 and 1.0.
    *
-   * @param values initial value
+   * @param values initial values
    */
   void initialize(Eigen::VectorXd values);
 
   /**
-   * @brief Store a value at a specific time.
+   * @brief Store values at a specific time.
    *
    * It is only allowed to store values in time that come after values that were already stored. Therefore, time has to be larger than maxStoredNormalizedDt. Overwriting existing values is forbidden. The function clear() should be used to clear the storage and provide new values.
    *
-   * @param time the time associated with the value
-   * @param value stored value
+   * @param time the time associated with the values
+   * @param values stored values
+   * @param mustOverwriteExisting if true checks whether there are already values at time and allows to overwrite the values. If there are no values at the given time, this will trigger an assertion.
    */
-  void setValueAtTime(double time, Eigen::VectorXd value, bool mustOverrideExisting = false);
+  void setValuesAtTime(double time, Eigen::VectorXd values, bool mustOverwriteExisting = false);
 
   /**
    * @brief Get maximum normalized dt that is stored in this Storage.
@@ -51,22 +52,22 @@ public:
 
   // @todo try to remove this function. In most cases we could use Eigen::VectorXd Storage::getValueAtEndOfWindow() instead (more efficient and robust).
   /**
-   * @brief Returns the value at given time contained in this Storage.
+   * @brief Returns the values at given time contained in this Storage.
    *
-   * @param time a double, the value in the Storage is associated with
-   * @return Eigen::VectorXd a value in this Storage
+   * @param time a double, the values in the Storage are associated with
+   * @return Eigen::VectorXd values in this Storage
    */
-  Eigen::VectorXd getValueAtTime(double time);
+  Eigen::VectorXd getValuesAtTime(double time);
 
   /**
-   * @brief Returns the value at time following "before" contained in this Storage.
+   * @brief Returns the values at time following "before" contained in this Storage.
    *
-   * The stored normalized dt is larger or equal than "before". If "before" is a normalized dt stored in this Storage, this function returns the value at "before"
+   * The stored normalized dt is larger or equal than "before". If "before" is a normalized dt stored in this Storage, this function returns the values at "before"
    *
    * @param before a double, where we want to find a normalized dt that comes directly after this one
-   * @return Eigen::VectorXd a value in this Storage at or directly after "before"
+   * @return Eigen::VectorXd a values in this Storage at or directly after "before"
    */
-  Eigen::VectorXd getValueAtOrAfter(double before);
+  Eigen::VectorXd getValuesAtOrAfter(double before);
 
   /**
    * @brief Get all normalized dts stored in this Storage sorted ascending.
@@ -97,7 +98,7 @@ public:
   int nDofs();
 
   /**
-   * @brief Move this Storage by storing the value at the end of the Storage at 0.0 and clearing the storage. Time 1.0 is initialized with extrapolated value
+   * @brief Move this Storage by storing the values at the end of the Storage at 0.0 and clearing the storage. Time 1.0 is initialized with extrapolated values
    */
   void move();
 
@@ -117,9 +118,9 @@ private:
 
   Eigen::VectorXd computeExtrapolation();
 
-  Eigen::VectorXd getValueAtBeginning();
+  Eigen::VectorXd getValuesAtBeginning();
 
-  Eigen::VectorXd getValueAtEnd();
+  Eigen::VectorXd getValuesAtEnd();
 };
 
 } // namespace precice::time

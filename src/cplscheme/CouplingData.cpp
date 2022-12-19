@@ -123,20 +123,20 @@ void CouplingData::clearTimeStepsStorage()
 void CouplingData::moveTimeStepsStorage()
 {
   _timeStepsStorage.move();
-  values() = _timeStepsStorage.getValueAtTime(time::Storage::WINDOW_END);
+  values() = _timeStepsStorage.getValuesAtTime(time::Storage::WINDOW_END);
 }
 
-void CouplingData::storeValuesAtTime(double relativeDt, Eigen::VectorXd data, bool mustOverrideExisting)
+void CouplingData::storeValuesAtTime(double relativeDt, Eigen::VectorXd data, bool mustOverwriteExisting)
 {
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
   PRECICE_ASSERT(math::greaterEquals(relativeDt, _timeStepsStorage.maxStoredNormalizedDt()), relativeDt, _timeStepsStorage.maxStoredNormalizedDt());
   PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
-  _timeStepsStorage.setValueAtTime(relativeDt, data, mustOverrideExisting);
+  _timeStepsStorage.setValuesAtTime(relativeDt, data, mustOverwriteExisting);
 }
 
 Eigen::VectorXd CouplingData::getValuesAtTime(double relativeDt)
 {
-  return _timeStepsStorage.getValueAtTime(relativeDt);
+  return _timeStepsStorage.getValuesAtTime(relativeDt);
 }
 
 } // namespace precice::cplscheme
