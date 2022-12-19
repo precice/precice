@@ -178,9 +178,7 @@ void BiCouplingScheme::retreiveTimeStepReceiveData(double relativeDt)
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
   PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
   for (auto &receiveData : getReceiveData()) {
-    auto dataId               = receiveData.second->getDataID();
-    auto allData              = getAllData();
-    allData[dataId]->values() = allData[dataId]->getValuesAtTime(relativeDt);
+    receiveData.second->values() = receiveData.second->getValuesAtTime(relativeDt);
   }
 }
 
