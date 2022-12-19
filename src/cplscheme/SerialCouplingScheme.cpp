@@ -82,7 +82,7 @@ void SerialCouplingScheme::performReceiveOfFirstAdvance()
     receiveAndSetTimeWindowSize();
     PRECICE_DEBUG("Receiving data...");
     receiveData(getM2N(), getReceiveData());
-    if (not hasDataBeenReceived()) {
+    if (not hasDataBeenReceived()) { // check is required, because calling checkDataHasBeenReceived() if hasDataBeenReceived() == true would trigger an assertion. This situation can only occur during initialization of the second participant of a SerialCouplingScheme, because it may call receive twice: Once for receiving initial data, once for receiving the result of the first advance.
       checkDataHasBeenReceived();
     }
   }
