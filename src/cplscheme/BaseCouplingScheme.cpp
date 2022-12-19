@@ -705,11 +705,11 @@ void BaseCouplingScheme::doImplicitStep()
     if (_acceleration) {
       _acceleration->performAcceleration(getAccelerationData());
       /**
-       * Acceleration changes CouplingData::values(), so we must override the data in CouplingData::_timeStepsStorage.
+       * Acceleration changes CouplingData::values(), so we must overwrite the data in CouplingData::_timeStepsStorage.
        * There are generally two possibilities:
        *
-       * 1) Only override the data in CouplingData::_timeStepsStorage that is part of the receive data
-       * 2) Override the data in CouplingData::_timeStepsStorage for all data in getAccelerationData()
+       * 1) Only overwrite the data in CouplingData::_timeStepsStorage that is part of the receive data
+       * 2) overwrite the data in CouplingData::_timeStepsStorage for all data in getAccelerationData()
        *
        * We are using strategy 2), because it's easier to access getAccelerationData() from here. However, this also means that
        * we have to make sure that the send data is stored in the CouplingData::_timeStepsStorage - even though this is not
@@ -718,8 +718,8 @@ void BaseCouplingScheme::doImplicitStep()
        */
       // @todo For other Acceleration schemes as described in "Rüth, B, Uekermann, B, Mehl, M, Birken, P, Monge, A, Bungartz, H-J. Quasi-Newton waveform iteration for partitioned surface-coupled multiphysics applications. Int J Numer Methods Eng. 2021; 122: 5236– 5257. https://doi.org/10.1002/nme.6443" we need a more elaborate implementation.
       for (auto &pair : getAccelerationData()) {
-        bool mustOverride = true;
-        pair.second->storeValuesAtTime(time::Storage::WINDOW_END, pair.second->values(), mustOverride);
+        bool mustOverwrite = true;
+        pair.second->storeValuesAtTime(time::Storage::WINDOW_END, pair.second->values(), mustOverwrite);
       }
     }
   }

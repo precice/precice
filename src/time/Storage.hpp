@@ -37,8 +37,9 @@ public:
    *
    * @param time the time associated with the values
    * @param values stored values
+   * @param mustOverwriteExisting if true checks whether there are already values at time and allows to overwrite the values. If there are no values at the given time, this will trigger an assertion.
    */
-  void setValuesAtTime(double time, Eigen::VectorXd values, bool mustOverrideExisting = false);
+  void setValuesAtTime(double time, Eigen::VectorXd values, bool mustOverwriteExisting = false);
 
   /**
    * @brief Get maximum normalized dt that is stored in this Storage.

@@ -29,18 +29,18 @@ Eigen::VectorXd Storage::getValuesAtTime(double time)
   PRECICE_ASSERT(false, "no values found!", time);
 }
 
-void Storage::setValuesAtTime(double time, Eigen::VectorXd values, bool mustOverrideExisting)
+void Storage::setValuesAtTime(double time, Eigen::VectorXd values, bool mustOverwriteExisting)
 {
   PRECICE_ASSERT(math::smallerEquals(WINDOW_START, time), "Setting values outside of valid range!");
   PRECICE_ASSERT(math::smallerEquals(time, WINDOW_END), "Sampling outside of valid range!");
-  if (!mustOverrideExisting) {
+  if (!mustOverwriteExisting) {
     PRECICE_ASSERT(math::smaller(maxStoredNormalizedDt(), time), maxStoredNormalizedDt(), time, "Trying to overwrite existing values or to write values with a time that is too small. Please use clear(), if you want to reset the storage.");
     _sampleStorage.emplace_back(std::make_pair(time, values));
   } else {
     // check that key "time" exists.
     auto sample = std::find_if(_sampleStorage.begin(), _sampleStorage.end(), [&time](const auto &s) { return math::equals(s.first, time); });
-    PRECICE_ASSERT(sample != _sampleStorage.end(), time, "Key does not exist, cannot override values.");
-    // override values at "time"
+    PRECICE_ASSERT(sample != _sampleStorage.end(), time, "Key does not exist, cannot overwrite values.");
+    // overwrite values at "time"
     for (auto &sample : _sampleStorage) {
       if (math::equals(sample.first, time)) {
         sample.second = values;
