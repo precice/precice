@@ -64,10 +64,10 @@ public:
   GinkgoRadialBasisFctSolver &operator=(const GinkgoRadialBasisFctSolver &solver) = delete;
 
   /// Maps the given input data
-  Eigen::VectorXd solveConsistent(const Eigen::VectorXd &rhsValues, Polynomial polynomial) const;
+  Eigen::VectorXd solveConsistent(const Eigen::VectorXd &rhsValues, Polynomial polynomial);
 
   /// Maps the given input data
-  Eigen::VectorXd solveConservative(const Eigen::VectorXd &inputData, Polynomial polynomial) const;
+  Eigen::VectorXd solveConservative(const Eigen::VectorXd &inputData, Polynomial polynomial);
 
   void clear();
 
@@ -103,7 +103,9 @@ private:
   std::shared_ptr<GinkgoMatrix> _matrixV;
 
   /// @brief Stores the calculated cofficients of the RBF interpolation
-  std::shared_ptr<GinkgoMatrix> _rbfCoefficients;
+  std::shared_ptr<GinkgoVector> _rbfCoefficients;
+
+  std::shared_ptr<GinkgoVector> _polynomialContribution;
 
   // Solver used for iteratively solving linear systems of equations TODO: Find out how to make dynamic for different solver families
   std::shared_ptr<precice::mapping::cg> _solver;
@@ -220,7 +222,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
                                               .with_max_iters(static_cast<std::size_t>(1e6))
                                               .on(this->_deviceExecutor),
                                           gko::stop::ResidualNormReduction<>::build()
-                                              .with_reduction_factor(1e-6)
+                                              .with_reduction_factor(1e-9)
                                               .on(this->_deviceExecutor))
                            .on(this->_deviceExecutor);
 
@@ -234,7 +236,7 @@ void GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::_solveRBFSystem(const 
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(const Eigen::VectorXd &rhsValues, Polynomial polynomial) const
+Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(const Eigen::VectorXd &rhsValues, Polynomial polynomial)
 {
   PRECICE_ASSERT(rhsValues.cols() == 1);
   // Copy rhs vector onto GPU by creating a Ginkgo Vector
@@ -253,7 +255,7 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsis
                                                           .with_max_iters(static_cast<std::size_t>(1e6))
                                                           .on(this->_deviceExecutor),
                                                       gko::stop::ResidualNormReduction<>::build()
-                                                          .with_reduction_factor(1e-6)
+                                                          .with_reduction_factor(1e-9)
                                                           .on(this->_deviceExecutor))
                                        .on(this->_deviceExecutor);
 
@@ -263,9 +265,13 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsis
     matrixQ_T->apply(gko::lend(this->_matrixQ), gko::lend(matrixQTQ));
     matrixQ_T->apply(gko::lend(rhs), gko::lend(polynomialRHS));
 
-    auto polynomialSolver       = polynomialSolverFactory->generate(matrixQTQ);
-    auto polynomialContribution = gko::share(GinkgoVector::create(this->_deviceExecutor, gko::dim<2>{matrixQTQ->get_size()[1], 1}));
-    polynomialSolver->apply(gko::lend(polynomialRHS), gko::lend(polynomialContribution));
+    auto polynomialSolver         = polynomialSolverFactory->generate(matrixQTQ);
+    this->_polynomialContribution = gko::share(GinkgoVector::create(this->_deviceExecutor, gko::dim<2>{matrixQTQ->get_size()[1], 1}));
+    polynomialSolver->apply(gko::lend(polynomialRHS), gko::lend(this->_polynomialContribution));
+
+    auto subPolynomialContribution = gko::share(GinkgoVector::create(this->_deviceExecutor, gko::dim<2>{this->_matrixQ->get_size()[0], 1}));
+    this->_matrixQ->apply(gko::lend(this->_polynomialContribution), gko::lend(subPolynomialContribution));
+    rhs->sub_scaled(gko::lend(this->_scalarOne), gko::lend(subPolynomialContribution));
   }
 
   this->_solveRBFSystem(rhs);
@@ -273,6 +279,12 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsis
   auto output = gko::share(GinkgoVector::create(this->_deviceExecutor, gko::dim<2>{this->_matrixA->get_size()[0], this->_rbfCoefficients->get_size()[1]}));
 
   this->_matrixA->apply(gko::lend(this->_rbfCoefficients), gko::lend(output));
+
+  if (polynomial == Polynomial::SEPARATE) {
+    auto addPolynomialContribution = gko::share(GinkgoVector::create(this->_deviceExecutor, gko::dim<2>{this->_matrixV->get_size()[1], 1}));
+    this->_matrixV->apply(gko::lend(this->_polynomialContribution), gko::lend(addPolynomialContribution));
+    output->add_scaled(gko::lend(this->_scalarOne), gko::lend(addPolynomialContribution));
+  }
 
   output = gko::clone(this->_hostExecutor, output);
 
@@ -288,7 +300,7 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsis
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConservative(const Eigen::VectorXd &rhsValues, Polynomial polynomial) const
+Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConservative(const Eigen::VectorXd &rhsValues, Polynomial polynomial)
 {
   return Eigen::VectorXd(1, 1);
 }
