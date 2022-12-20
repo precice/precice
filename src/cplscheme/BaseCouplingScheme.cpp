@@ -685,7 +685,7 @@ void BaseCouplingScheme::storeIteration()
   }
 }
 
-void BaseCouplingScheme::determineInitialSend(BaseCouplingScheme::DataMap &sendData)
+void BaseCouplingScheme::determineInitialSend(DataMap &sendData)
 {
   if (anyDataRequiresInitialization(sendData)) {
     _sendsInitializedData = true;
@@ -693,7 +693,7 @@ void BaseCouplingScheme::determineInitialSend(BaseCouplingScheme::DataMap &sendD
   }
 }
 
-void BaseCouplingScheme::determineInitialReceive(BaseCouplingScheme::DataMap &receiveData)
+void BaseCouplingScheme::determineInitialReceive(DataMap &receiveData)
 {
   if (anyDataRequiresInitialization(receiveData)) {
     _receivesInitializedData = true;
@@ -705,7 +705,7 @@ int BaseCouplingScheme::getExtrapolationOrder()
   return _extrapolationOrder;
 }
 
-bool BaseCouplingScheme::anyDataRequiresInitialization(BaseCouplingScheme::DataMap &dataMap) const
+bool BaseCouplingScheme::anyDataRequiresInitialization(DataMap &dataMap) const
 {
   /// @todo implement this function using https://en.cppreference.com/w/cpp/algorithm/all_any_none_of
   for (DataMap::value_type &pair : dataMap) {

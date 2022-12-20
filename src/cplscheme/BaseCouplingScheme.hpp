@@ -246,9 +246,6 @@ public:
   bool hasConverged() const override;
 
 protected:
-  /// Map that links DataID to CouplingData
-  typedef std::map<int, PtrCouplingData> DataMap;
-
   /**
    * @brief Sends data sendDataIDs given in mapCouplingData with communication.
    *
