@@ -74,7 +74,7 @@ void MultiCouplingScheme::overwriteSendValuesAtWindowEnd()
 {
   for (auto &sendExchange : _sendDataVector | boost::adaptors::map_values) {
     for (const auto &data : sendExchange | boost::adaptors::map_values) {
-      data->clearTimeStepsStorage();
+      data->overwriteValuesAtWindowEnd(data->values());
     }
   }
 }
