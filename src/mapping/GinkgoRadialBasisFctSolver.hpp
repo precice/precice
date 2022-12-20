@@ -281,7 +281,7 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsis
   this->_matrixA->apply(gko::lend(this->_rbfCoefficients), gko::lend(output));
 
   if (polynomial == Polynomial::SEPARATE) {
-    auto addPolynomialContribution = gko::share(GinkgoVector::create(this->_deviceExecutor, gko::dim<2>{this->_matrixV->get_size()[1], 1}));
+    auto addPolynomialContribution = gko::share(GinkgoVector::create(this->_deviceExecutor, gko::dim<2>{this->_matrixV->get_size()[0], 1}));
     this->_matrixV->apply(gko::lend(this->_polynomialContribution), gko::lend(addPolynomialContribution));
     output->add_scaled(gko::lend(this->_scalarOne), gko::lend(addPolynomialContribution));
   }
