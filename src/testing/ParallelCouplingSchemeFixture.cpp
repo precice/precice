@@ -38,7 +38,7 @@ void ParallelCouplingSchemeFixture::initializeAcceleration(cplscheme::ParallelCo
 
 void ParallelCouplingSchemeFixture::moveToNextWindow(cplscheme::ParallelCouplingScheme &cplscheme)
 {
-  for (const cplscheme::ParallelCouplingScheme::DataMap::value_type &pair : cplscheme.getAllData()) {
+  for (const auto &pair : cplscheme.getAllData()) {
     pair.second->moveTimeStepsStorage();
   }
 }
