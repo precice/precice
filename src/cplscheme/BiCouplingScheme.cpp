@@ -104,7 +104,15 @@ std::vector<std::string> BiCouplingScheme::getCouplingPartners() const
   return partnerNames;
 }
 
-typedef std::map<int, PtrCouplingData> DataMap;
+DataMap &BiCouplingScheme::getSendData()
+{
+  return _sendData;
+}
+
+DataMap &BiCouplingScheme::getReceiveData()
+{
+  return _receiveData;
+}
 
 const DataMap BiCouplingScheme::getAllData()
 {
@@ -135,6 +143,12 @@ CouplingData *BiCouplingScheme::getReceiveData(
   return nullptr;
 }
 
+m2n::PtrM2N BiCouplingScheme::getM2N() const
+{
+  PRECICE_ASSERT(_m2n);
+  return _m2n;
+}
+
 void BiCouplingScheme::exchangeInitialData()
 {
   // F: send, receive, S: receive, send
@@ -155,6 +169,16 @@ void BiCouplingScheme::exchangeInitialData()
       sendData(getM2N(), getSendData());
     }
   }
+}
+
+bool BiCouplingScheme::hasAnySendData()
+{
+  return not getSendData().empty();
+}
+
+bool BiCouplingScheme::hasSendData(DataID dataID)
+{
+  return getSendData(dataID) != nullptr;
 }
 
 } // namespace precice::cplscheme

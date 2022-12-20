@@ -81,6 +81,17 @@ BaseCouplingScheme::BaseCouplingScheme(
   }
 }
 
+bool BaseCouplingScheme::isImplicitCouplingScheme() const
+{
+  PRECICE_ASSERT(_couplingMode != Undefined);
+  return _couplingMode == Implicit;
+}
+
+bool BaseCouplingScheme::hasConverged() const
+{
+  return _hasConverged;
+}
+
 void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendData)
 {
   PRECICE_TRACE();
@@ -118,6 +129,12 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
     receivedDataIDs.push_back(pair.first);
   }
   PRECICE_DEBUG("Number of received data sets = {}", receivedDataIDs.size());
+}
+
+bool BaseCouplingScheme::isExplicitCouplingScheme()
+{
+  PRECICE_ASSERT(_couplingMode != Undefined);
+  return _couplingMode == Explicit;
 }
 
 void BaseCouplingScheme::setTimeWindowSize(double timeWindowSize)
@@ -293,6 +310,11 @@ double BaseCouplingScheme::getTimeWindowSize() const
   return _timeWindowSize;
 }
 
+bool BaseCouplingScheme::isInitialized() const
+{
+  return _isInitialized;
+}
+
 void BaseCouplingScheme::addComputedTime(
     double timeToAdd)
 {
@@ -326,10 +348,30 @@ bool BaseCouplingScheme::hasDataBeenReceived() const
   return _hasDataBeenReceived;
 }
 
+double BaseCouplingScheme::getComputedTimeWindowPart()
+{
+  return _computedTimeWindowPart;
+}
+
+void BaseCouplingScheme::setDoesFirstStep(bool doesFirstStep)
+{
+  _doesFirstStep = doesFirstStep;
+}
+
 void BaseCouplingScheme::checkDataHasBeenReceived()
 {
   PRECICE_ASSERT(not _hasDataBeenReceived, "checkDataHasBeenReceived() may only be called once within one coupling iteration. If this assertion is triggered this probably means that your coupling scheme has a bug.");
   _hasDataBeenReceived = true;
+}
+
+bool BaseCouplingScheme::receivesInitializedData() const
+{
+  return _receivesInitializedData;
+}
+
+void BaseCouplingScheme::setTimeWindows(int timeWindows)
+{
+  _timeWindows = timeWindows;
 }
 
 double BaseCouplingScheme::getTime() const
@@ -449,6 +491,12 @@ std::string BaseCouplingScheme::printActionsState() const
   return os.str();
 }
 
+void BaseCouplingScheme::performReceiveOfFirstAdvance()
+{
+  // noop by default. Will be overridden by child-coupling-schemes, if data has to be received here. See SerialCouplingScheme.
+  return;
+}
+
 void BaseCouplingScheme::checkCompletenessRequiredActions()
 {
   PRECICE_TRACE();
@@ -490,6 +538,11 @@ void BaseCouplingScheme::setAcceleration(
 {
   PRECICE_ASSERT(acceleration.get() != nullptr);
   _acceleration = acceleration;
+}
+
+bool BaseCouplingScheme::doesFirstStep() const
+{
+  return _doesFirstStep;
 }
 
 void BaseCouplingScheme::newConvergenceMeasurements()
@@ -622,6 +675,14 @@ void BaseCouplingScheme::advanceTXTWriters()
 bool BaseCouplingScheme::reachedEndOfTimeWindow()
 {
   return math::equals(getThisTimeWindowRemainder(), 0.0, _eps);
+}
+
+void BaseCouplingScheme::storeIteration()
+{
+  PRECICE_ASSERT(isImplicitCouplingScheme());
+  for (const DataMap::value_type &pair : getAllData()) {
+    pair.second->storeIteration();
+  }
 }
 
 void BaseCouplingScheme::determineInitialSend(BaseCouplingScheme::DataMap &sendData)

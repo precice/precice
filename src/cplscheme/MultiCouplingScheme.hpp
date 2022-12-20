@@ -66,16 +66,9 @@ public:
 
   void determineInitialDataExchange() override;
 
-  /// returns list of all coupling partners
   std::vector<std::string> getCouplingPartners() const override final;
 
-  /**
-   * @returns true, if coupling scheme has any sendData
-   */
-  bool hasAnySendData() override final
-  {
-    return std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(), [](const auto &sendExchange) { return not sendExchange.second.empty(); });
-  }
+  bool hasAnySendData() override final;
 
 private:
   /**
@@ -95,29 +88,15 @@ private:
 
   logging::Logger _log{"cplscheme::MultiCouplingScheme"};
 
-  /**
-   * @brief BiCouplingScheme has _sendData and _receiveData
-   * @returns DataMap with all data
-   */
-  const DataMap getAllData() override;
+  const DataMap getAllData() override final;
 
-  void exchangeFirstData() override;
+  void exchangeFirstData() override final;
 
-  void exchangeSecondData() override;
+  void exchangeSecondData() override final;
 
-  /**
-   * @brief MultiCouplingScheme applies acceleration to all CouplingData
-   * @returns DataMap being accelerated
-   */
-  const DataMap getAccelerationData() override
-  {
-    return getAllData();
-  }
+  const DataMap getAccelerationData() override final;
 
-  /**
-   * @brief Exchanges data, if it has to be initialized.
-   */
-  void exchangeInitialData() override;
+  void exchangeInitialData() override final;
 
   /// name of the controller participant
   std::string _controller;
