@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include <algorithm>
+#include <boost/range/adaptor/map.hpp>
 #include <map>
 #include <memory>
 #include <set>
@@ -403,8 +404,8 @@ protected:
   void storeIteration()
   {
     PRECICE_ASSERT(isImplicitCouplingScheme());
-    for (const DataMap::value_type &pair : getAllData()) {
-      pair.second->storeIteration();
+    for (const auto data : getAllData() | boost::adaptors::map_values) {
+      data->storeIteration();
     }
   }
 

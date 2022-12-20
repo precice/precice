@@ -184,15 +184,15 @@ void BiCouplingScheme::loadReceiveDataFromStorage(double relativeDt)
 
 void BiCouplingScheme::clearTimeStepSendStorage()
 {
-  for (const DataMap::value_type &pair : getSendData()) {
-    pair.second->clearTimeStepsStorage();
+  for (const auto data : getSendData() | boost::adaptors::map_values) {
+    data->clearTimeStepsStorage();
   }
 }
 
 void BiCouplingScheme::storeTimeStepSendData(double relativeDt)
 {
-  for (const DataMap::value_type &pair : getSendData()) {
-    pair.second->storeValuesAtTime(relativeDt, pair.second->values());
+  for (const auto data : getSendData() | boost::adaptors::map_values) {
+    data->storeValuesAtTime(relativeDt, data->values());
   }
 }
 

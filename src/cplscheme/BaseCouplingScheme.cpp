@@ -1,5 +1,6 @@
 #include <Eigen/Core>
 #include <algorithm>
+#include <boost/range/adaptor/map.hpp>
 #include <cmath>
 #include <cstddef>
 #include <functional>
@@ -88,7 +89,7 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
   PRECICE_ASSERT(m2n.get() != nullptr);
   PRECICE_ASSERT(m2n->isConnected());
 
-  for (const DataMap::value_type &pair : sendData) {
+  for (const auto data : sendData | boost::adaptors::map_values) {
     // will be changed via https://github.com/precice/precice/pull/1414
     double sendTime;
     if (initialCommunication) {
@@ -96,56 +97,49 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
     } else {
       sendTime = time::Storage::WINDOW_END;
     }
-    auto sendBuffer = pair.second->getValuesAtTime(sendTime);
+    auto sendBuffer = data->getValuesAtTime(sendTime);
     // Data is actually only send if size>0, which is checked in the derived classes implementation
-    m2n->send(sendBuffer, pair.second->getMeshID(), pair.second->getDimensions());
+    m2n->send(sendBuffer, data->getMeshID(), data->getDimensions());
 
-    if (pair.second->hasGradient()) {
-      m2n->send(pair.second->gradientValues(), pair.second->getMeshID(), pair.second->getDimensions() * pair.second->meshDimensions());
+    if (data->hasGradient()) {
+      m2n->send(data->gradientValues(), data->getMeshID(), data->getDimensions() * data->meshDimensions());
     }
-
-    sentDataIDs.push_back(pair.first);
   }
-  PRECICE_DEBUG("Number of sent data sets = {}", sentDataIDs.size());
 }
 
 void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData, bool initialCommunication)
 {
   PRECICE_TRACE();
-  std::vector<int> receivedDataIDs;
   PRECICE_ASSERT(m2n.get());
   PRECICE_ASSERT(m2n->isConnected());
-  for (const DataMap::value_type &pair : receiveData) {
+  for (const auto data : receiveData | boost::adaptors::map_values) {
     // Data is only received on ranks with size>0, which is checked in the derived class implementation
-    auto recvBuffer = Eigen::VectorXd(pair.second->getSize());
-    m2n->receive(recvBuffer, pair.second->getMeshID(), pair.second->getDimensions());
+    auto recvBuffer = Eigen::VectorXd(data->getSize());
+    m2n->receive(recvBuffer, data->getMeshID(), data->getDimensions());
 
     // will be changed via https://github.com/precice/precice/pull/1414
     if (initialCommunication) {
-      pair.second->storeValuesAtTime(time::Storage::WINDOW_START, recvBuffer);
-      pair.second->storeValuesAtTime(time::Storage::WINDOW_END, recvBuffer);
+      data->storeValuesAtTime(time::Storage::WINDOW_START, recvBuffer);
+      data->storeValuesAtTime(time::Storage::WINDOW_END, recvBuffer);
     } else {
-      pair.second->clearTimeStepsStorage();
-      pair.second->storeValuesAtTime(time::Storage::WINDOW_END, recvBuffer);
+      data->clearTimeStepsStorage();
+      data->storeValuesAtTime(time::Storage::WINDOW_END, recvBuffer);
     }
 
-    pair.second->values() = recvBuffer; // @todo Better do this just before returning to SolverInterfaceImpl.
+    data->values() = recvBuffer; // @todo Better do this just before returning to SolverInterfaceImpl.
 
-    if (pair.second->hasGradient()) {
-      m2n->receive(pair.second->gradientValues(), pair.second->getMeshID(), pair.second->getDimensions() * pair.second->meshDimensions());
+    if (data->hasGradient()) {
+      m2n->receive(data->gradientValues(), data->getMeshID(), data->getDimensions() * data->meshDimensions());
     }
-
-    receivedDataIDs.push_back(pair.first);
   }
-  PRECICE_DEBUG("Number of received data sets = {}", receivedDataIDs.size());
 }
 
 void BaseCouplingScheme::initializeZeroReceiveData(const DataMap &receiveData)
 {
-  for (const DataMap::value_type &pair : receiveData) {
-    auto zeroData = Eigen::VectorXd::Zero(pair.second->getSize());
-    pair.second->storeValuesAtTime(time::Storage::WINDOW_START, zeroData);
-    pair.second->storeValuesAtTime(time::Storage::WINDOW_END, zeroData);
+  for (const auto data : receiveData | boost::adaptors::map_values) {
+    auto zeroData = Eigen::VectorXd::Zero(data->getSize());
+    data->storeValuesAtTime(time::Storage::WINDOW_START, zeroData);
+    data->storeValuesAtTime(time::Storage::WINDOW_END, zeroData);
   }
 }
 
@@ -293,20 +287,18 @@ void BaseCouplingScheme::secondExchange()
 void BaseCouplingScheme::storeExtrapolationData()
 {
   PRECICE_TRACE(_timeWindows);
-  for (auto &pair : getAllData()) {
-    PRECICE_DEBUG("Store data: {}", pair.first);
-    pair.second->storeExtrapolationData();
+  for (const auto data : getAllData() | boost::adaptors::map_values) {
+    data->storeExtrapolationData();
   }
 }
 
 void BaseCouplingScheme::moveToNextWindow()
 {
   PRECICE_TRACE(_timeWindows);
-  for (auto &pair : getAccelerationData()) {
-    PRECICE_DEBUG("Store data: {}", pair.first);
-    pair.second->moveToNextWindow();
-    pair.second->clearTimeStepsStorage();
-    pair.second->storeValuesAtTime(time::Storage::WINDOW_END, pair.second->values());
+  for (const auto data : getAccelerationData() | boost::adaptors::map_values) {
+    data->moveToNextWindow();
+    data->clearTimeStepsStorage();
+    data->storeValuesAtTime(time::Storage::WINDOW_END, data->values());
   }
 }
 
@@ -504,8 +496,8 @@ void BaseCouplingScheme::initializeStorages()
 {
   PRECICE_TRACE();
   // Reserve storage for all data
-  for (auto &pair : getAllData()) {
-    pair.second->initializeExtrapolation();
+  for (const auto data : getAllData() | boost::adaptors::map_values) {
+    data->initializeExtrapolation();
   }
   // Reserve storage for acceleration
   if (_acceleration) {
@@ -675,8 +667,8 @@ int BaseCouplingScheme::getExtrapolationOrder()
 bool BaseCouplingScheme::anyDataRequiresInitialization(BaseCouplingScheme::DataMap &dataMap) const
 {
   /// @todo implement this function using https://en.cppreference.com/w/cpp/algorithm/all_any_none_of
-  for (DataMap::value_type &pair : dataMap) {
-    if (pair.second->requiresInitialization) {
+  for (const auto data : dataMap | boost::adaptors::map_values) {
+    if (data->requiresInitialization) {
       return true;
     }
   }
@@ -717,14 +709,14 @@ void BaseCouplingScheme::doImplicitStep()
        * track of _timeStepsStorage for subcycling. So it will become simpler as soon as subcycling is fully implemented.
        */
       // @todo For other Acceleration schemes as described in "Rüth, B, Uekermann, B, Mehl, M, Birken, P, Monge, A, Bungartz, H-J. Quasi-Newton waveform iteration for partitioned surface-coupled multiphysics applications. Int J Numer Methods Eng. 2021; 122: 5236– 5257. https://doi.org/10.1002/nme.6443" we need a more elaborate implementation.
-      // Put values into pair.second->values() for acceleration
-      for (auto &pair : getAccelerationData()) {
-        pair.second->values() = pair.second->getValuesAtTime(time::Storage::WINDOW_END);
+      // Put values into data->values() for acceleration
+      for (const auto data : getAccelerationData() | boost::adaptors::map_values) {
+        data->values() = data->getValuesAtTime(time::Storage::WINDOW_END);
       }
       _acceleration->performAcceleration(getAccelerationData());
-      for (auto &pair : getAccelerationData()) {
+      for (const auto data : getAccelerationData() | boost::adaptors::map_values) {
         bool mustOverwrite = true;
-        pair.second->storeValuesAtTime(time::Storage::WINDOW_END, pair.second->values(), mustOverwrite);
+        data->storeValuesAtTime(time::Storage::WINDOW_END, data->values(), mustOverwrite);
       }
     }
   }

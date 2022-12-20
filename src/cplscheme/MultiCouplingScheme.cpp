@@ -40,11 +40,11 @@ MultiCouplingScheme::MultiCouplingScheme(
 
 void MultiCouplingScheme::determineInitialDataExchange()
 {
-  for (auto &sendExchange : _sendDataVector) {
-    determineInitialSend(sendExchange.second);
+  for (auto &sendExchange : _sendDataVector | boost::adaptors::map_values) {
+    determineInitialSend(sendExchange);
   }
-  for (auto &receiveExchange : _receiveDataVector) {
-    determineInitialReceive(receiveExchange.second);
+  for (auto &receiveExchange : _receiveDataVector | boost::adaptors::map_values) {
+    determineInitialReceive(receiveExchange);
   }
 }
 
@@ -61,18 +61,18 @@ std::vector<std::string> MultiCouplingScheme::getCouplingPartners() const
 
 void MultiCouplingScheme::clearTimeStepSendStorage()
 {
-  for (auto &sendExchange : _sendDataVector) {
-    for (const DataMap::value_type &pair : sendExchange.second) {
-      pair.second->clearTimeStepsStorage();
+  for (auto &sendExchange : _sendDataVector | boost::adaptors::map_values) {
+    for (const auto data : sendExchange | boost::adaptors::map_values) {
+      data->clearTimeStepsStorage();
     }
   }
 }
 
 void MultiCouplingScheme::storeTimeStepSendData(double relativeDt)
 {
-  for (auto &sendExchange : _sendDataVector) {
-    for (const DataMap::value_type &pair : sendExchange.second) {
-      pair.second->storeValuesAtTime(relativeDt, pair.second->values());
+  for (auto &sendExchange : _sendDataVector | boost::adaptors::map_values) {
+    for (const auto data : sendExchange | boost::adaptors::map_values) {
+      data->storeValuesAtTime(relativeDt, data->values());
     }
   }
 }
@@ -89,8 +89,8 @@ void MultiCouplingScheme::exchangeInitialData()
       }
       checkDataHasBeenReceived();
     } else {
-      for (auto &receiveExchange : _receiveDataVector) {
-        initializeZeroReceiveData(receiveExchange.second);
+      for (auto &receiveExchange : _receiveDataVector | boost::adaptors::map_values) {
+        initializeZeroReceiveData(receiveExchange);
       }
     }
     if (sendsInitializedData()) {
@@ -110,8 +110,8 @@ void MultiCouplingScheme::exchangeInitialData()
       }
       checkDataHasBeenReceived();
     } else {
-      for (auto &receiveExchange : _receiveDataVector) {
-        initializeZeroReceiveData(receiveExchange.second);
+      for (auto &receiveExchange : _receiveDataVector | boost::adaptors::map_values) {
+        initializeZeroReceiveData(receiveExchange);
       }
     }
   }
@@ -122,10 +122,10 @@ void MultiCouplingScheme::storeReceiveData(double relativeDt)
 {
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
   PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
-  for (auto &receiveExchange : _receiveDataVector) {
-    for (auto &receiveData : receiveExchange.second) {
+  for (auto &receiveExchange : _receiveDataVector | boost::adaptors::map_values) {
+    for (auto &receiveData : receiveExchange | boost::adaptors::map_values) {
       bool mustOverride = true;
-      receiveData.second->storeValuesAtTime(relativeDt, receiveData.second->values(), mustOverride);
+      receiveData->storeValuesAtTime(relativeDt, receiveData->values(), mustOverride);
     }
   }
 }
@@ -134,9 +134,9 @@ void MultiCouplingScheme::loadReceiveDataFromStorage(double relativeDt)
 {
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
   PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
-  for (auto &receiveExchange : _receiveDataVector) {
-    for (auto &receiveData : receiveExchange.second) {
-      receiveData.second->values() = receiveData.second->getValuesAtTime(relativeDt);
+  for (auto &receiveExchange : _receiveDataVector | boost::adaptors::map_values) {
+    for (auto &receiveData : receiveExchange | boost::adaptors::map_values) {
+      receiveData->values() = receiveData->getValuesAtTime(relativeDt);
     }
   }
 }
@@ -147,11 +147,11 @@ const DataMap MultiCouplingScheme::getAllData()
 {
   DataMap allData;
   // @todo use C++17 std::map::merge
-  for (auto &sendData : _sendDataVector) {
-    allData.insert(sendData.second.begin(), sendData.second.end());
+  for (auto &sendData : _sendDataVector | boost::adaptors::map_values) {
+    allData.insert(sendData.begin(), sendData.end());
   }
-  for (auto &receiveData : _receiveDataVector) {
-    allData.insert(receiveData.second.begin(), receiveData.second.end());
+  for (auto &receiveData : _receiveDataVector | boost::adaptors::map_values) {
+    allData.insert(receiveData.begin(), receiveData.end());
   }
   return allData;
 }
@@ -188,8 +188,8 @@ void MultiCouplingScheme::exchangeSecondData()
 
   if (_isController) {
     doImplicitStep();
-    for (const auto &m2nPair : _m2ns) {
-      sendConvergence(m2nPair.second);
+    for (const auto &m2n : _m2ns | boost::adaptors::map_values) {
+      sendConvergence(m2n);
     }
 
     for (auto &sendExchange : _sendDataVector) {
@@ -204,8 +204,8 @@ void MultiCouplingScheme::exchangeSecondData()
     checkDataHasBeenReceived();
   }
   if (hasConverged()) {
-    for (const DataMap::value_type &data : getAllData()) {
-      data.second->moveTimeStepsStorage();
+    for (const auto data : getAllData() | boost::adaptors::map_values) {
+      data->moveTimeStepsStorage();
     }
   }
 }

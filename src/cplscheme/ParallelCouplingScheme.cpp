@@ -59,8 +59,8 @@ void ParallelCouplingScheme::exchangeSecondData()
     sendData(getM2N(), getSendData());
   }
   if (hasConverged()) {
-    for (const DataMap::value_type &pair : getAllData()) {
-      pair.second->moveTimeStepsStorage();
+    for (const auto &data : getAllData() | boost::adaptors::map_values) {
+      data->moveTimeStepsStorage();
     }
   }
 }

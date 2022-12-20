@@ -121,8 +121,8 @@ void SerialCouplingScheme::exchangeSecondData()
   if (hasConverged() && isCouplingOngoing()) {
     // first participant received converged result of this window
     // second participant will receive result for next window
-    for (const DataMap::value_type &pair : getAllData()) {
-      pair.second->moveTimeStepsStorage();
+    for (const auto &data : getAllData() | boost::adaptors::map_values) {
+      data->moveTimeStepsStorage();
     }
   }
 
