@@ -102,9 +102,9 @@ private:
 
   const DataMap getAccelerationData() override final;
 
-  void clearTimeStepSendStorage() override final;
+  void overwriteSendValuesAtWindowEnd() override final;
 
-  void storeTimeStepSendData(double relativeDt) override final;
+  void initializeSendDataStorage() override final;
 
   void exchangeInitialData() override final;
 

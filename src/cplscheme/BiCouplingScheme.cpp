@@ -206,17 +206,17 @@ void BiCouplingScheme::loadReceiveDataFromStorage(double relativeDt)
   }
 }
 
-void BiCouplingScheme::clearTimeStepSendStorage()
+void BiCouplingScheme::overwriteSendValuesAtWindowEnd()
 {
   for (auto &data : getSendData() | boost::adaptors::map_values) {
-    data->clearTimeStepsStorage();
+    data->overwriteValuesAtWindowEnd(data->values());
   }
 }
 
-void BiCouplingScheme::storeTimeStepSendData(double relativeDt)
+void BiCouplingScheme::initializeSendDataStorage()
 {
   for (auto &data : getSendData() | boost::adaptors::map_values) {
-    data->storeValuesAtTime(relativeDt, data->values());
+    data->storeValuesAtTime(time::Storage::WINDOW_START, data->values());
   }
 }
 

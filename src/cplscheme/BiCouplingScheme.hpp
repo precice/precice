@@ -94,9 +94,9 @@ protected:
   /// @return Communication device to the other coupling participant.
   m2n::PtrM2N getM2N() const;
 
-  void clearTimeStepSendStorage() override final;
+  void overwriteSendValuesAtWindowEnd() override final;
 
-  void storeTimeStepSendData(double relativeDt) override final;
+  void initializeSendDataStorage() override final;
 
   void exchangeInitialData() override final;
 

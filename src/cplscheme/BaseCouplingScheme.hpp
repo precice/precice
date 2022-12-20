@@ -352,14 +352,15 @@ protected:
    */
   void storeExtrapolationData();
 
-  virtual void clearTimeStepSendStorage() = 0;
+  /**
+   * @brief clears storage for all send data and writes given send data to storage at WINDOW_END
+   */
+  virtual void overwriteSendValuesAtWindowEnd() = 0;
 
   /**
-   * @brief Stores send data in storage of CouplingData at given time
-   *
-   * @param relativeDt time where data is stored
+   * @brief Stores send data in storage of CouplingData at given time WINDOW_START
    */
-  virtual void storeTimeStepSendData(double relativeDt) = 0;
+  virtual void initializeSendDataStorage() = 0;
 
   /**
    * @brief finalizes this window's data and initializes data for next window.

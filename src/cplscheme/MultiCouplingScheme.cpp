@@ -70,7 +70,7 @@ const DataMap MultiCouplingScheme::getAccelerationData()
   return getAllData();
 }
 
-void MultiCouplingScheme::clearTimeStepSendStorage()
+void MultiCouplingScheme::overwriteSendValuesAtWindowEnd()
 {
   for (auto &sendExchange : _sendDataVector | boost::adaptors::map_values) {
     for (const auto &data : sendExchange | boost::adaptors::map_values) {
@@ -79,11 +79,11 @@ void MultiCouplingScheme::clearTimeStepSendStorage()
   }
 }
 
-void MultiCouplingScheme::storeTimeStepSendData(double relativeDt)
+void MultiCouplingScheme::initializeSendDataStorage()
 {
   for (auto &sendExchange : _sendDataVector | boost::adaptors::map_values) {
     for (const auto &data : sendExchange | boost::adaptors::map_values) {
-      data->storeValuesAtTime(relativeDt, data->values());
+      data->storeValuesAtTime(time::Storage::WINDOW_START, data->values());
     }
   }
 }

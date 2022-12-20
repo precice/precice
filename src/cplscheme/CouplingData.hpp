@@ -77,6 +77,12 @@ public:
   /// store current value in _extrapolation
   void storeExtrapolationData();
 
+  /// initializes an empty storage with given data at WINDOW_START and WINDOW_END
+  void initializeStorage(Eigen::VectorXd data);
+
+  /// clears storage and writes given data at WINDOW_END
+  void overwriteValuesAtWindowEnd(Eigen::VectorXd data);
+
   /// clears _timeStepsStorage. Called after data was written or before data is received.
   void clearTimeStepsStorage();
 

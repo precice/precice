@@ -130,11 +130,9 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
 
     // will be changed via https://github.com/precice/precice/pull/1414
     if (initialCommunication) {
-      data->storeValuesAtTime(time::Storage::WINDOW_START, recvBuffer);
-      data->storeValuesAtTime(time::Storage::WINDOW_END, recvBuffer);
+      data->initializeStorage(recvBuffer);
     } else {
-      data->clearTimeStepsStorage();
-      data->storeValuesAtTime(time::Storage::WINDOW_END, recvBuffer);
+      data->overwriteValuesAtWindowEnd(recvBuffer);
     }
 
     data->values() = recvBuffer; // @todo Better do this just before returning to SolverInterfaceImpl.
@@ -149,8 +147,7 @@ void BaseCouplingScheme::initializeZeroReceiveData(const DataMap &receiveData)
 {
   for (const auto &data : receiveData | boost::adaptors::map_values) {
     auto zeroData = Eigen::VectorXd::Zero(data->getSize());
-    data->storeValuesAtTime(time::Storage::WINDOW_START, zeroData);
-    data->storeValuesAtTime(time::Storage::WINDOW_END, zeroData);
+    data->initializeStorage(zeroData);
   }
 }
 
@@ -204,7 +201,7 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
     storeIteration();
   }
 
-  storeTimeStepSendData(time::Storage::WINDOW_START);
+  initializeSendDataStorage();
   exchangeInitialData();
 
   if (isImplicitCouplingScheme()) {
@@ -248,8 +245,7 @@ void BaseCouplingScheme::firstExchange()
   if (reachedEndOfTimeWindow()) {
 
     _timeWindows += 1; // increment window counter. If not converged, will be decremented again later.
-    clearTimeStepSendStorage();
-    storeTimeStepSendData(time::Storage::WINDOW_END);
+    overwriteSendValuesAtWindowEnd();
     exchangeFirstData();
   }
 }
@@ -329,13 +325,11 @@ void BaseCouplingScheme::moveToNextWindow()
   // @todo breaks for CplSchemeTests/ParallelImplicitCouplingSchemeTests/Extrapolation/FirstOrder. Why? @fsimonis
   // for (auto &data : getAccelerationData() | boost::adaptors::map_values) {
   //  data->moveToNextWindow();
-  //  data->clearTimeStepsStorage();
-  //  data->storeValuesAtTime(time::Storage::WINDOW_END, data->values());
+  //  data->overwriteValuesAtWindowEnd(data->values());
   // }
   for (auto &pair : getAccelerationData()) {
     pair.second->moveToNextWindow();
-    pair.second->clearTimeStepsStorage();
-    pair.second->storeValuesAtTime(time::Storage::WINDOW_END, pair.second->values());
+    pair.second->overwriteValuesAtWindowEnd(pair.second->values());
   }
 }
 
@@ -790,13 +784,11 @@ void BaseCouplingScheme::doImplicitStep()
       //   data->values() = data->getValuesAtTime(time::Storage::WINDOW_END);
       // }
       for (auto &pair : getAccelerationData()) {
-        bool mustOverwrite    = true;
         pair.second->values() = pair.second->getValuesAtTime(time::Storage::WINDOW_END);
       }
       _acceleration->performAcceleration(getAccelerationData());
       // @todo breaks for CplSchemeTests/ParallelImplicitCouplingSchemeTests. Why? @fsimonis
       // for (auto &data : getAccelerationData() | boost::adaptors::map_values) {
-      //   bool mustOverwrite = true;
       //   data->storeValuesAtTime(time::Storage::WINDOW_END, data->values(), mustOverwrite);
       // }
       for (auto &pair : getAccelerationData()) {
