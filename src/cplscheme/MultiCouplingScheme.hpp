@@ -66,21 +66,12 @@ public:
 
   void determineInitialDataExchange() override;
 
-  /// returns list of all coupling partners
   std::vector<std::string> getCouplingPartners() const override final;
 
-  /**
-   * @returns true, if coupling scheme has any sendData
-   */
-  bool hasAnySendData() override final
-  {
-    return std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(), [](const auto &sendExchange) { return not sendExchange.second.empty(); });
-  }
+  bool hasAnySendData() override final;
 
-  /// @copydoc CouplingScheme::storeReceiveData
   void storeReceiveData(double relativeDt) override final;
 
-  /// @copydoc CouplingScheme::loadReceiveDataFromStorage
   void loadReceiveDataFromStorage(double relativeDt) override final;
 
 private:
@@ -101,35 +92,21 @@ private:
 
   logging::Logger _log{"cplscheme::MultiCouplingScheme"};
 
-  /**
-   * @brief MultiCouplingScheme has to collect all send data and receive data from _sendDataVector and _receiveDataVector
-   * @returns DataMap with all data
-   */
-  const DataMap getAllData() override;
+  const DataMap getAllData() override final;
 
   void performReceiveOfFirstAdvance() override final;
 
-  void exchangeFirstData() override;
+  void exchangeFirstData() override final;
 
-  void exchangeSecondData() override;
+  void exchangeSecondData() override final;
 
-  /**
-   * @brief MultiCouplingScheme applies acceleration to all CouplingData
-   * @returns DataMap being accelerated
-   */
-  const DataMap getAccelerationData() override
-  {
-    return getAllData();
-  }
+  const DataMap getAccelerationData() override final;
 
-  void clearTimeStepSendStorage() override;
+  void clearTimeStepSendStorage() override final;
 
-  void storeTimeStepSendData(double relativeDt) override;
+  void storeTimeStepSendData(double relativeDt) override final;
 
-  /**
-   * @brief Exchanges data, if it has to be initialized.
-   */
-  void exchangeInitialData() override;
+  void exchangeInitialData() override final;
 
   /// name of the controller participant
   std::string _controller;

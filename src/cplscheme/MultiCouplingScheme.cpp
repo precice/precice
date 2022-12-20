@@ -59,6 +59,17 @@ std::vector<std::string> MultiCouplingScheme::getCouplingPartners() const
   return partnerNames;
 }
 
+bool MultiCouplingScheme::hasAnySendData()
+{
+  return std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(), [](const auto &sendExchange) { return not sendExchange.second.empty(); });
+}
+
+const DataMap MultiCouplingScheme::getAccelerationData()
+{
+  // MultiCouplingScheme applies acceleration to all CouplingData
+  return getAllData();
+}
+
 void MultiCouplingScheme::clearTimeStepSendStorage()
 {
   for (auto &sendExchange : _sendDataVector | boost::adaptors::map_values) {
@@ -141,10 +152,9 @@ void MultiCouplingScheme::loadReceiveDataFromStorage(double relativeDt)
   }
 }
 
-typedef std::map<int, PtrCouplingData> DataMap;
-
 const DataMap MultiCouplingScheme::getAllData()
 {
+  // MultiCouplingScheme has to collect all send data and receive data from _sendDataVector and _receiveDataVector
   DataMap allData;
   // @todo use C++17 std::map::merge
   for (auto &sendData : _sendDataVector | boost::adaptors::map_values) {

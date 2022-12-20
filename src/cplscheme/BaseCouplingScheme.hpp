@@ -85,10 +85,7 @@ public:
    * @brief getter for _isInitialized
    * @returns true, if initialize has been called.
    */
-  bool isInitialized() const override final
-  {
-    return _isInitialized;
-  }
+  bool isInitialized() const override final;
 
   /**
    * @brief Adds newly computed time. Has to be called before every advance.
@@ -219,10 +216,7 @@ public:
    * @brief Getter for _doesFirstStep
    * @returns _doesFirstStep
    */
-  bool doesFirstStep() const
-  {
-    return _doesFirstStep;
-  }
+  bool doesFirstStep() const;
 
   /**
    * @returns true, if coupling scheme has any sendData
@@ -240,26 +234,16 @@ public:
    * @brief Function to determine whether coupling scheme is an implicit coupling scheme
    * @returns true, if coupling scheme is implicit
    */
-  bool isImplicitCouplingScheme() const override
-  {
-    PRECICE_ASSERT(_couplingMode != Undefined);
-    return _couplingMode == Implicit;
-  }
+  bool isImplicitCouplingScheme() const override;
 
   /**
    * @brief Checks if the implicit cplscheme has converged
    *
    * @pre \ref doImplicitStep() or \ref receiveConvergence() has been called
    */
-  bool hasConverged() const override
-  {
-    return _hasConverged;
-  }
+  bool hasConverged() const override;
 
 protected:
-  /// Map that links DataID to CouplingData
-  typedef std::map<int, PtrCouplingData> DataMap;
-
   /**
    * @brief Sends data sendDataIDs given in mapCouplingData with communication.
    *
@@ -297,11 +281,7 @@ protected:
    * @brief Function to determine whether coupling scheme is an explicit coupling scheme
    * @returns true, if coupling scheme is explicit
    */
-  bool isExplicitCouplingScheme()
-  {
-    PRECICE_ASSERT(_couplingMode != Undefined);
-    return _couplingMode == Explicit;
-  }
+  bool isExplicitCouplingScheme();
 
   /**
    * @brief Setter for _timeWindowSize
@@ -313,18 +293,12 @@ protected:
    * @brief Getter for _computedTimeWindowPart
    * @returns _computedTimeWindowPart
    */
-  double getComputedTimeWindowPart()
-  {
-    return _computedTimeWindowPart;
-  }
+  double getComputedTimeWindowPart();
 
   /**
    * @brief Setter for _doesFirstStep
    */
-  void setDoesFirstStep(bool doesFirstStep)
-  {
-    _doesFirstStep = doesFirstStep;
-  }
+  void setDoesFirstStep(bool doesFirstStep);
 
   /**
    * @brief Used to set flag after data has been received using receiveData().
@@ -335,10 +309,7 @@ protected:
    * @brief Getter for _receivesInitializedData
    * @returns _receivesInitializedData
    */
-  bool receivesInitializedData() const
-  {
-    return _receivesInitializedData;
-  }
+  bool receivesInitializedData() const;
 
   /**
    * @brief Setter for _timeWindows
@@ -348,10 +319,7 @@ protected:
    *
    * @param timeWindows number of time windows
    */
-  void setTimeWindows(int timeWindows)
-  {
-    _timeWindows = timeWindows;
-  }
+  void setTimeWindows(int timeWindows);
 
   /**
    * @brief Reserves memory to store data values from previous iterations and time windows in coupling data and acceleration, and initializes with zero.
@@ -401,13 +369,7 @@ protected:
   /**
    * @brief used for storing all Data at end of doImplicitStep for later reference.
    */
-  void storeIteration()
-  {
-    PRECICE_ASSERT(isImplicitCouplingScheme());
-    for (const auto data : getAllData() | boost::adaptors::map_values) {
-      data->storeIteration();
-    }
-  }
+  void storeIteration();
 
   /**
    * @brief Sets _sendsInitializedData, if sendData requires initialization
@@ -561,7 +523,9 @@ private:
   /// Exchanges the first set of data
   virtual void exchangeFirstData() = 0;
 
-  /// Exchanges the second set of data
+  /**
+   * @brief Exchanges the second set of data between the participants of the SerialCouplingSchemes
+   */
   virtual void exchangeSecondData() = 0;
 
   /**

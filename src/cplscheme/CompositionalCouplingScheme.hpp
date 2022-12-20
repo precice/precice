@@ -124,10 +124,8 @@ public:
    */
   bool hasDataBeenReceived() const final override;
 
-  /// @copydoc CouplingScheme::storeReceiveData
   void storeReceiveData(double relativeDt) override final;
 
-  /// @copydoc CouplingScheme::loadReceiveDataFromStorage
   void loadReceiveDataFromStorage(double relativeDt) final override;
 
   /**

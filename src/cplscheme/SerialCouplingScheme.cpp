@@ -77,6 +77,8 @@ void SerialCouplingScheme::receiveAndSetTimeWindowSize()
 
 void SerialCouplingScheme::performReceiveOfFirstAdvance()
 {
+  // Second participant of a SerialCouplingScheme, receives the result of the first advance of the first participant.
+
   if (!doesFirstStep()) { // second participant
     // similar to SerialCouplingScheme::exchangeSecondData()
     receiveAndSetTimeWindowSize();
@@ -139,6 +141,12 @@ void SerialCouplingScheme::exchangeSecondData()
       checkDataHasBeenReceived();
     }
   }
+}
+
+const DataMap SerialCouplingScheme::getAccelerationData()
+{
+  // SerialCouplingSchemes applies acceleration to send data
+  return getSendData();
 }
 
 } // namespace precice::cplscheme
