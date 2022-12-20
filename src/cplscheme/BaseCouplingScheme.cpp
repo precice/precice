@@ -89,7 +89,7 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
   PRECICE_ASSERT(m2n.get() != nullptr);
   PRECICE_ASSERT(m2n->isConnected());
 
-  for (const auto data : sendData | boost::adaptors::map_values) {
+  for (const auto &data : sendData | boost::adaptors::map_values) {
     // will be changed via https://github.com/precice/precice/pull/1414
     double sendTime;
     if (initialCommunication) {
@@ -112,7 +112,7 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
   PRECICE_TRACE();
   PRECICE_ASSERT(m2n.get());
   PRECICE_ASSERT(m2n->isConnected());
-  for (const auto data : receiveData | boost::adaptors::map_values) {
+  for (const auto &data : receiveData | boost::adaptors::map_values) {
     // Data is only received on ranks with size>0, which is checked in the derived class implementation
     auto recvBuffer = Eigen::VectorXd(data->getSize());
     m2n->receive(recvBuffer, data->getMeshID(), data->getDimensions());
@@ -136,7 +136,7 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
 
 void BaseCouplingScheme::initializeZeroReceiveData(const DataMap &receiveData)
 {
-  for (const auto data : receiveData | boost::adaptors::map_values) {
+  for (const auto &data : receiveData | boost::adaptors::map_values) {
     auto zeroData = Eigen::VectorXd::Zero(data->getSize());
     data->storeValuesAtTime(time::Storage::WINDOW_START, zeroData);
     data->storeValuesAtTime(time::Storage::WINDOW_END, zeroData);
@@ -287,19 +287,43 @@ void BaseCouplingScheme::secondExchange()
 void BaseCouplingScheme::storeExtrapolationData()
 {
   PRECICE_TRACE(_timeWindows);
-  for (const auto data : getAllData() | boost::adaptors::map_values) {
-    data->storeExtrapolationData();
+  // @todo breaks for CplSchemeTests/SerialImplicitCouplingSchemeTests/testConfiguredAbsConvergenceMeasureSynchronized. Why? @fsimonis
+  // for (auto &data : getAllData() | boost::adaptors::map_values) {
+  //   data->storeExtrapolationData();
+  // }
+  for (auto &pair : getAllData()) {
+    pair.second->storeExtrapolationData();
   }
 }
 
 void BaseCouplingScheme::moveToNextWindow()
 {
   PRECICE_TRACE(_timeWindows);
-  for (const auto data : getAccelerationData() | boost::adaptors::map_values) {
-    data->moveToNextWindow();
-    data->clearTimeStepsStorage();
-    data->storeValuesAtTime(time::Storage::WINDOW_END, data->values());
+  // @todo breaks for CplSchemeTests/ParallelImplicitCouplingSchemeTests/Extrapolation/FirstOrder. Why? @fsimonis
+  // for (auto &data : getAccelerationData() | boost::adaptors::map_values) {
+  //  data->moveToNextWindow();
+  //  data->clearTimeStepsStorage();
+  //  data->storeValuesAtTime(time::Storage::WINDOW_END, data->values());
+  // }
+  for (auto &pair : getAccelerationData()) {
+    pair.second->moveToNextWindow();
+    pair.second->clearTimeStepsStorage();
+    pair.second->storeValuesAtTime(time::Storage::WINDOW_END, pair.second->values());
   }
+}
+
+void BaseCouplingScheme::storeIteration()
+{
+  PRECICE_ASSERT(isImplicitCouplingScheme());
+  PRECICE_DEBUG("BaseCouplingScheme::storeIteration");
+  // @todo breaks for CplSchemeTests/ParallelImplicitCouplingSchemeTests/Extrapolation/FirstOrderWith*. Interesting: Not for individual tests... Why? @fsimonis
+  // for (auto &data : getAllData() | boost::adaptors::map_values) {
+  //   data->storeIteration();
+  // }
+  for (const DataMap::value_type &pair : getAllData()) {
+    pair.second->storeIteration();
+  }
+  PRECICE_DEBUG("BaseCouplingScheme::storeIteration ok");
 }
 
 bool BaseCouplingScheme::hasTimeWindowSize() const
@@ -496,8 +520,12 @@ void BaseCouplingScheme::initializeStorages()
 {
   PRECICE_TRACE();
   // Reserve storage for all data
-  for (const auto data : getAllData() | boost::adaptors::map_values) {
-    data->initializeExtrapolation();
+  // @todo breaks for CplSchemeTests/ParallelImplicitCouplingSchemeTests/Extrapolation/FirstOrderWith*. Interesting: Not for individual tests... Why? @fsimonis
+  // for (auto &data : getAllData() | boost::adaptors::map_values) {
+  //   data->initializeExtrapolation();
+  // }
+  for (auto &pair : getAllData()) {
+    pair.second->initializeExtrapolation();
   }
   // Reserve storage for acceleration
   if (_acceleration) {
@@ -667,7 +695,7 @@ int BaseCouplingScheme::getExtrapolationOrder()
 bool BaseCouplingScheme::anyDataRequiresInitialization(BaseCouplingScheme::DataMap &dataMap) const
 {
   /// @todo implement this function using https://en.cppreference.com/w/cpp/algorithm/all_any_none_of
-  for (const auto data : dataMap | boost::adaptors::map_values) {
+  for (const auto &data : dataMap | boost::adaptors::map_values) {
     if (data->requiresInitialization) {
       return true;
     }
@@ -710,13 +738,23 @@ void BaseCouplingScheme::doImplicitStep()
        */
       // @todo For other Acceleration schemes as described in "Rüth, B, Uekermann, B, Mehl, M, Birken, P, Monge, A, Bungartz, H-J. Quasi-Newton waveform iteration for partitioned surface-coupled multiphysics applications. Int J Numer Methods Eng. 2021; 122: 5236– 5257. https://doi.org/10.1002/nme.6443" we need a more elaborate implementation.
       // Put values into data->values() for acceleration
-      for (const auto data : getAccelerationData() | boost::adaptors::map_values) {
-        data->values() = data->getValuesAtTime(time::Storage::WINDOW_END);
+      // @todo breaks for CplSchemeTests/ParallelImplicitCouplingSchemeTests. Why? @fsimonis
+      // for (auto &data : getAccelerationData() | boost::adaptors::map_values) {
+      //   data->values() = data->getValuesAtTime(time::Storage::WINDOW_END);
+      // }
+      for (auto &pair : getAccelerationData()) {
+        bool mustOverwrite    = true;
+        pair.second->values() = pair.second->getValuesAtTime(time::Storage::WINDOW_END);
       }
       _acceleration->performAcceleration(getAccelerationData());
-      for (const auto data : getAccelerationData() | boost::adaptors::map_values) {
+      // @todo breaks for CplSchemeTests/ParallelImplicitCouplingSchemeTests. Why? @fsimonis
+      // for (auto &data : getAccelerationData() | boost::adaptors::map_values) {
+      //   bool mustOverwrite = true;
+      //   data->storeValuesAtTime(time::Storage::WINDOW_END, data->values(), mustOverwrite);
+      // }
+      for (auto &pair : getAccelerationData()) {
         bool mustOverwrite = true;
-        data->storeValuesAtTime(time::Storage::WINDOW_END, data->values(), mustOverwrite);
+        pair.second->storeValuesAtTime(time::Storage::WINDOW_END, pair.second->values(), mustOverwrite);
       }
     }
   }

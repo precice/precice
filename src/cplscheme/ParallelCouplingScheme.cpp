@@ -59,8 +59,12 @@ void ParallelCouplingScheme::exchangeSecondData()
     sendData(getM2N(), getSendData());
   }
   if (hasConverged()) {
-    for (const auto &data : getAllData() | boost::adaptors::map_values) {
-      data->moveTimeStepsStorage();
+    // @todo similar code breaks in SerialCouplingScheme.cpp for CplSchemeTests/SerialImplicitCouplingSchemeTests/ testConfiguredAbsConvergenceMeasureSynchronized. Why? @fsimonis
+    // for (const auto &data : getAllData() | boost::adaptors::map_values) {
+    //   data->moveTimeStepsStorage();
+    // }
+    for (const DataMap::value_type &pair : getAllData()) {
+      pair.second->moveTimeStepsStorage();
     }
   }
 }

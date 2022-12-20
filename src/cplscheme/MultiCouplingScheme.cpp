@@ -62,7 +62,7 @@ std::vector<std::string> MultiCouplingScheme::getCouplingPartners() const
 void MultiCouplingScheme::clearTimeStepSendStorage()
 {
   for (auto &sendExchange : _sendDataVector | boost::adaptors::map_values) {
-    for (const auto data : sendExchange | boost::adaptors::map_values) {
+    for (const auto &data : sendExchange | boost::adaptors::map_values) {
       data->clearTimeStepsStorage();
     }
   }
@@ -71,7 +71,7 @@ void MultiCouplingScheme::clearTimeStepSendStorage()
 void MultiCouplingScheme::storeTimeStepSendData(double relativeDt)
 {
   for (auto &sendExchange : _sendDataVector | boost::adaptors::map_values) {
-    for (const auto data : sendExchange | boost::adaptors::map_values) {
+    for (const auto &data : sendExchange | boost::adaptors::map_values) {
       data->storeValuesAtTime(relativeDt, data->values());
     }
   }
@@ -204,8 +204,12 @@ void MultiCouplingScheme::exchangeSecondData()
     checkDataHasBeenReceived();
   }
   if (hasConverged()) {
-    for (const auto data : getAllData() | boost::adaptors::map_values) {
-      data->moveTimeStepsStorage();
+    // @todo similar code breaks in SerialCouplingScheme.cpp for CplSchemeTests/SerialImplicitCouplingSchemeTests/ testConfiguredAbsConvergenceMeasureSynchronized. Why? @fsimonis
+    // for (const auto &data : getAllData() | boost::adaptors::map_values) {
+    //   data->moveTimeStepsStorage();
+    // }
+    for (const DataMap::value_type &data : getAllData()) {
+      data.second->moveTimeStepsStorage();
     }
   }
 }
