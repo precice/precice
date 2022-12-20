@@ -24,6 +24,7 @@ else()
     # Use the target system name of cmake as fallback
     set(CPACK_SYSTEM_NAME "${CMAKE_SYSTEM_NAME}")
   endif()
+  mark_as_advanced(LSB_RELEASE_EXE)
 endif()
 
 # General
@@ -100,6 +101,7 @@ install(FILES "${PRECICE_PACKAGING_DIR}/lintian-override"
 
 # Compress and install the debian changelog
 find_program(GZIP_EXE gzip DOC "The gzip executable")
+mark_as_advanced(GZIP_EXE)
 if(GZIP_EXE)
   # Process the changelog for debian package
   message(STATUS "Compressing changelog")
