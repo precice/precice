@@ -162,11 +162,6 @@ void BaseCouplingScheme::setTimeWindowSize(double timeWindowSize)
   _timeWindowSize = timeWindowSize;
 }
 
-double BaseCouplingScheme::getComputedTimeWindowPart()
-{
-  return _computedTimeWindowPart;
-}
-
 void BaseCouplingScheme::finalize()
 {
   PRECICE_TRACE();
@@ -219,11 +214,6 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
 bool BaseCouplingScheme::sendsInitializedData() const
 {
   return _sendsInitializedData;
-}
-
-bool BaseCouplingScheme::isInitialized() const
-{
-  return _isInitialized;
 }
 
 CouplingScheme::ChangedMeshes BaseCouplingScheme::firstSynchronization(const CouplingScheme::ChangedMeshes &changes)
@@ -333,20 +323,6 @@ void BaseCouplingScheme::moveToNextWindow()
   }
 }
 
-void BaseCouplingScheme::storeIteration()
-{
-  PRECICE_ASSERT(isImplicitCouplingScheme());
-  PRECICE_DEBUG("BaseCouplingScheme::storeIteration");
-  // @todo breaks for CplSchemeTests/ParallelImplicitCouplingSchemeTests/Extrapolation/FirstOrderWith*. Interesting: Not for individual tests... Why? @fsimonis
-  // for (auto &data : getAllData() | boost::adaptors::map_values) {
-  //   data->storeIteration();
-  // }
-  for (const DataMap::value_type &pair : getAllData()) {
-    pair.second->storeIteration();
-  }
-  PRECICE_DEBUG("BaseCouplingScheme::storeIteration ok");
-}
-
 bool BaseCouplingScheme::hasTimeWindowSize() const
 {
   return not math::equals(_timeWindowSize, UNDEFINED_TIME_WINDOW_SIZE);
@@ -356,6 +332,11 @@ double BaseCouplingScheme::getTimeWindowSize() const
 {
   PRECICE_ASSERT(hasTimeWindowSize());
   return _timeWindowSize;
+}
+
+bool BaseCouplingScheme::isInitialized() const
+{
+  return _isInitialized;
 }
 
 void BaseCouplingScheme::addComputedTime(
@@ -389,6 +370,11 @@ bool BaseCouplingScheme::willDataBeExchanged(
 bool BaseCouplingScheme::hasDataBeenReceived() const
 {
   return _hasDataBeenReceived;
+}
+
+double BaseCouplingScheme::getComputedTimeWindowPart()
+{
+  return _computedTimeWindowPart;
 }
 
 void BaseCouplingScheme::setDoesFirstStep(bool doesFirstStep)
@@ -711,6 +697,20 @@ void BaseCouplingScheme::advanceTXTWriters()
 bool BaseCouplingScheme::reachedEndOfTimeWindow()
 {
   return math::equals(getThisTimeWindowRemainder(), 0.0, _eps);
+}
+
+void BaseCouplingScheme::storeIteration()
+{
+  PRECICE_ASSERT(isImplicitCouplingScheme());
+  PRECICE_DEBUG("BaseCouplingScheme::storeIteration");
+  // @todo breaks for CplSchemeTests/ParallelImplicitCouplingSchemeTests/Extrapolation/FirstOrderWith*. Interesting: Not for individual tests... Why? @fsimonis
+  // for (auto &data : getAllData() | boost::adaptors::map_values) {
+  //   data->storeIteration();
+  // }
+  for (const DataMap::value_type &pair : getAllData()) {
+    pair.second->storeIteration();
+  }
+  PRECICE_DEBUG("BaseCouplingScheme::storeIteration ok");
 }
 
 void BaseCouplingScheme::determineInitialSend(DataMap &sendData)
