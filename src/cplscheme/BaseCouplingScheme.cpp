@@ -702,7 +702,6 @@ bool BaseCouplingScheme::reachedEndOfTimeWindow()
 void BaseCouplingScheme::storeIteration()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme());
-  PRECICE_DEBUG("BaseCouplingScheme::storeIteration");
   // @todo breaks for CplSchemeTests/ParallelImplicitCouplingSchemeTests/Extrapolation/FirstOrderWith*. Interesting: Not for individual tests... Why? @fsimonis
   // for (auto &data : getAllData() | boost::adaptors::map_values) {
   //   data->storeIteration();
@@ -710,7 +709,6 @@ void BaseCouplingScheme::storeIteration()
   for (const DataMap::value_type &pair : getAllData()) {
     pair.second->storeIteration();
   }
-  PRECICE_DEBUG("BaseCouplingScheme::storeIteration ok");
 }
 
 void BaseCouplingScheme::determineInitialSend(DataMap &sendData)
