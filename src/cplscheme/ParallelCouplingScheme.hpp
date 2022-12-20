@@ -61,23 +61,11 @@ private:
 
   void performReceiveOfFirstAdvance() override final;
 
-  /// Exchanges first set of data between the participants of the ParallelCouplingScheme
-  void exchangeFirstData() override;
+  void exchangeFirstData() override final;
 
-  /**
-   * @brief Exchanges the second set of data between the participants of the ParallelCouplingScheme and applies acceleration.
-   */
-  void exchangeSecondData() override;
+  void exchangeSecondData() override final;
 
-  /**
-   * @brief ParallelCouplingScheme applies acceleration to all CouplingData
-   * @returns DataMap being accelerated
-   */
-  const DataMap getAccelerationData() override
-  {
-    PRECICE_ASSERT(!doesFirstStep(), "Only the second participant should do the acceleration.");
-    return getAllData();
-  }
+  const DataMap getAccelerationData() override final;
 };
 
 } // namespace cplscheme

@@ -1,5 +1,6 @@
 #include <Eigen/Core>
 #include <algorithm>
+#include <boost/range/adaptor/map.hpp>
 #include <cmath>
 #include <cstddef>
 #include <functional>
@@ -81,6 +82,17 @@ BaseCouplingScheme::BaseCouplingScheme(
   }
 }
 
+bool BaseCouplingScheme::isImplicitCouplingScheme() const
+{
+  PRECICE_ASSERT(_couplingMode != Undefined);
+  return _couplingMode == Implicit;
+}
+
+bool BaseCouplingScheme::hasConverged() const
+{
+  return _hasConverged;
+}
+
 void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendData, bool initialCommunication)
 {
   PRECICE_TRACE();
@@ -88,7 +100,7 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
   PRECICE_ASSERT(m2n.get() != nullptr);
   PRECICE_ASSERT(m2n->isConnected());
 
-  for (const DataMap::value_type &pair : sendData) {
+  for (const auto &data : sendData | boost::adaptors::map_values) {
     // will be changed via https://github.com/precice/precice/pull/1414
     double sendTime;
     if (initialCommunication) {
@@ -96,58 +108,53 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
     } else {
       sendTime = time::Storage::WINDOW_END;
     }
-    auto sendBuffer = pair.second->getValuesAtTime(sendTime);
+    auto sendBuffer = data->getValuesAtTime(sendTime);
     // Data is actually only send if size>0, which is checked in the derived classes implementation
-    m2n->send(sendBuffer, pair.second->getMeshID(), pair.second->getDimensions());
+    m2n->send(sendBuffer, data->getMeshID(), data->getDimensions());
 
-    if (pair.second->hasGradient()) {
-      m2n->send(pair.second->gradientValues(), pair.second->getMeshID(), pair.second->getDimensions() * pair.second->meshDimensions());
+    if (data->hasGradient()) {
+      m2n->send(data->gradientValues(), data->getMeshID(), data->getDimensions() * data->meshDimensions());
     }
-
-    sentDataIDs.push_back(pair.first);
   }
-  PRECICE_DEBUG("Number of sent data sets = {}", sentDataIDs.size());
 }
 
 void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData, bool initialCommunication)
 {
   PRECICE_TRACE();
-  std::vector<int> receivedDataIDs;
   PRECICE_ASSERT(m2n.get());
   PRECICE_ASSERT(m2n->isConnected());
-  for (const DataMap::value_type &pair : receiveData) {
+  for (const auto &data : receiveData | boost::adaptors::map_values) {
     // Data is only received on ranks with size>0, which is checked in the derived class implementation
-    auto recvBuffer = Eigen::VectorXd(pair.second->getSize());
-    m2n->receive(recvBuffer, pair.second->getMeshID(), pair.second->getDimensions());
+    auto recvBuffer = Eigen::VectorXd(data->getSize());
+    m2n->receive(recvBuffer, data->getMeshID(), data->getDimensions());
 
     // will be changed via https://github.com/precice/precice/pull/1414
     if (initialCommunication) {
-      pair.second->storeValuesAtTime(time::Storage::WINDOW_START, recvBuffer);
-      pair.second->storeValuesAtTime(time::Storage::WINDOW_END, recvBuffer);
+      data->initializeStorage(recvBuffer);
     } else {
-      pair.second->clearTimeStepsStorage();
-      pair.second->storeValuesAtTime(time::Storage::WINDOW_END, recvBuffer);
+      data->overwriteValuesAtWindowEnd(recvBuffer);
     }
 
-    pair.second->values() = recvBuffer; // @todo Better do this just before returning to SolverInterfaceImpl.
+    data->values() = recvBuffer; // @todo Better do this just before returning to SolverInterfaceImpl.
 
-    if (pair.second->hasGradient()) {
-      m2n->receive(pair.second->gradientValues(), pair.second->getMeshID(), pair.second->getDimensions() * pair.second->meshDimensions());
+    if (data->hasGradient()) {
+      m2n->receive(data->gradientValues(), data->getMeshID(), data->getDimensions() * data->meshDimensions());
     }
-
-    receivedDataIDs.push_back(pair.first);
-    pair.second->values() = pair.second->getValuesAtTime(time::Storage::WINDOW_END); // store received value at window end in mesh data.
   }
-  PRECICE_DEBUG("Number of received data sets = {}", receivedDataIDs.size());
 }
 
 void BaseCouplingScheme::initializeZeroReceiveData(const DataMap &receiveData)
 {
-  for (const DataMap::value_type &pair : receiveData) {
-    auto zeroData = Eigen::VectorXd::Zero(pair.second->getSize());
-    pair.second->storeValuesAtTime(time::Storage::WINDOW_START, zeroData);
-    pair.second->storeValuesAtTime(time::Storage::WINDOW_END, zeroData);
+  for (const auto &data : receiveData | boost::adaptors::map_values) {
+    auto zeroData = Eigen::VectorXd::Zero(data->getSize());
+    data->initializeStorage(zeroData);
   }
+}
+
+bool BaseCouplingScheme::isExplicitCouplingScheme()
+{
+  PRECICE_ASSERT(_couplingMode != Undefined);
+  return _couplingMode == Explicit;
 }
 
 void BaseCouplingScheme::setTimeWindowSize(double timeWindowSize)
@@ -174,7 +181,6 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   _hasDataBeenReceived = false;
 
   if (isImplicitCouplingScheme()) {
-    storeIteration();
     if (not doesFirstStep()) {
       PRECICE_CHECK(not _convergenceMeasures.empty(),
                     "At least one convergence measure has to be defined for "
@@ -188,7 +194,7 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
     initializeTXTWriters();
   }
 
-  storeTimeStepSendData(time::Storage::WINDOW_START);
+  initializeSendDataStorage();
   exchangeInitialData();
   performReceiveOfFirstAdvance();
 
@@ -219,8 +225,7 @@ void BaseCouplingScheme::firstExchange()
   if (reachedEndOfTimeWindow()) {
 
     _timeWindows += 1; // increment window counter. If not converged, will be decremented again later.
-    clearTimeStepSendStorage();
-    storeTimeStepSendData(time::Storage::WINDOW_END);
+    overwriteSendValuesAtWindowEnd();
     exchangeFirstData();
   }
 }
@@ -293,6 +298,11 @@ double BaseCouplingScheme::getTimeWindowSize() const
   return _timeWindowSize;
 }
 
+bool BaseCouplingScheme::isInitialized() const
+{
+  return _isInitialized;
+}
+
 void BaseCouplingScheme::addComputedTime(
     double timeToAdd)
 {
@@ -326,10 +336,30 @@ bool BaseCouplingScheme::hasDataBeenReceived() const
   return _hasDataBeenReceived;
 }
 
+double BaseCouplingScheme::getComputedTimeWindowPart()
+{
+  return _computedTimeWindowPart;
+}
+
+void BaseCouplingScheme::setDoesFirstStep(bool doesFirstStep)
+{
+  _doesFirstStep = doesFirstStep;
+}
+
 void BaseCouplingScheme::checkDataHasBeenReceived()
 {
   PRECICE_ASSERT(not _hasDataBeenReceived, "checkDataHasBeenReceived() may only be called once within one coupling iteration. If this assertion is triggered this probably means that your coupling scheme has a bug.");
   _hasDataBeenReceived = true;
+}
+
+bool BaseCouplingScheme::receivesInitializedData() const
+{
+  return _receivesInitializedData;
+}
+
+void BaseCouplingScheme::setTimeWindows(int timeWindows)
+{
+  _timeWindows = timeWindows;
 }
 
 double BaseCouplingScheme::getTime() const
@@ -479,6 +509,11 @@ void BaseCouplingScheme::setAcceleration(
   _acceleration = acceleration;
 }
 
+bool BaseCouplingScheme::doesFirstStep() const
+{
+  return _doesFirstStep;
+}
+
 void BaseCouplingScheme::newConvergenceMeasurements()
 {
   PRECICE_TRACE();
@@ -611,7 +646,19 @@ bool BaseCouplingScheme::reachedEndOfTimeWindow()
   return math::equals(getThisTimeWindowRemainder(), 0.0, _eps);
 }
 
-void BaseCouplingScheme::determineInitialSend(BaseCouplingScheme::DataMap &sendData)
+void BaseCouplingScheme::storeIteration()
+{
+  PRECICE_ASSERT(isImplicitCouplingScheme());
+  // @todo breaks for CplSchemeTests/ParallelImplicitCouplingSchemeTests/Extrapolation/FirstOrderWith*. Interesting: Not for individual tests... Why? @fsimonis
+  // for (auto &data : getAllData() | boost::adaptors::map_values) {
+  //   data->storeIteration();
+  // }
+  for (const DataMap::value_type &pair : getAllData()) {
+    pair.second->storeIteration();
+  }
+}
+
+void BaseCouplingScheme::determineInitialSend(DataMap &sendData)
 {
   if (anyDataRequiresInitialization(sendData)) {
     _sendsInitializedData = true;
@@ -619,7 +666,7 @@ void BaseCouplingScheme::determineInitialSend(BaseCouplingScheme::DataMap &sendD
   }
 }
 
-void BaseCouplingScheme::determineInitialReceive(BaseCouplingScheme::DataMap &receiveData)
+void BaseCouplingScheme::determineInitialReceive(DataMap &receiveData)
 {
   if (anyDataRequiresInitialization(receiveData)) {
     _receivesInitializedData = true;
@@ -631,11 +678,11 @@ int BaseCouplingScheme::getExtrapolationOrder()
   return _extrapolationOrder;
 }
 
-bool BaseCouplingScheme::anyDataRequiresInitialization(BaseCouplingScheme::DataMap &dataMap) const
+bool BaseCouplingScheme::anyDataRequiresInitialization(DataMap &dataMap) const
 {
   /// @todo implement this function using https://en.cppreference.com/w/cpp/algorithm/all_any_none_of
-  for (DataMap::value_type &pair : dataMap) {
-    if (pair.second->requiresInitialization) {
+  for (const auto &data : dataMap | boost::adaptors::map_values) {
+    if (data->requiresInitialization) {
       return true;
     }
   }
@@ -673,11 +720,19 @@ void BaseCouplingScheme::doImplicitStep()
        * track of _timeStepsStorage for subcycling. So it will become simpler as soon as subcycling is fully implemented.
        */
       // @todo For other Acceleration schemes as described in "Rüth, B, Uekermann, B, Mehl, M, Birken, P, Monge, A, Bungartz, H-J. Quasi-Newton waveform iteration for partitioned surface-coupled multiphysics applications. Int J Numer Methods Eng. 2021; 122: 5236– 5257. https://doi.org/10.1002/nme.6443" we need a more elaborate implementation.
-      // Put values into pair.second->values() for acceleration
+      // Put values into data->values() for acceleration
+      // @todo breaks for CplSchemeTests/ParallelImplicitCouplingSchemeTests. Why? @fsimonis
+      // for (auto &data : getAccelerationData() | boost::adaptors::map_values) {
+      //   data->values() = data->getValuesAtTime(time::Storage::WINDOW_END);
+      // }
       for (auto &pair : getAccelerationData()) {
         pair.second->values() = pair.second->getValuesAtTime(time::Storage::WINDOW_END);
       }
       _acceleration->performAcceleration(getAccelerationData());
+      // @todo breaks for CplSchemeTests/ParallelImplicitCouplingSchemeTests. Why? @fsimonis
+      // for (auto &data : getAccelerationData() | boost::adaptors::map_values) {
+      //   data->storeValuesAtTime(time::Storage::WINDOW_END, data->values(), mustOverwrite);
+      // }
       for (auto &pair : getAccelerationData()) {
         bool mustOverwrite = true;
         pair.second->storeValuesAtTime(time::Storage::WINDOW_END, pair.second->values(), mustOverwrite);

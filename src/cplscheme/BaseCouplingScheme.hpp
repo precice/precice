@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include <algorithm>
+#include <boost/range/adaptor/map.hpp>
 #include <map>
 #include <memory>
 #include <set>
@@ -84,10 +85,7 @@ public:
    * @brief getter for _isInitialized
    * @returns true, if initialize has been called.
    */
-  bool isInitialized() const override final
-  {
-    return _isInitialized;
-  }
+  bool isInitialized() const override final;
 
   /**
    * @brief Adds newly computed time. Has to be called before every advance.
@@ -218,10 +216,7 @@ public:
    * @brief Getter for _doesFirstStep
    * @returns _doesFirstStep
    */
-  bool doesFirstStep() const
-  {
-    return _doesFirstStep;
-  }
+  bool doesFirstStep() const;
 
   /**
    * @returns true, if coupling scheme has any sendData
@@ -239,26 +234,16 @@ public:
    * @brief Function to determine whether coupling scheme is an implicit coupling scheme
    * @returns true, if coupling scheme is implicit
    */
-  bool isImplicitCouplingScheme() const override
-  {
-    PRECICE_ASSERT(_couplingMode != Undefined);
-    return _couplingMode == Implicit;
-  }
+  bool isImplicitCouplingScheme() const override;
 
   /**
    * @brief Checks if the implicit cplscheme has converged
    *
    * @pre \ref doImplicitStep() or \ref receiveConvergence() has been called
    */
-  bool hasConverged() const override
-  {
-    return _hasConverged;
-  }
+  bool hasConverged() const override;
 
 protected:
-  /// Map that links DataID to CouplingData
-  typedef std::map<int, PtrCouplingData> DataMap;
-
   /// Acceleration method to speedup iteration convergence.
   acceleration::PtrAcceleration _acceleration;
 
@@ -299,11 +284,7 @@ protected:
    * @brief Function to determine whether coupling scheme is an explicit coupling scheme
    * @returns true, if coupling scheme is explicit
    */
-  bool isExplicitCouplingScheme()
-  {
-    PRECICE_ASSERT(_couplingMode != Undefined);
-    return _couplingMode == Explicit;
-  }
+  bool isExplicitCouplingScheme();
 
   /**
    * @brief Setter for _timeWindowSize
@@ -315,18 +296,12 @@ protected:
    * @brief Getter for _computedTimeWindowPart
    * @returns _computedTimeWindowPart
    */
-  double getComputedTimeWindowPart()
-  {
-    return _computedTimeWindowPart;
-  }
+  double getComputedTimeWindowPart();
 
   /**
    * @brief Setter for _doesFirstStep
    */
-  void setDoesFirstStep(bool doesFirstStep)
-  {
-    _doesFirstStep = doesFirstStep;
-  }
+  void setDoesFirstStep(bool doesFirstStep);
 
   /**
    * @brief Used to set flag after data has been received using receiveData().
@@ -337,10 +312,7 @@ protected:
    * @brief Getter for _receivesInitializedData
    * @returns _receivesInitializedData
    */
-  bool receivesInitializedData() const
-  {
-    return _receivesInitializedData;
-  }
+  bool receivesInitializedData() const;
 
   /**
    * @brief Setter for _timeWindows
@@ -350,10 +322,7 @@ protected:
    *
    * @param timeWindows number of time windows
    */
-  void setTimeWindows(int timeWindows)
-  {
-    _timeWindows = timeWindows;
-  }
+  void setTimeWindows(int timeWindows);
 
   /**
    * @brief sends convergence to other participant via m2n
@@ -376,25 +345,20 @@ protected:
    */
   void doImplicitStep();
 
-  virtual void clearTimeStepSendStorage() = 0;
+  /**
+   * @brief clears storage for all send data and writes given send data to storage at WINDOW_END
+   */
+  virtual void overwriteSendValuesAtWindowEnd() = 0;
 
   /**
-   * @brief Stores send data in storage of CouplingData at given time
-   *
-   * @param relativeDt time where data is stored
+   * @brief Stores send data in storage of CouplingData at given time WINDOW_START
    */
-  virtual void storeTimeStepSendData(double relativeDt) = 0;
+  virtual void initializeSendDataStorage() = 0;
 
   /**
    * @brief used for storing all Data at end of doImplicitStep for later reference.
    */
-  void storeIteration()
-  {
-    PRECICE_ASSERT(isImplicitCouplingScheme());
-    for (const DataMap::value_type &pair : getAllData()) {
-      pair.second->storeIteration();
-    }
-  }
+  void storeIteration();
 
   /**
    * @brief Sets _sendsInitializedData, if sendData requires initialization
@@ -545,7 +509,9 @@ private:
   /// Exchanges the first set of data
   virtual void exchangeFirstData() = 0;
 
-  /// Exchanges the second set of data
+  /**
+   * @brief Exchanges the second set of data between the participants of the SerialCouplingSchemes
+   */
   virtual void exchangeSecondData() = 0;
 
   /**

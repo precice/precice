@@ -115,6 +115,18 @@ std::vector<int> CouplingData::getVertexOffsets()
   return _mesh->getVertexOffsets();
 }
 
+void CouplingData::initializeStorage(Eigen::VectorXd data)
+{
+  storeValuesAtTime(time::Storage::WINDOW_START, data);
+  storeValuesAtTime(time::Storage::WINDOW_END, data);
+}
+
+void CouplingData::overwriteValuesAtWindowEnd(Eigen::VectorXd data)
+{
+  clearTimeStepsStorage();
+  storeValuesAtTime(time::Storage::WINDOW_END, data);
+}
+
 void CouplingData::clearTimeStepsStorage()
 {
   _timeStepsStorage.clear();
@@ -123,7 +135,6 @@ void CouplingData::clearTimeStepsStorage()
 void CouplingData::moveTimeStepsStorage()
 {
   _timeStepsStorage.move();
-  values() = _timeStepsStorage.getValuesAtTime(time::Storage::WINDOW_END);
 }
 
 void CouplingData::storeValuesAtTime(double relativeDt, Eigen::VectorXd data, bool mustOverwriteExisting)

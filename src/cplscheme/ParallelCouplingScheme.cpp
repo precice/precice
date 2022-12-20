@@ -59,6 +59,10 @@ void ParallelCouplingScheme::exchangeSecondData()
     sendData(getM2N(), getSendData());
   }
   if (hasConverged()) {
+    // @todo similar code breaks in SerialCouplingScheme.cpp for CplSchemeTests/SerialImplicitCouplingSchemeTests/ testConfiguredAbsConvergenceMeasureSynchronized. Why? @fsimonis
+    // for (const auto &data : getAllData() | boost::adaptors::map_values) {
+    //   data->moveTimeStepsStorage();
+    // }
     for (const DataMap::value_type &pair : getAllData()) {
       pair.second->moveTimeStepsStorage();
     }
@@ -66,6 +70,13 @@ void ParallelCouplingScheme::exchangeSecondData()
   if (isImplicitCouplingScheme()) {
     storeIteration();
   }
+}
+
+const DataMap ParallelCouplingScheme::getAccelerationData()
+{
+  // ParallelCouplingScheme applies acceleration to all CouplingData
+  PRECICE_ASSERT(!doesFirstStep(), "Only the second participant should do the acceleration.");
+  return getAllData();
 }
 
 } // namespace precice::cplscheme

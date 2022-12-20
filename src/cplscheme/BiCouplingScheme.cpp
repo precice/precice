@@ -104,7 +104,15 @@ std::vector<std::string> BiCouplingScheme::getCouplingPartners() const
   return partnerNames;
 }
 
-typedef std::map<int, PtrCouplingData> DataMap;
+DataMap &BiCouplingScheme::getSendData()
+{
+  return _sendData;
+}
+
+DataMap &BiCouplingScheme::getReceiveData()
+{
+  return _receiveData;
+}
 
 const DataMap BiCouplingScheme::getAllData()
 {
@@ -135,6 +143,12 @@ CouplingData *BiCouplingScheme::getReceiveData(
   return nullptr;
 }
 
+m2n::PtrM2N BiCouplingScheme::getM2N() const
+{
+  PRECICE_ASSERT(_m2n);
+  return _m2n;
+}
+
 void BiCouplingScheme::exchangeInitialData()
 {
   // F: send, receive, S: receive, send
@@ -163,13 +177,23 @@ void BiCouplingScheme::exchangeInitialData()
   }
 }
 
+bool BiCouplingScheme::hasAnySendData()
+{
+  return not getSendData().empty();
+}
+
+bool BiCouplingScheme::hasSendData(DataID dataID)
+{
+  return getSendData(dataID) != nullptr;
+}
+
 void BiCouplingScheme::storeReceiveData(double relativeDt)
 {
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
   PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
-  for (auto &receiveData : getReceiveData()) {
+  for (auto &receiveData : getReceiveData() | boost::adaptors::map_values) {
     bool mustOverride = true;
-    receiveData.second->storeValuesAtTime(relativeDt, receiveData.second->values(), mustOverride);
+    receiveData->storeValuesAtTime(relativeDt, receiveData->values(), mustOverride);
   }
 }
 
@@ -177,22 +201,22 @@ void BiCouplingScheme::loadReceiveDataFromStorage(double relativeDt)
 {
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
   PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
-  for (auto &receiveData : getReceiveData()) {
-    receiveData.second->values() = receiveData.second->getValuesAtTime(relativeDt);
+  for (auto &receiveData : getReceiveData() | boost::adaptors::map_values) {
+    receiveData->values() = receiveData->getValuesAtTime(relativeDt);
   }
 }
 
-void BiCouplingScheme::clearTimeStepSendStorage()
+void BiCouplingScheme::overwriteSendValuesAtWindowEnd()
 {
-  for (const DataMap::value_type &pair : getSendData()) {
-    pair.second->clearTimeStepsStorage();
+  for (auto &data : getSendData() | boost::adaptors::map_values) {
+    data->overwriteValuesAtWindowEnd(data->values());
   }
 }
 
-void BiCouplingScheme::storeTimeStepSendData(double relativeDt)
+void BiCouplingScheme::initializeSendDataStorage()
 {
-  for (const DataMap::value_type &pair : getSendData()) {
-    pair.second->storeValuesAtTime(relativeDt, pair.second->values());
+  for (auto &data : getSendData() | boost::adaptors::map_values) {
+    data->storeValuesAtTime(time::Storage::WINDOW_START, data->values());
   }
 }
 
