@@ -191,9 +191,9 @@ void BiCouplingScheme::storeReceiveData(double relativeDt)
 {
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
   PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
-  for (auto &receiveData : getReceiveData()) {
+  for (auto &receiveData : getReceiveData() | boost::adaptors::map_values) {
     bool mustOverride = true;
-    receiveData.second->storeValuesAtTime(relativeDt, receiveData.second->values(), mustOverride);
+    receiveData->storeValuesAtTime(relativeDt, receiveData->values(), mustOverride);
   }
 }
 
@@ -201,8 +201,8 @@ void BiCouplingScheme::loadReceiveDataFromStorage(double relativeDt)
 {
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
   PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
-  for (auto &receiveData : getReceiveData()) {
-    receiveData.second->values() = receiveData.second->getValuesAtTime(relativeDt);
+  for (auto &receiveData : getReceiveData() | boost::adaptors::map_values) {
+    receiveData->values() = receiveData->getValuesAtTime(relativeDt);
   }
 }
 
