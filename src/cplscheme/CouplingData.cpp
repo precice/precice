@@ -135,6 +135,7 @@ void CouplingData::clearTimeStepsStorage()
 void CouplingData::moveTimeStepsStorage()
 {
   _timeStepsStorage.move();
+  values() = _timeStepsStorage.getValuesAtTime(time::Storage::WINDOW_END); // @todo Better do this just before returning to SolverInterfaceImpl. Compare to BaseCouplingScheme::receiveData
 }
 
 void CouplingData::storeValuesAtTime(double relativeDt, Eigen::VectorXd data, bool mustOverwriteExisting)
