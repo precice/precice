@@ -181,6 +181,7 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   _hasDataBeenReceived = false;
 
   if (isImplicitCouplingScheme()) {
+    storeIteration();
     if (not doesFirstStep()) {
       PRECICE_CHECK(not _convergenceMeasures.empty(),
                     "At least one convergence measure has to be defined for "
