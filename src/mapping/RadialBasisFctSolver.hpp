@@ -2,6 +2,7 @@
 
 #include <Eigen/Cholesky>
 #include <Eigen/QR>
+#include <Eigen/SVD>
 #include <boost/range/adaptor/indexed.hpp>
 #include <boost/range/irange.hpp>
 #include <numeric>
@@ -80,6 +81,43 @@ inline double computeSquaredDifference(
   }
   // @todo: this can be replaced by std::hypot when moving to C++17
   return std::accumulate(v.begin(), v.end(), static_cast<double>(0.), [](auto &res, auto &val) { return res + val * val; });
+}
+
+/// computes dead axis in case we want to exploit polynomials
+template <typename IndexContainer>
+constexpr std::array<bool, 3> computeActiveAxis(const mesh::Mesh &mesh, const IndexContainer &IDs, std::array<bool, 3> axis)
+{
+  // For now, a (rahter high) heuristic value to decide on the disabling
+  constexpr double threshold = 0.4;
+
+  // make a pair of the axis and the difference
+  std::vector<std::pair<int, double>> differences;
+  const int                           activeAxis = std::count(axis.begin(), axis.end(), true);
+  differences.reserve(activeAxis);
+
+  // Compute the difference magnitude per direction
+  for (unsigned int d = 0; d < axis.size(); ++d) {
+    // Ignore dead axis here
+    if (axis[d] == false) {
+      continue;
+    }
+    auto res = std::minmax_element(IDs.begin(), IDs.end(), [&](const auto &a, const auto &b) { return mesh.vertices()[a].rawCoords()[d] < mesh.vertices()[b].rawCoords()[d]; });
+    // Check if we are above or below the threshold
+    differences.emplace_back(std::make_pair<int, double>(d, std::abs(mesh.vertices()[*res.second].rawCoords()[d] - mesh.vertices()[*res.first].rawCoords()[d])));
+  }
+
+  std::sort(differences.begin(), differences.end(), [](const auto &d1, const auto &d2) { return d1.second < d2.second; });
+
+  // Check the aspect ratio from smallest to largest value
+  for (unsigned int v = 0; v < activeAxis - 1; ++v) {
+    PRECICE_ASSERT(v < differences.size());
+    double value = differences[v].second / std::max(differences[activeAxis - 1].second, math::NUMERICAL_ZERO_DIFFERENCE);
+
+    if (value < threshold || v == 0) {
+      axis[differences[v].first] = false;
+    }
+  }
+  return axis;
 }
 
 // Fill in the polynomial entries
@@ -217,14 +255,34 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
   // In case we deal with separated polynomials, we need dedicated matrices for the polynomial contribution
   if (polynomial == Polynomial::SEPARATE) {
 
-    // 1. Allocate memory for these matrices
     // 4 = 1 + dimensions(3) = maximum number of polynomial parameters
-    const unsigned int polyParams = 4 - std::count(activeAxis.begin(), activeAxis.end(), false);
-    _matrixQ.resize(inputIDs.size(), polyParams);
-    _matrixV.resize(outputIDs.size(), polyParams);
+    auto         _activeAxis = activeAxis;
+    unsigned int polyParams  = 4 - std::count(_activeAxis.begin(), _activeAxis.end(), false);
 
-    // 2. fill the matrices: Q for the inputMesh, V for the outputMesh
+    // First, build matrix Q and check for the condition number
+    _matrixQ.resize(inputIDs.size(), polyParams);
     fillPolynomialEntries(_matrixQ, inputMesh, inputIDs, 0, activeAxis);
+
+    Eigen::JacobiSVD<Eigen::MatrixXd> svd(_matrixQ);
+    const double                      conditionNumber = svd.singularValues()(0) / svd.singularValues()(svd.singularValues().size() - 1);
+    PRECICE_DEBUG("Condition number: {}", conditionNumber);
+
+    // If the condition number is too high, we disable ill-conditioned axis
+    if (conditionNumber > 1e5) {
+
+      // Decide, which axis to disable
+      _activeAxis = computeActiveAxis(inputMesh, inputIDs, activeAxis);
+      polyParams  = 4 - std::count(_activeAxis.begin(), _activeAxis.end(), false);
+
+      // Resize and refill matrix Q (could be done in a more clever way, e.g., skip fillinf the '1' column again)
+      _matrixQ.resize(inputIDs.size(), polyParams);
+
+      // fill the matrix Q for the inputMesh
+      fillPolynomialEntries(_matrixQ, inputMesh, inputIDs, 0, _activeAxis);
+    }
+
+    // allocate and fill matrix V for the outputMesh
+    _matrixV.resize(outputIDs.size(), polyParams);
     fillPolynomialEntries(_matrixV, outputMesh, outputIDs, 0, activeAxis);
 
     // 3. compute decomposition
