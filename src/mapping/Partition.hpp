@@ -140,7 +140,7 @@ Partition<RADIAL_BASIS_FUNCTION_T>::Partition(
 
   // If we have only very few vertices (10% of the target), we consider this partition as empty
   // TODO: The second empty criterion is potentially not suitable for conservative mappings
-  _emptyPartition = outIDs.size() == 0 || inIDs.size() < 0.1 * targetSize;
+  _emptyPartition = outIDs.size() == 0 || inIDs.size() == 0;
 
   if (_emptyPartition) {
     return;
@@ -149,6 +149,10 @@ Partition<RADIAL_BASIS_FUNCTION_T>::Partition(
   PRECICE_ASSERT(inIDs.size() > 0, "The source partition is empty whereas the target partition is non-empty.", inIDs.size(), outIDs.size());
   PRECICE_DEBUG("Partition input size: {}", inIDs.size());
   PRECICE_DEBUG("Partition output size: {}", outIDs.size());
+
+  // Otherwise or system is undertermined
+  if (inIDs.size() < 5)
+    _polynomial = Polynomial::OFF;
 
   // Construct the solver
   inputIDs.insert(inIDs.begin(), inIDs.end());
