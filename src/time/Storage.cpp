@@ -52,16 +52,11 @@ void Storage::move()
   initialize(initialGuess);
 }
 
-void Storage::clear(bool keepZero)
+void Storage::clear()
 {
-  Eigen::VectorXd keep;
-  if (keepZero) {
-    keep = _sampleStorage.front().second; // we keep data at _storageDict[0.0]
-  }
+  Eigen::VectorXd keep = _sampleStorage.front().second; // we keep data at _storageDict[0.0]
   _sampleStorage.clear();
-  if (keepZero) {
-    _sampleStorage.emplace_back(std::make_pair(WINDOW_START, keep));
-  }
+  _sampleStorage.emplace_back(std::make_pair(WINDOW_START, keep));
 }
 
 Eigen::VectorXd Storage::getValueAtOrAfter(double before)
