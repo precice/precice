@@ -40,8 +40,8 @@ BoundingBox::BoundingBox(std::vector<double> bounds)
 {
   PRECICE_ASSERT((int) bounds.size() == 4 || (int) bounds.size() == 6, "Dimension of a bounding box can only be 2 or 3.", bounds.size() / 2);
   _dimensions = _bounds.size() / 2;
-  _boundMin   = Eigen::Map<Eigen::VectorXd>(bounds.data(), _dimensions);
-  _boundMax   = Eigen::Map<Eigen::VectorXd>(bounds.data() + _dimensions, _dimensions);
+  _boundMin   = Eigen::Map<Eigen::VectorXd, 0, Eigen::InnerStride<2>>(bounds.data(), _dimensions);
+  _boundMax   = Eigen::Map<Eigen::VectorXd, 0, Eigen::InnerStride<2>>(bounds.data() + 1, _dimensions);
 }
 
 BoundingBox::BoundingBox(int dimension)
