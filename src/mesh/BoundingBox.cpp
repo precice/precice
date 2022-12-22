@@ -64,12 +64,8 @@ BoundingBox::BoundingBox(int dimension)
 bool BoundingBox::operator==(const BoundingBox &otherBB) const
 {
   PRECICE_ASSERT(_dimensions == otherBB._dimensions, "Bounding boxes with different dimensions cannot be compared.", _dimensions, otherBB._dimensions);
-  for (int i = 0; i < _dimensions; ++i) {
-    if (_boundMin[i] != otherBB._boundMin[i] && _boundMax[i] != otherBB._boundMax[i]) {
-      return false;
-    }
-  }
-  return true;
+
+  return _boundMin.isApprox(otherBB._boundMin) && _boundMax.isApprox(otherBB._boundMax);
 }
 
 bool BoundingBox::empty() const
