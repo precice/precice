@@ -44,21 +44,15 @@ BoundingBox::BoundingBox(std::vector<double> bounds)
   _boundMax   = Eigen::Map<Eigen::VectorXd>(bounds.data() + _dimensions, _dimensions);
 }
 
-// TODO: use more proper way to assign _boundMin & _boundMax
 BoundingBox::BoundingBox(int dimension)
     : _dimensions(dimension)
 {
   PRECICE_ASSERT(dimension == 2 || dimension == 3, "Dimension of a bounding box can only be 2 or 3.", dimension);
-  double min = std::numeric_limits<double>::lowest();
-  double max = std::numeric_limits<double>::max();
 
-  if (dimension == 2) {
-    _boundMin = Eigen::VectorXd{min, min};
-    _boundMax << max, max;
-  } else {
-    _boundMin << min, min, min;
-    _boundMax << max, max, max;
-  }
+  _boundMin = Eigen::VectorXd(dimension);
+  _boundMax = Eigen::VectorXd(dimension);
+  std::fill(_boundMin.data(), _boundMin.data() + _boundMin.rows(), std::numeric_limits<double>::lowest());
+  std::fill(_boundMax.data(), _boundMax.data() + _boundMax.rows(), std::numeric_limits<double>::max());
 }
 
 bool BoundingBox::operator==(const BoundingBox &otherBB) const
