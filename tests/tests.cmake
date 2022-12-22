@@ -49,14 +49,17 @@ target_sources(testprecice
     tests/parallel/mapping-volume/ParallelSquare2To1.cpp
     tests/parallel/mapping-volume/ParallelSquareConservative1To2.cpp
     tests/parallel/mapping-volume/ParallelTriangleConservative2To1.cpp
-    tests/parallel/quasi-newton/TestQN1.cpp
-    tests/parallel/quasi-newton/TestQN1EmptyPartition.cpp
-    tests/parallel/quasi-newton/TestQN2.cpp
-    tests/parallel/quasi-newton/TestQN2EmptyPartition.cpp
-    tests/parallel/quasi-newton/TestQN3.cpp
-    tests/parallel/quasi-newton/TestQN3EmptyPartition.cpp
-    tests/parallel/quasi-newton/helpers.cpp
-    tests/parallel/quasi-newton/helpers.hpp
+    tests/quasi-newton/helpers.cpp
+    tests/quasi-newton/helpers.hpp
+    tests/quasi-newton/parallel/TestQN1.cpp
+    tests/quasi-newton/parallel/TestQN1EmptyPartition.cpp
+    tests/quasi-newton/parallel/TestQN2.cpp
+    tests/quasi-newton/parallel/TestQN2EmptyPartition.cpp
+    tests/quasi-newton/parallel/TestQN3.cpp
+    tests/quasi-newton/parallel/TestQN3EmptyPartition.cpp
+    tests/quasi-newton/serial/TestQN1.cpp
+    tests/quasi-newton/serial/TestQN2.cpp
+    tests/quasi-newton/serial/TestQN3.cpp
     tests/serial/AitkenAcceleration.cpp
     tests/serial/PreconditionerBug.cpp
     tests/serial/SendMeshToMultipleParticipants.cpp
@@ -148,11 +151,6 @@ target_sources(testprecice
     tests/serial/multiple-mappings/MultipleWriteFromMappings.cpp
     tests/serial/multiple-mappings/MultipleWriteFromMappingsAndData.cpp
     tests/serial/multiple-mappings/MultipleWriteToMappings.cpp
-    tests/serial/quasi-newton/TestQN1.cpp
-    tests/serial/quasi-newton/TestQN2.cpp
-    tests/serial/quasi-newton/TestQN3.cpp
-    tests/serial/quasi-newton/helpers.cpp
-    tests/serial/quasi-newton/helpers.hpp
     tests/serial/three-solvers/ThreeSolversExplicitExplicit.cpp
     tests/serial/three-solvers/ThreeSolversExplicitImplicit.cpp
     tests/serial/three-solvers/ThreeSolversFirstParticipant.cpp
@@ -193,4 +191,4 @@ target_sources(testprecice
     )
 
 # Contains the list of integration test suites
-set(PRECICE_TEST_SUITES Parallel Serial)
+set(PRECICE_TEST_SUITES Parallel QuasiNewton Serial)
