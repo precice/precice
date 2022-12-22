@@ -61,6 +61,9 @@ private:
 
   /// Evaluation matrix (output x input)
   Eigen::MatrixXd _matrixA;
+
+  mutable Eigen::VectorXd rescalingCoefficients;
+  static constexpr bool   useRescaling = false;
 };
 
 // ------- Non-Member Functions ---------
@@ -280,6 +283,25 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConservative
 template <typename RADIAL_BASIS_FUNCTION_T>
 Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(Eigen::VectorXd &inputData, Polynomial polynomial) const
 {
+
+  if (rescalingCoefficients.size() == 0 && useRescaling) {
+    // compute rescaling
+    // TODO: use eigen for constant values
+    Eigen::VectorXd ones(inputData.size());
+    ones.setOnes();
+    Eigen::VectorXd po    = _decMatrixC.solve(ones);
+    rescalingCoefficients = _matrixA * po;
+
+    for (unsigned int i = 0; i < rescalingCoefficients.size(); ++i) {
+      if (rescalingCoefficients(i) > 1e-10)
+        rescalingCoefficients(i) = 1. / rescalingCoefficients(i);
+      else if (rescalingCoefficients(i) < -1e-10)
+        rescalingCoefficients(i) = 1. / rescalingCoefficients(i);
+      else
+        rescalingCoefficients(i) = 1;
+    }
+  }
+
   PRECICE_ASSERT((_matrixQ.size() > 0 && polynomial == Polynomial::SEPARATE) || _matrixQ.size() == 0);
   Eigen::VectorXd polynomialContribution;
   // Solve polynomial QR and subtract it from the input data
@@ -294,6 +316,11 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
   PRECICE_ASSERT(p.size() == _matrixA.cols());
   Eigen::VectorXd out = _matrixA * p;
 
+  if (useRescaling) {
+#pragma omp simd
+    for (unsigned int i = 0; i < out.size(); ++i)
+      out(i) = rescalingCoefficients(i) * out(i);
+  }
   // Add the polynomial part again for separated polynomial
   if (polynomial == Polynomial::SEPARATE) {
     out += (_matrixV * polynomialContribution);
