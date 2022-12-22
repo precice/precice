@@ -53,10 +53,9 @@ BoundingBox::BoundingBox(int dimension)
   double max = std::numeric_limits<double>::max();
 
   if (dimension == 2) {
-    _boundMin = Eigen::VectorXd{min,min};
+    _boundMin = Eigen::VectorXd{min, min};
     _boundMax << max, max;
-  }
-  else {
+  } else {
     _boundMin << min, min, min;
     _boundMax << max, max, max;
   }
@@ -132,7 +131,11 @@ int BoundingBox::getDimension() const
 
 const std::vector<double> BoundingBox::dataVector() const
 {
-  std::vector<double> _bounds{_boundMin[0], _boundMax[0], _boundMin[1], _boundMax[1], _boundMin[2], _boundMax[2]};
+  if (_boundMin.rows() == 3) {
+    std::vector<double> _bounds{_boundMin[0], _boundMax[0], _boundMin[1], _boundMax[1], _boundMin[2], _boundMax[2]};
+  } else {
+    std::vector<double> _bounds{_boundMin[0], _boundMax[0], _boundMin[1], _boundMax[1]};
+  }
   return _bounds;
 }
 
