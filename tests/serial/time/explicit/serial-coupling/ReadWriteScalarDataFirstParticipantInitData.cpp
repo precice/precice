@@ -48,7 +48,9 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantInitData)
   }
 
   VertexID vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
-  precice.requiresInitialData(); // TODO fix
+  if (precice.requiresInitialData()) {
+    // Do nothing
+  }
   double dt = precice.initialize();
 
   for (int i = 0; i < timestepSizes.size(); i++) {

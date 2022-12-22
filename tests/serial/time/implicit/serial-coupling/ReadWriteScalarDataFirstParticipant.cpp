@@ -54,6 +54,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipant)
   double   dt       = precice.initialize();
 
   if (precice.requiresWritingCheckpoint()) {
+    // Do nothing
   }
 
   for (auto iterationSizes : timestepSizes) {
@@ -70,8 +71,10 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipant)
       }
 
       if (precice.requiresReadingCheckpoint()) {
+        // Do nothing
       }
       if (precice.requiresWritingCheckpoint()) {
+        // Do nothing
       }
 
       precice.readScalarData(readDataID, vertexID, actualDataValue);

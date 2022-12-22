@@ -15,8 +15,6 @@ BOOST_AUTO_TEST_SUITE(SerialCoupling)
 
 /**
  * @brief Test to run a simple coupling with zeroth order waveform subcycling.
- *
- * Provides a dt argument to the read function, but since a zeroth order waveform is used the result should be identical to the case without waveform relaxation
  */
 BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingZero)
 {
@@ -83,21 +81,26 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingZero)
       timestepCheckpoint = timestep;
       iterations         = 0;
     }
-    double readTime;
-    readTime = timeCheckpoint + windowDt;
 
     precice.readScalarData(readDataID, vertexID, currentDt, readData);
     if (context.isNamed("SolverOne") && iterations == 0) { // in the first iteration of each window, use data from previous window.
       BOOST_TEST(readData == readFunction(timeCheckpoint));
     } else { // in the following iterations, use data at the end of window.
-      BOOST_TEST(readData == readFunction(readTime));
+      BOOST_TEST(readData == readFunction(time + currentDt));
     }
 
     precice.readScalarData(readDataID, vertexID, currentDt / 2, readData);
     if (context.isNamed("SolverOne") && iterations == 0) { // in the first iteration of each window, use data from previous window.
       BOOST_TEST(readData == readFunction(timeCheckpoint));
     } else { // in the following iterations, use data at the end of window.
-      BOOST_TEST(readData == readFunction(readTime));
+      BOOST_TEST(readData == readFunction(time + currentDt));
+    }
+
+    precice.readScalarData(readDataID, vertexID, 0, readData);
+    if (context.isNamed("SolverOne") && iterations == 0) { // in the first iteration of each window, use data from previous window.
+      BOOST_TEST(readData == readFunction(timeCheckpoint));
+    } else { // in the following iterations, use data at the end of window.
+      BOOST_TEST(readData == readFunction(time));
     }
 
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.

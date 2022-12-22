@@ -84,15 +84,13 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
       timestepCheckpoint = timestep;
       iterations         = 0;
     }
-    double readTime;
-    readTime = time + currentDt;
 
     precice.readScalarData(readDataID, vertexID, currentDt, readData);
 
     if (iterations == 0) { // in the first iteration of each window, we only have one sample of data. Therefore constant interpolation
       BOOST_TEST(readData == readFunction(timeCheckpoint));
     } else { // in the following iterations we have two samples of data. Therefore linear interpolation
-      BOOST_TEST(readData == readFunction(readTime));
+      BOOST_TEST(readData == readFunction(time + currentDt));
     }
 
     precice.readScalarData(readDataID, vertexID, currentDt / 2, readData);
@@ -100,7 +98,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
     if (iterations == 0) { // in the first iteration of each window, we only have one sample of data. Therefore constant interpolation
       BOOST_TEST(readData == readFunction(timeCheckpoint));
     } else { // in the following iterations we have two samples of data. Therefore linear interpolation
-      BOOST_TEST(readData == readFunction(readTime - currentDt / 2));
+      BOOST_TEST(readData == readFunction(time + currentDt / 2));
     }
 
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.
