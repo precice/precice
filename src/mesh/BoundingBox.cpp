@@ -16,24 +16,14 @@ logging::Logger BoundingBox::_log{"mesh::BoundingBox"};
 BoundingBox::BoundingBox(Eigen::VectorXd boundMin, Eigen::VectorXd boundMax)
 {
   // PRECICE_ASSERT 1
-  const int &dimMin = boundMin.rows();
-  const int &dimMax = boundMax.rows();
-  PRECICE_ASSERT(dimMin == dimMax, "Dimension of min and max vertices should be the same.", dimMin, dimMax);
+  PRECICE_ASSERT(boundMin.rows() == boundMax.rows(), "Dimension of min and max vertices should be the same.", boundMin.rows(), boundMax.rows());
 
   // PRECICE_ASSERT 2
-  bool isMinLessThanMax = true;
-  for (int i = 0; i < dimMin; i++) {
-    if (boundMin[i] >= boundMax[i]) {
-      isMinLessThanMax = false;
-      break;
-    }
-  }
-  PRECICE_ASSERT(isMinLessThanMax, "Each component of min vertex must be less than that of max vertex in the same axis direction.", boundMin, boundMax);
+  PRECICE_ASSERT((boundMin - boundMax).maxCoeff() > 0, "Each component of min vertex must be less than or equal to that of max vertex in the same axis direction.", boundMin, boundMax);
 
-  // Assign private members
-  _boundMin   = std::move(boundMin); // converts lval to rval
+  _boundMin   = std::move(boundMin);
   _boundMax   = std::move(boundMax);
-  _dimensions = dimMin;
+  _dimensions = boundMin.rows();
 }
 
 BoundingBox::BoundingBox(std::vector<double> bounds)
