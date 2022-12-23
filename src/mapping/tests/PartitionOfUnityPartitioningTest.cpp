@@ -83,14 +83,14 @@ BOOST_AUTO_TEST_CASE(CreateUniformBlockPartitioning3D)
   {
     auto [averagePartitionRadius, centerCandidates] = partitioner::createUniformBlockPartitioning(inMesh, outMesh, relativeOverlap, verticesPerPartition, projectToInput);
     BOOST_TEST(averagePartitionRadius == 1.4142135623730951);
-    BOOST_TEST(centerCandidates.size() == 162);
+    BOOST_TEST(centerCandidates.size() == 188);
   }
 
   {
     projectToInput                                  = true;
     auto [averagePartitionRadius, centerCandidates] = partitioner::createUniformBlockPartitioning(inMesh, outMesh, relativeOverlap, verticesPerPartition, projectToInput);
     BOOST_TEST(averagePartitionRadius == 1.4142135623730951);
-    BOOST_TEST(centerCandidates.size() == 204);
+    BOOST_TEST(centerCandidates.size() == 222);
   }
 }
 

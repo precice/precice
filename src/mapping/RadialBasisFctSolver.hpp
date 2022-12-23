@@ -261,7 +261,7 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
 
     // First, build matrix Q and check for the condition number
     _matrixQ.resize(inputIDs.size(), polyParams);
-    fillPolynomialEntries(_matrixQ, inputMesh, inputIDs, 0, activeAxis);
+    fillPolynomialEntries(_matrixQ, inputMesh, inputIDs, 0, _activeAxis);
 
     Eigen::JacobiSVD<Eigen::MatrixXd> svd(_matrixQ);
     const double                      conditionNumber = svd.singularValues()(0) / svd.singularValues()(svd.singularValues().size() - 1);
@@ -283,7 +283,7 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
 
     // allocate and fill matrix V for the outputMesh
     _matrixV.resize(outputIDs.size(), polyParams);
-    fillPolynomialEntries(_matrixV, outputMesh, outputIDs, 0, activeAxis);
+    fillPolynomialEntries(_matrixV, outputMesh, outputIDs, 0, _activeAxis);
 
     // 3. compute decomposition
     _qrMatrixQ = _matrixQ.colPivHouseholderQr();
