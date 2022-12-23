@@ -64,12 +64,12 @@ bool BoundingBox::operator==(const BoundingBox &otherBB) const
 
 bool BoundingBox::empty() const
 {
-  for (int i = 0; i < _dimensions; ++i) {
-    if (_boundMin[i] > _boundMax[i]) {
-      return true;
-    }
-  }
-  return false;
+  return (_boundMax - _boundMin).isZero();
+}
+
+bool BoundingBox::isDefault() const
+{
+  return _boundMin.isApproxToConstant(std::numeric_limits<double>::lowest()) && _boundMax.isApproxToConstant(std::numeric_limits<double>::max());
 }
 
 bool BoundingBox::contains(const mesh::Vertex &vertex) const
