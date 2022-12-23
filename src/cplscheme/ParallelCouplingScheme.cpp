@@ -55,4 +55,11 @@ void ParallelCouplingScheme::exchangeSecondData()
   }
 }
 
+const DataMap ParallelCouplingScheme::getAccelerationData()
+{
+  // ParallelCouplingScheme applies acceleration to all CouplingData
+  PRECICE_ASSERT(!doesFirstStep(), "Only the second participant should do the acceleration.");
+  return getAllData();
+}
+
 } // namespace precice::cplscheme

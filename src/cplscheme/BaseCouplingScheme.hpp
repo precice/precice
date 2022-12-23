@@ -84,10 +84,7 @@ public:
    * @brief getter for _isInitialized
    * @returns true, if initialize has been called.
    */
-  bool isInitialized() const override final
-  {
-    return _isInitialized;
-  }
+  bool isInitialized() const override final;
 
   /**
    * @brief Adds newly computed time. Has to be called before every advance.
@@ -221,10 +218,7 @@ public:
    * @brief Getter for _doesFirstStep
    * @returns _doesFirstStep
    */
-  bool doesFirstStep() const
-  {
-    return _doesFirstStep;
-  }
+  bool doesFirstStep() const;
 
   /**
    * @returns true, if coupling scheme has any sendData
@@ -242,30 +236,30 @@ public:
    * @brief Function to determine whether coupling scheme is an implicit coupling scheme
    * @returns true, if coupling scheme is implicit
    */
-  bool isImplicitCouplingScheme() const override
-  {
-    PRECICE_ASSERT(_couplingMode != Undefined);
-    return _couplingMode == Implicit;
-  }
+  bool isImplicitCouplingScheme() const override;
 
   /**
    * @brief Checks if the implicit cplscheme has converged
    *
    * @pre \ref doImplicitStep() or \ref receiveConvergence() has been called
    */
-  bool hasConverged() const override
-  {
-    return _hasConverged;
-  }
+  bool hasConverged() const override;
 
 protected:
-  /// Map that links DataID to CouplingData
-  typedef std::map<int, PtrCouplingData> DataMap;
-
-  /// Sends data sendDataIDs given in mapCouplingData with communication.
+  /**
+   * @brief Sends data sendDataIDs given in mapCouplingData with communication.
+   *
+   * @param m2n M2N used for communication
+   * @param sendData DataMap associated with sent data
+   */
   void sendData(const m2n::PtrM2N &m2n, const DataMap &sendData);
 
-  /// Receives data receiveDataIDs given in mapCouplingData with communication.
+  /**
+   * @brief Receives data receiveDataIDs given in mapCouplingData with communication.
+   *
+   * @param m2n M2N used for communication
+   * @param receiveData DataMap associated with received data
+   */
   void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData);
 
   /**
@@ -278,11 +272,7 @@ protected:
    * @brief Function to determine whether coupling scheme is an explicit coupling scheme
    * @returns true, if coupling scheme is explicit
    */
-  bool isExplicitCouplingScheme()
-  {
-    PRECICE_ASSERT(_couplingMode != Undefined);
-    return _couplingMode == Explicit;
-  }
+  bool isExplicitCouplingScheme();
 
   /**
    * @brief Setter for _timeWindowSize
@@ -294,18 +284,12 @@ protected:
    * @brief Getter for _computedTimeWindowPart
    * @returns _computedTimeWindowPart
    */
-  double getComputedTimeWindowPart()
-  {
-    return _computedTimeWindowPart;
-  }
+  double getComputedTimeWindowPart();
 
   /**
    * @brief Setter for _doesFirstStep
    */
-  void setDoesFirstStep(bool doesFirstStep)
-  {
-    _doesFirstStep = doesFirstStep;
-  }
+  void setDoesFirstStep(bool doesFirstStep);
 
   /**
    * @brief Used to set flag after data has been received using receiveData().
@@ -316,10 +300,7 @@ protected:
    * @brief Getter for _receivesInitializedData
    * @returns _receivesInitializedData
    */
-  bool receivesInitializedData() const
-  {
-    return _receivesInitializedData;
-  }
+  bool receivesInitializedData() const;
 
   /**
    * @brief Setter for _timeWindows
@@ -329,10 +310,7 @@ protected:
    *
    * @param timeWindows number of time windows
    */
-  void setTimeWindows(int timeWindows)
-  {
-    _timeWindows = timeWindows;
-  }
+  void setTimeWindows(int timeWindows);
 
   /**
    * @brief Reserves memory to store data values from previous iterations and time windows in coupling data and acceleration, and initializes with zero.
@@ -373,13 +351,7 @@ protected:
   /**
    * @brief used for storing all Data at end of doImplicitStep for later reference.
    */
-  void storeIteration()
-  {
-    PRECICE_ASSERT(isImplicitCouplingScheme());
-    for (const DataMap::value_type &pair : getAllData()) {
-      pair.second->storeIteration();
-    }
-  }
+  void storeIteration();
 
   /**
    * @brief Sets _sendsInitializedData, if sendData requires initialization
@@ -523,11 +495,7 @@ private:
   /**
    * @brief implements functionality for receiveResultOfFirstAdvance
    */
-  virtual void performReceiveOfFirstAdvance()
-  {
-    // noop by default. Will be overridden by child-coupling-schemes, if data has to be received here. See SerialCouplingScheme.
-    return;
-  }
+  virtual void performReceiveOfFirstAdvance();
 
   /// Functions needed for advance()
 

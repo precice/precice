@@ -125,4 +125,10 @@ void SerialCouplingScheme::exchangeSecondData()
   }
 }
 
+const DataMap SerialCouplingScheme::getAccelerationData()
+{
+  // SerialCouplingSchemes applies acceleration to send data
+  return getSendData();
+}
+
 } // namespace precice::cplscheme

@@ -59,6 +59,17 @@ std::vector<std::string> MultiCouplingScheme::getCouplingPartners() const
   return partnerNames;
 }
 
+bool MultiCouplingScheme::hasAnySendData()
+{
+  return std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(), [](const auto &sendExchange) { return not sendExchange.second.empty(); });
+}
+
+const DataMap MultiCouplingScheme::getAccelerationData()
+{
+  // MultiCouplingScheme applies acceleration to all CouplingData
+  return getAllData();
+}
+
 void MultiCouplingScheme::exchangeInitialData()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
@@ -89,6 +100,20 @@ void MultiCouplingScheme::exchangeInitialData()
     }
   }
   PRECICE_DEBUG("Initial data is exchanged in MultiCouplingScheme");
+}
+
+const DataMap MultiCouplingScheme::getAllData()
+{
+  // MultiCouplingScheme has to collect all send data and receive data from _sendDataVector and _receiveDataVector
+  DataMap allData;
+  // @todo use C++17 std::map::merge
+  for (auto &sendData : _sendDataVector) {
+    allData.insert(sendData.second.begin(), sendData.second.end());
+  }
+  for (auto &receiveData : _receiveDataVector) {
+    allData.insert(receiveData.second.begin(), receiveData.second.end());
+  }
+  return allData;
 }
 
 void MultiCouplingScheme::exchangeFirstData()

@@ -66,7 +66,7 @@ void runTestQN(std::string const &config, TestContext const &context)
       x_3^2 - 4 = 0
       x_4^2 - 4 = 0
 
-      Analyical solutions are (+/-2, 0, +/-2, +/-2).
+      Analytical solutions are (+/-2, 0, +/-2, +/-2).
       Assumably due to the initial relaxation the iteration always converges to the solution in the negative quadrant.
     */
 
@@ -163,7 +163,7 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
       x_3^2 - 4 = 0
       x_4^2 - 4 = 0
 
-      Analyical solutions are (+/-2, 0, +/-2, +/-2).
+      Analytical solutions are (+/-2, 0, +/-2, +/-2).
       Assumably due to the initial relaxation the iteration always converges to the solution in the negative quadrant.
     */
 
