@@ -151,8 +151,8 @@ Partition<RADIAL_BASIS_FUNCTION_T>::Partition(
   PRECICE_DEBUG("Partition output size: {}", outIDs.size());
 
   // Otherwise or system is undertermined
-  if (inIDs.size() < 5)
-    _polynomial = Polynomial::OFF;
+  // if (inIDs.size() < dimension + 1)
+  //   _polynomial = Polynomial::OFF;
 
   // Construct the solver
   inputIDs.insert(inIDs.begin(), inIDs.end());
