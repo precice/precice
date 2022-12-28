@@ -93,6 +93,22 @@ bool BaseCouplingScheme::hasConverged() const
   return _hasConverged;
 }
 
+void BaseCouplingScheme::sendNumberOfTimeSteps(const m2n::PtrM2N &m2n, const int numberOfTimeSteps)
+{
+  PRECICE_TRACE();
+  PRECICE_DEBUG("Sending number or time steps {}...", numberOfTimeSteps);
+  m2n->send(numberOfTimeSteps);
+}
+
+void BaseCouplingScheme::sendTimes(const m2n::PtrM2N &m2n, const Eigen::VectorXd times)
+{
+  PRECICE_TRACE();
+  PRECICE_DEBUG("Sending times...");
+  for (int i = 0; i < times.size(); i++) {
+    m2n->send(times(i));
+  }
+}
+
 void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendData, bool initialCommunication)
 {
   PRECICE_TRACE();
@@ -101,21 +117,45 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
   PRECICE_ASSERT(m2n->isConnected());
 
   for (const auto &data : sendData | boost::adaptors::map_values) {
-    // will be changed via https://github.com/precice/precice/pull/1414
-    double sendTime;
+    auto timesAscending = data->getStoredTimesAscending();
+    sendNumberOfTimeSteps(m2n, timesAscending.size());
+    sendTimes(m2n, timesAscending);
+
     if (initialCommunication) {
-      sendTime = time::Storage::WINDOW_START;
+      PRECICE_ASSERT(math::equals(timesAscending(timesAscending.size() - 1), time::Storage::WINDOW_START), timesAscending(timesAscending.size() - 1)); // assert that last (and only) element is time::Storage::WINDOW_START
     } else {
-      sendTime = time::Storage::WINDOW_END;
+      PRECICE_ASSERT(math::equals(timesAscending(timesAscending.size() - 1), time::Storage::WINDOW_END), timesAscending(timesAscending.size() - 1)); // assert that last element is time::Storage::WINDOW_END
     }
-    auto sendBuffer = data->getValuesAtTime(sendTime);
+
+    auto serializedSamples = data->getSerialized();
+    data->clearTimeStepsStorage();
     // Data is actually only send if size>0, which is checked in the derived classes implementation
-    m2n->send(sendBuffer, data->getMeshID(), data->getDimensions());
+    m2n->send(serializedSamples, data->getMeshID(), data->getDimensions() * timesAscending.size());
 
     if (data->hasGradient()) {
       m2n->send(data->gradientValues(), data->getMeshID(), data->getDimensions() * data->meshDimensions());
     }
   }
+}
+
+int BaseCouplingScheme::receiveNumberOfTimeSteps(const m2n::PtrM2N &m2n)
+{
+  PRECICE_TRACE();
+  PRECICE_DEBUG("Receiving number of time steps...");
+  int numberOfTimeSteps;
+  m2n->receive(numberOfTimeSteps);
+  return numberOfTimeSteps;
+}
+
+Eigen::VectorXd BaseCouplingScheme::receiveTimes(const m2n::PtrM2N &m2n, int nTimeSteps)
+{
+  PRECICE_TRACE();
+  PRECICE_DEBUG("Receiving times....");
+  auto times = Eigen::VectorXd(nTimeSteps);
+  for (int i = 0; i < nTimeSteps; i++) {
+    m2n->receive(times(i));
+  }
+  return times;
 }
 
 void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData, bool initialCommunication)
@@ -124,18 +164,24 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
   PRECICE_ASSERT(m2n.get());
   PRECICE_ASSERT(m2n->isConnected());
   for (const auto &data : receiveData | boost::adaptors::map_values) {
-    // Data is only received on ranks with size>0, which is checked in the derived class implementation
-    auto recvBuffer = Eigen::VectorXd(data->getSize());
-    m2n->receive(recvBuffer, data->getMeshID(), data->getDimensions());
+    int nTimeSteps = receiveNumberOfTimeSteps(m2n);
 
-    // will be changed via https://github.com/precice/precice/pull/1414
+    PRECICE_ASSERT(nTimeSteps > 0);
+    auto timesAscending = receiveTimes(m2n, nTimeSteps);
+
     if (initialCommunication) {
-      data->initializeStorage(recvBuffer);
+      PRECICE_ASSERT(math::equals(timesAscending(timesAscending.size() - 1), time::Storage::WINDOW_START), timesAscending(timesAscending.size() - 1)); // assert that last (and only) element is time::Storage::WINDOW_START
     } else {
-      data->overwriteValuesAtWindowEnd(recvBuffer);
+      PRECICE_ASSERT(math::equals(timesAscending(timesAscending.size() - 1), time::Storage::WINDOW_END), timesAscending(timesAscending.size() - 1)); // assert that last element is time::Storage::WINDOW_END
+      bool keepWindowStart = false;
+      data->clearTimeStepsStorage(keepWindowStart);
     }
 
-    data->values() = recvBuffer; // @todo Better do this just before returning to SolverInterfaceImpl.
+    auto serializedSamples = Eigen::VectorXd(nTimeSteps * data->getSize());
+    // Data is only received on ranks with size>0, which is checked in the derived class implementation
+    m2n->receive(serializedSamples, data->getMeshID(), data->getDimensions() * nTimeSteps);
+
+    data->storeFromSerialized(timesAscending, serializedSamples);
 
     if (data->hasGradient()) {
       m2n->receive(data->gradientValues(), data->getMeshID(), data->getDimensions() * data->meshDimensions());
@@ -223,10 +269,36 @@ void BaseCouplingScheme::firstExchange()
 
   PRECICE_ASSERT(_couplingMode != Undefined);
 
+  double relativeDt                 = -1;
+  bool   usesFirstParticipantMethod = (_timeWindowSize == -1);
+
+  if (isImplicitCouplingScheme()) {
+    // store data from writeDataContext in buffer, when advance is called.
+    PRECICE_ASSERT(_computedTimeWindowPart > 0);
+    if (not usesFirstParticipantMethod) {
+      relativeDt = _computedTimeWindowPart / _timeWindowSize;
+      PRECICE_ASSERT(math::smallerEquals(relativeDt, time::Storage::WINDOW_END), relativeDt, _computedTimeWindowPart, _timeWindowSize);
+      PRECICE_ASSERT(relativeDt > time::Storage::WINDOW_START, relativeDt, _computedTimeWindowPart, _timeWindowSize);
+      storeSendValuesAtTime(relativeDt);
+    } else {
+      // We don't support subcycling here, because this is complicated. Therefore, use same strategy like for explicit coupling and just use a single value at end of window.
+      // Possible solution: Don't scale times to [0,1], but leave them as they are. Then we would also allow times > 1. We then have two options:
+      // 1) scale the times back later when the time window size is known (to still benefit from the simpler handling, if all times are scaled to [0,1]).
+      // 2) generally use times in the interval [0, timeWindowSize]. This makes the implementation probably a bit more complicated, but also more consistent.
+      if (reachedEndOfTimeWindow()) {     // only necessary to trigger at end of time window.
+        overwriteSendValuesAtWindowEnd(); // only write data at end of window
+      }
+    }
+  } else {
+    // work-around for explicit coupling, because it does not support waveform relaxation.
+    if (reachedEndOfTimeWindow()) {     // only necessary to trigger at end of time window.
+      overwriteSendValuesAtWindowEnd(); // only write data at end of window
+    }
+  }
+
   if (reachedEndOfTimeWindow()) {
 
     _timeWindows += 1; // increment window counter. If not converged, will be decremented again later.
-    overwriteSendValuesAtWindowEnd();
     exchangeFirstData();
   }
 }
@@ -282,7 +354,7 @@ void BaseCouplingScheme::secondExchange()
       _isTimeWindowComplete = true;
     }
     if (isCouplingOngoing()) {
-      PRECICE_ASSERT(_hasDataBeenReceived);
+      //PRECICE_ASSERT(_hasDataBeenReceived);  // actually incorrect. Data is not necessarily received, if scheme is only sending.
     }
     _computedTimeWindowPart = 0.0; // reset window
   }

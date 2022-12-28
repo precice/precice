@@ -78,8 +78,9 @@ void SerialCouplingScheme::receiveAndSetTimeWindowSize()
 void SerialCouplingScheme::performReceiveOfFirstAdvance()
 {
   // Second participant of a SerialCouplingScheme, receives the result of the first advance of the first participant.
-
-  if (!doesFirstStep()) { // second participant
+  if (doesFirstStep()) {
+    storeReceiveData(time::Storage::WINDOW_END);
+  } else { // second participant
     // similar to SerialCouplingScheme::exchangeSecondData()
     receiveAndSetTimeWindowSize();
     PRECICE_DEBUG("Receiving data...");

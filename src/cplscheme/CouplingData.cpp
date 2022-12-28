@@ -127,9 +127,14 @@ void CouplingData::overwriteValuesAtWindowEnd(Eigen::VectorXd data)
   storeValuesAtTime(time::Storage::WINDOW_END, data);
 }
 
-void CouplingData::clearTimeStepsStorage()
+Eigen::VectorXd CouplingData::getStoredTimesAscending()
 {
-  _timeStepsStorage.clear();
+  return _timeStepsStorage.getTimes();
+}
+
+void CouplingData::clearTimeStepsStorage(bool keepWindowStart)
+{
+  _timeStepsStorage.clear(keepWindowStart);
 }
 
 void CouplingData::moveTimeStepsStorage()
@@ -149,6 +154,38 @@ void CouplingData::storeValuesAtTime(double relativeDt, Eigen::VectorXd data, bo
 Eigen::VectorXd CouplingData::getValuesAtTime(double relativeDt)
 {
   return _timeStepsStorage.getValuesAtTime(relativeDt);
+}
+
+Eigen::VectorXd CouplingData::getSerialized()
+{
+  int  nValues        = getSize();
+  int  nTimeSteps     = _timeStepsStorage.nTimes();
+  auto serializedData = Eigen::VectorXd(nTimeSteps * nValues);
+  auto timesAndValues = _timeStepsStorage.getTimesAndValues();
+  auto values         = timesAndValues.second;
+
+  for (int timeId = 0; timeId < nTimeSteps; timeId++) {
+    auto slice = values.col(timeId);
+    for (int valueId = 0; valueId < nValues; valueId++) {
+      serializedData(valueId * nTimeSteps + timeId) = slice(valueId);
+    }
+  }
+  return serializedData;
+}
+
+void CouplingData::storeFromSerialized(Eigen::VectorXd timesAscending, Eigen::VectorXd serializedData)
+{
+  PRECICE_ASSERT(timesAscending.size() * getSize() == serializedData.size());
+  for (int timeId = 0; timeId < timesAscending.size(); timeId++) {
+    auto slice = Eigen::VectorXd(getSize());
+    for (int valueId = 0; valueId < slice.size(); valueId++) {
+      slice(valueId) = serializedData(valueId * timesAscending.size() + timeId);
+    }
+    auto time = timesAscending(timeId);
+    PRECICE_ASSERT(math::greaterEquals(time, time::Storage::WINDOW_START) && math::greaterEquals(time::Storage::WINDOW_END, time)); // time < 0 or time > 1 is not allowed.
+    this->storeValuesAtTime(time, slice);
+  }
+  this->values() = this->getValuesAtTime(_timeStepsStorage.maxStoredNormalizedDt()); // store data in values to make this non-breaking.
 }
 
 } // namespace precice::cplscheme

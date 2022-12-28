@@ -68,9 +68,11 @@ public:
    */
   bool hasSendData(DataID dataID);
 
-  void storeReceiveData(double relativeDt) override final;
+  void storeReceiveData(double relativeDt, bool mustOverwrite = false) override final;
 
   void loadReceiveDataFromStorage(double relativeDt) override final;
+
+  std::vector<double> getReceiveTimes() override final;
 
 protected:
   /// Returns all data to be sent.
@@ -93,6 +95,8 @@ protected:
 
   /// @return Communication device to the other coupling participant.
   m2n::PtrM2N getM2N() const;
+
+  void storeSendValuesAtTime(double relativeDt) override final;
 
   void overwriteSendValuesAtWindowEnd() override final;
 

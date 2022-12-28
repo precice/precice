@@ -343,8 +343,7 @@ double SolverInterfaceImpl::initialize()
   _couplingScheme->initialize(time, timeWindow);
 
   performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0);
-  std::vector<double> receiveTimes{time::Storage::WINDOW_START, time::Storage::WINDOW_END};
-  mapReadData(receiveTimes);
+  mapReadData();
   performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
 
   resetWrittenData();
@@ -412,8 +411,7 @@ double SolverInterfaceImpl::advance(
 
   if (_couplingScheme->hasDataBeenReceived()) {
     performDataActions({action::Action::READ_MAPPING_PRIOR}, time);
-    std::vector<double> receiveTimes{time::Storage::WINDOW_END};
-    mapReadData(receiveTimes);
+    mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, time);
   }
 
@@ -1821,11 +1819,11 @@ void SolverInterfaceImpl::mapWrittenData()
   clearMappings(_accessor->writeMappingContexts());
 }
 
-void SolverInterfaceImpl::mapReadData(std::vector<double> receiveTimes)
+void SolverInterfaceImpl::mapReadData()
 {
   PRECICE_TRACE();
   computeMappings(_accessor->readMappingContexts(), "read");
-  for (auto time : receiveTimes) {
+  for (auto time : _couplingScheme->getReceiveTimes()) {
     _couplingScheme->loadReceiveDataFromStorage(time); // @todo loads data into ALL read data. Would be better to only perform this for read data with name context.getDataName
     for (auto &context : _accessor->readDataContexts()) {
       // context.retreiveTimeStepData(time);  // @todo try to retreive data via context. But complicated: DataContext needs a connection to associated CouplingData...
@@ -1855,7 +1853,8 @@ void SolverInterfaceImpl::performDataActions(
     }
   }
   if (_couplingScheme->hasDataBeenReceived()) {
-    _couplingScheme->storeReceiveData(time::Storage::WINDOW_END);
+    bool mustOverwrite = true;
+    _couplingScheme->storeReceiveData(time::Storage::WINDOW_END, mustOverwrite);
   }
 }
 

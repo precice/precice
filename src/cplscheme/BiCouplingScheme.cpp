@@ -187,13 +187,12 @@ bool BiCouplingScheme::hasSendData(DataID dataID)
   return getSendData(dataID) != nullptr;
 }
 
-void BiCouplingScheme::storeReceiveData(double relativeDt)
+void BiCouplingScheme::storeReceiveData(double relativeDt, bool mustOverwrite)
 {
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
   PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
   for (auto &receiveData : getReceiveData() | boost::adaptors::map_values) {
-    bool mustOverride = true;
-    receiveData->storeValuesAtTime(relativeDt, receiveData->values(), mustOverride);
+    receiveData->storeValuesAtTime(relativeDt, receiveData->values(), mustOverwrite);
   }
 }
 
@@ -203,6 +202,13 @@ void BiCouplingScheme::loadReceiveDataFromStorage(double relativeDt)
   PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
   for (auto &receiveData : getReceiveData() | boost::adaptors::map_values) {
     receiveData->values() = receiveData->getValuesAtTime(relativeDt);
+  }
+}
+
+void BiCouplingScheme::storeSendValuesAtTime(double relativeDt)
+{
+  for (auto &data : getSendData() | boost::adaptors::map_values) {
+    data->storeValuesAtTime(relativeDt, data->values());
   }
 }
 
@@ -218,6 +224,21 @@ void BiCouplingScheme::initializeSendDataStorage()
   for (auto &data : getSendData() | boost::adaptors::map_values) {
     data->storeValuesAtTime(time::Storage::WINDOW_START, data->values());
   }
+}
+
+std::vector<double> BiCouplingScheme::getReceiveTimes()
+{
+  //@todo Should ensure that all times vectors actually hold the same times (since otherwise we would have to get times individually per data), but for BiCouplingScheme this should be fine.
+  auto times = std::vector<double>();
+  for (auto &data : getReceiveData()) {
+    auto timesVec = data.second->getStoredTimesAscending();
+    PRECICE_ASSERT(timesVec.size() > 0, timesVec.size());
+    for (int i = 0; i < timesVec.size(); i++) {
+      times.push_back(timesVec(i));
+    }
+    return times;
+  }
+  PRECICE_ASSERT(false);
 }
 
 } // namespace precice::cplscheme

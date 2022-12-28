@@ -124,9 +124,11 @@ public:
    */
   bool hasDataBeenReceived() const final override;
 
-  void storeReceiveData(double relativeDt) override final;
+  void storeReceiveData(double relativeDt, bool mustOverwrite = false) override final;
 
   void loadReceiveDataFromStorage(double relativeDt) final override;
+
+  std::vector<double> getReceiveTimes() override final;
 
   /**
    * @brief Returns the currently computed time of the coupling scheme.

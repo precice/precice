@@ -105,7 +105,7 @@ public:
   /**
    * @brief Clear this Storage by deleting all values except values associated with 0.0.
    */
-  void clear();
+  void clear(bool keepWindowStart = true);
 
 private:
   /// Stores values on the current window associated with normalized dt.

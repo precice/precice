@@ -81,12 +81,17 @@ void Storage::move()
   _sampleStorage.emplace_back(std::make_pair(WINDOW_END, valuesAtEnd));
 }
 
-void Storage::clear()
+void Storage::clear(bool keepWindowStart)
 {
   PRECICE_ASSERT(nTimes() > 0, "Storage does not contain any data!");
-  Eigen::VectorXd keep = getValuesAtBeginning(); // we keep data at _storageDict[0.0]
+  Eigen::VectorXd keep;
+  if (keepWindowStart) {
+    keep = getValuesAtBeginning(); // we keep data at _storageDict[0.0]
+  }
   _sampleStorage.clear();
-  _sampleStorage.emplace_back(std::make_pair(WINDOW_START, keep));
+  if (keepWindowStart) {
+    _sampleStorage.emplace_back(std::make_pair(WINDOW_START, keep));
+  }
 }
 
 Eigen::VectorXd Storage::getValuesAtOrAfter(double before)

@@ -156,11 +156,11 @@ bool CompositionalCouplingScheme::hasDataBeenReceived() const
   return hasBeenReceived;
 }
 
-void CompositionalCouplingScheme::storeReceiveData(double relativeDt)
+void CompositionalCouplingScheme::storeReceiveData(double relativeDt, bool mustOverwrite)
 {
   PRECICE_TRACE();
   for (auto scheme : allSchemes()) {
-    scheme->storeReceiveData(relativeDt);
+    scheme->storeReceiveData(relativeDt, mustOverwrite);
   }
 }
 
@@ -170,6 +170,14 @@ void CompositionalCouplingScheme::loadReceiveDataFromStorage(double relativeDt)
   for (auto scheme : allSchemes()) {
     scheme->loadReceiveDataFromStorage(relativeDt);
   }
+}
+
+std::vector<double> CompositionalCouplingScheme::getReceiveTimes()
+{
+  //@todo stub implementation. Should walk over all receive data, get times and ensure that all times vectors actually hold the same times (since otherwise we would have to get times individually per data)
+  //@todo As for MultiCouplingScheme subcycling is not supported for CompositionalCouplingScheme, because this needs a complicated interplay of picking the right data in time and mapping this data. This is hard to realize with the current implementation.
+  auto times = std::vector<double>({time::Storage::WINDOW_END});
+  return times;
 }
 
 double CompositionalCouplingScheme::getTime() const

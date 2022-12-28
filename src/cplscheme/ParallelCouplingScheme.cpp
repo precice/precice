@@ -25,7 +25,7 @@ ParallelCouplingScheme::ParallelCouplingScheme(
 
 void ParallelCouplingScheme::performReceiveOfFirstAdvance()
 {
-  return; // no action needed.
+  storeReceiveData(time::Storage::WINDOW_END);
 }
 
 void ParallelCouplingScheme::exchangeFirstData()

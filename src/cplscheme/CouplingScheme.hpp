@@ -168,7 +168,7 @@ public:
    *
    * @param relativeDt relative dt that will be associated with the stored data.
    */
-  virtual void storeReceiveData(double relativeDt) = 0;
+  virtual void storeReceiveData(double relativeDt, bool mustOverwrite = false) = 0;
 
   /**
    * @brief loads time step data for given time from CouplingData into mesh values
@@ -176,6 +176,13 @@ public:
    * @param relativeDt relative dt associated with the data.
    */
   virtual void loadReceiveDataFromStorage(double relativeDt) = 0;
+
+  /**
+   * @brief Get the times associated with time steps in ascending order
+   *
+   * @return std::vector containing all times (as relative times)
+   */
+  virtual std::vector<double> getReceiveTimes() = 0;
 
   /// Returns the currently computed time of the coupling scheme.
   virtual double getTime() const = 0;

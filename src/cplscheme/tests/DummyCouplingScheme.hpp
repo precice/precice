@@ -110,7 +110,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  void storeReceiveData(double relativeDt) override final
+  void storeReceiveData(double relativeDt, bool mustOverwrite = false) override final
   {
     PRECICE_ASSERT(false);
   }
@@ -121,6 +121,15 @@ public:
   void loadReceiveDataFromStorage(double relativeDt) override final
   {
     PRECICE_ASSERT(false);
+  }
+
+  /**
+   * @brief Not implemented.
+   */
+  std::vector<double> getReceiveTimes() override final
+  {
+    PRECICE_ASSERT(false);
+    return std::vector<double>();
   }
 
   /**

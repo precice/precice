@@ -73,8 +73,11 @@ public:
   /// clears storage and writes given data at WINDOW_END
   void overwriteValuesAtWindowEnd(Eigen::VectorXd data);
 
+  /// returns keys in _timeStepsStorage in ascending order.
+  Eigen::VectorXd getStoredTimesAscending();
+
   /// clears _timeStepsStorage. Called after data was written or before data is received.
-  void clearTimeStepsStorage();
+  void clearTimeStepsStorage(bool keepWindowStart = true);
 
   /// moves _timeStepsStorage. Called after converged data was received.
   void moveTimeStepsStorage();
@@ -85,7 +88,26 @@ public:
   /// stores data for a given key into _data. Assumes that this data exists under the key.
   Eigen::VectorXd getValuesAtTime(double relativeDt);
 
+  /**
+   * @brief Returns the values of all time steps stored in this coupling data in a serialized fashion
+   *
+   * Serialization of the data is performed per mesh node. The dimension of one node is then data dimension (scalar or vector) * number of time steps.
+   *
+   * @return Eigen::VectorXd a vector containing all data for all time steps in serialized fashion.
+   */
+  Eigen::VectorXd getSerialized();
+
+  /**
+   * @brief accepts serialized data and stores it in this coupling data
+   *
+   * @param timesAscending times associated with data
+   * @param serializedData data in serialized form
+   */
+  void storeFromSerialized(Eigen::VectorXd timesAscending, Eigen::VectorXd serializedData);
+
 private:
+  mutable logging::Logger _log{"cplscheme::CouplingData"};
+
   /**
    * @brief Default constructor, not to be used!
    *

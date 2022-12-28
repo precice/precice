@@ -70,9 +70,11 @@ public:
 
   bool hasAnySendData() override final;
 
-  void storeReceiveData(double relativeDt) override final;
+  void storeReceiveData(double relativeDt, bool mustOverwrite = false) override final;
 
   void loadReceiveDataFromStorage(double relativeDt) override final;
+
+  std::vector<double> getReceiveTimes() override final;
 
 private:
   /**
@@ -101,6 +103,8 @@ private:
   void exchangeSecondData() override final;
 
   const DataMap getAccelerationData() override final;
+
+  void storeSendValuesAtTime(double relativeDt) override final;
 
   void overwriteSendValuesAtWindowEnd() override final;
 

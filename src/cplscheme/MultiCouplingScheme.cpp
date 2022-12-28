@@ -70,6 +70,15 @@ const DataMap MultiCouplingScheme::getAccelerationData()
   return getAllData();
 }
 
+void MultiCouplingScheme::storeSendValuesAtTime(double relativeDt)
+{
+  for (auto &sendExchange : _sendDataVector | boost::adaptors::map_values) {
+    for (auto &data : sendExchange | boost::adaptors::map_values) {
+      data->storeValuesAtTime(relativeDt, data->values());
+    }
+  }
+}
+
 void MultiCouplingScheme::overwriteSendValuesAtWindowEnd()
 {
   for (auto &sendExchange : _sendDataVector | boost::adaptors::map_values) {
@@ -129,13 +138,12 @@ void MultiCouplingScheme::exchangeInitialData()
   PRECICE_DEBUG("Initial data is exchanged in MultiCouplingScheme");
 }
 
-void MultiCouplingScheme::storeReceiveData(double relativeDt)
+void MultiCouplingScheme::storeReceiveData(double relativeDt, bool mustOverride)
 {
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
   PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
   for (auto &receiveExchange : _receiveDataVector | boost::adaptors::map_values) {
     for (auto &receiveData : receiveExchange | boost::adaptors::map_values) {
-      bool mustOverride = true;
       receiveData->storeValuesAtTime(relativeDt, receiveData->values(), mustOverride);
     }
   }
@@ -150,6 +158,14 @@ void MultiCouplingScheme::loadReceiveDataFromStorage(double relativeDt)
       receiveData->values() = receiveData->getValuesAtTime(relativeDt);
     }
   }
+}
+
+std::vector<double> MultiCouplingScheme::getReceiveTimes()
+{
+  //@todo stub implementation. Should walk over all receive data, get times and ensure that all times vectors actually hold the same times (since otherwise we would have to get times individually per data)
+  //@todo subcycling is not supported for MultiCouplingScheme, because this needs a complicated interplay of picking the right data in time and mapping this data. This is hard to realize with the current implementation.
+  auto times = std::vector<double>({time::Storage::WINDOW_END});
+  return times;
 }
 
 const DataMap MultiCouplingScheme::getAllData()
@@ -168,7 +184,7 @@ const DataMap MultiCouplingScheme::getAllData()
 
 void MultiCouplingScheme::performReceiveOfFirstAdvance()
 {
-  return; // no action needed.
+  storeReceiveData(time::Storage::WINDOW_END);
 }
 
 void MultiCouplingScheme::exchangeFirstData()

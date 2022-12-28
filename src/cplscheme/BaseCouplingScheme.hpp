@@ -247,21 +247,29 @@ protected:
   /// Acceleration method to speedup iteration convergence.
   acceleration::PtrAcceleration _acceleration;
 
+  void sendNumberOfTimeSteps(const m2n::PtrM2N &m2n, const int numberOfTimeSteps);
+
+  void sendTimes(const m2n::PtrM2N &m2n, const Eigen::VectorXd times);
+
   /**
    * @brief Sends data sendDataIDs given in mapCouplingData with communication.
    *
    * @param m2n M2N used for communication
    * @param sendData DataMap associated with sent data
-   * @param initialCommunication if true, will send data from WINDOW_START, else data from WINDOW_END
+   * @param initialCommunication if true, will only allow to send data from WINDOW_START, else sent data must end at WINDOW_END
    */
   void sendData(const m2n::PtrM2N &m2n, const DataMap &sendData, bool initialCommunication = false);
+
+  int receiveNumberOfTimeSteps(const m2n::PtrM2N &m2n);
+
+  Eigen::VectorXd receiveTimes(const m2n::PtrM2N &m2n, int nTimeSteps);
 
   /**
    * @brief Receives data receiveDataIDs given in mapCouplingData with communication.
    *
    * @param m2n M2N used for communication
    * @param receiveData DataMap associated with received data
-   * @param initialCommunication if true, will store received data for WINDOW_START, else store received data for WINDOW_END
+   * @param initialCommunication if true, will only allow to send data from WINDOW_START, else sent data must end at WINDOW_END
    */
   void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData, bool initialCommunication = false);
 
@@ -344,6 +352,13 @@ protected:
    * This function is called from the child classes
    */
   void doImplicitStep();
+
+  /**
+   * @brief Stores send data in storage of CouplingData at given time relativeDt
+   *
+   * @param relativeDt time associated with stored data
+   */
+  virtual void storeSendValuesAtTime(double relativeDt) = 0;
 
   /**
    * @brief clears storage for all send data and writes given send data to storage at WINDOW_END
