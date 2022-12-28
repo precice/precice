@@ -36,11 +36,15 @@ GKO_REGISTER_UNIFIED_OPERATION(polynomial_fill_operation, fill_polynomial_matrix
 GKO_REGISTER_UNIFIED_OPERATION(tril_operation, extract_upper_triangular);
 
 namespace precice {
+
+extern bool syncMode;
 namespace mapping {
 
 using GinkgoVector = gko::matrix::Dense<double>;
 using GinkgoMatrix = gko::matrix::Dense<double>;
 using cg           = gko::solver::Cg<>;
+using jacobi       = gko::preconditioner::Jacobi<>;
+using cholesky     = gko::preconditioner::Ic<>;
 
 enum GinkgoExecutorType { CPU,
                           OMP,
@@ -79,7 +83,7 @@ public:
   static std::map<GinkgoExecutorType, std::function<std::shared_ptr<gko::Executor>()>> exec_map;
 
 private:
-  precice::logging::Logger _log{"mapping::RadialBasisFctSolver"};
+  precice::logging::Logger _log{"mapping::GinkgoRadialBasisFctSolver"};
 
   std::shared_ptr<gko::Executor>        _deviceExecutor;
   static std::shared_ptr<gko::Executor> _hostExecutor;
@@ -114,6 +118,8 @@ private:
   std::shared_ptr<GinkgoMatrix> _scalarOne;
 
   void _solveRBFSystem(const std::shared_ptr<GinkgoVector> &rhs) const;
+
+  precice::utils::Event _copyEvent{"map.rbf.ginkgo.memCopy", precice::syncMode, false};
 };
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -121,9 +127,9 @@ std::map<GinkgoExecutorType, std::function<std::shared_ptr<gko::Executor>()>> Gi
                                                                                                                                                                                                                             {GinkgoExecutorType::OMP, [] { return gko::OmpExecutor::create(); }},
                                                                                                                                                                                                                             {
                                                                                                                                                                                                                                 GinkgoExecutorType::CUDA,
-                                                                                                                                                                                                                                [] { return gko::CudaExecutor::create(0, gko::ReferenceExecutor::create(), true); },
+                                                                                                                                                                                                                                [] { return gko::CudaExecutor::create(0, gko::OmpExecutor::create(), true); },
                                                                                                                                                                                                                             },
-                                                                                                                                                                                                                            {GinkgoExecutorType::HIP, [] { return gko::HipExecutor::create(0, gko::ReferenceExecutor::create(), true); }}};
+                                                                                                                                                                                                                            {GinkgoExecutorType::HIP, [] { return gko::HipExecutor::create(0, gko::OmpExecutor::create(), true); }}};
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(GinkgoExecutorType execType)
@@ -188,13 +194,16 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
     }
   }
 
-  // TODO: Check how to circumvent if executor is OMP -> CPU side
-  inputVertices  = gko::clone(this->_deviceExecutor, inputVertices);
-  outputVertices = gko::clone(this->_deviceExecutor, outputVertices);
+  this->_copyEvent.start();
+  //  TODO: Check how to circumvent if executor is OMP -> CPU side
+  inputVertices          = gko::clone(this->_deviceExecutor, inputVertices);
+  outputVertices         = gko::clone(this->_deviceExecutor, outputVertices);
+  this->_rbfCoefficients = gko::clone(this->_deviceExecutor, this->_rbfCoefficients); // TODO: Check if Ginkgo supports zero vector creation
+  this->_deviceExecutor->synchronize();
+  this->_copyEvent.pause();
 
   this->_rbfSystemMatrix = gko::share(GinkgoMatrix::create(this->_deviceExecutor, gko::dim<2>{n, n}));
   this->_matrixA         = gko::share(GinkgoMatrix::create(this->_deviceExecutor, gko::dim<2>{outputSize, n}));
-  this->_rbfCoefficients = gko::clone(this->_deviceExecutor, this->_rbfCoefficients); // TODO: Check if Ginkgo supports zero vector creation
 
   if (polynomial == Polynomial::SEPARATE) {
     const unsigned int polyParams = 4 - std::count(activeAxis.begin(), activeAxis.end(), false);
@@ -208,21 +217,24 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
   }
 
   // Launch RBF fill kernel on device
+  precice::utils::Event fillEvent("map.rbf.ginkgo.fillMatrices", precice::syncMode);
   this->_deviceExecutor->run(make_rbf_fill_operation(this->_rbfSystemMatrix->get_size()[0], this->_rbfSystemMatrix->get_size()[1], this->_rbfSystemMatrix->get_values(), inputVertices->get_values(), inputVertices->get_values(), basisFunction.getFunctor(), basisFunction.getFunctionParameters(), polynomial == Polynomial::ON, polyparams));
   this->_deviceExecutor->run(make_rbf_fill_operation(this->_matrixA->get_size()[0], this->_matrixA->get_size()[1], this->_matrixA->get_values(), inputVertices->get_values(), outputVertices->get_values(), basisFunction.getFunctor(), basisFunction.getFunctionParameters(), polynomial == Polynomial::ON, polyparams));
 
   // Wait for the kernels to finish
   this->_deviceExecutor->synchronize();
+  fillEvent.stop();
 
   // TODO: Add Polynomial == SEPARATE case
 
   // Setup solver TODO: Make configurable
   auto solverFactory = cg::build()
+                           .with_preconditioner(jacobi::build().on(this->_deviceExecutor))
                            .with_criteria(gko::stop::Iteration::build()
-                                              .with_max_iters(static_cast<std::size_t>(1e6))
+                                              .with_max_iters(static_cast<std::size_t>(1e4))
                                               .on(this->_deviceExecutor),
                                           gko::stop::ResidualNormReduction<>::build()
-                                              .with_reduction_factor(1e-9)
+                                              .with_reduction_factor(1e-4)
                                               .on(this->_deviceExecutor))
                            .on(this->_deviceExecutor);
 
@@ -232,6 +244,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
 template <typename RADIAL_BASIS_FUNCTION_T>
 void GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::_solveRBFSystem(const std::shared_ptr<GinkgoVector> &rhs) const
 {
+  precice::utils::Event e("map.rbf.ginkgo.solveSystemMatrix", precice::syncMode);
   this->_solver->apply(gko::lend(rhs), gko::lend(this->_rbfCoefficients));
 }
 
@@ -246,16 +259,18 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsis
     rhs->at(i, 0) = rhsValues(i, 0);
   }
 
+  this->_copyEvent.start();
   rhs = gko::clone(this->_deviceExecutor, rhs);
+  this->_copyEvent.pause();
 
   if (polynomial == Polynomial::SEPARATE) {
     // TODO: Check if there is least squares solver
     auto polynomialSolverFactory = cg::build()
                                        .with_criteria(gko::stop::Iteration::build()
-                                                          .with_max_iters(static_cast<std::size_t>(1e6))
+                                                          .with_max_iters(static_cast<std::size_t>(1e5))
                                                           .on(this->_deviceExecutor),
                                                       gko::stop::ResidualNormReduction<>::build()
-                                                          .with_reduction_factor(1e-9)
+                                                          .with_reduction_factor(1e-5)
                                                           .on(this->_deviceExecutor))
                                        .on(this->_deviceExecutor);
 
@@ -286,6 +301,7 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsis
     output->add_scaled(gko::lend(this->_scalarOne), gko::lend(addPolynomialContribution));
   }
 
+  this->_copyEvent.start();
   output = gko::clone(this->_hostExecutor, output);
 
   // TODO: Check if rather use Ginkgo throughout process instead of Eigen
@@ -295,6 +311,7 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsis
   for (Eigen::Index i = 0; i < result.rows(); ++i) {
     result(i, 0) = output->at(i, 0);
   }
+  this->_copyEvent.pause();
 
   return result;
 }
