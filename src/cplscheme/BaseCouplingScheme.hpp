@@ -517,7 +517,7 @@ private:
    * This is only relevant for the second participant of the SerialCouplingScheme, because other coupling schemes only
    * receive initial data in initialize.
    */
-  virtual void performReceiveOfFirstAdvance() = 0;
+  virtual void performReceiveOfFirstAdvance() = 0; // @todo try to merge this function inside exchangeInitialData() ?
 
   /// Functions needed for advance()
 

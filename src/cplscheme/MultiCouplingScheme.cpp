@@ -233,8 +233,10 @@ void MultiCouplingScheme::exchangeSecondData()
     // for (const auto &data : getAllData() | boost::adaptors::map_values) {
     //   data->moveTimeStepsStorage();
     // }
-    for (const DataMap::value_type &data : getAllData()) {
-      data.second->moveTimeStepsStorage();
+    for (auto &receiveExchange : _receiveDataVector | boost::adaptors::map_values) {
+      for (auto &receiveData : receiveExchange | boost::adaptors::map_values) {
+        receiveData->moveTimeStepsStorage();
+      }
     }
   }
   if (isImplicitCouplingScheme()) {

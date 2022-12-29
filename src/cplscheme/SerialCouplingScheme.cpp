@@ -128,7 +128,7 @@ void SerialCouplingScheme::exchangeSecondData()
     // for (const auto &data : getAllData() | boost::adaptors::map_values) {
     //   data->moveTimeStepsStorage();
     // }
-    for (const DataMap::value_type &pair : getAllData()) {
+    for (const DataMap::value_type &pair : getReceiveData()) {
       pair.second->moveTimeStepsStorage();
     }
   }

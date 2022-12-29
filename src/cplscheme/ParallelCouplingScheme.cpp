@@ -63,7 +63,7 @@ void ParallelCouplingScheme::exchangeSecondData()
     // for (const auto &data : getAllData() | boost::adaptors::map_values) {
     //   data->moveTimeStepsStorage();
     // }
-    for (const DataMap::value_type &pair : getAllData()) {
+    for (const DataMap::value_type &pair : getReceiveData()) { // @todo this is probably an error which causes wrong initial data at the beginning of the window. But with getAllData() it also breaks...
       pair.second->moveTimeStepsStorage();
     }
   }
