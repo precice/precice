@@ -1094,6 +1094,66 @@ void ParticipantImpl::writeGradientData(
   context.writeGradientsIntoDataBuffer(vertices, gradients);
 }
 
+void SolverInterfaceImpl::writeGlobalVectorData(
+    int           dataID,
+    // int           valueIndex,
+    const double *value)
+{
+  PRECICE_TRACE(dataID);
+  PRECICE_CHECK(_state != State::Finalized, "writeVectorData(...) cannot be called after finalize().");
+  PRECICE_REQUIRE_DATA_WRITE(dataID);
+  PRECICE_DEBUG("value = {}", Eigen::Map<const Eigen::VectorXd>(value, _dimensions).format(utils::eigenio::debug()));
+  WriteDataContext &context = _accessor->writeDataContext(dataID);
+  PRECICE_ASSERT(context.providedData() != nullptr);
+  PRECICE_CHECK(context.getDataDimensions() == _dimensions,
+                "You cannot call writeGlobalVectorData on the scalar data type \"{0}\". Use writeGlobalScalarData or change the data type for \"{0}\" to vector.",
+                context.getDataName());
+  PRECICE_VALIDATE_DATA(value, _dimensions);
+
+  mesh::Data &data        = *context.providedData();
+  auto &      values      = data.values();
+  const auto  vertexCount = values.size() / context.getDataDimensions(); // Should be 1. We can probably remove this line.
+  PRECICE_CHECK(vertexCount == 1, "vertexCount = {} , should be 1", vertexCount);
+  // PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
+  //               "Cannot write data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
+  //               context.getDataName(), valueIndex);
+  // const int offset = valueIndex * _dimensions;
+  for (int dim = 0; dim < _dimensions; dim++) {
+    // values[offset + dim] = value[dim];
+    values[dim] = value[dim];
+  }
+}
+void SolverInterfaceImpl::writeGlobalScalarData(
+    int    dataID,
+    double value)
+{
+  PRECICE_TRACE(dataID, value);
+  PRECICE_CHECK(_state != State::Finalized, "writeGlobalScalarData(...) cannot be called after finalize().");
+  PRECICE_REQUIRE_DATA_WRITE(dataID);
+  WriteDataContext &context = _accessor->writeDataContext(dataID);
+  PRECICE_ASSERT(context.providedData() != nullptr);
+  // PRECICE_CHECK(valueIndex >= -1,
+  //               "Invalid value index ({}) when writing scalar data. Value index must be >= 0. "
+  //               "Please check the value index for {}",
+  //               valueIndex, context.getDataName());
+  PRECICE_CHECK(context.getDataDimensions() == 1,
+                "You cannot call writeGlobalScalarData on the vector data type \"{0}\". "
+                "Use writeGlobalVectorData or change the data type for \"{0}\" to scalar.",
+                context.getDataName());
+  PRECICE_VALIDATE_DATA(static_cast<double *>(&value), 1);
+
+  mesh::Data &data        = *context.providedData();
+  auto &      values      = data.values();
+  // PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
+  //               "Cannot write data \"{}\" to invalid Vertex ID ({}). "
+  //               "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
+  //               context.getDataName(), valueIndex);
+  values[0] = value;
+
+  PRECICE_DEBUG("Written scalar value = {}", value);
+}
+
+
 void ParticipantImpl::setMeshAccessRegion(
     const std::string_view        meshName,
     ::precice::span<const double> boundingBox) const
