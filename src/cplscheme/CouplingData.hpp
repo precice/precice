@@ -70,9 +70,6 @@ public:
   /// initializes an empty storage with given data at WINDOW_START and WINDOW_END
   void initializeStorage(Eigen::VectorXd data);
 
-  /// clears storage and writes given data at WINDOW_END
-  void overwriteValuesAtWindowEnd(Eigen::VectorXd data);
-
   /// returns keys in _timeStepsStorage in ascending order.
   Eigen::VectorXd getStoredTimesAscending();
 

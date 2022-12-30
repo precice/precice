@@ -98,11 +98,7 @@ protected:
 
   void storeSendValuesAtTime(double relativeDt) override final;
 
-  void overwriteSendValuesAtWindowEnd() override final;
-
   void initializeSendDataStorage() override final;
-
-  void exchangeInitialData() override final;
 
 private:
   mutable logging::Logger _log{"cplscheme::BiCouplingScheme"};

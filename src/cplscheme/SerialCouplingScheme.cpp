@@ -75,19 +75,49 @@ void SerialCouplingScheme::receiveAndSetTimeWindowSize()
   }
 }
 
-void SerialCouplingScheme::performReceiveOfFirstAdvance()
+void SerialCouplingScheme::exchangeInitialData()
 {
-  // Second participant of a SerialCouplingScheme, receives the result of the first advance of the first participant.
+  // F: send, receive, S: receive, send
+  bool initialCommunication = true;
+
   if (doesFirstStep()) {
-    storeReceiveData(time::Storage::WINDOW_END);
+    if (sendsInitializedData()) {
+      sendData(getM2N(), getSendData(), initialCommunication);
+    } else {
+      // need to clear storage, because otherwise send data will be polluted in next iteration
+      for (const auto &data : getSendData() | boost::adaptors::map_values) {
+        bool keepWindowStart = false;
+        data->clearTimeStepsStorage(keepWindowStart);
+      }
+    }
+    if (receivesInitializedData()) {
+      receiveData(getM2N(), getReceiveData(), initialCommunication);
+      storeReceiveData(time::Storage::WINDOW_END); // use constant data
+      checkDataHasBeenReceived();
+    } else {
+      initializeZeroReceiveData(getReceiveData());
+    }
   } else { // second participant
+    if (receivesInitializedData()) {
+      receiveData(getM2N(), getReceiveData(), initialCommunication);
+    } else {
+      initializeZeroReceiveData(getReceiveData());
+    }
+    if (sendsInitializedData()) {
+      sendData(getM2N(), getSendData(), initialCommunication);
+    } else {
+      // need to clear storage, because otherwise send data will be polluted in next iteration
+      for (const auto &data : getSendData() | boost::adaptors::map_values) {
+        bool keepWindowStart = false;
+        data->clearTimeStepsStorage(keepWindowStart);
+      }
+    }
+    // Second participant of a SerialCouplingScheme, receives the result of the first advance of the first participant during initialization.
     // similar to SerialCouplingScheme::exchangeSecondData()
     receiveAndSetTimeWindowSize();
     PRECICE_DEBUG("Receiving data...");
     receiveData(getM2N(), getReceiveData());
-    if (not hasDataBeenReceived()) { // check is required, because calling checkDataHasBeenReceived() if hasDataBeenReceived() == true would trigger an assertion. This situation can only occur during initialization of the second participant of a SerialCouplingScheme, because it may call receive twice: Once for receiving initial data, once for receiving the result of the first advance.
-      checkDataHasBeenReceived();
-    }
+    checkDataHasBeenReceived();
   }
 }
 

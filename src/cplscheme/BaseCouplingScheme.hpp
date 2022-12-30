@@ -361,11 +361,6 @@ protected:
   virtual void storeSendValuesAtTime(double relativeDt) = 0;
 
   /**
-   * @brief clears storage for all send data and writes given send data to storage at WINDOW_END
-   */
-  virtual void overwriteSendValuesAtWindowEnd() = 0;
-
-  /**
    * @brief Stores send data in storage of CouplingData at given time WINDOW_START
    */
   virtual void initializeSendDataStorage() = 0;
@@ -508,16 +503,14 @@ private:
 
   /**
    * @brief implements functionality for initialize in base class.
-   */
-  virtual void exchangeInitialData() = 0;
-
-  /**
-   * @brief Receives result of first advance, if this has to happen inside BaseCouplingScheme::initialize()
    *
+   * Takes care of exhanging initial data or initializing zero data, if no initial data is provided.
+   *
+   * Also receives result of first advance, if this has to happen inside BaseCouplingScheme::initialize()
    * This is only relevant for the second participant of the SerialCouplingScheme, because other coupling schemes only
    * receive initial data in initialize.
    */
-  virtual void performReceiveOfFirstAdvance() = 0; // @todo try to merge this function inside exchangeInitialData() ?
+  virtual void exchangeInitialData() = 0;
 
   /// Functions needed for advance()
 

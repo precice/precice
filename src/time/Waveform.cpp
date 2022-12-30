@@ -28,10 +28,9 @@ void Waveform::initialize(const Eigen::VectorXd &values)
   PRECICE_ASSERT(_interpolationOrder >= Time::MIN_INTERPOLATION_ORDER);
 }
 
-void Waveform::store(const Eigen::VectorXd &values, double normalizedDt)
+void Waveform::store(const Eigen::VectorXd &values, double normalizedDt, bool keepWindowStart)
 {
   if (math::equals(_storage.maxStoredNormalizedDt(), time::Storage::WINDOW_END)) { // reached end of window and trying to write new data from next window. Clearing window first.
-    bool keepWindowStart = false;
     _storage.clear(keepWindowStart);
   }
   if (_storage.nTimes() > 0) {

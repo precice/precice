@@ -149,34 +149,6 @@ m2n::PtrM2N BiCouplingScheme::getM2N() const
   return _m2n;
 }
 
-void BiCouplingScheme::exchangeInitialData()
-{
-  // F: send, receive, S: receive, send
-  bool initialCommunication = true;
-
-  if (doesFirstStep()) {
-    if (sendsInitializedData()) {
-      sendData(getM2N(), getSendData(), initialCommunication);
-    }
-    if (receivesInitializedData()) {
-      receiveData(getM2N(), getReceiveData(), initialCommunication);
-      checkDataHasBeenReceived();
-    } else {
-      initializeZeroReceiveData(getReceiveData());
-    }
-  } else { // second participant
-    if (receivesInitializedData()) {
-      receiveData(getM2N(), getReceiveData(), initialCommunication);
-      checkDataHasBeenReceived();
-    } else {
-      initializeZeroReceiveData(getReceiveData());
-    }
-    if (sendsInitializedData()) {
-      sendData(getM2N(), getSendData(), initialCommunication);
-    }
-  }
-}
-
 bool BiCouplingScheme::hasAnySendData()
 {
   return not getSendData().empty();
@@ -209,13 +181,6 @@ void BiCouplingScheme::storeSendValuesAtTime(double relativeDt)
 {
   for (auto &data : getSendData() | boost::adaptors::map_values) {
     data->storeValuesAtTime(relativeDt, data->values());
-  }
-}
-
-void BiCouplingScheme::overwriteSendValuesAtWindowEnd()
-{
-  for (auto &data : getSendData() | boost::adaptors::map_values) {
-    data->overwriteValuesAtWindowEnd(data->values());
   }
 }
 

@@ -23,9 +23,46 @@ ParallelCouplingScheme::ParallelCouplingScheme(
     : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
                        secondParticipant, localParticipant, std::move(m2n), maxIterations, cplMode, dtMethod, extrapolationOrder) {}
 
-void ParallelCouplingScheme::performReceiveOfFirstAdvance()
+void ParallelCouplingScheme::exchangeInitialData()
 {
-  storeReceiveData(time::Storage::WINDOW_END);
+  // F: send, receive, S: receive, send
+  bool initialCommunication = true;
+
+  if (doesFirstStep()) {
+    if (sendsInitializedData()) {
+      sendData(getM2N(), getSendData(), initialCommunication);
+    } else {
+      // need to clear storage, because otherwise send data will be polluted in next iteration
+      for (const auto &data : getSendData() | boost::adaptors::map_values) {
+        bool keepWindowStart = false;
+        data->clearTimeStepsStorage(keepWindowStart);
+      }
+    }
+    if (receivesInitializedData()) {
+      receiveData(getM2N(), getReceiveData(), initialCommunication);
+      storeReceiveData(time::Storage::WINDOW_END); // use constant data in first iteration
+      checkDataHasBeenReceived();
+    } else {
+      initializeZeroReceiveData(getReceiveData());
+    }
+  } else { // second participant
+    if (receivesInitializedData()) {
+      receiveData(getM2N(), getReceiveData(), initialCommunication);
+      storeReceiveData(time::Storage::WINDOW_END); // use constant data in first iteration
+      checkDataHasBeenReceived();
+    } else {
+      initializeZeroReceiveData(getReceiveData());
+    }
+    if (sendsInitializedData()) {
+      sendData(getM2N(), getSendData(), initialCommunication);
+    } else {
+      // need to clear storage, because otherwise send data will be polluted in next iteration
+      for (const auto &data : getSendData() | boost::adaptors::map_values) {
+        bool keepWindowStart = false;
+        data->clearTimeStepsStorage(keepWindowStart);
+      }
+    }
+  }
 }
 
 void ParallelCouplingScheme::exchangeFirstData()

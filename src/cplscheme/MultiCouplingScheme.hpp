@@ -96,8 +96,6 @@ private:
 
   const DataMap getAllData() override final;
 
-  void performReceiveOfFirstAdvance() override final;
-
   void exchangeFirstData() override final;
 
   void exchangeSecondData() override final;
@@ -105,8 +103,6 @@ private:
   const DataMap getAccelerationData() override final;
 
   void storeSendValuesAtTime(double relativeDt) override final;
-
-  void overwriteSendValuesAtWindowEnd() override final;
 
   void initializeSendDataStorage() override final;
 

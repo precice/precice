@@ -128,7 +128,8 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
     }
 
     auto serializedSamples = data->getSerialized();
-    data->clearTimeStepsStorage();
+    bool keepWindowStart   = false;
+    data->clearTimeStepsStorage(keepWindowStart);
     // Data is actually only send if size>0, which is checked in the derived classes implementation
     m2n->send(serializedSamples, data->getMeshID(), data->getDimensions() * timesAscending.size());
 
@@ -173,7 +174,7 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
       PRECICE_ASSERT(math::equals(timesAscending(timesAscending.size() - 1), time::Storage::WINDOW_START), timesAscending(timesAscending.size() - 1)); // assert that last (and only) element is time::Storage::WINDOW_START
     } else {
       PRECICE_ASSERT(math::equals(timesAscending(timesAscending.size() - 1), time::Storage::WINDOW_END), timesAscending(timesAscending.size() - 1)); // assert that last element is time::Storage::WINDOW_END
-      bool keepWindowStart = false;
+      bool keepWindowStart = true;
       data->clearTimeStepsStorage(keepWindowStart);
     }
 
@@ -243,7 +244,6 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
 
   initializeSendDataStorage();
   exchangeInitialData();
-  performReceiveOfFirstAdvance();
 
   _isInitialized = true;
 }
@@ -285,19 +285,18 @@ void BaseCouplingScheme::firstExchange()
       // Possible solution: Don't scale times to [0,1], but leave them as they are. Then we would also allow times > 1. We then have two options:
       // 1) scale the times back later when the time window size is known (to still benefit from the simpler handling, if all times are scaled to [0,1]).
       // 2) generally use times in the interval [0, timeWindowSize]. This makes the implementation probably a bit more complicated, but also more consistent.
-      if (reachedEndOfTimeWindow()) {     // only necessary to trigger at end of time window.
-        overwriteSendValuesAtWindowEnd(); // only write data at end of window
+      if (reachedEndOfTimeWindow()) {                     // only necessary to trigger at end of time window.
+        storeSendValuesAtTime(time::Storage::WINDOW_END); // only write data at end of window
       }
     }
   } else {
     // work-around for explicit coupling, because it does not support waveform relaxation.
-    if (reachedEndOfTimeWindow()) {     // only necessary to trigger at end of time window.
-      overwriteSendValuesAtWindowEnd(); // only write data at end of window
+    if (reachedEndOfTimeWindow()) {                     // only necessary to trigger at end of time window.
+      storeSendValuesAtTime(time::Storage::WINDOW_END); // only write data at end of window
     }
   }
 
   if (reachedEndOfTimeWindow()) {
-
     _timeWindows += 1; // increment window counter. If not converged, will be decremented again later.
     exchangeFirstData();
   }

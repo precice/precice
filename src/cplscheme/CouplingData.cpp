@@ -121,12 +121,6 @@ void CouplingData::initializeStorage(Eigen::VectorXd data)
   storeValuesAtTime(time::Storage::WINDOW_END, data);
 }
 
-void CouplingData::overwriteValuesAtWindowEnd(Eigen::VectorXd data)
-{
-  clearTimeStepsStorage();
-  storeValuesAtTime(time::Storage::WINDOW_END, data);
-}
-
 Eigen::VectorXd CouplingData::getStoredTimesAscending()
 {
   return _timeStepsStorage.getTimes();

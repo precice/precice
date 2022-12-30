@@ -79,15 +79,6 @@ void MultiCouplingScheme::storeSendValuesAtTime(double relativeDt)
   }
 }
 
-void MultiCouplingScheme::overwriteSendValuesAtWindowEnd()
-{
-  for (auto &sendExchange : _sendDataVector | boost::adaptors::map_values) {
-    for (const auto &data : sendExchange | boost::adaptors::map_values) {
-      data->overwriteValuesAtWindowEnd(data->values());
-    }
-  }
-}
-
 void MultiCouplingScheme::initializeSendDataStorage()
 {
   for (auto &sendExchange : _sendDataVector | boost::adaptors::map_values) {
@@ -106,6 +97,7 @@ void MultiCouplingScheme::exchangeInitialData()
     if (receivesInitializedData()) {
       for (auto &receiveExchange : _receiveDataVector) {
         receiveData(_m2ns[receiveExchange.first], receiveExchange.second, initialCommunication);
+        storeReceiveData(time::Storage::WINDOW_END);
       }
       checkDataHasBeenReceived();
     } else {
@@ -117,16 +109,33 @@ void MultiCouplingScheme::exchangeInitialData()
       for (auto &sendExchange : _sendDataVector) {
         sendData(_m2ns[sendExchange.first], sendExchange.second, initialCommunication);
       }
+    } else {
+      // need to clear storage, because otherwise send data will be polluted in next iteration
+      for (auto &sendExchange : _sendDataVector) {
+        for (const auto &data : sendExchange.second | boost::adaptors::map_values) {
+          bool keepWindowStart = false;
+          data->clearTimeStepsStorage(keepWindowStart);
+        }
+      }
     }
   } else {
     if (sendsInitializedData()) {
       for (auto &sendExchange : _sendDataVector) {
         sendData(_m2ns[sendExchange.first], sendExchange.second, initialCommunication);
       }
+    } else {
+      // need to clear storage, because otherwise send data will be polluted in next iteration
+      for (auto &sendExchange : _sendDataVector) {
+        for (const auto &data : sendExchange.second | boost::adaptors::map_values) {
+          bool keepWindowStart = false;
+          data->clearTimeStepsStorage(keepWindowStart);
+        }
+      }
     }
     if (receivesInitializedData()) {
       for (auto &receiveExchange : _receiveDataVector) {
         receiveData(_m2ns[receiveExchange.first], receiveExchange.second, initialCommunication);
+        storeReceiveData(time::Storage::WINDOW_END);
       }
       checkDataHasBeenReceived();
     } else {
@@ -180,11 +189,6 @@ const DataMap MultiCouplingScheme::getAllData()
     allData.insert(receiveData.begin(), receiveData.end());
   }
   return allData;
-}
-
-void MultiCouplingScheme::performReceiveOfFirstAdvance()
-{
-  storeReceiveData(time::Storage::WINDOW_END);
 }
 
 void MultiCouplingScheme::exchangeFirstData()

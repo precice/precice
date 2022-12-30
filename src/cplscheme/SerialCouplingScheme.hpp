@@ -76,7 +76,7 @@ private:
   /// Receives and sets the time window size, if this participant is the one to receive
   void receiveAndSetTimeWindowSize();
 
-  void performReceiveOfFirstAdvance() override final;
+  void exchangeInitialData() override final;
 
   void exchangeFirstData() override;
 
