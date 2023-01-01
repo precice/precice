@@ -31,13 +31,8 @@ void ParallelCouplingScheme::exchangeInitialData()
   if (doesFirstStep()) {
     if (sendsInitializedData()) {
       sendData(getM2N(), getSendData(), initialCommunication);
-    } else {
-      // need to clear storage, because otherwise send data will be polluted in next iteration
-      for (const auto &data : getSendData() | boost::adaptors::map_values) {
-        bool keepWindowStart = false;
-        data->clearTimeStepsStorage(keepWindowStart);
-      }
     }
+
     if (receivesInitializedData()) {
       receiveData(getM2N(), getReceiveData(), initialCommunication);
       storeReceiveData(time::Storage::WINDOW_END); // use constant data in first iteration
@@ -53,15 +48,14 @@ void ParallelCouplingScheme::exchangeInitialData()
     } else {
       initializeZeroReceiveData(getReceiveData());
     }
+
     if (sendsInitializedData()) {
       sendData(getM2N(), getSendData(), initialCommunication);
-    } else {
-      // need to clear storage, because otherwise send data will be polluted in next iteration
-      for (const auto &data : getSendData() | boost::adaptors::map_values) {
-        bool keepWindowStart = false;
-        data->clearTimeStepsStorage(keepWindowStart);
-      }
     }
+  }
+
+  for (const auto &data : getSendData() | boost::adaptors::map_values) {
+    data->clearTimeStepsStorage();
   }
 }
 
@@ -79,33 +73,40 @@ void ParallelCouplingScheme::exchangeFirstData()
 
 void ParallelCouplingScheme::exchangeSecondData()
 {
-  if (doesFirstStep()) { // first participant
-    PRECICE_DEBUG("Receiving data...");
-    if (isImplicitCouplingScheme()) {
+  if (isImplicitCouplingScheme()) {
+    if (doesFirstStep()) { // first participant
       receiveConvergence(getM2N());
-    }
-    receiveData(getM2N(), getReceiveData());
-    checkDataHasBeenReceived();
-  } else { // second participant
-    if (isImplicitCouplingScheme()) {
+    } else { // second participant
       PRECICE_DEBUG("Perform acceleration (only second participant)...");
       doImplicitStep();
       sendConvergence(getM2N());
     }
-    PRECICE_DEBUG("Sending data...");
-    sendData(getM2N(), getSendData());
   }
+
   if (hasConverged()) {
     // @todo similar code breaks in SerialCouplingScheme.cpp for CplSchemeTests/SerialImplicitCouplingSchemeTests/ testConfiguredAbsConvergenceMeasureSynchronized. Why? @fsimonis
     // for (const auto &data : getAllData() | boost::adaptors::map_values) {
     //   data->moveTimeStepsStorage();
     // }
-    for (const DataMap::value_type &pair : getReceiveData()) { // @todo this is probably an error which causes wrong initial data at the beginning of the window. But with getAllData() it also breaks...
+    for (const DataMap::value_type &pair : getAllData()) {
       pair.second->moveTimeStepsStorage();
     }
   }
   if (isImplicitCouplingScheme()) {
     storeIteration();
+  }
+
+  if (doesFirstStep()) { // first participant
+    PRECICE_DEBUG("Receiving data...");
+    receiveData(getM2N(), getReceiveData());
+    checkDataHasBeenReceived();
+  } else { // second participant
+    PRECICE_DEBUG("Sending data...");
+    sendData(getM2N(), getSendData());
+  }
+
+  for (const DataMap::value_type &pair : getSendData()) {
+    pair.second->clearTimeStepsStorage();
   }
 }
 

@@ -83,13 +83,8 @@ void SerialCouplingScheme::exchangeInitialData()
   if (doesFirstStep()) {
     if (sendsInitializedData()) {
       sendData(getM2N(), getSendData(), initialCommunication);
-    } else {
-      // need to clear storage, because otherwise send data will be polluted in next iteration
-      for (const auto &data : getSendData() | boost::adaptors::map_values) {
-        bool keepWindowStart = false;
-        data->clearTimeStepsStorage(keepWindowStart);
-      }
     }
+
     if (receivesInitializedData()) {
       receiveData(getM2N(), getReceiveData(), initialCommunication);
       storeReceiveData(time::Storage::WINDOW_END); // use constant data
@@ -103,14 +98,9 @@ void SerialCouplingScheme::exchangeInitialData()
     } else {
       initializeZeroReceiveData(getReceiveData());
     }
+
     if (sendsInitializedData()) {
       sendData(getM2N(), getSendData(), initialCommunication);
-    } else {
-      // need to clear storage, because otherwise send data will be polluted in next iteration
-      for (const auto &data : getSendData() | boost::adaptors::map_values) {
-        bool keepWindowStart = false;
-        data->clearTimeStepsStorage(keepWindowStart);
-      }
     }
     // Second participant of a SerialCouplingScheme, receives the result of the first advance of the first participant during initialization.
     // similar to SerialCouplingScheme::exchangeSecondData()
@@ -118,6 +108,10 @@ void SerialCouplingScheme::exchangeInitialData()
     PRECICE_DEBUG("Receiving data...");
     receiveData(getM2N(), getReceiveData());
     checkDataHasBeenReceived();
+  }
+
+  for (const auto &data : getSendData() | boost::adaptors::map_values) {
+    data->clearTimeStepsStorage();
   }
 }
 
@@ -158,7 +152,7 @@ void SerialCouplingScheme::exchangeSecondData()
     // for (const auto &data : getAllData() | boost::adaptors::map_values) {
     //   data->moveTimeStepsStorage();
     // }
-    for (const DataMap::value_type &pair : getReceiveData()) {
+    for (const DataMap::value_type &pair : getAllData()) {
       pair.second->moveTimeStepsStorage();
     }
   }
@@ -174,6 +168,10 @@ void SerialCouplingScheme::exchangeSecondData()
       receiveData(getM2N(), getReceiveData());
       checkDataHasBeenReceived();
     }
+  }
+
+  for (const DataMap::value_type &pair : getSendData()) {
+    pair.second->clearTimeStepsStorage();
   }
 }
 

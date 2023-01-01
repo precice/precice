@@ -109,27 +109,11 @@ void MultiCouplingScheme::exchangeInitialData()
       for (auto &sendExchange : _sendDataVector) {
         sendData(_m2ns[sendExchange.first], sendExchange.second, initialCommunication);
       }
-    } else {
-      // need to clear storage, because otherwise send data will be polluted in next iteration
-      for (auto &sendExchange : _sendDataVector) {
-        for (const auto &data : sendExchange.second | boost::adaptors::map_values) {
-          bool keepWindowStart = false;
-          data->clearTimeStepsStorage(keepWindowStart);
-        }
-      }
     }
   } else {
     if (sendsInitializedData()) {
       for (auto &sendExchange : _sendDataVector) {
         sendData(_m2ns[sendExchange.first], sendExchange.second, initialCommunication);
-      }
-    } else {
-      // need to clear storage, because otherwise send data will be polluted in next iteration
-      for (auto &sendExchange : _sendDataVector) {
-        for (const auto &data : sendExchange.second | boost::adaptors::map_values) {
-          bool keepWindowStart = false;
-          data->clearTimeStepsStorage(keepWindowStart);
-        }
       }
     }
     if (receivesInitializedData()) {
@@ -142,6 +126,12 @@ void MultiCouplingScheme::exchangeInitialData()
       for (auto &receiveExchange : _receiveDataVector | boost::adaptors::map_values) {
         initializeZeroReceiveData(receiveExchange);
       }
+    }
+  }
+
+  for (auto &sendExchange : _sendDataVector) {
+    for (const auto &data : sendExchange.second | boost::adaptors::map_values) {
+      data->clearTimeStepsStorage();
     }
   }
   PRECICE_DEBUG("Initial data is exchanged in MultiCouplingScheme");
@@ -217,34 +207,43 @@ void MultiCouplingScheme::exchangeSecondData()
   // @todo implement MultiCouplingScheme for explicit coupling
 
   if (_isController) {
+    PRECICE_DEBUG("Perform acceleration (only controller)...");
     doImplicitStep();
     for (const auto &m2n : _m2ns | boost::adaptors::map_values) {
       sendConvergence(m2n);
     }
-
-    for (auto &sendExchange : _sendDataVector) {
-      sendData(_m2ns[sendExchange.first], sendExchange.second);
-    }
   } else {
     receiveConvergence(_m2ns[_controller]);
-    for (auto &receiveExchange : _receiveDataVector) {
-      receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
-    }
-    checkDataHasBeenReceived();
   }
+
   if (hasConverged()) {
     // @todo similar code breaks in SerialCouplingScheme.cpp for CplSchemeTests/SerialImplicitCouplingSchemeTests/ testConfiguredAbsConvergenceMeasureSynchronized. Why? @fsimonis
     // for (const auto &data : getAllData() | boost::adaptors::map_values) {
     //   data->moveTimeStepsStorage();
     // }
-    for (auto &receiveExchange : _receiveDataVector | boost::adaptors::map_values) {
-      for (auto &receiveData : receiveExchange | boost::adaptors::map_values) {
-        receiveData->moveTimeStepsStorage();
-      }
+    for (const DataMap::value_type &data : getAllData()) {
+      data.second->moveTimeStepsStorage();
     }
   }
   if (isImplicitCouplingScheme()) {
     storeIteration();
+  }
+
+  if (_isController) {
+    for (auto &sendExchange : _sendDataVector) {
+      sendData(_m2ns[sendExchange.first], sendExchange.second);
+    }
+  } else {
+    for (auto &receiveExchange : _receiveDataVector) {
+      receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
+    }
+    checkDataHasBeenReceived();
+  }
+
+  for (auto &sendExchange : _sendDataVector | boost::adaptors::map_values) {
+    for (auto &sendData : sendExchange | boost::adaptors::map_values) {
+      sendData->clearTimeStepsStorage();
+    }
   }
 }
 

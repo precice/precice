@@ -124,12 +124,11 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
     if (initialCommunication) {
       PRECICE_ASSERT(math::equals(timesAscending(timesAscending.size() - 1), time::Storage::WINDOW_START), timesAscending(timesAscending.size() - 1)); // assert that last (and only) element is time::Storage::WINDOW_START
     } else {
+      PRECICE_ASSERT(math::equals(timesAscending(0), time::Storage::WINDOW_START), timesAscending(0));                                               // assert that first element is time::Storage::WINDOW_START
       PRECICE_ASSERT(math::equals(timesAscending(timesAscending.size() - 1), time::Storage::WINDOW_END), timesAscending(timesAscending.size() - 1)); // assert that last element is time::Storage::WINDOW_END
     }
 
     auto serializedSamples = data->getSerialized();
-    bool keepWindowStart   = false;
-    data->clearTimeStepsStorage(keepWindowStart);
     // Data is actually only send if size>0, which is checked in the derived classes implementation
     m2n->send(serializedSamples, data->getMeshID(), data->getDimensions() * timesAscending.size());
 
@@ -173,8 +172,9 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
     if (initialCommunication) {
       PRECICE_ASSERT(math::equals(timesAscending(timesAscending.size() - 1), time::Storage::WINDOW_START), timesAscending(timesAscending.size() - 1)); // assert that last (and only) element is time::Storage::WINDOW_START
     } else {
+      PRECICE_ASSERT(math::equals(timesAscending(0), time::Storage::WINDOW_START), timesAscending(0));                                               // assert that first element is time::Storage::WINDOW_START
       PRECICE_ASSERT(math::equals(timesAscending(timesAscending.size() - 1), time::Storage::WINDOW_END), timesAscending(timesAscending.size() - 1)); // assert that last element is time::Storage::WINDOW_END
-      bool keepWindowStart = true;
+      bool keepWindowStart = false;
       data->clearTimeStepsStorage(keepWindowStart);
     }
 
