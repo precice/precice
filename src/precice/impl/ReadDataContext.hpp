@@ -3,6 +3,7 @@
 #include <Eigen/Core>
 
 #include "DataContext.hpp"
+#include "cplscheme/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "time/SharedPointer.hpp"
 #include "time/Time.hpp"
@@ -59,6 +60,22 @@ public:
    * @brief Updates _waveform when moving to the next time window.
    */
   void moveToNextWindow();
+
+  /**
+   * @brief Get the times received by cplscheme for the _fromData of this ReadDataContext
+   *
+   * @param cplscheme CouplingScheme that received the data
+   * @return std::vector<double> contains times in ascending order
+   */
+  std::vector<double> getReceivedTimes(cplscheme::PtrCouplingScheme cplscheme);
+
+  /**
+   * @brief Load received data at relativeDt from Storage of cplscheme into _fromData.
+   *
+   * @param relativeDt time associated with data to be loaded
+   * @param cplscheme coupling scheme providing access to the Storage
+   */
+  void loadReceived(double relativeDt, cplscheme::PtrCouplingScheme cplscheme);
 
   /**
    * @brief Stores _providedData in _waveform. Uses provided relativeDt to label data.

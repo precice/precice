@@ -1,5 +1,6 @@
 #include "ReadDataContext.hpp"
 
+#include "cplscheme/CouplingScheme.hpp"
 #include "time/Waveform.hpp"
 
 namespace precice::impl {
@@ -45,6 +46,16 @@ Eigen::VectorXd ReadDataContext::sampleWaveformAt(double normalizedDt)
 void ReadDataContext::moveToNextWindow()
 {
   _waveform->moveToNextWindow();
+}
+
+std::vector<double> ReadDataContext::getReceivedTimes(cplscheme::PtrCouplingScheme cplscheme)
+{
+  return cplscheme->getReceiveTimes(getDataName());
+}
+
+void ReadDataContext::loadReceived(double relativeDt, cplscheme::PtrCouplingScheme cplscheme)
+{
+  cplscheme->loadReceiveDataFromStorage(relativeDt); // @todo try to make this specific for this read data context. Not required to load all data!
 }
 
 } // namespace precice::impl
