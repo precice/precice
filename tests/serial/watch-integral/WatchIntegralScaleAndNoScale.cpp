@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_CASE(WatchIntegralScaleAndNoScale)
 
   if (context.isNamed("SolverOne")) {
     precice::SolverInterface interface(context.name, context.config(), 0, 1);
-    // does this trigger the CI pipeline?
+
     // Set mesh
     Vector2d coordA{0.0, 0.0};
     Vector2d coordB{1.0, 0.0};
