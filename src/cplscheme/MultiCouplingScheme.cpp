@@ -97,8 +97,8 @@ void MultiCouplingScheme::exchangeInitialData()
     if (receivesInitializedData()) {
       for (auto &receiveExchange : _receiveDataVector) {
         receiveData(_m2ns[receiveExchange.first], receiveExchange.second, initialCommunication);
-        storeReceiveData(time::Storage::WINDOW_END);
       }
+      storeReceiveData(time::Storage::WINDOW_END);
       checkDataHasBeenReceived();
     } else {
       for (auto &receiveExchange : _receiveDataVector | boost::adaptors::map_values) {
@@ -119,8 +119,8 @@ void MultiCouplingScheme::exchangeInitialData()
     if (receivesInitializedData()) {
       for (auto &receiveExchange : _receiveDataVector) {
         receiveData(_m2ns[receiveExchange.first], receiveExchange.second, initialCommunication);
-        storeReceiveData(time::Storage::WINDOW_END);
       }
+      storeReceiveData(time::Storage::WINDOW_END);
       checkDataHasBeenReceived();
     } else {
       for (auto &receiveExchange : _receiveDataVector | boost::adaptors::map_values) {
@@ -163,7 +163,7 @@ std::vector<double> MultiCouplingScheme::getReceiveTimes(std::string dataName)
 {
   //@todo stub implementation. Should walk over all receive data, get times and ensure that all times vectors actually hold the same times (since otherwise we would have to get times individually per data)
   //@todo subcycling is not supported for MultiCouplingScheme, because this needs a complicated interplay of picking the right data in time and mapping this data. This is hard to realize with the current implementation.
-  auto times = std::vector<double>({time::Storage::WINDOW_END});
+  auto times = std::vector<double>({time::Storage::WINDOW_START, time::Storage::WINDOW_END});
   return times;
 }
 
