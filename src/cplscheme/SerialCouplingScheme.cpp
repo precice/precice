@@ -81,6 +81,7 @@ void SerialCouplingScheme::exchangeInitialData()
   bool initialCommunication = true;
 
   if (doesFirstStep()) {
+    // @todo try to remove this unnecessary send, we will send all data again in the first advance.
     if (sendsInitializedData()) {
       sendData(getM2N(), getSendData(), initialCommunication);
     }
@@ -93,6 +94,7 @@ void SerialCouplingScheme::exchangeInitialData()
       initializeZeroReceiveData(getReceiveData());
     }
   } else { // second participant
+    // @todo try to remove this unnecessary receive, we receive all data further below.
     if (receivesInitializedData()) {
       receiveData(getM2N(), getReceiveData(), initialCommunication);
     } else {
