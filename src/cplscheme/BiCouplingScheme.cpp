@@ -191,17 +191,18 @@ void BiCouplingScheme::initializeSendDataStorage()
   }
 }
 
-std::vector<double> BiCouplingScheme::getReceiveTimes()
+std::vector<double> BiCouplingScheme::getReceiveTimes(std::string dataName)
 {
-  //@todo Should ensure that all times vectors actually hold the same times (since otherwise we would have to get times individually per data), but for BiCouplingScheme this should be fine.
   auto times = std::vector<double>();
-  for (auto &data : getReceiveData()) {
-    auto timesVec = data.second->getStoredTimesAscending();
-    PRECICE_ASSERT(timesVec.size() > 0, timesVec.size());
-    for (int i = 0; i < timesVec.size(); i++) {
-      times.push_back(timesVec(i));
+  for (auto &data : getReceiveData() | boost::adaptors::map_values) {
+    if (data->getDataName() == dataName) {
+      auto timesVec = data->getStoredTimesAscending();
+      PRECICE_ASSERT(timesVec.size() > 0, timesVec.size());
+      for (int i = 0; i < timesVec.size(); i++) {
+        times.push_back(timesVec(i));
+      }
+      return times;
     }
-    return times;
   }
   PRECICE_ASSERT(false);
 }

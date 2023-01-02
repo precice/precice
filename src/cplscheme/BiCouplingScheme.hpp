@@ -72,7 +72,7 @@ public:
 
   void loadReceiveDataFromStorage(double relativeDt) override final;
 
-  std::vector<double> getReceiveTimes() override final;
+  std::vector<double> getReceiveTimes(std::string dataName) override final;
 
 protected:
   /// Returns all data to be sent.

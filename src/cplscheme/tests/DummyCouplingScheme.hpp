@@ -126,7 +126,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  std::vector<double> getReceiveTimes() override final
+  std::vector<double> getReceiveTimes(std::string dataName) override final
   {
     PRECICE_ASSERT(false);
     return std::vector<double>();

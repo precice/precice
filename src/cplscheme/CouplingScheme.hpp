@@ -182,7 +182,7 @@ public:
    *
    * @return std::vector containing all times (as relative times)
    */
-  virtual std::vector<double> getReceiveTimes() = 0;
+  virtual std::vector<double> getReceiveTimes(std::string dataName) = 0;
 
   /// Returns the currently computed time of the coupling scheme.
   virtual double getTime() const = 0;

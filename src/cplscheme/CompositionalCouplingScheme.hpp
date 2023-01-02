@@ -128,7 +128,7 @@ public:
 
   void loadReceiveDataFromStorage(double relativeDt) final override;
 
-  std::vector<double> getReceiveTimes() override final;
+  std::vector<double> getReceiveTimes(std::string dataName) override final;
 
   /**
    * @brief Returns the currently computed time of the coupling scheme.
