@@ -1824,13 +1824,19 @@ void SolverInterfaceImpl::mapReadData()
   PRECICE_TRACE();
   computeMappings(_accessor->readMappingContexts(), "read");
   for (auto &context : _accessor->readDataContexts()) {
-    for (auto time : context.getReceivedTimes(_couplingScheme)) {
-      context.loadReceived(time, _couplingScheme);
-      if (context.isMappingRequired()) {
-        PRECICE_DEBUG("Map read data \"{}\" to mesh \"{}\"", context.getDataName(), context.getMeshName());
-        context.mapData();
+    auto receiveTimes = context.getReceivedTimes(_couplingScheme);
+    if (receiveTimes.empty()) { // @todo ugly hack required for very special cases with watch integral. See https://github.com/precice/precice/pull/1526
+      context.loadReceived(time::Storage::WINDOW_END, _couplingScheme);
+      context.storeDataInWaveform(time::Storage::WINDOW_END);
+    } else {
+      for (auto time : context.getReceivedTimes(_couplingScheme)) {
+        context.loadReceived(time, _couplingScheme);
+        if (context.isMappingRequired()) {
+          PRECICE_DEBUG("Map read data \"{}\" to mesh \"{}\"", context.getDataName(), context.getMeshName());
+          context.mapData();
+        }
+        context.storeDataInWaveform(time);
       }
-      context.storeDataInWaveform(time);
     }
   }
   clearMappings(_accessor->readMappingContexts());

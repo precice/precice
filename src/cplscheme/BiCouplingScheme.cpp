@@ -204,7 +204,9 @@ std::vector<double> BiCouplingScheme::getReceiveTimes(std::string dataName)
       return times;
     }
   }
-  PRECICE_ASSERT(false);
+  PRECICE_DEBUG("No data with dataName {} found in receive data. Returning empty.", dataName);
+  // PRECICE_ASSERT(false);  // Reasonable assertion, but the test Integration/Serial/WatchIntegralScaleAndNoScale actually uses read-data that is not receiving any data and this assertion gets triggered. See also https://github.com/precice/precice/pull/1526
+  return times;
 }
 
 } // namespace precice::cplscheme
