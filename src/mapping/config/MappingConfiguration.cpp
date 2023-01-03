@@ -56,6 +56,18 @@ MappingConfiguration::MappingConfiguration(
   auto attrUseLU = makeXMLAttribute(ATTR_USE_QR, false)
                        .setDocumentation("If set to true, QR decomposition is used to solve the RBF system");
 
+  auto attrGinkgoExecutor = makeXMLAttribute(ATTR_GINKGO_EXECUTOR, "ginkgo-reference-executor")
+                                .setDocumentation("Specifies the execution backend used by Ginkgo.")
+                                .setOptions({"ginkgo-reference-executor", "ginkgo-omp-executor", "ginkgo-cuda-executor", "ginkgo-hip-executor"});
+
+  auto attrGinkgoSolver = makeXMLAttribute(ATTR_GINKGO_SOLVER, "ginkgo-cg-solver")
+                              .setDocumentation("Specifies the iterative solver used by Ginkgo.")
+                              .setOptions({"ginkgo-cg-solver", "ginkgo-gmres-solver", "ginkgo-mg-solver"});
+
+  auto attrGinkgoPreconditioner = makeXMLAttribute(ATTR_GINKGO_PRECONDITIONER, "ginkgo-jacobi-preconditioner")
+                                      .setDocumentation("Specifies the preconditioner used by Ginkgo.")
+                                      .setOptions({"ginkgo-jacobi-preconditioner", "ginkgo-cholesky-preconditioner", "ginkgo-ilu-preconditioner", "ginkgo-isai-preconditioner"});
+
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
   std::list<XMLTag>  tags;
   {
@@ -128,6 +140,9 @@ MappingConfiguration::MappingConfiguration(
     tag.addAttribute(attrYDead);
     tag.addAttribute(attrZDead);
     tag.addAttribute(attrUseLU);
+    tag.addAttribute(attrGinkgoExecutor);
+    tag.addAttribute(attrGinkgoSolver);
+    tag.addAttribute(attrGinkgoPreconditioner);
   }
   {
     XMLTag tag(*this, VALUE_NEAREST_NEIGHBOR, occ, TAG);
@@ -258,10 +273,23 @@ void MappingConfiguration::xmlTagCallback(
         rbfParameter.value = supportRadius;
       }
     }
+
+    GinkgoParameter ginkgoParameter;
+
+    if (tag.hasAttribute(ATTR_GINKGO_EXECUTOR)) {
+      ginkgoParameter.executor = tag.getStringAttributeValue(ATTR_GINKGO_EXECUTOR);
+    }
+    if (tag.hasAttribute(ATTR_GINKGO_SOLVER)) {
+      ginkgoParameter.solver = tag.getStringAttributeValue(ATTR_GINKGO_SOLVER);
+    }
+    if (tag.hasAttribute(ATTR_GINKGO_PRECONDITIONER)) {
+      ginkgoParameter.preconditioner = tag.getStringAttributeValue(ATTR_GINKGO_PRECONDITIONER);
+    }
+
     ConfiguredMapping configuredMapping = createMapping(context,
                                                         dir, type, constraint,
                                                         fromMesh, toMesh, timing,
-                                                        rbfParameter, solverRtol,
+                                                        rbfParameter, ginkgoParameter, solverRtol,
                                                         xDead, yDead, zDead,
                                                         useLU,
                                                         polynomial, preallocation);
@@ -289,6 +317,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
     const std::string &              toMeshName,
     Timing                           timing,
     const RBFParameter &             rbfParameter,
+    const GinkgoParameter &          ginkgoParameter,
     double                           solverRtol,
     bool                             xDead,
     bool                             yDead,
@@ -368,6 +397,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
 
   configuredMapping.isRBF = true;
   bool    usePETSc        = false;
+  bool    useGinkgo       = false;
   RBFType rbfType         = RBFType::EIGEN;
 
 #ifndef PRECICE_NO_PETSC
@@ -379,32 +409,39 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   utils::Petsc::initialize(&argc, &argv, utils::Parallel::current()->comm);
   delete[] arg;
   usePETSc = true;
+
+#elseif PRECICE_NO_GINKGO
+
+  useGinkgo = true;
+
 #endif
 
   if (usePETSc && (not useLU)) {
     rbfType = RBFType::PETSc;
+  } else if (useGinkgo) {
+    rbfType = RBFType::Ginkgo;
   } else {
     rbfType = RBFType::EIGEN;
   }
 
-  if (rbfType == RBFType::EIGEN) {
-    PRECICE_DEBUG("Eigen RBF is used");
+  if (rbfType == RBFType::EIGEN || rbfType == RBFType::Ginkgo) {
+    PRECICE_DEBUG("Eigen/Ginkgo RBF is used");
     if (type == VALUE_RBF_TPS) {
       configuredMapping.mapping = PtrMapping(
-          new RadialBasisFctMapping<ThinPlateSplines>(constraintValue, dimensions, ThinPlateSplines(), {{xDead, yDead, zDead}}, polynomial));
+          new RadialBasisFctMapping<ThinPlateSplines>(constraintValue, dimensions, ThinPlateSplines(), {{xDead, yDead, zDead}}, polynomial, ginkgoParameter));
     } else if (type == VALUE_RBF_MULTIQUADRICS) {
       PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::ShapeParameter)
       configuredMapping.mapping = PtrMapping(
           new RadialBasisFctMapping<Multiquadrics>(
-              constraintValue, dimensions, Multiquadrics(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial));
+              constraintValue, dimensions, Multiquadrics(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial, ginkgoParameter));
     } else if (type == VALUE_RBF_INV_MULTIQUADRICS) {
       PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::ShapeParameter)
       configuredMapping.mapping = PtrMapping(
           new RadialBasisFctMapping<InverseMultiquadrics>(
-              constraintValue, dimensions, InverseMultiquadrics(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial));
+              constraintValue, dimensions, InverseMultiquadrics(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial, ginkgoParameter));
     } else if (type == VALUE_RBF_VOLUME_SPLINES) {
       configuredMapping.mapping = PtrMapping(
-          new RadialBasisFctMapping<VolumeSplines>(constraintValue, dimensions, VolumeSplines(), {{xDead, yDead, zDead}}, polynomial));
+          new RadialBasisFctMapping<VolumeSplines>(constraintValue, dimensions, VolumeSplines(), {{xDead, yDead, zDead}}, polynomial, ginkgoParameter));
     } else if (type == VALUE_RBF_GAUSSIAN) {
       double shapeParameter = rbfParameter.value;
       if (rbfParameter.type == RBFParameter::Type::SupportRadius) {
@@ -413,32 +450,32 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
       }
       configuredMapping.mapping = PtrMapping(
           new RadialBasisFctMapping<Gaussian>(
-              constraintValue, dimensions, Gaussian(shapeParameter), {{xDead, yDead, zDead}}, polynomial));
+              constraintValue, dimensions, Gaussian(shapeParameter), {{xDead, yDead, zDead}}, polynomial, ginkgoParameter));
     } else if (type == VALUE_RBF_CTPS_C2) {
       PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::SupportRadius)
       configuredMapping.mapping = PtrMapping(
           new RadialBasisFctMapping<CompactThinPlateSplinesC2>(
-              constraintValue, dimensions, CompactThinPlateSplinesC2(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial));
+              constraintValue, dimensions, CompactThinPlateSplinesC2(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial, ginkgoParameter));
     } else if (type == VALUE_RBF_CPOLYNOMIAL_C0) {
       PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::SupportRadius)
       configuredMapping.mapping = PtrMapping(
           new RadialBasisFctMapping<CompactPolynomialC0>(
-              constraintValue, dimensions, CompactPolynomialC0(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial));
+              constraintValue, dimensions, CompactPolynomialC0(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial, ginkgoParameter));
     } else if (type == VALUE_RBF_CPOLYNOMIAL_C2) {
       PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::SupportRadius)
       configuredMapping.mapping = PtrMapping(
           new RadialBasisFctMapping<CompactPolynomialC2>(
-              constraintValue, dimensions, CompactPolynomialC2(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial));
+              constraintValue, dimensions, CompactPolynomialC2(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial, ginkgoParameter));
     } else if (type == VALUE_RBF_CPOLYNOMIAL_C4) {
       PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::SupportRadius)
       configuredMapping.mapping = PtrMapping(
           new RadialBasisFctMapping<CompactPolynomialC4>(
-              constraintValue, dimensions, CompactPolynomialC4(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial));
+              constraintValue, dimensions, CompactPolynomialC4(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial, ginkgoParameter));
     } else if (type == VALUE_RBF_CPOLYNOMIAL_C6) {
       PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::SupportRadius)
       configuredMapping.mapping = PtrMapping(
           new RadialBasisFctMapping<CompactPolynomialC6>(
-              constraintValue, dimensions, CompactPolynomialC6(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial));
+              constraintValue, dimensions, CompactPolynomialC6(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial, ginkgoParameter));
     } else {
       PRECICE_ERROR("Unknown mapping type!");
     }

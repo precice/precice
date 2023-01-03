@@ -40,27 +40,57 @@ namespace precice {
 extern bool syncMode;
 namespace mapping {
 
+// Ginkgo Data Structures
 using GinkgoVector = gko::matrix::Dense<double>;
 using GinkgoMatrix = gko::matrix::Dense<double>;
-using cg           = gko::solver::Cg<>;
-using jacobi       = gko::preconditioner::Jacobi<>;
-using cholesky     = gko::preconditioner::Ic<>;
+// Ginkgo Solver
+using cg    = gko::solver::Cg<>;
+using gmres = gko::solver::Gmres<>;
+using mg    = gko::solver::Multigrid;
+// Ginkgo Preconditioner
+using jacobi   = gko::preconditioner::Jacobi<>;
+using cholesky = gko::preconditioner::Ic<>;
+using ilu      = gko::preconditioner::Ilu<>;
 
-enum GinkgoExecutorType { CPU,
-                          OMP,
-                          CUDA,
-                          HIP };
+enum SolverType {
+  CG,
+  GMRES,
+  MG
+};
+
+enum PreconditionerType {
+  Jacobi,
+  Cholesky,
+  Ilu
+};
+
+const std::map<std::string, SolverType> solverTypeLookup{
+    {"ginkgo-cg-solver", SolverType::CG},
+    {"ginkgo-gmres-solver", SolverType::GMRES},
+    {"ginkgo-mg-solver", SolverType::MG}};
+
+const std::map<std::string, PreconditionerType> preconditionerTypeLookup{
+    {"ginkgo-jacobi-preconditioner", PreconditionerType::Jacobi},
+    {"ginkgo-cholesky-preconditioner", PreconditionerType::Cholesky},
+    {"ginkgo-ilu-preconditioner", PreconditionerType::Ilu}};
+
+const std::map<std::string, std::function<std::shared_ptr<gko::Executor>()>> ginkgoExecutorLookup{{"ginkgo-reference-executor", [] { return gko::ReferenceExecutor::create(); }},
+                                                                                                  {"ginkgo-omp-executor", [] { return gko::OmpExecutor::create(); }},
+                                                                                                  {"ginkgo-cuda-executor", [] { return gko::CudaExecutor::create(0, gko::OmpExecutor::create(), true); }},
+                                                                                                  {"ginkgo-hip-executor", [] { return gko::HipExecutor::create(0, gko::OmpExecutor::create(), true); }}};
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 class GinkgoRadialBasisFctSolver {
 public:
-  GinkgoRadialBasisFctSolver(GinkgoExecutorType execType = GinkgoExecutorType::CUDA);
+  GinkgoRadialBasisFctSolver() = default;
+
+  GinkgoRadialBasisFctSolver(const MappingConfiguration::GinkgoParameter &ginkgoParameter);
 
   /// Assembles the system matrices and computes the decomposition of the interpolation matrix
   template <typename IndexContainer>
   GinkgoRadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
                              const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial,
-                             GinkgoExecutorType execType = GinkgoExecutorType::CUDA);
+                             const MappingConfiguration::GinkgoParameter &ginkgoParameter);
 
   ~GinkgoRadialBasisFctSolver() = default;
 
@@ -79,8 +109,6 @@ public:
   const std::shared_ptr<GinkgoMatrix> getEvaluationMatrix() const;
 
   std::shared_ptr<gko::Executor> getReferenceExecutor() const;
-
-  static std::map<GinkgoExecutorType, std::function<std::shared_ptr<gko::Executor>()>> exec_map;
 
 private:
   precice::logging::Logger _log{"mapping::GinkgoRadialBasisFctSolver"};
@@ -112,7 +140,13 @@ private:
   std::shared_ptr<GinkgoVector> _polynomialContribution;
 
   // Solver used for iteratively solving linear systems of equations TODO: Find out how to make dynamic for different solver families
-  std::shared_ptr<precice::mapping::cg> _solver;
+  std::shared_ptr<precice::mapping::cg>    _cgSolver;
+  std::shared_ptr<precice::mapping::gmres> _gmresSolver;
+  std::shared_ptr<precice::mapping::mg>    _mgSolver;
+
+  SolverType _solverType;
+
+  PreconditionerType _preconditionerType;
 
   // 1x1 identity matrix used for AXPY operations
   std::shared_ptr<GinkgoMatrix> _scalarOne;
@@ -123,28 +157,21 @@ private:
 };
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-std::map<GinkgoExecutorType, std::function<std::shared_ptr<gko::Executor>()>> GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::exec_map = std::map<GinkgoExecutorType, std::function<std::shared_ptr<gko::Executor>()>>{{GinkgoExecutorType::CPU, [] { return gko::ReferenceExecutor::create(); }},
-                                                                                                                                                                                                                            {GinkgoExecutorType::OMP, [] { return gko::OmpExecutor::create(); }},
-                                                                                                                                                                                                                            {
-                                                                                                                                                                                                                                GinkgoExecutorType::CUDA,
-                                                                                                                                                                                                                                [] { return gko::CudaExecutor::create(0, gko::OmpExecutor::create(), true); },
-                                                                                                                                                                                                                            },
-                                                                                                                                                                                                                            {GinkgoExecutorType::HIP, [] { return gko::HipExecutor::create(0, gko::OmpExecutor::create(), true); }}};
-
-template <typename RADIAL_BASIS_FUNCTION_T>
-GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(GinkgoExecutorType execType)
+GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(const MappingConfiguration::GinkgoParameter &ginkgoParameter)
 {
-  this->_deviceExecutor = exec_map.at(execType)();
+  this->_deviceExecutor = ginkgoExecutorLookup.at(ginkgoParameter.executor)();
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 template <typename IndexContainer>
 GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
                                                                                 const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial,
-                                                                                GinkgoExecutorType execType)
+                                                                                const MappingConfiguration::GinkgoParameter &ginkgoParameter)
 {
-  this->_deviceExecutor = exec_map.at(execType)();
-  this->_hostExecutor   = exec_map.at(GinkgoExecutorType::CPU)();
+  this->_deviceExecutor = ginkgoExecutorLookup.at(ginkgoParameter.executor)();
+
+  this->_solverType         = solverTypeLookup.at(ginkgoParameter.solver);
+  this->_preconditionerType = preconditionerTypeLookup.at(ginkgoParameter.preconditioner);
 
   PRECICE_ASSERT(!(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite() && polynomial == Polynomial::ON), "The integrated polynomial (polynomial=\"on\") is not supported for the selected radial-basis function. Please select another radial-basis function or change the polynomial configuration.");
   // Convert dead axis vector into an active axis array so that we can handle the reduction more easily
@@ -227,25 +254,67 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
 
   // TODO: Add Polynomial == SEPARATE case
 
-  // Setup solver TODO: Make configurable
-  auto solverFactory = cg::build()
-                           .with_preconditioner(jacobi::build().on(this->_deviceExecutor))
-                           .with_criteria(gko::stop::Iteration::build()
-                                              .with_max_iters(static_cast<std::size_t>(1e4))
-                                              .on(this->_deviceExecutor),
-                                          gko::stop::ResidualNormReduction<>::build()
-                                              .with_reduction_factor(1e-4)
-                                              .on(this->_deviceExecutor))
-                           .on(this->_deviceExecutor);
+  if (this->_solverType == SolverType::MG) {
 
-  this->_solver = gko::share(solverFactory->generate(this->_rbfSystemMatrix));
+  } else if (this->_solverType == SolverType::CG) {
+
+    auto solverFactoryWithPreconditioner = [preconditionerType = this->_preconditionerType, executor = this->_deviceExecutor]() {
+      if (preconditionerType == PreconditionerType::Jacobi) {
+        return cg::build().with_preconditioner(jacobi::build().on(executor));
+      } else if (preconditionerType == PreconditionerType::Cholesky) {
+        return cg::build().with_preconditioner(cholesky::build().on(executor));
+      } else {
+        return cg::build().with_preconditioner(ilu::build().on(executor));
+      }
+    }();
+
+    auto solverFactory = solverFactoryWithPreconditioner
+                             .with_criteria(gko::stop::Iteration::build()
+                                                .with_max_iters(static_cast<std::size_t>(1e6))
+                                                .on(this->_deviceExecutor),
+                                            gko::stop::ResidualNormReduction<>::build()
+                                                .with_reduction_factor(1e-4)
+                                                .on(this->_deviceExecutor))
+                             .on(this->_deviceExecutor);
+
+    this->_cgSolver = gko::share(solverFactory->generate(this->_rbfSystemMatrix));
+
+  } else if (this->_solverType == SolverType::GMRES) {
+
+    auto solverFactoryWithPreconditioner = [preconditionerType = this->_preconditionerType, executor = _deviceExecutor]() {
+      if (preconditionerType == PreconditionerType::Jacobi) {
+        return gmres::build().with_preconditioner(jacobi::build().on(executor));
+      } else if (preconditionerType == PreconditionerType::Cholesky) {
+        return gmres::build().with_preconditioner(cholesky::build().on(executor));
+      } else {
+        return gmres::build().with_preconditioner(ilu::build().on(executor));
+      }
+    }();
+
+    auto solverFactory = solverFactoryWithPreconditioner
+                             .with_criteria(gko::stop::Iteration::build()
+                                                .with_max_iters(static_cast<std::size_t>(1e6))
+                                                .on(this->_deviceExecutor),
+                                            gko::stop::ResidualNormReduction<>::build()
+                                                .with_reduction_factor(1e-4)
+                                                .on(this->_deviceExecutor))
+                             .on(this->_deviceExecutor);
+
+    this->_gmresSolver = gko::share(solverFactory->generate(this->_rbfSystemMatrix));
+  }
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 void GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::_solveRBFSystem(const std::shared_ptr<GinkgoVector> &rhs) const
 {
   precice::utils::Event e("map.rbf.ginkgo.solveSystemMatrix", precice::syncMode);
-  this->_solver->apply(gko::lend(rhs), gko::lend(this->_rbfCoefficients));
+  if (this->_solverType == SolverType::CG) {
+    this->_cgSolver->apply(gko::lend(rhs), gko::lend(this->_rbfCoefficients));
+  } else if (this->_solverType == SolverType::GMRES) {
+    this->_gmresSolver->apply(gko::lend(rhs), gko::lend(this->_rbfCoefficients));
+  } else if (this->_solverType == SolverType::MG) {
+    // TODO:
+  }
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -253,7 +322,7 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsis
 {
   PRECICE_ASSERT(rhsValues.cols() == 1);
   // Copy rhs vector onto GPU by creating a Ginkgo Vector
-  auto rhs = gko::share(GinkgoVector::create(this->_hostExecutor, gko::dim<2>{rhsValues.rows(), 1}));
+  auto rhs = gko::share(GinkgoVector::create(this->_hostExecutor, gko::dim<2>{static_cast<unsigned long>(rhsValues.rows()), 1}));
 
   for (Eigen::Index i = 0; i < rhsValues.rows(); ++i) {
     rhs->at(i, 0) = rhsValues(i, 0);
@@ -267,10 +336,10 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsis
     // TODO: Check if there is least squares solver
     auto polynomialSolverFactory = cg::build()
                                        .with_criteria(gko::stop::Iteration::build()
-                                                          .with_max_iters(static_cast<std::size_t>(1e5))
+                                                          .with_max_iters(static_cast<std::size_t>(1e6))
                                                           .on(this->_deviceExecutor),
                                                       gko::stop::ResidualNormReduction<>::build()
-                                                          .with_reduction_factor(1e-5)
+                                                          .with_reduction_factor(1e-4)
                                                           .on(this->_deviceExecutor))
                                        .on(this->_deviceExecutor);
 
@@ -323,7 +392,7 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConser
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-std::shared_ptr<gko::Executor> GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::_hostExecutor = GinkgoRadialBasisFctSolver::exec_map.at(GinkgoExecutorType::CPU)();
+std::shared_ptr<gko::Executor> GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::_hostExecutor = ginkgoExecutorLookup.at("ginkgo-reference-executor")();
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 std::shared_ptr<gko::Executor> GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::getReferenceExecutor() const

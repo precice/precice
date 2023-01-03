@@ -10,8 +10,6 @@
 #include <cuda_runtime.h>
 #include "mapping/impl/DeviceBasisFunctions.cuh"
 
-#define SHARED_HOST_DEVICE_FUNCTION __host__ __device__
-
 #endif
 
 namespace precice {

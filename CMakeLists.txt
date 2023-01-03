@@ -246,6 +246,9 @@ if (PRECICE_GinkgoParallelization)
 
   # Check if OpenMP is available
   find_package(OpenMP)
+  if(OpenMP_FOUND)
+    set(CMAKE_CXX_FLAGS "-fopenmp")
+  endif()
 
 endif()
 

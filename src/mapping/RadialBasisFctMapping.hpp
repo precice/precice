@@ -50,11 +50,12 @@ public:
    * @param[in] xDead, yDead, zDead Deactivates mapping along an axis
    */
   RadialBasisFctMapping(
-      Mapping::Constraint     constraint,
-      int                     dimensions,
-      RADIAL_BASIS_FUNCTION_T function,
-      std::array<bool, 3>     deadAxis,
-      Polynomial              polynomial);
+      Mapping::Constraint                          constraint,
+      int                                          dimensions,
+      RADIAL_BASIS_FUNCTION_T                      function,
+      std::array<bool, 3>                          deadAxis,
+      Polynomial                                   polynomial,
+      const MappingConfiguration::GinkgoParameter &ginkgoParameter = MappingConfiguration::GinkgoParameter());
 
   /// Computes the mapping coefficients from the in- and output mesh.
   void computeMapping() final override;
@@ -78,19 +79,24 @@ private:
 
   /// Treatment of the polynomial
   Polynomial _polynomial;
+
+  /// Ginkgo Configuration
+  MappingConfiguration::GinkgoParameter _ginkgoParameter;
 };
 
 // --------------------------------------------------- HEADER IMPLEMENTATIONS
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctMapping(
-    Mapping::Constraint     constraint,
-    int                     dimensions,
-    RADIAL_BASIS_FUNCTION_T function,
-    std::array<bool, 3>     deadAxis,
-    Polynomial              polynomial)
+    Mapping::Constraint                          constraint,
+    int                                          dimensions,
+    RADIAL_BASIS_FUNCTION_T                      function,
+    std::array<bool, 3>                          deadAxis,
+    Polynomial                                   polynomial,
+    const MappingConfiguration::GinkgoParameter &ginkgoParameter)
     : RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>(constraint, dimensions, function, deadAxis),
-      _polynomial(polynomial)
+      _polynomial(polynomial),
+      _ginkgoParameter(ginkgoParameter)
 {
   PRECICE_CHECK(!(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite() && polynomial == Polynomial::ON), "The integrated polynomial (polynomial=\"on\") is not supported for the selected radial-basis function. Please select another radial-basis function or change the polynomial configuration.");
 }
@@ -161,7 +167,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 #ifndef PRECICE_NO_GINKGO
     _rbfSolver.~GinkgoRadialBasisFctSolver();
     new (&_rbfSolver) GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>{this->_basisFunction, globalInMesh, boost::irange<Eigen::Index>(0, globalInMesh.vertices().size()),
-                                                                          globalOutMesh, boost::irange<Eigen::Index>(0, globalOutMesh.vertices().size()), this->_deadAxis, _polynomial};
+                                                                          globalOutMesh, boost::irange<Eigen::Index>(0, globalOutMesh.vertices().size()), this->_deadAxis, _polynomial, _ginkgoParameter};
 #else
     _rbfSolver = RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>{this->_basisFunction, globalInMesh, boost::irange<Eigen::Index>(0, globalInMesh.vertices().size()),
                                                                globalOutMesh, boost::irange<Eigen::Index>(0, globalOutMesh.vertices().size()), this->_deadAxis, _polynomial};

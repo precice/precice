@@ -38,8 +38,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <ginkgo/kernels/kernel_launch.hpp>
 
-#define SHARED_HOST_DEVICE_FUNCTION __host__ __device__
-
 namespace GKO_DEVICE_NAMESPACE {
 
 using namespace gko::kernels::GKO_DEVICE_NAMESPACE;
