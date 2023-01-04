@@ -45,7 +45,7 @@ endif()
 
 # Add linker flags
 if(BUILD_SHARED_LIBS)
-  precice_vi_add_value(LDFAGS "${CMAKE_SHARED_LINKER_FLAGS}")
+  precice_vi_add_value(LDFLAGS "${CMAKE_SHARED_LINKER_FLAGS}")
 else()
-  precice_vi_add_value(LDFAGS "${CMAKE_STATIC_LINKER_FLAGS}")
+  precice_vi_add_value(LDFLAGS "${CMAKE_STATIC_LINKER_FLAGS}")
 endif()
