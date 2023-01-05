@@ -83,7 +83,9 @@ void MultiCouplingScheme::initializeSendDataStorage()
 {
   for (auto &sendExchange : _sendDataVector | boost::adaptors::map_values) {
     for (const auto &data : sendExchange | boost::adaptors::map_values) {
+      // initialize as constant
       data->storeValuesAtTime(time::Storage::WINDOW_START, data->values());
+      data->storeValuesAtTime(time::Storage::WINDOW_END, data->values());
     }
   }
 }
@@ -91,14 +93,12 @@ void MultiCouplingScheme::initializeSendDataStorage()
 void MultiCouplingScheme::exchangeInitialData()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
-  bool initialCommunication = true;
 
   if (_isController) {
     if (receivesInitializedData()) {
       for (auto &receiveExchange : _receiveDataVector) {
-        receiveData(_m2ns[receiveExchange.first], receiveExchange.second, initialCommunication);
+        receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
       }
-      storeReceiveData(time::Storage::WINDOW_END);
       checkDataHasBeenReceived();
     } else {
       for (auto &receiveExchange : _receiveDataVector | boost::adaptors::map_values) {
@@ -107,20 +107,19 @@ void MultiCouplingScheme::exchangeInitialData()
     }
     if (sendsInitializedData()) {
       for (auto &sendExchange : _sendDataVector) {
-        sendData(_m2ns[sendExchange.first], sendExchange.second, initialCommunication);
+        sendData(_m2ns[sendExchange.first], sendExchange.second);
       }
     }
   } else {
     if (sendsInitializedData()) {
       for (auto &sendExchange : _sendDataVector) {
-        sendData(_m2ns[sendExchange.first], sendExchange.second, initialCommunication);
+        sendData(_m2ns[sendExchange.first], sendExchange.second);
       }
     }
     if (receivesInitializedData()) {
       for (auto &receiveExchange : _receiveDataVector) {
-        receiveData(_m2ns[receiveExchange.first], receiveExchange.second, initialCommunication);
+        receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
       }
-      storeReceiveData(time::Storage::WINDOW_END);
       checkDataHasBeenReceived();
     } else {
       for (auto &receiveExchange : _receiveDataVector | boost::adaptors::map_values) {

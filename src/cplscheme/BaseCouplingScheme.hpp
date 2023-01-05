@@ -256,9 +256,8 @@ protected:
    *
    * @param m2n M2N used for communication
    * @param sendData DataMap associated with sent data
-   * @param initialCommunication if true, will only allow to send data from WINDOW_START, else sent data must end at WINDOW_END
    */
-  void sendData(const m2n::PtrM2N &m2n, const DataMap &sendData, bool initialCommunication = false);
+  void sendData(const m2n::PtrM2N &m2n, const DataMap &sendData);
 
   int receiveNumberOfTimeSteps(const m2n::PtrM2N &m2n);
 
@@ -269,9 +268,8 @@ protected:
    *
    * @param m2n M2N used for communication
    * @param receiveData DataMap associated with received data
-   * @param initialCommunication if true, will only allow to send data from WINDOW_START, else sent data must end at WINDOW_END
    */
-  void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData, bool initialCommunication = false);
+  void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData);
 
   /**
    * @brief Initializes receiveData with zero values.

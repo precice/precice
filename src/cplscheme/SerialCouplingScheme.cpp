@@ -78,33 +78,21 @@ void SerialCouplingScheme::receiveAndSetTimeWindowSize()
 void SerialCouplingScheme::exchangeInitialData()
 {
   // F: send, receive, S: receive, send
-  bool initialCommunication = true;
 
   if (doesFirstStep()) {
-    // @todo try to remove this unnecessary send, we will send all data again in the first advance.
-    if (sendsInitializedData()) {
-      sendData(getM2N(), getSendData(), initialCommunication);
-    }
+    // First participant does not need to send initial data, because it will send its initial data and the result of the first window in the first advance call
 
     if (receivesInitializedData()) {
-      receiveData(getM2N(), getReceiveData(), initialCommunication);
-      storeReceiveData(time::Storage::WINDOW_END); // use constant data
+      receiveData(getM2N(), getReceiveData());
       checkDataHasBeenReceived();
     } else {
       initializeZeroReceiveData(getReceiveData());
     }
   } else { // second participant
-    // @todo try to remove this unnecessary receive, we receive all data further below.
-    if (receivesInitializedData()) {
-      receiveData(getM2N(), getReceiveData(), initialCommunication);
-    } else {
-      initializeZeroReceiveData(getReceiveData());
-    }
-
     if (sendsInitializedData()) {
-      sendData(getM2N(), getSendData(), initialCommunication);
+      sendData(getM2N(), getSendData());
     }
-    // Second participant of a SerialCouplingScheme, receives the result of the first advance of the first participant during initialization.
+    // Second participant of a SerialCouplingScheme, receives the initial data and the result of the first advance of the first participant during initialization.
     // similar to SerialCouplingScheme::exchangeSecondData()
     receiveAndSetTimeWindowSize();
     PRECICE_DEBUG("Receiving data...");

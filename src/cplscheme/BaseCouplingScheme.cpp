@@ -109,7 +109,7 @@ void BaseCouplingScheme::sendTimes(const m2n::PtrM2N &m2n, const Eigen::VectorXd
   }
 }
 
-void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendData, bool initialCommunication)
+void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendData)
 {
   PRECICE_TRACE();
   std::vector<int> sentDataIDs;
@@ -118,15 +118,12 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
 
   for (const auto &data : sendData | boost::adaptors::map_values) {
     auto timesAscending = data->getStoredTimesAscending();
+
+    PRECICE_ASSERT(math::equals(timesAscending(0), time::Storage::WINDOW_START), timesAscending(0));                                               // assert that first element is time::Storage::WINDOW_START
+    PRECICE_ASSERT(math::equals(timesAscending(timesAscending.size() - 1), time::Storage::WINDOW_END), timesAscending(timesAscending.size() - 1)); // assert that last element is time::Storage::WINDOW_END
+
     sendNumberOfTimeSteps(m2n, timesAscending.size());
     sendTimes(m2n, timesAscending);
-
-    if (initialCommunication) {
-      PRECICE_ASSERT(math::equals(timesAscending(timesAscending.size() - 1), time::Storage::WINDOW_START), timesAscending(timesAscending.size() - 1)); // assert that last (and only) element is time::Storage::WINDOW_START
-    } else {
-      PRECICE_ASSERT(math::equals(timesAscending(0), time::Storage::WINDOW_START), timesAscending(0));                                               // assert that first element is time::Storage::WINDOW_START
-      PRECICE_ASSERT(math::equals(timesAscending(timesAscending.size() - 1), time::Storage::WINDOW_END), timesAscending(timesAscending.size() - 1)); // assert that last element is time::Storage::WINDOW_END
-    }
 
     auto serializedSamples = data->getSerialized();
     // Data is actually only send if size>0, which is checked in the derived classes implementation
@@ -155,28 +152,26 @@ Eigen::VectorXd BaseCouplingScheme::receiveTimes(const m2n::PtrM2N &m2n, int nTi
   for (int i = 0; i < nTimeSteps; i++) {
     m2n->receive(times(i));
   }
+  PRECICE_DEBUG("Received times {}", times);
   return times;
 }
 
-void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData, bool initialCommunication)
+void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(m2n.get());
   PRECICE_ASSERT(m2n->isConnected());
   for (const auto &data : receiveData | boost::adaptors::map_values) {
+    PRECICE_DEBUG("BaseCouplingScheme::receiveData of DataID {}", data->getDataID());
+
     int nTimeSteps = receiveNumberOfTimeSteps(m2n);
 
     PRECICE_ASSERT(nTimeSteps > 0);
     auto timesAscending = receiveTimes(m2n, nTimeSteps);
 
-    if (initialCommunication) {
-      PRECICE_ASSERT(math::equals(timesAscending(timesAscending.size() - 1), time::Storage::WINDOW_START), timesAscending(timesAscending.size() - 1)); // assert that last (and only) element is time::Storage::WINDOW_START
-    } else {
-      PRECICE_ASSERT(math::equals(timesAscending(0), time::Storage::WINDOW_START), timesAscending(0));                                               // assert that first element is time::Storage::WINDOW_START
-      PRECICE_ASSERT(math::equals(timesAscending(timesAscending.size() - 1), time::Storage::WINDOW_END), timesAscending(timesAscending.size() - 1)); // assert that last element is time::Storage::WINDOW_END
-      bool keepWindowStart = false;
-      data->clearTimeStepsStorage(keepWindowStart);
-    }
+    PRECICE_ASSERT(math::equals(timesAscending(0), time::Storage::WINDOW_START), timesAscending(0));                                               // assert that first element is time::Storage::WINDOW_START
+    PRECICE_ASSERT(math::equals(timesAscending(timesAscending.size() - 1), time::Storage::WINDOW_END), timesAscending(timesAscending.size() - 1)); // assert that last element is time::Storage::WINDOW_END
+    data->clearTimeStepsStorage(false);
 
     auto serializedSamples = Eigen::VectorXd(nTimeSteps * data->getSize());
     // Data is only received on ranks with size>0, which is checked in the derived class implementation

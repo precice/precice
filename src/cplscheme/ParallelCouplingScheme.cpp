@@ -26,31 +26,28 @@ ParallelCouplingScheme::ParallelCouplingScheme(
 void ParallelCouplingScheme::exchangeInitialData()
 {
   // F: send, receive, S: receive, send
-  bool initialCommunication = true;
 
   if (doesFirstStep()) {
     if (sendsInitializedData()) {
-      sendData(getM2N(), getSendData(), initialCommunication);
+      sendData(getM2N(), getSendData());
     }
 
     if (receivesInitializedData()) {
-      receiveData(getM2N(), getReceiveData(), initialCommunication);
-      storeReceiveData(time::Storage::WINDOW_END); // use constant data in first iteration
+      receiveData(getM2N(), getReceiveData());
       checkDataHasBeenReceived();
     } else {
       initializeZeroReceiveData(getReceiveData());
     }
   } else { // second participant
     if (receivesInitializedData()) {
-      receiveData(getM2N(), getReceiveData(), initialCommunication);
-      storeReceiveData(time::Storage::WINDOW_END); // use constant data in first iteration
+      receiveData(getM2N(), getReceiveData());
       checkDataHasBeenReceived();
     } else {
       initializeZeroReceiveData(getReceiveData());
     }
 
     if (sendsInitializedData()) {
-      sendData(getM2N(), getSendData(), initialCommunication);
+      sendData(getM2N(), getSendData());
     }
   }
 
