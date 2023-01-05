@@ -159,8 +159,9 @@ bool BiCouplingScheme::hasSendData(DataID dataID)
   return getSendData(dataID) != nullptr;
 }
 
-void BiCouplingScheme::storeReceiveData(double relativeDt, bool mustOverwrite)
+void BiCouplingScheme::overwriteReceiveData(double relativeDt)
 {
+  bool mustOverwrite = true;
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
   PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
   for (auto &receiveData : getReceiveData() | boost::adaptors::map_values) {

@@ -164,11 +164,11 @@ public:
   virtual bool hasDataBeenReceived() const = 0;
 
   /**
-   * @brief stores time step data from mesh values with time stamp in CouplingData
+   * @brief overwrites data at time stamp in CouplingData with given data from mesh values
    *
    * @param relativeDt relative dt that will be associated with the stored data.
    */
-  virtual void storeReceiveData(double relativeDt, bool mustOverwrite = false) = 0;
+  virtual void overwriteReceiveData(double relativeDt) = 0;
 
   /**
    * @brief loads time step data for given time from CouplingData into mesh values

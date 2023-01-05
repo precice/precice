@@ -70,7 +70,7 @@ public:
 
   bool hasAnySendData() override final;
 
-  void storeReceiveData(double relativeDt, bool mustOverwrite = false) override final;
+  void overwriteReceiveData(double relativeDt) override final;
 
   void loadReceiveDataFromStorage(double relativeDt) override final;
 

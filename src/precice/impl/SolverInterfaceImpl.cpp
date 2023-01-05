@@ -1858,8 +1858,7 @@ void SolverInterfaceImpl::performDataActions(
     }
   }
   if (_couplingScheme->hasDataBeenReceived()) {
-    bool mustOverwrite = true;
-    _couplingScheme->storeReceiveData(time::Storage::WINDOW_END, mustOverwrite);
+    _couplingScheme->overwriteReceiveData(time::Storage::WINDOW_END);
   }
 }
 

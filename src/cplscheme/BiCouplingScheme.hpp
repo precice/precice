@@ -68,7 +68,7 @@ public:
    */
   bool hasSendData(DataID dataID);
 
-  void storeReceiveData(double relativeDt, bool mustOverwrite = false) override final;
+  void overwriteReceiveData(double relativeDt) override final;
 
   void loadReceiveDataFromStorage(double relativeDt) override final;
 

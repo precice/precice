@@ -110,7 +110,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  void storeReceiveData(double relativeDt, bool mustOverwrite = false) override final
+  void overwriteReceiveData(double relativeDt) override final
   {
     PRECICE_ASSERT(false);
   }

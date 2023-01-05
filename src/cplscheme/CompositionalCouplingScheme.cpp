@@ -156,11 +156,11 @@ bool CompositionalCouplingScheme::hasDataBeenReceived() const
   return hasBeenReceived;
 }
 
-void CompositionalCouplingScheme::storeReceiveData(double relativeDt, bool mustOverwrite)
+void CompositionalCouplingScheme::overwriteReceiveData(double relativeDt)
 {
   PRECICE_TRACE();
   for (auto scheme : allSchemes()) {
-    scheme->storeReceiveData(relativeDt, mustOverwrite);
+    scheme->overwriteReceiveData(relativeDt);
   }
 }
 
