@@ -64,9 +64,6 @@ public:
   /// Check if the number of BoundingBox's non-zero dimensions equal to zero
   bool empty() const;
 
-  /// Get the number of BoundingBox's non-zero dimensions
-  int getActiveDimensions() const;
-
   /// Check whether the bounding box is at default state or not
   bool isDefault() const;
 
