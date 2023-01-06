@@ -35,14 +35,6 @@ public:
   *
   */
   explicit BoundingBox(std::vector<double> bounds);
-  
-  /**
-   * @brief Construct a new Bounding Box object
-   * 
-   * @param boundMin Vertex of a bounding box with min components in each dimension
-   * @param boundMax Vertex of a bounding box with max components in each dimension
-   */
-  explicit BoundingBox(Vertex boundMin, Vertex boundMax);
 
 /**
  * @brief Construct a new Bounding Box:: Bounding Box object
