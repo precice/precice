@@ -20,17 +20,14 @@ BOOST_AUTO_TEST_CASE(Constructor)
     Eigen::VectorXd boundMin{1.0, 2.0, 3.0};
     Eigen::VectorXd boundMax{4.0, 5.0, 6.0};
     BoundingBox     bb(boundMin, boundMax);
-    BoundingBox     compareData({1.0, 4.0,
-                                 2.0, 5.0,
-                                 3.0, 6.0});
+    BoundingBox     compareData({1.0, 4.0, 2.0, 5.0, 3.0, 6.0});
     BOOST_TEST(bb == compareData);
   }
   { // 2D
     Eigen::VectorXd boundMin{1.0, 2.0};
     Eigen::VectorXd boundMax{4.0, 5.0};
     BoundingBox     bb(boundMin, boundMax);
-    BoundingBox     compareData({1.0, 4.0,
-                                 2.0, 5.0});
+    BoundingBox     compareData({1.0, 4.0, 2.0, 5.0});
     BOOST_TEST(bb == compareData);
   }
 } // Constructor

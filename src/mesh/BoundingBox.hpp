@@ -36,12 +36,12 @@ public:
   */
   explicit BoundingBox(std::vector<double> bounds);
 
-/**
- * @brief Construct a new Bounding Box:: Bounding Box object
- * 
- * @param boundMin 
- * @param boundMax 
- */
+  /**
+  * @brief Construct a new Bounding Box:: Bounding Box object
+  *
+  * @param boundMin
+  * @param boundMax
+  */
   explicit BoundingBox(Eigen::VectorXd boundMin, Eigen::VectorXd boundMax);
 
   /// Special Members
@@ -114,7 +114,7 @@ private:
 
   /// Container of a Eigen::VectorXd of a bounding box with min components in each dimension
   Eigen::VectorXd _boundMin;
-  
+
   /// Container of a Eigen::VectorXd of a bounding box with max components in each dimension
   Eigen::VectorXd _boundMax;
 };
