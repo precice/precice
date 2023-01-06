@@ -139,8 +139,7 @@ void BoundingBox::expandBy(const Vertex &vertices)
 // TODO: empty() definition
 void BoundingBox::expandBy(double value)
 {
-  if (empty())
-    return;
+  PRECICE_ASSERT(!empty(), "The BoundingBox is empty, i.e. it has zero area or zero volume.");
   for (int d = 0; d < _dimensions; d++) {
     _boundMin[d] -= value;
     _boundMax[d] += value;
@@ -149,8 +148,7 @@ void BoundingBox::expandBy(double value)
 // TODO: empty() definition
 void BoundingBox::scaleBy(double safetyFactor)
 {
-  if (empty())
-    return;
+  PRECICE_ASSERT(!empty(), "The BoundingBox is empty, i.e. it has zero area or zero volume.");
   double maxSideLength = 1e-6; // we need some minimum > 0 here
   for (int d = 0; d < _dimensions; d++) {
     if (_boundMax[d] > _boundMin[d])
