@@ -61,7 +61,7 @@ public:
   /// Comparison Operator
   bool operator==(const BoundingBox &otherBB) const;
 
-  /// Check if the number of BoundingBox's non-zero dimensions equal to zero
+  /// empty() returning true means that the length in every BoundingBox's dimension is equal to zero
   bool empty() const;
 
   /// Check whether the bounding box is at default state or not
