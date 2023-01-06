@@ -18,9 +18,6 @@ public:
   //( Used as the raw representation of the coordinates
   using RawCoords = std::array<double, 3>;
 
-  /// Add default constructor for [refactoring: replace the bounds by two instances of a Vertex]
-  Vertex::Vertex(){}
-
   /// Constructor for vertex
   template <typename VECTOR_T>
   Vertex(
