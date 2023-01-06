@@ -1,0 +1,92 @@
+#include "GlobalData.hpp"
+#include <algorithm>
+#include <utility>
+
+#include "SharedPointer.hpp"
+#include "precice/types.hpp"
+#include "utils/assertion.hpp"
+
+namespace precice {
+
+GlobalData::GlobalData()
+    : _name(""),
+      _id(-1),
+      _dimensions(0),
+      _spatialDimensions(-1)
+{
+  PRECICE_ASSERT(false);
+}
+
+GlobalData::GlobalData(
+    std::string name,
+    DataID      id,
+    int         dimensions,
+    int         spatialDimensions)
+    : _values(),
+      _name(std::move(name)),
+      _id(id),
+      _dimensions(dimensions),
+      _spatialDimensions(spatialDimensions)
+{
+  PRECICE_ASSERT(dimensions > 0, dimensions);
+}
+
+Eigen::VectorXd &GlobalData::values()
+{
+  return _values;
+}
+
+const Eigen::VectorXd &GlobalData::values() const
+{
+  return _values;
+}
+
+// Eigen::MatrixXd &GlobalData::gradientValues()
+// {
+//   return _gradientValues;
+// }
+
+// const Eigen::MatrixXd &GlobalData::gradientValues() const
+// {
+//   return _gradientValues;
+// }
+
+const std::string &GlobalData::getName() const
+{
+  return _name;
+}
+
+DataID GlobalData::getID() const
+{
+  return _id;
+}
+
+void GlobalData::toZero()
+{
+  _values.setZero();
+//   if (_hasGradient) {
+//     _gradientValues.setZero();
+//   }
+}
+
+// bool GlobalData::hasGradient() const
+// {
+//   return _hasGradient;
+// }
+
+// void GlobalData::requireDataGradient()
+// {
+//   _hasGradient = true;
+// };
+
+int GlobalData::getDimensions() const
+{
+  return _dimensions;
+}
+
+int GlobalData::getSpatialDimensions() const
+{
+  return _spatialDimensions;
+}
+
+} // namespace precice
