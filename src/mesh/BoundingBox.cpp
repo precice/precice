@@ -76,7 +76,7 @@ bool BoundingBox::contains(const mesh::Vertex &vertex) const
 
 Eigen::VectorXd BoundingBox::center() const
 {
-  PRECICE_ASSERT(!empty(), "Data of the bounding box is at default state.");
+  PRECICE_ASSERT(!empty(), "The BoundingBox is empty, i.e. it has zero area or zero volume.");
   Eigen::VectorXd cog(_dimensions);
   for (int d = 0; d < _dimensions; d++) {
     cog[d] = (_boundMax[d] + _boundMin[d]) / 2.0;
@@ -96,7 +96,7 @@ Eigen::VectorXd BoundingBox::maxCorner() const
 
 double BoundingBox::getArea(std::vector<bool> deadAxis)
 {
-  PRECICE_ASSERT(!empty(), "Data of the bounding box is at default state.");
+  PRECICE_ASSERT(!empty(), "The BoundingBox is empty, i.e. it has zero area or zero volume.");
   double meshArea = 1.0;
   for (int d = 0; d < _dimensions; d++)
     if (not deadAxis[d])
