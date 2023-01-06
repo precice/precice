@@ -268,14 +268,47 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
                                            .with_max_iters(static_cast<std::size_t>(1e6))
                                            .on(this->_deviceExecutor));
 
-  auto residualCriterion = gko::share(gko::stop::ResidualNormReduction<>::build()
-                                          .with_reduction_factor(1e-4)
+  auto residualCriterion = gko::share(gko::stop::AbsoluteResidualNorm<>::build()
+                                          .with_tolerance(1e-12)
                                           .on(this->_deviceExecutor));
 
   iterationCriterion->add_logger(this->_logger);
   residualCriterion->add_logger(this->_logger);
 
   if (this->_solverType == SolverType::MG) {
+
+    // TODO: Add loggers to each step here
+
+    auto smootherFactory = gko::share(
+        ir::build()
+            .with_solver(jacobi::build().with_max_block_size(1u).on(this->_deviceExecutor))
+            .with_relaxation_factor(0.9)
+            .with_criteria(
+                gko::stop::Iteration::build().with_max_iters(2u).on(this->_deviceExecutor))
+            .on(this->_deviceExecutor));
+
+    auto mgLevelFactory = amgx_pgm::build().with_deterministic(false).on(this->_deviceExecutor);
+
+    auto coarsestFactory =
+        cg::build()
+            .with_criteria(
+                gko::stop::Iteration::build().with_max_iters(4u).on(this->_deviceExecutor))
+            .on(this->_deviceExecutor);
+
+    auto multigridFactory =
+        mg::build()
+            .with_max_levels(2u)
+            .with_min_coarse_rows(2u) // TODO: Check how to configure best
+            .with_pre_smoother(gko::share(smootherFactory))
+            .with_post_uses_pre(true)
+            .with_mg_level(gko::share(mgLevelFactory))
+            .with_coarsest_solver(
+                gko::share(jacobi::build().with_max_block_size(1u).on(this->_deviceExecutor)))
+            .with_criteria(residualCriterion)
+            .on(this->_deviceExecutor);
+
+    this->_mgSolver = gko::share(multigridFactory->generate(this->_rbfSystemMatrix));
+    this->_mgSolver->add_logger(this->_logger);
 
   } else if (this->_solverType == SolverType::CG) {
 
