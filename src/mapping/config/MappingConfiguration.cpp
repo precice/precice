@@ -68,6 +68,9 @@ MappingConfiguration::MappingConfiguration(
                                       .setDocumentation("Specifies the preconditioner used by Ginkgo.")
                                       .setOptions({"ginkgo-jacobi-preconditioner", "ginkgo-cholesky-preconditioner", "ginkgo-ilu-preconditioner", "ginkgo-isai-preconditioner"});
 
+  auto attrGinkgoResidualNorm = makeXMLAttribute(ATTR_GINKGO_RESIDUAL_NORM, 1e-8)
+                                    .setDocumentation("Specifies the residual norm that must be achieved in order for the Ginkgo solver to stop.");
+
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
   std::list<XMLTag>  tags;
   {
@@ -143,6 +146,7 @@ MappingConfiguration::MappingConfiguration(
     tag.addAttribute(attrGinkgoExecutor);
     tag.addAttribute(attrGinkgoSolver);
     tag.addAttribute(attrGinkgoPreconditioner);
+    tag.addAttribute(attrGinkgoResidualNorm);
   }
   {
     XMLTag tag(*this, VALUE_NEAREST_NEIGHBOR, occ, TAG);
@@ -285,6 +289,9 @@ void MappingConfiguration::xmlTagCallback(
     if (tag.hasAttribute(ATTR_GINKGO_PRECONDITIONER)) {
       ginkgoParameter.preconditioner = tag.getStringAttributeValue(ATTR_GINKGO_PRECONDITIONER);
     }
+    if (tag.hasAttribute(ATTR_GINKGO_RESIDUAL_NORM)) {
+      ginkgoParameter.residualNorm = tag.getDoubleAttributeValue(ATTR_GINKGO_RESIDUAL_NORM);
+    }
 
     ConfiguredMapping configuredMapping = createMapping(context,
                                                         dir, type, constraint,
@@ -410,7 +417,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   delete[] arg;
   usePETSc = true;
 
-#elseif PRECICE_NO_GINKGO
+#elif PRECICE_NO_GINKGO
 
   useGinkgo = true;
 

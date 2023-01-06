@@ -268,8 +268,8 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
                                            .with_max_iters(static_cast<std::size_t>(1e6))
                                            .on(this->_deviceExecutor));
 
-  auto residualCriterion = gko::share(gko::stop::AbsoluteResidualNorm<>::build()
-                                          .with_tolerance(1e-12)
+  auto residualCriterion = gko::share(gko::stop::ResidualNormReduction<>::build()
+                                          .with_reduction_factor(ginkgoParameter.residualNorm)
                                           .on(this->_deviceExecutor));
 
   iterationCriterion->add_logger(this->_logger);

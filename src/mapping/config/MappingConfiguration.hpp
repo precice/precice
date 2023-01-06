@@ -82,6 +82,7 @@ public:
     std::string executor       = "ginkgo-reference-executor";
     std::string solver         = "ginkgo-cg-solver";
     std::string preconditioner = "ginkgo-jacobi-preconditioner";
+    double      residualNorm   = 1e-8;
   };
 
   MappingConfiguration(
@@ -135,6 +136,7 @@ private:
   const std::string ATTR_GINKGO_EXECUTOR       = "ginkgo-executor";
   const std::string ATTR_GINKGO_SOLVER         = "ginkgo-solver";
   const std::string ATTR_GINKGO_PRECONDITIONER = "ginkgo-preconditioner";
+  const std::string ATTR_GINKGO_RESIDUAL_NORM  = "ginkgo-residual-norm";
 
   const std::string VALUE_WRITE                     = "write";
   const std::string VALUE_READ                      = "read";
