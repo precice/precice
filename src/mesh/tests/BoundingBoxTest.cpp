@@ -17,17 +17,21 @@ BOOST_AUTO_TEST_CASE(Constructor)
 {
   PRECICE_TEST(1_rank);
   { // 3D
-    Eigen::VectorXd boundMin{1.0, 2.0, 3.0};
-    Eigen::VectorXd boundMax{4.0, 5.0, 6.0};
-    BoundingBox     bb(boundMin, boundMax);
-    BoundingBox     compareData({1.0, 4.0, 2.0, 5.0, 3.0, 6.0});
+    Eigen::VectorXd boundMin(3);
+    boundMin << 1.0, 2.0, 3.0;
+    Eigen::VectorXd boundMax(3);
+    boundMax << 4.0, 5.0, 6.0;
+    BoundingBox bb(boundMin, boundMax);
+    BoundingBox compareData({1.0, 4.0, 2.0, 5.0, 3.0, 6.0});
     BOOST_TEST(bb == compareData);
   }
   { // 2D
-    Eigen::VectorXd boundMin{1.0, 2.0};
-    Eigen::VectorXd boundMax{4.0, 5.0};
-    BoundingBox     bb(boundMin, boundMax);
-    BoundingBox     compareData({1.0, 4.0, 2.0, 5.0});
+    Eigen::VectorXd boundMin(2);
+    boundMin << 1.0, 2.0;
+    Eigen::VectorXd boundMax(2);
+    boundMax << 4.0, 5.0;
+    BoundingBox bb(boundMin, boundMax);
+    BoundingBox compareData({1.0, 4.0, 2.0, 5.0});
     BOOST_TEST(bb == compareData);
   }
 } // Constructor
