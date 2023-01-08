@@ -42,7 +42,7 @@ double matchTimeFromOtherSolver(double thisTime, int windowCounter, int otherSub
 double solverOneTime(double time, int windowCounter)
 {
   BOOST_TEST(solverOneNSubsteps == 4);
-  double relativeDts[4] = {0.5, 1.0, 1.5, 2.0};
+  double relativeDts[4] = {0.25, 0.5, 0.75, 1.0};
   return matchTimeFromOtherSolver(time, windowCounter, solverOneNSubsteps, relativeDts);
 }
 
@@ -50,7 +50,7 @@ double solverOneTime(double time, int windowCounter)
 double solverTwoTime(double time, int windowCounter)
 {
   BOOST_TEST(solverTwoNSubsteps == 3);
-  double relativeDts[3] = {2.0 / 3, 4.0 / 3, 2.0};
+  double relativeDts[3] = {1.0 / 3, 2.0 / 3, 1.0};
   return matchTimeFromOtherSolver(time, windowCounter, solverTwoNSubsteps, relativeDts);
 }
 
@@ -58,7 +58,7 @@ double solverTwoTime(double time, int windowCounter)
 double solverThreeTime(double time, int windowCounter)
 {
   BOOST_TEST(solverThreeNSubsteps == 2);
-  double relativeDts[2] = {1.0, 2.0};
+  double relativeDts[2] = {0.5, 1.0};
   return matchTimeFromOtherSolver(time, windowCounter, solverThreeNSubsteps, relativeDts);
 }
 
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingDifferentDts)
   DataID writeDataID;
 
   typedef double (*DataFunction)(double);
-  std::vector<std::pair<DataID, DataFunction>> readDataPairs;
+  std::vector<std::pair<std::string, DataFunction>> readDataPairs;
 
   DataFunction dataOneFunction = [](double t) -> double {
     return (double) (2 + t);
@@ -91,28 +91,24 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingDifferentDts)
   int nSubsteps; // let three solvers use different time step sizes
 
   if (context.isNamed("SolverOne")) {
-    meshID         = precice.getMeshID("MeshOne");
-    writeDataID    = precice.getDataID("DataOne", meshID);
-    writeFunction  = dataOneFunction;
-    auto dataTwoId = precice.getDataID("DataTwo", meshID);
-    readDataPairs.push_back(std::make_pair(dataTwoId, dataTwoFunction));
-    auto dataThreeId = precice.getDataID("DataThree", meshID);
-    readDataPairs.push_back(std::make_pair(dataThreeId, dataThreeFunction));
+    meshID        = precice.getMeshID("MeshOne");
+    writeDataID   = precice.getDataID("DataOne", meshID);
+    writeFunction = dataOneFunction;
+    readDataPairs.push_back(std::make_pair("DataTwo", dataTwoFunction));
+    readDataPairs.push_back(std::make_pair("DataThree", dataThreeFunction));
     nSubsteps = solverOneNSubsteps;
   } else if (context.isNamed("SolverTwo")) {
-    meshID         = precice.getMeshID("MeshTwo");
-    writeDataID    = precice.getDataID("DataTwo", meshID);
-    writeFunction  = dataTwoFunction;
-    auto dataOneId = precice.getDataID("DataOne", meshID);
-    readDataPairs.push_back(std::make_pair(dataOneId, dataOneFunction));
+    meshID        = precice.getMeshID("MeshTwo");
+    writeDataID   = precice.getDataID("DataTwo", meshID);
+    writeFunction = dataTwoFunction;
+    readDataPairs.push_back(std::make_pair("DataOne", dataOneFunction));
     nSubsteps = solverTwoNSubsteps;
   } else {
     BOOST_TEST(context.isNamed("SolverThree"));
-    meshID         = precice.getMeshID("MeshThree");
-    writeDataID    = precice.getDataID("DataThree", meshID);
-    writeFunction  = dataThreeFunction;
-    auto dataOneId = precice.getDataID("DataOne", meshID);
-    readDataPairs.push_back(std::make_pair(dataOneId, dataOneFunction));
+    meshID        = precice.getMeshID("MeshThree");
+    writeDataID   = precice.getDataID("DataThree", meshID);
+    writeFunction = dataThreeFunction;
+    readDataPairs.push_back(std::make_pair("DataOne", dataOneFunction));
     nSubsteps = solverThreeNSubsteps;
   }
 
@@ -148,7 +144,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingDifferentDts)
     }
 
     for (auto readDataPair : readDataPairs) {
-      auto readDataID   = readDataPair.first;
+      auto readDataName = readDataPair.first;
+      auto readDataID   = precice.getDataID(readDataName, meshID);
       auto readFunction = readDataPair.second;
 
       precice.readScalarData(readDataID, vertexID, currentDt, readData);
@@ -157,11 +154,11 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingDifferentDts)
         BOOST_TEST(readData == readFunction(windowStartTime));
       } else { // in the following iterations, use data at the end of window.
         double readTime;
-        if (readDataID == precice.getDataID("DataOne", meshID)) {
+        if (readDataName == "DataOne") {
           readTime = solverOneTime(time + currentDt, window);
-        } else if (precice.getDataID("DataTwo", meshID)) {
+        } else if (readDataName == "DataTwo") {
           readTime = solverTwoTime(time + currentDt, window);
-        } else if (precice.getDataID("DataThree", meshID)) {
+        } else if (readDataName == "DataThree") {
           readTime = solverThreeTime(time + currentDt, window);
         } else {
           BOOST_TEST(false);
@@ -175,12 +172,12 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingDifferentDts)
         BOOST_TEST(readData == readFunction(windowStartTime));
       } else { // in the following iterations, use data at the end of window.
         double readTime;
-        if (readDataID == precice.getDataID("DataOne", meshID)) {
-          readTime = solverOneTime(time + currentDt, window);
-        } else if (precice.getDataID("DataTwo", meshID)) {
-          readTime = solverTwoTime(time + currentDt, window);
-        } else if (precice.getDataID("DataThree", meshID)) {
-          readTime = solverThreeTime(time + currentDt, window);
+        if (readDataName == "DataOne") {
+          readTime = solverOneTime(time + currentDt / 2, window);
+        } else if (readDataName == "DataTwo") {
+          readTime = solverTwoTime(time + currentDt / 2, window);
+        } else if (readDataName == "DataThree") {
+          readTime = solverThreeTime(time + currentDt / 2, window);
         } else {
           BOOST_TEST(false);
         }
@@ -193,12 +190,12 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingDifferentDts)
         BOOST_TEST(readData == readFunction(windowStartTime));
       } else { // in the following iterations, use data at the end of window.
         double readTime;
-        if (readDataID == precice.getDataID("DataOne", meshID)) {
-          readTime = solverOneTime(time + currentDt, window);
-        } else if (precice.getDataID("DataTwo", meshID)) {
-          readTime = solverTwoTime(time + currentDt, window);
-        } else if (precice.getDataID("DataThree", meshID)) {
-          readTime = solverThreeTime(time + currentDt, window);
+        if (readDataName == "DataOne") {
+          readTime = solverOneTime(time, window);
+        } else if (readDataName == "DataTwo") {
+          readTime = solverTwoTime(time, window);
+        } else if (readDataName == "DataThree") {
+          readTime = solverThreeTime(time, window);
         } else {
           BOOST_TEST(false);
         }
