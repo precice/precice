@@ -598,9 +598,8 @@ void BaseCouplingScheme::addConvergenceMeasure(
     bool                        doesLogging)
 {
   ConvergenceMeasureContext convMeasure;
-  auto                      allData = getAllData();
-  PRECICE_ASSERT(allData.count(dataID) == 1, "Data with given data ID must exist!");
-  convMeasure.couplingData = allData.at(dataID);
+  PRECICE_ASSERT(_cplData.count(dataID) == 1, "Data with given data ID must exist!");
+  convMeasure.couplingData = _cplData.at(dataID);
   convMeasure.suffices     = suffices;
   convMeasure.strict       = strict;
   convMeasure.measure      = std::move(measure);
@@ -716,12 +715,8 @@ bool BaseCouplingScheme::reachedEndOfTimeWindow()
 void BaseCouplingScheme::storeIteration()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme());
-  // @todo breaks for CplSchemeTests/ParallelImplicitCouplingSchemeTests/Extrapolation/FirstOrderWith*. Interesting: Not for individual tests... Why? @fsimonis
-  // for (auto &data : getAllData() | boost::adaptors::map_values) {
-  //   data->storeIteration();
-  // }
-  for (const DataMap::value_type &pair : getAllData()) {
-    pair.second->storeIteration();
+  for (auto &data : _cplData | boost::adaptors::map_values) {
+    data->storeIteration();
   }
 }
 

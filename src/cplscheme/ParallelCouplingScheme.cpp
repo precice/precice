@@ -81,12 +81,8 @@ void ParallelCouplingScheme::exchangeSecondData()
   }
 
   if (hasConverged()) {
-    // @todo similar code breaks in SerialCouplingScheme.cpp for CplSchemeTests/SerialImplicitCouplingSchemeTests/ testConfiguredAbsConvergenceMeasureSynchronized. Why? @fsimonis
-    // for (const auto &data : getAllData() | boost::adaptors::map_values) {
-    //   data->moveTimeStepsStorage();
-    // }
-    for (const DataMap::value_type &pair : getAllData()) {
-      pair.second->moveTimeStepsStorage();
+    for (const auto &data : _cplData | boost::adaptors::map_values) {
+      data->moveTimeStepsStorage();
     }
   }
   if (isImplicitCouplingScheme()) {
@@ -111,7 +107,7 @@ const DataMap ParallelCouplingScheme::getAccelerationData()
 {
   // ParallelCouplingScheme applies acceleration to all CouplingData
   PRECICE_ASSERT(!doesFirstStep(), "Only the second participant should do the acceleration.");
-  return getAllData();
+  return _cplData;
 }
 
 } // namespace precice::cplscheme

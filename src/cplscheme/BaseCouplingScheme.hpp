@@ -247,6 +247,9 @@ protected:
   /// Acceleration method to speedup iteration convergence.
   acceleration::PtrAcceleration _acceleration;
 
+  /// All send and receive data as a map "data ID -> data"
+  DataMap _cplData;
+
   void sendNumberOfTimeSteps(const m2n::PtrM2N &m2n, const int numberOfTimeSteps);
 
   void sendTimes(const m2n::PtrM2N &m2n, const Eigen::VectorXd times);
@@ -279,12 +282,6 @@ protected:
    * @param receiveData DataMap associated with received data
    */
   void initializeZeroReceiveData(const DataMap &receiveData);
-
-  /**
-   * @brief interface to provide all CouplingData, depending on coupling scheme being used
-   * @return DataMap containing all CouplingData
-   */
-  virtual const DataMap getAllData() = 0;
 
   /**
    * @brief Function to determine whether coupling scheme is an explicit coupling scheme

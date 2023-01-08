@@ -38,7 +38,7 @@ void SerialCouplingSchemeFixture::initializeAcceleration(cplscheme::SerialCoupli
 
 void SerialCouplingSchemeFixture::moveToNextWindow(cplscheme::SerialCouplingScheme &cplscheme)
 {
-  for (const auto &pair : cplscheme.getAllData()) {
+  for (const auto &pair : cplscheme._cplData) {
     pair.second->moveTimeStepsStorage();
   }
 }
