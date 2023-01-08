@@ -124,9 +124,9 @@ public:
    */
   bool hasDataBeenReceived() const final override;
 
-  void overwriteReceiveData(double relativeDt) override final;
+  void overwriteReceiveData(std::string dataName, double relativeDt) override final;
 
-  void loadReceiveDataFromStorage(double relativeDt) final override;
+  void loadReceiveDataFromStorage(std::string dataName, double relativeDt) final override;
 
   std::vector<double> getReceiveTimes(std::string dataName) override final;
 

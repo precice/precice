@@ -68,9 +68,9 @@ public:
    */
   bool hasSendData(DataID dataID);
 
-  void overwriteReceiveData(double relativeDt) override final;
+  void overwriteReceiveData(std::string dataName, double relativeDt) override final;
 
-  void loadReceiveDataFromStorage(double relativeDt) override final;
+  void loadReceiveDataFromStorage(std::string dataName, double relativeDt) override final;
 
   std::vector<double> getReceiveTimes(std::string dataName) override final;
 

@@ -26,7 +26,7 @@ Eigen::VectorXd Storage::getValuesAtTime(double time)
       return sample.second;
     }
   }
-  PRECICE_ASSERT(false, "no values found!", time);
+  PRECICE_ASSERT(false, "no values found!", time, getTimes());
 }
 
 void Storage::setValuesAtTime(double time, Eigen::VectorXd values, bool mustOverwriteExisting)

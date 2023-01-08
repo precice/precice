@@ -55,7 +55,7 @@ std::vector<double> ReadDataContext::getReceivedTimes(cplscheme::PtrCouplingSche
 
 void ReadDataContext::loadReceived(double relativeDt, cplscheme::PtrCouplingScheme cplscheme)
 {
-  cplscheme->loadReceiveDataFromStorage(relativeDt); // @todo try to make this specific for this read data context. Not required to load all data!
+  cplscheme->loadReceiveDataFromStorage(getDataName(), relativeDt);
 }
 
 } // namespace precice::impl

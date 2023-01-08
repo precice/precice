@@ -146,34 +146,55 @@ void MultiCouplingScheme::exchangeInitialData()
   PRECICE_DEBUG("Initial data is exchanged in MultiCouplingScheme");
 }
 
-void MultiCouplingScheme::overwriteReceiveData(double relativeDt)
+void MultiCouplingScheme::overwriteReceiveData(std::string dataName, double relativeDt)
 {
   bool mustOverride = true;
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
   PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
   for (auto &receiveExchange : _receiveDataVector | boost::adaptors::map_values) {
     for (auto &receiveData : receiveExchange | boost::adaptors::map_values) {
-      receiveData->storeValuesAtTime(relativeDt, receiveData->values(), mustOverride);
+      if (receiveData->getDataName() == dataName) {
+        receiveData->storeValuesAtTime(relativeDt, receiveData->values(), mustOverride);
+        return;
+      }
     }
   }
+  PRECICE_ASSERT(false, "Data with name not found", dataName);
 }
 
-void MultiCouplingScheme::loadReceiveDataFromStorage(double relativeDt)
+void MultiCouplingScheme::loadReceiveDataFromStorage(std::string dataName, double relativeDt)
 {
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
   PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
   for (auto &receiveExchange : _receiveDataVector | boost::adaptors::map_values) {
     for (auto &receiveData : receiveExchange | boost::adaptors::map_values) {
-      receiveData->values() = receiveData->getValuesAtTime(relativeDt);
+      if (receiveData->getDataName() == dataName) {
+        receiveData->values() = receiveData->getValuesAtTime(relativeDt);
+        return;
+      }
     }
   }
+  PRECICE_ASSERT(false, "Data with name not found", dataName);
 }
 
 std::vector<double> MultiCouplingScheme::getReceiveTimes(std::string dataName)
 {
-  //@todo stub implementation. Should walk over all receive data, get times and ensure that all times vectors actually hold the same times (since otherwise we would have to get times individually per data)
-  //@todo subcycling is not supported for MultiCouplingScheme, because this needs a complicated interplay of picking the right data in time and mapping this data. This is hard to realize with the current implementation.
-  auto times = std::vector<double>({time::Storage::WINDOW_START, time::Storage::WINDOW_END});
+  auto times = std::vector<double>();
+  for (auto &receiveExchange : _receiveDataVector | boost::adaptors::map_values) {
+    for (auto &data : receiveExchange | boost::adaptors::map_values) {
+      if (data->getDataName() == dataName) {
+        auto timesVec = data->getStoredTimesAscending();
+        PRECICE_ASSERT(timesVec.size() > 0, timesVec.size());
+        for (int i = 0; i < timesVec.size(); i++) {
+          times.push_back(timesVec(i));
+        }
+        PRECICE_DEBUG("Receive times for {} are {}", dataName, times);
+        return times;
+      }
+    }
+  }
+  PRECICE_DEBUG("No data with dataName {} found in receive data. Returning empty.", dataName);
+  // PRECICE_ASSERT(false);  // Reasonable assertion, but the test Integration/Serial/WatchIntegralScaleAndNoScale actually uses read-data that is not receiving any data and this assertion gets triggered. See also https://github.com/precice/precice/pull/1526
   return times;
 }
 

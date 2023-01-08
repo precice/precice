@@ -1828,7 +1828,7 @@ void SolverInterfaceImpl::mapReadData()
       context.loadReceived(time::Storage::WINDOW_END, _couplingScheme);
       context.storeDataInWaveform(time::Storage::WINDOW_END);
     } else {
-      for (auto time : context.getReceivedTimes(_couplingScheme)) {
+      for (auto time : receiveTimes) {
         context.loadReceived(time, _couplingScheme);
         if (context.isMappingRequired()) {
           PRECICE_DEBUG("Map read data \"{}\" to mesh \"{}\"", context.getDataName(), context.getMeshName());
@@ -1849,7 +1849,9 @@ void SolverInterfaceImpl::performDataActions(
   // for actions we need to load and write back data from/to time steps storage.
   // Actions would need similar treatment like mapping.
   if (_couplingScheme->hasDataBeenReceived()) {
-    _couplingScheme->loadReceiveDataFromStorage(time::Storage::WINDOW_END);
+    for (auto &context : _accessor->readDataContexts()) {
+      _couplingScheme->loadReceiveDataFromStorage(context.getDataName(), time::Storage::WINDOW_END);
+    }
   }
   for (action::PtrAction &action : _accessor->actions()) {
     if (timings.find(action->getTiming()) != timings.end()) {
@@ -1857,7 +1859,9 @@ void SolverInterfaceImpl::performDataActions(
     }
   }
   if (_couplingScheme->hasDataBeenReceived()) {
-    _couplingScheme->overwriteReceiveData(time::Storage::WINDOW_END);
+    for (auto &context : _accessor->readDataContexts()) {
+      _couplingScheme->overwriteReceiveData(context.getDataName(), time::Storage::WINDOW_END);
+    }
   }
 }
 

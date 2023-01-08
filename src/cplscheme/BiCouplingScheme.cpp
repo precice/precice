@@ -106,8 +106,8 @@ void BiCouplingScheme::addDataToReceive(
 
 void BiCouplingScheme::determineInitialDataExchange()
 {
-  determineInitialSend(getSendData());
-  determineInitialReceive(getReceiveData());
+  determineInitialSend(_sendData);
+  determineInitialReceive(_receiveData);
 }
 
 std::vector<std::string> BiCouplingScheme::getCouplingPartners() const
@@ -170,23 +170,31 @@ bool BiCouplingScheme::hasSendData(DataID dataID)
   return getSendData(dataID) != nullptr;
 }
 
-void BiCouplingScheme::overwriteReceiveData(double relativeDt)
+void BiCouplingScheme::overwriteReceiveData(std::string dataName, double relativeDt)
 {
   bool mustOverwrite = true;
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
   PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
-  for (auto &receiveData : getReceiveData() | boost::adaptors::map_values) {
-    receiveData->storeValuesAtTime(relativeDt, receiveData->values(), mustOverwrite);
+  for (auto &receiveData : _receiveData | boost::adaptors::map_values) {
+    if (receiveData->getDataName() == dataName) {
+      receiveData->storeValuesAtTime(relativeDt, receiveData->values(), mustOverwrite);
+      return;
+    }
   }
+  PRECICE_ASSERT(false, "Data with name not found", dataName);
 }
 
-void BiCouplingScheme::loadReceiveDataFromStorage(double relativeDt)
+void BiCouplingScheme::loadReceiveDataFromStorage(std::string dataName, double relativeDt)
 {
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
   PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
-  for (auto &receiveData : getReceiveData() | boost::adaptors::map_values) {
-    receiveData->values() = receiveData->getValuesAtTime(relativeDt);
+  for (auto &receiveData : _receiveData | boost::adaptors::map_values) {
+    if (receiveData->getDataName() == dataName) {
+      receiveData->values() = receiveData->getValuesAtTime(relativeDt);
+      return;
+    }
   }
+  PRECICE_ASSERT(false, "Data with name not found", dataName);
 }
 
 void BiCouplingScheme::storeSendValuesAtTime(double relativeDt)
@@ -207,7 +215,7 @@ void BiCouplingScheme::initializeSendDataStorage()
 std::vector<double> BiCouplingScheme::getReceiveTimes(std::string dataName)
 {
   auto times = std::vector<double>();
-  for (auto &data : getReceiveData() | boost::adaptors::map_values) {
+  for (auto &data : _receiveData | boost::adaptors::map_values) {
     if (data->getDataName() == dataName) {
       auto timesVec = data->getStoredTimesAscending();
       PRECICE_ASSERT(timesVec.size() > 0, timesVec.size());

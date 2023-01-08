@@ -166,19 +166,23 @@ public:
   /**
    * @brief overwrites data at time stamp in CouplingData with given data from mesh values
    *
+   * @param dataName name of data data is overwritten for
    * @param relativeDt relative dt that will be associated with the stored data.
    */
-  virtual void overwriteReceiveData(double relativeDt) = 0;
+  virtual void overwriteReceiveData(std::string dataName, double relativeDt) = 0;
 
   /**
    * @brief loads time step data for given time from CouplingData into mesh values
    *
+   * @param dataName name of data data is loaded for
    * @param relativeDt relative dt associated with the data.
    */
-  virtual void loadReceiveDataFromStorage(double relativeDt) = 0;
+  virtual void loadReceiveDataFromStorage(std::string dataName, double relativeDt) = 0;
 
   /**
    * @brief Get the times associated with time steps in ascending order
+   *
+   * @param dataName name of data times are requested for
    *
    * @return std::vector containing all times (as relative times)
    */

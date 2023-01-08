@@ -156,19 +156,19 @@ bool CompositionalCouplingScheme::hasDataBeenReceived() const
   return hasBeenReceived;
 }
 
-void CompositionalCouplingScheme::overwriteReceiveData(double relativeDt)
+void CompositionalCouplingScheme::overwriteReceiveData(std::string dataName, double relativeDt)
 {
   PRECICE_TRACE();
   for (auto scheme : allSchemes()) {
-    scheme->overwriteReceiveData(relativeDt);
+    scheme->overwriteReceiveData(dataName, relativeDt);
   }
 }
 
-void CompositionalCouplingScheme::loadReceiveDataFromStorage(double relativeDt)
+void CompositionalCouplingScheme::loadReceiveDataFromStorage(std::string dataName, double relativeDt)
 {
   PRECICE_TRACE();
   for (auto scheme : allSchemes()) {
-    scheme->loadReceiveDataFromStorage(relativeDt);
+    scheme->loadReceiveDataFromStorage(dataName, relativeDt);
   }
 }
 
