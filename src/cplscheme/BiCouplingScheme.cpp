@@ -189,6 +189,7 @@ void BiCouplingScheme::initializeSendDataStorage()
 {
   for (auto &data : getSendData() | boost::adaptors::map_values) {
     data->storeValuesAtTime(time::Storage::WINDOW_START, data->values());
+    data->storeValuesAtTime(time::Storage::WINDOW_END, data->values());
   }
 }
 
