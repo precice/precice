@@ -395,11 +395,10 @@ double SolverInterfaceImpl::advance(
   // Current time
   double time = _couplingScheme->getTime();
 
-  if (_couplingScheme->willDataBeExchanged(0.0)) {
-    performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time);
-    mapWrittenData();
-    performDataActions({action::Action::WRITE_MAPPING_POST}, time);
-  }
+  // always perform mapping, because we will store all mapped data, if subcycling is used.
+  performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time);
+  mapWrittenData();
+  performDataActions({action::Action::WRITE_MAPPING_POST}, time);
 
   advanceCouplingScheme();
 
