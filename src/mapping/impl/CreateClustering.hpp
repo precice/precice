@@ -212,7 +212,7 @@ double estimatePartitionRadius(unsigned int verticesPerPartition, mesh::PtrMesh 
   std::nth_element(sampledPartitionRadii.begin(), sampledPartitionRadii.begin() + middle, sampledPartitionRadii.end());
   double averagePartitionRadius = sampledPartitionRadii[middle];
 
-  PRECICE_INFO("Partition Radius: {}", averagePartitionRadius);
+  PRECICE_INFO("VertexCluster Radius: {}", averagePartitionRadius);
   return averagePartitionRadius;
 }
 } // namespace
@@ -425,14 +425,14 @@ inline std::tuple<double, Vertices> createUniformBlockPartitioning2D(mesh::PtrMe
   nPartitions[0] = std::ceil(std::max(1., std::sqrt(nTotalPartitions * (edgeLength[0] / edgeLength[1]))));
   nPartitions[1] = std::ceil(std::max(1., std::sqrt(nTotalPartitions * (edgeLength[1] / edgeLength[0]))));
 
-  PRECICE_INFO("Partition distribution: {}", nPartitions);
+  PRECICE_INFO("VertexCluster distribution: {}", nPartitions);
 
   // Compute the radius based on the edge length and the number of partitions
   // 0.5 since we use a radius here instead of a diameter
   PRECICE_ASSERT(!bb.empty());
   const double distance               = std::max(edgeLength[0] / nPartitions[0], edgeLength[1] / nPartitions[1]);
   double       averagePartitionRadius = std::pow(relativeOverlap, 2) * distance + relativeOverlap * 0.5 * distance + 0.5 * distance;
-  PRECICE_INFO("Partition Radius: {}", averagePartitionRadius);
+  PRECICE_INFO("VertexCluster Radius: {}", averagePartitionRadius);
 
   Vertices centers;
   {

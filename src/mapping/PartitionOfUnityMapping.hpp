@@ -31,15 +31,15 @@ public:
    * @param[in] constraint Specifies mapping to be consistent or conservative.
    * @param[in] dimension Dimensionality of the meshes
    * @param[in] parameter shape parameter or support radius of the interpolation RBF
-   * @param[in] verticesPerPartition Estimate for the number of vertices to be clustered together
-   * @param[in] relativeOverlap Overlap between partitions, where 1 would correspnd to a complete overlap, 0 to distance of 2 x radius between partitions
+   * @param[in] verticesPerCluster Estimate for the number of vertices to be clustered together
+   * @param[in] relativeOverlap Overlap between clusters, where 1 would correspnd to a complete overlap, 0 to distance of 2 x radius between clusters
    */
   PartitionOfUnityMapping(
       Mapping::Constraint constraint,
       int                 dimension,
       double              parameter,
       Polynomial          polynomial,
-      unsigned int        verticesPerPartition,
+      unsigned int        verticesPerCluster,
       double              relativeOverlap,
       bool                projectToInput);
 
@@ -58,19 +58,19 @@ public:
 private:
   precice::logging::Logger _log{"mapping::PartitionOfUnityMapping"};
 
-  std::vector<Partition<RADIAL_BASIS_FUNCTION_T>> _partitions;
+  std::vector<VertexCluster<RADIAL_BASIS_FUNCTION_T>> _clusters;
 
   // Shape parameter or support radius for the RBF interpolant,
-  // only required for the Partition instantiation
+  // only required for the VertexCluster instantiation
   const double _parameter;
 
   // Input parameter
-  const unsigned int _verticesPerPartition;
+  const unsigned int _verticesPerCluster;
   const double       _relativeOverlap;
   const bool         _projectToInput;
 
   // Derived parameter
-  double averagePartitionRadius = 0;
+  double averageClusterRadius = 0;
 
   /// true if the mapping along some axis should be ignored
   /// has currently only dim x false entries, as integrated polynomials are irrelevant
@@ -78,7 +78,7 @@ private:
 
   Polynomial _polynomial;
 
-  // Holds the output vertex -> partition association. Outer vector has the size of the output mesh and inner vector size of the associated partitions
+  // Holds the output vertex -> cluster association. Outer vector has the size of the output mesh and inner vector size of the associated partitions
   std::vector<std::vector<VertexID>> _partMap;
 
   /// @copydoc Mapping::mapConservative
@@ -87,7 +87,7 @@ private:
   /// @copydoc Mapping::mapConsistent
   virtual void mapConsistent(DataID inputDataID, DataID outputDataID) override;
 
-  void exportPartitionCentersAsVTU(mesh::Mesh &centers);
+  void exportClusterCentersAsVTU(mesh::Mesh &centers);
 };
 
 // --------------------------------------------------- HEADER IMPLEMENTATIONS
@@ -98,15 +98,15 @@ PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::PartitionOfUnityMapping(
     int                 dimension,
     double              parameter,
     Polynomial          polynomial,
-    unsigned int        verticesPerPartition,
+    unsigned int        verticesPerCluster,
     double              relativeOverlap,
     bool                projectToInput)
     : Mapping(constraint, dimension),
-      _parameter(parameter), _verticesPerPartition(verticesPerPartition), _relativeOverlap(relativeOverlap), _projectToInput(projectToInput), _polynomial(polynomial)
+      _parameter(parameter), _verticesPerCluster(verticesPerCluster), _relativeOverlap(relativeOverlap), _projectToInput(projectToInput), _polynomial(polynomial)
 {
   PRECICE_ASSERT(this->getDimensions() <= 3);
-  PRECICE_CHECK(_relativeOverlap < 1, "The relative overlap has to be smaller than one.");
-  PRECICE_CHECK(_verticesPerPartition > 0, "The number of vertices per partition has to be greater zero.");
+  PRECICE_ASSERT(_relativeOverlap < 1, "The relative overlap has to be smaller than one.");
+  PRECICE_ASSERT(_verticesPerCluster > 0, "The number of vertices per cluster has to be greater zero.");
 
   if (isScaledConsistent()) {
     setInputRequirement(Mapping::MeshRequirement::FULL);
@@ -144,15 +144,15 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
   // interpolant requires all vertices with a distance of radius from the center.
   auto bb = outMesh->getBoundingBox();
 
-  if (averagePartitionRadius == 0)
-    averagePartitionRadius = partitioner::estimatePartitionRadius(_verticesPerPartition, filterMesh, bb);
+  if (averageClusterRadius == 0)
+    averageClusterRadius = partitioner::estimatePartitionRadius(_verticesPerCluster, filterMesh, bb);
 
   // @TODO: This assert is not completely right, as it checks all dimensions for non-emptyness (which might not be the case).
   // However, with the current BB implementation, the expandBy function will just do nothing.
   PRECICE_ASSERT(!bb.empty());
-  PRECICE_ASSERT(averagePartitionRadius > 0);
+  PRECICE_ASSERT(averageClusterRadius > 0);
   // Now we extend the bounding box by the radius
-  bb.expandBy(1 * averagePartitionRadius);
+  bb.expandBy(1 * averageClusterRadius);
 
   // ... and tag all affected vertices
   auto verticesNew = filterMesh->index().getVerticesInsideBox(bb);
@@ -173,7 +173,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   precice::utils::Event e("map.pou.computeMapping.From" + this->input()->getName() + "To" + this->output()->getName(), precice::syncMode);
 
-  // Recompute the whole partitioning
+  // Recompute the whole clustering
   this->clear();
 
   mesh::PtrMesh inMesh;
@@ -186,58 +186,58 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     outMesh = this->output();
   }
 
-  // Step 1: get a tentative partitioning consisting of centers and a radius from one of the available algorithms
-  auto [averagePartitionRadius_, centerCandidates] = partitioner::createUniformBlockPartitioning(inMesh, outMesh, _relativeOverlap, _verticesPerPartition, _projectToInput);
+  // Step 1: get a tentative clustering consisting of centers and a radius from one of the available algorithms
+  auto [averageClusterRadius_, centerCandidates] = partitioner::createUniformBlockPartitioning(inMesh, outMesh, _relativeOverlap, _verticesPerCluster, _projectToInput);
 
-  averagePartitionRadius = averagePartitionRadius_;
-  PRECICE_ASSERT(averagePartitionRadius > 0 || inMesh->vertices().size() == 0 || outMesh->vertices().size() == 0);
+  averageClusterRadius = averageClusterRadius_;
+  PRECICE_ASSERT(averageClusterRadius > 0 || inMesh->vertices().size() == 0 || outMesh->vertices().size() == 0);
 
-  // Step 2: check, which of the resulting partitions are be non-empty (in term sof the output vertices) and register the partition centers in a mesh
-  mesh::Mesh centerMesh("partitionCentersMesh", this->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
+  // Step 2: check, which of the resulting clusters are non-empty and register the cluster centers in a mesh
+  mesh::Mesh centerMesh("clusterCentersMesh", this->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
   auto &     meshVertices = centerMesh.vertices();
 
   for (const auto &c : centerCandidates) {
-    // We cannot simply take the vertex from the container, as the ID needs to match the partition ID
+    // We cannot simply take the vertex from the container, as the ID needs to match the cluster ID
     // That's required for the indexing and asserted below
-    mesh::Vertex                       center(c.getCoords(), meshVertices.size());
-    Partition<RADIAL_BASIS_FUNCTION_T> p(inMesh->getDimensions(), center, averagePartitionRadius, _parameter, _deadAxis, _polynomial, _verticesPerPartition, inMesh, outMesh);
+    mesh::Vertex                           center(c.getCoords(), meshVertices.size());
+    VertexCluster<RADIAL_BASIS_FUNCTION_T> p(inMesh->getDimensions(), center, averageClusterRadius, _parameter, _deadAxis, _polynomial, _verticesPerCluster, inMesh, outMesh);
 
-    // Consider only non-empty partitions
+    // Consider only non-empty clusters
     if (!p.isEmpty()) {
-      PRECICE_ASSERT(center.getID() == _partitions.size(), center.getID(), _partitions.size());
+      PRECICE_ASSERT(center.getID() == _clusters.size(), center.getID(), _clusters.size());
       meshVertices.emplace_back(std::move(center));
-      _partitions.emplace_back(std::move(p));
+      _clusters.emplace_back(std::move(p));
     }
   }
-  // Log the average number of resulting partitions
-  PRECICE_INFO("Number of total partitions (final): {}", _partitions.size());
+  // Log the average number of resulting clusters
+  PRECICE_INFO("Number of total clusters (final): {}", _clusters.size());
 
-  if (_partitions.size() > 0) {
-    unsigned int nVertices   = std::accumulate(_partitions.begin(), _partitions.end(), static_cast<unsigned int>(0), [](auto &acc, auto &val) { return acc += val.getNumberOfInputVertices(); });
-    unsigned int maxVertices = std::max_element(_partitions.begin(), _partitions.end(), [](auto &v1, auto &v2) { return v1.getNumberOfInputVertices() < v2.getNumberOfInputVertices(); })->getNumberOfInputVertices();
-    unsigned int minVertices = std::min_element(_partitions.begin(), _partitions.end(), [](auto &v1, auto &v2) { return v1.getNumberOfInputVertices() < v2.getNumberOfInputVertices(); })->getNumberOfInputVertices();
-    PRECICE_INFO("Average number of vertices per partition {}", nVertices / _partitions.size());
-    PRECICE_INFO("Maximum number of vertices per partition {}", maxVertices);
-    PRECICE_INFO("Minimum number of vertices per partition {}", minVertices);
+  if (_clusters.size() > 0) {
+    unsigned int nVertices   = std::accumulate(_clusters.begin(), _clusters.end(), static_cast<unsigned int>(0), [](auto &acc, auto &val) { return acc += val.getNumberOfInputVertices(); });
+    unsigned int maxVertices = std::max_element(_clusters.begin(), _clusters.end(), [](auto &v1, auto &v2) { return v1.getNumberOfInputVertices() < v2.getNumberOfInputVertices(); })->getNumberOfInputVertices();
+    unsigned int minVertices = std::min_element(_clusters.begin(), _clusters.end(), [](auto &v1, auto &v2) { return v1.getNumberOfInputVertices() < v2.getNumberOfInputVertices(); })->getNumberOfInputVertices();
+    PRECICE_INFO("Average number of vertices per cluster {}", nVertices / _clusters.size());
+    PRECICE_INFO("Maximum number of vertices per cluster {}", maxVertices);
+    PRECICE_INFO("Minimum number of vertices per cluster {}", minVertices);
   }
 
   // Log a bounding box of the center mesh
   centerMesh.computeBoundingBox();
-  PRECICE_INFO("Bounding Box of partition centers {}", centerMesh.getBoundingBox());
+  PRECICE_INFO("Bounding Box of the cluster centers {}", centerMesh.getBoundingBox());
 
-  // Step 3: index the partitions / the center mesh in order to create the output vertex -> partition association
-  query::Index partitionIndex(centerMesh);
-  // Find all partitions the output vertex lies in, i.e., find all centers which have the distance of a partition radius
-  // Here: VertexID = partitionID
+  // Step 3: index the clusters / the center mesh in order to create the output vertex -> cluster association
+  query::Index clusterIndex(centerMesh);
+  // Find all clusters the output vertex lies in, i.e., find all centers which have the distance of a cluster radius
+  // Here: VertexID = clusterID
   // This could also be done on-the-fly in the map data phase, which would require to make the mesh as well as the indexTree member variables.
   PRECICE_ASSERT(_partMap.empty());
-  PRECICE_DEBUG("Computing partition-vertex association");
+  PRECICE_DEBUG("Computing cluster-vertex association");
   for (const auto &v : outMesh->vertices()) {
-    auto indices = partitionIndex.getVerticesInsideBox(v, averagePartitionRadius);
+    auto indices = clusterIndex.getVerticesInsideBox(v, averageClusterRadius);
     if (indices.size() == 0) {
-      PRECICE_WARN("Output vertex {} could not be assigned to a partition. This means that the meshes probably do not match well geometry-wise.", v.getCoords());
+      PRECICE_WARN("Output vertex {} could not be assigned to a cluster. This means that the meshes probably do not match well geometry-wise.", v.getCoords());
       // TODO: Think about a proper way to handle this case, maybe set all radii to distance(v, closestvertex)?
-      indices.emplace_back(partitionIndex.getClosestVertex(v.getCoords()).index);
+      indices.emplace_back(clusterIndex.getClosestVertex(v.getCoords()).index);
     }
     _partMap.emplace_back(indices);
   }
@@ -246,7 +246,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
 // Add a VTK export for visualization purposes
 #ifndef NDEBUG
-  exportPartitionCentersAsVTU(centerMesh);
+  exportClusterCentersAsVTU(centerMesh);
 #endif
 
   // Compute the weigths
@@ -254,31 +254,31 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   // Iterate over all vertices and update the output data
   for (VertexID v = 0; v < outMesh->vertices().size(); ++v) {
-    // 1. Find all partitions the output vertex lies in, i.e., find all centers which have the distance of a partition radius
-    std::vector<VertexID> partitionIDs = _partMap[v];
-    const auto &          vertex       = outMesh->vertices()[v];
+    // 1. Find all clusters the output vertex lies in, i.e., find all centers which have the distance of a partition radius
+    std::vector<VertexID> clusterIDs = _partMap[v];
+    const auto &          vertex     = outMesh->vertices()[v];
 
     PRECICE_ASSERT(vertex.getID() == v);
-    PRECICE_ASSERT(partitionIDs.size() > 0, "No partition found for vertex v ", v);
+    PRECICE_ASSERT(clusterIDs.size() > 0, "No cluster found for vertex v ", v);
 
-    // 2. In each partition, gather the weights
-    std::vector<double> weights(partitionIDs.size());
-    std::transform(partitionIDs.cbegin(), partitionIDs.cend(), weights.begin(), [&](const auto &ids) { return _partitions[ids].computeWeight(vertex); });
+    // 2. In all clusters, gather the weights
+    std::vector<double> weights(clusterIDs.size());
+    std::transform(clusterIDs.cbegin(), clusterIDs.cend(), weights.begin(), [&](const auto &ids) { return _clusters[ids].computeWeight(vertex); });
     double weightSum = std::accumulate(weights.begin(), weights.end(), static_cast<double>(0.));
-    // TODO: This covers the edge case of vertices being at the edge of (several) partitions
-    // In case the sum is equal to zero, we assign equal weights for all partitions
+    // TODO: This covers the edge case of vertices being at the edge of (several) clusters
+    // In case the sum is equal to zero, we assign equal weights for all clusters
     if (!(weightSum > 0)) {
       PRECICE_ASSERT(weights.size() > 0);
       std::for_each(weights.begin(), weights.end(), [&weights](auto &w) { w = 1 / weights.size(); });
       weightSum = 1;
     }
     PRECICE_DEBUG("Weight sum {}", weightSum);
-    PRECICE_DEBUG("Partitions {}", partitionIDs);
+    PRECICE_DEBUG("Clusters {}", clusterIDs);
     PRECICE_DEBUG("V coords {}", vertex.getCoords());
     PRECICE_ASSERT(weightSum > 0);
 
-    for (unsigned int i = 0; i < partitionIDs.size(); ++i) {
-      _partitions[partitionIDs[i]].setNormalizedWeight(weights[i] / weightSum, vertex.getID());
+    for (unsigned int i = 0; i < clusterIDs.size(); ++i) {
+      _clusters[clusterIDs[i]].setNormalizedWeight(weights[i] / weightSum, vertex.getID());
     }
   }
 
@@ -291,10 +291,10 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::clear()
 {
   PRECICE_TRACE();
-  _partitions.clear();
+  _clusters.clear();
   _partMap.clear();
   // TODO: Don't reset this here
-  averagePartitionRadius    = 0;
+  averageClusterRadius      = 0;
   this->_hasComputedMapping = false;
 }
 
@@ -304,18 +304,18 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(DataID in
   precice::utils::Event e("map.pou.mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
   PRECICE_TRACE(inputDataID, outputDataID);
-  // Execute the actual mapping evaluation in all partitions
+  // Execute the actual mapping evaluation in all clusters
 
-  // 1. Reset the output data values as we need to accumulate data across partitions later on
+  // 1. Reset the output data values as we need to accumulate data across clusters later on
   output()->data(outputDataID)->values().setZero();
 
   PRECICE_ASSERT(_partMap.size() == this->input()->vertices().size(), _partMap.size(), this->input()->vertices().size());
 
-  // 2. Iterate over all partitoins and accumulate the result
-  std::for_each(_partitions.begin(), _partitions.end(), [&](auto &p) { p.mapConservative(input()->data(inputDataID),
-                                                                                         output()->data(outputDataID)); });
+  // 2. Iterate over all clusters and accumulate the result
+  std::for_each(_clusters.begin(), _clusters.end(), [&](auto &p) { p.mapConservative(input()->data(inputDataID),
+                                                                                     output()->data(outputDataID)); });
   // Set mapping finished
-  std::for_each(_partitions.begin(), _partitions.end(), [&](auto &p) { p.setMappingFinished(); });
+  std::for_each(_clusters.begin(), _clusters.end(), [&](auto &p) { p.setMappingFinished(); });
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -326,28 +326,28 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inpu
   // More detailed measurements
   PRECICE_TRACE(inputDataID, outputDataID);
 
-  // 1. Reset the output data values as we need to accumulate data across partitions later on
+  // 1. Reset the output data values as we need to accumulate data across clusters later on
   output()->data(outputDataID)->values().setZero();
 
-  // 2. Execute the actual mapping evaluation in all partitions and acccumulate the data
-  std::for_each(_partitions.begin(), _partitions.end(), [&](auto &p) { p.mapConsistent(input()->data(inputDataID),
-                                                                                       output()->data(outputDataID)); });
+  // 2. Execute the actual mapping evaluation in all vertex clusters and acccumulate the data
+  std::for_each(_clusters.begin(), _clusters.end(), [&](auto &p) { p.mapConsistent(input()->data(inputDataID),
+                                                                                   output()->data(outputDataID)); });
 
   // Set mapping finished
-  std::for_each(_partitions.begin(), _partitions.end(), [&](auto &p) { p.setMappingFinished(); });
+  std::for_each(_clusters.begin(), _clusters.end(), [&](auto &p) { p.setMappingFinished(); });
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::exportPartitionCentersAsVTU(mesh::Mesh &centerMesh)
+void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::exportClusterCentersAsVTU(mesh::Mesh &centerMesh)
 {
   PRECICE_TRACE();
 
   auto dataRadius      = centerMesh.createData("radius", 1, -1);
-  auto dataCardinality = centerMesh.createData("partition-size", 1, -1);
+  auto dataCardinality = centerMesh.createData("number-of-vertices", 1, -1);
   centerMesh.allocateDataValues();
-  dataRadius->values().fill(averagePartitionRadius);
-  for (unsigned int i = 0; i < _partitions.size(); ++i) {
-    dataCardinality->values()[i] = static_cast<double>(_partitions[i].getNumberOfInputVertices());
+  dataRadius->values().fill(averageClusterRadius);
+  for (unsigned int i = 0; i < _clusters.size(); ++i) {
+    dataCardinality->values()[i] = static_cast<double>(_clusters[i].getNumberOfInputVertices());
   }
 
   // We have to create the global offsets in order to export things in parallel

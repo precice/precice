@@ -16,10 +16,10 @@ namespace precice {
 namespace mapping {
 
 /**
- * @brief Mapping using partition of unity decomposition strategies
+ * @brief TODO
  */
 template <typename RADIAL_BASIS_FUNCTION_T>
-class Partition {
+class VertexCluster {
 public:
   /**
    * @brief Constructor.
@@ -32,15 +32,15 @@ public:
    * @param[in] inputMesh the input mesh
    * @param[in] outputMesh the output mesh
    */
-  Partition(int               dimension,
-            mesh::Vertex      center,
-            double            radius,
-            double            parameter,
-            std::vector<bool> deadAxis,
-            Polynomial        polynomial,
-            unsigned int      targetSize,
-            mesh::PtrMesh     inputMesh,
-            mesh::PtrMesh     outputMesh);
+  VertexCluster(int               dimension,
+                mesh::Vertex      center,
+                double            radius,
+                double            parameter,
+                std::vector<bool> deadAxis,
+                Polynomial        polynomial,
+                unsigned int      targetSize,
+                mesh::PtrMesh     inputMesh,
+                mesh::PtrMesh     outputMesh);
 
   /// Removes a computed mapping.
   void clear();
@@ -76,16 +76,16 @@ public:
   bool isEmpty() const;
 
 private:
-  precice::logging::Logger _log{"mapping::Partition"};
+  precice::logging::Logger _log{"mapping::VertexCluster"};
 
   bool _hasComputedMapping = false;
   bool _hasMappedData      = false;
   bool _emptyPartition     = false;
 
-  /// Partition center
+  /// VertexCluster center
   mesh::Vertex _center;
 
-  /// Partition radius
+  /// VertexCluster radius
   const double _radius;
 
   /// Array with one entry per data component. A plain array would require knowledge about the number of components
@@ -115,7 +115,7 @@ private:
 // --------------------------------------------------- HEADER IMPLEMENTATIONS
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-Partition<RADIAL_BASIS_FUNCTION_T>::Partition(
+VertexCluster<RADIAL_BASIS_FUNCTION_T>::VertexCluster(
     int               dimension,
     mesh::Vertex      center,
     double            radius,
@@ -131,7 +131,7 @@ Partition<RADIAL_BASIS_FUNCTION_T>::Partition(
   PRECICE_ASSERT(_polynomial != Polynomial::ON, "Integrated polynomial is not supported for PoU.")
   PRECICE_ASSERT(deadAxis.size() == dimension);
   PRECICE_DEBUG("Center coordinates: {}", _center.getCoords());
-  PRECICE_DEBUG("Partition radius: {}", _radius);
+  PRECICE_DEBUG("VertexCluster radius: {}", _radius);
 
   // Get vertices to be mapped
   auto outIDs = outputMesh->index().getVerticesInsideBox(center, radius);
@@ -147,8 +147,8 @@ Partition<RADIAL_BASIS_FUNCTION_T>::Partition(
   }
 
   PRECICE_ASSERT(inIDs.size() > 0, "The source partition is empty whereas the target partition is non-empty.", inIDs.size(), outIDs.size());
-  PRECICE_DEBUG("Partition input size: {}", inIDs.size());
-  PRECICE_DEBUG("Partition output size: {}", outIDs.size());
+  PRECICE_DEBUG("VertexCluster input size: {}", inIDs.size());
+  PRECICE_DEBUG("VertexCluster output size: {}", outIDs.size());
 
   // Otherwise or system is undertermined
   // if (inIDs.size() < dimension + 1)
@@ -162,25 +162,25 @@ Partition<RADIAL_BASIS_FUNCTION_T>::Partition(
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-unsigned int Partition<RADIAL_BASIS_FUNCTION_T>::getNumberOfInputVertices() const
+unsigned int VertexCluster<RADIAL_BASIS_FUNCTION_T>::getNumberOfInputVertices() const
 {
   return inputIDs.size();
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-std::array<double, 3> Partition<RADIAL_BASIS_FUNCTION_T>::getCenterCoords() const
+std::array<double, 3> VertexCluster<RADIAL_BASIS_FUNCTION_T>::getCenterCoords() const
 {
   return _center.rawCoords();
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-bool Partition<RADIAL_BASIS_FUNCTION_T>::isEmpty() const
+bool VertexCluster<RADIAL_BASIS_FUNCTION_T>::isEmpty() const
 {
   return _emptyPartition;
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void Partition<RADIAL_BASIS_FUNCTION_T>::clear()
+void VertexCluster<RADIAL_BASIS_FUNCTION_T>::clear()
 {
   PRECICE_TRACE();
   inputIDs.clear();
@@ -190,7 +190,7 @@ void Partition<RADIAL_BASIS_FUNCTION_T>::clear()
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void Partition<RADIAL_BASIS_FUNCTION_T>::setNormalizedWeight(double normalizedWeight, VertexID id)
+void VertexCluster<RADIAL_BASIS_FUNCTION_T>::setNormalizedWeight(double normalizedWeight, VertexID id)
 {
   PRECICE_ASSERT(outputIDs.size() > 0);
   if (normalizedWeights.size() == 0)
@@ -205,7 +205,7 @@ void Partition<RADIAL_BASIS_FUNCTION_T>::setNormalizedWeight(double normalizedWe
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void Partition<RADIAL_BASIS_FUNCTION_T>::mapConservative(mesh::PtrData inputData, mesh::PtrData outputData)
+void VertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConservative(mesh::PtrData inputData, mesh::PtrData outputData)
 {
   // Empty partitions should not be stored at all
   PRECICE_ASSERT(!_emptyPartition);
@@ -248,7 +248,7 @@ void Partition<RADIAL_BASIS_FUNCTION_T>::mapConservative(mesh::PtrData inputData
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void Partition<RADIAL_BASIS_FUNCTION_T>::mapConsistent(mesh::PtrData inputData, mesh::PtrData outputData)
+void VertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConsistent(mesh::PtrData inputData, mesh::PtrData outputData)
 {
   // Empty partitions should not be stored at all
   PRECICE_ASSERT(!_emptyPartition);
@@ -284,7 +284,7 @@ void Partition<RADIAL_BASIS_FUNCTION_T>::mapConsistent(mesh::PtrData inputData, 
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-double Partition<RADIAL_BASIS_FUNCTION_T>::computeWeight(const mesh::Vertex &v) const
+double VertexCluster<RADIAL_BASIS_FUNCTION_T>::computeWeight(const mesh::Vertex &v) const
 {
   // Assume that the local interpolant and the weighting function are the same
   // TODO: We don't need to reduce the dead coordinates here as the values should reduce anyway
@@ -293,7 +293,7 @@ double Partition<RADIAL_BASIS_FUNCTION_T>::computeWeight(const mesh::Vertex &v) 
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-double Partition<RADIAL_BASIS_FUNCTION_T>::getInterpolatedValue(const VertexID id, unsigned int direction) const
+double VertexCluster<RADIAL_BASIS_FUNCTION_T>::getInterpolatedValue(const VertexID id, unsigned int direction) const
 {
   PRECICE_ASSERT(_hasMappedData);
   PRECICE_ASSERT(outputIDs.contains(id), id);
@@ -303,7 +303,7 @@ double Partition<RADIAL_BASIS_FUNCTION_T>::getInterpolatedValue(const VertexID i
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-bool Partition<RADIAL_BASIS_FUNCTION_T>::isVertexInside(const mesh::Vertex &v) const
+bool VertexCluster<RADIAL_BASIS_FUNCTION_T>::isVertexInside(const mesh::Vertex &v) const
 {
   // TODO: We don't need to reduce the dead coordinates here as the values should reduce anyway
   auto res = computeSquaredDifference(_center.rawCoords(), v.rawCoords(), {{true, true, true}});
@@ -311,7 +311,7 @@ bool Partition<RADIAL_BASIS_FUNCTION_T>::isVertexInside(const mesh::Vertex &v) c
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void Partition<RADIAL_BASIS_FUNCTION_T>::setMappingFinished()
+void VertexCluster<RADIAL_BASIS_FUNCTION_T>::setMappingFinished()
 {
   _hasMappedData = false;
 }
