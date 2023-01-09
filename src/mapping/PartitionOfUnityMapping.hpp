@@ -84,15 +84,14 @@ private:
   /// polynomial treatment of the RBF system
   Polynomial _polynomial;
 
-  // Holds the output vertex -> cluster association. Outer vector has the size of the output mesh and inner vector size of the associated partitions
-  std::vector<std::vector<VertexID>> _partMap;
-
   /// @copydoc Mapping::mapConservative
   virtual void mapConservative(DataID inputDataID, DataID outputDataID) override;
 
   /// @copydoc Mapping::mapConsistent
   virtual void mapConsistent(DataID inputDataID, DataID outputDataID) override;
 
+  /// export the center vertices of all clusters as a mesh with some additional data on it such as vertex count
+  /// only enabled in debug builds and mainly for debugging purpose
   void exportClusterCentersAsVTU(mesh::Mesh &centers);
 };
 
@@ -199,6 +198,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   PRECICE_ASSERT(averageClusterRadius > 0 || inMesh->vertices().size() == 0 || outMesh->vertices().size() == 0);
 
   // Step 2: check, which of the resulting clusters are non-empty and register the cluster centers in a mesh
+  // Here, the VertexCluster computes the matrix decompositions directly in case the cluster is non-empty
   mesh::Mesh centerMesh("clusterCentersMesh", this->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
   auto &     meshVertices = centerMesh.vertices();
 
@@ -236,38 +236,20 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // Find all clusters the output vertex lies in, i.e., find all centers which have the distance of a cluster radius
   // Here: VertexID = clusterID
   // This could also be done on-the-fly in the map data phase, which would require to make the mesh as well as the indexTree member variables.
-  PRECICE_ASSERT(_partMap.empty());
   PRECICE_DEBUG("Computing cluster-vertex association");
-  for (const auto &v : outMesh->vertices()) {
-    auto indices = clusterIndex.getVerticesInsideBox(v, averageClusterRadius);
-    if (indices.size() == 0) {
-      PRECICE_WARN("Output vertex {} could not be assigned to a cluster. This means that the meshes probably do not match well geometry-wise.", v.getCoords());
+  for (const auto &vertex : outMesh->vertices()) {
+    auto clusterIDs = clusterIndex.getVerticesInsideBox(vertex, averageClusterRadius);
+    // Consider the case where we didn't find any partition (meshes don't match very well)
+    if (clusterIDs.size() == 0) {
+      PRECICE_WARN("Output vertex {} could not be assigned to a cluster. This means that the meshes probably do not match well geometry-wise.", vertex.getCoords());
       // TODO: Think about a proper way to handle this case, maybe set all radii to distance(v, closestvertex)?
-      indices.emplace_back(clusterIndex.getClosestVertex(v.getCoords()).index);
+      clusterIDs.emplace_back(clusterIndex.getClosestVertex(vertex.getCoords()).index);
     }
-    _partMap.emplace_back(indices);
-  }
-  // Consistency check
-  PRECICE_ASSERT(_partMap.size() == outMesh->vertices().size());
 
-// Add a VTK export for visualization purposes
-#ifndef NDEBUG
-  exportClusterCentersAsVTU(centerMesh);
-#endif
+    // Step 4: compute the normalized weights of each output vertex for each partition
+    PRECICE_ASSERT(clusterIDs.size() > 0, "No cluster found for vertex {}", vertex.getCoords());
 
-  // Compute the weigths
-  precice::utils::Event e_exec("map.pou.computeMapping.computeWeights", precice::syncMode);
-
-  // Iterate over all vertices and update the output data
-  for (VertexID v = 0; v < outMesh->vertices().size(); ++v) {
-    // 1. Find all clusters the output vertex lies in, i.e., find all centers which have the distance of a partition radius
-    std::vector<VertexID> clusterIDs = _partMap[v];
-    const auto &          vertex     = outMesh->vertices()[v];
-
-    PRECICE_ASSERT(vertex.getID() == v);
-    PRECICE_ASSERT(clusterIDs.size() > 0, "No cluster found for vertex v ", v);
-
-    // 2. In all clusters, gather the weights
+    // Step 4a: compute the weight in each partition individually and store them in 'weights'
     std::vector<double> weights(clusterIDs.size());
     std::transform(clusterIDs.cbegin(), clusterIDs.cend(), weights.begin(), [&](const auto &ids) { return _clusters[ids].computeWeight(vertex); });
     double weightSum = std::accumulate(weights.begin(), weights.end(), static_cast<double>(0.));
@@ -283,10 +265,16 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     PRECICE_DEBUG("V coords {}", vertex.getCoords());
     PRECICE_ASSERT(weightSum > 0);
 
+    // Step 4b: scale the weight using the weight sum and store the normalized weight in all associated clusters
     for (unsigned int i = 0; i < clusterIDs.size(); ++i) {
       _clusters[clusterIDs[i]].setNormalizedWeight(weights[i] / weightSum, vertex.getID());
     }
   }
+
+// Add a VTK export for visualization purposes
+#ifndef NDEBUG
+  exportClusterCentersAsVTU(centerMesh);
+#endif
 
   // Set the computedMapping flag
   this->_hasComputedMapping = true;
@@ -298,7 +286,6 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::clear()
 {
   PRECICE_TRACE();
   _clusters.clear();
-  _partMap.clear();
   // TODO: Don't reset this here
   averageClusterRadius      = 0;
   this->_hasComputedMapping = false;
