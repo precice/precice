@@ -91,19 +91,19 @@ constexpr std::array<bool, 3> computeActiveAxis(const mesh::Mesh &mesh, const In
   constexpr double threshold = 0.4;
 
   // make a pair of the axis and the difference
-  std::vector<std::pair<int, double>> differences;
-  const int                           activeAxis = std::count(axis.begin(), axis.end(), true);
-  differences.reserve(activeAxis);
+  std::array<std::pair<int, double>, 3> differences;
+  const int                             activeAxis = std::count(axis.begin(), axis.end(), true);
 
   // Compute the difference magnitude per direction
   for (unsigned int d = 0; d < axis.size(); ++d) {
-    // Ignore dead axis here
+    // Ignore dead axis here, i.e., apply the max value such that they are sorted on the last position(s)
     if (axis[d] == false) {
-      continue;
+      differences[d] = std::make_pair<int, double>(d, std::numeric_limits<double>::max());
+    } else {
+      auto res = std::minmax_element(IDs.begin(), IDs.end(), [&](const auto &a, const auto &b) { return mesh.vertices()[a].rawCoords()[d] < mesh.vertices()[b].rawCoords()[d]; });
+      // Check if we are above or below the threshold
+      differences[d] = std::make_pair<int, double>(d, std::abs(mesh.vertices()[*res.second].rawCoords()[d] - mesh.vertices()[*res.first].rawCoords()[d]));
     }
-    auto res = std::minmax_element(IDs.begin(), IDs.end(), [&](const auto &a, const auto &b) { return mesh.vertices()[a].rawCoords()[d] < mesh.vertices()[b].rawCoords()[d]; });
-    // Check if we are above or below the threshold
-    differences.emplace_back(std::make_pair<int, double>(d, std::abs(mesh.vertices()[*res.second].rawCoords()[d] - mesh.vertices()[*res.first].rawCoords()[d])));
   }
 
   std::sort(differences.begin(), differences.end(), [](const auto &d1, const auto &d2) { return d1.second < d2.second; });
@@ -375,6 +375,7 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
   Eigen::VectorXd out = _matrixA * p;
 
   if (useRescaling) {
+// requires -fopenmp, which will enable threading in Eigen
 #pragma omp simd
     for (unsigned int i = 0; i < out.size(); ++i)
       out(i) = rescalingCoefficients(i) * out(i);
