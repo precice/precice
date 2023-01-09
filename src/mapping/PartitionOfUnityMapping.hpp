@@ -5,9 +5,9 @@
 
 #include "com/Communication.hpp"
 #include "io/ExportVTU.hpp"
-#include "mapping/CreatePartitioning.hpp"
-#include "mapping/Partition.hpp"
 #include "mapping/RadialBasisFctBaseMapping.hpp"
+#include "mapping/impl/CreateClustering.hpp"
+#include "mapping/impl/VertexCluster.hpp"
 #include "mesh/Filter.hpp"
 #include "precice/types.hpp"
 #include "query/Index.hpp"
