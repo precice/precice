@@ -7,7 +7,7 @@
 #include "io/ExportVTU.hpp"
 #include "mapping/RadialBasisFctBaseMapping.hpp"
 #include "mapping/impl/CreateClustering.hpp"
-#include "mapping/impl/VertexCluster.hpp"
+#include "mapping/impl/SphericalVertexCluster.hpp"
 #include "mesh/Filter.hpp"
 #include "precice/types.hpp"
 #include "query/Index.hpp"
@@ -58,10 +58,10 @@ public:
 private:
   precice::logging::Logger _log{"mapping::PartitionOfUnityMapping"};
 
-  std::vector<VertexCluster<RADIAL_BASIS_FUNCTION_T>> _clusters;
+  std::vector<SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>> _clusters;
 
   // Shape parameter or support radius for the RBF interpolant,
-  // only required for the VertexCluster instantiation
+  // only required for the SphericalVertexCluster instantiation
   const double _parameter;
 
   // Input parameter
@@ -199,8 +199,8 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   for (const auto &c : centerCandidates) {
     // We cannot simply take the vertex from the container, as the ID needs to match the cluster ID
     // That's required for the indexing and asserted below
-    mesh::Vertex                           center(c.getCoords(), meshVertices.size());
-    VertexCluster<RADIAL_BASIS_FUNCTION_T> p(inMesh->getDimensions(), center, averageClusterRadius, _parameter, _deadAxis, _polynomial, _verticesPerCluster, inMesh, outMesh);
+    mesh::Vertex                                    center(c.getCoords(), meshVertices.size());
+    SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T> p(inMesh->getDimensions(), center, averageClusterRadius, _parameter, _deadAxis, _polynomial, _verticesPerCluster, inMesh, outMesh);
 
     // Consider only non-empty clusters
     if (!p.isEmpty()) {

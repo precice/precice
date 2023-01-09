@@ -195,7 +195,7 @@ target_sources(preciceCore
     src/mapping/config/MappingConfiguration.hpp
     src/mapping/impl/BasisFunctions.hpp
     src/mapping/impl/CreateClustering.hpp
-    src/mapping/impl/VertexCluster.hpp
+    src/mapping/impl/SphericalVertexCluster.hpp
     src/math/barycenter.cpp
     src/math/barycenter.hpp
     src/math/constants.hpp
