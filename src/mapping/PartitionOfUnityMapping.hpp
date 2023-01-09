@@ -267,6 +267,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
     // Step 4b: scale the weight using the weight sum and store the normalized weight in all associated clusters
     for (unsigned int i = 0; i < clusterIDs.size(); ++i) {
+      PRECICE_ASSERT(clusterIDs[i] < _clusters.size());
       _clusters[clusterIDs[i]].setNormalizedWeight(weights[i] / weightSum, vertex.getID());
     }
   }
@@ -294,38 +295,33 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::clear()
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(DataID inputDataID, DataID outputDataID)
 {
+  PRECICE_TRACE(inputDataID, outputDataID);
+
   precice::utils::Event e("map.pou.mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
-  PRECICE_TRACE(inputDataID, outputDataID);
   // Execute the actual mapping evaluation in all clusters
-
-  // 1. Reset the output data values as we need to accumulate data across clusters later on
+  // 1. Reset all output data values as we accumulate data in all clusters independent
   output()->data(outputDataID)->values().setZero();
 
-  // 2. Iterate over all clusters and accumulate the result
+  // 2. Iterate over all clusters and accumulate the result in the output data
   std::for_each(_clusters.begin(), _clusters.end(), [&](auto &p) { p.mapConservative(input()->data(inputDataID),
                                                                                      output()->data(outputDataID)); });
-  // Set mapping finished
-  std::for_each(_clusters.begin(), _clusters.end(), [&](auto &p) { p.setMappingFinished(); });
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inputDataID, DataID outputDataID)
 {
-  precice::utils::Event e("map.pou.mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
-
-  // More detailed measurements
   PRECICE_TRACE(inputDataID, outputDataID);
 
-  // 1. Reset the output data values as we need to accumulate data across clusters later on
+  precice::utils::Event e("map.pou.mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+
+  // Execute the actual mapping evaluation in all clusters
+  // 1. Reset all output data values as we accumulate data in all clusters independent
   output()->data(outputDataID)->values().setZero();
 
   // 2. Execute the actual mapping evaluation in all vertex clusters and acccumulate the data
   std::for_each(_clusters.begin(), _clusters.end(), [&](auto &p) { p.mapConsistent(input()->data(inputDataID),
                                                                                    output()->data(outputDataID)); });
-
-  // Set mapping finished
-  std::for_each(_clusters.begin(), _clusters.end(), [&](auto &p) { p.setMappingFinished(); });
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
