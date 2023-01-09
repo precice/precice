@@ -13,11 +13,11 @@
 
 namespace precice {
 namespace mapping {
-namespace partitioner {
+namespace impl {
 
 using Vertices = std::vector<mesh::Vertex>;
 namespace {
-precice::logging::Logger _log{"partitioner::createUniformBlockPartitioning"};
+precice::logging::Logger _log{"impl::createUniformBlockPartitioning"};
 
 // Formula doesn't correspond to a z curve right now, but it works
 constexpr VertexID zCurve(std::array<unsigned int, 3> ids, std::array<unsigned int, 3> nCells)
@@ -459,6 +459,6 @@ inline std::tuple<double, Vertices> createUniformBlockPartitioning2D(mesh::PtrMe
   return {averagePartitionRadius, centers};
 }
 
-} // namespace partitioner
+} // namespace impl
 } // namespace mapping
 } // namespace precice
