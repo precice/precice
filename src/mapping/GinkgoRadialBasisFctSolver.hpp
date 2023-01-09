@@ -19,7 +19,7 @@
 // Declare Ginkgo Kernels
 GKO_DECLARE_UNIFIED(template <typename ValueType, typename EvalFunctionType> void create_rbf_system_matrix(
     std::shared_ptr<const DefaultExecutor> exec,
-    const std::size_t n1, const std::size_t n2, ValueType *mtx, ValueType *supportPoints,
+    const std::size_t n1, const std::size_t n2, const std::size_t dataDimensionality, const std::array<bool, 3> activeAxis, ValueType *mtx, ValueType *supportPoints,
     ValueType *targetPoints, EvalFunctionType f, const std::array<ValueType, 3> rbf_params,
     const bool addPolynomial, const unsigned int extraDims = 0));
 
@@ -255,8 +255,8 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
 
   // Launch RBF fill kernel on device
   precice::utils::Event fillEvent("map.rbf.ginkgo.fillMatrices", precice::syncMode);
-  this->_deviceExecutor->run(make_rbf_fill_operation(this->_rbfSystemMatrix->get_size()[0], this->_rbfSystemMatrix->get_size()[1], this->_rbfSystemMatrix->get_values(), inputVertices->get_values(), inputVertices->get_values(), basisFunction.getFunctor(), basisFunction.getFunctionParameters(), polynomial == Polynomial::ON, polyparams));
-  this->_deviceExecutor->run(make_rbf_fill_operation(this->_matrixA->get_size()[0], this->_matrixA->get_size()[1], this->_matrixA->get_values(), inputVertices->get_values(), outputVertices->get_values(), basisFunction.getFunctor(), basisFunction.getFunctionParameters(), polynomial == Polynomial::ON, polyparams));
+  this->_deviceExecutor->run(make_rbf_fill_operation(this->_rbfSystemMatrix->get_size()[0], this->_rbfSystemMatrix->get_size()[1], inputVertices->get_size()[1], activeAxis, this->_rbfSystemMatrix->get_values(), inputVertices->get_values(), inputVertices->get_values(), basisFunction.getFunctor(), basisFunction.getFunctionParameters(), Polynomial::ON == polynomial, polyparams)); // polynomial evaluates to true only if ON is set
+  this->_deviceExecutor->run(make_rbf_fill_operation(this->_matrixA->get_size()[0], this->_matrixA->get_size()[1], inputVertices->get_size()[1], activeAxis, this->_matrixA->get_values(), inputVertices->get_values(), outputVertices->get_values(), basisFunction.getFunctor(), basisFunction.getFunctionParameters(), Polynomial::ON == polynomial, polyparams));
 
   // Wait for the kernels to finish
   this->_deviceExecutor->synchronize();
