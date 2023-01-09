@@ -171,7 +171,6 @@ target_sources(preciceCore
     src/m2n/config/M2NConfiguration.hpp
     src/mapping/BarycentricBaseMapping.cpp
     src/mapping/BarycentricBaseMapping.hpp
-    src/mapping/CreatePartitioning.hpp
     src/mapping/LinearCellInterpolationMapping.cpp
     src/mapping/LinearCellInterpolationMapping.hpp
     src/mapping/Mapping.cpp
@@ -184,7 +183,6 @@ target_sources(preciceCore
     src/mapping/NearestNeighborMapping.hpp
     src/mapping/NearestProjectionMapping.cpp
     src/mapping/NearestProjectionMapping.hpp
-    src/mapping/Partition.hpp
     src/mapping/PartitionOfUnityMapping.hpp
     src/mapping/PetRadialBasisFctMapping.hpp
     src/mapping/Polation.cpp
@@ -196,6 +194,8 @@ target_sources(preciceCore
     src/mapping/config/MappingConfiguration.cpp
     src/mapping/config/MappingConfiguration.hpp
     src/mapping/impl/BasisFunctions.hpp
+    src/mapping/impl/CreateClustering.hpp
+    src/mapping/impl/VertexCluster.hpp
     src/math/barycenter.cpp
     src/math/barycenter.hpp
     src/math/constants.hpp

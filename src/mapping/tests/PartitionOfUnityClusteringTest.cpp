@@ -6,7 +6,7 @@
 #include <utility>
 #include <vector>
 #include "logging/Logger.hpp"
-#include "mapping/CreatePartitioning.hpp"
+#include "mapping/impl/CreateClustering.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -22,7 +22,7 @@ using namespace precice::testing;
 using precice::testing::TestContext;
 
 BOOST_AUTO_TEST_SUITE(MappingTests)
-BOOST_AUTO_TEST_SUITE(PartitionOfUnityPartitioning)
+BOOST_AUTO_TEST_SUITE(PartitionOfUnityClustering)
 
 BOOST_AUTO_TEST_SUITE(Serial)
 
