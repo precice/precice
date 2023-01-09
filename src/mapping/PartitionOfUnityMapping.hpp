@@ -5,7 +5,6 @@
 
 #include "com/Communication.hpp"
 #include "io/ExportVTU.hpp"
-#include "mapping/RadialBasisFctBaseMapping.hpp"
 #include "mapping/impl/CreateClustering.hpp"
 #include "mapping/impl/SphericalVertexCluster.hpp"
 #include "mesh/Filter.hpp"
@@ -20,7 +19,10 @@ extern bool syncMode;
 namespace mapping {
 
 /**
- * @brief Mapping using partition of unity decomposition strategies
+ * Mapping using partition of unity decomposition strategies: The class here inherits from the Mapping
+ * class and orchestrates the partitions (called vertex clusters) in order to represent a partition of unity.
+ * This means in particular that the class computes the weights for the evaluation vertices and the necessary
+ * association between evaluation vertices and the clustering.
  */
 template <typename RADIAL_BASIS_FUNCTION_T>
 class PartitionOfUnityMapping : public Mapping {
@@ -30,9 +32,9 @@ public:
    *
    * @param[in] constraint Specifies mapping to be consistent or conservative.
    * @param[in] dimension Dimensionality of the meshes
-   * @param[in] parameter shape parameter or support radius of the interpolation RBF
-   * @param[in] verticesPerCluster Estimate for the number of vertices to be clustered together
-   * @param[in] relativeOverlap Overlap between clusters, where 1 would correspnd to a complete overlap, 0 to distance of 2 x radius between clusters
+   * @param[in] parameter shape parameter or support radius of the RB function
+   * @param[in] verticesPerCluster Target number of vertices to be clustered together
+   * @param[in] relativeOverlap Overlap between clusters, where 1 would correspond to a complete overlap, 0 to distance of 2 x radius between clusters
    */
   PartitionOfUnityMapping(
       Mapping::Constraint constraint,
@@ -56,12 +58,15 @@ public:
   virtual void tagMeshSecondRound() override;
 
 private:
+  /// logger, as usual
   precice::logging::Logger _log{"mapping::PartitionOfUnityMapping"};
 
+  /// main data container storing all the clusters, which need to be solved individually
   std::vector<SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>> _clusters;
 
   // Shape parameter or support radius for the RBF interpolant,
   // only required for the SphericalVertexCluster instantiation
+  // TODO: Rename
   const double _parameter;
 
   // Input parameter
@@ -76,6 +81,7 @@ private:
   /// has currently only dim x false entries, as integrated polynomials are irrelevant
   std::vector<bool> _deadAxis;
 
+  /// polynomial treatment of the RBF system
   Polynomial _polynomial;
 
   // Holds the output vertex -> cluster association. Outer vector has the size of the output mesh and inner vector size of the associated partitions
@@ -308,8 +314,6 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(DataID in
 
   // 1. Reset the output data values as we need to accumulate data across clusters later on
   output()->data(outputDataID)->values().setZero();
-
-  PRECICE_ASSERT(_partMap.size() == this->input()->vertices().size(), _partMap.size(), this->input()->vertices().size());
 
   // 2. Iterate over all clusters and accumulate the result
   std::for_each(_clusters.begin(), _clusters.end(), [&](auto &p) { p.mapConservative(input()->data(inputDataID),
