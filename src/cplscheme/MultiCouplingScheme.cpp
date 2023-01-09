@@ -111,10 +111,15 @@ void MultiCouplingScheme::exchangeInitialData()
       }
       checkDataHasBeenReceived();
     } else {
+      DataMap uniqueReceiveData;
       for (auto &receiveExchange : _receiveDataVector | boost::adaptors::map_values) {
-        initializeZeroReceiveData(receiveExchange);
+        for (auto &pair : receiveExchange) {
+          uniqueReceiveData[pair.first] = pair.second;
+        }
       }
+      initializeZeroReceiveData(uniqueReceiveData);
     }
+
     if (sendsInitializedData()) {
       for (auto &sendExchange : _sendDataVector) {
         sendData(_m2ns[sendExchange.first], sendExchange.second);
@@ -126,24 +131,43 @@ void MultiCouplingScheme::exchangeInitialData()
         sendData(_m2ns[sendExchange.first], sendExchange.second);
       }
     }
+
+    // @todo would be better to only use the call of clearTimeStepsStorage at the end of this function, but this breaks for Integration/Serial/MultiCoupling/MultiCouplingThreeSolvers3
+    for (auto &sendExchange : _sendDataVector) {
+      for (const auto &data : sendExchange.second | boost::adaptors::map_values) {
+        data->clearTimeStepsStorage(); // @todo really needed? receiveData should take care of clearing on its own.
+      }
+    }
+
     if (receivesInitializedData()) {
       for (auto &receiveExchange : _receiveDataVector) {
         receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
       }
       checkDataHasBeenReceived();
     } else {
+      DataMap uniqueReceiveData;
       for (auto &receiveExchange : _receiveDataVector | boost::adaptors::map_values) {
-        initializeZeroReceiveData(receiveExchange);
+        for (auto &pair : receiveExchange) {
+          uniqueReceiveData[pair.first] = pair.second;
+        }
       }
+      initializeZeroReceiveData(uniqueReceiveData);
     }
   }
 
-  for (auto &sendExchange : _sendDataVector) {
-    for (const auto &data : sendExchange.second | boost::adaptors::map_values) {
-      data->clearTimeStepsStorage();
+  PRECICE_DEBUG("Initial data is exchanged in MultiCouplingScheme");
+}
+
+bool MultiCouplingScheme::hasReceiveData(std::string dataName)
+{
+  for (auto &receiveExchange : _receiveDataVector | boost::adaptors::map_values) {
+    for (auto &receiveData : receiveExchange | boost::adaptors::map_values) {
+      if (receiveData->getDataName() == dataName) {
+        return true;
+      }
     }
   }
-  PRECICE_DEBUG("Initial data is exchanged in MultiCouplingScheme");
+  return false;
 }
 
 void MultiCouplingScheme::overwriteReceiveData(std::string dataName, double relativeDt)
@@ -151,6 +175,7 @@ void MultiCouplingScheme::overwriteReceiveData(std::string dataName, double rela
   bool mustOverride = true;
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
   PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
+  // @todo work with _cplData and move into BaseCouplingScheme
   for (auto &receiveExchange : _receiveDataVector | boost::adaptors::map_values) {
     for (auto &receiveData : receiveExchange | boost::adaptors::map_values) {
       if (receiveData->getDataName() == dataName) {
@@ -166,6 +191,7 @@ void MultiCouplingScheme::loadReceiveDataFromStorage(std::string dataName, doubl
 {
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
   PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
+  // @todo work with _cplData and move into BaseCouplingScheme
   for (auto &receiveExchange : _receiveDataVector | boost::adaptors::map_values) {
     for (auto &receiveData : receiveExchange | boost::adaptors::map_values) {
       if (receiveData->getDataName() == dataName) {
@@ -175,6 +201,14 @@ void MultiCouplingScheme::loadReceiveDataFromStorage(std::string dataName, doubl
     }
   }
   PRECICE_ASSERT(false, "Data with name not found", dataName);
+}
+
+// @todo may be moved into BaseCouplingScheme, but should be done consistently with MultiCouplingScheme::overwriteReceiveData and MultiCouplingScheme::loadReceiveDataFromStorage
+void MultiCouplingScheme::clearAllDataStorage()
+{
+  for (auto &data : _cplData | boost::adaptors::map_values) {
+    data->clearTimeStepsStorage();
+  }
 }
 
 std::vector<double> MultiCouplingScheme::getReceiveTimes(std::string dataName)
@@ -231,6 +265,10 @@ void MultiCouplingScheme::exchangeSecondData()
     }
   } else {
     receiveConvergence(_m2ns[_controller]);
+    for (auto &receiveExchange : _receiveDataVector) {
+      receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
+    }
+    checkDataHasBeenReceived();
   }
 
   if (hasConverged()) {
@@ -245,17 +283,6 @@ void MultiCouplingScheme::exchangeSecondData()
   if (_isController) {
     for (auto &sendExchange : _sendDataVector) {
       sendData(_m2ns[sendExchange.first], sendExchange.second);
-    }
-  } else {
-    for (auto &receiveExchange : _receiveDataVector) {
-      receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
-    }
-    checkDataHasBeenReceived();
-  }
-
-  for (auto &sendExchange : _sendDataVector | boost::adaptors::map_values) {
-    for (auto &sendData : sendExchange | boost::adaptors::map_values) {
-      sendData->clearTimeStepsStorage();
     }
   }
 }

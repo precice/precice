@@ -151,6 +151,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     sendCouplingData->values() = Eigen::VectorXd::Constant(1, 4.0);
     cplScheme.markActionFulfilled(CouplingScheme::Action::InitializeData);
     cplScheme.initialize(0.0, 0);
+    cplScheme.clearAllDataStorage();
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(testing::equals(receiveCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
     BOOST_TEST(receiveCouplingData->getPreviousIterationSize() == 3);
@@ -169,6 +170,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
       cplScheme.secondExchange();
+      cplScheme.clearAllDataStorage();
       BOOST_TEST(cplScheme.hasDataBeenReceived());
     }
   } else {
@@ -185,6 +187,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(sendCouplingData->values().size() == 3);
     BOOST_TEST(sendCouplingData->getPreviousIterationSize() == 3);
     cplScheme.initialize(0.0, 0);
+    cplScheme.clearAllDataStorage();
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 4.0));
     BOOST_TEST(receiveCouplingData->getPreviousIterationSize() == 1);
@@ -201,6 +204,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
       cplScheme.secondExchange();
+      cplScheme.clearAllDataStorage();
       BOOST_TEST(cplScheme.hasDataBeenReceived());
       if (cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint)) {
         cplScheme.markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
@@ -382,6 +386,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
   cplScheme.addConvergenceMeasure(convergenceDataIndex, false, false, minIterationConvMeasure1, true);
 
   cplScheme.initialize(0.0, 1);
+  cplScheme.clearAllDataStorage();
 
   Eigen::VectorXd v(1); // buffer for data
 
@@ -440,6 +445,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
     cplScheme.firstExchange();
     cplScheme.secondSynchronization();
     cplScheme.secondExchange();
+    cplScheme.clearAllDataStorage();
 
     if (i < maxIterations - 1) {
       BOOST_TEST(not cplScheme.isTimeWindowComplete());
@@ -495,6 +501,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
     cplScheme.firstExchange();
     cplScheme.secondSynchronization();
     cplScheme.secondExchange();
+    cplScheme.clearAllDataStorage();
 
     if (i < maxIterations - 1) {
       BOOST_TEST(not cplScheme.isTimeWindowComplete());
@@ -624,6 +631,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
   if (context.isNamed(first)) {
     // first participant receives initial data = 4 (see above)
     cplScheme.initialize(0.0, 1);
+    cplScheme.clearAllDataStorage();
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(mesh->data(receiveDataIndex)->values().size() == 1);
     BOOST_TEST(testing::equals(mesh->data(receiveDataIndex)->values()(0), 4.0));
@@ -633,6 +641,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
   } else {
     // second participant result no initial data = 0
     cplScheme.initialize(0.0, 1);
+    cplScheme.clearAllDataStorage();
     BOOST_TEST(not cplScheme.hasDataBeenReceived());
     BOOST_TEST(context.isNamed(second));
     BOOST_TEST(mesh->data(receiveDataIndex)->values().size() == 1);
@@ -694,6 +703,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
     cplScheme.firstExchange();
     cplScheme.secondSynchronization();
     cplScheme.secondExchange();
+    cplScheme.clearAllDataStorage();
 
     if (i < maxIterations - 1) {
       BOOST_TEST(not cplScheme.isTimeWindowComplete());
@@ -749,6 +759,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
     cplScheme.firstExchange();
     cplScheme.secondSynchronization();
     cplScheme.secondExchange();
+    cplScheme.clearAllDataStorage();
 
     if (i < maxIterations - 1) {
       BOOST_TEST(not cplScheme.isTimeWindowComplete());

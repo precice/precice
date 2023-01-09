@@ -99,10 +99,6 @@ void SerialCouplingScheme::exchangeInitialData()
     receiveData(getM2N(), getReceiveData());
     checkDataHasBeenReceived();
   }
-
-  for (const auto &data : getSendData() | boost::adaptors::map_values) {
-    data->clearTimeStepsStorage();
-  }
 }
 
 void SerialCouplingScheme::exchangeFirstData()
@@ -133,9 +129,12 @@ void SerialCouplingScheme::exchangeSecondData()
     PRECICE_DEBUG("Receiving data...");
     receiveData(getM2N(), getReceiveData());
     checkDataHasBeenReceived();
+  } else {
+    // needed for moveTimeStepsStorage of receive data, it will be overwritten anyway, but otherwise moveTimeStepsStorage will complain
+    initializeZeroReceiveData(getReceiveData());
   }
 
-  if (hasConverged()) {
+  if (hasConverged() || isExplicitCouplingScheme()) {
     // first participant received converged result of this window
     // second participant will receive result for next window
     for (const auto &data : _cplData | boost::adaptors::map_values) {
@@ -154,10 +153,6 @@ void SerialCouplingScheme::exchangeSecondData()
       receiveData(getM2N(), getReceiveData());
       checkDataHasBeenReceived();
     }
-  }
-
-  for (const DataMap::value_type &pair : getSendData()) {
-    pair.second->clearTimeStepsStorage();
   }
 }
 

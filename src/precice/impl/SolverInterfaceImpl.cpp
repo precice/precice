@@ -333,9 +333,9 @@ double SolverInterfaceImpl::initialize()
   _meshLock.lockAll();
 
   if (_couplingScheme->sendsInitializedData()) {
-    performDataActions({action::Action::WRITE_MAPPING_PRIOR}, 0.0);
+    performWriteDataActions({action::Action::WRITE_MAPPING_PRIOR}, 0.0);
     mapWrittenData();
-    performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0);
+    performWriteDataActions({action::Action::WRITE_MAPPING_POST}, 0.0);
   }
 
   PRECICE_DEBUG("Initialize coupling schemes");
@@ -353,6 +353,9 @@ double SolverInterfaceImpl::initialize()
 
   _state = State::Initialized;
   PRECICE_INFO(_couplingScheme->printCouplingState());
+
+  // Not sufficient to only clear data storages that belong to _accessor->readDataContexts()! We need to clear all DataContexts, even the ones that are not read data
+  _couplingScheme->clearAllDataStorage();
 
   // determine dt at the very end of the method to get the final value, even if first participant method is used (see above).
   double dt = _couplingScheme->getNextTimestepMaxLength();
@@ -396,9 +399,9 @@ double SolverInterfaceImpl::advance(
   double time = _couplingScheme->getTime();
 
   // always perform mapping, because we will store all mapped data, if subcycling is used.
-  performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time);
+  performWriteDataActions({action::Action::WRITE_MAPPING_PRIOR}, time);
   mapWrittenData();
-  performDataActions({action::Action::WRITE_MAPPING_POST}, time);
+  performWriteDataActions({action::Action::WRITE_MAPPING_POST}, time);
 
   advanceCouplingScheme();
 
@@ -424,6 +427,11 @@ double SolverInterfaceImpl::advance(
   handleExports();
 
   resetWrittenData();
+
+  // Not sufficient to only clear data storages that belong to _accessor->readDataContexts()! We need to clear all DataContexts, even the ones that are not read data
+  if (_couplingScheme->hasDataBeenReceived()) {
+    _couplingScheme->clearAllDataStorage();
+  }
 
   _meshLock.lockAll();
   solverEvent.start(precice::syncMode);
@@ -1861,6 +1869,18 @@ void SolverInterfaceImpl::performDataActions(
   if (_couplingScheme->hasDataBeenReceived()) {
     for (auto &context : _accessor->readDataContexts()) {
       _couplingScheme->overwriteReceiveData(context.getDataName(), time::Storage::WINDOW_END);
+    }
+  }
+}
+
+void SolverInterfaceImpl::performWriteDataActions(
+    const std::set<action::Action::Timing> &timings,
+    double                                  time)
+{
+  PRECICE_TRACE();
+  for (action::PtrAction &action : _accessor->actions()) {
+    if (timings.find(action->getTiming()) != timings.end()) {
+      action->performAction(time);
     }
   }
 }

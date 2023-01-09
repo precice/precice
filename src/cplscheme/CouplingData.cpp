@@ -117,6 +117,7 @@ std::vector<int> CouplingData::getVertexOffsets()
 
 void CouplingData::initializeStorage(Eigen::VectorXd data)
 {
+  clearTimeStepsStorage(false); // only required for MultiCouplingScheme, if participant that is not the controller has send data (with data) which is also non-initialized receive data. See DataBC in Integration/Serial/MultiCoupling/MultiCouplingThreeSolvers3.
   storeValuesAtTime(time::Storage::WINDOW_START, data);
   storeValuesAtTime(time::Storage::WINDOW_END, data);
 }

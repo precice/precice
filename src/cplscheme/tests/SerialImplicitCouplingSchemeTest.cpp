@@ -74,6 +74,7 @@ void runCoupling(
 
   if (nameParticipant == nameParticipant0) {
     cplScheme.initialize(0.0, 1);
+    cplScheme.clearAllDataStorage();
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
     BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
@@ -93,6 +94,7 @@ void runCoupling(
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
       cplScheme.secondExchange();
+      cplScheme.clearAllDataStorage();
       iterationCount++;
       // A coupling timestep is complete, when the coupling iterations are
       // globally converged and if subcycling steps have filled one global
@@ -141,6 +143,7 @@ void runCoupling(
     BOOST_TEST(testing::equals(computedTimesteps, 3));
   } else if (nameParticipant == nameParticipant1) {
     cplScheme.initialize(0.0, 1);
+    cplScheme.clearAllDataStorage();
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
     BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
@@ -163,6 +166,7 @@ void runCoupling(
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
       cplScheme.secondExchange();
+      cplScheme.clearAllDataStorage();
       iterationCount++;
       // A coupling timestep is complete, when the coupling iterations are
       // globally converged and if subcycling steps have filled one global
@@ -243,6 +247,7 @@ void runCouplingWithSubcycling(
   if (nameParticipant == nameParticipant0) {
     iterationCount++; // different handling due to subcycling
     cplScheme.initialize(0.0, 1);
+    cplScheme.clearAllDataStorage();
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
     BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
@@ -264,6 +269,7 @@ void runCouplingWithSubcycling(
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
       cplScheme.secondExchange();
+      cplScheme.clearAllDataStorage();
       // A coupling timestep is complete, when the coupling iterations are
       // globally converged and if subcycling steps have filled one global
       // timestep.
@@ -326,6 +332,7 @@ void runCouplingWithSubcycling(
   else if (nameParticipant == nameParticipant1) {
     iterationCount++; // different handling due to subcycling
     cplScheme.initialize(0.0, 1);
+    cplScheme.clearAllDataStorage();
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
     BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
@@ -348,6 +355,7 @@ void runCouplingWithSubcycling(
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
       cplScheme.secondExchange();
+      cplScheme.clearAllDataStorage();
       computedTimestepLength =
           cplScheme.getNextTimestepMaxLength() < preferredTimestepLength
               ? cplScheme.getNextTimestepMaxLength()
@@ -625,6 +633,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
   cplScheme.addConvergenceMeasure(convergenceDataIndex, false, false, minIterationConvMeasure1, true);
 
   cplScheme.initialize(0.0, 1);
+  cplScheme.clearAllDataStorage();
 
   Eigen::VectorXd v(1); // buffer for data
 
@@ -675,6 +684,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
     cplScheme.firstExchange();
     cplScheme.secondSynchronization();
     cplScheme.secondExchange();
+    cplScheme.clearAllDataStorage();
 
     if (i < maxIterations - 1) {
       BOOST_TEST(not cplScheme.isTimeWindowComplete());
@@ -722,6 +732,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
     cplScheme.firstExchange();
     cplScheme.secondSynchronization();
     cplScheme.secondExchange();
+    cplScheme.clearAllDataStorage();
 
     if (i < maxIterations - 1) {
       BOOST_TEST(not cplScheme.isTimeWindowComplete());
@@ -851,6 +862,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
   if (context.isNamed(first)) {
     // first participant receives initial data = 4 (see above)
     cplScheme.initialize(0.0, 1);
+    cplScheme.clearAllDataStorage();
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(mesh->data(receiveDataIndex)->values().size() == 1);
     BOOST_TEST(testing::equals(mesh->data(receiveDataIndex)->values()(0), 4.0));
@@ -860,6 +872,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
   } else {
     // second participant result written by first participant in its first window = 1 (see below)
     cplScheme.initialize(0.0, 1);
+    cplScheme.clearAllDataStorage();
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(context.isNamed(second));
     BOOST_TEST(mesh->data(receiveDataIndex)->values().size() == 1);
@@ -913,6 +926,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
     cplScheme.firstExchange();
     cplScheme.secondSynchronization();
     cplScheme.secondExchange();
+    cplScheme.clearAllDataStorage();
 
     if (i < maxIterations - 1) {
       BOOST_TEST(not cplScheme.isTimeWindowComplete());
@@ -960,6 +974,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
     cplScheme.firstExchange();
     cplScheme.secondSynchronization();
     cplScheme.secondExchange();
+    cplScheme.clearAllDataStorage();
 
     if (i < maxIterations - 1) {
       BOOST_TEST(not cplScheme.isTimeWindowComplete());
@@ -1303,6 +1318,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
 
     BOOST_TEST(Fixture::isImplicitCouplingScheme(cplScheme));
     cplScheme.initialize(0.0, 1);
+    cplScheme.clearAllDataStorage();
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     // ensure that initial data was read
     BOOST_TEST(receiveCouplingData->getSize() == 3);
@@ -1329,6 +1345,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
       cplScheme.secondExchange();
+      cplScheme.clearAllDataStorage();
       BOOST_TEST(cplScheme.hasDataBeenReceived());
     }
   } else {
@@ -1347,6 +1364,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(sendCouplingData->getPreviousIterationSize() == 3); // here, previousIteration is correctly initialized, see above
     BOOST_TEST(testing::equals(sendCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
     cplScheme.initialize(0.0, 1);
+    cplScheme.clearAllDataStorage();
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(receiveCouplingData->getSize() == 1);
     BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 4.0));
@@ -1365,6 +1383,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
       cplScheme.secondExchange();
+      cplScheme.clearAllDataStorage();
       if (cplScheme.isCouplingOngoing()) {
         BOOST_TEST(cplScheme.hasDataBeenReceived());
       }

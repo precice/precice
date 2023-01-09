@@ -70,9 +70,13 @@ public:
 
   bool hasAnySendData() override final;
 
+  bool hasReceiveData(std::string dataName) final override;
+
   void overwriteReceiveData(std::string dataName, double relativeDt) override final;
 
   void loadReceiveDataFromStorage(std::string dataName, double relativeDt) override final;
+
+  void clearAllDataStorage() override final;
 
   std::vector<double> getReceiveTimes(std::string dataName) override final;
 

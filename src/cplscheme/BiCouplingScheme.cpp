@@ -154,6 +154,18 @@ CouplingData *BiCouplingScheme::getReceiveData(
   return nullptr;
 }
 
+CouplingData *BiCouplingScheme::getReceiveData(
+    std::string dataName)
+{
+  PRECICE_TRACE(dataName);
+  for (auto &data : _receiveData | boost::adaptors::map_values) {
+    if (data->getDataName() == dataName) {
+      return data.get();
+    }
+  }
+  return nullptr;
+}
+
 m2n::PtrM2N BiCouplingScheme::getM2N() const
 {
   PRECICE_ASSERT(_m2n);
@@ -170,31 +182,48 @@ bool BiCouplingScheme::hasSendData(DataID dataID)
   return getSendData(dataID) != nullptr;
 }
 
+bool BiCouplingScheme::hasReceiveData(std::string dataName)
+{
+  return getReceiveData(dataName) != nullptr;
+}
+
 void BiCouplingScheme::overwriteReceiveData(std::string dataName, double relativeDt)
 {
   bool mustOverwrite = true;
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
   PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
+  // @todo work with _cplData and move into BaseCouplingScheme
+  // @todo use getReceiveData(dataName)?
   for (auto &receiveData : _receiveData | boost::adaptors::map_values) {
     if (receiveData->getDataName() == dataName) {
       receiveData->storeValuesAtTime(relativeDt, receiveData->values(), mustOverwrite);
       return;
     }
   }
-  PRECICE_ASSERT(false, "Data with name not found", dataName);
+  // PRECICE_ASSERT(false, "Data with name not found", dataName);  // @todo reasonable, but problematic with Integration/Serial/SummationActionTwoSources
 }
 
 void BiCouplingScheme::loadReceiveDataFromStorage(std::string dataName, double relativeDt)
 {
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
   PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
+  // @todo work with _cplData and move into BaseCouplingScheme
+  // @todo use getReceiveData(dataName)?
   for (auto &receiveData : _receiveData | boost::adaptors::map_values) {
     if (receiveData->getDataName() == dataName) {
       receiveData->values() = receiveData->getValuesAtTime(relativeDt);
       return;
     }
   }
-  PRECICE_ASSERT(false, "Data with name not found", dataName);
+  // PRECICE_ASSERT(false, "Data with name not found", dataName);  // @todo reasonable, but problematic with Integration/Serial/SummationActionTwoSources
+}
+
+// @todo may be moved into BaseCouplingScheme, but should be done consistently with BiCouplingScheme::overwriteReceiveData and BiCouplingScheme::loadReceiveDataFromStorage
+void BiCouplingScheme::clearAllDataStorage()
+{
+  for (auto &data : _cplData | boost::adaptors::map_values) {
+    data->clearTimeStepsStorage();
+  }
 }
 
 void BiCouplingScheme::storeSendValuesAtTime(double relativeDt)

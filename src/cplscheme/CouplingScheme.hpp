@@ -163,6 +163,10 @@ public:
   /// @brief Returns true, if data has been exchanged in last call of advance().
   virtual bool hasDataBeenReceived() const = 0;
 
+  /// Returns true if the scheme has a CouplingData in it's received data with the given dataName
+  virtual bool hasReceiveData(std::string dataName) = 0;
+
+  // @todo allow for all data, not only for receive? Makes it more flexible.
   /**
    * @brief overwrites data at time stamp in CouplingData with given data from mesh values
    *
@@ -171,6 +175,7 @@ public:
    */
   virtual void overwriteReceiveData(std::string dataName, double relativeDt) = 0;
 
+  // @todo allow for all data, not only for receive? Makes it more flexible.
   /**
    * @brief loads time step data for given time from CouplingData into mesh values
    *
@@ -178,6 +183,11 @@ public:
    * @param relativeDt relative dt associated with the data.
    */
   virtual void loadReceiveDataFromStorage(std::string dataName, double relativeDt) = 0;
+
+  /**
+   * @brief clear storages for all coupling data of this coupling scheme
+   */
+  virtual void clearAllDataStorage() = 0;
 
   /**
    * @brief Get the times associated with time steps in ascending order

@@ -50,10 +50,6 @@ void ParallelCouplingScheme::exchangeInitialData()
       sendData(getM2N(), getSendData());
     }
   }
-
-  for (const auto &data : getSendData() | boost::adaptors::map_values) {
-    data->clearTimeStepsStorage();
-  }
 }
 
 void ParallelCouplingScheme::exchangeFirstData()
@@ -80,7 +76,13 @@ void ParallelCouplingScheme::exchangeSecondData()
     }
   }
 
-  if (hasConverged()) {
+  if (doesFirstStep()) {
+    PRECICE_DEBUG("Receiving data...");
+    receiveData(getM2N(), getReceiveData());
+    checkDataHasBeenReceived();
+  }
+
+  if (hasConverged() || isExplicitCouplingScheme()) {
     for (const auto &data : _cplData | boost::adaptors::map_values) {
       data->moveTimeStepsStorage();
     }
@@ -89,17 +91,9 @@ void ParallelCouplingScheme::exchangeSecondData()
     storeIteration();
   }
 
-  if (doesFirstStep()) { // first participant
-    PRECICE_DEBUG("Receiving data...");
-    receiveData(getM2N(), getReceiveData());
-    checkDataHasBeenReceived();
-  } else { // second participant
+  if (!doesFirstStep()) { // second participant
     PRECICE_DEBUG("Sending data...");
     sendData(getM2N(), getSendData());
-  }
-
-  for (const DataMap::value_type &pair : getSendData()) {
-    pair.second->clearTimeStepsStorage();
   }
 }
 

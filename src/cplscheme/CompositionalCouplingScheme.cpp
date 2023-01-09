@@ -156,19 +156,53 @@ bool CompositionalCouplingScheme::hasDataBeenReceived() const
   return hasBeenReceived;
 }
 
+bool CompositionalCouplingScheme::hasReceiveData(std::string dataName)
+{
+  PRECICE_TRACE(dataName);
+  auto schemes = allSchemes();
+  bool has     = std::any_of(schemes.begin(), schemes.end(),
+                         [dataName](const auto &cpl) { return cpl->hasReceiveData(dataName); });
+  PRECICE_DEBUG("return {}", has);
+  return has;
+}
+
 void CompositionalCouplingScheme::overwriteReceiveData(std::string dataName, double relativeDt)
 {
   PRECICE_TRACE();
+  // @todo could be more useful to add private function returning BaseCouplingScheme* CompositionalCouplingScheme::getSchemeWithReceiveData(std::string dataName), because we will need this also in other functions.
+  bool found = false;
   for (auto scheme : allSchemes()) {
-    scheme->overwriteReceiveData(dataName, relativeDt);
+    if (scheme->hasReceiveData(dataName)) {
+      PRECICE_DEBUG("Found {}", dataName);
+      PRECICE_ASSERT(found == false, "CompositionCouplingScheme of participant should only have one receive data with the given name. Found multiple.", dataName)
+      found = true;
+      scheme->overwriteReceiveData(dataName, relativeDt); // @todo commented out because of problems in Integration/Serial/ThreeSolvers
+    }
   }
+  // PRECICE_ASSERT(found == true, "Did not find receive data with given name.", dataName); // @todo reasonable, but problematic with Integration/Serial/SummationActionTwoSources
 }
 
 void CompositionalCouplingScheme::loadReceiveDataFromStorage(std::string dataName, double relativeDt)
 {
   PRECICE_TRACE();
+  // @todo could be more useful to add private function returning BaseCouplingScheme* CompositionalCouplingScheme::getSchemeWithReceiveData(std::string dataName), because we will need this also in other functions.
+  bool found = false;
   for (auto scheme : allSchemes()) {
-    scheme->loadReceiveDataFromStorage(dataName, relativeDt);
+    if (scheme->hasReceiveData(dataName)) {
+      PRECICE_DEBUG("Found {}", dataName);
+      PRECICE_ASSERT(found == false, "CompositionCouplingScheme of participant should only have one receive data with the given name. Found multiple.", dataName)
+      found = true;
+      scheme->loadReceiveDataFromStorage(dataName, relativeDt); // @todo commented out because of problems in Integration/Serial/ThreeSolvers
+    }
+  }
+  // PRECICE_ASSERT(found == true, "Did not find receive data with given name.", dataName); // @todo reasonable, but problematic with Integration/Serial/SummationActionTwoSources
+}
+
+void CompositionalCouplingScheme::clearAllDataStorage()
+{
+  PRECICE_TRACE();
+  for (auto scheme : allSchemes()) {
+    scheme->clearAllDataStorage();
   }
 }
 

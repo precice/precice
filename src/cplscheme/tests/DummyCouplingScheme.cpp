@@ -74,6 +74,11 @@ void DummyCouplingScheme::finalize()
   PRECICE_ASSERT(not _isOngoing);
 }
 
+void DummyCouplingScheme::clearAllDataStorage()
+{
+  PRECICE_ASSERT(_isInitialized);
+}
+
 bool DummyCouplingScheme::isCouplingOngoing() const
 {
   PRECICE_ASSERT(_isInitialized);

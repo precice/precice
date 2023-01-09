@@ -110,6 +110,15 @@ public:
   /**
    * @brief Not implemented.
    */
+  bool hasReceiveData(std::string dataName) override final
+  {
+    PRECICE_ASSERT(false);
+    return false;
+  }
+
+  /**
+   * @brief Not implemented.
+   */
   void overwriteReceiveData(std::string dataName, double relativeDt) override final
   {
     PRECICE_ASSERT(false);
@@ -122,6 +131,8 @@ public:
   {
     PRECICE_ASSERT(false);
   }
+
+  void clearAllDataStorage() override final;
 
   /**
    * @brief Not implemented.
