@@ -284,16 +284,6 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::clear()
-{
-  PRECICE_TRACE();
-  _clusters.clear();
-  // TODO: Don't reset this here
-  averageClusterRadius      = 0;
-  this->_hasComputedMapping = false;
-}
-
-template <typename RADIAL_BASIS_FUNCTION_T>
 void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(DataID inputDataID, DataID outputDataID)
 {
   PRECICE_TRACE(inputDataID, outputDataID);
@@ -372,6 +362,16 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::exportClusterCentersAsVTU
 
   io::ExportVTU exporter;
   exporter.doExport("pouCenters", "exports", centerMesh);
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::clear()
+{
+  PRECICE_TRACE();
+  _clusters.clear();
+  // TODO: Don't reset this here
+  averageClusterRadius      = 0;
+  this->_hasComputedMapping = false;
 }
 } // namespace mapping
 } // namespace precice
