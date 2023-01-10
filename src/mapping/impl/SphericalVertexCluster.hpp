@@ -29,9 +29,14 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 class SphericalVertexCluster {
 public:
   /**
-   * @brief Constructor.
+   * The constructor uses the index RTree of the input mesh and output mesh in order to collect
+   * the vertexIDs of the input mesh and the output mesh lying within the spherical domain of the cluster.
+   * Note that the index trees of the meshes are constructed in case they are empty.
+   * If there are no input vertices or output verices in the given domain ( \p center and \p radius ),
+   * the cluster is considered empty ( see also \ref empty() ) and the constructor returns immediately.
+   * If the cluster is non-empty, an RBF solver is constructed. The RBF solver assembles the mapping
+   * matrices and computes the matrix decomposition direclty.
    *
-   * @param[in] dimension Dimensionality of the meshes
    * @param[in] center Center of the particular partition
    * @param[in] radius radius of the partition
    * @param[in] parameter Shape parameter or support radius
@@ -39,8 +44,7 @@ public:
    * @param[in] inputMesh the input mesh
    * @param[in] outputMesh the output mesh
    */
-  SphericalVertexCluster(int               dimension,
-                         mesh::Vertex      center,
+  SphericalVertexCluster(mesh::Vertex      center,
                          double            radius,
                          double            parameter,
                          std::vector<bool> deadAxis,
@@ -49,14 +53,14 @@ public:
                          mesh::PtrMesh     inputMesh,
                          mesh::PtrMesh     outputMesh);
 
-  /// Removes a computed mapping.
+  /// Invalidates and erases the data structures the cluster holds
   void clear();
 
-  /// Execute a consistent mapping
-  void mapConsistent(mesh::PtrData inputData, mesh::PtrData outputData);
+  /// Evaluates a conservative mapping and agglomerates the result in the given output data
+  void mapConservative(mesh::PtrData inputData, mesh::PtrData outputData) const;
 
-  /// Execute a conservative mapping
-  void mapConservative(mesh::PtrData inputData, mesh::PtrData outputData);
+  /// Evaluates a consistent mapping and agglomerates the result in the given output data
+  void mapConsistent(mesh::PtrData inputData, mesh::PtrData outputData) const;
 
   /// set the normalized weight in the normalizedWeight data structure
   void setNormalizedWeight(double normalizedWeight, VertexID vertexID);
@@ -74,13 +78,12 @@ public:
   std::array<double, 3> getCenterCoords() const;
 
   /// Indicates whether there are valid output points for this partition
-  bool isEmpty() const;
+  bool empty() const;
 
 private:
   precice::logging::Logger _log{"mapping::SphericalVertexCluster"};
 
   bool _hasComputedMapping = false;
-  bool _emptyPartition     = false;
 
   /// SphericalVertexCluster center
   mesh::Vertex _center;
@@ -114,7 +117,6 @@ private:
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::SphericalVertexCluster(
-    int               dimension,
     mesh::Vertex      center,
     double            radius,
     double            parameter,
@@ -126,8 +128,8 @@ SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::SphericalVertexCluster(
     : _center(center), _radius(radius), _polynomial(polynomial), _basisFunction(parameter), _weightingFunction(radius)
 {
   // Disable integrated polynomial, as it might cause locally singular matrices
-  PRECICE_ASSERT(_polynomial != Polynomial::ON, "Integrated polynomial is not supported for PoU.")
-  PRECICE_ASSERT(deadAxis.size() == dimension);
+  PRECICE_ASSERT(_polynomial != Polynomial::ON, "Integrated polynomial is not supported for partition of unity data mappings.")
+  PRECICE_ASSERT(deadAxis.size() == inputMesh->getDimensions());
   PRECICE_DEBUG("Center coordinates: {}", _center.getCoords());
   PRECICE_DEBUG("SphericalVertexCluster radius: {}", _radius);
 
@@ -136,11 +138,12 @@ SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::SphericalVertexCluster(
   // Constructing the partition when we don't have evaluation points is pointless
   auto inIDs = inputMesh->index().getVerticesInsideBox(center, radius);
 
-  // If we have only very few vertices (10% of the target), we consider this partition as empty
-  // TODO: The second empty criterion is potentially not suitable for conservative mappings
-  _emptyPartition = outIDs.size() == 0 || inIDs.size() == 0;
+  // Transform the vector to the appropriate boost data structure
+  _inputIDs.insert(inIDs.begin(), inIDs.end());
+  _outputIDs.insert(outIDs.begin(), outIDs.end());
 
-  if (_emptyPartition) {
+  // If the cluster is empty, we return immediately
+  if (empty()) {
     return;
   }
 
@@ -153,8 +156,6 @@ SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::SphericalVertexCluster(
   //   _polynomial = Polynomial::OFF;
 
   // Construct the solver
-  _inputIDs.insert(inIDs.begin(), inIDs.end());
-  _outputIDs.insert(outIDs.begin(), outIDs.end());
   _rbfSolver          = RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>{_basisFunction, *inputMesh.get(), _inputIDs, *outputMesh.get(), _outputIDs, deadAxis, _polynomial};
   _hasComputedMapping = true;
 }
@@ -172,9 +173,9 @@ std::array<double, 3> SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::getCenter
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-bool SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::isEmpty() const
+bool SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::empty() const
 {
-  return _emptyPartition;
+  return _outputIDs.size() == 0 || _inputIDs.size() == 0;
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -203,17 +204,16 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::setNormalizedWeight(double
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConservative(mesh::PtrData inputData, mesh::PtrData outputData)
+void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConservative(mesh::PtrData inputData, mesh::PtrData outputData) const
 {
-  // Empty partitions should not be stored at all
-  PRECICE_ASSERT(!_emptyPartition);
-
-  // Serial case
+  // First, a few sanity checks. Empty partitions shouldn't be stored at all
+  PRECICE_ASSERT(!empty());
   PRECICE_ASSERT(_hasComputedMapping);
-  const unsigned int nComponents = inputData->getDimensions();
-
   PRECICE_ASSERT(_normalizedWeights.size() == _outputIDs.size());
-  const auto &localInData = inputData->values();
+
+  // Define an alias for data dimension in order to avoid ambiguity
+  const unsigned int nComponents = inputData->getDimensions();
+  const auto &       localInData = inputData->values();
 
   // TODO: We can probably reduce the temporary allocations here
   // outputIDs and input as for conservative mappings in and output are swapped in terms of the mesh
@@ -245,16 +245,16 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConservative(mesh::PtrD
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConsistent(mesh::PtrData inputData, mesh::PtrData outputData)
+void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConsistent(mesh::PtrData inputData, mesh::PtrData outputData) const
 {
-  // Empty partitions should not be stored at all
-  PRECICE_ASSERT(!_emptyPartition);
-
-  // Serial case
+  // First, a few sanity checks. Empty partitions shouldn't be stored at all
+  PRECICE_ASSERT(!empty());
   PRECICE_ASSERT(_hasComputedMapping);
-  const unsigned int nComponents = inputData->getDimensions();
+  PRECICE_ASSERT(_normalizedWeights.size() == _outputIDs.size());
 
-  const auto &localInData = inputData->values();
+  // Define an alias for data dimension in order to avoid ambiguity
+  const unsigned int nComponents = inputData->getDimensions();
+  const auto &       localInData = inputData->values();
 
   Eigen::VectorXd in(_rbfSolver.getEvaluationMatrix().cols()); // rows == n
   in.setZero();
