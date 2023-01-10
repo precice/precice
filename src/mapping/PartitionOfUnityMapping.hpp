@@ -22,7 +22,8 @@ namespace mapping {
  * Mapping using partition of unity decomposition strategies: The class here inherits from the Mapping
  * class and orchestrates the partitions (called vertex clusters) in order to represent a partition of unity.
  * This means in particular that the class computes the weights for the evaluation vertices and the necessary
- * association between evaluation vertices and the clustering.
+ * association between evaluation vertices and the clustering during initialization and traverses through all
+ * vertex clusters when evaluating the mapping.
  */
 template <typename RADIAL_BASIS_FUNCTION_T>
 class PartitionOfUnityMapping : public Mapping {
