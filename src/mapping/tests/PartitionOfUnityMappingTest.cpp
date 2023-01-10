@@ -332,7 +332,7 @@ void perform2DTestConservativeMapping(Mapping &mapping)
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
   // Test that we get point-wise exact data values on output vertices 1 and 2
-  // remining vertices are zero
+  // remaining vertices are zero
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
 

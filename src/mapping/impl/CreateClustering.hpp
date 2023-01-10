@@ -217,7 +217,7 @@ double estimatePartitionRadius(unsigned int verticesPerPartition, mesh::PtrMesh 
 } // namespace
 
 /**
- * @brief Create a Uniform Block Partitioning using random smaples for the points density, given the meshes
+ * @brief Create a Uniform Block Partitioning using random samples for the points density, given the meshes
  *
  * @param inMesh The input mesh (remote mesh for consistent and conservative)
  * @param outMesh The output mesh (local mesh for consistent and conservative)

@@ -35,7 +35,7 @@ public:
    * If there are no input vertices or output verices in the given domain ( \p center and \p radius ),
    * the cluster is considered empty ( see also \ref empty() ) and the constructor returns immediately.
    * If the cluster is non-empty, an RBF solver is constructed. The RBF solver assembles the mapping
-   * matrices and computes the matrix decomposition direclty.
+   * matrices and computes the matrix decomposition directly.
    *
    * @param[in] center Spatial center of the vertex cluster
    * @param[in] radius Spatial radius of the cluster associated to the \p center

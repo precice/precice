@@ -320,7 +320,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inpu
   // 1. Reset all output data values as we accumulate data in all clusters independent
   output()->data(outputDataID)->values().setZero();
 
-  // 2. Execute the actual mapping evaluation in all vertex clusters and acccumulate the data
+  // 2. Execute the actual mapping evaluation in all vertex clusters and accumulate the data
   std::for_each(_clusters.begin(), _clusters.end(), [&](auto &p) { p.mapConsistent(input()->data(inputDataID),
                                                                                    output()->data(outputDataID)); });
 }
