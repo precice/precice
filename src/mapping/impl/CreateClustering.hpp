@@ -3,7 +3,6 @@
 #include <Eigen/Core>
 
 #include <algorithm>
-#include <boost/math/constants/constants.hpp>
 #include "math/math.hpp"
 #include "mesh/Mesh.hpp"
 #include "precice/types.hpp"
@@ -266,7 +265,7 @@ inline std::tuple<double, Vertices> createUniformBlockPartitioning(mesh::PtrMesh
   // maximum distance between partition centers, which corresponds to the overlap condition, if the distance between the centers is sqrt(2) * radius,
   // we violate the overlap condition between diagonal partitions
   // 0.3 should be a good default value
-  const double maximumCenterDistance = boost::math::constants::root_two<double>() * averagePartitionRadius * (1 - relativeOverlap);
+  const double maximumCenterDistance = std::sqrt(2) * averagePartitionRadius * (1 - relativeOverlap);
 
   std::array<unsigned int, 3> nPartitionsGlobal{1, 1, 1};
   for (int d = 0; d < globalBB.getDimension(); ++d)

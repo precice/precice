@@ -80,10 +80,10 @@ public:
   /// the max corner of the bounding box
   Eigen::VectorXd maxCorner() const;
 
-  /// returns the edge length in a specific direction
-  double getEdgeLength(int direction) const;
+  /// returns the edge length of a specific axis
+  double getEdgeLength(int axis) const;
 
-  /// returns the maximum length of the bounding box in a particular direction
+  /// returns the maximum length of the bounding box in any dimension
   double getMaximumEdgeLength() const;
 
   /// returns the coordinates of the bounding box in a specific direction

@@ -53,7 +53,7 @@ public:
                          mesh::PtrMesh     inputMesh,
                          mesh::PtrMesh     outputMesh);
 
-  /// Invalidates and erases the data structures the cluster holds
+  /// Invalidates and erases data structures the cluster holds
   void clear();
 
   /// Evaluates a conservative mapping and agglomerates the result in the given output data
