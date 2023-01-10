@@ -37,24 +37,23 @@ public:
    * If the cluster is non-empty, an RBF solver is constructed. The RBF solver assembles the mapping
    * matrices and computes the matrix decomposition direclty.
    *
-   * @param[in] center Center of the particular partition
-   * @param[in] radius radius of the partition
-   * @param[in] parameter Shape parameter or support radius
-   * @param[in] targetSize target size (cardinality) of the partition
-   * @param[in] inputMesh the input mesh
-   * @param[in] outputMesh the output mesh
+   * @param[in] center Spatial center of the vertex cluster
+   * @param[in] radius Spatial radius of the cluster associated to the \p center
+   * @param[in] parameter Shape parameter or support radius of the RBF (TODO)
+   * @param[in] deadAxis dead axis as set by the user. Required for the RBF solver
+   * @param[in] polynomial The polynomial treatment in the RBF system.
+   * @param[in] inputMesh mesh where the interpolants are build on, i.e., the input mesh for consistent
+   *                      mappings and the output mesh for conservative mappings
+   * @param[in] outputMesh mesh where we evaluate the interpolants, i.e., the output mesh consistent
+   *                      mappings and the input mesh for conservative mappings
    */
   SphericalVertexCluster(mesh::Vertex      center,
                          double            radius,
                          double            parameter,
                          std::vector<bool> deadAxis,
                          Polynomial        polynomial,
-                         unsigned int      targetSize,
                          mesh::PtrMesh     inputMesh,
                          mesh::PtrMesh     outputMesh);
-
-  /// Invalidates and erases data structures the cluster holds
-  void clear();
 
   /// Evaluates a conservative mapping and agglomerates the result in the given output data
   void mapConservative(mesh::PtrData inputData, mesh::PtrData outputData) const;
@@ -62,55 +61,61 @@ public:
   /// Evaluates a consistent mapping and agglomerates the result in the given output data
   void mapConsistent(mesh::PtrData inputData, mesh::PtrData outputData) const;
 
-  /// set the normalized weight in the normalizedWeight data structure
+  /// Set the normalized weight for the given \p vertexID in the outputMesh
   void setNormalizedWeight(double normalizedWeight, VertexID vertexID);
 
   /// Compute the weight for a given vertex
   double computeWeight(const mesh::Vertex &v) const;
 
-  /// Indicate whether a vertex lies within the partition or not
-  bool isVertexInside(const mesh::Vertex &v) const;
-
   /// Number of input vertices this partition operates on
   unsigned int getNumberOfInputVertices() const;
 
-  /// The center coordinate of this partition
+  /// The center coordinate of this cluster
   std::array<double, 3> getCenterCoords() const;
 
-  /// Indicates whether there are valid output points for this partition
+  /// Invalidates and erases data structures the cluster holds
+  void clear();
+
+  /// Returns, whether the current cluster is empty or not, where empty means that there
+  /// are either no input vertices or output vertices.
   bool empty() const;
 
 private:
+  /// logger, as usual
   precice::logging::Logger _log{"mapping::SphericalVertexCluster"};
 
-  bool _hasComputedMapping = false;
-
-  /// SphericalVertexCluster center
+  /// center vertex of the cluster
   mesh::Vertex _center;
 
-  /// SphericalVertexCluster radius
+  /// radius of the vertex cluster
   const double _radius;
-
-  /// vector containing the normalized weights used for the output mesh data
-  /// (consistent mapping) or input mesh data (conservative data)
-  Eigen::VectorXd _normalizedWeights;
-
-  // Stores the global IDs of the vertices so that we can apply a binary
-  // search in order to query specific objects
-  boost::container::flat_set<VertexID> _inputIDs;
-  boost::container::flat_set<VertexID> _outputIDs;
 
   /// The RBF solver
   RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T> _rbfSolver;
 
+  // Stores the global IDs of the vertices so that we can apply a binary
+  // search in order to query specific objects. Here we have logarithmic
+  // complexity for setting the weights (only performed once), and constant
+  // complexity when traversing through the IDs (performed in each iteration).
+
+  /// Global VertexIDs associated to the input mesh (see constructor)
+  boost::container::flat_set<VertexID> _inputIDs;
+
+  /// Global VertexIDs associated to the output mesh (see constructor)
+  boost::container::flat_set<VertexID> _outputIDs;
+
+  /// Vector containing the normalized weights used for the output mesh data
+  /// (consistent mapping) or input mesh data (conservative data)
+  Eigen::VectorXd _normalizedWeights;
+
   /// Polynomial treatment in the RBF solver
   Polynomial _polynomial;
 
-  //TODO: Can probably be removed
-  RADIAL_BASIS_FUNCTION_T _basisFunction;
-
   /// The weighting function
   CompactPolynomialC2 _weightingFunction;
+
+  /// Boolean switch in order to indicate that a mapping was computed
+  bool _hasComputedMapping = false;
 };
 
 // --------------------------------------------------- HEADER IMPLEMENTATIONS
@@ -122,10 +127,9 @@ SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::SphericalVertexCluster(
     double            parameter,
     std::vector<bool> deadAxis,
     Polynomial        polynomial,
-    unsigned int      targetSize,
     mesh::PtrMesh     inputMesh,
     mesh::PtrMesh     outputMesh)
-    : _center(center), _radius(radius), _polynomial(polynomial), _basisFunction(parameter), _weightingFunction(radius)
+    : _center(center), _radius(radius), _polynomial(polynomial), _weightingFunction(radius)
 {
   // Disable integrated polynomial, as it might cause locally singular matrices
   PRECICE_ASSERT(_polynomial != Polynomial::ON, "Integrated polynomial is not supported for partition of unity data mappings.")
@@ -139,6 +143,7 @@ SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::SphericalVertexCluster(
   auto inIDs = inputMesh->index().getVerticesInsideBox(center, radius);
 
   // Transform the vector to the appropriate boost data structure
+  // The IDs are sorted in the boost flat_set, hence, the function here has N log(N) complexity
   _inputIDs.insert(inIDs.begin(), inIDs.end());
   _outputIDs.insert(outIDs.begin(), outIDs.end());
 
@@ -147,17 +152,122 @@ SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::SphericalVertexCluster(
     return;
   }
 
-  PRECICE_ASSERT(inIDs.size() > 0, "The source partition is empty whereas the target partition is non-empty.", inIDs.size(), outIDs.size());
   PRECICE_DEBUG("SphericalVertexCluster input size: {}", inIDs.size());
   PRECICE_DEBUG("SphericalVertexCluster output size: {}", outIDs.size());
 
-  // Otherwise or system is undertermined
+  // TODO
+  // Otherwise the system is underdetermined
   // if (inIDs.size() < dimension + 1)
   //   _polynomial = Polynomial::OFF;
 
   // Construct the solver
-  _rbfSolver          = RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>{_basisFunction, *inputMesh.get(), _inputIDs, *outputMesh.get(), _outputIDs, deadAxis, _polynomial};
+  _rbfSolver          = RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>{RADIAL_BASIS_FUNCTION_T{parameter}, *inputMesh.get(), _inputIDs, *outputMesh.get(), _outputIDs, deadAxis, _polynomial};
   _hasComputedMapping = true;
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::setNormalizedWeight(double normalizedWeight, VertexID id)
+{
+  PRECICE_ASSERT(_outputIDs.size() > 0);
+  PRECICE_ASSERT(_outputIDs.contains(id), id);
+  PRECICE_ASSERT(normalizedWeight > 0);
+
+  if (_normalizedWeights.size() == 0)
+    _normalizedWeights.resize(_outputIDs.size());
+
+  // The find method of boost flat_set comes with O(log(N)) complexity (the more expensive part here)
+  auto localID = _outputIDs.index_of(_outputIDs.find(id));
+
+  PRECICE_ASSERT(localID < _normalizedWeights.size(), localID, _normalizedWeights.size());
+  _normalizedWeights[localID] = normalizedWeight;
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConservative(mesh::PtrData inputData, mesh::PtrData outputData) const
+{
+  // First, a few sanity checks. Empty partitions shouldn't be stored at all
+  PRECICE_ASSERT(!empty());
+  PRECICE_ASSERT(_hasComputedMapping);
+  PRECICE_ASSERT(_normalizedWeights.size() == _outputIDs.size());
+
+  // Define an alias for data dimension in order to avoid ambiguity
+  const unsigned int nComponents = inputData->getDimensions();
+  const auto &       localInData = inputData->values();
+
+  // TODO: We can probably reduce the temporary allocations here
+  Eigen::VectorXd in(_rbfSolver.getEvaluationMatrix().rows());
+
+  // Now we perform the data mapping component-wise
+  for (unsigned int c = 0; c < nComponents; ++c) {
+    // Step 1: extract the relevant input data from the global input data and store
+    // it in a contiguous array, which is required for the RBF solver
+    for (unsigned int i = 0; i < _outputIDs.size(); ++i) {
+      const auto dataIndex = *(_outputIDs.nth(i));
+      PRECICE_ASSERT(dataIndex * nComponents + c < localInData.size(), dataIndex * nComponents + c, localInData.size());
+      PRECICE_ASSERT(_normalizedWeights[i] > 0, _normalizedWeights[i], i);
+      // here, we also directly apply the weighting, i.e., we split the input data
+      in[i] = localInData[dataIndex * nComponents + c] * _normalizedWeights[i];
+    }
+
+    // Step 2: solve the system using a conservative constraint
+    auto result = _rbfSolver.solveConservative(in, _polynomial);
+    PRECICE_ASSERT(result.size() == _inputIDs.size());
+
+    // Step 3: now accumulate the result into our global output data
+    for (unsigned int i = 0; i < _inputIDs.size(); ++i) {
+      const auto dataIndex = *(_inputIDs.nth(i));
+      PRECICE_ASSERT(dataIndex * nComponents + c < outputData->values().size(), dataIndex * nComponents + c, outputData->values().size());
+      outputData->values()[dataIndex * nComponents + c] += result(i);
+    }
+  }
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConsistent(mesh::PtrData inputData, mesh::PtrData outputData) const
+{
+  // First, a few sanity checks. Empty partitions shouldn't be stored at all
+  PRECICE_ASSERT(!empty());
+  PRECICE_ASSERT(_hasComputedMapping);
+  PRECICE_ASSERT(_normalizedWeights.size() == _outputIDs.size());
+
+  // Define an alias for data dimension in order to avoid ambiguity
+  const unsigned int nComponents = inputData->getDimensions();
+  const auto &       localInData = inputData->values();
+
+  Eigen::VectorXd in(_rbfSolver.getEvaluationMatrix().cols());
+
+  // Now we perform the data mapping component-wise
+  for (unsigned int c = 0; c < nComponents; ++c) {
+    // Step 1: extract the relevant input data from the global input data and store
+    // it in a contiguous array, which is required for the RBF solver (last polyparams entries remain zero)
+    for (unsigned int i = 0; i < _inputIDs.size(); i++) {
+      const auto dataIndex = *(_inputIDs.nth(i));
+      PRECICE_ASSERT(dataIndex * nComponents + c < localInData.size(), dataIndex * nComponents + c, localInData.size());
+      in[i] = localInData[dataIndex * nComponents + c];
+    }
+
+    // Step 2: solve the system using a consistent constraint
+    auto result = _rbfSolver.solveConsistent(in, _polynomial);
+    PRECICE_ASSERT(_outputIDs.size() == result.size());
+
+    // Step 3: now accumulate the result into our global output data
+    for (unsigned int i = 0; i < _outputIDs.size(); ++i) {
+      const auto dataIndex = *(_outputIDs.nth(i));
+      PRECICE_ASSERT(dataIndex * nComponents + c < outputData->values().size(), dataIndex * nComponents + c, outputData->values().size());
+      PRECICE_ASSERT(_normalizedWeights[i] > 0);
+      // here, we also directly apply the weighting, i.e., split the result data
+      outputData->values()[dataIndex * nComponents + c] += result(i) * _normalizedWeights[i];
+    }
+  }
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+double SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::computeWeight(const mesh::Vertex &v) const
+{
+  // Assume that the local interpolant and the weighting function are the same
+  // TODO: We don't need to reduce the dead coordinates here as the values should reduce anyway
+  auto res = computeSquaredDifference(_center.rawCoords(), v.rawCoords(), {{true, true, true}});
+  return _weightingFunction.evaluate(std::sqrt(res));
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -187,114 +297,5 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::clear()
   _rbfSolver.clear();
   _hasComputedMapping = false;
 }
-
-template <typename RADIAL_BASIS_FUNCTION_T>
-void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::setNormalizedWeight(double normalizedWeight, VertexID id)
-{
-  PRECICE_ASSERT(_outputIDs.size() > 0);
-  if (_normalizedWeights.size() == 0)
-    _normalizedWeights.resize(_outputIDs.size());
-
-  auto localID = _outputIDs.index_of(_outputIDs.find(id));
-  PRECICE_ASSERT(_outputIDs.contains(id), id);
-  PRECICE_ASSERT(localID < _normalizedWeights.size(), localID, _normalizedWeights.size());
-  PRECICE_ASSERT(normalizedWeight > 0);
-
-  _normalizedWeights[localID] = normalizedWeight;
-}
-
-template <typename RADIAL_BASIS_FUNCTION_T>
-void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConservative(mesh::PtrData inputData, mesh::PtrData outputData) const
-{
-  // First, a few sanity checks. Empty partitions shouldn't be stored at all
-  PRECICE_ASSERT(!empty());
-  PRECICE_ASSERT(_hasComputedMapping);
-  PRECICE_ASSERT(_normalizedWeights.size() == _outputIDs.size());
-
-  // Define an alias for data dimension in order to avoid ambiguity
-  const unsigned int nComponents = inputData->getDimensions();
-  const auto &       localInData = inputData->values();
-
-  // TODO: We can probably reduce the temporary allocations here
-  // outputIDs and input as for conservative mappings in and output are swapped in terms of the mesh
-  Eigen::VectorXd in(_outputIDs.size());
-  in.setZero();
-
-  // The result can directly be written into the global data structures
-  Eigen::VectorXd result;
-  // For every data component, perform mapping
-
-  // First, extract the relevant input data from the global input data and store
-  // it in a contiguous array
-  for (unsigned int c = 0; c < nComponents; ++c) {
-    // Fill input from input data values (last polyparams entries remain zero)
-    for (unsigned int i = 0; i < _outputIDs.size(); ++i) {
-      const auto dataIndex = *(_outputIDs.nth(i));
-      in[i]                = localInData[dataIndex * nComponents + c] * _normalizedWeights[i];
-    }
-    result = _rbfSolver.solveConservative(in, _polynomial);
-
-    PRECICE_ASSERT(result.size() == _inputIDs.size());
-
-    // Now accumulate the result into our global output data
-    for (unsigned int i = 0; i < _inputIDs.size(); ++i) {
-      const auto dataIndex = *(_inputIDs.nth(i));
-      outputData->values()[dataIndex * nComponents + c] += result(i);
-    }
-  }
-}
-
-template <typename RADIAL_BASIS_FUNCTION_T>
-void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConsistent(mesh::PtrData inputData, mesh::PtrData outputData) const
-{
-  // First, a few sanity checks. Empty partitions shouldn't be stored at all
-  PRECICE_ASSERT(!empty());
-  PRECICE_ASSERT(_hasComputedMapping);
-  PRECICE_ASSERT(_normalizedWeights.size() == _outputIDs.size());
-
-  // Define an alias for data dimension in order to avoid ambiguity
-  const unsigned int nComponents = inputData->getDimensions();
-  const auto &       localInData = inputData->values();
-
-  Eigen::VectorXd in(_rbfSolver.getEvaluationMatrix().cols()); // rows == n
-  in.setZero();
-
-  // For every data component, perform mapping
-
-  // First, extract the relevant input data from the global input data and store
-  // it in a contiguous array
-  for (unsigned int c = 0; c < nComponents; ++c) {
-    // Fill input from input data values (last polyparams entries remain zero)
-    for (unsigned int i = 0; i < _inputIDs.size(); i++) {
-      const auto dataIndex = *(_inputIDs.nth(i));
-      in[i]                = localInData[dataIndex * nComponents + c];
-    }
-
-    auto result = _rbfSolver.solveConsistent(in, _polynomial);
-
-    for (unsigned int i = 0; i < _outputIDs.size(); ++i) {
-      const auto dataIndex = *(_outputIDs.nth(i));
-      outputData->values()[dataIndex * nComponents + c] += result(i) * _normalizedWeights[i];
-    }
-  }
-}
-
-template <typename RADIAL_BASIS_FUNCTION_T>
-double SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::computeWeight(const mesh::Vertex &v) const
-{
-  // Assume that the local interpolant and the weighting function are the same
-  // TODO: We don't need to reduce the dead coordinates here as the values should reduce anyway
-  auto res = computeSquaredDifference(_center.rawCoords(), v.rawCoords(), {{true, true, true}});
-  return _weightingFunction.evaluate(std::sqrt(res));
-}
-
-template <typename RADIAL_BASIS_FUNCTION_T>
-bool SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::isVertexInside(const mesh::Vertex &v) const
-{
-  // TODO: We don't need to reduce the dead coordinates here as the values should reduce anyway
-  auto res = computeSquaredDifference(_center.rawCoords(), v.rawCoords(), {{true, true, true}});
-  return res < math::pow_int<2>(_radius);
-}
-
 } // namespace mapping
 } // namespace precice

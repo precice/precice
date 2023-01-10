@@ -207,7 +207,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     // We cannot simply take the vertex from the container, as the ID needs to match the cluster ID
     // That's required for the indexing and asserted below
     mesh::Vertex                                    center(c.getCoords(), meshVertices.size());
-    SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T> p(center, averageClusterRadius, _parameter, _deadAxis, _polynomial, _verticesPerCluster, inMesh, outMesh);
+    SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T> p(center, averageClusterRadius, _parameter, _deadAxis, _polynomial, inMesh, outMesh);
 
     // Consider only non-empty clusters
     if (!p.empty()) {
