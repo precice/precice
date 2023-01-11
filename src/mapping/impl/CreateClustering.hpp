@@ -16,7 +16,6 @@ namespace impl {
 
 using Vertices = std::vector<mesh::Vertex>;
 namespace {
-precice::logging::Logger _log{"impl::createUniformBlockPartitioning"};
 
 // Formula doesn't correspond to a z curve right now, but it works
 constexpr VertexID zCurve(std::array<unsigned int, 3> ids, std::array<unsigned int, 3> nCells)
@@ -58,10 +57,10 @@ std::array<int, 26> zCurveNeighborOffsets<3>(std::array<unsigned int, 3> nCells)
 
 // Assumption, vertex position in the container == vertex ID
 template <typename ArrayType>
-std::vector<VertexID> getNeighborsWithinSphere(const Vertices &vertices, mesh::Vertex &center, const ArrayType &neighborOffsets, double radius)
+std::vector<VertexID> getNeighborsWithinSphere(const Vertices &vertices, mesh::Vertex &center, const ArrayType neighborOffsets, double radius)
 {
   // number of neighbors = (3^dim)-1
-  PRECICE_ASSERT((neighborOffsets.size() == 26) || (neighborOffsets.size() == 8));
+  static_assert((neighborOffsets.size() == 26) || (neighborOffsets.size() == 8));
   std::vector<VertexID> result;
   for (auto off : neighborOffsets) {
     // corner case where we have 'dead axis' in the bounding box
@@ -89,7 +88,6 @@ std::vector<VertexID> getNeighborsWithinSphere(const Vertices &vertices, mesh::V
  */
 void tagEmptyPartitions(double partitionRadius, Vertices &container, mesh::PtrMesh mesh, unsigned int threshold)
 {
-  PRECICE_TRACE();
   // todo: we don't need all vertices for the query, more than one would already allow to abort
   // todo: investigate difference to getClosestVertex > radius
   std::for_each(container.begin(), container.end(), [&](auto &v) {
@@ -104,7 +102,6 @@ void tagEmptyPartitions(double partitionRadius, Vertices &container, mesh::PtrMe
  */
 void projectPartitionCentersToinputMesh(Vertices &container, mesh::PtrMesh mesh)
 {
-  PRECICE_TRACE();
   std::transform(container.begin(), container.end(), container.begin(), [&](auto &v) {
     if (!v.isTagged()) {
       auto closestCenter = mesh->index().getClosestVertex(v.getCoords()).index;
@@ -122,13 +119,13 @@ void projectPartitionCentersToinputMesh(Vertices &container, mesh::PtrMesh mesh)
 template <int dim>
 void tagDuplicateCenters(Vertices &container, double threshold, std::array<unsigned int, 3> nCells)
 {
-  PRECICE_TRACE();
+  PRECICE_ASSERT(threshold > 0);
   if (container.empty())
     return;
 
   // Get the index offsets for the z curve
   auto neighborOffsets = zCurveNeighborOffsets<dim>(nCells);
-  PRECICE_ASSERT((neighborOffsets.size() == 8 && dim == 2) || (neighborOffsets.size() == 26 && dim == 3));
+  static_assert((neighborOffsets.size() == 8 && dim == 2) || (neighborOffsets.size() == 26 && dim == 3));
 
   // we check all neighbors
   for (auto &v : container) {
@@ -211,7 +208,6 @@ double estimateClusterRadius(unsigned int verticesPerPartition, mesh::PtrMesh in
   std::nth_element(sampledPartitionRadii.begin(), sampledPartitionRadii.begin() + middle, sampledPartitionRadii.end());
   double averagePartitionRadius = sampledPartitionRadii[middle];
 
-  PRECICE_INFO("VertexCluster Radius: {}", averagePartitionRadius);
   return averagePartitionRadius;
 }
 } // namespace
@@ -229,6 +225,7 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
                                                      double relativeOverlap, unsigned int verticesPerPartition,
                                                      bool projectPartitionsToInput)
 {
+  precice::logging::Logger _log{"impl::createUniformBlockPartitioning"};
   PRECICE_TRACE();
   PRECICE_ASSERT(relativeOverlap < 1);
   PRECICE_ASSERT(verticesPerPartition > 0);
@@ -261,6 +258,7 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
   // 2. Now we pick random samples from the input mesh and ask the index tree for the k-nearest neighbors
   // in order to estimate the point density and determine a proper partition radius
   double averagePartitionRadius = estimateClusterRadius(verticesPerPartition, inMesh, localBB);
+  PRECICE_INFO("VertexCluster Radius: {}", averagePartitionRadius);
 
   // maximum distance between partition centers, which corresponds to the overlap condition, if the distance between the centers is sqrt(2) * radius,
   // we violate the overlap condition between diagonal partitions
