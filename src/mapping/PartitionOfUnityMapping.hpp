@@ -161,7 +161,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   }
 
   // Step 1: get a tentative clustering consisting of centers and a radius from one of the available algorithms
-  auto [averageClusterRadius_, centerCandidates] = impl::createUniformBlockPartitioning(inMesh, outMesh, _relativeOverlap, _verticesPerCluster, _projectToInput);
+  auto [averageClusterRadius_, centerCandidates] = impl::createClustering(inMesh, outMesh, _relativeOverlap, _verticesPerCluster, _projectToInput);
 
   averageClusterRadius = averageClusterRadius_;
   PRECICE_ASSERT(averageClusterRadius > 0 || inMesh->vertices().size() == 0 || outMesh->vertices().size() == 0);
@@ -307,7 +307,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
   auto bb = outMesh->getBoundingBox();
 
   if (averageClusterRadius == 0)
-    averageClusterRadius = impl::estimatePartitionRadius(_verticesPerCluster, filterMesh, bb);
+    averageClusterRadius = impl::estimateClusterRadius(_verticesPerCluster, filterMesh, bb);
 
   // @TODO: This assert is not completely right, as it checks all dimensions for non-emptyness (which might not be the case).
   // However, with the current BB implementation, the expandBy function will just do nothing.

@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_SUITE(PartitionOfUnityClustering)
 
 BOOST_AUTO_TEST_SUITE(Serial)
 
-BOOST_AUTO_TEST_CASE(CreateUniformBlockPartitioning2D)
+BOOST_AUTO_TEST_CASE(createClustering2D)
 {
   PRECICE_TEST(1_rank);
 
@@ -46,20 +46,20 @@ BOOST_AUTO_TEST_CASE(CreateUniformBlockPartitioning2D)
   unsigned int verticesPerPartition = 10;
   bool         projectToInput       = false;
   {
-    auto [averagePartitionRadius, centerCandidates] = impl::createUniformBlockPartitioning(inMesh, outMesh, relativeOverlap, verticesPerPartition, projectToInput);
+    auto [averagePartitionRadius, centerCandidates] = impl::createClustering(inMesh, outMesh, relativeOverlap, verticesPerPartition, projectToInput);
     BOOST_TEST(averagePartitionRadius == 2.2360679774997898);
     BOOST_TEST(centerCandidates.size() == 19);
   }
 
   {
     projectToInput                                  = true;
-    auto [averagePartitionRadius, centerCandidates] = impl::createUniformBlockPartitioning(inMesh, outMesh, relativeOverlap, verticesPerPartition, projectToInput);
+    auto [averagePartitionRadius, centerCandidates] = impl::createClustering(inMesh, outMesh, relativeOverlap, verticesPerPartition, projectToInput);
     BOOST_TEST(averagePartitionRadius == 2.2360679774997898);
     BOOST_TEST(centerCandidates.size() == 25);
   }
 }
 
-BOOST_AUTO_TEST_CASE(CreateUniformBlockPartitioning3D)
+BOOST_AUTO_TEST_CASE(createClustering3D)
 {
   PRECICE_TEST(1_rank);
 
@@ -81,14 +81,14 @@ BOOST_AUTO_TEST_CASE(CreateUniformBlockPartitioning3D)
   unsigned int verticesPerPartition = 10;
   bool         projectToInput       = false;
   {
-    auto [averagePartitionRadius, centerCandidates] = impl::createUniformBlockPartitioning(inMesh, outMesh, relativeOverlap, verticesPerPartition, projectToInput);
+    auto [averagePartitionRadius, centerCandidates] = impl::createClustering(inMesh, outMesh, relativeOverlap, verticesPerPartition, projectToInput);
     BOOST_TEST(averagePartitionRadius == 1.4142135623730951);
     BOOST_TEST(centerCandidates.size() == 188);
   }
 
   {
     projectToInput                                  = true;
-    auto [averagePartitionRadius, centerCandidates] = impl::createUniformBlockPartitioning(inMesh, outMesh, relativeOverlap, verticesPerPartition, projectToInput);
+    auto [averagePartitionRadius, centerCandidates] = impl::createClustering(inMesh, outMesh, relativeOverlap, verticesPerPartition, projectToInput);
     BOOST_TEST(averagePartitionRadius == 1.4142135623730951);
     BOOST_TEST(centerCandidates.size() == 222);
   }

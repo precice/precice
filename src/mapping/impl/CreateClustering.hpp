@@ -167,7 +167,7 @@ mesh::BoundingBox getGlobalBoundingBox(mesh::PtrMesh mesh)
   return mesh->getBoundingBox();
 }
 
-double estimatePartitionRadius(unsigned int verticesPerPartition, mesh::PtrMesh inMesh, const mesh::BoundingBox &bb)
+double estimateClusterRadius(unsigned int verticesPerPartition, mesh::PtrMesh inMesh, const mesh::BoundingBox &bb)
 {
   // 2. Now we pick random samples from the input mesh and ask the index tree for the k-nearest neighbors
   // in order to estimate the point density and determine a proper partition radius
@@ -225,9 +225,9 @@ double estimatePartitionRadius(unsigned int verticesPerPartition, mesh::PtrMesh 
  *
  * @return a tuple for the partition radius and a vector of points marking the partition centers Vertices
  */
-inline std::tuple<double, Vertices> createUniformBlockPartitioning(mesh::PtrMesh inMesh, mesh::PtrMesh outMesh,
-                                                                   double relativeOverlap, unsigned int verticesPerPartition,
-                                                                   bool projectPartitionsToInput)
+inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh::PtrMesh outMesh,
+                                                     double relativeOverlap, unsigned int verticesPerPartition,
+                                                     bool projectPartitionsToInput)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(relativeOverlap < 1);
@@ -260,7 +260,7 @@ inline std::tuple<double, Vertices> createUniformBlockPartitioning(mesh::PtrMesh
 
   // 2. Now we pick random samples from the input mesh and ask the index tree for the k-nearest neighbors
   // in order to estimate the point density and determine a proper partition radius
-  double averagePartitionRadius = estimatePartitionRadius(verticesPerPartition, inMesh, localBB);
+  double averagePartitionRadius = estimateClusterRadius(verticesPerPartition, inMesh, localBB);
 
   // maximum distance between partition centers, which corresponds to the overlap condition, if the distance between the centers is sqrt(2) * radius,
   // we violate the overlap condition between diagonal partitions
@@ -376,88 +376,6 @@ inline std::tuple<double, Vertices> createUniformBlockPartitioning(mesh::PtrMesh
 
   return {averagePartitionRadius, centers};
 }
-
-/**
- * @brief Create a Uniform Block Partitioning in 2D, given the meshes
- *
- * @param inMesh The input mesh (remote mesh for consistent and conservative)
- * @param outMesh The output mesh (local mesh for consistent and conservative)
- *
- * @return a tuple for the partition radius and a vector of points marking the partition centers Vertices
- */
-inline std::tuple<double, Vertices> createUniformBlockPartitioning2D(mesh::PtrMesh inMesh, mesh::PtrMesh outMesh, double relativeOverlap, unsigned int verticesPerPartition)
-{
-  PRECICE_ASSERT(relativeOverlap < 1);
-  PRECICE_ASSERT(verticesPerPartition > 0);
-  PRECICE_ASSERT(inMesh->getDimensions() == outMesh->getDimensions());
-  PRECICE_DEBUG("Creating uniform block partitioning");
-
-  // Get the number of points in the input mesh lying within the output mesh region
-  // in order to estimate the global number of vertices this rank has to compute the
-  // mapping on
-  PRECICE_DEBUG("Relative overlap: {}", relativeOverlap);
-  PRECICE_DEBUG("Vertices per partition: {}", verticesPerPartition);
-  // 1. Get the global bounding box of the output mesh
-  outMesh->computeBoundingBox();
-  auto               bb         = outMesh->getBoundingBox();
-  auto               vertices   = inMesh->index().getVerticesInsideBox(bb);
-  const unsigned int vertexSize = vertices.size();
-
-  // 2. Based on the input parameter verticesPerPartition and overlap, estimate the number
-  // of partitions and the radius
-  PRECICE_INFO("Input mesh size: {}", vertexSize);
-  unsigned int nTotalPartitions = std::max(1., (vertexSize / verticesPerPartition) * (1. / (1 - relativeOverlap)));
-  PRECICE_INFO("Number of total partitions: {}", nTotalPartitions);
-
-  // Get the edge length of the bounding box in each direction
-  std::vector<double> edgeLength;
-  for (unsigned int d = 0; d < bb.getDimension(); ++d) {
-    edgeLength.emplace_back(bb.getEdgeLength(d));
-  }
-  PRECICE_ASSERT(bb.getDimension() == 2, "Not implemented.");
-
-  // Assume uniform distribution in the bounding box:
-  // xEdge/yEdge = nPartitionsX/nPartitionsY, nPartitionsX * nPartitionsY = nPartitions
-  // --> nPartitionsX = sqrt(nPartitions* (xEdge/yEdge))
-  std::array<unsigned int, 3> nPartitions{1, 1, 1};
-  // Values are ceiled
-  nPartitions[0] = std::ceil(std::max(1., std::sqrt(nTotalPartitions * (edgeLength[0] / edgeLength[1]))));
-  nPartitions[1] = std::ceil(std::max(1., std::sqrt(nTotalPartitions * (edgeLength[1] / edgeLength[0]))));
-
-  PRECICE_INFO("VertexCluster distribution: {}", nPartitions);
-
-  // Compute the radius based on the edge length and the number of partitions
-  // 0.5 since we use a radius here instead of a diameter
-  PRECICE_ASSERT(!bb.empty());
-  const double distance               = std::max(edgeLength[0] / nPartitions[0], edgeLength[1] / nPartitions[1]);
-  double       averagePartitionRadius = std::pow(relativeOverlap, 2) * distance + relativeOverlap * 0.5 * distance + 0.5 * distance;
-  PRECICE_INFO("VertexCluster Radius: {}", averagePartitionRadius);
-
-  Vertices centers;
-  {
-    // 1. Determine the centers of the partitions
-    const auto &        bb = outMesh->getBoundingBox();
-    std::vector<double> centerCoords(inMesh->getDimensions());
-    const double        center_x = bb.getEdgeLength(0) / nPartitions[0];
-    const double        center_y = bb.getEdgeLength(1) / nPartitions[1];
-
-    // start with the (bottom left) corner
-    centerCoords[0] = bb.getDirectionsCoordinates(0).first + 0.5 * center_x;
-    for (unsigned int x = 0; x < nPartitions[0]; ++x) {
-      centerCoords[1] = bb.getDirectionsCoordinates(1).first + 0.5 * center_y;
-      for (unsigned int y = 0; y < nPartitions[1]; ++y) {
-        centers.emplace_back(mesh::Vertex({centerCoords, -1}));
-
-        // for all x coordinates, iterate over the corresponding y coordinates
-        // 2 since we are dealing with the radius from both partitions
-        centerCoords[1] += center_y;
-      }
-      centerCoords[0] += center_x;
-    }
-  }
-  return {averagePartitionRadius, centers};
-}
-
 } // namespace impl
 } // namespace mapping
 } // namespace precice
