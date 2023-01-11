@@ -18,12 +18,14 @@ public:
     std::string name;
     int         dimensions;
     int         waveformDegree;
+    bool        isGlobal; // false = mesh data, true = meshless/global data
 
     ConfiguredData(
         const std::string &name,
         int                dimensions,
-        int                waveformDegree)
-        : name(name), dimensions(dimensions), waveformDegree(waveformDegree) {}
+        int                waveformDegree,
+        bool               isGlobal)
+        : name(name), dimensions(dimensions), waveformDegree(waveformDegree), isGlobal(isGlobal) {}
   };
 
   DataConfiguration(xml::XMLTag &parent);
@@ -51,12 +53,14 @@ public:
    */
   void addData(const std::string &name,
                int                dataDimensions,
-               int                waveformDegree = time::Time::DEFAULT_WAVEFORM_DEGREE);
+               int                waveformDegree = time::Time::DEFAULT_WAVEFORM_DEGREE,
+               bool               isGlobal);
 
 private:
   mutable logging::Logger _log{"mesh::DataConfiguration"};
 
-  const std::string TAG          = "data";
+  const std::string TAG_MESH_DATA   = "data";
+  const std::string TAG_GLOBAL_DATA = "global-data";
   const std::string ATTR_NAME    = "name";
   const std::string ATTR_DEGREE  = "waveform-degree";
   const std::string VALUE_VECTOR = "vector";
