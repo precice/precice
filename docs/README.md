@@ -32,7 +32,7 @@
 [![xSDK Policy Compatibility](https://img.shields.io/badge/xSDK-member-brightgreen)](https://github.com/xsdk-project/xsdk-policy-compatibility/blob/master/precice-policy-compatibility.md)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/3895/badge)](https://bestpractices.coreinfrastructure.org/projects/3895)
 [![CodeFactor](https://www.codefactor.io/repository/github/precice/precice/badge)](https://www.codefactor.io/repository/github/precice/precice)
-[![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/precice/precice.svg?logo=lgtm&logoWidth=18&label=lgtm%3AC%2B%2B)](https://lgtm.com/projects/g/precice/precice/context:cpp)
+[![CodeQL](https://github.com/precice/precice/actions/workflows/codeql.yml/badge.svg)](https://github.com/precice/precice/actions/workflows/codeql.yml)
 [![codecov](https://codecov.io/gh/precice/precice/branch/develop/graph/badge.svg?token=ixXCTXAZMU)](https://codecov.io/gh/precice/precice)
 
 preCICE stands for Precise Code Interaction Coupling Environment. Its main component is a library that can be used by simulation programs to be coupled together in a partitioned way, enabling multi-physics simulations, such as fluid-structure interaction.
