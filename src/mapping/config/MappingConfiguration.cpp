@@ -42,7 +42,7 @@ MappingConfiguration::MappingConfiguration(
                                .setDocumentation("Support radius of each RBF basis function (global choice).");
   auto vertivesPerPartition = XMLAttribute<double>(ATTR_VERTICES_PER_PARTITION)
                                   .setDocumentation("Vertices per partition in the PoU");
-  auto relativeOverlap = XMLAttribute<double>(ATTR_RELATIVE_OVERLAP)
+  auto relativeOverlap = XMLAttribute<double>(ATTR_RELATIVE_OVERLAP, 0.3)
                              .setDocumentation("Value between 0 and 1 indicating the relative overlap between partitions. A value of 0.3 is usually a good trade-off between accuracy and efficiency.");
   auto projectToInput = XMLAttribute<bool>(ATTR_PROJECT_TO_INPUT)
                             .setDocumentation("If enabled, places the partition centers at the closest vertex of the input mesh. Should be enabled in case of non-uniform point distributions such as for shell structures.");
