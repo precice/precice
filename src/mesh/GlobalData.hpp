@@ -8,12 +8,16 @@
 #include "precice/types.hpp"
 
 namespace precice {
+namespace mesh {
 class GlobalData;
+}
 } // namespace precice
+// TODO: GlobalData should not be inside mesh namespace
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
 namespace precice {
+namespace mesh {
 /**
  * @brief Describes a data value not belonging to a mesh.
  */
@@ -102,4 +106,6 @@ public:
 //   bool _hasGradient = false;
 
 };
+
+} // namespace mesh
 } // namespace precice
