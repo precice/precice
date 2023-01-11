@@ -29,7 +29,7 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 class PartitionOfUnityMapping : public Mapping {
 public:
   /**
-   * @brief Constructor.
+   * Constructor, which mostly sets the mesh connectivity requirements and initializes member variables.
    *
    * @param[in] constraint Specifies mapping to be consistent or conservative.
    * @param[in] dimension Dimensionality of the meshes
@@ -46,10 +46,18 @@ public:
       double              relativeOverlap,
       bool                projectToInput);
 
-  /// Computes the mapping coefficients from the in- and output mesh.
+  /**
+   * Computes the clustering for the partition of unity methods and fills the \p _clusters vector,
+   * which allows to travers through all vertex cluster computed. Each vertex cluster in the vector
+   * directly computes local mapping matrices and matrix decompositions.
+   * In addition, the method computes the normalized weights (Shepard's method) for the partition
+   * of unity method and stores them directly in each relevant vertex cluster.
+   * In debug mode, the function also exports the partition centers as a separate mesh for visualization
+   * purpose.
+   */
   virtual void computeMapping() override;
 
-  /// Removes a computed mapping.
+  /// Removes a computed mapping by erasing the \p _clusters vector.
   virtual void clear() override;
 
   /// tag the vertices required for the mapping
@@ -67,15 +75,21 @@ private:
 
   // Shape parameter or support radius for the RBF interpolant,
   // only required for the SphericalVertexCluster instantiation
-  // TODO: Rename
+  // TODO: Rename and generalize
   const double _parameter;
 
-  // Input parameter
-  const unsigned int _verticesPerCluster;
-  const double       _relativeOverlap;
-  const bool         _projectToInput;
+  /// Input parameters provided by the user for the clustering algorithm:
 
-  // Derived parameter
+  /// target number of input vertices for each cluster
+  const unsigned int _verticesPerCluster;
+
+  /// overlap of vertex clusters
+  const double _relativeOverlap;
+
+  /// toggles whether we project the cluster centers to the input mesh
+  const bool _projectToInput;
+
+  /// derived parameter based on the input above: the radius of each cluster
   double averageClusterRadius = 0;
 
   /// true if the mapping along some axis should be ignored
@@ -95,8 +109,6 @@ private:
   /// only enabled in debug builds and mainly for debugging purpose
   void exportClusterCentersAsVTU(mesh::Mesh &centers);
 };
-
-// --------------------------------------------------- HEADER IMPLEMENTATIONS
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::PartitionOfUnityMapping(
@@ -129,50 +141,6 @@ PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::PartitionOfUnityMapping(
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
-{
-  PRECICE_TRACE();
-  mesh::PtrMesh filterMesh, outMesh;
-  if (this->hasConstraint(Mapping::CONSERVATIVE)) {
-    filterMesh = this->output(); // remote
-    outMesh    = this->input();  // local
-  } else {
-    filterMesh = this->input();  // remote
-    outMesh    = this->output(); // local
-  }
-
-  if (outMesh->vertices().empty())
-    return; // Ranks not at the interface should never hold interface vertices
-
-  // TODO: Check again the tagging in combination with the partition construction (which mesh to use)
-  // In order to construct the local partitions, we need all vertices with a distance of 2 x radius,
-  // as the relevant partitions centers have a maximum distance of radius, and the proper construction of the
-  // interpolant requires all vertices with a distance of radius from the center.
-  auto bb = outMesh->getBoundingBox();
-
-  if (averageClusterRadius == 0)
-    averageClusterRadius = impl::estimatePartitionRadius(_verticesPerCluster, filterMesh, bb);
-
-  // @TODO: This assert is not completely right, as it checks all dimensions for non-emptyness (which might not be the case).
-  // However, with the current BB implementation, the expandBy function will just do nothing.
-  PRECICE_ASSERT(!bb.empty());
-  PRECICE_ASSERT(averageClusterRadius > 0);
-  // Now we extend the bounding box by the radius
-  bb.expandBy(1 * averageClusterRadius);
-
-  // ... and tag all affected vertices
-  auto verticesNew = filterMesh->index().getVerticesInsideBox(bb);
-
-  std::for_each(verticesNew.begin(), verticesNew.end(), [&filterMesh](VertexID v) { filterMesh->vertices()[v].tag(); });
-}
-
-template <typename RADIAL_BASIS_FUNCTION_T>
-void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
-{
-  // Probably nothing to be done here. There is no global ownership for matrix entries required and we tag all potentially locally relevant vertices already in the first round.
-}
-
-template <typename RADIAL_BASIS_FUNCTION_T>
 void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 {
   PRECICE_TRACE();
@@ -200,12 +168,12 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   // Step 2: check, which of the resulting clusters are non-empty and register the cluster centers in a mesh
   // Here, the VertexCluster computes the matrix decompositions directly in case the cluster is non-empty
-  mesh::Mesh centerMesh("clusterCentersMesh", this->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
+  mesh::Mesh centerMesh("pou-centers-" + inMesh->getName(), this->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
   auto &     meshVertices = centerMesh.vertices();
 
   for (const auto &c : centerCandidates) {
-    // We cannot simply take the vertex from the container, as the ID needs to match the cluster ID
-    // That's required for the indexing and asserted below
+    // We cannot simply copy the vertex from the container in order to fill the vertices of the centerMesh, as the vertexID of each center needs to match the index
+    // of the cluster within the _clusters vector. That's required for the indexing further down and asserted below
     mesh::Vertex                                    center(c.getCoords(), meshVertices.size());
     SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T> p(center, averageClusterRadius, _parameter, _deadAxis, _polynomial, inMesh, outMesh);
 
@@ -232,11 +200,12 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   centerMesh.computeBoundingBox();
   PRECICE_INFO("Bounding Box of the cluster centers {}", centerMesh.getBoundingBox());
 
-  // Step 3: index the clusters / the center mesh in order to create the output vertex -> cluster association
+  // Step 3: index the clusters / the center mesh in order to define the output vertex -> cluster ownership
+  // the ownership is required to compute the normalized partition of unity weight (Step 4)
   query::Index clusterIndex(centerMesh);
-  // Find all clusters the output vertex lies in, i.e., find all centers which have the distance of a cluster radius
-  // Here: VertexID = clusterID
-  // This could also be done on-the-fly in the map data phase, which would require to make the mesh as well as the indexTree member variables.
+  // Find all clusters the output vertex lies in, i.e., find all cluster centers which have the distance of a cluster radius from the given output vertex
+  // Here, we do this using the RTree on the clusterMesh: VertexID (queried from the centersMesh) == clusterID, by construction above.
+  // Note: this could also be done on-the-fly in the map data phase for dynamic queries, which would require to make the mesh as well as the indexTree member variables.
   PRECICE_DEBUG("Computing cluster-vertex association");
   for (const auto &vertex : outMesh->vertices()) {
     auto clusterIDs = clusterIndex.getVerticesInsideBox(vertex, averageClusterRadius);
@@ -316,6 +285,50 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inpu
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
+void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
+{
+  PRECICE_TRACE();
+  mesh::PtrMesh filterMesh, outMesh;
+  if (this->hasConstraint(Mapping::CONSERVATIVE)) {
+    filterMesh = this->output(); // remote
+    outMesh    = this->input();  // local
+  } else {
+    filterMesh = this->input();  // remote
+    outMesh    = this->output(); // local
+  }
+
+  if (outMesh->vertices().empty())
+    return; // Ranks not at the interface should never hold interface vertices
+
+  // TODO: Check again the tagging in combination with the partition construction (which mesh to use)
+  // In order to construct the local partitions, we need all vertices with a distance of 2 x radius,
+  // as the relevant partitions centers have a maximum distance of radius, and the proper construction of the
+  // interpolant requires all vertices with a distance of radius from the center.
+  auto bb = outMesh->getBoundingBox();
+
+  if (averageClusterRadius == 0)
+    averageClusterRadius = impl::estimatePartitionRadius(_verticesPerCluster, filterMesh, bb);
+
+  // @TODO: This assert is not completely right, as it checks all dimensions for non-emptyness (which might not be the case).
+  // However, with the current BB implementation, the expandBy function will just do nothing.
+  PRECICE_ASSERT(!bb.empty());
+  PRECICE_ASSERT(averageClusterRadius > 0);
+  // Now we extend the bounding box by the radius
+  bb.expandBy(1 * averageClusterRadius);
+
+  // ... and tag all affected vertices
+  auto verticesNew = filterMesh->index().getVerticesInsideBox(bb);
+
+  std::for_each(verticesNew.begin(), verticesNew.end(), [&filterMesh](VertexID v) { filterMesh->vertices()[v].tag(); });
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
+{
+  // Probably nothing to be done here. There is no global ownership for matrix entries required and we tag all potentially locally relevant vertices already in the first round.
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
 void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::exportClusterCentersAsVTU(mesh::Mesh &centerMesh)
 {
   PRECICE_TRACE();
@@ -361,7 +374,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::exportClusterCentersAsVTU
   }
 
   io::ExportVTU exporter;
-  exporter.doExport("pouCenters", "exports", centerMesh);
+  exporter.doExport(centerMesh.getName(), "exports", centerMesh);
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
