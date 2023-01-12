@@ -63,7 +63,6 @@ target_sources(testprecice
     tests/serial/AitkenAcceleration.cpp
     tests/serial/PreconditionerBug.cpp
     tests/serial/SendMeshToMultipleParticipants.cpp
-    tests/serial/SummationActionTwoSources.cpp
     tests/serial/TestExplicitWithDataMultipleReadWrite.cpp
     tests/serial/TestExplicitWithSolverGeometry.cpp
     tests/serial/TestImplicit.cpp
@@ -72,8 +71,6 @@ target_sources(testprecice
     tests/serial/access-received-mesh/ExplicitAndMapping.cpp
     tests/serial/access-received-mesh/ExplicitRead.cpp
     tests/serial/access-received-mesh/Implicit.cpp
-    tests/serial/action-timings/ActionTimingsExplicit.cpp
-    tests/serial/action-timings/ActionTimingsImplicit.cpp
     tests/serial/circular/Explicit.cpp
     tests/serial/circular/helper.hpp
     tests/serial/convergence-measures/helpers.cpp
@@ -191,7 +188,6 @@ target_sources(testprecice
     tests/serial/watch-integral/helpers.hpp
     tests/serial/whitebox/TestConfigurationComsol.cpp
     tests/serial/whitebox/TestConfigurationPeano.cpp
-    tests/serial/whitebox/TestExplicitWithDataScaling.cpp
     )
 
 # Contains the list of integration test suites

@@ -333,18 +333,14 @@ double SolverInterfaceImpl::initialize()
   _meshLock.lockAll();
 
   if (_couplingScheme->sendsInitializedData()) {
-    performWriteDataActions({action::Action::WRITE_MAPPING_PRIOR}, 0.0);
     mapWrittenData();
-    performWriteDataActions({action::Action::WRITE_MAPPING_POST}, 0.0);
   }
 
   PRECICE_DEBUG("Initialize coupling schemes");
   // result of _couplingScheme->getNextTimestepMaxLength() can change when calling _couplingScheme->initialize(...) and first participant method is used for setting the time window size.
   _couplingScheme->initialize(time, timeWindow);
 
-  performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0);
   mapReadData();
-  performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
 
   resetWrittenData();
   PRECICE_DEBUG("Plot output");
@@ -399,9 +395,7 @@ double SolverInterfaceImpl::advance(
   double time = _couplingScheme->getTime();
 
   // always perform mapping, because we will store all mapped data, if subcycling is used.
-  performWriteDataActions({action::Action::WRITE_MAPPING_PRIOR}, time);
   mapWrittenData();
-  performWriteDataActions({action::Action::WRITE_MAPPING_POST}, time);
 
   advanceCouplingScheme();
 
@@ -412,13 +406,7 @@ double SolverInterfaceImpl::advance(
   }
 
   if (_couplingScheme->hasDataBeenReceived()) {
-    performDataActions({action::Action::READ_MAPPING_PRIOR}, time);
     mapReadData();
-    performDataActions({action::Action::READ_MAPPING_POST}, time);
-  }
-
-  if (_couplingScheme->isTimeWindowComplete()) {
-    performDataActions({action::Action::ON_TIME_WINDOW_COMPLETE_POST}, time);
   }
 
   PRECICE_INFO(_couplingScheme->printCouplingState());
@@ -1847,42 +1835,6 @@ void SolverInterfaceImpl::mapReadData()
     }
   }
   clearMappings(_accessor->readMappingContexts());
-}
-
-void SolverInterfaceImpl::performDataActions(
-    const std::set<action::Action::Timing> &timings,
-    double                                  time)
-{
-  PRECICE_TRACE();
-  // for actions we need to load and write back data from/to time steps storage.
-  // Actions would need similar treatment like mapping.
-  if (_couplingScheme->hasDataBeenReceived()) {
-    for (auto &context : _accessor->readDataContexts()) {
-      _couplingScheme->loadReceiveDataFromStorage(context.getDataName(), time::Storage::WINDOW_END);
-    }
-  }
-  for (action::PtrAction &action : _accessor->actions()) {
-    if (timings.find(action->getTiming()) != timings.end()) {
-      action->performAction(time);
-    }
-  }
-  if (_couplingScheme->hasDataBeenReceived()) {
-    for (auto &context : _accessor->readDataContexts()) {
-      _couplingScheme->overwriteReceiveData(context.getDataName(), time::Storage::WINDOW_END);
-    }
-  }
-}
-
-void SolverInterfaceImpl::performWriteDataActions(
-    const std::set<action::Action::Timing> &timings,
-    double                                  time)
-{
-  PRECICE_TRACE();
-  for (action::PtrAction &action : _accessor->actions()) {
-    if (timings.find(action->getTiming()) != timings.end()) {
-      action->performAction(time);
-    }
-  }
 }
 
 void SolverInterfaceImpl::handleExports()

@@ -530,26 +530,6 @@ private:
   /// Computes, performs, and resets all suitable read mappings.
   void mapReadData();
 
-  /**
-   * @brief Performs all data actions with given timing.
-   *
-   * @param[in] timings the timings of the action.
-   * @param[in] time the current total simulation time.
-   */
-  void performDataActions(
-      const std::set<action::Action::Timing> &timings,
-      double                                  time);
-
-  /**
-   * @brief Performs all write data actions with given timing.
-   *
-   * @param[in] timings the timings of the action.
-   * @param[in] time the current total simulation time.
-   */
-  void performWriteDataActions(
-      const std::set<action::Action::Timing> &timings,
-      double                                  time);
-
   /// Resets written data, displacements and mesh neighbors to export.
   void resetWrittenData();
 
