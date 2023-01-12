@@ -67,7 +67,7 @@ bool MultiCouplingScheme::hasAnySendData()
 const DataMap MultiCouplingScheme::getAccelerationData()
 {
   // MultiCouplingScheme applies acceleration to all CouplingData
-  return getAllData();
+  return _allData;
 }
 
 void MultiCouplingScheme::exchangeInitialData()
@@ -100,20 +100,6 @@ void MultiCouplingScheme::exchangeInitialData()
     }
   }
   PRECICE_DEBUG("Initial data is exchanged in MultiCouplingScheme");
-}
-
-const DataMap MultiCouplingScheme::getAllData()
-{
-  // MultiCouplingScheme has to collect all send data and receive data from _sendDataVector and _receiveDataVector
-  DataMap allData;
-  // @todo use C++17 std::map::merge
-  for (auto &sendData : _sendDataVector) {
-    allData.insert(sendData.second.begin(), sendData.second.end());
-  }
-  for (auto &receiveData : _receiveDataVector) {
-    allData.insert(receiveData.second.begin(), receiveData.second.end());
-  }
-  return allData;
 }
 
 void MultiCouplingScheme::exchangeFirstData()
@@ -166,9 +152,17 @@ void MultiCouplingScheme::addDataToSend(
     bool                 initialize,
     const std::string &  to)
 {
-  int id = data->getID();
+  // @todo factor out into BaseCouplingScheme, function should create new CouplingData in _allData, if it does not exist and return the corresponding PtrCouplingData
+  int             id = data->getID();
+  PtrCouplingData ptrCplData;
+  if (!utils::contained(id, _allData)) { // data is not used by this coupling scheme yet, create new CouplingData
+    ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), initialize, getExtrapolationOrder());
+    _allData.emplace(id, ptrCplData);
+  } else { // data is already used by another exchange of this coupling scheme, use existing CouplingData
+    ptrCplData = _allData[id];
+  }
+
   PRECICE_DEBUG("Configuring send data to {}", to);
-  PtrCouplingData ptrCplData(new CouplingData(data, std::move(mesh), initialize, getExtrapolationOrder()));
   _sendDataVector[to].emplace(id, ptrCplData);
 }
 
@@ -178,9 +172,17 @@ void MultiCouplingScheme::addDataToReceive(
     bool                 initialize,
     const std::string &  from)
 {
-  int id = data->getID();
+  // @todo factor out into BaseCouplingScheme, function should create new CouplingData in _allData, if it does not exist and return the corresponding PtrCouplingData
+  int             id = data->getID();
+  PtrCouplingData ptrCplData;
+  if (!utils::contained(id, _allData)) { // data is not used by this coupling scheme yet, create new CouplingData
+    ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), initialize, getExtrapolationOrder());
+    _allData.emplace(id, ptrCplData);
+  } else { // data is already used by another exchange of this coupling scheme, use existing CouplingData
+    ptrCplData = _allData[id];
+  }
+
   PRECICE_DEBUG("Configuring receive data from {}", from);
-  PtrCouplingData ptrCplData(new CouplingData(data, std::move(mesh), initialize, getExtrapolationOrder()));
   _receiveDataVector[from].emplace(id, ptrCplData);
 }
 

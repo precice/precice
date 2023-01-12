@@ -246,6 +246,9 @@ public:
   bool hasConverged() const override;
 
 protected:
+  /// All send and receive data as a map "data ID -> data"
+  DataMap _allData;
+
   /**
    * @brief Sends data sendDataIDs given in mapCouplingData with communication.
    *
@@ -261,12 +264,6 @@ protected:
    * @param receiveData DataMap associated with received data
    */
   void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData);
-
-  /**
-   * @brief interface to provide all CouplingData, depending on coupling scheme being used
-   * @return DataMap containing all CouplingData
-   */
-  virtual const DataMap getAllData() = 0;
 
   /**
    * @brief Function to determine whether coupling scheme is an explicit coupling scheme

@@ -88,8 +88,6 @@ private:
 
   logging::Logger _log{"cplscheme::MultiCouplingScheme"};
 
-  const DataMap getAllData() override final;
-
   void exchangeFirstData() override final;
 
   void exchangeSecondData() override final;
