@@ -200,7 +200,7 @@ void BiCouplingScheme::overwriteReceiveData(std::string dataName, double relativ
       return;
     }
   }
-  // PRECICE_ASSERT(false, "Data with name not found", dataName);  // @todo reasonable, but problematic with Integration/Serial/SummationActionTwoSources
+  PRECICE_ASSERT(false, "Data with name not found", dataName);
 }
 
 void BiCouplingScheme::loadReceiveDataFromStorage(std::string dataName, double relativeDt)
@@ -215,7 +215,7 @@ void BiCouplingScheme::loadReceiveDataFromStorage(std::string dataName, double r
       return;
     }
   }
-  // PRECICE_ASSERT(false, "Data with name not found", dataName);  // @todo reasonable, but problematic with Integration/Serial/SummationActionTwoSources
+  PRECICE_ASSERT(false, "Data with name not found", dataName);
 }
 
 // @todo may be moved into BaseCouplingScheme, but should be done consistently with BiCouplingScheme::overwriteReceiveData and BiCouplingScheme::loadReceiveDataFromStorage

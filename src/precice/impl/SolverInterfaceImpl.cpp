@@ -1842,7 +1842,7 @@ void SolverInterfaceImpl::mapReadData()
           PRECICE_DEBUG("Map read data \"{}\" to mesh \"{}\"", context.getDataName(), context.getMeshName());
           context.mapData();
         }
-        context.storeDataInWaveform(time);
+        context.storeDataInWaveform(time); // @todo would be better to store the mapped data in the Storage of the CouplingData. Then transfer data from CouplingData::Storage into ReadDataContext::Waveform before returning from advance.
       }
     }
   }

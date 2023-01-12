@@ -179,7 +179,7 @@ void CompositionalCouplingScheme::overwriteReceiveData(std::string dataName, dou
       scheme->overwriteReceiveData(dataName, relativeDt); // @todo commented out because of problems in Integration/Serial/ThreeSolvers
     }
   }
-  // PRECICE_ASSERT(found == true, "Did not find receive data with given name.", dataName); // @todo reasonable, but problematic with Integration/Serial/SummationActionTwoSources
+  PRECICE_ASSERT(found == true, "Did not find receive data with given name.", dataName);
 }
 
 void CompositionalCouplingScheme::loadReceiveDataFromStorage(std::string dataName, double relativeDt)
@@ -195,22 +195,29 @@ void CompositionalCouplingScheme::loadReceiveDataFromStorage(std::string dataNam
       scheme->loadReceiveDataFromStorage(dataName, relativeDt); // @todo commented out because of problems in Integration/Serial/ThreeSolvers
     }
   }
-  // PRECICE_ASSERT(found == true, "Did not find receive data with given name.", dataName); // @todo reasonable, but problematic with Integration/Serial/SummationActionTwoSources
+  PRECICE_ASSERT(found == true, "Did not find receive data with given name.", dataName);
 }
 
 void CompositionalCouplingScheme::clearAllDataStorage()
 {
   PRECICE_TRACE();
-  for (auto scheme : allSchemes()) {
+  for (auto scheme : schemesToRun()) { // only clearAllDataStorage for schemesToRun(), if we do this for allSchemes(), this would clear the data storage for explicit schemes, when the implicit scheme is iterating.
     scheme->clearAllDataStorage();
   }
 }
 
 std::vector<double> CompositionalCouplingScheme::getReceiveTimes(std::string dataName)
 {
-  //@todo stub implementation. Should walk over all receive data, get times and ensure that all times vectors actually hold the same times (since otherwise we would have to get times individually per data)
-  //@todo As for MultiCouplingScheme subcycling is not supported for CompositionalCouplingScheme, because this needs a complicated interplay of picking the right data in time and mapping this data. This is hard to realize with the current implementation.
-  auto times = std::vector<double>({time::Storage::WINDOW_START, time::Storage::WINDOW_END});
+  std::vector<double> times;
+  bool                found = false;
+  for (auto scheme : allSchemes()) {
+    if (scheme->hasReceiveData(dataName)) {
+      PRECICE_ASSERT(found == false, "CompositionCouplingScheme of participant should only have one receive data with the given name. Found multiple.", dataName)
+      found = true;
+      times = scheme->getReceiveTimes(dataName);
+    }
+  }
+  PRECICE_ASSERT(found == true, "Did not find receive data with given name.", dataName);
   return times;
 }
 
