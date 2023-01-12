@@ -72,19 +72,29 @@ const DataMap MultiCouplingScheme::getAccelerationData()
 
 void MultiCouplingScheme::overwriteSendValuesAtWindowEnd()
 {
+  DataMap uniqueSendData;
   for (auto &sendExchange : _sendDataVector | boost::adaptors::map_values) {
-    for (const auto &data : sendExchange | boost::adaptors::map_values) {
-      data->overwriteValuesAtWindowEnd(data->values());
+    for (auto &pair : sendExchange) {
+      uniqueSendData[pair.first] = pair.second;
     }
+  }
+
+  for (const auto &data : uniqueSendData | boost::adaptors::map_values) {
+    data->overwriteValuesAtWindowEnd(data->values());
   }
 }
 
 void MultiCouplingScheme::initializeSendDataStorage()
 {
+  DataMap uniqueSendData;
   for (auto &sendExchange : _sendDataVector | boost::adaptors::map_values) {
-    for (const auto &data : sendExchange | boost::adaptors::map_values) {
-      data->storeValuesAtTime(time::Storage::WINDOW_START, data->values());
+    for (auto &pair : sendExchange) {
+      uniqueSendData[pair.first] = pair.second;
     }
+  }
+
+  for (const auto &data : uniqueSendData | boost::adaptors::map_values) {
+    data->storeValuesAtTime(time::Storage::WINDOW_START, data->values());
   }
 }
 
@@ -100,9 +110,13 @@ void MultiCouplingScheme::exchangeInitialData()
       }
       checkDataHasBeenReceived();
     } else {
+      DataMap uniqueReceiveData;
       for (auto &receiveExchange : _receiveDataVector | boost::adaptors::map_values) {
-        initializeZeroReceiveData(receiveExchange);
+        for (auto &pair : receiveExchange) {
+          uniqueReceiveData[pair.first] = pair.second;
+        }
       }
+      initializeZeroReceiveData(uniqueReceiveData);
     }
     if (sendsInitializedData()) {
       for (auto &sendExchange : _sendDataVector) {
@@ -115,15 +129,20 @@ void MultiCouplingScheme::exchangeInitialData()
         sendData(_m2ns[sendExchange.first], sendExchange.second, initialCommunication);
       }
     }
+
     if (receivesInitializedData()) {
       for (auto &receiveExchange : _receiveDataVector) {
         receiveData(_m2ns[receiveExchange.first], receiveExchange.second, initialCommunication);
       }
       checkDataHasBeenReceived();
     } else {
+      DataMap uniqueReceiveData;
       for (auto &receiveExchange : _receiveDataVector | boost::adaptors::map_values) {
-        initializeZeroReceiveData(receiveExchange);
+        for (auto &pair : receiveExchange) {
+          uniqueReceiveData[pair.first] = pair.second;
+        }
       }
+      initializeZeroReceiveData(uniqueReceiveData);
     }
   }
   PRECICE_DEBUG("Initial data is exchanged in MultiCouplingScheme");
@@ -133,11 +152,17 @@ void MultiCouplingScheme::storeReceiveData(double relativeDt)
 {
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
   PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
+
+  DataMap uniqueReceiveData;
   for (auto &receiveExchange : _receiveDataVector | boost::adaptors::map_values) {
-    for (auto &receiveData : receiveExchange | boost::adaptors::map_values) {
-      bool mustOverride = true;
-      receiveData->storeValuesAtTime(relativeDt, receiveData->values(), mustOverride);
+    for (auto &pair : receiveExchange) {
+      uniqueReceiveData[pair.first] = pair.second;
     }
+  }
+
+  for (auto &receiveData : uniqueReceiveData | boost::adaptors::map_values) {
+    bool mustOverride = true;
+    receiveData->storeValuesAtTime(relativeDt, receiveData->values(), mustOverride);
   }
 }
 
@@ -145,10 +170,16 @@ void MultiCouplingScheme::loadReceiveDataFromStorage(double relativeDt)
 {
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
   PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
+
+  DataMap uniqueReceiveData;
   for (auto &receiveExchange : _receiveDataVector | boost::adaptors::map_values) {
-    for (auto &receiveData : receiveExchange | boost::adaptors::map_values) {
-      receiveData->values() = receiveData->getValuesAtTime(relativeDt);
+    for (auto &pair : receiveExchange) {
+      uniqueReceiveData[pair.first] = pair.second;
     }
+  }
+
+  for (auto &receiveData : uniqueReceiveData | boost::adaptors::map_values) {
+    receiveData->values() = receiveData->getValuesAtTime(relativeDt);
   }
 }
 

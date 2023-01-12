@@ -134,6 +134,8 @@ void CouplingData::storeExtrapolationData()
 
 void CouplingData::initializeStorage(Eigen::VectorXd data)
 {
+  bool keepWindowStart = false;
+  _timeStepsStorage.clear(keepWindowStart);
   storeValuesAtTime(time::Storage::WINDOW_START, data);
   storeValuesAtTime(time::Storage::WINDOW_END, data);
 }

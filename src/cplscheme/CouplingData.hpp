@@ -83,7 +83,9 @@ public:
   /// clears storage and writes given data at WINDOW_END
   void overwriteValuesAtWindowEnd(Eigen::VectorXd data);
 
-  /// clears _timeStepsStorage. Called after data was written or before data is received.
+  /**
+   * @brief clears _timeStepsStorage. Called after data was written or before data is received.
+   */
   void clearTimeStepsStorage();
 
   /// moves _timeStepsStorage. Called after converged data was received.
@@ -96,6 +98,8 @@ public:
   Eigen::VectorXd getValuesAtTime(double relativeDt);
 
 private:
+  mutable logging::Logger _log{"cplscheme::CouplingData"};
+
   /**
    * @brief Default constructor, not to be used!
    *
