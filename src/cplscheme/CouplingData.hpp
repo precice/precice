@@ -73,7 +73,9 @@ public:
   /// returns keys in _timeStepsStorage in ascending order.
   Eigen::VectorXd getStoredTimesAscending();
 
-  /// clears _timeStepsStorage. Called after data was written or before data is received.
+  /**
+   * @brief clears _timeStepsStorage. Called after data was written or before data is received.
+   */
   void clearTimeStepsStorage(bool keepWindowStart = true);
 
   /// moves _timeStepsStorage. Called after converged data was received.

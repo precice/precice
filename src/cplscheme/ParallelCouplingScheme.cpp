@@ -83,7 +83,7 @@ void ParallelCouplingScheme::exchangeSecondData()
   }
 
   if (hasConverged() || isExplicitCouplingScheme()) {
-    for (const auto &data : _cplData | boost::adaptors::map_values) {
+    for (const auto &data : _allData | boost::adaptors::map_values) {
       data->moveTimeStepsStorage();
     }
   }
@@ -101,7 +101,7 @@ const DataMap ParallelCouplingScheme::getAccelerationData()
 {
   // ParallelCouplingScheme applies acceleration to all CouplingData
   PRECICE_ASSERT(!doesFirstStep(), "Only the second participant should do the acceleration.");
-  return _cplData;
+  return _allData;
 }
 
 } // namespace precice::cplscheme

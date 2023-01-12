@@ -23,6 +23,7 @@
 #include "mesh/Mesh.hpp"
 #include "precice/types.hpp"
 #include "utils/EigenHelperFunctions.hpp"
+#include "utils/Helpers.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
@@ -112,7 +113,6 @@ void BaseCouplingScheme::sendTimes(const m2n::PtrM2N &m2n, const Eigen::VectorXd
 void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendData)
 {
   PRECICE_TRACE();
-  std::vector<int> sentDataIDs;
   PRECICE_ASSERT(m2n.get() != nullptr);
   PRECICE_ASSERT(m2n->isConnected());
 
@@ -191,6 +191,23 @@ void BaseCouplingScheme::initializeZeroReceiveData(const DataMap &receiveData)
     auto zeroData = Eigen::VectorXd::Zero(data->getSize());
     data->initializeStorage(zeroData);
   }
+}
+
+PtrCouplingData BaseCouplingScheme::addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization)
+{
+  int             id = data->getID();
+  PtrCouplingData ptrCplData;
+  if (!utils::contained(id, _allData)) { // data is not used by this coupling scheme yet, create new CouplingData
+    if (isExplicitCouplingScheme()) {
+      ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization);
+    } else {
+      ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, getExtrapolationOrder());
+    }
+    _allData.emplace(id, ptrCplData);
+  } else { // data is already used by another exchange of this coupling scheme, use existing CouplingData
+    ptrCplData = _allData[id];
+  }
+  return ptrCplData;
 }
 
 bool BaseCouplingScheme::isExplicitCouplingScheme()
@@ -598,8 +615,8 @@ void BaseCouplingScheme::addConvergenceMeasure(
     bool                        doesLogging)
 {
   ConvergenceMeasureContext convMeasure;
-  PRECICE_ASSERT(_cplData.count(dataID) == 1, "Data with given data ID must exist!");
-  convMeasure.couplingData = _cplData.at(dataID);
+  PRECICE_ASSERT(_allData.count(dataID) == 1, "Data with given data ID must exist!");
+  convMeasure.couplingData = _allData.at(dataID);
   convMeasure.suffices     = suffices;
   convMeasure.strict       = strict;
   convMeasure.measure      = std::move(measure);
@@ -715,7 +732,7 @@ bool BaseCouplingScheme::reachedEndOfTimeWindow()
 void BaseCouplingScheme::storeIteration()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme());
-  for (auto &data : _cplData | boost::adaptors::map_values) {
+  for (auto &data : _allData | boost::adaptors::map_values) {
     data->storeIteration();
   }
 }

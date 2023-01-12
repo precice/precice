@@ -137,7 +137,7 @@ void SerialCouplingScheme::exchangeSecondData()
   if (hasConverged() || isExplicitCouplingScheme()) {
     // first participant received converged result of this window
     // second participant will receive result for next window
-    for (const auto &data : _cplData | boost::adaptors::map_values) {
+    for (const auto &data : _allData | boost::adaptors::map_values) {
       data->moveTimeStepsStorage();
     }
   }

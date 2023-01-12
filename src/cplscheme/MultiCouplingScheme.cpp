@@ -67,7 +67,7 @@ bool MultiCouplingScheme::hasAnySendData()
 const DataMap MultiCouplingScheme::getAccelerationData()
 {
   // MultiCouplingScheme applies acceleration to all CouplingData
-  return _cplData;
+  return _allData;
 }
 
 void MultiCouplingScheme::storeSendValuesAtTime(double relativeDt)
@@ -154,7 +154,6 @@ void MultiCouplingScheme::exchangeInitialData()
       initializeZeroReceiveData(uniqueReceiveData);
     }
   }
-
   PRECICE_DEBUG("Initial data is exchanged in MultiCouplingScheme");
 }
 
@@ -175,7 +174,7 @@ void MultiCouplingScheme::overwriteReceiveData(std::string dataName, double rela
   bool mustOverride = true;
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
   PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
-  // @todo work with _cplData and move into BaseCouplingScheme
+  // @todo work with _allData and move into BaseCouplingScheme
   for (auto &receiveExchange : _receiveDataVector | boost::adaptors::map_values) {
     for (auto &receiveData : receiveExchange | boost::adaptors::map_values) {
       if (receiveData->getDataName() == dataName) {
@@ -191,7 +190,7 @@ void MultiCouplingScheme::loadReceiveDataFromStorage(std::string dataName, doubl
 {
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
   PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
-  // @todo work with _cplData and move into BaseCouplingScheme
+  // @todo work with _allData and move into BaseCouplingScheme
   for (auto &receiveExchange : _receiveDataVector | boost::adaptors::map_values) {
     for (auto &receiveData : receiveExchange | boost::adaptors::map_values) {
       if (receiveData->getDataName() == dataName) {
@@ -206,7 +205,7 @@ void MultiCouplingScheme::loadReceiveDataFromStorage(std::string dataName, doubl
 // @todo may be moved into BaseCouplingScheme, but should be done consistently with MultiCouplingScheme::overwriteReceiveData and MultiCouplingScheme::loadReceiveDataFromStorage
 void MultiCouplingScheme::clearAllDataStorage()
 {
-  for (auto &data : _cplData | boost::adaptors::map_values) {
+  for (auto &data : _allData | boost::adaptors::map_values) {
     data->clearTimeStepsStorage();
   }
 }
@@ -272,7 +271,7 @@ void MultiCouplingScheme::exchangeSecondData()
   }
 
   if (hasConverged()) {
-    for (const auto &data : _cplData | boost::adaptors::map_values) {
+    for (const auto &data : _allData | boost::adaptors::map_values) {
       data->moveTimeStepsStorage();
     }
   }
@@ -290,41 +289,23 @@ void MultiCouplingScheme::exchangeSecondData()
 void MultiCouplingScheme::addDataToSend(
     const mesh::PtrData &data,
     mesh::PtrMesh        mesh,
-    bool                 initialize,
+    bool                 requiresInitialization,
     const std::string &  to)
 {
-  // @todo factor out into BaseCouplingScheme, function should create new CouplingData in _allData, if it does not exist and return the corresponding PtrCouplingData
-  int             id = data->getID();
-  PtrCouplingData aCplData;
-  if (!utils::contained(id, _cplData)) { // data is not used by this coupling scheme yet, create new CouplingData
-    aCplData = std::make_shared<CouplingData>(data, std::move(mesh), initialize, getExtrapolationOrder());
-    _cplData.emplace(id, aCplData);
-  } else { // data is already used by another exchange of this coupling scheme, use existing CouplingData
-    aCplData = _cplData[id];
-  }
-
+  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization);
   PRECICE_DEBUG("Configuring send data to {}", to);
-  _sendDataVector[to].emplace(id, aCplData);
+  _sendDataVector[to].emplace(data->getID(), ptrCplData);
 }
 
 void MultiCouplingScheme::addDataToReceive(
     const mesh::PtrData &data,
     mesh::PtrMesh        mesh,
-    bool                 initialize,
+    bool                 requiresInitialization,
     const std::string &  from)
 {
-  // @todo factor out into BaseCouplingScheme, function should create new CouplingData in _allData, if it does not exist and return the corresponding PtrCouplingData
-  int             id = data->getID();
-  PtrCouplingData aCplData;
-  if (!utils::contained(id, _cplData)) { // data is not used by this coupling scheme yet, create new CouplingData
-    aCplData = std::make_shared<CouplingData>(data, std::move(mesh), initialize, getExtrapolationOrder());
-    _cplData.emplace(id, aCplData);
-  } else { // data is already used by another exchange of this coupling scheme, use existing CouplingData
-    aCplData = _cplData[id];
-  }
-
+  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization);
   PRECICE_DEBUG("Configuring receive data from {}", from);
-  _receiveDataVector[from].emplace(id, aCplData);
+  _receiveDataVector[from].emplace(data->getID(), ptrCplData);
 }
 
 } // namespace precice::cplscheme

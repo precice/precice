@@ -54,23 +54,11 @@ void BiCouplingScheme::addDataToSend(
     bool                 requiresInitialization)
 {
   PRECICE_TRACE();
-  // @todo factor out into BaseCouplingScheme, function should create new CouplingData in _allData, if it does not exist and return the corresponding PtrCouplingData
-  int             id = data->getID();
-  PtrCouplingData aCplData;
-  if (!utils::contained(id, _cplData)) { // data is not used by this coupling scheme yet, create new CouplingData
-    if (isExplicitCouplingScheme()) {
-      aCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization);
-    } else {
-      aCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, getExtrapolationOrder());
-    }
-    _cplData.emplace(id, aCplData);
-  } else { // data is already used by another exchange of this coupling scheme, use existing CouplingData
-    aCplData = _cplData[id];
-  }
+  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization);
 
-  if (!utils::contained(id, _sendData)) {
-    PRECICE_ASSERT(_sendData.count(id) == 0, "Key already exists!");
-    _sendData.emplace(id, aCplData);
+  if (!utils::contained(data->getID(), _sendData)) {
+    PRECICE_ASSERT(_sendData.count(data->getID()) == 0, "Key already exists!");
+    _sendData.emplace(data->getID(), ptrCplData);
   } else {
     PRECICE_ERROR("Data \"{0}\" cannot be added twice for sending. Please remove any duplicate <exchange data=\"{0}\" .../> tags", data->getName());
   }
@@ -82,23 +70,11 @@ void BiCouplingScheme::addDataToReceive(
     bool                 requiresInitialization)
 {
   PRECICE_TRACE();
-  // @todo factor out into BaseCouplingScheme, function should create new CouplingData in _allData, if it does not exist and return the corresponding PtrCouplingData
-  int             id = data->getID();
-  PtrCouplingData aCplData;
-  if (!utils::contained(id, _cplData)) { // data is not used by this coupling scheme yet, create new CouplingData
-    if (isExplicitCouplingScheme()) {
-      aCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization);
-    } else {
-      aCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, getExtrapolationOrder());
-    }
-    _cplData.emplace(id, aCplData);
-  } else { // data is already used by another exchange of this coupling scheme, use existing CouplingData
-    aCplData = _cplData[id];
-  }
+  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization);
 
-  if (!utils::contained(id, _receiveData)) {
-    PRECICE_ASSERT(_receiveData.count(id) == 0, "Key already exists!");
-    _receiveData.emplace(id, aCplData);
+  if (!utils::contained(data->getID(), _receiveData)) {
+    PRECICE_ASSERT(_receiveData.count(data->getID()) == 0, "Key already exists!");
+    _receiveData.emplace(data->getID(), ptrCplData);
   } else {
     PRECICE_ERROR("Data \"{0}\" cannot be added twice for receiving. Please remove any duplicate <exchange data=\"{0}\" ... /> tags", data->getName());
   }
@@ -106,8 +82,8 @@ void BiCouplingScheme::addDataToReceive(
 
 void BiCouplingScheme::determineInitialDataExchange()
 {
-  determineInitialSend(_sendData);
-  determineInitialReceive(_receiveData);
+  determineInitialSend(getSendData());
+  determineInitialReceive(getReceiveData());
 }
 
 std::vector<std::string> BiCouplingScheme::getCouplingPartners() const
@@ -192,9 +168,9 @@ void BiCouplingScheme::overwriteReceiveData(std::string dataName, double relativ
   bool mustOverwrite = true;
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
   PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
-  // @todo work with _cplData and move into BaseCouplingScheme
+  // @todo work with _allData and move into BaseCouplingScheme
   // @todo use getReceiveData(dataName)?
-  for (auto &receiveData : _receiveData | boost::adaptors::map_values) {
+  for (auto &receiveData : getReceiveData() | boost::adaptors::map_values) {
     if (receiveData->getDataName() == dataName) {
       receiveData->storeValuesAtTime(relativeDt, receiveData->values(), mustOverwrite);
       return;
@@ -207,9 +183,9 @@ void BiCouplingScheme::loadReceiveDataFromStorage(std::string dataName, double r
 {
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
   PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
-  // @todo work with _cplData and move into BaseCouplingScheme
+  // @todo work with _allData and move into BaseCouplingScheme
   // @todo use getReceiveData(dataName)?
-  for (auto &receiveData : _receiveData | boost::adaptors::map_values) {
+  for (auto &receiveData : getReceiveData() | boost::adaptors::map_values) {
     if (receiveData->getDataName() == dataName) {
       receiveData->values() = receiveData->getValuesAtTime(relativeDt);
       return;
@@ -221,7 +197,7 @@ void BiCouplingScheme::loadReceiveDataFromStorage(std::string dataName, double r
 // @todo may be moved into BaseCouplingScheme, but should be done consistently with BiCouplingScheme::overwriteReceiveData and BiCouplingScheme::loadReceiveDataFromStorage
 void BiCouplingScheme::clearAllDataStorage()
 {
-  for (auto &data : _cplData | boost::adaptors::map_values) {
+  for (auto &data : _allData | boost::adaptors::map_values) {
     data->clearTimeStepsStorage();
   }
 }

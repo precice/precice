@@ -86,8 +86,7 @@ void Storage::clear(bool keepWindowStart)
 {
   if (keepWindowStart) {
     PRECICE_ASSERT(nTimes() > 0, "Storage does not contain any data!");
-    Eigen::VectorXd keep;
-    keep = getValuesAtBeginning(); // we keep data at _storageDict[0.0]
+    Eigen::VectorXd keep = getValuesAtBeginning(); // we keep data at _storageDict[0.0]
     _sampleStorage.clear();
     _sampleStorage.emplace_back(std::make_pair(WINDOW_START, keep));
   } else {
