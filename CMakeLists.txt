@@ -63,6 +63,7 @@ option(PRECICE_ALWAYS_VALIDATE_LIBS "Validate libraries even after the validatat
 option(PRECICE_ENABLE_C "Enable the native C bindings" ON)
 option(PRECICE_ENABLE_FORTRAN "Enable the native Fortran bindings" ON)
 option(PRECICE_BUILD_TOOLS "Build the \"precice-tools\" executable" ON)
+option(PRECICE_ENABLE_BACKTRACE "Enable libbacktrace for stacktrace generation." OFF)
 
 option(PRECICE_RELEASE_WITH_DEBUG_LOG "Enable debug logging in release builds" OFF)
 option(PRECICE_RELEASE_WITH_TRACE_LOG "Enable trace logging in release builds" OFF)
@@ -133,13 +134,21 @@ add_feature_info(FortranBindings PRECICE_ENABLE_FORTRAN
 
    This feature can be enabled/disabled by setting the PRECICE_ENABLE_FORTRAN CMake option.
   ")
-  add_feature_info(PreciceTools PRECICE_BUILD_TOOLS
+add_feature_info(PreciceTools PRECICE_BUILD_TOOLS
   "Build the \"precice-tools\" executable
 
    preCICE offers in addition to the core library a variety of tools in order to check configuration
    files or generate xml references. The tools are copmiled into an executable called \"precice-tools\".
 
    This feature can be enabled/disabled by setting the PRECICE_BUILD_TOOLS CMake option.
+  ")
+add_feature_info(Backtrace PRECICE_ENABLE_BACKTRACE
+  "Enables libbacktrace for stracktrace generation.
+
+   preCICE assertions are helpful during development, however, the default stacktraces may not be sufficent.
+   This feature enables the support for libbacktrace in boost.stacktrace.
+
+   This feature can be enabled/disabled by setting the PRECICE_ENABLE_BACKTRACE CMake option.
   ")
 
 
@@ -237,6 +246,12 @@ else()
   message(STATUS "Python support disabled")
 endif()
 
+# Option ENABLE_BACKTRACE
+# Note that the FindBacktrace module does not work reliably to find libbacktrace installations
+if (PRECICE_ENABLE_BACKTRACE)
+  find_package(PkgConfig REQUIRED)
+  pkg_search_module(Backtrace REQUIRED IMPORTED_TARGET libbacktrace)
+endif()
 
 #
 # Setup miscellaneous features
@@ -294,6 +309,10 @@ target_link_libraries(preciceCore PUBLIC
 if(UNIX OR APPLE OR MINGW)
   target_compile_definitions(preciceCore PUBLIC _GNU_SOURCE)
   target_link_libraries(preciceCore PUBLIC ${CMAKE_DL_LIBS})
+endif()
+if(PRECICE_ENABLE_BACKTRACE)
+  target_compile_definitions(preciceCore PRIVATE BOOST_STACKTRACE_USE_BACKTRACE)
+  target_link_libraries(preciceCore PRIVATE PkgConfig::Backtrace)
 endif()
 
 # Setup Eigen3
