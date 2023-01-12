@@ -54,14 +54,14 @@ public:
   void addDataToSend(
       const mesh::PtrData &data,
       mesh::PtrMesh        mesh,
-      bool                 initialize,
+      bool                 requiresInitialization,
       const std::string &  to);
 
   /// Adds data to be received on data exchange.
   void addDataToReceive(
       const mesh::PtrData &data,
       mesh::PtrMesh        mesh,
-      bool                 initialize,
+      bool                 requiresInitialization,
       const std::string &  from);
 
   void determineInitialDataExchange() override;
@@ -91,8 +91,6 @@ private:
   std::map<std::string, DataMap> _sendDataVector;
 
   logging::Logger _log{"cplscheme::MultiCouplingScheme"};
-
-  const DataMap getAllData() override final;
 
   void performReceiveOfFirstAdvance() override final;
 

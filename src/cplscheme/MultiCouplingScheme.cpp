@@ -67,7 +67,7 @@ bool MultiCouplingScheme::hasAnySendData()
 const DataMap MultiCouplingScheme::getAccelerationData()
 {
   // MultiCouplingScheme applies acceleration to all CouplingData
-  return getAllData();
+  return _allData;
 }
 
 void MultiCouplingScheme::overwriteSendValuesAtWindowEnd()
@@ -152,20 +152,6 @@ void MultiCouplingScheme::loadReceiveDataFromStorage(double relativeDt)
   }
 }
 
-const DataMap MultiCouplingScheme::getAllData()
-{
-  // MultiCouplingScheme has to collect all send data and receive data from _sendDataVector and _receiveDataVector
-  DataMap allData;
-  // @todo use C++17 std::map::merge
-  for (auto &sendData : _sendDataVector | boost::adaptors::map_values) {
-    allData.insert(sendData.begin(), sendData.end());
-  }
-  for (auto &receiveData : _receiveDataVector | boost::adaptors::map_values) {
-    allData.insert(receiveData.begin(), receiveData.end());
-  }
-  return allData;
-}
-
 void MultiCouplingScheme::performReceiveOfFirstAdvance()
 {
   return; // no action needed.
@@ -214,12 +200,8 @@ void MultiCouplingScheme::exchangeSecondData()
     checkDataHasBeenReceived();
   }
   if (hasConverged()) {
-    // @todo similar code breaks in SerialCouplingScheme.cpp for CplSchemeTests/SerialImplicitCouplingSchemeTests/ testConfiguredAbsConvergenceMeasureSynchronized. Why? @fsimonis
-    // for (const auto &data : getAllData() | boost::adaptors::map_values) {
-    //   data->moveTimeStepsStorage();
-    // }
-    for (const DataMap::value_type &data : getAllData()) {
-      data.second->moveTimeStepsStorage();
+    for (const auto &data : _allData | boost::adaptors::map_values) {
+      data->moveTimeStepsStorage();
     }
   }
 }
@@ -227,25 +209,23 @@ void MultiCouplingScheme::exchangeSecondData()
 void MultiCouplingScheme::addDataToSend(
     const mesh::PtrData &data,
     mesh::PtrMesh        mesh,
-    bool                 initialize,
+    bool                 requiresInitialization,
     const std::string &  to)
 {
-  int id = data->getID();
+  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization);
   PRECICE_DEBUG("Configuring send data to {}", to);
-  PtrCouplingData ptrCplData(new CouplingData(data, std::move(mesh), initialize, getExtrapolationOrder()));
-  _sendDataVector[to].emplace(id, ptrCplData);
+  _sendDataVector[to].emplace(data->getID(), ptrCplData);
 }
 
 void MultiCouplingScheme::addDataToReceive(
     const mesh::PtrData &data,
     mesh::PtrMesh        mesh,
-    bool                 initialize,
+    bool                 requiresInitialization,
     const std::string &  from)
 {
-  int id = data->getID();
+  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization);
   PRECICE_DEBUG("Configuring receive data from {}", from);
-  PtrCouplingData ptrCplData(new CouplingData(data, std::move(mesh), initialize, getExtrapolationOrder()));
-  _receiveDataVector[from].emplace(id, ptrCplData);
+  _receiveDataVector[from].emplace(data->getID(), ptrCplData);
 }
 
 } // namespace precice::cplscheme

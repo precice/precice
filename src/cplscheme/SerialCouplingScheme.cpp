@@ -123,12 +123,8 @@ void SerialCouplingScheme::exchangeSecondData()
   if (hasConverged() && isCouplingOngoing()) {
     // first participant received converged result of this window
     // second participant will receive result for next window
-    // @todo breaks for CplSchemeTests/SerialImplicitCouplingSchemeTests/ testConfiguredAbsConvergenceMeasureSynchronized. Why? @fsimonis
-    // for (const auto &data : getAllData() | boost::adaptors::map_values) {
-    //   data->moveTimeStepsStorage();
-    // }
-    for (const DataMap::value_type &pair : getAllData()) {
-      pair.second->moveTimeStepsStorage();
+    for (const auto &data : _allData | boost::adaptors::map_values) {
+      data->moveTimeStepsStorage();
     }
   }
 

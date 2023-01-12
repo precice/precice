@@ -23,6 +23,7 @@
 #include "mesh/Mesh.hpp"
 #include "precice/types.hpp"
 #include "utils/EigenHelperFunctions.hpp"
+#include "utils/Helpers.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
@@ -96,7 +97,6 @@ bool BaseCouplingScheme::hasConverged() const
 void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendData, bool initialCommunication)
 {
   PRECICE_TRACE();
-  std::vector<int> sentDataIDs;
   PRECICE_ASSERT(m2n.get() != nullptr);
   PRECICE_ASSERT(m2n->isConnected());
 
@@ -149,6 +149,23 @@ void BaseCouplingScheme::initializeZeroReceiveData(const DataMap &receiveData)
     auto zeroData = Eigen::VectorXd::Zero(data->getSize());
     data->initializeStorage(zeroData);
   }
+}
+
+PtrCouplingData BaseCouplingScheme::addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization)
+{
+  int             id = data->getID();
+  PtrCouplingData ptrCplData;
+  if (!utils::contained(id, _allData)) { // data is not used by this coupling scheme yet, create new CouplingData
+    if (isExplicitCouplingScheme()) {
+      ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization);
+    } else {
+      ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, getExtrapolationOrder());
+    }
+    _allData.emplace(id, ptrCplData);
+  } else { // data is already used by another exchange of this coupling scheme, use existing CouplingData
+    ptrCplData = _allData[id];
+  }
+  return ptrCplData;
 }
 
 bool BaseCouplingScheme::isExplicitCouplingScheme()
@@ -300,12 +317,8 @@ void BaseCouplingScheme::secondExchange()
 void BaseCouplingScheme::storeExtrapolationData()
 {
   PRECICE_TRACE(_timeWindows);
-  // @todo breaks for CplSchemeTests/SerialImplicitCouplingSchemeTests/testConfiguredAbsConvergenceMeasureSynchronized. Why? @fsimonis
-  // for (auto &data : getAllData() | boost::adaptors::map_values) {
-  //   data->storeExtrapolationData();
-  // }
-  for (auto &pair : getAllData()) {
-    pair.second->storeExtrapolationData();
+  for (auto &data : _allData | boost::adaptors::map_values) {
+    data->storeExtrapolationData();
   }
 }
 
@@ -542,12 +555,8 @@ void BaseCouplingScheme::initializeStorages()
 {
   PRECICE_TRACE();
   // Reserve storage for all data
-  // @todo breaks for CplSchemeTests/ParallelImplicitCouplingSchemeTests/Extrapolation/FirstOrderWith*. Interesting: Not for individual tests... Why? @fsimonis
-  // for (auto &data : getAllData() | boost::adaptors::map_values) {
-  //   data->initializeExtrapolation();
-  // }
-  for (auto &pair : getAllData()) {
-    pair.second->initializeExtrapolation();
+  for (auto &data : _allData | boost::adaptors::map_values) {
+    data->initializeExtrapolation();
   }
   // Reserve storage for acceleration
   if (_acceleration) {
@@ -584,9 +593,8 @@ void BaseCouplingScheme::addConvergenceMeasure(
     bool                        doesLogging)
 {
   ConvergenceMeasureContext convMeasure;
-  auto                      allData = getAllData();
-  PRECICE_ASSERT(allData.count(dataID) == 1, "Data with given data ID must exist!");
-  convMeasure.couplingData = allData.at(dataID);
+  PRECICE_ASSERT(_allData.count(dataID) == 1, "Data with given data ID must exist!");
+  convMeasure.couplingData = _allData.at(dataID);
   convMeasure.suffices     = suffices;
   convMeasure.strict       = strict;
   convMeasure.measure      = std::move(measure);
@@ -702,12 +710,8 @@ bool BaseCouplingScheme::reachedEndOfTimeWindow()
 void BaseCouplingScheme::storeIteration()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme());
-  // @todo breaks for CplSchemeTests/ParallelImplicitCouplingSchemeTests/Extrapolation/FirstOrderWith*. Interesting: Not for individual tests... Why? @fsimonis
-  // for (auto &data : getAllData() | boost::adaptors::map_values) {
-  //   data->storeIteration();
-  // }
-  for (const DataMap::value_type &pair : getAllData()) {
-    pair.second->storeIteration();
+  for (auto &data : _allData | boost::adaptors::map_values) {
+    data->storeIteration();
   }
 }
 
