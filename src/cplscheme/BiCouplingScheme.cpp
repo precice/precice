@@ -54,23 +54,11 @@ void BiCouplingScheme::addDataToSend(
     bool                 requiresInitialization)
 {
   PRECICE_TRACE();
-  // @todo factor out into BaseCouplingScheme, function should create new CouplingData in _allData, if it does not exist and return the corresponding PtrCouplingData
-  int             id = data->getID();
-  PtrCouplingData ptrCplData;
-  if (!utils::contained(id, _allData)) { // data is not used by this coupling scheme yet, create new CouplingData
-    if (isExplicitCouplingScheme()) {
-      ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization);
-    } else {
-      ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, getExtrapolationOrder());
-    }
-    _allData.emplace(id, ptrCplData);
-  } else {
-    ptrCplData = _allData[id];
-  }
+  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization);
 
-  if (!utils::contained(id, _sendData)) {
-    PRECICE_ASSERT(_sendData.count(id) == 0, "Key already exists!");
-    _sendData.emplace(id, ptrCplData);
+  if (!utils::contained(data->getID(), _sendData)) {
+    PRECICE_ASSERT(_sendData.count(data->getID()) == 0, "Key already exists!");
+    _sendData.emplace(data->getID(), ptrCplData);
   } else {
     PRECICE_ERROR("Data \"{0}\" cannot be added twice for sending. Please remove any duplicate <exchange data=\"{0}\" .../> tags", data->getName());
   }
@@ -82,23 +70,11 @@ void BiCouplingScheme::addDataToReceive(
     bool                 requiresInitialization)
 {
   PRECICE_TRACE();
-  // @todo factor out into BaseCouplingScheme, function should create new CouplingData in _allData, if it does not exist and return the corresponding PtrCouplingData
-  int             id = data->getID();
-  PtrCouplingData ptrCplData;
-  if (!utils::contained(id, _allData)) { // data is not used by this coupling scheme yet, create new CouplingData
-    if (isExplicitCouplingScheme()) {
-      ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization);
-    } else {
-      ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, getExtrapolationOrder());
-    }
-    _allData.emplace(id, ptrCplData);
-  } else {
-    ptrCplData = _allData[id];
-  }
+  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization);
 
-  if (!utils::contained(id, _receiveData)) {
-    PRECICE_ASSERT(_receiveData.count(id) == 0, "Key already exists!");
-    _receiveData.emplace(id, ptrCplData);
+  if (!utils::contained(data->getID(), _receiveData)) {
+    PRECICE_ASSERT(_receiveData.count(data->getID()) == 0, "Key already exists!");
+    _receiveData.emplace(data->getID(), ptrCplData);
   } else {
     PRECICE_ERROR("Data \"{0}\" cannot be added twice for receiving. Please remove any duplicate <exchange data=\"{0}\" ... /> tags", data->getName());
   }

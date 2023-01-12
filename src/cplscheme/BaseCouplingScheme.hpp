@@ -266,6 +266,18 @@ protected:
   void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData);
 
   /**
+   * @brief Adds CouplingData with given properties to this BaseCouplingScheme and returns a pointer to the CouplingData
+   *
+   * If CouplingData with ID of provided data already exists in coupling scheme, no duplicate is created but a pointer to the already existing CouplingData is returned.
+   *
+   * @param data data the CouplingData is associated with
+   * @param mesh mesh the CouplingData is associated with
+   * @param requiresInitialization true, if CouplingData requires initialization
+   * @return PtrCouplingData pointer to CouplingData owned by the CouplingScheme
+   */
+  PtrCouplingData addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization);
+
+  /**
    * @brief Function to determine whether coupling scheme is an explicit coupling scheme
    * @returns true, if coupling scheme is explicit
    */

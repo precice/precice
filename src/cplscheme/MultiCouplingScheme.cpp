@@ -149,41 +149,23 @@ void MultiCouplingScheme::exchangeSecondData()
 void MultiCouplingScheme::addDataToSend(
     const mesh::PtrData &data,
     mesh::PtrMesh        mesh,
-    bool                 initialize,
+    bool                 requiresInitialization,
     const std::string &  to)
 {
-  // @todo factor out into BaseCouplingScheme, function should create new CouplingData in _allData, if it does not exist and return the corresponding PtrCouplingData
-  int             id = data->getID();
-  PtrCouplingData ptrCplData;
-  if (!utils::contained(id, _allData)) { // data is not used by this coupling scheme yet, create new CouplingData
-    ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), initialize, getExtrapolationOrder());
-    _allData.emplace(id, ptrCplData);
-  } else { // data is already used by another exchange of this coupling scheme, use existing CouplingData
-    ptrCplData = _allData[id];
-  }
-
+  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization);
   PRECICE_DEBUG("Configuring send data to {}", to);
-  _sendDataVector[to].emplace(id, ptrCplData);
+  _sendDataVector[to].emplace(data->getID(), ptrCplData);
 }
 
 void MultiCouplingScheme::addDataToReceive(
     const mesh::PtrData &data,
     mesh::PtrMesh        mesh,
-    bool                 initialize,
+    bool                 requiresInitialization,
     const std::string &  from)
 {
-  // @todo factor out into BaseCouplingScheme, function should create new CouplingData in _allData, if it does not exist and return the corresponding PtrCouplingData
-  int             id = data->getID();
-  PtrCouplingData ptrCplData;
-  if (!utils::contained(id, _allData)) { // data is not used by this coupling scheme yet, create new CouplingData
-    ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), initialize, getExtrapolationOrder());
-    _allData.emplace(id, ptrCplData);
-  } else { // data is already used by another exchange of this coupling scheme, use existing CouplingData
-    ptrCplData = _allData[id];
-  }
-
+  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization);
   PRECICE_DEBUG("Configuring receive data from {}", from);
-  _receiveDataVector[from].emplace(id, ptrCplData);
+  _receiveDataVector[from].emplace(data->getID(), ptrCplData);
 }
 
 } // namespace precice::cplscheme
