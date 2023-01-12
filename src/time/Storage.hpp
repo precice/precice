@@ -103,9 +103,11 @@ public:
   void move();
 
   /**
-   * @brief Clear this Storage by deleting all values except values associated with 0.0.
+   * @brief Clear this Storage by deleting all values. May exclude values associated with 0.0 from deletion via keepWindowStart.
+   *
+   * @param keepWindowStart will keep value at start of window, if true, clear complete storage, if false
    */
-  void clear();
+  void clear(bool keepWindowStart = true);
 
 private:
   /// Stores values on the current window associated with normalized dt.

@@ -10,6 +10,7 @@ on:
       - 'examples/**'
       - 'src/**'
       - 'thirdparty/**'
+      - 'tests/**'
       - 'CMakeLists.txt'
       - 'extras/bindings/**'
       - '.github/workflows/build-and-test-mac.yml'
