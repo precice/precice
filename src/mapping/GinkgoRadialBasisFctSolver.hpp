@@ -83,7 +83,7 @@ const std::map<std::string, PreconditionerType> preconditionerTypeLookup{
 
 const std::map<std::string, std::function<std::shared_ptr<gko::Executor>()>> ginkgoExecutorLookup{{"ginkgo-reference-executor", [] { return gko::ReferenceExecutor::create(); }},
                                                                                                   {"ginkgo-omp-executor", [] { return gko::OmpExecutor::create(); }},
-                                                                                                  {"ginkgo-cuda-executor", [] { return gko::CudaExecutor::create(0, gko::OmpExecutor::create(), true); }},
+                                                                                                  {"ginkgo-cuda-executor", [] { return gko::CudaExecutor::create(0, gko::OmpExecutor::create(), true, gko::allocation_mode::unified_global); }},
                                                                                                   {"ginkgo-hip-executor", [] { return gko::HipExecutor::create(0, gko::OmpExecutor::create(), true); }}};
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -312,9 +312,9 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
 
   } else if (this->_solverType == SolverType::CG) {
 
-    auto solverFactoryWithPreconditioner = [preconditionerType = this->_preconditionerType, executor = this->_deviceExecutor]() {
+    auto solverFactoryWithPreconditioner = [preconditionerType = this->_preconditionerType, executor = this->_deviceExecutor, &ginkgoParameter]() {
       if (preconditionerType == PreconditionerType::Jacobi) {
-        return cg::build().with_preconditioner(jacobi::build().on(executor));
+        return cg::build().with_preconditioner(jacobi::build().with_max_block_size(ginkgoParameter.jacobiBlockSize).on(executor));
       } else if (preconditionerType == PreconditionerType::Cholesky) {
         return cg::build().with_preconditioner(cholesky::build().on(executor));
       } else {
@@ -330,9 +330,9 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
     this->_cgSolver->add_logger(this->_logger);
   } else if (this->_solverType == SolverType::GMRES) {
 
-    auto solverFactoryWithPreconditioner = [preconditionerType = this->_preconditionerType, executor = _deviceExecutor]() {
+    auto solverFactoryWithPreconditioner = [preconditionerType = this->_preconditionerType, executor = _deviceExecutor, &ginkgoParameter]() {
       if (preconditionerType == PreconditionerType::Jacobi) {
-        return gmres::build().with_preconditioner(jacobi::build().on(executor));
+        return gmres::build().with_preconditioner(jacobi::build().with_max_block_size(ginkgoParameter.jacobiBlockSize).on(executor));
       } else if (preconditionerType == PreconditionerType::Cholesky) {
         return gmres::build().with_preconditioner(cholesky::build().on(executor));
       } else {

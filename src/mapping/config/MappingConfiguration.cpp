@@ -71,6 +71,12 @@ MappingConfiguration::MappingConfiguration(
   auto attrGinkgoResidualNorm = makeXMLAttribute(ATTR_GINKGO_RESIDUAL_NORM, 1e-8)
                                     .setDocumentation("Specifies the residual norm that must be achieved in order for the Ginkgo solver to stop.");
 
+  auto attrGinkgoUsePreconditioner = makeXMLAttribute(ATTR_GINKGO_USE_PRECONDITIONER, true)
+                                         .setDocumentation("If set to true, a preconditioner is applied to the iterative Ginkgo RBF solver.");
+
+  auto attrGinkgoJacobiBlockSize = makeXMLAttribute(ATTR_GINKGO_JACOBI_BLOCK_SIZE, 1)
+                                       .setDocumentation("Size of diagonal blocks for Jacobi preconditioner.");
+
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
   std::list<XMLTag>  tags;
   {
@@ -147,6 +153,8 @@ MappingConfiguration::MappingConfiguration(
     tag.addAttribute(attrGinkgoSolver);
     tag.addAttribute(attrGinkgoPreconditioner);
     tag.addAttribute(attrGinkgoResidualNorm);
+    tag.addAttribute(attrGinkgoUsePreconditioner);
+    tag.addAttribute(attrGinkgoJacobiBlockSize);
   }
   {
     XMLTag tag(*this, VALUE_NEAREST_NEIGHBOR, occ, TAG);
@@ -291,6 +299,12 @@ void MappingConfiguration::xmlTagCallback(
     }
     if (tag.hasAttribute(ATTR_GINKGO_RESIDUAL_NORM)) {
       ginkgoParameter.residualNorm = tag.getDoubleAttributeValue(ATTR_GINKGO_RESIDUAL_NORM);
+    }
+    if (tag.hasAttribute(ATTR_GINKGO_USE_PRECONDITIONER)) {
+      ginkgoParameter.usePreconditioner = tag.getBooleanAttributeValue(ATTR_GINKGO_USE_PRECONDITIONER);
+    }
+    if (tag.hasAttribute(ATTR_GINKGO_JACOBI_BLOCK_SIZE)) {
+      ginkgoParameter.jacobiBlockSize = tag.getIntAttributeValue(ATTR_GINKGO_JACOBI_BLOCK_SIZE);
     }
 
     ConfiguredMapping configuredMapping = createMapping(context,

@@ -79,10 +79,12 @@ public:
   };
 
   struct GinkgoParameter {
-    std::string executor       = "ginkgo-reference-executor";
-    std::string solver         = "ginkgo-cg-solver";
-    std::string preconditioner = "ginkgo-jacobi-preconditioner";
-    double      residualNorm   = 1e-8;
+    std::string  executor          = "ginkgo-reference-executor";
+    std::string  solver            = "ginkgo-cg-solver";
+    std::string  preconditioner    = "ginkgo-jacobi-preconditioner";
+    bool         usePreconditioner = true;
+    double       residualNorm      = 1e-8;
+    unsigned int jacobiBlockSize   = 1;
   };
 
   MappingConfiguration(
@@ -120,23 +122,25 @@ private:
 
   const std::string TAG = "mapping";
 
-  const std::string ATTR_DIRECTION             = "direction";
-  const std::string ATTR_FROM                  = "from";
-  const std::string ATTR_TO                    = "to";
-  const std::string ATTR_TIMING                = "timing";
-  const std::string ATTR_TYPE                  = "type";
-  const std::string ATTR_CONSTRAINT            = "constraint";
-  const std::string ATTR_SHAPE_PARAM           = "shape-parameter";
-  const std::string ATTR_SUPPORT_RADIUS        = "support-radius";
-  const std::string ATTR_SOLVER_RTOL           = "solver-rtol";
-  const std::string ATTR_X_DEAD                = "x-dead";
-  const std::string ATTR_Y_DEAD                = "y-dead";
-  const std::string ATTR_Z_DEAD                = "z-dead";
-  const std::string ATTR_USE_QR                = "use-qr-decomposition";
-  const std::string ATTR_GINKGO_EXECUTOR       = "ginkgo-executor";
-  const std::string ATTR_GINKGO_SOLVER         = "ginkgo-solver";
-  const std::string ATTR_GINKGO_PRECONDITIONER = "ginkgo-preconditioner";
-  const std::string ATTR_GINKGO_RESIDUAL_NORM  = "ginkgo-residual-norm";
+  const std::string ATTR_DIRECTION                 = "direction";
+  const std::string ATTR_FROM                      = "from";
+  const std::string ATTR_TO                        = "to";
+  const std::string ATTR_TIMING                    = "timing";
+  const std::string ATTR_TYPE                      = "type";
+  const std::string ATTR_CONSTRAINT                = "constraint";
+  const std::string ATTR_SHAPE_PARAM               = "shape-parameter";
+  const std::string ATTR_SUPPORT_RADIUS            = "support-radius";
+  const std::string ATTR_SOLVER_RTOL               = "solver-rtol";
+  const std::string ATTR_X_DEAD                    = "x-dead";
+  const std::string ATTR_Y_DEAD                    = "y-dead";
+  const std::string ATTR_Z_DEAD                    = "z-dead";
+  const std::string ATTR_USE_QR                    = "use-qr-decomposition";
+  const std::string ATTR_GINKGO_EXECUTOR           = "ginkgo-executor";
+  const std::string ATTR_GINKGO_SOLVER             = "ginkgo-solver";
+  const std::string ATTR_GINKGO_PRECONDITIONER     = "ginkgo-preconditioner";
+  const std::string ATTR_GINKGO_RESIDUAL_NORM      = "ginkgo-residual-norm";
+  const std::string ATTR_GINKGO_USE_PRECONDITIONER = "ginkgo-use-preconditioner";
+  const std::string ATTR_GINKGO_JACOBI_BLOCK_SIZE  = "ginkgo-jacobi-block-size";
 
   const std::string VALUE_WRITE                     = "write";
   const std::string VALUE_READ                      = "read";
