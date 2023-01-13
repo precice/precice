@@ -75,18 +75,35 @@ void SerialCouplingScheme::receiveAndSetTimeWindowSize()
   }
 }
 
-void SerialCouplingScheme::performReceiveOfFirstAdvance()
+void SerialCouplingScheme::exchangeInitialData()
 {
-  // Second participant of a SerialCouplingScheme, receives the result of the first advance of the first participant.
+  // F: send, receive, S: receive, send
+  bool initialCommunication = true;
 
-  if (!doesFirstStep()) { // second participant
+  if (doesFirstStep()) {
+    if (sendsInitializedData()) {
+      sendData(getM2N(), getSendData(), initialCommunication);
+    }
+    if (receivesInitializedData()) {
+      receiveData(getM2N(), getReceiveData(), initialCommunication);
+      checkDataHasBeenReceived();
+    } else {
+      initializeZeroReceiveData(getReceiveData());
+    }
+  } else { // second participant
+    if (receivesInitializedData()) {
+      receiveData(getM2N(), getReceiveData(), initialCommunication);
+    } else {
+      initializeZeroReceiveData(getReceiveData());
+    }
+    if (sendsInitializedData()) {
+      sendData(getM2N(), getSendData(), initialCommunication);
+    }
     // similar to SerialCouplingScheme::exchangeSecondData()
     receiveAndSetTimeWindowSize();
     PRECICE_DEBUG("Receiving data...");
     receiveData(getM2N(), getReceiveData());
-    if (not hasDataBeenReceived()) { // check is required, because calling checkDataHasBeenReceived() if hasDataBeenReceived() == true would trigger an assertion. This situation can only occur during initialization of the second participant of a SerialCouplingScheme, because it may call receive twice: Once for receiving initial data, once for receiving the result of the first advance.
-      checkDataHasBeenReceived();
-    }
+    checkDataHasBeenReceived();
   }
 }
 

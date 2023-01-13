@@ -59,7 +59,7 @@ public:
 private:
   logging::Logger _log{"cplscheme::ParallelCouplingScheme"};
 
-  void performReceiveOfFirstAdvance() override final;
+  void exchangeInitialData() override final;
 
   void exchangeFirstData() override final;
 

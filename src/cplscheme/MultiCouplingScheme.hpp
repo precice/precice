@@ -92,8 +92,6 @@ private:
 
   logging::Logger _log{"cplscheme::MultiCouplingScheme"};
 
-  void performReceiveOfFirstAdvance() override final;
-
   void exchangeFirstData() override final;
 
   void exchangeSecondData() override final;

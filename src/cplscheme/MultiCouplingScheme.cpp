@@ -183,11 +183,6 @@ void MultiCouplingScheme::loadReceiveDataFromStorage(double relativeDt)
   }
 }
 
-void MultiCouplingScheme::performReceiveOfFirstAdvance()
-{
-  return; // no action needed.
-}
-
 void MultiCouplingScheme::exchangeFirstData()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");

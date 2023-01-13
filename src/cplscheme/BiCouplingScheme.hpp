@@ -92,8 +92,6 @@ protected:
 
   void initializeSendDataStorage() override final;
 
-  void exchangeInitialData() override final;
-
 private:
   mutable logging::Logger _log{"cplscheme::BiCouplingScheme"};
 

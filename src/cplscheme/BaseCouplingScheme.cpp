@@ -214,7 +214,6 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
 
   initializeSendDataStorage();
   exchangeInitialData();
-  performReceiveOfFirstAdvance();
 
   _isInitialized = true;
 }

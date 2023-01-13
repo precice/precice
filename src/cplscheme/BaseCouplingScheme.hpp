@@ -502,16 +502,14 @@ private:
 
   /**
    * @brief implements functionality for initialize in base class.
-   */
-  virtual void exchangeInitialData() = 0;
-
-  /**
-   * @brief Receives result of first advance, if this has to happen inside BaseCouplingScheme::initialize()
    *
+   * Takes care of exhanging initial data or initializing zero data, if no initial data is provided.
+   *
+   * Also receives result of first advance, if this has to happen inside BaseCouplingScheme::initialize()
    * This is only relevant for the second participant of the SerialCouplingScheme, because other coupling schemes only
    * receive initial data in initialize.
    */
-  virtual void performReceiveOfFirstAdvance() = 0;
+  virtual void exchangeInitialData() = 0;
 
   /// Functions needed for advance()
 

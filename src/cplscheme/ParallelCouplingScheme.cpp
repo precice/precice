@@ -23,9 +23,32 @@ ParallelCouplingScheme::ParallelCouplingScheme(
     : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
                        secondParticipant, localParticipant, std::move(m2n), maxIterations, cplMode, dtMethod, extrapolationOrder) {}
 
-void ParallelCouplingScheme::performReceiveOfFirstAdvance()
+void ParallelCouplingScheme::exchangeInitialData()
 {
-  return; // no action needed.
+  // F: send, receive, S: receive, send
+  bool initialCommunication = true;
+
+  if (doesFirstStep()) {
+    if (sendsInitializedData()) {
+      sendData(getM2N(), getSendData(), initialCommunication);
+    }
+    if (receivesInitializedData()) {
+      receiveData(getM2N(), getReceiveData(), initialCommunication);
+      checkDataHasBeenReceived();
+    } else {
+      initializeZeroReceiveData(getReceiveData());
+    }
+  } else { // second participant
+    if (receivesInitializedData()) {
+      receiveData(getM2N(), getReceiveData(), initialCommunication);
+      checkDataHasBeenReceived();
+    } else {
+      initializeZeroReceiveData(getReceiveData());
+    }
+    if (sendsInitializedData()) {
+      sendData(getM2N(), getSendData(), initialCommunication);
+    }
+  }
 }
 
 void ParallelCouplingScheme::exchangeFirstData()
