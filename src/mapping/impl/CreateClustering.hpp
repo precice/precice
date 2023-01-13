@@ -170,7 +170,7 @@ void projectClusterCentersToinputMesh(Vertices &clusterCenters, mesh::PtrMesh me
  *
  * @tparam dim spatial dimension of the clustering
  *
- * @param[in] centers vertex containter, where we look for duplicate vertices
+ * @param[in] centers vertex container, where we look for duplicate vertices
  * @param[in] nCells the maximum size of each index (x_max, y_max, z_max)
  * @param[in] threshold threshold value, which compares against the distance between centers
  */
@@ -292,7 +292,7 @@ inline double estimateClusterRadius(unsigned int verticesPerCluster, mesh::PtrMe
  * vertices to the closest vertex from the input mesh, which is useful in case of very irregular meshes or shell-shaped
  * meshes.
  * The algorithm also removes potentially empty cluster, i.e., clusters which would have either no vertex from the
- * \p inMesh or from the \p outMesh . See als \ref tagEmptyClusters.
+ * \p inMesh or from the \p outMesh . See also \ref tagEmptyClusters.
  *
  * @param[in] inMesh The input mesh (input mesh for consistent, output mesh for conservative mappings), on which the
  *            clustering is computed. The input parameters \p verticesPerCluster and \p projectClustersToInput refer
@@ -451,7 +451,7 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
     projectClusterCentersToinputMesh(centers, inMesh);
     // @todo: The duplication should probably be defined in terms of the target distance, not the actual distance. Find good default values
     const auto duplicateThreshold = 0.4 * (*std::min_element(distances.begin(), distances.end()));
-    PRECICE_DEBUG("Tagging duplicates using the threshold value {} fo the distances {}", duplicateThreshold, distances);
+    PRECICE_DEBUG("Tagging duplicates using the threshold value {} for the regular distances {}", duplicateThreshold, distances);
     // usually inMesh->getDimensions() == 2
     // to also cover the case where we have only a single layer in a 3D computation we use the number of clusters in z direction
     // Step 8b or 9a: Moving cluster centers might lead to duplicate centers or centers being too close to each other. Therefore,
