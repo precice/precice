@@ -27,14 +27,12 @@
         direction="write"
         from="MeshTwo"
         to="MeshOne"
-        constraint="consistent"
-        timing="initial" />
+        constraint="consistent" />
       <mapping:nearest-neighbor
         direction="read"
         from="MeshOne"
         to="MeshTwo"
-        constraint="consistent"
-        timing="initial" />
+        constraint="consistent" />
       <write-data name="DataTwo" mesh="MeshTwo" />
       <read-data name="DataOne" mesh="MeshTwo" />
     </participant>
