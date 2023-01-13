@@ -148,7 +148,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   precice::utils::Event e("map.pou.computeMapping.From" + this->input()->getName() + "To" + this->output()->getName(), precice::syncMode);
 
   // Recompute the whole clustering
-  this->clear();
+  PRECICE_ASSERT(!this->_hasComputedMapping, "Please clear the mapping before recomputing.");
 
   mesh::PtrMesh inMesh;
   mesh::PtrMesh outMesh;
