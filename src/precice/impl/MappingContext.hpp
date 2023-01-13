@@ -23,9 +23,6 @@ struct MappingContext {
   /// data which is mapped to mesh
   mesh::PtrData toData = nullptr;
 
-  /// Time of execution of mapping.
-  mapping::MappingConfiguration::Timing timing = mapping::MappingConfiguration::INITIAL;
-
   /// True, if computation and mapping is done repeatedly for single values.
   //bool isIncremental;
 

@@ -76,12 +76,7 @@ bool DataContext::isMappingRequired()
     return false;
   }
 
-  PRECICE_ASSERT(std::all_of(_mappingContexts.begin(), _mappingContexts.end(), [this](const auto &context) { return context.timing == _mappingContexts[0].timing; }), "Different mapping timings for the same data context are not supported");
-
-  return std::any_of(_mappingContexts.begin(), _mappingContexts.end(), [](const auto &context) {
-    const auto timing = context.timing;
-    const bool mapNow = (timing == mapping::MappingConfiguration::ON_ADVANCE) || (timing == mapping::MappingConfiguration::INITIAL);
-    return (mapNow && !context.hasMappedData); });
+  return std::any_of(_mappingContexts.begin(), _mappingContexts.end(), [](const auto &context) { return !context.hasMappedData; });
 }
 
 void DataContext::mapData()
