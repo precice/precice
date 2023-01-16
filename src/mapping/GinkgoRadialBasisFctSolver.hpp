@@ -37,8 +37,6 @@ GKO_REGISTER_UNIFIED_OPERATION(polynomial_fill_operation, fill_polynomial_matrix
 GKO_REGISTER_UNIFIED_OPERATION(tril_operation, extract_upper_triangular);
 
 namespace precice {
-
-extern bool syncMode;
 namespace mapping {
 
 // Every class uses Ginkgo's default_precision = double
@@ -256,7 +254,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
   }
 
   // Launch RBF fill kernel on device
-  precice::utils::Event fillEvent("map.rbf.ginkgo.fillMatrices", precice::syncMode);
+  precice::utils::Event fillEvent("map.rbf.ginkgo.fillMatrices");
   this->_deviceExecutor->run(make_rbf_fill_operation(this->_rbfSystemMatrix->get_size()[0], this->_rbfSystemMatrix->get_size()[1], inputVertices->get_size()[1], activeAxis, this->_rbfSystemMatrix->get_values(), inputVertices->get_values(), inputVertices->get_values(), basisFunction.getFunctor(), basisFunction.getFunctionParameters(), Polynomial::ON == polynomial, polyparams)); // polynomial evaluates to true only if ON is set
   this->_deviceExecutor->run(make_rbf_fill_operation(this->_matrixA->get_size()[0], this->_matrixA->get_size()[1], inputVertices->get_size()[1], activeAxis, this->_matrixA->get_values(), inputVertices->get_values(), outputVertices->get_values(), basisFunction.getFunctor(), basisFunction.getFunctionParameters(), Polynomial::ON == polynomial, polyparams));
 
@@ -375,7 +373,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
 template <typename RADIAL_BASIS_FUNCTION_T>
 void GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::_solveRBFSystem(const std::shared_ptr<GinkgoVector> &rhs) const
 {
-  precice::utils::Event e("map.rbf.ginkgo.solveSystemMatrix", precice::syncMode);
+  precice::utils::Event e("map.rbf.ginkgo.solveSystemMatrix");
   if (this->_solverType == SolverType::CG) {
     this->_cgSolver->apply(gko::lend(rhs), gko::lend(this->_rbfCoefficients));
   } else if (this->_solverType == SolverType::GMRES) {
