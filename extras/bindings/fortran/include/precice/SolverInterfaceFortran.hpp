@@ -83,20 +83,6 @@ PRECICE_API void precicef_finalize_();
 PRECICE_API void precicef_get_dims_(int *dimensions);
 
 /**
- * @deprecated Forwards to precicef_is_coupling_ongoing_
- *
- * Fortran syntax:
- * precicef_ongoing( INTEGER isOngoing )
- *
- * IN:  -
- * OUT: isOngoing(1:true, 0:false)
- *
- * @copydoc precice::SolverInterface::isOngoing()
- *
- */
-[[deprecated("Use precicef_is_coupling_ongoing_() instead.")]] void precicef_ongoing_(int *isOngoing);
-
-/**
  * Fortran syntax:
  * precicef_is_coupling_ongoing( INTEGER isOngoing )
  *
