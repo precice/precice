@@ -1,7 +1,7 @@
 #include "com/Extra.hpp"
 
-#include "com/SerializeMesh.hpp"
-#include "com/SerializePartitioning.hpp"
+#include "com/SerializedMesh.hpp"
+#include "com/SerializedPartitioning.hpp"
 
 namespace precice::com {
 

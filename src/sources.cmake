@@ -78,10 +78,10 @@ target_sources(preciceCore
     src/com/MPISinglePortsCommunicationFactory.hpp
     src/com/Request.cpp
     src/com/Request.hpp
-    src/com/SerializeMesh.cpp
-    src/com/SerializeMesh.hpp
-    src/com/SerializePartitioning.cpp
-    src/com/SerializePartitioning.hpp
+    src/com/SerializedMesh.cpp
+    src/com/SerializedMesh.hpp
+    src/com/SerializedPartitioning.cpp
+    src/com/SerializedPartitioning.hpp
     src/com/SharedPointer.hpp
     src/com/SocketCommunication.cpp
     src/com/SocketCommunication.hpp

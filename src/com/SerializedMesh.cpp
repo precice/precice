@@ -2,7 +2,7 @@
 #include <map>
 
 #include "com/Communication.hpp"
-#include "com/SerializeMesh.hpp"
+#include "com/SerializedMesh.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/assertion.hpp"

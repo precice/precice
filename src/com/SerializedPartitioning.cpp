@@ -5,7 +5,7 @@
 #include <utility>
 
 #include "com/Communication.hpp"
-#include "com/SerializePartitioning.hpp"
+#include "com/SerializedPartitioning.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice::com::serialize {
