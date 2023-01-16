@@ -21,9 +21,9 @@ public:
 
   void assertValid() const;
 
-  void sendTo(Communication &communication, int rankReceiver) const;
+  void send(Communication &communication, int rankReceiver) const;
 
-  static SerializedConnectionMap receiveFrom(Communication &communication, int rankSender);
+  static SerializedConnectionMap receive(Communication &communication, int rankSender);
 
   void broadcastSend(Communication &communication) const;
 
@@ -47,9 +47,9 @@ public:
 
   void assertValid() const;
 
-  void sendTo(Communication &communication, int rankReceiver);
+  void send(Communication &communication, int rankReceiver);
 
-  static SerializedBoundingBoxMap receiveFrom(Communication &communication, int rankSender);
+  static SerializedBoundingBoxMap receive(Communication &communication, int rankSender);
 
   void broadcastSend(Communication &communication);
 

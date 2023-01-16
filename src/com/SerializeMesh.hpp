@@ -18,8 +18,8 @@ public:
 
   void assertValid() const;
 
-  void                  sendTo(Communication &communication, int rankReceiver);
-  static SerializedMesh receiveFrom(Communication &communication, int rankSender);
+  void                  send(Communication &communication, int rankReceiver);
+  static SerializedMesh receive(Communication &communication, int rankSender);
 
   void                  broadcastSend(Communication &communication);
   static SerializedMesh broadcastReceive(Communication &communication);

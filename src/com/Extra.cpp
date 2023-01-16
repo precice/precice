@@ -7,12 +7,12 @@ namespace precice::com {
 
 void sendMesh(Communication &communication, int rankReceiver, const mesh::Mesh &mesh)
 {
-  serialize::SerializedMesh::serialize(mesh).sendTo(communication, rankReceiver);
+  serialize::SerializedMesh::serialize(mesh).send(communication, rankReceiver);
 }
 
 void receiveMesh(Communication &communication, int rankSender, mesh::Mesh &mesh)
 {
-  serialize::SerializedMesh::receiveFrom(communication, rankSender).addToMesh(mesh);
+  serialize::SerializedMesh::receive(communication, rankSender).addToMesh(mesh);
 }
 
 void broadcastSendMesh(Communication &communication, const mesh::Mesh &mesh)
@@ -27,12 +27,12 @@ void broadcastReceiveMesh(Communication &communication, mesh::Mesh &mesh)
 
 void sendConnectionMap(Communication &communication, int rankReceiver, const mesh::Mesh::ConnectionMap &cm)
 {
-  serialize::SerializedConnectionMap::serialize(cm).sendTo(communication, rankReceiver);
+  serialize::SerializedConnectionMap::serialize(cm).send(communication, rankReceiver);
 }
 
 void receiveConnectionMap(Communication &communication, int rankSender, mesh::Mesh::ConnectionMap &cm)
 {
-  cm = serialize::SerializedConnectionMap::receiveFrom(communication, rankSender).toConnectionMap();
+  cm = serialize::SerializedConnectionMap::receive(communication, rankSender).toConnectionMap();
 }
 
 void broadcastSendConnectionMap(Communication &communication, const mesh::Mesh::ConnectionMap &cm)
@@ -47,12 +47,12 @@ void broadcastReceiveConnectionMap(Communication &communication, mesh::Mesh::Con
 
 void sendBoundingBoxMap(Communication &communication, int rankReceiver, const mesh::Mesh::BoundingBoxMap &bbm)
 {
-  serialize::SerializedBoundingBoxMap::serialize(bbm).sendTo(communication, rankReceiver);
+  serialize::SerializedBoundingBoxMap::serialize(bbm).send(communication, rankReceiver);
 }
 
 void receiveBoundingBoxMap(Communication &communication, int rankSender, mesh::Mesh::BoundingBoxMap &bbm)
 {
-  bbm = serialize::SerializedBoundingBoxMap::receiveFrom(communication, rankSender).toBoundingBoxMap();
+  bbm = serialize::SerializedBoundingBoxMap::receive(communication, rankSender).toBoundingBoxMap();
 }
 
 void broadcastSendBoundingBoxMap(Communication &communication, const mesh::Mesh::BoundingBoxMap &bbm)

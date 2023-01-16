@@ -91,12 +91,12 @@ void SerializedConnectionMap::assertValid() const
   PRECICE_ASSERT(consumed == totalSize, "Not everything consumed");
 }
 
-void SerializedConnectionMap::sendTo(Communication &communication, int rankReceiver) const
+void SerializedConnectionMap::send(Communication &communication, int rankReceiver) const
 {
   communication.sendRange(content, rankReceiver);
 }
 
-SerializedConnectionMap SerializedConnectionMap::receiveFrom(Communication &communication, int rankSender)
+SerializedConnectionMap SerializedConnectionMap::receive(Communication &communication, int rankSender)
 {
   SerializedConnectionMap scm;
   scm.content = communication.receiveRange(rankSender, AsVectorTag<int>{});
@@ -203,7 +203,7 @@ void SerializedBoundingBoxMap::assertValid() const
   }
 }
 
-void SerializedBoundingBoxMap::sendTo(Communication &communication, int rankReceiver)
+void SerializedBoundingBoxMap::send(Communication &communication, int rankReceiver)
 {
   communication.sendRange(info, rankReceiver);
   if (info.size() > 1) {
@@ -211,7 +211,7 @@ void SerializedBoundingBoxMap::sendTo(Communication &communication, int rankRece
   }
 }
 
-SerializedBoundingBoxMap SerializedBoundingBoxMap::receiveFrom(Communication &communication, int rankSender)
+SerializedBoundingBoxMap SerializedBoundingBoxMap::receive(Communication &communication, int rankSender)
 {
   SerializedBoundingBoxMap sbbm;
   sbbm.info = communication.receiveRange(rankSender, AsVectorTag<int>{});

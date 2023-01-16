@@ -47,7 +47,7 @@ void SerializedMesh ::assertValid() const
   }
 }
 
-void SerializedMesh::sendTo(Communication &communication, int rankReceiver)
+void SerializedMesh::send(Communication &communication, int rankReceiver)
 {
   communication.sendRange(sizes, rankReceiver);
   if (sizes[1] > 0) {
@@ -56,7 +56,7 @@ void SerializedMesh::sendTo(Communication &communication, int rankReceiver)
   }
 }
 
-SerializedMesh SerializedMesh::receiveFrom(Communication &communication, int rankSender)
+SerializedMesh SerializedMesh::receive(Communication &communication, int rankSender)
 {
   SerializedMesh sm;
   sm.sizes = communication.receiveRange(rankSender, AsVectorTag<int>{});
