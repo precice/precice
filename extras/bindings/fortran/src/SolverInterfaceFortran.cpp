@@ -84,12 +84,6 @@ void precicef_get_dims_(
   *dimensions = impl->getDimensions();
 }
 
-void precicef_ongoing_(
-    int *isOngoing)
-{
-  precicef_is_coupling_ongoing_(isOngoing);
-}
-
 void precicef_is_coupling_ongoing_(
     int *isOngoing)
 {
