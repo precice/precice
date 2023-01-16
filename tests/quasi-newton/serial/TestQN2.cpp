@@ -3,20 +3,20 @@
 #include "testing/Testing.hpp"
 
 #include <precice/SolverInterface.hpp>
-#include "helpers.hpp"
+#include "../helpers.hpp"
 
 BOOST_AUTO_TEST_SUITE(Integration)
-BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_SUITE(QuasiNewton)
-BOOST_AUTO_TEST_CASE(TestQN3EmptyPartition)
+BOOST_AUTO_TEST_SUITE(Serial)
+BOOST_AUTO_TEST_CASE(TestQN2)
 {
-  PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
   // parallel coupling, IQN-ILS, strict QR2 filter
-  runTestQNEmptyPartition(context.config(), context);
+  runTestQN(context.config(), context);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Integration
-BOOST_AUTO_TEST_SUITE_END() // Parallel
 BOOST_AUTO_TEST_SUITE_END() // QuasiNewton
+BOOST_AUTO_TEST_SUITE_END() // Serial
 
 #endif // PRECICE_NO_MPI
