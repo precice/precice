@@ -54,14 +54,11 @@ void BiCouplingScheme::addDataToSend(
     bool                 requiresInitialization)
 {
   PRECICE_TRACE();
-  int id = data->getID();
-  if (!utils::contained(id, _sendData)) {
-    PRECICE_ASSERT(_sendData.count(id) == 0, "Key already exists!");
-    if (isExplicitCouplingScheme()) {
-      _sendData.emplace(id, std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization));
-    } else {
-      _sendData.emplace(id, std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, getExtrapolationOrder()));
-    }
+  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization);
+
+  if (!utils::contained(data->getID(), _sendData)) {
+    PRECICE_ASSERT(_sendData.count(data->getID()) == 0, "Key already exists!");
+    _sendData.emplace(data->getID(), ptrCplData);
   } else {
     PRECICE_ERROR("Data \"{0}\" cannot be added twice for sending. Please remove any duplicate <exchange data=\"{0}\" .../> tags", data->getName());
   }
@@ -73,14 +70,11 @@ void BiCouplingScheme::addDataToReceive(
     bool                 requiresInitialization)
 {
   PRECICE_TRACE();
-  int id = data->getID();
-  if (!utils::contained(id, _receiveData)) {
-    PRECICE_ASSERT(_receiveData.count(id) == 0, "Key already exists!");
-    if (isExplicitCouplingScheme()) {
-      _receiveData.emplace(id, std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization));
-    } else {
-      _receiveData.emplace(id, std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, getExtrapolationOrder()));
-    }
+  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization);
+
+  if (!utils::contained(data->getID(), _receiveData)) {
+    PRECICE_ASSERT(_receiveData.count(data->getID()) == 0, "Key already exists!");
+    _receiveData.emplace(data->getID(), ptrCplData);
   } else {
     PRECICE_ERROR("Data \"{0}\" cannot be added twice for receiving. Please remove any duplicate <exchange data=\"{0}\" ... /> tags", data->getName());
   }
@@ -112,13 +106,6 @@ DataMap &BiCouplingScheme::getSendData()
 DataMap &BiCouplingScheme::getReceiveData()
 {
   return _receiveData;
-}
-
-const DataMap BiCouplingScheme::getAllData()
-{
-  DataMap allData{_sendData};
-  allData.insert(_receiveData.begin(), _receiveData.end());
-  return allData;
 }
 
 CouplingData *BiCouplingScheme::getSendData(

@@ -67,7 +67,7 @@ bool MultiCouplingScheme::hasAnySendData()
 const DataMap MultiCouplingScheme::getAccelerationData()
 {
   // MultiCouplingScheme applies acceleration to all CouplingData
-  return getAllData();
+  return _allData;
 }
 
 void MultiCouplingScheme::exchangeInitialData()
@@ -100,20 +100,6 @@ void MultiCouplingScheme::exchangeInitialData()
     }
   }
   PRECICE_DEBUG("Initial data is exchanged in MultiCouplingScheme");
-}
-
-const DataMap MultiCouplingScheme::getAllData()
-{
-  // MultiCouplingScheme has to collect all send data and receive data from _sendDataVector and _receiveDataVector
-  DataMap allData;
-  // @todo use C++17 std::map::merge
-  for (auto &sendData : _sendDataVector) {
-    allData.insert(sendData.second.begin(), sendData.second.end());
-  }
-  for (auto &receiveData : _receiveDataVector) {
-    allData.insert(receiveData.second.begin(), receiveData.second.end());
-  }
-  return allData;
 }
 
 void MultiCouplingScheme::exchangeFirstData()
@@ -163,25 +149,23 @@ void MultiCouplingScheme::exchangeSecondData()
 void MultiCouplingScheme::addDataToSend(
     const mesh::PtrData &data,
     mesh::PtrMesh        mesh,
-    bool                 initialize,
+    bool                 requiresInitialization,
     const std::string &  to)
 {
-  int id = data->getID();
+  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization);
   PRECICE_DEBUG("Configuring send data to {}", to);
-  PtrCouplingData ptrCplData(new CouplingData(data, std::move(mesh), initialize, getExtrapolationOrder()));
-  _sendDataVector[to].emplace(id, ptrCplData);
+  _sendDataVector[to].emplace(data->getID(), ptrCplData);
 }
 
 void MultiCouplingScheme::addDataToReceive(
     const mesh::PtrData &data,
     mesh::PtrMesh        mesh,
-    bool                 initialize,
+    bool                 requiresInitialization,
     const std::string &  from)
 {
-  int id = data->getID();
+  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization);
   PRECICE_DEBUG("Configuring receive data from {}", from);
-  PtrCouplingData ptrCplData(new CouplingData(data, std::move(mesh), initialize, getExtrapolationOrder()));
-  _receiveDataVector[from].emplace(id, ptrCplData);
+  _receiveDataVector[from].emplace(data->getID(), ptrCplData);
 }
 
 } // namespace precice::cplscheme

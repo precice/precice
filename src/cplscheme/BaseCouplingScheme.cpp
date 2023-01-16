@@ -22,6 +22,7 @@
 #include "mesh/Mesh.hpp"
 #include "precice/types.hpp"
 #include "utils/EigenHelperFunctions.hpp"
+#include "utils/Helpers.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
@@ -129,6 +130,23 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
     receivedDataIDs.push_back(pair.first);
   }
   PRECICE_DEBUG("Number of received data sets = {}", receivedDataIDs.size());
+}
+
+PtrCouplingData BaseCouplingScheme::addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization)
+{
+  int             id = data->getID();
+  PtrCouplingData ptrCplData;
+  if (!utils::contained(id, _allData)) { // data is not used by this coupling scheme yet, create new CouplingData
+    if (isExplicitCouplingScheme()) {
+      ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization);
+    } else {
+      ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, getExtrapolationOrder());
+    }
+    _allData.emplace(id, ptrCplData);
+  } else { // data is already used by another exchange of this coupling scheme, use existing CouplingData
+    ptrCplData = _allData[id];
+  }
+  return ptrCplData;
 }
 
 bool BaseCouplingScheme::isExplicitCouplingScheme()
@@ -284,7 +302,7 @@ void BaseCouplingScheme::secondExchange()
 void BaseCouplingScheme::storeExtrapolationData()
 {
   PRECICE_TRACE(_timeWindows);
-  for (auto &pair : getAllData()) {
+  for (auto &pair : _allData) {
     PRECICE_DEBUG("Store data: {}", pair.first);
     pair.second->storeExtrapolationData();
   }
@@ -524,7 +542,7 @@ void BaseCouplingScheme::initializeStorages()
 {
   PRECICE_TRACE();
   // Reserve storage for all data
-  for (auto &pair : getAllData()) {
+  for (auto &pair : _allData) {
     pair.second->initializeExtrapolation();
   }
   // Reserve storage for acceleration
@@ -562,9 +580,8 @@ void BaseCouplingScheme::addConvergenceMeasure(
     bool                        doesLogging)
 {
   ConvergenceMeasureContext convMeasure;
-  auto                      allData = getAllData();
-  PRECICE_ASSERT(allData.count(dataID) == 1, "Data with given data ID must exist!");
-  convMeasure.couplingData = allData.at(dataID);
+  PRECICE_ASSERT(_allData.count(dataID) == 1, "Data with given data ID must exist!");
+  convMeasure.couplingData = _allData.at(dataID);
   convMeasure.suffices     = suffices;
   convMeasure.strict       = strict;
   convMeasure.measure      = std::move(measure);
@@ -680,7 +697,7 @@ bool BaseCouplingScheme::reachedEndOfTimeWindow()
 void BaseCouplingScheme::storeIteration()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme());
-  for (const DataMap::value_type &pair : getAllData()) {
+  for (const DataMap::value_type &pair : _allData) {
     pair.second->storeIteration();
   }
 }
