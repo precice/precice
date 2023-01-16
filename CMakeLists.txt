@@ -250,7 +250,7 @@ endif()
 # Note that the FindBacktrace module does not work reliably to find libbacktrace installations
 if (PRECICE_ENABLE_BACKTRACE)
   find_package(PkgConfig REQUIRED)
-  pkg_search_module(Backtrace IMPORTED_TARGET libbacktrace)
+  pkg_search_module(Backtrace REQUIRED IMPORTED_TARGET libbacktrace)
 endif()
 
 #
