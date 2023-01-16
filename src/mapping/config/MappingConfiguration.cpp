@@ -66,7 +66,7 @@ MappingConfiguration::MappingConfiguration(
 
   auto attrGinkgoPreconditioner = makeXMLAttribute(ATTR_GINKGO_PRECONDITIONER, "ginkgo-jacobi-preconditioner")
                                       .setDocumentation("Specifies the preconditioner used by Ginkgo.")
-                                      .setOptions({"ginkgo-jacobi-preconditioner", "ginkgo-cholesky-preconditioner", "ginkgo-ilu-preconditioner", "ginkgo-isai-preconditioner"});
+                                      .setOptions({"ginkgo-jacobi-preconditioner", "ginkgo-cholesky-preconditioner", "ginkgo-ilu-preconditioner", "ginkgo-isai-preconditioner", "ginkgo-no-preconditioner"});
 
   auto attrGinkgoResidualNorm = makeXMLAttribute(ATTR_GINKGO_RESIDUAL_NORM, 1e-8)
                                     .setDocumentation("Specifies the residual norm that must be achieved in order for the Ginkgo solver to stop.");
