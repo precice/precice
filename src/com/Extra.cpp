@@ -45,6 +45,16 @@ void broadcastReceiveConnectionMap(Communication &communication, mesh::Mesh::Con
   cm = serialize::SerializedConnectionMap::broadcastReceive(communication).toConnectionMap();
 }
 
+void sendBoundingBox(Communication &communication, int rankReceiver, const mesh::BoundingBox &bb)
+{
+  serialize::SerializedBoundingBox::serialize(bb).send(communication, rankReceiver);
+}
+
+void receiveBoundingBox(Communication &communication, int rankSender, mesh::BoundingBox &bb)
+{
+  bb = serialize::SerializedBoundingBox::receive(communication, rankSender).toBoundingBox();
+}
+
 void sendBoundingBoxMap(Communication &communication, int rankReceiver, const mesh::Mesh::BoundingBoxMap &bbm)
 {
   serialize::SerializedBoundingBoxMap::serialize(bbm).send(communication, rankReceiver);

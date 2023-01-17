@@ -10,6 +10,8 @@
 
 namespace precice::com::serialize {
 
+// SerializedConnectionMap
+
 SerializedConnectionMap SerializedConnectionMap::serialize(const ConnectionMap &cm)
 {
   SerializedConnectionMap scm;
@@ -116,6 +118,70 @@ SerializedConnectionMap SerializedConnectionMap::broadcastReceive(Communication 
   scm.assertValid();
   return scm;
 }
+
+// SerializedBoundingBox
+
+SerializedBoundingBox SerializedBoundingBox::serialize(const mesh::BoundingBox &bb)
+{
+  SerializedBoundingBox sbb;
+
+  // Entries, dimensions, ranks
+  const auto dims = bb.getDimension();
+  PRECICE_ASSERT(dims == 2 || dims == 3);
+
+  auto &coords = sbb.coords;
+  coords.reserve(1 + 2 * dims);
+  coords.push_back(dims);
+  // copy point coordinates
+  auto min = bb.minCorner();
+  std::copy_n(min.data(), dims, std::back_inserter(coords));
+  auto max = bb.maxCorner();
+  std::copy_n(max.data(), dims, std::back_inserter(coords));
+
+  sbb.assertValid();
+  return sbb;
+}
+
+mesh::BoundingBox SerializedBoundingBox::toBoundingBox() const
+{
+  auto dims = static_cast<int>(coords.at(0));
+
+  ///@todo replace the coord mess after refactoring of AABB to min and max points
+  std::vector<double> buffer(dims * 2);
+
+  // Copy coords into buffer
+  // Input:  minX, minY, minZ, maxX, maxY, maxZ
+  // Output: minX, maxX minY, maxY, minZ, maxZ
+  for (int d = 0; d < dims; ++d) {
+    auto offset        = d * 2;
+    buffer[offset]     = coords[1 + d];        // min
+    buffer[offset + 1] = coords[1 + d + dims]; // max
+  }
+  return mesh::BoundingBox(buffer);
+}
+
+void SerializedBoundingBox::assertValid() const
+{
+  PRECICE_ASSERT(!coords.empty());
+  auto dims = static_cast<size_t>(coords.front());
+  PRECICE_ASSERT(dims == 2 || dims == 3);
+  PRECICE_ASSERT(coords.size() == 1 + dims * 2);
+}
+
+void SerializedBoundingBox::send(Communication &communication, int rankReceiver)
+{
+  communication.sendRange(coords, rankReceiver);
+}
+
+SerializedBoundingBox SerializedBoundingBox::receive(Communication &communication, int rankSender)
+{
+  SerializedBoundingBox sbb;
+  sbb.coords = communication.receiveRange(rankSender, AsVectorTag<double>{});
+  sbb.assertValid();
+  return sbb;
+}
+
+// SerializedBoundingBoxMap
 
 SerializedBoundingBoxMap SerializedBoundingBoxMap::serialize(const BoundingBoxMap &bbm)
 {

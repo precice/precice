@@ -37,6 +37,28 @@ private:
   std::vector<int> content;
 };
 
+class SerializedBoundingBox {
+public:
+  static SerializedBoundingBox serialize(const mesh::BoundingBox &bbm);
+
+  mesh::BoundingBox toBoundingBox() const;
+
+  void assertValid() const;
+
+  void send(Communication &communication, int rankReceiver);
+
+  static SerializedBoundingBox receive(Communication &communication, int rankSender);
+
+private:
+  SerializedBoundingBox() = default;
+
+  /** AABB coords
+   * For 2D: 2, MinX, MinY, MaxX, MaxY
+   * For 3D: 3, MinX, MinY, MinZ, MaxX, MaxY, MaxZ
+   */
+  std::vector<double> coords;
+};
+
 class SerializedBoundingBoxMap {
 public:
   using BoundingBoxMap = std::map<Rank, mesh::BoundingBox>;

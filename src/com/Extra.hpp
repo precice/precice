@@ -21,6 +21,10 @@ void broadcastSendConnectionMap(Communication &communication, const mesh::Mesh::
 
 void broadcastReceiveConnectionMap(Communication &communication, mesh::Mesh::ConnectionMap &cm);
 
+void sendBoundingBox(Communication &communication, int rankReceiver, const mesh::BoundingBox &bb);
+
+void receiveBoundingBox(Communication &communication, int rankSender, mesh::BoundingBox &bb);
+
 void sendBoundingBoxMap(Communication &communication, int rankReceiver, const mesh::Mesh::BoundingBoxMap &bbm);
 
 void receiveBoundingBoxMap(Communication &communication, int rankSender, mesh::Mesh::BoundingBoxMap &bbm);
