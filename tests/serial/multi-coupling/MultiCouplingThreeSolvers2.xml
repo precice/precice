@@ -90,7 +90,7 @@
       <exchange data="DataAB" mesh="MeshA" from="SolverA" to="SolverB" />
       <exchange data="DataCB" mesh="MeshC" from="SolverC" to="SolverB" />
       <exchange data="DataBC" mesh="MeshC" from="SolverB" to="SolverC" />
-      <exchange data="DataBC" mesh="MeshC" from="SolverC" to="SolverA" />
+      <exchange data="DataBC" mesh="MeshC" from="SolverB" to="SolverA" />
       <exchange data="DataCB" mesh="MeshC" from="SolverC" to="SolverA" />
       <relative-convergence-measure data="DataCB" mesh="MeshC" limit="1e-4" />
       <relative-convergence-measure data="DataBA" mesh="MeshA" limit="1e-4" />

@@ -135,9 +135,9 @@
       <exchange data="DataCD" mesh="MeshD" from="SolverC" to="SolverD" />
       <exchange data="DataDC" mesh="MeshD" from="SolverD" to="SolverC" />
       <exchange data="DataCB" mesh="MeshC1" from="SolverC" to="SolverA" />
-      <exchange data="DataBC" mesh="MeshC1" from="SolverC" to="SolverA" />
+      <exchange data="DataBC" mesh="MeshC1" from="SolverB" to="SolverA" />
       <exchange data="DataDC" mesh="MeshD" from="SolverD" to="SolverA" />
-      <exchange data="DataCD" mesh="MeshD" from="SolverD" to="SolverA" />
+      <exchange data="DataCD" mesh="MeshD" from="SolverC" to="SolverA" />
       <relative-convergence-measure data="DataAB" mesh="MeshA" limit="1e-4" />
       <relative-convergence-measure data="DataDC" mesh="MeshD" limit="1e-4" />
       <acceleration:IQN-ILS>
