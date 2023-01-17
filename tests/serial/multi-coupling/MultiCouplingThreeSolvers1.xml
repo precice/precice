@@ -31,8 +31,6 @@
     <participant name="SolverA">
       <provide-mesh name="MeshA" />
       <receive-mesh name="MeshC" from="SolverC" />
-      <receive-mesh name="MeshB1" from="SolverB" />
-      <receive-mesh name="MeshB2" from="SolverB" />
       <write-data name="DataAB" mesh="MeshA" />
       <read-data name="DataBA" mesh="MeshA" />
     </participant>
@@ -51,18 +49,17 @@
         direction="write"
         from="MeshB1"
         to="MeshA"
-        constraint="conservative" />
+        constraint="consistent" />
       <mapping:nearest-neighbor direction="read" from="MeshC" to="MeshB2" constraint="consistent" />
       <mapping:nearest-neighbor
         direction="write"
         from="MeshB2"
         to="MeshC"
-        constraint="conservative" />
+        constraint="consistent" />
     </participant>
 
     <participant name="SolverC">
       <provide-mesh name="MeshC" />
-      <receive-mesh name="MeshA" from="SolverA" />
       <write-data name="DataCB" mesh="MeshC" />
       <read-data name="DataBC" mesh="MeshC" />
     </participant>
