@@ -111,7 +111,7 @@ int BoundingBox::getDimension() const
 
 const std::vector<double> BoundingBox::dataVector() const
 {
-  if (_boundMin.rows() == 3) {
+  if (_dimensions == 3) {
     std::vector<double> _bounds{_boundMin[0], _boundMax[0], _boundMin[1], _boundMax[1], _boundMin[2], _boundMax[2]};
   } else {
     std::vector<double> _bounds{_boundMin[0], _boundMax[0], _boundMin[1], _boundMax[1]};
