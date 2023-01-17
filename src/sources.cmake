@@ -53,8 +53,6 @@ target_sources(preciceCore
     src/action/SummationAction.hpp
     src/action/config/ActionConfiguration.cpp
     src/action/config/ActionConfiguration.hpp
-    src/com/CommunicateBoundingBox.cpp
-    src/com/CommunicateBoundingBox.hpp
     src/com/Communication.cpp
     src/com/Communication.hpp
     src/com/CommunicationFactory.hpp

@@ -3,7 +3,6 @@
 #include <memory>
 #include <vector>
 
-#include "com/CommunicateBoundingBox.hpp"
 #include "com/Extra.hpp"
 #include "com/SharedPointer.hpp"
 #include "m2n/M2N.hpp"
@@ -32,16 +31,16 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveBoundingBox)
       bounds.push_back(i);
       bounds.push_back(i + 1);
     }
-    mesh::BoundingBox      bb(bounds);
-    CommunicateBoundingBox comBB(m2n->getPrimaryRankCommunication());
+    mesh::BoundingBox bb(bounds);
+    auto              comm = m2n->getPrimaryRankCommunication();
 
     if (context.isNamed("A")) {
-      comBB.sendBoundingBox(bb, 0);
+      com::sendBoundingBox(*comm, 0, bb);
     } else {
       BOOST_TEST(context.isNamed("B"));
       mesh::BoundingBox bbCompare(dim);
 
-      comBB.receiveBoundingBox(bbCompare, 0);
+      com::receiveBoundingBox(*comm, 0, bbCompare);
 
       BOOST_TEST(bb == bbCompare);
     }

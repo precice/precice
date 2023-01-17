@@ -7,7 +7,6 @@
 #include <string>
 #include <vector>
 
-#include "com/CommunicateBoundingBox.hpp"
 #include "com/Communication.hpp"
 #include "com/Extra.hpp"
 #include "com/SharedPointer.hpp"

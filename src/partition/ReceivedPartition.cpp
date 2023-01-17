@@ -6,7 +6,6 @@
 #include <utility>
 #include <vector>
 
-#include "com/CommunicateBoundingBox.hpp"
 #include "com/Communication.hpp"
 #include "com/Extra.hpp"
 #include "com/SharedPointer.hpp"
@@ -306,7 +305,7 @@ void ReceivedPartition::filterByBoundingBox()
 
     if (utils::IntraComm::isSecondary()) {
       PRECICE_DEBUG("Send bounding box to primary rank");
-      com::CommunicateBoundingBox(utils::IntraComm::getCommunication()).sendBoundingBox(_bb, 0);
+      com::sendBoundingBox(*utils::IntraComm::getCommunication(), 0, _bb);
       PRECICE_DEBUG("Receive filtered mesh");
       com::receiveMesh(*utils::IntraComm::getCommunication(), 0, *_mesh);
 
@@ -320,7 +319,7 @@ void ReceivedPartition::filterByBoundingBox()
 
       for (int secondaryRank : utils::IntraComm::allSecondaryRanks()) {
         mesh::BoundingBox secondaryBB(_bb.getDimension());
-        com::CommunicateBoundingBox(utils::IntraComm::getCommunication()).receiveBoundingBox(secondaryBB, secondaryRank);
+        com::receiveBoundingBox(*utils::IntraComm::getCommunication(), secondaryRank, secondaryBB);
 
         PRECICE_DEBUG("From secondary rank {}, bounding mesh: {}", secondaryRank, secondaryBB);
         mesh::Mesh secondaryMesh("SecondaryMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
@@ -585,14 +584,14 @@ void ReceivedPartition::createOwnerInformation()
 
       // primary rank receives local bb from each secondary rank
       for (int secondaryRank = 1; secondaryRank < utils::IntraComm::getSize(); secondaryRank++) {
-        com::CommunicateBoundingBox(utils::IntraComm::getCommunication()).receiveBoundingBox(localBBMap.at(secondaryRank), secondaryRank);
+        com::receiveBoundingBox(*utils::IntraComm::getCommunication(), secondaryRank, localBBMap.at(secondaryRank));
       }
 
       // primary rank broadcast localBBMap to all secondary ranks
       com::broadcastSendBoundingBoxMap(*utils::IntraComm::getCommunication(), localBBMap);
     } else if (utils::IntraComm::isSecondary()) {
       // secondary ranks send local bb to primary rank
-      com::CommunicateBoundingBox(utils::IntraComm::getCommunication()).sendBoundingBox(_bb, 0);
+      com::sendBoundingBox(*utils::IntraComm::getCommunication(), 0, _bb);
       // secondary ranks receive localBBMap from primary rank
       com::broadcastReceiveBoundingBoxMap(*utils::IntraComm::getCommunication(), localBBMap);
     }

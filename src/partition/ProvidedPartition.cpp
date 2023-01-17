@@ -6,7 +6,6 @@
 #include <utility>
 #include <vector>
 
-#include "com/CommunicateBoundingBox.hpp"
 #include "com/Communication.hpp"
 #include "com/Extra.hpp"
 #include "com/SharedPointer.hpp"
@@ -259,7 +258,7 @@ void ProvidedPartition::compareBoundingBoxes()
   // each secondary rank sends its bb to the primary rank
   if (utils::IntraComm::isSecondary()) { // secondary
     PRECICE_ASSERT(_mesh->getBoundingBox().getDimension() == _mesh->getDimensions(), "The boundingbox of the local mesh is invalid!");
-    com::CommunicateBoundingBox(utils::IntraComm::getCommunication()).sendBoundingBox(_mesh->getBoundingBox(), 0);
+    com::sendBoundingBox(*utils::IntraComm::getCommunication(), 0, _mesh->getBoundingBox());
   } else { // Primary
 
     PRECICE_ASSERT(utils::IntraComm::getRank() == 0);
@@ -275,7 +274,7 @@ void ProvidedPartition::compareBoundingBoxes()
     for (Rank secondaryRank : utils::IntraComm::allSecondaryRanks()) {
       // initialize bbm
       bbm.emplace(secondaryRank, bb);
-      com::CommunicateBoundingBox(utils::IntraComm::getCommunication()).receiveBoundingBox(bbm.at(secondaryRank), secondaryRank);
+      com::receiveBoundingBox(*utils::IntraComm::getCommunication(), secondaryRank, bbm.at(secondaryRank));
     }
 
     // primary rank sends number of ranks and bbm to the other primary rank
