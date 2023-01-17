@@ -109,9 +109,6 @@ private:
   /// Number of dimensions
   int _dimensions;
 
-  /// Container of min and max points in each dimension
-  std::vector<double> _bounds;
-
   /// Container of a Eigen::VectorXd of a bounding box with min components in each dimension
   Eigen::VectorXd _boundMin;
 
