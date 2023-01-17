@@ -29,7 +29,7 @@ BoundingBox::BoundingBox(Eigen::VectorXd boundMin, Eigen::VectorXd boundMax)
 BoundingBox::BoundingBox(std::vector<double> bounds)
 {
   PRECICE_ASSERT((int) bounds.size() == 4 || (int) bounds.size() == 6, "Dimension of a bounding box can only be 2 or 3.", bounds.size() / 2);
-  _dimensions = _bounds.size() / 2;
+  _dimensions = bounds.size() / 2;
   _boundMin   = Eigen::Map<Eigen::VectorXd, 0, Eigen::InnerStride<2>>(bounds.data(), _dimensions);
   _boundMax   = Eigen::Map<Eigen::VectorXd, 0, Eigen::InnerStride<2>>(bounds.data() + 1, _dimensions);
 }
@@ -111,12 +111,13 @@ int BoundingBox::getDimension() const
 
 const std::vector<double> BoundingBox::dataVector() const
 {
+  std::vector<double> bounds;
   if (_dimensions == 3) {
-    std::vector<double> _bounds{_boundMin[0], _boundMax[0], _boundMin[1], _boundMax[1], _boundMin[2], _boundMax[2]};
+    bounds.insert(bounds.end(), {_boundMin[0], _boundMax[0], _boundMin[1], _boundMax[1], _boundMin[2], _boundMax[2]});
   } else {
-    std::vector<double> _bounds{_boundMin[0], _boundMax[0], _boundMin[1], _boundMax[1]};
+    bounds.insert(bounds.end(), {_boundMin[0], _boundMax[0], _boundMin[1], _boundMax[1]});
   }
-  return _bounds;
+  return bounds;
 }
 
 void BoundingBox::expandBy(const BoundingBox &otherBB)
