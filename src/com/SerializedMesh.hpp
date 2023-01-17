@@ -11,17 +11,32 @@ class Communication;
 
 namespace serialize {
 
+/// serialized representation of mesh::Mesh
 class SerializedMesh {
 public:
+  /** serializes a given mesh::Mesh
+   *
+   * Calls assertValid prior
+   */
   static SerializedMesh serialize(const mesh::Mesh &mesh);
-  void                  addToMesh(mesh::Mesh &mesh) const;
 
+  /** adds the serialized mesh to an actual mesh
+   *
+   * The mesh to add to may contain vertices.
+   */
+  void addToMesh(mesh::Mesh &mesh) const;
+
+  /// asserts the content for correctness
   void assertValid() const;
 
-  void                  send(Communication &communication, int rankReceiver);
+  void send(Communication &communication, int rankReceiver);
+
+  /// receives a SerializedMesh and calls assertValid before returning
   static SerializedMesh receive(Communication &communication, int rankSender);
 
-  void                  broadcastSend(Communication &communication);
+  void broadcastSend(Communication &communication);
+
+  /// receives a SerializedMesh and calls assertValid before returning
   static SerializedMesh broadcastReceive(Communication &communication);
 
 private:

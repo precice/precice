@@ -11,22 +11,31 @@ class Communication;
 
 namespace serialize {
 
+/// serialized representation of ConnectionMap
 class SerializedConnectionMap {
 public:
   using ConnectionMap = std::map<Rank, std::vector<VertexID>>;
 
+  /** serializes a given ConnectionMap
+   *
+   * Calls assertValid
+   */
   static SerializedConnectionMap serialize(const ConnectionMap &cm);
 
+  /// Builds and returns the connection map represented by the serialized state
   ConnectionMap toConnectionMap() const;
 
+  /// asserts the content for correctness
   void assertValid() const;
 
   void send(Communication &communication, int rankReceiver) const;
 
+  /// receives a SerializedConnectionMap and calls assertValid before returning
   static SerializedConnectionMap receive(Communication &communication, int rankSender);
 
   void broadcastSend(Communication &communication) const;
 
+  /// receives a SerializedConnectionMap and calls assertValid before returning
   static SerializedConnectionMap broadcastReceive(Communication &communication);
 
 private:
@@ -37,16 +46,24 @@ private:
   std::vector<int> content;
 };
 
+/// serialized representation of a mesh::BoundingBox
 class SerializedBoundingBox {
 public:
+  /** serializes a given mesh::BoundingBox
+   *
+   * Calls assertValid
+   */
   static SerializedBoundingBox serialize(const mesh::BoundingBox &bbm);
 
+  /// Builds and returns the BoundingBox represented by the serialized state
   mesh::BoundingBox toBoundingBox() const;
 
+  /// asserts the content for correctness
   void assertValid() const;
 
   void send(Communication &communication, int rankReceiver);
 
+  /// receives a SerializedBoundingBox and calls assertValid before returning
   static SerializedBoundingBox receive(Communication &communication, int rankSender);
 
 private:
@@ -59,22 +76,31 @@ private:
   std::vector<double> coords;
 };
 
+/// serialized representation of a BoundingBoxMap
 class SerializedBoundingBoxMap {
 public:
   using BoundingBoxMap = std::map<Rank, mesh::BoundingBox>;
 
+  /** serializes a given BoundingBoxMap
+   *
+   * Calls assertValid
+   */
   static SerializedBoundingBoxMap serialize(const BoundingBoxMap &bbm);
 
+  /// Builds and returns the BoundingBoxMap represented by the serialized state
   BoundingBoxMap toBoundingBoxMap() const;
 
+  /// asserts the content for correctness
   void assertValid() const;
 
   void send(Communication &communication, int rankReceiver);
 
+  /// receives a SerializedBoundingBoxMap and calls assertValid before returning
   static SerializedBoundingBoxMap receive(Communication &communication, int rankSender);
 
   void broadcastSend(Communication &communication);
 
+  /// receives a SerializedBoundingBoxMap and calls assertValid before returning
   static SerializedBoundingBoxMap broadcastReceive(Communication &communication);
 
 private:
