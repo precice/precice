@@ -800,10 +800,11 @@ void SolverInterfaceImpl::setMeshEdges(
 
   mesh::PtrMesh &mesh = context.mesh;
   {
-    auto [first, last] = utils::find_first_range(vertices, vertices + size * 2, [&mesh](VertexID vid) {
+    auto end           = std::next(vertices, size * 2);
+    auto [first, last] = utils::find_first_range(vertices, end, [&mesh](VertexID vid) {
       return !mesh->isValidVertexID(vid);
     });
-    PRECICE_CHECK(first == last,
+    PRECICE_CHECK(first == end,
                   impl::errorInvalidVertexIDRange,
                   std::distance(vertices, first),
                   std::distance(vertices, last));
@@ -867,10 +868,11 @@ void SolverInterfaceImpl::setMeshTriangles(
 
   mesh::PtrMesh &mesh = context.mesh;
   {
-    auto [first, last] = utils::find_first_range(vertices, vertices + size * 3, [&mesh](VertexID vid) {
+    auto end           = std::next(vertices, size * 3);
+    auto [first, last] = utils::find_first_range(vertices, end, [&mesh](VertexID vid) {
       return !mesh->isValidVertexID(vid);
     });
-    PRECICE_CHECK(first == last,
+    PRECICE_CHECK(first == end,
                   impl::errorInvalidVertexIDRange,
                   std::distance(vertices, first),
                   std::distance(vertices, last));
@@ -952,10 +954,11 @@ void SolverInterfaceImpl::setMeshQuads(
 
   mesh::Mesh &mesh = *(context.mesh);
   {
-    auto [first, last] = utils::find_first_range(vertices, vertices + size * 4, [&mesh](VertexID vid) {
+    auto end           = std::next(vertices, size * 4);
+    auto [first, last] = utils::find_first_range(vertices, end, [&mesh](VertexID vid) {
       return !mesh.isValidVertexID(vid);
     });
-    PRECICE_CHECK(first == last,
+    PRECICE_CHECK(first == end,
                   impl::errorInvalidVertexIDRange,
                   std::distance(vertices, first),
                   std::distance(vertices, last));
@@ -1039,10 +1042,11 @@ void SolverInterfaceImpl::setMeshTetrahedra(
 
   mesh::PtrMesh &mesh = context.mesh;
   {
-    auto [first, last] = utils::find_first_range(vertices, vertices + size * 4, [&mesh](VertexID vid) {
+    auto end           = std::next(vertices, size * 4);
+    auto [first, last] = utils::find_first_range(vertices, end, [&mesh](VertexID vid) {
       return !mesh->isValidVertexID(vid);
     });
-    PRECICE_CHECK(first == last,
+    PRECICE_CHECK(first == end,
                   impl::errorInvalidVertexIDRange,
                   std::distance(vertices, first),
                   std::distance(vertices, last));

@@ -177,12 +177,17 @@ void for_each_unique(InputIt first, InputIt last, Unary func)
 template <class InputIt, class Predicate>
 std::pair<InputIt, InputIt> find_first_range(InputIt first, InputIt last, Predicate p)
 {
-  auto start = std::find_if(first, last, p);
-  if (start == last) { // nothing found
+  auto firstMatch = std::find_if(first, last, p);
+  if (firstMatch == last) { // nothing found
     return {last, last};
   }
-  auto stop = std::find_if_not(start, last, p);
-  return {start, stop};
+  auto trailing = firstMatch;
+  auto next     = std::next(firstMatch);
+  while (next != last && p(*next)) {
+    ++trailing;
+    ++next;
+  }
+  return {firstMatch, trailing};
 }
 
 } // namespace utils
