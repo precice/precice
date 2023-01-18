@@ -175,6 +175,20 @@ WriteDataContext &ParticipantState::writeDataContext(std::string_view mesh, std:
   return it->second;
 }
 
+const GlobalDataContext &ParticipantState::globalDataContext(DataID dataID) const
+{
+  auto it = _globalDataContexts.find(dataID);
+  PRECICE_CHECK(it != _globalDataContexts.end(), "DataID \"{}\" does not exist as global data.", dataID)
+  return it->second;
+}
+
+GlobalDataContext &ParticipantState::globalDataContext(DataID dataID)
+{
+  auto it = _globalDataContexts.find(dataID);
+  PRECICE_CHECK(it != _globalDataContexts.end(), "DataID \"{}\" does not exist as global data.", dataID)
+  return it->second;
+}
+
 bool ParticipantState::hasData(std::string_view mesh, std::string_view data) const
 {
   return std::any_of(
