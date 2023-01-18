@@ -120,6 +120,15 @@ void ParticipantState::addReadData(
   _readDataContexts.emplace(MeshDataKey{mesh->getName(), data->getName()}, ReadDataContext(data, mesh));
 }
 
+void Participant::addGlobalData(
+    const mesh::PtrData &data,
+    int                  interpolationOrder)
+{
+  // checkDuplicatedData(data, mesh->getName());
+  //TODO: add support for global data in checkDuplicatedData
+  _globalDataContexts.emplace(data->getID(), GlobalDataContext(data, interpolationOrder));
+}
+
 void ParticipantState::addReadMappingContext(
     const MappingContext &mappingContext)
 {
