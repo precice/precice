@@ -1,5 +1,6 @@
 #include "ParallelCouplingScheme.hpp"
 
+#include <boost/range/adaptor/map.hpp>
 #include <utility>
 
 #include "cplscheme/BiCouplingScheme.hpp"
