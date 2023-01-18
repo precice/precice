@@ -1,4 +1,5 @@
 #include <Eigen/Core>
+#include <Eigen/src/Core/util/Meta.h>
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -1221,8 +1222,9 @@ void SolverInterfaceImpl::writeVectorGradientData(
                   "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                   data.getName(), valueIndex)
 
-    Eigen::Map<const Eigen::MatrixXd> gradient(gradientValues, _dimensions, _dimensions);
-    gradientValuesInternal.block(0, _dimensions * valueIndex, _dimensions, _dimensions) = gradient;
+    const Eigen::Index                dims{_dimensions};
+    Eigen::Map<const Eigen::MatrixXd> gradient(gradientValues, dims, dims);
+    gradientValuesInternal.block(0, dims * valueIndex, dims, dims) = gradient;
   }
 }
 
@@ -1270,7 +1272,8 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
     auto &     gradientValuesInternal = data.gradientValues();
     const auto vertexCount            = gradientValuesInternal.cols() / data.getDimensions();
 
-    Eigen::Map<const Eigen::MatrixXd> gradients(gradientValues, _dimensions, _dimensions * size);
+    const Eigen::Index                dims{_dimensions};
+    Eigen::Map<const Eigen::MatrixXd> gradients(gradientValues, dims, dims * size);
     // gradient matrices input one after the other (read row-wise)
     for (auto i = 0; i < size; i++) {
       const auto valueIndex = valueIndices[i];
@@ -1278,7 +1281,7 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
                     "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                     data.getName(), valueIndex);
 
-      gradientValuesInternal.block(0, _dimensions * valueIndex, _dimensions, _dimensions) = gradients.block(0, i * _dimensions, _dimensions, _dimensions);
+      gradientValuesInternal.block(0, dims * valueIndex, dims, dims) = gradients.block(0, i * dims, dims, dims);
     }
   }
 }

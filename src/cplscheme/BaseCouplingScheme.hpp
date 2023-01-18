@@ -2,7 +2,6 @@
 
 #include <Eigen/Core>
 #include <algorithm>
-#include <boost/range/adaptor/map.hpp>
 #include <map>
 #include <memory>
 #include <set>
