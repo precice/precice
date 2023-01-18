@@ -42,6 +42,14 @@ void createTag(Listener &              listener,
   storage.push_back(tag);
 }
 
+void addSubtagsToParents(std::list<xml::XMLTag> &subtags,
+                         std::list<xml::XMLTag> &parents)
+{
+  for (auto &p : parents) {
+    std::for_each(subtags.begin(), subtags.end(), [&p](auto &s) { p.addSubtag(s); });
+  }
+}
+
 using variant_t = std::variant<xml::XMLAttribute<double>, xml::XMLAttribute<std::string>, xml::XMLAttribute<bool>>;
 template <typename TagStorage>
 void addAttributes(TagStorage &storage, const std::vector<variant_t> &attributes)
@@ -86,15 +94,6 @@ MappingConfiguration::MappingConfiguration(
   auto attrConstraint = XMLAttribute<std::string>(ATTR_CONSTRAINT)
                             .setDocumentation("Use conservative to conserve the nodal sum of the data over the interface (needed e.g. for force mapping).  Use consistent for normalized quantities such as temperature or pressure. Use scaled-consistent-surface or scaled-consistent-volume for normalized quantities where conservation of integral values (surface or volume) is needed (e.g. velocities when the mass flow rate needs to be conserved). Mesh connectivity is required to use scaled-consistent.")
                             .setOptions({CONSTRAINT_CONSERVATIVE, CONSTRAINT_CONSISTENT, CONSTRAINT_SCALED_CONSISTENT_SURFACE, CONSTRAINT_SCALED_CONSISTENT_VOLUME});
-
-  auto attrBasisFunction = XMLAttribute<std::string>(ATTR_BASIS_FUNCTION)
-                               .setDocumentation("Sets the radial-basis function for the RBF data mapping.")
-                               .setOptions({RBF_CPOLYNOMIAL_C0, RBF_CPOLYNOMIAL_C2, RBF_CPOLYNOMIAL_C4, RBF_CPOLYNOMIAL_C6, RBF_TPS, RBF_MULTIQUADRICS, RBF_INV_MULTIQUADRICS, RBF_VOLUME_SPLINES, RBF_GAUSSIAN, RBF_CTPS_C2});
-
-  auto attrShapeParam = XMLAttribute<double>(ATTR_SHAPE_PARAM)
-                            .setDocumentation("Specific shape parameter for RBF basis function.");
-  auto attrSupportRadius = XMLAttribute<double>(ATTR_SUPPORT_RADIUS)
-                               .setDocumentation("Support radius of each RBF basis function (global choice).");
   auto attrXDead = makeXMLAttribute(ATTR_X_DEAD, false)
                        .setDocumentation("If set to true, the x axis will be ignored for the mapping");
   auto attrYDead = makeXMLAttribute(ATTR_Y_DEAD, false)
@@ -111,19 +110,51 @@ MappingConfiguration::MappingConfiguration(
                                .setDocumentation("Sets kind of preallocation for PETSc RBF implementation")
                                .setOptions({PREALLOCATION_ESTIMATE, PREALLOCATION_COMPUTE, PREALLOCATION_OFF, PREALLOCATION_SAVE, PREALLOCATION_TREE});
 
-  // Add tags that all mappings use and add to parent tag
-  addAttributes(projectionTags, {attrDirection, attrFromMesh, attrToMesh, attrConstraint});
-  addAttributes(rbfDirectTags, {attrDirection, attrFromMesh, attrToMesh, attrConstraint});
-  addAttributes(rbfIterativeTags, {attrDirection, attrFromMesh, attrToMesh, attrConstraint});
+  // Add the relevant attributes to the relevant tags
+  addAttributes(projectionTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint});
+  addAttributes(rbfDirectTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead});
+  addAttributes(rbfIterativeTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead, attrSolverRtol, attrPreallocation});
 
-  // The RBF tags
-  addAttributes(rbfDirectTags, {attrPolynomial, attrXDead, attrYDead, attrZDead, attrShapeParam, attrSupportRadius, attrBasisFunction});
-  addAttributes(rbfIterativeTags, {attrPolynomial, attrXDead, attrYDead, attrZDead, attrShapeParam, attrSupportRadius, attrBasisFunction});
+  // Now we take care of the subtag basis function
+  // First, we have the tags using a support radius
+  XMLTag::Occurrence once = XMLTag::OCCUR_NOT_OR_ONCE;
+  std::list<XMLTag>  supportRadiusRBF;
+  createTag(*this, RBF_CPOLYNOMIAL_C0, once, SUBTAG_BASIS_FUNCTION, supportRadiusRBF, "Wendland C0 function");
+  createTag(*this, RBF_CPOLYNOMIAL_C2, once, SUBTAG_BASIS_FUNCTION, supportRadiusRBF, "Wendland C2 function");
+  createTag(*this, RBF_CPOLYNOMIAL_C4, once, SUBTAG_BASIS_FUNCTION, supportRadiusRBF, "Wendland C4 function");
+  createTag(*this, RBF_CPOLYNOMIAL_C6, once, SUBTAG_BASIS_FUNCTION, supportRadiusRBF, "Wendland C6 function");
+  createTag(*this, RBF_CTPS_C2, once, SUBTAG_BASIS_FUNCTION, supportRadiusRBF, "Compact thin-plate-spline C2");
+  createTag(*this, RBF_GAUSSIAN, once, SUBTAG_BASIS_FUNCTION, supportRadiusRBF, "Gaussian basis function accepting a support radius");
 
-  // The RBF iterative tags
-  addAttributes(rbfIterativeTags, {attrSolverRtol, attrPreallocation});
+  auto attrSupportRadius = XMLAttribute<double>(ATTR_SUPPORT_RADIUS)
+                               .setDocumentation("Support radius of each RBF basis function (global choice).");
 
-  // Add all tags to the parent tag
+  addAttributes(supportRadiusRBF, {attrSupportRadius});
+  addSubtagsToParents(supportRadiusRBF, rbfIterativeTags);
+  addSubtagsToParents(supportRadiusRBF, rbfDirectTags);
+
+  // Now the tags using a shape parameter
+  std::list<XMLTag> shapeParameterRBF;
+  createTag(*this, RBF_MULTIQUADRICS, once, SUBTAG_BASIS_FUNCTION, shapeParameterRBF, "Multiquadrics");
+  createTag(*this, RBF_INV_MULTIQUADRICS, once, SUBTAG_BASIS_FUNCTION, shapeParameterRBF, "Inverse multiquadrics");
+  createTag(*this, RBF_GAUSSIAN, once, SUBTAG_BASIS_FUNCTION, shapeParameterRBF, "Gaussian basis function accepting a shape parameter");
+
+  auto attrShapeParam = XMLAttribute<double>(ATTR_SHAPE_PARAM)
+                            .setDocumentation("Specific shape parameter for RBF basis function.");
+
+  addAttributes(shapeParameterRBF, {attrShapeParam});
+  addSubtagsToParents(shapeParameterRBF, rbfIterativeTags);
+  addSubtagsToParents(shapeParameterRBF, rbfDirectTags);
+
+  // tags without an attribute
+  std::list<XMLTag> attributelessRBFs;
+  createTag(*this, RBF_TPS, once, SUBTAG_BASIS_FUNCTION, attributelessRBFs, "Thin-plate-splines");
+  createTag(*this, RBF_VOLUME_SPLINES, once, SUBTAG_BASIS_FUNCTION, attributelessRBFs, "Volume splines");
+
+  addSubtagsToParents(attributelessRBFs, rbfIterativeTags);
+  addSubtagsToParents(attributelessRBFs, rbfDirectTags);
+
+  // Add all tags to the mapping tag
   std::for_each(projectionTags.begin(), projectionTags.end(), [&parent](auto &s) { parent.addSubtag(s); });
   std::for_each(rbfIterativeTags.begin(), rbfIterativeTags.end(), [&parent](auto &s) { parent.addSubtag(s); });
   std::for_each(rbfDirectTags.begin(), rbfDirectTags.end(), [&parent](auto &s) { parent.addSubtag(s); });

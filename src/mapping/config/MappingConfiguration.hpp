@@ -8,8 +8,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "xml/XMLTag.hpp"
 
-namespace precice {
-namespace mapping {
+namespace precice::mapping {
 
 /// Performs XML configuration and holds configured mappings.
 class MappingConfiguration : public xml::XMLTag::Listener {
@@ -102,24 +101,10 @@ private:
   const std::string CONSTRAINT_SCALED_CONSISTENT_SURFACE = "scaled-consistent-surface";
   const std::string CONSTRAINT_SCALED_CONSISTENT_VOLUME  = "scaled-consistent-volume";
 
-  // Next, we have RBF specific options
-  const std::string ATTR_BASIS_FUNCTION   = "basis-function";
-  const std::string RBF_TPS               = "thin-plate-splines";
-  const std::string RBF_MULTIQUADRICS     = "multiquadrics";
-  const std::string RBF_INV_MULTIQUADRICS = "inverse-multiquadrics";
-  const std::string RBF_VOLUME_SPLINES    = "volume-splines";
-  const std::string RBF_GAUSSIAN          = "gaussian";
-  const std::string RBF_CTPS_C2           = "compact-tps-c2";
-  const std::string RBF_CPOLYNOMIAL_C0    = "compact-polynomial-c0";
-  const std::string RBF_CPOLYNOMIAL_C2    = "compact-polynomial-c2";
-  const std::string RBF_CPOLYNOMIAL_C4    = "compact-polynomial-c4";
-  const std::string RBF_CPOLYNOMIAL_C6    = "compact-polynomial-c6";
-
-  const std::string ATTR_SHAPE_PARAM    = "shape-parameter";
-  const std::string ATTR_SUPPORT_RADIUS = "support-radius";
-  const std::string ATTR_X_DEAD         = "x-dead";
-  const std::string ATTR_Y_DEAD         = "y-dead";
-  const std::string ATTR_Z_DEAD         = "z-dead";
+  // RBF specific options
+  const std::string ATTR_X_DEAD = "x-dead";
+  const std::string ATTR_Y_DEAD = "y-dead";
+  const std::string ATTR_Z_DEAD = "z-dead";
 
   const std::string ATTR_POLYNOMIAL     = "polynomial";
   const std::string POLYNOMIAL_SEPARATE = "separate";
@@ -141,6 +126,23 @@ private:
   // const std::string ATTR_PARALLELISM           = "parallelism";
   // const std::string PARALLELISM_GATHER_SCATTER = "gather-scatter";
   // const std::string PARALLELISM                = "distributed";
+
+  // We declare the basis function as subtag
+  const std::string SUBTAG_BASIS_FUNCTION = "basis-function";
+  const std::string RBF_TPS               = "thin-plate-splines";
+  const std::string RBF_MULTIQUADRICS     = "multiquadrics";
+  const std::string RBF_INV_MULTIQUADRICS = "inverse-multiquadrics";
+  const std::string RBF_VOLUME_SPLINES    = "volume-splines";
+  const std::string RBF_GAUSSIAN          = "gaussian";
+  const std::string RBF_CTPS_C2           = "compact-tps-c2";
+  const std::string RBF_CPOLYNOMIAL_C0    = "compact-polynomial-c0";
+  const std::string RBF_CPOLYNOMIAL_C2    = "compact-polynomial-c2";
+  const std::string RBF_CPOLYNOMIAL_C4    = "compact-polynomial-c4";
+  const std::string RBF_CPOLYNOMIAL_C6    = "compact-polynomial-c6";
+
+  // Attributes for the subtag
+  const std::string ATTR_SHAPE_PARAM    = "shape-parameter";
+  const std::string ATTR_SUPPORT_RADIUS = "support-radius";
 
   mesh::PtrMeshConfiguration _meshConfig;
 
@@ -165,5 +167,4 @@ private:
   /// Check whether a mapping to and from the same mesh already exists
   void checkDuplicates(const ConfiguredMapping &mapping);
 };
-} // namespace mapping
-} // namespace precice
+} // namespace precice::mapping
