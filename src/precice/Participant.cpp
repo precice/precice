@@ -234,6 +234,52 @@ void Participant::readData(
   _impl->readData(toSV(meshName), toSV(dataName), vertices, relativeReadTime, values);
 }
 
+void SolverInterface::writeGlobalVectorData(
+    int           dataID,
+    const double *value)
+{
+  _impl->writeGlobalVectorData(dataID, value);
+}
+
+void SolverInterface::writeGlobalScalarData(
+    int    dataID,
+    double value)
+{
+  _impl->writeGlobalScalarData(dataID, value);
+}
+
+void SolverInterface::readGlobalVectorData(
+    int     dataID,
+    double *value) const
+{
+  _impl->readGlobalVectorData(dataID, value);
+}
+
+void SolverInterface::readGlobalVectorData(
+    int     dataID,
+    double  relativeReadTime,
+    double *value) const
+{
+  // @todo: needs testing!
+  _impl->readGlobalVectorData(dataID, relativeReadTime, value);
+}
+
+void SolverInterface::readGlobalScalarData(
+    int     dataID,
+    double &value) const
+{
+  _impl->readGlobalScalarData(dataID, value);
+}
+
+void SolverInterface::readGlobalScalarData(
+    int     dataID,
+    double  relativeReadTime,
+    double &value) const
+{
+  _impl->readGlobalScalarData(dataID, relativeReadTime, value);
+}
+
+
 void Participant::setMeshAccessRegion(::precice::string_view        meshName,
                                       ::precice::span<const double> boundingBox) const
 {

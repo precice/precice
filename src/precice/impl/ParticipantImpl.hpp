@@ -250,6 +250,21 @@ public:
       ::precice::span<const VertexID> vertices,
       ::precice::span<const double>   gradients);
 
+    /// @copydoc SolverInterface::writeGlobalScalarData
+  void writeGlobalScalarData(
+      int    dataID,
+      double value);
+
+  /// @copydoc SolverInterface::readGlobalScalarData(int, double&) const
+  void readGlobalScalarData(
+      int     toDataID,
+      double &value) const;
+
+  /// @copydoc SolverInterface::readGlobalScalarData(int, double, double&) const
+  void readGlobalScalarData(
+      int     toDataID,
+      double  relativeReadTime,
+      double &value) const;
   ///@}
 
   /** @name Experimental Data Access
@@ -413,6 +428,17 @@ private:
 
   /// Syncs the primary ranks of all connected participants
   void closeCommunicationChannels(CloseChannels cc);
+
+  void readGlobalVectorDataImpl(
+      int     toDataID,
+      double  relativeReadTime,
+      double *value) const;
+
+
+  void readGlobalScalarDataImpl(
+      int     toDataID,
+      double  relativeReadTime,
+      double &value) const;
 
   /// To allow white box tests.
   friend struct Integration::Serial::Whitebox::TestConfigurationPeano;
