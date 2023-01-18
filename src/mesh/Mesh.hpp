@@ -49,6 +49,7 @@ public:
 
   /// A mapping from remote local ranks to the IDs that must be communicated
   using CommunicationMap = std::map<Rank, std::vector<VertexID>>;
+  using ConnectionMap    = CommunicationMap; // until we decide on a name
 
   using VertexOffsets = std::vector<int>;
 

@@ -1,3 +1,4 @@
+#include <cstddef>
 #ifndef PRECICE_NO_MPI
 
 #include "helpers.hpp"
@@ -27,11 +28,11 @@ void runTestAccessReceivedMesh(const TestContext &       context,
     double dt = interface.initialize();
 
     // Get relevant size, allocate data structures and retrieve coordinates
-    const int meshSize = interface.getMeshVertexSize(dataID);
+    const std::size_t meshSize = interface.getMeshVertexSize(dataID);
 
     // According to the bounding boxes and vertices: the primary rank receives 3 vertices, the secondary rank 2
     const bool expectedSize = (context.isPrimary() && meshSize == 3) ||
-                              (!context.isPrimary() && meshSize == static_cast<int>(expectedPositionSecondaryRank.size() / dim));
+                              (!context.isPrimary() && meshSize == expectedPositionSecondaryRank.size() / dim);
     BOOST_TEST(expectedSize);
 
     // Allocate memory
@@ -45,7 +46,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
 
     // Check the received vertex IDs (IDs are local?!)
     std::vector<int> expectedIDs;
-    for (int i = 0; i < meshSize; ++i)
+    for (std::size_t i = 0; i < meshSize; ++i)
       expectedIDs.emplace_back(i);
     BOOST_TEST(expectedIDs == ids);
 
@@ -87,7 +88,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
     {
       // Check, if we can use the 'getMeshVerticesAndIDs' function on provided meshes as well,
       // though the actual purpose is of course using it on received meshes
-      const int ownMeshSize = interface.getMeshVertexSize(meshID);
+      const std::size_t ownMeshSize = interface.getMeshVertexSize(meshID);
       BOOST_TEST(ownMeshSize == size);
       std::vector<int>    ownIDs(ownMeshSize);
       std::vector<double> ownCoordinates(ownMeshSize * dim);
