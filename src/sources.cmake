@@ -53,15 +53,13 @@ target_sources(preciceCore
     src/action/SummationAction.hpp
     src/action/config/ActionConfiguration.cpp
     src/action/config/ActionConfiguration.hpp
-    src/com/CommunicateBoundingBox.cpp
-    src/com/CommunicateBoundingBox.hpp
-    src/com/CommunicateMesh.cpp
-    src/com/CommunicateMesh.hpp
     src/com/Communication.cpp
     src/com/Communication.hpp
     src/com/CommunicationFactory.hpp
     src/com/ConnectionInfoPublisher.cpp
     src/com/ConnectionInfoPublisher.hpp
+    src/com/Extra.cpp
+    src/com/Extra.hpp
     src/com/MPICommunication.cpp
     src/com/MPICommunication.hpp
     src/com/MPIDirectCommunication.cpp
@@ -78,6 +76,10 @@ target_sources(preciceCore
     src/com/MPISinglePortsCommunicationFactory.hpp
     src/com/Request.cpp
     src/com/Request.hpp
+    src/com/SerializedMesh.cpp
+    src/com/SerializedMesh.hpp
+    src/com/SerializedPartitioning.cpp
+    src/com/SerializedPartitioning.hpp
     src/com/SharedPointer.hpp
     src/com/SocketCommunication.cpp
     src/com/SocketCommunication.hpp
