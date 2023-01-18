@@ -1,5 +1,6 @@
 #include "MultiCouplingScheme.hpp"
 #include <algorithm>
+#include <boost/range/adaptor/map.hpp>
 #include <cstddef>
 #include <map>
 #include <memory>
@@ -40,11 +41,11 @@ MultiCouplingScheme::MultiCouplingScheme(
 
 void MultiCouplingScheme::determineInitialDataExchange()
 {
-  for (auto &sendExchange : _sendDataVector) {
-    determineInitialSend(sendExchange.second);
+  for (auto &sendExchange : _sendDataVector | boost::adaptors::map_values) {
+    determineInitialSend(sendExchange);
   }
-  for (auto &receiveExchange : _receiveDataVector) {
-    determineInitialReceive(receiveExchange.second);
+  for (auto &receiveExchange : _receiveDataVector | boost::adaptors::map_values) {
+    determineInitialReceive(receiveExchange);
   }
 }
 
@@ -129,8 +130,8 @@ void MultiCouplingScheme::exchangeSecondData()
 
   if (_isController) {
     doImplicitStep();
-    for (const auto &m2nPair : _m2ns) {
-      sendConvergence(m2nPair.second);
+    for (const auto &m2n : _m2ns | boost::adaptors::map_values) {
+      sendConvergence(m2n);
     }
 
     for (auto &sendExchange : _sendDataVector) {

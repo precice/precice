@@ -1,5 +1,6 @@
 #include <Eigen/Core>
 #include <algorithm>
+#include <boost/range/adaptor/map.hpp>
 #include <cmath>
 #include <cstddef>
 #include <functional>
@@ -96,40 +97,32 @@ bool BaseCouplingScheme::hasConverged() const
 void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendData)
 {
   PRECICE_TRACE();
-  std::vector<int> sentDataIDs;
   PRECICE_ASSERT(m2n.get() != nullptr);
   PRECICE_ASSERT(m2n->isConnected());
 
-  for (const DataMap::value_type &pair : sendData) {
+  for (const auto &data : sendData | boost::adaptors::map_values) {
     // Data is actually only send if size>0, which is checked in the derived classes implementation
-    m2n->send(pair.second->values(), pair.second->getMeshID(), pair.second->getDimensions());
+    m2n->send(data->values(), data->getMeshID(), data->getDimensions());
 
-    if (pair.second->hasGradient()) {
-      m2n->send(pair.second->gradientValues(), pair.second->getMeshID(), pair.second->getDimensions() * pair.second->meshDimensions());
+    if (data->hasGradient()) {
+      m2n->send(data->gradientValues(), data->getMeshID(), data->getDimensions() * data->meshDimensions());
     }
-
-    sentDataIDs.push_back(pair.first);
   }
-  PRECICE_DEBUG("Number of sent data sets = {}", sentDataIDs.size());
 }
 
 void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData)
 {
   PRECICE_TRACE();
-  std::vector<int> receivedDataIDs;
   PRECICE_ASSERT(m2n.get());
   PRECICE_ASSERT(m2n->isConnected());
-  for (const DataMap::value_type &pair : receiveData) {
+  for (const auto &data : receiveData | boost::adaptors::map_values) {
     // Data is only received on ranks with size>0, which is checked in the derived class implementation
-    m2n->receive(pair.second->values(), pair.second->getMeshID(), pair.second->getDimensions());
+    m2n->receive(data->values(), data->getMeshID(), data->getDimensions());
 
-    if (pair.second->hasGradient()) {
-      m2n->receive(pair.second->gradientValues(), pair.second->getMeshID(), pair.second->getDimensions() * pair.second->meshDimensions());
+    if (data->hasGradient()) {
+      m2n->receive(data->gradientValues(), data->getMeshID(), data->getDimensions() * data->meshDimensions());
     }
-
-    receivedDataIDs.push_back(pair.first);
   }
-  PRECICE_DEBUG("Number of received data sets = {}", receivedDataIDs.size());
 }
 
 PtrCouplingData BaseCouplingScheme::addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization)
@@ -302,15 +295,18 @@ void BaseCouplingScheme::secondExchange()
 void BaseCouplingScheme::storeExtrapolationData()
 {
   PRECICE_TRACE(_timeWindows);
-  for (auto &pair : _allData) {
-    PRECICE_DEBUG("Store data: {}", pair.first);
-    pair.second->storeExtrapolationData();
+  for (auto &data : _allData | boost::adaptors::map_values) {
+    data->storeExtrapolationData();
   }
 }
 
 void BaseCouplingScheme::moveToNextWindow()
 {
   PRECICE_TRACE(_timeWindows);
+  // @todo breaks for CplSchemeTests/ParallelImplicitCouplingSchemeTests/Extrapolation/FirstOrder. Why? @fsimonis
+  // for (auto &data : getAccelerationData() | boost::adaptors::map_values) {
+  //  data->moveToNextWindow();
+  // }
   for (auto &pair : getAccelerationData()) {
     PRECICE_DEBUG("Store data: {}", pair.first);
     pair.second->moveToNextWindow();
@@ -542,8 +538,8 @@ void BaseCouplingScheme::initializeStorages()
 {
   PRECICE_TRACE();
   // Reserve storage for all data
-  for (auto &pair : _allData) {
-    pair.second->initializeExtrapolation();
+  for (auto &data : _allData | boost::adaptors::map_values) {
+    data->initializeExtrapolation();
   }
   // Reserve storage for acceleration
   if (_acceleration) {
@@ -725,8 +721,8 @@ int BaseCouplingScheme::getExtrapolationOrder()
 bool BaseCouplingScheme::anyDataRequiresInitialization(DataMap &dataMap) const
 {
   /// @todo implement this function using https://en.cppreference.com/w/cpp/algorithm/all_any_none_of
-  for (DataMap::value_type &pair : dataMap) {
-    if (pair.second->requiresInitialization) {
+  for (const auto &data : dataMap | boost::adaptors::map_values) {
+    if (data->requiresInitialization) {
       return true;
     }
   }
