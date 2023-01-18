@@ -122,7 +122,7 @@ const std::vector<double> BoundingBox::dataVector() const
 
 void BoundingBox::expandBy(const BoundingBox &otherBB)
 {
-  PRECICE_ASSERT(_dimensions == otherBB.getDimensions(), "Other BoundingBox with different dimensions than bounding box cannot be used to expand bounding box");
+  PRECICE_ASSERT(_dimensions == otherBB.getDimension(), "Other BoundingBox with different dimensions than bounding box cannot be used to expand bounding box");
   for (int d = 0; d < _dimensions; d++) {
     _boundMin[d] = std::min(_boundMin[d], otherBB._boundMin[d]);
     _boundMax[d] = std::max(_boundMax[d], otherBB._boundMax[d]);
