@@ -64,9 +64,9 @@ DataID GlobalData::getID() const
 void GlobalData::toZero()
 {
   _values.setZero();
-//   if (_hasGradient) {
-//     _gradientValues.setZero();
-//   }
+  //   if (_hasGradient) {
+  //     _gradientValues.setZero();
+  //   }
 }
 
 // bool GlobalData::hasGradient() const
