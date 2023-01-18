@@ -4,6 +4,8 @@
 // #include "MappingContext.hpp"
 // #include "MeshContext.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "time/SharedPointer.hpp"
+#include "time/Time.hpp"
 
 namespace precice {
 
@@ -18,14 +20,23 @@ namespace impl {
 /**
  * @brief Stores one Global (meshless) Data object.
  *
- * - GlobalDataContext is basically a stripped-down equivalent of DataContext. 
+ * - GlobalDataContext is basically a stripped-down equivalent of DataContext.
  *   Unlike DataContext, it has no associated mappings or meshes.
  */
 class GlobalDataContext {
   friend class testing::DataContextFixture; // Make the fixture friend of this class
-//TODO: May need a GlobalDataContextFixture
+  //TODO: May need a GlobalDataContextFixture
 
 public:
+  /**
+   * @brief Construct a new GlobalDataContext with time interpolation.
+   *
+   * @param data Data associated with this DataContext.
+   * @param interpolationOrder Order of the Waveform stored by this GlobalDataContext.
+   */
+  GlobalDataContext(mesh::PtrGlobalData data,
+                    int                 interpolationOrder = time::Time::DEFAULT_INTERPOLATION_ORDER);
+
   /**
    * @brief Get the Name of _providedData.
    *
@@ -45,21 +56,34 @@ public:
    */
   void resetData();
 
-protected:
   /**
-   * @brief Construct a new DataContext without a mapping. Protected, because only ReadDataContext and WriteDataContext should use this constructor.
+   * @brief Get _providedData member.
    *
-   * @param data Data associated with this DataContext.
-   * @param mesh Mesh associated with this DataContext.
+   * @return mesh::PtrGlobalData _providedData.
    */
-  GlobalDataContext(mesh::PtrGlobalData data);
+  mesh::PtrGlobalData providedData();
 
-  /// Unique data this context is associated with
-  mesh::PtrGlobalData _providedData;
+  /**
+   * @brief Gets _interpolationOrder of _waveform
+   *
+   * @return _interpolationOrder of _waveform
+   */
+  int getInterpolationOrder() const;
+
+  /**
+   * @brief Samples data at a given point in time within the current time window
+   *
+   * @param normalizedDt Point in time where waveform is sampled. Must be normalized to [0,1], where 0 refers to the beginning and 1 to the end of the current time window.
+   */
+  Eigen::VectorXd sampleWaveformAt(double normalizedDt);
 
 private:
   static logging::Logger _log;
 
+  /// Unique data this context is associated with
+  mesh::PtrGlobalData _providedData;
+
+  time::PtrWaveform _waveform;
 };
 
 } // namespace impl
