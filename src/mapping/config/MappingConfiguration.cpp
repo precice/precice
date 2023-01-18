@@ -6,6 +6,7 @@
 #include <memory>
 #include <ostream>
 #include <utility>
+#include <variant>
 #include "logging/LogMacros.hpp"
 #include "mapping/LinearCellInterpolationMapping.hpp"
 #include "mapping/Mapping.hpp"
@@ -24,8 +25,33 @@
 #include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 #include "xml/XMLTag.hpp"
-
 namespace precice::mapping {
+
+namespace {
+
+template <typename Listener, typename TagStorage>
+void createTag(Listener &              listener,
+               const std::string &     name,
+               xml::XMLTag::Occurrence occurrence,
+               const std::string &     xmlNamespace,
+               TagStorage &            storage,
+               std::string             documentation)
+{
+  xml::XMLTag tag(listener, name, occurrence, xmlNamespace);
+  tag.setDocumentation(documentation);
+  storage.push_back(tag);
+}
+
+using variant_t = std::variant<xml::XMLAttribute<double>, xml::XMLAttribute<std::string>, xml::XMLAttribute<bool>>;
+template <typename TagStorage>
+void addAttributes(TagStorage &storage, const std::vector<variant_t> &attributes)
+{
+  for (auto &s : storage) {
+    for (auto &a : attributes)
+      std::visit([&s](auto &&arg) { s.addAttribute(arg); }, a);
+  }
+}
+} // namespace
 
 MappingConfiguration::MappingConfiguration(
     xml::XMLTag &              parent,
@@ -35,123 +61,19 @@ MappingConfiguration::MappingConfiguration(
   PRECICE_ASSERT(_meshConfig);
   using namespace xml;
 
-  auto attrShapeParam = XMLAttribute<double>(ATTR_SHAPE_PARAM)
-                            .setDocumentation("Specific shape parameter for RBF basis function.");
-  auto attrSupportRadius = XMLAttribute<double>(ATTR_SUPPORT_RADIUS)
-                               .setDocumentation("Support radius of each RBF basis function (global choice).");
-  auto attrSolverRtol = makeXMLAttribute(ATTR_SOLVER_RTOL, 1e-9)
-                            .setDocumentation("Solver relative tolerance for convergence");
-  auto attrXDead = makeXMLAttribute(ATTR_X_DEAD, false)
-                       .setDocumentation("If set to true, the x axis will be ignored for the mapping");
-  auto attrYDead = makeXMLAttribute(ATTR_Y_DEAD, false)
-                       .setDocumentation("If set to true, the y axis will be ignored for the mapping");
-  auto attrZDead = makeXMLAttribute(ATTR_Z_DEAD, false)
-                       .setDocumentation("If set to true, the z axis will be ignored for the mapping");
-  auto attrPolynomial = makeXMLAttribute("polynomial", "separate")
-                            .setDocumentation("Toggles use of the global polynomial")
-                            .setOptions({"on", "off", "separate"});
-  auto attrPreallocation = makeXMLAttribute("preallocation", "tree")
-                               .setDocumentation("Sets kind of preallocation for PETSc RBF implementation")
-                               .setOptions({"estimate", "compute", "off", "save", "tree"});
-  auto attrUseLU = makeXMLAttribute(ATTR_USE_QR, false)
-                       .setDocumentation("If set to true, QR decomposition is used to solve the RBF system");
-
+  // First, we create the available tags
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
-  std::list<XMLTag>  tags;
-  {
-    XMLTag tag(*this, VALUE_RBF_TPS, occ, TAG);
-    tag.setDocumentation("Global radial-basis-function mapping based on the thin plate splines.");
-    tags.push_back(tag);
-  }
-  {
-    XMLTag tag(*this, VALUE_RBF_MULTIQUADRICS, occ, TAG);
-    tag.setDocumentation("Global radial-basis-function mapping based on the multiquadrics RBF.");
-    tag.addAttribute(attrShapeParam);
-    tags.push_back(tag);
-  }
-  {
-    XMLTag tag(*this, VALUE_RBF_INV_MULTIQUADRICS, occ, TAG);
-    tag.setDocumentation("Global radial-basis-function mapping based on the inverse multiquadrics RBF.");
-    tag.addAttribute(attrShapeParam);
-    tags.push_back(tag);
-  }
-  {
-    XMLTag tag(*this, VALUE_RBF_VOLUME_SPLINES, occ, TAG);
-    tag.setDocumentation("Global radial-basis-function mapping based on the volume-splines RBF.");
-    tags.push_back(tag);
-  }
-  {
-    XMLTag tag(*this, VALUE_RBF_GAUSSIAN, occ, TAG);
-    tag.setDocumentation("Local radial-basis-function mapping based on the Gaussian RBF using a cut-off threshold.");
-    tag.addAttribute(makeXMLAttribute<double>(ATTR_SHAPE_PARAM, std::numeric_limits<double>::quiet_NaN())
-                         .setDocumentation("Specific shape parameter for RBF basis function."));
-    tag.addAttribute(makeXMLAttribute(ATTR_SUPPORT_RADIUS, std::numeric_limits<double>::quiet_NaN())
-                         .setDocumentation("Support radius of each RBF basis function (global choice)."));
-    tags.push_back(tag);
-  }
-  {
-    XMLTag tag(*this, VALUE_RBF_CTPS_C2, occ, TAG);
-    tag.setDocumentation("Local radial-basis-function mapping based on the C2-polynomial RBF.");
-    tag.addAttribute(attrSupportRadius);
-    tags.push_back(tag);
-  }
-  {
-    XMLTag tag(*this, VALUE_RBF_CPOLYNOMIAL_C0, occ, TAG);
-    tag.setDocumentation("Local radial-basis-function mapping based on the Wendland C0-polynomial RBF.");
-    tag.addAttribute(attrSupportRadius);
-    tags.push_back(tag);
-  }
-  {
-    XMLTag tag(*this, VALUE_RBF_CPOLYNOMIAL_C2, occ, TAG);
-    tag.setDocumentation("Local radial-basis-function mapping based on the Wendland C2-polynomial RBF.");
-    tag.addAttribute(attrSupportRadius);
-    tags.push_back(tag);
-  }
-  {
-    XMLTag tag(*this, VALUE_RBF_CPOLYNOMIAL_C4, occ, TAG);
-    tag.setDocumentation("Local radial-basis-function mapping based on the Wendland C4-polynomial RBF.");
-    tag.addAttribute(attrSupportRadius);
-    tags.push_back(tag);
-  }
-  {
-    XMLTag tag(*this, VALUE_RBF_CPOLYNOMIAL_C6, occ, TAG);
-    tag.setDocumentation("Local radial-basis-function mapping based on the Wendland C6-polynomial RBF.");
-    tag.addAttribute(attrSupportRadius);
-    tags.push_back(tag);
-  }
-  // Add tags that only, but all RBF mappings use
-  for (XMLTag &tag : tags) {
-    tag.addAttribute(attrSolverRtol);
-    tag.addAttribute(attrPolynomial);
-    tag.addAttribute(attrPreallocation);
-    tag.addAttribute(attrXDead);
-    tag.addAttribute(attrYDead);
-    tag.addAttribute(attrZDead);
-    tag.addAttribute(attrUseLU);
-  }
-  {
-    XMLTag tag(*this, VALUE_NEAREST_NEIGHBOR, occ, TAG);
-    tag.setDocumentation("Nearest-neighbour mapping which uses a rstar-spacial index tree to index meshes and run nearest-neighbour queries.");
-    tags.push_back(tag);
-  }
-  {
-    XMLTag tag(*this, VALUE_NEAREST_PROJECTION, occ, TAG);
-    tag.setDocumentation("Nearest-projection mapping which uses a rstar-spacial index tree to index meshes and locate the nearest projections.");
-    tags.push_back(tag);
-  }
-  {
-    XMLTag tag(*this, VALUE_NEAREST_NEIGHBOR_GRADIENT, occ, TAG);
-    tag.setDocumentation("Nearest-neighbor-gradient mapping which uses nearest-neighbor mapping with an additional linear approximation using gradient data.");
-    tags.push_back(tag);
-  }
-  {
-    XMLTag tag(*this, VALUE_LINEAR_CELL_INTERPOLATION, occ, TAG);
-    tag.setDocumentation("Linear cell interpolation mapping which uses a rstar-spacial index tree to index meshes and locate the nearest cell. Only supports 2D meshes.");
-    tags.push_back(tag);
-  }
+  std::list<XMLTag>  projectionTags, rbfDirectTags, rbfIterativeTags;
+  createTag(*this, TYPE_NEAREST_NEIGHBOR, occ, TAG, projectionTags, "Nearest-neighbour mapping which uses a rstar-spacial index tree to index meshes and run nearest-neighbour queries.");
+  createTag(*this, TYPE_NEAREST_PROJECTION, occ, TAG, projectionTags, "Nearest-projection mapping which uses a rstar-spacial index tree to index meshes and locate the nearest projections.");
+  createTag(*this, TYPE_NEAREST_NEIGHBOR_GRADIENT, occ, TAG, projectionTags, "Nearest-neighbor-gradient mapping which uses nearest-neighbor mapping with an additional linear approximation using gradient data.");
+  createTag(*this, TYPE_LINEAR_CELL_INTERPOLATION, occ, TAG, projectionTags, "Linear cell interpolation mapping which uses a rstar-spacial index tree to index meshes and locate the nearest cell. Only supports 2D meshes.");
+  createTag(*this, TYPE_RBF_GLOBAL_DIRECT, occ, TAG, rbfDirectTags, "Radial-basis-function mapping using a direct solver with a gather-scatter parallelism.");
+  createTag(*this, TYPE_RBF_GLOBAL_ITERATIVE, occ, TAG, rbfIterativeTags, "Radial-basis-function mapping using an iterative solver with a distributed parallelism.");
 
+  // List of all attributes with corresponding documentation
   auto attrDirection = XMLAttribute<std::string>(ATTR_DIRECTION)
-                           .setOptions({VALUE_WRITE, VALUE_READ})
+                           .setOptions({DIRECTION_WRITE, DIRECTION_READ})
                            .setDocumentation("Write mappings map written data prior to communication, thus in the same participant who writes the data. "
                                              "Read mappings map received data after communication, thus in the same participant who reads the data.");
 
@@ -163,16 +85,48 @@ MappingConfiguration::MappingConfiguration(
 
   auto attrConstraint = XMLAttribute<std::string>(ATTR_CONSTRAINT)
                             .setDocumentation("Use conservative to conserve the nodal sum of the data over the interface (needed e.g. for force mapping).  Use consistent for normalized quantities such as temperature or pressure. Use scaled-consistent-surface or scaled-consistent-volume for normalized quantities where conservation of integral values (surface or volume) is needed (e.g. velocities when the mass flow rate needs to be conserved). Mesh connectivity is required to use scaled-consistent.")
-                            .setOptions({VALUE_CONSERVATIVE, VALUE_CONSISTENT, VALUE_SCALED_CONSISTENT_SURFACE, VALUE_SCALED_CONSISTENT_VOLUME});
+                            .setOptions({CONSTRAINT_CONSERVATIVE, CONSTRAINT_CONSISTENT, CONSTRAINT_SCALED_CONSISTENT_SURFACE, CONSTRAINT_SCALED_CONSISTENT_VOLUME});
+
+  auto attrBasisFunction = XMLAttribute<std::string>(ATTR_BASIS_FUNCTION)
+                               .setDocumentation("Sets the radial-basis function for the RBF data mapping.")
+                               .setOptions({RBF_CPOLYNOMIAL_C0, RBF_CPOLYNOMIAL_C2, RBF_CPOLYNOMIAL_C4, RBF_CPOLYNOMIAL_C6, RBF_TPS, RBF_MULTIQUADRICS, RBF_INV_MULTIQUADRICS, RBF_VOLUME_SPLINES, RBF_GAUSSIAN, RBF_CTPS_C2});
+
+  auto attrShapeParam = XMLAttribute<double>(ATTR_SHAPE_PARAM)
+                            .setDocumentation("Specific shape parameter for RBF basis function.");
+  auto attrSupportRadius = XMLAttribute<double>(ATTR_SUPPORT_RADIUS)
+                               .setDocumentation("Support radius of each RBF basis function (global choice).");
+  auto attrXDead = makeXMLAttribute(ATTR_X_DEAD, false)
+                       .setDocumentation("If set to true, the x axis will be ignored for the mapping");
+  auto attrYDead = makeXMLAttribute(ATTR_Y_DEAD, false)
+                       .setDocumentation("If set to true, the y axis will be ignored for the mapping");
+  auto attrZDead = makeXMLAttribute(ATTR_Z_DEAD, false)
+                       .setDocumentation("If set to true, the z axis will be ignored for the mapping");
+  auto attrPolynomial = makeXMLAttribute(ATTR_POLYNOMIAL, POLYNOMIAL_SEPARATE)
+                            .setDocumentation("Toggles use of the global polynomial")
+                            .setOptions({POLYNOMIAL_ON, POLYNOMIAL_OFF, POLYNOMIAL_SEPARATE});
+
+  auto attrSolverRtol = makeXMLAttribute(ATTR_SOLVER_RTOL, 1e-9)
+                            .setDocumentation("Solver relative tolerance for convergence");
+  auto attrPreallocation = makeXMLAttribute(ATTR_PREALLOCATION, PREALLOCATION_TREE)
+                               .setDocumentation("Sets kind of preallocation for PETSc RBF implementation")
+                               .setOptions({PREALLOCATION_ESTIMATE, PREALLOCATION_COMPUTE, PREALLOCATION_OFF, PREALLOCATION_SAVE, PREALLOCATION_TREE});
 
   // Add tags that all mappings use and add to parent tag
-  for (XMLTag &tag : tags) {
-    tag.addAttribute(attrDirection);
-    tag.addAttribute(attrFromMesh);
-    tag.addAttribute(attrToMesh);
-    tag.addAttribute(attrConstraint);
-    parent.addSubtag(tag);
-  }
+  addAttributes(projectionTags, {attrDirection, attrFromMesh, attrToMesh, attrConstraint});
+  addAttributes(rbfDirectTags, {attrDirection, attrFromMesh, attrToMesh, attrConstraint});
+  addAttributes(rbfIterativeTags, {attrDirection, attrFromMesh, attrToMesh, attrConstraint});
+
+  // The RBF tags
+  addAttributes(rbfDirectTags, {attrPolynomial, attrXDead, attrYDead, attrZDead, attrShapeParam, attrSupportRadius, attrBasisFunction});
+  addAttributes(rbfIterativeTags, {attrPolynomial, attrXDead, attrYDead, attrZDead, attrShapeParam, attrSupportRadius, attrBasisFunction});
+
+  // The RBF iterative tags
+  addAttributes(rbfIterativeTags, {attrSolverRtol, attrPreallocation});
+
+  // Add all tags to the parent tag
+  std::for_each(projectionTags.begin(), projectionTags.end(), [&parent](auto &s) { parent.addSubtag(s); });
+  std::for_each(rbfIterativeTags.begin(), rbfIterativeTags.end(), [&parent](auto &s) { parent.addSubtag(s); });
+  std::for_each(rbfDirectTags.begin(), rbfDirectTags.end(), [&parent](auto &s) { parent.addSubtag(s); });
 }
 
 void MappingConfiguration::xmlTagCallback(
@@ -514,6 +468,16 @@ void MappingConfiguration::checkDuplicates(const ConfiguredMapping &mapping)
                   "Please remove one of the duplicated meshes. ",
                   mapping.fromMesh->getName(), mapping.toMesh->getName());
   }
+}
+
+void MappingConfiguration::xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag)
+{
+}
+
+const std::vector<MappingConfiguration::ConfiguredMapping> &
+MappingConfiguration::mappings()
+{
+  return _mappings;
 }
 
 } // namespace precice::mapping

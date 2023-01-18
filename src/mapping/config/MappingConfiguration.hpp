@@ -4,36 +4,12 @@
 #include <vector>
 #include "logging/Logger.hpp"
 #include "mapping/SharedPointer.hpp"
+#include "mapping/config/MappingConfigurationTypes.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "xml/XMLTag.hpp"
 
 namespace precice {
 namespace mapping {
-
-/// How to handle the polynomial?
-/**
- * ON: Include it in the system matrix
- * OFF: Omit it altogether
- * SEPARATE: Compute it separately using least-squares QR.
- */
-enum class Polynomial {
-  ON,
-  OFF,
-  SEPARATE
-};
-
-enum class Preallocation {
-  OFF,
-  COMPUTE,
-  ESTIMATE,
-  SAVE,
-  TREE
-};
-
-enum class RBFType {
-  EIGEN,
-  PETSc
-};
 
 /// Performs XML configuration and holds configured mappings.
 class MappingConfiguration : public xml::XMLTag::Listener {
@@ -104,42 +80,67 @@ private:
 
   const std::string TAG = "mapping";
 
-  const std::string ATTR_DIRECTION      = "direction";
-  const std::string ATTR_FROM           = "from";
-  const std::string ATTR_TO             = "to";
-  const std::string ATTR_TYPE           = "type";
-  const std::string ATTR_CONSTRAINT     = "constraint";
+  // First, declare common attributes and associated options
+  const std::string ATTR_TYPE                      = "type";
+  const std::string TYPE_NEAREST_NEIGHBOR          = "nearest-neighbor";
+  const std::string TYPE_NEAREST_NEIGHBOR_GRADIENT = "nearest-neighbor-gradient";
+  const std::string TYPE_NEAREST_PROJECTION        = "nearest-projection";
+  const std::string TYPE_LINEAR_CELL_INTERPOLATION = "linear-cell-interpolation";
+  const std::string TYPE_RBF_GLOBAL_DIRECT         = "rbf-global-direct";
+  const std::string TYPE_RBF_GLOBAL_ITERATIVE      = "rbf-global-iterative";
+
+  const std::string ATTR_DIRECTION  = "direction";
+  const std::string DIRECTION_WRITE = "write";
+  const std::string DIRECTION_READ  = "read";
+
+  const std::string ATTR_FROM = "from";
+  const std::string ATTR_TO   = "to";
+
+  const std::string ATTR_CONSTRAINT                      = "constraint";
+  const std::string CONSTRAINT_CONSISTENT                = "consistent";
+  const std::string CONSTRAINT_CONSERVATIVE              = "conservative";
+  const std::string CONSTRAINT_SCALED_CONSISTENT_SURFACE = "scaled-consistent-surface";
+  const std::string CONSTRAINT_SCALED_CONSISTENT_VOLUME  = "scaled-consistent-volume";
+
+  // Next, we have RBF specific options
+  const std::string ATTR_BASIS_FUNCTION   = "basis-function";
+  const std::string RBF_TPS               = "thin-plate-splines";
+  const std::string RBF_MULTIQUADRICS     = "multiquadrics";
+  const std::string RBF_INV_MULTIQUADRICS = "inverse-multiquadrics";
+  const std::string RBF_VOLUME_SPLINES    = "volume-splines";
+  const std::string RBF_GAUSSIAN          = "gaussian";
+  const std::string RBF_CTPS_C2           = "compact-tps-c2";
+  const std::string RBF_CPOLYNOMIAL_C0    = "compact-polynomial-c0";
+  const std::string RBF_CPOLYNOMIAL_C2    = "compact-polynomial-c2";
+  const std::string RBF_CPOLYNOMIAL_C4    = "compact-polynomial-c4";
+  const std::string RBF_CPOLYNOMIAL_C6    = "compact-polynomial-c6";
+
   const std::string ATTR_SHAPE_PARAM    = "shape-parameter";
   const std::string ATTR_SUPPORT_RADIUS = "support-radius";
-  const std::string ATTR_SOLVER_RTOL    = "solver-rtol";
   const std::string ATTR_X_DEAD         = "x-dead";
   const std::string ATTR_Y_DEAD         = "y-dead";
   const std::string ATTR_Z_DEAD         = "z-dead";
-  const std::string ATTR_USE_QR         = "use-qr-decomposition";
 
-  const std::string VALUE_WRITE                     = "write";
-  const std::string VALUE_READ                      = "read";
-  const std::string VALUE_CONSISTENT                = "consistent";
-  const std::string VALUE_CONSERVATIVE              = "conservative";
-  const std::string VALUE_SCALED_CONSISTENT_SURFACE = "scaled-consistent-surface";
-  const std::string VALUE_SCALED_CONSISTENT_VOLUME  = "scaled-consistent-volume";
+  const std::string ATTR_POLYNOMIAL     = "polynomial";
+  const std::string POLYNOMIAL_SEPARATE = "separate";
+  const std::string POLYNOMIAL_ON       = "on";
+  const std::string POLYNOMIAL_OFF      = "off";
 
-  const std::string VALUE_NEAREST_NEIGHBOR          = "nearest-neighbor";
-  const std::string VALUE_NEAREST_PROJECTION        = "nearest-projection";
-  const std::string VALUE_LINEAR_CELL_INTERPOLATION = "linear-cell-interpolation";
+  // For iterative RBFs
+  const std::string ATTR_SOLVER_RTOL = "solver-rtol";
+  // const std::string ATTR_MAX_ITERATIONS="";
 
-  const std::string VALUE_RBF_TPS               = "rbf-thin-plate-splines";
-  const std::string VALUE_RBF_MULTIQUADRICS     = "rbf-multiquadrics";
-  const std::string VALUE_RBF_INV_MULTIQUADRICS = "rbf-inverse-multiquadrics";
-  const std::string VALUE_RBF_VOLUME_SPLINES    = "rbf-volume-splines";
-  const std::string VALUE_RBF_GAUSSIAN          = "rbf-gaussian";
-  const std::string VALUE_RBF_CTPS_C2           = "rbf-compact-tps-c2";
-  const std::string VALUE_RBF_CPOLYNOMIAL_C0    = "rbf-compact-polynomial-c0";
-  const std::string VALUE_RBF_CPOLYNOMIAL_C2    = "rbf-compact-polynomial-c2";
-  const std::string VALUE_RBF_CPOLYNOMIAL_C4    = "rbf-compact-polynomial-c4";
-  const std::string VALUE_RBF_CPOLYNOMIAL_C6    = "rbf-compact-polynomial-c6";
+  const std::string ATTR_PREALLOCATION     = "preallocation";
+  const std::string PREALLOCATION_ESTIMATE = "estimate";
+  const std::string PREALLOCATION_COMPUTE  = "compute";
+  const std::string PREALLOCATION_SAVE     = "save";
+  const std::string PREALLOCATION_TREE     = "tree";
+  const std::string PREALLOCATION_OFF      = "off";
 
-  const std::string VALUE_NEAREST_NEIGHBOR_GRADIENT = "nearest-neighbor-gradient";
+  // For the future
+  // const std::string ATTR_PARALLELISM           = "parallelism";
+  // const std::string PARALLELISM_GATHER_SCATTER = "gather-scatter";
+  // const std::string PARALLELISM                = "distributed";
 
   mesh::PtrMeshConfiguration _meshConfig;
 
