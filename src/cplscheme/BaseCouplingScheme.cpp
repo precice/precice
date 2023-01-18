@@ -710,7 +710,7 @@ bool BaseCouplingScheme::reachedEndOfTimeWindow()
 void BaseCouplingScheme::storeIteration()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme());
-  for (auto &data : _allData | boost::adaptors::map_values) {
+  for (const auto &data : _allData | boost::adaptors::map_values) {
     data->storeIteration();
   }
 }

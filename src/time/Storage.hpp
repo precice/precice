@@ -63,7 +63,7 @@ public:
    * The stored normalized dt is larger or equal than "before". If "before" is a normalized dt stored in this Storage, this function returns the values at "before"
    *
    * @param before a double, where we want to find a normalized dt that comes directly after this one
-   * @return Eigen::VectorXd a values in this Storage at or directly after "before"
+   * @return Eigen::VectorXd values in this Storage at or directly after "before"
    */
   Eigen::VectorXd getValuesAtOrAfter(double before);
 
@@ -103,7 +103,7 @@ public:
   /**
    * @brief Clear this Storage by deleting all values. May exclude values associated with 0.0 from deletion via keepWindowStart.
    *
-   * @param keepWindowStart will keep value at start of window, if true, clear complete storage, if false
+   * @param keepWindowStart will keep values at start of window, if true, clear complete storage, if false
    */
   void clear(bool keepWindowStart = true);
 
