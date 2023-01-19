@@ -250,6 +250,12 @@ public:
       ::precice::span<const VertexID> vertices,
       ::precice::span<const double>   gradients);
 
+/// @copydoc SolverInterface::writeGlobalVectorData
+  void writeGlobalVectorData(
+      int           fromDataID,
+      const double *value);
+
+
     /// @copydoc SolverInterface::writeGlobalScalarData
   void writeGlobalScalarData(
       int    dataID,

@@ -1159,7 +1159,7 @@ void SolverInterfaceImpl::readGlobalVectorData(
     int     dataID,
     double *value) const
 {
-  PRECICE_TRACE(dataID, valueIndex);
+  PRECICE_TRACE(dataID);
   double relativeTimeWindowEndTime = _couplingScheme->getThisTimeWindowRemainder(); // samples at end of time window
   if (_accessor->globalDataContext(dataID).getInterpolationOrder() != 0) {
     PRECICE_WARN("Interpolation order of read data named \"{}\" is set to \"{}\", but you are calling {} without providing a relativeReadTime. This looks like an error. You can fix this by providing a relativeReadTime to {} or by setting interpolation order to 0.",
@@ -1179,7 +1179,7 @@ void SolverInterfaceImpl::readGlobalVectorData(
 }
 
 void SolverInterfaceImpl::readGlobalVectorDataImpl(
-    int     DataID,
+    int     dataID,
     double  relativeReadTime,
     double *value) const
 {
@@ -1218,7 +1218,7 @@ void SolverInterfaceImpl::readGlobalVectorDataImpl(
   PRECICE_DEBUG("read value = {}", Eigen::Map<const Eigen::VectorXd>(value, _dimensions).format(utils::eigenio::debug()));
 }
 
-void SolverInterfaceImpl::readGlobalScalarData(int     toDataID,
+void SolverInterfaceImpl::readGlobalScalarData(int     dataID,
                                                double &value) const
 {
   PRECICE_TRACE(dataID);
@@ -1241,7 +1241,7 @@ void SolverInterfaceImpl::readGlobalScalarData(
 }
 
 void SolverInterfaceImpl::readGlobalScalarDataImpl(
-    int     DataID,
+    int     dataID,
     double  relativeReadTime,
     double &value) const
 {

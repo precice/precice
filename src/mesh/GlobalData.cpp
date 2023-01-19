@@ -6,7 +6,7 @@
 #include "precice/types.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
+namespace precice::mesh {
 
 GlobalData::GlobalData()
     : _name(""),
@@ -89,4 +89,4 @@ int GlobalData::getSpatialDimensions() const
   return _spatialDimensions;
 }
 
-} // namespace precice
+} // namespace precice::mesh
