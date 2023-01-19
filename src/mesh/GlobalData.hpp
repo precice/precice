@@ -51,6 +51,9 @@ public:
       int         dimension,
       int         spatialDimensions = -1);
 
+  /// Returns a reference to the data values.
+  Eigen::VectorXd &values();
+
   /// Returns a const reference to the data values.
   const Eigen::VectorXd &values() const;
 
