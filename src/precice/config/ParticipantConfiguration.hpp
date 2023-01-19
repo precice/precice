@@ -135,6 +135,9 @@ private:
       const mesh::PtrMesh &mesh,
       const std::string &  nameData) const;
 
+  const mesh::PtrGlobalData &getGlobalData(
+      const std::string &nameData) const;
+
   mapping::PtrMapping getMapping(const std::string &mappingName);
 
   // Does this participant already define a primary tag?

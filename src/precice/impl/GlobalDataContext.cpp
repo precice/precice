@@ -7,8 +7,7 @@ namespace precice::impl {
 logging::Logger GlobalDataContext::_log{"impl::GlobalDataContext"};
 
 GlobalDataContext::GlobalDataContext(
-    mesh::PtrGlobalData data,
-    int                 interpolationOrder)
+    mesh::PtrGlobalData data)
 {
   PRECICE_ASSERT(data);
   _providedData = data;

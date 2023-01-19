@@ -32,10 +32,8 @@ public:
    * @brief Construct a new GlobalDataContext with time interpolation.
    *
    * @param data Data associated with this DataContext.
-   * @param interpolationOrder Order of the Waveform stored by this GlobalDataContext.
    */
-  GlobalDataContext(mesh::PtrGlobalData data,
-                    int                 interpolationOrder = time::Time::DEFAULT_INTERPOLATION_ORDER);
+  GlobalDataContext(mesh::PtrGlobalData data);
 
   /**
    * @brief Get the Name of _providedData.
