@@ -16,6 +16,7 @@
 #include "m2n/config/M2NConfiguration.hpp"
 #include "precice/Participant.hpp"
 #include "precice/impl/DataContext.hpp"
+#include "precice/impl/GlobalDataContext.hpp"
 #include "precice/impl/SharedPointer.hpp"
 #include "precice/types.hpp"
 #include "utils/MultiLock.hpp"

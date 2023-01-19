@@ -1,5 +1,7 @@
 #include "precice/impl/GlobalDataContext.hpp"
 #include <memory>
+#include "mesh/GlobalData.hpp" //TODO: Should compile without this since GlobalData is already forward declared in mesh/SharedPointer.hpp, but doesn't.
+#include "time/Waveform.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
 namespace precice::impl {

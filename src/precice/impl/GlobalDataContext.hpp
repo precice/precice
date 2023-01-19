@@ -3,6 +3,8 @@
 #include <string>
 // #include "MappingContext.hpp"
 // #include "MeshContext.hpp"
+#include <Eigen/Core>
+#include "logging/Logger.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "time/SharedPointer.hpp"
 #include "time/Time.hpp"
