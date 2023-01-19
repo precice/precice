@@ -20,7 +20,7 @@ class BoundingBox {
 public:
   /***
   *
-  * @brief Constructor.
+  * @brief Constructor
   *
   * @param[in] dimension Dimension of the bounding box
   *
@@ -31,16 +31,16 @@ public:
   *
   * @brief Constructor.
   *
-  * @param[in] bounds Min-max values of the bounding box in each dimesion
+  * @param[in] bounds Min-max values of the bounding box in each dimesion (x_min, x_max, y_min, y_max, z_min, z_max)
   *
   */
   explicit BoundingBox(std::vector<double> bounds);
 
   /**
-  * @brief Construct a new Bounding Box:: Bounding Box object
+  * @brief Constructor accepting Eigen::VectorXd
   *
-  * @param boundMin
-  * @param boundMax
+  * @param boundMin: vertex at minCorner
+  * @param boundMax: vertex at maxCorner
   */
   explicit BoundingBox(Eigen::VectorXd boundMin, Eigen::VectorXd boundMax);
 
@@ -57,6 +57,8 @@ public:
   bool empty() const;
 
   /// Check whether the bounding box is at default state or not
+  /// all the values of _boundMin = std::numeric_limits<double>::max()
+  /// all the values of _boundMax = std::numeric_limits<double>::lowest()
   bool isDefault() const;
 
   /// Expand bounding box using another bounding box
@@ -106,13 +108,17 @@ public:
 private:
   static logging::Logger _log;
 
-  /// Number of dimensions
+  /// Number of dimensions (2 or 3)
   int _dimensions;
 
   /// Container of a Eigen::VectorXd of a bounding box with min components in each dimension
+  /// (x_min, y_min) when _dimensions=2;
+  /// (x_min, y_min, z_min) when _dimensions=3;
   Eigen::VectorXd _boundMin;
 
   /// Container of a Eigen::VectorXd of a bounding box with max components in each dimension
+  /// (x_max, y_max) when _dimensions=2;
+  /// (x_max, y_max, z_max) when _dimensions=3;
   Eigen::VectorXd _boundMax;
 };
 
