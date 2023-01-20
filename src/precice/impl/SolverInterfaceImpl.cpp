@@ -279,6 +279,15 @@ double SolverInterfaceImpl::initialize()
   Event                    e("initialize", precice::syncMode);
   utils::ScopedEventPrefix sep("initialize/");
 
+  PRECICE_DEBUG("Preprocessing provided meshes");
+  for (MeshContext *meshContext : _accessor->usedMeshContexts()) {
+    if (meshContext->provideMesh) {
+      auto &mesh = *(meshContext->mesh);
+      Event e("preprocess." + mesh.getName(), precice::syncMode);
+      meshContext->mesh->preprocess();
+    }
+  }
+
   // Setup communication
 
   PRECICE_INFO("Setting up primary communication to coupling partner/s");
@@ -768,8 +777,29 @@ void SolverInterfaceImpl::setMeshEdges(
     int        size,
     const int *vertices)
 {
+  PRECICE_TRACE(meshID, size);
+  PRECICE_REQUIRE_MESH_MODIFY(meshID);
+  MeshContext &context = _accessor->usedMeshContext(meshID);
+  if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
+    return;
+  }
+
+  mesh::PtrMesh &mesh = context.mesh;
+  {
+    auto end           = std::next(vertices, size * 2);
+    auto [first, last] = utils::find_first_range(vertices, end, [&mesh](VertexID vid) {
+      return !mesh->isValidVertexID(vid);
+    });
+    PRECICE_CHECK(first == end,
+                  impl::errorInvalidVertexIDRange,
+                  std::distance(vertices, first),
+                  std::distance(vertices, last));
+  }
+
   for (int i = 0; i < size; ++i) {
-    setMeshEdge(meshID, vertices[2 * i], vertices[2 * i + 1]);
+    auto aid = vertices[2 * i];
+    auto bid = vertices[2 * i + 1];
+    mesh->createEdge(mesh->vertices()[aid], mesh->vertices()[bid]);
   }
 }
 
@@ -815,8 +845,32 @@ void SolverInterfaceImpl::setMeshTriangles(
     int        size,
     const int *vertices)
 {
+  PRECICE_TRACE(meshID, size);
+  PRECICE_REQUIRE_MESH_MODIFY(meshID);
+  MeshContext &context = _accessor->usedMeshContext(meshID);
+  if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
+    return;
+  }
+
+  mesh::PtrMesh &mesh = context.mesh;
+  {
+    auto end           = std::next(vertices, size * 3);
+    auto [first, last] = utils::find_first_range(vertices, end, [&mesh](VertexID vid) {
+      return !mesh->isValidVertexID(vid);
+    });
+    PRECICE_CHECK(first == end,
+                  impl::errorInvalidVertexIDRange,
+                  std::distance(vertices, first),
+                  std::distance(vertices, last));
+  }
+
   for (int i = 0; i < size; ++i) {
-    setMeshTriangle(meshID, vertices[3 * i], vertices[3 * i + 1], vertices[3 * i + 2]);
+    auto aid = vertices[3 * i];
+    auto bid = vertices[3 * i + 1];
+    auto cid = vertices[3 * i + 2];
+    mesh->createTriangle(mesh->vertices()[aid],
+                         mesh->vertices()[bid],
+                         mesh->vertices()[cid]);
   }
 }
 
@@ -848,36 +902,26 @@ void SolverInterfaceImpl::setMeshQuad(
     auto coords = mesh::coordsFor(mesh, vertexIDs);
     PRECICE_CHECK(utils::unique_elements(coords),
                   "The four vertices that form the quad are not unique. The resulting shape may be a point, line or triangle."
-                  "Please check that the adapter sends the four unique vertices that form the quad, or that the mesh on the interface "
-                  "is composed of quads. A mix of triangles and quads are not supported.");
+                  "Please check that the adapter sends the four unique vertices that form the quad, or that the mesh on the interface is composed of quads.");
 
     auto convexity = math::geometry::isConvexQuad(coords);
     PRECICE_CHECK(convexity.convex, "The given quad is not convex. "
-                                    "Please check that the adapter send the four correct vertices or that the interface is composed of quads. "
-                                    "A mix of triangles and quads are not supported.");
+                                    "Please check that the adapter send the four correct vertices or that the interface is composed of quads.");
     auto reordered = utils::reorder_array(convexity.vertexOrder, mesh::vertexPtrsFor(mesh, vertexIDs));
 
     // Vertices are now in the order: V0-V1-V2-V3-V0.
-    // The order now identifies all outer edges of the quad.
-    auto &edge0 = mesh.createEdge(*reordered[0], *reordered[1]);
-    auto &edge1 = mesh.createEdge(*reordered[1], *reordered[2]);
-    auto &edge2 = mesh.createEdge(*reordered[2], *reordered[3]);
-    auto &edge3 = mesh.createEdge(*reordered[3], *reordered[0]);
-
     // Use the shortest diagonal to split the quad into 2 triangles.
     // Vertices are now in V0-V1-V2-V3-V0 order. The new edge, e[4] is either 0-2 or 1-3
-    double distance1 = (reordered[0]->getCoords() - reordered[2]->getCoords()).norm();
-    double distance2 = (reordered[1]->getCoords() - reordered[3]->getCoords()).norm();
+    double distance02 = (reordered[0]->getCoords() - reordered[2]->getCoords()).norm();
+    double distance13 = (reordered[1]->getCoords() - reordered[3]->getCoords()).norm();
 
     // The new edge, e[4], is the shortest diagonal of the quad
-    if (distance1 <= distance2) {
-      auto &diag = mesh.createEdge(*reordered[0], *reordered[2]);
-      mesh.createTriangle(edge0, edge1, diag);
-      mesh.createTriangle(edge2, edge3, diag);
+    if (distance02 <= distance13) {
+      mesh.createTriangle(*reordered[0], *reordered[2], *reordered[1]);
+      mesh.createTriangle(*reordered[0], *reordered[2], *reordered[3]);
     } else {
-      auto &diag = mesh.createEdge(*reordered[1], *reordered[3]);
-      mesh.createTriangle(edge3, edge0, diag);
-      mesh.createTriangle(edge1, edge2, diag);
+      mesh.createTriangle(*reordered[1], *reordered[3], *reordered[0]);
+      mesh.createTriangle(*reordered[1], *reordered[3], *reordered[2]);
     }
   }
 }
@@ -887,8 +931,58 @@ void SolverInterfaceImpl::setMeshQuads(
     int        size,
     const int *vertices)
 {
+  PRECICE_TRACE(meshID, size);
+  PRECICE_REQUIRE_MESH_MODIFY(meshID);
+  MeshContext &context = _accessor->usedMeshContext(meshID);
+  if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
+    return;
+  }
+
+  mesh::Mesh &mesh = *(context.mesh);
+  {
+    auto end           = std::next(vertices, size * 4);
+    auto [first, last] = utils::find_first_range(vertices, end, [&mesh](VertexID vid) {
+      return !mesh.isValidVertexID(vid);
+    });
+    PRECICE_CHECK(first == end,
+                  impl::errorInvalidVertexIDRange,
+                  std::distance(vertices, first),
+                  std::distance(vertices, last));
+  }
+
   for (int i = 0; i < size; ++i) {
-    setMeshQuad(meshID, vertices[4 * i], vertices[4 * i + 1], vertices[4 * i + 2], vertices[4 * i + 3]);
+    auto aid = vertices[4 * i];
+    auto bid = vertices[4 * i + 1];
+    auto cid = vertices[4 * i + 2];
+    auto did = vertices[4 * i + 3];
+
+    auto vertexIDs = utils::make_array(aid, bid, cid, did);
+    PRECICE_CHECK(utils::unique_elements(vertexIDs), "The four vertex ID's of the quad nr {} are not unique. Please check that the vertices that form the quad are correct.", i);
+
+    auto coords = mesh::coordsFor(mesh, vertexIDs);
+    PRECICE_CHECK(utils::unique_elements(coords),
+                  "The four vertices that form the quad nr {} are not unique. The resulting shape may be a point, line or triangle."
+                  "Please check that the adapter sends the four unique vertices that form the quad, or that the mesh on the interface is composed of quads.",
+                  i);
+
+    auto convexity = math::geometry::isConvexQuad(coords);
+    PRECICE_CHECK(convexity.convex, "The given quad nr {} is not convex. "
+                                    "Please check that the adapter send the four correct vertices or that the interface is composed of quads.",
+                  i);
+    auto reordered = utils::reorder_array(convexity.vertexOrder, mesh::vertexPtrsFor(mesh, vertexIDs));
+
+    // Use the shortest diagonal to split the quad into 2 triangles.
+    // Vertices are now in V0-V1-V2-V3-V0 order. The new edge, e[4] is either 0-2 or 1-3
+    double distance02 = (reordered[0]->getCoords() - reordered[2]->getCoords()).norm();
+    double distance13 = (reordered[1]->getCoords() - reordered[3]->getCoords()).norm();
+
+    if (distance02 <= distance13) {
+      mesh.createTriangle(*reordered[0], *reordered[2], *reordered[1]);
+      mesh.createTriangle(*reordered[0], *reordered[2], *reordered[3]);
+    } else {
+      mesh.createTriangle(*reordered[1], *reordered[3], *reordered[0]);
+      mesh.createTriangle(*reordered[1], *reordered[3], *reordered[2]);
+    }
   }
 }
 
@@ -916,20 +1010,6 @@ void SolverInterfaceImpl::setMeshTetrahedron(
     mesh::Vertex &C = mesh->vertices()[thirdVertexID];
     mesh::Vertex &D = mesh->vertices()[fourthVertexID];
 
-    // Also add underlying primitives (4 triangles, 6 edges)
-    // Tetra ABCD is made of triangles ABC, ABD, ACD, BCD
-    mesh::Edge &AB = mesh->createEdge(A, B);
-    mesh::Edge &BC = mesh->createEdge(B, C);
-    mesh::Edge &CD = mesh->createEdge(C, D);
-    mesh::Edge &DA = mesh->createEdge(D, A);
-    mesh::Edge &AC = mesh->createEdge(A, C);
-    mesh::Edge &BD = mesh->createEdge(B, D);
-
-    mesh->createTriangle(AB, BC, AC);
-    mesh->createTriangle(AB, BD, DA);
-    mesh->createTriangle(AC, CD, DA);
-    mesh->createTriangle(BC, CD, BD);
-
     mesh->createTetrahedron(A, B, C, D);
   }
 }
@@ -939,8 +1019,34 @@ void SolverInterfaceImpl::setMeshTetrahedra(
     int        size,
     const int *vertices)
 {
+  PRECICE_TRACE(meshID, size);
+  PRECICE_REQUIRE_MESH_MODIFY(meshID);
+  MeshContext &context = _accessor->usedMeshContext(meshID);
+  if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
+    return;
+  }
+
+  mesh::PtrMesh &mesh = context.mesh;
+  {
+    auto end           = std::next(vertices, size * 4);
+    auto [first, last] = utils::find_first_range(vertices, end, [&mesh](VertexID vid) {
+      return !mesh->isValidVertexID(vid);
+    });
+    PRECICE_CHECK(first == end,
+                  impl::errorInvalidVertexIDRange,
+                  std::distance(vertices, first),
+                  std::distance(vertices, last));
+  }
+
   for (int i = 0; i < size; ++i) {
-    setMeshTetrahedron(meshID, vertices[4 * i], vertices[4 * i + 1], vertices[4 * i + 2], vertices[4 * i + 3]);
+    auto aid = vertices[4 * i];
+    auto bid = vertices[4 * i + 1];
+    auto cid = vertices[4 * i + 2];
+    auto did = vertices[4 * i + 3];
+    mesh->createTetrahedron(mesh->vertices()[aid],
+                            mesh->vertices()[bid],
+                            mesh->vertices()[cid],
+                            mesh->vertices()[did]);
   }
 }
 

@@ -284,15 +284,27 @@ public:
 
   bool operator!=(const Mesh &other) const;
 
+  /// Call preprocess() before index() to ensure correct projection handling
   const query::Index &index() const
   {
     return _index;
   }
 
+  /// Call preprocess() before index() to ensure correct projection handling
   query::Index &index()
   {
     return _index;
   }
+
+  /**
+   * Removes all duplicates and generates implicit primitives.
+   *
+   * This needs to be called for correct projection handling.
+   *
+   * @see removeDuplicates()
+   * @see generateImplictPrimitives()
+   */
+  void preprocess();
 
 private:
   mutable logging::Logger _log{"mesh::Mesh"};
@@ -351,6 +363,15 @@ private:
   BoundingBox _boundingBox;
 
   query::Index _index;
+
+  /// Removes all duplicate connectivity.
+  void removeDuplicates();
+
+  /** Generates implicit primitives for correct projection handling
+   *
+   * removeDuplicates() should be called first to avoid unnecessary filtering.
+   */
+  void generateImplictPrimitives();
 };
 
 std::ostream &operator<<(std::ostream &os, const Mesh &q);

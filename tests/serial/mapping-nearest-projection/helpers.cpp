@@ -176,14 +176,17 @@ void testQuadMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFu
     auto &mesh = testing::WhiteboxAccessor::impl(interface).mesh("MeshOne");
     BOOST_REQUIRE(mesh.vertices().size() == 4);
     if (defineEdgesExplicitly) {
-      BOOST_REQUIRE(mesh.edges().size() == 9);
+      BOOST_REQUIRE(mesh.edges().size() == 4);
     } else {
-      BOOST_REQUIRE(mesh.edges().size() == 5);
+      BOOST_REQUIRE(mesh.edges().empty());
     }
     BOOST_REQUIRE(mesh.triangles().size() == 2);
 
     // Initialize, thus sending the mesh.
     double maxDt = interface.initialize();
+    BOOST_TEST(mesh.edges().size() == 5);
+    BOOST_TEST(mesh.triangles().size() == 2);
+
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant should have to advance once!");
 
     // Write the data to be send.
@@ -275,9 +278,9 @@ void testQuadMappingNearestProjectionTallKite(bool defineEdgesExplicitly, bool u
     auto &mesh = testing::WhiteboxAccessor::impl(interface).mesh("MeshOne");
     BOOST_REQUIRE(mesh.vertices().size() == 4);
     if (defineEdgesExplicitly) {
-      BOOST_REQUIRE(mesh.edges().size() == 9);
+      BOOST_REQUIRE(mesh.edges().size() == 4);
     } else {
-      BOOST_REQUIRE(mesh.edges().size() == 5);
+      BOOST_REQUIRE(mesh.edges().empty());
     }
     BOOST_REQUIRE(mesh.triangles().size() == 2);
 
@@ -334,9 +337,9 @@ void testQuadMappingNearestProjectionWideKite(bool defineEdgesExplicitly, bool u
     auto &mesh = testing::WhiteboxAccessor::impl(interface).mesh("MeshOne");
     BOOST_REQUIRE(mesh.vertices().size() == 4);
     if (defineEdgesExplicitly) {
-      BOOST_REQUIRE(mesh.edges().size() == 9);
+      BOOST_REQUIRE(mesh.edges().size() == 4);
     } else {
-      BOOST_REQUIRE(mesh.edges().size() == 5);
+      BOOST_REQUIRE(mesh.edges().empty());
     }
     BOOST_REQUIRE(mesh.triangles().size() == 2);
 
