@@ -81,6 +81,9 @@ void ParallelCouplingScheme::exchangeSecondData()
     PRECICE_DEBUG("Receiving data...");
     receiveData(getM2N(), getReceiveData());
     checkDataHasBeenReceived();
+  } else { // second participant
+    PRECICE_DEBUG("Sending data...");
+    sendData(getM2N(), getSendData());
   }
 
   if (hasConverged() || isExplicitCouplingScheme()) {
@@ -90,11 +93,6 @@ void ParallelCouplingScheme::exchangeSecondData()
   }
   if (isImplicitCouplingScheme()) {
     storeIteration();
-  }
-
-  if (!doesFirstStep()) { // second participant
-    PRECICE_DEBUG("Sending data...");
-    sendData(getM2N(), getSendData());
   }
 }
 

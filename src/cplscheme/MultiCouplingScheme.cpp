@@ -263,6 +263,9 @@ void MultiCouplingScheme::exchangeSecondData()
     for (const auto &m2n : _m2ns | boost::adaptors::map_values) {
       sendConvergence(m2n);
     }
+    for (auto &sendExchange : _sendDataVector) {
+      sendData(_m2ns[sendExchange.first], sendExchange.second);
+    }
   } else {
     receiveConvergence(_m2ns[_controller]);
     for (auto &receiveExchange : _receiveDataVector) {
@@ -278,12 +281,6 @@ void MultiCouplingScheme::exchangeSecondData()
   }
   if (isImplicitCouplingScheme()) {
     storeIteration();
-  }
-
-  if (_isController) {
-    for (auto &sendExchange : _sendDataVector) {
-      sendData(_m2ns[sendExchange.first], sendExchange.second);
-    }
   }
 }
 

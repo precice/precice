@@ -147,12 +147,18 @@ void SerialCouplingScheme::exchangeSecondData()
   }
 
   if (!doesFirstStep()) { // second participant
-    // the second participant does not want new data in the last iteration of the last time window
-    if (isCouplingOngoing() || (isImplicitCouplingScheme() && not hasConverged())) {
-      receiveAndSetTimeWindowSize();
-      PRECICE_DEBUG("Receiving data...");
-      receiveData(getM2N(), getReceiveData());
-      checkDataHasBeenReceived();
+    receiveAndSetTimeWindowSize();
+    PRECICE_DEBUG("Receiving data...");
+    receiveData(getM2N(), getReceiveData());
+    checkDataHasBeenReceived();
+  }
+
+  // wind-down when reaching end of simulation: Let first participant send converged & extrapolated data to second participant.
+  if (!isCouplingOngoing() && (isExplicitCouplingScheme() || hasConverged())) {
+    if (doesFirstStep()) {
+      PRECICE_DEBUG("Sending data...");
+      sendTimeWindowSize();
+      sendData(getM2N(), getSendData());
     }
   }
 }
