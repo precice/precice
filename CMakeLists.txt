@@ -246,7 +246,7 @@ else()
   message(STATUS "Python support disabled")
 endif()
 
-# Option ENABLE_BACKTRACE
+# Option ENABLE_LIBBACKTRACE
 # Note that the FindBacktrace module does not work reliably to find libbacktrace installations
 if (PRECICE_ENABLE_LIBBACKTRACE)
   add_subdirectory(thirdparty/libbacktrace)
