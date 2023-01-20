@@ -176,7 +176,7 @@ void CompositionalCouplingScheme::loadReceiveDataFromStorage(std::string dataNam
       PRECICE_DEBUG("Found {}", dataName);
       PRECICE_ASSERT(found == false, "CompositionCouplingScheme of participant should only have one receive data with the given name. Found multiple.", dataName)
       found = true;
-      scheme->loadReceiveDataFromStorage(dataName, relativeDt); // @todo commented out because of problems in Integration/Serial/ThreeSolvers
+      scheme->loadReceiveDataFromStorage(dataName, relativeDt);
     }
   }
   PRECICE_ASSERT(found == true, "Did not find receive data with given name.", dataName);

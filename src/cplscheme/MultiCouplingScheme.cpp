@@ -133,13 +133,6 @@ void MultiCouplingScheme::exchangeInitialData()
       }
     }
 
-    // @todo would be better to only use the call of clearTimeStepsStorage at the end of this function, but this breaks for Integration/Serial/MultiCoupling/MultiCouplingThreeSolvers3
-    for (auto &sendExchange : _sendDataVector) {
-      for (const auto &data : sendExchange.second | boost::adaptors::map_values) {
-        data->clearTimeStepsStorage(); // @todo really needed? receiveData should take care of clearing on its own.
-      }
-    }
-
     if (receivesInitializedData()) {
       for (auto &receiveExchange : _receiveDataVector) {
         receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
@@ -211,7 +204,7 @@ std::vector<double> MultiCouplingScheme::getReceiveTimes(std::string dataName)
     }
   }
   PRECICE_DEBUG("No data with dataName {} found in receive data. Returning empty.", dataName);
-  // PRECICE_ASSERT(false);  // Reasonable assertion, but the test Integration/Serial/WatchIntegralScaleAndNoScale actually uses read-data that is not receiving any data and this assertion gets triggered. See also https://github.com/precice/precice/pull/1526
+  PRECICE_ASSERT(false);
   return times;
 }
 
