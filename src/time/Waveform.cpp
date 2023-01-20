@@ -28,14 +28,12 @@ void Waveform::initialize(const Eigen::VectorXd &values)
   PRECICE_ASSERT(_interpolationOrder >= Time::MIN_INTERPOLATION_ORDER);
 }
 
-void Waveform::store(const Eigen::VectorXd &values, double normalizedDt, bool keepWindowStart)
+void Waveform::store(const Eigen::VectorXd &values, double normalizedDt)
 {
   if (math::equals(_storage.maxStoredNormalizedDt(), time::Storage::WINDOW_END)) { // reached end of window and trying to write new data from next window. Clearing window first.
-    _storage.clear(keepWindowStart);
+    _storage.clear(false);
   }
-  if (_storage.nTimes() > 0) {
-    PRECICE_ASSERT(values.size() == _storage.nDofs());
-  }
+  PRECICE_ASSERT((_storage.nTimes() == 0) || (values.size() == _storage.nDofs()), "Size of new data does not match size of existing data", values.size(), _storage.nDofs());
   _storage.setValuesAtTime(normalizedDt, values);
 }
 

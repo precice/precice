@@ -126,8 +126,6 @@ public:
 
   bool hasReceiveData(std::string dataName) final override;
 
-  void overwriteReceiveData(std::string dataName, double relativeDt) override final;
-
   void loadReceiveDataFromStorage(std::string dataName, double relativeDt) final override;
 
   void clearAllDataStorage() override final;

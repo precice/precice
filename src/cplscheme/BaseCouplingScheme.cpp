@@ -171,7 +171,6 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
 
     PRECICE_ASSERT(math::equals(timesAscending(0), time::Storage::WINDOW_START), timesAscending(0));                                               // assert that first element is time::Storage::WINDOW_START
     PRECICE_ASSERT(math::equals(timesAscending(timesAscending.size() - 1), time::Storage::WINDOW_END), timesAscending(timesAscending.size() - 1)); // assert that last element is time::Storage::WINDOW_END
-    data->clearTimeStepsStorage(false);
 
     auto serializedSamples = Eigen::VectorXd(nTimeSteps * data->getSize());
     // Data is only received on ranks with size>0, which is checked in the derived class implementation

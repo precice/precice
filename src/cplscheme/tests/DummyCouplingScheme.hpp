@@ -119,14 +119,6 @@ public:
   /**
    * @brief Not implemented.
    */
-  void overwriteReceiveData(std::string dataName, double relativeDt) override final
-  {
-    PRECICE_ASSERT(false);
-  }
-
-  /**
-   * @brief Not implemented.
-   */
   void loadReceiveDataFromStorage(std::string dataName, double relativeDt) override final
   {
     PRECICE_ASSERT(false);

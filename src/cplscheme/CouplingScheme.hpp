@@ -168,15 +168,6 @@ public:
 
   // @todo allow for all data, not only for receive? Makes it more flexible.
   /**
-   * @brief overwrites data at time stamp in CouplingData with given data from mesh values
-   *
-   * @param dataName name of data data is overwritten for
-   * @param relativeDt relative dt that will be associated with the stored data.
-   */
-  virtual void overwriteReceiveData(std::string dataName, double relativeDt) = 0;
-
-  // @todo allow for all data, not only for receive? Makes it more flexible.
-  /**
    * @brief loads time step data for given time from CouplingData into mesh values
    *
    * @param dataName name of data data is loaded for

@@ -117,7 +117,7 @@ std::vector<int> CouplingData::getVertexOffsets()
 
 void CouplingData::initializeStorage(Eigen::VectorXd data)
 {
-  clearTimeStepsStorage(false); // only required for MultiCouplingScheme, if participant that is not the controller has send data (with data) which is also non-initialized receive data. See DataBC in Integration/Serial/MultiCoupling/MultiCouplingThreeSolvers3.
+  _timeStepsStorage.clear(false); // only required for MultiCouplingScheme, if participant that is not the controller has send data (with data) which is also non-initialized receive data. See DataBC in Integration/Serial/MultiCoupling/MultiCouplingThreeSolvers3.
   storeValuesAtTime(time::Storage::WINDOW_START, data);
   storeValuesAtTime(time::Storage::WINDOW_END, data);
 }
@@ -127,9 +127,9 @@ Eigen::VectorXd CouplingData::getStoredTimesAscending()
   return _timeStepsStorage.getTimes();
 }
 
-void CouplingData::clearTimeStepsStorage(bool keepWindowStart)
+void CouplingData::clearTimeStepsStorage()
 {
-  _timeStepsStorage.clear(keepWindowStart);
+  _timeStepsStorage.clear();
 }
 
 void CouplingData::moveTimeStepsStorage()
@@ -171,6 +171,9 @@ Eigen::VectorXd CouplingData::getSerialized()
 void CouplingData::storeFromSerialized(Eigen::VectorXd timesAscending, Eigen::VectorXd serializedData)
 {
   PRECICE_ASSERT(timesAscending.size() * getSize() == serializedData.size());
+
+  _timeStepsStorage.clear(false);
+
   for (int timeId = 0; timeId < timesAscending.size(); timeId++) {
     auto slice = Eigen::VectorXd(getSize());
     for (int valueId = 0; valueId < slice.size(); valueId++) {

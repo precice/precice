@@ -166,22 +166,6 @@ bool CompositionalCouplingScheme::hasReceiveData(std::string dataName)
   return has;
 }
 
-void CompositionalCouplingScheme::overwriteReceiveData(std::string dataName, double relativeDt)
-{
-  PRECICE_TRACE();
-  // @todo could be more useful to add private function returning BaseCouplingScheme* CompositionalCouplingScheme::getSchemeWithReceiveData(std::string dataName), because we will need this also in other functions.
-  bool found = false;
-  for (auto scheme : allSchemes()) {
-    if (scheme->hasReceiveData(dataName)) {
-      PRECICE_DEBUG("Found {}", dataName);
-      PRECICE_ASSERT(found == false, "CompositionCouplingScheme of participant should only have one receive data with the given name. Found multiple.", dataName)
-      found = true;
-      scheme->overwriteReceiveData(dataName, relativeDt); // @todo commented out because of problems in Integration/Serial/ThreeSolvers
-    }
-  }
-  PRECICE_ASSERT(found == true, "Did not find receive data with given name.", dataName);
-}
-
 void CompositionalCouplingScheme::loadReceiveDataFromStorage(std::string dataName, double relativeDt)
 {
   PRECICE_TRACE();

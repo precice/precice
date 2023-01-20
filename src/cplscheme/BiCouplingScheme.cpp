@@ -164,22 +164,6 @@ bool BiCouplingScheme::hasReceiveData(std::string dataName)
   return getReceiveData(dataName) != nullptr;
 }
 
-void BiCouplingScheme::overwriteReceiveData(std::string dataName, double relativeDt)
-{
-  bool mustOverwrite = true;
-  PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
-  PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
-  // @todo work with _allData and move into BaseCouplingScheme
-  // @todo use getReceiveData(dataName)?
-  for (auto &receiveData : getReceiveData() | boost::adaptors::map_values) {
-    if (receiveData->getDataName() == dataName) {
-      receiveData->storeValuesAtTime(relativeDt, receiveData->values(), mustOverwrite);
-      return;
-    }
-  }
-  PRECICE_ASSERT(false, "Data with name not found", dataName);
-}
-
 void BiCouplingScheme::loadReceiveDataFromStorage(std::string dataName, double relativeDt)
 {
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
@@ -195,7 +179,7 @@ void BiCouplingScheme::loadReceiveDataFromStorage(std::string dataName, double r
   PRECICE_ASSERT(false, "Data with name not found", dataName);
 }
 
-// @todo may be moved into BaseCouplingScheme, but should be done consistently with BiCouplingScheme::overwriteReceiveData and BiCouplingScheme::loadReceiveDataFromStorage
+// @todo may be moved into BaseCouplingScheme, but should be done consistently with BiCouplingScheme::loadReceiveDataFromStorage
 void BiCouplingScheme::clearAllDataStorage()
 {
   for (auto &data : _allData | boost::adaptors::map_values) {

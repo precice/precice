@@ -170,23 +170,6 @@ bool MultiCouplingScheme::hasReceiveData(std::string dataName)
   return false;
 }
 
-void MultiCouplingScheme::overwriteReceiveData(std::string dataName, double relativeDt)
-{
-  bool mustOverride = true;
-  PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
-  PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
-  // @todo work with _allData and move into BaseCouplingScheme
-  for (auto &receiveExchange : _receiveDataVector | boost::adaptors::map_values) {
-    for (auto &receiveData : receiveExchange | boost::adaptors::map_values) {
-      if (receiveData->getDataName() == dataName) {
-        receiveData->storeValuesAtTime(relativeDt, receiveData->values(), mustOverride);
-        return;
-      }
-    }
-  }
-  PRECICE_ASSERT(false, "Data with name not found", dataName);
-}
-
 void MultiCouplingScheme::loadReceiveDataFromStorage(std::string dataName, double relativeDt)
 {
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
@@ -203,7 +186,7 @@ void MultiCouplingScheme::loadReceiveDataFromStorage(std::string dataName, doubl
   PRECICE_ASSERT(false, "Data with name not found", dataName);
 }
 
-// @todo may be moved into BaseCouplingScheme, but should be done consistently with MultiCouplingScheme::overwriteReceiveData and MultiCouplingScheme::loadReceiveDataFromStorage
+// @todo may be moved into BaseCouplingScheme, but should be done consistently with MultiCouplingScheme::loadReceiveDataFromStorage
 void MultiCouplingScheme::clearAllDataStorage()
 {
   for (auto &data : _allData | boost::adaptors::map_values) {

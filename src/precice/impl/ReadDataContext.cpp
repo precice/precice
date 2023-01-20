@@ -35,7 +35,7 @@ int ReadDataContext::getInterpolationOrder() const
 
 void ReadDataContext::storeDataInWaveform(double relativeDt)
 {
-  _waveform->store(_providedData->values(), relativeDt, false); // store mapped or received _providedData in the _waveform
+  _waveform->store(_providedData->values(), relativeDt); // store mapped or received _providedData in the _waveform
 }
 
 Eigen::VectorXd ReadDataContext::sampleWaveformAt(double normalizedDt)

@@ -52,7 +52,7 @@ public:
    * @param values Sample at normalizedDt in this time window
    * @param normalizedDt normalizedDt associated with this value. Only allows values between 0 and 1. 0 refers to the beginning of the window and 1 to the end.
    */
-  void store(const Eigen::VectorXd &values, double normalizedDt = 1.0, bool keepWindowStart = true);
+  void store(const Eigen::VectorXd &values, double normalizedDt = 1.0);
 
   /**
    * @brief Shifts all entries in _timeWindows. The new entry is initialized as the value from the last window (= constant extrapolation). Called when moving to the next time window.
