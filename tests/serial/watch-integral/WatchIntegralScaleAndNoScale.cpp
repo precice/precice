@@ -76,15 +76,7 @@ BOOST_AUTO_TEST_CASE(WatchIntegralScaleAndNoScale)
     // Initialize the mesh
     double dt = interface.initialize();
 
-    int    dataAID = interface.getDataID("DataTwo", meshTwoID);
-    double valueA, valueB, valueC;
-
     while (interface.isCouplingOngoing()) {
-
-      interface.readScalarData(dataAID, idA, valueA);
-      interface.readScalarData(dataAID, idB, valueB);
-      interface.readScalarData(dataAID, idC, valueC);
-
       dt = interface.advance(dt);
     }
     interface.finalize();
