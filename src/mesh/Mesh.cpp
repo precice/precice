@@ -16,6 +16,7 @@
 #include "logging/LogMacros.hpp"
 #include "math/geometry.hpp"
 #include "mesh/Data.hpp"
+#include "mesh/Vertex.hpp"
 #include "precice/types.hpp"
 #include "query/Index.hpp"
 #include "utils/EigenHelperFunctions.hpp"
@@ -372,6 +373,128 @@ const BoundingBox &Mesh::getBoundingBox() const
 void Mesh::expandBoundingBox(const BoundingBox &boundingBox)
 {
   _boundingBox.expandBy(boundingBox);
+}
+
+void Mesh::preprocess()
+{
+  removeDuplicates();
+  generateImplictPrimitives();
+}
+
+void Mesh::removeDuplicates()
+{
+  // Remove duplicate tetrahedra
+  auto tetrahedraCnt = _tetrahedra.size();
+  std::sort(_tetrahedra.begin(), _tetrahedra.end());
+  auto lastTetrahedron = std::unique(_tetrahedra.begin(), _tetrahedra.end());
+  _tetrahedra          = TetraContainer{_tetrahedra.begin(), lastTetrahedron};
+
+  // Remove duplicate triangles
+  auto triangleCnt = _triangles.size();
+  std::sort(_triangles.begin(), _triangles.end());
+  auto lastTriangle = std::unique(_triangles.begin(), _triangles.end());
+  _triangles        = TriangleContainer{_triangles.begin(), lastTriangle};
+
+  // Remove duplicate edges
+  auto edgeCnt = _edges.size();
+  std::sort(_edges.begin(), _edges.end());
+  auto lastEdge = std::unique(_edges.begin(), _edges.end());
+  _edges        = EdgeContainer{_edges.begin(), lastEdge};
+
+  PRECICE_DEBUG("Compression removed {} tetrahedra ({} to {}), {} triangles ({} to {}), and {} edges ({} to {})",
+                tetrahedraCnt - _tetrahedra.size(), tetrahedraCnt, _tetrahedra.size(),
+                triangleCnt - _triangles.size(), triangleCnt, _triangles.size(),
+                edgeCnt - _edges.size(), edgeCnt, _edges.size());
+}
+
+namespace {
+
+template <class Primitive, int... Indices>
+auto sortedVertexPtrsForImpl(Primitive &p, std::integer_sequence<int, Indices...>)
+{
+  std::array<Vertex *, Primitive::vertexCount> vs{&p.vertex(Indices)...};
+  std::sort(vs.begin(), vs.end());
+  return std::tuple_cat(vs);
+}
+
+/** returns a tuple of Vertex* sorted by ptr of the Primitive
+ *
+ * This uniquely identifies a primitive, provides a weak order to allow sorting,
+ * and allows to directly fetch each Vertex to later create the primitive in the mesh.
+ *
+ * Requires Primitive to provide static constexpr vertexCount.
+ * Generates an integer sequence based on the vertexCount, which is then expanded to fill the array.
+ */
+template <class Primitive>
+auto sortedVertexPtrsFor(Primitive &p)
+{
+  return sortedVertexPtrsForImpl(p, std::make_integer_sequence<int, Primitive::vertexCount>{});
+}
+} // namespace
+
+void Mesh::generateImplictPrimitives()
+{
+  if (_triangles.empty() && _tetrahedra.empty()) {
+    PRECICE_DEBUG("No implicit primitives required");
+    return; // no implicit primitives
+  }
+
+  // count explicit primitives for debug
+  const auto explTriangles = _triangles.size();
+  const auto explEdges     = _triangles.size();
+
+  // First handle all explicit tetrahedra
+
+  // Build a set of all explicit triangles
+  using ExisitingTriangle = std::tuple<Vertex *, Vertex *, Vertex *>;
+  std::set<ExisitingTriangle> triangles;
+  for (auto &t : _triangles) {
+    triangles.insert(sortedVertexPtrsFor(t));
+  }
+
+  // Generate all missing implicit triangles of explicit tetrahedra
+  // Update the triangles set used by the implicit edge generation
+  auto createTriangleIfMissing = [&](Vertex *a, Vertex *b, Vertex *c) {
+    if (triangles.count({a, b, c}) == 0) {
+      triangles.emplace(a, b, c);
+      createTriangle(*a, *b, *c);
+    };
+  };
+  for (auto &t : _tetrahedra) {
+    auto [a, b, c, d] = sortedVertexPtrsFor(t);
+    // Make sure these are in the same order as above
+    createTriangleIfMissing(a, b, c);
+    createTriangleIfMissing(a, b, d);
+    createTriangleIfMissing(a, c, d);
+    createTriangleIfMissing(b, c, d);
+  }
+
+  // Second handle all triangles, both explicit and implicit from the tetrahedron phase
+  // Build an set of all explicit triangles
+  using ExisitingEdge = std::tuple<Vertex *, Vertex *>;
+  std::set<ExisitingEdge> edges;
+  for (auto &e : _edges) {
+    edges.emplace(sortedVertexPtrsFor(e));
+  }
+
+  // generate all missing implicit edges of implicit and explicit triangles
+  auto createEdgeIfMissing = [&](Vertex *a, Vertex *b) {
+    if (edges.count({a, b}) == 0) {
+      edges.emplace(a, b);
+      createEdge(*a, *b);
+    };
+  };
+  for (auto &t : _triangles) {
+    auto [a, b, c] = sortedVertexPtrsFor(t);
+    // Make sure these are in the same order as above
+    createEdgeIfMissing(a, b);
+    createEdgeIfMissing(a, c);
+    createEdgeIfMissing(b, c);
+  }
+
+  PRECICE_DEBUG("Generated {} implicit triangles and {} implicit edges",
+                _triangles.size() - explTriangles,
+                _edges.size() - explEdges);
 }
 
 bool Mesh::operator==(const Mesh &other) const

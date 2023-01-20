@@ -16,6 +16,8 @@ inline std::string errorInvalidEdgeID(int eid)
   return "The given EdgeID \"" + std::to_string(eid) + "\" is invalid. Check that it originated from a call to setMeshEdge().";
 }
 
+static constexpr auto errorInvalidVertexIDRange = "The given range of VertexIDs contains invalid IDs at offsets [{},{}]. Check that they originated from calls to setMeshVertex() or setMeshVertices().";
+
 } // namespace impl
 
 } // namespace precice
