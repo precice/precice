@@ -91,11 +91,11 @@ BOOST_AUTO_TEST_CASE(WatchIntegralScaleAndNoScale)
 
     {
       std::string fileName = "precice-SolverTwo-watchintegral-WatchIntegral.log";
-      auto        result   = readDoublesFromTXTFile(fileName, 4);
+      auto        result   = readDoublesFromTXTFile(fileName, 3);
       auto        expected = std::vector<double>{
-          1.0, 9.5, 0.0, 3.0,
-          2.0, 12.5, 0.0, 3.0,
-          3.0, 12.5, 0.0, 3.0};
+          1.0, 9.5, 3.0,
+          2.0, 12.5, 3.0,
+          3.0, 0.0, 3.0};
       BOOST_TEST(result.size() == expected.size());
       for (size_t i = 0; i < result.size(); ++i) {
         BOOST_TEST_CONTEXT("entry index: " << i)
@@ -108,11 +108,11 @@ BOOST_AUTO_TEST_CASE(WatchIntegralScaleAndNoScale)
 
     {
       std::string fileName = "precice-SolverTwo-watchintegral-WatchIntegralNoScale.log";
-      auto        result   = readDoublesFromTXTFile(fileName, 4);
+      auto        result   = readDoublesFromTXTFile(fileName, 3);
       auto        expected = std::vector<double>{
-          1.0, 9.0, 0.0, 3.0,
-          2.0, 12.0, 0.0, 3.0,
-          3.0, 12.0, 0.0, 3.0};
+          1.0, 9.0, 3.0,
+          2.0, 12.0, 3.0,
+          3.0, 0.0, 3.0};
       BOOST_TEST(result.size() == expected.size());
       for (size_t i = 0; i < result.size(); ++i) {
         BOOST_TEST_CONTEXT("entry index: " << i)
