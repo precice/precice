@@ -6,10 +6,10 @@ else()
   message(STATUS "Preparing libbacktrace")
 
   message(STATUS "Extracting sources")
-  file(ARCHIVE_EXTRACT
-    INPUT ${CMAKE_CURRENT_SOURCE_DIR}/libbacktrace.zip
-    DESTINATION ${CMAKE_CURRENT_BINARY_DIR}
-    )
+  execute_process(
+      COMMAND unzip ${CMAKE_CURRENT_SOURCE_DIR}/libbacktrace.zip
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+      )
 
   set(_libbacktrace_sources ${CMAKE_CURRENT_BINARY_DIR}/libbacktrace-master)
 
@@ -18,7 +18,6 @@ else()
     execute_process(
       COMMAND ${_step}
       WORKING_DIRECTORY ${_libbacktrace_sources}
-      COMMAND_ERROR_IS_FATAL ANY
       )
   endforeach(_step)
 
