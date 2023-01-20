@@ -1,6 +1,7 @@
 #include <Eigen/Core>
 #include <algorithm>
 #include <array>
+#include <boost/test/unit_test_suite.hpp>
 #include <functional>
 #include <ostream>
 #include <string>
@@ -191,6 +192,110 @@ BOOST_AUTO_TEST_CASE(ScramblePointer)
 }
 
 BOOST_AUTO_TEST_SUITE_END() // ReorderArray
+
+BOOST_AUTO_TEST_SUITE(FindFirstRange)
+
+BOOST_AUTO_TEST_CASE(NoMatch)
+{
+  PRECICE_TEST(1_rank);
+  std::vector v{0, 1, 2, 3};
+
+  auto [first, last] = utils::find_first_range(v.begin(), v.end(), [](int i) { return false; });
+  BOOST_TEST((first == v.end()));
+  BOOST_TEST((last == v.end()));
+}
+
+BOOST_AUTO_TEST_CASE(AllMatch)
+{
+  PRECICE_TEST(1_rank);
+  std::vector v{0, 1, 2, 3};
+
+  auto [first, last] = utils::find_first_range(v.begin(), v.end(), [](int i) { return true; });
+  BOOST_TEST((first == v.begin()));
+  BOOST_TEST((last == v.end() - 1));
+}
+
+BOOST_AUTO_TEST_CASE(BeginSingle)
+{
+  PRECICE_TEST(1_rank);
+  std::vector v{0, 1, 2, 3};
+
+  auto [first, last] = utils::find_first_range(v.begin(), v.end(), [](int i) { return i == 0; });
+  BOOST_TEST((first == v.begin()));
+  BOOST_TEST((last == v.begin()));
+}
+
+BOOST_AUTO_TEST_CASE(BeginMultiple)
+{
+  PRECICE_TEST(1_rank);
+  std::vector v{0, 0, 2, 3};
+
+  auto [first, last] = utils::find_first_range(v.begin(), v.end(), [](int i) { return i == 0; });
+  BOOST_TEST((first == v.begin()));
+  BOOST_TEST((last == v.begin() + 1));
+}
+
+BOOST_AUTO_TEST_CASE(EndSingle)
+{
+  PRECICE_TEST(1_rank);
+  std::vector v{0, 1, 2, 3};
+
+  auto [first, last] = utils::find_first_range(v.begin(), v.end(), [](int i) { return i == 3; });
+  BOOST_TEST((first == v.end() - 1));
+  BOOST_TEST((last == first));
+}
+
+BOOST_AUTO_TEST_CASE(EndMultiple)
+{
+  PRECICE_TEST(1_rank);
+  std::vector v{1, 2, 3, 3};
+
+  auto [first, last] = utils::find_first_range(v.begin(), v.end(), [](int i) { return i == 3; });
+  BOOST_TEST((first == v.end() - 2));
+  BOOST_TEST((last == v.end() - 1));
+}
+
+BOOST_AUTO_TEST_CASE(MiddleSingle)
+{
+  PRECICE_TEST(1_rank);
+  std::vector v{1, 2, 3, 4};
+
+  auto [first, last] = utils::find_first_range(v.begin(), v.end(), [](int i) { return i == 2; });
+  BOOST_TEST((first == v.begin() + 1));
+  BOOST_TEST((last == first));
+}
+
+BOOST_AUTO_TEST_CASE(MiddleMultiple)
+{
+  PRECICE_TEST(1_rank);
+  std::vector v{1, 2, 2, 3};
+
+  auto [first, last] = utils::find_first_range(v.begin(), v.end(), [](int i) { return i == 2; });
+  BOOST_TEST((first == v.begin() + 1));
+  BOOST_TEST((last == v.begin() + 2));
+}
+
+BOOST_AUTO_TEST_CASE(MultipleRangesSingleMatch)
+{
+  PRECICE_TEST(1_rank);
+  std::vector v{1, 2, 3, 4, 5, 3};
+
+  auto [first, last] = utils::find_first_range(v.begin(), v.end(), [](int i) { return i == 3; });
+  BOOST_TEST((first == v.begin() + 2));
+  BOOST_TEST((last == first));
+}
+
+BOOST_AUTO_TEST_CASE(MultipleRangesMultipleMatches)
+{
+  PRECICE_TEST(1_rank);
+  std::vector v{1, 2, 2, 4, 2, 2};
+
+  auto [first, last] = utils::find_first_range(v.begin(), v.end(), [](int i) { return i == 2; });
+  BOOST_TEST((first == v.begin() + 1));
+  BOOST_TEST((last == v.begin() + 2));
+}
+
+BOOST_AUTO_TEST_SUITE_END() // FindRange
 
 BOOST_AUTO_TEST_SUITE_END() // Algorithm
 
