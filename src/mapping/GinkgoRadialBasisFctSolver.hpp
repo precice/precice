@@ -161,7 +161,9 @@ private:
 
   void _solveRBFSystem(const std::shared_ptr<GinkgoVector> &rhs) const;
 
-  precice::utils::Event _copyEvent{"map.rbf.ginkgo.memCopy", precice::syncMode, false};
+  precice::utils::Event _copyEvent{"map.rbf.ginkgo.memCopy", false, false};
+
+  precice::utils::Event _assemblyEvent{"map.rbf.ginkgo.assembleMatrices", false, false};
 
   std::shared_ptr<gko::log::Convergence<>> _logger;
 };
@@ -247,20 +249,22 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
     this->_matrixQ                = gko::share(GinkgoMatrix::create(this->_deviceExecutor, gko::dim<2>{n, polyParams}));
     this->_matrixV                = gko::share(GinkgoMatrix::create(this->_deviceExecutor, gko::dim<2>{outputSize, polyParams}));
 
+    this->_assemblyEvent.start();
     this->_deviceExecutor->run(make_polynomial_fill_operation(this->_matrixQ->get_size()[0], this->_matrixQ->get_size()[1], this->_matrixQ->get_values(), inputVertices->get_values(), polyParams));
     this->_deviceExecutor->run(make_polynomial_fill_operation(this->_matrixV->get_size()[0], this->_matrixV->get_size()[1], this->_matrixV->get_values(), outputVertices->get_values(), polyParams));
+    this->_assemblyEvent.pause();
 
     this->_deviceExecutor->synchronize();
   }
 
   // Launch RBF fill kernel on device
-  precice::utils::Event fillEvent("map.rbf.ginkgo.fillMatrices");
+  this->_assemblyEvent.start();
   this->_deviceExecutor->run(make_rbf_fill_operation(this->_rbfSystemMatrix->get_size()[0], this->_rbfSystemMatrix->get_size()[1], inputVertices->get_size()[1], activeAxis, this->_rbfSystemMatrix->get_values(), inputVertices->get_values(), inputVertices->get_values(), basisFunction.getFunctor(), basisFunction.getFunctionParameters(), Polynomial::ON == polynomial, polyparams)); // polynomial evaluates to true only if ON is set
   this->_deviceExecutor->run(make_rbf_fill_operation(this->_matrixA->get_size()[0], this->_matrixA->get_size()[1], inputVertices->get_size()[1], activeAxis, this->_matrixA->get_values(), inputVertices->get_values(), outputVertices->get_values(), basisFunction.getFunctor(), basisFunction.getFunctionParameters(), Polynomial::ON == polynomial, polyparams));
 
   // Wait for the kernels to finish
   this->_deviceExecutor->synchronize();
-  fillEvent.stop();
+  this->_assemblyEvent.stop();
 
   // TODO: Add Polynomial == SEPARATE case
 
