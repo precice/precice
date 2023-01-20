@@ -75,12 +75,6 @@ protected:
   /// Returns all data to be received.
   DataMap &getReceiveData();
 
-  /**
-   * @brief BiCouplingScheme has _sendData and _receiveData
-   * @returns DataMap with all data
-   */
-  const DataMap getAllData() override final;
-
   /// Sets the values
   CouplingData *getSendData(DataID dataID);
 

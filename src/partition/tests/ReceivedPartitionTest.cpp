@@ -7,8 +7,8 @@
 #include <string>
 #include <vector>
 
-#include "com/CommunicateBoundingBox.hpp"
 #include "com/Communication.hpp"
+#include "com/Extra.hpp"
 #include "com/SharedPointer.hpp"
 #include "com/SocketCommunication.hpp"
 #include "com/SocketCommunicationFactory.hpp"
@@ -943,7 +943,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
     std::map<int, std::vector<int>> receivedConnectionMap;
     mesh::PtrMesh                   pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
     m2n->getPrimaryRankCommunication()->send(3, 0);
-    com::CommunicateBoundingBox(m2n->getPrimaryRankCommunication()).sendBoundingBoxMap(sendGlobalBB, 0);
+    com::sendBoundingBoxMap(*m2n->getPrimaryRankCommunication(), 0, sendGlobalBB);
     std::vector<int> connectedRanksList = m2n->getPrimaryRankCommunication()->receiveRange(0, com::AsVectorTag<int>{});
     connectionMapSize                   = connectedRanksList.size();
     BOOST_TEST_REQUIRE(connectionMapSize == 2);
@@ -954,7 +954,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
       receivedConnectionMap[rank] = connectedRanks;
     }
 
-    com::CommunicateBoundingBox(m2n->getPrimaryRankCommunication()).receiveConnectionMap(receivedConnectionMap, 0);
+    com::receiveConnectionMap(*m2n->getPrimaryRankCommunication(), 0, receivedConnectionMap);
 
     // test whether we receive correct connection map
     BOOST_TEST(receivedConnectionMap.at(0).at(0) == 2);
@@ -1011,7 +1011,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D)
     std::map<int, std::vector<int>> receivedConnectionMap;
     mesh::PtrMesh                   pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
     m2n->getPrimaryRankCommunication()->send(3, 0);
-    com::CommunicateBoundingBox(m2n->getPrimaryRankCommunication()).sendBoundingBoxMap(sendGlobalBB, 0);
+    com::sendBoundingBoxMap(*m2n->getPrimaryRankCommunication(), 0, sendGlobalBB);
     std::vector<int> connectedRanksList = m2n->getPrimaryRankCommunication()->receiveRange(0, com::AsVectorTag<int>{});
     connectionMapSize                   = connectedRanksList.size();
     BOOST_TEST(connectionMapSize == 2);
@@ -1022,7 +1022,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D)
       receivedConnectionMap[rank] = connectedRanks;
     }
 
-    com::CommunicateBoundingBox(m2n->getPrimaryRankCommunication()).receiveConnectionMap(receivedConnectionMap, 0);
+    com::receiveConnectionMap(*m2n->getPrimaryRankCommunication(), 0, receivedConnectionMap);
 
     // test whether we receive correct connection map
     BOOST_TEST(receivedConnectionMap.at(0).at(0) == 2);
