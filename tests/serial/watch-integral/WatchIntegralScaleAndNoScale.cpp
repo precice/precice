@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(WatchIntegralScaleAndNoScale)
       auto        expected = std::vector<double>{
           1.0, 9.5, 3.0,
           2.0, 12.5, 3.0,
-          3.0, 0.0, 3.0};
+          3.0, 12.5, 3.0};
       BOOST_TEST(result.size() == expected.size());
       for (size_t i = 0; i < result.size(); ++i) {
         BOOST_TEST_CONTEXT("entry index: " << i)
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(WatchIntegralScaleAndNoScale)
       auto        expected = std::vector<double>{
           1.0, 9.0, 3.0,
           2.0, 12.0, 3.0,
-          3.0, 0.0, 3.0};
+          3.0, 12.0, 3.0};
       BOOST_TEST(result.size() == expected.size());
       for (size_t i = 0; i < result.size(); ++i) {
         BOOST_TEST_CONTEXT("entry index: " << i)
