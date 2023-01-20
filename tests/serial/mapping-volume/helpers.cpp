@@ -186,14 +186,17 @@ void testMappingVolumeOneTetra(const std::string configFile, const TestContext &
     auto &mesh = precice::testing::WhiteboxAccessor::impl(interface).mesh("MeshOne");
     // setMeshTetrahedron currently adds underlying connectivity
     BOOST_REQUIRE(mesh.vertices().size() == 4);
-    BOOST_REQUIRE(mesh.edges().size() == 6);
-    BOOST_REQUIRE(mesh.triangles().size() == 4);
+    BOOST_REQUIRE(mesh.edges().empty());
+    BOOST_REQUIRE(mesh.triangles().empty());
     BOOST_REQUIRE(mesh.tetrahedra().size() == 1);
 
     BOOST_TEST(equals(mesh.tetrahedra()[0].getVolume(), 1.0 / 6), "Tetrahedron volume must be 1/6");
 
     // Initialize, write data, advance and finalize
     double dt = interface.initialize();
+    BOOST_REQUIRE(mesh.edges().size() == 6);
+    BOOST_REQUIRE(mesh.triangles().size() == 4);
+    BOOST_REQUIRE(mesh.tetrahedra().size() == 1);
     BOOST_TEST(!mesh.tetrahedra().empty(), "Tetrahedra must still be stored");
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant must advance once.");
 
@@ -295,14 +298,17 @@ void testMappingVolumeOneTetraConservative(const std::string configFile, const T
     auto &mesh = precice::testing::WhiteboxAccessor::impl(interface).mesh("MeshTwo");
     // setMeshTetrahedron currently adds underlying connectivity
     BOOST_REQUIRE(mesh.vertices().size() == 4);
-    BOOST_REQUIRE(mesh.edges().size() == 6);
-    BOOST_REQUIRE(mesh.triangles().size() == 4);
+    BOOST_REQUIRE(mesh.edges().empty());
+    BOOST_REQUIRE(mesh.triangles().empty());
     BOOST_REQUIRE(mesh.tetrahedra().size() == 1);
 
     BOOST_TEST(equals(mesh.tetrahedra()[0].getVolume(), 1.0 / 6), "Tetrahedron volume must be 1/6");
 
     // Initialize, read data, advance and finalize. Check expected mapping
     double dt = interface.initialize();
+    BOOST_REQUIRE(mesh.edges().size() == 6);
+    BOOST_REQUIRE(mesh.triangles().size() == 4);
+    BOOST_REQUIRE(mesh.tetrahedra().size() == 1);
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant must advance once.");
 
     interface.advance(dt);

@@ -84,10 +84,7 @@ public:
    * @brief getter for _isInitialized
    * @returns true, if initialize has been called.
    */
-  bool isInitialized() const override final
-  {
-    return _isInitialized;
-  }
+  bool isInitialized() const override final;
 
   /**
    * @brief Adds newly computed time. Has to be called before every advance.
@@ -166,16 +163,16 @@ public:
   bool isTimeWindowComplete() const override final;
 
   /// Returns true, if the given action has to be performed by the accessor.
-  bool isActionRequired(const std::string &actionName) const override final;
+  bool isActionRequired(Action action) const override final;
 
   /// Returns true, if the given action has to be performed by the accessor.
-  bool isActionFulfilled(const std::string &actionName) const override final;
+  bool isActionFulfilled(Action action) const override final;
 
   /// Tells the coupling scheme that the accessor has performed the given action.
-  void markActionFulfilled(const std::string &actionName) override final;
+  void markActionFulfilled(Action action) override final;
 
   /// Sets an action required to be performed by the accessor.
-  void requireAction(const std::string &actionName) override final;
+  void requireAction(Action action) override final;
 
   /**
    * @brief Returns coupling state information.
@@ -221,10 +218,7 @@ public:
    * @brief Getter for _doesFirstStep
    * @returns _doesFirstStep
    */
-  bool doesFirstStep() const
-  {
-    return _doesFirstStep;
-  }
+  bool doesFirstStep() const;
 
   /**
    * @returns true, if coupling scheme has any sendData
@@ -242,47 +236,52 @@ public:
    * @brief Function to determine whether coupling scheme is an implicit coupling scheme
    * @returns true, if coupling scheme is implicit
    */
-  bool isImplicitCouplingScheme() const override
-  {
-    PRECICE_ASSERT(_couplingMode != Undefined);
-    return _couplingMode == Implicit;
-  }
+  bool isImplicitCouplingScheme() const override;
 
   /**
    * @brief Checks if the implicit cplscheme has converged
    *
    * @pre \ref doImplicitStep() or \ref receiveConvergence() has been called
    */
-  bool hasConverged() const override
-  {
-    return _hasConverged;
-  }
+  bool hasConverged() const override;
 
 protected:
-  /// Map that links DataID to CouplingData
-  typedef std::map<int, PtrCouplingData> DataMap;
+  /// All send and receive data as a map "data ID -> data"
+  DataMap _allData;
 
-  /// Sends data sendDataIDs given in mapCouplingData with communication.
+  /**
+   * @brief Sends data sendDataIDs given in mapCouplingData with communication.
+   *
+   * @param m2n M2N used for communication
+   * @param sendData DataMap associated with sent data
+   */
   void sendData(const m2n::PtrM2N &m2n, const DataMap &sendData);
 
-  /// Receives data receiveDataIDs given in mapCouplingData with communication.
+  /**
+   * @brief Receives data receiveDataIDs given in mapCouplingData with communication.
+   *
+   * @param m2n M2N used for communication
+   * @param receiveData DataMap associated with received data
+   */
   void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData);
 
   /**
-   * @brief interface to provide all CouplingData, depending on coupling scheme being used
-   * @return DataMap containing all CouplingData
+   * @brief Adds CouplingData with given properties to this BaseCouplingScheme and returns a pointer to the CouplingData
+   *
+   * If CouplingData with ID of provided data already exists in coupling scheme, no duplicate is created but a pointer to the already existing CouplingData is returned.
+   *
+   * @param data data the CouplingData is associated with
+   * @param mesh mesh the CouplingData is associated with
+   * @param requiresInitialization true, if CouplingData requires initialization
+   * @return PtrCouplingData pointer to CouplingData owned by the CouplingScheme
    */
-  virtual const DataMap getAllData() = 0;
+  PtrCouplingData addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization);
 
   /**
    * @brief Function to determine whether coupling scheme is an explicit coupling scheme
    * @returns true, if coupling scheme is explicit
    */
-  bool isExplicitCouplingScheme()
-  {
-    PRECICE_ASSERT(_couplingMode != Undefined);
-    return _couplingMode == Explicit;
-  }
+  bool isExplicitCouplingScheme();
 
   /**
    * @brief Setter for _timeWindowSize
@@ -294,18 +293,12 @@ protected:
    * @brief Getter for _computedTimeWindowPart
    * @returns _computedTimeWindowPart
    */
-  double getComputedTimeWindowPart()
-  {
-    return _computedTimeWindowPart;
-  }
+  double getComputedTimeWindowPart();
 
   /**
    * @brief Setter for _doesFirstStep
    */
-  void setDoesFirstStep(bool doesFirstStep)
-  {
-    _doesFirstStep = doesFirstStep;
-  }
+  void setDoesFirstStep(bool doesFirstStep);
 
   /**
    * @brief Used to set flag after data has been received using receiveData().
@@ -316,10 +309,7 @@ protected:
    * @brief Getter for _receivesInitializedData
    * @returns _receivesInitializedData
    */
-  bool receivesInitializedData() const
-  {
-    return _receivesInitializedData;
-  }
+  bool receivesInitializedData() const;
 
   /**
    * @brief Setter for _timeWindows
@@ -329,10 +319,7 @@ protected:
    *
    * @param timeWindows number of time windows
    */
-  void setTimeWindows(int timeWindows)
-  {
-    _timeWindows = timeWindows;
-  }
+  void setTimeWindows(int timeWindows);
 
   /**
    * @brief Reserves memory to store data values from previous iterations and time windows in coupling data and acceleration, and initializes with zero.
@@ -373,13 +360,7 @@ protected:
   /**
    * @brief used for storing all Data at end of doImplicitStep for later reference.
    */
-  void storeIteration()
-  {
-    PRECICE_ASSERT(isImplicitCouplingScheme());
-    for (const DataMap::value_type &pair : getAllData()) {
-      pair.second->storeIteration();
-    }
-  }
+  void storeIteration();
 
   /**
    * @brief Sets _sendsInitializedData, if sendData requires initialization
@@ -452,9 +433,9 @@ private:
   /// True, if coupling has been initialized.
   bool _isInitialized = false;
 
-  std::set<std::string> _requiredActions;
+  std::set<Action> _requiredActions;
 
-  std::set<std::string> _fulfilledActions;
+  std::set<Action> _fulfilledActions;
 
   /// True if implicit scheme converged
   bool _hasConverged = false;
@@ -473,14 +454,10 @@ private:
    *
    * The first participant in the implicit coupling scheme has to take some
    * initial guess for the interface values computed by the second participant.
-   * In order to improve this initial guess, an extrapolation from previous
-   * time windows can be performed.
+   * There are two possibilities to determine an initial guess:
    *
-   * The standard predictor is of order zero, i.e., simply the converged values
-   * of the last time windows are taken as initial guess for the coupling iterations.
-   * Currently, an order 1 predictor (linear extrapolation) and order 2 predictor
-   * (see https://doi.org/10.1016/j.compstruc.2008.11.013, p.796, Algorithm line 1 )
-   * is implement besides that.
+   * 1) Simply use the converged values of the last time window (constant extrapolation).
+   * 2) Compute a linear function from the values of the last two time windows and use it to determine the initial guess (linear extrapolation)
    */
   const int _extrapolationOrder;
 
@@ -527,24 +504,9 @@ private:
   /**
    * @brief implements functionality for receiveResultOfFirstAdvance
    */
-  virtual void performReceiveOfFirstAdvance()
-  {
-    // noop by default. Will be overridden by child-coupling-schemes, if data has to be received here. See SerialCouplingScheme.
-    return;
-  }
+  virtual void performReceiveOfFirstAdvance();
 
   /// Functions needed for advance()
-
-  /**
-   * @brief implements functionality for advance in base class.
-   * @returns true, if iteration converged
-   */
-  bool exchangeDataAndAccelerate()
-  {
-    exchangeFirstData();
-    exchangeSecondData();
-    return hasConverged();
-  }
 
   /// Exchanges the first set of data
   virtual void exchangeFirstData() = 0;

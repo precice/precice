@@ -264,17 +264,19 @@ public:
    * Connectivity is optional.
    * Use requiresMeshConnectivityFor() to check if the current participant can make use of the connectivity.
    *
-   *
-   * Always set the mesh connectivity of the highest dimensionality available.
-   * preCICE ensures the existence of hierarchical entries for the projection fallback.
-   * Prefer to use bulk versions, as they allows preCICE to efficiently avoid duplicates.
+   * Only set the mesh connectivity that you require for your use-case and use the face/cell elements that your solver provides.
    * preCICE removes all connectivity duplicates in initialize().
    *
-   * Examples:
+   * We recommend you to do the following depending on your case:
    *
-   * - setting triangle ABC ensures the existence of edges AB, BC, and AC.
-   * - setting triangles ABC and BCD separately will result in duplicate BC edges.
-   * - setting quad ABCD ensures the existence of triangles ABC ABD ACD BCD and edges AB AC AD BC BD CD.
+   * - **2D surface coupling:** Use setMeshEdge() and setMeshEdges() to specify the coupling interface.
+   * - **2D volume coupling:** Use setMeshTriangle() and setMeshTriangles() to specify the coupling area.
+   * - **3D surface coupling:** Use setMeshTriangle() and setMeshTriangles() to specify the coupling interface.
+   * - **3D volume coupling:** Use setMeshTetrahedron() and setMeshTetrahedra() to specify the coupling volume.
+   *
+   * As an alternative to triangles, preCICE supports **planar** quads using setMeshQuad() and setMeshQuads().
+   * These quads will be triangulated by preCICE, hence specifying triangles is generally preferred.
+   * Before using quads, we recommended to check if your solver provides a way to traverse triangulated faces.
    *
    *@{
    */
@@ -427,6 +429,8 @@ public:
   /**
    * @brief Sets a mesh edge from vertex IDs
    *
+   * Ignored if preCICE doesn't require connectivity for the mesh.
+   *
    * @note The order of vertices does not matter.
    *
    * @param[in] meshID ID of the mesh to add the edge to
@@ -445,6 +449,7 @@ public:
    *
    * vertices contain pairs of vertex indices for each edge to define.
    * The format follows: e1a, e1b, e2a, e2b, ...
+   * Ignored if preCICE doesn't require connectivity for the mesh.
    *
    * @note The order of vertices per edge does not matter.
    *
@@ -468,8 +473,6 @@ public:
    *
    * @note The order of vertices does not matter.
    *
-   * @warning For setting multiple triangle, prefer the vastly more efficient setMeshTriangles().
-   *
    * @param[in] meshID ID of the mesh to add the triangle to
    * @param[in] firstVertexID ID of the first vertex of the triangle
    * @param[in] secondVertexID ID of the second vertex of the triangle
@@ -490,6 +493,7 @@ public:
    *
    * vertices contain triples of vertex indices for each triangle to define.
    * The format follows: t1a, t1b, t1c, t2a, t2b, t2c, ...
+   * Ignored if preCICE doesn't require connectivity for the mesh.
    *
    * @note The order of vertices per triangle does not matter.
    *
@@ -510,10 +514,9 @@ public:
    * @brief Sets a planar surface mesh quadrangle from vertex IDs.
    *
    * The planar quad will be triangulated, maximizing area-to-circumference.
+   * Ignored if preCICE doesn't require connectivity for the mesh.
    *
    * @warning The order of vertices does not matter, however, only planar quads are allowed.
-   *
-   * @warning For setting multiple quads, prefer the vastly more efficient setMeshQuads().
    *
    * @param[in] meshID ID of the mesh to add the Quad to
    * @param[in] firstVertexID ID of the first vertex of the Quad
@@ -539,6 +542,7 @@ public:
    * The format follows: q1a, q1b, q1c, q1d, q2a, q2b, q2c, q2d, ...
    *
    * Each planar quad will be triangulated, maximizing area-to-circumference.
+   * Ignored if preCICE doesn't require connectivity for the mesh.
    *
    * @warning The order of vertices per quad does not matter, however, only planar quads are allowed.
    *
@@ -559,8 +563,6 @@ public:
    * @brief Set tetrahedron in 3D mesh from vertex ID
    *
    * @note The order of vertices does not matter.
-   *
-   * @warning For setting multiple tetrahedra, prefer the vastly more efficient setMeshTetrahedra().
    *
    * @param[in] meshID ID of the mesh to add the Tetrahedron to
    * @param[in] firstVertexID ID of the first vertex of the Tetrahedron
@@ -584,6 +586,7 @@ public:
    *
    * vertices contain quadruples of vertex indices for each tetrahedron to define.
    * The format follows: t1a, t1b, t1c, t1d, t2a, t2b, t2c, t2d, ...
+   * Ignored if preCICE doesn't require connectivity for the mesh.
    *
    * @note The order of vertices per tetrahedron does not matter.
    *

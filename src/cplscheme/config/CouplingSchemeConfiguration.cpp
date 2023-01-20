@@ -292,8 +292,8 @@ void CouplingSchemeConfiguration::xmlTagCallback(
   } else if (tag.getName() == TAG_EXTRAPOLATION) {
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
     _config.extrapolationOrder = tag.getIntAttributeValue(ATTR_VALUE);
-    PRECICE_CHECK((_config.extrapolationOrder == 0) || (_config.extrapolationOrder == 1) || (_config.extrapolationOrder == 2),
-                  "Extrapolation order has to be 0, 1, or 2. "
+    PRECICE_CHECK((_config.extrapolationOrder == 0) || (_config.extrapolationOrder == 1),
+                  "Extrapolation order has to be 0 or 1. "
                   "Please check the <extrapolation-order value=\"{}\" /> subtag in the <coupling-scheme:... /> of your precice-config.xml.",
                   _config.extrapolationOrder);
   }
@@ -372,33 +372,32 @@ void CouplingSchemeConfiguration::addCouplingScheme(
     const std::string &      participantName)
 {
   PRECICE_TRACE(participantName);
-  if (utils::contained(participantName, _couplingSchemes)) {
-    PRECICE_DEBUG("Coupling scheme exists already for participant");
-    if (utils::contained(participantName, _couplingSchemeCompositions)) {
-      PRECICE_DEBUG("Coupling scheme composition exists already for participant");
-      // Fetch the composition and add the new scheme.
-      PRECICE_ASSERT(_couplingSchemeCompositions.count(participantName) == 1);
-      auto composition = _couplingSchemeCompositions.at(participantName);
-      PRECICE_CHECK(!cplScheme->isImplicitCouplingScheme() || !composition->isImplicitCouplingScheme(),
-                    "You attempted to define a second implicit coupling-scheme for the participant \"{}\", which is not allowed. "
-                    "Please use a multi coupling-scheme for true implicit coupling of multiple participants.",
-                    participantName);
-      _couplingSchemeCompositions[participantName]->addCouplingScheme(cplScheme);
-    } else {
-      PRECICE_DEBUG("No composition exists for the participant");
-      // No composition exists, thus, the existing scheme is no composition.
-      // Create a new composition, add the already existing and new scheme, and
-      // overwrite the existing scheme with the composition.
-      CompositionalCouplingScheme *composition = new CompositionalCouplingScheme();
-      composition->addCouplingScheme(_couplingSchemes[participantName]);
-      composition->addCouplingScheme(cplScheme);
-      _couplingSchemes[participantName] = PtrCouplingScheme(composition);
-    }
-  } else {
+  if (!utils::contained(participantName, _couplingSchemes)) {
     PRECICE_DEBUG("No coupling scheme exists for the participant");
     // Store the new coupling scheme.
     _couplingSchemes[participantName] = cplScheme;
+    return;
   }
+  PRECICE_ASSERT(_couplingSchemes.count(participantName) > 0);
+
+  // Create a composition to add the new cplScheme to
+  if (!utils::contained(participantName, _couplingSchemeCompositions)) {
+    PRECICE_DEBUG("Creating a compositional coupling scheme for the participant");
+    auto composition = std::make_shared<CompositionalCouplingScheme>();
+    composition->addCouplingScheme(_couplingSchemes[participantName]);
+    _couplingSchemeCompositions[participantName] = composition.get();
+    _couplingSchemes[participantName]            = std::move(composition);
+  }
+
+  PRECICE_ASSERT(_couplingSchemeCompositions.count(participantName) > 0);
+
+  // Add the new scheme to the composition
+  auto composition = _couplingSchemeCompositions.at(participantName);
+  PRECICE_CHECK(!cplScheme->isImplicitCouplingScheme() || !composition->isImplicitCouplingScheme(),
+                "You attempted to define a second implicit coupling-scheme for the participant \"{}\", which is not allowed. "
+                "Please use a multi coupling-scheme for true implicit coupling of multiple participants.",
+                participantName);
+  _couplingSchemeCompositions[participantName]->addCouplingScheme(cplScheme);
 }
 
 void CouplingSchemeConfiguration::addTypespecifcSubtags(

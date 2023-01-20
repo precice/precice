@@ -186,9 +186,9 @@ public:
   /**
    * @brief Not implemented.
    */
-  bool isActionRequired(const std::string &actionName) const override final;
+  bool isActionRequired(Action action) const override final;
 
-  bool isActionFulfilled(const std::string &actionName) const override final
+  bool isActionFulfilled(Action action) const override final
   {
     return true;
   }
@@ -196,7 +196,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  void markActionFulfilled(const std::string &actionName) override final
+  void markActionFulfilled(Action action) override final
   {
     PRECICE_ASSERT(false);
   }
@@ -213,7 +213,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  void requireAction(const std::string &actionName) override final
+  void requireAction(Action action) override final
   {
     PRECICE_ASSERT(false);
   }

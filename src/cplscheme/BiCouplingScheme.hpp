@@ -61,42 +61,19 @@ public:
   /**
    * @returns true, if coupling scheme has any sendData
    */
-  bool hasAnySendData() override final
-  {
-    return not getSendData().empty();
-  }
+  bool hasAnySendData() override final;
 
   /**
    * @returns true, if coupling scheme has sendData with given DataID
    */
-  bool hasSendData(DataID dataID)
-  {
-    return getSendData(dataID) != nullptr;
-  }
+  bool hasSendData(DataID dataID);
 
 protected:
   /// Returns all data to be sent.
-  DataMap &getSendData()
-  {
-    return _sendData;
-  }
+  DataMap &getSendData();
 
   /// Returns all data to be received.
-  DataMap &getReceiveData()
-  {
-    return _receiveData;
-  }
-
-  /**
-   * @brief BiCouplingScheme has _sendData and _receiveData
-   * @returns DataMap with all data
-   */
-  const DataMap getAllData() override
-  {
-    DataMap allData{_sendData};
-    allData.insert(_receiveData.begin(), _receiveData.end());
-    return allData;
-  }
+  DataMap &getReceiveData();
 
   /// Sets the values
   CouplingData *getSendData(DataID dataID);
@@ -105,15 +82,8 @@ protected:
   CouplingData *getReceiveData(DataID dataID);
 
   /// @return Communication device to the other coupling participant.
-  m2n::PtrM2N getM2N() const
-  {
-    PRECICE_ASSERT(_m2n);
-    return _m2n;
-  }
+  m2n::PtrM2N getM2N() const;
 
-  /**
-   * @brief Exchanges data, if it has to be initialized.
-   */
   void exchangeInitialData() override final;
 
 private:

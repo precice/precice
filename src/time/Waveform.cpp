@@ -30,12 +30,11 @@ void Waveform::initialize(const Eigen::VectorXd &values)
 
 void Waveform::store(const Eigen::VectorXd &values, double normalizedDt)
 {
-  if (math::equals(_storage.maxStoredNormalizedDt(), 1.0)) { // reached end of window and trying to write new data from next window. Clearing window first.
-    bool keepZero = true;
-    _storage.clear(keepZero);
+  if (math::equals(_storage.maxStoredNormalizedDt(), time::Storage::WINDOW_END)) { // reached end of window and trying to write new data from next window. Clearing window first.
+    _storage.clear();
   }
   PRECICE_ASSERT(values.size() == _storage.nDofs());
-  _storage.setValueAtTime(normalizedDt, values);
+  _storage.setValuesAtTime(normalizedDt, values);
 }
 
 // helper function to compute x(t) from given data (x0,t0), (x1,t1), ..., (xn,tn) via B-spline interpolation (implemented using Eigen).
@@ -61,10 +60,10 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
 {
   const int usedOrder = computeUsedOrder(_interpolationOrder, _storage.nTimes());
 
-  PRECICE_ASSERT(math::equals(this->_storage.maxStoredNormalizedDt(), 1.0), this->_storage.maxStoredNormalizedDt()); // sampling is only allowed, if a window is complete.
+  PRECICE_ASSERT(math::equals(this->_storage.maxStoredNormalizedDt(), time::Storage::WINDOW_END), this->_storage.maxStoredNormalizedDt()); // sampling is only allowed, if a window is complete.
 
   if (_interpolationOrder == 0) {
-    return this->_storage.getValueAtOrAfter(normalizedDt);
+    return this->_storage.getValuesAtOrAfter(normalizedDt);
   }
 
   PRECICE_ASSERT(usedOrder >= 1);

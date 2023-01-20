@@ -1,5 +1,6 @@
 #include "MultiCouplingScheme.hpp"
 #include <algorithm>
+#include <boost/range/adaptor/map.hpp>
 #include <cstddef>
 #include <map>
 #include <memory>
@@ -40,11 +41,11 @@ MultiCouplingScheme::MultiCouplingScheme(
 
 void MultiCouplingScheme::determineInitialDataExchange()
 {
-  for (auto &sendExchange : _sendDataVector) {
-    determineInitialSend(sendExchange.second);
+  for (auto &sendExchange : _sendDataVector | boost::adaptors::map_values) {
+    determineInitialSend(sendExchange);
   }
-  for (auto &receiveExchange : _receiveDataVector) {
-    determineInitialReceive(receiveExchange.second);
+  for (auto &receiveExchange : _receiveDataVector | boost::adaptors::map_values) {
+    determineInitialReceive(receiveExchange);
   }
 }
 
@@ -57,6 +58,17 @@ std::vector<std::string> MultiCouplingScheme::getCouplingPartners() const
   }
 
   return partnerNames;
+}
+
+bool MultiCouplingScheme::hasAnySendData()
+{
+  return std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(), [](const auto &sendExchange) { return not sendExchange.second.empty(); });
+}
+
+const DataMap MultiCouplingScheme::getAccelerationData()
+{
+  // MultiCouplingScheme applies acceleration to all CouplingData
+  return _allData;
 }
 
 void MultiCouplingScheme::exchangeInitialData()
@@ -118,8 +130,8 @@ void MultiCouplingScheme::exchangeSecondData()
 
   if (_isController) {
     doImplicitStep();
-    for (const auto &m2nPair : _m2ns) {
-      sendConvergence(m2nPair.second);
+    for (const auto &m2n : _m2ns | boost::adaptors::map_values) {
+      sendConvergence(m2n);
     }
 
     for (auto &sendExchange : _sendDataVector) {
@@ -138,25 +150,23 @@ void MultiCouplingScheme::exchangeSecondData()
 void MultiCouplingScheme::addDataToSend(
     const mesh::PtrData &data,
     mesh::PtrMesh        mesh,
-    bool                 initialize,
+    bool                 requiresInitialization,
     const std::string &  to)
 {
-  int id = data->getID();
+  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization);
   PRECICE_DEBUG("Configuring send data to {}", to);
-  PtrCouplingData ptrCplData(new CouplingData(data, std::move(mesh), initialize, getExtrapolationOrder()));
-  _sendDataVector[to].emplace(id, ptrCplData);
+  _sendDataVector[to].emplace(data->getID(), ptrCplData);
 }
 
 void MultiCouplingScheme::addDataToReceive(
     const mesh::PtrData &data,
     mesh::PtrMesh        mesh,
-    bool                 initialize,
+    bool                 requiresInitialization,
     const std::string &  from)
 {
-  int id = data->getID();
+  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization);
   PRECICE_DEBUG("Configuring receive data from {}", from);
-  PtrCouplingData ptrCplData(new CouplingData(data, std::move(mesh), initialize, getExtrapolationOrder()));
-  _receiveDataVector[from].emplace(id, ptrCplData);
+  _receiveDataVector[from].emplace(data->getID(), ptrCplData);
 }
 
 } // namespace precice::cplscheme

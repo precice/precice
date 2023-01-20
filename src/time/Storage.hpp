@@ -7,6 +7,12 @@ namespace precice::time {
 
 class Storage {
 public:
+  /// Fixed time associated with beginning of window
+  static const double WINDOW_START;
+
+  /// Fixed time associated with end of window
+  static const double WINDOW_END;
+
   /**
    * @brief Stores data samples in time and provides corresponding convenience functions.
    *
@@ -18,21 +24,21 @@ public:
   Storage();
 
   /**
-   * @brief Initialize storage by storing given value at time 0.0 and 1.0.
+   * @brief Initialize storage by storing given values at time 0.0 and 1.0.
    *
-   * @param values initial value
+   * @param values initial values
    */
   void initialize(Eigen::VectorXd values);
 
   /**
-   * @brief Store a value at a specific time.
+   * @brief Store values at a specific time.
    *
    * It is only allowed to store values in time that come after values that were already stored. Therefore, time has to be larger than maxStoredNormalizedDt. Overwriting existing values is forbidden. The function clear() should be used to clear the storage and provide new values.
    *
-   * @param time the time associated with the value
-   * @param value stored value
+   * @param time the time associated with the values
+   * @param values stored values
    */
-  void setValueAtTime(double time, Eigen::VectorXd value);
+  void setValuesAtTime(double time, Eigen::VectorXd values);
 
   /**
    * @brief Get maximum normalized dt that is stored in this Storage.
@@ -42,14 +48,14 @@ public:
   double maxStoredNormalizedDt();
 
   /**
-   * @brief Returns the value at time following "before" contained in this Storage.
+   * @brief Returns the values at time following "before" contained in this Storage.
    *
-   * The stored normalized dt is larger or equal than "before". If "before" is a normalized dt stored in this Storage, this function returns the value at "before"
+   * The stored normalized dt is larger or equal than "before". If "before" is a normalized dt stored in this Storage, this function returns the values at "before"
    *
    * @param before a double, where we want to find a normalized dt that comes directly after this one
-   * @return Eigen::VectorXd a value in this Storage at or directly after "before"
+   * @return Eigen::VectorXd values in this Storage at or directly after "before"
    */
-  Eigen::VectorXd getValueAtOrAfter(double before);
+  Eigen::VectorXd getValuesAtOrAfter(double before);
 
   /**
    * @brief Get all normalized dts stored in this Storage sorted ascending.
@@ -80,16 +86,14 @@ public:
   int nDofs();
 
   /**
-   * @brief Move this Storage by storing the value at the end of the Storage at 0.0 and clearing the storage. Time 1.0 is initialized as value at 0.0
+   * @brief Move this Storage by storing the values at the end of the Storage at 0.0 and clearing the storage. Time 1.0 is initialized as values at 0.0
    */
   void move();
 
   /**
-   * @brief Clear this Storage by deleting all values. If keepZero is true, keep values associated with 0.0.
-   *
-   * @param keepZero if true, keep value associated with 0.0.
+   * @brief Clear this Storage by deleting all values except values associated with 0.0.
    */
-  void clear(bool keepZero = false);
+  void clear();
 
 private:
   /// Stores values on the current window associated with normalized dt.

@@ -54,28 +54,21 @@ public:
   void addDataToSend(
       const mesh::PtrData &data,
       mesh::PtrMesh        mesh,
-      bool                 initialize,
+      bool                 requiresInitialization,
       const std::string &  to);
 
   /// Adds data to be received on data exchange.
   void addDataToReceive(
       const mesh::PtrData &data,
       mesh::PtrMesh        mesh,
-      bool                 initialize,
+      bool                 requiresInitialization,
       const std::string &  from);
 
   void determineInitialDataExchange() override;
 
-  /// returns list of all coupling partners
   std::vector<std::string> getCouplingPartners() const override final;
 
-  /**
-   * @returns true, if coupling scheme has any sendData
-   */
-  bool hasAnySendData() override final
-  {
-    return std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(), [](const auto &sendExchange) { return not sendExchange.second.empty(); });
-  }
+  bool hasAnySendData() override final;
 
 private:
   /**
@@ -95,40 +88,13 @@ private:
 
   logging::Logger _log{"cplscheme::MultiCouplingScheme"};
 
-  /**
-   * @brief BiCouplingScheme has _sendData and _receiveData
-   * @returns DataMap with all data
-   */
-  const DataMap getAllData() override
-  {
-    DataMap allData;
-    // @todo user C++17 std::map::merge
-    for (auto &sendData : _sendDataVector) {
-      allData.insert(sendData.second.begin(), sendData.second.end());
-    }
-    for (auto &receiveData : _receiveDataVector) {
-      allData.insert(receiveData.second.begin(), receiveData.second.end());
-    }
-    return allData;
-  }
+  void exchangeFirstData() override final;
 
-  void exchangeFirstData() override;
+  void exchangeSecondData() override final;
 
-  void exchangeSecondData() override;
+  const DataMap getAccelerationData() override final;
 
-  /**
-   * @brief MultiCouplingScheme applies acceleration to all CouplingData
-   * @returns DataMap being accelerated
-   */
-  const DataMap getAccelerationData() override
-  {
-    return getAllData();
-  }
-
-  /**
-   * @brief Exchanges data, if it has to be initialized.
-   */
-  void exchangeInitialData() override;
+  void exchangeInitialData() override final;
 
   /// name of the controller participant
   std::string _controller;
