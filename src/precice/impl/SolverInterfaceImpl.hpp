@@ -521,9 +521,6 @@ private:
   /// Helper for mapWrittenData and mapReadData
   void computeMappings(std::vector<MappingContext> &contexts, const std::string &mappingType);
 
-  /// Helper for mapWrittenData and mapReadData
-  void clearMappings(std::vector<MappingContext> &contexts);
-
   /// Computes, performs, and resets all suitable write mappings.
   void mapWrittenData();
 

@@ -1799,17 +1799,6 @@ void SolverInterfaceImpl::computeMappings(std::vector<MappingContext> &contexts,
   }
 }
 
-void SolverInterfaceImpl::clearMappings(std::vector<MappingContext> &contexts)
-{
-  PRECICE_TRACE();
-  // Clear non-stationary, non-incremental mappings
-  using namespace mapping;
-  for (impl::MappingContext &context : contexts) {
-    context.mapping->clear();
-    context.hasMappedData = false;
-  }
-}
-
 void SolverInterfaceImpl::mapWrittenData()
 {
   PRECICE_TRACE();
@@ -1820,7 +1809,6 @@ void SolverInterfaceImpl::mapWrittenData()
       context.mapData();
     }
   }
-  clearMappings(_accessor->writeMappingContexts());
 }
 
 void SolverInterfaceImpl::mapReadData()
@@ -1834,7 +1822,6 @@ void SolverInterfaceImpl::mapReadData()
     }
     context.storeDataInWaveform();
   }
-  clearMappings(_accessor->readMappingContexts());
 }
 
 void SolverInterfaceImpl::performDataActions(

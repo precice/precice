@@ -69,7 +69,6 @@ BOOST_AUTO_TEST_CASE(testDataContextWriteMapping)
   BOOST_TEST(!fixture.hasReadMapping(dataContext));
   BOOST_TEST(fixture.mappingContexts(dataContext)[0].fromMeshID == mappingContext.fromMeshID);
   BOOST_TEST(fixture.mappingContexts(dataContext)[0].toMeshID == mappingContext.toMeshID);
-  BOOST_TEST(fixture.mappingContexts(dataContext)[0].hasMappedData == mappingContext.hasMappedData);
   BOOST_TEST(fixture.mappingContexts(dataContext)[0].mapping == mappingContext.mapping);
 }
 
@@ -147,7 +146,6 @@ BOOST_AUTO_TEST_CASE(testDataContextMultipleWriteMapping)
   BOOST_TEST(fixture.getToDataID(dataContext, 0) == ptrToData->getID());
   BOOST_TEST(fixture.mappingContexts(dataContext)[0].fromMeshID == mappingContext.fromMeshID);
   BOOST_TEST(fixture.mappingContexts(dataContext)[0].toMeshID == mappingContext.toMeshID);
-  BOOST_TEST(fixture.mappingContexts(dataContext)[0].hasMappedData == mappingContext.hasMappedData);
   BOOST_TEST(fixture.mappingContexts(dataContext)[0].mapping == mappingContext.mapping);
 
   // Now, test the newly added mapping
@@ -160,7 +158,6 @@ BOOST_AUTO_TEST_CASE(testDataContextMultipleWriteMapping)
   BOOST_TEST(fixture.getToDataID(dataContext, 1) == ptrToData2->getID());
   BOOST_TEST(fixture.mappingContexts(dataContext)[1].fromMeshID == mappingContext2.fromMeshID);
   BOOST_TEST(fixture.mappingContexts(dataContext)[1].toMeshID == mappingContext2.toMeshID);
-  BOOST_TEST(fixture.mappingContexts(dataContext)[1].hasMappedData == mappingContext2.hasMappedData);
   BOOST_TEST(fixture.mappingContexts(dataContext)[1].mapping == mappingContext2.mapping);
 }
 
@@ -219,7 +216,6 @@ BOOST_AUTO_TEST_CASE(testDataContextReadMapping)
   BOOST_TEST(fixture.hasReadMapping(dataContext));
   BOOST_TEST(fixture.mappingContexts(dataContext)[0].fromMeshID == mappingContext.fromMeshID);
   BOOST_TEST(fixture.mappingContexts(dataContext)[0].toMeshID == mappingContext.toMeshID);
-  BOOST_TEST(fixture.mappingContexts(dataContext)[0].hasMappedData == mappingContext.hasMappedData);
   BOOST_TEST(fixture.mappingContexts(dataContext)[0].mapping == mappingContext.mapping);
 }
 

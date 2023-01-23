@@ -23,12 +23,6 @@ struct MappingContext {
   /// data which is mapped to mesh
   mesh::PtrData toData = nullptr;
 
-  /// True, if computation and mapping is done repeatedly for single values.
-  //bool isIncremental;
-
-  /// True, if data has been mapped already.
-  bool hasMappedData = false;
-
   /// Enables gradient data in the corresponding 'from' data class
   void requireGradientData(const std::string &dataName)
   {
