@@ -23,12 +23,14 @@
         from="MeshOne"
         to="MeshTwo"
         constraint="conservative" />
-      <mapping:rbf-thin-plate-splines
+      <mapping:rbf-global-iterative
         direction="read"
         from="MeshTwo"
         to="MeshOne"
         constraint="consistent"
-        y-dead="true" />
+        y-dead="true">
+        <basis-function:thin-plate-splines />
+      </mapping:rbf-global-iterative>
       <write-data name="Data1" mesh="MeshOne" />
       <read-data name="Data2" mesh="MeshOne" />
     </participant>

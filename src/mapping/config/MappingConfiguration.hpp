@@ -123,7 +123,8 @@ private:
   const std::string RBF_MULTIQUADRICS     = "multiquadrics";
   const std::string RBF_INV_MULTIQUADRICS = "inverse-multiquadrics";
   const std::string RBF_VOLUME_SPLINES    = "volume-splines";
-  const std::string RBF_GAUSSIAN          = "gaussian";
+  const std::string RBF_GAUSSIAN_SUPPORT  = "gaussian-support";
+  const std::string RBF_GAUSSIAN_SHAPE    = "gaussian-shape";
   const std::string RBF_CTPS_C2           = "compact-tps-c2";
   const std::string RBF_CPOLYNOMIAL_C0    = "compact-polynomial-c0";
   const std::string RBF_CPOLYNOMIAL_C2    = "compact-polynomial-c2";

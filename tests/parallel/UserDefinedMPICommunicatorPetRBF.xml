@@ -18,16 +18,20 @@
       <intra-comm:mpi-single />
       <receive-mesh name="MeshTwo" from="SolverTwo" />
       <provide-mesh name="MeshOne" />
-      <mapping:rbf-thin-plate-splines
+      <mapping:rbf-global-iterative
         direction="write"
         from="MeshOne"
         to="MeshTwo"
-        constraint="conservative" />
-      <mapping:rbf-thin-plate-splines
+        constraint="conservative">
+        <basis-function:thin-plate-splines />
+      </mapping:rbf-global-iterative>
+      <mapping:rbf-global-iterative
         direction="read"
         from="MeshTwo"
         to="MeshOne"
-        constraint="consistent" />
+        constraint="consistent">
+        <basis-function:thin-plate-splines />
+      </mapping:rbf-global-iterative>
       <write-data name="Data1" mesh="MeshOne" />
       <read-data name="Data2" mesh="MeshOne" />
     </participant>

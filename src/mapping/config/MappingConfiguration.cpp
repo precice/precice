@@ -81,7 +81,7 @@ AttributeType getAttributeIfPresent(xml::XMLTag &tag, const std::string &attribu
       static_assert(always_false_v<T>, "Attribute type is not supported.");
     }
   }
-  return initializationValue;
+  return value;
 }
 
 enum struct RBFBackend {
@@ -211,7 +211,7 @@ MappingConfiguration::MappingConfiguration(
   createTag(*this, RBF_CPOLYNOMIAL_C4, once, SUBTAG_BASIS_FUNCTION, supportRadiusRBF, "Wendland C4 function");
   createTag(*this, RBF_CPOLYNOMIAL_C6, once, SUBTAG_BASIS_FUNCTION, supportRadiusRBF, "Wendland C6 function");
   createTag(*this, RBF_CTPS_C2, once, SUBTAG_BASIS_FUNCTION, supportRadiusRBF, "Compact thin-plate-spline C2");
-  createTag(*this, RBF_GAUSSIAN, once, SUBTAG_BASIS_FUNCTION, supportRadiusRBF, "Gaussian basis function accepting a support radius");
+  createTag(*this, RBF_GAUSSIAN_SUPPORT, once, SUBTAG_BASIS_FUNCTION, supportRadiusRBF, "Gaussian basis function accepting a support radius");
 
   auto attrSupportRadius = XMLAttribute<double>(ATTR_SUPPORT_RADIUS)
                                .setDocumentation("Support radius of each RBF basis function (global choice).");
@@ -224,7 +224,7 @@ MappingConfiguration::MappingConfiguration(
   std::list<XMLTag> shapeParameterRBF;
   createTag(*this, RBF_MULTIQUADRICS, once, SUBTAG_BASIS_FUNCTION, shapeParameterRBF, "Multiquadrics");
   createTag(*this, RBF_INV_MULTIQUADRICS, once, SUBTAG_BASIS_FUNCTION, shapeParameterRBF, "Inverse multiquadrics");
-  createTag(*this, RBF_GAUSSIAN, once, SUBTAG_BASIS_FUNCTION, shapeParameterRBF, "Gaussian basis function accepting a shape parameter");
+  createTag(*this, RBF_GAUSSIAN_SHAPE, once, SUBTAG_BASIS_FUNCTION, shapeParameterRBF, "Gaussian basis function accepting a shape parameter");
 
   auto attrShapeParam = XMLAttribute<double>(ATTR_SHAPE_PARAM)
                             .setDocumentation("Specific shape parameter for RBF basis function.");
@@ -293,8 +293,6 @@ void MappingConfiguration::xmlTagCallback(
     // We can only set one subtag
     PRECICE_CHECK(_mappings.back().mapping == nullptr, "More than one basis-function was defined for the.");
 
-    double shapeParameterOrSupportRadius = 0;
-
     std::string basisFctName   = tag.getName();
     double      supportRadius  = getAttributeIfPresent(tag, ATTR_SUPPORT_RADIUS, 0.);
     double      shapeParameter = getAttributeIfPresent(tag, ATTR_SHAPE_PARAM, 0.);
@@ -310,7 +308,7 @@ void MappingConfiguration::xmlTagCallback(
       basisFunction = BasisFunctions::InverseMultiquadrics;
     else if (basisFctName == RBF_VOLUME_SPLINES)
       basisFunction = BasisFunctions::VolumeSplines;
-    else if (basisFctName == RBF_GAUSSIAN)
+    else if (basisFctName == RBF_GAUSSIAN_SHAPE || basisFctName == RBF_GAUSSIAN_SUPPORT)
       basisFunction = BasisFunctions::Gaussian;
     else if (basisFctName == RBF_CTPS_C2)
       basisFunction = BasisFunctions::CompactThinPlateSplinesC2;
@@ -326,7 +324,7 @@ void MappingConfiguration::xmlTagCallback(
       PRECICE_UNREACHABLE("Unknown basis function \"{}\".", basisFctName);
 
     // The Gaussian RBF is always treated as a shape-parameter RBF. Hence, we have to convert the support radius, if necessary
-    if (basisFunction == BasisFunctions::Gaussian && supportRadius > 0 && shapeParameter != 0) {
+    if (basisFunction == BasisFunctions::Gaussian && supportRadius > 0 && shapeParameter == 0) {
       shapeParameter = std::sqrt(-std::log(Gaussian::cutoffThreshold)) / supportRadius;
     }
 
