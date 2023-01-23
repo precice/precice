@@ -59,6 +59,93 @@ void addAttributes(TagStorage &storage, const std::vector<variant_t> &attributes
       std::visit([&s](auto &&arg) { s.addAttribute(arg); }, a);
   }
 }
+
+// helper for the function below
+template <typename>
+inline constexpr bool always_false_v = false;
+
+// Returns the value, if present
+template <typename AttributeType>
+AttributeType getAttributeIfPresent(xml::XMLTag &tag, const std::string &attributeName, AttributeType initializationValue)
+{
+  AttributeType value = initializationValue;
+  if (tag.hasAttribute(attributeName)) {
+    using T = std::decay_t<AttributeType>;
+    if constexpr (std::is_same_v<T, double>) {
+      value = tag.getDoubleAttributeValue(attributeName);
+    } else if constexpr (std::is_same_v<T, bool>) {
+      value = tag.getBooleanAttributeValue(attributeName);
+    } else if constexpr (std::is_same_v<T, std::string>) {
+      value = tag.getStringAttributeValue(attributeName);
+    } else {
+      static_assert(always_false_v<T>, "Attribute type is not supported.");
+    }
+  }
+  return initializationValue;
+}
+
+enum struct RBFBackend {
+  Eigen,
+  PETSc
+};
+
+// Helper in order to resolve the template instantiations. Only the specializations are of interest
+template <RBFBackend Backend, typename RBF>
+struct BackendSelector {
+  typedef RBF type;
+};
+
+template <typename RBF>
+struct BackendSelector<RBFBackend::Eigen, RBF> {
+  typedef mapping::RadialBasisFctMapping<RBF> type;
+};
+
+#ifndef PRECICE_NO_PETSC
+template <typename RBF>
+struct BackendSelector<RBFBackend::PETSc, RBF> {
+  typedef mapping::PetRadialBasisFctMapping<RBF> type;
+};
+#endif
+
+template <RBFBackend T, typename... Args>
+PtrMapping instantiateRBFMapping(BasisFunctions functionType, mapping::Mapping::Constraint &constraint, int dimension, double supportRadius, double shapeParameter,
+                                 Args &&... args)
+{
+
+  switch (functionType) {
+  case BasisFunctions::WendlandC0: {
+    return PtrMapping(new typename BackendSelector<T, CompactPolynomialC0>::type(constraint, dimension, mapping::CompactPolynomialC0(supportRadius), std::forward<Args>(args)...));
+  }
+  case BasisFunctions::WendlandC2: {
+    return PtrMapping(new typename BackendSelector<T, CompactPolynomialC2>::type(constraint, dimension, mapping::CompactPolynomialC2(supportRadius), std::forward<Args>(args)...));
+  }
+  case BasisFunctions::WendlandC4: {
+    return PtrMapping(new typename BackendSelector<T, CompactPolynomialC4>::type(constraint, dimension, mapping::CompactPolynomialC4(supportRadius), std::forward<Args>(args)...));
+  }
+  case BasisFunctions::WendlandC6: {
+    return PtrMapping(new typename BackendSelector<T, CompactPolynomialC6>::type(constraint, dimension, mapping::CompactPolynomialC6(supportRadius), std::forward<Args>(args)...));
+  }
+  case BasisFunctions::CompactThinPlateSplinesC2: {
+    return PtrMapping(new typename BackendSelector<T, CompactThinPlateSplinesC2>::type(constraint, dimension, mapping::CompactThinPlateSplinesC2(supportRadius), std::forward<Args>(args)...));
+  }
+  case BasisFunctions::ThinPlateSplines: {
+    return PtrMapping(new typename BackendSelector<T, ThinPlateSplines>::type(constraint, dimension, mapping::ThinPlateSplines(), std::forward<Args>(args)...));
+  }
+  case BasisFunctions::Multiquadrics: {
+    return PtrMapping(new typename BackendSelector<T, Multiquadrics>::type(constraint, dimension, mapping::Multiquadrics(shapeParameter), std::forward<Args>(args)...));
+  }
+  case BasisFunctions::InverseMultiquadrics: {
+    return PtrMapping(new typename BackendSelector<T, InverseMultiquadrics>::type(constraint, dimension, mapping::InverseMultiquadrics(shapeParameter), std::forward<Args>(args)...));
+  }
+  case BasisFunctions::Gaussian: {
+    return PtrMapping(new typename BackendSelector<T, Gaussian>::type(constraint, dimension, mapping::Gaussian(shapeParameter), std::forward<Args>(args)...));
+  }
+  default:
+    PRECICE_UNREACHABLE("Unkown basis function.");
+    return nullptr;
+  }
+}
+
 } // namespace
 
 MappingConfiguration::MappingConfiguration(
@@ -166,117 +253,150 @@ void MappingConfiguration::xmlTagCallback(
 {
   PRECICE_TRACE(tag.getName());
   if (tag.getNamespace() == TAG) {
-    std::string   dir            = tag.getStringAttributeValue(ATTR_DIRECTION);
-    std::string   fromMesh       = tag.getStringAttributeValue(ATTR_FROM);
-    std::string   toMesh         = tag.getStringAttributeValue(ATTR_TO);
-    std::string   type           = tag.getName();
-    std::string   constraint     = tag.getStringAttributeValue(ATTR_CONSTRAINT);
-    double        shapeParameter = std::numeric_limits<double>::quiet_NaN();
-    double        supportRadius  = std::numeric_limits<double>::quiet_NaN();
-    double        solverRtol     = 1e-9;
-    bool          xDead = false, yDead = false, zDead = false;
-    bool          useLU         = false;
-    Polynomial    polynomial    = Polynomial::ON;
-    Preallocation preallocation = Preallocation::TREE;
+    // Mandatory tags
+    std::string dir        = tag.getStringAttributeValue(ATTR_DIRECTION);
+    std::string fromMesh   = tag.getStringAttributeValue(ATTR_FROM);
+    std::string toMesh     = tag.getStringAttributeValue(ATTR_TO);
+    std::string type       = tag.getName();
+    std::string constraint = tag.getStringAttributeValue(ATTR_CONSTRAINT);
 
-    if (tag.hasAttribute(ATTR_SHAPE_PARAM)) {
-      shapeParameter = tag.getDoubleAttributeValue(ATTR_SHAPE_PARAM);
-    }
-    if (tag.hasAttribute(ATTR_SUPPORT_RADIUS)) {
-      supportRadius = tag.getDoubleAttributeValue(ATTR_SUPPORT_RADIUS);
-    }
-    if (tag.hasAttribute(ATTR_SOLVER_RTOL)) {
-      solverRtol = tag.getDoubleAttributeValue(ATTR_SOLVER_RTOL);
-    }
-    if (tag.hasAttribute(ATTR_X_DEAD)) {
-      xDead = tag.getBooleanAttributeValue(ATTR_X_DEAD);
-    }
-    if (tag.hasAttribute(ATTR_Y_DEAD)) {
-      yDead = tag.getBooleanAttributeValue(ATTR_Y_DEAD);
-    }
-    if (tag.hasAttribute(ATTR_Z_DEAD)) {
-      zDead = tag.getBooleanAttributeValue(ATTR_Z_DEAD);
-    }
-    if (tag.hasAttribute(ATTR_USE_QR)) {
-      useLU = tag.getBooleanAttributeValue(ATTR_USE_QR);
-    }
-    if (tag.hasAttribute("polynomial")) {
-      std::string strPolynomial = tag.getStringAttributeValue("polynomial");
-      if (strPolynomial == "separate")
-        polynomial = Polynomial::SEPARATE;
-      else if (strPolynomial == "on")
-        polynomial = Polynomial::ON;
-      else if (strPolynomial == "off")
-        polynomial = Polynomial::OFF;
-    }
-    if (tag.hasAttribute("preallocation")) {
-      std::string strPrealloc = tag.getStringAttributeValue("preallocation");
-      if (strPrealloc == "estimate")
-        preallocation = Preallocation::ESTIMATE;
-      else if (strPrealloc == "compute")
-        preallocation = Preallocation::COMPUTE;
-      else if (strPrealloc == "save")
-        preallocation = Preallocation::SAVE;
-      else if (strPrealloc == "tree")
-        preallocation = Preallocation::TREE;
-      else if (strPrealloc == "off")
-        preallocation = Preallocation::OFF;
+    // optional tags
+    bool        xDead         = getAttributeIfPresent(tag, ATTR_X_DEAD, false);
+    bool        yDead         = getAttributeIfPresent(tag, ATTR_Y_DEAD, false);
+    bool        zDead         = getAttributeIfPresent(tag, ATTR_Z_DEAD, false);
+    double      solverRtol    = getAttributeIfPresent(tag, ATTR_SOLVER_RTOL, 1e-9);
+    std::string strPolynomial = getAttributeIfPresent(tag, ATTR_POLYNOMIAL, POLYNOMIAL_SEPARATE);
+    std::string strPrealloc   = getAttributeIfPresent(tag, ATTR_PREALLOCATION, PREALLOCATION_TREE);
+
+    // Convert raw string into enum types as the constructors take enums
+    if (constraint == CONSTRAINT_CONSERVATIVE) {
+      constraintValue = Mapping::CONSERVATIVE;
+    } else if (constraint == CONSTRAINT_CONSISTENT) {
+      constraintValue = Mapping::CONSISTENT;
+    } else if (constraint == CONSTRAINT_SCALED_CONSISTENT_SURFACE) {
+      constraintValue = Mapping::SCALED_CONSISTENT_SURFACE;
+    } else if (constraint == CONSTRAINT_SCALED_CONSISTENT_VOLUME) {
+      constraintValue = Mapping::SCALED_CONSISTENT_VOLUME;
+    } else {
+      PRECICE_UNREACHABLE("Unknown mapping constraint \"{}\".", constraint);
     }
 
-    RBFParameter rbfParameter;
-    // Check valid combinations for the Gaussian RBF input
-    if (type == VALUE_RBF_GAUSSIAN || type == VALUE_RBF_INV_MULTIQUADRICS || type == VALUE_RBF_MULTIQUADRICS || type == VALUE_RBF_CTPS_C2 || type == VALUE_RBF_CPOLYNOMIAL_C0 || type == VALUE_RBF_CPOLYNOMIAL_C6 || type == VALUE_RBF_CPOLYNOMIAL_C2 || type == VALUE_RBF_CPOLYNOMIAL_C4) {
-      const bool exactlyOneSet = (std::isfinite(supportRadius) && !std::isfinite(shapeParameter)) ||
-                                 (std::isfinite(shapeParameter) && !std::isfinite(supportRadius));
-      PRECICE_CHECK(exactlyOneSet, "The specified parameters for the Gaussian RBF mapping are invalid. Please specify either a \"shape-parameter\" or a \"support-radius\".");
-      if (std::isfinite(shapeParameter)) {
-        rbfParameter.type  = RBFParameter::Type::ShapeParameter;
-        rbfParameter.value = shapeParameter;
-      } else {
-        rbfParameter.type  = RBFParameter::Type::SupportRadius;
-        rbfParameter.value = supportRadius;
-      }
-    }
-    ConfiguredMapping configuredMapping = createMapping(context,
-                                                        dir, type, constraint,
-                                                        fromMesh, toMesh,
-                                                        rbfParameter, solverRtol,
-                                                        xDead, yDead, zDead,
-                                                        useLU,
-                                                        polynomial, preallocation);
+    ConfiguredMapping configuredMapping = createMapping(dir, type, fromMesh, toMesh);
+
+    _rbfConfig = configureRBFMapping(type, strPolynomial, strPrealloc, xDead, yDead, zDead, solverRtol);
+
     checkDuplicates(configuredMapping);
     _mappings.push_back(configuredMapping);
+  } else if (tag.getNamespace() == SUBTAG_BASIS_FUNCTION) {
+
+    PRECICE_ASSERT(!_mappings.empty());
+    // We can only set one subtag
+    PRECICE_CHECK(_mappings.back().mapping == nullptr, "More than one basis-function was defined for the.");
+
+    double shapeParameterOrSupportRadius = 0;
+
+    std::string basisFctName   = tag.getName();
+    double      supportRadius  = getAttributeIfPresent(tag, ATTR_SUPPORT_RADIUS, 0.);
+    double      shapeParameter = getAttributeIfPresent(tag, ATTR_SHAPE_PARAM, 0.);
+
+    ConfiguredMapping &mapping = _mappings.back();
+
+    BasisFunctions basisFunction{};
+    if (basisFctName == RBF_TPS)
+      basisFunction = BasisFunctions::ThinPlateSplines;
+    else if (basisFctName == RBF_MULTIQUADRICS)
+      basisFunction = BasisFunctions::Multiquadrics;
+    else if (basisFctName == RBF_INV_MULTIQUADRICS)
+      basisFunction = BasisFunctions::InverseMultiquadrics;
+    else if (basisFctName == RBF_VOLUME_SPLINES)
+      basisFunction = BasisFunctions::VolumeSplines;
+    else if (basisFctName == RBF_GAUSSIAN)
+      basisFunction = BasisFunctions::Gaussian;
+    else if (basisFctName == RBF_CTPS_C2)
+      basisFunction = BasisFunctions::CompactThinPlateSplinesC2;
+    else if (basisFctName == RBF_CPOLYNOMIAL_C0)
+      basisFunction = BasisFunctions::WendlandC0;
+    else if (basisFctName == RBF_CPOLYNOMIAL_C2)
+      basisFunction = BasisFunctions::WendlandC2;
+    else if (basisFctName == RBF_CPOLYNOMIAL_C4)
+      basisFunction = BasisFunctions::WendlandC4;
+    else if (basisFctName == RBF_CPOLYNOMIAL_C6)
+      basisFunction = BasisFunctions::WendlandC6;
+    else
+      PRECICE_UNREACHABLE("Unknown basis function \"{}\".", basisFctName);
+
+    // The Gaussian RBF is always treated as a shape-parameter RBF. Hence, we have to convert the support radius, if necessary
+    if (basisFunction == BasisFunctions::Gaussian && supportRadius > 0 && shapeParameter != 0) {
+      shapeParameter = std::sqrt(-std::log(Gaussian::cutoffThreshold)) / supportRadius;
+    }
+
+    if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalDirect) {
+      mapping.mapping = instantiateRBFMapping<RBFBackend::Eigen>(basisFunction, constraintValue, mapping.fromMesh->getDimensions(), supportRadius, shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial);
+    } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalIterative) {
+#ifndef PRECICE_NO_PETSC
+      // for petsc initialization
+      int   argc = 1;
+      char *arg  = new char[8];
+      strcpy(arg, "precice");
+      char **argv = &arg;
+      utils::Petsc::initialize(&argc, &argv, utils::Parallel::current()->comm);
+      delete[] arg;
+
+      mapping.mapping = instantiateRBFMapping<RBFBackend::PETSc>(basisFunction, constraintValue, mapping.fromMesh->getDimensions(), supportRadius, shapeParameter, _rbfConfig.deadAxis, _rbfConfig.solverRtol, _rbfConfig.polynomial, _rbfConfig.preallocation);
+#else
+      PRECICE_CHECK(false, "The global-iterative RBF solver requires a preCICE build with PETSc enabled.");
+#endif
+    } else {
+      PRECICE_UNREACHABLE("Unknown RBF solver.");
+    }
   }
 }
 
-void MappingConfiguration::xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag)
+MappingConfiguration::RBFConfiguration MappingConfiguration::configureRBFMapping(const std::string &type,
+                                                                                 const std::string &polynomial,
+                                                                                 const std::string &preallocation,
+                                                                                 bool xDead, bool yDead, bool zDead,
+                                                                                 double solverRtol) const
 {
-}
+  RBFConfiguration rbfConfig;
 
-const std::vector<MappingConfiguration::ConfiguredMapping> &
-MappingConfiguration::mappings()
-{
-  return _mappings;
+  if (type == TYPE_RBF_GLOBAL_ITERATIVE)
+    rbfConfig.solver = RBFConfiguration::SystemSolver::GlobalIterative;
+  else if (type == TYPE_RBF_GLOBAL_DIRECT)
+    rbfConfig.solver = RBFConfiguration::SystemSolver::GlobalDirect;
+
+  if (polynomial == POLYNOMIAL_SEPARATE)
+    rbfConfig.polynomial = Polynomial::SEPARATE;
+  else if (polynomial == POLYNOMIAL_ON)
+    rbfConfig.polynomial = Polynomial::ON;
+  else if (polynomial == POLYNOMIAL_OFF)
+    rbfConfig.polynomial = Polynomial::OFF;
+
+  if (preallocation == PREALLOCATION_ESTIMATE)
+    rbfConfig.preallocation = Preallocation::ESTIMATE;
+  else if (preallocation == PREALLOCATION_COMPUTE)
+    rbfConfig.preallocation = Preallocation::COMPUTE;
+  else if (preallocation == PREALLOCATION_SAVE)
+    rbfConfig.preallocation = Preallocation::SAVE;
+  else if (preallocation == PREALLOCATION_TREE)
+    rbfConfig.preallocation = Preallocation::TREE;
+  else if (preallocation == PREALLOCATION_OFF)
+    rbfConfig.preallocation = Preallocation::OFF;
+
+  rbfConfig.deadAxis   = {{xDead, yDead, zDead}};
+  rbfConfig.solverRtol = solverRtol;
+
+  return rbfConfig;
 }
 
 MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
-    const xml::ConfigurationContext &context,
-    const std::string &              direction,
-    const std::string &              type,
-    const std::string &              constraint,
-    const std::string &              fromMeshName,
-    const std::string &              toMeshName,
-    const RBFParameter &             rbfParameter,
-    double                           solverRtol,
-    bool                             xDead,
-    bool                             yDead,
-    bool                             zDead,
-    bool                             useLU,
-    Polynomial                       polynomial,
-    Preallocation                    preallocation) const
+    const std::string &direction,
+    const std::string &type,
+    const std::string &fromMeshName,
+    const std::string &toMeshName) const
 {
-  PRECICE_TRACE(direction, type, rbfParameter.value);
-  using namespace mapping;
+  PRECICE_TRACE(direction, type);
+
   ConfiguredMapping configuredMapping;
   mesh::PtrMesh     fromMesh(_meshConfig->getMesh(fromMeshName));
   mesh::PtrMesh     toMesh(_meshConfig->getMesh(toMeshName));
@@ -290,201 +410,38 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
                 toMeshName);
   configuredMapping.fromMesh = fromMesh;
   configuredMapping.toMesh   = toMesh;
-  int dimensions             = fromMesh->getDimensions();
 
-  if (direction == VALUE_WRITE) {
+  if (direction == DIRECTION_WRITE) {
     configuredMapping.direction = WRITE;
-  } else if (direction == VALUE_READ) {
+  } else if (direction == DIRECTION_READ) {
     configuredMapping.direction = READ;
   } else {
     PRECICE_UNREACHABLE("Unknown mapping direction type \"{}\".", direction);
   }
 
-  Mapping::Constraint constraintValue;
-  if (constraint == VALUE_CONSERVATIVE) {
-    constraintValue = Mapping::CONSERVATIVE;
-  } else if (constraint == VALUE_CONSISTENT) {
-    constraintValue = Mapping::CONSISTENT;
-  } else if (constraint == VALUE_SCALED_CONSISTENT_SURFACE) {
-    constraintValue = Mapping::SCALED_CONSISTENT_SURFACE;
-  } else if (constraint == VALUE_SCALED_CONSISTENT_VOLUME) {
-    constraintValue = Mapping::SCALED_CONSISTENT_VOLUME;
-  } else {
-    PRECICE_UNREACHABLE("Unknown mapping constraint \"{}\".", constraint);
-  }
-
-  if (type == VALUE_NEAREST_NEIGHBOR) {
-    configuredMapping.mapping = PtrMapping(
-        new NearestNeighborMapping(constraintValue, dimensions));
-    configuredMapping.isRBF = false;
-    return configuredMapping;
-  } else if (type == VALUE_NEAREST_PROJECTION) {
-    configuredMapping.mapping = PtrMapping(
-        new NearestProjectionMapping(constraintValue, dimensions));
-    configuredMapping.isRBF = false;
-    return configuredMapping;
-  } else if (type == VALUE_LINEAR_CELL_INTERPOLATION) {
-    configuredMapping.mapping = PtrMapping(
-        new LinearCellInterpolationMapping(constraintValue, dimensions));
-    configuredMapping.isRBF = false;
-    return configuredMapping;
-  } else if (type == VALUE_NEAREST_NEIGHBOR_GRADIENT) {
+  // Create all projection based mappings
+  if (type == TYPE_NEAREST_NEIGHBOR) {
+    configuredMapping.mapping = PtrMapping(new NearestNeighborMapping(constraintValue, fromMesh->getDimensions()));
+  } else if (type == TYPE_NEAREST_PROJECTION) {
+    configuredMapping.mapping = PtrMapping(new NearestProjectionMapping(constraintValue, fromMesh->getDimensions()));
+  } else if (type == TYPE_LINEAR_CELL_INTERPOLATION) {
+    configuredMapping.mapping = PtrMapping(new LinearCellInterpolationMapping(constraintValue, fromMesh->getDimensions()));
+  } else if (type == TYPE_NEAREST_NEIGHBOR_GRADIENT) {
 
     // NNG is not applicable with the conservative constraint
     PRECICE_CHECK(constraintValue != Mapping::CONSERVATIVE,
                   "Nearest-neighbor-gradient mapping is not implemented using a \"conservative\" constraint. "
                   "Please select constraint=\" consistent\" or a different mapping method.");
 
-    configuredMapping.mapping = PtrMapping(
-        new NearestNeighborGradientMapping(constraintValue, dimensions));
-    configuredMapping.isRBF = false;
-    return configuredMapping;
-  }
-
-  // the mapping is a RBF mapping
-
-  configuredMapping.isRBF = true;
-  bool    usePETSc        = false;
-  RBFType rbfType         = RBFType::EIGEN;
-
-#ifndef PRECICE_NO_PETSC
-  // for petsc initialization
-  int   argc = 1;
-  char *arg  = new char[8];
-  strcpy(arg, "precice");
-  char **argv = &arg;
-  utils::Petsc::initialize(&argc, &argv, utils::Parallel::current()->comm);
-  delete[] arg;
-  usePETSc = true;
-#endif
-
-  if (usePETSc && (not useLU)) {
-    rbfType = RBFType::PETSc;
+    configuredMapping.mapping = PtrMapping(new NearestNeighborGradientMapping(constraintValue, fromMesh->getDimensions()));
   } else {
-    rbfType = RBFType::EIGEN;
+    // We need knowledge about the basis function in order to instantiate the rbf related mapping
+    PRECICE_ASSERT(requiresBasisFunction(type));
+    configuredMapping.mapping = nullptr;
   }
 
-  if (rbfType == RBFType::EIGEN) {
-    PRECICE_DEBUG("Eigen RBF is used");
-    if (type == VALUE_RBF_TPS) {
-      configuredMapping.mapping = PtrMapping(
-          new RadialBasisFctMapping<ThinPlateSplines>(constraintValue, dimensions, ThinPlateSplines(), {{xDead, yDead, zDead}}, polynomial));
-    } else if (type == VALUE_RBF_MULTIQUADRICS) {
-      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::ShapeParameter)
-      configuredMapping.mapping = PtrMapping(
-          new RadialBasisFctMapping<Multiquadrics>(
-              constraintValue, dimensions, Multiquadrics(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial));
-    } else if (type == VALUE_RBF_INV_MULTIQUADRICS) {
-      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::ShapeParameter)
-      configuredMapping.mapping = PtrMapping(
-          new RadialBasisFctMapping<InverseMultiquadrics>(
-              constraintValue, dimensions, InverseMultiquadrics(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial));
-    } else if (type == VALUE_RBF_VOLUME_SPLINES) {
-      configuredMapping.mapping = PtrMapping(
-          new RadialBasisFctMapping<VolumeSplines>(constraintValue, dimensions, VolumeSplines(), {{xDead, yDead, zDead}}, polynomial));
-    } else if (type == VALUE_RBF_GAUSSIAN) {
-      double shapeParameter = rbfParameter.value;
-      if (rbfParameter.type == RBFParameter::Type::SupportRadius) {
-        // Compute shape parameter from the support radius
-        shapeParameter = std::sqrt(-std::log(Gaussian::cutoffThreshold)) / rbfParameter.value;
-      }
-      configuredMapping.mapping = PtrMapping(
-          new RadialBasisFctMapping<Gaussian>(
-              constraintValue, dimensions, Gaussian(shapeParameter), {{xDead, yDead, zDead}}, polynomial));
-    } else if (type == VALUE_RBF_CTPS_C2) {
-      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::SupportRadius)
-      configuredMapping.mapping = PtrMapping(
-          new RadialBasisFctMapping<CompactThinPlateSplinesC2>(
-              constraintValue, dimensions, CompactThinPlateSplinesC2(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial));
-    } else if (type == VALUE_RBF_CPOLYNOMIAL_C0) {
-      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::SupportRadius)
-      configuredMapping.mapping = PtrMapping(
-          new RadialBasisFctMapping<CompactPolynomialC0>(
-              constraintValue, dimensions, CompactPolynomialC0(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial));
-    } else if (type == VALUE_RBF_CPOLYNOMIAL_C2) {
-      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::SupportRadius)
-      configuredMapping.mapping = PtrMapping(
-          new RadialBasisFctMapping<CompactPolynomialC2>(
-              constraintValue, dimensions, CompactPolynomialC2(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial));
-    } else if (type == VALUE_RBF_CPOLYNOMIAL_C4) {
-      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::SupportRadius)
-      configuredMapping.mapping = PtrMapping(
-          new RadialBasisFctMapping<CompactPolynomialC4>(
-              constraintValue, dimensions, CompactPolynomialC4(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial));
-    } else if (type == VALUE_RBF_CPOLYNOMIAL_C6) {
-      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::SupportRadius)
-      configuredMapping.mapping = PtrMapping(
-          new RadialBasisFctMapping<CompactPolynomialC6>(
-              constraintValue, dimensions, CompactPolynomialC6(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial));
-    } else {
-      PRECICE_ERROR("Unknown mapping type!");
-    }
-  }
+  configuredMapping.requiresBasisFunction = requiresBasisFunction(type);
 
-#ifndef PRECICE_NO_PETSC
-
-  if (rbfType == RBFType::PETSc) {
-    PRECICE_DEBUG("PETSc RBF is used.");
-    if (type == VALUE_RBF_TPS) {
-      configuredMapping.mapping = PtrMapping(
-          new PetRadialBasisFctMapping<ThinPlateSplines>(constraintValue, dimensions, ThinPlateSplines(),
-                                                         {{xDead, yDead, zDead}}, solverRtol, polynomial, preallocation));
-    } else if (type == VALUE_RBF_MULTIQUADRICS) {
-      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::ShapeParameter)
-      configuredMapping.mapping = PtrMapping(
-          new PetRadialBasisFctMapping<Multiquadrics>(constraintValue, dimensions, Multiquadrics(rbfParameter.value),
-                                                      {{xDead, yDead, zDead}}, solverRtol, polynomial, preallocation));
-    } else if (type == VALUE_RBF_INV_MULTIQUADRICS) {
-      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::ShapeParameter)
-      configuredMapping.mapping = PtrMapping(
-          new PetRadialBasisFctMapping<InverseMultiquadrics>(constraintValue, dimensions, InverseMultiquadrics(rbfParameter.value),
-                                                             {{xDead, yDead, zDead}}, solverRtol, polynomial, preallocation));
-    } else if (type == VALUE_RBF_VOLUME_SPLINES) {
-      configuredMapping.mapping = PtrMapping(
-          new PetRadialBasisFctMapping<VolumeSplines>(constraintValue, dimensions, VolumeSplines(),
-                                                      {{xDead, yDead, zDead}}, solverRtol, polynomial, preallocation));
-    } else if (type == VALUE_RBF_GAUSSIAN) {
-      double shapeParameter = rbfParameter.value;
-      if (rbfParameter.type == RBFParameter::Type::SupportRadius) {
-        // Compute shape parameter from the support radius
-        shapeParameter = std::sqrt(-std::log(Gaussian::cutoffThreshold)) / rbfParameter.value;
-      }
-      configuredMapping.mapping = PtrMapping(
-          new PetRadialBasisFctMapping<Gaussian>(constraintValue, dimensions, Gaussian(shapeParameter),
-                                                 {{xDead, yDead, zDead}}, solverRtol, polynomial, preallocation));
-    } else if (type == VALUE_RBF_CTPS_C2) {
-      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::SupportRadius)
-      configuredMapping.mapping = PtrMapping(
-          new PetRadialBasisFctMapping<CompactThinPlateSplinesC2>(constraintValue, dimensions, CompactThinPlateSplinesC2(rbfParameter.value),
-                                                                  {{xDead, yDead, zDead}}, solverRtol, polynomial, preallocation));
-    } else if (type == VALUE_RBF_CPOLYNOMIAL_C0) {
-      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::SupportRadius)
-      configuredMapping.mapping = PtrMapping(
-          new PetRadialBasisFctMapping<CompactPolynomialC0>(constraintValue, dimensions, CompactPolynomialC0(rbfParameter.value),
-                                                            {{xDead, yDead, zDead}}, solverRtol, polynomial, preallocation));
-    } else if (type == VALUE_RBF_CPOLYNOMIAL_C2) {
-      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::SupportRadius)
-      configuredMapping.mapping = PtrMapping(
-          new PetRadialBasisFctMapping<CompactPolynomialC2>(constraintValue, dimensions, CompactPolynomialC2(rbfParameter.value),
-                                                            {{xDead, yDead, zDead}}, solverRtol, polynomial, preallocation));
-    } else if (type == VALUE_RBF_CPOLYNOMIAL_C4) {
-      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::SupportRadius)
-      configuredMapping.mapping = PtrMapping(
-          new PetRadialBasisFctMapping<CompactPolynomialC4>(constraintValue, dimensions, CompactPolynomialC4(rbfParameter.value),
-                                                            {{xDead, yDead, zDead}}, solverRtol, polynomial, preallocation));
-    } else if (type == VALUE_RBF_CPOLYNOMIAL_C6) {
-      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::SupportRadius)
-      configuredMapping.mapping = PtrMapping(
-          new PetRadialBasisFctMapping<CompactPolynomialC6>(constraintValue, dimensions, CompactPolynomialC6(rbfParameter.value),
-                                                            {{xDead, yDead, zDead}}, solverRtol, polynomial, preallocation));
-    } else {
-      PRECICE_ERROR("Unknown mapping type!");
-    }
-  }
-
-#endif
-
-  PRECICE_ASSERT(configuredMapping.mapping);
   return configuredMapping;
 }
 
@@ -503,12 +460,19 @@ void MappingConfiguration::checkDuplicates(const ConfiguredMapping &mapping)
 
 void MappingConfiguration::xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag)
 {
+  if (requiresBasisFunction(tag.getName())) {
+    PRECICE_CHECK(_mappings.back().mapping != nullptr, "No basis-function was defined for the \"{}\" mapping from mesh \"{}\" to mesh \"{}\".", tag.getName(), _mappings.back().fromMesh->getName(), _mappings.back().toMesh->getName());
+  }
+  PRECICE_ASSERT(_mappings.back().mapping != nullptr);
 }
 
-const std::vector<MappingConfiguration::ConfiguredMapping> &
-MappingConfiguration::mappings()
+const std::vector<MappingConfiguration::ConfiguredMapping> &MappingConfiguration::mappings()
 {
   return _mappings;
 }
 
+bool MappingConfiguration::requiresBasisFunction(const std::string &mappingType) const
+{
+  return mappingType == TYPE_RBF_GLOBAL_DIRECT || mappingType == TYPE_RBF_GLOBAL_ITERATIVE;
+}
 } // namespace precice::mapping

@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include "logging/Logger.hpp"
+#include "mapping/Mapping.hpp"
 #include "mapping/SharedPointer.hpp"
 #include "mapping/config/MappingConfigurationTypes.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -30,18 +31,7 @@ public:
     /// Direction of mapping (important to set input and output mesh).
     Direction direction;
     /// true for RBF mapping
-    bool isRBF;
-  };
-
-  struct RBFParameter {
-
-    enum struct Type {
-      ShapeParameter,
-      SupportRadius
-    };
-
-    Type   type{};
-    double value{};
+    bool requiresBasisFunction;
   };
 
   MappingConfiguration(
@@ -144,27 +134,53 @@ private:
   const std::string ATTR_SHAPE_PARAM    = "shape-parameter";
   const std::string ATTR_SUPPORT_RADIUS = "support-radius";
 
+  // Only affecting RBF related mappings
+  struct RBFConfiguration {
+
+    enum struct SystemSolver {
+      GlobalDirect,
+      GlobalIterative
+    };
+    SystemSolver        solver{};
+    std::array<bool, 3> deadAxis{};
+    Polynomial          polynomial{};
+    double              solverRtol{};
+    Preallocation       preallocation{};
+  };
+
+  // mapping constraint
+  Mapping::Constraint constraintValue{};
+
   mesh::PtrMeshConfiguration _meshConfig;
 
   std::vector<ConfiguredMapping> _mappings;
 
+  RBFConfiguration _rbfConfig;
+
+  /**
+   * @brief Instantiates all projection based mappings and creates
+   *
+   * @param direction
+   * @param type
+   * @param fromMeshName
+   * @param toMeshName
+   * @return ConfiguredMapping
+   */
   ConfiguredMapping createMapping(
-      const xml::ConfigurationContext &context,
-      const std::string &              direction,
-      const std::string &              type,
-      const std::string &              constraint,
-      const std::string &              fromMeshName,
-      const std::string &              toMeshName,
-      const RBFParameter &             rbfParameter,
-      double                           solverRtol,
-      bool                             xDead,
-      bool                             yDead,
-      bool                             zDead,
-      bool                             useLU,
-      Polynomial                       polynomial,
-      Preallocation                    preallocation) const;
+      const std::string &direction,
+      const std::string &type,
+      const std::string &fromMeshName,
+      const std::string &toMeshName) const;
+
+  RBFConfiguration configureRBFMapping(const std::string &type,
+                                       const std::string &polynomial,
+                                       const std::string &preallocation,
+                                       bool xDead, bool yDead, bool zDead,
+                                       double solverRtol) const;
 
   /// Check whether a mapping to and from the same mesh already exists
   void checkDuplicates(const ConfiguredMapping &mapping);
+
+  bool requiresBasisFunction(const std::string &mappingType) const;
 };
 } // namespace precice::mapping

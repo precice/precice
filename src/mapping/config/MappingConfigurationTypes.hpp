@@ -22,11 +22,6 @@ enum class Preallocation {
   TREE
 };
 
-enum class RBFType {
-  EIGEN,
-  PETSc
-};
-
 enum class BasisFunctions {
   WendlandC0,
   WendlandC2,
