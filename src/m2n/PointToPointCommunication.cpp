@@ -12,9 +12,9 @@
 #include <vector>
 
 #include "PointToPointCommunication.hpp"
-#include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
 #include "com/CommunicationFactory.hpp"
+#include "com/Extra.hpp"
 #include "com/Request.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/DistributedCommunication.hpp"
@@ -657,14 +657,14 @@ void PointToPointCommunication::broadcastReceiveAll(std::vector<int> &itemToRece
 void PointToPointCommunication::broadcastSendMesh()
 {
   for (auto &connectionData : _connectionDataVector) {
-    com::CommunicateMesh(_communication).sendMesh(*_mesh, connectionData.remoteRank);
+    com::sendMesh(*_communication, connectionData.remoteRank, *_mesh);
   }
 }
 
 void PointToPointCommunication::broadcastReceiveAllMesh()
 {
   for (auto &connectionData : _connectionDataVector) {
-    com::CommunicateMesh(_communication).receiveMesh(*_mesh, connectionData.remoteRank);
+    com::receiveMesh(*_communication, connectionData.remoteRank, *_mesh);
   }
 }
 

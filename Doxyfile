@@ -2295,6 +2295,12 @@ DOT_TRANSPARENT        = NO
 
 DOT_MULTI_TARGETS      = YES
 
+# Use the environment PLANTUML_JAR_PATH and set it to the restult of `find / -name plantuml.jar`
+# This activates the plantuml generation.
+# Note that startuml tags need to specify the filepath as .png for this to work correctly
+
+PLANTUML_JAR_PATH      = $(PLANTUML_JAR_PATH)
+
 # If the GENERATE_LEGEND tag is set to YES doxygen will generate a legend page
 # explaining the meaning of the various boxes and arrows in the dot generated
 # graphs.

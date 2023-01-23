@@ -246,6 +246,9 @@ public:
   bool hasConverged() const override;
 
 protected:
+  /// All send and receive data as a map "data ID -> data"
+  DataMap _allData;
+
   /**
    * @brief Sends data sendDataIDs given in mapCouplingData with communication.
    *
@@ -263,10 +266,16 @@ protected:
   void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData);
 
   /**
-   * @brief interface to provide all CouplingData, depending on coupling scheme being used
-   * @return DataMap containing all CouplingData
+   * @brief Adds CouplingData with given properties to this BaseCouplingScheme and returns a pointer to the CouplingData
+   *
+   * If CouplingData with ID of provided data already exists in coupling scheme, no duplicate is created but a pointer to the already existing CouplingData is returned.
+   *
+   * @param data data the CouplingData is associated with
+   * @param mesh mesh the CouplingData is associated with
+   * @param requiresInitialization true, if CouplingData requires initialization
+   * @return PtrCouplingData pointer to CouplingData owned by the CouplingScheme
    */
-  virtual const DataMap getAllData() = 0;
+  PtrCouplingData addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization);
 
   /**
    * @brief Function to determine whether coupling scheme is an explicit coupling scheme
