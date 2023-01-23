@@ -59,6 +59,26 @@ public:
   /// Returns all configured mappings.
   const std::vector<ConfiguredMapping> &mappings();
 
+  // Only affecting RBF related mappings
+  struct RBFConfiguration {
+
+    enum struct SystemSolver {
+      GlobalDirect,
+      GlobalIterative
+    };
+    SystemSolver        solver{};
+    std::array<bool, 3> deadAxis{};
+    Polynomial          polynomial{};
+    double              solverRtol{};
+    Preallocation       preallocation{};
+  };
+
+  /// Returns the RBF configuration. Only required for the configuration test
+  const RBFConfiguration &rbfConfig() const
+  {
+    return _rbfConfig;
+  }
+
   void resetMappings()
   {
     _mappings.clear();
@@ -77,6 +97,7 @@ private:
   const std::string TYPE_LINEAR_CELL_INTERPOLATION = "linear-cell-interpolation";
   const std::string TYPE_RBF_GLOBAL_DIRECT         = "rbf-global-direct";
   const std::string TYPE_RBF_GLOBAL_ITERATIVE      = "rbf-global-iterative";
+  const std::string TYPE_RBF_ALIAS                 = "rbf";
 
   const std::string ATTR_DIRECTION  = "direction";
   const std::string DIRECTION_WRITE = "write";
@@ -135,20 +156,6 @@ private:
   const std::string ATTR_SHAPE_PARAM    = "shape-parameter";
   const std::string ATTR_SUPPORT_RADIUS = "support-radius";
 
-  // Only affecting RBF related mappings
-  struct RBFConfiguration {
-
-    enum struct SystemSolver {
-      GlobalDirect,
-      GlobalIterative
-    };
-    SystemSolver        solver{};
-    std::array<bool, 3> deadAxis{};
-    Polynomial          polynomial{};
-    double              solverRtol{};
-    Preallocation       preallocation{};
-  };
-
   // mapping constraint
   Mapping::Constraint constraintValue{};
 
@@ -173,9 +180,10 @@ private:
       const std::string &fromMeshName,
       const std::string &toMeshName) const;
 
-  RBFConfiguration configureRBFMapping(const std::string &type,
-                                       const std::string &polynomial,
-                                       const std::string &preallocation,
+  RBFConfiguration configureRBFMapping(const std::string &              type,
+                                       const xml::ConfigurationContext &context,
+                                       const std::string &              polynomial,
+                                       const std::string &              preallocation,
                                        bool xDead, bool yDead, bool zDead,
                                        double solverRtol) const;
 

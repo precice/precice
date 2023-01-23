@@ -158,13 +158,14 @@ MappingConfiguration::MappingConfiguration(
 
   // First, we create the available tags
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
-  std::list<XMLTag>  projectionTags, rbfDirectTags, rbfIterativeTags;
+  std::list<XMLTag>  projectionTags, rbfDirectTags, rbfIterativeTags, rbfAliasTag;
   createTag(*this, TYPE_NEAREST_NEIGHBOR, occ, TAG, projectionTags, "Nearest-neighbour mapping which uses a rstar-spacial index tree to index meshes and run nearest-neighbour queries.");
   createTag(*this, TYPE_NEAREST_PROJECTION, occ, TAG, projectionTags, "Nearest-projection mapping which uses a rstar-spacial index tree to index meshes and locate the nearest projections.");
   createTag(*this, TYPE_NEAREST_NEIGHBOR_GRADIENT, occ, TAG, projectionTags, "Nearest-neighbor-gradient mapping which uses nearest-neighbor mapping with an additional linear approximation using gradient data.");
   createTag(*this, TYPE_LINEAR_CELL_INTERPOLATION, occ, TAG, projectionTags, "Linear cell interpolation mapping which uses a rstar-spacial index tree to index meshes and locate the nearest cell. Only supports 2D meshes.");
   createTag(*this, TYPE_RBF_GLOBAL_DIRECT, occ, TAG, rbfDirectTags, "Radial-basis-function mapping using a direct solver with a gather-scatter parallelism.");
   createTag(*this, TYPE_RBF_GLOBAL_ITERATIVE, occ, TAG, rbfIterativeTags, "Radial-basis-function mapping using an iterative solver with a distributed parallelism.");
+  createTag(*this, TYPE_RBF_ALIAS, occ, TAG, rbfAliasTag, "Alias tag, which auto-selects a radial-basis-function mapping depending on the simulation parameter,");
 
   // List of all attributes with corresponding documentation
   auto attrDirection = XMLAttribute<std::string>(ATTR_DIRECTION)
@@ -201,6 +202,7 @@ MappingConfiguration::MappingConfiguration(
   addAttributes(projectionTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint});
   addAttributes(rbfDirectTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead});
   addAttributes(rbfIterativeTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead, attrSolverRtol, attrPreallocation});
+  addAttributes(rbfAliasTag, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrXDead, attrYDead, attrZDead});
 
   // Now we take care of the subtag basis function
   // First, we have the tags using a support radius
@@ -219,6 +221,7 @@ MappingConfiguration::MappingConfiguration(
   addAttributes(supportRadiusRBF, {attrSupportRadius});
   addSubtagsToParents(supportRadiusRBF, rbfIterativeTags);
   addSubtagsToParents(supportRadiusRBF, rbfDirectTags);
+  addSubtagsToParents(supportRadiusRBF, rbfAliasTag);
 
   // Now the tags using a shape parameter
   std::list<XMLTag> shapeParameterRBF;
@@ -232,6 +235,7 @@ MappingConfiguration::MappingConfiguration(
   addAttributes(shapeParameterRBF, {attrShapeParam});
   addSubtagsToParents(shapeParameterRBF, rbfIterativeTags);
   addSubtagsToParents(shapeParameterRBF, rbfDirectTags);
+  addSubtagsToParents(shapeParameterRBF, rbfAliasTag);
 
   // tags without an attribute
   std::list<XMLTag> attributelessRBFs;
@@ -240,11 +244,13 @@ MappingConfiguration::MappingConfiguration(
 
   addSubtagsToParents(attributelessRBFs, rbfIterativeTags);
   addSubtagsToParents(attributelessRBFs, rbfDirectTags);
+  addSubtagsToParents(attributelessRBFs, rbfAliasTag);
 
   // Add all tags to the mapping tag
   std::for_each(projectionTags.begin(), projectionTags.end(), [&parent](auto &s) { parent.addSubtag(s); });
   std::for_each(rbfIterativeTags.begin(), rbfIterativeTags.end(), [&parent](auto &s) { parent.addSubtag(s); });
   std::for_each(rbfDirectTags.begin(), rbfDirectTags.end(), [&parent](auto &s) { parent.addSubtag(s); });
+  std::for_each(rbfAliasTag.begin(), rbfAliasTag.end(), [&parent](auto &s) { parent.addSubtag(s); });
 }
 
 void MappingConfiguration::xmlTagCallback(
@@ -283,7 +289,7 @@ void MappingConfiguration::xmlTagCallback(
 
     ConfiguredMapping configuredMapping = createMapping(dir, type, fromMesh, toMesh);
 
-    _rbfConfig = configureRBFMapping(type, strPolynomial, strPrealloc, xDead, yDead, zDead, solverRtol);
+    _rbfConfig = configureRBFMapping(type, context, strPolynomial, strPrealloc, xDead, yDead, zDead, solverRtol);
 
     checkDuplicates(configuredMapping);
     _mappings.push_back(configuredMapping);
@@ -350,9 +356,10 @@ void MappingConfiguration::xmlTagCallback(
   }
 }
 
-MappingConfiguration::RBFConfiguration MappingConfiguration::configureRBFMapping(const std::string &type,
-                                                                                 const std::string &polynomial,
-                                                                                 const std::string &preallocation,
+MappingConfiguration::RBFConfiguration MappingConfiguration::configureRBFMapping(const std::string &              type,
+                                                                                 const xml::ConfigurationContext &context,
+                                                                                 const std::string &              polynomial,
+                                                                                 const std::string &              preallocation,
                                                                                  bool xDead, bool yDead, bool zDead,
                                                                                  double solverRtol) const
 {
@@ -362,6 +369,22 @@ MappingConfiguration::RBFConfiguration MappingConfiguration::configureRBFMapping
     rbfConfig.solver = RBFConfiguration::SystemSolver::GlobalIterative;
   else if (type == TYPE_RBF_GLOBAL_DIRECT)
     rbfConfig.solver = RBFConfiguration::SystemSolver::GlobalDirect;
+  else {
+    // Rather simple auto-selection (for now)
+    // The default is the Eigen backend, as it is always available. Only in certain situations, we will decide for the PETSc backend
+    rbfConfig.solver = RBFConfiguration::SystemSolver::GlobalDirect;
+
+#ifndef PRECICE_NO_PETSC
+    // Running in serial, the Eigen backend will most likely be the fastest and most accurate variant
+    // We decide for the PETSc variant only if we have a lot of interface vertices and a lot of ranks
+    // A more sophisticated criterion here could take the globalNumberOfVertices into account
+    // (the mesh pointer is stored in the configuredMapping anyway), but this quantity is not yet computed
+    // during the configuration time.
+    if (context.size > 16) {
+      rbfConfig.solver = RBFConfiguration::SystemSolver::GlobalIterative;
+    }
+#endif
+  }
 
   if (polynomial == POLYNOMIAL_SEPARATE)
     rbfConfig.polynomial = Polynomial::SEPARATE;
@@ -471,6 +494,6 @@ const std::vector<MappingConfiguration::ConfiguredMapping> &MappingConfiguration
 
 bool MappingConfiguration::requiresBasisFunction(const std::string &mappingType) const
 {
-  return mappingType == TYPE_RBF_GLOBAL_DIRECT || mappingType == TYPE_RBF_GLOBAL_ITERATIVE;
+  return mappingType == TYPE_RBF_GLOBAL_DIRECT || mappingType == TYPE_RBF_GLOBAL_ITERATIVE || mappingType == TYPE_RBF_ALIAS;
 }
 } // namespace precice::mapping
