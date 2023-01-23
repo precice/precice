@@ -17,12 +17,12 @@ AxialGeoMultiscaleMapping::AxialGeoMultiscaleMapping(
   setInputRequirement(Mapping::MeshRequirement::VERTEX);
   setOutputRequirement(Mapping::MeshRequirement::VERTEX);
 
-  PRECICE_ASSERT(dimensions == 2 || dimensions == 3);
-  if (dimensions == 2) {
-    _scaling = 1.5;
-  } else if (dimensions == 3) {
-    _scaling = 2.0;
-  }
+  //PRECICE_ASSERT(dimensions == 2 || dimensions == 3);
+  //if (dimensions == 2) {
+  //  _scaling = 1.5;
+  //} else if (dimensions == 3) {
+  //  _scaling = 2.0;
+  //}
 }
 
 void AxialGeoMultiscaleMapping::computeMapping()
