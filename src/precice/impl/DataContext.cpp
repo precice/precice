@@ -70,15 +70,6 @@ bool DataContext::hasMapping() const
   return hasReadMapping() || hasWriteMapping();
 }
 
-bool DataContext::isMappingRequired()
-{
-  if (not hasMapping()) {
-    return false;
-  }
-
-  return std::any_of(_mappingContexts.begin(), _mappingContexts.end(), [](const auto &context) { return !context.hasMappedData; });
-}
-
 void DataContext::mapData()
 {
   PRECICE_ASSERT(hasMapping());

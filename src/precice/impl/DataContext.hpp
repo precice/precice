@@ -59,15 +59,6 @@ public:
   MeshID getMeshID() const;
 
   /**
-   * @brief Check whether any mapping has to be performed.
-   *
-   * Checks whether any mapping exists for this context and the corresponding timing configuration.
-   *
-   * @return True, if any mapping has to be performed.
-   */
-  bool isMappingRequired();
-
-  /**
    * @brief Perform the mapping for all mapping contexts and the corresponding data context (from and to data)
    */
   void mapData();
@@ -81,6 +72,13 @@ public:
    * @param[in] meshContext Context of mesh this mapping is mapping from or to
    */
   virtual void appendMappingConfiguration(MappingContext &mappingContext, const MeshContext &meshContext) = 0;
+
+  /**
+   * @brief Informs the user whether this DataContext has any _mappingContext.
+   *
+   * @return True, if this DataContext is associated with a mapping. False, if not.
+   */
+  bool hasMapping() const;
 
 protected:
   /**
@@ -125,13 +123,6 @@ private:
   mesh::PtrMesh _mesh;
 
   static logging::Logger _log;
-
-  /**
-   * @brief Informs the user whether this DataContext has any _mappingContext.
-   *
-   * @return True, if this DataContext is associated with a mapping. False, if not.
-   */
-  bool hasMapping() const;
 };
 
 } // namespace impl
