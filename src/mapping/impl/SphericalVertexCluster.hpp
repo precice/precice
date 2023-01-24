@@ -39,7 +39,7 @@ public:
    *
    * @param[in] center Spatial center of the vertex cluster
    * @param[in] radius Spatial radius of the cluster associated to the \p center
-   * @param[in] parameter Shape parameter or support radius of the RBF (TODO)
+   * @param[in] function Radial basis function type used in interpolation
    * @param[in] deadAxis dead axis as set by the user. Required for the RBF solver
    * @param[in] polynomial The polynomial treatment in the RBF system.
    * @param[in] inputMesh mesh where the interpolants are build on, i.e., the input mesh for consistent
@@ -47,13 +47,13 @@ public:
    * @param[in] outputMesh mesh where we evaluate the interpolants, i.e., the output mesh consistent
    *                      mappings and the input mesh for conservative mappings
    */
-  SphericalVertexCluster(mesh::Vertex      center,
-                         double            radius,
-                         double            parameter,
-                         std::vector<bool> deadAxis,
-                         Polynomial        polynomial,
-                         mesh::PtrMesh     inputMesh,
-                         mesh::PtrMesh     outputMesh);
+  SphericalVertexCluster(mesh::Vertex            center,
+                         double                  radius,
+                         RADIAL_BASIS_FUNCTION_T function,
+                         std::vector<bool>       deadAxis,
+                         Polynomial              polynomial,
+                         mesh::PtrMesh           inputMesh,
+                         mesh::PtrMesh           outputMesh);
 
   /// Evaluates a conservative mapping and agglomerates the result in the given output data
   void mapConservative(mesh::PtrData inputData, mesh::PtrData outputData) const;
@@ -122,13 +122,13 @@ private:
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::SphericalVertexCluster(
-    mesh::Vertex      center,
-    double            radius,
-    double            parameter,
-    std::vector<bool> deadAxis,
-    Polynomial        polynomial,
-    mesh::PtrMesh     inputMesh,
-    mesh::PtrMesh     outputMesh)
+    mesh::Vertex            center,
+    double                  radius,
+    RADIAL_BASIS_FUNCTION_T function,
+    std::vector<bool>       deadAxis,
+    Polynomial              polynomial,
+    mesh::PtrMesh           inputMesh,
+    mesh::PtrMesh           outputMesh)
     : _center(center), _radius(radius), _polynomial(polynomial), _weightingFunction(radius)
 {
   // Disable integrated polynomial, as it might cause locally singular matrices
@@ -161,7 +161,7 @@ SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::SphericalVertexCluster(
   //   _polynomial = Polynomial::OFF;
 
   // Construct the solver
-  _rbfSolver          = RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>{RADIAL_BASIS_FUNCTION_T{parameter}, *inputMesh.get(), _inputIDs, *outputMesh.get(), _outputIDs, deadAxis, _polynomial};
+  _rbfSolver          = RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>{function, *inputMesh.get(), _inputIDs, *outputMesh.get(), _outputIDs, deadAxis, _polynomial};
   _hasComputedMapping = true;
 }
 

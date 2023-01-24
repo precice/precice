@@ -33,18 +33,25 @@ public:
    *
    * @param[in] constraint Specifies mapping to be consistent or conservative.
    * @param[in] dimension Dimensionality of the meshes
-   * @param[in] parameter shape parameter or support radius of the RB function
+   * @param[in] function Radial basis function type used in interpolation
+   * @param[in] polynomial The handling of the polynomial in the RBF system. Valid choices are 'off' and 'separate'
    * @param[in] verticesPerCluster Target number of vertices to be clustered together
-   * @param[in] relativeOverlap Overlap between clusters, where 1 would correspond to a complete overlap, 0 to distance of 2 x radius between clusters
+   * @param[in] relativeOverlap Overlap between clusters: The parameter here determines the distance between two cluster
+   * centers, given the cluster radius (already determined through \p verticesPerCluster ). A value of 1 would correspond
+   * to no distance between cluster centers (i.e. completely overlapping clusters), 0 to distance of 2 x radius between
+   * clusters centers.
+   * @param[in] projectToInput if enabled, places the cluster centers at the closest vertex of the input mesh.
+   * See also \ref mapping::impl::createClustering()
    */
   PartitionOfUnityMapping(
-      Mapping::Constraint constraint,
-      int                 dimension,
-      double              parameter,
-      Polynomial          polynomial,
-      unsigned int        verticesPerCluster,
-      double              relativeOverlap,
-      bool                projectToInput);
+      Mapping::Constraint     constraint,
+      int                     dimension,
+      RADIAL_BASIS_FUNCTION_T function,
+      std::array<bool, 3>     deadAxis,
+      Polynomial              polynomial,
+      unsigned int            verticesPerCluster,
+      double                  relativeOverlap,
+      bool                    projectToInput);
 
   /**
    * Computes the clustering for the partition of unity method and fills the \p _clusters vector,
@@ -73,10 +80,8 @@ private:
   /// main data container storing all the clusters, which need to be solved individually
   std::vector<SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>> _clusters;
 
-  // Shape parameter or support radius for the RBF,
-  // only required for the SphericalVertexCluster instantiation
-  // TODO: Rename and generalize
-  const double _parameter;
+  /// Radial basis function type used in interpolation
+  RADIAL_BASIS_FUNCTION_T _basisFunction;
 
   /// Input parameters provided by the user for the clustering algorithm:
 
@@ -112,17 +117,19 @@ private:
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::PartitionOfUnityMapping(
-    Mapping::Constraint constraint,
-    int                 dimension,
-    double              parameter,
-    Polynomial          polynomial,
-    unsigned int        verticesPerCluster,
-    double              relativeOverlap,
-    bool                projectToInput)
+    Mapping::Constraint     constraint,
+    int                     dimension,
+    RADIAL_BASIS_FUNCTION_T function,
+    std::array<bool, 3>     deadAxis,
+    Polynomial              polynomial,
+    unsigned int            verticesPerCluster,
+    double                  relativeOverlap,
+    bool                    projectToInput)
     : Mapping(constraint, dimension),
-      _parameter(parameter), _verticesPerCluster(verticesPerCluster), _relativeOverlap(relativeOverlap), _projectToInput(projectToInput), _polynomial(polynomial)
+      _basisFunction(function), _verticesPerCluster(verticesPerCluster), _relativeOverlap(relativeOverlap), _projectToInput(projectToInput), _polynomial(polynomial)
 {
   PRECICE_ASSERT(this->getDimensions() <= 3);
+  PRECICE_CHECK(_polynomial != Polynomial::ON, "Integrated polynomial is not supported for partition of unity data mappings.");
   PRECICE_ASSERT(_relativeOverlap < 1, "The relative overlap has to be smaller than one.");
   PRECICE_ASSERT(_verticesPerCluster > 0, "The number of vertices per cluster has to be greater zero.");
 
@@ -133,11 +140,13 @@ PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::PartitionOfUnityMapping(
     setInputRequirement(Mapping::MeshRequirement::VERTEX);
     setOutputRequirement(Mapping::MeshRequirement::VERTEX);
   }
-  // Simply set each axis to be active according to the space dimension.
-  // We could even set each axis to be true, which would just lead to 'zero' columns in the polynomial QR.
-  // Integrated polynomials are anyway not supported with PoU
+
   _deadAxis.clear();
-  std::fill_n(std::back_inserter(_deadAxis), getDimensions(), false);
+  std::copy_n(deadAxis.begin(), getDimensions(), std::back_inserter(_deadAxis));
+  if (getDimensions() == 2 && deadAxis[2]) {
+    PRECICE_WARN("Setting the z-axis to dead on a 2-dimensional problem has no effect. Please remove the respective mapping's \"z-dead\" attribute.");
+  }
+  PRECICE_CHECK(std::any_of(_deadAxis.begin(), _deadAxis.end(), [](const auto &ax) { return ax == false; }), "You cannot set all axes to dead for an RBF mapping. Please remove one of the respective mapping's \"x-dead\", \"y-dead\", or \"z-dead\" attributes.");
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -175,7 +184,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     // We cannot simply copy the vertex from the container in order to fill the vertices of the centerMesh, as the vertexID of each center needs to match the index
     // of the cluster within the _clusters vector. That's required for the indexing further down and asserted below
     mesh::Vertex                                    center(c.getCoords(), meshVertices.size());
-    SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T> p(center, averageClusterRadius, _parameter, _deadAxis, _polynomial, inMesh, outMesh);
+    SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T> p(center, averageClusterRadius, _basisFunction, _deadAxis, _polynomial, inMesh, outMesh);
 
     // Consider only non-empty clusters
     if (!p.empty()) {

@@ -395,7 +395,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
 
   } else if (type == VALUE_RBF_POU) {
     configuredMapping.mapping = PtrMapping(
-        new PartitionOfUnityMapping<CompactPolynomialC2>(constraintValue, dimensions, rbfParameter.value, polynomial, verticesPerPartition, relativeOverlap, projectToInput));
+        new PartitionOfUnityMapping<CompactPolynomialC2>(constraintValue, dimensions, CompactPolynomialC2(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial, verticesPerPartition, relativeOverlap, projectToInput));
     configuredMapping.isRBF = false;
     return configuredMapping;
   }

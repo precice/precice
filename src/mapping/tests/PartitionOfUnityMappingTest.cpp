@@ -1016,21 +1016,23 @@ void perform3DTestConservativeMappingVector(Mapping &mapping)
 BOOST_AUTO_TEST_CASE(PartitionOfUnityMappingTests)
 {
   PRECICE_TEST(1_rank);
-  mapping::PartitionOfUnityMapping<CompactPolynomialC0> consistentMap2D(Mapping::CONSISTENT, 2, 3., Polynomial::SEPARATE, 5, 0.4, false);
+  mapping::CompactPolynomialC0                          function(3);
+  std::array<bool, 3>                                   deadAxis({{false, false, false}});
+  mapping::PartitionOfUnityMapping<CompactPolynomialC0> consistentMap2D(Mapping::CONSISTENT, 2, function, deadAxis, Polynomial::SEPARATE, 5, 0.4, false);
   perform2DTestConsistentMapping(consistentMap2D);
-  mapping::PartitionOfUnityMapping<CompactPolynomialC0> consistentMap2DVector(Mapping::CONSISTENT, 2, 3., Polynomial::SEPARATE, 5, 0.4, false);
+  mapping::PartitionOfUnityMapping<CompactPolynomialC0> consistentMap2DVector(Mapping::CONSISTENT, 2, function, deadAxis, Polynomial::SEPARATE, 5, 0.4, false);
   perform2DTestConsistentMappingVector(consistentMap2DVector);
-  mapping::PartitionOfUnityMapping<CompactPolynomialC0> conservativeMap2D(Mapping::CONSERVATIVE, 2, 3., Polynomial::SEPARATE, 5, 0.4, false);
+  mapping::PartitionOfUnityMapping<CompactPolynomialC0> conservativeMap2D(Mapping::CONSERVATIVE, 2, function, deadAxis, Polynomial::SEPARATE, 5, 0.4, false);
   perform2DTestConservativeMapping(conservativeMap2D);
-  mapping::PartitionOfUnityMapping<CompactPolynomialC0> conservativeMap2DVector(Mapping::CONSERVATIVE, 2, 3., Polynomial::SEPARATE, 5, 0.4, false);
+  mapping::PartitionOfUnityMapping<CompactPolynomialC0> conservativeMap2DVector(Mapping::CONSERVATIVE, 2, function, deadAxis, Polynomial::SEPARATE, 5, 0.4, false);
   perform2DTestConservativeMappingVector(conservativeMap2DVector);
-  mapping::PartitionOfUnityMapping<CompactPolynomialC0> consistentMap3D(Mapping::CONSISTENT, 3, 3., Polynomial::SEPARATE, 5, 0.4, false);
+  mapping::PartitionOfUnityMapping<CompactPolynomialC0> consistentMap3D(Mapping::CONSISTENT, 3, function, deadAxis, Polynomial::SEPARATE, 5, 0.4, false);
   perform3DTestConsistentMapping(consistentMap3D);
-  mapping::PartitionOfUnityMapping<CompactPolynomialC0> consistentMap3DVector(Mapping::CONSISTENT, 3, 3., Polynomial::SEPARATE, 5, 0.4, false);
+  mapping::PartitionOfUnityMapping<CompactPolynomialC0> consistentMap3DVector(Mapping::CONSISTENT, 3, function, deadAxis, Polynomial::SEPARATE, 5, 0.4, false);
   perform3DTestConsistentMappingVector(consistentMap3DVector);
-  mapping::PartitionOfUnityMapping<CompactPolynomialC0> conservativeMap3D(Mapping::CONSERVATIVE, 3, 3., Polynomial::SEPARATE, 5, 0.4, false);
+  mapping::PartitionOfUnityMapping<CompactPolynomialC0> conservativeMap3D(Mapping::CONSERVATIVE, 3, function, deadAxis, Polynomial::SEPARATE, 5, 0.4, false);
   perform3DTestConservativeMapping(conservativeMap3D);
-  mapping::PartitionOfUnityMapping<CompactPolynomialC0> conservativeMap3DVector(Mapping::CONSERVATIVE, 3, 3., Polynomial::SEPARATE, 5, 0.4, false);
+  mapping::PartitionOfUnityMapping<CompactPolynomialC0> conservativeMap3DVector(Mapping::CONSERVATIVE, 3, function, deadAxis, Polynomial::SEPARATE, 5, 0.4, false);
   perform3DTestConservativeMappingVector(conservativeMap3DVector);
 }
 
@@ -1194,7 +1196,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2D)
                              {3, {7}},
                              {3, {8}}};
 
-  mapping::PartitionOfUnityMapping<CompactPolynomialC6> consistentMap2D(Mapping::CONSISTENT, 2, 3., Polynomial::SEPARATE, 5, 0.3, false);
+  mapping::PartitionOfUnityMapping<CompactPolynomialC6> consistentMap2D(Mapping::CONSISTENT, 2, CompactPolynomialC6(3.), {{false, false, false}}, Polynomial::SEPARATE, 5, 0.3, false);
   testDistributed(context, consistentMap2D, in, out, ref, globalIndexOffsets.at(context.rank));
 }
 
@@ -1233,7 +1235,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DEmptyOut)
                              {2, {7}},
                              {2, {8}}};
 
-  mapping::PartitionOfUnityMapping<CompactPolynomialC6> consistentMap2D(Mapping::CONSISTENT, 2, 3., Polynomial::SEPARATE, 5, 0.3, false);
+  mapping::PartitionOfUnityMapping<CompactPolynomialC6> consistentMap2D(Mapping::CONSISTENT, 2, CompactPolynomialC6(3.), {{false, false, false}}, Polynomial::SEPARATE, 5, 0.3, false);
   testDistributed(context, consistentMap2D, in, out, ref, globalIndexOffsets.at(context.rank));
 }
 
@@ -1267,7 +1269,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DEmptyRank)
                              {2, {5}},
                              {2, {6}}};
 
-  mapping::PartitionOfUnityMapping<CompactPolynomialC6> consistentMap2D(Mapping::CONSISTENT, 2, 3., Polynomial::SEPARATE, 5, 0.3, false);
+  mapping::PartitionOfUnityMapping<CompactPolynomialC6> consistentMap2D(Mapping::CONSISTENT, 2, CompactPolynomialC6(3.), {{false, false, false}}, Polynomial::SEPARATE, 5, 0.3, false);
   testDistributed(context, consistentMap2D, in, out, ref, globalIndexOffsets.at(context.rank));
 }
 
@@ -1305,7 +1307,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2D)
                              {3, {7}},
                              {3, {8}}};
 
-  mapping::PartitionOfUnityMapping<CompactPolynomialC6> conservativeMap2D(Mapping::CONSERVATIVE, 2, 3., Polynomial::SEPARATE, 5, 0.3, false);
+  mapping::PartitionOfUnityMapping<CompactPolynomialC6> conservativeMap2D(Mapping::CONSERVATIVE, 2, CompactPolynomialC6(3.), {{false, false, false}}, Polynomial::SEPARATE, 5, 0.3, false);
   testDistributed(context, conservativeMap2D, in, out, ref, globalIndexOffsets.at(context.rank));
 }
 
@@ -1368,7 +1370,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DEmptyRank)
                              {3, {0}},
                              {3, {0}}};
 
-  mapping::PartitionOfUnityMapping<CompactPolynomialC6> conservativeMap2D(Mapping::CONSERVATIVE, 2, 3., Polynomial::SEPARATE, 5, 0.3, false);
+  mapping::PartitionOfUnityMapping<CompactPolynomialC6> conservativeMap2D(Mapping::CONSERVATIVE, 2, CompactPolynomialC6(3.), {{false, false, false}}, Polynomial::SEPARATE, 5, 0.3, false);
   testDistributed(context, conservativeMap2D, in, out, ref, globalIndexOffsets.at(context.rank));
 }
 
@@ -1415,7 +1417,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DTwoRanks)
                              {1, {7}},
                              {1, {8}}};
 
-  mapping::PartitionOfUnityMapping<CompactPolynomialC6> conservativeMap2D(Mapping::CONSERVATIVE, 2, 3., Polynomial::SEPARATE, 5, 0.3, false);
+  mapping::PartitionOfUnityMapping<CompactPolynomialC6> conservativeMap2D(Mapping::CONSERVATIVE, 2, CompactPolynomialC6(3.), {{false, false, false}}, Polynomial::SEPARATE, 5, 0.3, false);
   testDistributed(context, conservativeMap2D, in, out, ref, globalIndexOffsets.at(context.rank));
 }
 
