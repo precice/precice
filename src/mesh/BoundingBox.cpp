@@ -15,11 +15,8 @@ logging::Logger BoundingBox::_log{"mesh::BoundingBox"};
 
 BoundingBox::BoundingBox(Eigen::VectorXd boundMin, Eigen::VectorXd boundMax)
 {
-  // PRECICE_ASSERT 1
-  PRECICE_ASSERT(boundMin.rows() == boundMax.rows(), "Dimension of min ({}) and max ({}) vertices should be the same.", boundMin.rows(), boundMax.rows());
-
-  // PRECICE_ASSERT 2
-  PRECICE_ASSERT((boundMin - boundMax).maxCoeff() < 0, "Each component of min vertex ({}) must be <= max vertex ({}) in the same axis direction.", boundMin, boundMax);
+  PRECICE_ASSERT(boundMin.rows() == boundMax.rows(), "Dimension of min {} and max {} vertices should be the same.", boundMin.rows(), boundMax.rows());
+  PRECICE_ASSERT((boundMin - boundMax).maxCoeff() < 0, "Each component of min vertex {} must be <= max vertex {} in the same axis direction.", boundMin, boundMax);
 
   _boundMin   = std::move(boundMin);
   _boundMax   = std::move(boundMax);
@@ -28,7 +25,7 @@ BoundingBox::BoundingBox(Eigen::VectorXd boundMin, Eigen::VectorXd boundMax)
 
 BoundingBox::BoundingBox(std::vector<double> bounds)
 {
-  PRECICE_ASSERT((int) bounds.size() == 4 || (int) bounds.size() == 6, "Dimension of a bounding box can only be 2 or 3. The dimension is ({}).", bounds.size() / 2);
+  PRECICE_ASSERT((int) bounds.size() == 4 || (int) bounds.size() == 6, "Dimension of a bounding box can only be 2 or 3. The dimension is {}.", bounds.size() / 2);
   _dimensions = bounds.size() / 2;
   _boundMin   = Eigen::Map<Eigen::VectorXd, 0, Eigen::InnerStride<2>>(bounds.data(), _dimensions);
   _boundMax   = Eigen::Map<Eigen::VectorXd, 0, Eigen::InnerStride<2>>(bounds.data() + 1, _dimensions);
@@ -37,7 +34,7 @@ BoundingBox::BoundingBox(std::vector<double> bounds)
 BoundingBox::BoundingBox(int dimension)
     : _dimensions(dimension)
 {
-  PRECICE_ASSERT(dimension == 2 || dimension == 3, "Dimension of a bounding box ({}) can only be 2 or 3.", dimension);
+  PRECICE_ASSERT(dimension == 2 || dimension == 3, "Dimension of a bounding box can only be 2 or 3 (in this case, it is {}).", dimension);
 
   _boundMin = Eigen::VectorXd(dimension);
   _boundMax = Eigen::VectorXd(dimension);
@@ -49,14 +46,9 @@ BoundingBox::BoundingBox(int dimension)
 
 bool BoundingBox::operator==(const BoundingBox &otherBB) const
 {
-  PRECICE_ASSERT(_dimensions == otherBB._dimensions, "Bounding boxes ({} and {}) with different dimensions cannot be compared.", _dimensions, otherBB._dimensions);
+  PRECICE_ASSERT(_dimensions == otherBB._dimensions, "Bounding boxes with different dimensions ({} and {}) cannot be compared.", _dimensions, otherBB._dimensions);
 
   return _boundMin.isApprox(otherBB._boundMin) && _boundMax.isApprox(otherBB._boundMax);
-}
-
-bool BoundingBox::empty() const
-{
-  return (_boundMax - _boundMin).isZero();
 }
 
 bool BoundingBox::isDefault() const
@@ -114,10 +106,9 @@ int BoundingBox::getDimension() const
 const std::vector<double> BoundingBox::dataVector() const
 {
   std::vector<double> bounds;
+  bounds.insert(bounds.end(), {_boundMin[0], _boundMax[0], _boundMin[1], _boundMax[1]});
   if (_dimensions == 3) {
-    bounds.insert(bounds.end(), {_boundMin[0], _boundMax[0], _boundMin[1], _boundMax[1], _boundMin[2], _boundMax[2]});
-  } else {
-    bounds.insert(bounds.end(), {_boundMin[0], _boundMax[0], _boundMin[1], _boundMax[1]});
+    bounds.insert(bounds.end(), {_boundMin[2], _boundMax[2]});
   }
   return bounds;
 }
@@ -143,7 +134,7 @@ void BoundingBox::expandBy(const Vertex &vertices)
 
 void BoundingBox::expandBy(double value)
 {
-  // Adding or substracting a constant to the default state will still make an 'illegal' box
+  // Adding or subtracting a constant to the default state will still make an 'illegal' box
   if (isDefault()) {
     return;
   }

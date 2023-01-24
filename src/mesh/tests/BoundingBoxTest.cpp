@@ -22,8 +22,10 @@ BOOST_AUTO_TEST_CASE(Constructor)
     Eigen::VectorXd boundMax(3);
     boundMax << 4.0, 5.0, 6.0;
     BoundingBox bb(boundMin, boundMax);
-    BoundingBox compareData({1.0, 4.0, 2.0, 5.0, 3.0, 6.0});
-    BOOST_TEST(bb == compareData);
+
+    BOOST_TEST(bb.getDimension() == 3);
+    BOOST_TEST(bb.minCorner() == boundMin);
+    BOOST_TEST(bb.maxCorner() == boundMax);
   }
   { // 2D
     Eigen::VectorXd boundMin(2);
@@ -31,8 +33,10 @@ BOOST_AUTO_TEST_CASE(Constructor)
     Eigen::VectorXd boundMax(2);
     boundMax << 4.0, 5.0;
     BoundingBox bb(boundMin, boundMax);
-    BoundingBox compareData({1.0, 4.0, 2.0, 5.0});
-    BOOST_TEST(bb == compareData);
+
+    BOOST_TEST(bb.getDimension() == 2);
+    BOOST_TEST(bb.minCorner() == boundMin);
+    BOOST_TEST(bb.maxCorner() == boundMax);
   }
 } // Constructor
 

@@ -53,9 +53,6 @@ public:
   /// Comparison Operator
   bool operator==(const BoundingBox &otherBB) const;
 
-  /// empty() returning true means that the length in every BoundingBox's dimension is equal to zero
-  bool empty() const;
-
   /// Check whether the bounding box is at default state or not
   /// all the values of _boundMin = std::numeric_limits<double>::max()
   /// all the values of _boundMax = std::numeric_limits<double>::lowest()
@@ -111,12 +108,12 @@ private:
   /// Number of dimensions (2 or 3)
   int _dimensions;
 
-  /// Container of a Eigen::VectorXd of a bounding box with min components in each dimension
+  /// _boundMin defining the bounding box, with minimum coordinates in each direction
   /// (x_min, y_min) when _dimensions=2;
   /// (x_min, y_min, z_min) when _dimensions=3;
   Eigen::VectorXd _boundMin;
 
-  /// Container of a Eigen::VectorXd of a bounding box with max components in each dimension
+  /// _boundMax defining the bounding box, with minimum coordinates in each direction
   /// (x_max, y_max) when _dimensions=2;
   /// (x_max, y_max, z_max) when _dimensions=3;
   Eigen::VectorXd _boundMax;
