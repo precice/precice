@@ -210,29 +210,32 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // Step 3: index the clusters / the center mesh in order to define the output vertex -> cluster ownership
   // the ownership is required to compute the normalized partition of unity weights (Step 4)
   query::Index clusterIndex(centerMesh);
-  // Find all clusters the output vertex lies in, i.e., find all cluster centers which have the distance of a cluster radius from the given output vertex
-  // Here, we do this using the RTree on the centerMesh: VertexID (queried from the centersMesh) == clusterID, by construction above.
+  // Step 4: find all clusters the output vertex lies in, i.e., find all cluster centers which have the distance of a cluster radius from the given output vertex
+  // Here, we do this using the RTree on the centerMesh: VertexID (queried from the centersMesh) == clusterID, by construction above. The loop uses
+  // the vertices to compute the weights required for the partition of unity data mapping.
   // Note: this could also be done on-the-fly in the map data phase for dynamic queries, which would require to make the mesh as well as the indexTree member variables.
   PRECICE_DEBUG("Computing cluster-vertex association");
   for (const auto &vertex : outMesh->vertices()) {
-    auto clusterIDs = clusterIndex.getVerticesInsideBox(vertex, _clusterRadius);
+    // Step 4a: get the relevant clusters for the output vertex
+    auto       clusterIDs            = clusterIndex.getVerticesInsideBox(vertex, _clusterRadius);
+    const auto localNumberOfClusters = clusterIDs.size();
     // Consider the case where we didn't find any cluster (meshes don't match very well)
-    if (clusterIDs.size() == 0) {
-      PRECICE_WARN("Output vertex {} could not be assigned to a cluster. This means that the meshes probably do not match well geometry-wise.", vertex.getCoords());
+    if (localNumberOfClusters == 0) {
+      PRECICE_WARN("Output vertex {} could not be assigned to any cluster. This means that the meshes probably do not match well geometry-wise.", vertex.getCoords());
       // TODO: Think about a proper way to handle this case, maybe set all radii to distance(v, closestvertex)?
       clusterIDs.emplace_back(clusterIndex.getClosestVertex(vertex.getCoords()).index);
     }
 
-    // Step 4: compute the normalized weights of each output vertex for each partition
-    PRECICE_ASSERT(clusterIDs.size() > 0, "No cluster found for vertex {}", vertex.getCoords());
+    // Next we compute the normalized weights of each output vertex for each partition
+    PRECICE_ASSERT(localNumberOfClusters > 0, "No cluster found for vertex {}", vertex.getCoords());
 
-    // Step 4a: compute the weight in each partition individually and store them in 'weights'
-    std::vector<double> weights(clusterIDs.size());
+    // Step 4b: compute the weight in each partition individually and store them in 'weights'
+    std::vector<double> weights(localNumberOfClusters);
     std::transform(clusterIDs.cbegin(), clusterIDs.cend(), weights.begin(), [&](const auto &ids) { return _clusters[ids].computeWeight(vertex); });
     double weightSum = std::accumulate(weights.begin(), weights.end(), static_cast<double>(0.));
     // TODO: This covers the edge case of vertices being at the edge of (several) clusters
     // In case the sum is equal to zero, we assign equal weights for all clusters
-    if (!(weightSum > 0)) {
+    if (weightSum <= 0) {
       PRECICE_ASSERT(weights.size() > 0);
       std::for_each(weights.begin(), weights.end(), [&weights](auto &w) { w = 1 / weights.size(); });
       weightSum = 1;
@@ -242,8 +245,8 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     PRECICE_DEBUG("V coords {}", vertex.getCoords());
     PRECICE_ASSERT(weightSum > 0);
 
-    // Step 4b: scale the weight using the weight sum and store the normalized weight in all associated clusters
-    for (unsigned int i = 0; i < clusterIDs.size(); ++i) {
+    // Step 4c: scale the weight using the weight sum and store the normalized weight in all associated clusters
+    for (unsigned int i = 0; i < localNumberOfClusters; ++i) {
       PRECICE_ASSERT(clusterIDs[i] < _clusters.size());
       _clusters[clusterIDs[i]].setNormalizedWeight(weights[i] / weightSum, vertex.getID());
     }
@@ -269,8 +272,8 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(DataID in
   output()->data(outputDataID)->values().setZero();
 
   // 2. Iterate over all clusters and accumulate the result in the output data
-  std::for_each(_clusters.begin(), _clusters.end(), [&](auto &p) { p.mapConservative(input()->data(inputDataID),
-                                                                                     output()->data(outputDataID)); });
+  std::for_each(_clusters.begin(), _clusters.end(), [&](auto &cluster) { cluster.mapConservative(input()->data(inputDataID),
+                                                                                                 output()->data(outputDataID)); });
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -285,8 +288,8 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inpu
   output()->data(outputDataID)->values().setZero();
 
   // 2. Execute the actual mapping evaluation in all vertex clusters and accumulate the data
-  std::for_each(_clusters.begin(), _clusters.end(), [&](auto &p) { p.mapConsistent(input()->data(inputDataID),
-                                                                                   output()->data(outputDataID)); });
+  std::for_each(_clusters.begin(), _clusters.end(), [&](auto &clusters) { clusters.mapConsistent(input()->data(inputDataID),
+                                                                                                 output()->data(outputDataID)); });
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -330,7 +333,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
 {
-  // Probably nothing to be done here. There is no global ownership for matrix entries required and we tag all potentially locally relevant vertices already in the first round.
+  // Nothing to be done here. There is no global ownership for matrix entries required and we tag all potentially locally relevant vertices already in the first round.
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
