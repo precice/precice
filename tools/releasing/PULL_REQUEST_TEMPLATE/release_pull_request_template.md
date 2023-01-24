@@ -153,6 +153,7 @@ Run all these tests manually on your system. If you succeed, please write a comm
 * [ ] Send announcement to the [mailing list](https://mailman.informatik.uni-stuttgart.de/mailman/listinfo/precice)
 * [ ] [CFD-Online](https://www.cfd-online.com/Forum/news.cgi/form/0)
 * [ ] NADigest
+* [ ] [NAFEMS](https://www.nafems.org/mynafems/submitnews/)
 * [ ] Post on [Twitter](https://twitter.com/preCICE_org) (additionally to the automatic)
 * [ ] Post on [ResearchGate](https://www.researchgate.net/project/preCICE)
 * [ ] Post in [LinkedIn Group](https://www.linkedin.com/groups/9073912/)
