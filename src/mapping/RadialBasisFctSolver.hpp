@@ -30,7 +30,7 @@ public:
 
   /**
    * assembles the system matrices and computes the decomposition of the interpolation matrix
-   * inputMesh refers to the mesh where the interpolants are build on, i.e., the input mesh
+   * inputMesh refers to the mesh where the interpolants are built on, i.e., the input mesh
    * for consistent mappings and the output mesh for conservative mappings
    * outputMesh refers to the mesh where we evaluate the interpolants, i.e., the output mesh
    * consistent mappings and the input mesh for conservative mappings
@@ -93,7 +93,7 @@ inline double computeSquaredDifference(
 template <typename IndexContainer>
 constexpr std::array<bool, 3> computeActiveAxis(const mesh::Mesh &mesh, const IndexContainer &IDs, std::array<bool, 3> axis)
 {
-  // For now, a (rahter high) heuristic value to decide on the disabling
+  // For now, a (rather high) heuristic value to decide on the disabling
   constexpr double threshold = 0.4;
 
   // make a pair of the axis and the difference

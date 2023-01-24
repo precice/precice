@@ -22,7 +22,7 @@ namespace mapping {
  * Mapping using partition of unity decomposition strategies: The class here inherits from the Mapping
  * class and orchestrates the partitions (called vertex clusters) in order to represent a partition of unity.
  * This means in particular that the class computes the weights for the evaluation vertices and the necessary
- * association between evaluation vertices and the clustering during initialization and traverses through all
+ * association between evaluation vertices and the clusters during initialization and traverses through all
  * vertex clusters when evaluating the mapping.
  */
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -47,7 +47,7 @@ public:
       bool                projectToInput);
 
   /**
-   * Computes the clustering for the partition of unity methods and fills the \p _clusters vector,
+   * Computes the clustering for the partition of unity method and fills the \p _clusters vector,
    * which allows to travers through all vertex cluster computed. Each vertex cluster in the vector
    * directly computes local mapping matrices and matrix decompositions.
    * In addition, the method computes the normalized weights (Shepard's method) for the partition
@@ -57,7 +57,7 @@ public:
    */
   virtual void computeMapping() override;
 
-  /// Removes a computed mapping by erasing the \p _clusters vector.
+  /// Clears a computed mapping by deleting the content of the \p _clusters vector.
   virtual void clear() override;
 
   /// tag the vertices required for the mapping
@@ -73,7 +73,7 @@ private:
   /// main data container storing all the clusters, which need to be solved individually
   std::vector<SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>> _clusters;
 
-  // Shape parameter or support radius for the RBF interpolant,
+  // Shape parameter or support radius for the RBF,
   // only required for the SphericalVertexCluster instantiation
   // TODO: Rename and generalize
   const double _parameter;
@@ -201,7 +201,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   PRECICE_INFO("Bounding Box of the cluster centers {}", centerMesh.getBoundingBox());
 
   // Step 3: index the clusters / the center mesh in order to define the output vertex -> cluster ownership
-  // the ownership is required to compute the normalized partition of unity weight (Step 4)
+  // the ownership is required to compute the normalized partition of unity weights (Step 4)
   query::Index clusterIndex(centerMesh);
   // Find all clusters the output vertex lies in, i.e., find all cluster centers which have the distance of a cluster radius from the given output vertex
   // Here, we do this using the RTree on the clusterMesh: VertexID (queried from the centersMesh) == clusterID, by construction above.
@@ -209,7 +209,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   PRECICE_DEBUG("Computing cluster-vertex association");
   for (const auto &vertex : outMesh->vertices()) {
     auto clusterIDs = clusterIndex.getVerticesInsideBox(vertex, averageClusterRadius);
-    // Consider the case where we didn't find any partition (meshes don't match very well)
+    // Consider the case where we didn't find any cluster (meshes don't match very well)
     if (clusterIDs.size() == 0) {
       PRECICE_WARN("Output vertex {} could not be assigned to a cluster. This means that the meshes probably do not match well geometry-wise.", vertex.getCoords());
       // TODO: Think about a proper way to handle this case, maybe set all radii to distance(v, closestvertex)?
@@ -247,9 +247,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   exportClusterCentersAsVTU(centerMesh);
 #endif
 
-  // Set the computedMapping flag
   this->_hasComputedMapping = true;
-  PRECICE_DEBUG("Compute Mapping is Completed.");
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
