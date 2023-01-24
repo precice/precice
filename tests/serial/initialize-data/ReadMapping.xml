@@ -18,8 +18,7 @@
         direction="read"
         from="MeshTwo"
         to="MeshOne"
-        constraint="conservative"
-        timing="initial" />
+        constraint="conservative" />
       <read-data name="Data" mesh="MeshOne" />
     </participant>
 

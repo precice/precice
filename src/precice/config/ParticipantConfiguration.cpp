@@ -494,7 +494,6 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     precice::impl::MappingContext mappingContext;
     mappingContext.fromMeshID = fromMeshID;
     mappingContext.toMeshID   = toMeshID;
-    mappingContext.timing     = confMapping.timing;
 
     mapping::PtrMapping &map = mappingContext.mapping;
     PRECICE_ASSERT(map.get() == nullptr);
