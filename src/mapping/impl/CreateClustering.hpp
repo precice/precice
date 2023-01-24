@@ -278,9 +278,9 @@ inline double estimateClusterRadius(unsigned int verticesPerCluster, mesh::PtrMe
   PRECICE_ASSERT(sampledClusterRadii.size() > 0);
   unsigned int middle = sampledClusterRadii.size() / 2;
   std::nth_element(sampledClusterRadii.begin(), sampledClusterRadii.begin() + middle, sampledClusterRadii.end());
-  double averageClusterRadius = sampledClusterRadii[middle];
+  double clusterRadius = sampledClusterRadii[middle];
 
-  return averageClusterRadius;
+  return clusterRadius;
 }
 
 /**
@@ -342,13 +342,13 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
 
   // Step 2: Now we pick random samples from the input mesh and ask the index tree for the k-nearest neighbors
   // in order to estimate the point density and determine a proper cluster radius (see also the function documentation)
-  double averageClusterRadius = estimateClusterRadius(verticesPerCluster, inMesh, localBB);
-  PRECICE_INFO("VertexCluster Radius: {}", averageClusterRadius);
+  double clusterRadius = estimateClusterRadius(verticesPerCluster, inMesh, localBB);
+  PRECICE_INFO("VertexCluster Radius: {}", clusterRadius);
 
   // maximum distance between cluster centers lying diagonal to each other. The maximum distance takes the overlap condition into
   // account: if the distance between the centers is sqrt(2) * radius, we violate the overlap condition between diagonal clusters
   // 0.3 should be a good default value
-  const double maximumCenterDistance = std::sqrt(2) * averageClusterRadius * (1 - relativeOverlap);
+  const double maximumCenterDistance = std::sqrt(2) * clusterRadius * (1 - relativeOverlap);
 
   // Step 3: using the maximum distance and the bounding box, compute the number of clusters in each direction
   // we ceil the number of clusters in order to guarantee the desired overlap
@@ -442,8 +442,8 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
   // Step 8: tag vertices, which should be removed later on
 
   // Step 8a: tag empty clusters
-  tagEmptyClusters(centers, averageClusterRadius, inMesh);
-  tagEmptyClusters(centers, averageClusterRadius, outMesh);
+  tagEmptyClusters(centers, clusterRadius, inMesh);
+  tagEmptyClusters(centers, clusterRadius, outMesh);
   PRECICE_DEBUG("Number of non-tagged centers after empty clusters were filtered: {}", std::count_if(centers.begin(), centers.end(), [](auto &v) { return !v.isTagged(); }));
 
   // Step 9: Move the cluster centers if desired
@@ -470,7 +470,7 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
   PRECICE_ASSERT(std::none_of(centers.begin(), centers.end(), [](auto &v) { return v.isTagged(); }));
   PRECICE_CHECK(centers.size() > 0, "Too many vertices have been filtered out.");
 
-  return {averageClusterRadius, centers};
+  return {clusterRadius, centers};
 }
 } // namespace impl
 } // namespace mapping

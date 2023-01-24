@@ -95,7 +95,7 @@ private:
   const bool _projectToInput;
 
   /// derived parameter based on the input above: the radius of each cluster
-  double averageClusterRadius = 0;
+  double _clusterRadius = 0;
 
   /// true if the mapping along some axis should be ignored
   /// has currently only dim x false entries, as integrated polynomials are irrelevant
@@ -170,10 +170,10 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   }
 
   // Step 1: get a tentative clustering consisting of centers and a radius from one of the available algorithms
-  auto [averageClusterRadius_, centerCandidates] = impl::createClustering(inMesh, outMesh, _relativeOverlap, _verticesPerCluster, _projectToInput);
+  auto [clusterRadius, centerCandidates] = impl::createClustering(inMesh, outMesh, _relativeOverlap, _verticesPerCluster, _projectToInput);
 
-  averageClusterRadius = averageClusterRadius_;
-  PRECICE_ASSERT(averageClusterRadius > 0 || inMesh->vertices().size() == 0 || outMesh->vertices().size() == 0);
+  _clusterRadius = clusterRadius;
+  PRECICE_ASSERT(_clusterRadius > 0 || inMesh->vertices().size() == 0 || outMesh->vertices().size() == 0);
 
   // Step 2: check, which of the resulting clusters are non-empty and register the cluster centers in a mesh
   // Here, the VertexCluster computes the matrix decompositions directly in case the cluster is non-empty
@@ -185,7 +185,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     // of the cluster within the _clusters vector. That's required for the indexing further down and asserted below
     const VertexID                                  vertexID = meshVertices.size();
     mesh::Vertex                                    center(c.getCoords(), vertexID);
-    SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T> cluster(center, averageClusterRadius, _basisFunction, _deadAxis, _polynomial, inMesh, outMesh);
+    SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T> cluster(center, _clusterRadius, _basisFunction, _deadAxis, _polynomial, inMesh, outMesh);
 
     // Consider only non-empty clusters
     if (!cluster.empty()) {
@@ -195,30 +195,27 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     }
   }
   // Log the average number of resulting clusters
-  PRECICE_INFO("Number of total clusters (final): {}", _clusters.size());
+  PRECICE_INFO("Partition of unity data mapping between mesh \"{}\" and mesh \"{}\": mesh \"{}\" on rank {} was decomposed into {} clusters.", this->input()->getName(), this->output()->getName(), inMesh->getName(), utils::IntraComm::getRank(), _clusters.size());
 
   if (_clusters.size() > 0) {
-    unsigned int nVertices   = std::accumulate(_clusters.begin(), _clusters.end(), static_cast<unsigned int>(0), [](auto &acc, auto &val) { return acc += val.getNumberOfInputVertices(); });
-    unsigned int maxVertices = std::max_element(_clusters.begin(), _clusters.end(), [](auto &v1, auto &v2) { return v1.getNumberOfInputVertices() < v2.getNumberOfInputVertices(); })->getNumberOfInputVertices();
-    unsigned int minVertices = std::min_element(_clusters.begin(), _clusters.end(), [](auto &v1, auto &v2) { return v1.getNumberOfInputVertices() < v2.getNumberOfInputVertices(); })->getNumberOfInputVertices();
-    PRECICE_INFO("Average number of vertices per cluster {}", nVertices / _clusters.size());
-    PRECICE_INFO("Maximum number of vertices per cluster {}", maxVertices);
-    PRECICE_INFO("Minimum number of vertices per cluster {}", minVertices);
+    PRECICE_DEBUG("Average number of vertices per cluster {}", std::accumulate(_clusters.begin(), _clusters.end(), static_cast<unsigned int>(0), [](auto &acc, auto &val) { return acc += val.getNumberOfInputVertices(); }) / _clusters.size());
+    PRECICE_DEBUG("Maximum number of vertices per cluster {}", std::max_element(_clusters.begin(), _clusters.end(), [](auto &v1, auto &v2) { return v1.getNumberOfInputVertices() < v2.getNumberOfInputVertices(); })->getNumberOfInputVertices());
+    PRECICE_DEBUG("Minimum number of vertices per cluster {}", std::min_element(_clusters.begin(), _clusters.end(), [](auto &v1, auto &v2) { return v1.getNumberOfInputVertices() < v2.getNumberOfInputVertices(); })->getNumberOfInputVertices());
   }
 
   // Log a bounding box of the center mesh
   centerMesh.computeBoundingBox();
-  PRECICE_INFO("Bounding Box of the cluster centers {}", centerMesh.getBoundingBox());
+  PRECICE_DEBUG("Bounding Box of the cluster centers {}", centerMesh.getBoundingBox());
 
   // Step 3: index the clusters / the center mesh in order to define the output vertex -> cluster ownership
   // the ownership is required to compute the normalized partition of unity weights (Step 4)
   query::Index clusterIndex(centerMesh);
   // Find all clusters the output vertex lies in, i.e., find all cluster centers which have the distance of a cluster radius from the given output vertex
-  // Here, we do this using the RTree on the clusterMesh: VertexID (queried from the centersMesh) == clusterID, by construction above.
+  // Here, we do this using the RTree on the centerMesh: VertexID (queried from the centersMesh) == clusterID, by construction above.
   // Note: this could also be done on-the-fly in the map data phase for dynamic queries, which would require to make the mesh as well as the indexTree member variables.
   PRECICE_DEBUG("Computing cluster-vertex association");
   for (const auto &vertex : outMesh->vertices()) {
-    auto clusterIDs = clusterIndex.getVerticesInsideBox(vertex, averageClusterRadius);
+    auto clusterIDs = clusterIndex.getVerticesInsideBox(vertex, _clusterRadius);
     // Consider the case where we didn't find any cluster (meshes don't match very well)
     if (clusterIDs.size() == 0) {
       PRECICE_WARN("Output vertex {} could not be assigned to a cluster. This means that the meshes probably do not match well geometry-wise.", vertex.getCoords());
@@ -314,15 +311,15 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
   // interpolant requires all vertices with a distance of radius from the center.
   auto bb = outMesh->getBoundingBox();
 
-  if (averageClusterRadius == 0)
-    averageClusterRadius = impl::estimateClusterRadius(_verticesPerCluster, filterMesh, bb);
+  if (_clusterRadius == 0)
+    _clusterRadius = impl::estimateClusterRadius(_verticesPerCluster, filterMesh, bb);
 
   // @TODO: This assert is not completely right, as it checks all dimensions for non-emptyness (which might not be the case).
   // However, with the current BB implementation, the expandBy function will just do nothing.
   PRECICE_ASSERT(!bb.empty());
-  PRECICE_ASSERT(averageClusterRadius > 0);
+  PRECICE_ASSERT(_clusterRadius > 0);
   // Now we extend the bounding box by the radius
-  bb.expandBy(1 * averageClusterRadius);
+  bb.expandBy(1 * _clusterRadius);
 
   // ... and tag all affected vertices
   auto verticesNew = filterMesh->index().getVerticesInsideBox(bb);
@@ -344,7 +341,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::exportClusterCentersAsVTU
   auto dataRadius      = centerMesh.createData("radius", 1, -1);
   auto dataCardinality = centerMesh.createData("number-of-vertices", 1, -1);
   centerMesh.allocateDataValues();
-  dataRadius->values().fill(averageClusterRadius);
+  dataRadius->values().fill(_clusterRadius);
   for (unsigned int i = 0; i < _clusters.size(); ++i) {
     dataCardinality->values()[i] = static_cast<double>(_clusters[i].getNumberOfInputVertices());
   }
@@ -391,7 +388,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::clear()
   PRECICE_TRACE();
   _clusters.clear();
   // TODO: Don't reset this here
-  averageClusterRadius      = 0;
+  _clusterRadius            = 0;
   this->_hasComputedMapping = false;
 }
 } // namespace mapping
