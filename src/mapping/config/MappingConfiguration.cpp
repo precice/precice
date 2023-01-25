@@ -231,7 +231,6 @@ MappingConfiguration::MappingConfiguration(
   createTag(*this, RBF_CPOLYNOMIAL_C4, once, SUBTAG_BASIS_FUNCTION, supportRadiusRBF, "Wendland C4 function");
   createTag(*this, RBF_CPOLYNOMIAL_C6, once, SUBTAG_BASIS_FUNCTION, supportRadiusRBF, "Wendland C6 function");
   createTag(*this, RBF_CTPS_C2, once, SUBTAG_BASIS_FUNCTION, supportRadiusRBF, "Compact thin-plate-spline C2");
-  createTag(*this, RBF_GAUSSIAN_SUPPORT, once, SUBTAG_BASIS_FUNCTION, supportRadiusRBF, "Gaussian basis function accepting a support radius");
 
   auto attrSupportRadius = XMLAttribute<double>(ATTR_SUPPORT_RADIUS)
                                .setDocumentation("Support radius of each RBF basis function (global choice).");
@@ -245,7 +244,6 @@ MappingConfiguration::MappingConfiguration(
   std::list<XMLTag> shapeParameterRBF;
   createTag(*this, RBF_MULTIQUADRICS, once, SUBTAG_BASIS_FUNCTION, shapeParameterRBF, "Multiquadrics");
   createTag(*this, RBF_INV_MULTIQUADRICS, once, SUBTAG_BASIS_FUNCTION, shapeParameterRBF, "Inverse multiquadrics");
-  createTag(*this, RBF_GAUSSIAN_SHAPE, once, SUBTAG_BASIS_FUNCTION, shapeParameterRBF, "Gaussian basis function accepting a shape parameter");
 
   auto attrShapeParam = XMLAttribute<double>(ATTR_SHAPE_PARAM)
                             .setDocumentation("Specific shape parameter for RBF basis function.");
@@ -254,6 +252,16 @@ MappingConfiguration::MappingConfiguration(
   addSubtagsToParents(shapeParameterRBF, rbfIterativeTags);
   addSubtagsToParents(shapeParameterRBF, rbfDirectTags);
   addSubtagsToParents(shapeParameterRBF, rbfAliasTag);
+
+  // For the Gaussian, we need default values as the user can pass a support radius or a shape parameter
+  std::list<XMLTag> GaussRBF;
+  createTag(*this, RBF_GAUSSIAN, once, SUBTAG_BASIS_FUNCTION, GaussRBF, "Gaussian basis function accepting a support radius or a shape parameter.");
+  attrShapeParam.setDefaultValue(std::numeric_limits<double>::quiet_NaN());
+  attrSupportRadius.setDefaultValue(std::numeric_limits<double>::quiet_NaN());
+  addAttributes(GaussRBF, {attrShapeParam, attrSupportRadius});
+  addSubtagsToParents(GaussRBF, rbfIterativeTags);
+  addSubtagsToParents(GaussRBF, rbfDirectTags);
+  addSubtagsToParents(GaussRBF, rbfAliasTag);
 
   // tags without an attribute
   std::list<XMLTag> attributelessRBFs;
@@ -332,7 +340,7 @@ void MappingConfiguration::xmlTagCallback(
       basisFunction = BasisFunctions::InverseMultiquadrics;
     else if (basisFctName == RBF_VOLUME_SPLINES)
       basisFunction = BasisFunctions::VolumeSplines;
-    else if (basisFctName == RBF_GAUSSIAN_SHAPE || basisFctName == RBF_GAUSSIAN_SUPPORT)
+    else if (basisFctName == RBF_GAUSSIAN)
       basisFunction = BasisFunctions::Gaussian;
     else if (basisFctName == RBF_CTPS_C2)
       basisFunction = BasisFunctions::CompactThinPlateSplinesC2;
@@ -348,10 +356,17 @@ void MappingConfiguration::xmlTagCallback(
       PRECICE_UNREACHABLE("Unknown basis function \"{}\".", basisFctName);
 
     // The Gaussian RBF is always treated as a shape-parameter RBF. Hence, we have to convert the support radius, if necessary
-    if (basisFunction == BasisFunctions::Gaussian && supportRadius > 0 && shapeParameter == 0) {
-      shapeParameter = std::sqrt(-std::log(Gaussian::cutoffThreshold)) / supportRadius;
+    if (basisFunction == BasisFunctions::Gaussian) {
+      const bool exactlyOneSet = (std::isfinite(supportRadius) && !std::isfinite(shapeParameter)) ||
+                                 (std::isfinite(shapeParameter) && !std::isfinite(supportRadius));
+      PRECICE_CHECK(exactlyOneSet, "The specified parameters for the Gaussian RBF mapping are invalid. Please specify either a \"shape-parameter\" or a \"support-radius\".");
+
+      if (std::isfinite(supportRadius) && !std::isfinite(shapeParameter)) {
+        shapeParameter = std::sqrt(-std::log(Gaussian::cutoffThreshold)) / supportRadius;
+      }
     }
 
+    // Instantiate the RBF mapping classes
     if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalDirect) {
       mapping.mapping = instantiateRBFMapping<RBFBackend::Eigen>(basisFunction, constraintValue, mapping.fromMesh->getDimensions(), supportRadius, shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial);
     } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalIterative) {

@@ -90,7 +90,7 @@
     from="TestMeshEleven"
     to="TestMeshTen"
     constraint="consistent">
-    <basis-function:gaussian-support support-radius="0.3" />
+    <basis-function:gaussian support-radius="0.3" />
   </mapping:rbf-global-direct>
 
   <mapping:rbf-global-direct
@@ -102,6 +102,6 @@
     x-dead="true"
     y-dead="false"
     z-dead="true">
-    <basis-function:gaussian-shape shape-parameter="0.3" />
+    <basis-function:gaussian shape-parameter="0.3" />
   </mapping:rbf-global-direct>
 </configuration>

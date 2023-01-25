@@ -26,7 +26,7 @@
         to="MeshTwo"
         constraint="consistent"
         z-dead="true">
-        <basis-function:gaussian-shape shape-parameter="2.2761406940777196" />
+        <basis-function:gaussian shape-parameter="2.2761406940777196" />
       </mapping:rbf-global-direct>
       <read-data name="DataOne" mesh="MeshTwo" />
     </participant>
