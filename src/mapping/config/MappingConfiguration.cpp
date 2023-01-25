@@ -29,6 +29,8 @@ namespace precice::mapping {
 
 namespace {
 
+// creates a tag including documentation and stores the tag in the provided
+// \p storage (usually a std::list of tags)
 template <typename Listener, typename TagStorage>
 void createTag(Listener &              listener,
                const std::string &     name,
@@ -42,6 +44,8 @@ void createTag(Listener &              listener,
   storage.push_back(tag);
 }
 
+// given a list of subtags and parent tags, this function adds all subtags to all
+// parent tags
 void addSubtagsToParents(std::list<xml::XMLTag> &subtags,
                          std::list<xml::XMLTag> &parents)
 {
@@ -50,6 +54,8 @@ void addSubtagsToParents(std::list<xml::XMLTag> &subtags,
   }
 }
 
+// this function uses std::variant in order to add attributes of any type (double, string, bool)
+// to all tags in the list of tags \p storage.
 using variant_t = std::variant<xml::XMLAttribute<double>, xml::XMLAttribute<std::string>, xml::XMLAttribute<bool>>;
 template <typename TagStorage>
 void addAttributes(TagStorage &storage, const std::vector<variant_t> &attributes)
@@ -64,7 +70,9 @@ void addAttributes(TagStorage &storage, const std::vector<variant_t> &attributes
 template <typename>
 inline constexpr bool always_false_v = false;
 
-// Returns the value, if present
+// Reads and returns an attribute value of any type (bool, string, double) from the tag,
+// if the attribute is actually contained in the tag. If the attribute is not in the tag,
+// an \p initializationValue is returned.
 template <typename AttributeType>
 AttributeType getAttributeIfPresent(xml::XMLTag &tag, const std::string &attributeName, AttributeType initializationValue)
 {
@@ -84,22 +92,26 @@ AttributeType getAttributeIfPresent(xml::XMLTag &tag, const std::string &attribu
   return value;
 }
 
+// Enum required for the RBF instantiations
 enum struct RBFBackend {
   Eigen,
   PETSc
 };
 
-// Helper in order to resolve the template instantiations. Only the specializations are of interest
+// Helper in order to resolve the template instantiations.
+// Only the template specializations are of interest
 template <RBFBackend Backend, typename RBF>
 struct BackendSelector {
   typedef RBF type;
 };
 
+// Specialization for the RBF Eigen backend
 template <typename RBF>
 struct BackendSelector<RBFBackend::Eigen, RBF> {
   typedef mapping::RadialBasisFctMapping<RBF> type;
 };
 
+// Specialization for the PETSc RBF backend
 #ifndef PRECICE_NO_PETSC
 template <typename RBF>
 struct BackendSelector<RBFBackend::PETSc, RBF> {
@@ -107,6 +119,9 @@ struct BackendSelector<RBFBackend::PETSc, RBF> {
 };
 #endif
 
+// The actual instantion helper, which avoids enumerating all mapping implementations (more will come) with all RBF kernels
+// The first three arguments of the constructor are prescribed: constraint, dimension and the RBF function object, all other
+// constructor arguments are just forwareded. The first argument (BasisFunction) indicated then the actual instantiation to return.
 template <RBFBackend T, typename... Args>
 PtrMapping instantiateRBFMapping(BasisFunctions functionType, mapping::Mapping::Constraint &constraint, int dimension, double supportRadius, double shapeParameter,
                                  Args &&... args)

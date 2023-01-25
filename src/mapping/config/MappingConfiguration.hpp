@@ -59,7 +59,8 @@ public:
   /// Returns all configured mappings.
   const std::vector<ConfiguredMapping> &mappings();
 
-  // Only affecting RBF related mappings
+  // Only relevant for RBF related mappings
+  // Being public here is only required for testing purposes
   struct RBFConfiguration {
 
     enum struct SystemSolver {
@@ -73,7 +74,8 @@ public:
     Preallocation       preallocation{};
   };
 
-  /// Returns the RBF configuration. Only required for the configuration test
+  /// Returns the RBF configuration, which was configured at the latest.
+  /// Only required for the configuration test
   const RBFConfiguration &rbfConfig() const
   {
     return _rbfConfig;
@@ -161,18 +163,21 @@ private:
 
   mesh::PtrMeshConfiguration _meshConfig;
 
+  // main data structure storing the configurations
   std::vector<ConfiguredMapping> _mappings;
 
+  // Relevant information in order to store the RBF related settings,
+  // as we can only instantiate the RBF classes when we know the RBF
+  // which is configured in the subtag
   RBFConfiguration _rbfConfig;
 
   /**
-   * @brief Instantiates all projection based mappings and creates
-   *
-   * @param direction
-   * @param type
-   * @param fromMeshName
-   * @param toMeshName
-   * @return ConfiguredMapping
+   * Configures and instantiates all mappings, which do not require
+   * a subtag/ a basis function. For the RBF related mappings, this class
+   * stores all relevant information, but the class is not instantiated and
+   * a nullptr is returned intstead. The class instantiation for the RBF
+   * related mappings happens in \ref xmlTagCallback() as we need to read the
+   * subtag information.
    */
   ConfiguredMapping createMapping(
       const std::string &direction,
@@ -180,6 +185,12 @@ private:
       const std::string &fromMeshName,
       const std::string &toMeshName) const;
 
+  /**
+ * Stores additional information about the requested RBF mapping such as the
+ * configured polynomial and the solver type, which is not required for all
+ * the other mapping types. The information is then used later when instantiating
+ * the RBF mappings in \ref xmlTagCallback().
+ */
   RBFConfiguration configureRBFMapping(const std::string &              type,
                                        const xml::ConfigurationContext &context,
                                        const std::string &              polynomial,
@@ -190,6 +201,8 @@ private:
   /// Check whether a mapping to and from the same mesh already exists
   void checkDuplicates(const ConfiguredMapping &mapping);
 
+  /// Indicates whether the mapping here requires a basis function/ subtag,
+  /// given the mapping type (e.g. nearest-neighbor).
   bool requiresBasisFunction(const std::string &mappingType) const;
 };
 } // namespace precice::mapping
