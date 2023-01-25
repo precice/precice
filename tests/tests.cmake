@@ -6,7 +6,9 @@ target_sources(testprecice
     tests/parallel/CouplingOnLine.cpp
     tests/parallel/ExportTimeseries.cpp
     tests/parallel/GlobalRBFPartitioning.cpp
+    tests/parallel/GlobalRBFPartitioningPETSc.cpp
     tests/parallel/LocalRBFPartitioning.cpp
+    tests/parallel/LocalRBFPartitioningPETSc.cpp
     tests/parallel/NearestProjectionRePartitioning.cpp
     tests/parallel/PrimaryRankSockets.cpp
     tests/parallel/TestBoundingBoxInitialization.cpp
