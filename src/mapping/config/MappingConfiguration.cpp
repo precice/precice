@@ -395,6 +395,8 @@ MappingConfiguration::RBFConfiguration MappingConfiguration::configureRBFMapping
     rbfConfig.polynomial = Polynomial::ON;
   else if (polynomial == POLYNOMIAL_OFF)
     rbfConfig.polynomial = Polynomial::OFF;
+  else
+    PRECICE_UNREACHABLE("Unknown polynomial configuration.");
 
   if (preallocation == PREALLOCATION_ESTIMATE)
     rbfConfig.preallocation = Preallocation::ESTIMATE;
@@ -406,6 +408,8 @@ MappingConfiguration::RBFConfiguration MappingConfiguration::configureRBFMapping
     rbfConfig.preallocation = Preallocation::TREE;
   else if (preallocation == PREALLOCATION_OFF)
     rbfConfig.preallocation = Preallocation::OFF;
+  else
+    PRECICE_UNREACHABLE("Unknwon preallocation configuration");
 
   rbfConfig.deadAxis   = {{xDead, yDead, zDead}};
   rbfConfig.solverRtol = solverRtol;
