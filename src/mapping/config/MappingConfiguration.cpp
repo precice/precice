@@ -131,6 +131,9 @@ PtrMapping instantiateRBFMapping(BasisFunctions functionType, mapping::Mapping::
   case BasisFunctions::ThinPlateSplines: {
     return PtrMapping(new typename BackendSelector<T, ThinPlateSplines>::type(constraint, dimension, mapping::ThinPlateSplines(), std::forward<Args>(args)...));
   }
+  case BasisFunctions::VolumeSplines: {
+    return PtrMapping(new typename BackendSelector<T, VolumeSplines>::type(constraint, dimension, mapping::VolumeSplines(), std::forward<Args>(args)...));
+  }
   case BasisFunctions::Multiquadrics: {
     return PtrMapping(new typename BackendSelector<T, Multiquadrics>::type(constraint, dimension, mapping::Multiquadrics(shapeParameter), std::forward<Args>(args)...));
   }
@@ -141,7 +144,7 @@ PtrMapping instantiateRBFMapping(BasisFunctions functionType, mapping::Mapping::
     return PtrMapping(new typename BackendSelector<T, Gaussian>::type(constraint, dimension, mapping::Gaussian(shapeParameter), std::forward<Args>(args)...));
   }
   default:
-    PRECICE_UNREACHABLE("Unkown basis function.");
+    PRECICE_UNREACHABLE("No instantiation was found for the selected basis function.");
     return nullptr;
   }
 }
