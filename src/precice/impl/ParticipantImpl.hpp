@@ -229,6 +229,12 @@ public:
       std::string_view meshName,
       std::string_view dataName) const;
 
+  /// @copydoc SolverInterface::hasGlobalData
+  bool hasGlobalData(const std::string &dataName) const;
+  
+  /// @copydoc SolverInterface::getGlobalDataID
+  int getGlobalDataID(const std::string &dataName) const;
+  
   /// @copydoc Participant::readData
   void readData(
       std::string_view                meshName,
