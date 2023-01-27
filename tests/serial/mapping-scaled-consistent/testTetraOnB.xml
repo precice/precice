@@ -23,8 +23,7 @@
         direction="read"
         from="MeshOne"
         to="MeshTwo"
-        constraint="scaled-consistent-volume"
-        timing="initial" />
+        constraint="scaled-consistent-volume" />
       <read-data name="DataOne" mesh="MeshTwo" />
     </participant>
 
