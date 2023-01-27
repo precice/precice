@@ -638,12 +638,6 @@ void SolverInterfaceImpl::resetMesh(
   PRECICE_TRACE(meshID);
   PRECICE_VALIDATE_MESH_ID(meshID);
   impl::MeshContext &context = _accessor->usedMeshContext(meshID);
-  /*
-  bool               hasMapping = context.fromMappingContext.mapping || context.toMappingContext.mapping;
-  bool               isStationary =
-      context.fromMappingContext.timing == mapping::MappingConfiguration::INITIAL &&
-      context.toMappingContext.timing == mapping::MappingConfiguration::INITIAL;
-  */
 
   PRECICE_DEBUG("Clear mesh positions for mesh \"{}\"", context.mesh->getName());
   _meshLock.unlock(meshID);
@@ -1882,31 +1876,12 @@ void SolverInterfaceImpl::computeMappings(std::vector<MappingContext> &contexts,
 {
   PRECICE_TRACE();
   using namespace mapping;
-  MappingConfiguration::Timing timing;
   for (impl::MappingContext &context : contexts) {
-    timing      = context.timing;
-    bool mapNow = timing == MappingConfiguration::ON_ADVANCE;
-    mapNow |= timing == MappingConfiguration::INITIAL;
-    bool hasComputed = context.mapping->hasComputedMapping();
-    if (mapNow && not hasComputed) {
+    if (not context.mapping->hasComputedMapping()) {
       PRECICE_INFO("Compute \"{}\" mapping from mesh \"{}\" to mesh \"{}\".",
                    mappingType, _accessor->meshContext(context.fromMeshID).mesh->getName(), _accessor->meshContext(context.toMeshID).mesh->getName());
       context.mapping->computeMapping();
     }
-  }
-}
-
-void SolverInterfaceImpl::clearMappings(std::vector<MappingContext> &contexts)
-{
-  PRECICE_TRACE();
-  // Clear non-stationary, non-incremental mappings
-  using namespace mapping;
-  for (impl::MappingContext &context : contexts) {
-    bool isStationary = context.timing == MappingConfiguration::INITIAL;
-    if (not isStationary) {
-      context.mapping->clear();
-    }
-    context.hasMappedData = false;
   }
 }
 
@@ -1915,12 +1890,11 @@ void SolverInterfaceImpl::mapWrittenData()
   PRECICE_TRACE();
   computeMappings(_accessor->writeMappingContexts(), "write");
   for (auto &context : _accessor->writeDataContexts()) {
-    if (context.isMappingRequired()) {
+    if (context.hasMapping()) {
       PRECICE_DEBUG("Map write data \"{}\" from mesh \"{}\"", context.getDataName(), context.getMeshName());
       context.mapData();
     }
   }
-  clearMappings(_accessor->writeMappingContexts());
 }
 
 void SolverInterfaceImpl::mapReadData()
@@ -1935,7 +1909,7 @@ void SolverInterfaceImpl::mapReadData()
     } else {
       for (auto time : receiveTimes) {
         context.loadReceived(time, _couplingScheme);
-        if (context.isMappingRequired()) {
+        if (context.hasMapping()) {
           PRECICE_DEBUG("Map read data \"{}\" to mesh \"{}\"", context.getDataName(), context.getMeshName());
           context.mapData();
         }
@@ -1943,7 +1917,6 @@ void SolverInterfaceImpl::mapReadData()
       }
     }
   }
-  clearMappings(_accessor->readMappingContexts());
 }
 
 void SolverInterfaceImpl::handleExports()

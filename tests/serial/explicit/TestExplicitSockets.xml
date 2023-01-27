@@ -26,8 +26,7 @@
         direction="read"
         from="Test-Square"
         to="MeshOne"
-        constraint="consistent"
-        timing="onadvance" />
+        constraint="consistent" />
       <write-data name="Forces" mesh="MeshOne" />
       <read-data name="Velocities" mesh="MeshOne" />
     </participant>
