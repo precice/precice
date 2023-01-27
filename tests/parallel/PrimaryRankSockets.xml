@@ -24,14 +24,12 @@
         direction="write"
         from="ParallelMesh"
         to="SerialMesh"
-        constraint="conservative"
-        timing="initial" />
+        constraint="conservative" />
       <mapping:nearest-neighbor
         direction="read"
         from="SerialMesh"
         to="ParallelMesh"
-        constraint="consistent"
-        timing="initial" />
+        constraint="consistent" />
     </participant>
 
     <participant name="SerialSolver">

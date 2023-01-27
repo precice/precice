@@ -24,8 +24,7 @@
         direction="read"
         from="MeshOne"
         to="MeshTwo"
-        constraint="consistent"
-        timing="initial" />
+        constraint="consistent" />
       <read-data name="DataOne" mesh="MeshTwo" />
       <export:vtu />
     </participant>
