@@ -21,6 +21,7 @@
 #include "mapping/Mapping.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
+#include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
 #include "partition/ReceivedPartition.hpp"
 #include "precice/impl/MappingContext.hpp"
@@ -418,13 +419,24 @@ const mesh::PtrData &ParticipantConfiguration::getData(
 const mesh::PtrGlobalData &ParticipantConfiguration::getGlobalData(
     const std::string &nameData) const
 {
-  // PRECICE_CHECK(mesh->hasDataName(nameData),
-  //               "Participant \"{}\" asks for data \"{}\" from mesh \"{}\", but this mesh does not use such data. "
-  //               "Please add a use-data tag with name=\"{}\" to this mesh.",
-  //               _participants.back()->getName(), nameData, mesh->getName(), nameData);
-  // return mesh->data(nameData);
-  PRECICE_ERROR("getGlobalData() is WIP. Yet to figure out where to store global data (instead of the `mesh` object in ParticipantConfig).");
-  return nullptr;
+
+  mesh::PtrDataConfiguration dataConfig = _meshConfig->getDataConfiguration();
+  // // Find global data name in the data config.
+  // bool found=false;
+  // for (const mesh::PtrGlobalData : dataConfig->data()) {
+  //     if (data.name == name) {
+  //       PRECICE_CHECK(data.isGlobal == true, "Data \"{0}\" is mesh data (not global data)."
+  //                                             "Please provide mesh name as \"mesh=<name>\" from/to which this data is to be read/written.";
+  //       found = true;
+  //       return &data;
+  //     }
+  // }
+  // if (not found) {
+  //     PRECICE_ERROR("Data with name \"{}\" is not defined."
+  //                   "Please define a data tag with name=\"{}\".",
+  //                   nameData);
+  // }
+  return dataConfig->globalData(nameData);
 }
 
 void ParticipantConfiguration::finishParticipantConfiguration(

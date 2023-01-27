@@ -5,6 +5,8 @@
 #include "logging/Logger.hpp"
 #include "mesh/Data.hpp"
 #include "time/Time.hpp"
+#include "mesh/GlobalData.hpp"
+#include "mesh/SharedPointer.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "xml/XMLTag.hpp"
 
@@ -33,6 +35,8 @@ public:
   void setDimensions(int dimensions);
 
   const std::vector<ConfiguredData> &data() const;
+
+  const PtrGlobalData &globalData(const std::string &dataName) const;
 
   ConfiguredData getRecentlyConfiguredData() const;
 
@@ -71,9 +75,18 @@ private:
 
   std::vector<ConfiguredData> _data;
 
+  std::vector<PtrGlobalData> _globalData;
+
   int _indexLastConfigured = -1;
 
+  utils::ManageUniqueIDs _dataIDManager;
+
   int getDataDimensions(const std::string &typeName) const;
+
+  /// Creates a GlobalData object and appends it to _globalData vector
+  void createGlobalData(const std::string &name,
+                        int                dimension,
+                        DataID             id);
 };
 
 } // namespace mesh
