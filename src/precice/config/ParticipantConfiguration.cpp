@@ -67,10 +67,12 @@ ParticipantConfiguration::ParticipantConfiguration(
                           .setDocumentation("Name of the data.");
   tagWriteData.addAttribute(attrDataName);
   tagReadData.addAttribute(attrDataName);
-  auto attrMesh = XMLAttribute<std::string>(ATTR_MESH)
+  auto attrMesh = XMLAttribute<std::string>(ATTR_MESH, "none")
                       .setDocumentation(
                           "Mesh the data belongs to. If data should be read/written to several "
-                          "meshes, this has to be specified separately for each mesh.");
+                          "meshes, this has to be specified separately for each mesh."
+                          "For global data, omit this attribute.");
+  //TODO: mesh name = "none" for global data, is a temporary thing. Can make a better design decision here.
   tagWriteData.addAttribute(attrMesh);
   tagReadData.addAttribute(attrMesh);
 
@@ -314,7 +316,7 @@ void ParticipantConfiguration::xmlTagCallback(
     _participants.back()->receiveMesh(mesh, from, safetyFactor, geoFilter, allowDirectAccess);
   } else if (tag.getName() == TAG_WRITE) {
     const std::string &dataName = tag.getStringAttributeValue(ATTR_NAME);
-    std::string        meshName = tag.getStringAttributeValue(ATTR_MESH); // TODO: will this work if there is no mesh attribute under this write-data tag?
+    std::string        meshName = tag.getStringAttributeValue(ATTR_MESH);
     mesh::PtrMesh      mesh     = _meshConfig->getMesh(meshName);
     if (!(mesh)) { // no mesh implies it's global data
       mesh::PtrGlobalData data = getGlobalData(dataName);

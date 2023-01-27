@@ -83,6 +83,9 @@ private:
   /// Unique data this context is associated with
   mesh::PtrGlobalData _providedData;
 
+  /// Whether this is "read" context or "write" context
+  std::string _direction;
+
   time::PtrWaveform _waveform;
 };
 

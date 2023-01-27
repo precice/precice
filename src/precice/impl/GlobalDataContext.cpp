@@ -13,7 +13,6 @@ GlobalDataContext::GlobalDataContext(
 {
   PRECICE_ASSERT(data);
   _providedData = data;
-  _waveform     = std::make_shared<time::Waveform>(interpolationOrder);
 }
 
 std::string GlobalDataContext::getDataName() const
