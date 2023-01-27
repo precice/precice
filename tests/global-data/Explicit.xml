@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <solver-interface dimensions="2" experimental="true">
+    <data:scalar name="Velocities" />
+
+    <global-data:scalar name="GlobalData1" />
+
+    <mesh name="MeshTwo">
+      <use-data name="Velocities" />
+    </mesh>
+
+    <participant name="SolverOne">
+      <use-mesh name="MeshTwo" from="SolverTwo" direct-access="true" />
+      <write-data name="Velocities" mesh="MeshTwo" />
+      <write-data name="GlobalData1" />
+    </participant>
+
+    <participant name="SolverTwo">
+      <use-mesh name="MeshTwo" provide="yes" />
+      <read-data name="Velocities" mesh="MeshTwo" />
+      <read-data name="GobalData1" />
+    </participant>
+
+    <m2n:sockets from="SolverOne" to="SolverTwo" />
+
+    <coupling-scheme:serial-explicit>
+      <participants first="SolverOne" second="SolverTwo" />
+      <max-time-windows value="2" />
+      <time-window-size value="1.0" />
+      <exchange data="Velocities" mesh="MeshTwo" from="SolverOne" to="SolverTwo" />
+      <exchange data="GobalData1" from="SolverOne" to="SolverTwo" />
+    </coupling-scheme:serial-explicit>
+  </solver-interface>
+</precice-configuration>
