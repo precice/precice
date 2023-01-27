@@ -424,7 +424,7 @@ const mesh::PtrGlobalData &ParticipantConfiguration::getGlobalData(
   //               _participants.back()->getName(), nameData, mesh->getName(), nameData);
   // return mesh->data(nameData);
   PRECICE_ERROR("getGlobalData() is WIP. Yet to figure out where to store global data (instead of the `mesh` object in ParticipantConfig).");
-  return NULL;
+  return nullptr;
 }
 
 void ParticipantConfiguration::finishParticipantConfiguration(
