@@ -133,23 +133,29 @@ void BoundingBox::expandBy(const Vertex &vertices)
 
 void BoundingBox::expandBy(double value)
 {
-  for (int d = 0; d < _dimensions; d++) {
-    _boundMin[d] -= value;
-    _boundMax[d] += value;
+  // BoundingBox should not be default state; otherwise, it will make ReceivedPartitionTest fail because of incorrect connectionMapSize
+  if (!isDefault()) {
+    for (int d = 0; d < _dimensions; d++) {
+      _boundMin[d] -= value;
+      _boundMax[d] += value;
+    }
   }
 }
 
 void BoundingBox::scaleBy(double safetyFactor)
 {
-  double maxSideLength = 1e-6; // we need some minimum > 0 here
-  for (int d = 0; d < _dimensions; d++) {
-    if (_boundMax[d] > _boundMin[d])
-      maxSideLength = std::max(maxSideLength, _boundMax[d] - _boundMin[d]);
-  }
-  for (int d = 0; d < _dimensions; d++) {
-    _boundMax[d] += safetyFactor * maxSideLength;
-    _boundMin[d] -= safetyFactor * maxSideLength;
-    PRECICE_DEBUG("Merged BoundingBox {}", *this);
+  // TODO: the reason why BoundingBox should not be default state here is still unknown
+  if (!isDefault()) {
+    double maxSideLength = 1e-6; // we need some minimum > 0 here
+    for (int d = 0; d < _dimensions; d++) {
+      if (_boundMax[d] > _boundMin[d])
+        maxSideLength = std::max(maxSideLength, _boundMax[d] - _boundMin[d]);
+    }
+    for (int d = 0; d < _dimensions; d++) {
+      _boundMax[d] += safetyFactor * maxSideLength;
+      _boundMin[d] -= safetyFactor * maxSideLength;
+      PRECICE_DEBUG("Merged BoundingBox {}", *this);
+    }
   }
 }
 
