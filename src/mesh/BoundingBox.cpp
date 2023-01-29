@@ -147,10 +147,7 @@ void BoundingBox::scaleBy(double safetyFactor)
   // TODO: the reason why BoundingBox should not be default state here is still unknown
   if (!isDefault()) {
     double maxSideLength = 1e-6; // we need some minimum > 0 here
-    for (int d = 0; d < _dimensions; d++) {
-      if (_boundMax[d] > _boundMin[d])
-        maxSideLength = std::max(maxSideLength, _boundMax[d] - _boundMin[d]);
-    }
+    maxSideLength        = (_boundMax - _boundMin).maxCoeff();
     for (int d = 0; d < _dimensions; d++) {
       _boundMax[d] += safetyFactor * maxSideLength;
       _boundMin[d] -= safetyFactor * maxSideLength;
