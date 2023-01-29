@@ -134,13 +134,13 @@ Eigen::VectorXd Storage::computeExtrapolation()
 
 Eigen::VectorXd Storage::getValuesAtBeginning()
 {
-  PRECICE_ASSERT(_sampleStorage.front().first == WINDOW_START, _sampleStorage.front().first);
+  PRECICE_ASSERT(math::equals(_sampleStorage.front().first, WINDOW_START), _sampleStorage.front().first);
   return _sampleStorage.front().second;
 }
 
 Eigen::VectorXd Storage::getValuesAtEnd()
 {
-  PRECICE_ASSERT(_sampleStorage.back().first == WINDOW_END, _sampleStorage.back().first);
+  PRECICE_ASSERT(math::equals(_sampleStorage.back().first, WINDOW_END), _sampleStorage.back().first);
   return _sampleStorage.back().second;
 }
 
