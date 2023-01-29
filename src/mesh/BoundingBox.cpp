@@ -105,8 +105,7 @@ int BoundingBox::getDimension() const
 
 const std::vector<double> BoundingBox::dataVector() const
 {
-  std::vector<double> bounds;
-  bounds.insert(bounds.end(), {_boundMin[0], _boundMax[0], _boundMin[1], _boundMax[1]});
+  std::vector<double> bounds({_boundMin[0], _boundMax[0], _boundMin[1], _boundMax[1]});
   if (_dimensions == 3) {
     bounds.insert(bounds.end(), {_boundMin[2], _boundMax[2]});
   }
@@ -134,10 +133,6 @@ void BoundingBox::expandBy(const Vertex &vertices)
 
 void BoundingBox::expandBy(double value)
 {
-  // Adding or subtracting a constant to the default state will still make an 'illegal' box
-  if (isDefault()) {
-    return;
-  }
   for (int d = 0; d < _dimensions; d++) {
     _boundMin[d] -= value;
     _boundMax[d] += value;
@@ -146,9 +141,6 @@ void BoundingBox::expandBy(double value)
 
 void BoundingBox::scaleBy(double safetyFactor)
 {
-  if (isDefault()) {
-    return;
-  }
   double maxSideLength = 1e-6; // we need some minimum > 0 here
   for (int d = 0; d < _dimensions; d++) {
     if (_boundMax[d] > _boundMin[d])

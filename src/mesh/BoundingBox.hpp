@@ -113,7 +113,7 @@ private:
   /// (x_min, y_min, z_min) when _dimensions=3;
   Eigen::VectorXd _boundMin;
 
-  /// _boundMax defining the bounding box, with minimum coordinates in each direction
+  /// _boundMax defining the bounding box, with maximum coordinates in each direction
   /// (x_max, y_max) when _dimensions=2;
   /// (x_max, y_max, z_max) when _dimensions=3;
   Eigen::VectorXd _boundMax;
