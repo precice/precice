@@ -165,20 +165,6 @@ public:
       const double *positions,
       int *         ids);
 
-  /// @copydoc SolverInterface::getMeshVertices
-  void getMeshVertices(
-      int        meshID,
-      size_t     size,
-      const int *ids,
-      double *   positions) const;
-
-  /// @copydoc SolverInterface::getMeshVertexIDsFromPositions
-  void getMeshVertexIDsFromPositions(
-      int           meshID,
-      size_t        size,
-      const double *positions,
-      int *         ids) const;
-
   /// @copydoc SolverInterface::setMeshEdge
   void setMeshEdge(
       MeshID meshID,

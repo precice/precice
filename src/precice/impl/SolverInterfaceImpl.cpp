@@ -704,64 +704,6 @@ void SolverInterfaceImpl::setMeshVertices(
   mesh->allocateDataValues();
 }
 
-void SolverInterfaceImpl::getMeshVertices(
-    int        meshID,
-    size_t     size,
-    const int *ids,
-    double *   positions) const
-{
-  PRECICE_TRACE(meshID, size);
-  PRECICE_REQUIRE_MESH_USE(meshID);
-  MeshContext & context = _accessor->usedMeshContext(meshID);
-  mesh::PtrMesh mesh(context.mesh);
-  PRECICE_DEBUG("Get positions");
-  auto &vertices = mesh->vertices();
-  PRECICE_ASSERT(size <= vertices.size(), size, vertices.size());
-  Eigen::Map<Eigen::MatrixXd> posMatrix{
-      positions, _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(size)};
-  for (size_t i = 0; i < size; i++) {
-    const size_t id = ids[i];
-    PRECICE_ASSERT(id < vertices.size(), id, vertices.size());
-    posMatrix.col(i) = vertices[id].getCoords();
-  }
-}
-
-void SolverInterfaceImpl::getMeshVertexIDsFromPositions(
-    int           meshID,
-    size_t        size,
-    const double *positions,
-    int *         ids) const
-{
-  PRECICE_TRACE(meshID, size);
-  PRECICE_REQUIRE_MESH_USE(meshID);
-  MeshContext & context = _accessor->usedMeshContext(meshID);
-  mesh::PtrMesh mesh(context.mesh);
-  PRECICE_DEBUG("Get IDs");
-  const auto &                      vertices = mesh->vertices();
-  Eigen::Map<const Eigen::MatrixXd> posMatrix{
-      positions, _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(size)};
-  const auto vsize = vertices.size();
-  for (size_t i = 0; i < size; i++) {
-    size_t j = 0;
-    for (; j < vsize; j++) {
-      if (math::equals(posMatrix.col(i), vertices[j].getCoords())) {
-        break;
-      }
-    }
-    if (j == vsize) {
-      std::ostringstream err;
-      err << "Unable to find a vertex on mesh \"" << mesh->getName() << "\" at position (";
-      err << posMatrix.col(i)[0] << ", " << posMatrix.col(i)[1];
-      if (_dimensions == 3) {
-        err << ", " << posMatrix.col(i)[2];
-      }
-      err << "). The request failed for query " << i + 1 << " out of " << size << '.';
-      PRECICE_ERROR(err.str());
-    }
-    ids[i] = j;
-  }
-}
-
 void SolverInterfaceImpl::setMeshEdge(
     MeshID meshID,
     int    firstVertexID,

@@ -295,46 +295,6 @@ PRECICE_API void precicef_set_vertices_(
 
 /**
  * Fortran syntax:
- * precicef_get_vertices(
- *   INTEGER          meshID,
- *   INTEGER          size,
- *   INTEGER          ids(size)
- *   DOUBLE PRECISION positions(dim*size))
- *
- * IN:  meshID, size, ids
- * OUT: positions
- *
- * @copydoc precice::SolverInterface::getMeshVertices()
- *
- */
-PRECICE_API void precicef_get_vertices_(
-    const int *meshID,
-    const int *size,
-    int *      ids,
-    double *   positions);
-
-/**
- * Fortran syntax:
- * precicef_get_vertices(
- *   INTEGER          meshID,
- *   INTEGER          size,
- *   DOUBLE PRECISION positions(dim*size),
- *   INTEGER          ids(size))
- *
- * IN:  meshID, size, positions
- * OUT: ids
- *
- * @copydoc precice::SolverInterface::getMeshVertexIDsFromPositions()
- *
- */
-PRECICE_API void precicef_get_vertex_ids_from_positions_(
-    const int *meshID,
-    const int *size,
-    double *   positions,
-    int *      ids);
-
-/**
- * Fortran syntax:
  * precicef_set_edge(
  *   INTEGER meshID,
  *   INTEGER firstVertexID,

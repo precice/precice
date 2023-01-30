@@ -140,24 +140,6 @@ void SolverInterface::setMeshVertices(
   _impl->setMeshVertices(meshID, size, positions, ids);
 }
 
-void SolverInterface::getMeshVertices(
-    int        meshID,
-    int        size,
-    const int *ids,
-    double *   positions) const
-{
-  _impl->getMeshVertices(meshID, size, ids, positions);
-}
-
-void SolverInterface::getMeshVertexIDsFromPositions(
-    int           meshID,
-    int           size,
-    const double *positions,
-    int *         ids) const
-{
-  _impl->getMeshVertexIDsFromPositions(meshID, size, positions, ids);
-}
-
 void SolverInterface::setMeshEdge(
     int meshID,
     int firstVertexID,
