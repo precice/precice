@@ -22,7 +22,7 @@ enum class Preallocation {
   TREE
 };
 
-enum class BasisFunctions {
+enum class BasisFunction {
   WendlandC0,
   WendlandC2,
   WendlandC4,

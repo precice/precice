@@ -6,8 +6,8 @@
 #include <map>
 #include <numeric>
 #include <vector>
-#include "config/MappingConfiguration.hpp"
 #include "impl/BasisFunctions.hpp"
+#include "mapping/config/MappingConfigurationTypes.hpp"
 #include "math/math.hpp"
 #include "precice/impl/versions.hpp"
 #include "utils/Petsc.hpp"

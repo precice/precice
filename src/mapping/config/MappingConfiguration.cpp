@@ -123,39 +123,38 @@ struct BackendSelector<RBFBackend::PETSc, RBF> {
 // The first three arguments of the constructor are prescribed: constraint, dimension and the RBF function object, all other
 // constructor arguments are just forwareded. The first argument (BasisFunction) indicated then the actual instantiation to return.
 template <RBFBackend T, typename... Args>
-PtrMapping instantiateRBFMapping(BasisFunctions functionType, mapping::Mapping::Constraint &constraint, int dimension, double supportRadius, double shapeParameter,
+PtrMapping instantiateRBFMapping(BasisFunction functionType, mapping::Mapping::Constraint &constraint, int dimension, double supportRadius, double shapeParameter,
                                  Args &&... args)
 {
-
   switch (functionType) {
-  case BasisFunctions::WendlandC0: {
+  case BasisFunction::WendlandC0: {
     return PtrMapping(new typename BackendSelector<T, CompactPolynomialC0>::type(constraint, dimension, mapping::CompactPolynomialC0(supportRadius), std::forward<Args>(args)...));
   }
-  case BasisFunctions::WendlandC2: {
+  case BasisFunction::WendlandC2: {
     return PtrMapping(new typename BackendSelector<T, CompactPolynomialC2>::type(constraint, dimension, mapping::CompactPolynomialC2(supportRadius), std::forward<Args>(args)...));
   }
-  case BasisFunctions::WendlandC4: {
+  case BasisFunction::WendlandC4: {
     return PtrMapping(new typename BackendSelector<T, CompactPolynomialC4>::type(constraint, dimension, mapping::CompactPolynomialC4(supportRadius), std::forward<Args>(args)...));
   }
-  case BasisFunctions::WendlandC6: {
+  case BasisFunction::WendlandC6: {
     return PtrMapping(new typename BackendSelector<T, CompactPolynomialC6>::type(constraint, dimension, mapping::CompactPolynomialC6(supportRadius), std::forward<Args>(args)...));
   }
-  case BasisFunctions::CompactThinPlateSplinesC2: {
+  case BasisFunction::CompactThinPlateSplinesC2: {
     return PtrMapping(new typename BackendSelector<T, CompactThinPlateSplinesC2>::type(constraint, dimension, mapping::CompactThinPlateSplinesC2(supportRadius), std::forward<Args>(args)...));
   }
-  case BasisFunctions::ThinPlateSplines: {
+  case BasisFunction::ThinPlateSplines: {
     return PtrMapping(new typename BackendSelector<T, ThinPlateSplines>::type(constraint, dimension, mapping::ThinPlateSplines(), std::forward<Args>(args)...));
   }
-  case BasisFunctions::VolumeSplines: {
+  case BasisFunction::VolumeSplines: {
     return PtrMapping(new typename BackendSelector<T, VolumeSplines>::type(constraint, dimension, mapping::VolumeSplines(), std::forward<Args>(args)...));
   }
-  case BasisFunctions::Multiquadrics: {
+  case BasisFunction::Multiquadrics: {
     return PtrMapping(new typename BackendSelector<T, Multiquadrics>::type(constraint, dimension, mapping::Multiquadrics(shapeParameter), std::forward<Args>(args)...));
   }
-  case BasisFunctions::InverseMultiquadrics: {
+  case BasisFunction::InverseMultiquadrics: {
     return PtrMapping(new typename BackendSelector<T, InverseMultiquadrics>::type(constraint, dimension, mapping::InverseMultiquadrics(shapeParameter), std::forward<Args>(args)...));
   }
-  case BasisFunctions::Gaussian: {
+  case BasisFunction::Gaussian: {
     return PtrMapping(new typename BackendSelector<T, Gaussian>::type(constraint, dimension, mapping::Gaussian(shapeParameter), std::forward<Args>(args)...));
   }
   default:
@@ -331,32 +330,32 @@ void MappingConfiguration::xmlTagCallback(
 
     ConfiguredMapping &mapping = _mappings.back();
 
-    BasisFunctions basisFunction{};
+    BasisFunction basisFunction{};
     if (basisFctName == RBF_TPS)
-      basisFunction = BasisFunctions::ThinPlateSplines;
+      basisFunction = BasisFunction::ThinPlateSplines;
     else if (basisFctName == RBF_MULTIQUADRICS)
-      basisFunction = BasisFunctions::Multiquadrics;
+      basisFunction = BasisFunction::Multiquadrics;
     else if (basisFctName == RBF_INV_MULTIQUADRICS)
-      basisFunction = BasisFunctions::InverseMultiquadrics;
+      basisFunction = BasisFunction::InverseMultiquadrics;
     else if (basisFctName == RBF_VOLUME_SPLINES)
-      basisFunction = BasisFunctions::VolumeSplines;
+      basisFunction = BasisFunction::VolumeSplines;
     else if (basisFctName == RBF_GAUSSIAN)
-      basisFunction = BasisFunctions::Gaussian;
+      basisFunction = BasisFunction::Gaussian;
     else if (basisFctName == RBF_CTPS_C2)
-      basisFunction = BasisFunctions::CompactThinPlateSplinesC2;
+      basisFunction = BasisFunction::CompactThinPlateSplinesC2;
     else if (basisFctName == RBF_CPOLYNOMIAL_C0)
-      basisFunction = BasisFunctions::WendlandC0;
+      basisFunction = BasisFunction::WendlandC0;
     else if (basisFctName == RBF_CPOLYNOMIAL_C2)
-      basisFunction = BasisFunctions::WendlandC2;
+      basisFunction = BasisFunction::WendlandC2;
     else if (basisFctName == RBF_CPOLYNOMIAL_C4)
-      basisFunction = BasisFunctions::WendlandC4;
+      basisFunction = BasisFunction::WendlandC4;
     else if (basisFctName == RBF_CPOLYNOMIAL_C6)
-      basisFunction = BasisFunctions::WendlandC6;
+      basisFunction = BasisFunction::WendlandC6;
     else
       PRECICE_UNREACHABLE("Unknown basis function \"{}\".", basisFctName);
 
     // The Gaussian RBF is always treated as a shape-parameter RBF. Hence, we have to convert the support radius, if necessary
-    if (basisFunction == BasisFunctions::Gaussian) {
+    if (basisFunction == BasisFunction::Gaussian) {
       const bool exactlyOneSet = (std::isfinite(supportRadius) && !std::isfinite(shapeParameter)) ||
                                  (std::isfinite(shapeParameter) && !std::isfinite(supportRadius));
       PRECICE_CHECK(exactlyOneSet, "The specified parameters for the Gaussian RBF mapping are invalid. Please specify either a \"shape-parameter\" or a \"support-radius\".");
