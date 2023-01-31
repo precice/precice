@@ -53,6 +53,9 @@ public:
   /// Comparison Operator
   bool operator==(const BoundingBox &otherBB) const;
 
+  /// Check if every dimension's length is equal to zero
+  bool empty() const;
+
   /// Check whether the bounding box is at default state or not
   /// all the values of _boundMin = std::numeric_limits<double>::max()
   /// all the values of _boundMax = std::numeric_limits<double>::lowest()

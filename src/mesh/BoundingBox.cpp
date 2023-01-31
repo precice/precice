@@ -51,6 +51,11 @@ bool BoundingBox::operator==(const BoundingBox &otherBB) const
   return _boundMin.isApprox(otherBB._boundMin) && _boundMax.isApprox(otherBB._boundMax);
 }
 
+bool BoundingBox::empty() const
+{
+  return (_boundMax - _boundMin).isZero();
+}
+
 bool BoundingBox::isDefault() const
 {
   return _boundMin.isApproxToConstant(std::numeric_limits<double>::max()) && _boundMax.isApproxToConstant(std::numeric_limits<double>::lowest());
