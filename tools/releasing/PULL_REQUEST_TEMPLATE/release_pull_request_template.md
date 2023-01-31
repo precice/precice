@@ -151,12 +151,20 @@ Run all these tests manually on your system. If you succeed, please write a comm
 * [ ] Finalize post on [Discourse](https://precice.discourse.group/)
 * [ ] Write on [Matrix](https://matrix.to/#/#precice_lobby:gitter.im?web-instance[element.io]=app.gitter.im)
 * [ ] Send announcement to the [mailing list](https://mailman.informatik.uni-stuttgart.de/mailman/listinfo/precice)
-* [ ] [CFD-Online](https://www.cfd-online.com/Forum/news.cgi/form/0)
+* [ ] CFD Online: 
+     * [ ] [News](https://www.cfd-online.com/Forum/news.cgi/form/0)
+     * [ ] Forum (choose a central topic)
 * [ ] NADigest
-* [ ] [NAFEMS](https://www.nafems.org/mynafems/submitnews/)
+* [ ] [NAFEMS](https://www.nafems.org/mynafems/submitnews/) (needs account, appears in [Upcoming Industry Events](https://www.nafems.org/events/industry-events/))
 * [ ] Post on [Twitter](https://twitter.com/preCICE_org) (additionally to the automatic)
+* [ ] Post on [Mastodon](https://fosstodon.org/@precice)
 * [ ] Post on [ResearchGate](https://www.researchgate.net/project/preCICE)
-* [ ] Post in [LinkedIn Group](https://www.linkedin.com/groups/9073912/)
+* [ ] Post in LinkedIn. Relevant places:
+    * [ ] [preCICE group](https://www.linkedin.com/groups/9073912/)
+    * [ ] [OpenFOAM group](https://www.linkedin.com/groups/1920608/)
+    * [ ] [HPC group](https://www.linkedin.com/groups/87791/)
+    * [ ] Personal
+* [ ] reddit [r/cfd](https://www.reddit.com/r/CFD/)
 * [ ] Submit a short article to the [Quartl](https://www.in.tum.de/en/i05/further-activities/quartl/)
 
 
