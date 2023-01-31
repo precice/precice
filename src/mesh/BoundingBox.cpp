@@ -133,7 +133,6 @@ void BoundingBox::expandBy(const Vertex &vertices)
 
 void BoundingBox::expandBy(double value)
 {
-  // BoundingBox should not be default state; otherwise, it will make ReceivedPartitionTest fail because of incorrect connectionMapSize
   if (!isDefault()) {
     for (int d = 0; d < _dimensions; d++) {
       _boundMin[d] -= value;
