@@ -148,15 +148,12 @@ void BoundingBox::expandBy(double value)
 
 void BoundingBox::scaleBy(double safetyFactor)
 {
-  // TODO: the reason why BoundingBox should not be default state here is still unknown
   if (!isDefault()) {
     double maxSideLength = 1e-6; // we need some minimum > 0 here
     maxSideLength        = (_boundMax - _boundMin).maxCoeff();
-    for (int d = 0; d < _dimensions; d++) {
-      _boundMax[d] += safetyFactor * maxSideLength;
-      _boundMin[d] -= safetyFactor * maxSideLength;
-      PRECICE_DEBUG("Merged BoundingBox {}", *this);
-    }
+    _boundMax.array() += safetyFactor * maxSideLength;
+    _boundMin.array() -= safetyFactor * maxSideLength;
+    PRECICE_DEBUG("Merged BoundingBox {}", *this);
   }
 }
 
