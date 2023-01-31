@@ -132,6 +132,8 @@ ParticipantConfiguration::ParticipantConfiguration(
   tagProvideMesh.setDocumentation(doc);
   attrName.setDocumentation("Name of the mesh to provide.");
   tagProvideMesh.addAttribute(attrName);
+  tagProvideMesh.addAttribute(makeXMLAttribute(ATTR_DYNAMIC, false)
+                                  .setDocumentation("Dynamic meshes may be reset during the simulation. Experimental!"));
   tag.addSubtag(tagProvideMesh);
 
   XMLTag tagReceiveMesh(*this, TAG_RECEIVE_MESH, XMLTag::OCCUR_ARBITRARY);
@@ -269,14 +271,19 @@ void ParticipantConfiguration::xmlTagCallback(
     _participants.push_back(p);
   } else if (tag.getName() == TAG_PROVIDE_MESH) {
     PRECICE_ASSERT(_dimensions != 0); // setDimensions() has been called
-    std::string name = tag.getStringAttributeValue(ATTR_NAME);
+    std::string name    = tag.getStringAttributeValue(ATTR_NAME);
+    auto        dynamic = tag.getBooleanAttributeValue(ATTR_DYNAMIC);
+
+    PRECICE_CHECK(!dynamic || _experimental,
+                  "You tried to configure the provided mesh \"{}\" to use the option dynamic=\"true\", which is currently still experimental. Please set experimental=\"true\", if you want to use this feature.", name);
+    PRECICE_WARN("You configured the provided mesh \"{}\" to use the option dynamic=\"true\", which is currently still experimental. Use with care.", name);
 
     mesh::PtrMesh mesh = _meshConfig->getMesh(name);
     PRECICE_CHECK(mesh,
                   R"(Participant "{}" attempts to provide an unknown mesh "{}". <mesh name="{}"> needs to be defined first.)",
                   _participants.back()->getName(), name, name);
 
-    _participants.back()->provideMesh(mesh);
+    _participants.back()->provideMesh(mesh, dynamic);
   } else if (tag.getName() == TAG_RECEIVE_MESH) {
     PRECICE_ASSERT(_dimensions != 0); // setDimensions() has been called
     std::string                                   name              = tag.getStringAttributeValue(ATTR_NAME);

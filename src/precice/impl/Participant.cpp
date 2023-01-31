@@ -65,7 +65,7 @@ void Participant::addWatchIntegral(
   _watchIntegrals.push_back(watchIntegral);
 }
 
-void Participant::provideMesh(const mesh::PtrMesh &mesh)
+void Participant::provideMesh(const mesh::PtrMesh &mesh, bool dynamic)
 {
   PRECICE_TRACE(_name, mesh->getName(), mesh->getID());
   checkDuplicatedUse(mesh);
@@ -74,6 +74,7 @@ void Participant::provideMesh(const mesh::PtrMesh &mesh)
   auto context                 = new MeshContext();
   context->mesh                = mesh;
   context->provideMesh         = true;
+  context->dynamic             = dynamic;
   _meshContexts[mesh->getID()] = context;
   _usedMeshContexts.push_back(context);
 }

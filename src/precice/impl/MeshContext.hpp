@@ -38,6 +38,9 @@ struct MeshContext {
   /// True, if accessor does create the mesh.
   bool provideMesh = false;
 
+  /// True, if the mesh is dynamic and can be changed
+  bool dynamic = false;
+
   /// type of geometric filter
   partition::ReceivedPartition::GeometricFilter geoFilter = partition::ReceivedPartition::GeometricFilter::UNDEFINED;
 

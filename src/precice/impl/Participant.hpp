@@ -109,7 +109,7 @@ public:
   void addExportContext(const io::ExportContext &context);
 
   /// Adds a mesh to be provided by the participant.
-  void provideMesh(const mesh::PtrMesh &mesh);
+  void provideMesh(const mesh::PtrMesh &mesh, bool dynamic = false);
 
   /// Adds a mesh to be received by the participant.
   void receiveMesh(const mesh::PtrMesh &                         mesh,

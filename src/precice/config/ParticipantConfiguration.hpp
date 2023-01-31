@@ -83,6 +83,7 @@ private:
   const std::string TAG_INTRA_COMM     = "intra-comm";
 
   const std::string ATTR_NAME               = "name";
+  const std::string ATTR_DYNAMIC            = "dynamic";
   const std::string ATTR_SOURCE_DATA        = "source-data";
   const std::string ATTR_TARGET_DATA        = "target-data";
   const std::string ATTR_TIMING             = "timing";
