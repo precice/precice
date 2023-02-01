@@ -184,6 +184,11 @@ public:
    */
   GlobalDataContext &globalDataContext(DataID dataID);
 
+  /** Provides access to \ref GlobalDataContext of a \ref dataName
+   * @pre there exists a \ref GlobalDataContext for \ref dataName
+   */
+  const GlobalDataContext &globalDataContext(std::string DataName) const;
+
   /** Provides access to all \ref WriteDataContext objects
    * @remarks does not contain nullptr.
    */
@@ -203,7 +208,7 @@ public:
   /** Provides access to all \ref GlobalDataContext objects
    * @remarks does not contain nullptr.
    */
-  auto gobalDataContexts()
+  auto globalDataContexts() const
   {
     return _globalDataContexts | boost::adaptors::map_values;
   }
@@ -218,7 +223,7 @@ public:
   bool isDataUsed(std::string_view mesh, std::string_view data) const;
 
   /// Is the global data used by this participant?
-  bool isGlobalDataUsed(const std::string &dataName) const;
+  // bool isGlobalDataUsed(const std::string &dataName) const;
 
   /// Is the participant allowed to read the data?
   bool isDataRead(std::string_view mesh, std::string_view data) const;

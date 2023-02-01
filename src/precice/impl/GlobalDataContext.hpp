@@ -61,7 +61,7 @@ public:
    *
    * @return mesh::PtrGlobalData _providedData.
    */
-  mesh::PtrGlobalData providedData();
+  mesh::PtrGlobalData providedData() const;
 
   /**
    * @brief Gets _interpolationOrder of _waveform

@@ -33,7 +33,7 @@ void GlobalDataContext::resetData()
   _providedData->toZero();
 }
 
-mesh::PtrGlobalData GlobalDataContext::providedData()
+mesh::PtrGlobalData GlobalDataContext::providedData() const
 {
   PRECICE_ASSERT(_providedData);
   return _providedData;

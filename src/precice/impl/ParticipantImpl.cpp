@@ -561,14 +561,11 @@ bool SolverInterfaceImpl::hasGlobalData(
   // PRECICE_VALIDATE_MESH_ID(meshID);
   return _accessor->isGlobalDataUsed(dataName);
 }
+
 int SolverInterfaceImpl::getGlobalDataID(
     const std::string &dataName) const
 {
   PRECICE_TRACE(dataName);
-  PRECICE_CHECK(_accessor->isGlobalDataUsed(dataName),
-                "Global Data with name \"{0}\" is not defined. ",
-                // "Please add <use-data name=\"{0}\"/> under <mesh name=\"{1}\"/>.",
-                dataName);
   return _accessor->getUsedGlobalDataID(dataName);
 }
 

@@ -198,6 +198,16 @@ GlobalDataContext &ParticipantState::globalDataContext(DataID dataID)
   return it->second;
 }
 
+const GlobalDataContext &ParticipantState::globalDataContext(std::string dataName) const
+{
+  for (const auto &dataContext : globalDataContexts()) {
+    if (dataContext.getDataName() == dataName) {
+      return dataContext;
+    }
+  }
+  PRECICE_ASSERT(false, "GlobalData with name \"{}\" not found in Participant \"{}\".", dataName, _name);
+}
+
 bool ParticipantState::hasData(std::string_view mesh, std::string_view data) const
 {
   return std::any_of(
@@ -225,6 +235,24 @@ bool ParticipantState::isDataRead(std::string_view mesh, std::string_view data) 
 bool ParticipantState::isDataWrite(std::string_view mesh, std::string_view data) const
 {
   return _writeDataContexts.count(MeshDataKey{mesh, data}) > 0;
+}
+
+
+int Participant::getUsedGlobalDataID(const std::string &dataName) const
+{
+  // // fetch from _globalDataContexts;
+  // auto pos = std::find_if(_globalDataContexts.begin(), _globalDataContexts.end(),
+  //                         [dataName](const auto & context_pair) {
+  //                           return context_pair.second->providedData()->getName() == dataName;
+  //                         });
+  // const auto &dptr = usedMeshContext(meshID).mesh->data(dataName);
+  // PRECICE_ASSERT(dptr != nullptr);
+  // return dptr->getID();
+  // PRECICE_ASSERT(pos != _globalDataContexts.end());
+  const auto &context = globalDataContext(dataName);
+  return context.providedData()->getID();
+
+  // PRECICE_ERROR("Participant::getUsedGlobalDataID function is TODO.");
 }
 
 /// Mesh queries
