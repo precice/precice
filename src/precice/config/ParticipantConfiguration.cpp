@@ -677,6 +677,30 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   }
   _watchIntegralConfigs.clear();
 
+  // Mark received dynamic meshes of participants as dynamic.
+  // Old participants need to be updated in case of new dynamic meshes.
+  // The new participant needs to know which meshes were marked as dynamic.
+  // Doing this here prevents even more state in the ParticipantConfiguration
+  if (_participants.size() > 1) {
+    std::set<std::string> dynamicMeshes;
+    for (const auto &participant : _participants) {
+      for (const auto &context : participant->usedMeshContexts()) {
+        if (context->provideMesh && context->dynamic) {
+          dynamicMeshes.insert(context->mesh->getName());
+        }
+      }
+    }
+    if (!dynamicMeshes.empty()) {
+      for (auto &participant : _participants) {
+        for (auto &context : participant->usedMeshContexts()) {
+          if (!context->provideMesh && dynamicMeshes.count(context->mesh->getName()) != 0) {
+            context->dynamic = true;
+          }
+        }
+      }
+    }
+  }
+
   // create default primary communication if needed
   if (context.size > 1 && not _isIntraCommDefined && participant->getName() == context.name) {
 #ifdef PRECICE_NO_MPI

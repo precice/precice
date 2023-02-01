@@ -38,7 +38,7 @@ struct MeshContext {
   /// True, if accessor does create the mesh.
   bool provideMesh = false;
 
-  /// True, if the mesh is dynamic and can be changed
+  /// True, if the mesh is dynamic and may be changed locally or remotely
   bool dynamic = false;
 
   /// type of geometric filter
