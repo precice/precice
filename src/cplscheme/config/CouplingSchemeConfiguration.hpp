@@ -13,6 +13,7 @@
 #include "cplscheme/impl/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
+#include "mesh/GlobalData.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "precice/config/SharedPointer.hpp"
 #include "precice/impl/MeshContext.hpp"
@@ -155,7 +156,14 @@ private:
       bool          requiresInitialization;
       bool          exchangeSubsteps;
     };
+    struct GlobalExchange {
+      mesh::PtrGlobalData globalData;
+      std::string         from;
+      std::string         to;
+      bool                requiresInitialization;
+    };
     std::vector<Exchange>                    exchanges;
+    std::vector<GlobalExchange>              globalExchanges;
     std::vector<ConvergenceMeasureDefintion> convergenceMeasureDefinitions;
     int                                      maxIterations      = -1;
     int                                      extrapolationOrder = 0;
@@ -164,6 +172,13 @@ private:
     {
       return std::any_of(exchanges.begin(), exchanges.end(), [&totest](const auto &ex) {
         return ex.from == totest.from && ex.to == totest.to && ex.data->getName() == totest.data->getName() && ex.mesh->getName() == totest.mesh->getName();
+      });
+    }
+
+    bool hasGlobalExchange(const GlobalExchange &totest) const
+    {
+      return std::any_of(globalExchanges.begin(), globalExchanges.end(), [&totest](const auto &gex) {
+        return gex.from == totest.from && gex.to == totest.to && gex.globalData->getName() == totest.globalData->getName();
       });
     }
   } _config;

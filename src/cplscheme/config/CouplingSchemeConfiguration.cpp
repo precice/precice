@@ -26,6 +26,7 @@
 #include "m2n/config/M2NConfiguration.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
+#include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
 #include "precice/config/ParticipantConfiguration.hpp"
 #include "precice/impl/SharedPointer.hpp"
@@ -261,25 +262,42 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     bool        initialize          = tag.getBooleanAttributeValue(ATTR_INITIALIZE);
     bool        exchangeSubsteps    = tag.getBooleanAttributeValue(ATTR_EXCHANGE_SUBSTEPS);
 
-    PRECICE_CHECK(_meshConfig->hasMeshName(nameMesh) && _meshConfig->getMesh(nameMesh)->hasDataName(nameData),
-                  "Mesh \"{}\" with data \"{}\" not defined. "
-                  "Please check the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" /> "
-                  "tag in the <coupling-scheme:... /> of your precice-config.xml.",
-                  nameMesh, nameData, nameData, nameMesh, nameParticipantFrom, nameParticipantTo);
+    if (nameMesh.empty()) { // no mesh implies it's global data
+      PRECICE_CHECK(_meshConfig->getDataConfiguration()->hasGlobalDataName(nameData),
+                    "Data \"{}\" not defined. "
+                    "Please check the <exchange data=\"{}\" from=\"{}\" to=\"{}\" /> "
+                    "tag in the <coupling-scheme:... /> of your precice-config.xml.",
+                    nameData, nameData, nameParticipantFrom, nameParticipantTo);
+      mesh::PtrGlobalData exchangeData = _meshConfig->getDataConfiguration()->globalData(nameData);
+      PRECICE_ASSERT(exchangeData);
+      Config::GlobalExchange newGlobalExchange{exchangeData, nameParticipantFrom, nameParticipantTo, initialize};
+      PRECICE_CHECK(!_config.hasGlobalExchange(newGlobalExchange),
+                    R"(Data "{}" cannot be exchanged multiple times between participants "{}" and "{}". Please remove one of the exchange tags.)",
+                    nameData, nameParticipantFrom, nameParticipantTo);
+      _config.globalExchanges.emplace_back(std::move(newGlobalExchange));
 
-    mesh::PtrMesh exchangeMesh = _meshConfig->getMesh(nameMesh);
-    PRECICE_ASSERT(exchangeMesh);
-    mesh::PtrData exchangeData = exchangeMesh->data(nameData);
-    PRECICE_ASSERT(exchangeData);
+    } else {
+      PRECICE_CHECK(_meshConfig->hasMeshName(nameMesh) && _meshConfig->getMesh(nameMesh)->hasDataName(nameData),
+                    "Mesh \"{}\" with data \"{}\" not defined. "
+                    "Please check the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" /> "
+                    "tag in the <coupling-scheme:... /> of your precice-config.xml.",
+                    nameMesh, nameData, nameData, nameMesh, nameParticipantFrom, nameParticipantTo);
 
-    Config::Exchange newExchange{exchangeData, exchangeMesh, nameParticipantFrom, nameParticipantTo, initialize, exchangeSubsteps};
-    PRECICE_CHECK(!_config.hasExchange(newExchange),
-                  R"(Data "{}" of mesh "{}" cannot be exchanged multiple times between participants "{}" and "{}". Please remove one of the exchange tags.)",
-                  nameData, nameMesh, nameParticipantFrom, nameParticipantTo);
+      mesh::PtrMesh exchangeMesh = _meshConfig->getMesh(nameMesh);
+      PRECICE_ASSERT(exchangeMesh);
+      mesh::PtrData exchangeData = exchangeMesh->data(nameData);
+      PRECICE_ASSERT(exchangeData);
 
-    _meshConfig->addNeededMesh(nameParticipantFrom, nameMesh);
-    _meshConfig->addNeededMesh(nameParticipantTo, nameMesh);
-    _config.exchanges.emplace_back(std::move(newExchange));
+      Config::Exchange newExchange{exchangeData, exchangeMesh, nameParticipantFrom, nameParticipantTo, initialize};
+      PRECICE_CHECK(!_config.hasExchange(newExchange),
+                    R"(Data "{}" of mesh "{}" cannot be exchanged multiple times between participants "{}" and "{}". Please remove one of the exchange tags.)",
+                    nameData, nameMesh, nameParticipantFrom, nameParticipantTo);
+
+      _meshConfig->addNeededMesh(nameParticipantFrom, nameMesh);
+      _meshConfig->addNeededMesh(nameParticipantTo, nameMesh);
+      _config.exchanges.emplace_back(std::move(newExchange));
+    }
+
   } else if (tag.getName() == TAG_MAX_ITERATIONS) {
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
     _config.maxIterations = tag.getIntAttributeValue(ATTR_VALUE);
@@ -518,7 +536,7 @@ void CouplingSchemeConfiguration::addTagExchange(
 
   auto attrData = XMLAttribute<std::string>(ATTR_DATA).setDocumentation("The data to exchange.");
   tagExchange.addAttribute(attrData);
-  auto attrMesh = XMLAttribute<std::string>(ATTR_MESH).setDocumentation("The mesh which uses the data.");
+  auto attrMesh = XMLAttribute<std::string>(ATTR_MESH, "").setDocumentation("The mesh which uses the data.");
   tagExchange.addAttribute(attrMesh);
   auto participantFrom = XMLAttribute<std::string>(ATTR_FROM).setDocumentation("The participant sending the data.");
   tagExchange.addAttribute(participantFrom);
@@ -599,7 +617,7 @@ void CouplingSchemeConfiguration::addBaseAttributesTagConvergenceMeasure(
   auto attrData = XMLAttribute<std::string>(ATTR_DATA)
                       .setDocumentation("Data to be measured.");
   tag.addAttribute(attrData);
-  auto attrMesh = XMLAttribute<std::string>(ATTR_MESH)
+  auto attrMesh = XMLAttribute<std::string>(ATTR_MESH, "")
                       .setDocumentation("Mesh holding the data.");
   tag.addAttribute(attrMesh);
   auto attrSuffices = makeXMLAttribute(ATTR_SUFFICES, false)
