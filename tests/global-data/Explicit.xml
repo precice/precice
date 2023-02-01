@@ -18,7 +18,7 @@
     <participant name="SolverTwo">
       <use-mesh name="MeshTwo" provide="yes" />
       <read-data name="Velocities" mesh="MeshTwo" />
-      <read-data name="GobalData1" />
+      <read-data name="GlobalData1" />
     </participant>
 
     <m2n:sockets from="SolverOne" to="SolverTwo" />
@@ -28,7 +28,7 @@
       <max-time-windows value="2" />
       <time-window-size value="1.0" />
       <exchange data="Velocities" mesh="MeshTwo" from="SolverOne" to="SolverTwo" />
-      <exchange data="GobalData1" from="SolverOne" to="SolverTwo" />
+      <exchange data="GlobalData1" from="SolverOne" to="SolverTwo" />
     </coupling-scheme:serial-explicit>
   </solver-interface>
 </precice-configuration>
