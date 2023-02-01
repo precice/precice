@@ -112,6 +112,10 @@ void DataConfiguration::xmlTagCallback(
       PRECICE_ERROR("You tried to configure the data with name \"{}\" to use the waveform-degree=\"{}\", but the degree must be between \"{}\" and \"{}\". Please use a degree in the allowed range.", name, waveformDegree, time::Time::MIN_WAVEFORM_DEGREE, time::Time::MAX_WAVEFORM_DEGREE);
     }
     int                dataDimensions = getDataDimensions(typeName);
+    if (!_experimental) {
+      PRECICE_ERROR("You tried to configure \"{}\" as global data, which is currently still experimental. Please set experimental=\"true\", if you want to use this feature.", name);
+    }
+    PRECICE_WARN("You configured \"{}\" as global data, which is currently still experimental. Use with care.", name);
     addData(name, dataDimensions, waveformDegree, isGlobal);
     createGlobalData(name, dataDimensions, _dataIDManager.getFreeID()); // TODO: Add waveformDegree here?
   } else {
@@ -166,6 +170,12 @@ int DataConfiguration::getDataDimensions(
   }
   // We should never reach this point
   PRECICE_UNREACHABLE("Unknown data type \"{}\".", typeName);
+}
+
+void DataConfiguration::setExperimental(
+    bool experimental)
+{
+  _experimental = experimental;
 }
 
 } // namespace precice::mesh

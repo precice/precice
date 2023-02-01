@@ -64,6 +64,8 @@ public:
                int                waveformDegree = time::Time::DEFAULT_WAVEFORM_DEGREE,
                bool               isGlobal);
 
+  void setExperimental(bool experimental);
+
 private:
   mutable logging::Logger _log{"mesh::DataConfiguration"};
 
@@ -91,6 +93,8 @@ private:
   void createGlobalData(const std::string &name,
                         int                dimension,
                         DataID             id);
+
+  bool _experimental = false;
 };
 
 } // namespace mesh
