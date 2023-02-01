@@ -6,8 +6,10 @@
 #include <utility>
 
 #include "BiCouplingScheme.hpp"
+#include "com/Communication.hpp"
 #include "cplscheme/BaseCouplingScheme.hpp"
 #include "cplscheme/CouplingData.hpp"
+#include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/M2N.hpp"
@@ -15,6 +17,7 @@
 #include "mesh/Data.hpp"
 #include "precice/types.hpp"
 #include "utils/Helpers.hpp"
+#include "utils/IntraComm.hpp"
 
 namespace precice::cplscheme {
 
@@ -134,6 +137,43 @@ m2n::PtrM2N BiCouplingScheme::getM2N() const
 {
   PRECICE_ASSERT(_m2n);
   return _m2n;
+}
+
+CouplingScheme::ChangedMeshes BiCouplingScheme::receiveRemoteChanges()
+{
+  if (!utils::IntraComm::isSecondary()) {
+    PRECICE_ASSERT(getM2N() && getM2N()->getPrimaryRankCommunication());
+    CouplingScheme::ChangedMeshes changes = getM2N()->getPrimaryRankCommunication()->receiveRange(0, com::AsVectorTag<int>{});
+
+    // Serial case
+    if (utils::IntraComm::isParallel()) {
+      utils::IntraComm::getCommunication()->broadcast(changes);
+    }
+    return changes;
+  } else {
+    CouplingScheme::ChangedMeshes changes;
+    utils::IntraComm::getCommunication()->broadcast(changes, 0);
+    return changes;
+  }
+}
+
+void BiCouplingScheme::sendLocalChanges(const CouplingScheme::ChangedMeshes &changes)
+{
+  if (utils::IntraComm::isSecondary()) {
+    utils::IntraComm::getCommunication()->sendRange(changes, 0);
+    return;
+  }
+
+  std::set<MeshID> allChanges{changes.begin(), changes.end()};
+  if (utils::IntraComm::isParallel()) {
+    for (Rank rank : utils::IntraComm::allSecondaryRanks()) {
+      auto next = utils::IntraComm::getCommunication()->receiveRange(rank, com::AsVectorTag<int>{});
+      allChanges.insert(next.begin(), next.end());
+    }
+  }
+  CouplingScheme::ChangedMeshes changesToSend(allChanges.begin(), allChanges.end());
+  PRECICE_ASSERT(getM2N() && getM2N()->getPrimaryRankCommunication());
+  getM2N()->getPrimaryRankCommunication()->sendRange(changesToSend, 0);
 }
 
 void BiCouplingScheme::exchangeInitialData()

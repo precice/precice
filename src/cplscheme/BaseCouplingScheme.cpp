@@ -211,12 +211,6 @@ bool BaseCouplingScheme::sendsInitializedData() const
   return _sendsInitializedData;
 }
 
-CouplingScheme::ChangedMeshes BaseCouplingScheme::firstSynchronization(const CouplingScheme::ChangedMeshes &changes)
-{
-  PRECICE_ASSERT(changes.empty());
-  return changes;
-}
-
 void BaseCouplingScheme::firstExchange()
 {
   PRECICE_TRACE(_timeWindows, _time);
@@ -235,15 +229,9 @@ void BaseCouplingScheme::firstExchange()
   }
 }
 
-CouplingScheme::ChangedMeshes BaseCouplingScheme::secondSynchronization()
-{
-  return {};
-}
-
 void BaseCouplingScheme::secondExchange()
 {
   PRECICE_TRACE(_timeWindows, _time);
-  checkCompletenessRequiredActions();
   PRECICE_ASSERT(_isInitialized, "Before calling advance() coupling scheme has to be initialized via initialize().");
   PRECICE_ASSERT(_couplingMode != Undefined);
 

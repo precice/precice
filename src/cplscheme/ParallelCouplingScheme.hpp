@@ -56,11 +56,19 @@ public:
       int                           maxIterations      = UNDEFINED_MAX_ITERATIONS,
       int                           extrapolationOrder = UNDEFINED_EXTRAPOLATION_ORDER);
 
+  ChangedMeshes firstSynchronization(const ChangedMeshes &changes) final;
+
+  ChangedMeshes secondSynchronization() final;
+
 private:
   logging::Logger _log{"cplscheme::ParallelCouplingScheme"};
 
+  /// Exchanges first set of data between the participants of the ParallelCouplingScheme
   void exchangeFirstData() override final;
 
+  /**
+   * @brief Exchanges the second set of data between the participants of the ParallelCouplingScheme and applies acceleration.
+   */
   void exchangeSecondData() override final;
 
   const DataMap getAccelerationData() override final;

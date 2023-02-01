@@ -70,6 +70,10 @@ public:
 
   bool hasAnySendData() override final;
 
+  CouplingScheme::ChangedMeshes firstSynchronization(const CouplingScheme::ChangedMeshes &changes) final;
+
+  CouplingScheme::ChangedMeshes secondSynchronization() final;
+
 private:
   /**
    * @brief A vector of m2ns. A m2n is a communication device to the other coupling participant.
@@ -101,6 +105,10 @@ private:
 
   /// if this is the controller or not
   bool _isController;
+
+  void sendLocalChanges(const CouplingScheme::ChangedMeshes &changes);
+
+  CouplingScheme::ChangedMeshes receiveRemoteChanges();
 };
 
 } // namespace cplscheme

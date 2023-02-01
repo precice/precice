@@ -80,11 +80,27 @@ void SerialCouplingScheme::performReceiveOfFirstAdvance()
   if (doesFirstStep()) {
     // do nothing
   } else { // second participant
+    PRECICE_DEBUG("Receiving mesh changes...");
+    auto changes = receiveRemoteChanges();
+    PRECICE_CHECK(changes.empty(), "Mesh adaptivity in the first step is forbidden.");
+
     receiveAndSetTimeWindowSize();
     PRECICE_DEBUG("Receiving data...");
     receiveData(getM2N(), getReceiveData());
     checkDataHasBeenReceived();
   }
+}
+
+CouplingScheme::ChangedMeshes SerialCouplingScheme::firstSynchronization(const CouplingScheme::ChangedMeshes &changes)
+{
+  PRECICE_DEBUG("First snyc");
+  if (!reachedEndOfTimeWindow()) {
+    return {};
+  };
+  // First synchronization point always sends local changes
+  PRECICE_DEBUG("Sending mesh changes...");
+  sendLocalChanges(changes);
+  return {};
 }
 
 void SerialCouplingScheme::exchangeFirstData()
@@ -101,6 +117,21 @@ void SerialCouplingScheme::exchangeFirstData()
     }
     PRECICE_DEBUG("Sending data...");
     sendData(getM2N(), getSendData());
+  }
+}
+
+CouplingScheme::ChangedMeshes SerialCouplingScheme::secondSynchronization()
+{
+  PRECICE_DEBUG("Second snyc");
+  // Second synchronization point always receives remote changes
+  if (!reachedEndOfTimeWindow()) {
+    return {};
+  };
+  if (doesFirstStep() || isCouplingOngoing() || (isImplicitCouplingScheme() && not hasConverged())) {
+    PRECICE_DEBUG("Receiving mesh changes...");
+    return receiveRemoteChanges();
+  } else {
+    return {};
   }
 }
 

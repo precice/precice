@@ -54,6 +54,10 @@ public:
       int                           maxIterations      = UNDEFINED_MAX_ITERATIONS,
       int                           extrapolationOrder = UNDEFINED_EXTRAPOLATION_ORDER);
 
+  CouplingScheme::ChangedMeshes firstSynchronization(const CouplingScheme::ChangedMeshes &changes) final;
+
+  CouplingScheme::ChangedMeshes secondSynchronization() final;
+
 protected:
   /**
    * @brief Setter for _timeWindowSize
@@ -78,9 +82,13 @@ private:
 
   void performReceiveOfFirstAdvance() override final;
 
+  /// Exchanges the first set of data between the participants of the SerialCouplingSchemes
   void exchangeFirstData() override;
 
-  void exchangeSecondData() override final;
+  /**
+   * @brief Exchanges the second set of data between the participants of the SerialCouplingSchemes
+   */
+  void exchangeSecondData() override;
 
   const DataMap getAccelerationData() override final;
 };

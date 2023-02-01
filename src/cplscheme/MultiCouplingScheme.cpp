@@ -9,6 +9,7 @@
 #include <utility>
 #include "acceleration/Acceleration.hpp"
 #include "acceleration/SharedPointer.hpp"
+#include "com/Communication.hpp"
 #include "cplscheme/BaseCouplingScheme.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "cplscheme/SharedPointer.hpp"
@@ -16,6 +17,7 @@
 #include "m2n/SharedPointer.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
+#include "utils/IntraComm.hpp"
 
 namespace precice::cplscheme {
 
@@ -103,6 +105,23 @@ void MultiCouplingScheme::exchangeInitialData()
   PRECICE_DEBUG("Initial data is exchanged in MultiCouplingScheme");
 }
 
+CouplingScheme::ChangedMeshes MultiCouplingScheme::firstSynchronization(const CouplingScheme::ChangedMeshes &changes)
+{
+  if (!reachedEndOfTimeWindow()) {
+    return {};
+  }
+
+  PRECICE_DEBUG("Exchanging mesh changes...");
+  if (_isController) {
+    sendLocalChanges(changes);
+    return receiveRemoteChanges();
+  } else {
+    auto remote = receiveRemoteChanges();
+    sendLocalChanges(changes);
+    return remote;
+  }
+}
+
 void MultiCouplingScheme::exchangeFirstData()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
@@ -121,6 +140,11 @@ void MultiCouplingScheme::exchangeFirstData()
       sendData(_m2ns[sendExchange.first], sendExchange.second);
     }
   }
+}
+
+CouplingScheme::ChangedMeshes MultiCouplingScheme::secondSynchronization()
+{
+  return {};
 }
 
 void MultiCouplingScheme::exchangeSecondData()
@@ -167,6 +191,69 @@ void MultiCouplingScheme::addDataToReceive(
   PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization);
   PRECICE_DEBUG("Configuring receive data from {}", from);
   _receiveDataVector[from].emplace(data->getID(), ptrCplData);
+}
+
+CouplingScheme::ChangedMeshes MultiCouplingScheme::receiveRemoteChanges()
+{
+  PRECICE_DEBUG("Receiving remote changes{}...", _isController ? "" : " from controller");
+  CouplingScheme::ChangedMeshes changes;
+  /// Receive to primary rank
+  if (_isController) {
+    if (!utils::IntraComm::isSecondary()) {
+      // Receive changes from all non-controllers
+      std::set<MeshID> allChanges;
+      for (auto &m2n : _m2ns) {
+        auto changes = m2n.second->getPrimaryRankCommunication()->receiveRange(0, com::AsVectorTag<int>{});
+        allChanges.insert(changes.begin(), changes.end());
+      }
+      // Broadcast to other secondaries of the controller
+      changes.insert(changes.end(), allChanges.begin(), allChanges.end());
+    }
+  } else {
+    if (!utils::IntraComm::isSecondary()) {
+      // Receive changes from the controller
+      CouplingScheme::ChangedMeshes changes = _m2ns[_controller]->getPrimaryRankCommunication()->receiveRange(0, com::AsVectorTag<int>{});
+    }
+  }
+
+  /// Broadcast changes to secondaries rank
+  if (utils::IntraComm::isPrimary()) {
+    // Broadcast to other secondaries of the controller
+    utils::IntraComm::getCommunication()->broadcast(changes);
+  }
+  if (utils::IntraComm::isSecondary()) {
+    // Broadcast to other secondaries of the controller
+    utils::IntraComm::getCommunication()->broadcast(changes, 0);
+  }
+  return changes;
+}
+
+void MultiCouplingScheme::sendLocalChanges(const CouplingScheme::ChangedMeshes &changes)
+{
+  PRECICE_DEBUG("Sending local changes{}...", _isController ? "" : " to controller");
+  // Gather changes on primary of this participant
+  if (utils::IntraComm::isSecondary()) {
+    utils::IntraComm::getCommunication()->sendRange(changes, 0);
+    return;
+  }
+
+  std::set<MeshID> allChanges{changes.begin(), changes.end()};
+  if (utils::IntraComm::isParallel()) {
+    for (Rank rank : utils::IntraComm::allSecondaryRanks()) {
+      auto next = utils::IntraComm::getCommunication()->receiveRange(rank, com::AsVectorTag<int>{});
+      allChanges.insert(next.begin(), next.end());
+    }
+  }
+  CouplingScheme::ChangedMeshes changesToSend(allChanges.begin(), allChanges.end());
+
+  // Send changes
+  if (_isController) {
+    for (auto &m2n : _m2ns) {
+      m2n.second->getPrimaryRankCommunication()->sendRange(changesToSend, 0);
+    }
+  } else {
+    _m2ns[_controller]->getPrimaryRankCommunication()->sendRange(changesToSend, 0);
+  }
 }
 
 } // namespace precice::cplscheme

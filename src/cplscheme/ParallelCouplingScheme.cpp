@@ -23,6 +23,19 @@ ParallelCouplingScheme::ParallelCouplingScheme(
     : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
                        secondParticipant, localParticipant, std::move(m2n), maxIterations, cplMode, dtMethod, extrapolationOrder) {}
 
+CouplingScheme::ChangedMeshes ParallelCouplingScheme::firstSynchronization(const CouplingScheme::ChangedMeshes &changes)
+{
+  PRECICE_DEBUG("Exchanging mesh changes...");
+  if (doesFirstStep()) { // first participant
+    sendLocalChanges(changes);
+    return receiveRemoteChanges();
+  } else { // second participant
+    auto remote = receiveRemoteChanges();
+    sendLocalChanges(changes);
+    return remote;
+  }
+}
+
 void ParallelCouplingScheme::exchangeFirstData()
 {
   if (doesFirstStep()) { // first participant
@@ -33,6 +46,11 @@ void ParallelCouplingScheme::exchangeFirstData()
     receiveData(getM2N(), getReceiveData());
     checkDataHasBeenReceived();
   }
+}
+
+CouplingScheme::ChangedMeshes ParallelCouplingScheme::secondSynchronization()
+{
+  return {};
 }
 
 void ParallelCouplingScheme::exchangeSecondData()

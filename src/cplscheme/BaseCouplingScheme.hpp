@@ -195,11 +195,7 @@ public:
   /// Receives result of first advance, if this has to happen inside SolverInterface::initialize(), see CouplingScheme.hpp
   void receiveResultOfFirstAdvance() override final;
 
-  ChangedMeshes firstSynchronization(const ChangedMeshes &changes) override final;
-
   void firstExchange() override final;
-
-  ChangedMeshes secondSynchronization() override final;
 
   void secondExchange() override final;
 
@@ -379,6 +375,12 @@ protected:
    */
   int getExtrapolationOrder();
 
+  /**
+   * @brief Function to check whether end of time window is reached. Does not check for convergence
+   * @returns true if end time of time window is reached.
+   */
+  bool reachedEndOfTimeWindow();
+
 private:
   /// Coupling mode used by coupling scheme.
   CouplingMode _couplingMode = Undefined;
@@ -506,8 +508,6 @@ private:
    */
   virtual void performReceiveOfFirstAdvance();
 
-  /// Functions needed for advance()
-
   /// Exchanges the first set of data
   virtual void exchangeFirstData() = 0;
 
@@ -524,12 +524,6 @@ private:
    * @brief If any required actions are open, an error message is issued.
    */
   void checkCompletenessRequiredActions();
-
-  /**
-   * @brief Function to check whether end of time window is reached. Does not check for convergence
-   * @returns true if end time of time window is reached.
-   */
-  bool reachedEndOfTimeWindow();
 
   /**
    * @brief Initialize txt writers for iterations and convergence tracking
