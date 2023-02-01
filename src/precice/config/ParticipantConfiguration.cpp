@@ -419,23 +419,11 @@ const mesh::PtrData &ParticipantConfiguration::getData(
 const mesh::PtrGlobalData &ParticipantConfiguration::getGlobalData(
     const std::string &nameData) const
 {
-
   mesh::PtrDataConfiguration dataConfig = _meshConfig->getDataConfiguration();
-  // // Find global data name in the data config.
-  // bool found=false;
-  // for (const mesh::PtrGlobalData : dataConfig->data()) {
-  //     if (data.name == name) {
-  //       PRECICE_CHECK(data.isGlobal == true, "Data \"{0}\" is mesh data (not global data)."
-  //                                             "Please provide mesh name as \"mesh=<name>\" from/to which this data is to be read/written.";
-  //       found = true;
-  //       return &data;
-  //     }
-  // }
-  // if (not found) {
-  //     PRECICE_ERROR("Data with name \"{}\" is not defined."
-  //                   "Please define a data tag with name=\"{}\".",
-  //                   nameData);
-  // }
+  PRECICE_CHECK(dataConfig->hasGlobalDataName(nameData),
+                "Participant \"{}\" asks for global data \"{}\", but such data is not found. "
+                "Please add a global-data tag with name=\"{}\".",
+                _participants.back()->getName(), nameData, nameData);
   return dataConfig->globalData(nameData);
 }
 

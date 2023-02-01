@@ -36,7 +36,11 @@ public:
 
   const std::vector<ConfiguredData> &data() const;
 
+  /// Returns the Global Data with the matching name
   const PtrGlobalData &globalData(const std::string &dataName) const;
+
+  /// Returns whether Data Configuration has Global Data with the dataName
+  bool hasGlobalDataName(const std::string &dataName) const;
 
   ConfiguredData getRecentlyConfiguredData() const;
 

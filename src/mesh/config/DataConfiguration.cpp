@@ -62,6 +62,14 @@ DataConfiguration::data() const
   return _data;
 }
 
+bool DataConfiguration::hasGlobalDataName(const std::string &dataName) const
+{
+  auto iter = std::find_if(_globalData.begin(), _globalData.end(), [&dataName](const auto &dptr) {
+    return dptr->getName() == dataName;
+  });
+  return iter != _globalData.end(); // if name was not found in mesh, iter == _data.end()
+}
+
 const PtrGlobalData &DataConfiguration::globalData(const std::string &dataName) const
 {
   auto iter = std::find_if(_globalData.begin(), _globalData.end(), [&dataName](const auto &dptr) {
