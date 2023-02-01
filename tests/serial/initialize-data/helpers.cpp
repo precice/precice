@@ -19,9 +19,12 @@ void testDataInitialization(precice::testing::TestContext context, std::string c
     cplInterface.setMeshVertex(meshOneID, pos.data());
     int    dataID     = cplInterface.getDataID("Data", meshOneID);
     double valueDataB = 0.0;
-    cplInterface.initialize();
+    double dt         = cplInterface.initialize();
     cplInterface.readScalarData(dataID, 0, valueDataB);
     BOOST_TEST(2.0 == valueDataB);
+    while (cplInterface.isCouplingOngoing()) {
+      dt = cplInterface.advance(dt);
+    }
     cplInterface.finalize();
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
@@ -34,7 +37,10 @@ void testDataInitialization(precice::testing::TestContext context, std::string c
 
     int dataID = cplInterface.getDataID("Data", meshTwoID);
     cplInterface.writeScalarData(dataID, 0, 2.0);
-    cplInterface.initialize();
+    double dt = cplInterface.initialize();
+    while (cplInterface.isCouplingOngoing()) {
+      dt = cplInterface.advance(dt);
+    }
     cplInterface.finalize();
   }
 }
