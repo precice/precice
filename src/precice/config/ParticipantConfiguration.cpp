@@ -274,9 +274,11 @@ void ParticipantConfiguration::xmlTagCallback(
     std::string name    = tag.getStringAttributeValue(ATTR_NAME);
     auto        dynamic = tag.getBooleanAttributeValue(ATTR_DYNAMIC);
 
-    PRECICE_CHECK(!dynamic || _experimental,
-                  "You tried to configure the provided mesh \"{}\" to use the option dynamic=\"true\", which is currently still experimental. Please set experimental=\"true\", if you want to use this feature.", name);
-    PRECICE_WARN("You configured the provided mesh \"{}\" to use the option dynamic=\"true\", which is currently still experimental. Use with care.", name);
+    if (dynamic) {
+      PRECICE_CHECK(_experimental,
+                    "You tried to configure the provided mesh \"{}\" to use the option dynamic=\"true\", which is currently still experimental. Please set experimental=\"true\", if you want to use this feature.", name);
+      PRECICE_WARN("You configured the provided mesh \"{}\" to use the option dynamic=\"true\", which is currently still experimental. Use with care.", name);
+    }
 
     mesh::PtrMesh mesh = _meshConfig->getMesh(name);
     PRECICE_CHECK(mesh,
