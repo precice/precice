@@ -62,6 +62,7 @@ target_sources(testprecice
     src/partition/tests/ReceivedPartitionTest.cpp
     src/partition/tests/fixtures.hpp
     src/precice/tests/DataContextTest.cpp
+    src/precice/tests/MeshContextTests.cpp
     src/precice/tests/ParallelTests.cpp
     src/precice/tests/ToolingTests.cpp
     src/precice/tests/VersioningTests.cpp
