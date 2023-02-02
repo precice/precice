@@ -50,7 +50,7 @@ void addSubtagsToParents(std::list<xml::XMLTag> &subtags,
                          std::list<xml::XMLTag> &parents)
 {
   for (auto &p : parents) {
-    std::for_each(subtags.begin(), subtags.end(), [&p](auto &s) { p.addSubtag(s); });
+    p.addSubtags(subtags);
   }
 }
 
@@ -272,10 +272,10 @@ MappingConfiguration::MappingConfiguration(
   addSubtagsToParents(attributelessRBFs, rbfAliasTag);
 
   // Add all tags to the mapping tag
-  std::for_each(projectionTags.begin(), projectionTags.end(), [&parent](auto &s) { parent.addSubtag(s); });
-  std::for_each(rbfIterativeTags.begin(), rbfIterativeTags.end(), [&parent](auto &s) { parent.addSubtag(s); });
-  std::for_each(rbfDirectTags.begin(), rbfDirectTags.end(), [&parent](auto &s) { parent.addSubtag(s); });
-  std::for_each(rbfAliasTag.begin(), rbfAliasTag.end(), [&parent](auto &s) { parent.addSubtag(s); });
+  parent.addSubtags(projectionTags);
+  parent.addSubtags(rbfIterativeTags);
+  parent.addSubtags(rbfDirectTags);
+  parent.addSubtags(rbfAliasTag);
 }
 
 void MappingConfiguration::xmlTagCallback(

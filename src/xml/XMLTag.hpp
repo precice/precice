@@ -135,6 +135,12 @@ public:
 
   bool hasAttribute(const std::string &attributeName);
 
+  template <typename Container>
+  void addSubtags(const Container &subtags)
+  {
+    std::for_each(subtags.begin(), subtags.end(), [this](auto &s) { this->addSubtag(s); });
+  }
+
   /**
    * @brief Returns name (without namespace).
    *
