@@ -29,21 +29,6 @@ namespace precice::mapping {
 
 namespace {
 
-// creates a tag including documentation and stores the tag in the provided
-// \p storage (usually a std::list of tags)
-template <typename Listener, typename TagStorage>
-void createTag(Listener &              listener,
-               const std::string &     name,
-               xml::XMLTag::Occurrence occurrence,
-               const std::string &     xmlNamespace,
-               TagStorage &            storage,
-               std::string             documentation)
-{
-  xml::XMLTag tag(listener, name, occurrence, xmlNamespace);
-  tag.setDocumentation(documentation);
-  storage.push_back(tag);
-}
-
 // given a list of subtags and parent tags, this function adds all subtags to all
 // parent tags
 void addSubtagsToParents(std::list<xml::XMLTag> &subtags,
@@ -175,14 +160,17 @@ MappingConfiguration::MappingConfiguration(
 
   // First, we create the available tags
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
-  std::list<XMLTag>  projectionTags, rbfDirectTags, rbfIterativeTags, rbfAliasTag;
-  createTag(*this, TYPE_NEAREST_NEIGHBOR, occ, TAG, projectionTags, "Nearest-neighbour mapping which uses a rstar-spacial index tree to index meshes and run nearest-neighbour queries.");
-  createTag(*this, TYPE_NEAREST_PROJECTION, occ, TAG, projectionTags, "Nearest-projection mapping which uses a rstar-spacial index tree to index meshes and locate the nearest projections.");
-  createTag(*this, TYPE_NEAREST_NEIGHBOR_GRADIENT, occ, TAG, projectionTags, "Nearest-neighbor-gradient mapping which uses nearest-neighbor mapping with an additional linear approximation using gradient data.");
-  createTag(*this, TYPE_LINEAR_CELL_INTERPOLATION, occ, TAG, projectionTags, "Linear cell interpolation mapping which uses a rstar-spacial index tree to index meshes and locate the nearest cell. Only supports 2D meshes.");
-  createTag(*this, TYPE_RBF_GLOBAL_DIRECT, occ, TAG, rbfDirectTags, "Radial-basis-function mapping using a direct solver with a gather-scatter parallelism.");
-  createTag(*this, TYPE_RBF_GLOBAL_ITERATIVE, occ, TAG, rbfIterativeTags, "Radial-basis-function mapping using an iterative solver with a distributed parallelism.");
-  createTag(*this, TYPE_RBF_ALIAS, occ, TAG, rbfAliasTag, "Alias tag, which auto-selects a radial-basis-function mapping depending on the simulation parameter,");
+  std::list<XMLTag>  projectionTags{
+      XMLTag{*this, TYPE_NEAREST_NEIGHBOR, occ, TAG}.setDocumentation("Nearest-neighbour mapping which uses a rstar-spacial index tree to index meshes and run nearest-neighbour queries."),
+      XMLTag{*this, TYPE_NEAREST_PROJECTION, occ, TAG}.setDocumentation("Nearest-projection mapping which uses a rstar-spacial index tree to index meshes and locate the nearest projections."),
+      XMLTag{*this, TYPE_NEAREST_NEIGHBOR_GRADIENT, occ, TAG}.setDocumentation("Nearest-neighbor-gradient mapping which uses nearest-neighbor mapping with an additional linear approximation using gradient data."),
+      XMLTag{*this, TYPE_LINEAR_CELL_INTERPOLATION, occ, TAG}.setDocumentation("Linear cell interpolation mapping which uses a rstar-spacial index tree to index meshes and locate the nearest cell. Only supports 2D meshes.")};
+  std::list<XMLTag> rbfDirectTags{
+      XMLTag{*this, TYPE_RBF_GLOBAL_DIRECT, occ, TAG}.setDocumentation("Radial-basis-function mapping using a direct solver with a gather-scatter parallelism.")};
+  std::list<XMLTag> rbfIterativeTags{
+      XMLTag{*this, TYPE_RBF_GLOBAL_ITERATIVE, occ, TAG}.setDocumentation("Radial-basis-function mapping using an iterative solver with a distributed parallelism.")};
+  std::list<XMLTag> rbfAliasTag{
+      XMLTag{*this, TYPE_RBF_ALIAS, occ, TAG}.setDocumentation("Alias tag, which auto-selects a radial-basis-function mapping depending on the simulation parameter,")};
 
   // List of all attributes with corresponding documentation
   auto attrDirection = XMLAttribute<std::string>(ATTR_DIRECTION)
@@ -224,12 +212,12 @@ MappingConfiguration::MappingConfiguration(
   // Now we take care of the subtag basis function
   // First, we have the tags using a support radius
   XMLTag::Occurrence once = XMLTag::OCCUR_NOT_OR_ONCE;
-  std::list<XMLTag>  supportRadiusRBF;
-  createTag(*this, RBF_CPOLYNOMIAL_C0, once, SUBTAG_BASIS_FUNCTION, supportRadiusRBF, "Wendland C0 function");
-  createTag(*this, RBF_CPOLYNOMIAL_C2, once, SUBTAG_BASIS_FUNCTION, supportRadiusRBF, "Wendland C2 function");
-  createTag(*this, RBF_CPOLYNOMIAL_C4, once, SUBTAG_BASIS_FUNCTION, supportRadiusRBF, "Wendland C4 function");
-  createTag(*this, RBF_CPOLYNOMIAL_C6, once, SUBTAG_BASIS_FUNCTION, supportRadiusRBF, "Wendland C6 function");
-  createTag(*this, RBF_CTPS_C2, once, SUBTAG_BASIS_FUNCTION, supportRadiusRBF, "Compact thin-plate-spline C2");
+  std::list<XMLTag>  supportRadiusRBF{
+      XMLTag{*this, RBF_CPOLYNOMIAL_C0, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Wendland C0 function"),
+      XMLTag{*this, RBF_CPOLYNOMIAL_C2, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Wendland C2 function"),
+      XMLTag{*this, RBF_CPOLYNOMIAL_C4, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Wendland C4 function"),
+      XMLTag{*this, RBF_CPOLYNOMIAL_C6, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Wendland C6 function"),
+      XMLTag{*this, RBF_CTPS_C2, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Compact thin-plate-spline C2")};
 
   auto attrSupportRadius = XMLAttribute<double>(ATTR_SUPPORT_RADIUS)
                                .setDocumentation("Support radius of each RBF basis function (global choice).");
@@ -240,9 +228,9 @@ MappingConfiguration::MappingConfiguration(
   addSubtagsToParents(supportRadiusRBF, rbfAliasTag);
 
   // Now the tags using a shape parameter
-  std::list<XMLTag> shapeParameterRBF;
-  createTag(*this, RBF_MULTIQUADRICS, once, SUBTAG_BASIS_FUNCTION, shapeParameterRBF, "Multiquadrics");
-  createTag(*this, RBF_INV_MULTIQUADRICS, once, SUBTAG_BASIS_FUNCTION, shapeParameterRBF, "Inverse multiquadrics");
+  std::list<XMLTag> shapeParameterRBF{
+      XMLTag{*this, RBF_MULTIQUADRICS, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Multiquadrics"),
+      XMLTag{*this, RBF_INV_MULTIQUADRICS, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Inverse multiquadrics")};
 
   auto attrShapeParam = XMLAttribute<double>(ATTR_SHAPE_PARAM)
                             .setDocumentation("Specific shape parameter for RBF basis function.");
@@ -253,8 +241,8 @@ MappingConfiguration::MappingConfiguration(
   addSubtagsToParents(shapeParameterRBF, rbfAliasTag);
 
   // For the Gaussian, we need default values as the user can pass a support radius or a shape parameter
-  std::list<XMLTag> GaussRBF;
-  createTag(*this, RBF_GAUSSIAN, once, SUBTAG_BASIS_FUNCTION, GaussRBF, "Gaussian basis function accepting a support radius or a shape parameter.");
+  std::list<XMLTag> GaussRBF{
+      XMLTag{*this, RBF_GAUSSIAN, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Gaussian basis function accepting a support radius or a shape parameter.")};
   attrShapeParam.setDefaultValue(std::numeric_limits<double>::quiet_NaN());
   attrSupportRadius.setDefaultValue(std::numeric_limits<double>::quiet_NaN());
   addAttributes(GaussRBF, {attrShapeParam, attrSupportRadius});
@@ -263,9 +251,9 @@ MappingConfiguration::MappingConfiguration(
   addSubtagsToParents(GaussRBF, rbfAliasTag);
 
   // tags without an attribute
-  std::list<XMLTag> attributelessRBFs;
-  createTag(*this, RBF_TPS, once, SUBTAG_BASIS_FUNCTION, attributelessRBFs, "Thin-plate-splines");
-  createTag(*this, RBF_VOLUME_SPLINES, once, SUBTAG_BASIS_FUNCTION, attributelessRBFs, "Volume splines");
+  std::list<XMLTag> attributelessRBFs{
+      XMLTag{*this, RBF_TPS, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Thin-plate-splines"),
+      XMLTag{*this, RBF_VOLUME_SPLINES, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Volume splines")};
 
   addSubtagsToParents(attributelessRBFs, rbfIterativeTags);
   addSubtagsToParents(attributelessRBFs, rbfDirectTags);
