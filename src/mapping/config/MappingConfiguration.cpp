@@ -330,29 +330,7 @@ void MappingConfiguration::xmlTagCallback(
 
     ConfiguredMapping &mapping = _mappings.back();
 
-    BasisFunction basisFunction{};
-    if (basisFctName == RBF_TPS)
-      basisFunction = BasisFunction::ThinPlateSplines;
-    else if (basisFctName == RBF_MULTIQUADRICS)
-      basisFunction = BasisFunction::Multiquadrics;
-    else if (basisFctName == RBF_INV_MULTIQUADRICS)
-      basisFunction = BasisFunction::InverseMultiquadrics;
-    else if (basisFctName == RBF_VOLUME_SPLINES)
-      basisFunction = BasisFunction::VolumeSplines;
-    else if (basisFctName == RBF_GAUSSIAN)
-      basisFunction = BasisFunction::Gaussian;
-    else if (basisFctName == RBF_CTPS_C2)
-      basisFunction = BasisFunction::CompactThinPlateSplinesC2;
-    else if (basisFctName == RBF_CPOLYNOMIAL_C0)
-      basisFunction = BasisFunction::WendlandC0;
-    else if (basisFctName == RBF_CPOLYNOMIAL_C2)
-      basisFunction = BasisFunction::WendlandC2;
-    else if (basisFctName == RBF_CPOLYNOMIAL_C4)
-      basisFunction = BasisFunction::WendlandC4;
-    else if (basisFctName == RBF_CPOLYNOMIAL_C6)
-      basisFunction = BasisFunction::WendlandC6;
-    else
-      PRECICE_UNREACHABLE("Unknown basis function \"{}\".", basisFctName);
+    BasisFunction basisFunction = parseBasisFunctions(basisFctName);
 
     // The Gaussian RBF is always treated as a shape-parameter RBF. Hence, we have to convert the support radius, if necessary
     if (basisFunction == BasisFunction::Gaussian) {
@@ -531,5 +509,33 @@ const std::vector<MappingConfiguration::ConfiguredMapping> &MappingConfiguration
 bool MappingConfiguration::requiresBasisFunction(const std::string &mappingType) const
 {
   return mappingType == TYPE_RBF_GLOBAL_DIRECT || mappingType == TYPE_RBF_GLOBAL_ITERATIVE || mappingType == TYPE_RBF_ALIAS;
+}
+
+BasisFunction MappingConfiguration::parseBasisFunctions(const std::string &basisFctName) const
+{
+  BasisFunction basisFunction{};
+  if (basisFctName == RBF_TPS)
+    basisFunction = BasisFunction::ThinPlateSplines;
+  else if (basisFctName == RBF_MULTIQUADRICS)
+    basisFunction = BasisFunction::Multiquadrics;
+  else if (basisFctName == RBF_INV_MULTIQUADRICS)
+    basisFunction = BasisFunction::InverseMultiquadrics;
+  else if (basisFctName == RBF_VOLUME_SPLINES)
+    basisFunction = BasisFunction::VolumeSplines;
+  else if (basisFctName == RBF_GAUSSIAN)
+    basisFunction = BasisFunction::Gaussian;
+  else if (basisFctName == RBF_CTPS_C2)
+    basisFunction = BasisFunction::CompactThinPlateSplinesC2;
+  else if (basisFctName == RBF_CPOLYNOMIAL_C0)
+    basisFunction = BasisFunction::WendlandC0;
+  else if (basisFctName == RBF_CPOLYNOMIAL_C2)
+    basisFunction = BasisFunction::WendlandC2;
+  else if (basisFctName == RBF_CPOLYNOMIAL_C4)
+    basisFunction = BasisFunction::WendlandC4;
+  else if (basisFctName == RBF_CPOLYNOMIAL_C6)
+    basisFunction = BasisFunction::WendlandC6;
+  else
+    PRECICE_UNREACHABLE("Unknown basis function \"{}\".", basisFctName);
+  return basisFunction;
 }
 } // namespace precice::mapping

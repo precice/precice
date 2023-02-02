@@ -203,5 +203,8 @@ private:
   /// Indicates whether the mapping here requires a basis function/ subtag,
   /// given the mapping type (e.g. nearest-neighbor).
   bool requiresBasisFunction(const std::string &mappingType) const;
+
+  /// Given a basis function name (as a string), transforms the string into an enum of the BasisFunction
+  BasisFunction parseBasisFunctions(const std::string &basisFctName) const;
 };
 } // namespace precice::mapping
