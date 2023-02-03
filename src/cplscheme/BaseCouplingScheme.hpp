@@ -75,6 +75,11 @@ public:
       int                           extrapolationOrder);
 
   /**
+   * @brief Getter for _localParticipant
+   */
+  std::string getLocalParticipant() const override final;
+
+  /**
    * @brief Getter for _sendsInitializedData
    * @returns _sendsInitializedData
    */

@@ -156,6 +156,8 @@ public:
   /// Finalizes the coupling and disconnects communication.
   virtual void finalize() = 0;
 
+  virtual std::string getLocalParticipant() const = 0;
+
   /// Returns list of all coupling partners.
   virtual std::vector<std::string> getCouplingPartners() const = 0;
 

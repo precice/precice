@@ -106,6 +106,8 @@ public:
   /// Finalizes the coupling and disconnects communication.
   void finalize() final override;
 
+  std::string getLocalParticipant() const final override;
+
   /// Returns list of all coupling partners
   std::vector<std::string> getCouplingPartners() const final override;
 

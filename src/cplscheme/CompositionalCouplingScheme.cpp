@@ -132,6 +132,12 @@ void CompositionalCouplingScheme::finalize()
   }
 }
 
+std::string CompositionalCouplingScheme::getLocalParticipant() const
+{
+  // Returns the local participant of the first scheme
+  return allSchemes().front()->getLocalParticipant();
+}
+
 std::vector<std::string> CompositionalCouplingScheme::getCouplingPartners() const
 {
   PRECICE_TRACE();

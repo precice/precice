@@ -83,6 +83,11 @@ BaseCouplingScheme::BaseCouplingScheme(
   }
 }
 
+std::string BaseCouplingScheme::getLocalParticipant() const
+{
+  return _localParticipant;
+}
+
 bool BaseCouplingScheme::isImplicitCouplingScheme() const
 {
   PRECICE_ASSERT(_couplingMode != Undefined);

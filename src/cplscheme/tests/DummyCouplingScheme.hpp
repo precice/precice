@@ -91,6 +91,15 @@ public:
   /*
    * @brief Not implemented.
    */
+  virtual std::string getLocalParticipant() const
+  {
+    PRECICE_ASSERT(false);
+    return {};
+  }
+
+  /*
+   * @brief Not implemented.
+   */
   std::vector<std::string> getCouplingPartners() const override final
   {
     PRECICE_ASSERT(false);
