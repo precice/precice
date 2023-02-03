@@ -26,11 +26,6 @@ public:
       int maxTimesteps);
 
   /**
-   * @brief Destructor, empty.
-   */
-  //virtual ~DummyCouplingScheme() {}
-
-  /**
    * @brief
    */
   void initialize(
@@ -69,11 +64,6 @@ public:
   void addComputedTime(double timeToAdd) override final
   { /* Do nothing */
   }
-
-  /**
-   * @brief
-   */
-  //void advance() override final;
 
   ChangedMeshes firstSynchronization(const ChangedMeshes &changes) override;
 
@@ -241,6 +231,14 @@ public:
   }
 
   bool hasConverged() const override;
+
+  /**
+   * @brief Not implemented.
+   */
+  void updateDynamicParticipants(const std::set<std::string> &dynamicParticipants) override final
+  {
+    PRECICE_ASSERT(false);
+  }
 
 private:
   mutable logging::Logger _log{"cplscheme::tests::DummyCouplingScheme"};

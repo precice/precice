@@ -358,4 +358,12 @@ bool CompositionalCouplingScheme::hasConverged() const
   return _implicitScheme->hasConverged();
 }
 
+void CompositionalCouplingScheme::updateDynamicParticipants(const std::set<std::string> &dynamicParticipants)
+{
+  PRECICE_TRACE();
+  for (auto scheme : schemesToRun()) {
+    scheme->updateDynamicParticipants(dynamicParticipants);
+  }
+}
+
 } // namespace precice::cplscheme

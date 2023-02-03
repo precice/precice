@@ -386,6 +386,14 @@ protected:
    */
   bool reachedEndOfTimeWindow();
 
+  void updateDynamicParticipants(const std::set<std::string> &dynamicParticipants) override final;
+
+protected:
+  bool isSynchronizationRequired() const
+  {
+    return _isSynchonizationRequired;
+  }
+
 private:
   /// Coupling mode used by coupling scheme.
   CouplingMode _couplingMode = Undefined;
@@ -470,6 +478,9 @@ private:
 
   /// Smallest number, taking validDigits into account: eps = std::pow(10.0, -1 * validDigits)
   const double _eps;
+
+  /// Is either the local or the remote coupling partner dynamic?
+  bool _isSynchonizationRequired = false;
 
   /**
    * @brief Holds meta information to perform a convergence measurement.

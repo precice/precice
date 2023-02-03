@@ -99,6 +99,21 @@ bool BaseCouplingScheme::hasConverged() const
   return _hasConverged;
 }
 
+void BaseCouplingScheme::updateDynamicParticipants(const std::set<std::string> &dynamicParticipants)
+{
+  if (dynamicParticipants.count(_localParticipant) == 1) {
+    _isSynchonizationRequired = true;
+  } else {
+    auto partners = getCouplingPartners();
+    for (const auto &partner : partners) {
+      if (dynamicParticipants.count(partner) == 1) {
+        _isSynchonizationRequired = true;
+        return;
+      }
+    }
+  }
+}
+
 void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendData)
 {
   PRECICE_TRACE();
