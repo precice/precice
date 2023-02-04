@@ -28,14 +28,14 @@ int main(int argc, char **argv)
   SolverInterface interface(solverName, configFileName, commRank, commSize);
 
   if (solverName == "SolverOne") {
-    dataWriteName = "dataOne";
-    dataReadName  = "dataTwo";
-    meshName      = "MeshOne";
+    dataWriteName = "Data-One";
+    dataReadName  = "Data-Two";
+    meshName      = "Mesh-One";
   }
   if (solverName == "SolverTwo") {
-    dataReadName  = "dataOne";
-    dataWriteName = "dataTwo";
-    meshName      = "MeshTwo";
+    dataReadName  = "Data-One";
+    dataWriteName = "Data-Two";
+    meshName      = "Mesh-Two";
   }
 
   int meshID           = interface.getMeshID(meshName);
