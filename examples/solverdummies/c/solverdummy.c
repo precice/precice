@@ -42,12 +42,12 @@ int main(int argc, char **argv)
   if (strcmp(participantName, "SolverOne") == 0) {
     writeDataName = "dataOne";
     readDataName  = "dataTwo";
-    meshName      = "MeshOne";
+    meshName      = "Mesh-One";
   }
   if (strcmp(participantName, "SolverTwo") == 0) {
     writeDataName = "dataTwo";
     readDataName  = "dataOne";
-    meshName      = "MeshTwo";
+    meshName      = "Mesh-Two";
   }
 
   meshID      = precicec_getMeshID(meshName);
