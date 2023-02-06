@@ -78,50 +78,68 @@ struct BackendSelector<RBFBackend::PETSc, RBF> {
 };
 #endif
 
-// The actual instantion helper, which avoids enumerating all mapping implementations (more will come) with all RBF kernels
-// The first three arguments of the constructor are prescribed: constraint, dimension and the RBF function object, all other
-// constructor arguments are just forwareded. The first argument (BasisFunction) indicated then the actual instantiation to return.
-template <RBFBackend T, typename... Args>
-PtrMapping instantiateRBFMapping(BasisFunction functionType, mapping::Mapping::Constraint &constraint, int dimension, double supportRadius, double shapeParameter,
+// Variant holding all available RBF classes
+using rbf_variant_t = std::variant<CompactPolynomialC0, CompactPolynomialC2, CompactPolynomialC4, CompactPolynomialC6, CompactThinPlateSplinesC2, ThinPlateSplines, VolumeSplines, Multiquadrics, InverseMultiquadrics, Gaussian>;
+
+// The actual instantiation of the mapping class, which is called by the visitor \ref getRBFMapping
+template <RBFBackend T, typename RADIAL_BASIS_FUNCTION_T, typename... Args>
+PtrMapping instantiateRBFMapping(mapping::Mapping::Constraint &constraint, int dimension, RADIAL_BASIS_FUNCTION_T function,
                                  Args &&... args)
+{
+  return PtrMapping(new typename BackendSelector<T, RADIAL_BASIS_FUNCTION_T>::type(constraint, dimension, function, std::forward<Args>(args)...));
+}
+
+// Constrcuts the RBF function based on the functionType
+rbf_variant_t constructRBF(BasisFunction functionType, double supportRadius, double shapeParameter)
 {
   switch (functionType) {
   case BasisFunction::WendlandC0: {
-    return PtrMapping(new typename BackendSelector<T, CompactPolynomialC0>::type(constraint, dimension, mapping::CompactPolynomialC0(supportRadius), std::forward<Args>(args)...));
+    return mapping::CompactPolynomialC0(supportRadius);
   }
   case BasisFunction::WendlandC2: {
-    return PtrMapping(new typename BackendSelector<T, CompactPolynomialC2>::type(constraint, dimension, mapping::CompactPolynomialC2(supportRadius), std::forward<Args>(args)...));
+    return mapping::CompactPolynomialC2(supportRadius);
   }
   case BasisFunction::WendlandC4: {
-    return PtrMapping(new typename BackendSelector<T, CompactPolynomialC4>::type(constraint, dimension, mapping::CompactPolynomialC4(supportRadius), std::forward<Args>(args)...));
+    return mapping::CompactPolynomialC4(supportRadius);
   }
   case BasisFunction::WendlandC6: {
-    return PtrMapping(new typename BackendSelector<T, CompactPolynomialC6>::type(constraint, dimension, mapping::CompactPolynomialC6(supportRadius), std::forward<Args>(args)...));
+    return mapping::CompactPolynomialC6(supportRadius);
   }
   case BasisFunction::CompactThinPlateSplinesC2: {
-    return PtrMapping(new typename BackendSelector<T, CompactThinPlateSplinesC2>::type(constraint, dimension, mapping::CompactThinPlateSplinesC2(supportRadius), std::forward<Args>(args)...));
+    return mapping::CompactThinPlateSplinesC2(supportRadius);
   }
   case BasisFunction::ThinPlateSplines: {
-    return PtrMapping(new typename BackendSelector<T, ThinPlateSplines>::type(constraint, dimension, mapping::ThinPlateSplines(), std::forward<Args>(args)...));
+    return mapping::ThinPlateSplines();
   }
   case BasisFunction::VolumeSplines: {
-    return PtrMapping(new typename BackendSelector<T, VolumeSplines>::type(constraint, dimension, mapping::VolumeSplines(), std::forward<Args>(args)...));
+    return mapping::VolumeSplines();
   }
   case BasisFunction::Multiquadrics: {
-    return PtrMapping(new typename BackendSelector<T, Multiquadrics>::type(constraint, dimension, mapping::Multiquadrics(shapeParameter), std::forward<Args>(args)...));
+    return mapping::Multiquadrics(shapeParameter);
   }
   case BasisFunction::InverseMultiquadrics: {
-    return PtrMapping(new typename BackendSelector<T, InverseMultiquadrics>::type(constraint, dimension, mapping::InverseMultiquadrics(shapeParameter), std::forward<Args>(args)...));
+    return mapping::InverseMultiquadrics(shapeParameter);
   }
   case BasisFunction::Gaussian: {
-    return PtrMapping(new typename BackendSelector<T, Gaussian>::type(constraint, dimension, mapping::Gaussian(shapeParameter), std::forward<Args>(args)...));
+    return mapping::Gaussian(shapeParameter);
   }
   default:
     PRECICE_UNREACHABLE("No instantiation was found for the selected basis function.");
-    return nullptr;
   }
 }
 
+// The actual instantion helper, which avoids enumerating all mapping implementations (more will come) with all RBF kernels
+// The first three arguments of the constructor are prescribed: constraint, dimension and the RBF function object, all other
+// constructor arguments are just forwareded. The first argument (BasisFunction) indicates then the actual instantiation to return.
+template <RBFBackend T, typename... Args>
+PtrMapping getRBFMapping(BasisFunction functionType, mapping::Mapping::Constraint &constraint, int dimension, double supportRadius, double shapeParameter,
+                         Args &&... args)
+{
+  // First, construct the RBF function
+  auto functionVariant = constructRBF(functionType, supportRadius, shapeParameter);
+  // ... and instantiate the corresponding RBF mapping class
+  return std::visit([&](auto &&func) { return instantiateRBFMapping<T>(constraint, dimension, func, std::forward<Args>(args)...); }, functionVariant);
+}
 } // namespace
 
 MappingConfiguration::MappingConfiguration(
@@ -307,7 +325,7 @@ void MappingConfiguration::xmlTagCallback(
 
     // Instantiate the RBF mapping classes
     if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalDirect) {
-      mapping.mapping = instantiateRBFMapping<RBFBackend::Eigen>(basisFunction, constraintValue, mapping.fromMesh->getDimensions(), supportRadius, shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial);
+      mapping.mapping = getRBFMapping<RBFBackend::Eigen>(basisFunction, constraintValue, mapping.fromMesh->getDimensions(), supportRadius, shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial);
     } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalIterative) {
 #ifndef PRECICE_NO_PETSC
       // for petsc initialization
@@ -318,7 +336,7 @@ void MappingConfiguration::xmlTagCallback(
       utils::Petsc::initialize(&argc, &argv, utils::Parallel::current()->comm);
       delete[] arg;
 
-      mapping.mapping = instantiateRBFMapping<RBFBackend::PETSc>(basisFunction, constraintValue, mapping.fromMesh->getDimensions(), supportRadius, shapeParameter, _rbfConfig.deadAxis, _rbfConfig.solverRtol, _rbfConfig.polynomial, _rbfConfig.preallocation);
+      mapping.mapping = getRBFMapping<RBFBackend::PETSc>(basisFunction, constraintValue, mapping.fromMesh->getDimensions(), supportRadius, shapeParameter, _rbfConfig.deadAxis, _rbfConfig.solverRtol, _rbfConfig.polynomial, _rbfConfig.preallocation);
 #else
       PRECICE_CHECK(false, "The global-iterative RBF solver requires a preCICE build with PETSc enabled.");
 #endif
