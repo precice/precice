@@ -3,6 +3,7 @@
 #include <Eigen/Core>
 #include <map>
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
 #include <vector>
@@ -168,13 +169,13 @@ public:
     return _fullName;
   }
 
-  double getDoubleAttributeValue(const std::string &name) const;
+  double getDoubleAttributeValue(const std::string &name, std::optional<double> default_value = std::nullopt) const;
 
-  int getIntAttributeValue(const std::string &name) const;
+  int getIntAttributeValue(const std::string &name, std::optional<int> default_value = std::nullopt) const;
 
-  const std::string &getStringAttributeValue(const std::string &name) const;
+  const std::string &getStringAttributeValue(const std::string &name, std::optional<std::string> default_value = std::nullopt) const;
 
-  bool getBooleanAttributeValue(const std::string &name) const;
+  bool getBooleanAttributeValue(const std::string &name, std::optional<bool> default_value = std::nullopt) const;
 
   const AttributeMap<double> &getDoubleAttributes() const
   {
