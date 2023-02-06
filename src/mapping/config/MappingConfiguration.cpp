@@ -51,32 +51,6 @@ void addAttributes(TagStorage &storage, const std::vector<variant_t> &attributes
   }
 }
 
-// helper for the function below
-template <typename>
-inline constexpr bool always_false_v = false;
-
-// Reads and returns an attribute value of any type (bool, string, double) from the tag,
-// if the attribute is actually contained in the tag. If the attribute is not in the tag,
-// an \p initializationValue is returned.
-template <typename AttributeType>
-AttributeType getAttributeWithDefault(xml::XMLTag &tag, const std::string &attributeName, AttributeType initializationValue)
-{
-  AttributeType value = initializationValue;
-  if (tag.hasAttribute(attributeName)) {
-    using T = std::decay_t<AttributeType>;
-    if constexpr (std::is_same_v<T, double>) {
-      value = tag.getDoubleAttributeValue(attributeName);
-    } else if constexpr (std::is_same_v<T, bool>) {
-      value = tag.getBooleanAttributeValue(attributeName);
-    } else if constexpr (std::is_same_v<T, std::string>) {
-      value = tag.getStringAttributeValue(attributeName);
-    } else {
-      static_assert(always_false_v<T>, "Attribute type is not supported.");
-    }
-  }
-  return value;
-}
-
 // Enum required for the RBF instantiations
 enum struct RBFBackend {
   Eigen,
@@ -280,12 +254,12 @@ void MappingConfiguration::xmlTagCallback(
     std::string constraint = tag.getStringAttributeValue(ATTR_CONSTRAINT);
 
     // optional tags
-    bool        xDead         = getAttributeWithDefault(tag, ATTR_X_DEAD, false);
-    bool        yDead         = getAttributeWithDefault(tag, ATTR_Y_DEAD, false);
-    bool        zDead         = getAttributeWithDefault(tag, ATTR_Z_DEAD, false);
-    double      solverRtol    = getAttributeWithDefault(tag, ATTR_SOLVER_RTOL, 1e-9);
-    std::string strPolynomial = getAttributeWithDefault(tag, ATTR_POLYNOMIAL, POLYNOMIAL_SEPARATE);
-    std::string strPrealloc   = getAttributeWithDefault(tag, ATTR_PREALLOCATION, PREALLOCATION_TREE);
+    bool        xDead         = tag.getBooleanAttributeValue(ATTR_X_DEAD, false);
+    bool        yDead         = tag.getBooleanAttributeValue(ATTR_Y_DEAD, false);
+    bool        zDead         = tag.getBooleanAttributeValue(ATTR_Z_DEAD, false);
+    double      solverRtol    = tag.getDoubleAttributeValue(ATTR_SOLVER_RTOL, 1e-9);
+    std::string strPolynomial = tag.getStringAttributeValue(ATTR_POLYNOMIAL, POLYNOMIAL_SEPARATE);
+    std::string strPrealloc   = tag.getStringAttributeValue(ATTR_PREALLOCATION, PREALLOCATION_TREE);
 
     // Convert raw string into enum types as the constructors take enums
     if (constraint == CONSTRAINT_CONSERVATIVE) {
@@ -313,8 +287,8 @@ void MappingConfiguration::xmlTagCallback(
     PRECICE_CHECK(_mappings.back().mapping == nullptr, "More than one basis-function was defined for the.");
 
     std::string basisFctName   = tag.getName();
-    double      supportRadius  = getAttributeWithDefault(tag, ATTR_SUPPORT_RADIUS, 0.);
-    double      shapeParameter = getAttributeWithDefault(tag, ATTR_SHAPE_PARAM, 0.);
+    double      supportRadius  = tag.getDoubleAttributeValue(ATTR_SUPPORT_RADIUS, 0.);
+    double      shapeParameter = tag.getDoubleAttributeValue(ATTR_SHAPE_PARAM, 0.);
 
     ConfiguredMapping &mapping = _mappings.back();
 
