@@ -63,7 +63,7 @@ void AitkenAcceleration::performAcceleration(
   concatenateCouplingData(cplData, _dataIDs, _values, _oldValues);
 
   // Compute current residual = values - oldValues
-  auto residuals = _values - _oldValues;
+  Eigen::VectorXd residuals = _values - _oldValues;
 
   // Compute residual deltas (= residuals - oldResiduals) and store it in _oldResiduals
   Eigen::VectorXd residualDeltas = residuals - _oldResiduals;
