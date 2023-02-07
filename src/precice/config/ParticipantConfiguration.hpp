@@ -7,7 +7,7 @@
 #include "io/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "mapping/SharedPointer.hpp"
-#include "mapping/config/MappingConfiguration.hpp"
+#include "mapping/config/MappingConfigurationTypes.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "partition/ReceivedPartition.hpp"
 #include "precice/config/SolverInterfaceConfiguration.hpp"
