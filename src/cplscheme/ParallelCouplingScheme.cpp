@@ -25,6 +25,9 @@ ParallelCouplingScheme::ParallelCouplingScheme(
 
 CouplingScheme::ChangedMeshes ParallelCouplingScheme::firstSynchronization(const CouplingScheme::ChangedMeshes &changes)
 {
+  if (!isSynchronizationRequired()) {
+    return {};
+  }
   PRECICE_DEBUG("Exchanging mesh changes...");
   if (doesFirstStep()) { // first participant
     sendLocalChanges(changes);

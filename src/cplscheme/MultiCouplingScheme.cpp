@@ -107,7 +107,7 @@ void MultiCouplingScheme::exchangeInitialData()
 
 CouplingScheme::ChangedMeshes MultiCouplingScheme::firstSynchronization(const CouplingScheme::ChangedMeshes &changes)
 {
-  if (!reachedEndOfTimeWindow()) {
+  if (!reachedEndOfTimeWindow() || !isSynchronizationRequired()) {
     return {};
   }
 

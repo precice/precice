@@ -80,9 +80,11 @@ void SerialCouplingScheme::performReceiveOfFirstAdvance()
   if (doesFirstStep()) {
     // do nothing
   } else { // second participant
-    PRECICE_DEBUG("Receiving mesh changes...");
-    auto changes = receiveRemoteChanges();
-    PRECICE_CHECK(changes.empty(), "Mesh adaptivity in the first step is forbidden.");
+    if (isSynchronizationRequired()) {
+      PRECICE_DEBUG("Receiving mesh changes...");
+      auto changes = receiveRemoteChanges();
+      PRECICE_CHECK(changes.empty(), "Mesh adaptivity in the first step is forbidden.");
+    }
 
     receiveAndSetTimeWindowSize();
     PRECICE_DEBUG("Receiving data...");
@@ -93,8 +95,8 @@ void SerialCouplingScheme::performReceiveOfFirstAdvance()
 
 CouplingScheme::ChangedMeshes SerialCouplingScheme::firstSynchronization(const CouplingScheme::ChangedMeshes &changes)
 {
-  PRECICE_DEBUG("First snyc");
-  if (!reachedEndOfTimeWindow()) {
+  PRECICE_TRACE();
+  if (!isSynchronizationRequired() || !reachedEndOfTimeWindow()) {
     return {};
   };
   // First synchronization point always sends local changes
@@ -122,9 +124,9 @@ void SerialCouplingScheme::exchangeFirstData()
 
 CouplingScheme::ChangedMeshes SerialCouplingScheme::secondSynchronization()
 {
-  PRECICE_DEBUG("Second snyc");
+  PRECICE_TRACE();
   // Second synchronization point always receives remote changes
-  if (!reachedEndOfTimeWindow()) {
+  if (!reachedEndOfTimeWindow() || !isSynchronizationRequired()) {
     return {};
   };
   if (doesFirstStep() || isCouplingOngoing() || (isImplicitCouplingScheme() && not hasConverged())) {
