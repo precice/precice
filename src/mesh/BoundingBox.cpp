@@ -40,8 +40,8 @@ BoundingBox::BoundingBox(int dimension)
   _boundMax = Eigen::VectorXd(dimension);
 
   // Define 'illegal' BoundingBox: _boundMin > _boundMax
-  std::fill(_boundMin.data(), _boundMin.data() + _boundMin.rows(), std::numeric_limits<double>::max());
-  std::fill(_boundMax.data(), _boundMax.data() + _boundMax.rows(), std::numeric_limits<double>::lowest());
+  std::fill(_boundMin.begin(), _boundMin.end(), std::numeric_limits<double>::max());
+  std::fill(_boundMax.begin(), _boundMax.end(), std::numeric_limits<double>::lowest());
 }
 
 bool BoundingBox::operator==(const BoundingBox &otherBB) const
@@ -53,7 +53,7 @@ bool BoundingBox::operator==(const BoundingBox &otherBB) const
 
 bool BoundingBox::empty() const
 {
-  return (_boundMax - _boundMin).isZero();
+  return (_boundMax - _boundMin).isZero() || isDefault();
 }
 
 bool BoundingBox::isDefault() const
@@ -76,11 +76,7 @@ bool BoundingBox::contains(const mesh::Vertex &vertex) const
 Eigen::VectorXd BoundingBox::center() const
 {
   PRECICE_ASSERT(!isDefault(), "Data of the bounding box is at default state.");
-  Eigen::VectorXd cog(_dimensions);
-  for (int d = 0; d < _dimensions; d++) {
-    cog[d] = (_boundMax[d] + _boundMin[d]) / 2.0;
-  }
-  return cog;
+  return (_boundMax + _boundMin) * 0.5;
 }
 
 Eigen::VectorXd BoundingBox::minCorner() const
@@ -120,29 +116,23 @@ const std::vector<double> BoundingBox::dataVector() const
 void BoundingBox::expandBy(const BoundingBox &otherBB)
 {
   PRECICE_ASSERT(_dimensions == otherBB.getDimension(), "Other BoundingBox with different dimensions than this bounding box cannot be used to expand it.");
-  for (int d = 0; d < _dimensions; d++) {
-    _boundMin[d] = std::min(_boundMin[d], otherBB._boundMin[d]);
-    _boundMax[d] = std::max(_boundMax[d], otherBB._boundMax[d]);
-  }
+  _boundMin = _boundMin.cwiseMin(otherBB._boundMin);
+  _boundMax = _boundMax.cwiseMax(otherBB._boundMax);
 }
 
 void BoundingBox::expandBy(const Vertex &vertices)
 {
   PRECICE_ASSERT(_dimensions == vertices.getDimensions(), "Vertex with different dimensions than this bounding box cannot be used to expand it.");
-  const auto coords = vertices.rawCoords();
-  for (int d = 0; d < _dimensions; ++d) {
-    _boundMin[d] = std::min(coords[d], _boundMin[d]);
-    _boundMax[d] = std::max(coords[d], _boundMax[d]);
-  }
+  const auto coords = vertices.getCoords();
+  _boundMin         = _boundMin.cwiseMin(coords);
+  _boundMax         = _boundMax.cwiseMax(coords);
 }
 
 void BoundingBox::expandBy(double value)
 {
   if (!isDefault()) {
-    for (int d = 0; d < _dimensions; d++) {
-      _boundMin[d] -= value;
-      _boundMax[d] += value;
-    }
+    _boundMin.array() -= value;
+    _boundMax.array() += value;
   }
 }
 
