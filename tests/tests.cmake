@@ -3,6 +3,8 @@
 #
 target_sources(testprecice
     PRIVATE
+    tests/dynamic/selective-sync/ParallelExplicit.cpp
+    tests/dynamic/selective-sync/SerialExplicit.cpp
     tests/parallel/CouplingOnLine.cpp
     tests/parallel/ExportTimeseries.cpp
     tests/parallel/GlobalRBFPartitioning.cpp
@@ -191,4 +193,4 @@ target_sources(testprecice
     )
 
 # Contains the list of integration test suites
-set(PRECICE_TEST_SUITES Parallel QuasiNewton Serial)
+set(PRECICE_TEST_SUITES Dynamic Parallel QuasiNewton Serial)
