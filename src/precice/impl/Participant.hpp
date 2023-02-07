@@ -330,6 +330,12 @@ public:
 
   /// Returns all \ref ExportContext for exporting meshes and data.
   const std::vector<io::ExportContext> &exportContexts() const;
+
+  /// Is this participant dynamic?
+  bool isDynamic() const;
+
+  /// Returns the names of all dynamic participants including the local.
+  std::set<std::string> dynamicParticipants() const;
   /// @}
 
 private:

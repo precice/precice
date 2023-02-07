@@ -71,10 +71,12 @@ void Participant::provideMesh(const mesh::PtrMesh &mesh, bool dynamic)
   checkDuplicatedUse(mesh);
 
   PRECICE_ASSERT(mesh->getID() < (int) _meshContexts.size());
-  auto context                 = new MeshContext();
-  context->mesh                = mesh;
-  context->provideMesh         = true;
-  context->dynamic             = dynamic;
+  auto context         = new MeshContext();
+  context->mesh        = mesh;
+  context->provideMesh = true;
+  if (dynamic) {
+    context->dynamic = MeshContext::Dynamicity::Yes;
+  }
   _meshContexts[mesh->getID()] = context;
   _usedMeshContexts.push_back(context);
 }
@@ -402,6 +404,29 @@ void Participant::addExportContext(
 const std::vector<io::ExportContext> &Participant::exportContexts() const
 {
   return _exportContexts;
+}
+
+bool Participant::isDynamic() const
+{
+  return std::any_of(
+      _usedMeshContexts.begin(), _usedMeshContexts.end(),
+      [](auto context) { return context->provideMesh && context->dynamic != MeshContext::Dynamicity::No; });
+}
+
+std::set<std::string> Participant::dynamicParticipants() const
+{
+  std::set<std::string> names;
+  if (isDynamic()) {
+    names.insert(getName());
+  }
+  for (const MeshContext *meshContext : usedMeshContexts()) {
+    if (meshContext->provideMesh || meshContext->dynamic == MeshContext::Dynamicity::No) {
+      continue;
+    }
+    names.insert(meshContext->receiveMeshFrom);
+  }
+  PRECICE_WARN("Dynamic Participants are {}", names);
+  return names;
 }
 
 std::vector<PtrWatchPoint> &Participant::watchPoints()

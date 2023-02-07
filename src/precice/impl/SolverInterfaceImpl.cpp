@@ -244,6 +244,7 @@ void SolverInterfaceImpl::configure(
   cplscheme::PtrCouplingSchemeConfiguration cplSchemeConfig =
       config.getCouplingSchemeConfiguration();
   _couplingScheme = cplSchemeConfig->getCouplingScheme(_accessorName);
+  _couplingScheme->updateDynamicParticipants(_accessor->dynamicParticipants());
 
   // Register all MeshIds to the lock, but unlock them straight away as
   // writing is allowed after configuration.

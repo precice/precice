@@ -38,8 +38,14 @@ struct MeshContext {
   /// True, if accessor does create the mesh.
   bool provideMesh = false;
 
-  /// True, if the mesh is dynamic and may be changed locally or remotely
-  bool dynamic = false;
+  enum struct Dynamicity {
+    No,
+    Yes,
+    Transitively
+  };
+
+  /// Whether the mesh is static, dynamically provided or transitively dynamic via mappings or exchanges.
+  Dynamicity dynamic = Dynamicity::No;
 
   /// type of geometric filter
   partition::ReceivedPartition::GeometricFilter geoFilter = partition::ReceivedPartition::GeometricFilter::UNDEFINED;

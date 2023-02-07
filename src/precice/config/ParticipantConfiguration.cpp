@@ -28,6 +28,7 @@
 #include "precice/impl/Participant.hpp"
 #include "precice/impl/WatchIntegral.hpp"
 #include "precice/impl/WatchPoint.hpp"
+#include "precice/types.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 #include "utils/networking.hpp"
@@ -685,9 +686,36 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   // Doing this here prevents even more state in the ParticipantConfiguration
   if (_participants.size() > 1) {
     std::set<std::string> dynamicMeshes;
+    using Dynamicity = precice::impl::MeshContext::Dynamicity;
     for (const auto &participant : _participants) {
+      // Find directly provided
       for (const auto &context : participant->usedMeshContexts()) {
-        if (context->provideMesh && context->dynamic) {
+        if (context->provideMesh && context->dynamic == Dynamicity::Yes) {
+          PRECICE_WARN("Found dynamic mesh {} provided by {}", context->mesh->getName(), participant->getName());
+          dynamicMeshes.insert(context->mesh->getName());
+        }
+      }
+      std::map<std::string, std::set<std::string>> mappings;
+      for (const auto &rmc : participant->readMappingContexts()) {
+        auto from = rmc.mapping->getInputMesh()->getName();
+        auto to   = rmc.mapping->getOutputMesh()->getName();
+      }
+      for (const auto &wmc : participant->writeMappingContexts()) {
+        auto from = wmc.mapping->getInputMesh()->getName();
+        auto to   = wmc.mapping->getOutputMesh()->getName();
+        mappings[from].insert(to);
+        mappings[to].insert(from);
+      }
+      for (const auto &name : dynamicMeshes) {
+        if (auto match = mappings.find(name);
+            match != mappings.end()) {
+          PRECICE_WARN("Found transitively dynamic meshes {} via {} on {}", match->second, match->first, participant->getName());
+          dynamicMeshes.insert(match->second.begin(), match->second.end());
+        }
+      }
+      for (const auto &context : participant->usedMeshContexts()) {
+        if (context->provideMesh && context->dynamic == Dynamicity::Yes) {
+          PRECICE_WARN("Found dynamic mesh {} provided by {}", context->mesh->getName(), participant->getName());
           dynamicMeshes.insert(context->mesh->getName());
         }
       }
@@ -695,8 +723,12 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     if (!dynamicMeshes.empty()) {
       for (auto &participant : _participants) {
         for (auto &context : participant->usedMeshContexts()) {
-          if (!context->provideMesh && dynamicMeshes.count(context->mesh->getName()) != 0) {
-            context->dynamic = true;
+          PRECICE_WARN("Checking mesh {} of {}", context->mesh->getName(), participant->getName());
+          if (dynamicMeshes.count(context->mesh->getName()) != 0) {
+            PRECICE_WARN("Marking mesh {} received by {} as dynamic", context->mesh->getName(), participant->getName());
+            if (context->dynamic == Dynamicity::No) {
+              context->dynamic = Dynamicity::Transitively;
+            }
           }
         }
       }
