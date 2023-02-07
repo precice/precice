@@ -101,7 +101,7 @@ public:
 
   ~GinkgoRadialBasisFctSolver() = default;
 
-  GinkgoRadialBasisFctSolver(const GinkgoRadialBasisFctSolver &solver) = delete;
+  GinkgoRadialBasisFctSolver(const GinkgoRadialBasisFctSolver &solver)            = delete;
   GinkgoRadialBasisFctSolver &operator=(const GinkgoRadialBasisFctSolver &solver) = delete;
 
   /// Maps the given input data
@@ -251,8 +251,8 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
     this->_matrixV                = gko::share(GinkgoMatrix::create(this->_deviceExecutor, gko::dim<2>{outputSize, polyParams}));
 
     this->_assemblyEvent.start();
-    this->_ompExecutor->run(make_polynomial_fill_operation(this->_matrixQ->get_size()[0], this->_matrixQ->get_size()[1], this->_matrixQ->get_values(), inputVertices->get_values(), polyParams));
-    this->_ompExecutor->run(make_polynomial_fill_operation(this->_matrixV->get_size()[0], this->_matrixV->get_size()[1], this->_matrixV->get_values(), outputVertices->get_values(), polyParams));
+    this->_deviceExecutor->run(make_polynomial_fill_operation(this->_matrixQ->get_size()[0], this->_matrixQ->get_size()[1], this->_matrixQ->get_values(), inputVertices->get_values(), polyParams));
+    this->_deviceExecutor->run(make_polynomial_fill_operation(this->_matrixV->get_size()[0], this->_matrixV->get_size()[1], this->_matrixV->get_values(), outputVertices->get_values(), polyParams));
     this->_assemblyEvent.pause();
 
     this->_deviceExecutor->synchronize();
@@ -260,8 +260,8 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
 
   // Launch RBF fill kernel on device
   this->_assemblyEvent.start();
-  this->_ompExecutor->run(make_rbf_fill_operation(this->_rbfSystemMatrix->get_size()[0], this->_rbfSystemMatrix->get_size()[1], inputVertices->get_size()[1], activeAxis, this->_rbfSystemMatrix->get_values(), inputVertices->get_values(), inputVertices->get_values(), basisFunction.getFunctor(), basisFunction.getFunctionParameters(), Polynomial::ON == polynomial, polyparams)); // polynomial evaluates to true only if ON is set
-  this->_ompExecutor->run(make_rbf_fill_operation(this->_matrixA->get_size()[0], this->_matrixA->get_size()[1], inputVertices->get_size()[1], activeAxis, this->_matrixA->get_values(), inputVertices->get_values(), outputVertices->get_values(), basisFunction.getFunctor(), basisFunction.getFunctionParameters(), Polynomial::ON == polynomial, polyparams));
+  this->_deviceExecutor->run(make_rbf_fill_operation(this->_rbfSystemMatrix->get_size()[0], this->_rbfSystemMatrix->get_size()[1], inputVertices->get_size()[1], activeAxis, this->_rbfSystemMatrix->get_values(), inputVertices->get_values(), inputVertices->get_values(), basisFunction.getFunctor(), basisFunction.getFunctionParameters(), Polynomial::ON == polynomial, polyparams)); // polynomial evaluates to true only if ON is set
+  this->_deviceExecutor->run(make_rbf_fill_operation(this->_matrixA->get_size()[0], this->_matrixA->get_size()[1], inputVertices->get_size()[1], activeAxis, this->_matrixA->get_values(), inputVertices->get_values(), outputVertices->get_values(), basisFunction.getFunctor(), basisFunction.getFunctionParameters(), Polynomial::ON == polynomial, polyparams));
 
   // Wait for the kernels to finish
   this->_deviceExecutor->synchronize();

@@ -62,6 +62,40 @@ void create_rbf_system_matrix(std::shared_ptr<const DefaultExecutor> exec,
           mtx[i * rowLength + j] = 0;
         }
 
+#ifdef __NVCC__
+
+        // Use this as readonly shared buffer
+        __shared__ double prefetchedEvalPoint[3];
+
+        // Check if current block is at the end of a matrix row and induces a line break
+        if ((blockIdx.x * blockDim.x) % rowLength > ((blockIdx.x + 1) * blockDim.x - 1) % rowLength) {
+
+          // Since this block spans across two lines, we have to use global memory and cannot use prefetched memory
+          for (size_t k = 0; k < dataDimensionality; ++k) {
+            dist += (supportPoints[supportPointOffset + k] - targetPoints[evalPointOffset + k]) * (supportPoints[supportPointOffset + k] - targetPoints[evalPointOffset + k]) * static_cast<int>(activeAxis.at(k));
+          }
+
+        } else {
+
+          // If this block is indeed only in one row, we can make thread 0 in each block responsible for prefetching values into shared memory
+          if (0 == threadIdx.x) {
+            prefetchedEvalPoint[0] = targetPoints[evalPointOffset];
+            prefetchedEvalPoint[1] = targetPoints[evalPointOffset + 1];
+            prefetchedEvalPoint[2] = targetPoints[evalPointOffset + 2];
+          }
+          // Let all threads in a block wait until memory is prefetched
+          __syncthreads();
+
+          for (size_t k = 0; k < dataDimensionality; ++k) {
+            dist += (supportPoints[supportPointOffset + k] - prefetchedEvalPoint[k]) * (supportPoints[supportPointOffset + k] - prefetchedEvalPoint[k]) * static_cast<int>(activeAxis.at(k));
+          }
+        }
+
+        dist = std::sqrt(dist);
+
+        mtx[i * rowLength + j] = f(dist, rbf_params);
+
+#else
         // Loop over each dimension and calculate euclidian distance
         for (size_t k = 0; k < dataDimensionality; ++k) {
           dist += std::pow(supportPoints[supportPointOffset + k] - targetPoints[evalPointOffset + k], 2) * static_cast<int>(activeAxis.at(k));
@@ -70,6 +104,8 @@ void create_rbf_system_matrix(std::shared_ptr<const DefaultExecutor> exec,
         dist = std::sqrt(dist);
 
         mtx[i * rowLength + j] = f(dist, rbf_params);
+
+#endif
       },
       gko::dim<2>{n1, n2}, n2, dataDimensionality, activeAxis, mtx, supportPoints, targetPoints, f, rbf_params, addPolynomial, extraDims);
 }
