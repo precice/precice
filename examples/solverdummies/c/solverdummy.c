@@ -40,13 +40,13 @@ int main(int argc, char **argv)
   precicec_createSolverInterface(participantName, configFileName, solverProcessIndex, solverProcessSize);
 
   if (strcmp(participantName, "SolverOne") == 0) {
-    writeDataName = "dataOne";
-    readDataName  = "dataTwo";
+    writeDataName = "Data-One";
+    readDataName  = "Data-Two";
     meshName      = "Mesh-One";
   }
   if (strcmp(participantName, "SolverTwo") == 0) {
-    writeDataName = "dataTwo";
-    readDataName  = "dataOne";
+    writeDataName = "Data-Two";
+    readDataName  = "Data-One";
     meshName      = "Mesh-Two";
   }
 

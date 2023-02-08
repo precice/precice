@@ -15,14 +15,14 @@ PROGRAM main
   CALL getarg(2, participantName)
 
   IF(participantName .eq. 'SolverOne') THEN
-    writeDataName = 'dataOne'
-    readDataName = 'dataTwo'
-    meshName = 'MeshOne'
+    writeDataName = 'Data-One'
+    readDataName = 'Data-Two'
+    meshName = 'Mesh-One'
   ENDIF
   IF(participantName .eq. 'SolverTwo') THEN
-    writeDataName = 'dataTwo'
-    readDataName = 'dataOne'
-    meshName = 'MeshTwo'
+    writeDataName = 'Data-Two'
+    readDataName = 'Data-One'
+    meshName = 'Mesh-Two'
   ENDIF
 
   rank = 0
