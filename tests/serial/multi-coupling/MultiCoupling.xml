@@ -61,38 +61,32 @@
         direction="write"
         from="NASTIN_Mesh1"
         to="SOLIDZ_Mesh1"
-        constraint="conservative"
-        timing="initial" />
+        constraint="conservative" />
       <mapping:nearest-neighbor
         direction="write"
         from="NASTIN_Mesh2"
         to="SOLIDZ_Mesh2"
-        constraint="conservative"
-        timing="initial" />
+        constraint="conservative" />
       <mapping:nearest-neighbor
         direction="write"
         from="NASTIN_Mesh3"
         to="SOLIDZ_Mesh3"
-        constraint="conservative"
-        timing="initial" />
+        constraint="conservative" />
       <mapping:nearest-neighbor
         direction="read"
         from="SOLIDZ_Mesh1"
         to="NASTIN_Mesh1"
-        constraint="consistent"
-        timing="initial" />
+        constraint="consistent" />
       <mapping:nearest-neighbor
         direction="read"
         from="SOLIDZ_Mesh2"
         to="NASTIN_Mesh2"
-        constraint="consistent"
-        timing="initial" />
+        constraint="consistent" />
       <mapping:nearest-neighbor
         direction="read"
         from="SOLIDZ_Mesh3"
         to="NASTIN_Mesh3"
-        constraint="consistent"
-        timing="initial" />
+        constraint="consistent" />
     </participant>
 
     <participant name="SOLIDZ1">

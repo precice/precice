@@ -29,14 +29,12 @@
         direction="write"
         from="PeanoNodes"
         to="ComsolNodes"
-        constraint="conservative"
-        timing="onadvance" />
+        constraint="conservative" />
       <mapping:nearest-projection
         direction="read"
         from="ComsolNodes"
         to="PeanoNodes"
-        constraint="consistent"
-        timing="onadvance" />
+        constraint="consistent" />
       <write-data name="Forces" mesh="PeanoNodes" />
       <read-data name="Displacements" mesh="PeanoNodes" />
       <read-data name="Velocities" mesh="PeanoNodes" />

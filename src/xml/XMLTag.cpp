@@ -101,36 +101,60 @@ bool XMLTag::hasAttribute(const std::string &attributeName)
   return utils::contained(attributeName, _attributes);
 }
 
-double XMLTag::getDoubleAttributeValue(const std::string &name) const
+double XMLTag::getDoubleAttributeValue(const std::string &name, std::optional<double> default_value) const
 {
   std::map<std::string, XMLAttribute<double>>::const_iterator iter;
   iter = _doubleAttributes.find(name);
-  PRECICE_ASSERT(iter != _doubleAttributes.end());
-  return iter->second.getValue();
+  if (iter != _doubleAttributes.end()) {
+    return iter->second.getValue();
+  }
+  if (default_value) {
+    return default_value.value();
+  }
+  PRECICE_ASSERT(default_value, "The XMLAttribute doesn't exist, check its default.");
+  return default_value.value();
 }
 
-int XMLTag::getIntAttributeValue(const std::string &name) const
+int XMLTag::getIntAttributeValue(const std::string &name, std::optional<int> default_value) const
 {
   std::map<std::string, XMLAttribute<int>>::const_iterator iter;
   iter = _intAttributes.find(name);
-  PRECICE_ASSERT(iter != _intAttributes.end());
-  return iter->second.getValue();
+  if (iter != _intAttributes.end()) {
+    return iter->second.getValue();
+  }
+  if (default_value) {
+    return default_value.value();
+  }
+  PRECICE_ASSERT(default_value, "The XMLAttribute doesn't exist, check its default.");
+  return default_value.value();
 }
 
-const std::string &XMLTag::getStringAttributeValue(const std::string &name) const
+const std::string &XMLTag::getStringAttributeValue(const std::string &name, std::optional<std::string> default_value) const
 {
   std::map<std::string, XMLAttribute<std::string>>::const_iterator iter;
   iter = _stringAttributes.find(name);
-  PRECICE_ASSERT(iter != _stringAttributes.end(), name);
-  return iter->second.getValue();
+  if (iter != _stringAttributes.end()) {
+    return iter->second.getValue();
+  }
+  if (default_value) {
+    return default_value.value();
+  }
+  PRECICE_ASSERT(default_value, "The XMLAttribute doesn't exist, check its default.");
+  return default_value.value();
 }
 
-bool XMLTag::getBooleanAttributeValue(const std::string &name) const
+bool XMLTag::getBooleanAttributeValue(const std::string &name, std::optional<bool> default_value) const
 {
   std::map<std::string, XMLAttribute<bool>>::const_iterator iter;
   iter = _booleanAttributes.find(name);
-  PRECICE_ASSERT(iter != _booleanAttributes.end());
-  return iter->second.getValue();
+  if (iter != _booleanAttributes.end()) {
+    return iter->second.getValue();
+  }
+  if (default_value) {
+    return default_value.value();
+  }
+  PRECICE_ASSERT(default_value, "The XMLAttribute doesn't exist, check its default.");
+  return default_value.value();
 }
 
 Eigen::VectorXd XMLTag::getEigenVectorXdAttributeValue(const std::string &name, int dimensions) const

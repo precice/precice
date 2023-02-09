@@ -8,8 +8,7 @@
     direction="write"
     from="TestMesh"
     to="TestMeshThree"
-    constraint="conservative"
-    timing="ondemand" />
+    constraint="conservative" />
   <mapping:nearest-projection
     direction="read"
     from="TestMeshThree"
@@ -19,6 +18,5 @@
     direction="write"
     from="TestMeshTwo"
     to="TestMesh"
-    constraint="conservative"
-    timing="onadvance" />
+    constraint="conservative" />
 </configuration>

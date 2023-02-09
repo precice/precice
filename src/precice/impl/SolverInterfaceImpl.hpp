@@ -165,20 +165,6 @@ public:
       const double *positions,
       int *         ids);
 
-  /// @copydoc SolverInterface::getMeshVertices
-  void getMeshVertices(
-      int        meshID,
-      size_t     size,
-      const int *ids,
-      double *   positions) const;
-
-  /// @copydoc SolverInterface::getMeshVertexIDsFromPositions
-  void getMeshVertexIDsFromPositions(
-      int           meshID,
-      size_t        size,
-      const double *positions,
-      int *         ids) const;
-
   /// @copydoc SolverInterface::setMeshEdge
   void setMeshEdge(
       MeshID meshID,
@@ -520,9 +506,6 @@ private:
 
   /// Helper for mapWrittenData and mapReadData
   void computeMappings(std::vector<MappingContext> &contexts, const std::string &mappingType);
-
-  /// Helper for mapWrittenData and mapReadData
-  void clearMappings(std::vector<MappingContext> &contexts);
 
   /// Computes, performs, and resets all suitable write mappings.
   void mapWrittenData();

@@ -19,8 +19,7 @@
         direction="write"
         from="MeshOne"
         to="MeshTwo"
-        constraint="conservative"
-        timing="initial" />
+        constraint="conservative" />
       <export:vtu />
     </participant>
 

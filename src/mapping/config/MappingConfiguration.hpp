@@ -3,38 +3,13 @@
 #include <string>
 #include <vector>
 #include "logging/Logger.hpp"
+#include "mapping/Mapping.hpp"
 #include "mapping/SharedPointer.hpp"
+#include "mapping/config/MappingConfigurationTypes.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "xml/XMLTag.hpp"
 
-namespace precice {
-namespace mapping {
-
-/// How to handle the polynomial?
-/**
- * ON: Include it in the system matrix
- * OFF: Omit it altogether
- * SEPARATE: Compute it separately using least-squares QR.
- */
-enum class Polynomial {
-  ON,
-  OFF,
-  SEPARATE
-};
-
-enum class Preallocation {
-  OFF,
-  COMPUTE,
-  ESTIMATE,
-  SAVE,
-  TREE
-};
-
-enum class RBFType {
-  EIGEN,
-  PETSc,
-  Ginkgo
-};
+namespace precice::mapping {
 
 /// Performs XML configuration and holds configured mappings.
 class MappingConfiguration : public xml::XMLTag::Listener {
@@ -43,12 +18,6 @@ public:
   enum Direction {
     WRITE,
     READ
-  };
-
-  enum Timing {
-    INITIAL,
-    ON_ADVANCE,
-    ON_DEMAND
   };
 
   /// Configuration data for one mapping.
@@ -61,21 +30,8 @@ public:
     mesh::PtrMesh toMesh;
     /// Direction of mapping (important to set input and output mesh).
     Direction direction;
-    /// When the mapping should be executed.
-    Timing timing;
     /// true for RBF mapping
-    bool isRBF;
-  };
-
-  struct RBFParameter {
-
-    enum struct Type {
-      ShapeParameter,
-      SupportRadius
-    };
-
-    Type   type{};
-    double value{};
+    bool requiresBasisFunction;
   };
 
   struct GinkgoParameter {
@@ -112,6 +68,28 @@ public:
   /// Returns all configured mappings.
   const std::vector<ConfiguredMapping> &mappings();
 
+  // Only relevant for RBF related mappings
+  // Being public here is only required for testing purposes
+  struct RBFConfiguration {
+
+    enum struct SystemSolver {
+      GlobalDirect,
+      GlobalIterative
+    };
+    SystemSolver        solver{};
+    std::array<bool, 3> deadAxis{};
+    Polynomial          polynomial{};
+    double              solverRtol{};
+    Preallocation       preallocation{};
+  };
+
+  /// Returns the RBF configuration, which was configured at the latest.
+  /// Only required for the configuration test
+  const RBFConfiguration &rbfConfig() const
+  {
+    return _rbfConfig;
+  }
+
   void resetMappings()
   {
     _mappings.clear();
@@ -122,81 +100,120 @@ private:
 
   const std::string TAG = "mapping";
 
-  const std::string ATTR_DIRECTION                 = "direction";
-  const std::string ATTR_FROM                      = "from";
-  const std::string ATTR_TO                        = "to";
-  const std::string ATTR_TIMING                    = "timing";
+  // First, declare common attributes and associated options
   const std::string ATTR_TYPE                      = "type";
-  const std::string ATTR_CONSTRAINT                = "constraint";
-  const std::string ATTR_SHAPE_PARAM               = "shape-parameter";
-  const std::string ATTR_SUPPORT_RADIUS            = "support-radius";
-  const std::string ATTR_SOLVER_RTOL               = "solver-rtol";
-  const std::string ATTR_X_DEAD                    = "x-dead";
-  const std::string ATTR_Y_DEAD                    = "y-dead";
-  const std::string ATTR_Z_DEAD                    = "z-dead";
-  const std::string ATTR_USE_QR                    = "use-qr-decomposition";
-  const std::string ATTR_GINKGO_EXECUTOR           = "ginkgo-executor";
-  const std::string ATTR_GINKGO_SOLVER             = "ginkgo-solver";
-  const std::string ATTR_GINKGO_PRECONDITIONER     = "ginkgo-preconditioner";
-  const std::string ATTR_GINKGO_RESIDUAL_NORM      = "ginkgo-residual-norm";
-  const std::string ATTR_GINKGO_USE_PRECONDITIONER = "ginkgo-use-preconditioner";
-  const std::string ATTR_GINKGO_JACOBI_BLOCK_SIZE  = "ginkgo-jacobi-block-size";
+  const std::string TYPE_NEAREST_NEIGHBOR          = "nearest-neighbor";
+  const std::string TYPE_NEAREST_NEIGHBOR_GRADIENT = "nearest-neighbor-gradient";
+  const std::string TYPE_NEAREST_PROJECTION        = "nearest-projection";
+  const std::string TYPE_LINEAR_CELL_INTERPOLATION = "linear-cell-interpolation";
+  const std::string TYPE_RBF_GLOBAL_DIRECT         = "rbf-global-direct";
+  const std::string TYPE_RBF_GLOBAL_ITERATIVE      = "rbf-global-iterative";
+  const std::string TYPE_RBF_ALIAS                 = "rbf";
 
-  const std::string VALUE_WRITE                     = "write";
-  const std::string VALUE_READ                      = "read";
-  const std::string VALUE_CONSISTENT                = "consistent";
-  const std::string VALUE_CONSERVATIVE              = "conservative";
-  const std::string VALUE_SCALED_CONSISTENT_SURFACE = "scaled-consistent-surface";
-  const std::string VALUE_SCALED_CONSISTENT_VOLUME  = "scaled-consistent-volume";
+  const std::string ATTR_DIRECTION  = "direction";
+  const std::string DIRECTION_WRITE = "write";
+  const std::string DIRECTION_READ  = "read";
 
-  const std::string VALUE_NEAREST_NEIGHBOR          = "nearest-neighbor";
-  const std::string VALUE_NEAREST_PROJECTION        = "nearest-projection";
-  const std::string VALUE_LINEAR_CELL_INTERPOLATION = "linear-cell-interpolation";
+  const std::string ATTR_FROM = "from";
+  const std::string ATTR_TO   = "to";
 
-  const std::string VALUE_RBF_TPS               = "rbf-thin-plate-splines";
-  const std::string VALUE_RBF_MULTIQUADRICS     = "rbf-multiquadrics";
-  const std::string VALUE_RBF_INV_MULTIQUADRICS = "rbf-inverse-multiquadrics";
-  const std::string VALUE_RBF_VOLUME_SPLINES    = "rbf-volume-splines";
-  const std::string VALUE_RBF_GAUSSIAN          = "rbf-gaussian";
-  const std::string VALUE_RBF_CTPS_C2           = "rbf-compact-tps-c2";
-  const std::string VALUE_RBF_CPOLYNOMIAL_C0    = "rbf-compact-polynomial-c0";
-  const std::string VALUE_RBF_CPOLYNOMIAL_C2    = "rbf-compact-polynomial-c2";
-  const std::string VALUE_RBF_CPOLYNOMIAL_C4    = "rbf-compact-polynomial-c4";
-  const std::string VALUE_RBF_CPOLYNOMIAL_C6    = "rbf-compact-polynomial-c6";
+  const std::string ATTR_CONSTRAINT                      = "constraint";
+  const std::string CONSTRAINT_CONSISTENT                = "consistent";
+  const std::string CONSTRAINT_CONSERVATIVE              = "conservative";
+  const std::string CONSTRAINT_SCALED_CONSISTENT_SURFACE = "scaled-consistent-surface";
+  const std::string CONSTRAINT_SCALED_CONSISTENT_VOLUME  = "scaled-consistent-volume";
 
-  const std::string VALUE_NEAREST_NEIGHBOR_GRADIENT = "nearest-neighbor-gradient";
+  // RBF specific options
+  const std::string ATTR_X_DEAD = "x-dead";
+  const std::string ATTR_Y_DEAD = "y-dead";
+  const std::string ATTR_Z_DEAD = "z-dead";
 
-  const std::string VALUE_TIMING_INITIAL    = "initial";
-  const std::string VALUE_TIMING_ON_ADVANCE = "onadvance";
-  const std::string VALUE_TIMING_ON_DEMAND  = "ondemand";
+  const std::string ATTR_POLYNOMIAL     = "polynomial";
+  const std::string POLYNOMIAL_SEPARATE = "separate";
+  const std::string POLYNOMIAL_ON       = "on";
+  const std::string POLYNOMIAL_OFF      = "off";
+
+  // For iterative RBFs
+  const std::string ATTR_SOLVER_RTOL = "solver-rtol";
+  // const std::string ATTR_MAX_ITERATIONS="";
+
+  const std::string ATTR_PREALLOCATION     = "preallocation";
+  const std::string PREALLOCATION_ESTIMATE = "estimate";
+  const std::string PREALLOCATION_COMPUTE  = "compute";
+  const std::string PREALLOCATION_SAVE     = "save";
+  const std::string PREALLOCATION_TREE     = "tree";
+  const std::string PREALLOCATION_OFF      = "off";
+
+  // For the future
+  // const std::string ATTR_PARALLELISM           = "parallelism";
+  // const std::string PARALLELISM_GATHER_SCATTER = "gather-scatter";
+  // const std::string PARALLELISM                = "distributed";
+
+  // We declare the basis function as subtag
+  const std::string SUBTAG_BASIS_FUNCTION = "basis-function";
+  const std::string RBF_TPS               = "thin-plate-splines";
+  const std::string RBF_MULTIQUADRICS     = "multiquadrics";
+  const std::string RBF_INV_MULTIQUADRICS = "inverse-multiquadrics";
+  const std::string RBF_VOLUME_SPLINES    = "volume-splines";
+  const std::string RBF_GAUSSIAN          = "gaussian";
+  const std::string RBF_CTPS_C2           = "compact-tps-c2";
+  const std::string RBF_CPOLYNOMIAL_C0    = "compact-polynomial-c0";
+  const std::string RBF_CPOLYNOMIAL_C2    = "compact-polynomial-c2";
+  const std::string RBF_CPOLYNOMIAL_C4    = "compact-polynomial-c4";
+  const std::string RBF_CPOLYNOMIAL_C6    = "compact-polynomial-c6";
+
+  // Attributes for the subtag
+  const std::string ATTR_SHAPE_PARAM    = "shape-parameter";
+  const std::string ATTR_SUPPORT_RADIUS = "support-radius";
+
+  // mapping constraint
+  Mapping::Constraint constraintValue{};
 
   mesh::PtrMeshConfiguration _meshConfig;
 
+  // main data structure storing the configurations
   std::vector<ConfiguredMapping> _mappings;
 
+  // Relevant information in order to store the RBF related settings,
+  // as we can only instantiate the RBF classes when we know the RBF
+  // which is configured in the subtag
+  RBFConfiguration _rbfConfig;
+
+  /**
+   * Configures and instantiates all mappings, which do not require
+   * a subtag/ a basis function. For the RBF related mappings, this class
+   * stores all relevant information, but the class is not instantiated and
+   * a nullptr is returned intstead. The class instantiation for the RBF
+   * related mappings happens in \ref xmlTagCallback() as we need to read the
+   * subtag information.
+   */
   ConfiguredMapping createMapping(
-      const xml::ConfigurationContext &context,
-      const std::string &              direction,
-      const std::string &              type,
-      const std::string &              constraint,
-      const std::string &              fromMeshName,
-      const std::string &              toMeshName,
-      Timing                           timing,
-      const RBFParameter &             rbfParameter,
-      const GinkgoParameter &          GinkgoParameter,
-      double                           solverRtol,
-      bool                             xDead,
-      bool                             yDead,
-      bool                             zDead,
-      bool                             useLU,
-      Polynomial                       polynomial,
-      Preallocation                    preallocation) const;
+      const std::string &direction,
+      const std::string &type,
+      const std::string &fromMeshName,
+      const std::string &toMeshName) const;
+
+  /**
+   * Stores additional information about the requested RBF mapping such as the
+   * configured polynomial and the solver type, which is not required for all
+   * the other mapping types. The information is then used later when instantiating
+   * the RBF mappings in \ref xmlTagCallback().
+   */
+  RBFConfiguration configureRBFMapping(const std::string &              type,
+                                       const xml::ConfigurationContext &context,
+                                       const std::string &              polynomial,
+                                       const std::string &              preallocation,
+                                       bool xDead, bool yDead, bool zDead,
+                                       double solverRtol) const;
 
   /// Check whether a mapping to and from the same mesh already exists
   void checkDuplicates(const ConfiguredMapping &mapping);
 
-  Timing getTiming(const std::string &timing) const;
-};
+  /// Indicates whether the mapping here requires a basis function/ subtag,
+  /// given the mapping type (e.g. nearest-neighbor).
+  bool requiresBasisFunction(const std::string &mappingType) const;
 
-} // namespace mapping
-} // namespace precice
+  /// Given a basis function name (as a string), transforms the string into an enum of the BasisFunction
+  BasisFunction parseBasisFunctions(const std::string &basisFctName) const;
+};
+} // namespace precice::mapping

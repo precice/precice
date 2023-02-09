@@ -422,7 +422,7 @@ GENERATE_EXPORT_HEADER(preciceCore
   )
 
 # Add the export header to the public headers of the preCICE lib
-set_property(TARGET precice PROPERTY PUBLIC_HEADER
+set_property(TARGET precice APPEND PROPERTY PUBLIC_HEADER
     ${CMAKE_BINARY_DIR}/src/precice/export.h)
 
 #

@@ -27,14 +27,12 @@
         direction="write"
         from="MeshTwo"
         to="MeshOne"
-        constraint="conservative"
-        timing="initial" />
+        constraint="conservative" />
       <mapping:nearest-neighbor-gradient
         direction="read"
         from="MeshOne"
         to="MeshTwo"
-        constraint="consistent"
-        timing="initial" />
+        constraint="consistent" />
       <write-data name="DataTwo" mesh="MeshTwo" />
       <read-data name="DataOne" mesh="MeshTwo" />
     </participant>

@@ -26,14 +26,12 @@
         direction="write"
         from="MeshOne"
         to="SolverGeometry"
-        constraint="conservative"
-        timing="initial" />
+        constraint="conservative" />
       <mapping:nearest-neighbor
         direction="read"
         from="SolverGeometry"
         to="MeshOne"
-        constraint="consistent"
-        timing="initial" />
+        constraint="consistent" />
       <write-data name="Forces" mesh="MeshOne" />
       <read-data name="Velocities" mesh="MeshOne" />
       <read-data name="Displacements" mesh="MeshOne" />

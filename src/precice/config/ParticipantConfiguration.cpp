@@ -486,7 +486,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                     participant->getName(), confMapping.toMesh->getName());
     }
 
-    if (confMapping.isRBF) {
+    // @TODO: is this still correct?
+    if (confMapping.requiresBasisFunction) {
       fromMeshContext.geoFilter = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
       toMeshContext.geoFilter   = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
     }
@@ -494,7 +495,6 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     precice::impl::MappingContext mappingContext;
     mappingContext.fromMeshID = fromMeshID;
     mappingContext.toMeshID   = toMeshID;
-    mappingContext.timing     = confMapping.timing;
 
     mapping::PtrMapping &map = mappingContext.mapping;
     PRECICE_ASSERT(map.get() == nullptr);
