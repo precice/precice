@@ -101,7 +101,7 @@ public:
 
   ~GinkgoRadialBasisFctSolver() = default;
 
-  GinkgoRadialBasisFctSolver(const GinkgoRadialBasisFctSolver &solver)            = delete;
+  GinkgoRadialBasisFctSolver(const GinkgoRadialBasisFctSolver &solver) = delete;
   GinkgoRadialBasisFctSolver &operator=(const GinkgoRadialBasisFctSolver &solver) = delete;
 
   /// Maps the given input data
