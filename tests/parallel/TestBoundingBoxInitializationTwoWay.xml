@@ -23,14 +23,12 @@
         direction="write"
         from="FluidMesh"
         to="StructureMesh"
-        constraint="conservative"
-        timing="initial" />
+        constraint="conservative" />
       <mapping:nearest-neighbor
         direction="read"
         from="StructureMesh"
         to="FluidMesh"
-        constraint="consistent"
-        timing="initial" />
+        constraint="consistent" />
     </participant>
 
     <participant name="Structure">

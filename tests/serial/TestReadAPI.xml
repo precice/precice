@@ -27,14 +27,12 @@
         direction="write"
         from="MeshTwo"
         to="MeshOne"
-        constraint="conservative"
-        timing="initial" />
+        constraint="conservative" />
       <mapping:nearest-neighbor
         direction="read"
         from="MeshOne"
         to="MeshTwo"
-        constraint="consistent"
-        timing="initial" />
+        constraint="consistent" />
       <read-data name="DataOne" mesh="MeshTwo" waveform-order="1" />
       <write-data name="DataTwo" mesh="MeshTwo" />
     </participant>

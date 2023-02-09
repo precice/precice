@@ -183,17 +183,12 @@ MappingConfiguration::MappingConfiguration(
                             .setDocumentation("Use conservative to conserve the nodal sum of the data over the interface (needed e.g. for force mapping).  Use consistent for normalized quantities such as temperature or pressure. Use scaled-consistent-surface or scaled-consistent-volume for normalized quantities where conservation of integral values (surface or volume) is needed (e.g. velocities when the mass flow rate needs to be conserved). Mesh connectivity is required to use scaled-consistent.")
                             .setOptions({VALUE_CONSERVATIVE, VALUE_CONSISTENT, VALUE_SCALED_CONSISTENT_SURFACE, VALUE_SCALED_CONSISTENT_VOLUME});
 
-  auto attrTiming = makeXMLAttribute(ATTR_TIMING, VALUE_TIMING_INITIAL)
-                        .setDocumentation("This allows to defer the mapping of the data to advance or to a manual call to mapReadDataTo and mapWriteDataFrom.")
-                        .setOptions({VALUE_TIMING_INITIAL, VALUE_TIMING_ON_ADVANCE, VALUE_TIMING_ON_DEMAND});
-
   // Add tags that all mappings use and add to parent tag
   for (XMLTag &tag : tags) {
     tag.addAttribute(attrDirection);
     tag.addAttribute(attrFromMesh);
     tag.addAttribute(attrToMesh);
     tag.addAttribute(attrConstraint);
-    tag.addAttribute(attrTiming);
     parent.addSubtag(tag);
   }
 }
@@ -209,7 +204,6 @@ void MappingConfiguration::xmlTagCallback(
     std::string   toMesh               = tag.getStringAttributeValue(ATTR_TO);
     std::string   type                 = tag.getName();
     std::string   constraint           = tag.getStringAttributeValue(ATTR_CONSTRAINT);
-    Timing        timing               = getTiming(tag.getStringAttributeValue(ATTR_TIMING));
     double        shapeParameter       = std::numeric_limits<double>::quiet_NaN();
     double        supportRadius        = std::numeric_limits<double>::quiet_NaN();
     double        verticesPerPartition = 0;
@@ -286,7 +280,7 @@ void MappingConfiguration::xmlTagCallback(
     }
     ConfiguredMapping configuredMapping = createMapping(context,
                                                         dir, type, constraint,
-                                                        fromMesh, toMesh, timing,
+                                                        fromMesh, toMesh,
                                                         rbfParameter, solverRtol,
                                                         xDead, yDead, zDead,
                                                         useLU,
@@ -314,7 +308,6 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
     const std::string &              constraint,
     const std::string &              fromMeshName,
     const std::string &              toMeshName,
-    Timing                           timing,
     const RBFParameter &             rbfParameter,
     double                           solverRtol,
     bool                             xDead,
@@ -327,7 +320,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
     double                           relativeOverlap,
     bool                             projectToInput) const
 {
-  PRECICE_TRACE(direction, type, timing, rbfParameter.value);
+  PRECICE_TRACE(direction, type, rbfParameter.value);
   using namespace mapping;
   ConfiguredMapping configuredMapping;
   mesh::PtrMesh     fromMesh(_meshConfig->getMesh(fromMeshName));
@@ -342,7 +335,6 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
                 toMeshName);
   configuredMapping.fromMesh = fromMesh;
   configuredMapping.toMesh   = toMesh;
-  configuredMapping.timing   = timing;
   int dimensions             = fromMesh->getDimensions();
 
   if (direction == VALUE_WRITE) {
@@ -558,19 +550,6 @@ void MappingConfiguration::checkDuplicates(const ConfiguredMapping &mapping)
                   "Please remove one of the duplicated meshes. ",
                   mapping.fromMesh->getName(), mapping.toMesh->getName());
   }
-}
-
-MappingConfiguration::Timing MappingConfiguration::getTiming(const std::string &timing) const
-{
-  if (timing == VALUE_TIMING_INITIAL) {
-    return INITIAL;
-  } else if (timing == VALUE_TIMING_ON_ADVANCE) {
-    return ON_ADVANCE;
-  } else if (timing == VALUE_TIMING_ON_DEMAND) {
-    return ON_DEMAND;
-  }
-  // We should never reach this point
-  PRECICE_UNREACHABLE("Unknown timing value \"{}\".", timing);
 }
 
 } // namespace precice::mapping

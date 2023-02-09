@@ -168,16 +168,6 @@ int precicec_setMeshVertex(
   return impl->setMeshVertex(meshID, position);
 }
 
-void precicec_getMeshVertices(
-    int        meshID,
-    int        size,
-    const int *ids,
-    double *   positions)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->getMeshVertices(meshID, size, ids, positions);
-}
-
 void precicec_setMeshVertices(
     int           meshID,
     int           size,
@@ -193,16 +183,6 @@ int precicec_getMeshVertexSize(
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   return impl->getMeshVertexSize(meshID);
-}
-
-void precicec_getMeshVertexIDsFromPositions(
-    int           meshID,
-    int           size,
-    const double *positions,
-    int *         ids)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->getMeshVertexIDsFromPositions(meshID, size, positions, ids);
 }
 
 void precicec_setMeshEdge(

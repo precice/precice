@@ -44,12 +44,6 @@ public:
     READ
   };
 
-  enum Timing {
-    INITIAL,
-    ON_ADVANCE,
-    ON_DEMAND
-  };
-
   /// Configuration data for one mapping.
   struct ConfiguredMapping {
     /// Mapping object.
@@ -60,8 +54,6 @@ public:
     mesh::PtrMesh toMesh;
     /// Direction of mapping (important to set input and output mesh).
     Direction direction;
-    /// When the mapping should be executed.
-    Timing timing;
     /// true for RBF mapping
     bool isRBF;
   };
@@ -115,7 +107,6 @@ private:
   const std::string ATTR_DIRECTION      = "direction";
   const std::string ATTR_FROM           = "from";
   const std::string ATTR_TO             = "to";
-  const std::string ATTR_TIMING         = "timing";
   const std::string ATTR_TYPE           = "type";
   const std::string ATTR_CONSTRAINT     = "constraint";
   const std::string ATTR_SHAPE_PARAM    = "shape-parameter";
@@ -155,10 +146,6 @@ private:
 
   const std::string VALUE_NEAREST_NEIGHBOR_GRADIENT = "nearest-neighbor-gradient";
 
-  const std::string VALUE_TIMING_INITIAL    = "initial";
-  const std::string VALUE_TIMING_ON_ADVANCE = "onadvance";
-  const std::string VALUE_TIMING_ON_DEMAND  = "ondemand";
-
   mesh::PtrMeshConfiguration _meshConfig;
 
   std::vector<ConfiguredMapping> _mappings;
@@ -170,7 +157,6 @@ private:
       const std::string &              constraint,
       const std::string &              fromMeshName,
       const std::string &              toMeshName,
-      Timing                           timing,
       const RBFParameter &             rbfParameter,
       double                           solverRtol,
       bool                             xDead,
@@ -185,9 +171,6 @@ private:
 
   /// Check whether a mapping to and from the same mesh already exists
   void checkDuplicates(const ConfiguredMapping &mapping);
-
-  Timing getTiming(const std::string &timing) const;
 };
-
 } // namespace mapping
 } // namespace precice

@@ -220,26 +220,6 @@ void precicef_set_vertices_(
   impl->setMeshVertices(*meshID, *size, positions, positionIDs);
 }
 
-void precicef_get_vertices_(
-    const int *meshID,
-    const int *size,
-    int *      ids,
-    double *   positions)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->getMeshVertices(*meshID, *size, ids, positions);
-}
-
-void precicef_get_vertex_ids_from_positions_(
-    const int *meshID,
-    const int *size,
-    double *   positions,
-    int *      ids)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->getMeshVertexIDsFromPositions(*meshID, *size, positions, ids);
-}
-
 void precicef_set_edge_(
     const int *meshID,
     const int *firstVertexID,
