@@ -68,13 +68,18 @@ void create_rbf_system_matrix(std::shared_ptr<const DefaultExecutor> exec,
         __shared__ double prefetchedEvalPoint[3];
 
         // Check if current block is at the end of a matrix row and induces a line break
-        if ((blockIdx.x * blockDim.x) % rowLength > ((blockIdx.x + 1) * blockDim.x - 1) % rowLength) {
+        // However, if a block is larger than an entire row, we need to disable it since we now can't make sure
+        // it does not still span across two lines.
+        // We have to use uint64_t because these matrices become so large that using this
+        // if-condition overflows with int32
+        uint64_t leftThreadNum  = static_cast<uint64_t>(blockIdx.x) * blockDim.x;
+        uint64_t rightThreadNum = static_cast<uint64_t>(blockIdx.x + 1) * blockDim.x - 1;
+        if (blockDim.x < rowLength && leftThreadNum % rowLength > rightThreadNum % rowLength) {
 
           // Since this block spans across two lines, we have to use global memory and cannot use prefetched memory
           for (size_t k = 0; k < dataDimensionality; ++k) {
             dist += (supportPoints[supportPointOffset + k] - targetPoints[evalPointOffset + k]) * (supportPoints[supportPointOffset + k] - targetPoints[evalPointOffset + k]) * static_cast<int>(activeAxis.at(k));
           }
-
         } else {
 
           // If this block is indeed only in one row, we can make thread 0 in each block responsible for prefetching values into shared memory
@@ -91,21 +96,16 @@ void create_rbf_system_matrix(std::shared_ptr<const DefaultExecutor> exec,
           }
         }
 
-        dist = std::sqrt(dist);
-
-        mtx[i * rowLength + j] = f(dist, rbf_params);
-
 #else
         // Loop over each dimension and calculate euclidian distance
         for (size_t k = 0; k < dataDimensionality; ++k) {
           dist += std::pow(supportPoints[supportPointOffset + k] - targetPoints[evalPointOffset + k], 2) * static_cast<int>(activeAxis.at(k));
         }
+#endif
 
         dist = std::sqrt(dist);
 
         mtx[i * rowLength + j] = f(dist, rbf_params);
-
-#endif
       },
       gko::dim<2>{n1, n2}, n2, dataDimensionality, activeAxis, mtx, supportPoints, targetPoints, f, rbf_params, addPolynomial, extraDims);
 }
