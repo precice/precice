@@ -5,7 +5,6 @@
 
 #include "mapping/impl/DeviceBasisFunctions.cuh"
 
-#define SHARED_HOST_DEVICE_FUNCTION __host__ __device__
 #define NUMERICAL_ZERO_DIFFERENCE 1.0e-14
 
 namespace precice {
