@@ -46,8 +46,8 @@ BoundingBox::BoundingBox(int dimension)
   _boundMax = Eigen::VectorXd(dimension);
 
   // Define 'illegal' BoundingBox: _boundMin > _boundMax
-  std::fill(_boundMin.begin(), _boundMin.end(), std::numeric_limits<double>::max());
-  std::fill(_boundMax.begin(), _boundMax.end(), std::numeric_limits<double>::lowest());
+  _boundMin.fill(std::numeric_limits<double>::max());
+  _boundMax.fill(std::numeric_limits<double>::lowest());
 }
 
 bool BoundingBox::operator==(const BoundingBox &otherBB) const
