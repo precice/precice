@@ -62,10 +62,46 @@ void create_rbf_system_matrix(std::shared_ptr<const DefaultExecutor> exec,
           mtx[i * rowLength + j] = 0;
         }
 
+#ifdef __NVCC__
+
+        // Use this as readonly shared buffer
+        __shared__ double prefetchedEvalPoint[3];
+
+        // Check if current block is at the end of a matrix row and induces a line break
+        // However, if a block is larger than an entire row, we need to disable it since we now can't make sure
+        // it does not still span across two lines.
+        // We have to use uint64_t because these matrices become so large that using this
+        // if-condition overflows with int32
+        uint64_t leftThreadNum  = static_cast<uint64_t>(blockIdx.x) * blockDim.x;
+        uint64_t rightThreadNum = static_cast<uint64_t>(blockIdx.x + 1) * blockDim.x - 1;
+        if (blockDim.x < rowLength && leftThreadNum % rowLength > rightThreadNum % rowLength) {
+
+          // Since this block spans across two lines, we have to use global memory and cannot use prefetched memory
+          for (size_t k = 0; k < dataDimensionality; ++k) {
+            dist += (supportPoints[supportPointOffset + k] - targetPoints[evalPointOffset + k]) * (supportPoints[supportPointOffset + k] - targetPoints[evalPointOffset + k]) * static_cast<int>(activeAxis.at(k));
+          }
+        } else {
+
+          // If this block is indeed only in one row, we can make thread 0 in each block responsible for prefetching values into shared memory
+          if (0 == threadIdx.x) {
+            prefetchedEvalPoint[0] = targetPoints[evalPointOffset];
+            prefetchedEvalPoint[1] = targetPoints[evalPointOffset + 1];
+            prefetchedEvalPoint[2] = targetPoints[evalPointOffset + 2];
+          }
+          // Let all threads in a block wait until memory is prefetched
+          __syncthreads();
+
+          for (size_t k = 0; k < dataDimensionality; ++k) {
+            dist += (supportPoints[supportPointOffset + k] - prefetchedEvalPoint[k]) * (supportPoints[supportPointOffset + k] - prefetchedEvalPoint[k]) * static_cast<int>(activeAxis.at(k));
+          }
+        }
+
+#else
         // Loop over each dimension and calculate euclidian distance
         for (size_t k = 0; k < dataDimensionality; ++k) {
           dist += std::pow(supportPoints[supportPointOffset + k] - targetPoints[evalPointOffset + k], 2) * static_cast<int>(activeAxis.at(k));
         }
+#endif
 
         dist = std::sqrt(dist);
 
