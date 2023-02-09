@@ -67,7 +67,7 @@ public:
   /// Expand bounding box using vertices
   void expandBy(const Vertex &vertices);
 
-  /// Expand bounding box using double value
+  /// Expand bounding box using a double value in all dimensions
   /// Using this method, BoundingBox should not be in the default state; otherwise, it will make ReceivedPartitionTest fail because of incorrect connectionMapSize
   void expandBy(double value);
 
