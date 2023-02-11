@@ -35,11 +35,12 @@ public:
   };
 
   struct GinkgoParameter {
-    std::string  executor          = "ginkgo-reference-executor";
-    std::string  solver            = "ginkgo-cg-solver";
-    std::string  preconditioner    = "ginkgo-jacobi-preconditioner";
-    bool         usePreconditioner = true;
+    std::string  executor          = "reference-executor";
+    std::string  solver            = "cg-solver";
+    std::string  preconditioner    = "jacobi-preconditioner";
     double       residualNorm      = 1e-8;
+    std::size_t  maxIterations     = 1e6;
+    bool         usePreconditioner = true;
     unsigned int jacobiBlockSize   = 1;
   };
 
@@ -144,6 +145,13 @@ private:
   const std::string PREALLOCATION_TREE     = "tree";
   const std::string PREALLOCATION_OFF      = "off";
 
+  // For iterative RBFs using Ginkgo
+  const std::string ATTR_EXECUTOR          = "executor";
+  const std::string ATTR_SOLVER            = "solver";
+  const std::string ATTR_PRECONDITIONER    = "preconditioner";
+  const std::string ATTR_JACOBI_BLOCK_SIZE = "jacobi-block-size";
+  const std::string ATTR_MAX_ITERATIONS    = "max-iterations";
+
   // For the future
   // const std::string ATTR_PARALLELISM           = "parallelism";
   // const std::string PARALLELISM_GATHER_SCATTER = "gather-scatter";
@@ -178,6 +186,9 @@ private:
   // as we can only instantiate the RBF classes when we know the RBF
   // which is configured in the subtag
   RBFConfiguration _rbfConfig;
+
+  // Settings for the iterative solvers provided by Ginkgo
+  GinkgoParameter _ginkgoParameter;
 
   /**
    * Configures and instantiates all mappings, which do not require
