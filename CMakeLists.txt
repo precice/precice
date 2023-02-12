@@ -350,6 +350,7 @@ endif()
 # Setup Ginkgo
 if (PRECICE_GinkgoParallelization)
   set(CMAKE_CXX_FLAGS "-fPIC")
+  include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
   set(Ginkgo_Path "" CACHE STRING "Path to the experimental Ginkgo Repository of branch a195f856e.") # TODO: Remove as soon as GPU feature is in main branch
   find_package(Ginkgo REQUIRED HINTS "${Ginkgo_Path}/build" NO_CMAKE_SYSTEM_PATH)
   target_include_directories(preciceCore PUBLIC "${Ginkgo_Path}/include")
