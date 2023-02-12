@@ -3,7 +3,6 @@
 
 #ifdef __NVCC__
 
-#include <cuda.h>
 #include <cuda_runtime.h>
 #define SHARED_HOST_DEVICE_FUNCTION __host__ __device__
 
