@@ -364,7 +364,8 @@ void MappingConfiguration::xmlTagCallback(
       delete[] arg;
 
       mapping.mapping = getRBFMapping<RBFBackend::PETSc>(basisFunction, constraintValue, mapping.fromMesh->getDimensions(), supportRadius, shapeParameter, _rbfConfig.deadAxis, _rbfConfig.solverRtol, _rbfConfig.polynomial, _rbfConfig.preallocation);
-#elif 1 // PRECICE_NO_GINKGO // TODO: FIX
+
+#elif !defined(PRECICE_NO_GINKGO)
       mapping.mapping = getRBFMapping<RBFBackend::Ginkgo>(basisFunction, constraintValue, mapping.fromMesh->getDimensions(), supportRadius, shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, false, _ginkgoParameter);
 
 #else
