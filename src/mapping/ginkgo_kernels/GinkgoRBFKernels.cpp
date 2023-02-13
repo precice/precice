@@ -73,9 +73,9 @@ void create_rbf_system_matrix(std::shared_ptr<const DefaultExecutor> exec,
         // it does not still span across two lines.
         // We have to use uint64_t because these matrices become so large that using this
         // if-condition overflows with int32
-        uint32_t blockID        = blockIdx.x;
+        uint64_t blockID        = blockIdx.x;
         uint64_t leftThreadNum  = blockID * blockDim.x;
-        uint64_t rightThreadNum = fma(blockID + 1, blockID, -1); // static_cast<uint64_t>(blockIdx.x + 1) * blockDim.x - 1;
+        uint64_t rightThreadNum = (blockID + 1) * blockDim.x - 1;
         if (blockDim.x < rowLength && leftThreadNum % rowLength > rightThreadNum % rowLength) {
 
           // Since this block spans across two lines, we have to use global memory and cannot use prefetched memory
