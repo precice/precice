@@ -22,7 +22,7 @@ GlobalData::GlobalData(
     DataID      id,
     int         dimensions,
     int         spatialDimensions)
-    : _values(),
+    : _values(dimensions),
       _name(std::move(name)),
       _id(id),
       _dimensions(dimensions),
