@@ -2,10 +2,25 @@
 
 #include <cmath>
 #include <stdio.h>
+// #include "math/math.hpp"
 
 #include "mapping/impl/DeviceBasisFunctions.cuh"
 
 #define NUMERICAL_ZERO_DIFFERENCE 1.0e-14
+
+namespace math {
+template <int iexp, typename T>
+inline constexpr T pow_int(const T x)
+{
+  static_assert(iexp >= 0, "Exponent must be an integer greater or equal to zero.");
+
+  if (iexp == 0)
+    return static_cast<T>(1.);
+  else
+    // exponentiation by squaring
+    return ((iexp % 2 == 1) ? x * pow_int<iexp / 2>(x * x) : pow_int<iexp / 2>(x * x));
+}
+} // namespace math
 
 namespace precice {
 namespace mapping {
@@ -13,19 +28,19 @@ namespace mapping {
 SHARED_HOST_DEVICE_FUNCTION double ThinPlateSplinesFunctor::operator()(const double radius, const std::array<double, 3> params) const
 {
   // We don't need to read any values from params since there is no need here
-  return std::log(std::max(radius, NUMERICAL_ZERO_DIFFERENCE)) * std::pow(radius, 2);
+  return std::log(std::max(radius, NUMERICAL_ZERO_DIFFERENCE)) * math::pow_int<2>(radius);
 }
 
 SHARED_HOST_DEVICE_FUNCTION double MultiQuadraticsFunctor::operator()(const double radius, const std::array<double, 3> params) const
 {
   double cPow2 = params.at(0);
-  return std::sqrt(cPow2 + std::pow(radius, 2));
+  return std::sqrt(cPow2 + math::pow_int<2>(radius));
 }
 
 SHARED_HOST_DEVICE_FUNCTION double InverseMultiquadricsFunctor::operator()(const double radius, const std::array<double, 3> params) const
 {
   double cPow2 = params.at(0);
-  return 1.0 / std::sqrt(cPow2 + std::pow(radius, 2));
+  return 1.0 / std::sqrt(cPow2 + math::pow_int<2>(radius));
 }
 
 SHARED_HOST_DEVICE_FUNCTION double VolumeSplinesFunctor::operator()(const double radius, const std::array<double, 3> params) const
@@ -42,7 +57,7 @@ SHARED_HOST_DEVICE_FUNCTION double GaussianFunctor::operator()(const double radi
   if (radius > supportRadius) {
     return 0.0;
   } else {
-    return std::exp(-std::pow(shape * radius, 2)) - deltaY;
+    return std::exp(-math::pow_int<2>(shape * radius)) - deltaY;
   }
 }
 
@@ -97,7 +112,10 @@ SHARED_HOST_DEVICE_FUNCTION double CompactPolynomialC6Functor::operator()(const 
   if (p >= 1) {
     return 0.0;
   } else {
-    return std::pow(1.0 - p, 8) * (32.0 * std::pow(p, 3) + 25.0 * std::pow(p, 2) + 8.0 * p + 1.0);
+    double result = fma(8.0, p, 1.0);
+    result        = fma(25.0, math::pow_int<2>(p), result);
+    result        = fma(32.0, math::pow_int<3>(p), result);
+    return result * math::pow_int<8>(1.0 - p);
   }
 }
 

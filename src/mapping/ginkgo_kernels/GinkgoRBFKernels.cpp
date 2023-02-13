@@ -66,19 +66,22 @@ void create_rbf_system_matrix(std::shared_ptr<const DefaultExecutor> exec,
 
         // Use this as readonly shared buffer
         __shared__ double prefetchedEvalPoint[3];
+        double            y;
 
         // Check if current block is at the end of a matrix row and induces a line break
         // However, if a block is larger than an entire row, we need to disable it since we now can't make sure
         // it does not still span across two lines.
         // We have to use uint64_t because these matrices become so large that using this
         // if-condition overflows with int32
-        uint64_t leftThreadNum  = static_cast<uint64_t>(blockIdx.x) * blockDim.x;
-        uint64_t rightThreadNum = static_cast<uint64_t>(blockIdx.x + 1) * blockDim.x - 1;
+        uint32_t blockID        = blockIdx.x;
+        uint64_t leftThreadNum  = blockID * blockDim.x;
+        uint64_t rightThreadNum = fma(blockID + 1, blockID, -1); // static_cast<uint64_t>(blockIdx.x + 1) * blockDim.x - 1;
         if (blockDim.x < rowLength && leftThreadNum % rowLength > rightThreadNum % rowLength) {
 
           // Since this block spans across two lines, we have to use global memory and cannot use prefetched memory
           for (size_t k = 0; k < dataDimensionality; ++k) {
-            dist += (supportPoints[supportPointOffset + k] - targetPoints[evalPointOffset + k]) * (supportPoints[supportPointOffset + k] - targetPoints[evalPointOffset + k]) * static_cast<int>(activeAxis.at(k));
+            y    = supportPoints[supportPointOffset + k] - targetPoints[evalPointOffset + k];
+            dist = fma(y, y, dist);
           }
         } else {
 
@@ -92,18 +95,21 @@ void create_rbf_system_matrix(std::shared_ptr<const DefaultExecutor> exec,
           __syncthreads();
 
           for (size_t k = 0; k < dataDimensionality; ++k) {
-            dist += (supportPoints[supportPointOffset + k] - prefetchedEvalPoint[k]) * (supportPoints[supportPointOffset + k] - prefetchedEvalPoint[k]) * static_cast<int>(activeAxis.at(k));
+            y    = supportPoints[supportPointOffset + k] - prefetchedEvalPoint[k];
+            dist = fma(y, y, dist); //(supportPoints[supportPointOffset + k] - prefetchedEvalPoint[k]) * (supportPoints[supportPointOffset + k] - prefetchedEvalPoint[k]) * static_cast<int>(activeAxis.at(k));
           }
         }
+
+        dist = sqrt(dist);
 
 #else
         // Loop over each dimension and calculate euclidian distance
         for (size_t k = 0; k < dataDimensionality; ++k) {
           dist += std::pow(supportPoints[supportPointOffset + k] - targetPoints[evalPointOffset + k], 2) * static_cast<int>(activeAxis.at(k));
         }
-#endif
 
         dist = std::sqrt(dist);
+#endif
 
         mtx[i * rowLength + j] = f(dist, rbf_params);
       },
