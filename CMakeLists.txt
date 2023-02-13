@@ -350,6 +350,7 @@ endif()
 # Setup Ginkgo
 if (PRECICE_GinkgoParallelization)
   set(CMAKE_CXX_FLAGS "-fPIC")
+  include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
   set(Ginkgo_Path "" CACHE STRING "Path to the experimental Ginkgo Repository of branch a195f856e.") # TODO: Remove as soon as GPU feature is in main branch
   find_package(Ginkgo REQUIRED HINTS "${Ginkgo_Path}/build" NO_CMAKE_SYSTEM_PATH)
   target_include_directories(preciceCore PUBLIC "${Ginkgo_Path}/include")
@@ -422,7 +423,7 @@ GENERATE_EXPORT_HEADER(preciceCore
   )
 
 # Add the export header to the public headers of the preCICE lib
-set_property(TARGET precice PROPERTY PUBLIC_HEADER
+set_property(TARGET precice APPEND PROPERTY PUBLIC_HEADER
     ${CMAKE_BINARY_DIR}/src/precice/export.h)
 
 #

@@ -19,16 +19,15 @@
     <participant name="SolverTwo">
       <receive-mesh name="MeshOne" from="SolverOne" />
       <provide-mesh name="MeshTwo" />
-      <mapping:rbf-gaussian
-        solver-rtol="1e-11"
+      <mapping:rbf-global-direct
         polynomial="separate"
-        support-radius="2"
         direction="read"
         from="MeshOne"
         to="MeshTwo"
         constraint="consistent"
-        z-dead="true"
-        timing="initial" />
+        z-dead="true">
+        <basis-function:gaussian support-radius="2" />
+      </mapping:rbf-global-direct>
       <read-data name="DataOne" mesh="MeshTwo" />
     </participant>
 

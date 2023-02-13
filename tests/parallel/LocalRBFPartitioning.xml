@@ -23,13 +23,14 @@
         from="MeshOne"
         to="MeshTwo"
         constraint="conservative" />
-      <mapping:rbf-compact-tps-c2
+      <mapping:rbf-global-direct
         direction="read"
         from="MeshTwo"
         to="MeshOne"
         constraint="consistent"
-        support-radius="0.3"
-        y-dead="true" />
+        y-dead="true">
+        <basis-function:compact-tps-c2 support-radius="0.3" />
+      </mapping:rbf-global-direct>
       <write-data name="Data1" mesh="MeshOne" />
       <read-data name="Data2" mesh="MeshOne" />
     </participant>

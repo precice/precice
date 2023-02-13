@@ -71,20 +71,20 @@ enum PreconditionerType {
 };
 
 const std::map<std::string, SolverType> solverTypeLookup{
-    {"ginkgo-cg-solver", SolverType::CG},
-    {"ginkgo-gmres-solver", SolverType::GMRES},
-    {"ginkgo-mg-solver", SolverType::MG}};
+    {"cg-solver", SolverType::CG},
+    {"gmres-solver", SolverType::GMRES},
+    {"mg-solver", SolverType::MG}};
 
 const std::map<std::string, PreconditionerType> preconditionerTypeLookup{
-    {"ginkgo-jacobi-preconditioner", PreconditionerType::Jacobi},
-    {"ginkgo-cholesky-preconditioner", PreconditionerType::Cholesky},
-    {"ginkgo-ilu-preconditioner", PreconditionerType::Ilu},
-    {"ginkgo-no-preconditioner", PreconditionerType::None}};
+    {"jacobi-preconditioner", PreconditionerType::Jacobi},
+    {"cholesky-preconditioner", PreconditionerType::Cholesky},
+    {"ilu-preconditioner", PreconditionerType::Ilu},
+    {"no-preconditioner", PreconditionerType::None}};
 
-const std::map<std::string, std::function<std::shared_ptr<gko::Executor>()>> ginkgoExecutorLookup{{"ginkgo-reference-executor", [] { return gko::ReferenceExecutor::create(); }},
-                                                                                                  {"ginkgo-omp-executor", [] { return gko::OmpExecutor::create(); }},
-                                                                                                  {"ginkgo-cuda-executor", [] { return gko::CudaExecutor::create(0, gko::OmpExecutor::create(), true, gko::allocation_mode::unified_global); }},
-                                                                                                  {"ginkgo-hip-executor", [] { return gko::HipExecutor::create(0, gko::OmpExecutor::create(), true); }}};
+const std::map<std::string, std::function<std::shared_ptr<gko::Executor>()>> ginkgoExecutorLookup{{"reference-executor", [] { return gko::ReferenceExecutor::create(); }},
+                                                                                                  {"omp-executor", [] { return gko::OmpExecutor::create(); }},
+                                                                                                  {"cuda-executor", [] { return gko::CudaExecutor::create(0, gko::OmpExecutor::create(), true, gko::allocation_mode::unified_global); }},
+                                                                                                  {"hip-executor", [] { return gko::HipExecutor::create(0, gko::OmpExecutor::create(), true); }}};
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 class GinkgoRadialBasisFctSolver {

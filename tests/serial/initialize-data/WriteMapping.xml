@@ -23,8 +23,7 @@
         direction="write"
         from="MeshTwo"
         to="MeshOne"
-        constraint="conservative"
-        timing="initial" />
+        constraint="conservative" />
       <write-data name="Data" mesh="MeshTwo" />
     </participant>
 
