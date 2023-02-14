@@ -20,21 +20,15 @@
 GKO_DECLARE_UNIFIED(template <typename ValueType, typename EvalFunctionType> void create_rbf_system_matrix(
     std::shared_ptr<const DefaultExecutor> exec,
     const std::size_t n1, const std::size_t n2, const std::size_t dataDimensionality, const std::array<bool, 3> activeAxis, ValueType *mtx, ValueType *supportPoints,
-    ValueType *targetPoints, EvalFunctionType f, const std::array<ValueType, 3> rbf_params,
+    ValueType *targetPoints, EvalFunctionType f, const std::array<ValueType, 3> rbf_params, const std::size_t inputRowLength, const std::size_t outputRowLength,
     const bool addPolynomial, const unsigned int extraDims = 0));
 
 GKO_DECLARE_UNIFIED(template <typename ValueType> void fill_polynomial_matrix(
     std::shared_ptr<const DefaultExecutor> exec,
-    const std::size_t n1, const std::size_t n2, ValueType *mtx, ValueType *x, const unsigned int dims = 4));
-
-GKO_DECLARE_UNIFIED(template <typename ValueType> void extract_upper_triangular(
-    std::shared_ptr<const DefaultExecutor> exec,
-    ValueType *src, ValueType *dest,
-    const std::size_t i, const std::size_t j, const std::size_t N));
+    const std::size_t n1, const std::size_t n2, ValueType *mtx, ValueType *x, const std::size_t supportPointsRowLength, const unsigned int dims = 4));
 
 GKO_REGISTER_UNIFIED_OPERATION(rbf_fill_operation, create_rbf_system_matrix);
 GKO_REGISTER_UNIFIED_OPERATION(polynomial_fill_operation, fill_polynomial_matrix);
-GKO_REGISTER_UNIFIED_OPERATION(tril_operation, extract_upper_triangular);
 
 namespace precice {
 namespace mapping {
@@ -216,21 +210,44 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
   this->_rbfCoefficients = gko::share(GinkgoVector::create(this->_hostExecutor, gko::dim<2>{n, 1}));
 
   // We need to copy the input data into a CPU stored vector first and copy it to the GPU afterwards
-  auto inputVertices = gko::share(GinkgoMatrix::create(this->_hostExecutor, gko::dim<2>{inputMeshSize, meshDim}));
+  // To allow for coalesced memory accesses on the GPU, we need to store them in transposed order IFF the backend is the GPU
+  // However, the CPU does not need that; in fact, it would make it slower
+  std::size_t inputVerticesM, inputVerticesN, outputVerticesM, outputVerticesN;
+
+  if ("cuda-executor" == ginkgoParameter.executor) {
+    inputVerticesM  = meshDim;
+    inputVerticesN  = inputMeshSize;
+    outputVerticesM = meshDim;
+    outputVerticesN = outputMeshSize;
+  } else {
+    inputVerticesM  = inputMeshSize;
+    inputVerticesN  = meshDim;
+    outputVerticesM = outputMeshSize;
+    outputVerticesN = meshDim;
+  }
+
+  auto inputVertices  = gko::share(GinkgoMatrix::create(this->_hostExecutor, gko::dim<2>{inputVerticesM, inputVerticesN}));
+  auto outputVertices = gko::share(GinkgoMatrix::create(this->_hostExecutor, gko::dim<2>{outputVerticesM, outputVerticesN}));
   for (std::size_t i = 0; i < inputMeshSize; ++i) {
     for (std::size_t j = 0; j < meshDim; ++j) {
-      inputVertices->at(i, j) = inputMesh.vertices().at(i).rawCoords()[j];
+      if ("cuda-executor" == ginkgoParameter.executor) {
+        inputVertices->at(j, i) = inputMesh.vertices().at(i).rawCoords()[j];
+      } else {
+        inputVertices->at(i, j) = inputMesh.vertices().at(i).rawCoords()[j];
+      }
     }
     // Initial guess is required since memory chunk could lead to never converging system
     if (i < n) {
       this->_rbfCoefficients->at(i, 0) = 0.0;
     }
   }
-
-  auto outputVertices = gko::share(GinkgoMatrix::create(this->_hostExecutor, gko::dim<2>{outputMeshSize, meshDim}));
   for (std::size_t i = 0; i < outputMeshSize; ++i) {
     for (std::size_t j = 0; j < meshDim; ++j) {
-      outputVertices->at(i, j) = outputMesh.vertices().at(i).rawCoords()[j];
+      if ("cuda-executor" == ginkgoParameter.executor) {
+        outputVertices->at(j, i) = outputMesh.vertices().at(i).rawCoords()[j];
+      } else {
+        outputVertices->at(i, j) = outputMesh.vertices().at(i).rawCoords()[j];
+      }
     }
   }
 
@@ -251,8 +268,8 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
     this->_matrixV                = gko::share(GinkgoMatrix::create(this->_deviceExecutor, gko::dim<2>{outputSize, polyParams}));
 
     this->_assemblyEvent.start();
-    this->_deviceExecutor->run(make_polynomial_fill_operation(this->_matrixQ->get_size()[0], this->_matrixQ->get_size()[1], this->_matrixQ->get_values(), inputVertices->get_values(), polyParams));
-    this->_deviceExecutor->run(make_polynomial_fill_operation(this->_matrixV->get_size()[0], this->_matrixV->get_size()[1], this->_matrixV->get_values(), outputVertices->get_values(), polyParams));
+    this->_deviceExecutor->run(make_polynomial_fill_operation(this->_matrixQ->get_size()[0], this->_matrixQ->get_size()[1], this->_matrixQ->get_values(), inputVertices->get_values(), inputVertices->get_size()[1], polyParams));
+    this->_deviceExecutor->run(make_polynomial_fill_operation(this->_matrixV->get_size()[0], this->_matrixV->get_size()[1], this->_matrixV->get_values(), outputVertices->get_values(), outputVertices->get_size()[1], polyParams));
     this->_assemblyEvent.pause();
 
     this->_deviceExecutor->synchronize();
@@ -260,8 +277,8 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
 
   // Launch RBF fill kernel on device
   this->_assemblyEvent.start();
-  this->_deviceExecutor->run(make_rbf_fill_operation(this->_rbfSystemMatrix->get_size()[0], this->_rbfSystemMatrix->get_size()[1], inputVertices->get_size()[1], activeAxis, this->_rbfSystemMatrix->get_values(), inputVertices->get_values(), inputVertices->get_values(), basisFunction.getFunctor(), basisFunction.getFunctionParameters(), Polynomial::ON == polynomial, polyparams)); // polynomial evaluates to true only if ON is set
-  this->_deviceExecutor->run(make_rbf_fill_operation(this->_matrixA->get_size()[0], this->_matrixA->get_size()[1], inputVertices->get_size()[1], activeAxis, this->_matrixA->get_values(), inputVertices->get_values(), outputVertices->get_values(), basisFunction.getFunctor(), basisFunction.getFunctionParameters(), Polynomial::ON == polynomial, polyparams));
+  this->_deviceExecutor->run(make_rbf_fill_operation(this->_rbfSystemMatrix->get_size()[0], this->_rbfSystemMatrix->get_size()[1], meshDim, activeAxis, this->_rbfSystemMatrix->get_values(), inputVertices->get_values(), inputVertices->get_values(), basisFunction.getFunctor(), basisFunction.getFunctionParameters(), inputVertices->get_size()[1], inputVertices->get_size()[1], Polynomial::ON == polynomial, polyparams)); // polynomial evaluates to true only if ON is set
+  this->_deviceExecutor->run(make_rbf_fill_operation(this->_matrixA->get_size()[0], this->_matrixA->get_size()[1], meshDim, activeAxis, this->_matrixA->get_values(), inputVertices->get_values(), outputVertices->get_values(), basisFunction.getFunctor(), basisFunction.getFunctionParameters(), inputVertices->get_size()[1], outputVertices->get_size()[1], Polynomial::ON == polynomial, polyparams));
 
   // Wait for the kernels to finish
   this->_deviceExecutor->synchronize();

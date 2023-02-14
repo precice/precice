@@ -47,15 +47,13 @@ using mat = gko::matrix::Dense<double>;
 template <typename ValueType, typename EvalFunctionType>
 void create_rbf_system_matrix(std::shared_ptr<const DefaultExecutor> exec,
                               const std::size_t n1, const std::size_t n2, const std::size_t dataDimensionality, const std::array<bool, 3> activeAxis, ValueType *mtx, ValueType *supportPoints,
-                              ValueType *targetPoints, EvalFunctionType f, const std::array<ValueType, 3> rbf_params, const bool addPolynomial, const unsigned int extraDims = 0)
+                              ValueType *targetPoints, EvalFunctionType f, const std::array<ValueType, 3> rbf_params, const std::size_t inputRowLength, const std::size_t outputRowLength, const bool addPolynomial, const unsigned int extraDims = 0)
 {
   run_kernel(
       exec,
-      GKO_KERNEL(auto i, auto j, auto N, auto dataDimensionality, auto activeAxis, auto mtx, auto supportPoints, auto targetPoints, auto f, auto rbf_params, auto addPolynomial, auto extraDims) {
-        const unsigned int rowLength          = N + extraDims;
-        const unsigned int supportPointOffset = dataDimensionality * j; // Point of current column
-        const unsigned int evalPointOffset    = dataDimensionality * i; // Point of current row
-        double             dist               = 0;
+      GKO_KERNEL(auto i, auto j, auto N, auto dataDimensionality, auto activeAxis, auto mtx, auto supportPoints, auto targetPoints, auto f, auto rbf_params, auto inputRowLength, auto outputRowLength, auto addPolynomial, auto extraDims) {
+        const unsigned int rowLength = N + extraDims;
+        double             dist      = 0;
 
         // Make each entry zero if polynomial is on since not every entry will be adjusted below
         if (addPolynomial) {
@@ -76,118 +74,115 @@ void create_rbf_system_matrix(std::shared_ptr<const DefaultExecutor> exec,
         uint64_t blockID        = blockIdx.x;
         uint64_t leftThreadNum  = blockID * blockDim.x;
         uint64_t rightThreadNum = (blockID + 1) * blockDim.x - 1;
-        if (blockDim.x < rowLength && leftThreadNum % rowLength > rightThreadNum % rowLength) {
+        if (blockDim.x >= rowLength || (blockDim.x < rowLength && leftThreadNum % rowLength > rightThreadNum % rowLength)) {
 
           // Since this block spans across two lines, we have to use global memory and cannot use prefetched memory
           for (size_t k = 0; k < dataDimensionality; ++k) {
-            y    = supportPoints[supportPointOffset + k] - targetPoints[evalPointOffset + k];
+            y    = supportPoints[k * inputRowLength + j] - targetPoints[k * outputRowLength + i];
             dist = fma(y, y, dist);
           }
         } else {
 
           // If this block is indeed only in one row, we can make thread 0 in each block responsible for prefetching values into shared memory
           if (0 == threadIdx.x) {
-            prefetchedEvalPoint[0] = targetPoints[evalPointOffset];
-            prefetchedEvalPoint[1] = targetPoints[evalPointOffset + 1];
-            prefetchedEvalPoint[2] = targetPoints[evalPointOffset + 2];
+            prefetchedEvalPoint[0] = targetPoints[i];
+            prefetchedEvalPoint[1] = targetPoints[outputRowLength + i];
+            prefetchedEvalPoint[2] = targetPoints[2 * outputRowLength + i];
           }
           // Let all threads in a block wait until memory is prefetched
           __syncthreads();
 
           for (size_t k = 0; k < dataDimensionality; ++k) {
-            y    = supportPoints[supportPointOffset + k] - prefetchedEvalPoint[k];
-            dist = fma(y, y, dist); //(supportPoints[supportPointOffset + k] - prefetchedEvalPoint[k]) * (supportPoints[supportPointOffset + k] - prefetchedEvalPoint[k]) * static_cast<int>(activeAxis.at(k));
+            y    = supportPoints[k * inputRowLength + j] - prefetchedEvalPoint[k]; // <- This should not impose a bank conflict since CUDA offers broadcasting if a warp accesses the same shared memory adress
+            dist = fma(y, y, dist);
           }
         }
 
         dist = sqrt(dist);
 
 #else
+        const unsigned int supportPointOffset = dataDimensionality * j; // Point of current column
+        const unsigned int targetPointOffset  = dataDimensionality * i; // Point of current row
         // Loop over each dimension and calculate euclidian distance
         for (size_t k = 0; k < dataDimensionality; ++k) {
-          dist += std::pow(supportPoints[supportPointOffset + k] - targetPoints[evalPointOffset + k], 2) * static_cast<int>(activeAxis.at(k));
+          dist += std::pow(supportPoints[supportPointOffset + k] - targetPoints[targetPointOffset + k], 2) * static_cast<int>(activeAxis.at(k));
         }
 
-        dist = std::sqrt(dist);
+        dist                                  = std::sqrt(dist);
 #endif
 
         mtx[i * rowLength + j] = f(dist, rbf_params);
       },
-      gko::dim<2>{n1, n2}, n2, dataDimensionality, activeAxis, mtx, supportPoints, targetPoints, f, rbf_params, addPolynomial, extraDims);
+      gko::dim<2>{n1, n2}, n2, dataDimensionality, activeAxis, mtx, supportPoints, targetPoints, f, rbf_params, inputRowLength, outputRowLength, addPolynomial, extraDims);
 }
 
 // Here, we need to instantiate all possible variants for each basis function
 
 template void create_rbf_system_matrix<double, precice::mapping::ThinPlateSplinesFunctor>(std::shared_ptr<const DefaultExecutor>, const std::size_t, const std::size_t, const std::size_t, const std::array<bool, 3>,
                                                                                           double *, double *, double *, precice::mapping::ThinPlateSplinesFunctor, const std::array<double, 3>,
-                                                                                          const bool, const unsigned int);
+                                                                                          const std::size_t, const std::size_t, const bool, const unsigned int);
 
 template void create_rbf_system_matrix<double, precice::mapping::MultiQuadraticsFunctor>(std::shared_ptr<const DefaultExecutor>, const std::size_t, const std::size_t, const std::size_t, const std::array<bool, 3>,
                                                                                          double *, double *, double *, precice::mapping::MultiQuadraticsFunctor, const std::array<double, 3>,
-                                                                                         const bool, const unsigned int);
+                                                                                         const std::size_t, const std::size_t, const bool, const unsigned int);
 
 template void create_rbf_system_matrix<double, precice::mapping::InverseMultiquadricsFunctor>(std::shared_ptr<const DefaultExecutor>, const std::size_t, const std::size_t, const std::size_t, const std::array<bool, 3>,
                                                                                               double *, double *, double *, precice::mapping::InverseMultiquadricsFunctor, const std::array<double, 3>,
-                                                                                              const bool, const unsigned int);
+                                                                                              const std::size_t, const std::size_t, const bool, const unsigned int);
 
 template void create_rbf_system_matrix<double, precice::mapping::VolumeSplinesFunctor>(std::shared_ptr<const DefaultExecutor>, const std::size_t, const std::size_t, const std::size_t, const std::array<bool, 3>,
                                                                                        double *, double *, double *, precice::mapping::VolumeSplinesFunctor, const std::array<double, 3>,
-                                                                                       const bool, const unsigned int);
+                                                                                       const std::size_t, const std::size_t, const bool, const unsigned int);
 
 template void create_rbf_system_matrix<double, precice::mapping::GaussianFunctor>(std::shared_ptr<const DefaultExecutor>, const std::size_t, const std::size_t, const std::size_t, const std::array<bool, 3>,
                                                                                   double *, double *, double *, precice::mapping::GaussianFunctor, const std::array<double, 3>,
-                                                                                  const bool, const unsigned int);
+                                                                                  const std::size_t, const std::size_t, const bool, const unsigned int);
 
 template void create_rbf_system_matrix<double, precice::mapping::CompactThinPlateSplinesC2Functor>(std::shared_ptr<const DefaultExecutor>, const std::size_t, const std::size_t, const std::size_t, const std::array<bool, 3>,
                                                                                                    double *, double *, double *, precice::mapping::CompactThinPlateSplinesC2Functor, const std::array<double, 3>,
-                                                                                                   const bool, const unsigned int);
+                                                                                                   const std::size_t, const std::size_t, const bool, const unsigned int);
 
 template void create_rbf_system_matrix<double, precice::mapping::CompactPolynomialC0Functor>(std::shared_ptr<const DefaultExecutor>, const std::size_t, const std::size_t, const std::size_t, const std::array<bool, 3>,
                                                                                              double *, double *, double *, precice::mapping::CompactPolynomialC0Functor, const std::array<double, 3>,
-                                                                                             const bool, const unsigned int);
+                                                                                             const std::size_t, const std::size_t, const bool, const unsigned int);
 
 template void create_rbf_system_matrix<double, precice::mapping::CompactPolynomialC2Functor>(std::shared_ptr<const DefaultExecutor>, const std::size_t, const std::size_t, const std::size_t, const std::array<bool, 3>,
                                                                                              double *, double *, double *, precice::mapping::CompactPolynomialC2Functor, const std::array<double, 3>,
-                                                                                             const bool, const unsigned int);
+                                                                                             const std::size_t, const std::size_t, const bool, const unsigned int);
 
 template void create_rbf_system_matrix<double, precice::mapping::CompactPolynomialC4Functor>(std::shared_ptr<const DefaultExecutor>, const std::size_t, const std::size_t, const std::size_t, const std::array<bool, 3>,
                                                                                              double *, double *, double *, precice::mapping::CompactPolynomialC4Functor, const std::array<double, 3>,
-                                                                                             const bool, const unsigned int);
+                                                                                             const std::size_t, const std::size_t, const bool, const unsigned int);
 
 template void create_rbf_system_matrix<double, precice::mapping::CompactPolynomialC6Functor>(std::shared_ptr<const DefaultExecutor>, const std::size_t, const std::size_t, const std::size_t, const std::array<bool, 3>,
                                                                                              double *, double *, double *, precice::mapping::CompactPolynomialC6Functor, const std::array<double, 3>,
-                                                                                             const bool, const unsigned int);
+                                                                                             const std::size_t, const std::size_t, const bool, const unsigned int);
 
 template <typename ValueType>
 void fill_polynomial_matrix(std::shared_ptr<const DefaultExecutor> exec,
-                            const std::size_t n1, const std::size_t n2, ValueType *mtx, ValueType *x, const unsigned int dims = 4)
+                            const std::size_t n1, const std::size_t n2, ValueType *mtx, ValueType *x, const std::size_t supportPointsRowLength, const unsigned int dims = 4)
 {
   run_kernel(
       exec,
-      GKO_KERNEL(auto i, auto j, auto N1, auto N2, auto mtx, auto x, auto dims) {
+      GKO_KERNEL(auto i, auto j, auto N1, auto N2, auto mtx, auto x, auto supportPointsRowLength, auto dims) {
+#ifdef __NVCC__
+        if (j < dims - 1) {
+          mtx[i * dims + j] = x[j * supportPointsRowLength + i];
+        } else {
+          mtx[i * dims + j] = 1;
+        }
+#else
         const unsigned int supportPointOffset = 3 * i;
         if (j < dims - 1) {
           mtx[i * dims + j] = x[supportPointOffset + j];
         } else {
           mtx[i * dims + j] = 1;
         }
+#endif
       },
-      gko::dim<2>{n1, n2}, n1, n2, mtx, x, dims);
+      gko::dim<2>{n1, n2}, n1, n2, mtx, x, supportPointsRowLength, dims);
 }
 
-template void fill_polynomial_matrix<double>(std::shared_ptr<const DefaultExecutor>, const std::size_t, const std::size_t, double *, double *, const unsigned int);
-
-template <typename ValueType>
-void extract_upper_triangular(std::shared_ptr<const DefaultExecutor> exec, ValueType *src, ValueType *dest, const std::size_t i, const std::size_t j, const std::size_t N)
-{
-  run_kernel(
-      exec,
-      GKO_KERNEL(auto i, auto j, auto src, auto dest, auto N) {
-        dest[i * N + j] = src[i * N + j] * (int) (j >= i);
-      },
-      gko::dim<2>{i, j}, src, dest, N);
-}
-
-template void extract_upper_triangular<double>(std::shared_ptr<const DefaultExecutor>, double *, double *, const std::size_t, const std::size_t, const std::size_t);
+template void fill_polynomial_matrix<double>(std::shared_ptr<const DefaultExecutor>, const std::size_t, const std::size_t, double *, double *, const std::size_t, const unsigned int);
 
 } // namespace GKO_DEVICE_NAMESPACE
