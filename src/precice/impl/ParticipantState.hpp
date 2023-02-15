@@ -205,10 +205,18 @@ public:
     return _readDataContexts | boost::adaptors::map_values;
   }
   
-  /** Provides access to all \ref GlobalDataContext objects
+  /** Provides const access to all \ref GlobalDataContext objects
    * @remarks does not contain nullptr.
    */
   auto globalDataContexts() const
+  {
+    return _globalDataContexts | boost::adaptors::map_values;
+  }
+
+  /** Provides access to all \ref GlobalDataContext objects
+   * @remarks does not contain nullptr.
+   */
+  auto globalDataContexts()
   {
     return _globalDataContexts | boost::adaptors::map_values;
   }

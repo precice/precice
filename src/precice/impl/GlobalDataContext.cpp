@@ -49,4 +49,15 @@ Eigen::VectorXd GlobalDataContext::sampleWaveformAt(double normalizedDt)
   return _waveform->sample(normalizedDt);
 }
 
+void GlobalDataContext::initializeWaveform()
+{
+  // PRECICE_ASSERT(not hasWriteMapping(), "Write mapping does not need waveforms.");
+  _waveform->initialize(_providedData->values());
+}
+
+void GlobalDataContext::moveToNextWindow()
+{
+  _waveform->moveToNextWindow();
+}
+
 } // namespace precice::impl
