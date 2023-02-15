@@ -101,6 +101,8 @@ target_sources(preciceCore
     src/cplscheme/Constants.hpp
     src/cplscheme/CouplingData.cpp
     src/cplscheme/CouplingData.hpp
+    src/cplscheme/GlobalCouplingData.cpp
+    src/cplscheme/GlobalCouplingData.hpp
     src/cplscheme/CouplingScheme.cpp
     src/cplscheme/CouplingScheme.hpp
     src/cplscheme/MultiCouplingScheme.cpp
