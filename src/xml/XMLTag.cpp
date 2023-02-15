@@ -332,6 +332,10 @@ void XMLTag::areAllSubtagsConfigured() const
     if ((not configured) && (occurOnce || occurOnceOrMore)) {
 
       if (tag->getNamespace().empty()) {
+        if (tag->getName() == "mesh") {
+          continue;
+          // TODO:This is a temporary workaround to allow configuration without any mesh (for global data).
+        }
         PRECICE_ERROR("Tag <{}> was not found but is required to occur at least once.", tag->getName());
       } else {
         PRECICE_ERROR("Tag <{}:... > was not found but is required to occur at least once.", tag->getNamespace());
