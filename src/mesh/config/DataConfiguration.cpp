@@ -149,7 +149,7 @@ void DataConfiguration::createGlobalData(const std::string &name,
                                          int                dimension,
                                          DataID             id)
 {
-  PRECICE_TRACE(name, dimension);
+  PRECICE_TRACE(name, dimension, id);
   for (const PtrGlobalData &globalData : _globalData) {
     PRECICE_CHECK(globalData->getName() != name,
                   "Global data \"{}\" cannot be created twice."
