@@ -15,6 +15,7 @@
 #include "cplscheme/Constants.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "cplscheme/CouplingScheme.hpp"
+#include "cplscheme/GlobalCouplingData.hpp"
 #include "cplscheme/impl/SharedPointer.hpp"
 #include "impl/ConvergenceMeasure.hpp"
 #include "io/TXTTableWriter.hpp"
@@ -244,6 +245,35 @@ bool BaseCouplingScheme::isExplicitCouplingScheme()
 {
   PRECICE_ASSERT(_couplingMode != Undefined);
   return _couplingMode == Explicit;
+}
+
+void BaseCouplingScheme::sendGlobalData(const m2n::PtrM2N &m2n, const GlobalDataMap &sendGlobalData)
+{
+  PRECICE_TRACE();
+  std::vector<int> sentGlobalDataIDs; // for debugging
+  PRECICE_ASSERT(m2n.get() != nullptr);
+  PRECICE_ASSERT(m2n->isConnected());
+
+  for (const GlobalDataMap::value_type &pair : sendGlobalData) {
+    // Data is actually only send if size>0, which is checked in the derived classes implementation
+    m2n->send(pair.second->values(), -1, pair.second->getDimensions()); // TODO meshID=-1 is a makeshift thing here. Fix this.
+    sentGlobalDataIDs.push_back(pair.first);                            // Keep track of sent data (for degbugging)
+  }
+  PRECICE_DEBUG("Number of sent global data sets = {}", sentGlobalDataIDs.size());
+}
+
+void BaseCouplingScheme::receiveGlobalData(const m2n::PtrM2N &m2n, const GlobalDataMap &receiveGlobalData)
+{
+  PRECICE_TRACE();
+  std::vector<int> receivedGlobalDataIDs; // for debugging
+  PRECICE_ASSERT(m2n.get());
+  PRECICE_ASSERT(m2n->isConnected());
+  for (const GlobalDataMap::value_type &pair : receiveGlobalData) {
+    // Data is only received on ranks with size>0, which is checked in the derived class implementation
+    m2n->receive(pair.second->values(), -1, pair.second->getDimensions()); // TODO meshID=-1 is a makeshift thing here. Fix this.
+    receivedGlobalDataIDs.push_back(pair.first);                           // Keep track of received data (for debugging)
+  }
+  PRECICE_DEBUG("Number of received global data sets = {}", receivedGlobalDataIDs.size());
 }
 
 void BaseCouplingScheme::setTimeWindowSize(double timeWindowSize)

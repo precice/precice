@@ -55,6 +55,16 @@ public:
       bool                 requiresInitialization,
       bool                 exchangeSubsteps);
 
+  /// Adds global data to be sent on data exchange and possibly be modified during coupling iterations.
+  void addGlobalDataToSend(
+      const mesh::PtrGlobalData &globalData,
+      bool                       requiresInitialization);
+
+  /// Adds global data to be received on data exchange.
+  void addGlobalDataToReceive(
+      const mesh::PtrGlobalData &globalData,
+      bool                       requiresInitialization);
+
   void determineInitialDataExchange() override;
 
   /// returns list of all coupling partners
@@ -66,9 +76,33 @@ public:
   bool hasAnySendData() override final;
 
   /**
+   * @returns true, if coupling scheme has any sendGlobalData
+   */
+  // bool hasAnySendGlobalData() override final
+  // {
+  //   return not getSendGlobalData().empty();
+  // }
+
+  /**
    * @returns true, if coupling scheme has sendData with given DataID
    */
   bool hasSendData(DataID dataID);
+
+  /**
+   * @returns true, if coupling scheme has sendGlobalData with given DataID
+   */
+  bool hasSendGlobalData(DataID dataID)
+  {
+    return getSendGlobalData(dataID) != nullptr;
+  }
+
+  /**
+   * @returns true, if coupling scheme has sendGlobalData with given DataID
+   */
+  bool hasSendGlobalData(DataID dataID)
+  {
+    return getSendGlobalData(dataID) != nullptr;
+  }
 
 protected:
   /// Returns all data to be sent.
@@ -77,11 +111,41 @@ protected:
   /// Returns all data to be received.
   DataMap &getReceiveData();
 
+  /// Returns all data to be sent.
+  GlobalDataMap &getSendGlobalData()
+  {
+    return _sendGlobalData;
+  }
+
+  /// Returns all data to be received.
+  GlobalDataMap &getReceiveGlobalData()
+  {
+    return _receiveGlobalData;
+  }
+
+  /**
+   * @brief BiCouplingScheme has _sendData and _receiveData
+   * @returns DataMap with all data
+   */
+  const DataMap getAllData() override
+  {
+    DataMap allData{_sendData};
+    allData.insert(_receiveData.begin(), _receiveData.end());
+    return allData;
+    // TODO: append global data here?
+  }
+
   /// Sets the values
   CouplingData *getSendData(DataID dataID);
 
   /// Returns all data to be received with data ID as given.
   CouplingData *getReceiveData(DataID dataID);
+
+  /// Sets the values
+  CouplingData *getSendGlobalData(DataID dataID);
+
+  /// Returns all data to be received with data ID as given.
+  CouplingData *getReceiveGlobalData(DataID dataID);
 
   /// @return Communication device to the other coupling participant.
   m2n::PtrM2N getM2N() const;
@@ -100,6 +164,12 @@ private:
 
   /// All receive data as a map "data ID -> data"
   DataMap _receiveData;
+
+  /// All send global data as a map "data ID -> global data"
+  GlobalDataMap _sendGlobalData;
+
+  /// All receive global data as a map "data ID -> global data"
+  GlobalDataMap _receiveGlobalData;
 
   /// First participant name.
   std::string _firstParticipant = "unknown";

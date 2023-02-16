@@ -265,6 +265,15 @@ protected:
    */
   void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData);
 
+  /// Map that links DataID to GlobalCouplingData
+  typedef std::map<int, PtrGlobalCouplingData> GlobalDataMap;
+
+  /// Sends global data sendDataIDs given in mapCouplingData with communication.
+  void sendGlobalData(const m2n::PtrM2N &m2n, const GlobalDataMap &sendGlobalData);
+
+  /// Receives global data receiveDataIDs given in mapCouplingData with communication.
+  void receiveGlobalData(const m2n::PtrM2N &m2n, const GlobalDataMap &receiveGlobalData);
+
   /**
    * @brief Initializes storage in receiveData as zero
    *

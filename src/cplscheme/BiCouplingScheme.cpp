@@ -8,11 +8,14 @@
 #include "BiCouplingScheme.hpp"
 #include "cplscheme/BaseCouplingScheme.hpp"
 #include "cplscheme/CouplingData.hpp"
+#include "cplscheme/GlobalCouplingData.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/M2N.hpp"
 #include "m2n/SharedPointer.hpp"
 #include "mesh/Data.hpp"
+#include "mesh/GlobalData.hpp"
+
 #include "precice/types.hpp"
 #include "utils/Helpers.hpp"
 
