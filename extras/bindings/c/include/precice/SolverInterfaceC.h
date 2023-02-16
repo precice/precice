@@ -169,38 +169,6 @@ PRECICE_API void precicec_setMeshVertices(
     int *         ids);
 
 /**
- * @brief Get vertex positions for multiple vertex ids from a given mesh
- *
- * @param[in] meshID the id of the mesh to read the vertices from.
- * @param[in] size Number of vertices to lookup
- * @param[in] ids The ids of the vertices to lookup
- * @param[out] positions a pointer to memory to write the coordinates to
- *            The 2D-format is (d0x, d0y, d1x, d1y, ..., dnx, dny)
- *            The 3D-format is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
- */
-PRECICE_API void precicec_getMeshVertices(
-    int        meshID,
-    int        size,
-    const int *ids,
-    double *   positions);
-
-/**
- * @brief Gets mesh vertex IDs from positions.
- *
- * @param[in] meshID ID of the mesh to retrieve positions from
- * @param[in] size Number of vertices to lookup.
- * @param[in] positions Positions to find ids for.
- *            The 2D-format is (d0x, d0y, d1x, d1y, ..., dnx, dny)
- *            The 3D-format is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
- * @param[out] ids IDs corresponding to positions.
- */
-PRECICE_API void precicec_getMeshVertexIDsFromPositions(
-    int           meshID,
-    int           size,
-    const double *positions,
-    int *         ids);
-
-/**
  * @brief Sets mesh edge from vertex IDs, returns edge ID.
  *
  * @param[in] meshID ID of the mesh to add the edge to
