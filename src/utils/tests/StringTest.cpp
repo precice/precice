@@ -1,3 +1,4 @@
+#include <boost/test/tools/interface.hpp>
 #include <boost/test/tools/old/interface.hpp>
 #include <string>
 #include "math/constants.hpp"
@@ -91,6 +92,36 @@ BOOST_AUTO_TEST_CASE(StringMaker)
   auto str2    = sm.str();
   BOOST_TEST(str2.size() == 2);
   BOOST_TEST(str2 == "12");
+}
+
+BOOST_AUTO_TEST_CASE(EditDistance)
+{
+  PRECICE_TEST(1_rank);
+  using precice::utils::editDistance;
+  BOOST_TEST(editDistance("left", "theft") == 2);
+  BOOST_TEST(editDistance("aaa", "aa") == 1);
+  BOOST_TEST(editDistance("aAa", "aaa") == 1);
+  BOOST_TEST(editDistance("same", "same") == 0);
+}
+
+BOOST_AUTO_TEST_CASE(ComputeMatches)
+{
+  PRECICE_TEST(1_rank);
+  std::set names{"left", "right", "up", "down"};
+  auto     matches = utils::computeMatches("lewp", names);
+  BOOST_TEST_REQUIRE(matches.size() == 4);
+
+  BOOST_TEST(matches[0].name == "left");
+  BOOST_TEST(matches[0].distance == 2);
+
+  BOOST_TEST(matches[1].name == "down");
+  BOOST_TEST(matches[1].distance == 3);
+
+  BOOST_TEST(matches[2].name == "up");
+  BOOST_TEST(matches[2].distance == 3);
+
+  BOOST_TEST(matches[3].name == "right");
+  BOOST_TEST(matches[3].distance == 5);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
