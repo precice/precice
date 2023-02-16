@@ -270,7 +270,9 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
     fillPolynomialEntries(_matrixQ, inputMesh, inputIDs, 0, _activeAxis);
 
     Eigen::JacobiSVD<Eigen::MatrixXd> svd(_matrixQ);
-    const double                      conditionNumber = svd.singularValues()(0) / svd.singularValues()(svd.singularValues().size() - 1);
+    PRECICE_ASSERT(svd.singularValues().size() > 0);
+    PRECICE_DEBUG("Singular values in polynomial solver: {}", svd.singularValues());
+    const double conditionNumber = svd.singularValues()(0) / std::max(svd.singularValues()(svd.singularValues().size() - 1), math::NUMERICAL_ZERO_DIFFERENCE);
     PRECICE_DEBUG("Condition number: {}", conditionNumber);
 
     // If the condition number is too high, we disable ill-conditioned axis
