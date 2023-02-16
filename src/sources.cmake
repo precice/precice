@@ -195,6 +195,7 @@ target_sources(preciceCore
     src/mapping/SharedPointer.hpp
     src/mapping/config/MappingConfiguration.cpp
     src/mapping/config/MappingConfiguration.hpp
+    src/mapping/config/MappingConfigurationTypes.hpp
     src/mapping/impl/BasisFunctions.hpp
     src/mapping/impl/CreateClustering.hpp
     src/mapping/impl/SphericalVertexCluster.hpp
