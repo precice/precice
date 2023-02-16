@@ -1,15 +1,19 @@
-#include "xml/ConfigParser.hpp"
 #include <algorithm>
+#include <cstddef>
 #include <exception>
 #include <fstream>
 #include <iterator>
 #include <libxml/SAX.h>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <unordered_set>
 #include <utility>
+
 #include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
+#include "utils/String.hpp"
+#include "xml/ConfigParser.hpp"
 #include "xml/XMLTag.hpp"
 
 namespace precice::xml {
@@ -174,6 +178,30 @@ int ConfigParser::readXmlFile(std::string const &filePath)
   return 0;
 }
 
+namespace {
+struct Distance {
+  std::size_t distance;
+  std::string name;
+
+  bool operator<(const Distance &other) const
+  {
+    return distance < other.distance;
+  }
+};
+auto gatherCandidates(const std::vector<std::shared_ptr<XMLTag>> &DefTags, std::string_view prefix)
+{
+  bool validPrefix = std::any_of(DefTags.begin(), DefTags.end(), [prefix](const auto &tag) { return tag->getNamespace() == prefix; });
+
+  std::set<std::string> entries;
+  for (const auto &tag : DefTags) {
+    if (!validPrefix || (tag->getNamespace() == prefix)) {
+      entries.insert(tag->getFullName());
+    }
+  }
+  return entries;
+}
+} // namespace
+
 void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<std::shared_ptr<XMLTag>> &DefTags, CTagPtrVec &SubTags)
 {
   std::unordered_set<std::string> usedTags;
@@ -188,7 +216,15 @@ void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<
         });
 
     if (tagPosition == DefTags.end()) {
-      PRECICE_ERROR("The configuration contains an unknown tag <{}>.", expectedName);
+      // Tag not found
+      auto names = gatherCandidates(DefTags, subtag->m_Prefix);
+
+      auto matches = utils::computeMatches(expectedName, names);
+      if (matches.front().distance < 3) {
+        PRECICE_ERROR("The configuration contains an unknown tag <{}>. Did you mean <{}>?", expectedName, matches.front().name);
+      } else {
+        PRECICE_ERROR("The configuration contains an unknown tag <{}>. Expected tags are {}.", expectedName, fmt::join(names, ", "));
+      }
     }
 
     auto pDefSubTag = *tagPosition;
