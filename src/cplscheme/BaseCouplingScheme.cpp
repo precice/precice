@@ -813,7 +813,7 @@ void BaseCouplingScheme::doImplicitStep()
       // }
       for (auto &pair : getAccelerationData()) {
         bool mustOverwrite = true;
-        pair.second->storeValuesAtTime(time::Storage::WINDOW_END, pair.second->values(), mustOverwrite);  // @todo: Here might be an error. Do we actually apply any acceleration to the values that are not at WINDOW_END?
+        pair.second->storeValuesAtTime(time::Storage::WINDOW_END, pair.second->values(), mustOverwrite); // @todo: Here might be an error. Do we actually apply any acceleration to the values that are not at WINDOW_END?
       }
     }
   }
