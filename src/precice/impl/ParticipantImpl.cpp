@@ -1169,7 +1169,7 @@ void SolverInterfaceImpl::writeGlobalScalarData(
   //               context.getDataName(), valueIndex);
   valuesInternal[0]        = value;
   double valueVerification = valuesInternal[0];
-  PRECICE_DEBUG("Written scalar value = {}", valueVerification);
+  PRECICE_DEBUG("Written global scalar value = {}", valueVerification);
 }
 
 void SolverInterfaceImpl::readGlobalVectorData(
@@ -1293,7 +1293,7 @@ void SolverInterfaceImpl::readGlobalScalarDataImpl(
   //               "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
   //               context.getDataName(), valueIndex);
   value = values[0];
-  PRECICE_DEBUG("Read value = {}", value);
+  PRECICE_DEBUG("Read global scalar value = {}", value);
 }
 
 void ParticipantImpl::setMeshAccessRegion(
