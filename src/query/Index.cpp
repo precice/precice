@@ -183,15 +183,14 @@ VertexMatch Index::getClosestVertex(const Eigen::VectorXd &sourceCoord)
   return match;
 }
 
-std::vector<VertexID> Index::getClosestVertices(const mesh::Vertex &centerVertex, unsigned int n)
+std::vector<VertexID> Index::getClosestVertices(const Eigen::VectorXd &sourceCoord, int n)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(!(_mesh->vertices().empty()), _mesh->getName());
   std::vector<VertexID> matches;
-  const auto &          rtree  = _pimpl->getVertexRTree(*_mesh);
-  auto                  coords = centerVertex.getCoords();
+  const auto &          rtree = _pimpl->getVertexRTree(*_mesh);
 
-  rtree->query(bgi::nearest(coords, n), boost::make_function_output_iterator([&](size_t matchID) {
+  rtree->query(bgi::nearest(sourceCoord, n), boost::make_function_output_iterator([&](size_t matchID) {
                  matches.emplace_back(matchID);
                }));
   return matches;

@@ -262,7 +262,7 @@ inline double estimateClusterRadius(unsigned int verticesPerCluster, mesh::PtrMe
   std::vector<double> sampledClusterRadii;
   for (auto s : randomSamples) {
     // ask the index tree for the k-nearest neighbors  in order to estimate the point density
-    auto kNearestVertexIDs = inMesh->index().getClosestVertices(inMesh->vertices()[s], verticesPerCluster);
+    auto kNearestVertexIDs = inMesh->index().getClosestVertices(inMesh->vertices()[s].getCoords(), verticesPerCluster);
     // compute the distance of each point to the center
     std::vector<double> squaredRadius(kNearestVertexIDs.size());
     std::transform(kNearestVertexIDs.begin(), kNearestVertexIDs.end(), squaredRadius.begin(), [&inMesh, s](auto i) {
