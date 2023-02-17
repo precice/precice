@@ -78,7 +78,7 @@ public:
   bool contains(const Vertex &vertex) const;
 
   /// Checks whether two bounding boxes are overlapping
-  bool overlapping(const BoundingBox &otherBB);
+  bool overlapping(const BoundingBox &otherBB) const;
 
   /**
    * @brief Returns the Center Of Gravity of the mesh
@@ -98,10 +98,7 @@ public:
   double getEdgeLength(int axis) const;
 
   /// returns the maximum length of the bounding box in any dimension
-  double getMaximumEdgeLength() const;
-
-  /// returns the coordinates of the bounding box in a specific direction
-  std::pair<double, double> getDirectionsCoordinates(int direction) const;
+  double longestEdgeLength() const;
 
   /// Calculate the area of bounding box
   double getArea(std::vector<bool> deadAxis);

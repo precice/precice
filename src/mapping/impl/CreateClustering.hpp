@@ -369,7 +369,7 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
     // this distance calculation guarantees that we have at least the minimal specified overlap, as we ceil the division for the number of clusters
     // as an alternative, once could use distance = const = maximumCenterDistance, which might lead to better results when projecting and removing duplicates (?)
     distances[d] = globalBB.getEdgeLength(d) / (nClustersGlobal[d]);
-    start[d]     = globalBB.getDirectionsCoordinates(d).first;
+    start[d]     = globalBB.minCorner()(d);
   }
   PRECICE_DEBUG("Distances: {}", distances);
 
@@ -398,9 +398,9 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
   for (unsigned int d = 0; d < start.size(); ++d) {
     // Exclude the case where we have no distances (nClustersGlobal[d] == 1 )
     if (distances[d] > 0) {
-      start[d] += std::ceil(((localBB.getDirectionsCoordinates(d).first - start[d]) / distances[d]) - math::NUMERICAL_ZERO_DIFFERENCE) * distances[d];
+      start[d] += std::ceil(((localBB.minCorner()(d) - start[d]) / distances[d]) - math::NUMERICAL_ZERO_DIFFERENCE) * distances[d];
       // One cluster for the starting point and a further one for each distance we can fit into the BB
-      nClustersLocal[d] = 1 + std::floor(((localBB.getDirectionsCoordinates(d).second - start[d]) / distances[d]) + math::NUMERICAL_ZERO_DIFFERENCE);
+      nClustersLocal[d] = 1 + std::floor(((localBB.maxCorner()(d) - start[d]) / distances[d]) + math::NUMERICAL_ZERO_DIFFERENCE);
     }
   }
 
