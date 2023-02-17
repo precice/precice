@@ -1577,6 +1577,15 @@ void ParticipantImpl::mapReadData()
       context.mapData();
     }
   }
+  clearMappings(_accessor->readMappingContexts());
+
+  for (auto &context : _accessor->globalDataContexts()) {
+    if (context.getDirection() == "read") {
+      PRECICE_DEBUG("Store read global data \"{}\" in Waveform ", context.getDataName());
+      // context.mapData();
+      context.storeDataInWaveform();
+    }
+  }
 }
 
 void ParticipantImpl::performDataActions(

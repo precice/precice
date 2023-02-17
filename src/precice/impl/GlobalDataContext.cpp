@@ -60,4 +60,14 @@ void GlobalDataContext::moveToNextWindow()
   _waveform->moveToNextWindow();
 }
 
+std::string GlobalDataContext::getDirection()
+{
+  return _direction;
+}
+
+void GlobalDataContext::storeDataInWaveform()
+{
+  _waveform->store(_providedData->values()); // store mapped or received _providedData in the _waveform
+}
+
 } // namespace precice::impl
