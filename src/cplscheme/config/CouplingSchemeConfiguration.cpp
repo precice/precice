@@ -1029,6 +1029,38 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
       PRECICE_ASSERT(_config.type == VALUE_MULTI);
     }
   }
+
+  // Add global data to be exchanged
+  for (const Config::GlobalExchange &exchange : _config.globalExchanges) {
+    const std::string &from     = exchange.from;
+    const std::string &to       = exchange.to;
+    const std::string &dataName = exchange.globalData->getName();
+
+    PRECICE_CHECK(to != from,
+                  "You cannot define an exchange from and to the same participant. "
+                  "Please check the <exchange data=\"{}\" from=\"{}\" to=\"{}\" /> tag in the <coupling-scheme:... /> of your precice-config.xml.",
+                  dataName, from, to);
+
+    PRECICE_CHECK((utils::contained(from, _config.participants) || from == _config.controller),
+                  "Participant \"{}\" is not configured for coupling scheme. "
+                  "Please check the <exchange data=\"{}\" from=\"{}\" to=\"{}\" /> tag in the <coupling-scheme:... /> of your precice-config.xml.",
+                  from, dataName, from, to);
+
+    PRECICE_CHECK((utils::contained(to, _config.participants) || to == _config.controller),
+                  "Participant \"{}\" is not configured for coupling scheme. "
+                  "Please check the <exchange data=\"{}\" from=\"{}\" to=\"{}\" /> tag in the <coupling-scheme:... /> of your precice-config.xml.",
+                  to, dataName, from, to);
+
+    const bool requiresInitialization = exchange.requiresInitialization;
+    if (from == accessor) {
+      scheme.addGlobalDataToSend(exchange.globalData, requiresInitialization);
+    } else if (to == accessor) {
+      scheme.addGlobalDataToReceive(exchange.globalData, requiresInitialization);
+    } else {
+      PRECICE_ASSERT(_config.type == VALUE_MULTI);
+    }
+  }
+
   scheme.determineInitialDataExchange();
 }
 
