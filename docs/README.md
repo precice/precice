@@ -2,7 +2,7 @@
 
 **Communication**  
 <a style="text-decoration: none" href="https://matrix.to/#/#precice_Lobby:gitter.im" target="_blank">
-  <img alt="Matrix" src="https://img.shields.io/matrix/#precice_Lobby:gitter.im">
+  <img alt="Matrix" src="https://img.shields.io/matrix/precice_Lobby:gitter.im?label=Matrix&logo=Matrix">
 </a>
 <a style="text-decoration: none" href="https://precice.discourse.group" target="_blank">
     <img alt="Discourse posts" src="https://img.shields.io/discourse/posts?label=discourse%20QA&server=https%3A%2F%2Fprecice.discourse.group">
