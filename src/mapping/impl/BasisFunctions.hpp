@@ -59,7 +59,7 @@ class ThinPlateSplines : public NoCompactSupportBase,
 public:
   double evaluate(double radius) const
   {
-    return std::log(std::max(radius, math::NUMERICAL_ZERO_DIFFERENCE)) * math::pow_int<2>(radius);
+    return this->_functor(radius, this->_params);
   }
 
 #ifndef PRECICE_NO_GINKGO
@@ -98,18 +98,20 @@ class Multiquadrics : public NoCompactSupportBase,
                       public DefiniteFunction<false> {
 public:
   explicit Multiquadrics(double c)
-      : _cPow2(std::pow(c, 2)) {}
+      : _cPow2(std::pow(c, 2))
+  {
+    _params.at(0) = _cPow2;
+  }
 
   double evaluate(double radius) const
   {
-    return std::sqrt(_cPow2 + math::pow_int<2>(radius));
+    return this->_functor(radius, this->_params);
   }
 
 #ifndef PRECICE_NO_GINKGO
 
   std::array<double, 3> getFunctionParameters()
   {
-    _params.at(0) = _cPow2;
     return _params;
   }
 
@@ -123,15 +125,13 @@ public:
     return this->_functor;
   }
 
-private:
-  std::array<double, 3>        _params;
-  const std::string            _name = "Multiquadratics";
-  const MultiQuadraticsFunctor _functor{};
-
 #endif
 
 private:
-  double _cPow2;
+  double                       _cPow2;
+  const MultiQuadraticsFunctor _functor{};
+  std::array<double, 3>        _params;
+  const std::string            _name = "Multiquadratics";
 };
 
 /**
@@ -150,18 +150,18 @@ public:
   {
     PRECICE_CHECK(math::greater(c, 0.0),
                   "Shape parameter for radial-basis-function inverse multiquadric has to be larger than zero. Please update the \"shape-parameter\" attribute.");
+    _params.at(0) = _cPow2;
   }
 
   double evaluate(double radius) const
   {
-    return 1.0 / std::sqrt(_cPow2 + math::pow_int<2>(radius));
+    return this->_functor(radius, this->_params);
   }
 
 #ifndef PRECICE_NO_GINKGO
 
   std::array<double, 3> getFunctionParameters()
   {
-    _params.at(0) = _cPow2;
     return _params;
   }
 
@@ -175,17 +175,16 @@ public:
     return this->_functor;
   }
 
-private:
-  std::array<double, 3>             _params;
-  const std::string                 _name = "InverseMultiquadratics";
-  const InverseMultiquadricsFunctor _functor{};
-
 #endif
 
 private:
   logging::Logger _log{"mapping::InverseMultiQuadrics"};
 
   double const _cPow2;
+
+  const InverseMultiquadricsFunctor _functor{};
+  std::array<double, 3>             _params;
+  const std::string                 _name = "InverseMultiquadratics";
 };
 
 /**
@@ -200,7 +199,7 @@ class VolumeSplines : public NoCompactSupportBase,
 public:
   double evaluate(double radius) const
   {
-    return std::abs(radius);
+    return this->_functor(radius, this->_params);
   }
 
 #ifndef PRECICE_NO_GINKGO
@@ -220,12 +219,12 @@ public:
     return this->_functor;
   }
 
+#endif
+
 private:
+  const VolumeSplinesFunctor _functor{};
   std::array<double, 3>      _params;
   const std::string          _name = "VolumeSplines";
-  const VolumeSplinesFunctor _functor{};
-
-#endif
 };
 
 /**
@@ -253,6 +252,9 @@ public:
     }
     double threshold = std::sqrt(-std::log(cutoffThreshold)) / shape;
     _supportRadius   = std::min(supportRadius, threshold);
+    _params.at(0)    = _shape;
+    _params.at(1)    = _supportRadius;
+    _params.at(2)    = _deltaY;
   }
 
   double getSupportRadius() const
@@ -262,10 +264,7 @@ public:
 
   double evaluate(const double radius) const
   {
-    if (radius > _supportRadius)
-      return 0.0;
-    else
-      return std::exp(-math::pow_int<2>(_shape * radius)) - _deltaY;
+    return this->_functor(radius, this->_params);
   }
 
 #ifndef PRECICE_NO_GINKGO
@@ -273,9 +272,6 @@ public:
   // TODO: Make precomputed
   std::array<double, 3> getFunctionParameters()
   {
-    _params.at(0) = _shape;
-    _params.at(1) = _supportRadius;
-    _params.at(2) = _deltaY;
     return _params;
   };
 
@@ -288,11 +284,6 @@ public:
   {
     return this->_functor;
   }
-
-private:
-  std::array<double, 3> _params;
-  const std::string     _name = "Gaussian";
-  const GaussianFunctor _functor{};
 
 #endif
 public:
@@ -308,6 +299,10 @@ private:
   double _supportRadius;
 
   double _deltaY = 0;
+
+  const GaussianFunctor _functor{};
+  std::array<double, 3> _params;
+  const std::string     _name = "Gaussian";
 };
 
 /**
@@ -328,7 +323,8 @@ public:
   {
     PRECICE_CHECK(math::greater(supportRadius, 0.0),
                   "Support radius for radial-basis-function compact thin-plate-splines c2 has to be larger than zero. Please update the \"support-radius\" attribute.");
-    _r_inv = 1. / supportRadius;
+    _r_inv        = 1. / supportRadius;
+    _params.at(0) = _r_inv;
   }
 
   double getSupportRadius() const
@@ -338,17 +334,13 @@ public:
 
   double evaluate(double radius) const
   {
-    double const p = radius * _r_inv;
-    if (p >= 1)
-      return 0.0;
-    return 1.0 - 30.0 * math::pow_int<2>(p) - 10.0 * math::pow_int<3>(p) + 45.0 * math::pow_int<4>(p) - 6.0 * math::pow_int<5>(p) - math::pow_int<3>(p) * 60.0 * std::log(std::max(p, math::NUMERICAL_ZERO_DIFFERENCE));
+    return this->_functor(radius, this->_params);
   }
 
 #ifndef PRECICE_NO_GINKGO
 
   std::array<double, 3> getFunctionParameters()
   {
-    _params.at(0) = _r_inv;
     return _params;
   }
 
@@ -362,17 +354,15 @@ public:
     return this->_functor;
   }
 
-private:
-  std::array<double, 3>                  _params;
-  const std::string                      _name = "CompactThinPlateSplinesC2";
-  const CompactThinPlateSplinesC2Functor _functor{};
-
 #endif
 
 private:
   logging::Logger _log{"mapping::CompactThinPlateSplinesC2"};
 
-  double _r_inv;
+  double                                 _r_inv;
+  const CompactThinPlateSplinesC2Functor _functor{};
+  std::array<double, 3>                  _params;
+  const std::string                      _name = "CompactThinPlateSplinesC2";
 };
 
 /**
@@ -393,7 +383,8 @@ public:
     logging::Logger _log{"mapping::CompactPolynomialC0"};
     PRECICE_CHECK(math::greater(supportRadius, 0.0),
                   "Support radius for radial-basis-function compact polynomial c0 has to be larger than zero. Please update the \"support-radius\" attribute.");
-    _r_inv = 1. / supportRadius;
+    _r_inv        = 1. / supportRadius;
+    _params.at(0) = _r_inv;
   }
 
   double getSupportRadius() const
@@ -403,17 +394,13 @@ public:
 
   double evaluate(double radius) const
   {
-    double p = radius * _r_inv;
-    if (p >= 1)
-      return 0.0;
-    return math::pow_int<2>(1.0 - p);
+    return this->_functor(radius, this->_params);
   }
 
 #ifndef PRECICE_NO_GINKGO
 
   std::array<double, 3> getFunctionParameters()
   {
-    _params.at(0) = _r_inv;
     return _params;
   }
 
@@ -427,15 +414,13 @@ public:
     return this->_functor;
   }
 
-private:
-  std::array<double, 3>            _params;
-  const std::string                _name = "CompactPolynomialC0";
-  const CompactPolynomialC0Functor _functor{};
-
 #endif
 
 private:
-  double _r_inv;
+  double                           _r_inv;
+  const CompactPolynomialC0Functor _functor{};
+  std::array<double, 3>            _params;
+  const std::string                _name = "CompactPolynomialC0";
 };
 
 /**
@@ -457,7 +442,8 @@ public:
     PRECICE_CHECK(math::greater(supportRadius, 0.0),
                   "Support radius for radial-basis-function compact polynomial c2 has to be larger than zero. Please update the \"support-radius\" attribute.");
 
-    _r_inv = 1. / supportRadius;
+    _r_inv        = 1. / supportRadius;
+    _params.at(0) = _r_inv;
   }
 
   double getSupportRadius() const
@@ -467,17 +453,13 @@ public:
 
   double evaluate(double radius) const
   {
-    double p = radius * _r_inv;
-    if (p >= 1)
-      return 0.0;
-    return math::pow_int<4>(1.0 - p) * (4 * p + 1);
+    return this->_functor(radius, this->_params);
   }
 
 #ifndef PRECICE_NO_GINKGO
 
   std::array<double, 3> getFunctionParameters()
   {
-    _params.at(0) = _r_inv;
     return _params;
   }
 
@@ -491,15 +473,13 @@ public:
     return this->_functor;
   }
 
-private:
-  std::array<double, 3>            _params;
-  const std::string                _name = "CompactPolynomialC2";
-  const CompactPolynomialC2Functor _functor{};
-
 #endif
 
 private:
-  double _r_inv;
+  double                           _r_inv;
+  const CompactPolynomialC2Functor _functor{};
+  std::array<double, 3>            _params;
+  const std::string                _name = "CompactPolynomialC2";
 };
 
 /**
@@ -521,7 +501,8 @@ public:
     PRECICE_CHECK(math::greater(supportRadius, 0.0),
                   "Support radius for radial-basis-function compact polynomial c4 has to be larger than zero. Please update the \"support-radius\" attribute.");
 
-    _r_inv = 1. / supportRadius;
+    _r_inv        = 1. / supportRadius;
+    _params.at(0) = _r_inv;
   }
 
   double getSupportRadius() const
@@ -531,17 +512,13 @@ public:
 
   double evaluate(double radius) const
   {
-    double p = radius * _r_inv;
-    if (p >= 1)
-      return 0.0;
-    return math::pow_int<6>(1.0 - p) * (35 * math::pow_int<2>(p) + 18 * p + 3);
+    return this->_functor(radius, this->_params);
   }
 
 #ifndef PRECICE_NO_GINKGO
 
   std::array<double, 3> getFunctionParameters()
   {
-    _params.at(0) = _r_inv;
     return _params;
   }
 
@@ -555,15 +532,13 @@ public:
     return this->_functor;
   }
 
-private:
-  std::array<double, 3>            _params;
-  const std::string                _name = "CompactPolynomialC4";
-  const CompactPolynomialC4Functor _functor{};
-
 #endif
 
 private:
-  double _r_inv;
+  double                           _r_inv;
+  const CompactPolynomialC4Functor _functor{};
+  std::array<double, 3>            _params;
+  const std::string                _name = "CompactPolynomialC4";
 };
 
 /**
@@ -585,7 +560,8 @@ public:
     PRECICE_CHECK(math::greater(supportRadius, 0.0),
                   "Support radius for radial-basis-function compact polynomial c6 has to be larger than zero. Please update the \"support-radius\" attribute.");
 
-    _r_inv = 1. / supportRadius;
+    _r_inv              = 1. / supportRadius;
+    this->_params.at(0) = _r_inv;
   }
 
   double getSupportRadius() const
@@ -595,18 +571,14 @@ public:
 
   double evaluate(double radius) const
   {
-    double p = radius * _r_inv;
-    if (p >= 1)
-      return 0.0;
-    return math::pow_int<8>(1.0 - p) * (32.0 * math::pow_int<3>(p) + 25.0 * math::pow_int<2>(p) + 8.0 * p + 1.0);
+    return this->_functor(radius, this->_params);
   }
 
 #ifndef PRECICE_NO_GINKGO
 
-  std::array<double, 3> getFunctionParameters()
+  const std::array<double, 3> getFunctionParameters()
   {
-    _params.at(0) = _r_inv;
-    return _params;
+    return this->_params;
   }
 
   const std::string getName() const
@@ -619,15 +591,13 @@ public:
     return this->_functor;
   }
 
-private:
-  std::array<double, 3>            _params;
-  const std::string                _name = "CompactPolynomialC6";
-  const CompactPolynomialC6Functor _functor{};
-
 #endif
 
 private:
-  double _r_inv;
+  double                           _r_inv;
+  const CompactPolynomialC6Functor _functor{};
+  std::array<double, 3>            _params;
+  const std::string                _name = "CompactPolynomialC6";
 };
 } // namespace mapping
 } // namespace precice
