@@ -140,10 +140,10 @@ private:
 
   std::shared_ptr<GinkgoVector> _polynomialContribution;
 
-  // Solver used for iteratively solving linear systems of equations TODO: Find out how to make dynamic for different solver families
-  std::shared_ptr<precice::mapping::cg>    _cgSolver;
-  std::shared_ptr<precice::mapping::gmres> _gmresSolver;
-  std::shared_ptr<precice::mapping::mg>    _mgSolver;
+  // Solver used for iteratively solving linear systems of equations
+  std::shared_ptr<precice::mapping::cg>    _cgSolver    = nullptr;
+  std::shared_ptr<precice::mapping::gmres> _gmresSolver = nullptr;
+  std::shared_ptr<precice::mapping::mg>    _mgSolver    = nullptr;
 
   SolverType _solverType;
 
@@ -282,8 +282,6 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
   // Wait for the kernels to finish
   this->_deviceExecutor->synchronize();
   this->_assemblyEvent.stop();
-
-  // TODO: Add Polynomial == SEPARATE case
 
   auto iterationCriterion = gko::share(gko::stop::Iteration::build()
                                            .with_max_iters(static_cast<std::size_t>(1e6))
@@ -472,10 +470,8 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsis
   this->_copyEvent.start();
   output = gko::clone(this->_hostExecutor, output);
 
-  // TODO: Check if rather use Ginkgo throughout process instead of Eigen
   Eigen::VectorXd result(output->get_size()[0], 1);
 
-  // TODO: Check if rather put this procedure into function
   for (Eigen::Index i = 0; i < result.rows(); ++i) {
     result(i, 0) = output->at(i, 0);
   }
