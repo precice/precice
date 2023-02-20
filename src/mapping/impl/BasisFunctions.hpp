@@ -1,14 +1,24 @@
 #pragma once
 
-#include <array>
-#include "logging/Logger.hpp"
-#include "math/math.hpp"
+#ifdef __NVCC__
 
-#ifndef PRECICE_NO_GINKGO
+#include <cuda_runtime.h>
+#define PRECICE_HOST_DEVICE __host__ __device__
+#define FMA fma
 
-#include "mapping/impl/DeviceBasisFunctions.cuh"
+#else
+
+#define PRECICE_HOST_DEVICE
+#define FMA std::fma
 
 #endif
+
+PRECICE_HOST_DEVICE const double NUMERICAL_ZERO_DIFFERENCE = 1.0e-14;
+
+#include <array>
+
+#include "logging/Logger.hpp"
+#include "math/math.hpp"
 
 namespace precice {
 namespace mapping {
@@ -59,7 +69,13 @@ class ThinPlateSplines : public NoCompactSupportBase,
 public:
   double evaluate(double radius) const
   {
-    return this->_functor(radius, this->_params);
+    return this->operator()(radius, this->_params);
+  }
+
+  PRECICE_HOST_DEVICE inline double operator()(const double radius, const std::array<double, 3> &params) const
+  {
+    // We don't need to read any values from params since there is no need here
+    return std::log(std::max(radius, NUMERICAL_ZERO_DIFFERENCE)) * math::pow_int<2>(radius);
   }
 
 #ifndef PRECICE_NO_GINKGO
@@ -69,20 +85,8 @@ public:
     return _params;
   }
 
-  const std::string getName() const
-  {
-    return this->_name;
-  }
-
-  const ThinPlateSplinesFunctor getFunctor() const
-  {
-    return this->_functor;
-  }
-
 private:
-  std::array<double, 3>         _params;
-  const std::string             _name = "ThinPlateSplines";
-  const ThinPlateSplinesFunctor _functor{};
+  std::array<double, 3> _params;
 
 #endif
 };
@@ -105,7 +109,13 @@ public:
 
   double evaluate(double radius) const
   {
-    return this->_functor(radius, this->_params);
+    return this->operator()(radius, this->_params);
+  }
+
+  PRECICE_HOST_DEVICE inline double operator()(const double radius, const std::array<double, 3> &params) const
+  {
+    double cPow2 = params.at(0);
+    return std::sqrt(cPow2 + math::pow_int<2>(radius));
   }
 
 #ifndef PRECICE_NO_GINKGO
@@ -115,23 +125,11 @@ public:
     return _params;
   }
 
-  const std::string getName() const
-  {
-    return this->_name;
-  }
-
-  const MultiQuadraticsFunctor getFunctor() const
-  {
-    return this->_functor;
-  }
-
 #endif
 
 private:
-  double                       _cPow2;
-  const MultiQuadraticsFunctor _functor{};
-  std::array<double, 3>        _params;
-  const std::string            _name = "Multiquadratics";
+  double                _cPow2;
+  std::array<double, 3> _params;
 };
 
 /**
@@ -155,7 +153,13 @@ public:
 
   double evaluate(double radius) const
   {
-    return this->_functor(radius, this->_params);
+    return this->operator()(radius, this->_params);
+  }
+
+  PRECICE_HOST_DEVICE inline double operator()(const double radius, const std::array<double, 3> &params) const
+  {
+    double cPow2 = params.at(0);
+    return 1.0 / std::sqrt(cPow2 + math::pow_int<2>(radius));
   }
 
 #ifndef PRECICE_NO_GINKGO
@@ -165,16 +169,6 @@ public:
     return _params;
   }
 
-  const std::string getName() const
-  {
-    return this->_name;
-  }
-
-  const InverseMultiquadricsFunctor getFunctor() const
-  {
-    return this->_functor;
-  }
-
 #endif
 
 private:
@@ -182,9 +176,7 @@ private:
 
   double const _cPow2;
 
-  const InverseMultiquadricsFunctor _functor{};
-  std::array<double, 3>             _params;
-  const std::string                 _name = "InverseMultiquadratics";
+  std::array<double, 3> _params;
 };
 
 /**
@@ -199,7 +191,12 @@ class VolumeSplines : public NoCompactSupportBase,
 public:
   double evaluate(double radius) const
   {
-    return this->_functor(radius, this->_params);
+    return this->operator()(radius, this->_params);
+  }
+
+  PRECICE_HOST_DEVICE inline double operator()(const double radius, const std::array<double, 3> &params) const
+  {
+    return std::abs(radius);
   }
 
 #ifndef PRECICE_NO_GINKGO
@@ -209,22 +206,10 @@ public:
     return _params;
   }
 
-  const std::string getName() const
-  {
-    return this->_name;
-  }
-
-  const VolumeSplinesFunctor getFunctor() const
-  {
-    return this->_functor;
-  }
-
 #endif
 
 private:
-  const VolumeSplinesFunctor _functor{};
-  std::array<double, 3>      _params;
-  const std::string          _name = "VolumeSplines";
+  std::array<double, 3> _params;
 };
 
 /**
@@ -264,7 +249,22 @@ public:
 
   double evaluate(const double radius) const
   {
-    return this->_functor(radius, this->_params);
+    return this->operator()(radius, this->_params);
+  }
+
+  PRECICE_HOST_DEVICE inline double operator()(const double radius, const std::array<double, 3> &params) const
+  {
+    {
+      double shape         = params.at(0);
+      double supportRadius = params.at(1);
+      double deltaY        = params.at(2);
+
+      if (radius > supportRadius) {
+        return 0.0;
+      } else {
+        return std::exp(-math::pow_int<2>(shape * radius)) - deltaY;
+      }
+    }
   }
 
 #ifndef PRECICE_NO_GINKGO
@@ -274,16 +274,6 @@ public:
   {
     return _params;
   };
-
-  const std::string getName() const
-  {
-    return this->_name;
-  }
-
-  const GaussianFunctor getFunctor() const
-  {
-    return this->_functor;
-  }
 
 #endif
 public:
@@ -300,9 +290,7 @@ private:
 
   double _deltaY = 0;
 
-  const GaussianFunctor _functor{};
   std::array<double, 3> _params;
-  const std::string     _name = "Gaussian";
 };
 
 /**
@@ -334,7 +322,18 @@ public:
 
   double evaluate(double radius) const
   {
-    return this->_functor(radius, this->_params);
+    return this->operator()(radius, this->_params);
+  }
+
+  PRECICE_HOST_DEVICE inline double operator()(const double radius, const std::array<double, 3> &params) const
+  {
+    double       r_inv = params.at(0);
+    double const p     = radius * r_inv;
+    if (p >= 1) {
+      return 0.0;
+    } else {
+      return 1.0 - 30.0 * std::pow(p, 2) - 10.0 * std::pow(p, 3) + 45.0 * std::pow(p, 4) - 6.0 * std::pow(p, 5) - std::pow(p, 3) * 60.0 * std::log(std::max(p, NUMERICAL_ZERO_DIFFERENCE));
+    }
   }
 
 #ifndef PRECICE_NO_GINKGO
@@ -344,25 +343,13 @@ public:
     return _params;
   }
 
-  const std::string getName() const
-  {
-    return this->_name;
-  }
-
-  const CompactThinPlateSplinesC2Functor getFunctor() const
-  {
-    return this->_functor;
-  }
-
 #endif
 
 private:
   logging::Logger _log{"mapping::CompactThinPlateSplinesC2"};
 
-  double                                 _r_inv;
-  const CompactThinPlateSplinesC2Functor _functor{};
-  std::array<double, 3>                  _params;
-  const std::string                      _name = "CompactThinPlateSplinesC2";
+  double                _r_inv;
+  std::array<double, 3> _params;
 };
 
 /**
@@ -394,7 +381,18 @@ public:
 
   double evaluate(double radius) const
   {
-    return this->_functor(radius, this->_params);
+    return this->operator()(radius, this->_params);
+  }
+
+  PRECICE_HOST_DEVICE inline double operator()(const double radius, const std::array<double, 3> &params) const
+  {
+    double       r_inv = params.at(0);
+    double const p     = radius * r_inv;
+    if (p >= 1) {
+      return 0.0;
+    } else {
+      return std::pow(1.0 - p, 2);
+    }
   }
 
 #ifndef PRECICE_NO_GINKGO
@@ -404,23 +402,11 @@ public:
     return _params;
   }
 
-  const std::string getName() const
-  {
-    return this->_name;
-  }
-
-  const CompactPolynomialC0Functor getFunctor() const
-  {
-    return this->_functor;
-  }
-
 #endif
 
 private:
-  double                           _r_inv;
-  const CompactPolynomialC0Functor _functor{};
-  std::array<double, 3>            _params;
-  const std::string                _name = "CompactPolynomialC0";
+  double                _r_inv;
+  std::array<double, 3> _params;
 };
 
 /**
@@ -453,7 +439,18 @@ public:
 
   double evaluate(double radius) const
   {
-    return this->_functor(radius, this->_params);
+    return this->operator()(radius, this->_params);
+  }
+
+  PRECICE_HOST_DEVICE inline double operator()(const double radius, const std::array<double, 3> &params) const
+  {
+    double       r_inv = params.at(0);
+    double const p     = radius * r_inv;
+    if (p >= 1) {
+      return 0.0;
+    } else {
+      return std::pow(1.0 - p, 4) * (4 * p + 1);
+    }
   }
 
 #ifndef PRECICE_NO_GINKGO
@@ -463,23 +460,11 @@ public:
     return _params;
   }
 
-  const std::string getName() const
-  {
-    return this->_name;
-  }
-
-  const CompactPolynomialC2Functor getFunctor() const
-  {
-    return this->_functor;
-  }
-
 #endif
 
 private:
-  double                           _r_inv;
-  const CompactPolynomialC2Functor _functor{};
-  std::array<double, 3>            _params;
-  const std::string                _name = "CompactPolynomialC2";
+  double                _r_inv;
+  std::array<double, 3> _params;
 };
 
 /**
@@ -512,7 +497,18 @@ public:
 
   double evaluate(double radius) const
   {
-    return this->_functor(radius, this->_params);
+    return this->operator()(radius, this->_params);
+  }
+
+  PRECICE_HOST_DEVICE inline double operator()(const double radius, const std::array<double, 3> &params) const
+  {
+    double       r_inv = params.at(0);
+    double const p     = radius * r_inv;
+    if (p >= 1) {
+      return 0.0;
+    } else {
+      return std::pow(1.0 - p, 6) * (35 * std::pow(p, 2) + 18 * p + 3, 2);
+    }
   }
 
 #ifndef PRECICE_NO_GINKGO
@@ -522,23 +518,11 @@ public:
     return _params;
   }
 
-  const std::string getName() const
-  {
-    return this->_name;
-  }
-
-  const CompactPolynomialC4Functor getFunctor() const
-  {
-    return this->_functor;
-  }
-
 #endif
 
 private:
-  double                           _r_inv;
-  const CompactPolynomialC4Functor _functor{};
-  std::array<double, 3>            _params;
-  const std::string                _name = "CompactPolynomialC4";
+  double                _r_inv;
+  std::array<double, 3> _params;
 };
 
 /**
@@ -571,8 +555,22 @@ public:
 
   double evaluate(double radius) const
   {
-    return this->_functor(radius, this->_params);
+    return this->operator()(radius, this->_params);
   }
+
+  PRECICE_HOST_DEVICE inline double operator()(const double radius, const std::array<double, 3> &params) const
+  {
+    double       r_inv = params.at(0);
+    double const p     = radius * r_inv;
+    if (p >= 1) {
+      return 0.0;
+    } else {
+      double result = FMA(8.0, p, 1.0);
+      result        = FMA(25.0, math::pow_int<2>(p), result);
+      result        = FMA(32.0, math::pow_int<3>(p), result);
+      return result * math::pow_int<8>(1.0 - p);
+    }
+  };
 
 #ifndef PRECICE_NO_GINKGO
 
@@ -581,23 +579,11 @@ public:
     return this->_params;
   }
 
-  const std::string getName() const
-  {
-    return this->_name;
-  }
-
-  const CompactPolynomialC6Functor getFunctor() const
-  {
-    return this->_functor;
-  }
-
 #endif
 
 private:
-  double                           _r_inv;
-  const CompactPolynomialC6Functor _functor{};
-  std::array<double, 3>            _params;
-  const std::string                _name = "CompactPolynomialC6";
+  double                _r_inv;
+  std::array<double, 3> _params;
 };
 } // namespace mapping
 } // namespace precice

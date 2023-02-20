@@ -243,6 +243,7 @@ if (PRECICE_GinkgoParallelization)
     set(CMAKE_CUDA_FLAGS "-lineinfo --allow-unsupported-compiler --use_fast_math --std=c++17 --expt-extended-lambda --expt-relaxed-constexpr -Xcompiler -fopenmp -Wall")
     set(CMAKE_POSITION_INDEPENDENT_CODE ON)
     set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
+    include_directories(${EIGEN3_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/fmt/include)
 
   endif()
 
@@ -362,6 +363,7 @@ if (PRECICE_GinkgoParallelization)
 
   if(CMAKE_CUDA_COMPILER)
     target_link_libraries(preciceCore PUBLIC cublas cusolver)
+    target_compile_definitions(preciceCore PUBLIC EIGEN_NO_CUDA)
   endif()
 else()
   target_compile_definitions(preciceCore PUBLIC PRECICE_NO_GINKGO)

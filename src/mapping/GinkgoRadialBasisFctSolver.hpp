@@ -11,7 +11,6 @@
 #include <numeric>
 #include "mapping/config/MappingConfiguration.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
-#include "mapping/impl/DeviceBasisFunctions.cuh"
 #include "mesh/Mesh.hpp"
 #include "precice/types.hpp"
 #include "utils/Event.hpp"
@@ -77,7 +76,7 @@ const std::map<std::string, PreconditionerType> preconditionerTypeLookup{
 
 const std::map<std::string, std::function<std::shared_ptr<gko::Executor>()>> ginkgoExecutorLookup{{"reference-executor", [] { return gko::ReferenceExecutor::create(); }},
                                                                                                   {"omp-executor", [] { return gko::OmpExecutor::create(); }},
-                                                                                                  {"cuda-executor", [] { return gko::CudaExecutor::create(0, gko::OmpExecutor::create(), true, gko::allocation_mode::unified_global); }},
+                                                                                                  {"cuda-executor", [] { return gko::CudaExecutor::create(0, gko::OmpExecutor::create(), true, gko::allocation_mode::device); }},
                                                                                                   {"hip-executor", [] { return gko::HipExecutor::create(0, gko::OmpExecutor::create(), true); }}};
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -277,8 +276,8 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
 
   // Launch RBF fill kernel on device
   this->_assemblyEvent.start();
-  this->_deviceExecutor->run(make_rbf_fill_operation(this->_rbfSystemMatrix->get_size()[0], this->_rbfSystemMatrix->get_size()[1], meshDim, activeAxis, this->_rbfSystemMatrix->get_values(), inputVertices->get_values(), inputVertices->get_values(), basisFunction.getFunctor(), basisFunction.getFunctionParameters(), inputVertices->get_size()[1], inputVertices->get_size()[1], Polynomial::ON == polynomial, polyparams)); // polynomial evaluates to true only if ON is set
-  this->_deviceExecutor->run(make_rbf_fill_operation(this->_matrixA->get_size()[0], this->_matrixA->get_size()[1], meshDim, activeAxis, this->_matrixA->get_values(), inputVertices->get_values(), outputVertices->get_values(), basisFunction.getFunctor(), basisFunction.getFunctionParameters(), inputVertices->get_size()[1], outputVertices->get_size()[1], Polynomial::ON == polynomial, polyparams));
+  this->_deviceExecutor->run(make_rbf_fill_operation(this->_rbfSystemMatrix->get_size()[0], this->_rbfSystemMatrix->get_size()[1], meshDim, activeAxis, this->_rbfSystemMatrix->get_values(), inputVertices->get_values(), inputVertices->get_values(), basisFunction, basisFunction.getFunctionParameters(), inputVertices->get_size()[1], inputVertices->get_size()[1], Polynomial::ON == polynomial, polyparams)); // polynomial evaluates to true only if ON is set
+  this->_deviceExecutor->run(make_rbf_fill_operation(this->_matrixA->get_size()[0], this->_matrixA->get_size()[1], meshDim, activeAxis, this->_matrixA->get_values(), inputVertices->get_values(), outputVertices->get_values(), basisFunction, basisFunction.getFunctionParameters(), inputVertices->get_size()[1], outputVertices->get_size()[1], Polynomial::ON == polynomial, polyparams));
 
   // Wait for the kernels to finish
   this->_deviceExecutor->synchronize();
