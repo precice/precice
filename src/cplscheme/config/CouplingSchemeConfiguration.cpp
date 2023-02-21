@@ -486,6 +486,8 @@ void CouplingSchemeConfiguration::addTransientLimitTags(
                           .setOptions({VALUE_FIXED, VALUE_FIRST_PARTICIPANT})
                           .setDocumentation("The method used to determine the time window size. Use `fixed` to fix the time window size for the participants.");
     tagTimeWindowSize.addAttribute(attrMethod);
+  } else {
+    tagTimeWindowSize.addAttributeHint(ATTR_METHOD, "This feature is only available for serial coupling schemes.");
   }
   tag.addSubtag(tagTimeWindowSize);
 }
