@@ -52,48 +52,60 @@ XMLTag &XMLTag::addSubtag(const XMLTag &tag)
 
 XMLTag &XMLTag::addAttribute(const XMLAttribute<double> &attribute)
 {
-  PRECICE_TRACE(attribute.getName());
-  PRECICE_ASSERT(not utils::contained(attribute.getName(), _attributes));
-  _attributes.insert(attribute.getName());
-  _doubleAttributes.insert(std::pair<std::string, XMLAttribute<double>>(attribute.getName(), attribute));
+  const auto &name = attribute.getName();
+  PRECICE_TRACE(name);
+  PRECICE_ASSERT(_attributes.count(name) == 0 && _attributeHints.count(name) == 0);
+  _attributes.insert(name);
+  _doubleAttributes.insert(std::pair<std::string, XMLAttribute<double>>(name, attribute));
   return *this;
 }
 
 XMLTag &XMLTag::addAttribute(const XMLAttribute<int> &attribute)
 {
-  PRECICE_TRACE(attribute.getName());
-  PRECICE_ASSERT(not utils::contained(attribute.getName(), _attributes));
-  _attributes.insert(attribute.getName());
-  _intAttributes.insert(std::pair<std::string, XMLAttribute<int>>(attribute.getName(), attribute));
+  const auto &name = attribute.getName();
+  PRECICE_TRACE(name);
+  PRECICE_ASSERT(_attributes.count(name) == 0 && _attributeHints.count(name) == 0);
+  _attributes.insert(name);
+  _intAttributes.insert(std::pair<std::string, XMLAttribute<int>>(name, attribute));
   return *this;
 }
 
 XMLTag &XMLTag::addAttribute(const XMLAttribute<std::string> &attribute)
 {
-  PRECICE_TRACE(attribute.getName());
-  PRECICE_ASSERT(not utils::contained(attribute.getName(), _attributes));
-  _attributes.insert(attribute.getName());
-  _stringAttributes.insert(std::pair<std::string, XMLAttribute<std::string>>(attribute.getName(), attribute));
+  const auto &name = attribute.getName();
+  PRECICE_TRACE(name);
+  PRECICE_ASSERT(_attributes.count(name) == 0 && _attributeHints.count(name) == 0);
+  _attributes.insert(name);
+  _stringAttributes.insert(std::pair<std::string, XMLAttribute<std::string>>(name, attribute));
   return *this;
 }
 
 XMLTag &XMLTag::addAttribute(const XMLAttribute<bool> &attribute)
 {
-  PRECICE_TRACE(attribute.getName());
-  PRECICE_ASSERT(not utils::contained(attribute.getName(), _attributes));
-  _attributes.insert(attribute.getName());
-  _booleanAttributes.insert(std::pair<std::string, XMLAttribute<bool>>(attribute.getName(), attribute));
+  const auto &name = attribute.getName();
+  PRECICE_TRACE(name);
+  PRECICE_ASSERT(_attributes.count(name) == 0 && _attributeHints.count(name) == 0);
+  _attributes.insert(name);
+  _booleanAttributes.insert(std::pair<std::string, XMLAttribute<bool>>(name, attribute));
   return *this;
 }
 
 XMLTag &XMLTag::addAttribute(const XMLAttribute<Eigen::VectorXd> &attribute)
 {
-  PRECICE_TRACE(attribute.getName());
-  PRECICE_ASSERT(not utils::contained(attribute.getName(), _attributes));
-  _attributes.insert(attribute.getName());
+  const auto &name = attribute.getName();
+  PRECICE_TRACE(name);
+  PRECICE_ASSERT(_attributes.count(name) == 0 && _attributeHints.count(name) == 0);
+  _attributes.insert(name);
   _eigenVectorXdAttributes.insert(
-      std::pair<std::string, XMLAttribute<Eigen::VectorXd>>(attribute.getName(), attribute));
+      std::pair<std::string, XMLAttribute<Eigen::VectorXd>>(name, attribute));
   return *this;
+}
+
+void XMLTag::addAttributeHint(std::string name, std::string message)
+{
+  PRECICE_TRACE(name);
+  PRECICE_ASSERT(_attributes.count(name) == 0 && _attributeHints.count(name) == 0);
+  _attributeHints.emplace(std::move(name), std::move(message));
 }
 
 bool XMLTag::hasAttribute(const std::string &attributeName)
@@ -187,6 +199,11 @@ void XMLTag::readAttributes(const std::map<std::string, std::string> &aAttribute
     auto name = element.first;
 
     if (not utils::contained(name, _attributes)) {
+      // check existing hints
+      if (auto pos = _attributeHints.find(name);
+          pos != _attributeHints.end()) {
+        PRECICE_ERROR("The tag <{}> in the configuration contains the attribute \"{}\". {}", _fullName, name, pos->second);
+      }
       auto matches = utils::computeMatches(name, _attributes);
       if (matches.front().distance < 3) {
         PRECICE_ERROR("The tag <{}> in the configuration contains an unknown attribute \"{}\". Did you mean \"{}\"?", _fullName, name, matches.front().name);
