@@ -148,7 +148,7 @@ void QRFactorization::applyFilter(double singularityLimit, std::vector<int> &del
   } else if (_filter == Acceleration::QR3FILTER) {
     int index = cols() - 1;
     // Iterate from the last column to the 2nd column from the left
-    if (computeQR2 == true) {
+    if (computeQR2Filter == true) {
       PRECICE_DEBUG("  Pre-scaling weights were reset. Reverting to QR2 and rebuilding QR.");
       resetFilter(singularityLimit, delIndices, V);
     } else {
@@ -168,7 +168,8 @@ void QRFactorization::applyFilter(double singularityLimit, std::vector<int> &del
 }
 
 /**
- * Recomputes QR factorization using the QR2 filter
+ * Recomputes QR factorization using the QR2 filter.
+ * This removes columns during the QR factorization step. 
  * Returns Q and R.
  */
 void QRFactorization::resetFilter(double singularityLimit, std::vector<int> &delIndices, Eigen::MatrixXd &V)
