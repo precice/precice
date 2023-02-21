@@ -430,7 +430,6 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsis
   this->_copyEvent.pause();
 
   if (polynomial == Polynomial::SEPARATE) {
-    // TODO: Check if there is least squares solver
     auto polynomialSolverFactory = cg::build()
                                        .with_criteria(gko::stop::Iteration::build()
                                                           .with_max_iters(static_cast<std::size_t>(1e6))
