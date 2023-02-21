@@ -149,7 +149,7 @@ Run all these tests manually on your system. If you succeed, please write a comm
 ### Marketing
 
 * [ ] Finalize post on [Discourse](https://precice.discourse.group/)
-* [ ] Write on [Matrix](https://matrix.to/#/#precice_Lobby:gitter.im)
+* [ ] Write on [Matrix](https://matrix.to/#/#precice_lobby:gitter.im?web-instance[element.io]=app.gitter.im)
 * [ ] Send announcement to the [mailing list](https://mailman.informatik.uni-stuttgart.de/mailman/listinfo/precice)
 * [ ] [CFD-Online](https://www.cfd-online.com/Forum/news.cgi/form/0)
 * [ ] NADigest
