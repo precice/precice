@@ -17,12 +17,12 @@ PROGRAM main
   IF(participantName .eq. 'SolverOne') THEN
     writeDataName = 'Data-One'
     readDataName = 'Data-Two'
-    meshName = 'Mesh-One'
+    meshName = 'SolverOne-Mesh'
   ENDIF
   IF(participantName .eq. 'SolverTwo') THEN
     writeDataName = 'Data-Two'
     readDataName = 'Data-One'
-    meshName = 'Mesh-Two'
+    meshName = 'SolverTwo-Mesh'
   ENDIF
 
   rank = 0

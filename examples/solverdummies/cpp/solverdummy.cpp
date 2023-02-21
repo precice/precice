@@ -30,12 +30,12 @@ int main(int argc, char **argv)
   if (solverName == "SolverOne") {
     dataWriteName = "Data-One";
     dataReadName  = "Data-Two";
-    meshName      = "Mesh-One";
+    meshName      = "SolverOne-Mesh";
   }
   if (solverName == "SolverTwo") {
     dataReadName  = "Data-One";
     dataWriteName = "Data-Two";
-    meshName      = "Mesh-Two";
+    meshName      = "SolverTwo-Mesh";
   }
 
   int meshID           = interface.getMeshID(meshName);
