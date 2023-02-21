@@ -216,10 +216,10 @@ void BaseQNAcceleration::updateDifferenceMatrices(
         residualMagnitude /= utils::IntraComm::l2norm(_values);
       }
 
-      if ( math::equals(residualMagnitude, 0.0) ) {
+      if (math::equals(residualMagnitude, 0.0)) {
         PRECICE_INFO(
-                "The coupling residual equals almost zero. The newest column will not be added to V and W. "
-                "If V and W are empty, then a constant relaxation step will be applied. ");
+            "The coupling residual equals almost zero. The newest column will not be added to V and W. "
+            "If V and W are empty, then a constant relaxation step will be applied. ");
         _forceUnderRelaxationStep = true;
       }
 
@@ -293,7 +293,7 @@ void BaseQNAcceleration::performAcceleration(
    */
   updateDifferenceMatrices(cplData);
 
-  if ( ( _firstIteration && (_firstTimeWindow || _forceInitialRelaxation) ) || ( _forceUnderRelaxationStep && ( _matrixV.cols() > 0 ) ) ) {
+  if ((_firstIteration && (_firstTimeWindow || _forceInitialRelaxation)) || (_forceUnderRelaxationStep && (_matrixV.cols() > 0))) {
     PRECICE_DEBUG("   Performing underrelaxation");
     _oldXTilde    = _values;    // Store x tilde
     _oldResiduals = _residuals; // Store current residual
