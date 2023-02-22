@@ -273,14 +273,14 @@ void AccelerationConfiguration::xmlEndTagCallback(
         //if (not _config.preconditionerUpdate){ PRECICE_WARN("Preconditioner update is disabled. This is not supported for the value preconditioner.");}
       } else if (_config.preconditionerType == VALUE_RESIDUAL_SUM_PRECONDITIONER) {
         bool updatePreconWeights = true;
-        if (_config.preconditionerUpdate == VALUE_RESIDUAL_SUM_ALWAYS){
+        if (_config.preconditionerUpdate == VALUE_RESIDUAL_SUM_ALWAYS) {
           updatePreconWeights = true;
         } else if (_config.preconditionerUpdate == VALUE_RESIDUAL_SUM_THRESHOLD) {
           updatePreconWeights = false;
         } else {
           PRECICE_ERROR("Please use a valid tag. Current options are \"always\" and \"on-threshold\".");
         }
-          _preconditioner = PtrPreconditioner(new ResidualSumPreconditioner(_config.precond_nbNonConstTWindows, updatePreconWeights, _config.preconLimitUpdate));
+        _preconditioner = PtrPreconditioner(new ResidualSumPreconditioner(_config.precond_nbNonConstTWindows, updatePreconWeights, _config.preconLimitUpdate));
       } else {
         // no preconditioner defined
         std::vector<double> factors;
@@ -461,8 +461,8 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
                                       .setDocumentation("The type of the preconditioner.");
     tagPreconditioner.addAttribute(attrPreconditionerType);
     auto attrPreconditionerUpdate = XMLAttribute<std::string>(ATTR_PRECOND_UPDATE, VALUE_RESIDUAL_SUM_ALWAYS)
-                                      .setOptions({VALUE_RESIDUAL_SUM_ALWAYS,
-                                                   VALUE_RESIDUAL_SUM_THRESHOLD})
+                                        .setOptions({VALUE_RESIDUAL_SUM_ALWAYS,
+                                                     VALUE_RESIDUAL_SUM_THRESHOLD})
                                         .setDocumentation("Periodically updates the preconditioner weights after the first time windows.");
     tagPreconditioner.addAttribute(attrPreconditionerUpdate);
     auto nonconstTWindows = makeXMLAttribute(ATTR_PRECOND_NONCONST_TIME_WINDOWS, -1)
@@ -542,8 +542,8 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
                                       .setDocumentation("Type of the preconditioner.");
     tagPreconditioner.addAttribute(attrPreconditionerType);
     auto attrPreconditionerUpdate = XMLAttribute<std::string>(ATTR_PRECOND_UPDATE, VALUE_RESIDUAL_SUM_ALWAYS)
-                                      .setOptions({VALUE_RESIDUAL_SUM_ALWAYS,
-                                                   VALUE_RESIDUAL_SUM_THRESHOLD})
+                                        .setOptions({VALUE_RESIDUAL_SUM_ALWAYS,
+                                                     VALUE_RESIDUAL_SUM_THRESHOLD})
                                         .setDocumentation("Periodically updates the preconditioner weights after the first time windows.");
     tagPreconditioner.addAttribute(attrPreconditionerUpdate);
     auto nonconstTWindows = makeXMLAttribute(ATTR_PRECOND_NONCONST_TIME_WINDOWS, -1)

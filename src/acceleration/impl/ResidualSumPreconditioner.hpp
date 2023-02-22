@@ -38,9 +38,8 @@ private:
   std::vector<double> _residualSum;
   std::vector<double> _previousResidualSum;
   int                 timeWindowPreconditioner = 0;
-  bool                _preconForceUpdate; 
+  bool                _preconForceUpdate;
   double              _updatePreconLimit;
-
 };
 
 } // namespace impl

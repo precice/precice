@@ -120,7 +120,7 @@ private:
     double                preconLimitUpdate          = 10;
     bool                  estimateJacobian           = false;
     bool                  alwaysBuildJacobian        = false;
-    std::string            preconditionerUpdate;
+    std::string           preconditionerUpdate;
     std::string           preconditionerType;
   } _config;
 

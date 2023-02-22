@@ -11,8 +11,8 @@ namespace acceleration {
 namespace impl {
 
 ResidualSumPreconditioner::ResidualSumPreconditioner(
-    int maxNonConstTimeWindows,
-    bool preconForceUpdate,
+    int    maxNonConstTimeWindows,
+    bool   preconForceUpdate,
     double updatePreconLimit)
     : Preconditioner(maxNonConstTimeWindows),
       _preconForceUpdate(preconForceUpdate),
@@ -76,11 +76,11 @@ void ResidualSumPreconditioner::_update_(bool                   timeWindowComple
     // Chech if the new scaling weights are more or less than 1 order of magnitude from the previous weights
     for (size_t k = 0; k < _subVectorSizes.size(); k++) {
       double newScalingWeight = (1 / _residualSum[k]);
-      if ((newScalingWeight / _previousResidualSum[k] > (_updatePreconLimit)) || (newScalingWeight / _previousResidualSum[k] < (1/_updatePreconLimit))) {
+      if ((newScalingWeight / _previousResidualSum[k] > (_updatePreconLimit)) || (newScalingWeight / _previousResidualSum[k] < (1 / _updatePreconLimit))) {
         resetWeights = true;
         PRECICE_DEBUG("Resetting pre-scaling weights as the value has increased/decreased by more than 1 order of magnitude");
       }
-      if (_preconForceUpdate){
+      if (_preconForceUpdate) {
         resetWeights = true;
       }
     }
