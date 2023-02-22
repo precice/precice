@@ -129,7 +129,7 @@ int XMLTag::getIntAttributeValue(const std::string &name, std::optional<int> def
   return default_value.value();
 }
 
-const std::string &XMLTag::getStringAttributeValue(const std::string &name, std::optional<std::string> default_value) const
+std::string XMLTag::getStringAttributeValue(const std::string &name, std::optional<std::string> default_value) const
 {
   std::map<std::string, XMLAttribute<std::string>>::const_iterator iter;
   iter = _stringAttributes.find(name);
