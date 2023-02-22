@@ -47,12 +47,14 @@ void checkConfiguration(const std::string &filename, const std::string &particip
   fmt::print("Checking {} for syntax and basic setup issues...\n", filename);
   config::Configuration config;
   logging::setMPIRank(0);
+  utils::Parallel::initializeMPI(nullptr, nullptr);
   xml::ConfigurationContext context{
       participant,
       0,
       size};
   xml::configure(config.getXMLTag(), context, filename);
   fmt::print(fmt::emphasis::bold | fg(fmt::color::green), "No major issues detected\n", filename);
+  utils::Parallel::finalizeMPI();
 }
 
 } // namespace tooling
