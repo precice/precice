@@ -93,6 +93,16 @@ void OnStructuredErrorFunc(void *userData, xmlError *error)
   ConfigParser::MessageProxy(error->level, message);
 }
 
+void OnErrorFunc(void *userData, const char *error, ...)
+{
+  ConfigParser::MessageProxy(XML_ERR_ERROR, error);
+}
+
+void OnFatalErrorFunc(void *userData, const char *error, ...)
+{
+  ConfigParser::MessageProxy(XML_ERR_FATAL, error);
+}
+
 // ------------------------- ConfigParser implementation  -------------------------
 
 precice::logging::Logger ConfigParser::_log("xml::XMLParser");
@@ -146,6 +156,8 @@ int ConfigParser::readXmlFile(std::string const &filePath)
   SAXHandler.endElementNs   = OnEndElementNs;
   SAXHandler.characters     = OnCharacters;
   SAXHandler.serror         = OnStructuredErrorFunc;
+  SAXHandler.error          = OnErrorFunc;
+  SAXHandler.fatalError     = OnFatalErrorFunc;
 
   std::ifstream ifs(filePath);
   PRECICE_CHECK(ifs, "XML parser was unable to open configuration file \"{}\"", filePath);
