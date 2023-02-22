@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(testResSumPreconditioner)
   svs.push_back(4);
   svs.push_back(2);
 
-  ResidualSumPreconditioner precond(-1);
+  ResidualSumPreconditioner precond(-1, true, 10.0);
 
   precond.initialize(svs);
   Eigen::VectorXd backup = _data;
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(testMultilpleMeshes)
   svs.push_back(3);
   svs.push_back(5);
 
-  ResidualSumPreconditioner precond(-1);
+  ResidualSumPreconditioner precond(-1, true, 10.0);
 
   precond.initialize(svs);
   Eigen::VectorXd backup = _data;
