@@ -1,8 +1,8 @@
 # preCICE #
 
 **Communication**  
-<a style="text-decoration: none" href="https://gitter.im/precice/Lobby" target="_blank">
-    <img src="https://img.shields.io/badge/chat-on%20gitter-9c3375.svg" alt="Gitter chat">
+<a style="text-decoration: none" href="https://matrix.to/#/#precice_lobby:gitter.im?web-instance[element.io]=app.gitter.im" target="_blank">
+    <img src="https://matrix.to/img/matrix-badge.svg" alt="Chat on Matrix">
 </a>
 <a style="text-decoration: none" href="https://precice.discourse.group" target="_blank">
     <img alt="Discourse posts" src="https://img.shields.io/discourse/posts?label=discourse%20QA&server=https%3A%2F%2Fprecice.discourse.group">
