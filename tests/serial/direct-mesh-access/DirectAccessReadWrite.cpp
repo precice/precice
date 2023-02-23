@@ -10,7 +10,7 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(DirectMeshAccess)
-BOOST_AUTO_TEST_CASE(UseWaveform)
+BOOST_AUTO_TEST_CASE(DirectAccessReadWrite)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
