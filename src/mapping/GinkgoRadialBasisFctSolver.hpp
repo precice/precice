@@ -302,8 +302,6 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
 
   if (this->_solverType == SolverType::MG) {
 
-    // TODO: Add loggers to each step here
-
     auto smootherFactory = gko::share(
         ir::build()
             .with_solver(jacobi::build().with_max_block_size(1u).on(this->_deviceExecutor))
@@ -323,7 +321,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
     auto multigridFactory =
         mg::build()
             .with_max_levels(2u)
-            .with_min_coarse_rows(2u) // TODO: Check how to configure best
+            .with_min_coarse_rows(2u)
             .with_pre_smoother(gko::share(smootherFactory))
             .with_post_uses_pre(true)
             .with_mg_level(gko::share(mgLevelFactory))
