@@ -88,10 +88,10 @@ public:
     return _params;
   }
 
+#endif
+
 private:
   std::array<double, 3> _params;
-
-#endif
 };
 
 /**
