@@ -389,7 +389,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inputD
     if (_useEigen) {
       outputValues.resize((_rbfSolver.getEvaluationMatrix().rows()) * valueDim);
     } else {
-      outputValues.resize((_ginkgoRbfSolver.getEvaluationMatrix()->get_size()[0]) * valueDim); // TODO: Check for more memory efficient possibility
+      outputValues.resize((_ginkgoRbfSolver.getEvaluationMatrix()->get_size()[0]) * valueDim);
     }
 
     Eigen::VectorXd out;
