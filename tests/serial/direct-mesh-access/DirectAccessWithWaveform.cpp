@@ -43,8 +43,9 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithWaveform)
     // Some dummy writeData
     std::vector<double> readData(ownIDs.size(), 0);
     std::vector<double> writeData;
-    for (int i = 0; i < otherMeshSize; ++i)
+    for (int i = 0; i < otherMeshSize; ++i) {
       writeData.emplace_back(5);
+    }
 
     int iterations = 0;
     int timeWindow = 0;
@@ -106,8 +107,9 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithWaveform)
     // Allocate data to read and write
     std::vector<double> readData(ids.size(), 0);
     std::vector<double> writeData;
-    for (unsigned int i = 0; i < ids.size(); ++i)
+    for (unsigned int i = 0; i < ids.size(); ++i) {
       writeData.emplace_back(50);
+    }
 
     int iterations = 0;
     int timeWindow = 0;
