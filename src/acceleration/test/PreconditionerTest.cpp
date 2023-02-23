@@ -23,6 +23,7 @@ struct ResPreconditionerFixture {
   Eigen::VectorXd _compareDataRes;
   Eigen::VectorXd _compareDataResSum;
   Eigen::VectorXd _compareDataResSum2;
+  Eigen::VectorXd _compareDataResSumUpdate;
   Eigen::VectorXd _compareDataValue;
   Eigen::VectorXd _compareDataConstant;
 
@@ -63,6 +64,16 @@ struct ResPreconditionerFixture {
         6.00012000479918228280e+00,
         7.00014000559904481236e+00,
         8.00016000639890734192e+00;
+
+    _compareDataResSumUpdate.resize(8);
+    _compareDataResSumUpdate << 1.43742768988091e+01,
+        2.87485537976182e+01,
+        3.04924460094031e+03,
+        4.06565946792041e+03,
+        5.08207433490052e+03,
+        6.09848920188062e+03,
+        0.636376366054497e+00,
+        0.727287275490854e+00;
 
     _compareDataValue.resize(8);
     _compareDataValue << 4.47213595499957927704e-01,
@@ -153,6 +164,71 @@ BOOST_AUTO_TEST_CASE(testResSumPreconditioner)
   BOOST_TEST(testing::equals(_data, _compareDataResSum));
   precond.revert(_data);
   BOOST_TEST(testing::equals(_data, backup));
+}
+
+BOOST_AUTO_TEST_CASE(testResSumPreconditionerUpdate)
+{
+  PRECICE_TEST(1_rank);
+  std::vector<size_t> svs;
+  svs.push_back(2);
+  svs.push_back(4);
+  svs.push_back(2);
+
+  ResidualSumPreconditioner precond(-1, false, 5.1);
+
+  precond.initialize(svs);
+  Eigen::VectorXd backup = _data;
+
+  //should change, update twice to really test the summation
+  precond.update(false, _data, _res);
+  precond.update(false, _data, _res * 2);
+  BOOST_TEST(precond.requireNewQR());
+  precond.newQRfulfilled();
+  precond.apply(_data);
+  BOOST_TEST(testing::equals(_data, _compareDataResSum));
+
+  precond.revert(_data);
+  BOOST_TEST(testing::equals(_data, backup));
+
+  //should not change weights
+  precond.update(true, _data, _res * 10);
+  BOOST_TEST(not precond.requireNewQR());
+  precond.apply(_data);
+  BOOST_TEST(testing::equals(_data, _compareDataResSum));
+  precond.revert(_data);
+  BOOST_TEST(testing::equals(_data, backup));
+
+  // New time windows stops automatic update of values
+  precond.update(false, _data, _res * 3);
+  // New residuals are not large enough to trigger a change
+  BOOST_TEST(precond.requireNewQR());
+  precond.newQRfulfilled();
+  precond.apply(_data);
+  BOOST_TEST(testing::equals(_data, _compareDataResSum));
+  precond.revert(_data);
+
+  // Apply multiple preconditioners until weights change enough
+  for (int i = 0; i < 5; i++) {
+    precond.update(false, _data, _res * 3);
+  }
+  // New residuals are not large enough to trigger a change
+  BOOST_TEST(precond.requireNewQR());
+  precond.newQRfulfilled();
+  precond.apply(_data);
+  BOOST_TEST(testing::equals(_data, _compareDataResSum));
+  precond.revert(_data);
+
+  // Apply multiple preconditioners until weights change enough
+  for (int i = 0; i < 5; i++) {
+    precond.update(false, _data, _res * 3);
+  }
+  // New residuals are now large enough to trigger a change
+  BOOST_TEST(precond.requireNewQR());
+  precond.newQRfulfilled();
+  precond.apply(_data);
+  BOOST_TEST(testing::equals(_data, _compareDataResSumUpdate));
+  precond.revert(_data);
+
 }
 
 BOOST_AUTO_TEST_CASE(testValuePreconditioner)
