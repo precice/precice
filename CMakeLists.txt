@@ -55,7 +55,7 @@ endif()
 
 option(PRECICE_MPICommunication "Enables MPI-based communication and running coupling tests." ON)
 option(PRECICE_PETScMapping "Enable use of the PETSc linear algebra library." ON)
-option(PRECICE_GinkgoParallelization "Enable use of the Ginkgo linear algebra library for parallelization." ON)
+option(PRECICE_GinkgoParallelization "Enable use of the Ginkgo linear algebra library for parallelization." OFF)
 option(PRECICE_PythonActions "Python support" ON)
 option(PRECICE_Packages "Configure package generation." ON)
 option(BUILD_SHARED_LIBS "Build shared instead of static libraries" ON)
