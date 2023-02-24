@@ -7,13 +7,13 @@
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
-BOOST_AUTO_TEST_SUITE(AccessReceivedMesh)
+BOOST_AUTO_TEST_SUITE(DirectMeshAccess)
 // Test case for a direct mesh access on one participant to a mesh defined
 // by another participant. The region of interest is defined through a
 // boundingBox. The test case here is the most basic variant in order
-// use such a feature. SolverTwo defines the mesh whereas SolverOne writes
-// directly on this mesh.
-BOOST_AUTO_TEST_CASE(Explicit)
+// use such a feature. SolverTwo defines the mesh whereas SolverOne reads
+// directly from this mesh.
+BOOST_AUTO_TEST_CASE(ExplicitRead)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
@@ -43,18 +43,23 @@ BOOST_AUTO_TEST_CASE(Explicit)
     // Allocate a vector containing the vertices
     std::vector<double> solverTwoMesh(meshSize * dim);
     couplingInterface.getMeshVerticesAndIDs(otherMeshID, meshSize, ids.data(), solverTwoMesh.data());
-    // Some dummy writeData
-    std::array<double, 4> writeData({1, 2, 3, 4});
+
+    // Allocate data to read
+    std::vector<double> readData(4, std::numeric_limits<double>::max());
 
     // Expected data = positions of the other participant's mesh
     const std::vector<double> expectedData = positions;
     BOOST_TEST(precice::testing::equals(solverTwoMesh, expectedData));
 
     while (couplingInterface.isCouplingOngoing()) {
-      // Write data
-      couplingInterface.writeBlockScalarData(dataID, meshSize,
-                                             ids.data(), writeData.data());
+
       dt = couplingInterface.advance(dt);
+      // Write data
+      couplingInterface.readBlockScalarData(dataID, meshSize,
+                                            ids.data(), readData.data());
+      // Expected data according to the writeData
+      std::vector<double> expectedData({1, 2, 3, 4});
+      BOOST_TEST(precice::testing::equals(expectedData, readData));
     }
 
   } else {
@@ -65,19 +70,16 @@ BOOST_AUTO_TEST_CASE(Explicit)
 
     // Define the mesh
     couplingInterface.setMeshVertices(meshID, ids.size(), positions.data(), ids.data());
-    // Allocate data to read
-    std::vector<double> readData(4, std::numeric_limits<double>::max());
+    // Some dummy readData
+    std::array<double, 4> writeData({1, 2, 3, 4});
 
     // Initialize
     double dt = couplingInterface.initialize();
     while (couplingInterface.isCouplingOngoing()) {
 
+      couplingInterface.writeBlockScalarData(dataID, ids.size(),
+                                             ids.data(), writeData.data());
       dt = couplingInterface.advance(dt);
-      couplingInterface.readBlockScalarData(dataID, ids.size(),
-                                            ids.data(), readData.data());
-      // Expected data according to the writeData
-      std::vector<double> expectedData({1, 2, 3, 4});
-      BOOST_TEST(precice::testing::equals(expectedData, readData));
     }
   }
 }

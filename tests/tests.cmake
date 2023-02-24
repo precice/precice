@@ -70,10 +70,6 @@ target_sources(testprecice
     tests/serial/TestExplicitWithSolverGeometry.cpp
     tests/serial/TestImplicit.cpp
     tests/serial/TestReadAPI.cpp
-    tests/serial/access-received-mesh/Explicit.cpp
-    tests/serial/access-received-mesh/ExplicitAndMapping.cpp
-    tests/serial/access-received-mesh/ExplicitRead.cpp
-    tests/serial/access-received-mesh/Implicit.cpp
     tests/serial/action-timings/ActionTimingsExplicit.cpp
     tests/serial/action-timings/ActionTimingsImplicit.cpp
     tests/serial/circular/Explicit.cpp
@@ -86,6 +82,10 @@ target_sources(testprecice
     tests/serial/direct-mesh-access/DirectAccessReadWrite.cpp
     tests/serial/direct-mesh-access/DirectAccessWithDataInitialization.cpp
     tests/serial/direct-mesh-access/DirectAccessWithWaveform.cpp
+    tests/serial/direct-mesh-access/Explicit.cpp
+    tests/serial/direct-mesh-access/ExplicitAndMapping.cpp
+    tests/serial/direct-mesh-access/ExplicitRead.cpp
+    tests/serial/direct-mesh-access/Implicit.cpp
     tests/serial/explicit/TestExplicitMPI.cpp
     tests/serial/explicit/TestExplicitMPISingle.cpp
     tests/serial/explicit/TestExplicitSockets.cpp
