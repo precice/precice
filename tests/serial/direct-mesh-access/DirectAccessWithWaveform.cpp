@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithWaveform)
       if (interface.isTimeWindowComplete()) {
         timeWindow++;
         iterations = 0;
-        for (int i = 0; i < ids.size(); ++i) {
+        for (std::size_t i = 0; i < ids.size(); ++i) {
           writeData[i] = writeData[i] + 10;
         }
       }

@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessReadWrite)
     // Allocate data to read and write
     std::vector<double> readData(receiveMeshIDs.size(), 0);
     std::vector<double> writeData;
-    for (unsigned int i = 0; i < receivedMeshSize; ++i)
+    for (int i = 0; i < receivedMeshSize; ++i)
       writeData.emplace_back(i + 50);
     // Expected data = positions of the other participant's mesh
     const std::vector<double> expectedData = std::vector<double>({0.5, 0.25});

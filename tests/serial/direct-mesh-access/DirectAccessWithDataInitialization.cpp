@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithDataInitialization)
     std::vector<double> writeData;
 
     // writeData for initialization
-    for (int i = 0; i < ids.size(); ++i) {
+    for (std::size_t i = 0; i < ids.size(); ++i) {
       writeData.emplace_back(20);
     }
 
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithDataInitialization)
       if (interface.isTimeWindowComplete()) {
         timeWindow++;
         iterations = 0;
-        for (int i = 0; i < ids.size(); ++i) {
+        for (std::size_t i = 0; i < ids.size(); ++i) {
           writeData[i] = writeData[i] + 10;
         }
       }
