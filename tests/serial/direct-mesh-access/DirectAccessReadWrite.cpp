@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessReadWrite)
 
       interface.readBlockScalarData(readDataID, receiveMeshIDs.size(), receiveMeshIDs.data(), readData.data());
 
-      std::vector<double> expectedData = std::vector<double>({6});
+      std::vector<double> expectedData = std::vector<double>({5});
       if (iterations == 0) {
         expectedData[0] = 0; // initial data
       }
