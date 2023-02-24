@@ -25,13 +25,13 @@ BOOST_AUTO_TEST_CASE(DirectAccessReadWrite)
 
     std::vector<double> positions = std::vector<double>({0.5, 0.25});
     const int           meshSize  = positions.size() / dim;
-    std::vector<int>    ids(meshSize, 0);
+    std::vector<int>    ids(meshSize, -1);
     interface.setMeshVertices(providedMeshID, ids.size(), positions.data(), ids.data());
 
     double dt = interface.initialize();
 
     // Some dummy writeData
-    std::vector<double> readData(ids.size(), 0);
+    std::vector<double> readData(ids.size(), -1);
     std::vector<double> writeData;
     for (int i = 0; i < meshSize; ++i)
       writeData.emplace_back(i + 5);
@@ -79,11 +79,11 @@ BOOST_AUTO_TEST_CASE(DirectAccessReadWrite)
 
     // Allocate a vector containing the vertices
     std::vector<double> receivedMesh(receivedMeshSize * dim);
-    std::vector<int>    receiveMeshIDs(receivedMeshSize, 0);
+    std::vector<int>    receiveMeshIDs(receivedMeshSize, -1);
     interface.getMeshVerticesAndIDs(receivedMeshID, receivedMeshSize, receiveMeshIDs.data(), receivedMesh.data());
 
     // Allocate data to read and write
-    std::vector<double> readData(receiveMeshIDs.size(), 0);
+    std::vector<double> readData(receiveMeshIDs.size(), -1);
     std::vector<double> writeData;
     for (int i = 0; i < receivedMeshSize; ++i)
       writeData.emplace_back(i + 50);

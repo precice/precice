@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_CASE(Explicit)
   BOOST_TEST(couplingInterface.getDimensions() == 2);
 
   std::vector<double> positions = {0.0, 0.0, 0.0, 0.05, 0.1, 0.1, 0.1, 0.0};
-  std::vector<int>    ids(4, 0);
+  std::vector<int>    ids(4, -1);
 
   constexpr int               dim         = 2;
   std::array<double, dim * 2> boundingBox = {0.0, 1.0, 0.0, 1.0};

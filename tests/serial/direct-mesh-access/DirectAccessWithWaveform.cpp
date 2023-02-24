@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithWaveform)
     const int     writeDataID = interface.getDataID("Velocities", otherMeshID);
 
     std::vector<double> ownPositions = std::vector<double>({0.5, 0.25});
-    std::vector<int>    ownIDs(ownPositions.size() / dim, 0);
+    std::vector<int>    ownIDs(ownPositions.size() / dim, -1);
     interface.setMeshVertices(ownMeshID, ownIDs.size(), ownPositions.data(), ownIDs.data());
 
     std::array<double, dim * 2> boundingBox = std::array<double, dim * 2>{0.0, 1.0, 0.0, 1.0};
@@ -38,10 +38,10 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithWaveform)
     BOOST_TEST(otherMeshSize == 1);
 
     std::vector<double> otherPositions(otherMeshSize * dim);
-    std::vector<int>    otherIDs(otherMeshSize, 0);
+    std::vector<int>    otherIDs(otherMeshSize, -1);
 
     // Some dummy writeData
-    std::vector<double> readData(ownIDs.size(), 0);
+    std::vector<double> readData(ownIDs.size(), -1);
     std::vector<double> writeData;
     for (int i = 0; i < otherMeshSize; ++i) {
       writeData.emplace_back(5);
@@ -99,13 +99,13 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithWaveform)
     const int     readDataID  = interface.getDataID("Velocities", meshID);
 
     std::vector<double> positions = std::vector<double>({0.5, 0.25});
-    std::vector<int>    ids(positions.size() / dim, 0);
+    std::vector<int>    ids(positions.size() / dim, -1);
     interface.setMeshVertices(meshID, ids.size(), positions.data(), ids.data());
 
     double dt = interface.initialize();
 
     // Allocate data to read and write
-    std::vector<double> readData(ids.size(), 0);
+    std::vector<double> readData(ids.size(), -1);
     std::vector<double> writeData;
     for (unsigned int i = 0; i < ids.size(); ++i) {
       writeData.emplace_back(50);
