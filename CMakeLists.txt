@@ -243,9 +243,50 @@ if (PRECICE_GinkgoParallelization)
     set(CMAKE_CUDA_FLAGS "-lineinfo --allow-unsupported-compiler --use_fast_math --std=c++17 --expt-extended-lambda --expt-relaxed-constexpr -Xcompiler -fopenmp -Wall")
     set(CMAKE_POSITION_INDEPENDENT_CODE ON)
     set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
-    include_directories(${EIGEN3_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/fmt/include)
 
   endif()
+
+  if(NOT DEFINED HIP_PATH)
+      set(HIP_PATH "/opt/rocm/hip" CACHE PATH "Path to which HIP has been installed")
+   endif()
+
+  if(NOT DEFINED ROCM_PATH)
+     set(ROCM_PATH "/opt/rocm" CACHE PATH "Path to which ROCM has been installed")
+  endif()
+
+  if(NOT DEFINED HCC_PATH)
+      set(HCC_PATH "${ROCM_PATH}/hcc" CACHE PATH "Path to which HCC has been installed")
+  endif()
+
+  if(NOT DEFINED HIP_CLANG_PATH)
+      set(HIP_CLANG_PATH "${ROCM_PATH}/llvm/bin" CACHE PATH "Path to which HIP compatible clang binaries have been installed")
+  endif()
+
+  find_package(HIP QUIET)
+
+
+  if(HIP_FOUND)
+      message(STATUS "Found HIP: " ${HIP_VERSION})
+      set(CMAKE_MODULE_PATH "${HIP_PATH}/cmake" ${CMAKE_MODULE_PATH})
+      list(APPEND CMAKE_PREFIX_PATH
+     	"${HIP_PATH}/lib/cmake"
+      	"${HIP_PATH}/../lib/cmake"
+      )
+
+      include(${HIP_PATH}/cmake/FindHIP.cmake)
+
+      set_target_properties(hip::device PROPERTIES INTERFACE_COMPILE_OPTIONS "-fPIC")
+      set_target_properties(hip::device PROPERTIES INTERFACE_LINK_LIBRARIES "hip::host")
+
+      set(CMAKE_HIP_FLAGS "-fPIC -Wno-deprecated-register -w -fgpu-rdc")
+      set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+      set(GINKGO_HIPCC_OPTIONS "-fPIC")
+  endif()
+
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+
+  include_directories(${EIGEN3_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/fmt/include)
 
   # Check if OpenMP is available
   find_package(OpenMP)
@@ -352,7 +393,7 @@ endif()
 if (PRECICE_GinkgoParallelization)
   set(CMAKE_CXX_FLAGS "-fPIC")
   include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
-  set(Ginkgo_Path "" CACHE STRING "Path to the experimental Ginkgo Repository of branch a195f856e.") # TODO: Remove as soon as GPU feature is in main branch
+  set(Ginkgo_Path "/home/timo/Documents/Repos/ginkgo_kernel_test/ginkgo" CACHE STRING "Path to the experimental Ginkgo Repository of branch a195f856e.") # TODO: Remove as soon as GPU feature is in main branch
   find_package(Ginkgo REQUIRED HINTS "${Ginkgo_Path}/build" NO_CMAKE_SYSTEM_PATH)
   target_include_directories(preciceCore PUBLIC "${Ginkgo_Path}/include")
   include(${Ginkgo_Path}/cmake/unified_kernels.cmake)

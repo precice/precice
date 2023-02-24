@@ -15,11 +15,13 @@
 #include "precice/types.hpp"
 #include "utils/Event.hpp"
 
+using precice::mapping::RadialBasisParameters;
+
 // Declare Ginkgo Kernels
 GKO_DECLARE_UNIFIED(template <typename ValueType, typename EvalFunctionType> void create_rbf_system_matrix(
     std::shared_ptr<const DefaultExecutor> exec,
     const std::size_t n1, const std::size_t n2, const std::size_t dataDimensionality, const std::array<bool, 3> activeAxis, ValueType *mtx, ValueType *supportPoints,
-    ValueType *targetPoints, EvalFunctionType f, const std::array<ValueType, 3> rbf_params, const std::size_t inputRowLength, const std::size_t outputRowLength,
+    ValueType *targetPoints, EvalFunctionType f, const RadialBasisParameters rbf_params, const std::size_t inputRowLength, const std::size_t outputRowLength,
     const bool addPolynomial, const unsigned int extraDims = 0));
 
 GKO_DECLARE_UNIFIED(template <typename ValueType> void fill_polynomial_matrix(
@@ -213,7 +215,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
   // However, the CPU does not need that; in fact, it would make it slower
   std::size_t inputVerticesM, inputVerticesN, outputVerticesM, outputVerticesN;
 
-  if ("cuda-executor" == ginkgoParameter.executor) {
+  if ("cuda-executor" == ginkgoParameter.executor || "hip-executor" == ginkgoParameter.executor) {
     inputVerticesM  = meshDim;
     inputVerticesN  = inputMeshSize;
     outputVerticesM = meshDim;
@@ -229,7 +231,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
   auto outputVertices = gko::share(GinkgoMatrix::create(this->_hostExecutor, gko::dim<2>{outputVerticesM, outputVerticesN}));
   for (std::size_t i = 0; i < inputMeshSize; ++i) {
     for (std::size_t j = 0; j < meshDim; ++j) {
-      if ("cuda-executor" == ginkgoParameter.executor) {
+      if ("cuda-executor" == ginkgoParameter.executor || "hip-executor" == ginkgoParameter.executor) {
         inputVertices->at(j, i) = inputMesh.vertices().at(i).rawCoords()[j];
       } else {
         inputVertices->at(i, j) = inputMesh.vertices().at(i).rawCoords()[j];
@@ -242,7 +244,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
   }
   for (std::size_t i = 0; i < outputMeshSize; ++i) {
     for (std::size_t j = 0; j < meshDim; ++j) {
-      if ("cuda-executor" == ginkgoParameter.executor) {
+      if ("cuda-executor" == ginkgoParameter.executor || "hip-executor" == ginkgoParameter.executor) {
         outputVertices->at(j, i) = outputMesh.vertices().at(i).rawCoords()[j];
       } else {
         outputVertices->at(i, j) = outputMesh.vertices().at(i).rawCoords()[j];
