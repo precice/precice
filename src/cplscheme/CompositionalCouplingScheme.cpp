@@ -210,18 +210,6 @@ double CompositionalCouplingScheme::getTimeWindowSize() const
   return timeWindowSize;
 }
 
-double CompositionalCouplingScheme::getThisTimeWindowRemainder() const
-{
-  PRECICE_TRACE();
-  auto   schemes      = allSchemes();
-  double maxRemainder = std::transform_reduce(
-      schemes.begin(), schemes.end(), 0.0,
-      ::min<double>,
-      std::mem_fn(&CouplingScheme::getThisTimeWindowRemainder));
-  PRECICE_DEBUG("return {}", maxRemainder);
-  return maxRemainder;
-}
-
 double CompositionalCouplingScheme::getNextTimestepMaxLength() const
 {
   PRECICE_TRACE();

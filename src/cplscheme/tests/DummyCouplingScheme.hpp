@@ -154,15 +154,6 @@ public:
   /**
    * @brief Not implemented.
    */
-  double getThisTimeWindowRemainder() const override final
-  {
-    PRECICE_ASSERT(false);
-    return 0;
-  }
-
-  /**
-   * @brief Not implemented.
-   */
   double getNextTimestepMaxLength() const override final
   {
     PRECICE_ASSERT(false);
