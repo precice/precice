@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipant)
 
   for (auto iterationSizes : timestepSizes) {
     for (int it = 0; it < maxIterations; it++) {
-
+      actualDataValue = -1; // reset value.
       BOOST_TEST(precice.isCouplingOngoing());
       precice.writeScalarData(writeDataID, vertexID, expectedDataValue);
 
