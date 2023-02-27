@@ -64,152 +64,87 @@ void RadialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID output
 
   PRECICE_DEBUG("Map consistent");
   if (_type == SPREAD) {
-    PRECICE_ASSERT(inputValues.size() == valueDimensions);
+    size_t const inSize  = input()->vertices().size();
+    size_t const outSize = output()->vertices().size();
+
+    int coord;
     if (_axis == X) {
-      size_t const    inSize  = input()->vertices().size();
-      size_t const    outSize = output()->vertices().size();
-      Eigen::VectorXd axisMidpoints(inSize - 1);
-      for (size_t i = 0; i < (inSize - 1); i++) {
-        axisMidpoints(i) = (input()->vertices()[i].getCoords()[0] + input()->vertices()[i + 1].getCoords()[0]) / 2;
-      }
-      size_t i = 0;
-      size_t j = 0;
-      while (output()->vertices()[i].getCoords()[0] <= axisMidpoints(j)) {
-        PRECICE_ASSERT(i <= outSize);
-        PRECICE_ASSERT(j <= inSize);
-        outputValues((i * valueDimensions) + 0) = inputValues((j * valueDimensions) + 0);
-        i++;
-        if (output()->vertices()[i + 1].getCoords()[0] > axisMidpoints(j)) {
-          j++;
-        }
-      }
+      coord = 0;
     } else if (_axis == Y) {
-      size_t const    inSize  = input()->vertices().size();
-      size_t const    outSize = output()->vertices().size();
-      Eigen::VectorXd axisMidpoints(inSize - 1);
-      for (size_t i = 0; i < (inSize - 1); i++) {
-        axisMidpoints(i) = (input()->vertices()[i].getCoords()[1] + input()->vertices()[i + 1].getCoords()[1]) / 2;
-      }
-      size_t i = 0;
-      size_t j = 0;
-      while (output()->vertices()[i].getCoords()[1] <= axisMidpoints(j)) {
-        PRECICE_ASSERT(i <= outSize);
-        PRECICE_ASSERT(j <= inSize);
-        outputValues((i * valueDimensions) + 1) = inputValues((j * valueDimensions) + 1);
-        i++;
-        if (output()->vertices()[i + 1].getCoords()[1] > axisMidpoints(j)) {
-          j++;
-        }
-      }
+      coord = 1;
+    } else if (_axis == Z) {
+      coord = 2;
     } else {
-      PRECICE_ASSERT(_axis == Z);
-      size_t const    inSize  = input()->vertices().size();
-      size_t const    outSize = output()->vertices().size();
-      Eigen::VectorXd axisMidpoints(inSize - 1);
-      for (size_t i = 0; i < (inSize - 1); i++) {
-        axisMidpoints(i) = (input()->vertices()[i].getCoords()[2] + input()->vertices()[i + 1].getCoords()[2]) / 2;
+      PRECICE_ASSERT(false, "Unknown axis.");
+    }
+
+    Eigen::VectorXd axisMidpoints(inSize);
+    for (size_t i = 0; i < (inSize - 1); i++) {
+      auto axisPositionCurrent = input()->vertices()[i].getCoords()[coord];
+      auto axisPositionNext    = input()->vertices()[i + 1].getCoords()[coord];
+      axisMidpoints(i)         = (axisPositionCurrent + axisPositionNext) / 2;
+    }
+    axisMidpoints(inSize - 1) = 1e100; // arbitrary large number, such that vertices after the last midpoint are still assigned
+
+    for (size_t i = 0; i < outSize; i++) {
+      auto vertexCoords = output()->vertices()[i].getCoords()[coord];
+      int  index        = 0;
+      while (vertexCoords > axisMidpoints(index)) {
+        index++;
+        PRECICE_ASSERT(index < inSize);
       }
-      size_t i = 0;
-      size_t j = 0;
-      while (output()->vertices()[i].getCoords()[2] <= axisMidpoints(j)) {
-        PRECICE_ASSERT(i <= outSize);
-        PRECICE_ASSERT(j <= inSize);
-        outputValues((i * valueDimensions) + 2) = inputValues((j * valueDimensions) + 2);
-        i++;
-        if (output()->vertices()[i + 1].getCoords()[2] > axisMidpoints(j)) {
-          j++;
-        }
-      }
+      outputValues((i * valueDimensions) + 0) = inputValues((index * valueDimensions) + 0);
+      outputValues((i * valueDimensions) + 1) = inputValues((index * valueDimensions) + 1);
+      outputValues((i * valueDimensions) + 2) = inputValues((index * valueDimensions) + 2);
     }
   } else {
     PRECICE_ASSERT(_type == COLLECT);
-    PRECICE_ASSERT(outputValues.size() == valueDimensions);
-    //PRECICE_ASSERT(output()->vertices().size() == 1);
-    //for (int dim = 0; dim < valueDimensions; dim++) {
-    //  outputValues(dim) = 0.0;
-    //}
-    //size_t const inSize = input()->vertices().size();
-    //for (size_t i = 0; i < inSize; i++) {
-    //  for (int dim = 0; dim < valueDimensions; dim++) {
-    //    outputValues(dim) += inputValues((i * valueDimensions) + dim) / inSize;
-    //  }
-    //}
+    PRECICE_ASSERT(outputValues.size() == (valueDimensions * output()->vertices().size()), outputValues.size(), valueDimensions, output()->vertices().size());
+    size_t const inSize  = input()->vertices().size();
+    size_t const outSize = output()->vertices().size();
+
+    int coord;
     if (_axis == X) {
-      size_t const    inSize  = input()->vertices().size();
-      size_t const    outSize = output()->vertices().size();
-      Eigen::VectorXd axisMidpoints(inSize - 1);
-      for (size_t i = 0; i < (outSize - 1); i++) {
-        axisMidpoints(i) = (output()->vertices()[i].getCoords()[0] + output()->vertices()[i + 1].getCoords()[0]) / 2;
-      }
-      size_t i       = 0;
-      size_t j       = 0;
-      size_t counter = 0;
-      for (size_t index = 0; index < outSize; index++) {
-        outputValues((index * valueDimensions) + 0) = 0;
-      }
-      while (input()->vertices()[i].getCoords()[0] <= axisMidpoints(j)) {
-        PRECICE_ASSERT(i <= inSize);
-        PRECICE_ASSERT(j <= outSize);
-        outputValues((j * valueDimensions) + 0) += inputValues((i * valueDimensions) + 0);
-        i++;
-        counter++;
-        if (input()->vertices()[i + 1].getCoords()[0] > axisMidpoints(j)) {
-          j++;
-          outputValues((j * valueDimensions) + 0) = outputValues((j * valueDimensions) + 0) / counter;
-          counter                                 = 0;
-        }
-      }
+      coord = 0;
     } else if (_axis == Y) {
-      size_t const    inSize  = input()->vertices().size();
-      size_t const    outSize = output()->vertices().size();
-      Eigen::VectorXd axisMidpoints(inSize - 1);
-      for (size_t i = 0; i < (outSize - 1); i++) {
-        axisMidpoints(i) = (output()->vertices()[i].getCoords()[1] + output()->vertices()[i + 1].getCoords()[1]) / 2;
-      }
-      size_t i       = 0;
-      size_t j       = 0;
-      size_t counter = 0;
-      for (size_t index = 0; index < outSize; index++) {
-        outputValues((index * valueDimensions) + 1) = 0;
-      }
-      while (input()->vertices()[i].getCoords()[1] <= axisMidpoints(j)) {
-        PRECICE_ASSERT(i <= inSize);
-        PRECICE_ASSERT(j <= outSize);
-        outputValues((j * valueDimensions) + 1) += inputValues((i * valueDimensions) + 1);
-        i++;
-        counter++;
-        if (input()->vertices()[i + 1].getCoords()[1] > axisMidpoints(j)) {
-          j++;
-          outputValues((j * valueDimensions) + 1) = outputValues((j * valueDimensions) + 1) / counter;
-          counter                                 = 0;
-        }
-      }
+      coord = 1;
+    } else if (_axis == Z) {
+      coord = 2;
     } else {
-      PRECICE_ASSERT(_axis == Z);
-      size_t const    inSize  = input()->vertices().size();
-      size_t const    outSize = output()->vertices().size();
-      Eigen::VectorXd axisMidpoints(inSize - 1);
-      for (size_t i = 0; i < (outSize - 1); i++) {
-        axisMidpoints(i) = (output()->vertices()[i].getCoords()[1] + output()->vertices()[i + 1].getCoords()[1]) / 2;
+      PRECICE_ASSERT(false, "Unknown axis.");
+    }
+
+    Eigen::VectorXd axisMidpoints(outSize);
+    for (size_t i = 0; i < (outSize - 1); i++) {
+      auto axisPositionCurrent = output()->vertices()[i].getCoords()[coord];
+      auto axisPositionNext    = output()->vertices()[i + 1].getCoords()[coord];
+      axisMidpoints(i)         = (axisPositionCurrent + axisPositionNext) / 2;
+    }
+    axisMidpoints(outSize - 1) = 1e100; // arbitrary large number, such that vertices after the last midpoint are still assigned
+
+    Eigen::VectorXd counter(outSize); // counts number of vertices inbetween midpoints for averaging
+    for (size_t i = 0; i < outSize; i++) {
+      outputValues((i * valueDimensions) + 0) = 0;
+      outputValues((i * valueDimensions) + 1) = 0;
+      outputValues((i * valueDimensions) + 2) = 0;
+      counter(i)                              = 0;
+    }
+    for (size_t i = 0; i < inSize; i++) {
+      auto vertexCoords = input()->vertices()[i].getCoords()[coord];
+      int  index        = 0;
+      while (vertexCoords > axisMidpoints(index)) {
+        index++;
+        PRECICE_ASSERT(index < outSize);
       }
-      size_t i       = 0;
-      size_t j       = 0;
-      size_t counter = 0;
-      for (size_t index = 0; index < outSize; index++) {
-        outputValues((index * valueDimensions) + 1) = 0;
-      }
-      while (input()->vertices()[i].getCoords()[1] <= axisMidpoints(j)) {
-        PRECICE_ASSERT(i <= inSize);
-        PRECICE_ASSERT(j <= outSize);
-        outputValues((j * valueDimensions) + 1) += inputValues((i * valueDimensions) + 1);
-        i++;
-        counter++;
-        if (input()->vertices()[i + 1].getCoords()[1] > axisMidpoints(j)) {
-          j++;
-          outputValues((j * valueDimensions) + 1) = outputValues((j * valueDimensions) + 1) / counter;
-          counter                                 = 0;
-        }
-      }
+      outputValues((index * valueDimensions) + 0) += inputValues((i * valueDimensions) + 0);
+      outputValues((index * valueDimensions) + 1) += inputValues((i * valueDimensions) + 1);
+      outputValues((index * valueDimensions) + 2) += inputValues((i * valueDimensions) + 2);
+      counter(index) += 1;
+    }
+    for (size_t i = 0; i < outSize; i++) {
+      outputValues((i * valueDimensions) + 0) = outputValues((i * valueDimensions) + 0) / counter(i);
+      outputValues((i * valueDimensions) + 1) = outputValues((i * valueDimensions) + 1) / counter(i);
+      outputValues((i * valueDimensions) + 2) = outputValues((i * valueDimensions) + 2) / counter(i);
     }
   }
 }
