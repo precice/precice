@@ -41,7 +41,8 @@ public:
     double       residualNorm      = 1e-8;
     std::size_t  maxIterations     = 1e6;
     bool         usePreconditioner = true;
-    unsigned int jacobiBlockSize   = 1;
+    unsigned int jacobiBlockSize   = 4;
+    unsigned int deviceId          = 0;
   };
 
   MappingConfiguration(
@@ -136,7 +137,6 @@ private:
 
   // For iterative RBFs
   const std::string ATTR_SOLVER_RTOL = "solver-rtol";
-  // const std::string ATTR_MAX_ITERATIONS="";
 
   const std::string ATTR_PREALLOCATION     = "preallocation";
   const std::string PREALLOCATION_ESTIMATE = "estimate";
@@ -146,11 +146,13 @@ private:
   const std::string PREALLOCATION_OFF      = "off";
 
   // For iterative RBFs using Ginkgo
-  const std::string ATTR_EXECUTOR          = "executor";
-  const std::string ATTR_SOLVER            = "solver";
-  const std::string ATTR_PRECONDITIONER    = "preconditioner";
-  const std::string ATTR_JACOBI_BLOCK_SIZE = "jacobi-block-size";
-  const std::string ATTR_MAX_ITERATIONS    = "max-iterations";
+  const std::string ATTR_EXECUTOR           = "executor";
+  const std::string ATTR_DEVICE_ID          = "gpu-device-id";
+  const std::string ATTR_SOLVER             = "solver";
+  const std::string ATTR_USE_PRECONDITIONER = "use-preconditioner";
+  const std::string ATTR_PRECONDITIONER     = "preconditioner";
+  const std::string ATTR_JACOBI_BLOCK_SIZE  = "jacobi-block-size";
+  const std::string ATTR_MAX_ITERATIONS     = "max-iterations";
 
   // For the future
   // const std::string ATTR_PARALLELISM           = "parallelism";

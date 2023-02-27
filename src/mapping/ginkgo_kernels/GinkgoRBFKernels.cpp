@@ -1,36 +1,5 @@
-/*******************************<GINKGO LICENSE>******************************
-Copyright (c) 2017-2021, the Ginkgo authors
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions
-are met:
-
-1. Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright
-notice, this list of conditions and the following disclaimer in the
-documentation and/or other materials provided with the distribution.
-
-3. Neither the name of the copyright holder nor the names of its
-contributors may be used to endorse or promote products derived from
-this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
-IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
-TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
-PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-******************************<GINKGO LICENSE>*******************************/
-
 #include "mapping/impl/BasisFunctions.hpp"
+#include "math/math.hpp"
 
 #include <functional>
 #include <ginkgo/ginkgo.hpp>
@@ -41,10 +10,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace GKO_DEVICE_NAMESPACE {
 
 using namespace gko::kernels::GKO_DEVICE_NAMESPACE;
-using vec = gko::matrix::Dense<double>;
-using mat = gko::matrix::Dense<double>;
 
 using precice::mapping::RadialBasisParameters;
+using precice::math::pow_int;
 
 template <typename ValueType, typename EvalFunctionType>
 void create_rbf_system_matrix(std::shared_ptr<const DefaultExecutor> exec,
@@ -107,7 +75,7 @@ void create_rbf_system_matrix(std::shared_ptr<const DefaultExecutor> exec,
         const unsigned int targetPointOffset  = dataDimensionality * i; // Point of current row
         // Loop over each dimension and calculate euclidian distance
         for (size_t k = 0; k < dataDimensionality; ++k) {
-          dist += std::pow(supportPoints[supportPointOffset + k] - targetPoints[targetPointOffset + k], 2) * static_cast<int>(activeAxis.at(k));
+          dist += pow_int<2>(supportPoints[supportPointOffset + k] - targetPoints[targetPointOffset + k]) * static_cast<int>(activeAxis.at(k));
         }
 
         dist                                  = std::sqrt(dist);

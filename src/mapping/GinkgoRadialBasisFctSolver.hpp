@@ -2,8 +2,6 @@
 #ifndef PRECICE_NO_GINKGO
 
 #include <array>
-#include <boost/range/adaptor/indexed.hpp>
-#include <boost/range/irange.hpp>
 #include <cmath>
 #include <functional>
 #include <ginkgo/ginkgo.hpp>
@@ -17,7 +15,7 @@
 
 using precice::mapping::RadialBasisParameters;
 
-// Declare Ginkgo Kernels
+// Declare Ginkgo Kernels as required by Ginkgo's unified kernel interface
 GKO_DECLARE_UNIFIED(template <typename ValueType, typename EvalFunctionType> void create_rbf_system_matrix(
     std::shared_ptr<const DefaultExecutor> exec,
     const std::size_t n1, const std::size_t n2, const std::size_t dataDimensionality, const std::array<bool, 3> activeAxis, ValueType *mtx, ValueType *supportPoints,
@@ -52,35 +50,43 @@ using ilu      = gko::preconditioner::Ilu<>;
 // Ginkgo Helpers
 using amgx_pgm = gko::multigrid::AmgxPgm<>; // TODO: It was later renamed to Pgm so this needs to be fixed as soon as switching to newer Ginkgo version is done
 
-enum SolverType {
+enum class GinkgoSolverType {
   CG,
   GMRES,
   MG
 };
 
-enum PreconditionerType {
+enum class GinkgoPreconditionerType {
   Jacobi,
   Cholesky,
   Ilu,
   None
 };
 
-const std::map<std::string, SolverType> solverTypeLookup{
-    {"cg-solver", SolverType::CG},
-    {"gmres-solver", SolverType::GMRES},
-    {"mg-solver", SolverType::MG}};
+// Runtime lookups as suggested by Ginkgo
 
-const std::map<std::string, PreconditionerType> preconditionerTypeLookup{
-    {"jacobi-preconditioner", PreconditionerType::Jacobi},
-    {"cholesky-preconditioner", PreconditionerType::Cholesky},
-    {"ilu-preconditioner", PreconditionerType::Ilu},
-    {"no-preconditioner", PreconditionerType::None}};
+const std::map<std::string, GinkgoSolverType> solverTypeLookup{
+    {"cg-solver", GinkgoSolverType::CG},
+    {"gmres-solver", GinkgoSolverType::GMRES},
+    {"mg-solver", GinkgoSolverType::MG}};
 
-const std::map<std::string, std::function<std::shared_ptr<gko::Executor>()>> ginkgoExecutorLookup{{"reference-executor", [] { return gko::ReferenceExecutor::create(); }},
-                                                                                                  {"omp-executor", [] { return gko::OmpExecutor::create(); }},
-                                                                                                  {"cuda-executor", [] { return gko::CudaExecutor::create(0, gko::OmpExecutor::create(), true, gko::allocation_mode::device); }},
-                                                                                                  {"hip-executor", [] { return gko::HipExecutor::create(0, gko::OmpExecutor::create(), true); }}};
+const std::map<std::string, GinkgoPreconditionerType> preconditionerTypeLookup{
+    {"jacobi-preconditioner", GinkgoPreconditionerType::Jacobi},
+    {"cholesky-preconditioner", GinkgoPreconditionerType::Cholesky},
+    {"ilu-preconditioner", GinkgoPreconditionerType::Ilu},
+    {"no-preconditioner", GinkgoPreconditionerType::None}};
 
+const std::map<std::string, std::function<std::shared_ptr<gko::Executor>(unsigned int)>> ginkgoExecutorLookup{{"reference-executor", [](auto unused) { return gko::ReferenceExecutor::create(); }},
+                                                                                                              {"omp-executor", [](auto unused) { return gko::OmpExecutor::create(); }},
+                                                                                                              {"cuda-executor", [](auto deviceId) { return gko::CudaExecutor::create(deviceId, gko::OmpExecutor::create(), true, gko::allocation_mode::device); }},
+                                                                                                              {"hip-executor", [](auto deviceId) { return gko::HipExecutor::create(0, gko::OmpExecutor::create(), true); }}};
+
+/**
+ * This class assembles and solves an RBF system, given an input mesh and an output mesh with relevant vertex IDs.
+ * It uses iterative solvers (CG, GMRES) and preconditioners ((Block-)Jacobi, Cholesky, Ilu) to solve the interpolation
+ * systems. Furthermore, it optionally does that on Nvidia or AMD GPUs which provides significant speedup over (single-threaded)
+ * CPU implementations.
+ */
 template <typename RADIAL_BASIS_FUNCTION_T>
 class GinkgoRadialBasisFctSolver {
 public:
@@ -94,7 +100,7 @@ public:
                              const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial,
                              const MappingConfiguration::GinkgoParameter &ginkgoParameter);
 
-  ~GinkgoRadialBasisFctSolver() = default;
+  ~GinkgoRadialBasisFctSolver();
 
   GinkgoRadialBasisFctSolver(const GinkgoRadialBasisFctSolver &solver) = delete;
   GinkgoRadialBasisFctSolver &operator=(const GinkgoRadialBasisFctSolver &solver) = delete;
@@ -115,29 +121,37 @@ public:
 private:
   mutable precice::logging::Logger _log{"mapping::GinkgoRadialBasisFctSolver"};
 
-  std::shared_ptr<gko::Executor>        _deviceExecutor;
-  static std::shared_ptr<gko::Executor> _hostExecutor;
-  static std::shared_ptr<gko::Executor> _ompExecutor;
+  std::shared_ptr<gko::Executor> _deviceExecutor;
+  std::shared_ptr<gko::Executor> _hostExecutor = gko::ReferenceExecutor::create();
 
   // Stores the RBF interpolation matrix
   std::shared_ptr<GinkgoMatrix> _rbfSystemMatrix;
 
-  /// Decomposition of the interpolation matrix
-  std::shared_ptr<GinkgoMatrix> _decMatrixC;
-
   /// Evaluation matrix (output x input)
   std::shared_ptr<GinkgoMatrix> _matrixA;
-
-  /// Decomposition of the polynomial (for separate polynomial)
-  // Eigen::ColPivHouseholderQR<Eigen::MatrixXd> _qrMatrixQ;
 
   /// Polynomial matrix of the input mesh (for separate polynomial)
   std::shared_ptr<GinkgoMatrix> _matrixQ;
 
+  /// Transposed Polynomial matrix of the input mesh (for separate polynomial) (to solve Q^T*Q*x=Q^T*b)
+  std::shared_ptr<gko::LinOp> _matrixQ_T;
+
+  /// Product Q^T*Q (to solve Q^TQx=Q^Tb)
+  std::shared_ptr<gko::LinOp> _matrixQ_TQ;
+
+  /// Right-hand side of the polynomial system
+  std::shared_ptr<GinkgoVector> _polynomialRhs;
+
+  /// Subtraction of the polynomial contribution
+  std::shared_ptr<GinkgoVector> _subPolynomialContribution;
+
+  /// Addition of the polynomial contribution
+  std::shared_ptr<GinkgoVector> _addPolynomialContribution;
+
   /// Polynomial matrix of the output mesh (for separate polynomial)
   std::shared_ptr<GinkgoMatrix> _matrixV;
 
-  /// @brief Stores the calculated cofficients of the RBF interpolation
+  /// Stores the calculated cofficients of the RBF interpolation
   std::shared_ptr<GinkgoVector> _rbfCoefficients;
 
   std::shared_ptr<GinkgoVector> _polynomialContribution;
@@ -147,9 +161,11 @@ private:
   std::shared_ptr<precice::mapping::gmres> _gmresSolver = nullptr;
   std::shared_ptr<precice::mapping::mg>    _mgSolver    = nullptr;
 
-  SolverType _solverType;
+  std::shared_ptr<precice::mapping::cg> _polynomialSolver = nullptr;
 
-  PreconditionerType _preconditionerType;
+  GinkgoSolverType _solverType;
+
+  GinkgoPreconditionerType _preconditionerType;
 
   // 1x1 identity matrix used for AXPY operations
   std::shared_ptr<GinkgoScalar> _scalarOne;
@@ -167,7 +183,7 @@ private:
 template <typename RADIAL_BASIS_FUNCTION_T>
 GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(const MappingConfiguration::GinkgoParameter &ginkgoParameter)
 {
-  this->_deviceExecutor = ginkgoExecutorLookup.at(ginkgoParameter.executor)();
+  _deviceExecutor = ginkgoExecutorLookup.at(ginkgoParameter.executor)(ginkgoParameter.deviceId);
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -176,12 +192,13 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
                                                                                 const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial,
                                                                                 const MappingConfiguration::GinkgoParameter &ginkgoParameter)
 {
-  this->_deviceExecutor = ginkgoExecutorLookup.at(ginkgoParameter.executor)();
+  PRECICE_INFO("Using Ginkgo solver {} on executor {} with max. iterations {} and residual reduction {}", ginkgoParameter.solver, ginkgoParameter.executor, ginkgoParameter.maxIterations, ginkgoParameter.residualNorm);
+  _deviceExecutor = ginkgoExecutorLookup.at(ginkgoParameter.executor)(ginkgoParameter.deviceId);
 
-  this->_solverType         = solverTypeLookup.at(ginkgoParameter.solver);
-  this->_preconditionerType = preconditionerTypeLookup.at(ginkgoParameter.preconditioner);
+  _solverType         = solverTypeLookup.at(ginkgoParameter.solver);
+  _preconditionerType = preconditionerTypeLookup.at(ginkgoParameter.preconditioner);
 
-  this->_logger = gko::share(gko::log::Convergence<>::create(this->_deviceExecutor, gko::log::Logger::all_events_mask));
+  _logger = gko::share(gko::log::Convergence<>::create(_deviceExecutor, gko::log::Logger::all_events_mask));
 
   PRECICE_ASSERT(!(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite() && polynomial == Polynomial::ON), "The integrated polynomial (polynomial=\"on\") is not supported for the selected radial-basis function. Please select another radial-basis function or change the polynomial configuration.");
   // Convert dead axis vector into an active axis array so that we can handle the reduction more easily
@@ -204,11 +221,11 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
   const std::size_t outputMeshSize = outputMesh.vertices().size();
   const std::size_t meshDim        = inputMesh.vertices().at(0).getDimensions();
 
-  this->_scalarOne         = gko::share(gko::initialize<GinkgoScalar>({1.0}, this->_deviceExecutor));
-  this->_scalarNegativeOne = gko::share(gko::initialize<GinkgoScalar>({1.0}, this->_deviceExecutor));
+  _scalarOne         = gko::share(gko::initialize<GinkgoScalar>({1.0}, _deviceExecutor));
+  _scalarNegativeOne = gko::share(gko::initialize<GinkgoScalar>({1.0}, _deviceExecutor));
 
   // Now we fill the RBF system matrix on the GPU (or any other selected device)
-  this->_rbfCoefficients = gko::share(GinkgoVector::create(this->_hostExecutor, gko::dim<2>{n, 1}));
+  _rbfCoefficients = gko::share(GinkgoVector::create(_hostExecutor, gko::dim<2>{n, 1}));
 
   // We need to copy the input data into a CPU stored vector first and copy it to the GPU afterwards
   // To allow for coalesced memory accesses on the GPU, we need to store them in transposed order IFF the backend is the GPU
@@ -227,8 +244,8 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
     outputVerticesN = meshDim;
   }
 
-  auto inputVertices  = gko::share(GinkgoMatrix::create(this->_hostExecutor, gko::dim<2>{inputVerticesM, inputVerticesN}));
-  auto outputVertices = gko::share(GinkgoMatrix::create(this->_hostExecutor, gko::dim<2>{outputVerticesM, outputVerticesN}));
+  auto inputVertices  = gko::share(GinkgoMatrix::create(_hostExecutor, gko::dim<2>{inputVerticesM, inputVerticesN}));
+  auto outputVertices = gko::share(GinkgoMatrix::create(_hostExecutor, gko::dim<2>{outputVerticesM, outputVerticesN}));
   for (std::size_t i = 0; i < inputMeshSize; ++i) {
     for (std::size_t j = 0; j < meshDim; ++j) {
       if ("cuda-executor" == ginkgoParameter.executor || "hip-executor" == ginkgoParameter.executor) {
@@ -237,9 +254,9 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
         inputVertices->at(i, j) = inputMesh.vertices().at(i).rawCoords()[j];
       }
     }
-    // Initial guess is required since memory chunk could lead to never converging system
+    // Initial guess is required since uninitialized memory could lead to a never converging system
     if (i < n) {
-      this->_rbfCoefficients->at(i, 0) = 0.0;
+      _rbfCoefficients->at(i, 0) = 0.0;
     }
   }
   for (std::size_t i = 0; i < outputMeshSize; ++i) {
@@ -252,73 +269,92 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
     }
   }
 
-  this->_copyEvent.start();
+  _copyEvent.start();
 
-  auto dInputVertices  = gko::clone(this->_deviceExecutor, inputVertices);
-  auto dOutputVertices = gko::clone(this->_deviceExecutor, outputVertices);
+  auto dInputVertices  = gko::clone(_deviceExecutor, inputVertices);
+  auto dOutputVertices = gko::clone(_deviceExecutor, outputVertices);
   inputVertices->clear();
   outputVertices->clear();
 
-  this->_rbfCoefficients = gko::clone(this->_deviceExecutor, this->_rbfCoefficients);
-  this->_deviceExecutor->synchronize();
-  this->_copyEvent.pause();
+  _rbfCoefficients = gko::clone(_deviceExecutor, _rbfCoefficients);
+  _deviceExecutor->synchronize();
+  _copyEvent.pause();
 
-  this->_rbfSystemMatrix = gko::share(GinkgoMatrix::create(this->_deviceExecutor, gko::dim<2>{n, n}));
-  this->_matrixA         = gko::share(GinkgoMatrix::create(this->_deviceExecutor, gko::dim<2>{outputSize, n}));
+  _rbfSystemMatrix = gko::share(GinkgoMatrix::create(_deviceExecutor, gko::dim<2>{n, n}));
+  _matrixA         = gko::share(GinkgoMatrix::create(_deviceExecutor, gko::dim<2>{outputSize, n}));
 
   if (polynomial == Polynomial::SEPARATE) {
-    const unsigned int polyParams = 4 - std::count(activeAxis.begin(), activeAxis.end(), false);
-    this->_matrixQ                = gko::share(GinkgoMatrix::create(this->_deviceExecutor, gko::dim<2>{n, polyParams}));
-    this->_matrixV                = gko::share(GinkgoMatrix::create(this->_deviceExecutor, gko::dim<2>{outputSize, polyParams}));
+    const unsigned int separatePolyParams = 4 - std::count(activeAxis.begin(), activeAxis.end(), false);
+    _matrixQ                              = gko::share(GinkgoMatrix::create(_deviceExecutor, gko::dim<2>{n, separatePolyParams}));
+    _matrixV                              = gko::share(GinkgoMatrix::create(_deviceExecutor, gko::dim<2>{outputSize, separatePolyParams}));
 
-    this->_assemblyEvent.start();
-    this->_deviceExecutor->run(make_polynomial_fill_operation(this->_matrixQ->get_size()[0], this->_matrixQ->get_size()[1], this->_matrixQ->get_values(), dInputVertices->get_values(), dInputVertices->get_size()[1], polyParams));
-    this->_deviceExecutor->run(make_polynomial_fill_operation(this->_matrixV->get_size()[0], this->_matrixV->get_size()[1], this->_matrixV->get_values(), dOutputVertices->get_values(), dOutputVertices->get_size()[1], polyParams));
-    this->_assemblyEvent.pause();
+    _assemblyEvent.start();
+    _deviceExecutor->run(make_polynomial_fill_operation(_matrixQ->get_size()[0], _matrixQ->get_size()[1], _matrixQ->get_values(), dInputVertices->get_values(), dInputVertices->get_size()[1], separatePolyParams));
+    _deviceExecutor->run(make_polynomial_fill_operation(_matrixV->get_size()[0], _matrixV->get_size()[1], _matrixV->get_values(), dOutputVertices->get_values(), dOutputVertices->get_size()[1], separatePolyParams));
+    _assemblyEvent.pause();
 
-    this->_deviceExecutor->synchronize();
+    _deviceExecutor->synchronize();
+
+    _matrixQ_T     = gko::share(_matrixQ->transpose());
+    _matrixQ_TQ    = gko::share(GinkgoMatrix::create(_deviceExecutor, gko::dim<2>{_matrixQ_T->get_size()[0], _matrixQ->get_size()[1]}));
+    _polynomialRhs = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixQ_T->get_size()[0], 1}));
+    _matrixQ_T->apply(gko::lend(_matrixQ), gko::lend(_matrixQ_TQ));
+
+    _subPolynomialContribution = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixQ->get_size()[0], 1}));
+    _addPolynomialContribution = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixV->get_size()[0], 1}));
+
+    auto polynomialSolverFactory = cg::build()
+                                       .with_criteria(gko::stop::Iteration::build()
+                                                          .with_max_iters(static_cast<std::size_t>(1e6))
+                                                          .on(_deviceExecutor),
+                                                      gko::stop::ResidualNormReduction<>::build()
+                                                          .with_reduction_factor(1e-4)
+                                                          .on(_deviceExecutor))
+                                       .on(_deviceExecutor);
+
+    _polynomialSolver = polynomialSolverFactory->generate(_matrixQ_TQ);
   }
 
   // Launch RBF fill kernel on device
-  this->_assemblyEvent.start();
-  this->_deviceExecutor->run(make_rbf_fill_operation(this->_rbfSystemMatrix->get_size()[0], this->_rbfSystemMatrix->get_size()[1], meshDim, activeAxis, this->_rbfSystemMatrix->get_values(), dInputVertices->get_values(), dInputVertices->get_values(), basisFunction, basisFunction.getFunctionParameters(), dInputVertices->get_size()[1], dInputVertices->get_size()[1], Polynomial::ON == polynomial, polyparams)); // polynomial evaluates to true only if ON is set
-  this->_deviceExecutor->run(make_rbf_fill_operation(this->_matrixA->get_size()[0], this->_matrixA->get_size()[1], meshDim, activeAxis, this->_matrixA->get_values(), dInputVertices->get_values(), dOutputVertices->get_values(), basisFunction, basisFunction.getFunctionParameters(), dInputVertices->get_size()[1], dOutputVertices->get_size()[1], Polynomial::ON == polynomial, polyparams));
+  _assemblyEvent.start();
+  _deviceExecutor->run(make_rbf_fill_operation(_rbfSystemMatrix->get_size()[0], _rbfSystemMatrix->get_size()[1], meshDim, activeAxis, _rbfSystemMatrix->get_values(), dInputVertices->get_values(), dInputVertices->get_values(), basisFunction, basisFunction.getFunctionParameters(), dInputVertices->get_size()[1], dInputVertices->get_size()[1], Polynomial::ON == polynomial, polyparams)); // polynomial evaluates to true only if ON is set
+  _deviceExecutor->run(make_rbf_fill_operation(_matrixA->get_size()[0], _matrixA->get_size()[1], meshDim, activeAxis, _matrixA->get_values(), dInputVertices->get_values(), dOutputVertices->get_values(), basisFunction, basisFunction.getFunctionParameters(), dInputVertices->get_size()[1], dOutputVertices->get_size()[1], Polynomial::ON == polynomial, polyparams));
 
   // Wait for the kernels to finish
-  this->_deviceExecutor->synchronize();
-  this->_assemblyEvent.stop();
+  _deviceExecutor->synchronize();
+  _assemblyEvent.stop();
 
   dInputVertices->clear();
   dOutputVertices->clear();
 
   auto iterationCriterion = gko::share(gko::stop::Iteration::build()
-                                           .with_max_iters(static_cast<std::size_t>(1e6))
-                                           .on(this->_deviceExecutor));
+                                           .with_max_iters(ginkgoParameter.maxIterations)
+                                           .on(_deviceExecutor));
 
   auto residualCriterion = gko::share(gko::stop::ResidualNormReduction<>::build()
                                           .with_reduction_factor(ginkgoParameter.residualNorm)
-                                          .on(this->_deviceExecutor));
+                                          .on(_deviceExecutor));
 
-  iterationCriterion->add_logger(this->_logger);
-  residualCriterion->add_logger(this->_logger);
+  iterationCriterion->add_logger(_logger);
+  residualCriterion->add_logger(_logger);
 
-  if (this->_solverType == SolverType::MG) {
+  if (_solverType == GinkgoSolverType::MG) {
 
     auto smootherFactory = gko::share(
         ir::build()
-            .with_solver(jacobi::build().with_max_block_size(1u).on(this->_deviceExecutor))
+            .with_solver(jacobi::build().with_max_block_size(1u).on(_deviceExecutor))
             .with_relaxation_factor(0.9)
             .with_criteria(
-                gko::stop::Iteration::build().with_max_iters(2u).on(this->_deviceExecutor))
-            .on(this->_deviceExecutor));
+                gko::stop::Iteration::build().with_max_iters(2u).on(_deviceExecutor))
+            .on(_deviceExecutor));
 
-    auto mgLevelFactory = amgx_pgm::build().with_deterministic(false).on(this->_deviceExecutor);
+    auto mgLevelFactory = amgx_pgm::build().with_deterministic(false).on(_deviceExecutor);
 
     auto coarsestFactory =
         cg::build()
             .with_criteria(
-                gko::stop::Iteration::build().with_max_iters(4u).on(this->_deviceExecutor))
-            .on(this->_deviceExecutor);
+                gko::stop::Iteration::build().with_max_iters(4u).on(_deviceExecutor))
+            .on(_deviceExecutor);
 
     auto multigridFactory =
         mg::build()
@@ -328,20 +364,20 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
             .with_post_uses_pre(true)
             .with_mg_level(gko::share(mgLevelFactory))
             .with_coarsest_solver(
-                gko::share(jacobi::build().with_max_block_size(1u).on(this->_deviceExecutor)))
+                gko::share(jacobi::build().with_max_block_size(1u).on(_deviceExecutor)))
             .with_criteria(residualCriterion)
-            .on(this->_deviceExecutor);
+            .on(_deviceExecutor);
 
-    this->_mgSolver = gko::share(multigridFactory->generate(this->_rbfSystemMatrix));
-    this->_mgSolver->add_logger(this->_logger);
+    _mgSolver = gko::share(multigridFactory->generate(_rbfSystemMatrix));
+    _mgSolver->add_logger(_logger);
 
-  } else if (this->_solverType == SolverType::CG) {
+  } else if (_solverType == GinkgoSolverType::CG) {
 
-    if (PreconditionerType::None != this->_preconditionerType) {
-      auto solverFactoryWithPreconditioner = [preconditionerType = this->_preconditionerType, executor = this->_deviceExecutor, &ginkgoParameter]() {
-        if (preconditionerType == PreconditionerType::Jacobi) {
+    if (GinkgoPreconditionerType::None != _preconditionerType) {
+      auto solverFactoryWithPreconditioner = [preconditionerType = _preconditionerType, executor = _deviceExecutor, &ginkgoParameter]() {
+        if (preconditionerType == GinkgoPreconditionerType::Jacobi) {
           return cg::build().with_preconditioner(jacobi::build().with_max_block_size(ginkgoParameter.jacobiBlockSize).on(executor));
-        } else if (preconditionerType == PreconditionerType::Cholesky) {
+        } else if (preconditionerType == GinkgoPreconditionerType::Cholesky) {
           return cg::build().with_preconditioner(cholesky::build().on(executor));
         } else {
           return cg::build().with_preconditioner(ilu::build().on(executor));
@@ -350,28 +386,28 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
 
       auto solverFactory = solverFactoryWithPreconditioner
                                .with_criteria(iterationCriterion, residualCriterion)
-                               .on(this->_deviceExecutor);
+                               .on(_deviceExecutor);
 
-      this->_cgSolver = gko::share(solverFactory->generate(this->_rbfSystemMatrix));
-      this->_cgSolver->add_logger(this->_logger);
+      _cgSolver = gko::share(solverFactory->generate(_rbfSystemMatrix));
+      _cgSolver->add_logger(_logger);
     }
 
     else {
       auto solverFactory = cg::build()
                                .with_criteria(iterationCriterion, residualCriterion)
-                               .on(this->_deviceExecutor);
+                               .on(_deviceExecutor);
 
-      this->_cgSolver = gko::share(solverFactory->generate(this->_rbfSystemMatrix));
-      this->_cgSolver->add_logger(this->_logger);
+      _cgSolver = gko::share(solverFactory->generate(_rbfSystemMatrix));
+      _cgSolver->add_logger(_logger);
     }
 
-  } else if (this->_solverType == SolverType::GMRES) {
+  } else if (_solverType == GinkgoSolverType::GMRES) {
 
-    if (PreconditionerType::None != this->_preconditionerType) {
-      auto solverFactoryWithPreconditioner = [preconditionerType = this->_preconditionerType, executor = _deviceExecutor, &ginkgoParameter]() {
-        if (preconditionerType == PreconditionerType::Jacobi) {
+    if (GinkgoPreconditionerType::None != _preconditionerType) {
+      auto solverFactoryWithPreconditioner = [preconditionerType = _preconditionerType, executor = _deviceExecutor, &ginkgoParameter]() {
+        if (preconditionerType == GinkgoPreconditionerType::Jacobi) {
           return gmres::build().with_preconditioner(jacobi::build().with_max_block_size(ginkgoParameter.jacobiBlockSize).on(executor));
-        } else if (preconditionerType == PreconditionerType::Cholesky) {
+        } else if (preconditionerType == GinkgoPreconditionerType::Cholesky) {
           return gmres::build().with_preconditioner(cholesky::build().on(executor));
         } else {
           return gmres::build().with_preconditioner(ilu::build().on(executor));
@@ -380,17 +416,17 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
 
       auto solverFactory = solverFactoryWithPreconditioner
                                .with_criteria(iterationCriterion, residualCriterion)
-                               .on(this->_deviceExecutor);
+                               .on(_deviceExecutor);
 
-      this->_gmresSolver = gko::share(solverFactory->generate(this->_rbfSystemMatrix));
-      this->_gmresSolver->add_logger(this->_logger);
+      _gmresSolver = gko::share(solverFactory->generate(_rbfSystemMatrix));
+      _gmresSolver->add_logger(_logger);
     } else {
       auto solverFactory = gmres::build()
                                .with_criteria(iterationCriterion, residualCriterion)
-                               .on(this->_deviceExecutor);
+                               .on(_deviceExecutor);
 
-      this->_gmresSolver = gko::share(solverFactory->generate(this->_rbfSystemMatrix));
-      this->_gmresSolver->add_logger(this->_logger);
+      _gmresSolver = gko::share(solverFactory->generate(_rbfSystemMatrix));
+      _gmresSolver->add_logger(_logger);
     }
   }
 }
@@ -399,22 +435,22 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 void GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::_solveRBFSystem(const std::shared_ptr<GinkgoVector> &rhs) const
 {
   precice::utils::Event e("map.rbf.ginkgo.solveSystemMatrix");
-  if (this->_solverType == SolverType::CG) {
-    this->_cgSolver->apply(gko::lend(rhs), gko::lend(this->_rbfCoefficients));
-  } else if (this->_solverType == SolverType::GMRES) {
-    this->_gmresSolver->apply(gko::lend(rhs), gko::lend(this->_rbfCoefficients));
-  } else if (this->_solverType == SolverType::MG) {
-    this->_mgSolver->apply(gko::lend(rhs), gko::lend(this->_rbfCoefficients));
+  if (_solverType == GinkgoSolverType::CG) {
+    _cgSolver->apply(gko::lend(rhs), gko::lend(_rbfCoefficients));
+  } else if (_solverType == GinkgoSolverType::GMRES) {
+    _gmresSolver->apply(gko::lend(rhs), gko::lend(_rbfCoefficients));
+  } else if (_solverType == GinkgoSolverType::MG) {
+    _mgSolver->apply(gko::lend(rhs), gko::lend(_rbfCoefficients));
   }
 
 // Only compute time-consuming statistics in debug mode
 #ifndef NDEBUG
 
-  auto residual = gko::initialize<GinkgoScalar>({0.0}, this->_deviceExecutor);
-  this->_rbfSystemMatrix->apply(gko::lend(this->_scalarOne), gko::lend(this->_rbfCoefficients), gko::lend(this->_scalarNegativeOne), gko::lend(rhs));
+  auto residual = gko::initialize<GinkgoScalar>({0.0}, _deviceExecutor);
+  _rbfSystemMatrix->apply(gko::lend(_scalarOne), gko::lend(_rbfCoefficients), gko::lend(_scalarNegativeOne), gko::lend(rhs));
   rhs->compute_norm2(gko::lend(residual));
-  residual = gko::clone(this->_hostExecutor, residual);
-  PRECICE_INFO("Ginkgo Solver Iteration Count: {}", this->_logger->get_num_iterations());
+  residual = gko::clone(_hostExecutor, residual);
+  PRECICE_INFO("Ginkgo Solver Iteration Count: {}", _logger->get_num_iterations());
   PRECICE_INFO("Ginkgo Solver Final Residual: {}", residual->at(0, 0));
 
 #endif
@@ -425,70 +461,49 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsis
 {
   PRECICE_ASSERT(rhsValues.cols() == 1);
   // Copy rhs vector onto GPU by creating a Ginkgo Vector
-  auto rhs = gko::share(GinkgoVector::create(this->_hostExecutor, gko::dim<2>{static_cast<unsigned long>(rhsValues.rows()), 1}));
+  auto rhs = gko::share(GinkgoVector::create(_hostExecutor, gko::dim<2>{static_cast<unsigned long>(rhsValues.rows()), 1}));
 
   for (Eigen::Index i = 0; i < rhsValues.rows(); ++i) {
     rhs->at(i, 0) = rhsValues(i, 0);
   }
 
-  this->_copyEvent.start();
-  auto dRhs = gko::share(gko::clone(this->_deviceExecutor, rhs));
+  _copyEvent.start();
+  auto dRhs = gko::share(gko::clone(_deviceExecutor, rhs));
   rhs->clear();
-  this->_copyEvent.pause();
+  _copyEvent.pause();
 
   if (polynomial == Polynomial::SEPARATE) {
-    auto polynomialSolverFactory = cg::build()
-                                       .with_criteria(gko::stop::Iteration::build()
-                                                          .with_max_iters(static_cast<std::size_t>(1e6))
-                                                          .on(this->_deviceExecutor),
-                                                      gko::stop::ResidualNormReduction<>::build()
-                                                          .with_reduction_factor(1e-4)
-                                                          .on(this->_deviceExecutor))
-                                       .on(this->_deviceExecutor);
+    _matrixQ_T->apply(gko::lend(dRhs), gko::lend(_polynomialRhs));
 
-    auto matrixQ_T     = gko::share(this->_matrixQ->transpose());
-    auto matrixQTQ     = gko::share(GinkgoMatrix::create(this->_deviceExecutor, gko::dim<2>{matrixQ_T->get_size()[0], this->_matrixQ->get_size()[1]}));
-    auto polynomialRHS = gko::share(GinkgoVector::create(this->_deviceExecutor, gko::dim<2>{matrixQ_T->get_size()[0], 1}));
-    matrixQ_T->apply(gko::lend(this->_matrixQ), gko::lend(matrixQTQ));
-    matrixQ_T->apply(gko::lend(dRhs), gko::lend(polynomialRHS));
+    _polynomialContribution = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixQ_TQ->get_size()[1], 1}));
+    _polynomialSolver->apply(gko::lend(_polynomialRhs), gko::lend(_polynomialContribution));
 
-    auto polynomialSolver         = polynomialSolverFactory->generate(matrixQTQ);
-    this->_polynomialContribution = gko::share(GinkgoVector::create(this->_deviceExecutor, gko::dim<2>{matrixQTQ->get_size()[1], 1}));
-    polynomialSolver->apply(gko::lend(polynomialRHS), gko::lend(this->_polynomialContribution));
-
-    auto subPolynomialContribution = gko::share(GinkgoVector::create(this->_deviceExecutor, gko::dim<2>{this->_matrixQ->get_size()[0], 1}));
-    this->_matrixQ->apply(gko::lend(this->_polynomialContribution), gko::lend(subPolynomialContribution));
-    dRhs->sub_scaled(gko::lend(this->_scalarOne), gko::lend(subPolynomialContribution));
-
-    matrixQ_T->clear();
-    matrixQTQ->clear();
-    polynomialRHS->clear();
-    subPolynomialContribution->clear();
+    _matrixQ->apply(gko::lend(_polynomialContribution), gko::lend(_subPolynomialContribution));
+    dRhs->sub_scaled(gko::lend(_scalarOne), gko::lend(_subPolynomialContribution));
   }
 
-  this->_solveRBFSystem(dRhs);
+  _solveRBFSystem(dRhs);
 
   dRhs->clear();
 
-  auto output = gko::share(GinkgoVector::create(this->_deviceExecutor, gko::dim<2>{this->_matrixA->get_size()[0], this->_rbfCoefficients->get_size()[1]}));
+  auto output = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixA->get_size()[0], _rbfCoefficients->get_size()[1]}));
 
-  this->_matrixA->apply(gko::lend(this->_rbfCoefficients), gko::lend(output));
+  _matrixA->apply(gko::lend(_rbfCoefficients), gko::lend(output));
 
   if (polynomial == Polynomial::SEPARATE) {
-    auto addPolynomialContribution = gko::share(GinkgoVector::create(this->_deviceExecutor, gko::dim<2>{this->_matrixV->get_size()[0], 1}));
-    this->_matrixV->apply(gko::lend(this->_polynomialContribution), gko::lend(addPolynomialContribution));
-    output->add_scaled(gko::lend(this->_scalarOne), gko::lend(addPolynomialContribution));
+    _matrixV->apply(gko::lend(_polynomialContribution), gko::lend(_addPolynomialContribution));
+    output->add_scaled(gko::lend(_scalarOne), gko::lend(_addPolynomialContribution));
   }
 
-  this->_copyEvent.start();
-  output = gko::clone(this->_hostExecutor, output);
+  _copyEvent.start();
+  output = gko::clone(_hostExecutor, output);
 
   Eigen::VectorXd result(output->get_size()[0], 1);
 
   for (Eigen::Index i = 0; i < result.rows(); ++i) {
     result(i, 0) = output->at(i, 0);
   }
-  this->_copyEvent.pause();
+  _copyEvent.pause();
 
   return result;
 }
@@ -500,32 +515,38 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConser
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-std::shared_ptr<gko::Executor> GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::_hostExecutor = gko::ReferenceExecutor::create();
-
-template <typename RADIAL_BASIS_FUNCTION_T>
-std::shared_ptr<gko::Executor> GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::_ompExecutor = gko::OmpExecutor::create();
-
-template <typename RADIAL_BASIS_FUNCTION_T>
 std::shared_ptr<gko::Executor> GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::getReferenceExecutor() const
 {
-  return this->_hostExecutor;
+  return _hostExecutor;
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 const std::shared_ptr<GinkgoMatrix> GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::getEvaluationMatrix() const
 {
-  return this->_matrixA;
+  return _matrixA;
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::~GinkgoRadialBasisFctSolver()
+{
+  clear();
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 void GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::clear()
 {
-  if (nullptr == this->_rbfSystemMatrix) {
-    this->_rbfSystemMatrix = gko::share(GinkgoMatrix::create(this->_deviceExecutor, gko::dim<2>{0, 0}));
-    this->_matrixA         = gko::share(GinkgoMatrix::create(this->_deviceExecutor, gko::dim<2>{0, 0}));
-  } else {
-    this->_rbfSystemMatrix = gko::share(GinkgoMatrix::create(this->_deviceExecutor, gko::dim<2>{this->_rbfSystemMatrix->get_size()[0], this->_rbfSystemMatrix->get_size()[1]}));
-    this->_matrixA         = gko::share(GinkgoMatrix::create(this->_deviceExecutor, gko::dim<2>{this->_matrixA->get_size()[0], this->_matrixA->get_size()[1]}));
+  if (nullptr != _rbfSystemMatrix) {
+    _rbfSystemMatrix->clear();
+    _matrixA->clear();
+    _matrixV->clear();
+    _matrixQ->clear();
+    _matrixQ_T->clear();
+    _matrixQ_TQ->clear();
+    _rbfCoefficients->clear();
+    _polynomialRhs->clear();
+    _subPolynomialContribution->clear();
+    _addPolynomialContribution->clear();
+    _polynomialContribution->clear();
   }
 }
 

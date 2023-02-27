@@ -200,6 +200,9 @@ MappingConfiguration::MappingConfiguration(
 
   auto attrSolverRtol = makeXMLAttribute(ATTR_SOLVER_RTOL, 1e-9)
                             .setDocumentation("Solver relative tolerance for convergence");
+  auto attrMaxIterations = makeXMLAttribute(ATTR_MAX_ITERATIONS, 1e6)
+                               .setDocumentation("Maximum number of iterations of the solver");
+
   auto attrPreallocation = makeXMLAttribute(ATTR_PREALLOCATION, PREALLOCATION_TREE)
                                .setDocumentation("Sets kind of preallocation for PETSc RBF implementation")
                                .setOptions({PREALLOCATION_ESTIMATE, PREALLOCATION_COMPUTE, PREALLOCATION_OFF, PREALLOCATION_SAVE, PREALLOCATION_TREE});
@@ -207,6 +210,9 @@ MappingConfiguration::MappingConfiguration(
   auto attrExecutor = makeXMLAttribute(ATTR_EXECUTOR, "reference-executor")
                           .setDocumentation("Specifies the execution backend used by Ginkgo.")
                           .setOptions({"reference-executor", "omp-executor", "cuda-executor", "hip-executor"});
+
+  auto attrDeviceId = makeXMLAttribute(ATTR_DEVICE_ID, static_cast<double>(0))
+                          .setDocumentation("Specifies the ID of the GPU that should be used for the Ginkgo GPU backend.");
 
   auto attrSolver = makeXMLAttribute(ATTR_SOLVER, "cg-solver")
                         .setDocumentation("Specifies the iterative solver used by Ginkgo.")
@@ -216,13 +222,17 @@ MappingConfiguration::MappingConfiguration(
                                 .setDocumentation("Specifies the preconditioner used by Ginkgo.")
                                 .setOptions({"jacobi-preconditioner", "cholesky-preconditioner", "ilu-preconditioner", "isai-preconditioner", "no-preconditioner"});
 
+  auto attrUsePreconditioner = makeXMLAttribute(ATTR_USE_PRECONDITIONER, true)
+                                   .setDocumentation("If enabled, the Ginkgo solver will apply a preconditioner to the linear system")
+                                   .setOptions({true, false});
+
   auto attrJacobiBlockSize = makeXMLAttribute(ATTR_JACOBI_BLOCK_SIZE, static_cast<double>(1)) // TODO: Fix datatype
                                  .setDocumentation("Size of diagonal blocks for Jacobi preconditioner.");
 
   // Add the relevant attributes to the relevant tags
   addAttributes(projectionTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint});
   addAttributes(rbfDirectTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead});
-  addAttributes(rbfIterativeTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead, attrSolverRtol, attrPreallocation, attrExecutor, attrSolver, attrPreconditioner, attrJacobiBlockSize});
+  addAttributes(rbfIterativeTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead, attrMaxIterations, attrSolverRtol, attrPreallocation, attrExecutor, attrDeviceId, attrSolver, attrUsePreconditioner, attrPreconditioner, attrJacobiBlockSize});
   addAttributes(rbfAliasTag, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrXDead, attrYDead, attrZDead});
 
   // Now we take care of the subtag basis function
@@ -320,8 +330,14 @@ void MappingConfiguration::xmlTagCallback(
 
     _rbfConfig = configureRBFMapping(type, context, strPolynomial, strPrealloc, xDead, yDead, zDead, solverRtol);
 
-    _ginkgoParameter.residualNorm = _rbfConfig.solverRtol;
-    _ginkgoParameter.executor     = tag.getStringAttributeValue(ATTR_EXECUTOR, "reference-executor");
+    _ginkgoParameter.residualNorm      = _rbfConfig.solverRtol;
+    _ginkgoParameter.executor          = tag.getStringAttributeValue(ATTR_EXECUTOR, "reference-executor");
+    _ginkgoParameter.solver            = tag.getStringAttributeValue(ATTR_SOLVER, "cg-solver");
+    _ginkgoParameter.preconditioner    = tag.getStringAttributeValue(ATTR_PRECONDITIONER, "jacobi-preconditioner");
+    _ginkgoParameter.usePreconditioner = tag.getBooleanAttributeValue(ATTR_USE_PRECONDITIONER, true);
+    _ginkgoParameter.jacobiBlockSize   = tag.getDoubleAttributeValue(ATTR_JACOBI_BLOCK_SIZE, 4);
+    _ginkgoParameter.maxIterations     = tag.getDoubleAttributeValue(ATTR_MAX_ITERATIONS, 1e6);
+    _ginkgoParameter.deviceId          = tag.getDoubleAttributeValue(ATTR_DEVICE_ID, 0);
 
     checkDuplicates(configuredMapping);
     _mappings.push_back(configuredMapping);

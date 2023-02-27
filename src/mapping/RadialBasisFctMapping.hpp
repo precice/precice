@@ -14,14 +14,6 @@
 #include "utils/Event.hpp"
 #include "utils/IntraComm.hpp"
 
-#ifndef PRECICE_NO_GINKGO
-
-#include <ginkgo/ginkgo.hpp>
-using GinkgoVector = gko::matrix::Dense<double>;
-using GinkgoMatrix = gko::matrix::Dense<double>;
-
-#endif
-
 namespace precice {
 extern bool syncMode;
 
@@ -82,11 +74,11 @@ private:
   /// Treatment of the polynomial
   Polynomial _polynomial;
 
-  /// Ginkgo Configuration
-  MappingConfiguration::GinkgoParameter _ginkgoParameter;
-
   /// Determines which backend to use (Eigen or Ginkgo)
   bool _useEigen;
+
+  /// Ginkgo Configuration
+  MappingConfiguration::GinkgoParameter _ginkgoParameter;
 };
 
 // --------------------------------------------------- HEADER IMPLEMENTATIONS

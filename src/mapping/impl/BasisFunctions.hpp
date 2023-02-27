@@ -89,7 +89,7 @@ public:
 
   double evaluate(double radius) const
   {
-    return this->operator()(radius, this->_params);
+    return operator()(radius, _params);
   }
 
   PRECICE_HOST_DEVICE inline double operator()(const double radius, const RadialBasisParameters params) const
@@ -98,14 +98,10 @@ public:
     return std::log(std::max(radius, NUMERICAL_ZERO_DIFFERENCE)) * math::pow_int<2>(radius);
   }
 
-#ifndef PRECICE_NO_GINKGO
-
   RadialBasisParameters getFunctionParameters()
   {
     return _params;
   }
-
-#endif
 
 private:
   RadialBasisParameters _params;
@@ -122,7 +118,7 @@ class Multiquadrics : public NoCompactSupportBase,
                       public DefiniteFunction<false> {
 public:
   explicit Multiquadrics(double c)
-      : _cPow2(std::pow(c, 2))
+      : _cPow2(math::pow_int<2>(c))
   {
     _params.parameter1 = _cPow2;
   }
@@ -132,7 +128,7 @@ public:
 
   double evaluate(double radius) const
   {
-    return this->operator()(radius, this->_params);
+    return operator()(radius, _params);
   }
 
   PRECICE_HOST_DEVICE inline double operator()(const double radius, const RadialBasisParameters params) const
@@ -141,14 +137,10 @@ public:
     return std::sqrt(cPow2 + math::pow_int<2>(radius));
   }
 
-#ifndef PRECICE_NO_GINKGO
-
   RadialBasisParameters getFunctionParameters()
   {
     return _params;
   }
-
-#endif
 
 private:
   double                _cPow2;
@@ -167,7 +159,7 @@ class InverseMultiquadrics : public NoCompactSupportBase,
                              public DefiniteFunction<true> {
 public:
   explicit InverseMultiquadrics(double c)
-      : _cPow2(std::pow(c, 2))
+      : _cPow2(math::pow_int<2>(c))
   {
 #if !defined(__NVCC__) || !defined(__HIPCC__)
     logging::Logger _log{"mapping::InverseMultiQuadrics"};
@@ -182,7 +174,7 @@ public:
 
   double evaluate(double radius) const
   {
-    return this->operator()(radius, this->_params);
+    return operator()(radius, _params);
   }
 
   PRECICE_HOST_DEVICE inline double operator()(const double radius, const RadialBasisParameters params) const
@@ -191,14 +183,10 @@ public:
     return 1.0 / std::sqrt(cPow2 + math::pow_int<2>(radius));
   }
 
-#ifndef PRECICE_NO_GINKGO
-
   RadialBasisParameters getFunctionParameters()
   {
     return _params;
   }
-
-#endif
 
 private:
   double const _cPow2;
@@ -222,7 +210,7 @@ public:
 
   double evaluate(double radius) const
   {
-    return this->operator()(radius, this->_params);
+    return operator()(radius, _params);
   }
 
   PRECICE_HOST_DEVICE inline double operator()(const double radius, const RadialBasisParameters params) const
@@ -230,14 +218,10 @@ public:
     return std::abs(radius);
   }
 
-#ifndef PRECICE_NO_GINKGO
-
   RadialBasisParameters getFunctionParameters()
   {
     return _params;
   }
-
-#endif
 
 private:
   RadialBasisParameters _params;
@@ -286,7 +270,7 @@ public:
 
   double evaluate(const double radius) const
   {
-    return this->operator()(radius, this->_params);
+    return operator()(radius, _params);
   }
 
   PRECICE_HOST_DEVICE inline double operator()(const double radius, const RadialBasisParameters params) const
@@ -304,14 +288,11 @@ public:
     }
   }
 
-#ifndef PRECICE_NO_GINKGO
-
   RadialBasisParameters getFunctionParameters()
   {
     return _params;
   };
 
-#endif
 public:
   /// Below that value the function is supposed to be zero. Defines the support radius if not explicitly given
   static constexpr double cutoffThreshold = 1e-9;
@@ -362,7 +343,7 @@ public:
 
   double evaluate(double radius) const
   {
-    return this->operator()(radius, this->_params);
+    return operator()(radius, _params);
   }
 
   PRECICE_HOST_DEVICE inline double operator()(const double radius, const RadialBasisParameters params) const
@@ -372,18 +353,14 @@ public:
     if (p >= 1) {
       return 0.0;
     } else {
-      return 1.0 - 30.0 * std::pow(p, 2) - 10.0 * std::pow(p, 3) + 45.0 * std::pow(p, 4) - 6.0 * std::pow(p, 5) - std::pow(p, 3) * 60.0 * std::log(std::max(p, NUMERICAL_ZERO_DIFFERENCE));
+      return 1.0 - 30.0 * math::pow_int<2>(p) - 10.0 * math::pow_int<3>(p) + 45.0 * math::pow_int<4>(p) - 6.0 * math::pow_int<5>(p) - math::pow_int<3>(p) * 60.0 * std::log(std::max(p, NUMERICAL_ZERO_DIFFERENCE));
     }
   }
-
-#ifndef PRECICE_NO_GINKGO
 
   RadialBasisParameters getFunctionParameters()
   {
     return _params;
   }
-
-#endif
 
 private:
   double                _r_inv;
@@ -424,7 +401,7 @@ public:
 
   double evaluate(double radius) const
   {
-    return this->operator()(radius, this->_params);
+    return operator()(radius, _params);
   }
 
   PRECICE_HOST_DEVICE inline double operator()(const double radius, const RadialBasisParameters params) const
@@ -434,18 +411,14 @@ public:
     if (p >= 1) {
       return 0.0;
     } else {
-      return std::pow(1.0 - p, 2);
+      return math::pow_int<2>(1.0 - p);
     }
   }
-
-#ifndef PRECICE_NO_GINKGO
 
   RadialBasisParameters getFunctionParameters()
   {
     return _params;
   }
-
-#endif
 
 private:
   double                _r_inv;
@@ -487,7 +460,7 @@ public:
 
   double evaluate(double radius) const
   {
-    return this->operator()(radius, this->_params);
+    return operator()(radius, _params);
   }
 
   PRECICE_HOST_DEVICE inline double operator()(const double radius, const RadialBasisParameters params) const
@@ -497,18 +470,14 @@ public:
     if (p >= 1) {
       return 0.0;
     } else {
-      return std::pow(1.0 - p, 4) * (4 * p + 1);
+      return math::pow_int<4>(1.0 - p) * FMA(4, p, 1);
     }
   }
-
-#ifndef PRECICE_NO_GINKGO
 
   RadialBasisParameters getFunctionParameters()
   {
     return _params;
   }
-
-#endif
 
 private:
   double                _r_inv;
@@ -550,7 +519,7 @@ public:
 
   double evaluate(double radius) const
   {
-    return this->operator()(radius, this->_params);
+    return operator()(radius, _params);
   }
 
   PRECICE_HOST_DEVICE inline double operator()(const double radius, const RadialBasisParameters params) const
@@ -560,18 +529,14 @@ public:
     if (p >= 1) {
       return 0.0;
     } else {
-      return std::pow(1.0 - p, 6) * (35 * std::pow(p, 2) + 18 * p + 3, 2);
+      return math::pow_int<6>(1.0 - p) * FMA(35, math::pow_int<2>(p), FMA(18, p, 3));
     }
   }
-
-#ifndef PRECICE_NO_GINKGO
 
   RadialBasisParameters getFunctionParameters()
   {
     return _params;
   }
-
-#endif
 
 private:
   double                _r_inv;
@@ -598,8 +563,8 @@ public:
     PRECICE_CHECK(math::greater(supportRadius, 0.0),
                   "Support radius for radial-basis-function compact polynomial c6 has to be larger than zero. Please update the \"support-radius\" attribute.");
 #endif
-    _r_inv                   = 1. / supportRadius;
-    this->_params.parameter1 = _r_inv;
+    _r_inv             = 1. / supportRadius;
+    _params.parameter1 = _r_inv;
   }
 
   PRECICE_HOST_DEVICE CompactPolynomialC6(const CompactPolynomialC6 &cp) = default;
@@ -612,7 +577,7 @@ public:
 
   double evaluate(double radius) const
   {
-    return this->operator()(radius, this->_params);
+    return operator()(radius, _params);
   }
 
   PRECICE_HOST_DEVICE inline double operator()(const double radius, const RadialBasisParameters params) const
@@ -622,21 +587,14 @@ public:
     if (p >= 1) {
       return 0.0;
     } else {
-      double result = FMA(8.0, p, 1.0);
-      result        = FMA(25.0, math::pow_int<2>(p), result);
-      result        = FMA(32.0, math::pow_int<3>(p), result);
-      return result * math::pow_int<8>(1.0 - p);
+      return math::pow_int<8>(1.0 - p) * FMA(32.0, math::pow_int<3>(p), FMA(25.0, math::pow_int<2>(p), FMA(8.0, p, 1.0)));
     }
   };
 
-#ifndef PRECICE_NO_GINKGO
-
   const RadialBasisParameters getFunctionParameters()
   {
-    return this->_params;
+    return _params;
   }
-
-#endif
 
 private:
   double                _r_inv;

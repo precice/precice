@@ -108,6 +108,15 @@ add_feature_info(PETScMapping PRECICE_PETScMapping
    This feature can be enabled/disabled by setting the PRECICE_PETScMapping CMake option.
    Requires MPICommunication.
   ")
+  add_feature_info(GinkgoParallelization PRECICE_GinkgoParallelization
+  "Enables the Ginkgo library backend which supports the usage of GPUs and OpenMP in radial basis function mappings.
+
+   Currently, this enables radial basis function mappings to leverage the compute power of Nvidia and AMD GPUs.
+   It uses iterative solvers to compute the solution of interpolation problems.
+
+   This feature can be enabled/disabled by setting the PRECICE_GinkgoParallelization CMake option.
+   Requires the Ginkgo library.
+  ")
 add_feature_info(PythonActions PRECICE_PythonActions
   "Enables the support for user-defined python actions.
 
@@ -243,6 +252,7 @@ if (PRECICE_GinkgoParallelization)
     set(CMAKE_CUDA_FLAGS "-lineinfo --allow-unsupported-compiler --use_fast_math --std=c++17 --expt-extended-lambda --expt-relaxed-constexpr -Xcompiler -fopenmp -Wall")
     set(CMAKE_POSITION_INDEPENDENT_CODE ON)
     set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
+    message(STATUS "Enabled CUDA support for Ginkgo library.")
 
   endif()
 
@@ -264,9 +274,7 @@ if (PRECICE_GinkgoParallelization)
 
   find_package(HIP QUIET)
 
-
   if(HIP_FOUND)
-      message(STATUS "Found HIP: " ${HIP_VERSION})
       set(CMAKE_MODULE_PATH "${HIP_PATH}/cmake" ${CMAKE_MODULE_PATH})
       list(APPEND CMAKE_PREFIX_PATH
      	"${HIP_PATH}/lib/cmake"
@@ -282,6 +290,8 @@ if (PRECICE_GinkgoParallelization)
       set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
       set(GINKGO_HIPCC_OPTIONS "-fPIC")
+
+      message(STATUS "Enabled AMD HIP support for Ginkgo library.")
   endif()
 
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
@@ -291,7 +301,7 @@ if (PRECICE_GinkgoParallelization)
   # Check if OpenMP is available
   find_package(OpenMP)
   if(OpenMP_FOUND)
-    set(CMAKE_CXX_FLAGS "-fopenmp")
+    message(STATUS "Enabled OpenMP support for Ginkgo library.")
   endif()
 
 endif()
@@ -393,7 +403,7 @@ endif()
 if (PRECICE_GinkgoParallelization)
   set(CMAKE_CXX_FLAGS "-fPIC")
   include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
-  set(Ginkgo_Path "/home/timo/Documents/Repos/ginkgo_kernel_test/ginkgo" CACHE STRING "Path to the experimental Ginkgo Repository of branch a195f856e.") # TODO: Remove as soon as GPU feature is in main branch
+  set(Ginkgo_Path "" CACHE STRING "Path to the experimental Ginkgo Repository of branch a195f856e.") # TODO: Remove as soon as GPU feature is in main branch
   find_package(Ginkgo REQUIRED HINTS "${Ginkgo_Path}/build" NO_CMAKE_SYSTEM_PATH)
   target_include_directories(preciceCore PUBLIC "${Ginkgo_Path}/include")
   include(${Ginkgo_Path}/cmake/unified_kernels.cmake)
@@ -402,9 +412,8 @@ if (PRECICE_GinkgoParallelization)
   # This command registers Ginkgo kernels for different execution backends
   ginkgo_add_unified_kernels(preciceCore src/mapping/ginkgo_kernels/GinkgoRBFKernels.cpp)
 
-  if(CMAKE_CUDA_COMPILER)
-    target_link_libraries(preciceCore PUBLIC cublas cusolver)
-    target_compile_definitions(preciceCore PUBLIC EIGEN_NO_CUDA)
+  if(OpenMP_FOUND)
+    target_compile_options(preciceCore PUBLIC "-fopenmp")
   endif()
 else()
   target_compile_definitions(preciceCore PUBLIC PRECICE_NO_GINKGO)
