@@ -124,11 +124,6 @@ PRECICE_API int precicec_requiresReadingCheckpoint();
  */
 PRECICE_API int precicec_hasMesh(const char *meshName);
 
-/**
- * @brief Returns id belonging to the given mesh name
- */
-PRECICE_API int precicec_getMeshID(const char *meshName);
-
 /// @copydoc precice::SolverInterface::requiresMeshConnectivityFor()
 PRECICE_API int precicec_requiresMeshConnectivityFor(int meshID);
 
@@ -288,15 +283,6 @@ PRECICE_API void precicec_setMeshTetrahedra(
  * @brief Returns true (!=0), if data with given name is available.
  */
 PRECICE_API int precicec_hasData(const char *dataName, int meshID);
-
-/**
- * @brief Returns the data id belonging to the given name.
- *
- * The given name (dataName) has to be one of the names specified in the
- * configuration file. The data id obtained can be used to read and write
- * data to and from the coupling mesh.
- */
-PRECICE_API int precicec_getDataID(const char *dataName, int meshID);
 
 /**
  * @brief Writes vector data values given as block.

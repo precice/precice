@@ -301,16 +301,6 @@ public:
   bool hasMesh(const std::string &meshName) const;
 
   /**
-   * @brief Returns the ID belonging to the mesh with given name.
-   *
-   * The existing names are determined from the configuration.
-   *
-   * @param[in] meshName the name of the mesh
-   * @returns the id of the corresponding mesh
-   */
-  int getMeshID(const std::string &meshName) const;
-
-  /**
    * @brief Checks if the given mesh requires connectivity.
    *
    * preCICE may require connectivity information from the solver and
@@ -564,16 +554,6 @@ public:
    * @returns whether the mesh is used.
    */
   bool hasData(const std::string &dataName, int meshID) const;
-
-  /**
-   * @brief Returns the ID of the data associated with the given name and mesh.
-   *
-   * @param[in] dataName the name of the data
-   * @param[in] meshID the id of the associated mesh
-   *
-   * @returns the id of the corresponding data
-   */
-  int getDataID(const std::string &dataName, int meshID) const;
 
   /**
    * @brief Writes vector data given as block.

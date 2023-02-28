@@ -574,39 +574,12 @@ bool SolverInterfaceImpl::hasMesh(
   return _accessor->hasMesh(meshName);
 }
 
-int SolverInterfaceImpl::getMeshID(
-    const std::string &meshName) const
-{
-  PRECICE_TRACE(meshName);
-  PRECICE_CHECK(_accessor->hasMesh(meshName),
-                "The given mesh name \"{}\" is unknown to preCICE. "
-                "Please check the mesh definitions in the configuration.",
-                meshName);
-  PRECICE_CHECK(_accessor->isMeshUsed(meshName),
-                "The given mesh name \"{0}\" is not used by the participant \"{1}\". "
-                "Please define a <provide-mesh name=\"{0}\"/> or a <receive-mesh name=\"{0}\" from=\"...\" /> node for the particpant \"{1}\".",
-                meshName, _accessorName);
-  return _accessor->getUsedMeshID(meshName);
-}
-
 bool SolverInterfaceImpl::hasData(
     const std::string &dataName, MeshID meshID) const
 {
   PRECICE_TRACE(dataName, meshID);
   PRECICE_VALIDATE_MESH_ID(meshID);
   return _accessor->isDataUsed(dataName, meshID);
-}
-
-int SolverInterfaceImpl::getDataID(
-    const std::string &dataName, MeshID meshID) const
-{
-  PRECICE_TRACE(dataName, meshID);
-  PRECICE_VALIDATE_MESH_ID(meshID);
-  PRECICE_CHECK(_accessor->isDataUsed(dataName, meshID),
-                "Data with name \"{0}\" is not defined on mesh \"{1}\". "
-                "Please add <use-data name=\"{0}\"/> under <mesh name=\"{1}\"/>.",
-                dataName, _accessor->getMeshName(meshID));
-  return _accessor->getUsedDataID(dataName, meshID);
 }
 
 bool SolverInterfaceImpl::requiresMeshConnectivityFor(int meshID) const

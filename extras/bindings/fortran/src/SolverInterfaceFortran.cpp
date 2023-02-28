@@ -142,17 +142,6 @@ void precicef_has_mesh_(
   }
 }
 
-void precicef_get_mesh_id_(
-    const char *meshName,
-    int *       meshID,
-    int         lengthMeshName)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  int    strippedLength = precice::impl::strippedLength(meshName, lengthMeshName);
-  string stringMeshName(meshName, strippedLength);
-  *meshID = impl->getMeshID(stringMeshName);
-}
-
 void precicef_has_data_(
     const char *dataName,
     const int * meshID,
@@ -167,18 +156,6 @@ void precicef_has_data_(
   } else {
     *hasData = 0;
   }
-}
-
-void precicef_get_data_id_(
-    const char *dataName,
-    const int * meshID,
-    int *       dataID,
-    int         lengthDataName)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  int    strippedLength = precice::impl::strippedLength(dataName, lengthDataName);
-  string stringDataName(dataName, strippedLength);
-  *dataID = impl->getDataID(stringDataName, *meshID);
 }
 
 void precicef_requires_mesh_connectivity_for_(

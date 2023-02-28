@@ -138,9 +138,6 @@ public:
   /// @copydoc SolverInterface::hasMesh
   bool hasMesh(const std::string &meshName) const;
 
-  /// @copydoc SolverInterface::hasMesh
-  int getMeshID(const std::string &meshName) const;
-
   /// @copydoc SolverInterface::requiresMeshConnectivityFor
   bool requiresMeshConnectivityFor(int meshID) const;
 
@@ -222,9 +219,6 @@ public:
 
   /// @copydoc SolverInterface::hasData
   bool hasData(const std::string &dataName, MeshID meshID) const;
-
-  /// @copydoc SolverInterface::getDataID
-  int getDataID(const std::string &dataName, MeshID meshID) const;
 
   /// @copydoc SolverInterface::writeBlockVectorData
   void writeBlockVectorData(

@@ -130,25 +130,11 @@ int precicec_hasMesh(const char *meshName)
   return 0;
 }
 
-int precicec_getMeshID(const char *meshName)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  std::string stringMeshName(meshName);
-  return impl->getMeshID(stringMeshName);
-}
-
 int precicec_hasData(const char *dataName, int meshID)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   std::string stringDataName(dataName);
   return impl->hasData(stringDataName, meshID);
-}
-
-int precicec_getDataID(const char *dataName, int meshID)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  std::string stringDataName(dataName);
-  return impl->getDataID(stringDataName, meshID);
 }
 
 int precicec_requiresMeshConnectivityFor(int meshID)

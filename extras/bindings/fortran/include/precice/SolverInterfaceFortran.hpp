@@ -164,23 +164,6 @@ PRECICE_API void precicef_has_mesh_(
 
 /**
  * Fortran syntax:
- * precicef_get_mesh_id(
- *   CHARACTER meshName(*),
- *   INTEGER   meshID )
- *
- * IN:  meshName
- * OUT: meshID
- *
- * @copydoc precice::SolverInterface::getMeshID()
- *
- */
-PRECICE_API void precicef_get_mesh_id_(
-    const char *meshName,
-    int *       meshID,
-    int         lengthMeshName);
-
-/**
- * Fortran syntax:
  * precicef_has_data(
  *   CHARACTER dataName(*),
  *   INTEGER   meshID,
@@ -197,31 +180,6 @@ PRECICE_API void precicef_has_data_(
     const char *dataName,
     const int * meshID,
     int *       hasData,
-    int         lengthDataName);
-
-/**
- * The given name (dataName) has to be one of the names specified in the
- * configuration file. The data id obtained can be used to read and write
- * data to and from the coupling mesh.
- *
- * Fortran syntax:
- * precicef_get_data_id(
- *   CHARACTER dataName(*),
- *   INTEGER   meshID,
- *   INTEGER   dataID,
- *   INTEGER   lengthDataName)
- *
- * IN:  dataName
- * IN:  meshID
- * OUT: dataID
- *
- * @copydoc precice::SolverInterface::getDataID()
- *
- */
-PRECICE_API void precicef_get_data_id_(
-    const char *dataName,
-    const int * meshID,
-    int *       dataID,
     int         lengthDataName);
 
 /**

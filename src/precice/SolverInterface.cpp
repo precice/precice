@@ -78,12 +78,6 @@ bool SolverInterface::hasMesh(
   return _impl->hasMesh(meshName);
 }
 
-int SolverInterface::getMeshID(
-    const std::string &meshName) const
-{
-  return _impl->getMeshID(meshName);
-}
-
 bool SolverInterface::requiresMeshConnectivityFor(int meshID) const
 {
   return _impl->requiresMeshConnectivityFor(meshID);
@@ -98,12 +92,6 @@ bool SolverInterface::hasData(
     const std::string &dataName, int meshID) const
 {
   return _impl->hasData(dataName, meshID);
-}
-
-int SolverInterface::getDataID(
-    const std::string &dataName, int meshID) const
-{
-  return _impl->getDataID(dataName, meshID);
 }
 
 //void SolverInterface:: resetMesh
