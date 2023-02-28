@@ -537,15 +537,35 @@ void GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::clear()
 {
   if (nullptr != _rbfSystemMatrix) {
     _rbfSystemMatrix->clear();
+  }
+  if (nullptr != _matrixA) {
     _matrixA->clear();
+  }
+  if (nullptr != _matrixV) {
     _matrixV->clear();
+  }
+  if (nullptr != _matrixQ) {
     _matrixQ->clear();
+  }
+  if (nullptr != _matrixQ_T) {
     _matrixQ_T->clear();
+  }
+  if (nullptr != _matrixQ_TQ) {
     _matrixQ_TQ->clear();
+  }
+  if (nullptr != _rbfCoefficients) {
     _rbfCoefficients->clear();
+  }
+  if (nullptr != _polynomialRhs) {
     _polynomialRhs->clear();
+  }
+  if (nullptr != _subPolynomialContribution) {
     _subPolynomialContribution->clear();
+  }
+  if (nullptr != _addPolynomialContribution) {
     _addPolynomialContribution->clear();
+  }
+  if (nullptr != _polynomialContribution) {
     _polynomialContribution->clear();
   }
 }
