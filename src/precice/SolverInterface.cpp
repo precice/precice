@@ -84,11 +84,6 @@ int SolverInterface::getMeshID(
   return _impl->getMeshID(meshName);
 }
 
-std::set<int> SolverInterface::getMeshIDs() const
-{
-  return _impl->getMeshIDs();
-}
-
 bool SolverInterface::requiresMeshConnectivityFor(int meshID) const
 {
   return _impl->requiresMeshConnectivityFor(meshID);
