@@ -55,9 +55,9 @@ void create_rbf_system_matrix(std::shared_ptr<const DefaultExecutor> exec,
 
           // If this block is indeed only in one row, we can make thread 0 in each block responsible for prefetching values into shared memory
           if (0 == threadIdx.x) {
-            prefetchedEvalPoint[0] = targetPoints[i];
-            prefetchedEvalPoint[1] = targetPoints[outputRowLength + i];
-            prefetchedEvalPoint[2] = targetPoints[2 * outputRowLength + i];
+            for (size_t k = 0; k < dataDimensionality; ++k) {
+              prefetchedEvalPoint[k] = targetPoints[k * outputRowLength + i];
+            }
           }
           // Let all threads in a block wait until memory is prefetched
           __syncthreads();
