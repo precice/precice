@@ -141,9 +141,6 @@ public:
   /// @copydoc SolverInterface::hasMesh
   int getMeshID(const std::string &meshName) const;
 
-  /// @copydoc SolverInterface::getMeshIDs
-  std::set<int> getMeshIDs() const;
-
   /// @copydoc SolverInterface::requiresMeshConnectivityFor
   bool requiresMeshConnectivityFor(int meshID) const;
 

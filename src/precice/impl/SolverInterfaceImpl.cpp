@@ -589,16 +589,6 @@ int SolverInterfaceImpl::getMeshID(
   return _accessor->getUsedMeshID(meshName);
 }
 
-std::set<int> SolverInterfaceImpl::getMeshIDs() const
-{
-  PRECICE_TRACE();
-  std::set<int> ids;
-  for (const impl::MeshContext *context : _accessor->usedMeshContexts()) {
-    ids.insert(context->mesh->getID());
-  }
-  return ids;
-}
-
 bool SolverInterfaceImpl::hasData(
     const std::string &dataName, MeshID meshID) const
 {
