@@ -1,6 +1,7 @@
 #include "Participant.hpp"
 #include <algorithm>
 #include <ostream>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -19,6 +20,7 @@
 #include "precice/impl/SharedPointer.hpp"
 #include "precice/types.hpp"
 #include "utils/ManageUniqueIDs.hpp"
+#include "utils/String.hpp"
 #include "utils/assertion.hpp"
 #include "utils/fmt.hpp"
 
@@ -399,6 +401,53 @@ void Participant::checkDuplicatedData(std::string_view mesh, std::string_view da
                 "Participant \"{}\" can read/write data \"{}\" from/to mesh \"{}\" only once. "
                 "Please remove any duplicate instances of write-data/read-data nodes.",
                 _name, mesh, data);
+}
+
+std::string Participant::hintForMesh(std::string_view mesh) const
+{
+  PRECICE_ASSERT(!hasMesh(mesh));
+  PRECICE_ASSERT(!_meshContexts.empty());
+
+  if (_meshContexts.size() == 1) {
+    return " This participant only knows mesh \"" + _meshContexts.begin()->first + "\".";
+  }
+
+  auto matches = utils::computeMatches(mesh, _meshContexts | boost::adaptors::map_keys);
+  if (matches.front().distance < 3) {
+    return " Did you mean mesh \"" + matches.front().name + "\"?";
+  } else {
+    return fmt::format(" Available meshes are: {}", fmt::join(_meshContexts | boost::adaptors::map_keys, ", "));
+  }
+}
+
+std::string Participant::hintForMeshData(std::string_view mesh, std::string_view data) const
+{
+  PRECICE_ASSERT(hasMesh(mesh));
+  PRECICE_ASSERT(!hasData(mesh, data));
+  PRECICE_ASSERT(!_meshContexts.empty());
+
+  // Is there such data in other meshes?
+  std::vector<std::string> otherMeshes;
+  for (const auto &[_, mc] : _meshContexts) {
+    if (mc->mesh->hasDataName(data)) {
+      return " Did you mean the data of mesh \"" + mc->mesh->getName() + "\"?";
+    }
+  }
+
+  // Is there other data in the given mesh?
+  auto localData = meshContext(mesh).mesh->availableData();
+
+  if (localData.size() == 1) {
+    return " This mesh only knows data \"" + localData.front() + "\".";
+  }
+
+  // Was the data typoed?
+  auto matches = utils::computeMatches(mesh, localData);
+  if (matches.front().distance < 3) {
+    return " Did you mean data \"" + matches.front().name + "\"?";
+  }
+
+  return fmt::format(" Available data are: {}", fmt::join(localData, ", "));
 }
 
 } // namespace precice::impl

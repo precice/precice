@@ -288,6 +288,12 @@ public:
   const std::vector<io::ExportContext> &exportContexts() const;
   /// @}
 
+  /// @name Error helpers
+  /// @{
+  std::string hintForMesh(std::string_view mesh) const;
+  std::string hintForMeshData(std::string_view mesh, std::string_view data) const;
+  /// @}
+
 private:
   mutable logging::Logger _log{"impl::Participant"};
 

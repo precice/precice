@@ -15,10 +15,10 @@
  * @attention Do not use this macro directly!
  */
 #include "utils/stacktrace.hpp"
-#define PRECICE_VALIDATE_MESH_NAME_IMPL(name)                   \
-  PRECICE_CHECK(_accessor->hasMesh(name),                       \
-                "The mesh named \"{}\" is unknown to preCICE.", \
-                name);
+#define PRECICE_VALIDATE_MESH_NAME_IMPL(name)                     \
+  PRECICE_CHECK(_accessor->hasMesh(name),                         \
+                "The mesh named \"{}\" is unknown to preCICE.{}", \
+                name, _accessor->hintForMesh(name));
 
 /** Implementation of PRECICE_REQUIRE_MESH_USE()
  *
@@ -96,7 +96,7 @@
  */
 #define PRECICE_VALIDATE_DATA_NAME_IMPL(mesh, data) \
   PRECICE_CHECK(_accessor->hasData(mesh, data),     \
-                "The given data \"{}\" is unknown to preCICE mesh \"{}\".", mesh, data);
+                "The given data \"{}\" is unknown to preCICE mesh \"{}\".{}", data, mesh, _accessor->hintForMeshData(mesh, data));
 
 /** Implementation of PRECICE_REQUIRE_DATA_READ()
  *
