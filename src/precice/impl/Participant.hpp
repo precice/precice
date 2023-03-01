@@ -1,11 +1,11 @@
 #pragma once
 
-#include <Eigen/Core>
 #include <boost/range/adaptor/map.hpp>
 #include <cmath>
 #include <memory>
 #include <stddef.h>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -178,19 +178,13 @@ public:
   bool hasData(std::string_view mesh, std::string_view data) const;
 
   /// Is the data used by this participant?
-  bool isDataUsed(const std::string &dataName, std::string_view mesh) const;
+  bool isDataUsed(std::string_view mesh, std::string_view data) const;
 
   /// Is the participant allowed to read the data?
   bool isDataRead(std::string_view mesh, std::string_view data) const;
 
   /// Is the participant allowed to write the data?
   bool isDataWrite(std::string_view mesh, std::string_view data) const;
-
-  /// What is the dataID of the used data from a used mesh given the meshid and the data name?
-  int getUsedDataID(const std::string &dataName, std::string_view mesh) const;
-
-  /// What is the name of the given data id
-  std::string getDataName(std::string_view mesh, std::string_view data) const;
   /// @}
 
   /// @name Mesh queries
@@ -224,62 +218,30 @@ public:
    * @return a reference to the MeshContext
    * @pre there is a matching mesh
    */
-  MeshContext &usedMeshContext(const std::string &name);
+  MeshContext &usedMeshContext(std::string_view name);
 
   /** Looks for a used MeshContext with a given mesh name.
    * @param[in] name the name of the \ref Mesh
    * @return a reference to the MeshContext
    * @pre there is a matching mesh
    */
-  MeshContext const &usedMeshContext(const std::string &name) const;
-
-  /** Looks for a used MeshContext with a given mesh ID.
-   * @param[in] meshID the id of the \ref Mesh
-   * @return a reference to the MeshContext
-   * @pre there is a matching mesh
-   */
-  MeshContext &usedMeshContext(std::string_view mesh);
-
-  /** Looks for a used MeshContext with a given meshID
-   * @param[in] meshID the id of the \ref Mesh
-   * @return a reference to the MeshContext
-   * @pre there is a matching mesh
-   */
-  MeshContext const &usedMeshContext(std::string_view mesh) const;
-
-  /// Does preCICE know a mesh with this meshID?
-  bool hasMesh(std::string_view mesh) const;
+  MeshContext const &usedMeshContext(std::string_view name) const;
 
   /// Does preCICE know a mesh with this name?
-  bool hasMesh(const std::string &meshName) const;
-
-  /// Is a mesh with this id used by this participant?
-  bool isMeshUsed(std::string_view mesh) const;
+  bool hasMesh(std::string_view mesh) const;
 
   /// Is a mesh with this name used by this participant?
-  bool isMeshUsed(const std::string &meshID) const;
-
-  /// Is a mesh with this id provided?
-  bool isMeshProvided(std::string_view mesh) const;
+  bool isMeshUsed(std::string_view mesh) const;
 
   /// Is a mesh with this name provided by this participant?
-  bool isMeshProvided(const std::string &meshName) const;
+  bool isMeshProvided(std::string_view mesh) const;
 
   /// Is a mesh with this name received by this participant?
-  bool isMeshReceived(const std::string &meshName) const;
-
-  /// Get the used mesh id of a mesh with this name.
-  int getUsedMeshID(const std::string &meshName) const;
+  bool isMeshReceived(std::string_view mesh) const;
 
   /// Returns whether we are allowed to access a received mesh direct
   /// which requires the config tag <receive-mesh ... direct-access="true"
-  bool isDirectAccessAllowed(const int meshID) const;
-
-  /// Get the name of a mesh given by its id.
-  std::string getMeshName(std::string_view mesh) const;
-
-  /// Get a mesh name which uses the given data id.
-  std::string getMeshNameFromData(std::string_view mesh, std::string_view data) const;
+  bool isDirectAccessAllowed(std::string_view mesh) const;
   /// @}
 
   /// @name Exporting interface
@@ -346,8 +308,36 @@ private:
 
   std::vector<action::PtrAction> _actions;
 
-  /// All mesh contexts involved in a simulation, mesh ID == index.
-  std::vector<MeshContext *> _meshContexts; // @todo use map here!
+  template <typename T>
+  using MeshMap = std::map<std::string, T, std::less<>>;
+
+  /// Type that represent a compound key of two values
+  template <typename T>
+  struct MeshDataKey {
+    T mesh;
+    T data;
+    template <typename Other>
+    bool operator<(const MeshDataKey<Other> &other) const
+    {
+      if (mesh < other.mesh) {
+        return true;
+      }
+      if (other.mesh < mesh) {
+        return false;
+      }
+      return data < other.data;
+    }
+  };
+
+  /// Deduction guide for two identical parameter types
+  template <class T>
+  MeshDataKey(T, T)->MeshDataKey<T>;
+
+  template <typename T>
+  using DataMap = std::map<MeshDataKey<std::string>, T, std::less<>>;
+
+  /// All mesh contexts involved in a simulation
+  MeshMap<MeshContext *> _meshContexts;
 
   /// Read mapping contexts used by the participant.
   std::vector<MappingContext> _readMappingContexts;
@@ -358,9 +348,9 @@ private:
   /// Mesh contexts used by the participant.
   std::vector<MeshContext *> _usedMeshContexts;
 
-  std::map<DataID, WriteDataContext> _writeDataContexts;
+  DataMap<WriteDataContext> _writeDataContexts;
 
-  std::map<DataID, ReadDataContext> _readDataContexts;
+  DataMap<ReadDataContext> _readDataContexts;
 
   bool _useIntraComm = false;
 
@@ -371,9 +361,9 @@ private:
       const std::vector<ELEMENT_T> &data,
       const ELEMENT_T &             newElement) const;
 
-  void checkDuplicatedUse(const mesh::PtrMesh &mesh);
+  void checkDuplicatedUse(std::string_view mesh);
 
-  void checkDuplicatedData(const mesh::PtrData &data, const std::string &meshName);
+  void checkDuplicatedData(std::string_view mesh, std::string_view data);
 
   /// To allow white box tests.
   friend struct Integration::Serial::Whitebox::TestConfigurationPeano;
