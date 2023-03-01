@@ -22,21 +22,19 @@ BOOST_AUTO_TEST_CASE(DoNothingWithSubcycling)
 
   SolverInterface precice(context.name, context.config(), 0, 1);
 
-  MeshID meshID;
-  DataID writeDataID;
-
   int nSubsteps; // let three solvers use different time step sizes
 
+  std::string meshID, writeDataID;
   if (context.isNamed("SolverOne")) {
-    auto meshID = "MeshOne";
-    nSubsteps   = 1;
+    meshID    = "MeshOne";
+    nSubsteps = 1;
   } else if (context.isNamed("SolverTwo")) {
-    auto meshID = "MeshTwo";
-    nSubsteps   = 2;
+    meshID    = "MeshTwo";
+    nSubsteps = 2;
   } else {
     BOOST_TEST(context.isNamed("SolverThree"));
-    auto meshID = "MeshThree";
-    nSubsteps   = 3;
+    meshID    = "MeshThree";
+    nSubsteps = 3;
   }
 
   VertexID vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());

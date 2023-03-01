@@ -33,14 +33,14 @@ BOOST_AUTO_TEST_CASE(MultipleWriteFromMappingsAndData)
     interface.advance(dt);
     double pressure    = -1.0;
     double temperature = -1.0;
-    interface.readScalarData(meshID, dataIDTopP, vertexIDTop, pressure);
-    interface.readScalarData(meshID, dataIDTopT, vertexIDTop, temperature);
+    interface.readScalarData(meshIDTop, dataIDTopP, vertexIDTop, pressure);
+    interface.readScalarData(meshIDTop, dataIDTopT, vertexIDTop, temperature);
     BOOST_TEST(pressure == 1.0);
     BOOST_TEST(temperature == 331);
     pressure    = -1.0;
     temperature = -1.0;
-    interface.readScalarData(meshID, dataIDBottomP, vertexIDBottom, pressure);
-    interface.readScalarData(meshID, dataIDBottomT, vertexIDBottom, temperature);
+    interface.readScalarData(meshIDBottom, dataIDBottomP, vertexIDBottom, pressure);
+    interface.readScalarData(meshIDBottom, dataIDBottomT, vertexIDBottom, temperature);
     BOOST_TEST(temperature == 273.15);
     BOOST_TEST(pressure == 5.0);
     BOOST_TEST(not interface.isCouplingOngoing());

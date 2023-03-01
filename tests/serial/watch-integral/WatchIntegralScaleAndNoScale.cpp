@@ -81,9 +81,9 @@ BOOST_AUTO_TEST_CASE(WatchIntegralScaleAndNoScale)
 
     while (interface.isCouplingOngoing()) {
 
-      interface.readScalarData(meshID, dataOneID, idA, valueA);
-      interface.readScalarData(meshID, dataOneID, idB, valueB);
-      interface.readScalarData(meshID, dataOneID, idC, valueC);
+      interface.readScalarData(meshTwoID, dataOneID, idA, valueA);
+      interface.readScalarData(meshTwoID, dataOneID, idB, valueB);
+      interface.readScalarData(meshTwoID, dataOneID, idC, valueC);
 
       dt = interface.advance(dt);
     }

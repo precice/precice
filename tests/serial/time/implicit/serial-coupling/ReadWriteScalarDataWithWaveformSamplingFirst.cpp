@@ -23,10 +23,6 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
 
   SolverInterface precice(context.name, context.config(), 0, 1);
 
-  MeshID meshID;
-  DataID writeDataID;
-  DataID readDataID;
-
   typedef double (*DataFunction)(double);
 
   DataFunction dataOneFunction = [](double t) -> double {
@@ -38,19 +34,20 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
   DataFunction writeFunction;
   DataFunction readFunction;
 
+  std::string meshID, writeDataID, readDataID;
   if (context.isNamed("SolverOne")) {
-    auto meshID      = "MeshOne";
-    auto writeDataID = "DataOne"; //  meshID
-    writeFunction    = dataOneFunction;
-    auto readDataID  = "DataTwo"; //  meshID
-    readFunction     = dataTwoFunction;
+    meshID        = "MeshOne";
+    writeDataID   = "DataOne"; //  meshID
+    writeFunction = dataOneFunction;
+    readDataID    = "DataTwo"; //  meshID
+    readFunction  = dataTwoFunction;
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    auto meshID      = "MeshTwo";
-    auto writeDataID = "DataTwo"; //  meshID
-    writeFunction    = dataTwoFunction;
-    auto readDataID  = "DataOne"; //  meshID
-    readFunction     = dataOneFunction;
+    meshID        = "MeshTwo";
+    writeDataID   = "DataTwo"; //  meshID
+    writeFunction = dataTwoFunction;
+    readDataID    = "DataOne"; //  meshID
+    readFunction  = dataOneFunction;
   }
 
   double   writeData = 0;

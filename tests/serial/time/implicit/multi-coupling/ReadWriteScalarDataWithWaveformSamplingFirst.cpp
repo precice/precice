@@ -23,11 +23,10 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
 
   SolverInterface precice(context.name, context.config(), 0, 1);
 
-  MeshID meshID;
-  DataID writeDataID;
+  std::string meshID, writeDataID;
 
   typedef double (*DataFunction)(double);
-  std::vector<std::pair<DataID, DataFunction>> readDataPairs;
+  std::vector<std::pair<std::string, DataFunction>> readDataPairs;
 
   DataFunction dataOneFunction = [](double t) -> double {
     return (double) (2 + t);
@@ -41,25 +40,25 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
   DataFunction writeFunction;
 
   if (context.isNamed("SolverOne")) {
-    auto meshID      = "MeshOne";
-    auto writeDataID = "DataOne"; //  meshID
-    writeFunction    = dataOneFunction;
-    auto dataTwoId   = "DataTwo"; //  meshID
+    meshID         = "MeshOne";
+    writeDataID    = "DataOne"; //  meshID
+    writeFunction  = dataOneFunction;
+    auto dataTwoId = "DataTwo"; //  meshID
     readDataPairs.push_back(std::make_pair(dataTwoId, dataTwoFunction));
     auto dataThreeId = "DataThree"; //  meshID
     readDataPairs.push_back(std::make_pair(dataThreeId, dataThreeFunction));
   } else if (context.isNamed("SolverTwo")) {
-    auto meshID      = "MeshTwo";
-    auto writeDataID = "DataTwo"; //  meshID
-    writeFunction    = dataTwoFunction;
-    auto dataOneId   = "DataOne"; //  meshID
+    meshID         = "MeshTwo";
+    writeDataID    = "DataTwo"; //  meshID
+    writeFunction  = dataTwoFunction;
+    auto dataOneId = "DataOne"; //  meshID
     readDataPairs.push_back(std::make_pair(dataOneId, dataOneFunction));
   } else {
     BOOST_TEST(context.isNamed("SolverThree"));
-    auto meshID      = "MeshThree";
-    auto writeDataID = "DataThree"; //  meshID
-    writeFunction    = dataThreeFunction;
-    auto dataOneId   = "DataOne"; //  meshID
+    meshID         = "MeshThree";
+    writeDataID    = "DataThree"; //  meshID
+    writeFunction  = dataThreeFunction;
+    auto dataOneId = "DataOne"; //  meshID
     readDataPairs.push_back(std::make_pair(dataOneId, dataOneFunction));
   }
 

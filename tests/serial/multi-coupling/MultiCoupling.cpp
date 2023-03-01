@@ -39,25 +39,22 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
   if (context.isNamed("SOLIDZ1") ||
       context.isNamed("SOLIDZ2") ||
       context.isNamed("SOLIDZ3")) {
-    MeshID meshID      = -1;
-    int    dataWriteID = -1;
-    int    dataReadID  = -1;
-
     precice::SolverInterface precice(context.name, context.config(), 0, 1);
     BOOST_TEST(precice.getDimensions() == 2);
 
+    std::string meshID, dataWriteID, dataReadID;
     if (context.isNamed("SOLIDZ1")) {
-      auto meshID      = "SOLIDZ_Mesh1";
-      auto dataWriteID = "Displacements1"; //  meshID
-      auto dataReadID  = "Forces1";        //  meshID
+      meshID      = "SOLIDZ_Mesh1";
+      dataWriteID = "Displacements1"; //  meshID
+      dataReadID  = "Forces1";        //  meshID
     } else if (context.isNamed("SOLIDZ2")) {
-      auto meshID      = "SOLIDZ_Mesh2";
-      auto dataWriteID = "Displacements2"; //  meshID
-      auto dataReadID  = "Forces2";        //  meshID
+      meshID      = "SOLIDZ_Mesh2";
+      dataWriteID = "Displacements2"; //  meshID
+      dataReadID  = "Forces2";        //  meshID
     } else if (context.isNamed("SOLIDZ3")) {
-      auto meshID      = "SOLIDZ_Mesh3";
-      auto dataWriteID = "Displacements3"; //  meshID
-      auto dataReadID  = "Forces3";        //  meshID
+      meshID      = "SOLIDZ_Mesh3";
+      dataWriteID = "Displacements3"; //  meshID
+      dataReadID  = "Forces3";        //  meshID
     }
 
     std::vector<int> vertexIDs;
@@ -125,9 +122,9 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
     precice.initialize();
 
     for (size_t i = 0; i < 4; i++) {
-      precice.writeVectorData(meshID, dataWriteID1, vertexIDs1.at(i), datas.at(i).data());
-      precice.writeVectorData(meshID, dataWriteID2, vertexIDs2.at(i), datas.at(i).data());
-      precice.writeVectorData(meshID, dataWriteID3, vertexIDs3.at(i), datas.at(i).data());
+      precice.writeVectorData(meshID1, dataWriteID1, vertexIDs1.at(i), datas.at(i).data());
+      precice.writeVectorData(meshID2, dataWriteID2, vertexIDs2.at(i), datas.at(i).data());
+      precice.writeVectorData(meshID3, dataWriteID3, vertexIDs3.at(i), datas.at(i).data());
     }
 
     if (precice.requiresWritingCheckpoint()) {

@@ -26,12 +26,12 @@ BOOST_AUTO_TEST_CASE(TestConfigurationPeano)
   BOOST_TEST(peano);
   BOOST_TEST(peano->getName() == "Peano");
 
-  std::vector<impl::MeshContext *> meshContexts = peano->_meshContexts;
+  const auto &meshContexts = peano->_meshContexts;
   BOOST_TEST(meshContexts.size() == 2);
   BOOST_TEST(peano->_usedMeshContexts.size() == 2);
 
-  BOOST_TEST(meshContexts.at(0)->mesh->getName() == std::string("PeanoNodes"));
-  BOOST_TEST(meshContexts.at(1)->mesh->getName() == std::string("ComsolNodes"));
+  BOOST_TEST(meshContexts.count("PeanoNodes") > 0);
+  BOOST_TEST(meshContexts.count("ComsolNodes") > 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Whitebox

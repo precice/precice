@@ -28,10 +28,10 @@ BOOST_AUTO_TEST_CASE(MultipleReadFromMappings)
     double dt = interface.initialize();
     interface.advance(dt);
     double pressure = -1.0;
-    interface.readScalarData(meshID, dataIDTop, vertexIDTop, pressure);
+    interface.readScalarData(meshIDTop, dataIDTop, vertexIDTop, pressure);
     BOOST_TEST(pressure == 1.0);
     pressure = -1.0;
-    interface.readScalarData(meshID, dataIDBottom, vertexIDBottom, pressure);
+    interface.readScalarData(meshIDBottom, dataIDBottom, vertexIDBottom, pressure);
     BOOST_TEST(pressure == 1.0);
     BOOST_TEST(not interface.isCouplingOngoing());
     interface.finalize();

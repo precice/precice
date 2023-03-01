@@ -24,10 +24,6 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantInitData)
 
   SolverInterface precice(context.name, context.config(), 0, 1);
 
-  MeshID meshID;
-  DataID writeDataID;
-  DataID readDataID;
-
   // SolverOne prescribes these, thus SolverTwo expect these (we use "first-participant" as dt method)
   std::vector<double> timestepSizes{1.0, 2.0, 3.0};
 
@@ -36,15 +32,16 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantInitData)
   double expectedDataValue = 2.5;
   double actualDataValue   = -1.0;
 
+  std::string meshID, writeDataID, readDataID;
   if (context.isNamed("SolverOne")) {
-    auto meshID      = "MeshOne";
-    auto writeDataID = "DataOne"; //  meshID
-    auto readDataID  = "DataTwo"; //  meshID
+    meshID      = "MeshOne";
+    writeDataID = "DataOne"; //  meshID
+    readDataID  = "DataTwo"; //  meshID
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    auto meshID      = "MeshTwo";
-    auto writeDataID = "DataTwo"; //  meshID
-    auto readDataID  = "DataOne"; //  meshID
+    meshID      = "MeshTwo";
+    writeDataID = "DataTwo"; //  meshID
+    readDataID  = "DataOne"; //  meshID
   }
 
   VertexID vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
