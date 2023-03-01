@@ -423,7 +423,7 @@ private:
   /// Spatial dimensions of problem.
   int _dimensions = 0;
 
-  utils::MultiLock<int> _meshLock;
+  utils::MultiLock<std::string> _meshLock;
 
   /// mesh name to mesh ID mapping.
   std::map<std::string, int> _meshIDs;

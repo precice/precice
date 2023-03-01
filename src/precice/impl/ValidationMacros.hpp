@@ -30,7 +30,7 @@
                 "This participant does not use the mesh \"{0}\", but attempted to access it. "                 \
                 "Please define a <provide-mesh name=\"{0}\" /> or <receive-mesh name=\"{0}\" from=\"...\" /> " \
                 "tag in the configuration of participant \" {1}.",                                             \
-                _accessor->getMeshName(name), _accessorName);
+                name, _accessorName);
 
 /** Implementation of PRECICE_REQUIRE_MESH_PROVIDE()
  *

@@ -248,7 +248,7 @@ void SolverInterfaceImpl::configure(
   // Register all MeshIds to the lock, but unlock them straight away as
   // writing is allowed after configuration.
   for (const MeshContext *meshContext : _accessor->usedMeshContexts()) {
-    _meshLock.add(meshContext->mesh->getID(), false);
+    _meshLock.add(meshContext->mesh->getName(), false);
   }
 
   utils::EventRegistry::instance().initialize("precice-" + _accessorName, "", utils::Parallel::current()->comm);
@@ -593,7 +593,7 @@ bool SolverInterfaceImpl::requiresMeshConnectivityFor(std::string_view mesh) con
 bool SolverInterfaceImpl::requiresGradientDataFor(std::string_view mesh,
                                                   std::string_view data) const
 {
-  PRECICE_VALIDATE_DATA_ID(mesh, data);
+  PRECICE_VALIDATE_DATA_NAME(mesh, data);
   // Read data never requires gradients
   if (!_accessor->isDataWrite(mesh, data))
     return false;
@@ -611,7 +611,7 @@ int SolverInterfaceImpl::getMeshVertexSize(
   // Otherwise, the function call doesn't make any sense
   PRECICE_CHECK((_state == State::Initialized) || _accessor->isMeshProvided(mesh), "initialize() has to be called before accessing"
                                                                                    " data of the received mesh \"{}\" on participant \"{}\".",
-                _accessor->getMeshName(mesh), _accessor->getName());
+                mesh, _accessor->getName());
   MeshContext &context = _accessor->usedMeshContext(mesh);
   PRECICE_ASSERT(context.mesh.get() != nullptr);
   return context.mesh->vertices().size();
@@ -642,10 +642,10 @@ int SolverInterfaceImpl::setMeshVertex(
   PRECICE_DEBUG("Position = {}", internalPosition.format(utils::eigenio::debug()));
   int           index   = -1;
   MeshContext & context = _accessor->usedMeshContext(mesh);
-  mesh::PtrMesh mesh(context.mesh);
+  mesh::PtrMesh meshp(context.mesh);
   PRECICE_DEBUG("MeshRequirement: {}", fmt::streamed(context.meshRequirement));
-  index = mesh->createVertex(internalPosition).getID();
-  mesh->allocateDataValues();
+  index = meshp->createVertex(internalPosition).getID();
+  meshp->allocateDataValues();
   return index;
 }
 
@@ -658,15 +658,15 @@ void SolverInterfaceImpl::setMeshVertices(
   PRECICE_TRACE(mesh, size);
   PRECICE_REQUIRE_MESH_MODIFY(mesh);
   MeshContext & context = _accessor->usedMeshContext(mesh);
-  mesh::PtrMesh mesh(context.mesh);
+  mesh::PtrMesh meshp(context.mesh);
   PRECICE_DEBUG("Set positions");
   const Eigen::Map<const Eigen::MatrixXd> posMatrix{
       positions, _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(size)};
   for (int i = 0; i < size; ++i) {
     Eigen::VectorXd current(posMatrix.col(i));
-    ids[i] = mesh->createVertex(current).getID();
+    ids[i] = meshp->createVertex(current).getID();
   }
-  mesh->allocateDataValues();
+  meshp->allocateDataValues();
 }
 
 void SolverInterfaceImpl::setMeshEdge(
@@ -678,13 +678,13 @@ void SolverInterfaceImpl::setMeshEdge(
   PRECICE_REQUIRE_MESH_MODIFY(mesh);
   MeshContext &context = _accessor->usedMeshContext(mesh);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
-    mesh::PtrMesh &mesh = context.mesh;
+    mesh::PtrMesh &meshp = context.mesh;
     using impl::errorInvalidVertexID;
-    PRECICE_CHECK(mesh->isValidVertexID(firstVertexID), errorInvalidVertexID(firstVertexID));
-    PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), errorInvalidVertexID(secondVertexID));
-    mesh::Vertex &v0 = mesh->vertices()[firstVertexID];
-    mesh::Vertex &v1 = mesh->vertices()[secondVertexID];
-    mesh->createEdge(v0, v1);
+    PRECICE_CHECK(meshp->isValidVertexID(firstVertexID), errorInvalidVertexID(firstVertexID));
+    PRECICE_CHECK(meshp->isValidVertexID(secondVertexID), errorInvalidVertexID(secondVertexID));
+    mesh::Vertex &v0 = meshp->vertices()[firstVertexID];
+    mesh::Vertex &v1 = meshp->vertices()[secondVertexID];
+    meshp->createEdge(v0, v1);
   }
 }
 
@@ -700,11 +700,11 @@ void SolverInterfaceImpl::setMeshEdges(
     return;
   }
 
-  mesh::PtrMesh &mesh = context.mesh;
+  mesh::PtrMesh &meshp = context.mesh;
   {
     auto end           = std::next(vertices, size * 2);
-    auto [first, last] = utils::find_first_range(vertices, end, [&mesh](VertexID vid) {
-      return !mesh->isValidVertexID(vid);
+    auto [first, last] = utils::find_first_range(vertices, end, [&meshp](VertexID vid) {
+      return !meshp->isValidVertexID(vid);
     });
     PRECICE_CHECK(first == end,
                   impl::errorInvalidVertexIDRange,
@@ -715,7 +715,7 @@ void SolverInterfaceImpl::setMeshEdges(
   for (int i = 0; i < size; ++i) {
     auto aid = vertices[2 * i];
     auto bid = vertices[2 * i + 1];
-    mesh->createEdge(mesh->vertices()[aid], mesh->vertices()[bid]);
+    meshp->createEdge(meshp->vertices()[aid], meshp->vertices()[bid]);
   }
 }
 
@@ -731,28 +731,28 @@ void SolverInterfaceImpl::setMeshTriangle(
   PRECICE_REQUIRE_MESH_MODIFY(mesh);
   MeshContext &context = _accessor->usedMeshContext(mesh);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
-    mesh::PtrMesh &mesh = context.mesh;
+    mesh::PtrMesh &meshp = context.mesh;
     using impl::errorInvalidVertexID;
-    PRECICE_CHECK(mesh->isValidVertexID(firstVertexID), errorInvalidVertexID(firstVertexID));
-    PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), errorInvalidVertexID(secondVertexID));
-    PRECICE_CHECK(mesh->isValidVertexID(thirdVertexID), errorInvalidVertexID(thirdVertexID));
+    PRECICE_CHECK(meshp->isValidVertexID(firstVertexID), errorInvalidVertexID(firstVertexID));
+    PRECICE_CHECK(meshp->isValidVertexID(secondVertexID), errorInvalidVertexID(secondVertexID));
+    PRECICE_CHECK(meshp->isValidVertexID(thirdVertexID), errorInvalidVertexID(thirdVertexID));
     PRECICE_CHECK(utils::unique_elements(utils::make_array(firstVertexID, secondVertexID, thirdVertexID)),
                   "setMeshTriangle() was called with repeated Vertex IDs ({}, {}, {}).",
                   firstVertexID, secondVertexID, thirdVertexID);
     mesh::Vertex *vertices[3];
-    vertices[0] = &mesh->vertices()[firstVertexID];
-    vertices[1] = &mesh->vertices()[secondVertexID];
-    vertices[2] = &mesh->vertices()[thirdVertexID];
+    vertices[0] = &meshp->vertices()[firstVertexID];
+    vertices[1] = &meshp->vertices()[secondVertexID];
+    vertices[2] = &meshp->vertices()[thirdVertexID];
     PRECICE_CHECK(utils::unique_elements(utils::make_array(vertices[0]->getCoords(),
                                                            vertices[1]->getCoords(), vertices[2]->getCoords())),
                   "setMeshTriangle() was called with vertices located at identical coordinates (IDs: {}, {}, {}).",
                   firstVertexID, secondVertexID, thirdVertexID);
     mesh::Edge *edges[3];
-    edges[0] = &mesh->createEdge(*vertices[0], *vertices[1]);
-    edges[1] = &mesh->createEdge(*vertices[1], *vertices[2]);
-    edges[2] = &mesh->createEdge(*vertices[2], *vertices[0]);
+    edges[0] = &meshp->createEdge(*vertices[0], *vertices[1]);
+    edges[1] = &meshp->createEdge(*vertices[1], *vertices[2]);
+    edges[2] = &meshp->createEdge(*vertices[2], *vertices[0]);
 
-    mesh->createTriangle(*edges[0], *edges[1], *edges[2]);
+    meshp->createTriangle(*edges[0], *edges[1], *edges[2]);
   }
 }
 
@@ -768,11 +768,11 @@ void SolverInterfaceImpl::setMeshTriangles(
     return;
   }
 
-  mesh::PtrMesh &mesh = context.mesh;
+  mesh::PtrMesh &meshp = context.mesh;
   {
     auto end           = std::next(vertices, size * 3);
-    auto [first, last] = utils::find_first_range(vertices, end, [&mesh](VertexID vid) {
-      return !mesh->isValidVertexID(vid);
+    auto [first, last] = utils::find_first_range(vertices, end, [&meshp](VertexID vid) {
+      return !meshp->isValidVertexID(vid);
     });
     PRECICE_CHECK(first == end,
                   impl::errorInvalidVertexIDRange,
@@ -784,9 +784,9 @@ void SolverInterfaceImpl::setMeshTriangles(
     auto aid = vertices[3 * i];
     auto bid = vertices[3 * i + 1];
     auto cid = vertices[3 * i + 2];
-    mesh->createTriangle(mesh->vertices()[aid],
-                         mesh->vertices()[bid],
-                         mesh->vertices()[cid]);
+    meshp->createTriangle(meshp->vertices()[aid],
+                          meshp->vertices()[bid],
+                          meshp->vertices()[cid]);
   }
 }
 
@@ -854,11 +854,11 @@ void SolverInterfaceImpl::setMeshQuads(
     return;
   }
 
-  mesh::Mesh &mesh = *(context.mesh);
+  mesh::Mesh &meshp = *(context.mesh);
   {
     auto end           = std::next(vertices, size * 4);
-    auto [first, last] = utils::find_first_range(vertices, end, [&mesh](VertexID vid) {
-      return !mesh.isValidVertexID(vid);
+    auto [first, last] = utils::find_first_range(vertices, end, [&meshp](VertexID vid) {
+      return !meshp.isValidVertexID(vid);
     });
     PRECICE_CHECK(first == end,
                   impl::errorInvalidVertexIDRange,
@@ -875,7 +875,7 @@ void SolverInterfaceImpl::setMeshQuads(
     auto vertexIDs = utils::make_array(aid, bid, cid, did);
     PRECICE_CHECK(utils::unique_elements(vertexIDs), "The four vertex ID's of the quad nr {} are not unique. Please check that the vertices that form the quad are correct.", i);
 
-    auto coords = mesh::coordsFor(mesh, vertexIDs);
+    auto coords = mesh::coordsFor(meshp, vertexIDs);
     PRECICE_CHECK(utils::unique_elements(coords),
                   "The four vertices that form the quad nr {} are not unique. The resulting shape may be a point, line or triangle."
                   "Please check that the adapter sends the four unique vertices that form the quad, or that the mesh on the interface is composed of quads.",
@@ -885,7 +885,7 @@ void SolverInterfaceImpl::setMeshQuads(
     PRECICE_CHECK(convexity.convex, "The given quad nr {} is not convex. "
                                     "Please check that the adapter send the four correct vertices or that the interface is composed of quads.",
                   i);
-    auto reordered = utils::reorder_array(convexity.vertexOrder, mesh::vertexPtrsFor(mesh, vertexIDs));
+    auto reordered = utils::reorder_array(convexity.vertexOrder, mesh::vertexPtrsFor(meshp, vertexIDs));
 
     // Use the shortest diagonal to split the quad into 2 triangles.
     // Vertices are now in V0-V1-V2-V3-V0 order. The new edge, e[4] is either 0-2 or 1-3
@@ -893,11 +893,11 @@ void SolverInterfaceImpl::setMeshQuads(
     double distance13 = (reordered[1]->getCoords() - reordered[3]->getCoords()).norm();
 
     if (distance02 <= distance13) {
-      mesh.createTriangle(*reordered[0], *reordered[2], *reordered[1]);
-      mesh.createTriangle(*reordered[0], *reordered[2], *reordered[3]);
+      meshp.createTriangle(*reordered[0], *reordered[2], *reordered[1]);
+      meshp.createTriangle(*reordered[0], *reordered[2], *reordered[3]);
     } else {
-      mesh.createTriangle(*reordered[1], *reordered[3], *reordered[0]);
-      mesh.createTriangle(*reordered[1], *reordered[3], *reordered[2]);
+      meshp.createTriangle(*reordered[1], *reordered[3], *reordered[0]);
+      meshp.createTriangle(*reordered[1], *reordered[3], *reordered[2]);
     }
   }
 }
@@ -915,18 +915,18 @@ void SolverInterfaceImpl::setMeshTetrahedron(
                                   " Please set the dimension to 3 in the preCICE configuration file.");
   MeshContext &context = _accessor->usedMeshContext(mesh);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
-    mesh::PtrMesh &mesh = context.mesh;
+    mesh::PtrMesh &meshp = context.mesh;
     using impl::errorInvalidVertexID;
-    PRECICE_CHECK(mesh->isValidVertexID(firstVertexID), errorInvalidVertexID(firstVertexID));
-    PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), errorInvalidVertexID(secondVertexID));
-    PRECICE_CHECK(mesh->isValidVertexID(thirdVertexID), errorInvalidVertexID(thirdVertexID));
-    PRECICE_CHECK(mesh->isValidVertexID(fourthVertexID), errorInvalidVertexID(fourthVertexID));
-    mesh::Vertex &A = mesh->vertices()[firstVertexID];
-    mesh::Vertex &B = mesh->vertices()[secondVertexID];
-    mesh::Vertex &C = mesh->vertices()[thirdVertexID];
-    mesh::Vertex &D = mesh->vertices()[fourthVertexID];
+    PRECICE_CHECK(meshp->isValidVertexID(firstVertexID), errorInvalidVertexID(firstVertexID));
+    PRECICE_CHECK(meshp->isValidVertexID(secondVertexID), errorInvalidVertexID(secondVertexID));
+    PRECICE_CHECK(meshp->isValidVertexID(thirdVertexID), errorInvalidVertexID(thirdVertexID));
+    PRECICE_CHECK(meshp->isValidVertexID(fourthVertexID), errorInvalidVertexID(fourthVertexID));
+    mesh::Vertex &A = meshp->vertices()[firstVertexID];
+    mesh::Vertex &B = meshp->vertices()[secondVertexID];
+    mesh::Vertex &C = meshp->vertices()[thirdVertexID];
+    mesh::Vertex &D = meshp->vertices()[fourthVertexID];
 
-    mesh->createTetrahedron(A, B, C, D);
+    meshp->createTetrahedron(A, B, C, D);
   }
 }
 
@@ -942,11 +942,11 @@ void SolverInterfaceImpl::setMeshTetrahedra(
     return;
   }
 
-  mesh::PtrMesh &mesh = context.mesh;
+  mesh::PtrMesh &meshp = context.mesh;
   {
     auto end           = std::next(vertices, size * 4);
-    auto [first, last] = utils::find_first_range(vertices, end, [&mesh](VertexID vid) {
-      return !mesh->isValidVertexID(vid);
+    auto [first, last] = utils::find_first_range(vertices, end, [&meshp](VertexID vid) {
+      return !meshp->isValidVertexID(vid);
     });
     PRECICE_CHECK(first == end,
                   impl::errorInvalidVertexIDRange,
@@ -959,10 +959,10 @@ void SolverInterfaceImpl::setMeshTetrahedra(
     auto bid = vertices[4 * i + 1];
     auto cid = vertices[4 * i + 2];
     auto did = vertices[4 * i + 3];
-    mesh->createTetrahedron(mesh->vertices()[aid],
-                            mesh->vertices()[bid],
-                            mesh->vertices()[cid],
-                            mesh->vertices()[did]);
+    meshp->createTetrahedron(meshp->vertices()[aid],
+                             meshp->vertices()[bid],
+                             meshp->vertices()[cid],
+                             meshp->vertices()[did]);
   }
 }
 
@@ -987,9 +987,8 @@ void SolverInterfaceImpl::writeBlockVectorData(
                 context.getDataName());
   PRECICE_VALIDATE_DATA(values, size * _dimensions);
 
-  mesh::Data &data           = *context.providedData();
-  auto &      valuesInternal = data.values();
-  const auto  vertexCount    = valuesInternal.size() / context.getDataDimensions();
+  auto &     valuesInternal = context.providedData()->values();
+  const auto vertexCount    = valuesInternal.size() / context.getDataDimensions();
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
     PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
@@ -1022,9 +1021,8 @@ void SolverInterfaceImpl::writeVectorData(
                 context.getDataName());
   PRECICE_VALIDATE_DATA(value, _dimensions);
 
-  mesh::Data &data        = *context.providedData();
-  auto &      values      = data.values();
-  const auto  vertexCount = values.size() / context.getDataDimensions();
+  auto &     values      = context.providedData()->values();
+  const auto vertexCount = values.size() / context.getDataDimensions();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                 "Cannot write data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                 context.getDataName(), valueIndex);
@@ -1055,9 +1053,8 @@ void SolverInterfaceImpl::writeBlockScalarData(
                 context.getDataName(), context.getDataName());
   PRECICE_VALIDATE_DATA(values, size);
 
-  mesh::Data &data           = *context.providedData();
-  auto &      valuesInternal = data.values();
-  const auto  vertexCount    = valuesInternal.size() / context.getDataDimensions();
+  auto &     valuesInternal = context.providedData()->values();
+  const auto vertexCount    = valuesInternal.size() / context.getDataDimensions();
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
     PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
@@ -1088,9 +1085,8 @@ void SolverInterfaceImpl::writeScalarData(
                 context.getDataName());
   PRECICE_VALIDATE_DATA(static_cast<double *>(&value), 1);
 
-  mesh::Data &data        = *context.providedData();
-  auto &      values      = data.values();
-  const auto  vertexCount = values.size() / context.getDataDimensions();
+  auto &     values      = context.providedData()->values();
+  const auto vertexCount = values.size() / context.getDataDimensions();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                 "Cannot write data \"{}\" to invalid Vertex ID ({}). "
                 "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
@@ -1119,36 +1115,36 @@ void SolverInterfaceImpl::writeScalarGradientData(
 
     WriteDataContext &context = _accessor->writeDataContext(mesh, data);
     PRECICE_ASSERT(context.providedData() != nullptr);
-    mesh::Data &data = *context.providedData();
+    mesh::Data &meshData = *context.providedData();
 
     // Check if data has been initialized to include gradient data
-    PRECICE_CHECK(data.hasGradient(), "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", data.getName())
+    PRECICE_CHECK(meshData.hasGradient(), "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", meshData.getName())
 
     // Size of the gradient data input : must be spaceDimensions * dataDimensions -> here spaceDimensions (since for scalar: dataDimensions = 1)
-    PRECICE_ASSERT(data.getSpatialDimensions() == _dimensions,
-                   data.getSpatialDimensions(), _dimensions);
+    PRECICE_ASSERT(meshData.getSpatialDimensions() == _dimensions,
+                   meshData.getSpatialDimensions(), _dimensions);
 
     PRECICE_VALIDATE_DATA(gradientValues, _dimensions);
 
     // Gets the gradientvalues matrix corresponding to the dataID
-    auto &     gradientValuesInternal = data.gradientValues();
+    auto &     gradientValuesInternal = meshData.gradientValues();
     const auto vertexCount            = gradientValuesInternal.cols() / context.getDataDimensions();
 
     // Check if the index and dimensions are valid
     PRECICE_CHECK(valueIndex >= -1,
                   "Invalid value index ({}) when writing gradient scalar data. Value index must be >= 0. "
                   "Please check the value index for {}",
-                  valueIndex, data.getName());
+                  valueIndex, meshData.getName());
 
     PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                   "Cannot write data \"{}\" to invalid vertex ID ({}). "
                   "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                   context.getDataName(), valueIndex);
 
-    PRECICE_CHECK(data.getDimensions() == 1,
+    PRECICE_CHECK(meshData.getDimensions() == 1,
                   "You cannot call writeGradientScalarData on the vector data type \"{0}\". "
                   "Use writeVectorGradientData or change the data type for \"{0}\" to scalar.",
-                  data.getName());
+                  meshData.getName());
 
     // Values are entered derived in the spatial dimensions (#rows = #spatial dimensions)
     Eigen::Map<const Eigen::MatrixXd> gradient(gradientValues, _dimensions, 1);
@@ -1181,21 +1177,21 @@ void SolverInterfaceImpl::writeBlockScalarGradientData(
     // Get the data
     WriteDataContext &context = _accessor->writeDataContext(mesh, data);
     PRECICE_ASSERT(context.providedData() != nullptr);
-    mesh::Data &data = *context.providedData();
+    mesh::Data &meshData = *context.providedData();
 
-    PRECICE_CHECK(data.hasGradient(), "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", data.getName())
+    PRECICE_CHECK(meshData.hasGradient(), "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", meshData.getName())
 
-    PRECICE_CHECK(data.getDimensions() == 1,
+    PRECICE_CHECK(meshData.getDimensions() == 1,
                   "You cannot call writeBlockScalarGradientData on the vector data type \"{}\". Use writeBlockVectorGradientData or change the data type for \"{}\" to scalar.",
-                  data.getName(), data.getName());
+                  meshData.getName(), meshData.getName());
 
-    PRECICE_ASSERT(data.getSpatialDimensions() == _dimensions,
-                   data.getSpatialDimensions(), _dimensions);
+    PRECICE_ASSERT(meshData.getSpatialDimensions() == _dimensions,
+                   meshData.getSpatialDimensions(), _dimensions);
 
     PRECICE_VALIDATE_DATA(gradientValues, size * _dimensions);
 
     // Get gradient data and check if initialized
-    auto &     gradientValuesInternal = data.gradientValues();
+    auto &     gradientValuesInternal = meshData.gradientValues();
     const auto vertexCount            = gradientValuesInternal.cols() / context.getDataDimensions();
 
     Eigen::Map<const Eigen::MatrixXd> gradients(gradientValues, _dimensions, size);
@@ -1228,28 +1224,28 @@ void SolverInterfaceImpl::writeVectorGradientData(
 
     WriteDataContext &context = _accessor->writeDataContext(mesh, data);
     PRECICE_ASSERT(context.providedData() != nullptr);
-    mesh::Data &data = *context.providedData();
+    mesh::Data &meshData = *context.providedData();
 
     // Check if Data object with ID dataID has been initialized with gradient data
-    PRECICE_CHECK(data.hasGradient(), "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", data.getName())
+    PRECICE_CHECK(meshData.hasGradient(), "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", meshData.getName())
 
     // Check if the dimensions match
-    PRECICE_CHECK(data.getDimensions() > 1,
+    PRECICE_CHECK(meshData.getDimensions() > 1,
                   "You cannot call writeVectorGradientData on the scalar data type \"{}\". Use writeScalarGradientData or change the data type for \"{}\" to vector.",
-                  data.getName(), data.getName());
+                  meshData.getName(), meshData.getName());
 
-    PRECICE_ASSERT(data.getSpatialDimensions() == _dimensions,
-                   data.getSpatialDimensions(), _dimensions);
+    PRECICE_ASSERT(meshData.getSpatialDimensions() == _dimensions,
+                   meshData.getSpatialDimensions(), _dimensions);
 
     PRECICE_VALIDATE_DATA(gradientValues, _dimensions * _dimensions);
 
-    auto &     gradientValuesInternal = data.gradientValues();
-    const auto vertexCount            = gradientValuesInternal.cols() / data.getDimensions();
+    auto &     gradientValuesInternal = meshData.gradientValues();
+    const auto vertexCount            = gradientValuesInternal.cols() / meshData.getDimensions();
 
     // Check if the index is valid
     PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                   "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                  data.getName(), valueIndex)
+                  meshData.getName(), valueIndex)
 
     const Eigen::Index                dims{_dimensions};
     Eigen::Map<const Eigen::MatrixXd> gradient(gradientValues, dims, dims);
@@ -1283,24 +1279,24 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
     WriteDataContext &context = _accessor->writeDataContext(mesh, data);
     PRECICE_ASSERT(context.providedData() != nullptr);
 
-    mesh::Data &data = *context.providedData();
+    mesh::Data &meshData = *context.providedData();
 
     // Check if the Data object with ID mesh,data has been initialized with gradient data
-    PRECICE_CHECK(data.hasGradient(), "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", data.getName())
+    PRECICE_CHECK(meshData.hasGradient(), "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", meshData.getName())
 
     // Check if the dimensions match
-    PRECICE_CHECK(data.getDimensions() > 1,
+    PRECICE_CHECK(meshData.getDimensions() > 1,
                   "You cannot call writeBlockVectorGradientData on the scalar data type \"{}\". Use writeBlockScalarGradientData or change the data type for \"{}\" to vector.",
-                  data.getName(), data.getName());
+                  meshData.getName(), meshData.getName());
 
-    PRECICE_ASSERT(data.getSpatialDimensions() == _dimensions,
-                   data.getSpatialDimensions(), _dimensions);
+    PRECICE_ASSERT(meshData.getSpatialDimensions() == _dimensions,
+                   meshData.getSpatialDimensions(), _dimensions);
 
     PRECICE_VALIDATE_DATA(gradientValues, size * _dimensions * _dimensions);
 
     // Get the gradient data and check if initialized
-    auto &     gradientValuesInternal = data.gradientValues();
-    const auto vertexCount            = gradientValuesInternal.cols() / data.getDimensions();
+    auto &     gradientValuesInternal = meshData.gradientValues();
+    const auto vertexCount            = gradientValuesInternal.cols() / meshData.getDimensions();
 
     const Eigen::Index                dims{_dimensions};
     Eigen::Map<const Eigen::MatrixXd> gradients(gradientValues, dims, dims * size);
@@ -1309,7 +1305,7 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
       const auto valueIndex = valueIndices[i];
       PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                     "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                    data.getName(), valueIndex);
+                    meshData.getName(), valueIndex);
 
       gradientValuesInternal.block(0, dims * valueIndex, dims, dims) = gradients.block(0, i * dims, dims, dims);
     }
@@ -1613,10 +1609,10 @@ void SolverInterfaceImpl::setMeshAccessRegion(
 
   // Get the related mesh
   MeshContext & context = _accessor->meshContext(mesh);
-  mesh::PtrMesh mesh(context.mesh);
+  mesh::PtrMesh meshp(context.mesh);
   PRECICE_DEBUG("Define bounding box");
   // Transform bounds into a suitable format
-  int                 dim = mesh->getDimensions();
+  int                 dim = meshp->getDimensions();
   std::vector<double> bounds(dim * 2);
 
   for (int d = 0; d < dim; ++d) {
@@ -1628,7 +1624,7 @@ void SolverInterfaceImpl::setMeshAccessRegion(
   // Create a bounding box
   mesh::BoundingBox providedBoundingBox(bounds);
   // Expand the mesh associated bounding box
-  mesh->expandBoundingBox(providedBoundingBox);
+  meshp->expandBoundingBox(providedBoundingBox);
   // and set a flag so that we know the function was called
   _accessRegionDefined = true;
 }
@@ -1647,18 +1643,18 @@ void SolverInterfaceImpl::getMeshVerticesAndIDs(
   // Check, if the requested mesh data has already been received. Otherwise, the function call doesn't make any sense
   PRECICE_CHECK((_state == State::Initialized) || _accessor->isMeshProvided(mesh), "initialize() has to be called before accessing"
                                                                                    " data of the received mesh \"{}\" on participant \"{}\".",
-                _accessor->getMeshName(mesh), _accessor->getName());
+                mesh, _accessor->getName());
 
   if (size == 0)
     return;
 
   const MeshContext & context = _accessor->meshContext(mesh);
-  const mesh::PtrMesh mesh(context.mesh);
+  const mesh::PtrMesh meshp(context.mesh);
 
   PRECICE_CHECK(ids != nullptr, "getMeshVerticesAndIDs() was called with ids == nullptr");
   PRECICE_CHECK(coordinates != nullptr, "getMeshVerticesAndIDs() was called with coordinates == nullptr");
 
-  const auto &vertices = mesh->vertices();
+  const auto &vertices = meshp->vertices();
   PRECICE_CHECK(static_cast<unsigned int>(size) <= vertices.size(), "The queried size exceeds the number of available points.");
 
   Eigen::Map<Eigen::MatrixXd> posMatrix{
@@ -1828,7 +1824,7 @@ void SolverInterfaceImpl::computeMappings(std::vector<MappingContext> &contexts,
   for (impl::MappingContext &context : contexts) {
     if (not context.mapping->hasComputedMapping()) {
       PRECICE_INFO("Compute \"{}\" mapping from mesh \"{}\" to mesh \"{}\".",
-                   mappingType, _accessor->meshContext(context.fromMeshID).mesh->getName(), _accessor->meshContext(context.toMeshID).mesh->getName());
+                   mappingType, context.mapping->getInputMesh()->getName(), context.mapping->getOutputMesh()->getName());
       context.mapping->computeMapping();
     }
   }
