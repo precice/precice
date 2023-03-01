@@ -165,397 +165,440 @@ PRECICE_API void precicef_has_mesh_(
 /**
  * Fortran syntax:
  * precicef_has_data(
- *   CHARACTER dataName(*),
- *   INTEGER   meshID,
+ *   CHARACTER mesh(*),
+ *   CHARACTER data(*),
  *   INTEGER   hasData)
  *
- * IN:  dataName
- * IN:  meshID
+ * IN:  mesh, data, lengthMesh, lengthData
  * OUT: hasData(1:true, 0:false)
  *
  * @copydoc precice::SolverInterface::hasData()
  *
  */
 PRECICE_API void precicef_has_data_(
-    const char *dataName,
-    const int * meshID,
+    const char *mesh,
+    const char *data,
     int *       hasData,
-    int         lengthDataName);
+    int         lengthMesh,
+    int         lengthData);
 
 /**
  * Fortran syntax:
- * precicef_has_data(
- *   INTEGER   meshID
+ * precicef_precicef_requires_mesh_connectivity_for_(
+ *   CHARACTER mesh(*),
  *   INTEGER   required)
  *
- * IN:  meshID
+ * IN:  mesh, lengthMesh
  * OUT: required(1:true, 0:false)
  *
  * @copydoc precice::SolverInterface::requiresMeshConnectivityFor()
  */
 PRECICE_API void precicef_requires_mesh_connectivity_for_(
-    const int *meshID,
-    int *      required);
+    const char *mesh,
+    int *       required,
+    int         lengthMesh);
 
 /**
  * Fortran syntax:
  * precicef_set_vertex(
- *   INTEGER          meshID,
+ *   CHARACTER        mesh(*),
  *   DOUBLE PRECISION position(dim),
  *   INTEGER          vertexID )
  *
- * IN:  meshID, position
+ * IN:  mesh, position, lengthMesh
  * OUT: vertexID
  *
  * @copydoc precice::SolverInterface::setMeshVertex()
  *
  */
 PRECICE_API void precicef_set_vertex_(
-    const int *   meshID,
+    const char *  mesh,
     const double *position,
-    int *         vertexID);
+    int *vertexID int meshLenght);
 
 /**
  * Fortran syntax:
  * precicef_get_mesh_vertex_size(
- *   INTEGER meshID,
+ *   CHARACTER mesh(*),
  *   INTEGER meshSize )
  *
- * IN:  meshID
+ * IN:  mesh, meshLenght
  * OUT: meshSize
  *
  * @copydoc precice::SolverInterface::getMeshVertexSize()
  *
  */
 PRECICE_API void precicef_get_mesh_vertex_size_(
-    const int *meshID,
-    int *      meshSize);
+    const char *mesh,
+    int *       meshSize,
+    int         meshLenght);
 
 /**
  * Fortran syntax:
  * precicef_set_vertices(
- *   INTEGER          meshID,
+ *   CHARACTER        mesh(*),
  *   INTEGER          size,
  *   DOUBLE PRECISION positions(dim*size),
  *   INTEGER          positionIDs(size) )
  *
- * IN:  meshID, size, positions
+ * IN:  mesh, size, positions, meshLenght
  * OUT: positionIDs
  *
  * @copydoc precice::SolverInterface::setMeshVertices()
  *
  */
 PRECICE_API void precicef_set_vertices_(
-    const int *meshID,
-    const int *size,
-    double *   positions,
-    int *      positionIDs);
+    const char *mesh,
+    const int * size,
+    double *    positions,
+    int *       positionIDs,
+    int         meshLenght);
 
 /**
  * Fortran syntax:
  * precicef_set_edge(
- *   INTEGER meshID,
+ *   CHARACTER mesh(*),
  *   INTEGER firstVertexID,
  *   INTEGER secondVertexID )
  *
- * IN:  meshID, firstVertexID, secondVertexID
+ * IN:  mesh, firstVertexID, secondVertexID, meshLenght
  * OUT: -
  *
  * @copydoc precice::SolverInterface::setMeshEdge()
  *
  */
 PRECICE_API void precicef_set_edge_(
-    const int *meshID,
-    const int *firstVertexID,
-    const int *secondVertexID);
+    const char *mesh,
+    const int * firstVertexID,
+    const int * secondVertexID,
+    int         meshLenght);
 
 /**
  * Fortran syntax:
  * precicef_set_mesh_edges_(
- *   INTEGER meshID,
+ *   CHARACTER mesh(*),
  *   INTEGER size,
  *   INTEGER vertices(size*2) )
  *
- * IN:  meshID, size, vertices
+ * IN:  mesh, size, vertices, meshLenght
  * OUT: -
  *
  * @copydoc precice::SolverInterface::setMeshEdges()
  *
  */
 PRECICE_API void precicef_set_mesh_edges_(
-    const int *meshID,
-    const int *size,
-    const int *vertices);
+    const char *mesh,
+    const int * size,
+    const int * vertices,
+    int         meshLenght);
 
 /**
  * Fortran syntax:
  * precicef_set_triangle_(
- *   INTEGER meshID,
+ *   CHARACTER mesh(*),
  *   INTEGER firstVertexID,
  *   INTEGER secondVertexID,
  *   INTEGER thirdVertexID )
  *
- * IN:  meshID, firstVertexID, secondVertexID, thirdVertexID
+ * IN:  mesh, firstVertexID, secondVertexID, thirdVertexID, meshLenght
  * OUT: -
  *
  * @copydoc precice::SolverInterface::setMeshTriangle()
  *
  */
 PRECICE_API void precicef_set_triangle_(
-    const int *meshID,
-    const int *firstVertexID,
-    const int *secondVertexID,
-    const int *thirdVertexID);
+    const char *mesh,
+    const int * firstVertexID,
+    const int * secondVertexID,
+    const int * thirdVertexID,
+    int         meshLenght);
 
 /**
  * Fortran syntax:
  * precicef_set_mesh_triangles_(
- *   INTEGER meshID,
+ *   CHARACTER mesh(*),
  *   INTEGER size,
  *   INTEGER vertices(size*3) )
  *
- * IN:  meshID, size, vertices
+ * IN:  mesh, size, vertices, meshLenght
  * OUT: -
  *
  * @copydoc precice::SolverInterface::setMeshTriangles()
  *
  */
 PRECICE_API void precicef_set_mesh_edges_(
-    const int *meshID,
-    const int *size,
-    const int *vertices);
+    const char *mesh,
+    const int * size,
+    const int * vertices,
+    int         meshLenght);
 
 /**
  * Fortran syntax:
  * precicef_set_quad_(
- *   INTEGER meshID,
+ *   CHARACTER mesh(*),
  *   INTEGER firstVertexID,
  *   INTEGER secondVertexID,
  *   INTEGER thirdVertexID,
  *   INTEGER fourthVertexID )
  *
- * IN:  meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID
+ * IN:  mesh, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID, meshLenght
  * OUT: -
  *
  * @copydoc precice::SolverInterface::setMeshQuad()
  *
  */
 PRECICE_API void precicef_set_quad_(
-    const int *meshID,
-    const int *firstVertexID,
-    const int *secondVertexID,
-    const int *thirdVertexID,
-    const int *fourthVertexID);
+    const char *mesh,
+    const int * firstVertexID,
+    const int * secondVertexID,
+    const int * thirdVertexID,
+    const int * fourthVertexID,
+    int         meshLenght);
 
 /**
  * Fortran syntax:
  * precicef_set_mesh_quads(
- *   INTEGER meshID,
+ *   CHARACTER mesh(*),
  *   INTEGER size,
  *   INTEGER vertices(size*4) )
  *
- * IN:  meshID, size, vertices
+ * IN:  mesh, size, vertices, meshLenght
  * OUT: -
  *
  * @copydoc precice::SolverInterface::setMeshQuads()
  *
  */
 PRECICE_API void precicef_set_mesh_quads_(
-    const int *meshID,
-    const int *size,
-    const int *vertices);
+    const char *mesh,
+    const int * size,
+    const int * vertices,
+    int         meshLenght);
 
 /**
  * Fortran syntax:
  * precicef_set_tetrahedron(
- *   INTEGER meshID,
+ *   CHARACTER mesh(*),
  *   INTEGER firstVertexID,
  *   INTEGER secondVertexID,
  *   INTEGER thirdVertexID,
  *   INTEGER fourthVertexID )
  *
- * IN:  meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID
+ * IN:  mesh, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID, meshLenght
  * OUT: -
  *
  * @copydoc precice::SolverInterface::setMeshTetrahedron()
  *
  */
 PRECICE_API void precicef_set_tetrahedron(
-    const int *meshID,
-    const int *firstVertexID,
-    const int *secondVertexID,
-    const int *thirdVertexID,
-    const int *fourthVertexID);
+    const char *mesh,
+    const int * firstVertexID,
+    const int * secondVertexID,
+    const int * thirdVertexID,
+    const int * fourthVertexID,
+    int         meshLenght);
 
 /**
  * Fortran syntax:
  * precicef_set_mesh_tetrahedra_(
- *   INTEGER meshID,
+ *   CHARACTER mesh(*),
  *   INTEGER size,
  *   INTEGER vertices(size*4) )
  *
- * IN:  meshID, size, vertices
+ * IN:  mesh, size, vertices, meshLenght
  * OUT: -
  *
  * @copydoc precice::SolverInterface::setMeshTetrahedra()
  *
  */
 PRECICE_API void precicef_set_mesh_tetrahedra_(
-    const int *meshID,
-    const int *size,
-    const int *vertices);
+    const char *mesh,
+    const int * size,
+    const int * vertices,
+    int         meshLenght);
 
 /**
  * Fortran syntax:
  * precicef_write_bvdata(
- *   INTEGER dataID,
+ *   CHARACTER mesh(*),
+ *   CHARACTER data(*),
  *   INTEGER size,
  *   INTEGER valueIndices,
  *   DOUBLE PRECISION values(dim*size) )
  *
- * IN:  dataID, size, valueIndices, values
+ * IN:  mesh, data, size, valueIndices, values, meshLength, dataLength
  * OUT: -
  *
  * @copydoc precice::SolverInterface::writeBlockVectorData
  *
  */
 PRECICE_API void precicef_write_bvdata_(
-    const int *dataID,
-    const int *size,
-    int *      valueIndices,
-    double *   values);
+    const char *mesh,
+    const char *data,
+    const int * size,
+    int *       valueIndices,
+    double *    values,
+    int         meshLenght,
+    int         dataLength);
 
 /**
  * Fortran syntax:
  * precicef_write_vdata(
- *   INTEGER dataID,
+ *   CHARACTER mesh(*),
+ *   CHARACTER data(*),
  *   INTEGER valueIndex,
  *   DOUBLE PRECISION dataValue(dim) )
  *
- * IN:  dataID, valueIndex, dataValue
+ * IN:  mesh, data, valueIndex, dataValue, meshLength, dataLength
  * OUT: -
  *
  * @copydoc precice::SolverInterface::writeVectorData
  *
  */
 PRECICE_API void precicef_write_vdata_(
-    const int *   dataID,
+    const char *  mesh,
+    const char *  data,
     const int *   valueIndex,
-    const double *dataValue);
+    const double *dataValue,
+    int           meshLenght,
+    int           dataLength);
 
 /**
  * Fortran syntax:
  * precicef_write_bsdata(
- *   INTEGER dataID,
+ *   CHARACTER mesh(*),
+ *   CHARACTER data(*),
  *   INTEGER size,
  *   INTEGER valueIndices,
  *   DOUBLE PRECISION values(size) )
  *
- * IN:  dataID, size, valueIndices, values
+ * IN:  mesh, data, size, valueIndices, values, meshLength, dataLength
  * OUT: -
  *
  * @copydoc precice::SolverInterface::writeBlockScalarData
  *
  */
 PRECICE_API void precicef_write_bsdata_(
-    const int *dataID,
-    const int *size,
-    int *      valueIndices,
-    double *   values);
+    const char *mesh,
+    const char *data,
+    const int * size,
+    int *       valueIndices,
+    double *    values,
+    int         meshLenght,
+    int         dataLength);
 
 /**
  * Fortran syntax:
  * precicef_write_sdata(
- *   INTEGER dataID,
+ *   CHARACTER mesh(*),
+ *   CHARACTER data(*),
  *   INTEGER valueIndex,
  *   DOUBLE PRECISION dataValue )
  *
- * IN:  dataID, valueIndex, dataValue
+ * IN:  mesh, data, valueIndex, dataValue, meshLength, dataLength
  * OUT: -
  *
  * @copydoc precice::SolverInterface::writeScalarData
  *
  */
 PRECICE_API void precicef_write_sdata_(
-    const int *   dataID,
+    const char *  mesh,
+    const char *  data,
     const int *   valueIndex,
-    const double *dataValue);
+    const double *dataValue,
+    int           meshLenght,
+    int           dataLength);
 
 /**
  * Fortran syntax:
  * precicef_read_bvdata(
- *   INTEGER dataID,
+ *   CHARACTER mesh(*),
+ *   CHARACTER data(*),
  *   INTEGER size,
  *   INTEGER valueIndices,
  *   DOUBLE PRECISION values(dim*size) )
  *
- * IN:  dataID, size, valueIndices
+ * IN:  mesh, data, size, valueIndices, meshLength, dataLength
  * OUT: values
  *
  * @copydoc precice::SolverInterface::readBlockVectorData
  *
  */
 PRECICE_API void precicef_read_bvdata_(
-    const int *dataID,
-    const int *size,
-    int *      valueIndices,
-    double *   values);
+    const char *mesh,
+    const char *data,
+    const int * size,
+    int *       valueIndices,
+    double *    values,
+    int         meshLenght,
+    int         dataLength);
 
 /**
  * Fortran syntax:
  * precicef_read_vdata(
- *   INTEGER dataID,
+ *   CHARACTER mesh(*),
+ *   CHARACTER data(*),
  *   INTEGER valueIndex,
  *   DOUBLE PRECISION dataValue(dim) )
  *
- * IN:  dataID, valueIndex
+ * IN:  mesh, data, valueIndex, meshLength, dataLength
  * OUT: dataValue
  *
  * @copydoc precice::SolverInterface::readVectorData
  *
  */
 PRECICE_API void precicef_read_vdata_(
-    const int *dataID,
-    const int *valueIndex,
-    double *   dataValue);
+    const char *mesh,
+    const char *data,
+    const int * valueIndex,
+    double *    dataValue,
+    int         meshLenght,
+    int         dataLength);
 
 /**
  * Fortran syntax:
  * precicef_read_bsdata(
- *   INTEGER dataID,
+ *   CHARACTER mesh(*),
+ *   CHARACTER data(*),
  *   INTEGER size,
  *   INTEGER valueIndices,
  *   DOUBLE PRECISION values(size) )
  *
- * IN:  dataID, size, valueIndices
+ * IN:  mesh, data, size, valueIndices, meshLength, dataLength
  * OUT: values
  *
  * @copydoc precice::SolverInterface::readBlockScalarData
  *
  */
 PRECICE_API void precicef_read_bsdata_(
-    const int *dataID,
-    const int *size,
-    int *      valueIndices,
-    double *   values);
+    const char *mesh,
+    const char *data,
+    const int * size,
+    int *       valueIndices,
+    double *    values,
+    int         meshLenght,
+    int         dataLength);
 
 /**
  * Fortran syntax:
  * precicef_read_sdata(
- *   INTEGER dataID,
+ *   CHARACTER mesh(*),
+ *   CHARACTER data(*),
  *   INTEGER valueIndex,
  *   DOUBLE PRECISION dataValue )
  *
- * IN:  dataID, valueIndex
+ * IN:  mesh, data, valueIndex, meshLength, dataLength
  * OUT: dataValue
  *
  * @copydoc precice::SolverInterface::readScalarData
  *
  */
 PRECICE_API void precicef_read_sdata_(
-    const int *dataID,
-    const int *valueIndex,
-    double *   dataValue);
+    const char *mesh,
+    const char *data,
+    const int * valueIndex,
+    double *    dataValue,
+    int         meshLenght,
+    int         dataLength);
 
 PRECICE_API void precicef_get_version_information_(
     char *versionInfo,
@@ -569,7 +612,8 @@ PRECICE_API void precicef_get_version_information_(
 /**
  * Fortran syntax:
  * precicef_requires_gradient_data_for_(
- *   INTEGER dataID,
+ *   CHARACTER mesh(*),
+ *   CHARACTER data(*),
  *   INTEGER required )
  *
  * IN:  dataID
@@ -577,113 +621,134 @@ PRECICE_API void precicef_get_version_information_(
  *
  * @copydoc precice::SolverInterface::requiresGradientDataFor
  */
-PRECICE_API void precicef_requires_gradient_data_for_(const int *dataID, int *required);
+PRECICE_API void precicef_requires_gradient_data_for_(const char *mesh,
+                                                      const char *data, int *required,
+                                                      int meshLenght,
+                                                      int dataLength);
 
 /**
  * Fortran syntax:
  * precicef_write_sgradient_data_(
- *   INTEGER dataID,
+ *   CHARACTER mesh(*),
+ *   CHARACTER data(*),
  *   INTEGER valueIndex,
  *   DOUBLE PRECISION gradientValues )
  *
- * IN:  dataID, valueIndex, gradientValues
+ * IN:  mesh, data, valueIndex, gradientValues, meshLength, dataLength
  * OUT: -
  *
  * @copydoc precice::SolverInterface::writeScalarGradientData
  */
 PRECICE_API void precicef_write_sgradient_data_(
-    const int *   dataID,
+    const char *  mesh,
+    const char *  data,
     const int *   valueIndex,
-    const double *gradientValues);
+    const double *gradientValues,
+    int           meshLenght,
+    int           dataLength);
 
 /**
  * Fortran syntax:
  * precicef_write_bsgradient_data_(
- *   INTEGER dataID,
+ *   CHARACTER mesh(*),
+ *   CHARACTER data(*),
  *   INTEGER size,
  *   INTEGER valueIndices,
  *   DOUBLE PRECISION gradientValues )
  *
- * IN:  dataID, size, valueIndices, gradientValues
+ * IN:  mesh, data, size, valueIndices, gradientValues, meshLength, dataLength
  * OUT: -
  *
  * @copydoc precice::SolverInterface::writeBlockScalarGradientData
  */
 PRECICE_API void precicef_write_bsgradient_data_(
-    const int *   dataID,
+    const char *  mesh,
+    const char *  data,
     const int *   size,
     const int *   valueIndices,
-    const double *gradientValues);
+    const double *gradientValues,
+    int           meshLenght,
+    int           dataLength);
 
 /**
  * Fortran syntax:
  * precicef_write_vgradient_data_(
- *   INTEGER dataID,
+ *   CHARACTER mesh(*),
+ *   CHARACTER data(*),
  *   INTEGER valueIndex,
  *   DOUBLE PRECISION gradientValues )
  *
- * IN:  dataID, valueIndex, gradientValues
+ * IN:  mesh, data, valueIndex, gradientValues, meshLength, dataLength
  * OUT: -
  *
  * @copydoc precice::SolverInterface::writeVectorGradientData
  */
 PRECICE_API void precicef_write_vgradient_data_(
-    const int *   dataID,
+    const char *  mesh,
+    const char *  data,
     const int *   valueIndex,
-    const double *gradientValues);
+    const double *gradientValues,
+    int           meshLenght,
+    int           dataLength);
 
 /**
  * Fortran syntax:
  * precicef_write_bvgradient_data_(
- *   INTEGER dataID,
+ *   CHARACTER mesh(*),
+ *   CHARACTER data(*),
  *   INTEGER size,
  *   INTEGER valueIndices,
  *   DOUBLE PRECISION gradientValues )
  *
- * IN:  dataID, size, valueIndices, gradientValues
+ * IN:  mesh, data, size, valueIndices, gradientValues, meshLength, dataLength
  * OUT: -
  *
  * @copydoc precice::SolverInterface::writeBlockVectorGradientData
  */
 PRECICE_API void precicef_write_bvgradient_data_(
-    const int *   dataID,
+    const char *  mesh,
+    const char *  data,
     const int *   size,
     const int *   valueIndices,
-    const double *gradientValues);
+    const double *gradientValues,
+    int           meshLenght,
+    int           dataLength);
 
 /**
  * Fortran syntax:
  * precicef_set_mesh_access_region_(
- *   INTEGER          meshID,
+ *   CHARACTER        mesh(*),
  *   DOUBLE PRECISION bounding_box(dim*2))
  *
- * IN:  meshID, bounding_box
+ * IN:  mesh, bounding_box, meshLenght
  * OUT: -
  *
  * @copydoc precice::SolverInterface::setMeshAccessRegion()
  */
 PRECICE_API void precicef_set_mesh_access_region_(
-    const int     meshID,
-    const double *boundingBox);
+    const char *  mesh,
+    const double *boundingBox,
+    int           meshLenght);
 
 /**
  * Fortran syntax:
  * precicef_get_mesh_vertices_and_IDs_(
- *   INTEGER          meshID,
+ *   CHARACTER        mesh(*),
  *   INTEGER          size,
  *   INTEGER          ids(size),
  *   DOUBLE PRECISION coordinates(dim*size))
  *
- * IN:  meshID, size
+ * IN:  mesh, size, lengthMesh
  * OUT: ids, coordinates
  *
  * @copydoc precice::SolverInterface::getMeshVerticesAndIDs()
  */
 PRECICE_API void precicef_get_mesh_vertices_and_IDs_(
-    const int meshID,
-    const int size,
-    int *     ids,
-    double *  coordinates);
+    const char *mesh,
+    const int   size,
+    int *       ids,
+    double *    coordinates,
+    int         meshLenght);
 
 ///@}
 
