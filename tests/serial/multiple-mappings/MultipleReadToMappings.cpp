@@ -18,12 +18,12 @@ BOOST_AUTO_TEST_CASE(MultipleReadToMappings)
   Vector2d                 vertex{0.0, 0.0};
 
   if (context.isNamed("A")) {
-    const precice::MeshID meshIDTop      = interface.getMeshID("MeshATop");
-    const precice::MeshID meshIDBottom   = interface.getMeshID("MeshABottom");
-    int                   vertexIDTop    = interface.setMeshVertex(meshIDTop, vertex.data());
-    int                   vertexIDBottom = interface.setMeshVertex(meshIDBottom, vertex.data());
-    int                   dataIDTop      = interface.getDataID("DisplacementTop", meshIDTop);
-    int                   dataIDBottom   = interface.getDataID("DisplacementBottom", meshIDBottom);
+    auto meshIDTop      = "MeshATop";
+    auto meshIDBottom   = "MeshABottom";
+    int  vertexIDTop    = interface.setMeshVertex(meshIDTop, vertex.data());
+    int  vertexIDBottom = interface.setMeshVertex(meshIDBottom, vertex.data());
+    auto dataIDTop      = "DisplacementTop";    //  meshIDTop
+    auto dataIDBottom   = "DisplacementBottom"; //  meshIDBottom
 
     double dt              = interface.initialize();
     double displacementTop = 1.0;
@@ -36,10 +36,10 @@ BOOST_AUTO_TEST_CASE(MultipleReadToMappings)
 
   } else {
     BOOST_TEST(context.isNamed("B"));
-    const precice::MeshID meshID   = interface.getMeshID("MeshB");
-    int                   vertexID = interface.setMeshVertex(meshID, vertex.data());
-    int                   bottomID = interface.getDataID("DisplacementBottom", meshID);
-    int                   topID    = interface.getDataID("DisplacementTop", meshID);
+    auto meshID   = "MeshB";
+    int  vertexID = interface.setMeshVertex(meshID, vertex.data());
+    auto bottomID = "DisplacementBottom"; //  meshID
+    auto topID    = "DisplacementTop";    //  meshID
 
     double dt = interface.initialize();
     interface.advance(dt);

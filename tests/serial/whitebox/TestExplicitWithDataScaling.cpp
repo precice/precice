@@ -29,14 +29,14 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataScaling)
   std::vector<int>    ids       = {0, 0, 0, 0};
 
   if (context.isNamed("SolverOne")) {
-    MeshID meshID = cplInterface.getMeshID("Test-Square-One");
+    auto meshID = "Test-Square-One";
     cplInterface.setMeshVertices(meshID, 4, positions.data(), ids.data());
     for (int i = 0; i < 4; i++)
       cplInterface.setMeshEdge(meshID, ids.at(i), ids.at((i + 1) % 4));
 
     double dt = cplInterface.initialize();
 
-    int velocitiesID = cplInterface.getDataID("Velocities", meshID);
+    auto velocitiesID = "Velocities"; //  meshID
     while (cplInterface.isCouplingOngoing()) {
       for (size_t i = 0; i < testing::WhiteboxAccessor::impl(cplInterface).mesh("Test-Square-One").vertices().size(); ++i) {
         Eigen::Vector2d data = Eigen::Vector2d::Constant(i);
@@ -47,14 +47,14 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataScaling)
     cplInterface.finalize();
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    MeshID meshID = cplInterface.getMeshID("Test-Square-Two");
+    auto meshID = "Test-Square-Two";
     cplInterface.setMeshVertices(meshID, 4, positions.data(), ids.data());
     for (int i = 0; i < 4; i++)
       cplInterface.setMeshEdge(meshID, ids.at(i), ids.at((i + 1) % 4));
 
     double dt = cplInterface.initialize();
 
-    int velocitiesID = cplInterface.getDataID("Velocities", meshID);
+    auto velocitiesID = "Velocities"; //  meshID
     while (cplInterface.isCouplingOngoing()) {
       const auto size = testing::WhiteboxAccessor::impl(cplInterface).mesh("Test-Square-Two").vertices().size();
       for (size_t i = 0; i < size; ++i) {

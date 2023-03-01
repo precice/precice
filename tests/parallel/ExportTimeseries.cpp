@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_CASE(ExportTimeseries)
   std::vector<precice::VertexID> vertexIds(6 / context.size, -1);
   double                         y = context.size;
   std::vector<double>            coords{0, y, 0, 1, y, 0, 2, y, 0, 3, y, 0, 4, y, 0, 5, y, 0};
-  const precice::MeshID          meshID = interface.getMeshID(context.isNamed("ExporterOne") ? "A" : "B");
+  auto                           meshID = context.isNamed("ExporterOne") ? "A" : "B";
 
   if (context.isNamed("ExporterOne")) {
     interface.setMeshVertices(meshID, 6, coords.data(), vertexIds.data());
@@ -29,8 +29,8 @@ BOOST_AUTO_TEST_CASE(ExportTimeseries)
   double dt   = interface.initialize();
 
   if (context.isNamed("ExporterOne")) {
-    const precice::DataID sdataID = interface.getDataID("S", meshID);
-    const precice::DataID vdataID = interface.getDataID("V", meshID);
+    auto sdataID = "S"; //  meshID
+    auto vdataID = "V"; //  meshID
 
     std::vector<double> sdata(6);
     std::vector<double> vdata(6 * 3, 0);

@@ -47,11 +47,11 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalReadVector)
 
   SolverInterface cplInterface(context.name, context.config(), 0, 1);
   if (context.isNamed("SolverOne")) {
-    int      meshOneID = cplInterface.getMeshID("MeshOne");
+    auto     meshOneID = "MeshOne";
     Vector3d posOne    = Vector3d::Constant(0.0);
     cplInterface.setMeshVertex(meshOneID, posOne.data());
-    int dataAID = cplInterface.getDataID("DataOne", meshOneID);
-    int dataBID = cplInterface.getDataID("DataTwo", meshOneID);
+    auto dataAID = "DataOne"; //  meshOneID
+    auto dataBID = "DataTwo"; //  meshOneID
 
     Vector3d valueDataB;
 
@@ -77,12 +77,12 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalReadVector)
 
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    int      meshTwoID = cplInterface.getMeshID("MeshTwo");
+    auto     meshTwoID = "MeshTwo";
     Vector3d pos       = Vector3d::Constant(1.0);
     cplInterface.setMeshVertex(meshTwoID, pos.data());
 
-    int dataAID = cplInterface.getDataID("DataOne", meshTwoID);
-    int dataBID = cplInterface.getDataID("DataTwo", meshTwoID);
+    auto dataAID = "DataOne"; //  meshTwoID
+    auto dataBID = "DataTwo"; //  meshTwoID
 
     BOOST_REQUIRE(cplInterface.requiresInitialData());
     Vector3d valueDataB(2.0, 3.0, 4.0);

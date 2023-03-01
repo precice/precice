@@ -29,8 +29,8 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative1To3)
   double unbalancedForceOnAEGH = 7.0; // Distribution: 10%, 20%, 30%, 40%
 
   if (context.isNamed("SolverOneCubeConservative1To3")) {
-    auto meshID = interface.getMeshID("MeshOne");
-    auto dataID = interface.getDataID("DataOne", meshID);
+    auto meshID = "MeshOne";
+    auto dataID = "DataOne"; //  meshID
 
     std::vector<double> coords;
 
@@ -63,8 +63,8 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative1To3)
     BOOST_TEST(!interface.isCouplingOngoing(), "Sending participant must advance only once.");
     interface.finalize();
   } else { // SolverTwoCubeConservative1To3
-    auto meshID = interface.getMeshID("MeshTwo");
-    auto dataID = interface.getDataID("DataOne", meshID);
+    auto meshID = "MeshTwo";
+    auto dataID = "DataOne"; //  meshID
 
     std::vector<double> coords;
 

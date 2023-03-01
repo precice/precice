@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithSolverGeometry)
   BOOST_TEST(couplingInterface.getDimensions() == 3);
   if (context.isNamed("SolverOne")) {
     //was necessary to replace pre-defined geometries
-    precice::MeshID meshID = couplingInterface.getMeshID("MeshOne");
+    auto meshID = "MeshOne";
     couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
     couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
 
@@ -40,10 +40,10 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithSolverGeometry)
     couplingInterface.finalize();
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    precice::MeshID meshID = couplingInterface.getMeshID("SolverGeometry");
-    int             i0     = couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
-    int             i1     = couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
-    int             i2     = couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 1.0, 0.0).data());
+    auto meshID = "SolverGeometry";
+    int  i0     = couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+    int  i1     = couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
+    int  i2     = couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 1.0, 0.0).data());
     couplingInterface.setMeshTriangle(meshID, i0, i1, i2);
     double dt = couplingInterface.initialize();
 

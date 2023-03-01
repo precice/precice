@@ -18,10 +18,10 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
 
   if (context.isNamed("SolverA")) {
     SolverInterface cplInterface("SolverA", configFile, 0, 1);
-    const int       meshID   = cplInterface.getMeshID("MeshA");
+    auto            meshID   = "MeshA";
     int             vertexID = cplInterface.setMeshVertex(meshID, coordOneA.data());
-    int             dataABID = cplInterface.getDataID("DataAB", meshID);
-    int             dataBAID = cplInterface.getDataID("DataBA", meshID);
+    auto            dataABID = "DataAB"; //  meshID
+    auto            dataBAID = "DataBA"; //  meshID
 
     double maxDt = cplInterface.initialize();
     double valueRead;
@@ -44,14 +44,14 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
     cplInterface.finalize();
   } else if (context.isNamed("SolverB")) {
     SolverInterface cplInterface("SolverB", configFile, 0, 1);
-    const int       meshID1   = cplInterface.getMeshID("MeshB1");
-    const int       meshID2   = cplInterface.getMeshID("MeshB2");
+    auto            meshID1   = "MeshB1";
+    auto            meshID2   = "MeshB2";
     int             vertexID1 = cplInterface.setMeshVertex(meshID1, coordOneA.data());
     int             vertexID2 = cplInterface.setMeshVertex(meshID2, coordOneA.data());
-    int             dataABID  = cplInterface.getDataID("DataAB", meshID1);
-    int             dataBAID  = cplInterface.getDataID("DataBA", meshID1);
-    int             dataCBID  = cplInterface.getDataID("DataCB", meshID2);
-    int             dataBCID  = cplInterface.getDataID("DataBC", meshID2);
+    auto            dataABID  = "DataAB"; //  meshID1
+    auto            dataBAID  = "DataBA"; //  meshID1
+    auto            dataCBID  = "DataCB"; //  meshID2
+    auto            dataBCID  = "DataBC"; //  meshID2
 
     double maxDt = cplInterface.initialize();
     double valueReadA, valueReadC;
@@ -78,10 +78,10 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
 
   } else {
     SolverInterface cplInterface("SolverC", configFile, 0, 1);
-    const int       meshID   = cplInterface.getMeshID("MeshC");
+    auto            meshID   = "MeshC";
     int             vertexID = cplInterface.setMeshVertex(meshID, coordOneA.data());
-    int             dataCBID = cplInterface.getDataID("DataCB", meshID);
-    int             dataBCID = cplInterface.getDataID("DataBC", meshID);
+    auto            dataCBID = "DataCB"; //  meshID
+    auto            dataBCID = "DataBC"; //  meshID
 
     double maxDt = cplInterface.initialize();
     double valueRead;
@@ -112,10 +112,10 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
 
   if (context.isNamed("SolverA")) {
     SolverInterface cplInterface("SolverA", configFile, 0, 1);
-    const int       meshID   = cplInterface.getMeshID("MeshA");
+    auto            meshID   = "MeshA";
     int             vertexID = cplInterface.setMeshVertex(meshID, coordOneA.data());
-    int             dataABID = cplInterface.getDataID("DataAB", meshID);
-    int             dataBAID = cplInterface.getDataID("DataBA", meshID);
+    auto            dataABID = "DataAB"; //  meshID
+    auto            dataBAID = "DataBA"; //  meshID
 
     double maxDt = cplInterface.initialize();
     double valueRead;
@@ -136,14 +136,14 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
     cplInterface.finalize();
   } else if (context.isNamed("SolverB")) {
     SolverInterface cplInterface("SolverB", configFile, 0, 1);
-    const int       meshID1   = cplInterface.getMeshID("MeshB1");
-    const int       meshID2   = cplInterface.getMeshID("MeshB2");
+    auto            meshID1   = "MeshB1";
+    auto            meshID2   = "MeshB2";
     int             vertexID1 = cplInterface.setMeshVertex(meshID1, coordOneA.data());
     int             vertexID2 = cplInterface.setMeshVertex(meshID2, coordOneA.data());
-    int             dataABID  = cplInterface.getDataID("DataAB", meshID1);
-    int             dataBAID  = cplInterface.getDataID("DataBA", meshID1);
-    int             dataCBID  = cplInterface.getDataID("DataCB", meshID2);
-    int             dataBCID  = cplInterface.getDataID("DataBC", meshID2);
+    auto            dataABID  = "DataAB"; //  meshID1
+    auto            dataBAID  = "DataBA"; //  meshID1
+    auto            dataCBID  = "DataCB"; //  meshID2
+    auto            dataBCID  = "DataBC"; //  meshID2
 
     double maxDt = cplInterface.initialize();
     double valueReadA, valueReadC;
@@ -167,14 +167,14 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
 
   } else if (context.isNamed("SolverC")) {
     SolverInterface cplInterface("SolverC", configFile, 0, 1);
-    const int       meshID1   = cplInterface.getMeshID("MeshC1");
-    const int       meshID2   = cplInterface.getMeshID("MeshC2");
+    auto            meshID1   = "MeshC1";
+    auto            meshID2   = "MeshC2";
     int             vertexID1 = cplInterface.setMeshVertex(meshID1, coordOneA.data());
     int             vertexID2 = cplInterface.setMeshVertex(meshID2, coordOneA.data());
-    int             dataBCID  = cplInterface.getDataID("DataBC", meshID1);
-    int             dataCBID  = cplInterface.getDataID("DataCB", meshID1);
-    int             dataCDID  = cplInterface.getDataID("DataCD", meshID2);
-    int             dataDCID  = cplInterface.getDataID("DataDC", meshID2);
+    auto            dataBCID  = "DataBC"; //  meshID1
+    auto            dataCBID  = "DataCB"; //  meshID1
+    auto            dataCDID  = "DataCD"; //  meshID2
+    auto            dataDCID  = "DataDC"; //  meshID2
 
     double maxDt = cplInterface.initialize();
     double valueReadA, valueReadC;
@@ -197,10 +197,10 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
     cplInterface.finalize();
   } else {
     SolverInterface cplInterface("SolverD", configFile, 0, 1);
-    const int       meshID   = cplInterface.getMeshID("MeshD");
+    auto            meshID   = "MeshD";
     int             vertexID = cplInterface.setMeshVertex(meshID, coordOneA.data());
-    int             dataCDID = cplInterface.getDataID("DataCD", meshID);
-    int             dataDCID = cplInterface.getDataID("DataDC", meshID);
+    auto            dataCDID = "DataCD"; //  meshID
+    auto            dataDCID = "DataDC"; //  meshID
 
     double maxDt = cplInterface.initialize();
     double valueRead;

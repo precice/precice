@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_CASE(DoNothingWithSubcycling)
 
   SolverInterface precice(context.name, context.config(), 0, 1);
   if (context.isNamed("SolverOne")) {
-    MeshID meshID = precice.getMeshID("MeshOne");
+    auto meshID = "MeshOne";
     precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
     precice.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
     double maxDt     = precice.initialize();
@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(DoNothingWithSubcycling)
     BOOST_TEST(timestep == 20);
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    MeshID meshID = precice.getMeshID("Test-Square");
+    auto meshID = "Test-Square";
     precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
     precice.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
     double maxDt     = precice.initialize();

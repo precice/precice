@@ -25,10 +25,10 @@ BOOST_AUTO_TEST_CASE(ExplicitAndMapping)
   constexpr int dim = 2;
 
   if (context.isNamed("SolverOne")) {
-    const int ownMeshID   = interface.getMeshID("MeshOne");
-    const int otherMeshID = interface.getMeshID("MeshTwo");
-    const int readDataID  = interface.getDataID("Forces", ownMeshID);
-    const int writeDataID = interface.getDataID("Velocities", otherMeshID);
+    auto ownMeshID   = "MeshOne";
+    auto otherMeshID = "MeshTwo";
+    auto readDataID  = "Forces";     //  ownMeshID
+    auto writeDataID = "Velocities"; //  otherMeshID
 
     std::vector<double> positions = {0.2, 0.2, 0.1, 0.6, 0.1, 0.0, 0.1, 0.0};
     std::vector<int>    ownIDs(4, -1);
@@ -72,9 +72,9 @@ BOOST_AUTO_TEST_CASE(ExplicitAndMapping)
     std::vector<int>    ids(positions.size() / dim, -1);
 
     // Query IDs
-    const int meshID      = interface.getMeshID("MeshTwo");
-    const int writeDataID = interface.getDataID("Forces", meshID);
-    const int readDataID  = interface.getDataID("Velocities", meshID);
+    auto meshID      = "MeshTwo";
+    auto writeDataID = "Forces";     //  meshID
+    auto readDataID  = "Velocities"; //  meshID
 
     // Define the mesh
     interface.setMeshVertices(meshID, ids.size(), positions.data(), ids.data());

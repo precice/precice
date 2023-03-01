@@ -12,7 +12,7 @@ void testConvergenceMeasures(const std::string configFile, TestContext const &co
   std::string meshName = context.isNamed("SolverOne") ? "MeshOne" : "MeshTwo";
 
   precice::SolverInterface interface(context.name, configFile, 0, 1);
-  const int                meshID = interface.getMeshID(meshName);
+  auto                     meshID = meshName;
 
   Vector2d vertex{0.0, 0.0};
 
@@ -31,7 +31,7 @@ void testConvergenceMeasures(const std::string configFile, TestContext const &co
     }
 
     if (context.isNamed("SolverTwo")) {
-      precice::DataID dataID = interface.getDataID("Data2", meshID);
+      auto dataID = "Data2"; //  meshID
       interface.writeScalarData(dataID, vertexID, writeValues.at(numberOfAdvanceCalls));
     }
 

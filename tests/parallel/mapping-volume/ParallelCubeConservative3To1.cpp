@@ -31,8 +31,8 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative3To1)
   double                dt;
 
   if (context.isNamed("SolverOneCubeConservative3To1")) {
-    auto meshID = interface.getMeshID("MeshOne");
-    auto dataID = interface.getDataID("DataOne", meshID);
+    auto meshID = "MeshOne";
+    auto dataID = "DataOne"; //  meshID
 
     std::vector<double> coords;
     std::vector<double> values;
@@ -73,8 +73,8 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative3To1)
     BOOST_TEST(!interface.isCouplingOngoing(), "Sending participant must advance only once.");
     interface.finalize();
   } else { // SolverTwoCubeConservative3To1
-    auto meshID = interface.getMeshID("MeshTwo");
-    auto dataID = interface.getDataID("DataOne", meshID);
+    auto meshID = "MeshTwo";
+    auto dataID = "DataOne"; //  meshID
 
     std::vector<double> coords;
 

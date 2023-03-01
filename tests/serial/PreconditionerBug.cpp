@@ -19,8 +19,8 @@ BOOST_AUTO_TEST_CASE(PreconditionerBug)
   std::string              meshName = context.isNamed("SolverOne") ? "MeshOne" : "MeshTwo";
   precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
 
-  const precice::MeshID meshID = interface.getMeshID(meshName);
-  Vector2d              vertex{0.0, 0.0};
+  auto     meshID = meshName;
+  Vector2d vertex{0.0, 0.0};
 
   precice::VertexID vertexID = interface.setMeshVertex(meshID, vertex.data());
 
@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(PreconditionerBug)
       // nothing
     }
     if (context.isNamed("SolverTwo")) {
-      precice::DataID dataID = interface.getDataID("DataOne", meshID);
+      auto dataID = "DataOne"; //  meshID
       // to get convergence in first timestep (everything 0), but not in second timestep
       Vector2d value{0.0, 2.0 + numberOfAdvanceCalls * numberOfAdvanceCalls};
       interface.writeVectorData(dataID, vertexID, value.data());

@@ -41,27 +41,27 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
   int nSubsteps; // let three solvers use different time step sizes
 
   if (context.isNamed("SolverOne")) {
-    meshID         = precice.getMeshID("MeshOne");
-    writeDataID    = precice.getDataID("DataOne", meshID);
-    writeFunction  = dataOneFunction;
-    auto dataTwoId = precice.getDataID("DataTwo", meshID);
+    auto meshID      = "MeshOne";
+    auto writeDataID = "DataOne"; //  meshID
+    writeFunction    = dataOneFunction;
+    auto dataTwoId   = "DataTwo"; //  meshID
     readDataPairs.push_back(std::make_pair(dataTwoId, dataTwoFunction));
-    auto dataThreeId = precice.getDataID("DataThree", meshID);
+    auto dataThreeId = "DataThree"; //  meshID
     readDataPairs.push_back(std::make_pair(dataThreeId, dataThreeFunction));
     nSubsteps = 1;
   } else if (context.isNamed("SolverTwo")) {
-    meshID         = precice.getMeshID("MeshTwo");
-    writeDataID    = precice.getDataID("DataTwo", meshID);
-    writeFunction  = dataTwoFunction;
-    auto dataOneId = precice.getDataID("DataOne", meshID);
+    auto meshID      = "MeshTwo";
+    auto writeDataID = "DataTwo"; //  meshID
+    writeFunction    = dataTwoFunction;
+    auto dataOneId   = "DataOne"; //  meshID
     readDataPairs.push_back(std::make_pair(dataOneId, dataOneFunction));
     nSubsteps = 2;
   } else {
     BOOST_TEST(context.isNamed("SolverThree"));
-    meshID         = precice.getMeshID("MeshThree");
-    writeDataID    = precice.getDataID("DataThree", meshID);
-    writeFunction  = dataThreeFunction;
-    auto dataOneId = precice.getDataID("DataOne", meshID);
+    auto meshID      = "MeshThree";
+    auto writeDataID = "DataThree"; //  meshID
+    writeFunction    = dataThreeFunction;
+    auto dataOneId   = "DataOne"; //  meshID
     readDataPairs.push_back(std::make_pair(dataOneId, dataOneFunction));
     nSubsteps = 3;
   }

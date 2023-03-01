@@ -23,8 +23,8 @@ BOOST_AUTO_TEST_CASE(ParallelCube3To1)
   double                a = 1, b = 2, c = 5, d = 1;
 
   if (context.isNamed("SolverOne")) {
-    auto meshID = interface.getMeshID("MeshOne");
-    auto dataID = interface.getDataID("DataOne", meshID);
+    auto meshID = "MeshOne";
+    auto dataID = "DataOne"; //  meshID
 
     std::vector<double> coords;
 
@@ -86,8 +86,8 @@ BOOST_AUTO_TEST_CASE(ParallelCube3To1)
     interface.finalize();
 
   } else {
-    auto meshID = interface.getMeshID("MeshTwo");
-    auto dataID = interface.getDataID("DataOne", meshID);
+    auto meshID = "MeshTwo";
+    auto dataID = "DataOne"; //  meshID
 
     // For completion, we sample points in each direction.
     std::vector<double> coords;

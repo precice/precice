@@ -24,8 +24,8 @@ BOOST_DATA_TEST_CASE(NearestProjectionRePartitioning,
       interface.advance(1.0);
       interface.finalize();
     } else {
-      const precice::MeshID meshID     = interface.getMeshID("CellCenters");
-      const int             dimensions = 3;
+      auto      meshID     = "CellCenters";
+      const int dimensions = 3;
       BOOST_TEST(interface.getDimensions() == dimensions);
 
       const int                 numberOfVertices = 65;
@@ -108,7 +108,7 @@ BOOST_DATA_TEST_CASE(NearestProjectionRePartitioning,
   } else {
     BOOST_TEST(context.isNamed("SolidSolver"));
     precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    const int                meshID     = interface.getMeshID("Nodes");
+    auto                     meshID     = "Nodes";
     const int                dimensions = 3;
     BOOST_TEST(interface.getDimensions() == dimensions);
     const int                 numberOfVertices = 34;

@@ -20,14 +20,14 @@ BOOST_AUTO_TEST_CASE(MultipleWriteFromMappingsAndData)
   Vector2d                 vertex3{4.0, 0.0};
 
   if (context.isNamed("A")) {
-    const precice::MeshID meshIDTop      = interface.getMeshID("MeshATop");
-    const precice::MeshID meshIDBottom   = interface.getMeshID("MeshABottom");
-    int                   vertexIDTop    = interface.setMeshVertex(meshIDTop, vertex1.data());
-    int                   vertexIDBottom = interface.setMeshVertex(meshIDBottom, vertex3.data());
-    int                   dataIDTopP     = interface.getDataID("Pressure", meshIDTop);
-    int                   dataIDBottomP  = interface.getDataID("Pressure", meshIDBottom);
-    int                   dataIDTopT     = interface.getDataID("Temperature", meshIDTop);
-    int                   dataIDBottomT  = interface.getDataID("Temperature", meshIDBottom);
+    auto meshIDTop      = "MeshATop";
+    auto meshIDBottom   = "MeshABottom";
+    int  vertexIDTop    = interface.setMeshVertex(meshIDTop, vertex1.data());
+    int  vertexIDBottom = interface.setMeshVertex(meshIDBottom, vertex3.data());
+    auto dataIDTopP     = "Pressure";    //  meshIDTop
+    auto dataIDBottomP  = "Pressure";    //  meshIDBottom
+    auto dataIDTopT     = "Temperature"; //  meshIDTop
+    auto dataIDBottomT  = "Temperature"; //  meshIDBottom
 
     double dt = interface.initialize();
     interface.advance(dt);
@@ -48,12 +48,12 @@ BOOST_AUTO_TEST_CASE(MultipleWriteFromMappingsAndData)
 
   } else {
     BOOST_TEST(context.isNamed("B"));
-    const precice::MeshID meshID    = interface.getMeshID("MeshB");
-    int                   vertexID1 = interface.setMeshVertex(meshID, vertex1.data());
-    int                   vertexID2 = interface.setMeshVertex(meshID, vertex2.data());
-    int                   vertexID3 = interface.setMeshVertex(meshID, vertex3.data());
-    int                   dataIDP   = interface.getDataID("Pressure", meshID);
-    int                   dataIDT   = interface.getDataID("Temperature", meshID);
+    auto meshID    = "MeshB";
+    int  vertexID1 = interface.setMeshVertex(meshID, vertex1.data());
+    int  vertexID2 = interface.setMeshVertex(meshID, vertex2.data());
+    int  vertexID3 = interface.setMeshVertex(meshID, vertex3.data());
+    auto dataIDP   = "Pressure";    //  meshID
+    auto dataIDT   = "Temperature"; //  meshID
 
     double dt          = interface.initialize();
     double pressure    = 1.0;

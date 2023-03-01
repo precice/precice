@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_CASE(PrimaryRankSockets)
     myMeshName = "SerialMesh";
   }
   precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-  int                      meshID      = interface.getMeshID(myMeshName);
+  auto                     meshID      = myMeshName;
   double                   position[2] = {0, 0};
   interface.setMeshVertex(meshID, position);
   interface.initialize();

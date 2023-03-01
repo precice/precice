@@ -40,18 +40,18 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
   DataFunction readFunction;
 
   if (context.isNamed("SolverOne")) {
-    meshID        = precice.getMeshID("MeshOne");
-    writeDataID   = precice.getDataID("DataOne", meshID);
-    writeFunction = dataOneFunction;
-    readDataID    = precice.getDataID("DataTwo", meshID);
-    readFunction  = dataTwoFunction;
+    auto meshID      = "MeshOne";
+    auto writeDataID = "DataOne"; //  meshID
+    writeFunction    = dataOneFunction;
+    auto readDataID  = "DataTwo"; //  meshID
+    readFunction     = dataTwoFunction;
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    meshID        = precice.getMeshID("MeshTwo");
-    writeDataID   = precice.getDataID("DataTwo", meshID);
-    writeFunction = dataTwoFunction;
-    readDataID    = precice.getDataID("DataOne", meshID);
-    readFunction  = dataOneFunction;
+    auto meshID      = "MeshTwo";
+    auto writeDataID = "DataTwo"; //  meshID
+    writeFunction    = dataTwoFunction;
+    auto readDataID  = "DataOne"; //  meshID
+    readFunction     = dataOneFunction;
   }
 
   double   writeData = 0;

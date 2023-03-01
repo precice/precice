@@ -71,9 +71,9 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitializationTwoWay)
 
   precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
 
-  precice::MeshID meshID       = interface.getMeshID(context.name + "Mesh");
-  int             forcesID     = interface.getDataID("Forces", meshID);
-  int             velocitiesID = interface.getDataID("Velocities", meshID);
+  auto meshID       = context.name + "Mesh";
+  auto forcesID     = "Forces";     //  meshID
+  auto velocitiesID = "Velocities"; //  meshID
 
   std::vector<int> vertexIDs;
   for (int i = i1; i < i2; i++) {

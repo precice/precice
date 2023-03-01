@@ -26,10 +26,10 @@ BOOST_AUTO_TEST_CASE(Explicit)
 
   SolverInterface cplInterface(context.name, context.config(), 0, 1);
   if (context.isNamed("SolverOne")) {
-    int meshOneID = cplInterface.getMeshID("MeshOne");
+    auto meshOneID = "MeshOne";
     cplInterface.setMeshVertex(meshOneID, Vector3d(1.0, 2.0, 3.0).data());
-    int    dataAID    = cplInterface.getDataID("DataOne", meshOneID);
-    int    dataBID    = cplInterface.getDataID("DataTwo", meshOneID);
+    auto   dataAID    = "DataOne"; //  meshOneID
+    auto   dataBID    = "DataTwo"; //  meshOneID
     double valueDataB = 0.0;
     double maxDt      = cplInterface.initialize();
     cplInterface.readScalarData(dataBID, 0, valueDataB);
@@ -44,13 +44,13 @@ BOOST_AUTO_TEST_CASE(Explicit)
     cplInterface.finalize();
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    int      meshTwoID = cplInterface.getMeshID("MeshTwo");
+    auto     meshTwoID = "MeshTwo";
     Vector3d pos       = Vector3d::Zero();
     cplInterface.setMeshVertex(meshTwoID, pos.data());
 
     BOOST_REQUIRE(cplInterface.requiresInitialData());
-    int dataAID = cplInterface.getDataID("DataOne", meshTwoID);
-    int dataBID = cplInterface.getDataID("DataTwo", meshTwoID);
+    auto dataAID = "DataOne"; //  meshTwoID
+    auto dataBID = "DataTwo"; //  meshTwoID
     cplInterface.writeScalarData(dataBID, 0, 2.0);
     //tell preCICE that data has been written and call initializeData
     double   maxDt = cplInterface.initialize();

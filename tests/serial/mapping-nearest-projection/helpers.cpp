@@ -36,7 +36,7 @@ void testMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFuncti
   if (context.isNamed("SolverOne")) {
     precice::SolverInterface interface("SolverOne", configFile, 0, 1);
     // namespace is required because we are outside the fixture
-    const int meshOneID = interface.getMeshID("MeshOne");
+    auto meshOneID = "MeshOne";
 
     // Setup mesh one.
     int idA = interface.setMeshVertex(meshOneID, coordOneA.data());
@@ -70,7 +70,7 @@ void testMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFuncti
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant should have to advance once!");
 
     // Write the data to be send.
-    int dataAID = interface.getDataID("DataOne", meshOneID);
+    auto dataAID = "DataOne"; //  meshOneID
     BOOST_TEST(!interface.requiresGradientDataFor(dataAID));
 
     interface.writeScalarData(dataAID, idA, valOneA);
@@ -86,7 +86,7 @@ void testMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFuncti
     BOOST_TEST(context.isNamed("SolverTwo"));
     precice::SolverInterface interface("SolverTwo", configFile, 0, 1);
     // namespace is required because we are outside the fixture
-    int meshTwoID = interface.getMeshID("MeshTwo");
+    auto meshTwoID = "MeshTwo";
 
     // Setup receiving mesh.
     int idA = interface.setMeshVertex(meshTwoID, coordTwoA.data());
@@ -98,7 +98,7 @@ void testMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFuncti
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant should have to advance once!");
 
     // Read the mapped data from the mesh.
-    int dataAID = interface.getDataID("DataOne", meshTwoID);
+    auto dataAID = "DataOne"; //  meshTwoID
     BOOST_TEST(!interface.requiresGradientDataFor(dataAID));
 
     double valueA, valueB, valueC;
@@ -146,7 +146,7 @@ void testQuadMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFu
   if (context.isNamed("SolverOne")) {
     precice::SolverInterface interface("SolverOne", configFile, 0, 1);
     // namespace is required because we are outside the fixture
-    const int meshOneID = interface.getMeshID("MeshOne");
+    auto meshOneID = "MeshOne";
 
     // Setup mesh one.
     int idA = interface.setMeshVertex(meshOneID, coordOneA.data());
@@ -190,7 +190,7 @@ void testQuadMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFu
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant should have to advance once!");
 
     // Write the data to be send.
-    int dataAID = interface.getDataID("DataOne", meshOneID);
+    auto dataAID = "DataOne"; //  meshOneID
     interface.writeScalarData(dataAID, idA, valOneA);
     interface.writeScalarData(dataAID, idB, valOneB);
     interface.writeScalarData(dataAID, idC, valOneC);
@@ -204,7 +204,7 @@ void testQuadMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFu
     BOOST_TEST(context.isNamed("SolverTwo"));
     precice::SolverInterface interface("SolverTwo", configFile, 0, 1);
     // namespace is required because we are outside the fixture
-    int meshTwoID = interface.getMeshID("MeshTwo");
+    auto meshTwoID = "MeshTwo";
 
     // Setup receiving mesh.
     int idA = interface.setMeshVertex(meshTwoID, coordTwoA.data());
@@ -216,7 +216,7 @@ void testQuadMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFu
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant should have to advance once!");
 
     // Read the mapped data from the mesh.
-    int    dataAID = interface.getDataID("DataOne", meshTwoID);
+    auto   dataAID = "DataOne"; //  meshTwoID
     double valueA, valueB, valueC;
     interface.readScalarData(dataAID, idA, valueA);
     interface.readScalarData(dataAID, idB, valueB);
@@ -248,7 +248,7 @@ void testQuadMappingNearestProjectionTallKite(bool defineEdgesExplicitly, bool u
   if (context.isNamed("SolverOne")) {
     precice::SolverInterface interface("SolverOne", configFile, 0, 1);
     // namespace is required because we are outside the fixture
-    const int meshOneID = interface.getMeshID("MeshOne");
+    auto meshOneID = "MeshOne";
 
     // Setup mesh one.
     int idA = interface.setMeshVertex(meshOneID, coordOneA.data());
@@ -307,7 +307,7 @@ void testQuadMappingNearestProjectionWideKite(bool defineEdgesExplicitly, bool u
   if (context.isNamed("SolverOne")) {
     SolverInterface interface("SolverOne", configFile, 0, 1);
     // namespace is required because we are outside the fixture
-    const int meshOneID = interface.getMeshID("MeshOne");
+    auto meshOneID = "MeshOne";
 
     // Setup mesh one.
     int idA = interface.setMeshVertex(meshOneID, coordOneA.data());

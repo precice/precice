@@ -37,14 +37,14 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantInitData)
   double actualDataValue   = -1.0;
 
   if (context.isNamed("SolverOne")) {
-    meshID      = precice.getMeshID("MeshOne");
-    writeDataID = precice.getDataID("DataOne", meshID);
-    readDataID  = precice.getDataID("DataTwo", meshID);
+    auto meshID      = "MeshOne";
+    auto writeDataID = "DataOne"; //  meshID
+    auto readDataID  = "DataTwo"; //  meshID
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    meshID      = precice.getMeshID("MeshTwo");
-    writeDataID = precice.getDataID("DataTwo", meshID);
-    readDataID  = precice.getDataID("DataOne", meshID);
+    auto meshID      = "MeshTwo";
+    auto writeDataID = "DataTwo"; //  meshID
+    auto readDataID  = "DataOne"; //  meshID
   }
 
   VertexID vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());

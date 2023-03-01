@@ -26,10 +26,10 @@ BOOST_AUTO_TEST_CASE(Implicit)
     std::array<double, dim * 2> boundingBox = {0.0, 1.0, 0.0, 1.0};
     std::vector<int>            ownIDs(4, -1);
 
-    const int ownMeshID   = couplingInterface.getMeshID("MeshOne");
-    const int otherMeshID = couplingInterface.getMeshID("MeshTwo");
-    const int ownDataID   = couplingInterface.getDataID("Forces", ownMeshID);
-    const int otherDataID = couplingInterface.getDataID("Velocities", otherMeshID);
+    auto ownMeshID   = "MeshOne";
+    auto otherMeshID = "MeshTwo";
+    auto ownDataID   = "Forces";     //  ownMeshID
+    auto otherDataID = "Velocities"; //  otherMeshID
 
     // Define the own mesh
     couplingInterface.setMeshVertices(ownMeshID, ownIDs.size(), positions.data(), ownIDs.data());
@@ -81,10 +81,10 @@ BOOST_AUTO_TEST_CASE(Implicit)
     std::array<double, dim * 2> boundingBox = {0.0, 2.0, 0.0, 2.0};
 
     // Query IDs
-    const int ownMeshID   = couplingInterface.getMeshID("MeshTwo");
-    const int otherMeshID = couplingInterface.getMeshID("MeshOne");
-    const int ownDataID   = couplingInterface.getDataID("Velocities", ownMeshID);
-    const int otherDataID = couplingInterface.getDataID("Forces", otherMeshID);
+    auto ownMeshID   = "MeshTwo";
+    auto otherMeshID = "MeshOne";
+    auto ownDataID   = "Velocities"; //  ownMeshID
+    auto otherDataID = "Forces";     //  otherMeshID
 
     // Define the mesh
     couplingInterface.setMeshVertices(ownMeshID, ownIDs.size(), positions.data(), ownIDs.data());

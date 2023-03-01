@@ -14,7 +14,7 @@ BOOST_AUTO_TEST_CASE(CouplingOnLine)
 
   if (context.isNamed("Ateles")) {
     precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    int                      meshID = interface.getMeshID("Ateles_Mesh");
+    auto                     meshID = "Ateles_Mesh";
 
     int    vertexIDs[4];
     double offset        = context.rank * 0.4;
@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(CouplingOnLine)
     interface.finalize();
   } else {
     precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    int                      meshID = interface.getMeshID("FASTEST_Mesh");
+    auto                     meshID = "FASTEST_Mesh";
     int                      vertexIDs[10];
     double                   xCoord        = -0.0001;
     double                   yCoord        = 1.00001;

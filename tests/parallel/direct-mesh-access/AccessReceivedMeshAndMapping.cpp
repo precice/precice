@@ -21,10 +21,10 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
     precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
     BOOST_TEST(interface.getDimensions() == 2);
     constexpr int dim         = 2;
-    const int     ownMeshID   = interface.getMeshID("MeshOne");
-    const int     otherMeshID = interface.getMeshID("MeshTwo");
-    const int     readDataID  = interface.getDataID("Forces", ownMeshID);
-    const int     writeDataID = interface.getDataID("Velocities", otherMeshID);
+    auto          ownMeshID   = "MeshOne";
+    auto          otherMeshID = "MeshTwo";
+    auto          readDataID  = "Forces";     //  ownMeshID
+    auto          writeDataID = "Velocities"; //  otherMeshID
 
     std::vector<double> positions = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 2.0, 0.0, 3.0}) : std::vector<double>({0.0, 4.0, 0.0, 5.0, 0.0, 6.0});
 
@@ -78,9 +78,9 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
     std::vector<int>    ids(positions.size() / dim, -1);
 
     // Query IDs
-    const int meshID      = interface.getMeshID("MeshTwo");
-    const int writeDataID = interface.getDataID("Forces", meshID);
-    const int readDataID  = interface.getDataID("Velocities", meshID);
+    auto meshID      = "MeshTwo";
+    auto writeDataID = "Forces";     //  meshID
+    auto readDataID  = "Velocities"; //  meshID
 
     // Define the mesh
     interface.setMeshVertices(meshID, ids.size(), positions.data(), ids.data());

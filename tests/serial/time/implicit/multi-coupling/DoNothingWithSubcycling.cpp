@@ -28,15 +28,15 @@ BOOST_AUTO_TEST_CASE(DoNothingWithSubcycling)
   int nSubsteps; // let three solvers use different time step sizes
 
   if (context.isNamed("SolverOne")) {
-    meshID    = precice.getMeshID("MeshOne");
-    nSubsteps = 1;
+    auto meshID = "MeshOne";
+    nSubsteps   = 1;
   } else if (context.isNamed("SolverTwo")) {
-    meshID    = precice.getMeshID("MeshTwo");
-    nSubsteps = 2;
+    auto meshID = "MeshTwo";
+    nSubsteps   = 2;
   } else {
     BOOST_TEST(context.isNamed("SolverThree"));
-    meshID    = precice.getMeshID("MeshThree");
-    nSubsteps = 3;
+    auto meshID = "MeshThree";
+    nSubsteps   = 3;
   }
 
   VertexID vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());

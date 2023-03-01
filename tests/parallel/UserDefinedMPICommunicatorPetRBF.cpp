@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicatorPetRBF)
     MPI_Comm                 myComm = precice::utils::Parallel::current()->comm;
     precice::SolverInterface interface(context.name, context.config(), context.rank, context.size, &myComm);
 
-    int    meshID = interface.getMeshID("MeshOne");
+    auto   meshID = "MeshOne";
     int    vertexIDs[2];
     double xCoord       = context.rank * 0.4;
     double positions[4] = {xCoord, 0.0, xCoord + 0.2, 0.0};
@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicatorPetRBF)
     BOOST_REQUIRE(context.isNamed("SolverTwo"));
     precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
 
-    int    meshID = interface.getMeshID("MeshTwo");
+    auto   meshID = "MeshTwo";
     int    vertexIDs[6];
     double positions[12] = {0.0, 0.0, 0.2, 0.0, 0.4, 0.0, 0.6, 0.0, 0.8, 0.0, 1.0, 0.0};
     interface.setMeshVertices(meshID, 6, positions, vertexIDs);

@@ -17,9 +17,9 @@ BOOST_AUTO_TEST_CASE(AitkenAcceleration)
   Vector2d                 vertex{0.0, 0.0};
 
   if (context.isNamed("A")) {
-    const precice::MeshID meshID   = interface.getMeshID("A-Mesh");
-    int                   vertexID = interface.setMeshVertex(meshID, vertex.data());
-    int                   dataID   = interface.getDataID("Data", meshID);
+    auto meshID   = "A-Mesh";
+    int  vertexID = interface.setMeshVertex(meshID, vertex.data());
+    auto dataID   = "Data"; //  meshID
 
     double dt    = interface.initialize();
     double value = 1.0;
@@ -38,9 +38,9 @@ BOOST_AUTO_TEST_CASE(AitkenAcceleration)
 
   } else {
     BOOST_TEST(context.isNamed("B"));
-    const precice::MeshID meshID   = interface.getMeshID("B-Mesh");
-    int                   vertexID = interface.setMeshVertex(meshID, vertex.data());
-    int                   dataID   = interface.getDataID("Data", meshID);
+    auto meshID   = "B-Mesh";
+    int  vertexID = interface.setMeshVertex(meshID, vertex.data());
+    auto dataID   = "Data"; //  meshID
 
     double dt = interface.initialize();
     interface.requiresWritingCheckpoint();

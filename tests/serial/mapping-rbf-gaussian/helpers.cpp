@@ -43,7 +43,7 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
   if (context.isNamed("SolverOne")) {
     precice::SolverInterface interface("SolverOne", configFile, 0, 1);
     // namespace is required because we are outside the fixture
-    const int meshOneID = interface.getMeshID("MeshOne");
+    auto meshOneID = "MeshOne";
 
     // Setup mesh one.
     std::vector<int> ids;
@@ -64,7 +64,7 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
     double maxDt = interface.initialize();
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant should have to advance once!");
     // Write the data to be send.
-    int dataAID = interface.getDataID("DataOne", meshOneID);
+    auto dataAID = "DataOne"; //  meshOneID
     BOOST_TEST(!interface.requiresGradientDataFor(dataAID));
 
     interface.writeBlockScalarData(dataAID, nCoords, ids.data(), values.data());
@@ -77,7 +77,7 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
     BOOST_TEST(context.isNamed("SolverTwo"));
     precice::SolverInterface interface("SolverTwo", configFile, 0, 1);
     // namespace is required because we are outside the fixture
-    int meshTwoID = interface.getMeshID("MeshTwo");
+    auto meshTwoID = "MeshTwo";
 
     // Setup receiving mesh.
     int idA = interface.setMeshVertex(meshTwoID, coordTwoA.data());
@@ -89,7 +89,7 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant should have to advance once!");
 
     // Read the mapped data from the mesh.
-    int dataAID = interface.getDataID("DataOne", meshTwoID);
+    auto dataAID = "DataOne"; //  meshTwoID
     BOOST_TEST(!interface.requiresGradientDataFor(dataAID));
 
     double valueA, valueB, valueC;

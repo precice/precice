@@ -48,11 +48,11 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteScalar)
 
   SolverInterface cplInterface(context.name, context.config(), 0, 1);
   if (context.isNamed("SolverOne")) {
-    int      meshOneID = cplInterface.getMeshID("MeshOne");
+    auto     meshOneID = "MeshOne";
     Vector3d vec1      = Vector3d::Constant(0.1);
     cplInterface.setMeshVertex(meshOneID, vec1.data());
-    int dataAID = cplInterface.getDataID("DataOne", meshOneID);
-    int dataBID = cplInterface.getDataID("DataTwo", meshOneID);
+    auto dataAID = "DataOne"; //  meshOneID
+    auto dataBID = "DataTwo"; //  meshOneID
 
     double valueDataB = 0.0;
     double maxDt      = cplInterface.initialize();
@@ -71,12 +71,12 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteScalar)
 
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    int      meshTwoID = cplInterface.getMeshID("MeshTwo");
+    auto     meshTwoID = "MeshTwo";
     Vector3d vec2      = Vector3d::Constant(0.0);
     cplInterface.setMeshVertex(meshTwoID, vec2.data());
 
-    int dataAID = cplInterface.getDataID("DataOne", meshTwoID);
-    int dataBID = cplInterface.getDataID("DataTwo", meshTwoID);
+    auto dataAID = "DataOne"; //  meshTwoID
+    auto dataBID = "DataTwo"; //  meshTwoID
     BOOST_REQUIRE(cplInterface.requiresInitialData());
 
     double   valueDataB = 1.0;

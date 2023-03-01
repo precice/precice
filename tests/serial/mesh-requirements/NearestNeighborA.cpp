@@ -11,7 +11,7 @@ BOOST_AUTO_TEST_CASE(NearestNeighborA)
 {
   PRECICE_TEST(1_rank);
   precice::SolverInterface interface("A", context.config(), 0, 1);
-  auto                     meshID = interface.getMeshID("MeshA");
+  auto                     meshID = "MeshA";
   BOOST_TEST(!interface.requiresMeshConnectivityFor(meshID));
 }
 

@@ -22,9 +22,9 @@ void runTestQN(std::string const &config, TestContext const &context)
   }
 
   precice::SolverInterface interface(context.name, config, context.rank, context.size);
-  int                      meshID      = interface.getMeshID(meshName);
-  int                      writeDataID = interface.getDataID(writeDataName, meshID);
-  int                      readDataID  = interface.getDataID(readDataName, meshID);
+  auto                     meshID      = meshName;
+  auto                     writeDataID = writeDataName; //  meshID
+  auto                     readDataID  = readDataName;  //  meshID
 
   VertexID vertexIDs[4];
 
@@ -119,9 +119,9 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
   }
 
   precice::SolverInterface interface(context.name, config, context.rank, context.size);
-  int                      meshID      = interface.getMeshID(meshName);
-  int                      writeDataID = interface.getDataID(writeDataName, meshID);
-  int                      readDataID  = interface.getDataID(readDataName, meshID);
+  auto                     meshID      = meshName;
+  auto                     writeDataID = writeDataName; //  meshID
+  auto                     readDataID  = readDataName;  //  meshID
 
   VertexID vertexIDs[4];
 

@@ -13,9 +13,9 @@ inline void cyclicExplicit(TestContext &context)
   precice::SolverInterface interface{
       context.name, context.config(), 0, 1};
 
-  auto mid = interface.getMeshID("M" + context.name);
-  auto rid = interface.getDataID(std::map<std::string, std::string>{{"A", "DCA"}, {"B", "DAB"}, {"C", "DBC"}}.at(context.name), mid);
-  auto wid = interface.getDataID(std::map<std::string, std::string>{{"A", "DAB"}, {"B", "DBC"}, {"C", "DCA"}}.at(context.name), mid);
+  auto mid = "M" + context.name;
+  auto rid = std::map<std::string, std::string>{{"A", "DCA"}, {"B", "DAB"}, {"C", "DBC"}}.at(context.name); //  mid
+  auto wid = std::map<std::string, std::string>{{"A", "DAB"}, {"B", "DBC"}, {"C", "DCA"}}.at(context.name); //  mid
 
   // create mesh
   const std::vector<double> coords{1, 0, 2, 0};

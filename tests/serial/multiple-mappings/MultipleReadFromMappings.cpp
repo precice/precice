@@ -18,12 +18,12 @@ BOOST_AUTO_TEST_CASE(MultipleReadFromMappings)
   Vector2d                 vertex{0.0, 0.0};
 
   if (context.isNamed("A")) {
-    const precice::MeshID meshIDTop      = interface.getMeshID("MeshATop");
-    const precice::MeshID meshIDBottom   = interface.getMeshID("MeshABottom");
-    int                   vertexIDTop    = interface.setMeshVertex(meshIDTop, vertex.data());
-    int                   vertexIDBottom = interface.setMeshVertex(meshIDBottom, vertex.data());
-    int                   dataIDTop      = interface.getDataID("Pressure", meshIDTop);
-    int                   dataIDBottom   = interface.getDataID("Pressure", meshIDBottom);
+    auto meshIDTop      = "MeshATop";
+    auto meshIDBottom   = "MeshABottom";
+    int  vertexIDTop    = interface.setMeshVertex(meshIDTop, vertex.data());
+    int  vertexIDBottom = interface.setMeshVertex(meshIDBottom, vertex.data());
+    auto dataIDTop      = "Pressure"; //  meshIDTop
+    auto dataIDBottom   = "Pressure"; //  meshIDBottom
 
     double dt = interface.initialize();
     interface.advance(dt);
@@ -38,9 +38,9 @@ BOOST_AUTO_TEST_CASE(MultipleReadFromMappings)
 
   } else {
     BOOST_TEST(context.isNamed("B"));
-    const precice::MeshID meshID   = interface.getMeshID("MeshB");
-    int                   vertexID = interface.setMeshVertex(meshID, vertex.data());
-    int                   dataID   = interface.getDataID("Pressure", meshID);
+    auto meshID   = "MeshB";
+    int  vertexID = interface.setMeshVertex(meshID, vertex.data());
+    auto dataID   = "Pressure"; //  meshID
 
     double dt       = interface.initialize();
     double pressure = 1.0;

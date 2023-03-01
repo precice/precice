@@ -33,7 +33,7 @@ void testQuadMappingScaledConsistent(const std::string configFile, const TestCon
   if (context.isNamed("SolverOne")) {
     precice::SolverInterface interface("SolverOne", configFile, 0, 1);
     // namespace is required because we are outside the fixture
-    const int meshOneID = interface.getMeshID("MeshOne");
+    auto meshOneID = "MeshOne";
 
     // Setup mesh one.
     int idA = interface.setMeshVertex(meshOneID, coordOneA.data());
@@ -55,7 +55,7 @@ void testQuadMappingScaledConsistent(const std::string configFile, const TestCon
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant should have to advance once!");
 
     // Write the data to be send.
-    int dataAID = interface.getDataID("DataOne", meshOneID);
+    auto dataAID = "DataOne"; //  meshOneID
     interface.writeScalarData(dataAID, idA, valOneA);
     interface.writeScalarData(dataAID, idB, valOneB);
     interface.writeScalarData(dataAID, idC, valOneC);
@@ -69,7 +69,7 @@ void testQuadMappingScaledConsistent(const std::string configFile, const TestCon
     BOOST_TEST(context.isNamed("SolverTwo"));
     precice::SolverInterface interface("SolverTwo", configFile, 0, 1);
     // namespace is required because we are outside the fixture
-    int meshTwoID = interface.getMeshID("MeshTwo");
+    auto meshTwoID = "MeshTwo";
 
     // Setup receiving mesh.
     int idA = interface.setMeshVertex(meshTwoID, coordTwoA.data());
@@ -83,7 +83,7 @@ void testQuadMappingScaledConsistent(const std::string configFile, const TestCon
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant should have to advance once!");
 
     // Read the mapped data from the mesh.
-    int    dataAID = interface.getDataID("DataOne", meshTwoID);
+    auto   dataAID = "DataOne"; //  meshTwoID
     double valueA, valueB, valueC;
     interface.readScalarData(dataAID, idA, valueA);
     interface.readScalarData(dataAID, idB, valueB);
@@ -126,7 +126,7 @@ void testQuadMappingScaledConsistentVolumetric(const std::string configFile, con
   if (context.isNamed("SolverOne")) {
     precice::SolverInterface interface("SolverOne", configFile, 0, 1);
     // namespace is required because we are outside the fixture
-    const int meshOneID = interface.getMeshID("MeshOne");
+    auto meshOneID = "MeshOne";
 
     // Setup mesh one.
     int idA     = interface.setMeshVertex(meshOneID, coordOneA.data());
@@ -148,7 +148,7 @@ void testQuadMappingScaledConsistentVolumetric(const std::string configFile, con
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant should have to advance once!");
 
     // Write the data to be send.
-    int dataAID = interface.getDataID("DataOne", meshOneID);
+    auto dataAID = "DataOne"; //  meshOneID
     interface.writeScalarData(dataAID, idA, valOneA);
     interface.writeScalarData(dataAID, idB, valOneB);
     interface.writeScalarData(dataAID, idC, valOneC);
@@ -163,7 +163,7 @@ void testQuadMappingScaledConsistentVolumetric(const std::string configFile, con
     BOOST_TEST(context.isNamed("SolverTwo"));
     precice::SolverInterface interface("SolverTwo", configFile, 0, 1);
     // namespace is required because we are outside the fixture
-    int meshTwoID = interface.getMeshID("MeshTwo");
+    auto meshTwoID = "MeshTwo";
 
     // Setup receiving mesh.
     int idA = interface.setMeshVertex(meshTwoID, coordTwoA.data());
@@ -183,7 +183,7 @@ void testQuadMappingScaledConsistentVolumetric(const std::string configFile, con
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant should have to advance once!");
 
     // Read the mapped data from the mesh.
-    int    dataAID = interface.getDataID("DataOne", meshTwoID);
+    auto   dataAID = "DataOne"; //  meshTwoID
     double valueA, valueB, valueC, valueD;
     interface.readScalarData(dataAID, idA, valueA);
     interface.readScalarData(dataAID, idB, valueB);
@@ -229,7 +229,7 @@ void testTetraScaledConsistentVolumetric(const std::string configFile, const Tes
   if (context.isNamed("SolverOne")) {
     precice::SolverInterface interface("SolverOne", configFile, 0, 1);
     // namespace is required because we are outside the fixture
-    const int meshOneID = interface.getMeshID("MeshOne");
+    auto meshOneID = "MeshOne";
 
     // Setup mesh one.
     int idA     = interface.setMeshVertex(meshOneID, coordOneA.data());
@@ -250,7 +250,7 @@ void testTetraScaledConsistentVolumetric(const std::string configFile, const Tes
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant should have to advance once!");
 
     // Write the data to be send.
-    int dataAID = interface.getDataID("DataOne", meshOneID);
+    auto dataAID = "DataOne"; //  meshOneID
     interface.writeScalarData(dataAID, idA, valOneA);
     interface.writeScalarData(dataAID, idB, valOneB);
     interface.writeScalarData(dataAID, idC, valOneC);
@@ -265,7 +265,7 @@ void testTetraScaledConsistentVolumetric(const std::string configFile, const Tes
     BOOST_TEST(context.isNamed("SolverTwo"));
     precice::SolverInterface interface("SolverTwo", configFile, 0, 1);
     // namespace is required because we are outside the fixture
-    int meshTwoID = interface.getMeshID("MeshTwo");
+    auto meshTwoID = "MeshTwo";
 
     // Setup receiving mesh.
     int idA = interface.setMeshVertex(meshTwoID, coordTwoA.data());
@@ -280,7 +280,7 @@ void testTetraScaledConsistentVolumetric(const std::string configFile, const Tes
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant should have to advance once!");
 
     // Read the mapped data from the mesh.
-    int    dataAID = interface.getDataID("DataOne", meshTwoID);
+    auto   dataAID = "DataOne"; //  meshTwoID
     double valueA, valueB, valueC, valueD;
     interface.readScalarData(dataAID, idA, valueA);
     interface.readScalarData(dataAID, idB, valueB);

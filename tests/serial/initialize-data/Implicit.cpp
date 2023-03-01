@@ -40,9 +40,9 @@ BOOST_AUTO_TEST_CASE(Implicit)
     writeValue        = 2;
     expectedReadValue = 1;
   }
-  int                 meshID      = couplingInterface.getMeshID(meshName);
-  int                 writeDataID = couplingInterface.getDataID(writeDataName, meshID);
-  int                 readDataID  = couplingInterface.getDataID(readDataName, meshID);
+  auto                meshID      = meshName;
+  auto                writeDataID = writeDataName; //  meshID
+  auto                readDataID  = readDataName;  //  meshID
   std::vector<double> vertex(dimensions, 0);
   int                 vertexID = couplingInterface.setMeshVertex(meshID, vertex.data());
 

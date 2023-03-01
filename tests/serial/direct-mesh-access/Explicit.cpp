@@ -28,8 +28,8 @@ BOOST_AUTO_TEST_CASE(Explicit)
   std::array<double, dim * 2> boundingBox = {0.0, 1.0, 0.0, 1.0};
 
   if (context.isNamed("SolverOne")) {
-    const int otherMeshID = couplingInterface.getMeshID("MeshTwo");
-    const int dataID      = couplingInterface.getDataID("Velocities", otherMeshID);
+    auto otherMeshID = "MeshTwo";
+    auto dataID      = "Velocities"; //  otherMeshID
 
     // Define region of interest, where we could obtain direct write access
     couplingInterface.setMeshAccessRegion(otherMeshID, boundingBox.data());
@@ -60,8 +60,8 @@ BOOST_AUTO_TEST_CASE(Explicit)
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
     // Query IDs
-    const int meshID = couplingInterface.getMeshID("MeshTwo");
-    const int dataID = couplingInterface.getDataID("Velocities", meshID);
+    auto meshID = "MeshTwo";
+    auto dataID = "Velocities"; //  meshID
 
     // Define the mesh
     couplingInterface.setMeshVertices(meshID, ids.size(), positions.data(), ids.data());

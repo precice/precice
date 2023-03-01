@@ -14,7 +14,7 @@ BOOST_AUTO_TEST_CASE(TestFinalize)
 
   if (context.isNamed("SolverOne")) {
     precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    int                      meshID = interface.getMeshID("MeshOne");
+    auto                     meshID = "MeshOne";
     double                   xCoord = 0.0 + context.rank;
     interface.setMeshVertex(meshID, Eigen::Vector3d(xCoord, 0.0, 0.0).data());
     interface.initialize();
@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(TestFinalize)
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
     precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    int                      meshID = interface.getMeshID("MeshTwo");
+    auto                     meshID = "MeshTwo";
     double                   xCoord = 0.0 + context.rank;
     interface.setMeshVertex(meshID, Eigen::Vector3d(xCoord, 0.0, 0.0).data());
     interface.initialize();

@@ -44,9 +44,9 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelVector)
 
   if (context.isNamed("SolverOne")) {
     SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    MeshID          meshID  = interface.getMeshID("MeshOne");
-    DataID          dataID1 = interface.getDataID("Data1", meshID);
-    DataID          dataID2 = interface.getDataID("Data2", meshID);
+    auto            meshID  = "MeshOne";
+    auto            dataID1 = "Data1"; //  meshID
+    auto            dataID2 = "Data2"; //  meshID
 
     int    vertexIDs[2];
     double xCoord       = context.rank * 0.4 + 0.05;
@@ -67,13 +67,13 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelVector)
   } else {
     BOOST_REQUIRE(context.isNamed("SolverTwo"));
     SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    MeshID          meshID = interface.getMeshID("MeshTwo");
+    auto            meshID = "MeshTwo";
     int             vertexIDs[6];
     double          positions[12] = {0.0, 0.0, 0.2, 0.0, 0.4, 0.0, 0.6, 0.0, 0.8, 0.0, 1.0, 0.0};
     interface.setMeshVertices(meshID, 6, positions, vertexIDs);
 
-    DataID dataID1 = interface.getDataID("Data1", meshID);
-    DataID dataID2 = interface.getDataID("Data2", meshID);
+    auto dataID1 = "Data1"; //  meshID
+    auto dataID2 = "Data2"; //  meshID
     BOOST_TEST(interface.requiresGradientDataFor(dataID1) == false);
     BOOST_TEST(interface.requiresGradientDataFor(dataID2) == true);
 

@@ -35,8 +35,8 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
 
   if (context.isNamed("SolverOne")) {
     SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    const MeshID    meshID = interface.getMeshID("MeshOne");
-    const DataID    dataID = interface.getDataID("Data2", meshID);
+    auto            meshID = "MeshOne";
+    auto            dataID = "Data2"; //  meshID
 
     std::vector<int> vertexIDs(2);
     if (context.isPrimary()) {
@@ -67,13 +67,13 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
   } else {
     BOOST_REQUIRE(context.isNamed("SolverTwo"));
     SolverInterface  interface(context.name, context.config(), context.rank, context.size);
-    const MeshID     meshID = interface.getMeshID("MeshTwo");
+    auto             meshID = "MeshTwo";
     std::vector<int> vertexIDs(4);
     if (context.isPrimary()) {
       std::vector<double> positions = {4.0, 4.0, 4.0, 0.0, 0.4, 0.0, 0.7, 0.7, 1.7, 0.0, 1.0, 0.0};
       interface.setMeshVertices(meshID, 4, positions.data(), vertexIDs.data());
       interface.initialize();
-      const DataID        dataID = interface.getDataID("Data2", meshID);
+      auto                dataID = "Data2"; //  meshID
       std::vector<double> values = {1.0, 2.0, 3.0,
                                     -1.0, -1.0, -1.0,
                                     4.0, 5.0, 6.0,
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
       std::vector<double> positions = {2.1, 2.1, 3.1};
       interface.setMeshVertices(meshID, 1, positions.data(), vertexIDs.data());
       interface.initialize();
-      const DataID        dataID = interface.getDataID("Data2", meshID);
+      auto                dataID = "Data2"; //  meshID
       std::vector<double> values = {2.0, 3.0, 4.0};
 
       interface.writeBlockVectorData(dataID, 1, vertexIDs.data(), values.data());

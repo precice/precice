@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
     Vector3d coordC{1.0, 1.0, 0.3};
     Vector3d coordD{0.0, 1.0, 0.3};
 
-    const precice::MeshID meshID = interface.getMeshID("MeshTarget");
+    auto meshID = "MeshTarget";
 
     int idA = interface.setMeshVertex(meshID, coordA.data());
     int idB = interface.setMeshVertex(meshID, coordB.data());
@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
     double dt = interface.initialize();
 
     // Read the summed data from the mesh.
-    int    dataAID = interface.getDataID("Target", meshID);
+    auto   dataAID = "Target"; //  meshID
     double valueA, valueB, valueC, valueD;
 
     while (interface.isCouplingOngoing()) {
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
     Vector3d coordC{1.0, 1.0, 0.3};
     Vector3d coordD{0.0, 1.0, 0.3};
 
-    const precice::MeshID meshID = interface.getMeshID("MeshOne");
+    auto meshID = "MeshOne";
 
     int idA = interface.setMeshVertex(meshID, coordA.data());
     int idB = interface.setMeshVertex(meshID, coordB.data());
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
     // Initialize, the mesh
     double dt = interface.initialize();
 
-    int    dataAID = interface.getDataID("SourceOne", meshID);
+    auto   dataAID = "SourceOne"; //  meshID
     double valueA  = 1.0;
     double valueB  = 3.0;
     double valueC  = 5.0;
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
     Vector3d coordC{1.0, 1.0, 0.3};
     Vector3d coordD{0.0, 1.0, 0.3};
 
-    const precice::MeshID meshID = interface.getMeshID("MeshTwo");
+    auto meshID = "MeshTwo";
 
     int idA = interface.setMeshVertex(meshID, coordA.data());
     int idB = interface.setMeshVertex(meshID, coordB.data());
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
     // Initialize, the mesh
     double dt = interface.initialize();
 
-    int    dataAID = interface.getDataID("SourceTwo", meshID);
+    auto   dataAID = "SourceTwo"; //  meshID
     double valueA  = 2.0;
     double valueB  = 4.0;
     double valueC  = 6.0;

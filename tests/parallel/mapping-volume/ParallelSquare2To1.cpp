@@ -21,8 +21,8 @@ BOOST_AUTO_TEST_CASE(ParallelSquare2To1)
   double                dt;
 
   if (context.isNamed("SolverOne")) {
-    auto meshID = interface.getMeshID("MeshOne");
-    auto dataID = interface.getDataID("DataOne", meshID);
+    auto meshID = "MeshOne";
+    auto dataID = "DataOne"; //  meshID
 
     std::vector<double> coords;
 
@@ -64,8 +64,8 @@ BOOST_AUTO_TEST_CASE(ParallelSquare2To1)
     interface.finalize();
 
   } else {
-    auto meshID = interface.getMeshID("MeshTwo");
-    auto dataID = interface.getDataID("DataOne", meshID);
+    auto meshID = "MeshTwo";
+    auto dataID = "DataOne"; //  meshID
 
     std::vector<double> coords;
 

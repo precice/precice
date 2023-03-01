@@ -14,8 +14,8 @@ BOOST_AUTO_TEST_CASE(LocalRBFPartitioningPETSc)
 
   if (context.name == "SolverOne") {
     precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    int                      meshID = interface.getMeshID("MeshOne");
-    int                      dataID = interface.getDataID("Data2", meshID);
+    auto                     meshID = "MeshOne";
+    auto                     dataID = "Data2"; //  meshID
 
     int    vertexIDs[2];
     double xCoord       = context.rank * 0.4;
@@ -29,12 +29,12 @@ BOOST_AUTO_TEST_CASE(LocalRBFPartitioningPETSc)
   } else {
     BOOST_REQUIRE(context.isNamed("SolverTwo"));
     precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    int                      meshID = interface.getMeshID("MeshTwo");
+    auto                     meshID = "MeshTwo";
     int                      vertexIDs[6];
     double                   positions[12] = {0.0, 0.0, 0.2, 0.0, 0.4, 0.0, 0.6, 0.0, 0.8, 0.0, 1.0, 0.0};
     interface.setMeshVertices(meshID, 6, positions, vertexIDs);
     interface.initialize();
-    int    dataID    = interface.getDataID("Data2", meshID);
+    auto   dataID    = "Data2"; //  meshID
     double values[6] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
     interface.writeBlockScalarData(dataID, 6, vertexIDs, values);
     interface.advance(1.0);

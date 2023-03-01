@@ -39,9 +39,9 @@ BOOST_AUTO_TEST_CASE(ActionTimingsImplicit)
     readDataName  = "Forces";
     writeValue    = 2;
   }
-  int                 meshID      = interface.getMeshID(meshName);
-  int                 writeDataID = interface.getDataID(writeDataName, meshID);
-  int                 readDataID  = interface.getDataID(readDataName, meshID);
+  auto                meshID      = meshName;
+  auto                writeDataID = writeDataName; //  meshID
+  auto                readDataID  = readDataName;  //  meshID
   std::vector<double> vertex(dimensions, 0);
   int                 vertexID = interface.setMeshVertex(meshID, vertex.data());
 

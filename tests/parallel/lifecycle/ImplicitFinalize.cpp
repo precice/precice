@@ -23,19 +23,19 @@ BOOST_AUTO_TEST_CASE(ImplicitFinalize)
   constexpr double dx{1};
 
   if (context.isNamed("SolverOne")) {
-    auto   meshid   = interface.getMeshID("MeshOne");
+    auto   meshid   = "MeshOne";
     double coords[] = {x1 + dx * context.rank, y, z};
     auto   vertexid = interface.setMeshVertex(meshid, coords);
 
-    auto   dataid = interface.getDataID("DataOne", meshid);
+    auto   dataid = "DataOne"; //  meshid
     double data[] = {3.4, 4.5, 5.6};
     interface.writeVectorData(dataid, vertexid, data);
   } else {
-    auto   meshid   = interface.getMeshID("MeshTwo");
+    auto   meshid   = "MeshTwo";
     double coords[] = {x1 + dx * context.rank, y, z};
     auto   vertexid = interface.setMeshVertex(meshid, coords);
 
-    auto dataid = interface.getDataID("DataTwo", meshid);
+    auto dataid = "DataTwo"; //  meshid
     interface.writeScalarData(dataid, vertexid, 7.8);
   }
   interface.initialize();

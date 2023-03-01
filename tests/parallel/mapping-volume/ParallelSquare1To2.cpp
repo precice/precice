@@ -21,8 +21,8 @@ BOOST_AUTO_TEST_CASE(ParallelSquare1To2)
   double                dt;
 
   if (context.isNamed("SolverOne")) {
-    auto meshID = interface.getMeshID("MeshOne");
-    auto dataID = interface.getDataID("DataOne", meshID);
+    auto meshID = "MeshOne";
+    auto dataID = "DataOne"; //  meshID
 
     std::vector<double> coords;
 
@@ -55,8 +55,8 @@ BOOST_AUTO_TEST_CASE(ParallelSquare1To2)
     BOOST_TEST(!interface.isCouplingOngoing(), "Sending participant must advance only once.");
     interface.finalize();
   } else { // SolverTwo
-    auto meshID = interface.getMeshID("MeshTwo");
-    auto dataID = interface.getDataID("DataOne", meshID);
+    auto meshID = "MeshTwo";
+    auto dataID = "DataOne"; //  meshID
 
     std::vector<double> coords;
     if (context.rank == 0) {

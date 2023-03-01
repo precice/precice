@@ -47,17 +47,17 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
     BOOST_TEST(precice.getDimensions() == 2);
 
     if (context.isNamed("SOLIDZ1")) {
-      meshID      = precice.getMeshID("SOLIDZ_Mesh1");
-      dataWriteID = precice.getDataID("Displacements1", meshID);
-      dataReadID  = precice.getDataID("Forces1", meshID);
+      auto meshID      = "SOLIDZ_Mesh1";
+      auto dataWriteID = "Displacements1"; //  meshID
+      auto dataReadID  = "Forces1";        //  meshID
     } else if (context.isNamed("SOLIDZ2")) {
-      meshID      = precice.getMeshID("SOLIDZ_Mesh2");
-      dataWriteID = precice.getDataID("Displacements2", meshID);
-      dataReadID  = precice.getDataID("Forces2", meshID);
+      auto meshID      = "SOLIDZ_Mesh2";
+      auto dataWriteID = "Displacements2"; //  meshID
+      auto dataReadID  = "Forces2";        //  meshID
     } else if (context.isNamed("SOLIDZ3")) {
-      meshID      = precice.getMeshID("SOLIDZ_Mesh3");
-      dataWriteID = precice.getDataID("Displacements3", meshID);
-      dataReadID  = precice.getDataID("Forces3", meshID);
+      auto meshID      = "SOLIDZ_Mesh3";
+      auto dataWriteID = "Displacements3"; //  meshID
+      auto dataReadID  = "Forces3";        //  meshID
     }
 
     std::vector<int> vertexIDs;
@@ -98,12 +98,12 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
     BOOST_TEST(context.isNamed("NASTIN"));
     precice::SolverInterface precice("NASTIN", context.config(), 0, 1);
     BOOST_TEST(precice.getDimensions() == 2);
-    MeshID meshID1      = precice.getMeshID("NASTIN_Mesh1");
-    MeshID meshID2      = precice.getMeshID("NASTIN_Mesh2");
-    MeshID meshID3      = precice.getMeshID("NASTIN_Mesh3");
-    int    dataWriteID1 = precice.getDataID("Forces1", meshID1);
-    int    dataWriteID2 = precice.getDataID("Forces2", meshID2);
-    int    dataWriteID3 = precice.getDataID("Forces3", meshID3);
+    auto meshID1      = "NASTIN_Mesh1";
+    auto meshID2      = "NASTIN_Mesh2";
+    auto meshID3      = "NASTIN_Mesh3";
+    auto dataWriteID1 = "Forces1"; //  meshID1
+    auto dataWriteID2 = "Forces2"; //  meshID2
+    auto dataWriteID3 = "Forces3"; //  meshID3
 
     std::vector<int> vertexIDs1;
     int              vertexID = -1;

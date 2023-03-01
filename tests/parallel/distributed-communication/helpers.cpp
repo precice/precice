@@ -54,9 +54,9 @@ void runTestDistributedCommunication(std::string const &config, TestContext cons
   }
 
   precice::SolverInterface precice(context.name, config, context.rank, context.size);
-  int                      meshID   = precice.getMeshID(meshName);
-  int                      forcesID = precice.getDataID("Forces", meshID);
-  int                      velocID  = precice.getDataID("Velocities", meshID);
+  auto                     meshID   = meshName;
+  auto                     forcesID = "Forces";     //  meshID
+  auto                     velocID  = "Velocities"; //  meshID
 
   std::vector<int> vertexIDs;
   for (int i = i1; i < i2; i++) {
