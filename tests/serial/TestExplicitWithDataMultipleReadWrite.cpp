@@ -21,13 +21,13 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataMultipleReadWrite)
 
   precice::SolverInterface cplInterface(context.name, context.config(), 0, 1);
   if (context.isNamed("SolverOne")) {
-    auto            meshOneID = "MeshOne";
-    int             size      = 1;
+    auto            meshID = "MeshOne";
+    int             size   = 1;
     Eigen::VectorXi vertexIDs(size);
     Eigen::VectorXd readDataA(size * 3);
     Eigen::VectorXd readDataB(size);
     Eigen::VectorXd readPositions(size * 3);
-    vertexIDs[0] = cplInterface.setMeshVertex(meshOneID, readPositions.data());
+    vertexIDs[0] = cplInterface.setMeshVertex(meshID, readPositions.data());
 
     auto   dataAID = "DataOne"; //  meshOneID
     auto   dataBID = "DataTwo"; //  meshOneID
@@ -152,13 +152,13 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataMultipleReadWrite)
     cplInterface.finalize();
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    auto            meshTwoID = "MeshTwo";
-    int             size      = 1;
+    auto            meshID = "MeshTwo";
+    int             size   = 1;
     Eigen::VectorXi vertexIDs(size);
     Eigen::VectorXd writeDataA(size * 3);
     Eigen::VectorXd writeDataB(size);
     Eigen::VectorXd writePositions(size * 3);
-    vertexIDs[0] = cplInterface.setMeshVertex(meshTwoID, writePositions.data());
+    vertexIDs[0] = cplInterface.setMeshVertex(meshID, writePositions.data());
 
     BOOST_REQUIRE(cplInterface.requiresInitialData());
 

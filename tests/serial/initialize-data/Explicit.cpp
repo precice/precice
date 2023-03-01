@@ -26,8 +26,8 @@ BOOST_AUTO_TEST_CASE(Explicit)
 
   SolverInterface cplInterface(context.name, context.config(), 0, 1);
   if (context.isNamed("SolverOne")) {
-    auto meshOneID = "MeshOne";
-    cplInterface.setMeshVertex(meshOneID, Vector3d(1.0, 2.0, 3.0).data());
+    auto meshID = "MeshOne";
+    cplInterface.setMeshVertex(meshID, Vector3d(1.0, 2.0, 3.0).data());
     auto   dataAID    = "DataOne"; //  meshOneID
     auto   dataBID    = "DataTwo"; //  meshOneID
     double valueDataB = 0.0;
@@ -44,9 +44,9 @@ BOOST_AUTO_TEST_CASE(Explicit)
     cplInterface.finalize();
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    auto     meshTwoID = "MeshTwo";
-    Vector3d pos       = Vector3d::Zero();
-    cplInterface.setMeshVertex(meshTwoID, pos.data());
+    auto     meshID = "MeshTwo";
+    Vector3d pos    = Vector3d::Zero();
+    cplInterface.setMeshVertex(meshID, pos.data());
 
     BOOST_REQUIRE(cplInterface.requiresInitialData());
     auto dataAID = "DataOne"; //  meshTwoID

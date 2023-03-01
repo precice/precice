@@ -46,13 +46,13 @@ BOOST_AUTO_TEST_CASE(GradientTestUnidirectionalReadScalar)
   SolverInterface cplInterface(context.name, context.config(), 0, 1);
   if (context.isNamed("A")) {
 
-    auto meshOneID = "MeshA";
-    auto dataID    = "DataA"; //  meshOneID
+    auto meshID = "MeshA";
+    auto dataID = "DataA"; //  meshID
 
     Vector3d posOne = Vector3d::Constant(0.0);
     Vector3d posTwo = Vector3d::Constant(1.0);
-    cplInterface.setMeshVertex(meshOneID, posOne.data());
-    cplInterface.setMeshVertex(meshOneID, posTwo.data());
+    cplInterface.setMeshVertex(meshID, posOne.data());
+    cplInterface.setMeshVertex(meshID, posTwo.data());
 
     // Initialize, thus sending the mesh.
     double maxDt = cplInterface.initialize();
@@ -77,13 +77,13 @@ BOOST_AUTO_TEST_CASE(GradientTestUnidirectionalReadScalar)
 
   } else {
     BOOST_TEST(context.isNamed("B"));
-    auto meshTwoID = "MeshB";
-    auto dataID    = "DataA"; //  meshTwoID
+    auto meshID = "MeshB";
+    auto dataID = "DataA"; //  meshID
 
     Vector3d posOne = Vector3d::Constant(0.1);
     Vector3d posTwo = Vector3d::Constant(1.1);
-    cplInterface.setMeshVertex(meshTwoID, posOne.data());
-    cplInterface.setMeshVertex(meshTwoID, posTwo.data());
+    cplInterface.setMeshVertex(meshID, posOne.data());
+    cplInterface.setMeshVertex(meshID, posTwo.data());
 
     double maxDt = cplInterface.initialize();
     BOOST_TEST(cplInterface.isCouplingOngoing(), "Receiving participant should have to advance once!");

@@ -14,13 +14,13 @@ void testVectorGradientFunctions(const TestContext &context, const bool writeBlo
   SolverInterface interface(context.name, context.config(), 0, 1);
   if (context.isNamed("A")) {
 
-    auto meshOneID = "MeshA";
-    auto dataID    = "DataA"; //  meshOneID
+    auto meshID = "MeshA";
+    auto dataID = "DataA"; //  meshOneID
 
     Vector3d posOne = Vector3d::Constant(0.0);
     Vector3d posTwo = Vector3d::Constant(1.0);
-    interface.setMeshVertex(meshOneID, posOne.data());
-    interface.setMeshVertex(meshOneID, posTwo.data());
+    interface.setMeshVertex(meshID, posOne.data());
+    interface.setMeshVertex(meshID, posTwo.data());
 
     // Initialize, thus sending the mesh.
     double maxDt = interface.initialize();
@@ -53,13 +53,13 @@ void testVectorGradientFunctions(const TestContext &context, const bool writeBlo
 
   } else {
     BOOST_TEST(context.isNamed("B"));
-    auto meshTwoID = "MeshB";
-    auto dataID    = "DataA"; //  meshTwoID
+    auto meshID = "MeshB";
+    auto dataID = "DataA"; //  meshTwoID
 
     Vector3d posOne = Vector3d::Constant(0.1);
     Vector3d posTwo = Vector3d::Constant(1.1);
-    interface.setMeshVertex(meshTwoID, posOne.data());
-    interface.setMeshVertex(meshTwoID, posTwo.data());
+    interface.setMeshVertex(meshID, posOne.data());
+    interface.setMeshVertex(meshID, posTwo.data());
 
     double maxDt = interface.initialize();
     BOOST_TEST(interface.requiresGradientDataFor(meshID, dataID) == false);

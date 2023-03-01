@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(ExplicitRead)
 
       dt = couplingInterface.advance(dt);
       // Write data
-      couplingInterface.readBlockScalarData(meshID, dataID, meshSize,
+      couplingInterface.readBlockScalarData(otherMeshID, dataID, meshSize,
                                             ids.data(), readData.data());
       // Expected data according to the writeData
       std::vector<double> expectedData({1, 2, 3, 4});

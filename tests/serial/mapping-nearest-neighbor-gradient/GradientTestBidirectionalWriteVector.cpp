@@ -46,11 +46,11 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteVector)
 
   SolverInterface cplInterface(context.name, context.config(), 0, 1);
   if (context.isNamed("SolverOne")) {
-    auto     meshOneID = "MeshOne";
-    Vector3d posOne    = Vector3d::Constant(0.0);
-    cplInterface.setMeshVertex(meshOneID, posOne.data());
-    auto dataAID = "DataOne"; //  meshOneID
-    auto dataBID = "DataTwo"; //  meshOneID
+    auto     meshID = "MeshOne";
+    Vector3d posOne = Vector3d::Constant(0.0);
+    cplInterface.setMeshVertex(meshID, posOne.data());
+    auto dataAID = "DataOne"; //  meshID
+    auto dataBID = "DataTwo"; //  meshID
     BOOST_TEST(cplInterface.requiresGradientDataFor(meshID, dataAID) == false);
     BOOST_TEST(cplInterface.requiresGradientDataFor(meshID, dataBID) == false);
     BOOST_REQUIRE(cplInterface.requiresInitialData());
@@ -79,12 +79,12 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteVector)
 
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    auto     meshTwoID = "MeshTwo";
-    Vector3d pos       = Vector3d::Constant(1.0);
-    cplInterface.setMeshVertex(meshTwoID, pos.data());
+    auto     meshID = "MeshTwo";
+    Vector3d pos    = Vector3d::Constant(1.0);
+    cplInterface.setMeshVertex(meshID, pos.data());
 
-    auto dataAID = "DataOne"; //  meshTwoID
-    auto dataBID = "DataTwo"; //  meshTwoID
+    auto dataAID = "DataOne"; //  meshID
+    auto dataBID = "DataTwo"; //  meshID
     BOOST_TEST(cplInterface.requiresGradientDataFor(meshID, dataAID) == false);
     BOOST_TEST(cplInterface.requiresGradientDataFor(meshID, dataBID) == true);
     BOOST_REQUIRE(cplInterface.requiresInitialData());

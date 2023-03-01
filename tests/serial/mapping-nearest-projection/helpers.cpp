@@ -36,33 +36,33 @@ void testMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFuncti
   if (context.isNamed("SolverOne")) {
     precice::SolverInterface interface("SolverOne", configFile, 0, 1);
     // namespace is required because we are outside the fixture
-    auto meshOneID = "MeshOne";
+    auto meshID = "MeshOne";
 
     // Setup mesh one.
-    int idA = interface.setMeshVertex(meshOneID, coordOneA.data());
-    int idB = interface.setMeshVertex(meshOneID, coordOneB.data());
-    int idC = interface.setMeshVertex(meshOneID, coordOneC.data());
-    int idD = interface.setMeshVertex(meshOneID, coordOneD.data());
+    int idA = interface.setMeshVertex(meshID, coordOneA.data());
+    int idB = interface.setMeshVertex(meshID, coordOneB.data());
+    int idC = interface.setMeshVertex(meshID, coordOneC.data());
+    int idD = interface.setMeshVertex(meshID, coordOneD.data());
 
     if (defineEdgesExplicitly) {
       if (useBulkFunctions) {
         std::vector ids{idA, idB, idB, idC, idC, idD, idD, idA, idC, idA};
-        interface.setMeshEdges(meshOneID, 5, ids.data());
+        interface.setMeshEdges(meshID, 5, ids.data());
       } else {
-        interface.setMeshEdge(meshOneID, idA, idB);
-        interface.setMeshEdge(meshOneID, idB, idC);
-        interface.setMeshEdge(meshOneID, idC, idD);
-        interface.setMeshEdge(meshOneID, idD, idA);
-        interface.setMeshEdge(meshOneID, idC, idA);
+        interface.setMeshEdge(meshID, idA, idB);
+        interface.setMeshEdge(meshID, idB, idC);
+        interface.setMeshEdge(meshID, idC, idD);
+        interface.setMeshEdge(meshID, idD, idA);
+        interface.setMeshEdge(meshID, idC, idA);
       }
     }
 
     if (useBulkFunctions) {
       std::vector ids{idA, idB, idC, idC, idD, idA};
-      interface.setMeshTriangles(meshOneID, 2, ids.data());
+      interface.setMeshTriangles(meshID, 2, ids.data());
     } else {
-      interface.setMeshTriangle(meshOneID, idA, idB, idC);
-      interface.setMeshTriangle(meshOneID, idC, idD, idA);
+      interface.setMeshTriangle(meshID, idA, idB, idC);
+      interface.setMeshTriangle(meshID, idC, idD, idA);
     }
 
     // Initialize, thus sending the mesh.
@@ -70,7 +70,7 @@ void testMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFuncti
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant should have to advance once!");
 
     // Write the data to be send.
-    auto dataAID = "DataOne"; //  meshOneID
+    auto dataAID = "DataOne"; //  meshID
     BOOST_TEST(!interface.requiresGradientDataFor(meshID, dataAID));
 
     interface.writeScalarData(meshID, dataAID, idA, valOneA);
@@ -86,19 +86,19 @@ void testMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFuncti
     BOOST_TEST(context.isNamed("SolverTwo"));
     precice::SolverInterface interface("SolverTwo", configFile, 0, 1);
     // namespace is required because we are outside the fixture
-    auto meshTwoID = "MeshTwo";
+    auto meshID = "MeshTwo";
 
     // Setup receiving mesh.
-    int idA = interface.setMeshVertex(meshTwoID, coordTwoA.data());
-    int idB = interface.setMeshVertex(meshTwoID, coordTwoB.data());
-    int idC = interface.setMeshVertex(meshTwoID, coordTwoC.data());
+    int idA = interface.setMeshVertex(meshID, coordTwoA.data());
+    int idB = interface.setMeshVertex(meshID, coordTwoB.data());
+    int idC = interface.setMeshVertex(meshID, coordTwoC.data());
 
     // Initialize, thus receive the data and map.
     double maxDt = interface.initialize();
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant should have to advance once!");
 
     // Read the mapped data from the mesh.
-    auto dataAID = "DataOne"; //  meshTwoID
+    auto dataAID = "DataOne"; //  meshID
     BOOST_TEST(!interface.requiresGradientDataFor(meshID, dataAID));
 
     double valueA, valueB, valueC;
@@ -146,31 +146,31 @@ void testQuadMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFu
   if (context.isNamed("SolverOne")) {
     precice::SolverInterface interface("SolverOne", configFile, 0, 1);
     // namespace is required because we are outside the fixture
-    auto meshOneID = "MeshOne";
+    auto meshID = "MeshOne";
 
     // Setup mesh one.
-    int idA = interface.setMeshVertex(meshOneID, coordOneA.data());
-    int idB = interface.setMeshVertex(meshOneID, coordOneB.data());
-    int idC = interface.setMeshVertex(meshOneID, coordOneC.data());
-    int idD = interface.setMeshVertex(meshOneID, coordOneD.data());
+    int idA = interface.setMeshVertex(meshID, coordOneA.data());
+    int idB = interface.setMeshVertex(meshID, coordOneB.data());
+    int idC = interface.setMeshVertex(meshID, coordOneC.data());
+    int idD = interface.setMeshVertex(meshID, coordOneD.data());
 
     if (defineEdgesExplicitly) {
       if (useBulkFunctions) {
         std::vector ids{idA, idB, idB, idC, idC, idD, idD, idA};
-        interface.setMeshEdges(meshOneID, 4, ids.data());
+        interface.setMeshEdges(meshID, 4, ids.data());
       } else {
-        interface.setMeshEdge(meshOneID, idA, idB);
-        interface.setMeshEdge(meshOneID, idB, idC);
-        interface.setMeshEdge(meshOneID, idC, idD);
-        interface.setMeshEdge(meshOneID, idD, idA);
+        interface.setMeshEdge(meshID, idA, idB);
+        interface.setMeshEdge(meshID, idB, idC);
+        interface.setMeshEdge(meshID, idC, idD);
+        interface.setMeshEdge(meshID, idD, idA);
       }
     }
 
     if (useBulkFunctions) {
       std::vector ids{idA, idB, idC, idD};
-      interface.setMeshQuads(meshOneID, 1, ids.data());
+      interface.setMeshQuads(meshID, 1, ids.data());
     } else {
-      interface.setMeshQuad(meshOneID, idA, idB, idC, idD);
+      interface.setMeshQuad(meshID, idA, idB, idC, idD);
     }
 
     auto &mesh = testing::WhiteboxAccessor::impl(interface).mesh("MeshOne");
@@ -190,7 +190,7 @@ void testQuadMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFu
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant should have to advance once!");
 
     // Write the data to be send.
-    auto dataAID = "DataOne"; //  meshOneID
+    auto dataAID = "DataOne"; //  meshID
     interface.writeScalarData(meshID, dataAID, idA, valOneA);
     interface.writeScalarData(meshID, dataAID, idB, valOneB);
     interface.writeScalarData(meshID, dataAID, idC, valOneC);
@@ -204,19 +204,19 @@ void testQuadMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFu
     BOOST_TEST(context.isNamed("SolverTwo"));
     precice::SolverInterface interface("SolverTwo", configFile, 0, 1);
     // namespace is required because we are outside the fixture
-    auto meshTwoID = "MeshTwo";
+    auto meshID = "MeshTwo";
 
     // Setup receiving mesh.
-    int idA = interface.setMeshVertex(meshTwoID, coordTwoA.data());
-    int idB = interface.setMeshVertex(meshTwoID, coordTwoB.data());
-    int idC = interface.setMeshVertex(meshTwoID, coordTwoC.data());
+    int idA = interface.setMeshVertex(meshID, coordTwoA.data());
+    int idB = interface.setMeshVertex(meshID, coordTwoB.data());
+    int idC = interface.setMeshVertex(meshID, coordTwoC.data());
 
     // Initialize, thus receive the data and map.
     double maxDt = interface.initialize();
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant should have to advance once!");
 
     // Read the mapped data from the mesh.
-    auto   dataAID = "DataOne"; //  meshTwoID
+    auto   dataAID = "DataOne"; //  meshID
     double valueA, valueB, valueC;
     interface.readScalarData(meshID, dataAID, idA, valueA);
     interface.readScalarData(meshID, dataAID, idB, valueB);
@@ -248,31 +248,31 @@ void testQuadMappingNearestProjectionTallKite(bool defineEdgesExplicitly, bool u
   if (context.isNamed("SolverOne")) {
     precice::SolverInterface interface("SolverOne", configFile, 0, 1);
     // namespace is required because we are outside the fixture
-    auto meshOneID = "MeshOne";
+    auto meshID = "MeshOne";
 
     // Setup mesh one.
-    int idA = interface.setMeshVertex(meshOneID, coordOneA.data());
-    int idB = interface.setMeshVertex(meshOneID, coordOneB.data());
-    int idC = interface.setMeshVertex(meshOneID, coordOneC.data());
-    int idD = interface.setMeshVertex(meshOneID, coordOneD.data());
+    int idA = interface.setMeshVertex(meshID, coordOneA.data());
+    int idB = interface.setMeshVertex(meshID, coordOneB.data());
+    int idC = interface.setMeshVertex(meshID, coordOneC.data());
+    int idD = interface.setMeshVertex(meshID, coordOneD.data());
 
     if (defineEdgesExplicitly) {
       if (useBulkFunctions) {
         std::vector ids{idA, idB, idB, idC, idC, idD, idD, idA};
-        interface.setMeshEdges(meshOneID, 4, ids.data());
+        interface.setMeshEdges(meshID, 4, ids.data());
       } else {
-        interface.setMeshEdge(meshOneID, idA, idB);
-        interface.setMeshEdge(meshOneID, idB, idC);
-        interface.setMeshEdge(meshOneID, idC, idD);
-        interface.setMeshEdge(meshOneID, idD, idA);
+        interface.setMeshEdge(meshID, idA, idB);
+        interface.setMeshEdge(meshID, idB, idC);
+        interface.setMeshEdge(meshID, idC, idD);
+        interface.setMeshEdge(meshID, idD, idA);
       }
     }
 
     if (useBulkFunctions) {
       std::vector ids{idA, idB, idC, idD};
-      interface.setMeshQuads(meshOneID, 1, ids.data());
+      interface.setMeshQuads(meshID, 1, ids.data());
     } else {
-      interface.setMeshQuad(meshOneID, idA, idB, idC, idD);
+      interface.setMeshQuad(meshID, idA, idB, idC, idD);
     }
 
     auto &mesh = testing::WhiteboxAccessor::impl(interface).mesh("MeshOne");
@@ -307,31 +307,31 @@ void testQuadMappingNearestProjectionWideKite(bool defineEdgesExplicitly, bool u
   if (context.isNamed("SolverOne")) {
     SolverInterface interface("SolverOne", configFile, 0, 1);
     // namespace is required because we are outside the fixture
-    auto meshOneID = "MeshOne";
+    auto meshID = "MeshOne";
 
     // Setup mesh one.
-    int idA = interface.setMeshVertex(meshOneID, coordOneA.data());
-    int idB = interface.setMeshVertex(meshOneID, coordOneB.data());
-    int idC = interface.setMeshVertex(meshOneID, coordOneC.data());
-    int idD = interface.setMeshVertex(meshOneID, coordOneD.data());
+    int idA = interface.setMeshVertex(meshID, coordOneA.data());
+    int idB = interface.setMeshVertex(meshID, coordOneB.data());
+    int idC = interface.setMeshVertex(meshID, coordOneC.data());
+    int idD = interface.setMeshVertex(meshID, coordOneD.data());
 
     if (defineEdgesExplicitly) {
       if (useBulkFunctions) {
         std::vector ids{idA, idB, idB, idC, idC, idD, idD, idA};
-        interface.setMeshEdges(meshOneID, 4, ids.data());
+        interface.setMeshEdges(meshID, 4, ids.data());
       } else {
-        interface.setMeshEdge(meshOneID, idA, idB);
-        interface.setMeshEdge(meshOneID, idB, idC);
-        interface.setMeshEdge(meshOneID, idC, idD);
-        interface.setMeshEdge(meshOneID, idD, idA);
+        interface.setMeshEdge(meshID, idA, idB);
+        interface.setMeshEdge(meshID, idB, idC);
+        interface.setMeshEdge(meshID, idC, idD);
+        interface.setMeshEdge(meshID, idD, idA);
       }
     }
 
     if (useBulkFunctions) {
       std::vector ids{idA, idB, idD, idC};
-      interface.setMeshQuads(meshOneID, 1, ids.data());
+      interface.setMeshQuads(meshID, 1, ids.data());
     } else {
-      interface.setMeshQuad(meshOneID, idA, idB, idD, idC);
+      interface.setMeshQuad(meshID, idA, idB, idD, idC);
     }
 
     auto &mesh = testing::WhiteboxAccessor::impl(interface).mesh("MeshOne");

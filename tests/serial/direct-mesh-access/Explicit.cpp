@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(Explicit)
 
     while (couplingInterface.isCouplingOngoing()) {
       // Write data
-      couplingInterface.writeBlockScalarData(meshID, dataID, meshSize,
+      couplingInterface.writeBlockScalarData(otherMeshID, dataID, meshSize,
                                              ids.data(), writeData.data());
       dt = couplingInterface.advance(dt);
     }

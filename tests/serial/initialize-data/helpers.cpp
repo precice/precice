@@ -14,9 +14,9 @@ void testDataInitialization(precice::testing::TestContext context, std::string c
 
   SolverInterface cplInterface(context.name, config, 0, 1);
   if (context.isNamed("SolverOne")) {
-    auto     meshOneID = "MeshOne";
-    Vector3d pos       = Vector3d::Zero();
-    cplInterface.setMeshVertex(meshOneID, pos.data());
+    auto     meshID = "MeshOne";
+    Vector3d pos    = Vector3d::Zero();
+    cplInterface.setMeshVertex(meshID, pos.data());
     auto   dataID     = "Data"; //  meshOneID
     double valueDataB = 0.0;
     cplInterface.initialize();
@@ -25,9 +25,9 @@ void testDataInitialization(precice::testing::TestContext context, std::string c
     cplInterface.finalize();
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    auto     meshTwoID = "MeshTwo";
-    Vector3d pos       = Vector3d::Zero();
-    cplInterface.setMeshVertex(meshTwoID, pos.data());
+    auto     meshID = "MeshTwo";
+    Vector3d pos    = Vector3d::Zero();
+    cplInterface.setMeshVertex(meshID, pos.data());
 
     //tell preCICE that data has been written
     BOOST_REQUIRE(cplInterface.requiresInitialData());

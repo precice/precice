@@ -58,10 +58,10 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
 
     while (interface.isCouplingOngoing()) {
       // Write data
-      interface.writeBlockScalarData(meshID, writeDataID, otherMeshSize,
+      interface.writeBlockScalarData(otherMeshID, writeDataID, otherMeshSize,
                                      otherIDs.data(), writeData.data());
       dt = interface.advance(dt);
-      interface.readBlockScalarData(meshID, readDataID, ownIDs.size(),
+      interface.readBlockScalarData(ownMeshID, readDataID, ownIDs.size(),
                                     ownIDs.data(), readData.data());
 
       // Expected data according to the writeData
