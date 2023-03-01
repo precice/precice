@@ -56,12 +56,12 @@ void runTestAccessReceivedMesh(const TestContext &       context,
     while (interface.isCouplingOngoing()) {
       // Write data
       if (context.isPrimary()) {
-        interface.writeBlockScalarData(dataID, meshSize,
+        interface.writeBlockScalarData(meshID, dataID, meshSize,
                                        ids.data(), writeData.data());
       } else {
         // In order to prevent hypothetical index overruns reported by glibcc
         const int *ids_ptr = startIndex < ids.size() ? &ids[startIndex] : nullptr;
-        interface.writeBlockScalarData(dataID, meshSize - startIndex,
+        interface.writeBlockScalarData(meshID, dataID, meshSize - startIndex,
                                        ids_ptr, writeData.data());
       }
 
@@ -105,7 +105,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
     while (interface.isCouplingOngoing()) {
 
       dt = interface.advance(dt);
-      interface.readBlockScalarData(dataID, size,
+      interface.readBlockScalarData(meshID, dataID, size,
                                     ids.data(), readData.data());
 
       // Check the received data

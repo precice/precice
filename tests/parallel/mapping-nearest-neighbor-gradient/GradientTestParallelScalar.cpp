@@ -52,10 +52,10 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelScalar)
     double positions[4] = {xCoord, 0.0, xCoord + 0.2, 0.0};
     interface.setMeshVertices(meshID, 2, positions, vertexIDs);
     interface.initialize();
-    BOOST_TEST(interface.requiresGradientDataFor(dataID) == false);
+    BOOST_TEST(interface.requiresGradientDataFor(meshID, dataID) == false);
     Eigen::Vector2d values;
     interface.advance(1.0);
-    interface.readBlockScalarData(dataID, 2, vertexIDs, values.data());
+    interface.readBlockScalarData(meshID, dataID, 2, vertexIDs, values.data());
     Eigen::Vector2d expected(context.rank * 2.0 + 1.0 + 0.05, 2.0 * (context.rank + 1) + 0.05);
     BOOST_TEST(values == expected);
     interface.finalize();
@@ -68,15 +68,15 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelScalar)
     interface.setMeshVertices(meshID, 6, positions, vertexIDs);
     interface.initialize();
     auto dataID = "Data2"; //  meshID
-    BOOST_TEST(interface.requiresGradientDataFor(dataID));
+    BOOST_TEST(interface.requiresGradientDataFor(meshID, dataID));
     double values[6] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
 
-    interface.writeBlockScalarData(dataID, 6, vertexIDs, values);
+    interface.writeBlockScalarData(meshID, dataID, 6, vertexIDs, values);
 
-    if (interface.requiresGradientDataFor(dataID)) {
+    if (interface.requiresGradientDataFor(meshID, dataID)) {
 
       double gradientValues[12] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
-      interface.writeBlockScalarGradientData(dataID, 6, vertexIDs, gradientValues);
+      interface.writeBlockScalarGradientData(meshID, dataID, 6, vertexIDs, gradientValues);
     }
     interface.advance(1.0);
     interface.finalize();

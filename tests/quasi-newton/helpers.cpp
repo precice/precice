@@ -57,7 +57,7 @@ void runTestQN(std::string const &config, TestContext const &context)
     if (interface.requiresWritingCheckpoint()) {
     }
 
-    interface.readBlockScalarData(readDataID, 4, vertexIDs, inValues);
+    interface.readBlockScalarData(meshID, readDataID, 4, vertexIDs, inValues);
 
     /*
       Solves the following non-linear equations, which are extended to a fixed-point equation (simply +x)
@@ -81,7 +81,7 @@ void runTestQN(std::string const &config, TestContext const &context)
       outValues[3] = inValues[3] * inValues[3] - 4.0 + inValues[3];
     }
 
-    interface.writeBlockScalarData(writeDataID, 4, vertexIDs, outValues);
+    interface.writeBlockScalarData(meshID, writeDataID, 4, vertexIDs, outValues);
     interface.advance(1.0);
 
     if (interface.requiresReadingCheckpoint()) {
@@ -153,7 +153,7 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
 
     if ((context.isNamed("SolverOne") and context.isPrimary()) or
         (context.isNamed("SolverTwo") and (not context.isPrimary()))) {
-      interface.readBlockScalarData(readDataID, 4, vertexIDs, inValues);
+      interface.readBlockScalarData(meshID, readDataID, 4, vertexIDs, inValues);
     }
 
     /*
@@ -180,7 +180,7 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
 
     if ((context.isNamed("SolverOne") and context.isPrimary()) or
         (context.isNamed("SolverTwo") and (not context.isPrimary()))) {
-      interface.writeBlockScalarData(writeDataID, 4, vertexIDs, outValues);
+      interface.writeBlockScalarData(meshID, writeDataID, 4, vertexIDs, outValues);
     }
     interface.advance(1.0);
 

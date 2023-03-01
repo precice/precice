@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingZero)
   double readTime; // time where we are reading from the reference solution
   if (precice.requiresInitialData()) {
     writeData = writeFunction(time);
-    precice.writeScalarData(writeDataID, vertexID, writeData);
+    precice.writeScalarData(meshID, writeDataID, vertexID, writeData);
   }
 
   double maxDt        = precice.initialize();
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingZero)
       sampleDt = sampleDts[j];
       readDt   = readDts[j];
       readTime = time + readDt;
-      precice.readScalarData(readDataID, vertexID, sampleDt, readData);
+      precice.readScalarData(meshID, readDataID, vertexID, sampleDt, readData);
       if (context.isNamed("SolverOne") && iterations == 0) { // Solver One receives initial data / old data in first iteration
         BOOST_TEST(readData == readFunction(time));
       } else if (context.isNamed("SolverTwo") || (context.isNamed("SolverOne") && iterations > 0)) {
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingZero)
     time += currentDt;
     timewindow++;
     writeData = writeFunction(time);
-    precice.writeScalarData(writeDataID, vertexID, writeData);
+    precice.writeScalarData(meshID, writeDataID, vertexID, writeData);
     maxDt = precice.advance(currentDt);
     if (precice.requiresReadingCheckpoint()) {
       time       = timeCheckpoint;

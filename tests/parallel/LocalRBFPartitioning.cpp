@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_CASE(LocalRBFPartitioning)
     interface.initialize();
     double values[2];
     interface.advance(1.0);
-    interface.readBlockScalarData(dataID, 2, vertexIDs, values);
+    interface.readBlockScalarData(meshID, dataID, 2, vertexIDs, values);
     interface.finalize();
   } else {
     BOOST_REQUIRE(context.isNamed("SolverTwo"));
@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(LocalRBFPartitioning)
     interface.initialize();
     auto   dataID    = "Data2"; //  meshID
     double values[6] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
-    interface.writeBlockScalarData(dataID, 6, vertexIDs, values);
+    interface.writeBlockScalarData(meshID, dataID, 6, vertexIDs, values);
     interface.advance(1.0);
     interface.finalize();
   }

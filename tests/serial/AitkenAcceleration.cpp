@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_CASE(AitkenAcceleration)
 
     double dt    = interface.initialize();
     double value = 1.0;
-    interface.writeScalarData(dataID, vertexID, value);
+    interface.writeScalarData(meshID, dataID, vertexID, value);
 
     interface.requiresWritingCheckpoint();
     interface.advance(dt);
@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(AitkenAcceleration)
     interface.requiresReadingCheckpoint();
 
     double value = -1.0;
-    interface.readScalarData(dataID, vertexID, value);
+    interface.readScalarData(meshID, dataID, vertexID, value);
     BOOST_TEST(value == 0.1); // due to initial underrelaxation
 
     interface.requiresWritingCheckpoint();

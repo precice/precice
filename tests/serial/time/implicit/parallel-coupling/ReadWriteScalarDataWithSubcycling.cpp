@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
 
   if (precice.requiresInitialData()) {
     writeData = writeFunction(time);
-    precice.writeScalarData(writeDataID, vertexID, writeData);
+    precice.writeScalarData(meshID, writeDataID, vertexID, writeData);
   }
 
   double maxDt = precice.initialize();
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
       windowStartStep = timestep;
     }
 
-    precice.readScalarData(readDataID, vertexID, readData);
+    precice.readScalarData(meshID, readDataID, vertexID, readData);
 
     if (iterations == 0 && timestep == 0) {                                    // special situation: Both solvers are in their very first time windows, first iteration, first time step
       BOOST_TEST(readData == readFunction(startTime));                         // use initial data only.
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     BOOST_TEST(currentDt == expectedDts[timestep % nSubsteps]);
     time += currentDt;
     writeData = writeFunction(time);
-    precice.writeScalarData(writeDataID, vertexID, writeData);
+    precice.writeScalarData(meshID, writeDataID, vertexID, writeData);
     maxDt     = precice.advance(currentDt);
     currentDt = dt > maxDt ? maxDt : dt;
     timestep++;

@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(ParallelCube1To3)
               a + b + d,
               c + a + b + d};
 
-    interface.writeBlockScalarData(dataID, values.size(), vertexIDs.data(), values.data());
+    interface.writeBlockScalarData(meshID, dataID, values.size(), vertexIDs.data(), values.data());
 
     interface.advance(dt);
     BOOST_TEST(!interface.isCouplingOngoing(), "Sending participant must advance only once.");
@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(ParallelCube1To3)
     }
     Eigen::VectorXd readData(vertexIDs.size());
 
-    interface.readBlockScalarData(dataID, expected.size(), vertexIDs.data(), readData.data());
+    interface.readBlockScalarData(meshID, dataID, expected.size(), vertexIDs.data(), readData.data());
     BOOST_CHECK(equals(expected, readData));
     interface.finalize();
   }

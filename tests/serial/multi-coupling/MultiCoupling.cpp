@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
     precice.initialize();
 
     for (size_t i = 0; i < 4; i++) {
-      precice.writeVectorData(dataWriteID, vertexIDs.at(i), datas.at(i).data());
+      precice.writeVectorData(meshID, dataWriteID, vertexIDs.at(i), datas.at(i).data());
     }
 
     if (precice.requiresWritingCheckpoint()) {
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
     }
 
     for (size_t i = 0; i < 4; i++) {
-      precice.readVectorData(dataReadID, vertexIDs.at(i), datas.at(i).data());
+      precice.readVectorData(meshID, dataReadID, vertexIDs.at(i), datas.at(i).data());
     }
 
     BOOST_TEST(datas.at(0)(0) == 1.00000000000000002082e-03);
@@ -125,9 +125,9 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
     precice.initialize();
 
     for (size_t i = 0; i < 4; i++) {
-      precice.writeVectorData(dataWriteID1, vertexIDs1.at(i), datas.at(i).data());
-      precice.writeVectorData(dataWriteID2, vertexIDs2.at(i), datas.at(i).data());
-      precice.writeVectorData(dataWriteID3, vertexIDs3.at(i), datas.at(i).data());
+      precice.writeVectorData(meshID, dataWriteID1, vertexIDs1.at(i), datas.at(i).data());
+      precice.writeVectorData(meshID, dataWriteID2, vertexIDs2.at(i), datas.at(i).data());
+      precice.writeVectorData(meshID, dataWriteID3, vertexIDs3.at(i), datas.at(i).data());
     }
 
     if (precice.requiresWritingCheckpoint()) {

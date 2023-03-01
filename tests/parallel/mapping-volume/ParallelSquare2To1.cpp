@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(ParallelSquare2To1)
                 1.0};
     }
 
-    interface.writeBlockScalarData(dataID, 3, vertexIDs.data(), values.data());
+    interface.writeBlockScalarData(meshID, dataID, 3, vertexIDs.data(), values.data());
 
     interface.advance(dt);
     BOOST_TEST(!interface.isCouplingOngoing(), "Sending participant must advance only once.");
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(ParallelSquare2To1)
     Eigen::VectorXd readData(4);
     expected << 7. / 6, 5. / 6, 11. / 6, 13. / 6;
 
-    interface.readBlockScalarData(dataID, expected.size(), vertexIDs.data(), readData.data());
+    interface.readBlockScalarData(meshID, dataID, expected.size(), vertexIDs.data(), readData.data());
     BOOST_CHECK(equals(expected, readData));
     interface.finalize();
   }

@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(ParallelTriangleConservative2To1)
     std::vector<double> values;
     values = {1.0};
 
-    interface.writeBlockScalarData(dataID, 1, vertexIDs.data(), values.data());
+    interface.writeBlockScalarData(meshID, dataID, 1, vertexIDs.data(), values.data());
 
     interface.advance(dt);
     BOOST_TEST(!interface.isCouplingOngoing(), "Sending participant must advance only once.");
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(ParallelTriangleConservative2To1)
     // These are proportional to barycentric coordinates.
     expected << 0.3, 1.0, 0.7;
 
-    interface.readBlockScalarData(dataID, expected.size(), vertexIDs.data(), readData.data());
+    interface.readBlockScalarData(meshID, dataID, expected.size(), vertexIDs.data(), readData.data());
     BOOST_CHECK(equals(expected, readData));
     interface.finalize();
   }

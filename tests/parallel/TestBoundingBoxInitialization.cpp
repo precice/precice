@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitialization)
 
   if (context.isNamed("Fluid")) {
     for (size_t i = 0; i < vertexIDs.size(); i++) {
-      interface.writeVectorData(forcesID, vertexIDs[i], data[i + i1].data());
+      interface.writeVectorData(meshID, forcesID, vertexIDs[i], data[i + i1].data());
     }
   }
 
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitialization)
 
   if (context.isNamed("Structure")) {
     for (size_t i = 0; i < vertexIDs.size(); i++) {
-      interface.readVectorData(forcesID, vertexIDs[i], data[i + i1].data());
+      interface.readVectorData(meshID, forcesID, vertexIDs[i], data[i + i1].data());
       for (size_t d = 0; d < 3; d++) {
         BOOST_TEST(expectedData[i + i1][d] == data[i + i1][d]);
       }

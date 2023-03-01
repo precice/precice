@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(ImplicitBoth)
   std::vector<double> readData(dimensions, -1);
 
   if (couplingInterface.requiresInitialData()) {
-    couplingInterface.writeVectorData(writeDataID, vertexID, writeData.data());
+    couplingInterface.writeVectorData(meshID, writeDataID, vertexID, writeData.data());
   }
 
   dt = couplingInterface.initialize();
@@ -60,10 +60,10 @@ BOOST_AUTO_TEST_CASE(ImplicitBoth)
   while (couplingInterface.isCouplingOngoing()) {
     if (couplingInterface.requiresWritingCheckpoint()) {
     }
-    couplingInterface.readVectorData(readDataID, vertexID, readData.data());
+    couplingInterface.readVectorData(meshID, readDataID, vertexID, readData.data());
     BOOST_TEST(expectedReadValue == readData.at(0));
     BOOST_TEST(expectedReadValue == readData.at(1));
-    couplingInterface.writeVectorData(writeDataID, vertexID, writeData.data());
+    couplingInterface.writeVectorData(meshID, writeDataID, vertexID, writeData.data());
     dt = couplingInterface.advance(dt);
     if (couplingInterface.requiresReadingCheckpoint()) {
     }

@@ -32,7 +32,7 @@ void testConvergenceMeasures(const std::string configFile, TestContext const &co
 
     if (context.isNamed("SolverTwo")) {
       auto dataID = "Data2"; //  meshID
-      interface.writeScalarData(dataID, vertexID, writeValues.at(numberOfAdvanceCalls));
+      interface.writeScalarData(meshID, dataID, vertexID, writeValues.at(numberOfAdvanceCalls));
     }
 
     interface.advance(1.0);

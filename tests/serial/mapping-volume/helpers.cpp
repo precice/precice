@@ -45,7 +45,7 @@ void testMappingVolumeOneTriangle(const std::string configFile, const TestContex
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant must advance once.");
 
     std::vector<double> values{1.0, 100.0, 10.0};
-    interface.writeBlockScalarData(dataID, 3, vertexIDs.data(), values.data());
+    interface.writeBlockScalarData(meshID, dataID, 3, vertexIDs.data(), values.data());
 
     interface.advance(dt);
     BOOST_TEST(!interface.isCouplingOngoing(), "Sending participant must advance only once.");
@@ -81,7 +81,7 @@ void testMappingVolumeOneTriangle(const std::string configFile, const TestContex
     // Expected value in the middle of the triangle is the average of inputs (1, 10, 100)
     expected << 111.0 / 3;
 
-    interface.readBlockScalarData(dataID, expected.size(), vertexIDs.data(), readData.data());
+    interface.readBlockScalarData(meshID, dataID, expected.size(), vertexIDs.data(), readData.data());
     BOOST_CHECK(equals(expected, readData));
 
     interface.finalize();
@@ -115,7 +115,7 @@ void testMappingVolumeOneTriangleConservative(const std::string configFile, cons
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant must advance once.");
 
     std::vector<double> values{1.0};
-    interface.writeBlockScalarData(dataID, 1, vertexIDs.data(), values.data());
+    interface.writeBlockScalarData(meshID, dataID, 1, vertexIDs.data(), values.data());
 
     interface.advance(dt);
     BOOST_TEST(!interface.isCouplingOngoing(), "Sending participant must advance only once.");
@@ -147,7 +147,7 @@ void testMappingVolumeOneTriangleConservative(const std::string configFile, cons
     // Input point is (0.3, 0.2) and barycentric coordinates are thus (0.5, 0.3, 0.2)
     expected << 0.5, 0.3, 0.2;
 
-    interface.readBlockScalarData(dataID, expected.size(), vertexIDs.data(), readData.data());
+    interface.readBlockScalarData(meshID, dataID, expected.size(), vertexIDs.data(), readData.data());
     BOOST_CHECK(equals(expected, readData));
 
     interface.finalize();
@@ -202,7 +202,7 @@ void testMappingVolumeOneTetra(const std::string configFile, const TestContext &
 
     // Send 1 + 5x - 3y + 9z
     std::vector<double> values{1.0, 6.0, -2.0, 8.0};
-    interface.writeBlockScalarData(dataID, 4, vertexIDs.data(), values.data());
+    interface.writeBlockScalarData(meshID, dataID, 4, vertexIDs.data(), values.data());
 
     interface.advance(dt);
     BOOST_TEST(!interface.isCouplingOngoing(), "Sending participant must advance only once.");
@@ -239,7 +239,7 @@ void testMappingVolumeOneTetra(const std::string configFile, const TestContext &
     // Expected value in the middle of the tetra is the average of inputs (13.0/4)
     expected << 13.0 / 4;
 
-    interface.readBlockScalarData(dataID, expected.size(), vertexIDs.data(), readData.data());
+    interface.readBlockScalarData(meshID, dataID, expected.size(), vertexIDs.data(), readData.data());
     BOOST_CHECK(equals(expected, readData));
 
     interface.finalize();
@@ -273,7 +273,7 @@ void testMappingVolumeOneTetraConservative(const std::string configFile, const T
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant must advance once.");
 
     std::vector<double> values{1.0};
-    interface.writeBlockScalarData(dataID, 1, vertexIDs.data(), values.data());
+    interface.writeBlockScalarData(meshID, dataID, 1, vertexIDs.data(), values.data());
 
     interface.advance(dt);
     BOOST_TEST(!interface.isCouplingOngoing(), "Sending participant must advance only once.");
@@ -322,7 +322,7 @@ void testMappingVolumeOneTetraConservative(const std::string configFile, const T
     // Input point is (0.1, 0.2, 0.3) and barycentric coordinates are thus (0.4, 0.1, 0.2, 0.3)
     expected << 0.4, 0.1, 0.2, 0.3;
 
-    interface.readBlockScalarData(dataID, expected.size(), vertexIDs.data(), readData.data());
+    interface.readBlockScalarData(meshID, dataID, expected.size(), vertexIDs.data(), readData.data());
     BOOST_CHECK(equals(expected, readData));
 
     interface.finalize();

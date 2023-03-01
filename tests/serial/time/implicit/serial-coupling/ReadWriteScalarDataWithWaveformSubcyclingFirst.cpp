@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
 
   if (precice.requiresInitialData()) {
     writeData = writeFunction(time);
-    precice.writeScalarData(writeDataID, vertexID, writeData);
+    precice.writeScalarData(meshID, writeDataID, vertexID, writeData);
   }
 
   double maxDt    = precice.initialize();
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
     }
     double readTime;
     readTime = time + currentDt;
-    precice.readScalarData(readDataID, vertexID, currentDt, readData);
+    precice.readScalarData(meshID, readDataID, vertexID, currentDt, readData);
 
     if (context.isNamed("SolverOne") && iterations == 0) { // in the first iteration of each window, we only have one sample of data. Therefore constant interpolation
       BOOST_TEST(readData == readFunction(timeCheckpoint));
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
       BOOST_TEST(readData == readFunction(readTime));
     }
 
-    precice.readScalarData(readDataID, vertexID, currentDt / 2, readData);
+    precice.readScalarData(meshID, readDataID, vertexID, currentDt / 2, readData);
 
     if (context.isNamed("SolverOne") && iterations == 0) { // in the first iteration of each window, we only have one sample of data. Therefore constant interpolation
       BOOST_TEST(readData == readFunction(timeCheckpoint));
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
     time += currentDt;
     timestep++;
     writeData = writeFunction(time);
-    precice.writeScalarData(writeDataID, vertexID, writeData);
+    precice.writeScalarData(meshID, writeDataID, vertexID, writeData);
     maxDt = precice.advance(currentDt);
     if (precice.requiresReadingCheckpoint()) {
       time     = timeCheckpoint;

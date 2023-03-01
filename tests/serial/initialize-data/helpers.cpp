@@ -20,7 +20,7 @@ void testDataInitialization(precice::testing::TestContext context, std::string c
     auto   dataID     = "Data"; //  meshOneID
     double valueDataB = 0.0;
     cplInterface.initialize();
-    cplInterface.readScalarData(dataID, 0, valueDataB);
+    cplInterface.readScalarData(meshID, dataID, 0, valueDataB);
     BOOST_TEST(2.0 == valueDataB);
     cplInterface.finalize();
   } else {
@@ -33,7 +33,7 @@ void testDataInitialization(precice::testing::TestContext context, std::string c
     BOOST_REQUIRE(cplInterface.requiresInitialData());
 
     auto dataID = "Data"; //  meshTwoID
-    cplInterface.writeScalarData(dataID, 0, 2.0);
+    cplInterface.writeScalarData(meshID, dataID, 0, 2.0);
     cplInterface.initialize();
     cplInterface.finalize();
   }

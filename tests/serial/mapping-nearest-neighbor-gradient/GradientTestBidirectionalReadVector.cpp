@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalReadVector)
     Vector3d valueDataB;
 
     double maxDt = cplInterface.initialize();
-    cplInterface.readVectorData(dataBID, 0, valueDataB.data());
+    cplInterface.readVectorData(meshID, dataBID, 0, valueDataB.data());
     Vector3d expected(2.0, 3.0, 4.0);
     BOOST_TEST(valueDataB == expected);
 
@@ -64,12 +64,12 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalReadVector)
       Vector3d                    valueDataA(1.0, 1.0, 1.0);
       Eigen::Matrix<double, 3, 3> gradient;
       gradient << 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0;
-      cplInterface.writeVectorData(dataAID, 0, valueDataA.data());
-      cplInterface.writeVectorGradientData(dataAID, 0, gradient.data());
+      cplInterface.writeVectorData(meshID, dataAID, 0, valueDataA.data());
+      cplInterface.writeVectorGradientData(meshID, dataAID, 0, gradient.data());
 
       maxDt = cplInterface.advance(maxDt);
 
-      cplInterface.readVectorData(dataBID, 0, valueDataB.data());
+      cplInterface.readVectorData(meshID, dataBID, 0, valueDataB.data());
       expected << 2.5, 3.5, 4.5;
       BOOST_TEST(valueDataB == expected);
     }
@@ -86,23 +86,23 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalReadVector)
 
     BOOST_REQUIRE(cplInterface.requiresInitialData());
     Vector3d valueDataB(2.0, 3.0, 4.0);
-    cplInterface.writeVectorData(dataBID, 0, valueDataB.data());
+    cplInterface.writeVectorData(meshID, dataBID, 0, valueDataB.data());
 
     //tell preCICE that data has been written and call initialize
     double maxDt = cplInterface.initialize();
 
     Vector3d valueDataA;
-    cplInterface.readVectorData(dataAID, 0, valueDataA.data());
+    cplInterface.readVectorData(meshID, dataAID, 0, valueDataA.data());
     Vector3d expected(4.0, 4.0, 4.0);
     BOOST_TEST(valueDataA == expected);
 
     while (cplInterface.isCouplingOngoing()) {
 
       valueDataB << 2.5, 3.5, 4.5;
-      cplInterface.writeVectorData(dataBID, 0, valueDataB.data());
+      cplInterface.writeVectorData(meshID, dataBID, 0, valueDataB.data());
 
       maxDt = cplInterface.advance(maxDt);
-      cplInterface.readVectorData(dataAID, 0, valueDataA.data());
+      cplInterface.readVectorData(meshID, dataAID, 0, valueDataA.data());
       BOOST_TEST(valueDataA == expected);
     }
     cplInterface.finalize();

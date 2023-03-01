@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
 
   if (precice.requiresInitialData()) {
     writeData = writeFunction(time);
-    precice.writeScalarData(writeDataID, vertexID, writeData);
+    precice.writeScalarData(meshID, writeDataID, vertexID, writeData);
   }
 
   double maxDt = precice.initialize();
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
   while (precice.isCouplingOngoing()) {
     double readTime = timewindow * windowDt; // both solvers lag one window behind for parallel-explicit coupling.
 
-    precice.readScalarData(readDataID, vertexID, readData);
+    precice.readScalarData(meshID, readDataID, vertexID, readData);
     BOOST_TEST(readData == readFunction(readTime));
 
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     time += currentDt;
 
     writeData = writeFunction(time);
-    precice.writeScalarData(writeDataID, vertexID, writeData);
+    precice.writeScalarData(meshID, writeDataID, vertexID, writeData);
 
     maxDt     = precice.advance(currentDt);
     currentDt = dt > maxDt ? maxDt : dt;

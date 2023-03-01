@@ -71,12 +71,12 @@ void testMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFuncti
 
     // Write the data to be send.
     auto dataAID = "DataOne"; //  meshOneID
-    BOOST_TEST(!interface.requiresGradientDataFor(dataAID));
+    BOOST_TEST(!interface.requiresGradientDataFor(meshID, dataAID));
 
-    interface.writeScalarData(dataAID, idA, valOneA);
-    interface.writeScalarData(dataAID, idB, valOneB);
-    interface.writeScalarData(dataAID, idC, valOneC);
-    interface.writeScalarData(dataAID, idD, valOneD);
+    interface.writeScalarData(meshID, dataAID, idA, valOneA);
+    interface.writeScalarData(meshID, dataAID, idB, valOneB);
+    interface.writeScalarData(meshID, dataAID, idC, valOneC);
+    interface.writeScalarData(meshID, dataAID, idD, valOneD);
 
     // Advance, thus send the data to the receiving partner.
     interface.advance(maxDt);
@@ -99,12 +99,12 @@ void testMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFuncti
 
     // Read the mapped data from the mesh.
     auto dataAID = "DataOne"; //  meshTwoID
-    BOOST_TEST(!interface.requiresGradientDataFor(dataAID));
+    BOOST_TEST(!interface.requiresGradientDataFor(meshID, dataAID));
 
     double valueA, valueB, valueC;
-    interface.readScalarData(dataAID, idA, valueA);
-    interface.readScalarData(dataAID, idB, valueB);
-    interface.readScalarData(dataAID, idC, valueC);
+    interface.readScalarData(meshID, dataAID, idA, valueA);
+    interface.readScalarData(meshID, dataAID, idB, valueB);
+    interface.readScalarData(meshID, dataAID, idC, valueC);
 
     BOOST_TEST(valueA == expectedValTwoA);
     BOOST_TEST(valueB == expectedValTwoB);
@@ -191,10 +191,10 @@ void testQuadMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFu
 
     // Write the data to be send.
     auto dataAID = "DataOne"; //  meshOneID
-    interface.writeScalarData(dataAID, idA, valOneA);
-    interface.writeScalarData(dataAID, idB, valOneB);
-    interface.writeScalarData(dataAID, idC, valOneC);
-    interface.writeScalarData(dataAID, idD, valOneD);
+    interface.writeScalarData(meshID, dataAID, idA, valOneA);
+    interface.writeScalarData(meshID, dataAID, idB, valOneB);
+    interface.writeScalarData(meshID, dataAID, idC, valOneC);
+    interface.writeScalarData(meshID, dataAID, idD, valOneD);
 
     // Advance, thus send the data to the receiving partner.
     interface.advance(maxDt);
@@ -218,9 +218,9 @@ void testQuadMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFu
     // Read the mapped data from the mesh.
     auto   dataAID = "DataOne"; //  meshTwoID
     double valueA, valueB, valueC;
-    interface.readScalarData(dataAID, idA, valueA);
-    interface.readScalarData(dataAID, idB, valueB);
-    interface.readScalarData(dataAID, idC, valueC);
+    interface.readScalarData(meshID, dataAID, idA, valueA);
+    interface.readScalarData(meshID, dataAID, idB, valueB);
+    interface.readScalarData(meshID, dataAID, idC, valueC);
 
     BOOST_TEST(valueA == expectedValTwoA);
     BOOST_TEST(valueB == expectedValTwoB);

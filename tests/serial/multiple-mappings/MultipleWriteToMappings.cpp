@@ -27,9 +27,9 @@ BOOST_AUTO_TEST_CASE(MultipleWriteToMappings)
 
     double dt              = interface.initialize();
     double displacementTop = 1.0;
-    interface.writeScalarData(dataIDTop, vertexIDTop, displacementTop);
+    interface.writeScalarData(meshID, dataIDTop, vertexIDTop, displacementTop);
     double displacementBottom = 2.0;
-    interface.writeScalarData(dataIDBottom, vertexIDBottom, displacementBottom);
+    interface.writeScalarData(meshID, dataIDBottom, vertexIDBottom, displacementBottom);
     interface.advance(dt);
     BOOST_TEST(not interface.isCouplingOngoing());
     interface.finalize();
@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(MultipleWriteToMappings)
     double dt = interface.initialize();
     interface.advance(dt);
     double displacement = -1.0;
-    interface.readScalarData(dataID, vertexID, displacement);
+    interface.readScalarData(meshID, dataID, vertexID, displacement);
     BOOST_TEST(displacement == 3.0);
     BOOST_TEST(not interface.isCouplingOngoing());
     interface.finalize();

@@ -25,31 +25,31 @@ inline void cyclicExplicit(TestContext &context)
 
   std::vector<double> data{0, 0};
 
-  interface.writeBlockScalarData(wid, 2, ids.data(), data.data());
+  interface.writeBlockScalarData(meshID, wid, 2, ids.data(), data.data());
   interface.initialize();
 
   BOOST_TEST_CONTEXT("first step")
   {
     BOOST_TEST_REQUIRE(interface.isCouplingOngoing());
-    interface.readBlockScalarData(rid, 2, ids.data(), data.data());
+    interface.readBlockScalarData(meshID, rid, 2, ids.data(), data.data());
     std::vector<double> expected(2, (context.isNamed("A") ? 0 : 1));
     BOOST_TEST(data == expected, boost::test_tools::per_element());
 
     std::fill(data.begin(), data.end(), 1);
     expected = data;
-    interface.writeBlockScalarData(wid, 2, ids.data(), data.data());
+    interface.writeBlockScalarData(meshID, wid, 2, ids.data(), data.data());
     interface.advance(1);
   }
 
   BOOST_TEST_CONTEXT("second step")
   {
     BOOST_TEST_REQUIRE(interface.isCouplingOngoing());
-    interface.readBlockScalarData(rid, 2, ids.data(), data.data());
+    interface.readBlockScalarData(meshID, rid, 2, ids.data(), data.data());
     std::vector<double> expected(2, (context.isNamed("A") ? 1 : 2));
     BOOST_TEST(data == expected, boost::test_tools::per_element());
 
     std::fill(data.begin(), data.end(), 2);
-    interface.writeBlockScalarData(wid, 2, ids.data(), data.data());
+    interface.writeBlockScalarData(meshID, wid, 2, ids.data(), data.data());
     interface.advance(1);
   }
 

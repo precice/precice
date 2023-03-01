@@ -68,14 +68,14 @@ void runTestDistributedCommunication(std::string const &config, TestContext cons
 
   if (context.isNamed("Fluid")) { //Fluid
     for (size_t i = 0; i < vertexIDs.size(); i++) {
-      precice.writeVectorData(forcesID, vertexIDs[i], data[i + i1].data());
+      precice.writeVectorData(meshID, forcesID, vertexIDs[i], data[i + i1].data());
     }
   } else {
     BOOST_TEST(context.isNamed("Structure"));
     for (size_t i = 0; i < vertexIDs.size(); i++) {
-      precice.readVectorData(forcesID, vertexIDs[i], data[i].data());
+      precice.readVectorData(meshID, forcesID, vertexIDs[i], data[i].data());
       data[i] = (data[i] * 2).array() + 1.0;
-      precice.writeVectorData(velocID, vertexIDs[i], data[i].data());
+      precice.writeVectorData(meshID, velocID, vertexIDs[i], data[i].data());
     }
   }
 
@@ -83,7 +83,7 @@ void runTestDistributedCommunication(std::string const &config, TestContext cons
 
   if (context.isNamed("Fluid")) { //Fluid
     for (size_t i = 0; i < vertexIDs.size(); i++) {
-      precice.readVectorData(velocID, vertexIDs[i], data[i + i1].data());
+      precice.readVectorData(meshID, velocID, vertexIDs[i], data[i + i1].data());
       for (size_t d = 0; d < 3; d++) {
         BOOST_TEST(expectedData[i + i1][d] == data[i + i1][d]);
       }

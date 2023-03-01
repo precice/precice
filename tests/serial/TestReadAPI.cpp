@@ -36,31 +36,31 @@ BOOST_AUTO_TEST_CASE(TestReadAPI)
     writeDataA[0] = 7.0;
     writeDataA[1] = 7.0;
     writeDataA[2] = 7.0;
-    cplInterface.writeVectorData(dataAID, vertexIDs[0], writeDataA.data());
+    cplInterface.writeVectorData(meshID, dataAID, vertexIDs[0], writeDataA.data());
 
     double maxDt = cplInterface.initialize();
 
     // readBlockScalarData without waveform
-    cplInterface.readBlockScalarData(dataBID, 1, vertexIDs.data(), readDataB.data());
+    cplInterface.readBlockScalarData(meshID, dataBID, 1, vertexIDs.data(), readDataB.data());
     // expected data value received
     BOOST_TEST(3.0 == readDataB[0]);
     // reset value at read destination
     readDataB[0] = 0;
     // readBlockScalarData with waveform
-    cplInterface.readBlockScalarData(dataBID, 1, vertexIDs.data(), 0.5, readDataB.data());
+    cplInterface.readBlockScalarData(meshID, dataBID, 1, vertexIDs.data(), 0.5, readDataB.data());
     // expected data value received
     BOOST_TEST(3.0 == readDataB[0]);
     // reset value at read destination
     readDataB[0] = 0;
 
     // readScalarData without waveform
-    cplInterface.readScalarData(dataBID, vertexIDs[0], readDataB[0]);
+    cplInterface.readScalarData(meshID, dataBID, vertexIDs[0], readDataB[0]);
     // expected data value received
     BOOST_TEST(3.0 == readDataB[0]);
     // reset value at read destination
     readDataB[0] = 0;
     // readScalarData with waveform
-    cplInterface.readScalarData(dataBID, vertexIDs[0], 0.5, readDataB[0]);
+    cplInterface.readScalarData(meshID, dataBID, vertexIDs[0], 0.5, readDataB[0]);
     // expected data value received
     BOOST_TEST(3.0 == readDataB[0]);
     // reset value at read destination
@@ -76,33 +76,33 @@ BOOST_AUTO_TEST_CASE(TestReadAPI)
       writeDataA[0] = 14.0;
       writeDataA[1] = 14.0;
       writeDataA[2] = 14.0;
-      cplInterface.writeVectorData(dataAID, vertexIDs[0], writeDataA.data());
+      cplInterface.writeVectorData(meshID, dataAID, vertexIDs[0], writeDataA.data());
 
       maxDt = cplInterface.advance(maxDt);
 
       if (cplInterface.isCouplingOngoing()) {
 
         // readBlockScalarData without waveform
-        cplInterface.readBlockScalarData(dataBID, 1, vertexIDs.data(), readDataB.data());
+        cplInterface.readBlockScalarData(meshID, dataBID, 1, vertexIDs.data(), readDataB.data());
         // expected data value received
         BOOST_TEST(6.0 == readDataB[0]);
         // reset value at read destination
         readDataB[0] = 0;
         // readBlockScalarData with waveform
-        cplInterface.readBlockScalarData(dataBID, 1, vertexIDs.data(), 0.5, readDataB.data());
+        cplInterface.readBlockScalarData(meshID, dataBID, 1, vertexIDs.data(), 0.5, readDataB.data());
         // expected data value received
         BOOST_TEST(4.5 == readDataB[0]);
         // reset value at read destination
         readDataB[0] = 0;
 
         // readScalarData without waveform
-        cplInterface.readScalarData(dataBID, vertexIDs[0], readDataB[0]);
+        cplInterface.readScalarData(meshID, dataBID, vertexIDs[0], readDataB[0]);
         // expected data value received
         BOOST_TEST(6.0 == readDataB[0]);
         // reset value at read destination
         readDataB[0] = 0;
         // readScalarData with waveform
-        cplInterface.readScalarData(dataBID, vertexIDs[0], 0.5, readDataB[0]);
+        cplInterface.readScalarData(meshID, dataBID, vertexIDs[0], 0.5, readDataB[0]);
         // expected data value received
         BOOST_TEST(4.5 == readDataB[0]);
         // reset value at read destination
@@ -127,12 +127,12 @@ BOOST_AUTO_TEST_CASE(TestReadAPI)
 
     // writeScalarData
     writeDataB[0] = 3.0;
-    cplInterface.writeScalarData(dataBID, vertexIDs[0], writeDataB[0]);
+    cplInterface.writeScalarData(meshID, dataBID, vertexIDs[0], writeDataB[0]);
 
     double maxDt = cplInterface.initialize();
 
     // readBlockVectorData without waveform
-    cplInterface.readBlockVectorData(dataAID, 1, vertexIDs.data(), readDataA.data());
+    cplInterface.readBlockVectorData(meshID, dataAID, 1, vertexIDs.data(), readDataA.data());
     // expected data value received
     BOOST_TEST(Vector3d(7.0, 7.0, 7.0) == readDataA);
     // reset value at read destination
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(TestReadAPI)
     readDataA[1] = 0;
     readDataA[2] = 0;
     // readBlockVectorData with waveform
-    cplInterface.readBlockVectorData(dataAID, 1, vertexIDs.data(), 0.5, readDataA.data());
+    cplInterface.readBlockVectorData(meshID, dataAID, 1, vertexIDs.data(), 0.5, readDataA.data());
     // expected data value received
     BOOST_TEST(Vector3d(7.0, 7.0, 7.0) == readDataA);
     // reset value at read destination
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(TestReadAPI)
     readDataA[2] = 0;
 
     // readVectorData without waveform
-    cplInterface.readVectorData(dataAID, vertexIDs[0], readDataA.data());
+    cplInterface.readVectorData(meshID, dataAID, vertexIDs[0], readDataA.data());
     // expected data value received
     BOOST_TEST(Vector3d(7.0, 7.0, 7.0) == readDataA);
     // reset value at read destination
@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(TestReadAPI)
     readDataA[1] = 0;
     readDataA[2] = 0;
     // readVectorData with waveform
-    cplInterface.readVectorData(dataAID, vertexIDs[0], 0.5, readDataA.data());
+    cplInterface.readVectorData(meshID, dataAID, vertexIDs[0], 0.5, readDataA.data());
     // expected data value received
     BOOST_TEST(Vector3d(7.0, 7.0, 7.0) == readDataA);
     // reset value at read destination
@@ -173,13 +173,13 @@ BOOST_AUTO_TEST_CASE(TestReadAPI)
 
       // writeScalarData
       writeDataB[0] = 6.0;
-      cplInterface.writeScalarData(dataBID, vertexIDs[0], writeDataB[0]);
+      cplInterface.writeScalarData(meshID, dataBID, vertexIDs[0], writeDataB[0]);
 
       maxDt = cplInterface.advance(maxDt);
 
       if (cplInterface.isCouplingOngoing()) {
         // readBlockVectorData without waveform
-        cplInterface.readBlockVectorData(dataAID, 1, vertexIDs.data(), readDataA.data());
+        cplInterface.readBlockVectorData(meshID, dataAID, 1, vertexIDs.data(), readDataA.data());
         // expected data value received
         BOOST_TEST(Vector3d(14.0, 14.0, 14.0) == readDataA);
         // reset value at read destination
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(TestReadAPI)
         readDataA[1] = 0;
         readDataA[2] = 0;
         // readBlockVectorData with waveform
-        cplInterface.readBlockVectorData(dataAID, 1, vertexIDs.data(), 0.5, readDataA.data());
+        cplInterface.readBlockVectorData(meshID, dataAID, 1, vertexIDs.data(), 0.5, readDataA.data());
         // expected data value received
         BOOST_TEST(Vector3d(10.5, 10.5, 10.5) == readDataA);
         // reset value at read destination
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(TestReadAPI)
         readDataA[2] = 0;
 
         // readVectorData without waveform
-        cplInterface.readVectorData(dataAID, vertexIDs[0], readDataA.data());
+        cplInterface.readVectorData(meshID, dataAID, vertexIDs[0], readDataA.data());
         // expected data value received
         BOOST_TEST(Vector3d(14.0, 14.0, 14.0) == readDataA);
         // reset value at read destination
@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(TestReadAPI)
         readDataA[1] = 0;
         readDataA[2] = 0;
         // readVectorData with waveform
-        cplInterface.readVectorData(dataAID, vertexIDs[0], 0.5, readDataA.data());
+        cplInterface.readVectorData(meshID, dataAID, vertexIDs[0], 0.5, readDataA.data());
         // expected data value received
         BOOST_TEST(Vector3d(10.5, 10.5, 10.5) == readDataA);
         // reset value at read destination

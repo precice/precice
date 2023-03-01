@@ -23,14 +23,14 @@ BOOST_AUTO_TEST_CASE(ImplicitFinalize)
 
     auto   dataid = "DataOne"; //  meshid
     double data[] = {3.4, 4.5, 5.6};
-    interface.writeVectorData(dataid, vertexid, data);
+    interface.writeVectorData(meshID, dataid, vertexid, data);
   } else {
     auto   meshid   = "MeshTwo";
     double coords[] = {0.12, 1.21, 2.2};
     auto   vertexid = interface.setMeshVertex(meshid, coords);
 
     auto dataid = "DataTwo"; //  meshid
-    interface.writeScalarData(dataid, vertexid, 7.8);
+    interface.writeScalarData(meshID, dataid, vertexid, 7.8);
   }
   interface.initialize();
   BOOST_TEST(interface.isCouplingOngoing());

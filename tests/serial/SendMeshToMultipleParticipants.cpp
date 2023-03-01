@@ -34,10 +34,10 @@ BOOST_AUTO_TEST_CASE(SendMeshToMultipleParticipants)
   double                  maxDt    = interface.initialize();
 
   if (context.isNamed("SolverOne")) {
-    interface.writeScalarData(dataID, vertexID, value);
+    interface.writeScalarData(meshID, dataID, vertexID, value);
   } else {
     double valueReceived = -1.0;
-    interface.readScalarData(dataID, vertexID, valueReceived);
+    interface.readScalarData(meshID, dataID, vertexID, valueReceived);
     BOOST_TEST(valueReceived == value);
   }
 

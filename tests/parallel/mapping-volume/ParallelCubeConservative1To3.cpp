@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative1To3)
               forceNearC,
               unbalancedForceOnAEGH};
 
-    interface.writeBlockScalarData(dataID, values.size(), vertexIDs.data(), values.data());
+    interface.writeBlockScalarData(meshID, dataID, values.size(), vertexIDs.data(), values.data());
 
     interface.advance(dt);
     BOOST_TEST(!interface.isCouplingOngoing(), "Sending participant must advance only once.");
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative1To3)
     BOOST_TEST(!interface.isCouplingOngoing(), "Receiving participant must advance only once.");
 
     Eigen::VectorXd readData(vertexIDs.size());
-    interface.readBlockScalarData(dataID, vertexIDs.size(), vertexIDs.data(), readData.data());
+    interface.readBlockScalarData(meshID, dataID, vertexIDs.size(), vertexIDs.data(), readData.data());
 
     // map to global coordinates
     std::array<double, 8> forces{0, 0, 0, 0, 0, 0, 0, 0};

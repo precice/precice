@@ -56,10 +56,10 @@ void testQuadMappingScaledConsistent(const std::string configFile, const TestCon
 
     // Write the data to be send.
     auto dataAID = "DataOne"; //  meshOneID
-    interface.writeScalarData(dataAID, idA, valOneA);
-    interface.writeScalarData(dataAID, idB, valOneB);
-    interface.writeScalarData(dataAID, idC, valOneC);
-    interface.writeScalarData(dataAID, idD, valOneD);
+    interface.writeScalarData(meshID, dataAID, idA, valOneA);
+    interface.writeScalarData(meshID, dataAID, idB, valOneB);
+    interface.writeScalarData(meshID, dataAID, idC, valOneC);
+    interface.writeScalarData(meshID, dataAID, idD, valOneD);
 
     // Advance, thus send the data to the receiving partner.
     interface.advance(maxDt);
@@ -85,9 +85,9 @@ void testQuadMappingScaledConsistent(const std::string configFile, const TestCon
     // Read the mapped data from the mesh.
     auto   dataAID = "DataOne"; //  meshTwoID
     double valueA, valueB, valueC;
-    interface.readScalarData(dataAID, idA, valueA);
-    interface.readScalarData(dataAID, idB, valueB);
-    interface.readScalarData(dataAID, idC, valueC);
+    interface.readScalarData(meshID, dataAID, idA, valueA);
+    interface.readScalarData(meshID, dataAID, idB, valueB);
+    interface.readScalarData(meshID, dataAID, idC, valueC);
 
     double calculatedIntegral = precice::math::geometry::triangleArea(coordTwoA, coordTwoB, coordTwoC) * (valueA + valueB + valueC) / 3.0;
     BOOST_TEST(expectedIntegral == calculatedIntegral);
@@ -149,11 +149,11 @@ void testQuadMappingScaledConsistentVolumetric(const std::string configFile, con
 
     // Write the data to be send.
     auto dataAID = "DataOne"; //  meshOneID
-    interface.writeScalarData(dataAID, idA, valOneA);
-    interface.writeScalarData(dataAID, idB, valOneB);
-    interface.writeScalarData(dataAID, idC, valOneC);
-    interface.writeScalarData(dataAID, idD, valOneD);
-    interface.writeScalarData(dataAID, idExtra, valOneExtra);
+    interface.writeScalarData(meshID, dataAID, idA, valOneA);
+    interface.writeScalarData(meshID, dataAID, idB, valOneB);
+    interface.writeScalarData(meshID, dataAID, idC, valOneC);
+    interface.writeScalarData(meshID, dataAID, idD, valOneD);
+    interface.writeScalarData(meshID, dataAID, idExtra, valOneExtra);
 
     // Advance, thus send the data to the receiving partner.
     interface.advance(maxDt);
@@ -185,10 +185,10 @@ void testQuadMappingScaledConsistentVolumetric(const std::string configFile, con
     // Read the mapped data from the mesh.
     auto   dataAID = "DataOne"; //  meshTwoID
     double valueA, valueB, valueC, valueD;
-    interface.readScalarData(dataAID, idA, valueA);
-    interface.readScalarData(dataAID, idB, valueB);
-    interface.readScalarData(dataAID, idC, valueC);
-    interface.readScalarData(dataAID, idD, valueD);
+    interface.readScalarData(meshID, dataAID, idA, valueA);
+    interface.readScalarData(meshID, dataAID, idB, valueB);
+    interface.readScalarData(meshID, dataAID, idC, valueC);
+    interface.readScalarData(meshID, dataAID, idD, valueD);
 
     double calculatedIntegral = precice::math::geometry::triangleArea(coordTwoA, coordTwoB, coordTwoC) * (valueA + valueB + valueC) / 3.0 +
                                 precice::math::geometry::triangleArea(coordTwoA, coordTwoD, coordTwoC) * (valueA + valueD + valueC) / 3.0;
@@ -251,11 +251,11 @@ void testTetraScaledConsistentVolumetric(const std::string configFile, const Tes
 
     // Write the data to be send.
     auto dataAID = "DataOne"; //  meshOneID
-    interface.writeScalarData(dataAID, idA, valOneA);
-    interface.writeScalarData(dataAID, idB, valOneB);
-    interface.writeScalarData(dataAID, idC, valOneC);
-    interface.writeScalarData(dataAID, idD, valOneD);
-    interface.writeScalarData(dataAID, idExtra, valOneExtra);
+    interface.writeScalarData(meshID, dataAID, idA, valOneA);
+    interface.writeScalarData(meshID, dataAID, idB, valOneB);
+    interface.writeScalarData(meshID, dataAID, idC, valOneC);
+    interface.writeScalarData(meshID, dataAID, idD, valOneD);
+    interface.writeScalarData(meshID, dataAID, idExtra, valOneExtra);
 
     // Advance, thus send the data to the receiving partner.
     interface.advance(maxDt);
@@ -282,10 +282,10 @@ void testTetraScaledConsistentVolumetric(const std::string configFile, const Tes
     // Read the mapped data from the mesh.
     auto   dataAID = "DataOne"; //  meshTwoID
     double valueA, valueB, valueC, valueD;
-    interface.readScalarData(dataAID, idA, valueA);
-    interface.readScalarData(dataAID, idB, valueB);
-    interface.readScalarData(dataAID, idC, valueC);
-    interface.readScalarData(dataAID, idD, valueD);
+    interface.readScalarData(meshID, dataAID, idA, valueA);
+    interface.readScalarData(meshID, dataAID, idB, valueB);
+    interface.readScalarData(meshID, dataAID, idC, valueC);
+    interface.readScalarData(meshID, dataAID, idD, valueD);
 
     double calculatedIntegral = precice::math::geometry::tetraVolume(coordTwoA, coordTwoB, coordTwoC, coordTwoD) * (valueA + valueB + valueC + valueD) / 4.0;
     BOOST_TEST(expectedIntegral == calculatedIntegral);

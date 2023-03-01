@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipant)
     for (int it = 0; it < maxIterations; it++) {
       actualDataValue = -1; // reset value.
       BOOST_TEST(precice.isCouplingOngoing());
-      precice.writeScalarData(writeDataID, vertexID, expectedDataValue);
+      precice.writeScalarData(meshID, writeDataID, vertexID, expectedDataValue);
 
       if (context.isNamed("SolverOne")) {
         dt = precice.advance(iterationSizes.at(it));
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipant)
         // do nothing
       }
 
-      precice.readScalarData(readDataID, vertexID, actualDataValue);
+      precice.readScalarData(meshID, readDataID, vertexID, actualDataValue);
       BOOST_TEST(actualDataValue == expectedDataValue);
     }
   }

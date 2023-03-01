@@ -42,8 +42,8 @@ BOOST_AUTO_TEST_CASE(ExportTimeseries)
         vdata[3 * x + 1] = std::sin(x * pi / 3 + pi * time * 0.5);
         vdata[3 * x + 2] = 0;
       }
-      interface.writeBlockScalarData(sdataID, 6, vertexIds.data(), sdata.data());
-      interface.writeBlockVectorData(vdataID, 6, vertexIds.data(), vdata.data());
+      interface.writeBlockScalarData(meshID, sdataID, 6, vertexIds.data(), sdata.data());
+      interface.writeBlockVectorData(meshID, vdataID, 6, vertexIds.data(), vdata.data());
 
       time += dt;
       dt = interface.advance(dt);

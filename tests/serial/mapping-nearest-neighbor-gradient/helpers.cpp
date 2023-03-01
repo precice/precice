@@ -28,20 +28,20 @@ void testVectorGradientFunctions(const TestContext &context, const bool writeBlo
 
     double values[6]  = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
     int    indices[2] = {0, 1};
-    interface.writeBlockVectorData(dataID, 2, indices, values);
+    interface.writeBlockVectorData(meshID, dataID, 2, indices, values);
 
-    BOOST_TEST(interface.requiresGradientDataFor(dataID) == true);
+    BOOST_TEST(interface.requiresGradientDataFor(meshID, dataID) == true);
 
-    if (interface.requiresGradientDataFor(dataID)) {
+    if (interface.requiresGradientDataFor(meshID, dataID)) {
 
       std::vector<double> gradientValues({1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0,
                                           10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0});
 
       if (writeBlockWise) {
-        interface.writeBlockVectorGradientData(dataID, 2, indices, gradientValues.data());
+        interface.writeBlockVectorGradientData(meshID, dataID, 2, indices, gradientValues.data());
       } else {
-        interface.writeVectorGradientData(dataID, indices[0], &gradientValues[0]);
-        interface.writeVectorGradientData(dataID, indices[1], &gradientValues[9]);
+        interface.writeVectorGradientData(meshID, dataID, indices[0], &gradientValues[0]);
+        interface.writeVectorGradientData(meshID, dataID, indices[1], &gradientValues[9]);
       }
     }
 
@@ -62,12 +62,12 @@ void testVectorGradientFunctions(const TestContext &context, const bool writeBlo
     interface.setMeshVertex(meshTwoID, posTwo.data());
 
     double maxDt = interface.initialize();
-    BOOST_TEST(interface.requiresGradientDataFor(dataID) == false);
+    BOOST_TEST(interface.requiresGradientDataFor(meshID, dataID) == false);
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant should have to advance once!");
 
     double valueData[6];
     int    indices[2] = {0, 1};
-    interface.readBlockVectorData(dataID, 2, indices, valueData);
+    interface.readBlockVectorData(meshID, dataID, 2, indices, valueData);
 
     std::vector<double> expected;
     expected = {1.6, 3.5, 5.4, 7.3, 9.2, 11.1};

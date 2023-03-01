@@ -62,10 +62,10 @@ BOOST_AUTO_TEST_CASE(Implicit)
       }
 
       // Write data
-      couplingInterface.writeBlockScalarData(otherDataID, meshSize,
+      couplingInterface.writeBlockScalarData(meshID, otherDataID, meshSize,
                                              otherIDs.data(), writeData.data());
       dt = couplingInterface.advance(dt);
-      couplingInterface.readBlockScalarData(ownDataID, ownIDs.size(),
+      couplingInterface.readBlockScalarData(meshID, ownDataID, ownIDs.size(),
                                             ownIDs.data(), readData.data());
       if (couplingInterface.requiresReadingCheckpoint()) {
       }
@@ -112,10 +112,10 @@ BOOST_AUTO_TEST_CASE(Implicit)
       }
 
       // Write data
-      couplingInterface.writeBlockScalarData(otherDataID, meshSize,
+      couplingInterface.writeBlockScalarData(meshID, otherDataID, meshSize,
                                              otherIDs.data(), writeData.data());
       dt = couplingInterface.advance(dt);
-      couplingInterface.readBlockScalarData(ownDataID, ownIDs.size(),
+      couplingInterface.readBlockScalarData(meshID, ownDataID, ownIDs.size(),
                                             ownIDs.data(), readData.data());
       if (couplingInterface.requiresReadingCheckpoint()) {
       }

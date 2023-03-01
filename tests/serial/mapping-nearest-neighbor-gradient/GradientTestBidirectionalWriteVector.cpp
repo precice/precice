@@ -51,27 +51,27 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteVector)
     cplInterface.setMeshVertex(meshOneID, posOne.data());
     auto dataAID = "DataOne"; //  meshOneID
     auto dataBID = "DataTwo"; //  meshOneID
-    BOOST_TEST(cplInterface.requiresGradientDataFor(dataAID) == false);
-    BOOST_TEST(cplInterface.requiresGradientDataFor(dataBID) == false);
+    BOOST_TEST(cplInterface.requiresGradientDataFor(meshID, dataAID) == false);
+    BOOST_TEST(cplInterface.requiresGradientDataFor(meshID, dataBID) == false);
     BOOST_REQUIRE(cplInterface.requiresInitialData());
 
     Vector3d valueDataA(1.0, 1.0, 1.0);
-    cplInterface.writeVectorData(dataAID, 0, valueDataA.data());
+    cplInterface.writeVectorData(meshID, dataAID, 0, valueDataA.data());
 
     double maxDt = cplInterface.initialize();
 
     Vector3d valueDataB;
-    cplInterface.readVectorData(dataBID, 0, valueDataB.data());
+    cplInterface.readVectorData(meshID, dataBID, 0, valueDataB.data());
     Vector3d expected(-1.0, 0.0, 1.0);
     BOOST_TEST(valueDataB == expected);
 
     while (cplInterface.isCouplingOngoing()) {
       Vector3d valueDataA(2.0, 2.0, 2.0);
-      cplInterface.writeVectorData(dataAID, 0, valueDataA.data());
+      cplInterface.writeVectorData(meshID, dataAID, 0, valueDataA.data());
 
       maxDt = cplInterface.advance(maxDt);
 
-      cplInterface.readVectorData(dataBID, 0, valueDataB.data());
+      cplInterface.readVectorData(meshID, dataBID, 0, valueDataB.data());
       expected << -0.5, 0.5, 1.5;
       BOOST_TEST(valueDataB == expected);
     }
@@ -85,32 +85,32 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteVector)
 
     auto dataAID = "DataOne"; //  meshTwoID
     auto dataBID = "DataTwo"; //  meshTwoID
-    BOOST_TEST(cplInterface.requiresGradientDataFor(dataAID) == false);
-    BOOST_TEST(cplInterface.requiresGradientDataFor(dataBID) == true);
+    BOOST_TEST(cplInterface.requiresGradientDataFor(meshID, dataAID) == false);
+    BOOST_TEST(cplInterface.requiresGradientDataFor(meshID, dataBID) == true);
     BOOST_REQUIRE(cplInterface.requiresInitialData());
 
     Vector3d                    valueDataB(2.0, 3.0, 4.0);
     Eigen::Matrix<double, 3, 3> gradient;
     gradient << 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0;
-    cplInterface.writeVectorData(dataBID, 0, valueDataB.data());
-    cplInterface.writeVectorGradientData(dataBID, 0, gradient.data());
+    cplInterface.writeVectorData(meshID, dataBID, 0, valueDataB.data());
+    cplInterface.writeVectorGradientData(meshID, dataBID, 0, gradient.data());
 
     //tell preCICE that data has been written and call initialize
     double maxDt = cplInterface.initialize();
 
     Vector3d valueDataA;
-    cplInterface.readVectorData(dataAID, 0, valueDataA.data());
+    cplInterface.readVectorData(meshID, dataAID, 0, valueDataA.data());
     Vector3d expected(1.0, 1.0, 1.0);
     BOOST_TEST(valueDataA == expected);
 
     while (cplInterface.isCouplingOngoing()) {
 
       valueDataB << 2.5, 3.5, 4.5;
-      cplInterface.writeVectorData(dataBID, 0, valueDataB.data());
-      cplInterface.writeVectorGradientData(dataBID, 0, gradient.data());
+      cplInterface.writeVectorData(meshID, dataBID, 0, valueDataB.data());
+      cplInterface.writeVectorGradientData(meshID, dataBID, 0, gradient.data());
 
       maxDt = cplInterface.advance(maxDt);
-      cplInterface.readVectorData(dataAID, 0, valueDataA.data());
+      cplInterface.readVectorData(meshID, dataAID, 0, valueDataA.data());
       expected << 2.0, 2.0, 2.0;
       BOOST_TEST(valueDataA == expected);
     }

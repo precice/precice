@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(PreconditionerBug)
       auto dataID = "DataOne"; //  meshID
       // to get convergence in first timestep (everything 0), but not in second timestep
       Vector2d value{0.0, 2.0 + numberOfAdvanceCalls * numberOfAdvanceCalls};
-      interface.writeVectorData(dataID, vertexID, value.data());
+      interface.writeVectorData(meshID, dataID, vertexID, value.data());
     }
     interface.advance(1.0);
 

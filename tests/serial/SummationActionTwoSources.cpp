@@ -45,10 +45,10 @@ BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
 
     while (interface.isCouplingOngoing()) {
 
-      interface.readScalarData(dataAID, idA, valueA);
-      interface.readScalarData(dataAID, idB, valueB);
-      interface.readScalarData(dataAID, idC, valueC);
-      interface.readScalarData(dataAID, idD, valueD);
+      interface.readScalarData(meshID, dataAID, idA, valueA);
+      interface.readScalarData(meshID, dataAID, idB, valueB);
+      interface.readScalarData(meshID, dataAID, idC, valueC);
+      interface.readScalarData(meshID, dataAID, idD, valueD);
 
       BOOST_TEST(valueA == expectedValueA);
       BOOST_TEST(valueB == expectedValueB);
@@ -87,10 +87,10 @@ BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
 
     while (interface.isCouplingOngoing()) {
 
-      interface.writeScalarData(dataAID, idA, valueA);
-      interface.writeScalarData(dataAID, idB, valueB);
-      interface.writeScalarData(dataAID, idC, valueC);
-      interface.writeScalarData(dataAID, idD, valueD);
+      interface.writeScalarData(meshID, dataAID, idA, valueA);
+      interface.writeScalarData(meshID, dataAID, idB, valueB);
+      interface.writeScalarData(meshID, dataAID, idC, valueC);
+      interface.writeScalarData(meshID, dataAID, idD, valueD);
 
       dt = interface.advance(dt);
     }
@@ -124,10 +124,10 @@ BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
 
     while (interface.isCouplingOngoing()) {
 
-      interface.writeScalarData(dataAID, idA, valueA);
-      interface.writeScalarData(dataAID, idB, valueB);
-      interface.writeScalarData(dataAID, idC, valueC);
-      interface.writeScalarData(dataAID, idD, valueD);
+      interface.writeScalarData(meshID, dataAID, idA, valueA);
+      interface.writeScalarData(meshID, dataAID, idB, valueB);
+      interface.writeScalarData(meshID, dataAID, idC, valueC);
+      interface.writeScalarData(meshID, dataAID, idD, valueD);
 
       dt = interface.advance(dt);
     }
