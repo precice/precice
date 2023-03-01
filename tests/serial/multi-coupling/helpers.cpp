@@ -59,7 +59,7 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
     BOOST_TEST(cplInterface.isCouplingOngoing());
     while (cplInterface.isCouplingOngoing()) {
       cplInterface.writeScalarData(meshID1, dataBAID, vertexID1, valueB);
-      cplInterface.writeScalarData(meshID1, dataBCID, vertexID2, valueB);
+      cplInterface.writeScalarData(meshID2, dataBCID, vertexID2, valueB);
       if (cplInterface.requiresWritingCheckpoint()) {
       }
 

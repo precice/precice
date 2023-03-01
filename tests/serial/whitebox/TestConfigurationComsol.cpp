@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE(TestConfigurationComsol)
   BOOST_TEST(comsol->getName() == "Comsol");
 
   const auto &meshContexts = comsol->_meshContexts;
-  BOOST_TEST(meshContexts.size() == 2);
+  BOOST_TEST(meshContexts.size() == 1);
   BOOST_TEST(meshContexts.count("PeanoNodes") == 0);
   BOOST_TEST(meshContexts.count("ComsolNodes") > 0);
   BOOST_TEST(meshContexts.at("ComsolNodes")->mesh->getName() == std::string("ComsolNodes"));
