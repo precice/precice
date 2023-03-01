@@ -278,7 +278,7 @@ private:
       DataID dataID) const;
 
   /// Get waveform order for read data of given name. Raises an error if data name is not found in the read data of this participant.
-  int getWaveformUsedOrder(std::string participantName, std::string readDataName) const;
+  // int getWaveformUsedOrder(std::string participantName, std::string readDataName) const;
 
   void checkWaveformOrderReadData(
       int maxAllowedOrder) const;
