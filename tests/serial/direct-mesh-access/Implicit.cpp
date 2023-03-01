@@ -7,7 +7,7 @@
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
-BOOST_AUTO_TEST_SUITE(AccessReceivedMesh)
+BOOST_AUTO_TEST_SUITE(DirectMeshAccess)
 // Test case for a direct mesh access on one participant to a mesh defined
 // by another participant. The region of interest is defined through a
 // boundingBox. As opposed to the 'boundingBoxExplicit' test case, this
@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(Implicit)
   if (context.isNamed("SolverOne")) {
     std::vector<double>         positions   = {0.1, 0.1, 0.2, 0.05, 0.1, 0.0, 0.3, 0.9};
     std::array<double, dim * 2> boundingBox = {0.0, 1.0, 0.0, 1.0};
-    std::vector<int>            ownIDs(4, 0);
+    std::vector<int>            ownIDs(4, -1);
 
     const int ownMeshID   = couplingInterface.getMeshID("MeshOne");
     const int otherMeshID = couplingInterface.getMeshID("MeshTwo");
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(Implicit)
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
     std::vector<double>         positions = {0.0, 0.0, 0.2, 0.3, 0.1, 0.1};
-    std::vector<int>            ownIDs(3, 0);
+    std::vector<int>            ownIDs(3, -1);
     std::array<double, dim * 2> boundingBox = {0.0, 2.0, 0.0, 2.0};
 
     // Query IDs

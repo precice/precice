@@ -7,7 +7,7 @@
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
-BOOST_AUTO_TEST_SUITE(AccessReceivedMesh)
+BOOST_AUTO_TEST_SUITE(DirectMeshAccess)
 // Test case for a direct mesh access on one participant to a mesh defined
 // by another participant (see above). In addition to the direct mesh access
 // and data writing in one direction, an additional mapping (NN) is defined
@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(ExplicitAndMapping)
     const int writeDataID = interface.getDataID("Velocities", otherMeshID);
 
     std::vector<double> positions = {0.2, 0.2, 0.1, 0.6, 0.1, 0.0, 0.1, 0.0};
-    std::vector<int>    ownIDs(4, 0);
+    std::vector<int>    ownIDs(4, -1);
     interface.setMeshVertices(ownMeshID, ownIDs.size(), positions.data(), ownIDs.data());
 
     std::array<double, dim * 2> boundingBox = {0.0, 1.0, 0.0, 1.0};
@@ -46,12 +46,12 @@ BOOST_AUTO_TEST_CASE(ExplicitAndMapping)
 
     // Allocate a vector containing the vertices
     std::vector<double> solverTwoMesh(otherMeshSize * dim);
-    std::vector<int>    otherIDs(otherMeshSize, 0);
+    std::vector<int>    otherIDs(otherMeshSize, -1);
     interface.getMeshVerticesAndIDs(otherMeshID, otherMeshSize, otherIDs.data(), solverTwoMesh.data());
     // Some dummy writeData
     std::array<double, 5> writeData({1, 2, 3, 4, 5});
 
-    std::vector<double> readData(ownIDs.size(), 0);
+    std::vector<double> readData(ownIDs.size(), -1);
     // Expected data = positions of the other participant's mesh
     const std::vector<double> expectedData = {0.0, 0.0, 0.0, 0.05, 0.1, 0.1, 0.1, 0.0, 0.5, 0.5};
     BOOST_TEST(solverTwoMesh == expectedData);
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(ExplicitAndMapping)
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
     std::vector<double> positions = {0.0, 0.0, 0.0, 0.05, 0.1, 0.1, 0.1, 0.0, 0.5, 0.5};
-    std::vector<int>    ids(positions.size() / dim, 0);
+    std::vector<int>    ids(positions.size() / dim, -1);
 
     // Query IDs
     const int meshID      = interface.getMeshID("MeshTwo");
