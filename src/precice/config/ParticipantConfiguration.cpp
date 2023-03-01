@@ -486,7 +486,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                     participant->getName(), confMapping.toMesh->getName());
     }
 
-    if (confMapping.isRBF) {
+    // @TODO: is this still correct?
+    if (confMapping.requiresBasisFunction) {
       fromMeshContext.geoFilter = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
       toMeshContext.geoFilter   = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
     }

@@ -385,48 +385,6 @@ public:
       int *         ids);
 
   /**
-   * @brief Get vertex positions for multiple vertex ids from a given mesh
-   *
-   * @param[in] meshID the id of the mesh to read the vertices from.
-   * @param[in] size Number of vertices to lookup
-   * @param[in] ids The ids of the vertices to lookup
-   * @param[out] positions a pointer to memory to write the coordinates to
-   *            The 2D-format is (d0x, d0y, d1x, d1y, ..., dnx, dny)
-   *            The 3D-format is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
-   *
-   * @pre count of available elements at positions matches the configured dimension * size
-   * @pre count of available elements at ids matches size
-   *
-   * @see getDimensions()
-   */
-  void getMeshVertices(
-      int        meshID,
-      int        size,
-      const int *ids,
-      double *   positions) const;
-
-  /**
-   * @brief Gets mesh vertex IDs from positions.
-   *
-   * @param[in] meshID ID of the mesh to retrieve positions from
-   * @param[in] size Number of vertices to lookup.
-   * @param[in] positions Positions to find ids for.
-   *            The 2D-format is (d0x, d0y, d1x, d1y, ..., dnx, dny)
-   *            The 3D-format is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
-   * @param[out] ids IDs corresponding to positions.
-   *
-   * @pre count of available elements at positions matches the configured dimension * size
-   * @pre count of available elements at ids matches size
-   *
-   * @note prefer to reuse the IDs returned from calls to setMeshVertex() and setMeshVertices().
-   */
-  void getMeshVertexIDsFromPositions(
-      int           meshID,
-      int           size,
-      const double *positions,
-      int *         ids) const;
-
-  /**
    * @brief Sets a mesh edge from vertex IDs
    *
    * Ignored if preCICE doesn't require connectivity for the mesh.

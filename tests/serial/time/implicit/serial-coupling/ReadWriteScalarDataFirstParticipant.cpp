@@ -54,24 +54,42 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipant)
   double   dt       = precice.initialize();
 
   if (precice.requiresWritingCheckpoint()) {
+    // do nothing
   }
+
+  double startOfWindowTime = 0;
+  double timeInWindow      = 0;
+  double totalTime         = 6; // max-time from config
 
   for (auto iterationSizes : timestepSizes) {
     for (int it = 0; it < maxIterations; it++) {
-
+      actualDataValue = -1; // reset value.
       BOOST_TEST(precice.isCouplingOngoing());
       precice.writeScalarData(writeDataID, vertexID, expectedDataValue);
 
       if (context.isNamed("SolverOne")) {
-        precice.advance(iterationSizes.at(it));
+        dt = precice.advance(iterationSizes.at(it));
+        timeInWindow += iterationSizes.at(it);
       } else if (context.isNamed("SolverTwo")) {
         BOOST_TEST(dt == iterationSizes.at(it));
         dt = precice.advance(dt);
       }
 
       if (precice.requiresReadingCheckpoint()) {
+        timeInWindow = 0;
       }
+      if (precice.isTimeWindowComplete()) {
+        startOfWindowTime += timeInWindow;
+        timeInWindow = 0;
+      }
+
+      if (context.isNamed("SolverOne")) {
+        // Check remainder of simulation time
+        BOOST_TEST(dt == totalTime - startOfWindowTime);
+      }
+
       if (precice.requiresWritingCheckpoint()) {
+        // do nothing
       }
 
       precice.readScalarData(readDataID, vertexID, actualDataValue);

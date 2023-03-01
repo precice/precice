@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
 
     std::vector<double> positions = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 2.0, 0.0, 3.0}) : std::vector<double>({0.0, 4.0, 0.0, 5.0, 0.0, 6.0});
 
-    std::vector<int> ownIDs(positions.size() / dim, 0);
+    std::vector<int> ownIDs(positions.size() / dim, -1);
     interface.setMeshVertices(ownMeshID, ownIDs.size(), positions.data(), ownIDs.data());
 
     std::array<double, dim * 2> boundingBox = context.isPrimary() ? std::array<double, dim * 2>{0.0, 1.0, 0.0, 3.5} : std::array<double, dim * 2>{0.0, 1.0, 3.5, 5.0};
@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
 
     // Allocate a vector containing the vertices
     std::vector<double> solverTwoMesh(otherMeshSize * dim);
-    std::vector<int>    otherIDs(otherMeshSize, 0);
+    std::vector<int>    otherIDs(otherMeshSize, -1);
     interface.getMeshVerticesAndIDs(otherMeshID, otherMeshSize, otherIDs.data(), solverTwoMesh.data());
     // Expected data = positions of the other participant's mesh
     const std::vector<double> expectedData = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 2.0, 0.0, 3.5}) : std::vector<double>({0.0, 3.5, 0.0, 4.0, 0.0, 5.0});
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
     for (int i = 0; i < otherMeshSize; ++i)
       writeData.emplace_back(i + 5 + (10 * context.isPrimary()));
 
-    std::vector<double> readData(ownIDs.size(), 0);
+    std::vector<double> readData(ownIDs.size(), -1);
 
     while (interface.isCouplingOngoing()) {
       // Write data
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
     const int                dim = interface.getDimensions();
     BOOST_TEST(context.isNamed("SolverTwo"));
     std::vector<double> positions = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 2.0}) : std::vector<double>({0.0, 3.5, 0.0, 4.0, 0.0, 5.0});
-    std::vector<int>    ids(positions.size() / dim, 0);
+    std::vector<int>    ids(positions.size() / dim, -1);
 
     // Query IDs
     const int meshID      = interface.getMeshID("MeshTwo");
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
     // Define the mesh
     interface.setMeshVertices(meshID, ids.size(), positions.data(), ids.data());
     // Allocate data to read
-    std::vector<double> readData(ids.size(), 0);
+    std::vector<double> readData(ids.size(), -1);
     std::vector<double> writeData;
     for (unsigned int i = 0; i < ids.size(); ++i)
       writeData.emplace_back(i);

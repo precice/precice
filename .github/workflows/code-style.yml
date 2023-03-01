@@ -1,5 +1,9 @@
 name: Code Style
 on:
+  push:
+    branches:
+      - main
+      - develop
   pull_request:
     paths:
       - '**.[ch]pp'
