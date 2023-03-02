@@ -118,6 +118,7 @@ public:
                    partition::ReceivedPartition::GeometricFilter geoFilter,
                    const bool                                    allowDirectAccess);
 
+  /// Registers a given Participant as dynamic.
   void registerDynamicParticipant(const std::string &name);
   /// @}
 

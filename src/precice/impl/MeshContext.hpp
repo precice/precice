@@ -38,10 +38,11 @@ struct MeshContext {
   /// True, if accessor does create the mesh.
   bool provideMesh = false;
 
+  /// The kind of dynamicity of this mesh
   enum struct Dynamicity {
-    No,
-    Yes,
-    Transitively
+    No,          ///< static mesh, mappings will stay untouched too
+    Yes,         ///< dynamic mesh, which is provided or received
+    Transitively ///< static mesh, but has a mapping to a dynamic mesh
   };
 
   /// Whether the mesh is static, dynamically provided, dynamically received or transitively dynamic via mappings.
