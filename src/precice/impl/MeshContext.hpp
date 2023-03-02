@@ -44,7 +44,7 @@ struct MeshContext {
     Transitively
   };
 
-  /// Whether the mesh is static, dynamically provided or transitively dynamic via mappings or exchanges.
+  /// Whether the mesh is static, dynamically provided, dynamically received or transitively dynamic via mappings.
   Dynamicity dynamic = Dynamicity::No;
 
   /// type of geometric filter
