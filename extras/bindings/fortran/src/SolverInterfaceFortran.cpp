@@ -2,7 +2,9 @@
 #include <iostream>
 #include <memory>
 #include <stddef.h>
+#include <stdexcept>
 #include <string>
+#include <string_view>
 #include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
 #include "precice/SolverInterface.hpp"
@@ -31,6 +33,9 @@ namespace precice::impl {
  * @brief Returns length of string without trailing whitespace.
  */
 int strippedLength(const char *string, int length);
+
+std::string_view strippedStringView(const char *string, int length);
+
 } // namespace precice::impl
 
 void precicef_create_(
@@ -130,10 +135,10 @@ void precicef_requires_reading_checkpoint_(
 void precicef_has_mesh_(
     const char *meshName,
     int *       hasMesh,
-    int         lengthMeshName)
+    int         meshLengthName)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  int    strippedLength = precice::impl::strippedLength(meshName, lengthMeshName);
+  int    strippedLength = precice::impl::strippedLength(meshName, meshLengthName);
   string stringMeshName(meshName, strippedLength);
   if (impl->hasMesh(meshName)) {
     *hasMesh = 1;
@@ -143,15 +148,14 @@ void precicef_has_mesh_(
 }
 
 void precicef_has_data_(
-    const char *dataName,
-    const int * meshID,
+    const char *mesh,
+    const char *data,
     int *       hasData,
-    int         lengthDataName)
+    int         meshLength,
+    int         dataLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  int    strippedLength = precice::impl::strippedLength(dataName, lengthDataName);
-  string stringDataName(dataName, strippedLength);
-  if (impl->hasData(stringDataName, *meshID)) {
+  if (impl->hasData(precice::impl::strippedStringView(mesh, meshLength), precice::impl::strippedStringView(data, dataLength))) {
     *hasData = 1;
   } else {
     *hasData = 0;
@@ -159,11 +163,12 @@ void precicef_has_data_(
 }
 
 void precicef_requires_mesh_connectivity_for_(
-    const int *meshID,
-    int *      required)
+    const char *mesh,
+    int *       required,
+    int         meshLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  if (impl->requiresMeshConnectivityFor(*meshID)) {
+  if (impl->requiresMeshConnectivityFor(precice::impl::strippedStringView(mesh, meshLength))) {
     *required = 1;
   } else {
     *required = 0;
@@ -171,183 +176,218 @@ void precicef_requires_mesh_connectivity_for_(
 }
 
 void precicef_set_vertex_(
-    const int *   meshID,
+    const char *  mesh,
     const double *position,
-    int *         vertexID)
+    int *         vertexID,
+    int           meshLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  *vertexID = impl->setMeshVertex(*meshID, position);
+  *vertexID = impl->setMeshVertex(precice::impl::strippedStringView(mesh, meshLength), position);
 }
 
 void precicef_get_mesh_vertex_size_(
-    const int *meshID,
-    int *      meshSize)
+    const char *mesh,
+    int *       meshSize,
+    int         meshLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  *meshSize = impl->getMeshVertexSize(*meshID);
+  *meshSize = impl->getMeshVertexSize(precice::impl::strippedStringView(mesh, meshLength));
 }
 
 void precicef_set_vertices_(
-    const int *meshID,
-    const int *size,
-    double *   positions,
-    int *      positionIDs)
+    const char *mesh,
+    const int * size,
+    double *    positions,
+    int *       positionIDs,
+    int         meshLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->setMeshVertices(*meshID, *size, positions, positionIDs);
+  impl->setMeshVertices(precice::impl::strippedStringView(mesh, meshLength), *size, positions, positionIDs);
 }
 
 void precicef_set_edge_(
-    const int *meshID,
-    const int *firstVertexID,
-    const int *secondVertexID)
+    const char *mesh,
+    const int * firstVertexID,
+    const int * secondVertexID,
+    int         meshLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->setMeshEdge(*meshID, *firstVertexID, *secondVertexID);
+  impl->setMeshEdge(precice::impl::strippedStringView(mesh, meshLength), *firstVertexID, *secondVertexID);
 }
 
 void precicef_set_mesh_edges_(
-    const int *meshID,
-    const int *size,
-    const int *vertices)
+    const char *mesh,
+    const int * size,
+    const int * vertices,
+    int         meshLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->setMeshEdges(*meshID, *size, vertices);
+  impl->setMeshEdges(precice::impl::strippedStringView(mesh, meshLength), *size, vertices);
 }
 
 void precicef_set_triangle_(
-    const int *meshID,
-    const int *firstVertexID,
-    const int *secondVertexID,
-    const int *thirdVertexID)
+    const char *mesh,
+    const int * firstVertexID,
+    const int * secondVertexID,
+    const int * thirdVertexID,
+    int         meshLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->setMeshTriangle(*meshID, *firstVertexID, *secondVertexID, *thirdVertexID);
+  impl->setMeshTriangle(precice::impl::strippedStringView(mesh, meshLength), *firstVertexID, *secondVertexID, *thirdVertexID);
 }
 
 void precicef_set_mesh_triangles_(
-    const int *meshID,
-    const int *size,
-    const int *vertices)
+    const char *mesh,
+    const int * size,
+    const int * vertices,
+    int         meshLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->setMeshTriangles(*meshID, *size, vertices);
+  impl->setMeshTriangles(precice::impl::strippedStringView(mesh, meshLength), *size, vertices);
 }
 
 void precicef_set_quad_(
-    const int *meshID,
-    const int *firstVertexID,
-    const int *secondVertexID,
-    const int *thirdVertexID,
-    const int *fourthVertexID)
+    const char *mesh,
+    const int * firstVertexID,
+    const int * secondVertexID,
+    const int * thirdVertexID,
+    const int * fourthVertexID,
+    int         meshLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->setMeshQuad(*meshID, *firstVertexID, *secondVertexID, *thirdVertexID, *fourthVertexID);
+  impl->setMeshQuad(precice::impl::strippedStringView(mesh, meshLength), *firstVertexID, *secondVertexID, *thirdVertexID, *fourthVertexID);
 }
 
 void precicef_set_mesh_quads_(
-    const int *meshID,
-    const int *size,
-    const int *vertices)
+    const char *mesh,
+    const int * size,
+    const int * vertices,
+    int         meshLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->setMeshQuads(*meshID, *size, vertices);
+  impl->setMeshQuads(precice::impl::strippedStringView(mesh, meshLength), *size, vertices);
 }
 
 void precicef_set_tetrahedron(
-    const int *meshID,
-    const int *firstVertexID,
-    const int *secondVertexID,
-    const int *thirdVertexID,
-    const int *fourthVertexID)
+    const char *mesh,
+    const int * firstVertexID,
+    const int * secondVertexID,
+    const int * thirdVertexID,
+    const int * fourthVertexID,
+    int         meshLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->setMeshTetrahedron(*meshID, *firstVertexID, *secondVertexID, *thirdVertexID, *fourthVertexID);
+  impl->setMeshTetrahedron(precice::impl::strippedStringView(mesh, meshLength), *firstVertexID, *secondVertexID, *thirdVertexID, *fourthVertexID);
 }
 
 void precicef_set_mesh_tetrahedra_(
-    const int *meshID,
-    const int *size,
-    const int *vertices)
+    const char *mesh,
+    const int * size,
+    const int * vertices,
+    int         meshLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->setMeshTetrahedra(*meshID, *size, vertices);
+  impl->setMeshTetrahedra(precice::impl::strippedStringView(mesh, meshLength), *size, vertices);
 }
 
 void precicef_write_bvdata_(
-    const int *dataID,
-    const int *size,
-    int *      valueIndices,
-    double *   values)
+    const char *mesh,
+    const char *data,
+    const int * size,
+    int *       valueIndices,
+    double *    values,
+    int         meshLength,
+    int         dataLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->writeBlockVectorData(*dataID, *size, valueIndices, values);
+  impl->writeBlockVectorData(precice::impl::strippedStringView(mesh, meshLength), precice::impl::strippedStringView(data, dataLength), *size, valueIndices, values);
 }
 
 void precicef_write_vdata_(
-    const int *   dataID,
+    const char *  mesh,
+    const char *  data,
     const int *   valueIndex,
-    const double *dataValue)
+    const double *dataValue,
+    int           meshLength,
+    int           dataLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->writeVectorData(*dataID, *valueIndex, dataValue);
+  impl->writeVectorData(precice::impl::strippedStringView(mesh, meshLength), precice::impl::strippedStringView(data, dataLength), *valueIndex, dataValue);
 }
 
 void precicef_write_bsdata_(
-    const int *dataID,
-    const int *size,
-    int *      valueIndices,
-    double *   values)
+    const char *mesh,
+    const char *data,
+    const int * size,
+    int *       valueIndices,
+    double *    values,
+    int         meshLength,
+    int         dataLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->writeBlockScalarData(*dataID, *size, valueIndices, values);
+  impl->writeBlockScalarData(precice::impl::strippedStringView(mesh, meshLength), precice::impl::strippedStringView(data, dataLength), *size, valueIndices, values);
 }
 
 void precicef_write_sdata_(
-    const int *   dataID,
+    const char *  mesh,
+    const char *  data,
     const int *   valueIndex,
-    const double *dataValue)
+    const double *dataValue,
+    int           meshLength,
+    int           dataLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->writeScalarData(*dataID, *valueIndex, *dataValue);
+  impl->writeScalarData(precice::impl::strippedStringView(mesh, meshLength), precice::impl::strippedStringView(data, dataLength), *valueIndex, *dataValue);
 }
 
 void precicef_read_bvdata_(
-    const int *dataID,
-    const int *size,
-    int *      valueIndices,
-    double *   values)
+    const char *mesh,
+    const char *data,
+    const int * size,
+    int *       valueIndices,
+    double *    values,
+    int         meshLength,
+    int         dataLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->readBlockVectorData(*dataID, *size, valueIndices, values);
+  impl->readBlockVectorData(precice::impl::strippedStringView(mesh, meshLength), precice::impl::strippedStringView(data, dataLength), *size, valueIndices, values);
 }
 
 void precicef_read_vdata_(
-    const int *dataID,
-    const int *valueIndex,
-    double *   dataValue)
+    const char *mesh,
+    const char *data,
+    const int * valueIndex,
+    double *    dataValue,
+    int         meshLength,
+    int         dataLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->readVectorData(*dataID, *valueIndex, dataValue);
+  impl->readVectorData(precice::impl::strippedStringView(mesh, meshLength), precice::impl::strippedStringView(data, dataLength), *valueIndex, dataValue);
 }
 
 void precicef_read_bsdata_(
-    const int *dataID,
-    const int *size,
-    int *      valueIndices,
-    double *   values)
+    const char *mesh,
+    const char *data,
+    const int * size,
+    int *       valueIndices,
+    double *    values,
+    int         meshLength,
+    int         dataLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->readBlockScalarData(*dataID, *size, valueIndices, values);
+  impl->readBlockScalarData(precice::impl::strippedStringView(mesh, meshLength), precice::impl::strippedStringView(data, dataLength), *size, valueIndices, values);
 }
 
 void precicef_read_sdata_(
-    const int *dataID,
-    const int *valueIndex,
-    double *   dataValue)
+    const char *mesh,
+    const char *data,
+    const int * valueIndex,
+    double *    dataValue,
+    int         meshLength,
+    int         dataLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->readScalarData(*dataID, *valueIndex, *dataValue);
+  impl->readScalarData(precice::impl::strippedStringView(mesh, meshLength), precice::impl::strippedStringView(data, dataLength), *valueIndex, *dataValue);
 }
 
 int precice::impl::strippedLength(
@@ -361,6 +401,11 @@ int precice::impl::strippedLength(
   return i + 1;
 }
 
+std::string_view precice::impl::strippedStringView(const char *string, int length)
+{
+  return {string, static_cast<std::string_view::size_type>(strippedLength(string, length))};
+}
+
 void precicef_get_version_information_(
     char *versionInfo,
     int   lengthVersionInfo)
@@ -372,28 +417,14 @@ void precicef_get_version_information_(
   }
 }
 
-void precicef_set_mesh_access_region_(
-    const int     meshID,
-    const double *boundingBox)
+void precicef_requires_gradient_data_for_(
+    const char *mesh,
+    const char *data, int *required,
+    int meshLength,
+    int dataLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->setMeshAccessRegion(meshID, boundingBox);
-}
-
-void precicef_get_mesh_vertices_and_IDs_(
-    const int meshID,
-    const int size,
-    int *     ids,
-    double *  coordinates)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->getMeshVerticesAndIDs(meshID, size, ids, coordinates);
-}
-
-void precicef_requires_gradient_data_for_(const int *dataID, int *required)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  if (impl->requiresGradientDataFor(*dataID)) {
+  if (impl->requiresGradientDataFor(precice::impl::strippedStringView(mesh, meshLength), precice::impl::strippedStringView(data, dataLength))) {
     *required = 1;
   } else {
     *required = 0;
@@ -401,41 +432,73 @@ void precicef_requires_gradient_data_for_(const int *dataID, int *required)
 }
 
 void precicef_write_sgradient_data_(
-    const int *   dataID,
+    const char *  mesh,
+    const char *  data,
     const int *   valueIndex,
-    const double *gradientValues)
+    const double *gradientValues,
+    int           meshLength,
+    int           dataLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->writeScalarGradientData(*dataID, *valueIndex, gradientValues);
+  impl->writeScalarGradientData(precice::impl::strippedStringView(mesh, meshLength), precice::impl::strippedStringView(data, dataLength), *valueIndex, gradientValues);
 }
 
 void precicef_write_bsgradient_data_(
-    const int *   dataID,
+    const char *  mesh,
+    const char *  data,
     const int *   size,
     const int *   valueIndices,
-    const double *gradientValues)
+    const double *gradientValues,
+    int           meshLength,
+    int           dataLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->writeBlockScalarGradientData(*dataID, *size, valueIndices, gradientValues);
+  impl->writeBlockScalarGradientData(precice::impl::strippedStringView(mesh, meshLength), precice::impl::strippedStringView(data, dataLength), *size, valueIndices, gradientValues);
 }
 
 void precicef_write_vgradient_data_(
-    const int *   dataID,
+    const char *  mesh,
+    const char *  data,
     const int *   valueIndex,
-    const double *gradientValues)
+    const double *gradientValues,
+    int           meshLength,
+    int           dataLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->writeVectorGradientData(*dataID, *valueIndex, gradientValues);
+  impl->writeVectorGradientData(precice::impl::strippedStringView(mesh, meshLength), precice::impl::strippedStringView(data, dataLength), *valueIndex, gradientValues);
 }
 
 void precicef_write_bvgradient_data_(
-    const int *   dataID,
+    const char *  mesh,
+    const char *  data,
     const int *   size,
     const int *   valueIndices,
-    const double *gradientValues)
+    const double *gradientValues,
+    int           meshLength,
+    int           dataLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->writeBlockVectorGradientData(*dataID, *size, valueIndices, gradientValues);
+  impl->writeBlockVectorGradientData(precice::impl::strippedStringView(mesh, meshLength), precice::impl::strippedStringView(data, dataLength), *size, valueIndices, gradientValues);
+}
+
+void precicef_set_mesh_access_region_(
+    const char *  mesh,
+    const double *boundingBox,
+    int           meshLength)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->setMeshAccessRegion(precice::impl::strippedStringView(mesh, meshLength), boundingBox);
+}
+
+void precicef_get_mesh_vertices_and_IDs_(
+    const char *mesh,
+    const int   size,
+    int *       ids,
+    double *    coordinates,
+    int         meshLength)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->getMeshVerticesAndIDs(precice::impl::strippedStringView(mesh, meshLength), size, ids, coordinates);
 }
 
 #ifdef __GNUC__

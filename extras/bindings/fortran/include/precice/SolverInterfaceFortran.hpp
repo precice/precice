@@ -160,7 +160,7 @@ PRECICE_API void precicef_requires_writing_checkpoint_(
 PRECICE_API void precicef_has_mesh_(
     const char *meshName,
     int *       hasMesh,
-    int         lengthMeshName);
+    int         meshLengthName);
 
 /**
  * Fortran syntax:
@@ -169,7 +169,7 @@ PRECICE_API void precicef_has_mesh_(
  *   CHARACTER data(*),
  *   INTEGER   hasData)
  *
- * IN:  mesh, data, lengthMesh, lengthData
+ * IN:  mesh, data, meshLength, dataLength
  * OUT: hasData(1:true, 0:false)
  *
  * @copydoc precice::SolverInterface::hasData()
@@ -179,8 +179,8 @@ PRECICE_API void precicef_has_data_(
     const char *mesh,
     const char *data,
     int *       hasData,
-    int         lengthMesh,
-    int         lengthData);
+    int         meshLength,
+    int         dataLength);
 
 /**
  * Fortran syntax:
@@ -188,7 +188,7 @@ PRECICE_API void precicef_has_data_(
  *   CHARACTER mesh(*),
  *   INTEGER   required)
  *
- * IN:  mesh, lengthMesh
+ * IN:  mesh, meshLength
  * OUT: required(1:true, 0:false)
  *
  * @copydoc precice::SolverInterface::requiresMeshConnectivityFor()
@@ -196,7 +196,7 @@ PRECICE_API void precicef_has_data_(
 PRECICE_API void precicef_requires_mesh_connectivity_for_(
     const char *mesh,
     int *       required,
-    int         lengthMesh);
+    int         meshLength);
 
 /**
  * Fortran syntax:
@@ -205,7 +205,7 @@ PRECICE_API void precicef_requires_mesh_connectivity_for_(
  *   DOUBLE PRECISION position(dim),
  *   INTEGER          vertexID )
  *
- * IN:  mesh, position, lengthMesh
+ * IN:  mesh, position, meshLength
  * OUT: vertexID
  *
  * @copydoc precice::SolverInterface::setMeshVertex()
@@ -214,7 +214,8 @@ PRECICE_API void precicef_requires_mesh_connectivity_for_(
 PRECICE_API void precicef_set_vertex_(
     const char *  mesh,
     const double *position,
-    int *vertexID int meshLenght);
+    int *         vertexID,
+    int           meshLenght);
 
 /**
  * Fortran syntax:
@@ -621,10 +622,11 @@ PRECICE_API void precicef_get_version_information_(
  *
  * @copydoc precice::SolverInterface::requiresGradientDataFor
  */
-PRECICE_API void precicef_requires_gradient_data_for_(const char *mesh,
-                                                      const char *data, int *required,
-                                                      int meshLenght,
-                                                      int dataLength);
+PRECICE_API void precicef_requires_gradient_data_for_(
+    const char *mesh,
+    const char *data, int *required,
+    int meshLenght,
+    int dataLength);
 
 /**
  * Fortran syntax:
@@ -738,7 +740,7 @@ PRECICE_API void precicef_set_mesh_access_region_(
  *   INTEGER          ids(size),
  *   DOUBLE PRECISION coordinates(dim*size))
  *
- * IN:  mesh, size, lengthMesh
+ * IN:  mesh, size, meshLength
  * OUT: ids, coordinates
  *
  * @copydoc precice::SolverInterface::getMeshVerticesAndIDs()
