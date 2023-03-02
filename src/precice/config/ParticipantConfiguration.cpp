@@ -32,6 +32,7 @@
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 #include "utils/networking.hpp"
+#include "utils/span.hpp"
 #include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 
@@ -685,16 +686,38 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   // The new participant needs to know which meshes were marked as dynamic.
   // Doing this here prevents even more state in the ParticipantConfiguration
   if (_participants.size() > 1) {
-    std::set<std::string> dynamicMeshes;
     using Dynamicity = precice::impl::MeshContext::Dynamicity;
+    std::set<std::string> dynamicParticipants;
+
+    // Find all provided dynamic meshes
+    std::map<std::string, std::set<std::string>> providedDynamic;
     for (const auto &participant : _participants) {
-      // Find directly provided
       for (const auto &context : participant->usedMeshContexts()) {
         if (context->provideMesh && context->dynamic == Dynamicity::Yes) {
-          PRECICE_WARN("Found dynamic mesh {} provided by {}", context->mesh->getName(), participant->getName());
-          dynamicMeshes.insert(context->mesh->getName());
+          providedDynamic[participant->getName()].emplace(context->mesh->getName());
+          dynamicParticipants.emplace(participant->getName());
         }
       }
+    }
+
+    // Mark all received dynamic meshes as dynamic
+    for (const auto &participant : _participants) {
+      for (const auto &context : participant->usedMeshContexts()) {
+        if (context->provideMesh)
+          continue;
+        if (providedDynamic.count(context->receiveMeshFrom) == 0)
+          continue;
+
+        if (providedDynamic.at(context->receiveMeshFrom).count(context->mesh->getName()) > 0) {
+          context->dynamic = Dynamicity::Yes;
+          dynamicParticipants.emplace(participant->getName());
+        }
+      }
+    }
+
+    // Mark all transitively dynamic meshes using mappings
+    for (const auto &participant : _participants) {
+      // Determine mappings between meshes of this participant
       std::map<std::string, std::set<std::string>> mappings;
       for (const auto &rmc : participant->readMappingContexts()) {
         auto from = rmc.mapping->getInputMesh()->getName();
@@ -706,31 +729,34 @@ void ParticipantConfiguration::finishParticipantConfiguration(
         mappings[from].insert(to);
         mappings[to].insert(from);
       }
-      for (const auto &name : dynamicMeshes) {
-        if (auto match = mappings.find(name);
-            match != mappings.end()) {
-          PRECICE_WARN("Found transitively dynamic meshes {} via {} on {}", match->second, match->first, participant->getName());
-          dynamicMeshes.insert(match->second.begin(), match->second.end());
+      // Find transitively dynamic meshes
+      std::set<std::string> transitiveHull;
+      for (const auto &context : participant->usedMeshContexts()) {
+        if (context->dynamic == Dynamicity::Yes) {
+          auto meshName = context->mesh->getName();
+          if (mappings.count(meshName) == 0)
+            continue;
+          const auto &mappingPartners = mappings.at(meshName);
+          transitiveHull.insert(mappingPartners.begin(), mappingPartners.end());
         }
       }
+      // Mark transitively dynamic meshes
       for (const auto &context : participant->usedMeshContexts()) {
-        if (context->provideMesh && context->dynamic == Dynamicity::Yes) {
-          PRECICE_WARN("Found dynamic mesh {} provided by {}", context->mesh->getName(), participant->getName());
-          dynamicMeshes.insert(context->mesh->getName());
-        }
+        // @todo provided only????
+        // alrady dynamic or marked?
+        if (context->dynamic != Dynamicity::No)
+          continue;
+        // in the transitive hull?
+        if (transitiveHull.count(context->mesh->getName()) == 0)
+          continue;
+        context->dynamic = Dynamicity::Transitively;
       }
     }
-    if (!dynamicMeshes.empty()) {
-      for (auto &participant : _participants) {
-        for (auto &context : participant->usedMeshContexts()) {
-          PRECICE_WARN("Checking mesh {} of {}", context->mesh->getName(), participant->getName());
-          if (dynamicMeshes.count(context->mesh->getName()) != 0) {
-            PRECICE_WARN("Marking mesh {} received by {} as dynamic", context->mesh->getName(), participant->getName());
-            if (context->dynamic == Dynamicity::No) {
-              context->dynamic = Dynamicity::Transitively;
-            }
-          }
-        }
+
+    // Register all dynamic participants
+    for (const auto &participant : _participants) {
+      for (const auto &dyn : dynamicParticipants) {
+        participant->registerDynamicParticipant(dyn);
       }
     }
   }

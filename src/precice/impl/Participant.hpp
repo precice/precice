@@ -117,6 +117,8 @@ public:
                    double                                        safetyFactor,
                    partition::ReceivedPartition::GeometricFilter geoFilter,
                    const bool                                    allowDirectAccess);
+
+  void registerDynamicParticipant(const std::string &name);
   /// @}
 
   /// @name Data queries
@@ -371,6 +373,8 @@ private:
   bool _useIntraComm = false;
 
   std::unique_ptr<utils::ManageUniqueIDs> _meshIdManager;
+
+  std::set<std::string> _dynamicParticipants;
 
   template <typename ELEMENT_T>
   bool isDataValid(

@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(DynamicMesh)
       if (pname == "B") {
         if (meshName == "Dynamic") {
           BOOST_TEST(!context->provideMesh);
-          BOOST_TEST((context->dynamic == Dynamicity::Transitively));
+          BOOST_TEST((context->dynamic == Dynamicity::Yes));
         }
         if (meshName == "Static") {
           BOOST_TEST(context->provideMesh);
