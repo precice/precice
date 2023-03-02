@@ -7,6 +7,7 @@
 
 #include "action/Action.hpp"
 #include "action/config/ActionConfiguration.hpp"
+#include "boost/range/algorithm/for_each.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "com/SharedPointer.hpp"
 #include "com/config/CommunicationConfiguration.hpp"
@@ -774,53 +775,13 @@ void ParticipantConfiguration::updateParticipantDynamicity()
   // Mark all received dynamic meshes as dynamic
   for (const auto &participant : _participants) {
     for (const auto &context : participant->usedMeshContexts()) {
-      if (context->provideMesh)
+      if (context->provideMesh ||
+          (providedDynamic.count(context->receiveMeshFrom) == 0) ||
+          (providedDynamic.at(context->receiveMeshFrom).count(context->mesh->getName()) == 0)) {
         continue;
-      if (providedDynamic.count(context->receiveMeshFrom) == 0)
-        continue;
-
-      if (providedDynamic.at(context->receiveMeshFrom).count(context->mesh->getName()) > 0) {
-        context->dynamic = Dynamicity::Yes;
-        dynamicParticipants.emplace(participant->getName());
       }
-    }
-  }
-
-  // Mark all transitively dynamic meshes using mappings
-  for (const auto &participant : _participants) {
-    // Determine mappings between meshes of this participant
-    std::map<std::string, std::set<std::string>> mappings;
-    for (const auto &rmc : participant->readMappingContexts()) {
-      auto from = rmc.mapping->getInputMesh()->getName();
-      auto to   = rmc.mapping->getOutputMesh()->getName();
-    }
-    for (const auto &wmc : participant->writeMappingContexts()) {
-      auto from = wmc.mapping->getInputMesh()->getName();
-      auto to   = wmc.mapping->getOutputMesh()->getName();
-      mappings[from].insert(to);
-      mappings[to].insert(from);
-    }
-    // Find transitively dynamic meshes
-    std::set<std::string> transitiveHull;
-    for (const auto &context : participant->usedMeshContexts()) {
-      if (context->dynamic == Dynamicity::Yes) {
-        auto meshName = context->mesh->getName();
-        if (mappings.count(meshName) == 0)
-          continue;
-        const auto &mappingPartners = mappings.at(meshName);
-        transitiveHull.insert(mappingPartners.begin(), mappingPartners.end());
-      }
-    }
-    // Mark transitively dynamic meshes
-    for (const auto &context : participant->usedMeshContexts()) {
-      // @todo provided only????
-      // alrady dynamic or marked?
-      if (context->dynamic != Dynamicity::No)
-        continue;
-      // in the transitive hull?
-      if (transitiveHull.count(context->mesh->getName()) == 0)
-        continue;
-      context->dynamic = Dynamicity::Transitively;
+      context->dynamic = Dynamicity::Yes;
+      dynamicParticipants.emplace(participant->getName());
     }
   }
 
@@ -828,6 +789,42 @@ void ParticipantConfiguration::updateParticipantDynamicity()
   for (const auto &participant : _participants) {
     for (const auto &dyn : dynamicParticipants) {
       participant->registerDynamicParticipant(dyn);
+    }
+  }
+
+  // Mark all transitively dynamic meshes using mappings
+  for (const auto &participant : _participants) {
+    // Determine mappings between meshes of this participant
+    std::map<std::string, std::set<std::string>> mappings;
+    auto                                         addmapping = [&mappings](const auto &mc) {
+      auto from = mc.mapping->getInputMesh()->getName();
+      auto to   = mc.mapping->getOutputMesh()->getName();
+      mappings[from].insert(to);
+      mappings[to].insert(from);
+    };
+    boost::for_each(participant->readMappingContexts(), addmapping);
+    boost::for_each(participant->writeMappingContexts(), addmapping);
+
+    // Find transitively dynamic meshes
+    std::set<std::string> transitiveHull;
+    for (const auto &context : participant->usedMeshContexts()) {
+      auto meshName = context->mesh->getName();
+      if ((context->dynamic != Dynamicity::Yes) ||
+          (mappings.count(meshName) == 0)) {
+        continue;
+      }
+      const auto &mappingPartners = mappings.at(meshName);
+      transitiveHull.insert(mappingPartners.begin(), mappingPartners.end());
+    }
+    // Mark transitively dynamic meshes
+    for (const auto &context : participant->usedMeshContexts()) {
+      // @todo provided only????
+      // alrady dynamic/marked or not in the transitive hull?
+      if ((context->dynamic != Dynamicity::No) ||
+          (transitiveHull.count(context->mesh->getName()) == 0)) {
+        continue;
+      }
+      context->dynamic = Dynamicity::Transitively;
     }
   }
 }
