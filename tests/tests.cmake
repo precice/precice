@@ -3,6 +3,8 @@
 #
 target_sources(testprecice
     PRIVATE
+    tests/dynamic/selective-sync/MultiCouplingDynamicController.cpp
+    tests/dynamic/selective-sync/MultiCouplingDynamicParticipant.cpp
     tests/dynamic/selective-sync/ParallelExplicit.cpp
     tests/dynamic/selective-sync/SerialExplicit.cpp
     tests/parallel/CouplingOnLine.cpp
