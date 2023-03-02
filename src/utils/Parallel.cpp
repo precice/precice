@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <map>
 #include <memory>
+#include <mpi.h>
 #include <numeric>
 #include <ostream>
 #include <utility>
@@ -185,6 +186,17 @@ void Parallel::pushState(CommStatePtr newState)
 //   return nullptr;
 // #endif
 // }
+
+bool Parallel::isMPIInitialized()
+{
+#ifndef PRECICE_NO_MPI
+  int isMPIInitialized{-1};
+  MPI_Initialized(&isMPIInitialized);
+  return isMPIInitialized != 0;
+#else
+  return false;
+#endif // not PRECICE_NO_MPI
+}
 
 void Parallel::initializeManagedMPI(
     int *   argc,

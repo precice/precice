@@ -3,6 +3,8 @@
 #include "fmt/color.h"
 #include "precice/config/Configuration.hpp"
 #include "precice/impl/versions.hpp"
+#include "utils/Parallel.hpp"
+#include "utils/Petsc.hpp"
 #include "utils/fmt.hpp"
 #include "xml/Printer.hpp"
 
@@ -47,14 +49,20 @@ void checkConfiguration(const std::string &filename, const std::string &particip
   fmt::print("Checking {} for syntax and basic setup issues...\n", filename);
   config::Configuration config;
   logging::setMPIRank(0);
-  utils::Parallel::initializeMPI(nullptr, nullptr);
+  const auto wasInitialized = utils::Parallel::isMPIInitialized();
+  if (!wasInitialized) {
+    utils::Parallel::initializeMPI(nullptr, nullptr);
+  }
   xml::ConfigurationContext context{
       participant,
       0,
       size};
   xml::configure(config.getXMLTag(), context, filename);
   fmt::print(fmt::emphasis::bold | fg(fmt::color::green), "No major issues detected\n", filename);
-  utils::Parallel::finalizeMPI();
+  if (!wasInitialized) {
+    utils::Petsc::finalize();
+    utils::Parallel::finalizeMPI();
+  }
 }
 
 } // namespace tooling
