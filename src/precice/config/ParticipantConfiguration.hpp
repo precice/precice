@@ -153,6 +153,9 @@ private:
   void checkIllDefinedMappings(
       const mapping::MappingConfiguration::ConfiguredMapping &mapping,
       const impl::PtrParticipant &                            participant);
+
+  /// Updates all participants regarding dynamicity information
+  void updateParticipantDynamicity();
 };
 
 } // namespace config
