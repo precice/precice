@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessReadWrite)
       }
 
       BOOST_TEST(precice::testing::equals(expectedData, readData));
-      interface.writeBlockScalarData(writeDataID, providedMeshID, ids.data(), writeData.data());
+      interface.writeBlockScalarData(writeDataID, ids.size(), ids.data(), writeData.data());
       dt = interface.advance(dt);
       iterations++;
       if (interface.requiresReadingCheckpoint()) {
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessReadWrite)
         expectedData[0] = 0; // initial data
       }
 
-      // BOOST_TEST(precice::testing::equals(expectedData, readData)); // @todo reading data does not work? See https://github.com/precice/precice/issues/1582
+      BOOST_TEST(precice::testing::equals(expectedData, readData));
       interface.writeBlockScalarData(writeDataID, receiveMeshIDs.size(), receiveMeshIDs.data(), writeData.data());
       dt = interface.advance(dt);
       iterations++;
