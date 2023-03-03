@@ -70,10 +70,6 @@ target_sources(testprecice
     tests/serial/TestExplicitWithSolverGeometry.cpp
     tests/serial/TestImplicit.cpp
     tests/serial/TestReadAPI.cpp
-    tests/serial/access-received-mesh/Explicit.cpp
-    tests/serial/access-received-mesh/ExplicitAndMapping.cpp
-    tests/serial/access-received-mesh/ExplicitRead.cpp
-    tests/serial/access-received-mesh/Implicit.cpp
     tests/serial/action-timings/ActionTimingsExplicit.cpp
     tests/serial/action-timings/ActionTimingsImplicit.cpp
     tests/serial/circular/Explicit.cpp
@@ -83,6 +79,13 @@ target_sources(testprecice
     tests/serial/convergence-measures/testConvergenceMeasures1.cpp
     tests/serial/convergence-measures/testConvergenceMeasures2.cpp
     tests/serial/convergence-measures/testConvergenceMeasures3.cpp
+    tests/serial/direct-mesh-access/DirectAccessReadWrite.cpp
+    tests/serial/direct-mesh-access/DirectAccessWithDataInitialization.cpp
+    tests/serial/direct-mesh-access/DirectAccessWithWaveform.cpp
+    tests/serial/direct-mesh-access/Explicit.cpp
+    tests/serial/direct-mesh-access/ExplicitAndMapping.cpp
+    tests/serial/direct-mesh-access/ExplicitRead.cpp
+    tests/serial/direct-mesh-access/Implicit.cpp
     tests/serial/explicit/TestExplicitMPI.cpp
     tests/serial/explicit/TestExplicitMPISingle.cpp
     tests/serial/explicit/TestExplicitSockets.cpp
@@ -177,6 +180,8 @@ target_sources(testprecice
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithWaveformSubcyclingMixed.cpp
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithWaveformSubcyclingZero.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataFirstParticipant.cpp
+    tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataFirstParticipantChangingDt.cpp
+    tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataFirstParticipantFixedWindows.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithWaveformSamplingFirst.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithWaveformSamplingFirstNoInit.cpp

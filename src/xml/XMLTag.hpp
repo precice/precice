@@ -173,7 +173,7 @@ public:
 
   int getIntAttributeValue(const std::string &name, std::optional<int> default_value = std::nullopt) const;
 
-  const std::string &getStringAttributeValue(const std::string &name, std::optional<std::string> default_value = std::nullopt) const;
+  std::string getStringAttributeValue(const std::string &name, std::optional<std::string> default_value = std::nullopt) const;
 
   bool getBooleanAttributeValue(const std::string &name, std::optional<bool> default_value = std::nullopt) const;
 

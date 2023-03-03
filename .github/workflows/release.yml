@@ -87,4 +87,4 @@ jobs:
           file: "./tools/releasing/packaging/docker/Dockerfile"
           tags: ${{ env.docker_username }}/precice:${{ steps.tag.outputs.tag }},${{ env.docker_username }}/precice:latest
           build-args: |
-            version=v${{ steps.tag.outputs.tag }}
+            version=${{ steps.tag.outputs.tag }}

@@ -129,7 +129,7 @@ int XMLTag::getIntAttributeValue(const std::string &name, std::optional<int> def
   return default_value.value();
 }
 
-const std::string &XMLTag::getStringAttributeValue(const std::string &name, std::optional<std::string> default_value) const
+std::string XMLTag::getStringAttributeValue(const std::string &name, std::optional<std::string> default_value) const
 {
   std::map<std::string, XMLAttribute<std::string>>::const_iterator iter;
   iter = _stringAttributes.find(name);
@@ -187,7 +187,11 @@ void XMLTag::readAttributes(const std::map<std::string, std::string> &aAttribute
     auto name = element.first;
 
     if (not utils::contained(name, _attributes)) {
-      PRECICE_ERROR("Tag <{}> contains an unknown attribute named \"{}\".", _name, name);
+      auto matches = utils::computeMatches(name, _attributes);
+      if (matches.front().distance < 3) {
+        PRECICE_ERROR("The tag <{}> in the configuration contains an unknown attribute \"{}\". Did you mean \"{}\"?", _fullName, name, matches.front().name);
+      }
+      PRECICE_ERROR("The tag <{}> in the configuration contains an unknown attribute \"{}\". Expected attributes are {}.", _fullName, name, fmt::join(_attributes, ", "));
     }
   }
 
