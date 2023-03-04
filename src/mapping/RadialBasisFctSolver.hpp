@@ -89,19 +89,15 @@ inline double computeSquaredDifference(
   return std::accumulate(v.begin(), v.end(), static_cast<double>(0.), [](auto &res, auto &val) { return res + val * val; });
 }
 
-/// computes dead axis in case we want to exploit polynomials
+/// given the active axis, computes sets the axis with the lowest spatial expansion to dead
 template <typename IndexContainer>
-constexpr std::array<bool, 3> computeActiveAxis(const mesh::Mesh &mesh, const IndexContainer &IDs, std::array<bool, 3> axis)
+constexpr std::array<bool, 3> reduceActiveAxis(const mesh::Mesh &mesh, const IndexContainer &IDs, std::array<bool, 3> axis)
 {
-  // For now, a (rather high) heuristic value to decide on the disabling
-  constexpr double threshold = 0.4;
-
   // make a pair of the axis and the difference
   std::array<std::pair<int, double>, 3> differences;
-  const int                             activeAxis = std::count(axis.begin(), axis.end(), true);
 
   // Compute the difference magnitude per direction
-  for (unsigned int d = 0; d < axis.size(); ++d) {
+  for (std::size_t d = 0; d < axis.size(); ++d) {
     // Ignore dead axis here, i.e., apply the max value such that they are sorted on the last position(s)
     if (axis[d] == false) {
       differences[d] = std::make_pair<int, double>(d, std::numeric_limits<double>::max());
@@ -113,16 +109,9 @@ constexpr std::array<bool, 3> computeActiveAxis(const mesh::Mesh &mesh, const In
   }
 
   std::sort(differences.begin(), differences.end(), [](const auto &d1, const auto &d2) { return d1.second < d2.second; });
+  // Disable the axis having the smallest expansion
+  axis[differences[0].first] = false;
 
-  // Check the aspect ratio from smallest to largest value
-  for (unsigned int v = 0; v < activeAxis - 1; ++v) {
-    PRECICE_ASSERT(v < differences.size());
-    double value = differences[v].second / std::max(differences[activeAxis - 1].second, math::NUMERICAL_ZERO_DIFFERENCE);
-
-    if (value < threshold || v == 0) {
-      axis[differences[v].first] = false;
-    }
-  }
   return axis;
 }
 
@@ -279,7 +268,7 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
     if (conditionNumber > 1e5) {
 
       // Decide, which axis to disable
-      _activeAxis = computeActiveAxis(inputMesh, inputIDs, activeAxis);
+      _activeAxis = reduceActiveAxis(inputMesh, inputIDs, activeAxis);
       polyParams  = 4 - std::count(_activeAxis.begin(), _activeAxis.end(), false);
 
       // Resize and refill matrix Q (could be done in a more clever way, e.g., skip fillinf the '1' column again)
