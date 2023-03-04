@@ -35,19 +35,19 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingZero)
   DataFunction writeFunction;
   DataFunction readFunction;
 
-  std::string meshName, writeDataID, readDataID;
+  std::string meshName, writeDataName, readDataName;
   if (context.isNamed("SolverOne")) {
     meshName      = "MeshOne";
-    writeDataID   = "DataOne"; //  meshName
+    writeDataName = "DataOne"; //  meshName
     writeFunction = dataOneFunction;
-    readDataID    = "DataTwo"; //  meshName
+    readDataName  = "DataTwo"; //  meshName
     readFunction  = dataTwoFunction;
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
     meshName      = "MeshTwo";
-    writeDataID   = "DataTwo"; //  meshName
+    writeDataName = "DataTwo"; //  meshName
     writeFunction = dataTwoFunction;
-    readDataID    = "DataOne"; //  meshName
+    readDataName  = "DataOne"; //  meshName
     readFunction  = dataOneFunction;
   }
 
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingZero)
 
   if (precice.requiresInitialData()) {
     writeData = writeFunction(time);
-    precice.writeScalarData(meshName, writeDataID, vertexID, writeData);
+    precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
   }
 
   double maxDt    = precice.initialize();
@@ -83,14 +83,14 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingZero)
     double readTime;
     readTime = timeCheckpoint + windowDt;
 
-    precice.readScalarData(meshName, readDataID, vertexID, currentDt, readData);
+    precice.readScalarData(meshName, readDataName, vertexID, currentDt, readData);
     if (context.isNamed("SolverOne") && iterations == 0) { // in the first iteration of each window, use data from previous window.
       BOOST_TEST(readData == readFunction(timeCheckpoint));
     } else { // in the following iterations, use data at the end of window.
       BOOST_TEST(readData == readFunction(readTime));
     }
 
-    precice.readScalarData(meshName, readDataID, vertexID, currentDt / 2, readData);
+    precice.readScalarData(meshName, readDataName, vertexID, currentDt / 2, readData);
     if (context.isNamed("SolverOne") && iterations == 0) { // in the first iteration of each window, use data from previous window.
       BOOST_TEST(readData == readFunction(timeCheckpoint));
     } else { // in the following iterations, use data at the end of window.
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingZero)
     time += currentDt;
     timestep++;
     writeData = writeFunction(time);
-    precice.writeScalarData(meshName, writeDataID, vertexID, writeData);
+    precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
     maxDt = precice.advance(currentDt);
     if (precice.requiresReadingCheckpoint()) {
       time     = timeCheckpoint;

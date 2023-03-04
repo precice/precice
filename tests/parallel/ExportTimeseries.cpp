@@ -29,8 +29,8 @@ BOOST_AUTO_TEST_CASE(ExportTimeseries)
   double dt   = interface.initialize();
 
   if (context.isNamed("ExporterOne")) {
-    auto sdataID = "S"; //  meshName
-    auto vdataID = "V"; //  meshName
+    auto sdataName = "S"; //  meshName
+    auto vdataName = "V"; //  meshName
 
     std::vector<double> sdata(6);
     std::vector<double> vdata(6 * 3, 0);
@@ -42,8 +42,8 @@ BOOST_AUTO_TEST_CASE(ExportTimeseries)
         vdata[3 * x + 1] = std::sin(x * pi / 3 + pi * time * 0.5);
         vdata[3 * x + 2] = 0;
       }
-      interface.writeBlockScalarData(meshName, sdataID, 6, vertexIds.data(), sdata.data());
-      interface.writeBlockVectorData(meshName, vdataID, 6, vertexIds.data(), vdata.data());
+      interface.writeBlockScalarData(meshName, sdataName, 6, vertexIds.data(), sdata.data());
+      interface.writeBlockVectorData(meshName, vdataName, 6, vertexIds.data(), vdata.data());
 
       time += dt;
       dt = interface.advance(dt);

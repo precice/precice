@@ -23,8 +23,8 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
     constexpr int dim           = 2;
     auto          ownMeshName   = "MeshOne";
     auto          otherMeshName = "MeshTwo";
-    auto          readDataID    = "Forces";     //  ownMeshName
-    auto          writeDataID   = "Velocities"; //  otherMeshName
+    auto          readDataName  = "Forces";     //  ownMeshName
+    auto          writeDataName = "Velocities"; //  otherMeshName
 
     std::vector<double> positions = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 2.0, 0.0, 3.0}) : std::vector<double>({0.0, 4.0, 0.0, 5.0, 0.0, 6.0});
 
@@ -58,10 +58,10 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
 
     while (interface.isCouplingOngoing()) {
       // Write data
-      interface.writeBlockScalarData(otherMeshName, writeDataID, otherMeshSize,
+      interface.writeBlockScalarData(otherMeshName, writeDataName, otherMeshSize,
                                      otherIDs.data(), writeData.data());
       dt = interface.advance(dt);
-      interface.readBlockScalarData(ownMeshName, readDataID, ownIDs.size(),
+      interface.readBlockScalarData(ownMeshName, readDataName, ownIDs.size(),
                                     ownIDs.data(), readData.data());
 
       // Expected data according to the writeData
@@ -78,9 +78,9 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
     std::vector<int>    ids(positions.size() / dim, -1);
 
     // Query IDs
-    auto meshName    = "MeshTwo";
-    auto writeDataID = "Forces";     //  meshName
-    auto readDataID  = "Velocities"; //  meshName
+    auto meshName      = "MeshTwo";
+    auto writeDataName = "Forces";     //  meshName
+    auto readDataName  = "Velocities"; //  meshName
 
     // Define the mesh
     interface.setMeshVertices(meshName, ids.size(), positions.data(), ids.data());
@@ -94,10 +94,10 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
     double dt = interface.initialize();
     while (interface.isCouplingOngoing()) {
 
-      interface.writeBlockScalarData(meshName, writeDataID, ids.size(),
+      interface.writeBlockScalarData(meshName, writeDataName, ids.size(),
                                      ids.data(), writeData.data());
       dt = interface.advance(dt);
-      interface.readBlockScalarData(meshName, readDataID, ids.size(),
+      interface.readBlockScalarData(meshName, readDataName, ids.size(),
                                     ids.data(), readData.data());
       // Expected data according to the writeData
       // Values are summed up

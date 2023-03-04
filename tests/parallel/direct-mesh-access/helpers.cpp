@@ -18,7 +18,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
     // Defines the bounding box and writes data to the received mesh
     precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
     auto                     otherMeshName = "MeshTwo";
-    auto                     dataID        = "Velocities"; //  otherMeshName
+    auto                     dataName      = "Velocities"; //  otherMeshName
     const int                dim           = interface.getDimensions();
 
     std::vector<double> boundingBox = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 3.5}) : boundingBoxSecondaryRank;
@@ -56,12 +56,12 @@ void runTestAccessReceivedMesh(const TestContext &       context,
     while (interface.isCouplingOngoing()) {
       // Write data
       if (context.isPrimary()) {
-        interface.writeBlockScalarData(otherMeshName, dataID, meshSize,
+        interface.writeBlockScalarData(otherMeshName, dataName, meshSize,
                                        ids.data(), writeData.data());
       } else {
         // In order to prevent hypothetical index overruns reported by glibcc
         const int *ids_ptr = startIndex < ids.size() ? &ids[startIndex] : nullptr;
-        interface.writeBlockScalarData(otherMeshName, dataID, meshSize - startIndex,
+        interface.writeBlockScalarData(otherMeshName, dataName, meshSize - startIndex,
                                        ids_ptr, writeData.data());
       }
 
@@ -75,7 +75,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
 
     // Get IDs
     auto      meshName = "MeshTwo";
-    auto      dataID   = "Velocities"; //  meshName
+    auto      dataName = "Velocities"; //  meshName
     const int dim      = interface.getDimensions();
     // Define the interface
     std::vector<double> positions = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 2.0}) : std::vector<double>({0.0, 3.0, 0.0, 4.0, 0.0, 5.0});
@@ -105,7 +105,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
     while (interface.isCouplingOngoing()) {
 
       dt = interface.advance(dt);
-      interface.readBlockScalarData(meshName, dataID, size,
+      interface.readBlockScalarData(meshName, dataName, size,
                                     ids.data(), readData.data());
 
       // Check the received data

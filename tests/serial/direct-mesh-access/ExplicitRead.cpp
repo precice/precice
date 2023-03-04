@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(ExplicitRead)
 
   if (context.isNamed("SolverOne")) {
     auto otherMeshName = "MeshTwo";
-    auto dataID        = "Velocities"; //  otherMeshName
+    auto dataName      = "Velocities"; //  otherMeshName
 
     // Define region of interest, where we could obtain direct write access
     couplingInterface.setMeshAccessRegion(otherMeshName, boundingBox.data());
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(ExplicitRead)
 
       dt = couplingInterface.advance(dt);
       // Write data
-      couplingInterface.readBlockScalarData(otherMeshName, dataID, meshSize,
+      couplingInterface.readBlockScalarData(otherMeshName, dataName, meshSize,
                                             ids.data(), readData.data());
       // Expected data according to the writeData
       std::vector<double> expectedData({1, 2, 3, 4});
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(ExplicitRead)
     BOOST_TEST(context.isNamed("SolverTwo"));
     // Query IDs
     auto meshName = "MeshTwo";
-    auto dataID   = "Velocities"; //  meshName
+    auto dataName = "Velocities"; //  meshName
 
     // Define the mesh
     couplingInterface.setMeshVertices(meshName, ids.size(), positions.data(), ids.data());
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(ExplicitRead)
     double dt = couplingInterface.initialize();
     while (couplingInterface.isCouplingOngoing()) {
 
-      couplingInterface.writeBlockScalarData(meshName, dataID, ids.size(),
+      couplingInterface.writeBlockScalarData(meshName, dataName, ids.size(),
                                              ids.data(), writeData.data());
       dt = couplingInterface.advance(dt);
     }

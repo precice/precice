@@ -28,8 +28,8 @@ BOOST_AUTO_TEST_CASE(Implicit)
 
     auto ownMeshName   = "MeshOne";
     auto otherMeshName = "MeshTwo";
-    auto ownDataID     = "Forces";     //  ownMeshName
-    auto otherDataID   = "Velocities"; //  otherMeshName
+    auto ownDataName   = "Forces";     //  ownMeshName
+    auto otherDataName = "Velocities"; //  otherMeshName
 
     // Define the own mesh
     couplingInterface.setMeshVertices(ownMeshName, ownIDs.size(), positions.data(), ownIDs.data());
@@ -62,10 +62,10 @@ BOOST_AUTO_TEST_CASE(Implicit)
       }
 
       // Write data
-      couplingInterface.writeBlockScalarData(otherMeshName, otherDataID, meshSize,
+      couplingInterface.writeBlockScalarData(otherMeshName, otherDataName, meshSize,
                                              otherIDs.data(), writeData.data());
       dt = couplingInterface.advance(dt);
-      couplingInterface.readBlockScalarData(ownMeshName, ownDataID, ownIDs.size(),
+      couplingInterface.readBlockScalarData(ownMeshName, ownDataName, ownIDs.size(),
                                             ownIDs.data(), readData.data());
       if (couplingInterface.requiresReadingCheckpoint()) {
       }
@@ -83,8 +83,8 @@ BOOST_AUTO_TEST_CASE(Implicit)
     // Query IDs
     auto ownMeshName   = "MeshTwo";
     auto otherMeshName = "MeshOne";
-    auto ownDataID     = "Velocities"; //  ownMeshName
-    auto otherDataID   = "Forces";     //  otherMeshName
+    auto ownDataName   = "Velocities"; //  ownMeshName
+    auto otherDataName = "Forces";     //  otherMeshName
 
     // Define the mesh
     couplingInterface.setMeshVertices(ownMeshName, ownIDs.size(), positions.data(), ownIDs.data());
@@ -112,10 +112,10 @@ BOOST_AUTO_TEST_CASE(Implicit)
       }
 
       // Write data
-      couplingInterface.writeBlockScalarData(otherMeshName, otherDataID, meshSize,
+      couplingInterface.writeBlockScalarData(otherMeshName, otherDataName, meshSize,
                                              otherIDs.data(), writeData.data());
       dt = couplingInterface.advance(dt);
-      couplingInterface.readBlockScalarData(ownMeshName, ownDataID, ownIDs.size(),
+      couplingInterface.readBlockScalarData(ownMeshName, ownDataName, ownIDs.size(),
                                             ownIDs.data(), readData.data());
       if (couplingInterface.requiresReadingCheckpoint()) {
       }

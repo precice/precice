@@ -19,11 +19,11 @@ BOOST_AUTO_TEST_CASE(AitkenAcceleration)
   if (context.isNamed("A")) {
     auto meshName = "A-Mesh";
     int  vertexID = interface.setMeshVertex(meshName, vertex.data());
-    auto dataID   = "Data"; //  meshName
+    auto dataName = "Data"; //  meshName
 
     double dt    = interface.initialize();
     double value = 1.0;
-    interface.writeScalarData(meshName, dataID, vertexID, value);
+    interface.writeScalarData(meshName, dataName, vertexID, value);
 
     interface.requiresWritingCheckpoint();
     interface.advance(dt);
@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(AitkenAcceleration)
     BOOST_TEST(context.isNamed("B"));
     auto meshName = "B-Mesh";
     int  vertexID = interface.setMeshVertex(meshName, vertex.data());
-    auto dataID   = "Data"; //  meshName
+    auto dataName = "Data"; //  meshName
 
     double dt = interface.initialize();
     interface.requiresWritingCheckpoint();
@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(AitkenAcceleration)
     interface.requiresReadingCheckpoint();
 
     double value = -1.0;
-    interface.readScalarData(meshName, dataID, vertexID, value);
+    interface.readScalarData(meshName, dataName, vertexID, value);
     BOOST_TEST(value == 0.1); // due to initial underrelaxation
 
     interface.requiresWritingCheckpoint();

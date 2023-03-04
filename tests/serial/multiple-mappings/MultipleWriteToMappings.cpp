@@ -22,14 +22,14 @@ BOOST_AUTO_TEST_CASE(MultipleWriteToMappings)
     auto meshNameBottom = "MeshABottom";
     int  vertexIDTop    = interface.setMeshVertex(meshNameTop, vertex.data());
     int  vertexIDBottom = interface.setMeshVertex(meshNameBottom, vertex.data());
-    auto dataIDTop      = "DisplacementTop";    //  meshNameTop
-    auto dataIDBottom   = "DisplacementBottom"; //  meshNameBottom
+    auto dataNameTop    = "DisplacementTop";    //  meshNameTop
+    auto dataNameBottom = "DisplacementBottom"; //  meshNameBottom
 
     double dt              = interface.initialize();
     double displacementTop = 1.0;
-    interface.writeScalarData(meshNameTop, dataIDTop, vertexIDTop, displacementTop);
+    interface.writeScalarData(meshNameTop, dataNameTop, vertexIDTop, displacementTop);
     double displacementBottom = 2.0;
-    interface.writeScalarData(meshNameBottom, dataIDBottom, vertexIDBottom, displacementBottom);
+    interface.writeScalarData(meshNameBottom, dataNameBottom, vertexIDBottom, displacementBottom);
     interface.advance(dt);
     BOOST_TEST(not interface.isCouplingOngoing());
     interface.finalize();
@@ -38,12 +38,12 @@ BOOST_AUTO_TEST_CASE(MultipleWriteToMappings)
     BOOST_TEST(context.isNamed("B"));
     auto meshName = "MeshB";
     int  vertexID = interface.setMeshVertex(meshName, vertex.data());
-    auto dataID   = "DisplacementSum"; //  meshName
+    auto dataName = "DisplacementSum"; //  meshName
 
     double dt = interface.initialize();
     interface.advance(dt);
     double displacement = -1.0;
-    interface.readScalarData(meshName, dataID, vertexID, displacement);
+    interface.readScalarData(meshName, dataName, vertexID, displacement);
     BOOST_TEST(displacement == 3.0);
     BOOST_TEST(not interface.isCouplingOngoing());
     interface.finalize();

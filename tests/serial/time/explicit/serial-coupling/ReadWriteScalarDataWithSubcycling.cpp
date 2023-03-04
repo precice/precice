@@ -36,19 +36,19 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
   DataFunction writeFunction;
   DataFunction readFunction;
 
-  std::string meshName, writeDataID, readDataID;
+  std::string meshName, writeDataName, readDataName;
   if (context.isNamed("SolverOne")) {
     meshName      = "MeshOne";
-    writeDataID   = "DataOne"; //  meshName
+    writeDataName = "DataOne"; //  meshName
     writeFunction = dataOneFunction;
-    readDataID    = "DataTwo"; //  meshName
+    readDataName  = "DataTwo"; //  meshName
     readFunction  = dataTwoFunction;
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
     meshName      = "MeshTwo";
-    writeDataID   = "DataTwo"; //  meshName
+    writeDataName = "DataTwo"; //  meshName
     writeFunction = dataTwoFunction;
-    readDataID    = "DataOne"; //  meshName
+    readDataName  = "DataOne"; //  meshName
     readFunction  = dataOneFunction;
   }
 
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
 
   if (precice.requiresInitialData()) {
     writeData = writeFunction(time);
-    precice.writeScalarData(meshName, writeDataID, vertexID, writeData);
+    precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
   }
 
   double maxDt = precice.initialize();
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
       readTime = (timewindow + 1) * windowDt; // SolverTwo gets result at end of window from SolverOne
     }
 
-    precice.readScalarData(meshName, readDataID, vertexID, readData);
+    precice.readScalarData(meshName, readDataName, vertexID, readData);
     BOOST_TEST(readData == readFunction(readTime));
 
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     time += currentDt;
 
     writeData = writeFunction(time);
-    precice.writeScalarData(meshName, writeDataID, vertexID, writeData);
+    precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
 
     maxDt     = precice.advance(currentDt);
     currentDt = dt > maxDt ? maxDt : dt;

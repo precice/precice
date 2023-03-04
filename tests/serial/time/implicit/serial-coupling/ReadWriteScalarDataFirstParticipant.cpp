@@ -35,16 +35,16 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipant)
   double expectedDataValue = 2.5;
   double actualDataValue   = -1.0;
 
-  std::string meshName, writeDataID, readDataID;
+  std::string meshName, writeDataName, readDataName;
   if (context.isNamed("SolverOne")) {
-    meshName    = "MeshOne";
-    writeDataID = "DataOne"; //  meshName
-    readDataID  = "DataTwo"; //  meshName
+    meshName      = "MeshOne";
+    writeDataName = "DataOne"; //  meshName
+    readDataName  = "DataTwo"; //  meshName
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    meshName    = "MeshTwo";
-    writeDataID = "DataTwo"; //  meshName
-    readDataID  = "DataOne"; //  meshName
+    meshName      = "MeshTwo";
+    writeDataName = "DataTwo"; //  meshName
+    readDataName  = "DataOne"; //  meshName
   }
 
   VertexID vertexID = precice.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipant)
     for (int it = 0; it < maxIterations; it++) {
       actualDataValue = -1; // reset value.
       BOOST_TEST(precice.isCouplingOngoing());
-      precice.writeScalarData(meshName, writeDataID, vertexID, expectedDataValue);
+      precice.writeScalarData(meshName, writeDataName, vertexID, expectedDataValue);
 
       if (context.isNamed("SolverOne")) {
         dt = precice.advance(iterationSizes.at(it));
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipant)
         // do nothing
       }
 
-      precice.readScalarData(meshName, readDataID, vertexID, actualDataValue);
+      precice.readScalarData(meshName, readDataName, vertexID, actualDataValue);
       BOOST_TEST(actualDataValue == expectedDataValue);
     }
   }

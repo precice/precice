@@ -17,10 +17,10 @@ void testDataInitialization(precice::testing::TestContext context, std::string c
     auto     meshName = "MeshOne";
     Vector3d pos      = Vector3d::Zero();
     cplInterface.setMeshVertex(meshName, pos.data());
-    auto   dataID     = "Data"; //  meshOneID
+    auto   dataName   = "Data"; //  meshOneID
     double valueDataB = 0.0;
     cplInterface.initialize();
-    cplInterface.readScalarData(meshName, dataID, 0, valueDataB);
+    cplInterface.readScalarData(meshName, dataName, 0, valueDataB);
     BOOST_TEST(2.0 == valueDataB);
     cplInterface.finalize();
   } else {
@@ -32,8 +32,8 @@ void testDataInitialization(precice::testing::TestContext context, std::string c
     //tell preCICE that data has been written
     BOOST_REQUIRE(cplInterface.requiresInitialData());
 
-    auto dataID = "Data"; //  meshTwoID
-    cplInterface.writeScalarData(meshName, dataID, 0, 2.0);
+    auto dataName = "Data"; //  meshTwoID
+    cplInterface.writeScalarData(meshName, dataName, 0, 2.0);
     cplInterface.initialize();
     cplInterface.finalize();
   }

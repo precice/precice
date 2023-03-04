@@ -24,16 +24,16 @@ BOOST_AUTO_TEST_CASE(MultipleWriteFromMappings)
     auto meshNameBottom = "MeshABottom";
     int  vertexIDTop    = interface.setMeshVertex(meshNameTop, vertex1.data());
     int  vertexIDBottom = interface.setMeshVertex(meshNameBottom, vertex3.data());
-    auto dataIDTop      = "Pressure"; //  meshNameTop
-    auto dataIDBottom   = "Pressure"; //  meshNameBottom
+    auto dataNameTop    = "Pressure"; //  meshNameTop
+    auto dataNameBottom = "Pressure"; //  meshNameBottom
 
     double dt = interface.initialize();
     interface.advance(dt);
     double pressure = -1.0;
-    interface.readScalarData(meshNameTop, dataIDTop, vertexIDTop, pressure);
+    interface.readScalarData(meshNameTop, dataNameTop, vertexIDTop, pressure);
     BOOST_TEST(pressure == 1.0);
     pressure = -1.0;
-    interface.readScalarData(meshNameBottom, dataIDBottom, vertexIDBottom, pressure);
+    interface.readScalarData(meshNameBottom, dataNameBottom, vertexIDBottom, pressure);
     BOOST_TEST(pressure == 5.0);
     BOOST_TEST(not interface.isCouplingOngoing());
     interface.finalize();
@@ -44,15 +44,15 @@ BOOST_AUTO_TEST_CASE(MultipleWriteFromMappings)
     int  vertexID1 = interface.setMeshVertex(meshName, vertex1.data());
     int  vertexID2 = interface.setMeshVertex(meshName, vertex2.data());
     int  vertexID3 = interface.setMeshVertex(meshName, vertex3.data());
-    auto dataID    = "Pressure"; //  meshName
+    auto dataName  = "Pressure"; //  meshName
 
     double dt       = interface.initialize();
     double pressure = 1.0;
-    interface.writeScalarData(meshName, dataID, vertexID1, pressure);
+    interface.writeScalarData(meshName, dataName, vertexID1, pressure);
     pressure = 4.0;
-    interface.writeScalarData(meshName, dataID, vertexID2, pressure);
+    interface.writeScalarData(meshName, dataName, vertexID2, pressure);
     pressure = 5.0;
-    interface.writeScalarData(meshName, dataID, vertexID3, pressure);
+    interface.writeScalarData(meshName, dataName, vertexID3, pressure);
     interface.advance(dt);
     BOOST_TEST(not interface.isCouplingOngoing());
     interface.finalize();

@@ -11,10 +11,10 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
   if (context.isNamed("ParallelSolver")) {
     // Get mesh and data IDs
     precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    auto                     meshName    = "ParallelMesh";
-    auto                     writeDataID = "MyData1"; //  meshName
-    auto                     readDataID  = "MyData2"; //  meshName
-    const int                dim         = interface.getDimensions();
+    auto                     meshName      = "ParallelMesh";
+    auto                     writeDataName = "MyData1"; //  meshName
+    auto                     readDataName  = "MyData2"; //  meshName
+    const int                dim           = interface.getDimensions();
     BOOST_TEST(dim == 2);
 
     // Set coordinates, primary according to input argument
@@ -38,11 +38,11 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
     std::vector<double> readData(size);
     while (interface.isCouplingOngoing()) {
       // Write data, advance the solverinterface and readData
-      interface.writeBlockScalarData(meshName, writeDataID, size,
+      interface.writeBlockScalarData(meshName, writeDataName, size,
                                      ids.data(), writeData.data());
 
       dt = interface.advance(dt);
-      interface.readBlockScalarData(meshName, readDataID, size,
+      interface.readBlockScalarData(meshName, readDataName, size,
                                     ids.data(), readData.data());
       // The received data on the secondary rank is always the same
       if (!context.isPrimary()) {
@@ -54,10 +54,10 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
     BOOST_REQUIRE(context.isNamed("SerialSolver"));
     precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
     // Get IDs
-    auto      meshName    = "SerialMesh";
-    auto      writeDataID = "MyData2"; //  meshName
-    auto      readDataID  = "MyData1"; //  meshName
-    const int dim         = interface.getDimensions();
+    auto      meshName      = "SerialMesh";
+    auto      writeDataName = "MyData2"; //  meshName
+    auto      readDataName  = "MyData1"; //  meshName
+    const int dim           = interface.getDimensions();
     BOOST_TEST(interface.getDimensions() == 2);
 
     // Define the interface
@@ -78,10 +78,10 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
     // Start the time loop
     while (interface.isCouplingOngoing()) {
       // Write data, advance solverinterface and read data
-      interface.writeBlockScalarData(meshName, writeDataID, size,
+      interface.writeBlockScalarData(meshName, writeDataName, size,
                                      ids.data(), writeData.data());
       dt = interface.advance(dt);
-      interface.readBlockScalarData(meshName, readDataID, size,
+      interface.readBlockScalarData(meshName, readDataName, size,
                                     ids.data(), readData.data());
       // The received data is always the same
       if (!context.isPrimary()) {

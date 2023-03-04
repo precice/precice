@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(GradientTestUnidirectionalReadScalar)
   if (context.isNamed("A")) {
 
     auto meshName = "MeshA";
-    auto dataID   = "DataA"; //  meshName
+    auto dataName = "DataA"; //  meshName
 
     Vector3d posOne = Vector3d::Constant(0.0);
     Vector3d posTwo = Vector3d::Constant(1.0);
@@ -60,13 +60,13 @@ BOOST_AUTO_TEST_CASE(GradientTestUnidirectionalReadScalar)
 
     double values[2]  = {1.0, 2.0};
     int    indices[2] = {0, 1};
-    cplInterface.writeBlockScalarData(meshName, dataID, 2, indices, values);
+    cplInterface.writeBlockScalarData(meshName, dataName, 2, indices, values);
 
-    BOOST_TEST(cplInterface.requiresGradientDataFor(meshName, dataID) == true);
+    BOOST_TEST(cplInterface.requiresGradientDataFor(meshName, dataName) == true);
 
-    if (cplInterface.requiresGradientDataFor(meshName, dataID)) {
+    if (cplInterface.requiresGradientDataFor(meshName, dataName)) {
       double gradientValues[6] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
-      cplInterface.writeBlockScalarGradientData(meshName, dataID, 2, indices, gradientValues);
+      cplInterface.writeBlockScalarGradientData(meshName, dataName, 2, indices, gradientValues);
     }
 
     // Participant must make move after writing
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(GradientTestUnidirectionalReadScalar)
   } else {
     BOOST_TEST(context.isNamed("B"));
     auto meshName = "MeshB";
-    auto dataID   = "DataA"; //  meshName
+    auto dataName = "DataA"; //  meshName
 
     Vector3d posOne = Vector3d::Constant(0.1);
     Vector3d posTwo = Vector3d::Constant(1.1);
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(GradientTestUnidirectionalReadScalar)
 
     double valueData[2];
     int    indices[2] = {0, 1};
-    cplInterface.readBlockScalarData(meshName, dataID, 2, indices, valueData);
+    cplInterface.readBlockScalarData(meshName, dataName, 2, indices, valueData);
     double expected[2] = {1.6, 3.5};
     BOOST_TEST(valueData == expected);
 

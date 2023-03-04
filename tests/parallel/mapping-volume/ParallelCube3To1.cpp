@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(ParallelCube3To1)
 
   if (context.isNamed("SolverOne")) {
     auto meshName = "MeshOne";
-    auto dataID   = "DataOne"; //  meshName
+    auto dataName = "DataOne"; //  meshName
 
     std::vector<double> coords;
 
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(ParallelCube3To1)
       values.push_back(d + a * coords[3 * i] + b * coords[3 * i + 1] + c * coords[3 * i + 2]);
     }
 
-    interface.writeBlockScalarData(meshName, dataID, vertexIDs.size(), vertexIDs.data(), values.data());
+    interface.writeBlockScalarData(meshName, dataName, vertexIDs.size(), vertexIDs.data(), values.data());
 
     interface.advance(dt);
     BOOST_TEST(!interface.isCouplingOngoing(), "Sending participant must advance only once.");
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(ParallelCube3To1)
 
   } else {
     auto meshName = "MeshTwo";
-    auto dataID   = "DataOne"; //  meshName
+    auto dataName = "DataOne"; //  meshName
 
     // For completion, we sample points in each direction.
     std::vector<double> coords;
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(ParallelCube3To1)
     }
     Eigen::VectorXd readData(values.size());
 
-    interface.readBlockScalarData(meshName, dataID, expected.size(), vertexIDs.data(), readData.data());
+    interface.readBlockScalarData(meshName, dataName, expected.size(), vertexIDs.data(), readData.data());
     //BOOST_CHECK(equals(expected, readData, 1e-3));
     for (int i = 0; i < expected.size(); ++i) {
       BOOST_CHECK(equals(expected(i), readData[i]));

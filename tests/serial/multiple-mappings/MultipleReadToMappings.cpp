@@ -22,14 +22,14 @@ BOOST_AUTO_TEST_CASE(MultipleReadToMappings)
     auto meshNameBottom = "MeshABottom";
     int  vertexIDTop    = interface.setMeshVertex(meshNameTop, vertex.data());
     int  vertexIDBottom = interface.setMeshVertex(meshNameBottom, vertex.data());
-    auto dataIDTop      = "DisplacementTop";    //  meshNameTop
-    auto dataIDBottom   = "DisplacementBottom"; //  meshNameBottom
+    auto dataNameTop    = "DisplacementTop";    //  meshNameTop
+    auto dataNameBottom = "DisplacementBottom"; //  meshNameBottom
 
     double dt              = interface.initialize();
     double displacementTop = 1.0;
-    interface.writeScalarData(meshNameTop, dataIDTop, vertexIDTop, displacementTop);
+    interface.writeScalarData(meshNameTop, dataNameTop, vertexIDTop, displacementTop);
     double displacementBottom = 2.0;
-    interface.writeScalarData(meshNameBottom, dataIDBottom, vertexIDBottom, displacementBottom);
+    interface.writeScalarData(meshNameBottom, dataNameBottom, vertexIDBottom, displacementBottom);
     interface.advance(dt);
     BOOST_TEST(not interface.isCouplingOngoing());
     interface.finalize();

@@ -22,16 +22,16 @@ BOOST_AUTO_TEST_CASE(MultipleReadFromMappings)
     auto meshNameBottom = "MeshABottom";
     int  vertexIDTop    = interface.setMeshVertex(meshNameTop, vertex.data());
     int  vertexIDBottom = interface.setMeshVertex(meshNameBottom, vertex.data());
-    auto dataIDTop      = "Pressure"; //  meshNameTop
-    auto dataIDBottom   = "Pressure"; //  meshNameBottom
+    auto dataNameTop    = "Pressure"; //  meshNameTop
+    auto dataNameBottom = "Pressure"; //  meshNameBottom
 
     double dt = interface.initialize();
     interface.advance(dt);
     double pressure = -1.0;
-    interface.readScalarData(meshNameTop, dataIDTop, vertexIDTop, pressure);
+    interface.readScalarData(meshNameTop, dataNameTop, vertexIDTop, pressure);
     BOOST_TEST(pressure == 1.0);
     pressure = -1.0;
-    interface.readScalarData(meshNameBottom, dataIDBottom, vertexIDBottom, pressure);
+    interface.readScalarData(meshNameBottom, dataNameBottom, vertexIDBottom, pressure);
     BOOST_TEST(pressure == 1.0);
     BOOST_TEST(not interface.isCouplingOngoing());
     interface.finalize();
@@ -40,11 +40,11 @@ BOOST_AUTO_TEST_CASE(MultipleReadFromMappings)
     BOOST_TEST(context.isNamed("B"));
     auto meshName = "MeshB";
     int  vertexID = interface.setMeshVertex(meshName, vertex.data());
-    auto dataID   = "Pressure"; //  meshName
+    auto dataName = "Pressure"; //  meshName
 
     double dt       = interface.initialize();
     double pressure = 1.0;
-    interface.writeScalarData(meshName, dataID, vertexID, pressure);
+    interface.writeScalarData(meshName, dataName, vertexID, pressure);
     interface.advance(dt);
     BOOST_TEST(not interface.isCouplingOngoing());
     interface.finalize();

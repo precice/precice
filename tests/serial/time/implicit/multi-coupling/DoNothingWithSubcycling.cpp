@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(DoNothingWithSubcycling)
 
   int nSubsteps; // let three solvers use different time step sizes
 
-  std::string meshName, writeDataID;
+  std::string meshName, writeDataName;
   if (context.isNamed("SolverOne")) {
     meshName  = "MeshOne";
     nSubsteps = 1;
