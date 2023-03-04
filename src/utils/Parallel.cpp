@@ -2,7 +2,6 @@
 #include <algorithm>
 #include <map>
 #include <memory>
-#include <mpi.h>
 #include <numeric>
 #include <ostream>
 #include <utility>
