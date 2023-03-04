@@ -642,10 +642,10 @@ int SolverInterfaceImpl::setMeshVertex(
   PRECICE_DEBUG("Position = {}", internalPosition.format(utils::eigenio::debug()));
   int           index   = -1;
   MeshContext & context = _accessor->usedMeshContext(meshName);
-  mesh::PtrMesh meshp(context.mesh);
+  mesh::PtrMesh mesh(context.mesh);
   PRECICE_DEBUG("MeshRequirement: {}", fmt::streamed(context.meshRequirement));
-  index = meshp->createVertex(internalPosition).getID();
-  meshp->allocateDataValues();
+  index = mesh->createVertex(internalPosition).getID();
+  mesh->allocateDataValues();
   return index;
 }
 
@@ -658,15 +658,15 @@ void SolverInterfaceImpl::setMeshVertices(
   PRECICE_TRACE(meshName, size);
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   MeshContext & context = _accessor->usedMeshContext(meshName);
-  mesh::PtrMesh meshp(context.mesh);
+  mesh::PtrMesh mesh(context.mesh);
   PRECICE_DEBUG("Set positions");
   const Eigen::Map<const Eigen::MatrixXd> posMatrix{
       positions, _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(size)};
   for (int i = 0; i < size; ++i) {
     Eigen::VectorXd current(posMatrix.col(i));
-    ids[i] = meshp->createVertex(current).getID();
+    ids[i] = mesh->createVertex(current).getID();
   }
-  meshp->allocateDataValues();
+  mesh->allocateDataValues();
 }
 
 void SolverInterfaceImpl::setMeshEdge(
@@ -678,13 +678,13 @@ void SolverInterfaceImpl::setMeshEdge(
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   MeshContext &context = _accessor->usedMeshContext(meshName);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
-    mesh::PtrMesh &meshp = context.mesh;
+    mesh::PtrMesh &mesh = context.mesh;
     using impl::errorInvalidVertexID;
-    PRECICE_CHECK(meshp->isValidVertexID(firstVertexID), errorInvalidVertexID(firstVertexID));
-    PRECICE_CHECK(meshp->isValidVertexID(secondVertexID), errorInvalidVertexID(secondVertexID));
-    mesh::Vertex &v0 = meshp->vertices()[firstVertexID];
-    mesh::Vertex &v1 = meshp->vertices()[secondVertexID];
-    meshp->createEdge(v0, v1);
+    PRECICE_CHECK(mesh->isValidVertexID(firstVertexID), errorInvalidVertexID(firstVertexID));
+    PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), errorInvalidVertexID(secondVertexID));
+    mesh::Vertex &v0 = mesh->vertices()[firstVertexID];
+    mesh::Vertex &v1 = mesh->vertices()[secondVertexID];
+    mesh->createEdge(v0, v1);
   }
 }
 
@@ -700,11 +700,11 @@ void SolverInterfaceImpl::setMeshEdges(
     return;
   }
 
-  mesh::PtrMesh &meshp = context.mesh;
+  mesh::PtrMesh &mesh = context.mesh;
   {
     auto end           = std::next(vertices, size * 2);
-    auto [first, last] = utils::find_first_range(vertices, end, [&meshp](VertexID vid) {
-      return !meshp->isValidVertexID(vid);
+    auto [first, last] = utils::find_first_range(vertices, end, [&mesh](VertexID vid) {
+      return !mesh->isValidVertexID(vid);
     });
     PRECICE_CHECK(first == end,
                   impl::errorInvalidVertexIDRange,
@@ -715,7 +715,7 @@ void SolverInterfaceImpl::setMeshEdges(
   for (int i = 0; i < size; ++i) {
     auto aid = vertices[2 * i];
     auto bid = vertices[2 * i + 1];
-    meshp->createEdge(meshp->vertices()[aid], meshp->vertices()[bid]);
+    mesh->createEdge(mesh->vertices()[aid], mesh->vertices()[bid]);
   }
 }
 
@@ -731,28 +731,28 @@ void SolverInterfaceImpl::setMeshTriangle(
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   MeshContext &context = _accessor->usedMeshContext(meshName);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
-    mesh::PtrMesh &meshp = context.mesh;
+    mesh::PtrMesh &mesh = context.mesh;
     using impl::errorInvalidVertexID;
-    PRECICE_CHECK(meshp->isValidVertexID(firstVertexID), errorInvalidVertexID(firstVertexID));
-    PRECICE_CHECK(meshp->isValidVertexID(secondVertexID), errorInvalidVertexID(secondVertexID));
-    PRECICE_CHECK(meshp->isValidVertexID(thirdVertexID), errorInvalidVertexID(thirdVertexID));
+    PRECICE_CHECK(mesh->isValidVertexID(firstVertexID), errorInvalidVertexID(firstVertexID));
+    PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), errorInvalidVertexID(secondVertexID));
+    PRECICE_CHECK(mesh->isValidVertexID(thirdVertexID), errorInvalidVertexID(thirdVertexID));
     PRECICE_CHECK(utils::unique_elements(utils::make_array(firstVertexID, secondVertexID, thirdVertexID)),
                   "setMeshTriangle() was called with repeated Vertex IDs ({}, {}, {}).",
                   firstVertexID, secondVertexID, thirdVertexID);
     mesh::Vertex *vertices[3];
-    vertices[0] = &meshp->vertices()[firstVertexID];
-    vertices[1] = &meshp->vertices()[secondVertexID];
-    vertices[2] = &meshp->vertices()[thirdVertexID];
+    vertices[0] = &mesh->vertices()[firstVertexID];
+    vertices[1] = &mesh->vertices()[secondVertexID];
+    vertices[2] = &mesh->vertices()[thirdVertexID];
     PRECICE_CHECK(utils::unique_elements(utils::make_array(vertices[0]->getCoords(),
                                                            vertices[1]->getCoords(), vertices[2]->getCoords())),
                   "setMeshTriangle() was called with vertices located at identical coordinates (IDs: {}, {}, {}).",
                   firstVertexID, secondVertexID, thirdVertexID);
     mesh::Edge *edges[3];
-    edges[0] = &meshp->createEdge(*vertices[0], *vertices[1]);
-    edges[1] = &meshp->createEdge(*vertices[1], *vertices[2]);
-    edges[2] = &meshp->createEdge(*vertices[2], *vertices[0]);
+    edges[0] = &mesh->createEdge(*vertices[0], *vertices[1]);
+    edges[1] = &mesh->createEdge(*vertices[1], *vertices[2]);
+    edges[2] = &mesh->createEdge(*vertices[2], *vertices[0]);
 
-    meshp->createTriangle(*edges[0], *edges[1], *edges[2]);
+    mesh->createTriangle(*edges[0], *edges[1], *edges[2]);
   }
 }
 
@@ -768,11 +768,11 @@ void SolverInterfaceImpl::setMeshTriangles(
     return;
   }
 
-  mesh::PtrMesh &meshp = context.mesh;
+  mesh::PtrMesh &mesh = context.mesh;
   {
     auto end           = std::next(vertices, size * 3);
-    auto [first, last] = utils::find_first_range(vertices, end, [&meshp](VertexID vid) {
-      return !meshp->isValidVertexID(vid);
+    auto [first, last] = utils::find_first_range(vertices, end, [&mesh](VertexID vid) {
+      return !mesh->isValidVertexID(vid);
     });
     PRECICE_CHECK(first == end,
                   impl::errorInvalidVertexIDRange,
@@ -784,9 +784,9 @@ void SolverInterfaceImpl::setMeshTriangles(
     auto aid = vertices[3 * i];
     auto bid = vertices[3 * i + 1];
     auto cid = vertices[3 * i + 2];
-    meshp->createTriangle(meshp->vertices()[aid],
-                          meshp->vertices()[bid],
-                          meshp->vertices()[cid]);
+    mesh->createTriangle(mesh->vertices()[aid],
+                         mesh->vertices()[bid],
+                         mesh->vertices()[cid]);
   }
 }
 
@@ -854,11 +854,11 @@ void SolverInterfaceImpl::setMeshQuads(
     return;
   }
 
-  mesh::Mesh &meshp = *(context.mesh);
+  mesh::Mesh &mesh = *(context.mesh);
   {
     auto end           = std::next(vertices, size * 4);
-    auto [first, last] = utils::find_first_range(vertices, end, [&meshp](VertexID vid) {
-      return !meshp.isValidVertexID(vid);
+    auto [first, last] = utils::find_first_range(vertices, end, [&mesh](VertexID vid) {
+      return !mesh.isValidVertexID(vid);
     });
     PRECICE_CHECK(first == end,
                   impl::errorInvalidVertexIDRange,
@@ -875,7 +875,7 @@ void SolverInterfaceImpl::setMeshQuads(
     auto vertexIDs = utils::make_array(aid, bid, cid, did);
     PRECICE_CHECK(utils::unique_elements(vertexIDs), "The four vertex ID's of the quad nr {} are not unique. Please check that the vertices that form the quad are correct.", i);
 
-    auto coords = mesh::coordsFor(meshp, vertexIDs);
+    auto coords = mesh::coordsFor(mesh, vertexIDs);
     PRECICE_CHECK(utils::unique_elements(coords),
                   "The four vertices that form the quad nr {} are not unique. The resulting shape may be a point, line or triangle."
                   "Please check that the adapter sends the four unique vertices that form the quad, or that the mesh on the interface is composed of quads.",
@@ -885,7 +885,7 @@ void SolverInterfaceImpl::setMeshQuads(
     PRECICE_CHECK(convexity.convex, "The given quad nr {} is not convex. "
                                     "Please check that the adapter send the four correct vertices or that the interface is composed of quads.",
                   i);
-    auto reordered = utils::reorder_array(convexity.vertexOrder, mesh::vertexPtrsFor(meshp, vertexIDs));
+    auto reordered = utils::reorder_array(convexity.vertexOrder, mesh::vertexPtrsFor(mesh, vertexIDs));
 
     // Use the shortest diagonal to split the quad into 2 triangles.
     // Vertices are now in V0-V1-V2-V3-V0 order. The new edge, e[4] is either 0-2 or 1-3
@@ -893,11 +893,11 @@ void SolverInterfaceImpl::setMeshQuads(
     double distance13 = (reordered[1]->getCoords() - reordered[3]->getCoords()).norm();
 
     if (distance02 <= distance13) {
-      meshp.createTriangle(*reordered[0], *reordered[2], *reordered[1]);
-      meshp.createTriangle(*reordered[0], *reordered[2], *reordered[3]);
+      mesh.createTriangle(*reordered[0], *reordered[2], *reordered[1]);
+      mesh.createTriangle(*reordered[0], *reordered[2], *reordered[3]);
     } else {
-      meshp.createTriangle(*reordered[1], *reordered[3], *reordered[0]);
-      meshp.createTriangle(*reordered[1], *reordered[3], *reordered[2]);
+      mesh.createTriangle(*reordered[1], *reordered[3], *reordered[0]);
+      mesh.createTriangle(*reordered[1], *reordered[3], *reordered[2]);
     }
   }
 }
@@ -915,18 +915,18 @@ void SolverInterfaceImpl::setMeshTetrahedron(
                                   " Please set the dimension to 3 in the preCICE configuration file.");
   MeshContext &context = _accessor->usedMeshContext(meshName);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
-    mesh::PtrMesh &meshp = context.mesh;
+    mesh::PtrMesh &mesh = context.mesh;
     using impl::errorInvalidVertexID;
-    PRECICE_CHECK(meshp->isValidVertexID(firstVertexID), errorInvalidVertexID(firstVertexID));
-    PRECICE_CHECK(meshp->isValidVertexID(secondVertexID), errorInvalidVertexID(secondVertexID));
-    PRECICE_CHECK(meshp->isValidVertexID(thirdVertexID), errorInvalidVertexID(thirdVertexID));
-    PRECICE_CHECK(meshp->isValidVertexID(fourthVertexID), errorInvalidVertexID(fourthVertexID));
-    mesh::Vertex &A = meshp->vertices()[firstVertexID];
-    mesh::Vertex &B = meshp->vertices()[secondVertexID];
-    mesh::Vertex &C = meshp->vertices()[thirdVertexID];
-    mesh::Vertex &D = meshp->vertices()[fourthVertexID];
+    PRECICE_CHECK(mesh->isValidVertexID(firstVertexID), errorInvalidVertexID(firstVertexID));
+    PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), errorInvalidVertexID(secondVertexID));
+    PRECICE_CHECK(mesh->isValidVertexID(thirdVertexID), errorInvalidVertexID(thirdVertexID));
+    PRECICE_CHECK(mesh->isValidVertexID(fourthVertexID), errorInvalidVertexID(fourthVertexID));
+    mesh::Vertex &A = mesh->vertices()[firstVertexID];
+    mesh::Vertex &B = mesh->vertices()[secondVertexID];
+    mesh::Vertex &C = mesh->vertices()[thirdVertexID];
+    mesh::Vertex &D = mesh->vertices()[fourthVertexID];
 
-    meshp->createTetrahedron(A, B, C, D);
+    mesh->createTetrahedron(A, B, C, D);
   }
 }
 
@@ -942,11 +942,11 @@ void SolverInterfaceImpl::setMeshTetrahedra(
     return;
   }
 
-  mesh::PtrMesh &meshp = context.mesh;
+  mesh::PtrMesh &mesh = context.mesh;
   {
     auto end           = std::next(vertices, size * 4);
-    auto [first, last] = utils::find_first_range(vertices, end, [&meshp](VertexID vid) {
-      return !meshp->isValidVertexID(vid);
+    auto [first, last] = utils::find_first_range(vertices, end, [&mesh](VertexID vid) {
+      return !mesh->isValidVertexID(vid);
     });
     PRECICE_CHECK(first == end,
                   impl::errorInvalidVertexIDRange,
@@ -959,10 +959,10 @@ void SolverInterfaceImpl::setMeshTetrahedra(
     auto bid = vertices[4 * i + 1];
     auto cid = vertices[4 * i + 2];
     auto did = vertices[4 * i + 3];
-    meshp->createTetrahedron(meshp->vertices()[aid],
-                             meshp->vertices()[bid],
-                             meshp->vertices()[cid],
-                             meshp->vertices()[did]);
+    mesh->createTetrahedron(mesh->vertices()[aid],
+                            mesh->vertices()[bid],
+                            mesh->vertices()[cid],
+                            mesh->vertices()[did]);
   }
 }
 
@@ -1609,10 +1609,10 @@ void SolverInterfaceImpl::setMeshAccessRegion(
 
   // Get the related mesh
   MeshContext & context = _accessor->meshContext(meshName);
-  mesh::PtrMesh meshp(context.mesh);
+  mesh::PtrMesh mesh(context.mesh);
   PRECICE_DEBUG("Define bounding box");
   // Transform bounds into a suitable format
-  int                 dim = meshp->getDimensions();
+  int                 dim = mesh->getDimensions();
   std::vector<double> bounds(dim * 2);
 
   for (int d = 0; d < dim; ++d) {
@@ -1624,7 +1624,7 @@ void SolverInterfaceImpl::setMeshAccessRegion(
   // Create a bounding box
   mesh::BoundingBox providedBoundingBox(bounds);
   // Expand the mesh associated bounding box
-  meshp->expandBoundingBox(providedBoundingBox);
+  mesh->expandBoundingBox(providedBoundingBox);
   // and set a flag so that we know the function was called
   _accessRegionDefined = true;
 }
@@ -1649,12 +1649,12 @@ void SolverInterfaceImpl::getMeshVerticesAndIDs(
     return;
 
   const MeshContext & context = _accessor->meshContext(meshName);
-  const mesh::PtrMesh meshp(context.mesh);
+  const mesh::PtrMesh mesh(context.mesh);
 
   PRECICE_CHECK(ids != nullptr, "getMeshVerticesAndIDs() was called with ids == nullptr");
   PRECICE_CHECK(coordinates != nullptr, "getMeshVerticesAndIDs() was called with coordinates == nullptr");
 
-  const auto &vertices = meshp->vertices();
+  const auto &vertices = mesh->vertices();
   PRECICE_CHECK(static_cast<unsigned int>(size) <= vertices.size(), "The queried size exceeds the number of available points.");
 
   Eigen::Map<Eigen::MatrixXd> posMatrix{
