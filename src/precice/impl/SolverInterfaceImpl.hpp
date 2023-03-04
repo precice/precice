@@ -133,61 +133,61 @@ public:
   ///@{
 
   /// @copydoc SolverInterface::resetMesh
-  void resetMesh(std::string_view mesh);
+  void resetMesh(std::string_view meshName);
 
   /// @copydoc SolverInterface::hasMesh
   bool hasMesh(const std::string &meshName) const;
 
   /// @copydoc SolverInterface::requiresMeshConnectivityFor
-  bool requiresMeshConnectivityFor(std::string_view mesh) const;
+  bool requiresMeshConnectivityFor(std::string_view meshName) const;
 
   /// @copydoc SolverInterface::requiresGradientDataFor
-  bool requiresGradientDataFor(std::string_view mesh,
-                               std::string_view data) const;
+  bool requiresGradientDataFor(std::string_view meshName,
+                               std::string_view dataName) const;
 
   /// @copydoc SolverInterface::setMeshVertex
   int setMeshVertex(
-      std::string_view mesh,
+      std::string_view meshName,
       const double *   position);
 
   /// @copydoc SolverInterface::getMeshVertexSize
-  int getMeshVertexSize(std::string_view mesh) const;
+  int getMeshVertexSize(std::string_view meshName) const;
 
   /// @copydoc SolverInterface::setMeshVertices
   void setMeshVertices(
-      std::string_view mesh,
+      std::string_view meshName,
       int              size,
       const double *   positions,
       int *            ids);
 
   /// @copydoc SolverInterface::setMeshEdge
   void setMeshEdge(
-      std::string_view mesh,
+      std::string_view meshName,
       int              firstVertexID,
       int              secondVertexID);
 
   /// @copydoc SolverInterface::setMeshEdges
   void setMeshEdges(
-      std::string_view mesh,
+      std::string_view meshName,
       int              size,
       const int *      vertices);
 
   /// @copydoc SolverInterface::setMeshTriangle
   void setMeshTriangle(
-      std::string_view mesh,
+      std::string_view meshName,
       int              firstVertexID,
       int              secondVertexID,
       int              thirdVertexID);
 
   /// @copydoc SolverInterface::setMeshTriangles
   void setMeshTriangles(
-      std::string_view mesh,
+      std::string_view meshName,
       int              size,
       const int *      vertices);
 
   /// @copydoc SolverInterface::setMeshQuad
   void setMeshQuad(
-      std::string_view mesh,
+      std::string_view meshName,
       int              firstVertexID,
       int              secondVertexID,
       int              thirdVertexID,
@@ -195,13 +195,13 @@ public:
 
   /// @copydoc SolverInterface::setMeshQuads
   void setMeshQuads(
-      std::string_view mesh,
+      std::string_view meshName,
       int              size,
       const int *      vertices);
 
   /// @copydoc SolverInterface::setMeshTetrahedron
   void setMeshTetrahedron(
-      std::string_view mesh,
+      std::string_view meshName,
       int              firstVertexID,
       int              secondVertexID,
       int              thirdVertexID,
@@ -209,7 +209,7 @@ public:
 
   /// @copydoc SolverInterface::setMeshTetrahedra
   void setMeshTetrahedra(
-      std::string_view mesh,
+      std::string_view meshName,
       int              size,
       const int *      vertices);
 
@@ -220,81 +220,81 @@ public:
 
   /// @copydoc SolverInterface::hasData
   bool hasData(
-      std::string_view mesh,
-      std::string_view data) const;
+      std::string_view meshName,
+      std::string_view dataName) const;
 
   /// @copydoc SolverInterface::writeBlockVectorData
   void writeBlockVectorData(
-      std::string_view mesh,
-      std::string_view data,
+      std::string_view meshName,
+      std::string_view dataName,
       int              size,
       const int *      valueIndices,
       const double *   values);
 
   /// @copydoc precice::SolverInterface::writeBlockVectorGradientData
   void writeBlockVectorGradientData(
-      std::string_view mesh,
-      std::string_view data,
+      std::string_view meshName,
+      std::string_view dataName,
       int              size,
       const int *      valueIndices,
       const double *   gradientValues);
 
   /// @copydoc SolverInterface::writeVectorData
   void writeVectorData(
-      std::string_view mesh,
-      std::string_view data,
+      std::string_view meshName,
+      std::string_view dataName,
       int              valueIndex,
       const double *   value);
 
   /// @copydoc precice::SolverInterface::writeVectorGradientData
   void writeVectorGradientData(
-      std::string_view mesh,
-      std::string_view data,
+      std::string_view meshName,
+      std::string_view dataName,
       int              valueIndex,
       const double *   gradientValues);
 
   /// @copydoc SolverInterface::writeBlockScalarData
   void writeBlockScalarData(
-      std::string_view mesh,
-      std::string_view data,
+      std::string_view meshName,
+      std::string_view dataName,
       int              size,
       const int *      valueIndices,
       const double *   values);
 
   /// @copydoc precice::SolverInterface::writeBlockScalarGradientData
   void writeBlockScalarGradientData(
-      std::string_view mesh,
-      std::string_view data,
+      std::string_view meshName,
+      std::string_view dataName,
       int              size,
       const int *      valueIndices,
       const double *   gradientValues);
 
   /// @copydoc SolverInterface::writeScalarData
   void writeScalarData(
-      std::string_view mesh,
-      std::string_view data,
+      std::string_view meshName,
+      std::string_view dataName,
       int              valueIndex,
       double           value);
 
   /// @copydoc precice::SolverInterface::writeScalarGradientData
   void writeScalarGradientData(
-      std::string_view mesh,
-      std::string_view data,
+      std::string_view meshName,
+      std::string_view dataName,
       int              valueIndex,
       const double *   gradientValues);
 
   /// @copydoc SolverInterface::readBlockVectorData(int, int, const int*, double*) const
   void readBlockVectorData(
-      std::string_view mesh,
-      std::string_view data,
+      std::string_view meshName,
+      std::string_view dataName,
       int              size,
       const int *      valueIndices,
       double *         values) const;
 
   /// @copydoc SolverInterface::readBlockVectorData(int, int, const int*, double, double*) const
   void readBlockVectorData(
-      std::string_view mesh,
-      std::string_view data,
+      std::string_view meshName,
+      std::string_view dataName,
       int              size,
       const int *      valueIndices,
       double           relativeReadTime,
@@ -302,31 +302,31 @@ public:
 
   /// @copydoc SolverInterface::readVectorData(int, int, double*) const
   void readVectorData(
-      std::string_view mesh,
-      std::string_view data,
+      std::string_view meshName,
+      std::string_view dataName,
       int              valueIndex,
       double *         value) const;
 
   /// @copydoc SolverInterface::readVectorData(int, int, double, double*) const
   void readVectorData(
-      std::string_view mesh,
-      std::string_view data,
+      std::string_view meshName,
+      std::string_view dataName,
       int              valueIndex,
       double           relativeReadTime,
       double *         value) const;
 
   /// @copydoc SolverInterface::readBlockScalarData(int, int, const int*, double*) const
   void readBlockScalarData(
-      std::string_view mesh,
-      std::string_view data,
+      std::string_view meshName,
+      std::string_view dataName,
       int              size,
       const int *      valueIndices,
       double *         values) const;
 
   /// @copydoc SolverInterface::readBlockScalarData(int, int, const int*, double, double*) const
   void readBlockScalarData(
-      std::string_view mesh,
-      std::string_view data,
+      std::string_view meshName,
+      std::string_view dataName,
       int              size,
       const int *      valueIndices,
       double           relativeReadTime,
@@ -334,15 +334,15 @@ public:
 
   /// @copydoc SolverInterface::readScalarData(int, int, double&) const
   void readScalarData(
-      std::string_view mesh,
-      std::string_view data,
+      std::string_view meshName,
+      std::string_view dataName,
       int              valueIndex,
       double &         value) const;
 
   /// @copydoc SolverInterface::readScalarData(int, int, double, double&) const
   void readScalarData(
-      std::string_view mesh,
-      std::string_view data,
+      std::string_view meshName,
+      std::string_view dataName,
       int              valueIndex,
       double           relativeReadTime,
       double &         value) const;
@@ -355,12 +355,12 @@ public:
   ///@{
 
   /// @copydoc SolverInterface::setMeshAccessRegion
-  void setMeshAccessRegion(std::string_view mesh,
+  void setMeshAccessRegion(std::string_view meshName,
                            const double *   boundingBox) const;
 
   /// @copydoc SolverInterface::getMeshVerticesAndIDs
   void getMeshVerticesAndIDs(
-      std::string_view mesh,
+      std::string_view meshName,
       const int        size,
       int *            ids,
       double *         coordinates) const;
@@ -476,31 +476,31 @@ private:
 
   /// Implementation of read functions.
   void readBlockVectorDataImpl(
-      std::string_view mesh,
-      std::string_view data,
+      std::string_view meshName,
+      std::string_view dataName,
       int              size,
       const int *      valueIndices,
       double           relativeReadTime,
       double *         values) const;
 
   void readVectorDataImpl(
-      std::string_view mesh,
-      std::string_view data,
+      std::string_view meshName,
+      std::string_view dataName,
       int              valueIndex,
       double           relativeReadTime,
       double *         value) const;
 
   void readBlockScalarDataImpl(
-      std::string_view mesh,
-      std::string_view data,
+      std::string_view meshName,
+      std::string_view dataName,
       int              size,
       const int *      valueIndices,
       double           relativeReadTime,
       double *         values) const;
 
   void readScalarDataImpl(
-      std::string_view mesh,
-      std::string_view data,
+      std::string_view meshName,
+      std::string_view dataName,
       int              valueIndex,
       double           relativeReadTime,
       double &         value) const;

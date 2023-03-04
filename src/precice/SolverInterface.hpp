@@ -289,12 +289,12 @@ public:
    * changes. Only has an effect, if the mapping used is non-stationary and
    * non-incremental.
    */
-  //  void resetMesh ( std::string_view mesh );
+  //  void resetMesh ( std::string_view meshName );
 
   /**
    * @brief Checks if the mesh with given name is used by a solver.
    *
-   * @param[in] meshName the name of the mesh
+   * @param[in] meshNameName the name of the mesh
    * @returns whether the mesh is used.
    */
   bool hasMesh(const std::string &meshName) const;
@@ -306,15 +306,15 @@ public:
    * ignores any API calls regarding connectivity if it is not required.
    * Use this function to conditionally generate this connectivity.
    *
-   * @param[in] mesh the name of the mesh
+   * @param[in] meshName the name of the mesh
    * @returns whether connectivity is required
    */
-  bool requiresMeshConnectivityFor(std::string_view mesh) const;
+  bool requiresMeshConnectivityFor(std::string_view meshName) const;
 
   /**
    * @brief Creates a mesh vertex
    *
-   * @param[in] mesh the name of the mesh to add the vertex to.
+   * @param[in] meshName the name of the mesh to add the vertex to.
    * @param[in] position a pointer to the coordinates of the vertex.
    * @returns the id of the created vertex
    *
@@ -324,26 +324,26 @@ public:
    * @see getDimensions()
    */
   int setMeshVertex(
-      std::string_view mesh,
+      std::string_view meshName,
       const double *   position);
 
   /**
    * @brief Returns the number of vertices of a mesh.
    *
-   * @param[in] mesh the name of the mesh
+   * @param[in] meshName the name of the mesh
    * @returns the amount of the vertices of the mesh
    *
    * @pre This function can be called on received meshes as well as provided
    * meshes. However, you need to call this function after @p initialize(),
-   * if the \p meshID corresponds to a received mesh, since the relevant mesh data
+   * if the \p meshName corresponds to a received mesh, since the relevant mesh data
    * is exchanged during the @p initialize() call.
    */
-  int getMeshVertexSize(std::string_view mesh) const;
+  int getMeshVertexSize(std::string_view meshName) const;
 
   /**
    * @brief Creates multiple mesh vertices
    *
-   * @param[in] mesh the name of the mesh to add the vertices to.
+   * @param[in] meshName the name of the mesh to add the vertices to.
    * @param[in] size Number of vertices to create
    * @param[in] positions a pointer to the coordinates of the vertices
    *            The 2D-format is (d0x, d0y, d1x, d1y, ..., dnx, dny)
@@ -358,7 +358,7 @@ public:
    * @see getDimensions()
    */
   void setMeshVertices(
-      std::string_view mesh,
+      std::string_view meshName,
       int              size,
       const double *   positions,
       int *            ids);
@@ -370,14 +370,14 @@ public:
    *
    * @note The order of vertices does not matter.
    *
-   * @param[in] meshID ID of the mesh to add the edge to
+   * @param[in] meshName name of the mesh to add the edge to
    * @param[in] firstVertexID ID of the first vertex of the edge
    * @param[in] secondVertexID ID of the second vertex of the edge
    *
-   * @pre vertices with firstVertexID and secondVertexID were added to the mesh with the ID meshID
+   * @pre vertices with firstVertexID and secondVertexID were added to the mesh with the name meshName
    */
   void setMeshEdge(
-      std::string_view mesh,
+      std::string_view meshName,
       int              firstVertexID,
       int              secondVertexID);
 
@@ -390,16 +390,16 @@ public:
    *
    * @note The order of vertices per edge does not matter.
    *
-   * @param[in] meshID ID of the mesh to add the edges to
+   * @param[in] meshName name of the mesh to add the edges to
    * @param[in] size the amount of edges to set
    * @param[in] vertices an array containing 2*size vertex IDs
    *
-   * @pre vertices were added to the mesh with the ID meshID
+   * @pre vertices were added to the mesh with the name meshName
    *
    * @see requiresMeshConnectivityFor()
    */
   void setMeshEdges(
-      std::string_view mesh,
+      std::string_view meshName,
       int              size,
       const int *      vertices);
 
@@ -410,17 +410,17 @@ public:
    *
    * @note The order of vertices does not matter.
    *
-   * @param[in] meshID ID of the mesh to add the triangle to
+   * @param[in] meshName name of the mesh to add the triangle to
    * @param[in] firstVertexID ID of the first vertex of the triangle
    * @param[in] secondVertexID ID of the second vertex of the triangle
    * @param[in] thirdVertexID ID of the third vertex of the triangle
    *
-   * @pre edges with firstVertexID, secondVertexID, and thirdVertexID were added to the mesh with the ID meshID
+   * @pre edges with firstVertexID, secondVertexID, and thirdVertexID were added to the mesh with the name meshName
    *
    * @see requiresMeshConnectivityFor()
    */
   void setMeshTriangle(
-      std::string_view mesh,
+      std::string_view meshName,
       int              firstVertexID,
       int              secondVertexID,
       int              thirdVertexID);
@@ -434,16 +434,16 @@ public:
    *
    * @note The order of vertices per triangle does not matter.
    *
-   * @param[in] meshID ID of the mesh to add the triangles to
+   * @param[in] meshName name of the mesh to add the triangles to
    * @param[in] size the amount of triangles to set
    * @param[in] vertices an array containing 3*size vertex IDs
    *
-   * @pre vertices were added to the mesh with the ID meshID
+   * @pre vertices were added to the mesh with the name meshName
    *
    * @see requiresMeshConnectivityFor()
    */
   void setMeshTriangles(
-      std::string_view mesh,
+      std::string_view meshName,
       int              size,
       const int *      vertices);
 
@@ -455,18 +455,18 @@ public:
    *
    * @warning The order of vertices does not matter, however, only planar quads are allowed.
    *
-   * @param[in] meshID ID of the mesh to add the Quad to
+   * @param[in] meshName name of the mesh to add the Quad to
    * @param[in] firstVertexID ID of the first vertex of the Quad
    * @param[in] secondVertexID ID of the second vertex of the Quad
    * @param[in] thirdVertexID ID of the third vertex of the Quad
    * @param[in] fourthVertexID ID of the fourth vertex of the Quad
    *
-   * @pre vertices with firstVertexID, secondVertexID, thirdVertexID, and fourthVertexID were added to the mesh with the ID meshID
+   * @pre vertices with firstVertexID, secondVertexID, thirdVertexID, and fourthVertexID were added to the mesh with the name meshName
    *
    * @see requiresMeshConnectivityFor()
    */
   void setMeshQuad(
-      std::string_view mesh,
+      std::string_view meshName,
       int              firstVertexID,
       int              secondVertexID,
       int              thirdVertexID,
@@ -483,16 +483,16 @@ public:
    *
    * @warning The order of vertices per quad does not matter, however, only planar quads are allowed.
    *
-   * @param[in] meshID ID of the mesh to add the quad to
+   * @param[in] meshName name of the mesh to add the quad to
    * @param[in] size the amount of quads to set
    * @param[in] vertices an array containing 4*size vertex IDs
    *
-   * @pre vertices were added to the mesh with the ID meshID
+   * @pre vertices were added to the mesh with the name meshName
    *
    * @see requiresMeshConnectivityFor()
    */
   void setMeshQuads(
-      std::string_view mesh,
+      std::string_view meshName,
       int              size,
       const int *      vertices);
 
@@ -501,18 +501,18 @@ public:
    *
    * @note The order of vertices does not matter.
    *
-   * @param[in] meshID ID of the mesh to add the Tetrahedron to
+   * @param[in] meshName name of the mesh to add the Tetrahedron to
    * @param[in] firstVertexID ID of the first vertex of the Tetrahedron
    * @param[in] secondVertexID ID of the second vertex of the Tetrahedron
    * @param[in] thirdVertexID ID of the third vertex of the Tetrahedron
    * @param[in] fourthVertexID ID of the fourth vertex of the Tetrahedron
    *
-   * @pre vertices with firstVertexID, secondVertexID, thirdVertexID, and fourthVertexID were added to the mesh with the ID meshID
+   * @pre vertices with firstVertexID, secondVertexID, thirdVertexID, and fourthVertexID were added to the mesh with the name meshName
    *
    * @see requiresMeshConnectivityFor()
    */
   void setMeshTetrahedron(
-      std::string_view mesh,
+      std::string_view meshName,
       int              firstVertexID,
       int              secondVertexID,
       int              thirdVertexID,
@@ -527,16 +527,16 @@ public:
    *
    * @note The order of vertices per tetrahedron does not matter.
    *
-   * @param[in] meshID ID of the mesh to add the tetrahedra to
+   * @param[in] meshName name of the mesh to add the tetrahedra to
    * @param[in] size the amount of tetrahedra to set
    * @param[in] vertices an array containing 4*size vertex IDs
    *
-   * @pre vertices were added to the mesh with the ID meshID
+   * @pre vertices were added to the mesh with the name meshName
    *
    * @see requiresMeshConnectivityFor()
    */
   void setMeshTetrahedra(
-      std::string_view mesh,
+      std::string_view meshName,
       int              size,
       const int *      vertices);
 
@@ -548,13 +548,13 @@ public:
   /**
    * @brief Checks if the data with given name is used by a solver and mesh.
    *
-   * @param[in] mesh the name of the associated mesh
-   * @param[in] data the name of the data to check
+   * @param[in] meshName the name of the associated mesh
+   * @param[in] dataName the name of the data to check
    * @returns whether the mesh contains the data.
    */
   bool hasData(
-      std::string_view mesh,
-      std::string_view data) const;
+      std::string_view meshName,
+      std::string_view dataName) const;
 
   /**
    * @brief Writes vector data given as block.
@@ -566,8 +566,8 @@ public:
    * The 2D-format of values is (d0x, d0y, d1x, d1y, ..., dnx, dny)
    * The 3D-format of values is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
    *
-   * @param[in] mesh the name of mesh that hold the data.
-   * @param[in] data the name of the data to write to.
+   * @param[in] meshName the name of mesh that hold the data.
+   * @param[in] dataName the name of the data to write to.
    * @param[in] size Number n of vertices.
    * @param[in] valueIndices Indices of the vertices.
    * @param[in] values Pointer to the vector values.
@@ -579,8 +579,8 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void writeBlockVectorData(
-      std::string_view mesh,
-      std::string_view data,
+      std::string_view meshName,
+      std::string_view dataName,
       int              size,
       const int *      valueIndices,
       const double *   values);
@@ -594,8 +594,8 @@ public:
    * The 2D-format of value is (x, y)
    * The 3D-format of value is (x, y, z)
    *
-   * @param[in] mesh the name of mesh that hold the data.
-   * @param[in] data the name of the data to write to.
+   * @param[in] meshName the name of mesh that hold the data.
+   * @param[in] dataName the name of the data to write to.
    * @param[in] valueIndex Index of the vertex.
    * @param[in] value Pointer to the vector value.
    *
@@ -605,8 +605,8 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void writeVectorData(
-      std::string_view mesh,
-      std::string_view data,
+      std::string_view meshName,
+      std::string_view dataName,
       int              valueIndex,
       const double *   value);
 
@@ -617,8 +617,8 @@ public:
    * Values are provided as a block of continuous memory.
    * valueIndices contains the indices of the vertices
    *
-   * @param[in] mesh the name of mesh that hold the data.
-   * @param[in] data the name of the data to write to.
+   * @param[in] meshName the name of mesh that hold the data.
+   * @param[in] dataName the name of the data to write to.
    * @param[in] size Number n of vertices.
    * @param[in] valueIndices Indices of the vertices.
    * @param[in] values Pointer to the values.
@@ -630,8 +630,8 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void writeBlockScalarData(
-      std::string_view mesh,
-      std::string_view data,
+      std::string_view meshName,
+      std::string_view dataName,
       int              size,
       const int *      valueIndices,
       const double *   values);
@@ -641,8 +641,8 @@ public:
    *
    * This function writes a value of a specified vertex to data of a mesh.
    *
-   * @param[in] mesh the name of mesh that hold the data.
-   * @param[in] data the name of the data to write to.
+   * @param[in] meshName the name of mesh that hold the data.
+   * @param[in] dataName the name of the data to write to.
    * @param[in] valueIndex Index of the vertex.
    * @param[in] value The value to write.
    *
@@ -651,8 +651,8 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void writeScalarData(
-      std::string_view mesh,
-      std::string_view data,
+      std::string_view meshName,
+      std::string_view dataName,
       int              valueIndex,
       double           value);
 
@@ -666,8 +666,8 @@ public:
    * The 2D-format of values is (d0x, d0y, d1x, d1y, ..., dnx, dny)
    * The 3D-format of values is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
    *
-   * @param[in] mesh the name of mesh that hold the data.
-   * @param[in] data the name of the data to read from.
+   * @param[in] meshName the name of mesh that hold the data.
+   * @param[in] dataName the name of the data to read from.
    * @param[in] size Number n of vertices.
    * @param[in] valueIndices Indices of the vertices.
    * @param[out] values Pointer to read destination.
@@ -681,8 +681,8 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void readBlockVectorData(
-      std::string_view mesh,
-      std::string_view data,
+      std::string_view meshName,
+      std::string_view dataName,
       int              size,
       const int *      valueIndices,
       double *         values) const;
@@ -696,8 +696,8 @@ public:
    * The 2D-format of value is (x, y)
    * The 3D-format of value is (x, y, z)
    *
-   * @param[in] mesh the name of mesh that hold the data.
-   * @param[in] data the name of the data to read from.
+   * @param[in] meshName the name of mesh that hold the data.
+   * @param[in] dataName the name of the data to read from.
    * @param[in] valueIndex Index of the vertex.
    * @param[out] value Pointer to the vector value.
    *
@@ -709,8 +709,8 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void readVectorData(
-      std::string_view mesh,
-      std::string_view data,
+      std::string_view meshName,
+      std::string_view dataName,
       int              valueIndex,
       double *         value) const;
 
@@ -721,8 +721,8 @@ public:
    * Values are provided as a block of continuous memory.
    * valueIndices contains the indices of the vertices.
    *
-   * @param[in] mesh the name of mesh that hold the data.
-   * @param[in] data the name of the data to read from.
+   * @param[in] meshName the name of mesh that hold the data.
+   * @param[in] dataName the name of the data to read from.
    * @param[in] size Number n of vertices.
    * @param[in] valueIndices Indices of the vertices.
    * @param[out] values Pointer to the read destination.
@@ -736,8 +736,8 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void readBlockScalarData(
-      std::string_view mesh,
-      std::string_view data,
+      std::string_view meshName,
+      std::string_view dataName,
       int              size,
       const int *      valueIndices,
       double *         values) const;
@@ -747,8 +747,8 @@ public:
    *
    * This function reads a value of a specified vertex from data of a mesh.
    *
-   * @param[in] mesh the name of mesh that hold the data.
-   * @param[in] data the name of the data to read from.
+   * @param[in] meshName the name of mesh that hold the data.
+   * @param[in] dataName the name of the data to read from.
    * @param[in] valueIndex Index of the vertex.
    * @param[out] value Read destination of the value.
    *
@@ -759,8 +759,8 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void readScalarData(
-      std::string_view mesh,
-      std::string_view data,
+      std::string_view meshName,
+      std::string_view dataName,
       int              valueIndex,
       double &         value) const;
 
@@ -821,14 +821,14 @@ public:
    * The default value of the safety factor is 0.5,i.e., the defined access
    * region as computed through the involved provided mesh is by 50% enlarged.
    *
-   * @param[in] meshID ID of the mesh you want to access through the bounding box
+   * @param[in] meshName name of the mesh you want to access through the bounding box
    * @param[in] boundingBox Axis aligned bounding boxes which has in 3D the format
    *            [x_min, x_max, y_min, y_max, z_min, z_max]
    *
    * @pre @p initialize() has not yet been called.
    */
   void setMeshAccessRegion(
-      std::string_view mesh,
+      std::string_view meshName,
       const double *   boundingBox) const;
 
   /**
@@ -838,7 +838,7 @@ public:
    *
    * @experimental
    *
-   * @param[in]  meshID corresponding mesh ID
+   * @param[in]  meshName corresponding mesh name
    * @param[in]  size return value of @p getMeshVertexSize()
    * @param[out] ids ids corresponding to the coordinates
    * @param[out] coordinates the coordinates associated to the \p ids and
@@ -848,11 +848,11 @@ public:
    *
    * @pre This function can be called on received meshes as well as provided
    * meshes. However, you need to call this function after @p initialize(),
-   * if the \p meshID corresponds to a received mesh, since the relevant mesh data
+   * if the \p meshName corresponds to a received mesh, since the relevant mesh data
    * is exchanged during the @p initialize() call.
    */
   void getMeshVerticesAndIDs(
-      std::string_view mesh,
+      std::string_view meshName,
       const int        size,
       int *            ids,
       double *         coordinates) const;
@@ -881,8 +881,8 @@ public:
    * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at
    * the end of the time step.
    *
-   * @param[in] mesh the name of mesh that hold the data.
-   * @param[in] data the name of the data to read from.
+   * @param[in] meshName the name of mesh that hold the data.
+   * @param[in] dataName the name of the data to read from.
    * @param[in] size Number n of vertices.
    * @param[in] valueIndices Indices of the vertices.
    * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step.
@@ -897,8 +897,8 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void readBlockVectorData(
-      std::string_view mesh,
-      std::string_view data,
+      std::string_view meshName,
+      std::string_view dataName,
       int              size,
       const int *      valueIndices,
       double           relativeReadTime,
@@ -920,8 +920,8 @@ public:
    * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at
    * the end of the time step.
    *
-   * @param[in] mesh the name of mesh that hold the data.
-   * @param[in] data the name of the data to read from.
+   * @param[in] meshName the name of mesh that hold the data.
+   * @param[in] dataName the name of the data to read from.
    * @param[in] valueIndex Index of the vertex.
    * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step.
    * @param[out] value Pointer to the vector value.
@@ -934,8 +934,8 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void readVectorData(
-      std::string_view mesh,
-      std::string_view data,
+      std::string_view meshName,
+      std::string_view dataName,
       int              valueIndex,
       double           relativeReadTime,
       double *         value) const;
@@ -954,8 +954,8 @@ public:
    * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at
    * the end of the time step.
    *
-   * @param[in] mesh the name of mesh that hold the data.
-   * @param[in] data the name of the data to read from.
+   * @param[in] meshName the name of mesh that hold the data.
+   * @param[in] dataName the name of the data to read from.
    * @param[in] size Number n of vertices.
    * @param[in] valueIndices Indices of the vertices.
    * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step.
@@ -970,8 +970,8 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void readBlockScalarData(
-      std::string_view mesh,
-      std::string_view data,
+      std::string_view meshName,
+      std::string_view dataName,
       int              size,
       const int *      valueIndices,
       double           relativeReadTime,
@@ -989,8 +989,8 @@ public:
    * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at
    * the end of the time step.
    *
-   * @param[in] mesh the name of mesh that hold the data.
-   * @param[in] data the name of the data to read from.
+   * @param[in] meshName the name of mesh that hold the data.
+   * @param[in] dataName the name of the data to read from.
    * @param[in] valueIndex Index of the vertex.
    * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step
    * @param[out] value Read destination of the value.
@@ -1002,8 +1002,8 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void readScalarData(
-      std::string_view mesh,
-      std::string_view data,
+      std::string_view meshName,
+      std::string_view dataName,
       int              valueIndex,
       double           relativeReadTime,
       double &         value) const;
@@ -1025,12 +1025,12 @@ public:
    * ignores any API calls regarding gradient data if it is not required.
    * (When applying a nearest-neighbor-gradient mapping)
    *
-   * @param[in] mesh the name of mesh that hold the data.
-   * @param[in] data the name of the data.
+   * @param[in] meshName the name of mesh that hold the data.
+   * @param[in] dataName the name of the data.
    * @returns whether gradient is required
    */
-  bool requiresGradientDataFor(std::string_view mesh,
-                               std::string_view data) const;
+  bool requiresGradientDataFor(std::string_view meshName,
+                               std::string_view dataName) const;
 
   /**
    * @brief Writes vector gradient data given as block.
@@ -1058,8 +1058,8 @@ public:
    *
    * corresponding to the vector data v0 = (v0x, v0y, v0z) , v1 = (v1x, v1y, v1z), ... , vn = (vnx, vny, vnz) differentiated in spatial directions x,y and z.
    *
-   * @param[in] mesh the name of mesh that hold the data.
-   * @param[in] data the name of the data to write to.
+   * @param[in] meshName the name of mesh that hold the data.
+   * @param[in] dataName the name of the data to write to.
    * @param[in] size Number n of vertices.
    * @param[in] valueIndices Indices of the vertices.
    * @param[in] gradientValues Pointer to the gradient values.
@@ -1072,8 +1072,8 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void writeBlockVectorGradientData(
-      std::string_view mesh,
-      std::string_view data,
+      std::string_view meshName,
+      std::string_view dataName,
       int              size,
       const int *      valueIndices,
       const double *   gradientValues);
@@ -1086,8 +1086,8 @@ public:
    * This function writes a the corresponding gradient value of a specified vertex to data of a mesh.
    * Values are provided as a block of continuous memory.
    *
-   * @param[in] mesh the name of mesh that hold the data.
-   * @param[in] data the name of the data to write to.
+   * @param[in] meshName the name of mesh that hold the data.
+   * @param[in] dataName the name of the data to write to.
    * @param[in] valueIndex Index of the vertex.
    * @param[in] gradientValues Gradient values differentiated in the spacial direction (dx, dy) for 2D space, (dx, dy, dz) for 3D space
    *
@@ -1098,8 +1098,8 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void writeScalarGradientData(
-      std::string_view mesh,
-      std::string_view data,
+      std::string_view meshName,
+      std::string_view dataName,
       int              valueIndex,
       const double *   gradientValues);
 
@@ -1119,8 +1119,8 @@ public:
    * The 3D-format of \p gradientValues is (vx_dx, vy_dx, vz_dx, vx_dy, vy_dy, vz_dy, vx_dz, vy_dz, vz_dz) matrix
    * corresponding to the data block v = (vx, vy, vz) differentiated respectively in spatial directions x-direction dx and y-direction dy and z-direction dz
    *
-   * @param[in] mesh the name of mesh that hold the data.
-   * @param[in] data the name of the data to write to.
+   * @param[in] meshName the name of mesh that hold the data.
+   * @param[in] dataName the name of the data to write to.
    * @param[in] valueIndex Index of the vertex.
    * @param[in] gradientValue pointer to the gradient value.
    *
@@ -1131,8 +1131,8 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void writeVectorGradientData(
-      std::string_view mesh,
-      std::string_view data,
+      std::string_view meshName,
+      std::string_view dataName,
       int              valueIndex,
       const double *   gradientValues);
 
@@ -1153,8 +1153,8 @@ public:
    * The 3D-format of \p gradientValues is (v0_dx, v0_dy, v0_dz, v1_dx, v1_dy, v1_dz, ... , vn_dx, vn_dy, vn_dz)
    * corresponding to the scalar data v0, v1, ... , vn differentiated in spatial directions x, y and z.
    *
-   * @param[in] mesh the name of mesh that hold the data.
-   * @param[in] data the name of the data to write to.
+   * @param[in] meshName the name of mesh that hold the data.
+   * @param[in] dataName the name of the data to write to.
    * @param[in] size Number n of vertices.
    * @param[in] valueIndices Indices of the vertices.
    * @param[in] gradientValues Pointer to the gradient values.
@@ -1167,8 +1167,8 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void writeBlockScalarGradientData(
-      std::string_view mesh,
-      std::string_view data,
+      std::string_view meshName,
+      std::string_view dataName,
       int              size,
       const int *      valueIndices,
       const double *   gradientValues);

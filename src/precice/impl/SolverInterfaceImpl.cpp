@@ -575,73 +575,73 @@ bool SolverInterfaceImpl::hasMesh(
 }
 
 bool SolverInterfaceImpl::hasData(
-    std::string_view mesh,
-    std::string_view data) const
+    std::string_view meshName,
+    std::string_view dataName) const
 {
-  PRECICE_TRACE(data, mesh);
-  PRECICE_VALIDATE_MESH_NAME(mesh);
-  return _accessor->isDataUsed(data, mesh);
+  PRECICE_TRACE(dataName, meshName);
+  PRECICE_VALIDATE_MESH_NAME(meshName);
+  return _accessor->isDataUsed(dataName, meshName);
 }
 
-bool SolverInterfaceImpl::requiresMeshConnectivityFor(std::string_view mesh) const
+bool SolverInterfaceImpl::requiresMeshConnectivityFor(std::string_view meshName) const
 {
-  PRECICE_VALIDATE_MESH_NAME(mesh);
-  MeshContext &context = _accessor->usedMeshContext(mesh);
+  PRECICE_VALIDATE_MESH_NAME(meshName);
+  MeshContext &context = _accessor->usedMeshContext(meshName);
   return context.meshRequirement == mapping::Mapping::MeshRequirement::FULL;
 }
 
-bool SolverInterfaceImpl::requiresGradientDataFor(std::string_view mesh,
-                                                  std::string_view data) const
+bool SolverInterfaceImpl::requiresGradientDataFor(std::string_view meshName,
+                                                  std::string_view dataName) const
 {
-  PRECICE_VALIDATE_DATA_NAME(mesh, data);
+  PRECICE_VALIDATE_DATA_NAME(meshName, dataName);
   // Read data never requires gradients
-  if (!_accessor->isDataWrite(mesh, data))
+  if (!_accessor->isDataWrite(meshName, dataName))
     return false;
 
-  WriteDataContext &context = _accessor->writeDataContext(mesh, data);
+  WriteDataContext &context = _accessor->writeDataContext(meshName, dataName);
   return context.providedData()->hasGradient();
 }
 
 int SolverInterfaceImpl::getMeshVertexSize(
-    std::string_view mesh) const
+    std::string_view meshName) const
 {
-  PRECICE_TRACE(mesh);
-  PRECICE_REQUIRE_MESH_USE(mesh);
+  PRECICE_TRACE(meshName);
+  PRECICE_REQUIRE_MESH_USE(meshName);
   // In case we access received mesh data: check, if the requested mesh data has already been received.
   // Otherwise, the function call doesn't make any sense
-  PRECICE_CHECK((_state == State::Initialized) || _accessor->isMeshProvided(mesh), "initialize() has to be called before accessing"
-                                                                                   " data of the received mesh \"{}\" on participant \"{}\".",
-                mesh, _accessor->getName());
-  MeshContext &context = _accessor->usedMeshContext(mesh);
+  PRECICE_CHECK((_state == State::Initialized) || _accessor->isMeshProvided(meshName), "initialize() has to be called before accessing"
+                                                                                       " data of the received mesh \"{}\" on participant \"{}\".",
+                meshName, _accessor->getName());
+  MeshContext &context = _accessor->usedMeshContext(meshName);
   PRECICE_ASSERT(context.mesh.get() != nullptr);
   return context.mesh->vertices().size();
 }
 
 /// @todo Currently not supported as we would need to re-compute the re-partition
 void SolverInterfaceImpl::resetMesh(
-    std::string_view mesh)
+    std::string_view meshName)
 {
   PRECICE_EXPERIMENTAL_API();
-  PRECICE_TRACE(mesh);
-  PRECICE_VALIDATE_MESH_NAME(mesh);
-  impl::MeshContext &context = _accessor->usedMeshContext(mesh);
+  PRECICE_TRACE(meshName);
+  PRECICE_VALIDATE_MESH_NAME(meshName);
+  impl::MeshContext &context = _accessor->usedMeshContext(meshName);
 
   PRECICE_DEBUG("Clear mesh positions for mesh \"{}\"", context.mesh->getName());
-  _meshLock.unlock(mesh);
+  _meshLock.unlock(meshName);
   context.mesh->clear();
 }
 
 int SolverInterfaceImpl::setMeshVertex(
-    std::string_view mesh,
+    std::string_view meshName,
     const double *   position)
 {
-  PRECICE_TRACE(mesh);
-  PRECICE_REQUIRE_MESH_MODIFY(mesh);
+  PRECICE_TRACE(meshName);
+  PRECICE_REQUIRE_MESH_MODIFY(meshName);
   Eigen::VectorXd internalPosition{
       Eigen::Map<const Eigen::VectorXd>{position, _dimensions}};
   PRECICE_DEBUG("Position = {}", internalPosition.format(utils::eigenio::debug()));
   int           index   = -1;
-  MeshContext & context = _accessor->usedMeshContext(mesh);
+  MeshContext & context = _accessor->usedMeshContext(meshName);
   mesh::PtrMesh meshp(context.mesh);
   PRECICE_DEBUG("MeshRequirement: {}", fmt::streamed(context.meshRequirement));
   index = meshp->createVertex(internalPosition).getID();
@@ -650,14 +650,14 @@ int SolverInterfaceImpl::setMeshVertex(
 }
 
 void SolverInterfaceImpl::setMeshVertices(
-    std::string_view mesh,
+    std::string_view meshName,
     int              size,
     const double *   positions,
     int *            ids)
 {
-  PRECICE_TRACE(mesh, size);
-  PRECICE_REQUIRE_MESH_MODIFY(mesh);
-  MeshContext & context = _accessor->usedMeshContext(mesh);
+  PRECICE_TRACE(meshName, size);
+  PRECICE_REQUIRE_MESH_MODIFY(meshName);
+  MeshContext & context = _accessor->usedMeshContext(meshName);
   mesh::PtrMesh meshp(context.mesh);
   PRECICE_DEBUG("Set positions");
   const Eigen::Map<const Eigen::MatrixXd> posMatrix{
@@ -670,13 +670,13 @@ void SolverInterfaceImpl::setMeshVertices(
 }
 
 void SolverInterfaceImpl::setMeshEdge(
-    std::string_view mesh,
+    std::string_view meshName,
     int              firstVertexID,
     int              secondVertexID)
 {
-  PRECICE_TRACE(mesh, firstVertexID, secondVertexID);
-  PRECICE_REQUIRE_MESH_MODIFY(mesh);
-  MeshContext &context = _accessor->usedMeshContext(mesh);
+  PRECICE_TRACE(meshName, firstVertexID, secondVertexID);
+  PRECICE_REQUIRE_MESH_MODIFY(meshName);
+  MeshContext &context = _accessor->usedMeshContext(meshName);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
     mesh::PtrMesh &meshp = context.mesh;
     using impl::errorInvalidVertexID;
@@ -689,13 +689,13 @@ void SolverInterfaceImpl::setMeshEdge(
 }
 
 void SolverInterfaceImpl::setMeshEdges(
-    std::string_view mesh,
+    std::string_view meshName,
     int              size,
     const int *      vertices)
 {
-  PRECICE_TRACE(mesh, size);
-  PRECICE_REQUIRE_MESH_MODIFY(mesh);
-  MeshContext &context = _accessor->usedMeshContext(mesh);
+  PRECICE_TRACE(meshName, size);
+  PRECICE_REQUIRE_MESH_MODIFY(meshName);
+  MeshContext &context = _accessor->usedMeshContext(meshName);
   if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
     return;
   }
@@ -720,16 +720,16 @@ void SolverInterfaceImpl::setMeshEdges(
 }
 
 void SolverInterfaceImpl::setMeshTriangle(
-    std::string_view mesh,
+    std::string_view meshName,
     int              firstVertexID,
     int              secondVertexID,
     int              thirdVertexID)
 {
-  PRECICE_TRACE(mesh, firstVertexID,
+  PRECICE_TRACE(meshName, firstVertexID,
                 secondVertexID, thirdVertexID);
 
-  PRECICE_REQUIRE_MESH_MODIFY(mesh);
-  MeshContext &context = _accessor->usedMeshContext(mesh);
+  PRECICE_REQUIRE_MESH_MODIFY(meshName);
+  MeshContext &context = _accessor->usedMeshContext(meshName);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
     mesh::PtrMesh &meshp = context.mesh;
     using impl::errorInvalidVertexID;
@@ -757,13 +757,13 @@ void SolverInterfaceImpl::setMeshTriangle(
 }
 
 void SolverInterfaceImpl::setMeshTriangles(
-    std::string_view mesh,
+    std::string_view meshName,
     int              size,
     const int *      vertices)
 {
-  PRECICE_TRACE(mesh, size);
-  PRECICE_REQUIRE_MESH_MODIFY(mesh);
-  MeshContext &context = _accessor->usedMeshContext(mesh);
+  PRECICE_TRACE(meshName, size);
+  PRECICE_REQUIRE_MESH_MODIFY(meshName);
+  MeshContext &context = _accessor->usedMeshContext(meshName);
   if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
     return;
   }
@@ -791,18 +791,18 @@ void SolverInterfaceImpl::setMeshTriangles(
 }
 
 void SolverInterfaceImpl::setMeshQuad(
-    std::string_view mesh,
+    std::string_view meshName,
     int              firstVertexID,
     int              secondVertexID,
     int              thirdVertexID,
     int              fourthVertexID)
 {
-  PRECICE_TRACE(mesh, firstVertexID,
+  PRECICE_TRACE(meshName, firstVertexID,
                 secondVertexID, thirdVertexID, fourthVertexID);
   PRECICE_CHECK(_dimensions == 3, "setMeshQuad is only possible for 3D cases."
                                   " Please set the dimension to 3 in the preCICE configuration file.");
-  PRECICE_REQUIRE_MESH_MODIFY(mesh);
-  MeshContext &context = _accessor->usedMeshContext(mesh);
+  PRECICE_REQUIRE_MESH_MODIFY(meshName);
+  MeshContext &context = _accessor->usedMeshContext(meshName);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
     PRECICE_ASSERT(context.mesh);
     mesh::Mesh &mesh = *(context.mesh);
@@ -843,13 +843,13 @@ void SolverInterfaceImpl::setMeshQuad(
 }
 
 void SolverInterfaceImpl::setMeshQuads(
-    std::string_view mesh,
+    std::string_view meshName,
     int              size,
     const int *      vertices)
 {
-  PRECICE_TRACE(mesh, size);
-  PRECICE_REQUIRE_MESH_MODIFY(mesh);
-  MeshContext &context = _accessor->usedMeshContext(mesh);
+  PRECICE_TRACE(meshName, size);
+  PRECICE_REQUIRE_MESH_MODIFY(meshName);
+  MeshContext &context = _accessor->usedMeshContext(meshName);
   if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
     return;
   }
@@ -903,17 +903,17 @@ void SolverInterfaceImpl::setMeshQuads(
 }
 
 void SolverInterfaceImpl::setMeshTetrahedron(
-    std::string_view mesh,
+    std::string_view meshName,
     int              firstVertexID,
     int              secondVertexID,
     int              thirdVertexID,
     int              fourthVertexID)
 {
-  PRECICE_TRACE(mesh, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
-  PRECICE_REQUIRE_MESH_MODIFY(mesh);
+  PRECICE_TRACE(meshName, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
+  PRECICE_REQUIRE_MESH_MODIFY(meshName);
   PRECICE_CHECK(_dimensions == 3, "setMeshTetrahedron is only possible for 3D cases."
                                   " Please set the dimension to 3 in the preCICE configuration file.");
-  MeshContext &context = _accessor->usedMeshContext(mesh);
+  MeshContext &context = _accessor->usedMeshContext(meshName);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
     mesh::PtrMesh &meshp = context.mesh;
     using impl::errorInvalidVertexID;
@@ -931,13 +931,13 @@ void SolverInterfaceImpl::setMeshTetrahedron(
 }
 
 void SolverInterfaceImpl::setMeshTetrahedra(
-    std::string_view mesh,
+    std::string_view meshName,
     int              size,
     const int *      vertices)
 {
-  PRECICE_TRACE(mesh, size);
-  PRECICE_REQUIRE_MESH_MODIFY(mesh);
-  MeshContext &context = _accessor->usedMeshContext(mesh);
+  PRECICE_TRACE(meshName, size);
+  PRECICE_REQUIRE_MESH_MODIFY(meshName);
+  MeshContext &context = _accessor->usedMeshContext(meshName);
   if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
     return;
   }
@@ -967,20 +967,20 @@ void SolverInterfaceImpl::setMeshTetrahedra(
 }
 
 void SolverInterfaceImpl::writeBlockVectorData(
-    std::string_view mesh,
-    std::string_view data,
+    std::string_view meshName,
+    std::string_view dataName,
     int              size,
     const int *      valueIndices,
     const double *   values)
 {
-  PRECICE_TRACE(mesh, data, size);
+  PRECICE_TRACE(meshName, dataName, size);
   PRECICE_CHECK(_state != State::Finalized, "writeBlockVectorData(...) cannot be called after finalize().");
-  PRECICE_REQUIRE_DATA_WRITE(mesh, data);
+  PRECICE_REQUIRE_DATA_WRITE(meshName, dataName);
   if (size == 0)
     return;
   PRECICE_CHECK(valueIndices != nullptr, "writeBlockVectorData() was called with valueIndices == nullptr");
   PRECICE_CHECK(values != nullptr, "writeBlockVectorData() was called with values == nullptr");
-  WriteDataContext &context = _accessor->writeDataContext(mesh, data);
+  WriteDataContext &context = _accessor->writeDataContext(meshName, dataName);
   PRECICE_ASSERT(context.providedData() != nullptr);
   PRECICE_CHECK(context.getDataDimensions() == _dimensions,
                 "You cannot call writeBlockVectorData on the scalar data type \"{0}\". Use writeBlockScalarData or change the data type for \"{0}\" to vector.",
@@ -1005,16 +1005,16 @@ void SolverInterfaceImpl::writeBlockVectorData(
 }
 
 void SolverInterfaceImpl::writeVectorData(
-    std::string_view mesh,
-    std::string_view data,
+    std::string_view meshName,
+    std::string_view dataName,
     int              valueIndex,
     const double *   value)
 {
-  PRECICE_TRACE(mesh, data, valueIndex);
+  PRECICE_TRACE(meshName, dataName, valueIndex);
   PRECICE_CHECK(_state != State::Finalized, "writeVectorData(...) cannot be called after finalize().");
-  PRECICE_REQUIRE_DATA_WRITE(mesh, data);
+  PRECICE_REQUIRE_DATA_WRITE(meshName, dataName);
   PRECICE_DEBUG("value = {}", Eigen::Map<const Eigen::VectorXd>(value, _dimensions).format(utils::eigenio::debug()));
-  WriteDataContext &context = _accessor->writeDataContext(mesh, data);
+  WriteDataContext &context = _accessor->writeDataContext(meshName, dataName);
   PRECICE_ASSERT(context.providedData() != nullptr);
   PRECICE_CHECK(context.getDataDimensions() == _dimensions,
                 "You cannot call writeVectorData on the scalar data type \"{0}\". Use writeScalarData or change the data type for \"{0}\" to vector.",
@@ -1033,20 +1033,20 @@ void SolverInterfaceImpl::writeVectorData(
 }
 
 void SolverInterfaceImpl::writeBlockScalarData(
-    std::string_view mesh,
-    std::string_view data,
+    std::string_view meshName,
+    std::string_view dataName,
     int              size,
     const int *      valueIndices,
     const double *   values)
 {
-  PRECICE_TRACE(mesh, data, size);
+  PRECICE_TRACE(meshName, dataName, size);
   PRECICE_CHECK(_state != State::Finalized, "writeBlockScalarData(...) cannot be called after finalize().");
-  PRECICE_REQUIRE_DATA_WRITE(mesh, data);
+  PRECICE_REQUIRE_DATA_WRITE(meshName, dataName);
   if (size == 0)
     return;
   PRECICE_CHECK(valueIndices != nullptr, "writeBlockScalarData() was called with valueIndices == nullptr");
   PRECICE_CHECK(values != nullptr, "writeBlockScalarData() was called with values == nullptr");
-  WriteDataContext &context = _accessor->writeDataContext(mesh, data);
+  WriteDataContext &context = _accessor->writeDataContext(meshName, dataName);
   PRECICE_ASSERT(context.providedData() != nullptr);
   PRECICE_CHECK(context.getDataDimensions() == 1,
                 "You cannot call writeBlockScalarData on the vector data type \"{}\". Use writeBlockVectorData or change the data type for \"{}\" to scalar.",
@@ -1065,15 +1065,15 @@ void SolverInterfaceImpl::writeBlockScalarData(
 }
 
 void SolverInterfaceImpl::writeScalarData(
-    std::string_view mesh,
-    std::string_view data,
+    std::string_view meshName,
+    std::string_view dataName,
     int              valueIndex,
     double           value)
 {
-  PRECICE_TRACE(mesh, data, valueIndex, value);
+  PRECICE_TRACE(meshName, dataName, valueIndex, value);
   PRECICE_CHECK(_state != State::Finalized, "writeScalarData(...) cannot be called after finalize().");
-  PRECICE_REQUIRE_DATA_WRITE(mesh, data);
-  WriteDataContext &context = _accessor->writeDataContext(mesh, data);
+  PRECICE_REQUIRE_DATA_WRITE(meshName, dataName);
+  WriteDataContext &context = _accessor->writeDataContext(meshName, dataName);
   PRECICE_ASSERT(context.providedData() != nullptr);
   PRECICE_CHECK(valueIndex >= -1,
                 "Invalid value index ({}) when writing scalar data. Value index must be >= 0. "
@@ -1097,23 +1097,23 @@ void SolverInterfaceImpl::writeScalarData(
 }
 
 void SolverInterfaceImpl::writeScalarGradientData(
-    std::string_view mesh,
-    std::string_view data,
+    std::string_view meshName,
+    std::string_view dataName,
     int              valueIndex,
     const double *   gradientValues)
 {
 
   PRECICE_EXPERIMENTAL_API();
 
-  PRECICE_TRACE(mesh, data, valueIndex);
+  PRECICE_TRACE(meshName, dataName, valueIndex);
   PRECICE_CHECK(_state != State::Finalized, "writeScalarGradientData(...) cannot be called after finalize().")
-  PRECICE_REQUIRE_DATA_WRITE(mesh, data);
+  PRECICE_REQUIRE_DATA_WRITE(meshName, dataName);
 
-  if (requiresGradientDataFor(mesh, data)) {
+  if (requiresGradientDataFor(meshName, dataName)) {
     PRECICE_DEBUG("Gradient value = {}", Eigen::Map<const Eigen::VectorXd>(gradientValues, _dimensions).format(utils::eigenio::debug()));
     PRECICE_CHECK(gradientValues != nullptr, "writeScalarGradientData() was called with gradientValues == nullptr");
 
-    WriteDataContext &context = _accessor->writeDataContext(mesh, data);
+    WriteDataContext &context = _accessor->writeDataContext(meshName, dataName);
     PRECICE_ASSERT(context.providedData() != nullptr);
     mesh::Data &meshData = *context.providedData();
 
@@ -1153,8 +1153,8 @@ void SolverInterfaceImpl::writeScalarGradientData(
 }
 
 void SolverInterfaceImpl::writeBlockScalarGradientData(
-    std::string_view mesh,
-    std::string_view data,
+    std::string_view meshName,
+    std::string_view dataName,
     int              size,
     const int *      valueIndices,
     const double *   gradientValues)
@@ -1163,19 +1163,19 @@ void SolverInterfaceImpl::writeBlockScalarGradientData(
   PRECICE_EXPERIMENTAL_API();
 
   // Asserts and checks
-  PRECICE_TRACE(mesh, data, size);
+  PRECICE_TRACE(meshName, dataName, size);
   PRECICE_CHECK(_state != State::Finalized, "writeBlockScalarGradientData(...) cannot be called after finalize().");
-  PRECICE_REQUIRE_DATA_WRITE(mesh, data);
+  PRECICE_REQUIRE_DATA_WRITE(meshName, dataName);
   if (size == 0)
     return;
 
-  if (requiresGradientDataFor(mesh, data)) {
+  if (requiresGradientDataFor(meshName, dataName)) {
 
     PRECICE_CHECK(valueIndices != nullptr, "writeBlockScalarGradientData() was called with valueIndices == nullptr");
     PRECICE_CHECK(gradientValues != nullptr, "writeBlockScalarGradientData() was called with gradientValues == nullptr");
 
     // Get the data
-    WriteDataContext &context = _accessor->writeDataContext(mesh, data);
+    WriteDataContext &context = _accessor->writeDataContext(meshName, dataName);
     PRECICE_ASSERT(context.providedData() != nullptr);
     mesh::Data &meshData = *context.providedData();
 
@@ -1207,22 +1207,22 @@ void SolverInterfaceImpl::writeBlockScalarGradientData(
 }
 
 void SolverInterfaceImpl::writeVectorGradientData(
-    std::string_view mesh,
-    std::string_view data,
+    std::string_view meshName,
+    std::string_view dataName,
     int              valueIndex,
     const double *   gradientValues)
 {
   PRECICE_EXPERIMENTAL_API();
 
-  PRECICE_TRACE(mesh, data, valueIndex);
+  PRECICE_TRACE(meshName, dataName, valueIndex);
   PRECICE_CHECK(_state != State::Finalized, "writeVectorGradientData(...) cannot be called after finalize().")
-  PRECICE_REQUIRE_DATA_WRITE(mesh, data);
+  PRECICE_REQUIRE_DATA_WRITE(meshName, dataName);
 
-  if (requiresGradientDataFor(mesh, data)) {
+  if (requiresGradientDataFor(meshName, dataName)) {
 
     PRECICE_CHECK(gradientValues != nullptr, "writeVectorGradientData() was called with gradientValue == nullptr");
 
-    WriteDataContext &context = _accessor->writeDataContext(mesh, data);
+    WriteDataContext &context = _accessor->writeDataContext(meshName, dataName);
     PRECICE_ASSERT(context.providedData() != nullptr);
     mesh::Data &meshData = *context.providedData();
 
@@ -1254,8 +1254,8 @@ void SolverInterfaceImpl::writeVectorGradientData(
 }
 
 void SolverInterfaceImpl::writeBlockVectorGradientData(
-    std::string_view mesh,
-    std::string_view data,
+    std::string_view meshName,
+    std::string_view dataName,
     int              size,
     const int *      valueIndices,
     const double *   gradientValues)
@@ -1264,19 +1264,19 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
   PRECICE_EXPERIMENTAL_API();
 
   // Asserts and checks
-  PRECICE_TRACE(mesh, data, size);
+  PRECICE_TRACE(meshName, dataName, size);
   PRECICE_CHECK(_state != State::Finalized, "writeBlockVectorGradientData(...) cannot be called after finalize().");
-  PRECICE_REQUIRE_DATA_WRITE(mesh, data);
+  PRECICE_REQUIRE_DATA_WRITE(meshName, dataName);
   if (size == 0)
     return;
 
-  if (requiresGradientDataFor(mesh, data)) {
+  if (requiresGradientDataFor(meshName, dataName)) {
 
     PRECICE_CHECK(valueIndices != nullptr, "writeBlockVectorGradientData() was called with valueIndices == nullptr");
     PRECICE_CHECK(gradientValues != nullptr, "writeBlockVectorGradientData() was called with gradientValues == nullptr");
 
     // Get the data
-    WriteDataContext &context = _accessor->writeDataContext(mesh, data);
+    WriteDataContext &context = _accessor->writeDataContext(meshName, dataName);
     PRECICE_ASSERT(context.providedData() != nullptr);
 
     mesh::Data &meshData = *context.providedData();
@@ -1313,37 +1313,37 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
 }
 
 void SolverInterfaceImpl::readBlockVectorData(
-    std::string_view mesh,
-    std::string_view data,
+    std::string_view meshName,
+    std::string_view dataName,
     int              size,
     const int *      valueIndices,
     double *         values) const
 {
-  PRECICE_TRACE(mesh, data, size);
+  PRECICE_TRACE(meshName, dataName, size);
   double relativeTimeWindowEndTime = _couplingScheme->getNextTimestepMaxLength(); // samples at end of time window
-  if (_accessor->readDataContext(mesh, data).getInterpolationOrder() != 0) {
+  if (_accessor->readDataContext(meshName, dataName).getInterpolationOrder() != 0) {
     PRECICE_WARN("Interpolation order of read data named \"{}\" is set to \"{}\", but you are calling {} without providing a relativeReadTime. This looks like an error. You can fix this by providing a relativeReadTime to {} or by setting interpolation order to 0.",
-                 _accessor->readDataContext(mesh, data).getDataName(), _accessor->readDataContext(mesh, data).getInterpolationOrder(), __func__, __func__);
+                 _accessor->readDataContext(meshName, dataName).getDataName(), _accessor->readDataContext(meshName, dataName).getInterpolationOrder(), __func__, __func__);
   }
-  readBlockVectorDataImpl(mesh, data, size, valueIndices, relativeTimeWindowEndTime, values);
+  readBlockVectorDataImpl(meshName, dataName, size, valueIndices, relativeTimeWindowEndTime, values);
 }
 
 void SolverInterfaceImpl::readBlockVectorData(
-    std::string_view mesh,
-    std::string_view data,
+    std::string_view meshName,
+    std::string_view dataName,
     int              size,
     const int *      valueIndices,
     double           relativeReadTime,
     double *         values) const
 {
-  PRECICE_TRACE(mesh, data, size);
+  PRECICE_TRACE(meshName, dataName, size);
   PRECICE_EXPERIMENTAL_API();
-  readBlockVectorDataImpl(mesh, data, size, valueIndices, relativeReadTime, values);
+  readBlockVectorDataImpl(meshName, dataName, size, valueIndices, relativeReadTime, values);
 }
 
 void SolverInterfaceImpl::readBlockVectorDataImpl(
-    std::string_view mesh,
-    std::string_view data,
+    std::string_view meshName,
+    std::string_view dataName,
     int              size,
     const int *      valueIndices,
     double           relativeReadTime,
@@ -1361,12 +1361,12 @@ void SolverInterfaceImpl::readBlockVectorDataImpl(
     PRECICE_CHECK(relativeReadTime == _couplingScheme->getNextTimestepMaxLength(), "Waveform relaxation is not allowed for solver that sets the time step size");
     normalizedReadTime = 1; // by default read at end of window.
   }
-  PRECICE_REQUIRE_DATA_READ(mesh, data);
+  PRECICE_REQUIRE_DATA_READ(meshName, dataName);
   if (size == 0)
     return;
   PRECICE_CHECK(valueIndices != nullptr, "readBlockVectorData() was called with valueIndices == nullptr");
   PRECICE_CHECK(values != nullptr, "readBlockVectorData() was called with values == nullptr");
-  ReadDataContext &context = _accessor->readDataContext(mesh, data);
+  ReadDataContext &context = _accessor->readDataContext(meshName, dataName);
   PRECICE_CHECK(context.getDataDimensions() == _dimensions,
                 "You cannot call readBlockVectorData on the scalar data type \"{0}\". "
                 "Use readBlockScalarData or change the data type for \"{0}\" to vector.",
@@ -1388,35 +1388,35 @@ void SolverInterfaceImpl::readBlockVectorDataImpl(
 }
 
 void SolverInterfaceImpl::readVectorData(
-    std::string_view mesh,
-    std::string_view data,
+    std::string_view meshName,
+    std::string_view dataName,
     int              valueIndex,
     double *         value) const
 {
-  PRECICE_TRACE(mesh, data, valueIndex);
+  PRECICE_TRACE(meshName, dataName, valueIndex);
   double relativeTimeWindowEndTime = _couplingScheme->getNextTimestepMaxLength(); // samples at end of time window
-  if (_accessor->readDataContext(mesh, data).getInterpolationOrder() != 0) {
+  if (_accessor->readDataContext(meshName, dataName).getInterpolationOrder() != 0) {
     PRECICE_WARN("Interpolation order of read data named \"{}\" is set to \"{}\", but you are calling {} without providing a relativeReadTime. This looks like an error. You can fix this by providing a relativeReadTime to {} or by setting interpolation order to 0.",
-                 _accessor->readDataContext(mesh, data).getDataName(), _accessor->readDataContext(mesh, data).getInterpolationOrder(), __func__, __func__);
+                 _accessor->readDataContext(meshName, dataName).getDataName(), _accessor->readDataContext(meshName, dataName).getInterpolationOrder(), __func__, __func__);
   }
-  readVectorDataImpl(mesh, data, valueIndex, relativeTimeWindowEndTime, value);
+  readVectorDataImpl(meshName, dataName, valueIndex, relativeTimeWindowEndTime, value);
 }
 
 void SolverInterfaceImpl::readVectorData(
-    std::string_view mesh,
-    std::string_view data,
+    std::string_view meshName,
+    std::string_view dataName,
     int              valueIndex,
     double           relativeReadTime,
     double *         value) const
 {
-  PRECICE_TRACE(mesh, data, valueIndex);
+  PRECICE_TRACE(meshName, dataName, valueIndex);
   PRECICE_EXPERIMENTAL_API();
-  readVectorDataImpl(mesh, data, valueIndex, relativeReadTime, value);
+  readVectorDataImpl(meshName, dataName, valueIndex, relativeReadTime, value);
 }
 
 void SolverInterfaceImpl::readVectorDataImpl(
-    std::string_view mesh,
-    std::string_view data,
+    std::string_view meshName,
+    std::string_view dataName,
     int              valueIndex,
     double           relativeReadTime,
     double *         value) const
@@ -1433,8 +1433,8 @@ void SolverInterfaceImpl::readVectorDataImpl(
     PRECICE_CHECK(relativeReadTime == _couplingScheme->getNextTimestepMaxLength(), "Waveform relaxation is not allowed for solver that sets the time step size");
     normalizedReadTime = 1; // by default read at end of window.
   }
-  PRECICE_REQUIRE_DATA_READ(mesh, data);
-  ReadDataContext &context = _accessor->readDataContext(mesh, data);
+  PRECICE_REQUIRE_DATA_READ(meshName, dataName);
+  ReadDataContext &context = _accessor->readDataContext(meshName, dataName);
   PRECICE_CHECK(valueIndex >= -1,
                 "Invalid value index ( {} ) when reading vector data. Value index must be >= 0. "
                 "Please check the value index for {}",
@@ -1456,38 +1456,38 @@ void SolverInterfaceImpl::readVectorDataImpl(
 }
 
 void SolverInterfaceImpl::readBlockScalarData(
-    std::string_view mesh,
-    std::string_view data,
+    std::string_view meshName,
+    std::string_view dataName,
     int              size,
     const int *      valueIndices,
     double *         values) const
 {
-  PRECICE_TRACE(mesh, data, size);
-  PRECICE_REQUIRE_DATA_READ(mesh, data);
+  PRECICE_TRACE(meshName, dataName, size);
+  PRECICE_REQUIRE_DATA_READ(meshName, dataName);
   double relativeTimeWindowEndTime = _couplingScheme->getNextTimestepMaxLength(); // samples at end of time window
-  if (_accessor->readDataContext(mesh, data).getInterpolationOrder() != 0) {
+  if (_accessor->readDataContext(meshName, dataName).getInterpolationOrder() != 0) {
     PRECICE_WARN("Interpolation order of read data named \"{}\" is set to \"{}\", but you are calling {} without providing a relativeReadTime. This looks like an error. You can fix this by providing a relativeReadTime to {} or by setting interpolation order to 0.",
-                 _accessor->readDataContext(mesh, data).getDataName(), _accessor->readDataContext(mesh, data).getInterpolationOrder(), __func__, __func__);
+                 _accessor->readDataContext(meshName, dataName).getDataName(), _accessor->readDataContext(meshName, dataName).getInterpolationOrder(), __func__, __func__);
   }
-  readBlockScalarDataImpl(mesh, data, size, valueIndices, relativeTimeWindowEndTime, values);
+  readBlockScalarDataImpl(meshName, dataName, size, valueIndices, relativeTimeWindowEndTime, values);
 }
 
 void SolverInterfaceImpl::readBlockScalarData(
-    std::string_view mesh,
-    std::string_view data,
+    std::string_view meshName,
+    std::string_view dataName,
     int              size,
     const int *      valueIndices,
     double           relativeReadTime,
     double *         values) const
 {
-  PRECICE_TRACE(mesh, data, size);
+  PRECICE_TRACE(meshName, dataName, size);
   PRECICE_EXPERIMENTAL_API();
-  readBlockScalarDataImpl(mesh, data, size, valueIndices, relativeReadTime, values);
+  readBlockScalarDataImpl(meshName, dataName, size, valueIndices, relativeReadTime, values);
 }
 
 void SolverInterfaceImpl::readBlockScalarDataImpl(
-    std::string_view mesh,
-    std::string_view data,
+    std::string_view meshName,
+    std::string_view dataName,
     int              size,
     const int *      valueIndices,
     double           relativeReadTime,
@@ -1505,12 +1505,12 @@ void SolverInterfaceImpl::readBlockScalarDataImpl(
     PRECICE_CHECK(relativeReadTime == _couplingScheme->getNextTimestepMaxLength(), "Waveform relaxation is not allowed for solver that sets the time step size");
     normalizedReadTime = 1; // by default read at end of window.
   }
-  PRECICE_REQUIRE_DATA_READ(mesh, data);
+  PRECICE_REQUIRE_DATA_READ(meshName, dataName);
   if (size == 0)
     return;
   PRECICE_CHECK(valueIndices != nullptr, "readBlockScalarData() was called with valueIndices == nullptr");
   PRECICE_CHECK(values != nullptr, "readBlockScalarData() was called with values == nullptr");
-  ReadDataContext &context = _accessor->readDataContext(mesh, data);
+  ReadDataContext &context = _accessor->readDataContext(meshName, dataName);
   PRECICE_CHECK(context.getDataDimensions() == 1,
                 "You cannot call readBlockScalarData on the vector data type \"{0}\". "
                 "Use readBlockVectorData or change the data type for \"{0}\" to scalar.",
@@ -1529,35 +1529,35 @@ void SolverInterfaceImpl::readBlockScalarDataImpl(
 }
 
 void SolverInterfaceImpl::readScalarData(
-    std::string_view mesh,
-    std::string_view data,
+    std::string_view meshName,
+    std::string_view dataName,
     int              valueIndex,
     double &         value) const
 {
-  PRECICE_TRACE(mesh, data, valueIndex);
+  PRECICE_TRACE(meshName, dataName, valueIndex);
   double relativeTimeWindowEndTime = _couplingScheme->getNextTimestepMaxLength(); // samples at end of time window
-  if (_accessor->readDataContext(mesh, data).getInterpolationOrder() != 0) {
+  if (_accessor->readDataContext(meshName, dataName).getInterpolationOrder() != 0) {
     PRECICE_WARN("Interpolation order of read data named \"{}\" is set to \"{}\", but you are calling {} without providing a relativeReadTime. This looks like an error. You can fix this by providing a relativeReadTime to {} or by setting interpolation order to 0.",
-                 _accessor->readDataContext(mesh, data).getDataName(), _accessor->readDataContext(mesh, data).getInterpolationOrder(), __func__, __func__);
+                 _accessor->readDataContext(meshName, dataName).getDataName(), _accessor->readDataContext(meshName, dataName).getInterpolationOrder(), __func__, __func__);
   }
-  readScalarDataImpl(mesh, data, valueIndex, relativeTimeWindowEndTime, value);
+  readScalarDataImpl(meshName, dataName, valueIndex, relativeTimeWindowEndTime, value);
 }
 
 void SolverInterfaceImpl::readScalarData(
-    std::string_view mesh,
-    std::string_view data,
+    std::string_view meshName,
+    std::string_view dataName,
     int              valueIndex,
     double           relativeReadTime,
     double &         value) const
 {
-  PRECICE_TRACE(mesh, data, valueIndex, value);
+  PRECICE_TRACE(meshName, dataName, valueIndex, value);
   PRECICE_EXPERIMENTAL_API();
-  readScalarDataImpl(mesh, data, valueIndex, relativeReadTime, value);
+  readScalarDataImpl(meshName, dataName, valueIndex, relativeReadTime, value);
 }
 
 void SolverInterfaceImpl::readScalarDataImpl(
-    std::string_view mesh,
-    std::string_view data,
+    std::string_view meshName,
+    std::string_view dataName,
     int              valueIndex,
     double           relativeReadTime,
     double &         value) const
@@ -1574,8 +1574,8 @@ void SolverInterfaceImpl::readScalarDataImpl(
     PRECICE_CHECK(relativeReadTime == _couplingScheme->getNextTimestepMaxLength(), "Waveform relaxation is not allowed for solver that sets the time step size");
     normalizedReadTime = 1; // by default read at end of window.
   }
-  PRECICE_REQUIRE_DATA_READ(mesh, data);
-  ReadDataContext &context = _accessor->readDataContext(mesh, data);
+  PRECICE_REQUIRE_DATA_READ(meshName, dataName);
+  ReadDataContext &context = _accessor->readDataContext(meshName, dataName);
   PRECICE_CHECK(valueIndex >= -1,
                 "Invalid value index ( {} ) when reading scalar data. Value index must be >= 0. "
                 "Please check the value index for {}",
@@ -1596,19 +1596,19 @@ void SolverInterfaceImpl::readScalarDataImpl(
 }
 
 void SolverInterfaceImpl::setMeshAccessRegion(
-    const std::string_view mesh,
+    const std::string_view meshName,
     const double *         boundingBox) const
 {
   PRECICE_EXPERIMENTAL_API();
-  PRECICE_TRACE(mesh);
-  PRECICE_REQUIRE_MESH_USE(mesh);
+  PRECICE_TRACE(meshName);
+  PRECICE_REQUIRE_MESH_USE(meshName);
   PRECICE_CHECK(_state != State::Finalized, "setMeshAccessRegion() cannot be called after finalize().")
   PRECICE_CHECK(_state != State::Initialized, "setMeshAccessRegion() needs to be called before initialize().");
   PRECICE_CHECK(!_accessRegionDefined, "setMeshAccessRegion may only be called once.");
   PRECICE_CHECK(boundingBox != nullptr, "setMeshAccessRegion was called with boundingBox == nullptr.");
 
   // Get the related mesh
-  MeshContext & context = _accessor->meshContext(mesh);
+  MeshContext & context = _accessor->meshContext(meshName);
   mesh::PtrMesh meshp(context.mesh);
   PRECICE_DEBUG("Define bounding box");
   // Transform bounds into a suitable format
@@ -1630,25 +1630,25 @@ void SolverInterfaceImpl::setMeshAccessRegion(
 }
 
 void SolverInterfaceImpl::getMeshVerticesAndIDs(
-    const std::string_view mesh,
+    const std::string_view meshName,
     const int              size,
     int *                  ids,
     double *               coordinates) const
 {
   PRECICE_EXPERIMENTAL_API();
-  PRECICE_TRACE(mesh, size);
-  PRECICE_REQUIRE_MESH_USE(mesh);
+  PRECICE_TRACE(meshName, size);
+  PRECICE_REQUIRE_MESH_USE(meshName);
   PRECICE_DEBUG("Get {} mesh vertices with IDs", size);
 
   // Check, if the requested mesh data has already been received. Otherwise, the function call doesn't make any sense
-  PRECICE_CHECK((_state == State::Initialized) || _accessor->isMeshProvided(mesh), "initialize() has to be called before accessing"
-                                                                                   " data of the received mesh \"{}\" on participant \"{}\".",
-                mesh, _accessor->getName());
+  PRECICE_CHECK((_state == State::Initialized) || _accessor->isMeshProvided(meshName), "initialize() has to be called before accessing"
+                                                                                       " data of the received mesh \"{}\" on participant \"{}\".",
+                meshName, _accessor->getName());
 
   if (size == 0)
     return;
 
-  const MeshContext & context = _accessor->meshContext(mesh);
+  const MeshContext & context = _accessor->meshContext(meshName);
   const mesh::PtrMesh meshp(context.mesh);
 
   PRECICE_CHECK(ids != nullptr, "getMeshVerticesAndIDs() was called with ids == nullptr");
