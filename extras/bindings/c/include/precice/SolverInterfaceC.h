@@ -125,7 +125,7 @@ PRECICE_API int precicec_requiresReadingCheckpoint();
 PRECICE_API int precicec_hasMesh(const char *meshName);
 
 /// @copydoc precice::SolverInterface::requiresMeshConnectivityFor()
-PRECICE_API int precicec_requiresMeshConnectivityFor(const char *mesh);
+PRECICE_API int precicec_requiresMeshConnectivityFor(const char *meshName);
 
 /**
  * @brief Creates a mesh vertex
@@ -135,7 +135,7 @@ PRECICE_API int precicec_requiresMeshConnectivityFor(const char *mesh);
  * @returns the id of the created vertex
  */
 PRECICE_API int precicec_setMeshVertex(
-    const char *  mesh,
+    const char *  meshName,
     const double *position);
 
 /**
@@ -144,7 +144,7 @@ PRECICE_API int precicec_setMeshVertex(
  * @param[in] mesh the name of the mesh.
  * @returns the amount of the vertices of the mesh
  */
-PRECICE_API int precicec_getMeshVertexSize(const char *mesh);
+PRECICE_API int precicec_getMeshVertexSize(const char *meshName);
 
 /**
  * @brief Creates multiple mesh vertices
@@ -158,7 +158,7 @@ PRECICE_API int precicec_getMeshVertexSize(const char *mesh);
  * @param[out] ids The ids of the created vertices
  */
 PRECICE_API void precicec_setMeshVertices(
-    const char *  mesh,
+    const char *  meshName,
     int           size,
     const double *positions,
     int *         ids);
@@ -173,7 +173,7 @@ PRECICE_API void precicec_setMeshVertices(
  * @return the ID of the edge
  */
 PRECICE_API void precicec_setMeshEdge(
-    const char *mesh,
+    const char *meshName,
     int         firstVertexID,
     int         secondVertexID);
 
@@ -187,7 +187,7 @@ PRECICE_API void precicec_setMeshEdge(
  * @pre vertices were added to the mesh with the ID meshID
  */
 PRECICE_API void precicec_setMeshEdges(
-    const char *mesh,
+    const char *meshName,
     int         size,
     const int * vertices);
 
@@ -195,7 +195,7 @@ PRECICE_API void precicec_setMeshEdges(
  * @brief Sets a triangle from vertex IDs. Creates missing edges.
  */
 PRECICE_API void precicec_setMeshTriangle(
-    const char *mesh,
+    const char *meshName,
     int         firstVertexID,
     int         secondVertexID,
     int         thirdVertexID);
@@ -210,7 +210,7 @@ PRECICE_API void precicec_setMeshTriangle(
  * @pre vertices were added to the mesh with the ID meshID
  */
 PRECICE_API void precicec_setMeshTriangles(
-    const char *mesh,
+    const char *meshName,
     int         size,
     const int * vertices);
 
@@ -224,7 +224,7 @@ PRECICE_API void precicec_setMeshTriangles(
  * @param[in] fourthVertexID ID of the fourth vertex of the Quad
  */
 PRECICE_API void precicec_setMeshQuad(
-    const char *mesh,
+    const char *meshName,
     int         firstVertexID,
     int         secondVertexID,
     int         thirdVertexID,
@@ -240,7 +240,7 @@ PRECICE_API void precicec_setMeshQuad(
  * @pre vertices were added to the mesh with the ID meshID
  */
 PRECICE_API void precicec_setMeshQuads(
-    const char *mesh,
+    const char *meshName,
     int         size,
     const int * vertices);
 
@@ -254,7 +254,7 @@ PRECICE_API void precicec_setMeshQuads(
  * @param[in] fourthVertexID ID of the fourth vertex of the Tetra
  */
 PRECICE_API void precicec_setMeshTetrahedron(
-    const char *mesh,
+    const char *meshName,
     int         firstVertexID,
     int         secondVertexID,
     int         thirdVertexID,
@@ -270,7 +270,7 @@ PRECICE_API void precicec_setMeshTetrahedron(
  * @pre vertices were added to the mesh with the ID meshID
  */
 PRECICE_API void precicec_setMeshTetrahedra(
-    const char *mesh,
+    const char *meshName,
     int         size,
     const int * vertices);
 
@@ -282,7 +282,7 @@ PRECICE_API void precicec_setMeshTetrahedra(
 /**
  * @brief Returns true (!=0), if data with given name is available.
  */
-PRECICE_API int precicec_hasData(const char *dataName, const char *mesh);
+PRECICE_API int precicec_hasData(const char *meshName, const char *dataName);
 
 /**
  * @brief Writes vector data values given as block.
@@ -297,8 +297,8 @@ PRECICE_API int precicec_hasData(const char *dataName, const char *mesh);
  * @param[in] values Values of the data to be written.
  */
 PRECICE_API void precicec_writeBlockVectorData(
-    const char *  mesh,
-    const char *  data,
+    const char *  meshName,
+    const char *  dataName,
     int           size,
     const int *   valueIndices,
     const double *values);
@@ -312,8 +312,8 @@ PRECICE_API void precicec_writeBlockVectorData(
  * @param[in] dataValue Vectorial data value to be written.
  */
 PRECICE_API void precicec_writeVectorData(
-    const char *  mesh,
-    const char *  data,
+    const char *  meshName,
+    const char *  dataName,
     int           valueIndex,
     const double *dataValue);
 
@@ -321,8 +321,8 @@ PRECICE_API void precicec_writeVectorData(
  * @brief See precice::SolverInterface::writeBlockScalarData().
  */
 PRECICE_API void precicec_writeBlockScalarData(
-    const char *  mesh,
-    const char *  data,
+    const char *  meshName,
+    const char *  dataName,
     int           size,
     const int *   valueIndices,
     const double *values);
@@ -336,8 +336,8 @@ PRECICE_API void precicec_writeBlockScalarData(
  * @param[in] dataValue Scalar data value to be written.
  */
 PRECICE_API void precicec_writeScalarData(
-    const char *mesh,
-    const char *data,
+    const char *meshName,
+    const char *dataName,
     int         valueIndex,
     double      dataValue);
 
@@ -355,8 +355,8 @@ PRECICE_API void precicec_writeScalarData(
  * @param[in] values Values of the data to be read.
  */
 PRECICE_API void precicec_readBlockVectorData(
-    const char *mesh,
-    const char *data,
+    const char *meshName,
+    const char *dataName,
     int         size,
     const int * valueIndices,
     double *    values);
@@ -370,8 +370,8 @@ PRECICE_API void precicec_readBlockVectorData(
  * @param[out] dataValue Vectorial data value read.
  */
 PRECICE_API void precicec_readVectorData(
-    const char *mesh,
-    const char *data,
+    const char *meshName,
+    const char *dataName,
     int         valueIndex,
     double *    dataValue);
 
@@ -379,8 +379,8 @@ PRECICE_API void precicec_readVectorData(
  * @brief See precice::SolverInterface::readBlockScalarData().
  */
 PRECICE_API void precicec_readBlockScalarData(
-    const char *mesh,
-    const char *data,
+    const char *meshName,
+    const char *dataName,
     int         size,
     const int * valueIndices,
     double *    values);
@@ -394,8 +394,8 @@ PRECICE_API void precicec_readBlockScalarData(
  * @param[out] dataValue Scalar data value read.
  */
 PRECICE_API void precicec_readScalarData(
-    const char *mesh,
-    const char *data,
+    const char *meshName,
+    const char *dataName,
     int         valueIndex,
     double *    dataValue);
 
@@ -418,35 +418,35 @@ PRECICE_API const char *precicec_getVersionInformation();
 ///@{
 
 /// @copydoc precice::SolverInterface::requiresGradientDataFor
-PRECICE_API int precicec_requiresGradientDataFor(const char *mesh,
-                                                 const char *data);
+PRECICE_API int precicec_requiresGradientDataFor(const char *meshName,
+                                                 const char *dataName);
 
 /// @copydoc precice::SolverInterface::writeScalarGradientData
 PRECICE_API void precicec_writeScalarGradientData(
-    const char *  mesh,
-    const char *  data,
+    const char *  meshName,
+    const char *  dataName,
     int           valueIndex,
     const double *gradientValues);
 
 /// @copydoc precice::SolverInterface::writeBlockScalarGradientData
 PRECICE_API void precicec_writeBlockScalarGradientData(
-    const char *  mesh,
-    const char *  data,
+    const char *  meshName,
+    const char *  dataName,
     int           size,
     const int *   valueIndices,
     const double *gradientValues);
 
 /// @copydoc precice::SolverInterface::writeVectorGradientData
 PRECICE_API void precicec_writeVectorGradientData(
-    const char *  mesh,
-    const char *  data,
+    const char *  meshName,
+    const char *  dataName,
     int           valueIndex,
     const double *gradientValues);
 
 /// @copydoc precice::SolverInterface::writeBlockVectorGradientData
 PRECICE_API void precicec_writeBlockVectorGradientData(
-    const char *  mesh,
-    const char *  data,
+    const char *  meshName,
+    const char *  dataName,
     int           size,
     const int *   valueIndices,
     const double *gradientValues);
@@ -455,14 +455,14 @@ PRECICE_API void precicec_writeBlockVectorGradientData(
  * @brief See precice::SolverInterface::setMeshAccessRegion().
  */
 PRECICE_API void precicec_setMeshAccessRegion(
-    const char *  mesh,
+    const char *  meshName,
     const double *boundingBox);
 
 /**
  * @brief See precice::SolverInterface::getMeshVerticesAndIDs().
  */
 PRECICE_API void precicec_getMeshVerticesAndIDs(
-    const char *mesh,
+    const char *meshName,
     const int   size,
     int *       ids,
     double *    coordinates);
