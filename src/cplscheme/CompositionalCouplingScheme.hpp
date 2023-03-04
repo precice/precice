@@ -160,19 +160,6 @@ public:
   double getTimeWindowSize() const final override;
 
   /**
-   * @brief Returns the remaining timestep length inside the current time window.
-   *
-   * This is not necessarily the timestep length limit the solver has to obey
-   * which is returned by getNextTimestepMaxLength().
-   *
-   * If no timestep length is prescribed by the coupling scheme, always 0.0 is
-   * returned.
-   *
-   * The maximum remainder of all composed coupling schemes is returned.
-   */
-  double getThisTimeWindowRemainder() const final override;
-
-  /**
    * @brief Returns the maximal length of the next timestep to be computed.
    *
    * If no timestep length is prescribed by the coupling scheme, always the

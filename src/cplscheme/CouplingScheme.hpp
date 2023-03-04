@@ -191,17 +191,6 @@ public:
   virtual double getTimeWindowSize() const = 0;
 
   /**
-   * @brief Returns the remaining time within the current time window.
-   *
-   * This is not necessarily the time window size limit the solver has to obey
-   * which is returned by getNextTimestepMaxLength().  // TODO explain this better
-   *
-   * If no time window size is prescribed by the coupling scheme, always 0.0 is
-   * returned.
-   */
-  virtual double getThisTimeWindowRemainder() const = 0;
-
-  /**
    * @brief Returns the maximal length of the next timestep to be computed.
    *
    * If no time window size is prescribed by the coupling scheme, always the
