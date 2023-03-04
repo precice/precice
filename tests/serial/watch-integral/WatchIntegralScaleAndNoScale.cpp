@@ -23,19 +23,19 @@ BOOST_AUTO_TEST_CASE(WatchIntegralScaleAndNoScale)
     Vector2d coordB{1.0, 0.0};
     Vector2d coordC{1.0, 2.0};
 
-    auto meshID = "MeshOne";
+    auto meshName = "MeshOne";
 
-    int idA = interface.setMeshVertex(meshID, coordA.data());
-    int idB = interface.setMeshVertex(meshID, coordB.data());
-    int idC = interface.setMeshVertex(meshID, coordC.data());
+    int idA = interface.setMeshVertex(meshName, coordA.data());
+    int idB = interface.setMeshVertex(meshName, coordB.data());
+    int idC = interface.setMeshVertex(meshName, coordC.data());
 
-    interface.setMeshEdge(meshID, idA, idB);
-    interface.setMeshEdge(meshID, idB, idC);
+    interface.setMeshEdge(meshName, idA, idB);
+    interface.setMeshEdge(meshName, idB, idC);
 
     // Initialize, the mesh
     double dt = interface.initialize();
 
-    auto   dataOneID = "DataOne"; //  meshID
+    auto   dataOneID = "DataOne"; //  meshName
     double valueA    = 1.0;
     double valueB    = 2.0;
     double valueC    = 3.0;
@@ -44,9 +44,9 @@ BOOST_AUTO_TEST_CASE(WatchIntegralScaleAndNoScale)
 
     while (interface.isCouplingOngoing()) {
 
-      interface.writeScalarData(meshID, dataOneID, idA, valueA);
-      interface.writeScalarData(meshID, dataOneID, idB, valueB);
-      interface.writeScalarData(meshID, dataOneID, idC, valueC);
+      interface.writeScalarData(meshName, dataOneID, idA, valueA);
+      interface.writeScalarData(meshName, dataOneID, idB, valueB);
+      interface.writeScalarData(meshName, dataOneID, idC, valueC);
 
       dt = interface.advance(dt);
 

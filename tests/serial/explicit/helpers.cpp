@@ -17,14 +17,14 @@ void runTestExplicit(std::string const &configurationFileName, TestContext const
 
   //was necessary to replace pre-defined geometries
   if (context.isNamed("SolverOne") && couplingInterface.hasMesh("MeshOne")) {
-    auto meshID = "MeshOne";
-    couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
-    couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
+    auto meshName = "MeshOne";
+    couplingInterface.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+    couplingInterface.setMeshVertex(meshName, Eigen::Vector3d(1.0, 0.0, 0.0).data());
   }
   if (context.isNamed("SolverTwo") && couplingInterface.hasMesh("Test-Square")) {
-    auto meshID = "Test-Square";
-    couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
-    couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
+    auto meshName = "Test-Square";
+    couplingInterface.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+    couplingInterface.setMeshVertex(meshName, Eigen::Vector3d(1.0, 0.0, 0.0).data());
   }
 
   BOOST_TEST(couplingInterface.getDimensions() == 3);

@@ -20,8 +20,8 @@ BOOST_AUTO_TEST_CASE(ThreeSolversFirstParticipant)
 
   if (context.isNamed("SolverOne")) {
 
-    auto meshID = "MeshOne";
-    precice.setMeshVertex(meshID, Eigen::Vector2d(0, 0).data());
+    auto meshName = "MeshOne";
+    precice.setMeshVertex(meshName, Eigen::Vector2d(0, 0).data());
 
     precice.initialize();
 
@@ -53,8 +53,8 @@ BOOST_AUTO_TEST_CASE(ThreeSolversFirstParticipant)
   } else {
     BOOST_TEST(context.isNamed("SolverThree"));
 
-    auto meshID = "MeshThree";
-    precice.setMeshVertex(meshID, Eigen::Vector2d(0, 0).data());
+    auto meshName = "MeshThree";
+    precice.setMeshVertex(meshName, Eigen::Vector2d(0, 0).data());
 
     double dt = precice.initialize();
 

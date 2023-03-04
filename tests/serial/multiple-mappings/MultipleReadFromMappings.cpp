@@ -18,33 +18,33 @@ BOOST_AUTO_TEST_CASE(MultipleReadFromMappings)
   Vector2d                 vertex{0.0, 0.0};
 
   if (context.isNamed("A")) {
-    auto meshIDTop      = "MeshATop";
-    auto meshIDBottom   = "MeshABottom";
-    int  vertexIDTop    = interface.setMeshVertex(meshIDTop, vertex.data());
-    int  vertexIDBottom = interface.setMeshVertex(meshIDBottom, vertex.data());
-    auto dataIDTop      = "Pressure"; //  meshIDTop
-    auto dataIDBottom   = "Pressure"; //  meshIDBottom
+    auto meshNameTop    = "MeshATop";
+    auto meshNameBottom = "MeshABottom";
+    int  vertexIDTop    = interface.setMeshVertex(meshNameTop, vertex.data());
+    int  vertexIDBottom = interface.setMeshVertex(meshNameBottom, vertex.data());
+    auto dataIDTop      = "Pressure"; //  meshNameTop
+    auto dataIDBottom   = "Pressure"; //  meshNameBottom
 
     double dt = interface.initialize();
     interface.advance(dt);
     double pressure = -1.0;
-    interface.readScalarData(meshIDTop, dataIDTop, vertexIDTop, pressure);
+    interface.readScalarData(meshNameTop, dataIDTop, vertexIDTop, pressure);
     BOOST_TEST(pressure == 1.0);
     pressure = -1.0;
-    interface.readScalarData(meshIDBottom, dataIDBottom, vertexIDBottom, pressure);
+    interface.readScalarData(meshNameBottom, dataIDBottom, vertexIDBottom, pressure);
     BOOST_TEST(pressure == 1.0);
     BOOST_TEST(not interface.isCouplingOngoing());
     interface.finalize();
 
   } else {
     BOOST_TEST(context.isNamed("B"));
-    auto meshID   = "MeshB";
-    int  vertexID = interface.setMeshVertex(meshID, vertex.data());
-    auto dataID   = "Pressure"; //  meshID
+    auto meshName = "MeshB";
+    int  vertexID = interface.setMeshVertex(meshName, vertex.data());
+    auto dataID   = "Pressure"; //  meshName
 
     double dt       = interface.initialize();
     double pressure = 1.0;
-    interface.writeScalarData(meshID, dataID, vertexID, pressure);
+    interface.writeScalarData(meshName, dataID, vertexID, pressure);
     interface.advance(dt);
     BOOST_TEST(not interface.isCouplingOngoing());
     interface.finalize();

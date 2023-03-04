@@ -35,25 +35,25 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirstNoInit)
   DataFunction writeFunction;
   DataFunction readFunction;
 
-  std::string meshID, writeDataID, readDataID;
+  std::string meshName, writeDataID, readDataID;
   if (context.isNamed("SolverOne")) {
-    meshID        = "MeshOne";
-    writeDataID   = "DataOne"; //  meshID
+    meshName      = "MeshOne";
+    writeDataID   = "DataOne"; //  meshName
     writeFunction = dataOneFunction;
-    readDataID    = "DataTwo"; //  meshID
+    readDataID    = "DataTwo"; //  meshName
     readFunction  = dataTwoFunction;
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    meshID        = "MeshTwo";
-    writeDataID   = "DataTwo"; //  meshID
+    meshName      = "MeshTwo";
+    writeDataID   = "DataTwo"; //  meshName
     writeFunction = dataTwoFunction;
-    readDataID    = "DataOne"; //  meshID
+    readDataID    = "DataOne"; //  meshName
     readFunction  = dataOneFunction;
   }
 
   double   writeData;
   double   readData;
-  VertexID vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+  VertexID vertexID = precice.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());
 
   int    nWindows        = 5; // perform 5 windows.
   int    timestep        = 0;
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirstNoInit)
       sampleDt = sampleDts[j];
       readTime = time + sampleDt;
 
-      precice.readScalarData(meshID, readDataID, vertexID, sampleDt, readData);
+      precice.readScalarData(meshName, readDataID, vertexID, sampleDt, readData);
 
       if (iterations == 0 && timewindow == 0) { // use zero as initial value in first iteration (no data was initialized in initialize was called)
         BOOST_TEST(readData == 0);
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirstNoInit)
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.
     time += currentDt;
     writeData = writeFunction(time);
-    precice.writeScalarData(meshID, writeDataID, vertexID, writeData);
+    precice.writeScalarData(meshName, writeDataID, vertexID, writeData);
     maxDt     = precice.advance(currentDt);
     currentDt = dt > maxDt ? maxDt : dt;
     BOOST_CHECK(currentDt == windowDt); // no subcycling.

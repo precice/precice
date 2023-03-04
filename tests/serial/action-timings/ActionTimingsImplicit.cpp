@@ -39,11 +39,10 @@ BOOST_AUTO_TEST_CASE(ActionTimingsImplicit)
     readDataName  = "Forces";
     writeValue    = 2;
   }
-  auto                meshID      = meshName;
-  auto                writeDataID = writeDataName; //  meshID
-  auto                readDataID  = readDataName;  //  meshID
+  auto                writeDataID = writeDataName; //  meshName
+  auto                readDataID  = readDataName;  //  meshName
   std::vector<double> vertex(dimensions, 0);
-  int                 vertexID = interface.setMeshVertex(meshID, vertex.data());
+  int                 vertexID = interface.setMeshVertex(meshName, vertex.data());
 
   double dt = -1;
   BOOST_TEST(action::RecorderAction::records.empty());
@@ -53,7 +52,7 @@ BOOST_AUTO_TEST_CASE(ActionTimingsImplicit)
 
   if (interface.requiresInitialData()) {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    interface.writeVectorData(meshID, writeDataID, vertexID, writeData.data());
+    interface.writeVectorData(meshName, writeDataID, vertexID, writeData.data());
   }
 
   dt = interface.initialize();
@@ -70,8 +69,8 @@ BOOST_AUTO_TEST_CASE(ActionTimingsImplicit)
   int iteration = 0;
 
   while (interface.isCouplingOngoing()) {
-    interface.readVectorData(meshID, readDataID, vertexID, readData.data());
-    interface.writeVectorData(meshID, writeDataID, vertexID, writeData.data());
+    interface.readVectorData(meshName, readDataID, vertexID, readData.data());
+    interface.writeVectorData(meshName, writeDataID, vertexID, writeData.data());
     if (interface.requiresWritingCheckpoint()) {
     }
     dt = interface.advance(dt);

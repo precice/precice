@@ -22,9 +22,8 @@ void runTestQN(std::string const &config, TestContext const &context)
   }
 
   precice::SolverInterface interface(context.name, config, context.rank, context.size);
-  auto                     meshID      = meshName;
-  auto                     writeDataID = writeDataName; //  meshID
-  auto                     readDataID  = readDataName;  //  meshID
+  auto                     writeDataID = writeDataName; //  meshName
+  auto                     readDataID  = readDataName;  //  meshName
 
   VertexID vertexIDs[4];
 
@@ -34,16 +33,16 @@ void runTestQN(std::string const &config, TestContext const &context)
 
   if (context.isNamed("SolverOne")) {
     if (context.isPrimary()) {
-      interface.setMeshVertices(meshID, 4, positions0, vertexIDs);
+      interface.setMeshVertices(meshName, 4, positions0, vertexIDs);
     } else {
-      interface.setMeshVertices(meshID, 4, positions1, vertexIDs);
+      interface.setMeshVertices(meshName, 4, positions1, vertexIDs);
     }
   } else {
     BOOST_REQUIRE(context.isNamed("SolverTwo"));
     if (context.isPrimary()) {
-      interface.setMeshVertices(meshID, 4, positions0, vertexIDs);
+      interface.setMeshVertices(meshName, 4, positions0, vertexIDs);
     } else {
-      interface.setMeshVertices(meshID, 4, positions1, vertexIDs);
+      interface.setMeshVertices(meshName, 4, positions1, vertexIDs);
     }
   }
 
@@ -57,7 +56,7 @@ void runTestQN(std::string const &config, TestContext const &context)
     if (interface.requiresWritingCheckpoint()) {
     }
 
-    interface.readBlockScalarData(meshID, readDataID, 4, vertexIDs, inValues);
+    interface.readBlockScalarData(meshName, readDataID, 4, vertexIDs, inValues);
 
     /*
       Solves the following non-linear equations, which are extended to a fixed-point equation (simply +x)
@@ -81,7 +80,7 @@ void runTestQN(std::string const &config, TestContext const &context)
       outValues[3] = inValues[3] * inValues[3] - 4.0 + inValues[3];
     }
 
-    interface.writeBlockScalarData(meshID, writeDataID, 4, vertexIDs, outValues);
+    interface.writeBlockScalarData(meshName, writeDataID, 4, vertexIDs, outValues);
     interface.advance(1.0);
 
     if (interface.requiresReadingCheckpoint()) {
@@ -119,9 +118,8 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
   }
 
   precice::SolverInterface interface(context.name, config, context.rank, context.size);
-  auto                     meshID      = meshName;
-  auto                     writeDataID = writeDataName; //  meshID
-  auto                     readDataID  = readDataName;  //  meshID
+  auto                     writeDataID = writeDataName; //  meshName
+  auto                     readDataID  = readDataName;  //  meshName
 
   VertexID vertexIDs[4];
 
@@ -131,13 +129,13 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
   if (context.isNamed("SolverOne")) {
     // All mesh is on primary rank
     if (context.isPrimary()) {
-      interface.setMeshVertices(meshID, 4, positions0, vertexIDs);
+      interface.setMeshVertices(meshName, 4, positions0, vertexIDs);
     }
   } else {
     BOOST_REQUIRE(context.isNamed("SolverTwo"));
     // All mesh is on secondary rank
     if (not context.isPrimary()) {
-      interface.setMeshVertices(meshID, 4, positions0, vertexIDs);
+      interface.setMeshVertices(meshName, 4, positions0, vertexIDs);
     }
   }
 
@@ -153,7 +151,7 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
 
     if ((context.isNamed("SolverOne") and context.isPrimary()) or
         (context.isNamed("SolverTwo") and (not context.isPrimary()))) {
-      interface.readBlockScalarData(meshID, readDataID, 4, vertexIDs, inValues);
+      interface.readBlockScalarData(meshName, readDataID, 4, vertexIDs, inValues);
     }
 
     /*
@@ -180,7 +178,7 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
 
     if ((context.isNamed("SolverOne") and context.isPrimary()) or
         (context.isNamed("SolverTwo") and (not context.isPrimary()))) {
-      interface.writeBlockScalarData(meshID, writeDataID, 4, vertexIDs, outValues);
+      interface.writeBlockScalarData(meshName, writeDataID, 4, vertexIDs, outValues);
     }
     interface.advance(1.0);
 

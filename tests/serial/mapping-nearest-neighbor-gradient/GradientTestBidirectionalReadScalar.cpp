@@ -45,55 +45,55 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalReadScalar)
 
   SolverInterface cplInterface(context.name, context.config(), 0, 1);
   if (context.isNamed("SolverOne")) {
-    auto     meshID = "MeshOne";
-    Vector3d vec1   = Vector3d::Constant(0.1);
-    cplInterface.setMeshVertex(meshID, vec1.data());
+    auto     meshName = "MeshOne";
+    Vector3d vec1     = Vector3d::Constant(0.1);
+    cplInterface.setMeshVertex(meshName, vec1.data());
     auto dataAID = "DataOne"; //  meshOneID
     auto dataBID = "DataTwo"; //  meshOneID
 
     double valueDataB = 0.0;
     double maxDt      = cplInterface.initialize();
-    cplInterface.readScalarData(meshID, dataBID, 0, valueDataB);
+    cplInterface.readScalarData(meshName, dataBID, 0, valueDataB);
     BOOST_TEST(valueDataB == 1.0);
 
     while (cplInterface.isCouplingOngoing()) {
 
-      cplInterface.writeScalarData(meshID, dataAID, 0, 3.0);
+      cplInterface.writeScalarData(meshName, dataAID, 0, 3.0);
       Vector3d valueGradDataA(1.0, 2.0, 3.0);
-      BOOST_TEST(cplInterface.requiresGradientDataFor(meshID, dataAID));
-      cplInterface.writeScalarGradientData(meshID, dataAID, 0, valueGradDataA.data());
+      BOOST_TEST(cplInterface.requiresGradientDataFor(meshName, dataAID));
+      cplInterface.writeScalarGradientData(meshName, dataAID, 0, valueGradDataA.data());
 
       maxDt = cplInterface.advance(maxDt);
 
-      cplInterface.readScalarData(meshID, dataBID, 0, valueDataB);
+      cplInterface.readScalarData(meshName, dataBID, 0, valueDataB);
       BOOST_TEST(valueDataB == 1.5);
     }
     cplInterface.finalize();
 
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    auto     meshID = "MeshTwo";
-    Vector3d vec2   = Vector3d::Constant(0.0);
-    cplInterface.setMeshVertex(meshID, vec2.data());
+    auto     meshName = "MeshTwo";
+    Vector3d vec2     = Vector3d::Constant(0.0);
+    cplInterface.setMeshVertex(meshName, vec2.data());
 
     auto dataAID = "DataOne"; //  meshTwoID
     auto dataBID = "DataTwo"; //  meshTwoID
     BOOST_REQUIRE(cplInterface.requiresInitialData());
-    BOOST_TEST(cplInterface.requiresGradientDataFor(meshID, dataBID) == false);
+    BOOST_TEST(cplInterface.requiresGradientDataFor(meshName, dataBID) == false);
 
     double valueDataB = 1.0;
-    cplInterface.writeScalarData(meshID, dataBID, 0, valueDataB);
+    cplInterface.writeScalarData(meshName, dataBID, 0, valueDataB);
 
     //tell preCICE that data has been written and call initialize
     double maxDt = cplInterface.initialize();
 
     while (cplInterface.isCouplingOngoing()) {
-      cplInterface.writeScalarData(meshID, dataBID, 0, 1.5);
+      cplInterface.writeScalarData(meshName, dataBID, 0, 1.5);
 
       maxDt = cplInterface.advance(maxDt);
 
       double valueDataA;
-      cplInterface.readScalarData(meshID, dataAID, 0, valueDataA);
+      cplInterface.readScalarData(meshName, dataAID, 0, valueDataA);
       BOOST_TEST(valueDataA == 2.4);
     }
     cplInterface.finalize();

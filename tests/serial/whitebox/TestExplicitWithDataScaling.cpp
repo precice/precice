@@ -29,37 +29,37 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataScaling)
   std::vector<int>    ids       = {0, 0, 0, 0};
 
   if (context.isNamed("SolverOne")) {
-    auto meshID = "Test-Square-One";
-    cplInterface.setMeshVertices(meshID, 4, positions.data(), ids.data());
+    auto meshName = "Test-Square-One";
+    cplInterface.setMeshVertices(meshName, 4, positions.data(), ids.data());
     for (int i = 0; i < 4; i++)
-      cplInterface.setMeshEdge(meshID, ids.at(i), ids.at((i + 1) % 4));
+      cplInterface.setMeshEdge(meshName, ids.at(i), ids.at((i + 1) % 4));
 
     double dt = cplInterface.initialize();
 
-    auto velocitiesID = "Velocities"; //  meshID
+    auto velocitiesID = "Velocities"; //  meshName
     while (cplInterface.isCouplingOngoing()) {
       for (size_t i = 0; i < testing::WhiteboxAccessor::impl(cplInterface).mesh("Test-Square-One").vertices().size(); ++i) {
         Eigen::Vector2d data = Eigen::Vector2d::Constant(i);
-        cplInterface.writeVectorData(meshID, velocitiesID, i, data.data());
+        cplInterface.writeVectorData(meshName, velocitiesID, i, data.data());
       }
       dt = cplInterface.advance(dt);
     }
     cplInterface.finalize();
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    auto meshID = "Test-Square-Two";
-    cplInterface.setMeshVertices(meshID, 4, positions.data(), ids.data());
+    auto meshName = "Test-Square-Two";
+    cplInterface.setMeshVertices(meshName, 4, positions.data(), ids.data());
     for (int i = 0; i < 4; i++)
-      cplInterface.setMeshEdge(meshID, ids.at(i), ids.at((i + 1) % 4));
+      cplInterface.setMeshEdge(meshName, ids.at(i), ids.at((i + 1) % 4));
 
     double dt = cplInterface.initialize();
 
-    auto velocitiesID = "Velocities"; //  meshID
+    auto velocitiesID = "Velocities"; //  meshName
     while (cplInterface.isCouplingOngoing()) {
       const auto size = testing::WhiteboxAccessor::impl(cplInterface).mesh("Test-Square-Two").vertices().size();
       for (size_t i = 0; i < size; ++i) {
         Eigen::Vector2d readData;
-        cplInterface.readVectorData(meshID, velocitiesID, i, readData.data());
+        cplInterface.readVectorData(meshName, velocitiesID, i, readData.data());
         Eigen::Vector2d expectedData = Eigen::Vector2d::Constant(i * 10.0);
         BOOST_TEST(readData(0) == expectedData(0));
         BOOST_TEST(readData(1) == expectedData(1));

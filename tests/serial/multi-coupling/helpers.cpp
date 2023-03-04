@@ -18,17 +18,17 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
 
   if (context.isNamed("SolverA")) {
     SolverInterface cplInterface("SolverA", configFile, 0, 1);
-    auto            meshID   = "MeshA";
-    int             vertexID = cplInterface.setMeshVertex(meshID, coordOneA.data());
-    auto            dataABID = "DataAB"; //  meshID
-    auto            dataBAID = "DataBA"; //  meshID
+    auto            meshName = "MeshA";
+    int             vertexID = cplInterface.setMeshVertex(meshName, coordOneA.data());
+    auto            dataABID = "DataAB"; //  meshName
+    auto            dataBAID = "DataBA"; //  meshName
 
     double maxDt = cplInterface.initialize();
     double valueRead;
 
     BOOST_TEST(cplInterface.isCouplingOngoing());
     while (cplInterface.isCouplingOngoing()) {
-      cplInterface.writeScalarData(meshID, dataABID, vertexID, valueA);
+      cplInterface.writeScalarData(meshName, dataABID, vertexID, valueA);
       if (cplInterface.requiresWritingCheckpoint()) {
       }
 
@@ -36,7 +36,7 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
 
       if (cplInterface.requiresReadingCheckpoint()) {
       }
-      cplInterface.readScalarData(meshID, dataBAID, vertexID, valueRead);
+      cplInterface.readScalarData(meshName, dataBAID, vertexID, valueRead);
     }
 
     BOOST_TEST(valueRead == valueB);
@@ -44,22 +44,22 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
     cplInterface.finalize();
   } else if (context.isNamed("SolverB")) {
     SolverInterface cplInterface("SolverB", configFile, 0, 1);
-    auto            meshID1   = "MeshB1";
-    auto            meshID2   = "MeshB2";
-    int             vertexID1 = cplInterface.setMeshVertex(meshID1, coordOneA.data());
-    int             vertexID2 = cplInterface.setMeshVertex(meshID2, coordOneA.data());
-    auto            dataABID  = "DataAB"; //  meshID1
-    auto            dataBAID  = "DataBA"; //  meshID1
-    auto            dataCBID  = "DataCB"; //  meshID2
-    auto            dataBCID  = "DataBC"; //  meshID2
+    auto            meshName1 = "MeshB1";
+    auto            meshName2 = "MeshB2";
+    int             vertexID1 = cplInterface.setMeshVertex(meshName1, coordOneA.data());
+    int             vertexID2 = cplInterface.setMeshVertex(meshName2, coordOneA.data());
+    auto            dataABID  = "DataAB"; //  meshName1
+    auto            dataBAID  = "DataBA"; //  meshName1
+    auto            dataCBID  = "DataCB"; //  meshName2
+    auto            dataBCID  = "DataBC"; //  meshName2
 
     double maxDt = cplInterface.initialize();
     double valueReadA, valueReadC;
 
     BOOST_TEST(cplInterface.isCouplingOngoing());
     while (cplInterface.isCouplingOngoing()) {
-      cplInterface.writeScalarData(meshID1, dataBAID, vertexID1, valueB);
-      cplInterface.writeScalarData(meshID2, dataBCID, vertexID2, valueB);
+      cplInterface.writeScalarData(meshName1, dataBAID, vertexID1, valueB);
+      cplInterface.writeScalarData(meshName2, dataBCID, vertexID2, valueB);
       if (cplInterface.requiresWritingCheckpoint()) {
       }
 
@@ -67,8 +67,8 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
 
       if (cplInterface.requiresReadingCheckpoint()) {
       }
-      cplInterface.readScalarData(meshID1, dataABID, vertexID1, valueReadA);
-      cplInterface.readScalarData(meshID2, dataCBID, vertexID2, valueReadC);
+      cplInterface.readScalarData(meshName1, dataABID, vertexID1, valueReadA);
+      cplInterface.readScalarData(meshName2, dataCBID, vertexID2, valueReadC);
     }
 
     BOOST_TEST(valueReadA == 1.0);
@@ -78,10 +78,10 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
 
   } else {
     SolverInterface cplInterface("SolverC", configFile, 0, 1);
-    auto            meshID   = "MeshC";
-    int             vertexID = cplInterface.setMeshVertex(meshID, coordOneA.data());
-    auto            dataCBID = "DataCB"; //  meshID
-    auto            dataBCID = "DataBC"; //  meshID
+    auto            meshName = "MeshC";
+    int             vertexID = cplInterface.setMeshVertex(meshName, coordOneA.data());
+    auto            dataCBID = "DataCB"; //  meshName
+    auto            dataBCID = "DataBC"; //  meshName
 
     double maxDt = cplInterface.initialize();
     double valueRead;
@@ -89,7 +89,7 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
     BOOST_TEST(cplInterface.isCouplingOngoing());
     while (cplInterface.isCouplingOngoing()) {
 
-      cplInterface.writeScalarData(meshID, dataCBID, vertexID, valueC);
+      cplInterface.writeScalarData(meshName, dataCBID, vertexID, valueC);
       if (cplInterface.requiresWritingCheckpoint()) {
       }
 
@@ -97,7 +97,7 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
 
       if (cplInterface.requiresReadingCheckpoint()) {
       }
-      cplInterface.readScalarData(meshID, dataBCID, vertexID, valueRead);
+      cplInterface.readScalarData(meshName, dataBCID, vertexID, valueRead);
     }
 
     BOOST_TEST(valueRead == 2.0);
@@ -112,10 +112,10 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
 
   if (context.isNamed("SolverA")) {
     SolverInterface cplInterface("SolverA", configFile, 0, 1);
-    auto            meshID   = "MeshA";
-    int             vertexID = cplInterface.setMeshVertex(meshID, coordOneA.data());
-    auto            dataABID = "DataAB"; //  meshID
-    auto            dataBAID = "DataBA"; //  meshID
+    auto            meshName = "MeshA";
+    int             vertexID = cplInterface.setMeshVertex(meshName, coordOneA.data());
+    auto            dataABID = "DataAB"; //  meshName
+    auto            dataBAID = "DataBA"; //  meshName
 
     double maxDt = cplInterface.initialize();
     double valueRead;
@@ -123,7 +123,7 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
 
     BOOST_TEST(cplInterface.isCouplingOngoing());
     while (cplInterface.isCouplingOngoing()) {
-      cplInterface.writeScalarData(meshID, dataABID, vertexID, valueWrite);
+      cplInterface.writeScalarData(meshName, dataABID, vertexID, valueWrite);
       if (cplInterface.requiresWritingCheckpoint()) {
       }
 
@@ -131,19 +131,19 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
 
       if (cplInterface.requiresReadingCheckpoint()) {
       }
-      cplInterface.readScalarData(meshID, dataBAID, vertexID, valueRead);
+      cplInterface.readScalarData(meshName, dataBAID, vertexID, valueRead);
     }
     cplInterface.finalize();
   } else if (context.isNamed("SolverB")) {
     SolverInterface cplInterface("SolverB", configFile, 0, 1);
-    auto            meshID1   = "MeshB1";
-    auto            meshID2   = "MeshB2";
-    int             vertexID1 = cplInterface.setMeshVertex(meshID1, coordOneA.data());
-    int             vertexID2 = cplInterface.setMeshVertex(meshID2, coordOneA.data());
-    auto            dataABID  = "DataAB"; //  meshID1
-    auto            dataBAID  = "DataBA"; //  meshID1
-    auto            dataCBID  = "DataCB"; //  meshID2
-    auto            dataBCID  = "DataBC"; //  meshID2
+    auto            meshName1 = "MeshB1";
+    auto            meshName2 = "MeshB2";
+    int             vertexID1 = cplInterface.setMeshVertex(meshName1, coordOneA.data());
+    int             vertexID2 = cplInterface.setMeshVertex(meshName2, coordOneA.data());
+    auto            dataABID  = "DataAB"; //  meshName1
+    auto            dataBAID  = "DataBA"; //  meshName1
+    auto            dataCBID  = "DataCB"; //  meshName2
+    auto            dataBCID  = "DataBC"; //  meshName2
 
     double maxDt = cplInterface.initialize();
     double valueReadA, valueReadC;
@@ -151,8 +151,8 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
 
     BOOST_TEST(cplInterface.isCouplingOngoing());
     while (cplInterface.isCouplingOngoing()) {
-      cplInterface.writeScalarData(meshID1, dataBAID, vertexID1, valueWriteA);
-      cplInterface.writeScalarData(meshID2, dataBCID, vertexID2, valueWriteC);
+      cplInterface.writeScalarData(meshName1, dataBAID, vertexID1, valueWriteA);
+      cplInterface.writeScalarData(meshName2, dataBCID, vertexID2, valueWriteC);
       if (cplInterface.requiresWritingCheckpoint()) {
       }
 
@@ -160,21 +160,21 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
 
       if (cplInterface.requiresReadingCheckpoint()) {
       }
-      cplInterface.readScalarData(meshID1, dataABID, vertexID1, valueReadA);
-      cplInterface.readScalarData(meshID2, dataCBID, vertexID2, valueReadC);
+      cplInterface.readScalarData(meshName1, dataABID, vertexID1, valueReadA);
+      cplInterface.readScalarData(meshName2, dataCBID, vertexID2, valueReadC);
     }
     cplInterface.finalize();
 
   } else if (context.isNamed("SolverC")) {
     SolverInterface cplInterface("SolverC", configFile, 0, 1);
-    auto            meshID1   = "MeshC1";
-    auto            meshID2   = "MeshC2";
-    int             vertexID1 = cplInterface.setMeshVertex(meshID1, coordOneA.data());
-    int             vertexID2 = cplInterface.setMeshVertex(meshID2, coordOneA.data());
-    auto            dataBCID  = "DataBC"; //  meshID1
-    auto            dataCBID  = "DataCB"; //  meshID1
-    auto            dataCDID  = "DataCD"; //  meshID2
-    auto            dataDCID  = "DataDC"; //  meshID2
+    auto            meshName1 = "MeshC1";
+    auto            meshName2 = "MeshC2";
+    int             vertexID1 = cplInterface.setMeshVertex(meshName1, coordOneA.data());
+    int             vertexID2 = cplInterface.setMeshVertex(meshName2, coordOneA.data());
+    auto            dataBCID  = "DataBC"; //  meshName1
+    auto            dataCBID  = "DataCB"; //  meshName1
+    auto            dataCDID  = "DataCD"; //  meshName2
+    auto            dataDCID  = "DataDC"; //  meshName2
 
     double maxDt = cplInterface.initialize();
     double valueReadA, valueReadC;
@@ -182,8 +182,8 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
 
     BOOST_TEST(cplInterface.isCouplingOngoing());
     while (cplInterface.isCouplingOngoing()) {
-      cplInterface.writeScalarData(meshID1, dataCBID, vertexID1, valueWriteA);
-      cplInterface.writeScalarData(meshID2, dataCDID, vertexID2, valueWriteC);
+      cplInterface.writeScalarData(meshName1, dataCBID, vertexID1, valueWriteA);
+      cplInterface.writeScalarData(meshName2, dataCDID, vertexID2, valueWriteC);
       if (cplInterface.requiresWritingCheckpoint()) {
       }
 
@@ -191,16 +191,16 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
 
       if (cplInterface.requiresReadingCheckpoint()) {
       }
-      cplInterface.readScalarData(meshID1, dataBCID, vertexID1, valueReadA);
-      cplInterface.readScalarData(meshID2, dataDCID, vertexID2, valueReadC);
+      cplInterface.readScalarData(meshName1, dataBCID, vertexID1, valueReadA);
+      cplInterface.readScalarData(meshName2, dataDCID, vertexID2, valueReadC);
     }
     cplInterface.finalize();
   } else {
     SolverInterface cplInterface("SolverD", configFile, 0, 1);
-    auto            meshID   = "MeshD";
-    int             vertexID = cplInterface.setMeshVertex(meshID, coordOneA.data());
-    auto            dataCDID = "DataCD"; //  meshID
-    auto            dataDCID = "DataDC"; //  meshID
+    auto            meshName = "MeshD";
+    int             vertexID = cplInterface.setMeshVertex(meshName, coordOneA.data());
+    auto            dataCDID = "DataCD"; //  meshName
+    auto            dataDCID = "DataDC"; //  meshName
 
     double maxDt = cplInterface.initialize();
     double valueRead;
@@ -208,7 +208,7 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
 
     BOOST_TEST(cplInterface.isCouplingOngoing());
     while (cplInterface.isCouplingOngoing()) {
-      cplInterface.writeScalarData(meshID, dataDCID, vertexID, valueWrite);
+      cplInterface.writeScalarData(meshName, dataDCID, vertexID, valueWrite);
       if (cplInterface.requiresWritingCheckpoint()) {
       }
 
@@ -216,7 +216,7 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
 
       if (cplInterface.requiresReadingCheckpoint()) {
       }
-      cplInterface.readScalarData(meshID, dataCDID, vertexID, valueRead);
+      cplInterface.readScalarData(meshName, dataCDID, vertexID, valueRead);
     }
     cplInterface.finalize();
   }

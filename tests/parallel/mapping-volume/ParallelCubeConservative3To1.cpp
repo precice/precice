@@ -31,8 +31,8 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative3To1)
   double                dt;
 
   if (context.isNamed("SolverOneCubeConservative3To1")) {
-    auto meshID = "MeshOne";
-    auto dataID = "DataOne"; //  meshID
+    auto meshName = "MeshOne";
+    auto dataID   = "DataOne"; //  meshName
 
     std::vector<double> coords;
     std::vector<double> values;
@@ -60,21 +60,21 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative3To1)
       break;
     }
     vertexIDs.resize(coords.size() / 3);
-    interface.setMeshVertices(meshID, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, vertexIDs.size(), coords.data(), vertexIDs.data());
 
     dt = interface.initialize();
 
     // Run a step and write forces
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant must advance once.");
 
-    interface.writeBlockScalarData(meshID, dataID, values.size(), vertexIDs.data(), values.data());
+    interface.writeBlockScalarData(meshName, dataID, values.size(), vertexIDs.data(), values.data());
 
     interface.advance(dt);
     BOOST_TEST(!interface.isCouplingOngoing(), "Sending participant must advance only once.");
     interface.finalize();
   } else { // SolverTwoCubeConservative3To1
-    auto meshID = "MeshTwo";
-    auto dataID = "DataOne"; //  meshID
+    auto meshName = "MeshTwo";
+    auto dataID   = "DataOne"; //  meshName
 
     std::vector<double> coords;
 
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative3To1)
               0, 1, 1};
 
     vertexIDs.resize(coords.size() / 3);
-    interface.setMeshVertices(meshID, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, vertexIDs.size(), coords.data(), vertexIDs.data());
 
     VertexID v000 = vertexIDs[0];
 
@@ -101,12 +101,12 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative3To1)
     VertexID v111 = vertexIDs[6];
     VertexID v011 = vertexIDs[7];
 
-    interface.setMeshTetrahedron(meshID, v000, v001, v011, v111);
-    interface.setMeshTetrahedron(meshID, v000, v010, v011, v111);
-    interface.setMeshTetrahedron(meshID, v000, v001, v101, v111);
-    interface.setMeshTetrahedron(meshID, v000, v100, v101, v111);
-    interface.setMeshTetrahedron(meshID, v000, v010, v110, v111);
-    interface.setMeshTetrahedron(meshID, v000, v100, v110, v111);
+    interface.setMeshTetrahedron(meshName, v000, v001, v011, v111);
+    interface.setMeshTetrahedron(meshName, v000, v010, v011, v111);
+    interface.setMeshTetrahedron(meshName, v000, v001, v101, v111);
+    interface.setMeshTetrahedron(meshName, v000, v100, v101, v111);
+    interface.setMeshTetrahedron(meshName, v000, v010, v110, v111);
+    interface.setMeshTetrahedron(meshName, v000, v100, v110, v111);
 
     auto &mesh = precice::testing::WhiteboxAccessor::impl(interface).mesh("MeshTwo");
     BOOST_REQUIRE(mesh.vertices().size() == 8);
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative3To1)
 
     Eigen::VectorXd readData(8);
 
-    interface.readBlockScalarData(meshID, dataID, readData.size(), vertexIDs.data(), readData.data());
+    interface.readBlockScalarData(meshName, dataID, readData.size(), vertexIDs.data(), readData.data());
     BOOST_CHECK(equals(readData[0], forceOnMidABC / 3 + forceOnMidACD / 3 + forceOnMidAEGH / 4 + 0.1 * unbalancedForceOnAEGH));
     BOOST_CHECK(equals(readData[1], forceOnMidABC / 3));
     BOOST_CHECK(equals(readData[2], forceOnMidABC / 3 + forceOnMidACD / 3 + forceNearC));

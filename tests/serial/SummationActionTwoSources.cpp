@@ -29,26 +29,26 @@ BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
     Vector3d coordC{1.0, 1.0, 0.3};
     Vector3d coordD{0.0, 1.0, 0.3};
 
-    auto meshID = "MeshTarget";
+    auto meshName = "MeshTarget";
 
-    int idA = interface.setMeshVertex(meshID, coordA.data());
-    int idB = interface.setMeshVertex(meshID, coordB.data());
-    int idC = interface.setMeshVertex(meshID, coordC.data());
-    int idD = interface.setMeshVertex(meshID, coordD.data());
+    int idA = interface.setMeshVertex(meshName, coordA.data());
+    int idB = interface.setMeshVertex(meshName, coordB.data());
+    int idC = interface.setMeshVertex(meshName, coordC.data());
+    int idD = interface.setMeshVertex(meshName, coordD.data());
 
     // Initialize, the mesh
     double dt = interface.initialize();
 
     // Read the summed data from the mesh.
-    auto   dataAID = "Target"; //  meshID
+    auto   dataAID = "Target"; //  meshName
     double valueA, valueB, valueC, valueD;
 
     while (interface.isCouplingOngoing()) {
 
-      interface.readScalarData(meshID, dataAID, idA, valueA);
-      interface.readScalarData(meshID, dataAID, idB, valueB);
-      interface.readScalarData(meshID, dataAID, idC, valueC);
-      interface.readScalarData(meshID, dataAID, idD, valueD);
+      interface.readScalarData(meshName, dataAID, idA, valueA);
+      interface.readScalarData(meshName, dataAID, idB, valueB);
+      interface.readScalarData(meshName, dataAID, idC, valueC);
+      interface.readScalarData(meshName, dataAID, idD, valueD);
 
       BOOST_TEST(valueA == expectedValueA);
       BOOST_TEST(valueB == expectedValueB);
@@ -69,17 +69,17 @@ BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
     Vector3d coordC{1.0, 1.0, 0.3};
     Vector3d coordD{0.0, 1.0, 0.3};
 
-    auto meshID = "MeshOne";
+    auto meshName = "MeshOne";
 
-    int idA = interface.setMeshVertex(meshID, coordA.data());
-    int idB = interface.setMeshVertex(meshID, coordB.data());
-    int idC = interface.setMeshVertex(meshID, coordC.data());
-    int idD = interface.setMeshVertex(meshID, coordD.data());
+    int idA = interface.setMeshVertex(meshName, coordA.data());
+    int idB = interface.setMeshVertex(meshName, coordB.data());
+    int idC = interface.setMeshVertex(meshName, coordC.data());
+    int idD = interface.setMeshVertex(meshName, coordD.data());
 
     // Initialize, the mesh
     double dt = interface.initialize();
 
-    auto   dataAID = "SourceOne"; //  meshID
+    auto   dataAID = "SourceOne"; //  meshName
     double valueA  = 1.0;
     double valueB  = 3.0;
     double valueC  = 5.0;
@@ -87,10 +87,10 @@ BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
 
     while (interface.isCouplingOngoing()) {
 
-      interface.writeScalarData(meshID, dataAID, idA, valueA);
-      interface.writeScalarData(meshID, dataAID, idB, valueB);
-      interface.writeScalarData(meshID, dataAID, idC, valueC);
-      interface.writeScalarData(meshID, dataAID, idD, valueD);
+      interface.writeScalarData(meshName, dataAID, idA, valueA);
+      interface.writeScalarData(meshName, dataAID, idB, valueB);
+      interface.writeScalarData(meshName, dataAID, idC, valueC);
+      interface.writeScalarData(meshName, dataAID, idD, valueD);
 
       dt = interface.advance(dt);
     }
@@ -106,17 +106,17 @@ BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
     Vector3d coordC{1.0, 1.0, 0.3};
     Vector3d coordD{0.0, 1.0, 0.3};
 
-    auto meshID = "MeshTwo";
+    auto meshName = "MeshTwo";
 
-    int idA = interface.setMeshVertex(meshID, coordA.data());
-    int idB = interface.setMeshVertex(meshID, coordB.data());
-    int idC = interface.setMeshVertex(meshID, coordC.data());
-    int idD = interface.setMeshVertex(meshID, coordD.data());
+    int idA = interface.setMeshVertex(meshName, coordA.data());
+    int idB = interface.setMeshVertex(meshName, coordB.data());
+    int idC = interface.setMeshVertex(meshName, coordC.data());
+    int idD = interface.setMeshVertex(meshName, coordD.data());
 
     // Initialize, the mesh
     double dt = interface.initialize();
 
-    auto   dataAID = "SourceTwo"; //  meshID
+    auto   dataAID = "SourceTwo"; //  meshName
     double valueA  = 2.0;
     double valueB  = 4.0;
     double valueC  = 6.0;
@@ -124,10 +124,10 @@ BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
 
     while (interface.isCouplingOngoing()) {
 
-      interface.writeScalarData(meshID, dataAID, idA, valueA);
-      interface.writeScalarData(meshID, dataAID, idB, valueB);
-      interface.writeScalarData(meshID, dataAID, idC, valueC);
-      interface.writeScalarData(meshID, dataAID, idD, valueD);
+      interface.writeScalarData(meshName, dataAID, idA, valueA);
+      interface.writeScalarData(meshName, dataAID, idB, valueB);
+      interface.writeScalarData(meshName, dataAID, idC, valueC);
+      interface.writeScalarData(meshName, dataAID, idD, valueD);
 
       dt = interface.advance(dt);
     }

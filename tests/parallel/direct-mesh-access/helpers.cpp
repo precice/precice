@@ -17,18 +17,18 @@ void runTestAccessReceivedMesh(const TestContext &       context,
   if (context.isNamed("SolverOne")) {
     // Defines the bounding box and writes data to the received mesh
     precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    auto                     otherMeshID = "MeshTwo";
-    auto                     dataID      = "Velocities"; //  otherMeshID
-    const int                dim         = interface.getDimensions();
+    auto                     otherMeshName = "MeshTwo";
+    auto                     dataID        = "Velocities"; //  otherMeshName
+    const int                dim           = interface.getDimensions();
 
     std::vector<double> boundingBox = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 3.5}) : boundingBoxSecondaryRank;
     // Set bounding box
-    interface.setMeshAccessRegion(otherMeshID, boundingBox.data());
+    interface.setMeshAccessRegion(otherMeshName, boundingBox.data());
     // Initialize the solverinterface
     double dt = interface.initialize();
 
     // Get relevant size, allocate data structures and retrieve coordinates
-    const std::size_t meshSize = interface.getMeshVertexSize(otherMeshID);
+    const std::size_t meshSize = interface.getMeshVertexSize(otherMeshName);
 
     // According to the bounding boxes and vertices: the primary rank receives 3 vertices, the secondary rank 2
     const bool expectedSize = (context.isPrimary() && meshSize == 3) ||
@@ -38,7 +38,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
     // Allocate memory
     std::vector<int>    ids(meshSize);
     std::vector<double> coordinates(meshSize * dim);
-    interface.getMeshVerticesAndIDs(otherMeshID, meshSize, ids.data(), coordinates.data());
+    interface.getMeshVerticesAndIDs(otherMeshName, meshSize, ids.data(), coordinates.data());
 
     // Check the received vertex coordinates
     std::vector<double> expectedPositions = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 2.0, 0.0, 3.0}) : expectedPositionSecondaryRank;
@@ -56,12 +56,12 @@ void runTestAccessReceivedMesh(const TestContext &       context,
     while (interface.isCouplingOngoing()) {
       // Write data
       if (context.isPrimary()) {
-        interface.writeBlockScalarData(otherMeshID, dataID, meshSize,
+        interface.writeBlockScalarData(otherMeshName, dataID, meshSize,
                                        ids.data(), writeData.data());
       } else {
         // In order to prevent hypothetical index overruns reported by glibcc
         const int *ids_ptr = startIndex < ids.size() ? &ids[startIndex] : nullptr;
-        interface.writeBlockScalarData(otherMeshID, dataID, meshSize - startIndex,
+        interface.writeBlockScalarData(otherMeshName, dataID, meshSize - startIndex,
                                        ids_ptr, writeData.data());
       }
 
@@ -74,25 +74,25 @@ void runTestAccessReceivedMesh(const TestContext &       context,
     BOOST_TEST(interface.getDimensions() == 2);
 
     // Get IDs
-    auto      meshID = "MeshTwo";
-    auto      dataID = "Velocities"; //  meshID
-    const int dim    = interface.getDimensions();
+    auto      meshName = "MeshTwo";
+    auto      dataID   = "Velocities"; //  meshName
+    const int dim      = interface.getDimensions();
     // Define the interface
     std::vector<double> positions = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 2.0}) : std::vector<double>({0.0, 3.0, 0.0, 4.0, 0.0, 5.0});
 
     const int        size = positions.size() / dim;
     std::vector<int> ids(size);
 
-    interface.setMeshVertices(meshID, size, positions.data(), ids.data());
+    interface.setMeshVertices(meshName, size, positions.data(), ids.data());
 
     {
       // Check, if we can use the 'getMeshVerticesAndIDs' function on provided meshes as well,
       // though the actual purpose is of course using it on received meshes
-      const std::size_t ownMeshSize = interface.getMeshVertexSize(meshID);
+      const std::size_t ownMeshSize = interface.getMeshVertexSize(meshName);
       BOOST_TEST(ownMeshSize == size);
       std::vector<int>    ownIDs(ownMeshSize);
       std::vector<double> ownCoordinates(ownMeshSize * dim);
-      interface.getMeshVerticesAndIDs(meshID, ownMeshSize, ownIDs.data(), ownCoordinates.data());
+      interface.getMeshVerticesAndIDs(meshName, ownMeshSize, ownIDs.data(), ownCoordinates.data());
       BOOST_TEST(ownIDs == ids);
       BOOST_TEST(testing::equals(positions, ownCoordinates));
     }
@@ -105,7 +105,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
     while (interface.isCouplingOngoing()) {
 
       dt = interface.advance(dt);
-      interface.readBlockScalarData(meshID, dataID, size,
+      interface.readBlockScalarData(meshName, dataID, size,
                                     ids.data(), readData.data());
 
       // Check the received data

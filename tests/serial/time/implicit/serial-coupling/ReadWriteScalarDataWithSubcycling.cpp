@@ -35,25 +35,25 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
   DataFunction writeFunction;
   DataFunction readFunction;
 
-  std::string meshID, writeDataID, readDataID;
+  std::string meshName, writeDataID, readDataID;
   if (context.isNamed("SolverOne")) {
-    meshID        = "MeshOne";
-    writeDataID   = "DataOne"; //  meshID
+    meshName      = "MeshOne";
+    writeDataID   = "DataOne"; //  meshName
     writeFunction = dataOneFunction;
-    readDataID    = "DataTwo"; //  meshID
+    readDataID    = "DataTwo"; //  meshName
     readFunction  = dataTwoFunction;
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    meshID        = "MeshTwo";
-    writeDataID   = "DataTwo"; //  meshID
+    meshName      = "MeshTwo";
+    writeDataID   = "DataTwo"; //  meshName
     writeFunction = dataTwoFunction;
-    readDataID    = "DataOne"; //  meshID
+    readDataID    = "DataOne"; //  meshName
     readFunction  = dataOneFunction;
   }
 
   double   writeData = 0;
   double   readData  = 0;
-  VertexID vertexID  = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+  VertexID vertexID  = precice.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());
 
   int    nSubsteps       = 4; // perform subcycling on solvers. 4 steps happen in each window.
   int    nWindows        = 5; // perform 5 windows.
@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
 
   if (precice.requiresInitialData()) {
     writeData = writeFunction(time);
-    precice.writeScalarData(meshID, writeDataID, vertexID, writeData);
+    precice.writeScalarData(meshName, writeDataID, vertexID, writeData);
   }
 
   double maxDt = precice.initialize();
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
       windowStartStep = timestep;
     }
 
-    precice.readScalarData(meshID, readDataID, vertexID, readData);
+    precice.readScalarData(meshName, readDataID, vertexID, readData);
 
     if (context.isNamed("SolverOne") && iterations == 0) {                     // special situation for serial coupling: SolverOne gets the old data in its first iteration for all time windows.
       BOOST_TEST(readData == readFunction(startTime + timewindow * windowDt)); // zeroth window: Initial Data from SolverTwo; following windows: data at end of window was written by SolverTwo.
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     BOOST_TEST(currentDt == expectedDts[timestep % nSubsteps]);
     time += currentDt;
     writeData = writeFunction(time);
-    precice.writeScalarData(meshID, writeDataID, vertexID, writeData);
+    precice.writeScalarData(meshName, writeDataID, vertexID, writeData);
     maxDt     = precice.advance(currentDt);
     currentDt = dt > maxDt ? maxDt : dt;
     timestep++;

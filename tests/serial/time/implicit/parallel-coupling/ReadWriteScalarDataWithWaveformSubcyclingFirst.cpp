@@ -35,26 +35,26 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
   DataFunction writeFunction;
   DataFunction readFunction;
 
-  std::string meshID, writeDataID, readDataID;
+  std::string meshName, writeDataID, readDataID;
   if (context.isNamed("SolverOne")) {
-    meshID        = "MeshOne";
-    writeDataID   = "DataOne"; //  meshID
+    meshName      = "MeshOne";
+    writeDataID   = "DataOne"; //  meshName
     writeFunction = dataOneFunction;
-    readDataID    = "DataTwo"; //  meshID
+    readDataID    = "DataTwo"; //  meshName
     readFunction  = dataTwoFunction;
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    meshID        = "MeshTwo";
-    writeDataID   = "DataTwo"; //  meshID
+    meshName      = "MeshTwo";
+    writeDataID   = "DataTwo"; //  meshName
     writeFunction = dataTwoFunction;
-    readDataID    = "DataOne"; //  meshID
+    readDataID    = "DataOne"; //  meshName
     readFunction  = dataOneFunction;
   }
 
   double   writeData, readData;
   VertexID vertexID;
 
-  vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+  vertexID = precice.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());
 
   int    nSubsteps = 4; // perform subcycling on solvers. 4 steps happen in each window.
   int    nWindows  = 5; // perform 5 windows.
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
 
   if (precice.requiresInitialData()) {
     writeData = writeFunction(time);
-    precice.writeScalarData(meshID, writeDataID, vertexID, writeData);
+    precice.writeScalarData(meshName, writeDataID, vertexID, writeData);
   }
 
   double maxDt    = precice.initialize();
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
     double readTime;
     readTime = time + currentDt;
 
-    precice.readScalarData(meshID, readDataID, vertexID, currentDt, readData);
+    precice.readScalarData(meshName, readDataID, vertexID, currentDt, readData);
 
     if (iterations == 0) { // in the first iteration of each window, we only have one sample of data. Therefore constant interpolation
       BOOST_TEST(readData == readFunction(timeCheckpoint));
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
       BOOST_TEST(readData == readFunction(readTime));
     }
 
-    precice.readScalarData(meshID, readDataID, vertexID, currentDt / 2, readData);
+    precice.readScalarData(meshName, readDataID, vertexID, currentDt / 2, readData);
 
     if (iterations == 0) { // in the first iteration of each window, we only have one sample of data. Therefore constant interpolation
       BOOST_TEST(readData == readFunction(timeCheckpoint));
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
     time += currentDt;
     timestep++;
     writeData = writeFunction(time);
-    precice.writeScalarData(meshID, writeDataID, vertexID, writeData);
+    precice.writeScalarData(meshName, writeDataID, vertexID, writeData);
     maxDt = precice.advance(currentDt);
     if (precice.requiresReadingCheckpoint()) {
       time     = timeCheckpoint;

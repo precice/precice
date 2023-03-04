@@ -25,29 +25,29 @@ BOOST_AUTO_TEST_CASE(ExplicitAndMapping)
   constexpr int dim = 2;
 
   if (context.isNamed("SolverOne")) {
-    auto ownMeshID   = "MeshOne";
-    auto otherMeshID = "MeshTwo";
-    auto readDataID  = "Forces";     //  ownMeshID
-    auto writeDataID = "Velocities"; //  otherMeshID
+    auto ownMeshName   = "MeshOne";
+    auto otherMeshName = "MeshTwo";
+    auto readDataID    = "Forces";     //  ownMeshName
+    auto writeDataID   = "Velocities"; //  otherMeshName
 
     std::vector<double> positions = {0.2, 0.2, 0.1, 0.6, 0.1, 0.0, 0.1, 0.0};
     std::vector<int>    ownIDs(4, -1);
-    interface.setMeshVertices(ownMeshID, ownIDs.size(), positions.data(), ownIDs.data());
+    interface.setMeshVertices(ownMeshName, ownIDs.size(), positions.data(), ownIDs.data());
 
     std::array<double, dim * 2> boundingBox = {0.0, 1.0, 0.0, 1.0};
     // Define region of interest, where we could obtain direct write access
-    interface.setMeshAccessRegion(otherMeshID, boundingBox.data());
+    interface.setMeshAccessRegion(otherMeshName, boundingBox.data());
 
     double dt = interface.initialize();
     // Get the size of the filtered mesh within the bounding box
     // (provided by the coupling participant)
-    const int otherMeshSize = interface.getMeshVertexSize(otherMeshID);
+    const int otherMeshSize = interface.getMeshVertexSize(otherMeshName);
     BOOST_TEST(otherMeshSize == 5);
 
     // Allocate a vector containing the vertices
     std::vector<double> solverTwoMesh(otherMeshSize * dim);
     std::vector<int>    otherIDs(otherMeshSize, -1);
-    interface.getMeshVerticesAndIDs(otherMeshID, otherMeshSize, otherIDs.data(), solverTwoMesh.data());
+    interface.getMeshVerticesAndIDs(otherMeshName, otherMeshSize, otherIDs.data(), solverTwoMesh.data());
     // Some dummy writeData
     std::array<double, 5> writeData({1, 2, 3, 4, 5});
 
@@ -58,10 +58,10 @@ BOOST_AUTO_TEST_CASE(ExplicitAndMapping)
 
     while (interface.isCouplingOngoing()) {
       // Write data
-      interface.writeBlockScalarData(otherMeshID, writeDataID, otherMeshSize,
+      interface.writeBlockScalarData(otherMeshName, writeDataID, otherMeshSize,
                                      otherIDs.data(), writeData.data());
       dt = interface.advance(dt);
-      interface.readBlockScalarData(ownMeshID, readDataID, ownIDs.size(),
+      interface.readBlockScalarData(ownMeshName, readDataID, ownIDs.size(),
                                     ownIDs.data(), readData.data());
       BOOST_TEST(readData == (std::vector<double>{2, 4, 3, 3}));
     }
@@ -72,12 +72,12 @@ BOOST_AUTO_TEST_CASE(ExplicitAndMapping)
     std::vector<int>    ids(positions.size() / dim, -1);
 
     // Query IDs
-    auto meshID      = "MeshTwo";
-    auto writeDataID = "Forces";     //  meshID
-    auto readDataID  = "Velocities"; //  meshID
+    auto meshName    = "MeshTwo";
+    auto writeDataID = "Forces";     //  meshName
+    auto readDataID  = "Velocities"; //  meshName
 
     // Define the mesh
-    interface.setMeshVertices(meshID, ids.size(), positions.data(), ids.data());
+    interface.setMeshVertices(meshName, ids.size(), positions.data(), ids.data());
     // Allocate data to read
     std::vector<double> readData(ids.size(), -10);
     std::vector<double> writeData;
@@ -88,10 +88,10 @@ BOOST_AUTO_TEST_CASE(ExplicitAndMapping)
     double dt = interface.initialize();
     while (interface.isCouplingOngoing()) {
 
-      interface.writeBlockScalarData(meshID, writeDataID, ids.size(),
+      interface.writeBlockScalarData(meshName, writeDataID, ids.size(),
                                      ids.data(), writeData.data());
       dt = interface.advance(dt);
-      interface.readBlockScalarData(meshID, readDataID, ids.size(),
+      interface.readBlockScalarData(meshName, readDataID, ids.size(),
                                     ids.data(), readData.data());
       // Expected data according to the writeData
       std::vector<double> expectedData({1, 2, 3, 4, 5});

@@ -12,13 +12,12 @@ void testConvergenceMeasures(const std::string configFile, TestContext const &co
   std::string meshName = context.isNamed("SolverOne") ? "MeshOne" : "MeshTwo";
 
   precice::SolverInterface interface(context.name, configFile, 0, 1);
-  auto                     meshID = meshName;
 
   Vector2d vertex{0.0, 0.0};
 
   std::vector<double> writeValues = {1.0, 1.01, 2.0, 2.5, 2.8, 2.81};
 
-  VertexID vertexID = interface.setMeshVertex(meshID, vertex.data());
+  VertexID vertexID = interface.setMeshVertex(meshName, vertex.data());
 
   interface.initialize();
   int numberOfAdvanceCalls = 0;
@@ -31,8 +30,8 @@ void testConvergenceMeasures(const std::string configFile, TestContext const &co
     }
 
     if (context.isNamed("SolverTwo")) {
-      auto dataID = "Data2"; //  meshID
-      interface.writeScalarData(meshID, dataID, vertexID, writeValues.at(numberOfAdvanceCalls));
+      auto dataID = "Data2"; //  meshName
+      interface.writeScalarData(meshName, dataID, vertexID, writeValues.at(numberOfAdvanceCalls));
     }
 
     interface.advance(1.0);

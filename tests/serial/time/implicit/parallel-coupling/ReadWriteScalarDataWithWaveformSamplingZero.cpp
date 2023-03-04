@@ -36,24 +36,24 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingZero)
   DataFunction writeFunction;
   DataFunction readFunction;
 
-  std::string meshID, writeDataID, readDataID;
+  std::string meshName, writeDataID, readDataID;
   if (context.isNamed("SolverOne")) {
-    meshID        = "MeshOne";
-    writeDataID   = "DataOne"; //  meshID
+    meshName      = "MeshOne";
+    writeDataID   = "DataOne"; //  meshName
     writeFunction = dataOneFunction;
-    readDataID    = "DataTwo"; //  meshID
+    readDataID    = "DataTwo"; //  meshName
     readFunction  = dataTwoFunction;
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    meshID        = "MeshTwo";
-    writeDataID   = "DataTwo"; //  meshID
+    meshName      = "MeshTwo";
+    writeDataID   = "DataTwo"; //  meshName
     writeFunction = dataTwoFunction;
-    readDataID    = "DataOne"; //  meshID
+    readDataID    = "DataOne"; //  meshName
     readFunction  = dataOneFunction;
   }
 
   double   writeData, readData;
-  VertexID vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+  VertexID vertexID = precice.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());
 
   int    nWindows   = 5; // perform 5 windows.
   int    timewindow = 0;
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingZero)
   double time = 0;
   if (precice.requiresInitialData()) {
     writeData = writeFunction(time);
-    precice.writeScalarData(meshID, writeDataID, vertexID, writeData);
+    precice.writeScalarData(meshName, writeDataID, vertexID, writeData);
   }
 
   double maxDt     = precice.initialize();
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingZero)
       readDt   = readDts[j];
       readTime = time + readDt;
 
-      precice.readScalarData(meshID, readDataID, vertexID, sampleDt, readData);
+      precice.readScalarData(meshName, readDataID, vertexID, sampleDt, readData);
 
       if (iterations == 0) {
         BOOST_TEST(readData == readFunction(time));
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingZero)
     time += currentDt;
     timewindow++;
     writeData = writeFunction(time);
-    precice.writeScalarData(meshID, writeDataID, vertexID, writeData);
+    precice.writeScalarData(meshName, writeDataID, vertexID, writeData);
     maxDt = precice.advance(currentDt);
     if (precice.requiresReadingCheckpoint()) {
       time       = timeCheckpoint;

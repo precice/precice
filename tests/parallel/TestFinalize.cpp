@@ -14,9 +14,9 @@ BOOST_AUTO_TEST_CASE(TestFinalize)
 
   if (context.isNamed("SolverOne")) {
     precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    auto                     meshID = "MeshOne";
-    double                   xCoord = 0.0 + context.rank;
-    interface.setMeshVertex(meshID, Eigen::Vector3d(xCoord, 0.0, 0.0).data());
+    auto                     meshName = "MeshOne";
+    double                   xCoord   = 0.0 + context.rank;
+    interface.setMeshVertex(meshName, Eigen::Vector3d(xCoord, 0.0, 0.0).data());
     interface.initialize();
     BOOST_TEST(precice::testing::WhiteboxAccessor::impl(interface).mesh("MeshOne").vertices().size() == 1);
     BOOST_TEST(precice::testing::WhiteboxAccessor::impl(interface).mesh("MeshTwo").vertices().size() == 1);
@@ -24,9 +24,9 @@ BOOST_AUTO_TEST_CASE(TestFinalize)
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
     precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    auto                     meshID = "MeshTwo";
-    double                   xCoord = 0.0 + context.rank;
-    interface.setMeshVertex(meshID, Eigen::Vector3d(xCoord, 0.0, 0.0).data());
+    auto                     meshName = "MeshTwo";
+    double                   xCoord   = 0.0 + context.rank;
+    interface.setMeshVertex(meshName, Eigen::Vector3d(xCoord, 0.0, 0.0).data());
     interface.initialize();
     BOOST_TEST(precice::testing::WhiteboxAccessor::impl(interface).mesh("MeshTwo").vertices().size() == 1);
     interface.finalize();

@@ -37,36 +37,36 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
 
   int nSubsteps; // let three solvers use different time step sizes
 
-  std::string meshID, writeDataID;
+  std::string meshName, writeDataID;
   if (context.isNamed("SolverOne")) {
-    meshID         = "MeshOne";
-    writeDataID    = "DataOne"; //  meshID
+    meshName       = "MeshOne";
+    writeDataID    = "DataOne"; //  meshName
     writeFunction  = dataOneFunction;
-    auto dataTwoId = "DataTwo"; //  meshID
+    auto dataTwoId = "DataTwo"; //  meshName
     readDataPairs.push_back(std::make_pair(dataTwoId, dataTwoFunction));
-    auto dataThreeId = "DataThree"; //  meshID
+    auto dataThreeId = "DataThree"; //  meshName
     readDataPairs.push_back(std::make_pair(dataThreeId, dataThreeFunction));
     nSubsteps = 1;
   } else if (context.isNamed("SolverTwo")) {
-    meshID         = "MeshTwo";
-    writeDataID    = "DataTwo"; //  meshID
+    meshName       = "MeshTwo";
+    writeDataID    = "DataTwo"; //  meshName
     writeFunction  = dataTwoFunction;
-    auto dataOneId = "DataOne"; //  meshID
+    auto dataOneId = "DataOne"; //  meshName
     readDataPairs.push_back(std::make_pair(dataOneId, dataOneFunction));
     nSubsteps = 2;
   } else {
     BOOST_TEST(context.isNamed("SolverThree"));
-    meshID         = "MeshThree";
-    writeDataID    = "DataThree"; //  meshID
+    meshName       = "MeshThree";
+    writeDataID    = "DataThree"; //  meshName
     writeFunction  = dataThreeFunction;
-    auto dataOneId = "DataOne"; //  meshID
+    auto dataOneId = "DataOne"; //  meshName
     readDataPairs.push_back(std::make_pair(dataOneId, dataOneFunction));
     nSubsteps = 3;
   }
 
   double   writeData = 0;
   double   readData  = 0;
-  VertexID vertexID  = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+  VertexID vertexID  = precice.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());
 
   int    nWindows        = 5; // perform 5 windows.
   int    timestep        = 0;
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
 
   if (precice.requiresInitialData()) {
     writeData = writeFunction(time);
-    precice.writeScalarData(meshID, writeDataID, vertexID, writeData);
+    precice.writeScalarData(meshName, writeDataID, vertexID, writeData);
   }
 
   double maxDt     = precice.initialize();
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
       auto readDataID   = readDataPair.first;
       auto readFunction = readDataPair.second;
 
-      precice.readScalarData(meshID, readDataID, vertexID, readData);
+      precice.readScalarData(meshName, readDataID, vertexID, readData);
       if (iterations == 0 && timestep == 0) {                        // special situation: Both solvers are in their very first time windows, first iteration, first time step
         BOOST_TEST(readData == readFunction(0));                     // use initial data only.
       } else if (iterations == 0) {                                  // special situation: Both solvers get the old data for all time windows.
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.
     time += currentDt;
     writeData = writeFunction(time);
-    precice.writeScalarData(meshID, writeDataID, vertexID, writeData);
+    precice.writeScalarData(meshName, writeDataID, vertexID, writeData);
     maxDt     = precice.advance(currentDt);
     currentDt = dt > maxDt ? maxDt : dt;
     BOOST_CHECK(currentDt == windowDt / nSubsteps); // no subcycling.

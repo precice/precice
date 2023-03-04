@@ -47,16 +47,16 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalReadVector)
 
   SolverInterface cplInterface(context.name, context.config(), 0, 1);
   if (context.isNamed("SolverOne")) {
-    auto     meshID = "MeshOne";
-    Vector3d posOne = Vector3d::Constant(0.0);
-    cplInterface.setMeshVertex(meshID, posOne.data());
-    auto dataAID = "DataOne"; //  meshID
-    auto dataBID = "DataTwo"; //  meshID
+    auto     meshName = "MeshOne";
+    Vector3d posOne   = Vector3d::Constant(0.0);
+    cplInterface.setMeshVertex(meshName, posOne.data());
+    auto dataAID = "DataOne"; //  meshName
+    auto dataBID = "DataTwo"; //  meshName
 
     Vector3d valueDataB;
 
     double maxDt = cplInterface.initialize();
-    cplInterface.readVectorData(meshID, dataBID, 0, valueDataB.data());
+    cplInterface.readVectorData(meshName, dataBID, 0, valueDataB.data());
     Vector3d expected(2.0, 3.0, 4.0);
     BOOST_TEST(valueDataB == expected);
 
@@ -64,12 +64,12 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalReadVector)
       Vector3d                    valueDataA(1.0, 1.0, 1.0);
       Eigen::Matrix<double, 3, 3> gradient;
       gradient << 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0;
-      cplInterface.writeVectorData(meshID, dataAID, 0, valueDataA.data());
-      cplInterface.writeVectorGradientData(meshID, dataAID, 0, gradient.data());
+      cplInterface.writeVectorData(meshName, dataAID, 0, valueDataA.data());
+      cplInterface.writeVectorGradientData(meshName, dataAID, 0, gradient.data());
 
       maxDt = cplInterface.advance(maxDt);
 
-      cplInterface.readVectorData(meshID, dataBID, 0, valueDataB.data());
+      cplInterface.readVectorData(meshName, dataBID, 0, valueDataB.data());
       expected << 2.5, 3.5, 4.5;
       BOOST_TEST(valueDataB == expected);
     }
@@ -77,32 +77,32 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalReadVector)
 
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    auto     meshID = "MeshTwo";
-    Vector3d pos    = Vector3d::Constant(1.0);
-    cplInterface.setMeshVertex(meshID, pos.data());
+    auto     meshName = "MeshTwo";
+    Vector3d pos      = Vector3d::Constant(1.0);
+    cplInterface.setMeshVertex(meshName, pos.data());
 
-    auto dataAID = "DataOne"; //  meshID
-    auto dataBID = "DataTwo"; //  meshID
+    auto dataAID = "DataOne"; //  meshName
+    auto dataBID = "DataTwo"; //  meshName
 
     BOOST_REQUIRE(cplInterface.requiresInitialData());
     Vector3d valueDataB(2.0, 3.0, 4.0);
-    cplInterface.writeVectorData(meshID, dataBID, 0, valueDataB.data());
+    cplInterface.writeVectorData(meshName, dataBID, 0, valueDataB.data());
 
     //tell preCICE that data has been written and call initialize
     double maxDt = cplInterface.initialize();
 
     Vector3d valueDataA;
-    cplInterface.readVectorData(meshID, dataAID, 0, valueDataA.data());
+    cplInterface.readVectorData(meshName, dataAID, 0, valueDataA.data());
     Vector3d expected(4.0, 4.0, 4.0);
     BOOST_TEST(valueDataA == expected);
 
     while (cplInterface.isCouplingOngoing()) {
 
       valueDataB << 2.5, 3.5, 4.5;
-      cplInterface.writeVectorData(meshID, dataBID, 0, valueDataB.data());
+      cplInterface.writeVectorData(meshName, dataBID, 0, valueDataB.data());
 
       maxDt = cplInterface.advance(maxDt);
-      cplInterface.readVectorData(meshID, dataAID, 0, valueDataA.data());
+      cplInterface.readVectorData(meshName, dataAID, 0, valueDataA.data());
       BOOST_TEST(valueDataA == expected);
     }
     cplInterface.finalize();

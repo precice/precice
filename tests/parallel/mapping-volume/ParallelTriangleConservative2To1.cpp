@@ -20,8 +20,8 @@ BOOST_AUTO_TEST_CASE(ParallelTriangleConservative2To1)
   double                dt;
 
   if (context.isNamed("SolverOne")) {
-    auto meshID = "MeshOne";
-    auto dataID = "DataOne"; //  meshID
+    auto meshName = "MeshOne";
+    auto dataID   = "DataOne"; //  meshName
 
     std::vector<double> coords;
 
@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(ParallelTriangleConservative2To1)
       coords = {0.7, 0.2};
     }
     vertexIDs.resize(coords.size() / 2);
-    interface.setMeshVertices(meshID, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, vertexIDs.size(), coords.data(), vertexIDs.data());
 
     dt = interface.initialize();
 
@@ -42,20 +42,20 @@ BOOST_AUTO_TEST_CASE(ParallelTriangleConservative2To1)
     std::vector<double> values;
     values = {1.0};
 
-    interface.writeBlockScalarData(meshID, dataID, 1, vertexIDs.data(), values.data());
+    interface.writeBlockScalarData(meshName, dataID, 1, vertexIDs.data(), values.data());
 
     interface.advance(dt);
     BOOST_TEST(!interface.isCouplingOngoing(), "Sending participant must advance only once.");
     interface.finalize();
   } else { // SolverTwo
-    auto meshID = "MeshTwo";
-    auto dataID = "DataOne"; //  meshID
+    auto meshName = "MeshTwo";
+    auto dataID   = "DataOne"; //  meshName
 
     std::vector<double> coords = {0.0, 0.0, 1.0, 0.0, 0.0, 1.0}; // Lower-left triangle making half the unit square
 
     vertexIDs.resize(coords.size() / 2);
-    interface.setMeshVertices(meshID, vertexIDs.size(), coords.data(), vertexIDs.data());
-    interface.setMeshTriangle(meshID, vertexIDs[0], vertexIDs[1], vertexIDs[2]);
+    interface.setMeshVertices(meshName, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshTriangle(meshName, vertexIDs[0], vertexIDs[1], vertexIDs[2]);
 
     dt = interface.initialize();
 
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(ParallelTriangleConservative2To1)
     // These are proportional to barycentric coordinates.
     expected << 0.3, 1.0, 0.7;
 
-    interface.readBlockScalarData(meshID, dataID, expected.size(), vertexIDs.data(), readData.data());
+    interface.readBlockScalarData(meshName, dataID, expected.size(), vertexIDs.data(), readData.data());
     BOOST_CHECK(equals(expected, readData));
     interface.finalize();
   }

@@ -46,13 +46,13 @@ BOOST_AUTO_TEST_CASE(GradientTestUnidirectionalReadScalar)
   SolverInterface cplInterface(context.name, context.config(), 0, 1);
   if (context.isNamed("A")) {
 
-    auto meshID = "MeshA";
-    auto dataID = "DataA"; //  meshID
+    auto meshName = "MeshA";
+    auto dataID   = "DataA"; //  meshName
 
     Vector3d posOne = Vector3d::Constant(0.0);
     Vector3d posTwo = Vector3d::Constant(1.0);
-    cplInterface.setMeshVertex(meshID, posOne.data());
-    cplInterface.setMeshVertex(meshID, posTwo.data());
+    cplInterface.setMeshVertex(meshName, posOne.data());
+    cplInterface.setMeshVertex(meshName, posTwo.data());
 
     // Initialize, thus sending the mesh.
     double maxDt = cplInterface.initialize();
@@ -60,13 +60,13 @@ BOOST_AUTO_TEST_CASE(GradientTestUnidirectionalReadScalar)
 
     double values[2]  = {1.0, 2.0};
     int    indices[2] = {0, 1};
-    cplInterface.writeBlockScalarData(meshID, dataID, 2, indices, values);
+    cplInterface.writeBlockScalarData(meshName, dataID, 2, indices, values);
 
-    BOOST_TEST(cplInterface.requiresGradientDataFor(meshID, dataID) == true);
+    BOOST_TEST(cplInterface.requiresGradientDataFor(meshName, dataID) == true);
 
-    if (cplInterface.requiresGradientDataFor(meshID, dataID)) {
+    if (cplInterface.requiresGradientDataFor(meshName, dataID)) {
       double gradientValues[6] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
-      cplInterface.writeBlockScalarGradientData(meshID, dataID, 2, indices, gradientValues);
+      cplInterface.writeBlockScalarGradientData(meshName, dataID, 2, indices, gradientValues);
     }
 
     // Participant must make move after writing
@@ -77,20 +77,20 @@ BOOST_AUTO_TEST_CASE(GradientTestUnidirectionalReadScalar)
 
   } else {
     BOOST_TEST(context.isNamed("B"));
-    auto meshID = "MeshB";
-    auto dataID = "DataA"; //  meshID
+    auto meshName = "MeshB";
+    auto dataID   = "DataA"; //  meshName
 
     Vector3d posOne = Vector3d::Constant(0.1);
     Vector3d posTwo = Vector3d::Constant(1.1);
-    cplInterface.setMeshVertex(meshID, posOne.data());
-    cplInterface.setMeshVertex(meshID, posTwo.data());
+    cplInterface.setMeshVertex(meshName, posOne.data());
+    cplInterface.setMeshVertex(meshName, posTwo.data());
 
     double maxDt = cplInterface.initialize();
     BOOST_TEST(cplInterface.isCouplingOngoing(), "Receiving participant should have to advance once!");
 
     double valueData[2];
     int    indices[2] = {0, 1};
-    cplInterface.readBlockScalarData(meshID, dataID, 2, indices, valueData);
+    cplInterface.readBlockScalarData(meshName, dataID, 2, indices, valueData);
     double expected[2] = {1.6, 3.5};
     BOOST_TEST(valueData == expected);
 
