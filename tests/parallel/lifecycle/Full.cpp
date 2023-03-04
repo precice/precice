@@ -20,20 +20,20 @@ BOOST_AUTO_TEST_CASE(Full)
   constexpr double         dx{1};
 
   if (context.isNamed("SolverOne")) {
-    auto   meshid   = "MeshOne";
+    auto   meshName = "MeshOne";
     double coords[] = {x1 + dx * context.rank, y, z};
-    auto   vertexid = interface.setMeshVertex(meshid, coords);
+    auto   vertexid = interface.setMeshVertex(meshName, coords);
 
-    auto   dataid = "DataOne"; //  meshid
-    double data[] = {3.4, 4.5, 5.6};
-    interface.writeVectorData(meshid, dataid, vertexid, data);
+    auto   dataName = "DataOne"; //  meshName
+    double data[]   = {3.4, 4.5, 5.6};
+    interface.writeVectorData(meshName, dataName, vertexid, data);
   } else {
-    auto   meshid   = "MeshTwo";
+    auto   meshName = "MeshTwo";
     double coords[] = {x1 + dx * context.rank, y, z};
-    auto   vertexid = interface.setMeshVertex(meshid, coords);
+    auto   vertexid = interface.setMeshVertex(meshName, coords);
 
-    auto dataid = "DataTwo"; //  meshid
-    interface.writeScalarData(meshid, dataid, vertexid, 7.8);
+    auto dataName = "DataTwo"; //  meshName
+    interface.writeScalarData(meshName, dataName, vertexid, 7.8);
   }
   interface.initialize();
   BOOST_TEST(interface.isCouplingOngoing());
