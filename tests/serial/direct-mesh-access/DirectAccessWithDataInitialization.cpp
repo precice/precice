@@ -35,15 +35,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithDataInitialization)
     int                 otherMeshSize = 1; // @todo hard-coded, because we cannot read this from preCICE before interface.initialize(). See https://github.com/precice/precice/issues/1583.
     std::vector<double> writeData(otherMeshSize, -1);
 
-    // writeData for initialization
-    // for (int i = 0; i < otherMeshSize; ++i) {  // @todo otherMeshSize not available yet. See https://github.com/precice/precice/issues/1583.
-    //   writeData[i] = 2;
-    // }
-
-    if (interface.requiresInitialData()) {
-      // @todo not possible to write data to mesh here, because we can only access mesh after calling initialize due to direct access. See https://github.com/precice/precice/issues/1583.
-      // interface.writeBlockScalarData(writeDataID, otherIDs.size(), otherIDs.data(), writeData.data());
-    }
+    BOOST_TEST(!interface.requiresInitialData());
 
     double dt = interface.initialize();
     // Get the size of the filtered mesh within the bounding box
