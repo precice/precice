@@ -138,9 +138,7 @@ void precicef_has_mesh_(
     int         meshNameLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  int    strippedLength = precice::impl::strippedLength(meshName, meshNameLength);
-  string stringMeshName(meshName, strippedLength);
-  if (impl->hasMesh(meshName)) {
+  if (impl->hasMesh(precice::impl::strippedStringView(meshName, meshNameLength))) {
     *hasMesh = 1;
   } else {
     *hasMesh = 0;

@@ -567,8 +567,7 @@ bool SolverInterfaceImpl::requiresReadingCheckpoint()
   return required;
 }
 
-bool SolverInterfaceImpl::hasMesh(
-    const std::string &meshName) const
+bool SolverInterfaceImpl::hasMesh(std::string_view meshName) const
 {
   PRECICE_TRACE(meshName);
   return _accessor->hasMesh(meshName);

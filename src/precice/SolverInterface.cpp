@@ -72,8 +72,7 @@ bool SolverInterface::requiresWritingCheckpoint()
   return _impl->requiresWritingCheckpoint();
 }
 
-bool SolverInterface::hasMesh(
-    const std::string &meshName) const
+bool SolverInterface::hasMesh(std::string_view meshName) const
 {
   return _impl->hasMesh(meshName);
 }

@@ -136,7 +136,7 @@ public:
   void resetMesh(std::string_view meshName);
 
   /// @copydoc SolverInterface::hasMesh
-  bool hasMesh(const std::string &meshName) const;
+  bool hasMesh(std::string_view meshName) const;
 
   /// @copydoc SolverInterface::requiresMeshConnectivityFor
   bool requiresMeshConnectivityFor(std::string_view meshName) const;

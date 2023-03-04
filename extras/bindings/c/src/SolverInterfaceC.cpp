@@ -123,8 +123,7 @@ int precicec_requiresReadingCheckpoint()
 int precicec_hasMesh(const char *meshName)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  std::string stringMeshName(meshName);
-  if (impl->hasMesh(stringMeshName)) {
+  if (impl->hasMesh(meshName)) {
     return 1;
   }
   return 0;

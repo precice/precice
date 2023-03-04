@@ -294,10 +294,10 @@ public:
   /**
    * @brief Checks if the mesh with given name is used by a solver.
    *
-   * @param[in] meshNameName the name of the mesh
+   * @param[in] meshName the name of the mesh
    * @returns whether the mesh is used.
    */
-  bool hasMesh(const std::string &meshName) const;
+  bool hasMesh(std::string_view meshName) const;
 
   /**
    * @brief Checks if the given mesh requires connectivity.
