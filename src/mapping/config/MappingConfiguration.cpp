@@ -170,7 +170,7 @@ MappingConfiguration::MappingConfiguration(
   std::list<XMLTag> rbfIterativeTags{
       XMLTag{*this, TYPE_RBF_GLOBAL_ITERATIVE, occ, TAG}.setDocumentation("Radial-basis-function mapping using an iterative solver with a distributed parallelism.")};
   std::list<XMLTag> pumDirectTags{
-      XMLTag{*this, TYPE_RBF_PUM_DIRECT, occ, TAG}.setDocumentation("PUM")};
+      XMLTag{*this, TYPE_RBF_PUM_DIRECT, occ, TAG}.setDocumentation("Radial-basis-function mapping using a partition of unity method, which supports a distributed parallelism.")};
   std::list<XMLTag> rbfAliasTag{
       XMLTag{*this, TYPE_RBF_ALIAS, occ, TAG}.setDocumentation("Alias tag, which auto-selects a radial-basis-function mapping depending on the simulation parameter,")};
 
@@ -205,18 +205,18 @@ MappingConfiguration::MappingConfiguration(
                                .setDocumentation("Sets kind of preallocation for PETSc RBF implementation")
                                .setOptions({PREALLOCATION_ESTIMATE, PREALLOCATION_COMPUTE, PREALLOCATION_OFF, PREALLOCATION_SAVE, PREALLOCATION_TREE});
 
-  auto verticesPerPartition = XMLAttribute<int>(ATTR_VERTICES_PER_PARTITION)
-                                  .setDocumentation("Vertices per partition in the PoU");
+  auto verticesPerCluster = XMLAttribute<int>(ATTR_VERTICES_PER_CLUSTER)
+                                .setDocumentation("Vertices per cluster (partition) applied in the rbf partition of unity method.");
   auto relativeOverlap = makeXMLAttribute(ATTR_RELATIVE_OVERLAP, 0.3)
-                             .setDocumentation("Value between 0 and 1 indicating the relative overlap between partitions. A value of 0.3 is usually a good trade-off between accuracy and efficiency.");
+                             .setDocumentation("Value between 0 and 1 indicating the relative overlap between clusters. A value of 0.3 is usually a good trade-off between accuracy and efficiency.");
   auto projectToInput = XMLAttribute<bool>(ATTR_PROJECT_TO_INPUT)
-                            .setDocumentation("If enabled, places the partition centers at the closest vertex of the input mesh. Should be enabled in case of non-uniform point distributions such as for shell structures.");
+                            .setDocumentation("If enabled, places the cluster centers at the closest vertex of the input mesh. Should be enabled in case of non-uniform point distributions such as for shell structures.");
 
   // Add the relevant attributes to the relevant tags
   addAttributes(projectionTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint});
   addAttributes(rbfDirectTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead});
   addAttributes(rbfIterativeTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead, attrSolverRtol, attrPreallocation});
-  addAttributes(pumDirectTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead, verticesPerPartition, relativeOverlap, projectToInput});
+  addAttributes(pumDirectTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead, verticesPerCluster, relativeOverlap, projectToInput});
   addAttributes(rbfAliasTag, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrXDead, attrYDead, attrZDead});
 
   // Now we take care of the subtag basis function
@@ -302,6 +302,11 @@ void MappingConfiguration::xmlTagCallback(
     std::string strPolynomial = tag.getStringAttributeValue(ATTR_POLYNOMIAL, POLYNOMIAL_SEPARATE);
     std::string strPrealloc   = tag.getStringAttributeValue(ATTR_PREALLOCATION, PREALLOCATION_TREE);
 
+    // pum related tags
+    int    verticesPerCluster = tag.getIntAttributeValue(ATTR_VERTICES_PER_CLUSTER, 0);
+    double relativeOverlap    = tag.getDoubleAttributeValue(ATTR_RELATIVE_OVERLAP, 0.3);
+    bool   projectToInput     = tag.getBooleanAttributeValue(ATTR_PROJECT_TO_INPUT, false);
+
     // Convert raw string into enum types as the constructors take enums
     if (constraint == CONSTRAINT_CONSERVATIVE) {
       constraintValue = Mapping::CONSERVATIVE;
@@ -314,15 +319,10 @@ void MappingConfiguration::xmlTagCallback(
     } else {
       PRECICE_UNREACHABLE("Unknown mapping constraint \"{}\".", constraint);
     }
-    // if (tag.hasAttribute(ATTR_VERTICES_PER_PARTITION)) {
-    int    verticesPerPartition = tag.getIntAttributeValue(ATTR_VERTICES_PER_PARTITION, 0);
-    double relativeOverlap      = tag.getDoubleAttributeValue(ATTR_RELATIVE_OVERLAP, 0.3);
-    bool   projectToInput       = tag.getBooleanAttributeValue(ATTR_PROJECT_TO_INPUT, false);
-    // }
 
     ConfiguredMapping configuredMapping = createMapping(dir, type, fromMesh, toMesh);
 
-    _rbfConfig = configureRBFMapping(type, context, strPolynomial, strPrealloc, xDead, yDead, zDead, solverRtol, verticesPerPartition, relativeOverlap, projectToInput);
+    _rbfConfig = configureRBFMapping(type, context, strPolynomial, strPrealloc, xDead, yDead, zDead, solverRtol, verticesPerCluster, relativeOverlap, projectToInput);
 
     checkDuplicates(configuredMapping);
     _mappings.push_back(configuredMapping);
@@ -369,7 +369,7 @@ void MappingConfiguration::xmlTagCallback(
       PRECICE_CHECK(false, "The global-iterative RBF solver requires a preCICE build with PETSc enabled.");
 #endif
     } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::PUMDirect) {
-      mapping.mapping = getRBFMapping<RBFBackend::PUM>(basisFunction, constraintValue, mapping.fromMesh->getDimensions(), supportRadius, shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _rbfConfig.verticesPerPartition, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput);
+      mapping.mapping = getRBFMapping<RBFBackend::PUM>(basisFunction, constraintValue, mapping.fromMesh->getDimensions(), supportRadius, shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput);
     } else {
       PRECICE_UNREACHABLE("Unknown RBF solver.");
     }
@@ -382,7 +382,7 @@ MappingConfiguration::RBFConfiguration MappingConfiguration::configureRBFMapping
                                                                                  const std::string &              preallocation,
                                                                                  bool xDead, bool yDead, bool zDead,
                                                                                  double solverRtol,
-                                                                                 double verticesPerPartition,
+                                                                                 double verticesPerCluster,
                                                                                  double relativeOverlap,
                                                                                  bool   projectToInput) const
 {
@@ -436,9 +436,9 @@ MappingConfiguration::RBFConfiguration MappingConfiguration::configureRBFMapping
   rbfConfig.deadAxis   = {{xDead, yDead, zDead}};
   rbfConfig.solverRtol = solverRtol;
 
-  rbfConfig.verticesPerPartition = verticesPerPartition;
-  rbfConfig.relativeOverlap      = relativeOverlap;
-  rbfConfig.projectToInput       = projectToInput;
+  rbfConfig.verticesPerCluster = verticesPerCluster;
+  rbfConfig.relativeOverlap    = relativeOverlap;
+  rbfConfig.projectToInput     = projectToInput;
 
   return rbfConfig;
 }

@@ -73,7 +73,7 @@ public:
     Polynomial          polynomial{};
     double              solverRtol{};
     Preallocation       preallocation{};
-    int                 verticesPerPartition{};
+    int                 verticesPerCluster{};
     double              relativeOverlap{};
     bool                projectToInput{};
   };
@@ -146,9 +146,9 @@ private:
   // const std::string PARALLELISM                = "distributed";
 
   // For PUM
-  const std::string ATTR_VERTICES_PER_PARTITION = "vertices-per-partition";
-  const std::string ATTR_RELATIVE_OVERLAP       = "relative-overlap";
-  const std::string ATTR_PROJECT_TO_INPUT       = "project-to-input";
+  const std::string ATTR_VERTICES_PER_CLUSTER = "vertices-per-cluster";
+  const std::string ATTR_RELATIVE_OVERLAP     = "relative-overlap";
+  const std::string ATTR_PROJECT_TO_INPUT     = "project-to-input";
 
   // We declare the basis function as subtag
   const std::string SUBTAG_BASIS_FUNCTION = "basis-function";
@@ -206,7 +206,7 @@ private:
                                        const std::string &              preallocation,
                                        bool xDead, bool yDead, bool zDead,
                                        double solverRtol,
-                                       double verticesPerPartition,
+                                       double verticesPerCluster,
                                        double relativeOverlap,
                                        bool   projectToInput) const;
 
