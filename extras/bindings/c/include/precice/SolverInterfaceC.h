@@ -130,7 +130,7 @@ PRECICE_API int precicec_requiresMeshConnectivityFor(const char *meshName);
 /**
  * @brief Creates a mesh vertex
  *
- * @param[in] mesh the name of the mesh to add the vertex to.
+ * @param[in] meshName the name of the mesh to add the vertex to.
  * @param[in] position a pointer to the coordinates of the vertex.
  * @returns the id of the created vertex
  */
@@ -141,7 +141,7 @@ PRECICE_API int precicec_setMeshVertex(
 /**
  * @brief Returns the number of vertices of a mesh.
  *
- * @param[in] mesh the name of the mesh.
+ * @param[in] meshName the name of the mesh.
  * @returns the amount of the vertices of the mesh
  */
 PRECICE_API int precicec_getMeshVertexSize(const char *meshName);
@@ -149,7 +149,7 @@ PRECICE_API int precicec_getMeshVertexSize(const char *meshName);
 /**
  * @brief Creates multiple mesh vertices
  *
- * @param[in] mesh the name of the mesh to add the vertices to.
+ * @param[in] meshName the name of the mesh to add the vertices to.
  * @param[in] size Number of vertices to create
  * @param[in] positions a pointer to the coordinates of the vertices
  *            The 2D-format is (d0x, d0y, d1x, d1y, ..., dnx, dny)
@@ -166,7 +166,7 @@ PRECICE_API void precicec_setMeshVertices(
 /**
  * @brief Sets mesh edge from vertex IDs, returns edge ID.
  *
- * @param[in] meshID ID of the mesh to add the edge to
+ * @param[in] meshName name of the mesh to add the edge to
  * @param[in] firstVertexID ID of the first vertex of the edge
  * @param[in] secondVertexID ID of the second vertex of the edge
  *
@@ -180,7 +180,7 @@ PRECICE_API void precicec_setMeshEdge(
 /**
  * @brief Sets multiple mesh edge from vertex IDs
  *
- * @param[in] meshID ID of the mesh to add the edges to
+ * @param[in] meshName name of the mesh to add the edges to
  * @param[in] size the amount of edges to set
  * @param[in] vertices an array containing 2*size vertex IDs
  *
@@ -203,7 +203,7 @@ PRECICE_API void precicec_setMeshTriangle(
 /**
  * @brief Sets multiple mesh triangles from vertex IDs
  *
- * @param[in] meshID ID of the mesh to add the triangles to
+ * @param[in] meshName name of the mesh to add the triangles to
  * @param[in] size the amount of triangles to set
  * @param[in] vertices an array containing 3*size vertex IDs
  *
@@ -217,7 +217,7 @@ PRECICE_API void precicec_setMeshTriangles(
 /**
  * @brief Sets surface mesh quadrangle from vertex IDs.
  *
- * @param[in] meshID ID of the mesh to add the Quad to
+ * @param[in] meshName name of the mesh to add the Quad to
  * @param[in] firstVertexID ID of the first vertex of the Quad
  * @param[in] secondVertexID ID of the second vertex of the Quad
  * @param[in] thirdVertexID ID of the third vertex of the Quad
@@ -233,7 +233,7 @@ PRECICE_API void precicec_setMeshQuad(
 /**
  * @brief Sets multiple mesh quads from vertex IDs
  *
- * @param[in] meshID ID of the mesh to add the quad to
+ * @param[in] meshName name of the mesh to add the quad to
  * @param[in] size the amount of quads to set
  * @param[in] vertices an array containing 4*size vertex IDs
  *
@@ -247,7 +247,7 @@ PRECICE_API void precicec_setMeshQuads(
 /**
  * @brief Sets mesh tetrahedron from vertex IDs.
  *
- * @param[in] meshID ID of the mesh to add the Tetra to
+ * @param[in] meshName name of the mesh to add the Tetra to
  * @param[in] firstVertexID ID of the first vertex of the Tetra
  * @param[in] secondVertexID ID of the second vertex of the Tetra
  * @param[in] thirdVertexID ID of the third vertex of the Tetra
@@ -263,7 +263,7 @@ PRECICE_API void precicec_setMeshTetrahedron(
 /**
  * @brief Sets multiple mesh tetrahedra from vertex IDs
  *
- * @param[in] meshID ID of the mesh to add the tetrahedra to
+ * @param[in] meshName name of the mesh to add the tetrahedra to
  * @param[in] size the amount of tetrahedra to set
  * @param[in] vertices an array containing 4*size vertex IDs
  *
@@ -291,8 +291,8 @@ PRECICE_API int precicec_hasData(const char *meshName, const char *dataName);
  * values = (d0x, d0y, d0z, d1x, d1y, d1z, ...., dnx, dny, dnz), where n is
  * the number of vector values. In 2D, the z-components are removed.
  *
- * @param[in] mesh the name of the mesh
- * @param[in] data the name of the data to be written.
+ * @param[in] meshName the name of the mesh
+ * @param[in] dataName the name of the data to be written.
  * @param[in] size Number of indices, and number of values * dimensions.
  * @param[in] values Values of the data to be written.
  */
@@ -306,10 +306,10 @@ PRECICE_API void precicec_writeBlockVectorData(
 /**
  * @brief Writes vectorial foating point data to the coupling mesh.
  *
- * @param[in] mesh the name of the mesh
- * @param[in] data the name of the data to be written.
- * @param[in] dataPosition Spatial position of the data to be written.
- * @param[in] dataValue Vectorial data value to be written.
+ * @param[in] meshName the name of the mesh
+ * @param[in] dataName the name of the data to be written.
+ * @param[in] dataNamePosition Spatial position of the data to be written.
+ * @param[in] dataNameValue Vectorial data value to be written.
  */
 PRECICE_API void precicec_writeVectorData(
     const char *  meshName,
@@ -330,10 +330,10 @@ PRECICE_API void precicec_writeBlockScalarData(
 /**
  * @brief Writes scalar floating point data to the coupling mesh.
  *
- * @param[in] mesh the name of the mesh.
- * @param[in] data the name of the data to be written.
- * @param[in] dataPosition Spatial position of the data to be written.
- * @param[in] dataValue Scalar data value to be written.
+ * @param[in] meshName the name of the mesh.
+ * @param[in] dataName the name of the data to be written.
+ * @param[in] dataNamePosition Spatial position of the data to be written.
+ * @param[in] dataNameValue Scalar data value to be written.
  */
 PRECICE_API void precicec_writeScalarData(
     const char *meshName,
@@ -348,8 +348,8 @@ PRECICE_API void precicec_writeScalarData(
  * values = (d0x, d0y, d0z, d1x, d1y, d1z, ...., dnx, dny, dnz), where n is
  * the number of vector values. In 2D, the z-components are removed.
  *
- * @param[in] mesh the name of the mesh
- * @param[in] data the name of the data to be read.
+ * @param[in] meshName the name of the mesh
+ * @param[in] dataName the name of the data to be read.
  * @param[in] size  Number of indices, and number of values * dimensions.
  * @param[in] valueIndices Indices (from setReadPosition()) of data values.
  * @param[in] values Values of the data to be read.
@@ -364,9 +364,9 @@ PRECICE_API void precicec_readBlockVectorData(
 /**
  * @brief Reads vectorial foating point data from the coupling mesh.
  *
- * @param[in] mesh the name of the mesh
- * @param[in] data the name of the data to be read.
- * @param[in] dataPosition Position where the read data should be mapped to.
+ * @param[in] meshName the name of the mesh
+ * @param[in] dataName the name of the data to be read.
+ * @param[in] dataNamePosition Position where the read data should be mapped to.
  * @param[out] dataValue Vectorial data value read.
  */
 PRECICE_API void precicec_readVectorData(
@@ -388,9 +388,9 @@ PRECICE_API void precicec_readBlockScalarData(
 /**
  * @brief Reads scalar foating point data from the coupling mesh.
  *
- * @param[in] mesh the name of the mesh
- * @param[in] data the name of the data to be read.
- * @param[in] dataPosition Position where the read data should be mapped to.
+ * @param[in] meshName the name of the mesh
+ * @param[in] dataName the name of the data to be read.
+ * @param[in] dataNamePosition Position where the read data should be mapped to.
  * @param[out] dataValue Scalar data value read.
  */
 PRECICE_API void precicec_readScalarData(
