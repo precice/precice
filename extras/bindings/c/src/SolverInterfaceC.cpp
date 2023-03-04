@@ -32,12 +32,9 @@ void precicec_createSolverInterface_withCommunicator(
     int         solverProcessSize,
     void *      communicator)
 {
-  std::string stringAccessorName(participantName);
-  std::string stringConfigFileName(configFileName);
-
   PRECICE_CHECK(impl == nullptr, errormsgCreate);
-  impl.reset(new precice::SolverInterface(stringAccessorName,
-                                          stringConfigFileName,
+  impl.reset(new precice::SolverInterface(participantName,
+                                          configFileName,
                                           solverProcessIndex,
                                           solverProcessSize,
                                           communicator));
@@ -49,12 +46,9 @@ void precicec_createSolverInterface(
     int         solverProcessIndex,
     int         solverProcessSize)
 {
-  std::string stringAccessorName(participantName);
-  std::string stringConfigFileName(configFileName);
-
   PRECICE_CHECK(impl == nullptr, errormsgCreate);
-  impl.reset(new precice::SolverInterface(stringAccessorName,
-                                          stringConfigFileName,
+  impl.reset(new precice::SolverInterface(participantName,
+                                          configFileName,
                                           solverProcessIndex,
                                           solverProcessSize));
 }

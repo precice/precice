@@ -82,13 +82,13 @@ bool syncMode = false;
 namespace impl {
 
 SolverInterfaceImpl::SolverInterfaceImpl(
-    std::string        participantName,
-    const std::string &configurationFileName,
-    int                solverProcessIndex,
-    int                solverProcessSize,
-    void *             communicator,
-    bool               allowNullptr)
-    : _accessorName(std::move(participantName)),
+    std::string_view participantName,
+    std::string_view configurationFileName,
+    int              solverProcessIndex,
+    int              solverProcessSize,
+    void *           communicator,
+    bool             allowNullptr)
+    : _accessorName(participantName),
       _accessorProcessRank(solverProcessIndex),
       _accessorCommunicatorSize(solverProcessSize)
 {
@@ -144,21 +144,21 @@ SolverInterfaceImpl::SolverInterfaceImpl(
 }
 
 SolverInterfaceImpl::SolverInterfaceImpl(
-    std::string        participantName,
-    const std::string &configurationFileName,
-    int                solverProcessIndex,
-    int                solverProcessSize)
-    : SolverInterfaceImpl::SolverInterfaceImpl(std::move(participantName), configurationFileName, solverProcessIndex, solverProcessSize, nullptr, true)
+    std::string_view participantName,
+    std::string_view configurationFileName,
+    int              solverProcessIndex,
+    int              solverProcessSize)
+    : SolverInterfaceImpl::SolverInterfaceImpl(participantName, configurationFileName, solverProcessIndex, solverProcessSize, nullptr, true)
 {
 }
 
 SolverInterfaceImpl::SolverInterfaceImpl(
-    std::string        participantName,
-    const std::string &configurationFileName,
-    int                solverProcessIndex,
-    int                solverProcessSize,
-    void *             communicator)
-    : SolverInterfaceImpl::SolverInterfaceImpl(std::move(participantName), configurationFileName, solverProcessIndex, solverProcessSize, communicator, false)
+    std::string_view participantName,
+    std::string_view configurationFileName,
+    int              solverProcessIndex,
+    int              solverProcessSize,
+    void *           communicator)
+    : SolverInterfaceImpl::SolverInterfaceImpl(participantName, configurationFileName, solverProcessIndex, solverProcessSize, communicator, false)
 {
 }
 
@@ -171,7 +171,7 @@ SolverInterfaceImpl::~SolverInterfaceImpl()
 }
 
 void SolverInterfaceImpl::configure(
-    const std::string &configurationFileName)
+    std::string_view configurationFileName)
 {
   config::Configuration config;
   utils::Parallel::initializeManagedMPI(nullptr, nullptr);

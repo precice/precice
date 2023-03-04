@@ -1,9 +1,10 @@
 #pragma once
 
+#include <cstddef>
 #include <map>
 #include <set>
-#include <stddef.h>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "action/Action.hpp"
@@ -55,10 +56,10 @@ public:
    * @copydoc SolverInterface::SolverInterface(const std::string&, const std::string&, int, int)
    */
   SolverInterfaceImpl(
-      std::string        participantName,
-      const std::string &configurationFileName,
-      int                solverProcessIndex,
-      int                solverProcessSize);
+      std::string_view participantName,
+      std::string_view configurationFileName,
+      int              solverProcessIndex,
+      int              solverProcessSize);
 
   /**
    * @copybrief SolverInterface::SolverInterface(const std::string&, const std::string&, int, int, void*)
@@ -69,11 +70,11 @@ public:
    * @copydetails SolverInterface::SolverInterface(const std::string&, const std::string&, int, int, void*)
    */
   SolverInterfaceImpl(
-      std::string        participantName,
-      const std::string &configurationFileName,
-      int                solverProcessIndex,
-      int                solverProcessSize,
-      void *             communicator);
+      std::string_view participantName,
+      std::string_view configurationFileName,
+      int              solverProcessIndex,
+      int              solverProcessSize,
+      void *           communicator);
 
   /**
    * @brief Destructor
@@ -403,12 +404,12 @@ private:
    * @param[in] allowNullptr    Accept nullptr for communicator.
    */
   SolverInterfaceImpl(
-      std::string        participantName,
-      const std::string &configurationFileName,
-      int                solverProcessIndex,
-      int                solverProcessSize,
-      void *             communicator,
-      bool               allowNullptr);
+      std::string_view participantName,
+      std::string_view configurationFileName,
+      int              solverProcessIndex,
+      int              solverProcessSize,
+      void *           communicator,
+      bool             allowNullptr);
 
   mutable logging::Logger _log{"impl::SolverInterfaceImpl"};
 
@@ -462,7 +463,7 @@ private:
    *
    * @param[in] configurationFileName Name (with path) of the xml config. file.
    */
-  void configure(const std::string &configurationFileName);
+  void configure(std::string_view configurationFileName);
 
   /**
    * @brief Configures the coupling interface with a prepared configuration.

@@ -43,22 +43,14 @@ void precicef_create_(
     const char *configFileName,
     const int * solverProcessIndex,
     const int * solverProcessSize,
-    int         lengthAccessorName,
-    int         lengthConfigFileName)
+    int         participantNameLength,
+    int         configFileNameLength)
 {
-  // cout << "lengthAccessorName: " << lengthAccessorName << '\n';
-  // cout << "lengthConfigFileName: " << lengthConfigFileName << '\n';
-  // cout << "solverProcessIndex: " << *solverProcessIndex << '\n';
-  // cout << "solverProcessSize: " << *solverProcessSize << '\n';
-  int    strippedLength = precice::impl::strippedLength(participantName, lengthAccessorName);
-  string stringAccessorName(participantName, strippedLength);
-  strippedLength = precice::impl::strippedLength(configFileName, lengthConfigFileName);
-  string stringConfigFileName(configFileName, strippedLength);
-  // cout << "Accessor: " << stringAccessorName << "!" << '\n';
-  // cout << "Config  : " << stringConfigFileName << "!" << '\n';
-  impl.reset(new precice::SolverInterface(stringAccessorName,
-                                          stringConfigFileName,
-                                          *solverProcessIndex, *solverProcessSize));
+  impl.reset(new precice::SolverInterface(
+      precice::impl::strippedStringView(participantName, participantNameLength),
+      precice::impl::strippedStringView(configFileName, configFileNameLength),
+      *solverProcessIndex,
+      *solverProcessSize));
 }
 
 void precicef_initialize_(

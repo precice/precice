@@ -6,20 +6,20 @@
 namespace precice {
 
 SolverInterface::SolverInterface(
-    const std::string &participantName,
-    const std::string &configurationFileName,
-    int                solverProcessIndex,
-    int                solverProcessSize)
+    std::string_view participantName,
+    std::string_view configurationFileName,
+    int              solverProcessIndex,
+    int              solverProcessSize)
     : _impl(new impl::SolverInterfaceImpl(participantName, configurationFileName, solverProcessIndex, solverProcessSize))
 {
 }
 
 SolverInterface::SolverInterface(
-    const std::string &participantName,
-    const std::string &configurationFileName,
-    int                solverProcessIndex,
-    int                solverProcessSize,
-    void *             communicator)
+    std::string_view participantName,
+    std::string_view configurationFileName,
+    int              solverProcessIndex,
+    int              solverProcessSize,
+    void *           communicator)
     : _impl(new impl::SolverInterfaceImpl(participantName, configurationFileName, solverProcessIndex, solverProcessSize, communicator))
 {
 }

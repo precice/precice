@@ -34,8 +34,8 @@ PRECICE_API void precicef_create_(
     const char *configFileName,
     const int * solverProcessIndex,
     const int * solverProcessSize,
-    int         lengthAccessorName,
-    int         lengthConfigFileName);
+    int         participantNameLength,
+    int         configFileNameLength);
 
 /**
  * Fortran syntax:

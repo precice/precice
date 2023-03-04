@@ -1,7 +1,6 @@
 #pragma once
 
 #include <memory>
-#include <string>
 #include <string_view>
 #include "precice/Version.h"
 #include "precice/export.h"
@@ -53,10 +52,10 @@ public:
    * @param[in] solverProcessSize The number of solver processes using preCICE.
    */
   SolverInterface(
-      const std::string &participantName,
-      const std::string &configurationFileName,
-      int                solverProcessIndex,
-      int                solverProcessSize);
+      std::string_view participantName,
+      std::string_view configurationFileName,
+      int              solverProcessIndex,
+      int              solverProcessSize);
 
   /**
    * @brief Constructs a SolverInterface for the given participant and a custom MPI communicator.
@@ -71,11 +70,11 @@ public:
    * @param[in] communicator A pointer to an MPI_Comm to use as communicator.
    */
   SolverInterface(
-      const std::string &participantName,
-      const std::string &configurationFileName,
-      int                solverProcessIndex,
-      int                solverProcessSize,
-      void *             communicator);
+      std::string_view participantName,
+      std::string_view configurationFileName,
+      int              solverProcessIndex,
+      int              solverProcessSize,
+      void *           communicator);
 
   ~SolverInterface();
 

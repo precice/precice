@@ -305,7 +305,7 @@ XMLTag getRootTag();
 void configure(
     XMLTag &                                  tag,
     const precice::xml::ConfigurationContext &context,
-    const std::string &                       configurationFilename);
+    std::string_view                          configurationFilename);
 
 } // namespace xml
 } // namespace precice
