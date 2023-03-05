@@ -223,8 +223,7 @@ public:
   /// True if the implicit scheme has converged or no implicit scheme is defined
   bool hasConverged() const final;
 
-  /// Forwards the info to all subschemes
-  void updateDynamicParticipants(const std::set<std::string> &dynamicParticipants) final;
+  bool isSynchronizationRequired() const final;
 
 private:
   mutable logging::Logger _log{"cplscheme::CompositionalCouplingScheme"};

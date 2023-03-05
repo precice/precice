@@ -401,6 +401,20 @@ const impl::PtrParticipant ParticipantConfiguration::getParticipant(const std::s
   return *participant;
 }
 
+std::map<std::string, std::set<std::string>> ParticipantConfiguration::getDynamicMeshMap() const
+{
+  // mesh -> [participants]
+  std::map<std::string, std::set<std::string>> result;
+  for (const auto &participant : _participants) {
+    for (const auto &context : participant->usedMeshContexts()) {
+      if (context->dynamic != precice::impl::MeshContext::Dynamicity::No) {
+        result[context->mesh->getName()].insert(participant->getName());
+      }
+    }
+  }
+  return result;
+}
+
 partition::ReceivedPartition::GeometricFilter ParticipantConfiguration::getGeoFilter(const std::string &geoFilter) const
 {
   if (geoFilter == VALUE_FILTER_ON_PRIMARY_RANK) {

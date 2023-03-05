@@ -7,6 +7,8 @@ target_sources(testprecice
     tests/dynamic/selective-sync/MultiCouplingDynamicParticipant.cpp
     tests/dynamic/selective-sync/ParallelExplicit.cpp
     tests/dynamic/selective-sync/SerialExplicit.cpp
+    tests/dynamic/selective-sync/ThreeParallelExplicit.cpp
+    tests/dynamic/selective-sync/ThreeSerialExplicit.cpp
     tests/parallel/CouplingOnLine.cpp
     tests/parallel/ExportTimeseries.cpp
     tests/parallel/GlobalRBFPartitioning.cpp

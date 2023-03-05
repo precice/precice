@@ -239,8 +239,8 @@ public:
   /// Returns false if the scheme is implicit and hasn't converged
   virtual bool hasConverged() const = 0;
 
-  /// Informs the cplscheme which participants are considerred dynamic
-  virtual void updateDynamicParticipants(const std::set<std::string> &dynamicParticipants) = 0;
+  /// Returns true if the scheme requires synchronization due to dynamicity
+  virtual bool isSynchronizationRequired() const = 0;
 };
 
 } // namespace cplscheme

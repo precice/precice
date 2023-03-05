@@ -215,6 +215,9 @@ public:
   /// Set an acceleration technique.
   void setAcceleration(const acceleration::PtrAcceleration &acceleration);
 
+  /// Mark this couplingscheme as required to synchronize
+  void requireSynchronization();
+
   /**
    * @brief Getter for _doesFirstStep
    * @returns _doesFirstStep
@@ -245,6 +248,8 @@ public:
    * @pre \ref doImplicitStep() or \ref receiveConvergence() has been called
    */
   bool hasConverged() const override;
+
+  bool isSynchronizationRequired() const final;
 
 protected:
   /// All send and receive data as a map "data ID -> data"
@@ -385,14 +390,6 @@ protected:
    * @returns true if end time of time window is reached.
    */
   bool reachedEndOfTimeWindow();
-
-  void updateDynamicParticipants(const std::set<std::string> &dynamicParticipants) override final;
-
-protected:
-  bool isSynchronizationRequired() const
-  {
-    return _isSynchonizationRequired;
-  }
 
 private:
   /// Coupling mode used by coupling scheme.

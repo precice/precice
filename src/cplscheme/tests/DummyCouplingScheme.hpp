@@ -232,12 +232,9 @@ public:
 
   bool hasConverged() const override;
 
-  /**
-   * @brief Not implemented.
-   */
-  void updateDynamicParticipants(const std::set<std::string> &dynamicParticipants) override final
+  bool isSynchronizationRequired() const final
   {
-    PRECICE_ASSERT(false);
+    return false;
   }
 
 private:

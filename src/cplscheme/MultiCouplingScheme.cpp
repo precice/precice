@@ -110,12 +110,12 @@ CouplingScheme::ChangedMeshes MultiCouplingScheme::firstSynchronization(const Co
   if (!reachedEndOfTimeWindow() || !isSynchronizationRequired()) {
     return {};
   }
-
-  PRECICE_DEBUG("Exchanging mesh changes...");
   if (_isController) {
+    PRECICE_DEBUG("Sending mesh changes...");
     sendLocalChanges(changes);
     return receiveRemoteChanges();
   } else {
+    PRECICE_DEBUG("Receiving mesh changes...");
     auto remote = receiveRemoteChanges();
     sendLocalChanges(changes);
     return remote;

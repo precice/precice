@@ -99,21 +99,6 @@ bool BaseCouplingScheme::hasConverged() const
   return _hasConverged;
 }
 
-void BaseCouplingScheme::updateDynamicParticipants(const std::set<std::string> &dynamicParticipants)
-{
-  if (dynamicParticipants.count(_localParticipant) == 1) {
-    _isSynchonizationRequired = true;
-  } else {
-    auto partners = getCouplingPartners();
-    for (const auto &partner : partners) {
-      if (dynamicParticipants.count(partner) == 1) {
-        _isSynchonizationRequired = true;
-        return;
-      }
-    }
-  }
-}
-
 void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendData)
 {
   PRECICE_TRACE();
@@ -282,7 +267,7 @@ void BaseCouplingScheme::secondExchange()
           requireAction(CouplingScheme::Action::WriteCheckpoint);
         }
       }
-      //update iterations
+      // update iterations
       _totalIterations++;
       if (not hasConverged()) {
         _iterations++;
@@ -562,6 +547,16 @@ void BaseCouplingScheme::setAcceleration(
   _acceleration = acceleration;
 }
 
+void BaseCouplingScheme::requireSynchronization()
+{
+  if (_isSynchonizationRequired) {
+    return;
+  }
+  PRECICE_DEBUG("The scheme coupling {} to {} requires synchronization.",
+                getLocalParticipant(), getCouplingPartners());
+  _isSynchonizationRequired = true;
+}
+
 bool BaseCouplingScheme::doesFirstStep() const
 {
   return _doesFirstStep;
@@ -696,6 +691,11 @@ void BaseCouplingScheme::advanceTXTWriters()
 bool BaseCouplingScheme::reachedEndOfTimeWindow()
 {
   return math::equals(getThisTimeWindowRemainder(), 0.0, _eps);
+}
+
+bool BaseCouplingScheme::isSynchronizationRequired() const
+{
+  return _isSynchonizationRequired;
 }
 
 void BaseCouplingScheme::storeIteration()

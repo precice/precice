@@ -57,6 +57,8 @@ public:
   /// Returns a participant with the given name
   const impl::PtrParticipant getParticipant(const std::string &participantName) const;
 
+  std::map<std::string, std::set<std::string>> getDynamicMeshMap() const;
+
 private:
   struct WatchPointConfig {
     std::string     name;

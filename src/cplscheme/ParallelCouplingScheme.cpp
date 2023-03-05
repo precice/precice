@@ -28,11 +28,12 @@ CouplingScheme::ChangedMeshes ParallelCouplingScheme::firstSynchronization(const
   if (!isSynchronizationRequired()) {
     return {};
   }
-  PRECICE_DEBUG("Exchanging mesh changes...");
   if (doesFirstStep()) { // first participant
+    PRECICE_DEBUG("Sending mesh changes...");
     sendLocalChanges(changes);
     return receiveRemoteChanges();
   } else { // second participant
+    PRECICE_DEBUG("Receiving mesh changes...");
     auto remote = receiveRemoteChanges();
     sendLocalChanges(changes);
     return remote;
