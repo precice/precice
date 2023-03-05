@@ -121,6 +121,7 @@ BOOST_AUTO_TEST_CASE(Partial)
       using Dynamicity = precice::impl::MeshContext::Dynamicity;
       if (pname == "A") {
         if (meshName == "A") {
+          // Transitively dynamic via 1) the mapping and 2) the send
           BOOST_TEST(context->provideMesh);
           BOOST_TEST((context->dynamic == Dynamicity::Transitively));
         }
@@ -131,10 +132,12 @@ BOOST_AUTO_TEST_CASE(Partial)
       }
       if (pname == "B") {
         if (meshName == "A") {
+          // Transitively dynamic via the mapping
           BOOST_TEST(!context->provideMesh);
           BOOST_TEST((context->dynamic == Dynamicity::Transitively));
         }
         if (meshName == "B") {
+          // The dynamic mesh
           BOOST_TEST(context->provideMesh);
           BOOST_TEST((context->dynamic == Dynamicity::Yes));
         }
