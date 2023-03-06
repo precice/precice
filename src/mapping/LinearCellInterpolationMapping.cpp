@@ -93,21 +93,29 @@ void LinearCellInterpolationMapping::computeMapping()
     }
   }
 
-  if (hasConnectivity && !fallbackStatistics.empty()) {
-    PRECICE_INFO(
-        "Linear Cell Interpolation is used, but some points from {} don't lie in the domain defined by the {}. "
-        "These points have been projected on the domain boundary. This could come from non-matching discrete geometries or erroneous connectivity information."
-        "If distances seem too large, please check your mesh. "
-        "The fallback statistics are: {} ",
-        searchSpace->getName(), getDimensions() == 2 ? "triangles" : "tetrahedra",
-        fallbackStatistics);
-  } else if (!hasConnectivity && !fallbackStatistics.empty()) {
-    PRECICE_INFO("Fallback mapping statistics: {}", fallbackStatistics);
-  } else if (!hasConnectivity && fallbackStatistics.empty()) {
-    PRECICE_INFO("All vertices are inside cells, no fallback required");
+  if (!fallbackStatistics.empty()) {
+    if (hasConnectivity) {
+      // We have the connectivity, but some fallbacks occurred
+      PRECICE_INFO(
+          "Linear Cell Interpolation is used, but some points from {} don't lie in the domain defined by the {}. "
+          "These points have been projected on the domain boundary. This could come from non-matching discrete geometries or erroneous connectivity information."
+          "If distances seem too large, please check your mesh. "
+          "The fallback statistics are: {} ",
+          searchSpace->getName(), getDimensions() == 2 ? "triangles" : "tetrahedra",
+          fallbackStatistics);
+    } else {
+      // Fallback and no connectivity provided
+      PRECICE_INFO("Fallback mapping statistics: {}", fallbackStatistics);
+    }
   } else {
-    PRECICE_ASSERT(hasConnectivity && fallbackStatistics.empty())
-    PRECICE_INFO("Successfully computed linear-cell-interpolation mapping.");
+    if (!hasConnectivity) {
+      // Not all connectivity provided, but no fallback applied
+      PRECICE_INFO("All vertices are inside cells, no fallback required");
+    } else {
+      // No fallback and we have connectivity
+      PRECICE_ASSERT(hasConnectivity)
+      PRECICE_INFO("Successfully computed linear-cell-interpolation mapping.");
+    }
   }
 
   _hasComputedMapping = true;
