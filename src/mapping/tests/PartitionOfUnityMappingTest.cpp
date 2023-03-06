@@ -1488,6 +1488,95 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DTwoRanks)
   testDistributed(context, conservativeMap2D, in, out, ref, globalIndexOffsets.at(context.rank));
 }
 
+void testTagging(const TestContext &context,
+                 MeshSpecification  inMeshSpec,
+                 MeshSpecification  outMeshSpec,
+                 MeshSpecification  shouldTagFirstRound,
+                 MeshSpecification  shouldTagSecondRound,
+                 bool               consistent)
+{
+  int meshDimension  = inMeshSpec.at(0).position.size();
+  int valueDimension = inMeshSpec.at(0).value.size();
+
+  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", meshDimension, testing::nextMeshID()));
+  mesh::PtrData inData = inMesh->createData("InData", valueDimension, 0_dataID);
+  getDistributedMesh(context, inMeshSpec, inMesh, inData);
+
+  mesh::PtrMesh outMesh(new mesh::Mesh("outMesh", meshDimension, testing::nextMeshID()));
+  mesh::PtrData outData = outMesh->createData("OutData", valueDimension, 1_dataID);
+  getDistributedMesh(context, outMeshSpec, outMesh, outData);
+
+  Mapping::Constraint                                   constr = consistent ? Mapping::CONSISTENT : Mapping::CONSERVATIVE;
+  mapping::PartitionOfUnityMapping<CompactPolynomialC4> mapping(constr, 2, CompactPolynomialC4(2), {{false, false, false}}, Polynomial::SEPARATE, 2, 0.3, false);
+  inMesh->computeBoundingBox();
+  outMesh->computeBoundingBox();
+
+  mapping.setMeshes(inMesh, outMesh);
+  mapping.tagMeshFirstRound();
+
+  for (const auto &v : inMesh->vertices()) {
+    auto pos   = std::find_if(shouldTagFirstRound.begin(), shouldTagFirstRound.end(),
+                            [meshDimension, &v](const VertexSpecification &spec) {
+                              return std::equal(spec.position.data(), spec.position.data() + meshDimension, v.getCoords().data());
+                            });
+    bool found = pos != shouldTagFirstRound.end();
+    BOOST_TEST(found >= v.isTagged(),
+               "FirstRound: Vertex " << v << " is tagged, but should not be.");
+    BOOST_TEST(found <= v.isTagged(),
+               "FirstRound: Vertex " << v << " is not tagged, but should be.");
+  }
+
+  mapping.tagMeshSecondRound();
+
+  for (const auto &v : inMesh->vertices()) {
+    auto posFirst    = std::find_if(shouldTagFirstRound.begin(), shouldTagFirstRound.end(),
+                                 [meshDimension, &v](const VertexSpecification &spec) {
+                                   return std::equal(spec.position.data(), spec.position.data() + meshDimension, v.getCoords().data());
+                                 });
+    bool foundFirst  = posFirst != shouldTagFirstRound.end();
+    auto posSecond   = std::find_if(shouldTagSecondRound.begin(), shouldTagSecondRound.end(),
+                                  [meshDimension, &v](const VertexSpecification &spec) {
+                                    return std::equal(spec.position.data(), spec.position.data() + meshDimension, v.getCoords().data());
+                                  });
+    bool foundSecond = posSecond != shouldTagSecondRound.end();
+    BOOST_TEST(foundFirst <= v.isTagged(), "SecondRound: Vertex " << v
+                                                                  << " is not tagged, but should be from the first round.");
+    BOOST_TEST(foundSecond <= v.isTagged(), "SecondRound: Vertex " << v
+                                                                   << " is not tagged, but should be.");
+    BOOST_TEST((foundSecond or foundFirst) >= v.isTagged(), "SecondRound: Vertex " << v
+                                                                                   << " is tagged, but should not be.");
+  }
+}
+
+BOOST_AUTO_TEST_CASE(testTagFirstRound)
+{
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm())
+
+  MeshSpecification outMeshSpec = {
+      {0, -1, {0, 0}, {0}}};
+  MeshSpecification inMeshSpec = {
+      {0, -1, {-1, 0}, {1}}, //inside
+      {0, -1, {-3, 0}, {1}}, //outside
+      {0, 0, {1, 0}, {1}},   //inside, owner
+      {0, -1, {3, 0}, {1}},  //outside
+      {0, -1, {0, -1}, {1}}, //inside
+      {0, -1, {0, -3}, {1}}, //outside
+      {0, -1, {0, 1}, {1}},  //inside
+      {0, -1, {0, 3}, {1}}   //outside
+  };
+  MeshSpecification shouldTagFirstRound = {
+      {0, -1, {-1, 0}, {1}},
+      {0, -1, {1, 0}, {1}},
+      {0, -1, {0, -1}, {1}},
+      {0, -1, {0, 1}, {1}}};
+  // No tagging happening in round two
+  MeshSpecification shouldTagSecondRound;
+
+  testTagging(context, inMeshSpec, outMeshSpec, shouldTagFirstRound, shouldTagSecondRound, true);
+  // For conservative just swap meshes.
+  testTagging(context, outMeshSpec, inMeshSpec, shouldTagFirstRound, shouldTagSecondRound, false);
+}
+
 BOOST_AUTO_TEST_SUITE_END() // Parallel
 
 BOOST_AUTO_TEST_SUITE_END()

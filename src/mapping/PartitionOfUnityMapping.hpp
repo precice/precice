@@ -310,20 +310,25 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
   // In order to construct the local partitions, we need all vertices with a distance of 2 x radius,
   // as the relevant partitions centers have a maximum distance of radius, and the proper construction of the
   // interpolant requires all vertices with a distance of radius from the center.
-  auto bb = outMesh->getBoundingBox();
-
-  if (_clusterRadius == 0)
-    _clusterRadius = impl::estimateClusterRadius(_verticesPerCluster, filterMesh, bb);
+  auto bb = filterMesh->getBoundingBox();
 
   // @TODO: This assert is not completely right, as it checks all dimensions for non-emptyness (which might not be the case).
   // However, with the current BB implementation, the expandBy function will just do nothing.
   PRECICE_ASSERT(!bb.empty());
+
+  if (_clusterRadius == 0)
+    _clusterRadius = impl::estimateClusterRadius(_verticesPerCluster, filterMesh, bb);
+
+  PRECICE_DEBUG("Cluster radius estimate: {}", _clusterRadius);
   PRECICE_ASSERT(_clusterRadius > 0);
+
+  // Get the local bounding boxes
+  auto localBB = outMesh->getBoundingBox();
   // Now we extend the bounding box by the radius
-  bb.expandBy(1 * _clusterRadius);
+  localBB.expandBy(2 * _clusterRadius);
 
   // ... and tag all affected vertices
-  auto verticesNew = filterMesh->index().getVerticesInsideBox(bb);
+  auto verticesNew = filterMesh->index().getVerticesInsideBox(localBB);
 
   std::for_each(verticesNew.begin(), verticesNew.end(), [&filterMesh](VertexID v) { filterMesh->vertices()[v].tag(); });
 }
