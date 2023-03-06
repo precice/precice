@@ -241,9 +241,6 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       std::for_each(weights.begin(), weights.end(), [&weights](auto &w) { w = 1 / weights.size(); });
       weightSum = 1;
     }
-    PRECICE_DEBUG("Weight sum {}", weightSum);
-    PRECICE_DEBUG("Clusters {}", clusterIDs);
-    PRECICE_DEBUG("V coords {}", vertex.getCoords());
     PRECICE_ASSERT(weightSum > 0);
 
     // Step 4c: scale the weight using the weight sum and store the normalized weight in all associated clusters

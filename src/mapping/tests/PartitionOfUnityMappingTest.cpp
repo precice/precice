@@ -297,6 +297,62 @@ void perform2DTestConsistentMappingVector(Mapping &mapping)
   BOOST_TEST(outData->values()(1) == 3.0);
 }
 
+// Tests the automatic reduction of dead axis
+void performTestConsistentMapDeadAxis(Mapping &mapping, int dim)
+{
+  // Create mesh to map from
+  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dim, testing::nextMeshID()));
+  mesh::PtrData inData   = inMesh->createData("InData", 1, 0_dataID);
+  int           inDataID = inData->getID();
+
+  // create 20 vertices with two very close lines
+  for (unsigned int i = 0; i < 20; ++i)
+    if (dim == 2) {
+      inMesh->createVertex(Eigen::Vector2d(0.0, 0.0 + i * dim));
+      inMesh->createVertex(Eigen::Vector2d(1e-5, 0.0 + i * dim));
+    } else {
+      inMesh->createVertex(Eigen::Vector3d(7.0, 7.0, 40 + i * dim));
+    }
+
+  inMesh->allocateDataValues();
+  addGlobalIndex(inMesh);
+
+  auto &values = inData->values();
+  for (std::size_t v = 0; v < 20; ++v) {
+    values[v * 2]     = v * dim * 1e-5;
+    values[v * 2 + 1] = v * dim * 1e-5 + 2;
+  }
+
+  // Create mesh to map to
+  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dim, testing::nextMeshID()));
+  mesh::PtrData outData   = outMesh->createData("OutData", 1, 1_dataID);
+  int           outDataID = outData->getID();
+
+  for (unsigned int i = 0; i < 15; ++i) {
+    if (dim == 2)
+      outMesh->createVertex(Eigen::Vector2d(.1, 1 + 1 + i * dim));
+    else {
+      outMesh->createVertex(Eigen::Vector3d(7.0, 7.0, 41 + i * dim));
+    }
+  }
+  outMesh->allocateDataValues();
+  addGlobalIndex(outMesh);
+
+  // Setup mapping with mapping coordinates and geometry used
+  mapping.setMeshes(inMesh, outMesh);
+  BOOST_TEST(mapping.hasComputedMapping() == false);
+
+  mapping.computeMapping();
+  mapping.map(inDataID, outDataID);
+  double value  = outData->values()(0);
+  double value1 = outData->values()(1);
+  double value2 = outData->values()(2);
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+  BOOST_TEST(value == 19935.268150244759);
+  BOOST_TEST(value1 == 19935.266962237896);
+  BOOST_TEST(value2 == 19935.276990769267);
+}
+
 void perform2DTestConservativeMapping(Mapping &mapping)
 {
   int dimensions = 2;

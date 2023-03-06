@@ -88,7 +88,7 @@ inline double computeSquaredDifference(
 
 /// given the active axis, computes sets the axis with the lowest spatial expansion to dead
 template <typename IndexContainer>
-constexpr std::array<bool, 3> reduceActiveAxis(const mesh::Mesh &mesh, const IndexContainer &IDs, std::array<bool, 3> axis)
+constexpr void reduceActiveAxis(const mesh::Mesh &mesh, const IndexContainer &IDs, std::array<bool, 3> &axis)
 {
   // make a pair of the axis and the difference
   std::array<std::pair<int, double>, 3> differences;
@@ -108,8 +108,6 @@ constexpr std::array<bool, 3> reduceActiveAxis(const mesh::Mesh &mesh, const Ind
   std::sort(differences.begin(), differences.end(), [](const auto &d1, const auto &d2) { return d1.second < d2.second; });
   // Disable the axis having the smallest expansion
   axis[differences[0].first] = false;
-
-  return axis;
 }
 
 // Fill in the polynomial entries
@@ -265,9 +263,9 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
     if (conditionNumber > 1e5) {
 
       // Disable one axis
-      localActiveAxis = reduceActiveAxis(inputMesh, inputIDs, activeAxis);
-      polyParams      = 4 - std::count(localActiveAxis.begin(), localActiveAxis.end(), false);
-
+      reduceActiveAxis(inputMesh, inputIDs, localActiveAxis);
+      polyParams = 4 - std::count(localActiveAxis.begin(), localActiveAxis.end(), false);
+      PRECICE_DEBUG("Left-over polynomial dofs: {}", polyParams);
       // Resize and refill matrix Q (could be done in a more clever way, e.g., skip fillinf the '1' column again)
       _matrixQ.resize(inputIDs.size(), polyParams);
 
