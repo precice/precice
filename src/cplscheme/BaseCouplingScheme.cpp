@@ -340,7 +340,7 @@ void BaseCouplingScheme::addComputedTime(
   _time += timeToAdd;
 
   // Check validness
-  bool valid = math::greaterEquals(getThisTimeWindowRemainder(), 0.0, _eps);
+  bool valid = math::greaterEquals(getNextTimestepMaxLength(), 0.0, _eps);
   PRECICE_CHECK(valid,
                 "The timestep length given to preCICE in \"advance\" {} exceeds the maximum allowed timestep length {} "
                 "in the remaining of this time window. "
@@ -353,7 +353,7 @@ bool BaseCouplingScheme::willDataBeExchanged(
     double lastSolverTimestepLength) const
 {
   PRECICE_TRACE(lastSolverTimestepLength);
-  double remainder = getThisTimeWindowRemainder() - lastSolverTimestepLength;
+  double remainder = getNextTimestepMaxLength() - lastSolverTimestepLength;
   return not math::greater(remainder, 0.0, _eps);
 }
 
@@ -396,17 +396,6 @@ double BaseCouplingScheme::getTime() const
 int BaseCouplingScheme::getTimeWindows() const
 {
   return _timeWindows;
-}
-
-double BaseCouplingScheme::getThisTimeWindowRemainder() const
-{
-  PRECICE_TRACE();
-  double remainder = 0.0;
-  if (hasTimeWindowSize()) {
-    remainder = getNextTimestepMaxLength();
-  }
-  PRECICE_DEBUG("return {}", remainder);
-  return remainder;
 }
 
 double BaseCouplingScheme::getNextTimestepMaxLength() const
@@ -687,7 +676,7 @@ void BaseCouplingScheme::advanceTXTWriters()
 
 bool BaseCouplingScheme::reachedEndOfTimeWindow()
 {
-  return math::equals(getThisTimeWindowRemainder(), 0.0, _eps);
+  return math::equals(getNextTimestepMaxLength(), 0.0, _eps) || not hasTimeWindowSize();
 }
 
 void BaseCouplingScheme::storeIteration()

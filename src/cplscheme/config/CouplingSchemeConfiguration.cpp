@@ -205,7 +205,8 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     _config.timeWindowSize = tag.getDoubleAttributeValue(ATTR_VALUE);
     _config.validDigits    = tag.getIntAttributeValue(ATTR_VALID_DIGITS);
     PRECICE_CHECK((_config.validDigits >= 1) && (_config.validDigits < 17), "Valid digits of time window size has to be between 1 and 16.");
-    _config.dtMethod = getTimesteppingMethod(tag.getStringAttributeValue(ATTR_METHOD));
+    // Attribute does not exist for parallel coupling schemes as it is always fixed.
+    _config.dtMethod = getTimesteppingMethod(tag.getStringAttributeValue(ATTR_METHOD, VALUE_FIXED));
     if (_config.dtMethod == constants::TimesteppingMethod::FIXED_TIME_WINDOW_SIZE) {
       PRECICE_CHECK(_config.timeWindowSize > 0,
                     "Time window size has to be larger than zero. "
@@ -402,8 +403,7 @@ void CouplingSchemeConfiguration::addCouplingScheme(
 
 void CouplingSchemeConfiguration::addTypespecifcSubtags(
     const std::string &type,
-    //const std::string& name,
-    xml::XMLTag &tag)
+    xml::XMLTag &      tag)
 {
   PRECICE_TRACE(type);
   addTransientLimitTags(type, tag);
@@ -480,17 +480,15 @@ void CouplingSchemeConfiguration::addTransientLimitTags(
   XMLAttribute<int> attrValidDigits(ATTR_VALID_DIGITS, 10);
   attrValidDigits.setDocumentation(R"(Precision to use when checking for end of time windows used this many digits. \\(\phi = 10^{-validDigits}\\))");
   tagTimeWindowSize.addAttribute(attrValidDigits);
-  std::vector<std::string> allowedMethods;
   if (type == VALUE_SERIAL_EXPLICIT || type == VALUE_SERIAL_IMPLICIT) {
     // method="first-participant" is only allowed for serial coupling schemes
-    allowedMethods = {VALUE_FIXED, VALUE_FIRST_PARTICIPANT};
+    auto attrMethod = makeXMLAttribute(ATTR_METHOD, VALUE_FIXED)
+                          .setOptions({VALUE_FIXED, VALUE_FIRST_PARTICIPANT})
+                          .setDocumentation("The method used to determine the time window size. Use `fixed` to fix the time window size for the participants.");
+    tagTimeWindowSize.addAttribute(attrMethod);
   } else {
-    allowedMethods = {VALUE_FIXED};
+    tagTimeWindowSize.addAttributeHint(ATTR_METHOD, "This feature is only available for serial coupling schemes.");
   }
-  auto attrMethod = makeXMLAttribute(ATTR_METHOD, VALUE_FIXED)
-                        .setOptions(allowedMethods)
-                        .setDocumentation("The method used to determine the time window size. Use `fixed` to fix the time window size for the participants.");
-  tagTimeWindowSize.addAttribute(attrMethod);
   tag.addSubtag(tagTimeWindowSize);
 }
 
@@ -978,6 +976,12 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
                   to, dataName, meshName, from, to);
 
     const bool requiresInitialization = exchange.requiresInitialization;
+    PRECICE_CHECK(
+        !(requiresInitialization && _participantConfig->getParticipant(from)->isDirectAccessAllowed(exchange.mesh->getID())),
+        "Participant \"{}\" cannot initialize data of the directly-accessed mesh \"{}\" from the participant\"{}\". "
+        "Either disable the initialization in the <exchange /> tag or use a locally provided mesh instead.",
+        from, meshName, to);
+
     if (from == accessor) {
       scheme.addDataToSend(exchange.data, exchange.mesh, requiresInitialization);
     } else if (to == accessor) {

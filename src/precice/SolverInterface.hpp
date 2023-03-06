@@ -311,16 +311,6 @@ public:
   int getMeshID(const std::string &meshName) const;
 
   /**
-   * @brief Returns a id-set of all used meshes by this participant.
-   *
-   * @deprecated Unclear use case and difficult to port to other languages.
-   *             Prefer calling getMeshID for specific mesh names.
-   *
-   * @returns the set of ids.
-   */
-  [[deprecated("Use getMeshID() for specific mesh names instead.")]] std::set<int> getMeshIDs() const;
-
-  /**
    * @brief Checks if the given mesh requires connectivity.
    *
    * preCICE may require connectivity information from the solver and

@@ -31,7 +31,7 @@
   <coupling-scheme:parallel-explicit>
     <participants first="Participant0" second="Participant1" />
 
-    <time-window-size value="0.1" method="fixed" />
+    <time-window-size value="0.1" />
 
     <max-time-windows value="1" />
 

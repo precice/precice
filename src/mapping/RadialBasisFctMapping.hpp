@@ -299,7 +299,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inputD
 
     int valueDim = this->output()->data(outputDataID)->getDimensions();
 
-    std::vector<double> globalInValues((this->input()->getGlobalNumberOfVertices()) * valueDim, 0.0);
+    std::vector<double> globalInValues(static_cast<std::size_t>(this->input()->getGlobalNumberOfVertices()) * valueDim, 0.0);
     std::vector<int>    outValuesSize;
 
     if (utils::IntraComm::isPrimary()) { // Parallel case

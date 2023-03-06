@@ -113,7 +113,7 @@ void SerializedMesh::addToMesh(mesh::Mesh &mesh) const
   std::map<int, mesh::Vertex *> vertices;
   {
     Eigen::VectorXd coord(dim);
-    for (int i = 0; i < numberOfVertices; i++) {
+    for (std::size_t i = 0; i < static_cast<std::size_t>(numberOfVertices); ++i) {
       std::copy_n(&coords[i * dim], dim, coord.data());
       mesh::Vertex &v = mesh.createVertex(coord);
 
