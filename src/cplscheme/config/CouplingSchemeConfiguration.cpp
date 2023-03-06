@@ -307,10 +307,28 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
   PRECICE_TRACE(tag.getFullName());
   if (tag.getNamespace() == TAG) {
     if (_config.type == VALUE_SERIAL_EXPLICIT) {
+      
+    //The first participants waveform order has to be 0 for serial explicit coupling
       if (_experimental) {
-        int maxAllowedOrder = 0; // explicit coupling schemes do not allow waveform iteration
-        checkWaveformOrderReadData(maxAllowedOrder);
+      const auto first  = _config.participants[0];
+      const auto second = _config.participants[1];
+
+      auto first_participant = _participantConfig->getParticipant(first);
+      for (auto &dataContext : first_participant->readDataContexts()) {
+        int  usedOrder   = dataContext.getInterpolationOrder();
+        if (usedOrder != 0) {
+          PRECICE_ERROR(
+              "You configured <read-data name=\"{}\" mesh=\"{}\" waveform-order=\"{}\" />, but for the serial explicit coupling scheme only a maximum waveform-order of \"{}\" is allowed for the first participant.",
+              dataContext.getDataName(), dataContext.getMeshName(), usedOrder, 0);
+        }
       }
+      auto second_participant = _participantConfig->getParticipant(second);
+      for (auto &dataContext : second_participant->readDataContexts()) {
+      int  usedOrder = dataContext.getInterpolationOrder();
+      PRECICE_ASSERT(usedOrder >= 0);      
+      }
+      }
+
       std::string       accessor(_config.participants[0]);
       PtrCouplingScheme scheme = createSerialExplicitCouplingScheme(accessor);
       addCouplingScheme(scheme, accessor);
