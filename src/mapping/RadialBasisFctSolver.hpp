@@ -249,29 +249,26 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
     auto         localActiveAxis = activeAxis;
     unsigned int polyParams      = 4 - std::count(localActiveAxis.begin(), localActiveAxis.end(), false);
 
-    // First, build matrix Q and check for the condition number
-    _matrixQ.resize(inputIDs.size(), polyParams);
-    fillPolynomialEntries(_matrixQ, inputMesh, inputIDs, 0, localActiveAxis);
+    do {
+      // First, build matrix Q and check for the condition number
+      _matrixQ.resize(inputIDs.size(), polyParams);
+      fillPolynomialEntries(_matrixQ, inputMesh, inputIDs, 0, localActiveAxis);
 
-    Eigen::JacobiSVD<Eigen::MatrixXd> svd(_matrixQ);
-    PRECICE_ASSERT(svd.singularValues().size() > 0);
-    PRECICE_DEBUG("Singular values in polynomial solver: {}", svd.singularValues());
-    const double conditionNumber = svd.singularValues()(0) / std::max(svd.singularValues()(svd.singularValues().size() - 1), math::NUMERICAL_ZERO_DIFFERENCE);
-    PRECICE_DEBUG("Condition number: {}", conditionNumber);
-
-    // If the condition number is too high, we disable ill-conditioned axis
-    if (conditionNumber > 1e5) {
+      // Compute the condition number
+      Eigen::JacobiSVD<Eigen::MatrixXd> svd(_matrixQ);
+      PRECICE_ASSERT(svd.singularValues().size() > 0);
+      PRECICE_DEBUG("Singular values in polynomial solver: {}", svd.singularValues());
+      const double conditionNumber = svd.singularValues()(0) / std::max(svd.singularValues()(svd.singularValues().size() - 1), math::NUMERICAL_ZERO_DIFFERENCE);
+      PRECICE_DEBUG("Condition number: {}", conditionNumber);
 
       // Disable one axis
-      reduceActiveAxis(inputMesh, inputIDs, localActiveAxis);
-      polyParams = 4 - std::count(localActiveAxis.begin(), localActiveAxis.end(), false);
-      PRECICE_DEBUG("Left-over polynomial dofs: {}", polyParams);
-      // Resize and refill matrix Q (could be done in a more clever way, e.g., skip fillinf the '1' column again)
-      _matrixQ.resize(inputIDs.size(), polyParams);
-
-      // fill the matrix Q for the inputMesh
-      fillPolynomialEntries(_matrixQ, inputMesh, inputIDs, 0, localActiveAxis);
-    }
+      if (conditionNumber > 1e5) {
+        reduceActiveAxis(inputMesh, inputIDs, localActiveAxis);
+        polyParams = 4 - std::count(localActiveAxis.begin(), localActiveAxis.end(), false);
+      } else {
+        break;
+      }
+    } while (true);
 
     // allocate and fill matrix V for the outputMesh
     _matrixV.resize(outputIDs.size(), polyParams);

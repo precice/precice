@@ -312,6 +312,7 @@ void performTestConsistentMapDeadAxis(Mapping &mapping, int dim)
       inMesh->createVertex(Eigen::Vector2d(1e-5, 0.0 + i * dim));
     } else {
       inMesh->createVertex(Eigen::Vector3d(7.0, 7.0, 40 + i * dim));
+      inMesh->createVertex(Eigen::Vector3d(7.001, 7.001, 40 + i * dim));
     }
 
   inMesh->allocateDataValues();
@@ -332,7 +333,7 @@ void performTestConsistentMapDeadAxis(Mapping &mapping, int dim)
     if (dim == 2)
       outMesh->createVertex(Eigen::Vector2d(.1, 1 + 1 + i * dim));
     else {
-      outMesh->createVertex(Eigen::Vector3d(7.0, 7.0, 41 + i * dim));
+      outMesh->createVertex(Eigen::Vector3d(7.4, 7.4, 41 + i * dim));
     }
   }
   outMesh->allocateDataValues();
@@ -348,9 +349,15 @@ void performTestConsistentMapDeadAxis(Mapping &mapping, int dim)
   double value1 = outData->values()(1);
   double value2 = outData->values()(2);
   BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(value == 19935.268150244759);
-  BOOST_TEST(value1 == 19935.266962237896);
-  BOOST_TEST(value2 == 19935.276990769267);
+  if (dim == 2) {
+    BOOST_TEST(value == 19935.268150244759);
+    BOOST_TEST(value1 == 19935.266962237896);
+    BOOST_TEST(value2 == 19935.276990769267);
+  } else {
+    BOOST_TEST(value == 829.28063055069435);
+    BOOST_TEST(value1 == 819.35577218983303);
+    BOOST_TEST(value2 == 829.38388713302811);
+  }
 }
 
 void perform2DTestConservativeMapping(Mapping &mapping)
@@ -1078,6 +1085,10 @@ BOOST_AUTO_TEST_CASE(PartitionOfUnityMappingTests)
   perform2DTestConsistentMapping(consistentMap2D);
   mapping::PartitionOfUnityMapping<CompactPolynomialC0> consistentMap2DVector(Mapping::CONSISTENT, 2, function, deadAxis, Polynomial::SEPARATE, 5, 0.4, false);
   perform2DTestConsistentMappingVector(consistentMap2DVector);
+  mapping::PartitionOfUnityMapping<CompactPolynomialC6> consistentMap2DDeadAxis(Mapping::CONSISTENT, 2, mapping::CompactPolynomialC6(6), deadAxis, Polynomial::SEPARATE, 5, 0.4, false);
+  performTestConsistentMapDeadAxis(consistentMap2DDeadAxis, 2);
+  mapping::PartitionOfUnityMapping<CompactPolynomialC6> consistentMap3DDeadAxis(Mapping::CONSISTENT, 3, mapping::CompactPolynomialC6(8), deadAxis, Polynomial::SEPARATE, 5, 0.4, false);
+  performTestConsistentMapDeadAxis(consistentMap3DDeadAxis, 3);
   mapping::PartitionOfUnityMapping<CompactPolynomialC0> conservativeMap2D(Mapping::CONSERVATIVE, 2, function, deadAxis, Polynomial::SEPARATE, 5, 0.4, false);
   perform2DTestConservativeMapping(conservativeMap2D);
   mapping::PartitionOfUnityMapping<CompactPolynomialC0> conservativeMap2DVector(Mapping::CONSERVATIVE, 2, function, deadAxis, Polynomial::SEPARATE, 5, 0.4, false);
