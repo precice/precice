@@ -76,10 +76,10 @@ const std::map<std::string, GinkgoPreconditionerType> preconditionerTypeLookup{
     {"ilu-preconditioner", GinkgoPreconditionerType::Ilu},
     {"no-preconditioner", GinkgoPreconditionerType::None}};
 
-const std::map<std::string, std::function<std::shared_ptr<gko::Executor>(unsigned int)>> ginkgoExecutorLookup{{"reference-executor", [](auto unused) { return gko::ReferenceExecutor::create(); }},
-                                                                                                              {"omp-executor", [](auto unused) { return gko::OmpExecutor::create(); }},
-                                                                                                              {"cuda-executor", [](auto deviceId) { return gko::CudaExecutor::create(deviceId, gko::OmpExecutor::create(), true, gko::allocation_mode::device); }},
-                                                                                                              {"hip-executor", [](auto deviceId) { return gko::HipExecutor::create(0, gko::OmpExecutor::create(), true); }}};
+const std::map<std::string, std::function<std::shared_ptr<gko::Executor>(const unsigned int, const bool)>> ginkgoExecutorLookup{{"reference-executor", [](auto unused, auto unused2) { return gko::ReferenceExecutor::create(); }},
+                                                                                                                                {"omp-executor", [](auto unused, auto unused2) { return gko::OmpExecutor::create(); }},
+                                                                                                                                {"cuda-executor", [](auto deviceId, auto enableUnifiedMemory) { if(enableUnifiedMemory) return gko::CudaExecutor::create(deviceId, gko::OmpExecutor::create(), true, gko::allocation_mode::unified_global); else return gko::CudaExecutor::create(deviceId, gko::OmpExecutor::create(), true, gko::allocation_mode::device); }},
+                                                                                                                                {"hip-executor", [](auto deviceId, auto unused) { return gko::HipExecutor::create(0, gko::OmpExecutor::create(), true); }}};
 
 /**
  * This class assembles and solves an RBF system, given an input mesh and an output mesh with relevant vertex IDs.
@@ -183,7 +183,7 @@ private:
 template <typename RADIAL_BASIS_FUNCTION_T>
 GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(const MappingConfiguration::GinkgoParameter &ginkgoParameter)
 {
-  _deviceExecutor = ginkgoExecutorLookup.at(ginkgoParameter.executor)(ginkgoParameter.deviceId);
+  _deviceExecutor = ginkgoExecutorLookup.at(ginkgoParameter.executor)(ginkgoParameter.deviceId, ginkgoParameter.enableUnifiedMemory);
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -193,7 +193,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
                                                                                 const MappingConfiguration::GinkgoParameter &ginkgoParameter)
 {
   PRECICE_INFO("Using Ginkgo solver {} on executor {} with max. iterations {} and residual reduction {}", ginkgoParameter.solver, ginkgoParameter.executor, ginkgoParameter.maxIterations, ginkgoParameter.residualNorm);
-  _deviceExecutor = ginkgoExecutorLookup.at(ginkgoParameter.executor)(ginkgoParameter.deviceId);
+  _deviceExecutor = ginkgoExecutorLookup.at(ginkgoParameter.executor)(ginkgoParameter.deviceId, ginkgoParameter.enableUnifiedMemory);
 
   _solverType         = solverTypeLookup.at(ginkgoParameter.solver);
   _preconditionerType = preconditionerTypeLookup.at(ginkgoParameter.preconditioner);

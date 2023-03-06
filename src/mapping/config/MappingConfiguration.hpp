@@ -35,14 +35,15 @@ public:
   };
 
   struct GinkgoParameter {
-    std::string  executor          = "reference-executor";
-    std::string  solver            = "cg-solver";
-    std::string  preconditioner    = "jacobi-preconditioner";
-    double       residualNorm      = 1e-8;
-    std::size_t  maxIterations     = 1e6;
-    bool         usePreconditioner = true;
-    unsigned int jacobiBlockSize   = 4;
-    unsigned int deviceId          = 0;
+    std::string  executor            = "reference-executor";
+    std::string  solver              = "cg-solver";
+    std::string  preconditioner      = "jacobi-preconditioner";
+    double       residualNorm        = 1e-8;
+    std::size_t  maxIterations       = 1e6;
+    bool         usePreconditioner   = true;
+    unsigned int jacobiBlockSize     = 4;
+    unsigned int deviceId            = 0;
+    bool         enableUnifiedMemory = false;
   };
 
   MappingConfiguration(
@@ -146,13 +147,14 @@ private:
   const std::string PREALLOCATION_OFF      = "off";
 
   // For iterative RBFs using Ginkgo
-  const std::string ATTR_EXECUTOR           = "executor";
-  const std::string ATTR_DEVICE_ID          = "gpu-device-id";
-  const std::string ATTR_SOLVER             = "solver";
-  const std::string ATTR_USE_PRECONDITIONER = "use-preconditioner";
-  const std::string ATTR_PRECONDITIONER     = "preconditioner";
-  const std::string ATTR_JACOBI_BLOCK_SIZE  = "jacobi-block-size";
-  const std::string ATTR_MAX_ITERATIONS     = "max-iterations";
+  const std::string ATTR_EXECUTOR              = "executor";
+  const std::string ATTR_DEVICE_ID             = "gpu-device-id";
+  const std::string ATTR_ENABLE_UNIFIED_MEMORY = "enable-unified-memory";
+  const std::string ATTR_SOLVER                = "solver";
+  const std::string ATTR_USE_PRECONDITIONER    = "use-preconditioner";
+  const std::string ATTR_PRECONDITIONER        = "preconditioner";
+  const std::string ATTR_JACOBI_BLOCK_SIZE     = "jacobi-block-size";
+  const std::string ATTR_MAX_ITERATIONS        = "max-iterations";
 
   // For the future
   // const std::string ATTR_PARALLELISM           = "parallelism";

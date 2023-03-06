@@ -214,6 +214,9 @@ MappingConfiguration::MappingConfiguration(
   auto attrDeviceId = makeXMLAttribute(ATTR_DEVICE_ID, static_cast<double>(0))
                           .setDocumentation("Specifies the ID of the GPU that should be used for the Ginkgo GPU backend.");
 
+  auto attrUnifiedMemory = makeXMLAttribute(ATTR_ENABLE_UNIFIED_MEMORY, false)
+                               .setDocumentation("If enabled, CUDA Unified Memory will be enabled which allows CUDA to dynamically access RAM.");
+
   auto attrSolver = makeXMLAttribute(ATTR_SOLVER, "cg-solver")
                         .setDocumentation("Specifies the iterative solver used by Ginkgo.")
                         .setOptions({"cg-solver", "gmres-solver", "mg-solver"});
@@ -232,7 +235,7 @@ MappingConfiguration::MappingConfiguration(
   // Add the relevant attributes to the relevant tags
   addAttributes(projectionTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint});
   addAttributes(rbfDirectTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead});
-  addAttributes(rbfIterativeTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead, attrMaxIterations, attrSolverRtol, attrPreallocation, attrExecutor, attrDeviceId, attrSolver, attrUsePreconditioner, attrPreconditioner, attrJacobiBlockSize});
+  addAttributes(rbfIterativeTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead, attrMaxIterations, attrSolverRtol, attrPreallocation, attrExecutor, attrDeviceId, attrUnifiedMemory, attrSolver, attrUsePreconditioner, attrPreconditioner, attrJacobiBlockSize});
   addAttributes(rbfAliasTag, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrXDead, attrYDead, attrZDead});
 
   // Now we take care of the subtag basis function
@@ -330,14 +333,15 @@ void MappingConfiguration::xmlTagCallback(
 
     _rbfConfig = configureRBFMapping(type, context, strPolynomial, strPrealloc, xDead, yDead, zDead, solverRtol);
 
-    _ginkgoParameter.residualNorm      = _rbfConfig.solverRtol;
-    _ginkgoParameter.executor          = tag.getStringAttributeValue(ATTR_EXECUTOR, "reference-executor");
-    _ginkgoParameter.solver            = tag.getStringAttributeValue(ATTR_SOLVER, "cg-solver");
-    _ginkgoParameter.preconditioner    = tag.getStringAttributeValue(ATTR_PRECONDITIONER, "jacobi-preconditioner");
-    _ginkgoParameter.usePreconditioner = tag.getBooleanAttributeValue(ATTR_USE_PRECONDITIONER, true);
-    _ginkgoParameter.jacobiBlockSize   = tag.getDoubleAttributeValue(ATTR_JACOBI_BLOCK_SIZE, 4);
-    _ginkgoParameter.maxIterations     = tag.getDoubleAttributeValue(ATTR_MAX_ITERATIONS, 1e6);
-    _ginkgoParameter.deviceId          = tag.getDoubleAttributeValue(ATTR_DEVICE_ID, 0);
+    _ginkgoParameter.residualNorm        = _rbfConfig.solverRtol;
+    _ginkgoParameter.executor            = tag.getStringAttributeValue(ATTR_EXECUTOR, "reference-executor");
+    _ginkgoParameter.solver              = tag.getStringAttributeValue(ATTR_SOLVER, "cg-solver");
+    _ginkgoParameter.preconditioner      = tag.getStringAttributeValue(ATTR_PRECONDITIONER, "jacobi-preconditioner");
+    _ginkgoParameter.usePreconditioner   = tag.getBooleanAttributeValue(ATTR_USE_PRECONDITIONER, true);
+    _ginkgoParameter.jacobiBlockSize     = tag.getDoubleAttributeValue(ATTR_JACOBI_BLOCK_SIZE, 4);
+    _ginkgoParameter.maxIterations       = tag.getDoubleAttributeValue(ATTR_MAX_ITERATIONS, 1e6);
+    _ginkgoParameter.deviceId            = tag.getDoubleAttributeValue(ATTR_DEVICE_ID, 0);
+    _ginkgoParameter.enableUnifiedMemory = tag.getBooleanAttributeValue(ATTR_ENABLE_UNIFIED_MEMORY, false);
 
     checkDuplicates(configuredMapping);
     _mappings.push_back(configuredMapping);
