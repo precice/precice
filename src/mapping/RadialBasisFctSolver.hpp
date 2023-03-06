@@ -248,12 +248,12 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
   if (polynomial == Polynomial::SEPARATE) {
 
     // 4 = 1 + dimensions(3) = maximum number of polynomial parameters
-    auto         _activeAxis = activeAxis;
-    unsigned int polyParams  = 4 - std::count(_activeAxis.begin(), _activeAxis.end(), false);
+    auto         localActiveAxis = activeAxis;
+    unsigned int polyParams      = 4 - std::count(localActiveAxis.begin(), localActiveAxis.end(), false);
 
     // First, build matrix Q and check for the condition number
     _matrixQ.resize(inputIDs.size(), polyParams);
-    fillPolynomialEntries(_matrixQ, inputMesh, inputIDs, 0, _activeAxis);
+    fillPolynomialEntries(_matrixQ, inputMesh, inputIDs, 0, localActiveAxis);
 
     Eigen::JacobiSVD<Eigen::MatrixXd> svd(_matrixQ);
     PRECICE_ASSERT(svd.singularValues().size() > 0);
@@ -264,20 +264,20 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
     // If the condition number is too high, we disable ill-conditioned axis
     if (conditionNumber > 1e5) {
 
-      // Decide, which axis to disable
-      _activeAxis = reduceActiveAxis(inputMesh, inputIDs, activeAxis);
-      polyParams  = 4 - std::count(_activeAxis.begin(), _activeAxis.end(), false);
+      // Disable one axis
+      localActiveAxis = reduceActiveAxis(inputMesh, inputIDs, activeAxis);
+      polyParams      = 4 - std::count(localActiveAxis.begin(), localActiveAxis.end(), false);
 
       // Resize and refill matrix Q (could be done in a more clever way, e.g., skip fillinf the '1' column again)
       _matrixQ.resize(inputIDs.size(), polyParams);
 
       // fill the matrix Q for the inputMesh
-      fillPolynomialEntries(_matrixQ, inputMesh, inputIDs, 0, _activeAxis);
+      fillPolynomialEntries(_matrixQ, inputMesh, inputIDs, 0, localActiveAxis);
     }
 
     // allocate and fill matrix V for the outputMesh
     _matrixV.resize(outputIDs.size(), polyParams);
-    fillPolynomialEntries(_matrixV, outputMesh, outputIDs, 0, _activeAxis);
+    fillPolynomialEntries(_matrixV, outputMesh, outputIDs, 0, localActiveAxis);
 
     // 3. compute decomposition
     _qrMatrixQ = _matrixQ.colPivHouseholderQr();
