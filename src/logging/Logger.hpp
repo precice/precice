@@ -29,6 +29,14 @@ public:
 
   ///@name Logging operations
   ///@{
+  /// Logs an error and throws an exception
+  template <typename Exception>
+  void error(LogLocation loc, const std::string &mess)
+  {
+    error(std::move(loc), mess);
+    throw Exception{mess};
+  }
+
   void error(LogLocation loc, const std::string &mess) noexcept;
   void warning(LogLocation loc, const std::string &mess) noexcept;
   void info(LogLocation loc, const std::string &mess) noexcept;

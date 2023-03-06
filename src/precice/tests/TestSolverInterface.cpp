@@ -10,11 +10,12 @@ BOOST_AUTO_TEST_SUITE(ExceptionTests)
 
 BOOST_AUTO_TEST_CASE(ConfigurationFileNotFound)
 {
+  PRECICE_TEST(1_rank);
   //BOOST_REQUIRE_THROW does not work here. Expanding it manually.
   bool allFine = false;
   try {
     SolverInterface s("a", "b", 0, 1);
-  } catch (std::exception) { // this should be a preCICE exception type!
+  } catch (::precice::Error) { // this should be a preCICE exception type!
     allFine = true;
   }
   BOOST_TEST(allFine);
@@ -22,11 +23,12 @@ BOOST_AUTO_TEST_CASE(ConfigurationFileNotFound)
 
 BOOST_AUTO_TEST_CASE(WrongParticipant)
 {
+  PRECICE_TEST(1_rank);
   //BOOST_REQUIRE_THROW does not work here. Expanding it manually.
   bool allFine = false;
   try {
-    precice::SolverInterface s("a", testing::getPathToSources() + "/precice/tests/aitken-acceleration.xml", 0, 1);
-  } catch (std::exception) { // this should be a preCICE exception type!
+    precice::SolverInterface s("a", testing::getPathToSources() + "/precice/tests/config-checker.xml", 0, 1);
+  } catch (::precice::Error) { // this should be a preCICE exception type!
     allFine = true;
   }
   BOOST_TEST(allFine);
@@ -34,9 +36,10 @@ BOOST_AUTO_TEST_CASE(WrongParticipant)
 
 BOOST_AUTO_TEST_CASE(FinalizeTwice)
 {
-  precice::SolverInterface s("A", testing::getPathToSources() + "/precice/tests/aitken-acceleration.xml", 0, 1);
+  PRECICE_TEST(1_rank);
+  precice::SolverInterface s("SolverOne", testing::getPathToSources() + "/precice/tests/config-checker.xml", 0, 1);
   s.finalize();
-  BOOST_REQUIRE_THROW(s.finalize(), std::exception); // this should be a preCICE exception type!
+  BOOST_REQUIRE_THROW(s.finalize(), ::precice::Error); // this should be a preCICE exception type!
 }
 
 BOOST_AUTO_TEST_SUITE_END()
