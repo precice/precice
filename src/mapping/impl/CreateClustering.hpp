@@ -112,7 +112,7 @@ std::vector<VertexID> getNeighborsWithinSphere(const Vertices &vertices, VertexI
     // Assumption, vertex position in the container == vertex ID
     VertexID neighborID = centerID + off;
     // We might run out of the array bounds along the edges, so we only consider vertices inside
-    if (neighborID >= 0 && neighborID < vertices.size()) {
+    if (neighborID >= 0 && neighborID < static_cast<int>(vertices.size())) {
       auto &neighborVertex = vertices[neighborID];
       auto &center         = vertices[centerID];
       if (!neighborVertex.isTagged() && (computeSquaredDifference(center.rawCoords(), neighborVertex.rawCoords()) < math::pow_int<2>(radius))) {
@@ -375,7 +375,7 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
 
   // Step 5: Take care of the starting layer: if we start the grid at the globalBB edge we have an additional layer in each direction
   if (startGridAtEdge) {
-    for (unsigned int d = 0; d < inMesh->getDimensions(); ++d) {
+    for (int d = 0; d < inMesh->getDimensions(); ++d) {
       if (globalBB.getEdgeLength(d) > math::NUMERICAL_ZERO_DIFFERENCE) {
         nClustersGlobal[d] += 1;
       }
@@ -420,7 +420,7 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
       centerCoords[1] = start[1];
       for (unsigned int y = 0; y < nClustersLocal[1]; ++y, centerCoords[1] += distances[1]) {
         auto id = zCurve(std::array<unsigned int, 3>{{x, y, 0}}, nClustersLocal);
-        PRECICE_ASSERT(id < centers.size() && id >= 0);
+        PRECICE_ASSERT(id < static_cast<int>(centers.size()) && id >= 0);
         centers[id] = mesh::Vertex({centerCoords, id});
       }
     }
@@ -432,7 +432,7 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
         centerCoords[2] = start[2];
         for (unsigned int z = 0; z < nClustersLocal[2]; ++z, centerCoords[2] += distances[2]) {
           auto id = zCurve(std::array<unsigned int, 3>{{x, y, z}}, nClustersLocal);
-          PRECICE_ASSERT(id < centers.size() && id >= 0);
+          PRECICE_ASSERT(id < static_cast<int>(centers.size()) && id >= 0);
           centers[id] = mesh::Vertex({centerCoords, id});
         }
       }

@@ -189,7 +189,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
     // Consider only non-empty clusters
     if (!cluster.empty()) {
-      PRECICE_ASSERT(center.getID() == _clusters.size(), center.getID(), _clusters.size());
+      PRECICE_ASSERT(center.getID() == static_cast<int>(_clusters.size()), center.getID(), _clusters.size());
       meshVertices.emplace_back(std::move(center));
       _clusters.emplace_back(std::move(cluster));
     }
@@ -245,7 +245,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
     // Step 4c: scale the weight using the weight sum and store the normalized weight in all associated clusters
     for (unsigned int i = 0; i < localNumberOfClusters; ++i) {
-      PRECICE_ASSERT(clusterIDs[i] < _clusters.size());
+      PRECICE_ASSERT(clusterIDs[i] < static_cast<int>(_clusters.size()));
       _clusters[clusterIDs[i]].setNormalizedWeight(weights[i] / weightSum, vertex.getID());
     }
   }
