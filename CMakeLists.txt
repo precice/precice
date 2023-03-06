@@ -407,16 +407,6 @@ if (PRECICE_BUILD_TOOLS)
     CXX_STANDARD_REQUIRED Yes
     CXX_EXTENSIONS No
     )
-
-  # Add link for backwards compatibility
-  # TODO remove in 3.0.0
-  add_custom_target(
-    binprecice
-    ALL
-    COMMAND ${CMAKE_COMMAND} -E create_symlink precice-tools binprecice
-    DEPENDS precice-tools
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    )
 endif()
 
 #
@@ -478,10 +468,6 @@ if(PRECICE_BUILD_TOOLS)
     EXPORT preciceTargets
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     )
-
-  # Install the binprecice link for backwards compatibility
-  # TODO remove in 3.0.0
-  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/binprecice DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
 # Install examples
