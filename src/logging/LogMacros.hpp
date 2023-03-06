@@ -13,8 +13,8 @@
 
 #define PRECICE_INFO(...) _log.info(PRECICE_LOG_LOCATION, precice::utils::format_or_error(__VA_ARGS__))
 
-#define PRECICE_ERROR(...) \
-  _log.error<::precice::Error>(PRECICE_LOG_LOCATION, precice::utils::format_or_error(__VA_ARGS__))
+#define PRECICE_ERROR(kind, ...) \
+  _log.error<kind>(PRECICE_LOG_LOCATION, precice::utils::format_or_error(__VA_ARGS__))
 
 #define PRECICE_CHECK(check, ...) \
   if (!(check)) {                 \
