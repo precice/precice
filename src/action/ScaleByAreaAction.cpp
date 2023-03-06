@@ -34,6 +34,7 @@ void ScaleByAreaAction::performAction(double time)
 
   if (meshDimensions == 2) {
     PRECICE_CHECK(getMesh()->edges().size() != 0,
+                  ::precice::ActionError,
                   "The multiply/divide-by-area actions require meshes with connectivity information. In 2D, please ensure that the mesh {} contains edges.", getMesh()->getName());
     for (mesh::Edge &edge : getMesh()->edges()) {
       areas[edge.vertex(0).getID()] += edge.getEnclosingRadius();
@@ -41,6 +42,7 @@ void ScaleByAreaAction::performAction(double time)
     }
   } else {
     PRECICE_CHECK(getMesh()->triangles().size() != 0,
+                  ::precice::ActionError,
                   "The multiply/divide-by-area actions require meshes with connectivity information. In 3D, please ensure that the mesh {} contains triangles.", getMesh()->getName());
     for (mesh::Triangle &face : getMesh()->triangles()) {
       areas[face.vertex(0).getID()] += face.getArea() / 3.0;

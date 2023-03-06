@@ -52,16 +52,19 @@ BaseQNAcceleration::BaseQNAcceleration(
       _infostringstream(std::ostringstream::ate)
 {
   PRECICE_CHECK((_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),
+                ::precice::AccelerationError,
                 "Initial relaxation factor for QN acceleration has to "
                 "be larger than zero and smaller or equal than one. "
                 "Current initial relaxation is {}",
                 _initialRelaxation);
   PRECICE_CHECK(_maxIterationsUsed > 0,
+                ::precice::AccelerationError,
                 "Maximum number of iterations used in the quasi-Newton acceleration "
                 "scheme has to be larger than zero. "
                 "Current maximum reused iterations is {}",
                 _maxIterationsUsed);
   PRECICE_CHECK(_timeWindowsReused >= 0,
+                ::precice::AccelerationError,
                 "Number of previous time windows to be reused for "
                 "quasi-Newton acceleration has to be larger than or equal to zero. "
                 "Current number of time windows reused is {}",
@@ -217,6 +220,7 @@ void BaseQNAcceleration::updateDifferenceMatrices(
       }
 
       PRECICE_CHECK(not math::equals(residualMagnitude, 0.0),
+                    ::precice::AccelerationError,
                     "Attempting to add a zero vector to the quasi-Newton V matrix. This means that the residuals "
                     "in two consecutive iterations are identical. If a relative convergence limit was selected, "
                     "consider increasing the convergence threshold.");
@@ -392,7 +396,8 @@ void BaseQNAcceleration::performAcceleration(
     }
 
     if (std::isnan(utils::IntraComm::l2norm(xUpdate))) {
-      PRECICE_ERROR("The quasi-Newton update contains NaN values. This means that the quasi-Newton acceleration failed to converge. "
+      PRECICE_ERROR(::precice::AccelerationError,
+                    "The quasi-Newton update contains NaN values. This means that the quasi-Newton acceleration failed to converge. "
                     "When writing your own adapter this could indicate that you give wrong information to preCICE, such as identical "
                     "data in succeeding iterations. Or you do not properly save and reload checkpoints. "
                     "If you give the correct data this could also mean that the coupled problem is too hard to solve. Try to use a QR "

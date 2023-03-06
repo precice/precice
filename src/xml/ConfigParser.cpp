@@ -125,7 +125,8 @@ ConfigParser::ConfigParser(const std::string &filePath, const ConfigurationConte
   try {
     connectTags(context, DefTags, SubTags);
   } catch (const std::exception &e) {
-    PRECICE_ERROR("An unexpected exception occurred during configuration: {}.", e.what());
+    PRECICE_ERROR(::precice::ConfigurationError,
+                  "An unexpected exception occurred during configuration: {}.", e.what());
   }
 }
 
@@ -139,7 +140,8 @@ void ConfigParser::MessageProxy(int level, const std::string &mess)
   switch (level) {
   case (XML_ERR_FATAL):
   case (XML_ERR_ERROR):
-    PRECICE_ERROR(mess);
+    PRECICE_ERROR(::precice::ConfigurationError,
+                  mess);
     break;
   case (XML_ERR_WARNING):
     PRECICE_WARN(mess);
@@ -164,7 +166,8 @@ int ConfigParser::readXmlFile(std::string const &filePath)
   SAXHandler.fatalError     = OnFatalErrorFunc;
 
   std::ifstream ifs(filePath);
-  PRECICE_CHECK(ifs, "XML parser was unable to open configuration file \"{}\"", filePath);
+  PRECICE_CHECK(ifs,
+                ::precice::ConfigurationError, "XML parser was unable to open configuration file \"{}\"", filePath);
 
   std::string content{std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>()};
 
@@ -221,9 +224,11 @@ void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<
 
       auto matches = utils::computeMatches(expectedName, names);
       if (matches.front().distance < 3) {
-        PRECICE_ERROR("The configuration contains an unknown tag <{}>. Did you mean <{}>?", expectedName, matches.front().name);
+        PRECICE_ERROR(::precice::ConfigurationError,
+                      "The configuration contains an unknown tag <{}>. Did you mean <{}>?", expectedName, matches.front().name);
       } else {
-        PRECICE_ERROR("The configuration contains an unknown tag <{}>. Expected tags are {}.", expectedName, fmt::join(names, ", "));
+        PRECICE_ERROR(::precice::ConfigurationError,
+                      "The configuration contains an unknown tag <{}>. Expected tags are {}.", expectedName, fmt::join(names, ", "));
       }
     }
 
@@ -232,7 +237,8 @@ void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<
 
     if ((pDefSubTag->_occurrence == XMLTag::OCCUR_ONCE) || (pDefSubTag->_occurrence == XMLTag::OCCUR_NOT_OR_ONCE)) {
       if (usedTags.count(pDefSubTag->_fullName)) {
-        PRECICE_ERROR("Tag <{}> is not allowed to occur multiple times.", pDefSubTag->_fullName);
+        PRECICE_ERROR(::precice::ConfigurationError,
+                      "Tag <{}> is not allowed to occur multiple times.", pDefSubTag->_fullName);
       }
       usedTags.emplace(pDefSubTag->_fullName);
     }

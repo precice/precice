@@ -8,7 +8,8 @@ TXTReader::TXTReader(
     : _file()
 {
   _file.open(filename);
-  PRECICE_CHECK(_file, "TXT reader failed to open file \"{}\"", filename);
+  PRECICE_CHECK(_file,
+                ::precice::IOError, "TXT reader failed to open file \"{}\"", filename);
   _file.setf(std::ios::showpoint);
   _file.setf(std::ios::fixed);
   //_file << std::setprecision(16);

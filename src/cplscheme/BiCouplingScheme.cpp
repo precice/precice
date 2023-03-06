@@ -43,7 +43,8 @@ BiCouplingScheme::BiCouplingScheme(
   } else if (localParticipant == _secondParticipant) {
     setDoesFirstStep(false);
   } else {
-    PRECICE_ERROR("Name of local participant \"{}\" does not match any participant specified for the coupling scheme.",
+    PRECICE_ERROR(::precice::CouplingSchemeError,
+                  "Name of local participant \"{}\" does not match any participant specified for the coupling scheme.",
                   localParticipant);
   }
 }
@@ -60,7 +61,8 @@ void BiCouplingScheme::addDataToSend(
     PRECICE_ASSERT(_sendData.count(data->getID()) == 0, "Key already exists!");
     _sendData.emplace(data->getID(), ptrCplData);
   } else {
-    PRECICE_ERROR("Data \"{0}\" cannot be added twice for sending. Please remove any duplicate <exchange data=\"{0}\" .../> tags", data->getName());
+    PRECICE_ERROR(::precice::CouplingSchemeError,
+                  "Data \"{0}\" cannot be added twice for sending. Please remove any duplicate <exchange data=\"{0}\" .../> tags", data->getName());
   }
 }
 
@@ -76,7 +78,8 @@ void BiCouplingScheme::addDataToReceive(
     PRECICE_ASSERT(_receiveData.count(data->getID()) == 0, "Key already exists!");
     _receiveData.emplace(data->getID(), ptrCplData);
   } else {
-    PRECICE_ERROR("Data \"{0}\" cannot be added twice for receiving. Please remove any duplicate <exchange data=\"{0}\" ... /> tags", data->getName());
+    PRECICE_ERROR(::precice::CouplingSchemeError,
+                  "Data \"{0}\" cannot be added twice for receiving. Please remove any duplicate <exchange data=\"{0}\" ... /> tags", data->getName());
   }
 }
 

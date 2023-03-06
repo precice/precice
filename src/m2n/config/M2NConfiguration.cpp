@@ -133,7 +133,8 @@ m2n::PtrM2N M2NConfiguration::getM2N(const std::string &from, const std::string 
       return get<0>(tuple);
     }
   }
-  PRECICE_ERROR("There is no m2n communication configured between participants \"" + from + "\" and \"" + to + "\". Please add an appropriate \"<m2n />\" tag.");
+  PRECICE_ERROR(::precice::ConfigurationError,
+                "There is no m2n communication configured between participants \"" + from + "\" and \"" + to + "\". Please add an appropriate \"<m2n />\" tag.");
 }
 
 bool M2NConfiguration::isM2NConfigured(const std::string &from, const std::string &to)
@@ -168,6 +169,7 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, 
       int         port    = tag.getIntAttributeValue("port");
 
       PRECICE_CHECK(not utils::isTruncated<unsigned short>(port),
+                    ::precice::ConfigurationError,
                     "The value given for the \"port\" attribute is not a 16-bit unsigned integer: {}", port);
 
       std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
@@ -176,7 +178,8 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, 
     } else if (tagName == "mpi-multiple-ports") {
       std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
 #ifdef PRECICE_NO_MPI
-      PRECICE_ERROR("Communication type \"mpi-multiple-ports\" can only be used if preCICE was compiled with MPI support enabled. "
+      PRECICE_ERROR(::precice::ConfigurationError,
+                    "Communication type \"mpi-multiple-ports\" can only be used if preCICE was compiled with MPI support enabled. "
                     "Either switch to a \"sockets\" communication or recompile preCICE with \"PRECICE_MPICommunication=ON\".");
 #else
 #ifdef OMPI_MAJOR_VERSION
@@ -191,7 +194,8 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, 
       }
       std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
 #ifdef PRECICE_NO_MPI
-      PRECICE_ERROR("Communication type \"{}\" can only be used if preCICE was compiled with MPI support enabled. "
+      PRECICE_ERROR(::precice::ConfigurationError,
+                    "Communication type \"{}\" can only be used if preCICE was compiled with MPI support enabled. "
                     "Either switch to a \"sockets\" communication or recompile preCICE with \"PRECICE_MPICommunication=ON\".",
                     tagName);
 #else
@@ -228,7 +232,8 @@ void M2NConfiguration::checkDuplicates(
     alreadyAdded |= (get<1>(tuple) == from) && (get<2>(tuple) == to);
     alreadyAdded |= (get<2>(tuple) == from) && (get<1>(tuple) == to);
   }
-  PRECICE_CHECK(!alreadyAdded, "Multiple m2n communications between participant \"" + from + "\" and \"" + to + "\" are not allowed. Please remove redundant <m2n /> tags between them.");
+  PRECICE_CHECK(!alreadyAdded,
+                ::precice::ConfigurationError, "Multiple m2n communications between participant \"" + from + "\" and \"" + to + "\" are not allowed. Please remove redundant <m2n /> tags between them.");
 }
 
 } // namespace precice::m2n

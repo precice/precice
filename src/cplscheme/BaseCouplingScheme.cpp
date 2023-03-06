@@ -79,6 +79,7 @@ BaseCouplingScheme::BaseCouplingScheme(
   } else {
     PRECICE_ASSERT(isImplicitCouplingScheme());
     PRECICE_CHECK((_extrapolationOrder == 0) || (_extrapolationOrder == 1),
+                  ::precice::CouplingSchemeError,
                   "Extrapolation order has to be 0 or 1.");
   }
 }
@@ -174,6 +175,7 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   if (isImplicitCouplingScheme()) {
     if (not doesFirstStep()) {
       PRECICE_CHECK(not _convergenceMeasures.empty(),
+                    ::precice::CouplingSchemeError,
                     "At least one convergence measure has to be defined for "
                     "an implicit coupling scheme.");
       // reserve memory and initialize data with zero
@@ -342,6 +344,7 @@ void BaseCouplingScheme::addComputedTime(
   // Check validness
   bool valid = math::greaterEquals(getNextTimestepMaxLength(), 0.0, _eps);
   PRECICE_CHECK(valid,
+                ::precice::CouplingSchemeError,
                 "The timestep length given to preCICE in \"advance\" {} exceeds the maximum allowed timestep length {} "
                 "in the remaining of this time window. "
                 "Did you restrict your timestep length, \"dt = min(precice_dt, dt)\"? "
@@ -515,7 +518,8 @@ void BaseCouplingScheme::checkCompletenessRequiredActions()
       }
       stream << toString(action);
     }
-    PRECICE_ERROR("The required actions {} are not fulfilled. "
+    PRECICE_ERROR(::precice::CouplingSchemeError,
+                  "The required actions {} are not fulfilled. "
                   "Did you forget to call \"requiresReadingCheckpoint()\" or \"requiresWritingCheckpoint()\"?",
                   stream.str());
   }
@@ -601,6 +605,7 @@ bool BaseCouplingScheme::measureConvergence()
       if (convMeasure.strict) {
         oneStrict = true;
         PRECICE_CHECK(_iterations < _maxIterations,
+                      ::precice::CouplingSchemeError,
                       "The strict convergence measure for data \"" + convMeasure.couplingData->getDataName() +
                           "\" did not converge within the maximum allowed iterations, which terminates the simulation. "
                           "To avoid this forced termination do not mark the convergence measure as strict.")

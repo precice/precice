@@ -53,7 +53,8 @@ void MPIPortsCommunication::acceptConnection(std::string const &acceptorName,
 
   utils::StringMaker<MPI_MAX_PORT_NAME> sm;
   res = MPI_Open_port(MPI_INFO_NULL, sm.data());
-  PRECICE_CHECK(res, "MPI_Open_port failed with message: {}", res.message());
+  PRECICE_CHECK(res,
+                ::precice::CommunicationError, "MPI_Open_port failed with message: {}", res.message());
   _portName = sm.str();
 
   ConnectionInfoWriter conInfo(acceptorName, requesterName, tag, _addressDirectory);
@@ -66,7 +67,8 @@ void MPIPortsCommunication::acceptConnection(std::string const &acceptorName,
     // Connection
     MPI_Comm communicator;
     res = MPI_Comm_accept(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
-    PRECICE_CHECK(res, "MPI_Comm_accept failed with message: {}", res.message());
+    PRECICE_CHECK(res,
+                  ::precice::CommunicationError, "MPI_Comm_accept failed with message: {}", res.message());
     PRECICE_DEBUG("Accepted connection at {} for peer {}", _portName, peerCurrent);
 
     // Which rank is requesting a connection?
@@ -95,7 +97,8 @@ void MPIPortsCommunication::acceptConnection(std::string const &acceptorName,
   } while (++peerCurrent < peerCount);
 
   res = MPI_Close_port(const_cast<char *>(_portName.c_str()));
-  PRECICE_CHECK(res, "MPI_Close_port failed with message: {}", res.message());
+  PRECICE_CHECK(res,
+                ::precice::CommunicationError, "MPI_Close_port failed with message: {}", res.message());
   _portName.clear();
   PRECICE_DEBUG("Closed Port");
 
@@ -117,7 +120,8 @@ void MPIPortsCommunication::acceptConnectionAsServer(std::string const &acceptor
 
   utils::StringMaker<MPI_MAX_PORT_NAME> sm;
   res = MPI_Open_port(MPI_INFO_NULL, sm.data());
-  PRECICE_CHECK(res, "MPI_Open_port failed with message: {}", res.message());
+  PRECICE_CHECK(res,
+                ::precice::CommunicationError, "MPI_Open_port failed with message: {}", res.message());
   _portName = sm.str();
 
   ConnectionInfoWriter conInfo(acceptorName, requesterName, tag, acceptorRank, _addressDirectory);
@@ -127,7 +131,8 @@ void MPIPortsCommunication::acceptConnectionAsServer(std::string const &acceptor
   for (int connection = 0; connection < requesterCommunicatorSize; ++connection) {
     MPI_Comm communicator;
     res = MPI_Comm_accept(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
-    PRECICE_CHECK(res, "MPI_Comm_accept failed with message: {}", res.message());
+    PRECICE_CHECK(res,
+                  ::precice::CommunicationError, "MPI_Comm_accept failed with message: {}", res.message());
     PRECICE_DEBUG("Accepted connection at {}", _portName);
 
     // Receive the rank of requester
@@ -141,7 +146,8 @@ void MPIPortsCommunication::acceptConnectionAsServer(std::string const &acceptor
   }
 
   res = MPI_Close_port(const_cast<char *>(_portName.c_str()));
-  PRECICE_CHECK(res, "MPI_Close_port failed with message: {}", res.message());
+  PRECICE_CHECK(res,
+                ::precice::CommunicationError, "MPI_Close_port failed with message: {}", res.message());
   _portName.clear();
   PRECICE_DEBUG("Closed Port");
 
@@ -165,7 +171,8 @@ void MPIPortsCommunication::requestConnection(std::string const &acceptorName,
 
   MPI_Comm  communicator;
   MPIResult res = MPI_Comm_connect(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
-  PRECICE_CHECK(res, "MPI_Comm_connect failed with message: {}", res.message());
+  PRECICE_CHECK(res,
+                ::precice::CommunicationError, "MPI_Comm_connect failed with message: {}", res.message());
   PRECICE_DEBUG("Requested connection to {}", _portName);
 
   _isConnected = true;
@@ -205,7 +212,8 @@ void MPIPortsCommunication::requestConnectionAsClient(std::string const &  accep
 
     MPI_Comm  communicator;
     MPIResult res = MPI_Comm_connect(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
-    PRECICE_CHECK(res, "MPI_Comm_connect failed with message: {}", res.message());
+    PRECICE_CHECK(res,
+                  ::precice::CommunicationError, "MPI_Comm_connect failed with message: {}", res.message());
     PRECICE_DEBUG("Requested connection to {}", _portName);
 
     // Rank 0 is always the peer, because we connected on COMM_SELF

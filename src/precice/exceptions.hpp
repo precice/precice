@@ -28,9 +28,15 @@ public:
       : precice::Error(what_arg){};
 };
 
-class ExportError : public precice::Error {
+class CommunicationError : public precice::Error {
 public:
-  ExportError(const std::string &what_arg)
+  CommunicationError(const std::string &what_arg)
+      : precice::Error(what_arg){};
+};
+
+class IOError : public precice::Error {
+public:
+  IOError(const std::string &what_arg)
       : precice::Error(what_arg){};
 };
 
@@ -40,15 +46,33 @@ public:
       : precice::Error(what_arg){};
 };
 
-class InterfaceError : public precice::Error {
+class MeshError : public precice::Error {
 public:
-  InterfaceError(const std::string &what_arg)
+  MeshError(const std::string &what_arg)
+      : precice::Error(what_arg){};
+};
+
+class M2NError : public precice::Error {
+public:
+  M2NError(const std::string &what_arg)
+      : precice::Error(what_arg){};
+};
+
+class APIError : public precice::Error {
+public:
+  APIError(const std::string &what_arg)
       : precice::Error(what_arg){};
 };
 
 class ConfigurationError : public precice::Error {
 public:
   ConfigurationError(const std::string &what_arg)
+      : precice::Error(what_arg){};
+};
+
+class PartitionError : public precice::Error {
+public:
+  PartitionError(const std::string &what_arg)
       : precice::Error(what_arg){};
 };
 

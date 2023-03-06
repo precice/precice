@@ -93,22 +93,26 @@ SolverInterfaceImpl::SolverInterfaceImpl(
       _accessorCommunicatorSize(solverProcessSize)
 {
   if (!allowNullptr) {
-    PRECICE_CHECK(communicator != nullptr,
+    PRECICE_CHECK(communicator != nullptr, ::precice::APIError,
                   "Passing \"nullptr\" as \"communicator\" to SolverInterface constructor is not allowed. Please use the SolverInterface constructor without the \"communicator\" argument, if you don't want to pass an MPI communicator.");
   }
   PRECICE_CHECK(!_accessorName.empty(),
+                ::precice::APIError,
                 "This participant's name is an empty string. "
                 "When constructing a preCICE interface you need to pass the name of the "
                 "participant as first argument to the constructor.");
   PRECICE_CHECK(_accessorProcessRank >= 0,
+                ::precice::APIError,
                 "The solver process index needs to be a non-negative number, not: {}. "
                 "Please check the value given when constructing a preCICE interface.",
                 _accessorProcessRank);
   PRECICE_CHECK(_accessorCommunicatorSize >= 1,
+                ::precice::APIError,
                 "The solver process size needs to be a positive number, not: {}. "
                 "Please check the value given when constructing a preCICE interface.",
                 _accessorCommunicatorSize);
   PRECICE_CHECK(_accessorProcessRank < _accessorCommunicatorSize,
+                ::precice::APIError,
                 "The solver process index, currently: {}  needs to be smaller than the solver process size, currently: {}. "
                 "Please check the values given when constructing a preCICE interface.",
                 _accessorProcessRank, _accessorCommunicatorSize);
@@ -133,10 +137,12 @@ SolverInterfaceImpl::SolverInterfaceImpl(
   if (communicator != nullptr) {
     const auto currentRank = utils::Parallel::current()->rank();
     PRECICE_CHECK(_accessorProcessRank == currentRank,
+                  ::precice::APIError,
                   "The solver process index given in the preCICE interface constructor({}) does not match the rank of the passed MPI communicator ({}).",
                   _accessorProcessRank, currentRank);
     const auto currentSize = utils::Parallel::current()->size();
     PRECICE_CHECK(_accessorCommunicatorSize == currentSize,
+                  ::precice::APIError,
                   "The solver process size given in the preCICE interface constructor({}) does not match the size of the passed MPI communicator ({}).",
                   _accessorCommunicatorSize, currentSize);
   }
@@ -226,6 +232,7 @@ void SolverInterfaceImpl::configure(
   PRECICE_ASSERT(_accessorCommunicatorSize == 1 || _accessor->useIntraComm(),
                  "A parallel participant needs an intra-participant communication");
   PRECICE_CHECK(not(_accessorCommunicatorSize == 1 && _accessor->useIntraComm()),
+                ::precice::APIError,
                 "You cannot use an intra-participant communication with a serial participant. "
                 "If you do not know exactly what an intra-participant communication is and why you want to use it "
                 "you probably just want to remove the intraComm tag from the preCICE configuration.");
@@ -236,6 +243,7 @@ void SolverInterfaceImpl::configure(
   configureM2Ns(config.getM2NConfiguration());
 
   PRECICE_CHECK(_participants.size() > 1,
+                ::precice::APIError,
                 "In the preCICE configuration, only one participant is defined. "
                 "One participant makes no coupled simulation. "
                 "Please add at least another one.");
@@ -265,12 +273,15 @@ void SolverInterfaceImpl::configure(
 double SolverInterfaceImpl::initialize()
 {
   PRECICE_TRACE();
-  PRECICE_CHECK(_state != State::Finalized, "initialize() cannot be called after finalize().")
-  PRECICE_CHECK(_state != State::Initialized, "initialize() may only be called once.");
+  PRECICE_CHECK(_state != State::Finalized,
+                ::precice::APIError, "initialize() cannot be called after finalize().")
+  PRECICE_CHECK(_state != State::Initialized,
+                ::precice::APIError, "initialize() may only be called once.");
   PRECICE_ASSERT(not _couplingScheme->isInitialized());
 
   bool failedToInitialize = _couplingScheme->isActionRequired(cplscheme::CouplingScheme::Action::InitializeData) && not _couplingScheme->isActionFulfilled(cplscheme::CouplingScheme::Action::InitializeData);
   PRECICE_CHECK(not failedToInitialize,
+                ::precice::APIError,
                 "Initial data has to be written to preCICE before calling initialize(). "
                 "After defining your mesh, call requiresInitialData() to check if the participant is required to write initial data using an appropriate write...Data() function.");
 
@@ -401,13 +412,13 @@ double SolverInterfaceImpl::advance(
   Event                    e("advance", precice::syncMode);
   utils::ScopedEventPrefix sep("advance/");
 
-  PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before advance().");
-  PRECICE_CHECK(_state != State::Finalized, "advance() cannot be called after finalize().")
-  PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before advance().")
+  PRECICE_CHECK(_state != State::Constructed, ::precice::APIError, "initialize() has to be called before advance().");
+  PRECICE_CHECK(_state != State::Finalized, ::precice::APIError, "advance() cannot be called after finalize().")
+  PRECICE_CHECK(_state == State::Initialized, ::precice::APIError, "initialize() has to be called before advance().")
   PRECICE_ASSERT(_couplingScheme->isInitialized());
-  PRECICE_CHECK(isCouplingOngoing(), "advance() cannot be called when isCouplingOngoing() returns false.");
-  PRECICE_CHECK(!math::equals(computedTimestepLength, 0.0), "advance() cannot be called with a timestep size of 0.");
-  PRECICE_CHECK(computedTimestepLength > 0.0, "advance() cannot be called with a negative timestep size {}.", computedTimestepLength);
+  PRECICE_CHECK(isCouplingOngoing(), ::precice::APIError, "advance() cannot be called when isCouplingOngoing() returns false.");
+  PRECICE_CHECK(!math::equals(computedTimestepLength, 0.0), ::precice::APIError, "advance() cannot be called with a timestep size of 0.");
+  PRECICE_CHECK(computedTimestepLength > 0.0, ::precice::APIError, "advance() cannot be called with a negative timestep size {}.", computedTimestepLength);
   _numberAdvanceCalls++;
 
 #ifndef NDEBUG
@@ -461,7 +472,8 @@ double SolverInterfaceImpl::advance(
 void SolverInterfaceImpl::finalize()
 {
   PRECICE_TRACE();
-  PRECICE_CHECK(_state != State::Finalized, "finalize() may only be called once.");
+  PRECICE_CHECK(_state != State::Finalized,
+                ::precice::APIError, "finalize() may only be called once.");
 
   // Events for the solver time, finally stopped here
   auto &solverEvent = EventRegistry::instance().getStoredEvent("solver.advance");
@@ -521,23 +533,23 @@ int SolverInterfaceImpl::getDimensions() const
 bool SolverInterfaceImpl::isCouplingOngoing() const
 {
   PRECICE_TRACE();
-  PRECICE_CHECK(_state != State::Finalized, "isCouplingOngoing() cannot be called after finalize().");
-  PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before isCouplingOngoing() can be evaluated.");
+  PRECICE_CHECK(_state != State::Finalized, ::precice::APIError, "isCouplingOngoing() cannot be called after finalize().");
+  PRECICE_CHECK(_state == State::Initialized, ::precice::APIError, "initialize() has to be called before isCouplingOngoing() can be evaluated.");
   return _couplingScheme->isCouplingOngoing();
 }
 
 bool SolverInterfaceImpl::isTimeWindowComplete() const
 {
   PRECICE_TRACE();
-  PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before isTimeWindowComplete().");
-  PRECICE_CHECK(_state != State::Finalized, "isTimeWindowComplete() cannot be called after finalize().");
+  PRECICE_CHECK(_state != State::Constructed, ::precice::APIError, "initialize() has to be called before isTimeWindowComplete().");
+  PRECICE_CHECK(_state != State::Finalized, ::precice::APIError, "isTimeWindowComplete() cannot be called after finalize().");
   return _couplingScheme->isTimeWindowComplete();
 }
 
 bool SolverInterfaceImpl::requiresInitialData()
 {
   PRECICE_TRACE();
-  PRECICE_CHECK(_state == State::Constructed, "requiresInitialData() has to be called before initialize().");
+  PRECICE_CHECK(_state == State::Constructed, ::precice::APIError, "requiresInitialData() has to be called before initialize().");
   bool required = _couplingScheme->isActionRequired(cplscheme::CouplingScheme::Action::InitializeData);
   if (required) {
     _couplingScheme->markActionFulfilled(cplscheme::CouplingScheme::Action::InitializeData);
@@ -548,7 +560,7 @@ bool SolverInterfaceImpl::requiresInitialData()
 bool SolverInterfaceImpl::requiresWritingCheckpoint()
 {
   PRECICE_TRACE();
-  PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before requiresWritingCheckpoint().");
+  PRECICE_CHECK(_state == State::Initialized, ::precice::APIError, "initialize() has to be called before requiresWritingCheckpoint().");
   bool required = _couplingScheme->isActionRequired(cplscheme::CouplingScheme::Action::WriteCheckpoint);
   if (required) {
     _couplingScheme->markActionFulfilled(cplscheme::CouplingScheme::Action::WriteCheckpoint);
@@ -559,7 +571,7 @@ bool SolverInterfaceImpl::requiresWritingCheckpoint()
 bool SolverInterfaceImpl::requiresReadingCheckpoint()
 {
   PRECICE_TRACE();
-  PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before requiresReadingCheckpoint().");
+  PRECICE_CHECK(_state == State::Initialized, ::precice::APIError, "initialize() has to be called before requiresReadingCheckpoint().");
   bool required = _couplingScheme->isActionRequired(cplscheme::CouplingScheme::Action::ReadCheckpoint);
   if (required) {
     _couplingScheme->markActionFulfilled(cplscheme::CouplingScheme::Action::ReadCheckpoint);
@@ -579,10 +591,12 @@ int SolverInterfaceImpl::getMeshID(
 {
   PRECICE_TRACE(meshName);
   PRECICE_CHECK(_accessor->hasMesh(meshName),
+                ::precice::APIError,
                 "The given mesh name \"{}\" is unknown to preCICE. "
                 "Please check the mesh definitions in the configuration.",
                 meshName);
   PRECICE_CHECK(_accessor->isMeshUsed(meshName),
+                ::precice::APIError,
                 "The given mesh name \"{0}\" is not used by the participant \"{1}\". "
                 "Please define a <provide-mesh name=\"{0}\"/> or a <receive-mesh name=\"{0}\" from=\"...\" /> node for the particpant \"{1}\".",
                 meshName, _accessorName);
@@ -603,6 +617,7 @@ int SolverInterfaceImpl::getDataID(
   PRECICE_TRACE(dataName, meshID);
   PRECICE_VALIDATE_MESH_ID(meshID);
   PRECICE_CHECK(_accessor->isDataUsed(dataName, meshID),
+                ::precice::APIError,
                 "Data with name \"{0}\" is not defined on mesh \"{1}\". "
                 "Please add <use-data name=\"{0}\"/> under <mesh name=\"{1}\"/>.",
                 dataName, _accessor->getMeshName(meshID));
@@ -634,8 +649,9 @@ int SolverInterfaceImpl::getMeshVertexSize(
   PRECICE_REQUIRE_MESH_USE(meshID);
   // In case we access received mesh data: check, if the requested mesh data has already been received.
   // Otherwise, the function call doesn't make any sense
-  PRECICE_CHECK((_state == State::Initialized) || _accessor->isMeshProvided(meshID), "initialize() has to be called before accessing"
-                                                                                     " data of the received mesh \"{}\" on participant \"{}\".",
+  PRECICE_CHECK((_state == State::Initialized) || _accessor->isMeshProvided(meshID),
+                ::precice::APIError, "initialize() has to be called before accessing"
+                                     " data of the received mesh \"{}\" on participant \"{}\".",
                 _accessor->getMeshName(meshID), _accessor->getName());
   MeshContext &context = _accessor->usedMeshContext(meshID);
   PRECICE_ASSERT(context.mesh.get() != nullptr);
@@ -705,8 +721,8 @@ void SolverInterfaceImpl::setMeshEdge(
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
     mesh::PtrMesh &mesh = context.mesh;
     using impl::errorInvalidVertexID;
-    PRECICE_CHECK(mesh->isValidVertexID(firstVertexID), errorInvalidVertexID(firstVertexID));
-    PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), errorInvalidVertexID(secondVertexID));
+    PRECICE_CHECK(mesh->isValidVertexID(firstVertexID), ::precice::APIError, errorInvalidVertexID(firstVertexID));
+    PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), ::precice::APIError, errorInvalidVertexID(secondVertexID));
     mesh::Vertex &v0 = mesh->vertices()[firstVertexID];
     mesh::Vertex &v1 = mesh->vertices()[secondVertexID];
     mesh->createEdge(v0, v1);
@@ -732,6 +748,7 @@ void SolverInterfaceImpl::setMeshEdges(
       return !mesh->isValidVertexID(vid);
     });
     PRECICE_CHECK(first == end,
+                  ::precice::APIError,
                   impl::errorInvalidVertexIDRange,
                   std::distance(vertices, first),
                   std::distance(vertices, last));
@@ -758,18 +775,19 @@ void SolverInterfaceImpl::setMeshTriangle(
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
     mesh::PtrMesh &mesh = context.mesh;
     using impl::errorInvalidVertexID;
-    PRECICE_CHECK(mesh->isValidVertexID(firstVertexID), errorInvalidVertexID(firstVertexID));
-    PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), errorInvalidVertexID(secondVertexID));
-    PRECICE_CHECK(mesh->isValidVertexID(thirdVertexID), errorInvalidVertexID(thirdVertexID));
+    PRECICE_CHECK(mesh->isValidVertexID(firstVertexID), ::precice::APIError, errorInvalidVertexID(firstVertexID));
+    PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), ::precice::APIError, errorInvalidVertexID(secondVertexID));
+    PRECICE_CHECK(mesh->isValidVertexID(thirdVertexID), ::precice::APIError, errorInvalidVertexID(thirdVertexID));
     PRECICE_CHECK(utils::unique_elements(utils::make_array(firstVertexID, secondVertexID, thirdVertexID)),
+                  ::precice::APIError,
                   "setMeshTriangle() was called with repeated Vertex IDs ({}, {}, {}).",
                   firstVertexID, secondVertexID, thirdVertexID);
     mesh::Vertex *vertices[3];
     vertices[0] = &mesh->vertices()[firstVertexID];
     vertices[1] = &mesh->vertices()[secondVertexID];
     vertices[2] = &mesh->vertices()[thirdVertexID];
-    PRECICE_CHECK(utils::unique_elements(utils::make_array(vertices[0]->getCoords(),
-                                                           vertices[1]->getCoords(), vertices[2]->getCoords())),
+    PRECICE_CHECK(utils::unique_elements(utils::make_array(vertices[0]->getCoords(), vertices[1]->getCoords(), vertices[2]->getCoords())),
+                  ::precice::APIError,
                   "setMeshTriangle() was called with vertices located at identical coordinates (IDs: {}, {}, {}).",
                   firstVertexID, secondVertexID, thirdVertexID);
     mesh::Edge *edges[3];
@@ -800,6 +818,7 @@ void SolverInterfaceImpl::setMeshTriangles(
       return !mesh->isValidVertexID(vid);
     });
     PRECICE_CHECK(first == end,
+                  ::precice::APIError,
                   impl::errorInvalidVertexIDRange,
                   std::distance(vertices, first),
                   std::distance(vertices, last));
@@ -824,30 +843,37 @@ void SolverInterfaceImpl::setMeshQuad(
 {
   PRECICE_TRACE(meshID, firstVertexID,
                 secondVertexID, thirdVertexID, fourthVertexID);
-  PRECICE_CHECK(_dimensions == 3, "setMeshQuad is only possible for 3D cases."
-                                  " Please set the dimension to 3 in the preCICE configuration file.");
+  PRECICE_CHECK(_dimensions == 3,
+                ::precice::APIError,
+                "setMeshQuad is only possible for 3D cases."
+                " Please set the dimension to 3 in the preCICE configuration file.");
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->usedMeshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
     PRECICE_ASSERT(context.mesh);
     mesh::Mesh &mesh = *(context.mesh);
     using impl::errorInvalidVertexID;
-    PRECICE_CHECK(mesh.isValidVertexID(firstVertexID), errorInvalidVertexID(firstVertexID));
-    PRECICE_CHECK(mesh.isValidVertexID(secondVertexID), errorInvalidVertexID(secondVertexID));
-    PRECICE_CHECK(mesh.isValidVertexID(thirdVertexID), errorInvalidVertexID(thirdVertexID));
-    PRECICE_CHECK(mesh.isValidVertexID(fourthVertexID), errorInvalidVertexID(fourthVertexID));
+    PRECICE_CHECK(mesh.isValidVertexID(firstVertexID), ::precice::APIError, errorInvalidVertexID(firstVertexID));
+    PRECICE_CHECK(mesh.isValidVertexID(secondVertexID), ::precice::APIError, errorInvalidVertexID(secondVertexID));
+    PRECICE_CHECK(mesh.isValidVertexID(thirdVertexID), ::precice::APIError, errorInvalidVertexID(thirdVertexID));
+    PRECICE_CHECK(mesh.isValidVertexID(fourthVertexID), ::precice::APIError, errorInvalidVertexID(fourthVertexID));
 
     auto vertexIDs = utils::make_array(firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
-    PRECICE_CHECK(utils::unique_elements(vertexIDs), "The four vertex ID's are not unique. Please check that the vertices that form the quad are correct.");
+    PRECICE_CHECK(utils::unique_elements(vertexIDs),
+                  ::precice::APIError,
+                  "The four vertex ID's are not unique. Please check that the vertices that form the quad are correct.");
 
     auto coords = mesh::coordsFor(mesh, vertexIDs);
     PRECICE_CHECK(utils::unique_elements(coords),
+                  ::precice::APIError,
                   "The four vertices that form the quad are not unique. The resulting shape may be a point, line or triangle."
                   "Please check that the adapter sends the four unique vertices that form the quad, or that the mesh on the interface is composed of quads.");
 
     auto convexity = math::geometry::isConvexQuad(coords);
-    PRECICE_CHECK(convexity.convex, "The given quad is not convex. "
-                                    "Please check that the adapter send the four correct vertices or that the interface is composed of quads.");
+    PRECICE_CHECK(convexity.convex,
+                  ::precice::APIError,
+                  "The given quad is not convex. "
+                  "Please check that the adapter send the four correct vertices or that the interface is composed of quads.");
     auto reordered = utils::reorder_array(convexity.vertexOrder, mesh::vertexPtrsFor(mesh, vertexIDs));
 
     // Vertices are now in the order: V0-V1-V2-V3-V0.
@@ -886,6 +912,7 @@ void SolverInterfaceImpl::setMeshQuads(
       return !mesh.isValidVertexID(vid);
     });
     PRECICE_CHECK(first == end,
+                  ::precice::APIError,
                   impl::errorInvalidVertexIDRange,
                   std::distance(vertices, first),
                   std::distance(vertices, last));
@@ -898,17 +925,22 @@ void SolverInterfaceImpl::setMeshQuads(
     auto did = vertices[4 * i + 3];
 
     auto vertexIDs = utils::make_array(aid, bid, cid, did);
-    PRECICE_CHECK(utils::unique_elements(vertexIDs), "The four vertex ID's of the quad nr {} are not unique. Please check that the vertices that form the quad are correct.", i);
+    PRECICE_CHECK(utils::unique_elements(vertexIDs),
+                  ::precice::APIError,
+                  "The four vertex ID's of the quad nr {} are not unique. Please check that the vertices that form the quad are correct.", i);
 
     auto coords = mesh::coordsFor(mesh, vertexIDs);
     PRECICE_CHECK(utils::unique_elements(coords),
+                  ::precice::APIError,
                   "The four vertices that form the quad nr {} are not unique. The resulting shape may be a point, line or triangle."
                   "Please check that the adapter sends the four unique vertices that form the quad, or that the mesh on the interface is composed of quads.",
                   i);
 
     auto convexity = math::geometry::isConvexQuad(coords);
-    PRECICE_CHECK(convexity.convex, "The given quad nr {} is not convex. "
-                                    "Please check that the adapter send the four correct vertices or that the interface is composed of quads.",
+    PRECICE_CHECK(convexity.convex,
+                  ::precice::APIError,
+                  "The given quad nr {} is not convex. "
+                  "Please check that the adapter send the four correct vertices or that the interface is composed of quads.",
                   i);
     auto reordered = utils::reorder_array(convexity.vertexOrder, mesh::vertexPtrsFor(mesh, vertexIDs));
 
@@ -936,16 +968,18 @@ void SolverInterfaceImpl::setMeshTetrahedron(
 {
   PRECICE_TRACE(meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
-  PRECICE_CHECK(_dimensions == 3, "setMeshTetrahedron is only possible for 3D cases."
-                                  " Please set the dimension to 3 in the preCICE configuration file.");
+  PRECICE_CHECK(_dimensions == 3,
+                ::precice::APIError,
+                "setMeshTetrahedron is only possible for 3D cases."
+                " Please set the dimension to 3 in the preCICE configuration file.");
   MeshContext &context = _accessor->usedMeshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
     mesh::PtrMesh &mesh = context.mesh;
     using impl::errorInvalidVertexID;
-    PRECICE_CHECK(mesh->isValidVertexID(firstVertexID), errorInvalidVertexID(firstVertexID));
-    PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), errorInvalidVertexID(secondVertexID));
-    PRECICE_CHECK(mesh->isValidVertexID(thirdVertexID), errorInvalidVertexID(thirdVertexID));
-    PRECICE_CHECK(mesh->isValidVertexID(fourthVertexID), errorInvalidVertexID(fourthVertexID));
+    PRECICE_CHECK(mesh->isValidVertexID(firstVertexID), ::precice::APIError, errorInvalidVertexID(firstVertexID));
+    PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), ::precice::APIError, errorInvalidVertexID(secondVertexID));
+    PRECICE_CHECK(mesh->isValidVertexID(thirdVertexID), ::precice::APIError, errorInvalidVertexID(thirdVertexID));
+    PRECICE_CHECK(mesh->isValidVertexID(fourthVertexID), ::precice::APIError, errorInvalidVertexID(fourthVertexID));
     mesh::Vertex &A = mesh->vertices()[firstVertexID];
     mesh::Vertex &B = mesh->vertices()[secondVertexID];
     mesh::Vertex &C = mesh->vertices()[thirdVertexID];
@@ -974,6 +1008,7 @@ void SolverInterfaceImpl::setMeshTetrahedra(
       return !mesh->isValidVertexID(vid);
     });
     PRECICE_CHECK(first == end,
+                  ::precice::APIError,
                   impl::errorInvalidVertexIDRange,
                   std::distance(vertices, first),
                   std::distance(vertices, last));
@@ -998,15 +1033,16 @@ void SolverInterfaceImpl::writeBlockVectorData(
     const double *values)
 {
   PRECICE_TRACE(dataID, size);
-  PRECICE_CHECK(_state != State::Finalized, "writeBlockVectorData(...) cannot be called after finalize().");
+  PRECICE_CHECK(_state != State::Finalized, ::precice::APIError, "writeBlockVectorData(...) cannot be called after finalize().");
   PRECICE_REQUIRE_DATA_WRITE(dataID);
   if (size == 0)
     return;
-  PRECICE_CHECK(valueIndices != nullptr, "writeBlockVectorData() was called with valueIndices == nullptr");
-  PRECICE_CHECK(values != nullptr, "writeBlockVectorData() was called with values == nullptr");
+  PRECICE_CHECK(valueIndices != nullptr, ::precice::APIError, "writeBlockVectorData() was called with valueIndices == nullptr");
+  PRECICE_CHECK(values != nullptr, ::precice::APIError, "writeBlockVectorData() was called with values == nullptr");
   WriteDataContext &context = _accessor->writeDataContext(dataID);
   PRECICE_ASSERT(context.providedData() != nullptr);
   PRECICE_CHECK(context.getDataDimensions() == _dimensions,
+                ::precice::APIError,
                 "You cannot call writeBlockVectorData on the scalar data type \"{0}\". Use writeBlockScalarData or change the data type for \"{0}\" to vector.",
                 context.getDataName());
   PRECICE_VALIDATE_DATA(values, size * _dimensions);
@@ -1017,6 +1053,7 @@ void SolverInterfaceImpl::writeBlockVectorData(
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
     PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
+                  ::precice::APIError,
                   "Cannot write data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                   context.getDataName(), valueIndex);
     const int offsetInternal = valueIndex * _dimensions;
@@ -1035,12 +1072,13 @@ void SolverInterfaceImpl::writeVectorData(
     const double *value)
 {
   PRECICE_TRACE(dataID, valueIndex);
-  PRECICE_CHECK(_state != State::Finalized, "writeVectorData(...) cannot be called after finalize().");
+  PRECICE_CHECK(_state != State::Finalized, ::precice::APIError, "writeVectorData(...) cannot be called after finalize().");
   PRECICE_REQUIRE_DATA_WRITE(dataID);
   PRECICE_DEBUG("value = {}", Eigen::Map<const Eigen::VectorXd>(value, _dimensions).format(utils::eigenio::debug()));
   WriteDataContext &context = _accessor->writeDataContext(dataID);
   PRECICE_ASSERT(context.providedData() != nullptr);
   PRECICE_CHECK(context.getDataDimensions() == _dimensions,
+                ::precice::APIError,
                 "You cannot call writeVectorData on the scalar data type \"{0}\". Use writeScalarData or change the data type for \"{0}\" to vector.",
                 context.getDataName());
   PRECICE_VALIDATE_DATA(value, _dimensions);
@@ -1049,6 +1087,7 @@ void SolverInterfaceImpl::writeVectorData(
   auto &      values      = data.values();
   const auto  vertexCount = values.size() / context.getDataDimensions();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
+                ::precice::APIError,
                 "Cannot write data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                 context.getDataName(), valueIndex);
   const int offset = valueIndex * _dimensions;
@@ -1064,15 +1103,16 @@ void SolverInterfaceImpl::writeBlockScalarData(
     const double *values)
 {
   PRECICE_TRACE(dataID, size);
-  PRECICE_CHECK(_state != State::Finalized, "writeBlockScalarData(...) cannot be called after finalize().");
+  PRECICE_CHECK(_state != State::Finalized, ::precice::APIError, "writeBlockScalarData(...) cannot be called after finalize().");
   PRECICE_REQUIRE_DATA_WRITE(dataID);
   if (size == 0)
     return;
-  PRECICE_CHECK(valueIndices != nullptr, "writeBlockScalarData() was called with valueIndices == nullptr");
-  PRECICE_CHECK(values != nullptr, "writeBlockScalarData() was called with values == nullptr");
+  PRECICE_CHECK(valueIndices != nullptr, ::precice::APIError, "writeBlockScalarData() was called with valueIndices == nullptr");
+  PRECICE_CHECK(values != nullptr, ::precice::APIError, "writeBlockScalarData() was called with values == nullptr");
   WriteDataContext &context = _accessor->writeDataContext(dataID);
   PRECICE_ASSERT(context.providedData() != nullptr);
   PRECICE_CHECK(context.getDataDimensions() == 1,
+                ::precice::APIError,
                 "You cannot call writeBlockScalarData on the vector data type \"{}\". Use writeBlockVectorData or change the data type for \"{}\" to scalar.",
                 context.getDataName(), context.getDataName());
   PRECICE_VALIDATE_DATA(values, size);
@@ -1083,6 +1123,7 @@ void SolverInterfaceImpl::writeBlockScalarData(
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
     PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
+                  ::precice::APIError,
                   "Cannot write data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                   context.getDataName(), valueIndex);
     valuesInternal[valueIndex] = values[i];
@@ -1095,15 +1136,17 @@ void SolverInterfaceImpl::writeScalarData(
     double value)
 {
   PRECICE_TRACE(dataID, valueIndex, value);
-  PRECICE_CHECK(_state != State::Finalized, "writeScalarData(...) cannot be called after finalize().");
+  PRECICE_CHECK(_state != State::Finalized, ::precice::APIError, "writeScalarData(...) cannot be called after finalize().");
   PRECICE_REQUIRE_DATA_WRITE(dataID);
   WriteDataContext &context = _accessor->writeDataContext(dataID);
   PRECICE_ASSERT(context.providedData() != nullptr);
   PRECICE_CHECK(valueIndex >= -1,
+                ::precice::APIError,
                 "Invalid value index ({}) when writing scalar data. Value index must be >= 0. "
                 "Please check the value index for {}",
                 valueIndex, context.getDataName());
   PRECICE_CHECK(context.getDataDimensions() == 1,
+                ::precice::APIError,
                 "You cannot call writeScalarData on the vector data type \"{0}\". "
                 "Use writeVectorData or change the data type for \"{0}\" to scalar.",
                 context.getDataName());
@@ -1113,6 +1156,7 @@ void SolverInterfaceImpl::writeScalarData(
   auto &      values      = data.values();
   const auto  vertexCount = values.size() / context.getDataDimensions();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
+                ::precice::APIError,
                 "Cannot write data \"{}\" to invalid Vertex ID ({}). "
                 "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                 context.getDataName(), valueIndex);
@@ -1130,19 +1174,20 @@ void SolverInterfaceImpl::writeScalarGradientData(
   PRECICE_EXPERIMENTAL_API();
 
   PRECICE_TRACE(dataID, valueIndex);
-  PRECICE_CHECK(_state != State::Finalized, "writeScalarGradientData(...) cannot be called after finalize().")
+  PRECICE_CHECK(_state != State::Finalized, ::precice::APIError, "writeScalarGradientData(...) cannot be called after finalize().")
   PRECICE_REQUIRE_DATA_WRITE(dataID);
 
   if (requiresGradientDataFor(dataID)) {
     PRECICE_DEBUG("Gradient value = {}", Eigen::Map<const Eigen::VectorXd>(gradientValues, _dimensions).format(utils::eigenio::debug()));
-    PRECICE_CHECK(gradientValues != nullptr, "writeScalarGradientData() was called with gradientValues == nullptr");
+    PRECICE_CHECK(gradientValues != nullptr, ::precice::APIError, "writeScalarGradientData() was called with gradientValues == nullptr");
 
     WriteDataContext &context = _accessor->writeDataContext(dataID);
     PRECICE_ASSERT(context.providedData() != nullptr);
     mesh::Data &data = *context.providedData();
 
     // Check if data has been initialized to include gradient data
-    PRECICE_CHECK(data.hasGradient(), "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", data.getName())
+    PRECICE_CHECK(data.hasGradient(), ::precice::APIError,
+                  "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", data.getName())
 
     // Size of the gradient data input : must be spaceDimensions * dataDimensions -> here spaceDimensions (since for scalar: dataDimensions = 1)
     PRECICE_ASSERT(data.getSpatialDimensions() == _dimensions,
@@ -1156,16 +1201,19 @@ void SolverInterfaceImpl::writeScalarGradientData(
 
     // Check if the index and dimensions are valid
     PRECICE_CHECK(valueIndex >= -1,
+                  ::precice::APIError,
                   "Invalid value index ({}) when writing gradient scalar data. Value index must be >= 0. "
                   "Please check the value index for {}",
                   valueIndex, data.getName());
 
     PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
+                  ::precice::APIError,
                   "Cannot write data \"{}\" to invalid vertex ID ({}). "
                   "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                   context.getDataName(), valueIndex);
 
     PRECICE_CHECK(data.getDimensions() == 1,
+                  ::precice::APIError,
                   "You cannot call writeGradientScalarData on the vector data type \"{0}\". "
                   "Use writeVectorGradientData or change the data type for \"{0}\" to scalar.",
                   data.getName());
@@ -1187,24 +1235,24 @@ void SolverInterfaceImpl::writeBlockScalarGradientData(
 
   // Asserts and checks
   PRECICE_TRACE(dataID, size);
-  PRECICE_CHECK(_state != State::Finalized, "writeBlockScalarGradientData(...) cannot be called after finalize().");
+  PRECICE_CHECK(_state != State::Finalized, ::precice::APIError, "writeBlockScalarGradientData(...) cannot be called after finalize().");
   PRECICE_REQUIRE_DATA_WRITE(dataID);
   if (size == 0)
     return;
 
   if (requiresGradientDataFor(dataID)) {
 
-    PRECICE_CHECK(valueIndices != nullptr, "writeBlockScalarGradientData() was called with valueIndices == nullptr");
-    PRECICE_CHECK(gradientValues != nullptr, "writeBlockScalarGradientData() was called with gradientValues == nullptr");
+    PRECICE_CHECK(valueIndices != nullptr, ::precice::APIError, "writeBlockScalarGradientData() was called with valueIndices == nullptr");
+    PRECICE_CHECK(gradientValues != nullptr, ::precice::APIError, "writeBlockScalarGradientData() was called with gradientValues == nullptr");
 
     // Get the data
     WriteDataContext &context = _accessor->writeDataContext(dataID);
     PRECICE_ASSERT(context.providedData() != nullptr);
     mesh::Data &data = *context.providedData();
 
-    PRECICE_CHECK(data.hasGradient(), "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", data.getName())
+    PRECICE_CHECK(data.hasGradient(), ::precice::APIError, "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", data.getName())
 
-    PRECICE_CHECK(data.getDimensions() == 1,
+    PRECICE_CHECK(data.getDimensions() == 1, ::precice::APIError,
                   "You cannot call writeBlockScalarGradientData on the vector data type \"{}\". Use writeBlockVectorGradientData or change the data type for \"{}\" to scalar.",
                   data.getName(), data.getName());
 
@@ -1221,7 +1269,7 @@ void SolverInterfaceImpl::writeBlockScalarGradientData(
 
     for (auto i = 0; i < size; i++) {
       const auto valueIndex = valueIndices[i];
-      PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
+      PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount, ::precice::APIError,
                     "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                     context.getDataName(), valueIndex);
       gradientValuesInternal.block(0, valueIndex, _dimensions, 1) = gradients.block(0, i, _dimensions, 1);
@@ -1237,22 +1285,24 @@ void SolverInterfaceImpl::writeVectorGradientData(
   PRECICE_EXPERIMENTAL_API();
 
   PRECICE_TRACE(dataID, valueIndex);
-  PRECICE_CHECK(_state != State::Finalized, "writeVectorGradientData(...) cannot be called after finalize().")
+  PRECICE_CHECK(_state != State::Finalized, ::precice::APIError, "writeVectorGradientData(...) cannot be called after finalize().")
   PRECICE_REQUIRE_DATA_WRITE(dataID);
 
   if (requiresGradientDataFor(dataID)) {
 
-    PRECICE_CHECK(gradientValues != nullptr, "writeVectorGradientData() was called with gradientValue == nullptr");
+    PRECICE_CHECK(gradientValues != nullptr, ::precice::APIError, "writeVectorGradientData() was called with gradientValue == nullptr");
 
     WriteDataContext &context = _accessor->writeDataContext(dataID);
     PRECICE_ASSERT(context.providedData() != nullptr);
     mesh::Data &data = *context.providedData();
 
     // Check if Data object with ID dataID has been initialized with gradient data
-    PRECICE_CHECK(data.hasGradient(), "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", data.getName())
+    PRECICE_CHECK(data.hasGradient(), ::precice::APIError,
+                  "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", data.getName())
 
     // Check if the dimensions match
     PRECICE_CHECK(data.getDimensions() > 1,
+                  ::precice::APIError,
                   "You cannot call writeVectorGradientData on the scalar data type \"{}\". Use writeScalarGradientData or change the data type for \"{}\" to vector.",
                   data.getName(), data.getName());
 
@@ -1266,6 +1316,7 @@ void SolverInterfaceImpl::writeVectorGradientData(
 
     // Check if the index is valid
     PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
+                  ::precice::APIError,
                   "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                   data.getName(), valueIndex)
 
@@ -1286,15 +1337,15 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
 
   // Asserts and checks
   PRECICE_TRACE(dataID, size);
-  PRECICE_CHECK(_state != State::Finalized, "writeBlockVectorGradientData(...) cannot be called after finalize().");
+  PRECICE_CHECK(_state != State::Finalized, ::precice::APIError, "writeBlockVectorGradientData(...) cannot be called after finalize().");
   PRECICE_REQUIRE_DATA_WRITE(dataID);
   if (size == 0)
     return;
 
   if (requiresGradientDataFor(dataID)) {
 
-    PRECICE_CHECK(valueIndices != nullptr, "writeBlockVectorGradientData() was called with valueIndices == nullptr");
-    PRECICE_CHECK(gradientValues != nullptr, "writeBlockVectorGradientData() was called with gradientValues == nullptr");
+    PRECICE_CHECK(valueIndices != nullptr, ::precice::APIError, "writeBlockVectorGradientData() was called with valueIndices == nullptr");
+    PRECICE_CHECK(gradientValues != nullptr, ::precice::APIError, "writeBlockVectorGradientData() was called with gradientValues == nullptr");
 
     // Get the data
     WriteDataContext &context = _accessor->writeDataContext(dataID);
@@ -1303,10 +1354,12 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
     mesh::Data &data = *context.providedData();
 
     // Check if the Data object with ID dataID has been initialized with gradient data
-    PRECICE_CHECK(data.hasGradient(), "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", data.getName())
+    PRECICE_CHECK(data.hasGradient(), ::precice::APIError,
+                  "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", data.getName())
 
     // Check if the dimensions match
     PRECICE_CHECK(data.getDimensions() > 1,
+                  ::precice::APIError,
                   "You cannot call writeBlockVectorGradientData on the scalar data type \"{}\". Use writeBlockScalarGradientData or change the data type for \"{}\" to vector.",
                   data.getName(), data.getName());
 
@@ -1325,6 +1378,7 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
     for (auto i = 0; i < size; i++) {
       const auto valueIndex = valueIndices[i];
       PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
+                    ::precice::APIError,
                     "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                     data.getName(), valueIndex);
 
@@ -1367,25 +1421,28 @@ void SolverInterfaceImpl::readBlockVectorDataImpl(
     double     relativeReadTime,
     double *   values) const
 {
-  PRECICE_CHECK(_state != State::Finalized, "readBlockVectorData(...) cannot be called after finalize().");
-  PRECICE_CHECK(relativeReadTime <= _couplingScheme->getNextTimestepMaxLength(), "readBlockVectorData(...) cannot sample data outside of current time window.");
-  PRECICE_CHECK(relativeReadTime >= 0, "readBlockVectorData(...) cannot sample data before the current time.");
+  PRECICE_CHECK(_state != State::Finalized, ::precice::APIError, "readBlockVectorData(...) cannot be called after finalize().");
+  PRECICE_CHECK(relativeReadTime <= _couplingScheme->getNextTimestepMaxLength(),
+                ::precice::APIError, "readBlockVectorData(...) cannot sample data outside of current time window.");
+  PRECICE_CHECK(relativeReadTime >= 0, ::precice::APIError, "readBlockVectorData(...) cannot sample data before the current time.");
   double normalizedReadTime;
   if (_couplingScheme->hasTimeWindowSize()) {
     double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getNextTimestepMaxLength();
     double readTime      = timeStepStart + relativeReadTime;
     normalizedReadTime   = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
   } else {                                                                  // if this participant defines time window size through participant-first method
-    PRECICE_CHECK(relativeReadTime == _couplingScheme->getNextTimestepMaxLength(), "Waveform relaxation is not allowed for solver that sets the time step size");
+    PRECICE_CHECK(relativeReadTime == _couplingScheme->getNextTimestepMaxLength(),
+                  ::precice::APIError, "Waveform relaxation is not allowed for solver that sets the time step size");
     normalizedReadTime = 1; // by default read at end of window.
   }
   PRECICE_REQUIRE_DATA_READ(dataID);
   if (size == 0)
     return;
-  PRECICE_CHECK(valueIndices != nullptr, "readBlockVectorData() was called with valueIndices == nullptr");
-  PRECICE_CHECK(values != nullptr, "readBlockVectorData() was called with values == nullptr");
+  PRECICE_CHECK(valueIndices != nullptr, ::precice::APIError, "readBlockVectorData() was called with valueIndices == nullptr");
+  PRECICE_CHECK(values != nullptr, ::precice::APIError, "readBlockVectorData() was called with values == nullptr");
   ReadDataContext &context = _accessor->readDataContext(dataID);
   PRECICE_CHECK(context.getDataDimensions() == _dimensions,
+                ::precice::APIError,
                 "You cannot call readBlockVectorData on the scalar data type \"{0}\". "
                 "Use readBlockScalarData or change the data type for \"{0}\" to vector.",
                 context.getDataName());
@@ -1394,6 +1451,7 @@ void SolverInterfaceImpl::readBlockVectorDataImpl(
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
     PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
+                  ::precice::APIError,
                   "Cannot read data \"{}\" to invalid Vertex ID ({}). "
                   "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                   context.getDataName(), valueIndex);
@@ -1436,30 +1494,34 @@ void SolverInterfaceImpl::readVectorDataImpl(
     double  relativeReadTime,
     double *value) const
 {
-  PRECICE_CHECK(_state != State::Finalized, "readVectorData(...) cannot be called after finalize().");
-  PRECICE_CHECK(relativeReadTime <= _couplingScheme->getNextTimestepMaxLength(), "readVectorData(...) cannot sample data outside of current time window.");
-  PRECICE_CHECK(relativeReadTime >= 0, "readVectorData(...) cannot sample data before the current time.");
+  PRECICE_CHECK(_state != State::Finalized, ::precice::APIError, "readVectorData(...) cannot be called after finalize().");
+  PRECICE_CHECK(relativeReadTime <= _couplingScheme->getNextTimestepMaxLength(), ::precice::APIError, "readVectorData(...) cannot sample data outside of current time window.");
+  PRECICE_CHECK(relativeReadTime >= 0, ::precice::APIError, "readVectorData(...) cannot sample data before the current time.");
   double normalizedReadTime;
   if (_couplingScheme->hasTimeWindowSize()) {
     double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getNextTimestepMaxLength();
     double readTime      = timeStepStart + relativeReadTime;
     normalizedReadTime   = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
   } else {                                                                  // if this participant defines time window size through participant-first method
-    PRECICE_CHECK(relativeReadTime == _couplingScheme->getNextTimestepMaxLength(), "Waveform relaxation is not allowed for solver that sets the time step size");
+    PRECICE_CHECK(relativeReadTime == _couplingScheme->getNextTimestepMaxLength(),
+                  ::precice::APIError, "Waveform relaxation is not allowed for solver that sets the time step size");
     normalizedReadTime = 1; // by default read at end of window.
   }
   PRECICE_REQUIRE_DATA_READ(dataID);
   ReadDataContext &context = _accessor->readDataContext(dataID);
   PRECICE_CHECK(valueIndex >= -1,
+                ::precice::APIError,
                 "Invalid value index ( {} ) when reading vector data. Value index must be >= 0. "
                 "Please check the value index for {}",
                 valueIndex, context.getDataName());
   PRECICE_CHECK(context.getDataDimensions() == _dimensions,
+                ::precice::APIError,
                 "You cannot call readVectorData on the scalar data type \"{0}\". Use readScalarData or change the data type for \"{0}\" to vector.",
                 context.getDataName());
   const auto values      = context.sampleWaveformAt(normalizedReadTime);
   const auto vertexCount = values.size() / context.getDataDimensions();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
+                ::precice::APIError,
                 "Cannot read data \"{}\" to invalid Vertex ID ({}). "
                 "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                 context.getDataName(), valueIndex);
@@ -1505,25 +1567,26 @@ void SolverInterfaceImpl::readBlockScalarDataImpl(
     double     relativeReadTime,
     double *   values) const
 {
-  PRECICE_CHECK(_state != State::Finalized, "readBlockScalarData(...) cannot be called after finalize().");
-  PRECICE_CHECK(relativeReadTime <= _couplingScheme->getNextTimestepMaxLength(), "readBlockScalarData(...) cannot sample data outside of current time window.");
-  PRECICE_CHECK(relativeReadTime >= 0, "readBlockScalarData(...) cannot sample data before the current time.");
+  PRECICE_CHECK(_state != State::Finalized, ::precice::APIError, "readBlockScalarData(...) cannot be called after finalize().");
+  PRECICE_CHECK(relativeReadTime <= _couplingScheme->getNextTimestepMaxLength(), ::precice::APIError, "readBlockScalarData(...) cannot sample data outside of current time window.");
+  PRECICE_CHECK(relativeReadTime >= 0, ::precice::APIError, "readBlockScalarData(...) cannot sample data before the current time.");
   double normalizedReadTime;
   if (_couplingScheme->hasTimeWindowSize()) {
     double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getNextTimestepMaxLength();
     double readTime      = timeStepStart + relativeReadTime;
     normalizedReadTime   = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
   } else {                                                                  // if this participant defines time window size through participant-first method
-    PRECICE_CHECK(relativeReadTime == _couplingScheme->getNextTimestepMaxLength(), "Waveform relaxation is not allowed for solver that sets the time step size");
+    PRECICE_CHECK(relativeReadTime == _couplingScheme->getNextTimestepMaxLength(),
+                  ::precice::APIError, "Waveform relaxation is not allowed for solver that sets the time step size");
     normalizedReadTime = 1; // by default read at end of window.
   }
   PRECICE_REQUIRE_DATA_READ(dataID);
   if (size == 0)
     return;
-  PRECICE_CHECK(valueIndices != nullptr, "readBlockScalarData() was called with valueIndices == nullptr");
-  PRECICE_CHECK(values != nullptr, "readBlockScalarData() was called with values == nullptr");
+  PRECICE_CHECK(valueIndices != nullptr, ::precice::APIError, "readBlockScalarData() was called with valueIndices == nullptr");
+  PRECICE_CHECK(values != nullptr, ::precice::APIError, "readBlockScalarData() was called with values == nullptr");
   ReadDataContext &context = _accessor->readDataContext(dataID);
-  PRECICE_CHECK(context.getDataDimensions() == 1,
+  PRECICE_CHECK(context.getDataDimensions() == 1, ::precice::APIError,
                 "You cannot call readBlockScalarData on the vector data type \"{0}\". "
                 "Use readBlockVectorData or change the data type for \"{0}\" to scalar.",
                 context.getDataName());
@@ -1532,7 +1595,7 @@ void SolverInterfaceImpl::readBlockScalarDataImpl(
 
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
-    PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
+    PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount, ::precice::APIError,
                   "Cannot read data \"{}\" to invalid Vertex ID ({}). "
                   "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                   context.getDataName(), valueIndex);
@@ -1571,25 +1634,28 @@ void SolverInterfaceImpl::readScalarDataImpl(
     double  relativeReadTime,
     double &value) const
 {
-  PRECICE_CHECK(_state != State::Finalized, "readScalarData(...) cannot be called after finalize().");
-  PRECICE_CHECK(relativeReadTime <= _couplingScheme->getNextTimestepMaxLength(), "readScalarData(...) cannot sample data outside of current time window.");
-  PRECICE_CHECK(relativeReadTime >= 0, "readScalarData(...) cannot sample data before the current time.");
+  PRECICE_CHECK(_state != State::Finalized, ::precice::APIError, "readScalarData(...) cannot be called after finalize().");
+  PRECICE_CHECK(relativeReadTime <= _couplingScheme->getNextTimestepMaxLength(), ::precice::APIError, "readScalarData(...) cannot sample data outside of current time window.");
+  PRECICE_CHECK(relativeReadTime >= 0, ::precice::APIError, "readScalarData(...) cannot sample data before the current time.");
   double normalizedReadTime;
   if (_couplingScheme->hasTimeWindowSize()) {
     double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getNextTimestepMaxLength();
     double readTime      = timeStepStart + relativeReadTime;
     normalizedReadTime   = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
   } else {                                                                  // if this participant defines time window size through participant-first method
-    PRECICE_CHECK(relativeReadTime == _couplingScheme->getNextTimestepMaxLength(), "Waveform relaxation is not allowed for solver that sets the time step size");
+    PRECICE_CHECK(relativeReadTime == _couplingScheme->getNextTimestepMaxLength(),
+                  ::precice::APIError, "Waveform relaxation is not allowed for solver that sets the time step size");
     normalizedReadTime = 1; // by default read at end of window.
   }
   PRECICE_REQUIRE_DATA_READ(dataID);
   ReadDataContext &context = _accessor->readDataContext(dataID);
   PRECICE_CHECK(valueIndex >= -1,
+                ::precice::APIError,
                 "Invalid value index ( {} ) when reading scalar data. Value index must be >= 0. "
                 "Please check the value index for {}",
                 valueIndex, context.getDataName());
   PRECICE_CHECK(context.getDataDimensions() == 1,
+                ::precice::APIError,
                 "You cannot call readScalarData on the vector data type \"{0}\". "
                 "Use readVectorData or change the data type for \"{0}\" to scalar.",
                 context.getDataName());
@@ -1597,6 +1663,7 @@ void SolverInterfaceImpl::readScalarDataImpl(
   const auto values      = context.sampleWaveformAt(normalizedReadTime);
   const auto vertexCount = values.size();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
+                ::precice::APIError,
                 "Cannot read data \"{}\" from invalid Vertex ID ({}). "
                 "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                 context.getDataName(), valueIndex);
@@ -1611,10 +1678,10 @@ void SolverInterfaceImpl::setMeshAccessRegion(
   PRECICE_EXPERIMENTAL_API();
   PRECICE_TRACE(meshID);
   PRECICE_REQUIRE_MESH_USE(meshID);
-  PRECICE_CHECK(_state != State::Finalized, "setMeshAccessRegion() cannot be called after finalize().")
-  PRECICE_CHECK(_state != State::Initialized, "setMeshAccessRegion() needs to be called before initialize().");
-  PRECICE_CHECK(!_accessRegionDefined, "setMeshAccessRegion may only be called once.");
-  PRECICE_CHECK(boundingBox != nullptr, "setMeshAccessRegion was called with boundingBox == nullptr.");
+  PRECICE_CHECK(_state != State::Finalized, ::precice::APIError, "setMeshAccessRegion() cannot be called after finalize().")
+  PRECICE_CHECK(_state != State::Initialized, ::precice::APIError, "setMeshAccessRegion() needs to be called before initialize().");
+  PRECICE_CHECK(!_accessRegionDefined, ::precice::APIError, "setMeshAccessRegion may only be called once.");
+  PRECICE_CHECK(boundingBox != nullptr, ::precice::APIError, "setMeshAccessRegion was called with boundingBox == nullptr.");
 
   // Get the related mesh
   MeshContext & context = _accessor->meshContext(meshID);
@@ -1626,7 +1693,8 @@ void SolverInterfaceImpl::setMeshAccessRegion(
 
   for (int d = 0; d < dim; ++d) {
     // Check that min is lower or equal to max
-    PRECICE_CHECK(boundingBox[2 * d] <= boundingBox[2 * d + 1], "Your bounding box is ill defined, i.e. it has a negative volume. The required format is [x_min, x_max...]");
+    PRECICE_CHECK(boundingBox[2 * d] <= boundingBox[2 * d + 1],
+                  ::precice::APIError, "Your bounding box is ill defined, i.e. it has a negative volume. The required format is [x_min, x_max...]");
     bounds[2 * d]     = boundingBox[2 * d];
     bounds[2 * d + 1] = boundingBox[2 * d + 1];
   }
@@ -1650,8 +1718,10 @@ void SolverInterfaceImpl::getMeshVerticesAndIDs(
   PRECICE_DEBUG("Get {} mesh vertices with IDs", size);
 
   // Check, if the requested mesh data has already been received. Otherwise, the function call doesn't make any sense
-  PRECICE_CHECK((_state == State::Initialized) || _accessor->isMeshProvided(meshID), "initialize() has to be called before accessing"
-                                                                                     " data of the received mesh \"{}\" on participant \"{}\".",
+  PRECICE_CHECK((_state == State::Initialized) || _accessor->isMeshProvided(meshID),
+                ::precice::APIError,
+                "initialize() has to be called before accessing"
+                " data of the received mesh \"{}\" on participant \"{}\".",
                 _accessor->getMeshName(meshID), _accessor->getName());
 
   if (size == 0)
@@ -1660,11 +1730,11 @@ void SolverInterfaceImpl::getMeshVerticesAndIDs(
   const MeshContext & context = _accessor->meshContext(meshID);
   const mesh::PtrMesh mesh(context.mesh);
 
-  PRECICE_CHECK(ids != nullptr, "getMeshVerticesAndIDs() was called with ids == nullptr");
-  PRECICE_CHECK(coordinates != nullptr, "getMeshVerticesAndIDs() was called with coordinates == nullptr");
+  PRECICE_CHECK(ids != nullptr, ::precice::APIError, "getMeshVerticesAndIDs() was called with ids == nullptr");
+  PRECICE_CHECK(coordinates != nullptr, ::precice::APIError, "getMeshVerticesAndIDs() was called with coordinates == nullptr");
 
   const auto &vertices = mesh->vertices();
-  PRECICE_CHECK(static_cast<unsigned int>(size) <= vertices.size(), "The queried size exceeds the number of available points.");
+  PRECICE_CHECK(static_cast<unsigned int>(size) <= vertices.size(), ::precice::APIError, "The queried size exceeds the number of available points.");
 
   Eigen::Map<Eigen::MatrixXd> posMatrix{
       coordinates, _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(size)};
@@ -1717,6 +1787,7 @@ void SolverInterfaceImpl::configurePartitions(
 
     if (context->provideMesh) { // Accessor provides mesh
       PRECICE_CHECK(context->receiveMeshFrom.empty(),
+                    ::precice::APIError,
                     "Participant \"{}\" cannot provide and receive mesh {}!",
                     _accessorName, context->mesh->getName());
 
@@ -1904,10 +1975,12 @@ PtrParticipant SolverInterfaceImpl::determineAccessingParticipant(
       return participant;
     }
   }
-  PRECICE_ERROR("This participant's name, which was specified in the constructor of the preCICE interface as \"{}\", "
+  PRECICE_ERROR(::precice::APIError,
+                "This participant's name, which was specified in the constructor of the preCICE interface as \"{}\", "
                 "is not defined in the preCICE configuration. "
                 "Please double-check the correct spelling.",
                 _accessorName);
+  return {}; // unreachable
 }
 
 void SolverInterfaceImpl::initializeIntraCommunication()
@@ -1931,6 +2004,7 @@ void SolverInterfaceImpl::syncTimestep(double computedTimestepLength)
       double dt;
       utils::IntraComm::getCommunication()->receive(dt, secondaryRank);
       PRECICE_CHECK(math::equals(dt, computedTimestepLength),
+                    ::precice::APIError,
                     "Found ambiguous values for the timestep length passed to preCICE in \"advance\". On rank {}, the value is {}, while on rank 0, the value is {}.",
                     secondaryRank, dt, computedTimestepLength);
     }

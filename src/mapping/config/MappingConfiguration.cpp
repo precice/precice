@@ -302,7 +302,8 @@ void MappingConfiguration::xmlTagCallback(
 
     PRECICE_ASSERT(!_mappings.empty());
     // We can only set one subtag
-    PRECICE_CHECK(_mappings.back().mapping == nullptr, "More than one basis-function was defined for the.");
+    PRECICE_CHECK(_mappings.back().mapping == nullptr,
+                  ::precice::ConfigurationError, "More than one basis-function was defined for the.");
 
     std::string basisFctName   = tag.getName();
     double      supportRadius  = tag.getDoubleAttributeValue(ATTR_SUPPORT_RADIUS, 0.);
@@ -316,7 +317,8 @@ void MappingConfiguration::xmlTagCallback(
     if (basisFunction == BasisFunction::Gaussian) {
       const bool exactlyOneSet = (std::isfinite(supportRadius) && !std::isfinite(shapeParameter)) ||
                                  (std::isfinite(shapeParameter) && !std::isfinite(supportRadius));
-      PRECICE_CHECK(exactlyOneSet, "The specified parameters for the Gaussian RBF mapping are invalid. Please specify either a \"shape-parameter\" or a \"support-radius\".");
+      PRECICE_CHECK(exactlyOneSet,
+                    ::precice::ConfigurationError, "The specified parameters for the Gaussian RBF mapping are invalid. Please specify either a \"shape-parameter\" or a \"support-radius\".");
 
       if (std::isfinite(supportRadius) && !std::isfinite(shapeParameter)) {
         shapeParameter = std::sqrt(-std::log(Gaussian::cutoffThreshold)) / supportRadius;
@@ -338,7 +340,8 @@ void MappingConfiguration::xmlTagCallback(
 
       mapping.mapping = getRBFMapping<RBFBackend::PETSc>(basisFunction, constraintValue, mapping.fromMesh->getDimensions(), supportRadius, shapeParameter, _rbfConfig.deadAxis, _rbfConfig.solverRtol, _rbfConfig.polynomial, _rbfConfig.preallocation);
 #else
-      PRECICE_CHECK(false, "The global-iterative RBF solver requires a preCICE build with PETSc enabled.");
+      PRECICE_CHECK(false,
+                    ::precice::ConfigurationError, "The global-iterative RBF solver requires a preCICE build with PETSc enabled.");
 #endif
     } else {
       PRECICE_UNREACHABLE("Unknown RBF solver.");
@@ -416,10 +419,12 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   mesh::PtrMesh     fromMesh(_meshConfig->getMesh(fromMeshName));
   mesh::PtrMesh     toMesh(_meshConfig->getMesh(toMeshName));
   PRECICE_CHECK(fromMesh.get() != nullptr,
+                ::precice::ConfigurationError,
                 "Mesh \"{0}\" was not found while creating a mapping. "
                 "Please correct the from=\"{0}\" attribute.",
                 fromMeshName);
   PRECICE_CHECK(toMesh.get() != nullptr,
+                ::precice::ConfigurationError,
                 "Mesh \"{0}\" was not found while creating a mapping. "
                 "Please correct the to=\"{0}\" attribute.",
                 toMeshName);
@@ -445,6 +450,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
 
     // NNG is not applicable with the conservative constraint
     PRECICE_CHECK(constraintValue != Mapping::CONSERVATIVE,
+                  ::precice::ConfigurationError,
                   "Nearest-neighbor-gradient mapping is not implemented using a \"conservative\" constraint. "
                   "Please select constraint=\" consistent\" or a different mapping method.");
 
@@ -467,6 +473,7 @@ void MappingConfiguration::checkDuplicates(const ConfiguredMapping &mapping)
     bool sameFromMesh = mapping.fromMesh->getName() == configuredMapping.fromMesh->getName();
     bool sameMapping  = sameToMesh && sameFromMesh;
     PRECICE_CHECK(!sameMapping,
+                  ::precice::ConfigurationError,
                   "There cannot be two mappings from mesh \"{}\" to mesh \"{}\". "
                   "Please remove one of the duplicated meshes. ",
                   mapping.fromMesh->getName(), mapping.toMesh->getName());
@@ -476,7 +483,8 @@ void MappingConfiguration::checkDuplicates(const ConfiguredMapping &mapping)
 void MappingConfiguration::xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag)
 {
   if (requiresBasisFunction(tag.getName())) {
-    PRECICE_CHECK(_mappings.back().mapping != nullptr, "No basis-function was defined for the \"{}\" mapping from mesh \"{}\" to mesh \"{}\".", tag.getName(), _mappings.back().fromMesh->getName(), _mappings.back().toMesh->getName());
+    PRECICE_CHECK(_mappings.back().mapping != nullptr,
+                  ::precice::ConfigurationError, "No basis-function was defined for the \"{}\" mapping from mesh \"{}\" to mesh \"{}\".", tag.getName(), _mappings.back().fromMesh->getName(), _mappings.back().toMesh->getName());
   }
   PRECICE_ASSERT(_mappings.back().mapping != nullptr);
 }

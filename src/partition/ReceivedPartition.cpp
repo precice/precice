@@ -103,7 +103,9 @@ void ReceivedPartition::compute()
       // Filter out vertices not laying in the bounding box
       mesh::Mesh filteredMesh("FilteredMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
       // To discuss: maybe check this somewhere in the SolverInterfaceImpl, as we have now a similar check for the parallel case
-      PRECICE_CHECK(!_bb.empty(), "You are running this participant in serial mode and the bounding box on mesh \"{}\", is empty. Did you call setMeshAccessRegion with valid data?", _mesh->getName());
+      PRECICE_CHECK(!_bb.empty(),
+                    ::precice::PartitionError,
+                    "You are running this participant in serial mode and the bounding box on mesh \"{}\", is empty. Did you call setMeshAccessRegion with valid data?", _mesh->getName());
       unsigned int nFilteredVertices = 0;
       mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { if(!_bb.contains(v))
               ++nFilteredVertices;
@@ -136,6 +138,7 @@ void ReceivedPartition::compute()
   // check to prevent false configuration
   if (not utils::IntraComm::isSecondary()) {
     PRECICE_CHECK(hasAnyMapping() || _allowDirectAccess,
+                  ::precice::PartitionError,
                   "The received mesh {} needs a mapping, either from it, to it, or both. Maybe you don't want to receive this mesh at all?",
                   _mesh->getName());
   }
@@ -292,7 +295,7 @@ void ReceivedPartition::filterByBoundingBox()
                       " cannot solely be filtered on the primary rank "
                       "(option \"filter-on-master\") if it is communicated by an m2n communication that uses "
                       "two-level initialization. Use \"filter-on-secondary-rank\" or \"no-filter\" instead.";
-    PRECICE_CHECK(_geometricFilter != ON_PRIMARY_RANK, msg);
+    PRECICE_CHECK(_geometricFilter != ON_PRIMARY_RANK, ::precice::PartitionError, msg);
   }
 
   prepareBoundingBox();
@@ -310,7 +313,7 @@ void ReceivedPartition::filterByBoundingBox()
       com::receiveMesh(*utils::IntraComm::getCommunication(), 0, *_mesh);
 
       if (isAnyProvidedMeshNonEmpty()) {
-        PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName(), utils::IntraComm::getRank()));
+        PRECICE_CHECK(not _mesh->vertices().empty(), ::precice::PartitionError, errorMeshFilteredOut(_mesh->getName(), utils::IntraComm::getRank()));
       }
 
     } else { // Primary
@@ -339,7 +342,7 @@ void ReceivedPartition::filterByBoundingBox()
       _mesh->addMesh(filteredMesh);
 
       if (isAnyProvidedMeshNonEmpty()) {
-        PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName(), utils::IntraComm::getRank()));
+        PRECICE_CHECK(not _mesh->vertices().empty(), ::precice::PartitionError, errorMeshFilteredOut(_mesh->getName(), utils::IntraComm::getRank()));
       }
     }
   } else {
@@ -370,7 +373,7 @@ void ReceivedPartition::filterByBoundingBox()
       _mesh->clear();
       _mesh->addMesh(filteredMesh);
       if (isAnyProvidedMeshNonEmpty()) {
-        PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName(), utils::IntraComm::getRank()));
+        PRECICE_CHECK(not _mesh->vertices().empty(), ::precice::PartitionError, errorMeshFilteredOut(_mesh->getName(), utils::IntraComm::getRank()));
       }
     } else {
       PRECICE_ASSERT(_geometricFilter == NO_FILTER);
@@ -454,6 +457,7 @@ void ReceivedPartition::compareBoundingBoxes()
     // send connectionMap to other primary rank
     m2n().getPrimaryRankCommunication()->sendRange(connectedRanksList, 0);
     PRECICE_CHECK(not connectionMap.empty(),
+                  ::precice::PartitionError,
                   "The mesh \"{}\" of this participant seems to have no partitions at the coupling interface. "
                   "Check that both mapped meshes are describing the same geometry. "
                   "If you deal with very different mesh resolutions, consider increasing the safety-factor in the <receive-mesh /> tag.",
@@ -713,6 +717,7 @@ void ReceivedPartition::createOwnerInformation()
             // PRECICE_DEBUG("Decide owners, first round by rough load balancing");
             // // Provide a more descriptive error message if direct access was enabled
             // PRECICE_CHECK(!(ranksAtInterface == 0 && _allowDirectAccess),
+            // ::precice::PartitionError,
             //               "After repartitioning of mesh \"{}\" all ranks are empty. "
             //               "Please check the dimensions of the provided bounding box "
             //               "(in \"setMeshAccessRegion\") and verify that it covers vertices "
@@ -833,6 +838,7 @@ void ReceivedPartition::createOwnerInformation()
       PRECICE_DEBUG("Decide owners, first round by rough load balancing");
       // Provide a more descriptive error message if direct access was enabled
       PRECICE_CHECK(!(ranksAtInterface == 0 && _allowDirectAccess),
+                    ::precice::PartitionError,
                     "After repartitioning of mesh \"{}\" all ranks are empty. "
                     "Please check the dimensions of the provided bounding box "
                     "(in \"setMeshAccessRegion\") and verify that it covers vertices "

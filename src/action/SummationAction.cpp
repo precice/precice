@@ -23,7 +23,8 @@ SummationAction::SummationAction(
   }
 
   for (const auto &source : _sourceDataVector) {
-    PRECICE_CHECK(source->getDimensions() == _targetData->getDimensions(), "Source and target data dimensions (scalar or vector) of summation action need to be identical.");
+    PRECICE_CHECK(source->getDimensions() == _targetData->getDimensions(),
+                  ::precice::ActionError, "Source and target data dimensions (scalar or vector) of summation action need to be identical.");
   }
 }
 

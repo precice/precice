@@ -105,6 +105,7 @@ PythonAction::PythonAction(
       _moduleName(std::move(moduleName))
 {
   PRECICE_CHECK(boost::filesystem::is_directory(_modulePath),
+                ::precice::ActionError,
                 "The module path of the python action \"{}\" does not exist. The configured path is \"{}\".",
                 _moduleName, _modulePath);
   if (targetDataID != -1) {
@@ -144,7 +145,8 @@ void PythonAction::performAction(double time)
       double * sourceValues = _sourceData->values().data();
       //PRECICE_ASSERT(_sourceValues == NULL);
       _sourceValues = PyArray_SimpleNewFromData(1, sourceDim, NPY_DOUBLE, sourceValues);
-      PRECICE_CHECK(_sourceValues != nullptr, "Creating python source values failed. Please check that the source data name is used by the mesh in action:python.");
+      PRECICE_CHECK(_sourceValues != nullptr,
+                    ::precice::ActionError, "Creating python source values failed. Please check that the source data name is used by the mesh in action:python.");
       PyTuple_SetItem(dataArgs, 1, _sourceValues);
     }
     if (_targetData) {
@@ -153,13 +155,15 @@ void PythonAction::performAction(double time)
       //PRECICE_ASSERT(_targetValues == NULL);
       _targetValues =
           PyArray_SimpleNewFromData(1, targetDim, NPY_DOUBLE, targetValues);
-      PRECICE_CHECK(_targetValues != nullptr, "Creating python target values failed. Please check that the target data name is used by the mesh in action:python.");
+      PRECICE_CHECK(_targetValues != nullptr,
+                    ::precice::ActionError, "Creating python target values failed. Please check that the target data name is used by the mesh in action:python.");
       int argumentIndex = _sourceData ? 2 : 1;
       PyTuple_SetItem(dataArgs, argumentIndex, _targetValues);
     }
     PyObject_CallObject(_performAction, dataArgs);
     if (PyErr_Occurred()) {
-      PRECICE_ERROR("Error occurred during call of function performAction() in python module \"{}\". "
+      PRECICE_ERROR(::precice::ActionError,
+                    "Error occurred during call of function performAction() in python module \"{}\". "
                     "The error message is: {}",
                     _moduleName, python_error_as_string());
     }
@@ -181,13 +185,16 @@ void PythonAction::performAction(double time)
       coords                 = vertex.getCoords();
       PyObject *pythonID     = PyLong_FromLong(id);
       PyObject *pythonCoords = PyArray_SimpleNewFromData(1, vdim, NPY_DOUBLE, coords.data());
-      PRECICE_CHECK(pythonID != nullptr, "Creating python ID failed. Please check that the python-actions mesh name is correct.");
-      PRECICE_CHECK(pythonCoords != nullptr, "Creating python coords failed. Please check that the python-actions mesh name is correct.");
+      PRECICE_CHECK(pythonID != nullptr,
+                    ::precice::ActionError, "Creating python ID failed. Please check that the python-actions mesh name is correct.");
+      PRECICE_CHECK(pythonCoords != nullptr,
+                    ::precice::ActionError, "Creating python coords failed. Please check that the python-actions mesh name is correct.");
       PyTuple_SetItem(vertexArgs, 0, pythonID);
       PyTuple_SetItem(vertexArgs, 1, pythonCoords);
       PyObject_CallObject(_vertexCallback, vertexArgs);
       if (PyErr_Occurred()) {
-        PRECICE_ERROR("Error occurred during call of function vertexCallback() in python module \"{}\". "
+        PRECICE_ERROR(::precice::ActionError,
+                      "Error occurred during call of function vertexCallback() in python module \"{}\". "
                       "The error message is: {}",
                       _moduleName, python_error_as_string());
       }
@@ -199,7 +206,8 @@ void PythonAction::performAction(double time)
     PyObject *postActionArgs = PyTuple_New(0);
     PyObject_CallObject(_postAction, postActionArgs);
     if (PyErr_Occurred()) {
-      PRECICE_ERROR("Error occurred during call of function postAction() in python module \"{}\". "
+      PRECICE_ERROR(::precice::ActionError,
+                    "Error occurred during call of function postAction() in python module \"{}\". "
                     "The error message is: {}",
                     _moduleName, python_error_as_string());
     }
@@ -222,7 +230,8 @@ void PythonAction::initialize()
   _moduleNameObject = PyUnicode_FromString(_moduleName.c_str());
   _module           = PyImport_Import(_moduleNameObject);
   if (_module == nullptr) {
-    PRECICE_ERROR("An error occurred while loading python module \"{}\": {}", _moduleName, python_error_as_string());
+    PRECICE_ERROR(::precice::ActionError,
+                  "An error occurred while loading python module \"{}\": {}", _moduleName, python_error_as_string());
   }
 
   // Construct method performAction
@@ -252,6 +261,7 @@ void PythonAction::initialize()
                    _moduleName);
     }
     PRECICE_CHECK(_vertexCallbackArgs == 2 || _vertexCallbackArgs == 3,
+                  ::precice::ActionError,
                   "The provided vertexCallback() in python module \"{}\" has {} arguments, but needs to have 2 or 3. "
                   "Please use the following definition \"def vertexCallback(id, coords):\"",
                   _moduleName, _vertexCallbackArgs);

@@ -63,7 +63,8 @@ void MPISinglePortsCommunication::acceptConnection(std::string const &acceptorNa
 
   utils::StringMaker<MPI_MAX_PORT_NAME> sm;
   res = MPI_Open_port(MPI_INFO_NULL, sm.data());
-  PRECICE_CHECK(res, "MPI_Open_port failed with message: {}", res.message());
+  PRECICE_CHECK(res,
+                ::precice::CommunicationError, "MPI_Open_port failed with message: {}", res.message());
 
   _portName = sm.str();
 
@@ -76,7 +77,8 @@ void MPISinglePortsCommunication::acceptConnection(std::string const &acceptorNa
     // Connection
     MPI_Comm communicator;
     res = MPI_Comm_accept(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
-    PRECICE_CHECK(res, "MPI_Comm_accept failed with message: {}", res.message());
+    PRECICE_CHECK(res,
+                  ::precice::CommunicationError, "MPI_Comm_accept failed with message: {}", res.message());
     PRECICE_DEBUG("Accepted connection at {} for peer {}", _portName, peerCurrent);
 
     // Exchange information to which rank I am connected and which communicator size on the other side
@@ -127,21 +129,24 @@ void MPISinglePortsCommunication::acceptConnectionAsServer(std::string const &ac
 
     utils::StringMaker<MPI_MAX_PORT_NAME> sm;
     res = MPI_Open_port(MPI_INFO_NULL, sm.data());
-    PRECICE_CHECK(res, "MPI_Open_port failed with message: {}", res.message());
+    PRECICE_CHECK(res,
+                  ::precice::CommunicationError, "MPI_Open_port failed with message: {}", res.message());
     _portName = sm.str();
 
     conInfo.write(_portName);
     PRECICE_DEBUG("Accept connection at {}", _portName);
 
     res = MPI_Comm_accept(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, utils::Parallel::current()->comm, &_global);
-    PRECICE_CHECK(res, "MPI_Comm_accept failed with message: {}", res.message());
+    PRECICE_CHECK(res,
+                  ::precice::CommunicationError, "MPI_Comm_accept failed with message: {}", res.message());
     PRECICE_DEBUG("Accepted connection at {}", _portName);
 
   } else { // Secondary ranks call simply call accept
 
     // The port is only used on the root rank
     res = MPI_Comm_accept(nullptr, MPI_INFO_NULL, 0, utils::Parallel::current()->comm, &_global);
-    PRECICE_CHECK(res, "MPI_Comm_accept failed with message: {}", res.message());
+    PRECICE_CHECK(res,
+                  ::precice::CommunicationError, "MPI_Comm_accept failed with message: {}", res.message());
     PRECICE_DEBUG("Accepted connection");
   }
 
@@ -164,7 +169,8 @@ void MPISinglePortsCommunication::requestConnection(std::string const &acceptorN
 
   MPI_Comm  communicator;
   MPIResult res = MPI_Comm_connect(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
-  PRECICE_CHECK(res, "MPI_Open_port failed with message: {}", res.message());
+  PRECICE_CHECK(res,
+                ::precice::CommunicationError, "MPI_Open_port failed with message: {}", res.message());
   PRECICE_DEBUG("Requested connection to {}", _portName);
 
   // Send the rank of this requester
@@ -199,7 +205,8 @@ void MPISinglePortsCommunication::requestConnectionAsClient(std::string const & 
 
   MPIResult res = MPI_Comm_connect(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0,
                                    utils::Parallel::current()->comm, &_global);
-  PRECICE_CHECK(res, "MPI_Open_port failed with message: {}", res.message());
+  PRECICE_CHECK(res,
+                ::precice::CommunicationError, "MPI_Open_port failed with message: {}", res.message());
   PRECICE_DEBUG("Requested connection to {}", _portName);
 
   _isConnected = true;

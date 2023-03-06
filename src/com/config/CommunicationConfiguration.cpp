@@ -19,6 +19,7 @@ PtrCommunication CommunicationConfiguration::createCommunication(
     int         port    = tag.getIntAttributeValue("port");
 
     PRECICE_CHECK(utils::isValidPort(port),
+                  ::precice::ConfigurationError,
                   "A sockets communication was configured with an invalid port \"{}\". "
                   "Please check the \"ports=\" attributes of your socket connections.",
                   port);
@@ -28,14 +29,16 @@ PtrCommunication CommunicationConfiguration::createCommunication(
   } else if (tag.getName() == "mpi") {
     std::string dir = tag.getStringAttributeValue("exchange-directory");
 #ifdef PRECICE_NO_MPI
-    PRECICE_ERROR("Communication type \"mpi\" can only be used if preCICE was compiled with MPI support enabled. "
+    PRECICE_ERROR(::precice::ConfigurationError,
+                  "Communication type \"mpi\" can only be used if preCICE was compiled with MPI support enabled. "
                   "Either switch to a \"sockets\" communication or recompile preCICE with \"PRECICE_MPICommunication=ON\".");
 #else
     com = std::make_shared<com::MPIPortsCommunication>(dir);
 #endif
   } else if (tag.getName() == "mpi-single") {
 #ifdef PRECICE_NO_MPI
-    PRECICE_ERROR("Communication type \"mpi-single\" can only be used if preCICE was compiled with MPI support enabled. "
+    PRECICE_ERROR(::precice::ConfigurationError,
+                  "Communication type \"mpi-single\" can only be used if preCICE was compiled with MPI support enabled. "
                   "Either switch to a \"sockets\" communication or recompile preCICE with \"PRECICE_MPICommunication=ON\".");
 #else
     com = std::make_shared<com::MPIDirectCommunication>();

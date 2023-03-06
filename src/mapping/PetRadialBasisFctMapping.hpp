@@ -639,7 +639,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inp
         break;
       case (petsc::KSPSolver::SolverResult::Diverged):
         KSPView(_QRsolver, PETSC_VIEWER_STDOUT_WORLD);
-        PRECICE_ERROR("The polynomial QR system of the RBF mapping from mesh {} to mesh {} has diverged. "
+        PRECICE_ERROR(::precice::MappingError,
+                      "The polynomial QR system of the RBF mapping from mesh {} to mesh {} has diverged. "
                       "This means most probably that the mapping problem is not well-posed. "
                       "Please check if your coupling meshes are correct. "
                       "Maybe you need to fix axis-aligned mapping setups by marking perpendicular axes as dead? {}",
@@ -677,7 +678,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inp
       break;
     case (petsc::KSPSolver::SolverResult::Diverged):
       KSPView(_solver, PETSC_VIEWER_STDOUT_WORLD);
-      PRECICE_ERROR("The linear system of the RBF mapping from mesh {} to mesh {} has diverged. "
+      PRECICE_ERROR(::precice::MappingError,
+                    "The linear system of the RBF mapping from mesh {} to mesh {} has diverged. "
                     "This means most probably that the mapping problem is not well-posed. "
                     "Please check if your coupling meshes are correct. "
                     "Maybe you need to fix axis-aligned mapping setups by marking perpendicular axes as dead? {}",
@@ -784,7 +786,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(DataID i
         break;
       case (petsc::KSPSolver::SolverResult::Diverged):
         KSPView(_QRsolver, PETSC_VIEWER_STDOUT_WORLD);
-        PRECICE_ERROR("The polynomial linear system of the RBF mapping from mesh {} to mesh {} "
+        PRECICE_ERROR(::precice::MappingError,
+                      "The polynomial linear system of the RBF mapping from mesh {} to mesh {} "
                       "has diverged. This means most probably that the mapping problem is not well-posed. "
                       "Please check if your coupling meshes are correct. "
                       "Maybe you need to fix axis-aligned mapping setups by marking perpendicular axes as dead? {}",
@@ -815,7 +818,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(DataID i
         break;
       case (petsc::KSPSolver::SolverResult::Diverged):
         KSPView(_solver, PETSC_VIEWER_STDOUT_WORLD);
-        PRECICE_ERROR("The linear system of the RBF mapping from mesh {} to mesh {} "
+        PRECICE_ERROR(::precice::MappingError,
+                      "The linear system of the RBF mapping from mesh {} to mesh {} "
                       "has diverged. This means most probably that the mapping problem is not well-posed. "
                       "Please check if your coupling meshes are correct. "
                       "Maybe you need to fix axis-aligned mapping setups by marking perpendicular axes as dead? {}",

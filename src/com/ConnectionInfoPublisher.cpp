@@ -70,11 +70,13 @@ std::string ConnectionInfoReader::read() const
 
   std::ifstream ifs(path);
   PRECICE_CHECK(ifs,
+                ::precice::CommunicationError,
                 "Unable to establish connection as the connection file \"{}\" couldn't be opened.",
                 path);
   std::string addressData;
   std::getline(ifs, addressData);
   PRECICE_CHECK(!addressData.empty(),
+                ::precice::CommunicationError,
                 "Unable to establish connection as the connection file \"{}\" is empty. "
                 "Please report this bug to the preCICE developers.",
                 path);
@@ -115,20 +117,24 @@ void ConnectionInfoWriter::write(std::string const &info) const
     auto message = "Unable to establish connection as a {}connection file already exists at \"{}\". "
                    "This is likely a leftover of a previous crash or stop during communication build-up. "
                    "Please remove the \"precice-run\" directory and restart the simulation.";
-    PRECICE_CHECK(!bfs::exists(path), message, "", path);
-    PRECICE_CHECK(!bfs::exists(tmp), message, "temporary ")
+    PRECICE_CHECK(!bfs::exists(path),
+                  ::precice::CommunicationError, message, "", path);
+    PRECICE_CHECK(!bfs::exists(tmp),
+                  ::precice::CommunicationError, message, "temporary ")
   }
 
   PRECICE_DEBUG("Writing temporary connection file \"{}\"", tmp.generic_string());
   bfs::create_directories(tmp.parent_path());
   {
     std::ofstream ofs(tmp.string());
-    PRECICE_CHECK(ofs, "Unable to establish connection as the temporary connection file \"{}\" couldn't be opened.", tmp.generic_string());
+    PRECICE_CHECK(ofs,
+                  ::precice::CommunicationError, "Unable to establish connection as the temporary connection file \"{}\" couldn't be opened.", tmp.generic_string());
     fmt::print(ofs,
                "{}\nAcceptor: {}, Requester: {}, Tag: {}, Rank: {}",
                info, acceptorName, requesterName, tag, rank);
   }
   PRECICE_CHECK(bfs::exists(tmp),
+                ::precice::CommunicationError,
                 "Unable to establish connection as the temporary connection file \"{}\" was written, but doesn't exist on disk. "
                 "Please report this bug to the preCICE developers.",
                 tmp.generic_string());
@@ -141,6 +147,7 @@ void ConnectionInfoWriter::write(std::string const &info) const
                  tmp.generic_string());
   }
   PRECICE_CHECK(bfs::exists(path),
+                ::precice::CommunicationError,
                 "Unable to establish connection as the connection file \"{}\" doesn't exist on disk. "
                 "Please report this bug to the preCICE developers.",
                 path);
