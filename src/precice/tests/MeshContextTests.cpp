@@ -139,6 +139,45 @@ BOOST_AUTO_TEST_CASE(ExchangeTransitive)
   }
 }
 
+BOOST_AUTO_TEST_CASE(ExchangeDirectAccess)
+{
+  PRECICE_TEST(1_rank);
+
+  config::Configuration     config;
+  xml::ConfigurationContext cont{"A", 0, 1};
+  xml::configure(config.getXMLTag(),
+                 cont,
+                 context.prefix("meshcontext-direct.xml"));
+  auto participants = config.getSolverInterfaceConfiguration().getParticipantConfiguration()->getParticipants();
+
+  BOOST_REQUIRE(participants.size() == 2);
+
+  for (const auto &participant : participants) {
+    auto pname = participant->getName();
+    BOOST_REQUIRE(pname == "A" || pname == "B");
+    const auto &contexts = participant->usedMeshContexts();
+
+    for (const auto &context : contexts) {
+      auto meshName = context->mesh->getName();
+      BOOST_REQUIRE(meshName == "Dynamic");
+      using Dynamicity = precice::impl::MeshContext::Dynamicity;
+      if (pname == "A") {
+        if (meshName == "Dynamic") {
+          BOOST_TEST(context->provideMesh);
+          BOOST_TEST((context->dynamic == Dynamicity::Yes));
+        }
+      }
+      if (pname == "B") {
+        if (meshName == "Dynamic") {
+          BOOST_TEST(!context->provideMesh);
+          BOOST_TEST(context->allowDirectAccess);
+          BOOST_TEST((context->dynamic == Dynamicity::Yes));
+        }
+      }
+    }
+  }
+}
+
 BOOST_AUTO_TEST_CASE(Partial)
 {
   PRECICE_TEST(1_rank);
