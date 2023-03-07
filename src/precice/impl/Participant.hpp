@@ -117,9 +117,6 @@ public:
                    double                                        safetyFactor,
                    partition::ReceivedPartition::GeometricFilter geoFilter,
                    const bool                                    allowDirectAccess);
-
-  /// Registers a given Participant as dynamic.
-  void registerDynamicParticipant(const std::string &name);
   /// @}
 
   /// @name Data queries
@@ -334,11 +331,6 @@ public:
   /// Returns all \ref ExportContext for exporting meshes and data.
   const std::vector<io::ExportContext> &exportContexts() const;
 
-  /// Is this participant dynamic?
-  bool isDynamic() const;
-
-  /// Returns the names of all dynamic participants including the local.
-  std::set<std::string> dynamicParticipants() const;
   /// @}
 
 private:
@@ -374,8 +366,6 @@ private:
   bool _useIntraComm = false;
 
   std::unique_ptr<utils::ManageUniqueIDs> _meshIdManager;
-
-  std::set<std::string> _dynamicParticipants;
 
   template <typename ELEMENT_T>
   bool isDataValid(

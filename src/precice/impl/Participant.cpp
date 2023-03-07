@@ -105,11 +105,6 @@ void Participant::receiveMesh(const mesh::PtrMesh &                         mesh
   _usedMeshContexts.push_back(context);
 }
 
-void Participant::registerDynamicParticipant(const std::string &name)
-{
-  _dynamicParticipants.emplace(name);
-}
-
 void Participant::addWriteData(
     const mesh::PtrData &data,
     const mesh::PtrMesh &mesh)
@@ -409,18 +404,6 @@ void Participant::addExportContext(
 const std::vector<io::ExportContext> &Participant::exportContexts() const
 {
   return _exportContexts;
-}
-
-bool Participant::isDynamic() const
-{
-  return std::any_of(
-      _usedMeshContexts.begin(), _usedMeshContexts.end(),
-      [](auto context) { return context->provideMesh && context->dynamic != MeshContext::Dynamicity::No; });
-}
-
-std::set<std::string> Participant::dynamicParticipants() const
-{
-  return _dynamicParticipants;
 }
 
 std::vector<PtrWatchPoint> &Participant::watchPoints()

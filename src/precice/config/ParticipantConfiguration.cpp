@@ -799,13 +799,6 @@ void ParticipantConfiguration::updateParticipantDynamicity()
     }
   }
 
-  // Register all dynamic participants
-  for (const auto &participant : _participants) {
-    for (const auto &dyn : dynamicParticipants) {
-      participant->registerDynamicParticipant(dyn);
-    }
-  }
-
   // Mark all transitively dynamic meshes using mappings
   for (const auto &participant : _participants) {
     // Determine mappings between meshes of this participant
