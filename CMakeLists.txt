@@ -626,21 +626,21 @@ option(PRECICE_ENABLE_BENCHMARKS "Build the preCICE benchmarks" OFF)
 if(PRECICE_ENABLE_BENCHMARKS)
   find_package(benchmark REQUIRED)
 
-  add_executable(benchprecice)
+  add_executable(precice-bench)
   include(${CMAKE_CURRENT_LIST_DIR}/benchmarks/sources.cmake)
 
-  target_link_libraries(benchprecice
+  target_link_libraries(precice-bench
     PRIVATE
     preciceCore
     benchmark::benchmark
     )
-  set_target_properties(benchprecice PROPERTIES
+  set_target_properties(precice-bench PROPERTIES
     # precice is a C++17 project
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED Yes
     CXX_EXTENSIONS No
     )
-  target_include_directories(benchprecice PRIVATE
+  target_include_directories(precice-bench PRIVATE
     ${preCICE_SOURCE_DIR}/src
     ${preCICE_SOURCE_DIR}/benchmark
     )

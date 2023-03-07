@@ -145,10 +145,10 @@ target_sources(testprecice
     )
 """
 BENCHMARKS_BASE = """#
-# This file lists all benchmarks that will be compiles into benchprecice
+# This file lists all benchmarks that will be compiles into precice-bench
 #
 
-target_sources(benchprecice
+target_sources(precice-bench
     PRIVATE
     {}
     )
