@@ -13,7 +13,7 @@ BOOST_AUTO_TEST_SUITE(PreciceTests)
 
 BOOST_AUTO_TEST_SUITE(MeshContextTests)
 
-BOOST_AUTO_TEST_CASE(StaticMesh)
+BOOST_AUTO_TEST_CASE(ExchangeStatic)
 {
   PRECICE_TEST(1_rank);
 
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(StaticMesh)
   }
 }
 
-BOOST_AUTO_TEST_CASE(DynamicMesh)
+BOOST_AUTO_TEST_CASE(ExchangeDynamic)
 {
   PRECICE_TEST(1_rank);
 
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(DynamicMesh)
 
     for (const auto &context : contexts) {
       auto meshName = context->mesh->getName();
-      BOOST_REQUIRE(meshName == "Dynamic" || meshName == "Static");
+      BOOST_REQUIRE(meshName == "Dynamic" || meshName == "Transitive");
       using Dynamicity = precice::impl::MeshContext::Dynamicity;
       if (pname == "A") {
         if (meshName == "Dynamic") {
@@ -88,8 +88,50 @@ BOOST_AUTO_TEST_CASE(DynamicMesh)
           BOOST_TEST(!context->provideMesh);
           BOOST_TEST((context->dynamic == Dynamicity::Yes));
         }
-        if (meshName == "Static") {
+        if (meshName == "Transitive") {
           BOOST_TEST(context->provideMesh);
+          BOOST_TEST((context->dynamic == Dynamicity::Transitively));
+        }
+      }
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(ExchangeTransitive)
+{
+  PRECICE_TEST(1_rank);
+
+  config::Configuration     config;
+  xml::ConfigurationContext cont{"A", 0, 1};
+  xml::configure(config.getXMLTag(),
+                 cont,
+                 context.prefix("meshcontext-transitive.xml"));
+  auto participants = config.getSolverInterfaceConfiguration().getParticipantConfiguration()->getParticipants();
+
+  BOOST_REQUIRE(participants.size() == 2);
+
+  for (const auto &participant : participants) {
+    auto pname = participant->getName();
+    BOOST_REQUIRE(pname == "A" || pname == "B");
+    const auto &contexts = participant->usedMeshContexts();
+
+    for (const auto &context : contexts) {
+      auto meshName = context->mesh->getName();
+      BOOST_REQUIRE(meshName == "Dynamic" || meshName == "Transitive");
+      using Dynamicity = precice::impl::MeshContext::Dynamicity;
+      if (pname == "A") {
+        if (meshName == "Transitive") {
+          BOOST_TEST(context->provideMesh);
+          BOOST_TEST((context->dynamic == Dynamicity::Transitively));
+        }
+      }
+      if (pname == "B") {
+        if (meshName == "Dynamic") {
+          BOOST_TEST(context->provideMesh);
+          BOOST_TEST((context->dynamic == Dynamicity::Yes));
+        }
+        if (meshName == "Transitive") {
+          BOOST_TEST(!context->provideMesh);
           BOOST_TEST((context->dynamic == Dynamicity::Transitively));
         }
       }

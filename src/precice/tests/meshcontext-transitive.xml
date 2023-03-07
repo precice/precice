@@ -15,26 +15,26 @@
     </mesh>
 
     <participant name="A">
-      <provide-mesh name="Dynamic" dynamic="true" />
-      <write-data name="Data1" mesh="Dynamic" />
-      <read-data name="Data2" mesh="Dynamic" />
+      <provide-mesh name="Transitive" />
+      <write-data name="Data1" mesh="Transitive" />
+      <read-data name="Data2" mesh="Transitive" />
     </participant>
 
     <participant name="B">
-      <receive-mesh name="Dynamic" from="A" />
-      <provide-mesh name="Transitive" />
+      <provide-mesh name="Dynamic" dynamic="true" />
+      <receive-mesh name="Transitive" from="A" />
       <mapping:nearest-neighbor
         direction="read"
-        from="Dynamic"
-        to="Transitive"
+        from="Transitive"
+        to="Dynamic"
         constraint="consistent" />
       <mapping:nearest-neighbor
         direction="write"
-        from="Transitive"
-        to="Dynamic"
+        from="Dynamic"
+        to="Transitive"
         constraint="conservative" />
-      <write-data name="Data2" mesh="Transitive" />
-      <read-data name="Data1" mesh="Transitive" />
+      <write-data name="Data2" mesh="Dynamic" />
+      <read-data name="Data1" mesh="Dynamic" />
     </participant>
 
     <m2n:sockets from="A" to="B" />
@@ -43,8 +43,8 @@
       <participants first="A" second="B" />
       <max-time-windows value="1" />
       <time-window-size value="1.0" />
-      <exchange data="Data1" mesh="Dynamic" from="A" to="B" />
-      <exchange data="Data2" mesh="Dynamic" from="B" to="A" />
+      <exchange data="Data1" mesh="Transitive" from="A" to="B" />
+      <exchange data="Data2" mesh="Transitive" from="B" to="A" />
     </coupling-scheme:serial-explicit>
   </solver-interface>
 </precice-configuration>
