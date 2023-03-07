@@ -773,7 +773,6 @@ void ParticipantConfiguration::updateParticipantDynamicity()
   // The new participant needs to know which meshes were marked as dynamic.
   // Doing this here prevents even more state in the ParticipantConfiguration
   using Dynamicity = precice::impl::MeshContext::Dynamicity;
-  std::set<std::string> dynamicParticipants;
 
   // Find all provided dynamic meshes
   std::map<std::string, std::set<std::string>> providedDynamic;
@@ -781,7 +780,6 @@ void ParticipantConfiguration::updateParticipantDynamicity()
     for (const auto &context : participant->usedMeshContexts()) {
       if (context->provideMesh && context->dynamic == Dynamicity::Yes) {
         providedDynamic[participant->getName()].emplace(context->mesh->getName());
-        dynamicParticipants.emplace(participant->getName());
       }
     }
   }
@@ -795,7 +793,6 @@ void ParticipantConfiguration::updateParticipantDynamicity()
         continue;
       }
       context->dynamic = Dynamicity::Yes;
-      dynamicParticipants.emplace(participant->getName());
     }
   }
 
