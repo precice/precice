@@ -796,7 +796,7 @@ void BaseCouplingScheme::determineInitialSend(BaseCouplingScheme::GlobalDataMap 
 {
   if (anyDataRequiresInitialization(sendGlobalData)) {
     _sendsInitializedData = true;
-    requireAction(constants::actionWriteInitialData());
+    requireAction(CouplingScheme::Action::InitializeData);
   }
   //TODO test this
 }

@@ -96,14 +96,6 @@ public:
     return getSendGlobalData(dataID) != nullptr;
   }
 
-  /**
-   * @returns true, if coupling scheme has sendGlobalData with given DataID
-   */
-  bool hasSendGlobalData(DataID dataID)
-  {
-    return getSendGlobalData(dataID) != nullptr;
-  }
-
 protected:
   /// Returns all data to be sent.
   DataMap &getSendData();
