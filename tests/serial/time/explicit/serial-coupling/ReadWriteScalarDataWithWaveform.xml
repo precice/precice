@@ -34,7 +34,7 @@
         to="MeshTwo"
         constraint="consistent" />
       <write-data name="DataTwo" mesh="MeshTwo" />
-      <read-data name="DataOne" mesh="MeshTwo" waveform-order="1"/>
+      <read-data name="DataOne" mesh="MeshTwo" waveform-order="3"/>
     </participant>
 
     <m2n:sockets from="SolverOne" to="SolverTwo" />
