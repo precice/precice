@@ -473,7 +473,16 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsis
   _copyEvent.pause();
 
   if (polynomial == Polynomial::SEPARATE) {
+    auto tmpPolynomialContribution = gko::share(GinkgoVector::create(_hostExecutor, gko::dim<2>{_matrixQ_TQ->get_size()[1], 1}));
+
+    for (std::size_t i = 0; i < tmpPolynomialContribution->get_size()[0]; ++i) {
+      tmpPolynomialContribution->at(i, 0) = 0.;
+    }
+
     _matrixQ_T->apply(gko::lend(dRhs), gko::lend(_polynomialRhs));
+
+    _polynomialContribution = gko::clone(_deviceExecutor, tmpPolynomialContribution);
+    tmpPolynomialContribution->clear();
 
     _polynomialContribution = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixQ_TQ->get_size()[1], 1}));
     _polynomialSolver->apply(gko::lend(_polynomialRhs), gko::lend(_polynomialContribution));
