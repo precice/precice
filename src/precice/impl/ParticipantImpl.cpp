@@ -1577,7 +1577,6 @@ void ParticipantImpl::mapReadData()
       context.mapData();
     }
   }
-  clearMappings(_accessor->readMappingContexts());
 
   for (auto &context : _accessor->globalDataContexts()) {
     if (context.getDirection() == "read") {

@@ -115,18 +115,6 @@ protected:
     return _receiveGlobalData;
   }
 
-  /**
-   * @brief BiCouplingScheme has _sendData and _receiveData
-   * @returns DataMap with all data
-   */
-  const DataMap getAllData() override
-  {
-    DataMap allData{_sendData};
-    allData.insert(_receiveData.begin(), _receiveData.end());
-    return allData;
-    // TODO: append global data here?
-  }
-
   /// Sets the values
   CouplingData *getSendData(DataID dataID);
 
