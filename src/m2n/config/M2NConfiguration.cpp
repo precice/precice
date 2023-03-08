@@ -135,6 +135,7 @@ m2n::PtrM2N M2NConfiguration::getM2N(const std::string &from, const std::string 
   }
   PRECICE_ERROR(::precice::ConfigurationError,
                 "There is no m2n communication configured between participants \"" + from + "\" and \"" + to + "\". Please add an appropriate \"<m2n />\" tag.");
+  PRECICE_UNREACHABLE("Internal error");
 }
 
 bool M2NConfiguration::isM2NConfigured(const std::string &from, const std::string &to)
