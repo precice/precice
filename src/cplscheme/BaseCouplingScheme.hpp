@@ -236,7 +236,8 @@ public:
 
 protected:
   /// All send and receive data as a map "data ID -> data"
-  DataMap _allData;
+  DataMap       _allData;
+  GlobalDataMap _allGlobalData;
 
   /// Acceleration method to speedup iteration convergence.
   acceleration::PtrAcceleration _acceleration;
@@ -265,9 +266,6 @@ protected:
    */
   void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData);
 
-  /// Map that links DataID to GlobalCouplingData
-  typedef std::map<int, PtrGlobalCouplingData> GlobalDataMap;
-
   /// Sends global data sendDataIDs given in mapCouplingData with communication.
   void sendGlobalData(const m2n::PtrM2N &m2n, const GlobalDataMap &sendGlobalData);
 
@@ -293,6 +291,18 @@ protected:
    * @return PtrCouplingData pointer to CouplingData owned by the CouplingScheme
    */
   PtrCouplingData addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization, bool exchangeSubsteps);
+
+  /**
+   * @brief Adds GlobalCouplingData with given properties to this BaseCouplingScheme and returns a pointer to the CouplingData
+   *
+   * This is to avoid creation of duplicate GlobalCouplingData objects which may happen for e.g. in case of Multi-Coupling Schemes.
+   * If GlobalCouplingData with ID of provided data already exists in coupling scheme, no duplicate is created but a pointer to the already existing GlobalCouplingData is returned.
+   *
+   * @param data global data with which the GlobalCouplingData is associated
+   * @param requiresInitialization true, if GlobalCouplingData requires initialization
+   * @return PtrGlobalCouplingData pointer to CouplingData owned by the CouplingScheme
+   */
+  PtrGlobalCouplingData addGlobalCouplingData(const mesh::PtrGlobalData &data, bool requiresInitialization);
 
   /**
    * @brief Function to determine whether coupling scheme is an explicit coupling scheme

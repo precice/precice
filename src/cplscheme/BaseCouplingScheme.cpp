@@ -22,6 +22,7 @@
 #include "logging/LogMacros.hpp"
 #include "math/differences.hpp"
 #include "mesh/Data.hpp"
+#include "mesh/GlobalData.hpp"
 #include "mesh/Mesh.hpp"
 #include "precice/types.hpp"
 #include "utils/EigenHelperFunctions.hpp"
@@ -239,6 +240,24 @@ PtrCouplingData BaseCouplingScheme::addCouplingData(const mesh::PtrData &data, m
     ptrCplData = _allData[id];
   }
   return ptrCplData;
+}
+
+PtrGlobalCouplingData BaseCouplingScheme::addGlobalCouplingData(const mesh::PtrGlobalData &data, bool requiresInitialization)
+{
+  int                   id = data->getID();
+  PtrGlobalCouplingData ptrGblCplData;
+  if (!utils::contained(id, _allGlobalData)) { // data is not used by this coupling scheme yet, create new GlobalCouplingData
+    if (isExplicitCouplingScheme()) {
+      ptrGblCplData = std::make_shared<GlobalCouplingData>(data, requiresInitialization);
+    } else {
+      ptrGblCplData = std::make_shared<GlobalCouplingData>(data, requiresInitialization, getExtrapolationOrder());
+    }
+    _allGlobalData.emplace(id, ptrGblCplData);
+    PRECICE_DEBUG("Added global data {} to _allGlobalData.", data->getName());
+  } else { // data is already used by another exchange of this coupling scheme, use existing GlobalCouplingData
+    ptrGblCplData = _allGlobalData[id];
+  }
+  return ptrGblCplData;
 }
 
 bool BaseCouplingScheme::isExplicitCouplingScheme()
@@ -792,7 +811,7 @@ void BaseCouplingScheme::determineInitialSend(DataMap &sendData)
   }
 }
 
-void BaseCouplingScheme::determineInitialSend(BaseCouplingScheme::GlobalDataMap &sendGlobalData)
+void BaseCouplingScheme::determineInitialSend(GlobalDataMap &sendGlobalData)
 {
   if (anyDataRequiresInitialization(sendGlobalData)) {
     _sendsInitializedData = true;
@@ -819,12 +838,12 @@ bool BaseCouplingScheme::anyDataRequiresInitialization(DataMap &dataMap) const
   return false;
 }
 
-bool BaseCouplingScheme::anyDataRequiresInitialization(BaseCouplingScheme::GlobalDataMap &globalDataMap) const
+bool BaseCouplingScheme::anyDataRequiresInitialization(GlobalDataMap &globalDataMap) const
 {
   /// @todo implement this function using https://en.cppreference.com/w/cpp/algorithm/all_any_none_of
   for (GlobalDataMap::value_type &pair : globalDataMap) {
     if (pair.second->requiresInitialization) {
-      PRECICE_ERROR("Initilialization for global data exchange is not tested yet.");
+      PRECICE_ERROR("Initialization for global data exchange is not tested yet.");
       return true;
     }
   }

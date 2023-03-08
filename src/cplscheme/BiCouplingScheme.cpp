@@ -73,18 +73,21 @@ void BiCouplingScheme::addGlobalDataToSend(
     bool                       requiresInitialization)
 {
   PRECICE_TRACE();
-  int id = globalData->getID();
+  PtrGlobalCouplingData ptrGblCplData = addGlobalCouplingData(globalData, requiresInitialization);
+  precice::DataID       id            = globalData->getID();
   if (!utils::contained(id, _sendGlobalData)) {
     PRECICE_ASSERT(_sendGlobalData.count(id) == 0, "Key already exists!");
-    if (isExplicitCouplingScheme()) {
-      _sendGlobalData.emplace(id, std::make_shared<GlobalCouplingData>(globalData, requiresInitialization));
-      PRECICE_DEBUG("Added \"{}\" to _sendGlobalData. Now _sendGlobalData.size is {}.", globalData->getName(), _sendGlobalData.size());
-    } else {
-      _sendGlobalData.emplace(id, std::make_shared<GlobalCouplingData>(globalData, requiresInitialization, getExtrapolationOrder()));
-      PRECICE_DEBUG("Added \"{}\" to _sendGlobalData with extrapolation order.", globalData->getName());
-    }
+    // if (isExplicitCouplingScheme()) {
+    // _sendGlobalData.emplace(id, std::make_shared<GlobalCouplingData>(globalData, requiresInitialization));
+    _sendGlobalData.emplace(id, ptrGblCplData);
+    PRECICE_DEBUG("Added \"{}\" to _sendGlobalData. Now _sendGlobalData.size is {}.", globalData->getName(), _sendGlobalData.size());
+    // }
+    // else {
+    //   _sendGlobalData.emplace(id, std::make_shared<GlobalCouplingData>(globalData, requiresInitialization, getExtrapolationOrder()));
+    //   PRECICE_DEBUG("Added \"{}\" to _sendGlobalData with extrapolation order.", globalData->getName());
+    // }
   } else {
-    PRECICE_ERROR("Data \"{0}\" cannot be added twice for sending. Please remove any duplicate <exchange data=\"{0}\" .../> tags", globalData->getName());
+    PRECICE_ERROR("Global Data \"{0}\" cannot be added twice for sending. Please remove any duplicate <exchange data=\"{0}\" .../> tags", globalData->getName());
   }
 }
 
@@ -110,19 +113,19 @@ void BiCouplingScheme::addGlobalDataToReceive(
     bool                       requiresInitialization)
 {
   PRECICE_TRACE();
-  int id = globalData->getID();
+  PtrGlobalCouplingData PtrGblCplData = addGlobalCouplingData(globalData, requiresInitialization);
+  precice::DataID       id            = globalData->getID();
   if (!utils::contained(id, _receiveGlobalData)) {
     PRECICE_ASSERT(_receiveGlobalData.count(id) == 0, "Key already exists!");
-    if (isExplicitCouplingScheme()) {
-      _receiveGlobalData.emplace(id, std::make_shared<GlobalCouplingData>(globalData, requiresInitialization));
-      PRECICE_DEBUG("Added \"{}\" to _receiveGlobalData.", globalData->getName());
-
-    } else {
-      _receiveGlobalData.emplace(id, std::make_shared<GlobalCouplingData>(globalData, requiresInitialization, getExtrapolationOrder()));
-      PRECICE_DEBUG("Added \"{}\" to _sendGlobalData with extrapolation order.", globalData->getName());
-    }
+    // if (isExplicitCouplingScheme()) {
+    _receiveGlobalData.emplace(id, std::make_shared<GlobalCouplingData>(globalData, requiresInitialization));
+    PRECICE_DEBUG("Added \"{}\" to _receiveGlobalData.", globalData->getName());
+    // } else {
+    // _receiveGlobalData.emplace(id, std::make_shared<GlobalCouplingData>(globalData, requiresInitialization, getExtrapolationOrder()));
+    // PRECICE_DEBUG("Added \"{}\" to _sendGlobalData with extrapolation order.", globalData->getName());
+    // }
   } else {
-    PRECICE_ERROR("Data \"{0}\" cannot be added twice for receiving. Please remove any duplicate <exchange data=\"{0}\" ... /> tags", globalData->getName());
+    PRECICE_ERROR("Global Data \"{0}\" cannot be added twice for receiving. Please remove any duplicate <exchange data=\"{0}\" ... /> tags", globalData->getName());
   }
 }
 
