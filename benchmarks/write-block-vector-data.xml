@@ -1,46 +1,39 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
-  <log enabled="false" />
+  <log>
+    <sink
+      filter="%Severity% > info"
+      format="---[precice][%Module%:%Line%] in %Function%: %ColorizedSeverity% %Message%"
+      enabled="true" />
+  </log>
 
   <solver-interface dimensions="3">
     <data:vector name="Vector" />
 
-    <mesh name="dealii-mesh">
+    <mesh name="MeshB">
       <use-data name="Vector" />
-      <use-data name="Scalar" />
     </mesh>
 
     <mesh name="MeshA">
       <use-data name="Vector" />
-      <use-data name="Scalar" />
     </mesh>
-
-    <participant name="laplace-solver">
-      <provide-mesh name="dealii-mesh" />
-      <receive-mesh name="MeshA" from="A" />
-      <read-data name="Vector" mesh="dealii-mesh" />
-      <read-data name="Scalar" mesh="dealii-mesh" />
-      <mapping:nearest-neighbor
-        direction="read"
-        from="MeshA"
-        to="dealii-mesh"
-        constraint="consistent" />
-    </participant>
 
     <participant name="A">
       <provide-mesh name="MeshA" />
       <write-data name="Vector" mesh="MeshA" />
-      <write-data name="Scalar" mesh="MeshA" />
     </participant>
 
-    <m2n:sockets from="laplace-solver" to="A" />
+    <participant name="B">
+      <receive-mesh name="MeshA" from="A" />
+    </participant>
+
+    <m2n:sockets from="A" to="B" />
 
     <coupling-scheme:serial-explicit>
-      <time-window-size value="0.1" />
+      <time-window-size value="1" />
       <max-time value="1" />
-      <participants first="A" second="laplace-solver" />
-      <exchange data="Vector" mesh="MeshA" from="A" to="laplace-solver" />
-      <exchange data="Scalar" mesh="MeshA" from="A" to="laplace-solver" />
+      <participants first="A" second="B" />
+      <exchange data="Vector" mesh="MeshA" from="A" to="B" />
     </coupling-scheme:serial-explicit>
   </solver-interface>
 </precice-configuration>
