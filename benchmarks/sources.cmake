@@ -5,4 +5,5 @@
 target_sources(precice-bench
     PRIVATE
     benchmarks/main.cpp
+    benchmarks/write-block-vector-data.cpp
     )
