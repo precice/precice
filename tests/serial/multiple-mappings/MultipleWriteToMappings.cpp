@@ -22,8 +22,8 @@ BOOST_AUTO_TEST_CASE(MultipleWriteToMappings)
     auto meshNameBottom = "MeshABottom";
     int  vertexIDTop    = interface.setMeshVertex(meshNameTop, vertex.data());
     int  vertexIDBottom = interface.setMeshVertex(meshNameBottom, vertex.data());
-    auto dataNameTop    = "DisplacementTop";    //  meshNameTop
-    auto dataNameBottom = "DisplacementBottom"; //  meshNameBottom
+    auto dataNameTop    = "DisplacementTop";
+    auto dataNameBottom = "DisplacementBottom";
 
     double dt              = interface.initialize();
     double displacementTop = 1.0;
@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(MultipleWriteToMappings)
     BOOST_TEST(context.isNamed("B"));
     auto meshName = "MeshB";
     int  vertexID = interface.setMeshVertex(meshName, vertex.data());
-    auto dataName = "DisplacementSum"; //  meshName
+    auto dataName = "DisplacementSum";
 
     double dt = interface.initialize();
     interface.advance(dt);

@@ -45,16 +45,16 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
     std::string meshName, dataWriteID, dataReadID;
     if (context.isNamed("SOLIDZ1")) {
       meshName    = "SOLIDZ_Mesh1";
-      dataWriteID = "Displacements1"; //  meshName
-      dataReadID  = "Forces1";        //  meshName
+      dataWriteID = "Displacements1";
+      dataReadID  = "Forces1";
     } else if (context.isNamed("SOLIDZ2")) {
       meshName    = "SOLIDZ_Mesh2";
-      dataWriteID = "Displacements2"; //  meshName
-      dataReadID  = "Forces2";        //  meshName
+      dataWriteID = "Displacements2";
+      dataReadID  = "Forces2";
     } else if (context.isNamed("SOLIDZ3")) {
       meshName    = "SOLIDZ_Mesh3";
-      dataWriteID = "Displacements3"; //  meshName
-      dataReadID  = "Forces3";        //  meshName
+      dataWriteID = "Displacements3";
+      dataReadID  = "Forces3";
     }
 
     std::vector<int> vertexIDs;
@@ -98,9 +98,9 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
     auto meshName1    = "NASTIN_Mesh1";
     auto meshName2    = "NASTIN_Mesh2";
     auto meshName3    = "NASTIN_Mesh3";
-    auto dataWriteID1 = "Forces1"; //  meshName1
-    auto dataWriteID2 = "Forces2"; //  meshName2
-    auto dataWriteID3 = "Forces3"; //  meshName3
+    auto dataWriteID1 = "Forces1";
+    auto dataWriteID2 = "Forces2";
+    auto dataWriteID3 = "Forces3";
 
     std::vector<int> vertexIDs1;
     int              vertexID = -1;

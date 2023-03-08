@@ -45,8 +45,8 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelVector)
   if (context.isNamed("SolverOne")) {
     SolverInterface interface(context.name, context.config(), context.rank, context.size);
     auto            meshName  = "MeshOne";
-    auto            dataName1 = "Data1"; //  meshName
-    auto            dataName2 = "Data2"; //  meshName
+    auto            dataName1 = "Data1";
+    auto            dataName2 = "Data2";
 
     int    vertexIDs[2];
     double xCoord       = context.rank * 0.4 + 0.05;
@@ -72,8 +72,8 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelVector)
     double          positions[12] = {0.0, 0.0, 0.2, 0.0, 0.4, 0.0, 0.6, 0.0, 0.8, 0.0, 1.0, 0.0};
     interface.setMeshVertices(meshName, 6, positions, vertexIDs);
 
-    auto dataName1 = "Data1"; //  meshName
-    auto dataName2 = "Data2"; //  meshName
+    auto dataName1 = "Data1";
+    auto dataName2 = "Data2";
     BOOST_TEST(interface.requiresGradientDataFor(meshName, dataName1) == false);
     BOOST_TEST(interface.requiresGradientDataFor(meshName, dataName2) == true);
 

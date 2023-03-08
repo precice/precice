@@ -30,7 +30,7 @@ void testConvergenceMeasures(const std::string configFile, TestContext const &co
     }
 
     if (context.isNamed("SolverTwo")) {
-      auto dataName = "Data2"; //  meshName
+      auto dataName = "Data2";
       interface.writeScalarData(meshName, dataName, vertexID, writeValues.at(numberOfAdvanceCalls));
     }
 

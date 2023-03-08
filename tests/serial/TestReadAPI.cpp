@@ -27,8 +27,8 @@ BOOST_AUTO_TEST_CASE(TestReadAPI)
     Eigen::VectorXd readPositions(size * 3);
     vertexIDs[0] = cplInterface.setMeshVertex(meshName, readPositions.data());
 
-    auto dataAID = "DataOne"; //  meshOneID
-    auto dataBID = "DataTwo"; //  meshOneID
+    auto dataAID = "DataOne";
+    auto dataBID = "DataTwo";
 
     BOOST_REQUIRE(cplInterface.requiresInitialData());
 
@@ -120,8 +120,8 @@ BOOST_AUTO_TEST_CASE(TestReadAPI)
     Eigen::VectorXd writePositions(size * 3);
     vertexIDs[0] = cplInterface.setMeshVertex(meshName, writePositions.data());
 
-    auto dataAID = "DataOne"; //  meshTwoID
-    auto dataBID = "DataTwo"; //  meshTwoID
+    auto dataAID = "DataOne";
+    auto dataBID = "DataTwo";
 
     BOOST_REQUIRE(cplInterface.requiresInitialData());
 

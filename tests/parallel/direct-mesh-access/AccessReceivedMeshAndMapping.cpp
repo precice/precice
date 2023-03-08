@@ -23,8 +23,8 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
     constexpr int dim           = 2;
     auto          ownMeshName   = "MeshOne";
     auto          otherMeshName = "MeshTwo";
-    auto          readDataName  = "Forces";     //  ownMeshName
-    auto          writeDataName = "Velocities"; //  otherMeshName
+    auto          readDataName  = "Forces";
+    auto          writeDataName = "Velocities";
 
     std::vector<double> positions = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 2.0, 0.0, 3.0}) : std::vector<double>({0.0, 4.0, 0.0, 5.0, 0.0, 6.0});
 
@@ -79,8 +79,8 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
 
     // Query IDs
     auto meshName      = "MeshTwo";
-    auto writeDataName = "Forces";     //  meshName
-    auto readDataName  = "Velocities"; //  meshName
+    auto writeDataName = "Forces";
+    auto readDataName  = "Velocities";
 
     // Define the mesh
     interface.setMeshVertices(meshName, ids.size(), positions.data(), ids.data());

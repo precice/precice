@@ -24,8 +24,8 @@ BOOST_AUTO_TEST_CASE(MultipleWriteFromMappings)
     auto meshNameBottom = "MeshABottom";
     int  vertexIDTop    = interface.setMeshVertex(meshNameTop, vertex1.data());
     int  vertexIDBottom = interface.setMeshVertex(meshNameBottom, vertex3.data());
-    auto dataNameTop    = "Pressure"; //  meshNameTop
-    auto dataNameBottom = "Pressure"; //  meshNameBottom
+    auto dataNameTop    = "Pressure";
+    auto dataNameBottom = "Pressure";
 
     double dt = interface.initialize();
     interface.advance(dt);
@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(MultipleWriteFromMappings)
     int  vertexID1 = interface.setMeshVertex(meshName, vertex1.data());
     int  vertexID2 = interface.setMeshVertex(meshName, vertex2.data());
     int  vertexID3 = interface.setMeshVertex(meshName, vertex3.data());
-    auto dataName  = "Pressure"; //  meshName
+    auto dataName  = "Pressure";
 
     double dt       = interface.initialize();
     double pressure = 1.0;

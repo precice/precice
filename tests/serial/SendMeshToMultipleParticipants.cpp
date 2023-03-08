@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(SendMeshToMultipleParticipants)
   precice::SolverInterface interface(context.name, context.config(), 0, 1);
 
   const precice::VertexID vertexID = interface.setMeshVertex(meshName, vertex.data());
-  auto                    dataName = "Data"; //  meshName
+  auto                    dataName = "Data";
   double                  maxDt    = interface.initialize();
 
   if (context.isNamed("SolverOne")) {

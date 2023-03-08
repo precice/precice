@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(WatchIntegralScaleAndNoScale)
     // Initialize, the mesh
     double dt = interface.initialize();
 
-    auto   dataOneID = "DataOne"; //  meshName
+    auto   dataOneID = "DataOne";
     double valueA    = 1.0;
     double valueB    = 2.0;
     double valueC    = 3.0;
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(WatchIntegralScaleAndNoScale)
     // Initialize the mesh
     double dt = interface.initialize();
 
-    auto   dataOneID = "DataOne"; //  meshTwoID
+    auto   dataOneID = "DataOne";
     double valueA, valueB, valueC;
 
     while (interface.isCouplingOngoing()) {

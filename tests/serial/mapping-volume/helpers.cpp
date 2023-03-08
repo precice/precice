@@ -17,7 +17,7 @@ void testMappingVolumeOneTriangle(const std::string configFile, const TestContex
 
   if (context.isNamed("SolverOne")) {
     auto meshName = "MeshOne";
-    auto dataName = "DataOne"; //  meshName
+    auto dataName = "DataOne";
 
     std::vector<double> coords{0.0, 0.0, 1.0, 0.0, 0.0, 1.0};
     vertexIDs.resize(coords.size() / 2);
@@ -53,7 +53,7 @@ void testMappingVolumeOneTriangle(const std::string configFile, const TestContex
 
   } else {
     auto meshName = "MeshTwo";
-    auto dataName = "DataOne"; //  meshName
+    auto dataName = "DataOne";
 
     std::vector<double> coords{1. / 3., 1. / 3.};
     vertexIDs.resize(coords.size() / 2);
@@ -100,7 +100,7 @@ void testMappingVolumeOneTriangleConservative(const std::string configFile, cons
 
   if (context.isNamed("SolverOne")) {
     auto meshName = "MeshOne";
-    auto dataName = "DataOne"; //  meshName
+    auto dataName = "DataOne";
 
     std::vector<double> coords{0.3, 0.2};
     vertexIDs.resize(coords.size() / 2);
@@ -123,7 +123,7 @@ void testMappingVolumeOneTriangleConservative(const std::string configFile, cons
 
   } else {
     auto meshName = "MeshTwo";
-    auto dataName = "DataOne"; //  meshName
+    auto dataName = "DataOne";
 
     std::vector<double> coords{0.0, 0.0, 1.0, 0.0, 0.0, 1.0};
     vertexIDs.resize(coords.size() / 2);
@@ -164,7 +164,7 @@ void testMappingVolumeOneTetra(const std::string configFile, const TestContext &
 
   if (context.isNamed("SolverOne")) {
     auto meshName = "MeshOne";
-    auto dataName = "DataOne"; //  meshName
+    auto dataName = "DataOne";
 
     std::vector<double> coords{0.0, 0.0, 0.0,
                                1.0, 0.0, 0.0,
@@ -210,7 +210,7 @@ void testMappingVolumeOneTetra(const std::string configFile, const TestContext &
 
   } else {
     auto meshName = "MeshTwo";
-    auto dataName = "DataOne"; //  meshName
+    auto dataName = "DataOne";
 
     std::vector<double> coords{0.25, 0.25, 0.25};
     vertexIDs.resize(coords.size() / 2);
@@ -258,7 +258,7 @@ void testMappingVolumeOneTetraConservative(const std::string configFile, const T
 
   if (context.isNamed("SolverOne")) {
     auto meshName = "MeshOne";
-    auto dataName = "DataOne"; //  meshName
+    auto dataName = "DataOne";
 
     std::vector<double> coords{0.1, 0.2, 0.3};
     vertexIDs.resize(coords.size() / 3);
@@ -281,7 +281,7 @@ void testMappingVolumeOneTetraConservative(const std::string configFile, const T
 
   } else {
     auto meshName = "MeshTwo";
-    auto dataName = "DataOne"; //  meshName
+    auto dataName = "DataOne";
 
     std::vector<double> coords{0.0, 0.0, 0.0,
                                1.0, 0.0, 0.0,

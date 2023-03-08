@@ -21,7 +21,7 @@ BOOST_AUTO_TEST_CASE(ParallelTriangleConservative2To1)
 
   if (context.isNamed("SolverOne")) {
     auto meshName = "MeshOne";
-    auto dataName = "DataOne"; //  meshName
+    auto dataName = "DataOne";
 
     std::vector<double> coords;
 
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(ParallelTriangleConservative2To1)
     interface.finalize();
   } else { // SolverTwo
     auto meshName = "MeshTwo";
-    auto dataName = "DataOne"; //  meshName
+    auto dataName = "DataOne";
 
     std::vector<double> coords = {0.0, 0.0, 1.0, 0.0, 0.0, 1.0}; // Lower-left triangle making half the unit square
 

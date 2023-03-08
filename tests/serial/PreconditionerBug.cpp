@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(PreconditionerBug)
       // nothing
     }
     if (context.isNamed("SolverTwo")) {
-      auto dataName = "DataOne"; //  meshName
+      auto dataName = "DataOne";
       // to get convergence in first timestep (everything 0), but not in second timestep
       Vector2d value{0.0, 2.0 + numberOfAdvanceCalls * numberOfAdvanceCalls};
       interface.writeVectorData(meshName, dataName, vertexID, value.data());

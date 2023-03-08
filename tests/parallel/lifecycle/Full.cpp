@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(Full)
     double coords[] = {x1 + dx * context.rank, y, z};
     auto   vertexid = interface.setMeshVertex(meshName, coords);
 
-    auto   dataName = "DataOne"; //  meshName
+    auto   dataName = "DataOne";
     double data[]   = {3.4, 4.5, 5.6};
     interface.writeVectorData(meshName, dataName, vertexid, data);
   } else {
@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(Full)
     double coords[] = {x1 + dx * context.rank, y, z};
     auto   vertexid = interface.setMeshVertex(meshName, coords);
 
-    auto dataName = "DataTwo"; //  meshName
+    auto dataName = "DataTwo";
     interface.writeScalarData(meshName, dataName, vertexid, 7.8);
   }
   interface.initialize();

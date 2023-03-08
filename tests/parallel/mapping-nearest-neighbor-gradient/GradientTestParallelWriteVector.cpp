@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
   if (context.isNamed("SolverOne")) {
     SolverInterface interface(context.name, context.config(), context.rank, context.size);
     auto            meshName = "MeshOne";
-    auto            dataName = "Data2"; //  meshName
+    auto            dataName = "Data2";
 
     std::vector<int> vertexIDs(2);
     if (context.isPrimary()) {
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
       std::vector<double> positions = {4.0, 4.0, 4.0, 0.0, 0.4, 0.0, 0.7, 0.7, 1.7, 0.0, 1.0, 0.0};
       interface.setMeshVertices(meshName, 4, positions.data(), vertexIDs.data());
       interface.initialize();
-      auto                dataName = "Data2"; //  meshName
+      auto                dataName = "Data2";
       std::vector<double> values   = {1.0, 2.0, 3.0,
                                     -1.0, -1.0, -1.0,
                                     4.0, 5.0, 6.0,
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
       std::vector<double> positions = {2.1, 2.1, 3.1};
       interface.setMeshVertices(meshName, 1, positions.data(), vertexIDs.data());
       interface.initialize();
-      auto                dataName = "Data2"; //  meshName
+      auto                dataName = "Data2";
       std::vector<double> values   = {2.0, 3.0, 4.0};
 
       interface.writeBlockVectorData(meshName, dataName, 1, vertexIDs.data(), values.data());

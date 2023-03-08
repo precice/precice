@@ -29,8 +29,8 @@ BOOST_AUTO_TEST_CASE(ExportTimeseries)
   double dt   = interface.initialize();
 
   if (context.isNamed("ExporterOne")) {
-    auto sdataName = "S"; //  meshName
-    auto vdataName = "V"; //  meshName
+    auto sdataName = "S";
+    auto vdataName = "V";
 
     std::vector<double> sdata(6);
     std::vector<double> vdata(6 * 3, 0);

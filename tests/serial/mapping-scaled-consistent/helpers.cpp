@@ -55,7 +55,7 @@ void testQuadMappingScaledConsistent(const std::string configFile, const TestCon
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant should have to advance once!");
 
     // Write the data to be send.
-    auto dataAID = "DataOne"; //  meshOneID
+    auto dataAID = "DataOne";
     interface.writeScalarData(meshOneID, dataAID, idA, valOneA);
     interface.writeScalarData(meshOneID, dataAID, idB, valOneB);
     interface.writeScalarData(meshOneID, dataAID, idC, valOneC);
@@ -83,7 +83,7 @@ void testQuadMappingScaledConsistent(const std::string configFile, const TestCon
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant should have to advance once!");
 
     // Read the mapped data from the mesh.
-    auto   dataAID = "DataOne"; //  meshTwoID
+    auto   dataAID = "DataOne";
     double valueA, valueB, valueC;
     interface.readScalarData(meshTwoID, dataAID, idA, valueA);
     interface.readScalarData(meshTwoID, dataAID, idB, valueB);
@@ -148,7 +148,7 @@ void testQuadMappingScaledConsistentVolumetric(const std::string configFile, con
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant should have to advance once!");
 
     // Write the data to be send.
-    auto dataAID = "DataOne"; //  meshOneID
+    auto dataAID = "DataOne";
     interface.writeScalarData(meshOneID, dataAID, idA, valOneA);
     interface.writeScalarData(meshOneID, dataAID, idB, valOneB);
     interface.writeScalarData(meshOneID, dataAID, idC, valOneC);
@@ -183,7 +183,7 @@ void testQuadMappingScaledConsistentVolumetric(const std::string configFile, con
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant should have to advance once!");
 
     // Read the mapped data from the mesh.
-    auto   dataAID = "DataOne"; //  meshTwoID
+    auto   dataAID = "DataOne";
     double valueA, valueB, valueC, valueD;
     interface.readScalarData(meshTwoID, dataAID, idA, valueA);
     interface.readScalarData(meshTwoID, dataAID, idB, valueB);
@@ -250,7 +250,7 @@ void testTetraScaledConsistentVolumetric(const std::string configFile, const Tes
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant should have to advance once!");
 
     // Write the data to be send.
-    auto dataAID = "DataOne"; //  meshOneID
+    auto dataAID = "DataOne";
     interface.writeScalarData(meshOneID, dataAID, idA, valOneA);
     interface.writeScalarData(meshOneID, dataAID, idB, valOneB);
     interface.writeScalarData(meshOneID, dataAID, idC, valOneC);
@@ -280,7 +280,7 @@ void testTetraScaledConsistentVolumetric(const std::string configFile, const Tes
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant should have to advance once!");
 
     // Read the mapped data from the mesh.
-    auto   dataAID = "DataOne"; //  meshTwoID
+    auto   dataAID = "DataOne";
     double valueA, valueB, valueC, valueD;
     interface.readScalarData(meshTwoID, dataAID, idA, valueA);
     interface.readScalarData(meshTwoID, dataAID, idB, valueB);

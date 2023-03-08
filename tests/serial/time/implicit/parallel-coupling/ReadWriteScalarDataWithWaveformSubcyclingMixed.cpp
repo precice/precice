@@ -38,16 +38,16 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingMixed)
   std::string meshName, writeDataName, readDataName;
   if (context.isNamed("SolverOne")) {
     meshName      = "MeshOne";
-    writeDataName = "DataOne"; //  meshName
+    writeDataName = "DataOne";
     writeFunction = dataOneFunction;
-    readDataName  = "DataTwo"; //  meshName
+    readDataName  = "DataTwo";
     readFunction  = dataTwoFunction;
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
     meshName      = "MeshTwo";
-    writeDataName = "DataTwo"; //  meshName
+    writeDataName = "DataTwo";
     writeFunction = dataTwoFunction;
-    readDataName  = "DataOne"; //  meshName
+    readDataName  = "DataOne";
     readFunction  = dataOneFunction;
   }
 

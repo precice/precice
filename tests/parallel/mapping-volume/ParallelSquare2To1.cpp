@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_CASE(ParallelSquare2To1)
 
   if (context.isNamed("SolverOne")) {
     auto meshName = "MeshOne";
-    auto dataName = "DataOne"; //  meshName
+    auto dataName = "DataOne";
 
     std::vector<double> coords;
 
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(ParallelSquare2To1)
 
   } else {
     auto meshName = "MeshTwo";
-    auto dataName = "DataOne"; //  meshName
+    auto dataName = "DataOne";
 
     std::vector<double> coords;
 

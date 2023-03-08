@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
     double dt = interface.initialize();
 
     // Read the summed data from the mesh.
-    auto   dataAID = "Target"; //  meshName
+    auto   dataAID = "Target";
     double valueA, valueB, valueC, valueD;
 
     while (interface.isCouplingOngoing()) {
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
     // Initialize, the mesh
     double dt = interface.initialize();
 
-    auto   dataAID = "SourceOne"; //  meshName
+    auto   dataAID = "SourceOne";
     double valueA  = 1.0;
     double valueB  = 3.0;
     double valueC  = 5.0;
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
     // Initialize, the mesh
     double dt = interface.initialize();
 
-    auto   dataAID = "SourceTwo"; //  meshName
+    auto   dataAID = "SourceTwo";
     double valueA  = 2.0;
     double valueB  = 4.0;
     double valueC  = 6.0;

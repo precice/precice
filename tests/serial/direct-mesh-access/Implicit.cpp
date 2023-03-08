@@ -28,8 +28,8 @@ BOOST_AUTO_TEST_CASE(Implicit)
 
     auto ownMeshName   = "MeshOne";
     auto otherMeshName = "MeshTwo";
-    auto ownDataName   = "Forces";     //  ownMeshName
-    auto otherDataName = "Velocities"; //  otherMeshName
+    auto ownDataName   = "Forces";
+    auto otherDataName = "Velocities";
 
     // Define the own mesh
     couplingInterface.setMeshVertices(ownMeshName, ownIDs.size(), positions.data(), ownIDs.data());
@@ -83,8 +83,8 @@ BOOST_AUTO_TEST_CASE(Implicit)
     // Query IDs
     auto ownMeshName   = "MeshTwo";
     auto otherMeshName = "MeshOne";
-    auto ownDataName   = "Velocities"; //  ownMeshName
-    auto otherDataName = "Forces";     //  otherMeshName
+    auto ownDataName   = "Velocities";
+    auto otherDataName = "Forces";
 
     // Define the mesh
     couplingInterface.setMeshVertices(ownMeshName, ownIDs.size(), positions.data(), ownIDs.data());

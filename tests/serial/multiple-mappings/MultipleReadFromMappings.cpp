@@ -22,8 +22,8 @@ BOOST_AUTO_TEST_CASE(MultipleReadFromMappings)
     auto meshNameBottom = "MeshABottom";
     int  vertexIDTop    = interface.setMeshVertex(meshNameTop, vertex.data());
     int  vertexIDBottom = interface.setMeshVertex(meshNameBottom, vertex.data());
-    auto dataNameTop    = "Pressure"; //  meshNameTop
-    auto dataNameBottom = "Pressure"; //  meshNameBottom
+    auto dataNameTop    = "Pressure";
+    auto dataNameBottom = "Pressure";
 
     double dt = interface.initialize();
     interface.advance(dt);
@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(MultipleReadFromMappings)
     BOOST_TEST(context.isNamed("B"));
     auto meshName = "MeshB";
     int  vertexID = interface.setMeshVertex(meshName, vertex.data());
-    auto dataName = "Pressure"; //  meshName
+    auto dataName = "Pressure";
 
     double dt       = interface.initialize();
     double pressure = 1.0;

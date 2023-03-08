@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative3To1)
 
   if (context.isNamed("SolverOneCubeConservative3To1")) {
     auto meshName = "MeshOne";
-    auto dataName = "DataOne"; //  meshName
+    auto dataName = "DataOne";
 
     std::vector<double> coords;
     std::vector<double> values;
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative3To1)
     interface.finalize();
   } else { // SolverTwoCubeConservative3To1
     auto meshName = "MeshTwo";
-    auto dataName = "DataOne"; //  meshName
+    auto dataName = "DataOne";
 
     std::vector<double> coords;
 

@@ -15,7 +15,7 @@ void testVectorGradientFunctions(const TestContext &context, const bool writeBlo
   if (context.isNamed("A")) {
 
     auto meshName = "MeshA";
-    auto dataName = "DataA"; //  meshOneID
+    auto dataName = "DataA";
 
     Vector3d posOne = Vector3d::Constant(0.0);
     Vector3d posTwo = Vector3d::Constant(1.0);
@@ -54,7 +54,7 @@ void testVectorGradientFunctions(const TestContext &context, const bool writeBlo
   } else {
     BOOST_TEST(context.isNamed("B"));
     auto meshName = "MeshB";
-    auto dataName = "DataA"; //  meshTwoID
+    auto dataName = "DataA";
 
     Vector3d posOne = Vector3d::Constant(0.1);
     Vector3d posTwo = Vector3d::Constant(1.1);

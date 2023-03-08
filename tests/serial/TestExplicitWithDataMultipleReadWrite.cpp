@@ -29,8 +29,8 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataMultipleReadWrite)
     Eigen::VectorXd readPositions(size * 3);
     vertexIDs[0] = cplInterface.setMeshVertex(meshName, readPositions.data());
 
-    auto   dataAID = "DataOne"; //  meshOneID
-    auto   dataBID = "DataTwo"; //  meshOneID
+    auto   dataAID = "DataOne";
+    auto   dataBID = "DataTwo";
     double maxDt   = cplInterface.initialize();
 
     // multiple readBlockScalarData
@@ -162,8 +162,8 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataMultipleReadWrite)
 
     BOOST_REQUIRE(cplInterface.requiresInitialData());
 
-    auto dataAID = "DataOne"; //  meshTwoID
-    auto dataBID = "DataTwo"; //  meshTwoID
+    auto dataAID = "DataOne";
+    auto dataBID = "DataTwo";
 
     // multiple writeBlockScalarData
     writeDataB[0] = -2.11;

@@ -12,8 +12,8 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
     // Get mesh and data IDs
     precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
     auto                     meshName      = "ParallelMesh";
-    auto                     writeDataName = "MyData1"; //  meshName
-    auto                     readDataName  = "MyData2"; //  meshName
+    auto                     writeDataName = "MyData1";
+    auto                     readDataName  = "MyData2";
     const int                dim           = interface.getDimensions();
     BOOST_TEST(dim == 2);
 
@@ -55,8 +55,8 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
     precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
     // Get IDs
     auto      meshName      = "SerialMesh";
-    auto      writeDataName = "MyData2"; //  meshName
-    auto      readDataName  = "MyData1"; //  meshName
+    auto      writeDataName = "MyData2";
+    auto      readDataName  = "MyData1";
     const int dim           = interface.getDimensions();
     BOOST_TEST(interface.getDimensions() == 2);
 

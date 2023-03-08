@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataScaling)
 
     double dt = cplInterface.initialize();
 
-    auto velocitiesID = "Velocities"; //  meshName
+    auto velocitiesID = "Velocities";
     while (cplInterface.isCouplingOngoing()) {
       for (size_t i = 0; i < testing::WhiteboxAccessor::impl(cplInterface).mesh("Test-Square-One").vertices().size(); ++i) {
         Eigen::Vector2d data = Eigen::Vector2d::Constant(i);
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataScaling)
 
     double dt = cplInterface.initialize();
 
-    auto velocitiesID = "Velocities"; //  meshName
+    auto velocitiesID = "Velocities";
     while (cplInterface.isCouplingOngoing()) {
       const auto size = testing::WhiteboxAccessor::impl(cplInterface).mesh("Test-Square-Two").vertices().size();
       for (size_t i = 0; i < size; ++i) {

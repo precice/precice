@@ -22,8 +22,8 @@ BOOST_AUTO_TEST_CASE(MultipleReadToMappings)
     auto meshNameBottom = "MeshABottom";
     int  vertexIDTop    = interface.setMeshVertex(meshNameTop, vertex.data());
     int  vertexIDBottom = interface.setMeshVertex(meshNameBottom, vertex.data());
-    auto dataNameTop    = "DisplacementTop";    //  meshNameTop
-    auto dataNameBottom = "DisplacementBottom"; //  meshNameBottom
+    auto dataNameTop    = "DisplacementTop";
+    auto dataNameBottom = "DisplacementBottom";
 
     double dt              = interface.initialize();
     double displacementTop = 1.0;
@@ -38,8 +38,8 @@ BOOST_AUTO_TEST_CASE(MultipleReadToMappings)
     BOOST_TEST(context.isNamed("B"));
     auto meshName = "MeshB";
     int  vertexID = interface.setMeshVertex(meshName, vertex.data());
-    auto bottomID = "DisplacementBottom"; //  meshName
-    auto topID    = "DisplacementTop";    //  meshName
+    auto bottomID = "DisplacementBottom";
+    auto topID    = "DisplacementTop";
 
     double dt = interface.initialize();
     interface.advance(dt);

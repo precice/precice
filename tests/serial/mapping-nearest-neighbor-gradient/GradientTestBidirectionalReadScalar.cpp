@@ -48,8 +48,8 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalReadScalar)
     auto     meshName = "MeshOne";
     Vector3d vec1     = Vector3d::Constant(0.1);
     cplInterface.setMeshVertex(meshName, vec1.data());
-    auto dataAID = "DataOne"; //  meshOneID
-    auto dataBID = "DataTwo"; //  meshOneID
+    auto dataAID = "DataOne";
+    auto dataBID = "DataTwo";
 
     double valueDataB = 0.0;
     double maxDt      = cplInterface.initialize();
@@ -76,8 +76,8 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalReadScalar)
     Vector3d vec2     = Vector3d::Constant(0.0);
     cplInterface.setMeshVertex(meshName, vec2.data());
 
-    auto dataAID = "DataOne"; //  meshTwoID
-    auto dataBID = "DataTwo"; //  meshTwoID
+    auto dataAID = "DataOne";
+    auto dataBID = "DataTwo";
     BOOST_REQUIRE(cplInterface.requiresInitialData());
     BOOST_TEST(cplInterface.requiresGradientDataFor(meshName, dataBID) == false);
 

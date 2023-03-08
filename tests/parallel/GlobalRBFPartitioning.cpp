@@ -14,7 +14,7 @@ BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning)
   if (context.isNamed("SolverOne")) {
     precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
     auto                     meshName = "MeshOne";
-    auto                     dataName = "Data2"; //  meshName
+    auto                     dataName = "Data2";
 
     int    vertexIDs[2];
     double xCoord       = context.rank * 0.4;
@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning)
     double                   positions[12] = {0.0, 0.0, 0.2, 0.0, 0.4, 0.0, 0.6, 0.0, 0.8, 0.0, 1.0, 0.0};
     interface.setMeshVertices(meshName, 6, positions, vertexIDs);
     interface.initialize();
-    auto   dataName  = "Data2"; //  meshName
+    auto   dataName  = "Data2";
     double values[6] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
     interface.writeBlockScalarData(meshName, dataName, 6, vertexIDs, values);
     interface.advance(1.0);

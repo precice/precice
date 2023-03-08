@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(ParallelCube3To1)
 
   if (context.isNamed("SolverOne")) {
     auto meshName = "MeshOne";
-    auto dataName = "DataOne"; //  meshName
+    auto dataName = "DataOne";
 
     std::vector<double> coords;
 
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(ParallelCube3To1)
 
   } else {
     auto meshName = "MeshTwo";
-    auto dataName = "DataOne"; //  meshName
+    auto dataName = "DataOne";
 
     // For completion, we sample points in each direction.
     std::vector<double> coords;

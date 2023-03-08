@@ -27,8 +27,8 @@ BOOST_AUTO_TEST_CASE(ExplicitAndMapping)
   if (context.isNamed("SolverOne")) {
     auto ownMeshName   = "MeshOne";
     auto otherMeshName = "MeshTwo";
-    auto readDataName  = "Forces";     //  ownMeshName
-    auto writeDataName = "Velocities"; //  otherMeshName
+    auto readDataName  = "Forces";
+    auto writeDataName = "Velocities";
 
     std::vector<double> positions = {0.2, 0.2, 0.1, 0.6, 0.1, 0.0, 0.1, 0.0};
     std::vector<int>    ownIDs(4, -1);
@@ -73,8 +73,8 @@ BOOST_AUTO_TEST_CASE(ExplicitAndMapping)
 
     // Query IDs
     auto meshName      = "MeshTwo";
-    auto writeDataName = "Forces";     //  meshName
-    auto readDataName  = "Velocities"; //  meshName
+    auto writeDataName = "Forces";
+    auto readDataName  = "Velocities";
 
     // Define the mesh
     interface.setMeshVertices(meshName, ids.size(), positions.data(), ids.data());

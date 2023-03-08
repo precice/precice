@@ -49,8 +49,8 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteVector)
     auto     meshName = "MeshOne";
     Vector3d posOne   = Vector3d::Constant(0.0);
     cplInterface.setMeshVertex(meshName, posOne.data());
-    auto dataAID = "DataOne"; //  meshName
-    auto dataBID = "DataTwo"; //  meshName
+    auto dataAID = "DataOne";
+    auto dataBID = "DataTwo";
     BOOST_TEST(cplInterface.requiresGradientDataFor(meshName, dataAID) == false);
     BOOST_TEST(cplInterface.requiresGradientDataFor(meshName, dataBID) == false);
     BOOST_REQUIRE(cplInterface.requiresInitialData());
@@ -83,8 +83,8 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteVector)
     Vector3d pos      = Vector3d::Constant(1.0);
     cplInterface.setMeshVertex(meshName, pos.data());
 
-    auto dataAID = "DataOne"; //  meshName
-    auto dataBID = "DataTwo"; //  meshName
+    auto dataAID = "DataOne";
+    auto dataBID = "DataTwo";
     BOOST_TEST(cplInterface.requiresGradientDataFor(meshName, dataAID) == false);
     BOOST_TEST(cplInterface.requiresGradientDataFor(meshName, dataBID) == true);
     BOOST_REQUIRE(cplInterface.requiresInitialData());

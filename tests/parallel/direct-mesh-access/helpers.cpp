@@ -18,7 +18,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
     // Defines the bounding box and writes data to the received mesh
     precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
     auto                     otherMeshName = "MeshTwo";
-    auto                     dataName      = "Velocities"; //  otherMeshName
+    auto                     dataName      = "Velocities";
     const int                dim           = interface.getDimensions();
 
     std::vector<double> boundingBox = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 3.5}) : boundingBoxSecondaryRank;
@@ -75,7 +75,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
 
     // Get IDs
     auto      meshName = "MeshTwo";
-    auto      dataName = "Velocities"; //  meshName
+    auto      dataName = "Velocities";
     const int dim      = interface.getDimensions();
     // Define the interface
     std::vector<double> positions = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 2.0}) : std::vector<double>({0.0, 3.0, 0.0, 4.0, 0.0, 5.0});

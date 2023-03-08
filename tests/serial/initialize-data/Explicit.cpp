@@ -28,8 +28,8 @@ BOOST_AUTO_TEST_CASE(Explicit)
   if (context.isNamed("SolverOne")) {
     auto meshName = "MeshOne";
     cplInterface.setMeshVertex(meshName, Vector3d(1.0, 2.0, 3.0).data());
-    auto   dataAID    = "DataOne"; //  meshOneID
-    auto   dataBID    = "DataTwo"; //  meshOneID
+    auto   dataAID    = "DataOne";
+    auto   dataBID    = "DataTwo";
     double valueDataB = 0.0;
     double maxDt      = cplInterface.initialize();
     cplInterface.readScalarData(meshName, dataBID, 0, valueDataB);
@@ -49,8 +49,8 @@ BOOST_AUTO_TEST_CASE(Explicit)
     cplInterface.setMeshVertex(meshName, pos.data());
 
     BOOST_REQUIRE(cplInterface.requiresInitialData());
-    auto dataAID = "DataOne"; //  meshTwoID
-    auto dataBID = "DataTwo"; //  meshTwoID
+    auto dataAID = "DataOne";
+    auto dataBID = "DataTwo";
     cplInterface.writeScalarData(meshName, dataBID, 0, 2.0);
     //tell preCICE that data has been written and call initializeData
     double   maxDt = cplInterface.initialize();

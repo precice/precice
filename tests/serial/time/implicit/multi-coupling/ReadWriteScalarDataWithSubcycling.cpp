@@ -40,26 +40,26 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
   std::string meshName, writeDataName;
   if (context.isNamed("SolverOne")) {
     meshName       = "MeshOne";
-    writeDataName  = "DataOne"; //  meshName
+    writeDataName  = "DataOne";
     writeFunction  = dataOneFunction;
-    auto dataTwoId = "DataTwo"; //  meshName
+    auto dataTwoId = "DataTwo";
     readDataPairs.push_back(std::make_pair(dataTwoId, dataTwoFunction));
-    auto dataThreeId = "DataThree"; //  meshName
+    auto dataThreeId = "DataThree";
     readDataPairs.push_back(std::make_pair(dataThreeId, dataThreeFunction));
     nSubsteps = 1;
   } else if (context.isNamed("SolverTwo")) {
     meshName       = "MeshTwo";
-    writeDataName  = "DataTwo"; //  meshName
+    writeDataName  = "DataTwo";
     writeFunction  = dataTwoFunction;
-    auto dataOneId = "DataOne"; //  meshName
+    auto dataOneId = "DataOne";
     readDataPairs.push_back(std::make_pair(dataOneId, dataOneFunction));
     nSubsteps = 2;
   } else {
     BOOST_TEST(context.isNamed("SolverThree"));
     meshName       = "MeshThree";
-    writeDataName  = "DataThree"; //  meshName
+    writeDataName  = "DataThree";
     writeFunction  = dataThreeFunction;
-    auto dataOneId = "DataOne"; //  meshName
+    auto dataOneId = "DataOne";
     readDataPairs.push_back(std::make_pair(dataOneId, dataOneFunction));
     nSubsteps = 3;
   }

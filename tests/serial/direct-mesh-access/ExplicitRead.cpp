@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(ExplicitRead)
 
   if (context.isNamed("SolverOne")) {
     auto otherMeshName = "MeshTwo";
-    auto dataName      = "Velocities"; //  otherMeshName
+    auto dataName      = "Velocities";
 
     // Define region of interest, where we could obtain direct write access
     couplingInterface.setMeshAccessRegion(otherMeshName, boundingBox.data());
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(ExplicitRead)
     BOOST_TEST(context.isNamed("SolverTwo"));
     // Query IDs
     auto meshName = "MeshTwo";
-    auto dataName = "Velocities"; //  meshName
+    auto dataName = "Velocities";
 
     // Define the mesh
     couplingInterface.setMeshVertices(meshName, ids.size(), positions.data(), ids.data());

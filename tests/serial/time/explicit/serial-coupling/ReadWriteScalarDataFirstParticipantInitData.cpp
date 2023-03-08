@@ -35,13 +35,13 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantInitData)
   std::string meshName, writeDataName, readDataName;
   if (context.isNamed("SolverOne")) {
     meshName      = "MeshOne";
-    writeDataName = "DataOne"; //  meshName
-    readDataName  = "DataTwo"; //  meshName
+    writeDataName = "DataOne";
+    readDataName  = "DataTwo";
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
     meshName      = "MeshTwo";
-    writeDataName = "DataTwo"; //  meshName
-    readDataName  = "DataOne"; //  meshName
+    writeDataName = "DataTwo";
+    readDataName  = "DataOne";
   }
 
   VertexID vertexID = precice.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());

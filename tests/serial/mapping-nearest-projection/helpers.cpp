@@ -70,7 +70,7 @@ void testMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFuncti
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant should have to advance once!");
 
     // Write the data to be send.
-    auto dataAID = "DataOne"; //  meshName
+    auto dataAID = "DataOne";
     BOOST_TEST(!interface.requiresGradientDataFor(meshName, dataAID));
 
     interface.writeScalarData(meshName, dataAID, idA, valOneA);
@@ -98,7 +98,7 @@ void testMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFuncti
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant should have to advance once!");
 
     // Read the mapped data from the mesh.
-    auto dataAID = "DataOne"; //  meshName
+    auto dataAID = "DataOne";
     BOOST_TEST(!interface.requiresGradientDataFor(meshName, dataAID));
 
     double valueA, valueB, valueC;
@@ -190,7 +190,7 @@ void testQuadMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFu
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant should have to advance once!");
 
     // Write the data to be send.
-    auto dataAID = "DataOne"; //  meshName
+    auto dataAID = "DataOne";
     interface.writeScalarData(meshName, dataAID, idA, valOneA);
     interface.writeScalarData(meshName, dataAID, idB, valOneB);
     interface.writeScalarData(meshName, dataAID, idC, valOneC);
@@ -216,7 +216,7 @@ void testQuadMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFu
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant should have to advance once!");
 
     // Read the mapped data from the mesh.
-    auto   dataAID = "DataOne"; //  meshName
+    auto   dataAID = "DataOne";
     double valueA, valueB, valueC;
     interface.readScalarData(meshName, dataAID, idA, valueA);
     interface.readScalarData(meshName, dataAID, idB, valueB);
