@@ -18,10 +18,10 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithDataInitialization)
     precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
     BOOST_TEST(interface.getDimensions() == 2);
     constexpr int dim         = 2;
-    const int     ownMeshID   = interface.getMeshID("MeshOne");
-    const int     otherMeshID = interface.getMeshID("MeshTwo");
-    const int     readDataID  = interface.getDataID("Forces", ownMeshID);
-    const int     writeDataID = interface.getDataID("Velocities", otherMeshID);
+    const auto    ownMeshID   = "MeshOne";
+    const auto    otherMeshID = "MeshTwo";
+    const auto    readDataID  = "Forces";
+    const auto    writeDataID = "Velocities";
 
     std::vector<double> ownPositions = std::vector<double>({0.5, 0.25});
     std::vector<int>    ownIDs(ownPositions.size() / dim, -1);
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithDataInitialization)
         // do nothing
       }
 
-      interface.readBlockScalarData(readDataID, ownIDs.size(), ownIDs.data(), readData.data());
+      interface.readBlockScalarData(ownMeshID, readDataID, ownIDs.size(), ownIDs.data(), readData.data());
 
       std::vector<double> expectedData = std::vector<double>({-1});
 
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithDataInitialization)
       }
 
       BOOST_TEST(precice::testing::equals(expectedData, readData));
-      interface.writeBlockScalarData(writeDataID, otherIDs.size(), otherIDs.data(), writeData.data());
+      interface.writeBlockScalarData(otherMeshID, writeDataID, otherIDs.size(), otherIDs.data(), writeData.data());
       dt = interface.advance(dt);
       iterations++;
       if (interface.requiresReadingCheckpoint()) {
@@ -98,14 +98,14 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithDataInitialization)
     BOOST_TEST(context.isNamed("SolverTwo"));
     precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
     BOOST_TEST(interface.getDimensions() == 2);
-    constexpr int dim         = 2;
-    const int     meshID      = interface.getMeshID("MeshTwo");
-    const int     writeDataID = interface.getDataID("Forces", meshID);
-    const int     readDataID  = interface.getDataID("Velocities", meshID);
+    constexpr int dim           = 2;
+    const auto    meshName      = "MeshTwo";
+    const auto    writeDataName = "Forces";
+    const auto    readDataName  = "Velocities";
 
     std::vector<double> positions = std::vector<double>({0.5, 0.25});
     std::vector<int>    ids(positions.size() / dim, -1);
-    interface.setMeshVertices(meshID, ids.size(), positions.data(), ids.data());
+    interface.setMeshVertices(meshName, ids.size(), positions.data(), ids.data());
 
     std::vector<double> readData(ids.size(), -1);
     std::vector<double> writeData;
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithDataInitialization)
     }
 
     if (interface.requiresInitialData()) {
-      interface.writeBlockScalarData(writeDataID, ids.size(), ids.data(), writeData.data());
+      interface.writeBlockScalarData(meshName, writeDataName, ids.size(), ids.data(), writeData.data());
     }
 
     double dt = interface.initialize();
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithDataInitialization)
         // do nothing
       }
 
-      interface.readBlockScalarData(readDataID, ids.size(), ids.data(), readData.data());
+      interface.readBlockScalarData(meshName, readDataName, ids.size(), ids.data(), readData.data());
 
       std::vector<double> expectedData = std::vector<double>({-1});
 
@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithDataInitialization)
       }
 
       BOOST_TEST(precice::testing::equals(expectedData, readData));
-      interface.writeBlockScalarData(writeDataID, ids.size(), ids.data(), writeData.data());
+      interface.writeBlockScalarData(meshName, writeDataName, ids.size(), ids.data(), writeData.data());
       dt = interface.advance(dt);
       iterations++;
       if (interface.requiresReadingCheckpoint()) {

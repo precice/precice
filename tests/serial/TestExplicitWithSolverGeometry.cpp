@@ -27,9 +27,9 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithSolverGeometry)
   BOOST_TEST(couplingInterface.getDimensions() == 3);
   if (context.isNamed("SolverOne")) {
     //was necessary to replace pre-defined geometries
-    precice::MeshID meshID = couplingInterface.getMeshID("MeshOne");
-    couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
-    couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
+    auto meshName = "MeshOne";
+    couplingInterface.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+    couplingInterface.setMeshVertex(meshName, Eigen::Vector3d(1.0, 0.0, 0.0).data());
 
     double dt = couplingInterface.initialize();
     while (couplingInterface.isCouplingOngoing()) {
@@ -40,14 +40,14 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithSolverGeometry)
     couplingInterface.finalize();
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    precice::MeshID meshID = couplingInterface.getMeshID("SolverGeometry");
-    int             i0     = couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
-    int             i1     = couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
-    int             i2     = couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 1.0, 0.0).data());
-    couplingInterface.setMeshTriangle(meshID, i0, i1, i2);
+    auto meshName = "SolverGeometry";
+    int  i0       = couplingInterface.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+    int  i1       = couplingInterface.setMeshVertex(meshName, Eigen::Vector3d(1.0, 0.0, 0.0).data());
+    int  i2       = couplingInterface.setMeshVertex(meshName, Eigen::Vector3d(0.0, 1.0, 0.0).data());
+    couplingInterface.setMeshTriangle(meshName, i0, i1, i2);
     double dt = couplingInterface.initialize();
 
-    int size = couplingInterface.getMeshVertexSize(meshID);
+    int size = couplingInterface.getMeshVertexSize(meshName);
     BOOST_TEST(size == 3);
 
     while (couplingInterface.isCouplingOngoing()) {

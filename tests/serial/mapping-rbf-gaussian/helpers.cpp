@@ -43,7 +43,7 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
   if (context.isNamed("SolverOne")) {
     precice::SolverInterface interface("SolverOne", configFile, 0, 1);
     // namespace is required because we are outside the fixture
-    const int meshOneID = interface.getMeshID("MeshOne");
+    auto meshOneID = "MeshOne";
 
     // Setup mesh one.
     std::vector<int> ids;
@@ -64,10 +64,10 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
     double maxDt = interface.initialize();
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant should have to advance once!");
     // Write the data to be send.
-    int dataAID = interface.getDataID("DataOne", meshOneID);
-    BOOST_TEST(!interface.requiresGradientDataFor(dataAID));
+    auto dataAID = "DataOne";
+    BOOST_TEST(!interface.requiresGradientDataFor(meshOneID, dataAID));
 
-    interface.writeBlockScalarData(dataAID, nCoords, ids.data(), values.data());
+    interface.writeBlockScalarData(meshOneID, dataAID, nCoords, ids.data(), values.data());
 
     // Advance, thus send the data to the receiving partner.
     interface.advance(maxDt);
@@ -77,7 +77,7 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
     BOOST_TEST(context.isNamed("SolverTwo"));
     precice::SolverInterface interface("SolverTwo", configFile, 0, 1);
     // namespace is required because we are outside the fixture
-    int meshTwoID = interface.getMeshID("MeshTwo");
+    auto meshTwoID = "MeshTwo";
 
     // Setup receiving mesh.
     int idA = interface.setMeshVertex(meshTwoID, coordTwoA.data());
@@ -89,13 +89,13 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant should have to advance once!");
 
     // Read the mapped data from the mesh.
-    int dataAID = interface.getDataID("DataOne", meshTwoID);
-    BOOST_TEST(!interface.requiresGradientDataFor(dataAID));
+    auto dataAID = "DataOne";
+    BOOST_TEST(!interface.requiresGradientDataFor(meshTwoID, dataAID));
 
     double valueA, valueB, valueC;
-    interface.readScalarData(dataAID, idA, valueA);
-    interface.readScalarData(dataAID, idB, valueB);
-    interface.readScalarData(dataAID, idC, valueC);
+    interface.readScalarData(meshTwoID, dataAID, idA, valueA);
+    interface.readScalarData(meshTwoID, dataAID, idB, valueB);
+    interface.readScalarData(meshTwoID, dataAID, idC, valueC);
 
     // Due to Eigen 3.3.7 (Ubunu 2004) giving slightly different results
     BOOST_TEST(valueA == expectedValTwoA, boost::test_tools::tolerance(1e-8));

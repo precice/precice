@@ -19,8 +19,8 @@ void runTestThreeSolvers(std::string const &config, std::vector<int> expectedCal
   if (context.isNamed("SolverOne")) {
     precice::SolverInterface precice(context.name, config, 0, 1);
 
-    int meshAID = precice.getMeshID("MeshA");
-    int meshBID = precice.getMeshID("MeshB");
+    auto meshAID = "MeshA";
+    auto meshBID = "MeshB";
     precice.setMeshVertex(meshAID, Eigen::Vector2d(0, 0).data());
     precice.setMeshVertex(meshBID, Eigen::Vector2d(1, 1).data());
 
@@ -41,8 +41,8 @@ void runTestThreeSolvers(std::string const &config, std::vector<int> expectedCal
   } else if (context.isNamed("SolverTwo")) {
     SolverInterface precice(context.name, config, 0, 1);
 
-    MeshID meshID = precice.getMeshID("MeshC");
-    precice.setMeshVertex(meshID, Eigen::Vector2d(0, 0).data());
+    auto meshName = "MeshC";
+    precice.setMeshVertex(meshName, Eigen::Vector2d(0, 0).data());
 
     if (precice.requiresInitialData()) {
     }
@@ -62,8 +62,8 @@ void runTestThreeSolvers(std::string const &config, std::vector<int> expectedCal
     BOOST_TEST(context.isNamed("SolverThree"));
     SolverInterface precice(context.name, config, 0, 1);
 
-    MeshID meshID = precice.getMeshID("MeshD");
-    precice.setMeshVertex(meshID, Eigen::Vector2d(0, 0).data());
+    auto meshName = "MeshD";
+    precice.setMeshVertex(meshName, Eigen::Vector2d(0, 0).data());
 
     if (precice.requiresInitialData()) {
     }

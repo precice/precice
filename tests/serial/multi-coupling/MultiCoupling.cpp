@@ -39,38 +39,35 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
   if (context.isNamed("SOLIDZ1") ||
       context.isNamed("SOLIDZ2") ||
       context.isNamed("SOLIDZ3")) {
-    MeshID meshID      = -1;
-    int    dataWriteID = -1;
-    int    dataReadID  = -1;
-
     precice::SolverInterface precice(context.name, context.config(), 0, 1);
     BOOST_TEST(precice.getDimensions() == 2);
 
+    std::string meshName, dataWriteID, dataReadID;
     if (context.isNamed("SOLIDZ1")) {
-      meshID      = precice.getMeshID("SOLIDZ_Mesh1");
-      dataWriteID = precice.getDataID("Displacements1", meshID);
-      dataReadID  = precice.getDataID("Forces1", meshID);
+      meshName    = "SOLIDZ_Mesh1";
+      dataWriteID = "Displacements1";
+      dataReadID  = "Forces1";
     } else if (context.isNamed("SOLIDZ2")) {
-      meshID      = precice.getMeshID("SOLIDZ_Mesh2");
-      dataWriteID = precice.getDataID("Displacements2", meshID);
-      dataReadID  = precice.getDataID("Forces2", meshID);
+      meshName    = "SOLIDZ_Mesh2";
+      dataWriteID = "Displacements2";
+      dataReadID  = "Forces2";
     } else if (context.isNamed("SOLIDZ3")) {
-      meshID      = precice.getMeshID("SOLIDZ_Mesh3");
-      dataWriteID = precice.getDataID("Displacements3", meshID);
-      dataReadID  = precice.getDataID("Forces3", meshID);
+      meshName    = "SOLIDZ_Mesh3";
+      dataWriteID = "Displacements3";
+      dataReadID  = "Forces3";
     }
 
     std::vector<int> vertexIDs;
     int              vertexID = -1;
     for (size_t i = 0; i < 4; i++) {
-      vertexID = precice.setMeshVertex(meshID, positions.at(i).data());
+      vertexID = precice.setMeshVertex(meshName, positions.at(i).data());
       vertexIDs.push_back(vertexID);
     }
 
     precice.initialize();
 
     for (size_t i = 0; i < 4; i++) {
-      precice.writeVectorData(dataWriteID, vertexIDs.at(i), datas.at(i).data());
+      precice.writeVectorData(meshName, dataWriteID, vertexIDs.at(i), datas.at(i).data());
     }
 
     if (precice.requiresWritingCheckpoint()) {
@@ -80,7 +77,7 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
     }
 
     for (size_t i = 0; i < 4; i++) {
-      precice.readVectorData(dataReadID, vertexIDs.at(i), datas.at(i).data());
+      precice.readVectorData(meshName, dataReadID, vertexIDs.at(i), datas.at(i).data());
     }
 
     BOOST_TEST(datas.at(0)(0) == 1.00000000000000002082e-03);
@@ -98,36 +95,36 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
     BOOST_TEST(context.isNamed("NASTIN"));
     precice::SolverInterface precice("NASTIN", context.config(), 0, 1);
     BOOST_TEST(precice.getDimensions() == 2);
-    MeshID meshID1      = precice.getMeshID("NASTIN_Mesh1");
-    MeshID meshID2      = precice.getMeshID("NASTIN_Mesh2");
-    MeshID meshID3      = precice.getMeshID("NASTIN_Mesh3");
-    int    dataWriteID1 = precice.getDataID("Forces1", meshID1);
-    int    dataWriteID2 = precice.getDataID("Forces2", meshID2);
-    int    dataWriteID3 = precice.getDataID("Forces3", meshID3);
+    auto meshName1    = "NASTIN_Mesh1";
+    auto meshName2    = "NASTIN_Mesh2";
+    auto meshName3    = "NASTIN_Mesh3";
+    auto dataWriteID1 = "Forces1";
+    auto dataWriteID2 = "Forces2";
+    auto dataWriteID3 = "Forces3";
 
     std::vector<int> vertexIDs1;
     int              vertexID = -1;
     for (size_t i = 0; i < 4; i++) {
-      vertexID = precice.setMeshVertex(meshID1, positions.at(i).data());
+      vertexID = precice.setMeshVertex(meshName1, positions.at(i).data());
       vertexIDs1.push_back(vertexID);
     }
     std::vector<int> vertexIDs2;
     for (size_t i = 0; i < 4; i++) {
-      vertexID = precice.setMeshVertex(meshID2, positions.at(i).data());
+      vertexID = precice.setMeshVertex(meshName2, positions.at(i).data());
       vertexIDs2.push_back(vertexID);
     }
     std::vector<int> vertexIDs3;
     for (size_t i = 0; i < 4; i++) {
-      vertexID = precice.setMeshVertex(meshID3, positions.at(i).data());
+      vertexID = precice.setMeshVertex(meshName3, positions.at(i).data());
       vertexIDs3.push_back(vertexID);
     }
 
     precice.initialize();
 
     for (size_t i = 0; i < 4; i++) {
-      precice.writeVectorData(dataWriteID1, vertexIDs1.at(i), datas.at(i).data());
-      precice.writeVectorData(dataWriteID2, vertexIDs2.at(i), datas.at(i).data());
-      precice.writeVectorData(dataWriteID3, vertexIDs3.at(i), datas.at(i).data());
+      precice.writeVectorData(meshName1, dataWriteID1, vertexIDs1.at(i), datas.at(i).data());
+      precice.writeVectorData(meshName2, dataWriteID2, vertexIDs2.at(i), datas.at(i).data());
+      precice.writeVectorData(meshName3, dataWriteID3, vertexIDs3.at(i), datas.at(i).data());
     }
 
     if (precice.requiresWritingCheckpoint()) {

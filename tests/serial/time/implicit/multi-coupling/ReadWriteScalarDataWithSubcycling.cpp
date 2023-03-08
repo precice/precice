@@ -21,11 +21,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
 
   SolverInterface precice(context.name, context.config(), 0, 1);
 
-  MeshID meshID;
-  DataID writeDataID;
-
   typedef double (*DataFunction)(double);
-  std::vector<std::pair<DataID, DataFunction>> readDataPairs;
+  std::vector<std::pair<std::string, DataFunction>> readDataPairs;
 
   DataFunction dataOneFunction = [](double t) -> double {
     return (double) (2 + t);
@@ -40,35 +37,36 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
 
   int nSubsteps; // let three solvers use different time step sizes
 
+  std::string meshName, writeDataName;
   if (context.isNamed("SolverOne")) {
-    meshID         = precice.getMeshID("MeshOne");
-    writeDataID    = precice.getDataID("DataOne", meshID);
+    meshName       = "MeshOne";
+    writeDataName  = "DataOne";
     writeFunction  = dataOneFunction;
-    auto dataTwoId = precice.getDataID("DataTwo", meshID);
+    auto dataTwoId = "DataTwo";
     readDataPairs.push_back(std::make_pair(dataTwoId, dataTwoFunction));
-    auto dataThreeId = precice.getDataID("DataThree", meshID);
+    auto dataThreeId = "DataThree";
     readDataPairs.push_back(std::make_pair(dataThreeId, dataThreeFunction));
     nSubsteps = 1;
   } else if (context.isNamed("SolverTwo")) {
-    meshID         = precice.getMeshID("MeshTwo");
-    writeDataID    = precice.getDataID("DataTwo", meshID);
+    meshName       = "MeshTwo";
+    writeDataName  = "DataTwo";
     writeFunction  = dataTwoFunction;
-    auto dataOneId = precice.getDataID("DataOne", meshID);
+    auto dataOneId = "DataOne";
     readDataPairs.push_back(std::make_pair(dataOneId, dataOneFunction));
     nSubsteps = 2;
   } else {
     BOOST_TEST(context.isNamed("SolverThree"));
-    meshID         = precice.getMeshID("MeshThree");
-    writeDataID    = precice.getDataID("DataThree", meshID);
+    meshName       = "MeshThree";
+    writeDataName  = "DataThree";
     writeFunction  = dataThreeFunction;
-    auto dataOneId = precice.getDataID("DataOne", meshID);
+    auto dataOneId = "DataOne";
     readDataPairs.push_back(std::make_pair(dataOneId, dataOneFunction));
     nSubsteps = 3;
   }
 
   double   writeData = 0;
   double   readData  = 0;
-  VertexID vertexID  = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+  VertexID vertexID  = precice.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());
 
   int    nWindows        = 5; // perform 5 windows.
   int    timestep        = 0;
@@ -81,7 +79,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
 
   if (precice.requiresInitialData()) {
     writeData = writeFunction(time);
-    precice.writeScalarData(writeDataID, vertexID, writeData);
+    precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
   }
 
   double maxDt     = precice.initialize();
@@ -96,10 +94,10 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     }
 
     for (auto &readDataPair : readDataPairs) {
-      auto readDataID   = readDataPair.first;
+      auto readDataName = readDataPair.first;
       auto readFunction = readDataPair.second;
 
-      precice.readScalarData(readDataID, vertexID, readData);
+      precice.readScalarData(meshName, readDataName, vertexID, readData);
       if (iterations == 0 && timestep == 0) {                        // special situation: Both solvers are in their very first time windows, first iteration, first time step
         BOOST_TEST(readData == readFunction(0));                     // use initial data only.
       } else if (iterations == 0) {                                  // special situation: Both solvers get the old data for all time windows.
@@ -114,7 +112,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.
     time += currentDt;
     writeData = writeFunction(time);
-    precice.writeScalarData(writeDataID, vertexID, writeData);
+    precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
     maxDt     = precice.advance(currentDt);
     currentDt = dt > maxDt ? maxDt : dt;
     BOOST_CHECK(currentDt == windowDt / nSubsteps); // no subcycling.

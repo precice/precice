@@ -170,12 +170,21 @@ const PtrData &Mesh::data(DataID dataID) const
   return *iter;
 }
 
-bool Mesh::hasDataName(const std::string &dataName) const
+bool Mesh::hasDataName(std::string_view dataName) const
 {
   auto iter = std::find_if(_data.begin(), _data.end(), [&dataName](const auto &dptr) {
     return dptr->getName() == dataName;
   });
   return iter != _data.end(); // if name was not found in mesh, iter == _data.end()
+}
+
+std::vector<std::string> Mesh::availableData() const
+{
+  std::vector<std::string> names;
+  for (const auto &data : _data) {
+    names.push_back(data->getName());
+  }
+  return names;
 }
 
 const PtrData &Mesh::data(const std::string &dataName) const

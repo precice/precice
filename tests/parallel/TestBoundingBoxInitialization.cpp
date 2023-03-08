@@ -62,12 +62,12 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitialization)
 
   precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
 
-  precice::MeshID meshID   = interface.getMeshID(context.name + "Mesh");
-  int             forcesID = interface.getDataID("Forces", meshID);
+  auto meshName = context.name + "Mesh";
+  auto forcesID = "Forces";
 
   std::vector<int> vertexIDs;
   for (int i = i1; i < i2; i++) {
-    precice::VertexID vertexID = interface.setMeshVertex(meshID, positions[i].data());
+    precice::VertexID vertexID = interface.setMeshVertex(meshName, positions[i].data());
     vertexIDs.push_back(vertexID);
   }
 
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitialization)
 
   if (context.isNamed("Fluid")) {
     for (size_t i = 0; i < vertexIDs.size(); i++) {
-      interface.writeVectorData(forcesID, vertexIDs[i], data[i + i1].data());
+      interface.writeVectorData(meshName, forcesID, vertexIDs[i], data[i + i1].data());
     }
   }
 
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitialization)
 
   if (context.isNamed("Structure")) {
     for (size_t i = 0; i < vertexIDs.size(); i++) {
-      interface.readVectorData(forcesID, vertexIDs[i], data[i + i1].data());
+      interface.readVectorData(meshName, forcesID, vertexIDs[i], data[i + i1].data());
       for (size_t d = 0; d < 3; d++) {
         BOOST_TEST(expectedData[i + i1][d] == data[i + i1][d]);
       }

@@ -18,15 +18,15 @@ BOOST_AUTO_TEST_CASE(DirectAccessReadWrite)
     // Set up Solverinterface
     precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
     BOOST_TEST(interface.getDimensions() == 2);
-    constexpr int dim            = 2;
-    const int     providedMeshID = interface.getMeshID("MeshOne");
-    const int     readDataID     = interface.getDataID("Forces", providedMeshID);
-    const int     writeDataID    = interface.getDataID("Velocities", providedMeshID);
+    constexpr int dim              = 2;
+    const auto    providedMeshName = "MeshOne";
+    const auto    readDataName     = "Forces";
+    const auto    writeDataName    = "Velocities";
 
     std::vector<double> positions = std::vector<double>({0.5, 0.25});
     const int           meshSize  = positions.size() / dim;
     std::vector<int>    ids(meshSize, -1);
-    interface.setMeshVertices(providedMeshID, ids.size(), positions.data(), ids.data());
+    interface.setMeshVertices(providedMeshName, ids.size(), positions.data(), ids.data());
 
     double dt = interface.initialize();
 
@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessReadWrite)
         // do nothing
       }
 
-      interface.readBlockScalarData(readDataID, ids.size(), ids.data(), readData.data());
+      interface.readBlockScalarData(providedMeshName, readDataName, ids.size(), ids.data(), readData.data());
 
       std::vector<double> expectedData = std::vector<double>({50});
       if (iterations == 0) {
@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessReadWrite)
       }
 
       BOOST_TEST(precice::testing::equals(expectedData, readData));
-      interface.writeBlockScalarData(writeDataID, ids.size(), ids.data(), writeData.data());
+      interface.writeBlockScalarData(providedMeshName, writeDataName, ids.size(), ids.data(), writeData.data());
       dt = interface.advance(dt);
       iterations++;
       if (interface.requiresReadingCheckpoint()) {
@@ -62,25 +62,25 @@ BOOST_AUTO_TEST_CASE(DirectAccessReadWrite)
     BOOST_TEST(context.isNamed("SolverTwo"));
     precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
     BOOST_TEST(interface.getDimensions() == 2);
-    constexpr int dim            = 2;
-    const int     receivedMeshID = interface.getMeshID("MeshOne");
-    const int     writeDataID    = interface.getDataID("Forces", receivedMeshID);
-    const int     readDataID     = interface.getDataID("Velocities", receivedMeshID);
+    constexpr int dim              = 2;
+    const auto    receivedMeshName = "MeshOne";
+    const auto    writeDataName    = "Forces";
+    const auto    readDataName     = "Velocities";
 
     std::array<double, dim * 2> boundingBox = std::array<double, dim * 2>{0.0, 1.0, 0.0, 1.0};
     // Define region of interest, where we could obtain direct write access
-    interface.setMeshAccessRegion(receivedMeshID, boundingBox.data());
+    interface.setMeshAccessRegion(receivedMeshName, boundingBox.data());
 
     double dt = interface.initialize();
     // Get the size of the filtered mesh within the bounding box
     // (provided by the coupling participant)
-    const int receivedMeshSize = interface.getMeshVertexSize(receivedMeshID);
+    const int receivedMeshSize = interface.getMeshVertexSize(receivedMeshName);
     BOOST_TEST(receivedMeshSize == 1);
 
     // Allocate a vector containing the vertices
     std::vector<double> receivedMesh(receivedMeshSize * dim);
     std::vector<int>    receiveMeshIDs(receivedMeshSize, -1);
-    interface.getMeshVerticesAndIDs(receivedMeshID, receivedMeshSize, receiveMeshIDs.data(), receivedMesh.data());
+    interface.getMeshVerticesAndIDs(receivedMeshName, receivedMeshSize, receiveMeshIDs.data(), receivedMesh.data());
 
     // Allocate data to read and write
     std::vector<double> readData(receiveMeshIDs.size(), -1);
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessReadWrite)
         // do nothing
       }
 
-      interface.readBlockScalarData(readDataID, receiveMeshIDs.size(), receiveMeshIDs.data(), readData.data());
+      interface.readBlockScalarData(receivedMeshName, readDataName, receiveMeshIDs.size(), receiveMeshIDs.data(), readData.data());
 
       std::vector<double> expectedData = std::vector<double>({5});
       if (iterations == 0) {
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessReadWrite)
       }
 
       BOOST_TEST(precice::testing::equals(expectedData, readData));
-      interface.writeBlockScalarData(writeDataID, receiveMeshIDs.size(), receiveMeshIDs.data(), writeData.data());
+      interface.writeBlockScalarData(receivedMeshName, writeDataName, receiveMeshIDs.size(), receiveMeshIDs.data(), writeData.data());
       dt = interface.advance(dt);
       iterations++;
       if (interface.requiresReadingCheckpoint()) {

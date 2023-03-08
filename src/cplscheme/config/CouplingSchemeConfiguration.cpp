@@ -977,7 +977,7 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
 
     const bool requiresInitialization = exchange.requiresInitialization;
     PRECICE_CHECK(
-        !(requiresInitialization && _participantConfig->getParticipant(from)->isDirectAccessAllowed(exchange.mesh->getID())),
+        !(requiresInitialization && _participantConfig->getParticipant(from)->isDirectAccessAllowed(exchange.mesh->getName())),
         "Participant \"{}\" cannot initialize data of the directly-accessed mesh \"{}\" from the participant\"{}\". "
         "Either disable the initialization in the <exchange /> tag or use a locally provided mesh instead.",
         from, meshName, to);
@@ -1047,15 +1047,6 @@ void CouplingSchemeConfiguration::checkIfDataIsExchanged(
                 "Data \"{}\" is currently not exchanged over the respective mesh on which it is used for convergence measures and/or iteration acceleration. "
                 "Please check the <exchange ... /> and <...-convergence-measure ... /> tags in the <coupling-scheme:... /> of your precice-config.xml.",
                 dataName);
-}
-
-int CouplingSchemeConfiguration::getWaveformUsedOrder(std::string participantName, std::string readDataName) const
-{
-  auto participant = _participantConfig->getParticipant(participantName);
-  auto dataContext = participant->readDataContext(readDataName);
-  int  usedOrder   = dataContext.getInterpolationOrder();
-  PRECICE_ASSERT(usedOrder >= 0); // ensure that usedOrder was set
-  return usedOrder;
 }
 
 void CouplingSchemeConfiguration::checkWaveformOrderReadData(

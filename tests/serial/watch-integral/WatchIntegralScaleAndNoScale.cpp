@@ -23,19 +23,19 @@ BOOST_AUTO_TEST_CASE(WatchIntegralScaleAndNoScale)
     Vector2d coordB{1.0, 0.0};
     Vector2d coordC{1.0, 2.0};
 
-    const precice::MeshID meshID = interface.getMeshID("MeshOne");
+    auto meshName = "MeshOne";
 
-    int idA = interface.setMeshVertex(meshID, coordA.data());
-    int idB = interface.setMeshVertex(meshID, coordB.data());
-    int idC = interface.setMeshVertex(meshID, coordC.data());
+    int idA = interface.setMeshVertex(meshName, coordA.data());
+    int idB = interface.setMeshVertex(meshName, coordB.data());
+    int idC = interface.setMeshVertex(meshName, coordC.data());
 
-    interface.setMeshEdge(meshID, idA, idB);
-    interface.setMeshEdge(meshID, idB, idC);
+    interface.setMeshEdge(meshName, idA, idB);
+    interface.setMeshEdge(meshName, idB, idC);
 
     // Initialize, the mesh
     double dt = interface.initialize();
 
-    int    dataOneID = interface.getDataID("DataOne", meshID);
+    auto   dataOneID = "DataOne";
     double valueA    = 1.0;
     double valueB    = 2.0;
     double valueC    = 3.0;
@@ -44,9 +44,9 @@ BOOST_AUTO_TEST_CASE(WatchIntegralScaleAndNoScale)
 
     while (interface.isCouplingOngoing()) {
 
-      interface.writeScalarData(dataOneID, idA, valueA);
-      interface.writeScalarData(dataOneID, idB, valueB);
-      interface.writeScalarData(dataOneID, idC, valueC);
+      interface.writeScalarData(meshName, dataOneID, idA, valueA);
+      interface.writeScalarData(meshName, dataOneID, idB, valueB);
+      interface.writeScalarData(meshName, dataOneID, idC, valueC);
 
       dt = interface.advance(dt);
 
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(WatchIntegralScaleAndNoScale)
     Vector2d coordB{1.0, 0.0};
     Vector2d coordC{1.0, 2.0};
 
-    const int meshTwoID = interface.getMeshID("MeshTwo");
+    auto meshTwoID = "MeshTwo";
 
     int idA = interface.setMeshVertex(meshTwoID, coordA.data());
     int idB = interface.setMeshVertex(meshTwoID, coordB.data());
@@ -76,14 +76,14 @@ BOOST_AUTO_TEST_CASE(WatchIntegralScaleAndNoScale)
     // Initialize the mesh
     double dt = interface.initialize();
 
-    int    dataOneID = interface.getDataID("DataOne", meshTwoID);
+    auto   dataOneID = "DataOne";
     double valueA, valueB, valueC;
 
     while (interface.isCouplingOngoing()) {
 
-      interface.readScalarData(dataOneID, idA, valueA);
-      interface.readScalarData(dataOneID, idB, valueB);
-      interface.readScalarData(dataOneID, idC, valueC);
+      interface.readScalarData(meshTwoID, dataOneID, idA, valueA);
+      interface.readScalarData(meshTwoID, dataOneID, idB, valueB);
+      interface.readScalarData(meshTwoID, dataOneID, idC, valueC);
 
       dt = interface.advance(dt);
     }
