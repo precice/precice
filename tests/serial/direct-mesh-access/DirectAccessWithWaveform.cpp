@@ -17,29 +17,29 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithWaveform)
     // Set up Solverinterface
     precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
     BOOST_TEST(interface.getDimensions() == 2);
-    constexpr int dim         = 2;
-    const int     ownMeshID   = interface.getMeshID("MeshOne");
-    const int     otherMeshID = interface.getMeshID("MeshTwo");
-    const int     readDataID  = interface.getDataID("Forces", ownMeshID);
-    const int     writeDataID = interface.getDataID("Velocities", otherMeshID);
+    constexpr int dim           = 2;
+    const auto    ownMeshName   = "MeshOne";
+    const auto    otherMeshName = "MeshTwo";
+    const auto    readDataName  = "Forces";
+    const auto    writeDataName = "Velocities";
 
     std::vector<double> ownPositions = std::vector<double>({0.5, 0.25});
     std::vector<int>    ownIDs(ownPositions.size() / dim, -1);
-    interface.setMeshVertices(ownMeshID, ownIDs.size(), ownPositions.data(), ownIDs.data());
+    interface.setMeshVertices(ownMeshName, ownIDs.size(), ownPositions.data(), ownIDs.data());
 
     std::array<double, dim * 2> boundingBox = std::array<double, dim * 2>{0.0, 1.0, 0.0, 1.0};
     // Define region of interest, where we could obtain direct write access
-    interface.setMeshAccessRegion(otherMeshID, boundingBox.data());
+    interface.setMeshAccessRegion(otherMeshName, boundingBox.data());
 
     double dt = interface.initialize();
     // Get the size of the filtered mesh within the bounding box
     // (provided by the coupling participant)
-    const int otherMeshSize = interface.getMeshVertexSize(otherMeshID);
+    const int otherMeshSize = interface.getMeshVertexSize(otherMeshName);
     BOOST_TEST(otherMeshSize == 1);
 
     std::vector<double> otherPositions(otherMeshSize * dim);
     std::vector<int>    otherIDs(otherMeshSize, -1);
-    interface.getMeshVerticesAndIDs(otherMeshID, otherMeshSize, otherIDs.data(), otherPositions.data());
+    interface.getMeshVerticesAndIDs(otherMeshName, otherMeshSize, otherIDs.data(), otherPositions.data());
 
     // Some dummy writeData
     std::vector<double> readData(ownIDs.size(), -1);
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithWaveform)
         // do nothing
       }
 
-      interface.readBlockScalarData(readDataID, ownIDs.size(), ownIDs.data(), 0.5, readData.data());
+      interface.readBlockScalarData(ownMeshName, readDataName, ownIDs.size(), ownIDs.data(), 0.5, readData.data());
 
       std::vector<double> expectedData = std::vector<double>({-1});
 
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithWaveform)
       }
 
       BOOST_TEST(precice::testing::equals(expectedData, readData));
-      interface.writeBlockScalarData(writeDataID, otherIDs.size(), otherIDs.data(), writeData.data());
+      interface.writeBlockScalarData(otherMeshName, writeDataName, otherIDs.size(), otherIDs.data(), writeData.data());
       dt = interface.advance(dt);
       iterations++;
       if (interface.requiresReadingCheckpoint()) {
@@ -95,9 +95,9 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithWaveform)
     precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
     BOOST_TEST(interface.getDimensions() == 2);
     constexpr int dim         = 2;
-    const int     meshID      = interface.getMeshID("MeshTwo");
-    const int     writeDataID = interface.getDataID("Forces", meshID);
-    const int     readDataID  = interface.getDataID("Velocities", meshID);
+    const auto    meshID      = "MeshTwo";
+    const auto    writeDataID = "Forces";
+    const auto    readDataID  = "Velocities";
 
     std::vector<double> positions = std::vector<double>({0.5, 0.25});
     std::vector<int>    ids(positions.size() / dim, -1);
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithWaveform)
         // do nothing
       }
 
-      interface.readBlockScalarData(readDataID, ids.size(), ids.data(), 0.5, readData.data());
+      interface.readBlockScalarData(meshID, readDataID, ids.size(), ids.data(), 0.5, readData.data());
 
       std::vector<double> expectedData = std::vector<double>({-1});
 
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithWaveform)
       }
 
       BOOST_TEST(precice::testing::equals(expectedData, readData));
-      interface.writeBlockScalarData(writeDataID, ids.size(), ids.data(), writeData.data());
+      interface.writeBlockScalarData(meshID, writeDataID, ids.size(), ids.data(), writeData.data());
       dt = interface.advance(dt);
       iterations++;
       if (interface.requiresReadingCheckpoint()) {

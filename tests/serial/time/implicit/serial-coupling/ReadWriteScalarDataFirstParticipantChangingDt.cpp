@@ -26,10 +26,6 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantChangingDt)
 
   SolverInterface precice(context.name, context.config(), 0, 1);
 
-  MeshID meshID;
-  DataID writeDataID;
-  DataID readDataID;
-
   typedef double (*DataFunction)(double);
 
   DataFunction dataOneFunction = [](double t) -> double {
@@ -47,27 +43,28 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantChangingDt)
   // max number of iterations in implicit coupling
   int maxIterations = 3;
 
+  std::string meshName, writeDataName, readDataName;
   if (context.isNamed("SolverOne")) {
-    meshID        = precice.getMeshID("MeshOne");
-    writeDataID   = precice.getDataID("DataOne", meshID);
+    meshName      = "MeshOne";
+    writeDataName = "DataOne";
     writeFunction = dataOneFunction;
-    readDataID    = precice.getDataID("DataTwo", meshID);
+    readDataName  = "DataTwo";
     readFunction  = dataTwoFunction;
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    meshID        = precice.getMeshID("MeshTwo");
-    writeDataID   = precice.getDataID("DataTwo", meshID);
+    meshName      = "MeshTwo";
+    writeDataName = "DataTwo";
     writeFunction = dataTwoFunction;
-    readDataID    = precice.getDataID("DataOne", meshID);
+    readDataName  = "DataOne";
     readFunction  = dataOneFunction;
   }
 
   double writeData = 0;
   double readData  = 0;
 
-  VertexID vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+  VertexID vertexID = precice.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());
   if (precice.requiresInitialData()) {
-    precice.writeScalarData(writeDataID, vertexID, writeFunction(0));
+    precice.writeScalarData(meshName, writeDataName, vertexID, writeFunction(0));
   }
   double preciceDt = precice.initialize();
   double solverDt  = 0.5;
@@ -96,7 +93,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantChangingDt)
     if (context.isNamed("SolverOne")) {
       // @todo window end is not well defined for SolverOne! See https://github.com/precice/precice/issues/1570#issuecomment-1443063091
     } else {
-      precice.readScalarData(readDataID, vertexID, solverDt, actualDataValue);
+      precice.readScalarData(meshName, readDataName, vertexID, solverDt, actualDataValue);
     }
 
     dt = std::min({solverDt, preciceDt});
@@ -108,7 +105,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantChangingDt)
       expectedDataValue = readFunction(startOfWindowTime + timeInWindow);
       BOOST_TEST(actualDataValue == expectedDataValue);
     }
-    precice.writeScalarData(writeDataID, vertexID, writeFunction(startOfWindowTime + timeInWindow));
+    precice.writeScalarData(meshName, writeDataName, vertexID, writeFunction(startOfWindowTime + timeInWindow));
     preciceDt = precice.advance(dt);
 
     if (precice.requiresReadingCheckpoint()) {
