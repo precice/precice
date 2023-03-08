@@ -48,6 +48,28 @@ class ManageUniqueIDs;
 
 namespace impl {
 
+/// Type that represent a compound key of two values
+template <typename T>
+struct MeshDataKey {
+  T mesh;
+  T data;
+  template <typename Other>
+  bool operator<(const MeshDataKey<Other> &other) const
+  {
+    if (mesh < other.mesh) {
+      return true;
+    }
+    if (other.mesh < mesh) {
+      return false;
+    }
+    return data < other.data;
+  }
+};
+
+/// Deduction guide for two identical parameter types
+template <class T>
+MeshDataKey(T, T)->MeshDataKey<T>;
+
 /// Holds coupling state of one participating solver in coupled simulation.
 class Participant {
 public:
@@ -310,28 +332,6 @@ private:
 
   template <typename T>
   using MeshMap = std::map<std::string, T, std::less<>>;
-
-  /// Type that represent a compound key of two values
-  template <typename T>
-  struct MeshDataKey {
-    T mesh;
-    T data;
-    template <typename Other>
-    bool operator<(const MeshDataKey<Other> &other) const
-    {
-      if (mesh < other.mesh) {
-        return true;
-      }
-      if (other.mesh < mesh) {
-        return false;
-      }
-      return data < other.data;
-    }
-  };
-
-  /// Deduction guide for two identical parameter types
-  template <class T>
-  MeshDataKey(T, T)->MeshDataKey<T>;
 
   template <typename T>
   using DataMap = std::map<MeshDataKey<std::string>, T, std::less<>>;
