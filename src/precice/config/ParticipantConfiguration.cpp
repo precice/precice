@@ -273,6 +273,7 @@ void ParticipantConfiguration::xmlTagCallback(
 
     mesh::PtrMesh mesh = _meshConfig->getMesh(name);
     PRECICE_CHECK(mesh,
+                  ::precice::ConfigurationError,
                   R"(Participant "{}" attempts to provide an unknown mesh "{}". <mesh name="{}"> needs to be defined first.)",
                   _participants.back()->getName(), name, name);
 
@@ -288,28 +289,33 @@ void ParticipantConfiguration::xmlTagCallback(
     // Start with defining the mesh
     mesh::PtrMesh mesh = _meshConfig->getMesh(name);
     PRECICE_CHECK(mesh,
+                  ::precice::ConfigurationError,
                   R"(Participant "{}" attempts to provide an unknown mesh "{}". <mesh name="{}"> needs to be defined first.)",
                   _participants.back()->getName(), name, name);
 
     // Then check the attributes
     PRECICE_CHECK(!from.empty(),
+                  ::precice::ConfigurationError,
                   R"(Participant "{}" receives mesh "{}", but doesn't specify where from. )"
                   "Please add the name of the other participant to the receive-mesh tag: <receive-mesh name=\"{}\" from=\"(other participant)\" ... />",
                   context.name, name, name)
 
     if (allowDirectAccess) {
       if (!_experimental) {
-        PRECICE_ERROR("You tried to configure the received mesh \"{}\" to use the option access-direct=\"true\", which is currently still experimental. Please set experimental=\"true\", if you want to use this feature.", name);
+        PRECICE_ERROR(::precice::ConfigurationError,
+                      "You tried to configure the received mesh \"{}\" to use the option access-direct=\"true\", which is currently still experimental. Please set experimental=\"true\", if you want to use this feature.", name);
       }
       PRECICE_WARN("You configured the received mesh \"{}\" to use the option access-direct=\"true\", which is currently still experimental. Use with care.", name);
     }
 
     PRECICE_CHECK(_participants.back()->getName() != from,
+                  ::precice::ConfigurationError,
                   "Participant \"{}\" cannot receive mesh \"{}\" from itself. "
                   "To provide a mesh, use <provide-mesh name=\"{}\" /> instead.",
                   context.name, name, name);
 
     PRECICE_CHECK(safetyFactor >= 0,
+                  ::precice::ConfigurationError,
                   "Participant \"{}\" receives mesh \"{}\" with safety-factor=\"{}\". "
                   "Please use a positive or zero safety-factor instead.",
                   context.name, name, safetyFactor);
@@ -320,6 +326,7 @@ void ParticipantConfiguration::xmlTagCallback(
     std::string        meshName = tag.getStringAttributeValue(ATTR_MESH);
     mesh::PtrMesh      mesh     = _meshConfig->getMesh(meshName);
     PRECICE_CHECK(mesh,
+                  ::precice::ConfigurationError,
                   R"(Participant "{}" attempts to read data "{}" from an unknown mesh "{}". <mesh name="{}"> needs to be defined first.)",
                   _participants.back()->getName(), dataName, meshName, meshName);
     mesh::PtrData data = getData(mesh, dataName);
@@ -329,16 +336,19 @@ void ParticipantConfiguration::xmlTagCallback(
     std::string        meshName = tag.getStringAttributeValue(ATTR_MESH);
     mesh::PtrMesh      mesh     = _meshConfig->getMesh(meshName);
     PRECICE_CHECK(mesh,
+                  ::precice::ConfigurationError,
                   R"(Participant "{}" attempts to write data "{}" to an unknown mesh "{}". <mesh name="{}"> needs to be defined first.)",
                   _participants.back()->getName(), dataName, meshName, meshName);
     mesh::PtrData data          = getData(mesh, dataName);
     int           waveformOrder = tag.getIntAttributeValue(ATTR_ORDER);
     if (waveformOrder != time::Time::DEFAULT_INTERPOLATION_ORDER) {
       if (!_experimental) {
-        PRECICE_ERROR("You tried to configure the read data with name \"{}\" to use the waveform-order=\"{}\", which is currently still experimental. Please set experimental=\"true\", if you want to use this feature.", dataName, waveformOrder);
+        PRECICE_ERROR(::precice::ConfigurationError,
+                      "You tried to configure the read data with name \"{}\" to use the waveform-order=\"{}\", which is currently still experimental. Please set experimental=\"true\", if you want to use this feature.", dataName, waveformOrder);
       }
       if (waveformOrder < time::Time::MIN_INTERPOLATION_ORDER || waveformOrder > time::Time::MAX_INTERPOLATION_ORDER) {
-        PRECICE_ERROR("You tried to configure the read data with name \"{}\" to use the waveform-order=\"{}\", but the order must be between \"{}\" and \"{}\". Please use an order in the allowed range.", dataName, waveformOrder, time::Time::MIN_INTERPOLATION_ORDER, time::Time::MAX_INTERPOLATION_ORDER);
+        PRECICE_ERROR(::precice::ConfigurationError,
+                      "You tried to configure the read data with name \"{}\" to use the waveform-order=\"{}\", but the order must be between \"{}\" and \"{}\". Please use an order in the allowed range.", dataName, waveformOrder, time::Time::MIN_INTERPOLATION_ORDER, time::Time::MAX_INTERPOLATION_ORDER);
       }
       PRECICE_WARN("You configured the read data with name \"{}\" to use the waveform-order=\"{}\", which is currently still experimental. Use with care.", dataName, waveformOrder);
     }
@@ -406,6 +416,7 @@ const mesh::PtrData &ParticipantConfiguration::getData(
     const std::string &  nameData) const
 {
   PRECICE_CHECK(mesh->hasDataName(nameData),
+                ::precice::ConfigurationError,
                 "Participant \"{}\" asks for data \"{}\" from mesh \"{}\", but this mesh does not use such data. "
                 "Please add a use-data tag with name=\"{}\" to this mesh.",
                 _participants.back()->getName(), nameData, mesh->getName(), nameData);
@@ -430,20 +441,24 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     if (confMapping.direction == mapping::MappingConfiguration::Direction::READ) {
       /// A read mapping maps from received to provided
       PRECICE_CHECK(participant->isMeshReceived(fromMesh),
+                    ::precice::ConfigurationError,
                     "Participant \"{}\" has a read mapping from mesh \"{}\", without receiving it. "
                     "Please add a receive-mesh tag with name=\"{}\"",
                     participant->getName(), fromMesh, fromMesh);
       PRECICE_CHECK(participant->isMeshProvided(toMesh),
+                    ::precice::ConfigurationError,
                     "Participant \"{}\" has a read mapping to mesh \"{}\", without providing it. "
                     "Please add a provide-mesh tag with name=\"{}\"",
                     participant->getName(), toMesh, toMesh);
     } else {
       // A write mapping maps from provided to received
       PRECICE_CHECK(participant->isMeshProvided(fromMesh),
+                    ::precice::ConfigurationError,
                     "Participant \"{}\" has a write mapping from mesh \"{}\", without providing it. "
                     "Please add a provided-mesh tag with name=\"{}\"",
                     participant->getName(), fromMesh, fromMesh);
       PRECICE_CHECK(participant->isMeshReceived(toMesh),
+                    ::precice::ConfigurationError,
                     "Participant \"{}\" has a write mapping to mesh \"{}\", without receiving it. "
                     "Please add a receive-mesh tag with name=\"{}\"",
                     participant->getName(), toMesh, toMesh);
@@ -454,9 +469,11 @@ void ParticipantConfiguration::finishParticipantConfiguration(
            confMapping.mapping->getConstraint() == mapping::Mapping::CONSISTENT) ||
           (confMapping.direction == mapping::MappingConfiguration::READ &&
            confMapping.mapping->getConstraint() == mapping::Mapping::CONSERVATIVE)) {
-        PRECICE_ERROR("For a parallel participant, only the mapping combinations read-consistent and write-conservative are allowed");
+        PRECICE_ERROR(::precice::ConfigurationError,
+                      "For a parallel participant, only the mapping combinations read-consistent and write-conservative are allowed");
       } else if (confMapping.mapping->isScaledConsistent()) {
-        PRECICE_ERROR("Scaled consistent mapping is not yet supported for a parallel participant. "
+        PRECICE_ERROR(::precice::ConfigurationError,
+                      "Scaled consistent mapping is not yet supported for a parallel participant. "
                       "You could run in serial or use a plain (read-)consistent mapping instead.");
       }
     }
@@ -468,19 +485,23 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
     if (confMapping.direction == mapping::MappingConfiguration::READ) {
       PRECICE_CHECK(toMeshContext.provideMesh,
+                    ::precice::ConfigurationError,
                     "A read mapping of participant \"{}\" needs to map TO a provided mesh. Mesh \"{1}\" is not provided. "
                     "Please add the tag <provide-mesh name=\"{1}\" /> to the participant.",
                     participant->getName(), confMapping.toMesh->getName());
       PRECICE_CHECK(not fromMeshContext.receiveMeshFrom.empty(),
+                    ::precice::ConfigurationError,
                     "A read mapping of participant \"{}\" needs to map FROM a received mesh. Mesh \"{1}\" is not received. "
                     "Please add the tag <receive-mesh name=\"{1}\" /> to the participant.",
                     participant->getName(), confMapping.toMesh->getName());
     } else {
       PRECICE_CHECK(fromMeshContext.provideMesh,
+                    ::precice::ConfigurationError,
                     "A write mapping of participant \"{}\" needs to map FROM a provided mesh. Mesh \"{1}\" is not provided. "
                     "Please add the tag <provide-mesh name=\"{1}\" /> to the participant.",
                     participant->getName(), confMapping.fromMesh->getName());
       PRECICE_CHECK(not toMeshContext.receiveMeshFrom.empty(),
+                    ::precice::ConfigurationError,
                     "A write mapping of participant \"{}\" needs to map TO a received mesh. Mesh \"{1}\" is not received. "
                     "Please add the tag <receive-mesh name=\"{1}\" /> to the participant.",
                     participant->getName(), confMapping.toMesh->getName());
@@ -537,6 +558,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
         if (meshContext.mesh->hasDataName(dataContext.getDataName())) {
           // Check, if the fromMesh is a provided mesh
           PRECICE_CHECK(participant->isMeshProvided(fromMeshID),
+                        ::precice::ConfigurationError,
                         "Participant \"{}\" has to provide mesh \"{}\" to be able to write data to it. "
                         "Please add a provide-mesh node with name=\"{}\".",
                         participant->getName(), dataContext.getMeshName(), dataContext.getMeshName());
@@ -550,6 +572,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
       }
     }
     PRECICE_CHECK(dataFound,
+                  ::precice::ConfigurationError,
                   "Participant \"{}\" defines a write mapping from mesh \"{}\" to mesh \"{}\", "
                   "but there is either no corresponding write-data tag or the meshes used "
                   "by this participant lack the necessary use-data tags.",
@@ -571,6 +594,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
         if (meshContext.mesh->hasDataName(dataContext.getDataName())) {
           // Check, if the toMesh is a provided mesh
           PRECICE_CHECK(participant->isMeshProvided(toMeshID),
+                        ::precice::ConfigurationError,
                         "Participant \"{}\" has to provide mesh \"{}\" in order to read data from it. "
                         "Please add a provide-mesh node with name=\"{}\".",
                         participant->getName(), dataContext.getMeshName(), dataContext.getMeshName());
@@ -584,6 +608,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
       }
     }
     PRECICE_CHECK(dataFound,
+                  ::precice::ConfigurationError,
                   "Participant \"{}\" defines a read mapping from mesh \"{}\" to mesh \"{}\", "
                   "but there is either no corresponding read-data tag or the meshes used "
                   "by this participant lack the necessary use-data tags.",
@@ -594,6 +619,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   for (const action::PtrAction &action : _actionConfig->actions()) {
     bool used = _participants.back()->isMeshUsed(action->getMesh()->getID());
     PRECICE_CHECK(used,
+                  ::precice::ConfigurationError,
                   "Data action of participant \"{}\" uses mesh \"{}\", which is not used by the participant. "
                   "Please add a provide-mesh or receive-mesh node with name=\"{}\".",
                   _participants.back()->getName(), action->getMesh()->getName(), action->getMesh()->getName());
@@ -626,7 +652,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     } else if (exportContext.type == VALUE_CSV) {
       exporter = io::PtrExport(new io::ExportCSV());
     } else {
-      PRECICE_ERROR("Participant {} defines an <export/> tag of unknown type \"{}\".",
+      PRECICE_ERROR(::precice::ConfigurationError,
+                    "Participant {} defines an <export/> tag of unknown type \"{}\".",
                     _participants.back()->getName(), exportContext.type);
     }
     exportContext.exporter = exporter;
@@ -638,11 +665,13 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   // Create watch points
   for (const WatchPointConfig &config : _watchPointConfigs) {
     PRECICE_CHECK(participant->isMeshUsed(config.nameMesh),
+                  ::precice::ConfigurationError,
                   "Participant \"{}\" defines watchpoint \"{}\" for mesh \"{}\" which is not provided by the participant. "
                   "Please add <provide-mesh name=\"{}\" /> to the participant.",
                   participant->getName(), config.name, config.nameMesh, config.nameMesh);
     const auto &meshContext = participant->usedMeshContext(config.nameMesh);
     PRECICE_CHECK(meshContext.provideMesh,
+                  ::precice::ConfigurationError,
                   "Participant \"{}\" defines watchpoint \"{}\" for the received mesh \"{}\", which is not allowed. "
                   "Please move the watchpoint definition to the participant providing mesh \"{}\".",
                   participant->getName(), config.name, config.nameMesh, config.nameMesh);
@@ -656,11 +685,13 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   // Create watch integrals
   for (const WatchIntegralConfig &config : _watchIntegralConfigs) {
     PRECICE_CHECK(participant->isMeshUsed(config.nameMesh),
+                  ::precice::ConfigurationError,
                   "Participant \"{}\" defines watch integral \"{}\" for mesh \"{}\" which is not used by the participant. "
                   "Please add a provide-mesh node with name=\"{}\".",
                   participant->getName(), config.name, config.nameMesh, config.nameMesh);
     const auto &meshContext = participant->usedMeshContext(config.nameMesh);
     PRECICE_CHECK(meshContext.provideMesh,
+                  ::precice::ConfigurationError,
                   "Participant \"{}\" defines watch integral \"{}\" for the received mesh \"{}\", which is not allowed. "
                   "Please move the watchpoint definition to the participant providing mesh \"{}\".",
                   participant->getName(), config.name, config.nameMesh, config.nameMesh);
@@ -674,7 +705,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   // create default primary communication if needed
   if (context.size > 1 && not _isIntraCommDefined && participant->getName() == context.name) {
 #ifdef PRECICE_NO_MPI
-    PRECICE_ERROR("Implicit intra-participant communications for parallel participants are only available if preCICE was built with MPI. "
+    PRECICE_ERROR(::precice::ConfigurationError,
+                  "Implicit intra-participant communications for parallel participants are only available if preCICE was built with MPI. "
                   "Either explicitly define an intra-participant communication for each parallel participant or rebuild preCICE with \"PRECICE_MPICommunication=ON\".");
 #else
     com::PtrCommunication com            = std::make_shared<com::MPIDirectCommunication>();
@@ -722,6 +754,7 @@ void ParticipantConfiguration::checkIllDefinedMappings(
             }
           }
           PRECICE_CHECK(!sameDirection,
+                        ::precice::ConfigurationError,
                         "There cannot be two mappings to mesh \"{}\" if the meshes from which is mapped contain "
                         "duplicated data fields that are also actually mapped on this participant. "
                         "Here, both from meshes contain data \"{}\". "

@@ -138,6 +138,7 @@ PtrData &Mesh::createData(
   PRECICE_TRACE(name, dimension);
   for (const PtrData &data : _data) {
     PRECICE_CHECK(data->getName() != name,
+                  ::precice::MeshError,
                   "Data \"{}\" cannot be created twice for mesh \"{}\". "
                   "Please rename or remove one of the use-data tags with name \"{}\".",
                   name, _name, name);

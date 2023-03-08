@@ -245,6 +245,7 @@ target_sources(preciceCore
     src/precice/config/SharedPointer.hpp
     src/precice/config/SolverInterfaceConfiguration.cpp
     src/precice/config/SolverInterfaceConfiguration.hpp
+    src/precice/exceptions.hpp
     src/precice/impl/CommonErrorMessages.hpp
     src/precice/impl/DataContext.cpp
     src/precice/impl/DataContext.hpp
@@ -335,5 +336,6 @@ set_property(TARGET precice PROPERTY PUBLIC_HEADER
     ${CMAKE_BINARY_DIR}/src/precice/Version.h
     src/precice/SolverInterface.hpp
     src/precice/Tooling.hpp
+    src/precice/exceptions.hpp
     src/precice/types.hpp
     )

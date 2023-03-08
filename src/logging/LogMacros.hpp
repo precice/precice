@@ -1,5 +1,6 @@
 #pragma once
 
+#include "precice/exceptions.hpp"
 #include "utils/fmt.hpp"
 
 #define PRECICE_LOG_LOCATION     \
@@ -12,11 +13,8 @@
 
 #define PRECICE_INFO(...) _log.info(PRECICE_LOG_LOCATION, precice::utils::format_or_error(__VA_ARGS__))
 
-#define PRECICE_ERROR(...)                                                          \
-  do {                                                                              \
-    _log.error(PRECICE_LOG_LOCATION, precice::utils::format_or_error(__VA_ARGS__)); \
-    std::exit(-1);                                                                  \
-  } while (false)
+#define PRECICE_ERROR(kind, ...) \
+  _log.error<kind>(PRECICE_LOG_LOCATION, precice::utils::format_or_error(__VA_ARGS__))
 
 #define PRECICE_CHECK(check, ...) \
   if (!(check)) {                 \

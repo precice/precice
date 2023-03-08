@@ -77,6 +77,7 @@ void DataConfiguration::addData(
   // Check if data with same name has been added already
   for (auto &elem : _data) {
     PRECICE_CHECK(elem.name != name,
+                  ::precice::ConfigurationError,
                   "Data \"{0}\" has already been defined. Please rename or remove one of the data tags with name=\"{0}\".",
                   name);
   }

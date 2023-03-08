@@ -160,14 +160,16 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(const std::map<std::string, std::strin
   const auto position = aAttributes.find(getName());
   if (position == aAttributes.end()) {
     if (not _hasDefaultValue) {
-      PRECICE_ERROR("Attribute \"{}\" is required, but was not defined.", _name);
+      PRECICE_ERROR(::precice::ConfigurationError,
+                    "Attribute \"{}\" is required, but was not defined.", _name);
     }
     set(_value, _defaultValue);
   } else {
     try {
       readValueSpecific(position->second, _value);
     } catch (const std::exception &e) {
-      PRECICE_ERROR(e.what());
+      PRECICE_ERROR(::precice::ConfigurationError,
+                    e.what());
     }
     if (_hasValidation) {
       if (std::find(_options.begin(), _options.end(), _value) == _options.end()) {
@@ -183,7 +185,8 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(const std::map<std::string, std::strin
           stream << " or value must be \"" << *first << '"';
         }
 
-        PRECICE_ERROR(stream.str());
+        PRECICE_ERROR(::precice::ConfigurationError,
+                      stream.str());
       }
     }
   }

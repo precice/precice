@@ -135,14 +135,16 @@ void Participant::addWriteMappingContext(
 const ReadDataContext &Participant::readDataContext(DataID dataID) const
 {
   auto it = _readDataContexts.find(dataID);
-  PRECICE_CHECK(it != _readDataContexts.end(), "DataID does not exist.")
+  PRECICE_CHECK(it != _readDataContexts.end(),
+                ::precice::APIError, "DataID does not exist.")
   return it->second;
 }
 
 ReadDataContext &Participant::readDataContext(DataID dataID)
 {
   auto it = _readDataContexts.find(dataID);
-  PRECICE_CHECK(it != _readDataContexts.end(), "DataID does not exist.")
+  PRECICE_CHECK(it != _readDataContexts.end(),
+                ::precice::APIError, "DataID does not exist.")
   return it->second;
 }
 
@@ -157,14 +159,16 @@ ReadDataContext &Participant::readDataContext(const std::string &dataName)
 const WriteDataContext &Participant::writeDataContext(DataID dataID) const
 {
   auto it = _writeDataContexts.find(dataID);
-  PRECICE_CHECK(it != _writeDataContexts.end(), "DataID \"{}\" does not exist in write direction.", dataID)
+  PRECICE_CHECK(it != _writeDataContexts.end(),
+                ::precice::APIError, "DataID \"{}\" does not exist in write direction.", dataID)
   return it->second;
 }
 
 WriteDataContext &Participant::writeDataContext(DataID dataID)
 {
   auto it = _writeDataContexts.find(dataID);
-  PRECICE_CHECK(it != _writeDataContexts.end(), "DataID \"{}\" does not exist in write direction.", dataID)
+  PRECICE_CHECK(it != _writeDataContexts.end(),
+                ::precice::APIError, "DataID \"{}\" does not exist in write direction.", dataID)
   return it->second;
 }
 
@@ -492,6 +496,7 @@ void Participant::checkDuplicatedUse(const mesh::PtrMesh &mesh)
 {
   PRECICE_ASSERT((int) _meshContexts.size() > mesh->getID());
   PRECICE_CHECK(_meshContexts[mesh->getID()] == nullptr,
+                ::precice::APIError,
                 "Mesh \"{} cannot be used twice by participant {}. "
                 "Please remove one of the provide/receive-mesh nodes with name=\"{}\"./>",
                 mesh->getName(), _name, mesh->getName());
@@ -500,6 +505,7 @@ void Participant::checkDuplicatedUse(const mesh::PtrMesh &mesh)
 void Participant::checkDuplicatedData(const mesh::PtrData &data, const std::string &meshName)
 {
   PRECICE_CHECK(!isDataWrite(data->getID()) && !isDataRead(data->getID()),
+                ::precice::APIError,
                 "Participant \"{}\" can read/write data \"{}\" from/to mesh \"{}\" only once. "
                 "Please remove any duplicate instances of write-data/read-data nodes.",
                 _name, meshName, data->getName());

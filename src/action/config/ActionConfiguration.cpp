@@ -178,7 +178,8 @@ void ActionConfiguration::xmlEndTagCallback(
 
 int ActionConfiguration::getUsedMeshID() const
 {
-  PRECICE_CHECK(_meshConfig->hasMeshName(_configuredAction.mesh), "No mesh name \"{}\" found. Please check that the correct mesh name is used.", _configuredAction.mesh);
+  PRECICE_CHECK(_meshConfig->hasMeshName(_configuredAction.mesh),
+                ::precice::ConfigurationError, "No mesh name \"{}\" found. Please check that the correct mesh name is used.", _configuredAction.mesh);
   return _meshConfig->getMesh(_configuredAction.mesh)->getID();
 }
 
@@ -193,22 +194,26 @@ void ActionConfiguration::createAction()
   std::vector<int> sourceDataIDs;
   int              targetDataID = -1;
   PRECICE_CHECK(_meshConfig->hasMeshName(_configuredAction.mesh),
+                ::precice::ConfigurationError,
                 "Data action uses mesh \"{}\" which is not configured. Please ensure that the correct mesh name is given in <action:python mesh=\"...\">", _configuredAction.mesh);
   mesh::PtrMesh mesh = _meshConfig->getMesh(_configuredAction.mesh);
 
   if (!_configuredAction.targetData.empty()) {
     PRECICE_CHECK(mesh->hasDataName(_configuredAction.targetData),
+                  ::precice::ConfigurationError,
                   "Data action uses target data \"{}\" which is not configured. Please ensure that the target data name is used by the mesh with name \"{}\".", _configuredAction.targetData, _configuredAction.mesh);
     targetDataID = mesh->data(_configuredAction.targetData)->getID();
     PRECICE_ASSERT(targetDataID != -1);
   }
 
   for (const std::string &dataName : _configuredAction.sourceDataVector) {
-    PRECICE_CHECK(mesh->hasDataName(dataName), "Data action uses source data \"{}\" which is not configured. Please ensure that the target data name is used by the mesh with name \"{}\".", dataName, _configuredAction.mesh);
+    PRECICE_CHECK(mesh->hasDataName(dataName),
+                  ::precice::ConfigurationError, "Data action uses source data \"{}\" which is not configured. Please ensure that the target data name is used by the mesh with name \"{}\".", dataName, _configuredAction.mesh);
     sourceDataIDs.push_back(mesh->data(dataName)->getID());
   }
 
   PRECICE_CHECK((_configuredAction.sourceDataVector.empty() || not sourceDataIDs.empty()),
+                ::precice::ConfigurationError,
                 "Data action uses source data \"{}\" which is not configured. Please ensure that the source data name is used by the mesh with name \"{}\".", _configuredAction.sourceDataVector.back(), _configuredAction.mesh);
 
   action::PtrAction action;
@@ -273,7 +278,8 @@ action::Action::Timing ActionConfiguration::getTiming() const
   } else if (_configuredAction.timing == READ_MAPPING_POST) {
     timing = action::Action::READ_MAPPING_POST;
   } else {
-    PRECICE_ERROR("Unknown action timing \"{}\". "
+    PRECICE_ERROR(::precice::ConfigurationError,
+                  "Unknown action timing \"{}\". "
                   "Valid action timings are regular-prior, regular-post, on-exchange-prior, on-exchange-post, on-time-window-complete-post",
                   _configuredAction.timing);
   }

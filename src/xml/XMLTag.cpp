@@ -177,6 +177,7 @@ Eigen::VectorXd XMLTag::getEigenVectorXdAttributeValue(const std::string &name, 
   PRECICE_ASSERT(iter != _eigenVectorXdAttributes.end());
   const auto size = iter->second.getValue().size();
   PRECICE_CHECK(size == dimensions,
+                ::precice::ConfigurationError,
                 "Vector attribute \"{}\" of tag <{}> is {}D, "
                 "which does not match the dimension of the {}D solver-interface.",
                 name, getFullName(), size, dimensions);
@@ -202,13 +203,16 @@ void XMLTag::readAttributes(const std::map<std::string, std::string> &aAttribute
       // check existing hints
       if (auto pos = _attributeHints.find(name);
           pos != _attributeHints.end()) {
-        PRECICE_ERROR("The tag <{}> in the configuration contains the attribute \"{}\". {}", _fullName, name, pos->second);
+        PRECICE_ERROR(::precice::ConfigurationError,
+                      "The tag <{}> in the configuration contains the attribute \"{}\". {}", _fullName, name, pos->second);
       }
       auto matches = utils::computeMatches(name, _attributes);
       if (matches.front().distance < 3) {
-        PRECICE_ERROR("The tag <{}> in the configuration contains an unknown attribute \"{}\". Did you mean \"{}\"?", _fullName, name, matches.front().name);
+        PRECICE_ERROR(::precice::ConfigurationError,
+                      "The tag <{}> in the configuration contains an unknown attribute \"{}\". Did you mean \"{}\"?", _fullName, name, matches.front().name);
       }
-      PRECICE_ERROR("The tag <{}> in the configuration contains an unknown attribute \"{}\". Expected attributes are {}.", _fullName, name, fmt::join(_attributes, ", "));
+      PRECICE_ERROR(::precice::ConfigurationError,
+                    "The tag <{}> in the configuration contains an unknown attribute \"{}\". Expected attributes are {}.", _fullName, name, fmt::join(_attributes, ", "));
     }
   }
 
@@ -328,9 +332,11 @@ void XMLTag::areAllSubtagsConfigured() const
     if ((not configured) && (occurOnce || occurOnceOrMore)) {
 
       if (tag->getNamespace().empty()) {
-        PRECICE_ERROR("Tag <{}> was not found but is required to occur at least once.", tag->getName());
+        PRECICE_ERROR(::precice::ConfigurationError,
+                      "Tag <{}> was not found but is required to occur at least once.", tag->getName());
       } else {
-        PRECICE_ERROR("Tag <{}:... > was not found but is required to occur at least once.", tag->getNamespace());
+        PRECICE_ERROR(::precice::ConfigurationError,
+                      "Tag <{}:... > was not found but is required to occur at least once.", tag->getNamespace());
       }
     }
   }

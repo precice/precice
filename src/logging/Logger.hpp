@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <precice/exceptions.hpp>
 #include <string>
 
 namespace precice::logging {
@@ -29,6 +30,16 @@ public:
 
   ///@name Logging operations
   ///@{
+  /// Logs an error and throws an exception
+  template <typename Exception>
+  void error(LogLocation loc, const std::string &mess)
+  {
+    static_assert(std::is_base_of_v<::precice::Error, Exception>,
+                  "The given exception must be derived from ::precice::Error");
+    error(std::move(loc), mess);
+    throw Exception{mess};
+  }
+
   void error(LogLocation loc, const std::string &mess) noexcept;
   void warning(LogLocation loc, const std::string &mess) noexcept;
   void info(LogLocation loc, const std::string &mess) noexcept;

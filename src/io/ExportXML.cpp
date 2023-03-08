@@ -75,7 +75,8 @@ void ExportXML::writeParallelFile(
   outfile = outfile / fs::path(name + getParallelExtension());
   std::ofstream outParallelFile(outfile.string(), std::ios::trunc);
 
-  PRECICE_CHECK(outParallelFile, "{} export failed to open primary file \"{}\"", getVTKFormat(), outfile.generic_string());
+  PRECICE_CHECK(outParallelFile,
+                ::precice::IOError, "{} export failed to open primary file \"{}\"", getVTKFormat(), outfile.generic_string());
 
   const auto formatType = getVTKFormat();
   outParallelFile << "<?xml version=\"1.0\"?>\n";
@@ -130,7 +131,8 @@ void ExportXML::writeSubFile(
   outfile /= fs::path(name + getPieceSuffix() + getPieceExtension());
   std::ofstream outSubFile(outfile.string(), std::ios::trunc);
 
-  PRECICE_CHECK(outSubFile, "{} export failed to open secondary file \"{}\"", getVTKFormat(), outfile.generic_string());
+  PRECICE_CHECK(outSubFile,
+                ::precice::IOError, "{} export failed to open secondary file \"{}\"", getVTKFormat(), outfile.generic_string());
 
   const auto formatType = getVTKFormat();
   outSubFile << "<?xml version=\"1.0\"?>\n";

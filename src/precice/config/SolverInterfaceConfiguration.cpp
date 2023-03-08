@@ -79,6 +79,7 @@ void SolverInterfaceConfiguration::xmlEndTagCallback(
         if (participant->getName() == neededMeshes.first) {
           for (const std::string &neededMesh : neededMeshes.second) {
             PRECICE_CHECK(participant->isMeshUsed(neededMesh),
+                          ::precice::ConfigurationError,
                           "Participant \"{}\" needs to use the mesh \"{}\" to be able to use it in the coupling scheme. "
                           "Please either add a provide-mesh or a receive-mesh tag in this participant's configuration, or use a different mesh in the coupling scheme.",
                           neededMeshes.first, neededMesh);

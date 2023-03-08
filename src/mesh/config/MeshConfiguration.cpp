@@ -81,7 +81,8 @@ void MeshConfiguration::xmlTagCallback(
       }
     }
     if (not found) {
-      PRECICE_ERROR("Data with name \"{}\" used by mesh \"{}\" is not defined. "
+      PRECICE_ERROR(::precice::ConfigurationError,
+                    "Data with name \"{}\" used by mesh \"{}\" is not defined. "
                     "Please define a data tag with name=\"{}\".",
                     name, _meshes.back()->getName(), name);
     }
@@ -110,7 +111,9 @@ void MeshConfiguration::addMesh(
         break;
       }
     }
-    PRECICE_CHECK(found, "Data {0} is not defined. Please define a data tag with name=\"{0}\".", dataNewMesh->getName());
+    PRECICE_CHECK(found,
+                  ::precice::ConfigurationError,
+                  "Data {0} is not defined. Please define a data tag with name=\"{0}\".", dataNewMesh->getName());
   }
   _meshes.push_back(mesh);
 }

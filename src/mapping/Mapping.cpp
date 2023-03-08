@@ -130,16 +130,19 @@ void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID, Mapping:
   for (mesh::PtrMesh mesh : {input(), output()}) {
     if (not mesh->vertices().empty()) {
 
-      PRECICE_CHECK(!(requiresEdges && mesh->edges().empty()), "Edges connectivity information is missing for the mesh \"{}\". "
-                                                               "Scaled consistent mapping requires connectivity information.",
+      PRECICE_CHECK(!(requiresEdges && mesh->edges().empty()),
+                    ::precice::MappingError, "Edges connectivity information is missing for the mesh \"{}\". "
+                                             "Scaled consistent mapping requires connectivity information.",
                     mesh->getName());
 
-      PRECICE_CHECK(!(requiresTriangles && mesh->triangles().empty()), "Triangles connectivity information is missing for the mesh \"{}\". "
-                                                                       "Scaled consistent mapping requires connectivity information.",
+      PRECICE_CHECK(!(requiresTriangles && mesh->triangles().empty()),
+                    ::precice::MappingError, "Triangles connectivity information is missing for the mesh \"{}\". "
+                                             "Scaled consistent mapping requires connectivity information.",
                     mesh->getName());
 
-      PRECICE_CHECK(!(requiresTetra && mesh->tetrahedra().empty()), "Tetrahedra connectivity information is missing for the mesh \"{}\". "
-                                                                    "Scaled consistent mapping requires connectivity information.",
+      PRECICE_CHECK(!(requiresTetra && mesh->tetrahedra().empty()),
+                    ::precice::MappingError, "Tetrahedra connectivity information is missing for the mesh \"{}\". "
+                                             "Scaled consistent mapping requires connectivity information.",
                     mesh->getName());
     }
   }

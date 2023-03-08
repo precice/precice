@@ -147,6 +147,7 @@ const PtrCouplingScheme &CouplingSchemeConfiguration::getCouplingScheme(
     const std::string &participantName) const
 {
   PRECICE_CHECK(utils::contained(participantName, _couplingSchemes),
+                ::precice::ConfigurationError,
                 "No coupling scheme defined for participant \"{}\". "
                 "Please make sure to provide at least one <coupling-scheme:TYPE> in your "
                 "precice-config.xml that couples this participant using the <participants .../> tag.",
@@ -167,6 +168,7 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     _config.participants.push_back(first);
     std::string second = tag.getStringAttributeValue(ATTR_SECOND);
     PRECICE_CHECK(std::find(_config.participants.begin(), _config.participants.end(), second) == _config.participants.end(),
+                  ::precice::ConfigurationError,
                   "Provided first participant equals second participant in coupling scheme. "
                   "Please correct the <participants first=\"{}\" second=\"{}\" /> tag in the <coupling-scheme:...> of your precice-config.xml",
                   first, second);
@@ -176,12 +178,14 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     bool        control         = tag.getBooleanAttributeValue(ATTR_CONTROL);
     std::string participantName = tag.getStringAttributeValue(ATTR_NAME);
     PRECICE_CHECK(std::find(_config.participants.begin(), _config.participants.end(), participantName) == _config.participants.end() && participantName.compare(_config.controller) != 0,
+                  ::precice::ConfigurationError,
                   "Participant \"{0}\" is provided multiple times to multi coupling scheme. "
                   "Please make sure that you do not provide the participant multiple times via the <participant name=\"{0}\" /> "
                   "tag in the <coupling-scheme:...> of your precice-config.xml",
                   participantName);
     if (control) {
       PRECICE_CHECK(not _config.setController,
+                    ::precice::ConfigurationError,
                     "Only one controller per MultiCouplingScheme can be defined. "
                     "Please check the <participant name=\"{}\" control=\"{}\" /> tag in the <coupling-scheme:...> of your precice-config.xml",
                     participantName, control);
@@ -192,23 +196,28 @@ void CouplingSchemeConfiguration::xmlTagCallback(
   } else if (tag.getName() == TAG_MAX_TIME) {
     _config.maxTime = tag.getDoubleAttributeValue(ATTR_VALUE);
     PRECICE_CHECK(_config.maxTime > 0,
+                  ::precice::ConfigurationError,
                   "Maximum time has to be larger than zero. "
                   "Please check the <max-time value=\"{}\" /> tag in the <coupling-scheme:...> of your precice-config.xml",
                   _config.maxTime);
   } else if (tag.getName() == TAG_MAX_TIME_WINDOWS) {
     _config.maxTimeWindows = tag.getIntAttributeValue(ATTR_VALUE);
     PRECICE_CHECK(_config.maxTimeWindows > 0,
+                  ::precice::ConfigurationError,
                   "Maximum number of time windows has to be larger than zero. "
                   "Please check the <max-time-windows value=\"{}\" /> tag in the <coupling-scheme:...> of your precice-config.xml",
                   _config.maxTimeWindows);
   } else if (tag.getName() == TAG_TIME_WINDOW_SIZE) {
     _config.timeWindowSize = tag.getDoubleAttributeValue(ATTR_VALUE);
     _config.validDigits    = tag.getIntAttributeValue(ATTR_VALID_DIGITS);
-    PRECICE_CHECK((_config.validDigits >= 1) && (_config.validDigits < 17), "Valid digits of time window size has to be between 1 and 16.");
+    PRECICE_CHECK((_config.validDigits >= 1) && (_config.validDigits < 17),
+                  ::precice::ConfigurationError,
+                  "Valid digits of time window size has to be between 1 and 16.");
     // Attribute does not exist for parallel coupling schemes as it is always fixed.
     _config.dtMethod = getTimesteppingMethod(tag.getStringAttributeValue(ATTR_METHOD, VALUE_FIXED));
     if (_config.dtMethod == constants::TimesteppingMethod::FIXED_TIME_WINDOW_SIZE) {
       PRECICE_CHECK(_config.timeWindowSize > 0,
+                    ::precice::ConfigurationError,
                     "Time window size has to be larger than zero. "
                     "Please check the <time-window-size value=\"{}\" valid-digits=\"{}\" method=\"{}\" /> tag "
                     "in the <coupling-scheme:...> of your precice-config.xml",
@@ -216,12 +225,14 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     } else {
       PRECICE_ASSERT(_config.dtMethod == constants::TimesteppingMethod::FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE);
       PRECICE_CHECK(_config.timeWindowSize == -1,
+                    ::precice::ConfigurationError,
                     "Time window size value has to be equal to -1 (default), if method=\"first-participant\" is used. "
                     "Please check the <time-window-size value=\"{}\" valid-digits=\"{}\" method=\"{}\" /> "
                     "tag in the <coupling-scheme:...> of your precice-config.xml",
                     _config.timeWindowSize, _config.validDigits, tag.getStringAttributeValue(ATTR_METHOD));
     }
     PRECICE_CHECK((_config.validDigits >= 1) && (_config.validDigits < 17),
+                  ::precice::ConfigurationError,
                   "Valid digits of time window size has to be between 1 and 16. "
                   "Please check the <time-window-size value=\"{}\" valid-digits=\"{}\" method=\"{}\" /> tag "
                   "in the <coupling-scheme:...> of your precice-config.xml",
@@ -266,6 +277,7 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     bool        initialize          = tag.getBooleanAttributeValue(ATTR_INITIALIZE);
 
     PRECICE_CHECK(_meshConfig->hasMeshName(nameMesh) && _meshConfig->getMesh(nameMesh)->hasDataName(nameData),
+                  ::precice::ConfigurationError,
                   "Mesh \"{}\" with data \"{}\" not defined. "
                   "Please check the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" /> "
                   "tag in the <coupling-scheme:... /> of your precice-config.xml.",
@@ -278,6 +290,7 @@ void CouplingSchemeConfiguration::xmlTagCallback(
 
     Config::Exchange newExchange{exchangeData, exchangeMesh, nameParticipantFrom, nameParticipantTo, initialize};
     PRECICE_CHECK(!_config.hasExchange(newExchange),
+                  ::precice::ConfigurationError,
                   R"(Data "{}" of mesh "{}" cannot be exchanged multiple times between participants "{}" and "{}". Please remove one of the exchange tags.)",
                   nameData, nameMesh, nameParticipantFrom, nameParticipantTo);
 
@@ -288,12 +301,14 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
     _config.maxIterations = tag.getIntAttributeValue(ATTR_VALUE);
     PRECICE_CHECK(_config.maxIterations > 0,
+                  ::precice::ConfigurationError,
                   "Maximal iteration limit has to be larger than zero. Please check the <max-iterations value = \"{}\" /> subtag in the <coupling-scheme:... /> of your precice-config.xml.",
                   _config.maxIterations);
   } else if (tag.getName() == TAG_EXTRAPOLATION) {
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
     _config.extrapolationOrder = tag.getIntAttributeValue(ATTR_VALUE);
     PRECICE_CHECK((_config.extrapolationOrder == 0) || (_config.extrapolationOrder == 1),
+                  ::precice::ConfigurationError,
                   "Extrapolation order has to be 0 or 1. "
                   "Please check the <extrapolation-order value=\"{}\" /> subtag in the <coupling-scheme:... /> of your precice-config.xml.",
                   _config.extrapolationOrder);
@@ -354,6 +369,7 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
       _config = Config();
     } else if (_config.type == VALUE_MULTI) {
       PRECICE_CHECK(_config.setController,
+                    ::precice::ConfigurationError,
                     "One controller per MultiCoupling needs to be defined. "
                     "Please check the <participant name=... /> tags in the <coupling-scheme:... /> of your precice-config.xml. "
                     "Make sure that at least one participant tag provides the attribute <participant name=... control=\"True\"/>.");
@@ -395,6 +411,7 @@ void CouplingSchemeConfiguration::addCouplingScheme(
   // Add the new scheme to the composition
   auto composition = _couplingSchemeCompositions.at(participantName);
   PRECICE_CHECK(!cplScheme->isImplicitCouplingScheme() || !composition->isImplicitCouplingScheme(),
+                ::precice::ConfigurationError,
                 "You attempted to define a second implicit coupling-scheme for the participant \"{}\", which is not allowed. "
                 "Please use a multi coupling-scheme for true implicit coupling of multiple participants.",
                 participantName);
@@ -664,6 +681,7 @@ void CouplingSchemeConfiguration::addAbsoluteConvergenceMeasure(
 {
   PRECICE_TRACE();
   PRECICE_CHECK(math::greater(limit, 0.0),
+                ::precice::ConfigurationError,
                 "Absolute convergence limit has to be greater than zero. "
                 "Please check the <absolute-convergence-measure limit=\"{}\" data=\"{}\" mesh=\"{}\" /> subtag "
                 "in your <coupling-scheme ... /> in the preCICE configuration file.",
@@ -688,6 +706,7 @@ void CouplingSchemeConfiguration::addRelativeConvergenceMeasure(
 {
   PRECICE_TRACE();
   PRECICE_CHECK(math::greater(limit, 0.0) && math::greaterEquals(1.0, limit),
+                ::precice::ConfigurationError,
                 "Relative convergence limit has to be in ]0;1]. "
                 "Please check the <relative-convergence-measure limit=\"{}\" data=\"{}\" mesh=\"{}\" /> subtag "
                 "in your <coupling-scheme ... /> in the preCICE configuration file.",
@@ -718,6 +737,7 @@ void CouplingSchemeConfiguration::addResidualRelativeConvergenceMeasure(
 {
   PRECICE_TRACE();
   PRECICE_CHECK(math::greater(limit, 0.0) && math::greaterEquals(1.0, limit),
+                ::precice::ConfigurationError,
                 "Relative convergence limit has to be in ]0;1]. "
                 "Please check the <residul-relative-convergence-measure limit=\"{}\" data=\"{}\" mesh=\"{}\" /> subtag "
                 "in your <coupling-scheme ... /> in the preCICE configuration file.",
@@ -763,6 +783,7 @@ mesh::PtrData CouplingSchemeConfiguration::getData(
     const std::string &meshName) const
 {
   PRECICE_CHECK(_meshConfig->hasMeshName(meshName) && _meshConfig->getMesh(meshName)->data(dataName),
+                ::precice::ConfigurationError,
                 "Data \"{}\" used by mesh \"{}\" is not configured.", dataName, meshName);
   const mesh::PtrMesh &mesh = _meshConfig->getMesh(meshName);
   return mesh->data(dataName);
@@ -828,6 +849,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
 
   addDataToBeExchanged(*scheme, accessor);
   PRECICE_CHECK(scheme->hasAnySendData(),
+                ::precice::ConfigurationError,
                 "No send data configured. "
                 "Use explicit scheme for one-way coupling. "
                 "Please check your <coupling-scheme ... /> and make sure that you provide at least one <exchange .../> subtag, "
@@ -836,6 +858,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
 
   // Add convergence measures
   PRECICE_CHECK(not _config.convergenceMeasureDefinitions.empty(),
+                ::precice::ConfigurationError,
                 "At least one convergence measure has to be defined for an implicit coupling scheme. "
                 "Please check your <coupling-scheme ... /> and make sure that you provide at least one "
                 "<...-convergence-measure/> subtag in the precice-config.xml.");
@@ -847,6 +870,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
   if (scheme->doesFirstStep() && _accelerationConfig->getAcceleration() && not _accelerationConfig->getAcceleration()->getDataIDs().empty()) {
     DataID dataID = *(_accelerationConfig->getAcceleration()->getDataIDs().begin());
     PRECICE_CHECK(not scheme->hasSendData(dataID),
+                  ::precice::ConfigurationError,
                   "In case of serial coupling, acceleration can be defined for data of second participant only!");
   }
 
@@ -866,6 +890,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingSch
 
   addDataToBeExchanged(*scheme, accessor);
   PRECICE_CHECK(scheme->hasAnySendData(),
+                ::precice::ConfigurationError,
                 "No send data configured. Use explicit scheme for one-way coupling. "
                 "Please check your <coupling-scheme ... /> and make sure that you provide at least one <exchange .../> subtag, "
                 "where from=\"{}\".",
@@ -873,6 +898,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingSch
 
   // Add convergence measures
   PRECICE_CHECK(not _config.convergenceMeasureDefinitions.empty(),
+                ::precice::ConfigurationError,
                 "At least one convergence measure has to be defined for an implicit coupling scheme. "
                 "Please check your <coupling-scheme ... /> and make sure that you provide at least one <...-convergence-measure/> subtag in the precice-config.xml.");
   addConvergenceMeasures(scheme, _config.participants[1], _config.convergenceMeasureDefinitions);
@@ -907,6 +933,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
   addMultiDataToBeExchanged(*castedScheme, accessor);
 
   PRECICE_CHECK(scheme->hasAnySendData(),
+                ::precice::ConfigurationError,
                 "No send data configured. Use explicit scheme for one-way coupling. "
                 "Please check your <coupling-scheme ... /> and make sure that you provide at least one "
                 "<exchange .../> subtag, where from=\"{}\".",
@@ -914,6 +941,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
 
   // Add convergence measures
   PRECICE_CHECK(not _config.convergenceMeasureDefinitions.empty(),
+                ::precice::ConfigurationError,
                 "At least one convergence measure has to be defined for an implicit coupling scheme. "
                 "Please check your <coupling-scheme ... /> and make sure that you provide at least one "
                 "<...-convergence-measure/> subtag in the precice-config.xml.");
@@ -961,26 +989,29 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
     const std::string &meshName = exchange.mesh->getName();
 
     PRECICE_CHECK(to != from,
+                  ::precice::ConfigurationError,
                   "You cannot define an exchange from and to the same participant. "
                   "Please check the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" /> tag in the <coupling-scheme:... /> of your precice-config.xml.",
                   dataName, meshName, from, to);
 
     PRECICE_CHECK((utils::contained(from, _config.participants) || from == _config.controller),
+                  ::precice::ConfigurationError,
                   "Participant \"{}\" is not configured for coupling scheme. "
                   "Please check the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" /> tag in the <coupling-scheme:... /> of your precice-config.xml.",
                   from, dataName, meshName, from, to);
 
     PRECICE_CHECK((utils::contained(to, _config.participants) || to == _config.controller),
+                  ::precice::ConfigurationError,
                   "Participant \"{}\" is not configured for coupling scheme. "
                   "Please check the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" /> tag in the <coupling-scheme:... /> of your precice-config.xml.",
                   to, dataName, meshName, from, to);
 
     const bool requiresInitialization = exchange.requiresInitialization;
-    PRECICE_CHECK(
-        !(requiresInitialization && _participantConfig->getParticipant(from)->isDirectAccessAllowed(exchange.mesh->getID())),
-        "Participant \"{}\" cannot initialize data of the directly-accessed mesh \"{}\" from the participant\"{}\". "
-        "Either disable the initialization in the <exchange /> tag or use a locally provided mesh instead.",
-        from, meshName, to);
+    PRECICE_CHECK(!(requiresInitialization && _participantConfig->getParticipant(from)->isDirectAccessAllowed(exchange.mesh->getID())),
+                  ::precice::ConfigurationError,
+                  "Participant \"{}\" cannot initialize data of the directly-accessed mesh \"{}\" from the participant\"{}\". "
+                  "Either disable the initialization in the <exchange /> tag or use a locally provided mesh instead.",
+                  from, meshName, to);
 
     if (from == accessor) {
       scheme.addDataToSend(exchange.data, exchange.mesh, requiresInitialization);
@@ -1005,15 +1036,18 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
     const std::string &meshName = exchange.mesh->getName();
 
     PRECICE_CHECK(to != from,
+                  ::precice::ConfigurationError,
                   "You cannot define an exchange from and to the same participant. "
                   "Please check the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" /> tag in the <coupling-scheme:... /> of your precice-config.xml.",
                   dataName, meshName, from, to);
 
     PRECICE_CHECK((utils::contained(from, _config.participants) || from == _config.controller),
+                  ::precice::ConfigurationError,
                   "Participant \"{}\" is not configured for coupling scheme",
                   from);
 
     PRECICE_CHECK((utils::contained(to, _config.participants) || to == _config.controller),
+                  ::precice::ConfigurationError,
                   "Participant \"{}\" is not configured for coupling scheme", to);
 
     const bool initialize = exchange.requiresInitialization;
@@ -1043,7 +1077,8 @@ void CouplingSchemeConfiguration::checkIfDataIsExchanged(
     dataName = dataptr->getName();
   }
 
-  PRECICE_ERROR("You need to exchange every data that you use for convergence measures and/or the iteration acceleration. "
+  PRECICE_ERROR(::precice::ConfigurationError,
+                "You need to exchange every data that you use for convergence measures and/or the iteration acceleration. "
                 "Data \"{}\" is currently not exchanged over the respective mesh on which it is used for convergence measures and/or iteration acceleration. "
                 "Please check the <exchange ... /> and <...-convergence-measure ... /> tags in the <coupling-scheme:... /> of your precice-config.xml.",
                 dataName);
@@ -1066,9 +1101,9 @@ void CouplingSchemeConfiguration::checkWaveformOrderReadData(
       int usedOrder = dataContext.getInterpolationOrder();
       PRECICE_ASSERT(usedOrder >= 0); // ensure that usedOrder was set
       if (usedOrder > maxAllowedOrder) {
-        PRECICE_ERROR(
-            "You configured <read-data name=\"{}\" mesh=\"{}\" waveform-order=\"{}\" />, but for the coupling scheme you are using only a maximum waveform-order of \"{}\" is allowed.",
-            dataContext.getDataName(), dataContext.getMeshName(), usedOrder, maxAllowedOrder);
+        PRECICE_ERROR(::precice::ConfigurationError,
+                      "You configured <read-data name=\"{}\" mesh=\"{}\" waveform-order=\"{}\" />, but for the coupling scheme you are using only a maximum waveform-order of \"{}\" is allowed.",
+                      dataContext.getDataName(), dataContext.getMeshName(), usedOrder, maxAllowedOrder);
       }
     }
   }
@@ -1097,13 +1132,13 @@ void CouplingSchemeConfiguration::checkSerialImplicitAccelerationData(
     dataName = dataptr->getName();
   }
 
-  PRECICE_ERROR(
-      "You configured acceleration data \"{}\" in the serial implicit coupling scheme between participants \"{}\" and \"{}\". "
-      "For serial implicit coupling schemes, only data exchanged from the second to the first participant can be used for acceleration. "
-      "Here, from \"{}\" to \"{}\". "
-      "However, you configured data \"{}\" for acceleration, which is exchanged from \"{}\" to \"{}\". "
-      "Please remove this acceleration data tag or switch to a parallel implicit coupling scheme.",
-      dataName, first, second, second, first, dataName, first, second);
+  PRECICE_ERROR(::precice::ConfigurationError,
+                "You configured acceleration data \"{}\" in the serial implicit coupling scheme between participants \"{}\" and \"{}\". "
+                "For serial implicit coupling schemes, only data exchanged from the second to the first participant can be used for acceleration. "
+                "Here, from \"{}\" to \"{}\". "
+                "However, you configured data \"{}\" for acceleration, which is exchanged from \"{}\" to \"{}\". "
+                "Please remove this acceleration data tag or switch to a parallel implicit coupling scheme.",
+                dataName, first, second, second, first, dataName, first, second);
 }
 
 void CouplingSchemeConfiguration::addConvergenceMeasures(

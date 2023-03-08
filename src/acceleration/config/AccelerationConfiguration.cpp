@@ -156,7 +156,8 @@ void AccelerationConfiguration::xmlTagCallback(
     std::string meshName = callingTag.getStringAttributeValue(ATTR_MESH);
     auto        success  = _uniqueDataAndMeshNames.emplace(dataName, meshName);
     if (not success.second) {
-      PRECICE_ERROR("You have provided a subtag <data name=\"{}\" mesh=\"{}\"/> more than once in your <acceleration:.../>. "
+      PRECICE_ERROR(::precice::ConfigurationError,
+                    "You have provided a subtag <data name=\"{}\" mesh=\"{}\"/> more than once in your <acceleration:.../>. "
                     "Please remove the duplicated entry.",
                     dataName, meshName);
     }
@@ -167,6 +168,7 @@ void AccelerationConfiguration::xmlTagCallback(
     }
 
     PRECICE_CHECK(_meshConfig->hasMeshName(_meshName) && _meshConfig->getMesh(_meshName)->hasDataName(dataName),
+                  ::precice::ConfigurationError,
                   "Data with name \"{0}\" associated to mesh \"{1}\" not found on configuration of acceleration. "
                   "Add \"{0}\" to the \"<mesh name={1}>\" tag, or change the data name in the acceleration scheme.",
                   dataName, _meshName);
@@ -206,7 +208,8 @@ void AccelerationConfiguration::xmlTagCallback(
   } else if (callingTag.getName() == TAG_IMVJRESTART) {
 
     if (_config.alwaysBuildJacobian)
-      PRECICE_ERROR("IMVJ cannot be in restart mode while parameter always-build-jacobian is set to true. "
+      PRECICE_ERROR(::precice::ConfigurationError,
+                    "IMVJ cannot be in restart mode while parameter always-build-jacobian is set to true. "
                     "Please remove 'always-build-jacobian' from the configuration file or do not run in restart mode.");
 
 #ifndef PRECICE_NO_MPI
@@ -229,7 +232,8 @@ void AccelerationConfiguration::xmlTagCallback(
       PRECICE_ASSERT(false);
     }
 #else
-    PRECICE_ERROR("Acceleration IQN-IMVJ only works if preCICE is compiled with MPI");
+    PRECICE_ERROR(::precice::ConfigurationError,
+                  "Acceleration IQN-IMVJ only works if preCICE is compiled with MPI");
 #endif
   }
 }
@@ -306,7 +310,8 @@ void AccelerationConfiguration::xmlEndTagCallback(
               _config.imvjRSLS_reusedTimeWindows,
               _config.imvjRSSVD_truncationEps));
 #else
-      PRECICE_ERROR("Acceleration IQN-IMVJ only works if preCICE is compiled with MPI");
+      PRECICE_ERROR(::precice::ConfigurationError,
+                    "Acceleration IQN-IMVJ only works if preCICE is compiled with MPI");
 #endif
     } else if (callingTag.getName() == VALUE_BROYDEN) {
       _acceleration = PtrAcceleration(
@@ -545,7 +550,8 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     tagData.addAttribute(attrMesh);
     tag.addSubtag(tagData);
   } else {
-    PRECICE_ERROR("Acceleration of type \"{}\" is unknown. Please choose a valid acceleration scheme or check the spelling in the configuration file.", tag.getName());
+    PRECICE_ERROR(::precice::ConfigurationError,
+                  "Acceleration of type \"{}\" is unknown. Please choose a valid acceleration scheme or check the spelling in the configuration file.", tag.getName());
   }
 }
 } // namespace precice::acceleration

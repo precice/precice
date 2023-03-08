@@ -53,10 +53,12 @@ void ProvidedPartition::communicate()
   for (auto &m2n : _m2ns) {
     if (m2n->usesTwoLevelInitialization()) {
 
-      PRECICE_CHECK(not twoLevelInitAlreadyUsed, "Two-level initialization does not yet support multiple receivers of a provided mesh. "
-                                                 "Please either switch two-level initialization off in your m2n definition, or "
-                                                 "adapt your mesh setup such that each provided mesh is only received by maximum one "
-                                                 "participant.");
+      PRECICE_CHECK(not twoLevelInitAlreadyUsed,
+                    ::precice::PartitionError,
+                    "Two-level initialization does not yet support multiple receivers of a provided mesh. "
+                    "Please either switch two-level initialization off in your m2n definition, or "
+                    "adapt your mesh setup such that each provided mesh is only received by maximum one "
+                    "participant.");
       twoLevelInitAlreadyUsed = true;
 
       Event e("partition.broadcastMeshPartitions." + _mesh->getName(), precice::syncMode);
@@ -109,6 +111,7 @@ void ProvidedPartition::communicate()
 
       if (not utils::IntraComm::isSecondary()) {
         PRECICE_CHECK(globalMesh.vertices().size() > 0,
+                      ::precice::PartitionError,
                       "The provided mesh \"{}\" is empty. Please set the mesh using setMeshXXX() prior to calling initialize().",
                       globalMesh.getName());
         com::sendMesh(*m2n->getPrimaryRankCommunication(), 0, globalMesh);

@@ -76,7 +76,8 @@ void BroydenAcceleration::computeQNUpdate(const DataMap &cplData, Eigen::VectorX
 
   PRECICE_DEBUG("currentColumns={}", _currentColumns);
   if (_currentColumns > 1) {
-    PRECICE_ERROR("Truncated IMVJ is no longer supported. Please use IMVJ with restart mode instead.");
+    PRECICE_ERROR(::precice::AccelerationError,
+                  "Truncated IMVJ is no longer supported. Please use IMVJ with restart mode instead.");
     PRECICE_DEBUG("compute update with QR-dec");
     //computeNewtonFactorsQRDecomposition(cplData, xUpdate);
   } else {

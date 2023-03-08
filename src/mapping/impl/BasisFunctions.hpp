@@ -93,6 +93,7 @@ public:
       : _cPow2(std::pow(c, 2))
   {
     PRECICE_CHECK(math::greater(c, 0.0),
+                  ::precice::MappingError,
                   "Shape parameter for radial-basis-function inverse multiquadric has to be larger than zero. Please update the \"shape-parameter\" attribute.");
   }
 
@@ -139,8 +140,10 @@ public:
         _supportRadius(supportRadius)
   {
     PRECICE_CHECK(math::greater(_shape, 0.0),
+                  ::precice::MappingError,
                   "Shape parameter for radial-basis-function gaussian has to be larger than zero. Please update the \"shape-parameter\" attribute.");
     PRECICE_CHECK(math::greater(_supportRadius, 0.0),
+                  ::precice::MappingError,
                   "Support radius for radial-basis-function gaussian has to be larger than zero. Please update the \"support-radius\" attribute.");
 
     if (supportRadius < std::numeric_limits<double>::infinity()) {
@@ -194,6 +197,7 @@ public:
   explicit CompactThinPlateSplinesC2(double supportRadius)
   {
     PRECICE_CHECK(math::greater(supportRadius, 0.0),
+                  ::precice::MappingError,
                   "Support radius for radial-basis-function compact thin-plate-splines c2 has to be larger than zero. Please update the \"support-radius\" attribute.");
     _r_inv = 1. / supportRadius;
   }
@@ -234,7 +238,9 @@ public:
   {
     logging::Logger _log{"mapping::CompactPolynomialC0"};
     PRECICE_CHECK(math::greater(supportRadius, 0.0),
+                  ::precice::MappingError,
                   "Support radius for radial-basis-function compact polynomial c0 has to be larger than zero. Please update the \"support-radius\" attribute.");
+
     _r_inv = 1. / supportRadius;
   }
 
@@ -272,6 +278,7 @@ public:
   {
     logging::Logger _log{"mapping::CompactPolynomialC2"};
     PRECICE_CHECK(math::greater(supportRadius, 0.0),
+                  ::precice::MappingError,
                   "Support radius for radial-basis-function compact polynomial c2 has to be larger than zero. Please update the \"support-radius\" attribute.");
 
     _r_inv = 1. / supportRadius;
@@ -311,6 +318,7 @@ public:
   {
     logging::Logger _log{"mapping::CompactPolynomialC4"};
     PRECICE_CHECK(math::greater(supportRadius, 0.0),
+                  ::precice::MappingError,
                   "Support radius for radial-basis-function compact polynomial c4 has to be larger than zero. Please update the \"support-radius\" attribute.");
 
     _r_inv = 1. / supportRadius;
@@ -350,6 +358,7 @@ public:
   {
     logging::Logger _log{"mapping::CompactPolynomialC6"};
     PRECICE_CHECK(math::greater(supportRadius, 0.0),
+                  ::precice::MappingError,
                   "Support radius for radial-basis-function compact polynomial c6 has to be larger than zero. Please update the \"support-radius\" attribute.");
 
     _r_inv = 1. / supportRadius;

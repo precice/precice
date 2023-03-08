@@ -8,6 +8,7 @@
 
 #include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
+#include "precice/exceptions.hpp"
 #include "testing/Testing.hpp"
 #include "utils/assertion.hpp"
 
@@ -18,6 +19,7 @@ std::string getPathToRepository()
   precice::logging::Logger _log("testing");
   char *                   preciceRoot = std::getenv("PRECICE_ROOT");
   PRECICE_CHECK(preciceRoot != nullptr,
+                ::precice::APIError,
                 "Environment variable PRECICE_ROOT is required to run the tests, but has not been set. Please set it to the root directory of the precice repository.");
 
   // Cleanup the path by canonicalising it.

@@ -9,7 +9,8 @@ TXTWriter::TXTWriter(
     : _file()
 {
   _file.open(filename);
-  PRECICE_CHECK(_file, "TXT writer failed to open file \"{}\"", filename);
+  PRECICE_CHECK(_file,
+                ::precice::IOError, "TXT writer failed to open file \"{}\"", filename);
 
   _file.setf(std::ios::showpoint);
   _file.setf(std::ios::fixed);
