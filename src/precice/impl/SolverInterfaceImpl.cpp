@@ -1280,7 +1280,7 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
 
     mesh::Data &meshData = *context.providedData();
 
-    // Check if the Data object with ID mesh,data has been initialized with gradient data
+    // Check if the Data object of given mesh has been initialized with gradient data
     PRECICE_CHECK(meshData.hasGradient(), "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", meshData.getName())
 
     // Check if the dimensions match

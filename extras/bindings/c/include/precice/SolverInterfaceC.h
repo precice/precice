@@ -166,7 +166,7 @@ PRECICE_API void precicec_setMeshVertices(
 /**
  * @brief Sets mesh edge from vertex IDs, returns edge ID.
  *
- * @param[in] meshName name of the mesh to add the edge to
+ * @param[in] meshName the name of the mesh to add the edge to
  * @param[in] firstVertexID ID of the first vertex of the edge
  * @param[in] secondVertexID ID of the second vertex of the edge
  *
@@ -180,7 +180,7 @@ PRECICE_API void precicec_setMeshEdge(
 /**
  * @brief Sets multiple mesh edge from vertex IDs
  *
- * @param[in] meshName name of the mesh to add the edges to
+ * @param[in] meshName the name of the mesh to add the edges to
  * @param[in] size the amount of edges to set
  * @param[in] vertices an array containing 2*size vertex IDs
  *
@@ -203,7 +203,7 @@ PRECICE_API void precicec_setMeshTriangle(
 /**
  * @brief Sets multiple mesh triangles from vertex IDs
  *
- * @param[in] meshName name of the mesh to add the triangles to
+ * @param[in] meshName the name of the mesh to add the triangles to
  * @param[in] size the amount of triangles to set
  * @param[in] vertices an array containing 3*size vertex IDs
  *
@@ -217,7 +217,7 @@ PRECICE_API void precicec_setMeshTriangles(
 /**
  * @brief Sets surface mesh quadrangle from vertex IDs.
  *
- * @param[in] meshName name of the mesh to add the Quad to
+ * @param[in] meshName the name of the mesh to add the Quad to
  * @param[in] firstVertexID ID of the first vertex of the Quad
  * @param[in] secondVertexID ID of the second vertex of the Quad
  * @param[in] thirdVertexID ID of the third vertex of the Quad
@@ -233,7 +233,7 @@ PRECICE_API void precicec_setMeshQuad(
 /**
  * @brief Sets multiple mesh quads from vertex IDs
  *
- * @param[in] meshName name of the mesh to add the quad to
+ * @param[in] meshName the name of the mesh to add the quad to
  * @param[in] size the amount of quads to set
  * @param[in] vertices an array containing 4*size vertex IDs
  *
@@ -247,7 +247,7 @@ PRECICE_API void precicec_setMeshQuads(
 /**
  * @brief Sets mesh tetrahedron from vertex IDs.
  *
- * @param[in] meshName name of the mesh to add the Tetra to
+ * @param[in] meshName the name of the mesh to add the Tetra to
  * @param[in] firstVertexID ID of the first vertex of the Tetra
  * @param[in] secondVertexID ID of the second vertex of the Tetra
  * @param[in] thirdVertexID ID of the third vertex of the Tetra
@@ -263,7 +263,7 @@ PRECICE_API void precicec_setMeshTetrahedron(
 /**
  * @brief Sets multiple mesh tetrahedra from vertex IDs
  *
- * @param[in] meshName name of the mesh to add the tetrahedra to
+ * @param[in] meshName the name of the mesh to add the tetrahedra to
  * @param[in] size the amount of tetrahedra to set
  * @param[in] vertices an array containing 4*size vertex IDs
  *

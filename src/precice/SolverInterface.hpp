@@ -389,7 +389,7 @@ public:
    *
    * @note The order of vertices per edge does not matter.
    *
-   * @param[in] meshName name of the mesh to add the edges to
+   * @param[in] meshName the name of the mesh to add the edges to
    * @param[in] size the amount of edges to set
    * @param[in] vertices an array containing 2*size vertex IDs
    *
