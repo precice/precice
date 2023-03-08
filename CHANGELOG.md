@@ -109,7 +109,7 @@ All notable changes to this project will be documented in this file. For future 
 - Deprecated the `flip-normals` attribute of meshes. This is not functional anymore.
 - Deprecated vertex normals in the `vertexCallback()` of the python actions. preCICE will pass `None` if the normal parameter is defined.
 - Fixed FindNumPy using fallback of `find_path`.
-- Fixed FindPETSc to also find PETSc if the include directory is in CPATH, which occured with some versions of `pkg-config`.
+- Fixed FindPETSc to also find PETSc if the include directory is in CPATH, which occurred with some versions of `pkg-config`.
 - Fixed socket communication to fail without a network connection.
 - Fixed wrong error in tightly converging QN coupling. (Issue #976)
 - Implement a simplified interface to query index trees of meshes.
@@ -204,7 +204,7 @@ All notable changes to this project will be documented in this file. For future 
 - Changed the CMake FindNumPy module to only consider information based on the selected python interpreter.
 - Changed the minimum required PETSc version to 3.12, which delivers consistent results across platforms.
 - Disabled tests based on MPIPorts and MPISinglePorts when using Open MPI.
-- Enabled RBF-based tests in partiton unit-tests and serial integration tests.
+- Enabled RBF-based tests in partition unit-tests and serial integration tests.
 - Extended iteration logging by total and dropped quasi-Newton columns.
 - Extended title headers of convergence and iteration files by measure abbreviation.
 - Fixed MPIPorts and MPISinglePorts not always closing ports.
@@ -223,7 +223,7 @@ All notable changes to this project will be documented in this file. For future 
 - Improved readability of relative convergence measure INFO logs.
 - Refactored `com::Communication` handling of rank adjustments.
 - Refactored `cplscheme::BaseCouplingScheme` and derived classes. Introduce `cplscheme::BiCouplingScheme`.
-- Refactored `mesh::BoundingBox` into seperate class.
+- Refactored `mesh::BoundingBox` into separate class.
 - Removed `m2n:mpi-single`, which never worked outside tests.
 - Removed convergence file logging for min-iterations convergence measure.
 - Removed deprecated and untested Manifold Mapping. API functions `hasToEvaluateSurrogateModel` and `hasToEvaluateFineModel` remain as nop stubs.
@@ -274,7 +274,7 @@ All notable changes to this project will be documented in this file. For future 
 - Improved efficiency of nearest projection mapping of matching meshes using lazy generation of index trees.
 - Introduced preCICE-MATLAB bindings (https://github.com/precice/precice/pull/494, https://github.com/precice/precice/pull/580) and provided them in [`precice/matlab-bindings`](https://github.com/precice/matlab-bindings).
 - Merged the `SolverInterface::configure()` into the `SolverInterface` constructors. They now have a second parameter for the configuration file.
-- Moved Fortan 2003 bindings (`src/precice/bindings/f2003`) and solverdummy (`tools/solverdummy/f2003`) to a separate repository.
+- Moved Fortran 2003 bindings (`src/precice/bindings/f2003`) and solverdummy (`tools/solverdummy/f2003`) to a separate repository.
 - Refactored and made two-level initialization configurable through `"use-two-level-init"` in `m2n`.
 - Refactored the XML documentation generation out of the `xml::XMLAttribute` and `xml::XMLTag` classes into `xml/Printer.[c/h]pp`.
 - Released finalized version of python bindings in independent repository: [`precice/python-bindings`](https://github.com/precice/python-bindings). Package is named [`pyprecice`](https://github.com/precice/python-bindings/blob/3b9aec6c529814e6904a6a4697cf92388d4c4bf0/setup.py#L18) and supports the preCICE version >= 2.0.0.
@@ -392,7 +392,7 @@ All notable changes to this project will be documented in this file. For future 
 
 ## 1.4.1
 
-- Bug in re-partitioning fixed, occured for OpenFOAM and empty ranks in parallel.
+- Bug in re-partitioning fixed, occurred for OpenFOAM and empty ranks in parallel.
 
 ## 1.4.0
 - The python modules are now proper packages tracking dependencies etc.
@@ -458,7 +458,7 @@ All notable changes to this project will be documented in this file. For future 
 - Build system:
   - Make `python=off` default.
 - Building with Conda:
-  - The helper scripts are now placed in the directory `tools/conda_building`. All the terms refering to `Anaconda` have been changed to `Conda`.
+  - The helper scripts are now placed in the directory `tools/conda_building`. All the terms referring to `Anaconda` have been changed to `Conda`.
 - Sending data exchange is now fully asynchronous, so that the sending participant never waits for the receiving one.
 - Rename `src/precice/adapters` to `src/precice/bindings`
 - adding `libprefix` option in scons build process to allow for non-standard library paths
@@ -485,7 +485,7 @@ All notable changes to this project will be documented in this file. For future 
 - Converted all tests to the new, boost test based, unit testing framework.
 - Removed the `tarch` legacy library.
 - Use `boost::signal2` for implement observer pattern for the Mesh class.
-- Add contributer guidelines.
+- Add contributor guidelines.
 
 
 ## 1.0.3

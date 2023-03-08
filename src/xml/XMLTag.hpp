@@ -134,7 +134,7 @@ public:
   /// Adds a XML attribute by making a copy of the given attribute.
   XMLTag &addAttribute(const XMLAttribute<Eigen::VectorXd> &attribute);
 
-  /// Adds a hint for missing attributes, which will be displayed allong the error message.
+  /// Adds a hint for missing attributes, which will be displayed along the error message.
   void addAttributeHint(std::string name, std::string message);
 
   bool hasAttribute(const std::string &attributeName);

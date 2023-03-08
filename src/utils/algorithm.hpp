@@ -21,10 +21,10 @@ auto make_array(Elements &&... elements) -> std::array<typename std::common_type
 
 /** Checks weather the given elements contains no duplicates.
  *
- * \tparam Container type of the passed container.
- * \tparam BinaryPredicate the predicate used to compare two elements for equality.
- * \param c the container to check for unique elements.
- * \returns weather all elements in c are unique.
+ * @tparam Container type of the passed container.
+ * @tparam BinaryPredicate the predicate used to compare two elements for equality.
+ * @param c the container to check for unique elements.
+ * @returns weather all elements in c are unique.
  */
 template <typename Container, typename BinaryPredicate = std::equal_to<typename Container::value_type>>
 bool unique_elements(const Container &c, BinaryPredicate p = {})
@@ -52,11 +52,11 @@ bool unique_elements(const Container &c, BinaryPredicate p = {})
  *
  * This results in a range [first, elem, first+1, elem, ... , elem, last[
  *
- * \tparam InputIter the type of the input iterators
- * \tparam ElemT the type of the element to intersperse
+ * @tparam InputIter the type of the input iterators
+ * @tparam ElementType the type of the element to intersperse
  */
-template <class InputIter, class ElemT>
-void intersperse(InputIter first, InputIter last, const ElemT &elem, std::ostream &out)
+template <class InputIter, class ElementType>
+void intersperse(InputIter first, InputIter last, const ElementType &elem, std::ostream &out)
 {
   if (first == last)
     return;

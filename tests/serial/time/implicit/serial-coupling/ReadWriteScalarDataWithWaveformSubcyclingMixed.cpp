@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_SUITE(SerialCoupling)
 /**
  * @brief Test to run a simple coupling with zeroth order waveform subcycling.
  *
- * Provides a dt argument to the read function, uses zeroth order waveform for SolverOne and a first oder waveform for SolverTwo. See ReadWriteScalarDataWithWaveformSubcyclingZero and ReadWriteScalarDataWithWaveformSubcyclingFirst for details on the non-mixed cases and expected behavior.
+ * Provides a dt argument to the read function, uses zeroth order waveform for SolverOne and a first order waveform for SolverTwo. See ReadWriteScalarDataWithWaveformSubcyclingZero and ReadWriteScalarDataWithWaveformSubcyclingFirst for details on the non-mixed cases and expected behavior.
  */
 BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingMixed)
 {

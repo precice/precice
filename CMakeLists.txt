@@ -145,7 +145,7 @@ add_feature_info(PreciceTools PRECICE_BUILD_TOOLS
   add_feature_info(libbacktrace PRECICE_ENABLE_LIBBACKTRACE
   "Enables libbacktrace for stracktrace generation.
 
-   preCICE assertions are helpful during development, however, the default stacktraces may not be sufficent.
+   preCICE assertions are helpful during development, however, the default stacktraces may not be sufficient.
    This feature enables the support for libbacktrace in boost.stacktrace.
 
    This feature can be enabled/disabled by setting the PRECICE_ENABLE_LIBBACKTRACE CMake option.

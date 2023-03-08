@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitialization)
     }
   } else {
     BOOST_TEST(context.isNamed("Structure"));
-    // This partiticipant starts with negated data
+    // This participant starts with negated data
     for (int i = 0; i < 4; i++) {
       data[i] = -data[i];
     }
