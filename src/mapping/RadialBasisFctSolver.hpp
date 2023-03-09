@@ -121,6 +121,8 @@ Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh
   PRECICE_ASSERT((inputSize >= 1 + polyparams) || polynomial != Polynomial::ON, inputSize);
 
   Eigen::MatrixXd matrixCLU(n, n);
+
+  precice::utils::Event cluAssembly{"map.rbf.assembleSystemMatrix", false};
   matrixCLU.setZero();
 
   // Compute RBF matrix entries
@@ -136,6 +138,7 @@ Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh
       matrixCLU(i_index, j_index)   = basisFunction.evaluate(std::sqrt(squaredDifference));
     }
   }
+  cluAssembly.stop();
 
   // Add potentially the polynomial contribution in the matrix
   if (polynomial == Polynomial::ON) {
@@ -162,6 +165,8 @@ Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::
   PRECICE_ASSERT((inputSize >= 1 + polyparams) || polynomial != Polynomial::ON, inputSize);
 
   Eigen::MatrixXd matrixA(outputSize, n);
+
+  precice::utils::Event outputAssembly{"map.rbf.assembleOutputMatrix", false};
   matrixA.setZero();
 
   // Compute RBF values for matrix A
@@ -173,6 +178,8 @@ Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::
       matrixA(i.index(), j.index()) = basisFunction.evaluate(std::sqrt(squaredDifference));
     }
   }
+
+  outputAssembly.stop();
 
   // Add potentially the polynomial contribution in the matrix
   if (polynomial == Polynomial::ON) {
