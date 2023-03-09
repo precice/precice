@@ -13,6 +13,25 @@
 #include "precice/types.hpp"
 #include "utils/Event.hpp"
 
+// Every class uses Ginkgo's default_precision = double
+// Ginkgo Data Structures
+using GinkgoVector = gko::matrix::Dense<>;
+using GinkgoMatrix = gko::matrix::Dense<>;
+using GinkgoScalar = gko::matrix::Dense<>;
+// Ginkgo Solver
+using cg         = gko::solver::Cg<>;
+using gmres      = gko::solver::Gmres<>;
+using mg         = gko::solver::Multigrid;
+using ir         = gko::solver::Ir<>;
+using triangular = gko::solver::UpperTrs<>;
+// Ginkgo Preconditioner
+using jacobi   = gko::preconditioner::Jacobi<>;
+using cholesky = gko::preconditioner::Ic<>;
+using ilu      = gko::preconditioner::Ilu<>;
+
+// Ginkgo Helpers
+using amgx_pgm = gko::multigrid::AmgxPgm<>; // TODO: It was later renamed to Pgm so this needs to be fixed as soon as switching to newer Ginkgo version is done
+
 using precice::mapping::RadialBasisParameters;
 
 // Declare Ginkgo Kernels as required by Ginkgo's unified kernel interface
@@ -29,31 +48,18 @@ GKO_DECLARE_UNIFIED(template <typename ValueType> void fill_polynomial_matrix(
 GKO_REGISTER_UNIFIED_OPERATION(rbf_fill_operation, create_rbf_system_matrix);
 GKO_REGISTER_UNIFIED_OPERATION(polynomial_fill_operation, fill_polynomial_matrix);
 
+extern void initCuSolver(const bool enableUnifiedMemory = false);
+extern void deInitCuSolver();
+extern void computeQR(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *const A, GinkgoMatrix *Q, GinkgoMatrix *R);
+
 namespace precice {
 namespace mapping {
-
-// Every class uses Ginkgo's default_precision = double
-// Ginkgo Data Structures
-using GinkgoVector = gko::matrix::Dense<>;
-using GinkgoMatrix = gko::matrix::Dense<>;
-using GinkgoScalar = gko::matrix::Dense<>;
-// Ginkgo Solver
-using cg    = gko::solver::Cg<>;
-using gmres = gko::solver::Gmres<>;
-using mg    = gko::solver::Multigrid;
-using ir    = gko::solver::Ir<>;
-// Ginkgo Preconditioner
-using jacobi   = gko::preconditioner::Jacobi<>;
-using cholesky = gko::preconditioner::Ic<>;
-using ilu      = gko::preconditioner::Ilu<>;
-
-// Ginkgo Helpers
-using amgx_pgm = gko::multigrid::AmgxPgm<>; // TODO: It was later renamed to Pgm so this needs to be fixed as soon as switching to newer Ginkgo version is done
 
 enum class GinkgoSolverType {
   CG,
   GMRES,
-  MG
+  MG,
+  QR
 };
 
 enum class GinkgoPreconditionerType {
@@ -68,7 +74,8 @@ enum class GinkgoPreconditionerType {
 const std::map<std::string, GinkgoSolverType> solverTypeLookup{
     {"cg-solver", GinkgoSolverType::CG},
     {"gmres-solver", GinkgoSolverType::GMRES},
-    {"mg-solver", GinkgoSolverType::MG}};
+    {"mg-solver", GinkgoSolverType::MG},
+    {"qr-solver", GinkgoSolverType::QR}};
 
 const std::map<std::string, GinkgoPreconditionerType> preconditionerTypeLookup{
     {"jacobi-preconditioner", GinkgoPreconditionerType::Jacobi},
@@ -156,12 +163,25 @@ private:
 
   std::shared_ptr<GinkgoVector> _polynomialContribution;
 
-  // Solver used for iteratively solving linear systems of equations
-  std::shared_ptr<precice::mapping::cg>    _cgSolver    = nullptr;
-  std::shared_ptr<precice::mapping::gmres> _gmresSolver = nullptr;
-  std::shared_ptr<precice::mapping::mg>    _mgSolver    = nullptr;
+  /// Matrix Q of QR decomposition
+  std::shared_ptr<GinkgoMatrix> _decompMatrixQ;
 
-  std::shared_ptr<precice::mapping::cg> _polynomialSolver = nullptr;
+  /// Matrix Q^T of QR decomposition
+  std::shared_ptr<GinkgoMatrix> _decompMatrixQ_T;
+
+  /// Matrix R of QR decomposition
+  std::shared_ptr<GinkgoMatrix> _decompMatrixR;
+
+  /// Backwards Solver
+  std::shared_ptr<triangular> _triangularSolver;
+
+  // Solver used for iteratively solving linear systems of equations
+  std::shared_ptr<cg>
+      _cgSolver                       = nullptr;
+  std::shared_ptr<gmres> _gmresSolver = nullptr;
+  std::shared_ptr<mg>    _mgSolver    = nullptr;
+
+  std::shared_ptr<cg> _polynomialSolver = nullptr;
 
   GinkgoSolverType _solverType;
 
@@ -199,6 +219,11 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
   _preconditionerType = preconditionerTypeLookup.at(ginkgoParameter.preconditioner);
 
   _logger = gko::share(gko::log::Convergence<>::create(_deviceExecutor, gko::log::Logger::all_events_mask));
+
+  if (GinkgoSolverType::QR == _solverType) {
+    PRECICE_ASSERT("cuda-executor" == ginkgoParameter.executor, "The QR decomposition is only available on CUDA yet.");
+    initCuSolver(ginkgoParameter.enableUnifiedMemory);
+  }
 
   PRECICE_ASSERT(!(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite() && polynomial == Polynomial::ON), "The integrated polynomial (polynomial=\"on\") is not supported for the selected radial-basis function. Please select another radial-basis function or change the polynomial configuration.");
   // Convert dead axis vector into an active axis array so that we can handle the reduction more easily
@@ -434,6 +459,19 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
       _gmresSolver = gko::share(solverFactory->generate(_rbfSystemMatrix));
       _gmresSolver->add_logger(_logger);
     }
+  } else if (_solverType == GinkgoSolverType::QR) {
+    const std::size_t M = _rbfSystemMatrix->get_size()[0];
+    const std::size_t N = _rbfSystemMatrix->get_size()[1];
+    _decompMatrixQ      = gko::share(GinkgoMatrix::create(_deviceExecutor, gko::dim<2>(M, N)));
+    _decompMatrixQ_T    = gko::share(GinkgoMatrix::create(_deviceExecutor, gko::dim<2>(N, M)));
+    _decompMatrixR      = gko::share(GinkgoMatrix::create(_deviceExecutor, gko::dim<2>(N, N)));
+
+    computeQR(_deviceExecutor, gko::lend(_rbfSystemMatrix), gko::lend(_decompMatrixQ), gko::lend(_decompMatrixR));
+
+    _decompMatrixQ->transpose(gko::lend(_decompMatrixQ_T));
+
+    auto triangularSolverFactory = triangular::build().on(_deviceExecutor);
+    _triangularSolver            = gko::share(triangularSolverFactory->generate(_decompMatrixR));
   }
 }
 
@@ -497,7 +535,14 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsis
     dRhs->sub_scaled(gko::lend(_scalarOne), gko::lend(_subPolynomialContribution));
   }
 
-  _solveRBFSystem(dRhs);
+  if (GinkgoSolverType::QR == _solverType) {
+    // New rhs Q^T * b
+    auto dQ_T_Rhs = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_decompMatrixQ_T->get_size()[0], 1}));
+    _decompMatrixQ_T->apply(gko::lend(dRhs), gko::lend(dQ_T_Rhs));
+    _triangularSolver->apply(gko::lend(dQ_T_Rhs), gko::lend(_rbfCoefficients));
+  } else {
+    _solveRBFSystem(dRhs);
+  }
 
   dRhs->clear();
 
@@ -544,6 +589,11 @@ const std::shared_ptr<GinkgoMatrix> GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNC
 template <typename RADIAL_BASIS_FUNCTION_T>
 GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::~GinkgoRadialBasisFctSolver()
 {
+
+  if (GinkgoSolverType::QR == _solverType) {
+    deInitCuSolver();
+  }
+
   clear();
 }
 
