@@ -26,18 +26,11 @@ double *dTau = nullptr;
 double *dWork = nullptr;
 int *devInfo = nullptr;
 
-void initCuSolver(const bool enableUnifiedMemory=false){
+void initCuSolver(){
     // Allocating important CUDA variables
-    if(enableUnifiedMemory){
-        cudaMallocManaged((void **)&dWork, sizeof(double));
-        cudaMallocManaged((void **)&devInfo, sizeof(int));
-        cudaMallocManaged((void **)&dTau, sizeof(double));
-    }
-    else {
-        cudaMalloc((void **)&dWork, sizeof(double));
-        cudaMalloc((void **)&devInfo, sizeof(int));
-        cudaMalloc((void **)&dTau, sizeof(double));
-    }
+    cudaMalloc((void **)&dWork, sizeof(double));
+    cudaMalloc((void **)&devInfo, sizeof(int));
+    cudaMalloc((void **)&dTau, sizeof(double));
 
 }
 
@@ -48,21 +41,19 @@ void deInitCuSolver(){
     cudaFree(devInfo);
 }
 
-void computeQR(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *const A, GinkgoMatrix *Q, GinkgoMatrix *R)
+void computeQR(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, GinkgoMatrix *R)
 {
     cusolverDnCreate(&solverHandle);
     cublasCreate(&cublasHandle);
 
     // NOTE: It's important to transpose since cuSolver assumes column-major memory layout
     // Making a copy since every value will be overridden
-    auto A_T = gko::share(GinkgoMatrix::create(exec, gko::dim<2>(A->get_size()[1], A->get_size()[0])));
-    A->transpose(gko::lend(A_T));
+    auto A_T = gko::share(GinkgoMatrix::create(exec, gko::dim<2>(A_Q->get_size()[1], A_Q->get_size()[0])));
+    A_Q->transpose(gko::lend(A_T));
 
     // Setting dimensions for solver
     const unsigned int M = A_T->get_size()[1];
     const unsigned int N = A_T->get_size()[0];
-
-    auto temp_A = gko::share(GinkgoMatrix::create(exec, gko::dim<2>{M, N}));
 
     const int lda = max(1, M);
     const int k = min(M, N);
@@ -97,13 +88,11 @@ void computeQR(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *const A
     assert(cusolverStatus_SUCCESS == cusolverStatus);
     assert(cudaSuccess == cudaErrorCode);
 
-    A_T->transpose(gko::lend(Q));
+    A_T->transpose(gko::lend(A_Q));
 
     cudaDeviceSynchronize();
 
     calculateQRDecompEvent.stop();
-
-    temp_A->clear();
 
     return;
 }

@@ -48,9 +48,9 @@ GKO_DECLARE_UNIFIED(template <typename ValueType> void fill_polynomial_matrix(
 GKO_REGISTER_UNIFIED_OPERATION(rbf_fill_operation, create_rbf_system_matrix);
 GKO_REGISTER_UNIFIED_OPERATION(polynomial_fill_operation, fill_polynomial_matrix);
 
-extern void initCuSolver(const bool enableUnifiedMemory = false);
+extern void initCuSolver();
 extern void deInitCuSolver();
-extern void computeQR(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *const A, GinkgoMatrix *Q, GinkgoMatrix *R);
+extern void computeQR(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, GinkgoMatrix *R);
 
 namespace precice {
 namespace mapping {
@@ -163,9 +163,6 @@ private:
 
   std::shared_ptr<GinkgoVector> _polynomialContribution;
 
-  /// Matrix Q of QR decomposition
-  std::shared_ptr<GinkgoMatrix> _decompMatrixQ;
-
   /// Matrix Q^T of QR decomposition
   std::shared_ptr<GinkgoMatrix> _decompMatrixQ_T;
 
@@ -176,8 +173,7 @@ private:
   std::shared_ptr<triangular> _triangularSolver;
 
   // Solver used for iteratively solving linear systems of equations
-  std::shared_ptr<cg>
-      _cgSolver                       = nullptr;
+  std::shared_ptr<cg>    _cgSolver    = nullptr;
   std::shared_ptr<gmres> _gmresSolver = nullptr;
   std::shared_ptr<mg>    _mgSolver    = nullptr;
 
@@ -222,7 +218,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
 
   if (GinkgoSolverType::QR == _solverType) {
     PRECICE_ASSERT("cuda-executor" == ginkgoParameter.executor, "The QR decomposition is only available on CUDA yet.");
-    initCuSolver(ginkgoParameter.enableUnifiedMemory);
+    initCuSolver();
   }
 
   PRECICE_ASSERT(!(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite() && polynomial == Polynomial::ON), "The integrated polynomial (polynomial=\"on\") is not supported for the selected radial-basis function. Please select another radial-basis function or change the polynomial configuration.");
@@ -462,13 +458,13 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
   } else if (_solverType == GinkgoSolverType::QR) {
     const std::size_t M = _rbfSystemMatrix->get_size()[0];
     const std::size_t N = _rbfSystemMatrix->get_size()[1];
-    _decompMatrixQ      = gko::share(GinkgoMatrix::create(_deviceExecutor, gko::dim<2>(M, N)));
     _decompMatrixQ_T    = gko::share(GinkgoMatrix::create(_deviceExecutor, gko::dim<2>(N, M)));
     _decompMatrixR      = gko::share(GinkgoMatrix::create(_deviceExecutor, gko::dim<2>(N, N)));
 
-    computeQR(_deviceExecutor, gko::lend(_rbfSystemMatrix), gko::lend(_decompMatrixQ), gko::lend(_decompMatrixR));
+    // _rbfSystemMatrix will be overridden into Q
+    computeQR(_deviceExecutor, gko::lend(_rbfSystemMatrix), gko::lend(_decompMatrixR));
 
-    _decompMatrixQ->transpose(gko::lend(_decompMatrixQ_T));
+    _rbfSystemMatrix->transpose(gko::lend(_decompMatrixQ_T));
 
     auto triangularSolverFactory = triangular::build().on(_deviceExecutor);
     _triangularSolver            = gko::share(triangularSolverFactory->generate(_decompMatrixR));
