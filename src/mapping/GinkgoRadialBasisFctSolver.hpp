@@ -225,7 +225,9 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
   _scalarNegativeOne = gko::share(gko::initialize<GinkgoScalar>({1.0}, _deviceExecutor));
 
   // Now we fill the RBF system matrix on the GPU (or any other selected device)
-  _rbfCoefficients = gko::share(GinkgoVector::create(_hostExecutor, gko::dim<2>{n, 1}));
+  _rbfCoefficients = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{n, 1}));
+  // Initial guess is required since uninitialized memory could lead to a never converging system
+  _rbfCoefficients->fill(0.0);
 
   // We need to copy the input data into a CPU stored vector first and copy it to the GPU afterwards
   // To allow for coalesced memory accesses on the GPU, we need to store them in transposed order IFF the backend is the GPU
@@ -254,10 +256,6 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
         inputVertices->at(i, j) = inputMesh.vertices().at(i).rawCoords()[j];
       }
     }
-    // Initial guess is required since uninitialized memory could lead to a never converging system
-    if (i < n) {
-      _rbfCoefficients->at(i, 0) = 0.0;
-    }
   }
   for (std::size_t i = 0; i < outputMeshSize; ++i) {
     for (std::size_t j = 0; j < meshDim; ++j) {
@@ -276,7 +274,6 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
   inputVertices->clear();
   outputVertices->clear();
 
-  _rbfCoefficients = gko::clone(_deviceExecutor, _rbfCoefficients);
   _deviceExecutor->synchronize();
   _copyEvent.pause();
 
@@ -452,10 +449,10 @@ void GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::_solveRBFSystem(const 
 // Only compute time-consuming statistics in debug mode
 #ifndef NDEBUG
 
-  auto residual = gko::initialize<GinkgoScalar>({0.0}, _deviceExecutor);
+  auto dResidual = gko::initialize<GinkgoScalar>({0.0}, _deviceExecutor);
   _rbfSystemMatrix->apply(gko::lend(_scalarOne), gko::lend(_rbfCoefficients), gko::lend(_scalarNegativeOne), gko::lend(rhs));
-  rhs->compute_norm2(gko::lend(residual));
-  residual = gko::clone(_hostExecutor, residual);
+  rhs->compute_norm2(gko::lend(dResidual));
+  auto residual = gko::clone(_hostExecutor, dResidual);
   PRECICE_INFO("Ginkgo Solver Iteration Count: {}", _logger->get_num_iterations());
   PRECICE_INFO("Ginkgo Solver Final Residual: {}", residual->at(0, 0));
 
@@ -479,16 +476,10 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsis
   _copyEvent.pause();
 
   if (polynomial == Polynomial::SEPARATE) {
-    auto tmpPolynomialContribution = gko::share(GinkgoVector::create(_hostExecutor, gko::dim<2>{_matrixQ_TQ->get_size()[1], 1}));
-
-    for (std::size_t i = 0; i < tmpPolynomialContribution->get_size()[0]; ++i) {
-      tmpPolynomialContribution->at(i, 0) = 0.;
-    }
+    _polynomialContribution = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixQ_TQ->get_size()[1], 1}));
+    _polynomialContribution->fill(0.0);
 
     _matrixQ_T->apply(gko::lend(dRhs), gko::lend(_polynomialRhs));
-
-    _polynomialContribution = gko::clone(_deviceExecutor, tmpPolynomialContribution);
-    tmpPolynomialContribution->clear();
 
     _polynomialContribution = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixQ_TQ->get_size()[1], 1}));
     _polynomialSolver->apply(gko::lend(_polynomialRhs), gko::lend(_polynomialContribution));
@@ -501,17 +492,17 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsis
 
   dRhs->clear();
 
-  auto output = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixA->get_size()[0], _rbfCoefficients->get_size()[1]}));
+  auto dOutput = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixA->get_size()[0], _rbfCoefficients->get_size()[1]}));
 
-  _matrixA->apply(gko::lend(_rbfCoefficients), gko::lend(output));
+  _matrixA->apply(gko::lend(_rbfCoefficients), gko::lend(dOutput));
 
   if (polynomial == Polynomial::SEPARATE) {
     _matrixV->apply(gko::lend(_polynomialContribution), gko::lend(_addPolynomialContribution));
-    output->add_scaled(gko::lend(_scalarOne), gko::lend(_addPolynomialContribution));
+    dOutput->add_scaled(gko::lend(_scalarOne), gko::lend(_addPolynomialContribution));
   }
 
   _copyEvent.start();
-  output = gko::clone(_hostExecutor, output);
+  auto output = gko::clone(_hostExecutor, dOutput);
 
   Eigen::VectorXd result(output->get_size()[0], 1);
 
