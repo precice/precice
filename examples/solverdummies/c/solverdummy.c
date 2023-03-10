@@ -38,14 +38,14 @@ int main(int argc, char **argv)
   precicec_createSolverInterface(participantName, configFileName, solverProcessIndex, solverProcessSize);
 
   if (strcmp(participantName, "SolverOne") == 0) {
-    writeDataName = "dataOne";
-    readDataName  = "dataTwo";
-    meshName      = "MeshOne";
+    writeDataName = "Data-One";
+    readDataName  = "Data-Two";
+    meshName      = "SolverOne-Mesh";
   }
   if (strcmp(participantName, "SolverTwo") == 0) {
-    writeDataName = "dataTwo";
-    readDataName  = "dataOne";
-    meshName      = "MeshTwo";
+    writeDataName = "Data-Two";
+    readDataName  = "Data-One";
+    meshName      = "SolverTwo-Mesh";
   }
 
   dimensions = precicec_getDimensions();
