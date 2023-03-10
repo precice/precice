@@ -272,10 +272,11 @@ void BaseCouplingScheme::sendGlobalData(const m2n::PtrM2N &m2n, const GlobalData
   std::vector<int> sentGlobalDataIDs; // for debugging
   PRECICE_ASSERT(m2n.get() != nullptr);
   PRECICE_ASSERT(m2n->isConnected());
-  for (const GlobalDataMap::value_type &pair : sendGlobalData) {
+
+  for (const auto &data : sendGlobalData | boost::adaptors::map_values) {
     // Data is actually only send if size>0, which is checked in the derived classes implementation
-    m2n->send(pair.second->values(), -1, pair.second->getDimensions()); // TODO meshID=-1 is a makeshift thing here. Fix this.
-    sentGlobalDataIDs.push_back(pair.first);                            // Keep track of sent data (for degbugging)
+    m2n->send(data->values(), -1, data->getDimensions()); // TODO meshID=-1 is a makeshift thing here. Fix this.
+    sentGlobalDataIDs.push_back(data->getDataID());       // Keep track of sent data (for degbugging)
   }
   PRECICE_DEBUG("Number of sent data sets (global) = {}", sentGlobalDataIDs.size());
 }
@@ -283,15 +284,13 @@ void BaseCouplingScheme::sendGlobalData(const m2n::PtrM2N &m2n, const GlobalData
 void BaseCouplingScheme::receiveGlobalData(const m2n::PtrM2N &m2n, const GlobalDataMap &receiveGlobalData)
 {
   PRECICE_TRACE();
-  std::vector<int> receivedGlobalDataIDs; // for debugging
   PRECICE_ASSERT(m2n.get());
   PRECICE_ASSERT(m2n->isConnected());
-  for (const GlobalDataMap::value_type &pair : receiveGlobalData) {
+
+  for (const auto &data : receiveGlobalData | boost::adaptors::map_values) {
     // Data is only received on ranks with size>0, which is checked in the derived class implementation
-    m2n->receive(pair.second->values(), -1, pair.second->getDimensions()); // TODO meshID=-1 is a makeshift thing here. Fix this.
-    receivedGlobalDataIDs.push_back(pair.first);                           // Keep track of received data (for debugging)
+    m2n->receive(data->values(), -1, data->getDimensions()); // TODO meshID=-1 is a makeshift thing here. Fix this.
   }
-  PRECICE_DEBUG("Number of received data sets (global) = {}", receivedGlobalDataIDs.size());
 }
 
 void BaseCouplingScheme::setTimeWindowSize(double timeWindowSize)
