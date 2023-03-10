@@ -408,6 +408,8 @@ private:
 
   void checkDuplicatedData(std::string_view mesh, std::string_view data);
 
+  void checkDuplicatedGlobalData(const mesh::PtrGlobalData &data);
+
   /// To allow white box tests.
   friend struct Integration::Serial::Whitebox::TestConfigurationPeano;
   friend struct Integration::Serial::Whitebox::TestConfigurationComsol;
