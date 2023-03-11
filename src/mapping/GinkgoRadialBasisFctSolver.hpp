@@ -173,7 +173,7 @@ private:
 
   void _solveRBFSystem(const std::shared_ptr<GinkgoVector> &rhs) const;
 
-  precice::utils::Event _copyEvent{"map.rbf.ginkgo.memCopy", false, false};
+  precice::utils::Event _allocCopyEvent{"map.rbf.ginkgo.memoryAllocAndCopy", false, false};
 
   precice::utils::Event _assemblyEvent{"map.rbf.ginkgo.assembleMatrices", false, false};
 
@@ -225,7 +225,9 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
   _scalarNegativeOne = gko::share(gko::initialize<GinkgoScalar>({1.0}, _deviceExecutor));
 
   // Now we fill the RBF system matrix on the GPU (or any other selected device)
+  _allocCopyEvent.start();
   _rbfCoefficients = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{n, 1}));
+  _allocCopyEvent.pause();
   // Initial guess is required since uninitialized memory could lead to a never converging system
   _rbfCoefficients->fill(0.0);
 
@@ -267,7 +269,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
     }
   }
 
-  _copyEvent.start();
+  _allocCopyEvent.start();
 
   auto dInputVertices  = gko::clone(_deviceExecutor, inputVertices);
   auto dOutputVertices = gko::clone(_deviceExecutor, outputVertices);
@@ -275,15 +277,18 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
   outputVertices->clear();
 
   _deviceExecutor->synchronize();
-  _copyEvent.pause();
 
   _rbfSystemMatrix = gko::share(GinkgoMatrix::create(_deviceExecutor, gko::dim<2>{n, n}));
   _matrixA         = gko::share(GinkgoMatrix::create(_deviceExecutor, gko::dim<2>{outputSize, n}));
 
+  _allocCopyEvent.pause();
+
   if (polynomial == Polynomial::SEPARATE) {
     const unsigned int separatePolyParams = 4 - std::count(activeAxis.begin(), activeAxis.end(), false);
-    _matrixQ                              = gko::share(GinkgoMatrix::create(_deviceExecutor, gko::dim<2>{n, separatePolyParams}));
-    _matrixV                              = gko::share(GinkgoMatrix::create(_deviceExecutor, gko::dim<2>{outputSize, separatePolyParams}));
+    _allocCopyEvent.start();
+    _matrixQ = gko::share(GinkgoMatrix::create(_deviceExecutor, gko::dim<2>{n, separatePolyParams}));
+    _matrixV = gko::share(GinkgoMatrix::create(_deviceExecutor, gko::dim<2>{outputSize, separatePolyParams}));
+    _allocCopyEvent.pause();
 
     _assemblyEvent.start();
     _deviceExecutor->run(make_polynomial_fill_operation(_matrixQ->get_size()[0], _matrixQ->get_size()[1], _matrixQ->get_values(), dInputVertices->get_values(), dInputVertices->get_size()[1], separatePolyParams));
@@ -292,13 +297,16 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
 
     _deviceExecutor->synchronize();
 
-    _matrixQ_T     = gko::share(_matrixQ->transpose());
-    _matrixQ_TQ    = gko::share(GinkgoMatrix::create(_deviceExecutor, gko::dim<2>{_matrixQ_T->get_size()[0], _matrixQ->get_size()[1]}));
-    _polynomialRhs = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixQ_T->get_size()[0], 1}));
-    _matrixQ_T->apply(gko::lend(_matrixQ), gko::lend(_matrixQ_TQ));
+    _matrixQ_T = gko::share(_matrixQ->transpose());
 
+    _allocCopyEvent.start();
+    _matrixQ_TQ                = gko::share(GinkgoMatrix::create(_deviceExecutor, gko::dim<2>{_matrixQ_T->get_size()[0], _matrixQ->get_size()[1]}));
+    _polynomialRhs             = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixQ_T->get_size()[0], 1}));
     _subPolynomialContribution = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixQ->get_size()[0], 1}));
     _addPolynomialContribution = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixV->get_size()[0], 1}));
+    _allocCopyEvent.pause();
+
+    _matrixQ_T->apply(gko::lend(_matrixQ), gko::lend(_matrixQ_TQ));
 
     auto polynomialSolverFactory = cg::build()
                                        .with_criteria(gko::stop::Iteration::build()
@@ -470,18 +478,18 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsis
     rhs->at(i, 0) = rhsValues(i, 0);
   }
 
-  _copyEvent.start();
+  _allocCopyEvent.start();
   auto dRhs = gko::share(gko::clone(_deviceExecutor, rhs));
   rhs->clear();
-  _copyEvent.pause();
+  _allocCopyEvent.pause();
 
   if (polynomial == Polynomial::SEPARATE) {
+    _allocCopyEvent.start();
     _polynomialContribution = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixQ_TQ->get_size()[1], 1}));
+    _allocCopyEvent.pause();
     _polynomialContribution->fill(0.0);
 
     _matrixQ_T->apply(gko::lend(dRhs), gko::lend(_polynomialRhs));
-
-    _polynomialContribution = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixQ_TQ->get_size()[1], 1}));
     _polynomialSolver->apply(gko::lend(_polynomialRhs), gko::lend(_polynomialContribution));
 
     _matrixQ->apply(gko::lend(_polynomialContribution), gko::lend(_subPolynomialContribution));
@@ -492,7 +500,9 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsis
 
   dRhs->clear();
 
+  _allocCopyEvent.start();
   auto dOutput = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixA->get_size()[0], _rbfCoefficients->get_size()[1]}));
+  _allocCopyEvent.pause();
 
   _matrixA->apply(gko::lend(_rbfCoefficients), gko::lend(dOutput));
 
@@ -501,15 +511,15 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsis
     dOutput->add_scaled(gko::lend(_scalarOne), gko::lend(_addPolynomialContribution));
   }
 
-  _copyEvent.start();
+  _allocCopyEvent.start();
   auto output = gko::clone(_hostExecutor, dOutput);
+  _allocCopyEvent.pause();
 
   Eigen::VectorXd result(output->get_size()[0], 1);
 
   for (Eigen::Index i = 0; i < result.rows(); ++i) {
     result(i, 0) = output->at(i, 0);
   }
-  _copyEvent.pause();
 
   return result;
 }
@@ -535,6 +545,7 @@ const std::shared_ptr<GinkgoMatrix> GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNC
 template <typename RADIAL_BASIS_FUNCTION_T>
 GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::~GinkgoRadialBasisFctSolver()
 {
+  _allocCopyEvent.stop();
   clear();
 }
 
