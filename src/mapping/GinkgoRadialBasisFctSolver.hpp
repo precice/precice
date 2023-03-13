@@ -445,7 +445,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
 template <typename RADIAL_BASIS_FUNCTION_T>
 void GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::_solveRBFSystem(const std::shared_ptr<GinkgoVector> &rhs) const
 {
-  precice::utils::Event e("map.rbf.ginkgo.solveSystemMatrix");
+  precice::utils::Event solverEvent("map.rbf.ginkgo.solveSystemMatrix");
   if (_solverType == GinkgoSolverType::CG) {
     _cgSolver->apply(gko::lend(rhs), gko::lend(_rbfCoefficients));
   } else if (_solverType == GinkgoSolverType::GMRES) {
@@ -453,6 +453,8 @@ void GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::_solveRBFSystem(const 
   } else if (_solverType == GinkgoSolverType::MG) {
     _mgSolver->apply(gko::lend(rhs), gko::lend(_rbfCoefficients));
   }
+  solverEvent.stop();
+  PRECICE_INFO("The iterative solver stopped after {} iterations.", _logger->get_num_iterations());
 
 // Only compute time-consuming statistics in debug mode
 #ifndef NDEBUG
@@ -461,7 +463,6 @@ void GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::_solveRBFSystem(const 
   _rbfSystemMatrix->apply(gko::lend(_scalarOne), gko::lend(_rbfCoefficients), gko::lend(_scalarNegativeOne), gko::lend(rhs));
   rhs->compute_norm2(gko::lend(dResidual));
   auto residual = gko::clone(_hostExecutor, dResidual);
-  PRECICE_INFO("Ginkgo Solver Iteration Count: {}", _logger->get_num_iterations());
   PRECICE_INFO("Ginkgo Solver Final Residual: {}", residual->at(0, 0));
 
 #endif
