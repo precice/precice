@@ -26,19 +26,27 @@ double *dTau = nullptr;
 double *dWork = nullptr;
 int *devInfo = nullptr;
 
-void initCuSolver(){
+void initCuda(const int deviceId=0){
+    cudaSetDevice(deviceId);
+
     // Allocating important CUDA variables
     cudaMalloc((void **)&dWork, sizeof(double));
     cudaMalloc((void **)&devInfo, sizeof(int));
     cudaMalloc((void **)&dTau, sizeof(double));
 
+    cusolverDnCreate(&solverHandle);
+    cublasCreate(&cublasHandle);
+
 }
 
-void deInitCuSolver(){
+void deInitCuda(){
     // Freeing CUDA variables
     cudaFree(dTau);
     cudaFree(dWork);
     cudaFree(devInfo);
+
+    cusolverDnDestroy(solverHandle);
+    cublasDestroy(cublasHandle);
 }
 
 void computeQR(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, GinkgoMatrix *R)

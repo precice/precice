@@ -48,8 +48,8 @@ GKO_DECLARE_UNIFIED(template <typename ValueType> void fill_polynomial_matrix(
 GKO_REGISTER_UNIFIED_OPERATION(rbf_fill_operation, create_rbf_system_matrix);
 GKO_REGISTER_UNIFIED_OPERATION(polynomial_fill_operation, fill_polynomial_matrix);
 
-extern void initCuSolver();
-extern void deInitCuSolver();
+extern void initCuda(const int deviceId = 0);
+extern void deInitCuda();
 extern void computeQR(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, GinkgoMatrix *R);
 
 namespace precice {
@@ -218,7 +218,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
 
   if (GinkgoSolverType::QR == _solverType) {
     PRECICE_ASSERT("cuda-executor" == ginkgoParameter.executor, "The QR decomposition is only available on CUDA yet.");
-    initCuSolver();
+    initCuda(ginkgoParameter.deviceId);
   }
 
   PRECICE_ASSERT(!(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite() && polynomial == Polynomial::ON), "The integrated polynomial (polynomial=\"on\") is not supported for the selected radial-basis function. Please select another radial-basis function or change the polynomial configuration.");
@@ -590,7 +590,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::~GinkgoRadialBasisFctSolver
   _allocCopyEvent.stop();
 
   if (GinkgoSolverType::QR == _solverType) {
-    deInitCuSolver();
+    deInitCuda();
   }
 
   clear();
