@@ -384,7 +384,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
 
   } else if (_solverType == GinkgoSolverType::CG) {
 
-    if (GinkgoPreconditionerType::None != _preconditionerType) {
+    if (GinkgoPreconditionerType::None != _preconditionerType && ginkgoParameter.usePreconditioner) {
       auto solverFactoryWithPreconditioner = [preconditionerType = _preconditionerType, executor = _deviceExecutor, &ginkgoParameter]() {
         if (preconditionerType == GinkgoPreconditionerType::Jacobi) {
           return cg::build().with_preconditioner(jacobi::build().with_max_block_size(ginkgoParameter.jacobiBlockSize).on(executor));
@@ -414,7 +414,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
 
   } else if (_solverType == GinkgoSolverType::GMRES) {
 
-    if (GinkgoPreconditionerType::None != _preconditionerType) {
+    if (GinkgoPreconditionerType::None != _preconditionerType && ginkgoParameter.usePreconditioner) {
       auto solverFactoryWithPreconditioner = [preconditionerType = _preconditionerType, executor = _deviceExecutor, &ginkgoParameter]() {
         if (preconditionerType == GinkgoPreconditionerType::Jacobi) {
           return gmres::build().with_preconditioner(jacobi::build().with_max_block_size(ginkgoParameter.jacobiBlockSize).on(executor));
