@@ -329,8 +329,8 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
           int usedOrder = dataContext.getInterpolationOrder();
           if (usedOrder < 0) {
             PRECICE_ERROR(
-                "You configured <read-data name=\"{}\" mesh=\"{}\" waveform-order=\"{}\" />, but for the serial explicit coupling scheme a waveform-order greater than \"{}\" is allowed for the second participant.",
-                dataContext.getDataName(), dataContext.getMeshName(), usedOrder, 0);
+                "You configured <read-data name=\"{}\" mesh=\"{}\" waveform-order=\"{}\" />, but for the serial explicit coupling scheme the waveform-order must be non-negative for the second participant.",
+                dataContext.getDataName(), dataContext.getMeshName(), usedOrder);
           }
         }
       }
