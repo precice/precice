@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveform)
 
     precice.readScalarData(meshName, readDataName, vertexID, currentDt, readData);
 
-    if (context.isNamed("SolverOne")) { // in the first iteration of each window, we only have one sample of data. Therefore constant interpolation
+    if (context.isNamed("SolverOne")) { // first participant receives constant value from second
       BOOST_TEST(readData == readFunction(timeCheckpoint));
     } else { // in the following iterations we have two samples of data. Therefore linear interpolation
       BOOST_TEST(readData == readFunction(time + currentDt));
