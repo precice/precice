@@ -1,9 +1,8 @@
 #ifndef PRECICE_NO_MPI
 
-#include "testing/Testing.hpp"
-
 #include <precice/SolverInterface.hpp>
 #include <vector>
+#include "testing/Testing.hpp"
 
 using namespace precice;
 
@@ -22,9 +21,9 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveform)
 
   SolverInterface precice(context.name, context.config(), 0, 1);
 
-  MeshID meshID;
-  DataID writeDataID;
-  DataID readDataID;
+  std::string meshName;
+  std::string writeDataName;
+  std::string readDataName;
 
   typedef double (*DataFunction)(double);
 
@@ -38,22 +37,22 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveform)
   DataFunction readFunction;
 
   if (context.isNamed("SolverOne")) {
-    meshID        = precice.getMeshID("MeshOne");
-    writeDataID   = precice.getDataID("DataOne", meshID);
+    meshName      = "MeshOne";
+    writeDataName = "DataOne";
     writeFunction = dataOneFunction;
-    readDataID    = precice.getDataID("DataTwo", meshID);
+    readDataName  = "DataTwo";
     readFunction  = dataTwoFunction;
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    meshID        = precice.getMeshID("MeshTwo");
-    writeDataID   = precice.getDataID("DataTwo", meshID);
+    meshName      = "MeshTwo";
+    writeDataName = "DataTwo";
     writeFunction = dataTwoFunction;
-    readDataID    = precice.getDataID("DataOne", meshID);
+    readDataName  = "DataOne";
     readFunction  = dataOneFunction;
   }
 
   double   writeData, readData;
-  VertexID vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+  VertexID vertexID = precice.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());
 
   int    nSubsteps  = 4; // perform subcycling on solvers. 4 steps happen in each window.
   int    nWindows   = 5; // perform 5 windows.
@@ -63,7 +62,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveform)
 
   if (precice.requiresInitialData()) {
     writeData = writeFunction(time);
-    precice.writeScalarData(writeDataID, vertexID, writeData);
+    precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
   }
 
   double maxDt = precice.initialize();
@@ -75,7 +74,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveform)
 
   while (precice.isCouplingOngoing()) {
 
-    precice.readScalarData(readDataID, vertexID, currentDt, readData);
+    precice.readScalarData(meshName, readDataName, vertexID, currentDt, readData);
 
     if (context.isNamed("SolverOne")) { // in the first iteration of each window, we only have one sample of data. Therefore constant interpolation
       BOOST_TEST(readData == readFunction(timeCheckpoint));
@@ -83,7 +82,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveform)
       BOOST_TEST(readData == readFunction(time + currentDt));
     }
 
-    precice.readScalarData(readDataID, vertexID, currentDt / 2, readData);
+    precice.readScalarData(meshName, readDataName, vertexID, currentDt / 2, readData);
 
     if (context.isNamed("SolverOne")) { // in the first iteration of each window, we only have one sample of data. Therefore constant interpolation
       BOOST_TEST(readData == readFunction(timeCheckpoint));
@@ -100,7 +99,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveform)
     }
 
     writeData = writeFunction(time);
-    precice.writeScalarData(writeDataID, vertexID, writeData);
+    precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
     maxDt = precice.advance(currentDt);
 
     currentDt = dt > maxDt ? maxDt : dt;
