@@ -308,7 +308,7 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
   if (tag.getNamespace() == TAG) {
     if (_config.type == VALUE_SERIAL_EXPLICIT) {
 
-      //Check the order of both participants in the explicit coupling
+      //Check the waveform order of both participants in the explicit coupling
       if (_experimental) {
         const auto first  = _config.participants[0];
         const auto second = _config.participants[1];
