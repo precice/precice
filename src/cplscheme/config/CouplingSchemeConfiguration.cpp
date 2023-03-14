@@ -327,7 +327,11 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
         auto second_participant = _participantConfig->getParticipant(second);
         for (auto &dataContext : second_participant->readDataContexts()) {
           int usedOrder = dataContext.getInterpolationOrder();
-          PRECICE_ASSERT(usedOrder >= 0);
+          if (usedOrder < 0) {
+            PRECICE_ERROR(
+                "You configured <read-data name=\"{}\" mesh=\"{}\" waveform-order=\"{}\" />, but for the serial explicit coupling scheme a waveform-order greater than \"{}\" is allowed for the second participant.",
+                dataContext.getDataName(), dataContext.getMeshName(), usedOrder, 0);
+          }
         }
       }
 
