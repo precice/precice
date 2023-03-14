@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveform)
 
     if (context.isNamed("SolverOne")) { // first participant receives constant value from second
       BOOST_TEST(readData == readFunction(timeCheckpoint));
-    } else { // in the following iterations we have two samples of data. Therefore linear interpolation
+    } else { // second participant samples from waveform
       BOOST_TEST(readData == readFunction(time + currentDt / 2));
     }
 
