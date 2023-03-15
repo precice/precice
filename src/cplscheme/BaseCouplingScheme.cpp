@@ -811,10 +811,11 @@ void BaseCouplingScheme::doImplicitStep()
       // for (auto &data : getAccelerationData() | boost::adaptors::map_values) {
       //   data->storeValuesAtTime(time::Storage::WINDOW_END, data->values(), mustOverwrite);
       // }
-      for (auto &pair : getAccelerationData()) {
-        bool mustOverwrite = true;
-        pair.second->storeValuesAtTime(time::Storage::WINDOW_END, pair.second->values(), mustOverwrite); // @todo: Here might be an error. Do we actually apply any acceleration to the values that are not at WINDOW_END?
-      }
+      // The acceleration is applied to the data in the acceleration class not here.
+      // for (auto &pair : getAccelerationData()) {
+      //   bool mustOverwrite = true;
+      //   pair.second->storeValuesAtTime(time::Storage::WINDOW_END, pair.second->values(), mustOverwrite); // @todo: Here might be an error. Do we actually apply any acceleration to the values that are not at WINDOW_END?
+      // }
     }
   }
 }

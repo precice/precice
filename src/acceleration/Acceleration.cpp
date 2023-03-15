@@ -20,8 +20,17 @@ void Acceleration::applyRelaxation(double omega, const DataMap &cplData) const
     const auto  couplingData = pair.second;
     auto &      values       = couplingData->values();
     const auto &oldValues    = couplingData->previousIteration();
-    values *= omega;
-    values += oldValues * (1 - omega);
+    auto        storedTimes  = couplingData->getStoredTimesAscending();
+
+    for (auto time : storedTimes) {
+      auto data_value = couplingData->getValuesAtTime(time);
+      data_value *= omega;
+      data_value += oldValues * (1 - omega);
+      // Apply relaxation to all timesteps and store it in the current waveform
+      couplingData->storeValuesAtTime(time, data_value, true);
+    }
+
+    // Ignore the waveform iterations for the gradient for now
     if (couplingData->hasGradient()) {
       auto &      gradients    = couplingData->gradientValues();
       const auto &oldGradients = couplingData->previousIterationGradients();
