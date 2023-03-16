@@ -26,9 +26,12 @@ BOOST_AUTO_TEST_CASE(Explicit)
     double writeGlobalData{5};
 
     while (couplingInterface.isCouplingOngoing()) {
-      // Write data
+      // Write data to be sent to SolverTwo to buffer
       couplingInterface.writeGlobalScalarData(globalDataID, writeGlobalData);
+      // send data
       dt = couplingInterface.advance(dt);
+      // change reference data for next check
+      writeGlobalData++;
     }
 
   } else {
@@ -40,13 +43,19 @@ BOOST_AUTO_TEST_CASE(Explicit)
     double readGlobalData;
 
     // Initialize
-    double dt = couplingInterface.initialize();
+    double expectedGlobalData{5};
+    double dt = couplingInterface.initialize(); // For serial-explicit, first communication happens here
+
     while (couplingInterface.isCouplingOngoing()) {
-      dt = couplingInterface.advance(dt);
+      // read received data from buffer
       couplingInterface.readGlobalScalarData(globalDataID, readGlobalData);
-      // Expected data according to the writeData
-      double expectedGlobalData{5};
+      // check if received data is correct
       BOOST_TEST(precice::testing::equals(expectedGlobalData, readGlobalData));
+      // receive next data
+      dt = couplingInterface.advance(dt);
+      // change reference data for next check
+      expectedGlobalData++;
+      // Expected data according to the writeData
     }
   }
 }
