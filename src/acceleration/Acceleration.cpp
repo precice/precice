@@ -25,6 +25,7 @@ void Acceleration::applyRelaxation(double omega, const DataMap &cplData) const
     for (auto time : storedTimes) {
       auto data_value = couplingData->getValuesAtTime(time);
       data_value *= omega;
+
       data_value += oldValues * (1 - omega);
       // Apply relaxation to all timesteps and store it in the current waveform
       couplingData->storeValuesAtTime(time, data_value, true);
