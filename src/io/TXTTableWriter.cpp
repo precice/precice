@@ -15,7 +15,7 @@ TXTTableWriter::TXTTableWriter(
 {
   _outputStream.open(filename);
   PRECICE_CHECK(_outputStream,
-                ::precice::IOError, "TXT table writer failed to open file \"{}\"", filename);
+                ::precice::ExportError, "TXT table writer failed to open file \"{}\"", filename);
 
   _outputStream.setf(std::ios::showpoint);
   _outputStream.setf(std::ios::fixed);

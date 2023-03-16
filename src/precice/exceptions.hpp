@@ -34,27 +34,15 @@ public:
       : precice::Error(what_arg){};
 };
 
-class IOError : public precice::Error {
+class ExportError : public precice::Error {
 public:
-  IOError(const std::string &what_arg)
+  ExportError(const std::string &what_arg)
       : precice::Error(what_arg){};
 };
 
 class MappingError : public precice::Error {
 public:
   MappingError(const std::string &what_arg)
-      : precice::Error(what_arg){};
-};
-
-class MeshError : public precice::Error {
-public:
-  MeshError(const std::string &what_arg)
-      : precice::Error(what_arg){};
-};
-
-class M2NError : public precice::Error {
-public:
-  M2NError(const std::string &what_arg)
       : precice::Error(what_arg){};
 };
 

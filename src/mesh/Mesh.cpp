@@ -137,11 +137,7 @@ PtrData &Mesh::createData(
 {
   PRECICE_TRACE(name, dimension);
   for (const PtrData &data : _data) {
-    PRECICE_CHECK(data->getName() != name,
-                  ::precice::MeshError,
-                  "Data \"{}\" cannot be created twice for mesh \"{}\". "
-                  "Please rename or remove one of the use-data tags with name \"{}\".",
-                  name, _name, name);
+    PRECICE_ASSERT(data->getName() != name, "Duplicate data names");
   }
   //#rows = dimensions of current mesh #columns = dimensions of corresponding data set
   PtrData data(new Data(name, id, dimension, _dimensions));
