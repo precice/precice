@@ -844,8 +844,8 @@ bool BaseCouplingScheme::anyDataRequiresInitialization(DataMap &dataMap) const
 bool BaseCouplingScheme::anyDataRequiresInitialization(GlobalDataMap &globalDataMap) const
 {
   /// @todo implement this function using https://en.cppreference.com/w/cpp/algorithm/all_any_none_of
-  for (GlobalDataMap::value_type &pair : globalDataMap) {
-    if (pair.second->requiresInitialization) {
+  for (const auto &data : globalDataMap | boost::adaptors::map_values) {
+    if (data->requiresInitialization) {
       PRECICE_ERROR("Initialization for global data exchange is not tested yet.");
       return true;
     }
