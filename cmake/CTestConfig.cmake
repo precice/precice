@@ -59,7 +59,7 @@ function(add_precice_test)
     PROPERTIES
     RUN_SERIAL TRUE # Do not run this test in parallel with others
     WORKING_DIRECTORY "${PAT_WDIR}"
-    ENVIRONMENT "PRECICE_ROOT=${preCICE_SOURCE_DIR};OMPI_MCA_rmaps_base_oversubscribe=1"
+    ENVIRONMENT "OMPI_MCA_rmaps_base_oversubscribe=1"
     )
   if(PAT_TIMEOUT)
     set_tests_properties(${PAT_FULL_NAME} PROPERTIES TIMEOUT ${PAT_TIMEOUT} )
