@@ -363,7 +363,7 @@ void BaseCouplingScheme::addComputedTime(
   _time += timeToAdd;
 
   // Check validness
-  bool valid = math::greaterEquals(getThisTimeWindowRemainder(), 0.0, _eps);
+  bool valid = math::greaterEquals(getNextTimestepMaxLength(), 0.0, _eps);
   PRECICE_CHECK(valid,
                 "The timestep length given to preCICE in \"advance\" {} exceeds the maximum allowed timestep length {} "
                 "in the remaining of this time window. "
@@ -376,7 +376,7 @@ bool BaseCouplingScheme::willDataBeExchanged(
     double lastSolverTimestepLength) const
 {
   PRECICE_TRACE(lastSolverTimestepLength);
-  double remainder = getThisTimeWindowRemainder() - lastSolverTimestepLength;
+  double remainder = getNextTimestepMaxLength() - lastSolverTimestepLength;
   return not math::greater(remainder, 0.0, _eps);
 }
 
@@ -419,17 +419,6 @@ double BaseCouplingScheme::getTime() const
 int BaseCouplingScheme::getTimeWindows() const
 {
   return _timeWindows;
-}
-
-double BaseCouplingScheme::getThisTimeWindowRemainder() const
-{
-  PRECICE_TRACE();
-  double remainder = 0.0;
-  if (hasTimeWindowSize()) {
-    remainder = getNextTimestepMaxLength();
-  }
-  PRECICE_DEBUG("return {}", remainder);
-  return remainder;
 }
 
 double BaseCouplingScheme::getNextTimestepMaxLength() const
@@ -704,7 +693,7 @@ void BaseCouplingScheme::advanceTXTWriters()
 
 bool BaseCouplingScheme::reachedEndOfTimeWindow()
 {
-  return math::equals(getThisTimeWindowRemainder(), 0.0, _eps);
+  return math::equals(getNextTimestepMaxLength(), 0.0, _eps) || not hasTimeWindowSize();
 }
 
 void BaseCouplingScheme::storeIteration()
@@ -767,7 +756,7 @@ void BaseCouplingScheme::doImplicitStep()
     // no convergence achieved for the coupling iteration within the current time window
     if (_acceleration) {
       /**
-       * Acceleration works on CouplingData::values(), so we retreive the data from the storage, perform the acceleration and then put the data back into the storage.
+       * Acceleration works on CouplingData::values(), so we retrieve the data from the storage, perform the acceleration and then put the data back into the storage.
        *
        * There are generally two possibilities:
        *
@@ -779,7 +768,7 @@ void BaseCouplingScheme::doImplicitStep()
        * needed at the moment. Important note: In https://github.com/precice/precice/pull/1414 also send data requires to keep
        * track of _timeStepsStorage for subcycling. So it will become simpler as soon as subcycling is fully implemented.
        */
-      // @todo For other Acceleration schemes as described in "Rüth, B, Uekermann, B, Mehl, M, Birken, P, Monge, A, Bungartz, H-J. Quasi-Newton waveform iteration for partitioned surface-coupled multiphysics applications. Int J Numer Methods Eng. 2021; 122: 5236– 5257. https://doi.org/10.1002/nme.6443" we need a more elaborate implementation.
+      // @todo For other Acceleration schemes as described in https://doi.org/10.1002/nme.6443 we need a more elaborate implementation.
       // Put values into data->values() for acceleration
       // @todo breaks for CplSchemeTests/ParallelImplicitCouplingSchemeTests. Why? @fsimonis
       // for (auto &data : getAccelerationData() | boost::adaptors::map_values) {

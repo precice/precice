@@ -28,16 +28,15 @@ BOOST_AUTO_TEST_CASE(SendMeshToMultipleParticipants)
 
   precice::SolverInterface interface(context.name, context.config(), 0, 1);
 
-  const precice::MeshID   meshID   = interface.getMeshID(meshName);
-  const precice::VertexID vertexID = interface.setMeshVertex(meshID, vertex.data());
-  const precice::DataID   dataID   = interface.getDataID("Data", meshID);
+  const precice::VertexID vertexID = interface.setMeshVertex(meshName, vertex.data());
+  auto                    dataName = "Data";
   double                  maxDt    = interface.initialize();
 
   if (context.isNamed("SolverOne")) {
-    interface.writeScalarData(dataID, vertexID, value);
+    interface.writeScalarData(meshName, dataName, vertexID, value);
   } else {
     double valueReceived = -1.0;
-    interface.readScalarData(dataID, vertexID, valueReceived);
+    interface.readScalarData(meshName, dataName, vertexID, valueReceived);
     BOOST_TEST(valueReceived == value);
   }
 

@@ -18,33 +18,33 @@ BOOST_AUTO_TEST_CASE(MultipleReadFromMappings)
   Vector2d                 vertex{0.0, 0.0};
 
   if (context.isNamed("A")) {
-    const precice::MeshID meshIDTop      = interface.getMeshID("MeshATop");
-    const precice::MeshID meshIDBottom   = interface.getMeshID("MeshABottom");
-    int                   vertexIDTop    = interface.setMeshVertex(meshIDTop, vertex.data());
-    int                   vertexIDBottom = interface.setMeshVertex(meshIDBottom, vertex.data());
-    int                   dataIDTop      = interface.getDataID("Pressure", meshIDTop);
-    int                   dataIDBottom   = interface.getDataID("Pressure", meshIDBottom);
+    auto meshNameTop    = "MeshATop";
+    auto meshNameBottom = "MeshABottom";
+    int  vertexIDTop    = interface.setMeshVertex(meshNameTop, vertex.data());
+    int  vertexIDBottom = interface.setMeshVertex(meshNameBottom, vertex.data());
+    auto dataNameTop    = "Pressure";
+    auto dataNameBottom = "Pressure";
 
     double dt = interface.initialize();
     interface.advance(dt);
     double pressure = -1.0;
-    interface.readScalarData(dataIDTop, vertexIDTop, pressure);
+    interface.readScalarData(meshNameTop, dataNameTop, vertexIDTop, pressure);
     BOOST_TEST(pressure == 1.0);
     pressure = -1.0;
-    interface.readScalarData(dataIDBottom, vertexIDBottom, pressure);
+    interface.readScalarData(meshNameBottom, dataNameBottom, vertexIDBottom, pressure);
     BOOST_TEST(pressure == 1.0);
     BOOST_TEST(not interface.isCouplingOngoing());
     interface.finalize();
 
   } else {
     BOOST_TEST(context.isNamed("B"));
-    const precice::MeshID meshID   = interface.getMeshID("MeshB");
-    int                   vertexID = interface.setMeshVertex(meshID, vertex.data());
-    int                   dataID   = interface.getDataID("Pressure", meshID);
+    auto meshName = "MeshB";
+    int  vertexID = interface.setMeshVertex(meshName, vertex.data());
+    auto dataName = "Pressure";
 
     double dt       = interface.initialize();
     double pressure = 1.0;
-    interface.writeScalarData(dataID, vertexID, pressure);
+    interface.writeScalarData(meshName, dataName, vertexID, pressure);
     interface.advance(dt);
     BOOST_TEST(not interface.isCouplingOngoing());
     interface.finalize();

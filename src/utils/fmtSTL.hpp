@@ -17,7 +17,7 @@ struct fmt::formatter<std::vector<T, Allocator>> : formatter<string_view> {
 
 template <class T, class Allocator>
 struct fmt::formatter<std::deque<T, Allocator>> : formatter<string_view> {
-  /// Formats deques like [ l, i, s, t, s ]
+  /// Formats dequeues like [ l, i, s, t, s ]
   template <typename FormatContext>
   auto format(const std::deque<T, Allocator> &v, FormatContext &ctx) const
   {

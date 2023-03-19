@@ -174,7 +174,7 @@ private:
    * Configures and instantiates all mappings, which do not require
    * a subtag/ a basis function. For the RBF related mappings, this class
    * stores all relevant information, but the class is not instantiated and
-   * a nullptr is returned intstead. The class instantiation for the RBF
+   * a nullptr is returned instead. The class instantiation for the RBF
    * related mappings happens in \ref xmlTagCallback() as we need to read the
    * subtag information.
    */

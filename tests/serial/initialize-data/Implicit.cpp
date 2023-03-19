@@ -40,11 +40,8 @@ BOOST_AUTO_TEST_CASE(Implicit)
     writeValue        = 2;
     expectedReadValue = 1;
   }
-  int                 meshID      = couplingInterface.getMeshID(meshName);
-  int                 writeDataID = couplingInterface.getDataID(writeDataName, meshID);
-  int                 readDataID  = couplingInterface.getDataID(readDataName, meshID);
   std::vector<double> vertex(dimensions, 0);
-  int                 vertexID = couplingInterface.setMeshVertex(meshID, vertex.data());
+  int                 vertexID = couplingInterface.setMeshVertex(meshName, vertex.data());
 
   double              dt = 0;
   std::vector<double> writeData(dimensions, writeValue);
@@ -52,7 +49,7 @@ BOOST_AUTO_TEST_CASE(Implicit)
 
   if (couplingInterface.requiresInitialData()) {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    couplingInterface.writeVectorData(writeDataID, vertexID, writeData.data());
+    couplingInterface.writeVectorData(meshName, writeDataName, vertexID, writeData.data());
   }
 
   dt = couplingInterface.initialize();
@@ -60,10 +57,10 @@ BOOST_AUTO_TEST_CASE(Implicit)
   while (couplingInterface.isCouplingOngoing()) {
     if (couplingInterface.requiresWritingCheckpoint()) {
     }
-    couplingInterface.readVectorData(readDataID, vertexID, readData.data());
+    couplingInterface.readVectorData(meshName, readDataName, vertexID, readData.data());
     BOOST_TEST(expectedReadValue == readData.at(0));
     BOOST_TEST(expectedReadValue == readData.at(1));
-    couplingInterface.writeVectorData(writeDataID, vertexID, writeData.data());
+    couplingInterface.writeVectorData(meshName, writeDataName, vertexID, writeData.data());
     dt = couplingInterface.advance(dt);
     if (couplingInterface.requiresReadingCheckpoint()) {
     }

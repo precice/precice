@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # This script runs clang-tidy on the preCICE code base
-# It generates automatically a new buid directory called "_clang-tidy"
+# It generates automatically a new build directory called "_clang-tidy"
 # where the actual script is executed
 # ------------------------------------------------------------------
 #

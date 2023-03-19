@@ -406,14 +406,18 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingFirstParticipantSetsDt)
   CouplingScheme &cplScheme = *cplSchemeConfig.getCouplingScheme(context.name);
 
   double computedTime      = 0.0;
+  double maxTime           = 1.0; // from max-time
   int    computedTimesteps = 0;
   if (context.isNamed(nameParticipant0)) {
-    double dt = 0.3;
+    double solverDt = 0.3;
+    double preciceDt, dt;
     cplScheme.initialize(0.0, 1);
     BOOST_TEST(not cplScheme.hasDataBeenReceived());
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isCouplingOngoing());
     while (cplScheme.isCouplingOngoing()) {
+      preciceDt = cplScheme.getNextTimestepMaxLength();
+      dt        = std::min({solverDt, preciceDt});
       computedTime += dt;
       computedTimesteps++;
       cplScheme.addComputedTime(dt);
@@ -429,7 +433,7 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingFirstParticipantSetsDt)
       }
     }
     cplScheme.finalize();
-    BOOST_TEST(testing::equals(computedTime, 1.2));
+    BOOST_TEST(testing::equals(computedTime, maxTime));
     BOOST_TEST(computedTimesteps == 4);
     BOOST_TEST(cplScheme.isTimeWindowComplete());
     BOOST_TEST(not cplScheme.isCouplingOngoing());
@@ -455,7 +459,7 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingFirstParticipantSetsDt)
       }
     }
     cplScheme.finalize();
-    BOOST_TEST(testing::equals(computedTime, 1.2));
+    BOOST_TEST(testing::equals(computedTime, maxTime));
     BOOST_TEST(computedTimesteps == 4);
     BOOST_TEST(cplScheme.isTimeWindowComplete());
     BOOST_TEST(not cplScheme.isCouplingOngoing());

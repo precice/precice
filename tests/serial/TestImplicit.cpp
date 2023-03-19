@@ -22,25 +22,25 @@ BOOST_AUTO_TEST_CASE(TestImplicit)
   precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
 
   if (context.isNamed("SolverOne")) {
-    int    meshID = interface.getMeshID("Square");
+    auto   meshName = "Square";
     double pos[3];
     // Set mesh positions
     pos[0] = 0.0;
     pos[1] = 0.0;
     pos[2] = 0.0;
-    interface.setMeshVertex(meshID, pos);
+    interface.setMeshVertex(meshName, pos);
     pos[0] = 1.0;
     pos[1] = 0.0;
     pos[2] = 0.0;
-    interface.setMeshVertex(meshID, pos);
+    interface.setMeshVertex(meshName, pos);
     pos[0] = 1.0;
     pos[1] = 1.0;
     pos[2] = 0.0;
-    interface.setMeshVertex(meshID, pos);
+    interface.setMeshVertex(meshName, pos);
     pos[0] = 0.0;
     pos[1] = 1.0;
     pos[2] = 0.0;
-    interface.setMeshVertex(meshID, pos);
+    interface.setMeshVertex(meshName, pos);
 
     double maxDt = interface.initialize();
     while (interface.isCouplingOngoing()) {
@@ -63,13 +63,13 @@ BOOST_AUTO_TEST_CASE(TestImplicit)
     BOOST_TEST(computedTimesteps == 4);
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    int    meshID = interface.getMeshID("SquareTwo");
+    auto   meshName = "SquareTwo";
     double pos[3];
     // Set mesh positions
     pos[0] = 0.0;
     pos[1] = 0.0;
     pos[2] = 0.0;
-    interface.setMeshVertex(meshID, pos);
+    interface.setMeshVertex(meshName, pos);
     double maxDt = interface.initialize();
     while (interface.isCouplingOngoing()) {
       if (interface.requiresWritingCheckpoint()) {

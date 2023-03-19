@@ -17,20 +17,20 @@ BOOST_AUTO_TEST_CASE(ExportTimeseries)
   std::vector<precice::VertexID> vertexIds(6 / context.size, -1);
   double                         y = context.size;
   std::vector<double>            coords{0, y, 0, 1, y, 0, 2, y, 0, 3, y, 0, 4, y, 0, 5, y, 0};
-  const precice::MeshID          meshID = interface.getMeshID(context.isNamed("ExporterOne") ? "A" : "B");
+  auto                           meshName = context.isNamed("ExporterOne") ? "A" : "B";
 
   if (context.isNamed("ExporterOne")) {
-    interface.setMeshVertices(meshID, 6, coords.data(), vertexIds.data());
+    interface.setMeshVertices(meshName, 6, coords.data(), vertexIds.data());
   } else {
-    interface.setMeshVertices(meshID, 3, &coords[context.rank * 9], vertexIds.data());
+    interface.setMeshVertices(meshName, 3, &coords[context.rank * 9], vertexIds.data());
   }
 
   double time = 0.0;
   double dt   = interface.initialize();
 
   if (context.isNamed("ExporterOne")) {
-    const precice::DataID sdataID = interface.getDataID("S", meshID);
-    const precice::DataID vdataID = interface.getDataID("V", meshID);
+    auto sdataName = "S";
+    auto vdataName = "V";
 
     std::vector<double> sdata(6);
     std::vector<double> vdata(6 * 3, 0);
@@ -42,8 +42,8 @@ BOOST_AUTO_TEST_CASE(ExportTimeseries)
         vdata[3 * x + 1] = std::sin(x * pi / 3 + pi * time * 0.5);
         vdata[3 * x + 2] = 0;
       }
-      interface.writeBlockScalarData(sdataID, 6, vertexIds.data(), sdata.data());
-      interface.writeBlockVectorData(vdataID, 6, vertexIds.data(), vdata.data());
+      interface.writeBlockScalarData(meshName, sdataName, 6, vertexIds.data(), sdata.data());
+      interface.writeBlockVectorData(meshName, vdataName, 6, vertexIds.data(), vdata.data());
 
       time += dt;
       dt = interface.advance(dt);
