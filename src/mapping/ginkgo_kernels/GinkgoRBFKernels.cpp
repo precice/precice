@@ -24,6 +24,7 @@ void create_rbf_system_matrix(std::shared_ptr<const DefaultExecutor> exec,
       GKO_KERNEL(auto i, auto j, auto N, auto dataDimensionality, auto activeAxis, auto mtx, auto supportPoints, auto targetPoints, auto f, auto rbf_params, auto inputRowLength, auto outputRowLength, auto addPolynomial, auto extraDims) {
         const unsigned int rowLength = N + extraDims;
         double             dist      = 0;
+        double             y;
 
         // Make each entry zero if polynomial is on since not every entry will be adjusted below
         if (addPolynomial) {
@@ -32,40 +33,9 @@ void create_rbf_system_matrix(std::shared_ptr<const DefaultExecutor> exec,
 
 #if defined(__NVCC__) || defined(__HIPCC__)
 
-        // Use this as readonly shared buffer
-        __shared__ double prefetchedEvalPoint[3];
-        double            y;
-
-        // Check if current block is at the end of a matrix row and induces a line break
-        // However, if a block is larger than an entire row, we need to disable it since we now can't make sure
-        // it does not still span across two lines.
-        // We have to use uint64_t because these matrices become so large that using this
-        // if-condition overflows with int32
-        uint64_t blockID        = blockIdx.x;
-        uint64_t leftThreadNum  = blockID * blockDim.x;
-        uint64_t rightThreadNum = (blockID + 1) * blockDim.x - 1;
-        if (blockDim.x >= rowLength || (blockDim.x < rowLength && leftThreadNum % rowLength > rightThreadNum % rowLength)) {
-
-          // Since this block spans across two lines, we have to use global memory and cannot use prefetched memory
-          for (size_t k = 0; k < dataDimensionality; ++k) {
-            y    = supportPoints[k * inputRowLength + j] - targetPoints[k * outputRowLength + i];
-            dist = fma(y, y, dist);
-          }
-        } else {
-
-          // If this block is indeed only in one row, we can make thread 0 in each block responsible for prefetching values into shared memory
-          if (0 == threadIdx.x) {
-            for (size_t k = 0; k < dataDimensionality; ++k) {
-              prefetchedEvalPoint[k] = targetPoints[k * outputRowLength + i];
-            }
-          }
-          // Let all threads in a block wait until memory is prefetched
-          __syncthreads();
-
-          for (size_t k = 0; k < dataDimensionality; ++k) {
-            y    = supportPoints[k * inputRowLength + j] - prefetchedEvalPoint[k]; // <- This should not impose a bank conflict since CUDA offers broadcasting if a warp accesses the same shared memory adress
-            dist = fma(y, y, dist);
-          }
+        for (size_t k = 0; k < dataDimensionality; ++k) {
+          y    = supportPoints[k * inputRowLength + j] - targetPoints[k * outputRowLength + i];
+          dist = fma(y, y, dist);
         }
 
         dist = sqrt(dist);
