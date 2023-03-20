@@ -54,13 +54,12 @@ void runTestDistributedCommunication(std::string const &config, TestContext cons
   }
 
   precice::SolverInterface precice(context.name, config, context.rank, context.size);
-  int                      meshID   = precice.getMeshID(meshName);
-  int                      forcesID = precice.getDataID("Forces", meshID);
-  int                      velocID  = precice.getDataID("Velocities", meshID);
+  auto                     forcesID = "Forces";
+  auto                     velocID  = "Velocities";
 
   std::vector<int> vertexIDs;
   for (int i = i1; i < i2; i++) {
-    VertexID vertexID = precice.setMeshVertex(meshID, positions[i].data());
+    VertexID vertexID = precice.setMeshVertex(meshName, positions[i].data());
     vertexIDs.push_back(vertexID);
   }
 
@@ -68,14 +67,14 @@ void runTestDistributedCommunication(std::string const &config, TestContext cons
 
   if (context.isNamed("Fluid")) { //Fluid
     for (size_t i = 0; i < vertexIDs.size(); i++) {
-      precice.writeVectorData(forcesID, vertexIDs[i], data[i + i1].data());
+      precice.writeVectorData(meshName, forcesID, vertexIDs[i], data[i + i1].data());
     }
   } else {
     BOOST_TEST(context.isNamed("Structure"));
     for (size_t i = 0; i < vertexIDs.size(); i++) {
-      precice.readVectorData(forcesID, vertexIDs[i], data[i].data());
+      precice.readVectorData(meshName, forcesID, vertexIDs[i], data[i].data());
       data[i] = (data[i] * 2).array() + 1.0;
-      precice.writeVectorData(velocID, vertexIDs[i], data[i].data());
+      precice.writeVectorData(meshName, velocID, vertexIDs[i], data[i].data());
     }
   }
 
@@ -83,7 +82,7 @@ void runTestDistributedCommunication(std::string const &config, TestContext cons
 
   if (context.isNamed("Fluid")) { //Fluid
     for (size_t i = 0; i < vertexIDs.size(); i++) {
-      precice.readVectorData(velocID, vertexIDs[i], data[i + i1].data());
+      precice.readVectorData(meshName, velocID, vertexIDs[i], data[i + i1].data());
       for (size_t d = 0; d < 3; d++) {
         BOOST_TEST(expectedData[i + i1][d] == data[i + i1][d]);
       }

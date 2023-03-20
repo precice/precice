@@ -1,5 +1,6 @@
 #include <iostream>
 #include <sstream>
+#include <vector>
 #include "precice/SolverInterface.hpp"
 
 int main(int argc, char **argv)
@@ -28,22 +29,18 @@ int main(int argc, char **argv)
   SolverInterface interface(solverName, configFileName, commRank, commSize);
 
   if (solverName == "SolverOne") {
-    dataWriteName = "dataOne";
-    dataReadName  = "dataTwo";
-    meshName      = "MeshOne";
+    dataWriteName = "Data-One";
+    dataReadName  = "Data-Two";
+    meshName      = "SolverOne-Mesh";
   }
   if (solverName == "SolverTwo") {
-    dataReadName  = "dataOne";
-    dataWriteName = "dataTwo";
-    meshName      = "MeshTwo";
+    dataReadName  = "Data-One";
+    dataWriteName = "Data-Two";
+    meshName      = "SolverTwo-Mesh";
   }
 
-  int meshID           = interface.getMeshID(meshName);
   int dimensions       = interface.getDimensions();
   int numberOfVertices = 3;
-
-  const int readDataID  = interface.getDataID(dataReadName, meshID);
-  const int writeDataID = interface.getDataID(dataWriteName, meshID);
 
   std::vector<double> readData(numberOfVertices * dimensions);
   std::vector<double> writeData(numberOfVertices * dimensions);
@@ -58,7 +55,7 @@ int main(int argc, char **argv)
     }
   }
 
-  interface.setMeshVertices(meshID, numberOfVertices, vertices.data(), vertexIDs.data());
+  interface.setMeshVertices(meshName, numberOfVertices, vertices.data(), vertexIDs.data());
 
   if (interface.requiresInitialData()) {
     std::cout << "DUMMY: Writing initial data\n";
@@ -72,13 +69,13 @@ int main(int argc, char **argv)
       std::cout << "DUMMY: Writing iteration checkpoint\n";
     }
 
-    interface.readBlockVectorData(readDataID, numberOfVertices, vertexIDs.data(), readData.data());
+    interface.readBlockVectorData(meshName, dataReadName, numberOfVertices, vertexIDs.data(), readData.data());
 
     for (int i = 0; i < numberOfVertices * dimensions; i++) {
       writeData.at(i) = readData.at(i) + 1;
     }
 
-    interface.writeBlockVectorData(writeDataID, numberOfVertices, vertexIDs.data(), writeData.data());
+    interface.writeBlockVectorData(meshName, dataWriteName, numberOfVertices, vertexIDs.data(), writeData.data());
 
     dt = interface.advance(dt);
 

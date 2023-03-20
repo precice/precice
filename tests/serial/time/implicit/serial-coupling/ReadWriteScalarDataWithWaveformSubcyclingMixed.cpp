@@ -16,17 +16,13 @@ BOOST_AUTO_TEST_SUITE(SerialCoupling)
 /**
  * @brief Test to run a simple coupling with zeroth order waveform subcycling.
  *
- * Provides a dt argument to the read function, uses zeroth order waveform for SolverOne and a first oder waveform for SolverTwo. See ReadWriteScalarDataWithWaveformSubcyclingZero and ReadWriteScalarDataWithWaveformSubcyclingFirst for details on the non-mixed cases and expected behavior.
+ * Provides a dt argument to the read function, uses zeroth order waveform for SolverOne and a first order waveform for SolverTwo. See ReadWriteScalarDataWithWaveformSubcyclingZero and ReadWriteScalarDataWithWaveformSubcyclingFirst for details on the non-mixed cases and expected behavior.
  */
 BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingMixed)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
   SolverInterface precice(context.name, context.config(), 0, 1);
-
-  MeshID meshID;
-  DataID writeDataID;
-  DataID readDataID;
 
   typedef double (*DataFunction)(double);
 
@@ -39,24 +35,25 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingMixed)
   DataFunction writeFunction;
   DataFunction readFunction;
 
+  std::string meshName, writeDataName, readDataName;
   if (context.isNamed("SolverOne")) {
-    meshID        = precice.getMeshID("MeshOne");
-    writeDataID   = precice.getDataID("DataOne", meshID);
+    meshName      = "MeshOne";
+    writeDataName = "DataOne";
     writeFunction = dataOneFunction;
-    readDataID    = precice.getDataID("DataTwo", meshID);
+    readDataName  = "DataTwo";
     readFunction  = dataTwoFunction;
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    meshID        = precice.getMeshID("MeshTwo");
-    writeDataID   = precice.getDataID("DataTwo", meshID);
+    meshName      = "MeshTwo";
+    writeDataName = "DataTwo";
     writeFunction = dataTwoFunction;
-    readDataID    = precice.getDataID("DataOne", meshID);
+    readDataName  = "DataOne";
     readFunction  = dataOneFunction;
   }
 
   double   writeData = 0;
   double   readData  = 0;
-  VertexID vertexID  = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+  VertexID vertexID  = precice.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());
 
   int    nSubsteps          = 4; // perform subcycling on solvers. 4 steps happen in each window.
   int    nWindows           = 5; // perform 5 windows.
@@ -68,7 +65,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingMixed)
 
   if (precice.requiresInitialData()) {
     writeData = writeFunction(time);
-    precice.writeScalarData(writeDataID, vertexID, writeData);
+    precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
   }
 
   double maxDt    = precice.initialize();
@@ -93,14 +90,14 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingMixed)
       readTime = time + currentDt;
     }
 
-    precice.readScalarData(readDataID, vertexID, currentDt, readData);
+    precice.readScalarData(meshName, readDataName, vertexID, currentDt, readData);
     if (context.isNamed("SolverOne") && iterations == 0) { // in the first iteration of each window, we only have one sample of data. Therefore constant interpolation. Only for first participant with serial coupling.
       BOOST_TEST(readData == readFunction(timeCheckpoint));
     } else {
       BOOST_TEST(readData == readFunction(readTime));
     }
 
-    precice.readScalarData(readDataID, vertexID, currentDt / 2, readData);
+    precice.readScalarData(meshName, readDataName, vertexID, currentDt / 2, readData);
 
     if (context.isNamed("SolverOne") && iterations == 0) { // in the first iteration of each window, use data from previous window. Only for first participant with serial coupling.
       BOOST_TEST(readData == readFunction(timeCheckpoint));
@@ -117,7 +114,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingMixed)
     time += currentDt;
     timestep++;
     writeData = writeFunction(time);
-    precice.writeScalarData(writeDataID, vertexID, writeData);
+    precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
     maxDt = precice.advance(currentDt);
     if (precice.requiresReadingCheckpoint()) {
       time     = timeCheckpoint;

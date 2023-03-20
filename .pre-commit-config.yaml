@@ -20,3 +20,7 @@ repos:
   rev: 'v2.1'
   hooks:
   - id: format-precice-config
+- repo: https://github.com/codespell-project/codespell
+  rev: v2.2.2
+  hooks:
+    - id: codespell

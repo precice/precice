@@ -23,11 +23,10 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
 
   SolverInterface precice(context.name, context.config(), 0, 1);
 
-  MeshID meshID;
-  DataID writeDataID;
+  std::string meshName, writeDataName;
 
   typedef double (*DataFunction)(double);
-  std::vector<std::pair<DataID, DataFunction>> readDataPairs;
+  std::vector<std::pair<std::string, DataFunction>> readDataPairs;
 
   DataFunction dataOneFunction = [](double t) -> double {
     return (double) (2 + t);
@@ -41,31 +40,31 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
   DataFunction writeFunction;
 
   if (context.isNamed("SolverOne")) {
-    meshID         = precice.getMeshID("MeshOne");
-    writeDataID    = precice.getDataID("DataOne", meshID);
+    meshName       = "MeshOne";
+    writeDataName  = "DataOne";
     writeFunction  = dataOneFunction;
-    auto dataTwoId = precice.getDataID("DataTwo", meshID);
+    auto dataTwoId = "DataTwo";
     readDataPairs.push_back(std::make_pair(dataTwoId, dataTwoFunction));
-    auto dataThreeId = precice.getDataID("DataThree", meshID);
+    auto dataThreeId = "DataThree";
     readDataPairs.push_back(std::make_pair(dataThreeId, dataThreeFunction));
   } else if (context.isNamed("SolverTwo")) {
-    meshID         = precice.getMeshID("MeshTwo");
-    writeDataID    = precice.getDataID("DataTwo", meshID);
+    meshName       = "MeshTwo";
+    writeDataName  = "DataTwo";
     writeFunction  = dataTwoFunction;
-    auto dataOneId = precice.getDataID("DataOne", meshID);
+    auto dataOneId = "DataOne";
     readDataPairs.push_back(std::make_pair(dataOneId, dataOneFunction));
   } else {
     BOOST_TEST(context.isNamed("SolverThree"));
-    meshID         = precice.getMeshID("MeshThree");
-    writeDataID    = precice.getDataID("DataThree", meshID);
+    meshName       = "MeshThree";
+    writeDataName  = "DataThree";
     writeFunction  = dataThreeFunction;
-    auto dataOneId = precice.getDataID("DataOne", meshID);
+    auto dataOneId = "DataOne";
     readDataPairs.push_back(std::make_pair(dataOneId, dataOneFunction));
   }
 
   double   writeData = 0;
   double   readData  = 0;
-  VertexID vertexID  = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+  VertexID vertexID  = precice.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());
 
   int    nWindows        = 5; // perform 5 windows.
   int    timestep        = 0;
@@ -78,7 +77,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
 
   if (precice.requiresInitialData()) {
     writeData = writeFunction(time);
-    precice.writeScalarData(writeDataID, vertexID, writeData);
+    precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
   }
 
   double maxDt        = precice.initialize();
@@ -100,10 +99,10 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
       readTime = time + sampleDt;
 
       for (auto &readDataPair : readDataPairs) {
-        auto readDataID   = readDataPair.first;
+        auto readDataName = readDataPair.first;
         auto readFunction = readDataPair.second;
 
-        precice.readScalarData(readDataID, vertexID, sampleDt, readData);
+        precice.readScalarData(meshName, readDataName, vertexID, sampleDt, readData);
 
         if (iterations == 0) { // always use constant extrapolation in first iteration (from initialize or writeData of second participant at end previous window).
           BOOST_TEST(readData == readFunction(time));
@@ -118,7 +117,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.
     time += currentDt;
     writeData = writeFunction(time);
-    precice.writeScalarData(writeDataID, vertexID, writeData);
+    precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
     maxDt     = precice.advance(currentDt);
     currentDt = dt > maxDt ? maxDt : dt;
     BOOST_CHECK(currentDt == windowDt); // no subcycling.

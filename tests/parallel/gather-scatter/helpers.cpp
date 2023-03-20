@@ -11,10 +11,10 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
   if (context.isNamed("ParallelSolver")) {
     // Get mesh and data IDs
     precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    const precice::MeshID    meshID      = interface.getMeshID("ParallelMesh");
-    const int                writeDataID = interface.getDataID("MyData1", meshID);
-    const int                readDataID  = interface.getDataID("MyData2", meshID);
-    const int                dim         = interface.getDimensions();
+    auto                     meshName      = "ParallelMesh";
+    auto                     writeDataName = "MyData1";
+    auto                     readDataName  = "MyData2";
+    const int                dim           = interface.getDimensions();
     BOOST_TEST(dim == 2);
 
     // Set coordinates, primary according to input argument
@@ -23,7 +23,7 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
     std::vector<int>          ids(size, 0);
 
     // Set mesh vertices
-    interface.setMeshVertices(meshID, size, coordinates.data(), ids.data());
+    interface.setMeshVertices(meshName, size, coordinates.data(), ids.data());
 
     // Initialize the solverinterface
     double dt = interface.initialize();
@@ -38,11 +38,11 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
     std::vector<double> readData(size);
     while (interface.isCouplingOngoing()) {
       // Write data, advance the solverinterface and readData
-      interface.writeBlockScalarData(writeDataID, size,
+      interface.writeBlockScalarData(meshName, writeDataName, size,
                                      ids.data(), writeData.data());
 
       dt = interface.advance(dt);
-      interface.readBlockScalarData(readDataID, size,
+      interface.readBlockScalarData(meshName, readDataName, size,
                                     ids.data(), readData.data());
       // The received data on the secondary rank is always the same
       if (!context.isPrimary()) {
@@ -54,10 +54,10 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
     BOOST_REQUIRE(context.isNamed("SerialSolver"));
     precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
     // Get IDs
-    const precice::MeshID meshID      = interface.getMeshID("SerialMesh");
-    const int             writeDataID = interface.getDataID("MyData2", meshID);
-    const int             readDataID  = interface.getDataID("MyData1", meshID);
-    const int             dim         = interface.getDimensions();
+    auto      meshName      = "SerialMesh";
+    auto      writeDataName = "MyData2";
+    auto      readDataName  = "MyData1";
+    const int dim           = interface.getDimensions();
     BOOST_TEST(interface.getDimensions() == 2);
 
     // Define the interface
@@ -66,7 +66,7 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
     std::vector<int>          ids(size);
 
     // Set vertices
-    interface.setMeshVertices(meshID, size, coordinates.data(), ids.data());
+    interface.setMeshVertices(meshName, size, coordinates.data(), ids.data());
 
     // Initialize the solverinterface
     double dt = interface.initialize();
@@ -78,10 +78,10 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
     // Start the time loop
     while (interface.isCouplingOngoing()) {
       // Write data, advance solverinterface and read data
-      interface.writeBlockScalarData(writeDataID, size,
+      interface.writeBlockScalarData(meshName, writeDataName, size,
                                      ids.data(), writeData.data());
       dt = interface.advance(dt);
-      interface.readBlockScalarData(readDataID, size,
+      interface.readBlockScalarData(meshName, readDataName, size,
                                     ids.data(), readData.data());
       // The received data is always the same
       if (!context.isPrimary()) {

@@ -97,7 +97,7 @@ PtrMapping instantiateRBFMapping(mapping::Mapping::Constraint &constraint, int d
   return PtrMapping(new typename BackendSelector<T, RADIAL_BASIS_FUNCTION_T>::type(constraint, dimension, function, std::forward<Args>(args)...));
 }
 
-// Constrcuts the RBF function based on the functionType
+// Constructs the RBF function based on the functionType
 rbf_variant_t constructRBF(BasisFunction functionType, double supportRadius, double shapeParameter)
 {
   switch (functionType) {
@@ -431,7 +431,7 @@ MappingConfiguration::RBFConfiguration MappingConfiguration::configureRBFMapping
   else if (preallocation == PREALLOCATION_OFF)
     rbfConfig.preallocation = Preallocation::OFF;
   else
-    PRECICE_UNREACHABLE("Unknwon preallocation configuration");
+    PRECICE_UNREACHABLE("Unknown preallocation configuration");
 
   rbfConfig.deadAxis   = {{xDead, yDead, zDead}};
   rbfConfig.solverRtol = solverRtol;

@@ -18,36 +18,36 @@ BOOST_AUTO_TEST_CASE(MultipleReadToMappings)
   Vector2d                 vertex{0.0, 0.0};
 
   if (context.isNamed("A")) {
-    const precice::MeshID meshIDTop      = interface.getMeshID("MeshATop");
-    const precice::MeshID meshIDBottom   = interface.getMeshID("MeshABottom");
-    int                   vertexIDTop    = interface.setMeshVertex(meshIDTop, vertex.data());
-    int                   vertexIDBottom = interface.setMeshVertex(meshIDBottom, vertex.data());
-    int                   dataIDTop      = interface.getDataID("DisplacementTop", meshIDTop);
-    int                   dataIDBottom   = interface.getDataID("DisplacementBottom", meshIDBottom);
+    auto meshNameTop    = "MeshATop";
+    auto meshNameBottom = "MeshABottom";
+    int  vertexIDTop    = interface.setMeshVertex(meshNameTop, vertex.data());
+    int  vertexIDBottom = interface.setMeshVertex(meshNameBottom, vertex.data());
+    auto dataNameTop    = "DisplacementTop";
+    auto dataNameBottom = "DisplacementBottom";
 
     double dt              = interface.initialize();
     double displacementTop = 1.0;
-    interface.writeScalarData(dataIDTop, vertexIDTop, displacementTop);
+    interface.writeScalarData(meshNameTop, dataNameTop, vertexIDTop, displacementTop);
     double displacementBottom = 2.0;
-    interface.writeScalarData(dataIDBottom, vertexIDBottom, displacementBottom);
+    interface.writeScalarData(meshNameBottom, dataNameBottom, vertexIDBottom, displacementBottom);
     interface.advance(dt);
     BOOST_TEST(not interface.isCouplingOngoing());
     interface.finalize();
 
   } else {
     BOOST_TEST(context.isNamed("B"));
-    const precice::MeshID meshID   = interface.getMeshID("MeshB");
-    int                   vertexID = interface.setMeshVertex(meshID, vertex.data());
-    int                   bottomID = interface.getDataID("DisplacementBottom", meshID);
-    int                   topID    = interface.getDataID("DisplacementTop", meshID);
+    auto meshName = "MeshB";
+    int  vertexID = interface.setMeshVertex(meshName, vertex.data());
+    auto bottomID = "DisplacementBottom";
+    auto topID    = "DisplacementTop";
 
     double dt = interface.initialize();
     interface.advance(dt);
     double displacementTop    = -1.0;
     double displacementBottom = -3.0;
-    interface.readScalarData(topID, vertexID, displacementTop);
+    interface.readScalarData(meshName, topID, vertexID, displacementTop);
     BOOST_TEST(displacementTop == 1.0);
-    interface.readScalarData(bottomID, vertexID, displacementBottom);
+    interface.readScalarData(meshName, bottomID, vertexID, displacementBottom);
     BOOST_TEST(displacementBottom == 2.0);
     BOOST_TEST(not interface.isCouplingOngoing());
     interface.finalize();

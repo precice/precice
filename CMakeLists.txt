@@ -145,7 +145,7 @@ add_feature_info(PreciceTools PRECICE_BUILD_TOOLS
   add_feature_info(libbacktrace PRECICE_ENABLE_LIBBACKTRACE
   "Enables libbacktrace for stracktrace generation.
 
-   preCICE assertions are helpful during development, however, the default stacktraces may not be sufficent.
+   preCICE assertions are helpful during development, however, the default stacktraces may not be sufficient.
    This feature enables the support for libbacktrace in boost.stacktrace.
 
    This feature can be enabled/disabled by setting the PRECICE_ENABLE_LIBBACKTRACE CMake option.
@@ -407,16 +407,6 @@ if (PRECICE_BUILD_TOOLS)
     CXX_STANDARD_REQUIRED Yes
     CXX_EXTENSIONS No
     )
-
-  # Add link for backwards compatibility
-  # TODO remove in 3.0.0
-  add_custom_target(
-    binprecice
-    ALL
-    COMMAND ${CMAKE_COMMAND} -E create_symlink precice-tools binprecice
-    DEPENDS precice-tools
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    )
 endif()
 
 #
@@ -478,10 +468,6 @@ if(PRECICE_BUILD_TOOLS)
     EXPORT preciceTargets
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     )
-
-  # Install the binprecice link for backwards compatibility
-  # TODO remove in 3.0.0
-  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/binprecice DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
 # Install examples
