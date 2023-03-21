@@ -256,8 +256,6 @@ inline double estimateClusterRadius(unsigned int verticesPerCluster, mesh::PtrMe
     randomSamples.emplace_back(inMesh->index().getClosestVertex(sample).index);
   }
 
-  // TODO: Add more samples here in order to get a better estimate
-
   // Step 2: Compute the radius of the randomSamples ('centers'), which would have verticesPerCluster vertices
   std::vector<double> sampledClusterRadii;
   for (auto s : randomSamples) {
@@ -284,7 +282,7 @@ inline double estimateClusterRadius(unsigned int verticesPerCluster, mesh::PtrMe
 }
 
 /**
- * @brief Creates a clustering as a collection of Vertices (representing the cluster center) and a cluster radius,
+ * @brief Creates a clustering as a collection of Vertices (representing the cluster centers) and a cluster radius,
  * as required for the partition of unity mapping. The algorithm estimates a cluster radius based on the input parameter
  * \p verticesPerCluster (see also \ref estimateClusterRadius above, which is directly used by the function). Afterwards,
  * the algorithm creates a cartesian-like grid of center vertices, where the distance of the centers is defined through

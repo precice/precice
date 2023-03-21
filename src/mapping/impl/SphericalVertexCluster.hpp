@@ -24,6 +24,12 @@ namespace mapping {
  * VertexIDs of the input mesh and the output mesh lying within the sphere and a
  * RadialBasisFctSolver to assemble and solve mapping matrices. The solver class here is exactly
  * the same class used in the plain RBF mapping.
+ * Since each cluster maps data within its domain, the class is required to have similar
+ * functions as the mapping classes in preCICE, i.e., mapConsistent and mapConservative for
+ * the mapping execution as well as clear for the reset. These functions are always called
+ * from the corresponding PartitionOfUnity mapping class, i.e.,
+ * PartitionOfUnityMapping::mapConsistent calls the mapConsistent function of the (all elements
+ * in the cluster vector) cluster here.
  */
 template <typename RADIAL_BASIS_FUNCTION_T>
 class SphericalVertexCluster {
