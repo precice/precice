@@ -266,10 +266,20 @@ protected:
    */
   void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData);
 
-  /// Sends global data sendDataIDs given in mapCouplingData with communication.
+  /**
+   * @brief Sends all global data in the map sendGlobalData with communication.
+   *
+   * @param m2n M2N used for communication
+   * @param sendData DataMap associated with sent data
+   */
   void sendGlobalData(const m2n::PtrM2N &m2n, const GlobalDataMap &sendGlobalData);
 
-  /// Receives global data receiveDataIDs given in mapCouplingData with communication.
+  /**
+   * @brief Receives all global data in the map receiveGlobalData with communication.
+   *
+   * @param m2n M2N used for communication
+   * @param receiveData DataMap associated with received data
+   */
   void receiveGlobalData(const m2n::PtrM2N &m2n, const GlobalDataMap &receiveGlobalData);
 
   /**

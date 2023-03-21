@@ -269,16 +269,13 @@ bool BaseCouplingScheme::isExplicitCouplingScheme()
 void BaseCouplingScheme::sendGlobalData(const m2n::PtrM2N &m2n, const GlobalDataMap &sendGlobalData)
 {
   PRECICE_TRACE();
-  std::vector<int> sentGlobalDataIDs; // for debugging
   PRECICE_ASSERT(m2n.get() != nullptr);
   PRECICE_ASSERT(m2n->isConnected());
 
   for (const auto &data : sendGlobalData | boost::adaptors::map_values) {
     // Data is actually only send if size>0, which is checked in the derived classes implementation
     m2n->send(data->values(), -1, data->getDimensions()); // TODO meshID=-1 is a makeshift thing here. Fix this.
-    sentGlobalDataIDs.push_back(data->getDataID());       // Keep track of sent data (for degbugging)
   }
-  PRECICE_DEBUG("Number of sent data sets (global) = {}", sentGlobalDataIDs.size());
 }
 
 void BaseCouplingScheme::receiveGlobalData(const m2n::PtrM2N &m2n, const GlobalDataMap &receiveGlobalData)
