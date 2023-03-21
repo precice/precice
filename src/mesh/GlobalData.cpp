@@ -41,16 +41,6 @@ const Eigen::VectorXd &GlobalData::values() const
   return _values;
 }
 
-// Eigen::MatrixXd &GlobalData::gradientValues()
-// {
-//   return _gradientValues;
-// }
-
-// const Eigen::MatrixXd &GlobalData::gradientValues() const
-// {
-//   return _gradientValues;
-// }
-
 const std::string &GlobalData::getName() const
 {
   return _name;
@@ -64,20 +54,7 @@ DataID GlobalData::getID() const
 void GlobalData::toZero()
 {
   _values.setZero();
-  //   if (_hasGradient) {
-  //     _gradientValues.setZero();
-  //   }
 }
-
-// bool GlobalData::hasGradient() const
-// {
-//   return _hasGradient;
-// }
-
-// void GlobalData::requireDataGradient()
-// {
-//   _hasGradient = true;
-// };
 
 int GlobalData::getDimensions() const
 {

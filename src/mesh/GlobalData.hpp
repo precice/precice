@@ -57,12 +57,6 @@ public:
   /// Returns a const reference to the data values.
   const Eigen::VectorXd &values() const;
 
-  //   no gradients for meshless data
-  //   Eigen::MatrixXd &gradientValues();
-
-  //   no gradients for meshless data
-  //   const Eigen::MatrixXd &gradientValues() const;
-
   /// Returns the name of the data set, as set in the config file.
   const std::string &getName() const;
 
@@ -71,12 +65,6 @@ public:
 
   /// Sets all values to zero
   void toZero();
-
-  //   no gradients for meshless data
-  //   bool hasGradient() const;
-
-  //   no gradients for meshless data
-  //   void requireDataGradient();
 
   /// Returns the mesh dimension (i.e., number of rows) of one gradient data value .
   int getSpatialDimensions() const;
@@ -89,9 +77,6 @@ private:
 
   Eigen::VectorXd _values;
 
-  //   no gradients for meshless data
-  //   Eigen::MatrixXd _gradientValues;
-
   /// Name of the data set.
   std::string _name;
 
@@ -103,9 +88,6 @@ private:
 
   /// Spatial Dimension of one element -> number of rows (only 2, 3 allowed for 2D, 3D).
   int _spatialDimensions;
-
-  //   no gradients for meshless data
-  //   bool _hasGradient = false;
 };
 
 } // namespace mesh
