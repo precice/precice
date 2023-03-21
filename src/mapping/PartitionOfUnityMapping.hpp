@@ -221,7 +221,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     const auto localNumberOfClusters = clusterIDs.size();
     // Consider the case where we didn't find any cluster (meshes don't match very well)
     if (localNumberOfClusters == 0) {
-      PRECICE_ERROR("Output vertex {} could not be assigned to any cluster. This means that the meshes probably do not match well geometry-wise or the target numer of vertices per partition is too small.", vertex.getCoords());
+      PRECICE_ERROR("Output vertex {} could not be assigned to any cluster. This means that the meshes probably do not match well geometry-wise or the target number of vertices per partition is too small.", vertex.getCoords());
       // In principle, we could assign the vertex to the closest cluster using clusterIDs.emplace_back(clusterIndex.getClosestVertex(vertex.getCoords()).index);
       // However, this leads to a conflict with weights already set in the corresponding cluster, since we insert the ID and, later on, map the ID to a local weight index
       // Of course, we could rearrange the weights, but we want to avoid the case here anyway, i.e., prefer to abort.
@@ -362,7 +362,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::exportClusterCentersAsVTU
     // receive vertex offsets
     mesh::Mesh::VertexOffsets vertexOffsets;
     utils::IntraComm::getCommunication()->broadcast(vertexOffsets, 0);
-    PRECICE_DEBUG("My vertex offsets: {}", vertexOffsets);
+    PRECICE_DEBUG("Vertex offsets: {}", vertexOffsets);
     PRECICE_ASSERT(centerMesh.getVertexOffsets().empty());
     centerMesh.setVertexOffsets(std::move(vertexOffsets));
   } else if (utils::IntraComm::isPrimary()) {
@@ -379,7 +379,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::exportClusterCentersAsVTU
     }
 
     // broadcast vertex offsets
-    PRECICE_DEBUG("My vertex offsets: {}", centerMesh.getVertexOffsets());
+    PRECICE_DEBUG("Vertex offsets: {}", centerMesh.getVertexOffsets());
     utils::IntraComm::getCommunication()->broadcast(vertexOffsets);
     centerMesh.setVertexOffsets(std::move(vertexOffsets));
   }

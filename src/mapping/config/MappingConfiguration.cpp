@@ -206,7 +206,7 @@ MappingConfiguration::MappingConfiguration(
                                .setOptions({PREALLOCATION_ESTIMATE, PREALLOCATION_COMPUTE, PREALLOCATION_OFF, PREALLOCATION_SAVE, PREALLOCATION_TREE});
 
   auto verticesPerCluster = XMLAttribute<int>(ATTR_VERTICES_PER_CLUSTER)
-                                .setDocumentation("Vertices per cluster (partition) applied in the rbf partition of unity method.");
+                                .setDocumentation("Average number of vertices per cluster (partition) applied in the rbf partition of unity method.");
   auto relativeOverlap = makeXMLAttribute(ATTR_RELATIVE_OVERLAP, 0.3)
                              .setDocumentation("Value between 0 and 1 indicating the relative overlap between clusters. A value of 0.3 is usually a good trade-off between accuracy and efficiency.");
   auto projectToInput = XMLAttribute<bool>(ATTR_PROJECT_TO_INPUT)
