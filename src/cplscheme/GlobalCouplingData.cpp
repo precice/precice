@@ -3,25 +3,20 @@
 #include <utility>
 
 #include "mesh/GlobalData.hpp"
-// #include "mesh/Mesh.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
 namespace precice::cplscheme {
 
 GlobalCouplingData::GlobalCouplingData(
     mesh::PtrGlobalData globalData,
-    // mesh::PtrMesh mesh,
-    bool requiresInitialization,
-    int  extrapolationOrder)
+    bool                requiresInitialization,
+    int                 extrapolationOrder)
     : requiresInitialization(requiresInitialization),
       _globalData(std::move(globalData)),
-      //   _mesh(std::move(mesh)),
       _extrapolation(extrapolationOrder)
 {
   PRECICE_ASSERT(_globalData != nullptr);
   _previousIteration = Eigen::VectorXd::Zero(getSize());
-  //   PRECICE_ASSERT(_mesh != nullptr);
-  //   PRECICE_ASSERT(_mesh.use_count() > 0);
 }
 
 int GlobalCouplingData::getDimensions() const

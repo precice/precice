@@ -14,9 +14,8 @@ class GlobalCouplingData {
 public:
   GlobalCouplingData(
       mesh::PtrGlobalData globalData,
-      //   mesh::PtrMesh mesh,
-      bool requiresInitialization,
-      int  extrapolationOrder = CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
+      bool                requiresInitialization,
+      int                 extrapolationOrder = CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
 
   int getDimensions() const;
 
