@@ -76,14 +76,6 @@ public:
   bool hasAnySendData() override final;
 
   /**
-   * @returns true, if coupling scheme has any sendGlobalData
-   */
-  // bool hasAnySendGlobalData() override final
-  // {
-  //   return not getSendGlobalData().empty();
-  // }
-
-  /**
    * @returns true, if coupling scheme has sendData with given DataID
    */
   bool hasSendData(DataID dataID);
@@ -91,10 +83,7 @@ public:
   /**
    * @returns true, if coupling scheme has sendGlobalData with given DataID
    */
-  bool hasSendGlobalData(DataID dataID)
-  {
-    return getSendGlobalData(dataID) != nullptr;
-  }
+  bool hasSendGlobalData(DataID dataID);
 
 protected:
   /// Returns all data to be sent.
@@ -104,16 +93,10 @@ protected:
   DataMap &getReceiveData();
 
   /// Returns all data to be sent.
-  GlobalDataMap &getSendGlobalData()
-  {
-    return _sendGlobalData;
-  }
+  GlobalDataMap &getSendGlobalData();
 
   /// Returns all data to be received.
-  GlobalDataMap &getReceiveGlobalData()
-  {
-    return _receiveGlobalData;
-  }
+  GlobalDataMap &getReceiveGlobalData();
 
   /// Sets the values
   CouplingData *getSendData(DataID dataID);

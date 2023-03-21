@@ -77,15 +77,8 @@ void BiCouplingScheme::addGlobalDataToSend(
   precice::DataID       id            = globalData->getID();
   if (!utils::contained(id, _sendGlobalData)) {
     PRECICE_ASSERT(_sendGlobalData.count(id) == 0, "Key already exists!");
-    // if (isExplicitCouplingScheme()) {
-    // _sendGlobalData.emplace(id, std::make_shared<GlobalCouplingData>(globalData, requiresInitialization));
     _sendGlobalData.emplace(id, ptrGblCplData);
     PRECICE_DEBUG("Added \"{}\" to _sendGlobalData. Now _sendGlobalData.size is {}.", globalData->getName(), _sendGlobalData.size());
-    // }
-    // else {
-    //   _sendGlobalData.emplace(id, std::make_shared<GlobalCouplingData>(globalData, requiresInitialization, getExtrapolationOrder()));
-    //   PRECICE_DEBUG("Added \"{}\" to _sendGlobalData with extrapolation order.", globalData->getName());
-    // }
   } else {
     PRECICE_ERROR("Global Data \"{0}\" cannot be added twice for sending. Please remove any duplicate <exchange data=\"{0}\" .../> tags", globalData->getName());
   }
@@ -120,10 +113,6 @@ void BiCouplingScheme::addGlobalDataToReceive(
     // if (isExplicitCouplingScheme()) {
     _receiveGlobalData.emplace(id, std::make_shared<GlobalCouplingData>(globalData, requiresInitialization));
     PRECICE_DEBUG("Added \"{}\" to _receiveGlobalData.", globalData->getName());
-    // } else {
-    // _receiveGlobalData.emplace(id, std::make_shared<GlobalCouplingData>(globalData, requiresInitialization, getExtrapolationOrder()));
-    // PRECICE_DEBUG("Added \"{}\" to _sendGlobalData with extrapolation order.", globalData->getName());
-    // }
   } else {
     PRECICE_ERROR("Global Data \"{0}\" cannot be added twice for receiving. Please remove any duplicate <exchange data=\"{0}\" ... /> tags", globalData->getName());
   }
@@ -157,6 +146,16 @@ DataMap &BiCouplingScheme::getSendData()
 DataMap &BiCouplingScheme::getReceiveData()
 {
   return _receiveData;
+}
+
+GlobalDataMap &BiCouplingScheme::getSendGlobalData()
+{
+  return _sendGlobalData;
+}
+
+GlobalDataMap &BiCouplingScheme::getReceiveGlobalData()
+{
+  return _receiveGlobalData;
 }
 
 CouplingData *BiCouplingScheme::getSendData(
@@ -201,6 +200,11 @@ bool BiCouplingScheme::hasAnySendData()
 bool BiCouplingScheme::hasSendData(DataID dataID)
 {
   return getSendData(dataID) != nullptr;
+}
+
+bool BiCouplingScheme::hasSendGlobalData(DataID dataID)
+{
+  return getSendGlobalData(dataID) != nullptr;
 }
 
 } // namespace precice::cplscheme
