@@ -180,6 +180,28 @@ CouplingData *BiCouplingScheme::getReceiveData(
   return nullptr;
 }
 
+GlobalCouplingData *BiCouplingScheme::getSendGlobalData(
+    DataID dataID)
+{
+  PRECICE_TRACE(dataID);
+  GlobalDataMap::iterator iter = _sendGlobalData.find(dataID);
+  if (iter != _sendGlobalData.end()) {
+    return &(*(iter->second));
+  }
+  return nullptr;
+}
+
+GlobalCouplingData *BiCouplingScheme::getReceiveGlobalData(
+    DataID dataID)
+{
+  PRECICE_TRACE(dataID);
+  GlobalDataMap::iterator iter = _receiveGlobalData.find(dataID);
+  if (iter != _receiveGlobalData.end()) {
+    return &(*(iter->second));
+  }
+  return nullptr;
+}
+
 m2n::PtrM2N BiCouplingScheme::getM2N() const
 {
   PRECICE_ASSERT(_m2n);

@@ -105,10 +105,10 @@ protected:
   CouplingData *getReceiveData(DataID dataID);
 
   /// Sets the values
-  CouplingData *getSendGlobalData(DataID dataID);
+  GlobalCouplingData *getSendGlobalData(DataID dataID);
 
   /// Returns all data to be received with data ID as given.
-  CouplingData *getReceiveGlobalData(DataID dataID);
+  GlobalCouplingData *getReceiveGlobalData(DataID dataID);
 
   /// @return Communication device to the other coupling participant.
   m2n::PtrM2N getM2N() const;
