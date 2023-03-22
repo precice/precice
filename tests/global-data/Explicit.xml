@@ -2,13 +2,16 @@
 <precice-configuration>
   <solver-interface dimensions="2" experimental="true">
     <global-data:scalar name="GlobalData1" />
+    <global-data:vector name="GlobalVectorData" />
 
     <participant name="SolverOne">
       <write-data name="GlobalData1" />
+      <write-data name="GlobalVectorData" />
     </participant>
 
     <participant name="SolverTwo">
       <read-data name="GlobalData1" />
+      <read-data name="GlobalVectorData" />
     </participant>
 
     <m2n:sockets from="SolverOne" to="SolverTwo" />
@@ -18,6 +21,7 @@
       <max-time-windows value="2" />
       <time-window-size value="1.0" />
       <exchange data="GlobalData1" from="SolverOne" to="SolverTwo" />
+      <exchange data="GlobalVectorData" from="SolverOne" to="SolverTwo" />
     </coupling-scheme:serial-explicit>
   </solver-interface>
 </precice-configuration>

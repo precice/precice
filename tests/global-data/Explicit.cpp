@@ -17,44 +17,59 @@ BOOST_AUTO_TEST_CASE(Explicit)
 
   // Set up Solverinterface
   precice::SolverInterface couplingInterface(context.name, context.config(), 0, 1);
-  BOOST_TEST(couplingInterface.getDimensions() == 2);
+  const int                dimensions = 2;
+  BOOST_TEST(couplingInterface.getDimensions() == dimensions);
 
   if (context.isNamed("SolverOne")) {
-    const int globalDataID = couplingInterface.getGlobalDataID("GlobalData1");
-    double    dt           = couplingInterface.initialize();
+    const int globalDataID       = couplingInterface.getGlobalDataID("GlobalData1");
+    const int globalVectorDataID = couplingInterface.getGlobalDataID("GlobalVectorData");
+    double    dt                 = couplingInterface.initialize();
     // Some dummy writeData
-    double writeGlobalData{5};
+    double              writeGlobalData{5};
+    std::vector<double> writeGlobalVectorData(dimensions, 50.5);
 
     while (couplingInterface.isCouplingOngoing()) {
       // Write data to be sent to SolverTwo to buffer
       couplingInterface.writeGlobalScalarData(globalDataID, writeGlobalData);
+      couplingInterface.writeGlobalVectorData(globalVectorDataID, writeGlobalVectorData.data());
       // send data
       dt = couplingInterface.advance(dt);
       // change reference data for next check
       writeGlobalData++;
+      for (auto &elem : writeGlobalVectorData) {
+        elem++;
+      }
     }
 
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
     // Query IDs
-    const int globalDataID = couplingInterface.getGlobalDataID("GlobalData1");
+    const int globalDataID       = couplingInterface.getGlobalDataID("GlobalData1");
+    const int globalVectorDataID = couplingInterface.getGlobalDataID("GlobalVectorData");
 
     // Allocate data to read
-    double readGlobalData;
+    double              readGlobalData;
+    std::vector<double> readGlobalVectorData(dimensions, -1);
 
     // Initialize
-    double expectedGlobalData{5};
-    double dt = couplingInterface.initialize(); // For serial-explicit, first communication happens here
+    double              expectedGlobalData{5};
+    std::vector<double> expectedGlobalVectorData(dimensions, 50.5);
+    double              dt = couplingInterface.initialize(); // For serial-explicit, first communication happens here
 
     while (couplingInterface.isCouplingOngoing()) {
       // read received data from buffer
       couplingInterface.readGlobalScalarData(globalDataID, readGlobalData);
+      couplingInterface.readGlobalVectorData(globalVectorDataID, readGlobalVectorData.data());
       // check if received data is correct
       BOOST_TEST(precice::testing::equals(expectedGlobalData, readGlobalData));
+      BOOST_TEST(precice::testing::equals(expectedGlobalVectorData, readGlobalVectorData));
       // receive next data
       dt = couplingInterface.advance(dt);
       // change reference data for next check
       expectedGlobalData++;
+      for (auto &elem : expectedGlobalVectorData) {
+        elem++;
+      }
       // Expected data according to the writeData
     }
   }
