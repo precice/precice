@@ -37,6 +37,12 @@ DataID DataContext::getDataDimensions() const
   return _providedData->getDimensions();
 }
 
+DataID DataContext::getDataSize() const
+{
+  PRECICE_ASSERT(_providedData);
+  return _providedData->values().size();
+}
+
 std::string DataContext::getMeshName() const
 {
   PRECICE_ASSERT(_mesh);

@@ -45,6 +45,13 @@ public:
   int getDataDimensions() const;
 
   /**
+   * @brief Get the size of _providedData.
+   *
+   * @return int size of _providedData.
+   */
+  int getDataSize() const;
+
+  /**
    * @brief Get the name of _mesh.
    *
    * @return std::string Name of _mesh.

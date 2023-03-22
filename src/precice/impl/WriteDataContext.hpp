@@ -4,6 +4,7 @@
 
 #include "DataContext.hpp"
 #include "logging/Logger.hpp"
+#include "time/Sample.hpp"
 
 namespace precice {
 namespace impl {
@@ -32,6 +33,18 @@ public:
    */
   mesh::PtrData providedData();
 
+  time::Sample writeDataBuffer();
+
+  /**
+   * @brief Store data in _writeDataBuffer
+   *
+   * @param[in] index id of data
+   * @param[in] value value of data
+   */
+  void writeIntoDataBuffer(int index, double value);
+
+  void resizeBufferTo(int size);
+
   /**
    * @brief Adds a MappingContext and the MeshContext required by the write mapping to the corresponding WriteDataContext data structures.
    *
@@ -44,6 +57,9 @@ public:
 
 private:
   static logging::Logger _log;
+
+  /// @brief Buffer to store written data until it is copied to _providedData->timeStepsStorage()
+  time::Sample _writeDataBuffer;
 };
 
 } // namespace impl
