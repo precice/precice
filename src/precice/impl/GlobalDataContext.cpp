@@ -51,7 +51,6 @@ Eigen::VectorXd GlobalDataContext::sampleWaveformAt(double normalizedDt)
 
 void GlobalDataContext::initializeWaveform()
 {
-  // PRECICE_ASSERT(not hasWriteMapping(), "Write mapping does not need waveforms.");
   _waveform->initialize(_providedData->values());
 }
 

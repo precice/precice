@@ -230,9 +230,6 @@ public:
   /// Is the data used by this participant?
   bool isDataUsed(std::string_view mesh, std::string_view data) const;
 
-  /// Is the global data used by this participant?
-  // bool isGlobalDataUsed(const std::string &dataName) const;
-
   /// Is the participant allowed to read the data?
   bool isDataRead(std::string_view mesh, std::string_view data) const;
 
