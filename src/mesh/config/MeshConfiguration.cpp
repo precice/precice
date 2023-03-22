@@ -31,7 +31,7 @@ MeshConfiguration::MeshConfiguration(
 {
   using namespace xml;
   std::string doc;
-  XMLTag      tag(*this, TAG, xml::XMLTag::OCCUR_ONCE_OR_MORE);
+  XMLTag      tag(*this, TAG, xml::XMLTag::OCCUR_ARBITRARY);
   doc = "Surface mesh consisting of vertices and optional connectivity information. "
         "The vertices of a mesh can carry data, "
         "configured by tags <use-data>. The mesh coordinates have to be "
