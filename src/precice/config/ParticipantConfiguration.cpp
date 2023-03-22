@@ -528,22 +528,22 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     bool dataFound = false;
     for (auto &dataContext : participant->writeDataContexts()) {
       // First we look for the "from" mesh ID
-      const int fromMeshID = dataContext.getMeshID();
+      const int fromMeshID = dataContext->getMeshID();
       if (mappingContext.fromMeshID == fromMeshID) {
         // Second we look for the "to" mesh ID
         impl::MeshContext &meshContext = participant->meshContext(mappingContext.mapping->getOutputMesh()->getName());
         // If this is true, we actually found a proper configuration
         // If it is false, we look for another "from" mesh ID, because we might have multiple read and write mappings
-        if (meshContext.mesh->hasDataName(dataContext.getDataName())) {
+        if (meshContext.mesh->hasDataName(dataContext->getDataName())) {
           // Check, if the fromMesh is a provided mesh
-          PRECICE_CHECK(participant->isMeshProvided(dataContext.getMeshName()),
+          PRECICE_CHECK(participant->isMeshProvided(dataContext->getMeshName()),
                         "Participant \"{}\" has to provide mesh \"{}\" to be able to write data to it. "
                         "Please add a provide-mesh node with name=\"{}\".",
-                        participant->getName(), dataContext.getMeshName(), dataContext.getMeshName());
-          dataContext.appendMappingConfiguration(mappingContext, meshContext);
+                        participant->getName(), dataContext->getMeshName(), dataContext->getMeshName());
+          dataContext->appendMappingConfiguration(mappingContext, meshContext);
           // Enable gradient data if required
           if (mappingContext.mapping->requiresGradientData() == true) {
-            mappingContext.requireGradientData(dataContext.getDataName());
+            mappingContext.requireGradientData(dataContext->getDataName());
           }
           dataFound = true;
         }
@@ -562,22 +562,22 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     bool dataFound = false;
     for (auto &dataContext : participant->readDataContexts()) {
       // First we look for the "to" mesh ID
-      const int toMeshID = dataContext.getMeshID();
+      const int toMeshID = dataContext->getMeshID();
       if (mappingContext.toMeshID == toMeshID) {
         // Second we look for the "from" mesh ID
         impl::MeshContext &meshContext = participant->meshContext(mappingContext.mapping->getInputMesh()->getName());
         // If this is true, we actually found a proper configuration
         // If it is false, we look for another "from" mesh ID, because we might have multiple read and write mappings
-        if (meshContext.mesh->hasDataName(dataContext.getDataName())) {
+        if (meshContext.mesh->hasDataName(dataContext->getDataName())) {
           // Check, if the toMesh is a provided mesh
-          PRECICE_CHECK(participant->isMeshProvided(dataContext.getMeshName()),
+          PRECICE_CHECK(participant->isMeshProvided(dataContext->getMeshName()),
                         "Participant \"{}\" has to provide mesh \"{}\" in order to read data from it. "
                         "Please add a provide-mesh node with name=\"{}\".",
-                        participant->getName(), dataContext.getMeshName(), dataContext.getMeshName());
-          dataContext.appendMappingConfiguration(mappingContext, meshContext);
+                        participant->getName(), dataContext->getMeshName(), dataContext->getMeshName());
+          dataContext->appendMappingConfiguration(mappingContext, meshContext);
           // Enable gradient data if required
           if (mappingContext.mapping->requiresGradientData() == true) {
-            mappingContext.requireGradientData(dataContext.getDataName());
+            mappingContext.requireGradientData(dataContext->getDataName());
           }
           dataFound = true;
         }
@@ -713,12 +713,12 @@ void ParticipantConfiguration::checkIllDefinedMappings(
 
           if (mapping.direction == mapping::MappingConfiguration::WRITE) {
             for (const auto &dataContext : participant->writeDataContexts()) {
-              sameDirection |= data->getName() == dataContext.getDataName();
+              sameDirection |= data->getName() == dataContext->getDataName();
             }
           }
           if (mapping.direction == mapping::MappingConfiguration::READ) {
             for (const auto &dataContext : participant->readDataContexts()) {
-              sameDirection |= data->getName() == dataContext.getDataName();
+              sameDirection |= data->getName() == dataContext->getDataName();
             }
           }
           PRECICE_CHECK(!sameDirection,

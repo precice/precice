@@ -109,7 +109,7 @@ void Participant::addWriteData(
     const mesh::PtrMesh &mesh)
 {
   checkDuplicatedData(mesh->getName(), data->getName());
-  _writeDataContexts.emplace(MeshDataKey{mesh->getName(), data->getName()}, WriteDataContext(data, mesh));
+  _writeDataContexts.emplace(MeshDataKey{mesh->getName(), data->getName()}, std::make_shared<WriteDataContext>(data, mesh));
 }
 
 void Participant::addReadData(
@@ -118,7 +118,7 @@ void Participant::addReadData(
     int                  interpolationOrder)
 {
   checkDuplicatedData(mesh->getName(), data->getName());
-  _readDataContexts.emplace(MeshDataKey{mesh->getName(), data->getName()}, ReadDataContext(data, mesh, interpolationOrder));
+  _readDataContexts.emplace(MeshDataKey{mesh->getName(), data->getName()}, std::make_shared<ReadDataContext>(data, mesh, interpolationOrder));
 }
 
 void Participant::addReadMappingContext(
@@ -134,28 +134,28 @@ void Participant::addWriteMappingContext(
 }
 
 // Data queries
-const ReadDataContext &Participant::readDataContext(std::string_view mesh, std::string_view data) const
+const PtrReadDataContext Participant::readDataContext(std::string_view mesh, std::string_view data) const
 {
   auto it = _readDataContexts.find(MeshDataKey{mesh, data});
   PRECICE_CHECK(it != _readDataContexts.end(), "Data \"{}\" does not exist for mesh \"{}\".", data, mesh)
   return it->second;
 }
 
-ReadDataContext &Participant::readDataContext(std::string_view mesh, std::string_view data)
+PtrReadDataContext Participant::readDataContext(std::string_view mesh, std::string_view data)
 {
   auto it = _readDataContexts.find(MeshDataKey{mesh, data});
   PRECICE_CHECK(it != _readDataContexts.end(), "Data \"{}\" does not exist for mesh \"{}\".", data, mesh)
   return it->second;
 }
 
-const WriteDataContext &Participant::writeDataContext(std::string_view mesh, std::string_view data) const
+const PtrWriteDataContext Participant::writeDataContext(std::string_view mesh, std::string_view data) const
 {
   auto it = _writeDataContexts.find(MeshDataKey{mesh, data});
   PRECICE_CHECK(it != _writeDataContexts.end(), "Data \"{}\" does not exist in write direction.", data)
   return it->second;
 }
 
-WriteDataContext &Participant::writeDataContext(std::string_view mesh, std::string_view data)
+PtrWriteDataContext Participant::writeDataContext(std::string_view mesh, std::string_view data)
 {
   auto it = _writeDataContexts.find(MeshDataKey{mesh, data});
   PRECICE_CHECK(it != _writeDataContexts.end(), "Data \"{}\" does not exist in write direction.", data)

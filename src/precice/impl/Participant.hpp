@@ -146,22 +146,22 @@ public:
   /** Provides access to \ref ReadDataContext
    * @pre there exists a \ref ReadDataContext for \ref data
    */
-  const ReadDataContext &readDataContext(std::string_view mesh, std::string_view data) const;
+  const PtrReadDataContext readDataContext(std::string_view mesh, std::string_view data) const;
 
   /** Provides access to \ref ReadDataContext
    * @pre there exists a \ref ReadDataContext for \ref data
    */
-  ReadDataContext &readDataContext(std::string_view mesh, std::string_view data);
+  PtrReadDataContext readDataContext(std::string_view mesh, std::string_view data);
 
   /** Provides access to \ref WriteDataContext
    * @pre there exists a \ref WriteDataContext for \ref data
    */
-  const WriteDataContext &writeDataContext(std::string_view mesh, std::string_view data) const;
+  const PtrWriteDataContext writeDataContext(std::string_view mesh, std::string_view data) const;
 
   /** Provides access to \ref WriteDataContext
    * @pre there exists a \ref WriteDataContext for \ref data
    */
-  WriteDataContext &writeDataContext(std::string_view mesh, std::string_view data);
+  PtrWriteDataContext writeDataContext(std::string_view mesh, std::string_view data);
 
   /** Provides access to all \ref WriteDataContext objects
    * @remarks does not contain nullptr.
@@ -185,7 +185,7 @@ public:
   {
     int maxOrder = -1;
     for (auto &context : _readDataContexts | boost::adaptors::map_values) {
-      maxOrder = std::max(maxOrder, context.getInterpolationOrder());
+      maxOrder = std::max(maxOrder, context->getInterpolationOrder());
     }
     return maxOrder;
   }
@@ -348,9 +348,9 @@ private:
   /// Mesh contexts used by the participant.
   std::vector<MeshContext *> _usedMeshContexts;
 
-  DataMap<WriteDataContext> _writeDataContexts;
+  DataMap<PtrWriteDataContext> _writeDataContexts;
 
-  DataMap<ReadDataContext> _readDataContexts;
+  DataMap<PtrReadDataContext> _readDataContexts;
 
   bool _useIntraComm = false;
 
