@@ -266,8 +266,8 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(DataID in
   precice::utils::Event e("map.pou.mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
   // Execute the actual mapping evaluation in all clusters
-  // 1. Reset all output data values as we accumulate data in all clusters independent
-  output()->data(outputDataID)->values().setZero();
+  // 1. Assert that all output data values were reset, as we accumulate data in all clusters independently
+  PRECICE_ASSERT(output()->data(outputDataID)->values().isZero());
 
   // 2. Iterate over all clusters and accumulate the result in the output data
   std::for_each(_clusters.begin(), _clusters.end(), [&](auto &cluster) { cluster.mapConservative(input()->data(inputDataID),
@@ -282,8 +282,8 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inpu
   precice::utils::Event e("map.pou.mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
   // Execute the actual mapping evaluation in all clusters
-  // 1. Reset all output data values as we accumulate data in all clusters independent
-  output()->data(outputDataID)->values().setZero();
+  // 1. Assert that all output data values were reset, as we accumulate data in all clusters independently
+  PRECICE_ASSERT(output()->data(outputDataID)->values().isZero());
 
   // 2. Execute the actual mapping evaluation in all vertex clusters and accumulate the data
   std::for_each(_clusters.begin(), _clusters.end(), [&](auto &clusters) { clusters.mapConsistent(input()->data(inputDataID),

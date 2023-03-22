@@ -105,6 +105,7 @@ void perform2DTestConsistentMapping(Mapping &mapping)
 
   vertex.setCoords(Vector2d(0.0, 0.5));
   mapping.clear();
+  outData->values().setZero();
   BOOST_TEST(mapping.hasComputedMapping() == false);
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
@@ -114,6 +115,7 @@ void perform2DTestConsistentMapping(Mapping &mapping)
 
   vertex.setCoords(Vector2d(0.0, 1.0));
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   value = outData->values()(0);
@@ -122,6 +124,7 @@ void perform2DTestConsistentMapping(Mapping &mapping)
 
   vertex.setCoords(Vector2d(1.0, 0.0));
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   value = outData->values()(0);
@@ -130,6 +133,7 @@ void perform2DTestConsistentMapping(Mapping &mapping)
 
   vertex.setCoords(Vector2d(1.0, 0.5));
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   value = outData->values()(0);
@@ -138,6 +142,7 @@ void perform2DTestConsistentMapping(Mapping &mapping)
 
   vertex.setCoords(Vector2d(1.0, 1.0));
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   value = outData->values()(0);
@@ -146,6 +151,7 @@ void perform2DTestConsistentMapping(Mapping &mapping)
 
   vertex.setCoords(Vector2d(0.5, 0.0));
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   value = outData->values()(0);
@@ -154,6 +160,7 @@ void perform2DTestConsistentMapping(Mapping &mapping)
 
   vertex.setCoords(Vector2d(0.5, 0.5));
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   value = outData->values()(0);
@@ -162,6 +169,7 @@ void perform2DTestConsistentMapping(Mapping &mapping)
 
   vertex.setCoords(Vector2d(0.5, 1.0));
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   value = outData->values()(0);
@@ -234,6 +242,7 @@ void perform2DTestConsistentMappingVector(Mapping &mapping)
 
   vertex.setCoords(Vector2d(0.0, 0.5));
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   BOOST_TEST(mapping.hasComputedMapping() == true);
@@ -242,6 +251,7 @@ void perform2DTestConsistentMappingVector(Mapping &mapping)
 
   vertex.setCoords(Vector2d(0.0, 1.0));
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   BOOST_TEST(mapping.hasComputedMapping() == true);
@@ -250,6 +260,7 @@ void perform2DTestConsistentMappingVector(Mapping &mapping)
 
   vertex.setCoords(Vector2d(1.0, 0.0));
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   BOOST_TEST(mapping.hasComputedMapping() == true);
@@ -258,6 +269,7 @@ void perform2DTestConsistentMappingVector(Mapping &mapping)
 
   vertex.setCoords(Vector2d(1.0, 0.5));
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   BOOST_TEST(mapping.hasComputedMapping() == true);
@@ -266,6 +278,7 @@ void perform2DTestConsistentMappingVector(Mapping &mapping)
 
   vertex.setCoords(Vector2d(1.0, 1.0));
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   BOOST_TEST(mapping.hasComputedMapping() == true);
@@ -274,6 +287,7 @@ void perform2DTestConsistentMappingVector(Mapping &mapping)
 
   vertex.setCoords(Vector2d(0.5, 0.0));
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   BOOST_TEST(mapping.hasComputedMapping() == true);
@@ -282,6 +296,7 @@ void perform2DTestConsistentMappingVector(Mapping &mapping)
 
   vertex.setCoords(Vector2d(0.5, 0.5));
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   BOOST_TEST(mapping.hasComputedMapping() == true);
@@ -290,6 +305,7 @@ void perform2DTestConsistentMappingVector(Mapping &mapping)
 
   vertex.setCoords(Vector2d(0.5, 1.0));
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   BOOST_TEST(mapping.hasComputedMapping() == true);
@@ -428,6 +444,7 @@ void perform2DTestConservativeMapping(Mapping &mapping)
   values << 0.0, 10.0, 0.0, 0.0, 0.0;
 
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   BOOST_TEST(outData->values().sum() == inData->values().sum());
@@ -437,6 +454,7 @@ void perform2DTestConservativeMapping(Mapping &mapping)
   values << 5.0, 10.0, 7.0, 3.0, 4.0;
 
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
 
@@ -447,6 +465,7 @@ void perform2DTestConservativeMapping(Mapping &mapping)
   values << 3.0, 4.0, 5.0, 7.0, 9.0;
 
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   BOOST_TEST(outData->values().sum() == inData->values().sum());
@@ -529,6 +548,7 @@ void perform2DTestConservativeMappingVector(Mapping &mapping)
   values << 1.0, 0.0, 12.0, 0.0, 2.0, 0.0, 1.0, 0.0, 3.0, 0.0;
 
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
 
@@ -547,6 +567,7 @@ void perform2DTestConservativeMappingVector(Mapping &mapping)
   values << 0.0, 2.0, 0.0, 4.0, 0.0, 8.0, 0.0, 7.0, 0.0, 0.0;
 
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
 
@@ -565,6 +586,7 @@ void perform2DTestConservativeMappingVector(Mapping &mapping)
   values << 10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 27.0;
 
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
 
@@ -584,6 +606,7 @@ void perform2DTestConservativeMappingVector(Mapping &mapping)
   values << 3.0, 6.0, 2.0, 4.0, 12.0, 24.0, 1.0, 2.0, 3.0, 6.0;
 
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
 
@@ -672,6 +695,7 @@ void perform3DTestConsistentMapping(Mapping &mapping)
 
   vertex.setCoords(Vector3d(0.0, 0.5, 0.5));
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   value = outData->values()(0);
@@ -680,6 +704,7 @@ void perform3DTestConsistentMapping(Mapping &mapping)
 
   vertex.setCoords(Vector3d(0.0, 1.0, 1.0));
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   value = outData->values()(0);
@@ -688,6 +713,7 @@ void perform3DTestConsistentMapping(Mapping &mapping)
 
   vertex.setCoords(Vector3d(1.0, 0.0, 0.0));
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   value = outData->values()(0);
@@ -696,6 +722,7 @@ void perform3DTestConsistentMapping(Mapping &mapping)
 
   vertex.setCoords(Vector3d(1.0, 0.5, 0.5));
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   value = outData->values()(0);
@@ -704,6 +731,7 @@ void perform3DTestConsistentMapping(Mapping &mapping)
 
   vertex.setCoords(Vector3d(1.0, 1.0, 1.0));
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   value = outData->values()(0);
@@ -712,6 +740,7 @@ void perform3DTestConsistentMapping(Mapping &mapping)
 
   vertex.setCoords(Vector3d(0.5, 0.0, 0.5));
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   value = outData->values()(0);
@@ -720,6 +749,7 @@ void perform3DTestConsistentMapping(Mapping &mapping)
 
   vertex.setCoords(Vector3d(0.5, 0.5, 1.0));
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   value = outData->values()(0);
@@ -728,6 +758,7 @@ void perform3DTestConsistentMapping(Mapping &mapping)
 
   vertex.setCoords(Vector3d(0.5, 1.0, 0.0));
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   value = outData->values()(0);
@@ -820,6 +851,7 @@ void perform3DTestConsistentMappingVector(Mapping &mapping)
   }
 
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   BOOST_TEST(mapping.hasComputedMapping() == true);
@@ -901,6 +933,7 @@ void perform3DTestConservativeMapping(Mapping &mapping)
   values << 12.0, 5.0, 7.0, 8.0, 9.0;
 
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   BOOST_TEST(mapping.hasComputedMapping() == true);
@@ -913,6 +946,7 @@ void perform3DTestConservativeMapping(Mapping &mapping)
   values << 0.0, 50.0, 107.0, 108.0, 48.0;
 
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   BOOST_TEST(mapping.hasComputedMapping() == true);
@@ -925,6 +959,7 @@ void perform3DTestConservativeMapping(Mapping &mapping)
   values << 0.0, 100.0, 0.0, 0.0, 0.0;
 
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   BOOST_TEST(mapping.hasComputedMapping() == true);
@@ -1023,6 +1058,7 @@ void perform3DTestConservativeMappingVector(Mapping &mapping)
     inData->values()(i * dataDimension + 2) = 0;
   }
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   BOOST_TEST(mapping.hasComputedMapping() == true);
@@ -1041,6 +1077,7 @@ void perform3DTestConservativeMappingVector(Mapping &mapping)
     inData->values()(i * dataDimension + 2) = 3;
   }
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   BOOST_TEST(mapping.hasComputedMapping() == true);
@@ -1059,6 +1096,7 @@ void perform3DTestConservativeMappingVector(Mapping &mapping)
     inData->values()(i * dataDimension + 2) = 10 * std::pow(i * dataDimension, 3);
   }
   mapping.clear();
+  outData->values().setZero();
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   BOOST_TEST(mapping.hasComputedMapping() == true);

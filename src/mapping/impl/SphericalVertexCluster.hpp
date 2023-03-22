@@ -167,7 +167,8 @@ SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::SphericalVertexCluster(
   // if (inIDs.size() < dimension + 1)
   //   _polynomial = Polynomial::OFF;
 
-  // Construct the solver
+  // Construct the solver. Here, the constructor of the RadialBasisFctSolver computes already the decompositions etc, such that we can mark the
+  // mapping in this cluster as computed (mostly for debugging purpose)
   _rbfSolver          = RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>{function, *inputMesh.get(), _inputIDs, *outputMesh.get(), _outputIDs, deadAxis, _polynomial};
   _hasComputedMapping = true;
 }
