@@ -13,7 +13,7 @@
 #include "cplscheme/impl/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
-#include "mesh/GlobalData.hpp"
+#include "mesh/GlobalData.hpp" // this probably shouldn't be needed, but without this compiler throws warnings.
 #include "mesh/SharedPointer.hpp"
 #include "precice/config/SharedPointer.hpp"
 #include "precice/impl/MeshContext.hpp"
@@ -135,6 +135,13 @@ private:
     impl::PtrConvergenceMeasure measure;
     bool                        doesLogging;
   };
+  struct ConvergenceMeasureDefintionGlobalData {
+    mesh::PtrGlobalData         globalData;
+    bool                        suffices;
+    bool                        strict;
+    impl::PtrConvergenceMeasure measure;
+    bool                        doesLogging;
+  };
 
   struct Config {
     std::string                   type;
@@ -162,11 +169,12 @@ private:
       std::string         to;
       bool                requiresInitialization;
     };
-    std::vector<Exchange>                    exchanges;
-    std::vector<GlobalExchange>              globalExchanges;
-    std::vector<ConvergenceMeasureDefintion> convergenceMeasureDefinitions;
-    int                                      maxIterations      = -1;
-    int                                      extrapolationOrder = 0;
+    std::vector<Exchange>                              exchanges;
+    std::vector<GlobalExchange>                        globalExchanges;
+    std::vector<ConvergenceMeasureDefintion>           convergenceMeasureDefinitions;
+    std::vector<ConvergenceMeasureDefintionGlobalData> convergenceMeasureDefinitionsGlobalData;
+    int                                                maxIterations      = -1;
+    int                                                extrapolationOrder = 0;
 
     bool hasExchange(const Exchange &totest) const
     {
@@ -230,9 +238,21 @@ private:
       bool               suffices,
       bool               strict);
 
+  void addAbsoluteConvergenceMeasureGlobalData(
+      const std::string &dataName,
+      double             limit,
+      bool               suffices,
+      bool               strict);
+
   void addRelativeConvergenceMeasure(
       const std::string &dataName,
       const std::string &meshName,
+      double             limit,
+      bool               suffices,
+      bool               strict);
+
+  void addRelativeConvergenceMeasureGlobalData(
+      const std::string &dataName,
       double             limit,
       bool               suffices,
       bool               strict);
@@ -244,9 +264,21 @@ private:
       bool               suffices,
       bool               strict);
 
+  void addResidualRelativeConvergenceMeasureGlobalData(
+      const std::string &dataName,
+      double             limit,
+      bool               suffices,
+      bool               strict);
+
   void addMinIterationConvergenceMeasure(
       const std::string &dataName,
       const std::string &meshName,
+      int                minIterations,
+      bool               suffices,
+      bool               strict);
+
+  void addMinIterationConvergenceMeasureGlobalData(
+      const std::string &dataName,
       int                minIterations,
       bool               suffices,
       bool               strict);
@@ -255,7 +287,13 @@ private:
       const std::string &dataName,
       const std::string &meshName) const;
 
+  mesh::PtrGlobalData getGlobalData(
+      const std::string &dataName) const;
+
   mesh::PtrData findDataByID(
+      int ID) const;
+
+  mesh::PtrGlobalData findGlobalDataByID(
       int ID) const;
 
   PtrCouplingScheme createSerialExplicitCouplingScheme(
@@ -276,7 +314,7 @@ private:
   constants::TimesteppingMethod getTimesteppingMethod(
       const std::string &method) const;
 
-  /// Adds configured exchange data to be sent or received to scheme.
+  /// Adds configured exchange data (mesh-associated as well as global) to be sent or received to scheme.
   void addDataToBeExchanged(
       BiCouplingScheme & scheme,
       const std::string &accessor) const;
@@ -292,6 +330,9 @@ private:
   void checkIfDataIsExchanged(
       DataID dataID) const;
 
+  void checkIfGlobalDataIsExchanged(
+      DataID dataID) const;
+
   void checkSerialImplicitAccelerationData(
       DataID dataID, const std::string &first, const std::string &second) const;
 
@@ -299,6 +340,11 @@ private:
       BaseCouplingScheme *                            scheme,
       const std::string &                             participant,
       const std::vector<ConvergenceMeasureDefintion> &convergenceMeasureDefinitions) const;
+
+  void addConvergenceMeasuresGlobalData(
+      BaseCouplingScheme *                                      scheme,
+      const std::string &                                       participant,
+      const std::vector<ConvergenceMeasureDefintionGlobalData> &convergenceMeasureDefinitionsGlobalData) const;
 
   void setSerialAcceleration(
       BaseCouplingScheme *scheme,

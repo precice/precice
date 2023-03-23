@@ -219,6 +219,11 @@ bool BiCouplingScheme::hasAnySendData()
   return not getSendData().empty();
 }
 
+bool BiCouplingScheme::hasAnySendGlobalData()
+{
+  return not getSendGlobalData().empty();
+}
+
 bool BiCouplingScheme::hasSendData(DataID dataID)
 {
   return getSendData(dataID) != nullptr;

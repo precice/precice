@@ -318,7 +318,7 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   if (isImplicitCouplingScheme()) {
     storeIteration();
     if (not doesFirstStep()) {
-      PRECICE_CHECK(not _convergenceMeasures.empty(),
+      PRECICE_CHECK((not _convergenceMeasures.empty()) || (not _convergenceMeasuresGlobalData.empty()),
                     "At least one convergence measure has to be defined for "
                     "an implicit coupling scheme.");
       // reserve memory and initialize data with zero
@@ -668,6 +668,10 @@ void BaseCouplingScheme::newConvergenceMeasurements()
     PRECICE_ASSERT(convMeasure.measure.get() != nullptr);
     convMeasure.measure->newMeasurementSeries();
   }
+  for (ConvergenceMeasureContextGlobalData &convMeasure : _convergenceMeasuresGlobalData) {
+    PRECICE_ASSERT(convMeasure.measure.get() != nullptr);
+    convMeasure.measure->newMeasurementSeries();
+  }
 }
 
 void BaseCouplingScheme::addConvergenceMeasure(
@@ -687,6 +691,23 @@ void BaseCouplingScheme::addConvergenceMeasure(
   _convergenceMeasures.push_back(convMeasure);
 }
 
+void BaseCouplingScheme::addConvergenceMeasureGlobalData(
+    int                         dataID,
+    bool                        suffices,
+    bool                        strict,
+    impl::PtrConvergenceMeasure measure,
+    bool                        doesLogging)
+{
+  ConvergenceMeasureContextGlobalData convMeasure;
+  PRECICE_ASSERT(_allGlobalData.count(dataID) == 1, "Global Data with given data ID must exist!");
+  convMeasure.couplingData = _allGlobalData.at(dataID);
+  convMeasure.suffices     = suffices;
+  convMeasure.strict       = strict;
+  convMeasure.measure      = std::move(measure);
+  convMeasure.doesLogging  = doesLogging;
+  _convergenceMeasuresGlobalData.push_back(convMeasure);
+}
+
 bool BaseCouplingScheme::measureConvergence()
 {
   PRECICE_TRACE();
@@ -694,7 +715,7 @@ bool BaseCouplingScheme::measureConvergence()
   bool allConverged = true;
   bool oneSuffices  = false; // at least one convergence measure suffices and did converge
   bool oneStrict    = false; // at least one convergence measure is strict and did not converge
-  PRECICE_ASSERT(_convergenceMeasures.size() > 0);
+  PRECICE_ASSERT((_convergenceMeasures.size() > 0) || (_convergenceMeasuresGlobalData.size() > 0));
   if (not utils::IntraComm::isSecondary()) {
     _convergenceWriter->writeData("TimeWindow", _timeWindows - 1);
     _convergenceWriter->writeData("Iteration", _iterations);
@@ -715,6 +736,32 @@ bool BaseCouplingScheme::measureConvergence()
         oneStrict = true;
         PRECICE_CHECK(_iterations < _maxIterations,
                       "The strict convergence measure for data \"" + convMeasure.couplingData->getDataName() +
+                          "\" did not converge within the maximum allowed iterations, which terminates the simulation. "
+                          "To avoid this forced termination do not mark the convergence measure as strict.")
+      }
+    } else if (convMeasure.suffices == true) {
+      oneSuffices = true;
+    }
+
+    PRECICE_INFO(convMeasure.measure->printState(convMeasure.couplingData->getDataName()));
+  }
+
+  for (const auto &convMeasure : _convergenceMeasuresGlobalData) {
+    PRECICE_ASSERT(convMeasure.couplingData != nullptr);
+    PRECICE_ASSERT(convMeasure.measure.get() != nullptr);
+
+    convMeasure.measure->measure(convMeasure.couplingData->previousIteration(), convMeasure.couplingData->values());
+
+    if (not utils::IntraComm::isSecondary() && convMeasure.doesLogging) {
+      _convergenceWriter->writeData(convMeasure.logHeader(), convMeasure.measure->getNormResidual());
+    }
+
+    if (not convMeasure.measure->isConvergence()) {
+      allConverged = false;
+      if (convMeasure.strict) {
+        oneStrict = true;
+        PRECICE_CHECK(_iterations < _maxIterations,
+                      "The strict convergence measure for global data \"" + convMeasure.couplingData->getDataName() +
                           "\" did not converge within the maximum allowed iterations, which terminates the simulation. "
                           "To avoid this forced termination do not mark the convergence measure as strict.")
       }
@@ -755,6 +802,12 @@ void BaseCouplingScheme::initializeTXTWriters()
 
     if (not doesFirstStep()) {
       for (ConvergenceMeasureContext &convMeasure : _convergenceMeasures) {
+
+        if (convMeasure.doesLogging) {
+          _convergenceWriter->addData(convMeasure.logHeader(), io::TXTTableWriter::DOUBLE);
+        }
+      }
+      for (ConvergenceMeasureContextGlobalData &convMeasure : _convergenceMeasuresGlobalData) {
 
         if (convMeasure.doesLogging) {
           _convergenceWriter->addData(convMeasure.logHeader(), io::TXTTableWriter::DOUBLE);

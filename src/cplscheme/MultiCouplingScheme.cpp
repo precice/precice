@@ -11,10 +11,12 @@
 #include "acceleration/SharedPointer.hpp"
 #include "cplscheme/BaseCouplingScheme.hpp"
 #include "cplscheme/CouplingData.hpp"
+#include "cplscheme/GlobalCouplingData.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/SharedPointer.hpp"
 #include "mesh/Data.hpp"
+#include "mesh/GlobalData.hpp"
 #include "mesh/Mesh.hpp"
 
 namespace precice::cplscheme {
@@ -64,6 +66,12 @@ std::vector<std::string> MultiCouplingScheme::getCouplingPartners() const
 bool MultiCouplingScheme::hasAnySendData()
 {
   return std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(), [](const auto &sendExchange) { return not sendExchange.second.empty(); });
+}
+
+bool MultiCouplingScheme::hasAnySendGlobalData()
+{
+  // return std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(), [](const auto &sendExchange) { return not sendExchange.second.empty(); });
+  PRECICE_ERROR("TODO");
 }
 
 const DataMap &MultiCouplingScheme::getAccelerationData()
