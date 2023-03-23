@@ -160,10 +160,9 @@ SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::SphericalVertexCluster(
   PRECICE_DEBUG("SphericalVertexCluster input size: {}", inIDs.size());
   PRECICE_DEBUG("SphericalVertexCluster output size: {}", outIDs.size());
 
-  // TODO
-  // Otherwise the system is underdetermined
-  // if (inIDs.size() < dimension + 1)
-  //   _polynomial = Polynomial::OFF;
+  // The polynomial system is underdetermined if inIDs.size() < dimension + 1. However, the dynamic adoption of the axis in the RBF solver
+  // disables axis, if necessary. Hence, we don't disable the complete polynomial here for underdetermined systems. The case should anyway
+  // only occur for an almost unreasonable small vertices-per-cluster configuration.
 
   // Construct the solver. Here, the constructor of the RadialBasisFctSolver computes already the decompositions etc, such that we can mark the
   // mapping in this cluster as computed (mostly for debugging purpose)
