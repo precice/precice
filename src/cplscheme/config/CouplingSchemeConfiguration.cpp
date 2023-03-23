@@ -315,22 +315,22 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
 
         auto first_participant = _participantConfig->getParticipant(first);
         for (auto &dataContext : first_participant->readDataContexts()) {
-          int usedOrder = dataContext->getInterpolationOrder();
+          int usedOrder = dataContext.getInterpolationOrder();
           // The first participants waveform order has to be 0 for serial explicit coupling
           int allowedOrder = 0;
           if (usedOrder != allowedOrder) {
             PRECICE_ERROR(
                 "You configured <read-data name=\"{}\" mesh=\"{}\" waveform-order=\"{}\" />, but for the serial explicit coupling scheme only a maximum waveform-order of \"{}\" is allowed for the first participant.",
-                dataContext->getDataName(), dataContext->getMeshName(), usedOrder, allowedOrder);
+                dataContext.getDataName(), dataContext.getMeshName(), usedOrder, allowedOrder);
           }
         }
         auto second_participant = _participantConfig->getParticipant(second);
         for (auto &dataContext : second_participant->readDataContexts()) {
-          int usedOrder = dataContext->getInterpolationOrder();
+          int usedOrder = dataContext.getInterpolationOrder();
           if (usedOrder < 0) {
             PRECICE_ERROR(
                 "You configured <read-data name=\"{}\" mesh=\"{}\" waveform-order=\"{}\" />, but for the serial explicit coupling scheme the waveform-order must be non-negative for the second participant.",
-                dataContext->getDataName(), dataContext->getMeshName(), usedOrder);
+                dataContext.getDataName(), dataContext.getMeshName(), usedOrder);
           }
         }
       }
@@ -1078,12 +1078,12 @@ void CouplingSchemeConfiguration::checkWaveformOrderReadData(
 {
   for (const precice::impl::PtrParticipant &participant : _participantConfig->getParticipants()) {
     for (auto &dataContext : participant->readDataContexts()) {
-      int usedOrder = dataContext->getInterpolationOrder();
+      int usedOrder = dataContext.getInterpolationOrder();
       PRECICE_ASSERT(usedOrder >= 0); // ensure that usedOrder was set
       if (usedOrder > maxAllowedOrder) {
         PRECICE_ERROR(
             "You configured <read-data name=\"{}\" mesh=\"{}\" waveform-order=\"{}\" />, but for the coupling scheme you are using only a maximum waveform-order of \"{}\" is allowed.",
-            dataContext->getDataName(), dataContext->getMeshName(), usedOrder, maxAllowedOrder);
+            dataContext.getDataName(), dataContext.getMeshName(), usedOrder, maxAllowedOrder);
       }
     }
   }
