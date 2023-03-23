@@ -184,7 +184,7 @@ public:
   int maxReadWaveformOrder() const
   {
     int maxOrder = -1;
-    for (auto &context : _readDataContexts | boost::adaptors::map_values) {
+    for (const auto &context : _readDataContexts | boost::adaptors::map_values) {
       maxOrder = std::max(maxOrder, context.getInterpolationOrder());
     }
     return maxOrder;
