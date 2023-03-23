@@ -137,12 +137,10 @@ SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::SphericalVertexCluster(
     mesh::PtrMesh           outputMesh)
     : _center(center), _radius(radius), _polynomial(polynomial), _weightingFunction(radius)
 {
-  PRECICE_TRACE();
+  PRECICE_TRACE(_center.getCoords(), _radius);
   // Disable integrated polynomial, as it might cause locally singular matrices
   PRECICE_ASSERT(_polynomial != Polynomial::ON, "Integrated polynomial is not supported for partition of unity data mappings.")
   PRECICE_ASSERT(deadAxis.size() == inputMesh->getDimensions());
-  PRECICE_DEBUG("Center coordinates: {}", _center.getCoords());
-  PRECICE_DEBUG("SphericalVertexCluster radius: {}", _radius);
 
   // Get vertices to be mapped
   auto outIDs = outputMesh->index().getVerticesInsideBox(center, radius);

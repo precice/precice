@@ -129,7 +129,7 @@ PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::PartitionOfUnityMapping(
       _basisFunction(function), _verticesPerCluster(verticesPerCluster), _relativeOverlap(relativeOverlap), _projectToInput(projectToInput), _polynomial(polynomial)
 {
   PRECICE_ASSERT(this->getDimensions() <= 3);
-  PRECICE_CHECK(_polynomial != Polynomial::ON, "Integrated polynomial is not supported for partition of unity data mappings.");
+  PRECICE_ASSERT(_polynomial != Polynomial::ON, "Integrated polynomial is not supported for partition of unity data mappings.");
   PRECICE_ASSERT(_relativeOverlap < 1, "The relative overlap has to be smaller than one.");
   PRECICE_ASSERT(_verticesPerCluster > 0, "The number of vertices per cluster has to be greater zero.");
 
@@ -221,7 +221,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     const auto localNumberOfClusters = clusterIDs.size();
     // Consider the case where we didn't find any cluster (meshes don't match very well)
     if (localNumberOfClusters == 0) {
-      PRECICE_ERROR("Output vertex {} could not be assigned to any cluster. This means that the meshes probably do not match well geometry-wise or the target number of vertices per partition is too small.", vertex.getCoords());
+      PRECICE_ERROR("Output vertex {} could not be assigned to any cluster. This means that the meshes probably do not match well geometry-wise or the target number of vertices per cluster is too small.", vertex.getCoords());
       // In principle, we could assign the vertex to the closest cluster using clusterIDs.emplace_back(clusterIndex.getClosestVertex(vertex.getCoords()).index);
       // However, this leads to a conflict with weights already set in the corresponding cluster, since we insert the ID and, later on, map the ID to a local weight index
       // Of course, we could rearrange the weights, but we want to avoid the case here anyway, i.e., prefer to abort.
