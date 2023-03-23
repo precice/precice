@@ -42,6 +42,16 @@ public:
    */
   void appendMappingConfiguration(MappingContext &mappingContext, const MeshContext &meshContext) override;
 
+  /// Disable copy construction
+  WriteDataContext(const WriteDataContext &copy) = delete;
+
+  /// Disable assignment construction
+  WriteDataContext &operator=(const WriteDataContext &assign) = delete;
+
+  /// Move constructor, use the implicitly declared.
+  WriteDataContext(WriteDataContext &&) = default;
+  WriteDataContext &operator=(WriteDataContext &&) = default;
+
 private:
   static logging::Logger _log;
 };
