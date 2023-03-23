@@ -70,6 +70,16 @@ public:
    */
   void storeDataInWaveform();
 
+  /// Disable copy construction
+  ReadDataContext(const ReadDataContext &copy) = delete;
+
+  /// Disable assignment construction
+  ReadDataContext &operator=(const ReadDataContext &assign) = delete;
+
+  /// Move constructor, use the implicitly declared.
+  ReadDataContext(ReadDataContext &&) = default;
+  ReadDataContext &operator=(ReadDataContext &&) = default;
+
 private:
   static logging::Logger _log;
 

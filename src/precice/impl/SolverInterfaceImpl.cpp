@@ -648,7 +648,7 @@ int SolverInterfaceImpl::setMeshVertex(
   mesh->allocateDataValues(); //@todo remove this call.
 
   auto newSize = mesh->vertices().size(); // @todo add function Mesh::size()?
-  for (auto context : _accessor->writeDataContexts()) {
+  for (auto &context : _accessor->writeDataContexts()) {
     if (context.getMeshName() == mesh->getName()) {
       context.resizeBufferTo(newSize);
     }
@@ -678,7 +678,7 @@ void SolverInterfaceImpl::setMeshVertices(
   mesh->allocateDataValues(); //@todo remove this call.
 
   auto newSize = mesh->vertices().size(); // @todo add function Mesh::size()?
-  for (auto context : _accessor->writeDataContexts()) {
+  for (auto &context : _accessor->writeDataContexts()) {
     if (context.getMeshName() == mesh->getName()) {
       context.resizeBufferTo(newSize);
     }
@@ -1828,7 +1828,7 @@ void SolverInterfaceImpl::computePartitions()
     meshContext->mesh->allocateDataValues(); //@todo remove this call.
 
     auto newSize = meshContext->mesh->vertices().size(); // @todo add function Mesh::size()?
-    for (auto context : _accessor->writeDataContexts()) {
+    for (auto &context : _accessor->writeDataContexts()) {
       if (context.getMeshName() == meshContext->mesh->getName()) {
         context.resizeBufferTo(newSize);
       }
