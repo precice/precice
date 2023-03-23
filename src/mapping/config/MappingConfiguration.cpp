@@ -298,6 +298,8 @@ void MappingConfiguration::xmlTagCallback(
     std::string constraint = tag.getStringAttributeValue(ATTR_CONSTRAINT);
 
     // optional tags
+    // We set here default values, but their actual value doesn't really matter.
+    // It's just for the mapping methods, which do not use these attributes at all.
     bool        xDead         = tag.getBooleanAttributeValue(ATTR_X_DEAD, false);
     bool        yDead         = tag.getBooleanAttributeValue(ATTR_Y_DEAD, false);
     bool        zDead         = tag.getBooleanAttributeValue(ATTR_Z_DEAD, false);
