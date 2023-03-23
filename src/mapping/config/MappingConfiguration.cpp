@@ -205,11 +205,11 @@ MappingConfiguration::MappingConfiguration(
                                .setDocumentation("Sets kind of preallocation for PETSc RBF implementation")
                                .setOptions({PREALLOCATION_ESTIMATE, PREALLOCATION_COMPUTE, PREALLOCATION_OFF, PREALLOCATION_SAVE, PREALLOCATION_TREE});
 
-  auto verticesPerCluster = XMLAttribute<int>(ATTR_VERTICES_PER_CLUSTER)
+  auto verticesPerCluster = XMLAttribute<int>(ATTR_VERTICES_PER_CLUSTER, 100)
                                 .setDocumentation("Average number of vertices per cluster (partition) applied in the rbf partition of unity method.");
   auto relativeOverlap = makeXMLAttribute(ATTR_RELATIVE_OVERLAP, 0.3)
                              .setDocumentation("Value between 0 and 1 indicating the relative overlap between clusters. A value of 0.3 is usually a good trade-off between accuracy and efficiency.");
-  auto projectToInput = XMLAttribute<bool>(ATTR_PROJECT_TO_INPUT)
+  auto projectToInput = XMLAttribute<bool>(ATTR_PROJECT_TO_INPUT, true)
                             .setDocumentation("If enabled, places the cluster centers at the closest vertex of the input mesh. Should be enabled in case of non-uniform point distributions such as for shell structures.");
 
   // Add the relevant attributes to the relevant tags
@@ -303,9 +303,9 @@ void MappingConfiguration::xmlTagCallback(
     std::string strPrealloc   = tag.getStringAttributeValue(ATTR_PREALLOCATION, PREALLOCATION_TREE);
 
     // pum related tags
-    int    verticesPerCluster = tag.getIntAttributeValue(ATTR_VERTICES_PER_CLUSTER, 0);
+    int    verticesPerCluster = tag.getIntAttributeValue(ATTR_VERTICES_PER_CLUSTER, 100);
     double relativeOverlap    = tag.getDoubleAttributeValue(ATTR_RELATIVE_OVERLAP, 0.3);
-    bool   projectToInput     = tag.getBooleanAttributeValue(ATTR_PROJECT_TO_INPUT, false);
+    bool   projectToInput     = tag.getBooleanAttributeValue(ATTR_PROJECT_TO_INPUT, true);
 
     // Convert raw string into enum types as the constructors take enums
     if (constraint == CONSTRAINT_CONSERVATIVE) {
