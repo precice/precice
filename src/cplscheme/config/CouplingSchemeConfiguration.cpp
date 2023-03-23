@@ -314,8 +314,8 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
         const auto second = _config.participants[1];
 
         auto first_participant = _participantConfig->getParticipant(first);
-        for (auto &dataContext : first_participant->readDataContexts()) {
-          int usedOrder = dataContext.getInterpolationOrder();
+        for (const auto &dataContext : first_participant->readDataContexts()) {
+          const int usedOrder = dataContext.getInterpolationOrder();
           // The first participants waveform order has to be 0 for serial explicit coupling
           int allowedOrder = 0;
           if (usedOrder != allowedOrder) {
@@ -325,8 +325,8 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
           }
         }
         auto second_participant = _participantConfig->getParticipant(second);
-        for (auto &dataContext : second_participant->readDataContexts()) {
-          int usedOrder = dataContext.getInterpolationOrder();
+        for (const auto &dataContext : second_participant->readDataContexts()) {
+          const int usedOrder = dataContext.getInterpolationOrder();
           if (usedOrder < 0) {
             PRECICE_ERROR(
                 "You configured <read-data name=\"{}\" mesh=\"{}\" waveform-order=\"{}\" />, but for the serial explicit coupling scheme the waveform-order must be non-negative for the second participant.",
@@ -1077,8 +1077,8 @@ void CouplingSchemeConfiguration::checkWaveformOrderReadData(
     int maxAllowedOrder) const
 {
   for (const precice::impl::PtrParticipant &participant : _participantConfig->getParticipants()) {
-    for (auto &dataContext : participant->readDataContexts()) {
-      int usedOrder = dataContext.getInterpolationOrder();
+    for (const auto &dataContext : participant->readDataContexts()) {
+      const int usedOrder = dataContext.getInterpolationOrder();
       PRECICE_ASSERT(usedOrder >= 0); // ensure that usedOrder was set
       if (usedOrder > maxAllowedOrder) {
         PRECICE_ERROR(
