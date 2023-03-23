@@ -185,6 +185,7 @@ target_sources(preciceCore
     src/mapping/NearestNeighborMapping.hpp
     src/mapping/NearestProjectionMapping.cpp
     src/mapping/NearestProjectionMapping.hpp
+    src/mapping/PartitionOfUnityMapping.hpp
     src/mapping/PetRadialBasisFctMapping.hpp
     src/mapping/Polation.cpp
     src/mapping/Polation.hpp
@@ -196,6 +197,8 @@ target_sources(preciceCore
     src/mapping/config/MappingConfiguration.hpp
     src/mapping/config/MappingConfigurationTypes.hpp
     src/mapping/impl/BasisFunctions.hpp
+    src/mapping/impl/CreateClustering.hpp
+    src/mapping/impl/SphericalVertexCluster.hpp
     src/math/barycenter.cpp
     src/math/barycenter.hpp
     src/math/constants.hpp
