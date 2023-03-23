@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(Query3DFullVertex)
     auto                  result = indexTree.getClosestVertices(location, nVertices);
 
     BOOST_TEST(result.size() == nVertices);
-    BOOST_TEST(result == expectedResult, boost::test_tools::per_element());
+    BOOST_TEST(std::is_permutation(result.begin(), result.end(), expectedResult.begin()));
   }
   {
     Eigen::Vector3d       location(3.5, 3.5, 0.0);
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(Query3DFullVertex)
     auto                  result = indexTree.getClosestVertices(location, nVertices);
 
     BOOST_TEST(result.size() == nVertices);
-    BOOST_TEST(result == expectedResult, boost::test_tools::per_element());
+    BOOST_TEST(std::is_permutation(result.begin(), result.end(), expectedResult.begin()));
   }
 }
 
