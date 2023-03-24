@@ -238,7 +238,13 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   _timeWindows         = startTimeWindow;
   _hasDataBeenReceived = false;
 
+  //Need to initialize the waveforms before I store them.
+  initializeSendDataStorage();
+  exchangeInitialData();
+
   if (isImplicitCouplingScheme()) {
+
+    storeIteration();
 
     if (not doesFirstStep()) {
       PRECICE_CHECK(not _convergenceMeasures.empty(),
@@ -253,12 +259,6 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
     initializeTXTWriters();
   }
 
-  initializeSendDataStorage();
-  exchangeInitialData();
-  //Need to save the initialised data at some point.
-  if (isImplicitCouplingScheme()) {
-    storeIteration();
-  }
   _isInitialized = true;
 }
 
