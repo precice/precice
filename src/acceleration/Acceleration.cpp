@@ -17,16 +17,19 @@ void Acceleration::checkDataIDs(const DataMap &cplData) const
 void Acceleration::applyRelaxation(double omega, const DataMap &cplData) const
 {
   for (const DataMap::value_type &pair : cplData) {
-    const auto  couplingData = pair.second;
-    auto &      values       = couplingData->values();
-    const auto &oldValues    = couplingData->previousIteration();
-    auto        storedTimes  = couplingData->getStoredTimesAscending();
+    const auto couplingData = pair.second;
+    auto &     values       = couplingData->values();
+    // const auto &oldValues    = couplingData->previousIteration();
+    auto storedTimes = couplingData->getStoredTimesAscending();
 
     for (auto time : storedTimes) {
+
+      auto oldValues  = couplingData->getPreviousValuesAtTime(time);
       auto data_value = couplingData->getValuesAtTime(time);
       data_value *= omega;
 
       data_value += oldValues * (1 - omega);
+
       // Apply relaxation to all timesteps and store it in the current waveform
       couplingData->storeValuesAtTime(time, data_value, true);
     }

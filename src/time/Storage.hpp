@@ -116,7 +116,8 @@ private:
   mutable logging::Logger _log{"time::Storage"};
 
   /// extrapolation order for this extrapolation
-  const int _extrapolationOrder;
+  /// Removed constant, since one needs to create new instances of this class.
+  int _extrapolationOrder;
 
   Eigen::VectorXd computeExtrapolation();
 

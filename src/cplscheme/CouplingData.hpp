@@ -87,6 +87,9 @@ public:
   /// stores data for a given key into _data. Assumes that this data exists under the key.
   Eigen::VectorXd getValuesAtTime(double relativeDt);
 
+  /// returns previous data interpolated to the relativeDt time
+  Eigen::VectorXd getPreviousValuesAtTime(double relativeDt);
+
   /**
    * @brief Returns the values of all time steps stored in this coupling data in a serialized fashion
    *
@@ -132,7 +135,11 @@ private:
   mesh::PtrMesh _mesh;
 
   /// Stores time steps in the current time window
-  time::Storage _timeStepsStorage;
+  time::Storage _timeStepsStorageCurrent;
+
+  time::Storage _timeStepsStoragePrevious;
+
+  int _extrapolationOrder;
 };
 
 } // namespace cplscheme

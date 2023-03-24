@@ -239,7 +239,7 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   _hasDataBeenReceived = false;
 
   if (isImplicitCouplingScheme()) {
-    storeIteration();
+
     if (not doesFirstStep()) {
       PRECICE_CHECK(not _convergenceMeasures.empty(),
                     "At least one convergence measure has to be defined for "
@@ -255,7 +255,10 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
 
   initializeSendDataStorage();
   exchangeInitialData();
-
+  //Need to save the initialised data at some point.
+  if (isImplicitCouplingScheme()) {
+    storeIteration();
+  }
   _isInitialized = true;
 }
 
@@ -806,7 +809,12 @@ void BaseCouplingScheme::doImplicitStep()
       for (auto &pair : getAccelerationData()) {
         pair.second->values() = pair.second->getValuesAtTime(time::Storage::WINDOW_END);
       }
+
       _acceleration->performAcceleration(getAccelerationData());
+      // Need to copy over the accelerated data into values again
+      for (auto &pair : getAccelerationData()) {
+        pair.second->values() = pair.second->getValuesAtTime(time::Storage::WINDOW_END);
+      }
       // @todo breaks for CplSchemeTests/ParallelImplicitCouplingSchemeTests. Why? @fsimonis
       // for (auto &data : getAccelerationData() | boost::adaptors::map_values) {
       //   data->storeValuesAtTime(time::Storage::WINDOW_END, data->values(), mustOverwrite);

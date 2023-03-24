@@ -1,5 +1,4 @@
 #include "cplscheme/CouplingData.hpp"
-
 #include <utility>
 
 #include "mesh/Data.hpp"
@@ -15,8 +14,8 @@ CouplingData::CouplingData(
     int           extrapolationOrder)
     : requiresInitialization(requiresInitialization),
       _data(std::move(data)),
-      _mesh(std::move(mesh)),
-      _timeStepsStorage(extrapolationOrder)
+      _mesh(std::move(mesh)), _extrapolationOrder(extrapolationOrder),
+      _timeStepsStorageCurrent(extrapolationOrder), _timeStepsStoragePrevious(extrapolationOrder)
 {
   PRECICE_ASSERT(_data != nullptr);
   _previousIteration = Eigen::VectorXd::Zero(getSize());
@@ -73,7 +72,28 @@ int CouplingData::meshDimensions() const
 
 void CouplingData::storeIteration()
 {
-  _previousIteration = this->values();
+
+  _timeStepsStoragePrevious.clear(false);
+
+  // Need a better way of copying the contents of waveform iterations
+  int  nValues        = getSize();
+  int  nTimeSteps     = _timeStepsStorageCurrent.nTimes();
+  auto timesAndValues = _timeStepsStorageCurrent.getTimesAndValues();
+  auto serializedData = timesAndValues.second;
+  auto timesAscending = timesAndValues.first;
+
+  for (int timeId = 0; timeId < timesAscending.size(); timeId++) {
+    auto slice = Eigen::VectorXd(getSize());
+    for (int valueId = 0; valueId < slice.size(); valueId++) {
+      slice(valueId) = serializedData(valueId * timesAscending.size() + timeId);
+    }
+    auto time = timesAscending(timeId);
+    PRECICE_ASSERT(math::greaterEquals(time, time::Storage::WINDOW_START) && math::greaterEquals(time::Storage::WINDOW_END, time)); // time < 0 or time > 1 is not allowed.
+    _timeStepsStoragePrevious.setValuesAtTime(time, slice);
+  }
+
+  this->_previousIteration = this->getValuesAtTime(_timeStepsStorageCurrent.maxStoredNormalizedDt()); // store data in values to make this non-breaking.
+
   if (this->hasGradient()) {
     PRECICE_ASSERT(this->gradientValues().size() > 0);
     _previousIterationGradients = this->gradientValues();
@@ -117,46 +137,51 @@ std::vector<int> CouplingData::getVertexOffsets()
 
 void CouplingData::initializeStorage(Eigen::VectorXd data)
 {
-  _timeStepsStorage.clear(false); // only required for MultiCouplingScheme, if participant that is not the controller has send data (with data) which is also non-initialized receive data. See DataBC in Integration/Serial/MultiCoupling/MultiCouplingThreeSolvers3.
+  _timeStepsStorageCurrent.clear(false); // only required for MultiCouplingScheme, if participant that is not the controller has send data (with data) which is also non-initialized receive data. See DataBC in Integration/Serial/MultiCoupling/MultiCouplingThreeSolvers3.
   storeValuesAtTime(time::Storage::WINDOW_START, data);
   storeValuesAtTime(time::Storage::WINDOW_END, data);
 }
 
 Eigen::VectorXd CouplingData::getStoredTimesAscending()
 {
-  return _timeStepsStorage.getTimes();
+  return _timeStepsStorageCurrent.getTimes();
 }
 
 void CouplingData::clearTimeStepsStorage()
 {
-  _timeStepsStorage.clear();
+  _timeStepsStorageCurrent.clear();
 }
 
 void CouplingData::moveTimeStepsStorage()
 {
-  _timeStepsStorage.move();
-  values() = _timeStepsStorage.getValuesAtTime(time::Storage::WINDOW_END); // @todo Better do this just before returning to SolverInterfaceImpl. Compare to BaseCouplingScheme::receiveData
+  _timeStepsStorageCurrent.move();
+  values() = _timeStepsStorageCurrent.getValuesAtTime(time::Storage::WINDOW_END); // @todo Better do this just before returning to SolverInterfaceImpl. Compare to BaseCouplingScheme::receiveData
 }
 
 void CouplingData::storeValuesAtTime(double relativeDt, Eigen::VectorXd data, bool mustOverwriteExisting)
 {
   PRECICE_ASSERT(math::greaterEquals(relativeDt, time::Storage::WINDOW_START), relativeDt);
-  // PRECICE_ASSERT(math::greaterEquals(relativeDt, _timeStepsStorage.maxStoredNormalizedDt()), relativeDt, _timeStepsStorage.maxStoredNormalizedDt());
   PRECICE_ASSERT(math::greaterEquals(time::Storage::WINDOW_END, relativeDt), relativeDt);
-  _timeStepsStorage.setValuesAtTime(relativeDt, data, mustOverwriteExisting);
+  _timeStepsStorageCurrent.setValuesAtTime(relativeDt, data, mustOverwriteExisting);
 }
 
 Eigen::VectorXd CouplingData::getValuesAtTime(double relativeDt)
 {
-  return _timeStepsStorage.getValuesAtTime(relativeDt);
+  return _timeStepsStorageCurrent.getValuesAtTime(relativeDt);
+}
+
+Eigen::VectorXd CouplingData::getPreviousValuesAtTime(double relativeDt)
+{
+
+  return _timeStepsStoragePrevious.getValuesAtOrAfter(relativeDt);
 }
 
 Eigen::VectorXd CouplingData::getSerialized()
 {
   int  nValues        = getSize();
-  int  nTimeSteps     = _timeStepsStorage.nTimes();
+  int  nTimeSteps     = _timeStepsStorageCurrent.nTimes();
   auto serializedData = Eigen::VectorXd(nTimeSteps * nValues);
-  auto timesAndValues = _timeStepsStorage.getTimesAndValues();
+  auto timesAndValues = _timeStepsStorageCurrent.getTimesAndValues();
   auto values         = timesAndValues.second;
 
   for (int timeId = 0; timeId < nTimeSteps; timeId++) {
@@ -172,7 +197,7 @@ void CouplingData::storeFromSerialized(Eigen::VectorXd timesAscending, Eigen::Ve
 {
   PRECICE_ASSERT(timesAscending.size() * getSize() == serializedData.size());
 
-  _timeStepsStorage.clear(false);
+  _timeStepsStorageCurrent.clear(false);
 
   for (int timeId = 0; timeId < timesAscending.size(); timeId++) {
     auto slice = Eigen::VectorXd(getSize());
@@ -183,7 +208,7 @@ void CouplingData::storeFromSerialized(Eigen::VectorXd timesAscending, Eigen::Ve
     PRECICE_ASSERT(math::greaterEquals(time, time::Storage::WINDOW_START) && math::greaterEquals(time::Storage::WINDOW_END, time)); // time < 0 or time > 1 is not allowed.
     this->storeValuesAtTime(time, slice);
   }
-  this->values() = this->getValuesAtTime(_timeStepsStorage.maxStoredNormalizedDt()); // store data in values to make this non-breaking.
+  this->values() = this->getValuesAtTime(_timeStepsStorageCurrent.maxStoredNormalizedDt()); // store data in values to make this non-breaking.
 }
 
 } // namespace precice::cplscheme

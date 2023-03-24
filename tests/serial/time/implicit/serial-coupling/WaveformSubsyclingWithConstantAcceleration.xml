@@ -43,8 +43,8 @@
       <participants first="SolverOne" second="SolverTwo" />
       <max-time-windows value="1" />
       <time-window-size value="1" />
-      <max-iterations value="3" />
-      <min-iteration-convergence-measure min-iterations="3" data="DataOne" mesh="MeshOne" />
+      <max-iterations value="4" />
+      <min-iteration-convergence-measure min-iterations="4" data="DataOne" mesh="MeshOne" />
       <exchange data="DataOne" mesh="MeshOne" from="SolverOne" to="SolverTwo" initialize="on" />
       <exchange data="DataTwo" mesh="MeshOne" from="SolverTwo" to="SolverOne" initialize="on" />
       <acceleration:constant>
