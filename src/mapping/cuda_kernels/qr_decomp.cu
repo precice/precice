@@ -27,13 +27,15 @@ void *dWork = nullptr;
 void *hWork = nullptr;
 int *devInfo = nullptr;
 
+int cudaBackupDeviceId = 0;
+
 void initCuda(const int deviceId=0){
+    cudaGetDevice(&cudaBackupDeviceId);
     cudaSetDevice(deviceId);
 
     // Allocating important CUDA variables
     cudaMalloc((void **)&dWork, sizeof(double));
     cudaMalloc((void **)&devInfo, sizeof(int));
-    cudaMalloc((void **)&dTau, sizeof(double));
 
     cusolverDnCreate(&solverHandle);
     cublasCreate(&cublasHandle);
@@ -74,6 +76,8 @@ void computeQR(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, Gi
     size_t hLwork_geqrf = 0;
     size_t hLwork = 0;
 
+    cudaMalloc((void **)&dTau, sizeof(double) * M);
+
     precice::utils::Event calculateQRDecompEvent{"calculateQRDecomp"};
 
     // Query working space of geqrf and orgqr
@@ -105,6 +109,8 @@ void computeQR(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, Gi
     cudaDeviceSynchronize();
 
     calculateQRDecompEvent.stop();
+
+    cudaSetDevice(cudaBackupDeviceId); // Switch back to the GPU used for all coupled solvers
 
     return;
 }
