@@ -23,7 +23,8 @@ cudaError_t cudaErrorCode = cudaSuccess;
 
 // Important variables which track the state of the solver routines
 double *dTau = nullptr;
-double *dWork = nullptr;
+void *dWork = nullptr;
+void *hWork = nullptr;
 int *devInfo = nullptr;
 
 void initCuda(const int deviceId=0){
@@ -66,34 +67,37 @@ void computeQR(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, Gi
     const int lda = max(1, M);
     const int k = min(M, N);
 
-    int lwork_geqrf = 0;
-    int lwork_orgqr = 0;
-    int lwork = 0;
+    size_t dLwork_geqrf = 0;
+    size_t dLwork_orgqr = 0;
+    size_t dLwork = 0;
+
+    size_t hLwork_geqrf = 0;
+    size_t hLwork = 0;
 
     precice::utils::Event calculateQRDecompEvent{"calculateQRDecomp"};
 
     // Query working space of geqrf and orgqr
-    cusolverStatus = cusolverDnDgeqrf_bufferSize(solverHandle, M, N, A_T->get_values(), lda, &lwork_geqrf);
-    assert(cusolverStatus == cusolverStatus_SUCCESS);
-    cusolverStatus = cusolverDnDorgqr_bufferSize(solverHandle, M, N, k, A_T->get_values(), lda, dTau, &lwork_orgqr);
-    assert(cusolverStatus == cusolverStatus_SUCCESS);
-    lwork = (lwork_geqrf > lwork_orgqr) ? lwork_geqrf : lwork_orgqr;
-    cudaErrorCode = cudaMalloc((void **)&dWork, sizeof(double) * lwork);
+    cusolverStatus = cusolverDnXgeqrf_bufferSize(solverHandle, nullptr, M, N, CUDA_R_64F, A_T->get_values(), lda, CUDA_R_64F, dTau, CUDA_R_64F, &dLwork_geqrf, &hLwork_geqrf);
+    assert(cusolverStatus == CUSOLVER_STATUS_SUCCESS);
+    cusolverStatus = cusolverDnDorgqr_bufferSize(solverHandle, M, N, k, A_T->get_values(), lda, dTau, (int*) &dLwork_orgqr);
+    assert(cusolverStatus == CUSOLVER_STATUS_SUCCESS);
+    dLwork = (dLwork_geqrf > dLwork_orgqr) ? dLwork_geqrf : dLwork_orgqr;
+    cudaErrorCode = cudaMalloc((void **)&dWork, sizeof(double) * dLwork);
     assert(cudaSuccess == cudaErrorCode);
 
     // Compute QR factorization
-    cusolverStatus = cusolverDnDgeqrf(solverHandle, M, N, A_T->get_values(), lda, dTau, dWork, lwork, devInfo);
+    cusolverStatus = cusolverDnXgeqrf(solverHandle, nullptr, M, N, CUDA_R_64F, A_T->get_values(), lda, CUDA_R_64F, dTau, CUDA_R_64F, dWork, dLwork, hWork, hLwork, devInfo);
     cudaErrorCode = cudaDeviceSynchronize();
-    assert(cusolverStatus_SUCCESS == cusolverStatus);
+    assert(CUSOLVER_STATUS_SUCCESS == cusolverStatus);
     assert(cudaSuccess == cudaErrorCode);
 
     // Copy A_T to R s.t. the upper triangle corresponds to R
     A_T->transpose(gko::lend(R));
 
     // Compute Q
-    cusolverStatus = cusolverDnDorgqr(solverHandle, M, N, k, A_T->get_values(), lda, dTau, dWork, lwork, devInfo);
+    cusolverStatus = cusolverDnDorgqr(solverHandle, M, N, k, A_T->get_values(), lda, dTau, (double*) dWork, dLwork, devInfo);
     cudaErrorCode = cudaDeviceSynchronize();
-    assert(cusolverStatus_SUCCESS == cusolverStatus);
+    assert(CUSOLVER_STATUS_SUCCESS == cusolverStatus);
     assert(cudaSuccess == cudaErrorCode);
 
     A_T->transpose(gko::lend(A_Q));
