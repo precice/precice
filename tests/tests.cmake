@@ -4,6 +4,7 @@
 target_sources(testprecice
     PRIVATE
     tests/global-data/Explicit.cpp
+    tests/global-data/Implicit.cpp
     tests/parallel/CouplingOnLine.cpp
     tests/parallel/ExportTimeseries.cpp
     tests/parallel/GlobalRBFPartitioning.cpp

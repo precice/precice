@@ -1,16 +1,19 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
   <solver-interface dimensions="2" experimental="true">
-    <global-data:scalar name="GlobalData1" />
+    <global-data:vector name="GlobalData1" />
+    <global-data:vector name="GlobalData2" />
 
     <!-- <global-data:vector name="GlobalVectorData" /> -->
     <participant name="SolverOne">
       <write-data name="GlobalData1" />
+      <read-data name="GlobalData2" />
       <!-- <write-data name="GlobalVectorData" /> -->
     </participant>
 
     <participant name="SolverTwo">
       <read-data name="GlobalData1" />
+      <write-data name="GlobalData2" />
       <!-- <read-data name="GlobalVectorData" /> -->
     </participant>
 
@@ -18,11 +21,12 @@
 
     <coupling-scheme:serial-implicit>
       <participants first="SolverOne" second="SolverTwo" />
-      <max-time-windows value="2" />
+      <max-time-windows value="4" />
       <time-window-size value="1.0" />
+      <max-iterations value="3" />
       <exchange data="GlobalData1" from="SolverOne" to="SolverTwo" />
+      <exchange data="GlobalData2" from="SolverTwo" to="SolverOne" />
       <!-- <exchange data="GlobalVectorData" from="SolverOne" to="SolverTwo" /> -->
-      <max-iterations value="100" />
       <absolute-convergence-measure data="GlobalData1" limit="1.73205080756887729" />
       <!-- <absolute-convergence-measure data="GlobalVectorData" limit="1.73205080756887729"  /> -->
     </coupling-scheme:serial-implicit>
