@@ -27,7 +27,8 @@
       <exchange data="GlobalData1" from="SolverOne" to="SolverTwo" />
       <exchange data="GlobalData2" from="SolverTwo" to="SolverOne" />
       <!-- <exchange data="GlobalVectorData" from="SolverOne" to="SolverTwo" /> -->
-      <absolute-convergence-measure data="GlobalData1" limit="1.73205080756887729" />
+      <absolute-convergence-measure data="GlobalData1" limit="1" />
+      <absolute-convergence-measure data="GlobalData2" limit="2" />
       <!-- <absolute-convergence-measure data="GlobalVectorData" limit="1.73205080756887729"  /> -->
     </coupling-scheme:serial-implicit>
   </solver-interface>

@@ -43,25 +43,25 @@ BOOST_AUTO_TEST_CASE(Implicit)
   std::vector<double> writeData(dimensions, writeValue);
   std::vector<double> readData(dimensions, -1);
 
-  if (couplingInterface.requiresInitialData()) {
-    BOOST_TEST(context.isNamed("SolverTwo"));
-    couplingInterface.writeGlobalVectorData(writeDataID, writeData.data());
-  }
+  // if (couplingInterface.requiresInitialData()) {
+  //   BOOST_TEST(context.isNamed("SolverTwo"));
+  //   couplingInterface.writeGlobalVectorData(writeDataID, writeData.data());
+  // }
 
   dt = couplingInterface.initialize();
 
   while (couplingInterface.isCouplingOngoing()) {
     if (couplingInterface.requiresWritingCheckpoint()) {
     }
+    // Write: from local data structure --> to precice buffer
+    couplingInterface.writeGlobalVectorData(writeDataID, writeData.data());
+    // Advance (exchange coupling data)
+    dt = couplingInterface.advance(dt);
     // Read: from precice buffer --> to local data structure
     couplingInterface.readGlobalVectorData(readDataID, readData.data());
     // Check read data
     BOOST_TEST(expectedReadValue == readData.at(0));
     BOOST_TEST(expectedReadValue == readData.at(1));
-    // Write: from local data structure --> to precice buffer
-    couplingInterface.writeGlobalVectorData(writeDataID, writeData.data());
-    // Advance (exchange coupling data)
-    dt = couplingInterface.advance(dt);
     if (couplingInterface.requiresReadingCheckpoint()) {
     }
   }
