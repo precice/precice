@@ -251,7 +251,7 @@ public:
 protected:
   /// All send and receive mesh-associated data as a map "data ID -> data"
   DataMap _allData;
-  /// All send and receive global data as a map "data ID -> data"
+  /// All send and receive global data as a map "data ID -> global coupling data"
   GlobalDataMap _allGlobalData;
 
   /// Acceleration method to speedup iteration convergence.
