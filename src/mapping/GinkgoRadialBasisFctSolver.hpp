@@ -167,7 +167,7 @@ private:
   std::shared_ptr<GinkgoMatrix> _decompMatrixQ_T;
 
   /// Q^T * b of QR decomposition
-  std::shared_prt<GinkgoMatrix> _dQ_T_Rhs;
+  std::shared_ptr<GinkgoMatrix> _dQ_T_Rhs;
 
   /// Matrix R of QR decomposition
   std::shared_ptr<GinkgoMatrix> _decompMatrixR;
