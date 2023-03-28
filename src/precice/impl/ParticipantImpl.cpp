@@ -1582,6 +1582,11 @@ void ParticipantImpl::resetWrittenData(bool isAtWindowEnd, bool isTimeWindowComp
   for (auto &context : _accessor->writeDataContexts()) {
     context.resetData(isAtWindowEnd, isTimeWindowComplete);
   }
+  for (auto &context : _accessor->globalDataContexts()) {
+    if (context.getDirection() == "write") {
+      context.resetData();
+    }
+  }
 }
 
 PtrParticipant ParticipantImpl::determineAccessingParticipant(
