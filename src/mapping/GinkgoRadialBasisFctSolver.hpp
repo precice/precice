@@ -166,6 +166,9 @@ private:
   /// Matrix Q^T of QR decomposition
   std::shared_ptr<GinkgoMatrix> _decompMatrixQ_T;
 
+  /// Q^T * b of QR decomposition
+  std::shared_prt<GinkgoMatrix> _dQ_T_Rhs;
+
   /// Matrix R of QR decomposition
   std::shared_ptr<GinkgoMatrix> _decompMatrixR;
 
@@ -471,6 +474,8 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
 
     _rbfSystemMatrix->transpose(gko::lend(_decompMatrixQ_T));
 
+    _dQ_T_Rhs = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_decompMatrixQ_T->get_size()[0], 1}));
+
     auto triangularSolverFactory = triangular::build().on(_deviceExecutor);
     _triangularSolver            = gko::share(triangularSolverFactory->generate(_decompMatrixR));
   }
@@ -532,10 +537,8 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsis
   }
 
   if (GinkgoSolverType::QR == _solverType) {
-    // New rhs Q^T * b
-    auto dQ_T_Rhs = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_decompMatrixQ_T->get_size()[0], 1}));
-    _decompMatrixQ_T->apply(gko::lend(dRhs), gko::lend(dQ_T_Rhs));
-    _triangularSolver->apply(gko::lend(dQ_T_Rhs), gko::lend(_rbfCoefficients));
+    _decompMatrixQ_T->apply(gko::lend(dRhs), gko::lend(_dQ_T_Rhs));
+    _triangularSolver->apply(gko::lend(_dQ_T_Rhs), gko::lend(_rbfCoefficients));
   } else {
     _solveRBFSystem(dRhs);
   }
