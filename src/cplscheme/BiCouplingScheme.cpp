@@ -145,7 +145,6 @@ CouplingScheme::ChangedMeshes BiCouplingScheme::receiveRemoteChanges()
     PRECICE_ASSERT(getM2N() && getM2N()->getPrimaryRankCommunication());
     CouplingScheme::ChangedMeshes changes = getM2N()->getPrimaryRankCommunication()->receiveRange(0, com::AsVectorTag<int>{});
 
-    // Serial case
     if (utils::IntraComm::isParallel()) {
       utils::IntraComm::getCommunication()->broadcast(changes);
     }
