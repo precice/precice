@@ -403,7 +403,7 @@ const impl::PtrParticipant ParticipantConfiguration::getParticipant(const std::s
 
 std::map<std::string, std::set<std::string>> ParticipantConfiguration::getDynamicMeshMap() const
 {
-  // mesh -> [participants]
+  // Structure: meshName -> {participantName}
   std::map<std::string, std::set<std::string>> result;
   for (const auto &participant : _participants) {
     for (const auto &context : participant->usedMeshContexts()) {

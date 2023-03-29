@@ -57,6 +57,14 @@ public:
   /// Returns a participant with the given name
   const impl::PtrParticipant getParticipant(const std::string &participantName) const;
 
+  /** returns all dynamic participants for each dynamic mesh
+   *
+   * Structure: meshName -> {participantName}
+   *
+   * If no participant uses a mesh M dynamically, then M will not be a key in the map.
+   * A dynamic participant uses a dynamic mesh either directly (provided dynamic=true and received thereof),
+   * or transitively due to a mapping from/to the aforementioned.
+   */
   std::map<std::string, std::set<std::string>> getDynamicMeshMap() const;
 
 private:
