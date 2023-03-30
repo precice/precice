@@ -220,7 +220,7 @@ void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<
       auto names = gatherCandidates(DefTags, subtag->m_Prefix);
 
       auto matches = utils::computeMatches(expectedName, names);
-      if (matches.front().distance < 3) {
+      if (!matches.empty() && matches.front().distance < 3) {
         matches.erase(std::remove_if(matches.begin(), matches.end(), [](auto &m) { return m.distance > 2; }), matches.end());
         std::vector<std::string> stringMatches;
         std::transform(matches.begin(), matches.end(), std::back_inserter(stringMatches), [](auto &m) { return m.name; });

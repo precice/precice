@@ -206,7 +206,7 @@ void XMLTag::readAttributes(const std::map<std::string, std::string> &aAttribute
       }
 
       auto matches = utils::computeMatches(name, _attributes);
-      if (matches.front().distance < 3) {
+      if (!matches.empty() && matches.front().distance < 3) {
         matches.erase(std::remove_if(matches.begin(), matches.end(), [](auto &m) { return m.distance > 2; }), matches.end());
         std::vector<std::string> stringMatches;
         std::transform(matches.begin(), matches.end(), std::back_inserter(stringMatches), [](auto &m) { return m.name; });
