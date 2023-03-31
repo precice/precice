@@ -159,7 +159,6 @@ private:
   // Solver used for iteratively solving linear systems of equations
   std::shared_ptr<precice::mapping::cg>    _cgSolver    = nullptr;
   std::shared_ptr<precice::mapping::gmres> _gmresSolver = nullptr;
-  std::shared_ptr<precice::mapping::mg>    _mgSolver    = nullptr;
 
   std::shared_ptr<precice::mapping::cg> _polynomialSolver = nullptr;
 
@@ -177,11 +176,16 @@ private:
 
   precice::utils::Event _assemblyEvent{"map.rbf.ginkgo.assembleMatrices", false, false};
 
-  std::shared_ptr<gko::log::Convergence<>> _logger;
+  std::shared_ptr<gko::stop::Iteration::Factory> _iterationCriterion;
+
+  std::shared_ptr<gko::stop::ResidualNormReduction<>::Factory> _residualCriterion;
+
+  MappingConfiguration::GinkgoParameter _ginkgoParameter;
 };
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(const MappingConfiguration::GinkgoParameter &ginkgoParameter)
+    : _ginkgoParameter(ginkgoParameter)
 {
   _deviceExecutor = ginkgoExecutorLookup.at(ginkgoParameter.executor)(ginkgoParameter.deviceId, ginkgoParameter.enableUnifiedMemory);
 }
@@ -191,14 +195,13 @@ template <typename IndexContainer>
 GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
                                                                                 const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial,
                                                                                 const MappingConfiguration::GinkgoParameter &ginkgoParameter)
+    : _ginkgoParameter(ginkgoParameter)
 {
   PRECICE_INFO("Using Ginkgo solver {} on executor {} with max. iterations {} and residual reduction {}", ginkgoParameter.solver, ginkgoParameter.executor, ginkgoParameter.maxIterations, ginkgoParameter.residualNorm);
   _deviceExecutor = ginkgoExecutorLookup.at(ginkgoParameter.executor)(ginkgoParameter.deviceId, ginkgoParameter.enableUnifiedMemory);
 
   _solverType         = solverTypeLookup.at(ginkgoParameter.solver);
   _preconditionerType = preconditionerTypeLookup.at(ginkgoParameter.preconditioner);
-
-  _logger = gko::share(gko::log::Convergence<>::create(_deviceExecutor, gko::log::Logger::all_events_mask));
 
   PRECICE_ASSERT(!(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite() && polynomial == Polynomial::ON), "The integrated polynomial (polynomial=\"on\") is not supported for the selected radial-basis function. Please select another radial-basis function or change the polynomial configuration.");
   // Convert dead axis vector into an active axis array so that we can handle the reduction more easily
@@ -338,51 +341,15 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
   dInputVertices->clear();
   dOutputVertices->clear();
 
-  auto iterationCriterion = gko::share(gko::stop::Iteration::build()
-                                           .with_max_iters(ginkgoParameter.maxIterations)
-                                           .on(_deviceExecutor));
+  _iterationCriterion = gko::share(gko::stop::Iteration::build()
+                                       .with_max_iters(ginkgoParameter.maxIterations)
+                                       .on(_deviceExecutor));
 
-  auto residualCriterion = gko::share(gko::stop::ResidualNormReduction<>::build()
-                                          .with_reduction_factor(ginkgoParameter.residualNorm)
-                                          .on(_deviceExecutor));
+  _residualCriterion = gko::share(gko::stop::ResidualNormReduction<>::build()
+                                      .with_reduction_factor(ginkgoParameter.residualNorm)
+                                      .on(_deviceExecutor));
 
-  iterationCriterion->add_logger(_logger);
-  residualCriterion->add_logger(_logger);
-
-  if (_solverType == GinkgoSolverType::MG) {
-
-    auto smootherFactory = gko::share(
-        ir::build()
-            .with_solver(jacobi::build().with_max_block_size(1u).on(_deviceExecutor))
-            .with_relaxation_factor(0.9)
-            .with_criteria(
-                gko::stop::Iteration::build().with_max_iters(2u).on(_deviceExecutor))
-            .on(_deviceExecutor));
-
-    auto mgLevelFactory = amgx_pgm::build().with_deterministic(false).on(_deviceExecutor);
-
-    auto coarsestFactory =
-        cg::build()
-            .with_criteria(
-                gko::stop::Iteration::build().with_max_iters(4u).on(_deviceExecutor))
-            .on(_deviceExecutor);
-
-    auto multigridFactory =
-        mg::build()
-            .with_max_levels(2u)
-            .with_min_coarse_rows(2u)
-            .with_pre_smoother(gko::share(smootherFactory))
-            .with_post_uses_pre(true)
-            .with_mg_level(gko::share(mgLevelFactory))
-            .with_coarsest_solver(
-                gko::share(jacobi::build().with_max_block_size(1u).on(_deviceExecutor)))
-            .with_criteria(residualCriterion)
-            .on(_deviceExecutor);
-
-    _mgSolver = gko::share(multigridFactory->generate(_rbfSystemMatrix));
-    _mgSolver->add_logger(_logger);
-
-  } else if (_solverType == GinkgoSolverType::CG) {
+  if (_solverType == GinkgoSolverType::CG) {
 
     if (GinkgoPreconditionerType::None != _preconditionerType && ginkgoParameter.usePreconditioner) {
       auto solverFactoryWithPreconditioner = [preconditionerType = _preconditionerType, executor = _deviceExecutor, &ginkgoParameter]() {
@@ -396,20 +363,18 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
       }();
 
       auto solverFactory = solverFactoryWithPreconditioner
-                               .with_criteria(iterationCriterion, residualCriterion)
+                               .with_criteria(_iterationCriterion, _residualCriterion)
                                .on(_deviceExecutor);
 
       _cgSolver = gko::share(solverFactory->generate(_rbfSystemMatrix));
-      _cgSolver->add_logger(_logger);
     }
 
     else {
       auto solverFactory = cg::build()
-                               .with_criteria(iterationCriterion, residualCriterion)
+                               .with_criteria(_iterationCriterion, _residualCriterion)
                                .on(_deviceExecutor);
 
       _cgSolver = gko::share(solverFactory->generate(_rbfSystemMatrix));
-      _cgSolver->add_logger(_logger);
     }
 
   } else if (_solverType == GinkgoSolverType::GMRES) {
@@ -426,18 +391,16 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
       }();
 
       auto solverFactory = solverFactoryWithPreconditioner
-                               .with_criteria(iterationCriterion, residualCriterion)
+                               .with_criteria(_iterationCriterion, _residualCriterion)
                                .on(_deviceExecutor);
 
       _gmresSolver = gko::share(solverFactory->generate(_rbfSystemMatrix));
-      _gmresSolver->add_logger(_logger);
     } else {
       auto solverFactory = gmres::build()
-                               .with_criteria(iterationCriterion, residualCriterion)
+                               .with_criteria(_iterationCriterion, _residualCriterion)
                                .on(_deviceExecutor);
 
       _gmresSolver = gko::share(solverFactory->generate(_rbfSystemMatrix));
-      _gmresSolver->add_logger(_logger);
     }
   }
 }
@@ -445,16 +408,20 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
 template <typename RADIAL_BASIS_FUNCTION_T>
 void GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::_solveRBFSystem(const std::shared_ptr<GinkgoVector> &rhs) const
 {
+
+  auto logger = gko::share(gko::log::Convergence<>::create(_deviceExecutor, gko::log::Logger::all_events_mask));
+
+  _iterationCriterion->add_logger(logger);
+  _residualCriterion->add_logger(logger);
+
   precice::utils::Event solverEvent("map.rbf.ginkgo.solveSystemMatrix");
   if (_solverType == GinkgoSolverType::CG) {
     _cgSolver->apply(gko::lend(rhs), gko::lend(_rbfCoefficients));
   } else if (_solverType == GinkgoSolverType::GMRES) {
     _gmresSolver->apply(gko::lend(rhs), gko::lend(_rbfCoefficients));
-  } else if (_solverType == GinkgoSolverType::MG) {
-    _mgSolver->apply(gko::lend(rhs), gko::lend(_rbfCoefficients));
   }
   solverEvent.stop();
-  PRECICE_INFO("The iterative solver stopped after {} iterations.", _logger->get_num_iterations());
+  PRECICE_INFO("The iterative solver stopped after {} iterations.", logger->get_num_iterations());
 
 // Only compute time-consuming statistics in debug mode
 #ifndef NDEBUG
@@ -466,6 +433,9 @@ void GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::_solveRBFSystem(const 
   PRECICE_INFO("Ginkgo Solver Final Residual: {}", residual->at(0, 0));
 
 #endif
+
+  _iterationCriterion->clear_loggers();
+  _residualCriterion->clear_loggers();
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
