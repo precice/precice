@@ -40,26 +40,19 @@ using GinkgoScalar = gko::matrix::Dense<>;
 // Ginkgo Solver
 using cg    = gko::solver::Cg<>;
 using gmres = gko::solver::Gmres<>;
-using mg    = gko::solver::Multigrid;
 using ir    = gko::solver::Ir<>;
 // Ginkgo Preconditioner
 using jacobi   = gko::preconditioner::Jacobi<>;
 using cholesky = gko::preconditioner::Ic<>;
-using ilu      = gko::preconditioner::Ilu<>;
-
-// Ginkgo Helpers
-using amgx_pgm = gko::multigrid::AmgxPgm<>; // TODO: It was later renamed to Pgm so this needs to be fixed as soon as switching to newer Ginkgo version is done
 
 enum class GinkgoSolverType {
   CG,
-  GMRES,
-  MG
+  GMRES
 };
 
 enum class GinkgoPreconditionerType {
   Jacobi,
   Cholesky,
-  Ilu,
   None
 };
 
@@ -67,13 +60,11 @@ enum class GinkgoPreconditionerType {
 
 const std::map<std::string, GinkgoSolverType> solverTypeLookup{
     {"cg-solver", GinkgoSolverType::CG},
-    {"gmres-solver", GinkgoSolverType::GMRES},
-    {"mg-solver", GinkgoSolverType::MG}};
+    {"gmres-solver", GinkgoSolverType::GMRES}};
 
 const std::map<std::string, GinkgoPreconditionerType> preconditionerTypeLookup{
     {"jacobi-preconditioner", GinkgoPreconditionerType::Jacobi},
     {"cholesky-preconditioner", GinkgoPreconditionerType::Cholesky},
-    {"ilu-preconditioner", GinkgoPreconditionerType::Ilu},
     {"no-preconditioner", GinkgoPreconditionerType::None}};
 
 const std::map<std::string, std::function<std::shared_ptr<gko::Executor>(const unsigned int, const bool)>> ginkgoExecutorLookup{{"reference-executor", [](auto unused, auto unused2) { return gko::ReferenceExecutor::create(); }},
