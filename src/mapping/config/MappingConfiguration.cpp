@@ -219,11 +219,11 @@ MappingConfiguration::MappingConfiguration(
 
   auto attrSolver = makeXMLAttribute(ATTR_SOLVER, "cg-solver")
                         .setDocumentation("Specifies the iterative solver used by Ginkgo.")
-                        .setOptions({"cg-solver", "gmres-solver", "mg-solver", "qr-solver"});
+                        .setOptions({"cg-solver", "gmres-solver", "qr-solver"});
 
   auto attrPreconditioner = makeXMLAttribute(ATTR_PRECONDITIONER, "jacobi-preconditioner")
                                 .setDocumentation("Specifies the preconditioner used by Ginkgo.")
-                                .setOptions({"jacobi-preconditioner", "cholesky-preconditioner", "ilu-preconditioner", "isai-preconditioner", "no-preconditioner"});
+                                .setOptions({"jacobi-preconditioner", "cholesky-preconditioner", "no-preconditioner"});
 
   auto attrUsePreconditioner = makeXMLAttribute(ATTR_USE_PRECONDITIONER, true)
                                    .setDocumentation("If enabled, the Ginkgo solver will apply a preconditioner to the linear system")
