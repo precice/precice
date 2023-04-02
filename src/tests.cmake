@@ -9,8 +9,6 @@ target_sources(testprecice
     src/acceleration/test/PreconditionerTest.cpp
     src/acceleration/test/QRFactorizationTest.cpp
     src/action/tests/PythonActionTest.cpp
-    src/action/tests/ScaleActionTest.cpp
-    src/action/tests/SummationActionTest.cpp
     src/com/tests/CommunicateBoundingBoxTest.cpp
     src/com/tests/CommunicateMeshTest.cpp
     src/com/tests/GenericTestFunctions.hpp

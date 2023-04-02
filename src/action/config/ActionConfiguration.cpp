@@ -35,10 +35,6 @@ ActionConfiguration::ActionConfiguration(
       TAG_MAX_ITERATIONS("max-iterations"),
       TAG_MODULE_PATH("path"),
       TAG_MODULE_NAME("module"),
-      VALUE_REGULAR_PRIOR("regular-prior"),
-      VALUE_REGULAR_POST("regular-post"),
-      VALUE_ON_EXCHANGE_PRIOR("on-exchange-prior"),
-      VALUE_ON_EXCHANGE_POST("on-exchange-post"),
       VALUE_ON_TIME_WINDOW_COMPLETE_POST("on-time-window-complete-post"),
       WRITE_MAPPING_PRIOR("write-mapping-prior"),
       WRITE_MAPPING_POST("write-mapping-post"),
@@ -126,9 +122,7 @@ ActionConfiguration::ActionConfiguration(
 
   auto attrTiming = XMLAttribute<std::string>(ATTR_TIMING)
                         .setDocumentation("Determines when (relative to advancing the coupling scheme) the action is executed.")
-                        .setOptions({VALUE_REGULAR_PRIOR, VALUE_REGULAR_POST,
-                                     VALUE_ON_EXCHANGE_PRIOR, VALUE_ON_EXCHANGE_POST,
-                                     VALUE_ON_TIME_WINDOW_COMPLETE_POST, WRITE_MAPPING_PRIOR, WRITE_MAPPING_POST,
+                        .setOptions({VALUE_ON_TIME_WINDOW_COMPLETE_POST, WRITE_MAPPING_PRIOR, WRITE_MAPPING_POST,
                                      READ_MAPPING_PRIOR, READ_MAPPING_POST});
 
   auto attrMesh = XMLAttribute<std::string>(ATTR_MESH)
@@ -246,23 +240,7 @@ action::Action::Timing ActionConfiguration::getTiming() const
 {
   PRECICE_TRACE(_configuredAction.timing);
   action::Action::Timing timing;
-  if (_configuredAction.timing == VALUE_REGULAR_PRIOR) {
-    timing = action::Action::WRITE_MAPPING_PRIOR;
-    PRECICE_WARN("Regular-prior action timing is deprecated. Regular-prior will now revert to write-mapping-prior which performs "
-                 "the action before a write mapping and before the coupling update.");
-  } else if (_configuredAction.timing == VALUE_REGULAR_POST) {
-    timing = action::Action::READ_MAPPING_PRIOR;
-    PRECICE_WARN("Regular-post action timing is deprecated. Regular-post will now revert to read-mapping-prior which performs "
-                 "the action after the coupling update and before a read mapping.");
-  } else if (_configuredAction.timing == VALUE_ON_EXCHANGE_PRIOR) {
-    timing = action::Action::WRITE_MAPPING_POST;
-    PRECICE_WARN("on-exchange-prior action timing is deprecated. on-exchange-prior will now revert to write-mapping-post which performs "
-                 "the action before a write mapping and before the coupling update.");
-  } else if (_configuredAction.timing == VALUE_ON_EXCHANGE_POST) {
-    timing = action::Action::READ_MAPPING_PRIOR;
-    PRECICE_WARN("on-exchange-post action timing is deprecated. on-exchange-post will now revert to read-mapping-prior which performs "
-                 "the action before a write mapping and before the coupling update.");
-  } else if (_configuredAction.timing == VALUE_ON_TIME_WINDOW_COMPLETE_POST) {
+  if (_configuredAction.timing == VALUE_ON_TIME_WINDOW_COMPLETE_POST) {
     timing = action::Action::ON_TIME_WINDOW_COMPLETE_POST;
   } else if (_configuredAction.timing == WRITE_MAPPING_PRIOR) {
     timing = action::Action::WRITE_MAPPING_PRIOR;
@@ -274,7 +252,7 @@ action::Action::Timing ActionConfiguration::getTiming() const
     timing = action::Action::READ_MAPPING_POST;
   } else {
     PRECICE_ERROR("Unknown action timing \"{}\". "
-                  "Valid action timings are regular-prior, regular-post, on-exchange-prior, on-exchange-post, on-time-window-complete-post",
+                  "Valid action timings are on-time-window-complete-post, write-mapping-prior, write-mapping-post, read-mapping-prior, and read-mapping-post.",
                   _configuredAction.timing);
   }
   return timing;
