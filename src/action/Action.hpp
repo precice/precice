@@ -16,11 +16,8 @@ class Action {
 public:
   /// Defines the time and place of application of the action.
   enum Timing {
-    ON_TIME_WINDOW_COMPLETE_POST, // On advancing to next time window, after adv. cpl scheme
-    WRITE_MAPPING_PRIOR,          // Every time, before write mapping
-    WRITE_MAPPING_POST,           // Every time, after write mapping and before advancing cpl scheme
-    READ_MAPPING_PRIOR,           // Every time, after advancing cpl scheme and before read mapping
-    READ_MAPPING_POST             // Every time, after read mapping
+    WRITE_MAPPING_POST, // At the end of a time window, after write mapping (if existent) and before advancing cpl scheme
+    READ_MAPPING_POST   // At the end of a time window, after read mapping (if existent)
   };
 
   Action(
@@ -47,10 +44,10 @@ public:
   virtual ~Action() {}
 
   /**
-    * @brief Performs the action, to be overwritten by subclasses.
-    *
-    * @param[in] time the current total simulation time.
-    */
+   * @brief Performs the action, to be overwritten by subclasses.
+   *
+   * @param[in] time the current total simulation time.
+   */
   virtual void performAction(double time) = 0;
 
   /// Returns the timing of the action.

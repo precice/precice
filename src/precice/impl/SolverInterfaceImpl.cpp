@@ -346,7 +346,6 @@ double SolverInterfaceImpl::initialize()
   _meshLock.lockAll();
 
   if (_couplingScheme->sendsInitializedData()) {
-    performDataActions({action::Action::WRITE_MAPPING_PRIOR}, 0.0);
     mapWrittenData();
     performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0);
   }
@@ -356,7 +355,6 @@ double SolverInterfaceImpl::initialize()
   _couplingScheme->initialize(time, timeWindow);
 
   if (_couplingScheme->hasDataBeenReceived()) {
-    performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0);
     mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
   }
@@ -368,7 +366,6 @@ double SolverInterfaceImpl::initialize()
   _couplingScheme->receiveResultOfFirstAdvance();
 
   if (_couplingScheme->hasDataBeenReceived()) {
-    performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0);
     mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
   }
@@ -423,7 +420,6 @@ double SolverInterfaceImpl::advance(
   double time = _couplingScheme->getTime();
 
   if (_couplingScheme->willDataBeExchanged(0.0)) {
-    performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time);
     mapWrittenData();
     performDataActions({action::Action::WRITE_MAPPING_POST}, time);
   }
@@ -437,13 +433,8 @@ double SolverInterfaceImpl::advance(
   }
 
   if (_couplingScheme->hasDataBeenReceived()) {
-    performDataActions({action::Action::READ_MAPPING_PRIOR}, time);
     mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, time);
-  }
-
-  if (_couplingScheme->isTimeWindowComplete()) {
-    performDataActions({action::Action::ON_TIME_WINDOW_COMPLETE_POST}, time);
   }
 
   PRECICE_INFO(_couplingScheme->printCouplingState());
