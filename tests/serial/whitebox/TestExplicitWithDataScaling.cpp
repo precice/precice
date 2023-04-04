@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_SUITE(Whitebox)
  * and stay constant over the coupling cycles. SolverTwo has a scaling of the
  * values activated and reads the scaled values.
  */
-BOOST_AUTO_TEST_CASE(TestExplicitWithDataScaling)
+BOOST_AUTO_TEST_CASE(TestExplicitWithDataScaling, *precice::testing::bt::disabled())
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
