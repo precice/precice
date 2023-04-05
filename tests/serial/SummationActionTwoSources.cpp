@@ -7,7 +7,7 @@
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
-BOOST_AUTO_TEST_CASE(SummationActionTwoSources, *precice::testing::bt::disabled())
+BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
 {
   PRECICE_TEST("SolverTarget"_on(1_rank), "SolverSourceOne"_on(1_rank), "SolverSourceTwo"_on(1_rank));
 
