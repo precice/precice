@@ -401,5 +401,11 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::clear()
   _clusterRadius            = 0;
   this->_hasComputedMapping = false;
 }
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+std::string PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::getName() const
+{
+  return "partition of unity rbf";
+}
 } // namespace mapping
 } // namespace precice

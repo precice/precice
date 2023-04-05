@@ -1825,8 +1825,8 @@ void SolverInterfaceImpl::computeMappings(std::vector<MappingContext> &contexts,
   using namespace mapping;
   for (impl::MappingContext &context : contexts) {
     if (not context.mapping->hasComputedMapping()) {
-      PRECICE_INFO("Compute \"{}\" mapping from mesh \"{}\" to mesh \"{}\".",
-                   mappingType, context.mapping->getInputMesh()->getName(), context.mapping->getOutputMesh()->getName());
+      PRECICE_INFO("Computing \"{}\" mapping from mesh \"{}\" to mesh \"{}\" in \"{}\" direction.",
+                   context.mapping->getName(), context.mapping->getInputMesh()->getName(), context.mapping->getOutputMesh()->getName(), mappingType);
       context.mapping->computeMapping();
     }
   }

@@ -121,5 +121,9 @@ void LinearCellInterpolationMapping::computeMapping()
   _hasComputedMapping = true;
 }
 
+std::string LinearCellInterpolationMapping::getName() const
+{
+  return "linear-cell interpolation";
+}
 } // namespace mapping
 } // namespace precice
