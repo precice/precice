@@ -352,12 +352,7 @@ double SolverInterfaceImpl::initialize()
   _couplingScheme->initialize(time, timeWindow);
 
   std::vector<double> receiveTimes{time::Storage::WINDOW_START, time::Storage::WINDOW_END};
-  mapReadData(receiveTimes);
-  performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
-  // @todo Refactor treatment of read and write data. See https://github.com/precice/precice/pull/1614, "Remarks on waveform handling"
-  for (auto &context : _accessor->readDataContexts()) {
-    context.storeDataInWaveform();
-  }
+  mapReadDataAndPerformReadAction(receiveTimes);
 
   resetWrittenData();
   PRECICE_DEBUG("Plot output");
@@ -423,12 +418,7 @@ double SolverInterfaceImpl::advance(
 
   if (_couplingScheme->hasDataBeenReceived()) {
     std::vector<double> receiveTimes{time::Storage::WINDOW_END};
-    mapReadData(receiveTimes);
-    performDataActions({action::Action::READ_MAPPING_POST}, time);
-    // @todo Refactor treatment of read and write data. See https://github.com/precice/precice/pull/1614, "Remarks on waveform handling"
-    for (auto &context : _accessor->readDataContexts()) {
-      context.storeDataInWaveform();
-    }
+    mapReadDataAndPerformReadAction(receiveTimes);
   }
 
   PRECICE_INFO(_couplingScheme->printCouplingState());
@@ -1826,7 +1816,7 @@ void SolverInterfaceImpl::mapWrittenData()
   }
 }
 
-void SolverInterfaceImpl::mapReadData(std::vector<double> receiveTimes)
+void SolverInterfaceImpl::mapReadDataAndPerformReadAction(std::vector<double> receiveTimes)
 {
   PRECICE_TRACE();
   computeMappings(_accessor->readMappingContexts(), "read");
@@ -1838,6 +1828,11 @@ void SolverInterfaceImpl::mapReadData(std::vector<double> receiveTimes)
         PRECICE_DEBUG("Map read data \"{}\" to mesh \"{}\"", context.getDataName(), context.getMeshName());
         context.mapData();
       }
+    }
+
+    performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
+    // @todo Refactor treatment of read and write data. See https://github.com/precice/precice/pull/1614, "Remarks on waveform handling"
+    for (auto &context : _accessor->readDataContexts()) {
       context.storeDataInWaveform(time);
     }
   }
