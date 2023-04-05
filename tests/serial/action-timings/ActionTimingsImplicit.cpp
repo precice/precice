@@ -56,7 +56,8 @@ BOOST_AUTO_TEST_CASE(ActionTimingsImplicit)
   dt = interface.initialize();
   BOOST_TEST(dt == 1.0);
   // @todo Needed change because always mapping in initialize.
-  BOOST_TEST(action::RecorderAction::records.size() == 1);
+  BOOST_TEST(action::RecorderAction::records.size() == 2);
+  BOOST_TEST(action::RecorderAction::records.at(0).timing == action::Action::READ_MAPPING_POST);
   BOOST_TEST(action::RecorderAction::records.at(0).timing == action::Action::READ_MAPPING_POST);
   action::RecorderAction::reset();
   int iteration = 0;
