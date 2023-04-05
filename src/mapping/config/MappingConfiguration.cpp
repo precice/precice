@@ -327,7 +327,7 @@ void MappingConfiguration::xmlTagCallback(
 
     ConfiguredMapping configuredMapping = createMapping(dir, type, fromMesh, toMesh);
 
-    _rbfConfig = configureRBFMapping(type, context, strPolynomial, strPrealloc, xDead, yDead, zDead, solverRtol, verticesPerCluster, relativeOverlap, projectToInput);
+    _rbfConfig = configureRBFMapping(type, strPolynomial, strPrealloc, xDead, yDead, zDead, solverRtol, verticesPerCluster, relativeOverlap, projectToInput);
 
     checkDuplicates(configuredMapping);
     _mappings.push_back(configuredMapping);
@@ -381,10 +381,9 @@ void MappingConfiguration::xmlTagCallback(
   }
 }
 
-MappingConfiguration::RBFConfiguration MappingConfiguration::configureRBFMapping(const std::string &              type,
-                                                                                 const xml::ConfigurationContext &context,
-                                                                                 const std::string &              polynomial,
-                                                                                 const std::string &              preallocation,
+MappingConfiguration::RBFConfiguration MappingConfiguration::configureRBFMapping(const std::string &type,
+                                                                                 const std::string &polynomial,
+                                                                                 const std::string &preallocation,
                                                                                  bool xDead, bool yDead, bool zDead,
                                                                                  double solverRtol,
                                                                                  double verticesPerCluster,
