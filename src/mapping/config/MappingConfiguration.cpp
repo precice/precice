@@ -335,7 +335,9 @@ void MappingConfiguration::xmlTagCallback(
 
     PRECICE_ASSERT(!_mappings.empty());
     // We can only set one subtag
-    PRECICE_CHECK(_mappings.back().mapping == nullptr, "More than one basis-function was defined for the.");
+    PRECICE_CHECK(_mappings.back().mapping == nullptr, "More than one basis-function was defined for the mapping "
+                                                       "from mesh \"{}\" to mesh \"{}\".",
+                  _mappings.back().fromMesh->getName(), _mappings.back().toMesh->getName());
 
     std::string basisFctName   = tag.getName();
     double      supportRadius  = tag.getDoubleAttributeValue(ATTR_SUPPORT_RADIUS, 0.);
