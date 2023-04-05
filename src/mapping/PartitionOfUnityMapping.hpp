@@ -62,16 +62,19 @@ public:
    * In debug mode, the function also exports the partition centers as a separate mesh for visualization
    * purpose.
    */
-  virtual void computeMapping() override;
+  void computeMapping() final override;
 
   /// Clears a computed mapping by deleting the content of the \p _clusters vector.
-  virtual void clear() override;
+  void clear() final override;
 
   /// tag the vertices required for the mapping
-  virtual void tagMeshFirstRound() override;
+  void tagMeshFirstRound() final override;
 
   /// nothing to do here
-  virtual void tagMeshSecondRound() override;
+  void tagMeshSecondRound() final override;
+
+  /// name of the pum mapping
+  std::string getName() const final override;
 
 private:
   /// logger, as usual
