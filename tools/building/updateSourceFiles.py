@@ -11,10 +11,10 @@ import pathlib
 IGNORE_PATTERNS = ["drivers"]
 
 """ Configured files, which should be ignored by git, yet installed by CMake"""
-CONFIGURED_PUBLIC = ["${CMAKE_BINARY_DIR}/src/precice/Version.h"]
+CONFIGURED_PUBLIC = ["${PROJECT_BINARY_DIR}/src/precice/Version.h"]
 
 """ Configured files, which should be ignored by git """
-CONFIGURED_SOURCES = ["${CMAKE_BINARY_DIR}/src/precice/impl/versions.hpp", "${CMAKE_BINARY_DIR}/src/precice/impl/versions.cpp"]
+CONFIGURED_SOURCES = ["${PROJECT_BINARY_DIR}/src/precice/impl/versions.hpp", "${CMAKE_BINARY_DIR}/src/precice/impl/versions.cpp"]
 
 
 def get_gitfiles():
