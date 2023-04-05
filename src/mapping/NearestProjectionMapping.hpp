@@ -19,6 +19,9 @@ public:
   /// Computes the projections and interpolation relations.
   void computeMapping() final override;
 
+  /// name of the np mapping
+  std::string getName() const final override;
+
 private:
   logging::Logger _log{"mapping::NearestNeighborProjectionMapping"};
 };
