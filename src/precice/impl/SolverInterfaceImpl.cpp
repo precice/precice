@@ -354,6 +354,10 @@ double SolverInterfaceImpl::initialize()
   std::vector<double> receiveTimes{time::Storage::WINDOW_START, time::Storage::WINDOW_END};
   mapReadData(receiveTimes);
   performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
+  // @todo Refactor treatment of read and write data. See https://github.com/precice/precice/pull/1614, "Remarks on waveform handling"
+  for (auto &context : _accessor->readDataContexts()) {
+    context.storeDataInWaveform();
+  }
 
   resetWrittenData();
   PRECICE_DEBUG("Plot output");
@@ -421,6 +425,10 @@ double SolverInterfaceImpl::advance(
     std::vector<double> receiveTimes{time::Storage::WINDOW_END};
     mapReadData(receiveTimes);
     performDataActions({action::Action::READ_MAPPING_POST}, time);
+    // @todo Refactor treatment of read and write data. See https://github.com/precice/precice/pull/1614, "Remarks on waveform handling"
+    for (auto &context : _accessor->readDataContexts()) {
+      context.storeDataInWaveform();
+    }
   }
 
   PRECICE_INFO(_couplingScheme->printCouplingState());
