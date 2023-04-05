@@ -357,6 +357,10 @@ double SolverInterfaceImpl::initialize()
   if (_couplingScheme->hasDataBeenReceived()) {
     mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
+    // @todo Refactor treatment of read and write data. See https://github.com/precice/precice/pull/1614, "Remarks on waveform handling"
+    for (auto &context : _accessor->readDataContexts()) {
+      context.storeDataInWaveform();
+    }
   }
 
   for (auto &context : _accessor->readDataContexts()) {
@@ -368,6 +372,10 @@ double SolverInterfaceImpl::initialize()
   if (_couplingScheme->hasDataBeenReceived()) {
     mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
+    // @todo Refactor treatment of read and write data. See https://github.com/precice/precice/pull/1614, "Remarks on waveform handling"
+    for (auto &context : _accessor->readDataContexts()) {
+      context.storeDataInWaveform();
+    }
   }
 
   resetWrittenData();
@@ -435,6 +443,10 @@ double SolverInterfaceImpl::advance(
   if (_couplingScheme->hasDataBeenReceived()) {
     mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, time);
+    // @todo Refactor treatment of read and write data. See https://github.com/precice/precice/pull/1614, "Remarks on waveform handling"
+    for (auto &context : _accessor->readDataContexts()) {
+      context.storeDataInWaveform();
+    }
   }
 
   PRECICE_INFO(_couplingScheme->printCouplingState());
