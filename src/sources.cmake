@@ -40,8 +40,6 @@ target_sources(preciceCore
     src/acceleration/impl/ValuePreconditioner.cpp
     src/acceleration/impl/ValuePreconditioner.hpp
     src/action/Action.hpp
-    src/action/ComputeCurvatureAction.cpp
-    src/action/ComputeCurvatureAction.hpp
     src/action/PythonAction.cpp
     src/action/PythonAction.hpp
     src/action/RecorderAction.cpp

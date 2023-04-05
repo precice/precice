@@ -5,7 +5,6 @@
 #include <stdexcept>
 #include <utility>
 
-#include "action/ComputeCurvatureAction.hpp"
 #include "action/PythonAction.hpp"
 #include "action/RecorderAction.hpp"
 #include "action/ScaleByAreaAction.hpp"
@@ -26,7 +25,6 @@ ActionConfiguration::ActionConfiguration(
     : NAME_DIVIDE_BY_AREA("divide-by-area"),
       NAME_MULTIPLY_BY_AREA("multiply-by-area"),
       NAME_SUMMATION("summation"),
-      NAME_COMPUTE_CURVATURE("compute-curvature"),
       NAME_PYTHON("python"),
       NAME_RECORDER("recorder"),
       TAG_SOURCE_DATA("source-data"),
@@ -70,12 +68,6 @@ ActionConfiguration::ActionConfiguration(
     XMLTag tag(*this, NAME_SUMMATION, occ, TAG);
     tag.setDocumentation("Sums up multiple source data values and writes the result into target data.");
     tag.addSubtag(tagMultipleSourceData);
-    tag.addSubtag(tagTargetData);
-    tags.push_back(tag);
-  }
-  {
-    XMLTag tag(*this, NAME_COMPUTE_CURVATURE, occ, TAG);
-    tag.setDocumentation("Computes curvature values at mesh vertices.");
     tag.addSubtag(tagTargetData);
     tags.push_back(tag);
   }
@@ -210,10 +202,6 @@ void ActionConfiguration::createAction()
     action = action::PtrAction(
         new action::ScaleByAreaAction(timing, targetDataID,
                                       mesh, action::ScaleByAreaAction::SCALING_DIVIDE_BY_AREA));
-  } else if (_configuredAction.type == NAME_COMPUTE_CURVATURE) {
-    action = action::PtrAction(
-        new action::ComputeCurvatureAction(timing, targetDataID,
-                                           mesh));
   } else if (_configuredAction.type == NAME_SUMMATION) {
     action = action::PtrAction(
         new action::SummationAction(timing, sourceDataIDs, targetDataID, mesh));
