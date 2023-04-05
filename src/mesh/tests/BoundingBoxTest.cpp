@@ -187,6 +187,31 @@ BOOST_AUTO_TEST_CASE(MinMaxCorner)
   }
 } // CenterOfGravity
 
+BOOST_AUTO_TEST_CASE(EdgeLength)
+{
+  PRECICE_TEST(1_rank);
+  { // 3D
+    BoundingBox bb({0.0, 1.0,
+                    -1.0, 3.0,
+                    2.0, 4.0});
+
+    BOOST_TEST(bb.getEdgeLength(0) == 1.0);
+    BOOST_TEST(bb.getEdgeLength(1) == 4.0);
+    BOOST_TEST(bb.getEdgeLength(2) == 2.0);
+
+    BOOST_TEST(bb.longestEdgeLength() == 4.0);
+  }
+  { // 2D
+    BoundingBox bb({-1.0, 3.0,
+                    2.0, 4.0});
+
+    BOOST_TEST(bb.getEdgeLength(0) == 4.0);
+    BOOST_TEST(bb.getEdgeLength(1) == 2.0);
+
+    BOOST_TEST(bb.longestEdgeLength() == 4.0);
+  }
+}
+
 BOOST_AUTO_TEST_CASE(Area)
 {
   PRECICE_TEST(1_rank);

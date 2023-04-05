@@ -343,7 +343,6 @@ double SolverInterfaceImpl::initialize()
   _meshLock.lockAll();
 
   if (_couplingScheme->sendsInitializedData()) {
-    performDataActions({action::Action::WRITE_MAPPING_PRIOR}, 0.0);
     mapWrittenData();
     performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0);
   }
@@ -352,7 +351,6 @@ double SolverInterfaceImpl::initialize()
   // result of _couplingScheme->getNextTimestepMaxLength() can change when calling _couplingScheme->initialize(...) and first participant method is used for setting the time window size.
   _couplingScheme->initialize(time, timeWindow);
 
-  performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0);
   std::vector<double> receiveTimes{time::Storage::WINDOW_START, time::Storage::WINDOW_END};
   mapReadData(receiveTimes);
   performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
@@ -407,7 +405,6 @@ double SolverInterfaceImpl::advance(
   double time = _couplingScheme->getTime();
 
   if (_couplingScheme->willDataBeExchanged(0.0)) {
-    performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time);
     mapWrittenData();
     performDataActions({action::Action::WRITE_MAPPING_POST}, time);
   }
@@ -421,14 +418,9 @@ double SolverInterfaceImpl::advance(
   }
 
   if (_couplingScheme->hasDataBeenReceived()) {
-    performDataActions({action::Action::READ_MAPPING_PRIOR}, time);
     std::vector<double> receiveTimes{time::Storage::WINDOW_END};
     mapReadData(receiveTimes);
     performDataActions({action::Action::READ_MAPPING_POST}, time);
-  }
-
-  if (_couplingScheme->isTimeWindowComplete()) {
-    performDataActions({action::Action::ON_TIME_WINDOW_COMPLETE_POST}, time);
   }
 
   PRECICE_INFO(_couplingScheme->printCouplingState());

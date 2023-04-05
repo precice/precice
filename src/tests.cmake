@@ -43,6 +43,8 @@ target_sources(testprecice
     src/mapping/tests/NearestNeighborGradientMappingTest.cpp
     src/mapping/tests/NearestNeighborMappingTest.cpp
     src/mapping/tests/NearestProjectionMappingTest.cpp
+    src/mapping/tests/PartitionOfUnityClusteringTest.cpp
+    src/mapping/tests/PartitionOfUnityMappingTest.cpp
     src/mapping/tests/PetRadialBasisFctMappingTest.cpp
     src/mapping/tests/PolationTest.cpp
     src/mapping/tests/RadialBasisFctMappingTest.cpp

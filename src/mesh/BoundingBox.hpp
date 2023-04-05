@@ -78,7 +78,7 @@ public:
   bool contains(const Vertex &vertex) const;
 
   /// Checks whether two bounding boxes are overlapping
-  bool overlapping(const BoundingBox &otherBB);
+  bool overlapping(const BoundingBox &otherBB) const;
 
   /**
    * @brief Returns the Center Of Gravity of the mesh
@@ -93,6 +93,12 @@ public:
 
   /// the max corner of the bounding box
   Eigen::VectorXd maxCorner() const;
+
+  /// returns the edge length of a specific axis
+  double getEdgeLength(int axis) const;
+
+  /// returns the maximum length of the bounding box in any dimension
+  double longestEdgeLength() const;
 
   /// Calculate the area of bounding box
   double getArea(std::vector<bool> deadAxis);

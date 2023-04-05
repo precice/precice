@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration>
+  <mesh name="TestMesh" />
+  <mesh name="TestMeshTwo" />
+  <mesh name="TestMeshThree" />
+  <mesh name="TestMeshFour" />
+  <mesh name="TestMeshFive" />
+  <mesh name="TestMeshSix" />
+  <mesh name="TestMeshSeven" />
+  <mesh name="TestMeshEight" />
+  <mesh name="TestMeshNine" />
+  <mesh name="TestMeshTen" />
+  <mesh name="TestMeshEleven" />
+  <mesh name="TestMeshTwelve" />
+
+  <mapping:rbf-pum-direct
+    direction="read"
+    from="TestMeshTwo"
+    to="TestMesh"
+    constraint="consistent"
+    project-to-input="false"
+    vertices-per-cluster="10"
+    relative-overlap="0.4">
+    <basis-function:thin-plate-splines />
+  </mapping:rbf-pum-direct>
+
+  <mapping:rbf-pum-direct
+    direction="read"
+    from="TestMeshThree"
+    to="TestMeshTwo"
+    constraint="consistent"
+    project-to-input="false"
+    vertices-per-cluster="10"
+    relative-overlap="0.4">
+    <basis-function:volume-splines />
+  </mapping:rbf-pum-direct>
+
+  <mapping:rbf-pum-direct
+    direction="read"
+    from="TestMeshFour"
+    to="TestMeshThree"
+    constraint="consistent"
+    project-to-input="false"
+    vertices-per-cluster="10"
+    relative-overlap="0.4">
+    <basis-function:compact-polynomial-c0 support-radius="0.3" />
+  </mapping:rbf-pum-direct>
+
+  <mapping:rbf-pum-direct
+    direction="read"
+    from="TestMeshFive"
+    to="TestMeshFour"
+    constraint="consistent"
+    project-to-input="false"
+    vertices-per-cluster="10"
+    relative-overlap="0.4">
+    <basis-function:compact-polynomial-c2 support-radius="0.3" />
+  </mapping:rbf-pum-direct>
+
+  <mapping:rbf-pum-direct
+    direction="read"
+    from="TestMeshSix"
+    to="TestMeshFive"
+    constraint="consistent"
+    project-to-input="false"
+    vertices-per-cluster="10"
+    relative-overlap="0.4">
+    <basis-function:compact-polynomial-c4 support-radius="0.3" />
+  </mapping:rbf-pum-direct>
+
+  <mapping:rbf-pum-direct
+    direction="read"
+    from="TestMeshSeven"
+    to="TestMeshSix"
+    constraint="consistent"
+    project-to-input="false"
+    vertices-per-cluster="10"
+    relative-overlap="0.4">
+    <basis-function:compact-polynomial-c6 support-radius="0.3" />
+  </mapping:rbf-pum-direct>
+
+  <mapping:rbf-pum-direct
+    direction="read"
+    from="TestMeshEight"
+    to="TestMeshSeven"
+    constraint="consistent"
+    project-to-input="false"
+    vertices-per-cluster="10"
+    relative-overlap="0.4">
+    <basis-function:multiquadrics shape-parameter="0.3" />
+  </mapping:rbf-pum-direct>
+
+  <mapping:rbf-pum-direct
+    direction="read"
+    from="TestMeshNine"
+    to="TestMeshEight"
+    constraint="consistent"
+    project-to-input="false"
+    vertices-per-cluster="10"
+    relative-overlap="0.4">
+    <basis-function:inverse-multiquadrics shape-parameter="0.3" />
+  </mapping:rbf-pum-direct>
+
+  <mapping:rbf-pum-direct
+    direction="read"
+    from="TestMeshTen"
+    to="TestMeshNine"
+    constraint="consistent"
+    project-to-input="false"
+    vertices-per-cluster="10"
+    relative-overlap="0.4">
+    <basis-function:compact-tps-c2 support-radius="0.3" />
+  </mapping:rbf-pum-direct>
+
+  <mapping:rbf-pum-direct
+    direction="read"
+    from="TestMeshEleven"
+    to="TestMeshTen"
+    constraint="consistent"
+    project-to-input="false"
+    vertices-per-cluster="10"
+    relative-overlap="0.4">
+    <basis-function:gaussian support-radius="0.3" />
+  </mapping:rbf-pum-direct>
+
+  <mapping:rbf-pum-direct
+    direction="read"
+    from="TestMeshTwelve"
+    to="TestMeshEleven"
+    constraint="consistent"
+    project-to-input="true"
+    vertices-per-cluster="10"
+    relative-overlap="0.4"
+    polynomial="off"
+    x-dead="true"
+    y-dead="false"
+    z-dead="true">
+    <basis-function:gaussian shape-parameter="0.3" />
+  </mapping:rbf-pum-direct>
+</configuration>

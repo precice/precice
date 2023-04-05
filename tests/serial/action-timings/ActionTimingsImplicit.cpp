@@ -63,9 +63,8 @@ BOOST_AUTO_TEST_CASE(ActionTimingsImplicit)
     BOOST_TEST(action::RecorderAction::records.at(1).timing == action::Action::READ_MAPPING_POST);
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    BOOST_TEST(action::RecorderAction::records.size() == 2);
-    BOOST_TEST(action::RecorderAction::records.at(0).timing == action::Action::READ_MAPPING_PRIOR);
-    BOOST_TEST(action::RecorderAction::records.at(1).timing == action::Action::READ_MAPPING_POST);
+    BOOST_TEST(action::RecorderAction::records.size() == 1);
+    BOOST_TEST(action::RecorderAction::records.at(0).timing == action::Action::READ_MAPPING_POST);
   }
   action::RecorderAction::reset();
   int iteration = 0;
@@ -82,25 +81,12 @@ BOOST_AUTO_TEST_CASE(ActionTimingsImplicit)
       iteration++;
     }
     if (context.isNamed("SolverOne") || iteration < 10) {
-      if (interface.isTimeWindowComplete()) {
-        BOOST_TEST(action::RecorderAction::records.size() == 5);
-        BOOST_TEST(action::RecorderAction::records.at(4).timing == action::Action::ON_TIME_WINDOW_COMPLETE_POST);
-      } else {
-        BOOST_TEST(action::RecorderAction::records.size() == 4);
-      }
-      BOOST_TEST(action::RecorderAction::records.at(0).timing == action::Action::WRITE_MAPPING_PRIOR);
-      BOOST_TEST(action::RecorderAction::records.at(1).timing == action::Action::WRITE_MAPPING_POST);
-      BOOST_TEST(action::RecorderAction::records.at(2).timing == action::Action::READ_MAPPING_PRIOR);
-      BOOST_TEST(action::RecorderAction::records.at(3).timing == action::Action::READ_MAPPING_POST);
+      BOOST_TEST(action::RecorderAction::records.size() == 2);
+      BOOST_TEST(action::RecorderAction::records.at(0).timing == action::Action::WRITE_MAPPING_POST);
+      BOOST_TEST(action::RecorderAction::records.at(1).timing == action::Action::READ_MAPPING_POST);
     } else { // SolverTwo only writes in very last iteration, does not read.
-      if (interface.isTimeWindowComplete()) {
-        BOOST_TEST(action::RecorderAction::records.size() == 3);
-        BOOST_TEST(action::RecorderAction::records.at(2).timing == action::Action::ON_TIME_WINDOW_COMPLETE_POST);
-      } else {
-        BOOST_TEST(action::RecorderAction::records.size() == 2);
-      }
-      BOOST_TEST(action::RecorderAction::records.at(0).timing == action::Action::WRITE_MAPPING_PRIOR);
-      BOOST_TEST(action::RecorderAction::records.at(1).timing == action::Action::WRITE_MAPPING_POST);
+      BOOST_TEST(action::RecorderAction::records.size() == 1);
+      BOOST_TEST(action::RecorderAction::records.at(0).timing == action::Action::WRITE_MAPPING_POST);
     }
     action::RecorderAction::reset();
   }

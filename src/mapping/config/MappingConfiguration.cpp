@@ -13,6 +13,7 @@
 #include "mapping/NearestNeighborGradientMapping.hpp"
 #include "mapping/NearestNeighborMapping.hpp"
 #include "mapping/NearestProjectionMapping.hpp"
+#include "mapping/PartitionOfUnityMapping.hpp"
 #include "mapping/PetRadialBasisFctMapping.hpp"
 #include "mapping/RadialBasisFctMapping.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
@@ -41,7 +42,7 @@ void addSubtagsToParents(std::list<xml::XMLTag> &subtags,
 
 // this function uses std::variant in order to add attributes of any type (double, string, bool)
 // to all tags in the list of tags \p storage.
-using variant_t = std::variant<xml::XMLAttribute<double>, xml::XMLAttribute<std::string>, xml::XMLAttribute<bool>>;
+using variant_t = std::variant<xml::XMLAttribute<double>, xml::XMLAttribute<std::string>, xml::XMLAttribute<bool>, xml::XMLAttribute<int>>;
 template <typename TagStorage>
 void addAttributes(TagStorage &storage, const std::vector<variant_t> &attributes)
 {
@@ -54,7 +55,8 @@ void addAttributes(TagStorage &storage, const std::vector<variant_t> &attributes
 // Enum required for the RBF instantiations
 enum struct RBFBackend {
   Eigen,
-  PETSc
+  PETSc,
+  PUM
 };
 
 // Helper in order to resolve the template instantiations.
@@ -77,6 +79,12 @@ struct BackendSelector<RBFBackend::PETSc, RBF> {
   typedef mapping::PetRadialBasisFctMapping<RBF> type;
 };
 #endif
+
+// Specialization for the RBF PUM backend
+template <typename RBF>
+struct BackendSelector<RBFBackend::PUM, RBF> {
+  typedef mapping::PartitionOfUnityMapping<RBF> type;
+};
 
 // Variant holding all available RBF classes
 using rbf_variant_t = std::variant<CompactPolynomialC0, CompactPolynomialC2, CompactPolynomialC4, CompactPolynomialC6, CompactThinPlateSplinesC2, ThinPlateSplines, VolumeSplines, Multiquadrics, InverseMultiquadrics, Gaussian>;
@@ -161,6 +169,8 @@ MappingConfiguration::MappingConfiguration(
       XMLTag{*this, TYPE_RBF_GLOBAL_DIRECT, occ, TAG}.setDocumentation("Radial-basis-function mapping using a direct solver with a gather-scatter parallelism.")};
   std::list<XMLTag> rbfIterativeTags{
       XMLTag{*this, TYPE_RBF_GLOBAL_ITERATIVE, occ, TAG}.setDocumentation("Radial-basis-function mapping using an iterative solver with a distributed parallelism.")};
+  std::list<XMLTag> pumDirectTags{
+      XMLTag{*this, TYPE_RBF_PUM_DIRECT, occ, TAG}.setDocumentation("Radial-basis-function mapping using a partition of unity method, which supports a distributed parallelism.")};
   std::list<XMLTag> rbfAliasTag{
       XMLTag{*this, TYPE_RBF_ALIAS, occ, TAG}.setDocumentation("Alias tag, which auto-selects a radial-basis-function mapping depending on the simulation parameter,")};
 
@@ -188,6 +198,9 @@ MappingConfiguration::MappingConfiguration(
   auto attrPolynomial = makeXMLAttribute(ATTR_POLYNOMIAL, POLYNOMIAL_SEPARATE)
                             .setDocumentation("Toggles use of the global polynomial")
                             .setOptions({POLYNOMIAL_ON, POLYNOMIAL_OFF, POLYNOMIAL_SEPARATE});
+  auto attrPumPolynomial = makeXMLAttribute(ATTR_POLYNOMIAL, POLYNOMIAL_SEPARATE)
+                               .setDocumentation("Toggles use a local (per cluster) polynomial")
+                               .setOptions({POLYNOMIAL_OFF, POLYNOMIAL_SEPARATE});
 
   auto attrSolverRtol = makeXMLAttribute(ATTR_SOLVER_RTOL, 1e-9)
                             .setDocumentation("Solver relative tolerance for convergence");
@@ -195,10 +208,18 @@ MappingConfiguration::MappingConfiguration(
                                .setDocumentation("Sets kind of preallocation for PETSc RBF implementation")
                                .setOptions({PREALLOCATION_ESTIMATE, PREALLOCATION_COMPUTE, PREALLOCATION_OFF, PREALLOCATION_SAVE, PREALLOCATION_TREE});
 
+  auto verticesPerCluster = XMLAttribute<int>(ATTR_VERTICES_PER_CLUSTER, 100)
+                                .setDocumentation("Average number of vertices per cluster (partition) applied in the rbf partition of unity method.");
+  auto relativeOverlap = makeXMLAttribute(ATTR_RELATIVE_OVERLAP, 0.3)
+                             .setDocumentation("Value between 0 and 1 indicating the relative overlap between clusters. A value of 0.3 is usually a good trade-off between accuracy and efficiency.");
+  auto projectToInput = XMLAttribute<bool>(ATTR_PROJECT_TO_INPUT, true)
+                            .setDocumentation("If enabled, places the cluster centers at the closest vertex of the input mesh. Should be enabled in case of non-uniform point distributions such as for shell structures.");
+
   // Add the relevant attributes to the relevant tags
   addAttributes(projectionTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint});
   addAttributes(rbfDirectTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead});
   addAttributes(rbfIterativeTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead, attrSolverRtol, attrPreallocation});
+  addAttributes(pumDirectTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPumPolynomial, attrXDead, attrYDead, attrZDead, verticesPerCluster, relativeOverlap, projectToInput});
   addAttributes(rbfAliasTag, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrXDead, attrYDead, attrZDead});
 
   // Now we take care of the subtag basis function
@@ -217,6 +238,7 @@ MappingConfiguration::MappingConfiguration(
   addAttributes(supportRadiusRBF, {attrSupportRadius});
   addSubtagsToParents(supportRadiusRBF, rbfIterativeTags);
   addSubtagsToParents(supportRadiusRBF, rbfDirectTags);
+  addSubtagsToParents(supportRadiusRBF, pumDirectTags);
   addSubtagsToParents(supportRadiusRBF, rbfAliasTag);
 
   // Now the tags using a shape parameter
@@ -230,6 +252,7 @@ MappingConfiguration::MappingConfiguration(
   addAttributes(shapeParameterRBF, {attrShapeParam});
   addSubtagsToParents(shapeParameterRBF, rbfIterativeTags);
   addSubtagsToParents(shapeParameterRBF, rbfDirectTags);
+  addSubtagsToParents(shapeParameterRBF, pumDirectTags);
   addSubtagsToParents(shapeParameterRBF, rbfAliasTag);
 
   // For the Gaussian, we need default values as the user can pass a support radius or a shape parameter
@@ -240,6 +263,7 @@ MappingConfiguration::MappingConfiguration(
   addAttributes(GaussRBF, {attrShapeParam, attrSupportRadius});
   addSubtagsToParents(GaussRBF, rbfIterativeTags);
   addSubtagsToParents(GaussRBF, rbfDirectTags);
+  addSubtagsToParents(GaussRBF, pumDirectTags);
   addSubtagsToParents(GaussRBF, rbfAliasTag);
 
   // tags without an attribute
@@ -249,12 +273,14 @@ MappingConfiguration::MappingConfiguration(
 
   addSubtagsToParents(attributelessRBFs, rbfIterativeTags);
   addSubtagsToParents(attributelessRBFs, rbfDirectTags);
+  addSubtagsToParents(attributelessRBFs, pumDirectTags);
   addSubtagsToParents(attributelessRBFs, rbfAliasTag);
 
   // Add all tags to the mapping tag
   parent.addSubtags(projectionTags);
   parent.addSubtags(rbfIterativeTags);
   parent.addSubtags(rbfDirectTags);
+  parent.addSubtags(pumDirectTags);
   parent.addSubtags(rbfAliasTag);
 }
 
@@ -272,12 +298,19 @@ void MappingConfiguration::xmlTagCallback(
     std::string constraint = tag.getStringAttributeValue(ATTR_CONSTRAINT);
 
     // optional tags
+    // We set here default values, but their actual value doesn't really matter.
+    // It's just for the mapping methods, which do not use these attributes at all.
     bool        xDead         = tag.getBooleanAttributeValue(ATTR_X_DEAD, false);
     bool        yDead         = tag.getBooleanAttributeValue(ATTR_Y_DEAD, false);
     bool        zDead         = tag.getBooleanAttributeValue(ATTR_Z_DEAD, false);
     double      solverRtol    = tag.getDoubleAttributeValue(ATTR_SOLVER_RTOL, 1e-9);
     std::string strPolynomial = tag.getStringAttributeValue(ATTR_POLYNOMIAL, POLYNOMIAL_SEPARATE);
     std::string strPrealloc   = tag.getStringAttributeValue(ATTR_PREALLOCATION, PREALLOCATION_TREE);
+
+    // pum related tags
+    int    verticesPerCluster = tag.getIntAttributeValue(ATTR_VERTICES_PER_CLUSTER, 100);
+    double relativeOverlap    = tag.getDoubleAttributeValue(ATTR_RELATIVE_OVERLAP, 0.3);
+    bool   projectToInput     = tag.getBooleanAttributeValue(ATTR_PROJECT_TO_INPUT, true);
 
     // Convert raw string into enum types as the constructors take enums
     if (constraint == CONSTRAINT_CONSERVATIVE) {
@@ -294,7 +327,7 @@ void MappingConfiguration::xmlTagCallback(
 
     ConfiguredMapping configuredMapping = createMapping(dir, type, fromMesh, toMesh);
 
-    _rbfConfig = configureRBFMapping(type, context, strPolynomial, strPrealloc, xDead, yDead, zDead, solverRtol);
+    _rbfConfig = configureRBFMapping(type, context, strPolynomial, strPrealloc, xDead, yDead, zDead, solverRtol, verticesPerCluster, relativeOverlap, projectToInput);
 
     checkDuplicates(configuredMapping);
     _mappings.push_back(configuredMapping);
@@ -340,6 +373,8 @@ void MappingConfiguration::xmlTagCallback(
 #else
       PRECICE_CHECK(false, "The global-iterative RBF solver requires a preCICE build with PETSc enabled.");
 #endif
+    } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::PUMDirect) {
+      mapping.mapping = getRBFMapping<RBFBackend::PUM>(basisFunction, constraintValue, mapping.fromMesh->getDimensions(), supportRadius, shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput);
     } else {
       PRECICE_UNREACHABLE("Unknown RBF solver.");
     }
@@ -351,7 +386,10 @@ MappingConfiguration::RBFConfiguration MappingConfiguration::configureRBFMapping
                                                                                  const std::string &              polynomial,
                                                                                  const std::string &              preallocation,
                                                                                  bool xDead, bool yDead, bool zDead,
-                                                                                 double solverRtol) const
+                                                                                 double solverRtol,
+                                                                                 double verticesPerCluster,
+                                                                                 double relativeOverlap,
+                                                                                 bool   projectToInput) const
 {
   RBFConfiguration rbfConfig;
 
@@ -359,6 +397,8 @@ MappingConfiguration::RBFConfiguration MappingConfiguration::configureRBFMapping
     rbfConfig.solver = RBFConfiguration::SystemSolver::GlobalIterative;
   else if (type == TYPE_RBF_GLOBAL_DIRECT)
     rbfConfig.solver = RBFConfiguration::SystemSolver::GlobalDirect;
+  else if (type == TYPE_RBF_PUM_DIRECT)
+    rbfConfig.solver = RBFConfiguration::SystemSolver::PUMDirect;
   else {
     // Rather simple auto-selection (for now)
     // The default is the Eigen backend, as it is always available. Only in certain situations, we will decide for the PETSc backend
@@ -400,6 +440,10 @@ MappingConfiguration::RBFConfiguration MappingConfiguration::configureRBFMapping
 
   rbfConfig.deadAxis   = {{xDead, yDead, zDead}};
   rbfConfig.solverRtol = solverRtol;
+
+  rbfConfig.verticesPerCluster = verticesPerCluster;
+  rbfConfig.relativeOverlap    = relativeOverlap;
+  rbfConfig.projectToInput     = projectToInput;
 
   return rbfConfig;
 }
@@ -488,7 +532,7 @@ const std::vector<MappingConfiguration::ConfiguredMapping> &MappingConfiguration
 
 bool MappingConfiguration::requiresBasisFunction(const std::string &mappingType) const
 {
-  return mappingType == TYPE_RBF_GLOBAL_DIRECT || mappingType == TYPE_RBF_GLOBAL_ITERATIVE || mappingType == TYPE_RBF_ALIAS;
+  return mappingType == TYPE_RBF_PUM_DIRECT || mappingType == TYPE_RBF_GLOBAL_DIRECT || mappingType == TYPE_RBF_GLOBAL_ITERATIVE || mappingType == TYPE_RBF_ALIAS;
 }
 
 BasisFunction MappingConfiguration::parseBasisFunctions(const std::string &basisFctName) const

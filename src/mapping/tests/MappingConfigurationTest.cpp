@@ -86,6 +86,48 @@ BOOST_AUTO_TEST_CASE(RBFDirectConfiguration)
   }
 }
 
+BOOST_AUTO_TEST_CASE(RBFPUMConfiguration)
+{
+  PRECICE_TEST(1_rank);
+
+  std::string pathToTests = testing::getPathToSources() + "/mapping/tests/";
+  std::string file(pathToTests + "mapping-rbf-pum-direct-config.xml");
+  using xml::XMLTag;
+  XMLTag                     tag = xml::getRootTag();
+  mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(tag));
+  dataConfig->setDimensions(3);
+  mesh::PtrMeshConfiguration meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
+  meshConfig->setDimensions(3);
+  mapping::MappingConfiguration mappingConfig(tag, meshConfig);
+  xml::configure(tag, xml::ConfigurationContext{}, file);
+
+  BOOST_TEST(meshConfig->meshes().size() == 12);
+  BOOST_TEST(mappingConfig.mappings().size() == 11);
+  for (unsigned int i = 0; i < mappingConfig.mappings().size(); ++i) {
+    BOOST_TEST(mappingConfig.mappings().at(i).mapping != nullptr);
+    BOOST_TEST(mappingConfig.mappings().at(i).fromMesh == meshConfig->meshes().at(i + 1));
+    BOOST_TEST(mappingConfig.mappings().at(i).toMesh == meshConfig->meshes().at(i));
+    BOOST_TEST(mappingConfig.mappings().at(i).direction == MappingConfiguration::READ);
+    BOOST_TEST(mappingConfig.mappings().at(i).requiresBasisFunction == true);
+  }
+  {
+    // last configured RBF
+    bool solverSelection = mappingConfig.rbfConfig().solver == MappingConfiguration::RBFConfiguration::SystemSolver::PUMDirect;
+    BOOST_TEST(solverSelection);
+    bool poly = mappingConfig.rbfConfig().polynomial == Polynomial::OFF;
+    BOOST_TEST(poly);
+    BOOST_TEST(mappingConfig.rbfConfig().deadAxis[0] == true);
+    BOOST_TEST(mappingConfig.rbfConfig().deadAxis[1] == false);
+    BOOST_TEST(mappingConfig.rbfConfig().deadAxis[2] == true);
+    BOOST_TEST(mappingConfig.rbfConfig().solverRtol == 1e-9);
+    BOOST_TEST(mappingConfig.rbfConfig().verticesPerCluster == 10);
+    BOOST_TEST(mappingConfig.rbfConfig().relativeOverlap == 0.4);
+    BOOST_TEST(mappingConfig.rbfConfig().projectToInput == true);
+    bool prealloc = mappingConfig.rbfConfig().preallocation == Preallocation::TREE;
+    BOOST_TEST(prealloc);
+  }
+}
+
 #ifndef PRECICE_NO_PETSC
 
 BOOST_AUTO_TEST_CASE(RBFIterativeConfiguration)
