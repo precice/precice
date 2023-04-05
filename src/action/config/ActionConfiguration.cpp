@@ -79,7 +79,7 @@ ActionConfiguration::ActionConfiguration(
   {
     XMLTag tag(*this, NAME_PYTHON, occ, TAG);
     tag.setDocumentation("Calls Python script to execute action."
-                         " See preCICE file \"src/action/PythonAction.py\" for an overview.");
+                         " See preCICE file \"src/action/PythonAction.py\" for an example.");
 
     XMLTag tagModulePath(*this, TAG_MODULE_PATH, XMLTag::OCCUR_NOT_OR_ONCE);
     tagModulePath.setDocumentation("Directory path to Python module, i.e. script file."
