@@ -401,20 +401,12 @@ MappingConfiguration::RBFConfiguration MappingConfiguration::configureRBFMapping
   else if (type == TYPE_RBF_PUM_DIRECT)
     rbfConfig.solver = RBFConfiguration::SystemSolver::PUMDirect;
   else {
-    // Rather simple auto-selection (for now)
-    // The default is the Eigen backend, as it is always available. Only in certain situations, we will decide for the PETSc backend
-    rbfConfig.solver = RBFConfiguration::SystemSolver::GlobalDirect;
+    // Rather simple auto-selection (for now), consisting of the PUM Eigen backend
+    rbfConfig.solver = RBFConfiguration::SystemSolver::PUMDirect;
 
-#ifndef PRECICE_NO_PETSC
-    // Running in serial, the Eigen backend will most likely be the fastest and most accurate variant
-    // We decide for the PETSc variant only if we have a lot of interface vertices and a lot of ranks
     // A more sophisticated criterion here could take the globalNumberOfVertices into account
     // (the mesh pointer is stored in the configuredMapping anyway), but this quantity is not yet computed
     // during the configuration time.
-    if (context.size > 16) {
-      rbfConfig.solver = RBFConfiguration::SystemSolver::GlobalIterative;
-    }
-#endif
   }
 
   if (polynomial == POLYNOMIAL_SEPARATE)
