@@ -15,7 +15,6 @@ BOOST_AUTO_TEST_CASE(Explicit)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
-  // Set up Solverinterface
   precice::SolverInterface couplingInterface(context.name, context.config(), 0, 1);
   const int                dimensions = 2;
   BOOST_TEST(couplingInterface.getDimensions() == dimensions);
