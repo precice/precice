@@ -23,20 +23,6 @@ namespace mesh {
  */
 class GlobalData {
 public:
-  // @brief Possible types of data values.
-  //  enum DataType {
-  //    TYPE_UNDEFINED,
-  //    TYPE_DOUBLE,
-  //    TYPE_VECTOR
-  //  };
-
-  // @brief Name of an undefined data type.
-  //static const std::string TYPE_NAME_UNDEFINED;
-  // @brief Name of a double data type.
-  //static const std::string TYPE_NAME_DOUBLE;
-  // @brief Name of a vector data type.
-  //static const std::string TYPE_NAME_VECTOR;
-
   /**
    * @brief Do not use this constructor! Only there for compatibility with std::map.
    */
