@@ -103,6 +103,7 @@ public:
       const mesh::PtrData &data,
       const mesh::PtrMesh &mesh);
 
+  /// Adds a configured \ref GlobalData to the Participant
   void addGlobalData(
       const mesh::PtrGlobalData &data);
 
