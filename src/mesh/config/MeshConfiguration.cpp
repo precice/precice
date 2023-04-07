@@ -75,8 +75,8 @@ void MeshConfiguration::xmlTagCallback(
     bool        found = false;
     for (const DataConfiguration::ConfiguredData &data : _dataConfig->data()) {
       if (data.name == name) {
-        PRECICE_CHECK(data.isGlobal == false, "You used global data \"{0}\" in mesh \"{1}\"."
-                                              "Global data should not be associated with any mesh.",
+        PRECICE_CHECK(not data.isGlobal, "You used global data \"{0}\" in mesh \"{1}\"."
+                                         "Global data should not be associated with any mesh.",
                       data.name, _meshes.back()->getName());
         _meshes.back()->createData(data.name, data.dimensions, _dataIDManager.getFreeID(), data.waveformDegree);
         found = true;
