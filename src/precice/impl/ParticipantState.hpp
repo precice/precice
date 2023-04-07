@@ -225,7 +225,7 @@ public:
   /// Is the dataID know to preCICE?
   bool hasData(std::string_view mesh, std::string_view data) const;
 
-  /// Is the global dataID known to preCICE?
+  /// Is the global dataID known to preCICE? (redundant after #1588) // TODO: rebase
   bool hasGlobalData(DataID dataID) const;
 
   /// Is the data used by this participant?
