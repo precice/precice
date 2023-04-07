@@ -32,9 +32,8 @@ DataConfiguration::DataConfiguration(xml::XMLTag &parent)
   parent.addSubtag(tagVector);
 
   XMLTag tagGlobalScalar(*this, VALUE_SCALAR, XMLTag::OCCUR_ARBITRARY, TAG_GLOBAL_DATA);
-  tagGlobalScalar.setDocumentation("Defines a (global) scalar data set that doesn't assign to any mesh."
-                                   "Typically it is data that's space-invariant, e.g., density in case of"
-                                   "incompressible flows.");
+  tagGlobalScalar.setDocumentation("Defines (global) scalar data not associated to any mesh."
+                                   "Typically, it is space-invariant data, e.g., density for incompressible flow.");
   tagGlobalScalar.addAttribute(attrName);
   parent.addSubtag(tagGlobalScalar);
 
