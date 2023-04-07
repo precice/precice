@@ -52,9 +52,6 @@ public:
   /// Sets all values to zero
   void toZero();
 
-  /// Returns the space dimension (i.e., number of rows) of one gradient data value .
-  int getSpatialDimensions() const;
-
   /// Returns the dimension (i.e., number of components) of one data value (i.e number of columns of one gradient data value).
   int getDimensions() const;
 

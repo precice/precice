@@ -61,9 +61,4 @@ int GlobalData::getDimensions() const
   return _dimensions;
 }
 
-int GlobalData::getSpatialDimensions() const
-{
-  return _spatialDimensions;
-}
-
 } // namespace precice::mesh
