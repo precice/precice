@@ -10,13 +10,6 @@
 #include "time/Time.hpp"
 
 namespace precice {
-
-namespace testing {
-// Forward declaration to friend the boost test struct
-class DataContextFixture;
-} // namespace testing
-//TODO: May need a GlobalDataContextFixture
-
 namespace impl {
 
 /**
@@ -26,8 +19,6 @@ namespace impl {
  *   Unlike DataContext, it has no associated mappings or meshes.
  */
 class GlobalDataContext {
-  friend class testing::DataContextFixture; // Make the fixture friend of this class
-  //TODO: May need a GlobalDataContextFixture
 
 public:
   /**
