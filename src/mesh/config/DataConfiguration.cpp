@@ -38,11 +38,10 @@ DataConfiguration::DataConfiguration(xml::XMLTag &parent)
   parent.addSubtag(tagGlobalScalar);
 
   XMLTag tagGlobalVector(*this, VALUE_VECTOR, XMLTag::OCCUR_ARBITRARY, TAG_GLOBAL_DATA);
-  tagGlobalVector.setDocumentation("Defines a (global) vector data set that doesn't assign to any mesh."
-                                   "Typically it is data that's space-invariant, e.g., "
-                                   "angles between coordinate systems."
-                                   "The number of components of each data entry depends on"
-                                   "the spatial dimensions set in tag <solver-interface>.");
+  tagGlobalVector.setDocumentation("Defines a (global) vector data not associated to any mesh."
+                                   "Typically it is space-invariant data, e.g., angles between coordinate systems."
+                                   "The number of components of each data entry depends on the spatial dimensions "
+                                   "set in tag <solver-interface>.");
   tagGlobalVector.addAttribute(attrName);
   parent.addSubtag(tagGlobalVector);
 }
