@@ -98,14 +98,7 @@ private:
   const std::string ATTR_VALUE  = "value";
   const std::string ATTR_MESH   = "mesh";
 
-  const std::string VALUE_REGULAR_PRIOR;
-  const std::string VALUE_REGULAR_POST;
-  const std::string VALUE_ON_EXCHANGE_PRIOR;
-  const std::string VALUE_ON_EXCHANGE_POST;
-  const std::string VALUE_ON_TIME_WINDOW_COMPLETE_POST;
-  const std::string WRITE_MAPPING_PRIOR;
   const std::string WRITE_MAPPING_POST;
-  const std::string READ_MAPPING_PRIOR;
   const std::string READ_MAPPING_POST;
 
   mesh::PtrMeshConfiguration _meshConfig;

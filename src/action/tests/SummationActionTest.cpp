@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(SummationOneDimensional)
   targetValues = Eigen::VectorXd::Zero(targetValues.size());
 
   action::SummationAction sum(
-      action::SummationAction::WRITE_MAPPING_PRIOR, sourceDataIDs, targetDataID, mesh);
+      action::SummationAction::WRITE_MAPPING_POST, sourceDataIDs, targetDataID, mesh);
 
   sum.performAction(0.0);
   BOOST_TEST(sourceValues1(0) == 2.0);
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(SummationThreeDimensional)
   targetValues = Eigen::VectorXd::Zero(targetValues.size());
 
   action::SummationAction sum(
-      action::SummationAction::WRITE_MAPPING_PRIOR, sourceDataIDs, targetDataID, mesh);
+      action::SummationAction::WRITE_MAPPING_POST, sourceDataIDs, targetDataID, mesh);
 
   sum.performAction(0.0);
   BOOST_TEST(sourceValues1(0) == 1.0);
