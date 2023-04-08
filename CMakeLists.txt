@@ -408,9 +408,11 @@ if (PRECICE_GinkgoParallelization)
   target_include_directories(preciceCore PUBLIC "${Ginkgo_Path}/include")
   include(${Ginkgo_Path}/cmake/unified_kernels.cmake)
   file(GLOB ginkgo_lib "${Ginkgo_Path}/build/lib/*")
-  target_link_libraries(preciceCore PUBLIC ${ginkgo_lib})
+  target_link_libraries(preciceCore PUBLIC ${ginkgo_lib} cusolver cublas)
   # This command registers Ginkgo kernels for different execution backends
   ginkgo_add_unified_kernels(preciceCore src/mapping/ginkgo_kernels/GinkgoRBFKernels.cpp)
+
+  target_sources(preciceCore PRIVATE src/mapping/cuda_kernels/qr_decomp.cu)
 
   if(OpenMP_FOUND)
     target_compile_options(preciceCore PUBLIC "-fopenmp")
