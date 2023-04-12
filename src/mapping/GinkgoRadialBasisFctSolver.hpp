@@ -136,6 +136,9 @@ private:
   /// Product Q^T*Q (to solve Q^TQx=Q^Tb)
   std::shared_ptr<gko::LinOp> _matrixQ_TQ;
 
+  /// Product Q*Q^T
+  std::shared_ptr<gko::LinOp> _matrixQQ_T;
+
   /// Right-hand side of the polynomial system
   std::shared_ptr<GinkgoVector> _polynomialRhs;
 
@@ -528,7 +531,84 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsis
 template <typename RADIAL_BASIS_FUNCTION_T>
 Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConservative(const Eigen::VectorXd &rhsValues, Polynomial polynomial)
 {
-  return Eigen::VectorXd(1, 1);
+  PRECICE_ASSERT(rhsValues.cols() == 1);
+  // Copy rhs vector onto GPU by creating a Ginkgo Vector
+  auto rhs = gko::share(GinkgoVector::create(_hostExecutor, gko::dim<2>{static_cast<unsigned long>(rhsValues.rows()), 1}));
+
+  for (Eigen::Index i = 0; i < rhsValues.rows(); ++i) {
+    rhs->at(i, 0) = rhsValues(i, 0);
+  }
+
+  _allocCopyEvent.start();
+  auto dRhs = gko::share(gko::clone(_deviceExecutor, rhs));
+  rhs->clear();
+  _allocCopyEvent.pause();
+
+  auto dAu = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixA->get_size()[1], dRhs->get_size()[1]}));
+
+  if (GinkgoSolverType::QR == _solverType) {
+    _decompMatrixQ_T->apply(gko::lend(dAu), gko::lend(_dQ_T_Rhs));
+    _triangularSolver->apply(gko::lend(_dQ_T_Rhs), gko::lend(_rbfCoefficients));
+  } else {
+    _solveRBFSystem(dAu);
+  }
+
+  auto dOutput = gko::clone(_deviceExecutor, _rbfCoefficients);
+
+  if (polynomial == Polynomial::SEPARATE) {
+
+    auto dEpsilon = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixV->get_size()[1], dRhs->get_size()[1]}));
+    _matrixV->transpose()->apply(gko::lend(dRhs), gko::lend(dEpsilon));
+
+    auto dTmp = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixQ->get_size()[1], _rbfCoefficients->get_size()[1]}));
+    _matrixQ->transpose()->apply(gko::lend(dOutput), gko::lend(dTmp));
+
+    dEpsilon->sub_scaled(gko::lend(_scalarOne), gko::lend(dTmp));
+
+    // Since this class is constructed for consistent mapping per default, we have to delete unused memory and initialize conservative variables
+    if (nullptr == _matrixQQ_T) {
+      _matrixQ_TQ->clear();
+      _deviceExecutor->synchronize();
+      _matrixQQ_T = gko::share(GinkgoMatrix::create(_deviceExecutor, gko::dim<2>{_matrixQ->get_size()[0], _matrixQ_T->get_size()[1]}));
+
+      auto polynomialSolverFactory = cg::build()
+                                         .with_criteria(gko::stop::Iteration::build()
+                                                            .with_max_iters(static_cast<std::size_t>(1e6))
+                                                            .on(_deviceExecutor),
+                                                        gko::stop::ResidualNormReduction<>::build()
+                                                            .with_reduction_factor(1e-4)
+                                                            .on(_deviceExecutor))
+                                         .on(_deviceExecutor);
+
+      _polynomialSolver = polynomialSolverFactory->generate(_matrixQQ_T);
+
+      _polynomialRhs->clear();
+      _deviceExecutor->synchronize();
+      _polynomialRhs = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{}));
+    }
+
+    _polynomialContribution = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixQQ_T->get_size()[1], 1}));
+
+    dEpsilon->apply(gko::lend(_scalarNegativeOne), gko::lend(dEpsilon));
+
+    _matrixQ->apply(gko::lend(dEpsilon), gko::lend(_polynomialRhs));
+
+    _polynomialSolver->apply(gko::lend(dEpsilon), gko::lend(_polynomialContribution));
+
+    dOutput->sub_scaled(gko::lend(_scalarOne), gko::lend(_polynomialContribution));
+  }
+
+  _allocCopyEvent.start();
+  auto output = gko::clone(_hostExecutor, dOutput);
+  _allocCopyEvent.pause();
+
+  Eigen::VectorXd result(output->get_size()[0], 1);
+
+  for (Eigen::Index i = 0; i < result.rows(); ++i) {
+    result(i, 0) = output->at(i, 0);
+  }
+
+  return result;
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
