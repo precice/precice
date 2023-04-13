@@ -198,9 +198,10 @@ PtrCouplingData BaseCouplingScheme::addCouplingData(const mesh::PtrData &data, m
   PtrCouplingData ptrCplData;
   if (!utils::contained(id, _allData)) { // data is not used by this coupling scheme yet, create new CouplingData
     if (isExplicitCouplingScheme()) {
-      ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization);
+      /// ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, precice::cplscheme::CouplingSchemeConfiguration::getWaveformUsedOrder(this->_localParticipant, data->getName()));
+      ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, 1);
     } else {
-      ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, getExtrapolationOrder());
+      ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, 1, getExtrapolationOrder());
     }
     _allData.emplace(id, ptrCplData);
   } else { // data is already used by another exchange of this coupling scheme, use existing CouplingData

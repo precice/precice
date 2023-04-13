@@ -86,6 +86,9 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
     data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
     data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
 
+    dpcd->initializeStorage(displacements->values());
+    fpcd->initializeStorage(forces->values());
+
     dpcd->storeIteration();
     fpcd->storeIteration();
 
@@ -116,6 +119,9 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
     data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
     data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
 
+    dpcd->initializeStorage(displacements->values());
+    fpcd->initializeStorage(forces->values());
+
     dpcd->storeIteration();
     fpcd->storeIteration();
 
@@ -141,6 +147,9 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
     data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
     data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
 
+    dpcd->initializeStorage(displacements->values());
+    fpcd->initializeStorage(forces->values());
+
     dpcd->storeIteration();
     fpcd->storeIteration();
 
@@ -165,6 +174,9 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
 
     data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
     data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
+
+    dpcd->initializeStorage(displacements->values());
+    fpcd->initializeStorage(forces->values());
 
     dpcd->storeIteration();
     fpcd->storeIteration();
@@ -313,6 +325,9 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
     PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false));
     PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false));
 
+    dpcd->initializeStorage(displacements->values());
+    fpcd->initializeStorage(forces->values());
+
     dpcd->storeIteration();
     fpcd->storeIteration();
 
@@ -363,6 +378,9 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
     PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false));
     PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false));
 
+    dpcd->initializeStorage(displacements->values());
+    fpcd->initializeStorage(forces->values());
+
     dpcd->storeIteration();
     fpcd->storeIteration();
 
@@ -401,11 +419,12 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
      * processor with no vertices
      */
 
-    //init displacements
+    //init displacements and forces
     PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false));
-
-    //init forces
     PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false));
+
+    dpcd->initializeStorage(displacements->values());
+    fpcd->initializeStorage(forces->values());
 
     dpcd->storeIteration();
     fpcd->storeIteration();
@@ -433,6 +452,9 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
 
     PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false));
     PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false));
+
+    dpcd->initializeStorage(displacements->values());
+    fpcd->initializeStorage(forces->values());
 
     dpcd->storeIteration();
     fpcd->storeIteration();
@@ -587,6 +609,9 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
     //init forces
     fpcd.reset(new CouplingData(forces, dummyMesh, false));
 
+    dpcd->initializeStorage(displacements->values());
+    fpcd->initializeStorage(forces->values());
+
     dpcd->storeIteration();
     fpcd->storeIteration();
 
@@ -607,6 +632,9 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
 
     dpcd.reset(new CouplingData(displacements, dummyMesh, false));
     fpcd.reset(new CouplingData(forces, dummyMesh, false));
+
+    dpcd->initializeStorage(displacements->values());
+    fpcd->initializeStorage(forces->values());
 
     dpcd->storeIteration();
     fpcd->storeIteration();
@@ -631,6 +659,9 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
     dpcd.reset(new CouplingData(displacements, dummyMesh, false));
     fpcd.reset(new CouplingData(forces, dummyMesh, false));
 
+    dpcd->initializeStorage(displacements->values());
+    fpcd->initializeStorage(forces->values());
+
     dpcd->storeIteration();
     fpcd->storeIteration();
 
@@ -650,6 +681,9 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
 
     dpcd.reset(new CouplingData(displacements, dummyMesh, false));
     fpcd.reset(new CouplingData(forces, dummyMesh, false));
+
+    dpcd->initializeStorage(displacements->values());
+    fpcd->initializeStorage(forces->values());
 
     dpcd->storeIteration();
     fpcd->storeIteration();
@@ -1022,6 +1056,9 @@ BOOST_AUTO_TEST_CASE(testColumnsLogging)
 
   PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false));
   data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
+
+  dpcd->initializeStorage(displacements->values());
+
   dpcd->storeIteration();
 
   acc.initialize(data);

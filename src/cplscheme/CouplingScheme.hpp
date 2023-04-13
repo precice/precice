@@ -52,6 +52,9 @@ public:
   /// To be used, when the extrapolation order is not defined (for explicit coupling).
   static const int UNDEFINED_EXTRAPOLATION_ORDER;
 
+  /// To be used, when the interpolation order is not defined (for explicit parallel coupling).
+  static const int UNDEFINED_INTERPOLATION_ORDER;
+
   /// To be used, when the number of max iterations is not defined (for explicit coupling).
   static const int UNDEFINED_MAX_ITERATIONS;
 

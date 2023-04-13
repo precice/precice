@@ -11,7 +11,7 @@ namespace precice::time {
 
 Waveform::Waveform(
     const int interpolationOrder)
-    : _interpolationOrder(interpolationOrder)
+    : _interpolationOrder(interpolationOrder), _storage(0, interpolationOrder)
 {
   PRECICE_ASSERT(Time::MIN_INTERPOLATION_ORDER <= _interpolationOrder && _interpolationOrder <= Time::MAX_INTERPOLATION_ORDER);
 }
@@ -37,63 +37,16 @@ void Waveform::store(const Eigen::VectorXd &values, double normalizedDt)
   _storage.setValuesAtTime(normalizedDt, values);
 }
 
-// helper function to compute x(t) from given data (x0,t0), (x1,t1), ..., (xn,tn) via B-spline interpolation (implemented using Eigen).
-Eigen::VectorXd bSplineInterpolationAt(double t, Eigen::VectorXd ts, Eigen::MatrixXd xs, int splineDegree)
-{
-  // organize data in columns. Each column represents one sample in time.
-  PRECICE_ASSERT(xs.cols() == ts.size());
-  const int ndofs = xs.rows(); // number of dofs. Each dof needs it's own interpolant.
-
-  Eigen::VectorXd interpolated(ndofs);
-
-  const int splineDimension = 1;
-
-  for (int i = 0; i < ndofs; i++) {
-    auto spline     = Eigen::SplineFitting<Eigen::Spline<double, splineDimension>>::Interpolate(xs.row(i), splineDegree, ts);
-    interpolated[i] = spline(t)[0]; // get component of spline associated with xs.row(i)
-  }
-
-  return interpolated;
-}
-
 Eigen::VectorXd Waveform::sample(double normalizedDt)
 {
-  const int usedOrder = computeUsedOrder(_interpolationOrder, _storage.nTimes());
-
   PRECICE_ASSERT(math::equals(this->_storage.maxStoredNormalizedDt(), time::Storage::WINDOW_END), this->_storage.maxStoredNormalizedDt()); // sampling is only allowed, if a window is complete.
 
-  if (_interpolationOrder == 0) {
-    return this->_storage.getValuesAtOrAfter(normalizedDt);
-  }
-
-  PRECICE_ASSERT(usedOrder >= 1);
-
-  auto data = _storage.getTimesAndValues();
-
-  return bSplineInterpolationAt(normalizedDt, data.first, data.second, usedOrder);
+  return this->_storage.sampleAt(normalizedDt);
 }
 
 void Waveform::moveToNextWindow()
 {
   _storage.move();
-}
-
-int Waveform::computeUsedOrder(int requestedOrder, int numberOfAvailableSamples)
-{
-  int usedOrder = -1;
-  PRECICE_ASSERT(requestedOrder <= 3);
-  if (requestedOrder == 0 || numberOfAvailableSamples < 2) {
-    usedOrder = 0;
-  } else if (requestedOrder == 1 || numberOfAvailableSamples < 3) {
-    usedOrder = 1;
-  } else if (requestedOrder == 2 || numberOfAvailableSamples < 4) {
-    usedOrder = 2;
-  } else if (requestedOrder == 3 || numberOfAvailableSamples < 5) {
-    usedOrder = 3;
-  } else {
-    PRECICE_ASSERT(false); // not supported
-  }
-  return usedOrder;
 }
 
 } // namespace precice::time

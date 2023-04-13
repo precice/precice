@@ -77,18 +77,6 @@ private:
   const int _interpolationOrder;
 
   mutable logging::Logger _log{"time::Waveform"};
-
-  /**
-   * @brief Computes which order may be used for interpolation.
-   *
-   * Order of interpolation is determined by number of stored samples and maximum order defined by the user.
-   * Example: If only two samples are available, the maximum order we may use is 1, even if the user demands order 2.
-   *
-   * @param requestedOrder Order requested by the user.
-   * @param numberOfAvailableSamples Samples available for interpolation.
-   * @return Order that may be used.
-   */
-  int computeUsedOrder(int requestedOrder, int numberOfAvailableSamples);
 };
 
 } // namespace time

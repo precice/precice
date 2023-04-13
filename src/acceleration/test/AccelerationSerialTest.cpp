@@ -76,6 +76,10 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
   DataMap data;
   data.insert(std::pair<int, cplscheme::PtrCouplingData>(0, dpcd));
   data.insert(std::pair<int, cplscheme::PtrCouplingData>(1, fpcd));
+
+  dpcd->initializeStorage(displacements->values());
+  fpcd->initializeStorage(forces->values());
+
   dpcd->storeIteration();
   fpcd->storeIteration();
 
@@ -148,6 +152,10 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
 
   cplscheme::PtrCouplingData dpcd(new cplscheme::CouplingData(displacements, dummyMesh, false));
   cplscheme::PtrCouplingData fpcd(new cplscheme::CouplingData(forces, dummyMesh, false));
+
+  dpcd->initializeStorage(displacements->values());
+  fpcd->initializeStorage(forces->values());
+
   dpcd->storeIteration();
   fpcd->storeIteration();
 
@@ -217,6 +225,10 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxation)
   DataMap data;
   data.insert(std::pair<int, cplscheme::PtrCouplingData>(0, dpcd));
   data.insert(std::pair<int, cplscheme::PtrCouplingData>(1, fpcd));
+
+  dpcd->initializeStorage(displacements->values());
+  fpcd->initializeStorage(forces->values());
+
   dpcd->storeIteration();
   fpcd->storeIteration();
 
@@ -286,6 +298,10 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradient)
   DataMap data;
   data.insert(std::pair<int, cplscheme::PtrCouplingData>(0, dpcd));
   data.insert(std::pair<int, cplscheme::PtrCouplingData>(1, fpcd));
+
+  dpcd->initializeStorage(displacements->values());
+  fpcd->initializeStorage(forces->values());
+
   dpcd->storeIteration();
   fpcd->storeIteration();
 

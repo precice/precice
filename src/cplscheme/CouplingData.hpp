@@ -16,7 +16,8 @@ public:
       mesh::PtrData data,
       mesh::PtrMesh mesh,
       bool          requiresInitialization,
-      int           extrapolationOrder = CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
+      int           extrapolationOrder = CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER,
+      int           interpolationOrder = CouplingScheme::UNDEFINED_INTERPOLATION_ORDER);
 
   int getDimensions() const;
 
@@ -140,6 +141,8 @@ private:
   time::Storage _timeStepsStoragePrevious;
 
   int _extrapolationOrder;
+
+  int _interpolationOrder;
 };
 
 } // namespace cplscheme

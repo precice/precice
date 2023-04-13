@@ -22,8 +22,9 @@ public:
    * This Storage is used in the context of Waveform relaxation where samples in time are provided. Starting at the beginning of the window with time 0.0 and reaching the end of the window with time 1.0.
    *
    * @param extrapolationOrder defines the extrapolation this storage will use when it Storage::move() is called.
+   * @param interpolationOrder defines the interpolation order this storage will use when Storage:sampleAt() is called
    */
-  Storage(int extrapolationOrder = 0);
+  Storage(int extrapolationOrder = 0, int interpolationOrder = 0);
 
   /**
    * @brief Initialize storage by storing given values at time 0.0 and 1.0.
@@ -109,6 +110,14 @@ public:
    */
   void clear(bool keepWindowStart = true);
 
+  /**
+   * @brief Need to use interpolation for the case with changing time grids
+   *
+   * @param normalizedDt a double, where we want to sample the waveform
+   * @return Eigen::VectorXd values in this Storage at or directly after "before"
+  */
+  Eigen::VectorXd sampleAt(double normalizedDt);
+
 private:
   /// Stores values on the current window associated with normalized dt.
   std::vector<std::pair<double, Eigen::VectorXd>> _sampleStorage;
@@ -118,6 +127,12 @@ private:
   /// extrapolation order for this extrapolation
   /// Removed constant, since one needs to create new instances of this class.
   int _extrapolationOrder;
+
+  int _interpolationOrder;
+
+  Eigen::VectorXd bSplineInterpolationAt(double t, Eigen::VectorXd ts, Eigen::MatrixXd xs, int splineDegree);
+
+  int computeUsedOrder(int requestedOrder, int numberOfAvailableSamples);
 
   Eigen::VectorXd computeExtrapolation();
 

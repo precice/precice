@@ -1,6 +1,8 @@
 #include "time/Storage.hpp"
+#include <unsupported/Eigen/Splines>
 #include "cplscheme/CouplingScheme.hpp"
 #include "math/differences.hpp"
+#include "utils/EigenHelperFunctions.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice::time {
@@ -9,8 +11,8 @@ const double Storage::WINDOW_START = 0.0;
 
 const double Storage::WINDOW_END = 1.0;
 
-Storage::Storage(int extrapolationOrder)
-    : _sampleStorage{}, _extrapolationOrder(extrapolationOrder)
+Storage::Storage(int extrapolationOrder, int interpolationOrder)
+    : _sampleStorage{}, _extrapolationOrder(extrapolationOrder), _interpolationOrder(interpolationOrder)
 {
 }
 
@@ -142,6 +144,59 @@ Eigen::VectorXd Storage::getValuesAtEnd()
 {
   PRECICE_ASSERT(math::equals(_sampleStorage.back().first, WINDOW_END), _sampleStorage.back().first);
   return _sampleStorage.back().second;
+}
+
+// helper function to compute x(t) from given data (x0,t0), (x1,t1), ..., (xn,tn) via B-spline interpolation (implemented using Eigen).
+Eigen::VectorXd Storage::bSplineInterpolationAt(double t, Eigen::VectorXd ts, Eigen::MatrixXd xs, int splineDegree)
+{
+  // organize data in columns. Each column represents one sample in time.
+  PRECICE_ASSERT(xs.cols() == ts.size());
+  const int ndofs = xs.rows(); // number of dofs. Each dof needs it's own interpolant.
+
+  Eigen::VectorXd interpolated(ndofs);
+
+  const int splineDimension = 1;
+
+  for (int i = 0; i < ndofs; i++) {
+    auto spline     = Eigen::SplineFitting<Eigen::Spline<double, splineDimension>>::Interpolate(xs.row(i), splineDegree, ts);
+    interpolated[i] = spline(t)[0]; // get component of spline associated with xs.row(i)
+  }
+
+  return interpolated;
+}
+
+Eigen::VectorXd Storage::sampleAt(double normalizedDt)
+{
+  const int usedOrder = computeUsedOrder(_interpolationOrder, nTimes());
+
+  PRECICE_ASSERT(math::equals(this->maxStoredNormalizedDt(), time::Storage::WINDOW_END), this->maxStoredNormalizedDt()); // sampling is only allowed, if a window is complete.
+
+  if (_interpolationOrder == 0) {
+    return this->getValuesAtOrAfter(normalizedDt);
+  }
+
+  PRECICE_ASSERT(usedOrder >= 1);
+
+  auto data = getTimesAndValues();
+  return bSplineInterpolationAt(normalizedDt, data.first, data.second, usedOrder);
+}
+
+int Storage::computeUsedOrder(int requestedOrder, int numberOfAvailableSamples)
+{
+  int usedOrder = -1;
+  PRECICE_ASSERT(requestedOrder <= 3);
+  if (requestedOrder == 0 || numberOfAvailableSamples < 2) {
+    usedOrder = 0;
+  } else if (requestedOrder == 1 || numberOfAvailableSamples < 3) {
+    usedOrder = 1;
+  } else if (requestedOrder == 2 || numberOfAvailableSamples < 4) {
+    usedOrder = 2;
+  } else if (requestedOrder == 3 || numberOfAvailableSamples < 5) {
+    usedOrder = 3;
+  } else {
+    PRECICE_ASSERT(false); // not supported
+  }
+  return usedOrder;
 }
 
 } // namespace precice::time

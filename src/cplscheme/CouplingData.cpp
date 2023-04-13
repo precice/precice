@@ -11,11 +11,12 @@ CouplingData::CouplingData(
     mesh::PtrData data,
     mesh::PtrMesh mesh,
     bool          requiresInitialization,
+    int           interpolationOrder,
     int           extrapolationOrder)
     : requiresInitialization(requiresInitialization),
       _data(std::move(data)),
-      _mesh(std::move(mesh)), _extrapolationOrder(extrapolationOrder),
-      _timeStepsStorageCurrent(extrapolationOrder), _timeStepsStoragePrevious(extrapolationOrder)
+      _mesh(std::move(mesh)), _extrapolationOrder(extrapolationOrder), _interpolationOrder(interpolationOrder),
+      _timeStepsStorageCurrent(extrapolationOrder, interpolationOrder), _timeStepsStoragePrevious(extrapolationOrder, interpolationOrder)
 {
   PRECICE_ASSERT(_data != nullptr);
   _previousIteration = Eigen::VectorXd::Zero(getSize());
