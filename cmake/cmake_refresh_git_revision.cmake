@@ -32,7 +32,7 @@ set(preCICE_REVISION "no-info [git failed to run]")
 
 if(("${PRECICE_REVISION_RET}" EQUAL "0") AND ("${PRECICE_REPO_RET}" EQUAL "0"))
   file(TO_CMAKE_PATH "${PRECICE_REPO_OUT}" _detected_path)
-  if("${CMAKE_SOURCE_DIR}" STREQUAL "${_detected_path}")
+  if("${PROJECT_SOURCE_DIR}" STREQUAL "${_detected_path}")
     set(preCICE_REVISION "${PRECICE_REVISION_OUT}")
     message(STATUS "Revision status: ${preCICE_REVISION}")
   else()

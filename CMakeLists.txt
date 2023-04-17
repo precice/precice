@@ -391,7 +391,7 @@ GENERATE_EXPORT_HEADER(preciceCore
 
 # Add the export header to the public headers of the preCICE lib
 set_property(TARGET precice APPEND PROPERTY PUBLIC_HEADER
-    ${CMAKE_BINARY_DIR}/src/precice/export.h)
+    ${PROJECT_BINARY_DIR}/src/precice/export.h)
 
 #
 # Configuration of Target precice-tools

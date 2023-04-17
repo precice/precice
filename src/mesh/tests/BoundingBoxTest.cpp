@@ -383,5 +383,32 @@ BOOST_AUTO_TEST_CASE(DefaultCase)
   }
 } // DefaultCase
 
+BOOST_AUTO_TEST_CASE(EmptyCase)
+{
+  PRECICE_TEST(1_rank);
+  { // 3D
+    BoundingBox bb1({0.0, 1.0,
+                     -1.0, 3.0,
+                     2.0, 4.0});
+    BoundingBox bb2(3);
+    BoundingBox bb3({1.0, 1.0,
+                     1.0, 1.0,
+                     1.0, 1.0});
+    BOOST_TEST(!bb1.empty());
+    BOOST_TEST(bb2.empty());
+    BOOST_TEST(bb3.empty());
+  }
+  { // 2D
+    BoundingBox bb1({0.0, 1.0,
+                     -1.0, 3.0});
+    BoundingBox bb2(2);
+    BoundingBox bb3({2.0, 2.0,
+                     1.0, 1.0});
+    BOOST_TEST(!bb1.empty());
+    BOOST_TEST(bb2.empty());
+    BOOST_TEST(bb3.empty());
+  }
+} // EmptyCase
+
 BOOST_AUTO_TEST_SUITE_END() // BoundingBox
 BOOST_AUTO_TEST_SUITE_END() // Mesh
