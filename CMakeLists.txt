@@ -291,7 +291,9 @@ if (PRECICE_GinkgoParallelization)
 
       set(GINKGO_HIPCC_OPTIONS "-fPIC")
 
-      message(STATUS "Enabled AMD HIP support for Ginkgo library.")
+find_package(rocsolver) 
+
+     message(STATUS "Enabled AMD HIP support for Ginkgo library.")
   endif()
 
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
@@ -408,11 +410,17 @@ if (PRECICE_GinkgoParallelization)
   target_include_directories(preciceCore PUBLIC "${Ginkgo_Path}/include")
   include(${Ginkgo_Path}/cmake/unified_kernels.cmake)
   file(GLOB ginkgo_lib "${Ginkgo_Path}/build/lib/*")
-  target_link_libraries(preciceCore PUBLIC ${ginkgo_lib} cusolver cublas)
-  # This command registers Ginkgo kernels for different execution backends
-  ginkgo_add_unified_kernels(preciceCore src/mapping/ginkgo_kernels/GinkgoRBFKernels.cpp)
 
-  target_sources(preciceCore PRIVATE src/mapping/cuda_kernels/qr_decomp.cu)
+ginkgo_add_unified_kernels(preciceCore src/mapping/ginkgo_kernels/GinkgoRBFKernels.cpp)
+
+hip_add_library(preciceHIPQR src/mapping/cuda_kernels/qr_decomp.hip.cpp HIPCC_OPTIONS "-std=c++14" CLANG_OPTIONS "-fPIC" STATIC)
+target_link_libraries(preciceHIPQR PUBLIC ${ginkgo_lib} roc::rocsolver)
+target_include_directories(preciceHIPQR PUBLIC "${Ginkgo_Path}/include" "/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi" "/usr/lib/x86_64-linux-gnu/openmpi/include")
+
+  # This command registers Ginkgo kernels for different execution backends
+
+target_link_libraries(preciceCore PRIVATE preciceHIPQR)
+target_link_libraries(preciceCore PUBLIC roc::rocsolver)
 
   if(OpenMP_FOUND)
     target_compile_options(preciceCore PUBLIC "-fopenmp")
@@ -481,7 +489,7 @@ set_property(TARGET precice APPEND PROPERTY PUBLIC_HEADER
 if (PRECICE_BUILD_TOOLS)
   add_executable(precice-tools "src/drivers/main.cpp")
   target_link_libraries(precice-tools
-    PRIVATE
+   PRIVATE
    precice
    )
   set_target_properties(precice-tools PROPERTIES
