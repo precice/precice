@@ -35,8 +35,8 @@ void TXTTableWriter::addData(
   if ((type == INT) || (type == DOUBLE)) {
     _outputStream << delimiter << name;
   } else {
+    _outputStream << delimiter << name << 0;
     if (type == VECTOR2D) {
-      _outputStream << delimiter << name << 0;
       for (int i = 1; i < 2; i++) {
         _outputStream << "  " << name << i;
       }
