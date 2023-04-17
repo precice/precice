@@ -5,10 +5,6 @@
 #include "cuda_runtime.h"
 #include <cuda.h>
 #include "device_launch_parameters.h"
-#include <iostream>
-#include <cuda_runtime.h>
-#include <cublas_v2.h>
-#include <cusolverDn.h>
 #include "utils/Event.hpp"
 #include "utils/EventUtils.hpp"
 
@@ -16,8 +12,6 @@ using GinkgoMatrix = gko::matrix::Dense<>;
 
 // Handles for low-level CUDA libraries
 cusolverDnHandle_t solverHandle;
-cublasHandle_t cublasHandle;
-cublasStatus_t cublasStatus = CUBLAS_STATUS_SUCCESS;
 cusolverStatus_t cusolverStatus = CUSOLVER_STATUS_SUCCESS;
 cudaError_t cudaErrorCode = cudaSuccess;
 
@@ -38,7 +32,6 @@ void initCuda(const int deviceId=0){
     cudaMalloc((void **)&devInfo, sizeof(int));
 
     cusolverDnCreate(&solverHandle);
-    cublasCreate(&cublasHandle);
 
 }
 
@@ -48,14 +41,14 @@ void deInitCuda(){
     cudaFree(dWork);
     cudaFree(devInfo);
 
-    cusolverDnDestroy(solverHandle);
-    cublasDestroy(cublasHandle);
+    if (nullptr != solverHandle){
+        cusolverDnDestroy(solverHandle);
+    }
 }
 
 void computeQR(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, GinkgoMatrix *R)
 {
     cusolverDnCreate(&solverHandle);
-    cublasCreate(&cublasHandle);
 
     // NOTE: It's important to transpose since cuSolver assumes column-major memory layout
     // Making a copy since every value will be overridden

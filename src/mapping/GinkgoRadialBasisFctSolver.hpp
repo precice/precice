@@ -174,7 +174,7 @@ private:
 
   std::shared_ptr<cg> _polynomialSolver = nullptr;
 
-  GinkgoSolverType _solverType;
+  GinkgoSolverType _solverType = GinkgoSolverType::CG;
 
   GinkgoPreconditionerType _preconditionerType;
 
