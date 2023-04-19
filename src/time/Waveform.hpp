@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include "logging/Logger.hpp"
+#include "mesh/SharedPointer.hpp"
 #include "time/Storage.hpp"
 
 namespace precice {
@@ -31,8 +32,9 @@ public:
    * Storage still needs to be initialized with Waveform::initialize, before the Waveform can be used.
    *
    * @param interpolationOrder Defines the interpolation order supported by this Waveform and reserves storage correspondingly
+   * @param data pointer to data this waveform interpolates
    */
-  Waveform(const int interpolationOrder);
+  Waveform(const int interpolationOrder, mesh::PtrData data);
 
   /**
    * @brief Get the _interpolationOrder.
@@ -40,12 +42,6 @@ public:
    * @return int _interpolationOrder
    */
   int getInterpolationOrder() const;
-
-  /**
-   * @brief Used to initialize _storage according to required size and initializes Waveform as constant with given values.
-   * @param values Defines constant initial value of waveform and its size
-   */
-  void initialize(const Eigen::VectorXd &values);
 
   /**
    * @brief Updates an entry for normalizedDt in _timeWindows with given value.
@@ -70,8 +66,8 @@ public:
   Eigen::VectorXd sample(const double normalizedDt);
 
 private:
-  /// Stores values on the current window.
-  Storage _storage;
+  /// Stores values.
+  mesh::PtrData _data;
 
   /// interpolation order for this waveform
   const int _interpolationOrder;

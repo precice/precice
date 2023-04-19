@@ -340,9 +340,6 @@ double SolverInterfaceImpl::initialize()
   double time       = 0.0;
   int    timeWindow = 1;
 
-  for (auto &context : _accessor->readDataContexts()) {
-    context.initializeWaveform();
-  }
   _meshLock.lockAll();
 
   if (_couplingScheme->sendsInitializedData()) {
@@ -359,6 +356,10 @@ double SolverInterfaceImpl::initialize()
     performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0);
     mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
+  } else { // if no data has been received initialize with zero data
+    for (auto &context : _accessor->readDataContexts()) {
+      context.storeDataInWaveform();
+    }
   }
 
   for (auto &context : _accessor->readDataContexts()) {

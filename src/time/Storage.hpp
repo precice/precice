@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include "logging/Logger.hpp"
+#include "time/Stample.hpp"
 
 namespace precice::time {
 
@@ -96,8 +97,8 @@ public:
   void clear();
 
 private:
-  /// Stores values on the current window associated with normalized dt.
-  std::vector<std::pair<double, Eigen::VectorXd>> _sampleStorage;
+  /// Stores Stamples on the current window
+  std::vector<Stample> _sampleStorage;
 
   mutable logging::Logger _log{"time::Storage"};
 };

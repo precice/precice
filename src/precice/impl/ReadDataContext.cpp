@@ -12,7 +12,7 @@ ReadDataContext::ReadDataContext(
     int           interpolationOrder)
     : DataContext(data, mesh)
 {
-  _waveform = std::make_shared<time::Waveform>(interpolationOrder);
+  _waveform = std::make_shared<time::Waveform>(interpolationOrder, data);
 }
 
 void ReadDataContext::appendMappingConfiguration(MappingContext &mappingContext, const MeshContext &meshContext)
@@ -34,18 +34,12 @@ int ReadDataContext::getInterpolationOrder() const
 
 void ReadDataContext::storeDataInWaveform()
 {
-  _waveform->store(_providedData->values()); // store mapped or received _providedData in the _waveform
+  _providedData->timeStepsStorage().setValuesAtTime(time::Storage::WINDOW_END, _providedData->values());
 }
 
 Eigen::VectorXd ReadDataContext::sampleWaveformAt(double normalizedDt)
 {
   return _waveform->sample(normalizedDt);
-}
-
-void ReadDataContext::initializeWaveform()
-{
-  PRECICE_ASSERT(not hasWriteMapping(), "Write mapping does not need waveforms.");
-  _waveform->initialize(_providedData->values());
 }
 
 void ReadDataContext::moveToNextWindow()
