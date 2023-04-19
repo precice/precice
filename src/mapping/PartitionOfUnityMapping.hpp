@@ -310,6 +310,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
   // In order to construct the local partitions, we need all vertices with a distance of 2 x radius,
   // as the relevant partitions centers have a maximum distance of radius, and the proper construction of the
   // interpolant requires all vertices with a distance of radius from the center.
+  filterMesh->computeBoundingBox();
   auto bb = filterMesh->getBoundingBox();
 
   // @TODO: This assert is not completely right, as it checks all dimensions for non-emptyness (which might not be the case).

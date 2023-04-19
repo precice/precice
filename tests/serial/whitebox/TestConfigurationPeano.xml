@@ -50,7 +50,7 @@
       <write-data name="Velocities" mesh="ComsolNodes" />
       <write-data name="VelocityDeltas" mesh="ComsolNodes" />
       <read-data name="Forces" mesh="ComsolNodes" />
-      <action:divide-by-area mesh="ComsolNodes" timing="on-exchange-post">
+      <action:divide-by-area mesh="ComsolNodes" timing="read-mapping-post">
         <target-data name="Forces" />
       </action:divide-by-area>
     </participant>

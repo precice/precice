@@ -1,16 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
   <solver-interface dimensions="2">
-    <data:vector name="Forces" />
     <data:vector name="Velocities" />
 
     <mesh name="Test-Square-One">
-      <use-data name="Forces" />
       <use-data name="Velocities" />
     </mesh>
 
     <mesh name="Test-Square-Two">
-      <use-data name="Forces" />
       <use-data name="Velocities" />
     </mesh>
 
@@ -19,31 +16,18 @@
     <participant name="SolverOne">
       <provide-mesh name="Test-Square-One" />
       <write-data name="Velocities" mesh="Test-Square-One" />
-      <read-data name="Forces" mesh="Test-Square-One" />
-      <action:divide-by-area timing="on-exchange-post" mesh="Test-Square-One">
-        <target-data name="Forces" />
-      </action:divide-by-area>
     </participant>
 
     <participant name="SolverTwo">
       <provide-mesh name="Test-Square-Two" />
       <receive-mesh name="Test-Square-One" from="SolverOne" />
-      <write-data name="Forces" mesh="Test-Square-Two" />
       <read-data name="Velocities" mesh="Test-Square-Two" />
       <mapping:nearest-neighbor
         direction="read"
         from="Test-Square-One"
         to="Test-Square-Two"
         constraint="consistent" />
-      <mapping:nearest-neighbor
-        direction="write"
-        from="Test-Square-Two"
-        to="Test-Square-One"
-        constraint="conservative" />
-      <action:divide-by-area timing="on-exchange-post" mesh="Test-Square-Two">
-        <target-data name="Velocities" />
-      </action:divide-by-area>
-      <action:divide-by-area timing="on-exchange-post" mesh="Test-Square-One">
+      <action:divide-by-area timing="read-mapping-post" mesh="Test-Square-Two">
         <target-data name="Velocities" />
       </action:divide-by-area>
     </participant>
@@ -52,7 +36,6 @@
       <participants first="SolverOne" second="SolverTwo" />
       <max-time-windows value="10" />
       <time-window-size value="0.01" />
-      <exchange data="Forces" mesh="Test-Square-One" from="SolverTwo" to="SolverOne" />
       <exchange data="Velocities" mesh="Test-Square-One" from="SolverOne" to="SolverTwo" />
     </coupling-scheme:serial-explicit>
   </solver-interface>

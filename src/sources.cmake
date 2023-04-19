@@ -4,8 +4,8 @@
 
 target_sources(preciceCore
     PRIVATE
-    ${CMAKE_BINARY_DIR}/src/precice/impl/versions.cpp
-    ${CMAKE_BINARY_DIR}/src/precice/impl/versions.hpp
+    ${PROJECT_BINARY_DIR}/src/precice/impl/versions.cpp
+    ${PROJECT_BINARY_DIR}/src/precice/impl/versions.hpp
     src/acceleration/Acceleration.cpp
     src/acceleration/Acceleration.hpp
     src/acceleration/AitkenAcceleration.cpp
@@ -40,8 +40,6 @@ target_sources(preciceCore
     src/acceleration/impl/ValuePreconditioner.cpp
     src/acceleration/impl/ValuePreconditioner.hpp
     src/action/Action.hpp
-    src/action/ComputeCurvatureAction.cpp
-    src/action/ComputeCurvatureAction.hpp
     src/action/PythonAction.cpp
     src/action/PythonAction.hpp
     src/action/RecorderAction.cpp
@@ -337,7 +335,7 @@ target_sources(preciceCore
 #
 
 set_property(TARGET precice PROPERTY PUBLIC_HEADER
-    ${CMAKE_BINARY_DIR}/src/precice/Version.h
+    ${PROJECT_BINARY_DIR}/src/precice/Version.h
     src/precice/SolverInterface.hpp
     src/precice/Tooling.hpp
     src/precice/types.hpp

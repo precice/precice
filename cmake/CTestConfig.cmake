@@ -382,17 +382,17 @@ if(PRECICE_BUILD_TOOLS)
 
   add_tools_test(
     NAME check.file
-    COMMAND precice-tools check ${CMAKE_SOURCE_DIR}/src/precice/tests/config-checker.xml
+    COMMAND precice-tools check ${PROJECT_SOURCE_DIR}/src/precice/tests/config-checker.xml
     )
 
   add_tools_test(
     NAME check.file+name
-    COMMAND precice-tools check ${CMAKE_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo
+    COMMAND precice-tools check ${PROJECT_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo
     )
 
   add_tools_test(
     NAME check.file+name+size
-    COMMAND precice-tools check ${CMAKE_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo 2
+    COMMAND precice-tools check ${PROJECT_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo 2
     )
 endif()
 

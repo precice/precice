@@ -182,7 +182,7 @@ if(TPL_ENABLE_EIGEN3)
   # Use EIGEN3_ROOT to set the directory
   xsdk_tpl_require(EIGEN3 EIGEN3_INCLUDE_DIR)
 endif()
-find_package(Eigen3 3.2 REQUIRED)
+find_package(Eigen3 3.3.7 REQUIRED)
 message(STATUS "Found Eigen ${EIGEN3_VERSION}")
 precice_validate_eigen()
 
@@ -391,7 +391,7 @@ GENERATE_EXPORT_HEADER(preciceCore
 
 # Add the export header to the public headers of the preCICE lib
 set_property(TARGET precice APPEND PROPERTY PUBLIC_HEADER
-    ${CMAKE_BINARY_DIR}/src/precice/export.h)
+    ${PROJECT_BINARY_DIR}/src/precice/export.h)
 
 #
 # Configuration of Target precice-tools

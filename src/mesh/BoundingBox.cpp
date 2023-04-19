@@ -59,7 +59,7 @@ bool BoundingBox::operator==(const BoundingBox &otherBB) const
 
 bool BoundingBox::empty() const
 {
-  return (_boundMax - _boundMin).isZero() || isDefault();
+  return isDefault() || (_boundMin - _boundMax).isZero();
 }
 
 bool BoundingBox::isDefault() const
