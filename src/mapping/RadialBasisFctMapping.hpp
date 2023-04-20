@@ -166,7 +166,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::clear()
 template <typename RADIAL_BASIS_FUNCTION_T>
 std::string RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::getName() const
 {
-  return "rbf global direct";
+  return "global-direct RBF";
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
