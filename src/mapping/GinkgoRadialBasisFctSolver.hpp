@@ -28,8 +28,8 @@ using cholesky = gko::preconditioner::Ic<>;
 
 using precice::mapping::RadialBasisParameters;
 
-extern void initCuda(const int deviceId = 0);
-extern void deInitCuda();
+extern void initQRSolver(const int deviceId = 0);
+extern void deInitQRSolver();
 extern void computeQR(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, GinkgoMatrix *R);
 
 // Declare Ginkgo Kernels as required by Ginkgo's unified kernel interface
@@ -216,8 +216,8 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
   _preconditionerType = preconditionerTypeLookup.at(ginkgoParameter.preconditioner);
 
   if (GinkgoSolverType::QR == _solverType) {
-    PRECICE_ASSERT("cuda-executor" == ginkgoParameter.executor, "The parallel QR decomposition is only available on CUDA yet.");
-    initCuda(ginkgoParameter.deviceId);
+    PRECICE_ASSERT("cuda-executor" == ginkgoParameter.executor || "hip-executor" == ginkgoParameter.executor, "The parallel QR decomposition is only available on CUDA and HIP yet.");
+    initQRSolver(ginkgoParameter.deviceId);
   }
 
   PRECICE_ASSERT(!(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite() && polynomial == Polynomial::ON), "The integrated polynomial (polynomial=\"on\") is not supported for the selected radial-basis function. Please select another radial-basis function or change the polynomial configuration.");
@@ -629,7 +629,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::~GinkgoRadialBasisFctSolver
   _allocCopyEvent.stop();
 
   if (GinkgoSolverType::QR == _solverType) {
-    deInitCuda();
+    deInitQRSolver();
   }
 
   clear();

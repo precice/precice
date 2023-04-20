@@ -291,9 +291,9 @@ if (PRECICE_GinkgoParallelization)
 
       set(GINKGO_HIPCC_OPTIONS "-fPIC")
 
-find_package(hipsolver) 
+      find_package(hipsolver)
 
-     message(STATUS "Enabled AMD HIP support for Ginkgo library.")
+      message(STATUS "Enabled AMD HIP support for Ginkgo library.")
   endif()
 
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
@@ -411,15 +411,19 @@ if (PRECICE_GinkgoParallelization)
   include(${Ginkgo_Path}/cmake/unified_kernels.cmake)
   file(GLOB ginkgo_lib "${Ginkgo_Path}/build/lib/*")
 
-ginkgo_add_unified_kernels(preciceCore src/mapping/ginkgo_kernels/GinkgoRBFKernels.cpp)
-
-hip_add_library(preciceHIPQR src/mapping/cuda_kernels/qr_decomp.hip.cpp HIPCC_OPTIONS "-std=c++14" CLANG_OPTIONS "-fPIC" STATIC)
-target_link_libraries(preciceHIPQR PUBLIC ${ginkgo_lib} hip::host roc::hipsolver)
-target_include_directories(preciceHIPQR PUBLIC "${Ginkgo_Path}/include" "/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi" "/usr/lib/x86_64-linux-gnu/openmpi/include")
-
   # This command registers Ginkgo kernels for different execution backends
+  ginkgo_add_unified_kernels(preciceCore src/mapping/ginkgo_kernels/GinkgoRBFKernels.cpp)
 
-target_link_libraries(preciceCore PRIVATE preciceHIPQR)
+  # This compiles cuSolver or rocSOLVER into preCICE for GPU QR decomposition
+  if(CMAKE_CUDA_COMPILER)
+    target_sources(preciceCore PRIVATE src/mapping/cuda_kernels/qr_decomp.cu)
+    target_link_libraries(preciceCore PUBLIC ${ginkgo_lib} cusolver cublas)
+  elseif(HIP_FOUND)
+    hip_add_library(preciceHIPQR src/mapping/cuda_kernels/qr_decomp.hip.cpp HIPCC_OPTIONS "-std=c++14" CLANG_OPTIONS "-fPIC" STATIC)
+    target_link_libraries(preciceHIPQR PUBLIC ${ginkgo_lib} hip::host roc::hipsolver)
+    target_include_directories(preciceHIPQR PUBLIC "${Ginkgo_Path}/include" "/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi" "/usr/lib/x86_64-linux-gnu/openmpi/include") # TODO: Fix include path
+    target_link_libraries(preciceCore PRIVATE preciceHIPQR)
+    endif()
 
   if(OpenMP_FOUND)
     target_compile_options(preciceCore PUBLIC "-fopenmp")

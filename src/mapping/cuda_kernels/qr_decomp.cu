@@ -1,14 +1,10 @@
-#include "ginkgo/ginkgo.hpp"
+#include <ginkgo/ginkgo.hpp>
 #include <cusolverDn.h>
 #include <cublas_v2.h>
 #include <cuda_runtime_api.h>
-#include "cuda_runtime.h"
 #include <cuda.h>
 #include "device_launch_parameters.h"
-#include <iostream>
 #include <cuda_runtime.h>
-#include <cublas_v2.h>
-#include <cusolverDn.h>
 #include "utils/Event.hpp"
 #include "utils/EventUtils.hpp"
 
@@ -29,7 +25,7 @@ int *devInfo = nullptr;
 
 int cudaBackupDeviceId = 0;
 
-void initCuda(const int deviceId=0){
+void initQRSolver(const int deviceId=0){
     cudaGetDevice(&cudaBackupDeviceId);
     cudaSetDevice(deviceId);
 
@@ -42,7 +38,7 @@ void initCuda(const int deviceId=0){
 
 }
 
-void deInitCuda(){
+void deInitQRSolver(){
     // Freeing CUDA variables
     cudaFree(dTau);
     cudaFree(dWork);
