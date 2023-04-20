@@ -1,5 +1,14 @@
 include(CheckCXXSourceCompiles)
 
+# These are the compiler/STL versions required to compile preCICE
+set(_precice_recommended_baseline "Please upgrade your compiler at least to:
+    * GCC 9.2
+    * LLVM 5.0
+    * MSVC 19.14
+    * Intel 15 in conjunction with GCC 9.2
+    * PGI 2015 in conjunction with GCC 9.2
+")
+
 function(_check_cxx_11_n2071_n2072)
   unset(CXX11_N2071_N2072)
   set(CheckSourceN2071N2072 "
@@ -16,13 +25,7 @@ function(_check_cxx_11_n2071_n2072)
     message(FATAL_ERROR "
     The standard library used by your compiler ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} is not C++11 compliant.
     It does not support time manipulation (N2071 and N2072).
-    Please upgrade your compiler at least to:
-    * GCC 5
-    * LLVM 3.8
-    * MSVC 19.0
-    * Intel 15 in conjunction with GCC 5
-    * PGI 2015 in conjunction with GCC 5
-    ")
+    ${_precice_recommended_baseline}")
   endif()
   unset(CPP11LibraryConforming)
   unset(CPP11CheckSource)
@@ -45,14 +48,8 @@ function(_check_cxx_17_transform_reduce)
   if(NOT "${CXX17_TRANSFORM_REDUCE}")
     message(FATAL_ERROR "
     The standard library used by your compiler ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} is not C++17 compliant.
-    It does not support std::transform_reduce (P0024R2)!
-    Please upgrade your compiler at least to:
-    * GCC 9.3
-    * LLVM 5.0
-    * MSVC 19.14
-    * Intel 15 in conjunction with GCC 9.2
-    * PGI 2015 in conjunction with GCC 9.2
-    ")
+    It does not support std::transform_reduce (P0024R2).
+    ${_precice_recommended_baseline}")
   endif()
   unset(CPP11LibraryConforming)
   unset(CPP11CheckSource)
@@ -70,3 +67,5 @@ endfunction(check_cxx_17_library_support)
 
 check_cxx_11_library_support()
 check_cxx_17_library_support()
+
+unset(_precice_recommended_baseline)
