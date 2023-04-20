@@ -590,7 +590,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::clear()
 template <typename RADIAL_BASIS_FUNCTION_T>
 std::string PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::getName() const
 {
-  return "rbf global iterative";
+  return "global-iterative RBF";
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>

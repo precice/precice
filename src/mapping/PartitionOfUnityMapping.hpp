@@ -405,7 +405,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::clear()
 template <typename RADIAL_BASIS_FUNCTION_T>
 std::string PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::getName() const
 {
-  return "partition of unity rbf";
+  return "partition-of-unity RBF";
 }
 } // namespace mapping
 } // namespace precice
