@@ -120,13 +120,6 @@ bool Participant::hasData(::precice::string_view meshName, ::precice::string_vie
   return _impl->hasData(toSV(meshName), toSV(dataName));
 }
 
-
-// bool SolverInterface::hasGlobalData(
-//     const std::string &dataName) const
-// {
-//   return _impl->hasGlobalData(dataName);
-// }
-
 int SolverInterface::getGlobalDataID(
     const std::string &dataName) const
 {
