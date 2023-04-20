@@ -164,7 +164,10 @@ private:
       const mapping::MappingConfiguration::ConfiguredMapping &mapping,
       const impl::PtrParticipant &                            participant);
 
-  /// Updates all participants regarding dynamicity information
+  /** Updates all participants regarding dynamicity information
+   *
+   * There will be multiple non-trivial calls to this function when more than two participants are defined
+   */
   void updateParticipantDynamicity();
 };
 
