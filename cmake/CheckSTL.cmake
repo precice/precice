@@ -15,7 +15,7 @@ function(_check_cxx_11_n2071_n2072)
   if(NOT "${CXX11_N2071_N2072}")
     message(FATAL_ERROR "
     The standard library used by your compiler ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} is not C++11 compliant.
-    It does not support time manipulation (N2071 and N2072)!
+    It does not support time manipulation (N2071 and N2072).
     Please upgrade your compiler at least to:
     * GCC 5
     * LLVM 3.8
@@ -47,7 +47,7 @@ function(_check_cxx_17_transform_reduce)
     The standard library used by your compiler ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} is not C++17 compliant.
     It does not support std::transform_reduce (P0024R2)!
     Please upgrade your compiler at least to:
-    * GCC 9.2
+    * GCC 9.3
     * LLVM 5.0
     * MSVC 19.14
     * Intel 15 in conjunction with GCC 9.2
