@@ -489,7 +489,8 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   } else {
     // We need knowledge about the basis function in order to instantiate the rbf related mapping
     PRECICE_ASSERT(requiresBasisFunction(type));
-    configuredMapping.mapping = nullptr;
+    configuredMapping.mapping                = nullptr;
+    configuredMapping.configuredWithAliasTag = type == TYPE_RBF_ALIAS;
   }
 
   configuredMapping.requiresBasisFunction = requiresBasisFunction(type);

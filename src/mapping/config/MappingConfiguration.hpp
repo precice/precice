@@ -32,6 +32,8 @@ public:
     Direction direction;
     /// true for RBF mapping
     bool requiresBasisFunction;
+    /// used the automatic rbf alias tag in order to set the mapping
+    bool configuredWithAliasTag = false;
   };
 
   MappingConfiguration(

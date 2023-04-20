@@ -1825,6 +1825,10 @@ void SolverInterfaceImpl::computeMappings(std::vector<MappingContext> &contexts,
   using namespace mapping;
   for (impl::MappingContext &context : contexts) {
     if (not context.mapping->hasComputedMapping()) {
+      if (context.configuredWithAliasTag) {
+        PRECICE_INFO("Automatic RBF mapping alias from mesh \"{}\" to mesh \"{}\" in \"{}\" direction resolves to \"{}\" .",
+                     context.mapping->getInputMesh()->getName(), context.mapping->getOutputMesh()->getName(), mappingType, context.mapping->getName());
+      }
       PRECICE_INFO("Computing \"{}\" mapping from mesh \"{}\" to mesh \"{}\" in \"{}\" direction.",
                    context.mapping->getName(), context.mapping->getInputMesh()->getName(), context.mapping->getOutputMesh()->getName(), mappingType);
       context.mapping->computeMapping();
