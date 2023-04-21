@@ -32,11 +32,11 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
       if (cplInterface.requiresWritingCheckpoint()) {
       }
 
-      cplInterface.advance(maxDt);
+      maxDt = cplInterface.advance(maxDt);
 
       if (cplInterface.requiresReadingCheckpoint()) {
       }
-      cplInterface.readScalarData(meshName, dataBAID, vertexID, valueRead);
+      cplInterface.readScalarData(meshName, dataBAID, vertexID, maxDt, valueRead);
     }
 
     BOOST_TEST(valueRead == valueB);
@@ -63,12 +63,12 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
       if (cplInterface.requiresWritingCheckpoint()) {
       }
 
-      cplInterface.advance(maxDt);
+      maxDt = cplInterface.advance(maxDt);
 
       if (cplInterface.requiresReadingCheckpoint()) {
       }
-      cplInterface.readScalarData(meshName1, dataABID, vertexID1, valueReadA);
-      cplInterface.readScalarData(meshName2, dataCBID, vertexID2, valueReadC);
+      cplInterface.readScalarData(meshName1, dataABID, vertexID1, maxDt, valueReadA);
+      cplInterface.readScalarData(meshName2, dataCBID, vertexID2, maxDt, valueReadC);
     }
 
     BOOST_TEST(valueReadA == 1.0);
@@ -93,11 +93,11 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
       if (cplInterface.requiresWritingCheckpoint()) {
       }
 
-      cplInterface.advance(maxDt);
+      maxDt = cplInterface.advance(maxDt);
 
       if (cplInterface.requiresReadingCheckpoint()) {
       }
-      cplInterface.readScalarData(meshName, dataBCID, vertexID, valueRead);
+      cplInterface.readScalarData(meshName, dataBCID, vertexID, maxDt, valueRead);
     }
 
     BOOST_TEST(valueRead == 2.0);
@@ -127,11 +127,11 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
       if (cplInterface.requiresWritingCheckpoint()) {
       }
 
-      cplInterface.advance(maxDt);
+      maxDt = cplInterface.advance(maxDt);
 
       if (cplInterface.requiresReadingCheckpoint()) {
       }
-      cplInterface.readScalarData(meshName, dataBAID, vertexID, valueRead);
+      cplInterface.readScalarData(meshName, dataBAID, vertexID, maxDt, valueRead);
     }
     cplInterface.finalize();
   } else if (context.isNamed("SolverB")) {
@@ -156,12 +156,12 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
       if (cplInterface.requiresWritingCheckpoint()) {
       }
 
-      cplInterface.advance(maxDt);
+      maxDt = cplInterface.advance(maxDt);
 
       if (cplInterface.requiresReadingCheckpoint()) {
       }
-      cplInterface.readScalarData(meshName1, dataABID, vertexID1, valueReadA);
-      cplInterface.readScalarData(meshName2, dataCBID, vertexID2, valueReadC);
+      cplInterface.readScalarData(meshName1, dataABID, vertexID1, maxDt, valueReadA);
+      cplInterface.readScalarData(meshName2, dataCBID, vertexID2, maxDt, valueReadC);
     }
     cplInterface.finalize();
 
@@ -187,12 +187,12 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
       if (cplInterface.requiresWritingCheckpoint()) {
       }
 
-      cplInterface.advance(maxDt);
+      maxDt = cplInterface.advance(maxDt);
 
       if (cplInterface.requiresReadingCheckpoint()) {
       }
-      cplInterface.readScalarData(meshName1, dataBCID, vertexID1, valueReadA);
-      cplInterface.readScalarData(meshName2, dataDCID, vertexID2, valueReadC);
+      cplInterface.readScalarData(meshName1, dataBCID, vertexID1, maxDt, valueReadA);
+      cplInterface.readScalarData(meshName2, dataDCID, vertexID2, maxDt, valueReadC);
     }
     cplInterface.finalize();
   } else {
@@ -212,11 +212,11 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
       if (cplInterface.requiresWritingCheckpoint()) {
       }
 
-      cplInterface.advance(maxDt);
+      maxDt = cplInterface.advance(maxDt);
 
       if (cplInterface.requiresReadingCheckpoint()) {
       }
-      cplInterface.readScalarData(meshName, dataCDID, vertexID, valueRead);
+      cplInterface.readScalarData(meshName, dataCDID, vertexID, maxDt, valueRead);
     }
     cplInterface.finalize();
   }

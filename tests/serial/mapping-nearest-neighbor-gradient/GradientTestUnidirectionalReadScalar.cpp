@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(GradientTestUnidirectionalReadScalar)
 
     double valueData[2];
     int    indices[2] = {0, 1};
-    cplInterface.readBlockScalarData(meshName, dataName, 2, indices, valueData);
+    cplInterface.readBlockScalarData(meshName, dataName, 2, indices, maxDt, valueData);
     double expected[2] = {1.6, 3.5};
     BOOST_TEST(valueData == expected);
 

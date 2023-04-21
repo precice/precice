@@ -26,12 +26,12 @@ inline void cyclicExplicit(TestContext &context)
   std::vector<double> data{0, 0};
 
   interface.writeBlockScalarData(meshName, wid, 2, ids.data(), data.data());
-  interface.initialize();
+  double preciceDt = interface.initialize();
 
   BOOST_TEST_CONTEXT("first step")
   {
     BOOST_TEST_REQUIRE(interface.isCouplingOngoing());
-    interface.readBlockScalarData(meshName, rid, 2, ids.data(), data.data());
+    interface.readBlockScalarData(meshName, rid, 2, ids.data(), preciceDt, data.data());
     std::vector<double> expected(2, (context.isNamed("A") ? 0 : 1));
     BOOST_TEST(data == expected, boost::test_tools::per_element());
 
@@ -44,7 +44,7 @@ inline void cyclicExplicit(TestContext &context)
   BOOST_TEST_CONTEXT("second step")
   {
     BOOST_TEST_REQUIRE(interface.isCouplingOngoing());
-    interface.readBlockScalarData(meshName, rid, 2, ids.data(), data.data());
+    interface.readBlockScalarData(meshName, rid, 2, ids.data(), preciceDt, data.data());
     std::vector<double> expected(2, (context.isNamed("A") ? 1 : 2));
     BOOST_TEST(data == expected, boost::test_tools::per_element());
 

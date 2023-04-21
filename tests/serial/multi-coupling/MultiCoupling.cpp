@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
       vertexIDs.push_back(vertexID);
     }
 
-    precice.initialize();
+    double preciceDt = precice.initialize();
 
     for (size_t i = 0; i < 4; i++) {
       precice.writeVectorData(meshName, dataWriteID, vertexIDs.at(i), datas.at(i).data());
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
     }
 
     for (size_t i = 0; i < 4; i++) {
-      precice.readVectorData(meshName, dataReadID, vertexIDs.at(i), datas.at(i).data());
+      precice.readVectorData(meshName, dataReadID, vertexIDs.at(i), preciceDt, datas.at(i).data());
     }
 
     BOOST_TEST(datas.at(0)(0) == 1.00000000000000002082e-03);

@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessReadWrite)
         // do nothing
       }
 
-      interface.readBlockScalarData(providedMeshName, readDataName, ids.size(), ids.data(), readData.data());
+      interface.readBlockScalarData(providedMeshName, readDataName, ids.size(), ids.data(), dt, readData.data());
 
       std::vector<double> expectedData = std::vector<double>({50});
       if (iterations == 0) {
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessReadWrite)
         // do nothing
       }
 
-      interface.readBlockScalarData(receivedMeshName, readDataName, receiveMeshIDs.size(), receiveMeshIDs.data(), readData.data());
+      interface.readBlockScalarData(receivedMeshName, readDataName, receiveMeshIDs.size(), receiveMeshIDs.data(), dt, readData.data());
 
       std::vector<double> expectedData = std::vector<double>({5});
       if (iterations == 0) {

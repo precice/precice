@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(Implicit)
   while (couplingInterface.isCouplingOngoing()) {
     if (couplingInterface.requiresWritingCheckpoint()) {
     }
-    couplingInterface.readVectorData(meshName, readDataName, vertexID, readData.data());
+    couplingInterface.readVectorData(meshName, readDataName, vertexID, dt, readData.data());
     BOOST_TEST(expectedReadValue == readData.at(0));
     BOOST_TEST(expectedReadValue == readData.at(1));
     couplingInterface.writeVectorData(meshName, writeDataName, vertexID, writeData.data());

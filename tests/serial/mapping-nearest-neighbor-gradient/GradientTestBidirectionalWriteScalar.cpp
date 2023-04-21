@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteScalar)
 
     double valueDataB = 0.0;
     double maxDt      = cplInterface.initialize();
-    cplInterface.readScalarData(meshName, dataBID, 0, valueDataB);
+    cplInterface.readScalarData(meshName, dataBID, 0, maxDt, valueDataB);
     BOOST_TEST(1.3 == valueDataB);
 
     while (cplInterface.isCouplingOngoing()) {
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteScalar)
       cplInterface.writeVectorData(meshName, dataAID, 0, valueDataA.data());
       maxDt = cplInterface.advance(maxDt);
 
-      cplInterface.readScalarData(meshName, dataBID, 0, valueDataB);
+      cplInterface.readScalarData(meshName, dataBID, 0, maxDt, valueDataB);
       BOOST_TEST(1.8 == valueDataB);
     }
     cplInterface.finalize();
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteScalar)
     double maxDt = cplInterface.initialize();
 
     Vector3d valueDataA;
-    cplInterface.readVectorData(meshName, dataAID, 0, valueDataA.data());
+    cplInterface.readVectorData(meshName, dataAID, 0, maxDt, valueDataA.data());
     Vector3d expected(1.0, 1.0, 1.0);
     BOOST_TEST(valueDataA == expected);
 
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteScalar)
       cplInterface.writeScalarGradientData(meshName, dataBID, 0, valueGradDataA.data());
 
       maxDt = cplInterface.advance(maxDt);
-      cplInterface.readVectorData(meshName, dataAID, 0, valueDataA.data());
+      cplInterface.readVectorData(meshName, dataAID, 0, maxDt, valueDataA.data());
       BOOST_TEST(valueDataA == expected);
     }
     cplInterface.finalize();

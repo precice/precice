@@ -93,9 +93,9 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
     BOOST_TEST(!interface.requiresGradientDataFor(meshTwoID, dataAID));
 
     double valueA, valueB, valueC;
-    interface.readScalarData(meshTwoID, dataAID, idA, valueA);
-    interface.readScalarData(meshTwoID, dataAID, idB, valueB);
-    interface.readScalarData(meshTwoID, dataAID, idC, valueC);
+    interface.readScalarData(meshTwoID, dataAID, idA, maxDt, valueA);
+    interface.readScalarData(meshTwoID, dataAID, idB, maxDt, valueB);
+    interface.readScalarData(meshTwoID, dataAID, idC, maxDt, valueC);
 
     // Due to Eigen 3.3.7 (Ubunu 2004) giving slightly different results
     BOOST_TEST(valueA == expectedValTwoA, boost::test_tools::tolerance(1e-8));

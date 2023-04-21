@@ -102,9 +102,9 @@ void testMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFuncti
     BOOST_TEST(!interface.requiresGradientDataFor(meshName, dataAID));
 
     double valueA, valueB, valueC;
-    interface.readScalarData(meshName, dataAID, idA, valueA);
-    interface.readScalarData(meshName, dataAID, idB, valueB);
-    interface.readScalarData(meshName, dataAID, idC, valueC);
+    interface.readScalarData(meshName, dataAID, idA, maxDt, valueA);
+    interface.readScalarData(meshName, dataAID, idB, maxDt, valueB);
+    interface.readScalarData(meshName, dataAID, idC, maxDt, valueC);
 
     BOOST_TEST(valueA == expectedValTwoA);
     BOOST_TEST(valueB == expectedValTwoB);
@@ -218,9 +218,9 @@ void testQuadMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFu
     // Read the mapped data from the mesh.
     auto   dataAID = "DataOne";
     double valueA, valueB, valueC;
-    interface.readScalarData(meshName, dataAID, idA, valueA);
-    interface.readScalarData(meshName, dataAID, idB, valueB);
-    interface.readScalarData(meshName, dataAID, idC, valueC);
+    interface.readScalarData(meshName, dataAID, idA, maxDt, valueA);
+    interface.readScalarData(meshName, dataAID, idB, maxDt, valueB);
+    interface.readScalarData(meshName, dataAID, idC, maxDt, valueC);
 
     BOOST_TEST(valueA == expectedValTwoA);
     BOOST_TEST(valueB == expectedValTwoB);

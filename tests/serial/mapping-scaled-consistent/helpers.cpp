@@ -85,9 +85,9 @@ void testQuadMappingScaledConsistent(const std::string configFile, const TestCon
     // Read the mapped data from the mesh.
     auto   dataAID = "DataOne";
     double valueA, valueB, valueC;
-    interface.readScalarData(meshTwoID, dataAID, idA, valueA);
-    interface.readScalarData(meshTwoID, dataAID, idB, valueB);
-    interface.readScalarData(meshTwoID, dataAID, idC, valueC);
+    interface.readScalarData(meshTwoID, dataAID, idA, maxDt, valueA);
+    interface.readScalarData(meshTwoID, dataAID, idB, maxDt, valueB);
+    interface.readScalarData(meshTwoID, dataAID, idC, maxDt, valueC);
 
     double calculatedIntegral = precice::math::geometry::triangleArea(coordTwoA, coordTwoB, coordTwoC) * (valueA + valueB + valueC) / 3.0;
     BOOST_TEST(expectedIntegral == calculatedIntegral);
@@ -185,10 +185,10 @@ void testQuadMappingScaledConsistentVolumetric(const std::string configFile, con
     // Read the mapped data from the mesh.
     auto   dataAID = "DataOne";
     double valueA, valueB, valueC, valueD;
-    interface.readScalarData(meshTwoID, dataAID, idA, valueA);
-    interface.readScalarData(meshTwoID, dataAID, idB, valueB);
-    interface.readScalarData(meshTwoID, dataAID, idC, valueC);
-    interface.readScalarData(meshTwoID, dataAID, idD, valueD);
+    interface.readScalarData(meshTwoID, dataAID, idA, maxDt, valueA);
+    interface.readScalarData(meshTwoID, dataAID, idB, maxDt, valueB);
+    interface.readScalarData(meshTwoID, dataAID, idC, maxDt, valueC);
+    interface.readScalarData(meshTwoID, dataAID, idD, maxDt, valueD);
 
     double calculatedIntegral = precice::math::geometry::triangleArea(coordTwoA, coordTwoB, coordTwoC) * (valueA + valueB + valueC) / 3.0 +
                                 precice::math::geometry::triangleArea(coordTwoA, coordTwoD, coordTwoC) * (valueA + valueD + valueC) / 3.0;
@@ -282,10 +282,10 @@ void testTetraScaledConsistentVolumetric(const std::string configFile, const Tes
     // Read the mapped data from the mesh.
     auto   dataAID = "DataOne";
     double valueA, valueB, valueC, valueD;
-    interface.readScalarData(meshTwoID, dataAID, idA, valueA);
-    interface.readScalarData(meshTwoID, dataAID, idB, valueB);
-    interface.readScalarData(meshTwoID, dataAID, idC, valueC);
-    interface.readScalarData(meshTwoID, dataAID, idD, valueD);
+    interface.readScalarData(meshTwoID, dataAID, idA, maxDt, valueA);
+    interface.readScalarData(meshTwoID, dataAID, idB, maxDt, valueB);
+    interface.readScalarData(meshTwoID, dataAID, idC, maxDt, valueC);
+    interface.readScalarData(meshTwoID, dataAID, idD, maxDt, valueD);
 
     double calculatedIntegral = precice::math::geometry::tetraVolume(coordTwoA, coordTwoB, coordTwoC, coordTwoD) * (valueA + valueB + valueC + valueD) / 4.0;
     BOOST_TEST(expectedIntegral == calculatedIntegral);

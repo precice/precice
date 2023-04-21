@@ -46,7 +46,7 @@ void testVectorGradientFunctions(const TestContext &context, const bool writeBlo
     }
 
     // Participant must make move after writing
-    maxDt = interface.advance(maxDt);
+    interface.advance(maxDt);
 
     BOOST_TEST(!interface.isCouplingOngoing(), "Sending participant should have to advance once!");
     interface.finalize();
@@ -67,7 +67,7 @@ void testVectorGradientFunctions(const TestContext &context, const bool writeBlo
 
     double valueData[6];
     int    indices[2] = {0, 1};
-    interface.readBlockVectorData(meshName, dataName, 2, indices, valueData);
+    interface.readBlockVectorData(meshName, dataName, 2, indices, maxDt, valueData);
 
     std::vector<double> expected;
     expected = {1.6, 3.5, 5.4, 7.3, 9.2, 11.1};
