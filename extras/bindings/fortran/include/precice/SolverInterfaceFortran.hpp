@@ -516,6 +516,7 @@ PRECICE_API void precicef_write_sdata_(
  *   CHARACTER dataName(*),
  *   INTEGER size,
  *   INTEGER valueIndices,
+ *   DOUBLE PRECISION relativeReadTime,
  *   DOUBLE PRECISION values(dim*size) )
  *
  * IN:  mesh, data, size, valueIndices, meshNameLength, dataNameLength
@@ -529,6 +530,7 @@ PRECICE_API void precicef_read_bvdata_(
     const char *dataName,
     const int * size,
     int *       valueIndices,
+    double      relativeReadTime,
     double *    values,
     int         meshNameLength,
     int         dataNameLength);
@@ -539,6 +541,7 @@ PRECICE_API void precicef_read_bvdata_(
  *   CHARACTER meshName(*),
  *   CHARACTER dataName(*),
  *   INTEGER valueIndex,
+ *   DOUBLE PRECISION relativeReadTime,
  *   DOUBLE PRECISION dataValue(dim) )
  *
  * IN:  mesh, data, valueIndex, meshNameLength, dataNameLength
@@ -551,6 +554,7 @@ PRECICE_API void precicef_read_vdata_(
     const char *meshName,
     const char *dataName,
     const int * valueIndex,
+    double      relativeReadTime,
     double *    dataValue,
     int         meshNameLength,
     int         dataNameLength);
@@ -562,6 +566,7 @@ PRECICE_API void precicef_read_vdata_(
  *   CHARACTER dataName(*),
  *   INTEGER size,
  *   INTEGER valueIndices,
+ *   DOUBLE PRECISION relativeReadTime,
  *   DOUBLE PRECISION values(size) )
  *
  * IN:  mesh, data, size, valueIndices, meshNameLength, dataNameLength
@@ -575,6 +580,7 @@ PRECICE_API void precicef_read_bsdata_(
     const char *dataName,
     const int * size,
     int *       valueIndices,
+    double      relativeReadTime,
     double *    values,
     int         meshNameLength,
     int         dataNameLength);
@@ -585,6 +591,7 @@ PRECICE_API void precicef_read_bsdata_(
  *   CHARACTER meshName(*),
  *   CHARACTER dataName(*),
  *   INTEGER valueIndex,
+ *   DOUBLE PRECISION relativeReadTime,
  *   DOUBLE PRECISION dataValue )
  *
  * IN:  mesh, data, valueIndex, meshNameLength, dataNameLength
@@ -597,6 +604,7 @@ PRECICE_API void precicef_read_sdata_(
     const char *meshName,
     const char *dataName,
     const int * valueIndex,
+    double      relativeReadTime,
     double *    dataValue,
     int         meshNameLength,
     int         dataNameLength);

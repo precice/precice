@@ -78,7 +78,7 @@ int main(int argc, char **argv)
       printf("DUMMY: Writing iteration checkpoint \n");
     }
 
-    precicec_readBlockVectorData(meshName, readDataName, numberOfVertices, vertexIDs, readData);
+    precicec_readBlockVectorData(meshName, readDataName, numberOfVertices, vertexIDs, dt, readData);
 
     for (int i = 0; i < numberOfVertices * dimensions; i++) {
       writeData[i] = readData[i] + 1;
