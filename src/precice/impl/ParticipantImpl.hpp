@@ -256,25 +256,36 @@ public:
 
 /// @copydoc SolverInterface::writeGlobalVectorData
   void writeGlobalVectorData(
-      int           fromDataID,
-      const double *value);
+      std::string_view dataName,
+      const double *   value);
 
 
     /// @copydoc SolverInterface::writeGlobalScalarData
   void writeGlobalScalarData(
-      int    dataID,
-      double value);
+      std::string_view dataName,
+      double           value);
+
+  /// @copydoc SolverInterface::readGlobalVectorData(int, double*) const
+  void readGlobalVectorData(
+      std::string_view dataName,
+      double *         value) const;
+
+  /// @copydoc SolverInterface::readGlobalVectorData(int, double, double*) const
+  void readGlobalVectorData(
+      std::string_view dataName,
+      double           relativeReadTime,
+      double *         value) const;
 
   /// @copydoc SolverInterface::readGlobalScalarData(int, double&) const
   void readGlobalScalarData(
-      int     toDataID,
-      double &value) const;
+      std::string_view dataName,
+      double &         value) const;
 
   /// @copydoc SolverInterface::readGlobalScalarData(int, double, double&) const
   void readGlobalScalarData(
-      int     toDataID,
-      double  relativeReadTime,
-      double &value) const;
+      std::string_view dataName,
+      double           relativeReadTime,
+      double &         value) const;
   ///@}
 
   /** @name Experimental Data Access
@@ -376,6 +387,17 @@ private:
   void configure(const config::Configuration &configuration);
 
   void configureM2Ns(const m2n::M2NConfiguration::SharedPointer &config);
+
+  void readGlobalVectorDataImpl(
+      std::string_view dataName,
+      double           relativeReadTime,
+      double *         value) const;
+
+  void readGlobalScalarDataImpl(
+      std::string_view dataName,
+      double           relativeReadTime,
+      double &         value) const;
+
 
   /// Exports meshes with data and watch point data.
   void handleExports();

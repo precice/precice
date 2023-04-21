@@ -124,8 +124,8 @@ void ParticipantState::addReadData(
 void Participant::addGlobalData(
     const mesh::PtrGlobalData &data)
 {
-    checkDuplicatedGlobalData(data);
-  _globalDataContexts.emplace(data->getID(), GlobalDataContext(data));
+  checkDuplicatedGlobalData(data->getName());
+  _globalDataContexts.emplace(data->getName(), GlobalDataContext(data));
 }
 
 void ParticipantState::addReadMappingContext(
@@ -183,29 +183,29 @@ WriteDataContext &ParticipantState::writeDataContext(std::string_view mesh, std:
   return it->second;
 }
 
-const GlobalDataContext &ParticipantState::globalDataContext(DataID dataID) const
+const GlobalDataContext &ParticipantState::globalDataContext(std::string_view data) const
 {
-  auto it = _globalDataContexts.find(dataID);
-  PRECICE_CHECK(it != _globalDataContexts.end(), "DataID \"{}\" does not exist as global data.", dataID)
+  auto it = _globalDataContexts.find(data);
+  PRECICE_CHECK(it != _globalDataContexts.end(), "Data \"{}\" does not exist as global data.", data)
   return it->second;
 }
 
-GlobalDataContext &ParticipantState::globalDataContext(DataID dataID)
+GlobalDataContext &ParticipantState::globalDataContext(std::string_view data)
 {
-  auto it = _globalDataContexts.find(dataID);
-  PRECICE_CHECK(it != _globalDataContexts.end(), "DataID \"{}\" does not exist as global data.", dataID)
+  auto it = _globalDataContexts.find(data);
+  PRECICE_CHECK(it != _globalDataContexts.end(), "Data \"{}\" does not exist as global data.", data)
   return it->second;
 }
 
-const GlobalDataContext &ParticipantState::globalDataContext(std::string dataName) const
-{
-  for (const auto &dataContext : globalDataContexts()) {
-    if (dataContext.getDataName() == dataName) {
-      return dataContext;
-    }
-  }
-  PRECICE_ASSERT(false, "GlobalData with name \"{}\" not found in Participant \"{}\".", dataName, _name);
-}
+// const GlobalDataContext &ParticipantState::globalDataContext(std::string dataName) const
+// {
+//   for (const auto &dataContext : globalDataContexts()) {
+//     if (dataContext.getDataName() == dataName) {
+//       return dataContext;
+//     }
+//   }
+//   PRECICE_ASSERT(false, "GlobalData with name \"{}\" not found in Participant \"{}\".", dataName, _name);
+// }
 
 bool ParticipantState::hasData(std::string_view mesh, std::string_view data) const
 {
@@ -236,12 +236,21 @@ bool ParticipantState::isDataWrite(std::string_view mesh, std::string_view data)
   return _writeDataContexts.count(MeshDataKey{mesh, data}) > 0;
 }
 
-
-int Participant::getUsedGlobalDataID(const std::string &dataName) const
+bool Participant::isDataGlobal(std::string_view data) const
 {
-  const auto &context = globalDataContext(dataName);
-  return context.providedData()->getID();
+  // std::string_view mesh = "";
+  // return _globalDataContexts.count(MeshDataKey{mesh, data}) > 0;
+
+  return std::any_of(_globalDataContexts.begin(), _globalDataContexts.end(), [data](const auto &gdc) {
+    return gdc.second.getDataName() == data;
+  });
 }
+
+// int Participant::getUsedGlobalDataID(const std::string &dataName) const
+// {
+//   const auto &context = globalDataContext(dataName);
+//   return context.providedData()->getID();
+// }
 
 /// Mesh queries
 
@@ -502,13 +511,13 @@ std::string ParticipantState::hintForMeshData(std::string_view mesh, std::string
   return fmt::format(" Available data are: {}", fmt::join(localData, ", "));
 }
 
-void Participant::checkDuplicatedGlobalData(const mesh::PtrGlobalData &data)
+void Participant::checkDuplicatedGlobalData(std::string_view data)
 {
-  bool isDataGlobal = _globalDataContexts.count(data->getID()) > 0;
-  PRECICE_CHECK(!isDataGlobal,
+  // bool isDataGlobal = _globalDataContexts.count(data->getID()) > 0;
+  PRECICE_CHECK(!isDataGlobal(data),
                 "Participant \"{}\" can read/write global data \"{}\" only once. "
                 "Please remove any duplicate instances of write-data/read-data nodes.",
-                _name, data->getName());
+                _name, data);
 }
 
 } // namespace precice::impl

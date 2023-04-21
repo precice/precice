@@ -176,19 +176,19 @@ public:
   WriteDataContext &writeDataContext(std::string_view mesh, std::string_view data);
 
   /** Provides access to \ref GlobalDataContext
-   * @pre there exists a \ref GlobalDataContext for \ref dataID
+   * @pre there exists a \ref GlobalDataContext for \ref data
    */
-  const GlobalDataContext &globalDataContext(DataID dataID) const;
+  const GlobalDataContext &globalDataContext(std::string_view data) const;
 
   /** Provides access to \ref GlobalDataContext
-   * @pre there exists a \ref GlobalDataContext for \ref dataID
+   * @pre there exists a \ref GlobalDataContext for \ref data
    */
-  GlobalDataContext &globalDataContext(DataID dataID);
+  GlobalDataContext &globalDataContext(std::string_view data);
 
-  /** Provides access to \ref GlobalDataContext of a \ref dataName
-   * @pre there exists a \ref GlobalDataContext for \ref dataName
-   */
-  const GlobalDataContext &globalDataContext(std::string DataName) const;
+  // /** Provides access to \ref GlobalDataContext of a \ref dataName
+  //  * @pre there exists a \ref GlobalDataContext for \ref dataName
+  //  */
+  // const GlobalDataContext &globalDataContext(std::string_view data) const;
 
   /** Provides access to all \ref WriteDataContext objects
    * @remarks does not contain nullptr.
@@ -236,7 +236,7 @@ public:
   /// @}
 
   /// What is the dataID of the used global data given the data name?
-  int getUsedGlobalDataID(const std::string &dataName) const;
+  // int getUsedGlobalDataID(const std::string &dataName) const;
 
   /// @name Mesh queries
   /// @{
@@ -387,7 +387,7 @@ private:
 
   DataMap<ReadDataContext> _readDataContexts;
 
-  std::map<DataID, GlobalDataContext> _globalDataContexts;
+  std::map<std::string_view, GlobalDataContext> _globalDataContexts;
 
   bool _useIntraComm = false;
 
@@ -402,7 +402,7 @@ private:
 
   void checkDuplicatedData(std::string_view mesh, std::string_view data);
 
-  void checkDuplicatedGlobalData(const mesh::PtrGlobalData &data);
+  void checkDuplicatedGlobalData(std::string_view data);
 
   /// To allow white box tests.
   friend struct Integration::Serial::Whitebox::TestConfigurationPeano;

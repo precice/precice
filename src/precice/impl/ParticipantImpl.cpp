@@ -554,13 +554,6 @@ bool ParticipantImpl::hasData(
   return _accessor->isDataUsed(dataName, meshName);
 }
 
-int SolverInterfaceImpl::getGlobalDataID(
-    const std::string &dataName) const
-{
-  PRECICE_TRACE(dataName);
-  return _accessor->getUsedGlobalDataID(dataName);
-}
-
 bool SolverInterfaceImpl::requiresMeshConnectivityFor(std::string_view meshName) const
 {
   PRECICE_VALIDATE_MESH_NAME(meshName);
@@ -1103,24 +1096,23 @@ void ParticipantImpl::writeGradientData(
 }
 
 void SolverInterfaceImpl::writeGlobalVectorData(
-    int           dataID,
-    const double *value)
+    std::string_view dataName,
+    const double *   value)
 {
-  PRECICE_TRACE(dataID);
-  PRECICE_CHECK(_state != State::Finalized, "writeVectorData(...) cannot be called after finalize().");
-  // PRECICE_REQUIRE_DATA_WRITE(dataID);
+  PRECICE_TRACE(dataName);
+  PRECICE_CHECK(_state != State::Finalized, "writeGlobalVectorData(...) cannot be called after finalize().");
+  // PRECICE_REQUIRE_DATA_WRITE(dataName);
   // TODO: write an analog of this for global.
   PRECICE_DEBUG("value = {}", Eigen::Map<const Eigen::VectorXd>(value, _dimensions).format(utils::eigenio::debug()));
-  GlobalDataContext &context = _accessor->globalDataContext(dataID);
+  GlobalDataContext &context = _accessor->globalDataContext(dataName);
   PRECICE_ASSERT(context.providedData() != nullptr);
   PRECICE_CHECK(context.getDataDimensions() == _dimensions,
                 "You cannot call writeGlobalVectorData on the scalar data type \"{0}\". Use writeGlobalScalarData or change the data type for \"{0}\" to vector.",
                 context.getDataName());
   PRECICE_VALIDATE_DATA(value, _dimensions);
 
-  mesh::GlobalData &data           = *context.providedData();
-  auto &            valuesInternal = data.values();
-  const auto        vertexCount    = valuesInternal.size() / context.getDataDimensions(); // Should be 1. // TODO We can probably remove this line.
+  auto &     valuesInternal = context.providedData()->values();
+  const auto vertexCount    = valuesInternal.size() / context.getDataDimensions(); // Should be 1. // TODO We can probably remove this line.
   PRECICE_CHECK(vertexCount == 1, "vertexCount = {} , should be 1", vertexCount);
 
   for (int dim = 0; dim < _dimensions; dim++) {
@@ -1128,52 +1120,51 @@ void SolverInterfaceImpl::writeGlobalVectorData(
   }
 }
 void SolverInterfaceImpl::writeGlobalScalarData(
-    int    dataID,
-    double value)
+    std::string_view dataName,
+    double           value)
 {
-  PRECICE_TRACE(dataID, value);
+  PRECICE_TRACE(dataName, value);
   PRECICE_CHECK(_state != State::Finalized, "writeGlobalScalarData(...) cannot be called after finalize().");
-  // PRECICE_REQUIRE_DATA_WRITE(dataID); TODO write global data analog for this
-  GlobalDataContext &context = _accessor->globalDataContext(dataID);
+  // PRECICE_REQUIRE_DATA_WRITE(dataName); TODO write global data analog for this
+  GlobalDataContext &context = _accessor->globalDataContext(dataName);
   PRECICE_ASSERT(context.providedData() != nullptr);
   PRECICE_CHECK(context.getDataDimensions() == 1,
                 "You cannot call writeGlobalScalarData on the vector data type \"{0}\". "
                 "Use writeGlobalVectorData or change the data type for \"{0}\" to scalar.",
                 context.getDataName());
   PRECICE_VALIDATE_DATA(static_cast<double *>(&value), 1);
-  mesh::GlobalData &data           = *context.providedData();
-  auto &            valuesInternal = data.values();
-  valuesInternal[0]                = value;
+  auto &valuesInternal = context.providedData()->values();
+  valuesInternal[0]    = value;
   PRECICE_DEBUG("Written global scalar value = {}", valuesInternal[0]);
 }
 
 void SolverInterfaceImpl::readGlobalVectorData(
-    int     dataID,
-    double *value) const
+    std::string_view dataName,
+    double *         value) const
 {
-  PRECICE_TRACE(dataID);
+  PRECICE_TRACE(dataName);
   double relativeTimeWindowEndTime = _couplingScheme->getNextTimestepMaxLength(); // samples at end of time window
-  if (_accessor->globalDataContext(dataID).getInterpolationOrder() != 0) {
+  if (_accessor->globalDataContext(dataName).getInterpolationOrder() != 0) {
     PRECICE_WARN("Interpolation order of read global vector-data named \"{}\" is set to \"{}\", but you are calling {} without providing a relativeReadTime. This looks like an error. You can fix this by providing a relativeReadTime to {} or by setting interpolation order to 0.",
-                 _accessor->globalDataContext(dataID).getDataName(), _accessor->globalDataContext(dataID).getInterpolationOrder(), __func__, __func__);
+                 _accessor->globalDataContext(dataName).getDataName(), _accessor->globalDataContext(dataName).getInterpolationOrder(), __func__, __func__);
   }
-  readGlobalVectorDataImpl(dataID, relativeTimeWindowEndTime, value);
+  readGlobalVectorDataImpl(dataName, relativeTimeWindowEndTime, value);
 }
 
 void SolverInterfaceImpl::readGlobalVectorData(
-    int     dataID,
-    double  relativeReadTime,
-    double *value) const
+    std::string_view dataName,
+    double           relativeReadTime,
+    double *         value) const
 {
-  PRECICE_TRACE(dataID);
+  PRECICE_TRACE(dataName);
   PRECICE_EXPERIMENTAL_API();
-  readGlobalVectorDataImpl(dataID, relativeReadTime, value);
+  readGlobalVectorDataImpl(dataName, relativeReadTime, value);
 }
 
 void SolverInterfaceImpl::readGlobalVectorDataImpl(
-    int     dataID,
-    double  relativeReadTime,
-    double *value) const
+    std::string_view dataName,
+    double           relativeReadTime,
+    double *         value) const
 {
   PRECICE_CHECK(_state != State::Finalized, "readGlobalVectorData(...) cannot be called after finalize().");
   PRECICE_CHECK(relativeReadTime <= _couplingScheme->getNextTimestepMaxLength(), "readGlobalVectorData(...) cannot sample data outside of current time window.");
@@ -1187,8 +1178,8 @@ void SolverInterfaceImpl::readGlobalVectorDataImpl(
     PRECICE_CHECK(relativeReadTime == _couplingScheme->getNextTimestepMaxLength(), "Waveform relaxation is not allowed for solver that sets the time step size");
     normalizedReadTime = 1; // by default read at end of window.
   }
-  // PRECICE_REQUIRE_DATA_READ(dataID); // TODO: write global data version of this macro
-  GlobalDataContext &context = _accessor->globalDataContext(dataID);
+  // PRECICE_REQUIRE_DATA_READ(dataName); // TODO: write global data version of this macro
+  GlobalDataContext &context = _accessor->globalDataContext(dataName);
   PRECICE_CHECK(context.getDataDimensions() == _dimensions,
                 "You cannot call readGlobalVectorData on the scalar data type \"{0}\". Use readGlobalScalarData or change the data type for \"{0}\" to vector.",
                 context.getDataName());
@@ -1202,32 +1193,32 @@ void SolverInterfaceImpl::readGlobalVectorDataImpl(
   PRECICE_DEBUG("read global value = {}", Eigen::Map<const Eigen::VectorXd>(value, _dimensions).format(utils::eigenio::debug()));
 }
 
-void SolverInterfaceImpl::readGlobalScalarData(int     dataID,
-                                               double &value) const
+void SolverInterfaceImpl::readGlobalScalarData(std::string_view dataName,
+                                               double &         value) const
 {
-  PRECICE_TRACE(dataID);
+  PRECICE_TRACE(dataName);
   double relativeTimeWindowEndTime = _couplingScheme->getNextTimestepMaxLength(); // samples at end of time window
-  if (_accessor->globalDataContext(dataID).getInterpolationOrder() != 0) {
+  if (_accessor->globalDataContext(dataName).getInterpolationOrder() != 0) {
     PRECICE_WARN("Interpolation order of read global scalar-data named \"{}\" is set to \"{}\", but you are calling {} without providing a relativeReadTime. This looks like an error. You can fix this by providing a relativeReadTime to {} or by setting interpolation order to 0.",
-                 _accessor->globalDataContext(dataID).getDataName(), _accessor->globalDataContext(dataID).getInterpolationOrder(), __func__, __func__);
+                 _accessor->globalDataContext(dataName).getDataName(), _accessor->globalDataContext(dataName).getInterpolationOrder(), __func__, __func__);
   }
-  readGlobalScalarDataImpl(dataID, relativeTimeWindowEndTime, value);
+  readGlobalScalarDataImpl(dataName, relativeTimeWindowEndTime, value);
 }
 
 void SolverInterfaceImpl::readGlobalScalarData(
-    int     dataID,
-    double  relativeReadTime,
-    double &value) const
+    std::string_view dataName,
+    double           relativeReadTime,
+    double &         value) const
 {
-  PRECICE_TRACE(dataID, value);
+  PRECICE_TRACE(dataName, value);
   PRECICE_EXPERIMENTAL_API();
-  readGlobalScalarDataImpl(dataID, relativeReadTime, value);
+  readGlobalScalarDataImpl(dataName, relativeReadTime, value);
 }
 
 void SolverInterfaceImpl::readGlobalScalarDataImpl(
-    int     dataID,
-    double  relativeReadTime,
-    double &value) const
+    std::string_view dataName,
+    double           relativeReadTime,
+    double &         value) const
 {
   PRECICE_CHECK(_state != State::Finalized, "readGlobalScalarData(...) cannot be called after finalize().");
   PRECICE_CHECK(relativeReadTime <= _couplingScheme->getNextTimestepMaxLength(), "readGlobalScalarData(...) cannot sample data outside of current time window.");
@@ -1241,8 +1232,8 @@ void SolverInterfaceImpl::readGlobalScalarDataImpl(
     PRECICE_CHECK(relativeReadTime == _couplingScheme->getNextTimestepMaxLength(), "Waveform relaxation is not allowed for solver that sets the time step size");
     normalizedReadTime = 1; // by default read at end of window.
   }
-  // PRECICE_REQUIRE_DATA_READ(dataID); // TODO: write an analog of this for global.
-  GlobalDataContext &context = _accessor->globalDataContext(dataID);
+  // PRECICE_REQUIRE_DATA_READ(dataName); // TODO: write an analog of this for global.
+  GlobalDataContext &context = _accessor->globalDataContext(dataName);
   PRECICE_CHECK(context.getDataDimensions() == 1,
                 "You cannot call readGlobalScalarData on the vector data type \"{0}\". "
                 "Use readGlobalVectorData or change the data type for \"{0}\" to scalar.",
