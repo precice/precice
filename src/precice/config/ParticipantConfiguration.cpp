@@ -412,7 +412,7 @@ const mesh::PtrData &ParticipantConfiguration::getData(
   // if getData is called for global data, then the config file must incorrectly have a mesh name with the global data.
   PRECICE_CHECK(!(_meshConfig->getDataConfiguration()->hasGlobalDataName(nameData)),
                 "Participant \"{}\" specifies mesh name \"{}\" for global data \"{}\", but global data are not associated with meshes. "
-                "Please remove mesh=\"{}\".",
+                "Please remove mesh=\"{}\" from the corresponding read-data or write-data tag.",
                 _participants.back()->getName(), mesh->getName(), nameData, mesh->getName());
 
   PRECICE_CHECK(mesh->hasDataName(nameData),
