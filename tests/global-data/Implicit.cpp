@@ -44,10 +44,6 @@ BOOST_AUTO_TEST_CASE(Implicit)
     expectedReadVectorValue = 1;
     expectedReadScalarValue = 11;
   }
-  int writeVectorDataID = couplingInterface.getGlobalDataID(writeVectorDataName);
-  int readVectorDataID  = couplingInterface.getGlobalDataID(readVectorDataName);
-  int writeScalarDataID = couplingInterface.getGlobalDataID(writeScalarDataName);
-  int readScalarDataID  = couplingInterface.getGlobalDataID(readScalarDataName);
 
   double              dt = 0;
   std::vector<double> writeVectorData(dimensions, writeVectorValue);
@@ -61,13 +57,13 @@ BOOST_AUTO_TEST_CASE(Implicit)
     if (couplingInterface.requiresWritingCheckpoint()) {
     }
     // Write: from local data structure --> to precice buffer
-    couplingInterface.writeGlobalVectorData(writeVectorDataID, writeVectorData.data());
-    couplingInterface.writeGlobalScalarData(writeScalarDataID, writeScalarData);
+    couplingInterface.writeGlobalVectorData(writeVectorDataName, writeVectorData.data());
+    couplingInterface.writeGlobalScalarData(writeScalarDataName, writeScalarData);
     // Advance (exchange coupling data)
     dt = couplingInterface.advance(dt);
     // Read: from precice buffer --> to local data structure
-    couplingInterface.readGlobalVectorData(readVectorDataID, readVectorData.data());
-    couplingInterface.readGlobalScalarData(readScalarDataID, readScalarData);
+    couplingInterface.readGlobalVectorData(readVectorDataName, readVectorData.data());
+    couplingInterface.readGlobalScalarData(readScalarDataName, readScalarData);
     // Check read data
     BOOST_TEST(expectedReadVectorValue == readVectorData.at(0));
     BOOST_TEST(expectedReadVectorValue == readVectorData.at(1));
