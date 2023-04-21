@@ -235,6 +235,9 @@ public:
   bool isDataWrite(std::string_view mesh, std::string_view data) const;
   /// @}
 
+  /// Is the participant allowed to read/write the global data?
+  bool isDataGlobal(std::string_view data) const;
+
   /// What is the dataID of the used global data given the data name?
   // int getUsedGlobalDataID(const std::string &dataName) const;
 
