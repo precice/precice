@@ -44,39 +44,39 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelScalar)
 
   if (context.isNamed("SolverOne")) {
     SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    int             meshID = interface.getMeshID("MeshOne");
-    int             dataID = interface.getDataID("Data2", meshID);
+    auto            meshName = "MeshOne";
+    auto            dataName = "Data2";
 
     int    vertexIDs[2];
     double xCoord       = context.rank * 0.4 + 0.05;
     double positions[4] = {xCoord, 0.0, xCoord + 0.2, 0.0};
-    interface.setMeshVertices(meshID, 2, positions, vertexIDs);
+    interface.setMeshVertices(meshName, 2, positions, vertexIDs);
     interface.initialize();
-    BOOST_TEST(interface.requiresGradientDataFor(dataID) == false);
+    BOOST_TEST(interface.requiresGradientDataFor(meshName, dataName) == false);
     Eigen::Vector2d values;
     interface.advance(1.0);
-    interface.readBlockScalarData(dataID, 2, vertexIDs, values.data());
+    interface.readBlockScalarData(meshName, dataName, 2, vertexIDs, values.data());
     Eigen::Vector2d expected(context.rank * 2.0 + 1.0 + 0.05, 2.0 * (context.rank + 1) + 0.05);
     BOOST_TEST(values == expected);
     interface.finalize();
   } else {
     BOOST_REQUIRE(context.isNamed("SolverTwo"));
     SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    int             meshID = interface.getMeshID("MeshTwo");
+    auto            meshName = "MeshTwo";
     int             vertexIDs[6];
     double          positions[12] = {0.0, 0.0, 0.2, 0.0, 0.4, 0.0, 0.6, 0.0, 0.8, 0.0, 1.0, 0.0};
-    interface.setMeshVertices(meshID, 6, positions, vertexIDs);
+    interface.setMeshVertices(meshName, 6, positions, vertexIDs);
     interface.initialize();
-    int dataID = interface.getDataID("Data2", meshID);
-    BOOST_TEST(interface.requiresGradientDataFor(dataID));
+    auto dataName = "Data2";
+    BOOST_TEST(interface.requiresGradientDataFor(meshName, dataName));
     double values[6] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
 
-    interface.writeBlockScalarData(dataID, 6, vertexIDs, values);
+    interface.writeBlockScalarData(meshName, dataName, 6, vertexIDs, values);
 
-    if (interface.requiresGradientDataFor(dataID)) {
+    if (interface.requiresGradientDataFor(meshName, dataName)) {
 
       double gradientValues[12] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
-      interface.writeBlockScalarGradientData(dataID, 6, vertexIDs, gradientValues);
+      interface.writeBlockScalarGradientData(meshName, dataName, 6, vertexIDs, gradientValues);
     }
     interface.advance(1.0);
     interface.finalize();

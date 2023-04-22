@@ -24,8 +24,8 @@ BOOST_DATA_TEST_CASE(NearestProjectionRePartitioning,
       interface.advance(1.0);
       interface.finalize();
     } else {
-      const precice::MeshID meshID     = interface.getMeshID("CellCenters");
-      const int             dimensions = 3;
+      auto      meshName   = "CellCenters";
+      const int dimensions = 3;
       BOOST_TEST(interface.getDimensions() == dimensions);
 
       const int                 numberOfVertices = 65;
@@ -99,7 +99,7 @@ BOOST_DATA_TEST_CASE(NearestProjectionRePartitioning,
           0.22547, yCoord, zCoord};
       BOOST_TEST(numberOfVertices * dimensions == positions.size());
       std::vector<int> vertexIDs(numberOfVertices);
-      interface.setMeshVertices(meshID, numberOfVertices, positions.data(), vertexIDs.data());
+      interface.setMeshVertices(meshName, numberOfVertices, positions.data(), vertexIDs.data());
       interface.initialize();
       BOOST_TEST(precice::testing::WhiteboxAccessor::impl(interface).mesh("Nodes").triangles().size() == 15);
       interface.advance(1.0);
@@ -108,7 +108,7 @@ BOOST_DATA_TEST_CASE(NearestProjectionRePartitioning,
   } else {
     BOOST_TEST(context.isNamed("SolidSolver"));
     precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    const int                meshID     = interface.getMeshID("Nodes");
+    auto                     meshName   = "Nodes";
     const int                dimensions = 3;
     BOOST_TEST(interface.getDimensions() == dimensions);
     const int                 numberOfVertices = 34;
@@ -152,7 +152,7 @@ BOOST_DATA_TEST_CASE(NearestProjectionRePartitioning,
         0.5, yCoord, zCoord1};
     BOOST_TEST(numberOfVertices * dimensions == positions.size());
     std::vector<int> vertexIDs(numberOfVertices);
-    interface.setMeshVertices(meshID, numberOfVertices, positions.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, numberOfVertices, positions.data(), vertexIDs.data());
 
     const int numberOfCells = numberOfVertices / 2 - 1;
 
@@ -169,14 +169,14 @@ BOOST_DATA_TEST_CASE(NearestProjectionRePartitioning,
         ids.push_back(vertexIDs.at(i * 2 + 2));
         ids.push_back(vertexIDs.at(i * 2 + 3));
       }
-      interface.setMeshTriangles(meshID, numberOfCells, ids.data());
+      interface.setMeshTriangles(meshName, numberOfCells, ids.data());
     } else {
       for (int i = 0; i < numberOfCells; i++) {
         // left-diag-bottom
-        interface.setMeshTriangle(meshID, vertexIDs.at(i * 2), vertexIDs.at(i * 2 + 1), vertexIDs.at(i * 2 + 3));
+        interface.setMeshTriangle(meshName, vertexIDs.at(i * 2), vertexIDs.at(i * 2 + 1), vertexIDs.at(i * 2 + 3));
 
         // top-diag-right
-        interface.setMeshTriangle(meshID, vertexIDs.at(i * 2), vertexIDs.at(i * 2 + 2), vertexIDs.at(i * 2 + 3));
+        interface.setMeshTriangle(meshName, vertexIDs.at(i * 2), vertexIDs.at(i * 2 + 2), vertexIDs.at(i * 2 + 3));
       }
     }
 

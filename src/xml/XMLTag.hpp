@@ -134,6 +134,9 @@ public:
   /// Adds a XML attribute by making a copy of the given attribute.
   XMLTag &addAttribute(const XMLAttribute<Eigen::VectorXd> &attribute);
 
+  /// Adds a hint for missing attributes, which will be displayed along the error message.
+  void addAttributeHint(std::string name, std::string message);
+
   bool hasAttribute(const std::string &attributeName);
 
   template <typename Container>
@@ -269,6 +272,8 @@ private:
 
   AttributeMap<Eigen::VectorXd> _eigenVectorXdAttributes;
 
+  std::map<std::string, std::string> _attributeHints;
+
   void areAllSubtagsConfigured() const;
 
   void resetAttributes();
@@ -300,7 +305,7 @@ XMLTag getRootTag();
 void configure(
     XMLTag &                                  tag,
     const precice::xml::ConfigurationContext &context,
-    const std::string &                       configurationFilename);
+    std::string_view                          configurationFilename);
 
 } // namespace xml
 } // namespace precice

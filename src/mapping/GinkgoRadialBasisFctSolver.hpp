@@ -28,9 +28,13 @@ using cholesky = gko::preconditioner::Ic<>;
 
 using precice::mapping::RadialBasisParameters;
 
+#if defined(__NVCC__) || defined(__HIPCC__)
+
 extern void initQRSolver(const int deviceId = 0);
 extern void deInitQRSolver();
 extern void computeQR(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, GinkgoMatrix *R);
+
+#endif
 
 // Declare Ginkgo Kernels as required by Ginkgo's unified kernel interface
 GKO_DECLARE_UNIFIED(template <typename ValueType, typename EvalFunctionType> void create_rbf_system_matrix(
@@ -151,7 +155,7 @@ private:
   /// Polynomial matrix of the output mesh (for separate polynomial)
   std::shared_ptr<GinkgoMatrix> _matrixV;
 
-  /// Stores the calculated cofficients of the RBF interpolation
+  /// Stores the calculated coefficients of the RBF interpolation
   std::shared_ptr<GinkgoVector> _rbfCoefficients;
 
   std::shared_ptr<GinkgoVector> _polynomialContribution;
@@ -215,10 +219,12 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
   _solverType         = solverTypeLookup.at(ginkgoParameter.solver);
   _preconditionerType = preconditionerTypeLookup.at(ginkgoParameter.preconditioner);
 
+#if defined(__NVCC__) || defined(__HIPCC__)
   if (GinkgoSolverType::QR == _solverType) {
     PRECICE_ASSERT("cuda-executor" == ginkgoParameter.executor || "hip-executor" == ginkgoParameter.executor, "The parallel QR decomposition is only available on CUDA and HIP yet.");
     initQRSolver(ginkgoParameter.deviceId);
   }
+#endif
 
   PRECICE_ASSERT(!(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite() && polynomial == Polynomial::ON), "The integrated polynomial (polynomial=\"on\") is not supported for the selected radial-basis function. Please select another radial-basis function or change the polynomial configuration.");
   // Convert dead axis vector into an active axis array so that we can handle the reduction more easily
@@ -415,7 +421,9 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
 
       _gmresSolver = gko::share(solverFactory->generate(_rbfSystemMatrix));
     }
-  } else if (_solverType == GinkgoSolverType::QR) {
+  }
+#if defined(__NVCC__) || defined(__HIPCC__)
+  else if (_solverType == GinkgoSolverType::QR) {
     const std::size_t M = _rbfSystemMatrix->get_size()[0];
     const std::size_t N = _rbfSystemMatrix->get_size()[1];
     _decompMatrixQ_T    = gko::share(GinkgoMatrix::create(_deviceExecutor, gko::dim<2>(N, M)));
@@ -431,6 +439,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
     auto triangularSolverFactory = triangular::build().on(_deviceExecutor);
     _triangularSolver            = gko::share(triangularSolverFactory->generate(_decompMatrixR));
   }
+#endif
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -628,9 +637,11 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::~GinkgoRadialBasisFctSolver
 {
   _allocCopyEvent.stop();
 
+#if defined(__NVCC__) || defined(__HIPCC__)
   if (GinkgoSolverType::QR == _solverType) {
     deInitQRSolver();
   }
+#endif
 
   clear();
 }

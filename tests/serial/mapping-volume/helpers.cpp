@@ -16,21 +16,21 @@ void testMappingVolumeOneTriangle(const std::string configFile, const TestContex
   std::vector<precice::VertexID> vertexIDs;
 
   if (context.isNamed("SolverOne")) {
-    auto meshID = interface.getMeshID("MeshOne");
-    auto dataID = interface.getDataID("DataOne", meshID);
+    auto meshName = "MeshOne";
+    auto dataName = "DataOne";
 
     std::vector<double> coords{0.0, 0.0, 1.0, 0.0, 0.0, 1.0};
     vertexIDs.resize(coords.size() / 2);
 
-    interface.setMeshVertices(meshID, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, vertexIDs.size(), coords.data(), vertexIDs.data());
 
     BOOST_TEST(vertexIDs[0] != -1, "Vertex A is invalid");
     BOOST_TEST(vertexIDs[1] != -1, "Vertex B is invalid");
     BOOST_TEST(vertexIDs[2] != -1, "Vertex C is invalid");
 
-    interface.setMeshTriangle(meshID, vertexIDs[0], vertexIDs[1], vertexIDs[2]);
+    interface.setMeshTriangle(meshName, vertexIDs[0], vertexIDs[1], vertexIDs[2]);
 
-    BOOST_CHECK(interface.getMeshVertexSize(meshID) == 3);
+    BOOST_CHECK(interface.getMeshVertexSize(meshName) == 3);
 
     auto &mesh = precice::testing::WhiteboxAccessor::impl(interface).mesh("MeshOne");
     BOOST_REQUIRE(mesh.vertices().size() == 3);
@@ -45,20 +45,20 @@ void testMappingVolumeOneTriangle(const std::string configFile, const TestContex
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant must advance once.");
 
     std::vector<double> values{1.0, 100.0, 10.0};
-    interface.writeBlockScalarData(dataID, 3, vertexIDs.data(), values.data());
+    interface.writeBlockScalarData(meshName, dataName, 3, vertexIDs.data(), values.data());
 
     interface.advance(dt);
     BOOST_TEST(!interface.isCouplingOngoing(), "Sending participant must advance only once.");
     interface.finalize();
 
   } else {
-    auto meshID = interface.getMeshID("MeshTwo");
-    auto dataID = interface.getDataID("DataOne", meshID);
+    auto meshName = "MeshTwo";
+    auto dataName = "DataOne";
 
     std::vector<double> coords{1. / 3., 1. / 3.};
     vertexIDs.resize(coords.size() / 2);
 
-    interface.setMeshVertices(meshID, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, vertexIDs.size(), coords.data(), vertexIDs.data());
 
     // Initialize, read data, advance and finalize. Check expected mapping
     double dt = interface.initialize();
@@ -81,7 +81,7 @@ void testMappingVolumeOneTriangle(const std::string configFile, const TestContex
     // Expected value in the middle of the triangle is the average of inputs (1, 10, 100)
     expected << 111.0 / 3;
 
-    interface.readBlockScalarData(dataID, expected.size(), vertexIDs.data(), readData.data());
+    interface.readBlockScalarData(meshName, dataName, expected.size(), vertexIDs.data(), readData.data());
     BOOST_CHECK(equals(expected, readData));
 
     interface.finalize();
@@ -99,38 +99,38 @@ void testMappingVolumeOneTriangleConservative(const std::string configFile, cons
   std::vector<precice::VertexID> vertexIDs;
 
   if (context.isNamed("SolverOne")) {
-    auto meshID = interface.getMeshID("MeshOne");
-    auto dataID = interface.getDataID("DataOne", meshID);
+    auto meshName = "MeshOne";
+    auto dataName = "DataOne";
 
     std::vector<double> coords{0.3, 0.2};
     vertexIDs.resize(coords.size() / 2);
 
-    interface.setMeshVertices(meshID, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, vertexIDs.size(), coords.data(), vertexIDs.data());
 
     BOOST_TEST(vertexIDs[0] != -1, "Vertex A is invalid");
-    BOOST_CHECK(interface.getMeshVertexSize(meshID) == 1);
+    BOOST_CHECK(interface.getMeshVertexSize(meshName) == 1);
 
     // Initialize, write data, advance and finalize
     double dt = interface.initialize();
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant must advance once.");
 
     std::vector<double> values{1.0};
-    interface.writeBlockScalarData(dataID, 1, vertexIDs.data(), values.data());
+    interface.writeBlockScalarData(meshName, dataName, 1, vertexIDs.data(), values.data());
 
     interface.advance(dt);
     BOOST_TEST(!interface.isCouplingOngoing(), "Sending participant must advance only once.");
     interface.finalize();
 
   } else {
-    auto meshID = interface.getMeshID("MeshTwo");
-    auto dataID = interface.getDataID("DataOne", meshID);
+    auto meshName = "MeshTwo";
+    auto dataName = "DataOne";
 
     std::vector<double> coords{0.0, 0.0, 1.0, 0.0, 0.0, 1.0};
     vertexIDs.resize(coords.size() / 2);
 
-    interface.setMeshVertices(meshID, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, vertexIDs.size(), coords.data(), vertexIDs.data());
 
-    interface.setMeshTriangle(meshID, vertexIDs[0], vertexIDs[1], vertexIDs[2]);
+    interface.setMeshTriangle(meshName, vertexIDs[0], vertexIDs[1], vertexIDs[2]);
 
     // Initialize, read data, advance and finalize. Check expected mapping
     double dt = interface.initialize();
@@ -147,7 +147,7 @@ void testMappingVolumeOneTriangleConservative(const std::string configFile, cons
     // Input point is (0.3, 0.2) and barycentric coordinates are thus (0.5, 0.3, 0.2)
     expected << 0.5, 0.3, 0.2;
 
-    interface.readBlockScalarData(dataID, expected.size(), vertexIDs.data(), readData.data());
+    interface.readBlockScalarData(meshName, dataName, expected.size(), vertexIDs.data(), readData.data());
     BOOST_CHECK(equals(expected, readData));
 
     interface.finalize();
@@ -163,8 +163,8 @@ void testMappingVolumeOneTetra(const std::string configFile, const TestContext &
   std::vector<precice::VertexID> vertexIDs;
 
   if (context.isNamed("SolverOne")) {
-    auto meshID = interface.getMeshID("MeshOne");
-    auto dataID = interface.getDataID("DataOne", meshID);
+    auto meshName = "MeshOne";
+    auto dataName = "DataOne";
 
     std::vector<double> coords{0.0, 0.0, 0.0,
                                1.0, 0.0, 0.0,
@@ -172,16 +172,16 @@ void testMappingVolumeOneTetra(const std::string configFile, const TestContext &
                                0.0, 0.0, 1.0};
     vertexIDs.resize(coords.size() / 3);
 
-    interface.setMeshVertices(meshID, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, vertexIDs.size(), coords.data(), vertexIDs.data());
 
     BOOST_TEST(vertexIDs[0] != -1, "Vertex A is invalid");
     BOOST_TEST(vertexIDs[1] != -1, "Vertex B is invalid");
     BOOST_TEST(vertexIDs[2] != -1, "Vertex C is invalid");
     BOOST_TEST(vertexIDs[3] != -1, "Vertex D is invalid");
 
-    interface.setMeshTetrahedron(meshID, vertexIDs[0], vertexIDs[1], vertexIDs[2], vertexIDs[3]);
+    interface.setMeshTetrahedron(meshName, vertexIDs[0], vertexIDs[1], vertexIDs[2], vertexIDs[3]);
 
-    BOOST_CHECK(interface.getMeshVertexSize(meshID) == 4);
+    BOOST_CHECK(interface.getMeshVertexSize(meshName) == 4);
 
     auto &mesh = precice::testing::WhiteboxAccessor::impl(interface).mesh("MeshOne");
     // setMeshTetrahedron currently adds underlying connectivity
@@ -202,20 +202,20 @@ void testMappingVolumeOneTetra(const std::string configFile, const TestContext &
 
     // Send 1 + 5x - 3y + 9z
     std::vector<double> values{1.0, 6.0, -2.0, 8.0};
-    interface.writeBlockScalarData(dataID, 4, vertexIDs.data(), values.data());
+    interface.writeBlockScalarData(meshName, dataName, 4, vertexIDs.data(), values.data());
 
     interface.advance(dt);
     BOOST_TEST(!interface.isCouplingOngoing(), "Sending participant must advance only once.");
     interface.finalize();
 
   } else {
-    auto meshID = interface.getMeshID("MeshTwo");
-    auto dataID = interface.getDataID("DataOne", meshID);
+    auto meshName = "MeshTwo";
+    auto dataName = "DataOne";
 
     std::vector<double> coords{0.25, 0.25, 0.25};
     vertexIDs.resize(coords.size() / 2);
 
-    interface.setMeshVertices(meshID, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, vertexIDs.size(), coords.data(), vertexIDs.data());
 
     // Initialize, read data, advance and finalize. Check expected mapping
     double dt = interface.initialize();
@@ -239,7 +239,7 @@ void testMappingVolumeOneTetra(const std::string configFile, const TestContext &
     // Expected value in the middle of the tetra is the average of inputs (13.0/4)
     expected << 13.0 / 4;
 
-    interface.readBlockScalarData(dataID, expected.size(), vertexIDs.data(), readData.data());
+    interface.readBlockScalarData(meshName, dataName, expected.size(), vertexIDs.data(), readData.data());
     BOOST_CHECK(equals(expected, readData));
 
     interface.finalize();
@@ -257,31 +257,31 @@ void testMappingVolumeOneTetraConservative(const std::string configFile, const T
   std::vector<precice::VertexID> vertexIDs;
 
   if (context.isNamed("SolverOne")) {
-    auto meshID = interface.getMeshID("MeshOne");
-    auto dataID = interface.getDataID("DataOne", meshID);
+    auto meshName = "MeshOne";
+    auto dataName = "DataOne";
 
     std::vector<double> coords{0.1, 0.2, 0.3};
     vertexIDs.resize(coords.size() / 3);
 
-    interface.setMeshVertices(meshID, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, vertexIDs.size(), coords.data(), vertexIDs.data());
 
     BOOST_TEST(vertexIDs[0] != -1, "Vertex A is invalid");
-    BOOST_CHECK(interface.getMeshVertexSize(meshID) == 1);
+    BOOST_CHECK(interface.getMeshVertexSize(meshName) == 1);
 
     // Initialize, write data, advance and finalize
     double dt = interface.initialize();
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant must advance once.");
 
     std::vector<double> values{1.0};
-    interface.writeBlockScalarData(dataID, 1, vertexIDs.data(), values.data());
+    interface.writeBlockScalarData(meshName, dataName, 1, vertexIDs.data(), values.data());
 
     interface.advance(dt);
     BOOST_TEST(!interface.isCouplingOngoing(), "Sending participant must advance only once.");
     interface.finalize();
 
   } else {
-    auto meshID = interface.getMeshID("MeshTwo");
-    auto dataID = interface.getDataID("DataOne", meshID);
+    auto meshName = "MeshTwo";
+    auto dataName = "DataOne";
 
     std::vector<double> coords{0.0, 0.0, 0.0,
                                1.0, 0.0, 0.0,
@@ -289,11 +289,11 @@ void testMappingVolumeOneTetraConservative(const std::string configFile, const T
                                0.0, 0.0, 1.0};
     vertexIDs.resize(coords.size() / 3);
 
-    interface.setMeshVertices(meshID, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, vertexIDs.size(), coords.data(), vertexIDs.data());
 
-    interface.setMeshTetrahedron(meshID, vertexIDs[0], vertexIDs[1], vertexIDs[2], vertexIDs[3]);
+    interface.setMeshTetrahedron(meshName, vertexIDs[0], vertexIDs[1], vertexIDs[2], vertexIDs[3]);
 
-    BOOST_CHECK(interface.getMeshVertexSize(meshID) == 4);
+    BOOST_CHECK(interface.getMeshVertexSize(meshName) == 4);
 
     auto &mesh = precice::testing::WhiteboxAccessor::impl(interface).mesh("MeshTwo");
     // setMeshTetrahedron currently adds underlying connectivity
@@ -322,7 +322,7 @@ void testMappingVolumeOneTetraConservative(const std::string configFile, const T
     // Input point is (0.1, 0.2, 0.3) and barycentric coordinates are thus (0.4, 0.1, 0.2, 0.3)
     expected << 0.4, 0.1, 0.2, 0.3;
 
-    interface.readBlockScalarData(dataID, expected.size(), vertexIDs.data(), readData.data());
+    interface.readBlockScalarData(meshName, dataName, expected.size(), vertexIDs.data(), readData.data());
     BOOST_CHECK(equals(expected, readData));
 
     interface.finalize();

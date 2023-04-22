@@ -141,20 +141,12 @@ public:
   double getTimeWindowSize() const override final;
 
   /**
-   * @brief Returns the remaining timestep length within the current time window.
-   *
-   * If no time window size is prescribed by the coupling scheme, always 0.0 is
-   * returned.
-   */
-  double getThisTimeWindowRemainder() const override final;
-
-  /**
    * @brief Returns the maximal length of the next timestep to be computed.
    *
    * If no time window size is prescribed by the coupling scheme, always the
    * maximal double accuracy floating point number value is returned.
    */
-  double getNextTimestepMaxLength() const override final; // @todo mainly used in tests. Is this function actually needed or can we drop it and only use getThisTimeWindowRemainder()?
+  double getNextTimestepMaxLength() const override final;
 
   /// Returns true, when the coupled simulation is still ongoing.
   bool isCouplingOngoing() const override final;

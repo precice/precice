@@ -7,7 +7,7 @@
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
-BOOST_AUTO_TEST_SUITE(AccessReceivedMesh)
+BOOST_AUTO_TEST_SUITE(DirectMeshAccess)
 // Test case for a direct mesh access on one participant to a mesh defined
 // by another participant. The region of interest is defined through a
 // boundingBox. The test case here is the most basic variant in order
@@ -22,27 +22,27 @@ BOOST_AUTO_TEST_CASE(Explicit)
   BOOST_TEST(couplingInterface.getDimensions() == 2);
 
   std::vector<double> positions = {0.0, 0.0, 0.0, 0.05, 0.1, 0.1, 0.1, 0.0};
-  std::vector<int>    ids(4, 0);
+  std::vector<int>    ids(4, -1);
 
   constexpr int               dim         = 2;
   std::array<double, dim * 2> boundingBox = {0.0, 1.0, 0.0, 1.0};
 
   if (context.isNamed("SolverOne")) {
-    const int otherMeshID = couplingInterface.getMeshID("MeshTwo");
-    const int dataID      = couplingInterface.getDataID("Velocities", otherMeshID);
+    auto otherMeshName = "MeshTwo";
+    auto dataName      = "Velocities";
 
     // Define region of interest, where we could obtain direct write access
-    couplingInterface.setMeshAccessRegion(otherMeshID, boundingBox.data());
+    couplingInterface.setMeshAccessRegion(otherMeshName, boundingBox.data());
 
     double dt = couplingInterface.initialize();
     // Get the size of the filtered mesh within the bounding box
     // (provided by the coupling participant)
-    const int meshSize = couplingInterface.getMeshVertexSize(otherMeshID);
+    const int meshSize = couplingInterface.getMeshVertexSize(otherMeshName);
     BOOST_TEST(meshSize == (ids.size()));
 
     // Allocate a vector containing the vertices
     std::vector<double> solverTwoMesh(meshSize * dim);
-    couplingInterface.getMeshVerticesAndIDs(otherMeshID, meshSize, ids.data(), solverTwoMesh.data());
+    couplingInterface.getMeshVerticesAndIDs(otherMeshName, meshSize, ids.data(), solverTwoMesh.data());
     // Some dummy writeData
     std::array<double, 4> writeData({1, 2, 3, 4});
 
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(Explicit)
 
     while (couplingInterface.isCouplingOngoing()) {
       // Write data
-      couplingInterface.writeBlockScalarData(dataID, meshSize,
+      couplingInterface.writeBlockScalarData(otherMeshName, dataName, meshSize,
                                              ids.data(), writeData.data());
       dt = couplingInterface.advance(dt);
     }
@@ -60,11 +60,11 @@ BOOST_AUTO_TEST_CASE(Explicit)
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
     // Query IDs
-    const int meshID = couplingInterface.getMeshID("MeshTwo");
-    const int dataID = couplingInterface.getDataID("Velocities", meshID);
+    auto meshName = "MeshTwo";
+    auto dataName = "Velocities";
 
     // Define the mesh
-    couplingInterface.setMeshVertices(meshID, ids.size(), positions.data(), ids.data());
+    couplingInterface.setMeshVertices(meshName, ids.size(), positions.data(), ids.data());
     // Allocate data to read
     std::vector<double> readData(4, std::numeric_limits<double>::max());
 
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(Explicit)
     while (couplingInterface.isCouplingOngoing()) {
 
       dt = couplingInterface.advance(dt);
-      couplingInterface.readBlockScalarData(dataID, ids.size(),
+      couplingInterface.readBlockScalarData(meshName, dataName, ids.size(),
                                             ids.data(), readData.data());
       // Expected data according to the writeData
       std::vector<double> expectedData({1, 2, 3, 4});

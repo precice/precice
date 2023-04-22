@@ -23,8 +23,8 @@ BOOST_AUTO_TEST_CASE(ParallelCube3To1)
   double                a = 1, b = 2, c = 5, d = 1;
 
   if (context.isNamed("SolverOne")) {
-    auto meshID = interface.getMeshID("MeshOne");
-    auto dataID = interface.getDataID("DataOne", meshID);
+    auto meshName = "MeshOne";
+    auto dataName = "DataOne";
 
     std::vector<double> coords;
 
@@ -53,19 +53,19 @@ BOOST_AUTO_TEST_CASE(ParallelCube3To1)
     }
 
     vertexIDs.resize(coords.size() / 3);
-    interface.setMeshVertices(meshID, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, vertexIDs.size(), coords.data(), vertexIDs.data());
     switch (context.rank) {
     case 0:
-      interface.setMeshTetrahedron(meshID, vertexIDs[0], vertexIDs[1], vertexIDs[2], vertexIDs[3]);
-      interface.setMeshTetrahedron(meshID, vertexIDs[0], vertexIDs[4], vertexIDs[2], vertexIDs[3]);
+      interface.setMeshTetrahedron(meshName, vertexIDs[0], vertexIDs[1], vertexIDs[2], vertexIDs[3]);
+      interface.setMeshTetrahedron(meshName, vertexIDs[0], vertexIDs[4], vertexIDs[2], vertexIDs[3]);
       break;
     case 1:
-      interface.setMeshTetrahedron(meshID, vertexIDs[0], vertexIDs[1], vertexIDs[2], vertexIDs[3]);
-      interface.setMeshTetrahedron(meshID, vertexIDs[0], vertexIDs[4], vertexIDs[2], vertexIDs[3]);
+      interface.setMeshTetrahedron(meshName, vertexIDs[0], vertexIDs[1], vertexIDs[2], vertexIDs[3]);
+      interface.setMeshTetrahedron(meshName, vertexIDs[0], vertexIDs[4], vertexIDs[2], vertexIDs[3]);
       break;
     case 2:
-      interface.setMeshTetrahedron(meshID, vertexIDs[0], vertexIDs[1], vertexIDs[2], vertexIDs[3]);
-      interface.setMeshTetrahedron(meshID, vertexIDs[0], vertexIDs[4], vertexIDs[2], vertexIDs[3]);
+      interface.setMeshTetrahedron(meshName, vertexIDs[0], vertexIDs[1], vertexIDs[2], vertexIDs[3]);
+      interface.setMeshTetrahedron(meshName, vertexIDs[0], vertexIDs[4], vertexIDs[2], vertexIDs[3]);
       break;
     }
 
@@ -79,15 +79,15 @@ BOOST_AUTO_TEST_CASE(ParallelCube3To1)
       values.push_back(d + a * coords[3 * i] + b * coords[3 * i + 1] + c * coords[3 * i + 2]);
     }
 
-    interface.writeBlockScalarData(dataID, vertexIDs.size(), vertexIDs.data(), values.data());
+    interface.writeBlockScalarData(meshName, dataName, vertexIDs.size(), vertexIDs.data(), values.data());
 
     interface.advance(dt);
     BOOST_TEST(!interface.isCouplingOngoing(), "Sending participant must advance only once.");
     interface.finalize();
 
   } else {
-    auto meshID = interface.getMeshID("MeshTwo");
-    auto dataID = interface.getDataID("DataOne", meshID);
+    auto meshName = "MeshTwo";
+    auto dataName = "DataOne";
 
     // For completion, we sample points in each direction.
     std::vector<double> coords;
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(ParallelCube3To1)
     }
 
     vertexIDs.resize(coords.size() / 3);
-    interface.setMeshVertices(meshID, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, vertexIDs.size(), coords.data(), vertexIDs.data());
 
     dt = interface.initialize();
 
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(ParallelCube3To1)
     }
     Eigen::VectorXd readData(values.size());
 
-    interface.readBlockScalarData(dataID, expected.size(), vertexIDs.data(), readData.data());
+    interface.readBlockScalarData(meshName, dataName, expected.size(), vertexIDs.data(), readData.data());
     //BOOST_CHECK(equals(expected, readData, 1e-3));
     for (int i = 0; i < expected.size(); ++i) {
       BOOST_CHECK(equals(expected(i), readData[i]));

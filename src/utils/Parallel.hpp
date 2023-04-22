@@ -130,6 +130,9 @@ public:
   /// @name Initialization and Finalization
   /// @{
 
+  /// Return true if MPI is initialized
+  static bool isMPIInitialized();
+
   /**
    * @brief Initializes the MPI environment and manages it.
    *

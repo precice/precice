@@ -2,6 +2,7 @@
 
 #include <Eigen/Cholesky>
 #include <Eigen/QR>
+#include <Eigen/SVD>
 #include <boost/range/adaptor/indexed.hpp>
 #include <boost/range/irange.hpp>
 #include <numeric>
@@ -27,7 +28,13 @@ public:
   /// Default constructor
   RadialBasisFctSolver() = default;
 
-  /// Assembles the system matrices and computes the decomposition of the interpolation matrix
+  /**
+   * assembles the system matrices and computes the decomposition of the interpolation matrix
+   * inputMesh refers to the mesh where the interpolants are built on, i.e., the input mesh
+   * for consistent mappings and the output mesh for conservative mappings
+   * outputMesh refers to the mesh where we evaluate the interpolants, i.e., the output mesh
+   * consistent mappings and the input mesh for conservative mappings
+  */
   template <typename IndexContainer>
   RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
                        const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial);
@@ -77,6 +84,30 @@ inline double computeSquaredDifference(
   }
   // @todo: this can be replaced by std::hypot when moving to C++17
   return std::accumulate(v.begin(), v.end(), static_cast<double>(0.), [](auto &res, auto &val) { return res + val * val; });
+}
+
+/// given the active axis, computes sets the axis with the lowest spatial expansion to dead
+template <typename IndexContainer>
+constexpr void reduceActiveAxis(const mesh::Mesh &mesh, const IndexContainer &IDs, std::array<bool, 3> &axis)
+{
+  // make a pair of the axis and the difference
+  std::array<std::pair<int, double>, 3> differences;
+
+  // Compute the difference magnitude per direction
+  for (std::size_t d = 0; d < axis.size(); ++d) {
+    // Ignore dead axis here, i.e., apply the max value such that they are sorted on the last position(s)
+    if (axis[d] == false) {
+      differences[d] = std::make_pair<int, double>(d, std::numeric_limits<double>::max());
+    } else {
+      auto res = std::minmax_element(IDs.begin(), IDs.end(), [&](const auto &a, const auto &b) { return mesh.vertices()[a].rawCoords()[d] < mesh.vertices()[b].rawCoords()[d]; });
+      // Check if we are above or below the threshold
+      differences[d] = std::make_pair<int, double>(d, std::abs(mesh.vertices()[*res.second].rawCoords()[d] - mesh.vertices()[*res.first].rawCoords()[d]));
+    }
+  }
+
+  std::sort(differences.begin(), differences.end(), [](const auto &d1, const auto &d2) { return d1.second < d2.second; });
+  // Disable the axis having the smallest expansion
+  axis[differences[0].first] = false;
 }
 
 // Fill in the polynomial entries
@@ -221,15 +252,34 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
   // In case we deal with separated polynomials, we need dedicated matrices for the polynomial contribution
   if (polynomial == Polynomial::SEPARATE) {
 
-    // 1. Allocate memory for these matrices
     // 4 = 1 + dimensions(3) = maximum number of polynomial parameters
-    const unsigned int polyParams = 4 - std::count(activeAxis.begin(), activeAxis.end(), false);
-    _matrixQ.resize(inputIDs.size(), polyParams);
-    _matrixV.resize(outputIDs.size(), polyParams);
+    auto         localActiveAxis = activeAxis;
+    unsigned int polyParams      = 4 - std::count(localActiveAxis.begin(), localActiveAxis.end(), false);
 
-    // 2. fill the matrices: Q for the inputMesh, V for the outputMesh
-    fillPolynomialEntries(_matrixQ, inputMesh, inputIDs, 0, activeAxis);
-    fillPolynomialEntries(_matrixV, outputMesh, outputIDs, 0, activeAxis);
+    do {
+      // First, build matrix Q and check for the condition number
+      _matrixQ.resize(inputIDs.size(), polyParams);
+      fillPolynomialEntries(_matrixQ, inputMesh, inputIDs, 0, localActiveAxis);
+
+      // Compute the condition number
+      Eigen::JacobiSVD<Eigen::MatrixXd> svd(_matrixQ);
+      PRECICE_ASSERT(svd.singularValues().size() > 0);
+      PRECICE_DEBUG("Singular values in polynomial solver: {}", svd.singularValues());
+      const double conditionNumber = svd.singularValues()(0) / std::max(svd.singularValues()(svd.singularValues().size() - 1), math::NUMERICAL_ZERO_DIFFERENCE);
+      PRECICE_DEBUG("Condition number: {}", conditionNumber);
+
+      // Disable one axis
+      if (conditionNumber > 1e5) {
+        reduceActiveAxis(inputMesh, inputIDs, localActiveAxis);
+        polyParams = 4 - std::count(localActiveAxis.begin(), localActiveAxis.end(), false);
+      } else {
+        break;
+      }
+    } while (true);
+
+    // allocate and fill matrix V for the outputMesh
+    _matrixV.resize(outputIDs.size(), polyParams);
+    fillPolynomialEntries(_matrixV, outputMesh, outputIDs, 0, localActiveAxis);
 
     // 3. compute decomposition
     _qrMatrixQ = _matrixQ.colPivHouseholderQr();

@@ -1,3 +1,4 @@
+#include <string>
 #ifndef PRECICE_NO_MPI
 
 #include "testing/Testing.hpp"
@@ -24,10 +25,6 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipant)
 
   SolverInterface precice(context.name, context.config(), 0, 1);
 
-  MeshID meshID;
-  DataID writeDataID;
-  DataID readDataID;
-
   // SolverOne prescribes these, thus SolverTwo expect these (we use "first-participant" as dt method)
   std::vector<double> timestepSizes{1.0, 2.0, 3.0};
 
@@ -36,23 +33,24 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipant)
   double expectedDataValue = 2.5;
   double actualDataValue   = -1.0;
 
+  std::string meshName, writeDataName, readDataName;
   if (context.isNamed("SolverOne")) {
-    meshID      = precice.getMeshID("MeshOne");
-    writeDataID = precice.getDataID("DataOne", meshID);
-    readDataID  = precice.getDataID("DataTwo", meshID);
+    meshName      = "MeshOne";
+    writeDataName = "DataOne";
+    readDataName  = "DataTwo";
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    meshID      = precice.getMeshID("MeshTwo");
-    writeDataID = precice.getDataID("DataTwo", meshID);
-    readDataID  = precice.getDataID("DataOne", meshID);
+    meshName      = "MeshTwo";
+    writeDataName = "DataTwo";
+    readDataName  = "DataOne";
   }
 
-  VertexID vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+  VertexID vertexID = precice.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());
   double   dt       = precice.initialize();
 
   for (auto prescribed_dt : timestepSizes) {
     BOOST_TEST(precice.isCouplingOngoing());
-    precice.writeScalarData(writeDataID, vertexID, expectedDataValue);
+    precice.writeScalarData(meshName, writeDataName, vertexID, expectedDataValue);
 
     if (context.isNamed("SolverOne")) {
       precice.advance(prescribed_dt);
@@ -61,7 +59,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipant)
       dt = precice.advance(dt);
     }
 
-    precice.readScalarData(readDataID, vertexID, actualDataValue);
+    precice.readScalarData(meshName, readDataName, vertexID, actualDataValue);
     BOOST_TEST(actualDataValue == expectedDataValue);
   }
 

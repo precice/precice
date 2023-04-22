@@ -3,8 +3,7 @@ PROGRAM main
   CHARACTER*512                   :: config
   CHARACTER*50                    :: participantName, meshName
   CHARACTER*50                    :: readDataName, writeDataName
-  INTEGER                         :: rank, commsize, ongoing, dimensions, meshID, bool, numberOfVertices, i,j
-  INTEGER                         :: readDataID, writeDataID
+  INTEGER                         :: rank, commsize, ongoing, dimensions, bool, numberOfVertices, i,j
   DOUBLE PRECISION                :: dt
   DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: vertices, writeData, readData
   INTEGER, DIMENSION(:), ALLOCATABLE :: vertexIDs
@@ -15,14 +14,14 @@ PROGRAM main
   CALL getarg(2, participantName)
 
   IF(participantName .eq. 'SolverOne') THEN
-    writeDataName = 'dataOne'
-    readDataName = 'dataTwo'
-    meshName = 'MeshOne'
+    writeDataName = 'Data-One'
+    readDataName = 'Data-Two'
+    meshName = 'SolverOne-Mesh'
   ENDIF
   IF(participantName .eq. 'SolverTwo') THEN
-    writeDataName = 'dataTwo'
-    readDataName = 'dataOne'
-    meshName = 'MeshTwo'
+    writeDataName = 'Data-Two'
+    readDataName = 'Data-One'
+    meshName = 'SolverTwo-Mesh'
   ENDIF
 
   rank = 0
@@ -37,7 +36,6 @@ PROGRAM main
   ALLOCATE(vertexIDs(numberOfVertices))
   ALLOCATE(readData(numberOfVertices*dimensions))
   ALLOCATE(writeData(numberOfVertices*dimensions))
-  CALL precicef_get_mesh_id(meshName, meshID)
 
   do i = 1,numberOfVertices,1
     do j = 1,dimensions,1
@@ -48,11 +46,8 @@ PROGRAM main
     vertexIDs(i) = i-1
   enddo
 
-  CALL precicef_set_vertices(meshID, numberOfVertices, vertices, vertexIDs)
+  CALL precicef_set_vertices(meshName, numberOfVertices, vertices, vertexIDs)
   DEALLOCATE(vertices)
-
-  CALL precicef_get_data_id(readDataName,meshID,readDataID)
-  CALL precicef_get_data_id(writeDataName,meshID,writeDataID)
 
   CALL precicef_requires_initial_data(bool)
   IF (bool.EQ.1) THEN
@@ -69,13 +64,13 @@ PROGRAM main
       WRITE (*,*) 'DUMMY: Writing iteration checkpoint'
     ENDIF
 
-    CALL precicef_read_bvdata(readDataID, numberOfVertices, vertexIDs, readData)
+    CALL precicef_read_bvdata(meshName, readDataName, numberOfVertices, vertexIDs, readData)
 
     WRITE (*,*) 'readData: ', readData
 
     writeData = readData + 1
 
-    CALL precicef_write_bvdata(writeDataID, numberOfVertices, vertexIDs, writeData)
+    CALL precicef_write_bvdata(meshName, writeDataName, numberOfVertices, vertexIDs, writeData)
 
     CALL precicef_advance(dt)
 

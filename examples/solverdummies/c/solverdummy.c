@@ -13,8 +13,6 @@ int main(int argc, char **argv)
   double *    vertices;
   double *    readData;
   double *    writeData;
-  int         meshID = -1;
-  int         dataID = -1;
   int *       vertexIDs;
   int         numberOfVertices = 3;
   int         writeDataID      = -1;
@@ -40,19 +38,15 @@ int main(int argc, char **argv)
   precicec_createSolverInterface(participantName, configFileName, solverProcessIndex, solverProcessSize);
 
   if (strcmp(participantName, "SolverOne") == 0) {
-    writeDataName = "dataOne";
-    readDataName  = "dataTwo";
-    meshName      = "MeshOne";
+    writeDataName = "Data-One";
+    readDataName  = "Data-Two";
+    meshName      = "SolverOne-Mesh";
   }
   if (strcmp(participantName, "SolverTwo") == 0) {
-    writeDataName = "dataTwo";
-    readDataName  = "dataOne";
-    meshName      = "MeshTwo";
+    writeDataName = "Data-Two";
+    readDataName  = "Data-One";
+    meshName      = "SolverTwo-Mesh";
   }
-
-  meshID      = precicec_getMeshID(meshName);
-  writeDataID = precicec_getDataID(writeDataName, meshID);
-  readDataID  = precicec_getDataID(readDataName, meshID);
 
   dimensions = precicec_getDimensions();
   vertices   = malloc(numberOfVertices * dimensions * sizeof(double));
@@ -68,7 +62,7 @@ int main(int argc, char **argv)
     }
   }
 
-  precicec_setMeshVertices(meshID, numberOfVertices, vertices, vertexIDs);
+  precicec_setMeshVertices(meshName, numberOfVertices, vertices, vertexIDs);
 
   free(vertices);
 
@@ -84,13 +78,13 @@ int main(int argc, char **argv)
       printf("DUMMY: Writing iteration checkpoint \n");
     }
 
-    precicec_readBlockVectorData(readDataID, numberOfVertices, vertexIDs, readData);
+    precicec_readBlockVectorData(meshName, readDataName, numberOfVertices, vertexIDs, readData);
 
     for (int i = 0; i < numberOfVertices * dimensions; i++) {
       writeData[i] = readData[i] + 1;
     }
 
-    precicec_writeBlockVectorData(writeDataID, numberOfVertices, vertexIDs, writeData);
+    precicec_writeBlockVectorData(meshName, writeDataName, numberOfVertices, vertexIDs, writeData);
 
     dt = precicec_advance(dt);
 

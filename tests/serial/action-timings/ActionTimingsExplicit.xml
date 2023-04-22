@@ -27,10 +27,7 @@
       <provide-mesh name="MeshOne" />
       <write-data name="Forces" mesh="MeshOne" />
       <read-data name="Velocities" mesh="MeshOne" />
-      <action:recorder timing="on-time-window-complete-post" mesh="MeshOne" />
-      <action:recorder timing="write-mapping-prior" mesh="MeshOne" />
       <action:recorder timing="write-mapping-post" mesh="MeshOne" />
-      <action:recorder timing="read-mapping-prior" mesh="MeshOne" />
       <action:recorder timing="read-mapping-post" mesh="MeshOne" />
     </participant>
 
@@ -49,10 +46,7 @@
         constraint="consistent" />
       <write-data name="Velocities" mesh="MeshTwo" />
       <read-data name="Forces" mesh="MeshTwo" />
-      <action:recorder timing="on-time-window-complete-post" mesh="MeshTwo" />
-      <action:recorder timing="write-mapping-prior" mesh="MeshTwo" />
       <action:recorder timing="write-mapping-post" mesh="MeshTwo" />
-      <action:recorder timing="read-mapping-prior" mesh="MeshTwo" />
       <action:recorder timing="read-mapping-post" mesh="MeshTwo" />
     </participant>
 

@@ -17,7 +17,6 @@
 #include "logging/LogMacros.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
-#include "mesh/Vertex.hpp"
 #include "utils/String.hpp"
 #include "utils/assertion.hpp"
 
@@ -135,75 +134,32 @@ void PythonAction::performAction(double time)
   if (not _isInitialized)
     initialize();
 
-  PyObject *dataArgs = PyTuple_New(_numberArguments);
-  if (_performAction != nullptr) {
-    PyObject *pythonTime = PyFloat_FromDouble(time);
-    PyTuple_SetItem(dataArgs, 0, pythonTime);
-    if (_sourceData) {
-      npy_intp sourceDim[]  = {_sourceData->values().size()};
-      double * sourceValues = _sourceData->values().data();
-      //PRECICE_ASSERT(_sourceValues == NULL);
-      _sourceValues = PyArray_SimpleNewFromData(1, sourceDim, NPY_DOUBLE, sourceValues);
-      PRECICE_CHECK(_sourceValues != nullptr, "Creating python source values failed. Please check that the source data name is used by the mesh in action:python.");
-      PyTuple_SetItem(dataArgs, 1, _sourceValues);
-    }
-    if (_targetData) {
-      npy_intp targetDim[]  = {_targetData->values().size()};
-      double * targetValues = _targetData->values().data();
-      //PRECICE_ASSERT(_targetValues == NULL);
-      _targetValues =
-          PyArray_SimpleNewFromData(1, targetDim, NPY_DOUBLE, targetValues);
-      PRECICE_CHECK(_targetValues != nullptr, "Creating python target values failed. Please check that the target data name is used by the mesh in action:python.");
-      int argumentIndex = _sourceData ? 2 : 1;
-      PyTuple_SetItem(dataArgs, argumentIndex, _targetValues);
-    }
-    PyObject_CallObject(_performAction, dataArgs);
-    if (PyErr_Occurred()) {
-      PRECICE_ERROR("Error occurred during call of function performAction() in python module \"{}\". "
-                    "The error message is: {}",
-                    _moduleName, python_error_as_string());
-    }
+  PyObject *dataArgs   = PyTuple_New(_numberArguments);
+  PyObject *pythonTime = PyFloat_FromDouble(time);
+  PyTuple_SetItem(dataArgs, 0, pythonTime);
+  if (_sourceData) {
+    npy_intp sourceDim[]  = {_sourceData->values().size()};
+    double * sourceValues = _sourceData->values().data();
+    // PRECICE_ASSERT(_sourceValues == NULL);
+    _sourceValues = PyArray_SimpleNewFromData(1, sourceDim, NPY_DOUBLE, sourceValues);
+    PRECICE_CHECK(_sourceValues != nullptr, "Creating python source values failed. Please check that the source data name is used by the mesh in action:python.");
+    PyTuple_SetItem(dataArgs, 1, _sourceValues);
   }
-
-  if (_vertexCallback != nullptr) {
-    // The arguments is a tuple of (id, coord) or (id, coord, normal).
-    // The deprecated normal is optional and None will be passed if it was defined.
-    PRECICE_ASSERT(_vertexCallbackArgs == 2 || _vertexCallbackArgs == 3, _vertexCallbackArgs);
-    PyObject *vertexArgs = PyTuple_New(_vertexCallbackArgs);
-    if (_vertexCallbackArgs == 3) {
-      PyTuple_SetItem(vertexArgs, 2, Py_None);
-    }
-    mesh::PtrMesh   mesh = getMesh();
-    Eigen::VectorXd coords(mesh->getDimensions());
-    for (mesh::Vertex &vertex : mesh->vertices()) {
-      npy_intp vdim[]        = {mesh->getDimensions()};
-      int      id            = vertex.getID();
-      coords                 = vertex.getCoords();
-      PyObject *pythonID     = PyLong_FromLong(id);
-      PyObject *pythonCoords = PyArray_SimpleNewFromData(1, vdim, NPY_DOUBLE, coords.data());
-      PRECICE_CHECK(pythonID != nullptr, "Creating python ID failed. Please check that the python-actions mesh name is correct.");
-      PRECICE_CHECK(pythonCoords != nullptr, "Creating python coords failed. Please check that the python-actions mesh name is correct.");
-      PyTuple_SetItem(vertexArgs, 0, pythonID);
-      PyTuple_SetItem(vertexArgs, 1, pythonCoords);
-      PyObject_CallObject(_vertexCallback, vertexArgs);
-      if (PyErr_Occurred()) {
-        PRECICE_ERROR("Error occurred during call of function vertexCallback() in python module \"{}\". "
-                      "The error message is: {}",
-                      _moduleName, python_error_as_string());
-      }
-    }
-    Py_DECREF(vertexArgs);
+  if (_targetData) {
+    npy_intp targetDim[]  = {_targetData->values().size()};
+    double * targetValues = _targetData->values().data();
+    // PRECICE_ASSERT(_targetValues == NULL);
+    _targetValues =
+        PyArray_SimpleNewFromData(1, targetDim, NPY_DOUBLE, targetValues);
+    PRECICE_CHECK(_targetValues != nullptr, "Creating python target values failed. Please check that the target data name is used by the mesh in action:python.");
+    int argumentIndex = _sourceData ? 2 : 1;
+    PyTuple_SetItem(dataArgs, argumentIndex, _targetValues);
   }
-
-  if (_postAction != nullptr) {
-    PyObject *postActionArgs = PyTuple_New(0);
-    PyObject_CallObject(_postAction, postActionArgs);
-    if (PyErr_Occurred()) {
-      PRECICE_ERROR("Error occurred during call of function postAction() in python module \"{}\". "
-                    "The error message is: {}",
-                    _moduleName, python_error_as_string());
-    }
-    Py_DECREF(postActionArgs);
+  PyObject_CallObject(_performAction, dataArgs);
+  if (PyErr_Occurred()) {
+    PRECICE_ERROR("Error occurred during call of function performAction() in python module \"{}\". "
+                  "The error message is: {}",
+                  _moduleName, python_error_as_string());
   }
 
   Py_DECREF(dataArgs);
@@ -231,38 +187,6 @@ void PythonAction::initialize()
     PyErr_Clear();
     PRECICE_WARN("Python module \"{}\" does not define function performAction().", _moduleName);
     _performAction = nullptr;
-  }
-  //  bool valid = _performAction != NULL;
-  //  if (valid) valid = PyCallable_Check(_performAction);
-  //  if (not valid){
-  //  }
-
-  // Construct method vertexCallback
-  _vertexCallback = PyObject_GetAttrString(_module, "vertexCallback");
-  if (PyErr_Occurred()) {
-    PyErr_Clear();
-    PRECICE_WARN("Python module \"{}\" does not define function vertexCallback().", _moduleName);
-    _vertexCallback = nullptr;
-  } else {
-    _vertexCallbackArgs = python_func_args(_vertexCallback).size();
-    if (_vertexCallbackArgs == 3) {
-      PRECICE_WARN("Python module \"{}\" defines the function vertexCallback with 3 arguments. "
-                   "The normal argument is deprecated and preCICE will pass None instead. "
-                   "Please use the following definition to silence this warning \"def vertexCallback(id, coords):\".",
-                   _moduleName);
-    }
-    PRECICE_CHECK(_vertexCallbackArgs == 2 || _vertexCallbackArgs == 3,
-                  "The provided vertexCallback() in python module \"{}\" has {} arguments, but needs to have 2 or 3. "
-                  "Please use the following definition \"def vertexCallback(id, coords):\"",
-                  _moduleName, _vertexCallbackArgs);
-  }
-
-  // Construct function postAction
-  _postAction = PyObject_GetAttrString(_module, "postAction");
-  if (PyErr_Occurred()) {
-    PyErr_Clear();
-    PRECICE_WARN("Python module \"{}\" does not define function postAction().", _moduleName);
-    _postAction = nullptr;
   }
 }
 

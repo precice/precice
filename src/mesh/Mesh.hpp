@@ -6,6 +6,7 @@
 #include <list>
 #include <map>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "logging/Logger.hpp"
@@ -180,7 +181,10 @@ public:
   const PtrData &data(DataID dataID) const;
 
   /// Returns whether Mesh has Data with the dataName
-  bool hasDataName(const std::string &dataName) const;
+  bool hasDataName(std::string_view dataName) const;
+
+  /// Returns the names of all available data
+  std::vector<std::string> availableData() const;
 
   /// Returns the data with the matching name
   const PtrData &data(const std::string &dataName) const;

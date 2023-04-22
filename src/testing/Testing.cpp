@@ -8,6 +8,7 @@
 
 #include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
+#include "testing/SourceLocation.hpp"
 #include "testing/Testing.hpp"
 #include "utils/assertion.hpp"
 
@@ -16,13 +17,7 @@ namespace precice::testing {
 std::string getPathToRepository()
 {
   precice::logging::Logger _log("testing");
-  char *                   preciceRoot = std::getenv("PRECICE_ROOT");
-  PRECICE_CHECK(preciceRoot != nullptr,
-                "Environment variable PRECICE_ROOT is required to run the tests, but has not been set. Please set it to the root directory of the precice repository.");
-
-  // Cleanup the path by canonicalising it.
-  boost::filesystem::path root(preciceRoot);
-  return boost::filesystem::weakly_canonical(root).string();
+  return precice::testing::SourceLocation;
 }
 
 std::string getPathToSources()

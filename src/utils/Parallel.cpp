@@ -186,6 +186,17 @@ void Parallel::pushState(CommStatePtr newState)
 // #endif
 // }
 
+bool Parallel::isMPIInitialized()
+{
+#ifndef PRECICE_NO_MPI
+  int isMPIInitialized{-1};
+  MPI_Initialized(&isMPIInitialized);
+  return isMPIInitialized != 0;
+#else
+  return false;
+#endif // not PRECICE_NO_MPI
+}
+
 void Parallel::initializeManagedMPI(
     int *   argc,
     char ***argv)

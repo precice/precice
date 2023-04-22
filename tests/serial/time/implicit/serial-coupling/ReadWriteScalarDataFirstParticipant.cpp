@@ -24,10 +24,6 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipant)
 
   SolverInterface precice(context.name, context.config(), 0, 1);
 
-  MeshID meshID;
-  DataID writeDataID;
-  DataID readDataID;
-
   // SolverOne prescribes these, thus SolverTwo expect these (we use "first-participant" as dt method)
   std::vector<std::vector<double>> timestepSizes{{1.0, 2.0, 1.0}, {2.0, 1.0, 2.0}, {3.0, 2.5, 3.0}};
 
@@ -39,42 +35,61 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipant)
   double expectedDataValue = 2.5;
   double actualDataValue   = -1.0;
 
+  std::string meshName, writeDataName, readDataName;
   if (context.isNamed("SolverOne")) {
-    meshID      = precice.getMeshID("MeshOne");
-    writeDataID = precice.getDataID("DataOne", meshID);
-    readDataID  = precice.getDataID("DataTwo", meshID);
+    meshName      = "MeshOne";
+    writeDataName = "DataOne";
+    readDataName  = "DataTwo";
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    meshID      = precice.getMeshID("MeshTwo");
-    writeDataID = precice.getDataID("DataTwo", meshID);
-    readDataID  = precice.getDataID("DataOne", meshID);
+    meshName      = "MeshTwo";
+    writeDataName = "DataTwo";
+    readDataName  = "DataOne";
   }
 
-  VertexID vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+  VertexID vertexID = precice.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());
   double   dt       = precice.initialize();
 
   if (precice.requiresWritingCheckpoint()) {
+    // do nothing
   }
+
+  double startOfWindowTime = 0;
+  double timeInWindow      = 0;
+  double totalTime         = 6; // max-time from config
 
   for (auto iterationSizes : timestepSizes) {
     for (int it = 0; it < maxIterations; it++) {
-
+      actualDataValue = -1; // reset value.
       BOOST_TEST(precice.isCouplingOngoing());
-      precice.writeScalarData(writeDataID, vertexID, expectedDataValue);
+      precice.writeScalarData(meshName, writeDataName, vertexID, expectedDataValue);
 
       if (context.isNamed("SolverOne")) {
-        precice.advance(iterationSizes.at(it));
+        dt = precice.advance(iterationSizes.at(it));
+        timeInWindow += iterationSizes.at(it);
       } else if (context.isNamed("SolverTwo")) {
         BOOST_TEST(dt == iterationSizes.at(it));
         dt = precice.advance(dt);
       }
 
       if (precice.requiresReadingCheckpoint()) {
+        timeInWindow = 0;
       }
-      if (precice.requiresWritingCheckpoint()) {
+      if (precice.isTimeWindowComplete()) {
+        startOfWindowTime += timeInWindow;
+        timeInWindow = 0;
       }
 
-      precice.readScalarData(readDataID, vertexID, actualDataValue);
+      if (context.isNamed("SolverOne")) {
+        // Check remainder of simulation time
+        BOOST_TEST(dt == totalTime - startOfWindowTime);
+      }
+
+      if (precice.requiresWritingCheckpoint()) {
+        // do nothing
+      }
+
+      precice.readScalarData(meshName, readDataName, vertexID, actualDataValue);
       BOOST_TEST(actualDataValue == expectedDataValue);
     }
   }

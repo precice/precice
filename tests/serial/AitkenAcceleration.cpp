@@ -17,13 +17,13 @@ BOOST_AUTO_TEST_CASE(AitkenAcceleration)
   Vector2d                 vertex{0.0, 0.0};
 
   if (context.isNamed("A")) {
-    const precice::MeshID meshID   = interface.getMeshID("A-Mesh");
-    int                   vertexID = interface.setMeshVertex(meshID, vertex.data());
-    int                   dataID   = interface.getDataID("Data", meshID);
+    auto meshName = "A-Mesh";
+    int  vertexID = interface.setMeshVertex(meshName, vertex.data());
+    auto dataName = "Data";
 
     double dt    = interface.initialize();
     double value = 1.0;
-    interface.writeScalarData(dataID, vertexID, value);
+    interface.writeScalarData(meshName, dataName, vertexID, value);
 
     interface.requiresWritingCheckpoint();
     interface.advance(dt);
@@ -38,9 +38,9 @@ BOOST_AUTO_TEST_CASE(AitkenAcceleration)
 
   } else {
     BOOST_TEST(context.isNamed("B"));
-    const precice::MeshID meshID   = interface.getMeshID("B-Mesh");
-    int                   vertexID = interface.setMeshVertex(meshID, vertex.data());
-    int                   dataID   = interface.getDataID("Data", meshID);
+    auto meshName = "B-Mesh";
+    int  vertexID = interface.setMeshVertex(meshName, vertex.data());
+    auto dataName = "Data";
 
     double dt = interface.initialize();
     interface.requiresWritingCheckpoint();
@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(AitkenAcceleration)
     interface.requiresReadingCheckpoint();
 
     double value = -1.0;
-    interface.readScalarData(dataID, vertexID, value);
+    interface.readScalarData(meshName, dataName, vertexID, value);
     BOOST_TEST(value == 0.1); // due to initial underrelaxation
 
     interface.requiresWritingCheckpoint();

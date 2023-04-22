@@ -56,6 +56,9 @@ public:
   /// Removes a computed mapping.
   void clear() final override;
 
+  /// name of the rbf mapping
+  std::string getName() const final override;
+
 private:
   precice::logging::Logger _log{"mapping::RadialBasisFctMapping"};
 
@@ -185,6 +188,12 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::clear()
   PRECICE_TRACE();
   _rbfSolver.clear();
   this->_hasComputedMapping = false;
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+std::string RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::getName() const
+{
+  return "global-direct RBF";
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -346,7 +355,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inputD
 
     int valueDim = this->output()->data(outputDataID)->getDimensions();
 
-    std::vector<double> globalInValues((this->input()->getGlobalNumberOfVertices()) * valueDim, 0.0);
+    std::vector<double> globalInValues(static_cast<std::size_t>(this->input()->getGlobalNumberOfVertices()) * valueDim, 0.0);
     std::vector<int>    outValuesSize;
 
     if (utils::IntraComm::isPrimary()) { // Parallel case

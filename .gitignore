@@ -24,5 +24,6 @@ CMakeFiles
 Makefile
 src/precice/impl/versions.hpp
 src/precice/Version.h
+src/testing/SourceLocation.hpp
 .idea
 CMakeUserPresets.json

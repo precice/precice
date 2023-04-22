@@ -58,8 +58,8 @@ function(print_configuration)
     "CMAKE_CXX_FLAGS;CXX compiler flags"
     "CMAKE_LINKER;CXX linker"
     "CMAKE_INSTALL_PREFIX;Install prefix"
-    "CMAKE_SOURCE_DIR;Source directory"
-    "CMAKE_BINARY_DIR;Binary directory"
+    "PROJECT_SOURCE_DIR;Source directory"
+    "PROJECT_BINARY_DIR;Binary directory"
     )
   if(PRINT_CONFIG_ADDITIONAL)
     print_variables(VARS ${PRINT_CONFIG_ADDITIONAL})

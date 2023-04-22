@@ -19,7 +19,6 @@
 #include "mesh/Vertex.hpp"
 #include "precice/types.hpp"
 #include "query/Index.hpp"
-#include "utils/EigenHelperFunctions.hpp"
 
 namespace precice::mesh {
 
@@ -170,12 +169,21 @@ const PtrData &Mesh::data(DataID dataID) const
   return *iter;
 }
 
-bool Mesh::hasDataName(const std::string &dataName) const
+bool Mesh::hasDataName(std::string_view dataName) const
 {
   auto iter = std::find_if(_data.begin(), _data.end(), [&dataName](const auto &dptr) {
     return dptr->getName() == dataName;
   });
   return iter != _data.end(); // if name was not found in mesh, iter == _data.end()
+}
+
+std::vector<std::string> Mesh::availableData() const
+{
+  std::vector<std::string> names;
+  for (const auto &data : _data) {
+    names.push_back(data->getName());
+  }
+  return names;
 }
 
 const PtrData &Mesh::data(const std::string &dataName) const
@@ -206,42 +214,8 @@ void Mesh::allocateDataValues()
 {
   PRECICE_TRACE(_vertices.size());
   const auto expectedCount = _vertices.size();
-  using SizeType           = std::remove_cv<decltype(expectedCount)>::type;
   for (PtrData &data : _data) {
-
-    // Allocate data values
-    const SizeType expectedSize = expectedCount * data->getDimensions();
-    const auto     actualSize   = static_cast<SizeType>(data->values().size());
-    // Shrink Buffer
-    if (expectedSize < actualSize) {
-      data->values().resize(expectedSize);
-    }
-    // Enlarge Buffer
-    if (expectedSize > actualSize) {
-      const auto leftToAllocate = expectedSize - actualSize;
-      utils::append(data->values(), Eigen::VectorXd(Eigen::VectorXd::Zero(leftToAllocate)));
-    }
-    PRECICE_DEBUG("Data {} now has {} values", data->getName(), data->values().size());
-
-    // Allocate gradient data values
-    if (data->hasGradient()) {
-      const SizeType spaceDimensions = data->getSpatialDimensions();
-
-      const SizeType expectedColumnSize = expectedCount * data->getDimensions();
-      const auto     actualColumnSize   = static_cast<SizeType>(data->gradientValues().cols());
-
-      // Shrink Buffer
-      if (expectedColumnSize < actualColumnSize) {
-        data->gradientValues().resize(spaceDimensions, expectedColumnSize);
-      }
-
-      // Enlarge Buffer
-      if (expectedColumnSize > actualColumnSize) {
-        const auto columnLeftToAllocate = expectedColumnSize - actualColumnSize;
-        utils::append(data->gradientValues(), Eigen::MatrixXd(Eigen::MatrixXd::Zero(spaceDimensions, columnLeftToAllocate)));
-      }
-      PRECICE_DEBUG("Gradient Data {} now has {} x {} values", data->getName(), data->gradientValues().rows(), data->gradientValues().cols());
-    }
+    data->allocateValues(expectedCount);
   }
 }
 

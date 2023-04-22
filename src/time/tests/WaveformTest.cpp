@@ -520,7 +520,7 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataThirdOrder)
     BOOST_TEST(testing::equals(waveform.sample(t)(0), t * t * t));
   }
 
-  // quartically increasing values, but with non-uniform spacing
+  // quadratically increasing values, but with non-uniform spacing
   for (double t : std::vector<double>{0.25, 0.5, 0.75, 1}) {
     value(0) = t * t * t * t;
     waveform.store(value, t);

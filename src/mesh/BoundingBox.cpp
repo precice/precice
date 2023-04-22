@@ -59,7 +59,7 @@ bool BoundingBox::operator==(const BoundingBox &otherBB) const
 
 bool BoundingBox::empty() const
 {
-  return (_boundMax - _boundMin).isZero() || isDefault();
+  return isDefault() || (_boundMin - _boundMax).isZero();
 }
 
 bool BoundingBox::isDefault() const
@@ -95,6 +95,18 @@ Eigen::VectorXd BoundingBox::minCorner() const
 Eigen::VectorXd BoundingBox::maxCorner() const
 {
   return _boundMax;
+}
+
+double BoundingBox::getEdgeLength(int direction) const
+{
+  PRECICE_ASSERT(direction < _dimensions);
+  PRECICE_ASSERT(_boundMax.size() > direction && _boundMin.size() > direction);
+  return std::abs(_boundMax(direction) - _boundMin(direction));
+}
+
+double BoundingBox::longestEdgeLength() const
+{
+  return (_boundMax - _boundMin).maxCoeff();
 }
 
 double BoundingBox::getArea(std::vector<bool> deadAxis)
@@ -150,15 +162,14 @@ void BoundingBox::expandBy(double value)
 void BoundingBox::scaleBy(double safetyFactor)
 {
   if (!isDefault()) {
-    double maxSideLength = 1e-6; // we need some minimum > 0 here
-    maxSideLength        = (_boundMax - _boundMin).maxCoeff();
+    double maxSideLength = longestEdgeLength();
     _boundMax.array() += safetyFactor * maxSideLength;
     _boundMin.array() -= safetyFactor * maxSideLength;
     PRECICE_DEBUG("Merged BoundingBox {}", *this);
   }
 }
 
-bool BoundingBox::overlapping(const BoundingBox &otherBB)
+bool BoundingBox::overlapping(const BoundingBox &otherBB) const
 {
   for (int d = 0; d < _dimensions; d++) {
     if ((_boundMin[d] < otherBB._boundMin[d] && _boundMax[d] < otherBB._boundMin[d]) ||

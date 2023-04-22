@@ -32,6 +32,8 @@ public:
     Direction direction;
     /// true for RBF mapping
     bool requiresBasisFunction;
+    /// used the automatic rbf alias tag in order to set the mapping
+    bool configuredWithAliasTag = false;
   };
 
   struct GinkgoParameter {
@@ -77,13 +79,17 @@ public:
 
     enum struct SystemSolver {
       GlobalDirect,
-      GlobalIterative
+      GlobalIterative,
+      PUMDirect
     };
     SystemSolver        solver{};
     std::array<bool, 3> deadAxis{};
     Polynomial          polynomial{};
     double              solverRtol{};
     Preallocation       preallocation{};
+    int                 verticesPerCluster{};
+    double              relativeOverlap{};
+    bool                projectToInput{};
   };
 
   /// Returns the RBF configuration, which was configured at the latest.
@@ -111,6 +117,7 @@ private:
   const std::string TYPE_LINEAR_CELL_INTERPOLATION = "linear-cell-interpolation";
   const std::string TYPE_RBF_GLOBAL_DIRECT         = "rbf-global-direct";
   const std::string TYPE_RBF_GLOBAL_ITERATIVE      = "rbf-global-iterative";
+  const std::string TYPE_RBF_PUM_DIRECT            = "rbf-pum-direct";
   const std::string TYPE_RBF_ALIAS                 = "rbf";
 
   const std::string ATTR_DIRECTION  = "direction";
@@ -161,6 +168,11 @@ private:
   // const std::string PARALLELISM_GATHER_SCATTER = "gather-scatter";
   // const std::string PARALLELISM                = "distributed";
 
+  // For PUM
+  const std::string ATTR_VERTICES_PER_CLUSTER = "vertices-per-cluster";
+  const std::string ATTR_RELATIVE_OVERLAP     = "relative-overlap";
+  const std::string ATTR_PROJECT_TO_INPUT     = "project-to-input";
+
   // We declare the basis function as subtag
   const std::string SUBTAG_BASIS_FUNCTION = "basis-function";
   const std::string RBF_TPS               = "thin-plate-splines";
@@ -198,7 +210,7 @@ private:
    * Configures and instantiates all mappings, which do not require
    * a subtag/ a basis function. For the RBF related mappings, this class
    * stores all relevant information, but the class is not instantiated and
-   * a nullptr is returned intstead. The class instantiation for the RBF
+   * a nullptr is returned instead. The class instantiation for the RBF
    * related mappings happens in \ref xmlTagCallback() as we need to read the
    * subtag information.
    */
@@ -214,12 +226,14 @@ private:
    * the other mapping types. The information is then used later when instantiating
    * the RBF mappings in \ref xmlTagCallback().
    */
-  RBFConfiguration configureRBFMapping(const std::string &              type,
-                                       const xml::ConfigurationContext &context,
-                                       const std::string &              polynomial,
-                                       const std::string &              preallocation,
+  RBFConfiguration configureRBFMapping(const std::string &type,
+                                       const std::string &polynomial,
+                                       const std::string &preallocation,
                                        bool xDead, bool yDead, bool zDead,
-                                       double solverRtol) const;
+                                       double solverRtol,
+                                       double verticesPerCluster,
+                                       double relativeOverlap,
+                                       bool   projectToInput) const;
 
   /// Check whether a mapping to and from the same mesh already exists
   void checkDuplicates(const ConfiguredMapping &mapping);
