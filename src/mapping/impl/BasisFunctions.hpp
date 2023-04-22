@@ -11,8 +11,8 @@
 #elif defined(__HIPCC__)
 
 #define __HIP_PLATFORM_AMD__
+//#include <hip/hip_runtime_api.h>
 #include <hip/hip_runtime.h>
-#include <hip/hip_runtime_api.h>
 #define PRECICE_HOST_DEVICE __host__ __device__
 #define PRECICE_MEMORY_SPACE __device__
 #define FMA fma
@@ -83,9 +83,9 @@ struct DefiniteFunction {
 class ThinPlateSplines : public NoCompactSupportBase,
                          public DefiniteFunction<false> {
 public:
-  PRECICE_HOST_DEVICE ThinPlateSplines()                            = default;
-  PRECICE_HOST_DEVICE ThinPlateSplines(const ThinPlateSplines &tps) = default;
-  PRECICE_HOST_DEVICE ~ThinPlateSplines()                           = default;
+  ThinPlateSplines()                            = default;
+  ThinPlateSplines(const ThinPlateSplines &tps) = default;
+  ~ThinPlateSplines()                           = default;
 
   double evaluate(double radius) const
   {
@@ -123,8 +123,8 @@ public:
     _params.parameter1 = _cPow2;
   }
 
-  PRECICE_HOST_DEVICE Multiquadrics(const Multiquadrics &m) = default;
-  PRECICE_HOST_DEVICE ~Multiquadrics()                      = default;
+  Multiquadrics(const Multiquadrics &m) = default;
+  ~Multiquadrics()                      = default;
 
   double evaluate(double radius) const
   {
@@ -169,8 +169,8 @@ public:
     _params.parameter1 = _cPow2;
   }
 
-  PRECICE_HOST_DEVICE InverseMultiquadrics(const InverseMultiquadrics &im) = default;
-  PRECICE_HOST_DEVICE ~InverseMultiquadrics()                              = default;
+  InverseMultiquadrics(const InverseMultiquadrics &im) = default;
+  ~InverseMultiquadrics()                              = default;
 
   double evaluate(double radius) const
   {
@@ -204,9 +204,9 @@ private:
 class VolumeSplines : public NoCompactSupportBase,
                       public DefiniteFunction<false> {
 public:
-  PRECICE_HOST_DEVICE VolumeSplines()                        = default;
-  PRECICE_HOST_DEVICE VolumeSplines(const VolumeSplines &vs) = default;
-  PRECICE_HOST_DEVICE ~VolumeSplines()                       = default;
+  VolumeSplines()                        = default;
+  VolumeSplines(const VolumeSplines &vs) = default;
+  ~VolumeSplines()                       = default;
 
   double evaluate(double radius) const
   {
@@ -260,8 +260,8 @@ public:
     _params.parameter3 = _deltaY;
   }
 
-  PRECICE_HOST_DEVICE Gaussian(const Gaussian &g) = default;
-  PRECICE_HOST_DEVICE ~Gaussian()                 = default;
+  Gaussian(const Gaussian &g) = default;
+  ~Gaussian()                 = default;
 
   double getSupportRadius() const
   {
@@ -333,8 +333,8 @@ public:
     _params.parameter1 = _r_inv;
   }
 
-  PRECICE_HOST_DEVICE CompactThinPlateSplinesC2(const CompactThinPlateSplinesC2 &ctps) = default;
-  PRECICE_HOST_DEVICE ~CompactThinPlateSplinesC2()                                     = default;
+  CompactThinPlateSplinesC2(const CompactThinPlateSplinesC2 &ctps) = default;
+  ~CompactThinPlateSplinesC2()                                     = default;
 
   double getSupportRadius() const
   {
@@ -391,8 +391,8 @@ public:
     _params.parameter1 = _r_inv;
   }
 
-  PRECICE_HOST_DEVICE CompactPolynomialC0(const CompactPolynomialC0 &cp) = default;
-  PRECICE_HOST_DEVICE ~CompactPolynomialC0()                             = default;
+  CompactPolynomialC0(const CompactPolynomialC0 &cp) = default;
+  ~CompactPolynomialC0()                             = default;
 
   double getSupportRadius() const
   {
@@ -450,8 +450,8 @@ public:
     _params.parameter1 = _r_inv;
   }
 
-  PRECICE_HOST_DEVICE CompactPolynomialC2(const CompactPolynomialC2 &cp) = default;
-  PRECICE_HOST_DEVICE ~CompactPolynomialC2()                             = default;
+  CompactPolynomialC2(const CompactPolynomialC2 &cp) = default;
+  ~CompactPolynomialC2()                             = default;
 
   double getSupportRadius() const
   {
@@ -509,8 +509,8 @@ public:
     _params.parameter1 = _r_inv;
   }
 
-  PRECICE_HOST_DEVICE CompactPolynomialC4(const CompactPolynomialC4 &cp) = default;
-  PRECICE_HOST_DEVICE ~CompactPolynomialC4()                             = default;
+  CompactPolynomialC4(const CompactPolynomialC4 &cp) = default;
+  ~CompactPolynomialC4()                             = default;
 
   double getSupportRadius() const
   {
@@ -567,8 +567,8 @@ public:
     _params.parameter1 = _r_inv;
   }
 
-  PRECICE_HOST_DEVICE CompactPolynomialC6(const CompactPolynomialC6 &cp) = default;
-  PRECICE_HOST_DEVICE ~CompactPolynomialC6()                             = default;
+  CompactPolynomialC6(const CompactPolynomialC6 &cp) = default;
+  ~CompactPolynomialC6()                             = default;
 
   double getSupportRadius() const
   {
