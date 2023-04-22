@@ -28,7 +28,7 @@ using cholesky = gko::preconditioner::Ic<>;
 
 using precice::mapping::RadialBasisParameters;
 
-#if defined(__NVCC__) || defined(__HIPCC__)
+#if defined(PRECICE_WITH_CUDA) || defined(PRECICE_WITH_HIP)
 
 extern void initQRSolver(const int deviceId = 0);
 extern void deInitQRSolver();
@@ -219,7 +219,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
   _solverType         = solverTypeLookup.at(ginkgoParameter.solver);
   _preconditionerType = preconditionerTypeLookup.at(ginkgoParameter.preconditioner);
 
-#if defined(__NVCC__) || defined(__HIPCC__)
+#if defined(PRECICE_WITH_CUDA) || defined(PRECICE_WITH_HIP)
   if (GinkgoSolverType::QR == _solverType) {
     PRECICE_ASSERT("cuda-executor" == ginkgoParameter.executor || "hip-executor" == ginkgoParameter.executor, "The parallel QR decomposition is only available on CUDA and HIP yet.");
     initQRSolver(ginkgoParameter.deviceId);
@@ -422,7 +422,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
       _gmresSolver = gko::share(solverFactory->generate(_rbfSystemMatrix));
     }
   }
-#if defined(__NVCC__) || defined(__HIPCC__)
+#if defined(PRECICE_WITH_CUDA) || defined(PRECICE_WITH_HIP)
   else if (_solverType == GinkgoSolverType::QR) {
     const std::size_t M = _rbfSystemMatrix->get_size()[0];
     const std::size_t N = _rbfSystemMatrix->get_size()[1];
@@ -637,7 +637,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::~GinkgoRadialBasisFctSolver
 {
   _allocCopyEvent.stop();
 
-#if defined(__NVCC__) || defined(__HIPCC__)
+#if defined(PRECICE_WITH_CUDA) || defined(PRECICE_WITH_HIP)
   if (GinkgoSolverType::QR == _solverType) {
     deInitQRSolver();
   }

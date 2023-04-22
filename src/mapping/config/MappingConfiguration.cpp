@@ -254,7 +254,6 @@ MappingConfiguration::MappingConfiguration(
   addAttributes(projectionTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint});
   addAttributes(rbfDirectTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead});
   addAttributes(rbfIterativeTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead, attrMaxIterations, attrSolverRtol, attrPreallocation, attrExecutor, attrDeviceId, attrUnifiedMemory, attrSolver, attrUsePreconditioner, attrPreconditioner, attrJacobiBlockSize});
-  addAttributes(rbfIterativeTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead, attrSolverRtol, attrPreallocation});
   addAttributes(pumDirectTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPumPolynomial, attrXDead, attrYDead, attrZDead, verticesPerCluster, relativeOverlap, projectToInput});
   addAttributes(rbfAliasTag, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrXDead, attrYDead, attrZDead});
 

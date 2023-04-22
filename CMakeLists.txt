@@ -263,6 +263,8 @@ if (PRECICE_GinkgoParallelization)
     set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
     message(STATUS "Enabled CUDA support for Ginkgo library.")
 
+    add_compile_definitions("PRECICE_WITH_CUDA")
+
   endif()
 
   if(NOT DEFINED HIP_PATH)
@@ -303,6 +305,8 @@ if (PRECICE_GinkgoParallelization)
       find_package(hipsolver)
 
       message(STATUS "Enabled AMD HIP support for Ginkgo library.")
+
+      add_compile_definitions("PRECICE_WITH_HIP")
   endif()
 
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
