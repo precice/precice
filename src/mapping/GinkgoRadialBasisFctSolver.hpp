@@ -555,6 +555,8 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConser
 
   auto dAu = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixA->get_size()[1], dRhs->get_size()[1]}));
 
+  _matrixA->transpose()->apply(gko::lend(dRhs), gko::lend(dAu));
+
   if (GinkgoSolverType::QR == _solverType) {
     _decompMatrixQ_T->apply(gko::lend(dAu), gko::lend(_dQ_T_Rhs));
     _triangularSolver->apply(gko::lend(_dQ_T_Rhs), gko::lend(_rbfCoefficients));
@@ -580,6 +582,8 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConser
       _deviceExecutor->synchronize();
       _matrixQQ_T = gko::share(GinkgoMatrix::create(_deviceExecutor, gko::dim<2>{_matrixQ->get_size()[0], _matrixQ_T->get_size()[1]}));
 
+      _matrixQ->apply(gko::lend(_matrixQ_T), gko::lend(_matrixQQ_T));
+
       auto polynomialSolverFactory = cg::build()
                                          .with_criteria(gko::stop::Iteration::build()
                                                             .with_max_iters(static_cast<std::size_t>(1e6))
@@ -593,16 +597,17 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConser
 
       _polynomialRhs->clear();
       _deviceExecutor->synchronize();
-      _polynomialRhs = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{}));
     }
 
     _polynomialContribution = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixQQ_T->get_size()[1], 1}));
 
     dEpsilon->apply(gko::lend(_scalarNegativeOne), gko::lend(dEpsilon));
 
+    _polynomialRhs = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixQ->get_size()[0], dEpsilon->get_size()[1]}));
+
     _matrixQ->apply(gko::lend(dEpsilon), gko::lend(_polynomialRhs));
 
-    _polynomialSolver->apply(gko::lend(dEpsilon), gko::lend(_polynomialContribution));
+    _polynomialSolver->apply(gko::lend(_polynomialRhs), gko::lend(_polynomialContribution));
 
     dOutput->sub_scaled(gko::lend(_scalarOne), gko::lend(_polynomialContribution));
   }
