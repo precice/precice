@@ -18,6 +18,9 @@ public:
   /// Computes the projections and interpolation relations.
   void computeMapping() final override;
 
+  /// name of the lci mapping
+  std::string getName() const final override;
+
 private:
   logging::Logger _log{"mapping::LinearCellInterpolationMappingMapping"};
 };

@@ -341,7 +341,7 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
   // Step 2: Now we pick random samples from the input mesh and ask the index tree for the k-nearest neighbors
   // in order to estimate the point density and determine a proper cluster radius (see also the function documentation)
   double clusterRadius = estimateClusterRadius(verticesPerCluster, inMesh, localBB);
-  PRECICE_INFO("VertexCluster Radius: {}", clusterRadius);
+  PRECICE_DEBUG("Vertex cluster radius: {}", clusterRadius);
 
   // maximum distance between cluster centers lying diagonal to each other. The maximum distance takes the overlap condition into
   // account: if the distance between the centers is sqrt(2) * radius, we violate the overlap condition between diagonal clusters

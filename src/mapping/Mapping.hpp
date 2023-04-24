@@ -127,6 +127,9 @@ public:
   /// Returns whether the mapping requires gradient data
   bool requiresGradientData() const;
 
+  /// Returns the name of the mapping method for logging purpose
+  virtual std::string getName() const = 0;
+
 protected:
   /// Returns pointer to input mesh.
   mesh::PtrMesh input() const;

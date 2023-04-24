@@ -498,7 +498,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
     mapping::PtrMapping &map = mappingContext.mapping;
     PRECICE_ASSERT(map.get() == nullptr);
-    map = confMapping.mapping;
+    map                                   = confMapping.mapping;
+    mappingContext.configuredWithAliasTag = confMapping.configuredWithAliasTag;
 
     const mesh::PtrMesh &input  = fromMeshContext.mesh;
     const mesh::PtrMesh &output = toMeshContext.mesh;

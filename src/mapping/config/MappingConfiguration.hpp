@@ -32,6 +32,8 @@ public:
     Direction direction;
     /// true for RBF mapping
     bool requiresBasisFunction;
+    /// used the automatic rbf alias tag in order to set the mapping
+    bool configuredWithAliasTag = false;
   };
 
   MappingConfiguration(
@@ -200,10 +202,9 @@ private:
  * the other mapping types. The information is then used later when instantiating
  * the RBF mappings in \ref xmlTagCallback().
  */
-  RBFConfiguration configureRBFMapping(const std::string &              type,
-                                       const xml::ConfigurationContext &context,
-                                       const std::string &              polynomial,
-                                       const std::string &              preallocation,
+  RBFConfiguration configureRBFMapping(const std::string &type,
+                                       const std::string &polynomial,
+                                       const std::string &preallocation,
                                        bool xDead, bool yDead, bool zDead,
                                        double solverRtol,
                                        double verticesPerCluster,
