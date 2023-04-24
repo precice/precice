@@ -402,11 +402,12 @@ public:
 
     // Custom span constructor to allow string_view imitation
     template <
+        typename T,
         std::size_t E = Extent,
         typename std::enable_if<
-            E == dynamic_extent && std::is_same<pointer, const char*>::value,
+            E == dynamic_extent && (std::is_same<T, const char*>::value || std::is_same<T, char*>::value),
             int>::type = 0>
-    span(pointer cstring)
+    span(T cstring)
         : storage_(cstring, std::strlen(cstring))
     {
         TCB_SPAN_EXPECT(extent == dynamic_extent);
