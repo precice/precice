@@ -23,8 +23,8 @@ BOOST_AUTO_TEST_CASE(GlobalRBFPartitioningPETSc)
     interface.setMeshVertices(meshName, 2, positions, vertexIDs);
     interface.initialize();
     double values[2];
-    interface.advance(1.0);
-    interface.readBlockScalarData(meshName, dataName, 2, vertexIDs, values);
+    double preciceDt = interface.advance(1.0);
+    interface.readBlockScalarData(meshName, dataName, 2, vertexIDs, preciceDt, values);
     //    std::cout << context.rank <<": " << values << '\n';
     interface.finalize();
   } else {

@@ -93,8 +93,12 @@ void NearestNeighborGradientMapping::mapConsistent(DataID inputDataID, DataID ou
 
 void NearestNeighborGradientMapping::mapConservative(DataID /*inputDataID*/, DataID /*outputDataID*/)
 {
-  PRECICE_ASSERT(false, "Not implemented.")
+  PRECICE_ASSERT(false, "Not implemented.");
 }
 
+std::string NearestNeighborGradientMapping::getName() const
+{
+  return "nearest-neighbor-gradient";
+}
 } // namespace mapping
 } // namespace precice

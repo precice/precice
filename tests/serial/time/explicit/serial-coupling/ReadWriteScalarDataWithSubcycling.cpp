@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
       readTime = (timewindow + 1) * windowDt; // SolverTwo gets result at end of window from SolverOne
     }
 
-    precice.readScalarData(meshName, readDataName, vertexID, readData);
+    precice.readScalarData(meshName, readDataName, vertexID, maxDt, readData);
     BOOST_TEST(readData == readFunction(readTime));
 
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.

@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(ExplicitAndMapping)
                                      otherIDs.data(), writeData.data());
       dt = interface.advance(dt);
       interface.readBlockScalarData(ownMeshName, readDataName, ownIDs.size(),
-                                    ownIDs.data(), readData.data());
+                                    ownIDs.data(), dt, readData.data());
       BOOST_TEST(readData == (std::vector<double>{2, 4, 3, 3}));
     }
 
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(ExplicitAndMapping)
                                      ids.data(), writeData.data());
       dt = interface.advance(dt);
       interface.readBlockScalarData(meshName, readDataName, ids.size(),
-                                    ids.data(), readData.data());
+                                    ids.data(), dt, readData.data());
       // Expected data according to the writeData
       std::vector<double> expectedData({1, 2, 3, 4, 5});
       BOOST_TEST(precice::testing::equals(expectedData, readData));

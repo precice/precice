@@ -15,6 +15,7 @@ http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/n4820.pdf
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <type_traits>
 
 #ifndef TCB_SPAN_NO_EXCEPTIONS
@@ -398,6 +399,19 @@ public:
 
     TCB_SPAN_CONSTEXPR_ASSIGN span&
     operator=(const span& other) noexcept = default;
+
+    // Custom span constructor to allow string_view imitation
+    template <
+        typename T,
+        std::size_t E = Extent,
+        typename std::enable_if<
+            E == dynamic_extent && (std::is_same<T, const char*>::value || std::is_same<T, char*>::value),
+            int>::type = 0>
+    span(T cstring)
+        : storage_(cstring, std::strlen(cstring))
+    {
+        TCB_SPAN_EXPECT(extent == dynamic_extent);
+    }
 
     // [span.sub], span subviews
     template <std::size_t Count>

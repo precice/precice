@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(SendMeshToMultipleParticipants)
     interface.writeScalarData(meshName, dataName, vertexID, value);
   } else {
     double valueReceived = -1.0;
-    interface.readScalarData(meshName, dataName, vertexID, valueReceived);
+    interface.readScalarData(meshName, dataName, vertexID, maxDt, valueReceived);
     BOOST_TEST(valueReceived == value);
   }
 

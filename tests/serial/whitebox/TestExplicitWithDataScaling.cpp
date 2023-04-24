@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataScaling)
       const auto size = testing::WhiteboxAccessor::impl(cplInterface).mesh("Test-Square-Two").vertices().size();
       for (size_t i = 0; i < size; ++i) {
         Eigen::Vector2d readData;
-        cplInterface.readVectorData(meshName, velocitiesID, i, readData.data());
+        cplInterface.readVectorData(meshName, velocitiesID, i, dt, readData.data());
         Eigen::Vector2d expectedData = Eigen::Vector2d::Constant(i * 10.0);
         BOOST_TEST(readData(0) == expectedData(0));
         BOOST_TEST(readData(1) == expectedData(1));

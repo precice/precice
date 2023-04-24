@@ -201,16 +201,16 @@ BOOST_AUTO_TEST_CASE(RBFAliasConfiguration)
   BOOST_TEST(mappingConfig.mappings().at(0).requiresBasisFunction == true);
   {
     // last configured RBF
-    bool solverSelection = mappingConfig.rbfConfig().solver == MappingConfiguration::RBFConfiguration::SystemSolver::GlobalDirect;
+    bool solverSelection = mappingConfig.rbfConfig().solver == MappingConfiguration::RBFConfiguration::SystemSolver::PUMDirect;
     BOOST_TEST(solverSelection);
     bool poly = mappingConfig.rbfConfig().polynomial == Polynomial::SEPARATE;
     BOOST_TEST(poly);
     BOOST_TEST(mappingConfig.rbfConfig().deadAxis[0] == false);
     BOOST_TEST(mappingConfig.rbfConfig().deadAxis[1] == false);
     BOOST_TEST(mappingConfig.rbfConfig().deadAxis[2] == false);
-    BOOST_TEST(mappingConfig.rbfConfig().solverRtol == 1e-9);
-    bool prealloc = mappingConfig.rbfConfig().preallocation == Preallocation::TREE;
-    BOOST_TEST(prealloc);
+    BOOST_TEST(mappingConfig.rbfConfig().verticesPerCluster == 100);
+    BOOST_TEST(mappingConfig.rbfConfig().relativeOverlap == 0.3);
+    BOOST_TEST(mappingConfig.rbfConfig().projectToInput == true);
   }
 }
 

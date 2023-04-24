@@ -62,16 +62,19 @@ public:
    * In debug mode, the function also exports the partition centers as a separate mesh for visualization
    * purpose.
    */
-  virtual void computeMapping() override;
+  void computeMapping() final override;
 
   /// Clears a computed mapping by deleting the content of the \p _clusters vector.
-  virtual void clear() override;
+  void clear() final override;
 
   /// tag the vertices required for the mapping
-  virtual void tagMeshFirstRound() override;
+  void tagMeshFirstRound() final override;
 
   /// nothing to do here
-  virtual void tagMeshSecondRound() override;
+  void tagMeshSecondRound() final override;
+
+  /// name of the pum mapping
+  std::string getName() const final override;
 
 private:
   /// logger, as usual
@@ -195,7 +198,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     }
   }
   // Log the average number of resulting clusters
-  PRECICE_INFO("Partition of unity data mapping between mesh \"{}\" and mesh \"{}\": mesh \"{}\" on rank {} was decomposed into {} clusters.", this->input()->getName(), this->output()->getName(), inMesh->getName(), utils::IntraComm::getRank(), _clusters.size());
+  PRECICE_DEBUG("Partition of unity data mapping between mesh \"{}\" and mesh \"{}\": mesh \"{}\" on rank {} was decomposed into {} clusters.", this->input()->getName(), this->output()->getName(), inMesh->getName(), utils::IntraComm::getRank(), _clusters.size());
 
   if (_clusters.size() > 0) {
     PRECICE_DEBUG("Average number of vertices per cluster {}", std::accumulate(_clusters.begin(), _clusters.end(), static_cast<unsigned int>(0), [](auto &acc, auto &val) { return acc += val.getNumberOfInputVertices(); }) / _clusters.size());
@@ -397,6 +400,12 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::clear()
   // TODO: Don't reset this here
   _clusterRadius            = 0;
   this->_hasComputedMapping = false;
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+std::string PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::getName() const
+{
+  return "partition-of-unity RBF";
 }
 } // namespace mapping
 } // namespace precice

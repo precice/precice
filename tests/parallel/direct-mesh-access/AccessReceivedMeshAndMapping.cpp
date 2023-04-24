@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
                                      otherIDs.data(), writeData.data());
       dt = interface.advance(dt);
       interface.readBlockScalarData(ownMeshName, readDataName, ownIDs.size(),
-                                    ownIDs.data(), readData.data());
+                                    ownIDs.data(), dt, readData.data());
 
       // Expected data according to the writeData
       // Values are summed up
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
                                      ids.data(), writeData.data());
       dt = interface.advance(dt);
       interface.readBlockScalarData(meshName, readDataName, ids.size(),
-                                    ids.data(), readData.data());
+                                    ids.data(), dt, readData.data());
       // Expected data according to the writeData
       // Values are summed up
       std::vector<double> expectedData = context.isPrimary() ? std::vector<double>({15, 16}) : std::vector<double>({22, 6, 7});

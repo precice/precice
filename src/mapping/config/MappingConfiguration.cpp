@@ -327,7 +327,7 @@ void MappingConfiguration::xmlTagCallback(
 
     ConfiguredMapping configuredMapping = createMapping(dir, type, fromMesh, toMesh);
 
-    _rbfConfig = configureRBFMapping(type, context, strPolynomial, strPrealloc, xDead, yDead, zDead, solverRtol, verticesPerCluster, relativeOverlap, projectToInput);
+    _rbfConfig = configureRBFMapping(type, strPolynomial, strPrealloc, xDead, yDead, zDead, solverRtol, verticesPerCluster, relativeOverlap, projectToInput);
 
     checkDuplicates(configuredMapping);
     _mappings.push_back(configuredMapping);
@@ -335,7 +335,9 @@ void MappingConfiguration::xmlTagCallback(
 
     PRECICE_ASSERT(!_mappings.empty());
     // We can only set one subtag
-    PRECICE_CHECK(_mappings.back().mapping == nullptr, "More than one basis-function was defined for the.");
+    PRECICE_CHECK(_mappings.back().mapping == nullptr, "More than one basis-function was defined for the mapping "
+                                                       "from mesh \"{}\" to mesh \"{}\".",
+                  _mappings.back().fromMesh->getName(), _mappings.back().toMesh->getName());
 
     std::string basisFctName   = tag.getName();
     double      supportRadius  = tag.getDoubleAttributeValue(ATTR_SUPPORT_RADIUS, 0.);
@@ -381,10 +383,9 @@ void MappingConfiguration::xmlTagCallback(
   }
 }
 
-MappingConfiguration::RBFConfiguration MappingConfiguration::configureRBFMapping(const std::string &              type,
-                                                                                 const xml::ConfigurationContext &context,
-                                                                                 const std::string &              polynomial,
-                                                                                 const std::string &              preallocation,
+MappingConfiguration::RBFConfiguration MappingConfiguration::configureRBFMapping(const std::string &type,
+                                                                                 const std::string &polynomial,
+                                                                                 const std::string &preallocation,
                                                                                  bool xDead, bool yDead, bool zDead,
                                                                                  double solverRtol,
                                                                                  double verticesPerCluster,
@@ -400,20 +401,12 @@ MappingConfiguration::RBFConfiguration MappingConfiguration::configureRBFMapping
   else if (type == TYPE_RBF_PUM_DIRECT)
     rbfConfig.solver = RBFConfiguration::SystemSolver::PUMDirect;
   else {
-    // Rather simple auto-selection (for now)
-    // The default is the Eigen backend, as it is always available. Only in certain situations, we will decide for the PETSc backend
-    rbfConfig.solver = RBFConfiguration::SystemSolver::GlobalDirect;
+    // Rather simple auto-selection (for now), consisting of the PUM Eigen backend
+    rbfConfig.solver = RBFConfiguration::SystemSolver::PUMDirect;
 
-#ifndef PRECICE_NO_PETSC
-    // Running in serial, the Eigen backend will most likely be the fastest and most accurate variant
-    // We decide for the PETSc variant only if we have a lot of interface vertices and a lot of ranks
     // A more sophisticated criterion here could take the globalNumberOfVertices into account
     // (the mesh pointer is stored in the configuredMapping anyway), but this quantity is not yet computed
     // during the configuration time.
-    if (context.size > 16) {
-      rbfConfig.solver = RBFConfiguration::SystemSolver::GlobalIterative;
-    }
-#endif
   }
 
   if (polynomial == POLYNOMIAL_SEPARATE)
@@ -496,7 +489,8 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   } else {
     // We need knowledge about the basis function in order to instantiate the rbf related mapping
     PRECICE_ASSERT(requiresBasisFunction(type));
-    configuredMapping.mapping = nullptr;
+    configuredMapping.mapping                = nullptr;
+    configuredMapping.configuredWithAliasTag = type == TYPE_RBF_ALIAS;
   }
 
   configuredMapping.requiresBasisFunction = requiresBasisFunction(type);

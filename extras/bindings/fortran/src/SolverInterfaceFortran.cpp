@@ -331,53 +331,57 @@ void precicef_write_sdata_(
 }
 
 void precicef_read_bvdata_(
-    const char *meshName,
-    const char *dataName,
-    const int * size,
-    int *       valueIndices,
-    double *    values,
-    int         meshNameLength,
-    int         dataNameLength)
+    const char *  meshName,
+    const char *  dataName,
+    const int *   size,
+    int *         valueIndices,
+    const double *relativeReadTime,
+    double *      values,
+    int           meshNameLength,
+    int           dataNameLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->readBlockVectorData(precice::impl::strippedStringView(meshName, meshNameLength), precice::impl::strippedStringView(dataName, dataNameLength), *size, valueIndices, values);
+  impl->readBlockVectorData(precice::impl::strippedStringView(meshName, meshNameLength), precice::impl::strippedStringView(dataName, dataNameLength), *size, valueIndices, *relativeReadTime, values);
 }
 
 void precicef_read_vdata_(
-    const char *meshName,
-    const char *dataName,
-    const int * valueIndex,
-    double *    dataValue,
-    int         meshNameLength,
-    int         dataNameLength)
+    const char *  meshName,
+    const char *  dataName,
+    const int *   valueIndex,
+    const double *relativeReadTime,
+    double *      dataValue,
+    int           meshNameLength,
+    int           dataNameLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->readVectorData(precice::impl::strippedStringView(meshName, meshNameLength), precice::impl::strippedStringView(dataName, dataNameLength), *valueIndex, dataValue);
+  impl->readVectorData(precice::impl::strippedStringView(meshName, meshNameLength), precice::impl::strippedStringView(dataName, dataNameLength), *valueIndex, *relativeReadTime, dataValue);
 }
 
 void precicef_read_bsdata_(
-    const char *meshName,
-    const char *dataName,
-    const int * size,
-    int *       valueIndices,
-    double *    values,
-    int         meshNameLength,
-    int         dataNameLength)
+    const char *  meshName,
+    const char *  dataName,
+    const int *   size,
+    int *         valueIndices,
+    const double *relativeReadTime,
+    double *      values,
+    int           meshNameLength,
+    int           dataNameLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->readBlockScalarData(precice::impl::strippedStringView(meshName, meshNameLength), precice::impl::strippedStringView(dataName, dataNameLength), *size, valueIndices, values);
+  impl->readBlockScalarData(precice::impl::strippedStringView(meshName, meshNameLength), precice::impl::strippedStringView(dataName, dataNameLength), *size, valueIndices, *relativeReadTime, values);
 }
 
 void precicef_read_sdata_(
-    const char *meshName,
-    const char *dataName,
-    const int * valueIndex,
-    double *    dataValue,
-    int         meshNameLength,
-    int         dataNameLength)
+    const char *  meshName,
+    const char *  dataName,
+    const int *   valueIndex,
+    const double *relativeReadTime,
+    double *      dataValue,
+    int           meshNameLength,
+    int           dataNameLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->readScalarData(precice::impl::strippedStringView(meshName, meshNameLength), precice::impl::strippedStringView(dataName, dataNameLength), *valueIndex, *dataValue);
+  impl->readScalarData(precice::impl::strippedStringView(meshName, meshNameLength), precice::impl::strippedStringView(dataName, dataNameLength), *valueIndex, *relativeReadTime, *dataValue);
 }
 
 int precice::impl::strippedLength(

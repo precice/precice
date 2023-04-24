@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(ParallelSquare2To1)
     // Run a step and read data expected to be f(x) = x+2*y
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant must advance once.");
 
-    interface.advance(dt);
+    dt = interface.advance(dt);
     BOOST_TEST(!interface.isCouplingOngoing(), "Receiving participant must advance only once.");
 
     //Check expected VS read
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(ParallelSquare2To1)
     Eigen::VectorXd readData(4);
     expected << 7. / 6, 5. / 6, 11. / 6, 13. / 6;
 
-    interface.readBlockScalarData(meshName, dataName, expected.size(), vertexIDs.data(), readData.data());
+    interface.readBlockScalarData(meshName, dataName, expected.size(), vertexIDs.data(), dt, readData.data());
     BOOST_CHECK(equals(expected, readData));
     interface.finalize();
   }

@@ -106,7 +106,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
 
       dt = interface.advance(dt);
       interface.readBlockScalarData(meshName, dataName, size,
-                                    ids.data(), readData.data());
+                                    ids.data(), dt, readData.data());
 
       // Check the received data
       const std::vector<double> expectedReadData = context.isPrimary() ? std::vector<double>({1, 2}) : expectedReadDataSecondaryRank;

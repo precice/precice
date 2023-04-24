@@ -64,7 +64,7 @@ PROGRAM main
       WRITE (*,*) 'DUMMY: Writing iteration checkpoint'
     ENDIF
 
-    CALL precicef_read_bvdata(meshName, readDataName, numberOfVertices, vertexIDs, readData)
+    CALL precicef_read_bvdata(meshName, readDataName, numberOfVertices, vertexIDs, dt, readData)
 
     WRITE (*,*) 'readData: ', readData
 

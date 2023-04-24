@@ -45,10 +45,10 @@ BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
 
     while (interface.isCouplingOngoing()) {
 
-      interface.readScalarData(meshName, dataAID, idA, valueA);
-      interface.readScalarData(meshName, dataAID, idB, valueB);
-      interface.readScalarData(meshName, dataAID, idC, valueC);
-      interface.readScalarData(meshName, dataAID, idD, valueD);
+      interface.readScalarData(meshName, dataAID, idA, dt, valueA);
+      interface.readScalarData(meshName, dataAID, idB, dt, valueB);
+      interface.readScalarData(meshName, dataAID, idC, dt, valueC);
+      interface.readScalarData(meshName, dataAID, idD, dt, valueD);
 
       BOOST_TEST(valueA == expectedValueA);
       BOOST_TEST(valueB == expectedValueB);

@@ -40,10 +40,10 @@ BOOST_AUTO_TEST_CASE(MultipleWriteToMappings)
     int  vertexID = interface.setMeshVertex(meshName, vertex.data());
     auto dataName = "DisplacementSum";
 
-    double dt = interface.initialize();
-    interface.advance(dt);
+    double dt           = interface.initialize();
+    dt                  = interface.advance(dt);
     double displacement = -1.0;
-    interface.readScalarData(meshName, dataName, vertexID, displacement);
+    interface.readScalarData(meshName, dataName, vertexID, dt, displacement);
     BOOST_TEST(displacement == 3.0);
     BOOST_TEST(not interface.isCouplingOngoing());
     interface.finalize();

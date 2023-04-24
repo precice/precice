@@ -53,6 +53,9 @@ public:
   /// Removes a computed mapping.
   void clear() final override;
 
+  /// name of the rbf mapping
+  std::string getName() const final override;
+
 private:
   precice::logging::Logger _log{"mapping::RadialBasisFctMapping"};
 
@@ -158,6 +161,12 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::clear()
   PRECICE_TRACE();
   _rbfSolver.clear();
   this->_hasComputedMapping = false;
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+std::string RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::getName() const
+{
+  return "global-direct RBF";
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>

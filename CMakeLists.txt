@@ -25,7 +25,7 @@ set(preCICE_SOVERSION ${preCICE_VERSION_MAJOR})
 list (APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 list (APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/modules")
 
-include(CheckCXX11Library)
+include(CheckSTL)
 include(CopyTargetProperty)
 include(XSDKMacros)
 include(Validation)
@@ -182,7 +182,7 @@ if(TPL_ENABLE_EIGEN3)
   # Use EIGEN3_ROOT to set the directory
   xsdk_tpl_require(EIGEN3 EIGEN3_INCLUDE_DIR)
 endif()
-find_package(Eigen3 3.2 REQUIRED)
+find_package(Eigen3 3.3.7 REQUIRED)
 message(STATUS "Found Eigen ${EIGEN3_VERSION}")
 precice_validate_eigen()
 
