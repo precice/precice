@@ -9,7 +9,7 @@
       enabled="true" />
   </log>
 
-  <solver-interface dimensions="2">
+  <simulation-setup dimensions="2">
     <data:vector name="Forces" />
     <data:vector name="Velocities" />
 
@@ -64,5 +64,5 @@
         to="SolverOne"
         initialize="True" />
     </coupling-scheme:serial-explicit>
-  </solver-interface>
+  </simulation-setup>
 </precice-configuration>

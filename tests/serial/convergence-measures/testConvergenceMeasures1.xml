@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
-  <solver-interface dimensions="2">
+  <simulation-setup dimensions="2">
     <data:scalar name="Data1" />
     <data:scalar name="Data2" />
 
@@ -49,5 +49,5 @@
       <absolute-convergence-measure limit="1e-1" data="Data2" mesh="MeshOne" suffices="true" />
       <min-iteration-convergence-measure min-iterations="3" data="Data1" mesh="MeshOne" />
     </coupling-scheme:serial-implicit>
-  </solver-interface>
+  </simulation-setup>
 </precice-configuration>

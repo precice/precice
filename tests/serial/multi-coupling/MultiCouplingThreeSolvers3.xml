@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
-  <solver-interface dimensions="2">
+  <simulation-setup dimensions="2">
     <data:scalar name="DataAB" />
     <data:scalar name="DataBA" />
     <data:scalar name="DataBC" />
@@ -91,5 +91,5 @@
         <time-windows-reused value="0" />
       </acceleration:IQN-ILS>
     </coupling-scheme:multi>
-  </solver-interface>
+  </simulation-setup>
 </precice-configuration>

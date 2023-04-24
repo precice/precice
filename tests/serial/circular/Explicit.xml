@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
-  <solver-interface>
+  <simulation-setup>
     <data:scalar name="DAB" />
     <data:scalar name="DBC" />
     <data:scalar name="DCA" />
@@ -68,5 +68,5 @@
       <max-time-windows value="2" />
       <exchange data="DCA" mesh="MA" from="C" to="A" />
     </coupling-scheme:serial-explicit>
-  </solver-interface>
+  </simulation-setup>
 </precice-configuration>

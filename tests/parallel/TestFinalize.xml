@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
-  <solver-interface dimensions="3">
+  <simulation-setup dimensions="3">
     <data:vector name="Data1" />
     <data:vector name="Data2" />
 
@@ -48,5 +48,5 @@
       <exchange data="Data1" mesh="MeshTwo" from="SolverOne" to="SolverTwo" />
       <exchange data="Data2" mesh="MeshTwo" from="SolverTwo" to="SolverOne" />
     </coupling-scheme:parallel-explicit>
-  </solver-interface>
+  </simulation-setup>
 </precice-configuration>

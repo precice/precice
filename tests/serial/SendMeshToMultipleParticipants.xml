@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
-  <solver-interface dimensions="2">
+  <simulation-setup dimensions="2">
     <data:scalar name="Data" />
 
     <mesh name="MeshA">
@@ -58,5 +58,5 @@
       <time-window-size value="1.0" />
       <exchange data="Data" mesh="MeshA" from="SolverOne" to="SolverThree" />
     </coupling-scheme:serial-explicit>
-  </solver-interface>
+  </simulation-setup>
 </precice-configuration>

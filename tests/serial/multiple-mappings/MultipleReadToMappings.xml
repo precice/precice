@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
-  <solver-interface dimensions="2">
+  <simulation-setup dimensions="2">
     <data:scalar name="DisplacementTop" />
     <data:scalar name="DisplacementBottom" />
     <data:scalar name="Pressure" />
@@ -55,5 +55,5 @@
       <exchange data="DisplacementTop" mesh="MeshATop" from="A" to="B" />
       <exchange data="DisplacementBottom" mesh="MeshABottom" from="A" to="B" />
     </coupling-scheme:parallel-explicit>
-  </solver-interface>
+  </simulation-setup>
 </precice-configuration>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
-  <solver-interface dimensions="2">
+  <simulation-setup dimensions="2">
     <data:vector name="Forces" />
     <data:vector name="Velocities" />
 
@@ -53,5 +53,5 @@
         to="SolverOne"
         initialize="true" />
     </coupling-scheme:serial-implicit>
-  </solver-interface>
+  </simulation-setup>
 </precice-configuration>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
-  <solver-interface dimensions="2">
+  <simulation-setup dimensions="2">
     <data:vector name="DataOne" />
     <data:vector name="DataTwo" />
 
@@ -48,5 +48,5 @@
         <filter type="QR2" limit="1e-3" />
       </acceleration:IQN-ILS>
     </coupling-scheme:serial-implicit>
-  </solver-interface>
+  </simulation-setup>
 </precice-configuration>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
-  <solver-interface dimensions="2">
+  <simulation-setup dimensions="2">
     <data:vector name="Forces" />
     <data:vector name="Velocities" />
     <data:vector name="Displacements" />
@@ -64,5 +64,5 @@
       <exchange data="Displacements" mesh="ComsolNodes" from="Comsol" to="Peano" />
       <exchange data="VelocityDeltas" mesh="ComsolNodes" from="Comsol" to="Peano" />
     </coupling-scheme:serial-explicit>
-  </solver-interface>
+  </simulation-setup>
 </precice-configuration>

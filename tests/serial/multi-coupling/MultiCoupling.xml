@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
-  <solver-interface dimensions="2">
+  <simulation-setup dimensions="2">
     <data:vector name="Forces1" />
     <data:vector name="Forces2" />
     <data:vector name="Forces3" />
@@ -152,5 +152,5 @@
         <time-windows-reused value="8" />
       </acceleration:IQN-ILS>
     </coupling-scheme:multi>
-  </solver-interface>
+  </simulation-setup>
 </precice-configuration>

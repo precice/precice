@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
-  <solver-interface dimensions="3">
+  <simulation-setup dimensions="3">
     <data:scalar name="DataOne" />
 
     <mesh name="MeshOne">
@@ -44,5 +44,5 @@
         from="SolverOneCubeConservative3To1"
         to="SolverTwoCubeConservative3To1" />
     </coupling-scheme:serial-explicit>
-  </solver-interface>
+  </simulation-setup>
 </precice-configuration>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
-  <solver-interface dimensions="2">
+  <simulation-setup dimensions="2">
     <data:vector name="Velocities" />
 
     <mesh name="Test-Square-One">
@@ -38,5 +38,5 @@
       <time-window-size value="0.01" />
       <exchange data="Velocities" mesh="Test-Square-One" from="SolverOne" to="SolverTwo" />
     </coupling-scheme:serial-explicit>
-  </solver-interface>
+  </simulation-setup>
 </precice-configuration>

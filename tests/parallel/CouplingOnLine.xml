@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
-  <solver-interface dimensions="3">
+  <simulation-setup dimensions="3">
     <data:scalar name="Pressure" />
 
     <mesh name="FASTEST_Mesh">
@@ -35,5 +35,5 @@
       <time-window-size value="1.0" />
       <exchange data="Pressure" mesh="FASTEST_Mesh" from="FASTEST" to="Ateles" />
     </coupling-scheme:parallel-explicit>
-  </solver-interface>
+  </simulation-setup>
 </precice-configuration>

@@ -7,7 +7,7 @@
       enabled="true" />
   </log>
 
-  <solver-interface dimensions="3">
+  <simulation-setup dimensions="3">
     <data:scalar name="DataOne" />
 
     <mesh name="MeshOne">
@@ -42,5 +42,5 @@
       <time-window-size value="1.0" />
       <exchange data="DataOne" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
     </coupling-scheme:serial-explicit>
-  </solver-interface>
+  </simulation-setup>
 </precice-configuration>

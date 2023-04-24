@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
-  <solver-interface dimensions="3">
+  <simulation-setup dimensions="3">
     <data:vector name="Forces" />
     <data:vector name="Velocities" />
 
@@ -48,5 +48,5 @@
       <exchange data="Forces" mesh="StructureMesh" from="Fluid" to="Structure" />
       <exchange data="Velocities" mesh="StructureMesh" from="Structure" to="Fluid" />
     </coupling-scheme:serial-explicit>
-  </solver-interface>
+  </simulation-setup>
 </precice-configuration>

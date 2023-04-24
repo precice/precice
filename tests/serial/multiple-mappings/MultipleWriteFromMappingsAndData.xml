@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
-  <solver-interface dimensions="2">
+  <simulation-setup dimensions="2">
     <data:scalar name="Pressure" />
     <data:scalar name="Temperature" />
 
@@ -57,5 +57,5 @@
       <exchange data="Temperature" mesh="MeshATop" from="B" to="A" />
       <exchange data="Temperature" mesh="MeshABottom" from="B" to="A" />
     </coupling-scheme:parallel-explicit>
-  </solver-interface>
+  </simulation-setup>
 </precice-configuration>
