@@ -87,12 +87,12 @@ bool SolverInterface::requiresWritingCheckpoint()
 
 bool SolverInterface::hasMesh(::precice::string_view meshName) const
 {
-  return _impl->hasMesh(toSV(toSV(meshName)));
+  return _impl->hasMesh(toSV(meshName));
 }
 
 bool SolverInterface::requiresMeshConnectivityFor(::precice::string_view meshName) const
 {
-  return _impl->requiresMeshConnectivityFor(toSV(toSV(meshName)));
+  return _impl->requiresMeshConnectivityFor(toSV(meshName));
 }
 
 bool SolverInterface::requiresGradientDataFor(::precice::string_view meshName,
