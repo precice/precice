@@ -2,11 +2,11 @@ include(CheckCXXSourceCompiles)
 
 # These are the compiler/STL versions required to compile preCICE
 set(_precice_recommended_baseline "Please upgrade your compiler at least to:
-    * GCC 9.2
+    * GCC 9.3
     * LLVM 5.0
     * MSVC 19.14
-    * Intel 15 in conjunction with GCC 9.2
-    * PGI 2015 in conjunction with GCC 9.2
+    * Intel 15 in conjunction with GCC 9.3
+    * PGI 2015 in conjunction with GCC 9.3
 ")
 
 function(_check_cxx_11_n2071_n2072)
