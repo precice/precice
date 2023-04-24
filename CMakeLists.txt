@@ -25,7 +25,7 @@ set(preCICE_SOVERSION ${preCICE_VERSION_MAJOR})
 list (APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 list (APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/modules")
 
-include(CheckCXX11Library)
+include(CheckSTL)
 include(CopyTargetProperty)
 include(XSDKMacros)
 include(Validation)
