@@ -9,7 +9,7 @@
       enabled="true" />
   </log>
 
-  <solver-interface dimensions="3">
+  <simulation-setup dimensions="3">
     <data:vector name="Data-One" />
     <data:vector name="Data-Two" />
 
@@ -57,5 +57,5 @@
       <exchange data="Data-One" mesh="SolverOne-Mesh" from="SolverOne" to="SolverTwo" />
       <exchange data="Data-Two" mesh="SolverOne-Mesh" from="SolverTwo" to="SolverOne" />
     </coupling-scheme:serial-implicit>
-  </solver-interface>
+  </simulation-setup>
 </precice-configuration>
