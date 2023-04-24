@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(ActionTimingsImplicit)
   int iteration = 0;
 
   while (interface.isCouplingOngoing()) {
-    interface.readVectorData(meshName, readDataName, vertexID, readData.data());
+    interface.readVectorData(meshName, readDataName, vertexID, dt, readData.data());
     interface.writeVectorData(meshName, writeDataName, vertexID, writeData.data());
     if (interface.requiresWritingCheckpoint()) {
     }

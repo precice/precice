@@ -43,7 +43,7 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
 
       dt = interface.advance(dt);
       interface.readBlockScalarData(meshName, readDataName, size,
-                                    ids.data(), readData.data());
+                                    ids.data(), dt, readData.data());
       // The received data on the secondary rank is always the same
       if (!context.isPrimary()) {
         BOOST_TEST(readData == std::vector<double>({3.4, 5.7, 4.0}));
@@ -82,7 +82,7 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
                                      ids.data(), writeData.data());
       dt = interface.advance(dt);
       interface.readBlockScalarData(meshName, readDataName, size,
-                                    ids.data(), readData.data());
+                                    ids.data(), dt, readData.data());
       // The received data is always the same
       if (!context.isPrimary()) {
         BOOST_TEST(readData == std::vector<double>({1, 2, 3}));

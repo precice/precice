@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithDataInitialization)
         // do nothing
       }
 
-      interface.readBlockScalarData(ownMeshID, readDataID, ownIDs.size(), ownIDs.data(), readData.data());
+      interface.readBlockScalarData(ownMeshID, readDataID, ownIDs.size(), ownIDs.data(), dt, readData.data());
 
       std::vector<double> expectedData = std::vector<double>({-1});
 
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithDataInitialization)
         // do nothing
       }
 
-      interface.readBlockScalarData(meshName, readDataName, ids.size(), ids.data(), readData.data());
+      interface.readBlockScalarData(meshName, readDataName, ids.size(), ids.data(), dt, readData.data());
 
       std::vector<double> expectedData = std::vector<double>({-1});
 

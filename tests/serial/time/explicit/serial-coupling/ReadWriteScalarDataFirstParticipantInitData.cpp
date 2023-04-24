@@ -53,13 +53,13 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantInitData)
     precice.writeScalarData(meshName, writeDataName, vertexID, expectedDataValue);
 
     if (context.isNamed("SolverOne")) {
-      precice.advance(timestepSizes.at(i));
+      dt = precice.advance(timestepSizes.at(i));
     } else if (context.isNamed("SolverTwo")) {
       BOOST_TEST(dt == timestepSizes.at(i));
       dt = precice.advance(dt);
     }
 
-    precice.readScalarData(meshName, readDataName, vertexID, actualDataValue);
+    precice.readScalarData(meshName, readDataName, vertexID, dt, actualDataValue);
     BOOST_TEST(actualDataValue == expectedDataValue);
   }
 

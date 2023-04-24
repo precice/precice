@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(Implicit)
                                              otherIDs.data(), writeData.data());
       dt = couplingInterface.advance(dt);
       couplingInterface.readBlockScalarData(ownMeshName, ownDataName, ownIDs.size(),
-                                            ownIDs.data(), readData.data());
+                                            ownIDs.data(), dt, readData.data());
       if (couplingInterface.requiresReadingCheckpoint()) {
       }
 
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(Implicit)
                                              otherIDs.data(), writeData.data());
       dt = couplingInterface.advance(dt);
       couplingInterface.readBlockScalarData(ownMeshName, ownDataName, ownIDs.size(),
-                                            ownIDs.data(), readData.data());
+                                            ownIDs.data(), dt, readData.data());
       if (couplingInterface.requiresReadingCheckpoint()) {
       }
 

@@ -69,11 +69,11 @@ void multiCouplingThreeSolversParallelControl(const std::string configFile, cons
         if (cplInterface.requiresWritingCheckpoint()) {
         }
 
-        cplInterface.advance(maxDt);
+        double preciceDt = cplInterface.advance(maxDt);
 
         if (cplInterface.requiresReadingCheckpoint()) {
         }
-        cplInterface.readScalarData(meshName, dataBAID, vertex1, valueRead);
+        cplInterface.readScalarData(meshName, dataBAID, vertex1, preciceDt, valueRead);
       }
 
       BOOST_TEST(valueRead == valueB1);
@@ -92,11 +92,11 @@ void multiCouplingThreeSolversParallelControl(const std::string configFile, cons
         if (cplInterface.requiresWritingCheckpoint()) {
         }
 
-        cplInterface.advance(maxDt);
+        double preciceDt = cplInterface.advance(maxDt);
 
         if (cplInterface.requiresReadingCheckpoint()) {
         }
-        cplInterface.readScalarData(meshName, dataBAID, vertex2, valueRead);
+        cplInterface.readScalarData(meshName, dataBAID, vertex2, preciceDt, valueRead);
       }
 
       BOOST_TEST(valueRead == valueB2);
@@ -130,14 +130,14 @@ void multiCouplingThreeSolversParallelControl(const std::string configFile, cons
       if (cplInterface.requiresWritingCheckpoint()) {
       }
 
-      cplInterface.advance(maxDt);
+      double preciceDt = cplInterface.advance(maxDt);
 
       if (cplInterface.requiresReadingCheckpoint()) {
       }
-      cplInterface.readScalarData(meshName1, dataABID, vertex1, valueReadA1);
-      cplInterface.readScalarData(meshName1, dataABID, vertex2, valueReadA2);
-      cplInterface.readScalarData(meshName2, dataCBID, vertex1, valueReadC1);
-      cplInterface.readScalarData(meshName2, dataCBID, vertex2, valueReadC2);
+      cplInterface.readScalarData(meshName1, dataABID, vertex1, preciceDt, valueReadA1);
+      cplInterface.readScalarData(meshName1, dataABID, vertex2, preciceDt, valueReadA2);
+      cplInterface.readScalarData(meshName2, dataCBID, vertex1, preciceDt, valueReadC1);
+      cplInterface.readScalarData(meshName2, dataCBID, vertex2, preciceDt, valueReadC2);
     }
 
     BOOST_TEST(valueReadA1 == valueA1);
@@ -166,12 +166,12 @@ void multiCouplingThreeSolversParallelControl(const std::string configFile, cons
       if (cplInterface.requiresWritingCheckpoint()) {
       }
 
-      cplInterface.advance(maxDt);
+      double preciceDt = cplInterface.advance(maxDt);
 
       if (cplInterface.requiresReadingCheckpoint()) {
       }
-      cplInterface.readScalarData(meshName, dataBCID, vertex1, valueRead1);
-      cplInterface.readScalarData(meshName, dataBCID, vertex2, valueRead2);
+      cplInterface.readScalarData(meshName, dataBCID, vertex1, preciceDt, valueRead1);
+      cplInterface.readScalarData(meshName, dataBCID, vertex2, preciceDt, valueRead2);
     }
 
     BOOST_TEST(valueRead1 == valueB1);

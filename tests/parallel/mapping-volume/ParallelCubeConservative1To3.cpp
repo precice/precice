@@ -122,11 +122,11 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative1To3)
 
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant must advance once.");
 
-    interface.advance(dt);
+    double preciceDt = interface.advance(dt);
     BOOST_TEST(!interface.isCouplingOngoing(), "Receiving participant must advance only once.");
 
     Eigen::VectorXd readData(vertexIDs.size());
-    interface.readBlockScalarData(meshName, dataName, vertexIDs.size(), vertexIDs.data(), readData.data());
+    interface.readBlockScalarData(meshName, dataName, vertexIDs.size(), vertexIDs.data(), preciceDt, readData.data());
 
     // map to global coordinates
     std::array<double, 8> forces{0, 0, 0, 0, 0, 0, 0, 0};

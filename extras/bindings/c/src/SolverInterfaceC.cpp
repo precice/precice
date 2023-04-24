@@ -287,20 +287,22 @@ void precicec_readBlockVectorData(
     const char *dataName,
     int         size,
     const int * valueIndices,
+    double      relativeReadTime,
     double *    values)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->readBlockVectorData(meshName, dataName, size, valueIndices, values);
+  impl->readBlockVectorData(meshName, dataName, size, valueIndices, relativeReadTime, values);
 }
 
 void precicec_readVectorData(
     const char *meshName,
     const char *dataName,
     int         valueIndex,
+    double      relativeReadTime,
     double *    dataValue)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->readVectorData(meshName, dataName, valueIndex, dataValue);
+  impl->readVectorData(meshName, dataName, valueIndex, relativeReadTime, dataValue);
 }
 
 void precicec_readBlockScalarData(
@@ -308,20 +310,22 @@ void precicec_readBlockScalarData(
     const char *dataName,
     int         size,
     const int * valueIndices,
+    double      relativeReadTime,
     double *    values)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->readBlockScalarData(meshName, dataName, size, valueIndices, values);
+  impl->readBlockScalarData(meshName, dataName, size, valueIndices, relativeReadTime, values);
 }
 
 void precicec_readScalarData(
     const char *meshName,
     const char *dataName,
     int         valueIndex,
+    double      relativeReadTime,
     double *    dataValue)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->readScalarData(meshName, dataName, valueIndex, *dataValue);
+  impl->readScalarData(meshName, dataName, valueIndex, relativeReadTime, *dataValue);
 }
 
 int precicec_requiresGradientDataFor(const char *meshName,

@@ -284,14 +284,6 @@ public:
       int              valueIndex,
       const double *   gradientValues);
 
-  /// @copydoc SolverInterface::readBlockVectorData(int, int, const int*, double*) const
-  void readBlockVectorData(
-      std::string_view meshName,
-      std::string_view dataName,
-      int              size,
-      const int *      valueIndices,
-      double *         values) const;
-
   /// @copydoc SolverInterface::readBlockVectorData(int, int, const int*, double, double*) const
   void readBlockVectorData(
       std::string_view meshName,
@@ -301,13 +293,6 @@ public:
       double           relativeReadTime,
       double *         values) const;
 
-  /// @copydoc SolverInterface::readVectorData(int, int, double*) const
-  void readVectorData(
-      std::string_view meshName,
-      std::string_view dataName,
-      int              valueIndex,
-      double *         value) const;
-
   /// @copydoc SolverInterface::readVectorData(int, int, double, double*) const
   void readVectorData(
       std::string_view meshName,
@@ -315,14 +300,6 @@ public:
       int              valueIndex,
       double           relativeReadTime,
       double *         value) const;
-
-  /// @copydoc SolverInterface::readBlockScalarData(int, int, const int*, double*) const
-  void readBlockScalarData(
-      std::string_view meshName,
-      std::string_view dataName,
-      int              size,
-      const int *      valueIndices,
-      double *         values) const;
 
   /// @copydoc SolverInterface::readBlockScalarData(int, int, const int*, double, double*) const
   void readBlockScalarData(
@@ -332,13 +309,6 @@ public:
       const int *      valueIndices,
       double           relativeReadTime,
       double *         values) const;
-
-  /// @copydoc SolverInterface::readScalarData(int, int, double&) const
-  void readScalarData(
-      std::string_view meshName,
-      std::string_view dataName,
-      int              valueIndex,
-      double &         value) const;
 
   /// @copydoc SolverInterface::readScalarData(int, int, double, double&) const
   void readScalarData(
@@ -474,37 +444,6 @@ private:
   void configure(const config::SolverInterfaceConfiguration &configuration);
 
   void configureM2Ns(const m2n::M2NConfiguration::SharedPointer &config);
-
-  /// Implementation of read functions.
-  void readBlockVectorDataImpl(
-      std::string_view meshName,
-      std::string_view dataName,
-      int              size,
-      const int *      valueIndices,
-      double           relativeReadTime,
-      double *         values) const;
-
-  void readVectorDataImpl(
-      std::string_view meshName,
-      std::string_view dataName,
-      int              valueIndex,
-      double           relativeReadTime,
-      double *         value) const;
-
-  void readBlockScalarDataImpl(
-      std::string_view meshName,
-      std::string_view dataName,
-      int              size,
-      const int *      valueIndices,
-      double           relativeReadTime,
-      double *         values) const;
-
-  void readScalarDataImpl(
-      std::string_view meshName,
-      std::string_view dataName,
-      int              valueIndex,
-      double           relativeReadTime,
-      double &         value) const;
 
   /// Exports meshes with data and watch point data.
   void handleExports();

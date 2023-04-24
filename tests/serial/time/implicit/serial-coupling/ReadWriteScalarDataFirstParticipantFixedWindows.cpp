@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantFixedWindows)
         // do nothing
       }
 
-      precice.readScalarData(meshName, readDataName, vertexID, actualDataValue);
+      precice.readScalarData(meshName, readDataName, vertexID, dt, actualDataValue);
       BOOST_TEST(actualDataValue == expectedDataValue);
     }
   }

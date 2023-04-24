@@ -1319,38 +1319,10 @@ void SolverInterfaceImpl::readBlockVectorData(
     std::string_view dataName,
     int              size,
     const int *      valueIndices,
-    double *         values) const
-{
-  PRECICE_TRACE(meshName, dataName, size);
-  double relativeTimeWindowEndTime = _couplingScheme->getNextTimestepMaxLength(); // samples at end of time window
-  if (_accessor->readDataContext(meshName, dataName).getInterpolationOrder() != 0) {
-    PRECICE_WARN("Interpolation order of read data named \"{}\" is set to \"{}\", but you are calling {} without providing a relativeReadTime. This looks like an error. You can fix this by providing a relativeReadTime to {} or by setting interpolation order to 0.",
-                 _accessor->readDataContext(meshName, dataName).getDataName(), _accessor->readDataContext(meshName, dataName).getInterpolationOrder(), __func__, __func__);
-  }
-  readBlockVectorDataImpl(meshName, dataName, size, valueIndices, relativeTimeWindowEndTime, values);
-}
-
-void SolverInterfaceImpl::readBlockVectorData(
-    std::string_view meshName,
-    std::string_view dataName,
-    int              size,
-    const int *      valueIndices,
     double           relativeReadTime,
     double *         values) const
 {
   PRECICE_TRACE(meshName, dataName, size);
-  PRECICE_EXPERIMENTAL_API();
-  readBlockVectorDataImpl(meshName, dataName, size, valueIndices, relativeReadTime, values);
-}
-
-void SolverInterfaceImpl::readBlockVectorDataImpl(
-    std::string_view meshName,
-    std::string_view dataName,
-    int              size,
-    const int *      valueIndices,
-    double           relativeReadTime,
-    double *         values) const
-{
   PRECICE_CHECK(_state != State::Finalized, "readBlockVectorData(...) cannot be called after finalize().");
   PRECICE_CHECK(relativeReadTime <= _couplingScheme->getNextTimestepMaxLength(), "readBlockVectorData(...) cannot sample data outside of current time window.");
   PRECICE_CHECK(relativeReadTime >= 0, "readBlockVectorData(...) cannot sample data before the current time.");
@@ -1393,36 +1365,10 @@ void SolverInterfaceImpl::readVectorData(
     std::string_view meshName,
     std::string_view dataName,
     int              valueIndex,
-    double *         value) const
-{
-  PRECICE_TRACE(meshName, dataName, valueIndex);
-  double relativeTimeWindowEndTime = _couplingScheme->getNextTimestepMaxLength(); // samples at end of time window
-  if (_accessor->readDataContext(meshName, dataName).getInterpolationOrder() != 0) {
-    PRECICE_WARN("Interpolation order of read data named \"{}\" is set to \"{}\", but you are calling {} without providing a relativeReadTime. This looks like an error. You can fix this by providing a relativeReadTime to {} or by setting interpolation order to 0.",
-                 _accessor->readDataContext(meshName, dataName).getDataName(), _accessor->readDataContext(meshName, dataName).getInterpolationOrder(), __func__, __func__);
-  }
-  readVectorDataImpl(meshName, dataName, valueIndex, relativeTimeWindowEndTime, value);
-}
-
-void SolverInterfaceImpl::readVectorData(
-    std::string_view meshName,
-    std::string_view dataName,
-    int              valueIndex,
     double           relativeReadTime,
     double *         value) const
 {
   PRECICE_TRACE(meshName, dataName, valueIndex);
-  PRECICE_EXPERIMENTAL_API();
-  readVectorDataImpl(meshName, dataName, valueIndex, relativeReadTime, value);
-}
-
-void SolverInterfaceImpl::readVectorDataImpl(
-    std::string_view meshName,
-    std::string_view dataName,
-    int              valueIndex,
-    double           relativeReadTime,
-    double *         value) const
-{
   PRECICE_CHECK(_state != State::Finalized, "readVectorData(...) cannot be called after finalize().");
   PRECICE_CHECK(relativeReadTime <= _couplingScheme->getNextTimestepMaxLength(), "readVectorData(...) cannot sample data outside of current time window.");
   PRECICE_CHECK(relativeReadTime >= 0, "readVectorData(...) cannot sample data before the current time.");
@@ -1462,39 +1408,10 @@ void SolverInterfaceImpl::readBlockScalarData(
     std::string_view dataName,
     int              size,
     const int *      valueIndices,
-    double *         values) const
-{
-  PRECICE_TRACE(meshName, dataName, size);
-  PRECICE_REQUIRE_DATA_READ(meshName, dataName);
-  double relativeTimeWindowEndTime = _couplingScheme->getNextTimestepMaxLength(); // samples at end of time window
-  if (_accessor->readDataContext(meshName, dataName).getInterpolationOrder() != 0) {
-    PRECICE_WARN("Interpolation order of read data named \"{}\" is set to \"{}\", but you are calling {} without providing a relativeReadTime. This looks like an error. You can fix this by providing a relativeReadTime to {} or by setting interpolation order to 0.",
-                 _accessor->readDataContext(meshName, dataName).getDataName(), _accessor->readDataContext(meshName, dataName).getInterpolationOrder(), __func__, __func__);
-  }
-  readBlockScalarDataImpl(meshName, dataName, size, valueIndices, relativeTimeWindowEndTime, values);
-}
-
-void SolverInterfaceImpl::readBlockScalarData(
-    std::string_view meshName,
-    std::string_view dataName,
-    int              size,
-    const int *      valueIndices,
     double           relativeReadTime,
     double *         values) const
 {
   PRECICE_TRACE(meshName, dataName, size);
-  PRECICE_EXPERIMENTAL_API();
-  readBlockScalarDataImpl(meshName, dataName, size, valueIndices, relativeReadTime, values);
-}
-
-void SolverInterfaceImpl::readBlockScalarDataImpl(
-    std::string_view meshName,
-    std::string_view dataName,
-    int              size,
-    const int *      valueIndices,
-    double           relativeReadTime,
-    double *         values) const
-{
   PRECICE_CHECK(_state != State::Finalized, "readBlockScalarData(...) cannot be called after finalize().");
   PRECICE_CHECK(relativeReadTime <= _couplingScheme->getNextTimestepMaxLength(), "readBlockScalarData(...) cannot sample data outside of current time window.");
   PRECICE_CHECK(relativeReadTime >= 0, "readBlockScalarData(...) cannot sample data before the current time.");
@@ -1534,36 +1451,10 @@ void SolverInterfaceImpl::readScalarData(
     std::string_view meshName,
     std::string_view dataName,
     int              valueIndex,
-    double &         value) const
-{
-  PRECICE_TRACE(meshName, dataName, valueIndex);
-  double relativeTimeWindowEndTime = _couplingScheme->getNextTimestepMaxLength(); // samples at end of time window
-  if (_accessor->readDataContext(meshName, dataName).getInterpolationOrder() != 0) {
-    PRECICE_WARN("Interpolation order of read data named \"{}\" is set to \"{}\", but you are calling {} without providing a relativeReadTime. This looks like an error. You can fix this by providing a relativeReadTime to {} or by setting interpolation order to 0.",
-                 _accessor->readDataContext(meshName, dataName).getDataName(), _accessor->readDataContext(meshName, dataName).getInterpolationOrder(), __func__, __func__);
-  }
-  readScalarDataImpl(meshName, dataName, valueIndex, relativeTimeWindowEndTime, value);
-}
-
-void SolverInterfaceImpl::readScalarData(
-    std::string_view meshName,
-    std::string_view dataName,
-    int              valueIndex,
     double           relativeReadTime,
     double &         value) const
 {
   PRECICE_TRACE(meshName, dataName, valueIndex, value);
-  PRECICE_EXPERIMENTAL_API();
-  readScalarDataImpl(meshName, dataName, valueIndex, relativeReadTime, value);
-}
-
-void SolverInterfaceImpl::readScalarDataImpl(
-    std::string_view meshName,
-    std::string_view dataName,
-    int              valueIndex,
-    double           relativeReadTime,
-    double &         value) const
-{
   PRECICE_CHECK(_state != State::Finalized, "readScalarData(...) cannot be called after finalize().");
   PRECICE_CHECK(relativeReadTime <= _couplingScheme->getNextTimestepMaxLength(), "readScalarData(...) cannot sample data outside of current time window.");
   PRECICE_CHECK(relativeReadTime >= 0, "readScalarData(...) cannot sample data before the current time.");
