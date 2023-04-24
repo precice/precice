@@ -1,26 +1,34 @@
 #include "precice/SolverInterface.hpp"
+#include <string_view>
 #include "cplscheme/Constants.hpp"
 #include "precice/impl/SolverInterfaceImpl.hpp"
 #include "precice/impl/versions.hpp"
 
 namespace precice {
 
+namespace {
+std::string_view toSV(precice::string_view sv)
+{
+  return {sv.data(), sv.size()};
+}
+} // namespace
+
 SolverInterface::SolverInterface(
-    std::string_view participantName,
-    std::string_view configurationFileName,
-    int              solverProcessIndex,
-    int              solverProcessSize)
-    : _impl(new impl::SolverInterfaceImpl(participantName, configurationFileName, solverProcessIndex, solverProcessSize))
+    ::precice::string_view participantName,
+    ::precice::string_view configurationFileName,
+    int                    solverProcessIndex,
+    int                    solverProcessSize)
+    : _impl(new impl::SolverInterfaceImpl(toSV(participantName), toSV(configurationFileName), solverProcessIndex, solverProcessSize))
 {
 }
 
 SolverInterface::SolverInterface(
-    std::string_view participantName,
-    std::string_view configurationFileName,
-    int              solverProcessIndex,
-    int              solverProcessSize,
-    void *           communicator)
-    : _impl(new impl::SolverInterfaceImpl(participantName, configurationFileName, solverProcessIndex, solverProcessSize, communicator))
+    ::precice::string_view participantName,
+    ::precice::string_view configurationFileName,
+    int                    solverProcessIndex,
+    int                    solverProcessSize,
+    void *                 communicator)
+    : _impl(new impl::SolverInterfaceImpl(toSV(participantName), toSV(configurationFileName), solverProcessIndex, solverProcessSize, communicator))
 {
 }
 
@@ -77,258 +85,258 @@ bool SolverInterface::requiresWritingCheckpoint()
   return _impl->requiresWritingCheckpoint();
 }
 
-bool SolverInterface::hasMesh(std::string_view meshName) const
+bool SolverInterface::hasMesh(::precice::string_view meshName) const
 {
-  return _impl->hasMesh(meshName);
+  return _impl->hasMesh(toSV(toSV(meshName)));
 }
 
-bool SolverInterface::requiresMeshConnectivityFor(std::string_view meshName) const
+bool SolverInterface::requiresMeshConnectivityFor(::precice::string_view meshName) const
 {
-  return _impl->requiresMeshConnectivityFor(meshName);
+  return _impl->requiresMeshConnectivityFor(toSV(toSV(meshName)));
 }
 
-bool SolverInterface::requiresGradientDataFor(std::string_view meshName,
-                                              std::string_view dataName) const
+bool SolverInterface::requiresGradientDataFor(::precice::string_view meshName,
+                                              ::precice::string_view dataName) const
 {
-  return _impl->requiresGradientDataFor(meshName, dataName);
+  return _impl->requiresGradientDataFor(toSV(meshName), toSV(dataName));
 }
 
-bool SolverInterface::hasData(std::string_view meshName, std::string_view dataName) const
+bool SolverInterface::hasData(::precice::string_view meshName, ::precice::string_view dataName) const
 {
-  return _impl->hasData(meshName, dataName);
+  return _impl->hasData(toSV(meshName), toSV(dataName));
 }
 
 // void SolverInterface:: resetMesh
 //(
-//   std::string_view meshName )
+//   ::precice::string_view meshName )
 //{
-//   _impl->resetMesh(meshNameID);
+//   _impl->resetMesh(toSV(meshName)ID);
 // }
 
 int SolverInterface::setMeshVertex(
-    std::string_view meshName,
-    const double *   position)
+    ::precice::string_view meshName,
+    const double *         position)
 {
-  return _impl->setMeshVertex(meshName, position);
+  return _impl->setMeshVertex(toSV(meshName), position);
 }
 
 int SolverInterface::getMeshVertexSize(
-    std::string_view meshName) const
+    ::precice::string_view meshName) const
 {
-  return _impl->getMeshVertexSize(meshName);
+  return _impl->getMeshVertexSize(toSV(meshName));
 }
 
 void SolverInterface::setMeshVertices(
-    std::string_view meshName,
-    int              size,
-    const double *   positions,
-    int *            ids)
+    ::precice::string_view meshName,
+    int                    size,
+    const double *         positions,
+    int *                  ids)
 {
-  _impl->setMeshVertices(meshName, size, positions, ids);
+  _impl->setMeshVertices(toSV(meshName), size, positions, ids);
 }
 
 void SolverInterface::setMeshEdge(
-    std::string_view meshName,
-    int              firstVertexID,
-    int              secondVertexID)
+    ::precice::string_view meshName,
+    int                    firstVertexID,
+    int                    secondVertexID)
 {
-  _impl->setMeshEdge(meshName, firstVertexID, secondVertexID);
+  _impl->setMeshEdge(toSV(meshName), firstVertexID, secondVertexID);
 }
 
 void SolverInterface::setMeshEdges(
-    std::string_view meshName,
-    int              size,
-    const int *      vertices)
+    ::precice::string_view meshName,
+    int                    size,
+    const int *            vertices)
 {
-  _impl->setMeshEdges(meshName, size, vertices);
+  _impl->setMeshEdges(toSV(meshName), size, vertices);
 }
 
 void SolverInterface::setMeshTriangle(
-    std::string_view meshName,
-    int              firstVertexID,
-    int              secondVertexID,
-    int              thirdVertexID)
+    ::precice::string_view meshName,
+    int                    firstVertexID,
+    int                    secondVertexID,
+    int                    thirdVertexID)
 {
-  _impl->setMeshTriangle(meshName, firstVertexID, secondVertexID, thirdVertexID);
+  _impl->setMeshTriangle(toSV(meshName), firstVertexID, secondVertexID, thirdVertexID);
 }
 
 void SolverInterface::setMeshTriangles(
-    std::string_view meshName,
-    int              size,
-    const int *      vertices)
+    ::precice::string_view meshName,
+    int                    size,
+    const int *            vertices)
 {
-  _impl->setMeshTriangles(meshName, size, vertices);
+  _impl->setMeshTriangles(toSV(meshName), size, vertices);
 }
 
 void SolverInterface::setMeshQuad(
-    std::string_view meshName,
-    int              firstVertexID,
-    int              secondVertexID,
-    int              thirdVertexID,
-    int              fourthVertexID)
+    ::precice::string_view meshName,
+    int                    firstVertexID,
+    int                    secondVertexID,
+    int                    thirdVertexID,
+    int                    fourthVertexID)
 {
-  _impl->setMeshQuad(meshName, firstVertexID, secondVertexID, thirdVertexID,
+  _impl->setMeshQuad(toSV(meshName), firstVertexID, secondVertexID, thirdVertexID,
                      fourthVertexID);
 }
 
 void SolverInterface::setMeshQuads(
-    std::string_view meshName,
-    int              size,
-    const int *      vertices)
+    ::precice::string_view meshName,
+    int                    size,
+    const int *            vertices)
 {
-  _impl->setMeshQuads(meshName, size, vertices);
+  _impl->setMeshQuads(toSV(meshName), size, vertices);
 }
 
 void SolverInterface::setMeshTetrahedron(
-    std::string_view meshName,
-    int              firstVertexID,
-    int              secondVertexID,
-    int              thirdVertexID,
-    int              fourthVertexID)
+    ::precice::string_view meshName,
+    int                    firstVertexID,
+    int                    secondVertexID,
+    int                    thirdVertexID,
+    int                    fourthVertexID)
 {
-  _impl->setMeshTetrahedron(meshName, firstVertexID, secondVertexID, thirdVertexID,
+  _impl->setMeshTetrahedron(toSV(meshName), firstVertexID, secondVertexID, thirdVertexID,
                             fourthVertexID);
 }
 
 void SolverInterface::setMeshTetrahedra(
-    std::string_view meshName,
-    int              size,
-    const int *      vertices)
+    ::precice::string_view meshName,
+    int                    size,
+    const int *            vertices)
 {
-  _impl->setMeshTetrahedra(meshName, size, vertices);
+  _impl->setMeshTetrahedra(toSV(meshName), size, vertices);
 }
 
 void SolverInterface::writeBlockVectorData(
-    std::string_view meshName,
-    std::string_view dataName,
-    int              size,
-    const int *      valueIndices,
-    const double *   values)
+    ::precice::string_view meshName,
+    ::precice::string_view dataName,
+    int                    size,
+    const int *            valueIndices,
+    const double *         values)
 {
-  _impl->writeBlockVectorData(meshName, dataName, size, valueIndices, values);
+  _impl->writeBlockVectorData(toSV(meshName), toSV(dataName), size, valueIndices, values);
 }
 
 void SolverInterface::writeBlockVectorGradientData(
-    std::string_view meshName,
-    std::string_view dataName,
-    int              size,
-    const int *      valueIndices,
-    const double *   gradientValues)
+    ::precice::string_view meshName,
+    ::precice::string_view dataName,
+    int                    size,
+    const int *            valueIndices,
+    const double *         gradientValues)
 {
-  _impl->writeBlockVectorGradientData(meshName, dataName, size, valueIndices, gradientValues);
+  _impl->writeBlockVectorGradientData(toSV(meshName), toSV(dataName), size, valueIndices, gradientValues);
 }
 
 void SolverInterface::writeVectorData(
-    std::string_view meshName,
-    std::string_view dataName,
-    int              valueIndex,
-    const double *   value)
+    ::precice::string_view meshName,
+    ::precice::string_view dataName,
+    int                    valueIndex,
+    const double *         value)
 {
-  _impl->writeVectorData(meshName, dataName, valueIndex, value);
+  _impl->writeVectorData(toSV(meshName), toSV(dataName), valueIndex, value);
 }
 
 void SolverInterface::writeVectorGradientData(
-    std::string_view meshName,
-    std::string_view dataName,
-    int              valueIndex,
-    const double *   gradientValues)
+    ::precice::string_view meshName,
+    ::precice::string_view dataName,
+    int                    valueIndex,
+    const double *         gradientValues)
 {
-  _impl->writeVectorGradientData(meshName, dataName, valueIndex, gradientValues);
+  _impl->writeVectorGradientData(toSV(meshName), toSV(dataName), valueIndex, gradientValues);
 }
 
 void SolverInterface::writeBlockScalarData(
-    std::string_view meshName,
-    std::string_view dataName,
-    int              size,
-    const int *      valueIndices,
-    const double *   values)
+    ::precice::string_view meshName,
+    ::precice::string_view dataName,
+    int                    size,
+    const int *            valueIndices,
+    const double *         values)
 {
-  _impl->writeBlockScalarData(meshName, dataName, size, valueIndices, values);
+  _impl->writeBlockScalarData(toSV(meshName), toSV(dataName), size, valueIndices, values);
 }
 
 void SolverInterface::writeBlockScalarGradientData(
-    std::string_view meshName,
-    std::string_view dataName,
-    int              size,
-    const int *      valueIndices,
-    const double *   gradientValues)
+    ::precice::string_view meshName,
+    ::precice::string_view dataName,
+    int                    size,
+    const int *            valueIndices,
+    const double *         gradientValues)
 {
-  _impl->writeBlockScalarGradientData(meshName, dataName, size, valueIndices, gradientValues);
+  _impl->writeBlockScalarGradientData(toSV(meshName), toSV(dataName), size, valueIndices, gradientValues);
 }
 
 void SolverInterface::writeScalarData(
-    std::string_view meshName,
-    std::string_view dataName,
-    int              valueIndex,
-    double           value)
+    ::precice::string_view meshName,
+    ::precice::string_view dataName,
+    int                    valueIndex,
+    double                 value)
 {
-  _impl->writeScalarData(meshName, dataName, valueIndex, value);
+  _impl->writeScalarData(toSV(meshName), toSV(dataName), valueIndex, value);
 }
 
 void SolverInterface::writeScalarGradientData(
-    std::string_view meshName,
-    std::string_view dataName,
-    int              valueIndex,
-    const double *   gradientValues)
+    ::precice::string_view meshName,
+    ::precice::string_view dataName,
+    int                    valueIndex,
+    const double *         gradientValues)
 {
-  _impl->writeScalarGradientData(meshName, dataName, valueIndex, gradientValues);
+  _impl->writeScalarGradientData(toSV(meshName), toSV(dataName), valueIndex, gradientValues);
 }
 
 void SolverInterface::readBlockVectorData(
-    std::string_view meshName,
-    std::string_view dataName,
-    int              size,
-    const int *      valueIndices,
-    double           relativeReadTime,
-    double *         values) const
+    ::precice::string_view meshName,
+    ::precice::string_view dataName,
+    int                    size,
+    const int *            valueIndices,
+    double                 relativeReadTime,
+    double *               values) const
 {
-  _impl->readBlockVectorData(meshName, dataName, size, valueIndices, relativeReadTime, values);
+  _impl->readBlockVectorData(toSV(meshName), toSV(dataName), size, valueIndices, relativeReadTime, values);
 }
 
 void SolverInterface::readVectorData(
-    std::string_view meshName,
-    std::string_view dataName,
-    int              valueIndex,
-    double           relativeReadTime,
-    double *         value) const
+    ::precice::string_view meshName,
+    ::precice::string_view dataName,
+    int                    valueIndex,
+    double                 relativeReadTime,
+    double *               value) const
 {
   // @todo: needs testing!
-  _impl->readVectorData(meshName, dataName, valueIndex, relativeReadTime, value);
+  _impl->readVectorData(toSV(meshName), toSV(dataName), valueIndex, relativeReadTime, value);
 }
 
 void SolverInterface::readBlockScalarData(
-    std::string_view meshName,
-    std::string_view dataName,
-    int              size,
-    const int *      valueIndices,
-    double           relativeReadTime,
-    double *         values) const
+    ::precice::string_view meshName,
+    ::precice::string_view dataName,
+    int                    size,
+    const int *            valueIndices,
+    double                 relativeReadTime,
+    double *               values) const
 {
-  _impl->readBlockScalarData(meshName, dataName, size, valueIndices, relativeReadTime, values);
+  _impl->readBlockScalarData(toSV(meshName), toSV(dataName), size, valueIndices, relativeReadTime, values);
 }
 
 void SolverInterface::readScalarData(
-    std::string_view meshName,
-    std::string_view dataName,
-    int              valueIndex,
-    double           relativeReadTime,
-    double &         value) const
+    ::precice::string_view meshName,
+    ::precice::string_view dataName,
+    int                    valueIndex,
+    double                 relativeReadTime,
+    double &               value) const
 {
-  _impl->readScalarData(meshName, dataName, valueIndex, relativeReadTime, value);
+  _impl->readScalarData(toSV(meshName), toSV(dataName), valueIndex, relativeReadTime, value);
 }
 
-void SolverInterface::setMeshAccessRegion(std::string_view meshName,
-                                          const double *   boundingBox) const
+void SolverInterface::setMeshAccessRegion(::precice::string_view meshName,
+                                          const double *         boundingBox) const
 {
-  _impl->setMeshAccessRegion(meshName, boundingBox);
+  _impl->setMeshAccessRegion(toSV(meshName), boundingBox);
 }
 
-void SolverInterface::getMeshVerticesAndIDs(std::string_view meshName,
-                                            const int        size,
-                                            int *            ids,
-                                            double *         coordinates) const
+void SolverInterface::getMeshVerticesAndIDs(::precice::string_view meshName,
+                                            const int              size,
+                                            int *                  ids,
+                                            double *               coordinates) const
 {
-  _impl->getMeshVerticesAndIDs(meshName, size, ids, coordinates);
+  _impl->getMeshVerticesAndIDs(toSV(meshName), size, ids, coordinates);
 }
 
 } // namespace precice
