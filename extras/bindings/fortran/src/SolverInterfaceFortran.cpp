@@ -54,17 +54,17 @@ void precicef_create_(
 }
 
 void precicef_initialize_(
-    double *timestepLengthLimit)
+    double *timeStepSizeLimit)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  *timestepLengthLimit = impl->initialize();
+  *timeStepSizeLimit = impl->initialize();
 }
 
 void precicef_advance_(
-    double *timestepLengthLimit)
+    double *timeStepSizeLimit)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  *timestepLengthLimit = impl->advance(*timestepLengthLimit);
+  *timeStepSizeLimit = impl->advance(*timeStepSizeLimit);
 }
 
 void precicef_finalize_()

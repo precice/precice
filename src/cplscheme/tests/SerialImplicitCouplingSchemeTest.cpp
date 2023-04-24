@@ -87,9 +87,9 @@ void runCoupling(
 
     while (cplScheme.isCouplingOngoing()) {
       dataValues0(index) += stepsizeData0;
-      // The max timestep length is required to be obeyed.
-      double maxLengthTimestep = cplScheme.getNextTimestepMaxLength();
-      cplScheme.addComputedTime(maxLengthTimestep);
+      // The max time step size is required to be obeyed.
+      double maxTimeStepSize = cplScheme.getNextTimeStepMaxSize();
+      cplScheme.addComputedTime(maxTimeStepSize);
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
@@ -100,7 +100,7 @@ void runCoupling(
       // timestep.
       if (cplScheme.isTimeWindowComplete()) {
         // Advance participant time and timestep
-        computedTime += maxLengthTimestep;
+        computedTime += maxTimeStepSize;
         computedTimesteps++;
         BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
         BOOST_TEST(testing::equals(computedTimesteps, cplScheme.getTimeWindows() - 1));
@@ -158,9 +158,9 @@ void runCoupling(
       currentData = dataValues1.segment(index * 3, 3);
       currentData += stepsizeData1;
       dataValues1.segment(index * 3, 3) = currentData;
-      // The max timestep length is required to be obeyed.
-      double maxLengthTimestep = cplScheme.getNextTimestepMaxLength();
-      cplScheme.addComputedTime(maxLengthTimestep);
+      // The max time step size is required to be obeyed.
+      double maxTimeStepSize = cplScheme.getNextTimeStepMaxSize();
+      cplScheme.addComputedTime(maxTimeStepSize);
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
@@ -171,7 +171,7 @@ void runCoupling(
       // timestep.
       if (cplScheme.isTimeWindowComplete()) {
         // Advance participant time and timestep
-        computedTime += maxLengthTimestep;
+        computedTime += maxTimeStepSize;
         computedTimesteps++;
         BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
         BOOST_TEST(testing::equals(computedTimesteps, cplScheme.getTimeWindows() - 1));
@@ -256,13 +256,13 @@ void runCouplingWithSubcycling(
     cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
     BOOST_TEST(cplScheme.isActionFulfilled(CouplingScheme::Action::WriteCheckpoint));
 
-    double maxTimestepLength      = cplScheme.getNextTimestepMaxLength();
-    double computedTimestepLength = maxTimestepLength / 2.0;
-    int    subcyclingStep         = 0;
+    double maxTimeStepSize      = cplScheme.getNextTimeStepMaxSize();
+    double computedTimeStepSize = maxTimeStepSize / 2.0;
+    int    subcyclingStep       = 0;
 
     // Main coupling loop
     while (cplScheme.isCouplingOngoing()) {
-      cplScheme.addComputedTime(computedTimestepLength);
+      cplScheme.addComputedTime(computedTimeStepSize);
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
@@ -272,7 +272,7 @@ void runCouplingWithSubcycling(
       // timestep.
       if (cplScheme.isTimeWindowComplete()) {
         // Advance participant time and timestep
-        computedTime += maxTimestepLength;
+        computedTime += maxTimeStepSize;
         computedTimesteps++;
         BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
         BOOST_TEST(testing::equals(computedTimesteps, cplScheme.getTimeWindows() - 1));
@@ -293,13 +293,13 @@ void runCouplingWithSubcycling(
           BOOST_TEST(not cplScheme.isCouplingOngoing());
         }
         // Reset data values, to simulate same convergence behavior of
-        // interface values in next timestep.
+        // interface values in next time step.
         stepsizeData0 = initialStepsizeData0;
         BOOST_TEST(testing::equals(subcyclingStep, 1));
         subcyclingStep = 0;
       } else { // coupling timestep is not yet complete
         BOOST_TEST(cplScheme.isCouplingOngoing());
-        // If length of global timestep is reached
+        // If end of time window is reached
         if (cplScheme.hasDataBeenReceived()) {
           BOOST_TEST(iterationCount <= *iterValidIterations);
           BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
@@ -340,28 +340,28 @@ void runCouplingWithSubcycling(
     cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
     BOOST_TEST(cplScheme.isActionFulfilled(CouplingScheme::Action::WriteCheckpoint));
 
-    double maxTimestepLength       = cplScheme.getNextTimestepMaxLength();
-    double preferredTimestepLength = maxTimestepLength / 2.5;
-    double computedTimestepLength  = preferredTimestepLength;
-    int    subcyclingStep          = 0;
+    double maxTimeStepSize       = cplScheme.getNextTimeStepMaxSize();
+    double preferredTimeStepSize = maxTimeStepSize / 2.5;
+    double computedTimeStepSize  = preferredTimeStepSize;
+    int    subcyclingStep        = 0;
 
     // Main coupling loop
     while (cplScheme.isCouplingOngoing()) {
-      cplScheme.addComputedTime(computedTimestepLength);
+      cplScheme.addComputedTime(computedTimeStepSize);
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
       cplScheme.secondExchange();
-      computedTimestepLength =
-          cplScheme.getNextTimestepMaxLength() < preferredTimestepLength
-              ? cplScheme.getNextTimestepMaxLength()
-              : preferredTimestepLength;
-      // A coupling timestep is complete, when the coupling iterations are
+      computedTimeStepSize =
+          cplScheme.getNextTimeStepMaxSize() < preferredTimeStepSize
+              ? cplScheme.getNextTimeStepMaxSize()
+              : preferredTimeStepSize;
+      // A coupling time step is complete, when the coupling iterations are
       // globally converged and if subcycling steps have filled one global
-      // timestep.
+      // time step.
       if (cplScheme.isTimeWindowComplete()) {
-        // Advance participant time and timestep
-        computedTime += maxTimestepLength;
+        // Advance participant time and time step
+        computedTime += maxTimeStepSize;
         computedTimesteps++;
         BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
         BOOST_TEST(testing::equals(computedTimesteps, cplScheme.getTimeWindows() - 1));
@@ -382,13 +382,13 @@ void runCouplingWithSubcycling(
           BOOST_TEST(not cplScheme.isCouplingOngoing());
         }
         // Reset data values, to simulate same convergence behavior of
-        // interface values in next timestep.
+        // interface values in next time step.
         stepsizeData1 = initialStepsizeData1;
         BOOST_TEST(testing::equals(subcyclingStep, 2));
         subcyclingStep = 0;
       } else { // coupling timestep is not yet complete
         BOOST_TEST(cplScheme.isCouplingOngoing());
-        // If length of global timestep is reached
+        // If end of time window is reached
         if (cplScheme.hasDataBeenReceived()) {
           BOOST_TEST(iterationCount <= *iterValidIterations);
           BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
@@ -469,7 +469,7 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   BOOST_TEST(data->values().size() == 1);
 
   const double          maxTime      = CouplingScheme::UNDEFINED_TIME;
-  const int             maxTimesteps = 1;
+  const int             maxTimeSteps = 1;
   const double          dt           = 1.0;
   std::string           first        = "First";
   std::string           second       = "Second";
@@ -480,7 +480,7 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   const int             extrapolationOrder = 1;
 
   // Test first order extrapolation
-  SerialCouplingScheme scheme(maxTime, maxTimesteps, dt, 16, first, second,
+  SerialCouplingScheme scheme(maxTime, maxTimeSteps, dt, 16, first, second,
                               accessor, globalCom, constants::FIXED_TIME_WINDOW_SIZE,
                               BaseCouplingScheme::Implicit, maxIterations, extrapolationOrder);
 
@@ -584,7 +584,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
   const double timeWindowSize     = 0.1;
   const int    maxIterations      = 3;
   const int    extrapolationOrder = 1;
-  const double timestepLength     = timeWindowSize;
+  const double timeStepSize       = timeWindowSize;
   std::string  first("Participant0");
   std::string  second("Participant1");
   int          sendDataIndex        = -1;
@@ -669,7 +669,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
       v << 2.0;
     }
     mesh->data(sendDataIndex)->values() = v;
-    cplScheme.addComputedTime(timestepLength);
+    cplScheme.addComputedTime(timeStepSize);
 
     cplScheme.firstSynchronization({});
     cplScheme.firstExchange();
@@ -716,7 +716,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
 
     v << 3.0;
     mesh->data(sendDataIndex)->values() = v;
-    cplScheme.addComputedTime(timestepLength);
+    cplScheme.addComputedTime(timeStepSize);
 
     cplScheme.firstSynchronization({});
     cplScheme.firstExchange();
@@ -789,7 +789,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
   const double timeWindowSize     = 0.1;
   const int    maxIterations      = 3;
   const int    extrapolationOrder = 1;
-  const double timestepLength     = timeWindowSize;
+  const double timeStepSize       = timeWindowSize;
   std::string  first("Participant0");
   std::string  second("Participant1");
   int          sendDataIndex        = -1;
@@ -911,7 +911,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
       v << 2.0;
     }
     mesh->data(sendDataIndex)->values() = v;
-    cplScheme.addComputedTime(timestepLength);
+    cplScheme.addComputedTime(timeStepSize);
 
     cplScheme.firstSynchronization({});
     cplScheme.firstExchange();
@@ -958,7 +958,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
 
     v << 3.0;
     mesh->data(sendDataIndex)->values() = v;
-    cplScheme.addComputedTime(timestepLength);
+    cplScheme.addComputedTime(timeStepSize);
 
     cplScheme.firstSynchronization({});
     cplScheme.firstExchange();
@@ -1018,9 +1018,9 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
   meshConfig.addMesh(mesh);
 
   // Create all parameters necessary to create an ImplicitCouplingScheme object
-  double      maxTime        = 1.0;
-  int         maxTimesteps   = 3;
-  double      timestepLength = 0.1;
+  double      maxTime      = 1.0;
+  int         maxTimeSteps = 3;
+  double      timeStepSize = 0.1;
   std::string nameParticipant0("Participant0");
   std::string nameParticipant1("Participant1");
   int         sendDataIndex        = -1;
@@ -1039,7 +1039,7 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
 
   // Create the coupling scheme object
   cplscheme::SerialCouplingScheme cplScheme(
-      maxTime, maxTimesteps, timestepLength, 16, nameParticipant0,
+      maxTime, maxTimeSteps, timeStepSize, 16, nameParticipant0,
       nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, 100, extrapolationOrder);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
@@ -1124,9 +1124,9 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
   meshConfig.addMesh(mesh);
 
   // Create all parameters necessary to create an ImplicitCouplingScheme object
-  double      maxTime        = 1.0;
-  int         maxTimesteps   = 3;
-  double      timestepLength = 0.1;
+  double      maxTime      = 1.0;
+  int         maxTimeSteps = 3;
+  double      timeStepSize = 0.1;
   std::string nameParticipant0("Participant0");
   std::string nameParticipant1("Participant1");
   int         sendDataIndex        = -1;
@@ -1145,7 +1145,7 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
 
   // Create the coupling scheme object
   cplscheme::SerialCouplingScheme cplScheme(
-      maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
+      maxTime, maxTimeSteps, timeStepSize, 16, nameParticipant0, nameParticipant1,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, 100, extrapolationOrder);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
@@ -1187,9 +1187,9 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
   meshConfig.addMesh(mesh);
 
   // Create all parameters necessary to create an ImplicitCouplingScheme object
-  double           maxTime        = 1.0;
-  int              maxTimesteps   = 3;
-  double           timestepLength = 0.1;
+  double           maxTime      = 1.0;
+  int              maxTimeSteps = 3;
+  double           timeStepSize = 0.1;
   std::string      nameParticipant0("Participant0");
   std::string      nameParticipant1("Participant1");
   int              sendDataIndex        = -1;
@@ -1211,7 +1211,7 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
 
   // Create the coupling scheme object
   cplscheme::SerialCouplingScheme cplScheme(
-      maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
+      maxTime, maxTimeSteps, timeStepSize, 16, nameParticipant0, nameParticipant1,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, 100, extrapolationOrder);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
@@ -1253,9 +1253,9 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   meshConfig.addMesh(mesh);
 
   // Create all parameters necessary to create an ImplicitCouplingScheme object
-  double      maxTime        = 1.0;
-  int         maxTimesteps   = 3;
-  double      timestepLength = 0.1;
+  double      maxTime      = 1.0;
+  int         maxTimeSteps = 3;
+  double      timeStepSize = 0.1;
   std::string nameParticipant0("Participant0");
   std::string nameParticipant1("Participant1");
   int         sendDataIndex              = -1;
@@ -1276,7 +1276,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
 
   // Create the coupling scheme object
   cplscheme::SerialCouplingScheme cplScheme(
-      maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
+      maxTime, maxTimeSteps, timeStepSize, 16, nameParticipant0, nameParticipant1,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, 100, extrapolationOrder);
   using Fixture = testing::SerialCouplingSchemeFixture;
@@ -1330,7 +1330,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       if (cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint)) {
         cplScheme.markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
       }
-      cplScheme.addComputedTime(timestepLength);
+      cplScheme.addComputedTime(timeStepSize);
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
@@ -1368,7 +1368,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       if (cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint)) {
         cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
       }
-      cplScheme.addComputedTime(timestepLength);
+      cplScheme.addComputedTime(timeStepSize);
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();

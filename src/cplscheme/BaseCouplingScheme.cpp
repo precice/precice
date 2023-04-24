@@ -340,20 +340,20 @@ void BaseCouplingScheme::addComputedTime(
   _time += timeToAdd;
 
   // Check validness
-  bool valid = math::greaterEquals(getNextTimestepMaxLength(), 0.0, _eps);
+  bool valid = math::greaterEquals(getNextTimeStepMaxSize(), 0.0, _eps);
   PRECICE_CHECK(valid,
-                "The timestep length given to preCICE in \"advance\" {} exceeds the maximum allowed timestep length {} "
+                "The time step size given to preCICE in \"advance\" {} exceeds the maximum allowed time step size {} "
                 "in the remaining of this time window. "
-                "Did you restrict your timestep length, \"dt = min(precice_dt, dt)\"? "
+                "Did you restrict your time step size, \"dt = min(preciceDt, solverDt)\"? "
                 "For more information, consult the adapter example in the preCICE documentation.",
                 timeToAdd, _timeWindowSize - _computedTimeWindowPart + timeToAdd);
 }
 
 bool BaseCouplingScheme::willDataBeExchanged(
-    double lastSolverTimestepLength) const
+    double lastSolverTimeStepSize) const
 {
-  PRECICE_TRACE(lastSolverTimestepLength);
-  double remainder = getNextTimestepMaxLength() - lastSolverTimestepLength;
+  PRECICE_TRACE(lastSolverTimeStepSize);
+  double remainder = getNextTimeStepMaxSize() - lastSolverTimeStepSize;
   return not math::greater(remainder, 0.0, _eps);
 }
 
@@ -398,7 +398,7 @@ int BaseCouplingScheme::getTimeWindows() const
   return _timeWindows;
 }
 
-double BaseCouplingScheme::getNextTimestepMaxLength() const
+double BaseCouplingScheme::getNextTimeStepMaxSize() const
 {
   if (hasTimeWindowSize()) {
     return _timeWindowSize - _computedTimeWindowPart;
@@ -476,7 +476,7 @@ std::string BaseCouplingScheme::printBasicState(
     os << ", time-window-size: " << _timeWindowSize;
   }
   if (hasTimeWindowSize() || (_maxTime != UNDEFINED_TIME)) {
-    os << ", max-timestep-length: " << getNextTimestepMaxLength();
+    os << ", max-time-step-size: " << getNextTimeStepMaxSize();
   }
   os << ", ongoing: ";
   isCouplingOngoing() ? os << "yes" : os << "no";
@@ -676,7 +676,7 @@ void BaseCouplingScheme::advanceTXTWriters()
 
 bool BaseCouplingScheme::reachedEndOfTimeWindow()
 {
-  return math::equals(getNextTimestepMaxLength(), 0.0, _eps) || not hasTimeWindowSize();
+  return math::equals(getNextTimeStepMaxSize(), 0.0, _eps) || not hasTimeWindowSize();
 }
 
 void BaseCouplingScheme::storeIteration()

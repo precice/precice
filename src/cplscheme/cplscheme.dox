@@ -49,12 +49,12 @@ mesh.setVertexData ( data );
 
 // Create explicit coupling scheme object
 double maxSimulationTime = 1.0;
-int maxSimulationTimesteps = 100;
-double timesteplength = 0.01;
+int maxSimulationTimeSteps = 100;
+double timeStepSize = 0.01;
 std::string nameFirstParticipant ( nameThisSolver );
 std::string nameSecondParticipant ( nameOtherSolver );
 ExplicitCouplingScheme cplScheme (
-   maxSimulationTime, maxSimulationTimesteps, timestepLength,
+   maxSimulationTime, maxSimulationTimeSteps, timeStepSize,
    nameFirstParticipant, nameSecondParticipant );
 cplScheme.addMesh ( mesh );
 std::string nameDataCreator ( nameThisSolver );
@@ -67,7 +67,7 @@ while ( cplScheme.isCouplingOngoing() ) {
 
    // ...
 
-   cplScheme.advance ( computedTimestepLength );
+   cplScheme.advance ( computedTimeStepSize );
 
    // ...
 

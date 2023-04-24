@@ -84,8 +84,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
 
   double maxDt     = precice.initialize();
   double windowDt  = maxDt;
-  double dt        = windowDt / nSubsteps; // Timestep length desired by solver. E.g. 2 steps with size 1/2
-  double currentDt = dt;                   // Timestep length used by solver
+  double dt        = windowDt / nSubsteps; // time step size desired by solver. E.g. 2 steps with size 1/2
+  double currentDt = dt;                   // time step size used by solver
 
   while (precice.isCouplingOngoing()) {
     if (precice.requiresWritingCheckpoint()) {

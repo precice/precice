@@ -59,10 +59,10 @@ double precicec_initialize()
   return impl->initialize();
 }
 
-double precicec_advance(double computedTimestepLength)
+double precicec_advance(double computedTimeStepSize)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  return impl->advance(computedTimestepLength);
+  return impl->advance(computedTimeStepSize);
 }
 
 void precicec_finalize()

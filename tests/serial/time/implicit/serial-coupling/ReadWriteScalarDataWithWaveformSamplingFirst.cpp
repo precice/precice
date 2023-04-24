@@ -72,8 +72,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
 
   double maxDt        = precice.initialize();
   double windowDt     = maxDt;
-  double dt           = maxDt; // Timestep length desired by solver
-  double currentDt    = dt;    // Timestep length used by solver
+  double dt           = maxDt; // time step size desired by solver
+  double currentDt    = dt;    // time step size used by solver
   double sampleDts[4] = {0.0, dt / 4.0, dt / 2.0, 3.0 * dt / 4.0};
 
   while (precice.isCouplingOngoing()) {

@@ -40,7 +40,7 @@ while ( interface.isCouplingOngoing() ){
 
    // ...
 
-   if ( interface.isWriteDataRequired(computedTimestepLength) ) {
+   if ( interface.isWriteDataRequired(computedTimeStepSize) ) {
       // ...
       interface.writeVectorData ( forceDataID, solverNodeCoords, forceValue );
       // ...
@@ -48,10 +48,10 @@ while ( interface.isCouplingOngoing() ){
 
    // When all data values are written, the simulation can be advanced.
    // preCICE automatically exchanges data between coupled solvers and
-   // computes the current state of the simulation. It uses the timestep length
-   // of the solver timestep for that, and returns an upper limit for the next
-   // timestep of the solver.
-   dtLimit = interface.advance ( computedTimestepLength );
+   // computes the current state of the simulation. It uses the time step size
+   // of the solver time step for that, and returns an upper limit for the next
+   // time step of the solver.
+   dtLimit = interface.advance ( computedTimeStepSize );
 }
 
 // A call to finalize cleans up data structures and disconnects coupled solvers

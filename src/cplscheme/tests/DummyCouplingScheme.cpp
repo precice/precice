@@ -7,9 +7,9 @@ namespace precice::cplscheme::tests {
 
 DummyCouplingScheme::DummyCouplingScheme(
     int numberIterations,
-    int maxTimesteps)
+    int maxTimeSteps)
     : _numberIterations(numberIterations),
-      _maxTimesteps(maxTimesteps)
+      _maxTimeSteps(maxTimeSteps)
 {
 }
 
@@ -20,7 +20,7 @@ void DummyCouplingScheme::initialize(
   PRECICE_ASSERT(not _isInitialized);
   _isInitialized = true;
   _isOngoing     = true;
-  _timesteps     = startTimesteps;
+  _timeWindows   = startTimesteps;
   _iterations    = 1;
 }
 
@@ -53,18 +53,18 @@ void DummyCouplingScheme::secondExchange()
   _hasConverged = _iterations == _numberIterations;
 
   if (_hasConverged) {
-    if (_timesteps == _maxTimesteps) {
+    if (_timeWindows == _maxTimeSteps) {
       _isOngoing = false;
     }
-    _timesteps++;
+    _timeWindows++;
     _iterations = 1;
   } else {
     _iterations++;
   }
   if (isImplicitCouplingScheme()) {
-    PRECICE_DEBUG("advanced to {}-{}/{} (ongoing {})", _timesteps, _iterations, _numberIterations, _isOngoing);
+    PRECICE_DEBUG("advanced to {}-{}/{} (ongoing {})", _timeWindows, _iterations, _numberIterations, _isOngoing);
   } else {
-    PRECICE_DEBUG("advanced to {} (ongoing {})", _timesteps, _isOngoing);
+    PRECICE_DEBUG("advanced to {} (ongoing {})", _timeWindows, _isOngoing);
   }
 }
 
@@ -77,7 +77,7 @@ void DummyCouplingScheme::finalize()
 bool DummyCouplingScheme::isCouplingOngoing() const
 {
   PRECICE_ASSERT(_isInitialized);
-  if (_timesteps <= _maxTimesteps)
+  if (_timeWindows <= _maxTimeSteps)
     return true;
   return false;
 }

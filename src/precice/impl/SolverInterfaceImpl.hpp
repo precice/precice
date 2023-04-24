@@ -94,7 +94,7 @@ public:
   double initialize();
 
   /// @copydoc SolverInterface::advance
-  double advance(double computedTimestepLength);
+  double advance(double computedTimeStepSize);
 
   /// @copydoc SolverInterface::finalize
   void finalize();
@@ -490,8 +490,8 @@ private:
   /// Advances the coupling schemes
   void advanceCouplingScheme();
 
-  /// Syncs the timestep between all ranks (all timesteps should be the same!)
-  void syncTimestep(double computedTimestepLength);
+  /// Syncs the time step between all ranks (all time steps should be the same!)
+  void syncTimestep(double computedTimeStepSize);
 
   /// Which channels to close in closeCommunicationChannels()
   enum class CloseChannels : bool {
