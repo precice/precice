@@ -734,7 +734,7 @@ PRECICE_API void precicef_set_mesh_access_region_(
 
 /**
  * Fortran syntax:
- * precicef_get_mesh_vertices_and_IDs_(
+ * precicef_get_mesh_vertices_and_ids_(
  *   CHARACTER        meshName(*),
  *   INTEGER          size,
  *   INTEGER          ids(size),
@@ -745,7 +745,7 @@ PRECICE_API void precicef_set_mesh_access_region_(
  *
  * @copydoc precice::SolverInterface::getMeshVerticesAndIDs()
  */
-PRECICE_API void precicef_get_mesh_vertices_and_IDs_(
+PRECICE_API void precicef_get_mesh_vertices_and_ids_(
     const char *meshName,
     const int   size,
     int *       ids,

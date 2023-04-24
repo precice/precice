@@ -480,7 +480,7 @@ void precicef_set_mesh_access_region_(
   impl->setMeshAccessRegion(precice::impl::strippedStringView(meshName, meshNameLength), boundingBox);
 }
 
-void precicef_get_mesh_vertices_and_IDs_(
+void precicef_get_mesh_vertices_and_ids_(
     const char *meshName,
     const int   size,
     int *       ids,
