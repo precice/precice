@@ -161,6 +161,6 @@
 
 #define PRECICE_EXPERIMENTAL_API()                                                                                                                    \
   PRECICE_CHECK(_allowsExperimental, "You called the API function \"{}\", which is part of the experimental API. "                                    \
-                                     "You may unlock the full API by specifying <solver-interface experimental=\"true\" ... > in the configuration. " \
+                                     "You may unlock the full API by specifying <simulation-setup experimental=\"true\" ... > in the configuration. " \
                                      "Please be aware that experimental features may change in any future version (even minor or bugfix).",           \
                 __func__)
