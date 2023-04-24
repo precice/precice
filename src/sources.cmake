@@ -4,7 +4,7 @@
 
 target_sources(preciceCore
     PRIVATE
-    ${PROJECT_BINARY_DIR}/src/precice/impl/versions.cpp
+    ${CMAKE_BINARY_DIR}/src/precice/impl/versions.cpp
     ${PROJECT_BINARY_DIR}/src/precice/impl/versions.hpp
     src/acceleration/Acceleration.cpp
     src/acceleration/Acceleration.hpp
