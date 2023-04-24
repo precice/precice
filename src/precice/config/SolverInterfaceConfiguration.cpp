@@ -23,7 +23,7 @@ namespace precice::config {
 SolverInterfaceConfiguration::SolverInterfaceConfiguration(xml::XMLTag &parent)
 {
   using namespace xml;
-  XMLTag tag(*this, "solver-interface", XMLTag::OCCUR_ONCE);
+  XMLTag tag(*this, "simulation-setup", XMLTag::OCCUR_ONCE);
   tag.setDocumentation("Configuration of simulation relevant features.");
   auto attrDimensions = makeXMLAttribute("dimensions", 2)
                             .setDocumentation("Determines the spatial dimensionality of the configuration")
@@ -52,7 +52,7 @@ void SolverInterfaceConfiguration::xmlTagCallback(
     xml::XMLTag &                    tag)
 {
   PRECICE_TRACE();
-  if (tag.getName() == "solver-interface") {
+  if (tag.getName() == "simulation-setup") {
     _dimensions = tag.getIntAttributeValue("dimensions");
     _dataConfiguration->setDimensions(_dimensions);
     _meshConfiguration->setDimensions(_dimensions);
@@ -70,7 +70,7 @@ void SolverInterfaceConfiguration::xmlEndTagCallback(
     xml::XMLTag &                    tag)
 {
   PRECICE_TRACE();
-  if (tag.getName() == "solver-interface") {
+  if (tag.getName() == "simulation-setup") {
     //test if both participants do have the exchange meshes
     typedef std::map<std::string, std::vector<std::string>>::value_type neededMeshPair;
     for (const neededMeshPair &neededMeshes : _meshConfiguration->getNeededMeshes()) {
