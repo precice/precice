@@ -248,7 +248,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
   const std::size_t meshDim        = inputMesh.vertices().at(0).getDimensions();
 
   _scalarOne         = gko::share(gko::initialize<GinkgoScalar>({1.0}, _deviceExecutor));
-  _scalarNegativeOne = gko::share(gko::initialize<GinkgoScalar>({1.0}, _deviceExecutor));
+  _scalarNegativeOne = gko::share(gko::initialize<GinkgoScalar>({-1.0}, _deviceExecutor));
 
   // Now we fill the RBF system matrix on the GPU (or any other selected device)
   _allocCopyEvent.start();
@@ -315,6 +315,9 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
     _matrixQ = gko::share(GinkgoMatrix::create(_deviceExecutor, gko::dim<2>{n, separatePolyParams}));
     _matrixV = gko::share(GinkgoMatrix::create(_deviceExecutor, gko::dim<2>{outputSize, separatePolyParams}));
     _allocCopyEvent.pause();
+
+    _matrixQ->fill(0.0);
+    _matrixV->fill(0.0);
 
     _assemblyEvent.start();
     _deviceExecutor->run(make_polynomial_fill_operation(_matrixQ->get_size()[0], _matrixQ->get_size()[1], _matrixQ->get_values(), dInputVertices->get_values(), dInputVertices->get_size()[1], separatePolyParams));
@@ -601,7 +604,13 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConser
 
     _polynomialContribution = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixQQ_T->get_size()[1], 1}));
 
-    dEpsilon->apply(gko::lend(_scalarNegativeOne), gko::lend(dEpsilon));
+    auto epsilon = gko::clone(_hostExecutor, dEpsilon);
+
+    for (int i = 0; i < epsilon->get_size()[0]; ++i) {
+      epsilon->at(i, 0) *= -1;
+    }
+
+    dEpsilon = gko::clone(_deviceExecutor, epsilon);
 
     _polynomialRhs = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixQ->get_size()[0], dEpsilon->get_size()[1]}));
 

@@ -43,7 +43,7 @@ void create_rbf_system_matrix(std::shared_ptr<const DefaultExecutor> exec,
 #else
         const unsigned int supportPointOffset = dataDimensionality * j; // Point of current column
         const unsigned int targetPointOffset  = dataDimensionality * i; // Point of current row
-        // Loop over each dimension and calculate euclidian distance
+        // Loop over each dimension and calculate euclidean distance
         for (size_t k = 0; k < dataDimensionality; ++k) {
           dist += pow_int<2>(supportPoints[supportPointOffset + k] - targetPoints[targetPointOffset + k]) * static_cast<int>(activeAxis.at(k));
         }
@@ -112,7 +112,7 @@ void fill_polynomial_matrix(std::shared_ptr<const DefaultExecutor> exec,
           mtx[i * dims + j] = 1;
         }
 #else
-        const unsigned int supportPointOffset = 3 * i;
+        const unsigned int supportPointOffset = (dims - 1) * i;
         if (j < dims - 1) {
           mtx[i * dims + j] = x[supportPointOffset + j];
         } else {
