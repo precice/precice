@@ -9,7 +9,14 @@ namespace precice {
 namespace {
 std::string_view toSV(precice::string_view sv)
 {
-  return {sv.data(), sv.size()};
+  // The given string_view may contain null chars.
+  // We trim to the first null char here.
+  std::string_view s{sv.data(), sv.size()};
+  auto             trim_pos = s.find('\0');
+  if (trim_pos != s.npos) {
+    s.remove_suffix(s.size() - trim_pos);
+  }
+  return s;
 }
 } // namespace
 
