@@ -6,6 +6,7 @@
 #include "com/Communication.hpp"
 #include "com/Extra.hpp"
 #include "config/MappingConfiguration.hpp"
+#include "mapping/GinkgoRadialBasisFctSolver.hpp"
 #include "mapping/RadialBasisFctBaseMapping.hpp"
 #include "mapping/RadialBasisFctSolver.hpp"
 #include "mesh/Filter.hpp"
@@ -41,11 +42,13 @@ public:
    * @param[in] xDead, yDead, zDead Deactivates mapping along an axis
    */
   RadialBasisFctMapping(
-      Mapping::Constraint     constraint,
-      int                     dimensions,
-      RADIAL_BASIS_FUNCTION_T function,
-      std::array<bool, 3>     deadAxis,
-      Polynomial              polynomial);
+      Mapping::Constraint                          constraint,
+      int                                          dimensions,
+      RADIAL_BASIS_FUNCTION_T                      function,
+      std::array<bool, 3>                          deadAxis,
+      Polynomial                                   polynomial,
+      const bool                                   useEigen        = true,
+      const MappingConfiguration::GinkgoParameter &ginkgoParameter = MappingConfiguration::GinkgoParameter());
 
   /// Computes the mapping coefficients from the in- and output mesh.
   void computeMapping() final override;
@@ -59,7 +62,12 @@ public:
 private:
   precice::logging::Logger _log{"mapping::RadialBasisFctMapping"};
 
+#ifndef PRECICE_NO_GINKGO
+  GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T> _ginkgoRbfSolver;
+#endif
+
   RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T> _rbfSolver;
+
   /// @copydoc RadialBasisFctBaseMapping::mapConservative
   void mapConservative(DataID inputDataID, DataID outputDataID) final override;
 
@@ -68,19 +76,29 @@ private:
 
   /// Treatment of the polynomial
   Polynomial _polynomial;
+
+  /// Determines which backend to use (Eigen or Ginkgo)
+  bool _useEigen;
+
+  /// Ginkgo Configuration
+  MappingConfiguration::GinkgoParameter _ginkgoParameter;
 };
 
 // --------------------------------------------------- HEADER IMPLEMENTATIONS
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctMapping(
-    Mapping::Constraint     constraint,
-    int                     dimensions,
-    RADIAL_BASIS_FUNCTION_T function,
-    std::array<bool, 3>     deadAxis,
-    Polynomial              polynomial)
+    Mapping::Constraint                          constraint,
+    int                                          dimensions,
+    RADIAL_BASIS_FUNCTION_T                      function,
+    std::array<bool, 3>                          deadAxis,
+    Polynomial                                   polynomial,
+    const bool                                   useEigen,
+    const MappingConfiguration::GinkgoParameter &ginkgoParameter)
     : RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>(constraint, dimensions, function, deadAxis),
-      _polynomial(polynomial)
+      _polynomial(polynomial),
+      _useEigen(useEigen),
+      _ginkgoParameter(ginkgoParameter)
 {
   PRECICE_CHECK(!(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite() && polynomial == Polynomial::ON), "The integrated polynomial (polynomial=\"on\") is not supported for the selected radial-basis function. Please select another radial-basis function or change the polynomial configuration.");
 }
@@ -148,8 +166,17 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       globalOutMesh.addMesh(*outMesh);
     }
 
-    _rbfSolver = RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>{this->_basisFunction, globalInMesh, boost::irange<Eigen::Index>(0, globalInMesh.vertices().size()),
-                                                               globalOutMesh, boost::irange<Eigen::Index>(0, globalOutMesh.vertices().size()), this->_deadAxis, _polynomial};
+    if (_useEigen) {
+      _rbfSolver = RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>{this->_basisFunction, globalInMesh, boost::irange<Eigen::Index>(0, globalInMesh.vertices().size()),
+                                                                 globalOutMesh, boost::irange<Eigen::Index>(0, globalOutMesh.vertices().size()), this->_deadAxis, _polynomial};
+    }
+#ifndef PRECICE_NO_GINKGO
+    else {
+      _ginkgoRbfSolver.~GinkgoRadialBasisFctSolver();
+      new (&_ginkgoRbfSolver) GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>{this->_basisFunction, globalInMesh, boost::irange<Eigen::Index>(0, globalInMesh.vertices().size()),
+                                                                                  globalOutMesh, boost::irange<Eigen::Index>(0, globalOutMesh.vertices().size()), this->_deadAxis, _polynomial, _ginkgoParameter};
+    }
+#endif
   }
   this->_hasComputedMapping = true;
   PRECICE_DEBUG("Compute Mapping is Completed.");
@@ -229,7 +256,18 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(DataID inpu
     // Construct Eigen vectors
     Eigen::Map<Eigen::VectorXd> inputValues(globalInValues.data(), globalInValues.size());
     Eigen::VectorXd             outputValues((this->output()->getGlobalNumberOfVertices()) * valueDim);
-    Eigen::VectorXd             in(_rbfSolver.getEvaluationMatrix().rows()); // rows == outputSize
+
+    Eigen::VectorXd in; // rows == outputSize
+
+    if (_useEigen) {
+      in.resize(_rbfSolver.getEvaluationMatrix().rows()); // rows == outputSize
+    }
+#ifndef PRECICE_NO_GINKGO
+    else {
+      in.resize(_ginkgoRbfSolver.getEvaluationMatrix()->get_size()[0]); // rows == outputSize
+    };
+#endif
+
     outputValues.setZero();
 
     for (int dim = 0; dim < valueDim; dim++) {
@@ -237,7 +275,16 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(DataID inpu
         in[i] = inputValues(i * valueDim + dim);
       }
 
-      Eigen::VectorXd out = _rbfSolver.solveConservative(in, _polynomial);
+      Eigen::VectorXd out;
+
+      if (_useEigen) {
+        out = _rbfSolver.solveConservative(in, _polynomial);
+      }
+#ifndef PRECICE_NO_GINKGO
+      else {
+        out = _ginkgoRbfSolver.solveConservative(in, _polynomial);
+      }
+#endif
 
       // Copy mapped data to output data values
       for (int i = 0; i < this->output()->getGlobalNumberOfVertices(); i++) {
@@ -336,13 +383,33 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inputD
       outValuesSize.push_back(this->output()->data(outputDataID)->values().size());
     }
 
-    Eigen::VectorXd in(_rbfSolver.getEvaluationMatrix().cols()); // rows == n
+    Eigen::VectorXd in;
+
+    if (_useEigen) {
+      in.resize(_rbfSolver.getEvaluationMatrix().cols()); // rows == n
+    }
+#ifndef PRECICE_NO_GINKGO
+    else {
+      in.resize(_ginkgoRbfSolver.getEvaluationMatrix()->get_size()[1]); // rows == n
+    }
+#endif
+
     in.setZero();
 
     // Construct Eigen vectors
     Eigen::Map<Eigen::VectorXd> inputValues(globalInValues.data(), globalInValues.size());
 
-    Eigen::VectorXd outputValues((_rbfSolver.getEvaluationMatrix().rows()) * valueDim);
+    Eigen::VectorXd outputValues;
+
+    if (_useEigen) {
+      outputValues.resize((_rbfSolver.getEvaluationMatrix().rows()) * valueDim);
+    }
+#ifndef PRECICE_NO_GINKGO
+    else {
+      outputValues.resize((_ginkgoRbfSolver.getEvaluationMatrix()->get_size()[0]) * valueDim);
+    }
+#endif
+
     Eigen::VectorXd out;
     outputValues.setZero();
 
@@ -353,7 +420,14 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inputD
         in[i] = inputValues[i * valueDim + dim];
       }
 
-      out = _rbfSolver.solveConsistent(in, _polynomial);
+      if (_useEigen) {
+        out = _rbfSolver.solveConsistent(in, _polynomial);
+      }
+#ifndef PRECICE_NO_GINKGO
+      else {
+        out = _ginkgoRbfSolver.solveConsistent(in, _polynomial);
+      }
+#endif
 
       // Copy mapped data to output data values
       for (int i = 0; i < out.size(); i++) {

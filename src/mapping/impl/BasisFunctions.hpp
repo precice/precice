@@ -1,10 +1,43 @@
 #pragma once
 
+#if defined(__NVCC__)
+
+#include <cuda_runtime.h>
+#define BOOST_PP_VARIADICS 1
+#define PRECICE_HOST_DEVICE __host__ __device__
+#define PRECICE_MEMORY_SPACE __device__
+#define FMA fma
+
+#elif defined(__HIPCC__)
+
+#define __HIP_PLATFORM_AMD__
+//#include <hip/hip_runtime_api.h>
+#include <hip/hip_runtime.h>
+#define PRECICE_HOST_DEVICE __host__ __device__
+#define PRECICE_MEMORY_SPACE __device__
+#define FMA fma
+
+#else
+
+#define PRECICE_HOST_DEVICE
+#define PRECICE_MEMORY_SPACE
+#define FMA std::fma
+
+#endif
+
+PRECICE_MEMORY_SPACE const double NUMERICAL_ZERO_DIFFERENCE = 1.0e-14;
+
 #include "logging/Logger.hpp"
 #include "math/math.hpp"
 
 namespace precice {
 namespace mapping {
+
+struct RadialBasisParameters {
+  double parameter1;
+  double parameter2;
+  double parameter3;
+};
 
 /// Base class for RBF with compact support
 struct CompactSupportBase {
@@ -50,10 +83,28 @@ struct DefiniteFunction {
 class ThinPlateSplines : public NoCompactSupportBase,
                          public DefiniteFunction<false> {
 public:
+  ThinPlateSplines()                            = default;
+  ThinPlateSplines(const ThinPlateSplines &tps) = default;
+  ~ThinPlateSplines()                           = default;
+
   double evaluate(double radius) const
   {
-    return std::log(std::max(radius, math::NUMERICAL_ZERO_DIFFERENCE)) * math::pow_int<2>(radius);
+    return operator()(radius, _params);
   }
+
+  PRECICE_HOST_DEVICE inline double operator()(const double radius, const RadialBasisParameters params) const
+  {
+    // We don't need to read any values from params since there is no need here
+    return std::log(std::max(radius, NUMERICAL_ZERO_DIFFERENCE)) * math::pow_int<2>(radius);
+  }
+
+  RadialBasisParameters getFunctionParameters()
+  {
+    return _params;
+  }
+
+private:
+  RadialBasisParameters _params;
 };
 
 /**
@@ -67,15 +118,33 @@ class Multiquadrics : public NoCompactSupportBase,
                       public DefiniteFunction<false> {
 public:
   explicit Multiquadrics(double c)
-      : _cPow2(std::pow(c, 2)) {}
+      : _cPow2(math::pow_int<2>(c))
+  {
+    _params.parameter1 = _cPow2;
+  }
+
+  Multiquadrics(const Multiquadrics &m) = default;
+  ~Multiquadrics()                      = default;
 
   double evaluate(double radius) const
   {
-    return std::sqrt(_cPow2 + math::pow_int<2>(radius));
+    return operator()(radius, _params);
+  }
+
+  PRECICE_HOST_DEVICE inline double operator()(const double radius, const RadialBasisParameters params) const
+  {
+    double cPow2 = params.parameter1;
+    return std::sqrt(cPow2 + math::pow_int<2>(radius));
+  }
+
+  RadialBasisParameters getFunctionParameters()
+  {
+    return _params;
   }
 
 private:
-  double _cPow2;
+  double                _cPow2;
+  RadialBasisParameters _params;
 };
 
 /**
@@ -90,21 +159,39 @@ class InverseMultiquadrics : public NoCompactSupportBase,
                              public DefiniteFunction<true> {
 public:
   explicit InverseMultiquadrics(double c)
-      : _cPow2(std::pow(c, 2))
+      : _cPow2(math::pow_int<2>(c))
   {
+#if !defined(__NVCC__) || !defined(__HIPCC__)
+    logging::Logger _log{"mapping::InverseMultiQuadrics"};
     PRECICE_CHECK(math::greater(c, 0.0),
                   "Shape parameter for radial-basis-function inverse multiquadric has to be larger than zero. Please update the \"shape-parameter\" attribute.");
+#endif
+    _params.parameter1 = _cPow2;
   }
+
+  InverseMultiquadrics(const InverseMultiquadrics &im) = default;
+  ~InverseMultiquadrics()                              = default;
 
   double evaluate(double radius) const
   {
-    return 1.0 / std::sqrt(_cPow2 + math::pow_int<2>(radius));
+    return operator()(radius, _params);
+  }
+
+  PRECICE_HOST_DEVICE inline double operator()(const double radius, const RadialBasisParameters params) const
+  {
+    double cPow2 = params.parameter1;
+    return 1.0 / std::sqrt(cPow2 + math::pow_int<2>(radius));
+  }
+
+  RadialBasisParameters getFunctionParameters()
+  {
+    return _params;
   }
 
 private:
-  logging::Logger _log{"mapping::InverseMultiQuadrics"};
-
   double const _cPow2;
+
+  RadialBasisParameters _params;
 };
 
 /**
@@ -117,10 +204,27 @@ private:
 class VolumeSplines : public NoCompactSupportBase,
                       public DefiniteFunction<false> {
 public:
+  VolumeSplines()                        = default;
+  VolumeSplines(const VolumeSplines &vs) = default;
+  ~VolumeSplines()                       = default;
+
   double evaluate(double radius) const
+  {
+    return operator()(radius, _params);
+  }
+
+  PRECICE_HOST_DEVICE inline double operator()(const double radius, const RadialBasisParameters params) const
   {
     return std::abs(radius);
   }
+
+  RadialBasisParameters getFunctionParameters()
+  {
+    return _params;
+  }
+
+private:
+  RadialBasisParameters _params;
 };
 
 /**
@@ -138,17 +242,26 @@ public:
       : _shape(shape),
         _supportRadius(supportRadius)
   {
+#if !defined(__NVCC__) || !defined(__HIPCC__)
+    logging::Logger _log{"mapping::Gaussian"};
     PRECICE_CHECK(math::greater(_shape, 0.0),
                   "Shape parameter for radial-basis-function gaussian has to be larger than zero. Please update the \"shape-parameter\" attribute.");
     PRECICE_CHECK(math::greater(_supportRadius, 0.0),
                   "Support radius for radial-basis-function gaussian has to be larger than zero. Please update the \"support-radius\" attribute.");
+#endif
 
     if (supportRadius < std::numeric_limits<double>::infinity()) {
       _deltaY = evaluate(supportRadius);
     }
-    double threshold = std::sqrt(-std::log(cutoffThreshold)) / shape;
-    _supportRadius   = std::min(supportRadius, threshold);
+    double threshold   = std::sqrt(-std::log(cutoffThreshold)) / shape;
+    _supportRadius     = std::min(supportRadius, threshold);
+    _params.parameter1 = _shape;
+    _params.parameter2 = _supportRadius;
+    _params.parameter3 = _deltaY;
   }
+
+  Gaussian(const Gaussian &g) = default;
+  ~Gaussian()                 = default;
 
   double getSupportRadius() const
   {
@@ -157,24 +270,42 @@ public:
 
   double evaluate(const double radius) const
   {
-    if (radius > _supportRadius)
-      return 0.0;
-    else
-      return std::exp(-math::pow_int<2>(_shape * radius)) - _deltaY;
+    return operator()(radius, _params);
   }
 
+  PRECICE_HOST_DEVICE inline double operator()(const double radius, const RadialBasisParameters params) const
+  {
+    {
+      double shape         = params.parameter1;
+      double supportRadius = params.parameter2;
+      double deltaY        = params.parameter3;
+
+      if (radius > supportRadius) {
+        return 0.0;
+      } else {
+        return std::exp(-math::pow_int<2>(shape * radius)) - deltaY;
+      }
+    }
+  }
+
+  RadialBasisParameters getFunctionParameters()
+  {
+    return _params;
+  };
+
+public:
   /// Below that value the function is supposed to be zero. Defines the support radius if not explicitly given
   static constexpr double cutoffThreshold = 1e-9;
 
 private:
-  logging::Logger _log{"mapping::Gaussian"};
-
   double const _shape;
 
   /// Either explicitly set (from cutoffThreshold) or computed supportRadius
   double _supportRadius;
 
   double _deltaY = 0;
+
+  RadialBasisParameters _params;
 };
 
 /**
@@ -193,10 +324,17 @@ class CompactThinPlateSplinesC2 : public CompactSupportBase,
 public:
   explicit CompactThinPlateSplinesC2(double supportRadius)
   {
+#if !defined(__NVCC__) || !defined(__HIPCC__)
+    logging::Logger _log{"mapping::CompactThinPlateSplinesC2"};
     PRECICE_CHECK(math::greater(supportRadius, 0.0),
                   "Support radius for radial-basis-function compact thin-plate-splines c2 has to be larger than zero. Please update the \"support-radius\" attribute.");
-    _r_inv = 1. / supportRadius;
+#endif
+    _r_inv             = 1. / supportRadius;
+    _params.parameter1 = _r_inv;
   }
+
+  CompactThinPlateSplinesC2(const CompactThinPlateSplinesC2 &ctps) = default;
+  ~CompactThinPlateSplinesC2()                                     = default;
 
   double getSupportRadius() const
   {
@@ -205,16 +343,28 @@ public:
 
   double evaluate(double radius) const
   {
-    double const p = radius * _r_inv;
-    if (p >= 1)
+    return operator()(radius, _params);
+  }
+
+  PRECICE_HOST_DEVICE inline double operator()(const double radius, const RadialBasisParameters params) const
+  {
+    double       r_inv = params.parameter1;
+    double const p     = radius * r_inv;
+    if (p >= 1) {
       return 0.0;
-    return 1.0 - 30.0 * math::pow_int<2>(p) - 10.0 * math::pow_int<3>(p) + 45.0 * math::pow_int<4>(p) - 6.0 * math::pow_int<5>(p) - math::pow_int<3>(p) * 60.0 * std::log(std::max(p, math::NUMERICAL_ZERO_DIFFERENCE));
+    } else {
+      return 1.0 - 30.0 * math::pow_int<2>(p) - 10.0 * math::pow_int<3>(p) + 45.0 * math::pow_int<4>(p) - 6.0 * math::pow_int<5>(p) - math::pow_int<3>(p) * 60.0 * std::log(std::max(p, NUMERICAL_ZERO_DIFFERENCE));
+    }
+  }
+
+  RadialBasisParameters getFunctionParameters()
+  {
+    return _params;
   }
 
 private:
-  logging::Logger _log{"mapping::CompactThinPlateSplinesC2"};
-
-  double _r_inv;
+  double                _r_inv;
+  RadialBasisParameters _params;
 };
 
 /**
@@ -232,11 +382,17 @@ class CompactPolynomialC0 : public CompactSupportBase,
 public:
   explicit CompactPolynomialC0(double supportRadius)
   {
+#if !defined(__NVCC__) || !defined(__HIPCC__)
     logging::Logger _log{"mapping::CompactPolynomialC0"};
     PRECICE_CHECK(math::greater(supportRadius, 0.0),
                   "Support radius for radial-basis-function compact polynomial c0 has to be larger than zero. Please update the \"support-radius\" attribute.");
-    _r_inv = 1. / supportRadius;
+#endif
+    _r_inv             = 1. / supportRadius;
+    _params.parameter1 = _r_inv;
   }
+
+  CompactPolynomialC0(const CompactPolynomialC0 &cp) = default;
+  ~CompactPolynomialC0()                             = default;
 
   double getSupportRadius() const
   {
@@ -245,14 +401,28 @@ public:
 
   double evaluate(double radius) const
   {
-    double p = radius * _r_inv;
-    if (p >= 1)
+    return operator()(radius, _params);
+  }
+
+  PRECICE_HOST_DEVICE inline double operator()(const double radius, const RadialBasisParameters params) const
+  {
+    double       r_inv = params.parameter1;
+    double const p     = radius * r_inv;
+    if (p >= 1) {
       return 0.0;
-    return math::pow_int<2>(1.0 - p);
+    } else {
+      return math::pow_int<2>(1.0 - p);
+    }
+  }
+
+  RadialBasisParameters getFunctionParameters()
+  {
+    return _params;
   }
 
 private:
-  double _r_inv;
+  double                _r_inv;
+  RadialBasisParameters _params;
 };
 
 /**
@@ -270,12 +440,18 @@ class CompactPolynomialC2 : public CompactSupportBase,
 public:
   explicit CompactPolynomialC2(double supportRadius)
   {
+#if !defined(__NVCC__) || !defined(__HIPCC__)
     logging::Logger _log{"mapping::CompactPolynomialC2"};
     PRECICE_CHECK(math::greater(supportRadius, 0.0),
                   "Support radius for radial-basis-function compact polynomial c2 has to be larger than zero. Please update the \"support-radius\" attribute.");
+#endif
 
-    _r_inv = 1. / supportRadius;
+    _r_inv             = 1. / supportRadius;
+    _params.parameter1 = _r_inv;
   }
+
+  CompactPolynomialC2(const CompactPolynomialC2 &cp) = default;
+  ~CompactPolynomialC2()                             = default;
 
   double getSupportRadius() const
   {
@@ -284,14 +460,28 @@ public:
 
   double evaluate(double radius) const
   {
-    double p = radius * _r_inv;
-    if (p >= 1)
+    return operator()(radius, _params);
+  }
+
+  PRECICE_HOST_DEVICE inline double operator()(const double radius, const RadialBasisParameters params) const
+  {
+    double       r_inv = params.parameter1;
+    double const p     = radius * r_inv;
+    if (p >= 1) {
       return 0.0;
-    return math::pow_int<4>(1.0 - p) * (4 * p + 1);
+    } else {
+      return math::pow_int<4>(1.0 - p) * FMA(4, p, 1);
+    }
+  }
+
+  RadialBasisParameters getFunctionParameters()
+  {
+    return _params;
   }
 
 private:
-  double _r_inv;
+  double                _r_inv;
+  RadialBasisParameters _params;
 };
 
 /**
@@ -309,12 +499,18 @@ class CompactPolynomialC4 : public CompactSupportBase,
 public:
   explicit CompactPolynomialC4(double supportRadius)
   {
+#if !defined(__NVCC__) || !defined(__HIPCC__)
     logging::Logger _log{"mapping::CompactPolynomialC4"};
     PRECICE_CHECK(math::greater(supportRadius, 0.0),
                   "Support radius for radial-basis-function compact polynomial c4 has to be larger than zero. Please update the \"support-radius\" attribute.");
+#endif
 
-    _r_inv = 1. / supportRadius;
+    _r_inv             = 1. / supportRadius;
+    _params.parameter1 = _r_inv;
   }
+
+  CompactPolynomialC4(const CompactPolynomialC4 &cp) = default;
+  ~CompactPolynomialC4()                             = default;
 
   double getSupportRadius() const
   {
@@ -323,14 +519,28 @@ public:
 
   double evaluate(double radius) const
   {
-    double p = radius * _r_inv;
-    if (p >= 1)
+    return operator()(radius, _params);
+  }
+
+  PRECICE_HOST_DEVICE inline double operator()(const double radius, const RadialBasisParameters params) const
+  {
+    double       r_inv = params.parameter1;
+    double const p     = radius * r_inv;
+    if (p >= 1) {
       return 0.0;
-    return math::pow_int<6>(1.0 - p) * (35 * math::pow_int<2>(p) + 18 * p + 3);
+    } else {
+      return math::pow_int<6>(1.0 - p) * FMA(35, math::pow_int<2>(p), FMA(18, p, 3));
+    }
+  }
+
+  RadialBasisParameters getFunctionParameters()
+  {
+    return _params;
   }
 
 private:
-  double _r_inv;
+  double                _r_inv;
+  RadialBasisParameters _params;
 };
 
 /**
@@ -348,12 +558,17 @@ class CompactPolynomialC6 : public CompactSupportBase,
 public:
   explicit CompactPolynomialC6(double supportRadius)
   {
+#if !defined(__NVCC__) || !defined(__HIPCC__)
     logging::Logger _log{"mapping::CompactPolynomialC6"};
     PRECICE_CHECK(math::greater(supportRadius, 0.0),
                   "Support radius for radial-basis-function compact polynomial c6 has to be larger than zero. Please update the \"support-radius\" attribute.");
-
-    _r_inv = 1. / supportRadius;
+#endif
+    _r_inv             = 1. / supportRadius;
+    _params.parameter1 = _r_inv;
   }
+
+  CompactPolynomialC6(const CompactPolynomialC6 &cp) = default;
+  ~CompactPolynomialC6()                             = default;
 
   double getSupportRadius() const
   {
@@ -362,14 +577,28 @@ public:
 
   double evaluate(double radius) const
   {
-    double p = radius * _r_inv;
-    if (p >= 1)
+    return operator()(radius, _params);
+  }
+
+  PRECICE_HOST_DEVICE inline double operator()(const double radius, const RadialBasisParameters params) const
+  {
+    double       r_inv = params.parameter1;
+    double const p     = radius * r_inv;
+    if (p >= 1) {
       return 0.0;
-    return math::pow_int<8>(1.0 - p) * (32.0 * math::pow_int<3>(p) + 25.0 * math::pow_int<2>(p) + 8.0 * p + 1.0);
+    } else {
+      return math::pow_int<8>(1.0 - p) * FMA(32.0, math::pow_int<3>(p), FMA(25.0, math::pow_int<2>(p), FMA(8.0, p, 1.0)));
+    }
+  };
+
+  const RadialBasisParameters getFunctionParameters()
+  {
+    return _params;
   }
 
 private:
-  double _r_inv;
+  double                _r_inv;
+  RadialBasisParameters _params;
 };
 } // namespace mapping
 } // namespace precice

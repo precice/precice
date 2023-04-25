@@ -55,6 +55,7 @@ endif()
 
 option(PRECICE_MPICommunication "Enables MPI-based communication and running coupling tests." ON)
 option(PRECICE_PETScMapping "Enable use of the PETSc linear algebra library." ON)
+option(PRECICE_GinkgoParallelization "Enable use of the Ginkgo linear algebra library for parallelization." OFF)
 option(PRECICE_PythonActions "Python support" ON)
 option(PRECICE_Packages "Configure package generation." ON)
 option(BUILD_SHARED_LIBS "Build shared instead of static libraries" ON)
@@ -107,6 +108,15 @@ add_feature_info(PETScMapping PRECICE_PETScMapping
 
    This feature can be enabled/disabled by setting the PRECICE_PETScMapping CMake option.
    Requires MPICommunication.
+  ")
+  add_feature_info(GinkgoParallelization PRECICE_GinkgoParallelization
+  "Enables the Ginkgo library backend which supports the usage of GPUs and OpenMP in radial basis function mappings.
+
+   Currently, this enables radial basis function mappings to leverage the compute power of Nvidia and AMD GPUs.
+   It uses iterative solvers to compute the solution of interpolation problems.
+
+   This feature can be enabled/disabled by setting the PRECICE_GinkgoParallelization CMake option.
+   Requires the Ginkgo library.
   ")
 add_feature_info(PythonActions PRECICE_PythonActions
   "Enables the support for user-defined python actions.
@@ -236,6 +246,81 @@ else()
   message(STATUS "PETSc support disabled")
 endif()
 
+# Option: Ginkgo
+if (PRECICE_GinkgoParallelization)
+
+  # Check if CUDA is available on the system
+  include(CheckLanguage)
+  check_language(CUDA)
+
+  # Enable CUDA if driver and libraries are available; otherwise it'll be ignored
+  if(CMAKE_CUDA_COMPILER)
+    enable_language(CUDA)
+    set(CMAKE_CUDA_STANDARD 17)
+    set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+    set(CMAKE_CUDA_FLAGS "-lineinfo --allow-unsupported-compiler --use_fast_math --std=c++17 --expt-extended-lambda --expt-relaxed-constexpr -Xcompiler -fopenmp -Wall")
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+    set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
+    message(STATUS "Enabled CUDA support for Ginkgo library.")
+
+    add_compile_definitions("PRECICE_WITH_CUDA")
+
+  endif()
+
+  if(NOT DEFINED HIP_PATH)
+      set(HIP_PATH "/opt/rocm/hip" CACHE PATH "Path to which HIP has been installed")
+   endif()
+
+  if(NOT DEFINED ROCM_PATH)
+     set(ROCM_PATH "/opt/rocm" CACHE PATH "Path to which ROCM has been installed")
+  endif()
+
+  if(NOT DEFINED HCC_PATH)
+      set(HCC_PATH "${ROCM_PATH}/hcc" CACHE PATH "Path to which HCC has been installed")
+  endif()
+
+  if(NOT DEFINED HIP_CLANG_PATH)
+      set(HIP_CLANG_PATH "${ROCM_PATH}/llvm/bin" CACHE PATH "Path to which HIP compatible clang binaries have been installed")
+  endif()
+
+  find_package(HIP QUIET)
+
+  if(HIP_FOUND)
+      set(CMAKE_MODULE_PATH "${HIP_PATH}/cmake" ${CMAKE_MODULE_PATH})
+      list(APPEND CMAKE_PREFIX_PATH
+     	"${HIP_PATH}/lib/cmake"
+      	"${HIP_PATH}/../lib/cmake"
+      )
+
+      include(${HIP_PATH}/cmake/FindHIP.cmake)
+
+      set_target_properties(hip::device PROPERTIES INTERFACE_COMPILE_OPTIONS "-fPIC")
+      set_target_properties(hip::device PROPERTIES INTERFACE_LINK_LIBRARIES "hip::host")
+
+      set(CMAKE_HIP_FLAGS "-fPIC -Wno-deprecated-register -w -fgpu-rdc")
+      set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+      set(GINKGO_HIPCC_OPTIONS "-fPIC")
+
+      find_package(hipsolver)
+
+      message(STATUS "Enabled AMD HIP support for Ginkgo library.")
+
+      add_compile_definitions("PRECICE_WITH_HIP")
+  endif()
+
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+
+  include_directories(${EIGEN3_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/fmt/include)
+
+  # Check if OpenMP is available
+  find_package(OpenMP)
+  if(OpenMP_FOUND)
+    message(STATUS "Enabled OpenMP support for Ginkgo library.")
+  endif()
+
+endif()
+
 # Option Python
 if (PRECICE_PythonActions)
   find_package(Python3 REQUIRED COMPONENTS Development NumPy)
@@ -338,6 +423,37 @@ else()
   target_compile_definitions(preciceCore PUBLIC PRECICE_NO_PETSC)
 endif()
 
+# Setup Ginkgo
+if (PRECICE_GinkgoParallelization)
+  set(CMAKE_CXX_FLAGS "-fPIC")
+  include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
+  set(Ginkgo_Path "" CACHE STRING "Path to the experimental Ginkgo Repository of branch a195f856e.") # TODO: Remove as soon as GPU feature is in main branch
+  find_package(Ginkgo REQUIRED HINTS "${Ginkgo_Path}/build" NO_CMAKE_SYSTEM_PATH)
+  target_include_directories(preciceCore PUBLIC "${Ginkgo_Path}/include")
+  include(${Ginkgo_Path}/cmake/unified_kernels.cmake)
+  file(GLOB ginkgo_lib "${Ginkgo_Path}/build/lib/*")
+
+  # This command registers Ginkgo kernels for different execution backends
+  ginkgo_add_unified_kernels(preciceCore src/mapping/ginkgo_kernels/GinkgoRBFKernels.cpp)
+
+  # This compiles cuSolver or rocSOLVER into preCICE for GPU QR decomposition
+  if(CMAKE_CUDA_COMPILER)
+    target_sources(preciceCore PRIVATE src/mapping/cuda_kernels/qr_decomp.cu)
+    target_link_libraries(preciceCore PUBLIC ${ginkgo_lib} cusolver cublas)
+  elseif(HIP_FOUND)
+    hip_add_library(preciceHIPQR src/mapping/cuda_kernels/qr_decomp.hip.cpp HIPCC_OPTIONS "-std=c++14" CLANG_OPTIONS "-fPIC" STATIC)
+    target_link_libraries(preciceHIPQR PUBLIC ${ginkgo_lib} hip::host roc::hipsolver)
+    target_include_directories(preciceHIPQR PUBLIC "${Ginkgo_Path}/include" "/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi" "/usr/lib/x86_64-linux-gnu/openmpi/include") # TODO: Fix include path
+    target_link_libraries(preciceCore PRIVATE preciceHIPQR)
+    endif()
+
+  if(OpenMP_FOUND)
+    target_compile_options(preciceCore PUBLIC "-fopenmp")
+  endif()
+else()
+  target_compile_definitions(preciceCore PUBLIC PRECICE_NO_GINKGO)
+endif()
+
 # Option Python
 if (PRECICE_PythonActions)
   target_link_libraries(preciceCore PUBLIC Python3::NumPy Python3::Python)
@@ -399,7 +515,7 @@ set_property(TARGET precice APPEND PROPERTY PUBLIC_HEADER
 if (PRECICE_BUILD_TOOLS)
   add_executable(precice-tools "src/drivers/main.cpp")
   target_link_libraries(precice-tools
-    PRIVATE
+   PRIVATE
    precice
    )
   set_target_properties(precice-tools PROPERTIES

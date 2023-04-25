@@ -36,6 +36,18 @@ public:
     bool configuredWithAliasTag = false;
   };
 
+  struct GinkgoParameter {
+    std::string  executor            = "reference-executor";
+    std::string  solver              = "cg-solver";
+    std::string  preconditioner      = "jacobi-preconditioner";
+    double       residualNorm        = 1e-8;
+    std::size_t  maxIterations       = 1e6;
+    bool         usePreconditioner   = true;
+    unsigned int jacobiBlockSize     = 4;
+    unsigned int deviceId            = 0;
+    bool         enableUnifiedMemory = false;
+  };
+
   MappingConfiguration(
       xml::XMLTag &              parent,
       mesh::PtrMeshConfiguration meshConfiguration);
@@ -133,7 +145,6 @@ private:
 
   // For iterative RBFs
   const std::string ATTR_SOLVER_RTOL = "solver-rtol";
-  // const std::string ATTR_MAX_ITERATIONS="";
 
   const std::string ATTR_PREALLOCATION     = "preallocation";
   const std::string PREALLOCATION_ESTIMATE = "estimate";
@@ -141,6 +152,16 @@ private:
   const std::string PREALLOCATION_SAVE     = "save";
   const std::string PREALLOCATION_TREE     = "tree";
   const std::string PREALLOCATION_OFF      = "off";
+
+  // For iterative RBFs using Ginkgo
+  const std::string ATTR_EXECUTOR              = "executor";
+  const std::string ATTR_DEVICE_ID             = "gpu-device-id";
+  const std::string ATTR_ENABLE_UNIFIED_MEMORY = "enable-unified-memory";
+  const std::string ATTR_SOLVER                = "solver";
+  const std::string ATTR_USE_PRECONDITIONER    = "use-preconditioner";
+  const std::string ATTR_PRECONDITIONER        = "preconditioner";
+  const std::string ATTR_JACOBI_BLOCK_SIZE     = "jacobi-block-size";
+  const std::string ATTR_MAX_ITERATIONS        = "max-iterations";
 
   // For the future
   // const std::string ATTR_PARALLELISM           = "parallelism";
@@ -182,6 +203,9 @@ private:
   // which is configured in the subtag
   RBFConfiguration _rbfConfig;
 
+  // Settings for the iterative solvers provided by Ginkgo
+  GinkgoParameter _ginkgoParameter;
+
   /**
    * Configures and instantiates all mappings, which do not require
    * a subtag/ a basis function. For the RBF related mappings, this class
@@ -197,11 +221,11 @@ private:
       const std::string &toMeshName) const;
 
   /**
- * Stores additional information about the requested RBF mapping such as the
- * configured polynomial and the solver type, which is not required for all
- * the other mapping types. The information is then used later when instantiating
- * the RBF mappings in \ref xmlTagCallback().
- */
+   * Stores additional information about the requested RBF mapping such as the
+   * configured polynomial and the solver type, which is not required for all
+   * the other mapping types. The information is then used later when instantiating
+   * the RBF mappings in \ref xmlTagCallback().
+   */
   RBFConfiguration configureRBFMapping(const std::string &type,
                                        const std::string &polynomial,
                                        const std::string &preallocation,

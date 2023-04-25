@@ -56,6 +56,7 @@ void addAttributes(TagStorage &storage, const std::vector<variant_t> &attributes
 enum struct RBFBackend {
   Eigen,
   PETSc,
+  Ginkgo,
   PUM
 };
 
@@ -80,6 +81,13 @@ struct BackendSelector<RBFBackend::PETSc, RBF> {
 };
 #endif
 
+// Specialization for the Ginkgo RBF backend
+#ifndef PRECICE_NO_Ginkgo
+template <typename RBF>
+struct BackendSelector<RBFBackend::Ginkgo, RBF> {
+  typedef mapping::RadialBasisFctMapping<RBF> type;
+};
+#endif
 // Specialization for the RBF PUM backend
 template <typename RBF>
 struct BackendSelector<RBFBackend::PUM, RBF> {
@@ -204,10 +212,37 @@ MappingConfiguration::MappingConfiguration(
 
   auto attrSolverRtol = makeXMLAttribute(ATTR_SOLVER_RTOL, 1e-9)
                             .setDocumentation("Solver relative tolerance for convergence");
+  auto attrMaxIterations = makeXMLAttribute(ATTR_MAX_ITERATIONS, 1e6)
+                               .setDocumentation("Maximum number of iterations of the solver");
+
   auto attrPreallocation = makeXMLAttribute(ATTR_PREALLOCATION, PREALLOCATION_TREE)
                                .setDocumentation("Sets kind of preallocation for PETSc RBF implementation")
                                .setOptions({PREALLOCATION_ESTIMATE, PREALLOCATION_COMPUTE, PREALLOCATION_OFF, PREALLOCATION_SAVE, PREALLOCATION_TREE});
 
+  auto attrExecutor = makeXMLAttribute(ATTR_EXECUTOR, "reference-executor")
+                          .setDocumentation("Specifies the execution backend used by Ginkgo.")
+                          .setOptions({"reference-executor", "omp-executor", "cuda-executor", "hip-executor"});
+
+  auto attrDeviceId = makeXMLAttribute(ATTR_DEVICE_ID, static_cast<double>(0))
+                          .setDocumentation("Specifies the ID of the GPU that should be used for the Ginkgo GPU backend.");
+
+  auto attrUnifiedMemory = makeXMLAttribute(ATTR_ENABLE_UNIFIED_MEMORY, false)
+                               .setDocumentation("If enabled, CUDA Unified Memory will be enabled which allows CUDA to dynamically access RAM.");
+
+  auto attrSolver = makeXMLAttribute(ATTR_SOLVER, "cg-solver")
+                        .setDocumentation("Specifies the iterative solver used by Ginkgo.")
+                        .setOptions({"cg-solver", "gmres-solver", "qr-solver"});
+
+  auto attrPreconditioner = makeXMLAttribute(ATTR_PRECONDITIONER, "jacobi-preconditioner")
+                                .setDocumentation("Specifies the preconditioner used by Ginkgo.")
+                                .setOptions({"jacobi-preconditioner", "cholesky-preconditioner", "no-preconditioner"});
+
+  auto attrUsePreconditioner = makeXMLAttribute(ATTR_USE_PRECONDITIONER, true)
+                                   .setDocumentation("If enabled, the Ginkgo solver will apply a preconditioner to the linear system")
+                                   .setOptions({true, false});
+
+  auto attrJacobiBlockSize = makeXMLAttribute(ATTR_JACOBI_BLOCK_SIZE, static_cast<double>(1)) // TODO: Fix datatype
+                                 .setDocumentation("Size of diagonal blocks for Jacobi preconditioner.");
   auto verticesPerCluster = XMLAttribute<int>(ATTR_VERTICES_PER_CLUSTER, 100)
                                 .setDocumentation("Average number of vertices per cluster (partition) applied in the rbf partition of unity method.");
   auto relativeOverlap = makeXMLAttribute(ATTR_RELATIVE_OVERLAP, 0.3)
@@ -218,7 +253,7 @@ MappingConfiguration::MappingConfiguration(
   // Add the relevant attributes to the relevant tags
   addAttributes(projectionTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint});
   addAttributes(rbfDirectTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead});
-  addAttributes(rbfIterativeTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead, attrSolverRtol, attrPreallocation});
+  addAttributes(rbfIterativeTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead, attrMaxIterations, attrSolverRtol, attrPreallocation, attrExecutor, attrDeviceId, attrUnifiedMemory, attrSolver, attrUsePreconditioner, attrPreconditioner, attrJacobiBlockSize});
   addAttributes(pumDirectTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPumPolynomial, attrXDead, attrYDead, attrZDead, verticesPerCluster, relativeOverlap, projectToInput});
   addAttributes(rbfAliasTag, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrXDead, attrYDead, attrZDead});
 
@@ -329,6 +364,16 @@ void MappingConfiguration::xmlTagCallback(
 
     _rbfConfig = configureRBFMapping(type, strPolynomial, strPrealloc, xDead, yDead, zDead, solverRtol, verticesPerCluster, relativeOverlap, projectToInput);
 
+    _ginkgoParameter.residualNorm        = _rbfConfig.solverRtol;
+    _ginkgoParameter.executor            = tag.getStringAttributeValue(ATTR_EXECUTOR, "reference-executor");
+    _ginkgoParameter.solver              = tag.getStringAttributeValue(ATTR_SOLVER, "cg-solver");
+    _ginkgoParameter.preconditioner      = tag.getStringAttributeValue(ATTR_PRECONDITIONER, "jacobi-preconditioner");
+    _ginkgoParameter.usePreconditioner   = tag.getBooleanAttributeValue(ATTR_USE_PRECONDITIONER, true);
+    _ginkgoParameter.jacobiBlockSize     = tag.getDoubleAttributeValue(ATTR_JACOBI_BLOCK_SIZE, 4);
+    _ginkgoParameter.maxIterations       = tag.getDoubleAttributeValue(ATTR_MAX_ITERATIONS, 1e6);
+    _ginkgoParameter.deviceId            = tag.getDoubleAttributeValue(ATTR_DEVICE_ID, 0);
+    _ginkgoParameter.enableUnifiedMemory = tag.getBooleanAttributeValue(ATTR_ENABLE_UNIFIED_MEMORY, false);
+
     checkDuplicates(configuredMapping);
     _mappings.push_back(configuredMapping);
   } else if (tag.getNamespace() == SUBTAG_BASIS_FUNCTION) {
@@ -372,6 +417,10 @@ void MappingConfiguration::xmlTagCallback(
       delete[] arg;
 
       mapping.mapping = getRBFMapping<RBFBackend::PETSc>(basisFunction, constraintValue, mapping.fromMesh->getDimensions(), supportRadius, shapeParameter, _rbfConfig.deadAxis, _rbfConfig.solverRtol, _rbfConfig.polynomial, _rbfConfig.preallocation);
+
+#elif !defined(PRECICE_NO_GINKGO)
+      mapping.mapping = getRBFMapping<RBFBackend::Ginkgo>(basisFunction, constraintValue, mapping.fromMesh->getDimensions(), supportRadius, shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, false, _ginkgoParameter);
+
 #else
       PRECICE_CHECK(false, "The global-iterative RBF solver requires a preCICE build with PETSc enabled.");
 #endif
