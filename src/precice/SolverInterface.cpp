@@ -57,9 +57,14 @@ void SolverInterface::finalize()
   return _impl->finalize();
 }
 
-int SolverInterface::getDimensions() const
+int SolverInterface::getMeshDimensions(::precice::string_view meshName) const
 {
-  return _impl->getDimensions();
+  return _impl->getMeshDimensions(toSV(meshName));
+}
+
+int SolverInterface::getDataDimensions(::precice::string_view meshName, ::precice::string_view dataName) const
+{
+  return _impl->getDataDimensions(toSV(meshName), toSV(dataName));
 }
 
 bool SolverInterface::isCouplingOngoing() const

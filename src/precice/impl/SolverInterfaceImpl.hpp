@@ -104,8 +104,11 @@ public:
   ///@name Status Queries
   ///@{
 
-  /// @copydoc SolverInterface::getDimensions
-  int getDimensions() const;
+  /// @copydoc SolverInterface::getMeshDimensions
+  int getMeshDimensions(std::string_view meshName) const;
+
+  /// @copydoc SolverInterface::getDataDimensions
+  int getDataDimensions(std::string_view meshName, std::string_view dataName) const;
 
   /// @copydoc SolverInterface::isCouplingOngoing
   bool isCouplingOngoing() const;

@@ -72,15 +72,40 @@ PRECICE_API void precicef_finalize_();
 
 /**
  * Fortran syntax:
- * precicef_get_dims( INTEGER dimensions )
+ * precicef_get_mesh_dimensions_(
+ *   CHARACTER meshName(*),
+ *   INTEGER   dimensions)
  *
- * IN:  -
+ * IN:  mesh, meshNameLength
  * OUT: dimensions
  *
- * @copydoc precice::SolverInterface::getDimensions()
+ * @copydoc precice::SolverInterface::getMeshDimensions()
  *
  */
-PRECICE_API void precicef_get_dims_(int *dimensions);
+PRECICE_API void precicef_get_mesh_dimensions_(
+    const char *meshName,
+    int *       dimensions,
+    int         meshNameLength);
+
+/**
+ * Fortran syntax:
+ * precicef_get_data_dimensions_(
+ *   CHARACTER meshName(*),
+ *   CHARACTER dataName(*),
+ *   INTEGER   dimensions)
+ *
+ * IN:  mesh, data, meshNameLength, dataNameLength
+ * OUT: dimensions
+ *
+ * @copydoc precice::SolverInterface::getDataDimensions()
+ *
+ */
+PRECICE_API void precicef_get_data_dimensions_(
+    const char *meshName,
+    const char *dataName,
+    int *       dimensions,
+    int         meshNameLength,
+    int         dataNameLength);
 
 /**
  * Fortran syntax:
