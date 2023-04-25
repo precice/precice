@@ -12,12 +12,12 @@ BOOST_AUTO_TEST_CASE(ExportTimeseries)
   PRECICE_TEST("ExporterOne"_on(1_rank), "ExporterTwo"_on(2_ranks));
 
   precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-  BOOST_REQUIRE(interface.getDimensions() == 3);
 
   std::vector<precice::VertexID> vertexIds(6 / context.size, -1);
   double                         y = context.size;
   std::vector<double>            coords{0, y, 0, 1, y, 0, 2, y, 0, 3, y, 0, 4, y, 0, 5, y, 0};
   auto                           meshName = context.isNamed("ExporterOne") ? "A" : "B";
+  BOOST_REQUIRE(interface.getMeshDimensions(meshName) == 3);
 
   if (context.isNamed("ExporterOne")) {
     interface.setMeshVertices(meshName, 6, coords.data(), vertexIds.data());

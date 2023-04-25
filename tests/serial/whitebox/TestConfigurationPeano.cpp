@@ -20,7 +20,6 @@ BOOST_AUTO_TEST_CASE(TestConfigurationPeano)
   SolverInterface interfacePeano("Peano", context.config(), 0, 1);
 
   BOOST_TEST(testing::WhiteboxAccessor::impl(interfacePeano)._participants.size() == 2);
-  BOOST_TEST(interfacePeano.getDimensions() == 2);
 
   impl::PtrParticipant peano = testing::WhiteboxAccessor::impl(interfacePeano)._participants.at(0);
   BOOST_TEST(peano);
@@ -32,6 +31,8 @@ BOOST_AUTO_TEST_CASE(TestConfigurationPeano)
 
   BOOST_TEST(meshContexts.count("PeanoNodes") > 0);
   BOOST_TEST(meshContexts.count("ComsolNodes") > 0);
+  BOOST_TEST(interfacePeano.getMeshDimensions("PeanoNodes") == 2);
+  BOOST_TEST(interfacePeano.getMeshDimensions("ComsolNodes") == 2);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Whitebox

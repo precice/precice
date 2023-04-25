@@ -19,7 +19,6 @@ BOOST_AUTO_TEST_CASE(Explicit)
 
   // Set up Solverinterface
   precice::SolverInterface couplingInterface(context.name, context.config(), 0, 1);
-  BOOST_TEST(couplingInterface.getDimensions() == 2);
 
   std::vector<double> positions = {0.0, 0.0, 0.0, 0.05, 0.1, 0.1, 0.1, 0.0};
   std::vector<int>    ids(4, -1);
@@ -29,7 +28,8 @@ BOOST_AUTO_TEST_CASE(Explicit)
 
   if (context.isNamed("SolverOne")) {
     auto otherMeshName = "MeshTwo";
-    auto dataName      = "Velocities";
+    BOOST_REQUIRE(couplingInterface.getMeshDimensions(otherMeshName) == 2);
+    auto dataName = "Velocities";
 
     // Define region of interest, where we could obtain direct write access
     couplingInterface.setMeshAccessRegion(otherMeshName, boundingBox.data());
@@ -64,6 +64,7 @@ BOOST_AUTO_TEST_CASE(Explicit)
     // Query IDs
     auto meshName = "MeshTwo";
     auto dataName = "Velocities";
+    BOOST_REQUIRE(couplingInterface.getMeshDimensions(meshName) == 2);
 
     // Define the mesh
     couplingInterface.setMeshVertices(meshName, ids.size(), positions.data(), ids.data());

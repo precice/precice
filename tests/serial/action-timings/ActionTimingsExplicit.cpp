@@ -19,7 +19,6 @@ BOOST_AUTO_TEST_CASE(ActionTimingsExplicit)
   using namespace precice;
   SolverInterface interface(context.name, context.config(), 0, 1);
 
-  int         dimensions = interface.getDimensions();
   std::string meshName;
   std::string writeDataName;
   std::string readDataName;
@@ -37,6 +36,7 @@ BOOST_AUTO_TEST_CASE(ActionTimingsExplicit)
     readDataName  = "Forces";
     writeValue    = 2;
   }
+  int                 dimensions = interface.getMeshDimensions(meshName);
   std::vector<double> vertex(dimensions, 0);
   int                 vertexID = interface.setMeshVertex(meshName, vertex.data());
 

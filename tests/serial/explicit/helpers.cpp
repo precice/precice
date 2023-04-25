@@ -1,3 +1,4 @@
+#include <boost/test/unit_test_log.hpp>
 #ifndef PRECICE_NO_MPI
 
 #include "helpers.hpp"
@@ -15,19 +16,22 @@ void runTestExplicit(std::string const &configurationFileName, TestContext const
 
   SolverInterface couplingInterface(context.name, configurationFileName, 0, 1);
 
-  //was necessary to replace pre-defined geometries
-  if (context.isNamed("SolverOne") && couplingInterface.hasMesh("MeshOne")) {
+  // was necessary to replace pre-defined geometries
+  if (context.isNamed("SolverOne")) {
     auto meshName = "MeshOne";
+    BOOST_REQUIRE(couplingInterface.hasMesh(meshName));
+    BOOST_REQUIRE(couplingInterface.getMeshDimensions(meshName) == 3);
     couplingInterface.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());
     couplingInterface.setMeshVertex(meshName, Eigen::Vector3d(1.0, 0.0, 0.0).data());
   }
-  if (context.isNamed("SolverTwo") && couplingInterface.hasMesh("Test-Square")) {
+  if (context.isNamed("SolverTwo")) {
     auto meshName = "Test-Square";
+    BOOST_REQUIRE(couplingInterface.hasMesh(meshName));
+    BOOST_REQUIRE(couplingInterface.getMeshDimensions(meshName) == 3);
     couplingInterface.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());
     couplingInterface.setMeshVertex(meshName, Eigen::Vector3d(1.0, 0.0, 0.0).data());
   }
 
-  BOOST_TEST(couplingInterface.getDimensions() == 3);
   couplingInterface.initialize();
   double dt = couplingInterface.getMaxTimeStepSize();
   while (couplingInterface.isCouplingOngoing()) {

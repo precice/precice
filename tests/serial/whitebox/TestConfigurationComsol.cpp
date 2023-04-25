@@ -19,7 +19,6 @@ BOOST_AUTO_TEST_CASE(TestConfigurationComsol)
   // Test configuration for accessor "Comsol"
   SolverInterface interfaceComsol("Comsol", context.config(), 0, 1);
   BOOST_TEST(testing::WhiteboxAccessor::impl(interfaceComsol)._participants.size() == 2);
-  BOOST_TEST(interfaceComsol.getDimensions() == 2);
 
   impl::PtrParticipant comsol = testing::WhiteboxAccessor::impl(interfaceComsol)._participants.at(1);
   BOOST_TEST(comsol);
@@ -31,6 +30,8 @@ BOOST_AUTO_TEST_CASE(TestConfigurationComsol)
   BOOST_TEST(meshContexts.count("ComsolNodes") > 0);
   BOOST_TEST(meshContexts.at("ComsolNodes")->mesh->getName() == std::string("ComsolNodes"));
   BOOST_TEST(comsol->_usedMeshContexts.size() == 1);
+
+  BOOST_TEST(interfaceComsol.getMeshDimensions("ComsolNodes") == 2);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Integration
