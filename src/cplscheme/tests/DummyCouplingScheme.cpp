@@ -7,9 +7,9 @@ namespace precice::cplscheme::tests {
 
 DummyCouplingScheme::DummyCouplingScheme(
     int numberIterations,
-    int maxTimeSteps)
+    int maxTimeWindows)
     : _numberIterations(numberIterations),
-      _maxTimeSteps(maxTimeSteps)
+      _maxTimeSteps(maxTimeWindows)
 {
 }
 

@@ -18,12 +18,13 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param[in] numberIterations If 1, models and explicit coupling scheme,
-   *        otherwise and implicit one.
+   * @param[in] numberIterations If 1, models an explicit coupling scheme,
+   *        otherwise an implicit one.
+   * @param[in] maxTimeWindows Number of time windows this DummyCouplingScheme has to perform.
    */
   DummyCouplingScheme(
       int numberIterations,
-      int maxTimeSteps);
+      int maxTimeWindows);
 
   /**
    * @brief Destructor, empty.
@@ -227,13 +228,13 @@ public:
 private:
   mutable logging::Logger _log{"cplscheme::tests::DummyCouplingScheme"};
 
-  /// @brief Number of iterations performed per time step. 1 --> explicit.
+  /// @brief Number of iterations performed per time window. 1 --> explicit.
   int _numberIterations;
 
-  /// @brief Performed iterations in the current time step.
+  /// @brief Performed iterations in the current time window.
   int _iterations = 0;
 
-  /// @brief Maximal number of time steps to be performed.
+  /// @brief Maximal number of time windows to be performed.
   int _maxTimeSteps;
 
   /// @brief Performed number of time windows.

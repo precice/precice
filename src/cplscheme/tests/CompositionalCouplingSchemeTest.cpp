@@ -224,9 +224,9 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit2)
 {
   PRECICE_TEST(1_rank, Require::Events);
   int                         numberIterations = 1;
-  int                         maxTimeSteps     = 10;
-  PtrCouplingScheme           scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimeSteps));
-  PtrCouplingScheme           scheme2(new tests::DummyCouplingScheme(numberIterations, maxTimeSteps));
+  int                         maxTimeWindows   = 10;
+  PtrCouplingScheme           scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimeWindows));
+  PtrCouplingScheme           scheme2(new tests::DummyCouplingScheme(numberIterations, maxTimeWindows));
   CompositionalCouplingScheme composition;
   composition.addCouplingScheme(scheme1);
   composition.addCouplingScheme(scheme2);
@@ -250,13 +250,13 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit3)
 {
   PRECICE_TEST(1_rank, Require::Events);
   int               numberIterations = 1;
-  int               maxTimeSteps     = 10;
+  int               maxTimeWindows   = 10;
   PtrCouplingScheme scheme1(
-      new tests::DummyCouplingScheme(numberIterations, maxTimeSteps));
+      new tests::DummyCouplingScheme(numberIterations, maxTimeWindows));
   PtrCouplingScheme scheme2(
-      new tests::DummyCouplingScheme(numberIterations, maxTimeSteps));
+      new tests::DummyCouplingScheme(numberIterations, maxTimeWindows));
   PtrCouplingScheme scheme3(
-      new tests::DummyCouplingScheme(numberIterations, maxTimeSteps));
+      new tests::DummyCouplingScheme(numberIterations, maxTimeWindows));
   CompositionalCouplingScheme composition;
   composition.addCouplingScheme(scheme1);
   composition.addCouplingScheme(scheme2);
@@ -282,10 +282,10 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit2)
 {
   PRECICE_TEST(1_rank, Require::Events);
   int               numberIterations = 1;
-  int               maxTimeSteps     = 10;
-  PtrCouplingScheme scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimeSteps));
+  int               maxTimeWindows   = 10;
+  PtrCouplingScheme scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimeWindows));
   numberIterations = 2;
-  PtrCouplingScheme           scheme2(new tests::DummyCouplingScheme(numberIterations, maxTimeSteps));
+  PtrCouplingScheme           scheme2(new tests::DummyCouplingScheme(numberIterations, maxTimeWindows));
   CompositionalCouplingScheme composition;
   composition.addCouplingScheme(scheme1);
   composition.addCouplingScheme(scheme2);
@@ -324,10 +324,10 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2Explicit1)
 {
   PRECICE_TEST(1_rank, Require::Events);
   int               numberIterations = 2;
-  int               maxTimeSteps     = 10;
-  PtrCouplingScheme scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimeSteps));
+  int               maxTimeWindows   = 10;
+  PtrCouplingScheme scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimeWindows));
   numberIterations = 1;
-  PtrCouplingScheme           scheme2(new tests::DummyCouplingScheme(numberIterations, maxTimeSteps));
+  PtrCouplingScheme           scheme2(new tests::DummyCouplingScheme(numberIterations, maxTimeWindows));
   CompositionalCouplingScheme composition;
   composition.addCouplingScheme(scheme1);
   composition.addCouplingScheme(scheme2);
@@ -358,12 +358,12 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit3)
 {
   PRECICE_TEST(1_rank, Require::Events);
   int               numberIterations = 1;
-  int               maxTimeSteps     = 10;
+  int               maxTimeWindows   = 10;
   PtrCouplingScheme scheme1(
-      new tests::DummyCouplingScheme(numberIterations, maxTimeSteps));
+      new tests::DummyCouplingScheme(numberIterations, maxTimeWindows));
   numberIterations = 3;
   PtrCouplingScheme scheme2(
-      new tests::DummyCouplingScheme(numberIterations, maxTimeSteps));
+      new tests::DummyCouplingScheme(numberIterations, maxTimeWindows));
   CompositionalCouplingScheme composition;
   composition.addCouplingScheme(scheme1);
   composition.addCouplingScheme(scheme2);
@@ -394,10 +394,10 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit3Explicit1)
 {
   PRECICE_TEST(1_rank, Require::Events);
   int               numberIterations = 3;
-  int               maxTimeSteps     = 10;
-  PtrCouplingScheme scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimeSteps));
+  int               maxTimeWindows   = 10;
+  PtrCouplingScheme scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimeWindows));
   numberIterations = 1;
-  PtrCouplingScheme           scheme2(new tests::DummyCouplingScheme(numberIterations, maxTimeSteps));
+  PtrCouplingScheme           scheme2(new tests::DummyCouplingScheme(numberIterations, maxTimeWindows));
   CompositionalCouplingScheme composition;
   composition.addCouplingScheme(scheme1);
   composition.addCouplingScheme(scheme2);
