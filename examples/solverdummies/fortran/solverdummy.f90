@@ -31,7 +31,7 @@ PROGRAM main
   CALL precicef_create(participantName, config, rank, commsize)
 
   ! Allocate dummy mesh with only one vertex
-  CALL precicef_get_dims(dimensions)
+  CALL precicef_get_mesh_dimensions(meshName, dimensions)
   ALLOCATE(vertices(numberOfVertices*dimensions))
   ALLOCATE(vertexIDs(numberOfVertices))
   ALLOCATE(readData(numberOfVertices*dimensions))
