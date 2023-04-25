@@ -48,7 +48,7 @@ int main(int argc, char **argv)
     meshName      = "SolverTwo-Mesh";
   }
 
-  dimensions = precicec_getDimensions();
+  dimensions = precicec_getMeshDimensions(meshName);
   vertices   = malloc(numberOfVertices * dimensions * sizeof(double));
   readData   = malloc(numberOfVertices * dimensions * sizeof(double));
   writeData  = malloc(numberOfVertices * dimensions * sizeof(double));

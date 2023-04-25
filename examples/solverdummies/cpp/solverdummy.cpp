@@ -39,7 +39,7 @@ int main(int argc, char **argv)
     meshName      = "SolverTwo-Mesh";
   }
 
-  int dimensions       = interface.getDimensions();
+  int dimensions       = interface.getMeshDimensions(meshName);
   int numberOfVertices = 3;
 
   std::vector<double> readData(numberOfVertices * dimensions);
