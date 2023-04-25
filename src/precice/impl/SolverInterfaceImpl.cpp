@@ -509,10 +509,19 @@ void SolverInterfaceImpl::finalize()
   _state = State::Finalized;
 }
 
-int SolverInterfaceImpl::getDimensions() const
+int SolverInterfaceImpl::getMeshDimensions(std::string_view meshName) const
 {
-  PRECICE_TRACE(_dimensions);
-  return _dimensions;
+  PRECICE_TRACE(meshName);
+  PRECICE_VALIDATE_MESH_NAME(meshName);
+  return _accessor->usedMeshContext(meshName).mesh->getDimensions();
+}
+
+int SolverInterfaceImpl::getDataDimensions(std::string_view meshName, std::string_view dataName) const
+{
+  PRECICE_TRACE(meshName, dataName);
+  PRECICE_VALIDATE_MESH_NAME(meshName);
+  PRECICE_VALIDATE_DATA_NAME(meshName, dataName);
+  return _accessor->usedMeshContext(meshName).mesh->data(dataName)->getDimensions();
 }
 
 bool SolverInterfaceImpl::isCouplingOngoing() const

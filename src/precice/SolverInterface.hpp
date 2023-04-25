@@ -165,14 +165,28 @@ public:
   ///@{
 
   /**
-   * @brief Returns the number of spatial dimensions configured.
+   * @brief Returns the spatial dimensionality of the given mesh.
    *
-   * @returns the configured dimension
+   * @param[in] meshName the name of the associated mesh
+   * @param[in] dataName the name of the data to check
    *
-   * Currently, two and three dimensional problems can be solved using preCICE.
-   * The dimension is specified in the XML configuration.
+   * @returns the dimensions of the given mesh
    */
-  int getDimensions() const;
+  int getMeshDimensions(::precice::string_view meshName) const;
+
+  /**
+   * @brief Returns the spatial dimensionality of the given data on the given mesh.
+   *
+   * Note that vectorial data dimensionality directly depends on the spacial dimensionality of the mesh.
+   *
+   * @param[in] meshName the name of the associated mesh
+   * @param[in] dataName the name of the data to get the dimensions for
+   *
+   * @returns the dimensions of the given Data
+   *
+   * @see getMeshDimensions
+   */
+  int getDataDimensions(::precice::string_view meshName, ::precice::string_view dataName) const;
 
   /**
    * @brief Checks if the coupled simulation is still ongoing.

@@ -72,10 +72,16 @@ void precicec_finalize()
   impl.reset();
 }
 
-int precicec_getDimensions()
+int precicec_getMeshDimensions(const char *meshName)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  return impl->getDimensions();
+  return impl->getMeshDimensions(meshName);
+}
+
+int precicec_getDataDimensions(const char *meshName, const char *dataName)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  return impl->getDataDimensions(meshName, dataName);
 }
 
 int precicec_isCouplingOngoing()
