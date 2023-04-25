@@ -14,7 +14,7 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
     auto                     meshName      = "ParallelMesh";
     auto                     writeDataName = "MyData1";
     auto                     readDataName  = "MyData2";
-    const int                dim           = interface.getDimensions();
+    const int                dim           = interface.getMeshDimensions(meshName);
     BOOST_TEST(dim == 2);
 
     // Set coordinates, primary according to input argument
@@ -59,8 +59,8 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
     auto      meshName      = "SerialMesh";
     auto      writeDataName = "MyData2";
     auto      readDataName  = "MyData1";
-    const int dim           = interface.getDimensions();
-    BOOST_TEST(interface.getDimensions() == 2);
+    const int dim           = interface.getMeshDimensions(meshName);
+    BOOST_TEST(interface.getMeshDimensions(meshName) == 2);
 
     // Define the interface
     const std::vector<double> coordinates{0.0, 0.5, 0.0, 3.5, 0.0, 5.0};

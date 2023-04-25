@@ -1,4 +1,3 @@
-#include <boost/test/tools/old/interface.hpp>
 #ifndef PRECICE_NO_MPI
 
 #include "testing/Testing.hpp"

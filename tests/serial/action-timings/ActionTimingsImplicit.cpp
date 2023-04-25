@@ -21,7 +21,6 @@ BOOST_AUTO_TEST_CASE(ActionTimingsImplicit)
 
   SolverInterface interface(context.name, context.config(), context.rank, context.size);
 
-  int         dimensions = interface.getDimensions();
   std::string meshName;
   std::string writeDataName;
   std::string readDataName;
@@ -39,6 +38,7 @@ BOOST_AUTO_TEST_CASE(ActionTimingsImplicit)
     readDataName  = "Forces";
     writeValue    = 2;
   }
+  int                 dimensions = interface.getMeshDimensions(meshName);
   std::vector<double> vertex(dimensions, 0);
   int                 vertexID = interface.setMeshVertex(meshName, vertex.data());
 

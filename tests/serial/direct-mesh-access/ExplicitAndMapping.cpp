@@ -21,14 +21,15 @@ BOOST_AUTO_TEST_CASE(ExplicitAndMapping)
 
   // Set up Solverinterface
   precice::SolverInterface interface(context.name, context.config(), 0, 1);
-  BOOST_TEST(interface.getDimensions() == 2);
-  constexpr int dim = 2;
+  constexpr int            dim = 2;
 
   if (context.isNamed("SolverOne")) {
     auto ownMeshName   = "MeshOne";
     auto otherMeshName = "MeshTwo";
     auto readDataName  = "Forces";
     auto writeDataName = "Velocities";
+    BOOST_REQUIRE(interface.getMeshDimensions(ownMeshName) == 2);
+    BOOST_REQUIRE(interface.getMeshDimensions(otherMeshName) == 2);
 
     std::vector<double> positions = {0.2, 0.2, 0.1, 0.6, 0.1, 0.0, 0.1, 0.0};
     std::vector<int>    ownIDs(4, -1);
@@ -77,6 +78,8 @@ BOOST_AUTO_TEST_CASE(ExplicitAndMapping)
     auto meshName      = "MeshTwo";
     auto writeDataName = "Forces";
     auto readDataName  = "Velocities";
+
+    BOOST_REQUIRE(interface.getMeshDimensions(meshName) == 2);
 
     // Define the mesh
     interface.setMeshVertices(meshName, ids.size(), positions.data(), ids.data());
