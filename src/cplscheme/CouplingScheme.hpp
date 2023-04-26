@@ -191,6 +191,15 @@ public:
   virtual double getTimeWindowSize() const = 0;
 
   /**
+   * @brief Returns the normalized time within the current time window.
+   *
+   * TODO: Where do we define what the normalized time is? Refer this part in the docs!
+   *
+   * @return time normalized to [0,1] w.r.t current time window.
+   */
+  virtual double getNormalizedWindowTime() const = 0;
+
+  /**
    * @brief Returns the maximal size of the next time step to be computed.
    *
    * If no time window size is prescribed by the coupling scheme, always the

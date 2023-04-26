@@ -21,17 +21,22 @@ void Storage::initialize(Eigen::VectorXd values)
 
 void Storage::setValuesAtTime(double time, Eigen::VectorXd values)
 {
+  setSampleAtTime(time, Sample{values});
+}
+
+void Storage::setSampleAtTime(double time, Sample sample)
+{
   PRECICE_ASSERT(math::smallerEquals(WINDOW_START, time), "Setting values outside of valid range!");
   PRECICE_ASSERT(math::smallerEquals(time, WINDOW_END), "Sampling outside of valid range!");
   // check if key "time" exists.
-  auto sample = std::find_if(_sampleStorage.begin(), _sampleStorage.end(), [&time](const auto &s) { return math::equals(s.timestamp, time); });
-  if (sample == _sampleStorage.end()) { // key does not exist yet
+  auto existingSample = std::find_if(_sampleStorage.begin(), _sampleStorage.end(), [&time](const auto &s) { return math::equals(s.timestamp, time); });
+  if (existingSample == _sampleStorage.end()) { // key does not exist yet
     PRECICE_ASSERT(math::smaller(maxStoredNormalizedDt(), time), maxStoredNormalizedDt(), time, "Trying to write values with a time that is too small. Please use clear(), if you want to reset the storage.");
-    _sampleStorage.emplace_back(Stample{time, Sample{values}});
+    _sampleStorage.emplace_back(Stample{time, sample});
   } else { // overwrite values at "time"
-    for (auto &sample : _sampleStorage) {
-      if (math::equals(sample.timestamp, time)) {
-        sample.sample.values = values;
+    for (auto &stample : _sampleStorage) {
+      if (math::equals(stample.timestamp, time)) {
+        stample.sample = sample;
         return;
       }
     }
@@ -71,8 +76,14 @@ void Storage::clear()
 {
   PRECICE_ASSERT(nTimes() > 0, "Storage does not contain any data!");
   Stample keep = _sampleStorage.front();
+  PRECICE_ASSERT(keep.timestamp == time::Storage::WINDOW_START);
   _sampleStorage.clear();
   _sampleStorage.emplace_back(keep);
+}
+
+void Storage::clearAll()
+{
+  _sampleStorage.clear();
 }
 
 Eigen::VectorXd Storage::getValuesAtOrAfter(double before)

@@ -337,18 +337,22 @@ void SolverInterfaceImpl::initialize()
   }
 
   // Initialize coupling state, overwrite these values for restart
-  double time       = 0.0;
-  int    timeWindow = 1;
+  const double time         = 0.0;
+  const int    timeWindow   = 1;
+  const double relativeTime = time::Storage::WINDOW_START;
 
   _meshLock.lockAll();
 
   for (auto &context : _accessor->writeDataContexts()) {
-    context.storeBufferedData();
+    context.storeBufferedData(relativeTime);
   }
 
   if (_couplingScheme->sendsInitializedData()) {
     mapWrittenData();
     performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0);
+  }
+  for (auto &context : _accessor->writeDataContexts()) {
+    context.clearStorage();
   }
 
   PRECICE_DEBUG("Initialize coupling schemes");
@@ -421,15 +425,19 @@ void SolverInterfaceImpl::advance(
   // Update the coupling scheme time state. Necessary to get correct remainder.
   _couplingScheme->addComputedTime(computedTimeStepSize);
   // Current time
-  double time = _couplingScheme->getTime();
+  const double time         = _couplingScheme->getTime();
+  const double relativeTime = _couplingScheme->getNormalizedWindowTime();
 
   for (auto &context : _accessor->writeDataContexts()) {
-    context.storeBufferedData();
+    context.storeBufferedData(relativeTime);
   }
 
   if (_couplingScheme->willDataBeExchanged(0.0)) {
     mapWrittenData();
     performDataActions({action::Action::WRITE_MAPPING_POST}, time);
+    for (auto &context : _accessor->writeDataContexts()) {
+      context.clearStorage();
+    }
   }
 
   advanceCouplingScheme();

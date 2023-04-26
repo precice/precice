@@ -47,8 +47,15 @@ public:
 
   /**
    * @brief Store data from _writeDataBuffer in persistent storage
+   *
+   * @param[in] currentTime time data should be associated with
    */
-  void storeBufferedData();
+  void storeBufferedData(double currentTime);
+
+  /**
+   * @brief Clear data storage for next iteration or window.
+   */
+  void clearStorage();
 
   /**
    * @brief Adds a MappingContext and the MeshContext required by the write mapping to the corresponding WriteDataContext data structures.

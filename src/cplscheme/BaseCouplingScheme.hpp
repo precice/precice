@@ -140,6 +140,9 @@ public:
    */
   double getTimeWindowSize() const override final;
 
+  /// @copydoc CouplingScheme::getNormalizedWindowTime
+  double getNormalizedWindowTime() const override;
+
   /**
    * @brief Returns the maximal size of the next time step to be computed.
    *
@@ -288,6 +291,13 @@ protected:
   double getComputedTimeWindowPart();
 
   /**
+   * @brief Returns the time at the beginning of the current time window.
+   *
+   * @return time at beginning of the current time window.
+   */
+  double getWindowStartTime() const;
+
+  /**
    * @brief Setter for _doesFirstStep
    */
   void setDoesFirstStep(bool doesFirstStep);
@@ -381,7 +391,7 @@ private:
   double _maxTime;
 
   /// current time; _time <= _maxTime
-  double _time = 0;
+  double _time = 0; // @todo remove?
 
   /// Number of time windows that have to be computed. End of simulation is reached, if _timeWindows == _maxTimeWindows
   int _maxTimeWindows;

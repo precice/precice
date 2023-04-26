@@ -262,7 +262,7 @@ void BaseCouplingScheme::secondExchange()
         // time window remainder is zero. Subtract the time window size and do another
         // coupling iteration.
         PRECICE_ASSERT(math::greater(_computedTimeWindowPart, 0.0));
-        _time = _time - _computedTimeWindowPart;
+        _time = getWindowStartTime();
         _timeWindows -= 1;
       } else { // write output, prepare for next window
         PRECICE_DEBUG("Convergence achieved");
@@ -322,6 +322,20 @@ double BaseCouplingScheme::getTimeWindowSize() const
 {
   PRECICE_ASSERT(hasTimeWindowSize());
   return _timeWindowSize;
+}
+
+double BaseCouplingScheme::getWindowStartTime() const
+{
+  return _time - _computedTimeWindowPart;
+}
+
+double BaseCouplingScheme::getNormalizedWindowTime() const
+{
+  const double timeWindowStart        = getWindowStartTime();
+  const double timeWindowSize         = getTimeWindowSize();
+  const double computedTimeWindowPart = getTime() - timeWindowStart;
+  // const double computedTimeWindowPart = getComputedTimeWindowPart();  // @todo make public?
+  return computedTimeWindowPart / timeWindowSize;
 }
 
 bool BaseCouplingScheme::isInitialized() const
@@ -390,6 +404,7 @@ void BaseCouplingScheme::setTimeWindows(int timeWindows)
 
 double BaseCouplingScheme::getTime() const
 {
+  // @todo Might be easier to store _timeWindowStartTime and compute _timeWindowStartTime + _computedTimeWindowPart here.
   return _time;
 }
 

@@ -41,6 +41,8 @@ public:
    */
   void setValuesAtTime(double time, Eigen::VectorXd values);
 
+  void setSampleAtTime(double time, Sample sample);
+
   /**
    * @brief Get maximum normalized dt that is stored in this Storage.
    *
@@ -95,6 +97,11 @@ public:
    * @brief Clear this Storage by deleting all values except values associated with 0.0.
    */
   void clear();
+
+  /**
+   * @brief Clear this Storage by deleting all values.
+   */
+  void clearAll();
 
 private:
   /// Stores Stamples on the current window

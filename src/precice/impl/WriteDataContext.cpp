@@ -71,10 +71,16 @@ void WriteDataContext::resizeBufferTo(int nVertices)
   }
 }
 
-void WriteDataContext::storeBufferedData()
+void WriteDataContext::storeBufferedData(double currentTime)
 {
-  _providedData->values() = _writeDataBuffer.values;
-  // _providedData->gradientValues() = writeDataBuffer.gradient;
+  _providedData->values() = _writeDataBuffer.values; // @todo this line should become unnecessary!
+  _providedData->timeStepsStorage().setSampleAtTime(currentTime, _writeDataBuffer);
+}
+
+void WriteDataContext::clearStorage()
+{
+  // need to not only clear _providedData->timeStepsStorage(), but also _toData->timeStepsStorage() as soon as we map from storage to storage.
+  _providedData->timeStepsStorage().clearAll();
 }
 
 void WriteDataContext::appendMappingConfiguration(MappingContext &mappingContext, const MeshContext &meshContext)

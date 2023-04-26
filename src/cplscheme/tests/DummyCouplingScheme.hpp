@@ -155,6 +155,15 @@ public:
   /**
    * @brief Not implemented.
    */
+  double getNormalizedWindowTime() const override final
+  {
+    PRECICE_ASSERT(false);
+    return 0;
+  }
+
+  /**
+   * @brief Not implemented.
+   */
   double getNextTimeStepMaxSize() const override final
   {
     PRECICE_ASSERT(false);
