@@ -102,11 +102,11 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
       BOOST_TEST(cplScheme->isCouplingOngoing());
       while (cplScheme->isCouplingOngoing()) {
         BOOST_REQUIRE(computedTime < 1.1);
-        BOOST_TEST(testing::equals(0.1, cplScheme->getNextTimestepMaxLength()));
+        BOOST_TEST(testing::equals(0.1, cplScheme->getNextTimeStepMaxSize()));
         if (cplScheme->isActionRequired(CouplingScheme::Action::WriteCheckpoint)) {
           cplScheme->markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
         }
-        cplScheme->addComputedTime(cplScheme->getNextTimestepMaxLength());
+        cplScheme->addComputedTime(cplScheme->getNextTimeStepMaxSize());
         cplScheme->firstSynchronization({});
         cplScheme->firstExchange();
         cplScheme->secondSynchronization();
@@ -115,7 +115,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
           cplScheme->markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
         } else {
           BOOST_TEST(cplScheme->isTimeWindowComplete());
-          computedTime += cplScheme->getNextTimestepMaxLength();
+          computedTime += cplScheme->getNextTimeStepMaxSize();
           computedTimesteps++;
         }
         BOOST_TEST(testing::equals(computedTime, cplScheme->getTime()));
@@ -126,7 +126,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
       BOOST_TEST(computedTimesteps == 10);
       BOOST_TEST(cplScheme->isTimeWindowComplete());
       BOOST_TEST(not cplScheme->isCouplingOngoing());
-      BOOST_TEST(cplScheme->getNextTimestepMaxLength() > 0.0); // ??
+      BOOST_TEST(cplScheme->getNextTimeStepMaxSize() > 0.0); // ??
     } else if (participantName == std::string("Participant1")) {
       cplScheme->initialize(0.0, 1);
       BOOST_TEST(!cplScheme->hasDataBeenReceived());
@@ -136,11 +136,11 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
       BOOST_TEST(cplScheme->isCouplingOngoing());
       while (cplScheme->isCouplingOngoing()) {
         BOOST_REQUIRE(computedTime < 1.1);
-        BOOST_TEST(testing::equals(0.1, cplScheme->getNextTimestepMaxLength()));
+        BOOST_TEST(testing::equals(0.1, cplScheme->getNextTimeStepMaxSize()));
         if (cplScheme->isActionRequired(CouplingScheme::Action::WriteCheckpoint)) {
           cplScheme->markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
         }
-        cplScheme->addComputedTime(cplScheme->getNextTimestepMaxLength());
+        cplScheme->addComputedTime(cplScheme->getNextTimeStepMaxSize());
         cplScheme->firstSynchronization({});
         cplScheme->firstExchange();
         cplScheme->secondSynchronization();
@@ -149,7 +149,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
           cplScheme->markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
         } else {
           BOOST_TEST(cplScheme->isTimeWindowComplete());
-          computedTime += cplScheme->getNextTimestepMaxLength();
+          computedTime += cplScheme->getNextTimeStepMaxSize();
           computedTimesteps++;
         }
         BOOST_TEST(testing::equals(computedTime, cplScheme->getTime()));
@@ -160,7 +160,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
       BOOST_TEST(computedTimesteps == 10);
       BOOST_TEST(cplScheme->isTimeWindowComplete());
       BOOST_TEST(not cplScheme->isCouplingOngoing());
-      BOOST_TEST(cplScheme->getNextTimestepMaxLength() > 0.0); // ??
+      BOOST_TEST(cplScheme->getNextTimeStepMaxSize() > 0.0); // ??
     } else {
       BOOST_TEST(participantName == std::string("Participant2"), participantName);
       cplScheme->initialize(0.0, 1);
@@ -171,11 +171,11 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
       BOOST_TEST(cplScheme->isCouplingOngoing());
       while (cplScheme->isCouplingOngoing()) {
         BOOST_REQUIRE(computedTime < 1.1);
-        BOOST_TEST(testing::equals(0.1, cplScheme->getNextTimestepMaxLength()));
+        BOOST_TEST(testing::equals(0.1, cplScheme->getNextTimeStepMaxSize()));
         if (cplScheme->isActionRequired(CouplingScheme::Action::WriteCheckpoint)) {
           cplScheme->markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
         }
-        cplScheme->addComputedTime(cplScheme->getNextTimestepMaxLength());
+        cplScheme->addComputedTime(cplScheme->getNextTimeStepMaxSize());
         cplScheme->firstSynchronization({});
         cplScheme->firstExchange();
         cplScheme->secondSynchronization();
@@ -184,7 +184,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
           cplScheme->markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
         } else {
           BOOST_TEST(cplScheme->isTimeWindowComplete());
-          computedTime += cplScheme->getNextTimestepMaxLength();
+          computedTime += cplScheme->getNextTimeStepMaxSize();
           computedTimesteps++;
         }
         BOOST_TEST(testing::equals(computedTime, cplScheme->getTime()));
@@ -196,7 +196,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
       BOOST_TEST(computedTimesteps == 10);
       BOOST_TEST(cplScheme->isTimeWindowComplete());
       BOOST_TEST(not cplScheme->isCouplingOngoing());
-      BOOST_TEST(cplScheme->getNextTimestepMaxLength() > 0.0); // ??
+      BOOST_TEST(cplScheme->getNextTimeStepMaxSize() > 0.0); // ??
     }
   }
 
@@ -223,12 +223,10 @@ BOOST_AUTO_TEST_SUITE(DummySchemeCompositionTests)
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit2)
 {
   PRECICE_TEST(1_rank, Require::Events);
-  int               numberIterations = 1;
-  int               maxTimesteps     = 10;
-  PtrCouplingScheme scheme1(
-      new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
-  PtrCouplingScheme scheme2(
-      new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
+  int                         numberIterations = 1;
+  int                         maxTimeWindows   = 10;
+  PtrCouplingScheme           scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimeWindows));
+  PtrCouplingScheme           scheme2(new tests::DummyCouplingScheme(numberIterations, maxTimeWindows));
   CompositionalCouplingScheme composition;
   composition.addCouplingScheme(scheme1);
   composition.addCouplingScheme(scheme2);
@@ -252,13 +250,13 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit3)
 {
   PRECICE_TEST(1_rank, Require::Events);
   int               numberIterations = 1;
-  int               maxTimesteps     = 10;
+  int               maxTimeWindows   = 10;
   PtrCouplingScheme scheme1(
-      new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
+      new tests::DummyCouplingScheme(numberIterations, maxTimeWindows));
   PtrCouplingScheme scheme2(
-      new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
+      new tests::DummyCouplingScheme(numberIterations, maxTimeWindows));
   PtrCouplingScheme scheme3(
-      new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
+      new tests::DummyCouplingScheme(numberIterations, maxTimeWindows));
   CompositionalCouplingScheme composition;
   composition.addCouplingScheme(scheme1);
   composition.addCouplingScheme(scheme2);
@@ -284,10 +282,10 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit2)
 {
   PRECICE_TEST(1_rank, Require::Events);
   int               numberIterations = 1;
-  int               maxTimesteps     = 10;
-  PtrCouplingScheme scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
+  int               maxTimeWindows   = 10;
+  PtrCouplingScheme scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimeWindows));
   numberIterations = 2;
-  PtrCouplingScheme           scheme2(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
+  PtrCouplingScheme           scheme2(new tests::DummyCouplingScheme(numberIterations, maxTimeWindows));
   CompositionalCouplingScheme composition;
   composition.addCouplingScheme(scheme1);
   composition.addCouplingScheme(scheme2);
@@ -326,10 +324,10 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2Explicit1)
 {
   PRECICE_TEST(1_rank, Require::Events);
   int               numberIterations = 2;
-  int               maxTimesteps     = 10;
-  PtrCouplingScheme scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
+  int               maxTimeWindows   = 10;
+  PtrCouplingScheme scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimeWindows));
   numberIterations = 1;
-  PtrCouplingScheme           scheme2(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
+  PtrCouplingScheme           scheme2(new tests::DummyCouplingScheme(numberIterations, maxTimeWindows));
   CompositionalCouplingScheme composition;
   composition.addCouplingScheme(scheme1);
   composition.addCouplingScheme(scheme2);
@@ -360,12 +358,12 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit3)
 {
   PRECICE_TEST(1_rank, Require::Events);
   int               numberIterations = 1;
-  int               maxTimesteps     = 10;
+  int               maxTimeWindows   = 10;
   PtrCouplingScheme scheme1(
-      new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
+      new tests::DummyCouplingScheme(numberIterations, maxTimeWindows));
   numberIterations = 3;
   PtrCouplingScheme scheme2(
-      new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
+      new tests::DummyCouplingScheme(numberIterations, maxTimeWindows));
   CompositionalCouplingScheme composition;
   composition.addCouplingScheme(scheme1);
   composition.addCouplingScheme(scheme2);
@@ -396,10 +394,10 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit3Explicit1)
 {
   PRECICE_TEST(1_rank, Require::Events);
   int               numberIterations = 3;
-  int               maxTimesteps     = 10;
-  PtrCouplingScheme scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
+  int               maxTimeWindows   = 10;
+  PtrCouplingScheme scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimeWindows));
   numberIterations = 1;
-  PtrCouplingScheme           scheme2(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
+  PtrCouplingScheme           scheme2(new tests::DummyCouplingScheme(numberIterations, maxTimeWindows));
   CompositionalCouplingScheme composition;
   composition.addCouplingScheme(scheme1);
   composition.addCouplingScheme(scheme2);

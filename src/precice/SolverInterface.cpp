@@ -32,9 +32,9 @@ double SolverInterface::initialize()
 }
 
 double SolverInterface::advance(
-    double computedTimestepLength)
+    double computedTimeStepSize)
 {
-  return _impl->advance(computedTimestepLength);
+  return _impl->advance(computedTimeStepSize);
 }
 
 void SolverInterface::finalize()
@@ -274,29 +274,10 @@ void SolverInterface::readBlockVectorData(
     std::string_view dataName,
     int              size,
     const int *      valueIndices,
-    double *         values) const
-{
-  _impl->readBlockVectorData(meshName, dataName, size, valueIndices, values);
-}
-
-void SolverInterface::readBlockVectorData(
-    std::string_view meshName,
-    std::string_view dataName,
-    int              size,
-    const int *      valueIndices,
     double           relativeReadTime,
     double *         values) const
 {
   _impl->readBlockVectorData(meshName, dataName, size, valueIndices, relativeReadTime, values);
-}
-
-void SolverInterface::readVectorData(
-    std::string_view meshName,
-    std::string_view dataName,
-    int              valueIndex,
-    double *         value) const
-{
-  _impl->readVectorData(meshName, dataName, valueIndex, value);
 }
 
 void SolverInterface::readVectorData(
@@ -315,29 +296,10 @@ void SolverInterface::readBlockScalarData(
     std::string_view dataName,
     int              size,
     const int *      valueIndices,
-    double *         values) const
-{
-  _impl->readBlockScalarData(meshName, dataName, size, valueIndices, values);
-}
-
-void SolverInterface::readBlockScalarData(
-    std::string_view meshName,
-    std::string_view dataName,
-    int              size,
-    const int *      valueIndices,
     double           relativeReadTime,
     double *         values) const
 {
   _impl->readBlockScalarData(meshName, dataName, size, valueIndices, relativeReadTime, values);
-}
-
-void SolverInterface::readScalarData(
-    std::string_view meshName,
-    std::string_view dataName,
-    int              valueIndex,
-    double &         value) const
-{
-  _impl->readScalarData(meshName, dataName, valueIndex, value);
 }
 
 void SolverInterface::readScalarData(

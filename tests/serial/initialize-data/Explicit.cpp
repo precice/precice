@@ -32,13 +32,13 @@ BOOST_AUTO_TEST_CASE(Explicit)
     auto   dataBID    = "DataTwo";
     double valueDataB = 0.0;
     double maxDt      = cplInterface.initialize();
-    cplInterface.readScalarData(meshName, dataBID, 0, valueDataB);
+    cplInterface.readScalarData(meshName, dataBID, 0, maxDt, valueDataB);
     BOOST_TEST(2.0 == valueDataB);
     while (cplInterface.isCouplingOngoing()) {
       Vector3d valueDataA(1.0, 1.0, 1.0);
       cplInterface.writeVectorData(meshName, dataAID, 0, valueDataA.data());
       maxDt = cplInterface.advance(maxDt);
-      cplInterface.readScalarData(meshName, dataBID, 0, valueDataB);
+      cplInterface.readScalarData(meshName, dataBID, 0, maxDt, valueDataB);
       BOOST_TEST(2.5 == valueDataB);
     }
     cplInterface.finalize();
@@ -55,13 +55,13 @@ BOOST_AUTO_TEST_CASE(Explicit)
     //tell preCICE that data has been written and call initializeData
     double   maxDt = cplInterface.initialize();
     Vector3d valueDataA;
-    cplInterface.readVectorData(meshName, dataAID, 0, valueDataA.data());
+    cplInterface.readVectorData(meshName, dataAID, 0, maxDt, valueDataA.data());
     Vector3d expected(1.0, 1.0, 1.0);
     BOOST_TEST(valueDataA == expected);
     while (cplInterface.isCouplingOngoing()) {
       cplInterface.writeScalarData(meshName, dataBID, 0, 2.5);
       maxDt = cplInterface.advance(maxDt);
-      cplInterface.readVectorData(meshName, dataAID, 0, valueDataA.data());
+      cplInterface.readVectorData(meshName, dataAID, 0, maxDt, valueDataA.data());
       BOOST_TEST(valueDataA == expected);
     }
     cplInterface.finalize();

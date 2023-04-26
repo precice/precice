@@ -69,7 +69,7 @@ int main(int argc, char **argv)
       std::cout << "DUMMY: Writing iteration checkpoint\n";
     }
 
-    interface.readBlockVectorData(meshName, dataReadName, numberOfVertices, vertexIDs.data(), readData.data());
+    interface.readBlockVectorData(meshName, dataReadName, numberOfVertices, vertexIDs.data(), dt, readData.data());
 
     for (int i = 0; i < numberOfVertices * dimensions; i++) {
       writeData.at(i) = readData.at(i) + 1;

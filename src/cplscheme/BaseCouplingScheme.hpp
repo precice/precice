@@ -51,8 +51,8 @@ class CouplingData;
  * -# query actions and mark them as fulfilled
  * -# compute data to be sent (possibly taking into account received data from
  *    initialize())
- * -# advance the coupling scheme with advance(); where the maximum timestep
- *    length (= time window size) needs to be obeyed
+ * -# advance the coupling scheme with advance(); where the maximum time step
+ *    size (= time window size) needs to be obeyed
  * -# ....
  * -# when the method isCouplingOngoing() returns false, call finalize() to
  *    stop the coupling scheme
@@ -98,10 +98,10 @@ public:
    * Also returns true after the last call of advance() at the end of the
    * simulation.
    *
-   * @param lastSolverTimestepLength [IN] The length of the last timestep
+   * @param lastSolverTimeStepSize [IN] The size of the last time step
    *        computed by the solver calling willDataBeExchanged().
    */
-  bool willDataBeExchanged(double lastSolverTimestepLength) const override final;
+  bool willDataBeExchanged(double lastSolverTimeStepSize) const override final;
 
   /**
    * @brief getter for _hasDataBeenReceived
@@ -141,12 +141,12 @@ public:
   double getTimeWindowSize() const override final;
 
   /**
-   * @brief Returns the maximal length of the next timestep to be computed.
+   * @brief Returns the maximal size of the next time step to be computed.
    *
    * If no time window size is prescribed by the coupling scheme, always the
    * maximal double accuracy floating point number value is returned.
    */
-  double getNextTimestepMaxLength() const override final;
+  double getNextTimeStepMaxSize() const override final;
 
   /// Returns true, when the coupled simulation is still ongoing.
   bool isCouplingOngoing() const override final;

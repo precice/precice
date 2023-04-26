@@ -348,7 +348,7 @@ double SolverInterfaceImpl::initialize()
   }
 
   PRECICE_DEBUG("Initialize coupling schemes");
-  // result of _couplingScheme->getNextTimestepMaxLength() can change when calling _couplingScheme->initialize(...) and first participant method is used for setting the time window size.
+  // result of _couplingScheme->getNextTimeStepMaxSize() can change when calling _couplingScheme->initialize(...) and first participant method is used for setting the time window size.
   _couplingScheme->initialize(time, timeWindow);
 
   if (_couplingScheme->hasDataBeenReceived()) {
@@ -384,15 +384,15 @@ double SolverInterfaceImpl::initialize()
   PRECICE_INFO(_couplingScheme->printCouplingState());
 
   // determine dt at the very end of the method to get the final value, even if first participant method is used (see above).
-  double dt = _couplingScheme->getNextTimestepMaxLength();
+  double dt = _couplingScheme->getNextTimeStepMaxSize();
   return dt;
 }
 
 double SolverInterfaceImpl::advance(
-    double computedTimestepLength)
+    double computedTimeStepSize)
 {
 
-  PRECICE_TRACE(computedTimestepLength);
+  PRECICE_TRACE(computedTimeStepSize);
 
   // Events for the solver time, stopped when we enter, restarted when we leave advance
   auto &solverEvent = EventRegistry::instance().getStoredEvent("solver.advance");
@@ -408,19 +408,19 @@ double SolverInterfaceImpl::advance(
   PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before advance().")
   PRECICE_ASSERT(_couplingScheme->isInitialized());
   PRECICE_CHECK(isCouplingOngoing(), "advance() cannot be called when isCouplingOngoing() returns false.");
-  PRECICE_CHECK(!math::equals(computedTimestepLength, 0.0), "advance() cannot be called with a timestep size of 0.");
-  PRECICE_CHECK(computedTimestepLength > 0.0, "advance() cannot be called with a negative timestep size {}.", computedTimestepLength);
+  PRECICE_CHECK(!math::equals(computedTimeStepSize, 0.0), "advance() cannot be called with a time step size of 0.");
+  PRECICE_CHECK(computedTimeStepSize > 0.0, "advance() cannot be called with a negative time step size {}.", computedTimeStepSize);
   _numberAdvanceCalls++;
 
 #ifndef NDEBUG
-  PRECICE_DEBUG("Synchronize timestep length");
+  PRECICE_DEBUG("Synchronize time step size");
   if (utils::IntraComm::isParallel()) {
-    syncTimestep(computedTimestepLength);
+    syncTimestep(computedTimeStepSize);
   }
 #endif
 
   // Update the coupling scheme time state. Necessary to get correct remainder.
-  _couplingScheme->addComputedTime(computedTimestepLength);
+  _couplingScheme->addComputedTime(computedTimeStepSize);
   // Current time
   double time = _couplingScheme->getTime();
 
@@ -455,7 +455,7 @@ double SolverInterfaceImpl::advance(
 
   _meshLock.lockAll();
   solverEvent.start(precice::syncMode);
-  return _couplingScheme->getNextTimestepMaxLength();
+  return _couplingScheme->getNextTimeStepMaxSize();
 }
 
 void SolverInterfaceImpl::finalize()
@@ -1329,48 +1329,20 @@ void SolverInterfaceImpl::readBlockVectorData(
     std::string_view dataName,
     int              size,
     const int *      valueIndices,
-    double *         values) const
-{
-  PRECICE_TRACE(meshName, dataName, size);
-  double relativeTimeWindowEndTime = _couplingScheme->getNextTimestepMaxLength(); // samples at end of time window
-  if (_accessor->readDataContext(meshName, dataName).getInterpolationOrder() != 0) {
-    PRECICE_WARN("Interpolation order of read data named \"{}\" is set to \"{}\", but you are calling {} without providing a relativeReadTime. This looks like an error. You can fix this by providing a relativeReadTime to {} or by setting interpolation order to 0.",
-                 _accessor->readDataContext(meshName, dataName).getDataName(), _accessor->readDataContext(meshName, dataName).getInterpolationOrder(), __func__, __func__);
-  }
-  readBlockVectorDataImpl(meshName, dataName, size, valueIndices, relativeTimeWindowEndTime, values);
-}
-
-void SolverInterfaceImpl::readBlockVectorData(
-    std::string_view meshName,
-    std::string_view dataName,
-    int              size,
-    const int *      valueIndices,
     double           relativeReadTime,
     double *         values) const
 {
   PRECICE_TRACE(meshName, dataName, size);
-  PRECICE_EXPERIMENTAL_API();
-  readBlockVectorDataImpl(meshName, dataName, size, valueIndices, relativeReadTime, values);
-}
-
-void SolverInterfaceImpl::readBlockVectorDataImpl(
-    std::string_view meshName,
-    std::string_view dataName,
-    int              size,
-    const int *      valueIndices,
-    double           relativeReadTime,
-    double *         values) const
-{
   PRECICE_CHECK(_state != State::Finalized, "readBlockVectorData(...) cannot be called after finalize().");
-  PRECICE_CHECK(relativeReadTime <= _couplingScheme->getNextTimestepMaxLength(), "readBlockVectorData(...) cannot sample data outside of current time window.");
+  PRECICE_CHECK(relativeReadTime <= _couplingScheme->getNextTimeStepMaxSize(), "readBlockVectorData(...) cannot sample data outside of current time window.");
   PRECICE_CHECK(relativeReadTime >= 0, "readBlockVectorData(...) cannot sample data before the current time.");
   double normalizedReadTime;
   if (_couplingScheme->hasTimeWindowSize()) {
-    double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getNextTimestepMaxLength();
+    double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getNextTimeStepMaxSize();
     double readTime      = timeStepStart + relativeReadTime;
     normalizedReadTime   = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
   } else {                                                                  // if this participant defines time window size through participant-first method
-    PRECICE_CHECK(relativeReadTime == _couplingScheme->getNextTimestepMaxLength(), "Waveform relaxation is not allowed for solver that sets the time step size");
+    PRECICE_CHECK(relativeReadTime == _couplingScheme->getNextTimeStepMaxSize(), "Waveform relaxation is not allowed for solver that sets the time step size");
     normalizedReadTime = 1; // by default read at end of window.
   }
   PRECICE_REQUIRE_DATA_READ(meshName, dataName);
@@ -1403,46 +1375,20 @@ void SolverInterfaceImpl::readVectorData(
     std::string_view meshName,
     std::string_view dataName,
     int              valueIndex,
-    double *         value) const
-{
-  PRECICE_TRACE(meshName, dataName, valueIndex);
-  double relativeTimeWindowEndTime = _couplingScheme->getNextTimestepMaxLength(); // samples at end of time window
-  if (_accessor->readDataContext(meshName, dataName).getInterpolationOrder() != 0) {
-    PRECICE_WARN("Interpolation order of read data named \"{}\" is set to \"{}\", but you are calling {} without providing a relativeReadTime. This looks like an error. You can fix this by providing a relativeReadTime to {} or by setting interpolation order to 0.",
-                 _accessor->readDataContext(meshName, dataName).getDataName(), _accessor->readDataContext(meshName, dataName).getInterpolationOrder(), __func__, __func__);
-  }
-  readVectorDataImpl(meshName, dataName, valueIndex, relativeTimeWindowEndTime, value);
-}
-
-void SolverInterfaceImpl::readVectorData(
-    std::string_view meshName,
-    std::string_view dataName,
-    int              valueIndex,
     double           relativeReadTime,
     double *         value) const
 {
   PRECICE_TRACE(meshName, dataName, valueIndex);
-  PRECICE_EXPERIMENTAL_API();
-  readVectorDataImpl(meshName, dataName, valueIndex, relativeReadTime, value);
-}
-
-void SolverInterfaceImpl::readVectorDataImpl(
-    std::string_view meshName,
-    std::string_view dataName,
-    int              valueIndex,
-    double           relativeReadTime,
-    double *         value) const
-{
   PRECICE_CHECK(_state != State::Finalized, "readVectorData(...) cannot be called after finalize().");
-  PRECICE_CHECK(relativeReadTime <= _couplingScheme->getNextTimestepMaxLength(), "readVectorData(...) cannot sample data outside of current time window.");
+  PRECICE_CHECK(relativeReadTime <= _couplingScheme->getNextTimeStepMaxSize(), "readVectorData(...) cannot sample data outside of current time window.");
   PRECICE_CHECK(relativeReadTime >= 0, "readVectorData(...) cannot sample data before the current time.");
   double normalizedReadTime;
   if (_couplingScheme->hasTimeWindowSize()) {
-    double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getNextTimestepMaxLength();
+    double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getNextTimeStepMaxSize();
     double readTime      = timeStepStart + relativeReadTime;
     normalizedReadTime   = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
   } else {                                                                  // if this participant defines time window size through participant-first method
-    PRECICE_CHECK(relativeReadTime == _couplingScheme->getNextTimestepMaxLength(), "Waveform relaxation is not allowed for solver that sets the time step size");
+    PRECICE_CHECK(relativeReadTime == _couplingScheme->getNextTimeStepMaxSize(), "Waveform relaxation is not allowed for solver that sets the time step size");
     normalizedReadTime = 1; // by default read at end of window.
   }
   PRECICE_REQUIRE_DATA_READ(meshName, dataName);
@@ -1472,49 +1418,20 @@ void SolverInterfaceImpl::readBlockScalarData(
     std::string_view dataName,
     int              size,
     const int *      valueIndices,
-    double *         values) const
-{
-  PRECICE_TRACE(meshName, dataName, size);
-  PRECICE_REQUIRE_DATA_READ(meshName, dataName);
-  double relativeTimeWindowEndTime = _couplingScheme->getNextTimestepMaxLength(); // samples at end of time window
-  if (_accessor->readDataContext(meshName, dataName).getInterpolationOrder() != 0) {
-    PRECICE_WARN("Interpolation order of read data named \"{}\" is set to \"{}\", but you are calling {} without providing a relativeReadTime. This looks like an error. You can fix this by providing a relativeReadTime to {} or by setting interpolation order to 0.",
-                 _accessor->readDataContext(meshName, dataName).getDataName(), _accessor->readDataContext(meshName, dataName).getInterpolationOrder(), __func__, __func__);
-  }
-  readBlockScalarDataImpl(meshName, dataName, size, valueIndices, relativeTimeWindowEndTime, values);
-}
-
-void SolverInterfaceImpl::readBlockScalarData(
-    std::string_view meshName,
-    std::string_view dataName,
-    int              size,
-    const int *      valueIndices,
     double           relativeReadTime,
     double *         values) const
 {
   PRECICE_TRACE(meshName, dataName, size);
-  PRECICE_EXPERIMENTAL_API();
-  readBlockScalarDataImpl(meshName, dataName, size, valueIndices, relativeReadTime, values);
-}
-
-void SolverInterfaceImpl::readBlockScalarDataImpl(
-    std::string_view meshName,
-    std::string_view dataName,
-    int              size,
-    const int *      valueIndices,
-    double           relativeReadTime,
-    double *         values) const
-{
   PRECICE_CHECK(_state != State::Finalized, "readBlockScalarData(...) cannot be called after finalize().");
-  PRECICE_CHECK(relativeReadTime <= _couplingScheme->getNextTimestepMaxLength(), "readBlockScalarData(...) cannot sample data outside of current time window.");
+  PRECICE_CHECK(relativeReadTime <= _couplingScheme->getNextTimeStepMaxSize(), "readBlockScalarData(...) cannot sample data outside of current time window.");
   PRECICE_CHECK(relativeReadTime >= 0, "readBlockScalarData(...) cannot sample data before the current time.");
   double normalizedReadTime;
   if (_couplingScheme->hasTimeWindowSize()) {
-    double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getNextTimestepMaxLength();
+    double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getNextTimeStepMaxSize();
     double readTime      = timeStepStart + relativeReadTime;
     normalizedReadTime   = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
   } else {                                                                  // if this participant defines time window size through participant-first method
-    PRECICE_CHECK(relativeReadTime == _couplingScheme->getNextTimestepMaxLength(), "Waveform relaxation is not allowed for solver that sets the time step size");
+    PRECICE_CHECK(relativeReadTime == _couplingScheme->getNextTimeStepMaxSize(), "Waveform relaxation is not allowed for solver that sets the time step size");
     normalizedReadTime = 1; // by default read at end of window.
   }
   PRECICE_REQUIRE_DATA_READ(meshName, dataName);
@@ -1544,46 +1461,20 @@ void SolverInterfaceImpl::readScalarData(
     std::string_view meshName,
     std::string_view dataName,
     int              valueIndex,
-    double &         value) const
-{
-  PRECICE_TRACE(meshName, dataName, valueIndex);
-  double relativeTimeWindowEndTime = _couplingScheme->getNextTimestepMaxLength(); // samples at end of time window
-  if (_accessor->readDataContext(meshName, dataName).getInterpolationOrder() != 0) {
-    PRECICE_WARN("Interpolation order of read data named \"{}\" is set to \"{}\", but you are calling {} without providing a relativeReadTime. This looks like an error. You can fix this by providing a relativeReadTime to {} or by setting interpolation order to 0.",
-                 _accessor->readDataContext(meshName, dataName).getDataName(), _accessor->readDataContext(meshName, dataName).getInterpolationOrder(), __func__, __func__);
-  }
-  readScalarDataImpl(meshName, dataName, valueIndex, relativeTimeWindowEndTime, value);
-}
-
-void SolverInterfaceImpl::readScalarData(
-    std::string_view meshName,
-    std::string_view dataName,
-    int              valueIndex,
     double           relativeReadTime,
     double &         value) const
 {
   PRECICE_TRACE(meshName, dataName, valueIndex, value);
-  PRECICE_EXPERIMENTAL_API();
-  readScalarDataImpl(meshName, dataName, valueIndex, relativeReadTime, value);
-}
-
-void SolverInterfaceImpl::readScalarDataImpl(
-    std::string_view meshName,
-    std::string_view dataName,
-    int              valueIndex,
-    double           relativeReadTime,
-    double &         value) const
-{
   PRECICE_CHECK(_state != State::Finalized, "readScalarData(...) cannot be called after finalize().");
-  PRECICE_CHECK(relativeReadTime <= _couplingScheme->getNextTimestepMaxLength(), "readScalarData(...) cannot sample data outside of current time window.");
+  PRECICE_CHECK(relativeReadTime <= _couplingScheme->getNextTimeStepMaxSize(), "readScalarData(...) cannot sample data outside of current time window.");
   PRECICE_CHECK(relativeReadTime >= 0, "readScalarData(...) cannot sample data before the current time.");
   double normalizedReadTime;
   if (_couplingScheme->hasTimeWindowSize()) {
-    double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getNextTimestepMaxLength();
+    double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getNextTimeStepMaxSize();
     double readTime      = timeStepStart + relativeReadTime;
     normalizedReadTime   = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
   } else {                                                                  // if this participant defines time window size through participant-first method
-    PRECICE_CHECK(relativeReadTime == _couplingScheme->getNextTimestepMaxLength(), "Waveform relaxation is not allowed for solver that sets the time step size");
+    PRECICE_CHECK(relativeReadTime == _couplingScheme->getNextTimeStepMaxSize(), "Waveform relaxation is not allowed for solver that sets the time step size");
     normalizedReadTime = 1; // by default read at end of window.
   }
   PRECICE_REQUIRE_DATA_READ(meshName, dataName);
@@ -1934,19 +1825,19 @@ void SolverInterfaceImpl::initializeIntraCommunication()
       _accessorProcessRank, _accessorCommunicatorSize);
 }
 
-void SolverInterfaceImpl::syncTimestep(double computedTimestepLength)
+void SolverInterfaceImpl::syncTimestep(double computedTimeStepSize)
 {
   PRECICE_ASSERT(utils::IntraComm::isParallel());
   if (utils::IntraComm::isSecondary()) {
-    utils::IntraComm::getCommunication()->send(computedTimestepLength, 0);
+    utils::IntraComm::getCommunication()->send(computedTimeStepSize, 0);
   } else {
     PRECICE_ASSERT(utils::IntraComm::isPrimary());
     for (Rank secondaryRank : utils::IntraComm::allSecondaryRanks()) {
       double dt;
       utils::IntraComm::getCommunication()->receive(dt, secondaryRank);
-      PRECICE_CHECK(math::equals(dt, computedTimestepLength),
-                    "Found ambiguous values for the timestep length passed to preCICE in \"advance\". On rank {}, the value is {}, while on rank 0, the value is {}.",
-                    secondaryRank, dt, computedTimestepLength);
+      PRECICE_CHECK(math::equals(dt, computedTimeStepSize),
+                    "Found ambiguous values for the time step size passed to preCICE in \"advance\". On rank {}, the value is {}, while on rank 0, the value is {}.",
+                    secondaryRank, dt, computedTimeStepSize);
     }
   }
 }

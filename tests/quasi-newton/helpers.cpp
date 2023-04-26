@@ -44,7 +44,7 @@ void runTestQN(std::string const &config, TestContext const &context)
     }
   }
 
-  interface.initialize();
+  double preciceDt    = interface.initialize();
   double inValues[4]  = {0.0, 0.0, 0.0, 0.0};
   double outValues[4] = {0.0, 0.0, 0.0, 0.0};
 
@@ -54,7 +54,7 @@ void runTestQN(std::string const &config, TestContext const &context)
     if (interface.requiresWritingCheckpoint()) {
     }
 
-    interface.readBlockScalarData(meshName, readDataName, 4, vertexIDs, inValues);
+    interface.readBlockScalarData(meshName, readDataName, 4, vertexIDs, preciceDt, inValues);
 
     /*
       Solves the following non-linear equations, which are extended to a fixed-point equation (simply +x)
@@ -79,7 +79,7 @@ void runTestQN(std::string const &config, TestContext const &context)
     }
 
     interface.writeBlockScalarData(meshName, writeDataName, 4, vertexIDs, outValues);
-    interface.advance(1.0);
+    preciceDt = interface.advance(1.0);
 
     if (interface.requiresReadingCheckpoint()) {
     }
@@ -135,7 +135,7 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
     }
   }
 
-  interface.initialize();
+  double preciceDt    = interface.initialize();
   double inValues[4]  = {0.0, 0.0, 0.0, 0.0};
   double outValues[4] = {0.0, 0.0, 0.0, 0.0};
 
@@ -147,7 +147,7 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
 
     if ((context.isNamed("SolverOne") and context.isPrimary()) or
         (context.isNamed("SolverTwo") and (not context.isPrimary()))) {
-      interface.readBlockScalarData(meshName, readDataName, 4, vertexIDs, inValues);
+      interface.readBlockScalarData(meshName, readDataName, 4, vertexIDs, preciceDt, inValues);
     }
 
     /*
@@ -176,7 +176,7 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
         (context.isNamed("SolverTwo") and (not context.isPrimary()))) {
       interface.writeBlockScalarData(meshName, writeDataName, 4, vertexIDs, outValues);
     }
-    interface.advance(1.0);
+    preciceDt = interface.advance(1.0);
 
     if (interface.requiresReadingCheckpoint()) {
     }

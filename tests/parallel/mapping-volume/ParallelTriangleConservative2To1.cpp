@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(ParallelTriangleConservative2To1)
 
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant must advance once.");
 
-    interface.advance(dt);
+    dt = interface.advance(dt);
     BOOST_TEST(!interface.isCouplingOngoing(), "Receiving participant must advance only once.");
 
     // Check expected VS read
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(ParallelTriangleConservative2To1)
     // These are proportional to barycentric coordinates.
     expected << 0.3, 1.0, 0.7;
 
-    interface.readBlockScalarData(meshName, dataName, expected.size(), vertexIDs.data(), readData.data());
+    interface.readBlockScalarData(meshName, dataName, expected.size(), vertexIDs.data(), dt, readData.data());
     BOOST_CHECK(equals(expected, readData));
     interface.finalize();
   }

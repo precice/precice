@@ -84,8 +84,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
 
   double maxDt     = precice.initialize();
   double windowDt  = maxDt;
-  double dt        = windowDt / nSubsteps; // Timestep length desired by solver. E.g. 2 steps with size 1/2
-  double currentDt = dt;                   // Timestep length used by solver
+  double dt        = windowDt / nSubsteps; // time step size desired by solver. E.g. 2 steps with size 1/2
+  double currentDt = dt;                   // time step size used by solver
 
   while (precice.isCouplingOngoing()) {
     if (precice.requiresWritingCheckpoint()) {
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
       auto readDataName = readDataPair.first;
       auto readFunction = readDataPair.second;
 
-      precice.readScalarData(meshName, readDataName, vertexID, readData);
+      precice.readScalarData(meshName, readDataName, vertexID, maxDt, readData);
       if (iterations == 0 && timestep == 0) {                        // special situation: Both solvers are in their very first time windows, first iteration, first time step
         BOOST_TEST(readData == readFunction(0));                     // use initial data only.
       } else if (iterations == 0) {                                  // special situation: Both solvers get the old data for all time windows.

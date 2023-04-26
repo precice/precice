@@ -73,8 +73,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
   BOOST_TEST(maxDt == 2.0); // use window size != 1.0 to be able to detect more possible bugs
   double windowDt      = maxDt;
   double dt            = windowDt / (nSubsteps - 0.5);                 // Solver always tries to do a timestep of fixed size.
-  double expectedDts[] = {4.0 / 7.0, 4.0 / 7.0, 4.0 / 7.0, 2.0 / 7.0}; // If solver uses timestep size of 4/7, fourth step will be restricted to 2/7 via preCICE steering to fit into the window.
-  double currentDt     = dt > maxDt ? maxDt : dt;                      // determine actual timestep length; must fit into remaining time in window
+  double expectedDts[] = {4.0 / 7.0, 4.0 / 7.0, 4.0 / 7.0, 2.0 / 7.0}; // If solver uses time step size of 4/7, fourth step will be restricted to 2/7 via preCICE steering to fit into the window.
+  double currentDt     = dt > maxDt ? maxDt : dt;                      // determine actual time step size; must fit into remaining time in window
 
   while (precice.isCouplingOngoing()) {
     if (precice.requiresWritingCheckpoint()) {
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
       windowStartStep = timestep;
     }
 
-    precice.readScalarData(meshName, readDataName, vertexID, readData);
+    precice.readScalarData(meshName, readDataName, vertexID, maxDt, readData);
 
     if (iterations == 0 && timestep == 0) {                                    // special situation: Both solvers are in their very first time windows, first iteration, first time step
       BOOST_TEST(readData == readFunction(startTime));                         // use initial data only.

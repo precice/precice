@@ -28,8 +28,8 @@ BOOST_AUTO_TEST_CASE(DoNothingWithSubcycling)
     precice.setMeshVertex(meshName, Eigen::Vector3d(1.0, 0.0, 0.0).data());
     double maxDt     = precice.initialize();
     int    timestep  = 0;
-    double dt        = maxDt / 2.0; // Timestep length desired by solver
-    double currentDt = dt;          // Timestep length used by solver
+    double dt        = maxDt / 2.0; // Time step size desired by solver
+    double currentDt = dt;          // Time step size used by solver
     while (precice.isCouplingOngoing()) {
       maxDt     = precice.advance(currentDt);
       currentDt = dt > maxDt ? maxDt : dt;
@@ -44,8 +44,8 @@ BOOST_AUTO_TEST_CASE(DoNothingWithSubcycling)
     precice.setMeshVertex(meshName, Eigen::Vector3d(1.0, 0.0, 0.0).data());
     double maxDt     = precice.initialize();
     int    timestep  = 0;
-    double dt        = maxDt / 3.0; // Timestep length desired by solver
-    double currentDt = dt;          // Timestep length used by solver
+    double dt        = maxDt / 3.0; // Time step size desired by solver
+    double currentDt = dt;          // Time step size used by solver
     while (precice.isCouplingOngoing()) {
       maxDt     = precice.advance(currentDt);
       currentDt = dt > maxDt ? maxDt : dt;

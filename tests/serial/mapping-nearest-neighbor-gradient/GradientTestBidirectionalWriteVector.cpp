@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteVector)
     double maxDt = cplInterface.initialize();
 
     Vector3d valueDataB;
-    cplInterface.readVectorData(meshName, dataBID, 0, valueDataB.data());
+    cplInterface.readVectorData(meshName, dataBID, 0, maxDt, valueDataB.data());
     Vector3d expected(-1.0, 0.0, 1.0);
     BOOST_TEST(valueDataB == expected);
 
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteVector)
 
       maxDt = cplInterface.advance(maxDt);
 
-      cplInterface.readVectorData(meshName, dataBID, 0, valueDataB.data());
+      cplInterface.readVectorData(meshName, dataBID, 0, maxDt, valueDataB.data());
       expected << -0.5, 0.5, 1.5;
       BOOST_TEST(valueDataB == expected);
     }
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteVector)
     double maxDt = cplInterface.initialize();
 
     Vector3d valueDataA;
-    cplInterface.readVectorData(meshName, dataAID, 0, valueDataA.data());
+    cplInterface.readVectorData(meshName, dataAID, 0, maxDt, valueDataA.data());
     Vector3d expected(1.0, 1.0, 1.0);
     BOOST_TEST(valueDataA == expected);
 
@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteVector)
       cplInterface.writeVectorGradientData(meshName, dataBID, 0, gradient.data());
 
       maxDt = cplInterface.advance(maxDt);
-      cplInterface.readVectorData(meshName, dataAID, 0, valueDataA.data());
+      cplInterface.readVectorData(meshName, dataAID, 0, maxDt, valueDataA.data());
       expected << 2.0, 2.0, 2.0;
       BOOST_TEST(valueDataA == expected);
     }

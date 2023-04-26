@@ -34,17 +34,17 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
 {
   PRECICE_TEST(1_rank);
   //use two vectors and see if underrelaxation works
-  double           initialRelaxation        = 0.01;
-  int              maxIterationsUsed        = 50;
-  int              timestepsReused          = 6;
-  int              reusedTimestepsAtRestart = 0;
-  int              chunkSize                = 0;
-  int              filter                   = Acceleration::QR1FILTER;
-  int              restartType              = MVQNAcceleration::NO_RESTART;
-  double           singularityLimit         = 1e-10;
-  double           svdTruncationEps         = 0.0;
-  bool             enforceInitialRelaxation = false;
-  bool             alwaysBuildJacobian      = false;
+  double           initialRelaxation          = 0.01;
+  int              maxIterationsUsed          = 50;
+  int              timeWindowsReused          = 6;
+  int              reusedTimeWindowsAtRestart = 0;
+  int              chunkSize                  = 0;
+  int              filter                     = Acceleration::QR1FILTER;
+  int              restartType                = MVQNAcceleration::NO_RESTART;
+  double           singularityLimit           = 1e-10;
+  double           svdTruncationEps           = 0.0;
+  bool             enforceInitialRelaxation   = false;
+  bool             alwaysBuildJacobian        = false;
   std::vector<int> dataIDs;
   dataIDs.push_back(0);
   dataIDs.push_back(1);
@@ -54,8 +54,8 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
   mesh::PtrMesh           dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
 
   MVQNAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                      timestepsReused, filter, singularityLimit, dataIDs, prec, alwaysBuildJacobian,
-                      restartType, chunkSize, reusedTimestepsAtRestart, svdTruncationEps);
+                      timeWindowsReused, filter, singularityLimit, dataIDs, prec, alwaysBuildJacobian,
+                      restartType, chunkSize, reusedTimeWindowsAtRestart, svdTruncationEps);
 
   Eigen::VectorXd fcol1;
 
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
 
   double           initialRelaxation        = 0.01;
   int              maxIterationsUsed        = 50;
-  int              timestepsReused          = 6;
+  int              timeWindowsReused        = 6;
   int              filter                   = acceleration::BaseQNAcceleration::QR1FILTER;
   double           singularityLimit         = 1e-10;
   bool             enforceInitialRelaxation = false;
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
   mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
 
   IQNILSAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                        timestepsReused, filter, singularityLimit, dataIDs, prec);
+                        timeWindowsReused, filter, singularityLimit, dataIDs, prec);
 
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
   mesh::PtrData forces(new mesh::Data("fvalues", -1, 1));

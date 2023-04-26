@@ -99,15 +99,16 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   meshConfig.addMesh(mesh);
 
   // Create all parameters necessary to create a ParallelImplicitCouplingScheme object
-  double      maxTime        = 1.0;
-  int         maxTimesteps   = 3;
-  double      timestepLength = 0.1;
-  std::string nameParticipant0("Participant0");
-  std::string nameParticipant1("Participant1");
-  int         sendDataIndex              = -1;
-  int         receiveDataIndex           = -1;
-  bool        dataRequiresInitialization = false;
-  int         extrapolationOrder         = 0;
+  double       maxTime        = 1.0;
+  int          maxTimeWindows = 3;
+  const double timeWindowSize = 0.1;
+  const double timeStepSize   = timeWindowSize; // solver is not subcycling
+  std::string  nameParticipant0("Participant0");
+  std::string  nameParticipant1("Participant1");
+  int          sendDataIndex              = -1;
+  int          receiveDataIndex           = -1;
+  bool         dataRequiresInitialization = false;
+  int          extrapolationOrder         = 0;
   if (context.isNamed(nameParticipant0)) {
     sendDataIndex              = dataID0;
     receiveDataIndex           = dataID1;
@@ -120,7 +121,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
 
   // Create the coupling scheme object
   ParallelCouplingScheme cplScheme(
-      maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
+      maxTime, maxTimeWindows, timeWindowSize, 16, nameParticipant0, nameParticipant1,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, 100, extrapolationOrder);
 
   using Fixture = testing::ParallelCouplingSchemeFixture;
@@ -164,7 +165,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       if (cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint)) {
         cplScheme.markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
       }
-      cplScheme.addComputedTime(timestepLength);
+      cplScheme.addComputedTime(timeStepSize);
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
@@ -196,7 +197,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       if (cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint)) {
         cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
       }
-      cplScheme.addComputedTime(timestepLength);
+      cplScheme.addComputedTime(timeStepSize);
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
@@ -223,19 +224,19 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   mesh->allocateDataValues();
   BOOST_TEST(data->values().size() == 1);
 
-  const double          maxTime      = CouplingScheme::UNDEFINED_TIME;
-  const int             maxTimesteps = 1;
-  const double          dt           = 1.0;
-  std::string           first        = "First";
-  std::string           second       = "Second";
-  std::string           accessor     = second;
+  const double          maxTime        = CouplingScheme::UNDEFINED_TIME;
+  const int             maxTimeWindows = 1;
+  const double          timeWindowSize = 1.0;
+  std::string           first          = "First";
+  std::string           second         = "Second";
+  std::string           accessor       = second;
   com::PtrCommunication com(new com::MPIDirectCommunication());
   m2n::PtrM2N           globalCom(new m2n::M2N(com, m2n::DistributedComFactory::SharedPointer()));
   const int             maxIterations      = 1;
   const int             extrapolationOrder = 1;
 
   // Test first order extrapolation
-  ParallelCouplingScheme scheme(maxTime, maxTimesteps, dt, 16, first, second,
+  ParallelCouplingScheme scheme(maxTime, maxTimeWindows, timeWindowSize, 16, first, second,
                                 accessor, globalCom, constants::FIXED_TIME_WINDOW_SIZE,
                                 BaseCouplingScheme::Implicit, maxIterations, extrapolationOrder);
 
@@ -339,7 +340,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
   const double timeWindowSize     = 0.1;
   const int    maxIterations      = 3;
   const int    extrapolationOrder = 1;
-  const double timestepLength     = timeWindowSize;
+  const double timeStepSize       = timeWindowSize; // solver is not subcycling
   std::string  first("Participant0");
   std::string  second("Participant1");
   int          sendDataIndex        = -1;
@@ -431,7 +432,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
       v << 2.0;
     }
     mesh->data(sendDataIndex)->values() = v;
-    cplScheme.addComputedTime(timestepLength);
+    cplScheme.addComputedTime(timeStepSize);
 
     cplScheme.firstSynchronization({});
     cplScheme.firstExchange();
@@ -486,7 +487,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
 
     v << 3.0;
     mesh->data(sendDataIndex)->values() = v;
-    cplScheme.addComputedTime(timestepLength);
+    cplScheme.addComputedTime(timeStepSize);
 
     cplScheme.firstSynchronization({});
     cplScheme.firstExchange();
@@ -559,7 +560,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
   const double timeWindowSize     = 0.1;
   const int    maxIterations      = 3;
   const int    extrapolationOrder = 1;
-  const double timestepLength     = timeWindowSize;
+  const double timeStepSize       = timeWindowSize; // solver is not subcycling
   std::string  first("Participant0");
   std::string  second("Participant1");
   int          sendDataIndex        = -1;
@@ -685,7 +686,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
       v << 2.0;
     }
     mesh->data(sendDataIndex)->values() = v;
-    cplScheme.addComputedTime(timestepLength);
+    cplScheme.addComputedTime(timeStepSize);
 
     cplScheme.firstSynchronization({});
     cplScheme.firstExchange();
@@ -740,7 +741,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
 
     v << 3.0;
     mesh->data(sendDataIndex)->values() = v;
-    cplScheme.addComputedTime(timestepLength);
+    cplScheme.addComputedTime(timeStepSize);
 
     cplScheme.firstSynchronization({});
     cplScheme.firstExchange();
