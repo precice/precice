@@ -174,7 +174,7 @@ Eigen::VectorXd CouplingData::getValuesAtTime(double relativeDt)
 Eigen::VectorXd CouplingData::getPreviousValuesAtTime(double relativeDt)
 {
 
-  return _timeStepsStoragePrevious.getValuesAtOrAfter(relativeDt);
+  return _timeStepsStoragePrevious.sampleAt(relativeDt);
 }
 
 Eigen::VectorXd CouplingData::getSerialized()
@@ -192,6 +192,13 @@ Eigen::VectorXd CouplingData::getSerialized()
     }
   }
   return serializedData;
+}
+
+precice::time::Storage CouplingData::copyWaveform()
+{
+
+  precice::time::Storage temp = _timeStepsStorageCurrent;
+  return temp;
 }
 
 void CouplingData::storeFromSerialized(Eigen::VectorXd timesAscending, Eigen::VectorXd serializedData)

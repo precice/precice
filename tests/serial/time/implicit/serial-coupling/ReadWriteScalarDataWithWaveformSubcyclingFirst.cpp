@@ -86,12 +86,12 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
       iterations         = 0;
     }
 
-    precice.readScalarData(readDataID, vertexID, currentDt, readData);
+    precice.readScalarData(readDataID, vertexID, currentDt / 2, readData);
 
     if (context.isNamed("SolverOne") && iterations == 0) { // in the first iteration of each window, we only have one sample of data. Therefore constant interpolation
       BOOST_TEST(readData == readFunction(timeCheckpoint));
     } else { // in the following iterations we have two samples of data. Therefore linear interpolation
-      BOOST_TEST(readData == readFunction(time + currentDt));
+      BOOST_TEST(readData == readFunction(time + currentDt / 2));
     }
 
     precice.readScalarData(readDataID, vertexID, currentDt / 2, readData);

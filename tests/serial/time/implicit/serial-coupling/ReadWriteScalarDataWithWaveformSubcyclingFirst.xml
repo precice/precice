@@ -42,9 +42,9 @@
     <coupling-scheme:serial-implicit>
       <participants first="SolverOne" second="SolverTwo" />
       <max-time-windows value="5" />
-      <time-window-size value="2" />
-      <max-iterations value="3" />
-      <min-iteration-convergence-measure min-iterations="3" data="DataOne" mesh="MeshOne" />
+      <time-window-size value="5" />
+      <max-iterations value="2" />
+      <min-iteration-convergence-measure min-iterations="2" data="DataOne" mesh="MeshOne" />
       <exchange data="DataOne" mesh="MeshOne" from="SolverOne" to="SolverTwo" initialize="on" />
       <exchange data="DataTwo" mesh="MeshOne" from="SolverTwo" to="SolverOne" initialize="on" />
     </coupling-scheme:serial-implicit>

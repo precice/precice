@@ -108,6 +108,8 @@ public:
    */
   void storeFromSerialized(Eigen::VectorXd timesAscending, Eigen::VectorXd serializedData);
 
+  precice::time::Storage copyWaveform();
+
 private:
   mutable logging::Logger _log{"cplscheme::CouplingData"};
 

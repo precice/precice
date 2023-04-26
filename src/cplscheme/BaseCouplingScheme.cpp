@@ -801,12 +801,6 @@ void BaseCouplingScheme::doImplicitStep()
        * needed at the moment. Important note: In https://github.com/precice/precice/pull/1414 also send data requires to keep
        * track of _timeStepsStorage for subcycling. So it will become simpler as soon as subcycling is fully implemented.
        */
-      // @todo For other Acceleration schemes as described in "Rüth, B, Uekermann, B, Mehl, M, Birken, P, Monge, A, Bungartz, H-J. Quasi-Newton waveform iteration for partitioned surface-coupled multiphysics applications. Int J Numer Methods Eng. 2021; 122: 5236– 5257. https://doi.org/10.1002/nme.6443" we need a more elaborate implementation.
-      // Put values into data->values() for acceleration
-      // @todo breaks for CplSchemeTests/ParallelImplicitCouplingSchemeTests. Why? @fsimonis
-      // for (auto &data : getAccelerationData() | boost::adaptors::map_values) {
-      //   data->values() = data->getValuesAtTime(time::Storage::WINDOW_END);
-      // }
       for (auto &pair : getAccelerationData()) {
         pair.second->values() = pair.second->getValuesAtTime(time::Storage::WINDOW_END);
       }
@@ -816,15 +810,6 @@ void BaseCouplingScheme::doImplicitStep()
       for (auto &pair : getAccelerationData()) {
         pair.second->values() = pair.second->getValuesAtTime(time::Storage::WINDOW_END);
       }
-      // @todo breaks for CplSchemeTests/ParallelImplicitCouplingSchemeTests. Why? @fsimonis
-      // for (auto &data : getAccelerationData() | boost::adaptors::map_values) {
-      //   data->storeValuesAtTime(time::Storage::WINDOW_END, data->values(), mustOverwrite);
-      // }
-      // The acceleration is applied to the data in the acceleration class not here.
-      // for (auto &pair : getAccelerationData()) {
-      //   bool mustOverwrite = true;
-      //   pair.second->storeValuesAtTime(time::Storage::WINDOW_END, pair.second->values(), mustOverwrite); // @todo: Here might be an error. Do we actually apply any acceleration to the values that are not at WINDOW_END?
-      // }
     }
   }
 }

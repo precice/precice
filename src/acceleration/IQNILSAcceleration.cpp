@@ -72,6 +72,7 @@ void IQNILSAcceleration::updateDifferenceMatrices(
     if (not _firstIteration) {
       bool columnLimitReached = getLSSystemCols() == _maxIterationsUsed;
       bool overdetermined     = getLSSystemCols() <= getLSSystemRows();
+
       if (not columnLimitReached && overdetermined) {
 
         // Append column for secondary W matrices
@@ -91,6 +92,20 @@ void IQNILSAcceleration::updateDifferenceMatrices(
         PRECICE_ASSERT(secW.rows() == cplData.at(id)->getSize(), secW.rows(), cplData.at(id)->getSize());
         secW.col(0) = cplData.at(id)->values();
         secW.col(0) -= _secondaryOldXTildes[id];
+
+        std::vector<precice::time::Storage> &vec       = _secondaryWaveformW[id];
+        precice::time::Storage               localCopy = cplData.at(id)->copyWaveform();
+
+        if (columnLimitReached || overdetermined) {
+          vec.erase(vec.end());
+        }
+
+        Eigen::VectorXd times = localCopy.getTimes();
+        for (double t : times) {
+          Eigen::VectorXd temp = localCopy.getValuesAtTime(t) - _secondaryOldXTildesW.at(id).sampleAt(t);
+          localCopy.setValuesAtTime(t, temp, true);
+        }
+        vec.insert(vec.begin(), localCopy);
       }
     }
 
@@ -99,6 +114,12 @@ void IQNILSAcceleration::updateDifferenceMatrices(
       PRECICE_ASSERT(_secondaryOldXTildes[id].size() == cplData.at(id)->getSize(),
                      _secondaryOldXTildes[id].size(), cplData.at(id)->getSize());
       _secondaryOldXTildes[id] = cplData.at(id)->values();
+
+      _secondaryOldXTildesW.clear();
+      for (int id : _dataIDs) {
+        precice::time::Storage localCopy = cplData.at(id)->copyWaveform();
+        _secondaryOldXTildesW.insert(std::pair<int, precice::time::Storage>(id, localCopy));
+      }
     }
   }
 
@@ -114,6 +135,12 @@ void IQNILSAcceleration::computeUnderrelaxationSecondaryData(
     PRECICE_ASSERT(_secondaryOldXTildes.at(id).size() == cplData.at(id)->getSize(),
                    _secondaryOldXTildes.at(id).size(), cplData.at(id)->getSize());
     _secondaryOldXTildes[id] = cplData.at(id)->values();
+
+    _secondaryOldXTildesW.clear();
+    for (int id : _dataIDs) {
+      precice::time::Storage localCopy = cplData.at(id)->copyWaveform();
+      _secondaryOldXTildesW.insert(std::pair<int, precice::time::Storage>(id, localCopy));
+    }
   }
 
   // Perform underrelaxation with initial relaxation factor for secondary data
@@ -125,6 +152,25 @@ void IQNILSAcceleration::computeUnderrelaxationSecondaryData(
     secResiduals                  = data->previousIteration(); // old
     secResiduals *= 1.0 - _initialRelaxation;                  // (1-omg) * old
     values += secResiduals;                                    // (1-omg) * old + new * omg
+  }
+
+  for (const DataMap::value_type &pair : cplData) {
+    const auto couplingData = pair.second;
+    auto &     values       = couplingData->values();
+    // const auto &oldValues    = couplingData->previousIteration();
+    auto storedTimes = couplingData->getStoredTimesAscending();
+
+    for (auto time : storedTimes) {
+
+      auto oldValues  = couplingData->getPreviousValuesAtTime(time);
+      auto data_value = couplingData->getValuesAtTime(time);
+      data_value *= _initialRelaxation;
+
+      data_value += oldValues * (1 - _initialRelaxation);
+
+      // Apply relaxation to all timesteps and store it in the current waveform
+      couplingData->storeValuesAtTime(time, data_value, true);
+    }
   }
 }
 
@@ -192,21 +238,16 @@ void IQNILSAcceleration::computeQNUpdate(const DataMap &cplData, Eigen::VectorXd
   }
 
   PRECICE_DEBUG("   Apply Newton factors");
-  // compute x updates from W and coefficients c, i.e, xUpdate = c*W
-  xUpdate = _matrixW * c;
-
-  /**
-     *  perform QN-Update step for the secondary Data
-     */
 
   // If the previous time window converged within one single iteration, nothing was added
   // to the LS system matrices and they need to be restored from the backup at time T-2
   if (not _firstTimeWindow && (getLSSystemCols() < 1) && (_timeWindowsReused == 0) && not _forceInitialRelaxation) {
     PRECICE_DEBUG("   Last time window converged after one iteration. Need to restore the secondaryMatricesW from backup.");
     _secondaryMatricesW = _secondaryMatricesWBackup;
+    _secondaryWaveformW = _secondaryWaveformWBackup;
   }
 
-  // Perform QN relaxation for secondary data
+  // Perform QN acceleration for secondary data
   for (int id : _secondaryDataIDs) {
     PtrCouplingData data   = cplData.at(id);
     auto &          values = data->values();
@@ -218,15 +259,71 @@ void IQNILSAcceleration::computeQNUpdate(const DataMap &cplData, Eigen::VectorXd
     values += _secondaryResiduals[id];
   }
 
+  // printf("\n *******Begin******** \n");
+  // std::cout << c;
+  // printf("\n *******End******** \n");
+
+  // printf("\n *******Begin V******** \n");
+  // std::cout << _matrixV;
+  // printf("\n *******End V******** \n");
+
+  // compute x updates from W and coefficients c, i.e, xUpdate = c*W
+
+  for (int id : _dataIDs) {
+
+    precice::time::Storage              localCopy = cplData.at(id)->copyWaveform();
+    std::vector<precice::time::Storage> Wlist     = _waveformW[id];
+    Eigen::VectorXd                     times     = localCopy.getTimes();
+    for (double t : times) {
+
+      Eigen::VectorXd temp = localCopy.getValuesAtTime(t);
+
+      for (int i = 0; i < c.size(); i++) {
+        // std::cout << Wlist.size();
+        // std::cout << c.size();
+        // std::cout << "\n Why no out put \n";
+        temp += Wlist[i].sampleAt(t) * c[i];
+      }
+      // printf("\n ********first******* \n");
+      // std::cout << cplData.at(id)->getValuesAtTime(t);
+      // printf("\n *************** \n");
+
+      cplData.at(id)->storeValuesAtTime(t, temp, true);
+
+      // printf("\n *******second******** \n");
+      // std::cout << cplData.at(id)->getValuesAtTime(t);
+      // printf("\n *************** \n");
+    }
+  }
+
+  for (int id : _secondaryDataIDs) {
+
+    precice::time::Storage              localCopy = cplData.at(id)->copyWaveform();
+    std::vector<precice::time::Storage> Wlist     = _secondaryWaveformW[id];
+    Eigen::VectorXd                     times     = localCopy.getTimes();
+    for (double t : times) {
+
+      Eigen::VectorXd temp = localCopy.getValuesAtTime(t);
+      for (int i = 0; i < c.size(); i++) {
+        temp += Wlist[i].sampleAt(t) * c[i];
+      }
+
+      cplData.at(id)->storeValuesAtTime(t, temp, true);
+    }
+  }
+
   // pending deletion: delete old secondaryMatricesW
-  if (_firstIteration && _timeWindowsReused == 0 && not _forceInitialRelaxation) {
+  if (false && _firstIteration && _timeWindowsReused == 0 && not _forceInitialRelaxation) {
     // save current secondaryMatrix data in case the coupling for the next time window will terminate
     // after the first iteration (no new data, i.e., V = W = 0)
     if (getLSSystemCols() > 0) {
       _secondaryMatricesWBackup = _secondaryMatricesW;
+      _secondaryWaveformWBackup = _secondaryWaveformW;
     }
+
     for (int id : _secondaryDataIDs) {
       _secondaryMatricesW[id].resize(0, 0);
+      _secondaryWaveformW.clear();
     }
   }
 }
@@ -258,6 +355,9 @@ void IQNILSAcceleration::specializedIterationsConverged(
       PRECICE_ASSERT(secW.cols() > toRemove, secW, toRemove, id);
       for (int i = 0; i < toRemove; i++) {
         utils::removeColumnFromMatrix(secW, secW.cols() - 1);
+        for (int id : _secondaryDataIDs) {
+          _secondaryWaveformW[id].erase(_secondaryWaveformW[id].end());
+        }
       }
     }
   }
@@ -270,6 +370,7 @@ void IQNILSAcceleration::removeMatrixColumn(
   // remove column from secondary Data Matrix W
   for (int id : _secondaryDataIDs) {
     utils::removeColumnFromMatrix(_secondaryMatricesW[id], columnIndex);
+    _secondaryWaveformW[id].erase(_secondaryWaveformW[id].begin() + columnIndex);
   }
 
   BaseQNAcceleration::removeMatrixColumn(columnIndex);

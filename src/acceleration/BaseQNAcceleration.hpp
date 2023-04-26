@@ -185,9 +185,15 @@ protected:
     */
   bool _resetLS = false;
 
-  /// @brief Solver output from last iteration.
-  Eigen::VectorXd _oldXTilde;
+  /**
+   *
+   * @brief Saves the current waveform xtilde in _waveformW.
+  */
+  void addWaveforms(const DataMap &cplData);
 
+  /// @brief Solver output from last iteration.
+  Eigen::VectorXd                       _oldXTilde;
+  std::map<int, precice::time::Storage> _oldXTildeW;
   /// @brief Current iteration residuals of IQN data. Temporary.
   Eigen::VectorXd _residuals;
 
@@ -198,7 +204,12 @@ protected:
   Eigen::MatrixXd _matrixV;
 
   /// @brief Stores x tilde deltas, where x tilde are values computed by solvers.
+  /// Need to store the waveform iterations
   Eigen::MatrixXd _matrixW;
+  // Need to store the waveforms of x tilde as well
+  std::map<int, std::vector<precice::time::Storage>> _waveformW;
+
+  std::map<int, std::vector<precice::time::Storage>> _waveformWBackup;
 
   /// @brief Stores the current QR decomposition ov _matrixV, can be updated via deletion/insertion of columns
   impl::QRFactorization _qrV;
