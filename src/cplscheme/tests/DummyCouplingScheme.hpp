@@ -18,12 +18,13 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param[in] numberIterations If 1, models and explicit coupling scheme,
-   *        otherwise and implicit one.
+   * @param[in] numberIterations If 1, models an explicit coupling scheme,
+   *        otherwise an implicit one.
+   * @param[in] maxTimeWindows Number of time windows this DummyCouplingScheme has to perform.
    */
   DummyCouplingScheme(
       int numberIterations,
-      int maxTimesteps);
+      int maxTimeWindows);
 
   /**
    * @brief Destructor, empty.
@@ -100,7 +101,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  bool willDataBeExchanged(double lastSolverTimestepLength) const override final
+  bool willDataBeExchanged(double lastSolverTimeStepSize) const override final
   {
     PRECICE_ASSERT(false);
     return false;
@@ -129,7 +130,7 @@ public:
    */
   int getTimeWindows() const override final
   {
-    return _timesteps;
+    return _timeWindows;
     return 0;
   }
 
@@ -154,7 +155,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  double getNextTimestepMaxLength() const override final
+  double getNextTimeStepMaxSize() const override final
   {
     PRECICE_ASSERT(false);
     return 0;
@@ -227,17 +228,17 @@ public:
 private:
   mutable logging::Logger _log{"cplscheme::tests::DummyCouplingScheme"};
 
-  /// @brief Number of iterations performed per timestep. 1 --> explicit.
+  /// @brief Number of iterations performed per time window. 1 --> explicit.
   int _numberIterations;
 
-  /// @brief Performed iterations in the current timestep.
+  /// @brief Performed iterations in the current time window.
   int _iterations = 0;
 
-  /// @brief Maximal number of timesteps to be performed.
-  int _maxTimesteps;
+  /// @brief Maximal number of time windows to be performed.
+  int _maxTimeWindows;
 
-  /// @brief Performed number of timesteps.
-  int _timesteps = 0;
+  /// @brief Performed number of time windows.
+  int _timeWindows = 0;
 
   /// @brief True, if initialize has been called.
   bool _isInitialized = false;

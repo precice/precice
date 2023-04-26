@@ -32,9 +32,9 @@ double SolverInterface::initialize()
 }
 
 double SolverInterface::advance(
-    double computedTimestepLength)
+    double computedTimeStepSize)
 {
-  return _impl->advance(computedTimestepLength);
+  return _impl->advance(computedTimeStepSize);
 }
 
 void SolverInterface::finalize()

@@ -39,27 +39,27 @@ PRECICE_API void precicef_create_(
 
 /**
  * Fortran syntax:
- * precicef_initialize( DOUBLE PRECISION timstepLengthLimit )
+ * precicef_initialize( DOUBLE PRECISION timeStepSizeLimit )
  *
  * IN:  -
- * OUT: timestepLengthLimit
+ * OUT: timeStepSizeLimit
  *
  * @copydoc precice::SolverInterface::initialize()
  *
  */
-PRECICE_API void precicef_initialize_(double *timestepLengthLimit);
+PRECICE_API void precicef_initialize_(double *timeStepSizeLimit);
 
 /**
  * Fortran syntax:
- * precicef_advance( DOUBLE PRECISION timstepLengthLimit )
+ * precicef_advance( DOUBLE PRECISION timeStepSizeLimit )
  *
- * IN:  timestepLengthLimit
- * OUT: timestepLengthLimit
+ * IN:  timeStepSizeLimit
+ * OUT: timeStepSizeLimit
  *
  * @copydoc precice::SolverInterface::advance()
  *
  */
-PRECICE_API void precicef_advance_(double *timestepLengthLimit);
+PRECICE_API void precicef_advance_(double *timeStepSizeLimit);
 
 /**
  * Fortran syntax:
