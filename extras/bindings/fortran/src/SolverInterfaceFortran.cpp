@@ -53,18 +53,17 @@ void precicef_create_(
       *solverProcessSize));
 }
 
-void precicef_initialize_(
-    double *timeStepSizeLimit)
+void precicef_initialize_()
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  *timeStepSizeLimit = impl->initialize();
+  impl->initialize();
 }
 
 void precicef_advance_(
-    double *timeStepSizeLimit)
+    const double *timeStepSize)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  *timeStepSizeLimit = impl->advance(*timeStepSizeLimit);
+  impl->advance(*timeStepSize);
 }
 
 void precicef_finalize_()
@@ -101,6 +100,13 @@ void precicef_is_time_window_complete_(
   } else {
     *isComplete = 0;
   }
+}
+
+void precicef_get_max_time_step_size_(
+    double *maxTimeStepSize)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  *maxTimeStepSize = impl->getMaxTimeStepSize();
 }
 
 void precicef_requires_initial_data_(

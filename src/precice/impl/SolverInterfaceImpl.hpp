@@ -91,10 +91,10 @@ public:
   ///@{
 
   /// @copydoc SolverInterface::initialize
-  double initialize();
+  void initialize();
 
   /// @copydoc SolverInterface::advance
-  double advance(double computedTimeStepSize);
+  void advance(double computedTimeStepSize);
 
   /// @copydoc SolverInterface::finalize
   void finalize();
@@ -112,6 +112,9 @@ public:
 
   /// @copydoc SolverInterface::isTimeWindowComplete
   bool isTimeWindowComplete() const;
+
+  /// @copydoc SolverInterface::getMaxTimeStepSize
+  double getMaxTimeStepSize() const;
 
   ///@}
 
@@ -490,7 +493,7 @@ private:
   /// Advances the coupling schemes
   void advanceCouplingScheme();
 
-  /// Syncs the time step between all ranks (all time steps should be the same!)
+  /// Syncs the time step size between all ranks (all time steps sizes should be the same!)
   void syncTimestep(double computedTimeStepSize);
 
   /// Which channels to close in closeCommunicationChannels()

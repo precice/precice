@@ -36,7 +36,7 @@ public:
    */
   void initialize(
       double startTime,
-      int    startTimesteps) override final;
+      int    startTimeWindows) override final;
 
   /**
    * @brief Not implemented.

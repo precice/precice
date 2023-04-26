@@ -39,27 +39,27 @@ PRECICE_API void precicef_create_(
 
 /**
  * Fortran syntax:
- * precicef_initialize( DOUBLE PRECISION timeStepSizeLimit )
+ * precicef_initialize()
  *
  * IN:  -
- * OUT: timeStepSizeLimit
+ * OUT: -
  *
  * @copydoc precice::SolverInterface::initialize()
  *
  */
-PRECICE_API void precicef_initialize_(double *timeStepSizeLimit);
+PRECICE_API void precicef_initialize_();
 
 /**
  * Fortran syntax:
- * precicef_advance( DOUBLE PRECISION timeStepSizeLimit )
+ * precicef_advance( DOUBLE PRECISION timeStepSize )
  *
- * IN:  timeStepSizeLimit
- * OUT: timeStepSizeLimit
+ * IN:  timeStepSize
+ * OUT: -
  *
  * @copydoc precice::SolverInterface::advance()
  *
  */
-PRECICE_API void precicef_advance_(double *timeStepSizeLimit);
+PRECICE_API void precicef_advance_(const double *timeStepSize);
 
 /**
  * Fortran syntax:
@@ -105,6 +105,18 @@ PRECICE_API void precicef_is_coupling_ongoing_(int *isOngoing);
  *
  */
 PRECICE_API void precicef_is_time_window_complete_(int *isComplete);
+
+/**
+ * Fortran syntax:
+ * precicef_get_max_time_step_size( DOUBLE PRECISION maxTimeStepSize )
+ *
+ * IN:  -
+ * OUT: maxTimeStepSize
+ *
+ * @copydoc precice::SolverInterface::getMaxTimeStepSize()
+ *
+ */
+PRECICE_API void precicef_get_max_time_step_size_(double *maxTimeStepSize);
 
 /**
  * Fortran syntax:

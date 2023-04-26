@@ -262,7 +262,7 @@ void SolverInterfaceImpl::configure(
   solverInitEvent.start(precice::syncMode);
 }
 
-double SolverInterfaceImpl::initialize()
+void SolverInterfaceImpl::initialize()
 {
   PRECICE_TRACE();
   PRECICE_CHECK(_state != State::Finalized, "initialize() cannot be called after finalize().")
@@ -351,7 +351,6 @@ double SolverInterfaceImpl::initialize()
   }
 
   PRECICE_DEBUG("Initialize coupling schemes");
-  // result of _couplingScheme->getNextTimeStepMaxSize() can change when calling _couplingScheme->initialize(...) and first participant method is used for setting the time window size.
   _couplingScheme->initialize(time, timeWindow);
 
   if (_couplingScheme->hasDataBeenReceived()) {
@@ -385,13 +384,9 @@ double SolverInterfaceImpl::initialize()
 
   _state = State::Initialized;
   PRECICE_INFO(_couplingScheme->printCouplingState());
-
-  // determine dt at the very end of the method to get the final value, even if first participant method is used (see above).
-  double dt = _couplingScheme->getNextTimeStepMaxSize();
-  return dt;
 }
 
-double SolverInterfaceImpl::advance(
+void SolverInterfaceImpl::advance(
     double computedTimeStepSize)
 {
 
@@ -458,7 +453,6 @@ double SolverInterfaceImpl::advance(
 
   _meshLock.lockAll();
   solverEvent.start(precice::syncMode);
-  return _couplingScheme->getNextTimeStepMaxSize();
 }
 
 void SolverInterfaceImpl::finalize()
@@ -535,6 +529,13 @@ bool SolverInterfaceImpl::isTimeWindowComplete() const
   PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before isTimeWindowComplete().");
   PRECICE_CHECK(_state != State::Finalized, "isTimeWindowComplete() cannot be called after finalize().");
   return _couplingScheme->isTimeWindowComplete();
+}
+
+double SolverInterfaceImpl::getMaxTimeStepSize() const
+{
+  PRECICE_CHECK(_state != State::Finalized, "getMaxTimeStepSize() cannot be called after finalize().");
+  PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before isCouplingOngoing() can be evaluated.");
+  return _couplingScheme->getNextTimeStepMaxSize();
 }
 
 bool SolverInterfaceImpl::requiresInitialData()

@@ -26,15 +26,15 @@ SolverInterface::SolverInterface(
 
 SolverInterface::~SolverInterface() = default;
 
-double SolverInterface::initialize()
+void SolverInterface::initialize()
 {
-  return _impl->initialize();
+  _impl->initialize();
 }
 
-double SolverInterface::advance(
+void SolverInterface::advance(
     double computedTimeStepSize)
 {
-  return _impl->advance(computedTimeStepSize);
+  _impl->advance(computedTimeStepSize);
 }
 
 void SolverInterface::finalize()
@@ -55,6 +55,11 @@ bool SolverInterface::isCouplingOngoing() const
 bool SolverInterface::isTimeWindowComplete() const
 {
   return _impl->isTimeWindowComplete();
+}
+
+double SolverInterface::getMaxTimeStepSize() const
+{
+  return _impl->getMaxTimeStepSize();
 }
 
 bool SolverInterface::requiresInitialData()
