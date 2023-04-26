@@ -28,10 +28,12 @@ void runTestExplicit(std::string const &configurationFileName, TestContext const
   }
 
   BOOST_TEST(couplingInterface.getDimensions() == 3);
-  double dt = couplingInterface.initialize();
+  couplingInterface.initialize();
+  double dt = couplingInterface.getMaxTimeStepSize();
   while (couplingInterface.isCouplingOngoing()) {
     time += dt;
-    dt = couplingInterface.advance(dt);
+    couplingInterface.advance(dt);
+    dt = couplingInterface.getMaxTimeStepSize();
     timesteps++;
   }
   couplingInterface.finalize();

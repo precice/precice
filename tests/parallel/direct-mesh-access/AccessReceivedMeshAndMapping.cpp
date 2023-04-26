@@ -35,7 +35,8 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
     // Define region of interest, where we could obtain direct write access
     interface.setMeshAccessRegion(otherMeshName, boundingBox.data());
 
-    double dt = interface.initialize();
+    interface.initialize();
+    double dt = interface.getMaxTimeStepSize();
     // Get the size of the filtered mesh within the bounding box
     // (provided by the coupling participant)
     const int otherMeshSize = interface.getMeshVertexSize(otherMeshName);
@@ -60,7 +61,8 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
       // Write data
       interface.writeBlockScalarData(otherMeshName, writeDataName, otherMeshSize,
                                      otherIDs.data(), writeData.data());
-      dt = interface.advance(dt);
+      interface.advance(dt);
+      dt = interface.getMaxTimeStepSize();
       interface.readBlockScalarData(ownMeshName, readDataName, ownIDs.size(),
                                     ownIDs.data(), dt, readData.data());
 
@@ -91,12 +93,16 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
       writeData.emplace_back(i);
 
     // Initialize
-    double dt = interface.initialize();
+    interface.initialize();
+    double dt = interface.getMaxTimeStepSize();
+
     while (interface.isCouplingOngoing()) {
 
       interface.writeBlockScalarData(meshName, writeDataName, ids.size(),
                                      ids.data(), writeData.data());
-      dt = interface.advance(dt);
+      interface.advance(dt);
+      dt = interface.getMaxTimeStepSize();
+
       interface.readBlockScalarData(meshName, readDataName, ids.size(),
                                     ids.data(), dt, readData.data());
       // Expected data according to the writeData

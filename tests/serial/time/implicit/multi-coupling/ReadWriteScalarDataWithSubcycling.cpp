@@ -82,10 +82,9 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
   }
 
-  double maxDt     = precice.initialize();
-  double windowDt  = maxDt;
-  double dt        = windowDt / nSubsteps; // time step size desired by solver. E.g. 2 steps with size 1/2
-  double currentDt = dt;                   // time step size used by solver
+  precice.initialize();
+  double windowDt = precice.getMaxTimeStepSize();
+  double solverDt = windowDt / nSubsteps; // time step size desired by solver. E.g. 2 steps with size 1/2
 
   while (precice.isCouplingOngoing()) {
     if (precice.requiresWritingCheckpoint()) {
@@ -93,11 +92,15 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
       windowStartStep = timestep;
     }
 
+    double preciceDt = precice.getMaxTimeStepSize();
+    double currentDt = solverDt > preciceDt ? preciceDt : solverDt; // determine actual time step size; must fit into remaining time in window
+    BOOST_CHECK(currentDt == windowDt / nSubsteps);                 // no subcycling.
+
     for (auto &readDataPair : readDataPairs) {
       auto readDataName = readDataPair.first;
       auto readFunction = readDataPair.second;
 
-      precice.readScalarData(meshName, readDataName, vertexID, maxDt, readData);
+      precice.readScalarData(meshName, readDataName, vertexID, currentDt, readData);
       if (iterations == 0 && timestep == 0) {                        // special situation: Both solvers are in their very first time windows, first iteration, first time step
         BOOST_TEST(readData == readFunction(0));                     // use initial data only.
       } else if (iterations == 0) {                                  // special situation: Both solvers get the old data for all time windows.
@@ -113,9 +116,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     time += currentDt;
     writeData = writeFunction(time);
     precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
-    maxDt     = precice.advance(currentDt);
-    currentDt = dt > maxDt ? maxDt : dt;
-    BOOST_CHECK(currentDt == windowDt / nSubsteps); // no subcycling.
+    precice.advance(currentDt);
     timestep++;
     if (precice.requiresReadingCheckpoint()) { // at end of window and we have to repeat it.
       iterations++;

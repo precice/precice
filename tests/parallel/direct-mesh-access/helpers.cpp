@@ -25,7 +25,8 @@ void runTestAccessReceivedMesh(const TestContext &       context,
     // Set bounding box
     interface.setMeshAccessRegion(otherMeshName, boundingBox.data());
     // Initialize the solverinterface
-    double dt = interface.initialize();
+    interface.initialize();
+    double dt = interface.getMaxTimeStepSize();
 
     // Get relevant size, allocate data structures and retrieve coordinates
     const std::size_t meshSize = interface.getMeshVertexSize(otherMeshName);
@@ -65,7 +66,8 @@ void runTestAccessReceivedMesh(const TestContext &       context,
                                        ids_ptr, writeData.data());
       }
 
-      dt = interface.advance(dt);
+      interface.advance(dt);
+      double dt = interface.getMaxTimeStepSize();
     }
   } else {
     // Defines the mesh and reads data
@@ -98,13 +100,15 @@ void runTestAccessReceivedMesh(const TestContext &       context,
     }
 
     // Initialize the solverinterface
-    double dt = interface.initialize();
+    interface.initialize();
+    double dt = interface.getMaxTimeStepSize();
 
     // Start the time loop
     std::vector<double> readData(size);
     while (interface.isCouplingOngoing()) {
 
-      dt = interface.advance(dt);
+      interface.advance(dt);
+      double dt = interface.getMaxTimeStepSize();
       interface.readBlockScalarData(meshName, dataName, size,
                                     ids.data(), dt, readData.data());
 

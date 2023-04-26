@@ -29,9 +29,10 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataMultipleReadWrite)
     Eigen::VectorXd readPositions(size * 3);
     vertexIDs[0] = cplInterface.setMeshVertex(meshName, readPositions.data());
 
-    auto   dataAID = "DataOne";
-    auto   dataBID = "DataTwo";
-    double maxDt   = cplInterface.initialize();
+    auto dataAID = "DataOne";
+    auto dataBID = "DataTwo";
+    cplInterface.initialize();
+    double maxDt = cplInterface.getMaxTimeStepSize();
 
     // multiple readBlockScalarData
     cplInterface.readBlockScalarData(meshName, dataBID, 1, vertexIDs.data(), maxDt, readDataB.data());
@@ -91,7 +92,8 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataMultipleReadWrite)
     BOOST_TEST(Vector3d(7.0, 7.0, 7.0) == readDataA);
 
     while (cplInterface.isCouplingOngoing()) {
-      maxDt = cplInterface.advance(maxDt);
+      cplInterface.advance(maxDt);
+      maxDt = cplInterface.getMaxTimeStepSize();
 
       // multiple readBlockScalarData
       cplInterface.readBlockScalarData(meshName, dataBID, 1, vertexIDs.data(), maxDt, readDataB.data());
@@ -211,7 +213,8 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataMultipleReadWrite)
     BOOST_TEST(Vector3d(7.0, 7.0, 7.0) == writeDataA);
     cplInterface.writeVectorData(meshName, dataAID, vertexIDs[0], writeDataA.data());
 
-    double maxDt = cplInterface.initialize();
+    cplInterface.initialize();
+    double maxDt = cplInterface.getMaxTimeStepSize();
     while (cplInterface.isCouplingOngoing()) {
       // multiple writeBlockScalarData
       writeDataB[0] = -2.51;
@@ -259,7 +262,8 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataMultipleReadWrite)
       BOOST_TEST(Vector3d(9.0, 9.0, 9.0) == writeDataA);
       cplInterface.writeVectorData(meshName, dataAID, vertexIDs[0], writeDataA.data());
 
-      maxDt = cplInterface.advance(maxDt);
+      cplInterface.advance(maxDt);
+      maxDt = cplInterface.getMaxTimeStepSize();
     }
     cplInterface.finalize();
   }

@@ -26,7 +26,8 @@ BOOST_AUTO_TEST_CASE(ExportTimeseries)
   }
 
   double time = 0.0;
-  double dt   = interface.initialize();
+  interface.initialize();
+  double dt = interface.getMaxTimeStepSize();
 
   if (context.isNamed("ExporterOne")) {
     auto sdataName = "S";
@@ -46,12 +47,14 @@ BOOST_AUTO_TEST_CASE(ExportTimeseries)
       interface.writeBlockVectorData(meshName, vdataName, 6, vertexIds.data(), vdata.data());
 
       time += dt;
-      dt = interface.advance(dt);
+      interface.advance(dt);
+      dt = interface.getMaxTimeStepSize();
     }
   } else {
     while (interface.isCouplingOngoing()) {
       time += dt;
-      dt = interface.advance(dt);
+      interface.advance(dt);
+      dt = interface.getMaxTimeStepSize();
     };
   }
   BOOST_TEST(time == 5);

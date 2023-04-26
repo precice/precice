@@ -53,7 +53,8 @@ BOOST_AUTO_TEST_CASE(ActionTimingsImplicit)
     interface.writeVectorData(meshName, writeDataName, vertexID, writeData.data());
   }
 
-  dt = interface.initialize();
+  interface.initialize();
+  dt = interface.getMaxTimeStepSize();
   BOOST_TEST(dt == 1.0);
   if (context.isNamed("SolverOne")) {
     BOOST_TEST(action::RecorderAction::records.empty());
@@ -70,7 +71,8 @@ BOOST_AUTO_TEST_CASE(ActionTimingsImplicit)
     interface.writeVectorData(meshName, writeDataName, vertexID, writeData.data());
     if (interface.requiresWritingCheckpoint()) {
     }
-    dt = interface.advance(dt);
+    interface.advance(dt);
+    double dt = interface.getMaxTimeStepSize();
     if (interface.requiresReadingCheckpoint()) {
     }
     if (interface.isTimeWindowComplete()) {

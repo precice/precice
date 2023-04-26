@@ -65,7 +65,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingMixed)
     precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
   }
 
-  double maxDt    = precice.initialize();
+  precice.initialize();
+  double maxDt    = precice.getMaxTimeStepSize();
   double windowDt = maxDt;
   double dt       = windowDt / nSubsteps; // time step size desired by solver. E.g. 4 steps  with size 1/4
   dt += windowDt / nSubsteps / nSubsteps; // increase time step size such that we get a non-matching subcycling. E.g. 3 step with size 5/16 and 1 step with size 1/16.
@@ -115,7 +116,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingMixed)
     timestep++;
     writeData = writeFunction(time);
     precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
-    maxDt = precice.advance(currentDt);
+    precice.advance(currentDt);
+    maxDt = precice.getMaxTimeStepSize();
     if (precice.requiresReadingCheckpoint()) {
       time     = timeCheckpoint;
       timestep = timestepCheckpoint;

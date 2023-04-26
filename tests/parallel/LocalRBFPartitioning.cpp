@@ -22,7 +22,8 @@ BOOST_AUTO_TEST_CASE(LocalRBFPartitioning)
     interface.setMeshVertices(meshName, 2, positions, vertexIDs);
     interface.initialize();
     double values[2];
-    double preciceDt = interface.advance(1.0);
+    interface.advance(1.0);
+    double preciceDt = interface.getMaxTimeStepSize();
     interface.readBlockScalarData(meshName, dataName, 2, vertexIDs, preciceDt, values);
     interface.finalize();
   } else {

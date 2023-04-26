@@ -28,7 +28,8 @@ BOOST_AUTO_TEST_CASE(DirectAccessReadWrite)
     std::vector<int>    ids(meshSize, -1);
     interface.setMeshVertices(providedMeshName, ids.size(), positions.data(), ids.data());
 
-    double dt = interface.initialize();
+    interface.initialize();
+    double dt = interface.getMaxTimeStepSize();
 
     // Some dummy writeData
     std::vector<double> readData(ids.size(), -1);
@@ -51,7 +52,8 @@ BOOST_AUTO_TEST_CASE(DirectAccessReadWrite)
 
       BOOST_TEST(precice::testing::equals(expectedData, readData));
       interface.writeBlockScalarData(providedMeshName, writeDataName, ids.size(), ids.data(), writeData.data());
-      dt = interface.advance(dt);
+      interface.advance(dt);
+      double dt = interface.getMaxTimeStepSize();
       iterations++;
       if (interface.requiresReadingCheckpoint()) {
         // do nothing
@@ -71,7 +73,8 @@ BOOST_AUTO_TEST_CASE(DirectAccessReadWrite)
     // Define region of interest, where we could obtain direct write access
     interface.setMeshAccessRegion(receivedMeshName, boundingBox.data());
 
-    double dt = interface.initialize();
+    interface.initialize();
+    double dt = interface.getMaxTimeStepSize();
     // Get the size of the filtered mesh within the bounding box
     // (provided by the coupling participant)
     const int receivedMeshSize = interface.getMeshVertexSize(receivedMeshName);
@@ -105,7 +108,8 @@ BOOST_AUTO_TEST_CASE(DirectAccessReadWrite)
 
       BOOST_TEST(precice::testing::equals(expectedData, readData));
       interface.writeBlockScalarData(receivedMeshName, writeDataName, receiveMeshIDs.size(), receiveMeshIDs.data(), writeData.data());
-      dt = interface.advance(dt);
+      interface.advance(dt);
+      double dt = interface.getMaxTimeStepSize();
       iterations++;
       if (interface.requiresReadingCheckpoint()) {
         // do nothing

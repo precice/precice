@@ -51,7 +51,8 @@ BOOST_AUTO_TEST_CASE(ActionTimingsExplicit)
     interface.writeVectorData(meshName, writeDataName, vertexID, writeData.data());
   }
 
-  dt = interface.initialize();
+  interface.initialize();
+  dt = interface.getMaxTimeStepSize();
   BOOST_TEST(dt == 1.0);
 
   if (context.isNamed("SolverOne")) {
@@ -70,7 +71,8 @@ BOOST_AUTO_TEST_CASE(ActionTimingsExplicit)
   while (interface.isCouplingOngoing()) {
     interface.readVectorData(meshName, readDataName, vertexID, dt, readData.data());
     interface.writeVectorData(meshName, writeDataName, vertexID, writeData.data());
-    dt = interface.advance(dt);
+    interface.advance(dt);
+    double dt = interface.getMaxTimeStepSize();
     BOOST_TEST(interface.isTimeWindowComplete());
     iteration++;
     if (context.isNamed("SolverOne") || iteration < 10) {

@@ -63,7 +63,8 @@ void runTestDistributedCommunication(std::string const &config, TestContext cons
     vertexIDs.push_back(vertexID);
   }
 
-  double dt = precice.initialize();
+  precice.initialize();
+  double dt = precice.getMaxTimeStepSize();
 
   if (context.isNamed("Fluid")) { //Fluid
     for (size_t i = 0; i < vertexIDs.size(); i++) {
@@ -78,7 +79,8 @@ void runTestDistributedCommunication(std::string const &config, TestContext cons
     }
   }
 
-  dt = precice.advance(1.0);
+  precice.advance(1.0);
+  dt = precice.getMaxTimeStepSize();
 
   if (context.isNamed("Fluid")) { //Fluid
     for (size_t i = 0; i < vertexIDs.size(); i++) {

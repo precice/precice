@@ -38,7 +38,8 @@ BOOST_AUTO_TEST_CASE(Implicit)
     // Define region of interest, where we could obtain direct write access
     couplingInterface.setMeshAccessRegion(otherMeshName, boundingBox.data());
 
-    double dt = couplingInterface.initialize();
+    couplingInterface.initialize();
+    double dt = couplingInterface.getMaxTimeStepSize();
     // Get the size of the filtered mesh within the bounding box
     // (provided by the coupling participant)
     const int meshSize = couplingInterface.getMeshVertexSize(otherMeshName);
@@ -64,7 +65,8 @@ BOOST_AUTO_TEST_CASE(Implicit)
       // Write data
       couplingInterface.writeBlockScalarData(otherMeshName, otherDataName, meshSize,
                                              otherIDs.data(), writeData.data());
-      dt = couplingInterface.advance(dt);
+      couplingInterface.advance(dt);
+      dt = couplingInterface.getMaxTimeStepSize();
       couplingInterface.readBlockScalarData(ownMeshName, ownDataName, ownIDs.size(),
                                             ownIDs.data(), dt, readData.data());
       if (couplingInterface.requiresReadingCheckpoint()) {
@@ -91,7 +93,8 @@ BOOST_AUTO_TEST_CASE(Implicit)
     // Define region of interest, where we could obtain direct write access
     couplingInterface.setMeshAccessRegion(otherMeshName, boundingBox.data());
     // Initialize
-    double dt = couplingInterface.initialize();
+    couplingInterface.initialize();
+    double dt = couplingInterface.getMaxTimeStepSize();
 
     const int meshSize = couplingInterface.getMeshVertexSize(otherMeshName);
     BOOST_TEST(meshSize == 4);
@@ -114,7 +117,8 @@ BOOST_AUTO_TEST_CASE(Implicit)
       // Write data
       couplingInterface.writeBlockScalarData(otherMeshName, otherDataName, meshSize,
                                              otherIDs.data(), writeData.data());
-      dt = couplingInterface.advance(dt);
+      couplingInterface.advance(dt);
+      dt = couplingInterface.getMaxTimeStepSize();
       couplingInterface.readBlockScalarData(ownMeshName, ownDataName, ownIDs.size(),
                                             ownIDs.data(), dt, readData.data());
       if (couplingInterface.requiresReadingCheckpoint()) {
