@@ -143,8 +143,6 @@ public:
   /**
    * @brief Returns true, if time window size is given by any of the coupling schemes in this compositional coupling scheme.
    *
-   * If any of the solvers in the composition has a time step size limit, this
-   * counts as limit.
    */
   bool hasTimeWindowSize() const final override;
 
@@ -154,8 +152,6 @@ public:
    * An assertion is thrown, if no valid time window size is given. Check with
    * hasTimeWindowSize().
    *
-   * The smallest time step size limit in the coupling scheme composition has
-   * to be obeyed.
    */
   double getTimeWindowSize() const final override;
 
