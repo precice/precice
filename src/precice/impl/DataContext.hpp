@@ -45,6 +45,13 @@ public:
   int getDataDimensions() const;
 
   /**
+   * @brief Get the spatial dimensions of _providedData.
+   *
+   * @return int Spatial dimensions of _providedData.
+   */
+  int getSpatialDimensions() const;
+
+  /**
    * @brief Get the size of _providedData.
    *
    * @return int size of _providedData.
@@ -64,6 +71,14 @@ public:
    * @return int ID of _mesh.
    */
   MeshID getMeshID() const;
+
+  /**
+   * @brief Returns whether _providedData has gradient
+   *
+   * @return true, if it has gradient
+   * @return false, if it has gradient
+   */
+  bool hasGradient() const;
 
   /**
    * @brief Perform the mapping for all mapping contexts and the corresponding data context (from and to data)

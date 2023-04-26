@@ -31,13 +31,19 @@ void DataContext::resetData()
   }
 }
 
-DataID DataContext::getDataDimensions() const
+int DataContext::getDataDimensions() const
 {
   PRECICE_ASSERT(_providedData);
   return _providedData->getDimensions();
 }
 
-DataID DataContext::getDataSize() const
+int DataContext::getSpatialDimensions() const
+{
+  PRECICE_ASSERT(_providedData);
+  return _providedData->getSpatialDimensions();
+}
+
+int DataContext::getDataSize() const
 {
   PRECICE_ASSERT(_providedData);
   return _providedData->values().size();
@@ -53,6 +59,12 @@ MeshID DataContext::getMeshID() const
 {
   PRECICE_ASSERT(_mesh);
   return _mesh->getID();
+}
+
+bool DataContext::hasGradient() const
+{
+  PRECICE_ASSERT(_providedData);
+  return _providedData->hasGradient();
 }
 
 void DataContext::appendMapping(MappingContext mappingContext)
