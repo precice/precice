@@ -1,6 +1,6 @@
 #pragma once
 
-#include "precice/export.h"
+#include <precice/export.h>
 
 /** @file
  * This file contains a Fortran 77 compatible interface written in C/C++.

@@ -1,9 +1,9 @@
 #pragma once
 
 #include <memory>
+#include <precice/Version.h>
+#include <precice/export.h>
 #include <precice/span.hpp>
-#include "precice/Version.h"
-#include "precice/export.h"
 
 /**
  * forward declarations.
@@ -703,10 +703,10 @@ public:
   void readBlockVectorData(
       ::precice::string_view meshName,
       ::precice::string_view dataName,
-      int              size,
-      const int *      valueIndices,
-      double           relativeReadTime,
-      double *         values) const;
+      int                    size,
+      const int *            valueIndices,
+      double                 relativeReadTime,
+      double *               values) const;
 
   /**
    * @brief Reads vector data at a vertex on a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.
@@ -738,9 +738,9 @@ public:
   void readVectorData(
       ::precice::string_view meshName,
       ::precice::string_view dataName,
-      int              valueIndex,
-      double           relativeReadTime,
-      double *         value) const;
+      int                    valueIndex,
+      double                 relativeReadTime,
+      double *               value) const;
 
   /**
    * @brief Reads scalar data values given as block from a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.
@@ -772,10 +772,10 @@ public:
   void readBlockScalarData(
       ::precice::string_view meshName,
       ::precice::string_view dataName,
-      int              size,
-      const int *      valueIndices,
-      double           relativeReadTime,
-      double *         values) const;
+      int                    size,
+      const int *            valueIndices,
+      double                 relativeReadTime,
+      double *               values) const;
 
   /**
    * @brief Reads scalar data at a vertex on a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.
@@ -802,9 +802,9 @@ public:
   void readScalarData(
       ::precice::string_view meshName,
       ::precice::string_view dataName,
-      int              valueIndex,
-      double           relativeReadTime,
-      double &         value) const;
+      int                    valueIndex,
+      double                 relativeReadTime,
+      double &               value) const;
 
   ///@}
 
