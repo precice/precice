@@ -34,7 +34,7 @@ int ReadDataContext::getInterpolationOrder() const
 
 void ReadDataContext::storeDataInWaveform()
 {
-  _providedData->timeStepsStorage().setValuesAtTime(time::Storage::WINDOW_END, _providedData->values());
+  _providedData->timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, time::Sample{_providedData->values()});
 }
 
 Eigen::VectorXd ReadDataContext::sampleWaveformAt(double normalizedDt)

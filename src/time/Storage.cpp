@@ -19,11 +19,6 @@ void Storage::initialize(Eigen::VectorXd values)
   _sampleStorage.emplace_back(Stample{WINDOW_END, Sample{values}});
 }
 
-void Storage::setValuesAtTime(double time, Eigen::VectorXd values)
-{
-  setSampleAtTime(time, Sample{values});
-}
-
 void Storage::setSampleAtTime(double time, Sample sample)
 {
   PRECICE_ASSERT(math::smallerEquals(WINDOW_START, time), "Setting values outside of valid range!");

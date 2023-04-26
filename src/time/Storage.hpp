@@ -32,15 +32,13 @@ public:
   void initialize(Eigen::VectorXd values);
 
   /**
-   * @brief Store values at a specific time.
+   * @brief Store Sample at a specific time.
    *
-   * It is only allowed to store values in time that come after values that were already stored. Therefore, time has to be larger than maxStoredNormalizedDt. Overwriting existing values is forbidden. The function clear() should be used to clear the storage and provide new values.
+   * It is only allowed to store a Sample in time that comes after a Sample that was already stored. Therefore, time has to be larger than maxStoredNormalizedDt. Overwriting existing samples is forbidden. The function clear() should be used to clear the storage and provide new samples.
    *
-   * @param time the time associated with the values
-   * @param values stored values
+   * @param time the time associated with the sample
+   * @param sample stored sample
    */
-  void setValuesAtTime(double time, Eigen::VectorXd values);
-
   void setSampleAtTime(double time, Sample sample);
 
   /**
