@@ -235,7 +235,7 @@ private:
   int _iterations = 0;
 
   /// @brief Maximal number of time windows to be performed.
-  int _maxTimeSteps;
+  int _maxTimeWindows;
 
   /// @brief Performed number of time windows.
   int _timeWindows = 0;

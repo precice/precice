@@ -9,7 +9,7 @@ DummyCouplingScheme::DummyCouplingScheme(
     int numberIterations,
     int maxTimeWindows)
     : _numberIterations(numberIterations),
-      _maxTimeSteps(maxTimeWindows)
+      _maxTimeWindows(maxTimeWindows)
 {
 }
 
@@ -53,7 +53,7 @@ void DummyCouplingScheme::secondExchange()
   _hasConverged = _iterations == _numberIterations;
 
   if (_hasConverged) {
-    if (_timeWindows == _maxTimeSteps) {
+    if (_timeWindows == _maxTimeWindows) {
       _isOngoing = false;
     }
     _timeWindows++;
@@ -77,7 +77,7 @@ void DummyCouplingScheme::finalize()
 bool DummyCouplingScheme::isCouplingOngoing() const
 {
   PRECICE_ASSERT(_isInitialized);
-  if (_timeWindows <= _maxTimeSteps)
+  if (_timeWindows <= _maxTimeWindows)
     return true;
   return false;
 }
