@@ -70,7 +70,7 @@ int main(int argc, char **argv)
     printf("DUMMY: Writing initial data\n");
   }
 
-  dt = precicec_initialize();
+  precicec_initialize();
 
   while (precicec_isCouplingOngoing()) {
 
@@ -78,6 +78,7 @@ int main(int argc, char **argv)
       printf("DUMMY: Writing iteration checkpoint \n");
     }
 
+    dt = precicec_getMaxTimeStepSize();
     precicec_readBlockVectorData(meshName, readDataName, numberOfVertices, vertexIDs, dt, readData);
 
     for (int i = 0; i < numberOfVertices * dimensions; i++) {
@@ -86,7 +87,7 @@ int main(int argc, char **argv)
 
     precicec_writeBlockVectorData(meshName, writeDataName, numberOfVertices, vertexIDs, writeData);
 
-    dt = precicec_advance(dt);
+    precicec_advance(dt);
 
     if (precicec_requiresReadingCheckpoint()) {
       printf("DUMMY: Reading iteration checkpoint \n");
