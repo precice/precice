@@ -15,12 +15,12 @@ DummyCouplingScheme::DummyCouplingScheme(
 
 void DummyCouplingScheme::initialize(
     double startTime,
-    int    startTimesteps)
+    int    startTimeWindows)
 {
   PRECICE_ASSERT(not _isInitialized);
   _isInitialized = true;
   _isOngoing     = true;
-  _timeWindows   = startTimesteps;
+  _timeWindows   = startTimeWindows;
   _iterations    = 1;
 }
 

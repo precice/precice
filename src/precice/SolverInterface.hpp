@@ -89,17 +89,17 @@ public:
    * - Sets up a connection to the other participants of the coupled simulation.
    * - Creates all meshes, solver meshes need to be submitted before.
    * - Receives first coupling data. The starting values for coupling data are zero by default.
-   * - Determines size of the first time step to be computed.
+   * - Determines maximum allowed size of the first time step to be computed.
+   *
+   * @see getMaxTimeStepSize
    *
    * @pre initialize() has not yet been called.
    *
    * @post Parallel communication to the coupling partner(s) is setup.
    * @post Meshes are exchanged between coupling partners and the parallel partitions are created.
    * @post Initial coupling data was exchanged.
-   *
-   * @return Maximum size of first time step to be computed by the solver.
    */
-  double initialize();
+  void initialize();
 
   /**
    * @brief Advances preCICE after the solver has computed one time step.
@@ -113,6 +113,8 @@ public:
    *
    * @param[in] computedTimeStepSize Size of time step used by the solver.
    *
+   * @see getMaxTimeStepSize to get the maximum allowed value for \p computedTimeStepSize.
+   *
    * @pre initialize() has been called successfully.
    * @pre The solver has computed one time step.
    * @pre The solver has written all coupling data.
@@ -125,10 +127,8 @@ public:
    * @post Configured data mapping schemes are applied.
    * @post [Second Participant] Configured acceleration schemes are applied.
    * @post Meshes with data are exported to files if configured.
-   *
-   * @return Maximum size of next time step to be computed by solver.
    */
-  double advance(double computedTimeStepSize);
+  void advance(double computedTimeStepSize);
 
   /**
    * @brief Finalizes preCICE.
@@ -209,6 +209,18 @@ public:
    * @pre initialize() has been called successfully.
    */
   bool isTimeWindowComplete() const;
+
+  /**
+   * @brief Get the maximum allowed time step size of the current window.
+   *
+   * @returns Maximum size of time step to be computed by solver.
+   *
+   * Allows the user to query the maximum allowed time step size in the current window.
+   * This should be used to compute the actual time step that the solver uses.
+   *
+   * @pre initialize() has been called successfully.
+   */
+  double getMaxTimeStepSize() const;
 
   ///@}
 

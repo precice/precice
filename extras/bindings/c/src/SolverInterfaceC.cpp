@@ -53,16 +53,16 @@ void precicec_createSolverInterface(
                                           solverProcessSize));
 }
 
-double precicec_initialize()
+void precicec_initialize()
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  return impl->initialize();
+  impl->initialize();
 }
 
-double precicec_advance(double computedTimeStepSize)
+void precicec_advance(double computedTimeStepSize)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  return impl->advance(computedTimeStepSize);
+  impl->advance(computedTimeStepSize);
 }
 
 void precicec_finalize()
@@ -94,6 +94,11 @@ int precicec_isTimeWindowComplete()
     return 1;
   }
   return 0;
+}
+
+double precicec_getMaxTimeStepSize()
+{
+  return impl->getMaxTimeStepSize();
 }
 
 int precicec_requiresInitialData()

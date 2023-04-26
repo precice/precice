@@ -60,18 +60,15 @@ PRECICE_API void precicec_createSolverInterface(
 
 /**
  * @brief Initiates the coupling to the coupling supervisor and initializes coupling data.
- *
- * @return Maximal size of first time step to be computed by solver.
  */
-PRECICE_API double precicec_initialize();
+PRECICE_API void precicec_initialize();
 
 /**
  * @brief Exchanges data between solver and coupling supervisor.
  *
  * @param[in] computedTimeStepSize Size of time step computed by solver.
- * @return Maximal size of next time step to be computed by solver.
  */
-PRECICE_API double precicec_advance(double computedTimeStepSize);
+PRECICE_API void precicec_advance(double computedTimeStepSize);
 
 /**
  * @brief Finalizes the coupling to the coupling supervisor.
@@ -97,6 +94,11 @@ PRECICE_API int precicec_isCouplingOngoing();
  * @brief Returns true (->1), if the coupling time window is completed.
  */
 PRECICE_API int precicec_isTimeWindowComplete();
+
+/**
+ * @brief Returns maximum allowed time step size
+ */
+PRECICE_API double precicec_getMaxTimeStepSize();
 
 ///@}
 
