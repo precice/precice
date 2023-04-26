@@ -44,7 +44,8 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative1To3)
     vertexIDs.resize(coords.size() / 3);
     interface.setMeshVertices(meshName, vertexIDs.size(), coords.data(), vertexIDs.data());
 
-    dt = interface.initialize();
+    interface.initialize();
+    dt = interface.getMaxTimeStepSize();
 
     // Run a step and write forces
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant must advance once.");
@@ -118,15 +119,16 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative1To3)
       break;
     }
 
-    dt = interface.initialize();
+    interface.initialize();
+    dt = interface.getMaxTimeStepSize();
 
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant must advance once.");
 
-    double preciceDt = interface.advance(dt);
+    interface.advance(dt);
     BOOST_TEST(!interface.isCouplingOngoing(), "Receiving participant must advance only once.");
 
     Eigen::VectorXd readData(vertexIDs.size());
-    interface.readBlockScalarData(meshName, dataName, vertexIDs.size(), vertexIDs.data(), preciceDt, readData.data());
+    interface.readBlockScalarData(meshName, dataName, vertexIDs.size(), vertexIDs.data(), interface.getMaxTimeStepSize(), readData.data());
 
     // map to global coordinates
     std::array<double, 8> forces{0, 0, 0, 0, 0, 0, 0, 0};

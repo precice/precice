@@ -27,8 +27,10 @@ BOOST_AUTO_TEST_CASE(MultipleWriteFromMappings)
     auto dataNameTop    = "Pressure";
     auto dataNameBottom = "Pressure";
 
-    double dt       = interface.initialize();
-    dt              = interface.advance(dt);
+    interface.initialize();
+    double dt = interface.getMaxTimeStepSize();
+    interface.advance(dt);
+    dt              = interface.getMaxTimeStepSize();
     double pressure = -1.0;
     interface.readScalarData(meshNameTop, dataNameTop, vertexIDTop, dt, pressure);
     BOOST_TEST(pressure == 1.0);
@@ -46,13 +48,14 @@ BOOST_AUTO_TEST_CASE(MultipleWriteFromMappings)
     int  vertexID3 = interface.setMeshVertex(meshName, vertex3.data());
     auto dataName  = "Pressure";
 
-    double dt       = interface.initialize();
+    interface.initialize();
     double pressure = 1.0;
     interface.writeScalarData(meshName, dataName, vertexID1, pressure);
     pressure = 4.0;
     interface.writeScalarData(meshName, dataName, vertexID2, pressure);
     pressure = 5.0;
     interface.writeScalarData(meshName, dataName, vertexID3, pressure);
+    double dt = interface.getMaxTimeStepSize();
     interface.advance(dt);
     BOOST_TEST(not interface.isCouplingOngoing());
     interface.finalize();

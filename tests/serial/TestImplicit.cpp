@@ -42,7 +42,8 @@ BOOST_AUTO_TEST_CASE(TestImplicit)
     pos[2] = 0.0;
     interface.setMeshVertex(meshName, pos);
 
-    double maxDt = interface.initialize();
+    interface.initialize();
+    double maxDt = interface.getMaxTimeStepSize();
     while (interface.isCouplingOngoing()) {
       if (interface.requiresWritingCheckpoint()) {
         checkpoint     = state;
@@ -54,7 +55,8 @@ BOOST_AUTO_TEST_CASE(TestImplicit)
       iterationCount++;
       stateChange = initialStateChange / (double) iterationCount;
       state += stateChange;
-      maxDt = interface.advance(maxDt);
+      interface.advance(maxDt);
+      maxDt = interface.getMaxTimeStepSize();
       if (interface.isTimeWindowComplete()) {
         computedTimesteps++;
       }
@@ -70,7 +72,8 @@ BOOST_AUTO_TEST_CASE(TestImplicit)
     pos[1] = 0.0;
     pos[2] = 0.0;
     interface.setMeshVertex(meshName, pos);
-    double maxDt = interface.initialize();
+    interface.initialize();
+    double maxDt = interface.getMaxTimeStepSize();
     while (interface.isCouplingOngoing()) {
       if (interface.requiresWritingCheckpoint()) {
         checkpoint     = state;
@@ -82,7 +85,8 @@ BOOST_AUTO_TEST_CASE(TestImplicit)
       }
       stateChange = initialStateChange / (double) iterationCount;
       state += stateChange;
-      maxDt = interface.advance(maxDt);
+      interface.advance(maxDt);
+      maxDt = interface.getMaxTimeStepSize();
       if (interface.isTimeWindowComplete()) {
         computedTimesteps++;
       }

@@ -66,7 +66,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantChangingDt)
   if (precice.requiresInitialData()) {
     precice.writeScalarData(meshName, writeDataName, vertexID, writeFunction(0));
   }
-  double preciceDt = precice.initialize();
+  precice.initialize();
+  double preciceDt = precice.getMaxTimeStepSize();
   double solverDt  = 0.5;
   double dt;
   double startOfWindowTime = 0;
@@ -106,7 +107,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantChangingDt)
       BOOST_TEST(actualDataValue == expectedDataValue);
     }
     precice.writeScalarData(meshName, writeDataName, vertexID, writeFunction(startOfWindowTime + timeInWindow));
-    preciceDt = precice.advance(dt);
+    precice.advance(dt);
+    preciceDt = precice.getMaxTimeStepSize();
 
     if (precice.requiresReadingCheckpoint()) {
       timeInWindow = 0;

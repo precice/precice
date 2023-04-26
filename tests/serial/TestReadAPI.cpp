@@ -38,7 +38,8 @@ BOOST_AUTO_TEST_CASE(TestReadAPI)
     writeDataA[2] = 7.0;
     cplInterface.writeVectorData(meshName, dataAID, vertexIDs[0], writeDataA.data());
 
-    double maxDt = cplInterface.initialize();
+    cplInterface.initialize();
+    double maxDt = cplInterface.getMaxTimeStepSize();
 
     // readBlockScalarData without waveform
     cplInterface.readBlockScalarData(meshName, dataBID, 1, vertexIDs.data(), maxDt, readDataB.data());
@@ -78,7 +79,8 @@ BOOST_AUTO_TEST_CASE(TestReadAPI)
       writeDataA[2] = 14.0;
       cplInterface.writeVectorData(meshName, dataAID, vertexIDs[0], writeDataA.data());
 
-      maxDt = cplInterface.advance(maxDt);
+      cplInterface.advance(maxDt);
+      maxDt = cplInterface.getMaxTimeStepSize();
 
       if (cplInterface.isCouplingOngoing()) {
 
@@ -129,7 +131,8 @@ BOOST_AUTO_TEST_CASE(TestReadAPI)
     writeDataB[0] = 3.0;
     cplInterface.writeScalarData(meshName, dataBID, vertexIDs[0], writeDataB[0]);
 
-    double maxDt = cplInterface.initialize();
+    cplInterface.initialize();
+    double maxDt = cplInterface.getMaxTimeStepSize();
 
     // readBlockVectorData without waveform
     cplInterface.readBlockVectorData(meshName, dataAID, 1, vertexIDs.data(), maxDt, readDataA.data());
@@ -175,7 +178,8 @@ BOOST_AUTO_TEST_CASE(TestReadAPI)
       writeDataB[0] = 6.0;
       cplInterface.writeScalarData(meshName, dataBID, vertexIDs[0], writeDataB[0]);
 
-      maxDt = cplInterface.advance(maxDt);
+      cplInterface.advance(maxDt);
+      maxDt = cplInterface.getMaxTimeStepSize();
 
       if (cplInterface.isCouplingOngoing()) {
         // readBlockVectorData without waveform

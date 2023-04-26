@@ -61,7 +61,8 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
     ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneL.data()));
 
     // Initialize, thus sending the mesh.
-    double maxDt = interface.initialize();
+    interface.initialize();
+    double maxDt = interface.getMaxTimeStepSize();
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant should have to advance once!");
     // Write the data to be send.
     auto dataAID = "DataOne";
@@ -85,7 +86,8 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
     int idC = interface.setMeshVertex(meshTwoID, coordTwoC.data());
 
     // Initialize, thus receive the data and map.
-    double maxDt = interface.initialize();
+    interface.initialize();
+    double maxDt = interface.getMaxTimeStepSize();
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant should have to advance once!");
 
     // Read the mapped data from the mesh.

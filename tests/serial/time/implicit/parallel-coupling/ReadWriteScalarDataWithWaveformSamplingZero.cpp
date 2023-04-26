@@ -64,7 +64,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingZero)
     precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
   }
 
-  double maxDt     = precice.initialize();
+  precice.initialize();
+  double maxDt     = precice.getMaxTimeStepSize();
   double dt        = maxDt; // time step size desired by solver
   double currentDt = dt;    // time step size used by solver
   double timeCheckpoint;
@@ -103,7 +104,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingZero)
     timewindow++;
     writeData = writeFunction(time);
     precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
-    maxDt = precice.advance(currentDt);
+    precice.advance(currentDt);
+    maxDt = precice.getMaxTimeStepSize();
     if (precice.requiresReadingCheckpoint()) {
       time       = timeCheckpoint;
       timewindow = timewindowCheckpoint;

@@ -34,7 +34,8 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataScaling)
     for (int i = 0; i < 4; i++)
       cplInterface.setMeshEdge(meshName, ids.at(i), ids.at((i + 1) % 4));
 
-    double dt = cplInterface.initialize();
+    cplInterface.initialize();
+    double dt = cplInterface.getMaxTimeStepSize();
 
     auto velocitiesID = "Velocities";
     while (cplInterface.isCouplingOngoing()) {
@@ -42,7 +43,8 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataScaling)
         Eigen::Vector2d data = Eigen::Vector2d::Constant(i);
         cplInterface.writeVectorData(meshName, velocitiesID, i, data.data());
       }
-      dt = cplInterface.advance(dt);
+      cplInterface.advance(dt);
+      double dt = cplInterface.getMaxTimeStepSize();
     }
     cplInterface.finalize();
   } else {
@@ -52,7 +54,8 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataScaling)
     for (int i = 0; i < 4; i++)
       cplInterface.setMeshEdge(meshName, ids.at(i), ids.at((i + 1) % 4));
 
-    double dt = cplInterface.initialize();
+    cplInterface.initialize();
+    double dt = cplInterface.getMaxTimeStepSize();
 
     auto velocitiesID = "Velocities";
     while (cplInterface.isCouplingOngoing()) {
@@ -64,7 +67,8 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataScaling)
         BOOST_TEST(readData(0) == expectedData(0));
         BOOST_TEST(readData(1) == expectedData(1));
       }
-      dt = cplInterface.advance(dt);
+      cplInterface.advance(dt);
+      double dt = cplInterface.getMaxTimeStepSize();
     }
     cplInterface.finalize();
   }

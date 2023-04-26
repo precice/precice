@@ -34,7 +34,8 @@ BOOST_AUTO_TEST_CASE(Explicit)
     // Define region of interest, where we could obtain direct write access
     couplingInterface.setMeshAccessRegion(otherMeshName, boundingBox.data());
 
-    double dt = couplingInterface.initialize();
+    couplingInterface.initialize();
+    double dt = couplingInterface.getMaxTimeStepSize();
     // Get the size of the filtered mesh within the bounding box
     // (provided by the coupling participant)
     const int meshSize = couplingInterface.getMeshVertexSize(otherMeshName);
@@ -54,7 +55,8 @@ BOOST_AUTO_TEST_CASE(Explicit)
       // Write data
       couplingInterface.writeBlockScalarData(otherMeshName, dataName, meshSize,
                                              ids.data(), writeData.data());
-      dt = couplingInterface.advance(dt);
+      couplingInterface.advance(dt);
+      dt = couplingInterface.getMaxTimeStepSize();
     }
 
   } else {
@@ -69,10 +71,12 @@ BOOST_AUTO_TEST_CASE(Explicit)
     std::vector<double> readData(4, std::numeric_limits<double>::max());
 
     // Initialize
-    double dt = couplingInterface.initialize();
+    couplingInterface.initialize();
+    double dt = couplingInterface.getMaxTimeStepSize();
     while (couplingInterface.isCouplingOngoing()) {
 
-      dt = couplingInterface.advance(dt);
+      couplingInterface.advance(dt);
+      dt = couplingInterface.getMaxTimeStepSize();
       couplingInterface.readBlockScalarData(meshName, dataName, ids.size(),
                                             ids.data(), dt, readData.data());
       // Expected data according to the writeData

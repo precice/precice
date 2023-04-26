@@ -26,12 +26,14 @@ void runTestThreeSolvers(std::string const &config, std::vector<int> expectedCal
 
     if (precice.requiresInitialData()) {
     }
-    double dt = precice.initialize();
+    precice.initialize();
+    double dt = precice.getMaxTimeStepSize();
 
     while (precice.isCouplingOngoing()) {
       if (precice.requiresWritingCheckpoint()) {
       }
-      dt = precice.advance(dt);
+      precice.advance(dt);
+      dt = precice.getMaxTimeStepSize();
       if (precice.requiresReadingCheckpoint()) {
       }
       callsOfAdvance++;
@@ -46,12 +48,14 @@ void runTestThreeSolvers(std::string const &config, std::vector<int> expectedCal
 
     if (precice.requiresInitialData()) {
     }
-    double dt = precice.initialize();
+    precice.initialize();
+    double dt = precice.getMaxTimeStepSize();
 
     while (precice.isCouplingOngoing()) {
       if (precice.requiresWritingCheckpoint()) {
       }
-      dt = precice.advance(dt);
+      precice.advance(dt);
+      dt = precice.getMaxTimeStepSize();
       if (precice.requiresReadingCheckpoint()) {
       }
       callsOfAdvance++;
@@ -67,12 +71,14 @@ void runTestThreeSolvers(std::string const &config, std::vector<int> expectedCal
 
     if (precice.requiresInitialData()) {
     }
-    double dt = precice.initialize();
+    precice.initialize();
+    double dt = precice.getMaxTimeStepSize();
 
     while (precice.isCouplingOngoing()) {
       if (precice.requiresWritingCheckpoint()) {
       }
-      dt = precice.advance(dt);
+      precice.advance(dt);
+      dt = precice.getMaxTimeStepSize();
       if (precice.requiresReadingCheckpoint()) {
       }
       callsOfAdvance++;

@@ -48,7 +48,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantFixedWindows)
   }
 
   VertexID vertexID = precice.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());
-  double   dt       = precice.initialize();
+  precice.initialize();
+  double dt = precice.getMaxTimeStepSize();
 
   if (precice.requiresWritingCheckpoint()) {
     // do nothing
@@ -61,10 +62,12 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantFixedWindows)
       precice.writeScalarData(meshName, writeDataName, vertexID, expectedDataValue);
 
       if (context.isNamed("SolverOne")) {
-        dt = precice.advance(iterationSizes.at(it));
+        precice.advance(iterationSizes.at(it));
+        double dt = precice.getMaxTimeStepSize();
       } else if (context.isNamed("SolverTwo")) {
         BOOST_TEST(dt == iterationSizes.at(it));
-        dt = precice.advance(dt);
+        precice.advance(dt);
+        dt = precice.getMaxTimeStepSize();
       }
 
       if (precice.requiresReadingCheckpoint()) {

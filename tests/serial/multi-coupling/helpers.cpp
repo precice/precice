@@ -23,7 +23,8 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
     auto            dataABID = "DataAB";
     auto            dataBAID = "DataBA";
 
-    double maxDt = cplInterface.initialize();
+    cplInterface.initialize();
+    double maxDt = cplInterface.getMaxTimeStepSize();
     double valueRead;
 
     BOOST_TEST(cplInterface.isCouplingOngoing());
@@ -32,7 +33,8 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
       if (cplInterface.requiresWritingCheckpoint()) {
       }
 
-      maxDt = cplInterface.advance(maxDt);
+      cplInterface.advance(maxDt);
+      maxDt = cplInterface.getMaxTimeStepSize();
 
       if (cplInterface.requiresReadingCheckpoint()) {
       }
@@ -53,7 +55,8 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
     auto            dataCBID  = "DataCB";
     auto            dataBCID  = "DataBC";
 
-    double maxDt = cplInterface.initialize();
+    cplInterface.initialize();
+    double maxDt = cplInterface.getMaxTimeStepSize();
     double valueReadA, valueReadC;
 
     BOOST_TEST(cplInterface.isCouplingOngoing());
@@ -63,7 +66,8 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
       if (cplInterface.requiresWritingCheckpoint()) {
       }
 
-      maxDt = cplInterface.advance(maxDt);
+      cplInterface.advance(maxDt);
+      maxDt = cplInterface.getMaxTimeStepSize();
 
       if (cplInterface.requiresReadingCheckpoint()) {
       }
@@ -83,7 +87,8 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
     auto            dataCBID = "DataCB";
     auto            dataBCID = "DataBC";
 
-    double maxDt = cplInterface.initialize();
+    cplInterface.initialize();
+    double maxDt = cplInterface.getMaxTimeStepSize();
     double valueRead;
 
     BOOST_TEST(cplInterface.isCouplingOngoing());
@@ -93,7 +98,8 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
       if (cplInterface.requiresWritingCheckpoint()) {
       }
 
-      maxDt = cplInterface.advance(maxDt);
+      cplInterface.advance(maxDt);
+      maxDt = cplInterface.getMaxTimeStepSize();
 
       if (cplInterface.requiresReadingCheckpoint()) {
       }
@@ -117,7 +123,8 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
     auto            dataABID = "DataAB";
     auto            dataBAID = "DataBA";
 
-    double maxDt = cplInterface.initialize();
+    cplInterface.initialize();
+    double maxDt = cplInterface.getMaxTimeStepSize();
     double valueRead;
     double valueWrite = 1.0;
 
@@ -127,7 +134,8 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
       if (cplInterface.requiresWritingCheckpoint()) {
       }
 
-      maxDt = cplInterface.advance(maxDt);
+      cplInterface.advance(maxDt);
+      maxDt = cplInterface.getMaxTimeStepSize();
 
       if (cplInterface.requiresReadingCheckpoint()) {
       }
@@ -145,7 +153,8 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
     auto            dataCBID  = "DataCB";
     auto            dataBCID  = "DataBC";
 
-    double maxDt = cplInterface.initialize();
+    cplInterface.initialize();
+    double maxDt = cplInterface.getMaxTimeStepSize();
     double valueReadA, valueReadC;
     double valueWriteA{1.0}, valueWriteC{1.0};
 
@@ -156,7 +165,8 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
       if (cplInterface.requiresWritingCheckpoint()) {
       }
 
-      maxDt = cplInterface.advance(maxDt);
+      cplInterface.advance(maxDt);
+      maxDt = cplInterface.getMaxTimeStepSize();
 
       if (cplInterface.requiresReadingCheckpoint()) {
       }
@@ -176,7 +186,8 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
     auto            dataCDID  = "DataCD";
     auto            dataDCID  = "DataDC";
 
-    double maxDt = cplInterface.initialize();
+    cplInterface.initialize();
+    double maxDt = cplInterface.getMaxTimeStepSize();
     double valueReadA, valueReadC;
     double valueWriteA{1.0}, valueWriteC{1.0};
 
@@ -187,7 +198,8 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
       if (cplInterface.requiresWritingCheckpoint()) {
       }
 
-      maxDt = cplInterface.advance(maxDt);
+      cplInterface.advance(maxDt);
+      maxDt = cplInterface.getMaxTimeStepSize();
 
       if (cplInterface.requiresReadingCheckpoint()) {
       }
@@ -202,7 +214,8 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
     auto            dataCDID = "DataCD";
     auto            dataDCID = "DataDC";
 
-    double maxDt = cplInterface.initialize();
+    cplInterface.initialize();
+    double maxDt = cplInterface.getMaxTimeStepSize();
     double valueRead;
     double valueWrite = 1.0;
 
@@ -212,7 +225,8 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
       if (cplInterface.requiresWritingCheckpoint()) {
       }
 
-      maxDt = cplInterface.advance(maxDt);
+      cplInterface.advance(maxDt);
+      maxDt = cplInterface.getMaxTimeStepSize();
 
       if (cplInterface.requiresReadingCheckpoint()) {
       }
