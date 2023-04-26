@@ -71,6 +71,12 @@ void WriteDataContext::resizeBufferTo(int nVertices)
   }
 }
 
+void WriteDataContext::storeBufferedData()
+{
+  _providedData->values() = _writeDataBuffer.values;
+  // _providedData->gradientValues() = writeDataBuffer.gradient;
+}
+
 void WriteDataContext::appendMappingConfiguration(MappingContext &mappingContext, const MeshContext &meshContext)
 {
   PRECICE_ASSERT(meshContext.mesh->hasDataName(getDataName()));

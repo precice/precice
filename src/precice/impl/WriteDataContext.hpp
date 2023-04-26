@@ -46,6 +46,11 @@ public:
   void resizeBufferTo(int size);
 
   /**
+   * @brief Store data from _writeDataBuffer in persistent storage
+   */
+  void storeBufferedData();
+
+  /**
    * @brief Adds a MappingContext and the MeshContext required by the write mapping to the corresponding WriteDataContext data structures.
    *
    * A write mapping maps _providedData to _toData. A WriteDataContext already has _providedData, but additionally requires _toData.

@@ -342,6 +342,10 @@ void SolverInterfaceImpl::initialize()
 
   _meshLock.lockAll();
 
+  for (auto &context : _accessor->writeDataContexts()) {
+    context.storeBufferedData();
+  }
+
   if (_couplingScheme->sendsInitializedData()) {
     mapWrittenData();
     performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0);
@@ -418,6 +422,10 @@ void SolverInterfaceImpl::advance(
   _couplingScheme->addComputedTime(computedTimeStepSize);
   // Current time
   double time = _couplingScheme->getTime();
+
+  for (auto &context : _accessor->writeDataContexts()) {
+    context.storeBufferedData();
+  }
 
   if (_couplingScheme->willDataBeExchanged(0.0)) {
     mapWrittenData();
