@@ -81,13 +81,15 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitializationTwoWay)
     vertexIDs.push_back(vertexID);
   }
 
-  double preciceDt = interface.initialize();
+  interface.initialize();
 
   if (context.isNamed("Fluid")) {
     for (size_t i = 0; i < vertexIDs.size(); i++) {
       interface.writeVectorData(meshName, forcesID, vertexIDs[i], data[i + i1].data());
     }
   }
+
+  double preciceDt = interface.getMaxTimeStepSize();
 
   if (context.isNamed("Structure")) {
     for (size_t i = 0; i < vertexIDs.size(); i++) {
@@ -106,7 +108,8 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitializationTwoWay)
     }
   }
 
-  preciceDt = interface.advance(1.0);
+  interface.advance(1.0);
+  preciceDt = interface.getMaxTimeStepSize();
 
   if (context.isNamed("Fluid")) {
     for (size_t i = 0; i < vertexIDs.size(); i++) {

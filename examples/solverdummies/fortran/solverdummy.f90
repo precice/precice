@@ -53,7 +53,7 @@ PROGRAM main
   IF (bool.EQ.1) THEN
     WRITE (*,*) 'DUMMY: Writing initial data'
   ENDIF
-  CALL precicef_initialize(dt)
+  CALL precicef_initialize()
 
   CALL precicef_is_coupling_ongoing(ongoing)
   DO WHILE (ongoing.NE.0)
@@ -64,6 +64,7 @@ PROGRAM main
       WRITE (*,*) 'DUMMY: Writing iteration checkpoint'
     ENDIF
 
+    CALL precicef_get_max_time_step_size(dt)
     CALL precicef_read_bvdata(meshName, readDataName, numberOfVertices, vertexIDs, dt, readData)
 
     WRITE (*,*) 'readData: ', readData

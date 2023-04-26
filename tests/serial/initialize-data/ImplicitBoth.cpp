@@ -52,7 +52,8 @@ BOOST_AUTO_TEST_CASE(ImplicitBoth)
     couplingInterface.writeVectorData(meshName, writeDataName, vertexID, writeData.data());
   }
 
-  dt = couplingInterface.initialize();
+  couplingInterface.initialize();
+  dt = couplingInterface.getMaxTimeStepSize();
 
   while (couplingInterface.isCouplingOngoing()) {
     if (couplingInterface.requiresWritingCheckpoint()) {
@@ -61,7 +62,8 @@ BOOST_AUTO_TEST_CASE(ImplicitBoth)
     BOOST_TEST(expectedReadValue == readData.at(0));
     BOOST_TEST(expectedReadValue == readData.at(1));
     couplingInterface.writeVectorData(meshName, writeDataName, vertexID, writeData.data());
-    dt = couplingInterface.advance(dt);
+    couplingInterface.advance(dt);
+    dt = couplingInterface.getMaxTimeStepSize();
     if (couplingInterface.requiresReadingCheckpoint()) {
     }
   }

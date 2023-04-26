@@ -37,7 +37,8 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithDataInitialization)
 
     BOOST_TEST(!interface.requiresInitialData());
 
-    double dt = interface.initialize();
+    interface.initialize();
+    double dt = interface.getMaxTimeStepSize();
     // Get the size of the filtered mesh within the bounding box
     // (provided by the coupling participant)
     BOOST_TEST(otherMeshSize == interface.getMeshVertexSize(otherMeshID)); // @todo would need to know this already earlier (see above).
@@ -80,7 +81,8 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithDataInitialization)
 
       BOOST_TEST(precice::testing::equals(expectedData, readData));
       interface.writeBlockScalarData(otherMeshID, writeDataID, otherIDs.size(), otherIDs.data(), writeData.data());
-      dt = interface.advance(dt);
+      interface.advance(dt);
+      double dt = interface.getMaxTimeStepSize();
       iterations++;
       if (interface.requiresReadingCheckpoint()) {
         // do nothing
@@ -119,7 +121,8 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithDataInitialization)
       interface.writeBlockScalarData(meshName, writeDataName, ids.size(), ids.data(), writeData.data());
     }
 
-    double dt = interface.initialize();
+    interface.initialize();
+    double dt = interface.getMaxTimeStepSize();
 
     // writeData for first window
     for (unsigned int i = 0; i < ids.size(); ++i) {
@@ -155,7 +158,8 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithDataInitialization)
 
       BOOST_TEST(precice::testing::equals(expectedData, readData));
       interface.writeBlockScalarData(meshName, writeDataName, ids.size(), ids.data(), writeData.data());
-      dt = interface.advance(dt);
+      interface.advance(dt);
+      double dt = interface.getMaxTimeStepSize();
       iterations++;
       if (interface.requiresReadingCheckpoint()) {
         // do nothing

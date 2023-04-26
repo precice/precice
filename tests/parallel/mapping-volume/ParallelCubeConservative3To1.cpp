@@ -62,7 +62,8 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative3To1)
     vertexIDs.resize(coords.size() / 3);
     interface.setMeshVertices(meshName, vertexIDs.size(), coords.data(), vertexIDs.data());
 
-    dt = interface.initialize();
+    interface.initialize();
+    dt = interface.getMaxTimeStepSize();
 
     // Run a step and write forces
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant must advance once.");
@@ -111,15 +112,17 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative3To1)
     auto &mesh = precice::testing::WhiteboxAccessor::impl(interface).mesh("MeshTwo");
     BOOST_REQUIRE(mesh.vertices().size() == 8);
     BOOST_REQUIRE(mesh.tetrahedra().size() == 6);
-    dt = interface.initialize();
+    interface.initialize();
+    dt = interface.getMaxTimeStepSize();
 
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant must advance once.");
 
-    dt = interface.advance(dt);
+    interface.advance(dt);
     BOOST_TEST(!interface.isCouplingOngoing(), "Receiving participant must advance only once.");
 
     Eigen::VectorXd readData(8);
 
+    dt = interface.getMaxTimeStepSize();
     interface.readBlockScalarData(meshName, dataName, readData.size(), vertexIDs.data(), dt, readData.data());
     BOOST_CHECK(equals(readData[0], forceOnMidABC / 3 + forceOnMidACD / 3 + forceOnMidAEGH / 4 + 0.1 * unbalancedForceOnAEGH));
     BOOST_CHECK(equals(readData[1], forceOnMidABC / 3));
