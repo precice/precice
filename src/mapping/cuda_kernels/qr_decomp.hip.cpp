@@ -1,3 +1,5 @@
+#ifdef GINKGO_BUILD_HIP
+
 #include <ginkgo/ginkgo.hpp>
 #include <hip/hip_runtime.h>
 #include <hip/hip_runtime_api.h>
@@ -61,9 +63,9 @@ void computeQR(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, Gi
 
   // Query working space of geqrf and orgqr
   hipsolverStatus = hipsolverDnDgeqrf_bufferSize(solverHandle, M, N, A_T->get_values(), lda, &lwork_geqrf);
-  assert(hipsolverStatus == hipsolverStatus_SUCCESS);
+  assert(hipsolverStatus == HIPSOLVER_STATUS_SUCCESS);
   hipsolverStatus = hipsolverDnDorgqr_bufferSize(solverHandle, M, N, k, A_T->get_values(), lda, dTau, &lwork_orgqr);
-  assert(hipsolverStatus == hipsolverStatus_SUCCESS);
+  assert(hipsolverStatus == HIPSOLVER_STATUS_SUCCESS);
   lwork         = (lwork_geqrf > lwork_orgqr) ? lwork_geqrf : lwork_orgqr;
   cudaErrorCode = hipMalloc((void **) &dWork, sizeof(double) * lwork);
   assert(hipSuccess == cudaErrorCode);
@@ -71,7 +73,7 @@ void computeQR(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, Gi
   // Compute QR factorization
   hipsolverStatus = hipsolverDnDgeqrf(solverHandle, M, N, A_T->get_values(), lda, dTau, dWork, lwork, devInfo);
   cudaErrorCode   = hipDeviceSynchronize();
-  assert(hipsolverStatus_SUCCESS == hipsolverStatus);
+  assert(HIPSOLVER_STATUS_SUCCESS == hipsolverStatus);
   assert(hipSuccess == cudaErrorCode);
 
   // Copy A_T to R s.t. the upper triangle corresponds to R
@@ -80,7 +82,7 @@ void computeQR(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, Gi
   // Compute Q
   hipsolverStatus = hipsolverDnDorgqr(solverHandle, M, N, k, A_T->get_values(), lda, dTau, dWork, lwork, devInfo);
   cudaErrorCode   = hipDeviceSynchronize();
-  assert(hipsolverStatus_SUCCESS == hipsolverStatus);
+  assert(HIPSOLVER_STATUS_SUCCESS == hipsolverStatus);
   assert(hipSuccess == cudaErrorCode);
 
   A_T->transpose(gko::lend(A_Q));
@@ -89,3 +91,4 @@ void computeQR(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, Gi
 
   return;
 }
+#endif

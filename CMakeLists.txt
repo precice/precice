@@ -248,77 +248,63 @@ endif()
 
 # Option: Ginkgo
 if (PRECICE_GinkgoParallelization)
+  find_package(Ginkgo 1.5 REQUIRED)
+  message(STATUS "Found Ginkgo ${GINKGO_PROJECT_VERSION} at ${GINKGO_INSTALL_PREFIX}")
 
-  # Check if CUDA is available on the system
-  include(CheckLanguage)
-  check_language(CUDA)
-
-  # Enable CUDA if driver and libraries are available; otherwise it'll be ignored
-  if(CMAKE_CUDA_COMPILER)
+  # We aim for the same configuration as Ginkgo itself and check immediately for device compiler
+  # such that preciceCore inherits all relevant flags directly
+  # 1. Check if Ginkgo was built with CUDA and if CUDA is available on the system
+  if(${GINKGO_BUILD_CUDA})
+    # Necessary for the unified kernels and the qr decomposition
+    include(CheckLanguage)
+    check_language(CUDA)
     enable_language(CUDA)
     set(CMAKE_CUDA_STANDARD 17)
     set(CMAKE_CUDA_STANDARD_REQUIRED ON)
-    set(CMAKE_CUDA_FLAGS "-lineinfo --allow-unsupported-compiler --use_fast_math --std=c++17 --expt-extended-lambda --expt-relaxed-constexpr -Xcompiler -fopenmp -Wall")
-    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-    set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
-    message(STATUS "Enabled CUDA support for Ginkgo library.")
+    set(CMAKE_CUDA_FLAGS "${GINKGO_CUDA_ARCH_FLAGS} --expt-relaxed-constexpr")
 
-    add_compile_definitions("PRECICE_WITH_CUDA")
-
+    # Similar to Ginkgo, we don't let CMake deduce the architecture, but inherit the Ginkgo flags
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.18)
+      set(CMAKE_CUDA_ARCHITECTURES OFF)
+    endif()
+    message(STATUS "Enabled CUDA support for preCICE via the Ginkgo library.")
   endif()
 
-  if(NOT DEFINED HIP_PATH)
-      set(HIP_PATH "/opt/rocm/hip" CACHE PATH "Path to which HIP has been installed")
-   endif()
+  # 2. Check if Ginkgo was built with HIP and if HIP is available on the system
+  if(${GINKGO_BUILD_HIP})
+    if(NOT DEFINED HIP_PATH)
+     if(NOT DEFINED $ENV{HIP_PATH})
+       set(HIP_PATH "/opt/rocm/hip" CACHE PATH "Path to which HIP has been installed")
+       set(ENV{HIP_PATH} ${HIP_PATH})
+     else()
+       set(HIP_PATH $ENV{HIP_PATH} CACHE PATH "Path to which HIP has been installed")
+     endif()
+    endif()
 
-  if(NOT DEFINED ROCM_PATH)
+    if(NOT DEFINED ROCM_PATH)
      set(ROCM_PATH "/opt/rocm" CACHE PATH "Path to which ROCM has been installed")
+     set(ENV{ROCM_PATH} ${ROCM_PATH})
+    endif()
+
+    find_package(HIP REQUIRED)
+    find_package(hipsolver REQUIRED)
+
+    set(HIP_CLANG_FLAGS "-fPIC -w")
+    set(HIP_NVCC_FLAGS "-fPIC")
+    message(STATUS "Enabled HIP support for preCICE via the Ginkgo library.")
+    # add_compile_definitions("PRECICE_WITH_HIP")
   endif()
 
-  if(NOT DEFINED HCC_PATH)
-      set(HCC_PATH "${ROCM_PATH}/hcc" CACHE PATH "Path to which HCC has been installed")
+  # 3. Check if Ginkgo was built with OpenMP and if OpenMP is available on the system
+  if(${GINKGO_BUILD_OMP})
+    # There is nothing special required for OpenMP, looking for OpenMP and setting the flag is handled by the unified kernels
+    message(STATUS "Enabled OpenMP support for preCICE via the Ginkgo library.")
   endif()
 
-  if(NOT DEFINED HIP_CLANG_PATH)
-      set(HIP_CLANG_PATH "${ROCM_PATH}/llvm/bin" CACHE PATH "Path to which HIP compatible clang binaries have been installed")
-  endif()
-
-  find_package(HIP QUIET)
-
-  if(HIP_FOUND)
-      set(CMAKE_MODULE_PATH "${HIP_PATH}/cmake" ${CMAKE_MODULE_PATH})
-      list(APPEND CMAKE_PREFIX_PATH
-     	"${HIP_PATH}/lib/cmake"
-      	"${HIP_PATH}/../lib/cmake"
-      )
-
-      include(${HIP_PATH}/cmake/FindHIP.cmake)
-
-      set_target_properties(hip::device PROPERTIES INTERFACE_COMPILE_OPTIONS "-fPIC")
-      set_target_properties(hip::device PROPERTIES INTERFACE_LINK_LIBRARIES "hip::host")
-
-      set(CMAKE_HIP_FLAGS "-fPIC -Wno-deprecated-register -w -fgpu-rdc")
-      set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
-      set(GINKGO_HIPCC_OPTIONS "-fPIC")
-
-      find_package(hipsolver)
-
-      message(STATUS "Enabled AMD HIP support for Ginkgo library.")
-
-      add_compile_definitions("PRECICE_WITH_HIP")
-  endif()
-
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
-
-  include_directories(${EIGEN3_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/fmt/include)
-
-  # Check if OpenMP is available
-  find_package(OpenMP)
-  if(OpenMP_FOUND)
-    message(STATUS "Enabled OpenMP support for Ginkgo library.")
-  endif()
-
+  # That's essentially all backends we use from Ginkgo. The reference executor doesn't need any special treatments and
+  # DPCPP has not yet been tested/setup
+else()
+  message(STATUS "Ginkgo support disabled")
 endif()
 
 # Option Python
@@ -425,31 +411,45 @@ endif()
 
 # Setup Ginkgo
 if (PRECICE_GinkgoParallelization)
-  set(CMAKE_CXX_FLAGS "-fPIC")
-  include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
-  set(Ginkgo_Path "" CACHE STRING "Path to the experimental Ginkgo Repository of branch a195f856e.") # TODO: Remove as soon as GPU feature is in main branch
-  find_package(Ginkgo REQUIRED HINTS "${Ginkgo_Path}/build" NO_CMAKE_SYSTEM_PATH)
-  target_include_directories(preciceCore PUBLIC "${Ginkgo_Path}/include")
+  # Next we configure the common kernels for the matrix assembly
+  # This CMake part is still a shortcoming from the experimental Ginkgo we are using right now
+  # TODO: Remove as soon as GPU feature is in main branch
+  set(Ginkgo_Path "${Ginkgo_DIR}/.." CACHE STRING "Path to the experimental Ginkgo Repository of branch a195f856e.")
   include(${Ginkgo_Path}/cmake/unified_kernels.cmake)
-  file(GLOB ginkgo_lib "${Ginkgo_Path}/build/lib/*")
 
   # This command registers Ginkgo kernels for different execution backends
   ginkgo_add_unified_kernels(preciceCore src/mapping/ginkgo_kernels/GinkgoRBFKernels.cpp)
+  # shortcoming of the kernel registration: we need to add the includes here to all generated targets
+  include_directories(${PROJECT_SOURCE_DIR}/src)
+  include_directories(${EIGEN3_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/thirdparty/fmt/include)
+  target_compile_definitions(preciceCore_cuda PUBLIC EIGEN_NO_CUDA)
+  target_compile_definitions(preciceCore_hip PUBLIC EIGEN_NO_CUDA)
+  set_target_properties(preciceCore_cuda PROPERTIES POSITION_INDEPENDENT_CODE ON)
+  set_target_properties(preciceCore_reference PROPERTIES POSITION_INDEPENDENT_CODE ON)
+  set_target_properties(preciceCore_hip PROPERTIES POSITION_INDEPENDENT_CODE ON)
+  set_target_properties(preciceCore_omp PROPERTIES POSITION_INDEPENDENT_CODE ON)
+  set_target_properties(preciceCore_dpcpp PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-  # This compiles cuSolver or rocSOLVER into preCICE for GPU QR decomposition
-  if(CMAKE_CUDA_COMPILER)
-    target_sources(preciceCore PRIVATE src/mapping/cuda_kernels/qr_decomp.cu)
-    target_link_libraries(preciceCore PUBLIC ${ginkgo_lib} cusolver cublas)
-  elseif(HIP_FOUND)
-    hip_add_library(preciceHIPQR src/mapping/cuda_kernels/qr_decomp.hip.cpp HIPCC_OPTIONS "-std=c++14" CLANG_OPTIONS "-fPIC" STATIC)
-    target_link_libraries(preciceHIPQR PUBLIC ${ginkgo_lib} hip::host roc::hipsolver)
-    target_include_directories(preciceHIPQR PUBLIC "${Ginkgo_Path}/include" "/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi" "/usr/lib/x86_64-linux-gnu/openmpi/include") # TODO: Fix include path
-    target_link_libraries(preciceCore PRIVATE preciceHIPQR)
-    endif()
-
-  if(OpenMP_FOUND)
-    target_compile_options(preciceCore PUBLIC "-fopenmp")
+  # Now we setup cuSolver and hipSOLVER for preCICE
+  if(${GINKGO_BUILD_CUDA})
+    target_sources(preciceCore PRIVATE ${PROJECT_SOURCE_DIR}/src/mapping/cuda_kernels/qr_decomp.cu)
+    target_link_libraries(preciceCore PUBLIC cusolver)
   endif()
+
+  if(${GINKGO_BUILD_HIP})
+    set(_hiplist ${PROJECT_SOURCE_DIR}/src/mapping/cuda_kernels/qr_decomp.hip.cpp)
+    set_source_files_properties(${_hiplist} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT TRUE)
+    hip_add_library(preciceCore_qr_hip ${_hiplist}
+    HIPCC_OPTIONS ${GINKGO_HIPCC_OPTIONS} "-std=c++17 -DGINKGO_BUILD_HIP"
+        CLANG_OPTIONS ${GINKGO_HIP_CLANG_OPTIONS}
+        NVCC_OPTIONS ${GINKGO_HIP_NVCC_OPTIONS}
+        STATIC)
+        target_link_libraries(preciceCore_qr_hip PRIVATE Ginkgo::ginkgo roc::hipsolver)
+        target_link_libraries(preciceCore PRIVATE preciceCore_qr_hip)
+  endif()
+
+   # Finally, we link Ginkgo into preCICE
+   target_link_libraries(preciceCore PUBLIC Ginkgo::ginkgo)
 else()
   target_compile_definitions(preciceCore PUBLIC PRECICE_NO_GINKGO)
 endif()

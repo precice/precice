@@ -1,3 +1,4 @@
+#ifdef GINKGO_BUILD_CUDA
 #include <ginkgo/ginkgo.hpp>
 #include <cusolverDn.h>
 #include <cublas_v2.h>
@@ -107,3 +108,4 @@ void computeQR(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, Gi
 
     return;
 }
+#endif
