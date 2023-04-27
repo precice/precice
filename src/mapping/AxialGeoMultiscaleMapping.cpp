@@ -72,6 +72,17 @@ void AxialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID outputD
   int                    outValueDimensions = output()->data(outputDataID)->getDimensions();
   Eigen::VectorXd &      outputValues       = output()->data(outputDataID)->values();
 
+  int coord;
+  if (_axis == X) {
+    coord = 0;
+  } else if (_axis == Y) {
+    coord = 1;
+  } else if (_axis == Z) {
+    coord = 2;
+  } else {
+    PRECICE_ASSERT(false, "Unknown axis.");
+  }
+
   PRECICE_ASSERT((inputValues.size() / inValueDimensions == static_cast<int>(input()->vertices().size())),
                  inputValues.size(), inValueDimensions, input()->vertices().size());
   PRECICE_ASSERT((outputValues.size() / outValueDimensions == static_cast<int>(output()->vertices().size())),
@@ -83,16 +94,7 @@ void AxialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID outputD
     PRECICE_ASSERT(input()->vertices().size() == 1);
     mesh::Vertex &v0      = input()->vertices()[0];
     size_t const  outSize = output()->vertices().size();
-    int           coord;
-    if (_axis == X) {
-      coord = 0;
-    } else if (_axis == Y) {
-      coord = 1;
-    } else if (_axis == Z) {
-      coord = 2;
-    } else {
-      PRECICE_ASSERT(false, "Unknown axis.");
-    }
+
     for (size_t i = 0; i < outSize; i++) {
       Eigen::VectorXd difference(outValueDimensions);
       difference = v0.getCoords();
@@ -109,12 +111,10 @@ void AxialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID outputD
     outputValues(0)     = 0;
     size_t const inSize = input()->vertices().size();
     for (size_t i = 0; i < inSize; i++) {
-      for (int dim = 0; dim < inValueDimensions; dim++) {
-        PRECICE_ASSERT(((i * inValueDimensions) + dim) < inputValues.size(), ((i * inValueDimensions) + dim), inputValues.size())
-        outputValues(0) += inputValues((i * inValueDimensions) + dim);
-      }
+      PRECICE_ASSERT(((i * inValueDimensions) + coord) < inputValues.size(), ((i * inValueDimensions) + coord), inputValues.size())
+      outputValues(0) += inputValues((i * inValueDimensions) + coord);
     }
-    outputValues(0) = outputValues(0) / inputValues.size();
+    outputValues(0) = outputValues(0) / inSize;
   }
 }
 

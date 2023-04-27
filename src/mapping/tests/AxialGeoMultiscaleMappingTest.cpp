@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(testConsistentCollect)
   Vertex &inVertex2 = inMesh->createVertex(Eigen::Vector3d(0.0, 0.5, 0.0)); // distance of 0.5 = r/2 to center
   inMesh->allocateDataValues();
   Eigen::VectorXd &inValues = inData->values();
-  inValues << 0.0, 0.0, 4.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0;
+  inValues << 1.0, 0.0, 0.0, 2.0, 0.0, 0.0, 3.0, 0.0, 0.0;
 
   double radius = 1.0; // radius of the "tube" from or to which the data is mapped, i.e., radius of the circular interface between the two participants
 
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(testConsistentCollect)
 
   // Check if data is averaged at center node
   BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(outValues(0) == (1 / 9.0) * (inValues(0) + inValues(1) + inValues(2) + inValues(3) + inValues(4) + inValues(5) + inValues(6) + inValues(7) + inValues(8)));
+  BOOST_TEST(outValues(0) == (1 / 3.0) * (inValues(0) + inValues(3) + inValues(6)));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

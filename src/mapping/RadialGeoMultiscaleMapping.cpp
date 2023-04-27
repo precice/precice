@@ -55,6 +55,17 @@ void RadialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID output
   int                    valueDimensions = input()->data(inputDataID)->getDimensions();
   Eigen::VectorXd &      outputValues    = output()->data(outputDataID)->values();
 
+  int coord;
+  if (_axis == X) {
+    coord = 0;
+  } else if (_axis == Y) {
+    coord = 1;
+  } else if (_axis == Z) {
+    coord = 2;
+  } else {
+    PRECICE_ASSERT(false, "Unknown axis.");
+  }
+
   PRECICE_ASSERT((inputValues.size() / valueDimensions == static_cast<int>(input()->vertices().size())),
                  inputValues.size(), valueDimensions, input()->vertices().size());
   PRECICE_ASSERT((outputValues.size() / valueDimensions == static_cast<int>(output()->vertices().size())),
@@ -65,17 +76,6 @@ void RadialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID output
   if (_type == SPREAD) {
     size_t const inSize  = input()->vertices().size();
     size_t const outSize = output()->vertices().size();
-
-    int coord;
-    if (_axis == X) {
-      coord = 0;
-    } else if (_axis == Y) {
-      coord = 1;
-    } else if (_axis == Z) {
-      coord = 2;
-    } else {
-      PRECICE_ASSERT(false, "Unknown axis.");
-    }
 
     Eigen::VectorXd axisMidpoints(inSize);
     for (size_t i = 0; i < (inSize - 1); i++) {
@@ -98,17 +98,6 @@ void RadialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID output
     PRECICE_ASSERT(outputValues.size() == output()->vertices().size(), outputValues.size(), valueDimensions, output()->vertices().size());
     size_t const inSize  = input()->vertices().size();
     size_t const outSize = output()->vertices().size();
-
-    int coord;
-    if (_axis == X) {
-      coord = 0;
-    } else if (_axis == Y) {
-      coord = 1;
-    } else if (_axis == Z) {
-      coord = 2;
-    } else {
-      PRECICE_ASSERT(false, "Unknown axis.");
-    }
 
     Eigen::VectorXd axisMidpoints(outSize);
     for (size_t i = 0; i < (outSize - 1); i++) {
