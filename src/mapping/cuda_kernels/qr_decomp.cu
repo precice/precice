@@ -1,4 +1,4 @@
-#ifdef GINKGO_BUILD_CUDA
+#ifdef PRECICE_WITH_CUDA
 #include <ginkgo/ginkgo.hpp>
 #include <cusolverDn.h>
 #include <cublas_v2.h>

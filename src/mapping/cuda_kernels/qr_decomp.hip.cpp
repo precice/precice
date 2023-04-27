@@ -1,4 +1,4 @@
-#ifdef GINKGO_BUILD_HIP
+#ifdef PRECICE_WITH_HIP
 
 #include <ginkgo/ginkgo.hpp>
 #include <hip/hip_runtime.h>

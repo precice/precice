@@ -192,7 +192,9 @@ if(TPL_ENABLE_EIGEN3)
   # Use EIGEN3_ROOT to set the directory
   xsdk_tpl_require(EIGEN3 EIGEN3_INCLUDE_DIR)
 endif()
-find_package(Eigen3 3.3.7 REQUIRED)
+# We need Eigen 3.4.0 such that Eigen deals properly eith cuda
+# TODO: We should only conditionally increase the requirement
+find_package(Eigen3 3.4.0 REQUIRED)
 message(STATUS "Found Eigen ${EIGEN3_VERSION}")
 precice_validate_eigen()
 
@@ -267,6 +269,7 @@ if (PRECICE_GinkgoParallelization)
     if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.18)
       set(CMAKE_CUDA_ARCHITECTURES OFF)
     endif()
+    add_compile_definitions("PRECICE_WITH_CUDA")
     message(STATUS "Enabled CUDA support for preCICE via the Ginkgo library.")
   endif()
 
@@ -291,13 +294,14 @@ if (PRECICE_GinkgoParallelization)
 
     set(HIP_CLANG_FLAGS "-fPIC -w")
     set(HIP_NVCC_FLAGS "-fPIC")
+    add_compile_definitions("PRECICE_WITH_HIP")
     message(STATUS "Enabled HIP support for preCICE via the Ginkgo library.")
-    # add_compile_definitions("PRECICE_WITH_HIP")
   endif()
 
   # 3. Check if Ginkgo was built with OpenMP and if OpenMP is available on the system
   if(${GINKGO_BUILD_OMP})
     # There is nothing special required for OpenMP, looking for OpenMP and setting the flag is handled by the unified kernels
+    add_compile_definitions("PRECICE_WITH_OMP")
     message(STATUS "Enabled OpenMP support for preCICE via the Ginkgo library.")
   endif()
 
