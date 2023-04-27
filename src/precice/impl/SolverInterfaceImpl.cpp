@@ -1147,7 +1147,7 @@ void SolverInterfaceImpl::writeScalarGradientData(
     mesh::Data &meshData = *context.providedData();
 
     // Check if data has been initialized to include gradient data
-    PRECICE_CHECK(context.hasGradient(), "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", context.getDataName())
+    PRECICE_CHECK(context.hasGradient(), "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", context.getDataName());
 
     // Size of the gradient data input : must be spaceDimensions * dataDimensions -> here spaceDimensions (since for scalar: dataDimensions = 1)
     PRECICE_ASSERT(context.getSpatialDimensions() == _dimensions,
@@ -1212,7 +1212,7 @@ void SolverInterfaceImpl::writeBlockScalarGradientData(
     PRECICE_ASSERT(context.providedData() != nullptr);
     mesh::Data &meshData = *context.providedData();
 
-    PRECICE_CHECK(context.hasGradient(), "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", context.getDataName())
+    PRECICE_CHECK(context.hasGradient(), "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", context.getDataName());
 
     PRECICE_CHECK(context.getDataDimensions() == 1,
                   "You cannot call writeBlockScalarGradientData on the vector data type \"{}\". Use writeBlockVectorGradientData or change the data type for \"{}\" to scalar.",
@@ -1262,7 +1262,7 @@ void SolverInterfaceImpl::writeVectorGradientData(
     mesh::Data &meshData = *context.providedData();
 
     // Check if Data object with ID dataID has been initialized with gradient data
-    PRECICE_CHECK(context.hasGradient(), "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", context.getDataName())
+    PRECICE_CHECK(context.hasGradient(), "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", context.getDataName());
 
     // Check if the dimensions match
     PRECICE_CHECK(context.getDataDimensions() > 1,
@@ -1320,7 +1320,7 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
     mesh::Data &meshData = *context.providedData();
 
     // Check if the Data object of given mesh has been initialized with gradient data
-    PRECICE_CHECK(context.hasGradient(), "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", meshData.getName())
+    PRECICE_CHECK(context.hasGradient(), "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", context.getDataName());
 
     // Check if the dimensions match
     PRECICE_CHECK(context.getDataDimensions() > 1,
