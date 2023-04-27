@@ -997,7 +997,7 @@ void SolverInterfaceImpl::writeData(
   const auto dataDims         = context.getDataDimensions();
   const auto expectedDataSize = vertices.size() * dataDims;
   PRECICE_CHECK(expectedDataSize == values.size(),
-                "Input sizes are incorrect attempting to write {}D data \"{}\" to mesh \"{}\". "
+                "Input sizes are inconsistent attempting to write {}D data \"{}\" to mesh \"{}\". "
                 "You passed {} vertices and {} data components, but we expected {} data components ({} x {}).",
                 dataDims, dataName, meshName,
                 vertices.size(), values.size(), expectedDataSize, dataDims, vertices.size());
@@ -1050,7 +1050,7 @@ void SolverInterfaceImpl::readData(
   const auto       dataDims         = context.getDataDimensions();
   const auto       expectedDataSize = vertices.size() * dataDims;
   PRECICE_CHECK(expectedDataSize == values.size(),
-                "Input sizes are incorrect attempting to read {}D data \"{}\" from mesh \"{}\". "
+                "Input sizes are inconsistent attempting to read {}D data \"{}\" from mesh \"{}\". "
                 "You passed {} vertices and {} data components, but we expected {} data components ({} x {}).",
                 dataDims, dataName, meshName,
                 vertices.size(), values.size(), expectedDataSize, dataDims, vertices.size());
@@ -1100,7 +1100,7 @@ void SolverInterfaceImpl::writeGradientData(
   const auto  gradientComponents = meshDims * dataDims;
   const auto  expectedComponents = vertices.size() * gradientComponents;
   PRECICE_CHECK(expectedComponents == gradients.size(),
-                "Input sizes are incorrect attempting to write gradient for data \"{}\" to mesh \"{}\". "
+                "Input sizes are inconsistent attempting to write gradient for data \"{}\" to mesh \"{}\". "
                 "A single gradient/Jacobian for {}D data on a {}D mesh has {} components. "
                 "You passed {} vertices and {} gradient components, but we expected {} gradient components. ",
                 dataName, meshName,
