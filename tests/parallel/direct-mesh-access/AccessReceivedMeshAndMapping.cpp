@@ -60,12 +60,10 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
 
     while (interface.isCouplingOngoing()) {
       // Write data
-      interface.writeBlockScalarData(otherMeshName, writeDataName, otherMeshSize,
-                                     otherIDs.data(), writeData.data());
+      interface.writeData(otherMeshName, writeDataName, otherIDs, writeData);
       interface.advance(dt);
       dt = interface.getMaxTimeStepSize();
-      interface.readBlockScalarData(ownMeshName, readDataName, ownIDs.size(),
-                                    ownIDs.data(), dt, readData.data());
+      interface.readData(ownMeshName, readDataName, ownIDs, dt, readData);
 
       // Expected data according to the writeData
       // Values are summed up
@@ -99,13 +97,11 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
 
     while (interface.isCouplingOngoing()) {
 
-      interface.writeBlockScalarData(meshName, writeDataName, ids.size(),
-                                     ids.data(), writeData.data());
+      interface.writeData(meshName, writeDataName, ids, writeData);
       interface.advance(dt);
       dt = interface.getMaxTimeStepSize();
 
-      interface.readBlockScalarData(meshName, readDataName, ids.size(),
-                                    ids.data(), dt, readData.data());
+      interface.readData(meshName, readDataName, ids, dt, readData);
       // Expected data according to the writeData
       // Values are summed up
       std::vector<double> expectedData = context.isPrimary() ? std::vector<double>({15, 16}) : std::vector<double>({22, 6, 7});

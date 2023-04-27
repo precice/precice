@@ -64,12 +64,10 @@ BOOST_AUTO_TEST_CASE(Implicit)
       }
 
       // Write data
-      couplingInterface.writeBlockScalarData(otherMeshName, otherDataName, meshSize,
-                                             otherIDs.data(), writeData.data());
+      couplingInterface.writeData(otherMeshName, otherDataName, otherIDs, writeData);
       couplingInterface.advance(dt);
       dt = couplingInterface.getMaxTimeStepSize();
-      couplingInterface.readBlockScalarData(ownMeshName, ownDataName, ownIDs.size(),
-                                            ownIDs.data(), dt, readData.data());
+      couplingInterface.readData(ownMeshName, ownDataName, ownIDs, dt, readData);
       if (couplingInterface.requiresReadingCheckpoint()) {
       }
 
@@ -119,12 +117,10 @@ BOOST_AUTO_TEST_CASE(Implicit)
       }
 
       // Write data
-      couplingInterface.writeBlockScalarData(otherMeshName, otherDataName, meshSize,
-                                             otherIDs.data(), writeData.data());
+      couplingInterface.writeData(otherMeshName, otherDataName, otherIDs, writeData);
       couplingInterface.advance(dt);
       dt = couplingInterface.getMaxTimeStepSize();
-      couplingInterface.readBlockScalarData(ownMeshName, ownDataName, ownIDs.size(),
-                                            ownIDs.data(), dt, readData.data());
+      couplingInterface.readData(ownMeshName, ownDataName, ownIDs, dt, readData);
       if (couplingInterface.requiresReadingCheckpoint()) {
       }
 

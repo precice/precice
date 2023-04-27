@@ -46,10 +46,10 @@ BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
 
     while (interface.isCouplingOngoing()) {
 
-      interface.readScalarData(meshName, dataAID, idA, dt, valueA);
-      interface.readScalarData(meshName, dataAID, idB, dt, valueB);
-      interface.readScalarData(meshName, dataAID, idC, dt, valueC);
-      interface.readScalarData(meshName, dataAID, idD, dt, valueD);
+      interface.readData(meshName, dataAID, {&idA, 1}, dt, {&valueA, 1});
+      interface.readData(meshName, dataAID, {&idB, 1}, dt, {&valueB, 1});
+      interface.readData(meshName, dataAID, {&idC, 1}, dt, {&valueC, 1});
+      interface.readData(meshName, dataAID, {&idD, 1}, dt, {&valueD, 1});
 
       BOOST_TEST(valueA == expectedValueA);
       BOOST_TEST(valueB == expectedValueB);
@@ -90,10 +90,10 @@ BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
 
     while (interface.isCouplingOngoing()) {
 
-      interface.writeScalarData(meshName, dataAID, idA, valueA);
-      interface.writeScalarData(meshName, dataAID, idB, valueB);
-      interface.writeScalarData(meshName, dataAID, idC, valueC);
-      interface.writeScalarData(meshName, dataAID, idD, valueD);
+      interface.writeData(meshName, dataAID, {&idA, 1}, {&valueA, 1});
+      interface.writeData(meshName, dataAID, {&idB, 1}, {&valueB, 1});
+      interface.writeData(meshName, dataAID, {&idC, 1}, {&valueC, 1});
+      interface.writeData(meshName, dataAID, {&idD, 1}, {&valueD, 1});
 
       interface.advance(dt);
       double dt = interface.getMaxTimeStepSize();
@@ -129,10 +129,10 @@ BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
 
     while (interface.isCouplingOngoing()) {
 
-      interface.writeScalarData(meshName, dataAID, idA, valueA);
-      interface.writeScalarData(meshName, dataAID, idB, valueB);
-      interface.writeScalarData(meshName, dataAID, idC, valueC);
-      interface.writeScalarData(meshName, dataAID, idD, valueD);
+      interface.writeData(meshName, dataAID, {&idA, 1}, {&valueA, 1});
+      interface.writeData(meshName, dataAID, {&idB, 1}, {&valueB, 1});
+      interface.writeData(meshName, dataAID, {&idC, 1}, {&valueC, 1});
+      interface.writeData(meshName, dataAID, {&idD, 1}, {&valueD, 1});
 
       interface.advance(dt);
       double dt = interface.getMaxTimeStepSize();

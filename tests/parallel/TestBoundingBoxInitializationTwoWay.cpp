@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitializationTwoWay)
 
   if (context.isNamed("Fluid")) {
     for (size_t i = 0; i < vertexIDs.size(); i++) {
-      interface.writeVectorData(meshName, forcesID, vertexIDs[i], data[i + i1].data());
+      interface.writeData(meshName, forcesID, {&vertexIDs[i], 1}, {data[i + i1].data(), 3});
     }
   }
 
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitializationTwoWay)
 
   if (context.isNamed("Structure")) {
     for (size_t i = 0; i < vertexIDs.size(); i++) {
-      interface.readVectorData(meshName, forcesID, vertexIDs[i], preciceDt, data[i + i1].data());
+      interface.readData(meshName, forcesID, {&vertexIDs[i], 1}, preciceDt, {data[i + i1].data(), 3});
       for (size_t d = 0; d < 3; d++) {
         BOOST_TEST(expectedData[i + i1][d] == data[i + i1][d]);
       }
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitializationTwoWay)
     }
 
     for (size_t i = 0; i < vertexIDs.size(); i++) {
-      interface.writeVectorData(meshName, velocitiesID, vertexIDs[i], data[i + i1].data());
+      interface.writeData(meshName, velocitiesID, {&vertexIDs[i], 1}, {data[i + i1].data(), 3});
     }
   }
 
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitializationTwoWay)
 
   if (context.isNamed("Fluid")) {
     for (size_t i = 0; i < vertexIDs.size(); i++) {
-      interface.readVectorData(meshName, velocitiesID, vertexIDs[i], preciceDt, data[i + i1].data());
+      interface.readData(meshName, velocitiesID, {&vertexIDs[i], 1}, preciceDt, {data[i + i1].data(), 3});
       for (size_t d = 0; d < 3; d++) {
         BOOST_TEST(expectedData[i + i1][d] == data[i + i1][d]);
       }

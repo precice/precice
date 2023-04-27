@@ -56,11 +56,10 @@ void testQuadMappingScaledConsistent(const std::string configFile, const TestCon
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant should have to advance once!");
 
     // Write the data to be send.
-    auto dataAID = "DataOne";
-    interface.writeScalarData(meshOneID, dataAID, idA, valOneA);
-    interface.writeScalarData(meshOneID, dataAID, idB, valOneB);
-    interface.writeScalarData(meshOneID, dataAID, idC, valOneC);
-    interface.writeScalarData(meshOneID, dataAID, idD, valOneD);
+    auto   dataAID  = "DataOne";
+    int    ids[]    = {idA, idB, idC, idD};
+    double values[] = {valOneA, valOneB, valOneC, valOneD};
+    interface.writeData(meshOneID, dataAID, ids, values);
 
     // Advance, thus send the data to the receiving partner.
     interface.advance(maxDt);
@@ -86,12 +85,11 @@ void testQuadMappingScaledConsistent(const std::string configFile, const TestCon
 
     // Read the mapped data from the mesh.
     auto   dataAID = "DataOne";
-    double valueA, valueB, valueC;
-    interface.readScalarData(meshTwoID, dataAID, idA, maxDt, valueA);
-    interface.readScalarData(meshTwoID, dataAID, idB, maxDt, valueB);
-    interface.readScalarData(meshTwoID, dataAID, idC, maxDt, valueC);
+    int    ids[]   = {idA, idB, idC};
+    double values[3];
+    interface.readData(meshTwoID, dataAID, ids, maxDt, values);
 
-    double calculatedIntegral = precice::math::geometry::triangleArea(coordTwoA, coordTwoB, coordTwoC) * (valueA + valueB + valueC) / 3.0;
+    double calculatedIntegral = precice::math::geometry::triangleArea(coordTwoA, coordTwoB, coordTwoC) * (values[0] + values[1] + values[2]) / 3.0;
     BOOST_TEST(expectedIntegral == calculatedIntegral);
 
     // Verify that there is only one time step necessary.
@@ -151,12 +149,10 @@ void testQuadMappingScaledConsistentVolumetric(const std::string configFile, con
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant should have to advance once!");
 
     // Write the data to be send.
-    auto dataAID = "DataOne";
-    interface.writeScalarData(meshOneID, dataAID, idA, valOneA);
-    interface.writeScalarData(meshOneID, dataAID, idB, valOneB);
-    interface.writeScalarData(meshOneID, dataAID, idC, valOneC);
-    interface.writeScalarData(meshOneID, dataAID, idD, valOneD);
-    interface.writeScalarData(meshOneID, dataAID, idExtra, valOneExtra);
+    auto   dataAID  = "DataOne";
+    int    ids[]    = {idA, idB, idC, idD, idExtra};
+    double values[] = {valOneA, valOneB, valOneC, valOneD, valOneExtra};
+    interface.writeData(meshOneID, dataAID, ids, values);
 
     // Advance, thus send the data to the receiving partner.
     interface.advance(maxDt);
@@ -187,17 +183,16 @@ void testQuadMappingScaledConsistentVolumetric(const std::string configFile, con
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant should have to advance once!");
 
     // Read the mapped data from the mesh.
-    auto   dataAID = "DataOne";
-    double valueA, valueB, valueC, valueD;
-    interface.readScalarData(meshTwoID, dataAID, idA, maxDt, valueA);
-    interface.readScalarData(meshTwoID, dataAID, idB, maxDt, valueB);
-    interface.readScalarData(meshTwoID, dataAID, idC, maxDt, valueC);
-    interface.readScalarData(meshTwoID, dataAID, idD, maxDt, valueD);
+    auto dataAID = "DataOne";
 
-    double calculatedIntegral = precice::math::geometry::triangleArea(coordTwoA, coordTwoB, coordTwoC) * (valueA + valueB + valueC) / 3.0 +
-                                precice::math::geometry::triangleArea(coordTwoA, coordTwoD, coordTwoC) * (valueA + valueD + valueC) / 3.0;
+    int    ids[] = {idA, idB, idC, idD};
+    double values[4];
+    interface.readData(meshTwoID, dataAID, ids, maxDt, values);
+
+    double calculatedIntegral = precice::math::geometry::triangleArea(coordTwoA, coordTwoB, coordTwoC) * (values[0] + values[1] + values[2]) / 3.0 +
+                                precice::math::geometry::triangleArea(coordTwoA, coordTwoD, coordTwoC) * (values[0] + values[1] + values[2]) / 3.0;
     BOOST_TEST(expectedIntegral == calculatedIntegral);
-    BOOST_TEST(valueA = valOneA * 8.0 / 7);
+    BOOST_TEST(values[0] = valOneA * 8.0 / 7);
 
     // Verify that there is only one time step necessary.
     interface.advance(maxDt);
@@ -255,12 +250,10 @@ void testTetraScaledConsistentVolumetric(const std::string configFile, const Tes
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant should have to advance once!");
 
     // Write the data to be send.
-    auto dataAID = "DataOne";
-    interface.writeScalarData(meshOneID, dataAID, idA, valOneA);
-    interface.writeScalarData(meshOneID, dataAID, idB, valOneB);
-    interface.writeScalarData(meshOneID, dataAID, idC, valOneC);
-    interface.writeScalarData(meshOneID, dataAID, idD, valOneD);
-    interface.writeScalarData(meshOneID, dataAID, idExtra, valOneExtra);
+    auto   dataAID  = "DataOne";
+    int    ids[]    = {idA, idB, idC, idD, idExtra};
+    double values[] = {valOneA, valOneB, valOneC, valOneD, valOneExtra};
+    interface.writeData(meshOneID, dataAID, ids, values);
 
     // Advance, thus send the data to the receiving partner.
     interface.advance(maxDt);
@@ -287,15 +280,13 @@ void testTetraScaledConsistentVolumetric(const std::string configFile, const Tes
 
     // Read the mapped data from the mesh.
     auto   dataAID = "DataOne";
-    double valueA, valueB, valueC, valueD;
-    interface.readScalarData(meshTwoID, dataAID, idA, maxDt, valueA);
-    interface.readScalarData(meshTwoID, dataAID, idB, maxDt, valueB);
-    interface.readScalarData(meshTwoID, dataAID, idC, maxDt, valueC);
-    interface.readScalarData(meshTwoID, dataAID, idD, maxDt, valueD);
+    double values[4];
+    int    ids[] = {idA, idB, idC, idD};
+    interface.readData(meshTwoID, dataAID, ids, maxDt, values);
 
-    double calculatedIntegral = precice::math::geometry::tetraVolume(coordTwoA, coordTwoB, coordTwoC, coordTwoD) * (valueA + valueB + valueC + valueD) / 4.0;
+    double calculatedIntegral = precice::math::geometry::tetraVolume(coordTwoA, coordTwoB, coordTwoC, coordTwoD) * (values[0] + values[1] + values[2] + values[3]) / 4.0;
     BOOST_TEST(expectedIntegral == calculatedIntegral);
-    BOOST_TEST(valueA == valOneA * 1.3);
+    BOOST_TEST(values[0] == valOneA * 1.3);
 
     // Verify that there is only one time step necessary.
     interface.advance(maxDt);

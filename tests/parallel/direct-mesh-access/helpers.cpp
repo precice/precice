@@ -57,13 +57,11 @@ void runTestAccessReceivedMesh(const TestContext &       context,
     while (interface.isCouplingOngoing()) {
       // Write data
       if (context.isPrimary()) {
-        interface.writeBlockScalarData(otherMeshName, dataName, meshSize,
-                                       ids.data(), writeData.data());
+        interface.writeData(otherMeshName, dataName, ids, writeData);
       } else {
         // In order to prevent hypothetical index overruns reported by glibcc
         const int *ids_ptr = startIndex < ids.size() ? &ids[startIndex] : nullptr;
-        interface.writeBlockScalarData(otherMeshName, dataName, meshSize - startIndex,
-                                       ids_ptr, writeData.data());
+        interface.writeData(otherMeshName, dataName, {ids_ptr, meshSize - startIndex}, writeData);
       }
 
       interface.advance(dt);
@@ -109,8 +107,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
 
       interface.advance(dt);
       double dt = interface.getMaxTimeStepSize();
-      interface.readBlockScalarData(meshName, dataName, size,
-                                    ids.data(), dt, readData.data());
+      interface.readData(meshName, dataName, ids, dt, readData);
 
       // Check the received data
       const std::vector<double> expectedReadData = context.isPrimary() ? std::vector<double>({1, 2}) : expectedReadDataSecondaryRank;

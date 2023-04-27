@@ -45,9 +45,9 @@ BOOST_AUTO_TEST_CASE(WatchIntegralScaleAndNoScale)
 
     while (interface.isCouplingOngoing()) {
 
-      interface.writeScalarData(meshName, dataOneID, idA, valueA);
-      interface.writeScalarData(meshName, dataOneID, idB, valueB);
-      interface.writeScalarData(meshName, dataOneID, idC, valueC);
+      interface.writeData(meshName, dataOneID, {&idA, 1}, {&valueA, 1});
+      interface.writeData(meshName, dataOneID, {&idB, 1}, {&valueB, 1});
+      interface.writeData(meshName, dataOneID, {&idC, 1}, {&valueC, 1});
 
       interface.advance(dt);
       double dt = interface.getMaxTimeStepSize();
@@ -84,9 +84,9 @@ BOOST_AUTO_TEST_CASE(WatchIntegralScaleAndNoScale)
 
     while (interface.isCouplingOngoing()) {
 
-      interface.readScalarData(meshTwoID, dataOneID, idA, dt, valueA);
-      interface.readScalarData(meshTwoID, dataOneID, idB, dt, valueB);
-      interface.readScalarData(meshTwoID, dataOneID, idC, dt, valueC);
+      interface.readData(meshTwoID, dataOneID, {&idA, 1}, dt, {&valueA, 1});
+      interface.readData(meshTwoID, dataOneID, {&idB, 1}, dt, {&valueB, 1});
+      interface.readData(meshTwoID, dataOneID, {&idC, 1}, dt, {&valueC, 1});
 
       interface.advance(dt);
       double dt = interface.getMaxTimeStepSize();

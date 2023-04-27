@@ -45,11 +45,11 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
       interface.initialize();
       Eigen::Vector3d values;
       interface.advance(1.0);
-      interface.readBlockVectorData(meshName, dataName, 1, &vertexIDs[0], interface.getMaxTimeStepSize(), values.data());
+      interface.readData(meshName, dataName, {&vertexIDs[0], 1}, interface.getMaxTimeStepSize(), values);
       Eigen::Vector3d expected(21.1, 24.8, 28.5);
       BOOST_TEST(interface.requiresGradientDataFor(meshName, dataName) == false);
       BOOST_TEST(testing::equals(values, expected));
-      interface.readBlockVectorData(meshName, dataName, 1, &vertexIDs[1], interface.getMaxTimeStepSize(), values.data());
+      interface.readData(meshName, dataName, {&vertexIDs[1], 1}, interface.getMaxTimeStepSize(), values);
       Eigen::Vector3d expected2(2.3, 4.2, 6.1);
       BOOST_TEST(testing::equals(values, expected2));
     } else {
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
       interface.initialize();
       Eigen::Vector3d values;
       interface.advance(1.0);
-      interface.readBlockVectorData(meshName, dataName, 1, vertexIDs.data(), interface.getMaxTimeStepSize(), values.data());
+      interface.readData(meshName, dataName, vertexIDs, interface.getMaxTimeStepSize(), values);
       Eigen::Vector3d expected(1., 2., 3.);
       BOOST_TEST(interface.requiresGradientDataFor(meshName, dataName) == false);
       BOOST_TEST(testing::equals(values, expected));
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
                                     4.0, 5.0, 6.0,
                                     0.0, 0.0, 0.0};
 
-      interface.writeBlockVectorData(meshName, dataName, 4, vertexIDs.data(), values.data());
+      interface.writeData(meshName, dataName, vertexIDs, values);
 
       BOOST_TEST(interface.requiresGradientDataFor(meshName, dataName) == true);
 
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
         for (unsigned int i = 0; i < 36; ++i) {
           gradientValues.emplace_back(i);
         }
-        interface.writeBlockVectorGradientData(meshName, dataName, 4, vertexIDs.data(), gradientValues.data());
+        interface.writeGradientData(meshName, dataName, vertexIDs, gradientValues);
       }
     } else {
       // Assigned to the first rank
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
       auto                dataName = "Data2";
       std::vector<double> values   = {2.0, 3.0, 4.0};
 
-      interface.writeBlockVectorData(meshName, dataName, 1, vertexIDs.data(), values.data());
+      interface.writeData(meshName, dataName, vertexIDs, values);
 
       BOOST_TEST(interface.requiresGradientDataFor(meshName, dataName) == true);
 
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
         for (int i = 0; i < 9; ++i) {
           gradientValues.emplace_back(-i);
         }
-        interface.writeVectorGradientData(meshName, dataName, vertexIDs[0], gradientValues.data());
+        interface.writeGradientData(meshName, dataName, {&vertexIDs[0], 1}, gradientValues);
       }
     }
     interface.advance(1.0);
