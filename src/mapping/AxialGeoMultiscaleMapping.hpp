@@ -20,6 +20,11 @@ public:
     SPREAD,
     COLLECT
   };
+  enum AxialAxis {
+    X,
+    Y,
+    Z
+  };
 
   /**
    * @brief Constructor.
@@ -27,9 +32,10 @@ public:
    * @param[in] constraint Specifies mapping to be consistent or conservative.
    * @param[in] dimensions Dimensionality of the meshes
    * @param[in] type Geometric multiscale type of the mapping
+   * @param[in] axis Main axis along which axial geometric multiscale coupling happens
    * @param[in] radius Radius of the 1D solver "tube"
    */
-  AxialGeoMultiscaleMapping(Constraint constraint, int dimensions, MultiscaleType type, double radius);
+  AxialGeoMultiscaleMapping(Constraint constraint, int dimensions, MultiscaleType type, AxialAxis axis, double radius);
 
   /// Destructor, empty.
   virtual ~AxialGeoMultiscaleMapping() {}
@@ -68,6 +74,9 @@ private:
 
   /// scaling to make up for difference between max and avg value for a certain shape function
   double _scaling = 0.0;
+
+  /// main axis along which axial geometric multiscale coupling happens
+  AxialAxis _axis;
 };
 
 } // namespace mapping

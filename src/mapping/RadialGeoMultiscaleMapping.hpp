@@ -68,6 +68,7 @@ private:
 
   MultiscaleType _type;
 
+  /// main axis along which radial geometric multiscale coupling happens
   RadialAxis _axis;
 };
 

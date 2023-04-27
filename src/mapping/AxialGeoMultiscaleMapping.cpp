@@ -9,9 +9,11 @@ AxialGeoMultiscaleMapping::AxialGeoMultiscaleMapping(
     Constraint     constraint,
     int            dimensions,
     MultiscaleType type,
+    AxialAxis      axis,
     double         radius)
     : Mapping(constraint, dimensions),
       _type(type),
+      _axis(axis),
       _radius(radius)
 {
   setInputRequirement(Mapping::MeshRequirement::VERTEX);
@@ -65,46 +67,54 @@ void AxialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID outputD
 {
   PRECICE_TRACE(inputDataID, outputDataID);
 
-  const Eigen::VectorXd &inputValues     = input()->data(inputDataID)->values();
-  int                    valueDimensions = input()->data(inputDataID)->getDimensions();
-  Eigen::VectorXd &      outputValues    = output()->data(outputDataID)->values();
+  const Eigen::VectorXd &inputValues        = input()->data(inputDataID)->values();
+  int                    inValueDimensions  = input()->data(inputDataID)->getDimensions();
+  int                    outValueDimensions = output()->data(outputDataID)->getDimensions();
+  Eigen::VectorXd &      outputValues       = output()->data(outputDataID)->values();
 
-  PRECICE_ASSERT(valueDimensions == output()->data(outputDataID)->getDimensions(),
-                 valueDimensions, output()->data(outputDataID)->getDimensions());
-  PRECICE_ASSERT(inputValues.size() / valueDimensions == static_cast<int>(input()->vertices().size()),
-                 inputValues.size(), valueDimensions, input()->vertices().size());
-  PRECICE_ASSERT(outputValues.size() / valueDimensions == static_cast<int>(output()->vertices().size()),
-                 outputValues.size(), valueDimensions, output()->vertices().size());
+  PRECICE_ASSERT((inputValues.size() / inValueDimensions == static_cast<int>(input()->vertices().size())),
+                 inputValues.size(), inValueDimensions, input()->vertices().size());
+  PRECICE_ASSERT((outputValues.size() / outValueDimensions == static_cast<int>(output()->vertices().size())),
+                 outputValues.size(), outValueDimensions, output()->vertices().size());
 
   PRECICE_DEBUG("Map consistent");
   if (_type == SPREAD) {
-    PRECICE_ASSERT(inputValues.size() == valueDimensions);
+    PRECICE_ASSERT(inputValues.size() == 1);
     PRECICE_ASSERT(input()->vertices().size() == 1);
     mesh::Vertex &v0      = input()->vertices()[0];
     size_t const  outSize = output()->vertices().size();
+    int           coord;
+    if (_axis == X) {
+      coord = 0;
+    } else if (_axis == Y) {
+      coord = 1;
+    } else if (_axis == Z) {
+      coord = 2;
+    } else {
+      PRECICE_ASSERT(false, "Unknown axis.");
+    }
     for (size_t i = 0; i < outSize; i++) {
-      Eigen::VectorXd difference(valueDimensions);
+      Eigen::VectorXd difference(outValueDimensions);
       difference = v0.getCoords();
       difference -= output()->vertices()[i].getCoords();
       double distance = difference.norm() / _radius;
       PRECICE_CHECK(distance <= 1.05, "Output mesh has vertices that do not coincide with the geometric multiscale interface defined by the input mesh. Ratio of vertex distance to radius is {}.", distance);
-      for (int dim = 0; dim < valueDimensions; dim++) {
-        outputValues((i * valueDimensions) + dim) = 2 * inputValues(dim) * (1 - distance * distance);
-      }
+      PRECICE_ASSERT(((i * outValueDimensions) + coord) < outputValues.size(), ((i * outValueDimensions) + coord), outputValues.size())
+      outputValues((i * outValueDimensions) + coord) = 2 * inputValues(0) * (1 - distance * distance);
     }
   } else {
     PRECICE_ASSERT(_type == COLLECT);
     PRECICE_ASSERT(output()->vertices().size() == 1);
-    PRECICE_ASSERT(outputValues.size() == valueDimensions);
-    for (int dim = 0; dim < valueDimensions; dim++) {
-      outputValues(dim) = 0.0;
-    }
+    PRECICE_ASSERT(outputValues.size() == 1);
+    outputValues(0)     = 0;
     size_t const inSize = input()->vertices().size();
     for (size_t i = 0; i < inSize; i++) {
-      for (int dim = 0; dim < valueDimensions; dim++) {
-        outputValues(dim) += inputValues((i * valueDimensions) + dim) / inSize;
+      for (int dim = 0; dim < inValueDimensions; dim++) {
+        PRECICE_ASSERT(((i * inValueDimensions) + dim) < inputValues.size(), ((i * inValueDimensions) + dim), inputValues.size())
+        outputValues(0) += inputValues((i * inValueDimensions) + dim);
       }
     }
+    outputValues(0) = outputValues(0) / inputValues.size();
   }
 }
 

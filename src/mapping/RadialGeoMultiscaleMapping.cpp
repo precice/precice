@@ -55,12 +55,11 @@ void RadialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID output
   int                    valueDimensions = input()->data(inputDataID)->getDimensions();
   Eigen::VectorXd &      outputValues    = output()->data(outputDataID)->values();
 
-  PRECICE_ASSERT(valueDimensions == output()->data(outputDataID)->getDimensions(),
-                 valueDimensions, output()->data(outputDataID)->getDimensions());
-  PRECICE_ASSERT(inputValues.size() / valueDimensions == static_cast<int>(input()->vertices().size()),
+  PRECICE_ASSERT((inputValues.size() / valueDimensions == static_cast<int>(input()->vertices().size())),
                  inputValues.size(), valueDimensions, input()->vertices().size());
-  PRECICE_ASSERT(outputValues.size() / valueDimensions == static_cast<int>(output()->vertices().size()),
+  PRECICE_ASSERT((outputValues.size() / valueDimensions == static_cast<int>(output()->vertices().size())),
                  outputValues.size(), valueDimensions, output()->vertices().size());
+  PRECICE_ASSERT(valueDimensions == 1);
 
   PRECICE_DEBUG("Map consistent");
   if (_type == SPREAD) {
@@ -85,7 +84,6 @@ void RadialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID output
       axisMidpoints(i)         = (axisPositionCurrent + axisPositionNext) / 2;
     }
     axisMidpoints(inSize - 1) = 1e100; // arbitrary large number, such that vertices after the last midpoint are still assigned
-
     for (size_t i = 0; i < outSize; i++) {
       auto vertexCoords = output()->vertices()[i].getCoords()[coord];
       int  index        = 0;
@@ -93,13 +91,11 @@ void RadialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID output
         index++;
         PRECICE_ASSERT(index < inSize);
       }
-      outputValues((i * valueDimensions) + 0) = inputValues((index * valueDimensions) + 0);
-      outputValues((i * valueDimensions) + 1) = inputValues((index * valueDimensions) + 1);
-      outputValues((i * valueDimensions) + 2) = inputValues((index * valueDimensions) + 2);
+      outputValues((i * valueDimensions)) = inputValues(index);
     }
   } else {
     PRECICE_ASSERT(_type == COLLECT);
-    PRECICE_ASSERT(outputValues.size() == (valueDimensions * output()->vertices().size()), outputValues.size(), valueDimensions, output()->vertices().size());
+    PRECICE_ASSERT(outputValues.size() == output()->vertices().size(), outputValues.size(), valueDimensions, output()->vertices().size());
     size_t const inSize  = input()->vertices().size();
     size_t const outSize = output()->vertices().size();
 
@@ -124,11 +120,10 @@ void RadialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID output
 
     Eigen::VectorXd counter(outSize); // counts number of vertices inbetween midpoints for averaging
     for (size_t i = 0; i < outSize; i++) {
-      outputValues((i * valueDimensions) + 0) = 0;
-      outputValues((i * valueDimensions) + 1) = 0;
-      outputValues((i * valueDimensions) + 2) = 0;
-      counter(i)                              = 0;
+      outputValues((i * valueDimensions)) = 0;
+      counter(i)                          = 0;
     }
+
     for (size_t i = 0; i < inSize; i++) {
       auto vertexCoords = input()->vertices()[i].getCoords()[coord];
       int  index        = 0;
@@ -136,15 +131,11 @@ void RadialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID output
         index++;
         PRECICE_ASSERT(index < outSize);
       }
-      outputValues((index * valueDimensions) + 0) += inputValues((i * valueDimensions) + 0);
-      outputValues((index * valueDimensions) + 1) += inputValues((i * valueDimensions) + 1);
-      outputValues((index * valueDimensions) + 2) += inputValues((i * valueDimensions) + 2);
+      outputValues(index) += inputValues(i * valueDimensions);
       counter(index) += 1;
     }
     for (size_t i = 0; i < outSize; i++) {
-      outputValues((i * valueDimensions) + 0) = outputValues((i * valueDimensions) + 0) / counter(i);
-      outputValues((i * valueDimensions) + 1) = outputValues((i * valueDimensions) + 1) / counter(i);
-      outputValues((i * valueDimensions) + 2) = outputValues((i * valueDimensions) + 2) / counter(i);
+      outputValues(i) = outputValues(i) / counter(i);
     }
   }
 }
