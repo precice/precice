@@ -16,12 +16,13 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithWaveform)
   if (context.isNamed("SolverOne")) {
     // Set up Solverinterface
     precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    BOOST_TEST(interface.getDimensions() == 2);
-    constexpr int dim           = 2;
-    const auto    ownMeshName   = "MeshOne";
-    const auto    otherMeshName = "MeshTwo";
-    const auto    readDataName  = "Forces";
-    const auto    writeDataName = "Velocities";
+    constexpr int            dim           = 2;
+    const auto               ownMeshName   = "MeshOne";
+    const auto               otherMeshName = "MeshTwo";
+    const auto               readDataName  = "Forces";
+    const auto               writeDataName = "Velocities";
+    BOOST_REQUIRE(interface.getMeshDimensions(ownMeshName) == 2);
+    BOOST_REQUIRE(interface.getMeshDimensions(otherMeshName) == 2);
 
     std::vector<double> ownPositions = std::vector<double>({0.5, 0.25});
     std::vector<int>    ownIDs(ownPositions.size() / dim, -1);
@@ -95,11 +96,11 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithWaveform)
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
     precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    BOOST_TEST(interface.getDimensions() == 2);
-    constexpr int dim         = 2;
-    const auto    meshID      = "MeshTwo";
-    const auto    writeDataID = "Forces";
-    const auto    readDataID  = "Velocities";
+    constexpr int            dim         = 2;
+    const auto               meshID      = "MeshTwo";
+    const auto               writeDataID = "Forces";
+    const auto               readDataID  = "Velocities";
+    BOOST_REQUIRE(interface.getMeshDimensions(meshID) == 2);
 
     std::vector<double> positions = std::vector<double>({0.5, 0.25});
     std::vector<int>    ids(positions.size() / dim, -1);

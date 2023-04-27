@@ -20,7 +20,6 @@ BOOST_AUTO_TEST_CASE(Implicit)
 
   SolverInterface couplingInterface(context.name, context.config(), 0, 1);
 
-  int         dimensions = couplingInterface.getDimensions();
   std::string meshName;
   std::string writeDataName;
   std::string readDataName;
@@ -40,6 +39,7 @@ BOOST_AUTO_TEST_CASE(Implicit)
     writeValue        = 2;
     expectedReadValue = 1;
   }
+  int                 dimensions = couplingInterface.getMeshDimensions(meshName);
   std::vector<double> vertex(dimensions, 0);
   int                 vertexID = couplingInterface.setMeshVertex(meshName, vertex.data());
   double              dt       = 0;

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "precice/Version.h"
-#include "precice/export.h"
+#include <precice/Version.h>
+#include <precice/export.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -80,10 +80,11 @@ PRECICE_API void precicec_finalize();
 ///@name Status Queries
 ///@{
 
-/**
- * @brief Returns the number of spatial configurations for the coupling.
- */
-PRECICE_API int precicec_getDimensions();
+/// @copydoc precice::SolverInterface::getMeshDimensions()
+PRECICE_API int precicec_getMeshDimensions(const char *meshName);
+
+/// @copydoc precice::SolverInterface::getDataDimensions()
+PRECICE_API int precicec_getDataDimensions(const char *meshName, const char *dataName);
 
 /**
  * @brief Returns true (->1), if the coupled simulation is ongoing

@@ -1310,20 +1310,10 @@ void SolverInterfaceImpl::readBlockVectorData(
                 "You cannot call readBlockVectorData on the scalar data type \"{0}\". "
                 "Use readBlockScalarData or change the data type for \"{0}\" to vector.",
                 context.getDataName());
-  const auto valuesInternal = context.sampleWaveformAt(normalizedReadTime);
-  const auto vertexCount    = valuesInternal.size() / context.getDataDimensions();
-  for (int i = 0; i < size; i++) {
-    const auto valueIndex = valueIndices[i];
-    PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
-                  "Cannot read data \"{}\" to invalid Vertex ID ({}). "
-                  "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                  context.getDataName(), valueIndex);
-    int offsetInternal = valueIndex * _dimensions;
-    int offset         = i * _dimensions;
-    for (int dim = 0; dim < _dimensions; dim++) {
-      values[offset + dim] = valuesInternal[offsetInternal + dim];
-    }
-  }
+
+  const auto valueIndicesVec                                       = std::vector<int>(valueIndices, valueIndices + size);
+  const auto valuesInternal                                        = context.readValues(valueIndicesVec, normalizedReadTime);
+  Eigen::VectorXd::Map(values, context.getDataDimensions() * size) = valuesInternal;
 }
 
 void SolverInterfaceImpl::readVectorData(
@@ -1355,17 +1345,12 @@ void SolverInterfaceImpl::readVectorData(
   PRECICE_CHECK(context.getDataDimensions() == _dimensions,
                 "You cannot call readVectorData on the scalar data type \"{0}\". Use readScalarData or change the data type for \"{0}\" to vector.",
                 context.getDataName());
-  const auto values      = context.sampleWaveformAt(normalizedReadTime);
-  const auto vertexCount = context.getDataSize() / context.getDataDimensions();
-  PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
-                "Cannot read data \"{}\" to invalid Vertex ID ({}). "
-                "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                context.getDataName(), valueIndex);
-  int offset = valueIndex * _dimensions;
-  for (int dim = 0; dim < _dimensions; dim++) {
-    value[dim] = values[offset + dim];
-  }
-  PRECICE_DEBUG("read value = {}", Eigen::Map<const Eigen::VectorXd>(value, _dimensions).format(utils::eigenio::debug()));
+  const auto valueIndicesVec                                      = std::vector<int>{valueIndex};
+  const auto valuesInternal                                       = context.readValues(valueIndicesVec, normalizedReadTime);
+  const int  size                                                 = 1;
+  Eigen::VectorXd::Map(value, context.getDataDimensions() * size) = valuesInternal;
+
+  PRECICE_DEBUG("read value = {}", Eigen::Map<const Eigen::VectorXd>(value, context.getDataDimensions()).format(utils::eigenio::debug()));
 }
 
 void SolverInterfaceImpl::readBlockScalarData(
@@ -1399,17 +1384,9 @@ void SolverInterfaceImpl::readBlockScalarData(
                 "You cannot call readBlockScalarData on the vector data type \"{0}\". "
                 "Use readBlockVectorData or change the data type for \"{0}\" to scalar.",
                 context.getDataName());
-  const auto valuesInternal = context.sampleWaveformAt(normalizedReadTime);
-  const auto vertexCount    = valuesInternal.size();
-
-  for (int i = 0; i < size; i++) {
-    const auto valueIndex = valueIndices[i];
-    PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
-                  "Cannot read data \"{}\" to invalid Vertex ID ({}). "
-                  "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                  context.getDataName(), valueIndex);
-    values[i] = valuesInternal[valueIndex];
-  }
+  const auto valueIndicesVec                                       = std::vector<int>(valueIndices, valueIndices + size);
+  const auto valuesInternal                                        = context.readValues(valueIndicesVec, normalizedReadTime);
+  Eigen::VectorXd::Map(values, context.getDataDimensions() * size) = valuesInternal;
 }
 
 void SolverInterfaceImpl::readScalarData(
@@ -1443,13 +1420,10 @@ void SolverInterfaceImpl::readScalarData(
                 "Use readVectorData or change the data type for \"{0}\" to scalar.",
                 context.getDataName());
 
-  const auto values      = context.sampleWaveformAt(normalizedReadTime);
-  const auto vertexCount = context.getDataSize();
-  PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
-                "Cannot read data \"{}\" from invalid Vertex ID ({}). "
-                "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                context.getDataName(), valueIndex);
-  value = values[valueIndex];
+  const auto valueIndicesVec                                       = std::vector<int>{valueIndex};
+  const auto valuesInternal                                        = context.readValues(valueIndicesVec, normalizedReadTime);
+  const int  size                                                  = 1;
+  Eigen::VectorXd::Map(&value, context.getDataDimensions() * size) = valuesInternal;
   PRECICE_DEBUG("Read value = {}", value);
 }
 

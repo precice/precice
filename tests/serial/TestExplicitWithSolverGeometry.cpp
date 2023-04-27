@@ -24,10 +24,10 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithSolverGeometry)
   double time      = 0;
 
   precice::SolverInterface couplingInterface(context.name, context.config(), 0, 1);
-  BOOST_TEST(couplingInterface.getDimensions() == 3);
   if (context.isNamed("SolverOne")) {
     //was necessary to replace pre-defined geometries
     auto meshName = "MeshOne";
+    BOOST_REQUIRE(couplingInterface.getMeshDimensions(meshName) == 3);
     couplingInterface.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());
     couplingInterface.setMeshVertex(meshName, Eigen::Vector3d(1.0, 0.0, 0.0).data());
 

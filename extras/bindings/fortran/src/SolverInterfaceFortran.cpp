@@ -73,11 +73,24 @@ void precicef_finalize_()
   impl.reset();
 }
 
-void precicef_get_dims_(
-    int *dimensions)
+void precicef_get_mesh_dimensions_(
+    const char *meshName,
+    int *       dimensions,
+    int         meshNameLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  *dimensions = impl->getDimensions();
+  *dimensions = impl->getMeshDimensions(precice::impl::strippedStringView(meshName, meshNameLength));
+}
+
+void precicef_get_data_dimensions_(
+    const char *meshName,
+    const char *dataName,
+    int *       dimensions,
+    int         meshNameLength,
+    int         dataNameLength)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  *dimensions = impl->getDataDimensions(precice::impl::strippedStringView(meshName, meshNameLength), precice::impl::strippedStringView(dataName, dataNameLength));
 }
 
 void precicef_is_coupling_ongoing_(
