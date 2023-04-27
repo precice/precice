@@ -1177,8 +1177,11 @@ void SolverInterfaceImpl::writeScalarGradientData(
                   context.getDataName());
 
     // Values are entered derived in the spatial dimensions (#rows = #spatial dimensions)
-    Eigen::Map<const Eigen::MatrixXd> gradient(gradientValues, context.getSpatialDimensions(), 1);
-    gradientValuesInternal.block(0, valueIndex, context.getSpatialDimensions(), context.getDataDimensions()) = gradient;
+    Eigen::Map<const Eigen::MatrixXd> gradients(gradientValues, context.getSpatialDimensions(), size * context.getDataDimensions());
+
+    const int stride                                                                                                  = 1;
+    const int i                                                                                                       = 0;
+    gradientValuesInternal.block(0, stride * valueIndex, context.getSpatialDimensions(), context.getDataDimensions()) = gradients.block(0, 0, context.getSpatialDimensions(), context.getDataDimensions());
   }
 }
 
@@ -1231,7 +1234,9 @@ void SolverInterfaceImpl::writeBlockScalarGradientData(
       PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                     "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                     context.getDataName(), valueIndex);
-      gradientValuesInternal.block(0, valueIndex, context.getSpatialDimensions(), context.getDataDimensions()) = gradients.block(0, i, context.getSpatialDimensions(), context.getDataDimensions());
+
+      const int stride                                                                                                  = 1;
+      gradientValuesInternal.block(0, stride * valueIndex, context.getSpatialDimensions(), context.getDataDimensions()) = gradients.block(0, i, context.getSpatialDimensions(), context.getDataDimensions());
     }
   }
 }
@@ -1278,8 +1283,11 @@ void SolverInterfaceImpl::writeVectorGradientData(
                   "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                   context.getDataName(), valueIndex)
 
-    Eigen::Map<const Eigen::MatrixXd> gradient(gradientValues, context.getSpatialDimensions(), context.getDataDimensions());
-    gradientValuesInternal.block(0, context.getSpatialDimensions() * valueIndex, context.getSpatialDimensions(), context.getDataDimensions()) = gradient;
+    Eigen::Map<const Eigen::MatrixXd> gradients(gradientValues, context.getSpatialDimensions(), size * context.getDataDimensions());
+
+    const int stride                                                                                                  = context.getSpatialDimensions();
+    const int i                                                                                                       = 0;
+    gradientValuesInternal.block(0, stride * valueIndex, context.getSpatialDimensions(), context.getDataDimensions()) = gradients.block(0, i, context.getSpatialDimensions(), context.getDataDimensions());
   }
 }
 
@@ -1335,7 +1343,9 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
       PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                     "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                     context.getDataName(), valueIndex);
-      gradientValuesInternal.block(0, context.getSpatialDimensions() * valueIndex, context.getSpatialDimensions(), context.getDataDimensions()) = gradients.block(0, i * context.getSpatialDimensions(), context.getSpatialDimensions(), context.getDataDimensions());
+
+      const int stride                                                                                                  = context.getSpatialDimensions();
+      gradientValuesInternal.block(0, stride * valueIndex, context.getSpatialDimensions(), context.getDataDimensions()) = gradients.block(0, i * context.getSpatialDimensions(), context.getSpatialDimensions(), context.getDataDimensions());
     }
   }
 }
