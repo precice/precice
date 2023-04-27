@@ -995,9 +995,12 @@ void SolverInterfaceImpl::writeData(
   PRECICE_ASSERT(context.providedData() != nullptr);
 
   const auto dataDims         = context.getDataDimensions();
-  const auto expectedVertices = values.size() / dataDims;
-  PRECICE_CHECK(expectedVertices < vertices.size(), "");
-  PRECICE_CHECK(expectedVertices > vertices.size(), "");
+  const auto expectedDataSize = vertices.size() * dataDims;
+  PRECICE_CHECK(expectedDataSize != values.size(),
+                "Input sizes are incorrect attempting to write {}D data \"{}\" to mesh \"{}\". "
+                "You passed {} vertices and {} data components, but we expected {} data components ({} x {}).",
+                dataDims, dataName, meshName,
+                vertices.size(), values.size(), expectedDataSize, dataDims, vertices.size());
 
   // Sizes are correct at this point
   PRECICE_VALIDATE_DATA(values.data(), values.size()); // TODO Only take span
@@ -1045,9 +1048,12 @@ void SolverInterfaceImpl::readData(
 
   ReadDataContext &context          = _accessor->readDataContext(meshName, dataName);
   const auto       dataDims         = context.getDataDimensions();
-  const auto       expectedVertices = values.size() / dataDims;
-  PRECICE_CHECK(expectedVertices < vertices.size(), "");
-  PRECICE_CHECK(expectedVertices > vertices.size(), "");
+  const auto       expectedDataSize = vertices.size() * dataDims;
+  PRECICE_CHECK(expectedDataSize == values.size(),
+                "Input sizes are incorrect attempting to read {}D data \"{}\" from mesh \"{}\". "
+                "You passed {} vertices and {} data components, but we expected {} data components ({} x {}).",
+                dataDims, dataName, meshName,
+                vertices.size(), values.size(), expectedDataSize, dataDims, vertices.size());
 
   const auto &                mesh = *context.getMesh();
   Eigen::Map<Eigen::MatrixXd> outputData(values.data(), dataDims, values.size());
@@ -1089,10 +1095,17 @@ void SolverInterfaceImpl::writeGradientData(
   PRECICE_CHECK(meshData.hasGradient(), "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", meshName);
 
   const auto &mesh               = *context.getMesh();
-  const auto  gradientComponents = context.getDataDimensions() * mesh.getDimensions();
-  const auto  expectedVertices   = gradients.size() / gradientComponents;
-  PRECICE_CHECK(expectedVertices < vertices.size(), "");
-  PRECICE_CHECK(expectedVertices > vertices.size(), "");
+  const auto  dataDims           = context.getDataDimensions();
+  const auto  meshDims           = mesh.getDimensions();
+  const auto  gradientComponents = meshDims * dataDims;
+  const auto  expectedComponents = vertices.size() * gradientComponents;
+  PRECICE_CHECK(expectedComponents == values.size(),
+                "Input sizes are incorrect attempting to write gradient for data \"{}\" to mesh \"{}\". "
+                "A single gradient/Jacobian for {}D data on a {}D mesh has {} components. "
+                "You passed {} vertices and {} gradient components, but we expected {} gradient components. ",
+                dataName, meshName,
+                dataDims, meshDims, gradientComponents,
+                vertices.size(), gradients.size(), expectedComponents);
 
   PRECICE_VALIDATE_DATA(gradients.data(), gradients.size());
 
