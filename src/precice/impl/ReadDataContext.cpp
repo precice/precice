@@ -27,6 +27,26 @@ void ReadDataContext::appendMappingConfiguration(MappingContext &mappingContext,
   PRECICE_ASSERT(hasReadMapping());
 }
 
+Eigen::VectorXd ReadDataContext::readValues(std::vector<int> indices, double normalizedDt)
+{
+  const auto vertexCount    = getDataSize() / getDataDimensions();
+  const auto valuesInternal = _waveform->sample(normalizedDt);
+  auto       values         = Eigen::VectorXd(indices.size() * getDataDimensions());
+  for (int i = 0; i < indices.size(); i++) {
+    const auto valueIndex = indices[i];
+    PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
+                  "Cannot read data \"{}\" from invalid Vertex ID ({}). "
+                  "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
+                  getDataName(), valueIndex);
+    int offsetInternal = valueIndex * getDataDimensions();
+    int offset         = i * getDataDimensions();
+    for (int dim = 0; dim < getDataDimensions(); dim++) {
+      values[offset + dim] = valuesInternal[offsetInternal + dim];
+    }
+  }
+  return values;
+}
+
 int ReadDataContext::getInterpolationOrder() const
 {
   return _waveform->getInterpolationOrder();
@@ -35,11 +55,6 @@ int ReadDataContext::getInterpolationOrder() const
 void ReadDataContext::storeDataInWaveform()
 {
   _waveform->store(_providedData->values()); // store mapped or received _providedData in the _waveform
-}
-
-Eigen::VectorXd ReadDataContext::sampleWaveformAt(double normalizedDt)
-{
-  return _waveform->sample(normalizedDt);
 }
 
 void ReadDataContext::initializeWaveform()
