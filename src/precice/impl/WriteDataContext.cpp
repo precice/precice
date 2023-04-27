@@ -43,10 +43,7 @@ void WriteDataContext::writeGradientIntoDataBuffer(std::vector<int> indices, con
     PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                   "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                   getDataName(), valueIndex);
-
-    mesh::Data &meshData                                                                              = *providedData(); // @todo write into buffer!
-    auto &      gradientValuesInternal                                                                = meshData.gradientValues();
-    gradientValuesInternal.block(0, stride * valueIndex, getSpatialDimensions(), getDataDimensions()) = gradients.block(0, stride * i, getSpatialDimensions(), getDataDimensions());
+    _writeDataBuffer.gradient.block(0, stride * valueIndex, getSpatialDimensions(), getDataDimensions()) = gradients.block(0, stride * i, getSpatialDimensions(), getDataDimensions());
   }
 }
 
@@ -55,7 +52,7 @@ void WriteDataContext::resizeBufferTo(int nVertices)
   using SizeType = std::remove_cv<decltype(nVertices)>::type;
 
   // Allocate data values
-  const SizeType expectedSize = nVertices * _providedData->getDimensions();
+  const SizeType expectedSize = nVertices * getDataDimensions();
   const auto     actualSize   = static_cast<SizeType>(_writeDataBuffer.values.size());
   // Shrink Buffer
   if (expectedSize < actualSize) {
@@ -66,14 +63,14 @@ void WriteDataContext::resizeBufferTo(int nVertices)
     const auto leftToAllocate = expectedSize - actualSize;
     utils::append(_writeDataBuffer.values, Eigen::VectorXd(Eigen::VectorXd::Zero(leftToAllocate)));
   }
-  PRECICE_DEBUG("Data {} now has {} values", _providedData->getName(), _writeDataBuffer.values.size());
+  PRECICE_DEBUG("Data {} now has {} values", getDataName(), _writeDataBuffer.values.size());
 
   // Allocate gradient data values
   if (_providedData->hasGradient()) {
-    const SizeType spaceDimensions = _providedData->getSpatialDimensions();
+    const SizeType spaceDimensions = getSpatialDimensions();
 
-    const SizeType expectedColumnSize = expectedSize * _providedData->getDimensions();
-    const auto     actualColumnSize   = static_cast<SizeType>(_providedData->gradientValues().cols());
+    const SizeType expectedColumnSize = expectedSize * getDataDimensions();
+    const auto     actualColumnSize   = static_cast<SizeType>(_writeDataBuffer.gradient.cols());
 
     // Shrink Buffer
     if (expectedColumnSize < actualColumnSize) {
@@ -85,13 +82,14 @@ void WriteDataContext::resizeBufferTo(int nVertices)
       const auto columnLeftToAllocate = expectedColumnSize - actualColumnSize;
       utils::append(_writeDataBuffer.gradient, Eigen::MatrixXd(Eigen::MatrixXd::Zero(spaceDimensions, columnLeftToAllocate)));
     }
-    PRECICE_DEBUG("Gradient Data {} now has {} x {} values", _providedData->getName(), _writeDataBuffer.gradient.rows(), _writeDataBuffer.gradient.cols());
+    PRECICE_DEBUG("Gradient Data {} now has {} x {} values", getDataName(), _writeDataBuffer.gradient.rows(), _writeDataBuffer.gradient.cols());
   }
 }
 
 void WriteDataContext::storeBufferedData(double currentTime)
 {
-  _providedData->values() = _writeDataBuffer.values; // @todo this line should become unnecessary!
+  _providedData->values()         = _writeDataBuffer.values;   // @todo this line should become unnecessary!
+  _providedData->gradientValues() = _writeDataBuffer.gradient; // @todo this line should become unnecessary!
   _providedData->timeStepsStorage().setSampleAtTime(currentTime, _writeDataBuffer);
 }
 
