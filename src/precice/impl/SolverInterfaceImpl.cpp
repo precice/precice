@@ -1023,21 +1023,7 @@ void SolverInterfaceImpl::writeBlockVectorData(
 
   Eigen::Map<const Eigen::VectorXd> valuesVec(values, size * context.getDataDimensions());
   auto                              valueIndicesVec = std::vector<int>(valueIndices, valueIndices + size);
-
-  const auto vertexCount = context.getDataSize() / context.getDataDimensions();
-  for (int i = 0; i < valueIndicesVec.size(); i++) {
-    const auto valueIndex = valueIndicesVec[i];
-    PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
-                  "Cannot write data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                  context.getDataName(), valueIndex);
-    const int offsetInternal = valueIndex * context.getDataDimensions();
-    const int offset         = i * context.getDataDimensions();
-    for (int dim = 0; dim < context.getDataDimensions(); dim++) {
-      PRECICE_ASSERT(offset + dim < context.getDataSize(),
-                     offset + dim, context.getDataSize());
-      context.writeValuesIntoDataBuffer(offsetInternal + dim, valuesVec[offset + dim]);
-    }
-  }
+  context.writeValuesIntoDataBuffer(valueIndicesVec, valuesVec);
 }
 
 void SolverInterfaceImpl::writeVectorData(
@@ -1061,19 +1047,7 @@ void SolverInterfaceImpl::writeVectorData(
 
   Eigen::Map<const Eigen::VectorXd> valuesVec(value, size * context.getDataDimensions());
   auto                              valueIndicesVec = std::vector<int>{valueIndex};
-
-  const auto vertexCount = context.getDataSize() / context.getDataDimensions();
-  for (int i = 0; i < valueIndicesVec.size(); i++) {
-    const auto valueIndex = valueIndicesVec[i];
-    PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
-                  "Cannot write data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                  context.getDataName(), valueIndex);
-    const int offsetInternal = valueIndex * context.getDataDimensions();
-    const int offset         = i * context.getDataDimensions();
-    for (int dim = 0; dim < context.getDataDimensions(); dim++) {
-      context.writeValuesIntoDataBuffer(offsetInternal + dim, valuesVec[offset + dim]);
-    }
-  }
+  context.writeValuesIntoDataBuffer(valueIndicesVec, valuesVec);
 }
 
 void SolverInterfaceImpl::writeBlockScalarData(
@@ -1100,19 +1074,7 @@ void SolverInterfaceImpl::writeBlockScalarData(
 
   Eigen::Map<const Eigen::VectorXd> valuesVec(values, size * context.getDataDimensions());
   auto                              valueIndicesVec = std::vector<int>(valueIndices, valueIndices + size);
-
-  const auto vertexCount = context.getDataSize() / context.getDataDimensions();
-  for (int i = 0; i < valueIndicesVec.size(); i++) {
-    const auto valueIndex = valueIndicesVec[i];
-    PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
-                  "Cannot write data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                  context.getDataName(), valueIndex);
-    const int offsetInternal = valueIndex * context.getDataDimensions();
-    const int offset         = i * context.getDataDimensions();
-    for (int dim = 0; dim < context.getDataDimensions(); dim++) {
-      context.writeValuesIntoDataBuffer(offsetInternal + dim, valuesVec[offset + dim]);
-    }
-  }
+  context.writeValuesIntoDataBuffer(valueIndicesVec, valuesVec);
 }
 
 void SolverInterfaceImpl::writeScalarData(
@@ -1140,20 +1102,7 @@ void SolverInterfaceImpl::writeScalarData(
 
   Eigen::Map<const Eigen::VectorXd> valuesVec(&value, size * context.getDataDimensions());
   auto                              valueIndicesVec = std::vector<int>{valueIndex};
-
-  const auto vertexCount = context.getDataSize() / context.getDataDimensions();
-  for (int i = 0; i < valueIndicesVec.size(); i++) {
-    const auto valueIndex = valueIndicesVec[i];
-    PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
-                  "Cannot write data \"{}\" to invalid Vertex ID ({}). "
-                  "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                  context.getDataName(), valueIndex);
-    const int offsetInternal = valueIndex * context.getDataDimensions();
-    const int offset         = i * context.getDataDimensions();
-    for (int dim = 0; dim < context.getDataDimensions(); dim++) {
-      context.writeValuesIntoDataBuffer(offsetInternal + dim, valuesVec[offset + dim]);
-    }
-  }
+  context.writeValuesIntoDataBuffer(valueIndicesVec, valuesVec);
   PRECICE_DEBUG("Written scalar value = {}", value);
 }
 

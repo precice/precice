@@ -38,10 +38,10 @@ public:
   /**
    * @brief Store values in _writeDataBuffer
    *
-   * @param[in] index id of data
-   * @param[in] value value of data
+   * @param[in] indices ids of data
+   * @param[in] values values of data
    */
-  void writeValuesIntoDataBuffer(int index, double value);
+  void writeValuesIntoDataBuffer(std::vector<int> indices, const Eigen::Map<const Eigen::VectorXd> values);
 
   /**
    * @brief Store gradients in _writeDataBuffer
