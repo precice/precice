@@ -246,7 +246,7 @@ add_precice_test(
   )
 add_precice_test(
   NAME mapping
-  ARGUMENTS "--run_test=MappingTests:\!MappingTests/PetRadialBasisFunctionMapping"
+  ARGUMENTS "--run_test=MappingTests:\!MappingTests/PetRadialBasisFunctionMapping:\!MappingTests/GinkgoRadialBasisFunctionSolver"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   )
 add_precice_test(
@@ -255,6 +255,13 @@ add_precice_test(
   TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
   LABELS petsc
   PETSC
+  )
+add_precice_test(
+  NAME mapping.ginkgo
+  ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver"
+  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+  LABELS ginkgo
+  GINKGO
   )
 add_precice_test(
   NAME math
