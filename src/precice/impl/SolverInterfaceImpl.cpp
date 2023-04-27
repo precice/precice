@@ -996,7 +996,7 @@ void SolverInterfaceImpl::writeData(
 
   const auto dataDims         = context.getDataDimensions();
   const auto expectedDataSize = vertices.size() * dataDims;
-  PRECICE_CHECK(expectedDataSize != values.size(),
+  PRECICE_CHECK(expectedDataSize == values.size(),
                 "Input sizes are incorrect attempting to write {}D data \"{}\" to mesh \"{}\". "
                 "You passed {} vertices and {} data components, but we expected {} data components ({} x {}).",
                 dataDims, dataName, meshName,
@@ -1099,7 +1099,7 @@ void SolverInterfaceImpl::writeGradientData(
   const auto  meshDims           = mesh.getDimensions();
   const auto  gradientComponents = meshDims * dataDims;
   const auto  expectedComponents = vertices.size() * gradientComponents;
-  PRECICE_CHECK(expectedComponents == values.size(),
+  PRECICE_CHECK(expectedComponents == gradients.size(),
                 "Input sizes are incorrect attempting to write gradient for data \"{}\" to mesh \"{}\". "
                 "A single gradient/Jacobian for {}D data on a {}D mesh has {} components. "
                 "You passed {} vertices and {} gradient components, but we expected {} gradient components. ",
