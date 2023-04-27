@@ -218,7 +218,7 @@ void SolverInterface::setMeshTetrahedra(
   _impl->setMeshTetrahedra(toSV(meshName), size, vertices);
 }
 
-void writeData(
+void SolverInterface::writeData(
     ::precice::string_view          meshName,
     ::precice::string_view          dataName,
     ::precice::span<const VertexID> vertices,
@@ -257,7 +257,7 @@ void SolverInterface::writeGradientData(
     ::precice::span<const VertexID> vertices,
     ::precice::span<const double>   gradients)
 {
-  _impl->writeGradientData(meshName, dataName, vertices, gradients);
+  _impl->writeGradientData(toSV(meshName), toSV(dataName), vertices, gradients);
 }
 
 } // namespace precice

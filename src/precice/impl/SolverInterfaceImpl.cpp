@@ -1004,7 +1004,7 @@ void SolverInterfaceImpl::writeData(
 
   const auto &                      mesh = *context.getMesh();
   Eigen::Map<const Eigen::MatrixXd> inputData(values.data(), dataDims, vertices.size());
-  Eigen::Map<const Eigen::MatrixXd> localData(context.providedData()->values().data(), dataDims, mesh.vertices().size());
+  Eigen::Map<Eigen::MatrixXd>       localData(context.providedData()->values().data(), dataDims, mesh.vertices().size());
 
   for (int i = 0; i < vertices.size(); ++i) {
     const auto vid = vertices[i];
@@ -1049,9 +1049,9 @@ void SolverInterfaceImpl::readData(
   PRECICE_CHECK(expectedVertices < vertices.size(), "");
   PRECICE_CHECK(expectedVertices > vertices.size(), "");
 
-  const auto &                      mesh = *context.getMesh();
-  Eigen::Map<const Eigen::MatrixXd> outputData(values.data(), dataDims, values.size());
-  const Eigen::MatrixXd             localData{
+  const auto &                mesh = *context.getMesh();
+  Eigen::Map<Eigen::MatrixXd> outputData(values.data(), dataDims, values.size());
+  const Eigen::MatrixXd       localData{
       context.sampleWaveformAt(normalizedReadTime).reshaped(dataDims, mesh.vertices().size())};
 
   for (int i = 0; i < vertices.size(); ++i) {
@@ -1097,7 +1097,7 @@ void SolverInterfaceImpl::writeGradientData(
   PRECICE_VALIDATE_DATA(gradients.data(), gradients.size());
 
   Eigen::Map<const Eigen::MatrixXd> inputGradients(gradients.data(), gradientComponents, vertices.size());
-  Eigen::Map<const Eigen::MatrixXd> localGradients(meshData.gradientValues().data(), gradientComponents, mesh.vertices().size());
+  Eigen::Map<Eigen::MatrixXd>       localGradients(meshData.gradientValues().data(), gradientComponents, mesh.vertices().size());
 
   for (int i = 0; i < vertices.size(); ++i) {
     const auto vid = vertices[i];
