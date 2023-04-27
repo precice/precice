@@ -31,7 +31,7 @@ void DataContext::resetData()
   }
 }
 
-DataID DataContext::getDataDimensions() const
+int DataContext::getDataDimensions() const
 {
   PRECICE_ASSERT(_providedData);
   return _providedData->getDimensions();
