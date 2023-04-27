@@ -1031,7 +1031,7 @@ void SolverInterfaceImpl::writeBlockVectorData(
     for (int dim = 0; dim < _dimensions; dim++) {
       PRECICE_ASSERT(offset + dim < context.getDataSize(),
                      offset + dim, context.getDataSize());
-      context.writeIntoDataBuffer(offsetInternal + dim, values[offset + dim]);
+      context.writeValuesIntoDataBuffer(offsetInternal + dim, values[offset + dim]);
     }
   }
 }
@@ -1059,7 +1059,7 @@ void SolverInterfaceImpl::writeVectorData(
                 context.getDataName(), valueIndex);
   const int offset = valueIndex * _dimensions;
   for (int dim = 0; dim < _dimensions; dim++) {
-    context.writeIntoDataBuffer(offset + dim, value[dim]);
+    context.writeValuesIntoDataBuffer(offset + dim, value[dim]);
   }
 }
 
@@ -1090,7 +1090,7 @@ void SolverInterfaceImpl::writeBlockScalarData(
     PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                   "Cannot write data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                   context.getDataName(), valueIndex);
-    context.writeIntoDataBuffer(valueIndex, values[i]);
+    context.writeValuesIntoDataBuffer(valueIndex, values[i]);
   }
 }
 
@@ -1120,7 +1120,7 @@ void SolverInterfaceImpl::writeScalarData(
                 "Cannot write data \"{}\" to invalid Vertex ID ({}). "
                 "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                 context.getDataName(), valueIndex);
-  context.writeIntoDataBuffer(valueIndex, value);
+  context.writeValuesIntoDataBuffer(valueIndex, value);
 
   PRECICE_DEBUG("Written scalar value = {}", value);
 }
@@ -1168,21 +1168,7 @@ void SolverInterfaceImpl::writeScalarGradientData(
     // Values are entered derived in the spatial dimensions (#rows = #spatial dimensions)
     Eigen::Map<const Eigen::MatrixXd> gradients(gradientValues, context.getSpatialDimensions(), size * context.getDataDimensions());
     auto                              valueIndicesVec = std::vector<int>{valueIndex};
-
-    for (auto i = 0; i < valueIndicesVec.size(); i++) {
-      const auto valueIndex  = valueIndicesVec[i];
-      const auto vertexCount = context.getDataSize() / context.getDataDimensions();
-      PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
-                    "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                    context.getDataName(), valueIndex);
-
-      const int stride = context.getDataDimensions();
-      PRECICE_ASSERT(context.providedData() != nullptr);
-      mesh::Data &meshData = *context.providedData();
-      // Gets the gradientvalues matrix corresponding to the dataID
-      auto &gradientValuesInternal                                                                                      = meshData.gradientValues(); // @todo provide similar implementation like for context.writeDataBuffer()
-      gradientValuesInternal.block(0, stride * valueIndex, context.getSpatialDimensions(), context.getDataDimensions()) = gradients.block(0, stride * i, context.getSpatialDimensions(), context.getDataDimensions());
-    }
+    context.writeGradientIntoDataBuffer(valueIndicesVec, gradients);
   }
 }
 
@@ -1226,20 +1212,7 @@ void SolverInterfaceImpl::writeBlockScalarGradientData(
 
     Eigen::Map<const Eigen::MatrixXd> gradients(gradientValues, context.getSpatialDimensions(), size * context.getDataDimensions());
     auto                              valueIndicesVec = std::vector<int>(valueIndices, valueIndices + size);
-
-    for (auto i = 0; i < valueIndicesVec.size(); i++) {
-      const auto valueIndex = valueIndicesVec[i];
-      PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
-                    "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                    context.getDataName(), valueIndex);
-
-      const int stride = context.getDataDimensions();
-      PRECICE_ASSERT(context.providedData() != nullptr);
-      mesh::Data &meshData = *context.providedData();
-      // Get the gradient data and check if initialized
-      auto &gradientValuesInternal                                                                                      = meshData.gradientValues(); // @todo provide similar implementation like for context.writeDataBuffer()
-      gradientValuesInternal.block(0, stride * valueIndex, context.getSpatialDimensions(), context.getDataDimensions()) = gradients.block(0, stride * i, context.getSpatialDimensions(), context.getDataDimensions());
-    }
+    context.writeGradientIntoDataBuffer(valueIndicesVec, gradients);
   }
 }
 
@@ -1277,21 +1250,7 @@ void SolverInterfaceImpl::writeVectorGradientData(
 
     Eigen::Map<const Eigen::MatrixXd> gradients(gradientValues, context.getSpatialDimensions(), size * context.getDataDimensions());
     auto                              valueIndicesVec = std::vector<int>{valueIndex};
-
-    for (auto i = 0; i < valueIndicesVec.size(); i++) {
-      const auto valueIndex  = valueIndicesVec[i];
-      const auto vertexCount = context.getDataSize() / context.getDataDimensions();
-      PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
-                    "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                    context.getDataName(), valueIndex);
-
-      const int stride = context.getDataDimensions();
-      PRECICE_ASSERT(context.providedData() != nullptr);
-      mesh::Data &meshData = *context.providedData();
-      // Get the gradient data and check if initialized
-      auto &gradientValuesInternal                                                                                      = meshData.gradientValues(); // @todo provide similar implementation like for context.writeDataBuffer()
-      gradientValuesInternal.block(0, stride * valueIndex, context.getSpatialDimensions(), context.getDataDimensions()) = gradients.block(0, stride * i, context.getSpatialDimensions(), context.getDataDimensions());
-    }
+    context.writeGradientIntoDataBuffer(valueIndicesVec, gradients);
   }
 }
 
@@ -1333,25 +1292,9 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
 
     PRECICE_VALIDATE_DATA(gradientValues, size * context.getSpatialDimensions() * context.getDataDimensions());
 
-    const auto vertexCount = context.getDataSize() / context.getDataDimensions();
-
     Eigen::Map<const Eigen::MatrixXd> gradients(gradientValues, context.getSpatialDimensions(), size * context.getDataDimensions());
     auto                              valueIndicesVec = std::vector<int>(valueIndices, valueIndices + size);
-
-    // gradient matrices input one after the other (read row-wise)
-    for (auto i = 0; i < valueIndicesVec.size(); i++) {
-      const auto valueIndex = valueIndicesVec[i];
-      PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
-                    "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                    context.getDataName(), valueIndex);
-
-      const int stride = context.getDataDimensions();
-      PRECICE_ASSERT(context.providedData() != nullptr);
-      mesh::Data &meshData = *context.providedData();
-      // Get the gradient data and check if initialized
-      auto &gradientValuesInternal                                                                                      = meshData.gradientValues(); // @todo provide similar implementation like for context.writeDataBuffer()
-      gradientValuesInternal.block(0, stride * valueIndex, context.getSpatialDimensions(), context.getDataDimensions()) = gradients.block(0, stride * i, context.getSpatialDimensions(), context.getDataDimensions());
-    }
+    context.writeGradientIntoDataBuffer(valueIndicesVec, gradients);
   }
 }
 

@@ -25,11 +25,29 @@ time::Sample WriteDataContext::writeDataBuffer()
   return _writeDataBuffer;
 }
 
-void WriteDataContext::writeIntoDataBuffer(int index, double value)
+void WriteDataContext::writeValuesIntoDataBuffer(int index, double value)
 {
   PRECICE_DEBUG("Store value {} at id {}", value, index);
   PRECICE_ASSERT(_writeDataBuffer.values.size() > index, _writeDataBuffer.values.size(), index);
   _writeDataBuffer.values[index] = value;
+}
+
+void WriteDataContext::writeGradientIntoDataBuffer(std::vector<int> indices, const Eigen::Map<const Eigen::MatrixXd> gradients)
+{
+  const auto vertexCount = getDataSize() / getDataDimensions();
+  const int  stride      = getDataDimensions();
+  PRECICE_ASSERT(providedData() != nullptr);
+
+  for (auto i = 0; i < indices.size(); i++) {
+    const auto valueIndex = indices[i];
+    PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
+                  "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
+                  getDataName(), valueIndex);
+
+    mesh::Data &meshData                                                                              = *providedData(); // @todo write into buffer!
+    auto &      gradientValuesInternal                                                                = meshData.gradientValues();
+    gradientValuesInternal.block(0, stride * valueIndex, getSpatialDimensions(), getDataDimensions()) = gradients.block(0, stride * i, getSpatialDimensions(), getDataDimensions());
+  }
 }
 
 void WriteDataContext::resizeBufferTo(int nVertices)

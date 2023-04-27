@@ -36,12 +36,20 @@ public:
   time::Sample writeDataBuffer();
 
   /**
-   * @brief Store data in _writeDataBuffer
+   * @brief Store values in _writeDataBuffer
    *
    * @param[in] index id of data
    * @param[in] value value of data
    */
-  void writeIntoDataBuffer(int index, double value);
+  void writeValuesIntoDataBuffer(int index, double value);
+
+  /**
+   * @brief Store gradients in _writeDataBuffer
+   *
+   * @param[in] indices ids of data
+   * @param[in] gradients gradients of data
+   */
+  void writeGradientIntoDataBuffer(std::vector<int> indices, const Eigen::Map<const Eigen::MatrixXd> gradients);
 
   void resizeBufferTo(int size);
 
