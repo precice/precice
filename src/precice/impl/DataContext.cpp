@@ -115,7 +115,7 @@ void DataContext::mapData()
       context.mapping->map(fromDataID, toDataID);
 
       // Store data from mapping buffer in storage
-      context.toData->timeStepsStorage().setSampleAtTime(stample.timestamp, context.toData->sample());
+      context.toData->setSampleAtTime(stample.timestamp, context.toData->sample());
 
       PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, context.toData->values()));
     }

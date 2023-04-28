@@ -99,7 +99,6 @@ void WriteDataContext::resizeBufferTo(int nVertices)
 
 void WriteDataContext::storeBufferedData(double currentTime)
 {
-  _providedData->sample() = _writeDataBuffer; // @todo this line should become unnecessary!
   _providedData->setSampleAtTime(currentTime, _writeDataBuffer);
 }
 

@@ -673,7 +673,6 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
     } else if (context.isNamed(second)) {
       v << 2.0;
     }
-    mesh->data(sendDataIndex)->values() = v;
     mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v});
     cplScheme.addComputedTime(timeStepSize);
 
@@ -721,7 +720,6 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
     }
 
     v << 3.0;
-    mesh->data(sendDataIndex)->values() = v;
     mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v});
     cplScheme.addComputedTime(timeStepSize);
 
@@ -849,7 +847,6 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
     BOOST_TEST(context.isNamed(second));
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::InitializeData));
     v << 4.0;
-    mesh->data(sendDataIndex)->values() = v;
     mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v});
     cplScheme.markActionFulfilled(CouplingScheme::Action::InitializeData);
     BOOST_TEST(mesh->data(sendDataIndex)->values().size() == 1);
@@ -918,7 +915,6 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
     } else if (context.isNamed(second)) {
       v << 2.0;
     }
-    mesh->data(sendDataIndex)->values() = v;
     mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v});
     cplScheme.addComputedTime(timeStepSize);
 
@@ -966,7 +962,6 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
     }
 
     v << 3.0;
-    mesh->data(sendDataIndex)->values() = v;
     mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v});
     cplScheme.addComputedTime(timeStepSize);
 

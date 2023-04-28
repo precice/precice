@@ -76,6 +76,7 @@ const std::vector<time::Stample> &CouplingData::getStamples() const
 
 void CouplingData::setSampleAtTime(double time, time::Sample sample)
 {
+  this->sample() = sample; // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
   timeStepsStorage().setSampleAtTime(time, sample);
 }
 

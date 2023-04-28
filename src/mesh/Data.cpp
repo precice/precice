@@ -74,6 +74,7 @@ const std::vector<time::Stample> &Data::getStamples() const
 
 void Data::setSampleAtTime(double time, time::Sample sample)
 {
+  _sample = sample; // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
   _timeStepsStorage.setSampleAtTime(time, sample);
 }
 
