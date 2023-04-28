@@ -56,7 +56,7 @@ public:
    *
    * @return Eigen::VectorXd with data associated with given indices for time normalizedDt
    */
-  Eigen::VectorXd readValues(std::vector<int> indices, double normalizedDt);
+  Eigen::VectorXd readValues(const std::vector<int> &indices, double normalizedDt) const;
 
   /**
    * @brief Initializes the _waveform as a constant function with values from _providedData.

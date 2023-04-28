@@ -38,7 +38,7 @@ public:
    * @param[in] indices ids of data
    * @param[in] values values of data
    */
-  void writeValues(std::vector<int> indices, const Eigen::Map<const Eigen::VectorXd> values);
+  void writeValues(const std::vector<int> &indices, const Eigen::Map<const Eigen::VectorXd> values);
 
   /**
    * @brief Store gradients in _providedData.gradientValues()
@@ -46,7 +46,7 @@ public:
    * @param[in] indices ids of data
    * @param[in] gradients gradients of data
    */
-  void writeGradientValues(std::vector<int> indices, const Eigen::Map<const Eigen::MatrixXd> gradients);
+  void writeGradientValues(const std::vector<int> &indices, const Eigen::Map<const Eigen::MatrixXd> gradients);
 
   /**
    * @brief Adds a MappingContext and the MeshContext required by the write mapping to the corresponding WriteDataContext data structures.

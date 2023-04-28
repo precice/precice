@@ -17,7 +17,7 @@ mesh::PtrData WriteDataContext::providedData()
   return _providedData;
 }
 
-void WriteDataContext::writeValues(std::vector<int> indices, const Eigen::Map<const Eigen::VectorXd> values)
+void WriteDataContext::writeValues(const std::vector<int> &indices, const Eigen::Map<const Eigen::VectorXd> values)
 {
   const auto vertexCount    = getDataSize() / getDataDimensions();
   auto &     valuesInternal = providedData()->values();
@@ -36,7 +36,7 @@ void WriteDataContext::writeValues(std::vector<int> indices, const Eigen::Map<co
   }
 }
 
-void WriteDataContext::writeGradientValues(std::vector<int> indices, const Eigen::Map<const Eigen::MatrixXd> gradients)
+void WriteDataContext::writeGradientValues(const std::vector<int> &indices, const Eigen::Map<const Eigen::MatrixXd> gradients)
 {
   const auto vertexCount            = getDataSize() / getDataDimensions();
   auto &     gradientValuesInternal = providedData()->gradientValues();
