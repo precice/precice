@@ -41,7 +41,7 @@ public:
    * @param[in] indices ids of data
    * @param[in] values values of data
    */
-  void writeValuesIntoDataBuffer(std::vector<int> indices, const Eigen::Map<const Eigen::VectorXd> values);
+  void writeValuesIntoDataBuffer(const std::vector<int> &indices, const Eigen::Map<const Eigen::VectorXd> values);
 
   /**
    * @brief Store gradients in _writeDataBuffer
@@ -49,7 +49,7 @@ public:
    * @param[in] indices ids of data
    * @param[in] gradients gradients of data
    */
-  void writeGradientIntoDataBuffer(std::vector<int> indices, const Eigen::Map<const Eigen::MatrixXd> gradients);
+  void writeGradientIntoDataBuffer(const std::vector<int> &indices, const Eigen::Map<const Eigen::MatrixXd> gradients);
 
   void resizeBufferTo(int size);
 
@@ -60,26 +60,12 @@ public:
    */
   void storeBufferedData(double currentTime);
 
+  // void loadLastFromStorage();
+
   /**
    * @brief Clear data storage for next iteration or window.
    */
   void clearStorage();
-
-  /**
-   * @brief Store values in _providedData.values()
-   *
-   * @param[in] indices ids of data
-   * @param[in] values values of data
-   */
-  void writeValues(const std::vector<int> &indices, const Eigen::Map<const Eigen::VectorXd> values);
-
-  /**
-   * @brief Store gradients in _providedData.gradientValues()
-   *
-   * @param[in] indices ids of data
-   * @param[in] gradients gradients of data
-   */
-  void writeGradientValues(const std::vector<int> &indices, const Eigen::Map<const Eigen::MatrixXd> gradients);
 
   /**
    * @brief Adds a MappingContext and the MeshContext required by the write mapping to the corresponding WriteDataContext data structures.

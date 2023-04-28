@@ -64,7 +64,7 @@ Eigen::VectorXd Waveform::sample(double normalizedDt) const
 
   PRECICE_ASSERT(usedOrder >= 1);
 
-  const auto data = _storage.getTimesAndValues();
+  const auto data = _data->timeStepsStorage().getTimesAndValues();
 
   return bSplineInterpolationAt(normalizedDt, data.first, data.second, usedOrder);
 }
