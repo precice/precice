@@ -94,14 +94,7 @@ void DataContext::mapData()
   PRECICE_ASSERT(hasMapping());
   // Execute the mapping
   for (auto &context : _mappingContexts) {
-    // @todo messy. Try to improve this. Current problem: With clear all we also remove the data at WINDOW_START, which is not received by the coupling scheme.
-    if (context.toData->timeStepsStorage().nTimes() > 0) {
-      if (context.toData->timeStepsStorage().getTimes()[0] != time::Storage::WINDOW_START) {
-        context.toData->timeStepsStorage().clearAll();
-      } else {
-        context.toData->timeStepsStorage().clear();
-      }
-    }
+    context.clearToDataStorage();
 
     PRECICE_ASSERT(context.fromData->getStamples().size() > 0);
     for (auto &stample : context.fromData->getStamples()) {
