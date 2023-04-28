@@ -6,6 +6,7 @@
 
 #include "logging/Logger.hpp"
 #include "precice/types.hpp"
+#include "time/Sample.hpp"
 #include "time/Storage.hpp"
 
 namespace precice {
@@ -64,6 +65,12 @@ public:
   /// Returns a const reference to the gradient data values.
   const Eigen::MatrixXd &gradientValues() const;
 
+  /// Returns a reference to the _sample.
+  time::Sample &sample();
+
+  /// Returns a const reference to the _sample.
+  const time::Sample &sample() const;
+
   /// Returns a reference to the data values.
   time::Storage &timeStepsStorage();
 
@@ -98,9 +105,7 @@ public:
 private:
   logging::Logger _log{"mesh::Data"};
 
-  Eigen::VectorXd _values;
-
-  Eigen::MatrixXd _gradientValues;
+  time::Sample _sample;
 
   /// Stores time steps in the current time window
   time::Storage _timeStepsStorage;

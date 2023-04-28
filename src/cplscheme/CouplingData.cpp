@@ -19,7 +19,9 @@ CouplingData::CouplingData(
       _extrapolation(extrapolationOrder)
 {
   PRECICE_ASSERT(_data != nullptr);
-  _previousIteration = Eigen::VectorXd::Zero(getSize());
+  /// Lazy allocation of _previousIteration.gradient: only used in case the corresponding data has gradients
+  _previousIteration = time::Sample{Eigen::VectorXd::Zero(getSize())};
+
   PRECICE_ASSERT(_mesh != nullptr);
   PRECICE_ASSERT(_mesh.use_count() > 0);
 }
@@ -32,38 +34,33 @@ int CouplingData::getDimensions() const
 
 int CouplingData::getSize() const
 {
-  PRECICE_ASSERT(_data != nullptr);
-  return values().size();
+  return sample().values.size();
 }
 
 Eigen::VectorXd &CouplingData::values()
 {
-  PRECICE_ASSERT(_data != nullptr);
-  return _data->values();
+  return sample().values;
+}
+
+const Eigen::VectorXd &CouplingData::values() const
+{
+  return sample().values;
+}
+
+Eigen::MatrixXd &CouplingData::gradientValues()
+{
+  return sample().gradient;
+}
+
+const Eigen::MatrixXd &CouplingData::gradientValues() const
+{
+  return sample().gradient;
 }
 
 time::Storage &CouplingData::timeStepsStorage()
 {
   PRECICE_ASSERT(_data != nullptr);
   return _data->timeStepsStorage();
-}
-
-const Eigen::VectorXd &CouplingData::values() const
-{
-  PRECICE_ASSERT(_data != nullptr);
-  return _data->values();
-}
-
-Eigen::MatrixXd &CouplingData::gradientValues()
-{
-  PRECICE_ASSERT(_data != nullptr);
-  return _data->gradientValues();
-}
-
-const Eigen::MatrixXd &CouplingData::gradientValues() const
-{
-  PRECICE_ASSERT(_data != nullptr);
-  return _data->gradientValues();
 }
 
 bool CouplingData::hasGradient() const
@@ -82,32 +79,25 @@ void CouplingData::storeIteration()
   const auto stamples = this->timeStepsStorage().getStamples();
   // PRECICE_ASSERT(stamples.size() > 0);  //@todo preferable, but cannot use this, because of some invalid configs in tests (e.g. tests/serial/AitkenAcceleration.xml)
   if (stamples.size() > 0) {
-    this->values() = stamples.back().sample.values;
-    if (this->hasGradient()) {
-      this->gradientValues() = stamples.back().sample.gradient;
-    }
+    this->sample() = stamples.back().sample;
   }
 
-  _previousIteration = this->values();
-  if (this->hasGradient()) {
-    PRECICE_ASSERT(this->gradientValues().size() > 0);
-    _previousIterationGradients = this->gradientValues();
-  }
+  _previousIteration = this->sample();
 }
 
 const Eigen::VectorXd CouplingData::previousIteration() const
 {
-  return _previousIteration;
+  return _previousIteration.values;
 }
 
 const Eigen::MatrixXd &CouplingData::previousIterationGradients() const
 {
-  return _previousIterationGradients;
+  return _previousIteration.gradient;
 }
 
 int CouplingData::getPreviousIterationSize() const
 {
-  return previousIteration().size();
+  return _previousIteration.values.size();
 }
 
 int CouplingData::getMeshID()
@@ -141,10 +131,7 @@ void CouplingData::moveToNextWindow()
   _extrapolation.moveToNextWindow();
   values() = _extrapolation.getInitialGuess();
 
-  if (this->hasGradient()) {
-    this->timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, time::Sample{this->values(), this->gradientValues()});
-  }
-  this->timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, time::Sample{this->values()});
+  this->timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, sample());
 }
 
 void CouplingData::storeExtrapolationData()
@@ -156,6 +143,18 @@ void CouplingData::storeExtrapolationData()
   }
 
   _extrapolation.store(values());
+}
+
+time::Sample &CouplingData::sample()
+{
+  PRECICE_ASSERT(_data != nullptr);
+  return _data->sample();
+}
+
+const time::Sample &CouplingData::sample() const
+{
+  PRECICE_ASSERT(_data != nullptr);
+  return _data->sample();
 }
 
 } // namespace precice::cplscheme

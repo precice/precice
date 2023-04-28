@@ -99,8 +99,7 @@ void WriteDataContext::resizeBufferTo(int nVertices)
 
 void WriteDataContext::storeBufferedData(double currentTime)
 {
-  _providedData->values()         = _writeDataBuffer.values;   // @todo this line should become unnecessary!
-  _providedData->gradientValues() = _writeDataBuffer.gradient; // @todo this line should become unnecessary!
+  _providedData->sample() = _writeDataBuffer; // @todo this line should become unnecessary!
   _providedData->timeStepsStorage().setSampleAtTime(currentTime, _writeDataBuffer);
 }
 

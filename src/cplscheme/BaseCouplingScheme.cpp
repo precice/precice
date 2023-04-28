@@ -104,10 +104,7 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
     const auto stamples = data->timeStepsStorage().getStamples();
     // PRECICE_ASSERT(stamples.size() > 0);  //@todo preferable, but cannot use this, because of some invalid configs in tests (e.g. tests/serial/AitkenAcceleration.xml)
     if (stamples.size() > 0) {
-      data->values() = stamples.back().sample.values;
-      if (data->hasGradient()) {
-        data->gradientValues() = stamples.back().sample.gradient;
-      }
+      data->sample() = stamples.back().sample;
     }
 
     // Data is actually only send if size>0, which is checked in the derived classes implementation
@@ -127,12 +124,11 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
   for (const auto &data : receiveData | boost::adaptors::map_values) {
     // Data is only received on ranks with size>0, which is checked in the derived class implementation
     m2n->receive(data->values(), data->getMeshID(), data->getDimensions());
-    data->timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, time::Sample{data->values()});
-
     if (data->hasGradient()) {
       m2n->receive(data->gradientValues(), data->getMeshID(), data->getDimensions() * data->meshDimensions());
-      data->timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, time::Sample{data->values(), data->gradientValues()});
     }
+
+    data->timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, data->sample());
   }
 }
 
@@ -766,14 +762,10 @@ void BaseCouplingScheme::doImplicitStep()
     if (_acceleration) {
       // Load from storage into buffer
       for (auto &pair : getAccelerationData()) {
-        // need to take care of gradient, because otherwise it might get lost.
         const auto stamples = pair.second->timeStepsStorage().getStamples();
         // PRECICE_ASSERT(stamples.size() > 0);  //@todo preferable, but cannot use this, because of some invalid configs in tests (e.g. tests/serial/AitkenAcceleration.xml)
         if (stamples.size() > 0) {
-          pair.second->values() = stamples.back().sample.values;
-          if (pair.second->hasGradient()) {
-            pair.second->gradientValues() = stamples.back().sample.gradient;
-          }
+          pair.second->sample() = stamples.back().sample;
         }
       }
 
@@ -781,11 +773,7 @@ void BaseCouplingScheme::doImplicitStep()
 
       // Store from buffer
       for (auto &pair : getAccelerationData()) {
-        // need to take care of gradient, because otherwise it might get lost.
-        if (pair.second->hasGradient()) {
-          pair.second->timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, time::Sample{pair.second->values(), pair.second->gradientValues()});
-        }
-        pair.second->timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, time::Sample{pair.second->values()});
+        pair.second->timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, pair.second->sample());
       }
     }
   }

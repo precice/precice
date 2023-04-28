@@ -35,6 +35,12 @@ public:
   /// Returns a reference to the gradient data values.
   Eigen::MatrixXd &gradientValues();
 
+  /// Returns a reference to the gradient data Sample.
+  time::Sample &sample();
+
+  /// Returns a const reference to the data Sample.
+  const time::Sample &sample() const;
+
   /// Returns a const reference to the gradient data values.
   const Eigen::MatrixXd &gradientValues() const;
 
@@ -93,12 +99,8 @@ private:
     PRECICE_ASSERT(false);
   }
 
-  /// Data values of previous iteration.
-  Eigen::VectorXd _previousIteration;
-
-  /// Gradient data of previous iteration.
-  /// Lazy allocation: only used in case the corresponding data has gradients
-  Eigen::MatrixXd _previousIterationGradients;
+  /// Sample values of previous iteration.
+  time::Sample _previousIteration;
 
   /// Data associated with this CouplingData
   mesh::PtrData _data;

@@ -106,8 +106,7 @@ void DataContext::mapData()
     PRECICE_ASSERT(context.fromData->timeStepsStorage().getStamples().size() > 0);
     for (auto &stample : context.fromData->timeStepsStorage().getStamples()) {
       // Put data from storage into mapping buffer
-      context.fromData->values()         = stample.sample.values;
-      context.fromData->gradientValues() = stample.sample.gradient;
+      context.fromData->sample() = stample.sample;
 
       // Reset the toData before executing the mapping
       context.toData->toZero();
@@ -116,8 +115,7 @@ void DataContext::mapData()
       context.mapping->map(fromDataID, toDataID);
 
       // Store data from mapping buffer in storage
-      time::Sample mappedSample{context.toData->values(), context.toData->gradientValues()};
-      context.toData->timeStepsStorage().setSampleAtTime(stample.timestamp, mappedSample);
+      context.toData->timeStepsStorage().setSampleAtTime(stample.timestamp, context.toData->sample());
 
       PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, context.toData->values()));
     }
