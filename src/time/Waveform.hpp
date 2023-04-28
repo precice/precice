@@ -67,7 +67,7 @@ public:
    * @param normalizedDt Time where the sampling inside the window happens. Only allows values between 0 and 1. 0 refers to the beginning of the window and 1 to the end.
    * @return Value of Waveform at time normalizedDt.
    */
-  Eigen::VectorXd sample(const double normalizedDt);
+  Eigen::VectorXd sample(const double normalizedDt) const;
 
 private:
   /// Stores values on the current window.
@@ -88,7 +88,7 @@ private:
    * @param numberOfAvailableSamples Samples available for interpolation.
    * @return Order that may be used.
    */
-  int computeUsedOrder(int requestedOrder, int numberOfAvailableSamples);
+  int computeUsedOrder(int requestedOrder, int numberOfAvailableSamples) const;
 };
 
 } // namespace time
