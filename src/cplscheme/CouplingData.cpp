@@ -79,6 +79,15 @@ int CouplingData::meshDimensions() const
 
 void CouplingData::storeIteration()
 {
+  const auto stamples = this->timeStepsStorage().getStamples();
+  // PRECICE_ASSERT(stamples.size() > 0);  //@todo preferable, but cannot use this, because of some invalid configs in tests (e.g. tests/serial/AitkenAcceleration.xml)
+  if (stamples.size() > 0) {
+    this->values() = stamples.back().sample.values;
+    if (this->hasGradient()) {
+      this->gradientValues() = stamples.back().sample.gradient;
+    }
+  }
+
   _previousIteration = this->values();
   if (this->hasGradient()) {
     PRECICE_ASSERT(this->gradientValues().size() > 0);
@@ -131,10 +140,21 @@ void CouplingData::moveToNextWindow()
 {
   _extrapolation.moveToNextWindow();
   values() = _extrapolation.getInitialGuess();
+
+  if (this->hasGradient()) {
+    this->timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, time::Sample{this->values(), this->gradientValues()});
+  }
+  this->timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, time::Sample{this->values()});
 }
 
 void CouplingData::storeExtrapolationData()
 {
+  const auto stamples = this->timeStepsStorage().getStamples();
+  // PRECICE_ASSERT(stamples.size() > 0);  //@todo preferable, but cannot use this, because of some invalid configs in tests (e.g. tests/serial/AitkenAcceleration.xml)
+  if (stamples.size() > 0) {
+    this->values() = stamples.back().sample.values;
+  }
+
   _extrapolation.store(values());
 }
 
