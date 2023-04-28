@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveform)
 
   if (precice.requiresInitialData()) {
     writeData = writeFunction(time);
-    precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
+    precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&writeData, 1});
   }
 
   precice.initialize();
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveform)
 
   while (precice.isCouplingOngoing()) {
 
-    precice.readScalarData(meshName, readDataName, vertexID, currentDt, readData);
+    precice.readData(meshName, readDataName, {&vertexID, 1}, currentDt, {&readData, 1});
 
     if (context.isNamed("SolverOne")) { // first participant receives constant value from second
       BOOST_TEST(readData == readFunction(timeCheckpoint));
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveform)
       BOOST_TEST(readData == readFunction(time + currentDt));
     }
 
-    precice.readScalarData(meshName, readDataName, vertexID, currentDt / 2, readData);
+    precice.readData(meshName, readDataName, {&vertexID, 1}, currentDt / 2, {&readData, 1});
 
     if (context.isNamed("SolverOne")) { // first participant receives constant value from second
       BOOST_TEST(readData == readFunction(timeCheckpoint));
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveform)
     }
 
     writeData = writeFunction(time);
-    precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
+    precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&writeData, 1});
     precice.advance(currentDt);
     maxDt = precice.getMaxTimeStepSize();
 
