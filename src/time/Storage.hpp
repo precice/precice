@@ -46,7 +46,7 @@ public:
    *
    * @return the maximum normalized dt from this Storage
    */
-  double maxStoredNormalizedDt();
+  double maxStoredNormalizedDt() const;
 
   /**
    * @brief Returns the values at time following "before" contained in this Storage.
@@ -56,35 +56,35 @@ public:
    * @param before a double, where we want to find a normalized dt that comes directly after this one
    * @return Eigen::VectorXd values in this Storage at or directly after "before"
    */
-  Eigen::VectorXd getValuesAtOrAfter(double before);
+  Eigen::VectorXd getValuesAtOrAfter(double before) const;
 
   /**
    * @brief Get all normalized dts stored in this Storage sorted ascending.
    *
    * @return Eigen::VectorXd containing all stored normalized dts in ascending order.
    */
-  Eigen::VectorXd getTimes();
+  Eigen::VectorXd getTimes() const;
 
   /**
    * @brief Get all normalized dts and values in ascending order (with respect to normalized dts)
    *
    * @return std::pair<Eigen::VectorXd, Eigen::MatrixXd> containing all stored times and values in ascending order (with respect to normalized dts).
    */
-  std::pair<Eigen::VectorXd, Eigen::MatrixXd> getTimesAndValues();
+  std::pair<Eigen::VectorXd, Eigen::MatrixXd> getTimesAndValues() const;
 
   /**
    * @brief Number of stored times
    *
    * @return int number of stored times
    */
-  int nTimes();
+  int nTimes() const;
 
   /**
    * @brief Number of Dofs for each values
    *
    * @return int number of dofs
    */
-  int nDofs();
+  int nDofs() const;
 
   /**
    * @brief Move this Storage by storing the values at the end of the Storage at 0.0 and clearing the storage. Time 1.0 is initialized as values at 0.0

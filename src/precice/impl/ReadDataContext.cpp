@@ -27,7 +27,7 @@ void ReadDataContext::appendMappingConfiguration(MappingContext &mappingContext,
   PRECICE_ASSERT(hasReadMapping());
 }
 
-Eigen::VectorXd ReadDataContext::readValues(std::vector<int> indices, double normalizedDt)
+Eigen::VectorXd ReadDataContext::readValues(const std::vector<int> &indices, double normalizedDt) const
 {
   const auto vertexCount    = getDataSize() / getDataDimensions();
   const auto valuesInternal = _waveform->sample(normalizedDt);

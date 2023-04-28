@@ -25,7 +25,7 @@ time::Sample WriteDataContext::writeDataBuffer()
   return _writeDataBuffer;
 }
 
-void WriteDataContext::writeValuesIntoDataBuffer(std::vector<int> indices, const Eigen::Map<const Eigen::VectorXd> values)
+void WriteDataContext::writeValuesIntoDataBuffer(const std::vector<int> &indices, const Eigen::Map<const Eigen::VectorXd> values)
 {
   const auto vertexCount = getDataSize() / getDataDimensions();
   for (int i = 0; i < indices.size(); i++) {
@@ -43,7 +43,7 @@ void WriteDataContext::writeValuesIntoDataBuffer(std::vector<int> indices, const
   }
 }
 
-void WriteDataContext::writeGradientIntoDataBuffer(std::vector<int> indices, const Eigen::Map<const Eigen::MatrixXd> gradients)
+void WriteDataContext::writeGradientIntoDataBuffer(const std::vector<int> &indices, const Eigen::Map<const Eigen::MatrixXd> gradients)
 {
   const auto vertexCount = getDataSize() / getDataDimensions();
   const int  stride      = getDataDimensions();

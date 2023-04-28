@@ -1031,7 +1031,7 @@ void SolverInterfaceImpl::writeBlockVectorData(
   PRECICE_VALIDATE_DATA(values, size * context.getDataDimensions());
 
   Eigen::Map<const Eigen::VectorXd> valuesVec(values, size * context.getDataDimensions());
-  auto                              valueIndicesVec = std::vector<int>(valueIndices, valueIndices + size);
+  const auto                        valueIndicesVec = std::vector<int>(valueIndices, valueIndices + size);
   context.writeValuesIntoDataBuffer(valueIndicesVec, valuesVec);
 }
 
@@ -1055,7 +1055,7 @@ void SolverInterfaceImpl::writeVectorData(
   PRECICE_VALIDATE_DATA(value, size * context.getDataDimensions());
 
   Eigen::Map<const Eigen::VectorXd> valuesVec(value, size * context.getDataDimensions());
-  auto                              valueIndicesVec = std::vector<int>{valueIndex};
+  const auto                        valueIndicesVec = std::vector<int>{valueIndex};
   context.writeValuesIntoDataBuffer(valueIndicesVec, valuesVec);
 }
 
@@ -1082,7 +1082,7 @@ void SolverInterfaceImpl::writeBlockScalarData(
   PRECICE_VALIDATE_DATA(values, size * context.getDataDimensions());
 
   Eigen::Map<const Eigen::VectorXd> valuesVec(values, size * context.getDataDimensions());
-  auto                              valueIndicesVec = std::vector<int>(valueIndices, valueIndices + size);
+  const auto                        valueIndicesVec = std::vector<int>(valueIndices, valueIndices + size);
   context.writeValuesIntoDataBuffer(valueIndicesVec, valuesVec);
 }
 
@@ -1110,7 +1110,7 @@ void SolverInterfaceImpl::writeScalarData(
   PRECICE_VALIDATE_DATA(static_cast<double *>(&value), size * context.getDataDimensions());
 
   Eigen::Map<const Eigen::VectorXd> valuesVec(&value, size * context.getDataDimensions());
-  auto                              valueIndicesVec = std::vector<int>{valueIndex};
+  const auto                        valueIndicesVec = std::vector<int>{valueIndex};
   context.writeValuesIntoDataBuffer(valueIndicesVec, valuesVec);
   PRECICE_DEBUG("Written scalar value = {}", value);
 }
@@ -1157,7 +1157,7 @@ void SolverInterfaceImpl::writeScalarGradientData(
 
     // Values are entered derived in the spatial dimensions (#rows = #spatial dimensions)
     Eigen::Map<const Eigen::MatrixXd> gradients(gradientValues, context.getSpatialDimensions(), size * context.getDataDimensions());
-    auto                              valueIndicesVec = std::vector<int>{valueIndex};
+    const auto                        valueIndicesVec = std::vector<int>{valueIndex};
     context.writeGradientIntoDataBuffer(valueIndicesVec, gradients);
   }
 }
@@ -1201,7 +1201,7 @@ void SolverInterfaceImpl::writeBlockScalarGradientData(
     const auto vertexCount = context.getDataSize() / context.getDataDimensions();
 
     Eigen::Map<const Eigen::MatrixXd> gradients(gradientValues, context.getSpatialDimensions(), size * context.getDataDimensions());
-    auto                              valueIndicesVec = std::vector<int>(valueIndices, valueIndices + size);
+    const auto                        valueIndicesVec = std::vector<int>(valueIndices, valueIndices + size);
     context.writeGradientIntoDataBuffer(valueIndicesVec, gradients);
   }
 }
@@ -1239,7 +1239,7 @@ void SolverInterfaceImpl::writeVectorGradientData(
     PRECICE_VALIDATE_DATA(gradientValues, size * context.getSpatialDimensions() * context.getDataDimensions());
 
     Eigen::Map<const Eigen::MatrixXd> gradients(gradientValues, context.getSpatialDimensions(), size * context.getDataDimensions());
-    auto                              valueIndicesVec = std::vector<int>{valueIndex};
+    const auto                        valueIndicesVec = std::vector<int>{valueIndex};
     context.writeGradientIntoDataBuffer(valueIndicesVec, gradients);
   }
 }
@@ -1283,7 +1283,7 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
     PRECICE_VALIDATE_DATA(gradientValues, size * context.getSpatialDimensions() * context.getDataDimensions());
 
     Eigen::Map<const Eigen::MatrixXd> gradients(gradientValues, context.getSpatialDimensions(), size * context.getDataDimensions());
-    auto                              valueIndicesVec = std::vector<int>(valueIndices, valueIndices + size);
+    const auto                        valueIndicesVec = std::vector<int>(valueIndices, valueIndices + size);
     context.writeGradientIntoDataBuffer(valueIndicesVec, gradients);
   }
 }
