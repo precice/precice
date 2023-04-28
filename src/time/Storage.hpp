@@ -66,6 +66,13 @@ public:
   Eigen::VectorXd getTimes() const;
 
   /**
+   * @brief Get the vector of Stamples
+   *
+   * @return std::vector<Stample>
+   */
+  std::vector<Stample> getStamples() const;
+
+  /**
    * @brief Get all normalized dts and values in ascending order (with respect to normalized dts)
    *
    * @return std::pair<Eigen::VectorXd, Eigen::MatrixXd> containing all stored times and values in ascending order (with respect to normalized dts).

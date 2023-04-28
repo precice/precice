@@ -42,6 +42,12 @@ Eigen::VectorXd &CouplingData::values()
   return _data->values();
 }
 
+time::Storage &CouplingData::timeStepsStorage()
+{
+  PRECICE_ASSERT(_data != nullptr);
+  return _data->timeStepsStorage();
+}
+
 const Eigen::VectorXd &CouplingData::values() const
 {
   PRECICE_ASSERT(_data != nullptr);

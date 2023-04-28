@@ -98,6 +98,12 @@ Eigen::VectorXd Storage::getTimes() const
   return times;
 }
 
+std::vector<Stample> Storage::getStamples() const
+{
+  PRECICE_DEBUG("Storage::getStamples()");
+  return _sampleStorage;
+}
+
 std::pair<Eigen::VectorXd, Eigen::MatrixXd> Storage::getTimesAndValues() const
 {
   auto times  = Eigen::VectorXd(nTimes());

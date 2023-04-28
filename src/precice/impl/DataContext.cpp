@@ -94,12 +94,33 @@ void DataContext::mapData()
   PRECICE_ASSERT(hasMapping());
   // Execute the mapping
   for (auto &context : _mappingContexts) {
-    // Reset the toData before executing the mapping
-    context.toData->toZero();
-    const DataID fromDataID = context.fromData->getID();
-    const DataID toDataID   = context.toData->getID();
-    context.mapping->map(fromDataID, toDataID);
-    PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, context.toData->values()));
+    // @todo messy. Try to improve this. Current problem: With clear all we also remove the data at WINDOW_START, which is not received by the coupling scheme.
+    if (context.toData->timeStepsStorage().nTimes() > 0) {
+      if (context.toData->timeStepsStorage().getTimes()[0] != time::Storage::WINDOW_START) {
+        context.toData->timeStepsStorage().clearAll();
+      } else {
+        context.toData->timeStepsStorage().clear();
+      }
+    }
+
+    PRECICE_ASSERT(context.fromData->timeStepsStorage().getStamples().size() > 0);
+    for (auto &stample : context.fromData->timeStepsStorage().getStamples()) {
+      // Put data from storage into mapping buffer
+      context.fromData->values()         = stample.sample.values;
+      context.fromData->gradientValues() = stample.sample.gradient;
+
+      // Reset the toData before executing the mapping
+      context.toData->toZero();
+      const DataID fromDataID = context.fromData->getID();
+      const DataID toDataID   = context.toData->getID();
+      context.mapping->map(fromDataID, toDataID);
+
+      // Store data from mapping buffer in storage
+      time::Sample mappedSample{context.toData->values(), context.toData->gradientValues()};
+      context.toData->timeStepsStorage().setSampleAtTime(stample.timestamp, mappedSample);
+
+      PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, context.toData->values()));
+    }
   }
 }
 

@@ -5,6 +5,7 @@
 #include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/impl/Extrapolation.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "time/Storage.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -24,6 +25,9 @@ public:
 
   /// Returns a reference to the data values.
   Eigen::VectorXd &values();
+
+  /// Returns a reference to the time step storage of the data.
+  time::Storage &timeStepsStorage();
 
   /// Returns a const reference to the data values.
   const Eigen::VectorXd &values() const;
