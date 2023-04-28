@@ -190,7 +190,7 @@ void testQuadMappingScaledConsistentVolumetric(const std::string configFile, con
     interface.readData(meshTwoID, dataAID, ids, maxDt, values);
 
     double calculatedIntegral = precice::math::geometry::triangleArea(coordTwoA, coordTwoB, coordTwoC) * (values[0] + values[1] + values[2]) / 3.0 +
-                                precice::math::geometry::triangleArea(coordTwoA, coordTwoD, coordTwoC) * (values[0] + values[1] + values[2]) / 3.0;
+                                precice::math::geometry::triangleArea(coordTwoA, coordTwoD, coordTwoC) * (values[0] + values[3] + values[2]) / 3.0;
     BOOST_TEST(expectedIntegral == calculatedIntegral);
     BOOST_TEST(values[0] = valOneA * 8.0 / 7);
 
