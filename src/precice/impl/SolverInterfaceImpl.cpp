@@ -382,7 +382,7 @@ void SolverInterfaceImpl::initialize()
     }
   }
 
-  resetWrittenData();
+  resetWrittenData(false);
   PRECICE_DEBUG("Plot output");
   _accessor->exportFinal();
   solverInitEvent.start(precice::syncMode);
@@ -425,8 +425,9 @@ void SolverInterfaceImpl::advance(
   // Update the coupling scheme time state. Necessary to get correct remainder.
   _couplingScheme->addComputedTime(computedTimeStepSize);
   // Current time
-  const double time         = _couplingScheme->getTime();
-  const double relativeTime = _couplingScheme->getNormalizedWindowTime();
+  const double time          = _couplingScheme->getTime();
+  const double relativeTime  = _couplingScheme->getNormalizedWindowTime();
+  const bool   isAtWindowEnd = relativeTime == time::Storage::WINDOW_END;
 
   for (auto &context : _accessor->writeDataContexts()) {
     context.storeBufferedData(relativeTime);
@@ -435,9 +436,6 @@ void SolverInterfaceImpl::advance(
   if (_couplingScheme->willDataBeExchanged(0.0)) {
     mapWrittenData();
     performDataActions({action::Action::WRITE_MAPPING_POST}, time);
-    for (auto &context : _accessor->writeDataContexts()) {
-      context.clearStorage();
-    }
   }
 
   advanceCouplingScheme();
@@ -462,7 +460,7 @@ void SolverInterfaceImpl::advance(
   PRECICE_DEBUG("Handle exports");
   handleExports();
 
-  resetWrittenData();
+  resetWrittenData(isAtWindowEnd);
 
   _meshLock.lockAll();
   solverEvent.start(precice::syncMode);
@@ -1684,6 +1682,7 @@ void SolverInterfaceImpl::computeMappings(std::vector<MappingContext> &contexts,
 
 void SolverInterfaceImpl::mapWrittenData()
 {
+  // @todo map write data storage, not data::values() etc.
   PRECICE_TRACE();
   computeMappings(_accessor->writeMappingContexts(), "write");
   for (auto &context : _accessor->writeDataContexts()) {
@@ -1696,6 +1695,7 @@ void SolverInterfaceImpl::mapWrittenData()
 
 void SolverInterfaceImpl::mapReadData()
 {
+  // @todo map read data storage, not data::values() etc.
   PRECICE_TRACE();
   computeMappings(_accessor->readMappingContexts(), "read");
   for (auto &context : _accessor->readDataContexts()) {
@@ -1730,11 +1730,15 @@ void SolverInterfaceImpl::handleExports()
   _accessor->exportIntermediate(exp);
 }
 
-void SolverInterfaceImpl::resetWrittenData()
+void SolverInterfaceImpl::resetWrittenData(bool isAtWindowEnd)
 {
   PRECICE_TRACE();
   for (auto &context : _accessor->writeDataContexts()) {
     context.resetData();
+    if (isAtWindowEnd) { // make context ready for next window/iteration
+      // @todo differentiate for case _couplingScheme->isTimeWindowComplete()?
+      context.clearStorage();
+    }
   }
 }
 

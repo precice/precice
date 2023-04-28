@@ -483,8 +483,12 @@ private:
       const std::set<action::Action::Timing> &timings,
       double                                  time);
 
-  /// Resets written data, displacements and mesh neighbors to export.
-  void resetWrittenData();
+  /**
+   * @brief Resets written data.
+   *
+   * @param isAtWindowEnd set true, if function is called at end of window, to also reset the time sample storage
+   */
+  void resetWrittenData(bool isAtWindowEnd);
 
   /// Determines participant accessing this interface from the configuration.
   impl::PtrParticipant determineAccessingParticipant(
