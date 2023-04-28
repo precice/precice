@@ -49,14 +49,14 @@ Eigen::VectorXd bSplineInterpolationAt(double t, Eigen::VectorXd ts, Eigen::Matr
   const int splineDimension = 1;
 
   for (int i = 0; i < ndofs; i++) {
-    auto spline     = Eigen::SplineFitting<Eigen::Spline<double, splineDimension>>::Interpolate(xs.row(i), splineDegree, ts);
-    interpolated[i] = spline(t)[0]; // get component of spline associated with xs.row(i)
+    const auto spline = Eigen::SplineFitting<Eigen::Spline<double, splineDimension>>::Interpolate(xs.row(i), splineDegree, ts);
+    interpolated[i]   = spline(t)[0]; // get component of spline associated with xs.row(i)
   }
 
   return interpolated;
 }
 
-Eigen::VectorXd Waveform::sample(double normalizedDt)
+Eigen::VectorXd Waveform::sample(double normalizedDt) const
 {
   const int usedOrder = computeUsedOrder(_interpolationOrder, _storage.nTimes());
 
@@ -68,7 +68,7 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
 
   PRECICE_ASSERT(usedOrder >= 1);
 
-  auto data = _storage.getTimesAndValues();
+  const auto data = _storage.getTimesAndValues();
 
   return bSplineInterpolationAt(normalizedDt, data.first, data.second, usedOrder);
 }
@@ -78,7 +78,7 @@ void Waveform::moveToNextWindow()
   _storage.move();
 }
 
-int Waveform::computeUsedOrder(int requestedOrder, int numberOfAvailableSamples)
+int Waveform::computeUsedOrder(int requestedOrder, int numberOfAvailableSamples) const
 {
   int usedOrder = -1;
   PRECICE_ASSERT(requestedOrder <= 3);
