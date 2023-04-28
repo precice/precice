@@ -1025,7 +1025,7 @@ void SolverInterfaceImpl::writeVectorData(
   PRECICE_VALIDATE_DATA(value, size * context.getDataDimensions());
 
   Eigen::Map<const Eigen::VectorXd> valuesVec(value, size * context.getDataDimensions());
-  auto                              valueIndicesVec = std::vector<int>{valueIndex};
+  const auto                        valueIndicesVec = std::vector<int>{valueIndex};
   context.writeValues(valueIndicesVec, valuesVec);
 }
 
