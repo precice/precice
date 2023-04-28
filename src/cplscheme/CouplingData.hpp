@@ -26,14 +26,14 @@ public:
   /// Returns a reference to the data values.
   Eigen::VectorXd &values();
 
-  /// Returns a reference to the time step storage of the data.
-  time::Storage &timeStepsStorage();
-
   /// Returns a const reference to the data values.
   const Eigen::VectorXd &values() const;
 
   /// Returns a reference to the gradient data values.
   Eigen::MatrixXd &gradientValues();
+
+  /// Returns a const reference to the gradient data values.
+  const Eigen::MatrixXd &gradientValues() const;
 
   /// Returns a reference to the gradient data Sample.
   time::Sample &sample();
@@ -41,8 +41,17 @@ public:
   /// Returns a const reference to the data Sample.
   const time::Sample &sample() const;
 
-  /// Returns a const reference to the gradient data values.
-  const Eigen::MatrixXd &gradientValues() const;
+  /// Returns a reference to the time step storage of the data.
+  time::Storage &timeStepsStorage();
+
+  /// Returns a const reference to the time step storage of the data.
+  const time::Storage &timeStepsStorage() const;
+
+  /// Returns a reference to the Stamples in _timeStepsStorage.
+  const std::vector<time::Stample> &getStamples() const;
+
+  /// Add sample at given time to _timeStepsStorage.
+  void setSampleAtTime(double time, time::Sample sample);
 
   /// Returns if the data contains gradient data
   bool hasGradient() const;

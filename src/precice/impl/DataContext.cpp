@@ -103,8 +103,8 @@ void DataContext::mapData()
       }
     }
 
-    PRECICE_ASSERT(context.fromData->timeStepsStorage().getStamples().size() > 0);
-    for (auto &stample : context.fromData->timeStepsStorage().getStamples()) {
+    PRECICE_ASSERT(context.fromData->getStamples().size() > 0);
+    for (auto &stample : context.fromData->getStamples()) {
       // Put data from storage into mapping buffer
       context.fromData->sample() = stample.sample;
 

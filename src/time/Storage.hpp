@@ -70,7 +70,7 @@ public:
    *
    * @return std::vector<Stample>
    */
-  std::vector<Stample> getStamples() const;
+  const std::vector<Stample> &getStamples() const;
 
   /**
    * @brief Get all normalized dts and values in ascending order (with respect to normalized dts)

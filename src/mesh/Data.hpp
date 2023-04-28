@@ -71,8 +71,14 @@ public:
   /// Returns a const reference to the _sample.
   const time::Sample &sample() const;
 
-  /// Returns a reference to the data values.
+  /// Returns a reference to the _timeStepsStorage.
   time::Storage &timeStepsStorage();
+
+  /// Returns a reference to the Stamples in _timeStepsStorage.
+  const std::vector<time::Stample> &getStamples() const;
+
+  /// Add sample at given time to _timeStepsStorage.
+  void setSampleAtTime(double time, time::Sample sample);
 
   /// Returns the name of the data set, as set in the config file.
   const std::string &getName() const;

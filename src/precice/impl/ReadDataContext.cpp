@@ -54,7 +54,7 @@ int ReadDataContext::getInterpolationOrder() const
 
 void ReadDataContext::storeDataInWaveform()
 {
-  _providedData->timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, _providedData->sample());
+  _providedData->setSampleAtTime(time::Storage::WINDOW_END, _providedData->sample());
 }
 
 void ReadDataContext::moveToNextWindow()

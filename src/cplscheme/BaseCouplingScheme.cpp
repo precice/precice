@@ -101,7 +101,7 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
   PRECICE_ASSERT(m2n->isConnected());
 
   for (const auto &data : sendData | boost::adaptors::map_values) {
-    const auto stamples = data->timeStepsStorage().getStamples();
+    const auto stamples = data->getStamples();
     // PRECICE_ASSERT(stamples.size() > 0);  //@todo preferable, but cannot use this, because of some invalid configs in tests (e.g. tests/serial/AitkenAcceleration.xml)
     if (stamples.size() > 0) {
       data->sample() = stamples.back().sample;
@@ -128,7 +128,7 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
       m2n->receive(data->gradientValues(), data->getMeshID(), data->getDimensions() * data->meshDimensions());
     }
 
-    data->timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, data->sample());
+    data->setSampleAtTime(time::Storage::WINDOW_END, data->sample());
   }
 }
 
@@ -762,7 +762,7 @@ void BaseCouplingScheme::doImplicitStep()
     if (_acceleration) {
       // Load from storage into buffer
       for (auto &pair : getAccelerationData()) {
-        const auto stamples = pair.second->timeStepsStorage().getStamples();
+        const auto stamples = pair.second->getStamples();
         // PRECICE_ASSERT(stamples.size() > 0);  //@todo preferable, but cannot use this, because of some invalid configs in tests (e.g. tests/serial/AitkenAcceleration.xml)
         if (stamples.size() > 0) {
           pair.second->sample() = stamples.back().sample;
@@ -773,7 +773,7 @@ void BaseCouplingScheme::doImplicitStep()
 
       // Store from buffer
       for (auto &pair : getAccelerationData()) {
-        pair.second->timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, pair.second->sample());
+        pair.second->setSampleAtTime(time::Storage::WINDOW_END, pair.second->sample());
       }
     }
   }

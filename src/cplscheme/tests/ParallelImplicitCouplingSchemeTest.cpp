@@ -256,8 +256,8 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 0.0));
 
   // start first window
-  cplData->values()(0) = 1.0;                                                                              // data provided at end of first window
-  cplData->timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, time::Sample{cplData->values()}); // data provided at end of first window
+  cplData->values()(0) = 1.0;                                                           // data provided at end of first window
+  cplData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{cplData->values()}); // data provided at end of first window
   Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
   Fixture::storeExtrapolationData(scheme);
   BOOST_TEST(testing::equals(cplData->values()(0), 1.0));
@@ -268,8 +268,8 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   Fixture::storeIteration(scheme);
   BOOST_TEST(testing::equals(cplData->values()(0), 2.0)); // = 2*1 - 0
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
-  cplData->values()(0) = 4.0;                                                                              // data provided at end of second window
-  cplData->timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, time::Sample{cplData->values()}); // data provided at end of second window
+  cplData->values()(0) = 4.0;                                                           // data provided at end of second window
+  cplData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{cplData->values()}); // data provided at end of second window
   Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
   Fixture::storeExtrapolationData(scheme);
 
@@ -279,8 +279,8 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   Fixture::storeIteration(scheme);
   BOOST_TEST(testing::equals(cplData->values()(0), 7.0)); // = 2*4 - 1
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 7.0));
-  cplData->values()(0) = 10.0;                                                                             // data provided at end of third window
-  cplData->timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, time::Sample{cplData->values()}); // data provided at end of third window
+  cplData->values()(0) = 10.0;                                                          // data provided at end of third window
+  cplData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{cplData->values()}); // data provided at end of third window
   Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
   Fixture::storeExtrapolationData(scheme);
 
@@ -435,7 +435,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
       v << 2.0;
     }
     mesh->data(sendDataIndex)->values() = v;
-    mesh->data(sendDataIndex)->timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v});
+    mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v});
     cplScheme.addComputedTime(timeStepSize);
 
     cplScheme.firstSynchronization({});
@@ -491,7 +491,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
 
     v << 3.0;
     mesh->data(sendDataIndex)->values() = v;
-    mesh->data(sendDataIndex)->timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v});
+    mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v});
     cplScheme.addComputedTime(timeStepSize);
 
     cplScheme.firstSynchronization({});
@@ -691,7 +691,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
       v << 2.0;
     }
     mesh->data(sendDataIndex)->values() = v;
-    mesh->data(sendDataIndex)->timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v});
+    mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v});
     cplScheme.addComputedTime(timeStepSize);
 
     cplScheme.firstSynchronization({});
@@ -747,7 +747,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
 
     v << 3.0;
     mesh->data(sendDataIndex)->values() = v;
-    mesh->data(sendDataIndex)->timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v});
+    mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v});
     cplScheme.addComputedTime(timeStepSize);
 
     cplScheme.firstSynchronization({});

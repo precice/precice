@@ -98,7 +98,7 @@ Eigen::VectorXd Storage::getTimes() const
   return times;
 }
 
-std::vector<Stample> Storage::getStamples() const
+const std::vector<Stample> &Storage::getStamples() const
 {
   PRECICE_DEBUG("Storage::getStamples()");
   return _sampleStorage;

@@ -63,6 +63,22 @@ time::Storage &CouplingData::timeStepsStorage()
   return _data->timeStepsStorage();
 }
 
+const time::Storage &CouplingData::timeStepsStorage() const
+{
+  PRECICE_ASSERT(_data != nullptr);
+  return _data->timeStepsStorage();
+}
+
+const std::vector<time::Stample> &CouplingData::getStamples() const
+{
+  return timeStepsStorage().getStamples();
+}
+
+void CouplingData::setSampleAtTime(double time, time::Sample sample)
+{
+  timeStepsStorage().setSampleAtTime(time, sample);
+}
+
 bool CouplingData::hasGradient() const
 {
   PRECICE_ASSERT(_data != nullptr);
@@ -76,7 +92,7 @@ int CouplingData::meshDimensions() const
 
 void CouplingData::storeIteration()
 {
-  const auto stamples = this->timeStepsStorage().getStamples();
+  const auto stamples = this->getStamples();
   // PRECICE_ASSERT(stamples.size() > 0);  //@todo preferable, but cannot use this, because of some invalid configs in tests (e.g. tests/serial/AitkenAcceleration.xml)
   if (stamples.size() > 0) {
     this->sample() = stamples.back().sample;
@@ -131,12 +147,12 @@ void CouplingData::moveToNextWindow()
   _extrapolation.moveToNextWindow();
   values() = _extrapolation.getInitialGuess();
 
-  this->timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, sample());
+  this->setSampleAtTime(time::Storage::WINDOW_END, sample());
 }
 
 void CouplingData::storeExtrapolationData()
 {
-  const auto stamples = this->timeStepsStorage().getStamples();
+  const auto stamples = this->getStamples();
   // PRECICE_ASSERT(stamples.size() > 0);  //@todo preferable, but cannot use this, because of some invalid configs in tests (e.g. tests/serial/AitkenAcceleration.xml)
   if (stamples.size() > 0) {
     this->values() = stamples.back().sample.values;
