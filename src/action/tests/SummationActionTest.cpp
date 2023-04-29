@@ -40,19 +40,25 @@ BOOST_AUTO_TEST_CASE(SummationOneDimensional)
   mesh->createVertex(Eigen::Vector3d::Constant(2.0));
 
   mesh->allocateDataValues();
-  auto &sourceValues1 = sourceData1->values();
-  auto &sourceValues2 = sourceData2->values();
-  auto &sourceValues3 = sourceData3->values();
-  auto &targetValues  = targetData->values();
-  sourceValues1 << 2.0, 3.0, 4.0;
-  sourceValues2 << 1.0, 2.0, 3.0;
-  sourceValues3 << 2.0, 3.0, 4.0;
-  targetValues = Eigen::VectorXd::Zero(targetValues.size());
+
+  Eigen::VectorXd v1(3), v2(3), v3(3);
+  v1 << 2.0, 3.0, 4.0;
+  v2 << 1.0, 2.0, 3.0;
+  v3 << 2.0, 3.0, 4.0;
+  sourceData1->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v1});
+  sourceData2->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v2});
+  sourceData3->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v3});
+  // targetData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{Eigen::VectorXd::Zero(targetValues.size())});
 
   action::SummationAction sum(
       action::SummationAction::WRITE_MAPPING_POST, sourceDataIDs, targetDataID, mesh);
 
   sum.performAction(0.0);
+
+  const auto &sourceValues1 = sourceData1->values();
+  const auto &sourceValues2 = sourceData2->values();
+  const auto &sourceValues3 = sourceData3->values();
+  const auto &targetValues  = targetData->values();
   BOOST_TEST(sourceValues1(0) == 2.0);
   BOOST_TEST(sourceValues1(1) == 3.0);
   BOOST_TEST(sourceValues1(2) == 4.0);
@@ -82,17 +88,23 @@ BOOST_AUTO_TEST_CASE(SummationThreeDimensional)
   mesh->createVertex(Eigen::Vector3d::Constant(1.0));
   mesh->createVertex(Eigen::Vector3d::Constant(2.0));
   mesh->allocateDataValues();
-  auto &sourceValues1 = sourceData1->values();
-  auto &sourceValues2 = sourceData2->values();
-  auto &targetValues  = targetData->values();
-  sourceValues1 << 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0;
-  sourceValues2 << 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0;
-  targetValues = Eigen::VectorXd::Zero(targetValues.size());
+
+  Eigen::VectorXd v1(9), v2(9);
+  v1 << 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0;
+  v2 << 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0;
+
+  sourceData1->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v1});
+  sourceData2->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v2});
+  // targetData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{Eigen::VectorXd::Zero(targetValues.size())})
 
   action::SummationAction sum(
       action::SummationAction::WRITE_MAPPING_POST, sourceDataIDs, targetDataID, mesh);
 
   sum.performAction(0.0);
+
+  const auto &sourceValues1 = sourceData1->values();
+  const auto &sourceValues2 = sourceData2->values();
+  const auto &targetValues  = targetData->values();
   BOOST_TEST(sourceValues1(0) == 1.0);
   BOOST_TEST(sourceValues2(0) == 2.0);
   BOOST_TEST(targetValues(0) == 3.0);

@@ -35,8 +35,13 @@ void SummationAction::performAction(double time)
   targetValues.setZero();
 
   for (const auto &sourceData : _sourceDataVector) {
-    targetValues += sourceData->values();
+    auto sourceStample = sourceData->getStamples().back();
+    PRECICE_ASSERT(sourceStample.timestamp == time::Storage::WINDOW_END);
+    auto sourceDataValues = sourceStample.sample.values;
+    targetValues += sourceDataValues;
   }
+
+  _targetData->setSampleAtTime(time::Storage::WINDOW_END, _targetData->sample());
 }
 
 } // namespace precice::action

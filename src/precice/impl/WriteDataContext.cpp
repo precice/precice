@@ -14,17 +14,6 @@ WriteDataContext::WriteDataContext(
   _writeDataBuffer = time::Sample{Eigen::VectorXd(), Eigen::MatrixXd()};
 }
 
-mesh::PtrData WriteDataContext::providedData()
-{
-  PRECICE_ASSERT(_providedData);
-  return _providedData;
-}
-
-time::Sample WriteDataContext::writeDataBuffer()
-{
-  return _writeDataBuffer;
-}
-
 void WriteDataContext::writeValuesIntoDataBuffer(const std::vector<int> &indices, const Eigen::Map<const Eigen::VectorXd> values)
 {
   const auto vertexCount = getDataSize() / getDataDimensions();
@@ -47,7 +36,6 @@ void WriteDataContext::writeGradientIntoDataBuffer(const std::vector<int> &indic
 {
   const auto vertexCount = getDataSize() / getDataDimensions();
   const int  stride      = getDataDimensions();
-  PRECICE_ASSERT(providedData() != nullptr);
 
   for (auto i = 0; i < indices.size(); i++) {
     const auto valueIndex = indices[i];

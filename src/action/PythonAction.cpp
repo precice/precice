@@ -50,46 +50,6 @@ std::string python_error_as_string()
     }
   }
 }
-
-/// Fetches the function inspect.getfullargspec().
-PyObject *getfullargspec()
-{
-  PyObject *const inspect_module_name     = PyUnicode_DecodeFSDefault("inspect");
-  PyObject *const inspect_module          = PyImport_Import(inspect_module_name);
-  PyObject *const getfullargspec_function = PyObject_GetAttrString(inspect_module, "getfullargspec");
-  Py_DECREF(inspect_module_name);
-  Py_DECREF(inspect_module);
-  return getfullargspec_function;
-}
-
-/// Returns the argument names of a callable
-std::vector<std::string> python_func_args(PyObject *const func)
-{
-  PyObject *const getfullargspec_function = getfullargspec();
-
-  // Call the inspect.getfullargspec function.
-  PyObject *const argspec_call_args = PyTuple_New(1);
-  PyTuple_SetItem(argspec_call_args, 0, func);
-  PyObject *const argspec = PyObject_CallObject(getfullargspec_function, argspec_call_args);
-  Py_DECREF(argspec_call_args);
-  Py_DECREF(getfullargspec_function);
-
-  // Get args from argspec.
-  PyObject *const          f_args   = PyObject_GetAttrString(argspec, "args");
-  Py_ssize_t const         num_args = PyList_Size(f_args);
-  std::vector<std::string> arg_names;
-  for (Py_ssize_t i = 0; i < num_args; ++i) {
-    PyObject *const arg      = PyList_GetItem(f_args, i);
-    PyObject *const arg_repr = PyObject_Repr(arg);
-    PyObject *const arg_str  = PyUnicode_AsASCIIString(arg_repr);
-    arg_names.emplace_back(PyBytes_AS_STRING(arg_str));
-    Py_DECREF(arg);
-    Py_DECREF(arg_repr);
-    Py_DECREF(arg_str);
-  }
-  Py_DECREF(f_args);
-  return arg_names;
-}
 } // namespace
 
 PythonAction::PythonAction(
@@ -137,6 +97,13 @@ void PythonAction::performAction(double time)
   PyObject *dataArgs   = PyTuple_New(_numberArguments);
   PyObject *pythonTime = PyFloat_FromDouble(time);
   PyTuple_SetItem(dataArgs, 0, pythonTime);
+
+  auto &sourceStample = _sourceData->getStamples().back();
+  PRECICE_ASSERT(sourceStample.timestamp == time::Storage::WINDOW_END);
+
+  auto &targetStample = _targetData->getStamples().back();
+  PRECICE_ASSERT(targetStample.timestamp == time::Storage::WINDOW_END);
+
   if (_sourceData) {
     npy_intp sourceDim[]  = {_sourceData->values().size()};
     double * sourceValues = _sourceData->values().data();
@@ -149,8 +116,7 @@ void PythonAction::performAction(double time)
     npy_intp targetDim[]  = {_targetData->values().size()};
     double * targetValues = _targetData->values().data();
     // PRECICE_ASSERT(_targetValues == NULL);
-    _targetValues =
-        PyArray_SimpleNewFromData(1, targetDim, NPY_DOUBLE, targetValues);
+    _targetValues = PyArray_SimpleNewFromData(1, targetDim, NPY_DOUBLE, targetValues);
     PRECICE_CHECK(_targetValues != nullptr, "Creating python target values failed. Please check that the target data name is used by the mesh in action:python.");
     int argumentIndex = _sourceData ? 2 : 1;
     PyTuple_SetItem(dataArgs, argumentIndex, _targetValues);
@@ -163,6 +129,8 @@ void PythonAction::performAction(double time)
   }
 
   Py_DECREF(dataArgs);
+
+  _targetData->setSampleAtTime(time::Storage::WINDOW_END, _targetData->sample());
 }
 
 void PythonAction::initialize()

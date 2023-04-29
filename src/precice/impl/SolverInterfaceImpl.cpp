@@ -614,7 +614,7 @@ bool SolverInterfaceImpl::requiresGradientDataFor(std::string_view meshName,
     return false;
 
   WriteDataContext &context = _accessor->writeDataContext(meshName, dataName);
-  return context.providedData()->hasGradient();
+  return context.hasGradient();
 }
 
 int SolverInterfaceImpl::getMeshVertexSize(
@@ -1013,7 +1013,6 @@ void SolverInterfaceImpl::writeBlockVectorData(
   PRECICE_CHECK(valueIndices != nullptr, "writeBlockVectorData() was called with valueIndices == nullptr");
   PRECICE_CHECK(values != nullptr, "writeBlockVectorData() was called with values == nullptr");
   WriteDataContext &context = _accessor->writeDataContext(meshName, dataName);
-  PRECICE_ASSERT(context.providedData() != nullptr);
   PRECICE_CHECK(context.getDataDimensions() == _dimensions,
                 "You cannot call writeBlockVectorData on the scalar data type \"{0}\". Use writeBlockScalarData or change the data type for \"{0}\" to vector.",
                 context.getDataName());
@@ -1036,7 +1035,6 @@ void SolverInterfaceImpl::writeVectorData(
   PRECICE_REQUIRE_DATA_WRITE(meshName, dataName);
   PRECICE_DEBUG("value = {}", Eigen::Map<const Eigen::VectorXd>(value, _dimensions).format(utils::eigenio::debug()));
   WriteDataContext &context = _accessor->writeDataContext(meshName, dataName);
-  PRECICE_ASSERT(context.providedData() != nullptr);
   PRECICE_CHECK(context.getDataDimensions() == _dimensions,
                 "You cannot call writeVectorData on the scalar data type \"{0}\". Use writeScalarData or change the data type for \"{0}\" to vector.",
                 context.getDataName());
@@ -1064,7 +1062,6 @@ void SolverInterfaceImpl::writeBlockScalarData(
   PRECICE_CHECK(valueIndices != nullptr, "writeBlockScalarData() was called with valueIndices == nullptr");
   PRECICE_CHECK(values != nullptr, "writeBlockScalarData() was called with values == nullptr");
   WriteDataContext &context = _accessor->writeDataContext(meshName, dataName);
-  PRECICE_ASSERT(context.providedData() != nullptr);
   PRECICE_CHECK(context.getDataDimensions() == 1,
                 "You cannot call writeBlockScalarData on the vector data type \"{}\". Use writeBlockVectorData or change the data type for \"{}\" to scalar.",
                 context.getDataName(), context.getDataName());
@@ -1086,7 +1083,6 @@ void SolverInterfaceImpl::writeScalarData(
   PRECICE_CHECK(_state != State::Finalized, "writeScalarData(...) cannot be called after finalize().");
   PRECICE_REQUIRE_DATA_WRITE(meshName, dataName);
   WriteDataContext &context = _accessor->writeDataContext(meshName, dataName);
-  PRECICE_ASSERT(context.providedData() != nullptr);
   PRECICE_CHECK(valueIndex >= -1,
                 "Invalid value index ({}) when writing scalar data. Value index must be >= 0. "
                 "Please check the value index for {}",
@@ -1707,9 +1703,6 @@ void SolverInterfaceImpl::performDataActions(
     if (timings.find(action->getTiming()) != timings.end()) {
       action->performAction(time);
     }
-  }
-  for (auto &context : _accessor->readDataContexts()) {
-    context.storeDataInWaveform(); // @todo try to remove this call by applying action directly to storage.
   }
 }
 
