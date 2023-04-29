@@ -52,7 +52,7 @@ void runSimpleExplicitCoupling(
 
   if (participantName == std::string("Participant0")) {
     cplScheme.initialize(0.0, 1);
-    BOOST_TEST(not cplScheme.hasDataBeenReceived());
+    BOOST_TEST(cplScheme.hasDataBeenReceived());
     cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(not cplScheme.hasDataBeenReceived());
     BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
@@ -97,7 +97,7 @@ void runSimpleExplicitCoupling(
     BOOST_TEST(cplScheme.getNextTimeStepMaxSize() > 0.0);
   } else if (participantName == std::string("Participant1")) {
     cplScheme.initialize(0.0, 1);
-    BOOST_TEST(not cplScheme.hasDataBeenReceived());
+    BOOST_TEST(cplScheme.hasDataBeenReceived());
     cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     double value = dataValues0(vertex.getID());
@@ -167,7 +167,7 @@ void runExplicitCouplingWithSubcycling(
     cplScheme.initialize(0.0, 1);
     double dtDesired = cplScheme.getNextTimeStepMaxSize() / 2.0;
     double dtUsed    = dtDesired;
-    BOOST_TEST(not cplScheme.hasDataBeenReceived());
+    BOOST_TEST(cplScheme.hasDataBeenReceived());
     cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(not cplScheme.hasDataBeenReceived());
     BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
@@ -221,7 +221,7 @@ void runExplicitCouplingWithSubcycling(
   } else if (participantName == nameParticipant1) {
     // Start coupling
     cplScheme.initialize(0.0, 1);
-    BOOST_TEST(not cplScheme.hasDataBeenReceived());
+    BOOST_TEST(cplScheme.hasDataBeenReceived());
     cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     // Validate current coupling status
@@ -421,7 +421,7 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingFirstParticipantSetsDt)
     double solverDt = 0.3;
     double preciceDt, dt;
     cplScheme.initialize(0.0, 1);
-    BOOST_TEST(not cplScheme.hasDataBeenReceived());
+    BOOST_TEST(cplScheme.hasDataBeenReceived());
     cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(cplScheme.getNextTimeStepMaxSize() == 1);
     BOOST_TEST(not cplScheme.hasDataBeenReceived());
@@ -452,7 +452,7 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingFirstParticipantSetsDt)
   } else {
     BOOST_TEST(context.isNamed(nameParticipant1));
     cplScheme.initialize(0.0, 1);
-    BOOST_TEST(not cplScheme.hasDataBeenReceived());
+    BOOST_TEST(cplScheme.hasDataBeenReceived());
     cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(not cplScheme.isTimeWindowComplete());

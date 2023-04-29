@@ -261,6 +261,13 @@ protected:
   void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData);
 
   /**
+   * @brief Initializes storage in receiveData as zero
+   *
+   * @param receiveData DataMap associated with received data
+   */
+  void initializeWithZeroInitialData(const DataMap &receiveData);
+
+  /**
    * @brief Adds CouplingData with given properties to this BaseCouplingScheme and returns a pointer to the CouplingData
    *
    * If CouplingData with ID of provided data already exists in coupling scheme, no duplicate is created but a pointer to the already existing CouplingData is returned.

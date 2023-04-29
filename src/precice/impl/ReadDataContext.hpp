@@ -63,11 +63,6 @@ public:
    */
   void moveToNextWindow();
 
-  /**
-   * @brief Stores _providedData in _waveform.
-   */
-  void storeDataInWaveform(); // @todo try to remove this function.
-
   /// Disable copy construction
   ReadDataContext(const ReadDataContext &copy) = delete;
 

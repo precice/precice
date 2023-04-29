@@ -145,13 +145,17 @@ void BiCouplingScheme::exchangeInitialData()
     }
     if (receivesInitializedData()) {
       receiveData(getM2N(), getReceiveData());
-      checkDataHasBeenReceived();
+    } else {
+      initializeWithZeroInitialData(getReceiveData());
     }
+    checkDataHasBeenReceived();
   } else { // second participant
     if (receivesInitializedData()) {
       receiveData(getM2N(), getReceiveData());
-      checkDataHasBeenReceived();
+    } else {
+      initializeWithZeroInitialData(getReceiveData());
     }
+    checkDataHasBeenReceived();
     if (sendsInitializedData()) {
       sendData(getM2N(), getSendData());
     }

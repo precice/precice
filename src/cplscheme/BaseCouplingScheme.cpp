@@ -132,6 +132,15 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
   }
 }
 
+void BaseCouplingScheme::initializeWithZeroInitialData(const DataMap &receiveData)
+{
+  for (const auto &data : receiveData | boost::adaptors::map_values) {
+    PRECICE_DEBUG("Initialize {} as zero.", data->getDataName());
+    // just store already initialized zero sample to storage.
+    data->setSampleAtTime(time::Storage::WINDOW_END, data->sample());
+  }
+}
+
 PtrCouplingData BaseCouplingScheme::addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization)
 {
   int             id = data->getID();

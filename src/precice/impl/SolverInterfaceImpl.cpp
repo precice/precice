@@ -358,13 +358,9 @@ void SolverInterfaceImpl::initialize()
   PRECICE_DEBUG("Initialize coupling schemes");
   _couplingScheme->initialize(time, timeWindow);
 
-  if (_couplingScheme->hasDataBeenReceived()) {
+  if (_couplingScheme->hasDataBeenReceived()) { // always perform mapping here to avoid need for workarounds during initialization.
     mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
-  }
-  // @todo Refactor treatment of read and write data. See https://github.com/precice/precice/pull/1614, "Remarks on waveform handling"
-  for (auto &context : _accessor->readDataContexts()) {
-    context.storeDataInWaveform(); // @todo try to remove this call.
   }
 
   for (auto &context : _accessor->readDataContexts()) {
@@ -1683,7 +1679,6 @@ void SolverInterfaceImpl::mapWrittenData()
 
 void SolverInterfaceImpl::mapReadData()
 {
-  // @todo map read data storage, not data::values() etc.
   PRECICE_TRACE();
   computeMappings(_accessor->readMappingContexts(), "read");
   for (auto &context : _accessor->readDataContexts()) {

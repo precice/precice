@@ -52,11 +52,6 @@ int ReadDataContext::getInterpolationOrder() const
   return _waveform->getInterpolationOrder();
 }
 
-void ReadDataContext::storeDataInWaveform()
-{
-  _providedData->setSampleAtTime(time::Storage::WINDOW_END, _providedData->sample());
-}
-
 void ReadDataContext::moveToNextWindow()
 {
   _waveform->moveToNextWindow();
