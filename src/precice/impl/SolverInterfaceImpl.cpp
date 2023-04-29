@@ -1666,7 +1666,6 @@ void SolverInterfaceImpl::computeMappings(std::vector<MappingContext> &contexts,
 
 void SolverInterfaceImpl::mapWrittenData()
 {
-  // @todo map write data storage, not data::values() etc.
   PRECICE_TRACE();
   computeMappings(_accessor->writeMappingContexts(), "write");
   for (auto &context : _accessor->writeDataContexts()) {
