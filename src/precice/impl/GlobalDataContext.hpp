@@ -26,7 +26,8 @@ public:
    *
    * @param data Data associated with this DataContext.
    */
-  GlobalDataContext(mesh::PtrGlobalData data);
+  GlobalDataContext(mesh::PtrData data,
+                    std::string   _direction);
 
   /**
    * @brief Get the Name of _providedData.
@@ -52,7 +53,7 @@ public:
    *
    * @return mesh::PtrGlobalData _providedData.
    */
-  mesh::PtrGlobalData providedData() const;
+  mesh::PtrData providedData() const;
 
   /**
    * @brief Gets _interpolationOrder of _waveform
@@ -92,7 +93,7 @@ private:
   static logging::Logger _log;
 
   /// Unique data this context is associated with
-  mesh::PtrGlobalData _providedData;
+  mesh::PtrData _providedData;
 
   /// Whether this is "read" context or "write" context
   std::string _direction;

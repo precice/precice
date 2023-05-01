@@ -13,9 +13,9 @@ namespace cplscheme {
 class GlobalCouplingData {
 public:
   GlobalCouplingData(
-      mesh::PtrGlobalData globalData,
-      bool                requiresInitialization,
-      int                 extrapolationOrder = CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
+      mesh::PtrData data,
+      bool          requiresInitialization,
+      int           extrapolationOrder = CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
 
   int getDimensions() const;
 
@@ -71,7 +71,7 @@ private:
   Eigen::VectorXd _previousIteration;
 
   /// Data associated with this CouplingData
-  mesh::PtrGlobalData _globalData;
+  mesh::PtrData _data;
 
   /// Extrapolation associated with this CouplingData
   cplscheme::impl::Extrapolation _extrapolation;

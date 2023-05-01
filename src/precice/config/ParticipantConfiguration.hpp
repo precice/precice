@@ -135,7 +135,7 @@ private:
       const mesh::PtrMesh &mesh,
       const std::string &  nameData) const;
 
-  const mesh::PtrGlobalData &getGlobalData(
+  const mesh::PtrData &getGlobalData(
       const std::string &nameData) const;
 
   mapping::PtrMapping getMapping(const std::string &mappingName);

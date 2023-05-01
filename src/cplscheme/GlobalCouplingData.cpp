@@ -2,45 +2,46 @@
 
 #include <utility>
 
-#include "mesh/GlobalData.hpp"
+// #include "mesh/GlobalData.hpp"
+#include "mesh/Data.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
 namespace precice::cplscheme {
 
 GlobalCouplingData::GlobalCouplingData(
-    mesh::PtrGlobalData globalData,
-    bool                requiresInitialization,
-    int                 extrapolationOrder)
+    mesh::PtrData data,
+    bool          requiresInitialization,
+    int           extrapolationOrder)
     : requiresInitialization(requiresInitialization),
-      _globalData(std::move(globalData)),
+      _data(std::move(data)),
       _extrapolation(extrapolationOrder)
 {
-  PRECICE_ASSERT(_globalData != nullptr);
+  PRECICE_ASSERT(_data != nullptr);
   _previousIteration = Eigen::VectorXd::Zero(getSize());
 }
 
 int GlobalCouplingData::getDimensions() const
 {
-  PRECICE_ASSERT(_globalData != nullptr);
-  return _globalData->getDimensions();
+  PRECICE_ASSERT(_data != nullptr);
+  return _data->getDimensions();
 }
 
 int GlobalCouplingData::getSize() const
 {
-  PRECICE_ASSERT(_globalData != nullptr);
+  PRECICE_ASSERT(_data != nullptr);
   return values().size();
 }
 
 Eigen::VectorXd &GlobalCouplingData::values()
 {
-  PRECICE_ASSERT(_globalData != nullptr);
-  return _globalData->values();
+  PRECICE_ASSERT(_data != nullptr);
+  return _data->values();
 }
 
 const Eigen::VectorXd &GlobalCouplingData::values() const
 {
-  PRECICE_ASSERT(_globalData != nullptr);
-  return _globalData->values();
+  PRECICE_ASSERT(_data != nullptr);
+  return _data->values();
 }
 
 void GlobalCouplingData::storeIteration()
@@ -60,12 +61,12 @@ int GlobalCouplingData::getPreviousIterationSize() const
 
 int GlobalCouplingData::getDataID()
 {
-  return _globalData->getID();
+  return _data->getID();
 }
 
 std::string GlobalCouplingData::getDataName()
 {
-  return _globalData->getName();
+  return _data->getName();
 }
 
 void GlobalCouplingData::initializeExtrapolation()

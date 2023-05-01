@@ -25,7 +25,7 @@
 #include "m2n/SharedPointer.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include "mesh/Data.hpp"
-#include "mesh/GlobalData.hpp"
+// #include "mesh/GlobalData.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
@@ -287,7 +287,7 @@ void CouplingSchemeConfiguration::xmlTagCallback(
                     "Please check the <exchange data=\"{}\" from=\"{}\" to=\"{}\" /> "
                     "tag in the <coupling-scheme:... /> of your precice-config.xml.",
                     nameData, nameData, nameParticipantFrom, nameParticipantTo);
-      mesh::PtrGlobalData exchangeData = _meshConfig->getDataConfiguration()->globalData(nameData);
+      mesh::PtrData exchangeData = _meshConfig->getDataConfiguration()->globalData(nameData);
       PRECICE_ASSERT(exchangeData);
       Config::GlobalExchange newGlobalExchange{exchangeData, nameParticipantFrom, nameParticipantTo, initialize};
       PRECICE_CHECK(!_config.hasGlobalExchange(newGlobalExchange),
@@ -832,13 +832,13 @@ mesh::PtrData CouplingSchemeConfiguration::getData(
   return mesh->data(dataName);
 }
 
-mesh::PtrGlobalData CouplingSchemeConfiguration::getGlobalData(
+mesh::PtrData CouplingSchemeConfiguration::getGlobalData(
     const std::string &dataName) const
 {
   PRECICE_CHECK(_meshConfig->getDataConfiguration()->hasGlobalDataName(dataName),
                 "Global Data \"{}\" not defined.",
                 dataName);
-  mesh::PtrGlobalData globalData = _meshConfig->getDataConfiguration()->globalData(dataName);
+  mesh::PtrData globalData = _meshConfig->getDataConfiguration()->globalData(dataName);
   return globalData;
 }
 
@@ -853,7 +853,7 @@ mesh::PtrData CouplingSchemeConfiguration::findDataByID(
   return nullptr;
 }
 
-mesh::PtrGlobalData CouplingSchemeConfiguration::findGlobalDataByID(
+mesh::PtrData CouplingSchemeConfiguration::findGlobalDataByID(
     int ID) const
 {
   PRECICE_ERROR("TODO");
@@ -1212,7 +1212,7 @@ void CouplingSchemeConfiguration::checkIfGlobalDataIsExchanged(
   // Data is not being exchanged
   std::string dataName = "";
   // auto        dataptr  = findGlobalDataByID(dataID); //TODO: implement findGlobalDataByID
-  mesh::PtrGlobalData dataptr = nullptr; //TODO: implement findGlobalDataByID
+  mesh::PtrData dataptr = nullptr; //TODO: implement findGlobalDataByID
   if (dataptr) {
     dataName = dataptr->getName();
   }

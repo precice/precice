@@ -105,7 +105,8 @@ public:
 
   /// Adds a configured \ref GlobalData to the Participant
   void addGlobalData(
-      const mesh::PtrGlobalData &data);
+      const mesh::PtrData &data,
+      std::string          direction);
 
   /// Adds a configured read \ref Mapping to the ParticipantState
   void addReadMappingContext(const MappingContext &mappingContext);

@@ -5,7 +5,7 @@
 #include "logging/Logger.hpp"
 #include "mesh/Data.hpp"
 #include "time/Time.hpp"
-#include "mesh/GlobalData.hpp"
+// #include "mesh/GlobalData.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "xml/XMLTag.hpp"
@@ -37,7 +37,7 @@ public:
   const std::vector<ConfiguredData> &data() const;
 
   /// Returns the Global Data with the matching name
-  const PtrGlobalData &globalData(const std::string &dataName) const;
+  const PtrData &globalData(const std::string &dataName) const;
 
   /// Returns whether Data Configuration has Global Data with the dataName
   bool hasGlobalDataName(const std::string &dataName) const;
@@ -81,7 +81,7 @@ private:
 
   std::vector<ConfiguredData> _data;
 
-  std::vector<PtrGlobalData> _globalData;
+  std::vector<PtrData> _globalData;
 
   int _indexLastConfigured = -1;
 

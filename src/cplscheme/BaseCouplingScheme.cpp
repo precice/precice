@@ -22,7 +22,7 @@
 #include "logging/LogMacros.hpp"
 #include "math/differences.hpp"
 #include "mesh/Data.hpp"
-#include "mesh/GlobalData.hpp"
+// #include "mesh/GlobalData.hpp"
 #include "mesh/Mesh.hpp"
 #include "precice/types.hpp"
 #include "utils/EigenHelperFunctions.hpp"
@@ -242,7 +242,7 @@ PtrCouplingData BaseCouplingScheme::addCouplingData(const mesh::PtrData &data, m
   return ptrCplData;
 }
 
-PtrGlobalCouplingData BaseCouplingScheme::addGlobalCouplingData(const mesh::PtrGlobalData &data, bool requiresInitialization)
+PtrGlobalCouplingData BaseCouplingScheme::addGlobalCouplingData(const mesh::PtrData &data, bool requiresInitialization)
 {
   int                   id = data->getID();
   PtrGlobalCouplingData ptrGblCplData;

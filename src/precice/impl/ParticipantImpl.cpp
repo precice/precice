@@ -36,7 +36,7 @@
 #include "math/geometry.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Edge.hpp"
-#include "mesh/GlobalData.hpp"
+// #include "mesh/GlobalData.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Utils.hpp"

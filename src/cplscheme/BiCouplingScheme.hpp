@@ -57,13 +57,13 @@ public:
 
   /// Adds global data to be sent on data exchange and possibly be modified during coupling iterations.
   void addGlobalDataToSend(
-      const mesh::PtrGlobalData &globalData,
-      bool                       requiresInitialization);
+      const mesh::PtrData &globalData,
+      bool                 requiresInitialization);
 
   /// Adds global data to be received on data exchange.
   void addGlobalDataToReceive(
-      const mesh::PtrGlobalData &globalData,
-      bool                       requiresInitialization);
+      const mesh::PtrData &globalData,
+      bool                 requiresInitialization);
 
   void determineInitialDataExchange() override;
 

@@ -1,6 +1,7 @@
 #include "precice/impl/GlobalDataContext.hpp"
 #include <memory>
-#include "mesh/GlobalData.hpp" //TODO: Should compile without this since GlobalData is already forward declared in mesh/SharedPointer.hpp, but doesn't.
+// #include "mesh/GlobalData.hpp" //TODO: Should compile without this since GlobalData is already forward declared in mesh/SharedPointer.hpp, but doesn't.
+#include "mesh/Data.hpp"
 #include "time/Waveform.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
@@ -9,7 +10,8 @@ namespace precice::impl {
 logging::Logger GlobalDataContext::_log{"impl::GlobalDataContext"};
 
 GlobalDataContext::GlobalDataContext(
-    mesh::PtrGlobalData data)
+    mesh::PtrData data,
+    std::string   direction)
 {
   PRECICE_ASSERT(data);
   _providedData = data;
@@ -33,7 +35,7 @@ void GlobalDataContext::resetData()
   _providedData->toZero();
 }
 
-mesh::PtrGlobalData GlobalDataContext::providedData() const
+mesh::PtrData GlobalDataContext::providedData() const
 {
   PRECICE_ASSERT(_providedData);
   return _providedData;

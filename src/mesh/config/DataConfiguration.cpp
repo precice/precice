@@ -68,7 +68,7 @@ bool DataConfiguration::hasGlobalDataName(const std::string &dataName) const
   return iter != _globalData.end(); // if name was not found in mesh, iter == _data.end()
 }
 
-const PtrGlobalData &DataConfiguration::globalData(const std::string &dataName) const
+const PtrData &DataConfiguration::globalData(const std::string &dataName) const
 {
   auto iter = std::find_if(_globalData.begin(), _globalData.end(), [&dataName](const auto &dptr) {
     return dptr->getName() == dataName;
@@ -148,13 +148,13 @@ void DataConfiguration::createGlobalData(const std::string &name,
                                          DataID             id)
 {
   PRECICE_TRACE(name, dimension, id);
-  for (const PtrGlobalData &globalData : _globalData) {
+  for (const PtrData &globalData : _globalData) {
     PRECICE_CHECK(globalData->getName() != name,
                   "Global data \"{}\" cannot be created twice."
                   "Please rename or remove one of the global-data tags with name \"{}\".",
                   name, name);
   }
-  PtrGlobalData globalData(new GlobalData(name, id, dimension));
+  PtrData globalData(new Data(name, id, dimension, _dimensions));
   _globalData.push_back(globalData);
 }
 

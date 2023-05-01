@@ -13,7 +13,7 @@
 #include "cplscheme/impl/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
-#include "mesh/GlobalData.hpp" // this probably shouldn't be needed, but without this compiler throws warnings.
+// #include "mesh/GlobalData.hpp" // this probably shouldn't be needed, but without this compiler throws warnings.
 #include "mesh/SharedPointer.hpp"
 #include "precice/config/SharedPointer.hpp"
 #include "precice/impl/MeshContext.hpp"
@@ -136,7 +136,7 @@ private:
     bool                        doesLogging;
   };
   struct ConvergenceMeasureDefintionGlobalData {
-    mesh::PtrGlobalData         globalData;
+    mesh::PtrData               globalData;
     bool                        suffices;
     bool                        strict;
     impl::PtrConvergenceMeasure measure;
@@ -164,10 +164,10 @@ private:
       bool          exchangeSubsteps;
     };
     struct GlobalExchange {
-      mesh::PtrGlobalData globalData;
-      std::string         from;
-      std::string         to;
-      bool                requiresInitialization;
+      mesh::PtrData globalData;
+      std::string   from;
+      std::string   to;
+      bool          requiresInitialization;
     };
     std::vector<Exchange>                              exchanges;
     std::vector<GlobalExchange>                        globalExchanges;
@@ -287,13 +287,13 @@ private:
       const std::string &dataName,
       const std::string &meshName) const;
 
-  mesh::PtrGlobalData getGlobalData(
+  mesh::PtrData getGlobalData(
       const std::string &dataName) const;
 
   mesh::PtrData findDataByID(
       int ID) const;
 
-  mesh::PtrGlobalData findGlobalDataByID(
+  mesh::PtrData findGlobalDataByID(
       int ID) const;
 
   PtrCouplingScheme createSerialExplicitCouplingScheme(

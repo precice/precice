@@ -14,7 +14,7 @@
 #include "m2n/M2N.hpp"
 #include "m2n/SharedPointer.hpp"
 #include "mesh/Data.hpp"
-#include "mesh/GlobalData.hpp"
+// #include "mesh/GlobalData.hpp"
 
 #include "precice/types.hpp"
 #include "utils/Helpers.hpp"
@@ -69,8 +69,8 @@ void BiCouplingScheme::addDataToSend(
 }
 
 void BiCouplingScheme::addGlobalDataToSend(
-    const mesh::PtrGlobalData &globalData,
-    bool                       requiresInitialization)
+    const mesh::PtrData &globalData,
+    bool                 requiresInitialization)
 {
   PRECICE_TRACE();
   PtrGlobalCouplingData ptrGblCplData = addGlobalCouplingData(globalData, requiresInitialization);
@@ -102,8 +102,8 @@ void BiCouplingScheme::addDataToReceive(
 }
 
 void BiCouplingScheme::addGlobalDataToReceive(
-    const mesh::PtrGlobalData &globalData,
-    bool                       requiresInitialization)
+    const mesh::PtrData &globalData,
+    bool                 requiresInitialization)
 {
   PRECICE_TRACE();
   PtrGlobalCouplingData PtrGblCplData = addGlobalCouplingData(globalData, requiresInitialization);
