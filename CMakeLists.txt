@@ -436,7 +436,7 @@ if (PRECICE_GinkgoParallelization)
 
   # Now we setup cuSolver and hipSOLVER for preCICE
   if(${GINKGO_BUILD_CUDA})
-    target_sources(preciceCore PRIVATE ${PROJECT_SOURCE_DIR}/src/mapping/cuda_kernels/qr_decomp.cu)
+    target_sources(preciceCore PRIVATE ${PROJECT_SOURCE_DIR}/src/mapping/cuda_kernels/qr_decomp.cu ${PROJECT_SOURCE_DIR}/src/mapping/cuda_kernels/qr_decomp.cuh)
     target_link_libraries(preciceCore PUBLIC cusolver)
   endif()
 

@@ -1,5 +1,5 @@
 #pragma once
-#include <cuda_runtime.h>
+
 #include <cublas_v2.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
@@ -10,10 +10,11 @@
 using GinkgoMatrix = gko::matrix::Dense<>;
 
 class QRSolver {
-  public:
-   QRSolver(const int deviceId = 0);
-   void computeQR(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, GinkgoMatrix *R);
+public:
+  QRSolver(const int deviceId = 0);
+  void computeQR(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, GinkgoMatrix *R);
   ~QRSolver();
+
 private:
   // Handles for low-level CUDA libraries
   cusolverDnHandle_t solverHandle;

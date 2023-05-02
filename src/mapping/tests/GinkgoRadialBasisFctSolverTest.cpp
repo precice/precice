@@ -26,7 +26,8 @@ BOOST_AUTO_TEST_SUITE(GinkgoRadialBasisFunctionSolver)
     MappingConfiguration::GinkgoParameter gpm;                                                                                                              \
     gpm.executor      = EXECUTOR;                                                                                                                           \
     gpm.solver        = SOLVER;                                                                                                                             \
-    gpm.maxIterations = 1e2;                                                                                                                                \
+    gpm.maxIterations = 100;                                                                                                                                \
+    gpm.usePreconditioner = false;                                                                                                                                \
     RadialBasisFctMapping<Type> consistentMap2D(Mapping::CONSISTENT, 2, function, {{false, false, false}}, polynomial, useEigen, gpm);                      \
     perform2DTestConsistentMapping(consistentMap2D);                                                                                                        \
     RadialBasisFctMapping<Type> consistentMap2DVector(Mapping::CONSISTENT, 2, function, {{false, false, false}}, polynomial, useEigen, gpm);                \

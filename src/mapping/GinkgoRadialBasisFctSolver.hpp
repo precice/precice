@@ -12,6 +12,9 @@
 #include "mesh/Mesh.hpp"
 #include "precice/types.hpp"
 #include "utils/Event.hpp"
+#if defined(PRECICE_WITH_CUDA) || defined(PRECICE_WITH_HIP)
+  #include "mapping/cuda_kernels/qr_decomp.cuh"
+#endif
 
 // Every class uses Ginkgo's default_precision = double
 // Ginkgo Data Structures
@@ -27,14 +30,6 @@ using jacobi   = gko::preconditioner::Jacobi<>;
 using cholesky = gko::preconditioner::Ic<>;
 
 using precice::mapping::RadialBasisParameters;
-
-#if defined(PRECICE_WITH_CUDA) || defined(PRECICE_WITH_HIP)
-
-extern void initQRSolver(const int deviceId = 0);
-extern void deInitQRSolver();
-extern void computeQR(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, GinkgoMatrix *R);
-
-#endif
 
 // Declare Ginkgo Kernels as required by Ginkgo's unified kernel interface
 GKO_DECLARE_UNIFIED(template <typename ValueType, typename EvalFunctionType> void create_rbf_system_matrix(
@@ -93,21 +88,14 @@ class GinkgoRadialBasisFctSolver {
 public:
   GinkgoRadialBasisFctSolver() = default;
 
-  GinkgoRadialBasisFctSolver(const MappingConfiguration::GinkgoParameter &ginkgoParameter);
-
   /// Assembles the system matrices and computes the decomposition of the interpolation matrix
   template <typename IndexContainer>
   GinkgoRadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
                              const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial,
                              const MappingConfiguration::GinkgoParameter &ginkgoParameter);
 
-  ~GinkgoRadialBasisFctSolver();
-
-  GinkgoRadialBasisFctSolver(const GinkgoRadialBasisFctSolver &solver) = delete;
-  GinkgoRadialBasisFctSolver &operator=(const GinkgoRadialBasisFctSolver &solver) = delete;
-
   /// Maps the given input data
-  Eigen::VectorXd solveConsistent(const Eigen::VectorXd &rhsValues, Polynomial polynomial);
+  Eigen::VectorXd solveConsistent(const Eigen::VectorXd &inputData, Polynomial polynomial);
 
   /// Maps the given input data
   Eigen::VectorXd solveConservative(const Eigen::VectorXd &inputData, Polynomial polynomial);
@@ -172,6 +160,9 @@ private:
   /// Backwards Solver
   std::shared_ptr<triangular> _triangularSolver;
 
+  /// QR Solver
+  std::unique_ptr<QRSolver> _qrSolver;
+
   // Solver used for iteratively solving linear systems of equations
   std::shared_ptr<cg>    _cgSolver    = nullptr;
   std::shared_ptr<gmres> _gmresSolver = nullptr;
@@ -199,12 +190,6 @@ private:
   MappingConfiguration::GinkgoParameter _ginkgoParameter;
 };
 
-template <typename RADIAL_BASIS_FUNCTION_T>
-GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(const MappingConfiguration::GinkgoParameter &ginkgoParameter)
-    : _ginkgoParameter(ginkgoParameter)
-{
-  _deviceExecutor = ginkgoExecutorLookup.at(ginkgoParameter.executor)(ginkgoParameter.deviceId, ginkgoParameter.enableUnifiedMemory);
-}
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 template <typename IndexContainer>
@@ -219,14 +204,14 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
   _solverType         = solverTypeLookup.at(ginkgoParameter.solver);
   _preconditionerType = preconditionerTypeLookup.at(ginkgoParameter.preconditioner);
 
-#if defined(PRECICE_WITH_CUDA) || defined(PRECICE_WITH_HIP)
   if (GinkgoSolverType::QR == _solverType) {
-    PRECICE_ASSERT("cuda-executor" == ginkgoParameter.executor || "hip-executor" == ginkgoParameter.executor, "The parallel QR decomposition is only available on CUDA and HIP yet.");
-    initQRSolver(ginkgoParameter.deviceId);
-  }
+    PRECICE_CHECK("cuda-executor" == ginkgoParameter.executor || "hip-executor" == ginkgoParameter.executor, "The parallel QR decomposition is only available on CUDA and HIP yet.");
+#if defined(PRECICE_WITH_CUDA) || defined(PRECICE_WITH_HIP)
+    _qrSolver = std::make_unique<QRSolver>(ginkgoParameter.deviceId);
 #endif
+  }
 
-  PRECICE_ASSERT(!(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite() && polynomial == Polynomial::ON), "The integrated polynomial (polynomial=\"on\") is not supported for the selected radial-basis function. Please select another radial-basis function or change the polynomial configuration.");
+  PRECICE_CHECK(!(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite() && polynomial == Polynomial::ON), "The integrated polynomial (polynomial=\"on\") is not supported for the selected radial-basis function. Please select another radial-basis function or change the polynomial configuration.");
   // Convert dead axis vector into an active axis array so that we can handle the reduction more easily
   std::array<bool, 3> activeAxis({{false, false, false}});
   std::transform(deadAxis.begin(), deadAxis.end(), activeAxis.begin(), [](const auto ax) { return !ax; });
@@ -339,7 +324,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
 
     auto polynomialSolverFactory = cg::build()
                                        .with_criteria(gko::stop::Iteration::build()
-                                                          .with_max_iters(static_cast<std::size_t>(1e6))
+                                                          .with_max_iters(static_cast<std::size_t>(40))
                                                           .on(_deviceExecutor),
                                                       gko::stop::ResidualNormReduction<>::build()
                                                           .with_reduction_factor(1e-4)
@@ -392,7 +377,6 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
 
       _cgSolver = gko::share(solverFactory->generate(_rbfSystemMatrix));
     }
-
     else {
       auto solverFactory = cg::build()
                                .with_criteria(_iterationCriterion, _residualCriterion)
@@ -433,7 +417,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
     _decompMatrixR      = gko::share(GinkgoMatrix::create(_deviceExecutor, gko::dim<2>(N, N)));
 
     // _rbfSystemMatrix will be overridden into Q
-    computeQR(_deviceExecutor, gko::lend(_rbfSystemMatrix), gko::lend(_decompMatrixR));
+    _qrSolver->computeQR(_deviceExecutor, gko::lend(_rbfSystemMatrix), gko::lend(_decompMatrixR));
 
     _rbfSystemMatrix->transpose(gko::lend(_decompMatrixQ_T));
 
@@ -570,7 +554,6 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConser
   auto dOutput = gko::clone(_deviceExecutor, _rbfCoefficients);
 
   if (polynomial == Polynomial::SEPARATE) {
-
     auto dEpsilon = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixV->get_size()[1], dRhs->get_size()[1]}));
     _matrixV->transpose()->apply(gko::lend(dRhs), gko::lend(dEpsilon));
 
@@ -589,7 +572,7 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConser
 
       auto polynomialSolverFactory = cg::build()
                                          .with_criteria(gko::stop::Iteration::build()
-                                                            .with_max_iters(static_cast<std::size_t>(1e6))
+                                                            .with_max_iters(static_cast<std::size_t>(40))
                                                             .on(_deviceExecutor),
                                                         gko::stop::ResidualNormReduction<>::build()
                                                             .with_reduction_factor(1e-4)
