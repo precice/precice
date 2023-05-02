@@ -657,9 +657,9 @@ int SolverInterfaceImpl::setMeshVertex(
   PRECICE_DEBUG("MeshRequirement: {}", fmt::streamed(context.meshRequirement));
   index = mesh->createVertex(internalPosition).getID();
 
-  mesh->allocateDataValues(); //@todo remove this call.
+  mesh->allocateDataValues(); //@todo remove this call? But complicated, because write mapping expects already initialized toData
 
-  auto newSize = mesh->vertices().size(); // @todo add function Mesh::size()?
+  const auto newSize = mesh->verticesSize();
   for (auto &context : _accessor->writeDataContexts()) {
     if (context.getMeshName() == mesh->getName()) {
       context.resizeBufferTo(newSize);
@@ -687,9 +687,9 @@ void SolverInterfaceImpl::setMeshVertices(
     ids[i] = mesh->createVertex(current).getID();
   }
 
-  mesh->allocateDataValues(); //@todo remove this call.
+  mesh->allocateDataValues(); //@todo remove this call? But complicated, because write mapping expects already initialized toData
 
-  auto newSize = mesh->vertices().size(); // @todo add function Mesh::size()?
+  const auto newSize = mesh->verticesSize();
   for (auto &context : _accessor->writeDataContexts()) {
     if (context.getMeshName() == mesh->getName()) {
       context.resizeBufferTo(newSize);
@@ -1636,9 +1636,9 @@ void SolverInterfaceImpl::computePartitions()
     }
 
     // This allocates gradient values here too if available
-    meshContext->mesh->allocateDataValues(); //@todo remove this call.
+    meshContext->mesh->allocateDataValues(); //@todo remove this call? But complicated, because write mapping expects already initialized toData
 
-    auto newSize = meshContext->mesh->vertices().size(); // @todo add function Mesh::size()?
+    const auto newSize = meshContext->mesh->verticesSize();
     for (auto &context : _accessor->writeDataContexts()) {
       if (context.getMeshName() == meshContext->mesh->getName()) {
         context.resizeBufferTo(newSize);

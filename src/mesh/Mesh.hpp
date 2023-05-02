@@ -75,6 +75,9 @@ public:
   /// Returns const container holding all vertices.
   const VertexContainer &vertices() const;
 
+  /// Returns number of vertices.
+  int verticesSize() const;
+
   /// Returns modifiable container holding all edges.
   EdgeContainer &edges();
 
