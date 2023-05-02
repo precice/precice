@@ -24,10 +24,10 @@ BOOST_AUTO_TEST_SUITE(GinkgoRadialBasisFunctionSolver)
   {                                                                                                                                                         \
     bool                                  useEigen = false;                                                                                                 \
     MappingConfiguration::GinkgoParameter gpm;                                                                                                              \
-    gpm.executor      = EXECUTOR;                                                                                                                           \
-    gpm.solver        = SOLVER;                                                                                                                             \
-    gpm.maxIterations = 100;                                                                                                                                \
-    gpm.usePreconditioner = false;                                                                                                                                \
+    gpm.executor          = EXECUTOR;                                                                                                                       \
+    gpm.solver            = SOLVER;                                                                                                                         \
+    gpm.maxIterations     = 100;                                                                                                                            \
+    gpm.usePreconditioner = false;                                                                                                                          \
     RadialBasisFctMapping<Type> consistentMap2D(Mapping::CONSISTENT, 2, function, {{false, false, false}}, polynomial, useEigen, gpm);                      \
     perform2DTestConsistentMapping(consistentMap2D);                                                                                                        \
     RadialBasisFctMapping<Type> consistentMap2DVector(Mapping::CONSISTENT, 2, function, {{false, false, false}}, polynomial, useEigen, gpm);                \

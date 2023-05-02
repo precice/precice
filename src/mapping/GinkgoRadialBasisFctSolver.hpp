@@ -13,7 +13,7 @@
 #include "precice/types.hpp"
 #include "utils/Event.hpp"
 #if defined(PRECICE_WITH_CUDA) || defined(PRECICE_WITH_HIP)
-  #include "mapping/cuda_kernels/qr_decomp.cuh"
+#include "mapping/cuda_kernels/qr_decomp.cuh"
 #endif
 
 // Every class uses Ginkgo's default_precision = double
@@ -189,7 +189,6 @@ private:
 
   MappingConfiguration::GinkgoParameter _ginkgoParameter;
 };
-
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 template <typename IndexContainer>
@@ -376,8 +375,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
                                .on(_deviceExecutor);
 
       _cgSolver = gko::share(solverFactory->generate(_rbfSystemMatrix));
-    }
-    else {
+    } else {
       auto solverFactory = cg::build()
                                .with_criteria(_iterationCriterion, _residualCriterion)
                                .on(_deviceExecutor);
