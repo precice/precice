@@ -37,6 +37,18 @@ int DataContext::getDataDimensions() const
   return _providedData->getDimensions();
 }
 
+int DataContext::getSpatialDimensions() const
+{
+  PRECICE_ASSERT(_providedData);
+  return _providedData->getSpatialDimensions();
+}
+
+int DataContext::getDataSize() const
+{
+  PRECICE_ASSERT(_providedData);
+  return _providedData->values().size();
+}
+
 std::string DataContext::getMeshName() const
 {
   PRECICE_ASSERT(_mesh);
@@ -47,6 +59,12 @@ MeshID DataContext::getMeshID() const
 {
   PRECICE_ASSERT(_mesh);
   return _mesh->getID();
+}
+
+bool DataContext::hasGradient() const
+{
+  PRECICE_ASSERT(_providedData);
+  return _providedData->hasGradient();
 }
 
 void DataContext::appendMapping(MappingContext mappingContext)
