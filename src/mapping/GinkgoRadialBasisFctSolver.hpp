@@ -427,7 +427,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
     auto triangularSolverFactory = triangular::build().on(_deviceExecutor);
     _triangularSolver            = gko::share(triangularSolverFactory->generate(_decompMatrixR));
   } else {
-    PRECICE_UNREACHABLE();
+    PRECICE_UNREACHABLE("Unknown solver type");
   }
 }
 
