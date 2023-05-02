@@ -7,13 +7,16 @@
 #include <ginkgo/ginkgo.hpp>
 #include <ginkgo/kernels/kernel_declaration.hpp>
 #include <numeric>
+#include "mapping/QRSolver.hpp"
 #include "mapping/config/MappingConfiguration.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
 #include "mesh/Mesh.hpp"
 #include "precice/types.hpp"
 #include "utils/Event.hpp"
-#if defined(PRECICE_WITH_CUDA) || defined(PRECICE_WITH_HIP)
-#include "mapping/cuda_kernels/qr_decomp.cuh"
+#if defined(PRECICE_WITH_HIP)
+#include "mapping/device/HipQRSolver.hip.hpp"
+#elif defined(PRECICE_WITH_CUDA)
+#include "mapping/device/CudaQRSolver.cuh"
 #endif
 
 // Every class uses Ginkgo's default_precision = double
@@ -161,7 +164,7 @@ private:
   std::shared_ptr<triangular> _triangularSolver;
 
   /// QR Solver
-  std::unique_ptr<QRSolver> _qrSolver;
+  std::unique_ptr<CudaQRSolver> _qrSolver;
 
   // Solver used for iteratively solving linear systems of equations
   std::shared_ptr<cg>    _cgSolver    = nullptr;
@@ -206,7 +209,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
   if (GinkgoSolverType::QR == _solverType) {
     PRECICE_CHECK("cuda-executor" == ginkgoParameter.executor || "hip-executor" == ginkgoParameter.executor, "The parallel QR decomposition is only available on CUDA and HIP yet.");
 #if defined(PRECICE_WITH_CUDA) || defined(PRECICE_WITH_HIP)
-    _qrSolver = std::make_unique<QRSolver>(ginkgoParameter.deviceId);
+    _qrSolver = std::make_unique<CudaQRSolver>(ginkgoParameter.deviceId);
 #endif
   }
 

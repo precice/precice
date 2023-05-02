@@ -9,11 +9,11 @@
 
 using GinkgoMatrix = gko::matrix::Dense<>;
 
-class QRSolver {
+class CudaQRSolver {
 public:
-  QRSolver(const int deviceId = 0);
+  CudaQRSolver(const int deviceId = 0);
   void computeQR(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, GinkgoMatrix *R);
-  ~QRSolver();
+  ~CudaQRSolver();
 
 private:
   // Handles for low-level CUDA libraries
