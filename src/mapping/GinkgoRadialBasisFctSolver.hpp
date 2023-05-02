@@ -16,7 +16,7 @@
 #if defined(PRECICE_WITH_HIP)
 #include "mapping/device/HipQRSolver.hip.hpp"
 #elif defined(PRECICE_WITH_CUDA)
-#include "mapping/device/CudaQRSolver.cuh"
+#include "mapping/device/QRSolver.cuh"
 #endif
 
 // Every class uses Ginkgo's default_precision = double
@@ -164,7 +164,7 @@ private:
   std::shared_ptr<triangular> _triangularSolver;
 
   /// QR Solver
-  std::unique_ptr<CudaQRSolver> _qrSolver;
+  std::unique_ptr<QRSolver> _qrSolver;
 
   // Solver used for iteratively solving linear systems of equations
   std::shared_ptr<cg>    _cgSolver    = nullptr;
@@ -207,8 +207,10 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
   _preconditionerType = preconditionerTypeLookup.at(ginkgoParameter.preconditioner);
 
   if (GinkgoSolverType::QR == _solverType) {
-    PRECICE_CHECK("cuda-executor" == ginkgoParameter.executor || "hip-executor" == ginkgoParameter.executor, "The parallel QR decomposition is only available on CUDA and HIP yet.");
-#if defined(PRECICE_WITH_CUDA) || defined(PRECICE_WITH_HIP)
+    PRECICE_CHECK("cuda-executor" == ginkgoParameter.executor || "hip-executor" == ginkgoParameter.executor, "The parallel QR decomposition is only available on Cuda (Nvidia) or HIP (Nvidia or AMD) decives.");
+#if defined(PRECICE_WITH_HIP)
+    _qrSolver = std::make_unique<HipQRSolver>(ginkgoParameter.deviceId);
+#elif defined(PRECICE_WITH_CUDA)
     _qrSolver = std::make_unique<CudaQRSolver>(ginkgoParameter.deviceId);
 #endif
   }
@@ -409,9 +411,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
 
       _gmresSolver = gko::share(solverFactory->generate(_rbfSystemMatrix));
     }
-  }
-#if defined(PRECICE_WITH_CUDA) || defined(PRECICE_WITH_HIP)
-  else if (_solverType == GinkgoSolverType::QR) {
+  } else if (_solverType == GinkgoSolverType::QR) {
     const std::size_t M = _rbfSystemMatrix->get_size()[0];
     const std::size_t N = _rbfSystemMatrix->get_size()[1];
     _decompMatrixQ_T    = gko::share(GinkgoMatrix::create(_deviceExecutor, gko::dim<2>(N, M)));
@@ -426,8 +426,9 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
 
     auto triangularSolverFactory = triangular::build().on(_deviceExecutor);
     _triangularSolver            = gko::share(triangularSolverFactory->generate(_decompMatrixR));
+  } else {
+    PRECICE_UNREACHABLE();
   }
-#endif
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -450,13 +451,11 @@ void GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::_solveRBFSystem(const 
 
 // Only compute time-consuming statistics in debug mode
 #ifndef NDEBUG
-
   auto dResidual = gko::initialize<GinkgoScalar>({0.0}, _deviceExecutor);
   _rbfSystemMatrix->apply(gko::lend(_scalarOne), gko::lend(_rbfCoefficients), gko::lend(_scalarNegativeOne), gko::lend(rhs));
   rhs->compute_norm2(gko::lend(dResidual));
   auto residual = gko::clone(_hostExecutor, dResidual);
   PRECICE_INFO("Ginkgo Solver Final Residual: {}", residual->at(0, 0));
-
 #endif
 
   _iterationCriterion->clear_loggers();
@@ -628,20 +627,6 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 const std::shared_ptr<GinkgoMatrix> GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::getEvaluationMatrix() const
 {
   return _matrixA;
-}
-
-template <typename RADIAL_BASIS_FUNCTION_T>
-GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::~GinkgoRadialBasisFctSolver()
-{
-  _allocCopyEvent.stop();
-
-#if defined(PRECICE_WITH_CUDA) || defined(PRECICE_WITH_HIP)
-  if (GinkgoSolverType::QR == _solverType) {
-    deInitQRSolver();
-  }
-#endif
-
-  clear();
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>

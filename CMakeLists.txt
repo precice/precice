@@ -192,7 +192,7 @@ if(TPL_ENABLE_EIGEN3)
   # Use EIGEN3_ROOT to set the directory
   xsdk_tpl_require(EIGEN3 EIGEN3_INCLUDE_DIR)
 endif()
-# We need Eigen 3.4.0 such that Eigen deals properly eith cuda
+# We need Eigen 3.4.0 such that Eigen deals properly with cuda
 # TODO: We should only conditionally increase the requirement
 find_package(Eigen3 3.4.0 REQUIRED)
 message(STATUS "Found Eigen ${EIGEN3_VERSION}")
@@ -422,7 +422,7 @@ if (PRECICE_GinkgoParallelization)
   include(${Ginkgo_Path}/cmake/unified_kernels.cmake)
 
   # This command registers Ginkgo kernels for different execution backends
-  ginkgo_add_unified_kernels(preciceCore src/mapping/ginkgo_kernels/GinkgoRBFKernels.cpp)
+  ginkgo_add_unified_kernels(preciceCore src/mapping/device/GinkgoRBFKernels.cpp)
   # shortcoming of the kernel registration: we need to add the includes here to all generated targets
   include_directories(${PROJECT_SOURCE_DIR}/src)
   include_directories(${EIGEN3_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/thirdparty/fmt/include)
@@ -436,12 +436,12 @@ if (PRECICE_GinkgoParallelization)
 
   # Now we setup cuSolver and hipSOLVER for preCICE
   if(${GINKGO_BUILD_CUDA})
-    target_sources(preciceCore PRIVATE ${PROJECT_SOURCE_DIR}/src/mapping/cuda_kernels/qr_decomp.cu ${PROJECT_SOURCE_DIR}/src/mapping/cuda_kernels/qr_decomp.cuh)
+    target_sources(preciceCore PRIVATE ${PROJECT_SOURCE_DIR}/src/mapping/device/CudaQRSolver.cuh ${PROJECT_SOURCE_DIR}/src/mapping/device/CudaQRSolver.cu)
     target_link_libraries(preciceCore PUBLIC cusolver)
   endif()
 
   if(${GINKGO_BUILD_HIP})
-    set(_hiplist ${PROJECT_SOURCE_DIR}/src/mapping/cuda_kernels/qr_decomp.hip.cpp)
+    set(_hiplist ${PROJECT_SOURCE_DIR}/src/mapping/device/HipQRSolver.hip.hpp ${PROJECT_SOURCE_DIR}/src/mapping/device/HipQRSolver.hip.cpp)
     set_source_files_properties(${_hiplist} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT TRUE)
     hip_add_library(preciceCore_qr_hip ${_hiplist}
     HIPCC_OPTIONS ${GINKGO_HIPCC_OPTIONS} "-std=c++17 -DGINKGO_BUILD_HIP"
