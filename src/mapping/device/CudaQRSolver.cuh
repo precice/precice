@@ -1,3 +1,4 @@
+#ifdef PRECICE_WITH_CUDA
 #pragma once
 
 #include <cublas_v2.h>
@@ -20,3 +21,5 @@ private:
   cusolverStatus_t   cusolverStatus = CUSOLVER_STATUS_SUCCESS;
   cudaError_t        cudaErrorCode  = cudaSuccess;
 };
+
+#endif

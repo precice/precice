@@ -7,13 +7,13 @@
 #include <cusolverDn.h>
 #include <ginkgo/ginkgo.hpp>
 #include "device_launch_parameters.h"
-#include "mapping/cuda_kernels/qr_decomp.cuh"
+#include "mapping/device/CudaQRSolver.cuh"
 #include "utils/Event.hpp"
 #include "utils/EventUtils.hpp"
 
-QRSolver::QRSolver(const int deviceId)
+CudaQRSolver::CudaQRSolver(const int deviceId)
 {
-  cudaGetDevice(&cudaBackupDeviceId);
+  cudaGetDevice(&backupDeviceId);
   cudaSetDevice(deviceId);
 
   // Allocating important CUDA variables
@@ -23,7 +23,7 @@ QRSolver::QRSolver(const int deviceId)
   cusolverDnCreate(&solverHandle);
 }
 
-QRSolver::~QRSolver()
+CudaQRSolver::~CudaQRSolver()
 {
   // Freeing CUDA variables
   cudaFree(dTau);
@@ -32,7 +32,7 @@ QRSolver::~QRSolver()
   cusolverDnDestroy(solverHandle);
 }
 
-void QRSolver::computeQR(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, GinkgoMatrix *R)
+void CudaQRSolver::computeQR(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, GinkgoMatrix *R)
 {
   // NOTE: It's important to transpose since cuSolver assumes column-major memory layout
   // Making a copy since every value will be overridden
@@ -88,6 +88,6 @@ void QRSolver::computeQR(const std::shared_ptr<gko::Executor> &exec, GinkgoMatri
 
   calculateQRDecompEvent.stop();
 
-  cudaSetDevice(cudaBackupDeviceId); // Switch back to the GPU used for all coupled solvers
+  cudaSetDevice(backupDeviceId); // Switch back to the GPU used for all coupled solvers
 }
 #endif

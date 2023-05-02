@@ -16,7 +16,7 @@
 #if defined(PRECICE_WITH_HIP)
 #include "mapping/device/HipQRSolver.hip.hpp"
 #elif defined(PRECICE_WITH_CUDA)
-#include "mapping/device/QRSolver.cuh"
+#include "mapping/device/CudaQRSolver.cuh"
 #endif
 
 // Every class uses Ginkgo's default_precision = double
