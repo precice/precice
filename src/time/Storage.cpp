@@ -51,7 +51,7 @@ void Storage::setValuesAtTime(double time, Eigen::VectorXd values, bool mustOver
   }
 }
 
-double Storage::maxStoredNormalizedDt()
+double Storage::maxStoredNormalizedDt() const
 {
   if (_sampleStorage.size() == 0) {
     return -1; // invalid return
@@ -60,12 +60,12 @@ double Storage::maxStoredNormalizedDt()
   }
 }
 
-int Storage::nTimes()
+int Storage::nTimes() const
 {
   return _sampleStorage.size();
 }
 
-int Storage::nDofs()
+int Storage::nDofs() const
 {
   PRECICE_ASSERT(_sampleStorage.size() > 0);
   return _sampleStorage[0].second.size();
@@ -91,7 +91,7 @@ void Storage::clear(bool keepWindowStart)
   }
 }
 
-Eigen::VectorXd Storage::getValuesAtOrAfter(double before)
+Eigen::VectorXd Storage::getValuesAtOrAfter(double before) const
 {
   auto sample = std::find_if(_sampleStorage.begin(), _sampleStorage.end(), [&before](const auto &s) { return math::greaterEquals(s.first, before); });
   PRECICE_ASSERT(sample != _sampleStorage.end(), "no values found!");
@@ -99,7 +99,7 @@ Eigen::VectorXd Storage::getValuesAtOrAfter(double before)
   return sample->second;
 }
 
-Eigen::VectorXd Storage::getTimes()
+Eigen::VectorXd Storage::getTimes() const
 {
   auto times = Eigen::VectorXd(nTimes());
   for (int i = 0; i < times.size(); i++) {
@@ -108,7 +108,7 @@ Eigen::VectorXd Storage::getTimes()
   return times;
 }
 
-std::pair<Eigen::VectorXd, Eigen::MatrixXd> Storage::getTimesAndValues()
+std::pair<Eigen::VectorXd, Eigen::MatrixXd> Storage::getTimesAndValues() const
 {
   auto times  = Eigen::VectorXd(nTimes());
   auto values = Eigen::MatrixXd(nDofs(), nTimes());

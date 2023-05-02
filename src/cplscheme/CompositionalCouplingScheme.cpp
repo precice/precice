@@ -136,12 +136,12 @@ std::vector<std::string> CompositionalCouplingScheme::getCouplingPartners() cons
   return partners;
 }
 
-bool CompositionalCouplingScheme::willDataBeExchanged(double lastSolverTimestepLength) const
+bool CompositionalCouplingScheme::willDataBeExchanged(double lastSolverTimeStepSize) const
 {
-  PRECICE_TRACE(lastSolverTimestepLength);
+  PRECICE_TRACE(lastSolverTimeStepSize);
   auto schemes         = allSchemes();
   bool willBeExchanged = std::any_of(schemes.begin(), schemes.end(),
-                                     [lastSolverTimestepLength](const auto &cpl) { return cpl->willDataBeExchanged(lastSolverTimestepLength); });
+                                     [lastSolverTimeStepSize](const auto &cpl) { return cpl->willDataBeExchanged(lastSolverTimeStepSize); });
   PRECICE_DEBUG("return {}", willBeExchanged);
   return willBeExchanged;
 }
@@ -219,14 +219,14 @@ double CompositionalCouplingScheme::getTimeWindowSize() const
   return timeWindowSize;
 }
 
-double CompositionalCouplingScheme::getNextTimestepMaxLength() const
+double CompositionalCouplingScheme::getNextTimeStepMaxSize() const
 {
   PRECICE_TRACE();
   auto   schemes   = allSchemes();
   double maxLength = std::transform_reduce(
       schemes.begin(), schemes.end(), std::numeric_limits<double>::max(),
       ::min<double>,
-      std::mem_fn(&CouplingScheme::getNextTimestepMaxLength));
+      std::mem_fn(&CouplingScheme::getNextTimeStepMaxSize));
   PRECICE_DEBUG("return {}", maxLength);
   return maxLength;
 }

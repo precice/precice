@@ -55,7 +55,8 @@ BOOST_AUTO_TEST_CASE(GradientTestUnidirectionalReadScalar)
     cplInterface.setMeshVertex(meshName, posTwo.data());
 
     // Initialize, thus sending the mesh.
-    double maxDt = cplInterface.initialize();
+    cplInterface.initialize();
+    double maxDt = cplInterface.getMaxTimeStepSize();
     BOOST_TEST(cplInterface.isCouplingOngoing(), "Sending participant should have to advance once!");
 
     double values[2]  = {1.0, 2.0};
@@ -70,7 +71,8 @@ BOOST_AUTO_TEST_CASE(GradientTestUnidirectionalReadScalar)
     }
 
     // Participant must make move after writing
-    maxDt = cplInterface.advance(maxDt);
+    cplInterface.advance(maxDt);
+    maxDt = cplInterface.getMaxTimeStepSize();
 
     BOOST_TEST(!cplInterface.isCouplingOngoing(), "Sending participant should have to advance once!");
     cplInterface.finalize();
@@ -85,7 +87,8 @@ BOOST_AUTO_TEST_CASE(GradientTestUnidirectionalReadScalar)
     cplInterface.setMeshVertex(meshName, posOne.data());
     cplInterface.setMeshVertex(meshName, posTwo.data());
 
-    double maxDt = cplInterface.initialize();
+    cplInterface.initialize();
+    double maxDt = cplInterface.getMaxTimeStepSize();
     BOOST_TEST(cplInterface.isCouplingOngoing(), "Receiving participant should have to advance once!");
 
     double valueData[2];

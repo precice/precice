@@ -21,7 +21,6 @@ BOOST_AUTO_TEST_CASE(ImplicitBoth)
 
   SolverInterface couplingInterface(context.name, context.config(), 0, 1);
 
-  int         dimensions = couplingInterface.getDimensions();
   std::string meshName;
   std::string writeDataName;
   std::string readDataName;
@@ -41,6 +40,7 @@ BOOST_AUTO_TEST_CASE(ImplicitBoth)
     writeValue        = 2;
     expectedReadValue = 1;
   }
+  int                 dimensions = couplingInterface.getMeshDimensions(meshName);
   std::vector<double> vertex(dimensions, 0);
   int                 vertexID = couplingInterface.setMeshVertex(meshName, vertex.data());
 
@@ -52,7 +52,8 @@ BOOST_AUTO_TEST_CASE(ImplicitBoth)
     couplingInterface.writeVectorData(meshName, writeDataName, vertexID, writeData.data());
   }
 
-  dt = couplingInterface.initialize();
+  couplingInterface.initialize();
+  dt = couplingInterface.getMaxTimeStepSize();
 
   while (couplingInterface.isCouplingOngoing()) {
     if (couplingInterface.requiresWritingCheckpoint()) {
@@ -61,7 +62,8 @@ BOOST_AUTO_TEST_CASE(ImplicitBoth)
     BOOST_TEST(expectedReadValue == readData.at(0));
     BOOST_TEST(expectedReadValue == readData.at(1));
     couplingInterface.writeVectorData(meshName, writeDataName, vertexID, writeData.data());
-    dt = couplingInterface.advance(dt);
+    couplingInterface.advance(dt);
+    dt = couplingInterface.getMaxTimeStepSize();
     if (couplingInterface.requiresReadingCheckpoint()) {
     }
   }

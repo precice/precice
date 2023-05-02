@@ -1,9 +1,9 @@
 #pragma once
 
 #include <memory>
-#include <string_view>
-#include "precice/Version.h"
-#include "precice/export.h"
+#include <precice/Version.h>
+#include <precice/export.h>
+#include <precice/span.hpp>
 
 /**
  * forward declarations.
@@ -20,6 +20,9 @@ struct WhiteboxAccessor;
 // ----------------------------------------------------------- CLASS DEFINITION
 
 namespace precice {
+
+/// convenience type for compatibility
+using string_view = ::precice::span<const char>;
 
 /**
  * @brief Main Application Programming Interface of preCICE
@@ -52,10 +55,10 @@ public:
    * @param[in] solverProcessSize The number of solver processes using preCICE.
    */
   SolverInterface(
-      std::string_view participantName,
-      std::string_view configurationFileName,
-      int              solverProcessIndex,
-      int              solverProcessSize);
+      ::precice::string_view participantName,
+      ::precice::string_view configurationFileName,
+      int                    solverProcessIndex,
+      int                    solverProcessSize);
 
   /**
    * @brief Constructs a SolverInterface for the given participant and a custom MPI communicator.
@@ -70,11 +73,11 @@ public:
    * @param[in] communicator A pointer to an MPI_Comm to use as communicator.
    */
   SolverInterface(
-      std::string_view participantName,
-      std::string_view configurationFileName,
-      int              solverProcessIndex,
-      int              solverProcessSize,
-      void *           communicator);
+      ::precice::string_view participantName,
+      ::precice::string_view configurationFileName,
+      int                    solverProcessIndex,
+      int                    solverProcessSize,
+      void *                 communicator);
 
   ~SolverInterface();
 
@@ -89,20 +92,20 @@ public:
    * - Sets up a connection to the other participants of the coupled simulation.
    * - Creates all meshes, solver meshes need to be submitted before.
    * - Receives first coupling data. The starting values for coupling data are zero by default.
-   * - Determines length of the first timestep to be computed.
+   * - Determines maximum allowed size of the first time step to be computed.
+   *
+   * @see getMaxTimeStepSize
    *
    * @pre initialize() has not yet been called.
    *
    * @post Parallel communication to the coupling partner(s) is setup.
    * @post Meshes are exchanged between coupling partners and the parallel partitions are created.
    * @post Initial coupling data was exchanged.
-   *
-   * @return Maximum length of first timestep to be computed by the solver.
    */
-  double initialize();
+  void initialize();
 
   /**
-   * @brief Advances preCICE after the solver has computed one timestep.
+   * @brief Advances preCICE after the solver has computed one time step.
    *
    * - Sends and resets coupling data written by solver to coupling partners.
    * - Receives coupling data read by solver.
@@ -111,24 +114,24 @@ public:
    * - Exchanges and computes information regarding the state of the coupled
    *   simulation.
    *
-   * @param[in] computedTimestepLength Length of timestep used by the solver.
+   * @param[in] computedTimeStepSize Size of time step used by the solver.
+   *
+   * @see getMaxTimeStepSize to get the maximum allowed value for \p computedTimeStepSize.
    *
    * @pre initialize() has been called successfully.
-   * @pre The solver has computed one timestep.
+   * @pre The solver has computed one time step.
    * @pre The solver has written all coupling data.
    * @pre isCouplngOngoing() returns true.
    * @pre finalize() has not yet been called.
    *
    * @post Coupling data values specified in the configuration are exchanged.
-   * @post Coupling scheme state (computed time, computed timesteps, ...) is updated.
+   * @post Coupling scheme state (computed time, computed time steps, ...) is updated.
    * @post The coupling state is logged.
    * @post Configured data mapping schemes are applied.
    * @post [Second Participant] Configured acceleration schemes are applied.
    * @post Meshes with data are exported to files if configured.
-   *
-   * @return Maximum length of next timestep to be computed by solver.
    */
-  double advance(double computedTimestepLength);
+  void advance(double computedTimeStepSize);
 
   /**
    * @brief Finalizes preCICE.
@@ -162,14 +165,28 @@ public:
   ///@{
 
   /**
-   * @brief Returns the number of spatial dimensions configured.
+   * @brief Returns the spatial dimensionality of the given mesh.
    *
-   * @returns the configured dimension
+   * @param[in] meshName the name of the associated mesh
+   * @param[in] dataName the name of the data to check
    *
-   * Currently, two and three dimensional problems can be solved using preCICE.
-   * The dimension is specified in the XML configuration.
+   * @returns the dimensions of the given mesh
    */
-  int getDimensions() const;
+  int getMeshDimensions(::precice::string_view meshName) const;
+
+  /**
+   * @brief Returns the spatial dimensionality of the given data on the given mesh.
+   *
+   * Note that vectorial data dimensionality directly depends on the spacial dimensionality of the mesh.
+   *
+   * @param[in] meshName the name of the associated mesh
+   * @param[in] dataName the name of the data to get the dimensions for
+   *
+   * @returns the dimensions of the given Data
+   *
+   * @see getMeshDimensions
+   */
+  int getDataDimensions(::precice::string_view meshName, ::precice::string_view dataName) const;
 
   /**
    * @brief Checks if the coupled simulation is still ongoing.
@@ -209,6 +226,18 @@ public:
    * @pre initialize() has been called successfully.
    */
   bool isTimeWindowComplete() const;
+
+  /**
+   * @brief Get the maximum allowed time step size of the current window.
+   *
+   * @returns Maximum size of time step to be computed by solver.
+   *
+   * Allows the user to query the maximum allowed time step size in the current window.
+   * This should be used to compute the actual time step that the solver uses.
+   *
+   * @pre initialize() has been called successfully.
+   */
+  double getMaxTimeStepSize() const;
 
   ///@}
 
@@ -288,7 +317,7 @@ public:
    * changes. Only has an effect, if the mapping used is non-stationary and
    * non-incremental.
    */
-  //  void resetMesh ( std::string_view meshName );
+  //  void resetMesh ( ::precice::string_view meshName );
 
   /**
    * @brief Checks if the mesh with given name is used by a solver.
@@ -296,7 +325,7 @@ public:
    * @param[in] meshName the name of the mesh
    * @returns whether the mesh is used.
    */
-  bool hasMesh(std::string_view meshName) const;
+  bool hasMesh(::precice::string_view meshName) const;
 
   /**
    * @brief Checks if the given mesh requires connectivity.
@@ -308,7 +337,7 @@ public:
    * @param[in] meshName the name of the mesh
    * @returns whether connectivity is required
    */
-  bool requiresMeshConnectivityFor(std::string_view meshName) const;
+  bool requiresMeshConnectivityFor(::precice::string_view meshName) const;
 
   /**
    * @brief Creates a mesh vertex
@@ -323,8 +352,8 @@ public:
    * @see getDimensions()
    */
   int setMeshVertex(
-      std::string_view meshName,
-      const double *   position);
+      ::precice::string_view meshName,
+      const double *         position);
 
   /**
    * @brief Returns the number of vertices of a mesh.
@@ -337,7 +366,7 @@ public:
    * if the \p meshName corresponds to a received mesh, since the relevant mesh data
    * is exchanged during the @p initialize() call.
    */
-  int getMeshVertexSize(std::string_view meshName) const;
+  int getMeshVertexSize(::precice::string_view meshName) const;
 
   /**
    * @brief Creates multiple mesh vertices
@@ -357,10 +386,10 @@ public:
    * @see getDimensions()
    */
   void setMeshVertices(
-      std::string_view meshName,
-      int              size,
-      const double *   positions,
-      int *            ids);
+      ::precice::string_view meshName,
+      int                    size,
+      const double *         positions,
+      int *                  ids);
 
   /**
    * @brief Sets a mesh edge from vertex IDs
@@ -376,9 +405,9 @@ public:
    * @pre vertices with firstVertexID and secondVertexID were added to the mesh with the name meshName
    */
   void setMeshEdge(
-      std::string_view meshName,
-      int              firstVertexID,
-      int              secondVertexID);
+      ::precice::string_view meshName,
+      int                    firstVertexID,
+      int                    secondVertexID);
 
   /**
    * @brief Sets multiple mesh edge from vertex IDs
@@ -398,9 +427,9 @@ public:
    * @see requiresMeshConnectivityFor()
    */
   void setMeshEdges(
-      std::string_view meshName,
-      int              size,
-      const int *      vertices);
+      ::precice::string_view meshName,
+      int                    size,
+      const int *            vertices);
 
   /**
    * @brief Sets mesh triangle from vertex IDs.
@@ -419,10 +448,10 @@ public:
    * @see requiresMeshConnectivityFor()
    */
   void setMeshTriangle(
-      std::string_view meshName,
-      int              firstVertexID,
-      int              secondVertexID,
-      int              thirdVertexID);
+      ::precice::string_view meshName,
+      int                    firstVertexID,
+      int                    secondVertexID,
+      int                    thirdVertexID);
 
   /**
    * @brief Sets multiple mesh triangles from vertex IDs
@@ -442,9 +471,9 @@ public:
    * @see requiresMeshConnectivityFor()
    */
   void setMeshTriangles(
-      std::string_view meshName,
-      int              size,
-      const int *      vertices);
+      ::precice::string_view meshName,
+      int                    size,
+      const int *            vertices);
 
   /**
    * @brief Sets a planar surface mesh quadrangle from vertex IDs.
@@ -465,11 +494,11 @@ public:
    * @see requiresMeshConnectivityFor()
    */
   void setMeshQuad(
-      std::string_view meshName,
-      int              firstVertexID,
-      int              secondVertexID,
-      int              thirdVertexID,
-      int              fourthVertexID);
+      ::precice::string_view meshName,
+      int                    firstVertexID,
+      int                    secondVertexID,
+      int                    thirdVertexID,
+      int                    fourthVertexID);
 
   /**
    * @brief Sets multiple mesh quads from vertex IDs
@@ -491,9 +520,9 @@ public:
    * @see requiresMeshConnectivityFor()
    */
   void setMeshQuads(
-      std::string_view meshName,
-      int              size,
-      const int *      vertices);
+      ::precice::string_view meshName,
+      int                    size,
+      const int *            vertices);
 
   /**
    * @brief Set tetrahedron in 3D mesh from vertex ID
@@ -511,11 +540,11 @@ public:
    * @see requiresMeshConnectivityFor()
    */
   void setMeshTetrahedron(
-      std::string_view meshName,
-      int              firstVertexID,
-      int              secondVertexID,
-      int              thirdVertexID,
-      int              fourthVertexID);
+      ::precice::string_view meshName,
+      int                    firstVertexID,
+      int                    secondVertexID,
+      int                    thirdVertexID,
+      int                    fourthVertexID);
 
   /**
    * @brief Sets multiple mesh tetrahedra from vertex IDs
@@ -535,9 +564,9 @@ public:
    * @see requiresMeshConnectivityFor()
    */
   void setMeshTetrahedra(
-      std::string_view meshName,
-      int              size,
-      const int *      vertices);
+      ::precice::string_view meshName,
+      int                    size,
+      const int *            vertices);
 
   ///@}
 
@@ -552,8 +581,8 @@ public:
    * @returns whether the mesh contains the data.
    */
   bool hasData(
-      std::string_view meshName,
-      std::string_view dataName) const;
+      ::precice::string_view meshName,
+      ::precice::string_view dataName) const;
 
   /**
    * @brief Writes vector data given as block.
@@ -578,11 +607,11 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void writeBlockVectorData(
-      std::string_view meshName,
-      std::string_view dataName,
-      int              size,
-      const int *      valueIndices,
-      const double *   values);
+      ::precice::string_view meshName,
+      ::precice::string_view dataName,
+      int                    size,
+      const int *            valueIndices,
+      const double *         values);
 
   /**
    * @brief Writes vector data to a vertex
@@ -604,10 +633,10 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void writeVectorData(
-      std::string_view meshName,
-      std::string_view dataName,
-      int              valueIndex,
-      const double *   value);
+      ::precice::string_view meshName,
+      ::precice::string_view dataName,
+      int                    valueIndex,
+      const double *         value);
 
   /**
    * @brief Writes scalar data given as block.
@@ -629,11 +658,11 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void writeBlockScalarData(
-      std::string_view meshName,
-      std::string_view dataName,
-      int              size,
-      const int *      valueIndices,
-      const double *   values);
+      ::precice::string_view meshName,
+      ::precice::string_view dataName,
+      int                    size,
+      const int *            valueIndices,
+      const double *         values);
 
   /**
    * @brief Writes scalar data to a vertex
@@ -650,10 +679,10 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void writeScalarData(
-      std::string_view meshName,
-      std::string_view dataName,
-      int              valueIndex,
-      double           value);
+      ::precice::string_view meshName,
+      ::precice::string_view dataName,
+      int                    valueIndex,
+      double                 value);
 
   /**
    * @brief Reads vector data values given as block from a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.
@@ -667,7 +696,7 @@ public:
    *
    * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
    * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
-   * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at
+   * end of the time step, dt indicates the size of the current time step. Then relativeReadTime = dt corresponds to the data at
    * the end of the time step.
    *
    * @param[in] meshName the name of mesh that hold the data.
@@ -686,12 +715,12 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void readBlockVectorData(
-      std::string_view meshName,
-      std::string_view dataName,
-      int              size,
-      const int *      valueIndices,
-      double           relativeReadTime,
-      double *         values) const;
+      ::precice::string_view meshName,
+      ::precice::string_view dataName,
+      int                    size,
+      const int *            valueIndices,
+      double                 relativeReadTime,
+      double *               values) const;
 
   /**
    * @brief Reads vector data at a vertex on a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.
@@ -704,7 +733,7 @@ public:
    *
    * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
    * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
-   * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at
+   * end of the time step, dt indicates the size of the current time step. Then relativeReadTime = dt corresponds to the data at
    * the end of the time step.
    *
    * @param[in] meshName the name of mesh that hold the data.
@@ -721,11 +750,11 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void readVectorData(
-      std::string_view meshName,
-      std::string_view dataName,
-      int              valueIndex,
-      double           relativeReadTime,
-      double *         value) const;
+      ::precice::string_view meshName,
+      ::precice::string_view dataName,
+      int                    valueIndex,
+      double                 relativeReadTime,
+      double *               value) const;
 
   /**
    * @brief Reads scalar data values given as block from a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.
@@ -736,7 +765,7 @@ public:
    *
    * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
    * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
-   * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at
+   * end of the time step, dt indicates the size of the current time step. Then relativeReadTime = dt corresponds to the data at
    * the end of the time step.
    *
    * @param[in] meshName the name of mesh that hold the data.
@@ -755,12 +784,12 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void readBlockScalarData(
-      std::string_view meshName,
-      std::string_view dataName,
-      int              size,
-      const int *      valueIndices,
-      double           relativeReadTime,
-      double *         values) const;
+      ::precice::string_view meshName,
+      ::precice::string_view dataName,
+      int                    size,
+      const int *            valueIndices,
+      double                 relativeReadTime,
+      double *               values) const;
 
   /**
    * @brief Reads scalar data at a vertex on a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.
@@ -769,7 +798,7 @@ public:
    *
    * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
    * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
-   * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at
+   * end of the time step, dt indicates the size of the current time step. Then relativeReadTime = dt corresponds to the data at
    * the end of the time step.
    *
    * @param[in] meshName the name of mesh that hold the data.
@@ -785,11 +814,11 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void readScalarData(
-      std::string_view meshName,
-      std::string_view dataName,
-      int              valueIndex,
-      double           relativeReadTime,
-      double &         value) const;
+      ::precice::string_view meshName,
+      ::precice::string_view dataName,
+      int                    valueIndex,
+      double                 relativeReadTime,
+      double &               value) const;
 
   ///@}
 
@@ -855,8 +884,8 @@ public:
    * @pre @p initialize() has not yet been called.
    */
   void setMeshAccessRegion(
-      std::string_view meshName,
-      const double *   boundingBox) const;
+      ::precice::string_view meshName,
+      const double *         boundingBox) const;
 
   /**
    * @brief getMeshVerticesAndIDs Iterates over the region of
@@ -879,10 +908,10 @@ public:
    * is exchanged during the @p initialize() call.
    */
   void getMeshVerticesAndIDs(
-      std::string_view meshName,
-      const int        size,
-      int *            ids,
-      double *         coordinates) const;
+      ::precice::string_view meshName,
+      const int              size,
+      int *                  ids,
+      double *               coordinates) const;
 
   ///@}
 
@@ -905,8 +934,8 @@ public:
    * @param[in] dataName the name of the data.
    * @returns whether gradient is required
    */
-  bool requiresGradientDataFor(std::string_view meshName,
-                               std::string_view dataName) const;
+  bool requiresGradientDataFor(::precice::string_view meshName,
+                               ::precice::string_view dataName) const;
 
   /**
    * @brief Writes vector gradient data given as block.
@@ -948,11 +977,11 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void writeBlockVectorGradientData(
-      std::string_view meshName,
-      std::string_view dataName,
-      int              size,
-      const int *      valueIndices,
-      const double *   gradientValues);
+      ::precice::string_view meshName,
+      ::precice::string_view dataName,
+      int                    size,
+      const int *            valueIndices,
+      const double *         gradientValues);
 
   /**
    * @brief Writes scalar gradient data to a vertex
@@ -974,10 +1003,10 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void writeScalarGradientData(
-      std::string_view meshName,
-      std::string_view dataName,
-      int              valueIndex,
-      const double *   gradientValues);
+      ::precice::string_view meshName,
+      ::precice::string_view dataName,
+      int                    valueIndex,
+      const double *         gradientValues);
 
   /**
    * @brief Writes vector gradient data to a vertex
@@ -1007,10 +1036,10 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void writeVectorGradientData(
-      std::string_view meshName,
-      std::string_view dataName,
-      int              valueIndex,
-      const double *   gradientValues);
+      ::precice::string_view meshName,
+      ::precice::string_view dataName,
+      int                    valueIndex,
+      const double *         gradientValues);
 
   /**
    * @brief Writes scalar gradient data given as block.
@@ -1043,11 +1072,11 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void writeBlockScalarGradientData(
-      std::string_view meshName,
-      std::string_view dataName,
-      int              size,
-      const int *      valueIndices,
-      const double *   gradientValues);
+      ::precice::string_view meshName,
+      ::precice::string_view dataName,
+      int                    size,
+      const int *            valueIndices,
+      const double *         gradientValues);
 
   ///@}
 

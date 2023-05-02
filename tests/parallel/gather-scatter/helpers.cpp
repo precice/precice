@@ -14,7 +14,7 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
     auto                     meshName      = "ParallelMesh";
     auto                     writeDataName = "MyData1";
     auto                     readDataName  = "MyData2";
-    const int                dim           = interface.getDimensions();
+    const int                dim           = interface.getMeshDimensions(meshName);
     BOOST_TEST(dim == 2);
 
     // Set coordinates, primary according to input argument
@@ -26,7 +26,8 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
     interface.setMeshVertices(meshName, size, coordinates.data(), ids.data());
 
     // Initialize the solverinterface
-    double dt = interface.initialize();
+    interface.initialize();
+    double dt = interface.getMaxTimeStepSize();
 
     // Create some dummy writeData
     std::vector<double> writeData;
@@ -41,7 +42,8 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
       interface.writeBlockScalarData(meshName, writeDataName, size,
                                      ids.data(), writeData.data());
 
-      dt = interface.advance(dt);
+      interface.advance(dt);
+      double dt = interface.getMaxTimeStepSize();
       interface.readBlockScalarData(meshName, readDataName, size,
                                     ids.data(), dt, readData.data());
       // The received data on the secondary rank is always the same
@@ -57,8 +59,8 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
     auto      meshName      = "SerialMesh";
     auto      writeDataName = "MyData2";
     auto      readDataName  = "MyData1";
-    const int dim           = interface.getDimensions();
-    BOOST_TEST(interface.getDimensions() == 2);
+    const int dim           = interface.getMeshDimensions(meshName);
+    BOOST_TEST(interface.getMeshDimensions(meshName) == 2);
 
     // Define the interface
     const std::vector<double> coordinates{0.0, 0.5, 0.0, 3.5, 0.0, 5.0};
@@ -69,7 +71,8 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
     interface.setMeshVertices(meshName, size, coordinates.data(), ids.data());
 
     // Initialize the solverinterface
-    double dt = interface.initialize();
+    interface.initialize();
+    double dt = interface.getMaxTimeStepSize();
 
     // Somce arbitrary write data
     std::vector<double> writeData{3.4, 5.7, 4.0};
@@ -80,7 +83,8 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
       // Write data, advance solverinterface and read data
       interface.writeBlockScalarData(meshName, writeDataName, size,
                                      ids.data(), writeData.data());
-      dt = interface.advance(dt);
+      interface.advance(dt);
+      double dt = interface.getMaxTimeStepSize();
       interface.readBlockScalarData(meshName, readDataName, size,
                                     ids.data(), dt, readData.data());
       // The received data is always the same

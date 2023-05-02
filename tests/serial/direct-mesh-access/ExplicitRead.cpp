@@ -19,7 +19,6 @@ BOOST_AUTO_TEST_CASE(ExplicitRead)
 
   // Set up Solverinterface
   precice::SolverInterface couplingInterface(context.name, context.config(), 0, 1);
-  BOOST_TEST(couplingInterface.getDimensions() == 2);
 
   std::vector<double> positions = {0.0, 0.0, 0.0, 0.05, 0.1, 0.1, 0.1, 0.0};
   std::vector<int>    ids(4, -1);
@@ -30,11 +29,13 @@ BOOST_AUTO_TEST_CASE(ExplicitRead)
   if (context.isNamed("SolverOne")) {
     auto otherMeshName = "MeshTwo";
     auto dataName      = "Velocities";
+    BOOST_REQUIRE(couplingInterface.getMeshDimensions(otherMeshName) == 2);
 
     // Define region of interest, where we could obtain direct write access
     couplingInterface.setMeshAccessRegion(otherMeshName, boundingBox.data());
 
-    double dt = couplingInterface.initialize();
+    couplingInterface.initialize();
+    double dt = couplingInterface.getMaxTimeStepSize();
     // Get the size of the filtered mesh within the bounding box
     // (provided by the coupling participant)
     const int meshSize = couplingInterface.getMeshVertexSize(otherMeshName);
@@ -53,7 +54,8 @@ BOOST_AUTO_TEST_CASE(ExplicitRead)
 
     while (couplingInterface.isCouplingOngoing()) {
 
-      dt = couplingInterface.advance(dt);
+      couplingInterface.advance(dt);
+      dt = couplingInterface.getMaxTimeStepSize();
       // Write data
       couplingInterface.readBlockScalarData(otherMeshName, dataName, meshSize,
                                             ids.data(), dt, readData.data());
@@ -67,6 +69,7 @@ BOOST_AUTO_TEST_CASE(ExplicitRead)
     // Query IDs
     auto meshName = "MeshTwo";
     auto dataName = "Velocities";
+    BOOST_REQUIRE(couplingInterface.getMeshDimensions(meshName));
 
     // Define the mesh
     couplingInterface.setMeshVertices(meshName, ids.size(), positions.data(), ids.data());
@@ -74,12 +77,14 @@ BOOST_AUTO_TEST_CASE(ExplicitRead)
     std::array<double, 4> writeData({1, 2, 3, 4});
 
     // Initialize
-    double dt = couplingInterface.initialize();
+    couplingInterface.initialize();
+    double dt = couplingInterface.getMaxTimeStepSize();
     while (couplingInterface.isCouplingOngoing()) {
 
       couplingInterface.writeBlockScalarData(meshName, dataName, ids.size(),
                                              ids.data(), writeData.data());
-      dt = couplingInterface.advance(dt);
+      couplingInterface.advance(dt);
+      dt = couplingInterface.getMaxTimeStepSize();
     }
   }
 }

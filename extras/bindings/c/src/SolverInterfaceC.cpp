@@ -53,16 +53,16 @@ void precicec_createSolverInterface(
                                           solverProcessSize));
 }
 
-double precicec_initialize()
+void precicec_initialize()
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  return impl->initialize();
+  impl->initialize();
 }
 
-double precicec_advance(double computedTimestepLength)
+void precicec_advance(double computedTimeStepSize)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  return impl->advance(computedTimestepLength);
+  impl->advance(computedTimeStepSize);
 }
 
 void precicec_finalize()
@@ -72,10 +72,16 @@ void precicec_finalize()
   impl.reset();
 }
 
-int precicec_getDimensions()
+int precicec_getMeshDimensions(const char *meshName)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  return impl->getDimensions();
+  return impl->getMeshDimensions(meshName);
+}
+
+int precicec_getDataDimensions(const char *meshName, const char *dataName)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  return impl->getDataDimensions(meshName, dataName);
 }
 
 int precicec_isCouplingOngoing()
@@ -94,6 +100,11 @@ int precicec_isTimeWindowComplete()
     return 1;
   }
   return 0;
+}
+
+double precicec_getMaxTimeStepSize()
+{
+  return impl->getMaxTimeStepSize();
 }
 
 int precicec_requiresInitialData()

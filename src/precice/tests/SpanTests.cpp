@@ -1,8 +1,8 @@
 #include <string>
 #include <string_view>
 
+#include "precice/span.hpp"
 #include "testing/Testing.hpp"
-#include "utils/span.hpp"
 
 BOOST_AUTO_TEST_SUITE(PreciceTests)
 BOOST_AUTO_TEST_SUITE(Span)

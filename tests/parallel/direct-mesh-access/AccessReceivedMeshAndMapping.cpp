@@ -19,12 +19,13 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
   if (context.isNamed("SolverOne")) {
     // Set up Solverinterface
     precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    BOOST_TEST(interface.getDimensions() == 2);
-    constexpr int dim           = 2;
-    auto          ownMeshName   = "MeshOne";
-    auto          otherMeshName = "MeshTwo";
-    auto          readDataName  = "Forces";
-    auto          writeDataName = "Velocities";
+    constexpr int            dim           = 2;
+    auto                     ownMeshName   = "MeshOne";
+    auto                     otherMeshName = "MeshTwo";
+    auto                     readDataName  = "Forces";
+    auto                     writeDataName = "Velocities";
+    BOOST_TEST(interface.getMeshDimensions(ownMeshName) == 2);
+    BOOST_TEST(interface.getMeshDimensions(otherMeshName) == 2);
 
     std::vector<double> positions = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 2.0, 0.0, 3.0}) : std::vector<double>({0.0, 4.0, 0.0, 5.0, 0.0, 6.0});
 
@@ -35,7 +36,8 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
     // Define region of interest, where we could obtain direct write access
     interface.setMeshAccessRegion(otherMeshName, boundingBox.data());
 
-    double dt = interface.initialize();
+    interface.initialize();
+    double dt = interface.getMaxTimeStepSize();
     // Get the size of the filtered mesh within the bounding box
     // (provided by the coupling participant)
     const int otherMeshSize = interface.getMeshVertexSize(otherMeshName);
@@ -60,7 +62,8 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
       // Write data
       interface.writeBlockScalarData(otherMeshName, writeDataName, otherMeshSize,
                                      otherIDs.data(), writeData.data());
-      dt = interface.advance(dt);
+      interface.advance(dt);
+      dt = interface.getMaxTimeStepSize();
       interface.readBlockScalarData(ownMeshName, readDataName, ownIDs.size(),
                                     ownIDs.data(), dt, readData.data());
 
@@ -71,16 +74,16 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
     }
 
   } else {
-    precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    const int                dim = interface.getDimensions();
-    BOOST_TEST(context.isNamed("SolverTwo"));
-    std::vector<double> positions = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 2.0}) : std::vector<double>({0.0, 3.5, 0.0, 4.0, 0.0, 5.0});
-    std::vector<int>    ids(positions.size() / dim, -1);
-
     // Query IDs
     auto meshName      = "MeshTwo";
     auto writeDataName = "Forces";
     auto readDataName  = "Velocities";
+
+    precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
+    const int                dim = interface.getMeshDimensions(meshName);
+    BOOST_TEST(context.isNamed("SolverTwo"));
+    std::vector<double> positions = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 2.0}) : std::vector<double>({0.0, 3.5, 0.0, 4.0, 0.0, 5.0});
+    std::vector<int>    ids(positions.size() / dim, -1);
 
     // Define the mesh
     interface.setMeshVertices(meshName, ids.size(), positions.data(), ids.data());
@@ -91,12 +94,16 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
       writeData.emplace_back(i);
 
     // Initialize
-    double dt = interface.initialize();
+    interface.initialize();
+    double dt = interface.getMaxTimeStepSize();
+
     while (interface.isCouplingOngoing()) {
 
       interface.writeBlockScalarData(meshName, writeDataName, ids.size(),
                                      ids.data(), writeData.data());
-      dt = interface.advance(dt);
+      interface.advance(dt);
+      dt = interface.getMaxTimeStepSize();
+
       interface.readBlockScalarData(meshName, readDataName, ids.size(),
                                     ids.data(), dt, readData.data());
       // Expected data according to the writeData

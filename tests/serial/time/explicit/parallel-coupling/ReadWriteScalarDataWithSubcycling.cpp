@@ -66,16 +66,17 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
   }
 
-  double maxDt = precice.initialize();
-  BOOST_TEST(maxDt == 2.0); // use window size != 1.0 to be able to detect more possible bugs
-  double windowDt      = maxDt;
-  double dt            = windowDt / (nSubsteps - 0.5);                 // Solver tries to do a timestep of size 4/7
+  precice.initialize();
+  BOOST_TEST(precice.getMaxTimeStepSize() == 2.0); // use window size != 1.0 to be able to detect more possible bugs
+  double windowDt      = precice.getMaxTimeStepSize();
+  double solverDt      = windowDt / (nSubsteps - 0.5);                 // Solver tries to do a timestep of size 4/7
   double expectedDts[] = {4.0 / 7.0, 4.0 / 7.0, 4.0 / 7.0, 2.0 / 7.0}; // If solver uses timestep size of 4/7, fourth step will be restricted to 2/7 via preCICE steering to fit into the window.
-  double currentDt     = dt > maxDt ? maxDt : dt;                      // determine actual timestep length; must fit into remaining time in window
 
   while (precice.isCouplingOngoing()) {
-    double readTime = timewindow * windowDt; // both solvers lag one window behind for parallel-explicit coupling.
-    precice.readScalarData(meshName, readDataName, vertexID, maxDt, readData);
+    double readTime  = timewindow * windowDt; // both solvers lag one window behind for parallel-explicit coupling.
+    double preciceDt = precice.getMaxTimeStepSize();
+    double currentDt = solverDt > preciceDt ? preciceDt : solverDt; // determine actual time step size; must fit into remaining time in window
+    precice.readScalarData(meshName, readDataName, vertexID, currentDt, readData);
     BOOST_TEST(readData == readFunction(readTime));
 
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.
@@ -85,8 +86,9 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     writeData = writeFunction(time);
     precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
 
-    maxDt     = precice.advance(currentDt);
-    currentDt = dt > maxDt ? maxDt : dt;
+    precice.advance(currentDt);
+    double maxDt = precice.getMaxTimeStepSize();
+    currentDt    = solverDt > preciceDt ? preciceDt : solverDt;
     timestep++;
     if (precice.isTimeWindowComplete()) {
       timewindow++;

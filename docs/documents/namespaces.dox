@@ -93,6 +93,10 @@
  *  @brief contains the testing framework.
  */
 
+/** @namespace precice::time
+ *  @brief contains the time interpolation logic.
+ */
+
 /** @namespace precice::utils
  *  @brief contains precice-related utilities.
  */

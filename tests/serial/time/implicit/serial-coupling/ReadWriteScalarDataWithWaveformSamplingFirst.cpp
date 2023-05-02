@@ -70,10 +70,11 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
     precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
   }
 
-  double maxDt        = precice.initialize();
+  precice.initialize();
+  double maxDt        = precice.getMaxTimeStepSize();
   double windowDt     = maxDt;
-  double dt           = maxDt; // Timestep length desired by solver
-  double currentDt    = dt;    // Timestep length used by solver
+  double dt           = maxDt; // time step size desired by solver
+  double currentDt    = dt;    // time step size used by solver
   double sampleDts[4] = {0.0, dt / 4.0, dt / 2.0, 3.0 * dt / 4.0};
 
   while (precice.isCouplingOngoing()) {
@@ -97,8 +98,9 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
     time += currentDt;
     writeData = writeFunction(time);
     precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
-    maxDt     = precice.advance(currentDt);
-    currentDt = dt > maxDt ? maxDt : dt;
+    precice.advance(maxDt);
+    double maxDt = precice.getMaxTimeStepSize();
+    currentDt    = dt > maxDt ? maxDt : dt;
     BOOST_CHECK(currentDt == windowDt); // no subcycling.
     timestep++;
     if (precice.requiresReadingCheckpoint()) { // at end of window and we have to repeat it.

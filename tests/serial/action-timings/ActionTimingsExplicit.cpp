@@ -19,7 +19,6 @@ BOOST_AUTO_TEST_CASE(ActionTimingsExplicit)
   using namespace precice;
   SolverInterface interface(context.name, context.config(), 0, 1);
 
-  int         dimensions = interface.getDimensions();
   std::string meshName;
   std::string writeDataName;
   std::string readDataName;
@@ -37,6 +36,7 @@ BOOST_AUTO_TEST_CASE(ActionTimingsExplicit)
     readDataName  = "Forces";
     writeValue    = 2;
   }
+  int                 dimensions = interface.getMeshDimensions(meshName);
   std::vector<double> vertex(dimensions, 0);
   int                 vertexID = interface.setMeshVertex(meshName, vertex.data());
 
@@ -51,7 +51,8 @@ BOOST_AUTO_TEST_CASE(ActionTimingsExplicit)
     interface.writeVectorData(meshName, writeDataName, vertexID, writeData.data());
   }
 
-  dt = interface.initialize();
+  interface.initialize();
+  dt = interface.getMaxTimeStepSize();
   BOOST_TEST(dt == 1.0);
 
   if (context.isNamed("SolverOne")) {
@@ -72,7 +73,8 @@ BOOST_AUTO_TEST_CASE(ActionTimingsExplicit)
   while (interface.isCouplingOngoing()) {
     interface.readVectorData(meshName, readDataName, vertexID, dt, readData.data());
     interface.writeVectorData(meshName, writeDataName, vertexID, writeData.data());
-    dt = interface.advance(dt);
+    interface.advance(dt);
+    double dt = interface.getMaxTimeStepSize();
     BOOST_TEST(interface.isTimeWindowComplete());
     iteration++;
     if (context.isNamed("SolverOne") || iteration < 10) {

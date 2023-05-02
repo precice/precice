@@ -155,10 +155,10 @@ public:
    * Also returns true after the last call of advance() at the end of the
    * simulation.
    *
-   * @param lastSolverTimestepLength [IN] The length of the last timestep
+   * @param lastSolverTimeStepSize [IN] The size of the last time step
    *        computed by the solver calling willDataBeExchanged().
    */
-  virtual bool willDataBeExchanged(double lastSolverTimestepLength) const = 0;
+  virtual bool willDataBeExchanged(double lastSolverTimeStepSize) const = 0;
 
   /// @brief Returns true, if data has been exchanged in last call of advance().
   virtual bool hasDataBeenReceived() const = 0;
@@ -195,12 +195,12 @@ public:
   virtual double getTimeWindowSize() const = 0;
 
   /**
-   * @brief Returns the maximal length of the next timestep to be computed.
+   * @brief Returns the maximal size of the next time step to be computed.
    *
    * If no time window size is prescribed by the coupling scheme, always the
    * maximal double accuracy floating point number value is returned.
    */
-  virtual double getNextTimestepMaxLength() const = 0;
+  virtual double getNextTimeStepMaxSize() const = 0;
 
   /// Returns true, when the coupled simulation is still ongoing.
   virtual bool isCouplingOngoing() const = 0;

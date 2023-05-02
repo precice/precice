@@ -40,9 +40,7 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
       context.isNamed("SOLIDZ2") ||
       context.isNamed("SOLIDZ3")) {
     precice::SolverInterface precice(context.name, context.config(), 0, 1);
-    BOOST_TEST(precice.getDimensions() == 2);
-
-    std::string meshName, dataWriteID, dataReadID;
+    std::string              meshName, dataWriteID, dataReadID;
     if (context.isNamed("SOLIDZ1")) {
       meshName    = "SOLIDZ_Mesh1";
       dataWriteID = "Displacements1";
@@ -56,6 +54,7 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
       dataWriteID = "Displacements3";
       dataReadID  = "Forces3";
     }
+    BOOST_REQUIRE(precice.getMeshDimensions(meshName) == 2);
 
     std::vector<int> vertexIDs;
     int              vertexID = -1;
@@ -64,7 +63,7 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
       vertexIDs.push_back(vertexID);
     }
 
-    double preciceDt = precice.initialize();
+    precice.initialize();
 
     for (size_t i = 0; i < 4; i++) {
       precice.writeVectorData(meshName, dataWriteID, vertexIDs.at(i), datas.at(i).data());
@@ -77,7 +76,7 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
     }
 
     for (size_t i = 0; i < 4; i++) {
-      precice.readVectorData(meshName, dataReadID, vertexIDs.at(i), preciceDt, datas.at(i).data());
+      precice.readVectorData(meshName, dataReadID, vertexIDs.at(i), precice.getMaxTimeStepSize(), datas.at(i).data());
     }
 
     BOOST_TEST(datas.at(0)(0) == 1.00000000000000002082e-03);
@@ -94,13 +93,15 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
   } else {
     BOOST_TEST(context.isNamed("NASTIN"));
     precice::SolverInterface precice("NASTIN", context.config(), 0, 1);
-    BOOST_TEST(precice.getDimensions() == 2);
-    auto meshName1    = "NASTIN_Mesh1";
-    auto meshName2    = "NASTIN_Mesh2";
-    auto meshName3    = "NASTIN_Mesh3";
-    auto dataWriteID1 = "Forces1";
-    auto dataWriteID2 = "Forces2";
-    auto dataWriteID3 = "Forces3";
+    auto                     meshName1    = "NASTIN_Mesh1";
+    auto                     meshName2    = "NASTIN_Mesh2";
+    auto                     meshName3    = "NASTIN_Mesh3";
+    auto                     dataWriteID1 = "Forces1";
+    auto                     dataWriteID2 = "Forces2";
+    auto                     dataWriteID3 = "Forces3";
+    BOOST_TEST(precice.getMeshDimensions(meshName1) == 2);
+    BOOST_TEST(precice.getMeshDimensions(meshName2) == 2);
+    BOOST_TEST(precice.getMeshDimensions(meshName3) == 2);
 
     std::vector<int> vertexIDs1;
     int              vertexID = -1;

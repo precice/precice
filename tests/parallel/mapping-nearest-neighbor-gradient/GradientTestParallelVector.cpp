@@ -58,8 +58,8 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelVector)
     BOOST_TEST(interface.requiresGradientDataFor(meshName, dataName1) == false);
     BOOST_TEST(interface.requiresGradientDataFor(meshName, dataName2) == false);
     Eigen::Vector4d values;
-    double          preciceDt = interface.advance(1.0);
-    interface.readBlockVectorData(meshName, dataName2, 2, vertexIDs, preciceDt, values.data());
+    interface.advance(1.0);
+    interface.readBlockVectorData(meshName, dataName2, 2, vertexIDs, interface.getMaxTimeStepSize(), values.data());
     Eigen::Vector4d expected(context.rank * 2.0 + 1.0 + 0.05, context.rank * 2.0 + 1.0 + 0.05,
                              2.0 * (context.rank + 1) + 0.05, 2.0 * (context.rank + 1) + 0.05);
     BOOST_TEST(values == expected);

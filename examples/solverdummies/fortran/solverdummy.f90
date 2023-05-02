@@ -31,7 +31,7 @@ PROGRAM main
   CALL precicef_create(participantName, config, rank, commsize)
 
   ! Allocate dummy mesh with only one vertex
-  CALL precicef_get_dims(dimensions)
+  CALL precicef_get_mesh_dimensions(meshName, dimensions)
   ALLOCATE(vertices(numberOfVertices*dimensions))
   ALLOCATE(vertexIDs(numberOfVertices))
   ALLOCATE(readData(numberOfVertices*dimensions))
@@ -53,7 +53,7 @@ PROGRAM main
   IF (bool.EQ.1) THEN
     WRITE (*,*) 'DUMMY: Writing initial data'
   ENDIF
-  CALL precicef_initialize(dt)
+  CALL precicef_initialize()
 
   CALL precicef_is_coupling_ongoing(ongoing)
   DO WHILE (ongoing.NE.0)
@@ -64,6 +64,7 @@ PROGRAM main
       WRITE (*,*) 'DUMMY: Writing iteration checkpoint'
     ENDIF
 
+    CALL precicef_get_max_time_step_size(dt)
     CALL precicef_read_bvdata(meshName, readDataName, numberOfVertices, vertexIDs, dt, readData)
 
     WRITE (*,*) 'readData: ', readData

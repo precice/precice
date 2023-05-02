@@ -18,8 +18,7 @@ BOOST_AUTO_TEST_CASE(Implicit)
 
   // Set up Solverinterface
   precice::SolverInterface couplingInterface(context.name, context.config(), 0, 1);
-  BOOST_TEST(couplingInterface.getDimensions() == 2);
-  constexpr int dim = 2;
+  constexpr int            dim = 2;
 
   if (context.isNamed("SolverOne")) {
     std::vector<double>         positions   = {0.1, 0.1, 0.2, 0.05, 0.1, 0.0, 0.3, 0.9};
@@ -30,6 +29,8 @@ BOOST_AUTO_TEST_CASE(Implicit)
     auto otherMeshName = "MeshTwo";
     auto ownDataName   = "Forces";
     auto otherDataName = "Velocities";
+    BOOST_REQUIRE(couplingInterface.getMeshDimensions(ownMeshName) == 2);
+    BOOST_REQUIRE(couplingInterface.getMeshDimensions(otherMeshName) == 2);
 
     // Define the own mesh
     couplingInterface.setMeshVertices(ownMeshName, ownIDs.size(), positions.data(), ownIDs.data());
@@ -38,7 +39,8 @@ BOOST_AUTO_TEST_CASE(Implicit)
     // Define region of interest, where we could obtain direct write access
     couplingInterface.setMeshAccessRegion(otherMeshName, boundingBox.data());
 
-    double dt = couplingInterface.initialize();
+    couplingInterface.initialize();
+    double dt = couplingInterface.getMaxTimeStepSize();
     // Get the size of the filtered mesh within the bounding box
     // (provided by the coupling participant)
     const int meshSize = couplingInterface.getMeshVertexSize(otherMeshName);
@@ -64,7 +66,8 @@ BOOST_AUTO_TEST_CASE(Implicit)
       // Write data
       couplingInterface.writeBlockScalarData(otherMeshName, otherDataName, meshSize,
                                              otherIDs.data(), writeData.data());
-      dt = couplingInterface.advance(dt);
+      couplingInterface.advance(dt);
+      dt = couplingInterface.getMaxTimeStepSize();
       couplingInterface.readBlockScalarData(ownMeshName, ownDataName, ownIDs.size(),
                                             ownIDs.data(), dt, readData.data());
       if (couplingInterface.requiresReadingCheckpoint()) {
@@ -86,12 +89,16 @@ BOOST_AUTO_TEST_CASE(Implicit)
     auto ownDataName   = "Velocities";
     auto otherDataName = "Forces";
 
+    BOOST_REQUIRE(couplingInterface.getMeshDimensions(otherMeshName) == 2);
+    BOOST_REQUIRE(couplingInterface.getMeshDimensions(ownMeshName) == 2);
+
     // Define the mesh
     couplingInterface.setMeshVertices(ownMeshName, ownIDs.size(), positions.data(), ownIDs.data());
     // Define region of interest, where we could obtain direct write access
     couplingInterface.setMeshAccessRegion(otherMeshName, boundingBox.data());
     // Initialize
-    double dt = couplingInterface.initialize();
+    couplingInterface.initialize();
+    double dt = couplingInterface.getMaxTimeStepSize();
 
     const int meshSize = couplingInterface.getMeshVertexSize(otherMeshName);
     BOOST_TEST(meshSize == 4);
@@ -114,7 +121,8 @@ BOOST_AUTO_TEST_CASE(Implicit)
       // Write data
       couplingInterface.writeBlockScalarData(otherMeshName, otherDataName, meshSize,
                                              otherIDs.data(), writeData.data());
-      dt = couplingInterface.advance(dt);
+      couplingInterface.advance(dt);
+      dt = couplingInterface.getMaxTimeStepSize();
       couplingInterface.readBlockScalarData(ownMeshName, ownDataName, ownIDs.size(),
                                             ownIDs.data(), dt, readData.data());
       if (couplingInterface.requiresReadingCheckpoint()) {

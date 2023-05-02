@@ -44,7 +44,7 @@ void runTestQN(std::string const &config, TestContext const &context)
     }
   }
 
-  double preciceDt    = interface.initialize();
+  interface.initialize();
   double inValues[4]  = {0.0, 0.0, 0.0, 0.0};
   double outValues[4] = {0.0, 0.0, 0.0, 0.0};
 
@@ -54,6 +54,7 @@ void runTestQN(std::string const &config, TestContext const &context)
     if (interface.requiresWritingCheckpoint()) {
     }
 
+    double preciceDt = interface.getMaxTimeStepSize();
     interface.readBlockScalarData(meshName, readDataName, 4, vertexIDs, preciceDt, inValues);
 
     /*
@@ -79,7 +80,7 @@ void runTestQN(std::string const &config, TestContext const &context)
     }
 
     interface.writeBlockScalarData(meshName, writeDataName, 4, vertexIDs, outValues);
-    preciceDt = interface.advance(1.0);
+    interface.advance(1.0);
 
     if (interface.requiresReadingCheckpoint()) {
     }
@@ -135,7 +136,7 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
     }
   }
 
-  double preciceDt    = interface.initialize();
+  interface.initialize();
   double inValues[4]  = {0.0, 0.0, 0.0, 0.0};
   double outValues[4] = {0.0, 0.0, 0.0, 0.0};
 
@@ -144,6 +145,8 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
   while (interface.isCouplingOngoing()) {
     if (interface.requiresWritingCheckpoint()) {
     }
+
+    double preciceDt = interface.getMaxTimeStepSize();
 
     if ((context.isNamed("SolverOne") and context.isPrimary()) or
         (context.isNamed("SolverTwo") and (not context.isPrimary()))) {
@@ -176,7 +179,7 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
         (context.isNamed("SolverTwo") and (not context.isPrimary()))) {
       interface.writeBlockScalarData(meshName, writeDataName, 4, vertexIDs, outValues);
     }
-    preciceDt = interface.advance(1.0);
+    interface.advance(1.0);
 
     if (interface.requiresReadingCheckpoint()) {
     }

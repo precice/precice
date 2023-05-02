@@ -43,18 +43,20 @@ BOOST_AUTO_TEST_CASE(DoNothingWithSubcycling)
   int totalCompletedTimesteps = 0;
   int timestepsInThisWindow   = 0;
 
-  double maxDt     = precice.initialize();
+  precice.initialize();
+  double maxDt     = precice.getMaxTimeStepSize();
   double windowDt  = maxDt;
-  double dt        = windowDt / nSubsteps; // Timestep length desired by solver. E.g. 2 steps with size 1/2
-  double currentDt = dt;                   // Timestep length used by solver
+  double dt        = windowDt / nSubsteps; // time step size desired by solver. E.g. 2 steps with size 1/2
+  double currentDt = dt;                   // time step size used by solver
 
   while (precice.isCouplingOngoing()) {
     if (precice.requiresWritingCheckpoint()) {
       totalCompletedTimesteps += timestepsInThisWindow;
       timestepsInThisWindow = 0;
     }
-    maxDt     = precice.advance(currentDt);
-    currentDt = dt > maxDt ? maxDt : dt;
+    precice.advance(currentDt);
+    double maxDt = precice.getMaxTimeStepSize();
+    currentDt    = dt > maxDt ? maxDt : dt;
     totalSolves++;
     timestepsInThisWindow++;
     if (precice.requiresReadingCheckpoint()) {

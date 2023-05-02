@@ -44,12 +44,12 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
       interface.setMeshVertices(meshName, 2, positions.data(), vertexIDs.data());
       interface.initialize();
       Eigen::Vector3d values;
-      double          preciceDt = interface.advance(1.0);
-      interface.readBlockVectorData(meshName, dataName, 1, &vertexIDs[0], preciceDt, values.data());
+      interface.advance(1.0);
+      interface.readBlockVectorData(meshName, dataName, 1, &vertexIDs[0], interface.getMaxTimeStepSize(), values.data());
       Eigen::Vector3d expected(21.1, 24.8, 28.5);
       BOOST_TEST(interface.requiresGradientDataFor(meshName, dataName) == false);
       BOOST_TEST(testing::equals(values, expected));
-      interface.readBlockVectorData(meshName, dataName, 1, &vertexIDs[1], preciceDt, values.data());
+      interface.readBlockVectorData(meshName, dataName, 1, &vertexIDs[1], interface.getMaxTimeStepSize(), values.data());
       Eigen::Vector3d expected2(2.3, 4.2, 6.1);
       BOOST_TEST(testing::equals(values, expected2));
     } else {
@@ -57,8 +57,8 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
       interface.setMeshVertices(meshName, 1, positions.data(), vertexIDs.data());
       interface.initialize();
       Eigen::Vector3d values;
-      double          preciceDt = interface.advance(1.0);
-      interface.readBlockVectorData(meshName, dataName, 1, vertexIDs.data(), preciceDt, values.data());
+      interface.advance(1.0);
+      interface.readBlockVectorData(meshName, dataName, 1, vertexIDs.data(), interface.getMaxTimeStepSize(), values.data());
       Eigen::Vector3d expected(1., 2., 3.);
       BOOST_TEST(interface.requiresGradientDataFor(meshName, dataName) == false);
       BOOST_TEST(testing::equals(values, expected));

@@ -65,11 +65,12 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveform)
     precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
   }
 
-  double maxDt = precice.initialize();
+  precice.initialize();
+  double maxDt = precice.getMaxTimeStepSize();
   BOOST_TEST(maxDt == 2.0); // use window size != 1.0 to be able to detect more possible bugs
   double windowDt  = maxDt;
   double dt        = windowDt / (nSubsteps - 0.5); // Solver always tries to do a timestep of fixed size.
-  double currentDt = dt > maxDt ? maxDt : dt;      // determine actual timestep length; must fit into remaining time in window
+  double currentDt = dt > maxDt ? maxDt : dt;      // determine actual time step size; must fit into remaining time in window
   double timeCheckpoint;
 
   while (precice.isCouplingOngoing()) {
@@ -100,7 +101,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveform)
 
     writeData = writeFunction(time);
     precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
-    maxDt = precice.advance(currentDt);
+    precice.advance(currentDt);
+    maxDt = precice.getMaxTimeStepSize();
 
     currentDt = dt > maxDt ? maxDt : dt;
   }

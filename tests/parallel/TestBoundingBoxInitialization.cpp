@@ -79,9 +79,10 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitialization)
     }
   }
 
-  double preciceDt = interface.advance(1.0);
+  interface.advance(1.0);
 
   if (context.isNamed("Structure")) {
+    double preciceDt = interface.getMaxTimeStepSize();
     for (size_t i = 0; i < vertexIDs.size(); i++) {
       interface.readVectorData(meshName, forcesID, vertexIDs[i], preciceDt, data[i + i1].data());
       for (size_t d = 0; d < 3; d++) {

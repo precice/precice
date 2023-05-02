@@ -19,7 +19,8 @@ void testDataInitialization(precice::testing::TestContext context, std::string c
     cplInterface.setMeshVertex(meshName, pos.data());
     auto   dataName   = "Data";
     double valueDataB = 0.0;
-    double dt         = cplInterface.initialize();
+    cplInterface.initialize();
+    double dt = cplInterface.getMaxTimeStepSize();
     cplInterface.readScalarData(meshName, dataName, 0, dt, valueDataB);
     BOOST_TEST(2.0 == valueDataB);
     cplInterface.finalize();

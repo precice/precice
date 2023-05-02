@@ -55,15 +55,16 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirstNoInit)
   double   readData  = 0;
   VertexID vertexID  = precice.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());
 
-  int    nWindows        = 5; // perform 5 windows.
-  double maxDt           = precice.initialize();
+  int nWindows = 5; // perform 5 windows.
+  precice.initialize();
+  double maxDt           = precice.getMaxTimeStepSize();
   double windowDt        = maxDt;
   int    timestep        = 0;
   int    timewindow      = 0;
   double windowStartTime = 0;
   int    windowStartStep = 0;
-  double dt              = maxDt; // Timestep length desired by solver
-  double currentDt       = dt;    // Timestep length used by solver
+  double dt              = maxDt; // time step size desired by solver
+  double currentDt       = dt;    // time step size used by solver
   double time            = timestep * dt;
   double sampleDts[4]    = {0.0, dt / 4.0, dt / 2.0, 3.0 * dt / 4.0};
   int    nSamples        = 4;
@@ -101,8 +102,9 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirstNoInit)
     time += currentDt;
     writeData = writeFunction(time);
     precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
-    maxDt     = precice.advance(currentDt);
-    currentDt = dt > maxDt ? maxDt : dt;
+    precice.advance(maxDt);
+    double maxDt = precice.getMaxTimeStepSize();
+    currentDt    = dt > maxDt ? maxDt : dt;
     BOOST_CHECK(currentDt == windowDt); // no subcycling.
     timestep++;
     if (precice.requiresReadingCheckpoint()) { // at end of window and we have to repeat it.

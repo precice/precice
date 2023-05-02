@@ -21,7 +21,6 @@ BOOST_AUTO_TEST_CASE(ActionTimingsImplicit)
 
   SolverInterface interface(context.name, context.config(), context.rank, context.size);
 
-  int         dimensions = interface.getDimensions();
   std::string meshName;
   std::string writeDataName;
   std::string readDataName;
@@ -39,6 +38,7 @@ BOOST_AUTO_TEST_CASE(ActionTimingsImplicit)
     readDataName  = "Forces";
     writeValue    = 2;
   }
+  int                 dimensions = interface.getMeshDimensions(meshName);
   std::vector<double> vertex(dimensions, 0);
   int                 vertexID = interface.setMeshVertex(meshName, vertex.data());
 
@@ -53,7 +53,8 @@ BOOST_AUTO_TEST_CASE(ActionTimingsImplicit)
     interface.writeVectorData(meshName, writeDataName, vertexID, writeData.data());
   }
 
-  dt = interface.initialize();
+  interface.initialize();
+  dt = interface.getMaxTimeStepSize();
   BOOST_TEST(dt == 1.0);
   // @todo Needed change because always mapping in initialize.
   BOOST_TEST(action::RecorderAction::records.size() == 2);
@@ -67,7 +68,8 @@ BOOST_AUTO_TEST_CASE(ActionTimingsImplicit)
     interface.writeVectorData(meshName, writeDataName, vertexID, writeData.data());
     if (interface.requiresWritingCheckpoint()) {
     }
-    dt = interface.advance(dt);
+    interface.advance(dt);
+    double dt = interface.getMaxTimeStepSize();
     if (interface.requiresReadingCheckpoint()) {
     }
     if (interface.isTimeWindowComplete()) {

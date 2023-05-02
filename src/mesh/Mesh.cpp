@@ -186,7 +186,7 @@ std::vector<std::string> Mesh::availableData() const
   return names;
 }
 
-const PtrData &Mesh::data(const std::string &dataName) const
+const PtrData &Mesh::data(std::string_view dataName) const
 {
   auto iter = std::find_if(_data.begin(), _data.end(), [&dataName](const auto &dptr) {
     return dptr->getName() == dataName;

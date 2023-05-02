@@ -187,7 +187,7 @@ public:
   std::vector<std::string> availableData() const;
 
   /// Returns the data with the matching name
-  const PtrData &data(const std::string &dataName) const;
+  const PtrData &data(std::string_view dataName) const;
 
   /// Returns the name of the mesh, as set in the config file.
   const std::string &getName() const;

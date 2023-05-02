@@ -16,12 +16,13 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithDataInitialization)
   if (context.isNamed("SolverOne")) {
     // Set up Solverinterface
     precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    BOOST_TEST(interface.getDimensions() == 2);
-    constexpr int dim         = 2;
-    const auto    ownMeshID   = "MeshOne";
-    const auto    otherMeshID = "MeshTwo";
-    const auto    readDataID  = "Forces";
-    const auto    writeDataID = "Velocities";
+    constexpr int            dim         = 2;
+    const auto               ownMeshID   = "MeshOne";
+    const auto               otherMeshID = "MeshTwo";
+    const auto               readDataID  = "Forces";
+    const auto               writeDataID = "Velocities";
+    BOOST_REQUIRE(interface.getMeshDimensions(ownMeshID) == 2);
+    BOOST_REQUIRE(interface.getMeshDimensions(otherMeshID) == 2);
 
     std::vector<double> ownPositions = std::vector<double>({0.5, 0.25});
     std::vector<int>    ownIDs(ownPositions.size() / dim, -1);
@@ -37,7 +38,8 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithDataInitialization)
 
     BOOST_TEST(!interface.requiresInitialData());
 
-    double dt = interface.initialize();
+    interface.initialize();
+    double dt = interface.getMaxTimeStepSize();
     // Get the size of the filtered mesh within the bounding box
     // (provided by the coupling participant)
     BOOST_TEST(otherMeshSize == interface.getMeshVertexSize(otherMeshID)); // @todo would need to know this already earlier (see above).
@@ -80,7 +82,8 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithDataInitialization)
 
       BOOST_TEST(precice::testing::equals(expectedData, readData));
       interface.writeBlockScalarData(otherMeshID, writeDataID, otherIDs.size(), otherIDs.data(), writeData.data());
-      dt = interface.advance(dt);
+      interface.advance(dt);
+      double dt = interface.getMaxTimeStepSize();
       iterations++;
       if (interface.requiresReadingCheckpoint()) {
         // do nothing
@@ -97,11 +100,11 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithDataInitialization)
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
     precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    BOOST_TEST(interface.getDimensions() == 2);
-    constexpr int dim           = 2;
-    const auto    meshName      = "MeshTwo";
-    const auto    writeDataName = "Forces";
-    const auto    readDataName  = "Velocities";
+    constexpr int            dim           = 2;
+    const auto               meshName      = "MeshTwo";
+    const auto               writeDataName = "Forces";
+    const auto               readDataName  = "Velocities";
+    BOOST_REQUIRE(interface.getMeshDimensions(meshName) == 2);
 
     std::vector<double> positions = std::vector<double>({0.5, 0.25});
     std::vector<int>    ids(positions.size() / dim, -1);
@@ -119,7 +122,8 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithDataInitialization)
       interface.writeBlockScalarData(meshName, writeDataName, ids.size(), ids.data(), writeData.data());
     }
 
-    double dt = interface.initialize();
+    interface.initialize();
+    double dt = interface.getMaxTimeStepSize();
 
     // writeData for first window
     for (unsigned int i = 0; i < ids.size(); ++i) {
@@ -155,7 +159,8 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithDataInitialization)
 
       BOOST_TEST(precice::testing::equals(expectedData, readData));
       interface.writeBlockScalarData(meshName, writeDataName, ids.size(), ids.data(), writeData.data());
-      dt = interface.advance(dt);
+      interface.advance(dt);
+      double dt = interface.getMaxTimeStepSize();
       iterations++;
       if (interface.requiresReadingCheckpoint()) {
         // do nothing
