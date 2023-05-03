@@ -24,8 +24,8 @@ public:
    * @param interpolationOrder Order of the Waveform stored by this GlobalReadDataContext.
    */
   GlobalReadDataContext(
-      mesh::PtrGlobalData data,
-      int                 interpolationOrder = time::Time::DEFAULT_INTERPOLATION_ORDER);
+      mesh::PtrData data,
+      int           interpolationOrder = time::Time::DEFAULT_INTERPOLATION_ORDER);
 
   /**
    * @brief Gets _interpolationOrder of _waveform
