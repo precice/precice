@@ -1,4 +1,4 @@
-#include "GlobalReadDataContext.cpp"
+#include "GlobalReadDataContext.hpp"
 
 #include "time/Waveform.hpp"
 
