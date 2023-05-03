@@ -26,7 +26,7 @@ mark_as_advanced(PRECICE_TEST_WRAPPER_SCRIPT)
 
 
 function(add_precice_test)
-  cmake_parse_arguments(PARSE_ARGV 0 PAT "PETSC;MPIPORTS;GINKGO" "NAME;ARGUMENTS;TIMEOUT;LABELS" "")
+  cmake_parse_arguments(PARSE_ARGV 0 PAT "PETSC;MPIPORTS;GINKGO;GINKGO_OMP;GINKGO_CUDA;GINKGO_HIP" "NAME;ARGUMENTS;TIMEOUT;LABELS" "")
   # Check arguments
   if(NOT PAT_NAME)
     message(FATAL_ERROR "Argument NAME not passed")
@@ -38,9 +38,9 @@ function(add_precice_test)
   # Are direct dependencies fulfilled?
   if( (NOT PRECICE_MPICommunication) OR (PAT_PETSC AND NOT PRECICE_PETScMapping)
        OR (PAT_GINKGO AND NOT PRECICE_GinkgoParallelization)
-       OR (PAT_GINKGO AND NOT PRECICE_WITH_OMP)
-       OR (PAT_GINKGO AND NOT PRECICE_WITH_CUDA)
-       OR (PAT_GINKGO AND NOT PRECICE_WITH_HIP))
+       OR (PAT_GINKGO_OMP AND NOT PRECICE_WITH_OMP)
+       OR (PAT_GINKGO_CUDA AND NOT PRECICE_WITH_CUDA)
+       OR (PAT_GINKGO_HIP AND NOT PRECICE_WITH_HIP))
     message(STATUS "Test ${PAT_FULL_NAME} - skipped")
     return()
   endif()
@@ -272,35 +272,35 @@ add_precice_test(
   ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/OpenMP"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   LABELS ginkgo
-  GINKGO
+  GINKGO_OMP
   )
 add_precice_test(
   NAME mapping.ginkgo.cuda
   ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/Cuda"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   LABELS ginkgo
-  GINKGO
+  GINKGO_CUDA
   )
 add_precice_test(
   NAME mapping.ginkgo.cuSolver
   ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/cuSolver"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   LABELS ginkgo
-  GINKGO
+  GINKGO_CUDA
   )
 add_precice_test(
   NAME mapping.ginkgo.hip
   ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/Hip"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   LABELS ginkgo
-  GINKGO
+  GINKGO_HIP
   )
 add_precice_test(
   NAME mapping.ginkgo.hipSolver
   ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/hipSolver"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   LABELS ginkgo
-  GINKGO
+  GINKGO_HIP
   )
 add_precice_test(
   NAME math
