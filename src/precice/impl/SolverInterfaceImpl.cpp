@@ -351,25 +351,16 @@ void SolverInterfaceImpl::initialize()
     mapWrittenData();
     performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0);
   }
-  for (auto &context : _accessor->writeDataContexts()) {
-    context.clearStorage();
-  }
 
   PRECICE_DEBUG("Initialize coupling schemes");
   _couplingScheme->initialize(time, timeWindow);
 
+  // After communication clear storage to make it ready for next iterationwindow
+  // for (auto &context : _accessor->writeDataContexts()) {
+  //   context.clearStorage();
+  // }
+
   if (_couplingScheme->hasDataBeenReceived()) { // always perform mapping here to avoid need for workarounds during initialization.
-    mapReadData();
-    performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
-  }
-
-  for (auto &context : _accessor->readDataContexts()) {
-    context.moveToNextWindow();
-  }
-
-  _couplingScheme->receiveResultOfFirstAdvance();
-
-  if (_couplingScheme->hasDataBeenReceived()) {
     mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
   }

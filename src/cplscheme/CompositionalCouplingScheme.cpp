@@ -49,13 +49,6 @@ void CompositionalCouplingScheme::initialize(
   }
 }
 
-void CompositionalCouplingScheme::receiveResultOfFirstAdvance()
-{
-  for (const auto scheme : allSchemes()) {
-    scheme->receiveResultOfFirstAdvance();
-  }
-}
-
 bool CompositionalCouplingScheme::sendsInitializedData() const
 {
   PRECICE_TRACE();

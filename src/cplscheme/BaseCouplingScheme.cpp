@@ -212,14 +212,9 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
     }
   }
 
-  _isInitialized = true;
-}
-
-void BaseCouplingScheme::receiveResultOfFirstAdvance()
-{
-  PRECICE_ASSERT(_isInitialized, "Before calling receiveResultOfFirstAdvance() one has to call initialize().");
-  _hasDataBeenReceived = false;
   performReceiveOfFirstAdvance();
+
+  _isInitialized = true;
 }
 
 bool BaseCouplingScheme::sendsInitializedData() const
