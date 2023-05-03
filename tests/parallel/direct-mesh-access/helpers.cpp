@@ -1,8 +1,8 @@
-#include <cstddef>
 #ifndef PRECICE_NO_MPI
 
 #include "helpers.hpp"
 
+#include <numeric>
 #include "precice/SolverInterface.hpp"
 #include "testing/Testing.hpp"
 
@@ -52,16 +52,18 @@ void runTestAccessReceivedMesh(const TestContext &       context,
     BOOST_TEST(expectedIDs == ids);
 
     // Create some unique writeData in order to check it in the other participant
-    std::vector<double> writeData = context.isPrimary() ? std::vector<double>({1, 2, 3}) : writeDataSecondaryRank;
+    std::vector<double> primaryData(meshSize);
+    std::iota(primaryData.begin(), primaryData.end(), 1);
+    std::vector<double> writeData = context.isPrimary() ? primaryData : writeDataSecondaryRank;
 
     while (interface.isCouplingOngoing()) {
       // Write data
       if (context.isPrimary()) {
         interface.writeData(otherMeshName, dataName, ids, writeData);
       } else {
-        // In order to prevent hypothetical index overruns reported by glibcc
-        const int *ids_ptr = startIndex < ids.size() ? &ids[startIndex] : nullptr;
-        interface.writeData(otherMeshName, dataName, {ids_ptr, meshSize - startIndex}, writeData);
+        const int *ids_ptr  = &ids.at(startIndex);
+        const auto vertices = meshSize - startIndex;
+        interface.writeData(otherMeshName, dataName, {ids_ptr, vertices}, {writeData.data(), vertices});
       }
 
       interface.advance(dt);
@@ -111,7 +113,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
 
       // Check the received data
       const std::vector<double> expectedReadData = context.isPrimary() ? std::vector<double>({1, 2}) : expectedReadDataSecondaryRank;
-      BOOST_TEST(expectedReadData == readData);
+      BOOST_TEST(expectedReadData == readData, boost::test_tools::per_element());
     }
   }
 }
