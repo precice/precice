@@ -105,11 +105,12 @@ public:
       const mesh::PtrMesh &mesh);
 
   /// Adds a configured \ref GlobalData to the ParticipantState
-  void addGlobalReadData(
-      const mesh::PtrData &data);
+  void addReadGlobalData(
+      const mesh::PtrData &data,
+      int                  interpolationOrder = time::Time::DEFAULT_INTERPOLATION_ORDER);
 
   /// Adds a configured write \ref GlobalData to the ParticipantState
-  void addGlobalWriteData(
+  void addWriteGlobalData(
       const mesh::PtrData &data);
 
   /// Adds a configured read \ref Mapping to the ParticipantState
