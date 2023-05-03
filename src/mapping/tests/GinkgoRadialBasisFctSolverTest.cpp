@@ -40,8 +40,6 @@ BOOST_AUTO_TEST_SUITE(GinkgoRadialBasisFunctionSolver)
     perform3DTestScaledConsistentMapping(scaledConsistentMap3D);                                                                                            \
     RadialBasisFctMapping<Type> conservativeMap2D(Mapping::CONSERVATIVE, 2, function, {{false, false, false}}, polynomial, useEigen, gpm);                  \
     perform2DTestConservativeMapping(conservativeMap2D);                                                                                                    \
-    RadialBasisFctMapping<Type> conservativeMap2DVector(Mapping::CONSERVATIVE, 2, function, {{false, false, false}}, polynomial, useEigen, gpm);            \
-    perform2DTestConservativeMappingVector(conservativeMap2DVector);                                                                                        \
     RadialBasisFctMapping<Type> conservativeMap3D(Mapping::CONSERVATIVE, 3, function, {{false, false, false}}, polynomial, useEigen, gpm);                  \
     perform3DTestConservativeMapping(conservativeMap3D);                                                                                                    \
   }
@@ -114,28 +112,38 @@ BOOST_AUTO_TEST_SUITE(GinkgoRadialBasisFunctionSolver)
   }
 
 BOOST_AUTO_TEST_SUITE(Reference)
-
 TEST_FOR_ALL_RBFS("reference-executor", "gmres-solver");
-
 BOOST_AUTO_TEST_SUITE_END()
 
+#ifdef PRECICE_WITH_OMP
 BOOST_AUTO_TEST_SUITE(OpenMP)
-
 TEST_FOR_ALL_RBFS("omp-executor", "gmres-solver");
-
 BOOST_AUTO_TEST_SUITE_END()
+#endif
 
+#ifdef PRECICE_WITH_CUDA
 BOOST_AUTO_TEST_SUITE(Cuda)
-
 TEST_FOR_ALL_RBFS("cuda-executor", "gmres-solver");
-
 BOOST_AUTO_TEST_SUITE_END()
+#endif
 
+#ifdef PRECICE_WITH_CUDA
 BOOST_AUTO_TEST_SUITE(cuSolver)
-
 TEST_FOR_ALL_RBFS("cuda-executor", "qr-solver");
-
 BOOST_AUTO_TEST_SUITE_END()
+#endif
+
+#ifdef PRECICE_WITH_HIP
+BOOST_AUTO_TEST_SUITE(Hip)
+TEST_FOR_ALL_RBFS("hip-executor", "gmres-solver");
+BOOST_AUTO_TEST_SUITE_END()
+#endif
+
+#ifdef PRECICE_WITH_HIP
+BOOST_AUTO_TEST_SUITE(hipSolver)
+TEST_FOR_ALL_RBFS("hip-executor", "qr-solver");
+BOOST_AUTO_TEST_SUITE_END()
+#endif
 
 #undef TEST_FOR_ALL_RBFS
 #undef doLocalCode

@@ -278,10 +278,24 @@ add_precice_test(
   GINKGO
   )
 add_precice_test(
-  NAME mapping.ginkgo.cusSolver
+  NAME mapping.ginkgo.cuSolver
   ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/cuSolver"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   LABELS ginkgo
+  GINKGO
+  )
+add_precice_test(
+  NAME mapping.ginkgo.hip
+  ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/Hip"
+  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+  LABELS hip
+  GINKGO
+  )
+add_precice_test(
+  NAME mapping.ginkgo.hipSolver
+  ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/hipSolver"
+  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+  LABELS hip
   GINKGO
   )
 add_precice_test(

@@ -331,7 +331,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
                                                           .with_max_iters(static_cast<std::size_t>(40))
                                                           .on(_deviceExecutor),
                                                       gko::stop::ResidualNormReduction<>::build()
-                                                          .with_reduction_factor(1e-4)
+                                                          .with_reduction_factor(1e-6)
                                                           .on(_deviceExecutor))
                                        .on(_deviceExecutor);
 
@@ -575,7 +575,7 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConser
                                                             .with_max_iters(static_cast<std::size_t>(40))
                                                             .on(_deviceExecutor),
                                                         gko::stop::ResidualNormReduction<>::build()
-                                                            .with_reduction_factor(1e-4)
+                                                            .with_reduction_factor(1e-6)
                                                             .on(_deviceExecutor))
                                          .on(_deviceExecutor);
 

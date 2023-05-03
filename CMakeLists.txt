@@ -256,7 +256,7 @@ if (PRECICE_GinkgoParallelization)
   # We aim for the same configuration as Ginkgo itself and check immediately for device compiler
   # such that preciceCore inherits all relevant flags directly
   # 1. Check if Ginkgo was built with CUDA and if CUDA is available on the system
-  if(${GINKGO_BUILD_CUDA})
+  if(GINKGO_BUILD_CUDA)
     # Necessary for the unified kernels and the qr decomposition
     include(CheckLanguage)
     check_language(CUDA)
@@ -274,7 +274,7 @@ if (PRECICE_GinkgoParallelization)
   endif()
 
   # 2. Check if Ginkgo was built with HIP and if HIP is available on the system
-  if(${GINKGO_BUILD_HIP})
+  if(GINKGO_BUILD_HIP)
     if(NOT DEFINED HIP_PATH)
      if(NOT DEFINED $ENV{HIP_PATH})
        set(HIP_PATH "/opt/rocm/hip" CACHE PATH "Path to which HIP has been installed")
@@ -299,7 +299,7 @@ if (PRECICE_GinkgoParallelization)
   endif()
 
   # 3. Check if Ginkgo was built with OpenMP and if OpenMP is available on the system
-  if(${GINKGO_BUILD_OMP})
+  if(GINKGO_BUILD_OMP)
     # There is nothing special required for OpenMP, looking for OpenMP and setting the flag is handled by the unified kernels
     add_compile_definitions("PRECICE_WITH_OMP")
     message(STATUS "Enabled OpenMP support for preCICE via the Ginkgo library.")
@@ -435,12 +435,12 @@ if (PRECICE_GinkgoParallelization)
   set_target_properties(preciceCore_dpcpp PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
   # Now we setup cuSolver and hipSOLVER for preCICE
-  if(${GINKGO_BUILD_CUDA})
+  if(GINKGO_BUILD_CUDA)
     target_sources(preciceCore PRIVATE ${PROJECT_SOURCE_DIR}/src/mapping/device/CudaQRSolver.cuh ${PROJECT_SOURCE_DIR}/src/mapping/device/CudaQRSolver.cu)
     target_link_libraries(preciceCore PUBLIC cusolver)
   endif()
 
-  if(${GINKGO_BUILD_HIP})
+  if(GINKGO_BUILD_HIP)
     set(_hiplist ${PROJECT_SOURCE_DIR}/src/mapping/device/HipQRSolver.hip.hpp ${PROJECT_SOURCE_DIR}/src/mapping/device/HipQRSolver.hip.cpp)
     set_source_files_properties(${_hiplist} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT TRUE)
     hip_add_library(preciceCore_qr_hip ${_hiplist}
