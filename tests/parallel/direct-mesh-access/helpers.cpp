@@ -61,9 +61,11 @@ void runTestAccessReceivedMesh(const TestContext &       context,
       if (context.isPrimary()) {
         interface.writeData(otherMeshName, dataName, ids, writeData);
       } else {
-        const int *ids_ptr  = &ids.at(startIndex);
-        const auto vertices = meshSize - startIndex;
-        interface.writeData(otherMeshName, dataName, {ids_ptr, vertices}, {writeData.data(), vertices});
+        if (meshSize - startIndex > 0) {
+          const int *ids_ptr  = &ids.at(startIndex);
+          const auto vertices = meshSize - startIndex;
+          interface.writeData(otherMeshName, dataName, {ids_ptr, vertices}, {writeData.data(), vertices});
+        }
       }
 
       interface.advance(dt);
