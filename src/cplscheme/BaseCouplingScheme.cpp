@@ -116,7 +116,7 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
   }
 }
 
-void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData)
+void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData, bool initialCommunication)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(m2n.get());
@@ -128,6 +128,10 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
       m2n->receive(data->gradientValues(), data->getMeshID(), data->getDimensions() * data->meshDimensions());
     }
 
+    if (initialCommunication) {
+      data->setSampleAtTime(time::Storage::WINDOW_START, data->sample());
+    }
+
     data->setSampleAtTime(time::Storage::WINDOW_END, data->sample());
   }
 }
@@ -137,6 +141,7 @@ void BaseCouplingScheme::initializeWithZeroInitialData(const DataMap &receiveDat
   for (const auto &data : receiveData | boost::adaptors::map_values) {
     PRECICE_DEBUG("Initialize {} as zero.", data->getDataName());
     // just store already initialized zero sample to storage.
+    data->setSampleAtTime(time::Storage::WINDOW_START, data->sample());
     data->setSampleAtTime(time::Storage::WINDOW_END, data->sample());
   }
 }

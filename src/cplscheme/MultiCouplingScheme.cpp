@@ -74,11 +74,12 @@ const DataMap MultiCouplingScheme::getAccelerationData()
 void MultiCouplingScheme::exchangeInitialData()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
+  bool initialReceive = true;
 
   if (_isController) {
     if (receivesInitializedData()) {
       for (auto &receiveExchange : _receiveDataVector) {
-        receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
+        receiveData(_m2ns[receiveExchange.first], receiveExchange.second, initialReceive);
       }
     } else {
       for (auto &receiveExchange : _receiveDataVector) {
@@ -99,7 +100,7 @@ void MultiCouplingScheme::exchangeInitialData()
     }
     if (receivesInitializedData()) {
       for (auto &receiveExchange : _receiveDataVector) {
-        receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
+        receiveData(_m2ns[receiveExchange.first], receiveExchange.second, initialReceive);
       }
     } else {
       for (auto &receiveExchange : _receiveDataVector) {
