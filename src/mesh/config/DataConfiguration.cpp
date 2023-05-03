@@ -155,6 +155,7 @@ void DataConfiguration::createGlobalData(const std::string &name,
                   name, name);
   }
   PtrData globalData(new Data(name, id, dimension, _dimensions));
+  globalData->allocateValues(1);
   _globalData.push_back(globalData);
 }
 
