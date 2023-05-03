@@ -38,8 +38,8 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
     auto            meshName = "MeshOne";
     auto            dataName = "Data2";
 
-    std::vector<int> vertexIDs(2);
     if (context.isPrimary()) {
+      std::vector<int>    vertexIDs(2);
       std::vector<double> positions = {1.0, 1.0, 2.0, 2., 2., 3.0};
       interface.setMeshVertices(meshName, 2, positions.data(), vertexIDs.data());
       interface.initialize();
@@ -53,6 +53,7 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
       Eigen::Vector3d expected2(2.3, 4.2, 6.1);
       BOOST_TEST(testing::equals(values, expected2));
     } else {
+      std::vector<int>    vertexIDs(1);
       std::vector<double> positions = {4.0, 4.0, 4.0};
       interface.setMeshVertices(meshName, 1, positions.data(), vertexIDs.data());
       interface.initialize();
@@ -66,10 +67,10 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
     interface.finalize();
   } else {
     BOOST_REQUIRE(context.isNamed("SolverTwo"));
-    SolverInterface  interface(context.name, context.config(), context.rank, context.size);
-    auto             meshName = "MeshTwo";
-    std::vector<int> vertexIDs(4);
+    SolverInterface interface(context.name, context.config(), context.rank, context.size);
+    auto            meshName = "MeshTwo";
     if (context.isPrimary()) {
+      std::vector<int>    vertexIDs(4);
       std::vector<double> positions = {4.0, 4.0, 4.0, 0.0, 0.4, 0.0, 0.7, 0.7, 1.7, 0.0, 1.0, 0.0};
       interface.setMeshVertices(meshName, 4, positions.data(), vertexIDs.data());
       interface.initialize();
@@ -92,6 +93,7 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
       }
     } else {
       // Assigned to the first rank
+      std::vector<int>    vertexIDs(1);
       std::vector<double> positions = {2.1, 2.1, 3.1};
       interface.setMeshVertices(meshName, 1, positions.data(), vertexIDs.data());
       interface.initialize();
