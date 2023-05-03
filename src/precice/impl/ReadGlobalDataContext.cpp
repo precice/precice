@@ -1,12 +1,12 @@
-#include "GlobalReadDataContext.hpp"
+#include "ReadGlobalDataContext.hpp"
 
 #include "time/Waveform.hpp"
 
 namespace precice::impl {
 
-logging::Logger GlobalReadDataContext::_log{"impl::GlobalReadDataContext"};
+logging::Logger ReadGlobalDataContext::_log{"impl::ReadGlobalDataContext"};
 
-GlobalReadDataContext::GlobalReadDataContext(
+ReadGlobalDataContext::ReadGlobalDataContext(
     mesh::PtrData data,
     int           interpolationOrder)
     : DataContext(data, nullptr)
@@ -14,28 +14,28 @@ GlobalReadDataContext::GlobalReadDataContext(
   _waveform = std::make_shared<time::Waveform>(interpolationOrder);
 }
 
-int GlobalReadDataContext::getInterpolationOrder() const
+int ReadGlobalDataContext::getInterpolationOrder() const
 {
   return _waveform->getInterpolationOrder();
 }
 
-void GlobalReadDataContext::storeDataInWaveform()
+void ReadGlobalDataContext::storeDataInWaveform()
 {
   _waveform->store(_providedData->values()); // store mapped or received _providedData in the _waveform
 }
 
-Eigen::VectorXd GlobalReadDataContext::sampleWaveformAt(double normalizedDt)
+Eigen::VectorXd ReadGlobalDataContext::sampleWaveformAt(double normalizedDt)
 {
   return _waveform->sample(normalizedDt);
 }
 
-void GlobalReadDataContext::initializeWaveform()
+void ReadGlobalDataContext::initializeWaveform()
 {
   PRECICE_ASSERT(not hasWriteMapping(), "Write mapping does not need waveforms.");
   _waveform->initialize(_providedData->values());
 }
 
-void GlobalReadDataContext::moveToNextWindow()
+void ReadGlobalDataContext::moveToNextWindow()
 {
   _waveform->moveToNextWindow();
 }

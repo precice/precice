@@ -251,10 +251,10 @@ target_sources(preciceCore
     src/precice/impl/CommonErrorMessages.hpp
     src/precice/impl/DataContext.cpp
     src/precice/impl/DataContext.hpp
-    src/precice/impl/GlobalReadDataContext.cpp
-    src/precice/impl/GlobalReadDataContext.hpp
-    src/precice/impl/GlobalWriteDataContext.cpp
-    src/precice/impl/GlobalWriteDataContext.hpp
+    src/precice/impl/ReadGlobalDataContext.cpp
+    src/precice/impl/ReadGlobalDataContext.hpp
+    src/precice/impl/WriteGlobalDataContext.cpp
+    src/precice/impl/WriteGlobalDataContext.hpp
     src/precice/impl/MappingContext.hpp
     src/precice/impl/MeshContext.hpp
     src/precice/impl/ParticipantImpl.cpp

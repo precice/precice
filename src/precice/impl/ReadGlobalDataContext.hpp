@@ -15,15 +15,15 @@ namespace impl {
  *
  * Derived from DataContext
  */
-class GlobalReadDataContext : public DataContext {
+class ReadGlobalDataContext : public DataContext {
 public:
   /**
-   * @brief Construct a new GlobalReadDataContext object without a mapping.
+   * @brief Construct a new ReadGlobalDataContext object without a mapping.
    *
-   * @param data Data associated with this GlobalReadDataContext.
-   * @param interpolationOrder Order of the Waveform stored by this GlobalReadDataContext.
+   * @param data Data associated with this ReadGlobalDataContext.
+   * @param interpolationOrder Order of the Waveform stored by this ReadGlobalDataContext.
    */
-  GlobalReadDataContext(
+  ReadGlobalDataContext(
       mesh::PtrData data,
       int           interpolationOrder = time::Time::DEFAULT_INTERPOLATION_ORDER);
 
@@ -57,19 +57,19 @@ public:
   void storeDataInWaveform();
 
   /// Disable copy construction
-  GlobalReadDataContext(const GlobalReadDataContext &copy) = delete;
+  ReadGlobalDataContext(const ReadGlobalDataContext &copy) = delete;
 
   /// Disable assignment construction
-  GlobalReadDataContext &operator=(const GlobalReadDataContext &assign) = delete;
+  ReadGlobalDataContext &operator=(const ReadGlobalDataContext &assign) = delete;
 
   /// Move constructor, use the implicitly declared.
-  GlobalReadDataContext(GlobalReadDataContext &&) = default;
-  GlobalReadDataContext &operator=(GlobalReadDataContext &&) = default;
+  ReadGlobalDataContext(ReadGlobalDataContext &&) = default;
+  ReadGlobalDataContext &operator=(ReadGlobalDataContext &&) = default;
 
 private:
   static logging::Logger _log;
 
-  /// Waveform wrapped by this GlobalReadDataContext.
+  /// Waveform wrapped by this ReadGlobalDataContext.
   time::PtrWaveform _waveform;
 };
 

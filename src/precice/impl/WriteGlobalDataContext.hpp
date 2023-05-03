@@ -13,14 +13,14 @@ namespace impl {
  *
  * Derived from DataContext
  */
-class GlobalWriteDataContext : public DataContext {
+class WriteGlobalDataContext : public DataContext {
 public:
   /**
-   * @brief Construct a new GlobalWriteDataContext object without a mapping.
+   * @brief Construct a new WriteGlobalDataContext object without a mapping.
    *
-   * @param data Data associated with this GlobalWriteDataContext.
+   * @param data Data associated with this WriteGlobalDataContext.
    */
-  GlobalWriteDataContext(
+  WriteGlobalDataContext(
       mesh::PtrData data);
 
   /**
@@ -31,14 +31,14 @@ public:
   mesh::PtrData providedData();
 
   /// Disable copy construction
-  GlobalWriteDataContext(const GlobalWriteDataContext &copy) = delete;
+  WriteGlobalDataContext(const WriteGlobalDataContext &copy) = delete;
 
   /// Disable assignment construction
-  GlobalWriteDataContext &operator=(const GlobalWriteDataContext &assign) = delete;
+  WriteGlobalDataContext &operator=(const WriteGlobalDataContext &assign) = delete;
 
   /// Move constructor, use the implicitly declared.
-  GlobalWriteDataContext(GlobalWriteDataContext &&) = default;
-  GlobalWriteDataContext &operator=(GlobalWriteDataContext &&) = default;
+  WriteGlobalDataContext(WriteGlobalDataContext &&) = default;
+  WriteGlobalDataContext &operator=(WriteGlobalDataContext &&) = default;
 
 private:
   static logging::Logger _log;

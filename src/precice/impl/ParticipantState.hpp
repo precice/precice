@@ -18,10 +18,10 @@
 #include "mapping/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "partition/ReceivedPartition.hpp"
-#include "precice/impl/GlobalReadDataContext.hpp"
-#include "precice/impl/GlobalWriteDataContext.hpp"
 #include "precice/impl/ReadDataContext.hpp"
+#include "precice/impl/ReadGlobalDataContext.hpp"
 #include "precice/impl/WriteDataContext.hpp"
+#include "precice/impl/WriteGlobalDataContext.hpp"
 #include "precice/types.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/ManageUniqueIDs.hpp"
@@ -180,25 +180,25 @@ public:
    */
   WriteDataContext &writeDataContext(std::string_view mesh, std::string_view data);
 
-  /** Provides access to \ref GlobalWriteDataContext
-   * @pre there exists a \ref GlobalWriteDataContext for \ref data
+  /** Provides access to \ref WriteGlobalDataContext
+   * @pre there exists a \ref WriteGlobalDataContext for \ref data
    */
-  const GlobalWriteDataContext &globalWriteDataContext(std::string_view data) const;
+  const WriteGlobalDataContext &writeGlobalDataContext(std::string_view data) const;
 
-  /** Provides access to \ref GlobalWriteDataContext
-   * @pre there exists a \ref GlobalWriteDataContext for \ref data
+  /** Provides access to \ref WriteGlobalDataContext
+   * @pre there exists a \ref WriteGlobalDataContext for \ref data
    */
-  GlobalWriteDataContext &globalWriteDataContext(std::string_view data);
+  WriteGlobalDataContext &writeGlobalDataContext(std::string_view data);
 
-  /** Provides access to \ref GlobalWriteDataContext
-   * @pre there exists a \ref GlobalWriteDataContext for \ref data
+  /** Provides access to \ref WriteGlobalDataContext
+   * @pre there exists a \ref WriteGlobalDataContext for \ref data
    */
-  const GlobalReadDataContext &globalReadDataContext(std::string_view data) const;
+  const ReadGlobalDataContext &readGlobalDataContext(std::string_view data) const;
 
-  /** Provides access to \ref GlobalWriteDataContext
-   * @pre there exists a \ref GlobalWriteDataContext for \ref data
+  /** Provides access to \ref WriteGlobalDataContext
+   * @pre there exists a \ref WriteGlobalDataContext for \ref data
    */
-  GlobalReadDataContext &globalReadDataContext(std::string_view data);
+  ReadGlobalDataContext &readGlobalDataContext(std::string_view data);
 
   /** Provides access to all \ref WriteDataContext objects
    * @remarks does not contain nullptr.
@@ -216,30 +216,36 @@ public:
     return _readDataContexts | boost::adaptors::map_values;
   }
 
-  /** Provides const access to all \ref GlobalWriteDataContext objects
+  /** Provides const access to all \ref WriteGlobalDataContext objects
    * @remarks does not contain nullptr.
    */
-  auto globalWriteDataContexts() const
+  auto writeGlobalDataContexts() const
   {
-    return _globalWriteDataContexts | boost::adaptors::map_values;
+    return _writeGlobalDataContexts | boost::adaptors::map_values;
   }
 
-  /** Provides const access to all \ref GlobalWriteDataContext objects
+  /** Provides access to all \ref WriteGlobalDataContext objects
    * @remarks does not contain nullptr.
    */
-  auto globalWriteDataContexts()
+  auto writeGlobalDataContexts()
   {
-    return _globalWriteDataContexts | boost::adaptors::map_values;
+    return _writeGlobalDataContexts | boost::adaptors::map_values;
   }
 
-  auto globalReadDataContexts() const
+  /** Provides const access to all \ref ReadGlobalDataContext objects
+   * @remarks does not contain nullptr.
+   */
+  auto readGlobalDataContexts() const
   {
-    return _globalReadDataContexts | boost::adaptors::map_values;
+    return _readGlobalDataContexts | boost::adaptors::map_values;
   }
 
-  auto globalReadDataContexts()
+  /** Provides access to all \ref ReadGlobalDataContext objects
+   * @remarks does not contain nullptr.
+   */
+  auto readGlobalDataContexts()
   {
-    return _globalReadDataContexts | boost::adaptors::map_values;
+    return _readGlobalDataContexts | boost::adaptors::map_values;
   }
 
   /// Is the dataID know to preCICE?
@@ -410,9 +416,9 @@ private:
 
   DataMap<ReadDataContext> _readDataContexts;
 
-  std::map<std::string_view, GlobalReadDataContext> _globalReadDataContexts;
+  std::map<std::string_view, ReadGlobalDataContext> _readGlobalDataContexts;
 
-  std::map<std::string_view, GlobalWriteDataContext> _globalWriteDataContexts;
+  std::map<std::string_view, WriteGlobalDataContext> _writeGlobalDataContexts;
 
   bool _useIntraComm = false;
 
