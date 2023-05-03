@@ -115,7 +115,25 @@ BOOST_AUTO_TEST_SUITE(GinkgoRadialBasisFunctionSolver)
 
 BOOST_AUTO_TEST_SUITE(Reference)
 
-TEST_FOR_ALL_RBFS("reference-executor", "cg-solver");
+TEST_FOR_ALL_RBFS("reference-executor", "gmres-solver");
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(OpenMP)
+
+TEST_FOR_ALL_RBFS("omp-executor", "gmres-solver");
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(Cuda)
+
+TEST_FOR_ALL_RBFS("cuda-executor", "gmres-solver");
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(cuSolver)
+
+TEST_FOR_ALL_RBFS("cuda-executor", "qr-solver");
 
 BOOST_AUTO_TEST_SUITE_END()
 

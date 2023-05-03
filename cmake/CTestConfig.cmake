@@ -257,8 +257,29 @@ add_precice_test(
   PETSC
   )
 add_precice_test(
-  NAME mapping.ginkgo
-  ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver"
+  NAME mapping.ginkgo.reference
+  ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/Reference"
+  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+  LABELS ginkgo
+  GINKGO
+  )
+add_precice_test(
+  NAME mapping.ginkgo.openmp
+  ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/OpenMP"
+  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+  LABELS ginkgo
+  GINKGO
+  )
+add_precice_test(
+  NAME mapping.ginkgo.cuda
+  ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/Cuda"
+  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+  LABELS ginkgo
+  GINKGO
+  )
+add_precice_test(
+  NAME mapping.ginkgo.cusSolver
+  ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/cuSolver"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   LABELS ginkgo
   GINKGO
