@@ -42,7 +42,7 @@ public:
     std::string  preconditioner      = "jacobi-preconditioner";
     double       residualNorm        = 1e-8;
     std::size_t  maxIterations       = 1e6;
-    bool         usePreconditioner   = true;
+    bool         usePreconditioner   = false;
     unsigned int jacobiBlockSize     = 4;
     unsigned int deviceId            = 0;
     bool         enableUnifiedMemory = false;
