@@ -323,9 +323,10 @@ void BaseCouplingScheme::moveToNextWindow()
   // for (auto &data : getAccelerationData() | boost::adaptors::map_values) {
   //  data->moveToNextWindow();
   // }
-  for (auto &pair : getAccelerationData()) {
+  for (auto &pair : _allData) {
     PRECICE_DEBUG("Store data: {}", pair.first);
-    pair.second->moveToNextWindow();
+    bool doExtrapolation = (!doesFirstStep() && isImplicitCouplingScheme());
+    pair.second->moveToNextWindow(doExtrapolation);
   }
 }
 
@@ -765,7 +766,6 @@ void BaseCouplingScheme::doImplicitStep()
       _acceleration->iterationsConverged(getAccelerationData());
     }
     newConvergenceMeasurements();
-    moveToNextWindow();
   } else {
     // no convergence achieved for the coupling iteration within the current time window
     if (_acceleration) {

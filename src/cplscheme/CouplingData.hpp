@@ -90,12 +90,14 @@ public:
   void initializeExtrapolation();
 
   /// move to next window and initialize data via extrapolation
-  void moveToNextWindow();
+  void moveToNextWindow(bool doExtrapolation);
 
   /// store current value in _extrapolation
   void storeExtrapolationData();
 
 private:
+  logging::Logger _log{"cplscheme::CouplingData"};
+
   /**
    * @brief Default constructor, not to be used!
    *

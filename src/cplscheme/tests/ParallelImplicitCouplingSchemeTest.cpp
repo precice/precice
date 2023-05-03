@@ -249,6 +249,7 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   BOOST_TEST(cplData->getSize() == 1);
   BOOST_TEST(cplData->getPreviousIterationSize() == 1);
 
+  cplData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{cplData->values()}); // data provided for initial value
   Fixture::moveToNextWindow(scheme);
 
   // data is uninitialized

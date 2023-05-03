@@ -130,7 +130,14 @@ void SerialCouplingScheme::exchangeSecondData()
     PRECICE_DEBUG("Receiving data...");
     receiveData(getM2N(), getReceiveData());
     checkDataHasBeenReceived();
-  } else { // second participant
+  }
+
+  // move to next window.
+  if (hasConverged() || isExplicitCouplingScheme()) {
+    moveToNextWindow();
+  }
+
+  if (!doesFirstStep()) { // second participant
     // the second participant does not want new data in the last iteration of the last time window
     if (isCouplingOngoing() || (isImplicitCouplingScheme() && not hasConverged())) {
       receiveAndSetTimeWindowSize();

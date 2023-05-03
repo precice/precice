@@ -143,12 +143,20 @@ void CouplingData::initializeExtrapolation()
   storeIteration();
 }
 
-void CouplingData::moveToNextWindow()
+void CouplingData::moveToNextWindow(bool doExtrapolation)
 {
-  _extrapolation.moveToNextWindow();
-  values() = _extrapolation.getInitialGuess();
+  if (this->timeStepsStorage().getStamples().size() > 0) {
+    auto atEndOfWindow = this->timeStepsStorage().getStamples().back();
+    this->timeStepsStorage().clearAll();
 
-  this->setSampleAtTime(time::Storage::WINDOW_END, sample());
+    if (doExtrapolation) {
+      _extrapolation.moveToNextWindow();
+      this->values() = _extrapolation.getInitialGuess();
+    }
+
+    this->setSampleAtTime(time::Storage::WINDOW_START, atEndOfWindow.sample);
+    this->setSampleAtTime(time::Storage::WINDOW_END, this->sample());
+  }
 }
 
 void CouplingData::storeExtrapolationData()
