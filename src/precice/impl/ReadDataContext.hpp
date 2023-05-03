@@ -42,7 +42,7 @@ public:
    *
    * @note Note that read mapping contexts have to be unique and and this function may only be called once for a given ReadDataContext
    */
-  void appendMappingConfiguration(MappingContext &mappingContext, const MeshContext &meshContext) override;
+  void appendMappingConfiguration(MappingContext &mappingContext, const MeshContext &meshContext);
 
   /**
    * @brief Samples data at a given point in time within the current time window for given indices

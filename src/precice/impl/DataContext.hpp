@@ -83,16 +83,6 @@ public:
   void mapData();
 
   /**
-   * @brief Adds a MappingContext and the MeshContext required by the mapping to the corresponding DataContext data structures.
-   *
-   * A mapping maps the given data from or to _providedData (depending on whether it is a read or write mapping).
-   *
-   * @param[in] mappingContext Context of the mapping
-   * @param[in] meshContext Context of mesh this mapping is mapping from or to
-   */
-  virtual void appendMappingConfiguration(MappingContext &mappingContext, const MeshContext &meshContext) = 0;
-
-  /**
    * @brief Informs the user whether this DataContext has any _mappingContext.
    *
    * @return True, if this DataContext is associated with a mapping. False, if not.
