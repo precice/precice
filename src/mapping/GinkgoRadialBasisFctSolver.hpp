@@ -78,7 +78,7 @@ const std::map<std::string, GinkgoPreconditionerType> preconditionerTypeLookup{
 const std::map<std::string, std::function<std::shared_ptr<gko::Executor>(const unsigned int, const bool)>> ginkgoExecutorLookup{{"reference-executor", [](auto unused, auto unused2) { return gko::ReferenceExecutor::create(); }},
                                                                                                                                 {"omp-executor", [](auto unused, auto unused2) { return gko::OmpExecutor::create(); }},
                                                                                                                                 {"cuda-executor", [](auto deviceId, auto enableUnifiedMemory) { if(enableUnifiedMemory) return gko::CudaExecutor::create(deviceId, gko::OmpExecutor::create(), true, gko::allocation_mode::unified_global); else return gko::CudaExecutor::create(deviceId, gko::OmpExecutor::create(), true, gko::allocation_mode::device); }},
-                                                                                                                                {"hip-executor", [](auto deviceId, auto unused) { return gko::HipExecutor::create(0, gko::OmpExecutor::create(), true); }}};
+                                                                                                                                {"hip-executor", [](auto deviceId, auto unused) { return gko::HipExecutor::create(deviceId, gko::OmpExecutor::create(), true); }}};
 
 /**
  * This class assembles and solves an RBF system, given an input mesh and an output mesh with relevant vertex IDs.

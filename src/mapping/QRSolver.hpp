@@ -17,6 +17,5 @@ protected:
   void *  dWork   = nullptr;
   void *  hWork   = nullptr;
   int *   devInfo = nullptr;
-
   int backupDeviceId = 0;
 };

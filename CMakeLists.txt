@@ -441,10 +441,10 @@ if (PRECICE_GinkgoParallelization)
   endif()
 
   if(GINKGO_BUILD_HIP)
-    set(_hiplist ${PROJECT_SOURCE_DIR}/src/mapping/device/HipQRSolver.hip.hpp ${PROJECT_SOURCE_DIR}/src/mapping/device/HipQRSolver.hip.cpp)
+    set(_hiplist ${PROJECT_SOURCE_DIR}/src/mapping/device/HipQRSolver.hip.cpp)
     set_source_files_properties(${_hiplist} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT TRUE)
     hip_add_library(preciceCore_qr_hip ${_hiplist}
-    HIPCC_OPTIONS ${GINKGO_HIPCC_OPTIONS} "-std=c++17 -DGINKGO_BUILD_HIP"
+        HIPCC_OPTIONS ${GINKGO_HIPCC_OPTIONS} "-std=c++17 -DGINKGO_BUILD_HIP"
         CLANG_OPTIONS ${GINKGO_HIP_CLANG_OPTIONS}
         NVCC_OPTIONS ${GINKGO_HIP_NVCC_OPTIONS}
         STATIC)

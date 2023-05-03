@@ -1,29 +1,18 @@
 #ifdef PRECICE_WITH_HIP
 
+#include "mapping/device/HipQRSolver.hip.hpp"
 #include <ginkgo/ginkgo.hpp>
 #include <hip/hip_runtime.h>
 #include <hip/hip_runtime_api.h>
-#include <hipblas.h>
 #include <hipsolver.h>
 
-using GinkgoMatrix = gko::matrix::Dense<>;
 
-// Handles for low-level CUDA libraries
-hipsolverDnHandle_t solverHandle;
-hipblasHandle_t     cublasHandle;
-hipsolverStatus_t   hipsolverStatus;
-hipError_t          cudaErrorCode = hipSuccess;
-
-// Important variables which track the state of the solver routines
-double *dTau    = nullptr;
-double *dWork   = nullptr;
-int *   devInfo = nullptr;
-
-void initQRSolver(const int deviceId = 0)
+HipQRSolver::HipQRSolver(const int deviceId)
 {
+  hipGetDevice(&backupDeviceId);
   hipSetDevice(deviceId);
 
-  // Allocating important CUDA variables
+  // Allocating important HIP variables
   hipMalloc((void **) &dWork, sizeof(double));
   hipMalloc((void **) &devInfo, sizeof(int));
   hipMalloc((void **) &dTau, sizeof(double));
@@ -31,9 +20,8 @@ void initQRSolver(const int deviceId = 0)
   hipsolverDnCreate(&solverHandle);
 }
 
-void deInitQRSolver()
+HipQRSolver::~HipQRSolver()
 {
-  // Freeing CUDA variables
   hipFree(dTau);
   hipFree(dWork);
   hipFree(devInfo);
@@ -41,10 +29,8 @@ void deInitQRSolver()
   hipsolverDnDestroy(solverHandle);
 }
 
-void computeQR(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, GinkgoMatrix *R)
+void HipQRSolver::computeQR(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, GinkgoMatrix *R)
 {
-  hipsolverDnCreate(&solverHandle);
-
   // NOTE: It's important to transpose since hipsolver assumes column-major memory layout
   // Making a copy since every value will be overridden
   auto A_T = gko::share(GinkgoMatrix::create(exec, gko::dim<2>(A_Q->get_size()[1], A_Q->get_size()[0])));
@@ -67,28 +53,27 @@ void computeQR(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, Gi
   hipsolverStatus = hipsolverDnDorgqr_bufferSize(solverHandle, M, N, k, A_T->get_values(), lda, dTau, &lwork_orgqr);
   assert(hipsolverStatus == HIPSOLVER_STATUS_SUCCESS);
   lwork         = (lwork_geqrf > lwork_orgqr) ? lwork_geqrf : lwork_orgqr;
-  cudaErrorCode = hipMalloc((void **) &dWork, sizeof(double) * lwork);
-  assert(hipSuccess == cudaErrorCode);
+  hipErrorCode = hipMalloc((void **) &dWork, sizeof(double) * lwork);
+  assert(hipSuccess == hipErrorCode);
 
   // Compute QR factorization
-  hipsolverStatus = hipsolverDnDgeqrf(solverHandle, M, N, A_T->get_values(), lda, dTau, dWork, lwork, devInfo);
-  cudaErrorCode   = hipDeviceSynchronize();
-  assert(HIPSOLVER_STATUS_SUCCESS == hipsolverStatus);
-  assert(hipSuccess == cudaErrorCode);
+  hipsolverStatus = hipsolverDnDgeqrf(solverHandle, M, N, A_T->get_values(), lda, dTau, (double *) dWork, lwork, devInfo);
+  hipErrorCode    = hipDeviceSynchronize();
+  assert(hipsolverStatus == HIPSOLVER_STATUS_SUCCESS);
+  assert(hipSuccess == hipErrorCode);
 
   // Copy A_T to R s.t. the upper triangle corresponds to R
   A_T->transpose(gko::lend(R));
 
   // Compute Q
-  hipsolverStatus = hipsolverDnDorgqr(solverHandle, M, N, k, A_T->get_values(), lda, dTau, dWork, lwork, devInfo);
-  cudaErrorCode   = hipDeviceSynchronize();
-  assert(HIPSOLVER_STATUS_SUCCESS == hipsolverStatus);
-  assert(hipSuccess == cudaErrorCode);
+  hipsolverStatus = hipsolverDnDorgqr(solverHandle, M, N, k, A_T->get_values(), lda, dTau, (double *) dWork, lwork, devInfo);
+  hipErrorCode   = hipDeviceSynchronize();
+  assert(hipsolverStatus == HIPSOLVER_STATUS_SUCCESS);
+  assert(hipSuccess == hipErrorCode);
 
   A_T->transpose(gko::lend(A_Q));
 
   hipDeviceSynchronize();
-
-  return;
+  hipSetDevice(backupDeviceId); // Switch back to the GPU used for all coupled solvers
 }
 #endif
