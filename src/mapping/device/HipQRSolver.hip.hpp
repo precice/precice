@@ -19,7 +19,7 @@ public:
 
 private:
   // Handles for HIP
-#ifdef __NVCC__
+#ifdef __HIPCC__
 hipsolverDnHandle_t solverHandle;
 hipsolverStatus_t   hipsolverStatus;
 hipError_t          hipErrorCode = hipSuccess;

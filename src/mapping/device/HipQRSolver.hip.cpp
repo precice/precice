@@ -15,17 +15,14 @@ HipQRSolver::HipQRSolver(const int deviceId)
   // Allocating important HIP variables
   hipMalloc((void **) &dWork, sizeof(double));
   hipMalloc((void **) &devInfo, sizeof(int));
-  hipMalloc((void **) &dTau, sizeof(double));
 
   hipsolverDnCreate(&solverHandle);
 }
 
 HipQRSolver::~HipQRSolver()
 {
-  hipFree(dTau);
   hipFree(dWork);
   hipFree(devInfo);
-
   hipsolverDnDestroy(solverHandle);
 }
 
@@ -40,12 +37,14 @@ void HipQRSolver::computeQR(const std::shared_ptr<gko::Executor> &exec, GinkgoMa
   const unsigned int M = A_T->get_size()[1];
   const unsigned int N = A_T->get_size()[0];
 
-  const int lda = 1 > M ? 1 : M;
-  const int k   = M < N ? M : N;
+  const int lda = max(1, M);//1 > M ? 1 : M;
+  const int k   = max(M, N);//M < N ? M : N;
 
   int lwork_geqrf = 0;
   int lwork_orgqr = 0;
   int lwork       = 0;
+
+  hipMalloc((void **) &dTau, sizeof(double)*M);
 
   // Query working space of geqrf and orgqr
   hipsolverStatus = hipsolverDnDgeqrf_bufferSize(solverHandle, M, N, A_T->get_values(), lda, &lwork_geqrf);
@@ -74,6 +73,8 @@ void HipQRSolver::computeQR(const std::shared_ptr<gko::Executor> &exec, GinkgoMa
   A_T->transpose(gko::lend(A_Q));
 
   hipDeviceSynchronize();
+  hipFree(dTau);
+
   hipSetDevice(backupDeviceId); // Switch back to the GPU used for all coupled solvers
 }
 #endif
