@@ -146,16 +146,13 @@ void CouplingData::initializeExtrapolation()
 void CouplingData::moveToNextWindow(bool doExtrapolation)
 {
   if (this->timeStepsStorage().getStamples().size() > 0) {
-    auto atEndOfWindow = this->timeStepsStorage().getStamples().back();
-    this->timeStepsStorage().clearAll();
+    this->timeStepsStorage().move();
 
     if (doExtrapolation) {
       _extrapolation.moveToNextWindow();
-      this->values() = _extrapolation.getInitialGuess();
+      auto extrapolatedValue = _extrapolation.getInitialGuess();
+      this->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{extrapolatedValue});
     }
-
-    this->setSampleAtTime(time::Storage::WINDOW_START, atEndOfWindow.sample);
-    this->setSampleAtTime(time::Storage::WINDOW_END, this->sample());
   }
 }
 
