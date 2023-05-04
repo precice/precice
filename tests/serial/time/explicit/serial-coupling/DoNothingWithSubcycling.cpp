@@ -21,11 +21,14 @@ BOOST_AUTO_TEST_CASE(DoNothingWithSubcycling)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
+  double v0[] = {0, 0, 0};
+  double v1[] = {1, 0, 0};
+
   SolverInterface precice(context.name, context.config(), 0, 1);
   if (context.isNamed("SolverOne")) {
     auto meshName = "MeshOne";
-    precice.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());
-    precice.setMeshVertex(meshName, Eigen::Vector3d(1.0, 0.0, 0.0).data());
+    precice.setMeshVertex(meshName, v0);
+    precice.setMeshVertex(meshName, v1);
     precice.initialize();
     double maxDt     = precice.getMaxTimeStepSize();
     int    timestep  = 0;
@@ -42,8 +45,8 @@ BOOST_AUTO_TEST_CASE(DoNothingWithSubcycling)
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
     auto meshName = "Test-Square";
-    precice.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());
-    precice.setMeshVertex(meshName, Eigen::Vector3d(1.0, 0.0, 0.0).data());
+    precice.setMeshVertex(meshName, v0);
+    precice.setMeshVertex(meshName, v1);
     precice.initialize();
     double maxDt     = precice.getMaxTimeStepSize();
     int    timestep  = 0;
