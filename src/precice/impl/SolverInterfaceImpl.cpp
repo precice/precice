@@ -1055,10 +1055,10 @@ void SolverInterfaceImpl::readData(
                 dataDims, dataName, meshName,
                 vertices.size(), values.size(), expectedDataSize, dataDims, vertices.size());
 
-  const auto &                mesh = *context.getMesh();
-  Eigen::Map<Eigen::MatrixXd> outputData(values.data(), dataDims, values.size());
-  const Eigen::MatrixXd       localData{
-      context.sampleWaveformAt(normalizedReadTime).reshaped(dataDims, mesh.vertices().size())};
+  const auto &                      mesh = *context.getMesh();
+  Eigen::Map<Eigen::MatrixXd>       outputData(values.data(), dataDims, values.size());
+  const Eigen::MatrixXd             sample{context.sampleWaveformAt(normalizedReadTime)};
+  Eigen::Map<const Eigen::MatrixXd> localData(sample.data(), dataDims, mesh.vertices().size());
 
   for (int i = 0; i < vertices.size(); ++i) {
     const auto vid = vertices[i];
