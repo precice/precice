@@ -193,30 +193,21 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   _hasDataBeenReceived = false;
 
   if (isImplicitCouplingScheme()) {
+    storeIteration();
     if (not doesFirstStep()) {
       PRECICE_CHECK(not _convergenceMeasures.empty(),
                     "At least one convergence measure has to be defined for "
                     "an implicit coupling scheme.");
       // reserve memory and initialize data with zero
-      initializeStorages();
+      if (_acceleration) {
+        _acceleration->initialize(getAccelerationData());
+      }
     }
     requireAction(CouplingScheme::Action::WriteCheckpoint);
     initializeTXTWriters();
   }
 
-  if (isImplicitCouplingScheme()) {
-    storeIteration();
-  }
-
   exchangeInitialData();
-
-  if (isImplicitCouplingScheme()) {
-    if (not doesFirstStep()) {
-      storeExtrapolationData();
-      moveToNextWindow();
-    }
-  }
-
   performReceiveOfFirstAdvance();
 
   _isInitialized = true;
@@ -308,14 +299,6 @@ void BaseCouplingScheme::secondExchange()
   }
 }
 
-void BaseCouplingScheme::storeExtrapolationData()
-{
-  PRECICE_TRACE(_timeWindows);
-  for (auto &data : _allData | boost::adaptors::map_values) {
-    data->storeExtrapolationData();
-  }
-}
-
 void BaseCouplingScheme::moveToNextWindow()
 {
   PRECICE_TRACE(_timeWindows);
@@ -324,9 +307,7 @@ void BaseCouplingScheme::moveToNextWindow()
   //  data->moveToNextWindow();
   // }
   for (auto &pair : _allData) {
-    PRECICE_DEBUG("Store data: {}", pair.first);
-    bool doExtrapolation = (!doesFirstStep() && isImplicitCouplingScheme());
-    pair.second->moveToNextWindow(doExtrapolation);
+    pair.second->moveToNextWindow();
   }
 }
 
@@ -555,19 +536,6 @@ void BaseCouplingScheme::checkCompletenessRequiredActions()
   _fulfilledActions.clear();
 }
 
-void BaseCouplingScheme::initializeStorages()
-{
-  PRECICE_TRACE();
-  // Reserve storage for all data
-  for (auto &data : _allData | boost::adaptors::map_values) {
-    data->initializeExtrapolation();
-  }
-  // Reserve storage for acceleration
-  if (_acceleration) {
-    _acceleration->initialize(getAccelerationData());
-  }
-}
-
 void BaseCouplingScheme::setAcceleration(
     const acceleration::PtrAcceleration &acceleration)
 {
@@ -752,8 +720,6 @@ bool BaseCouplingScheme::anyDataRequiresInitialization(DataMap &dataMap) const
 
 void BaseCouplingScheme::doImplicitStep()
 {
-  storeExtrapolationData();
-
   PRECICE_DEBUG("measure convergence of the coupling iteration");
   _hasConverged = measureConvergence();
   // Stop, when maximal iteration count (given in config) is reached
@@ -786,8 +752,6 @@ void BaseCouplingScheme::doImplicitStep()
       }
     }
   }
-  // Store data for conv. measurement, acceleration
-  storeIteration();
 }
 
 void BaseCouplingScheme::sendConvergence(const m2n::PtrM2N &m2n)

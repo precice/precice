@@ -155,9 +155,12 @@ void MultiCouplingScheme::exchangeSecondData()
     checkDataHasBeenReceived();
   }
 
-  // move to next window.
   if (hasConverged() || isExplicitCouplingScheme()) {
     moveToNextWindow();
+  }
+
+  if (isImplicitCouplingScheme()) {
+    storeIteration();
   }
 }
 

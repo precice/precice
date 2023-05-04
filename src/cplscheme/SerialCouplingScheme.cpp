@@ -136,6 +136,9 @@ void SerialCouplingScheme::exchangeSecondData()
   if (hasConverged() || isExplicitCouplingScheme()) {
     moveToNextWindow();
   }
+  if (isImplicitCouplingScheme()) {
+    storeIteration();
+  }
 
   if (!doesFirstStep()) { // second participant
     // the second participant does not want new data in the last iteration of the last time window

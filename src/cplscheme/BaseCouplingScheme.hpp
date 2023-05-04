@@ -241,6 +241,9 @@ protected:
   /// All send and receive data as a map "data ID -> data"
   DataMap _allData;
 
+  /// Acceleration method to speedup iteration convergence.
+  acceleration::PtrAcceleration _acceleration;
+
   /**
    * @brief Sends data sendDataIDs given in mapCouplingData with communication.
    *
@@ -329,11 +332,6 @@ protected:
   void setTimeWindows(int timeWindows);
 
   /**
-   * @brief Reserves memory to store data values from previous iterations and time windows in coupling data and acceleration, and initializes with zero.
-   */
-  void initializeStorages();
-
-  /**
    * @brief sends convergence to other participant via m2n
    * @param m2n used for sending
    */
@@ -353,11 +351,6 @@ protected:
    * This function is called from the child classes
    */
   void doImplicitStep();
-
-  /**
-   * @brief stores current data in buffer for extrapolation
-   */
-  void storeExtrapolationData();
 
   /**
    * @brief finalizes this window's data and initializes data for next window.
@@ -424,9 +417,6 @@ private:
 
   /// True, if _computedTimeWindowPart == _timeWindowSize and (coupling has converged or _iterations == _maxIterations)
   bool _isTimeWindowComplete = false;
-
-  /// Acceleration method to speedup iteration convergence.
-  acceleration::PtrAcceleration _acceleration;
 
   /// True, if this participant has to send initialized data.
   bool _sendsInitializedData = false;

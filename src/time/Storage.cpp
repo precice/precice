@@ -9,7 +9,7 @@ const double Storage::WINDOW_START = 0.0;
 const double Storage::WINDOW_END = 1.0;
 
 Storage::Storage()
-    : _sampleStorage{}
+    : _sampleStorage{}, _extrapolationOrder{0}
 {
 }
 
@@ -39,6 +39,11 @@ void Storage::setSampleAtTime(double time, Sample sample)
   }
 }
 
+void Storage::setExtrapolationOrder(int extrapolationOrder)
+{
+  _extrapolationOrder = extrapolationOrder;
+}
+
 double Storage::maxStoredNormalizedDt() const
 {
   if (_sampleStorage.size() == 0) {
@@ -62,16 +67,18 @@ int Storage::nDofs() const
 void Storage::move()
 {
   PRECICE_ASSERT(nTimes() > 0);
-  auto initialGuess = _sampleStorage.back().sample; // use sample at end of window as initial guess for next
+  auto sampleAtBeginning = getSampleAtEnd();
+  auto sampleAtEnd       = computeExtrapolation();
   _sampleStorage.clear();
-  initialize(initialGuess);
+  _sampleStorage.emplace_back(time::Stample{WINDOW_START, sampleAtBeginning});
+  _sampleStorage.emplace_back(time::Stample{WINDOW_END, sampleAtEnd});
 }
 
 void Storage::clear()
 {
   PRECICE_ASSERT(nTimes() > 0, "Storage does not contain any data!");
   Stample keep = _sampleStorage.front();
-  PRECICE_ASSERT(keep.timestamp == time::Storage::WINDOW_START);
+  PRECICE_ASSERT(math::equals(keep.timestamp, time::Storage::WINDOW_START));
   _sampleStorage.clear();
   _sampleStorage.emplace_back(keep);
 }
@@ -113,6 +120,28 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> Storage::getTimesAndValues() const
     values.col(i) = _sampleStorage[i].sample.values;
   }
   return std::make_pair(times, values);
+}
+
+time::Sample Storage::computeExtrapolation()
+{
+  if (_extrapolationOrder == 0) {
+    return getSampleAtEnd(); // use values at end of window as initial guess for next
+  } else if (_extrapolationOrder == 1) {
+    auto s0 = getSampleAtBeginning();
+    auto s1 = getSampleAtEnd();
+    return time::Sample{2 * s1.values - s0.values, 2 * s1.gradient - s1.gradient}; // use linear extrapolation from window at beginning and end of window.
+  }
+  PRECICE_UNREACHABLE("Invalid _extrapolationOrder")
+}
+
+time::Sample Storage::getSampleAtBeginning()
+{
+  return _sampleStorage.front().sample;
+}
+
+time::Sample Storage::getSampleAtEnd()
+{
+  return _sampleStorage.back().sample;
 }
 
 } // namespace precice::time

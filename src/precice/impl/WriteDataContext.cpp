@@ -87,6 +87,7 @@ void WriteDataContext::resizeBufferTo(int nVertices)
 
 void WriteDataContext::storeBufferedData(double currentTime)
 {
+  PRECICE_DEBUG("storeBufferedData {} at time {}", getDataName(), currentTime);
   _providedData->setSampleAtTime(currentTime, _writeDataBuffer);
 }
 

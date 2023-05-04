@@ -53,10 +53,11 @@ void ParallelCouplingScheme::exchangeSecondData()
     PRECICE_DEBUG("Sending data...");
     sendData(getM2N(), getSendData());
   }
-
-  // move to next window.
   if (hasConverged() || isExplicitCouplingScheme()) {
     moveToNextWindow();
+  }
+  if (isImplicitCouplingScheme()) {
+    storeIteration();
   }
 }
 

@@ -243,14 +243,13 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   using Fixture = testing::ParallelCouplingSchemeFixture;
 
   scheme.addDataToSend(data, mesh, true);
-  Fixture::initializeStorages(scheme);
+  Fixture::initializeAcceleration(scheme);
   CouplingData *cplData = Fixture::getSendData(scheme, dataID);
   BOOST_CHECK(cplData); // no nullptr
   BOOST_TEST(cplData->getSize() == 1);
   BOOST_TEST(cplData->getPreviousIterationSize() == 1);
 
-  cplData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{cplData->values()}); // data provided for initial value
-  Fixture::moveToNextWindow(scheme);
+  cplData->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{cplData->values()}); // data provided for initial value
 
   // data is uninitialized
   BOOST_TEST(testing::equals(cplData->values()(0), 0.0));
@@ -260,7 +259,6 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   cplData->values()(0) = 1.0;                                                           // data provided at end of first window
   cplData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{cplData->values()}); // data provided at end of first window
   Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
-  Fixture::storeExtrapolationData(scheme);
   BOOST_TEST(testing::equals(cplData->values()(0), 1.0));
 
   // go to second window
@@ -272,7 +270,6 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   cplData->values()(0) = 4.0;                                                           // data provided at end of second window
   cplData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{cplData->values()}); // data provided at end of second window
   Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
-  Fixture::storeExtrapolationData(scheme);
 
   // go to third window
   Fixture::moveToNextWindow(scheme); // uses first order extrapolation (maximum allowed) at end of second window
@@ -283,7 +280,6 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   cplData->values()(0) = 10.0;                                                          // data provided at end of third window
   cplData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{cplData->values()}); // data provided at end of third window
   Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
-  Fixture::storeExtrapolationData(scheme);
 
   // go to fourth window
   Fixture::moveToNextWindow(scheme); // uses first order extrapolation (maximum allowed) at end of third window
@@ -383,9 +379,10 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
       new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
   cplScheme.addConvergenceMeasure(convergenceDataIndex, false, false, minIterationConvMeasure1, true);
 
-  cplScheme.initialize(0.0, 1);
-
   Eigen::VectorXd v(1); // buffer for data
+  v << 0;
+  mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{v});
+  cplScheme.initialize(0.0, 1);
 
   // write data is uninitialized
   BOOST_TEST(mesh->data(sendDataIndex)->values()(0) == 0);
@@ -613,11 +610,13 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
 
   if (context.isNamed(first)) {
     BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::InitializeData));
+    v << 0.0;
+    mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{v});
   } else {
     BOOST_TEST(context.isNamed(second));
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::InitializeData));
     v << 4.0;
-    mesh->data(sendDataIndex)->values() = v;
+    mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{v});
     cplScheme.markActionFulfilled(CouplingScheme::Action::InitializeData);
     BOOST_TEST(mesh->data(sendDataIndex)->values().size() == 1);
     BOOST_TEST(testing::equals(mesh->data(sendDataIndex)->values()(0), 4.0));
