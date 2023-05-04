@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingZero)
   double maxDt     = precice.getMaxTimeStepSize();
   double dt        = maxDt; // time step size desired by solver
   double currentDt = dt;    // time step size used by solver
-  double timeCheckpoint;
+  double timeCheckpoint{0.0};
   double sampleDts[4] = {0.0, dt / 4.0, dt / 2.0, 3.0 * dt / 4.0};
   double readDts[4]   = {0.0, currentDt, currentDt, currentDt};
   int    nSamples     = 4;

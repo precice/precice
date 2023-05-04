@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveform)
   double windowDt  = maxDt;
   double dt        = windowDt / (nSubsteps - 0.5); // Solver always tries to do a timestep of fixed size.
   double currentDt = dt > maxDt ? maxDt : dt;      // determine actual time step size; must fit into remaining time in window
-  double timeCheckpoint;
+  double timeCheckpoint{0};
 
   while (precice.isCouplingOngoing()) {
 
