@@ -25,9 +25,9 @@ BOOST_AUTO_TEST_CASE(Explicit)
 
   SolverInterface cplInterface(context.name, context.config(), 0, 1);
   if (context.isNamed("SolverOne")) {
-    auto   meshName = "MeshOne";
-    double v[]      = {1.0, 2.0, 3.0};
-    auto vid = cplInterface.setMeshVertex(meshName, v);
+    auto   meshName   = "MeshOne";
+    double v[]        = {1.0, 2.0, 3.0};
+    auto   vid        = cplInterface.setMeshVertex(meshName, v);
     auto   dataAID    = "DataOne";
     auto   dataBID    = "DataTwo";
     double valueDataB = 0.0;
