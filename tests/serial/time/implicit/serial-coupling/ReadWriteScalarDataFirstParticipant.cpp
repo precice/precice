@@ -47,7 +47,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipant)
     readDataName  = "DataOne";
   }
 
-  VertexID vertexID = precice.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+  double   v0[]     = {0, 0, 0};
+  VertexID vertexID = precice.setMeshVertex(meshName, v0);
   precice.initialize();
   double dt = precice.getMaxTimeStepSize();
 

@@ -18,10 +18,12 @@ BOOST_AUTO_TEST_CASE(ThreeSolversFirstParticipant)
 
   precice::SolverInterface precice(context.name, config, 0, 1);
 
+  double v0[] = {0, 0};
+
   if (context.isNamed("SolverOne")) {
 
     auto meshName = "MeshOne";
-    precice.setMeshVertex(meshName, Eigen::Vector2d(0, 0).data());
+    precice.setMeshVertex(meshName, v0);
 
     precice.initialize();
 
@@ -35,9 +37,9 @@ BOOST_AUTO_TEST_CASE(ThreeSolversFirstParticipant)
   } else if (context.isNamed("SolverTwo")) {
 
     auto meshAID = "MeshTwoA";
-    precice.setMeshVertex(meshAID, Eigen::Vector2d(0, 0).data());
+    precice.setMeshVertex(meshAID, v0);
     auto meshBID = "MeshTwoB";
-    precice.setMeshVertex(meshBID, Eigen::Vector2d(0, 0).data());
+    precice.setMeshVertex(meshBID, v0);
 
     precice.initialize();
     double dt = precice.getMaxTimeStepSize();
@@ -56,7 +58,7 @@ BOOST_AUTO_TEST_CASE(ThreeSolversFirstParticipant)
     BOOST_TEST(context.isNamed("SolverThree"));
 
     auto meshName = "MeshThree";
-    precice.setMeshVertex(meshName, Eigen::Vector2d(0, 0).data());
+    precice.setMeshVertex(meshName, v0);
 
     precice.initialize();
     double dt = precice.getMaxTimeStepSize();
