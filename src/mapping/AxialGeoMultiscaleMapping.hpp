@@ -49,13 +49,11 @@ public:
   /// Removes a computed mapping.
   void clear() override;
 
-  /// Maps input data to output data from input mesh to output mesh.
-  // void map (
-  //  int inputDataID,
-  //  int outputDataID ) override;
-
   void tagMeshFirstRound() override;
   void tagMeshSecondRound() override;
+
+  /// Returns name of the mapping
+  std::string getName() const final override;
 
 protected:
   /// @copydoc Mapping::mapConservative

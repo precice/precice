@@ -48,13 +48,11 @@ public:
   /// Removes a computed mapping.
   void clear() override;
 
-  /// Maps input data to output data from input mesh to output mesh.
-  // void map (
-  //  int inputDataID,
-  //  int outputDataID ) override;
-
   void tagMeshFirstRound() override;
   void tagMeshSecondRound() override;
+
+  /// Returns name of the mapping
+  std::string getName() const final override;
 
 protected:
   /// @copydoc Mapping::mapConservative
@@ -62,6 +60,9 @@ protected:
 
   /// @copydoc Mapping::mapConsistent
   void mapConsistent(DataID inputDataID, DataID outputDataID) override;
+
+  /// Returns name of the mapping
+  std::string AxialGeoMultiscaleMapping::getName() const final override;
 
 private:
   mutable logging::Logger _log{"mapping::RadialGeoMultiscaleMapping"};
