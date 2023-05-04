@@ -13,10 +13,10 @@ Storage::Storage()
 {
 }
 
-void Storage::initialize(Eigen::VectorXd values)
+void Storage::initialize(time::Sample sample)
 {
-  _sampleStorage.emplace_back(Stample{WINDOW_START, Sample{values}});
-  _sampleStorage.emplace_back(Stample{WINDOW_END, Sample{values}});
+  _sampleStorage.emplace_back(Stample{WINDOW_START, sample});
+  _sampleStorage.emplace_back(Stample{WINDOW_END, sample});
 }
 
 void Storage::setSampleAtTime(double time, Sample sample)
@@ -62,7 +62,7 @@ int Storage::nDofs() const
 void Storage::move()
 {
   PRECICE_ASSERT(nTimes() > 0);
-  auto initialGuess = _sampleStorage.back().sample.values; // use values at end of window as initial guess for next
+  auto initialGuess = _sampleStorage.back().sample; // use sample at end of window as initial guess for next
   _sampleStorage.clear();
   initialize(initialGuess);
 }

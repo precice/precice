@@ -25,11 +25,11 @@ public:
   Storage();
 
   /**
-   * @brief Initialize storage by storing given values at time 0.0 and 1.0.
+   * @brief Initialize storage by storing given sample at time 0.0 and 1.0.
    *
-   * @param values initial values
+   * @param sample initial sample
    */
-  void initialize(Eigen::VectorXd values);
+  void initialize(time::Sample sample);
 
   /**
    * @brief Store Sample at a specific time.
