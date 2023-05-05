@@ -52,13 +52,6 @@ public:
   int getSpatialDimensions() const;
 
   /**
-   * @brief Get the size of _providedData.
-   *
-   * @return int size of _providedData.
-   */
-  int getDataSize() const;
-
-  /**
    * @brief Get the name of _mesh.
    *
    * @return std::string Name of _mesh.
@@ -139,6 +132,16 @@ protected:
    * @return True, if DataContext has any write mapping.
    */
   bool hasWriteMapping() const;
+
+  /**
+   * @brief Get the number of vertices of mesh
+   *
+   * @return int number of vertices
+   */
+  int getMeshVertexCount() const;
+
+  /// Returns true if the given vertexID is valid
+  bool isValidVertexID(const VertexID id) const;
 
 private:
   /// Unique mesh associated with _providedData.

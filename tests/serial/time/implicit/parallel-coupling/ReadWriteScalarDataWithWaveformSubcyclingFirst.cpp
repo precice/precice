@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
 
   if (precice.requiresInitialData()) {
     writeData = writeFunction(time);
-    precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
+    precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&writeData, 1});
   }
 
   precice.initialize();
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
   double dt       = windowDt / nSubsteps; // time step size desired by solver. E.g. 4 steps  with size 1/4
   dt += windowDt / nSubsteps / nSubsteps; // increase time step size such that we get a non-matching subcycling. E.g. 3 step with size 5/16 and 1 step with size 1/16.
   double currentDt = dt;                  // time step size used by solver
-  double timeCheckpoint;
+  double timeCheckpoint{0.0};
   int    iterations;
 
   while (precice.isCouplingOngoing()) {
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
     double readTime;
     readTime = time + currentDt;
 
-    precice.readScalarData(meshName, readDataName, vertexID, currentDt, readData);
+    precice.readData(meshName, readDataName, {&vertexID, 1}, currentDt, {&readData, 1});
 
     if (iterations == 0) { // in the first iteration of each window, we only have one sample of data. Therefore constant interpolation
       BOOST_TEST(readData == readFunction(timeCheckpoint));
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
       BOOST_TEST(readData == readFunction(readTime));
     }
 
-    precice.readScalarData(meshName, readDataName, vertexID, currentDt / 2, readData);
+    precice.readData(meshName, readDataName, {&vertexID, 1}, currentDt / 2, {&readData, 1});
 
     if (iterations == 0) { // in the first iteration of each window, we only have one sample of data. Therefore constant interpolation
       BOOST_TEST(readData == readFunction(timeCheckpoint));
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
     time += currentDt;
     timestep++;
     writeData = writeFunction(time);
-    precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
+    precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&writeData, 1});
     precice.advance(currentDt);
     maxDt = precice.getMaxTimeStepSize();
     if (precice.requiresReadingCheckpoint()) {

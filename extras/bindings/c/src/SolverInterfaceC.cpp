@@ -251,7 +251,7 @@ void precicec_setMeshTetrahedra(
   impl->setMeshTetrahedra(meshName, size, vertices);
 }
 
-void precicec_writeBlockVectorData(
+void precicec_writeData(
     const char *  meshName,
     const char *  dataName,
     int           size,
@@ -259,41 +259,11 @@ void precicec_writeBlockVectorData(
     const double *values)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->writeBlockVectorData(meshName, dataName, size, valueIndices, values);
+  auto dataSize = size * impl->getDataDimensions(meshName, dataName);
+  impl->writeData(meshName, dataName, {valueIndices, static_cast<unsigned long>(size)}, {values, static_cast<unsigned long>(dataSize)});
 }
 
-void precicec_writeVectorData(
-    const char *  meshName,
-    const char *  dataName,
-    int           valueIndex,
-    const double *dataValue)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->writeVectorData(meshName, dataName, valueIndex, dataValue);
-}
-
-void precicec_writeBlockScalarData(
-    const char *  meshName,
-    const char *  dataName,
-    int           size,
-    const int *   valueIndices,
-    const double *values)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->writeBlockScalarData(meshName, dataName, size, valueIndices, values);
-}
-
-void precicec_writeScalarData(
-    const char *meshName,
-    const char *dataName,
-    int         valueIndex,
-    double      dataValue)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->writeScalarData(meshName, dataName, valueIndex, dataValue);
-}
-
-void precicec_readBlockVectorData(
+void precicec_readData(
     const char *meshName,
     const char *dataName,
     int         size,
@@ -302,41 +272,8 @@ void precicec_readBlockVectorData(
     double *    values)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->readBlockVectorData(meshName, dataName, size, valueIndices, relativeReadTime, values);
-}
-
-void precicec_readVectorData(
-    const char *meshName,
-    const char *dataName,
-    int         valueIndex,
-    double      relativeReadTime,
-    double *    dataValue)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->readVectorData(meshName, dataName, valueIndex, relativeReadTime, dataValue);
-}
-
-void precicec_readBlockScalarData(
-    const char *meshName,
-    const char *dataName,
-    int         size,
-    const int * valueIndices,
-    double      relativeReadTime,
-    double *    values)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->readBlockScalarData(meshName, dataName, size, valueIndices, relativeReadTime, values);
-}
-
-void precicec_readScalarData(
-    const char *meshName,
-    const char *dataName,
-    int         valueIndex,
-    double      relativeReadTime,
-    double *    dataValue)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->readScalarData(meshName, dataName, valueIndex, relativeReadTime, *dataValue);
+  auto dataSize = size * impl->getDataDimensions(meshName, dataName);
+  impl->readData(meshName, dataName, {valueIndices, static_cast<unsigned long>(size)}, relativeReadTime, {values, static_cast<unsigned long>(dataSize)});
 }
 
 int precicec_requiresGradientDataFor(const char *meshName,
@@ -349,37 +286,6 @@ int precicec_requiresGradientDataFor(const char *meshName,
   return 0;
 }
 
-void precicec_writeScalarGradientData(
-    const char *  meshName,
-    const char *  dataName,
-    int           valueIndex,
-    const double *gradientValues)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->writeScalarGradientData(meshName, dataName, valueIndex, gradientValues);
-}
-
-void precicec_writeBlockScalarGradientData(
-    const char *  meshName,
-    const char *  dataName,
-    int           size,
-    const int *   valueIndices,
-    const double *gradientValues)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->writeBlockScalarGradientData(meshName, dataName, size, valueIndices, gradientValues);
-}
-
-void precicec_writeVectorGradientData(
-    const char *  meshName,
-    const char *  dataName,
-    int           valueIndex,
-    const double *gradientValues)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->writeVectorGradientData(meshName, dataName, valueIndex, gradientValues);
-}
-
 void precicec_writeBlockVectorGradientData(
     const char *  meshName,
     const char *  dataName,
@@ -388,7 +294,9 @@ void precicec_writeBlockVectorGradientData(
     const double *gradientValues)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->writeBlockVectorGradientData(meshName, dataName, size, valueIndices, gradientValues);
+  auto gradientComponents = impl->getDataDimensions(meshName, dataName) * impl->getMeshDimensions(meshName);
+  auto gradientSize       = size * gradientComponents;
+  impl->writeGradientData(meshName, dataName, {valueIndices, static_cast<unsigned long>(size)}, {gradientValues, static_cast<unsigned long>(gradientSize)});
 }
 
 const char *precicec_getVersionInformation()

@@ -65,13 +65,13 @@ PROGRAM main
     ENDIF
 
     CALL precicef_get_max_time_step_size(dt)
-    CALL precicef_read_bvdata(meshName, readDataName, numberOfVertices, vertexIDs, dt, readData)
+    CALL precicef_read_data(meshName, readDataName, numberOfVertices, vertexIDs, dt, readData)
 
     WRITE (*,*) 'readData: ', readData
 
     writeData = readData + 1
 
-    CALL precicef_write_bvdata(meshName, writeDataName, numberOfVertices, vertexIDs, writeData)
+    CALL precicef_write_data(meshName, writeDataName, numberOfVertices, vertexIDs, writeData)
 
     CALL precicef_advance(dt)
 

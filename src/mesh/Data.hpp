@@ -60,10 +60,10 @@ public:
   const Eigen::VectorXd &values() const;
 
   /// Returns a reference to the gradient data values.
-  Eigen::MatrixXd &gradientValues();
+  Eigen::MatrixXd &gradientValues(); // @todo rename to gradients() ?
 
   /// Returns a const reference to the gradient data values.
-  const Eigen::MatrixXd &gradientValues() const;
+  const Eigen::MatrixXd &gradientValues() const; // @todo rename to gradients() ?
 
   /// Returns a reference to the _sample.
   time::Sample &sample();

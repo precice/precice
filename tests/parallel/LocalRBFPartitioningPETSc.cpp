@@ -25,7 +25,7 @@ BOOST_AUTO_TEST_CASE(LocalRBFPartitioningPETSc)
     double values[2];
     interface.advance(1.0);
     double preciceDt = interface.getMaxTimeStepSize();
-    interface.readBlockScalarData(meshName, dataName, 2, vertexIDs, preciceDt, values);
+    interface.readData(meshName, dataName, vertexIDs, preciceDt, values);
     interface.finalize();
   } else {
     BOOST_REQUIRE(context.isNamed("SolverTwo"));
@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(LocalRBFPartitioningPETSc)
     interface.initialize();
     auto   dataName  = "Data2";
     double values[6] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
-    interface.writeBlockScalarData(meshName, dataName, 6, vertexIDs, values);
+    interface.writeData(meshName, dataName, vertexIDs, values);
     interface.advance(1.0);
     interface.finalize();
   }

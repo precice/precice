@@ -49,12 +49,12 @@ const Eigen::VectorXd &CouplingData::values() const
 
 Eigen::MatrixXd &CouplingData::gradientValues()
 {
-  return sample().gradient;
+  return sample().gradients;
 }
 
 const Eigen::MatrixXd &CouplingData::gradientValues() const
 {
-  return sample().gradient;
+  return sample().gradients;
 }
 
 time::Storage &CouplingData::timeStepsStorage()
@@ -109,7 +109,7 @@ const Eigen::VectorXd CouplingData::previousIteration() const
 
 const Eigen::MatrixXd &CouplingData::previousIterationGradients() const
 {
-  return _previousIteration.gradient;
+  return _previousIteration.gradients;
 }
 
 int CouplingData::getPreviousIterationSize() const

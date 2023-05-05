@@ -68,7 +68,7 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
     auto dataAID = "DataOne";
     BOOST_TEST(!interface.requiresGradientDataFor(meshOneID, dataAID));
 
-    interface.writeBlockScalarData(meshOneID, dataAID, nCoords, ids.data(), values.data());
+    interface.writeData(meshOneID, dataAID, ids, values);
 
     // Advance, thus send the data to the receiving partner.
     interface.advance(maxDt);
@@ -94,15 +94,14 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
     auto dataAID = "DataOne";
     BOOST_TEST(!interface.requiresGradientDataFor(meshTwoID, dataAID));
 
-    double valueA, valueB, valueC;
-    interface.readScalarData(meshTwoID, dataAID, idA, maxDt, valueA);
-    interface.readScalarData(meshTwoID, dataAID, idB, maxDt, valueB);
-    interface.readScalarData(meshTwoID, dataAID, idC, maxDt, valueC);
+    double values[3];
+    int    ids[] = {idA, idB, idC};
+    interface.readData(meshTwoID, dataAID, ids, maxDt, values);
 
     // Due to Eigen 3.3.7 (Ubunu 2004) giving slightly different results
-    BOOST_TEST(valueA == expectedValTwoA, boost::test_tools::tolerance(1e-8));
-    BOOST_TEST(valueB == expectedValTwoB, boost::test_tools::tolerance(3e-2));
-    BOOST_TEST(valueC == expectedValTwoC, boost::test_tools::tolerance(2e-3));
+    BOOST_TEST(values[0] == expectedValTwoA, boost::test_tools::tolerance(1e-8));
+    BOOST_TEST(values[1] == expectedValTwoB, boost::test_tools::tolerance(3e-2));
+    BOOST_TEST(values[2] == expectedValTwoC, boost::test_tools::tolerance(2e-3));
 
     // Verify that there is only one time step necessary.
     interface.advance(maxDt);

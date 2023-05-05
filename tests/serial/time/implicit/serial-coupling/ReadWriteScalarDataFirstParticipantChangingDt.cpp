@@ -65,7 +65,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantChangingDt)
   double   v0[]     = {0, 0, 0};
   VertexID vertexID = precice.setMeshVertex(meshName, v0);
   if (precice.requiresInitialData()) {
-    precice.writeScalarData(meshName, writeDataName, vertexID, writeFunction(0));
+    double data[] = {writeFunction(0)};
+    precice.writeData(meshName, writeDataName, {&vertexID, 1}, data);
   }
   precice.initialize();
   double preciceDt = precice.getMaxTimeStepSize();
@@ -95,7 +96,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantChangingDt)
     if (context.isNamed("SolverOne")) {
       // @todo window end is not well defined for SolverOne! See https://github.com/precice/precice/issues/1570#issuecomment-1443063091
     } else {
-      precice.readScalarData(meshName, readDataName, vertexID, solverDt, actualDataValue);
+      precice.readData(meshName, readDataName, {&vertexID, 1}, solverDt, {&actualDataValue, 1});
     }
 
     dt = std::min({solverDt, preciceDt});
@@ -107,7 +108,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantChangingDt)
       expectedDataValue = readFunction(startOfWindowTime + timeInWindow);
       BOOST_TEST(actualDataValue == expectedDataValue);
     }
-    precice.writeScalarData(meshName, writeDataName, vertexID, writeFunction(startOfWindowTime + timeInWindow));
+    double data[] = {writeFunction(startOfWindowTime + timeInWindow)};
+    precice.writeData(meshName, writeDataName, {&vertexID, 1}, data);
     precice.advance(dt);
     preciceDt = precice.getMaxTimeStepSize();
 

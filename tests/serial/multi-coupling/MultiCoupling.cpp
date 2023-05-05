@@ -25,16 +25,11 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
   position << 0.0, 1.0;
   positions.push_back(position);
 
-  std::vector<Eigen::Vector2d> datas;
-  Eigen::Vector2d              data;
-  data << 1.0, 1.0;
-  datas.push_back(data);
-  data << 2.0, 2.0;
-  datas.push_back(data);
-  data << 3.0, 3.0;
-  datas.push_back(data);
-  data << 4.0, 5.0;
-  datas.push_back(data);
+  std::vector<double> datas{
+      1.0, 1.0,
+      2.0, 2.0,
+      3.0, 3.0,
+      4.0, 5.0};
 
   if (context.isNamed("SOLIDZ1") ||
       context.isNamed("SOLIDZ2") ||
@@ -65,9 +60,7 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
 
     precice.initialize();
 
-    for (size_t i = 0; i < 4; i++) {
-      precice.writeVectorData(meshName, dataWriteID, vertexIDs.at(i), datas.at(i).data());
-    }
+    precice.writeData(meshName, dataWriteID, vertexIDs, datas);
 
     if (precice.requiresWritingCheckpoint()) {
     }
@@ -75,18 +68,18 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
     if (precice.requiresReadingCheckpoint()) {
     }
 
-    for (size_t i = 0; i < 4; i++) {
-      precice.readVectorData(meshName, dataReadID, vertexIDs.at(i), precice.getMaxTimeStepSize(), datas.at(i).data());
-    }
+    precice.readData(meshName, dataReadID, vertexIDs, precice.getMaxTimeStepSize(), datas);
 
-    BOOST_TEST(datas.at(0)(0) == 1.00000000000000002082e-03);
-    BOOST_TEST(datas.at(0)(1) == 1.00000000000000002082e-03);
-    BOOST_TEST(datas.at(1)(0) == 2.00000000000000000000e-03);
-    BOOST_TEST(datas.at(1)(1) == 2.00000000000000002082e-03);
-    BOOST_TEST(datas.at(2)(0) == 3.00000000000000006245e-03);
-    BOOST_TEST(datas.at(2)(1) == 3.00000000000000006245e-03);
-    BOOST_TEST(datas.at(3)(0) == 4.00000000000000008327e-03);
-    BOOST_TEST(datas.at(3)(1) == 5.00000000000000010408e-03);
+    double expected[] = {
+        1.00000000000000002082e-03,
+        1.00000000000000002082e-03,
+        2.00000000000000000000e-03,
+        2.00000000000000002082e-03,
+        3.00000000000000006245e-03,
+        3.00000000000000006245e-03,
+        4.00000000000000008327e-03,
+        5.00000000000000010408e-03};
+    BOOST_TEST(datas == expected, boost::test_tools::per_element());
 
     precice.finalize();
 
@@ -122,11 +115,9 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
 
     precice.initialize();
 
-    for (size_t i = 0; i < 4; i++) {
-      precice.writeVectorData(meshName1, dataWriteID1, vertexIDs1.at(i), datas.at(i).data());
-      precice.writeVectorData(meshName2, dataWriteID2, vertexIDs2.at(i), datas.at(i).data());
-      precice.writeVectorData(meshName3, dataWriteID3, vertexIDs3.at(i), datas.at(i).data());
-    }
+    precice.writeData(meshName1, dataWriteID1, vertexIDs1, datas);
+    precice.writeData(meshName2, dataWriteID2, vertexIDs2, datas);
+    precice.writeData(meshName3, dataWriteID3, vertexIDs3, datas);
 
     if (precice.requiresWritingCheckpoint()) {
     }

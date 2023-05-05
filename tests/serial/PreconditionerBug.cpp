@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(PreconditionerBug)
       auto dataName = "DataOne";
       // to get convergence in first timestep (everything 0), but not in second timestep
       Vector2d value{0.0, 2.0 + numberOfAdvanceCalls * numberOfAdvanceCalls};
-      interface.writeVectorData(meshName, dataName, vertexID, value.data());
+      interface.writeData(meshName, dataName, {&vertexID, 1}, value);
     }
     interface.advance(1.0);
 

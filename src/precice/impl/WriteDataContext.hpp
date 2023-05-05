@@ -32,7 +32,7 @@ public:
    * @param[in] indices ids of data
    * @param[in] values values of data
    */
-  void writeValuesIntoDataBuffer(const std::vector<int> &indices, const Eigen::Map<const Eigen::VectorXd> values);
+  void writeValuesIntoDataBuffer(::precice::span<const VertexID> vertices, ::precice::span<const double> values);
 
   /**
    * @brief Store gradients in _writeDataBuffer
@@ -40,7 +40,7 @@ public:
    * @param[in] indices ids of data
    * @param[in] gradients gradients of data
    */
-  void writeGradientIntoDataBuffer(const std::vector<int> &indices, const Eigen::Map<const Eigen::MatrixXd> gradients);
+  void writeGradientsIntoDataBuffer(::precice::span<const VertexID> vertices, ::precice::span<const double> gradients);
 
   void resizeBufferTo(int size);
 
