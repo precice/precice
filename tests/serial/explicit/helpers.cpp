@@ -16,20 +16,21 @@ void runTestExplicit(std::string const &configurationFileName, TestContext const
 
   SolverInterface couplingInterface(context.name, configurationFileName, 0, 1);
 
+  double pos[] = {0, 0, 0, 1, 1, 1};
+  int    vids[2];
+
   // was necessary to replace pre-defined geometries
   if (context.isNamed("SolverOne")) {
     auto meshName = "MeshOne";
     BOOST_REQUIRE(couplingInterface.hasMesh(meshName));
     BOOST_REQUIRE(couplingInterface.getMeshDimensions(meshName) == 3);
-    couplingInterface.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());
-    couplingInterface.setMeshVertex(meshName, Eigen::Vector3d(1.0, 0.0, 0.0).data());
+    couplingInterface.setMeshVertices(meshName, 2, pos, vids);
   }
   if (context.isNamed("SolverTwo")) {
     auto meshName = "Test-Square";
     BOOST_REQUIRE(couplingInterface.hasMesh(meshName));
     BOOST_REQUIRE(couplingInterface.getMeshDimensions(meshName) == 3);
-    couplingInterface.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());
-    couplingInterface.setMeshVertex(meshName, Eigen::Vector3d(1.0, 0.0, 0.0).data());
+    couplingInterface.setMeshVertices(meshName, 2, pos, vids);
   }
 
   couplingInterface.initialize();
