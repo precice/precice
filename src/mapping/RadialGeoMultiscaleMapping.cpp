@@ -158,10 +158,11 @@ void RadialGeoMultiscaleMapping::tagMeshSecondRound()
   // no operation needed here for the moment
 }
 
-std::string AxialGeoMultiscaleMapping::getName() const
-{
-  return "radial-geomultiscale";
-}
+// TODO: needed for porting to develop
+// std::string AxialGeoMultiscaleMapping::getName() const
+// {
+//   return "radial-geomultiscale";
+// }
 
 } // namespace mapping
 } // namespace precice
