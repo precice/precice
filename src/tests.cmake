@@ -59,6 +59,7 @@ target_sources(testprecice
     src/mesh/tests/MeshTest.cpp
     src/mesh/tests/TetrahedronTest.cpp
     src/mesh/tests/TriangleTest.cpp
+    src/mesh/tests/UtilsTest.cpp
     src/mesh/tests/VertexTest.cpp
     src/partition/tests/ProvidedPartitionTest.cpp
     src/partition/tests/ReceivedPartitionTest.cpp
