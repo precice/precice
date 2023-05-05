@@ -66,7 +66,7 @@ void multiCouplingThreeSolversParallelControl(const std::string configFile, cons
 
       BOOST_TEST(cplInterface.isCouplingOngoing());
       while (cplInterface.isCouplingOngoing()) {
-        cplInterface.writeScalarData(meshName, dataABID, vertex1, valueA1);
+        cplInterface.writeData(meshName, dataABID, {&vertex1, 1}, {&valueA1, 1});
         if (cplInterface.requiresWritingCheckpoint()) {
         }
 
@@ -76,7 +76,7 @@ void multiCouplingThreeSolversParallelControl(const std::string configFile, cons
         }
 
         maxDt = cplInterface.getMaxTimeStepSize();
-        cplInterface.readScalarData(meshName, dataBAID, vertex1, maxDt, valueRead);
+        cplInterface.readData(meshName, dataBAID, {&vertex1, 1}, maxDt, {&valueRead, 1});
       }
 
       BOOST_TEST(valueRead == valueB1);
@@ -92,7 +92,7 @@ void multiCouplingThreeSolversParallelControl(const std::string configFile, cons
 
       BOOST_TEST(cplInterface.isCouplingOngoing());
       while (cplInterface.isCouplingOngoing()) {
-        cplInterface.writeScalarData(meshName, dataABID, vertex2, valueA2);
+        cplInterface.writeData(meshName, dataABID, {&vertex2, 1}, {&valueA2, 1});
         if (cplInterface.requiresWritingCheckpoint()) {
         }
 
@@ -102,7 +102,7 @@ void multiCouplingThreeSolversParallelControl(const std::string configFile, cons
         }
 
         maxDt = cplInterface.getMaxTimeStepSize();
-        cplInterface.readScalarData(meshName, dataBAID, vertex2, maxDt, valueRead);
+        cplInterface.readData(meshName, dataBAID, {&vertex2, 1}, maxDt, {&valueRead, 1});
       }
 
       BOOST_TEST(valueRead == valueB2);
@@ -130,10 +130,10 @@ void multiCouplingThreeSolversParallelControl(const std::string configFile, cons
 
     BOOST_TEST(cplInterface.isCouplingOngoing());
     while (cplInterface.isCouplingOngoing()) {
-      cplInterface.writeScalarData(meshName1, dataBAID, vertex1, valueB1);
-      cplInterface.writeScalarData(meshName1, dataBAID, vertex2, valueB2);
-      cplInterface.writeScalarData(meshName2, dataBCID, vertex3, valueB1);
-      cplInterface.writeScalarData(meshName2, dataBCID, vertex4, valueB2);
+      cplInterface.writeData(meshName1, dataBAID, {&vertex1, 1}, {&valueB1, 1});
+      cplInterface.writeData(meshName1, dataBAID, {&vertex2, 1}, {&valueB2, 1});
+      cplInterface.writeData(meshName2, dataBCID, {&vertex3, 1}, {&valueB1, 1});
+      cplInterface.writeData(meshName2, dataBCID, {&vertex4, 1}, {&valueB2, 1});
       if (cplInterface.requiresWritingCheckpoint()) {
       }
 
@@ -143,10 +143,10 @@ void multiCouplingThreeSolversParallelControl(const std::string configFile, cons
       }
 
       maxDt = cplInterface.getMaxTimeStepSize();
-      cplInterface.readScalarData(meshName1, dataABID, vertex1, maxDt, valueReadA1);
-      cplInterface.readScalarData(meshName1, dataABID, vertex2, maxDt, valueReadA2);
-      cplInterface.readScalarData(meshName2, dataCBID, vertex1, maxDt, valueReadC1);
-      cplInterface.readScalarData(meshName2, dataCBID, vertex2, maxDt, valueReadC2);
+      cplInterface.readData(meshName1, dataABID, {&vertex1, 1}, maxDt, {&valueReadA1, 1});
+      cplInterface.readData(meshName1, dataABID, {&vertex2, 1}, maxDt, {&valueReadA2, 1});
+      cplInterface.readData(meshName2, dataCBID, {&vertex1, 1}, maxDt, {&valueReadC1, 1});
+      cplInterface.readData(meshName2, dataCBID, {&vertex2, 1}, maxDt, {&valueReadC2, 1});
     }
 
     BOOST_TEST(valueReadA1 == valueA1);
@@ -171,8 +171,8 @@ void multiCouplingThreeSolversParallelControl(const std::string configFile, cons
     BOOST_TEST(cplInterface.isCouplingOngoing());
     while (cplInterface.isCouplingOngoing()) {
 
-      cplInterface.writeScalarData(meshName, dataCBID, vertex1, valueC1);
-      cplInterface.writeScalarData(meshName, dataCBID, vertex2, valueC2);
+      cplInterface.writeData(meshName, dataCBID, {&vertex1, 1}, {&valueC1, 1});
+      cplInterface.writeData(meshName, dataCBID, {&vertex2, 1}, {&valueC2, 1});
       if (cplInterface.requiresWritingCheckpoint()) {
       }
 
@@ -182,8 +182,8 @@ void multiCouplingThreeSolversParallelControl(const std::string configFile, cons
       }
 
       maxDt = cplInterface.getMaxTimeStepSize();
-      cplInterface.readScalarData(meshName, dataBCID, vertex1, maxDt, valueRead1);
-      cplInterface.readScalarData(meshName, dataBCID, vertex2, maxDt, valueRead2);
+      cplInterface.readData(meshName, dataBCID, {&vertex1, 1}, maxDt, {&valueRead1, 1});
+      cplInterface.readData(meshName, dataBCID, {&vertex2, 1}, maxDt, {&valueRead2, 1});
     }
 
     BOOST_TEST(valueRead1 == valueB1);

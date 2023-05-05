@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_SUITE(MappingNearestNeighborGradient)
 BOOST_AUTO_TEST_CASE(GradientTestUnidirectionalReadVector)
 {
   PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank))
-  testVectorGradientFunctions(context, false);
+  testVectorGradientFunctions(context);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -39,13 +39,11 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
     std::vector<double> readData(size);
     while (interface.isCouplingOngoing()) {
       // Write data, advance the solverinterface and readData
-      interface.writeBlockScalarData(meshName, writeDataName, size,
-                                     ids.data(), writeData.data());
+      interface.writeData(meshName, writeDataName, ids, writeData);
 
       interface.advance(dt);
       double dt = interface.getMaxTimeStepSize();
-      interface.readBlockScalarData(meshName, readDataName, size,
-                                    ids.data(), dt, readData.data());
+      interface.readData(meshName, readDataName, ids, dt, readData);
       // The received data on the secondary rank is always the same
       if (!context.isPrimary()) {
         BOOST_TEST(readData == std::vector<double>({3.4, 5.7, 4.0}));
@@ -81,12 +79,10 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
     // Start the time loop
     while (interface.isCouplingOngoing()) {
       // Write data, advance solverinterface and read data
-      interface.writeBlockScalarData(meshName, writeDataName, size,
-                                     ids.data(), writeData.data());
+      interface.writeData(meshName, writeDataName, ids, writeData);
       interface.advance(dt);
       double dt = interface.getMaxTimeStepSize();
-      interface.readBlockScalarData(meshName, readDataName, size,
-                                    ids.data(), dt, readData.data());
+      interface.readData(meshName, readDataName, ids, dt, readData);
       // The received data is always the same
       if (!context.isPrimary()) {
         BOOST_TEST(readData == std::vector<double>({1, 2, 3}));

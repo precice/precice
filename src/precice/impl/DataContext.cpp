@@ -43,16 +43,16 @@ int DataContext::getSpatialDimensions() const
   return _providedData->getSpatialDimensions();
 }
 
-int DataContext::getDataSize() const
-{
-  PRECICE_ASSERT(_providedData);
-  return _providedData->values().size();
-}
-
 std::string DataContext::getMeshName() const
 {
   PRECICE_ASSERT(_mesh);
   return _mesh->getName();
+}
+
+int DataContext::getMeshVertexCount() const
+{
+  PRECICE_ASSERT(_mesh);
+  return _mesh->vertices().size();
 }
 
 MeshID DataContext::getMeshID() const
@@ -110,6 +110,12 @@ bool DataContext::hasReadMapping() const
 bool DataContext::hasWriteMapping() const
 {
   return std::any_of(_mappingContexts.begin(), _mappingContexts.end(), [this](auto &context) { return context.fromData == _providedData; });
+}
+
+bool DataContext::isValidVertexID(const VertexID id) const
+{
+  PRECICE_ASSERT(_mesh);
+  return _mesh->isValidVertexID(id);
 }
 
 } // namespace precice::impl

@@ -11,44 +11,34 @@ WriteDataContext::WriteDataContext(
 {
 }
 
-mesh::PtrData WriteDataContext::providedData()
+void WriteDataContext::writeValues(::precice::span<const VertexID> vertices, ::precice::span<const double> values)
 {
-  PRECICE_ASSERT(_providedData);
-  return _providedData;
-}
+  const auto                        vertexCount = getMeshVertexCount();
+  Eigen::Map<const Eigen::MatrixXd> inputData(values.data(), getDataDimensions(), vertices.size());
+  Eigen::Map<Eigen::MatrixXd>       localData(_providedData->values().data(), getDataDimensions(), vertexCount);
 
-void WriteDataContext::writeValues(const std::vector<int> &indices, const Eigen::Map<const Eigen::VectorXd> values)
-{
-  const auto vertexCount    = getDataSize() / getDataDimensions();
-  auto &     valuesInternal = providedData()->values();
-  for (int i = 0; i < indices.size(); i++) {
-    const auto valueIndex = indices[i];
-    PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
-                  "Cannot write data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                  getDataName(), valueIndex);
-    const int offsetInternal = valueIndex * getDataDimensions();
-    const int offset         = i * getDataDimensions();
-    for (int dim = 0; dim < getDataDimensions(); dim++) {
-      PRECICE_ASSERT(offset + dim < getDataSize(),
-                     offset + dim, getDataSize());
-      valuesInternal[offsetInternal + dim] = values[offset + dim];
-    }
+  for (int i = 0; i < vertices.size(); ++i) {
+    const auto vid = vertices[i];
+    PRECICE_CHECK(isValidVertexID(vid),
+                  "Cannot write data \"{}\" to invalid Vertex ID ({}) of mesh \"{}\". Please make sure you only use the results from calls to setMeshVertex/Vertices().",
+                  getDataName(), vid, getMeshName());
+    localData.col(vid) = inputData.col(i);
   }
 }
 
-void WriteDataContext::writeGradientValues(const std::vector<int> &indices, const Eigen::Map<const Eigen::MatrixXd> gradients)
+void WriteDataContext::writeGradientValues(::precice::span<const VertexID> vertices, ::precice::span<const double> gradients)
 {
-  const auto vertexCount            = getDataSize() / getDataDimensions();
-  auto &     gradientValuesInternal = providedData()->gradientValues();
-  const int  stride                 = getDataDimensions();
-  PRECICE_ASSERT(providedData() != nullptr);
+  const auto                        vertexCount        = getMeshVertexCount();
+  const auto                        gradientComponents = getSpatialDimensions() * getDataDimensions();
+  Eigen::Map<const Eigen::MatrixXd> inputGradients(gradients.data(), gradientComponents, vertices.size());
+  Eigen::Map<Eigen::MatrixXd>       localGradients(_providedData->gradientValues().data(), gradientComponents, vertexCount);
 
-  for (auto i = 0; i < indices.size(); i++) {
-    const auto valueIndex = indices[i];
-    PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
-                  "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                  getDataName(), valueIndex);
-    gradientValuesInternal.block(0, stride * valueIndex, getSpatialDimensions(), getDataDimensions()) = gradients.block(0, stride * i, getSpatialDimensions(), getDataDimensions());
+  for (int i = 0; i < vertices.size(); ++i) {
+    const auto vid = vertices[i];
+    PRECICE_CHECK(isValidVertexID(vid),
+                  "Cannot write gradient for data \"{}\" to invalid Vertex ID ({}) of mesh \"{}\". Please make sure you only use the results from calls to setMeshVertex/Vertices().",
+                  getDataName(), vid, getMeshName());
+    localGradients.col(vid) = inputGradients.col(i);
   }
 }
 

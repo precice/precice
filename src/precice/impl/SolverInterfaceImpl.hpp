@@ -230,99 +230,27 @@ public:
       std::string_view meshName,
       std::string_view dataName) const;
 
-  /// @copydoc SolverInterface::writeBlockVectorData
-  void writeBlockVectorData(
-      std::string_view meshName,
-      std::string_view dataName,
-      int              size,
-      const int *      valueIndices,
-      const double *   values);
+  /// @copydoc SolverInterface::readData
+  void readData(
+      std::string_view                meshName,
+      std::string_view                dataName,
+      ::precice::span<const VertexID> vertices,
+      double                          relativeReadTime,
+      ::precice::span<double>         values) const;
 
-  /// @copydoc SolverInterface::writeBlockVectorGradientData
-  void writeBlockVectorGradientData(
-      std::string_view meshName,
-      std::string_view dataName,
-      int              size,
-      const int *      valueIndices,
-      const double *   gradientValues);
+  /// @copydoc SolverInterface::writeData
+  void writeData(
+      std::string_view                meshName,
+      std::string_view                dataName,
+      ::precice::span<const VertexID> vertices,
+      ::precice::span<const double>   values);
 
-  /// @copydoc SolverInterface::writeVectorData
-  void writeVectorData(
-      std::string_view meshName,
-      std::string_view dataName,
-      int              valueIndex,
-      const double *   value);
-
-  /// @copydoc SolverInterface::writeVectorGradientData
-  void writeVectorGradientData(
-      std::string_view meshName,
-      std::string_view dataName,
-      int              valueIndex,
-      const double *   gradientValues);
-
-  /// @copydoc SolverInterface::writeBlockScalarData
-  void writeBlockScalarData(
-      std::string_view meshName,
-      std::string_view dataName,
-      int              size,
-      const int *      valueIndices,
-      const double *   values);
-
-  /// @copydoc SolverInterface::writeBlockScalarGradientData
-  void writeBlockScalarGradientData(
-      std::string_view meshName,
-      std::string_view dataName,
-      int              size,
-      const int *      valueIndices,
-      const double *   gradientValues);
-
-  /// @copydoc SolverInterface::writeScalarData
-  void writeScalarData(
-      std::string_view meshName,
-      std::string_view dataName,
-      int              valueIndex,
-      double           value);
-
-  /// @copydoc SolverInterface::writeScalarGradientData
-  void writeScalarGradientData(
-      std::string_view meshName,
-      std::string_view dataName,
-      int              valueIndex,
-      const double *   gradientValues);
-
-  /// @copydoc SolverInterface::readBlockVectorData
-  void readBlockVectorData(
-      std::string_view meshName,
-      std::string_view dataName,
-      int              size,
-      const int *      valueIndices,
-      double           relativeReadTime,
-      double *         values) const;
-
-  /// @copydoc SolverInterface::readVectorData
-  void readVectorData(
-      std::string_view meshName,
-      std::string_view dataName,
-      int              valueIndex,
-      double           relativeReadTime,
-      double *         value) const;
-
-  /// @copydoc SolverInterface::readBlockScalarData
-  void readBlockScalarData(
-      std::string_view meshName,
-      std::string_view dataName,
-      int              size,
-      const int *      valueIndices,
-      double           relativeReadTime,
-      double *         values) const;
-
-  /// @copydoc SolverInterface::readScalarData
-  void readScalarData(
-      std::string_view meshName,
-      std::string_view dataName,
-      int              valueIndex,
-      double           relativeReadTime,
-      double &         value) const;
+  /// @copydoc SolverInterface::writeGradientData
+  void writeGradientData(
+      std::string_view                meshName,
+      std::string_view                dataName,
+      ::precice::span<const VertexID> vertices,
+      ::precice::span<const double>   gradients);
 
   ///@}
 

@@ -27,24 +27,20 @@ void ReadDataContext::appendMappingConfiguration(MappingContext &mappingContext,
   PRECICE_ASSERT(hasReadMapping());
 }
 
-Eigen::VectorXd ReadDataContext::readValues(const std::vector<int> &indices, double normalizedDt) const
+void ReadDataContext::readValues(::precice::span<const VertexID> vertices, double normalizedDt, ::precice::span<double> values) const
 {
-  const auto vertexCount    = getDataSize() / getDataDimensions();
-  const auto valuesInternal = _waveform->sample(normalizedDt);
-  auto       values         = Eigen::VectorXd(indices.size() * getDataDimensions());
-  for (int i = 0; i < indices.size(); i++) {
-    const auto valueIndex = indices[i];
-    PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
-                  "Cannot read data \"{}\" from invalid Vertex ID ({}). "
+  const auto                        vertexCount = getMeshVertexCount();
+  Eigen::Map<Eigen::MatrixXd>       outputData(values.data(), getDataDimensions(), values.size());
+  const Eigen::MatrixXd             sample{_waveform->sample(normalizedDt)};
+  Eigen::Map<const Eigen::MatrixXd> localData(sample.data(), getDataDimensions(), vertexCount);
+  for (int i = 0; i < vertices.size(); ++i) {
+    const auto vid = vertices[i];
+    PRECICE_CHECK(isValidVertexID(vid),
+                  "Cannot read data \"{}\" from invalid Vertex ID ({}) of mesh \"{}\". "
                   "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                  getDataName(), valueIndex);
-    int offsetInternal = valueIndex * getDataDimensions();
-    int offset         = i * getDataDimensions();
-    for (int dim = 0; dim < getDataDimensions(); dim++) {
-      values[offset + dim] = valuesInternal[offsetInternal + dim];
-    }
+                  getDataName(), vid, getMeshName());
+    outputData.col(i) = localData.col(vid);
   }
-  return values;
 }
 
 int ReadDataContext::getInterpolationOrder() const

@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirstNoInit)
       sampleDt = sampleDts[j];
       readTime = time + sampleDt;
 
-      precice.readScalarData(meshName, readDataName, vertexID, sampleDt, readData);
+      precice.readData(meshName, readDataName, {&vertexID, 1}, sampleDt, {&readData, 1});
 
       if (iterations == 0 && timewindow == 0) { // use zero as initial value in first iteration (no data was initialized in initialize was called)
         BOOST_TEST(readData == 0);
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirstNoInit)
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.
     time += currentDt;
     writeData = writeFunction(time);
-    precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
+    precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&writeData, 1});
     precice.advance(maxDt);
     double maxDt = precice.getMaxTimeStepSize();
     currentDt    = dt > maxDt ? maxDt : dt;

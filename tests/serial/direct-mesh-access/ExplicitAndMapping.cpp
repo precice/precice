@@ -60,12 +60,10 @@ BOOST_AUTO_TEST_CASE(ExplicitAndMapping)
 
     while (interface.isCouplingOngoing()) {
       // Write data
-      interface.writeBlockScalarData(otherMeshName, writeDataName, otherMeshSize,
-                                     otherIDs.data(), writeData.data());
+      interface.writeData(otherMeshName, writeDataName, otherIDs, writeData);
       interface.advance(dt);
       double dt = interface.getMaxTimeStepSize();
-      interface.readBlockScalarData(ownMeshName, readDataName, ownIDs.size(),
-                                    ownIDs.data(), dt, readData.data());
+      interface.readData(ownMeshName, readDataName, ownIDs, dt, readData);
       BOOST_TEST(readData == (std::vector<double>{2, 4, 3, 3}));
     }
 
@@ -94,12 +92,10 @@ BOOST_AUTO_TEST_CASE(ExplicitAndMapping)
     double dt = interface.getMaxTimeStepSize();
     while (interface.isCouplingOngoing()) {
 
-      interface.writeBlockScalarData(meshName, writeDataName, ids.size(),
-                                     ids.data(), writeData.data());
+      interface.writeData(meshName, writeDataName, ids, writeData);
       interface.advance(dt);
       double dt = interface.getMaxTimeStepSize();
-      interface.readBlockScalarData(meshName, readDataName, ids.size(),
-                                    ids.data(), dt, readData.data());
+      interface.readData(meshName, readDataName, ids, dt, readData);
       // Expected data according to the writeData
       std::vector<double> expectedData({1, 2, 3, 4, 5});
       BOOST_TEST(precice::testing::equals(expectedData, readData));

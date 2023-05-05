@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative3To1)
     // Run a step and write forces
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant must advance once.");
 
-    interface.writeBlockScalarData(meshName, dataName, values.size(), vertexIDs.data(), values.data());
+    interface.writeData(meshName, dataName, vertexIDs, values);
 
     interface.advance(dt);
     BOOST_TEST(!interface.isCouplingOngoing(), "Sending participant must advance only once.");
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative3To1)
     Eigen::VectorXd readData(8);
 
     dt = interface.getMaxTimeStepSize();
-    interface.readBlockScalarData(meshName, dataName, readData.size(), vertexIDs.data(), dt, readData.data());
+    interface.readData(meshName, dataName, vertexIDs, dt, readData);
     BOOST_CHECK(equals(readData[0], forceOnMidABC / 3 + forceOnMidACD / 3 + forceOnMidAEGH / 4 + 0.1 * unbalancedForceOnAEGH));
     BOOST_CHECK(equals(readData[1], forceOnMidABC / 3));
     BOOST_CHECK(equals(readData[2], forceOnMidABC / 3 + forceOnMidACD / 3 + forceNearC));

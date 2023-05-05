@@ -50,23 +50,23 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteScalar)
   if (context.isNamed("SolverOne")) {
     auto     meshName = "MeshOne";
     Vector3d vec1     = Vector3d::Constant(0.1);
-    cplInterface.setMeshVertex(meshName, vec1.data());
-    auto dataAID = "DataOne";
-    auto dataBID = "DataTwo";
+    auto     vid      = cplInterface.setMeshVertex(meshName, vec1.data());
+    auto     dataAID  = "DataOne";
+    auto     dataBID  = "DataTwo";
 
     double valueDataB = 0.0;
     cplInterface.initialize();
     double maxDt = cplInterface.getMaxTimeStepSize();
-    cplInterface.readScalarData(meshName, dataBID, 0, maxDt, valueDataB);
+    cplInterface.readData(meshName, dataBID, {&vid, 1}, maxDt, {&valueDataB, 1});
     BOOST_TEST(1.3 == valueDataB);
 
     while (cplInterface.isCouplingOngoing()) {
       Vector3d valueDataA(1.0, 1.0, 1.0);
-      cplInterface.writeVectorData(meshName, dataAID, 0, valueDataA.data());
+      cplInterface.writeData(meshName, dataAID, {&vid, 1}, valueDataA);
       cplInterface.advance(maxDt);
       maxDt = cplInterface.getMaxTimeStepSize();
 
-      cplInterface.readScalarData(meshName, dataBID, 0, maxDt, valueDataB);
+      cplInterface.readData(meshName, dataBID, {&vid, 1}, maxDt, {&valueDataB, 1});
       BOOST_TEST(1.8 == valueDataB);
     }
     cplInterface.finalize();
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteScalar)
     BOOST_TEST(context.isNamed("SolverTwo"));
     auto     meshName = "MeshTwo";
     Vector3d vec2     = Vector3d::Constant(0.0);
-    cplInterface.setMeshVertex(meshName, vec2.data());
+    auto     vid      = cplInterface.setMeshVertex(meshName, vec2.data());
 
     auto dataAID = "DataOne";
     auto dataBID = "DataTwo";
@@ -83,26 +83,27 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteScalar)
 
     double   valueDataB = 1.0;
     Vector3d valueGradDataB(1.0, 1.0, 1.0);
-    cplInterface.writeScalarData(meshName, dataBID, 0, valueDataB);
-    cplInterface.writeScalarGradientData(meshName, dataBID, 0, valueGradDataB.data());
+    cplInterface.writeData(meshName, dataBID, {&vid, 1}, {&valueDataB, 1});
+    cplInterface.writeGradientData(meshName, dataBID, {&vid, 1}, valueGradDataB);
 
     //tell preCICE that data has been written and call initialize
     cplInterface.initialize();
     double maxDt = cplInterface.getMaxTimeStepSize();
 
     Vector3d valueDataA;
-    cplInterface.readVectorData(meshName, dataAID, 0, maxDt, valueDataA.data());
+    cplInterface.readData(meshName, dataAID, {&vid, 1}, maxDt, valueDataA);
     Vector3d expected(1.0, 1.0, 1.0);
     BOOST_TEST(valueDataA == expected);
 
     while (cplInterface.isCouplingOngoing()) {
-      cplInterface.writeScalarData(meshName, dataBID, 0, 1.5);
+      double dataB[] = {1.5};
+      cplInterface.writeData(meshName, dataBID, {&vid, 1}, dataB);
       Vector3d valueGradDataA(1.0, 1.0, 1.0);
-      cplInterface.writeScalarGradientData(meshName, dataBID, 0, valueGradDataA.data());
+      cplInterface.writeGradientData(meshName, dataBID, {&vid, 1}, valueGradDataA);
 
       cplInterface.advance(maxDt);
       maxDt = cplInterface.getMaxTimeStepSize();
-      cplInterface.readVectorData(meshName, dataAID, 0, maxDt, valueDataA.data());
+      cplInterface.readData(meshName, dataAID, {&vid, 1}, maxDt, valueDataA);
       BOOST_TEST(valueDataA == expected);
     }
     cplInterface.finalize();
