@@ -417,9 +417,9 @@ private:
 
   DataMap<ReadDataContext> _readDataContexts;
 
-  std::map<std::string_view, ReadGlobalDataContext> _readGlobalDataContexts;
+  std::map<std::string, ReadGlobalDataContext> _readGlobalDataContexts;
 
-  std::map<std::string_view, WriteGlobalDataContext> _writeGlobalDataContexts;
+  std::map<std::string, WriteGlobalDataContext> _writeGlobalDataContexts;
 
   bool _useIntraComm = false;
 
