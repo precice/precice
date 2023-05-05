@@ -563,6 +563,7 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConser
     auto dTmp = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixQ->get_size()[1], _rbfCoefficients->get_size()[1]}));
     _matrixQ->transpose()->apply(gko::lend(dOutput), gko::lend(dTmp));
 
+    // epsilon -= tmp
     dEpsilon->sub_scaled(gko::lend(_scalarOne), gko::lend(dTmp));
 
     // Since this class is constructed for consistent mapping per default, we have to delete unused memory and initialize conservative variables
@@ -589,14 +590,9 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConser
     }
 
     _polynomialContribution = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixQQ_T->get_size()[1], 1}));
+    _polynomialContribution->fill(0.0);
 
-    auto epsilon = gko::clone(_hostExecutor, dEpsilon);
-
-    for (int i = 0; i < epsilon->get_size()[0]; ++i) {
-      epsilon->at(i, 0) *= -1;
-    }
-
-    dEpsilon = gko::clone(_deviceExecutor, epsilon);
+    dEpsilon->scale(gko::lend(_scalarNegativeOne));
 
     _polynomialRhs = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixQ->get_size()[0], dEpsilon->get_size()[1]}));
 
@@ -604,6 +600,7 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConser
 
     _polynomialSolver->apply(gko::lend(_polynomialRhs), gko::lend(_polynomialContribution));
 
+    // out -= poly
     dOutput->sub_scaled(gko::lend(_scalarOne), gko::lend(_polynomialContribution));
   }
 

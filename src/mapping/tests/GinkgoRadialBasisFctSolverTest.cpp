@@ -40,6 +40,8 @@ BOOST_AUTO_TEST_SUITE(GinkgoRadialBasisFunctionSolver)
     perform3DTestScaledConsistentMapping(scaledConsistentMap3D);                                                                                            \
     RadialBasisFctMapping<Type> conservativeMap2D(Mapping::CONSERVATIVE, 2, function, {{false, false, false}}, polynomial, useEigen, gpm);                  \
     perform2DTestConservativeMapping(conservativeMap2D);                                                                                                    \
+        RadialBasisFctMapping<Type> conservativeMap2DVector(Mapping::CONSERVATIVE, 2, function, {{false, false, false}}, polynomial, useEigen, gpm);            \
+    perform2DTestConservativeMappingVector(conservativeMap2DVector);                                                                         \
     RadialBasisFctMapping<Type> conservativeMap3D(Mapping::CONSERVATIVE, 3, function, {{false, false, false}}, polynomial, useEigen, gpm);                  \
     perform3DTestConservativeMapping(conservativeMap3D);                                                                                                    \
   }
