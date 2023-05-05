@@ -1,9 +1,12 @@
 #pragma once
 
+#include <optional>
 #include <string>
+
 #include "MappingContext.hpp"
 #include "MeshContext.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "mesh/Utils.hpp"
 
 namespace precice {
 
@@ -84,6 +87,12 @@ public:
    * @return True, if this DataContext is associated with a mapping. False, if not.
    */
   bool hasMapping() const;
+
+  template <typename Container>
+  std::optional<std::size_t> locateInvalidVertexID(const Container &c)
+  {
+    return mesh::locateInvalidVertexID(*_mesh, c);
+  }
 
 protected:
   /**

@@ -1006,6 +1006,11 @@ void SolverInterfaceImpl::writeData(
   // Sizes are correct at this point
   PRECICE_VALIDATE_DATA(values.data(), values.size()); // TODO Only take span
 
+  if (auto index = context.locateInvalidVertexID(vertices); index) {
+    PRECICE_ERROR("Cannot write data \"{}\" to mesh \"{}\" due to invalid Vertex ID at vertices[{}]. "
+                  "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
+                  dataName, meshName, *index);
+  }
   context.writeValues(vertices, values);
 }
 
@@ -1047,6 +1052,12 @@ void SolverInterfaceImpl::readData(
                 dataDims, dataName, meshName,
                 vertices.size(), values.size(), expectedDataSize, dataDims, vertices.size());
 
+  if (auto index = context.locateInvalidVertexID(vertices); index) {
+    PRECICE_ERROR("Cannot read data \"{}\" from mesh \"{}\" due to invalid Vertex ID at vertices[{}]. "
+                  "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
+                  dataName, meshName, *index);
+  }
+
   context.readValues(vertices, normalizedReadTime, values);
 }
 
@@ -1076,11 +1087,17 @@ void SolverInterfaceImpl::writeGradientData(
   mesh::Data &meshData = *context.providedData();
   PRECICE_CHECK(meshData.hasGradient(), "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", dataName);
 
-  const auto &mesh               = context.getMesh();
-  const auto  dataDims           = context.getDataDimensions();
-  const auto  meshDims           = mesh.getDimensions();
-  const auto  gradientComponents = meshDims * dataDims;
-  const auto  expectedComponents = vertices.size() * gradientComponents;
+  const auto &mesh = context.getMesh();
+  if (auto index = mesh::locateInvalidVertexID(mesh, vertices); index) {
+    PRECICE_ERROR("Cannot write gradient data \"{}\" to mesh \"{}\" due to invalid Vertex ID at vertices[{}]. "
+                  "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
+                  dataName, meshName, *index);
+  }
+
+  const auto dataDims           = context.getDataDimensions();
+  const auto meshDims           = mesh.getDimensions();
+  const auto gradientComponents = meshDims * dataDims;
+  const auto expectedComponents = vertices.size() * gradientComponents;
   PRECICE_CHECK(expectedComponents == gradients.size(),
                 "Input sizes are inconsistent attempting to write gradient for data \"{}\" to mesh \"{}\". "
                 "A single gradient/Jacobian for {}D data on a {}D mesh has {} components. "
