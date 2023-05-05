@@ -11,32 +11,25 @@
 #include "utils/Event.hpp"
 #include "utils/EventUtils.hpp"
 
-CudaQRSolver::CudaQRSolver(const int deviceId)
+
+void computeQRDecompositionCuda(const int deviceId, const std::shared_ptr<gko::Executor> &exec, gko::matrix::Dense<> *A_Q, gko::matrix::Dense<> *R)
 {
+  int backupDeviceId{};
   cudaGetDevice(&backupDeviceId);
   cudaSetDevice(deviceId);
+
+  void *dWork{};
+  int  *devInfo{};
 
   // Allocating important CUDA variables
   cudaMalloc((void **) &dWork, sizeof(double));
   cudaMalloc((void **) &devInfo, sizeof(int));
 
+  cusolverDnHandle_t solverHandle;
   cusolverDnCreate(&solverHandle);
-}
-
-CudaQRSolver::~CudaQRSolver()
-{
-  // Freeing CUDA variables
-  cudaFree(dTau);
-  cudaFree(dWork);
-  cudaFree(devInfo);
-  cusolverDnDestroy(solverHandle);
-}
-
-void CudaQRSolver::computeQR(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, GinkgoMatrix *R)
-{
   // NOTE: It's important to transpose since cuSolver assumes column-major memory layout
   // Making a copy since every value will be overridden
-  auto A_T = gko::share(GinkgoMatrix::create(exec, gko::dim<2>(A_Q->get_size()[1], A_Q->get_size()[0])));
+  auto A_T = gko::share(gko::matrix::Dense<>::create(exec, gko::dim<2>(A_Q->get_size()[1], A_Q->get_size()[0])));
   A_Q->transpose(gko::lend(A_T));
 
   // Setting dimensions for solver
@@ -53,20 +46,22 @@ void CudaQRSolver::computeQR(const std::shared_ptr<gko::Executor> &exec, GinkgoM
   size_t hLwork_geqrf = 0;
   size_t hLwork       = 0;
 
+  double *dTau{};
   cudaMalloc((void **) &dTau, sizeof(double) * M);
 
   precice::utils::Event calculateQRDecompEvent{"calculateQRDecomp"};
 
   // Query working space of geqrf and orgqr
-  cusolverStatus = cusolverDnXgeqrf_bufferSize(solverHandle, nullptr, M, N, CUDA_R_64F, A_T->get_values(), lda, CUDA_R_64F, dTau, CUDA_R_64F, &dLwork_geqrf, &hLwork_geqrf);
+  cusolverStatus_t cusolverStatus = cusolverDnXgeqrf_bufferSize(solverHandle, nullptr, M, N, CUDA_R_64F, A_T->get_values(), lda, CUDA_R_64F, dTau, CUDA_R_64F, &dLwork_geqrf, &hLwork_geqrf);
   // PRECICE_ASSERTs collide with cuda for some (non-extensively investigated) reason
   assert(cusolverStatus == CUSOLVER_STATUS_SUCCESS);
   cusolverStatus = cusolverDnDorgqr_bufferSize(solverHandle, M, N, k, A_T->get_values(), lda, dTau, (int *) &dLwork_orgqr);
   assert(cusolverStatus == CUSOLVER_STATUS_SUCCESS);
-  dLwork        = (dLwork_geqrf > dLwork_orgqr) ? dLwork_geqrf : dLwork_orgqr;
-  cudaErrorCode = cudaMalloc((void **) &dWork, sizeof(double) * dLwork);
+  dLwork                    = (dLwork_geqrf > dLwork_orgqr) ? dLwork_geqrf : dLwork_orgqr;
+  cudaError_t cudaErrorCode = cudaMalloc((void **) &dWork, sizeof(double) * dLwork);
   assert(cudaSuccess == cudaErrorCode);
 
+  void *hWork{};
   // Compute QR factorization
   cusolverStatus = cusolverDnXgeqrf(solverHandle, nullptr, M, N, CUDA_R_64F, A_T->get_values(), lda, CUDA_R_64F, dTau, CUDA_R_64F, dWork, dLwork, hWork, hLwork, devInfo);
   cudaErrorCode  = cudaDeviceSynchronize();
@@ -85,9 +80,14 @@ void CudaQRSolver::computeQR(const std::shared_ptr<gko::Executor> &exec, GinkgoM
   A_T->transpose(gko::lend(A_Q));
 
   cudaDeviceSynchronize();
-
   calculateQRDecompEvent.stop();
 
-  cudaSetDevice(backupDeviceId); // Switch back to the GPU used for all coupled solvers
+  // Switch back to the GPU used for all coupled solvers
+  cudaSetDevice(backupDeviceId);
+  // ... and free the utilizted memory
+  cudaFree(dTau);
+  cudaFree(dWork);
+  cudaFree(devInfo);
+  cusolverDnDestroy(solverHandle);
 }
 #endif

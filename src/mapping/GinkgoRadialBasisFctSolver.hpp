@@ -164,7 +164,7 @@ private:
   std::shared_ptr<triangular> _triangularSolver;
 
   /// QR Solver
-  std::unique_ptr<QRSolver> _qrSolver;
+  // std::unique_ptr<QRSolver> _qrSolver;
 
   // Solver used for iteratively solving linear systems of equations
   std::shared_ptr<cg>    _cgSolver    = nullptr;
@@ -206,15 +206,6 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
 
   _solverType         = solverTypeLookup.at(ginkgoParameter.solver);
   _preconditionerType = preconditionerTypeLookup.at(ginkgoParameter.preconditioner);
-
-  if (GinkgoSolverType::QR == _solverType) {
-    PRECICE_CHECK("cuda-executor" == ginkgoParameter.executor || "hip-executor" == ginkgoParameter.executor, "The parallel QR decomposition is only available on Cuda (Nvidia) or HIP (Nvidia or AMD) decives.");
-#if defined(PRECICE_WITH_HIP)
-    _qrSolver = std::make_unique<HipQRSolver>(ginkgoParameter.deviceId);
-#elif defined(PRECICE_WITH_CUDA)
-    _qrSolver = std::make_unique<CudaQRSolver>(ginkgoParameter.deviceId);
-#endif
-  }
 
   PRECICE_CHECK(!(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite() && polynomial == Polynomial::ON), "The integrated polynomial (polynomial=\"on\") is not supported for the selected radial-basis function. Please select another radial-basis function or change the polynomial configuration.");
   // Convert dead axis vector into an active axis array so that we can handle the reduction more easily
@@ -418,9 +409,19 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
     _decompMatrixQ_T    = gko::share(GinkgoMatrix::create(_deviceExecutor, gko::dim<2>(N, M)));
     _decompMatrixR      = gko::share(GinkgoMatrix::create(_deviceExecutor, gko::dim<2>(N, N)));
 
-    // _rbfSystemMatrix will be overridden into Q
-    _qrSolver->computeQR(_deviceExecutor, gko::lend(_rbfSystemMatrix), gko::lend(_decompMatrixR));
-
+    if ("cuda-executor" == ginkgoParameter.executor) {
+#ifdef PRECICE_WITH_CUDA
+      // _rbfSystemMatrix will be overridden into Q
+      computeQRDecompositionCuda(ginkgoParameter.deviceId, _deviceExecutor, gko::lend(_rbfSystemMatrix), gko::lend(_decompMatrixR));
+#endif
+    } else if ("hip-executor" == ginkgoParameter.executor) {
+#ifdef PRECICE_WITH_HIP
+      // _rbfSystemMatrix will be overridden into Q
+      computeQRDecompositionHip(ginkgoParameter.deviceId, _deviceExecutor, gko::lend(_rbfSystemMatrix), gko::lend(_decompMatrixR));
+#endif
+    } else {
+      PRECICE_UNREACHABLE("Not implemented");
+    }
     _rbfSystemMatrix->transpose(gko::lend(_decompMatrixQ_T));
 
     _dQ_T_Rhs = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_decompMatrixQ_T->get_size()[0], 1}));
