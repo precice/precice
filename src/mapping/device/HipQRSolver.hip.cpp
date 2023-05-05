@@ -6,7 +6,7 @@
 #include <hip/hip_runtime_api.h>
 #include <hipsolver.h>
 
-void computeQRDecompositionHip(const int deviceId, const std::shared_ptr<gko::Executor> &exec, gko::matrix::Dense<> *A_Q, gko::matrix::Dense<> *R);
+void computeQRDecompositionHip(const int deviceId, const std::shared_ptr<gko::Executor> &exec, gko::matrix::Dense<> *A_Q, gko::matrix::Dense<> *R)
 {
   int backupDeviceId{};
   hipGetDevice(&backupDeviceId);
@@ -23,7 +23,7 @@ void computeQRDecompositionHip(const int deviceId, const std::shared_ptr<gko::Ex
   hipsolverDnCreate(&solverHandle);
   // NOTE: It's important to transpose since hipsolver assumes column-major memory layout
   // Making a copy since every value will be overridden
-  auto A_T = gko::share(GinkgoMatrix::create(exec, gko::dim<2>(A_Q->get_size()[1], A_Q->get_size()[0])));
+  auto A_T = gko::share(gko::matrix::Dense<>::create(exec, gko::dim<2>(A_Q->get_size()[1], A_Q->get_size()[0])));
   A_Q->transpose(gko::lend(A_T));
 
   // Setting dimensions for solver
