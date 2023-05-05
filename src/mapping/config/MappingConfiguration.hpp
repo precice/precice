@@ -168,9 +168,38 @@ private:
   // Attributes for the subtag
   const std::string ATTR_SHAPE_PARAM    = "shape-parameter";
   const std::string ATTR_SUPPORT_RADIUS = "support-radius";
+  const std::string ATTR_SOLVER_RTOL    = "solver-rtol";
+  const std::string ATTR_X_DEAD         = "x-dead";
+  const std::string ATTR_Y_DEAD         = "y-dead";
+  const std::string ATTR_Z_DEAD         = "z-dead";
+  const std::string ATTR_USE_QR         = "use-qr-decomposition";
 
-  // mapping constraint
-  Mapping::Constraint constraintValue{};
+  const std::string VALUE_WRITE             = "write";
+  const std::string VALUE_READ              = "read";
+  const std::string VALUE_CONSISTENT        = "consistent";
+  const std::string VALUE_CONSERVATIVE      = "conservative";
+  const std::string VALUE_SCALED_CONSISTENT = "scaled-consistent";
+
+  const std::string VALUE_NEAREST_NEIGHBOR          = "nearest-neighbor";
+  const std::string VALUE_NEAREST_PROJECTION        = "nearest-projection";
+  const std::string VALUE_LINEAR_CELL_INTERPOLATION = "linear-cell-interpolation";
+
+  const std::string VALUE_AXIAL_GEOMETRIC_MULTISCALE = "axial-geometric-multiscale";
+
+  const std::string VALUE_RBF_TPS               = "rbf-thin-plate-splines";
+  const std::string VALUE_RBF_MULTIQUADRICS     = "rbf-multiquadrics";
+  const std::string VALUE_RBF_INV_MULTIQUADRICS = "rbf-inverse-multiquadrics";
+  const std::string VALUE_RBF_VOLUME_SPLINES    = "rbf-volume-splines";
+  const std::string VALUE_RBF_GAUSSIAN          = "rbf-gaussian";
+  const std::string VALUE_RBF_CTPS_C2           = "rbf-compact-tps-c2";
+  const std::string VALUE_RBF_CPOLYNOMIAL_C0    = "rbf-compact-polynomial-c0";
+  const std::string VALUE_RBF_CPOLYNOMIAL_C6    = "rbf-compact-polynomial-c6";
+
+  const std::string VALUE_NEAREST_NEIGHBOR_GRADIENT = "nearest-neighbor-gradient";
+
+  const std::string VALUE_TIMING_INITIAL    = "initial";
+  const std::string VALUE_TIMING_ON_ADVANCE = "onadvance";
+  const std::string VALUE_TIMING_ON_DEMAND  = "ondemand";
 
   mesh::PtrMeshConfiguration _meshConfig;
 
@@ -191,25 +220,23 @@ private:
    * subtag information.
    */
   ConfiguredMapping createMapping(
-      const std::string &direction,
-      const std::string &type,
-      const std::string &fromMeshName,
-      const std::string &toMeshName) const;
-
-  /**
- * Stores additional information about the requested RBF mapping such as the
- * configured polynomial and the solver type, which is not required for all
- * the other mapping types. The information is then used later when instantiating
- * the RBF mappings in \ref xmlTagCallback().
- */
-  RBFConfiguration configureRBFMapping(const std::string &type,
-                                       const std::string &polynomial,
-                                       const std::string &preallocation,
-                                       bool xDead, bool yDead, bool zDead,
-                                       double solverRtol,
-                                       double verticesPerCluster,
-                                       double relativeOverlap,
-                                       bool   projectToInput) const;
+      const xml::ConfigurationContext &context,
+      const std::string &              direction,
+      const std::string &              type,
+      const std::string &              constraint,
+      const std::string &              fromMeshName,
+      const std::string &              toMeshName,
+      Timing                           timing,
+      const RBFParameter &             rbfParameter,
+      double                           solverRtol,
+      bool                             xDead,
+      bool                             yDead,
+      bool                             zDead,
+      bool                             useLU,
+      Polynomial                       polynomial,
+      Preallocation                    preallocation,
+      double                           radius,
+      const std::string &              multiscaleType) const;
 
   /// Check whether a mapping to and from the same mesh already exists
   void checkDuplicates(const ConfiguredMapping &mapping);

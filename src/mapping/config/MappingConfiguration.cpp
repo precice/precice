@@ -8,6 +8,7 @@
 #include <utility>
 #include <variant>
 #include "logging/LogMacros.hpp"
+#include "mapping/AxialGeoMultiscaleMapping.hpp"
 #include "mapping/LinearCellInterpolationMapping.hpp"
 #include "mapping/Mapping.hpp"
 #include "mapping/NearestNeighborGradientMapping.hpp"
@@ -35,8 +36,42 @@ namespace {
 void addSubtagsToParents(std::list<xml::XMLTag> &subtags,
                          std::list<xml::XMLTag> &parents)
 {
-  for (auto &p : parents) {
-    p.addSubtags(subtags);
+  PRECICE_ASSERT(_meshConfig);
+  using namespace xml;
+
+  auto attrShapeParam = XMLAttribute<double>(ATTR_SHAPE_PARAM)
+                            .setDocumentation("Specific shape parameter for RBF basis function.");
+  auto attrSupportRadius = XMLAttribute<double>(ATTR_SUPPORT_RADIUS)
+                               .setDocumentation("Support radius of each RBF basis function (global choice).");
+  auto attrSolverRtol = makeXMLAttribute(ATTR_SOLVER_RTOL, 1e-9)
+                            .setDocumentation("Solver relative tolerance for convergence");
+  auto attrXDead = makeXMLAttribute(ATTR_X_DEAD, false)
+                       .setDocumentation("If set to true, the x axis will be ignored for the mapping");
+  auto attrYDead = makeXMLAttribute(ATTR_Y_DEAD, false)
+                       .setDocumentation("If set to true, the y axis will be ignored for the mapping");
+  auto attrZDead = makeXMLAttribute(ATTR_Z_DEAD, false)
+                       .setDocumentation("If set to true, the z axis will be ignored for the mapping");
+  auto attrPolynomial = makeXMLAttribute("polynomial", "separate")
+                            .setDocumentation("Toggles use of the global polynomial")
+                            .setOptions({"on", "off", "separate"});
+  auto attrPreallocation = makeXMLAttribute("preallocation", "tree")
+                               .setDocumentation("Sets kind of preallocation for PETSc RBF implementation")
+                               .setOptions({"estimate", "compute", "off", "save", "tree"});
+  auto attrUseLU = makeXMLAttribute(ATTR_USE_QR, false)
+                       .setDocumentation("If set to true, QR decomposition is used to solve the RBF system");
+
+  auto attrRadius = XMLAttribute<double>("radius")
+                        .setDocumentation("Radius for 1D participants in a geometric multiscale mapping.");
+  auto attrMultiscaleType = XMLAttribute<std::string>("type")
+                                .setDocumentation("Type of a geometric multiscale mapping (spread or collect).")
+                                .setOptions({"spread", "collect"});
+
+  XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
+  std::list<XMLTag>  tags;
+  {
+    XMLTag tag(*this, VALUE_RBF_TPS, occ, TAG);
+    tag.setDocumentation("Global radial-basis-function mapping based on the thin plate splines.");
+    tags.push_back(tag);
   }
 }
 
@@ -134,7 +169,13 @@ rbf_variant_t constructRBF(BasisFunction functionType, double supportRadius, dou
   default:
     PRECICE_UNREACHABLE("No instantiation was found for the selected basis function.");
   }
-}
+  {
+    XMLTag tag(*this, VALUE_AXIAL_GEOMETRIC_MULTISCALE, occ, TAG);
+    tag.setDocumentation("Axial geometric multiscale mapping.");
+    tag.addAttribute(attrRadius);
+    tag.addAttribute(attrMultiscaleType);
+    tags.push_back(tag);
+  }
 
 // The actual instantion helper, which avoids enumerating all mapping implementations (more will come) with all RBF kernels
 // The first three arguments of the constructor are prescribed: constraint, dimension and the RBF function object, all other
@@ -290,39 +331,70 @@ void MappingConfiguration::xmlTagCallback(
 {
   PRECICE_TRACE(tag.getName());
   if (tag.getNamespace() == TAG) {
-    // Mandatory tags
-    std::string dir        = tag.getStringAttributeValue(ATTR_DIRECTION);
-    std::string fromMesh   = tag.getStringAttributeValue(ATTR_FROM);
-    std::string toMesh     = tag.getStringAttributeValue(ATTR_TO);
-    std::string type       = tag.getName();
-    std::string constraint = tag.getStringAttributeValue(ATTR_CONSTRAINT);
+    std::string   dir            = tag.getStringAttributeValue(ATTR_DIRECTION);
+    std::string   fromMesh       = tag.getStringAttributeValue(ATTR_FROM);
+    std::string   toMesh         = tag.getStringAttributeValue(ATTR_TO);
+    std::string   type           = tag.getName();
+    std::string   constraint     = tag.getStringAttributeValue(ATTR_CONSTRAINT);
+    Timing        timing         = getTiming(tag.getStringAttributeValue(ATTR_TIMING));
+    double        shapeParameter = std::numeric_limits<double>::quiet_NaN();
+    double        supportRadius  = std::numeric_limits<double>::quiet_NaN();
+    double        solverRtol     = 1e-9;
+    bool          xDead = false, yDead = false, zDead = false;
+    bool          useLU          = false;
+    Polynomial    polynomial     = Polynomial::ON;
+    Preallocation preallocation  = Preallocation::TREE;
+    double        radius         = 0.0;
+    std::string   multiscaleType = "undefined";
 
-    // optional tags
-    // We set here default values, but their actual value doesn't really matter.
-    // It's just for the mapping methods, which do not use these attributes at all.
-    bool        xDead         = tag.getBooleanAttributeValue(ATTR_X_DEAD, false);
-    bool        yDead         = tag.getBooleanAttributeValue(ATTR_Y_DEAD, false);
-    bool        zDead         = tag.getBooleanAttributeValue(ATTR_Z_DEAD, false);
-    double      solverRtol    = tag.getDoubleAttributeValue(ATTR_SOLVER_RTOL, 1e-9);
-    std::string strPolynomial = tag.getStringAttributeValue(ATTR_POLYNOMIAL, POLYNOMIAL_SEPARATE);
-    std::string strPrealloc   = tag.getStringAttributeValue(ATTR_PREALLOCATION, PREALLOCATION_TREE);
-
-    // pum related tags
-    int    verticesPerCluster = tag.getIntAttributeValue(ATTR_VERTICES_PER_CLUSTER, 100);
-    double relativeOverlap    = tag.getDoubleAttributeValue(ATTR_RELATIVE_OVERLAP, 0.3);
-    bool   projectToInput     = tag.getBooleanAttributeValue(ATTR_PROJECT_TO_INPUT, true);
-
-    // Convert raw string into enum types as the constructors take enums
-    if (constraint == CONSTRAINT_CONSERVATIVE) {
-      constraintValue = Mapping::CONSERVATIVE;
-    } else if (constraint == CONSTRAINT_CONSISTENT) {
-      constraintValue = Mapping::CONSISTENT;
-    } else if (constraint == CONSTRAINT_SCALED_CONSISTENT_SURFACE) {
-      constraintValue = Mapping::SCALED_CONSISTENT_SURFACE;
-    } else if (constraint == CONSTRAINT_SCALED_CONSISTENT_VOLUME) {
-      constraintValue = Mapping::SCALED_CONSISTENT_VOLUME;
-    } else {
-      PRECICE_UNREACHABLE("Unknown mapping constraint \"{}\".", constraint);
+    if (tag.hasAttribute(ATTR_SHAPE_PARAM)) {
+      shapeParameter = tag.getDoubleAttributeValue(ATTR_SHAPE_PARAM);
+    }
+    if (tag.hasAttribute(ATTR_SUPPORT_RADIUS)) {
+      supportRadius = tag.getDoubleAttributeValue(ATTR_SUPPORT_RADIUS);
+    }
+    if (tag.hasAttribute(ATTR_SOLVER_RTOL)) {
+      solverRtol = tag.getDoubleAttributeValue(ATTR_SOLVER_RTOL);
+    }
+    if (tag.hasAttribute(ATTR_X_DEAD)) {
+      xDead = tag.getBooleanAttributeValue(ATTR_X_DEAD);
+    }
+    if (tag.hasAttribute(ATTR_Y_DEAD)) {
+      yDead = tag.getBooleanAttributeValue(ATTR_Y_DEAD);
+    }
+    if (tag.hasAttribute(ATTR_Z_DEAD)) {
+      zDead = tag.getBooleanAttributeValue(ATTR_Z_DEAD);
+    }
+    if (tag.hasAttribute(ATTR_USE_QR)) {
+      useLU = tag.getBooleanAttributeValue(ATTR_USE_QR);
+    }
+    if (tag.hasAttribute("polynomial")) {
+      std::string strPolynomial = tag.getStringAttributeValue("polynomial");
+      if (strPolynomial == "separate")
+        polynomial = Polynomial::SEPARATE;
+      else if (strPolynomial == "on")
+        polynomial = Polynomial::ON;
+      else if (strPolynomial == "off")
+        polynomial = Polynomial::OFF;
+    }
+    if (tag.hasAttribute("preallocation")) {
+      std::string strPrealloc = tag.getStringAttributeValue("preallocation");
+      if (strPrealloc == "estimate")
+        preallocation = Preallocation::ESTIMATE;
+      else if (strPrealloc == "compute")
+        preallocation = Preallocation::COMPUTE;
+      else if (strPrealloc == "save")
+        preallocation = Preallocation::SAVE;
+      else if (strPrealloc == "tree")
+        preallocation = Preallocation::TREE;
+      else if (strPrealloc == "off")
+        preallocation = Preallocation::OFF;
+    }
+    if (tag.hasAttribute("radius")) {
+      radius = tag.getDoubleAttributeValue("radius");
+    }
+    if (tag.hasAttribute("type")) {
+      multiscaleType = tag.getStringAttributeValue("type");
     }
 
     ConfiguredMapping configuredMapping = createMapping(dir, type, fromMesh, toMesh);
@@ -357,29 +429,16 @@ void MappingConfiguration::xmlTagCallback(
         shapeParameter = std::sqrt(-std::log(Gaussian::cutoffThreshold)) / supportRadius;
       }
     }
-
-    // Instantiate the RBF mapping classes
-    if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalDirect) {
-      mapping.mapping = getRBFMapping<RBFBackend::Eigen>(basisFunction, constraintValue, mapping.fromMesh->getDimensions(), supportRadius, shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial);
-    } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalIterative) {
-#ifndef PRECICE_NO_PETSC
-      // for petsc initialization
-      int   argc = 1;
-      char *arg  = new char[8];
-      strcpy(arg, "precice");
-      char **argv = &arg;
-      utils::Petsc::initialize(&argc, &argv, utils::Parallel::current()->comm);
-      delete[] arg;
-
-      mapping.mapping = getRBFMapping<RBFBackend::PETSc>(basisFunction, constraintValue, mapping.fromMesh->getDimensions(), supportRadius, shapeParameter, _rbfConfig.deadAxis, _rbfConfig.solverRtol, _rbfConfig.polynomial, _rbfConfig.preallocation);
-#else
-      PRECICE_CHECK(false, "The global-iterative RBF solver requires a preCICE build with PETSc enabled.");
-#endif
-    } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::PUMDirect) {
-      mapping.mapping = getRBFMapping<RBFBackend::PUM>(basisFunction, constraintValue, mapping.fromMesh->getDimensions(), supportRadius, shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput);
-    } else {
-      PRECICE_UNREACHABLE("Unknown RBF solver.");
-    }
+    ConfiguredMapping configuredMapping = createMapping(context,
+                                                        dir, type, constraint,
+                                                        fromMesh, toMesh, timing,
+                                                        rbfParameter, solverRtol,
+                                                        xDead, yDead, zDead,
+                                                        useLU,
+                                                        polynomial, preallocation,
+                                                        radius, multiscaleType);
+    checkDuplicates(configuredMapping);
+    _mappings.push_back(configuredMapping);
   }
 }
 
@@ -442,10 +501,23 @@ MappingConfiguration::RBFConfiguration MappingConfiguration::configureRBFMapping
 }
 
 MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
-    const std::string &direction,
-    const std::string &type,
-    const std::string &fromMeshName,
-    const std::string &toMeshName) const
+    const xml::ConfigurationContext &context,
+    const std::string &              direction,
+    const std::string &              type,
+    const std::string &              constraint,
+    const std::string &              fromMeshName,
+    const std::string &              toMeshName,
+    Timing                           timing,
+    const RBFParameter &             rbfParameter,
+    double                           solverRtol,
+    bool                             xDead,
+    bool                             yDead,
+    bool                             zDead,
+    bool                             useLU,
+    Polynomial                       polynomial,
+    Preallocation                    preallocation,
+    double                           radius,
+    const std::string &              multiscaleType) const
 {
   PRECICE_TRACE(direction, type);
 
@@ -487,10 +559,132 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
 
     configuredMapping.mapping = PtrMapping(new NearestNeighborGradientMapping(constraintValue, fromMesh->getDimensions()));
   } else {
-    // We need knowledge about the basis function in order to instantiate the rbf related mapping
-    PRECICE_ASSERT(requiresBasisFunction(type));
-    configuredMapping.mapping                = nullptr;
-    configuredMapping.configuredWithAliasTag = type == TYPE_RBF_ALIAS;
+    rbfType = RBFType::EIGEN;
+  }
+
+  if (rbfType == RBFType::EIGEN) {
+    PRECICE_DEBUG("Eigen RBF is used");
+    if (type == VALUE_RBF_TPS) {
+      configuredMapping.mapping = PtrMapping(
+          new RadialBasisFctMapping<ThinPlateSplines>(constraintValue, dimensions, ThinPlateSplines(), {{xDead, yDead, zDead}}, polynomial));
+    } else if (type == VALUE_RBF_MULTIQUADRICS) {
+      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::ShapeParameter)
+      configuredMapping.mapping = PtrMapping(
+          new RadialBasisFctMapping<Multiquadrics>(
+              constraintValue, dimensions, Multiquadrics(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial));
+    } else if (type == VALUE_RBF_INV_MULTIQUADRICS) {
+      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::ShapeParameter)
+      configuredMapping.mapping = PtrMapping(
+          new RadialBasisFctMapping<InverseMultiquadrics>(
+              constraintValue, dimensions, InverseMultiquadrics(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial));
+    } else if (type == VALUE_RBF_VOLUME_SPLINES) {
+      configuredMapping.mapping = PtrMapping(
+          new RadialBasisFctMapping<VolumeSplines>(constraintValue, dimensions, VolumeSplines(), {{xDead, yDead, zDead}}, polynomial));
+    } else if (type == VALUE_RBF_GAUSSIAN) {
+      double shapeParameter = rbfParameter.value;
+      if (rbfParameter.type == RBFParameter::Type::SupportRadius) {
+        // Compute shape parameter from the support radius
+        shapeParameter = std::sqrt(-std::log(Gaussian::cutoffThreshold)) / rbfParameter.value;
+      }
+      configuredMapping.mapping = PtrMapping(
+          new RadialBasisFctMapping<Gaussian>(
+              constraintValue, dimensions, Gaussian(shapeParameter), {{xDead, yDead, zDead}}, polynomial));
+    } else if (type == VALUE_RBF_CTPS_C2) {
+      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::SupportRadius)
+      configuredMapping.mapping = PtrMapping(
+          new RadialBasisFctMapping<CompactThinPlateSplinesC2>(
+              constraintValue, dimensions, CompactThinPlateSplinesC2(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial));
+    } else if (type == VALUE_RBF_CPOLYNOMIAL_C0) {
+      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::SupportRadius)
+      configuredMapping.mapping = PtrMapping(
+          new RadialBasisFctMapping<CompactPolynomialC0>(
+              constraintValue, dimensions, CompactPolynomialC0(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial));
+    } else if (type == VALUE_RBF_CPOLYNOMIAL_C6) {
+      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::SupportRadius)
+      configuredMapping.mapping = PtrMapping(
+          new RadialBasisFctMapping<CompactPolynomialC6>(
+              constraintValue, dimensions, CompactPolynomialC6(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial));
+    } else if (type == VALUE_AXIAL_GEOMETRIC_MULTISCALE) {
+
+      AxialGeoMultiscaleMapping::MultiscaleType multiscaleTypeValue;
+      if (multiscaleType == "spread") {
+        multiscaleTypeValue = AxialGeoMultiscaleMapping::SPREAD;
+      } else if (multiscaleType == "collect") {
+        multiscaleTypeValue = AxialGeoMultiscaleMapping::COLLECT;
+      } else {
+        PRECICE_ERROR("Unknown geometric multiscale type \"{}\". Known types are \"spread\" and \"collect\".", multiscaleTypeValue);
+      }
+      configuredMapping.mapping = PtrMapping(
+          new AxialGeoMultiscaleMapping(constraintValue, dimensions, multiscaleTypeValue, radius));
+      configuredMapping.isRBF = false;
+    } else {
+      std::cout << type;
+      PRECICE_ERROR("Unknown mapping type!");
+    }
+  }
+
+#ifndef PRECICE_NO_PETSC
+
+  if (rbfType == RBFType::PETSc) {
+    PRECICE_DEBUG("PETSc RBF is used.");
+    if (type == VALUE_RBF_TPS) {
+      configuredMapping.mapping = PtrMapping(
+          new PetRadialBasisFctMapping<ThinPlateSplines>(constraintValue, dimensions, ThinPlateSplines(),
+                                                         {{xDead, yDead, zDead}}, solverRtol, polynomial, preallocation));
+    } else if (type == VALUE_RBF_MULTIQUADRICS) {
+      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::ShapeParameter)
+      configuredMapping.mapping = PtrMapping(
+          new PetRadialBasisFctMapping<Multiquadrics>(constraintValue, dimensions, Multiquadrics(rbfParameter.value),
+                                                      {{xDead, yDead, zDead}}, solverRtol, polynomial, preallocation));
+    } else if (type == VALUE_RBF_INV_MULTIQUADRICS) {
+      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::ShapeParameter)
+      configuredMapping.mapping = PtrMapping(
+          new PetRadialBasisFctMapping<InverseMultiquadrics>(constraintValue, dimensions, InverseMultiquadrics(rbfParameter.value),
+                                                             {{xDead, yDead, zDead}}, solverRtol, polynomial, preallocation));
+    } else if (type == VALUE_RBF_VOLUME_SPLINES) {
+      configuredMapping.mapping = PtrMapping(
+          new PetRadialBasisFctMapping<VolumeSplines>(constraintValue, dimensions, VolumeSplines(),
+                                                      {{xDead, yDead, zDead}}, solverRtol, polynomial, preallocation));
+    } else if (type == VALUE_RBF_GAUSSIAN) {
+      double shapeParameter = rbfParameter.value;
+      if (rbfParameter.type == RBFParameter::Type::SupportRadius) {
+        // Compute shape parameter from the support radius
+        shapeParameter = std::sqrt(-std::log(Gaussian::cutoffThreshold)) / rbfParameter.value;
+      }
+      configuredMapping.mapping = PtrMapping(
+          new PetRadialBasisFctMapping<Gaussian>(constraintValue, dimensions, Gaussian(shapeParameter),
+                                                 {{xDead, yDead, zDead}}, solverRtol, polynomial, preallocation));
+    } else if (type == VALUE_RBF_CTPS_C2) {
+      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::SupportRadius)
+      configuredMapping.mapping = PtrMapping(
+          new PetRadialBasisFctMapping<CompactThinPlateSplinesC2>(constraintValue, dimensions, CompactThinPlateSplinesC2(rbfParameter.value),
+                                                                  {{xDead, yDead, zDead}}, solverRtol, polynomial, preallocation));
+    } else if (type == VALUE_RBF_CPOLYNOMIAL_C0) {
+      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::SupportRadius)
+      configuredMapping.mapping = PtrMapping(
+          new PetRadialBasisFctMapping<CompactPolynomialC0>(constraintValue, dimensions, CompactPolynomialC0(rbfParameter.value),
+                                                            {{xDead, yDead, zDead}}, solverRtol, polynomial, preallocation));
+    } else if (type == VALUE_RBF_CPOLYNOMIAL_C6) {
+      PRECICE_ASSERT(rbfParameter.type == RBFParameter::Type::SupportRadius)
+      configuredMapping.mapping = PtrMapping(
+          new PetRadialBasisFctMapping<CompactPolynomialC6>(constraintValue, dimensions, CompactPolynomialC6(rbfParameter.value),
+                                                            {{xDead, yDead, zDead}}, solverRtol, polynomial, preallocation));
+    } else if (type == VALUE_AXIAL_GEOMETRIC_MULTISCALE) {
+
+      AxialGeoMultiscaleMapping::MultiscaleType multiscaleTypeValue;
+      if (multiscaleType == "spread") {
+        multiscaleTypeValue = AxialGeoMultiscaleMapping::SPREAD;
+      } else if (multiscaleType == "collect") {
+        multiscaleTypeValue = AxialGeoMultiscaleMapping::COLLECT;
+      } else {
+        PRECICE_ERROR("Unknown geometric multiscale type \"{}\". Known types are \"spread\" and \"collect\".", multiscaleTypeValue);
+      }
+      configuredMapping.mapping = PtrMapping(
+          new AxialGeoMultiscaleMapping(constraintValue, dimensions, multiscaleTypeValue, radius));
+      configuredMapping.isRBF = false;
+    } else {
+      PRECICE_ERROR("Unknown mapping type!");
+    }
   }
 
   configuredMapping.requiresBasisFunction = requiresBasisFunction(type);

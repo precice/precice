@@ -169,6 +169,8 @@ target_sources(preciceCore
     src/m2n/config/M2NConfiguration.hpp
     src/mapping/BarycentricBaseMapping.cpp
     src/mapping/BarycentricBaseMapping.hpp
+    src/mapping/AxialGeoMultiscaleMapping.cpp
+    src/mapping/AxialGeoMultiscaleMapping.hpp
     src/mapping/LinearCellInterpolationMapping.cpp
     src/mapping/LinearCellInterpolationMapping.hpp
     src/mapping/Mapping.cpp
