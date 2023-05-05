@@ -298,51 +298,15 @@ PRECICE_API int precicec_hasData(const char *meshName, const char *dataName);
  * @param[in] dataName the name of the data to be written.
  * @param[in] size Number of indices, and number of values * dimensions.
  * @param[in] values Values of the data to be written.
+ *
+ * @see SolverInterface::writeData
  */
-PRECICE_API void precicec_writeBlockVectorData(
+PRECICE_API void precicec_writeData(
     const char *  meshName,
     const char *  dataName,
     int           size,
     const int *   valueIndices,
     const double *values);
-
-/**
- * @brief Writes vectorial foating point data to the coupling mesh.
- *
- * @param[in] meshName the name of the mesh
- * @param[in] dataName the name of the data to be written.
- * @param[in] dataNamePosition Spatial position of the data to be written.
- * @param[in] dataNameValue Vectorial data value to be written.
- */
-PRECICE_API void precicec_writeVectorData(
-    const char *  meshName,
-    const char *  dataName,
-    int           valueIndex,
-    const double *dataValue);
-
-/**
- * @brief See precice::SolverInterface::writeBlockScalarData().
- */
-PRECICE_API void precicec_writeBlockScalarData(
-    const char *  meshName,
-    const char *  dataName,
-    int           size,
-    const int *   valueIndices,
-    const double *values);
-
-/**
- * @brief Writes scalar floating point data to the coupling mesh.
- *
- * @param[in] meshName the name of the mesh.
- * @param[in] dataName the name of the data to be written.
- * @param[in] dataNamePosition Spatial position of the data to be written.
- * @param[in] dataNameValue Scalar data value to be written.
- */
-PRECICE_API void precicec_writeScalarData(
-    const char *meshName,
-    const char *dataName,
-    int         valueIndex,
-    double      dataValue);
 
 /**
  * @brief Reads vector data values given as block.
@@ -357,57 +321,16 @@ PRECICE_API void precicec_writeScalarData(
  * @param[in] valueIndices Indices (from setReadPosition()) of data values.
  * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step.
  * @param[in] values Values of the data to be read.
+ *
+ * @see SolverInterface::readData
  */
-PRECICE_API void precicec_readBlockVectorData(
+PRECICE_API void precicec_readData(
     const char *meshName,
     const char *dataName,
     int         size,
     const int * valueIndices,
     double      relativeReadTime,
     double *    values);
-
-/**
- * @brief Reads vectorial foating point data from the coupling mesh.
- *
- * @param[in] meshName the name of the mesh
- * @param[in] dataName the name of the data to be read.
- * @param[in] dataNamePosition Position where the read data should be mapped to.
- * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step.
- * @param[out] dataValue Vectorial data value read.
- */
-PRECICE_API void precicec_readVectorData(
-    const char *meshName,
-    const char *dataName,
-    int         valueIndex,
-    double      relativeReadTime,
-    double *    dataValue);
-
-/**
- * @brief See precice::SolverInterface::readBlockScalarData().
- */
-PRECICE_API void precicec_readBlockScalarData(
-    const char *meshName,
-    const char *dataName,
-    int         size,
-    const int * valueIndices,
-    double      relativeReadTime,
-    double *    values);
-
-/**
- * @brief Reads scalar foating point data from the coupling mesh.
- *
- * @param[in] meshName the name of the mesh
- * @param[in] dataName the name of the data to be read.
- * @param[in] dataNamePosition Position where the read data should be mapped to.
- * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step.
- * @param[out] dataValue Scalar data value read.
- */
-PRECICE_API void precicec_readScalarData(
-    const char *meshName,
-    const char *dataName,
-    int         valueIndex,
-    double      relativeReadTime,
-    double *    dataValue);
 
 /**
  * @brief Returns information on the version of preCICE.
@@ -431,30 +354,8 @@ PRECICE_API const char *precicec_getVersionInformation();
 PRECICE_API int precicec_requiresGradientDataFor(const char *meshName,
                                                  const char *dataName);
 
-/// @copydoc precice::SolverInterface::writeScalarGradientData
-PRECICE_API void precicec_writeScalarGradientData(
-    const char *  meshName,
-    const char *  dataName,
-    int           valueIndex,
-    const double *gradientValues);
-
-/// @copydoc precice::SolverInterface::writeBlockScalarGradientData
-PRECICE_API void precicec_writeBlockScalarGradientData(
-    const char *  meshName,
-    const char *  dataName,
-    int           size,
-    const int *   valueIndices,
-    const double *gradientValues);
-
-/// @copydoc precice::SolverInterface::writeVectorGradientData
-PRECICE_API void precicec_writeVectorGradientData(
-    const char *  meshName,
-    const char *  dataName,
-    int           valueIndex,
-    const double *gradientValues);
-
-/// @copydoc precice::SolverInterface::writeBlockVectorGradientData
-PRECICE_API void precicec_writeBlockVectorGradientData(
+/// @copydoc precice::SolverInterface::writeGradientData
+PRECICE_API void precicec_writeGradientData(
     const char *  meshName,
     const char *  dataName,
     int           size,

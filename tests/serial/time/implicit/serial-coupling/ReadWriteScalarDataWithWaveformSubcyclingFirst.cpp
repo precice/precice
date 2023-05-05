@@ -55,7 +55,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
   double   readData  = 0;
   VertexID vertexID;
 
-  vertexID = precice.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+  double v0[] = {0, 0, 0};
+  vertexID    = precice.setMeshVertex(meshName, v0);
 
   int    nSubsteps          = 4; // perform subcycling on solvers. 4 steps happen in each window.
   int    nWindows           = 5; // perform 5 windows.
@@ -67,7 +68,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
 
   if (precice.requiresInitialData()) {
     writeData = writeFunction(time);
-    precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
+    precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&writeData, 1});
   }
 
   precice.initialize();
@@ -85,7 +86,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
     }
     double readTime;
     readTime = time + currentDt;
-    precice.readScalarData(meshName, readDataName, vertexID, currentDt, readData);
+    precice.readData(meshName, readDataName, {&vertexID, 1}, currentDt, {&readData, 1});
 
     if (context.isNamed("SolverOne") && iterations == 0) { // in the first iteration of each window, we only have one sample of data. Therefore constant interpolation
       BOOST_TEST(readData == readFunction(timeCheckpoint));
@@ -93,7 +94,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
       BOOST_TEST(readData == readFunction(readTime));
     }
 
-    precice.readScalarData(meshName, readDataName, vertexID, currentDt / 2, readData);
+    precice.readData(meshName, readDataName, {&vertexID, 1}, currentDt / 2, {&readData, 1});
 
     if (context.isNamed("SolverOne") && iterations == 0) { // in the first iteration of each window, we only have one sample of data. Therefore constant interpolation
       BOOST_TEST(readData == readFunction(timeCheckpoint));
@@ -105,7 +106,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
     time += currentDt;
     timestep++;
     writeData = writeFunction(time);
-    precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
+    precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&writeData, 1});
     precice.advance(currentDt);
     maxDt = precice.getMaxTimeStepSize();
     if (precice.requiresReadingCheckpoint()) {

@@ -51,12 +51,11 @@ public:
   /**
    * @brief Samples data at a given point in time within the current time window for given indices
    *
-   * @param[in] indices ids of data
+   * @param[in] vertices vertex ids
    * @param[in] normalizedDt Point in time where waveform is sampled. Must be normalized to [0,1], where 0 refers to the beginning and 1 to the end of the current time window.
-   *
-   * @return Eigen::VectorXd with data associated with given indices for time normalizedDt
+   * @param[in] values read data associated with given indices for time normalizedDt will be returned into this span
    */
-  Eigen::VectorXd readValues(const std::vector<int> &indices, double normalizedDt) const;
+  void readValues(::precice::span<const VertexID> vertices, double normalizedDt, ::precice::span<double> values) const;
 
   /**
    * @brief Updates _waveform when moving to the next time window.

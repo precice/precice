@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(ActionTimingsExplicit)
 
   if (interface.requiresInitialData()) {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    interface.writeVectorData(meshName, writeDataName, vertexID, writeData.data());
+    interface.writeData(meshName, writeDataName, {&vertexID, 1}, writeData);
   }
 
   interface.initialize();
@@ -69,8 +69,8 @@ BOOST_AUTO_TEST_CASE(ActionTimingsExplicit)
   int iteration = 0;
 
   while (interface.isCouplingOngoing()) {
-    interface.readVectorData(meshName, readDataName, vertexID, dt, readData.data());
-    interface.writeVectorData(meshName, writeDataName, vertexID, writeData.data());
+    interface.readData(meshName, readDataName, {&vertexID, 1}, dt, readData);
+    interface.writeData(meshName, writeDataName, {&vertexID, 1}, writeData);
     interface.advance(dt);
     double dt = interface.getMaxTimeStepSize();
     BOOST_TEST(interface.isTimeWindowComplete());

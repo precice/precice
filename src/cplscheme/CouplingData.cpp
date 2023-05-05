@@ -49,12 +49,12 @@ const Eigen::VectorXd &CouplingData::values() const
 
 Eigen::MatrixXd &CouplingData::gradientValues()
 {
-  return sample().gradient;
+  return sample().gradients;
 }
 
 const Eigen::MatrixXd &CouplingData::gradientValues() const
 {
-  return sample().gradient;
+  return sample().gradients;
 }
 
 time::Storage &CouplingData::timeStepsStorage()
@@ -102,14 +102,17 @@ void CouplingData::storeIteration()
   _previousIteration = this->sample();
 }
 
-const Eigen::VectorXd CouplingData::previousIteration() const
+const Eigen::VectorXd CouplingData::previousIteration()
 {
+  if (_previousIteration.values.size() == 0) { // @todo work-around for direct mesh access, if _previousIteration was initialized with incorrect size.
+    _previousIteration = time::Sample{Eigen::VectorXd::Zero(getSize())};
+  }
   return _previousIteration.values;
 }
 
 const Eigen::MatrixXd &CouplingData::previousIterationGradients() const
 {
-  return _previousIteration.gradient;
+  return _previousIteration.gradients;
 }
 
 int CouplingData::getPreviousIterationSize() const

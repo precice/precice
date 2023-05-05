@@ -53,7 +53,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
   }
 
   double   writeData, readData;
-  VertexID vertexID = precice.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+  double   v0[]     = {0, 0, 0};
+  VertexID vertexID = precice.setMeshVertex(meshName, v0);
 
   int    nSubsteps  = 4; // perform subcycling on solvers. 4 steps happen in each window.
   int    nWindows   = 5; // perform 5 windows.
@@ -63,7 +64,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
 
   if (precice.requiresInitialData()) {
     writeData = writeFunction(time);
-    precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
+    precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&writeData, 1});
   }
 
   precice.initialize();
@@ -82,7 +83,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
       readTime = (timewindow + 1) * windowDt; // SolverTwo gets result at end of window from SolverOne
     }
 
-    precice.readScalarData(meshName, readDataName, vertexID, currentDt, readData);
+    precice.readData(meshName, readDataName, {&vertexID, 1}, currentDt, {&readData, 1});
     BOOST_TEST(readData == readFunction(readTime));
 
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.
@@ -90,7 +91,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     time += currentDt;
 
     writeData = writeFunction(time);
-    precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
+    precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&writeData, 1});
 
     precice.advance(currentDt);
     timestep++;

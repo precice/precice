@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(ParallelSquare1To2)
               3.0,
               2.0};
 
-    interface.writeBlockScalarData(meshName, dataName, 4, vertexIDs.data(), values.data());
+    interface.writeData(meshName, dataName, vertexIDs, values);
 
     interface.advance(dt);
     BOOST_TEST(!interface.isCouplingOngoing(), "Sending participant must advance only once.");
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(ParallelSquare1To2)
     }
 
     dt = interface.getMaxTimeStepSize();
-    interface.readBlockScalarData(meshName, dataName, expected.size(), vertexIDs.data(), dt, readData.data());
+    interface.readData(meshName, dataName, vertexIDs, dt, readData);
     BOOST_CHECK(equals(expected, readData));
     interface.finalize();
   }

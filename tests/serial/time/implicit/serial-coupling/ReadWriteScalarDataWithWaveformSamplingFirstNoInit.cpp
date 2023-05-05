@@ -53,7 +53,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirstNoInit)
 
   double   writeData = 0;
   double   readData  = 0;
-  VertexID vertexID  = precice.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+  double   v0[]      = {0, 0, 0};
+  VertexID vertexID  = precice.setMeshVertex(meshName, v0);
 
   int nWindows = 5; // perform 5 windows.
   precice.initialize();
@@ -80,7 +81,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirstNoInit)
     for (int j = 0; j < nSamples; j++) {
       sampleDt = sampleDts[j];
       readTime = time + sampleDt;
-      precice.readScalarData(meshName, readDataName, vertexID, sampleDt, readData);
+      precice.readData(meshName, readDataName, {&vertexID, 1}, sampleDt, {&readData, 1});
 
       if (context.isNamed("SolverOne") && iterations == 0 && timewindow == 0) { // use zero as initial value in first iteration (no initializeData was called)
         BOOST_TEST(readData == 0);
@@ -101,7 +102,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirstNoInit)
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.
     time += currentDt;
     writeData = writeFunction(time);
-    precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
+    precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&writeData, 1});
     precice.advance(maxDt);
     double maxDt = precice.getMaxTimeStepSize();
     currentDt    = dt > maxDt ? maxDt : dt;

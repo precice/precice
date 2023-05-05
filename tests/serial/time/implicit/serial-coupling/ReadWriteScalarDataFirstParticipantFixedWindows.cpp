@@ -47,7 +47,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantFixedWindows)
     readDataName  = "DataOne";
   }
 
-  VertexID vertexID = precice.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+  double   v0[]     = {0, 0, 0};
+  VertexID vertexID = precice.setMeshVertex(meshName, v0);
   precice.initialize();
   double dt = precice.getMaxTimeStepSize();
 
@@ -59,7 +60,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantFixedWindows)
     for (int it = 0; it < maxIterations; it++) {
       actualDataValue = -1; // reset value.
       BOOST_TEST(precice.isCouplingOngoing());
-      precice.writeScalarData(meshName, writeDataName, vertexID, expectedDataValue);
+      precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&expectedDataValue, 1});
 
       if (context.isNamed("SolverOne")) {
         precice.advance(iterationSizes.at(it));
@@ -83,7 +84,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantFixedWindows)
         // do nothing
       }
 
-      precice.readScalarData(meshName, readDataName, vertexID, dt, actualDataValue);
+      precice.readData(meshName, readDataName, {&vertexID, 1}, dt, {&actualDataValue, 1});
       BOOST_TEST(actualDataValue == expectedDataValue);
     }
   }

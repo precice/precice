@@ -23,13 +23,17 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithSolverGeometry)
   int    timesteps = 0;
   double time      = 0;
 
+  double v0[]   = {0, 0, 0};
+  double v100[] = {1, 0, 0};
+  double v010[] = {0, 1, 0};
+
   precice::SolverInterface couplingInterface(context.name, context.config(), 0, 1);
   if (context.isNamed("SolverOne")) {
     //was necessary to replace pre-defined geometries
     auto meshName = "MeshOne";
     BOOST_REQUIRE(couplingInterface.getMeshDimensions(meshName) == 3);
-    couplingInterface.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());
-    couplingInterface.setMeshVertex(meshName, Eigen::Vector3d(1.0, 0.0, 0.0).data());
+    couplingInterface.setMeshVertex(meshName, v0);
+    couplingInterface.setMeshVertex(meshName, v100);
 
     couplingInterface.initialize();
     double dt = couplingInterface.getMaxTimeStepSize();
@@ -43,9 +47,9 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithSolverGeometry)
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
     auto meshName = "SolverGeometry";
-    int  i0       = couplingInterface.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());
-    int  i1       = couplingInterface.setMeshVertex(meshName, Eigen::Vector3d(1.0, 0.0, 0.0).data());
-    int  i2       = couplingInterface.setMeshVertex(meshName, Eigen::Vector3d(0.0, 1.0, 0.0).data());
+    int  i0       = couplingInterface.setMeshVertex(meshName, v0);
+    int  i1       = couplingInterface.setMeshVertex(meshName, v100);
+    int  i2       = couplingInterface.setMeshVertex(meshName, v010);
     couplingInterface.setMeshTriangle(meshName, i0, i1, i2);
     couplingInterface.initialize();
     double dt = couplingInterface.getMaxTimeStepSize();

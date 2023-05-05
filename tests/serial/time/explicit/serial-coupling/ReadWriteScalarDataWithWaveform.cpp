@@ -52,7 +52,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveform)
   }
 
   double   writeData, readData;
-  VertexID vertexID = precice.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+  double   v0[]     = {0, 0, 0};
+  VertexID vertexID = precice.setMeshVertex(meshName, v0);
 
   int    nSubsteps  = 4; // perform subcycling on solvers. 4 steps happen in each window.
   int    nWindows   = 5; // perform 5 windows.
@@ -62,7 +63,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveform)
 
   if (precice.requiresInitialData()) {
     writeData = writeFunction(time);
-    precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
+    precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&writeData, 1});
   }
 
   precice.initialize();
@@ -71,11 +72,11 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveform)
   double windowDt  = maxDt;
   double dt        = windowDt / (nSubsteps - 0.5); // Solver always tries to do a timestep of fixed size.
   double currentDt = dt > maxDt ? maxDt : dt;      // determine actual time step size; must fit into remaining time in window
-  double timeCheckpoint;
+  double timeCheckpoint{0};
 
   while (precice.isCouplingOngoing()) {
 
-    precice.readScalarData(meshName, readDataName, vertexID, currentDt, readData);
+    precice.readData(meshName, readDataName, {&vertexID, 1}, currentDt, {&readData, 1});
 
     if (context.isNamed("SolverOne")) { // first participant receives constant value from second
       BOOST_TEST(readData == readFunction(timeCheckpoint));
@@ -83,7 +84,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveform)
       BOOST_TEST(readData == readFunction(time + currentDt));
     }
 
-    precice.readScalarData(meshName, readDataName, vertexID, currentDt / 2, readData);
+    precice.readData(meshName, readDataName, {&vertexID, 1}, currentDt / 2, {&readData, 1});
 
     if (context.isNamed("SolverOne")) { // first participant receives constant value from second
       BOOST_TEST(readData == readFunction(timeCheckpoint));
@@ -100,7 +101,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveform)
     }
 
     writeData = writeFunction(time);
-    precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
+    precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&writeData, 1});
     precice.advance(currentDt);
     maxDt = precice.getMaxTimeStepSize();
 

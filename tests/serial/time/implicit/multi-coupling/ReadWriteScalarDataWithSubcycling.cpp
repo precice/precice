@@ -66,7 +66,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
 
   double   writeData = 0;
   double   readData  = 0;
-  VertexID vertexID  = precice.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+  double   v0[]      = {0, 0, 0};
+  VertexID vertexID  = precice.setMeshVertex(meshName, v0);
 
   int    nWindows        = 5; // perform 5 windows.
   int    timestep        = 0;
@@ -79,7 +80,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
 
   if (precice.requiresInitialData()) {
     writeData = writeFunction(time);
-    precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
+    precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&writeData, 1});
   }
 
   precice.initialize();
@@ -100,7 +101,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
       auto readDataName = readDataPair.first;
       auto readFunction = readDataPair.second;
 
-      precice.readScalarData(meshName, readDataName, vertexID, currentDt, readData);
+      precice.readData(meshName, readDataName, {&vertexID, 1}, currentDt, {&readData, 1});
       if (iterations == 0 && timestep == 0) {                        // special situation: Both solvers are in their very first time windows, first iteration, first time step
         BOOST_TEST(readData == readFunction(0));                     // use initial data only.
       } else if (iterations == 0) {                                  // special situation: Both solvers get the old data for all time windows.
@@ -115,7 +116,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.
     time += currentDt;
     writeData = writeFunction(time);
-    precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
+    precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&writeData, 1});
     precice.advance(currentDt);
     timestep++;
     if (precice.requiresReadingCheckpoint()) { // at end of window and we have to repeat it.

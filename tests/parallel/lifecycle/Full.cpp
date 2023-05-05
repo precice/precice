@@ -26,14 +26,15 @@ BOOST_AUTO_TEST_CASE(Full)
 
     auto   dataName = "DataOne";
     double data[]   = {3.4, 4.5, 5.6};
-    interface.writeVectorData(meshName, dataName, vertexid, data);
+    interface.writeData(meshName, dataName, {&vertexid, 1}, data);
   } else {
     auto   meshName = "MeshTwo";
     double coords[] = {x1 + dx * context.rank, y, z};
     auto   vertexid = interface.setMeshVertex(meshName, coords);
 
-    auto dataName = "DataTwo";
-    interface.writeScalarData(meshName, dataName, vertexid, 7.8);
+    auto   dataName = "DataTwo";
+    double data[]   = {7.8};
+    interface.writeData(meshName, dataName, {&vertexid, 1}, data);
   }
   interface.initialize();
   BOOST_TEST(interface.isCouplingOngoing());

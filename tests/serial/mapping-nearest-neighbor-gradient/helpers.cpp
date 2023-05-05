@@ -7,7 +7,7 @@
 
 using namespace precice;
 
-void testVectorGradientFunctions(const TestContext &context, const bool writeBlockWise)
+void testVectorGradientFunctions(const TestContext &context)
 {
   using Eigen::Vector3d;
 
@@ -29,7 +29,7 @@ void testVectorGradientFunctions(const TestContext &context, const bool writeBlo
 
     double values[6]  = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
     int    indices[2] = {0, 1};
-    interface.writeBlockVectorData(meshName, dataName, 2, indices, values);
+    interface.writeData(meshName, dataName, indices, values);
 
     BOOST_TEST(interface.requiresGradientDataFor(meshName, dataName) == true);
 
@@ -38,12 +38,7 @@ void testVectorGradientFunctions(const TestContext &context, const bool writeBlo
       std::vector<double> gradientValues({1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0,
                                           10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0});
 
-      if (writeBlockWise) {
-        interface.writeBlockVectorGradientData(meshName, dataName, 2, indices, gradientValues.data());
-      } else {
-        interface.writeVectorGradientData(meshName, dataName, indices[0], &gradientValues[0]);
-        interface.writeVectorGradientData(meshName, dataName, indices[1], &gradientValues[9]);
-      }
+      interface.writeGradientData(meshName, dataName, indices, gradientValues);
     }
 
     // Participant must make move after writing
@@ -69,7 +64,7 @@ void testVectorGradientFunctions(const TestContext &context, const bool writeBlo
 
     double valueData[6];
     int    indices[2] = {0, 1};
-    interface.readBlockVectorData(meshName, dataName, 2, indices, maxDt, valueData);
+    interface.readData(meshName, dataName, indices, maxDt, valueData);
 
     std::vector<double> expected;
     expected = {1.6, 3.5, 5.4, 7.3, 9.2, 11.1};

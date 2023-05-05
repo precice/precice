@@ -70,13 +70,13 @@ int main(int argc, char **argv)
     }
 
     double dt = interface.getMaxTimeStepSize();
-    interface.readBlockVectorData(meshName, dataReadName, numberOfVertices, vertexIDs.data(), dt, readData.data());
+    interface.readData(meshName, dataReadName, vertexIDs, dt, readData);
 
     for (int i = 0; i < numberOfVertices * dimensions; i++) {
       writeData.at(i) = readData.at(i) + 1;
     }
 
-    interface.writeBlockVectorData(meshName, dataWriteName, numberOfVertices, vertexIDs.data(), writeData.data());
+    interface.writeData(meshName, dataWriteName, vertexIDs, writeData);
 
     interface.advance(dt);
 
