@@ -29,10 +29,9 @@ void ReadDataContext::appendMappingConfiguration(MappingContext &mappingContext,
 
 void ReadDataContext::readValues(::precice::span<const VertexID> vertices, double normalizedDt, ::precice::span<double> values) const
 {
-  const auto                        vertexCount = getMeshVertexCount();
   Eigen::Map<Eigen::MatrixXd>       outputData(values.data(), getDataDimensions(), values.size());
   const Eigen::MatrixXd             sample{_waveform->sample(normalizedDt)};
-  Eigen::Map<const Eigen::MatrixXd> localData(sample.data(), getDataDimensions(), vertexCount);
+  Eigen::Map<const Eigen::MatrixXd> localData(sample.data(), getDataDimensions(), getMeshVertexCount());
   for (int i = 0; i < vertices.size(); ++i) {
     const auto vid = vertices[i];
     PRECICE_CHECK(isValidVertexID(vid),
