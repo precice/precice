@@ -13,7 +13,7 @@ void computeQRDecompositionHip(const int deviceId, const std::shared_ptr<gko::Ex
   hipSetDevice(deviceId);
 
   void *dWork{};
-  int  *devInfo{};
+  int * devInfo{};
 
   // Allocating important HIP variables
   hipMalloc((void **) &dWork, sizeof(double));
