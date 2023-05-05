@@ -13,9 +13,9 @@ public:
 
 protected:
   // Important variables which track the state of the solver routines
-  double *dTau    = nullptr;
-  void *  dWork   = nullptr;
-  void *  hWork   = nullptr;
-  int *   devInfo = nullptr;
-  int backupDeviceId = 0;
+  double *dTau           = nullptr;
+  void *  dWork          = nullptr;
+  void *  hWork          = nullptr;
+  int *   devInfo        = nullptr;
+  int     backupDeviceId = 0;
 };

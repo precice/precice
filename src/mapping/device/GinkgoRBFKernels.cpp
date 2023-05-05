@@ -106,7 +106,6 @@ void fill_polynomial_matrix(std::shared_ptr<const DefaultExecutor> exec,
       exec,
       GKO_KERNEL(auto i, auto j, auto N1, auto N2, auto mtx, auto x, auto supportPointsRowLength, auto dims) {
 #if defined(__NVCC__) || defined(__HIPCC__)
-
         if (j < dims - 1) {
           mtx[i * dims + j] = x[j * supportPointsRowLength + i];
         } else {

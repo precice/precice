@@ -16,7 +16,6 @@ public:
 
 private:
   // Handles for HIP
-
 };
 
 #endif
