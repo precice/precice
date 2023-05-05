@@ -253,10 +253,15 @@ if (PRECICE_GinkgoParallelization)
   find_package(Ginkgo 1.5 REQUIRED)
   message(STATUS "Found Ginkgo ${GINKGO_PROJECT_VERSION} at ${GINKGO_INSTALL_PREFIX}")
 
+  include(CMakeDependentOption)
+  cmake_dependent_option(PRECICE_WITH_CUDA "Enable Ginkgo Cuda support in preCICE" ON "PRECICE_GinkgoParallelization;GINKGO_BUILD_CUDA" OFF)
+  cmake_dependent_option(PRECICE_WITH_HIP "Enable Ginkgo HIP support in preCICE" ON "PRECICE_GinkgoParallelization;GINKGO_BUILD_HIP" OFF)
+  cmake_dependent_option(PRECICE_WITH_OMP "Enable Ginkgo OpenMP support in preCICE" ON "PRECICE_GinkgoParallelization;GINKGO_BUILD_OMP" OFF)
+
   # We aim for the same configuration as Ginkgo itself and check immediately for device compiler
   # such that preciceCore inherits all relevant flags directly
   # 1. Check if Ginkgo was built with CUDA and if CUDA is available on the system
-  if(GINKGO_BUILD_CUDA)
+  if(PRECICE_WITH_CUDA)
     # Necessary for the unified kernels and the qr decomposition
     include(CheckLanguage)
     check_language(CUDA)
@@ -269,12 +274,10 @@ if (PRECICE_GinkgoParallelization)
     if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.18)
       set(CMAKE_CUDA_ARCHITECTURES OFF)
     endif()
-    add_compile_definitions("PRECICE_WITH_CUDA")
-    message(STATUS "Enabled CUDA support for preCICE via the Ginkgo library.")
   endif()
 
   # 2. Check if Ginkgo was built with HIP and if HIP is available on the system
-  if(GINKGO_BUILD_HIP)
+  if(PRECICE_WITH_HIP)
     if(NOT DEFINED HIP_PATH)
      if(NOT DEFINED $ENV{HIP_PATH})
        set(HIP_PATH "/opt/rocm/hip" CACHE PATH "Path to which HIP has been installed")
@@ -294,18 +297,9 @@ if (PRECICE_GinkgoParallelization)
 
     set(HIP_CLANG_FLAGS "-fPIC -w")
     set(HIP_NVCC_FLAGS "-fPIC")
-    add_compile_definitions("PRECICE_WITH_HIP")
-    message(STATUS "Enabled HIP support for preCICE via the Ginkgo library.")
   endif()
 
-  # 3. Check if Ginkgo was built with OpenMP and if OpenMP is available on the system
-  if(GINKGO_BUILD_OMP)
-    # There is nothing special required for OpenMP, looking for OpenMP and setting the flag is handled by the unified kernels
-    add_compile_definitions("PRECICE_WITH_OMP")
-    message(STATUS "Enabled OpenMP support for preCICE via the Ginkgo library.")
-  endif()
-
-  # That's essentially all backends we use from Ginkgo. The reference executor doesn't need any special treatments and
+  # That's essentially all backends we use from Ginkgo. The reference executor and OMP doesn't need any special treatments and
   # DPCPP has not yet been tested/setup
 else()
   message(STATUS "Ginkgo support disabled")
@@ -435,25 +429,35 @@ if (PRECICE_GinkgoParallelization)
   set_target_properties(preciceCore_dpcpp PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
   # Now we setup cuSolver and hipSOLVER for preCICE
-  if(GINKGO_BUILD_CUDA)
+  if(PRECICE_WITH_CUDA)
+    target_compile_definitions(preciceCore PUBLIC PRECICE_WITH_CUDA)
     target_sources(preciceCore PRIVATE ${PROJECT_SOURCE_DIR}/src/mapping/device/CudaQRSolver.cuh ${PROJECT_SOURCE_DIR}/src/mapping/device/CudaQRSolver.cu)
     target_link_libraries(preciceCore PUBLIC cusolver)
+    message(STATUS "Enabled CUDA support for preCICE via the Ginkgo library.")
   endif()
 
-  if(GINKGO_BUILD_HIP)
+  if(PRECICE_WITH_HIP)
+    target_compile_definitions(preciceCore PUBLIC PRECICE_WITH_HIP)
     set(_hiplist ${PROJECT_SOURCE_DIR}/src/mapping/device/HipQRSolver.hip.cpp)
     set_source_files_properties(${_hiplist} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT TRUE)
     hip_add_library(preciceCore_qr_hip ${_hiplist}
-        HIPCC_OPTIONS ${GINKGO_HIPCC_OPTIONS} "-std=c++17 -DGINKGO_BUILD_HIP"
+        HIPCC_OPTIONS ${GINKGO_HIPCC_OPTIONS} "-std=c++17 -DPRECICE_WITH_HIP"
         CLANG_OPTIONS ${GINKGO_HIP_CLANG_OPTIONS}
         NVCC_OPTIONS ${GINKGO_HIP_NVCC_OPTIONS}
         STATIC)
         target_link_libraries(preciceCore_qr_hip PRIVATE Ginkgo::ginkgo roc::hipsolver)
         target_link_libraries(preciceCore PRIVATE preciceCore_qr_hip)
+    message(STATUS "Enabled HIP support for preCICE via the Ginkgo library.")
   endif()
 
-   # Finally, we link Ginkgo into preCICE
-   target_link_libraries(preciceCore PUBLIC Ginkgo::ginkgo)
+  if(PRECICE_WITH_OMP)
+    target_compile_definitions(preciceCore PUBLIC PRECICE_WITH_OMP)
+    # There is nothing special required for OpenMP, looking for OpenMP and setting the flag is handled by the unified kernels
+    message(STATUS "Enabled OpenMP support for preCICE via the Ginkgo library.")
+  endif()
+
+  # Finally, we link Ginkgo into preCICE
+  target_link_libraries(preciceCore PUBLIC Ginkgo::ginkgo)
 else()
   target_compile_definitions(preciceCore PUBLIC PRECICE_NO_GINKGO)
 endif()
