@@ -214,8 +214,6 @@ target_sources(preciceCore
     src/mesh/Edge.cpp
     src/mesh/Edge.hpp
     src/mesh/Filter.hpp
-    # src/mesh/GlobalData.cpp
-    # src/mesh/GlobalData.hpp
     src/mesh/Mesh.cpp
     src/mesh/Mesh.hpp
     src/mesh/RangeAccessor.hpp
