@@ -22,8 +22,8 @@ BOOST_AUTO_TEST_CASE(MultipleWriteFromMappings)
   if (context.isNamed("A")) {
     auto meshNameTop    = "MeshATop";
     auto meshNameBottom = "MeshABottom";
-    int  vertexIDTop    = interface.setMeshVertex(meshNameTop, vertex1.data());
-    int  vertexIDBottom = interface.setMeshVertex(meshNameBottom, vertex3.data());
+    int  vertexIDTop    = interface.setMeshVertex(meshNameTop, vertex1);
+    int  vertexIDBottom = interface.setMeshVertex(meshNameBottom, vertex3);
     auto dataNameTop    = "Pressure";
     auto dataNameBottom = "Pressure";
 
@@ -43,9 +43,9 @@ BOOST_AUTO_TEST_CASE(MultipleWriteFromMappings)
   } else {
     BOOST_TEST(context.isNamed("B"));
     auto meshName  = "MeshB";
-    int  vertexID1 = interface.setMeshVertex(meshName, vertex1.data());
-    int  vertexID2 = interface.setMeshVertex(meshName, vertex2.data());
-    int  vertexID3 = interface.setMeshVertex(meshName, vertex3.data());
+    int  vertexID1 = interface.setMeshVertex(meshName, vertex1);
+    int  vertexID2 = interface.setMeshVertex(meshName, vertex2);
+    int  vertexID3 = interface.setMeshVertex(meshName, vertex3);
     auto dataName  = "Pressure";
 
     interface.initialize();

@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_CASE(AitkenAcceleration)
 
   if (context.isNamed("A")) {
     auto meshName = "A-Mesh";
-    int  vertexID = interface.setMeshVertex(meshName, vertex.data());
+    int  vertexID = interface.setMeshVertex(meshName, vertex);
     auto dataName = "Data";
 
     interface.initialize();
@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(AitkenAcceleration)
   } else {
     BOOST_TEST(context.isNamed("B"));
     auto meshName = "B-Mesh";
-    int  vertexID = interface.setMeshVertex(meshName, vertex.data());
+    int  vertexID = interface.setMeshVertex(meshName, vertex);
     auto dataName = "Data";
 
     interface.initialize();

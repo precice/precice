@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalReadScalar)
   if (context.isNamed("SolverOne")) {
     auto     meshName = "MeshOne";
     Vector3d vec1     = Vector3d::Constant(0.1);
-    auto     vid      = cplInterface.setMeshVertex(meshName, vec1.data());
+    auto     vid      = cplInterface.setMeshVertex(meshName, vec1);
     auto     dataAID  = "DataOne";
     auto     dataBID  = "DataTwo";
 
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalReadScalar)
     BOOST_TEST(context.isNamed("SolverTwo"));
     auto     meshName = "MeshTwo";
     Vector3d vec2     = Vector3d::Constant(0.0);
-    auto     vid      = cplInterface.setMeshVertex(meshName, vec2.data());
+    auto     vid      = cplInterface.setMeshVertex(meshName, vec2);
 
     auto dataAID = "DataOne";
     auto dataBID = "DataTwo";

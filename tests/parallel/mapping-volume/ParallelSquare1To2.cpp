@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(ParallelSquare1To2)
               1.0, 1.0,
               0.0, 1.0};
     vertexIDs.resize(coords.size() / 2);
-    interface.setMeshVertices(meshName, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, coords, vertexIDs);
 
     // Square ABCD in counter-clockwise order. A is the origin, B on the right
     interface.setMeshTriangle(meshName, vertexIDs[0], vertexIDs[1], vertexIDs[2]);
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(ParallelSquare1To2)
     }
 
     vertexIDs.resize(coords.size() / 2);
-    interface.setMeshVertices(meshName, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, coords, vertexIDs);
 
     interface.initialize();
     dt = interface.getMaxTimeStepSize();

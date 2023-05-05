@@ -16,7 +16,7 @@ void testDataInitialization(precice::testing::TestContext context, std::string c
   if (context.isNamed("SolverOne")) {
     auto     meshName   = "MeshOne";
     Vector3d pos        = Vector3d::Zero();
-    auto     vid        = cplInterface.setMeshVertex(meshName, pos.data());
+    auto     vid        = cplInterface.setMeshVertex(meshName, pos);
     auto     dataName   = "Data";
     double   valueDataB = 0.0;
     cplInterface.initialize();
@@ -28,7 +28,7 @@ void testDataInitialization(precice::testing::TestContext context, std::string c
     BOOST_TEST(context.isNamed("SolverTwo"));
     auto     meshName = "MeshTwo";
     Vector3d pos      = Vector3d::Zero();
-    auto     vid      = cplInterface.setMeshVertex(meshName, pos.data());
+    auto     vid      = cplInterface.setMeshVertex(meshName, pos);
 
     //tell preCICE that data has been written
     BOOST_REQUIRE(cplInterface.requiresInitialData());

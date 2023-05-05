@@ -19,8 +19,8 @@ void testVectorGradientFunctions(const TestContext &context)
 
     Vector3d posOne = Vector3d::Constant(0.0);
     Vector3d posTwo = Vector3d::Constant(1.0);
-    interface.setMeshVertex(meshName, posOne.data());
-    interface.setMeshVertex(meshName, posTwo.data());
+    interface.setMeshVertex(meshName, posOne);
+    interface.setMeshVertex(meshName, posTwo);
 
     // Initialize, thus sending the mesh.
     interface.initialize();
@@ -54,8 +54,8 @@ void testVectorGradientFunctions(const TestContext &context)
 
     Vector3d posOne = Vector3d::Constant(0.1);
     Vector3d posTwo = Vector3d::Constant(1.1);
-    interface.setMeshVertex(meshName, posOne.data());
-    interface.setMeshVertex(meshName, posTwo.data());
+    interface.setMeshVertex(meshName, posOne);
+    interface.setMeshVertex(meshName, posTwo);
 
     interface.initialize();
     double maxDt = interface.getMaxTimeStepSize();

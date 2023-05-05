@@ -99,7 +99,7 @@ BOOST_DATA_TEST_CASE(NearestProjectionRePartitioning,
           0.22547, yCoord, zCoord};
       BOOST_TEST(numberOfVertices * dimensions == positions.size());
       std::vector<int> vertexIDs(numberOfVertices);
-      interface.setMeshVertices(meshName, numberOfVertices, positions.data(), vertexIDs.data());
+      interface.setMeshVertices(meshName, positions, vertexIDs);
       interface.initialize();
       BOOST_TEST(precice::testing::WhiteboxAccessor::impl(interface).mesh("Nodes").triangles().size() == 15);
       interface.advance(1.0);
@@ -152,7 +152,7 @@ BOOST_DATA_TEST_CASE(NearestProjectionRePartitioning,
         0.5, yCoord, zCoord1};
     BOOST_TEST(numberOfVertices * dimensions == positions.size());
     std::vector<int> vertexIDs(numberOfVertices);
-    interface.setMeshVertices(meshName, numberOfVertices, positions.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, positions, vertexIDs);
 
     const int numberOfCells = numberOfVertices / 2 - 1;
 
@@ -169,7 +169,7 @@ BOOST_DATA_TEST_CASE(NearestProjectionRePartitioning,
         ids.push_back(vertexIDs.at(i * 2 + 2));
         ids.push_back(vertexIDs.at(i * 2 + 3));
       }
-      interface.setMeshTriangles(meshName, numberOfCells, ids.data());
+      interface.setMeshTriangles(meshName, ids);
     } else {
       for (int i = 0; i < numberOfCells; i++) {
         // left-diag-bottom

@@ -17,7 +17,7 @@ void testConvergenceMeasures(const std::string configFile, TestContext const &co
 
   std::vector<double> writeValues = {1.0, 1.01, 2.0, 2.5, 2.8, 2.81};
 
-  VertexID vertexID = interface.setMeshVertex(meshName, vertex.data());
+  VertexID vertexID = interface.setMeshVertex(meshName, vertex);
 
   interface.initialize();
   int numberOfAdvanceCalls = 0;

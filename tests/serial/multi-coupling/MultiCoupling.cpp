@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
     std::vector<int> vertexIDs;
     int              vertexID = -1;
     for (size_t i = 0; i < 4; i++) {
-      vertexID = precice.setMeshVertex(meshName, positions.at(i).data());
+      vertexID = precice.setMeshVertex(meshName, positions.at(i));
       vertexIDs.push_back(vertexID);
     }
 
@@ -99,17 +99,17 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
     std::vector<int> vertexIDs1;
     int              vertexID = -1;
     for (size_t i = 0; i < 4; i++) {
-      vertexID = precice.setMeshVertex(meshName1, positions.at(i).data());
+      vertexID = precice.setMeshVertex(meshName1, positions.at(i));
       vertexIDs1.push_back(vertexID);
     }
     std::vector<int> vertexIDs2;
     for (size_t i = 0; i < 4; i++) {
-      vertexID = precice.setMeshVertex(meshName2, positions.at(i).data());
+      vertexID = precice.setMeshVertex(meshName2, positions.at(i));
       vertexIDs2.push_back(vertexID);
     }
     std::vector<int> vertexIDs3;
     for (size_t i = 0; i < 4; i++) {
-      vertexID = precice.setMeshVertex(meshName3, positions.at(i).data());
+      vertexID = precice.setMeshVertex(meshName3, positions.at(i));
       vertexIDs3.push_back(vertexID);
     }
 

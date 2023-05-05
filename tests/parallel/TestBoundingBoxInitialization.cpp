@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitialization)
 
   std::vector<int> vertexIDs;
   for (int i = i1; i < i2; i++) {
-    precice::VertexID vertexID = interface.setMeshVertex(meshName, positions[i].data());
+    precice::VertexID vertexID = interface.setMeshVertex(meshName, positions[i]);
     vertexIDs.push_back(vertexID);
   }
 

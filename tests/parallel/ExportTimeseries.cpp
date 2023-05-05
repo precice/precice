@@ -20,9 +20,11 @@ BOOST_AUTO_TEST_CASE(ExportTimeseries)
   BOOST_REQUIRE(interface.getMeshDimensions(meshName) == 3);
 
   if (context.isNamed("ExporterOne")) {
-    interface.setMeshVertices(meshName, 6, coords.data(), vertexIds.data());
+    interface.setMeshVertices(meshName, coords, vertexIds);
   } else {
-    interface.setMeshVertices(meshName, 3, &coords[context.rank * 9], vertexIds.data());
+    auto coordsPtr  = &coords[context.rank * 9];
+    auto coordsSize = vertexIds.size() * 3;
+    interface.setMeshVertices(meshName, {coordsPtr, coordsSize}, vertexIds);
   }
 
   double time = 0.0;

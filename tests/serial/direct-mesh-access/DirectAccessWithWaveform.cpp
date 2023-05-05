@@ -26,11 +26,11 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithWaveform)
 
     std::vector<double> ownPositions = std::vector<double>({0.5, 0.25});
     std::vector<int>    ownIDs(ownPositions.size() / dim, -1);
-    interface.setMeshVertices(ownMeshName, ownIDs.size(), ownPositions.data(), ownIDs.data());
+    interface.setMeshVertices(ownMeshName, ownPositions, ownIDs);
 
     std::array<double, dim * 2> boundingBox = std::array<double, dim * 2>{0.0, 1.0, 0.0, 1.0};
     // Define region of interest, where we could obtain direct write access
-    interface.setMeshAccessRegion(otherMeshName, boundingBox.data());
+    interface.setMeshAccessRegion(otherMeshName, boundingBox);
 
     interface.initialize();
     double dt = interface.getMaxTimeStepSize();
@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithWaveform)
 
     std::vector<double> otherPositions(otherMeshSize * dim);
     std::vector<int>    otherIDs(otherMeshSize, -1);
-    interface.getMeshVerticesAndIDs(otherMeshName, otherMeshSize, otherIDs.data(), otherPositions.data());
+    interface.getMeshVerticesAndIDs(otherMeshName, otherIDs, otherPositions);
 
     // Some dummy writeData
     std::vector<double> readData(ownIDs.size(), -1);
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithWaveform)
 
     std::vector<double> positions = std::vector<double>({0.5, 0.25});
     std::vector<int>    ids(positions.size() / dim, -1);
-    interface.setMeshVertices(meshID, ids.size(), positions.data(), ids.data());
+    interface.setMeshVertices(meshID, positions, ids);
 
     interface.initialize();
     double dt = interface.getMaxTimeStepSize();
