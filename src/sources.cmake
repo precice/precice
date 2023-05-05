@@ -188,7 +188,6 @@ target_sources(preciceCore
     src/mapping/PetRadialBasisFctMapping.hpp
     src/mapping/Polation.cpp
     src/mapping/Polation.hpp
-    src/mapping/QRSolver.hpp
     src/mapping/RadialBasisFctBaseMapping.hpp
     src/mapping/RadialBasisFctMapping.hpp
     src/mapping/RadialBasisFctSolver.hpp

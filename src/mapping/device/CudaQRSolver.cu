@@ -82,12 +82,13 @@ void computeQRDecompositionCuda(const int deviceId, const std::shared_ptr<gko::E
   cudaDeviceSynchronize();
   calculateQRDecompEvent.stop();
 
-  // Switch back to the GPU used for all coupled solvers
-  cudaSetDevice(backupDeviceId);
-  // ... and free the utilizted memory
+  // Free the utilizted memory
   cudaFree(dTau);
   cudaFree(dWork);
   cudaFree(devInfo);
   cusolverDnDestroy(solverHandle);
+
+  // ...and switch back to the GPU used for all coupled solvers
+  cudaSetDevice(backupDeviceId);
 }
 #endif

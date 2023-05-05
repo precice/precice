@@ -7,7 +7,6 @@
 #include <ginkgo/ginkgo.hpp>
 #include <ginkgo/kernels/kernel_declaration.hpp>
 #include <numeric>
-#include "mapping/QRSolver.hpp"
 #include "mapping/config/MappingConfiguration.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
 #include "mesh/Mesh.hpp"
