@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
 
   if (precice.requiresInitialData()) {
     writeData = writeFunction(time);
-    precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
+    precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&writeData, 1});
   }
 
   precice.initialize();
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
         auto readDataName = readDataPair.first;
         auto readFunction = readDataPair.second;
 
-        precice.readScalarData(meshName, readDataName, vertexID, sampleDt, readData);
+        precice.readData(meshName, readDataName, {&vertexID, 1}, sampleDt, {&readData, 1});
 
         if (iterations == 0) { // always use constant extrapolation in first iteration (from initialize or writeData of second participant at end previous window).
           BOOST_TEST(readData == readFunction(time));
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.
     time += currentDt;
     writeData = writeFunction(time);
-    precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
+    precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&writeData, 1});
     precice.advance(maxDt);
     double maxDt = precice.getMaxTimeStepSize();
     currentDt    = dt > maxDt ? maxDt : dt;

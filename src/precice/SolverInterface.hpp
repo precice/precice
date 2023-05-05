@@ -4,6 +4,7 @@
 #include <precice/Version.h>
 #include <precice/export.h>
 #include <precice/span.hpp>
+#include "precice/types.hpp"
 
 /**
  * forward declarations.
@@ -585,112 +586,41 @@ public:
       ::precice::string_view dataName) const;
 
   /**
-   * @brief Writes vector data given as block.
+   * @brief Writes data to a mesh.
    *
    * This function writes values of specified vertices to data of a mesh.
-   * Values are provided as a block of continuous memory.
-   * valueIndices contains the indices of the vertices
+   * Values are provided as a block of continuous memory defined by values.
+   * The order of the provided data follows the order specified by vertices.
    *
+   * The 1D/Scalar-format of values is (d0, d1, ..., dn)
    * The 2D-format of values is (d0x, d0y, d1x, d1y, ..., dnx, dny)
    * The 3D-format of values is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
    *
    * @param[in] meshName the name of mesh that hold the data.
    * @param[in] dataName the name of the data to write to.
-   * @param[in] size Number n of vertices.
-   * @param[in] valueIndices Indices of the vertices.
-   * @param[in] values Pointer to the vector values.
+   * @param[in] vertices the vertex ids of the vertices to write data to.
+   * @param[in] values the values to write to preCICE.
    *
-   * @pre count of available elements at values matches the configured dimension * size
-   * @pre count of available elements at valueIndices matches the given size
-   * @pre initialize() has been called
+   * @pre every VertexID in vertices is a return value of setMeshVertex or setMeshVertices
+   * @pre values has the size = getDataDimensions(meshName, dataName) * vertices.size
    *
    * @see SolverInterface::setMeshVertex()
+   * @see SolverInterface::setMeshVertices()
+   * @see SolverInterface::getDataDimensions()
    */
-  void writeBlockVectorData(
-      ::precice::string_view meshName,
-      ::precice::string_view dataName,
-      int                    size,
-      const int *            valueIndices,
-      const double *         values);
+  void writeData(
+      ::precice::string_view          meshName,
+      ::precice::string_view          dataName,
+      ::precice::span<const VertexID> vertices,
+      ::precice::span<const double>   values);
 
   /**
-   * @brief Writes vector data to a vertex
-   *
-   * This function writes a value of a specified vertex to data of a mesh.
-   * Values are provided as a block of continuous memory.
-   *
-   * The 2D-format of value is (x, y)
-   * The 3D-format of value is (x, y, z)
-   *
-   * @param[in] meshName the name of mesh that hold the data.
-   * @param[in] dataName the name of the data to write to.
-   * @param[in] valueIndex Index of the vertex.
-   * @param[in] value Pointer to the vector value.
-   *
-   * @pre count of available elements at value matches the configured dimension
-   * @pre initialize() has been called
-   *
-   * @see SolverInterface::setMeshVertex()
-   */
-  void writeVectorData(
-      ::precice::string_view meshName,
-      ::precice::string_view dataName,
-      int                    valueIndex,
-      const double *         value);
-
-  /**
-   * @brief Writes scalar data given as block.
-   *
-   * This function writes values of specified vertices to data of a mesh.
-   * Values are provided as a block of continuous memory.
-   * valueIndices contains the indices of the vertices
-   *
-   * @param[in] meshName the name of mesh that hold the data.
-   * @param[in] dataName the name of the data to write to.
-   * @param[in] size Number n of vertices.
-   * @param[in] valueIndices Indices of the vertices.
-   * @param[in] values Pointer to the values.
-   *
-   * @pre count of available elements at values matches the given size
-   * @pre count of available elements at valueIndices matches the given size
-   * @pre initialize() has been called
-   *
-   * @see SolverInterface::setMeshVertex()
-   */
-  void writeBlockScalarData(
-      ::precice::string_view meshName,
-      ::precice::string_view dataName,
-      int                    size,
-      const int *            valueIndices,
-      const double *         values);
-
-  /**
-   * @brief Writes scalar data to a vertex
-   *
-   * This function writes a value of a specified vertex to data of a mesh.
-   *
-   * @param[in] meshName the name of mesh that hold the data.
-   * @param[in] dataName the name of the data to write to.
-   * @param[in] valueIndex Index of the vertex.
-   * @param[in] value The value to write.
-   *
-   * @pre initialize() has been called
-   *
-   * @see SolverInterface::setMeshVertex()
-   */
-  void writeScalarData(
-      ::precice::string_view meshName,
-      ::precice::string_view dataName,
-      int                    valueIndex,
-      double                 value);
-
-  /**
-   * @brief Reads vector data values given as block from a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.
+   * @brief Reads data values from a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.
    *
    * This function reads values of specified vertices from data of a mesh.
-   * Values are read into a block of continuous memory.
-   * valueIndices contains the indices of the vertices.
+   * Values are read into a block of continuous memory defined by values in the order specified by vertices.
    *
+   * The 1D/Scalar-format of values is (d0, d1, ..., dn)
    * The 2D-format of values is (d0x, d0y, d1x, d1y, ..., dnx, dny)
    * The 3D-format of values is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
    *
@@ -701,124 +631,25 @@ public:
    *
    * @param[in] meshName the name of mesh that hold the data.
    * @param[in] dataName the name of the data to read from.
-   * @param[in] size Number n of vertices.
-   * @param[in] valueIndices Indices of the vertices.
+   * @param[in] vertices the vertex ids of the vertices to read data from.
    * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step.
-   * @param[out] values Pointer to read destination.
+   * @param[out] values the destination memory to read the data from.
    *
-   * @pre count of available elements at values matches the configured dimension * size
-   * @pre count of available elements at valueIndices matches the given size
-   * @pre initialize() has been called
+   * @pre every VertexID in vertices is a return value of setMeshVertex or setMeshVertices
+   * @pre values has the size = getDataDimensions(meshName, dataName) * vertices.size
    *
    * @post values contain the read data as specified in the above format.
    *
    * @see SolverInterface::setMeshVertex()
+   * @see SolverInterface::setMeshVertices()
+   * @see SolverInterface::getDataDimensions()
    */
-  void readBlockVectorData(
-      ::precice::string_view meshName,
-      ::precice::string_view dataName,
-      int                    size,
-      const int *            valueIndices,
-      double                 relativeReadTime,
-      double *               values) const;
-
-  /**
-   * @brief Reads vector data at a vertex on a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.
-   *
-   * This function reads a value of a specified vertex from data of a mesh.
-   * Values are provided as a block of continuous memory.
-   *
-   * The 2D-format of value is (x, y)
-   * The 3D-format of value is (x, y, z)
-   *
-   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
-   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
-   * end of the time step, dt indicates the size of the current time step. Then relativeReadTime = dt corresponds to the data at
-   * the end of the time step.
-   *
-   * @param[in] meshName the name of mesh that hold the data.
-   * @param[in] dataName the name of the data to read from.
-   * @param[in] valueIndex Index of the vertex.
-   * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step.
-   * @param[out] value Pointer to the vector value.
-   *
-   * @pre count of available elements at value matches the configured dimension
-   * @pre initialize() has been called
-   *
-   * @post value contains the read data as specified in the above format.
-   *
-   * @see SolverInterface::setMeshVertex()
-   */
-  void readVectorData(
-      ::precice::string_view meshName,
-      ::precice::string_view dataName,
-      int                    valueIndex,
-      double                 relativeReadTime,
-      double *               value) const;
-
-  /**
-   * @brief Reads scalar data values given as block from a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.
-   *
-   * This function reads values of specified vertices from data of a mesh.
-   * Values are provided as a block of continuous memory.
-   * valueIndices contains the indices of the vertices.
-   *
-   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
-   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
-   * end of the time step, dt indicates the size of the current time step. Then relativeReadTime = dt corresponds to the data at
-   * the end of the time step.
-   *
-   * @param[in] meshName the name of mesh that hold the data.
-   * @param[in] dataName the name of the data to read from.
-   * @param[in] size Number n of vertices.
-   * @param[in] valueIndices Indices of the vertices.
-   * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step.
-   * @param[out] values Pointer to the read destination.
-   *
-   * @pre count of available elements at values matches the given size
-   * @pre count of available elements at valueIndices matches the given size
-   * @pre initialize() has been called
-   *
-   * @post values contains the read data.
-   *
-   * @see SolverInterface::setMeshVertex()
-   */
-  void readBlockScalarData(
-      ::precice::string_view meshName,
-      ::precice::string_view dataName,
-      int                    size,
-      const int *            valueIndices,
-      double                 relativeReadTime,
-      double *               values) const;
-
-  /**
-   * @brief Reads scalar data at a vertex on a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.
-   *
-   * This function reads a value of a specified vertex from data of a mesh.
-   *
-   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
-   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
-   * end of the time step, dt indicates the size of the current time step. Then relativeReadTime = dt corresponds to the data at
-   * the end of the time step.
-   *
-   * @param[in] meshName the name of mesh that hold the data.
-   * @param[in] dataName the name of the data to read from.
-   * @param[in] valueIndex Index of the vertex.
-   * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step
-   * @param[out] value Read destination of the value.
-   *
-   * @pre initialize() has been called
-   *
-   * @post value contains the read data.
-   *
-   * @see SolverInterface::setMeshVertex()
-   */
-  void readScalarData(
-      ::precice::string_view meshName,
-      ::precice::string_view dataName,
-      int                    valueIndex,
-      double                 relativeReadTime,
-      double &               value) const;
+  void readData(
+      ::precice::string_view          meshName,
+      ::precice::string_view          dataName,
+      ::precice::span<const VertexID> vertices,
+      double                          relativeReadTime,
+      ::precice::span<double>         values) const;
 
   ///@}
 
@@ -938,145 +769,52 @@ public:
                                ::precice::string_view dataName) const;
 
   /**
-   * @brief Writes vector gradient data given as block.
+   * @brief Writes vector gradient data to a mesh.
    *
    * @experimental
    *
-   * This function writes values of specified vertices to data of a mesh.
-   * Values are provided as a block of continuous memory.
-   * \p valueIndices contains the indices of the vertices
+   * This function writes gradient values of specified vertices to data of a mesh.
+   * Values are provided as a block of continuous memory defined by gradients.
+   * The order of the provided gradient data follows the order specified by vertices.
    *
-   * The values are passed in the same format applied in \ref writeVectorGradientData() for each data vertex:
+   * Each gradient or Jacobian depends on the dimensionality of the mesh and data.
+   * Each gradient has a total of \ref getMeshDimensions() "getMeshDimensions(meshName)" * \ref getDataDimensions() "getDataDimensions(meshName, dataName)" components and
+   * is stored in a linearised format as follows:
    *
-   * The 2D-format of \p gradientValues is ( v0x_dx, v0y_dx, v0x_dy, v0y_dy,
-   *                                         v1x_dx, v1y_dx, v1x_dy, v1y_dy,
-   *                                         ... ,
-   *                                         vnx_dx, vny_dx, vnx_dy, vny_dy)
-   *
-   * corresponding to the vector data v0 = (v0x, v0y) , v1 = (v1x, v1y), ... , vn = (vnx, vny) differentiated in spatial directions x and y.
+   * | Spatial Dimensions | Scalar Data | Vectorial Data |
+   * | --- | --- | --- |
+   * | **2D** | s dx, s dy | x dx, y dx, x dy, y dy |
+   * | **3D** | s dy, s dy, s dz | x dx, y dx, z dx, x dy, y dy, z dy, x dz, y dz, z dz |
    *
    *
-   * The 3D-format of \p gradientValues is ( v0x_dx, v0y_dx, v0z_dx, v0x_dy, v0y_dy, v0z_dy, v0x_dz, v0y_dz, v0z_dz,
-   *                                         v1x_dx, v1y_dx, v1z_dx, v1x_dy, v1y_dy, v1z_dy, v1x_dz, v1y_dz, v1z_dz,
-   *                                         ... ,
-   *                                         vnx_dx, vny_dx, vnz_dx, vnx_dy, vny_dy, vnz_dy, vnx_dz, vny_dz, vnz_dz)
+   * The gradients/Jacobian for all \ref vertices are then contiguously saved in memory.
    *
-   * corresponding to the vector data v0 = (v0x, v0y, v0z) , v1 = (v1x, v1y, v1z), ... , vn = (vnx, vny, vnz) differentiated in spatial directions x,y and z.
+   * Example for 2D Vectorial:
+   *
+   * | Index     | 0 | 1 | 2 | 3 | ... | 4n | 4n+1 | 4n+2 | 4n+3 |
+   * | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+   * | Component | x0 dx| y0 dx | x0 dy | y0 dy | ... | xn dx | yn dx | xn dy | yn dy |
    *
    * @param[in] meshName the name of mesh that hold the data.
    * @param[in] dataName the name of the data to write to.
-   * @param[in] size Number n of vertices.
-   * @param[in] valueIndices Indices of the vertices.
-   * @param[in] gradientValues Pointer to the gradient values.
+   * @param[in] vertices the vertex ids of the vertices to write gradient data to.
+   * @param[in] gradients the linearised gradient data to write to preCICE.
    *
-   * @pre count of available elements at gradient values matches the configured dimension * size
-   * @pre count of available elements at valueIndices matches the given size
-   * @pre initialize() has been called
    * @pre Data has attribute hasGradient = true
+   * @pre every VertexID in vertices is a return value of setMeshVertex or setMeshVertices
+   * @pre gradients has the size = `vertices.size * getMeshDimensions(meshName) * getDataDimensions(meshName, dataName)`
    *
    * @see SolverInterface::setMeshVertex()
+   * @see SolverInterface::setMeshVertices()
+   * @see SolverInterface::getMeshDimensions()
+   * @see SolverInterface::getDataDimensions()
+   *
    */
-  void writeBlockVectorGradientData(
-      ::precice::string_view meshName,
-      ::precice::string_view dataName,
-      int                    size,
-      const int *            valueIndices,
-      const double *         gradientValues);
-
-  /**
-   * @brief Writes scalar gradient data to a vertex
-   *
-   * @experimental
-   *
-   * This function writes a the corresponding gradient value of a specified vertex to data of a mesh.
-   * Values are provided as a block of continuous memory.
-   *
-   * @param[in] meshName the name of mesh that hold the data.
-   * @param[in] dataName the name of the data to write to.
-   * @param[in] valueIndex Index of the vertex.
-   * @param[in] gradientValues Gradient values differentiated in the spacial direction (dx, dy) for 2D space, (dx, dy, dz) for 3D space
-   *
-   * @pre count of available elements at value matches the configured dimension
-   * @pre initialize() has been called
-   * @pre Data exists and has attribute hasGradient = true
-   *
-   * @see SolverInterface::setMeshVertex()
-   */
-  void writeScalarGradientData(
-      ::precice::string_view meshName,
-      ::precice::string_view dataName,
-      int                    valueIndex,
-      const double *         gradientValues);
-
-  /**
-   * @brief Writes vector gradient data to a vertex
-   *
-   * @experimental
-   *
-   * This function writes the corresponding gradient matrix value of a specified vertex to data of a mesh.
-   * Values are provided as a block of continuous memory.
-   *
-   * The gradients need to be provided in the following format:
-   *
-   * The 2D-format of \p gradientValues is (vx_dx, vy_dx, vx_dy, vy_dy) matrix corresponding to the data block v = (vx, vy)
-   * differentiated respectively in x-direction dx and y-direction dy
-   *
-   * The 3D-format of \p gradientValues is (vx_dx, vy_dx, vz_dx, vx_dy, vy_dy, vz_dy, vx_dz, vy_dz, vz_dz) matrix
-   * corresponding to the data block v = (vx, vy, vz) differentiated respectively in spatial directions x-direction dx and y-direction dy and z-direction dz
-   *
-   * @param[in] meshName the name of mesh that hold the data.
-   * @param[in] dataName the name of the data to write to.
-   * @param[in] valueIndex Index of the vertex.
-   * @param[in] gradientValue pointer to the gradient value.
-   *
-   * @pre count of available elements at value matches the configured dimension
-   * @pre initialize() has been called
-   * @pre Data exists and has attribute hasGradient = true
-   *
-   * @see SolverInterface::setMeshVertex()
-   */
-  void writeVectorGradientData(
-      ::precice::string_view meshName,
-      ::precice::string_view dataName,
-      int                    valueIndex,
-      const double *         gradientValues);
-
-  /**
-   * @brief Writes scalar gradient data given as block.
-   *
-   * @experimental
-   *
-   * This function writes values of specified vertices to data of a mesh.
-   * Values are provided as a block of continuous memory.
-   * valueIndices contains the indices of the vertices
-   *
-   * The gradients need to be provided in the following format:
-   *
-   * The 2D-format of \p gradientValues is (v0_dx, v0_dy, v1_dx, v1_dy, ... , vn_dx, vn_dy, vn_dz)
-   * corresponding to the scalar data v0, v1, ... , vn differentiated in spatial directions x and y.
-   *
-   * The 3D-format of \p gradientValues is (v0_dx, v0_dy, v0_dz, v1_dx, v1_dy, v1_dz, ... , vn_dx, vn_dy, vn_dz)
-   * corresponding to the scalar data v0, v1, ... , vn differentiated in spatial directions x, y and z.
-   *
-   * @param[in] meshName the name of mesh that hold the data.
-   * @param[in] dataName the name of the data to write to.
-   * @param[in] size Number n of vertices.
-   * @param[in] valueIndices Indices of the vertices.
-   * @param[in] gradientValues Pointer to the gradient values.
-   *
-   * @pre count of available elements at values matches the given size
-   * @pre count of available elements at valueIndices matches the given size
-   * @pre initialize() has been called
-   * @pre Data exists and has attribute hasGradient = true
-   *
-   * @see SolverInterface::setMeshVertex()
-   */
-  void writeBlockScalarGradientData(
-      ::precice::string_view meshName,
-      ::precice::string_view dataName,
-      int                    size,
-      const int *            valueIndices,
-      const double *         gradientValues);
+  void writeGradientData(
+      ::precice::string_view          meshName,
+      ::precice::string_view          dataName,
+      ::precice::span<const VertexID> vertices,
+      ::precice::span<const double>   gradients);
 
   ///@}
 

@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithDataInitialization)
         // do nothing
       }
 
-      interface.readBlockScalarData(ownMeshID, readDataID, ownIDs.size(), ownIDs.data(), dt, readData.data());
+      interface.readData(ownMeshID, readDataID, ownIDs, dt, readData);
 
       std::vector<double> expectedData = std::vector<double>({-1});
 
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithDataInitialization)
       }
 
       BOOST_TEST(precice::testing::equals(expectedData, readData));
-      interface.writeBlockScalarData(otherMeshID, writeDataID, otherIDs.size(), otherIDs.data(), writeData.data());
+      interface.writeData(otherMeshID, writeDataID, otherIDs, writeData);
       interface.advance(dt);
       double dt = interface.getMaxTimeStepSize();
       iterations++;
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithDataInitialization)
     }
 
     if (interface.requiresInitialData()) {
-      interface.writeBlockScalarData(meshName, writeDataName, ids.size(), ids.data(), writeData.data());
+      interface.writeData(meshName, writeDataName, ids, writeData);
     }
 
     interface.initialize();
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithDataInitialization)
         // do nothing
       }
 
-      interface.readBlockScalarData(meshName, readDataName, ids.size(), ids.data(), dt, readData.data());
+      interface.readData(meshName, readDataName, ids, dt, readData);
 
       std::vector<double> expectedData = std::vector<double>({-1});
 
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithDataInitialization)
       }
 
       BOOST_TEST(precice::testing::equals(expectedData, readData));
-      interface.writeBlockScalarData(meshName, writeDataName, ids.size(), ids.data(), writeData.data());
+      interface.writeData(meshName, writeDataName, ids, writeData);
       interface.advance(dt);
       double dt = interface.getMaxTimeStepSize();
       iterations++;

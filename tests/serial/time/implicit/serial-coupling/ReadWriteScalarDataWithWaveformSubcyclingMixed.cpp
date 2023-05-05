@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingMixed)
 
   if (precice.requiresInitialData()) {
     writeData = writeFunction(time);
-    precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
+    precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&writeData, 1});
   }
 
   precice.initialize();
@@ -92,14 +92,14 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingMixed)
       readTime = time + currentDt;
     }
 
-    precice.readScalarData(meshName, readDataName, vertexID, currentDt, readData);
+    precice.readData(meshName, readDataName, {&vertexID, 1}, currentDt, {&readData, 1});
     if (context.isNamed("SolverOne") && iterations == 0) { // in the first iteration of each window, we only have one sample of data. Therefore constant interpolation. Only for first participant with serial coupling.
       BOOST_TEST(readData == readFunction(timeCheckpoint));
     } else {
       BOOST_TEST(readData == readFunction(readTime));
     }
 
-    precice.readScalarData(meshName, readDataName, vertexID, currentDt / 2, readData);
+    precice.readData(meshName, readDataName, {&vertexID, 1}, currentDt / 2, {&readData, 1});
 
     if (context.isNamed("SolverOne") && iterations == 0) { // in the first iteration of each window, use data from previous window. Only for first participant with serial coupling.
       BOOST_TEST(readData == readFunction(timeCheckpoint));
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingMixed)
     time += currentDt;
     timestep++;
     writeData = writeFunction(time);
-    precice.writeScalarData(meshName, writeDataName, vertexID, writeData);
+    precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&writeData, 1});
     precice.advance(currentDt);
     maxDt = precice.getMaxTimeStepSize();
     if (precice.requiresReadingCheckpoint()) {

@@ -46,7 +46,7 @@ void testMappingVolumeOneTriangle(const std::string configFile, const TestContex
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant must advance once.");
 
     std::vector<double> values{1.0, 100.0, 10.0};
-    interface.writeBlockScalarData(meshName, dataName, 3, vertexIDs.data(), values.data());
+    interface.writeData(meshName, dataName, vertexIDs, values);
 
     interface.advance(dt);
     BOOST_TEST(!interface.isCouplingOngoing(), "Sending participant must advance only once.");
@@ -83,7 +83,7 @@ void testMappingVolumeOneTriangle(const std::string configFile, const TestContex
     // Expected value in the middle of the triangle is the average of inputs (1, 10, 100)
     expected << 111.0 / 3;
 
-    interface.readBlockScalarData(meshName, dataName, expected.size(), vertexIDs.data(), dt, readData.data());
+    interface.readData(meshName, dataName, vertexIDs, dt, readData);
     BOOST_CHECK(equals(expected, readData));
 
     interface.finalize();
@@ -118,7 +118,7 @@ void testMappingVolumeOneTriangleConservative(const std::string configFile, cons
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant must advance once.");
 
     std::vector<double> values{1.0};
-    interface.writeBlockScalarData(meshName, dataName, 1, vertexIDs.data(), values.data());
+    interface.writeData(meshName, dataName, vertexIDs, values);
 
     interface.advance(dt);
     BOOST_TEST(!interface.isCouplingOngoing(), "Sending participant must advance only once.");
@@ -152,7 +152,7 @@ void testMappingVolumeOneTriangleConservative(const std::string configFile, cons
     expected << 0.5, 0.3, 0.2;
 
     dt = interface.getMaxTimeStepSize();
-    interface.readBlockScalarData(meshName, dataName, expected.size(), vertexIDs.data(), dt, readData.data());
+    interface.readData(meshName, dataName, vertexIDs, dt, readData);
     BOOST_CHECK(equals(expected, readData));
 
     interface.finalize();
@@ -208,7 +208,7 @@ void testMappingVolumeOneTetra(const std::string configFile, const TestContext &
 
     // Send 1 + 5x - 3y + 9z
     std::vector<double> values{1.0, 6.0, -2.0, 8.0};
-    interface.writeBlockScalarData(meshName, dataName, 4, vertexIDs.data(), values.data());
+    interface.writeData(meshName, dataName, vertexIDs, values);
 
     interface.advance(dt);
     BOOST_TEST(!interface.isCouplingOngoing(), "Sending participant must advance only once.");
@@ -247,7 +247,7 @@ void testMappingVolumeOneTetra(const std::string configFile, const TestContext &
     expected << 13.0 / 4;
 
     dt = interface.getMaxTimeStepSize();
-    interface.readBlockScalarData(meshName, dataName, expected.size(), vertexIDs.data(), dt, readData.data());
+    interface.readData(meshName, dataName, vertexIDs, dt, readData);
     BOOST_CHECK(equals(expected, readData));
 
     interface.finalize();
@@ -282,7 +282,7 @@ void testMappingVolumeOneTetraConservative(const std::string configFile, const T
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant must advance once.");
 
     std::vector<double> values{1.0};
-    interface.writeBlockScalarData(meshName, dataName, 1, vertexIDs.data(), values.data());
+    interface.writeData(meshName, dataName, vertexIDs, values);
 
     interface.advance(dt);
     BOOST_TEST(!interface.isCouplingOngoing(), "Sending participant must advance only once.");
@@ -333,7 +333,7 @@ void testMappingVolumeOneTetraConservative(const std::string configFile, const T
     expected << 0.4, 0.1, 0.2, 0.3;
 
     dt = interface.getMaxTimeStepSize();
-    interface.readBlockScalarData(meshName, dataName, expected.size(), vertexIDs.data(), dt, readData.data());
+    interface.readData(meshName, dataName, vertexIDs, dt, readData);
     BOOST_CHECK(equals(expected, readData));
 
     interface.finalize();

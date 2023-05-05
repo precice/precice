@@ -218,123 +218,23 @@ void SolverInterface::setMeshTetrahedra(
   _impl->setMeshTetrahedra(toSV(meshName), size, vertices);
 }
 
-void SolverInterface::writeBlockVectorData(
-    ::precice::string_view meshName,
-    ::precice::string_view dataName,
-    int                    size,
-    const int *            valueIndices,
-    const double *         values)
+void SolverInterface::writeData(
+    ::precice::string_view          meshName,
+    ::precice::string_view          dataName,
+    ::precice::span<const VertexID> vertices,
+    ::precice::span<const double>   values)
 {
-  _impl->writeBlockVectorData(toSV(meshName), toSV(dataName), size, valueIndices, values);
+  _impl->writeData(toSV(meshName), toSV(dataName), vertices, values);
 }
 
-void SolverInterface::writeBlockVectorGradientData(
-    ::precice::string_view meshName,
-    ::precice::string_view dataName,
-    int                    size,
-    const int *            valueIndices,
-    const double *         gradientValues)
+void SolverInterface::readData(
+    ::precice::string_view          meshName,
+    ::precice::string_view          dataName,
+    ::precice::span<const VertexID> vertices,
+    double                          relativeReadTime,
+    ::precice::span<double>         values) const
 {
-  _impl->writeBlockVectorGradientData(toSV(meshName), toSV(dataName), size, valueIndices, gradientValues);
-}
-
-void SolverInterface::writeVectorData(
-    ::precice::string_view meshName,
-    ::precice::string_view dataName,
-    int                    valueIndex,
-    const double *         value)
-{
-  _impl->writeVectorData(toSV(meshName), toSV(dataName), valueIndex, value);
-}
-
-void SolverInterface::writeVectorGradientData(
-    ::precice::string_view meshName,
-    ::precice::string_view dataName,
-    int                    valueIndex,
-    const double *         gradientValues)
-{
-  _impl->writeVectorGradientData(toSV(meshName), toSV(dataName), valueIndex, gradientValues);
-}
-
-void SolverInterface::writeBlockScalarData(
-    ::precice::string_view meshName,
-    ::precice::string_view dataName,
-    int                    size,
-    const int *            valueIndices,
-    const double *         values)
-{
-  _impl->writeBlockScalarData(toSV(meshName), toSV(dataName), size, valueIndices, values);
-}
-
-void SolverInterface::writeBlockScalarGradientData(
-    ::precice::string_view meshName,
-    ::precice::string_view dataName,
-    int                    size,
-    const int *            valueIndices,
-    const double *         gradientValues)
-{
-  _impl->writeBlockScalarGradientData(toSV(meshName), toSV(dataName), size, valueIndices, gradientValues);
-}
-
-void SolverInterface::writeScalarData(
-    ::precice::string_view meshName,
-    ::precice::string_view dataName,
-    int                    valueIndex,
-    double                 value)
-{
-  _impl->writeScalarData(toSV(meshName), toSV(dataName), valueIndex, value);
-}
-
-void SolverInterface::writeScalarGradientData(
-    ::precice::string_view meshName,
-    ::precice::string_view dataName,
-    int                    valueIndex,
-    const double *         gradientValues)
-{
-  _impl->writeScalarGradientData(toSV(meshName), toSV(dataName), valueIndex, gradientValues);
-}
-
-void SolverInterface::readBlockVectorData(
-    ::precice::string_view meshName,
-    ::precice::string_view dataName,
-    int                    size,
-    const int *            valueIndices,
-    double                 relativeReadTime,
-    double *               values) const
-{
-  _impl->readBlockVectorData(toSV(meshName), toSV(dataName), size, valueIndices, relativeReadTime, values);
-}
-
-void SolverInterface::readVectorData(
-    ::precice::string_view meshName,
-    ::precice::string_view dataName,
-    int                    valueIndex,
-    double                 relativeReadTime,
-    double *               value) const
-{
-  // @todo: needs testing!
-  _impl->readVectorData(toSV(meshName), toSV(dataName), valueIndex, relativeReadTime, value);
-}
-
-void SolverInterface::readBlockScalarData(
-    ::precice::string_view meshName,
-    ::precice::string_view dataName,
-    int                    size,
-    const int *            valueIndices,
-    double                 relativeReadTime,
-    double *               values) const
-{
-  _impl->readBlockScalarData(toSV(meshName), toSV(dataName), size, valueIndices, relativeReadTime, values);
-}
-
-void SolverInterface::readScalarData(
-    ::precice::string_view meshName,
-    ::precice::string_view dataName,
-    int                    valueIndex,
-    double                 relativeReadTime,
-    double &               value) const
-{
-  _impl->readScalarData(toSV(meshName), toSV(dataName), valueIndex, relativeReadTime, value);
+  _impl->readData(toSV(meshName), toSV(dataName), vertices, relativeReadTime, values);
 }
 
 void SolverInterface::setMeshAccessRegion(::precice::string_view meshName,
@@ -349,6 +249,15 @@ void SolverInterface::getMeshVerticesAndIDs(::precice::string_view meshName,
                                             double *               coordinates) const
 {
   _impl->getMeshVerticesAndIDs(toSV(meshName), size, ids, coordinates);
+}
+
+void SolverInterface::writeGradientData(
+    ::precice::string_view          meshName,
+    ::precice::string_view          dataName,
+    ::precice::span<const VertexID> vertices,
+    ::precice::span<const double>   gradients)
+{
+  _impl->writeGradientData(toSV(meshName), toSV(dataName), vertices, gradients);
 }
 
 } // namespace precice

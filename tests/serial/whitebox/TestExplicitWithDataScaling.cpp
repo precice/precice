@@ -39,10 +39,12 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataScaling)
 
     auto velocitiesID = "Velocities";
     while (cplInterface.isCouplingOngoing()) {
+      std::vector<double> data;
       for (size_t i = 0; i < testing::WhiteboxAccessor::impl(cplInterface).mesh("Test-Square-One").vertices().size(); ++i) {
-        Eigen::Vector2d data = Eigen::Vector2d::Constant(i);
-        cplInterface.writeVectorData(meshName, velocitiesID, i, data.data());
+        data.push_back(i);
+        data.push_back(i);
       }
+      cplInterface.writeData(meshName, velocitiesID, ids, data);
       cplInterface.advance(dt);
       double dt = cplInterface.getMaxTimeStepSize();
     }
@@ -61,13 +63,16 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataScaling)
     auto velocitiesID = "Velocities";
     while (cplInterface.isCouplingOngoing()) {
       const auto size = testing::WhiteboxAccessor::impl(cplInterface).mesh("Test-Square-Two").vertices().size();
+
+      std::vector<double> expected;
       for (size_t i = 0; i < size; ++i) {
-        Eigen::Vector2d readData;
-        cplInterface.readVectorData(meshName, velocitiesID, i, dt, readData.data());
-        Eigen::Vector2d expectedData = Eigen::Vector2d::Constant(i * 10.0);
-        BOOST_TEST(readData(0) == expectedData(0));
-        BOOST_TEST(readData(1) == expectedData(1));
+        expected.push_back(i * 10.0);
+        expected.push_back(i * 10.0);
       }
+      std::vector<double> data(expected.size());
+      cplInterface.readData(meshName, velocitiesID, ids, dt, data);
+      BOOST_TEST(data == expected, boost::test_tools::per_element());
+
       cplInterface.advance(dt);
       double dt = cplInterface.getMaxTimeStepSize();
     }
