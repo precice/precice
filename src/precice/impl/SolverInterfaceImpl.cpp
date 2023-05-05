@@ -1006,7 +1006,7 @@ void SolverInterfaceImpl::writeData(
   // Sizes are correct at this point
   PRECICE_VALIDATE_DATA(values.data(), values.size()); // TODO Only take span
 
-  const auto &                      mesh = *context.getMesh();
+  const auto &                      mesh = context.getMesh();
   Eigen::Map<const Eigen::MatrixXd> inputData(values.data(), dataDims, vertices.size());
   Eigen::Map<Eigen::MatrixXd>       localData(context.providedData()->values().data(), dataDims, mesh.vertices().size());
 
@@ -1057,7 +1057,7 @@ void SolverInterfaceImpl::readData(
                 dataDims, dataName, meshName,
                 vertices.size(), values.size(), expectedDataSize, dataDims, vertices.size());
 
-  const auto &                      mesh = *context.getMesh();
+  const auto &                      mesh = context.getMesh();
   Eigen::Map<Eigen::MatrixXd>       outputData(values.data(), dataDims, values.size());
   const Eigen::MatrixXd             sample{context.sampleWaveformAt(normalizedReadTime)};
   Eigen::Map<const Eigen::MatrixXd> localData(sample.data(), dataDims, mesh.vertices().size());
@@ -1098,7 +1098,7 @@ void SolverInterfaceImpl::writeGradientData(
   mesh::Data &meshData = *context.providedData();
   PRECICE_CHECK(meshData.hasGradient(), "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", meshName);
 
-  const auto &mesh               = *context.getMesh();
+  const auto &mesh               = context.getMesh();
   const auto  dataDims           = context.getDataDimensions();
   const auto  meshDims           = mesh.getDimensions();
   const auto  gradientComponents = meshDims * dataDims;

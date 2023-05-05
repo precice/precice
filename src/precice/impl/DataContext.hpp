@@ -61,7 +61,7 @@ public:
   /**
    * @brief Get the Mesh
    */
-  mesh::PtrMesh getMesh() const;
+  const mesh::Mesh &getMesh() const;
 
   /**
    * @brief Perform the mapping for all mapping contexts and the corresponding data context (from and to data)
