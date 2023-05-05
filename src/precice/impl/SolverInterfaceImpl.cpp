@@ -987,7 +987,8 @@ void SolverInterfaceImpl::writeData(
   PRECICE_TRACE(meshName, dataName, vertices.size());
   PRECICE_CHECK(_state != State::Finalized, "writeData(...) cannot be called after finalize().");
   PRECICE_REQUIRE_DATA_WRITE(meshName, dataName);
-  if (vertices.empty()) {
+  // Inconsistent sizes will be handled below
+  if (vertices.empty() && values.empty()) {
     return;
   }
 
@@ -1031,7 +1032,8 @@ void SolverInterfaceImpl::readData(
 
   PRECICE_REQUIRE_DATA_READ(meshName, dataName);
 
-  if (vertices.empty()) {
+  // Inconsistent sizes will be handled below
+  if (vertices.empty() && values.empty()) {
     return;
   }
 
@@ -1059,7 +1061,9 @@ void SolverInterfaceImpl::writeGradientData(
   PRECICE_TRACE(meshName, dataName, vertices.size());
   PRECICE_CHECK(_state != State::Finalized, "writeGradientData(...) cannot be called after finalize().");
   PRECICE_REQUIRE_DATA_WRITE(meshName, dataName);
-  if (vertices.empty() || !requiresGradientDataFor(meshName, dataName)) {
+
+  // Inconsistent sizes will be handled below
+  if ((vertices.empty() && gradients.empty()) || !requiresGradientDataFor(meshName, dataName)) {
     return;
   }
 

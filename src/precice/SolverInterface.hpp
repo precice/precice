@@ -597,9 +597,8 @@ public:
    * The 3D-format of values is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
    *
    * @param[in] meshName the name of mesh that hold the data.
-   * @param[in] dataName the name of the data to read from.
+   * @param[in] dataName the name of the data to write to.
    * @param[in] vertices the vertex ids of the vertices to write data to.
-   * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step.
    * @param[in] values the values to write to preCICE.
    *
    * @pre every VertexID in vertices is a return value of setMeshVertex or setMeshVertices
@@ -634,7 +633,7 @@ public:
    * @param[in] dataName the name of the data to read from.
    * @param[in] vertices the vertex ids of the vertices to read data from.
    * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step.
-   * @param[out] values the destination memory to write the data to.
+   * @param[out] values the destination memory to read the data from.
    *
    * @pre every VertexID in vertices is a return value of setMeshVertex or setMeshVertices
    * @pre values has the size = getDataDimensions(meshName, dataName) * vertices.size
@@ -779,8 +778,8 @@ public:
    * The order of the provided gradient data follows the order specified by vertices.
    *
    * Each gradient or Jacobian depends on the dimensionality of the mesh and data.
-   * They have a total of \ref getMeshDimensions() "getMeshDimensions(meshName)" * \ref getDataDimensions() "getDataDimensions(meshName, dataName)" components and
-   * are stored in a linearised format as follows:
+   * Each gradient has a total of \ref getMeshDimensions() "getMeshDimensions(meshName)" * \ref getDataDimensions() "getDataDimensions(meshName, dataName)" components and
+   * is stored in a linearised format as follows:
    *
    * | Spatial Dimensions | Scalar Data | Vectorial Data |
    * | --- | --- | --- |
@@ -788,7 +787,7 @@ public:
    * | **3D** | s dy, s dy, s dz | x dx, y dx, z dx, x dy, y dy, z dy, x dz, y dz, z dz |
    *
    *
-   * The gradients/Jacobian for all \ref vertices are contiguously saved in memory.
+   * The gradients/Jacobian for all \ref vertices are then contiguously saved in memory.
    *
    * Example for 2D Vectorial:
    *
