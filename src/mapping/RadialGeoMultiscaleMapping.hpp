@@ -61,9 +61,6 @@ protected:
   /// @copydoc Mapping::mapConsistent
   void mapConsistent(DataID inputDataID, DataID outputDataID) override;
 
-  /// Returns name of the mapping
-  std::string AxialGeoMultiscaleMapping::getName() const final override;
-
 private:
   mutable logging::Logger _log{"mapping::RadialGeoMultiscaleMapping"};
 
