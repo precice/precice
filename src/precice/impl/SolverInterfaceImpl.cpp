@@ -1171,6 +1171,14 @@ void SolverInterfaceImpl::getMeshVerticesAndIDs(
   Eigen::Map<Eigen::MatrixXd> posMatrix{
       coordinates, _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(size)};
 
+  // check and, if necessary, resize write data buffers of mesh
+  const auto requiredSize = mesh->verticesSize();
+  for (auto &context : _accessor->writeDataContexts()) {
+    if (context.getMeshName() == mesh->getName()) {
+      context.resizeBufferTo(requiredSize);
+    }
+  }
+
   for (size_t i = 0; i < static_cast<size_t>(size); i++) {
     PRECICE_ASSERT(i < vertices.size(), i, vertices.size());
     ids[i]           = vertices[i].getID();

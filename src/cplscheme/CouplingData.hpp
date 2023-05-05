@@ -63,7 +63,7 @@ public:
   void storeIteration();
 
   /// returns data value from previous iteration
-  const Eigen::VectorXd previousIteration() const;
+  const Eigen::VectorXd previousIteration();
 
   /// returns gradient data from previous iteration
   const Eigen::MatrixXd &previousIterationGradients() const;
