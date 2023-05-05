@@ -136,6 +136,8 @@ private:
   const std::string VALUE_NEAREST_PROJECTION        = "nearest-projection";
   const std::string VALUE_LINEAR_CELL_INTERPOLATION = "linear-cell-interpolation";
 
+  const std::string VALUE_AXIAL_GEOMETRIC_MULTISCALE = "axial-geometric-multiscale";
+
   const std::string VALUE_RBF_TPS               = "rbf-thin-plate-splines";
   const std::string VALUE_RBF_MULTIQUADRICS     = "rbf-multiquadrics";
   const std::string VALUE_RBF_INV_MULTIQUADRICS = "rbf-inverse-multiquadrics";
@@ -170,7 +172,9 @@ private:
       bool                             zDead,
       bool                             useLU,
       Polynomial                       polynomial,
-      Preallocation                    preallocation) const;
+      Preallocation                    preallocation,
+      double                           radius,
+      const std::string &              multiscaleType) const;
 
   /// Check whether a mapping to and from the same mesh already exists
   void checkDuplicates(const ConfiguredMapping &mapping);

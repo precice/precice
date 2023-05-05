@@ -7,6 +7,7 @@
 #include <ostream>
 #include <utility>
 #include "logging/LogMacros.hpp"
+#include "mapping/AxialGeoMultiscaleMapping.hpp"
 #include "mapping/LinearCellInterpolationMapping.hpp"
 #include "mapping/Mapping.hpp"
 #include "mapping/NearestNeighborGradientMapping.hpp"
@@ -56,6 +57,12 @@ MappingConfiguration::MappingConfiguration(
                                .setOptions({"estimate", "compute", "off", "save", "tree"});
   auto attrUseLU = makeXMLAttribute(ATTR_USE_QR, false)
                        .setDocumentation("If set to true, QR decomposition is used to solve the RBF system");
+
+  auto attrRadius = XMLAttribute<double>("radius")
+                        .setDocumentation("Radius for 1D participants in a geometric multiscale mapping.");
+  auto attrMultiscaleType = XMLAttribute<std::string>("type")
+                                .setDocumentation("Type of a geometric multiscale mapping (spread or collect).")
+                                .setOptions({"spread", "collect"});
 
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
   std::list<XMLTag>  tags;
@@ -138,6 +145,13 @@ MappingConfiguration::MappingConfiguration(
     tag.setDocumentation("Linear cell interpolation mapping which uses a rstar-spacial index tree to index meshes and locate the nearest cell. Only supports 2D meshes.");
     tags.push_back(tag);
   }
+  {
+    XMLTag tag(*this, VALUE_AXIAL_GEOMETRIC_MULTISCALE, occ, TAG);
+    tag.setDocumentation("Axial geometric multiscale mapping.");
+    tag.addAttribute(attrRadius);
+    tag.addAttribute(attrMultiscaleType);
+    tags.push_back(tag);
+  }
 
   auto attrDirection = XMLAttribute<std::string>(ATTR_DIRECTION)
                            .setOptions({VALUE_WRITE, VALUE_READ})
@@ -185,9 +199,11 @@ void MappingConfiguration::xmlTagCallback(
     double        supportRadius  = std::numeric_limits<double>::quiet_NaN();
     double        solverRtol     = 1e-9;
     bool          xDead = false, yDead = false, zDead = false;
-    bool          useLU         = false;
-    Polynomial    polynomial    = Polynomial::ON;
-    Preallocation preallocation = Preallocation::TREE;
+    bool          useLU          = false;
+    Polynomial    polynomial     = Polynomial::ON;
+    Preallocation preallocation  = Preallocation::TREE;
+    double        radius         = 0.0;
+    std::string   multiscaleType = "undefined";
 
     if (tag.hasAttribute(ATTR_SHAPE_PARAM)) {
       shapeParameter = tag.getDoubleAttributeValue(ATTR_SHAPE_PARAM);
@@ -232,6 +248,12 @@ void MappingConfiguration::xmlTagCallback(
       else if (strPrealloc == "off")
         preallocation = Preallocation::OFF;
     }
+    if (tag.hasAttribute("radius")) {
+      radius = tag.getDoubleAttributeValue("radius");
+    }
+    if (tag.hasAttribute("type")) {
+      multiscaleType = tag.getStringAttributeValue("type");
+    }
 
     RBFParameter rbfParameter;
     // Check valid combinations for the Gaussian RBF input
@@ -253,7 +275,8 @@ void MappingConfiguration::xmlTagCallback(
                                                         rbfParameter, solverRtol,
                                                         xDead, yDead, zDead,
                                                         useLU,
-                                                        polynomial, preallocation);
+                                                        polynomial, preallocation,
+                                                        radius, multiscaleType);
     checkDuplicates(configuredMapping);
     _mappings.push_back(configuredMapping);
   }
@@ -284,7 +307,9 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
     bool                             zDead,
     bool                             useLU,
     Polynomial                       polynomial,
-    Preallocation                    preallocation) const
+    Preallocation                    preallocation,
+    double                           radius,
+    const std::string &              multiscaleType) const
 {
   PRECICE_TRACE(direction, type, timing, rbfParameter.value);
   using namespace mapping;
@@ -416,7 +441,21 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
       configuredMapping.mapping = PtrMapping(
           new RadialBasisFctMapping<CompactPolynomialC6>(
               constraintValue, dimensions, CompactPolynomialC6(rbfParameter.value), {{xDead, yDead, zDead}}, polynomial));
+    } else if (type == VALUE_AXIAL_GEOMETRIC_MULTISCALE) {
+
+      AxialGeoMultiscaleMapping::MultiscaleType multiscaleTypeValue;
+      if (multiscaleType == "spread") {
+        multiscaleTypeValue = AxialGeoMultiscaleMapping::SPREAD;
+      } else if (multiscaleType == "collect") {
+        multiscaleTypeValue = AxialGeoMultiscaleMapping::COLLECT;
+      } else {
+        PRECICE_ERROR("Unknown geometric multiscale type \"{}\". Known types are \"spread\" and \"collect\".", multiscaleTypeValue);
+      }
+      configuredMapping.mapping = PtrMapping(
+          new AxialGeoMultiscaleMapping(constraintValue, dimensions, multiscaleTypeValue, radius));
+      configuredMapping.isRBF = false;
     } else {
+      std::cout << type;
       PRECICE_ERROR("Unknown mapping type!");
     }
   }
@@ -467,6 +506,19 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
       configuredMapping.mapping = PtrMapping(
           new PetRadialBasisFctMapping<CompactPolynomialC6>(constraintValue, dimensions, CompactPolynomialC6(rbfParameter.value),
                                                             {{xDead, yDead, zDead}}, solverRtol, polynomial, preallocation));
+    } else if (type == VALUE_AXIAL_GEOMETRIC_MULTISCALE) {
+
+      AxialGeoMultiscaleMapping::MultiscaleType multiscaleTypeValue;
+      if (multiscaleType == "spread") {
+        multiscaleTypeValue = AxialGeoMultiscaleMapping::SPREAD;
+      } else if (multiscaleType == "collect") {
+        multiscaleTypeValue = AxialGeoMultiscaleMapping::COLLECT;
+      } else {
+        PRECICE_ERROR("Unknown geometric multiscale type \"{}\". Known types are \"spread\" and \"collect\".", multiscaleTypeValue);
+      }
+      configuredMapping.mapping = PtrMapping(
+          new AxialGeoMultiscaleMapping(constraintValue, dimensions, multiscaleTypeValue, radius));
+      configuredMapping.isRBF = false;
     } else {
       PRECICE_ERROR("Unknown mapping type!");
     }
