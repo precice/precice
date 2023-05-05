@@ -25,7 +25,6 @@
 #include "m2n/SharedPointer.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include "mesh/Data.hpp"
-// #include "mesh/GlobalData.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
@@ -230,11 +229,7 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     bool               suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
     bool               strict   = tag.getBooleanAttributeValue(ATTR_STRICT);
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
-    if (!meshName.empty()) {
-      addAbsoluteConvergenceMeasure(dataName, meshName, limit, suffices, strict);
-    } else {
-      addAbsoluteConvergenceMeasureGlobalData(dataName, limit, suffices, strict);
-    }
+    addAbsoluteConvergenceMeasure(dataName, limit, suffices, strict, meshName);
 
   } else if (tag.getName() == TAG_REL_CONV_MEASURE) {
     const std::string &dataName = tag.getStringAttributeValue(ATTR_DATA);
@@ -684,10 +679,10 @@ void CouplingSchemeConfiguration::addTagAcceleration(
 
 void CouplingSchemeConfiguration::addAbsoluteConvergenceMeasure(
     const std::string &dataName,
-    const std::string &meshName,
     double             limit,
     bool               suffices,
-    bool               strict)
+    bool               strict,
+    const std::string &meshName)
 {
   PRECICE_TRACE();
   PRECICE_CHECK(math::greater(limit, 0.0),
@@ -697,35 +692,17 @@ void CouplingSchemeConfiguration::addAbsoluteConvergenceMeasure(
                 limit, dataName, meshName);
   impl::PtrConvergenceMeasure measure(new impl::AbsoluteConvergenceMeasure(limit));
   ConvergenceMeasureDefintion convMeasureDef;
-  convMeasureDef.data        = getData(dataName, meshName);
+  if (not meshName.empty()) { // mesh associated data
+    convMeasureDef.data = getData(dataName, meshName);
+  } else { // global data
+    convMeasureDef.data = getGlobalData(dataName);
+  }
   convMeasureDef.suffices    = suffices;
   convMeasureDef.strict      = strict;
   convMeasureDef.meshName    = meshName;
   convMeasureDef.measure     = std::move(measure);
   convMeasureDef.doesLogging = true;
   _config.convergenceMeasureDefinitions.push_back(convMeasureDef);
-}
-
-void CouplingSchemeConfiguration::addAbsoluteConvergenceMeasureGlobalData(
-    const std::string &dataName,
-    double             limit,
-    bool               suffices,
-    bool               strict)
-{
-  PRECICE_TRACE();
-  PRECICE_CHECK(math::greater(limit, 0.0),
-                "Absolute convergence limit has to be greater than zero. "
-                "Please check the <absolute-convergence-measure limit=\"{}\" data=\"{}\" /> subtag "
-                "in your <coupling-scheme ... /> in the preCICE configuration file.",
-                limit, dataName);
-  impl::PtrConvergenceMeasure           measure(new impl::AbsoluteConvergenceMeasure(limit));
-  ConvergenceMeasureDefintionGlobalData convMeasureDef;
-  convMeasureDef.globalData  = getGlobalData(dataName);
-  convMeasureDef.suffices    = suffices;
-  convMeasureDef.strict      = strict;
-  convMeasureDef.measure     = std::move(measure);
-  convMeasureDef.doesLogging = true;
-  _config.convergenceMeasureDefinitionsGlobalData.push_back(convMeasureDef);
 }
 
 void CouplingSchemeConfiguration::addRelativeConvergenceMeasure(
@@ -838,8 +815,8 @@ mesh::PtrData CouplingSchemeConfiguration::getGlobalData(
   PRECICE_CHECK(_meshConfig->getDataConfiguration()->hasGlobalDataName(dataName),
                 "Global Data \"{}\" not defined.",
                 dataName);
-  mesh::PtrData globalData = _meshConfig->getDataConfiguration()->globalData(dataName);
-  return globalData;
+  const mesh::PtrDataConfiguration dataConfig = _meshConfig->getDataConfiguration();
+  return dataConfig->globalData(dataName);
 }
 
 mesh::PtrData CouplingSchemeConfiguration::findDataByID(
@@ -850,13 +827,7 @@ mesh::PtrData CouplingSchemeConfiguration::findDataByID(
       return mesh->data(ID);
     }
   }
-  return nullptr;
-}
-
-mesh::PtrData CouplingSchemeConfiguration::findGlobalDataByID(
-    int ID) const
-{
-  PRECICE_ERROR("TODO");
+  // TODO: this only searches for mesh-associated data. Should also search for global data (in the dataConfig).
   return nullptr;
 }
 
@@ -916,12 +887,11 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
                 accessor);
 
   // Add convergence measures
-  PRECICE_CHECK((not _config.convergenceMeasureDefinitions.empty()) || (not _config.convergenceMeasureDefinitionsGlobalData.empty()),
+  PRECICE_CHECK((not _config.convergenceMeasureDefinitions.empty()),
                 "At least one convergence measure has to be defined for an implicit coupling scheme. "
                 "Please check your <coupling-scheme ... /> and make sure that you provide at least one "
                 "<...-convergence-measure/> subtag in the precice-config.xml.");
   addConvergenceMeasures(scheme, second, _config.convergenceMeasureDefinitions);
-  addConvergenceMeasuresGlobalData(scheme, second, _config.convergenceMeasureDefinitionsGlobalData);
 
   // Set acceleration
   setSerialAcceleration(scheme, first, second);
@@ -954,11 +924,10 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingSch
                 accessor);
 
   // Add convergence measures
-  PRECICE_CHECK((not _config.convergenceMeasureDefinitions.empty()) || (not _config.convergenceMeasureDefinitionsGlobalData.empty()),
+  PRECICE_CHECK((not _config.convergenceMeasureDefinitions.empty()),
                 "At least one convergence measure has to be defined for an implicit coupling scheme. "
                 "Please check your <coupling-scheme ... /> and make sure that you provide at least one <...-convergence-measure/> subtag in the precice-config.xml.");
   addConvergenceMeasures(scheme, _config.participants[1], _config.convergenceMeasureDefinitions);
-  addConvergenceMeasuresGlobalData(scheme, _config.participants[1], _config.convergenceMeasureDefinitionsGlobalData);
 
   // Set acceleration
   setParallelAcceleration(scheme, _config.participants[1]);
@@ -996,13 +965,12 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
                 accessor);
 
   // Add convergence measures
-  PRECICE_CHECK((not _config.convergenceMeasureDefinitions.empty()) || (not _config.convergenceMeasureDefinitionsGlobalData.empty()),
+  PRECICE_CHECK((not _config.convergenceMeasureDefinitions.empty()),
                 "At least one convergence measure has to be defined for an implicit coupling scheme. "
                 "Please check your <coupling-scheme ... /> and make sure that you provide at least one "
                 "<...-convergence-measure/> subtag in the precice-config.xml.");
   if (accessor == _config.controller) {
     addConvergenceMeasures(scheme, _config.controller, _config.convergenceMeasureDefinitions);
-    addConvergenceMeasuresGlobalData(scheme, _config.controller, _config.convergenceMeasureDefinitionsGlobalData);
   }
 
   // Set acceleration
@@ -1110,7 +1078,7 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
   for (const Config::GlobalExchange &exchange : _config.globalExchanges) {
     const std::string &from     = exchange.from;
     const std::string &to       = exchange.to;
-    const std::string &dataName = exchange.globalData->getName();
+    const std::string &dataName = exchange.data->getName();
 
     PRECICE_CHECK(to != from,
                   "You cannot define an exchange from and to the same participant. "
@@ -1129,9 +1097,9 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
 
     const bool requiresInitialization = exchange.requiresInitialization;
     if (from == accessor) {
-      scheme.addGlobalDataToSend(exchange.globalData, requiresInitialization);
+      scheme.addGlobalDataToSend(exchange.data, requiresInitialization);
     } else if (to == accessor) {
-      scheme.addGlobalDataToReceive(exchange.globalData, requiresInitialization);
+      scheme.addGlobalDataToReceive(exchange.data, requiresInitialization);
     } else {
       PRECICE_ASSERT(_config.type == VALUE_MULTI);
     }
@@ -1178,10 +1146,19 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
 void CouplingSchemeConfiguration::checkIfDataIsExchanged(
     DataID dataID) const
 {
+  // check in mesh-associated exchanges
   const auto match = std::find_if(_config.exchanges.begin(),
                                   _config.exchanges.end(),
                                   [dataID](const Config::Exchange &exchange) { return exchange.data->getID() == dataID; });
   if (match != _config.exchanges.end()) {
+    return;
+  }
+
+  // check in global exchanges
+  const auto matchGlobal = std::find_if(_config.globalExchanges.begin(),
+                                        _config.globalExchanges.end(),
+                                        [dataID](const Config::GlobalExchange &gExchange) { return gExchange.data->getID() == dataID; });
+  if (matchGlobal != _config.globalExchanges.end()) {
     return;
   }
 
@@ -1261,20 +1238,13 @@ void CouplingSchemeConfiguration::addConvergenceMeasures(
     const std::vector<ConvergenceMeasureDefintion> &convergenceMeasureDefinitions) const
 {
   for (auto &elem : convergenceMeasureDefinitions) {
-    _meshConfig->addNeededMesh(participant, elem.meshName);
     checkIfDataIsExchanged(elem.data->getID());
-    scheme->addConvergenceMeasure(elem.data->getID(), elem.suffices, elem.strict, elem.measure, elem.doesLogging);
-  }
-}
-
-void CouplingSchemeConfiguration::addConvergenceMeasuresGlobalData(
-    BaseCouplingScheme *                                      scheme,
-    const std::string &                                       participant,
-    const std::vector<ConvergenceMeasureDefintionGlobalData> &convergenceMeasureDefinitionsGlobalData) const
-{
-  for (auto &elem : convergenceMeasureDefinitionsGlobalData) {
-    // checkIfGlobalDataIsExchanged(elem.globalData->getID()); // TODO: is this really needed?
-    scheme->addConvergenceMeasureGlobalData(elem.globalData->getID(), elem.suffices, elem.strict, elem.measure, elem.doesLogging);
+    if (not elem.meshName.empty()) {
+      _meshConfig->addNeededMesh(participant, elem.meshName);
+      scheme->addConvergenceMeasure(elem.data->getID(), elem.suffices, elem.strict, elem.measure, elem.doesLogging);
+    } else { // empty meshName implies a convergence measure for global data
+      scheme->addConvergenceMeasureGlobalData(elem.data->getID(), elem.suffices, elem.strict, elem.measure, elem.doesLogging);
+    }
   }
 }
 

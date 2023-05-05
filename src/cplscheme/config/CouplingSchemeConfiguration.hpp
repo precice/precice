@@ -135,13 +135,6 @@ private:
     impl::PtrConvergenceMeasure measure;
     bool                        doesLogging;
   };
-  struct ConvergenceMeasureDefintionGlobalData {
-    mesh::PtrData               globalData;
-    bool                        suffices;
-    bool                        strict;
-    impl::PtrConvergenceMeasure measure;
-    bool                        doesLogging;
-  };
 
   struct Config {
     std::string                   type;
@@ -164,17 +157,16 @@ private:
       bool          exchangeSubsteps;
     };
     struct GlobalExchange {
-      mesh::PtrData globalData;
+      mesh::PtrData data;
       std::string   from;
       std::string   to;
       bool          requiresInitialization;
     };
-    std::vector<Exchange>                              exchanges;
-    std::vector<GlobalExchange>                        globalExchanges;
-    std::vector<ConvergenceMeasureDefintion>           convergenceMeasureDefinitions;
-    std::vector<ConvergenceMeasureDefintionGlobalData> convergenceMeasureDefinitionsGlobalData;
-    int                                                maxIterations      = -1;
-    int                                                extrapolationOrder = 0;
+    std::vector<Exchange>                    exchanges;
+    std::vector<GlobalExchange>              globalExchanges;
+    std::vector<ConvergenceMeasureDefintion> convergenceMeasureDefinitions;
+    int                                      maxIterations      = -1;
+    int                                      extrapolationOrder = 0;
 
     bool hasExchange(const Exchange &totest) const
     {
@@ -186,7 +178,7 @@ private:
     bool hasGlobalExchange(const GlobalExchange &totest) const
     {
       return std::any_of(globalExchanges.begin(), globalExchanges.end(), [&totest](const auto &gex) {
-        return gex.from == totest.from && gex.to == totest.to && gex.globalData->getName() == totest.globalData->getName();
+        return gex.from == totest.from && gex.to == totest.to && gex.data->getName() == totest.data->getName();
       });
     }
   } _config;
@@ -233,16 +225,10 @@ private:
 
   void addAbsoluteConvergenceMeasure(
       const std::string &dataName,
-      const std::string &meshName,
       double             limit,
       bool               suffices,
-      bool               strict);
-
-  void addAbsoluteConvergenceMeasureGlobalData(
-      const std::string &dataName,
-      double             limit,
-      bool               suffices,
-      bool               strict);
+      bool               strict,
+      const std::string &meshName = "");
 
   void addRelativeConvergenceMeasure(
       const std::string &dataName,
@@ -293,9 +279,6 @@ private:
   mesh::PtrData findDataByID(
       int ID) const;
 
-  mesh::PtrData findGlobalDataByID(
-      int ID) const;
-
   PtrCouplingScheme createSerialExplicitCouplingScheme(
       const std::string &accessor) const;
 
@@ -340,11 +323,6 @@ private:
       BaseCouplingScheme *                            scheme,
       const std::string &                             participant,
       const std::vector<ConvergenceMeasureDefintion> &convergenceMeasureDefinitions) const;
-
-  void addConvergenceMeasuresGlobalData(
-      BaseCouplingScheme *                                      scheme,
-      const std::string &                                       participant,
-      const std::vector<ConvergenceMeasureDefintionGlobalData> &convergenceMeasureDefinitionsGlobalData) const;
 
   void setSerialAcceleration(
       BaseCouplingScheme *scheme,
