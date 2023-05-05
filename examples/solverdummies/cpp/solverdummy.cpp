@@ -55,7 +55,7 @@ int main(int argc, char **argv)
     }
   }
 
-  interface.setMeshVertices(meshName, numberOfVertices, vertices.data(), vertexIDs.data());
+  interface.setMeshVertices(meshName, vertices, vertexIDs);
 
   if (interface.requiresInitialData()) {
     std::cout << "DUMMY: Writing initial data\n";
