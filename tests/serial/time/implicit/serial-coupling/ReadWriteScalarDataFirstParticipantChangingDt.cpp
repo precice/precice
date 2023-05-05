@@ -62,7 +62,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantChangingDt)
   double writeData = 0;
   double readData  = 0;
 
-  VertexID vertexID = precice.setMeshVertex(meshName, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+  double   v0[]     = {0, 0, 0};
+  VertexID vertexID = precice.setMeshVertex(meshName, v0);
   if (precice.requiresInitialData()) {
     precice.writeScalarData(meshName, writeDataName, vertexID, writeFunction(0));
   }
