@@ -169,7 +169,6 @@ public:
    * @brief Returns the spatial dimensionality of the given mesh.
    *
    * @param[in] meshName the name of the associated mesh
-   * @param[in] dataName the name of the data to check
    *
    * @returns the dimensions of the given mesh
    */
@@ -344,17 +343,17 @@ public:
    * @brief Creates a mesh vertex
    *
    * @param[in] meshName the name of the mesh to add the vertex to.
-   * @param[in] position a pointer to the coordinates of the vertex.
+   * @param[in] position the coordinates of the vertex.
    * @returns the id of the created vertex
    *
    * @pre initialize() has not yet been called
-   * @pre count of available elements at position matches the configured dimension
+   * @pre position.size() == getMeshDimensions(meshName)
    *
-   * @see getDimensions()
+   * @see getMeshDimensions()
    */
   int setMeshVertex(
-      ::precice::string_view meshName,
-      const double *         position);
+      ::precice::string_view        meshName,
+      ::precice::span<const double> position);
 
   /**
    * @brief Returns the number of vertices of a mesh.
@@ -373,24 +372,21 @@ public:
    * @brief Creates multiple mesh vertices
    *
    * @param[in] meshName the name of the mesh to add the vertices to.
-   * @param[in] size Number of vertices to create
-   * @param[in] positions a pointer to the coordinates of the vertices
+   * @param[in] positions a span to the coordinates of the vertices
    *            The 2D-format is (d0x, d0y, d1x, d1y, ..., dnx, dny)
    *            The 3D-format is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
    *
    * @param[out] ids The ids of the created vertices
    *
    * @pre initialize() has not yet been called
-   * @pre count of available elements at positions matches the configured dimension * size
-   * @pre count of available elements at ids matches size
+   * @pre position.size() == getMeshDimensions(meshName) * ids.size()
    *
    * @see getDimensions()
    */
   void setMeshVertices(
-      ::precice::string_view meshName,
-      int                    size,
-      const double *         positions,
-      int *                  ids);
+      ::precice::string_view        meshName,
+      ::precice::span<const double> positions,
+      ::precice::span<VertexID>     ids);
 
   /**
    * @brief Sets a mesh edge from vertex IDs
@@ -420,17 +416,16 @@ public:
    * @note The order of vertices per edge does not matter.
    *
    * @param[in] meshName the name of the mesh to add the edges to
-   * @param[in] size the amount of edges to set
    * @param[in] vertices an array containing 2*size vertex IDs
    *
    * @pre vertices were added to the mesh with the name meshName
+   * @pre vertices.size() is multiple of 2
    *
    * @see requiresMeshConnectivityFor()
    */
   void setMeshEdges(
-      ::precice::string_view meshName,
-      int                    size,
-      const int *            vertices);
+      ::precice::string_view          meshName,
+      ::precice::span<const VertexID> vertices);
 
   /**
    * @brief Sets mesh triangle from vertex IDs.
@@ -464,17 +459,16 @@ public:
    * @note The order of vertices per triangle does not matter.
    *
    * @param[in] meshName name of the mesh to add the triangles to
-   * @param[in] size the amount of triangles to set
    * @param[in] vertices an array containing 3*size vertex IDs
    *
    * @pre vertices were added to the mesh with the name meshName
+   * @pre vertices.size() is multiple of 3
    *
    * @see requiresMeshConnectivityFor()
    */
   void setMeshTriangles(
-      ::precice::string_view meshName,
-      int                    size,
-      const int *            vertices);
+      ::precice::string_view          meshName,
+      ::precice::span<const VertexID> vertices);
 
   /**
    * @brief Sets a planar surface mesh quadrangle from vertex IDs.
@@ -513,17 +507,16 @@ public:
    * @warning The order of vertices per quad does not matter, however, only planar quads are allowed.
    *
    * @param[in] meshName name of the mesh to add the quad to
-   * @param[in] size the amount of quads to set
    * @param[in] vertices an array containing 4*size vertex IDs
    *
    * @pre vertices were added to the mesh with the name meshName
+   * @pre vertices.size() is multiple of 4
    *
    * @see requiresMeshConnectivityFor()
    */
   void setMeshQuads(
-      ::precice::string_view meshName,
-      int                    size,
-      const int *            vertices);
+      ::precice::string_view          meshName,
+      ::precice::span<const VertexID> vertices);
 
   /**
    * @brief Set tetrahedron in 3D mesh from vertex ID
@@ -557,17 +550,16 @@ public:
    * @note The order of vertices per tetrahedron does not matter.
    *
    * @param[in] meshName name of the mesh to add the tetrahedra to
-   * @param[in] size the amount of tetrahedra to set
    * @param[in] vertices an array containing 4*size vertex IDs
    *
    * @pre vertices were added to the mesh with the name meshName
+   * @pre vertices.size() is multiple of 4
    *
    * @see requiresMeshConnectivityFor()
    */
   void setMeshTetrahedra(
-      ::precice::string_view meshName,
-      int                    size,
-      const int *            vertices);
+      ::precice::string_view          meshName,
+      ::precice::span<const VertexID> vertices);
 
   ///@}
 
@@ -602,7 +594,7 @@ public:
    * @param[in] values the values to write to preCICE.
    *
    * @pre every VertexID in vertices is a return value of setMeshVertex or setMeshVertices
-   * @pre values has the size = getDataDimensions(meshName, dataName) * vertices.size
+   * @pre values.size() = getDataDimensions(meshName, dataName) * vertices.size()
    *
    * @see SolverInterface::setMeshVertex()
    * @see SolverInterface::setMeshVertices()
@@ -636,7 +628,7 @@ public:
    * @param[out] values the destination memory to read the data from.
    *
    * @pre every VertexID in vertices is a return value of setMeshVertex or setMeshVertices
-   * @pre values has the size = getDataDimensions(meshName, dataName) * vertices.size
+   * @pre values.size() = getDataDimensions(meshName, dataName) * vertices.size()
    *
    * @post values contain the read data as specified in the above format.
    *
@@ -713,10 +705,11 @@ public:
    *            [x_min, x_max, y_min, y_max, z_min, z_max]
    *
    * @pre @p initialize() has not yet been called.
+   * @pre boundingBox.size() == 2 * getMeshDimensions(meshName)
    */
   void setMeshAccessRegion(
-      ::precice::string_view meshName,
-      const double *         boundingBox) const;
+      ::precice::string_view        meshName,
+      ::precice::span<const double> boundingBox) const;
 
   /**
    * @brief getMeshVerticesAndIDs Iterates over the region of
@@ -726,23 +719,25 @@ public:
    * @experimental
    *
    * @param[in]  meshName corresponding mesh name
-   * @param[in]  size return value of @p getMeshVertexSize()
    * @param[out] ids ids corresponding to the coordinates
    * @param[out] coordinates the coordinates associated to the \p ids and
-   *             corresponding data values (dim * \p size)
+   *             corresponding data values
    *
-   * @pre IDs and coordinates need to have the correct size, which can be queried by @p getMeshVertexSize()
+   * @pre ids.size() == getMeshVertexSize(meshName)
+   * @pre coordinates.size() == getMeshVertexSize(meshName) * getMeshDimensions(meshName)
    *
    * @pre This function can be called on received meshes as well as provided
    * meshes. However, you need to call this function after @p initialize(),
    * if the \p meshName corresponds to a received mesh, since the relevant mesh data
    * is exchanged during the @p initialize() call.
+   *
+   * @see getMeshVertexSize() to get the amount of vertices in the mesh
+   * @see getMeshDimensions() to get the spacial dimensionality of the mesh
    */
   void getMeshVerticesAndIDs(
-      ::precice::string_view meshName,
-      const int              size,
-      int *                  ids,
-      double *               coordinates) const;
+      ::precice::string_view    meshName,
+      ::precice::span<VertexID> ids,
+      ::precice::span<double>   coordinates) const;
 
   ///@}
 
@@ -802,7 +797,7 @@ public:
    *
    * @pre Data has attribute hasGradient = true
    * @pre every VertexID in vertices is a return value of setMeshVertex or setMeshVertices
-   * @pre gradients has the size = `vertices.size * getMeshDimensions(meshName) * getDataDimensions(meshName, dataName)`
+   * @pre gradients.size() == vertices.size() * getMeshDimensions(meshName) * getDataDimensions(meshName, dataName)
    *
    * @see SolverInterface::setMeshVertex()
    * @see SolverInterface::setMeshVertices()
