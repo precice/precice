@@ -33,6 +33,22 @@ public:
   mesh::PtrData providedData();
 
   /**
+   * @brief Store values in _providedData.values()
+   *
+   * @param[in] indices ids of data
+   * @param[in] values values of data
+   */
+  void writeValues(::precice::span<const VertexID> vertices, ::precice::span<const double> values);
+
+  /**
+   * @brief Store gradients in _providedData.gradientValues()
+   *
+   * @param[in] indices ids of data
+   * @param[in] gradients gradients of data
+   */
+  void writeGradientValues(::precice::span<const VertexID> vertices, ::precice::span<const double> gradients);
+
+  /**
    * @brief Adds a MappingContext and the MeshContext required by the write mapping to the corresponding WriteDataContext data structures.
    *
    * A write mapping maps _providedData to _toData. A WriteDataContext already has _providedData, but additionally requires _toData.

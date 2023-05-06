@@ -1006,17 +1006,7 @@ void SolverInterfaceImpl::writeData(
   // Sizes are correct at this point
   PRECICE_VALIDATE_DATA(values.data(), values.size()); // TODO Only take span
 
-  const auto &                      mesh = context.getMesh();
-  Eigen::Map<const Eigen::MatrixXd> inputData(values.data(), dataDims, vertices.size());
-  Eigen::Map<Eigen::MatrixXd>       localData(context.providedData()->values().data(), dataDims, mesh.vertices().size());
-
-  for (int i = 0; i < vertices.size(); ++i) {
-    const auto vid = vertices[i];
-    PRECICE_CHECK(mesh.isValidVertexID(vid),
-                  "Cannot write data \"{}\" to invalid Vertex ID ({}) of mesh \"{}\". Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                  dataName, vid, meshName);
-    localData.col(vid) = inputData.col(i);
-  }
+  context.writeValues(vertices, values);
 }
 
 void SolverInterfaceImpl::readData(
@@ -1057,19 +1047,7 @@ void SolverInterfaceImpl::readData(
                 dataDims, dataName, meshName,
                 vertices.size(), values.size(), expectedDataSize, dataDims, vertices.size());
 
-  const auto &                      mesh = context.getMesh();
-  Eigen::Map<Eigen::MatrixXd>       outputData(values.data(), dataDims, values.size());
-  const Eigen::MatrixXd             sample{context.sampleWaveformAt(normalizedReadTime)};
-  Eigen::Map<const Eigen::MatrixXd> localData(sample.data(), dataDims, mesh.vertices().size());
-
-  for (int i = 0; i < vertices.size(); ++i) {
-    const auto vid = vertices[i];
-    PRECICE_CHECK(mesh.isValidVertexID(vid),
-                  "Cannot read data \"{}\" from invalid Vertex ID ({}) of mesh \"{}\". "
-                  "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                  dataName, vid, meshName);
-    outputData.col(i) = localData.col(vid);
-  }
+  context.readValues(vertices, normalizedReadTime, values);
 }
 
 void SolverInterfaceImpl::writeGradientData(
@@ -1113,16 +1091,7 @@ void SolverInterfaceImpl::writeGradientData(
 
   PRECICE_VALIDATE_DATA(gradients.data(), gradients.size());
 
-  Eigen::Map<const Eigen::MatrixXd> inputGradients(gradients.data(), gradientComponents, vertices.size());
-  Eigen::Map<Eigen::MatrixXd>       localGradients(meshData.gradientValues().data(), gradientComponents, mesh.vertices().size());
-
-  for (int i = 0; i < vertices.size(); ++i) {
-    const auto vid = vertices[i];
-    PRECICE_CHECK(mesh.isValidVertexID(vid),
-                  "Cannot write gradient for data \"{}\" to invalid Vertex ID ({}) of mesh \"{}\". Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                  dataName, vid, meshName);
-    localGradients.col(vid) = inputGradients.col(i);
-  }
+  context.writeGradientValues(vertices, gradients);
 }
 
 void SolverInterfaceImpl::setMeshAccessRegion(
