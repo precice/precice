@@ -1096,7 +1096,7 @@ void SolverInterfaceImpl::writeGradientData(
 
   // Check if the Data object of given mesh has been initialized with gradient data
   mesh::Data &meshData = *context.providedData();
-  PRECICE_CHECK(meshData.hasGradient(), "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", meshName);
+  PRECICE_CHECK(meshData.hasGradient(), "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", dataName);
 
   const auto &mesh               = context.getMesh();
   const auto  dataDims           = context.getDataDimensions();
