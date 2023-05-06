@@ -38,22 +38,10 @@ int DataContext::getDataDimensions() const
   return _providedData->getDimensions();
 }
 
-int DataContext::getSpatialDimensions() const
-{
-  PRECICE_ASSERT(_providedData);
-  return _providedData->getSpatialDimensions();
-}
-
 std::string DataContext::getMeshName() const
 {
   PRECICE_ASSERT(_mesh);
   return _mesh->getName();
-}
-
-int DataContext::getMeshVertexCount() const
-{
-  PRECICE_ASSERT(_mesh);
-  return _mesh->vertices().size();
 }
 
 MeshID DataContext::getMeshID() const
@@ -62,10 +50,10 @@ MeshID DataContext::getMeshID() const
   return _mesh->getID();
 }
 
-bool DataContext::hasGradient() const
+const mesh::Mesh &DataContext::getMesh() const
 {
-  PRECICE_ASSERT(_providedData);
-  return _providedData->hasGradient();
+  PRECICE_ASSERT(_mesh);
+  return *_mesh;
 }
 
 void DataContext::appendMapping(MappingContext mappingContext)
@@ -123,12 +111,6 @@ bool DataContext::hasReadMapping() const
 bool DataContext::hasWriteMapping() const
 {
   return std::any_of(_mappingContexts.begin(), _mappingContexts.end(), [this](auto &context) { return context.fromData == _providedData; });
-}
-
-bool DataContext::isValidVertexID(const VertexID id) const
-{
-  PRECICE_ASSERT(_mesh);
-  return _mesh->isValidVertexID(id);
 }
 
 } // namespace precice::impl

@@ -590,7 +590,7 @@ bool SolverInterfaceImpl::requiresGradientDataFor(std::string_view meshName,
     return false;
 
   WriteDataContext &context = _accessor->writeDataContext(meshName, dataName);
-  return context.hasGradient();
+  return context.providedData()->hasGradient();
 }
 
 int SolverInterfaceImpl::getMeshVertexSize(
@@ -989,6 +989,7 @@ void SolverInterfaceImpl::writeData(
   }
 
   WriteDataContext &context = _accessor->writeDataContext(meshName, dataName);
+  PRECICE_ASSERT(context.providedData() != nullptr);
 
   const auto dataDims         = context.getDataDimensions();
   const auto expectedDataSize = vertices.size() * dataDims;
@@ -1065,14 +1066,17 @@ void SolverInterfaceImpl::writeGradientData(
 
   // Get the data
   WriteDataContext &context = _accessor->writeDataContext(meshName, dataName);
+  PRECICE_ASSERT(context.providedData() != nullptr);
 
   // Check if the Data object of given mesh has been initialized with gradient data
-  PRECICE_CHECK(context.hasGradient(), "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", meshName);
+  mesh::Data &meshData = *context.providedData();
+  PRECICE_CHECK(meshData.hasGradient(), "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", dataName);
 
-  const auto dataDims           = context.getDataDimensions();
-  const auto meshDims           = context.getSpatialDimensions();
-  const auto gradientComponents = meshDims * dataDims;
-  const auto expectedComponents = vertices.size() * gradientComponents;
+  const auto &mesh               = context.getMesh();
+  const auto  dataDims           = context.getDataDimensions();
+  const auto  meshDims           = mesh.getDimensions();
+  const auto  gradientComponents = meshDims * dataDims;
+  const auto  expectedComponents = vertices.size() * gradientComponents;
   PRECICE_CHECK(expectedComponents == gradients.size(),
                 "Input sizes are inconsistent attempting to write gradient for data \"{}\" to mesh \"{}\". "
                 "A single gradient/Jacobian for {}D data on a {}D mesh has {} components. "
