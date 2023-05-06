@@ -105,11 +105,6 @@ public:
    */
   void clear();
 
-  /**
-   * @brief Clear this Storage by deleting all values.
-   */
-  void clearAll();
-
 private:
   /// Stores Stamples on the current window
   std::vector<Stample> _sampleStorage;

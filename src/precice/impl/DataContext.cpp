@@ -29,7 +29,6 @@ void DataContext::resetData()
     PRECICE_ASSERT(!hasReadMapping());
     std::for_each(_mappingContexts.begin(), _mappingContexts.end(), [](auto &context) { context.toData->toZero(); });
   }
-  // @todo need to also reset/clear (write)DataBuffer?
 }
 
 int DataContext::getDataDimensions() const

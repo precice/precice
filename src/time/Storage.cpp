@@ -83,11 +83,6 @@ void Storage::clear()
   _sampleStorage.emplace_back(keep);
 }
 
-void Storage::clearAll()
-{
-  _sampleStorage.clear();
-}
-
 Eigen::VectorXd Storage::getValuesAtOrAfter(double before) const
 {
   auto sample = std::find_if(_sampleStorage.begin(), _sampleStorage.end(), [&before](const auto &s) { return math::greaterEquals(s.timestamp, before); });
