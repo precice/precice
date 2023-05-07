@@ -95,7 +95,7 @@ void RadialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID output
     }
   } else {
     PRECICE_ASSERT(_type == COLLECT);
-    PRECICE_ASSERT(outputValues.size() == output()->vertices().size(), outputValues.size(), valueDimensions, output()->vertices().size());
+    PRECICE_ASSERT(outputValues.size() == static_cast<int>(output()->vertices().size()), outputValues.size(), valueDimensions, output()->vertices().size());
     size_t const inSize  = input()->vertices().size();
     size_t const outSize = output()->vertices().size();
 
@@ -118,7 +118,7 @@ void RadialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID output
       int  index        = 0;
       while (vertexCoords > axisMidpoints(index)) {
         index++;
-        PRECICE_ASSERT(index < outSize);
+        PRECICE_ASSERT(index < static_cast<int>(outSize));
       }
       outputValues(index) += inputValues(i * valueDimensions);
       counter(index) += 1;

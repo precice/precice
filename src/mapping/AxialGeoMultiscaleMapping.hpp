@@ -67,14 +67,11 @@ private:
 
   MultiscaleType _type;
 
-  /// radius of the "tube" from or to which the data is mapped, i.e., radius of the circular interface between the two participants
-  double _radius;
-
-  /// scaling to make up for difference between max and avg value for a certain shape function
-  double _scaling = 0.0;
-
   /// main axis along which axial geometric multiscale coupling happens
   AxialAxis _axis;
+
+  /// radius of the "tube" from or to which the data is mapped, i.e., radius of the circular interface between the two participants
+  double _radius;
 };
 
 } // namespace mapping
