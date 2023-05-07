@@ -89,7 +89,7 @@ void RadialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID output
       int  index        = 0;
       while (vertexCoords > axisMidpoints(index)) {
         index++;
-        PRECICE_ASSERT(index < inSize);
+        PRECICE_ASSERT(index < static_cast<int>(inSize));
       }
       outputValues((i * valueDimensions)) = inputValues(index);
     }
