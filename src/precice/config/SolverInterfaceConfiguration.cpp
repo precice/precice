@@ -12,7 +12,7 @@
 #include "mesh/config/MeshConfiguration.hpp"
 #include "precice/config/SharedPointer.hpp"
 #include "precice/impl/MeshContext.hpp"
-#include "precice/impl/Participant.hpp"
+#include "precice/impl/ParticipantState.hpp"
 #include "precice/impl/SharedPointer.hpp"
 #include "utils/assertion.hpp"
 #include "xml/ConfigParser.hpp"

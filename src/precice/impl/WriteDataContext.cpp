@@ -19,12 +19,8 @@ void WriteDataContext::writeValuesIntoDataBuffer(::precice::span<const VertexID>
   Eigen::Map<const Eigen::MatrixXd> inputData(values.data(), getDataDimensions(), vertices.size());
   Eigen::Map<Eigen::MatrixXd>       localData(_writeDataBuffer.values.data(), getDataDimensions(), getMesh().vertices().size());
 
-  for (int i = 0; i < vertices.size(); ++i) {
-    const auto vid = vertices[i];
-    PRECICE_CHECK(getMesh().isValidVertexID(vid),
-                  "Cannot write data \"{}\" to invalid Vertex ID ({}) of mesh \"{}\". Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                  getDataName(), vid, getMeshName());
-    localData.col(vid) = inputData.col(i);
+  for (int i = 0; i < static_cast<int>(vertices.size()); ++i) {
+    localData.col(vertices[i]) = inputData.col(i);
   }
 }
 
@@ -34,12 +30,8 @@ void WriteDataContext::writeGradientsIntoDataBuffer(::precice::span<const Vertex
   Eigen::Map<const Eigen::MatrixXd> inputGradients(gradients.data(), gradientComponents, vertices.size());
   Eigen::Map<Eigen::MatrixXd>       localGradients(_writeDataBuffer.gradients.data(), gradientComponents, getMesh().vertices().size());
 
-  for (int i = 0; i < vertices.size(); ++i) {
-    const auto vid = vertices[i];
-    PRECICE_CHECK(getMesh().isValidVertexID(vid),
-                  "Cannot write gradient for data \"{}\" to invalid Vertex ID ({}) of mesh \"{}\". Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                  getDataName(), vid, getMeshName());
-    localGradients.col(vid) = inputGradients.col(i);
+  for (int i = 0; i < static_cast<int>(vertices.size()); ++i) {
+    localGradients.col(vertices[i]) = inputGradients.col(i);
   }
 }
 

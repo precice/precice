@@ -25,7 +25,7 @@
 #include "partition/ReceivedPartition.hpp"
 #include "precice/impl/MappingContext.hpp"
 #include "precice/impl/MeshContext.hpp"
-#include "precice/impl/Participant.hpp"
+#include "precice/impl/ParticipantState.hpp"
 #include "precice/impl/WatchIntegral.hpp"
 #include "precice/impl/WatchPoint.hpp"
 #include "utils/IntraComm.hpp"
@@ -265,7 +265,7 @@ void ParticipantConfiguration::xmlTagCallback(
   PRECICE_TRACE(tag.getName());
   if (tag.getName() == TAG) {
     const std::string &  name = tag.getStringAttributeValue(ATTR_NAME);
-    impl::PtrParticipant p(new impl::Participant(name, _meshConfig));
+    impl::PtrParticipant p(new impl::ParticipantState(name, _meshConfig));
     _participants.push_back(p);
   } else if (tag.getName() == TAG_PROVIDE_MESH) {
     PRECICE_ASSERT(_dimensions != 0); // setDimensions() has been called

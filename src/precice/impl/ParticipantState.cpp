@@ -1,4 +1,4 @@
-#include "Participant.hpp"
+#include "ParticipantState.hpp"
 #include <algorithm>
 #include <ostream>
 #include <sstream>
@@ -26,14 +26,14 @@
 
 namespace precice::impl {
 
-Participant::Participant(
+ParticipantState::ParticipantState(
     std::string                 name,
     mesh::PtrMeshConfiguration &meshConfig)
     : _name(std::move(name))
 {
 }
 
-Participant::~Participant()
+ParticipantState::~ParticipantState()
 {
   for (MeshContext *context : _usedMeshContexts) {
     delete context;
@@ -43,31 +43,31 @@ Participant::~Participant()
 
 /// Configuration interface
 
-void Participant::addAction(action::PtrAction &&action)
+void ParticipantState::addAction(action::PtrAction &&action)
 {
   auto &context = meshContext(action->getMesh()->getName());
   context.require(action->getMeshRequirement());
   _actions.push_back(std::move(action));
 }
 
-void Participant::setUsePrimaryRank(bool useIntraComm)
+void ParticipantState::setUsePrimaryRank(bool useIntraComm)
 {
   _useIntraComm = useIntraComm;
 }
 
-void Participant::addWatchPoint(
+void ParticipantState::addWatchPoint(
     const PtrWatchPoint &watchPoint)
 {
   _watchPoints.push_back(watchPoint);
 }
 
-void Participant::addWatchIntegral(
+void ParticipantState::addWatchIntegral(
     const PtrWatchIntegral &watchIntegral)
 {
   _watchIntegrals.push_back(watchIntegral);
 }
 
-void Participant::provideMesh(const mesh::PtrMesh &mesh)
+void ParticipantState::provideMesh(const mesh::PtrMesh &mesh)
 {
   std::string meshName = mesh->getName();
   PRECICE_TRACE(_name, meshName);
@@ -80,11 +80,11 @@ void Participant::provideMesh(const mesh::PtrMesh &mesh)
   _usedMeshContexts.push_back(context);
 }
 
-void Participant::receiveMesh(const mesh::PtrMesh &                         mesh,
-                              const std::string &                           fromParticipant,
-                              double                                        safetyFactor,
-                              partition::ReceivedPartition::GeometricFilter geoFilter,
-                              const bool                                    allowDirectAccess)
+void ParticipantState::receiveMesh(const mesh::PtrMesh &                         mesh,
+                                   const std::string &                           fromParticipant,
+                                   double                                        safetyFactor,
+                                   partition::ReceivedPartition::GeometricFilter geoFilter,
+                                   const bool                                    allowDirectAccess)
 {
   std::string meshName = mesh->getName();
   PRECICE_TRACE(_name, meshName);
@@ -104,7 +104,7 @@ void Participant::receiveMesh(const mesh::PtrMesh &                         mesh
   _usedMeshContexts.push_back(context);
 }
 
-void Participant::addWriteData(
+void ParticipantState::addWriteData(
     const mesh::PtrData &data,
     const mesh::PtrMesh &mesh)
 {
@@ -112,7 +112,7 @@ void Participant::addWriteData(
   _writeDataContexts.emplace(MeshDataKey{mesh->getName(), data->getName()}, WriteDataContext(data, mesh));
 }
 
-void Participant::addReadData(
+void ParticipantState::addReadData(
     const mesh::PtrData &data,
     const mesh::PtrMesh &mesh,
     int                  interpolationOrder)
@@ -121,48 +121,48 @@ void Participant::addReadData(
   _readDataContexts.emplace(MeshDataKey{mesh->getName(), data->getName()}, ReadDataContext(data, mesh, interpolationOrder));
 }
 
-void Participant::addReadMappingContext(
+void ParticipantState::addReadMappingContext(
     const MappingContext &mappingContext)
 {
   _readMappingContexts.push_back(mappingContext);
 }
 
-void Participant::addWriteMappingContext(
+void ParticipantState::addWriteMappingContext(
     const MappingContext &mappingContext)
 {
   _writeMappingContexts.push_back(mappingContext);
 }
 
 // Data queries
-const ReadDataContext &Participant::readDataContext(std::string_view mesh, std::string_view data) const
+const ReadDataContext &ParticipantState::readDataContext(std::string_view mesh, std::string_view data) const
 {
   auto it = _readDataContexts.find(MeshDataKey{mesh, data});
   PRECICE_CHECK(it != _readDataContexts.end(), "Data \"{}\" does not exist for mesh \"{}\".", data, mesh)
   return it->second;
 }
 
-ReadDataContext &Participant::readDataContext(std::string_view mesh, std::string_view data)
+ReadDataContext &ParticipantState::readDataContext(std::string_view mesh, std::string_view data)
 {
   auto it = _readDataContexts.find(MeshDataKey{mesh, data});
   PRECICE_CHECK(it != _readDataContexts.end(), "Data \"{}\" does not exist for mesh \"{}\".", data, mesh)
   return it->second;
 }
 
-const WriteDataContext &Participant::writeDataContext(std::string_view mesh, std::string_view data) const
+const WriteDataContext &ParticipantState::writeDataContext(std::string_view mesh, std::string_view data) const
 {
   auto it = _writeDataContexts.find(MeshDataKey{mesh, data});
   PRECICE_CHECK(it != _writeDataContexts.end(), "Data \"{}\" does not exist in write direction.", data)
   return it->second;
 }
 
-WriteDataContext &Participant::writeDataContext(std::string_view mesh, std::string_view data)
+WriteDataContext &ParticipantState::writeDataContext(std::string_view mesh, std::string_view data)
 {
   auto it = _writeDataContexts.find(MeshDataKey{mesh, data});
   PRECICE_CHECK(it != _writeDataContexts.end(), "Data \"{}\" does not exist in write direction.", data)
   return it->second;
 }
 
-bool Participant::hasData(std::string_view mesh, std::string_view data) const
+bool ParticipantState::hasData(std::string_view mesh, std::string_view data) const
 {
   return std::any_of(
       _meshContexts.begin(), _meshContexts.end(),
@@ -174,50 +174,50 @@ bool Participant::hasData(std::string_view mesh, std::string_view data) const
       });
 }
 
-bool Participant::isDataUsed(std::string_view mesh, std::string_view data) const
+bool ParticipantState::isDataUsed(std::string_view mesh, std::string_view data) const
 {
   const auto &meshData = meshContext(mesh).mesh->data();
   const auto  match    = std::find_if(meshData.begin(), meshData.end(), [data](auto &dptr) { return dptr->getName() == data; });
   return match != meshData.end();
 }
 
-bool Participant::isDataRead(std::string_view mesh, std::string_view data) const
+bool ParticipantState::isDataRead(std::string_view mesh, std::string_view data) const
 {
   return _readDataContexts.count(MeshDataKey{mesh, data}) > 0;
 }
 
-bool Participant::isDataWrite(std::string_view mesh, std::string_view data) const
+bool ParticipantState::isDataWrite(std::string_view mesh, std::string_view data) const
 {
   return _writeDataContexts.count(MeshDataKey{mesh, data}) > 0;
 }
 
 /// Mesh queries
 
-const MeshContext &Participant::meshContext(std::string_view mesh) const
+const MeshContext &ParticipantState::meshContext(std::string_view mesh) const
 {
   auto pos = _meshContexts.find(mesh);
   PRECICE_ASSERT(pos != _meshContexts.end());
   return *pos->second;
 }
 
-MeshContext &Participant::meshContext(std::string_view mesh)
+MeshContext &ParticipantState::meshContext(std::string_view mesh)
 {
   auto pos = _meshContexts.find(mesh);
   PRECICE_ASSERT(pos != _meshContexts.end());
   return *pos->second;
 }
 
-const std::vector<MeshContext *> &Participant::usedMeshContexts() const
+const std::vector<MeshContext *> &ParticipantState::usedMeshContexts() const
 {
   return _usedMeshContexts;
 }
 
-std::vector<MeshContext *> &Participant::usedMeshContexts()
+std::vector<MeshContext *> &ParticipantState::usedMeshContexts()
 {
   return _usedMeshContexts;
 }
 
-MeshContext &Participant::usedMeshContext(std::string_view mesh)
+MeshContext &ParticipantState::usedMeshContext(std::string_view mesh)
 {
   auto pos = std::find_if(_usedMeshContexts.begin(), _usedMeshContexts.end(),
                           [mesh](MeshContext const *context) {
@@ -227,7 +227,7 @@ MeshContext &Participant::usedMeshContext(std::string_view mesh)
   return **pos;
 }
 
-MeshContext const &Participant::usedMeshContext(std::string_view mesh) const
+MeshContext const &ParticipantState::usedMeshContext(std::string_view mesh) const
 {
   auto pos = std::find_if(_usedMeshContexts.begin(), _usedMeshContexts.end(),
                           [mesh](MeshContext const *context) {
@@ -237,12 +237,12 @@ MeshContext const &Participant::usedMeshContext(std::string_view mesh) const
   return **pos;
 }
 
-bool Participant::hasMesh(std::string_view mesh) const
+bool ParticipantState::hasMesh(std::string_view mesh) const
 {
   return _meshContexts.count(mesh) > 0;
 }
 
-bool Participant::isMeshUsed(std::string_view mesh) const
+bool ParticipantState::isMeshUsed(std::string_view mesh) const
 {
   return std::any_of(
       _usedMeshContexts.begin(), _usedMeshContexts.end(),
@@ -251,19 +251,19 @@ bool Participant::isMeshUsed(std::string_view mesh) const
       });
 }
 
-bool Participant::isMeshProvided(std::string_view mesh) const
+bool ParticipantState::isMeshProvided(std::string_view mesh) const
 {
   PRECICE_ASSERT(hasMesh(mesh));
   return usedMeshContext(mesh).provideMesh;
 }
 
-bool Participant::isMeshReceived(std::string_view mesh) const
+bool ParticipantState::isMeshReceived(std::string_view mesh) const
 {
   PRECICE_ASSERT(hasMesh(mesh));
   return !usedMeshContext(mesh).provideMesh;
 }
 
-bool Participant::isDirectAccessAllowed(std::string_view mesh) const
+bool ParticipantState::isDirectAccessAllowed(std::string_view mesh) const
 {
   PRECICE_ASSERT(hasMesh(mesh));
   return meshContext(mesh).allowDirectAccess;
@@ -271,58 +271,58 @@ bool Participant::isDirectAccessAllowed(std::string_view mesh) const
 
 // Other queries
 
-std::vector<MappingContext> &Participant::readMappingContexts()
+std::vector<MappingContext> &ParticipantState::readMappingContexts()
 {
   return _readMappingContexts;
 }
 
-std::vector<MappingContext> &Participant::writeMappingContexts()
+std::vector<MappingContext> &ParticipantState::writeMappingContexts()
 {
   return _writeMappingContexts;
 }
 
-std::vector<action::PtrAction> &Participant::actions()
+std::vector<action::PtrAction> &ParticipantState::actions()
 {
   return _actions;
 }
 
-const std::vector<action::PtrAction> &Participant::actions() const
+const std::vector<action::PtrAction> &ParticipantState::actions() const
 {
   return _actions;
 }
 
-void Participant::addExportContext(
+void ParticipantState::addExportContext(
     const io::ExportContext &exportContext)
 {
   _exportContexts.push_back(exportContext);
 }
 
-const std::vector<io::ExportContext> &Participant::exportContexts() const
+const std::vector<io::ExportContext> &ParticipantState::exportContexts() const
 {
   return _exportContexts;
 }
 
-std::vector<PtrWatchPoint> &Participant::watchPoints()
+std::vector<PtrWatchPoint> &ParticipantState::watchPoints()
 {
   return _watchPoints;
 }
 
-std::vector<PtrWatchIntegral> &Participant::watchIntegrals()
+std::vector<PtrWatchIntegral> &ParticipantState::watchIntegrals()
 {
   return _watchIntegrals;
 }
 
-bool Participant::useIntraComm() const
+bool ParticipantState::useIntraComm() const
 {
   return _useIntraComm;
 }
 
-const std::string &Participant::getName() const
+const std::string &ParticipantState::getName() const
 {
   return _name;
 }
 
-void Participant::exportInitial()
+void ParticipantState::exportInitial()
 {
   for (const io::ExportContext &context : exportContexts()) {
     if (context.everyNTimeWindows < 1) {
@@ -337,7 +337,7 @@ void Participant::exportInitial()
   }
 }
 
-void Participant::exportFinal()
+void ParticipantState::exportFinal()
 {
   for (const io::ExportContext &context : exportContexts()) {
     if (context.everyNTimeWindows < 1) {
@@ -352,7 +352,7 @@ void Participant::exportFinal()
   }
 }
 
-void Participant::exportIntermediate(IntermediateExport exp)
+void ParticipantState::exportIntermediate(IntermediateExport exp)
 {
   for (const io::ExportContext &context : exportContexts()) {
     if (exp.complete && (context.everyNTimeWindows > 0) && (exp.timewindow % context.everyNTimeWindows == 0)) {
@@ -387,7 +387,7 @@ void Participant::exportIntermediate(IntermediateExport exp)
 
 // private
 
-void Participant::checkDuplicatedUse(std::string_view mesh)
+void ParticipantState::checkDuplicatedUse(std::string_view mesh)
 {
   PRECICE_CHECK(_meshContexts.count(mesh) == 0,
                 "Mesh \"{} cannot be used twice by participant {}. "
@@ -395,15 +395,15 @@ void Participant::checkDuplicatedUse(std::string_view mesh)
                 mesh, _name, mesh);
 }
 
-void Participant::checkDuplicatedData(std::string_view mesh, std::string_view data)
+void ParticipantState::checkDuplicatedData(std::string_view mesh, std::string_view data)
 {
   PRECICE_CHECK(!isDataWrite(mesh, data) && !isDataRead(mesh, data),
-                "Participant \"{}\" can read/write data \"{}\" from/to mesh \"{}\" only once. "
+                "ParticipantState \"{}\" can read/write data \"{}\" from/to mesh \"{}\" only once. "
                 "Please remove any duplicate instances of write-data/read-data nodes.",
                 _name, mesh, data);
 }
 
-std::string Participant::hintForMesh(std::string_view mesh) const
+std::string ParticipantState::hintForMesh(std::string_view mesh) const
 {
   PRECICE_ASSERT(!hasMesh(mesh));
   PRECICE_ASSERT(!_meshContexts.empty());
@@ -420,7 +420,7 @@ std::string Participant::hintForMesh(std::string_view mesh) const
   }
 }
 
-std::string Participant::hintForMeshData(std::string_view mesh, std::string_view data) const
+std::string ParticipantState::hintForMeshData(std::string_view mesh, std::string_view data) const
 {
   PRECICE_ASSERT(hasMesh(mesh));
   PRECICE_ASSERT(!hasData(mesh, data));

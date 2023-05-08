@@ -3,7 +3,7 @@
 #include <vector>
 #include "precice/SolverInterface.hpp"
 #include "precice/impl/MeshContext.hpp"
-#include "precice/impl/Participant.hpp"
+#include "precice/impl/ParticipantState.hpp"
 #include "precice/impl/SolverInterfaceImpl.hpp"
 #include "testing/Testing.hpp"
 
