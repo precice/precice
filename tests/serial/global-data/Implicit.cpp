@@ -18,7 +18,6 @@ BOOST_AUTO_TEST_CASE(Implicit)
   // Set up Solverinterface
   precice::SolverInterface couplingInterface(context.name, context.config(), 0, 1);
   const int                dimensions = 2;
-  BOOST_TEST(couplingInterface.getDimensions() == dimensions);
 
   std::string writeVectorDataName, writeScalarDataName;
   std::string readVectorDataName, readScalarDataName;
@@ -51,7 +50,8 @@ BOOST_AUTO_TEST_CASE(Implicit)
   std::vector<double> readVectorData(dimensions, -1);
   double              readScalarData = -1;
 
-  dt = couplingInterface.initialize();
+  couplingInterface.initialize();
+  dt = couplingInterface.getMaxTimeStepSize();
 
   while (couplingInterface.isCouplingOngoing()) {
     if (couplingInterface.requiresWritingCheckpoint()) {
@@ -60,7 +60,8 @@ BOOST_AUTO_TEST_CASE(Implicit)
     couplingInterface.writeGlobalVectorData(writeVectorDataName, writeVectorData.data());
     couplingInterface.writeGlobalScalarData(writeScalarDataName, writeScalarData);
     // Advance (exchange coupling data)
-    dt = couplingInterface.advance(dt);
+    couplingInterface.advance(dt);
+    dt = couplingInterface.getMaxTimeStepSize();
     // Read: from precice buffer --> to local data structure
     couplingInterface.readGlobalVectorData(readVectorDataName, readVectorData.data());
     couplingInterface.readGlobalScalarData(readScalarDataName, readScalarData);

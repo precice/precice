@@ -17,12 +17,12 @@ BOOST_AUTO_TEST_CASE(Explicit)
 
   precice::SolverInterface couplingInterface(context.name, context.config(), 0, 1);
   const int                dimensions = 2;
-  BOOST_TEST(couplingInterface.getDimensions() == dimensions);
 
   if (context.isNamed("SolverOne")) {
     const std::string globalDataName       = "GlobalData1";
     const std::string globalVectorDataName = "GlobalVectorData";
-    double            dt                   = couplingInterface.initialize();
+    couplingInterface.initialize();
+    double dt = couplingInterface.getMaxTimeStepSize();
     // Some dummy writeData
     double              writeGlobalData{5};
     std::vector<double> writeGlobalVectorData(dimensions, 50.5);
@@ -32,7 +32,8 @@ BOOST_AUTO_TEST_CASE(Explicit)
       couplingInterface.writeGlobalScalarData(globalDataName, writeGlobalData);
       couplingInterface.writeGlobalVectorData(globalVectorDataName, writeGlobalVectorData.data());
       // send data
-      dt = couplingInterface.advance(dt);
+      couplingInterface.advance(dt);
+      dt = couplingInterface.getMaxTimeStepSize();
       // change reference data for next check
       writeGlobalData++;
       for (auto &elem : writeGlobalVectorData) {
@@ -53,7 +54,8 @@ BOOST_AUTO_TEST_CASE(Explicit)
     // Initialize
     double              expectedGlobalData{5};
     std::vector<double> expectedGlobalVectorData(dimensions, 50.5);
-    double              dt = couplingInterface.initialize(); // For serial-explicit, first communication happens here
+    couplingInterface.initialize(); // For serial-explicit, first communication happens here
+    double dt = couplingInterface.getMaxTimeStepSize();
 
     while (couplingInterface.isCouplingOngoing()) {
       // read received data from buffer
@@ -63,7 +65,8 @@ BOOST_AUTO_TEST_CASE(Explicit)
       BOOST_TEST(precice::testing::equals(expectedGlobalData, readGlobalData));
       BOOST_TEST(precice::testing::equals(expectedGlobalVectorData, readGlobalVectorData));
       // receive next data
-      dt = couplingInterface.advance(dt);
+      couplingInterface.advance(dt);
+      dt = couplingInterface.getMaxTimeStepSize();
       // change reference data for next check
       expectedGlobalData++;
       for (auto &elem : expectedGlobalVectorData) {
