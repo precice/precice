@@ -379,21 +379,23 @@ void MappingConfiguration::xmlTagCallback(
   } else if (tag.getNamespace() == SUBTAG_BASIS_FUNCTION) {
 
     PRECICE_ASSERT(!_mappings.empty());
+    PRECICE_CHECK(_mappings.back().requiresBasisFunction == true, "A basis-function was defined for the mapping "
+                                                                  "from mesh \"{}\" to mesh \"{}\", but no basis-function is required for this mapping type. "
+                                                                  "Please remove the basis-function tag or configure an rbf mapping, which requires a basis-function.",
+                  _mappings.back().fromMesh->getName(), _mappings.back().toMesh->getName());
     // We can only set one subtag
-    PRECICE_CHECK(_mappings.back().mapping == nullptr, "More than one basis-function was defined for the mapping "
-                                                       "from mesh \"{}\" to mesh \"{}\".",
+    PRECICE_CHECK(_rbfConfig.basisFunctionDefined == false, "More than one basis-function was defined for the mapping "
+                                                            "from mesh \"{}\" to mesh \"{}\".",
                   _mappings.back().fromMesh->getName(), _mappings.back().toMesh->getName());
 
     std::string basisFctName   = tag.getName();
     double      supportRadius  = tag.getDoubleAttributeValue(ATTR_SUPPORT_RADIUS, 0.);
     double      shapeParameter = tag.getDoubleAttributeValue(ATTR_SHAPE_PARAM, 0.);
 
-    ConfiguredMapping &mapping = _mappings.back();
-
-    BasisFunction basisFunction = parseBasisFunctions(basisFctName);
-
+    _rbfConfig.basisFunction        = parseBasisFunctions(basisFctName);
+    _rbfConfig.basisFunctionDefined = true;
     // The Gaussian RBF is always treated as a shape-parameter RBF. Hence, we have to convert the support radius, if necessary
-    if (basisFunction == BasisFunction::Gaussian) {
+    if (_rbfConfig.basisFunction == BasisFunction::Gaussian) {
       const bool exactlyOneSet = (std::isfinite(supportRadius) && !std::isfinite(shapeParameter)) ||
                                  (std::isfinite(shapeParameter) && !std::isfinite(supportRadius));
       PRECICE_CHECK(exactlyOneSet, "The specified parameters for the Gaussian RBF mapping are invalid. Please specify either a \"shape-parameter\" or a \"support-radius\".");
@@ -403,32 +405,8 @@ void MappingConfiguration::xmlTagCallback(
       }
     }
 
-    // Instantiate the RBF mapping classes
-    if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalDirect) {
-      mapping.mapping = getRBFMapping<RBFBackend::Eigen>(basisFunction, constraintValue, mapping.fromMesh->getDimensions(), supportRadius, shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial);
-    } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalIterative) {
-#ifndef PRECICE_NO_PETSC
-      // for petsc initialization
-      int   argc = 1;
-      char *arg  = new char[8];
-      strcpy(arg, "precice");
-      char **argv = &arg;
-      utils::Petsc::initialize(&argc, &argv, utils::Parallel::current()->comm);
-      delete[] arg;
-
-      mapping.mapping = getRBFMapping<RBFBackend::PETSc>(basisFunction, constraintValue, mapping.fromMesh->getDimensions(), supportRadius, shapeParameter, _rbfConfig.deadAxis, _rbfConfig.solverRtol, _rbfConfig.polynomial, _rbfConfig.preallocation);
-
-#elif !defined(PRECICE_NO_GINKGO)
-      mapping.mapping = getRBFMapping<RBFBackend::Ginkgo>(basisFunction, constraintValue, mapping.fromMesh->getDimensions(), supportRadius, shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, false, _ginkgoParameter);
-
-#else
-      PRECICE_CHECK(false, "The global-iterative RBF solver requires a preCICE build with PETSc enabled.");
-#endif
-    } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::PUMDirect) {
-      mapping.mapping = getRBFMapping<RBFBackend::PUM>(basisFunction, constraintValue, mapping.fromMesh->getDimensions(), supportRadius, shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput);
-    } else {
-      PRECICE_UNREACHABLE("Unknown RBF solver.");
-    }
+    _rbfConfig.supportRadius  = supportRadius;
+    _rbfConfig.shapeParameter = shapeParameter;
   }
 }
 
@@ -562,10 +540,44 @@ void MappingConfiguration::checkDuplicates(const ConfiguredMapping &mapping)
 
 void MappingConfiguration::xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag)
 {
-  if (requiresBasisFunction(tag.getName())) {
-    PRECICE_CHECK(_mappings.back().mapping != nullptr, "No basis-function was defined for the \"{}\" mapping from mesh \"{}\" to mesh \"{}\".", tag.getName(), _mappings.back().fromMesh->getName(), _mappings.back().toMesh->getName());
+  if (tag.getNamespace() == TAG) {
+    if (requiresBasisFunction(tag.getName())) {
+      PRECICE_CHECK(_rbfConfig.basisFunctionDefined, "No basis-function was defined for the \"{}\" mapping from mesh \"{}\" to mesh \"{}\".", tag.getName(), _mappings.back().fromMesh->getName(), _mappings.back().toMesh->getName());
+      finishRBFConfiguration();
+    }
+    PRECICE_ASSERT(_mappings.back().mapping != nullptr);
   }
-  PRECICE_ASSERT(_mappings.back().mapping != nullptr);
+}
+
+void MappingConfiguration::finishRBFConfiguration()
+{
+  ConfiguredMapping &mapping = _mappings.back();
+  // Instantiate the RBF mapping classes
+  if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalDirect) {
+    mapping.mapping = getRBFMapping<RBFBackend::Eigen>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial);
+  } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalIterative) {
+#ifndef PRECICE_NO_PETSC
+    // for petsc initialization
+    int   argc = 1;
+    char *arg  = new char[8];
+    strcpy(arg, "precice");
+    char **argv = &arg;
+    utils::Petsc::initialize(&argc, &argv, utils::Parallel::current()->comm);
+    delete[] arg;
+
+    mapping.mapping = getRBFMapping<RBFBackend::PETSc>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.solverRtol, _rbfConfig.polynomial, _rbfConfig.preallocation);
+
+#elif !defined(PRECICE_NO_GINKGO)
+    mapping.mapping = getRBFMapping<RBFBackend::Ginkgo>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, false, _ginkgoParameter);
+
+#else
+    PRECICE_CHECK(false, "The global-iterative RBF solver requires a preCICE build with PETSc enabled.");
+#endif
+  } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::PUMDirect) {
+    mapping.mapping = getRBFMapping<RBFBackend::PUM>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput);
+  } else {
+    PRECICE_UNREACHABLE("Unknown RBF solver.");
+  }
 }
 
 const std::vector<MappingConfiguration::ConfiguredMapping> &MappingConfiguration::mappings()

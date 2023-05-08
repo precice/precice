@@ -90,6 +90,10 @@ public:
     int                 verticesPerCluster{};
     double              relativeOverlap{};
     bool                projectToInput{};
+    BasisFunction       basisFunction{};
+    double              supportRadius{};
+    double              shapeParameter{};
+    bool                basisFunctionDefined = false;
   };
 
   /// Returns the RBF configuration, which was configured at the latest.
@@ -234,6 +238,8 @@ private:
                                        double verticesPerCluster,
                                        double relativeOverlap,
                                        bool   projectToInput) const;
+
+  void finishRBFConfiguration();
 
   /// Check whether a mapping to and from the same mesh already exists
   void checkDuplicates(const ConfiguredMapping &mapping);
