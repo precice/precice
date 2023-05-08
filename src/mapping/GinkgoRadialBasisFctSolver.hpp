@@ -88,13 +88,14 @@ const std::map<std::string, std::function<std::shared_ptr<gko::Executor>(const u
 template <typename RADIAL_BASIS_FUNCTION_T>
 class GinkgoRadialBasisFctSolver {
 public:
+  using BASIS_FUNCTION_T       = RADIAL_BASIS_FUNCTION_T;
   GinkgoRadialBasisFctSolver() = default;
 
   /// Assembles the system matrices and computes the decomposition of the interpolation matrix
   template <typename IndexContainer>
   GinkgoRadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
                              const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial,
-                             const MappingConfiguration::GinkgoParameter &ginkgoParameter);
+                             MappingConfiguration::GinkgoParameter ginkgoParameter = MappingConfiguration::GinkgoParameter());
 
   /// Maps the given input data
   Eigen::VectorXd solveConsistent(const Eigen::VectorXd &inputData, Polynomial polynomial);
@@ -197,7 +198,7 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 template <typename IndexContainer>
 GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
                                                                                 const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial,
-                                                                                const MappingConfiguration::GinkgoParameter &ginkgoParameter)
+                                                                                 MappingConfiguration::GinkgoParameter ginkgoParameter)
     : _ginkgoParameter(ginkgoParameter)
 {
   PRECICE_TRACE();

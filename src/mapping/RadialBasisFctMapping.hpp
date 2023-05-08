@@ -30,9 +30,10 @@ namespace mapping {
  * The radial basis function type has to be given as template parameter, and has
  * to be one of the defined types in this file.
  */
-template <typename RADIAL_BASIS_FUNCTION_T>
-class RadialBasisFctMapping : public RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T> {
+template <typename SOLVER_T>
+class RadialBasisFctMapping : public RadialBasisFctBaseMapping<typename SOLVER_T::BASIS_FUNCTION_T> {
 public:
+  using RADIAL_BASIS_FUNCTION_T = typename SOLVER_T::BASIS_FUNCTION_T;
   /**
    * @brief Constructor.
    *
@@ -62,7 +63,7 @@ private:
   precice::logging::Logger _log{"mapping::RadialBasisFctMapping"};
 
   // The actual solver
-  RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T> _rbfSolver;
+  std::unique_ptr<SOLVER_T> _rbfSolver;
 
   /// @copydoc RadialBasisFctBaseMapping::mapConservative
   void mapConservative(DataID inputDataID, DataID outputDataID) final override;
@@ -79,8 +80,8 @@ private:
 
 // --------------------------------------------------- HEADER IMPLEMENTATIONS
 
-template <typename RADIAL_BASIS_FUNCTION_T>
-RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctMapping(
+template <typename SOLVER_T>
+RadialBasisFctMapping<SOLVER_T>::RadialBasisFctMapping(
     Mapping::Constraint                          constraint,
     int                                          dimensions,
     RADIAL_BASIS_FUNCTION_T                      function,
@@ -94,8 +95,8 @@ RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctMapping(
   PRECICE_CHECK(!(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite() && polynomial == Polynomial::ON), "The integrated polynomial (polynomial=\"on\") is not supported for the selected radial-basis function. Please select another radial-basis function or change the polynomial configuration.");
 }
 
-template <typename RADIAL_BASIS_FUNCTION_T>
-void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
+template <typename SOLVER_T>
+void RadialBasisFctMapping<SOLVER_T>::computeMapping()
 {
   PRECICE_TRACE();
 
@@ -157,8 +158,8 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       globalOutMesh.addMesh(*outMesh);
     }
 
-    _rbfSolver = RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>{this->_basisFunction, globalInMesh, boost::irange<Eigen::Index>(0, globalInMesh.vertices().size()),
-                                                               globalOutMesh, boost::irange<Eigen::Index>(0, globalOutMesh.vertices().size()), this->_deadAxis, _polynomial};
+    _rbfSolver = std::make_unique<SOLVER_T>(this->_basisFunction, globalInMesh, boost::irange<Eigen::Index>(0, globalInMesh.vertices().size()),
+                                            globalOutMesh, boost::irange<Eigen::Index>(0, globalOutMesh.vertices().size()), this->_deadAxis, _polynomial);
     // _ginkgoRbfSolver = GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>{this->_basisFunction, globalInMesh, boost::irange<Eigen::Index>(0, globalInMesh.vertices().size()),
     //                                                                        globalOutMesh, boost::irange<Eigen::Index>(0, globalOutMesh.vertices().size()), this->_deadAxis, _polynomial, _ginkgoParameter};
   }
@@ -166,22 +167,22 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   PRECICE_DEBUG("Compute Mapping is Completed.");
 }
 
-template <typename RADIAL_BASIS_FUNCTION_T>
-void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::clear()
+template <typename SOLVER_T>
+void RadialBasisFctMapping<SOLVER_T>::clear()
 {
   PRECICE_TRACE();
-  _rbfSolver.clear();
+  _rbfSolver.reset();
   this->_hasComputedMapping = false;
 }
 
-template <typename RADIAL_BASIS_FUNCTION_T>
-std::string RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::getName() const
+template <typename SOLVER_T>
+std::string RadialBasisFctMapping<SOLVER_T>::getName() const
 {
   return "global-direct RBF";
 }
 
-template <typename RADIAL_BASIS_FUNCTION_T>
-void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(DataID inputDataID, DataID outputDataID)
+template <typename SOLVER_T>
+void RadialBasisFctMapping<SOLVER_T>::mapConservative(DataID inputDataID, DataID outputDataID)
 {
   precice::utils::Event e("map.rbf.mapData.From" + this->input()->getName() + "To" + this->output()->getName(), precice::syncMode);
   PRECICE_TRACE(inputDataID, outputDataID);
@@ -241,8 +242,8 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(DataID inpu
     Eigen::Map<Eigen::VectorXd> inputValues(globalInValues.data(), globalInValues.size());
     Eigen::VectorXd             outputValues((this->output()->getGlobalNumberOfVertices()) * valueDim);
 
-    Eigen::VectorXd in;                    // rows == outputSize
-    in.resize(_rbfSolver.getOutputSize()); // rows == outputSize
+    Eigen::VectorXd in;                     // rows == outputSize
+    in.resize(_rbfSolver->getOutputSize()); // rows == outputSize
 
     outputValues.setZero();
 
@@ -252,7 +253,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(DataID inpu
       }
 
       Eigen::VectorXd out;
-      out = _rbfSolver.solveConservative(in, _polynomial);
+      out = _rbfSolver->solveConservative(in, _polynomial);
 
       // Copy mapped data to output data values
       for (int i = 0; i < this->output()->getGlobalNumberOfVertices(); i++) {
@@ -302,8 +303,8 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(DataID inpu
   }
 }
 
-template <typename RADIAL_BASIS_FUNCTION_T>
-void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inputDataID, DataID outputDataID)
+template <typename SOLVER_T>
+void RadialBasisFctMapping<SOLVER_T>::mapConsistent(DataID inputDataID, DataID outputDataID)
 {
   precice::utils::Event e("map.rbf.mapData.From" + this->input()->getName() + "To" + this->output()->getName(), precice::syncMode);
   PRECICE_TRACE(inputDataID, outputDataID);
@@ -353,14 +354,14 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inputD
 
     Eigen::VectorXd in;
 
-    in.resize(_rbfSolver.getInputSize()); // rows == n
+    in.resize(_rbfSolver->getInputSize()); // rows == n
     in.setZero();
 
     // Construct Eigen vectors
     Eigen::Map<Eigen::VectorXd> inputValues(globalInValues.data(), globalInValues.size());
 
     Eigen::VectorXd outputValues;
-    outputValues.resize((_rbfSolver.getOutputSize()) * valueDim);
+    outputValues.resize((_rbfSolver->getOutputSize()) * valueDim);
 
     Eigen::VectorXd out;
     outputValues.setZero();
@@ -372,7 +373,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inputD
         in[i] = inputValues[i * valueDim + dim];
       }
 
-      out = _rbfSolver.solveConsistent(in, _polynomial);
+      out = _rbfSolver->solveConsistent(in, _polynomial);
 
       // Copy mapped data to output data values
       for (int i = 0; i < out.size(); i++) {

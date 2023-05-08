@@ -70,7 +70,7 @@ struct BackendSelector {
 // Specialization for the RBF Eigen backend
 template <typename RBF>
 struct BackendSelector<RBFBackend::Eigen, RBF> {
-  typedef mapping::RadialBasisFctMapping<RBF> type;
+  typedef mapping::RadialBasisFctMapping<RadialBasisFctSolver<RBF>> type;
 };
 
 // Specialization for the PETSc RBF backend
@@ -85,7 +85,7 @@ struct BackendSelector<RBFBackend::PETSc, RBF> {
 #ifndef PRECICE_NO_GINKGO
 template <typename RBF>
 struct BackendSelector<RBFBackend::Ginkgo, RBF> {
-  typedef mapping::RadialBasisFctMapping<RBF> type;
+  typedef mapping::RadialBasisFctMapping<GinkgoRadialBasisFctSolver<RBF>> type;
 };
 #endif
 // Specialization for the RBF PUM backend
@@ -618,7 +618,7 @@ void MappingConfiguration::finishRBFConfiguration()
     } else {
       PRECICE_UNREACHABLE("Unknown solver type.");
     }
-    mapping.mapping = getRBFMapping<RBFBackend::Ginkgo>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, false, _ginkgoParameter);
+    mapping.mapping = getRBFMapping<RBFBackend::Ginkgo>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _ginkgoParameter);
 #else
     PRECICE_CHECK(false, "The selected executor for the mapping from mesh {} to mesh {} requires a preCICE build with Ginkgo enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
 #endif

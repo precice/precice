@@ -24,7 +24,7 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 class RadialBasisFctSolver {
 public:
   using DecompositionType = std::conditional_t<RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite(), Eigen::LLT<Eigen::MatrixXd>, Eigen::ColPivHouseholderQR<Eigen::MatrixXd>>;
-
+  using BASIS_FUNCTION_T  = RADIAL_BASIS_FUNCTION_T;
   /// Default constructor
   RadialBasisFctSolver() = default;
 
