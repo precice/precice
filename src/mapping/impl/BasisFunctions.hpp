@@ -10,8 +10,7 @@
 
 #elif defined(__HIPCC__)
 
-#define __HIP_PLATFORM_AMD__
-//#include <hip/hip_runtime_api.h>
+// #define __HIP_PLATFORM_AMD__
 #include <hip/hip_runtime.h>
 #define PRECICE_HOST_DEVICE __host__ __device__
 #define PRECICE_MEMORY_SPACE __device__
@@ -83,10 +82,6 @@ struct DefiniteFunction {
 class ThinPlateSplines : public NoCompactSupportBase,
                          public DefiniteFunction<false> {
 public:
-  ThinPlateSplines()                            = default;
-  ThinPlateSplines(const ThinPlateSplines &tps) = default;
-  ~ThinPlateSplines()                           = default;
-
   double evaluate(double radius) const
   {
     return operator()(radius, _params);
@@ -122,9 +117,6 @@ public:
   {
     _params.parameter1 = _cPow2;
   }
-
-  Multiquadrics(const Multiquadrics &m) = default;
-  ~Multiquadrics()                      = default;
 
   double evaluate(double radius) const
   {
@@ -169,9 +161,6 @@ public:
     _params.parameter1 = _cPow2;
   }
 
-  InverseMultiquadrics(const InverseMultiquadrics &im) = default;
-  ~InverseMultiquadrics()                              = default;
-
   double evaluate(double radius) const
   {
     return operator()(radius, _params);
@@ -204,10 +193,6 @@ private:
 class VolumeSplines : public NoCompactSupportBase,
                       public DefiniteFunction<false> {
 public:
-  VolumeSplines()                        = default;
-  VolumeSplines(const VolumeSplines &vs) = default;
-  ~VolumeSplines()                       = default;
-
   double evaluate(double radius) const
   {
     return operator()(radius, _params);
@@ -260,9 +245,6 @@ public:
     _params.parameter3 = _deltaY;
   }
 
-  Gaussian(const Gaussian &g) = default;
-  ~Gaussian()                 = default;
-
   double getSupportRadius() const
   {
     return _supportRadius;
@@ -275,17 +257,13 @@ public:
 
   PRECICE_HOST_DEVICE inline double operator()(const double radius, const RadialBasisParameters params) const
   {
-    {
-      double shape         = params.parameter1;
-      double supportRadius = params.parameter2;
-      double deltaY        = params.parameter3;
+    double shape         = params.parameter1;
+    double supportRadius = params.parameter2;
+    double deltaY        = params.parameter3;
 
-      if (radius > supportRadius) {
-        return 0.0;
-      } else {
-        return std::exp(-math::pow_int<2>(shape * radius)) - deltaY;
-      }
-    }
+    if (radius > supportRadius)
+      return 0.0;
+    return std::exp(-math::pow_int<2>(shape * radius)) - deltaY;
   }
 
   RadialBasisParameters getFunctionParameters()
@@ -333,9 +311,6 @@ public:
     _params.parameter1 = _r_inv;
   }
 
-  CompactThinPlateSplinesC2(const CompactThinPlateSplinesC2 &ctps) = default;
-  ~CompactThinPlateSplinesC2()                                     = default;
-
   double getSupportRadius() const
   {
     return 1. / _r_inv;
@@ -349,12 +324,10 @@ public:
   PRECICE_HOST_DEVICE inline double operator()(const double radius, const RadialBasisParameters params) const
   {
     double       r_inv = params.parameter1;
-    double const p     = radius * r_inv;
-    if (p >= 1) {
+    const double p     = radius * r_inv;
+    if (p >= 1)
       return 0.0;
-    } else {
-      return 1.0 - 30.0 * math::pow_int<2>(p) - 10.0 * math::pow_int<3>(p) + 45.0 * math::pow_int<4>(p) - 6.0 * math::pow_int<5>(p) - math::pow_int<3>(p) * 60.0 * std::log(std::max(p, NUMERICAL_ZERO_DIFFERENCE));
-    }
+    return 1.0 - 30.0 * math::pow_int<2>(p) - 10.0 * math::pow_int<3>(p) + 45.0 * math::pow_int<4>(p) - 6.0 * math::pow_int<5>(p) - math::pow_int<3>(p) * 60.0 * std::log(std::max(p, NUMERICAL_ZERO_DIFFERENCE));
   }
 
   RadialBasisParameters getFunctionParameters()
@@ -391,9 +364,6 @@ public:
     _params.parameter1 = _r_inv;
   }
 
-  CompactPolynomialC0(const CompactPolynomialC0 &cp) = default;
-  ~CompactPolynomialC0()                             = default;
-
   double getSupportRadius() const
   {
     return 1. / _r_inv;
@@ -407,12 +377,10 @@ public:
   PRECICE_HOST_DEVICE inline double operator()(const double radius, const RadialBasisParameters params) const
   {
     double       r_inv = params.parameter1;
-    double const p     = radius * r_inv;
-    if (p >= 1) {
+    const double p     = radius * r_inv;
+    if (p >= 1)
       return 0.0;
-    } else {
-      return math::pow_int<2>(1.0 - p);
-    }
+    return math::pow_int<2>(1.0 - p);
   }
 
   RadialBasisParameters getFunctionParameters()
@@ -450,9 +418,6 @@ public:
     _params.parameter1 = _r_inv;
   }
 
-  CompactPolynomialC2(const CompactPolynomialC2 &cp) = default;
-  ~CompactPolynomialC2()                             = default;
-
   double getSupportRadius() const
   {
     return 1. / _r_inv;
@@ -466,12 +431,10 @@ public:
   PRECICE_HOST_DEVICE inline double operator()(const double radius, const RadialBasisParameters params) const
   {
     double       r_inv = params.parameter1;
-    double const p     = radius * r_inv;
-    if (p >= 1) {
+    const double p     = radius * r_inv;
+    if (p >= 1)
       return 0.0;
-    } else {
-      return math::pow_int<4>(1.0 - p) * FMA(4, p, 1);
-    }
+    return math::pow_int<4>(1.0 - p) * FMA(4, p, 1);
   }
 
   RadialBasisParameters getFunctionParameters()
@@ -509,9 +472,6 @@ public:
     _params.parameter1 = _r_inv;
   }
 
-  CompactPolynomialC4(const CompactPolynomialC4 &cp) = default;
-  ~CompactPolynomialC4()                             = default;
-
   double getSupportRadius() const
   {
     return 1. / _r_inv;
@@ -525,12 +485,10 @@ public:
   PRECICE_HOST_DEVICE inline double operator()(const double radius, const RadialBasisParameters params) const
   {
     double       r_inv = params.parameter1;
-    double const p     = radius * r_inv;
-    if (p >= 1) {
+    const double p     = radius * r_inv;
+    if (p >= 1)
       return 0.0;
-    } else {
-      return math::pow_int<6>(1.0 - p) * FMA(35, math::pow_int<2>(p), FMA(18, p, 3));
-    }
+    return math::pow_int<6>(1.0 - p) * (35 * math::pow_int<2>(p) + FMA(18, p, 3));
   }
 
   RadialBasisParameters getFunctionParameters()
@@ -567,9 +525,6 @@ public:
     _params.parameter1 = _r_inv;
   }
 
-  CompactPolynomialC6(const CompactPolynomialC6 &cp) = default;
-  ~CompactPolynomialC6()                             = default;
-
   double getSupportRadius() const
   {
     return 1. / _r_inv;
@@ -583,12 +538,10 @@ public:
   PRECICE_HOST_DEVICE inline double operator()(const double radius, const RadialBasisParameters params) const
   {
     double       r_inv = params.parameter1;
-    double const p     = radius * r_inv;
-    if (p >= 1) {
+    const double p     = radius * r_inv;
+    if (p >= 1)
       return 0.0;
-    } else {
-      return math::pow_int<8>(1.0 - p) * FMA(32.0, math::pow_int<3>(p), FMA(25.0, math::pow_int<2>(p), FMA(8.0, p, 1.0)));
-    }
+    return math::pow_int<8>(1.0 - p) * (32.0 * math::pow_int<3>(p) + 25.0 * math::pow_int<2>(p) + FMA(8.0, p, 1.0));
   };
 
   const RadialBasisParameters getFunctionParameters()
