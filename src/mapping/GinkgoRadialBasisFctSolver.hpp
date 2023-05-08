@@ -198,7 +198,7 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 template <typename IndexContainer>
 GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
                                                                                 const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial,
-                                                                                 MappingConfiguration::GinkgoParameter ginkgoParameter)
+                                                                                MappingConfiguration::GinkgoParameter ginkgoParameter)
     : _ginkgoParameter(ginkgoParameter)
 {
   PRECICE_TRACE();
