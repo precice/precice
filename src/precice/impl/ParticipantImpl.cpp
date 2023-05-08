@@ -1142,7 +1142,7 @@ void SolverInterfaceImpl::readGlobalVectorData(
     double *         value) const
 {
   PRECICE_TRACE(dataName);
-  double relativeTimeWindowEndTime = _couplingScheme->getNextTimestepMaxLength(); // samples at end of time window
+  double relativeTimeWindowEndTime = _couplingScheme->getNextTimeStepMaxSize(); // samples at end of time window
   if (_accessor->readGlobalDataContext(dataName).getInterpolationOrder() != 0) {
     PRECICE_WARN("Interpolation order of read global vector-data named \"{}\" is set to \"{}\", but you are calling {} without providing a relativeReadTime. This looks like an error. You can fix this by providing a relativeReadTime to {} or by setting interpolation order to 0.",
                  _accessor->readGlobalDataContext(dataName).getDataName(), _accessor->readGlobalDataContext(dataName).getInterpolationOrder(), __func__, __func__);
@@ -1166,15 +1166,15 @@ void SolverInterfaceImpl::readGlobalVectorDataImpl(
     double *         value) const
 {
   PRECICE_CHECK(_state != State::Finalized, "readGlobalVectorData(...) cannot be called after finalize().");
-  PRECICE_CHECK(relativeReadTime <= _couplingScheme->getNextTimestepMaxLength(), "readGlobalVectorData(...) cannot sample data outside of current time window.");
+  PRECICE_CHECK(relativeReadTime <= _couplingScheme->getNextTimeStepMaxSize(), "readGlobalVectorData(...) cannot sample data outside of current time window.");
   PRECICE_CHECK(relativeReadTime >= 0, "readGlobalVectorData(...) cannot sample data before the current time.");
   double normalizedReadTime;
   if (_couplingScheme->hasTimeWindowSize()) {
-    double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getNextTimestepMaxLength();
+    double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getNextTimeStepMaxSize();
     double readTime      = timeStepStart + relativeReadTime;
     normalizedReadTime   = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
   } else {                                                                  // if this participant defines time window size through participant-first method
-    PRECICE_CHECK(relativeReadTime == _couplingScheme->getNextTimestepMaxLength(), "Waveform relaxation is not allowed for solver that sets the time step size");
+    PRECICE_CHECK(relativeReadTime == _couplingScheme->getNextTimeStepMaxSize(), "Waveform relaxation is not allowed for solver that sets the time step size");
     normalizedReadTime = 1; // by default read at end of window.
   }
   // PRECICE_REQUIRE_DATA_READ(dataName); // TODO: write global data version of this macro
@@ -1196,7 +1196,7 @@ void SolverInterfaceImpl::readGlobalScalarData(std::string_view dataName,
                                                double &         value) const
 {
   PRECICE_TRACE(dataName);
-  double relativeTimeWindowEndTime = _couplingScheme->getNextTimestepMaxLength(); // samples at end of time window
+  double relativeTimeWindowEndTime = _couplingScheme->getNextTimeStepMaxSize(); // samples at end of time window
   if (_accessor->readGlobalDataContext(dataName).getInterpolationOrder() != 0) {
     PRECICE_WARN("Interpolation order of read global scalar-data named \"{}\" is set to \"{}\", but you are calling {} without providing a relativeReadTime. This looks like an error. You can fix this by providing a relativeReadTime to {} or by setting interpolation order to 0.",
                  _accessor->readGlobalDataContext(dataName).getDataName(), _accessor->readGlobalDataContext(dataName).getInterpolationOrder(), __func__, __func__);
@@ -1220,15 +1220,15 @@ void SolverInterfaceImpl::readGlobalScalarDataImpl(
     double &         value) const
 {
   PRECICE_CHECK(_state != State::Finalized, "readGlobalScalarData(...) cannot be called after finalize().");
-  PRECICE_CHECK(relativeReadTime <= _couplingScheme->getNextTimestepMaxLength(), "readGlobalScalarData(...) cannot sample data outside of current time window.");
+  PRECICE_CHECK(relativeReadTime <= _couplingScheme->getNextTimeStepMaxSize(), "readGlobalScalarData(...) cannot sample data outside of current time window.");
   PRECICE_CHECK(relativeReadTime >= 0, "readGlobalScalarData(...) cannot sample data before the current time.");
   double normalizedReadTime;
   if (_couplingScheme->hasTimeWindowSize()) {
-    double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getNextTimestepMaxLength();
+    double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getNextTimeStepMaxSize();
     double readTime      = timeStepStart + relativeReadTime;
     normalizedReadTime   = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
   } else {                                                                  // if this participant defines time window size through participant-first method
-    PRECICE_CHECK(relativeReadTime == _couplingScheme->getNextTimestepMaxLength(), "Waveform relaxation is not allowed for solver that sets the time step size");
+    PRECICE_CHECK(relativeReadTime == _couplingScheme->getNextTimeStepMaxSize(), "Waveform relaxation is not allowed for solver that sets the time step size");
     normalizedReadTime = 1; // by default read at end of window.
   }
   // PRECICE_REQUIRE_DATA_READ(dataName); // TODO: write an analog of this for global.
