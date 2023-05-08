@@ -7,6 +7,7 @@
 #include <functional>
 #include <iterator>
 #include <memory>
+#include <optional>
 #include <ostream>
 #include <sstream>
 #include <tuple>
@@ -82,20 +83,19 @@ bool syncMode = false;
 namespace impl {
 
 SolverInterfaceImpl::SolverInterfaceImpl(
-    std::string_view participantName,
-    std::string_view configurationFileName,
-    int              solverProcessIndex,
-    int              solverProcessSize,
-    void *           communicator,
-    bool             allowNullptr)
+    std::string_view      participantName,
+    std::string_view      configurationFileName,
+    int                   solverProcessIndex,
+    int                   solverProcessSize,
+    std::optional<void *> communicator)
     : _accessorName(participantName),
       _accessorProcessRank(solverProcessIndex),
       _accessorCommunicatorSize(solverProcessSize)
 {
-  if (!allowNullptr) {
-    PRECICE_CHECK(communicator != nullptr,
-                  "Passing \"nullptr\" as \"communicator\" to SolverInterface constructor is not allowed. Please use the SolverInterface constructor without the \"communicator\" argument, if you don't want to pass an MPI communicator.");
-  }
+
+  PRECICE_CHECK(!communicator || communicator.value() != nullptr,
+                "Passing \"nullptr\" as \"communicator\" to SolverInterface constructor is not allowed. "
+                "Please use the SolverInterface constructor without the \"communicator\" argument, if you don't want to pass an MPI communicator.");
   PRECICE_CHECK(!_accessorName.empty(),
                 "This participant's name is an empty string. "
                 "When constructing a preCICE interface you need to pass the name of the "
@@ -113,12 +113,11 @@ SolverInterfaceImpl::SolverInterfaceImpl(
                 "Please check the values given when constructing a preCICE interface.",
                 _accessorProcessRank, _accessorCommunicatorSize);
 
-// Set the global communicator to the passed communicator.
-// This is a noop if preCICE is not configured with MPI.
-// nullpointer signals to use MPI_COMM_WORLD
+  // Set the global communicator to the passed communicator.
+  // This is a noop if preCICE is not configured with MPI.
 #ifndef PRECICE_NO_MPI
-  if (communicator != nullptr) {
-    auto commptr = static_cast<utils::Parallel::Communicator *>(communicator);
+  if (communicator.has_value()) {
+    auto commptr = static_cast<utils::Parallel::Communicator *>(communicator.value());
     utils::Parallel::registerUserProvidedComm(*commptr);
   }
 #endif
@@ -127,39 +126,18 @@ SolverInterfaceImpl::SolverInterfaceImpl(
 
   configure(configurationFileName);
 
-// This block cannot be merge with the one above as only configure calls
-// utils::Parallel::initializeMPI, which is needed for getProcessRank.
+  // This block cannot be merge with the one above as only configure calls
+  // utils::Parallel::initializeMPI, which is needed for getProcessRank.
 #ifndef PRECICE_NO_MPI
-  if (communicator != nullptr) {
-    const auto currentRank = utils::Parallel::current()->rank();
-    PRECICE_CHECK(_accessorProcessRank == currentRank,
-                  "The solver process index given in the preCICE interface constructor({}) does not match the rank of the passed MPI communicator ({}).",
-                  _accessorProcessRank, currentRank);
-    const auto currentSize = utils::Parallel::current()->size();
-    PRECICE_CHECK(_accessorCommunicatorSize == currentSize,
-                  "The solver process size given in the preCICE interface constructor({}) does not match the size of the passed MPI communicator ({}).",
-                  _accessorCommunicatorSize, currentSize);
-  }
+  const auto currentRank = utils::Parallel::current()->rank();
+  PRECICE_CHECK(_accessorProcessRank == currentRank,
+                "The solver process index given in the preCICE interface constructor({}) does not match the rank of the passed MPI communicator ({}).",
+                _accessorProcessRank, currentRank);
+  const auto currentSize = utils::Parallel::current()->size();
+  PRECICE_CHECK(_accessorCommunicatorSize == currentSize,
+                "The solver process size given in the preCICE interface constructor({}) does not match the size of the passed MPI communicator ({}).",
+                _accessorCommunicatorSize, currentSize);
 #endif
-}
-
-SolverInterfaceImpl::SolverInterfaceImpl(
-    std::string_view participantName,
-    std::string_view configurationFileName,
-    int              solverProcessIndex,
-    int              solverProcessSize)
-    : SolverInterfaceImpl::SolverInterfaceImpl(participantName, configurationFileName, solverProcessIndex, solverProcessSize, nullptr, true)
-{
-}
-
-SolverInterfaceImpl::SolverInterfaceImpl(
-    std::string_view participantName,
-    std::string_view configurationFileName,
-    int              solverProcessIndex,
-    int              solverProcessSize,
-    void *           communicator)
-    : SolverInterfaceImpl::SolverInterfaceImpl(participantName, configurationFileName, solverProcessIndex, solverProcessSize, communicator, false)
-{
 }
 
 SolverInterfaceImpl::~SolverInterfaceImpl()

@@ -53,28 +53,26 @@ public:
   ///@{
 
   /**
-   * @copydoc SolverInterface::SolverInterface(std::string_view, std::string_view, int, int)
-   */
-  SolverInterfaceImpl(
-      std::string_view participantName,
-      std::string_view configurationFileName,
-      int              solverProcessIndex,
-      int              solverProcessSize);
-
-  /**
-   * @copybrief SolverInterface::SolverInterface(std::string_view, std::string_view, int, int, void*)
+   * @brief Generic constructor for SolverInterfaceImpl.
    *
    * Use the parameter communicator to specify a custom global MPI communicator.
-   * Pass a null pointer to signal preCICE to use MPI_COMM_WORLD.
+   * Pass std::nullopt to signal preCICE to use MPI_COMM_WORLD.
    *
-   * @copydetails SolverInterface::SolverInterface(std::string_view, std::string_view, int, int, void*)
+   * @param[in] participantName Name of the participant using the interface. Has to
+   *        match the name given for a participant in the xml configuration file.
+   * @param[in] configurationFileName Name (with path) of the xml configuration file.
+   * @param[in] solverProcessIndex If the solver code runs with several processes,
+   *        each process using preCICE has to specify its index, which has to start
+   *        from 0 and end with solverProcessSize - 1.
+   * @param[in] solverProcessSize The number of solver processes using preCICE.
+   * @param[in] communicator An optional pointer to an MPI_Comm to use as communicator.
    */
   SolverInterfaceImpl(
-      std::string_view participantName,
-      std::string_view configurationFileName,
-      int              solverProcessIndex,
-      int              solverProcessSize,
-      void *           communicator);
+      std::string_view      participantName,
+      std::string_view      configurationFileName,
+      int                   solverProcessIndex,
+      int                   solverProcessSize,
+      std::optional<void *> communicator);
 
   /**
    * @brief Destructor
@@ -291,30 +289,6 @@ public:
   SolverInterfaceImpl &operator=(SolverInterfaceImpl &&) = delete;
 
 private:
-  /**
-   * @brief Generic constructor for SolverInterfaceImpl.
-   *
-   * Use the parameter communicator to specify a custom global MPI communicator.
-   * Pass a null pointer to signal preCICE to use MPI_COMM_WORLD.
-   *
-   * @param[in] participantName Name of the participant using the interface. Has to
-   *        match the name given for a participant in the xml configuration file.
-   * @param[in] configurationFileName Name (with path) of the xml configuration file.
-   * @param[in] solverProcessIndex If the solver code runs with several processes,
-   *        each process using preCICE has to specify its index, which has to start
-   *        from 0 and end with solverProcessSize - 1.
-   * @param[in] solverProcessSize The number of solver processes using preCICE.
-   * @param[in] communicator A pointer to an MPI_Comm to use as communicator.
-   * @param[in] allowNullptr    Accept nullptr for communicator.
-   */
-  SolverInterfaceImpl(
-      std::string_view participantName,
-      std::string_view configurationFileName,
-      int              solverProcessIndex,
-      int              solverProcessSize,
-      void *           communicator,
-      bool             allowNullptr);
-
   mutable logging::Logger _log{"impl::SolverInterfaceImpl"};
 
   std::string _accessorName;
