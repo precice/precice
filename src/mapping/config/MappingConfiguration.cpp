@@ -212,37 +212,14 @@ MappingConfiguration::MappingConfiguration(
 
   auto attrSolverRtol = makeXMLAttribute(ATTR_SOLVER_RTOL, 1e-9)
                             .setDocumentation("Solver relative tolerance for convergence");
-  auto attrMaxIterations = makeXMLAttribute(ATTR_MAX_ITERATIONS, 1e6)
-                               .setDocumentation("Maximum number of iterations of the solver");
+  // TODO: Discuss whether we wanto to introduce this attribute
+  // auto attrMaxIterations = makeXMLAttribute(ATTR_MAX_ITERATIONS, 1e6)
+  //                              .setDocumentation("Maximum number of iterations of the solver");
 
   auto attrPreallocation = makeXMLAttribute(ATTR_PREALLOCATION, PREALLOCATION_TREE)
                                .setDocumentation("Sets kind of preallocation for PETSc RBF implementation")
                                .setOptions({PREALLOCATION_ESTIMATE, PREALLOCATION_COMPUTE, PREALLOCATION_OFF, PREALLOCATION_SAVE, PREALLOCATION_TREE});
 
-  auto attrExecutor = makeXMLAttribute(ATTR_EXECUTOR, "reference-executor")
-                          .setDocumentation("Specifies the execution backend used by Ginkgo.")
-                          .setOptions({"reference-executor", "omp-executor", "cuda-executor", "hip-executor"});
-
-  auto attrDeviceId = makeXMLAttribute(ATTR_DEVICE_ID, static_cast<double>(0))
-                          .setDocumentation("Specifies the ID of the GPU that should be used for the Ginkgo GPU backend.");
-
-  auto attrUnifiedMemory = makeXMLAttribute(ATTR_ENABLE_UNIFIED_MEMORY, false)
-                               .setDocumentation("If enabled, CUDA Unified Memory will be enabled which allows CUDA to dynamically access RAM.");
-
-  auto attrSolver = makeXMLAttribute(ATTR_SOLVER, "cg-solver")
-                        .setDocumentation("Specifies the iterative solver used by Ginkgo.")
-                        .setOptions({"cg-solver", "gmres-solver", "qr-solver"});
-
-  auto attrPreconditioner = makeXMLAttribute(ATTR_PRECONDITIONER, "jacobi-preconditioner")
-                                .setDocumentation("Specifies the preconditioner used by Ginkgo.")
-                                .setOptions({"jacobi-preconditioner", "cholesky-preconditioner", "no-preconditioner"});
-
-  auto attrUsePreconditioner = makeXMLAttribute(ATTR_USE_PRECONDITIONER, true)
-                                   .setDocumentation("If enabled, the Ginkgo solver will apply a preconditioner to the linear system")
-                                   .setOptions({true, false});
-
-  auto attrJacobiBlockSize = makeXMLAttribute(ATTR_JACOBI_BLOCK_SIZE, static_cast<double>(1)) // TODO: Fix datatype
-                                 .setDocumentation("Size of diagonal blocks for Jacobi preconditioner.");
   auto verticesPerCluster = XMLAttribute<int>(ATTR_VERTICES_PER_CLUSTER, 100)
                                 .setDocumentation("Average number of vertices per cluster (partition) applied in the rbf partition of unity method.");
   auto relativeOverlap = makeXMLAttribute(ATTR_RELATIVE_OVERLAP, 0.3)
@@ -253,14 +230,56 @@ MappingConfiguration::MappingConfiguration(
   // Add the relevant attributes to the relevant tags
   addAttributes(projectionTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint});
   addAttributes(rbfDirectTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead});
-  addAttributes(rbfIterativeTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead, attrMaxIterations, attrSolverRtol, attrPreallocation, attrExecutor, attrDeviceId, attrUnifiedMemory, attrSolver, attrUsePreconditioner, attrPreconditioner, attrJacobiBlockSize});
+  addAttributes(rbfIterativeTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead, attrSolverRtol, attrPreallocation});
   addAttributes(pumDirectTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPumPolynomial, attrXDead, attrYDead, attrZDead, verticesPerCluster, relativeOverlap, projectToInput});
   addAttributes(rbfAliasTag, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrXDead, attrYDead, attrZDead});
 
+  // Now we take care of the subtag executor. We repeat some of the subtags in order to add individual documentation
+  XMLTag::Occurrence once = XMLTag::OCCUR_NOT_OR_ONCE;
+  // TODO, make type an int
+  auto attrDeviceId = makeXMLAttribute(ATTR_DEVICE_ID, static_cast<int>(0))
+                          .setDocumentation("Specifies the ID of the GPU that should be used for the Ginkgo GPU backend.");
+  auto attrNThreads = makeXMLAttribute(ATTR_N_THREADS, static_cast<int>(0))
+                          .setDocumentation("Specifies the number of threads for the OpenMP executor that should be used for the Ginkgo OpenMP backend.");
+
+  // First, we have the executors for the direct solvers
+  {
+    std::list<XMLTag> cpuExecutor{
+        XMLTag{*this, EXECUTOR_CPU, once, SUBTAG_EXECUTOR}.setDocumentation("The default executor, which uses a single-core CPU with a gather-scatter parallelism.")};
+    std::list<XMLTag> deviceExecutors{
+        XMLTag{*this, EXECUTOR_CUDA, once, SUBTAG_EXECUTOR}.setDocumentation("Cuda (Nvidia) executor, which uses cuSolver/Ginkgo and a direct QR decomposition with a gather-scatter parallelism."),
+        XMLTag{*this, EXECUTOR_HIP, once, SUBTAG_EXECUTOR}.setDocumentation("Hip (AMD/Nvidia) executor, which uses hipSolver/Ginkgo and a direct QR decomposition with a gather-scatter parallelism.")};
+
+    addAttributes(deviceExecutors, {attrDeviceId});
+    addSubtagsToParents(cpuExecutor, rbfDirectTags);
+    addSubtagsToParents(deviceExecutors, rbfDirectTags);
+  }
+  // Second, the executors for the iterative solver
+  {
+    std::list<XMLTag> cpuExecutor{
+        XMLTag{*this, EXECUTOR_CPU, once, SUBTAG_EXECUTOR}.setDocumentation("The default executor relying on PETSc, which uses CPUs and distributed memory parallelism via MPI.")};
+    std::list<XMLTag> deviceExecutors{
+        XMLTag{*this, EXECUTOR_CUDA, once, SUBTAG_EXECUTOR}.setDocumentation("Cuda (Nvidia) executor, which uses Ginkgo with a gather-scatter parallelism."),
+        XMLTag{*this, EXECUTOR_HIP, once, SUBTAG_EXECUTOR}.setDocumentation("Hip (AMD/Nvidia) executor, which uses hipSolver with a gather-scatter parallelism.")};
+    std::list<XMLTag> ompExecutor{
+        XMLTag{*this, EXECUTOR_OMP, once, SUBTAG_EXECUTOR}.setDocumentation("OpenMP executor, which uses Ginkgo with a gather-scatter parallelism.")};
+
+    addAttributes(deviceExecutors, {attrDeviceId});
+    addAttributes(ompExecutor, {attrNThreads});
+    addSubtagsToParents(cpuExecutor, rbfIterativeTags);
+    addSubtagsToParents(deviceExecutors, rbfIterativeTags);
+    addSubtagsToParents(ompExecutor, rbfIterativeTags);
+  }
+  {
+    std::list<XMLTag> cpuExecutor{
+        XMLTag{*this, EXECUTOR_CPU, once, SUBTAG_EXECUTOR}.setDocumentation("The default (and currently only) executor using a CPU and a distributed memory parallelism via MPI.")};
+    addSubtagsToParents(cpuExecutor, pumDirectTags);
+  }
+  // The alias tag doesn't receive the subtag at all
+
   // Now we take care of the subtag basis function
   // First, we have the tags using a support radius
-  XMLTag::Occurrence once = XMLTag::OCCUR_NOT_OR_ONCE;
-  std::list<XMLTag>  supportRadiusRBF{
+  std::list<XMLTag> supportRadiusRBF{
       XMLTag{*this, RBF_CPOLYNOMIAL_C0, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Wendland C0 function"),
       XMLTag{*this, RBF_CPOLYNOMIAL_C2, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Wendland C2 function"),
       XMLTag{*this, RBF_CPOLYNOMIAL_C4, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Wendland C4 function"),
@@ -364,16 +383,6 @@ void MappingConfiguration::xmlTagCallback(
 
     _rbfConfig = configureRBFMapping(type, strPolynomial, strPrealloc, xDead, yDead, zDead, solverRtol, verticesPerCluster, relativeOverlap, projectToInput);
 
-    _ginkgoParameter.residualNorm        = _rbfConfig.solverRtol;
-    _ginkgoParameter.executor            = tag.getStringAttributeValue(ATTR_EXECUTOR, "reference-executor");
-    _ginkgoParameter.solver              = tag.getStringAttributeValue(ATTR_SOLVER, "cg-solver");
-    _ginkgoParameter.preconditioner      = tag.getStringAttributeValue(ATTR_PRECONDITIONER, "jacobi-preconditioner");
-    _ginkgoParameter.usePreconditioner   = tag.getBooleanAttributeValue(ATTR_USE_PRECONDITIONER, true);
-    _ginkgoParameter.jacobiBlockSize     = tag.getDoubleAttributeValue(ATTR_JACOBI_BLOCK_SIZE, 4);
-    _ginkgoParameter.maxIterations       = tag.getDoubleAttributeValue(ATTR_MAX_ITERATIONS, 1e6);
-    _ginkgoParameter.deviceId            = tag.getDoubleAttributeValue(ATTR_DEVICE_ID, 0);
-    _ginkgoParameter.enableUnifiedMemory = tag.getBooleanAttributeValue(ATTR_ENABLE_UNIFIED_MEMORY, false);
-
     checkDuplicates(configuredMapping);
     _mappings.push_back(configuredMapping);
   } else if (tag.getNamespace() == SUBTAG_BASIS_FUNCTION) {
@@ -407,6 +416,21 @@ void MappingConfiguration::xmlTagCallback(
 
     _rbfConfig.supportRadius  = supportRadius;
     _rbfConfig.shapeParameter = shapeParameter;
+  } else if (tag.getNamespace() == SUBTAG_EXECUTOR) {
+    _executorConfig = std::make_unique<ExecutorConfiguration>();
+
+    if (tag.getName() == EXECUTOR_CPU) {
+      _executorConfig->executor = ExecutorConfiguration::Executor::CPU;
+    } else if (tag.getName() == EXECUTOR_CUDA) {
+      _executorConfig->executor = ExecutorConfiguration::Executor::CUDA;
+    } else if (tag.getName() == EXECUTOR_HIP) {
+      _executorConfig->executor = ExecutorConfiguration::Executor::HIP;
+    } else if (tag.getName() == EXECUTOR_OMP) {
+      _executorConfig->executor = ExecutorConfiguration::Executor::OpenMP;
+    }
+
+    _executorConfig->deviceID = tag.getIntAttributeValue(ATTR_DEVICE_ID, -1);
+    _executorConfig->nThreads = tag.getIntAttributeValue(ATTR_N_THREADS, 0);
   }
 }
 
@@ -543,7 +567,11 @@ void MappingConfiguration::xmlEndTagCallback(const xml::ConfigurationContext &co
   if (tag.getNamespace() == TAG) {
     if (requiresBasisFunction(tag.getName())) {
       PRECICE_CHECK(_rbfConfig.basisFunctionDefined, "No basis-function was defined for the \"{}\" mapping from mesh \"{}\" to mesh \"{}\".", tag.getName(), _mappings.back().fromMesh->getName(), _mappings.back().toMesh->getName());
+      if (!_executorConfig) {
+        _executorConfig = std::make_unique<ExecutorConfiguration>();
+      }
       finishRBFConfiguration();
+      _executorConfig.reset();
     }
     PRECICE_ASSERT(_mappings.back().mapping != nullptr);
   }
@@ -551,32 +579,49 @@ void MappingConfiguration::xmlEndTagCallback(const xml::ConfigurationContext &co
 
 void MappingConfiguration::finishRBFConfiguration()
 {
+  PRECICE_ASSERT(_executorConfig);
   ConfiguredMapping &mapping = _mappings.back();
   // Instantiate the RBF mapping classes
-  if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalDirect) {
-    mapping.mapping = getRBFMapping<RBFBackend::Eigen>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial);
-  } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalIterative) {
+  // We first categorize according to the executor
+  // 1. the CPU executor
+  if (_executorConfig->executor == ExecutorConfiguration::Executor::CPU) {
+    if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalDirect) {
+      mapping.mapping = getRBFMapping<RBFBackend::Eigen>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial);
+    } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalIterative) {
 #ifndef PRECICE_NO_PETSC
-    // for petsc initialization
-    int   argc = 1;
-    char *arg  = new char[8];
-    strcpy(arg, "precice");
-    char **argv = &arg;
-    utils::Petsc::initialize(&argc, &argv, utils::Parallel::current()->comm);
-    delete[] arg;
+      // for petsc initialization
+      int   argc = 1;
+      char *arg  = new char[8];
+      strcpy(arg, "precice");
+      char **argv = &arg;
+      utils::Petsc::initialize(&argc, &argv, utils::Parallel::current()->comm);
+      delete[] arg;
 
-    mapping.mapping = getRBFMapping<RBFBackend::PETSc>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.solverRtol, _rbfConfig.polynomial, _rbfConfig.preallocation);
-
-#elif !defined(PRECICE_NO_GINKGO)
-    mapping.mapping = getRBFMapping<RBFBackend::Ginkgo>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, false, _ginkgoParameter);
-
+      mapping.mapping = getRBFMapping<RBFBackend::PETSc>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.solverRtol, _rbfConfig.polynomial, _rbfConfig.preallocation);
 #else
-    PRECICE_CHECK(false, "The global-iterative RBF solver requires a preCICE build with PETSc enabled.");
+      PRECICE_CHECK(false, "The global-iterative RBF solver on a CPU requires a preCICE build with PETSc enabled.");
 #endif
-  } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::PUMDirect) {
-    mapping.mapping = getRBFMapping<RBFBackend::PUM>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput);
+    } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::PUMDirect) {
+      mapping.mapping = getRBFMapping<RBFBackend::PUM>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput);
+    } else {
+      PRECICE_UNREACHABLE("Unknown RBF solver.");
+    }
+    // 2. any other executor is configured via Ginkgo
   } else {
-    PRECICE_UNREACHABLE("Unknown RBF solver.");
+#ifndef PRECICE_NO_GINKGO
+    _ginkgoParameter = GinkgoParameter();
+    if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalDirect) {
+      _ginkgoParameter.solver = "qr-solver";
+    } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalIterative) {
+      _ginkgoParameter.solver       = "cg-solver";
+      _ginkgoParameter.residualNorm = _rbfConfig.solverRtol;
+    } else {
+      PRECICE_UNREACHABLE("Unknown solver type.");
+    }
+    mapping.mapping = getRBFMapping<RBFBackend::Ginkgo>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, false, _ginkgoParameter);
+#else
+    PRECICE_CHECK(false, "The selected executor for the mapping from mesh {} to mesh {} requires a preCICE build with Ginkgo enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
+#endif
   }
 }
 

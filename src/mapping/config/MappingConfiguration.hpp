@@ -157,16 +157,6 @@ private:
   const std::string PREALLOCATION_TREE     = "tree";
   const std::string PREALLOCATION_OFF      = "off";
 
-  // For iterative RBFs using Ginkgo
-  const std::string ATTR_EXECUTOR              = "executor";
-  const std::string ATTR_DEVICE_ID             = "gpu-device-id";
-  const std::string ATTR_ENABLE_UNIFIED_MEMORY = "enable-unified-memory";
-  const std::string ATTR_SOLVER                = "solver";
-  const std::string ATTR_USE_PRECONDITIONER    = "use-preconditioner";
-  const std::string ATTR_PRECONDITIONER        = "preconditioner";
-  const std::string ATTR_JACOBI_BLOCK_SIZE     = "jacobi-block-size";
-  const std::string ATTR_MAX_ITERATIONS        = "max-iterations";
-
   // For the future
   // const std::string ATTR_PARALLELISM           = "parallelism";
   // const std::string PARALLELISM_GATHER_SCATTER = "gather-scatter";
@@ -194,6 +184,22 @@ private:
   const std::string ATTR_SHAPE_PARAM    = "shape-parameter";
   const std::string ATTR_SUPPORT_RADIUS = "support-radius";
 
+  // For iterative RBFs using Ginkgo
+  const std::string SUBTAG_EXECUTOR = "executor";
+  const std::string EXECUTOR_CPU    = "cpu";
+  const std::string EXECUTOR_CUDA   = "cuda";
+  const std::string EXECUTOR_HIP    = "hip";
+  const std::string EXECUTOR_OMP    = "openmp";
+
+  const std::string ATTR_DEVICE_ID = "gpu-device-id";
+  const std::string ATTR_N_THREADS = "n-threads";
+  // const std::string ATTR_ENABLE_UNIFIED_MEMORY = "enable-unified-memory";
+  // const std::string ATTR_SOLVER                = "solver";
+  // const std::string ATTR_USE_PRECONDITIONER    = "use-preconditioner";
+  // const std::string ATTR_PRECONDITIONER        = "preconditioner";
+  // const std::string ATTR_JACOBI_BLOCK_SIZE     = "jacobi-block-size";
+  // const std::string ATTR_MAX_ITERATIONS        = "max-iterations";
+
   // mapping constraint
   Mapping::Constraint constraintValue{};
 
@@ -206,6 +212,21 @@ private:
   // as we can only instantiate the RBF classes when we know the RBF
   // which is configured in the subtag
   RBFConfiguration _rbfConfig;
+
+  struct ExecutorConfiguration {
+    enum struct Executor {
+      CPU,
+      CUDA,
+      HIP,
+      OpenMP
+    };
+
+    Executor executor = Executor::CPU;
+    int      deviceID{};
+    int      nThreads{};
+  };
+
+  std::unique_ptr<ExecutorConfiguration> _executorConfig;
 
   // Settings for the iterative solvers provided by Ginkgo
   GinkgoParameter _ginkgoParameter;
