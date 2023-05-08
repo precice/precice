@@ -51,7 +51,7 @@
 #include "precice/impl/CommonErrorMessages.hpp"
 #include "precice/impl/MappingContext.hpp"
 #include "precice/impl/MeshContext.hpp"
-#include "precice/impl/Participant.hpp"
+#include "precice/impl/ParticipantState.hpp"
 #include "precice/impl/ReadDataContext.hpp"
 #include "precice/impl/ValidationMacros.hpp"
 #include "precice/impl/WatchIntegral.hpp"
@@ -1390,7 +1390,7 @@ void SolverInterfaceImpl::performDataActions(
 void SolverInterfaceImpl::handleExports()
 {
   PRECICE_TRACE();
-  Participant::IntermediateExport exp;
+  ParticipantState::IntermediateExport exp;
   exp.timewindow = _couplingScheme->getTimeWindows() - 1;
   exp.iteration  = _numberAdvanceCalls;
   exp.complete   = _couplingScheme->isTimeWindowComplete();

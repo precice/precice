@@ -104,7 +104,7 @@ void TestContext::handleOption(Participants &, testing::Require requirement)
   }
 }
 
-void TestContext::handleOption(Participants &participants, Participant participant)
+void TestContext::handleOption(Participants &participants, ParticipantState participant)
 {
   if (_simple) {
     std::terminate();
@@ -114,7 +114,7 @@ void TestContext::handleOption(Participants &participants, Participant participa
   participants.emplace_back(std::move(participant));
 }
 
-void TestContext::setContextFrom(const Participant &p, Rank rank)
+void TestContext::setContextFrom(const ParticipantState &p, Rank rank)
 {
   this->name           = p.name;
   this->size           = p.size;
@@ -138,7 +138,7 @@ void TestContext::initializeMPI(const TestContext::Participants &participants)
   auto      baseComm   = Par::current();
   const int globalRank = baseComm->rank();
   const int available  = baseComm->size();
-  const int required   = std::accumulate(participants.begin(), participants.end(), 0, [](int total, const Participant &next) { return total + next.size; });
+  const int required   = std::accumulate(participants.begin(), participants.end(), 0, [](int total, const ParticipantState &next) { return total + next.size; });
   if (required > available) {
     throw std::runtime_error{"This test requests " + std::to_string(required) + " ranks, but there are only " + std::to_string(available) + " available"};
   }

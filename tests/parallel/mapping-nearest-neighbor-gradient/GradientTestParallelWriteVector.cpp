@@ -13,7 +13,7 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Utils.hpp"
 #include "precice/SolverInterface.hpp"
-#include "precice/impl/Participant.hpp"
+#include "precice/impl/ParticipantState.hpp"
 #include "precice/impl/SharedPointer.hpp"
 #include "precice/impl/SolverInterfaceImpl.hpp"
 #include "precice/types.hpp"
