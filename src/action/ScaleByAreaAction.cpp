@@ -28,7 +28,7 @@ void ScaleByAreaAction::performAction(double time)
   PRECICE_TRACE();
   const int meshDimensions = getMesh()->getDimensions();
   auto &    targetStample  = _targetData->getStamples().back();
-  PRECICE_ASSERT(targetStample.timestamp == time::Storage::WINDOW_END);
+  PRECICE_ASSERT(math::equals(targetStample.timestamp, time::Storage::WINDOW_END));
   auto &targetValues              = _targetData->values();
   targetValues                    = targetStample.sample.values;
   const int       valueDimensions = _targetData->getDimensions();

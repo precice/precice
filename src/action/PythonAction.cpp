@@ -99,10 +99,10 @@ void PythonAction::performAction(double time)
   PyTuple_SetItem(dataArgs, 0, pythonTime);
 
   auto &sourceStample = _sourceData->getStamples().back();
-  PRECICE_ASSERT(sourceStample.timestamp == time::Storage::WINDOW_END);
+  PRECICE_ASSERT(math::equals(sourceStample.timestamp, time::Storage::WINDOW_END));
 
   auto &targetStample = _targetData->getStamples().back();
-  PRECICE_ASSERT(targetStample.timestamp == time::Storage::WINDOW_END);
+  PRECICE_ASSERT(math::equals(targetStample.timestamp, time::Storage::WINDOW_END));
 
   if (_sourceData) {
     npy_intp sourceDim[]  = {_sourceData->values().size()};

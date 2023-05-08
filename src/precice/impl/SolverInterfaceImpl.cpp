@@ -419,7 +419,7 @@ void SolverInterfaceImpl::advance(
   // Current time
   const double time          = _couplingScheme->getTime();
   const double relativeTime  = _couplingScheme->getNormalizedWindowTime();
-  const bool   isAtWindowEnd = relativeTime == time::Storage::WINDOW_END;
+  const bool   isAtWindowEnd = math::equals(relativeTime, time::Storage::WINDOW_END);
 
   for (auto &context : _accessor->writeDataContexts()) {
     context.storeBufferedData(relativeTime);
