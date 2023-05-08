@@ -200,7 +200,7 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConservative(mesh::PtrD
   const auto &       localInData = inputData->values();
 
   // TODO: We can probably reduce the temporary allocations here
-  Eigen::VectorXd in(_rbfSolver.getEvaluationMatrix().rows());
+  Eigen::VectorXd in(_rbfSolver.getOutputSize());
 
   // Now we perform the data mapping component-wise
   for (unsigned int c = 0; c < nComponents; ++c) {
@@ -239,7 +239,7 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConsistent(mesh::PtrDat
   const unsigned int nComponents = inputData->getDimensions();
   const auto &       localInData = inputData->values();
 
-  Eigen::VectorXd in(_rbfSolver.getEvaluationMatrix().cols());
+  Eigen::VectorXd in(_rbfSolver.getInputSize());
 
   // Now we perform the data mapping component-wise
   for (unsigned int c = 0; c < nComponents; ++c) {

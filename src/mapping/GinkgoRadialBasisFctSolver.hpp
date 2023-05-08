@@ -104,8 +104,9 @@ public:
 
   void clear();
 
-  // Access to the evaluation matrix (output x input)
-  const std::shared_ptr<GinkgoMatrix> getEvaluationMatrix() const;
+  Eigen::Index getInputSize() const;
+
+  Eigen::Index getOutputSize() const;
 
   std::shared_ptr<gko::Executor> getReferenceExecutor() const;
 
@@ -624,9 +625,15 @@ std::shared_ptr<gko::Executor> GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-const std::shared_ptr<GinkgoMatrix> GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::getEvaluationMatrix() const
+Eigen::Index GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::getInputSize() const
 {
-  return _matrixA;
+  return _matrixA->get_size()[1];
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+Eigen::Index GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::getOutputSize() const
+{
+  return _matrixA->get_size()[0];
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>

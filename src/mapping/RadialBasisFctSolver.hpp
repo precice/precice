@@ -48,8 +48,11 @@ public:
   // Clear all stored matrices
   void clear();
 
-  // Access to the evaluation matrix (output x input)
-  const Eigen::MatrixXd &getEvaluationMatrix() const;
+  // Returns the size of the input data
+  Eigen::Index getInputSize() const;
+
+  // Returns the size of the input data
+  Eigen::Index getOutputSize() const;
 
 private:
   precice::logging::Logger _log{"mapping::RadialBasisFctSolver"};
@@ -366,10 +369,15 @@ void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::clear()
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-const Eigen::MatrixXd &RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::getEvaluationMatrix() const
+Eigen::Index RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::getInputSize() const
 {
-  return _matrixA;
+  return _matrixA.cols();
 }
 
+template <typename RADIAL_BASIS_FUNCTION_T>
+Eigen::Index RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::getOutputSize() const
+{
+  return _matrixA.rows();
+}
 } // namespace mapping
 } // namespace precice
