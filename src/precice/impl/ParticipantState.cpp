@@ -1,4 +1,4 @@
-#include "Participant.hpp"
+#include "ParticipantState.hpp"
 #include <algorithm>
 #include <ostream>
 #include <sstream>
