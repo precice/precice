@@ -71,7 +71,7 @@ template <class T>
 MeshDataKey(T, T)->MeshDataKey<T>;
 
 /// Holds coupling state of one participating solver in coupled simulation.
-class Participant {
+class ParticipantState {
 public:
   enum MappingConstants {
     MAPPING_LINEAR_CONSERVATIVE,
@@ -84,35 +84,35 @@ public:
    *
    * @param[in] name Name of the participant. Has to be unique.
    */
-  Participant(
+  ParticipantState(
       std::string                 name,
       mesh::PtrMeshConfiguration &meshConfig);
 
-  virtual ~Participant();
+  virtual ~ParticipantState();
 
   /// @name Configuration interface
   /// @{
-  /// Adds a configured write \ref Data to the Participant
+  /// Adds a configured write \ref Data to the ParticipantState
   void addWriteData(
       const mesh::PtrData &data,
       const mesh::PtrMesh &mesh);
 
-  /// Adds a configured read \ref Data to the Participant
+  /// Adds a configured read \ref Data to the ParticipantState
   void addReadData(
       const mesh::PtrData &data,
       const mesh::PtrMesh &mesh,
       int                  interpolationOrder);
 
-  /// Adds a configured read \ref Mapping to the Participant
+  /// Adds a configured read \ref Mapping to the ParticipantState
   void addReadMappingContext(const MappingContext &mappingContext);
 
-  /// Adds a configured write \ref Mapping to the Participant
+  /// Adds a configured write \ref Mapping to the ParticipantState
   void addWriteMappingContext(const MappingContext &mappingContext);
 
-  /// Adds a configured \ref WatchPoint to the Participant
+  /// Adds a configured \ref WatchPoint to the ParticipantState
   void addWatchPoint(const PtrWatchPoint &watchPoint);
 
-  /// Adds a configured \ref WatchIntegral to the Participant
+  /// Adds a configured \ref WatchIntegral to the ParticipantState
   void addWatchIntegral(const PtrWatchIntegral &watchIntegral);
 
   /// Sets weather the participant was configured with a primary tag
@@ -208,23 +208,23 @@ public:
   /*** Provides direct access to a \ref MeshContext given the \ref meshid
    * @param[in] meshID the id of the \ref Mesh
    * @returns a reference to the matching \ref MeshContext
-   * @pre the \ref Mesh with \ref meshID is used by the Participant
+   * @pre the \ref Mesh with \ref meshID is used by the ParticipantState
    */
   const MeshContext &meshContext(std::string_view mesh) const;
 
   /*** Provides direct access to a \ref MeshContext given the \ref meshid
    * @param[in] meshID the id of the \ref Mesh
    * @returns a reference to the matching \ref MeshContext
-   * @pre the \ref Mesh with \ref meshID is used by the Participant
+   * @pre the \ref Mesh with \ref meshID is used by the ParticipantState
    */
   MeshContext &meshContext(std::string_view mesh);
 
-  /** Provides unordered access to all \ref MeshContext.used by this \ref Participant
+  /** Provides unordered access to all \ref MeshContext.used by this \ref ParticipantState
    * @remarks The sequence does not contain nullptr
    */
   const std::vector<MeshContext *> &usedMeshContexts() const;
 
-  /** Provides unordered access to all \ref MeshContext.used by this \ref Participant
+  /** Provides unordered access to all \ref MeshContext.used by this \ref ParticipantState
    * @remarks The sequence does not contain nullptr
    */
   std::vector<MeshContext *> &usedMeshContexts();
@@ -317,7 +317,7 @@ public:
   /// @}
 
 private:
-  mutable logging::Logger _log{"impl::Participant"};
+  mutable logging::Logger _log{"impl::ParticipantState"};
 
   std::string _name;
 
@@ -373,7 +373,7 @@ private:
 // --------------------------------------------------------- HEADER DEFINITIONS
 
 template <typename ELEMENT_T>
-bool Participant::isDataValid(
+bool ParticipantState::isDataValid(
     const std::vector<ELEMENT_T> &data,
     const ELEMENT_T &             newElement) const
 {
