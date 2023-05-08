@@ -594,7 +594,7 @@ public:
    * @param[in] values the values to write to preCICE.
    *
    * @pre every VertexID in vertices is a return value of setMeshVertex or setMeshVertices
-   * @pre values.size() = getDataDimensions(meshName, dataName) * vertices.size()
+   * @pre values.size() == getDataDimensions(meshName, dataName) * vertices.size()
    *
    * @see SolverInterface::setMeshVertex()
    * @see SolverInterface::setMeshVertices()
@@ -628,7 +628,7 @@ public:
    * @param[out] values the destination memory to read the data from.
    *
    * @pre every VertexID in vertices is a return value of setMeshVertex or setMeshVertices
-   * @pre values.size() = getDataDimensions(meshName, dataName) * vertices.size()
+   * @pre values.size() == getDataDimensions(meshName, dataName) * vertices.size()
    *
    * @post values contain the read data as specified in the above format.
    *

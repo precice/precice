@@ -716,7 +716,7 @@ void SolverInterfaceImpl::setMeshEdges(
   mesh::PtrMesh &mesh = context.mesh;
   PRECICE_CHECK(vertices.size() % 2 == 0,
                 "Cannot interpret passed vertex IDs attempting to set edges of mesh \"{}\" . "
-                "You passed {} vertices, but we expected an odd number.",
+                "You passed {} vertices, but we expected an even number.",
                 meshName, vertices.size());
   {
     auto end           = vertices.end();
