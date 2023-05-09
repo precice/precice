@@ -159,7 +159,7 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::computeMapping()
     }
 
     // Forwarding the tuples here requires some template magic I don't want to implement
-    if constexpr (std::tuple_size_v<std::tuple<Args...>> > 0) {
+    if constexpr (std::tuple_size_v<std::tuple<Args...>>> 0) {
       _rbfSolver = std::make_unique<SOLVER_T>(this->_basisFunction, globalInMesh, boost::irange<Eigen::Index>(0, globalInMesh.vertices().size()),
                                               globalOutMesh, boost::irange<Eigen::Index>(0, globalOutMesh.vertices().size()), this->_deadAxis, _polynomial, std::get<0>(optionalArgs));
     } else {
