@@ -20,30 +20,29 @@ BOOST_AUTO_TEST_SUITE(MappingTests)
 BOOST_AUTO_TEST_SUITE(GinkgoRadialBasisFunctionSolver)
 
 #undef doLocalCode
-#define doLocalCode(Type, function, polynomial, EXECUTOR, SOLVER)                                                                                                             \
-  {                                                                                                                                                                           \
-    bool                                  useEigen = false;                                                                                                                   \
-    MappingConfiguration::GinkgoParameter gpm;                                                                                                                                \
-    gpm.executor          = EXECUTOR;                                                                                                                                         \
-    gpm.solver            = SOLVER;                                                                                                                                           \
-    gpm.maxIterations     = 100;                                                                                                                                              \
-    gpm.usePreconditioner = false;                                                                                                                                            \
-    RadialBasisFctMapping<GinkgoRadialBasisFctSolver<Type>> consistentMap2D(Mapping::CONSISTENT, 2, function, {{false, false, false}}, polynomial, gpm);                      \
-    perform2DTestConsistentMapping(consistentMap2D);                                                                                                                          \
-    RadialBasisFctMapping<GinkgoRadialBasisFctSolver<Type>> consistentMap2DVector(Mapping::CONSISTENT, 2, function, {{false, false, false}}, polynomial, gpm);                \
-    perform2DTestConsistentMappingVector(consistentMap2DVector);                                                                                                              \
-    RadialBasisFctMapping<GinkgoRadialBasisFctSolver<Type>> consistentMap3D(Mapping::CONSISTENT, 3, function, {{false, false, false}}, polynomial, gpm);                      \
-    perform3DTestConsistentMapping(consistentMap3D);                                                                                                                          \
-    RadialBasisFctMapping<GinkgoRadialBasisFctSolver<Type>> scaledConsistentMap2D(Mapping::SCALED_CONSISTENT_SURFACE, 2, function, {{false, false, false}}, polynomial, gpm); \
-    perform2DTestScaledConsistentMapping(scaledConsistentMap2D);                                                                                                              \
-    RadialBasisFctMapping<GinkgoRadialBasisFctSolver<Type>> scaledConsistentMap3D(Mapping::SCALED_CONSISTENT_SURFACE, 3, function, {{false, false, false}}, polynomial, gpm); \
-    perform3DTestScaledConsistentMapping(scaledConsistentMap3D);                                                                                                              \
-    RadialBasisFctMapping<GinkgoRadialBasisFctSolver<Type>> conservativeMap2D(Mapping::CONSERVATIVE, 2, function, {{false, false, false}}, polynomial, gpm);                  \
-    perform2DTestConservativeMapping(conservativeMap2D);                                                                                                                      \
-    RadialBasisFctMapping<GinkgoRadialBasisFctSolver<Type>> conservativeMap2DVector(Mapping::CONSERVATIVE, 2, function, {{false, false, false}}, polynomial, gpm);            \
-    perform2DTestConservativeMappingVector(conservativeMap2DVector);                                                                                                          \
-    RadialBasisFctMapping<GinkgoRadialBasisFctSolver<Type>> conservativeMap3D(Mapping::CONSERVATIVE, 3, function, {{false, false, false}}, polynomial, gpm);                  \
-    perform3DTestConservativeMapping(conservativeMap3D);                                                                                                                      \
+#define doLocalCode(Type, function, polynomial, EXECUTOR, SOLVER)                                                                                                                                                    \
+  {                                                                                                                                                                                                                  \
+    MappingConfiguration::GinkgoParameter gpm;                                                                                                                                                                       \
+    gpm.executor          = EXECUTOR;                                                                                                                                                                                \
+    gpm.solver            = SOLVER;                                                                                                                                                                                  \
+    gpm.maxIterations     = 100;                                                                                                                                                                                     \
+    gpm.usePreconditioner = false;                                                                                                                                                                                   \
+    RadialBasisFctMapping<GinkgoRadialBasisFctSolver<Type>, MappingConfiguration::GinkgoParameter> consistentMap2D(Mapping::CONSISTENT, 2, function, {{false, false, false}}, polynomial, gpm);                      \
+    perform2DTestConsistentMapping(consistentMap2D);                                                                                                                                                                 \
+    RadialBasisFctMapping<GinkgoRadialBasisFctSolver<Type>, MappingConfiguration::GinkgoParameter> consistentMap2DVector(Mapping::CONSISTENT, 2, function, {{false, false, false}}, polynomial, gpm);                \
+    perform2DTestConsistentMappingVector(consistentMap2DVector);                                                                                                                                                     \
+    RadialBasisFctMapping<GinkgoRadialBasisFctSolver<Type>, MappingConfiguration::GinkgoParameter> consistentMap3D(Mapping::CONSISTENT, 3, function, {{false, false, false}}, polynomial, gpm);                      \
+    perform3DTestConsistentMapping(consistentMap3D);                                                                                                                                                                 \
+    RadialBasisFctMapping<GinkgoRadialBasisFctSolver<Type>, MappingConfiguration::GinkgoParameter> scaledConsistentMap2D(Mapping::SCALED_CONSISTENT_SURFACE, 2, function, {{false, false, false}}, polynomial, gpm); \
+    perform2DTestScaledConsistentMapping(scaledConsistentMap2D);                                                                                                                                                     \
+    RadialBasisFctMapping<GinkgoRadialBasisFctSolver<Type>, MappingConfiguration::GinkgoParameter> scaledConsistentMap3D(Mapping::SCALED_CONSISTENT_SURFACE, 3, function, {{false, false, false}}, polynomial, gpm); \
+    perform3DTestScaledConsistentMapping(scaledConsistentMap3D);                                                                                                                                                     \
+    RadialBasisFctMapping<GinkgoRadialBasisFctSolver<Type>, MappingConfiguration::GinkgoParameter> conservativeMap2D(Mapping::CONSERVATIVE, 2, function, {{false, false, false}}, polynomial, gpm);                  \
+    perform2DTestConservativeMapping(conservativeMap2D);                                                                                                                                                             \
+    RadialBasisFctMapping<GinkgoRadialBasisFctSolver<Type>, MappingConfiguration::GinkgoParameter> conservativeMap2DVector(Mapping::CONSERVATIVE, 2, function, {{false, false, false}}, polynomial, gpm);            \
+    perform2DTestConservativeMappingVector(conservativeMap2DVector);                                                                                                                                                 \
+    RadialBasisFctMapping<GinkgoRadialBasisFctSolver<Type>, MappingConfiguration::GinkgoParameter> conservativeMap3D(Mapping::CONSERVATIVE, 3, function, {{false, false, false}}, polynomial, gpm);                  \
+    perform3DTestConservativeMapping(conservativeMap3D);                                                                                                                                                             \
   }
 
 #define TEST_FOR_ALL_RBFS(EXECUTOR, SOLVER)                                              \

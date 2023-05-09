@@ -85,7 +85,7 @@ struct BackendSelector<RBFBackend::PETSc, RBF> {
 #ifndef PRECICE_NO_GINKGO
 template <typename RBF>
 struct BackendSelector<RBFBackend::Ginkgo, RBF> {
-  typedef mapping::RadialBasisFctMapping<GinkgoRadialBasisFctSolver<RBF>> type;
+  typedef mapping::RadialBasisFctMapping<GinkgoRadialBasisFctSolver<RBF>, MappingConfiguration::GinkgoParameter> type;
 };
 #endif
 // Specialization for the RBF PUM backend

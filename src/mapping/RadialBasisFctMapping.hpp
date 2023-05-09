@@ -30,7 +30,7 @@ namespace mapping {
  * The radial basis function type has to be given as template parameter, and has
  * to be one of the defined types in this file.
  */
-template <typename SOLVER_T>
+template <typename SOLVER_T, typename... Args>
 class RadialBasisFctMapping : public RadialBasisFctBaseMapping<typename SOLVER_T::BASIS_FUNCTION_T> {
 public:
   using RADIAL_BASIS_FUNCTION_T = typename SOLVER_T::BASIS_FUNCTION_T;
@@ -43,12 +43,12 @@ public:
    * @param[in] xDead, yDead, zDead Deactivates mapping along an axis
    */
   RadialBasisFctMapping(
-      Mapping::Constraint                          constraint,
-      int                                          dimensions,
-      RADIAL_BASIS_FUNCTION_T                      function,
-      std::array<bool, 3>                          deadAxis,
-      Polynomial                                   polynomial,
-      const MappingConfiguration::GinkgoParameter &ginkgoParameter = MappingConfiguration::GinkgoParameter());
+      Mapping::Constraint     constraint,
+      int                     dimensions,
+      RADIAL_BASIS_FUNCTION_T function,
+      std::array<bool, 3>     deadAxis,
+      Polynomial              polynomial,
+      Args... args);
 
   /// Computes the mapping coefficients from the in- and output mesh.
   void computeMapping() final override;
@@ -74,29 +74,29 @@ private:
   /// Treatment of the polynomial
   Polynomial _polynomial;
 
-  /// Ginkgo Configuration
-  MappingConfiguration::GinkgoParameter _ginkgoParameter;
+  /// Optional constructor arguments for the solver class
+  std::tuple<Args...> optionalArgs;
 };
 
 // --------------------------------------------------- HEADER IMPLEMENTATIONS
 
-template <typename SOLVER_T>
-RadialBasisFctMapping<SOLVER_T>::RadialBasisFctMapping(
-    Mapping::Constraint                          constraint,
-    int                                          dimensions,
-    RADIAL_BASIS_FUNCTION_T                      function,
-    std::array<bool, 3>                          deadAxis,
-    Polynomial                                   polynomial,
-    const MappingConfiguration::GinkgoParameter &ginkgoParameter)
+template <typename SOLVER_T, typename... Args>
+RadialBasisFctMapping<SOLVER_T, Args...>::RadialBasisFctMapping(
+    Mapping::Constraint     constraint,
+    int                     dimensions,
+    RADIAL_BASIS_FUNCTION_T function,
+    std::array<bool, 3>     deadAxis,
+    Polynomial              polynomial,
+    Args... args)
     : RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>(constraint, dimensions, function, deadAxis),
       _polynomial(polynomial),
-      _ginkgoParameter(ginkgoParameter)
+      optionalArgs(std::make_tuple(std::forward<Args>(args)...))
 {
   PRECICE_CHECK(!(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite() && polynomial == Polynomial::ON), "The integrated polynomial (polynomial=\"on\") is not supported for the selected radial-basis function. Please select another radial-basis function or change the polynomial configuration.");
 }
 
-template <typename SOLVER_T>
-void RadialBasisFctMapping<SOLVER_T>::computeMapping()
+template <typename SOLVER_T, typename... Args>
+void RadialBasisFctMapping<SOLVER_T, Args...>::computeMapping()
 {
   PRECICE_TRACE();
 
@@ -158,31 +158,35 @@ void RadialBasisFctMapping<SOLVER_T>::computeMapping()
       globalOutMesh.addMesh(*outMesh);
     }
 
-    _rbfSolver = std::make_unique<SOLVER_T>(this->_basisFunction, globalInMesh, boost::irange<Eigen::Index>(0, globalInMesh.vertices().size()),
-                                            globalOutMesh, boost::irange<Eigen::Index>(0, globalOutMesh.vertices().size()), this->_deadAxis, _polynomial);
-    // _ginkgoRbfSolver = GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>{this->_basisFunction, globalInMesh, boost::irange<Eigen::Index>(0, globalInMesh.vertices().size()),
-    //                                                                        globalOutMesh, boost::irange<Eigen::Index>(0, globalOutMesh.vertices().size()), this->_deadAxis, _polynomial, _ginkgoParameter};
+    // Forwarding the tuples here requires some template magic I don't want to implement
+    if constexpr (std::tuple_size_v<std::tuple<Args...>> > 0) {
+      _rbfSolver = std::make_unique<SOLVER_T>(this->_basisFunction, globalInMesh, boost::irange<Eigen::Index>(0, globalInMesh.vertices().size()),
+                                              globalOutMesh, boost::irange<Eigen::Index>(0, globalOutMesh.vertices().size()), this->_deadAxis, _polynomial, std::get<0>(optionalArgs));
+    } else {
+      _rbfSolver = std::make_unique<SOLVER_T>(this->_basisFunction, globalInMesh, boost::irange<Eigen::Index>(0, globalInMesh.vertices().size()),
+                                              globalOutMesh, boost::irange<Eigen::Index>(0, globalOutMesh.vertices().size()), this->_deadAxis, _polynomial);
+    }
   }
   this->_hasComputedMapping = true;
   PRECICE_DEBUG("Compute Mapping is Completed.");
 }
 
-template <typename SOLVER_T>
-void RadialBasisFctMapping<SOLVER_T>::clear()
+template <typename SOLVER_T, typename... Args>
+void RadialBasisFctMapping<SOLVER_T, Args...>::clear()
 {
   PRECICE_TRACE();
   _rbfSolver.reset();
   this->_hasComputedMapping = false;
 }
 
-template <typename SOLVER_T>
-std::string RadialBasisFctMapping<SOLVER_T>::getName() const
+template <typename SOLVER_T, typename... Args>
+std::string RadialBasisFctMapping<SOLVER_T, Args...>::getName() const
 {
   return "global-direct RBF";
 }
 
-template <typename SOLVER_T>
-void RadialBasisFctMapping<SOLVER_T>::mapConservative(DataID inputDataID, DataID outputDataID)
+template <typename SOLVER_T, typename... Args>
+void RadialBasisFctMapping<SOLVER_T, Args...>::mapConservative(DataID inputDataID, DataID outputDataID)
 {
   precice::utils::Event e("map.rbf.mapData.From" + this->input()->getName() + "To" + this->output()->getName(), precice::syncMode);
   PRECICE_TRACE(inputDataID, outputDataID);
@@ -303,8 +307,8 @@ void RadialBasisFctMapping<SOLVER_T>::mapConservative(DataID inputDataID, DataID
   }
 }
 
-template <typename SOLVER_T>
-void RadialBasisFctMapping<SOLVER_T>::mapConsistent(DataID inputDataID, DataID outputDataID)
+template <typename SOLVER_T, typename... Args>
+void RadialBasisFctMapping<SOLVER_T, Args...>::mapConsistent(DataID inputDataID, DataID outputDataID)
 {
   precice::utils::Event e("map.rbf.mapData.From" + this->input()->getName() + "To" + this->output()->getName(), precice::syncMode);
   PRECICE_TRACE(inputDataID, outputDataID);
