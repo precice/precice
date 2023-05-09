@@ -102,10 +102,8 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
 
   for (const auto &data : sendData | boost::adaptors::map_values) {
     const auto stamples = data->getStamples();
-    // PRECICE_ASSERT(stamples.size() > 0);  //@todo preferable, but cannot use this, because of some invalid configs in tests (e.g. tests/serial/AitkenAcceleration.xml)
-    if (stamples.size() > 0) {
-      data->sample() = stamples.back().sample;
-    }
+    PRECICE_ASSERT(stamples.size() > 0);
+    data->sample() = stamples.back().sample;
 
     // Data is actually only send if size>0, which is checked in the derived classes implementation
     m2n->send(data->values(), data->getMeshID(), data->getDimensions());
@@ -178,6 +176,8 @@ void BaseCouplingScheme::finalize()
 
 void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
 {
+  // initialize with zero data here, might eventually be overwritten in exchangeInitialData
+  initializeReceiveDataStorage();
   // Initialize uses the template method pattern (https://en.wikipedia.org/wiki/Template_method_pattern).
   PRECICE_TRACE(startTime, startTimeWindow);
   PRECICE_ASSERT(not isInitialized());
@@ -772,10 +772,8 @@ void BaseCouplingScheme::doImplicitStep()
       // Load from storage into buffer
       for (auto &pair : getAccelerationData()) {
         const auto stamples = pair.second->getStamples();
-        // PRECICE_ASSERT(stamples.size() > 0);  //@todo preferable, but cannot use this, because of some invalid configs in tests (e.g. tests/serial/AitkenAcceleration.xml)
-        if (stamples.size() > 0) {
-          pair.second->sample() = stamples.back().sample;
-        }
+        PRECICE_ASSERT(stamples.size() > 0);
+        pair.second->sample() = stamples.back().sample;
       }
 
       _acceleration->performAcceleration(getAccelerationData());

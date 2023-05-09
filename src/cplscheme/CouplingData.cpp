@@ -94,11 +94,8 @@ int CouplingData::meshDimensions() const
 void CouplingData::storeIteration()
 {
   const auto stamples = this->getStamples();
-  // PRECICE_ASSERT(stamples.size() > 0);  //@todo preferable, but cannot use this, because of some invalid configs in tests (e.g. tests/serial/AitkenAcceleration.xml)
-  if (stamples.size() > 0) {
-    this->sample() = stamples.back().sample;
-  }
-
+  PRECICE_ASSERT(stamples.size() > 0);
+  this->sample()     = stamples.back().sample;
   _previousIteration = this->sample();
 }
 
@@ -157,11 +154,8 @@ void CouplingData::moveToNextWindow()
 void CouplingData::storeExtrapolationData()
 {
   const auto stamples = this->getStamples();
-  // PRECICE_ASSERT(stamples.size() > 0);  //@todo preferable, but cannot use this, because of some invalid configs in tests (e.g. tests/serial/AitkenAcceleration.xml)
-  if (stamples.size() > 0) {
-    this->values() = stamples.back().sample.values;
-  }
-
+  PRECICE_ASSERT(stamples.size() > 0);
+  this->values() = stamples.back().sample.values;
   _extrapolation.store(values());
 }
 

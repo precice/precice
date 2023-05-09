@@ -136,6 +136,12 @@ m2n::PtrM2N BiCouplingScheme::getM2N() const
   return _m2n;
 }
 
+void BiCouplingScheme::initializeReceiveDataStorage()
+{
+  // @todo check receiveData. Should only contain zero data!
+  initializeWithZeroInitialData(getReceiveData());
+}
+
 void BiCouplingScheme::exchangeInitialData()
 {
   // F: send, receive, S: receive, send

@@ -506,6 +506,11 @@ private:
   /// Functions needed for initialize()
 
   /**
+   * @brief Need to initialize receive data
+   */
+  virtual void initializeReceiveDataStorage() = 0;
+
+  /**
    * @brief implements functionality for initialize in base class.
    */
   virtual void exchangeInitialData() = 0;

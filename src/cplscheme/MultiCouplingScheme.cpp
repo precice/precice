@@ -71,6 +71,14 @@ const DataMap MultiCouplingScheme::getAccelerationData()
   return _allData;
 }
 
+void MultiCouplingScheme::initializeReceiveDataStorage()
+{
+  // @todo check receiveData. Should only contain zero data!
+  for (auto &receiveExchange : _receiveDataVector) {
+    initializeWithZeroInitialData(receiveExchange.second);
+  }
+}
+
 void MultiCouplingScheme::exchangeInitialData()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
