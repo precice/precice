@@ -30,6 +30,11 @@
         from="SquareTwo"
         to="Square"
         constraint="conservative" />
+      <mapping:nearest-neighbor
+        direction="read"
+        from="Square"
+        to="SquareTwo"
+        constraint="consistent" />
       <write-data name="Velocities" mesh="SquareTwo" />
       <read-data name="Forces" mesh="SquareTwo" />
     </participant>
