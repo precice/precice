@@ -235,48 +235,48 @@ void Participant::readData(
 }
 
 void SolverInterface::writeGlobalVectorData(
-    std::string_view dataName,
-    const double *   value)
+    ::precice::string_view dataName,
+    const double *         value)
 {
-  _impl->writeGlobalVectorData(dataName, value);
+  _impl->writeGlobalVectorData(toSV(dataName), value);
 }
 
 void SolverInterface::writeGlobalScalarData(
-    std::string_view dataName,
-    double           value)
+    ::precice::string_view dataName,
+    double                 value)
 {
-  _impl->writeGlobalScalarData(dataName, value);
+  _impl->writeGlobalScalarData(toSV(dataName), value);
 }
 
 void SolverInterface::readGlobalVectorData(
-    std::string_view dataName,
-    double *         value) const
+    ::precice::string_view dataName,
+    double *               value) const
 {
-  _impl->readGlobalVectorData(dataName, value);
+  _impl->readGlobalVectorData(toSV(dataName), value);
 }
 
 void SolverInterface::readGlobalVectorData(
-    std::string_view dataName,
-    double           relativeReadTime,
-    double *         value) const
+    ::precice::string_view dataName,
+    double                 relativeReadTime,
+    double *               value) const
 {
   // @todo: needs testing!
-  _impl->readGlobalVectorData(dataName, relativeReadTime, value);
+  _impl->readGlobalVectorData(toSV(dataName), relativeReadTime, value);
 }
 
 void SolverInterface::readGlobalScalarData(
-    std::string_view dataName,
-    double &         value) const
+    ::precice::string_view dataName,
+    double &               value) const
 {
-  _impl->readGlobalScalarData(dataName, value);
+  _impl->readGlobalScalarData(toSV(dataName), value);
 }
 
 void SolverInterface::readGlobalScalarData(
-    std::string_view dataName,
-    double           relativeReadTime,
-    double &         value) const
+    ::precice::string_view dataName,
+    double                 relativeReadTime,
+    double &               value) const
 {
-  _impl->readGlobalScalarData(dataName, relativeReadTime, value);
+  _impl->readGlobalScalarData(toSV(dataName), relativeReadTime, value);
 }
 
 

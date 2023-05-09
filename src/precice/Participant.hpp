@@ -578,15 +578,6 @@ public:
       ::precice::string_view dataName) const;
 
   /**
-   * @brief Returns the ID of the global data associated with the given name.
-   *
-   * @param[in] dataName the name of the data
-   *
-   * @returns the id of the corresponding data
-   */
-  int getGlobalDataID(const std::string &dataName) const;
-
-  /**
    * @brief Writes data to a mesh.
    *
    * This function writes values of specified vertices to data of a mesh.
@@ -631,8 +622,8 @@ public:
    * @pre initialize() has been called
    */
   void writeGlobalVectorData(
-      std::string_view dataName,
-      const double *   value);
+      ::precice::string_view dataName,
+      const double *         value);
 
   /**
    * @brief Writes global scalar data
@@ -645,8 +636,8 @@ public:
    * @pre initialize() has been called
    */
   void writeGlobalScalarData(
-      std::string_view dataName,
-      double           value);
+      ::precice::string_view dataName,
+      double                 value);
 
   /**
    * @brief Reads data values from a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.
@@ -686,22 +677,6 @@ public:
       ::precice::span<double>         values) const;
 
   /**
-   * @brief Reads global scalar data. Values correspond to the end of the current time window.
-   *
-   * This function reads the value of a global data object from a dataID.
-   *
-   * @param[in] dataID ID to read from.
-   * @param[out] value Read destination of the value.
-   *
-   * @pre initialize() has been called
-   *
-   * @post value contains the read data.
-   */
-  void readGlobalScalarData(
-      int     dataID,
-      double &value) const;
-
-  /**
    * @brief Reads global vector data. Values correspond to the end of the current time window.
    *
    * This function reads the value of a global data object.
@@ -719,12 +694,24 @@ public:
    * @post value contains the read data as specified in the above format.
    */
   void readGlobalVectorData(
-      std::string_view dataName,
-      double *         value) const;
+      ::precice::string_view dataName,
+      double *               value) const;
 
+  /**
+   * @brief Reads global scalar data. Values correspond to the end of the current time window.
+   *
+   * This function reads the value of a global data object.
+   *
+   * @param[in] dataName the name of the data to read from.
+   * @param[out] value Read destination of the value.
+   *
+   * @pre initialize() has been called
+   *
+   * @post value contains the read data.
+   */
   void readGlobalScalarData(
-      std::string_view dataName,
-      double &         value) const;
+      ::precice::string_view dataName,
+      double &               value) const;
 
   ///@}
 
@@ -823,31 +810,6 @@ public:
       ::precice::span<double>   coordinates) const;
 
   /**
-   * @brief Reads global scalar data. Values correspond to a given point in time relative to the beginning of the current timestep.
-   *
-   * @experimental
-   *
-   * This function reads a global value from a dataID.
-   *
-   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
-   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
-   * end of the time step, dt indicates the size of the current time step. Then relativeReadTime = dt corresponds to the data at
-   * the end of the time step.
-   *
-   * @param[in] dataID ID to read from.
-   * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step
-   * @param[out] value Read destination of the value.
-   *
-   * @pre initialize() has been called
-   *
-   * @post value contains the read data.
-   */
-  void readGlobalScalarData(
-      int     dataID,
-      double  relativeReadTime,
-      double &value) const;
-
-  /**
    * @brief Reads global vector data. Values correspond to a given point in time relative to the beginning of the current timestep.
    *
    * @experimental
@@ -873,9 +835,9 @@ public:
    * @post value contains the read data as specified in the above format.
    */
   void readGlobalVectorData(
-      std::string_view dataName,
-      double           relativeReadTime,
-      double *         value) const;
+      ::precice::string_view dataName,
+      double                 relativeReadTime,
+      double *               value) const;
 
   ///@}
 
@@ -900,9 +862,9 @@ public:
    * @post value contains the read data.
    */
   void readGlobalScalarData(
-      std::string_view dataName,
-      double           relativeReadTime,
-      double &         value) const;
+      ::precice::string_view dataName,
+      double                 relativeReadTime,
+      double &               value) const;
 
   /** @name Experimental: Gradient Data
    * These API functions are \b experimental and may change in future versions.
