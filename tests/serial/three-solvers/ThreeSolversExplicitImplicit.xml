@@ -11,12 +11,6 @@
       <use-data name="Data2" />
     </mesh>
 
-    <mesh name="MeshB">
-      <use-data name="Data0" />
-      <use-data name="Data1" />
-      <use-data name="Data2" />
-    </mesh>
-
     <mesh name="MeshC">
       <use-data name="Data0" />
       <use-data name="Data1" />
@@ -31,10 +25,9 @@
 
     <participant name="SolverOne">
       <provide-mesh name="MeshA" />
-      <provide-mesh name="MeshB" />
       <write-data name="Data0" mesh="MeshA" />
       <read-data name="Data1" mesh="MeshA" />
-      <read-data name="Data2" mesh="MeshB" />
+      <read-data name="Data2" mesh="MeshA" />
     </participant>
 
     <participant name="SolverTwo">
@@ -47,18 +40,20 @@
         from="MeshA"
         to="MeshC"
         constraint="conservative" />
+      <mapping:nearest-neighbor direction="write" from="MeshC" to="MeshA" constraint="consistent" />
     </participant>
 
     <participant name="SolverThree">
-      <receive-mesh name="MeshB" from="SolverOne" />
+      <receive-mesh name="MeshA" from="SolverOne" />
       <write-data name="Data2" mesh="MeshD" />
       <read-data name="Data0" mesh="MeshD" />
       <provide-mesh name="MeshD" />
       <mapping:nearest-neighbor
         direction="read"
-        from="MeshB"
+        from="MeshA"
         to="MeshD"
         constraint="conservative" />
+      <mapping:nearest-neighbor direction="write" from="MeshD" to="MeshA" constraint="consistent" />
     </participant>
 
     <m2n:sockets from="SolverOne" to="SolverTwo" />
@@ -77,9 +72,9 @@
       <max-time-windows value="10" />
       <time-window-size value="1.0" />
       <max-iterations value="10" />
-      <min-iteration-convergence-measure min-iterations="3" data="Data2" mesh="MeshB" />
-      <exchange data="Data0" mesh="MeshB" from="SolverOne" to="SolverThree" />
-      <exchange data="Data2" mesh="MeshB" from="SolverThree" to="SolverOne" />
+      <min-iteration-convergence-measure min-iterations="3" data="Data2" mesh="MeshA" />
+      <exchange data="Data0" mesh="MeshA" from="SolverOne" to="SolverThree" />
+      <exchange data="Data2" mesh="MeshA" from="SolverThree" to="SolverOne" />
     </coupling-scheme:serial-implicit>
   </solver-interface>
 </precice-configuration>
