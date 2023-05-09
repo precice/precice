@@ -81,7 +81,9 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
     utils::append(forces->values(), insert);
 
     PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false));
+    dpcd->setSampleAtTime(time::Storage::WINDOW_START, dpcd->sample());
     PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false));
+    fpcd->setSampleAtTime(time::Storage::WINDOW_START, fpcd->sample());
 
     data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
     data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
@@ -111,7 +113,9 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
     utils::append(forces->values(), insert);
 
     PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false));
+    dpcd->setSampleAtTime(time::Storage::WINDOW_START, dpcd->sample());
     PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false));
+    fpcd->setSampleAtTime(time::Storage::WINDOW_START, fpcd->sample());
 
     data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
     data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
@@ -134,9 +138,11 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
 
     //init displacements
     PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false));
+    dpcd->setSampleAtTime(time::Storage::WINDOW_START, dpcd->sample());
 
     //init forces
     PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false));
+    fpcd->setSampleAtTime(time::Storage::WINDOW_START, fpcd->sample());
 
     data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
     data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
@@ -161,7 +167,9 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
     utils::append(forces->values(), insert);
 
     PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false));
+    dpcd->setSampleAtTime(time::Storage::WINDOW_START, dpcd->sample());
     PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false));
+    fpcd->setSampleAtTime(time::Storage::WINDOW_START, fpcd->sample());
 
     data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
     data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
@@ -311,7 +319,9 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
     utils::append(forces->values(), insert);
 
     PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false));
+    dpcd->setSampleAtTime(time::Storage::WINDOW_START, dpcd->sample());
     PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false));
+    fpcd->setSampleAtTime(time::Storage::WINDOW_START, fpcd->sample());
 
     dpcd->storeIteration();
     fpcd->storeIteration();
@@ -361,7 +371,9 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
     utils::append(forces->values(), insert);
 
     PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false));
+    dpcd->setSampleAtTime(time::Storage::WINDOW_START, dpcd->sample());
     PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false));
+    fpcd->setSampleAtTime(time::Storage::WINDOW_START, fpcd->sample());
 
     dpcd->storeIteration();
     fpcd->storeIteration();
@@ -403,9 +415,11 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
 
     //init displacements
     PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false));
+    dpcd->setSampleAtTime(time::Storage::WINDOW_START, dpcd->sample());
 
     //init forces
     PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false));
+    fpcd->setSampleAtTime(time::Storage::WINDOW_START, fpcd->sample());
 
     dpcd->storeIteration();
     fpcd->storeIteration();
@@ -432,7 +446,9 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
     utils::append(forces->values(), insert);
 
     PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false));
+    dpcd->setSampleAtTime(time::Storage::WINDOW_START, dpcd->sample());
     PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false));
+    fpcd->setSampleAtTime(time::Storage::WINDOW_START, fpcd->sample());
 
     dpcd->storeIteration();
     fpcd->storeIteration();
