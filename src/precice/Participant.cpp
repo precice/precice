@@ -241,35 +241,12 @@ void SolverInterface::writeGlobalData(
   _impl->writeGlobalData(toSV(dataName), value);
 }
 
-void SolverInterface::readGlobalVectorData(
-    ::precice::string_view dataName,
-    double *               value) const
+void SolverInterface::readGlobalData(
+    ::precice::string_view  dataName,
+    double                  relativeReadTime,
+    ::precice::span<double> value) const
 {
-  _impl->readGlobalVectorData(toSV(dataName), value);
-}
-
-void SolverInterface::readGlobalVectorData(
-    ::precice::string_view dataName,
-    double                 relativeReadTime,
-    double *               value) const
-{
-  // @todo: needs testing!
-  _impl->readGlobalVectorData(toSV(dataName), relativeReadTime, value);
-}
-
-void SolverInterface::readGlobalScalarData(
-    ::precice::string_view dataName,
-    double &               value) const
-{
-  _impl->readGlobalScalarData(toSV(dataName), value);
-}
-
-void SolverInterface::readGlobalScalarData(
-    ::precice::string_view dataName,
-    double                 relativeReadTime,
-    double &               value) const
-{
-  _impl->readGlobalScalarData(toSV(dataName), relativeReadTime, value);
+  _impl->readGlobalData(toSV(dataName), relativeReadTime, value);
 }
 
 

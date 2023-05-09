@@ -255,27 +255,12 @@ public:
       std::string_view              dataName,
       ::precice::span<const double> value);
 
-  /// @copydoc SolverInterface::readGlobalVectorData(int, double*) const
-  void readGlobalVectorData(
-      std::string_view dataName,
-      double *         value) const;
+  /// @copydoc SolverInterface::readGlobalData
+  void readGlobalData(
+      std::string_view        dataName,
+      double                  relativeReadTime,
+      ::precice::span<double> value) const;
 
-  /// @copydoc SolverInterface::readGlobalVectorData(int, double, double*) const
-  void readGlobalVectorData(
-      std::string_view dataName,
-      double           relativeReadTime,
-      double *         value) const;
-
-  /// @copydoc SolverInterface::readGlobalScalarData(int, double&) const
-  void readGlobalScalarData(
-      std::string_view dataName,
-      double &         value) const;
-
-  /// @copydoc SolverInterface::readGlobalScalarData(int, double, double&) const
-  void readGlobalScalarData(
-      std::string_view dataName,
-      double           relativeReadTime,
-      double &         value) const;
   ///@}
 
   /** @name Experimental Data Access
@@ -377,16 +362,6 @@ private:
   void configure(const config::Configuration &configuration);
 
   void configureM2Ns(const m2n::M2NConfiguration::SharedPointer &config);
-
-  void readGlobalVectorDataImpl(
-      std::string_view dataName,
-      double           relativeReadTime,
-      double *         value) const;
-
-  void readGlobalScalarDataImpl(
-      std::string_view dataName,
-      double           relativeReadTime,
-      double &         value) const;
 
   /// Exports meshes with data and watch point data.
   void handleExports();

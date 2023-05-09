@@ -35,6 +35,14 @@ public:
   int getInterpolationOrder() const;
 
   /**
+   * @brief Samples data at a given point in time within the current time window and writes it to the given span
+   *
+   * @param[in] normalizedDt Point in time where waveform is sampled. Must be normalized to [0,1], where 0 refers to the beginning and 1 to the end of the current time window.
+   * @param[in] value read data at time normalizedDt will be returned into this span
+   */
+  void readValue(double normalizedDt, ::precice::span<double> value) const;
+
+  /**
    * @brief Samples data at a given point in time within the current time window
    *
    * @param normalizedDt Point in time where waveform is sampled. Must be normalized to [0,1], where 0 refers to the beginning and 1 to the end of the current time window.

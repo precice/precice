@@ -59,8 +59,8 @@ BOOST_AUTO_TEST_CASE(Explicit)
 
     while (couplingInterface.isCouplingOngoing()) {
       // read received data from buffer
-      couplingInterface.readGlobalScalarData(globalScalarDataName, readGlobalScalarData);
-      couplingInterface.readGlobalVectorData(globalVectorDataName, readGlobalVectorData.data());
+      couplingInterface.readGlobalData(globalScalarDataName, dt, {&readGlobalScalarData, 1});
+      couplingInterface.readGlobalData(globalVectorDataName, dt, readGlobalVectorData);
       // check if received data is correct
       BOOST_TEST(precice::testing::equals(expectedGlobalData, readGlobalScalarData));
       BOOST_TEST(precice::testing::equals(expectedGlobalVectorData, readGlobalVectorData));

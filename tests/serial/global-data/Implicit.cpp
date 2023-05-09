@@ -63,8 +63,8 @@ BOOST_AUTO_TEST_CASE(Implicit)
     couplingInterface.advance(dt);
     dt = couplingInterface.getMaxTimeStepSize();
     // Read: from precice buffer --> to local data structure
-    couplingInterface.readGlobalVectorData(readVectorDataName, readVectorData.data());
-    couplingInterface.readGlobalScalarData(readScalarDataName, readScalarData);
+    couplingInterface.readGlobalData(readVectorDataName, dt, readVectorData);
+    couplingInterface.readGlobalData(readScalarDataName, dt, {&readScalarData, 1});
     // Check read data
     BOOST_TEST(expectedReadVectorValue == readVectorData.at(0));
     BOOST_TEST(expectedReadVectorValue == readVectorData.at(1));

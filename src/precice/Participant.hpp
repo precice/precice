@@ -612,15 +612,15 @@ public:
    * This function writes a specified value to a global data object.
    * Values are provided as a block of continuous memory defined by value.
    *
-   * The 2D-format of value is (x, y)
-   * The 3D-format of value is (x, y, z)
+   * The 1D/Scalar-format of values is (d)
+   * The 2D-format of value is (dx, dy)
+   * The 3D-format of value is (dx, dy, dz)
    *
    * @param[in] dataName the name of the data to write to.
    * @param[in] value Pointer to the vector value.
    *
    * @pre value has the same size as that of the global data specified by dataName
    *
-   * @see SolverInterface::getDataDimensions()
    */
   void writeGlobalData(
       ::precice::string_view        dataName,
@@ -664,41 +664,32 @@ public:
       ::precice::span<double>         values) const;
 
   /**
-   * @brief Reads global vector data. Values correspond to the end of the current time window.
+   * @brief Reads value from a global data object. Value corresponds to a given point in time relative to the beginning of the current timestep.
    *
    * This function reads the value of a global data object.
-   * Values are provided as a block of continuous memory.
+   * Value is read into a block of continuous memory.
    *
-   * The 2D-format of value is (x, y)
-   * The 3D-format of value is (x, y, z)
+   * The 1D/Scalar-format of values is (d)
+   * The 2D-format of value is (dx, dy)
+   * The 3D-format of value is (dx, dy, dz)
+   *
+   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
+   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
+   * end of the time step, dt indicates the size of the current time step. Then relativeReadTime = dt corresponds to the data at
+   * the end of the time step.
    *
    * @param[in] dataName the name of the data to read from.
-   * @param[out] value Pointer to the vector value.
+   * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step.
+   * @param[out] value the destination memory to write the data to.
    *
-   * @pre count of available elements at value matches the configured dimension
-   * @pre initialize() has been called
+   * @pre value has the same size as that of the data object specified by dataName
    *
    * @post value contains the read data as specified in the above format.
    */
-  void readGlobalVectorData(
-      ::precice::string_view dataName,
-      double *               value) const;
-
-  /**
-   * @brief Reads global scalar data. Values correspond to the end of the current time window.
-   *
-   * This function reads the value of a global data object.
-   *
-   * @param[in] dataName the name of the data to read from.
-   * @param[out] value Read destination of the value.
-   *
-   * @pre initialize() has been called
-   *
-   * @post value contains the read data.
-   */
-  void readGlobalScalarData(
-      ::precice::string_view dataName,
-      double &               value) const;
+  void readGlobalData(
+      ::precice::string_view  dataName,
+      double                  relativeReadTime,
+      ::precice::span<double> value) const;
 
   ///@}
 
@@ -796,62 +787,7 @@ public:
       ::precice::span<VertexID> ids,
       ::precice::span<double>   coordinates) const;
 
-  /**
-   * @brief Reads global vector data. Values correspond to a given point in time relative to the beginning of the current timestep.
-   *
-   * @experimental
-   *
-   * This function reads the value of a global data object.
-   * Values are provided as a block of continuous memory.
-   *
-   * The 2D-format of value is (x, y)
-   * The 3D-format of value is (x, y, z)
-   *
-   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
-   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
-   * end of the time step, dt indicates the size of the current time step. Then relativeReadTime = dt corresponds to the data at
-   * the end of the time step.
-   *
-   * @param[in] dataName the name of the data to read from.
-   * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step.
-   * @param[out] value Pointer to the vector value.
-   *
-   * @pre count of available elements at value matches the configured dimension
-   * @pre initialize() has been called
-   *
-   * @post value contains the read data as specified in the above format.
-   */
-  void readGlobalVectorData(
-      ::precice::string_view dataName,
-      double                 relativeReadTime,
-      double *               value) const;
-
   ///@}
-
-  /**
-   * @brief Reads global scalar data. Values correspond to a given point in time relative to the beginning of the current timestep.
-   *
-   * @experimental
-   *
-   * This function reads the value of a global data object.
-   *
-   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
-   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
-   * end of the time step, dt indicates the size of the current time step. Then relativeReadTime = dt corresponds to the data at
-   * the end of the time step.
-   *
-   * @param[in] dataName the name of the data to read from.
-   * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step
-   * @param[out] value Read destination of the value.
-   *
-   * @pre initialize() has been called
-   *
-   * @post value contains the read data.
-   */
-  void readGlobalScalarData(
-      ::precice::string_view dataName,
-      double                 relativeReadTime,
-      double &               value) const;
 
   /** @name Experimental: Gradient Data
    * These API functions are \b experimental and may change in future versions.

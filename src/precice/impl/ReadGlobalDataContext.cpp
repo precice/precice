@@ -14,6 +14,14 @@ ReadGlobalDataContext::ReadGlobalDataContext(
   _waveform = std::make_shared<time::Waveform>(interpolationOrder);
 }
 
+void ReadGlobalDataContext::readValue(double normalizedDt, ::precice::span<double> value) const
+{
+  Eigen::Map<Eigen::MatrixXd>       outputData(value.data(), getDataDimensions(), 1);
+  const Eigen::MatrixXd             sample{_waveform->sample(normalizedDt)};
+  Eigen::Map<const Eigen::MatrixXd> localData(sample.data(), getDataDimensions(), 1);
+  outputData.col(0) = localData.col(0);
+}
+
 int ReadGlobalDataContext::getInterpolationOrder() const
 {
   return _waveform->getInterpolationOrder();
