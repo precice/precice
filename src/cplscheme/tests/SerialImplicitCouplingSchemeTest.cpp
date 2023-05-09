@@ -73,6 +73,7 @@ void runCoupling(
   std::vector<int>::const_iterator iterValidIterations = validIterations.begin();
 
   if (nameParticipant == nameParticipant0) {
+    mesh->data(0)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{mesh->data(0)->values()});
     cplScheme.initialize(0.0, 1);
     cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
@@ -142,6 +143,7 @@ void runCoupling(
     BOOST_TEST(testing::equals(computedTime, 0.3));
     BOOST_TEST(testing::equals(computedTimesteps, 3));
   } else if (nameParticipant == nameParticipant1) {
+    mesh->data(1)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{mesh->data(1)->values()});
     cplScheme.initialize(0.0, 1);
     cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
@@ -246,6 +248,7 @@ void runCouplingWithSubcycling(
 
   if (nameParticipant == nameParticipant0) {
     iterationCount++; // different handling due to subcycling
+    mesh->data(0)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{mesh->data(0)->values()});
     cplScheme.initialize(0.0, 1);
     cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
@@ -262,9 +265,13 @@ void runCouplingWithSubcycling(
     double computedTimeStepSize = maxTimeStepSize / 2.0;
     int    subcyclingStep       = 0;
 
+    // Clear data for iteration.
+    mesh->data(0)->timeStepsStorage().clear();
+
     // Main coupling loop
     while (cplScheme.isCouplingOngoing()) {
       cplScheme.addComputedTime(computedTimeStepSize);
+      mesh->data(0)->setSampleAtTime(cplScheme.getNormalizedWindowTime(), time::Sample{mesh->data(0)->values()});
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
@@ -274,6 +281,7 @@ void runCouplingWithSubcycling(
       // timestep.
       if (cplScheme.isTimeWindowComplete()) {
         // Advance participant time and timestep
+        mesh->data(0)->timeStepsStorage().clear();
         computedTime += maxTimeStepSize;
         computedTimesteps++;
         BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
@@ -330,6 +338,7 @@ void runCouplingWithSubcycling(
 
   else if (nameParticipant == nameParticipant1) {
     iterationCount++; // different handling due to subcycling
+    mesh->data(1)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{mesh->data(1)->values()});
     cplScheme.initialize(0.0, 1);
     cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
@@ -347,9 +356,13 @@ void runCouplingWithSubcycling(
     double computedTimeStepSize  = preferredTimeStepSize;
     int    subcyclingStep        = 0;
 
+    // Clear data for iteration.
+    mesh->data(1)->timeStepsStorage().clear();
+
     // Main coupling loop
     while (cplScheme.isCouplingOngoing()) {
       cplScheme.addComputedTime(computedTimeStepSize);
+      mesh->data(1)->setSampleAtTime(cplScheme.getNormalizedWindowTime(), time::Sample{mesh->data(1)->values()});
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
@@ -362,6 +375,7 @@ void runCouplingWithSubcycling(
       // globally converged and if subcycling steps have filled one global
       // time step.
       if (cplScheme.isTimeWindowComplete()) {
+        mesh->data(1)->timeStepsStorage().clear();
         // Advance participant time and time step
         computedTime += maxTimeStepSize;
         computedTimesteps++;
@@ -489,11 +503,12 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   using Fixture = testing::SerialCouplingSchemeFixture;
 
   scheme.addDataToSend(data, mesh, true);
-  Fixture::initializeStorages(scheme);
   CouplingData *cplData = Fixture::getSendData(scheme, dataID);
   BOOST_CHECK(cplData); // no nullptr
   BOOST_TEST(cplData->getSize() == 1);
   BOOST_TEST(cplData->getPreviousIterationSize() == 1);
+  cplData->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{cplData->values()}); // data provided for initial value
+  Fixture::initializeStorages(scheme);
 
   Fixture::moveToNextWindow(scheme);
 
@@ -628,10 +643,11 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
       new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
   cplScheme.addConvergenceMeasure(convergenceDataIndex, false, false, minIterationConvMeasure1, true);
 
+  Eigen::VectorXd v(1); // buffer for data
+  v << 0;
+  mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{v});
   cplScheme.initialize(0.0, 1);
   cplScheme.receiveResultOfFirstAdvance();
-
-  Eigen::VectorXd v(1); // buffer for data
 
   // write data is uninitialized
   BOOST_TEST(mesh->data(sendDataIndex)->values()(0) == 0);
@@ -843,6 +859,8 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
 
   if (context.isNamed(first)) {
     BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::InitializeData));
+    v << 0.0;
+    mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{v});
   } else {
     BOOST_TEST(context.isNamed(second));
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::InitializeData));
@@ -1312,6 +1330,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(testing::equals(sendCouplingData->previousIteration()(0), 0.0));
 
     BOOST_TEST(Fixture::isImplicitCouplingScheme(cplScheme));
+    sendCouplingData->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{sendCouplingData->values()});
     cplScheme.initialize(0.0, 1);
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     cplScheme.receiveResultOfFirstAdvance();
@@ -1328,7 +1347,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(testing::equals(sendCouplingData->previousIteration()(0), 0.0));
     BOOST_TEST(sendCouplingData->getPreviousIterationSize() == 1);
     // set write data
-    sendCouplingData->values() = Eigen::VectorXd::Constant(sendCouplingData->getSize(), 4.0);
+    sendCouplingData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{Eigen::VectorXd::Constant(sendCouplingData->getSize(), 4.0)});
     while (cplScheme.isCouplingOngoing()) {
       if (cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint)) {
         cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
@@ -1348,7 +1367,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::InitializeData));
     Eigen::VectorXd v(3);
     v << 1.0, 2.0, 3.0;
-    sendCouplingData->values() = v;
+    sendCouplingData->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{v});
     cplScheme.markActionFulfilled(CouplingScheme::Action::InitializeData);
     BOOST_TEST(receiveCouplingData->getSize() == 1);
     BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 0.0));
