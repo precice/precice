@@ -113,10 +113,10 @@ add_feature_info(PETScMapping PRECICE_PETScMapping
   "Enables the Ginkgo library backend which supports the usage of GPUs and OpenMP in radial basis function mappings.
 
    Currently, this enables radial basis function mappings to leverage the compute power of Nvidia and AMD GPUs.
-   It uses iterative solvers to compute the solution of interpolation problems.
+   It uses iterative solvers provided by Ginkgo or direct solvers offered by hip/cuSolver to compute the solution of interpolation problems.
 
    This feature can be enabled/disabled by setting the PRECICE_GinkgoParallelization CMake option.
-   Requires the Ginkgo library.
+   Requires the Ginkgo library. Note that this feature is still experimental.
   ")
 add_feature_info(PythonActions PRECICE_PythonActions
   "Enables the support for user-defined python actions.
