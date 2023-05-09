@@ -24,6 +24,11 @@
         from="A-Mesh"
         to="B-Mesh"
         constraint="consistent" />
+      <mapping:nearest-neighbor
+        direction="read"
+        from="B-Mesh"
+        to="A-Mesh"
+        constraint="conservative" />
     </participant>
 
     <participant name="B">

@@ -28,6 +28,11 @@
         from="MeshTwo"
         to="MeshOne"
         constraint="consistent" />
+      <mapping:nearest-neighbor
+        direction="read"
+        from="MeshOne"
+        to="MeshTwo"
+        constraint="conservative" />
       <read-data name="DataTwo" mesh="MeshTwo" />
       <write-data name="DataOne" mesh="MeshTwo" />
     </participant>
