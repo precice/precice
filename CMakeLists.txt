@@ -193,8 +193,11 @@ if(TPL_ENABLE_EIGEN3)
   xsdk_tpl_require(EIGEN3 EIGEN3_INCLUDE_DIR)
 endif()
 # We need Eigen 3.4.0 such that Eigen deals properly with cuda
-# TODO: We should only conditionally increase the requirement
-find_package(Eigen3 3.4.0 REQUIRED)
+if(PRECICE_GinkgoParallelization)
+  find_package(Eigen3 3.4.0 REQUIRED)
+else()
+  find_package(Eigen3 3.3.7 REQUIRED)
+endif()
 message(STATUS "Found Eigen ${EIGEN3_VERSION}")
 precice_validate_eigen()
 
