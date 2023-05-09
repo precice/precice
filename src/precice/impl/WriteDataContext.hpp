@@ -35,7 +35,7 @@ public:
   /**
    * @brief Store values in _providedData.values()
    *
-   * @param[in] indices ids of data
+   * @param[in] vertices ids of data
    * @param[in] values values of data
    */
   void writeValues(::precice::span<const VertexID> vertices, ::precice::span<const double> values);
@@ -43,7 +43,7 @@ public:
   /**
    * @brief Store gradients in _providedData.gradientValues()
    *
-   * @param[in] indices ids of data
+   * @param[in] vertices ids of data
    * @param[in] gradients gradients of data
    */
   void writeGradientValues(::precice::span<const VertexID> vertices, ::precice::span<const double> gradients);
