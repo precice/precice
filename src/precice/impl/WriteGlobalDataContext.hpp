@@ -30,6 +30,13 @@ public:
    */
   mesh::PtrData providedData();
 
+  /**
+   * @brief Store value in _providedData.values()
+   *
+   * @param[in] value value of data
+   */
+  void writeValue(::precice::span<const double> values);
+
   /// Disable copy construction
   WriteGlobalDataContext(const WriteGlobalDataContext &copy) = delete;
 

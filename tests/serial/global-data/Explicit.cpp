@@ -19,23 +19,23 @@ BOOST_AUTO_TEST_CASE(Explicit)
   const int                dimensions = 2;
 
   if (context.isNamed("SolverOne")) {
-    const std::string globalDataName       = "GlobalData1";
+    const std::string globalScalarDataName = "GlobalData1";
     const std::string globalVectorDataName = "GlobalVectorData";
     couplingInterface.initialize();
     double dt = couplingInterface.getMaxTimeStepSize();
     // Some dummy writeData
-    double              writeGlobalData{5};
+    double              writeGlobalScalarData{5};
     std::vector<double> writeGlobalVectorData(dimensions, 50.5);
 
     while (couplingInterface.isCouplingOngoing()) {
       // Write data to be sent to SolverTwo to buffer
-      couplingInterface.writeGlobalScalarData(globalDataName, writeGlobalData);
-      couplingInterface.writeGlobalVectorData(globalVectorDataName, writeGlobalVectorData.data());
+      couplingInterface.writeGlobalData(globalScalarDataName, {&writeGlobalScalarData, 1});
+      couplingInterface.writeGlobalData(globalVectorDataName, writeGlobalVectorData);
       // send data
       couplingInterface.advance(dt);
       dt = couplingInterface.getMaxTimeStepSize();
       // change reference data for next check
-      writeGlobalData++;
+      writeGlobalScalarData++;
       for (auto &elem : writeGlobalVectorData) {
         elem++;
       }
@@ -44,11 +44,11 @@ BOOST_AUTO_TEST_CASE(Explicit)
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
     // Query IDs
-    const std::string globalDataName       = "GlobalData1";
+    const std::string globalScalarDataName = "GlobalData1";
     const std::string globalVectorDataName = "GlobalVectorData";
 
     // Allocate data to read
-    double              readGlobalData;
+    double              readGlobalScalarData;
     std::vector<double> readGlobalVectorData(dimensions, -1);
 
     // Initialize
@@ -59,10 +59,10 @@ BOOST_AUTO_TEST_CASE(Explicit)
 
     while (couplingInterface.isCouplingOngoing()) {
       // read received data from buffer
-      couplingInterface.readGlobalScalarData(globalDataName, readGlobalData);
+      couplingInterface.readGlobalScalarData(globalScalarDataName, readGlobalScalarData);
       couplingInterface.readGlobalVectorData(globalVectorDataName, readGlobalVectorData.data());
       // check if received data is correct
-      BOOST_TEST(precice::testing::equals(expectedGlobalData, readGlobalData));
+      BOOST_TEST(precice::testing::equals(expectedGlobalData, readGlobalScalarData));
       BOOST_TEST(precice::testing::equals(expectedGlobalVectorData, readGlobalVectorData));
       // receive next data
       couplingInterface.advance(dt);

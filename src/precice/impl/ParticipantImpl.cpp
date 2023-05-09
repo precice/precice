@@ -1094,47 +1094,30 @@ void ParticipantImpl::writeGradientData(
   context.writeGradientsIntoDataBuffer(vertices, gradients);
 }
 
-void SolverInterfaceImpl::writeGlobalVectorData(
-    std::string_view dataName,
-    const double *   value)
+void SolverInterfaceImpl::writeGlobalData(
+    std::string_view              dataName,
+    ::precice::span<const double> value)
 {
   PRECICE_TRACE(dataName);
-  PRECICE_CHECK(_state != State::Finalized, "writeGlobalVectorData(...) cannot be called after finalize().");
+  PRECICE_CHECK(_state != State::Finalized, "writeGlobalData(...) cannot be called after finalize().");
   // PRECICE_REQUIRE_DATA_WRITE(dataName);
   // TODO: write an analog of this for global.
-  PRECICE_DEBUG("value = {}", Eigen::Map<const Eigen::VectorXd>(value, _dimensions).format(utils::eigenio::debug()));
+
   WriteGlobalDataContext &context = _accessor->writeGlobalDataContext(dataName);
   PRECICE_ASSERT(context.providedData() != nullptr);
-  PRECICE_CHECK(context.getDataDimensions() == _dimensions,
-                "You cannot call writeGlobalVectorData on the scalar data type \"{0}\". Use writeGlobalScalarData or change the data type for \"{0}\" to vector.",
-                context.getDataName());
-  PRECICE_VALIDATE_DATA(value, _dimensions);
 
-  auto &     valuesInternal = context.providedData()->values();
-  const auto vertexCount    = valuesInternal.size() / context.getDataDimensions(); // Should be 1. // TODO We can probably remove this line.
-  PRECICE_CHECK(vertexCount == 1, "vertexCount = {} , should be 1", vertexCount);
+  const auto dataDims = context.getDataDimensions();
+  // Handling inconsistent sizes
+  PRECICE_CHECK(dataDims == value.size(),
+                "Input sizes are inconsistent attempting to write {}D global data \"{}\". "
+                "You passed {} data components, but we expected {} data components.",
+                dataDims, dataName,
+                value.size(), dataDims);
 
-  for (int dim = 0; dim < _dimensions; dim++) {
-    valuesInternal[dim] = value[dim];
-  }
-}
-void SolverInterfaceImpl::writeGlobalScalarData(
-    std::string_view dataName,
-    double           value)
-{
-  PRECICE_TRACE(dataName, value);
-  PRECICE_CHECK(_state != State::Finalized, "writeGlobalScalarData(...) cannot be called after finalize().");
-  // PRECICE_REQUIRE_DATA_WRITE(dataName); TODO write global data analog for this
-  WriteGlobalDataContext &context = _accessor->writeGlobalDataContext(dataName);
-  PRECICE_ASSERT(context.providedData() != nullptr);
-  PRECICE_CHECK(context.getDataDimensions() == 1,
-                "You cannot call writeGlobalScalarData on the vector data type \"{0}\". "
-                "Use writeGlobalVectorData or change the data type for \"{0}\" to scalar.",
-                context.getDataName());
-  PRECICE_VALIDATE_DATA(static_cast<double *>(&value), 1);
-  auto &valuesInternal = context.providedData()->values();
-  valuesInternal[0]    = value;
-  PRECICE_DEBUG("Written global scalar value = {}", valuesInternal[0]);
+  // Sizes are correct at this point
+  PRECICE_VALIDATE_DATA(value.data(), value.size());
+
+  context.writeValue(value);
 }
 
 void SolverInterfaceImpl::readGlobalVectorData(

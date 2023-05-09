@@ -234,18 +234,11 @@ void Participant::readData(
   _impl->readData(toSV(meshName), toSV(dataName), vertices, relativeReadTime, values);
 }
 
-void SolverInterface::writeGlobalVectorData(
-    ::precice::string_view dataName,
-    const double *         value)
+void SolverInterface::writeGlobalData(
+    ::precice::string_view        dataName,
+    ::precice::span<const double> value)
 {
-  _impl->writeGlobalVectorData(toSV(dataName), value);
-}
-
-void SolverInterface::writeGlobalScalarData(
-    ::precice::string_view dataName,
-    double                 value)
-{
-  _impl->writeGlobalScalarData(toSV(dataName), value);
+  _impl->writeGlobalData(toSV(dataName), value);
 }
 
 void SolverInterface::readGlobalVectorData(

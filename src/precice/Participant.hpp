@@ -607,10 +607,10 @@ public:
       ::precice::span<const double>   values);
 
   /**
-   * @brief Writes global vector data
+   * @brief Writes global data
    *
-   * This function writes a value a global vector data.
-   * Values are provided as a block of continuous memory.
+   * This function writes a specified value to a global data object.
+   * Values are provided as a block of continuous memory defined by value.
    *
    * The 2D-format of value is (x, y)
    * The 3D-format of value is (x, y, z)
@@ -618,26 +618,13 @@ public:
    * @param[in] dataName the name of the data to write to.
    * @param[in] value Pointer to the vector value.
    *
-   * @pre count of available elements at value matches the configured dimension
-   * @pre initialize() has been called
+   * @pre value has the same size as that of the global data specified by dataName
+   *
+   * @see SolverInterface::getDataDimensions()
    */
-  void writeGlobalVectorData(
-      ::precice::string_view dataName,
-      const double *         value);
-
-  /**
-   * @brief Writes global scalar data
-   *
-   * This function writes a value to a global scalar data.
-   *
-   * @param[in] dataName the name of the data to write to.
-   * @param[in] value The value to write.
-   *
-   * @pre initialize() has been called
-   */
-  void writeGlobalScalarData(
-      ::precice::string_view dataName,
-      double                 value);
+  void writeGlobalData(
+      ::precice::string_view        dataName,
+      ::precice::span<const double> value);
 
   /**
    * @brief Reads data values from a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.

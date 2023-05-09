@@ -57,8 +57,8 @@ BOOST_AUTO_TEST_CASE(Implicit)
     if (couplingInterface.requiresWritingCheckpoint()) {
     }
     // Write: from local data structure --> to precice buffer
-    couplingInterface.writeGlobalVectorData(writeVectorDataName, writeVectorData.data());
-    couplingInterface.writeGlobalScalarData(writeScalarDataName, writeScalarData);
+    couplingInterface.writeGlobalData(writeVectorDataName, writeVectorData);
+    couplingInterface.writeGlobalData(writeScalarDataName, {&writeScalarData, 1});
     // Advance (exchange coupling data)
     couplingInterface.advance(dt);
     dt = couplingInterface.getMaxTimeStepSize();
