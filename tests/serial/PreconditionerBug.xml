@@ -17,6 +17,7 @@
     <participant name="SolverOne">
       <provide-mesh name="MeshOne" />
       <read-data name="DataOne" mesh="MeshOne" />
+      <write-data name="DataTwo" mesh="MeshOne" />
     </participant>
 
     <participant name="SolverTwo">
@@ -27,6 +28,7 @@
         from="MeshTwo"
         to="MeshOne"
         constraint="consistent" />
+      <read-data name="DataTwo" mesh="MeshTwo" />
       <write-data name="DataOne" mesh="MeshTwo" />
     </participant>
 
