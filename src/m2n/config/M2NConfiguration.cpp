@@ -85,7 +85,7 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
     tags.push_back(tag);
   }
   {
-    /// @TODO Remove in Version 3.0
+    /// @TODO Remove in Version 3.0, see https://github.com/precice/precice/issues/1650
     XMLTag tag(*this, "mpi-singleports", occ, TAG);
     doc = "Communication via MPI with startup in separated communication spaces, using a single communicator";
     tag.setDocumentation(doc);
