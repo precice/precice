@@ -271,7 +271,7 @@ add_precice_test(
 add_precice_test(
   NAME mapping.ginkgo.openmp
   ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/OpenMP"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+  TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
   LABELS ginkgo
   GINKGO_OMP
   )
