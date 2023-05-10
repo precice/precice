@@ -41,7 +41,7 @@ namespace cplscheme {
 class CouplingScheme {
 public:
   /// Does not define a time limit for the coupled simulation.
-  static const double UNDEFINED_TIME;
+  static const double UNDEFINED_MAX_TIME;
 
   /// Does not define limit on time windows for the coupled simulation.
   static const int UNDEFINED_TIME_WINDOWS;
