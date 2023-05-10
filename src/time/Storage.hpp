@@ -110,7 +110,7 @@ public:
 
 private:
   /// Stores Stamples on the current window
-  std::vector<Stample> _sampleStorage;
+  std::vector<Stample> _stampleStorage;
 
   mutable logging::Logger _log{"time::Storage"};
 };
