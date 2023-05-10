@@ -39,11 +39,11 @@ BOOST_AUTO_TEST_CASE(ExportDataWithGradient)
   valuesScalar << 1.0, 2.0;
   valuesVector << 1.0, 2.0, 3.0, 4.0;
 
-  // Create corresponding gradient data (all gradient values = const = 1)
-  Eigen::MatrixXd &gradValuesScalar = dataScalar->gradientValues();
-  Eigen::MatrixXd &gradValuesVector = dataVector->gradientValues();
-  gradValuesScalar.setOnes();
-  gradValuesVector.setOnes();
+  // Create corresponding gradient data (all gradients = const = 1)
+  Eigen::MatrixXd &gradientsScalar = dataScalar->gradients();
+  Eigen::MatrixXd &gradientsVector = dataVector->gradients();
+  gradientsScalar.setOnes();
+  gradientsVector.setOnes();
   io::ExportVTK exportVTK;
   std::string   filename = "io-VTKExport-ExportDatawithGradient";
   std::string   location = "";

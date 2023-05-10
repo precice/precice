@@ -70,7 +70,7 @@ void NearestNeighborGradientMapping::mapConsistent(DataID inputDataID, DataID ou
   const int              valueDimensions = input()->data(inputDataID)->getDimensions(); // Data dimensions (for scalar = 1, for vectors > 1)
   const Eigen::VectorXd &inputValues     = input()->data(inputDataID)->values();
   Eigen::VectorXd &      outputValues    = output()->data(outputDataID)->values();
-  const Eigen::MatrixXd &gradientValues  = input()->data(inputDataID)->gradientValues();
+  const Eigen::MatrixXd &gradients       = input()->data(inputDataID)->gradients();
 
   //Consistent mapping
   PRECICE_DEBUG((hasConstraint(CONSISTENT) ? "Map consistent" : "Map scaled-consistent"));
@@ -84,7 +84,7 @@ void NearestNeighborGradientMapping::mapConsistent(DataID inputDataID, DataID ou
       const int mapOutputIndex = (i * valueDimensions) + dim;
       const int mapInputIndex  = inputIndex + dim;
 
-      outputValues(mapOutputIndex) = inputValues(mapInputIndex) + _offsetsMatched[i].transpose() * gradientValues.col(mapInputIndex);
+      outputValues(mapOutputIndex) = inputValues(mapInputIndex) + _offsetsMatched[i].transpose() * gradients.col(mapInputIndex);
     }
   }
 

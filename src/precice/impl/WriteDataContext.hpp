@@ -34,12 +34,12 @@ public:
   void writeValues(::precice::span<const VertexID> vertices, ::precice::span<const double> values);
 
   /**
-   * @brief Store gradients in _providedData.gradientValues()
+   * @brief Store gradients in _providedData.gradients()
    *
    * @param[in] vertices ids of data
    * @param[in] gradients gradients of data
    */
-  void writeGradientValues(::precice::span<const VertexID> vertices, ::precice::span<const double> gradients);
+  void writeGradients(::precice::span<const VertexID> vertices, ::precice::span<const double> gradients);
 
   /**
    * @brief Adds a MappingContext and the MeshContext required by the write mapping to the corresponding WriteDataContext data structures.

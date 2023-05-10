@@ -85,11 +85,11 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
       BOOST_TEST(interface.requiresGradientDataFor(meshName, dataName) == true);
 
       if (interface.requiresGradientDataFor(meshName, dataName)) {
-        std::vector<double> gradientValues;
+        std::vector<double> gradients;
         for (unsigned int i = 0; i < 36; ++i) {
-          gradientValues.emplace_back(i);
+          gradients.emplace_back(i);
         }
-        interface.writeGradientData(meshName, dataName, vertexIDs, gradientValues);
+        interface.writeGradientData(meshName, dataName, vertexIDs, gradients);
       }
     } else {
       // Assigned to the first rank
@@ -105,11 +105,11 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
       BOOST_TEST(interface.requiresGradientDataFor(meshName, dataName) == true);
 
       if (interface.requiresGradientDataFor(meshName, dataName)) {
-        std::vector<double> gradientValues;
+        std::vector<double> gradients;
         for (int i = 0; i < 9; ++i) {
-          gradientValues.emplace_back(-i);
+          gradients.emplace_back(-i);
         }
-        interface.writeGradientData(meshName, dataName, {&vertexIDs[0], 1}, gradientValues);
+        interface.writeGradientData(meshName, dataName, {&vertexIDs[0], 1}, gradients);
       }
     }
     interface.advance(1.0);

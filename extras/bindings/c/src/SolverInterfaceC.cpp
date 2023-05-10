@@ -298,12 +298,12 @@ void precicec_writeBlockVectorGradientData(
     const char *  dataName,
     int           size,
     const int *   valueIndices,
-    const double *gradientValues)
+    const double *gradients)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   auto gradientComponents = impl->getDataDimensions(meshName, dataName) * impl->getMeshDimensions(meshName);
   auto gradientSize       = size * gradientComponents;
-  impl->writeGradientData(meshName, dataName, {valueIndices, static_cast<unsigned long>(size)}, {gradientValues, static_cast<unsigned long>(gradientSize)});
+  impl->writeGradientData(meshName, dataName, {valueIndices, static_cast<unsigned long>(size)}, {gradients, static_cast<unsigned long>(gradientSize)});
 }
 
 const char *precicec_getVersionInformation()
