@@ -21,7 +21,7 @@ inline void cyclicExplicit(TestContext &context)
   const std::vector<double> coords{1, 0, 2, 0};
 
   std::vector<int> ids(2);
-  interface.setMeshVertices(meshName, 2, coords.data(), ids.data());
+  interface.setMeshVertices(meshName, coords, ids);
 
   std::vector<double> data{0, 0};
 

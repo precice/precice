@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(ActionTimingsExplicit)
   }
   int                 dimensions = interface.getMeshDimensions(meshName);
   std::vector<double> vertex(dimensions, 0);
-  int                 vertexID = interface.setMeshVertex(meshName, vertex.data());
+  int                 vertexID = interface.setMeshVertex(meshName, vertex);
 
   double dt = -1;
   BOOST_TEST(action::RecorderAction::records.empty());

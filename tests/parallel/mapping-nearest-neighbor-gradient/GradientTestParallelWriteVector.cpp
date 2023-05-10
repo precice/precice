@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
     if (context.isPrimary()) {
       std::vector<int>    vertexIDs(2);
       std::vector<double> positions = {1.0, 1.0, 2.0, 2., 2., 3.0};
-      interface.setMeshVertices(meshName, 2, positions.data(), vertexIDs.data());
+      interface.setMeshVertices(meshName, positions, vertexIDs);
       interface.initialize();
       Eigen::Vector3d values;
       interface.advance(1.0);
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
     } else {
       std::vector<int>    vertexIDs(1);
       std::vector<double> positions = {4.0, 4.0, 4.0};
-      interface.setMeshVertices(meshName, 1, positions.data(), vertexIDs.data());
+      interface.setMeshVertices(meshName, positions, vertexIDs);
       interface.initialize();
       Eigen::Vector3d values;
       interface.advance(1.0);
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
     if (context.isPrimary()) {
       std::vector<int>    vertexIDs(4);
       std::vector<double> positions = {4.0, 4.0, 4.0, 0.0, 0.4, 0.0, 0.7, 0.7, 1.7, 0.0, 1.0, 0.0};
-      interface.setMeshVertices(meshName, 4, positions.data(), vertexIDs.data());
+      interface.setMeshVertices(meshName, positions, vertexIDs);
       interface.initialize();
       auto                dataName = "Data2";
       std::vector<double> values   = {1.0, 2.0, 3.0,
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
       // Assigned to the first rank
       std::vector<int>    vertexIDs(1);
       std::vector<double> positions = {2.1, 2.1, 3.1};
-      interface.setMeshVertices(meshName, 1, positions.data(), vertexIDs.data());
+      interface.setMeshVertices(meshName, positions, vertexIDs);
       interface.initialize();
       auto                dataName = "Data2";
       std::vector<double> values   = {2.0, 3.0, 4.0};

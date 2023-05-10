@@ -640,25 +640,22 @@ void SolverInterfaceImpl::resetMesh(
 }
 
 int SolverInterfaceImpl::setMeshVertex(
-    std::string_view meshName,
-    const double *   position)
+    std::string_view              meshName,
+    ::precice::span<const double> position)
 {
   PRECICE_TRACE(meshName);
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
-  Eigen::VectorXd internalPosition{
-      Eigen::Map<const Eigen::VectorXd>{position, _dimensions}};
-  PRECICE_DEBUG("Position = {}", internalPosition.format(utils::eigenio::debug()));
-  int           index   = -1;
-  MeshContext & context = _accessor->usedMeshContext(meshName);
-  mesh::PtrMesh mesh(context.mesh);
-  PRECICE_DEBUG("MeshRequirement: {}", fmt::streamed(context.meshRequirement));
-  index = mesh->createVertex(internalPosition).getID();
+  MeshContext &context = _accessor->usedMeshContext(meshName);
+  auto &       mesh    = *context.mesh;
+  PRECICE_CHECK(position.size() == static_cast<unsigned long>(mesh.getDimensions()),
+                "Cannot set vertex for mesh \"{}\". Expected {} position components but found {}.", meshName, mesh.getDimensions(), position.size());
+  auto index = mesh.createVertex(Eigen::Map<const Eigen::VectorXd>{position.data(), _dimensions}).getID();
 
-  mesh->allocateDataValues(); //@todo remove this call? But complicated, because write mapping expects already initialized toData
+  mesh.allocateDataValues(); //@todo remove this call? But complicated, because write mapping expects already initialized toData
 
-  const auto newSize = mesh->verticesSize();
+  const auto newSize = mesh.verticesSize();
   for (auto &context : _accessor->writeDataContexts()) {
-    if (context.getMeshName() == mesh->getName()) {
+    if (context.getMeshName() == mesh.getName()) {
       context.resizeBufferTo(newSize);
     }
   }
@@ -667,28 +664,33 @@ int SolverInterfaceImpl::setMeshVertex(
 }
 
 void SolverInterfaceImpl::setMeshVertices(
-    std::string_view meshName,
-    int              size,
-    const double *   positions,
-    int *            ids)
+    std::string_view              meshName,
+    ::precice::span<const double> positions,
+    ::precice::span<VertexID>     ids)
 {
-  PRECICE_TRACE(meshName, size);
+  PRECICE_TRACE(meshName, positions.size(), ids.size());
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
-  MeshContext & context = _accessor->usedMeshContext(meshName);
-  mesh::PtrMesh mesh(context.mesh);
-  PRECICE_DEBUG("Set positions");
+  MeshContext &context = _accessor->usedMeshContext(meshName);
+  auto &       mesh    = *context.mesh;
+
+  const auto meshDims             = mesh.getDimensions();
+  const auto expectedPositionSize = ids.size() * meshDims;
+  PRECICE_CHECK(positions.size() == expectedPositionSize,
+                "Input sizes are inconsistent attempting to set vertices on {}D mesh \"{}\". "
+                "You passed {} vertices indices and {} position components, but we expected {} position components ({} x {}).",
+                meshDims, meshName, ids.size(), positions.size(), expectedPositionSize, ids.size(), meshDims);
+
   const Eigen::Map<const Eigen::MatrixXd> posMatrix{
-      positions, _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(size)};
-  for (int i = 0; i < size; ++i) {
-    Eigen::VectorXd current(posMatrix.col(i));
-    ids[i] = mesh->createVertex(current).getID();
+      positions.data(), _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(ids.size())};
+  for (unsigned long i = 0; i < ids.size(); ++i) {
+    ids[i] = mesh.createVertex(posMatrix.col(i)).getID();
   }
 
-  mesh->allocateDataValues(); //@todo remove this call? But complicated, because write mapping expects already initialized toData
+  mesh.allocateDataValues(); //@todo remove this call? But complicated, because write mapping expects already initialized toData
 
-  const auto newSize = mesh->verticesSize();
+  const auto newSize = mesh.verticesSize();
   for (auto &context : _accessor->writeDataContexts()) {
-    if (context.getMeshName() == mesh->getName()) {
+    if (context.getMeshName() == mesh.getName()) {
       context.resizeBufferTo(newSize);
     }
   }
@@ -714,11 +716,10 @@ void SolverInterfaceImpl::setMeshEdge(
 }
 
 void SolverInterfaceImpl::setMeshEdges(
-    std::string_view meshName,
-    int              size,
-    const int *      vertices)
+    std::string_view                meshName,
+    ::precice::span<const VertexID> vertices)
 {
-  PRECICE_TRACE(meshName, size);
+  PRECICE_TRACE(meshName, vertices.size());
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   MeshContext &context = _accessor->usedMeshContext(meshName);
   if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
@@ -726,18 +727,22 @@ void SolverInterfaceImpl::setMeshEdges(
   }
 
   mesh::PtrMesh &mesh = context.mesh;
+  PRECICE_CHECK(vertices.size() % 2 == 0,
+                "Cannot interpret passed vertex IDs attempting to set edges of mesh \"{}\" . "
+                "You passed {} vertices, but we expected an even number.",
+                meshName, vertices.size());
   {
-    auto end           = std::next(vertices, size * 2);
-    auto [first, last] = utils::find_first_range(vertices, end, [&mesh](VertexID vid) {
+    auto end           = vertices.end();
+    auto [first, last] = utils::find_first_range(vertices.begin(), end, [&mesh](VertexID vid) {
       return !mesh->isValidVertexID(vid);
     });
     PRECICE_CHECK(first == end,
                   impl::errorInvalidVertexIDRange,
-                  std::distance(vertices, first),
-                  std::distance(vertices, last));
+                  std::distance(vertices.begin(), first),
+                  std::distance(vertices.begin(), last));
   }
 
-  for (int i = 0; i < size; ++i) {
+  for (unsigned long i = 0; i < vertices.size() / 2; ++i) {
     auto aid = vertices[2 * i];
     auto bid = vertices[2 * i + 1];
     mesh->createEdge(mesh->vertices()[aid], mesh->vertices()[bid]);
@@ -782,11 +787,10 @@ void SolverInterfaceImpl::setMeshTriangle(
 }
 
 void SolverInterfaceImpl::setMeshTriangles(
-    std::string_view meshName,
-    int              size,
-    const int *      vertices)
+    std::string_view                meshName,
+    ::precice::span<const VertexID> vertices)
 {
-  PRECICE_TRACE(meshName, size);
+  PRECICE_TRACE(meshName, vertices.size());
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   MeshContext &context = _accessor->usedMeshContext(meshName);
   if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
@@ -794,18 +798,22 @@ void SolverInterfaceImpl::setMeshTriangles(
   }
 
   mesh::PtrMesh &mesh = context.mesh;
+  PRECICE_CHECK(vertices.size() % 3 == 0,
+                "Cannot interpret passed vertex IDs attempting to set triangles of mesh \"{}\" . "
+                "You passed {} vertices, which isn't dividable by 3.",
+                meshName, vertices.size());
   {
-    auto end           = std::next(vertices, size * 3);
-    auto [first, last] = utils::find_first_range(vertices, end, [&mesh](VertexID vid) {
+    auto end           = vertices.end();
+    auto [first, last] = utils::find_first_range(vertices.begin(), end, [&mesh](VertexID vid) {
       return !mesh->isValidVertexID(vid);
     });
     PRECICE_CHECK(first == end,
                   impl::errorInvalidVertexIDRange,
-                  std::distance(vertices, first),
-                  std::distance(vertices, last));
+                  std::distance(vertices.begin(), first),
+                  std::distance(vertices.begin(), last));
   }
 
-  for (int i = 0; i < size; ++i) {
+  for (unsigned long i = 0; i < vertices.size() / 3; ++i) {
     auto aid = vertices[3 * i];
     auto bid = vertices[3 * i + 1];
     auto cid = vertices[3 * i + 2];
@@ -868,11 +876,10 @@ void SolverInterfaceImpl::setMeshQuad(
 }
 
 void SolverInterfaceImpl::setMeshQuads(
-    std::string_view meshName,
-    int              size,
-    const int *      vertices)
+    std::string_view                meshName,
+    ::precice::span<const VertexID> vertices)
 {
-  PRECICE_TRACE(meshName, size);
+  PRECICE_TRACE(meshName, vertices.size());
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   MeshContext &context = _accessor->usedMeshContext(meshName);
   if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
@@ -880,18 +887,22 @@ void SolverInterfaceImpl::setMeshQuads(
   }
 
   mesh::Mesh &mesh = *(context.mesh);
+  PRECICE_CHECK(vertices.size() % 4 == 0,
+                "Cannot interpret passed vertex IDs attempting to set quads of mesh \"{}\" . "
+                "You passed {} vertices, which isn't dividable by 4.",
+                meshName, vertices.size());
   {
-    auto end           = std::next(vertices, size * 4);
-    auto [first, last] = utils::find_first_range(vertices, end, [&mesh](VertexID vid) {
+    auto end           = vertices.end();
+    auto [first, last] = utils::find_first_range(vertices.begin(), end, [&mesh](VertexID vid) {
       return !mesh.isValidVertexID(vid);
     });
     PRECICE_CHECK(first == end,
                   impl::errorInvalidVertexIDRange,
-                  std::distance(vertices, first),
-                  std::distance(vertices, last));
+                  std::distance(vertices.begin(), first),
+                  std::distance(vertices.begin(), last));
   }
 
-  for (int i = 0; i < size; ++i) {
+  for (unsigned long i = 0; i < vertices.size() / 4; ++i) {
     auto aid = vertices[4 * i];
     auto bid = vertices[4 * i + 1];
     auto cid = vertices[4 * i + 2];
@@ -956,11 +967,10 @@ void SolverInterfaceImpl::setMeshTetrahedron(
 }
 
 void SolverInterfaceImpl::setMeshTetrahedra(
-    std::string_view meshName,
-    int              size,
-    const int *      vertices)
+    std::string_view                meshName,
+    ::precice::span<const VertexID> vertices)
 {
-  PRECICE_TRACE(meshName, size);
+  PRECICE_TRACE(meshName, vertices.size());
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   MeshContext &context = _accessor->usedMeshContext(meshName);
   if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
@@ -968,18 +978,22 @@ void SolverInterfaceImpl::setMeshTetrahedra(
   }
 
   mesh::PtrMesh &mesh = context.mesh;
+  PRECICE_CHECK(vertices.size() % 4 == 0,
+                "Cannot interpret passed vertex IDs attempting to set quads of mesh \"{}\" . "
+                "You passed {} vertices, which isn't dividable by 4.",
+                meshName, vertices.size());
   {
-    auto end           = std::next(vertices, size * 4);
-    auto [first, last] = utils::find_first_range(vertices, end, [&mesh](VertexID vid) {
+    auto end           = vertices.end();
+    auto [first, last] = utils::find_first_range(vertices.begin(), end, [&mesh](VertexID vid) {
       return !mesh->isValidVertexID(vid);
     });
     PRECICE_CHECK(first == end,
                   impl::errorInvalidVertexIDRange,
-                  std::distance(vertices, first),
-                  std::distance(vertices, last));
+                  std::distance(vertices.begin(), first),
+                  std::distance(vertices.begin(), last));
   }
 
-  for (int i = 0; i < size; ++i) {
+  for (unsigned long i = 0; i < vertices.size() / 4; ++i) {
     auto aid = vertices[4 * i];
     auto bid = vertices[4 * i + 1];
     auto cid = vertices[4 * i + 2];
@@ -1060,7 +1074,7 @@ void SolverInterfaceImpl::readData(
   const auto       dataDims         = context.getDataDimensions();
   const auto       expectedDataSize = vertices.size() * dataDims;
   PRECICE_CHECK(expectedDataSize == values.size(),
-                "Input sizes are inconsistent attempting to read {}D data \"{}\" from mesh \"{}\". "
+                "Input/Output sizes are inconsistent attempting to read {}D data \"{}\" from mesh \"{}\". "
                 "You passed {} vertices and {} data components, but we expected {} data components ({} x {}).",
                 dataDims, dataName, meshName,
                 vertices.size(), values.size(), expectedDataSize, dataDims, vertices.size());
@@ -1125,23 +1139,27 @@ void SolverInterfaceImpl::writeGradientData(
 }
 
 void SolverInterfaceImpl::setMeshAccessRegion(
-    const std::string_view meshName,
-    const double *         boundingBox) const
+    const std::string_view        meshName,
+    ::precice::span<const double> boundingBox) const
 {
   PRECICE_EXPERIMENTAL_API();
-  PRECICE_TRACE(meshName);
+  PRECICE_TRACE(meshName, boundingBox.size());
   PRECICE_REQUIRE_MESH_USE(meshName);
   PRECICE_CHECK(_state != State::Finalized, "setMeshAccessRegion() cannot be called after finalize().")
   PRECICE_CHECK(_state != State::Initialized, "setMeshAccessRegion() needs to be called before initialize().");
   PRECICE_CHECK(!_accessRegionDefined, "setMeshAccessRegion may only be called once.");
-  PRECICE_CHECK(boundingBox != nullptr, "setMeshAccessRegion was called with boundingBox == nullptr.");
 
   // Get the related mesh
   MeshContext & context = _accessor->meshContext(meshName);
   mesh::PtrMesh mesh(context.mesh);
-  PRECICE_DEBUG("Define bounding box");
+  int           dim = mesh->getDimensions();
+  PRECICE_CHECK(boundingBox.size() == static_cast<unsigned long>(dim) * 2,
+                "Incorrect amount of bounding box components attempting to set the bounding box of {}D mesh \"{}\" . "
+                "You passed {} limits, but we expected {} ({}x2).",
+                dim, meshName, boundingBox.size(), dim * 2, dim);
+
   // Transform bounds into a suitable format
-  int                 dim = mesh->getDimensions();
+  PRECICE_DEBUG("Define bounding box");
   std::vector<double> bounds(dim * 2);
 
   for (int d = 0; d < dim; ++d) {
@@ -1159,35 +1177,45 @@ void SolverInterfaceImpl::setMeshAccessRegion(
 }
 
 void SolverInterfaceImpl::getMeshVerticesAndIDs(
-    const std::string_view meshName,
-    const int              size,
-    int *                  ids,
-    double *               coordinates) const
+    const std::string_view    meshName,
+    ::precice::span<VertexID> ids,
+    ::precice::span<double>   coordinates) const
 {
   PRECICE_EXPERIMENTAL_API();
-  PRECICE_TRACE(meshName, size);
+  PRECICE_TRACE(meshName, ids.size(), coordinates.size());
   PRECICE_REQUIRE_MESH_USE(meshName);
-  PRECICE_DEBUG("Get {} mesh vertices with IDs", size);
+  PRECICE_DEBUG("Get {} mesh vertices with IDs", ids.size());
 
   // Check, if the requested mesh data has already been received. Otherwise, the function call doesn't make any sense
   PRECICE_CHECK((_state == State::Initialized) || _accessor->isMeshProvided(meshName), "initialize() has to be called before accessing"
                                                                                        " data of the received mesh \"{}\" on participant \"{}\".",
                 meshName, _accessor->getName());
 
-  if (size == 0)
+  if (ids.empty() && coordinates.empty()) {
     return;
-
+  }
   const MeshContext & context = _accessor->meshContext(meshName);
   const mesh::PtrMesh mesh(context.mesh);
 
-  PRECICE_CHECK(ids != nullptr, "getMeshVerticesAndIDs() was called with ids == nullptr");
-  PRECICE_CHECK(coordinates != nullptr, "getMeshVerticesAndIDs() was called with coordinates == nullptr");
-
   const auto &vertices = mesh->vertices();
-  PRECICE_CHECK(static_cast<unsigned int>(size) <= vertices.size(), "The queried size exceeds the number of available points.");
+  const auto  meshSize = vertices.size();
+  const auto  meshDims = mesh->getDimensions();
+  PRECICE_CHECK(ids.size() == meshSize,
+                "Output size is incorrect attempting to get vertex ids of {}D mesh \"{}\". "
+                "You passed {} vertices indices, but we expected {}. "
+                "Use getMeshVertexSize(\"{}\") to receive the required amount of vertices.",
+                meshDims, meshName, ids.size(), meshSize, meshName);
+  const auto expectedCoordinatesSize = static_cast<unsigned long>(meshDims * meshSize);
+  PRECICE_CHECK(coordinates.size() == expectedCoordinatesSize,
+                "Output size is incorrect attempting to get vertex coordinates of {}D mesh \"{}\". "
+                "You passed {} coordinate components, but we expected {} ({}x{}). "
+                "Use getMeshVertexSize(\"{}\") and getMeshDimensions(\"{}\") to receive the required amount components",
+                meshDims, meshName, coordinates.size(), expectedCoordinatesSize, meshSize, meshDims, meshName, meshName);
+
+  PRECICE_CHECK(ids.size() <= vertices.size(), "The queried size exceeds the number of available points.");
 
   Eigen::Map<Eigen::MatrixXd> posMatrix{
-      coordinates, _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(size)};
+      coordinates.data(), _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(ids.size())};
 
   // check and, if necessary, resize write data buffers of mesh
   const auto requiredSize = mesh->verticesSize();
@@ -1197,7 +1225,7 @@ void SolverInterfaceImpl::getMeshVerticesAndIDs(
     }
   }
 
-  for (size_t i = 0; i < static_cast<size_t>(size); i++) {
+  for (unsigned long i = 0; i < ids.size(); i++) {
     PRECICE_ASSERT(i < vertices.size(), i, vertices.size());
     ids[i]           = vertices[i].getID();
     posMatrix.col(i) = vertices[i].getCoords();

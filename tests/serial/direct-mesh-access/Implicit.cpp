@@ -33,11 +33,11 @@ BOOST_AUTO_TEST_CASE(Implicit)
     BOOST_REQUIRE(couplingInterface.getMeshDimensions(otherMeshName) == 2);
 
     // Define the own mesh
-    couplingInterface.setMeshVertices(ownMeshName, ownIDs.size(), positions.data(), ownIDs.data());
+    couplingInterface.setMeshVertices(ownMeshName, positions, ownIDs);
     // TODO: Implement something in order to derive the bounding box from the mesh
 
     // Define region of interest, where we could obtain direct write access
-    couplingInterface.setMeshAccessRegion(otherMeshName, boundingBox.data());
+    couplingInterface.setMeshAccessRegion(otherMeshName, boundingBox);
 
     couplingInterface.initialize();
     double dt = couplingInterface.getMaxTimeStepSize();
@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(Implicit)
     std::vector<double> solverTwoMesh(meshSize * dim);
     std::vector<int>    otherIDs(meshSize);
 
-    couplingInterface.getMeshVerticesAndIDs(otherMeshName, meshSize, otherIDs.data(), solverTwoMesh.data());
+    couplingInterface.getMeshVerticesAndIDs(otherMeshName, otherIDs, solverTwoMesh);
     // Some dummy writeData
     std::array<double, 3> writeData({1, 2, 3});
 
@@ -91,9 +91,9 @@ BOOST_AUTO_TEST_CASE(Implicit)
     BOOST_REQUIRE(couplingInterface.getMeshDimensions(ownMeshName) == 2);
 
     // Define the mesh
-    couplingInterface.setMeshVertices(ownMeshName, ownIDs.size(), positions.data(), ownIDs.data());
+    couplingInterface.setMeshVertices(ownMeshName, positions, ownIDs);
     // Define region of interest, where we could obtain direct write access
-    couplingInterface.setMeshAccessRegion(otherMeshName, boundingBox.data());
+    couplingInterface.setMeshAccessRegion(otherMeshName, boundingBox);
     // Initialize
     couplingInterface.initialize();
     double dt = couplingInterface.getMaxTimeStepSize();
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(Implicit)
     std::vector<double> solverOneMesh(meshSize * dim);
     std::vector<int>    otherIDs(meshSize);
 
-    couplingInterface.getMeshVerticesAndIDs(otherMeshName, meshSize, otherIDs.data(), solverOneMesh.data());
+    couplingInterface.getMeshVerticesAndIDs(otherMeshName, otherIDs, solverOneMesh);
     // Some dummy writeData
     std::array<double, 4> writeData({10, 11, 12, 13});
 

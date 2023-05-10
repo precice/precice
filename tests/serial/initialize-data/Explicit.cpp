@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(Explicit)
     BOOST_TEST(context.isNamed("SolverTwo"));
     auto     meshName = "MeshTwo";
     Vector3d pos      = Vector3d::Zero();
-    auto     vid      = cplInterface.setMeshVertex(meshName, pos.data());
+    auto     vid      = cplInterface.setMeshVertex(meshName, pos);
 
     BOOST_REQUIRE(cplInterface.requiresInitialData());
     auto   dataAID      = "DataOne";

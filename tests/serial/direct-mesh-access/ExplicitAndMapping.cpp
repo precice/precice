@@ -33,11 +33,11 @@ BOOST_AUTO_TEST_CASE(ExplicitAndMapping)
 
     std::vector<double> positions = {0.2, 0.2, 0.1, 0.6, 0.1, 0.0, 0.1, 0.0};
     std::vector<int>    ownIDs(4, -1);
-    interface.setMeshVertices(ownMeshName, ownIDs.size(), positions.data(), ownIDs.data());
+    interface.setMeshVertices(ownMeshName, positions, ownIDs);
 
     std::array<double, dim * 2> boundingBox = {0.0, 1.0, 0.0, 1.0};
     // Define region of interest, where we could obtain direct write access
-    interface.setMeshAccessRegion(otherMeshName, boundingBox.data());
+    interface.setMeshAccessRegion(otherMeshName, boundingBox);
 
     interface.initialize();
     double dt = interface.getMaxTimeStepSize();
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(ExplicitAndMapping)
     // Allocate a vector containing the vertices
     std::vector<double> solverTwoMesh(otherMeshSize * dim);
     std::vector<int>    otherIDs(otherMeshSize, -1);
-    interface.getMeshVerticesAndIDs(otherMeshName, otherMeshSize, otherIDs.data(), solverTwoMesh.data());
+    interface.getMeshVerticesAndIDs(otherMeshName, otherIDs, solverTwoMesh);
     // Some dummy writeData
     std::array<double, 5> writeData({1, 2, 3, 4, 5});
 
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(ExplicitAndMapping)
     BOOST_REQUIRE(interface.getMeshDimensions(meshName) == 2);
 
     // Define the mesh
-    interface.setMeshVertices(meshName, ids.size(), positions.data(), ids.data());
+    interface.setMeshVertices(meshName, positions, ids);
     // Allocate data to read
     std::vector<double> readData(ids.size(), -10);
     std::vector<double> writeData;

@@ -59,7 +59,7 @@ void runTestDistributedCommunication(std::string const &config, TestContext cons
 
   std::vector<int> vertexIDs;
   for (int i = i1; i < i2; i++) {
-    VertexID vertexID = precice.setMeshVertex(meshName, positions[i].data());
+    VertexID vertexID = precice.setMeshVertex(meshName, positions[i]);
     vertexIDs.push_back(vertexID);
   }
 

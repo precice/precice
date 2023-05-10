@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(ParallelSquare2To1)
     }
 
     vertexIDs.resize(coords.size() / 2);
-    interface.setMeshVertices(meshName, 3, coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, coords, vertexIDs);
     interface.setMeshTriangle(meshName, vertexIDs[0], vertexIDs[1], vertexIDs[2]);
 
     interface.initialize();
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(ParallelSquare2To1)
               1. / 2, 5. / 6};
 
     vertexIDs.resize(coords.size() / 2);
-    interface.setMeshVertices(meshName, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, coords, vertexIDs);
 
     interface.initialize();
     dt = interface.getMaxTimeStepSize();

@@ -154,7 +154,8 @@ int precicec_setMeshVertex(
     const double *position)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  return impl->setMeshVertex(meshName, position);
+  auto size = static_cast<long unsigned>(impl->getMeshDimensions(meshName));
+  return impl->setMeshVertex(meshName, {position, size});
 }
 
 void precicec_setMeshVertices(
@@ -164,7 +165,9 @@ void precicec_setMeshVertices(
     int *         ids)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->setMeshVertices(meshName, size, positions, ids);
+  auto idsSize = static_cast<long unsigned>(size);
+  auto posSize = static_cast<long unsigned>(impl->getMeshDimensions(meshName) * size);
+  impl->setMeshVertices(meshName, {positions, posSize}, {ids, idsSize});
 }
 
 int precicec_getMeshVertexSize(
@@ -189,7 +192,8 @@ void precicec_setMeshEdges(
     const int * vertices)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->setMeshEdges(meshName, size, vertices);
+  auto verticesSize = static_cast<long unsigned>(size) * 2;
+  impl->setMeshEdges(meshName, {vertices, verticesSize});
 }
 
 void precicec_setMeshTriangle(
@@ -208,7 +212,8 @@ void precicec_setMeshTriangles(
     const int * vertices)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->setMeshTriangles(meshName, size, vertices);
+  auto verticesSize = static_cast<long unsigned>(size) * 3;
+  impl->setMeshTriangles(meshName, {vertices, verticesSize});
 }
 
 void precicec_setMeshQuad(
@@ -228,7 +233,8 @@ void precicec_setMeshQuads(
     const int * vertices)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->setMeshQuads(meshName, size, vertices);
+  auto verticesSize = static_cast<long unsigned>(size) * 4;
+  impl->setMeshQuads(meshName, {vertices, verticesSize});
 }
 
 void precicec_setMeshTetrahedron(
@@ -248,7 +254,8 @@ void precicec_setMeshTetrahedra(
     const int * vertices)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->setMeshTetrahedra(meshName, size, vertices);
+  auto verticesSize = static_cast<long unsigned>(size) * 4;
+  impl->setMeshTetrahedra(meshName, {vertices, verticesSize});
 }
 
 void precicec_writeData(
@@ -308,7 +315,8 @@ void precicec_setMeshAccessRegion(
     const char *  meshName,
     const double *boundingBox)
 {
-  impl->setMeshAccessRegion(meshName, boundingBox);
+  auto bbSize = static_cast<long unsigned>(impl->getMeshDimensions(meshName)) * 2;
+  impl->setMeshAccessRegion(meshName, {boundingBox, bbSize});
 }
 
 void precicec_getMeshVerticesAndIDs(
@@ -317,7 +325,8 @@ void precicec_getMeshVerticesAndIDs(
     int *       ids,
     double *    coordinates)
 {
-  impl->getMeshVerticesAndIDs(meshName, size, ids, coordinates);
+  auto coordinatesSize = static_cast<long unsigned>(impl->getMeshDimensions(meshName) * size);
+  impl->getMeshVerticesAndIDs(meshName, {ids, static_cast<unsigned long>(size)}, {coordinates, coordinatesSize});
 }
 
 #ifdef __GNUC__

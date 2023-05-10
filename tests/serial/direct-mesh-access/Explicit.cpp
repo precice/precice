@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(Explicit)
     auto dataName = "Velocities";
 
     // Define region of interest, where we could obtain direct write access
-    couplingInterface.setMeshAccessRegion(otherMeshName, boundingBox.data());
+    couplingInterface.setMeshAccessRegion(otherMeshName, boundingBox);
 
     couplingInterface.initialize();
     double dt = couplingInterface.getMaxTimeStepSize();
@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(Explicit)
 
     // Allocate a vector containing the vertices
     std::vector<double> solverTwoMesh(meshSize * dim);
-    couplingInterface.getMeshVerticesAndIDs(otherMeshName, meshSize, ids.data(), solverTwoMesh.data());
+    couplingInterface.getMeshVerticesAndIDs(otherMeshName, ids, solverTwoMesh);
     // Some dummy writeData
     std::array<double, 4> writeData({1, 2, 3, 4});
 
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(Explicit)
     BOOST_REQUIRE(couplingInterface.getMeshDimensions(meshName) == 2);
 
     // Define the mesh
-    couplingInterface.setMeshVertices(meshName, ids.size(), positions.data(), ids.data());
+    couplingInterface.setMeshVertices(meshName, positions, ids);
     // Allocate data to read
     std::vector<double> readData(4, std::numeric_limits<double>::max());
 

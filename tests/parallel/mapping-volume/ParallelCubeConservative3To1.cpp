@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative3To1)
       break;
     }
     vertexIDs.resize(coords.size() / 3);
-    interface.setMeshVertices(meshName, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, coords, vertexIDs);
 
     interface.initialize();
     dt = interface.getMaxTimeStepSize();
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative3To1)
               0, 1, 1};
 
     vertexIDs.resize(coords.size() / 3);
-    interface.setMeshVertices(meshName, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, coords, vertexIDs);
 
     VertexID v000 = vertexIDs[0];
 

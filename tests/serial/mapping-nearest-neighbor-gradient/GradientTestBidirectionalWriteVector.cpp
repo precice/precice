@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteVector)
   if (context.isNamed("SolverOne")) {
     auto     meshName = "MeshOne";
     Vector3d posOne   = Vector3d::Constant(0.0);
-    auto     vid      = cplInterface.setMeshVertex(meshName, posOne.data());
+    auto     vid      = cplInterface.setMeshVertex(meshName, posOne);
     auto     dataAID  = "DataOne";
     auto     dataBID  = "DataTwo";
     BOOST_TEST(cplInterface.requiresGradientDataFor(meshName, dataAID) == false);
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteVector)
     BOOST_TEST(context.isNamed("SolverTwo"));
     auto     meshName = "MeshTwo";
     Vector3d pos      = Vector3d::Constant(1.0);
-    auto     vid      = cplInterface.setMeshVertex(meshName, pos.data());
+    auto     vid      = cplInterface.setMeshVertex(meshName, pos);
 
     auto dataAID = "DataOne";
     auto dataBID = "DataTwo";
