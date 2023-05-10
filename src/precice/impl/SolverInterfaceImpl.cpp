@@ -126,7 +126,7 @@ SolverInterfaceImpl::SolverInterfaceImpl(
 
   configure(configurationFileName);
 
-  // This block cannot be merge with the one above as only configure calls
+  // This block cannot be merged with the one above as it only configures calls
   // utils::Parallel::initializeMPI, which is needed for getProcessRank.
 #ifndef PRECICE_NO_MPI
   const auto currentRank = utils::Parallel::current()->rank();
