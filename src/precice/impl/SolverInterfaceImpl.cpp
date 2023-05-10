@@ -611,7 +611,7 @@ bool SolverInterfaceImpl::requiresGradientDataFor(std::string_view meshName,
     return false;
 
   WriteDataContext &context = _accessor->writeDataContext(meshName, dataName);
-  return context.providedData()->hasGradient();
+  return context.hasGradient();
 }
 
 int SolverInterfaceImpl::getMeshVertexSize(
@@ -1007,7 +1007,6 @@ void SolverInterfaceImpl::writeData(
   }
 
   WriteDataContext &context = _accessor->writeDataContext(meshName, dataName);
-  PRECICE_ASSERT(context.providedData() != nullptr);
 
   const auto dataDims         = context.getDataDimensions();
   const auto expectedDataSize = vertices.size() * dataDims;
@@ -1095,21 +1094,18 @@ void SolverInterfaceImpl::writeGradientData(
 
   // Get the data
   WriteDataContext &context = _accessor->writeDataContext(meshName, dataName);
-  PRECICE_ASSERT(context.providedData() != nullptr);
 
   // Check if the Data object of given mesh has been initialized with gradient data
-  mesh::Data &meshData = *context.providedData();
-  PRECICE_CHECK(meshData.hasGradient(), "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", dataName);
+  PRECICE_CHECK(context.hasGradient(), "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", dataName);
 
-  const auto &mesh = context.getMesh();
-  if (auto index = mesh::locateInvalidVertexID(mesh, vertices); index) {
+  if (auto index = context.locateInvalidVertexID(vertices); index) {
     PRECICE_ERROR("Cannot write gradient data \"{}\" to mesh \"{}\" due to invalid Vertex ID at vertices[{}]. "
                   "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                   dataName, meshName, *index);
   }
 
   const auto dataDims           = context.getDataDimensions();
-  const auto meshDims           = mesh.getDimensions();
+  const auto meshDims           = context.getSpatialDimensions();
   const auto gradientComponents = meshDims * dataDims;
   const auto expectedComponents = vertices.size() * gradientComponents;
   PRECICE_CHECK(expectedComponents == gradients.size(),

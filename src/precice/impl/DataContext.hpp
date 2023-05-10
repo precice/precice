@@ -48,6 +48,13 @@ public:
   int getDataDimensions() const;
 
   /**
+   * @brief Get the spatial dimensions of _providedData.
+   *
+   * @return int Spatial dimensions of _providedData.
+   */
+  int getSpatialDimensions() const;
+
+  /**
    * @brief Get the name of _mesh.
    *
    * @return std::string Name of _mesh.
@@ -62,9 +69,12 @@ public:
   MeshID getMeshID() const;
 
   /**
-   * @brief Get the Mesh
+   * @brief Returns whether _providedData has gradient
+   *
+   * @return true, if it has gradient
+   * @return false, if it has gradient
    */
-  const mesh::Mesh &getMesh() const;
+  bool hasGradient() const;
 
   /**
    * @brief Perform the mapping for all mapping contexts and the corresponding data context (from and to data)
@@ -131,6 +141,16 @@ protected:
    * @return True, if DataContext has any write mapping.
    */
   bool hasWriteMapping() const;
+
+  /**
+   * @brief Get the number of vertices of mesh
+   *
+   * @return int number of vertices
+   */
+  int getMeshVertexCount() const;
+
+  /// Returns true if the given vertexID is valid
+  bool isValidVertexID(const VertexID id) const;
 
 private:
   /// Unique mesh associated with _providedData.
