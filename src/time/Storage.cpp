@@ -26,7 +26,7 @@ void Storage::setSampleAtTime(double time, Sample sample)
   // check if key "time" exists.
   auto existingStample = std::find_if(_stampleStorage.begin(), _stampleStorage.end(), [&time](const auto &s) { return math::equals(s.timestamp, time); });
   if (existingStample == _stampleStorage.end()) { // key does not exist yet
-    PRECICE_ASSERT(math::smaller(maxStoredNormalizedDt(), time), maxStoredNormalizedDt(), time, "Trying to write values with a time that is too small. Please use clear(), if you want to reset the storage.");
+    PRECICE_ASSERT(math::smaller(maxStoredNormalizedDt(), time), maxStoredNormalizedDt(), time, "Trying to write values with a time that is too small. Please use trim() or clear(), if you want to write new samples to the storage.");
     _stampleStorage.emplace_back(Stample{time, sample});
   } else { // overwrite values at "time"
     for (auto &stample : _stampleStorage) {
@@ -67,7 +67,7 @@ void Storage::move()
   initialize(initialGuess);
 }
 
-void Storage::clear()
+void Storage::trim()
 {
   PRECICE_ASSERT(nTimes() > 0, "Storage does not contain any data!");
   Stample keep = _stampleStorage.front();
@@ -76,7 +76,7 @@ void Storage::clear()
   _stampleStorage.emplace_back(keep);
 }
 
-void Storage::clearAll()
+void Storage::clear()
 {
   _stampleStorage.clear();
 }

@@ -82,7 +82,7 @@ void WriteDataContext::storeBufferedData(double currentTime)
 void WriteDataContext::clearStorage()
 {
   // need to not only clear _providedData->timeStepsStorage(), but also _toData->timeStepsStorage() as soon as we map from storage to storage.
-  _providedData->timeStepsStorage().clearAll();
+  _providedData->timeStepsStorage().clear();
 }
 
 void WriteDataContext::appendMappingConfiguration(MappingContext &mappingContext, const MeshContext &meshContext)

@@ -25,7 +25,7 @@ int Waveform::getInterpolationOrder() const
 void Waveform::store(const Eigen::VectorXd &values, double normalizedDt)
 {
   if (math::equals(_data->timeStepsStorage().maxStoredNormalizedDt(), time::Storage::WINDOW_END)) { // reached end of window and trying to write new data from next window. Clearing window first.
-    _data->timeStepsStorage().clear();
+    _data->timeStepsStorage().trim();
   }
   if (_data->timeStepsStorage().nTimes() > 0) {
     PRECICE_ASSERT(values.size() == _data->timeStepsStorage().nDofs());

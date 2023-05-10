@@ -51,7 +51,6 @@ public:
    */
   void storeBufferedData(double currentTime);
 
-
   /**
    * @brief Clear data storage for next iteration or window.
    */
