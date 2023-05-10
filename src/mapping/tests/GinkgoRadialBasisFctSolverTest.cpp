@@ -1,5 +1,6 @@
 #ifndef PRECICE_NO_GINKGO
 
+#include "mapping/GinkgoRadialBasisFctSolver.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
 #include "mapping/tests/RadialBasisFctHelper.hpp"
 #include "mesh/Data.hpp"

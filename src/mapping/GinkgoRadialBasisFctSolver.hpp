@@ -12,9 +12,10 @@
 #include "mesh/Mesh.hpp"
 #include "precice/types.hpp"
 #include "utils/Event.hpp"
-#if defined(PRECICE_WITH_HIP)
+#ifdef PRECICE_WITH_HIP
 #include "mapping/device/HipQRSolver.hip.hpp"
-#elif defined(PRECICE_WITH_CUDA)
+#endif
+#ifdef PRECICE_WITH_CUDA
 #include "mapping/device/CudaQRSolver.cuh"
 #endif
 
@@ -204,7 +205,10 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
   PRECICE_TRACE();
   PRECICE_INFO("Using Ginkgo solver {} on executor {} with max. iterations {} and residual reduction {}", ginkgoParameter.solver, ginkgoParameter.executor, ginkgoParameter.maxIterations, ginkgoParameter.residualNorm);
   _deviceExecutor = ginkgoExecutorLookup.at(ginkgoParameter.executor)(ginkgoParameter.deviceId, ginkgoParameter.enableUnifiedMemory);
-
+#ifdef PRECICE_WITH_OMP
+  if (_ginkgoParameter.nThreads > 0 && _ginkgoParameter.solver == "omp-executor")
+    omp_set_num_threads(ginkgoParameter.nThreads);
+#endif
   _solverType         = solverTypeLookup.at(ginkgoParameter.solver);
   _preconditionerType = preconditionerTypeLookup.at(ginkgoParameter.preconditioner);
 

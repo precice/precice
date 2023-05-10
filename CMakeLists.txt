@@ -555,6 +555,9 @@ IF (BUILD_TESTING)
     ${preCICE_SOURCE_DIR}/src
     ${preCICE_SOURCE_DIR}/tests
     )
+  if(PRECICE_WITH_OMP)
+    target_compile_options(testprecice PRIVATE "-fopenmp")
+  endif()
 
   message(STATUS "Including test sources")
   # Test Sources Configuration

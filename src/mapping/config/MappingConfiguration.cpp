@@ -8,6 +8,7 @@
 #include <utility>
 #include <variant>
 #include "logging/LogMacros.hpp"
+#include "mapping/GinkgoRadialBasisFctSolver.hpp"
 #include "mapping/LinearCellInterpolationMapping.hpp"
 #include "mapping/Mapping.hpp"
 #include "mapping/NearestNeighborGradientMapping.hpp"
@@ -16,6 +17,7 @@
 #include "mapping/PartitionOfUnityMapping.hpp"
 #include "mapping/PetRadialBasisFctMapping.hpp"
 #include "mapping/RadialBasisFctMapping.hpp"
+#include "mapping/RadialBasisFctSolver.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -429,7 +431,7 @@ void MappingConfiguration::xmlTagCallback(
       _executorConfig->executor = ExecutorConfiguration::Executor::OpenMP;
     }
 
-    _executorConfig->deviceID = tag.getIntAttributeValue(ATTR_DEVICE_ID, -1);
+    _executorConfig->deviceId = tag.getIntAttributeValue(ATTR_DEVICE_ID, -1);
     _executorConfig->nThreads = tag.getIntAttributeValue(ATTR_N_THREADS, 0);
   }
 }
@@ -609,7 +611,17 @@ void MappingConfiguration::finishRBFConfiguration()
     // 2. any other executor is configured via Ginkgo
   } else {
 #ifndef PRECICE_NO_GINKGO
-    _ginkgoParameter = GinkgoParameter();
+    _ginkgoParameter                   = GinkgoParameter();
+    _ginkgoParameter.usePreconditioner = false;
+    _ginkgoParameter.deviceId          = _executorConfig->deviceId;
+    if (_executorConfig->executor == ExecutorConfiguration::Executor::CUDA) {
+      _ginkgoParameter.executor = "cuda-executor";
+    } else if (_executorConfig->executor == ExecutorConfiguration::Executor::HIP) {
+      _ginkgoParameter.executor = "hip-executor";
+    } else if (_executorConfig->executor == ExecutorConfiguration::Executor::OpenMP) {
+      _ginkgoParameter.executor = "omp-executor";
+      _ginkgoParameter.nThreads = _executorConfig->nThreads;
+    }
     if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalDirect) {
       _ginkgoParameter.solver = "qr-solver";
     } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalIterative) {

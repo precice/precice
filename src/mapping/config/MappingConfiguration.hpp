@@ -45,6 +45,7 @@ public:
     bool         usePreconditioner   = false;
     unsigned int jacobiBlockSize     = 4;
     unsigned int deviceId            = 0;
+    unsigned int nThreads            = 0;
     bool         enableUnifiedMemory = false;
   };
 
@@ -222,7 +223,7 @@ private:
     };
 
     Executor executor = Executor::CPU;
-    int      deviceID{};
+    int      deviceId{};
     int      nThreads{};
   };
 

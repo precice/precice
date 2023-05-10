@@ -8,6 +8,7 @@
 #include "logging/Logger.hpp"
 #include "mapping/Mapping.hpp"
 #include "mapping/RadialBasisFctMapping.hpp"
+#include "mapping/RadialBasisFctSolver.hpp"
 #include "mapping/config/MappingConfiguration.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
 #include "mapping/tests/RadialBasisFctHelper.hpp"

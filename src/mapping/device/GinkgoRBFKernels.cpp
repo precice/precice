@@ -24,7 +24,6 @@ void create_rbf_system_matrix(std::shared_ptr<const DefaultExecutor> exec,
       GKO_KERNEL(auto i, auto j, auto N, auto dataDimensionality, auto activeAxis, auto mtx, auto supportPoints, auto targetPoints, auto f, auto rbf_params, auto inputRowLength, auto outputRowLength, auto addPolynomial, auto extraDims) {
         const unsigned int rowLength = N + extraDims;
         double             dist      = 0;
-        double             y;
 
         // Make each entry zero if polynomial is on since not every entry will be adjusted below
         if (addPolynomial) {
@@ -33,6 +32,7 @@ void create_rbf_system_matrix(std::shared_ptr<const DefaultExecutor> exec,
 
 #if defined(__NVCC__) || defined(__HIPCC__)
 
+        double y;
         for (size_t k = 0; k < dataDimensionality; ++k) {
           y    = supportPoints[k * inputRowLength + j] - targetPoints[k * outputRowLength + i];
           dist = fma(y, y, dist);
