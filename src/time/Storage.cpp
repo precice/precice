@@ -1,5 +1,7 @@
-#include "time/Storage.hpp"
+#include <boost/range.hpp>
+
 #include "math/differences.hpp"
+#include "time/Storage.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice::time {
@@ -94,12 +96,6 @@ Eigen::VectorXd Storage::getTimes() const
     times[i] = _stampleStorage[i].timestamp;
   }
   return times;
-}
-
-const std::vector<Stample> &Storage::getStamples() const
-{
-  PRECICE_DEBUG("Storage::getStamples()");
-  return _stampleStorage;
 }
 
 std::pair<Eigen::VectorXd, Eigen::MatrixXd> Storage::getTimesAndValues() const

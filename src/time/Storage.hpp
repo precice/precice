@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <boost/range.hpp>
 #include "logging/Logger.hpp"
 #include "time/Stample.hpp"
 
@@ -66,11 +67,14 @@ public:
   Eigen::VectorXd getTimes() const;
 
   /**
-   * @brief Get the vector of Stamples
+   * @brief Get the stamples
    *
-   * @return std::vector<Stample>
+   * @return boost range of stamples
    */
-  const std::vector<Stample> &getStamples() const;
+  auto stamples() const
+  {
+    return boost::make_iterator_range(_stampleStorage);
+  }
 
   /**
    * @brief Get all normalized dts and values in ascending order (with respect to normalized dts)

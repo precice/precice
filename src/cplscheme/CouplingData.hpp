@@ -47,8 +47,11 @@ public:
   /// Returns a const reference to the time step storage of the data.
   const time::Storage &timeStepsStorage() const;
 
-  /// Returns a reference to the Stamples in _timeStepsStorage.
-  const std::vector<time::Stample> &getStamples() const;
+  /// Returns the stamples in _timeStepsStorage.
+  auto stamples() const
+  {
+    return timeStepsStorage().stamples();
+  }
 
   /// Add sample at given time to _timeStepsStorage.
   void setSampleAtTime(double time, time::Sample sample);

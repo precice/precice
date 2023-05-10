@@ -69,11 +69,6 @@ const time::Storage &CouplingData::timeStepsStorage() const
   return _data->timeStepsStorage();
 }
 
-const std::vector<time::Stample> &CouplingData::getStamples() const
-{
-  return timeStepsStorage().getStamples();
-}
-
 void CouplingData::setSampleAtTime(double time, time::Sample sample)
 {
   this->sample() = sample; // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
@@ -93,7 +88,7 @@ int CouplingData::meshDimensions() const
 
 void CouplingData::storeIteration()
 {
-  const auto stamples = this->getStamples();
+  const auto stamples = this->stamples();
   PRECICE_ASSERT(stamples.size() > 0);
   this->sample()     = stamples.back().sample;
   _previousIteration = this->sample();
@@ -153,7 +148,7 @@ void CouplingData::moveToNextWindow()
 
 void CouplingData::storeExtrapolationData()
 {
-  const auto stamples = this->getStamples();
+  const auto stamples = this->stamples();
   PRECICE_ASSERT(stamples.size() > 0);
   this->values() = stamples.back().sample.values;
   _extrapolation.store(values());

@@ -98,10 +98,10 @@ void PythonAction::performAction(double time)
   PyObject *pythonTime = PyFloat_FromDouble(time);
   PyTuple_SetItem(dataArgs, 0, pythonTime);
 
-  auto &sourceStample = _sourceData->getStamples().back();
+  auto &sourceStample = _sourceData->stamples().back();
   PRECICE_ASSERT(math::equals(sourceStample.timestamp, time::Storage::WINDOW_END));
 
-  auto &targetStample = _targetData->getStamples().back();
+  auto &targetStample = _targetData->stamples().back();
   PRECICE_ASSERT(math::equals(targetStample.timestamp, time::Storage::WINDOW_END));
 
   if (_sourceData) {

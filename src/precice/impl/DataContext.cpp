@@ -96,8 +96,8 @@ void DataContext::mapData()
   for (auto &context : _mappingContexts) {
     context.clearToDataStorage();
 
-    PRECICE_ASSERT(context.fromData->getStamples().size() > 0);
-    for (auto &stample : context.fromData->getStamples()) {
+    PRECICE_ASSERT(context.fromData->stamples().size() > 0);
+    for (auto &stample : context.fromData->stamples()) {
       // Put data from storage into mapping buffer
       context.fromData->sample() = stample.sample;
 
