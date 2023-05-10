@@ -31,7 +31,7 @@ void ReadDataContext::readValues(::precice::span<const VertexID> vertices, doubl
 {
   Eigen::Map<Eigen::MatrixXd>       outputData(values.data(), getDataDimensions(), values.size());
   const Eigen::MatrixXd             sample{_waveform->sample(normalizedDt)};
-  Eigen::Map<const Eigen::MatrixXd> localData(sample.data(), getDataDimensions(), getMesh().vertices().size());
+  Eigen::Map<const Eigen::MatrixXd> localData(sample.data(), getDataDimensions(), getMeshVertexCount());
   for (int i = 0; i < static_cast<int>(vertices.size()); ++i) {
     outputData.col(i) = localData.col(vertices[i]);
   }

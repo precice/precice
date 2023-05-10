@@ -26,13 +26,6 @@ public:
       mesh::PtrMesh mesh);
 
   /**
-   * @brief Get _providedData member.
-   *
-   * @return mesh::PtrData _providedData.
-   */
-  mesh::PtrData providedData();
-
-  /**
    * @brief Store values in _providedData.values()
    *
    * @param[in] vertices ids of data
