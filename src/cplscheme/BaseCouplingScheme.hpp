@@ -398,7 +398,7 @@ private:
   double _maxTime;
 
   /// current time; _time <= _maxTime
-  double _time = 0; // @todo remove?
+  double _time = 0;
 
   /// Number of time windows that have to be computed. End of simulation is reached, if _timeWindows == _maxTimeWindows
   int _maxTimeWindows;

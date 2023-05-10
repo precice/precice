@@ -420,7 +420,6 @@ void BaseCouplingScheme::setTimeWindows(int timeWindows)
 
 double BaseCouplingScheme::getTime() const
 {
-  // @todo Might be easier to store _timeWindowStartTime and compute _timeWindowStartTime + _computedTimeWindowPart here.
   return _time;
 }
 
