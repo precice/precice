@@ -17,7 +17,7 @@ WriteDataContext::WriteDataContext(
 void WriteDataContext::writeValuesIntoDataBuffer(::precice::span<const VertexID> vertices, ::precice::span<const double> values)
 {
   Eigen::Map<const Eigen::MatrixXd> inputData(values.data(), getDataDimensions(), vertices.size());
-  Eigen::Map<Eigen::MatrixXd>       localData(_writeDataBuffer.values.data(), getDataDimensions(), getMesh().vertices().size());
+  Eigen::Map<Eigen::MatrixXd>       localData(_writeDataBuffer.values.data(), getDataDimensions(), getMeshVertexCount());
 
   for (int i = 0; i < static_cast<int>(vertices.size()); ++i) {
     localData.col(vertices[i]) = inputData.col(i);
@@ -26,9 +26,9 @@ void WriteDataContext::writeValuesIntoDataBuffer(::precice::span<const VertexID>
 
 void WriteDataContext::writeGradientsIntoDataBuffer(::precice::span<const VertexID> vertices, ::precice::span<const double> gradients)
 {
-  const auto                        gradientComponents = getMesh().getDimensions() * getDataDimensions();
+  const auto                        gradientComponents = getSpatialDimensions() * getDataDimensions();
   Eigen::Map<const Eigen::MatrixXd> inputGradients(gradients.data(), gradientComponents, vertices.size());
-  Eigen::Map<Eigen::MatrixXd>       localGradients(_writeDataBuffer.gradients.data(), gradientComponents, getMesh().vertices().size());
+  Eigen::Map<Eigen::MatrixXd>       localGradients(_writeDataBuffer.gradients.data(), gradientComponents, getMeshVertexCount());
 
   for (int i = 0; i < static_cast<int>(vertices.size()); ++i) {
     localGradients.col(vertices[i]) = inputGradients.col(i);
@@ -55,7 +55,7 @@ void WriteDataContext::resizeBufferTo(int nVertices)
 
   // Allocate gradient data values
   if (_providedData->hasGradient()) {
-    const SizeType spaceDimensions = getMesh().getDimensions();
+    const SizeType spaceDimensions = getSpatialDimensions();
 
     const SizeType expectedColumnSize = expectedSize * getDataDimensions();
     const auto     actualColumnSize   = static_cast<SizeType>(_writeDataBuffer.gradients.cols());
@@ -83,12 +83,6 @@ void WriteDataContext::clearStorage()
 {
   // need to not only clear _providedData->timeStepsStorage(), but also _toData->timeStepsStorage() as soon as we map from storage to storage.
   _providedData->timeStepsStorage().clearAll();
-}
-
-mesh::PtrData WriteDataContext::providedData()
-{
-  PRECICE_ASSERT(_providedData);
-  return _providedData;
 }
 
 void WriteDataContext::appendMappingConfiguration(MappingContext &mappingContext, const MeshContext &meshContext)
