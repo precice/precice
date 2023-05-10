@@ -32,10 +32,10 @@ BOOST_AUTO_TEST_CASE(testConsistentSpread)
   using testing::equals;
 
   // Create mesh to map from
-  PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
-  PtrData inData    = inMesh->createData("InData", 1, 0_dataID);
-  int     inDataID  = inData->getID();
-  Vertex &inVertex0 = inMesh->createVertex(Eigen::Vector3d::Constant(0.0));
+  PtrMesh                  inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
+  PtrData                  inData    = inMesh->createData("InData", 1, 0_dataID);
+  int                      inDataID  = inData->getID();
+  [[maybe_unused]] Vertex &inVertex0 = inMesh->createVertex(Eigen::Vector3d::Constant(0.0));
   inMesh->allocateDataValues();
   Eigen::VectorXd &inValues = inData->values();
   inValues << 2.0;
@@ -43,12 +43,12 @@ BOOST_AUTO_TEST_CASE(testConsistentSpread)
   double radius = 1.0; // radius of the "tube" from or to which the data is mapped, i.e., radius of the circular interface between the two participants
 
   // Create mesh to map to
-  PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  PtrData outData    = outMesh->createData("OutData", 3, 2_dataID);
-  int     outDataID  = outData->getID();
-  Vertex &outVertex0 = outMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // center, equal to incoming mesh node
-  Vertex &outVertex1 = outMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0)); // distance of 1.0 = r to center
-  Vertex &outVertex2 = outMesh->createVertex(Eigen::Vector3d(0.0, 0.5, 0.0)); // distance of 0.5 = r/2 to center
+  PtrMesh                  outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
+  PtrData                  outData    = outMesh->createData("OutData", 3, 2_dataID);
+  int                      outDataID  = outData->getID();
+  [[maybe_unused]] Vertex &outVertex0 = outMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // center, equal to incoming mesh node
+  [[maybe_unused]] Vertex &outVertex1 = outMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0)); // distance of 1.0 = r to center
+  [[maybe_unused]] Vertex &outVertex2 = outMesh->createVertex(Eigen::Vector3d(0.0, 0.5, 0.0)); // distance of 0.5 = r/2 to center
   outMesh->allocateDataValues();
 
   // Setup mapping with mapping coordinates and geometry used
@@ -83,12 +83,12 @@ BOOST_AUTO_TEST_CASE(testConsistentCollect)
   using testing::equals;
 
   // Create mesh to map from
-  PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
-  PtrData inData    = inMesh->createData("InData", 3, 0_dataID);
-  int     inDataID  = inData->getID();
-  Vertex &inVertex0 = inMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // center
-  Vertex &inVertex1 = inMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0)); // distance of 1.0 = r to center
-  Vertex &inVertex2 = inMesh->createVertex(Eigen::Vector3d(0.0, 0.5, 0.0)); // distance of 0.5 = r/2 to center
+  PtrMesh                  inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
+  PtrData                  inData    = inMesh->createData("InData", 3, 0_dataID);
+  int                      inDataID  = inData->getID();
+  [[maybe_unused]] Vertex &inVertex0 = inMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // center
+  [[maybe_unused]] Vertex &inVertex1 = inMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0)); // distance of 1.0 = r to center
+  [[maybe_unused]] Vertex &inVertex2 = inMesh->createVertex(Eigen::Vector3d(0.0, 0.5, 0.0)); // distance of 0.5 = r/2 to center
   inMesh->allocateDataValues();
   Eigen::VectorXd &inValues = inData->values();
   inValues << 1.0, 0.0, 0.0, 2.0, 0.0, 0.0, 3.0, 0.0, 0.0;
@@ -96,10 +96,10 @@ BOOST_AUTO_TEST_CASE(testConsistentCollect)
   double radius = 1.0; // radius of the "tube" from or to which the data is mapped, i.e., radius of the circular interface between the two participants
 
   // Create mesh to map to
-  PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  PtrData outData    = outMesh->createData("OutData", 1, 2_dataID);
-  int     outDataID  = outData->getID();
-  Vertex &outVertex0 = outMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // equal to center of incoming mesh
+  PtrMesh                  outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
+  PtrData                  outData    = outMesh->createData("OutData", 1, 2_dataID);
+  int                      outDataID  = outData->getID();
+  [[maybe_unused]] Vertex &outVertex0 = outMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // equal to center of incoming mesh
   outMesh->allocateDataValues();
 
   // Setup mapping with mapping coordinates and geometry used

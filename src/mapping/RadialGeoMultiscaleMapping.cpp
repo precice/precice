@@ -55,7 +55,7 @@ void RadialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID output
   int                    valueDimensions = input()->data(inputDataID)->getDimensions();
   Eigen::VectorXd &      outputValues    = output()->data(outputDataID)->values();
 
-  int coord;
+  int coord = -1;
   if (_axis == X) {
     coord = 0;
   } else if (_axis == Y) {
