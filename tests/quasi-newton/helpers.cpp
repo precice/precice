@@ -31,16 +31,16 @@ void runTestQN(std::string const &config, TestContext const &context)
 
   if (context.isNamed("SolverOne")) {
     if (context.isPrimary()) {
-      interface.setMeshVertices(meshName, 4, positions0, vertexIDs);
+      interface.setMeshVertices(meshName, positions0, vertexIDs);
     } else {
-      interface.setMeshVertices(meshName, 4, positions1, vertexIDs);
+      interface.setMeshVertices(meshName, positions1, vertexIDs);
     }
   } else {
     BOOST_REQUIRE(context.isNamed("SolverTwo"));
     if (context.isPrimary()) {
-      interface.setMeshVertices(meshName, 4, positions0, vertexIDs);
+      interface.setMeshVertices(meshName, positions0, vertexIDs);
     } else {
-      interface.setMeshVertices(meshName, 4, positions1, vertexIDs);
+      interface.setMeshVertices(meshName, positions1, vertexIDs);
     }
   }
 
@@ -126,13 +126,13 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
   if (context.isNamed("SolverOne")) {
     // All mesh is on primary rank
     if (context.isPrimary()) {
-      interface.setMeshVertices(meshName, 4, positions0, vertexIDs);
+      interface.setMeshVertices(meshName, positions0, vertexIDs);
     }
   } else {
     BOOST_REQUIRE(context.isNamed("SolverTwo"));
     // All mesh is on secondary rank
     if (not context.isPrimary()) {
-      interface.setMeshVertices(meshName, 4, positions0, vertexIDs);
+      interface.setMeshVertices(meshName, positions0, vertexIDs);
     }
   }
 

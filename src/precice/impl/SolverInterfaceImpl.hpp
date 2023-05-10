@@ -154,18 +154,17 @@ public:
 
   /// @copydoc SolverInterface::setMeshVertex
   int setMeshVertex(
-      std::string_view meshName,
-      const double *   position);
+      std::string_view              meshName,
+      ::precice::span<const double> position);
 
   /// @copydoc SolverInterface::getMeshVertexSize
   int getMeshVertexSize(std::string_view meshName) const;
 
   /// @copydoc SolverInterface::setMeshVertices
   void setMeshVertices(
-      std::string_view meshName,
-      int              size,
-      const double *   positions,
-      int *            ids);
+      std::string_view              meshName,
+      ::precice::span<const double> positions,
+      ::precice::span<VertexID>     ids);
 
   /// @copydoc SolverInterface::setMeshEdge
   void setMeshEdge(
@@ -175,9 +174,8 @@ public:
 
   /// @copydoc SolverInterface::setMeshEdges
   void setMeshEdges(
-      std::string_view meshName,
-      int              size,
-      const int *      vertices);
+      std::string_view                meshName,
+      ::precice::span<const VertexID> vertices);
 
   /// @copydoc SolverInterface::setMeshTriangle
   void setMeshTriangle(
@@ -188,9 +186,8 @@ public:
 
   /// @copydoc SolverInterface::setMeshTriangles
   void setMeshTriangles(
-      std::string_view meshName,
-      int              size,
-      const int *      vertices);
+      std::string_view                meshName,
+      ::precice::span<const VertexID> vertices);
 
   /// @copydoc SolverInterface::setMeshQuad
   void setMeshQuad(
@@ -202,9 +199,8 @@ public:
 
   /// @copydoc SolverInterface::setMeshQuads
   void setMeshQuads(
-      std::string_view meshName,
-      int              size,
-      const int *      vertices);
+      std::string_view                meshName,
+      ::precice::span<const VertexID> vertices);
 
   /// @copydoc SolverInterface::setMeshTetrahedron
   void setMeshTetrahedron(
@@ -216,9 +212,8 @@ public:
 
   /// @copydoc SolverInterface::setMeshTetrahedra
   void setMeshTetrahedra(
-      std::string_view meshName,
-      int              size,
-      const int *      vertices);
+      std::string_view                meshName,
+      ::precice::span<const VertexID> vertices);
 
   ///@}
 
@@ -260,15 +255,14 @@ public:
   ///@{
 
   /// @copydoc SolverInterface::setMeshAccessRegion
-  void setMeshAccessRegion(std::string_view meshName,
-                           const double *   boundingBox) const;
+  void setMeshAccessRegion(std::string_view              meshName,
+                           ::precice::span<const double> boundingBox) const;
 
   /// @copydoc SolverInterface::getMeshVerticesAndIDs
   void getMeshVerticesAndIDs(
-      std::string_view meshName,
-      const int        size,
-      int *            ids,
-      double *         coordinates) const;
+      std::string_view          meshName,
+      ::precice::span<VertexID> ids,
+      ::precice::span<double>   coordinates) const;
 
   ///@}
 

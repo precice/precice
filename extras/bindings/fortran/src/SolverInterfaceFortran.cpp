@@ -191,7 +191,9 @@ void precicef_set_vertex_(
     int           meshNameLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  *vertexID = impl->setMeshVertex(precice::impl::strippedStringView(meshName, meshNameLength), position);
+  auto sv           = precice::impl::strippedStringView(meshName, meshNameLength);
+  auto positionSize = static_cast<unsigned long>(impl->getMeshDimensions(sv));
+  *vertexID         = impl->setMeshVertex(sv, {position, positionSize});
 }
 
 void precicef_get_mesh_vertex_size_(
@@ -211,7 +213,9 @@ void precicef_set_vertices_(
     int         meshNameLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->setMeshVertices(precice::impl::strippedStringView(meshName, meshNameLength), *size, positions, positionIDs);
+  auto sv           = precice::impl::strippedStringView(meshName, meshNameLength);
+  auto positionSize = static_cast<unsigned long>(impl->getMeshDimensions(sv) * *size);
+  impl->setMeshVertices(sv, {positions, positionSize}, {positionIDs, static_cast<unsigned long>(*size)});
 }
 
 void precicef_set_edge_(
@@ -231,7 +235,8 @@ void precicef_set_mesh_edges_(
     int         meshNameLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->setMeshEdges(precice::impl::strippedStringView(meshName, meshNameLength), *size, vertices);
+  auto verticesSize = static_cast<unsigned long>(*size) * 2;
+  impl->setMeshEdges(precice::impl::strippedStringView(meshName, meshNameLength), {vertices, verticesSize});
 }
 
 void precicef_set_triangle_(
@@ -252,7 +257,8 @@ void precicef_set_mesh_triangles_(
     int         meshNameLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->setMeshTriangles(precice::impl::strippedStringView(meshName, meshNameLength), *size, vertices);
+  auto verticesSize = static_cast<unsigned long>(*size) * 3;
+  impl->setMeshTriangles(precice::impl::strippedStringView(meshName, meshNameLength), {vertices, verticesSize});
 }
 
 void precicef_set_quad_(
@@ -274,7 +280,8 @@ void precicef_set_mesh_quads_(
     int         meshNameLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->setMeshQuads(precice::impl::strippedStringView(meshName, meshNameLength), *size, vertices);
+  auto verticesSize = static_cast<unsigned long>(*size) * 4;
+  impl->setMeshQuads(precice::impl::strippedStringView(meshName, meshNameLength), {vertices, verticesSize});
 }
 
 void precicef_set_tetrahedron(
@@ -296,7 +303,8 @@ void precicef_set_mesh_tetrahedra_(
     int         meshNameLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->setMeshTetrahedra(precice::impl::strippedStringView(meshName, meshNameLength), *size, vertices);
+  auto verticesSize = static_cast<unsigned long>(*size) * 4;
+  impl->setMeshTetrahedra(precice::impl::strippedStringView(meshName, meshNameLength), {vertices, verticesSize});
 }
 
 void precicef_write_data_(
@@ -408,7 +416,9 @@ void precicef_set_mesh_access_region_(
     int           meshNameLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->setMeshAccessRegion(precice::impl::strippedStringView(meshName, meshNameLength), boundingBox);
+  auto sv     = precice::impl::strippedStringView(meshName, meshNameLength);
+  auto bbSize = static_cast<unsigned long>(impl->getMeshDimensions(sv) * 2);
+  impl->setMeshAccessRegion(sv, {boundingBox, bbSize});
 }
 
 void precicef_get_mesh_vertices_and_ids_(
@@ -419,7 +429,9 @@ void precicef_get_mesh_vertices_and_ids_(
     int         meshNameLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  impl->getMeshVerticesAndIDs(precice::impl::strippedStringView(meshName, meshNameLength), size, ids, coordinates);
+  auto sv              = precice::impl::strippedStringView(meshName, meshNameLength);
+  auto coordinatesSize = static_cast<unsigned long>(impl->getMeshDimensions(sv) * size);
+  impl->getMeshVerticesAndIDs(sv, {ids, static_cast<unsigned long>(size)}, {coordinates, coordinatesSize});
 }
 
 #ifdef __GNUC__

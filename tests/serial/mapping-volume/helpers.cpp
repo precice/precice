@@ -22,7 +22,7 @@ void testMappingVolumeOneTriangle(const std::string configFile, const TestContex
     std::vector<double> coords{0.0, 0.0, 1.0, 0.0, 0.0, 1.0};
     vertexIDs.resize(coords.size() / 2);
 
-    interface.setMeshVertices(meshName, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, coords, vertexIDs);
 
     BOOST_TEST(vertexIDs[0] != -1, "Vertex A is invalid");
     BOOST_TEST(vertexIDs[1] != -1, "Vertex B is invalid");
@@ -59,7 +59,7 @@ void testMappingVolumeOneTriangle(const std::string configFile, const TestContex
     std::vector<double> coords{1. / 3., 1. / 3.};
     vertexIDs.resize(coords.size() / 2);
 
-    interface.setMeshVertices(meshName, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, coords, vertexIDs);
 
     // Initialize, read data, advance and finalize. Check expected mapping
     interface.initialize();
@@ -107,7 +107,7 @@ void testMappingVolumeOneTriangleConservative(const std::string configFile, cons
     std::vector<double> coords{0.3, 0.2};
     vertexIDs.resize(coords.size() / 2);
 
-    interface.setMeshVertices(meshName, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, coords, vertexIDs);
 
     BOOST_TEST(vertexIDs[0] != -1, "Vertex A is invalid");
     BOOST_CHECK(interface.getMeshVertexSize(meshName) == 1);
@@ -131,7 +131,7 @@ void testMappingVolumeOneTriangleConservative(const std::string configFile, cons
     std::vector<double> coords{0.0, 0.0, 1.0, 0.0, 0.0, 1.0};
     vertexIDs.resize(coords.size() / 2);
 
-    interface.setMeshVertices(meshName, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, coords, vertexIDs);
 
     interface.setMeshTriangle(meshName, vertexIDs[0], vertexIDs[1], vertexIDs[2]);
 
@@ -177,7 +177,7 @@ void testMappingVolumeOneTetra(const std::string configFile, const TestContext &
                                0.0, 0.0, 1.0};
     vertexIDs.resize(coords.size() / 3);
 
-    interface.setMeshVertices(meshName, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, coords, vertexIDs);
 
     BOOST_TEST(vertexIDs[0] != -1, "Vertex A is invalid");
     BOOST_TEST(vertexIDs[1] != -1, "Vertex B is invalid");
@@ -221,7 +221,7 @@ void testMappingVolumeOneTetra(const std::string configFile, const TestContext &
     std::vector<double> coords{0.25, 0.25, 0.25};
     vertexIDs.resize(coords.size() / 2);
 
-    interface.setMeshVertices(meshName, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, coords, vertexIDs);
 
     // Initialize, read data, advance and finalize. Check expected mapping
     interface.initialize();
@@ -271,7 +271,7 @@ void testMappingVolumeOneTetraConservative(const std::string configFile, const T
     std::vector<double> coords{0.1, 0.2, 0.3};
     vertexIDs.resize(coords.size() / 3);
 
-    interface.setMeshVertices(meshName, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, coords, vertexIDs);
 
     BOOST_TEST(vertexIDs[0] != -1, "Vertex A is invalid");
     BOOST_CHECK(interface.getMeshVertexSize(meshName) == 1);
@@ -298,7 +298,7 @@ void testMappingVolumeOneTetraConservative(const std::string configFile, const T
                                0.0, 0.0, 1.0};
     vertexIDs.resize(coords.size() / 3);
 
-    interface.setMeshVertices(meshName, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, coords, vertexIDs);
 
     interface.setMeshTetrahedron(meshName, vertexIDs[0], vertexIDs[1], vertexIDs[2], vertexIDs[3]);
 

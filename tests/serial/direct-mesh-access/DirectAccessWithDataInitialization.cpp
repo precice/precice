@@ -26,11 +26,11 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithDataInitialization)
 
     std::vector<double> ownPositions = std::vector<double>({0.5, 0.25});
     std::vector<int>    ownIDs(ownPositions.size() / dim, -1);
-    interface.setMeshVertices(ownMeshID, ownIDs.size(), ownPositions.data(), ownIDs.data());
+    interface.setMeshVertices(ownMeshID, ownPositions, ownIDs);
 
     std::array<double, dim * 2> boundingBox = std::array<double, dim * 2>{0.0, 1.0, 0.0, 1.0};
     // Define region of interest, where we could obtain direct write access
-    interface.setMeshAccessRegion(otherMeshID, boundingBox.data());
+    interface.setMeshAccessRegion(otherMeshID, boundingBox);
 
     std::vector<double> readData(ownIDs.size(), -1);
     int                 otherMeshSize = 1; // @todo hard-coded, because we cannot read this from preCICE before interface.initialize(). See https://github.com/precice/precice/issues/1583.
@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithDataInitialization)
 
     std::vector<double> otherPositions(otherMeshSize * dim);
     std::vector<int>    otherIDs(otherMeshSize, -1);
-    interface.getMeshVerticesAndIDs(otherMeshID, otherMeshSize, otherIDs.data(), otherPositions.data());
+    interface.getMeshVerticesAndIDs(otherMeshID, otherIDs, otherPositions);
 
     // writeData for first window
     for (int i = 0; i < otherMeshSize; ++i) {
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithDataInitialization)
 
     std::vector<double> positions = std::vector<double>({0.5, 0.25});
     std::vector<int>    ids(positions.size() / dim, -1);
-    interface.setMeshVertices(meshName, ids.size(), positions.data(), ids.data());
+    interface.setMeshVertices(meshName, positions, ids);
 
     std::vector<double> readData(ids.size(), -1);
     std::vector<double> writeData;

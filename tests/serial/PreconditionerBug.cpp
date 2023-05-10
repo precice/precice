@@ -21,7 +21,7 @@ BOOST_AUTO_TEST_CASE(PreconditionerBug)
 
   Vector2d vertex{0.0, 0.0};
 
-  precice::VertexID vertexID = interface.setMeshVertex(meshName, vertex.data());
+  precice::VertexID vertexID = interface.setMeshVertex(meshName, vertex);
 
   interface.initialize();
   int numberOfAdvanceCalls = 0;

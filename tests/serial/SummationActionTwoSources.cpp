@@ -31,10 +31,10 @@ BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
 
     auto meshName = "MeshTarget";
 
-    int idA = interface.setMeshVertex(meshName, coordA.data());
-    int idB = interface.setMeshVertex(meshName, coordB.data());
-    int idC = interface.setMeshVertex(meshName, coordC.data());
-    int idD = interface.setMeshVertex(meshName, coordD.data());
+    int idA = interface.setMeshVertex(meshName, coordA);
+    int idB = interface.setMeshVertex(meshName, coordB);
+    int idC = interface.setMeshVertex(meshName, coordC);
+    int idD = interface.setMeshVertex(meshName, coordD);
 
     // Initialize, the mesh
     interface.initialize();
@@ -73,10 +73,10 @@ BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
 
     auto meshName = "MeshOne";
 
-    int idA = interface.setMeshVertex(meshName, coordA.data());
-    int idB = interface.setMeshVertex(meshName, coordB.data());
-    int idC = interface.setMeshVertex(meshName, coordC.data());
-    int idD = interface.setMeshVertex(meshName, coordD.data());
+    int idA = interface.setMeshVertex(meshName, coordA);
+    int idB = interface.setMeshVertex(meshName, coordB);
+    int idC = interface.setMeshVertex(meshName, coordC);
+    int idD = interface.setMeshVertex(meshName, coordD);
 
     // Initialize, the mesh
     interface.initialize();
@@ -112,10 +112,10 @@ BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
 
     auto meshName = "MeshTwo";
 
-    int idA = interface.setMeshVertex(meshName, coordA.data());
-    int idB = interface.setMeshVertex(meshName, coordB.data());
-    int idC = interface.setMeshVertex(meshName, coordC.data());
-    int idD = interface.setMeshVertex(meshName, coordD.data());
+    int idA = interface.setMeshVertex(meshName, coordA);
+    int idB = interface.setMeshVertex(meshName, coordB);
+    int idC = interface.setMeshVertex(meshName, coordC);
+    int idD = interface.setMeshVertex(meshName, coordD);
 
     // Initialize, the mesh
     interface.initialize();

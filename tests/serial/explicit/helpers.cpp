@@ -24,13 +24,13 @@ void runTestExplicit(std::string const &configurationFileName, TestContext const
     auto meshName = "MeshOne";
     BOOST_REQUIRE(couplingInterface.hasMesh(meshName));
     BOOST_REQUIRE(couplingInterface.getMeshDimensions(meshName) == 3);
-    couplingInterface.setMeshVertices(meshName, 2, pos, vids);
+    couplingInterface.setMeshVertices(meshName, pos, vids);
   }
   if (context.isNamed("SolverTwo")) {
     auto meshName = "Test-Square";
     BOOST_REQUIRE(couplingInterface.hasMesh(meshName));
     BOOST_REQUIRE(couplingInterface.getMeshDimensions(meshName) == 3);
-    couplingInterface.setMeshVertices(meshName, 2, pos, vids);
+    couplingInterface.setMeshVertices(meshName, pos, vids);
   }
 
   couplingInterface.initialize();

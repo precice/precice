@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(ParallelSquareConservative1To2)
     coords = {0.3, 0.5,
               0.9, 0.2};
     vertexIDs.resize(coords.size() / 2);
-    interface.setMeshVertices(meshName, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, coords, vertexIDs);
 
     interface.initialize();
     dt = interface.getMaxTimeStepSize();
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(ParallelSquareConservative1To2)
     }
 
     vertexIDs.resize(coords.size() / 2);
-    interface.setMeshVertices(meshName, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, coords, vertexIDs);
     interface.setMeshTriangle(meshName, vertexIDs[0], vertexIDs[1], vertexIDs[2]);
 
     interface.initialize();

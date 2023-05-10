@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataScaling)
   if (context.isNamed("SolverOne")) {
     auto meshName = "Test-Square-One";
     BOOST_REQUIRE(cplInterface.getMeshDimensions(meshName));
-    cplInterface.setMeshVertices(meshName, 4, positions.data(), ids.data());
+    cplInterface.setMeshVertices(meshName, positions, ids);
     for (int i = 0; i < 4; i++)
       cplInterface.setMeshEdge(meshName, ids.at(i), ids.at((i + 1) % 4));
 
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataScaling)
     BOOST_TEST(context.isNamed("SolverTwo"));
     auto meshName = "Test-Square-Two";
     BOOST_REQUIRE(cplInterface.getMeshDimensions(meshName));
-    cplInterface.setMeshVertices(meshName, 4, positions.data(), ids.data());
+    cplInterface.setMeshVertices(meshName, positions, ids);
     for (int i = 0; i < 4; i++)
       cplInterface.setMeshEdge(meshName, ids.at(i), ids.at((i + 1) % 4));
 

@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessReadWrite)
     std::vector<double> positions = std::vector<double>({0.5, 0.25});
     const int           meshSize  = positions.size() / dim;
     std::vector<int>    ids(meshSize, -1);
-    interface.setMeshVertices(providedMeshName, ids.size(), positions.data(), ids.data());
+    interface.setMeshVertices(providedMeshName, positions, ids);
 
     interface.initialize();
     double dt = interface.getMaxTimeStepSize();
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessReadWrite)
 
     std::array<double, dim * 2> boundingBox = std::array<double, dim * 2>{0.0, 1.0, 0.0, 1.0};
     // Define region of interest, where we could obtain direct write access
-    interface.setMeshAccessRegion(receivedMeshName, boundingBox.data());
+    interface.setMeshAccessRegion(receivedMeshName, boundingBox);
 
     interface.initialize();
     double dt = interface.getMaxTimeStepSize();
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessReadWrite)
     // Allocate a vector containing the vertices
     std::vector<double> receivedMesh(receivedMeshSize * dim);
     std::vector<int>    receiveMeshIDs(receivedMeshSize, -1);
-    interface.getMeshVerticesAndIDs(receivedMeshName, receivedMeshSize, receiveMeshIDs.data(), receivedMesh.data());
+    interface.getMeshVerticesAndIDs(receivedMeshName, receiveMeshIDs, receivedMesh);
 
     // Allocate data to read and write
     std::vector<double> readData(receiveMeshIDs.size(), -1);

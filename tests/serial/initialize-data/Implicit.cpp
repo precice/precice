@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(Implicit)
   }
   int                 dimensions = couplingInterface.getMeshDimensions(meshName);
   std::vector<double> vertex(dimensions, 0);
-  int                 vertexID = couplingInterface.setMeshVertex(meshName, vertex.data());
+  int                 vertexID = couplingInterface.setMeshVertex(meshName, vertex);
   double              dt       = 0;
   std::vector<double> writeData(dimensions, writeValue);
   std::vector<double> readData(dimensions, -1);

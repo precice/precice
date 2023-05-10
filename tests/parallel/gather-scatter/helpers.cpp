@@ -23,7 +23,7 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
     std::vector<int>          ids(size, 0);
 
     // Set mesh vertices
-    interface.setMeshVertices(meshName, size, coordinates.data(), ids.data());
+    interface.setMeshVertices(meshName, coordinates, ids);
 
     // Initialize the solverinterface
     interface.initialize();
@@ -66,7 +66,7 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
     std::vector<int>          ids(size);
 
     // Set vertices
-    interface.setMeshVertices(meshName, size, coordinates.data(), ids.data());
+    interface.setMeshVertices(meshName, coordinates, ids);
 
     // Initialize the solverinterface
     interface.initialize();

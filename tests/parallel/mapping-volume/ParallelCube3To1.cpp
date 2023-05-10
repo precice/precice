@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(ParallelCube3To1)
     }
 
     vertexIDs.resize(coords.size() / 3);
-    interface.setMeshVertices(meshName, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, coords, vertexIDs);
     switch (context.rank) {
     case 0:
       interface.setMeshTetrahedron(meshName, vertexIDs[0], vertexIDs[1], vertexIDs[2], vertexIDs[3]);
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(ParallelCube3To1)
     }
 
     vertexIDs.resize(coords.size() / 3);
-    interface.setMeshVertices(meshName, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, coords, vertexIDs);
 
     interface.initialize();
     dt = interface.getMaxTimeStepSize();

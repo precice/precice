@@ -30,11 +30,11 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
     std::vector<double> positions = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 2.0, 0.0, 3.0}) : std::vector<double>({0.0, 4.0, 0.0, 5.0, 0.0, 6.0});
 
     std::vector<int> ownIDs(positions.size() / dim, -1);
-    interface.setMeshVertices(ownMeshName, ownIDs.size(), positions.data(), ownIDs.data());
+    interface.setMeshVertices(ownMeshName, positions, ownIDs);
 
     std::array<double, dim * 2> boundingBox = context.isPrimary() ? std::array<double, dim * 2>{0.0, 1.0, 0.0, 3.5} : std::array<double, dim * 2>{0.0, 1.0, 3.5, 5.0};
     // Define region of interest, where we could obtain direct write access
-    interface.setMeshAccessRegion(otherMeshName, boundingBox.data());
+    interface.setMeshAccessRegion(otherMeshName, boundingBox);
 
     interface.initialize();
     double dt = interface.getMaxTimeStepSize();
@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
     // Allocate a vector containing the vertices
     std::vector<double> solverTwoMesh(otherMeshSize * dim);
     std::vector<int>    otherIDs(otherMeshSize, -1);
-    interface.getMeshVerticesAndIDs(otherMeshName, otherMeshSize, otherIDs.data(), solverTwoMesh.data());
+    interface.getMeshVerticesAndIDs(otherMeshName, otherIDs, solverTwoMesh);
     // Expected data = positions of the other participant's mesh
     const std::vector<double> expectedData = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 2.0, 0.0, 3.5}) : std::vector<double>({0.0, 3.5, 0.0, 4.0, 0.0, 5.0});
     BOOST_TEST(solverTwoMesh == expectedData);
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
     std::vector<int>    ids(positions.size() / dim, -1);
 
     // Define the mesh
-    interface.setMeshVertices(meshName, ids.size(), positions.data(), ids.data());
+    interface.setMeshVertices(meshName, positions, ids);
     // Allocate data to read
     std::vector<double> readData(ids.size(), -1);
     std::vector<double> writeData;

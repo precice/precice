@@ -19,7 +19,7 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
   if (context.isNamed("SolverA")) {
     SolverInterface cplInterface("SolverA", configFile, 0, 1);
     auto            meshName = "MeshA";
-    int             vertexID = cplInterface.setMeshVertex(meshName, coordOneA.data());
+    int             vertexID = cplInterface.setMeshVertex(meshName, coordOneA);
     auto            dataABID = "DataAB";
     auto            dataBAID = "DataBA";
 
@@ -48,8 +48,8 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
     SolverInterface cplInterface("SolverB", configFile, 0, 1);
     auto            meshName1 = "MeshB1";
     auto            meshName2 = "MeshB2";
-    int             vertexID1 = cplInterface.setMeshVertex(meshName1, coordOneA.data());
-    int             vertexID2 = cplInterface.setMeshVertex(meshName2, coordOneA.data());
+    int             vertexID1 = cplInterface.setMeshVertex(meshName1, coordOneA);
+    int             vertexID2 = cplInterface.setMeshVertex(meshName2, coordOneA);
     auto            dataABID  = "DataAB";
     auto            dataBAID  = "DataBA";
     auto            dataCBID  = "DataCB";
@@ -83,7 +83,7 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
   } else {
     SolverInterface cplInterface("SolverC", configFile, 0, 1);
     auto            meshName = "MeshC";
-    int             vertexID = cplInterface.setMeshVertex(meshName, coordOneA.data());
+    int             vertexID = cplInterface.setMeshVertex(meshName, coordOneA);
     auto            dataCBID = "DataCB";
     auto            dataBCID = "DataBC";
 
@@ -119,7 +119,7 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
   if (context.isNamed("SolverA")) {
     SolverInterface cplInterface("SolverA", configFile, 0, 1);
     auto            meshName = "MeshA";
-    int             vertexID = cplInterface.setMeshVertex(meshName, coordOneA.data());
+    int             vertexID = cplInterface.setMeshVertex(meshName, coordOneA);
     auto            dataABID = "DataAB";
     auto            dataBAID = "DataBA";
 
@@ -146,8 +146,8 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
     SolverInterface cplInterface("SolverB", configFile, 0, 1);
     auto            meshName1 = "MeshB1";
     auto            meshName2 = "MeshB2";
-    int             vertexID1 = cplInterface.setMeshVertex(meshName1, coordOneA.data());
-    int             vertexID2 = cplInterface.setMeshVertex(meshName2, coordOneA.data());
+    int             vertexID1 = cplInterface.setMeshVertex(meshName1, coordOneA);
+    int             vertexID2 = cplInterface.setMeshVertex(meshName2, coordOneA);
     auto            dataABID  = "DataAB";
     auto            dataBAID  = "DataBA";
     auto            dataCBID  = "DataCB";
@@ -179,8 +179,8 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
     SolverInterface cplInterface("SolverC", configFile, 0, 1);
     auto            meshName1 = "MeshC1";
     auto            meshName2 = "MeshC2";
-    int             vertexID1 = cplInterface.setMeshVertex(meshName1, coordOneA.data());
-    int             vertexID2 = cplInterface.setMeshVertex(meshName2, coordOneA.data());
+    int             vertexID1 = cplInterface.setMeshVertex(meshName1, coordOneA);
+    int             vertexID2 = cplInterface.setMeshVertex(meshName2, coordOneA);
     auto            dataBCID  = "DataBC";
     auto            dataCBID  = "DataCB";
     auto            dataCDID  = "DataCD";
@@ -210,7 +210,7 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
   } else {
     SolverInterface cplInterface("SolverD", configFile, 0, 1);
     auto            meshName = "MeshD";
-    int             vertexID = cplInterface.setMeshVertex(meshName, coordOneA.data());
+    int             vertexID = cplInterface.setMeshVertex(meshName, coordOneA);
     auto            dataCDID = "DataCD";
     auto            dataDCID = "DataDC";
 

@@ -36,10 +36,10 @@ void testQuadMappingScaledConsistent(const std::string configFile, const TestCon
     auto meshOneID = "MeshOne";
 
     // Setup mesh one.
-    int idA = interface.setMeshVertex(meshOneID, coordOneA.data());
-    int idB = interface.setMeshVertex(meshOneID, coordOneB.data());
-    int idC = interface.setMeshVertex(meshOneID, coordOneC.data());
-    int idD = interface.setMeshVertex(meshOneID, coordOneD.data());
+    int idA = interface.setMeshVertex(meshOneID, coordOneA);
+    int idB = interface.setMeshVertex(meshOneID, coordOneB);
+    int idC = interface.setMeshVertex(meshOneID, coordOneC);
+    int idD = interface.setMeshVertex(meshOneID, coordOneD);
 
     interface.setMeshQuad(meshOneID, idA, idB, idC, idD);
 
@@ -72,9 +72,9 @@ void testQuadMappingScaledConsistent(const std::string configFile, const TestCon
     auto meshTwoID = "MeshTwo";
 
     // Setup receiving mesh.
-    int idA = interface.setMeshVertex(meshTwoID, coordTwoA.data());
-    int idB = interface.setMeshVertex(meshTwoID, coordTwoB.data());
-    int idC = interface.setMeshVertex(meshTwoID, coordTwoC.data());
+    int idA = interface.setMeshVertex(meshTwoID, coordTwoA);
+    int idB = interface.setMeshVertex(meshTwoID, coordTwoB);
+    int idC = interface.setMeshVertex(meshTwoID, coordTwoC);
 
     interface.setMeshTriangle(meshTwoID, idA, idB, idC);
 
@@ -129,11 +129,11 @@ void testQuadMappingScaledConsistentVolumetric(const std::string configFile, con
     auto meshOneID = "MeshOne";
 
     // Setup mesh one.
-    int idA     = interface.setMeshVertex(meshOneID, coordOneA.data());
-    int idB     = interface.setMeshVertex(meshOneID, coordOneB.data());
-    int idC     = interface.setMeshVertex(meshOneID, coordOneC.data());
-    int idD     = interface.setMeshVertex(meshOneID, coordOneD.data());
-    int idExtra = interface.setMeshVertex(meshOneID, coordOneExtra.data());
+    int idA     = interface.setMeshVertex(meshOneID, coordOneA);
+    int idB     = interface.setMeshVertex(meshOneID, coordOneB);
+    int idC     = interface.setMeshVertex(meshOneID, coordOneC);
+    int idD     = interface.setMeshVertex(meshOneID, coordOneD);
+    int idExtra = interface.setMeshVertex(meshOneID, coordOneExtra);
 
     interface.setMeshTriangle(meshOneID, idA, idB, idExtra);
     interface.setMeshTriangle(meshOneID, idA, idD, idExtra);
@@ -165,10 +165,10 @@ void testQuadMappingScaledConsistentVolumetric(const std::string configFile, con
     auto meshTwoID = "MeshTwo";
 
     // Setup receiving mesh.
-    int idA = interface.setMeshVertex(meshTwoID, coordTwoA.data());
-    int idB = interface.setMeshVertex(meshTwoID, coordTwoB.data());
-    int idC = interface.setMeshVertex(meshTwoID, coordTwoC.data());
-    int idD = interface.setMeshVertex(meshTwoID, coordTwoD.data());
+    int idA = interface.setMeshVertex(meshTwoID, coordTwoA);
+    int idB = interface.setMeshVertex(meshTwoID, coordTwoB);
+    int idC = interface.setMeshVertex(meshTwoID, coordTwoC);
+    int idD = interface.setMeshVertex(meshTwoID, coordTwoD);
 
     interface.setMeshEdge(meshTwoID, idA, idB);
     interface.setMeshEdge(meshTwoID, idB, idC);
@@ -231,11 +231,11 @@ void testTetraScaledConsistentVolumetric(const std::string configFile, const Tes
     auto meshOneID = "MeshOne";
 
     // Setup mesh one.
-    int idA     = interface.setMeshVertex(meshOneID, coordOneA.data());
-    int idB     = interface.setMeshVertex(meshOneID, coordOneB.data());
-    int idC     = interface.setMeshVertex(meshOneID, coordOneC.data());
-    int idD     = interface.setMeshVertex(meshOneID, coordOneD.data());
-    int idExtra = interface.setMeshVertex(meshOneID, coordOneExtra.data());
+    int idA     = interface.setMeshVertex(meshOneID, coordOneA);
+    int idB     = interface.setMeshVertex(meshOneID, coordOneB);
+    int idC     = interface.setMeshVertex(meshOneID, coordOneC);
+    int idD     = interface.setMeshVertex(meshOneID, coordOneD);
+    int idExtra = interface.setMeshVertex(meshOneID, coordOneExtra);
 
     interface.setMeshTetrahedron(meshOneID, idA, idB, idD, idExtra);
     interface.setMeshTetrahedron(meshOneID, idC, idB, idD, idExtra);
@@ -266,10 +266,10 @@ void testTetraScaledConsistentVolumetric(const std::string configFile, const Tes
     auto meshTwoID = "MeshTwo";
 
     // Setup receiving mesh.
-    int idA = interface.setMeshVertex(meshTwoID, coordTwoA.data());
-    int idB = interface.setMeshVertex(meshTwoID, coordTwoB.data());
-    int idC = interface.setMeshVertex(meshTwoID, coordTwoC.data());
-    int idD = interface.setMeshVertex(meshTwoID, coordTwoD.data());
+    int idA = interface.setMeshVertex(meshTwoID, coordTwoA);
+    int idB = interface.setMeshVertex(meshTwoID, coordTwoB);
+    int idC = interface.setMeshVertex(meshTwoID, coordTwoC);
+    int idD = interface.setMeshVertex(meshTwoID, coordTwoD);
 
     interface.setMeshTetrahedron(meshTwoID, idA, idB, idC, idD);
 

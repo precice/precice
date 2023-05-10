@@ -25,9 +25,9 @@ BOOST_AUTO_TEST_CASE(WatchIntegralScaleAndNoScale)
 
     auto meshName = "MeshOne";
 
-    int idA = interface.setMeshVertex(meshName, coordA.data());
-    int idB = interface.setMeshVertex(meshName, coordB.data());
-    int idC = interface.setMeshVertex(meshName, coordC.data());
+    int idA = interface.setMeshVertex(meshName, coordA);
+    int idB = interface.setMeshVertex(meshName, coordB);
+    int idC = interface.setMeshVertex(meshName, coordC);
 
     interface.setMeshEdge(meshName, idA, idB);
     interface.setMeshEdge(meshName, idB, idC);
@@ -68,9 +68,9 @@ BOOST_AUTO_TEST_CASE(WatchIntegralScaleAndNoScale)
 
     auto meshTwoID = "MeshTwo";
 
-    int idA = interface.setMeshVertex(meshTwoID, coordA.data());
-    int idB = interface.setMeshVertex(meshTwoID, coordB.data());
-    int idC = interface.setMeshVertex(meshTwoID, coordC.data());
+    int idA = interface.setMeshVertex(meshTwoID, coordA);
+    int idB = interface.setMeshVertex(meshTwoID, coordB);
+    int idC = interface.setMeshVertex(meshTwoID, coordC);
 
     interface.setMeshEdge(meshTwoID, idA, idB);
     interface.setMeshEdge(meshTwoID, idB, idC);
