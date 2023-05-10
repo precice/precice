@@ -69,11 +69,9 @@ void Storage::move()
 
 void Storage::trim()
 {
-  PRECICE_ASSERT(nTimes() > 0, "Storage does not contain any data!");
-  Stample keep = _stampleStorage.front();
-  PRECICE_ASSERT(keep.timestamp == time::Storage::WINDOW_START);
-  _stampleStorage.clear();
-  _stampleStorage.emplace_back(keep);
+  PRECICE_ASSERT(!_stampleStorage.empty(), "Storage does not contain any data!");
+  PRECICE_ASSERT(_stampleStorage.front().timestamp == time::Storage::WINDOW_START);
+  _stampleStorage.erase(++_stampleStorage.begin(), _stampleStorage.end());
 }
 
 void Storage::clear()
