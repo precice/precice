@@ -32,23 +32,23 @@ BOOST_AUTO_TEST_CASE(testConsistentSpread)
   using testing::equals;
 
   // Create mesh to map from
-  PtrMesh                  inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
-  PtrData                  inData    = inMesh->createData("InData", 1, 0_dataID);
-  int                      inDataID  = inData->getID();
-  [[maybe_unused]] Vertex &inVertex0 = inMesh->createVertex(Eigen::Vector3d::Constant(0.0));
-  [[maybe_unused]] Vertex &inVertex1 = inMesh->createVertex(Eigen::Vector3d(3.0, 0.0, 0.0));
-  [[maybe_unused]] Vertex &inVertex2 = inMesh->createVertex(Eigen::Vector3d(6.0, 0.0, 0.0));
+  PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
+  PtrData inData   = inMesh->createData("InData", 1, 0_dataID);
+  int     inDataID = inData->getID();
+  inMesh->createVertex(Eigen::Vector3d::Constant(0.0));
+  inMesh->createVertex(Eigen::Vector3d(3.0, 0.0, 0.0));
+  inMesh->createVertex(Eigen::Vector3d(6.0, 0.0, 0.0));
   inMesh->allocateDataValues();
   Eigen::VectorXd &inValues = inData->values();
   inValues << 1.0, 2.0, 3.0;
 
   // Create mesh to map to
-  PtrMesh                  outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  PtrData                  outData    = outMesh->createData("OutData", 1, 2_dataID);
-  int                      outDataID  = outData->getID();
-  [[maybe_unused]] Vertex &outVertex0 = outMesh->createVertex(Eigen::Vector3d(1.0, 1.0, 0.0)); // closest to first 1D vertex
-  [[maybe_unused]] Vertex &outVertex1 = outMesh->createVertex(Eigen::Vector3d(4.0, 2.0, 0.0)); // closest to second 1D vertex
-  [[maybe_unused]] Vertex &outVertex2 = outMesh->createVertex(Eigen::Vector3d(7.0, 3.0, 0.0)); // closest to third 1D vertex
+  PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
+  PtrData outData   = outMesh->createData("OutData", 1, 2_dataID);
+  int     outDataID = outData->getID();
+  outMesh->createVertex(Eigen::Vector3d(1.0, 1.0, 0.0)); // closest to first 1D vertex
+  outMesh->createVertex(Eigen::Vector3d(4.0, 2.0, 0.0)); // closest to second 1D vertex
+  outMesh->createVertex(Eigen::Vector3d(7.0, 3.0, 0.0)); // closest to third 1D vertex
   outMesh->allocateDataValues();
 
   // Setup mapping with mapping coordinates and geometry used
@@ -81,26 +81,26 @@ BOOST_AUTO_TEST_CASE(testConsistentCollect)
   using testing::equals;
 
   // Create mesh to map from
-  PtrMesh                  inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
-  PtrData                  inData    = inMesh->createData("InData", 1, 0_dataID);
-  int                      inDataID  = inData->getID();
-  [[maybe_unused]] Vertex &inVertex0 = inMesh->createVertex(Eigen::Vector3d(1.0, 1.0, 0.0));
-  [[maybe_unused]] Vertex &inVertex1 = inMesh->createVertex(Eigen::Vector3d(1.0, 2.0, 0.0));
-  [[maybe_unused]] Vertex &inVertex2 = inMesh->createVertex(Eigen::Vector3d(2.0, 1.0, 0.0));
-  [[maybe_unused]] Vertex &inVertex3 = inMesh->createVertex(Eigen::Vector3d(4.0, 1.0, 0.0));
-  [[maybe_unused]] Vertex &inVertex4 = inMesh->createVertex(Eigen::Vector3d(5.0, 2.0, 0.0));
-  [[maybe_unused]] Vertex &inVertex5 = inMesh->createVertex(Eigen::Vector3d(7.0, 1.0, 0.0));
+  PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
+  PtrData inData   = inMesh->createData("InData", 1, 0_dataID);
+  int     inDataID = inData->getID();
+  inMesh->createVertex(Eigen::Vector3d(1.0, 1.0, 0.0));
+  inMesh->createVertex(Eigen::Vector3d(1.0, 2.0, 0.0));
+  inMesh->createVertex(Eigen::Vector3d(2.0, 1.0, 0.0));
+  inMesh->createVertex(Eigen::Vector3d(4.0, 1.0, 0.0));
+  inMesh->createVertex(Eigen::Vector3d(5.0, 2.0, 0.0));
+  inMesh->createVertex(Eigen::Vector3d(7.0, 1.0, 0.0));
   inMesh->allocateDataValues();
   Eigen::VectorXd &inValues = inData->values();
   inValues << 1.0, 3.0, 5.0, 7.0, 2.0, 4.0;
 
   // Create mesh to map to
-  PtrMesh                  outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  PtrData                  outData    = outMesh->createData("OutData", 1, 2_dataID);
-  int                      outDataID  = outData->getID();
-  [[maybe_unused]] Vertex &outVertex0 = outMesh->createVertex(Eigen::Vector3d::Constant(0.0));
-  [[maybe_unused]] Vertex &outVertex1 = outMesh->createVertex(Eigen::Vector3d(3.0, 0.0, 0.0));
-  [[maybe_unused]] Vertex &outVertex2 = outMesh->createVertex(Eigen::Vector3d(6.0, 0.0, 0.0));
+  PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
+  PtrData outData   = outMesh->createData("OutData", 1, 2_dataID);
+  int     outDataID = outData->getID();
+  outMesh->createVertex(Eigen::Vector3d::Constant(0.0));
+  outMesh->createVertex(Eigen::Vector3d(3.0, 0.0, 0.0));
+  outMesh->createVertex(Eigen::Vector3d(6.0, 0.0, 0.0));
   outMesh->allocateDataValues();
 
   // Setup mapping with mapping coordinates and geometry used
