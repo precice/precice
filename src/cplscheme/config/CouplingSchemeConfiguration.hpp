@@ -13,7 +13,6 @@
 #include "cplscheme/impl/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
-// #include "mesh/GlobalData.hpp" // this probably shouldn't be needed, but without this compiler throws warnings.
 #include "mesh/SharedPointer.hpp"
 #include "precice/config/SharedPointer.hpp"
 #include "precice/impl/MeshContext.hpp"
@@ -232,42 +231,24 @@ private:
 
   void addRelativeConvergenceMeasure(
       const std::string &dataName,
-      const std::string &meshName,
       double             limit,
       bool               suffices,
-      bool               strict);
-
-  void addRelativeConvergenceMeasureGlobalData(
-      const std::string &dataName,
-      double             limit,
-      bool               suffices,
-      bool               strict);
+      bool               strict,
+      const std::string &meshName = "");
 
   void addResidualRelativeConvergenceMeasure(
       const std::string &dataName,
-      const std::string &meshName,
       double             limit,
       bool               suffices,
-      bool               strict);
-
-  void addResidualRelativeConvergenceMeasureGlobalData(
-      const std::string &dataName,
-      double             limit,
-      bool               suffices,
-      bool               strict);
+      bool               strict,
+      const std::string &meshName = "");
 
   void addMinIterationConvergenceMeasure(
       const std::string &dataName,
-      const std::string &meshName,
       int                minIterations,
       bool               suffices,
-      bool               strict);
-
-  void addMinIterationConvergenceMeasureGlobalData(
-      const std::string &dataName,
-      int                minIterations,
-      bool               suffices,
-      bool               strict);
+      bool               strict,
+      const std::string &meshName = "");
 
   mesh::PtrData getData(
       const std::string &dataName,

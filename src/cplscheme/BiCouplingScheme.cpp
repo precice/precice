@@ -14,8 +14,6 @@
 #include "m2n/M2N.hpp"
 #include "m2n/SharedPointer.hpp"
 #include "mesh/Data.hpp"
-// #include "mesh/GlobalData.hpp"
-
 #include "precice/types.hpp"
 #include "utils/Helpers.hpp"
 
@@ -69,18 +67,18 @@ void BiCouplingScheme::addDataToSend(
 }
 
 void BiCouplingScheme::addGlobalDataToSend(
-    const mesh::PtrData &globalData,
+    const mesh::PtrData &data,
     bool                 requiresInitialization)
 {
   PRECICE_TRACE();
-  PtrGlobalCouplingData ptrGblCplData = addGlobalCouplingData(globalData, requiresInitialization);
-  precice::DataID       id            = globalData->getID();
+  PtrGlobalCouplingData ptrGblCplData = addGlobalCouplingData(data, requiresInitialization);
+  precice::DataID       id            = data->getID();
   if (!utils::contained(id, _sendGlobalData)) {
     PRECICE_ASSERT(_sendGlobalData.count(id) == 0, "Key already exists!");
     _sendGlobalData.emplace(id, ptrGblCplData);
-    PRECICE_DEBUG("Added \"{}\" to _sendGlobalData. Now _sendGlobalData.size is {}.", globalData->getName(), _sendGlobalData.size());
+    PRECICE_DEBUG("Added \"{}\" to _sendGlobalData. Now _sendGlobalData.size is {}.", data->getName(), _sendGlobalData.size());
   } else {
-    PRECICE_ERROR("Global Data \"{0}\" cannot be added twice for sending. Please remove any duplicate <exchange data=\"{0}\" .../> tags", globalData->getName());
+    PRECICE_ERROR("Global Data \"{0}\" cannot be added twice for sending. Please remove any duplicate <exchange data=\"{0}\" .../> tags", data->getName());
   }
 }
 
@@ -102,19 +100,19 @@ void BiCouplingScheme::addDataToReceive(
 }
 
 void BiCouplingScheme::addGlobalDataToReceive(
-    const mesh::PtrData &globalData,
+    const mesh::PtrData &data,
     bool                 requiresInitialization)
 {
   PRECICE_TRACE();
-  PtrGlobalCouplingData PtrGblCplData = addGlobalCouplingData(globalData, requiresInitialization);
-  precice::DataID       id            = globalData->getID();
+  PtrGlobalCouplingData PtrGblCplData = addGlobalCouplingData(data, requiresInitialization);
+  precice::DataID       id            = data->getID();
   if (!utils::contained(id, _receiveGlobalData)) {
     PRECICE_ASSERT(_receiveGlobalData.count(id) == 0, "Key already exists!");
     // if (isExplicitCouplingScheme()) {
-    _receiveGlobalData.emplace(id, std::make_shared<GlobalCouplingData>(globalData, requiresInitialization));
-    PRECICE_DEBUG("Added \"{}\" to _receiveGlobalData.", globalData->getName());
+    _receiveGlobalData.emplace(id, std::make_shared<GlobalCouplingData>(data, requiresInitialization));
+    PRECICE_DEBUG("Added \"{}\" to _receiveGlobalData.", data->getName());
   } else {
-    PRECICE_ERROR("Global Data \"{0}\" cannot be added twice for receiving. Please remove any duplicate <exchange data=\"{0}\" ... /> tags", globalData->getName());
+    PRECICE_ERROR("Global Data \"{0}\" cannot be added twice for receiving. Please remove any duplicate <exchange data=\"{0}\" ... /> tags", data->getName());
   }
 }
 

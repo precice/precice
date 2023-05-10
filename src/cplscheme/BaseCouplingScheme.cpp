@@ -22,7 +22,6 @@
 #include "logging/LogMacros.hpp"
 #include "math/differences.hpp"
 #include "mesh/Data.hpp"
-// #include "mesh/GlobalData.hpp"
 #include "mesh/Mesh.hpp"
 #include "precice/types.hpp"
 #include "utils/EigenHelperFunctions.hpp"

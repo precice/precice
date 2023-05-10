@@ -2,7 +2,6 @@
 
 #include <utility>
 
-// #include "mesh/GlobalData.hpp"
 #include "mesh/Data.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 

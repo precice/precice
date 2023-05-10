@@ -5,7 +5,6 @@
 #include "logging/Logger.hpp"
 #include "mesh/Data.hpp"
 #include "time/Time.hpp"
-// #include "mesh/GlobalData.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "xml/XMLTag.hpp"
@@ -20,7 +19,7 @@ public:
     std::string name;
     int         dimensions;
     int         waveformDegree;
-    bool        isGlobal; // false = mesh data, true = meshless/global data
+    bool        isGlobal; // false = mesh-associated data, true = global data
 
     ConfiguredData(
         const std::string &name,

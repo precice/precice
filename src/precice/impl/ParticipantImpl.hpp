@@ -425,16 +425,6 @@ private:
   /// Syncs the primary ranks of all connected participants
   void closeCommunicationChannels(CloseChannels cc);
 
-  void readGlobalVectorDataImpl(
-      int     toDataID,
-      double  relativeReadTime,
-      double *value) const;
-
-  void readGlobalScalarDataImpl(
-      int     toDataID,
-      double  relativeReadTime,
-      double &value) const;
-
   /// To allow white box tests.
   friend struct Integration::Serial::Whitebox::TestConfigurationPeano;
   friend struct Integration::Serial::Whitebox::TestConfigurationComsol;

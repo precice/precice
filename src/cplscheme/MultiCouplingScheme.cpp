@@ -16,7 +16,6 @@
 #include "logging/LogMacros.hpp"
 #include "m2n/SharedPointer.hpp"
 #include "mesh/Data.hpp"
-// #include "mesh/GlobalData.hpp"
 #include "mesh/Mesh.hpp"
 
 namespace precice::cplscheme {

@@ -249,24 +249,12 @@ bool ParticipantState::isDataWrite(std::string_view mesh, std::string_view data)
 
 bool ParticipantState::isGlobalDataWrite(std::string_view data) const
 {
-  ///NOTE: ignore reviewing this for now; writeGlobalDataContext will inherit from DataContext and have separate read and write classes.
-  // std::string_view mesh = "";
-  // return _writeGlobalDataContexts.count(MeshDataKey{mesh, data}) > 0;
-
-  return std::any_of(_writeGlobalDataContexts.begin(), _writeGlobalDataContexts.end(), [data](const auto &gwdc) {
-    return gwdc.second.getDataName() == data;
-  });
+  return _writeGlobalDataContexts.count(std::string(data)) > 0;
 }
 
 bool ParticipantState::isGlobalDataRead(std::string_view data) const
 {
-  ///NOTE: ignore reviewing this for now; readGlobalDataContext will inherit from DataContext and have separate read and write classes.
-  // std::string_view mesh = "";
-  // return _readGlobalDataContexts.count(MeshDataKey{mesh, data}) > 0;
-
-  return std::any_of(_readGlobalDataContexts.begin(), _readGlobalDataContexts.end(), [data](const auto &grdc) {
-    return grdc.second.getDataName() == data;
-  });
+  return _readGlobalDataContexts.count(std::string(data)) > 0;
 }
 
 /// Mesh queries
@@ -530,7 +518,6 @@ std::string ParticipantState::hintForMeshData(std::string_view mesh, std::string
 
 void ParticipantState::checkDuplicatedGlobalData(std::string_view data)
 {
-  // bool isDataGlobal = _globalDataContexts.count(data->getID()) > 0;
   PRECICE_CHECK(!isGlobalDataRead(data) && !isGlobalDataWrite(data),
                 "Participant \"{}\" can read/write global data \"{}\" only once. "
                 "Please remove any duplicate instances of write-data/read-data nodes.",
