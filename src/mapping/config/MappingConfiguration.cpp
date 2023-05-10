@@ -242,7 +242,7 @@ MappingConfiguration::MappingConfiguration(
   auto attrDeviceId = makeXMLAttribute(ATTR_DEVICE_ID, static_cast<int>(0))
                           .setDocumentation("Specifies the ID of the GPU that should be used for the Ginkgo GPU backend.");
   auto attrNThreads = makeXMLAttribute(ATTR_N_THREADS, static_cast<int>(0))
-                          .setDocumentation("Specifies the number of threads for the OpenMP executor that should be used for the Ginkgo OpenMP backend.");
+                          .setDocumentation("Specifies the number of threads for the OpenMP executor that should be used for the Ginkgo OpenMP backend. If a value of \"0\" is set, preCICE doesn't set the number of threads and the default behavior of OpenMP applies.");
 
   // First, we have the executors for the direct solvers
   {
