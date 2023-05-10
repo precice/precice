@@ -653,7 +653,7 @@ int SolverInterfaceImpl::setMeshVertex(
 
   mesh.allocateDataValues(); //@todo remove this call? But complicated, because write mapping expects already initialized toData
 
-  const auto newSize = mesh.verticesSize();
+  const auto newSize = mesh.vertices().size();
   for (auto &context : _accessor->writeDataContexts()) {
     if (context.getMeshName() == mesh.getName()) {
       context.resizeBufferTo(newSize);
@@ -688,7 +688,7 @@ void SolverInterfaceImpl::setMeshVertices(
 
   mesh.allocateDataValues(); //@todo remove this call? But complicated, because write mapping expects already initialized toData
 
-  const auto newSize = mesh.verticesSize();
+  const auto newSize = mesh.vertices().size();
   for (auto &context : _accessor->writeDataContexts()) {
     if (context.getMeshName() == mesh.getName()) {
       context.resizeBufferTo(newSize);
@@ -1214,7 +1214,7 @@ void SolverInterfaceImpl::getMeshVerticesAndIDs(
       coordinates.data(), _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(ids.size())};
 
   // check and, if necessary, resize write data buffers of mesh
-  const auto requiredSize = mesh->verticesSize();
+  const auto requiredSize = mesh->vertices().size();
   for (auto &context : _accessor->writeDataContexts()) {
     if (context.getMeshName() == mesh->getName()) {
       context.resizeBufferTo(requiredSize);
