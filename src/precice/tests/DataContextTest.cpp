@@ -161,6 +161,53 @@ BOOST_AUTO_TEST_CASE(testDataContextMultipleWriteMapping)
   BOOST_TEST(fixture.mappingContexts(dataContext)[1].mapping == mappingContext2.mapping);
 }
 
+BOOST_AUTO_TEST_CASE(testDataContextWriteBuffer)
+{
+  PRECICE_TEST(1_rank);
+
+  testing::DataContextFixture fixture;
+
+  // Create mesh object for from mesh
+  int           dimensions     = 3;
+  int           dataDimensions = 1;
+  int           nValues        = 3;
+  mesh::PtrMesh ptrMesh        = std::make_shared<mesh::Mesh>("Mesh", dimensions, testing::nextMeshID());
+  mesh::PtrData ptrData        = ptrMesh->createData("Data", dataDimensions, 0_dataID);
+
+  std::vector<VertexID> ids(nValues);
+
+  ids[0] = ptrMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0)).getID();
+  ids[1] = ptrMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0)).getID();
+  ids[2] = ptrMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 1.0)).getID();
+
+  BOOST_TEST(ids[0] == 0);
+  BOOST_TEST(ids[1] == 1);
+  BOOST_TEST(ids[2] == 2);
+
+  std::vector<double> values(nValues);
+  for (int i = 0; i < nValues; i++) {
+    values[i] = i;
+  }
+
+  WriteDataContext dataContext(ptrData, ptrMesh);
+
+  BOOST_TEST(!fixture.hasMapping(dataContext));
+  BOOST_TEST(fixture.getProvidedDataID(dataContext) == ptrData->getID());
+  BOOST_TEST(dataContext.getMeshID() == ptrMesh->getID());
+
+  dataContext.resizeBufferTo(nValues);
+  dataContext.writeValuesIntoDataBuffer(ids, values);
+
+  // add another vertex
+  ids.emplace_back(ptrMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 0.0)).getID());
+  values.emplace_back(nValues);
+
+  BOOST_TEST(ids[3] == 3);
+
+  dataContext.resizeBufferTo(nValues + 1);
+  dataContext.writeValuesIntoDataBuffer(ids, values);
+}
+
 BOOST_AUTO_TEST_CASE(testDataContextReadMapping)
 {
   PRECICE_TEST(1_rank);
