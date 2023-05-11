@@ -27,9 +27,11 @@ public:
       mesh::PtrMesh mesh);
 
   /**
-   * @brief Resets provided data, writeDataBuffer and (if mapping exists) fromData or toData.
+   * @brief Resets provided data, writeDataBuffer, (if mapping exists) fromData or toData, and (optionally) storage.
+   *
+   * @param atEndOfWindow if true, also the Storage will be reset (useful at end of window to clear storage).
    */
-  void resetData();
+  void resetData(bool atEndOfWindow);
 
   /**
    * @brief Store values in _writeDataBuffer
@@ -55,11 +57,6 @@ public:
    * @param[in] currentTime time data should be associated with
    */
   void storeBufferedData(double currentTime);
-
-  /**
-   * @brief Clear data storage for next iteration or window.
-   */
-  void clearStorage();
 
   /**
    * @brief Adds a MappingContext and the MeshContext required by the write mapping to the corresponding WriteDataContext data structures.

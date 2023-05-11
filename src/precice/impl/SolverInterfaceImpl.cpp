@@ -1440,11 +1440,7 @@ void SolverInterfaceImpl::resetWrittenData(bool isAtWindowEnd)
 {
   PRECICE_TRACE();
   for (auto &context : _accessor->writeDataContexts()) {
-    context.resetData();
-    if (isAtWindowEnd) { // make context ready for next window/iteration
-      // @todo differentiate for case _couplingScheme->isTimeWindowComplete()?
-      context.clearStorage();
-    }
+    context.resetData(isAtWindowEnd);
   }
 }
 

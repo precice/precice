@@ -14,7 +14,7 @@ WriteDataContext::WriteDataContext(
   _writeDataBuffer = time::Sample{Eigen::VectorXd(), Eigen::MatrixXd()};
 }
 
-void WriteDataContext::resetData()
+void WriteDataContext::resetData(bool atEndOfWindow)
 {
   // See also https://github.com/precice/precice/issues/1156.
   _providedData->toZero();
@@ -27,6 +27,11 @@ void WriteDataContext::resetData()
   // reset all toData
   if (hasWriteMapping()) {
     std::for_each(_mappingContexts.begin(), _mappingContexts.end(), [](auto &context) { context.toData->toZero(); });
+  }
+
+  if (atEndOfWindow) {
+    // need to not only clear _providedData->timeStepsStorage(), but also _toData->timeStepsStorage() as soon as we map from storage to storage.
+    _providedData->timeStepsStorage().clear();
   }
 }
 
@@ -93,12 +98,6 @@ void WriteDataContext::resizeBufferTo(int nVertices)
 void WriteDataContext::storeBufferedData(double currentTime)
 {
   _providedData->setSampleAtTime(currentTime, _writeDataBuffer);
-}
-
-void WriteDataContext::clearStorage()
-{
-  // need to not only clear _providedData->timeStepsStorage(), but also _toData->timeStepsStorage() as soon as we map from storage to storage.
-  _providedData->timeStepsStorage().clear();
 }
 
 void WriteDataContext::appendMappingConfiguration(MappingContext &mappingContext, const MeshContext &meshContext)
