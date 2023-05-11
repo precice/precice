@@ -20,7 +20,7 @@ extern "C" {
 
 static std::unique_ptr<precice::Participant> impl = nullptr;
 
-static precice::logging::Logger _log("ParticipantC");
+static precice::logging::Logger _log("precicec");
 
 static std::string errormsg       = "preCICE has not been created properly. Be sure to call \"precicec_createParticipant\" or \"precicec_createParticipant_withCommunicator\" before any other call to preCICE.";
 static std::string errormsgCreate = "preCICE has been created already! Be sure to call either \"precicec_createParticipant\" or \"precicec_createParticipant_withCommunicator\" exactly once.";

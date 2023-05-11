@@ -24,7 +24,7 @@ using namespace std;
 
 static std::unique_ptr<precice::Participant> impl = nullptr;
 
-static precice::logging::Logger _log("ParticipantFortran");
+static precice::logging::Logger _log("precicefortran");
 
 static std::string errormsg = "preCICE has not been created properly. Be sure to call \"precicef_create\" before any other call to preCICE.";
 
