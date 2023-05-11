@@ -65,6 +65,8 @@ option(PRECICE_ENABLE_FORTRAN "Enable the native Fortran bindings" ON)
 option(PRECICE_BUILD_TOOLS "Build the \"precice-tools\" executable" ON)
 option(PRECICE_ENABLE_LIBBACKTRACE "Enable libbacktrace for stacktrace generation." OFF)
 
+option(CMAKE_INTERPROCEDURAL_OPTIMIZATION "Enable interprocedural optimization for all targets." OFF)
+
 option(PRECICE_RELEASE_WITH_DEBUG_LOG "Enable debug logging in release builds" OFF)
 option(PRECICE_RELEASE_WITH_TRACE_LOG "Enable trace logging in release builds" OFF)
 option(PRECICE_RELEASE_WITH_ASSERTIONS "Enable assertions in release builds" OFF)
