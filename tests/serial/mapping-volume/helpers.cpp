@@ -4,14 +4,14 @@
 #include "testing/Testing.hpp"
 
 #include "mesh/Utils.hpp"
-#include "precice/SolverInterface.hpp"
-#include "precice/impl/SolverInterfaceImpl.hpp"
+#include "precice/Participant.hpp"
+#include "precice/impl/ParticipantImpl.hpp"
 
 void testMappingVolumeOneTriangle(const std::string configFile, const TestContext &context)
 {
   using precice::testing::equals;
 
-  precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
+  precice::Participant interface(context.name, context.config(), context.rank, context.size);
 
   std::vector<precice::VertexID> vertexIDs;
 
@@ -94,7 +94,7 @@ void testMappingVolumeOneTriangleConservative(const std::string configFile, cons
 {
   using precice::testing::equals;
 
-  precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
+  precice::Participant interface(context.name, context.config(), context.rank, context.size);
   // SolverOne defines a vertex and a conserved quantity (e.g. a force) on it.
   // SolverTwo defines a triangle and read the mapped quantity. We check it is spread correctly.
 
@@ -163,7 +163,7 @@ void testMappingVolumeOneTetra(const std::string configFile, const TestContext &
 {
   using precice::testing::equals;
 
-  precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
+  precice::Participant interface(context.name, context.config(), context.rank, context.size);
 
   std::vector<precice::VertexID> vertexIDs;
 
@@ -258,7 +258,7 @@ void testMappingVolumeOneTetraConservative(const std::string configFile, const T
 {
   using precice::testing::equals;
 
-  precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
+  precice::Participant interface(context.name, context.config(), context.rank, context.size);
   // SolverOne defines a vertex and a conserved quantity (e.g. a force) on it.
   // SolverTwo defines a triangle and read the mapped quantity. We check it is spread correctly.
 

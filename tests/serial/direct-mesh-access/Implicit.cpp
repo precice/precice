@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/Participant.hpp>
 #include <vector>
 
 BOOST_AUTO_TEST_SUITE(Integration)
@@ -17,8 +17,8 @@ BOOST_AUTO_TEST_CASE(Implicit)
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
   // Set up Solverinterface
-  precice::SolverInterface couplingInterface(context.name, context.config(), 0, 1);
-  constexpr int            dim = 2;
+  precice::Participant couplingInterface(context.name, context.config(), 0, 1);
+  constexpr int        dim = 2;
 
   if (context.isNamed("SolverOne")) {
     std::vector<double>         positions   = {0.1, 0.1, 0.2, 0.05, 0.1, 0.0, 0.3, 0.9};

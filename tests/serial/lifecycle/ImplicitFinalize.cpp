@@ -2,19 +2,19 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/Participant.hpp>
 #include <vector>
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(Lifecycle)
-// Test representing the full lifecycle of a SolverInterface
+// Test representing the full lifecycle of a Participant
 // Finalize is not called explicitly here.
 // The destructor has to cleanup.
 BOOST_AUTO_TEST_CASE(ImplicitFinalize)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
-  precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
+  precice::Participant interface(context.name, context.config(), context.rank, context.size);
 
   if (context.isNamed("SolverOne")) {
     auto   meshName = "MeshOne";

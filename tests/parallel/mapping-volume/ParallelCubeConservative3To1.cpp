@@ -2,9 +2,9 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/Participant.hpp>
 #include <vector>
-#include "precice/impl/SolverInterfaceImpl.hpp"
+#include "precice/impl/ParticipantImpl.hpp"
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
@@ -15,7 +15,7 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative3To1)
   using precice::testing::equals;
 
   PRECICE_TEST("SolverOneCubeConservative3To1"_on(3_ranks), "SolverTwoCubeConservative3To1"_on(1_rank));
-  precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
+  precice::Participant interface(context.name, context.config(), context.rank, context.size);
 
   // Apply some forces (geometry described below)
   // They get spread to various ranks and tetra/triangle/edge

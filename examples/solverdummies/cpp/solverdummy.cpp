@@ -1,7 +1,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
-#include "precice/SolverInterface.hpp"
+#include "precice/Participant.hpp"
 
 int main(int argc, char **argv)
 {
@@ -26,7 +26,7 @@ int main(int argc, char **argv)
 
   std::cout << "DUMMY: Running solver dummy with preCICE config file \"" << configFileName << "\" and participant name \"" << solverName << "\".\n";
 
-  SolverInterface interface(solverName, configFileName, commRank, commSize);
+  Participant interface(solverName, configFileName, commRank, commSize);
 
   if (solverName == "SolverOne") {
     dataWriteName = "Data-One";

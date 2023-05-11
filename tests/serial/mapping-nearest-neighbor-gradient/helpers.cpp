@@ -2,7 +2,7 @@
 
 #include "helpers.hpp"
 
-#include "precice/SolverInterface.hpp"
+#include "precice/Participant.hpp"
 #include "testing/Testing.hpp"
 
 using namespace precice;
@@ -11,7 +11,7 @@ void testVectorGradientFunctions(const TestContext &context)
 {
   using Eigen::Vector3d;
 
-  SolverInterface interface(context.name, context.config(), 0, 1);
+  Participant interface(context.name, context.config(), 0, 1);
   if (context.isNamed("A")) {
 
     auto meshName = "MeshA";

@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/Participant.hpp>
 #include <vector>
 
 using namespace precice;
@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(DoNothingWithSubcycling)
   double v0[] = {0, 0, 0};
   double v1[] = {1, 0, 0};
 
-  SolverInterface precice(context.name, context.config(), 0, 1);
+  Participant precice(context.name, context.config(), 0, 1);
   if (context.isNamed("SolverOne")) {
     auto meshName = "MeshOne";
     precice.setMeshVertex(meshName, v0);

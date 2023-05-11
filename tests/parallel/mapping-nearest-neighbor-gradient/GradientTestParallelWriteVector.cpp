@@ -12,10 +12,10 @@
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Utils.hpp"
-#include "precice/SolverInterface.hpp"
+#include "precice/Participant.hpp"
+#include "precice/impl/ParticipantImpl.hpp"
 #include "precice/impl/ParticipantState.hpp"
 #include "precice/impl/SharedPointer.hpp"
-#include "precice/impl/SolverInterfaceImpl.hpp"
 #include "precice/types.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
@@ -34,9 +34,9 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
   PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
 
   if (context.isNamed("SolverOne")) {
-    SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    auto            meshName = "MeshOne";
-    auto            dataName = "Data2";
+    Participant interface(context.name, context.config(), context.rank, context.size);
+    auto        meshName = "MeshOne";
+    auto        dataName = "Data2";
 
     if (context.isPrimary()) {
       std::vector<int>    vertexIDs(2);
@@ -67,8 +67,8 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
     interface.finalize();
   } else {
     BOOST_REQUIRE(context.isNamed("SolverTwo"));
-    SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    auto            meshName = "MeshTwo";
+    Participant interface(context.name, context.config(), context.rank, context.size);
+    auto        meshName = "MeshTwo";
     if (context.isPrimary()) {
       std::vector<int>    vertexIDs(4);
       std::vector<double> positions = {4.0, 4.0, 4.0, 0.0, 0.4, 0.0, 0.7, 0.7, 1.7, 0.0, 1.0, 0.0};

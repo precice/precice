@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/Participant.hpp>
 #include <vector>
 
 BOOST_AUTO_TEST_SUITE(Integration)
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitialization)
   BOOST_REQUIRE(i1 >= 0);
   BOOST_REQUIRE(i2 >= 0);
 
-  precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
+  precice::Participant interface(context.name, context.config(), context.rank, context.size);
 
   auto meshName = context.name + "Mesh";
   auto forcesID = "Forces";

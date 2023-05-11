@@ -4,8 +4,8 @@
 #include "testing/Testing.hpp"
 
 #include "mesh/Utils.hpp"
-#include "precice/SolverInterface.hpp"
-#include "precice/impl/SolverInterfaceImpl.hpp"
+#include "precice/Participant.hpp"
+#include "precice/impl/ParticipantImpl.hpp"
 
 void testMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFunctions, const std::string configFile, const TestContext &context)
 {
@@ -34,7 +34,7 @@ void testMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFuncti
   double   expectedValTwoC = Vector3d{valOneA, valOneB, valOneC}.dot(barycenterABC);
 
   if (context.isNamed("SolverOne")) {
-    precice::SolverInterface interface("SolverOne", configFile, 0, 1);
+    precice::Participant interface("SolverOne", configFile, 0, 1);
     // namespace is required because we are outside the fixture
     auto meshName = "MeshOne";
 
@@ -84,7 +84,7 @@ void testMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFuncti
     interface.finalize();
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    precice::SolverInterface interface("SolverTwo", configFile, 0, 1);
+    precice::Participant interface("SolverTwo", configFile, 0, 1);
     // namespace is required because we are outside the fixture
     auto meshName = "MeshTwo";
 
@@ -144,7 +144,7 @@ void testQuadMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFu
   double   expectedValTwoC = Vector3d{valOneA, valOneB, valOneC}.dot(barycenterABC);
 
   if (context.isNamed("SolverOne")) {
-    precice::SolverInterface interface("SolverOne", configFile, 0, 1);
+    precice::Participant interface("SolverOne", configFile, 0, 1);
     // namespace is required because we are outside the fixture
     auto meshName = "MeshOne";
 
@@ -202,7 +202,7 @@ void testQuadMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFu
     interface.finalize();
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    precice::SolverInterface interface("SolverTwo", configFile, 0, 1);
+    precice::Participant interface("SolverTwo", configFile, 0, 1);
     // namespace is required because we are outside the fixture
     auto meshName = "MeshTwo";
 
@@ -246,7 +246,7 @@ void testQuadMappingNearestProjectionTallKite(bool defineEdgesExplicitly, bool u
   Vector3d coordOneD{0.0, -0.5, z};
 
   if (context.isNamed("SolverOne")) {
-    precice::SolverInterface interface("SolverOne", configFile, 0, 1);
+    precice::Participant interface("SolverOne", configFile, 0, 1);
     // namespace is required because we are outside the fixture
     auto meshName = "MeshOne";
 
@@ -305,7 +305,7 @@ void testQuadMappingNearestProjectionWideKite(bool defineEdgesExplicitly, bool u
   Vector3d coordOneD{0.5, -0.2, z};
 
   if (context.isNamed("SolverOne")) {
-    SolverInterface interface("SolverOne", configFile, 0, 1);
+    Participant interface("SolverOne", configFile, 0, 1);
     // namespace is required because we are outside the fixture
     auto meshName = "MeshOne";
 

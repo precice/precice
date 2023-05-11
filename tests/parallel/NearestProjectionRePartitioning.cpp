@@ -3,8 +3,8 @@
 #include "testing/Testing.hpp"
 
 #include <boost/test/data/test_case.hpp>
-#include <precice/SolverInterface.hpp>
-#include <precice/impl/SolverInterfaceImpl.hpp>
+#include <precice/Participant.hpp>
+#include <precice/impl/ParticipantImpl.hpp>
 #include <vector>
 
 /// This testcase is based on a bug documented in issue #371
@@ -17,7 +17,7 @@ BOOST_DATA_TEST_CASE(NearestProjectionRePartitioning,
   PRECICE_TEST("FluidSolver"_on(3_ranks), "SolidSolver"_on(1_rank));
 
   if (context.isNamed("FluidSolver")) {
-    precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
+    precice::Participant interface(context.name, context.config(), context.rank, context.size);
 
     if (context.isPrimary()) {
       interface.initialize();
@@ -107,9 +107,9 @@ BOOST_DATA_TEST_CASE(NearestProjectionRePartitioning,
     }
   } else {
     BOOST_TEST(context.isNamed("SolidSolver"));
-    precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    auto                     meshName   = "Nodes";
-    const int                dimensions = interface.getMeshDimensions(meshName);
+    precice::Participant interface(context.name, context.config(), context.rank, context.size);
+    auto                 meshName   = "Nodes";
+    const int            dimensions = interface.getMeshDimensions(meshName);
     BOOST_REQUIRE(dimensions == 3);
     const int                 numberOfVertices = 34;
     const double              yCoord           = 0.0;

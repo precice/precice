@@ -2,7 +2,7 @@
 
 #include "helpers.hpp"
 
-#include "precice/SolverInterface.hpp"
+#include "precice/Participant.hpp"
 #include "testing/Testing.hpp"
 
 // In order to test enforced gather scatter communication with an empty primary rank (see below)
@@ -10,11 +10,11 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
 {
   if (context.isNamed("ParallelSolver")) {
     // Get mesh and data IDs
-    precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    auto                     meshName      = "ParallelMesh";
-    auto                     writeDataName = "MyData1";
-    auto                     readDataName  = "MyData2";
-    const int                dim           = interface.getMeshDimensions(meshName);
+    precice::Participant interface(context.name, context.config(), context.rank, context.size);
+    auto                 meshName      = "ParallelMesh";
+    auto                 writeDataName = "MyData1";
+    auto                 readDataName  = "MyData2";
+    const int            dim           = interface.getMeshDimensions(meshName);
     BOOST_TEST(dim == 2);
 
     // Set coordinates, primary according to input argument
@@ -52,7 +52,7 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
   } else {
     // The serial participant
     BOOST_REQUIRE(context.isNamed("SerialSolver"));
-    precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
+    precice::Participant interface(context.name, context.config(), context.rank, context.size);
     // Get IDs
     auto      meshName      = "SerialMesh";
     auto      writeDataName = "MyData2";

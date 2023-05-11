@@ -102,7 +102,7 @@ void ReceivedPartition::compute()
       prepareBoundingBox();
       // Filter out vertices not laying in the bounding box
       mesh::Mesh filteredMesh("FilteredMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
-      // To discuss: maybe check this somewhere in the SolverInterfaceImpl, as we have now a similar check for the parallel case
+      // To discuss: maybe check this somewhere in the ParticipantImpl, as we have now a similar check for the parallel case
       PRECICE_CHECK(!_bb.empty(), "You are running this participant in serial mode and the bounding box on mesh \"{}\", is empty. Did you call setMeshAccessRegion with valid data?", _mesh->getName());
       unsigned int nFilteredVertices = 0;
       mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { if(!_bb.contains(v))

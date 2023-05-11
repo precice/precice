@@ -14,7 +14,7 @@
 #include "logging/Logger.hpp"
 #include "m2n/BoundM2N.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
-#include "precice/SolverInterface.hpp"
+#include "precice/Participant.hpp"
 #include "precice/impl/DataContext.hpp"
 #include "precice/impl/SharedPointer.hpp"
 #include "precice/types.hpp"
@@ -47,13 +47,13 @@ class Mesh;
 namespace impl {
 
 /// Implementation of SolverInterface. See also pimpl ideom (https://en.cppreference.com/w/cpp/language/pimpl).
-class SolverInterfaceImpl {
+class ParticipantImpl {
 public:
   ///@name Construction and Configuration
   ///@{
 
   /**
-   * @brief Generic constructor for SolverInterfaceImpl.
+   * @brief Generic constructor for ParticipantImpl.
    *
    * Use the parameter communicator to specify a custom global MPI communicator.
    * Pass std::nullopt to signal preCICE to use MPI_COMM_WORLD.
@@ -67,7 +67,7 @@ public:
    * @param[in] solverProcessSize The number of solver processes using preCICE.
    * @param[in] communicator An optional pointer to an MPI_Comm to use as communicator.
    */
-  SolverInterfaceImpl(
+  ParticipantImpl(
       std::string_view      participantName,
       std::string_view      configurationFileName,
       int                   solverProcessIndex,
@@ -81,7 +81,7 @@ public:
    *
    * @see finalize
    */
-  ~SolverInterfaceImpl();
+  ~ParticipantImpl();
 
   ///@}
 
@@ -271,19 +271,19 @@ public:
   const mesh::Mesh &mesh(const std::string &meshName) const;
 
   /// Disable copy construction
-  SolverInterfaceImpl(SolverInterfaceImpl const &) = delete;
+  ParticipantImpl(ParticipantImpl const &) = delete;
 
   /// Disable assignment construction
-  SolverInterfaceImpl &operator=(SolverInterfaceImpl const &) = delete;
+  ParticipantImpl &operator=(ParticipantImpl const &) = delete;
 
   /// Disable move construction
-  SolverInterfaceImpl(SolverInterfaceImpl &&) = delete;
+  ParticipantImpl(ParticipantImpl &&) = delete;
 
   /// Disable move assignment
-  SolverInterfaceImpl &operator=(SolverInterfaceImpl &&) = delete;
+  ParticipantImpl &operator=(ParticipantImpl &&) = delete;
 
 private:
-  mutable logging::Logger _log{"impl::SolverInterfaceImpl"};
+  mutable logging::Logger _log{"impl::ParticipantImpl"};
 
   std::string _accessorName;
 
@@ -330,7 +330,7 @@ private:
   /**
    * @brief Configures the coupling interface from the given xml file.
    *
-   * Only after the configuration a reasonable state of a SolverInterfaceImpl
+   * Only after the configuration a reasonable state of a ParticipantImpl
    * object is achieved.
    *
    * @param[in] configurationFileName Name (with path) of the xml config. file.
@@ -340,7 +340,7 @@ private:
   /**
    * @brief Configures the coupling interface with a prepared configuration.
    *
-   * Can be used to configure the SolverInterfaceImpl without xml file. Requires
+   * Can be used to configure the ParticipantImpl without xml file. Requires
    * to manually setup the configuration object.
    */
   void configure(const config::SolverInterfaceConfiguration &configuration);

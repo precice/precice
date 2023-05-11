@@ -3,9 +3,9 @@
 #include "testing/Testing.hpp"
 
 #include <iostream>
-#include <precice/SolverInterface.hpp>
+#include <precice/Participant.hpp>
 #include <vector>
-#include "precice/impl/SolverInterfaceImpl.hpp"
+#include "precice/impl/ParticipantImpl.hpp"
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_SUITE(MappingVolume)
@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_CASE(ParallelCube1To3)
 
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(3_ranks));
 
-  precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
+  precice::Participant interface(context.name, context.config(), context.rank, context.size);
 
   std::vector<VertexID> vertexIDs;
   double                dt;

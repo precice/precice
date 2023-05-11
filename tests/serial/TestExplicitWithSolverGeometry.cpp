@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/Participant.hpp>
 #include <vector>
 
 BOOST_AUTO_TEST_SUITE(Integration)
@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithSolverGeometry)
   double v100[] = {1, 0, 0};
   double v010[] = {0, 1, 0};
 
-  precice::SolverInterface couplingInterface(context.name, context.config(), 0, 1);
+  precice::Participant couplingInterface(context.name, context.config(), 0, 1);
   if (context.isNamed("SolverOne")) {
     //was necessary to replace pre-defined geometries
     auto meshName = "MeshOne";

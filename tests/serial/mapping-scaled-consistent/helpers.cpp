@@ -2,8 +2,8 @@
 
 #include "helpers.hpp"
 #include "math/geometry.hpp"
-#include "precice/SolverInterface.hpp"
-#include "precice/impl/SolverInterfaceImpl.hpp"
+#include "precice/Participant.hpp"
+#include "precice/impl/ParticipantImpl.hpp"
 #include "testing/Testing.hpp"
 
 void testQuadMappingScaledConsistent(const std::string configFile, const TestContext &context)
@@ -31,7 +31,7 @@ void testQuadMappingScaledConsistent(const std::string configFile, const TestCon
                             precice::math::geometry::triangleArea(coordOneA, coordOneC, coordOneD) * (valOneA + valOneC + valOneD) / 3.0;
 
   if (context.isNamed("SolverOne")) {
-    precice::SolverInterface interface("SolverOne", configFile, 0, 1);
+    precice::Participant interface("SolverOne", configFile, 0, 1);
     // namespace is required because we are outside the fixture
     auto meshOneID = "MeshOne";
 
@@ -67,7 +67,7 @@ void testQuadMappingScaledConsistent(const std::string configFile, const TestCon
     interface.finalize();
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    precice::SolverInterface interface("SolverTwo", configFile, 0, 1);
+    precice::Participant interface("SolverTwo", configFile, 0, 1);
     // namespace is required because we are outside the fixture
     auto meshTwoID = "MeshTwo";
 
@@ -124,7 +124,7 @@ void testQuadMappingScaledConsistentVolumetric(const std::string configFile, con
   double expectedIntegral = 7.0 / 3;
 
   if (context.isNamed("SolverOne")) {
-    precice::SolverInterface interface("SolverOne", configFile, 0, 1);
+    precice::Participant interface("SolverOne", configFile, 0, 1);
     // namespace is required because we are outside the fixture
     auto meshOneID = "MeshOne";
 
@@ -160,7 +160,7 @@ void testQuadMappingScaledConsistentVolumetric(const std::string configFile, con
     interface.finalize();
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    precice::SolverInterface interface("SolverTwo", configFile, 0, 1);
+    precice::Participant interface("SolverTwo", configFile, 0, 1);
     // namespace is required because we are outside the fixture
     auto meshTwoID = "MeshTwo";
 
@@ -226,7 +226,7 @@ void testTetraScaledConsistentVolumetric(const std::string configFile, const Tes
   double expectedIntegral = 6.5 / 12;
 
   if (context.isNamed("SolverOne")) {
-    precice::SolverInterface interface("SolverOne", configFile, 0, 1);
+    precice::Participant interface("SolverOne", configFile, 0, 1);
     // namespace is required because we are outside the fixture
     auto meshOneID = "MeshOne";
 
@@ -261,7 +261,7 @@ void testTetraScaledConsistentVolumetric(const std::string configFile, const Tes
     interface.finalize();
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    precice::SolverInterface interface("SolverTwo", configFile, 0, 1);
+    precice::Participant interface("SolverTwo", configFile, 0, 1);
     // namespace is required because we are outside the fixture
     auto meshTwoID = "MeshTwo";
 

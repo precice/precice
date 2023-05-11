@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/Participant.hpp>
 #include <vector>
 
 // Test representing the minimal lifecylce, which consists out of construction only.
@@ -14,7 +14,7 @@ BOOST_AUTO_TEST_CASE(ConstructOnly)
 {
   PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
 
-  precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
+  precice::Participant interface(context.name, context.config(), context.rank, context.size);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Integration

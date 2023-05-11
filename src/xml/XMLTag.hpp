@@ -20,7 +20,7 @@ class ConfigParser;
 namespace precice {
 namespace xml {
 
-/// Tightly coupled to the parameters of SolverInterface()
+/// Tightly coupled to the parameters of Participant()
 struct ConfigurationContext {
   std::string name;
   int         rank;

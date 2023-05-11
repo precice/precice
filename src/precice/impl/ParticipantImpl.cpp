@@ -13,7 +13,7 @@
 #include <tuple>
 #include <utility>
 
-#include "SolverInterfaceImpl.hpp"
+#include "ParticipantImpl.hpp"
 #include "action/SharedPointer.hpp"
 #include "com/Communication.hpp"
 #include "com/SharedPointer.hpp"
@@ -82,7 +82,7 @@ bool syncMode = false;
 
 namespace impl {
 
-SolverInterfaceImpl::SolverInterfaceImpl(
+ParticipantImpl::ParticipantImpl(
     std::string_view      participantName,
     std::string_view      configurationFileName,
     int                   solverProcessIndex,
@@ -140,7 +140,7 @@ SolverInterfaceImpl::SolverInterfaceImpl(
 #endif
 }
 
-SolverInterfaceImpl::~SolverInterfaceImpl()
+ParticipantImpl::~ParticipantImpl()
 {
   if (_state != State::Finalized) {
     PRECICE_INFO("Implicitly finalizing in destructor");
@@ -148,7 +148,7 @@ SolverInterfaceImpl::~SolverInterfaceImpl()
   }
 }
 
-void SolverInterfaceImpl::configure(
+void ParticipantImpl::configure(
     std::string_view configurationFileName)
 {
   config::Configuration config;
@@ -186,7 +186,7 @@ void SolverInterfaceImpl::configure(
   configure(config.getSolverInterfaceConfiguration());
 }
 
-void SolverInterfaceImpl::configure(
+void ParticipantImpl::configure(
     const config::SolverInterfaceConfiguration &config)
 {
   PRECICE_TRACE();
@@ -240,7 +240,7 @@ void SolverInterfaceImpl::configure(
   solverInitEvent.start(precice::syncMode);
 }
 
-void SolverInterfaceImpl::initialize()
+void ParticipantImpl::initialize()
 {
   PRECICE_TRACE();
   PRECICE_CHECK(_state != State::Finalized, "initialize() cannot be called after finalize().")
@@ -364,7 +364,7 @@ void SolverInterfaceImpl::initialize()
   PRECICE_INFO(_couplingScheme->printCouplingState());
 }
 
-void SolverInterfaceImpl::advance(
+void ParticipantImpl::advance(
     double computedTimeStepSize)
 {
 
@@ -433,7 +433,7 @@ void SolverInterfaceImpl::advance(
   solverEvent.start(precice::syncMode);
 }
 
-void SolverInterfaceImpl::finalize()
+void ParticipantImpl::finalize()
 {
   PRECICE_TRACE();
   PRECICE_CHECK(_state != State::Finalized, "finalize() may only be called once.");
@@ -487,14 +487,14 @@ void SolverInterfaceImpl::finalize()
   _state = State::Finalized;
 }
 
-int SolverInterfaceImpl::getMeshDimensions(std::string_view meshName) const
+int ParticipantImpl::getMeshDimensions(std::string_view meshName) const
 {
   PRECICE_TRACE(meshName);
   PRECICE_VALIDATE_MESH_NAME(meshName);
   return _accessor->usedMeshContext(meshName).mesh->getDimensions();
 }
 
-int SolverInterfaceImpl::getDataDimensions(std::string_view meshName, std::string_view dataName) const
+int ParticipantImpl::getDataDimensions(std::string_view meshName, std::string_view dataName) const
 {
   PRECICE_TRACE(meshName, dataName);
   PRECICE_VALIDATE_MESH_NAME(meshName);
@@ -502,7 +502,7 @@ int SolverInterfaceImpl::getDataDimensions(std::string_view meshName, std::strin
   return _accessor->usedMeshContext(meshName).mesh->data(dataName)->getDimensions();
 }
 
-bool SolverInterfaceImpl::isCouplingOngoing() const
+bool ParticipantImpl::isCouplingOngoing() const
 {
   PRECICE_TRACE();
   PRECICE_CHECK(_state != State::Finalized, "isCouplingOngoing() cannot be called after finalize().");
@@ -510,7 +510,7 @@ bool SolverInterfaceImpl::isCouplingOngoing() const
   return _couplingScheme->isCouplingOngoing();
 }
 
-bool SolverInterfaceImpl::isTimeWindowComplete() const
+bool ParticipantImpl::isTimeWindowComplete() const
 {
   PRECICE_TRACE();
   PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before isTimeWindowComplete().");
@@ -518,14 +518,14 @@ bool SolverInterfaceImpl::isTimeWindowComplete() const
   return _couplingScheme->isTimeWindowComplete();
 }
 
-double SolverInterfaceImpl::getMaxTimeStepSize() const
+double ParticipantImpl::getMaxTimeStepSize() const
 {
   PRECICE_CHECK(_state != State::Finalized, "getMaxTimeStepSize() cannot be called after finalize().");
   PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before isCouplingOngoing() can be evaluated.");
   return _couplingScheme->getNextTimeStepMaxSize();
 }
 
-bool SolverInterfaceImpl::requiresInitialData()
+bool ParticipantImpl::requiresInitialData()
 {
   PRECICE_TRACE();
   PRECICE_CHECK(_state == State::Constructed, "requiresInitialData() has to be called before initialize().");
@@ -536,7 +536,7 @@ bool SolverInterfaceImpl::requiresInitialData()
   return required;
 }
 
-bool SolverInterfaceImpl::requiresWritingCheckpoint()
+bool ParticipantImpl::requiresWritingCheckpoint()
 {
   PRECICE_TRACE();
   PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before requiresWritingCheckpoint().");
@@ -547,7 +547,7 @@ bool SolverInterfaceImpl::requiresWritingCheckpoint()
   return required;
 }
 
-bool SolverInterfaceImpl::requiresReadingCheckpoint()
+bool ParticipantImpl::requiresReadingCheckpoint()
 {
   PRECICE_TRACE();
   PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before requiresReadingCheckpoint().");
@@ -558,13 +558,13 @@ bool SolverInterfaceImpl::requiresReadingCheckpoint()
   return required;
 }
 
-bool SolverInterfaceImpl::hasMesh(std::string_view meshName) const
+bool ParticipantImpl::hasMesh(std::string_view meshName) const
 {
   PRECICE_TRACE(meshName);
   return _accessor->hasMesh(meshName);
 }
 
-bool SolverInterfaceImpl::hasData(
+bool ParticipantImpl::hasData(
     std::string_view meshName,
     std::string_view dataName) const
 {
@@ -573,15 +573,15 @@ bool SolverInterfaceImpl::hasData(
   return _accessor->isDataUsed(dataName, meshName);
 }
 
-bool SolverInterfaceImpl::requiresMeshConnectivityFor(std::string_view meshName) const
+bool ParticipantImpl::requiresMeshConnectivityFor(std::string_view meshName) const
 {
   PRECICE_VALIDATE_MESH_NAME(meshName);
   MeshContext &context = _accessor->usedMeshContext(meshName);
   return context.meshRequirement == mapping::Mapping::MeshRequirement::FULL;
 }
 
-bool SolverInterfaceImpl::requiresGradientDataFor(std::string_view meshName,
-                                                  std::string_view dataName) const
+bool ParticipantImpl::requiresGradientDataFor(std::string_view meshName,
+                                              std::string_view dataName) const
 {
   PRECICE_VALIDATE_DATA_NAME(meshName, dataName);
   // Read data never requires gradients
@@ -592,7 +592,7 @@ bool SolverInterfaceImpl::requiresGradientDataFor(std::string_view meshName,
   return context.hasGradient();
 }
 
-int SolverInterfaceImpl::getMeshVertexSize(
+int ParticipantImpl::getMeshVertexSize(
     std::string_view meshName) const
 {
   PRECICE_TRACE(meshName);
@@ -608,7 +608,7 @@ int SolverInterfaceImpl::getMeshVertexSize(
 }
 
 /// @todo Currently not supported as we would need to re-compute the re-partition
-void SolverInterfaceImpl::resetMesh(
+void ParticipantImpl::resetMesh(
     std::string_view meshName)
 {
   PRECICE_EXPERIMENTAL_API();
@@ -621,7 +621,7 @@ void SolverInterfaceImpl::resetMesh(
   context.mesh->clear();
 }
 
-int SolverInterfaceImpl::setMeshVertex(
+int ParticipantImpl::setMeshVertex(
     std::string_view              meshName,
     ::precice::span<const double> position)
 {
@@ -636,7 +636,7 @@ int SolverInterfaceImpl::setMeshVertex(
   return index;
 }
 
-void SolverInterfaceImpl::setMeshVertices(
+void ParticipantImpl::setMeshVertices(
     std::string_view              meshName,
     ::precice::span<const double> positions,
     ::precice::span<VertexID>     ids)
@@ -661,7 +661,7 @@ void SolverInterfaceImpl::setMeshVertices(
   mesh.allocateDataValues();
 }
 
-void SolverInterfaceImpl::setMeshEdge(
+void ParticipantImpl::setMeshEdge(
     std::string_view meshName,
     int              firstVertexID,
     int              secondVertexID)
@@ -680,7 +680,7 @@ void SolverInterfaceImpl::setMeshEdge(
   }
 }
 
-void SolverInterfaceImpl::setMeshEdges(
+void ParticipantImpl::setMeshEdges(
     std::string_view                meshName,
     ::precice::span<const VertexID> vertices)
 {
@@ -714,7 +714,7 @@ void SolverInterfaceImpl::setMeshEdges(
   }
 }
 
-void SolverInterfaceImpl::setMeshTriangle(
+void ParticipantImpl::setMeshTriangle(
     std::string_view meshName,
     int              firstVertexID,
     int              secondVertexID,
@@ -751,7 +751,7 @@ void SolverInterfaceImpl::setMeshTriangle(
   }
 }
 
-void SolverInterfaceImpl::setMeshTriangles(
+void ParticipantImpl::setMeshTriangles(
     std::string_view                meshName,
     ::precice::span<const VertexID> vertices)
 {
@@ -788,7 +788,7 @@ void SolverInterfaceImpl::setMeshTriangles(
   }
 }
 
-void SolverInterfaceImpl::setMeshQuad(
+void ParticipantImpl::setMeshQuad(
     std::string_view meshName,
     int              firstVertexID,
     int              secondVertexID,
@@ -840,7 +840,7 @@ void SolverInterfaceImpl::setMeshQuad(
   }
 }
 
-void SolverInterfaceImpl::setMeshQuads(
+void ParticipantImpl::setMeshQuads(
     std::string_view                meshName,
     ::precice::span<const VertexID> vertices)
 {
@@ -903,7 +903,7 @@ void SolverInterfaceImpl::setMeshQuads(
   }
 }
 
-void SolverInterfaceImpl::setMeshTetrahedron(
+void ParticipantImpl::setMeshTetrahedron(
     std::string_view meshName,
     int              firstVertexID,
     int              secondVertexID,
@@ -931,7 +931,7 @@ void SolverInterfaceImpl::setMeshTetrahedron(
   }
 }
 
-void SolverInterfaceImpl::setMeshTetrahedra(
+void ParticipantImpl::setMeshTetrahedra(
     std::string_view                meshName,
     ::precice::span<const VertexID> vertices)
 {
@@ -970,7 +970,7 @@ void SolverInterfaceImpl::setMeshTetrahedra(
   }
 }
 
-void SolverInterfaceImpl::writeData(
+void ParticipantImpl::writeData(
     std::string_view                meshName,
     std::string_view                dataName,
     ::precice::span<const VertexID> vertices,
@@ -1005,7 +1005,7 @@ void SolverInterfaceImpl::writeData(
   context.writeValues(vertices, values);
 }
 
-void SolverInterfaceImpl::readData(
+void ParticipantImpl::readData(
     std::string_view                meshName,
     std::string_view                dataName,
     ::precice::span<const VertexID> vertices,
@@ -1052,7 +1052,7 @@ void SolverInterfaceImpl::readData(
   context.readValues(vertices, normalizedReadTime, values);
 }
 
-void SolverInterfaceImpl::writeGradientData(
+void ParticipantImpl::writeGradientData(
     std::string_view                meshName,
     std::string_view                dataName,
     ::precice::span<const VertexID> vertices,
@@ -1099,7 +1099,7 @@ void SolverInterfaceImpl::writeGradientData(
   context.writeGradientValues(vertices, gradients);
 }
 
-void SolverInterfaceImpl::setMeshAccessRegion(
+void ParticipantImpl::setMeshAccessRegion(
     const std::string_view        meshName,
     ::precice::span<const double> boundingBox) const
 {
@@ -1137,7 +1137,7 @@ void SolverInterfaceImpl::setMeshAccessRegion(
   _accessRegionDefined = true;
 }
 
-void SolverInterfaceImpl::getMeshVerticesAndIDs(
+void ParticipantImpl::getMeshVerticesAndIDs(
     const std::string_view    meshName,
     ::precice::span<VertexID> ids,
     ::precice::span<double>   coordinates) const
@@ -1185,7 +1185,7 @@ void SolverInterfaceImpl::getMeshVerticesAndIDs(
   }
 }
 
-void SolverInterfaceImpl::configureM2Ns(
+void ParticipantImpl::configureM2Ns(
     const m2n::M2NConfiguration::SharedPointer &config)
 {
   PRECICE_TRACE();
@@ -1218,7 +1218,7 @@ void SolverInterfaceImpl::configureM2Ns(
   }
 }
 
-void SolverInterfaceImpl::configurePartitions(
+void ParticipantImpl::configurePartitions(
     const m2n::M2NConfiguration::SharedPointer &m2nConfig)
 {
   PRECICE_TRACE();
@@ -1268,7 +1268,7 @@ void SolverInterfaceImpl::configurePartitions(
   }
 }
 
-void SolverInterfaceImpl::compareBoundingBoxes()
+void ParticipantImpl::compareBoundingBoxes()
 {
   // sort meshContexts by name, for communication in right order.
   std::sort(_accessor->usedMeshContexts().begin(), _accessor->usedMeshContexts().end(),
@@ -1288,7 +1288,7 @@ void SolverInterfaceImpl::compareBoundingBoxes()
   }
 }
 
-void SolverInterfaceImpl::computePartitions()
+void ParticipantImpl::computePartitions()
 {
   // We need to do this in two loops: First, communicate the mesh and later compute the partition.
   // Originally, this was done in one loop. This however gave deadlock if two meshes needed to be communicated cross-wise.
@@ -1335,7 +1335,7 @@ void SolverInterfaceImpl::computePartitions()
   }
 }
 
-void SolverInterfaceImpl::computeMappings(std::vector<MappingContext> &contexts, const std::string &mappingType)
+void ParticipantImpl::computeMappings(std::vector<MappingContext> &contexts, const std::string &mappingType)
 {
   PRECICE_TRACE();
   using namespace mapping;
@@ -1352,7 +1352,7 @@ void SolverInterfaceImpl::computeMappings(std::vector<MappingContext> &contexts,
   }
 }
 
-void SolverInterfaceImpl::mapWrittenData()
+void ParticipantImpl::mapWrittenData()
 {
   PRECICE_TRACE();
   computeMappings(_accessor->writeMappingContexts(), "write");
@@ -1364,7 +1364,7 @@ void SolverInterfaceImpl::mapWrittenData()
   }
 }
 
-void SolverInterfaceImpl::mapReadData()
+void ParticipantImpl::mapReadData()
 {
   PRECICE_TRACE();
   computeMappings(_accessor->readMappingContexts(), "read");
@@ -1377,7 +1377,7 @@ void SolverInterfaceImpl::mapReadData()
   }
 }
 
-void SolverInterfaceImpl::performDataActions(
+void ParticipantImpl::performDataActions(
     const std::set<action::Action::Timing> &timings,
     double                                  time)
 {
@@ -1389,7 +1389,7 @@ void SolverInterfaceImpl::performDataActions(
   }
 }
 
-void SolverInterfaceImpl::handleExports()
+void ParticipantImpl::handleExports()
 {
   PRECICE_TRACE();
   ParticipantState::IntermediateExport exp;
@@ -1400,7 +1400,7 @@ void SolverInterfaceImpl::handleExports()
   _accessor->exportIntermediate(exp);
 }
 
-void SolverInterfaceImpl::resetWrittenData()
+void ParticipantImpl::resetWrittenData()
 {
   PRECICE_TRACE();
   for (auto &context : _accessor->writeDataContexts()) {
@@ -1408,7 +1408,7 @@ void SolverInterfaceImpl::resetWrittenData()
   }
 }
 
-PtrParticipant SolverInterfaceImpl::determineAccessingParticipant(
+PtrParticipant ParticipantImpl::determineAccessingParticipant(
     const config::SolverInterfaceConfiguration &config)
 {
   const auto &partConfig = config.getParticipantConfiguration();
@@ -1423,7 +1423,7 @@ PtrParticipant SolverInterfaceImpl::determineAccessingParticipant(
                 _accessorName);
 }
 
-void SolverInterfaceImpl::initializeIntraCommunication()
+void ParticipantImpl::initializeIntraCommunication()
 {
   PRECICE_TRACE();
 
@@ -1433,7 +1433,7 @@ void SolverInterfaceImpl::initializeIntraCommunication()
       _accessorProcessRank, _accessorCommunicatorSize);
 }
 
-void SolverInterfaceImpl::syncTimestep(double computedTimeStepSize)
+void ParticipantImpl::syncTimestep(double computedTimeStepSize)
 {
   PRECICE_ASSERT(utils::IntraComm::isParallel());
   if (utils::IntraComm::isSecondary()) {
@@ -1450,7 +1450,7 @@ void SolverInterfaceImpl::syncTimestep(double computedTimeStepSize)
   }
 }
 
-void SolverInterfaceImpl::advanceCouplingScheme()
+void ParticipantImpl::advanceCouplingScheme()
 {
   PRECICE_DEBUG("Advance coupling scheme");
   // Orchestrate local and remote mesh changes
@@ -1463,7 +1463,7 @@ void SolverInterfaceImpl::advanceCouplingScheme()
   _couplingScheme->secondExchange();
 }
 
-void SolverInterfaceImpl::closeCommunicationChannels(CloseChannels close)
+void ParticipantImpl::closeCommunicationChannels(CloseChannels close)
 {
   // Apply some final ping-pong to sync solver that run e.g. with a uni-directional coupling only
   // afterwards close connections
@@ -1497,7 +1497,7 @@ void SolverInterfaceImpl::closeCommunicationChannels(CloseChannels close)
   }
 }
 
-const mesh::Mesh &SolverInterfaceImpl::mesh(const std::string &meshName) const
+const mesh::Mesh &ParticipantImpl::mesh(const std::string &meshName) const
 {
   PRECICE_TRACE(meshName);
   return *_accessor->usedMeshContext(meshName).mesh;
