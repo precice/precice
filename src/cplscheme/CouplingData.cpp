@@ -94,11 +94,8 @@ void CouplingData::storeIteration()
   _previousIteration = this->sample();
 }
 
-const Eigen::VectorXd CouplingData::previousIteration()
+const Eigen::VectorXd CouplingData::previousIteration() const
 {
-  if (_previousIteration.values.size() == 0) { // @todo work-around for direct mesh access, if _previousIteration was initialized with incorrect size.
-    _previousIteration = time::Sample{Eigen::VectorXd::Zero(getSize())};
-  }
   return _previousIteration.values;
 }
 
