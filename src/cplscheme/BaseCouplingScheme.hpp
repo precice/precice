@@ -86,11 +86,8 @@ public:
    */
   bool isInitialized() const override final;
 
-  /**
-   * @brief Adds newly computed time. Has to be called before every advance.
-   * @param timeToAdd time to be added
-   */
-  void addComputedTime(double timeToAdd) override final;
+  /// @copydoc cplscheme::CouplingScheme::addComputedTime()
+  bool addComputedTime(double timeToAdd) override final;
 
   /**
    * @brief Returns true, if data will be exchanged when calling advance().

@@ -359,7 +359,7 @@ bool BaseCouplingScheme::isInitialized() const
   return _isInitialized;
 }
 
-void BaseCouplingScheme::addComputedTime(
+bool BaseCouplingScheme::addComputedTime(
     double timeToAdd)
 {
   PRECICE_TRACE(timeToAdd, _time);
@@ -377,6 +377,9 @@ void BaseCouplingScheme::addComputedTime(
                 "Did you restrict your time step size, \"dt = min(preciceDt, solverDt)\"? "
                 "For more information, consult the adapter example in the preCICE documentation.",
                 timeToAdd, _timeWindowSize - _computedTimeWindowPart + timeToAdd);
+
+  const bool isAtWindowEnd = math::equals(getNormalizedWindowTime(), time::Storage::WINDOW_END, _eps);
+  return isAtWindowEnd;
 }
 
 bool BaseCouplingScheme::willDataBeExchanged(

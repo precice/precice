@@ -105,8 +105,13 @@ public:
    * @{
    */
 
-  /// @brief Adds newly computed time. Has to be called before every advance.
-  virtual void addComputedTime(double timeToAdd) = 0;
+  /**
+   * @brief Adds newly computed time. Has to be called before every advance.
+   * @param timeToAdd time to be added
+   *
+   * @returns true, if reaches end of the window by adding timeToAdd to time in this time step.
+   */
+  virtual bool addComputedTime(double timeToAdd) = 0;
 
   using ChangedMeshes = std::vector<MeshID>;
 

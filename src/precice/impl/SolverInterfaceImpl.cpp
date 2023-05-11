@@ -410,11 +410,9 @@ void SolverInterfaceImpl::advance(
 #endif
 
   // Update the coupling scheme time state. Necessary to get correct remainder.
-  _couplingScheme->addComputedTime(computedTimeStepSize);
-  // Current time
+  const bool   isAtWindowEnd = _couplingScheme->addComputedTime(computedTimeStepSize);
   const double time          = _couplingScheme->getTime();
   const double relativeTime  = _couplingScheme->getNormalizedWindowTime();
-  const bool   isAtWindowEnd = math::equals(relativeTime, time::Storage::WINDOW_END);
 
   for (auto &context : _accessor->writeDataContexts()) {
     context.storeBufferedData(relativeTime);
