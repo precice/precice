@@ -9,7 +9,6 @@
 #include "mapping/impl/BasisFunctions.hpp"
 #include "mesh/Filter.hpp"
 #include "precice/types.hpp"
-#include "utils/Event.hpp"
 
 namespace precice {
 

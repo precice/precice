@@ -9,12 +9,10 @@
 #include "mapping/RadialBasisFctBaseMapping.hpp"
 #include "mesh/Filter.hpp"
 #include "precice/types.hpp"
-#include "utils/Event.hpp"
+#include "profiling/Event.hpp"
 #include "utils/IntraComm.hpp"
 
 namespace precice {
-extern bool syncMode;
-
 namespace mapping {
 
 /**
@@ -98,7 +96,7 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::computeMapping()
 {
   PRECICE_TRACE();
 
-  precice::utils::Event e("map.rbf.computeMapping.From" + this->input()->getName() + "To" + this->output()->getName(), precice::syncMode);
+  precice::profiling::Event e("map.rbf.computeMapping.From" + this->input()->getName() + "To" + this->output()->getName(), profiling::Synchronize);
 
   PRECICE_ASSERT(this->input()->getDimensions() == this->output()->getDimensions(),
                  this->input()->getDimensions(), this->output()->getDimensions());
@@ -186,7 +184,7 @@ std::string RadialBasisFctMapping<SOLVER_T, Args...>::getName() const
 template <typename SOLVER_T, typename... Args>
 void RadialBasisFctMapping<SOLVER_T, Args...>::mapConservative(DataID inputDataID, DataID outputDataID)
 {
-  precice::utils::Event e("map.rbf.mapData.From" + this->input()->getName() + "To" + this->output()->getName(), precice::syncMode);
+  precice::profiling::Event e("map.rbf.mapData.From" + this->input()->getName() + "To" + this->output()->getName(), profiling::Synchronize);
   PRECICE_TRACE(inputDataID, outputDataID);
   using precice::com::AsVectorTag;
 
@@ -308,7 +306,7 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConservative(DataID inputDataI
 template <typename SOLVER_T, typename... Args>
 void RadialBasisFctMapping<SOLVER_T, Args...>::mapConsistent(DataID inputDataID, DataID outputDataID)
 {
-  precice::utils::Event e("map.rbf.mapData.From" + this->input()->getName() + "To" + this->output()->getName(), precice::syncMode);
+  precice::profiling::Event e("map.rbf.mapData.From" + this->input()->getName() + "To" + this->output()->getName(), profiling::Synchronize);
   PRECICE_TRACE(inputDataID, outputDataID);
   using precice::com::AsVectorTag;
 
