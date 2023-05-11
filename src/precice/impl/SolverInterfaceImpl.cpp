@@ -347,18 +347,16 @@ void SolverInterfaceImpl::initialize()
     context.storeBufferedData(relativeTime);
   }
 
-  mapWrittenData(); // always perform mapping here to avoid need for workarounds during initialization.
-  if (_couplingScheme->sendsInitializedData()) {
+  mapWrittenData();
+  if (_couplingScheme->sendsInitializedData()) { // @todo try to remove this check as well. Currently problematic, because of Integration/Serial/MultipleMappings/MultipleWriteToMappings (During initialization only data at WINDOW_START available. Should improve, if we apply actions to all samples in storage)
     performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0);
   }
 
   PRECICE_DEBUG("Initialize coupling schemes");
   _couplingScheme->initialize(time, timeWindow);
 
-  if (_couplingScheme->hasDataBeenReceived()) {
-    mapReadData();
-    performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
-  }
+  mapReadData();
+  performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
 
   for (auto &context : _accessor->readDataContexts()) {
     context.moveToNextWindow();

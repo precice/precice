@@ -53,7 +53,7 @@ void runSimpleExplicitCoupling(
   if (participantName == std::string("Participant0")) {
     mesh->data(0)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{mesh->data(0)->values()});
     cplScheme.initialize(0.0, 1);
-    BOOST_TEST(cplScheme.hasDataBeenReceived());
+    BOOST_TEST(not cplScheme.hasDataBeenReceived());
     cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(not cplScheme.hasDataBeenReceived());
     BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
@@ -100,7 +100,7 @@ void runSimpleExplicitCoupling(
   } else if (participantName == std::string("Participant1")) {
     mesh->data(1)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{mesh->data(1)->values()});
     cplScheme.initialize(0.0, 1);
-    BOOST_TEST(cplScheme.hasDataBeenReceived());
+    BOOST_TEST(not cplScheme.hasDataBeenReceived());
     cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     double value = dataValues0(vertex.getID());
@@ -173,7 +173,7 @@ void runExplicitCouplingWithSubcycling(
     mesh->data(0)->timeStepsStorage().clear();
     double dtDesired = cplScheme.getNextTimeStepMaxSize() / 2.0;
     double dtUsed    = dtDesired;
-    BOOST_TEST(cplScheme.hasDataBeenReceived());
+    BOOST_TEST(not cplScheme.hasDataBeenReceived());
     cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(not cplScheme.hasDataBeenReceived());
     BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
@@ -231,7 +231,7 @@ void runExplicitCouplingWithSubcycling(
     // Start coupling
     mesh->data(1)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{mesh->data(1)->values()});
     cplScheme.initialize(0.0, 1);
-    BOOST_TEST(cplScheme.hasDataBeenReceived());
+    BOOST_TEST(not cplScheme.hasDataBeenReceived());
     cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     // Validate current coupling status
@@ -437,7 +437,7 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingFirstParticipantSetsDt)
     double preciceDt, dt;
     mesh->data(0)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{mesh->data(0)->values()});
     cplScheme.initialize(0.0, 1);
-    BOOST_TEST(cplScheme.hasDataBeenReceived());
+    BOOST_TEST(not cplScheme.hasDataBeenReceived());
     cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(cplScheme.getNextTimeStepMaxSize() == 1);
     BOOST_TEST(not cplScheme.hasDataBeenReceived());
@@ -469,7 +469,7 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingFirstParticipantSetsDt)
     BOOST_TEST(context.isNamed(nameParticipant1));
     mesh->data(1)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{mesh->data(1)->values()});
     cplScheme.initialize(0.0, 1);
-    BOOST_TEST(cplScheme.hasDataBeenReceived());
+    BOOST_TEST(not cplScheme.hasDataBeenReceived());
     cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(not cplScheme.isTimeWindowComplete());

@@ -885,7 +885,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
   } else {
     // second participant result written by first participant in its first window = 1 (see below)
     cplScheme.initialize(0.0, 1);
-    BOOST_TEST(cplScheme.hasDataBeenReceived());
+    BOOST_TEST(!cplScheme.hasDataBeenReceived());
     cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(context.isNamed(second));
@@ -1378,7 +1378,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(sendCouplingData->getPreviousIterationSize() == 3); // here, previousIteration is correctly initialized, see above
     BOOST_TEST(testing::equals(sendCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
     cplScheme.initialize(0.0, 1);
-    BOOST_TEST(cplScheme.hasDataBeenReceived());
+    BOOST_TEST(!cplScheme.hasDataBeenReceived());
     cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(receiveCouplingData->getSize() == 1);
