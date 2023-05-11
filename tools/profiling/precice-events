@@ -464,6 +464,54 @@ def analyzeCommand(eventfile, participant, outfile=None, unit='us'):
 
     return 0
 
+def histogramCommand(eventfile, outfile, participant, event, rank, bins, unit='us'):
+    requireModules(["pandas", "matplotlib"])
+    import pandas
+    import matplotlib.pyplot as plt
+
+    run = Run(eventfile)
+    df = run.toDataFrame()
+
+    # Check user input
+    assert participant in df["participant"].unique(), f"Given participant {participant} doesn't exist."
+    assert event in df["eid"].unique(), f"Given event {event} doesn't exist."
+    if not rank is None:
+        assert rank in df["rank"].unique(), f"Given rank {rank} doesn't exist."
+
+
+    # Filter by participant and event
+    df = df[(df["participant"] == participant) & (df["eid"] == event)]
+    df.drop(["participant", "eid"], axis=1, inplace=True)
+
+    if not rank is None:
+        df = df[df["rank"] == rank]
+
+    # Convert duration to requested unit
+    df.dur = df.dur.apply(lambda td: ns_to_unit(td, unit))
+
+    durations = df["dur"].to_list()
+
+    ranks = df["rank"].unique()
+    rankDesc = "ranks: " + ",".join(map(str,ranks)) if len(ranks) < 5 else f"{len(ranks)} ranks"
+
+    fig, ax = plt.subplots(figsize=(14,7), tight_layout=True)
+    ax.set_title(f"Histogram of event \"{event}\" on {participant} ({rankDesc})")
+    ax.set_xlabel(f"Duration [{unit}]")
+    ax.set_ylabel("Occurrence")
+    hist_data = ax.hist(durations, bins=bins, histtype="barstacked", align="mid")
+    ax.bar_label(hist_data[2])
+    binborders = hist_data[1]
+    ax.set_xticks(binborders, labels=[ f"{d:,.2f}" for d in binborders], rotation=90)
+    ax.set_xlim(left=min(binborders), right=max(binborders))
+    ax.grid(axis="x")
+
+    if (outfile):
+        print(f"Writing to {outfile}")
+        plt.savefig(outfile)
+    else:
+        plt.show()
+
+    return 0
 
 def detectFiles(files):
     # Default to loading from the local directory
@@ -594,6 +642,25 @@ if __name__ == '__main__':
     analyze.add_argument("-o", "--output",
                          help="Write the result to CSV file")
 
+    def try_int(s):
+        try:
+            return int(s)
+        except:
+            return s
+
+    histogram_help = """Plots the duration distribution of a single event of a given solver.
+    Event durations are displayed in the unit of choice.
+    """
+    histogram = subparsers.add_parser('histogram',
+                                    help=histogram_help.splitlines()[0], description=histogram_help)
+    histogram.add_argument("-o", "--output", default=None, help="Write to file instead of displaying the plot")
+    histogram.add_argument("-r", "--rank", type=int, default=None, help="Display only the given rank")
+    histogram.add_argument("-b", "--bins", type=try_int, default="fd", help="Number of bins or strategy. Must be a valid argument to numpy.histogram_bin_edges")
+    histogram.add_argument("participant", type=str, help="The participant to analyze")
+    histogram.add_argument("event", type=str, help="The event to analyze")
+    histogram.add_argument("eventfile", nargs="?", type=str, default="events.json",
+                         help="The event file to process")
+
     trace_help = "Transform events to the Trace Event Format."
     trace = subparsers.add_parser('trace',
                                   help=trace_help.splitlines()[0], description=trace_help)
@@ -626,6 +693,7 @@ if __name__ == '__main__':
         "trace": lambda ns: traceCommand(ns.eventfile, ns.output, ns.rank, ns.limit),
         "export": lambda ns: exportCommand(ns.eventfile, ns.output, ns.unit),
         "analyze": lambda ns: analyzeCommand(ns.eventfile, ns.participant, ns.output,  ns.unit),
+        "histogram": lambda ns: histogramCommand(ns.eventfile, ns.output, ns.participant, ns.event, ns.rank, ns.bins, ns.unit),
         "merge": lambda ns: mergeCommand(ns.files, ns.output, not ns.no_align)
     }
 
