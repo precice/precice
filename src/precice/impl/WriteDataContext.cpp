@@ -14,6 +14,22 @@ WriteDataContext::WriteDataContext(
   _writeDataBuffer = time::Sample{Eigen::VectorXd(), Eigen::MatrixXd()};
 }
 
+void WriteDataContext::resetData()
+{
+  // See also https://github.com/precice/precice/issues/1156.
+  _providedData->toZero();
+
+  // reset writeDataBuffer
+  _writeDataBuffer.values.setZero();
+  _writeDataBuffer.gradients.setZero();
+
+  PRECICE_ASSERT(!hasReadMapping(), "Read mapping is not allowed for WriteDataContext.");
+  // reset all toData
+  if (hasWriteMapping()) {
+    std::for_each(_mappingContexts.begin(), _mappingContexts.end(), [](auto &context) { context.toData->toZero(); });
+  }
+}
+
 void WriteDataContext::writeValuesIntoDataBuffer(::precice::span<const VertexID> vertices, ::precice::span<const double> values)
 {
   Eigen::Map<const Eigen::MatrixXd> inputData(values.data(), getDataDimensions(), vertices.size());

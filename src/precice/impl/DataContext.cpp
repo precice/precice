@@ -20,18 +20,6 @@ std::string DataContext::getDataName() const
   return _providedData->getName();
 }
 
-void DataContext::resetData()
-{
-  // See also https://github.com/precice/precice/issues/1156.
-  _providedData->toZero();
-  if (hasMapping()) {
-    PRECICE_ASSERT(hasWriteMapping());
-    PRECICE_ASSERT(!hasReadMapping());
-    std::for_each(_mappingContexts.begin(), _mappingContexts.end(), [](auto &context) { context.toData->toZero(); });
-  }
-  // @todo need to also reset/clear (write)DataBuffer?
-}
-
 int DataContext::getDataDimensions() const
 {
   PRECICE_ASSERT(_providedData);

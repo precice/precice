@@ -27,6 +27,11 @@ public:
       mesh::PtrMesh mesh);
 
   /**
+   * @brief Resets provided data, writeDataBuffer and (if mapping exists) fromData or toData.
+   */
+  void resetData();
+
+  /**
    * @brief Store values in _writeDataBuffer
    *
    * @param[in] vertices ids of data
