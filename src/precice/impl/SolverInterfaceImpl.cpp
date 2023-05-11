@@ -1209,14 +1209,6 @@ void SolverInterfaceImpl::getMeshVerticesAndIDs(
   Eigen::Map<Eigen::MatrixXd> posMatrix{
       coordinates.data(), _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(ids.size())};
 
-  // check and, if necessary, resize write data buffers of mesh
-  const auto requiredSize = mesh->vertices().size();
-  for (auto &context : _accessor->writeDataContexts()) {
-    if (context.getMeshName() == mesh->getName()) {
-      context.resizeBufferTo(requiredSize);
-    }
-  }
-
   for (unsigned long i = 0; i < ids.size(); i++) {
     PRECICE_ASSERT(i < vertices.size(), i, vertices.size());
     ids[i]           = vertices[i].getID();
@@ -1369,8 +1361,14 @@ void SolverInterfaceImpl::computePartitions()
       meshContext->mesh->computeBoundingBox();
     }
 
-    // This allocates gradient values here too if available
-    meshContext->mesh->allocateDataValues();
+    meshContext->mesh->allocateDataValues(); //@todo remove this call? But complicated, because write mapping expects already initialized toData
+
+    const auto requiredSize = meshContext->mesh->vertices().size();
+    for (auto &context : _accessor->writeDataContexts()) {
+      if (context.getMeshName() == meshContext->mesh->getName()) {
+        context.resizeBufferTo(requiredSize);
+      }
+    }
   }
 }
 
