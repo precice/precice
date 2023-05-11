@@ -37,21 +37,30 @@ void WriteDataContext::resetData(bool atEndOfWindow)
 
 void WriteDataContext::writeValuesIntoDataBuffer(::precice::span<const VertexID> vertices, ::precice::span<const double> values)
 {
+  PRECICE_ASSERT(vertices.size() * getDataDimensions() == values.size());
+  PRECICE_ASSERT(_writeDataBuffer.values.data());
+
   Eigen::Map<const Eigen::MatrixXd> inputData(values.data(), getDataDimensions(), vertices.size());
   Eigen::Map<Eigen::MatrixXd>       localData(_writeDataBuffer.values.data(), getDataDimensions(), getMeshVertexCount());
 
   for (int i = 0; i < static_cast<int>(vertices.size()); ++i) {
+    PRECICE_ASSERT(vertices[i] < localData.cols());
     localData.col(vertices[i]) = inputData.col(i);
   }
 }
 
 void WriteDataContext::writeGradientsIntoDataBuffer(::precice::span<const VertexID> vertices, ::precice::span<const double> gradients)
 {
-  const auto                        gradientComponents = getSpatialDimensions() * getDataDimensions();
+  const auto gradientComponents = getSpatialDimensions() * getDataDimensions();
+
+  PRECICE_ASSERT(gradientComponents * vertices.size() == gradients.size());
+  PRECICE_ASSERT(_writeDataBuffer.gradients.data());
+
   Eigen::Map<const Eigen::MatrixXd> inputGradients(gradients.data(), gradientComponents, vertices.size());
   Eigen::Map<Eigen::MatrixXd>       localGradients(_writeDataBuffer.gradients.data(), gradientComponents, getMeshVertexCount());
 
   for (int i = 0; i < static_cast<int>(vertices.size()); ++i) {
+    PRECICE_ASSERT(vertices[i] < localGradients.cols());
     localGradients.col(vertices[i]) = inputGradients.col(i);
   }
 }
