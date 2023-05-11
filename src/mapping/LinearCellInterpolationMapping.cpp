@@ -1,14 +1,12 @@
 #include "LinearCellInterpolationMapping.hpp"
 #include "logging/LogMacros.hpp"
+#include "profiling/Event.hpp"
 #include "query/Index.hpp"
-#include "utils/Event.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/Statistics.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-extern bool syncMode;
-
-namespace mapping {
+namespace precice::mapping {
 
 LinearCellInterpolationMapping::LinearCellInterpolationMapping(
     Constraint constraint,
@@ -33,8 +31,8 @@ LinearCellInterpolationMapping::LinearCellInterpolationMapping(
 void LinearCellInterpolationMapping::computeMapping()
 {
   PRECICE_TRACE(input()->vertices().size(), output()->vertices().size());
-  const std::string     baseEvent = "map.vci.computeMapping.From" + input()->getName() + "To" + output()->getName();
-  precice::utils::Event e(baseEvent, precice::syncMode);
+  const std::string         baseEvent = "map.vci.computeMapping.From" + input()->getName() + "To" + output()->getName();
+  precice::profiling::Event e(baseEvent, profiling::Synchronize);
 
   // Setup Direction of Mapping
   mesh::PtrMesh origins, searchSpace;
@@ -125,5 +123,5 @@ std::string LinearCellInterpolationMapping::getName() const
 {
   return "linear-cell interpolation";
 }
-} // namespace mapping
-} // namespace precice
+
+} // namespace precice::mapping

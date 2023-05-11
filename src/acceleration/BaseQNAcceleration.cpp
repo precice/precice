@@ -12,8 +12,8 @@
 #include "logging/LogMacros.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "profiling/Event.hpp"
 #include "utils/EigenHelperFunctions.hpp"
-#include "utils/Event.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
@@ -23,8 +23,6 @@ namespace io {
 class TXTReader;
 class TXTWriter;
 } // namespace io
-
-extern bool syncMode;
 namespace acceleration {
 
 /* ----------------------------------------------------------------------------
@@ -270,7 +268,7 @@ void BaseQNAcceleration::performAcceleration(
 {
   PRECICE_TRACE(_dataIDs.size(), cplData.size());
 
-  utils::Event e("cpl.computeQuasiNewtonUpdate", precice::syncMode);
+  profiling::Event e("cpl.computeQuasiNewtonUpdate", profiling::Synchronize);
 
   PRECICE_ASSERT(_oldResiduals.size() == _oldXTilde.size(), _oldResiduals.size(), _oldXTilde.size());
   PRECICE_ASSERT(_values.size() == _oldXTilde.size(), _values.size(), _oldXTilde.size());
@@ -346,7 +344,7 @@ void BaseQNAcceleration::performAcceleration(
     }
 
     // apply the configured filter to the LS system
-    utils::Event applyingFilter("ApplyFilter");
+    profiling::Event applyingFilter("ApplyFilter");
     applyFilter();
     applyingFilter.stop();
 

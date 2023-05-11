@@ -4,15 +4,13 @@
 #include <boost/container/flat_set.hpp>
 #include <functional>
 #include "logging/LogMacros.hpp"
+#include "profiling/Event.hpp"
+#include "profiling/EventUtils.hpp"
 #include "utils/EigenHelperFunctions.hpp"
-#include "utils/Event.hpp"
-#include "utils/EventUtils.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-extern bool syncMode;
-
-namespace mapping {
+namespace precice::mapping {
 
 NearestNeighborMapping::NearestNeighborMapping(
     Constraint constraint,
@@ -31,7 +29,7 @@ NearestNeighborMapping::NearestNeighborMapping(
 void NearestNeighborMapping::mapConservative(DataID inputDataID, DataID outputDataID)
 {
   PRECICE_TRACE(inputDataID, outputDataID);
-  precice::utils::Event e("map." + mappingNameShort + ".mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  precice::profiling::Event e("map." + mappingNameShort + ".mapData.From" + input()->getName() + "To" + output()->getName(), profiling::Synchronize);
   PRECICE_DEBUG("Map conservative");
 
   const Eigen::VectorXd &inputValues  = input()->data(inputDataID)->values();
@@ -58,7 +56,7 @@ void NearestNeighborMapping::mapConservative(DataID inputDataID, DataID outputDa
 void NearestNeighborMapping::mapConsistent(DataID inputDataID, DataID outputDataID)
 {
   PRECICE_TRACE(inputDataID, outputDataID);
-  precice::utils::Event e("map." + mappingNameShort + ".mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  precice::profiling::Event e("map." + mappingNameShort + ".mapData.From" + input()->getName() + "To" + output()->getName(), profiling::Synchronize);
   PRECICE_DEBUG((hasConstraint(CONSISTENT) ? "Map consistent" : "Map scaled-consistent"));
 
   const Eigen::VectorXd &inputValues  = input()->data(inputDataID)->values();
@@ -86,5 +84,5 @@ std::string NearestNeighborMapping::getName() const
 {
   return "nearest-neighbor";
 }
-} // namespace mapping
-} // namespace precice
+
+} // namespace precice::mapping

@@ -21,6 +21,11 @@
 #include "utils/MultiLock.hpp"
 
 namespace precice {
+
+namespace profiling {
+class Event;
+}
+
 namespace config {
 class SolverInterfaceConfiguration;
 }
@@ -407,6 +412,9 @@ private:
   /// To allow white box tests.
   friend struct Integration::Serial::Whitebox::TestConfigurationPeano;
   friend struct Integration::Serial::Whitebox::TestConfigurationComsol;
+
+  std::unique_ptr<profiling::Event> _solverInitEvent;
+  std::unique_ptr<profiling::Event> _solverAdvanceEvent;
 };
 
 } // namespace impl
