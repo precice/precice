@@ -647,7 +647,7 @@ int SolverInterfaceImpl::setMeshVertex(
                 "Cannot set vertex for mesh \"{}\". Expected {} position components but found {}.", meshName, mesh.getDimensions(), position.size());
   auto index = mesh.createVertex(Eigen::Map<const Eigen::VectorXd>{position.data(), _dimensions}).getID();
 
-  mesh.allocateDataValues(); //@todo remove this call? But complicated, because write mapping expects already initialized toData
+  mesh.allocateDataValues();
 
   const auto newSize = mesh.vertices().size();
   for (auto &context : _accessor->writeDataContexts()) {
@@ -682,7 +682,7 @@ void SolverInterfaceImpl::setMeshVertices(
     ids[i] = mesh.createVertex(posMatrix.col(i)).getID();
   }
 
-  mesh.allocateDataValues(); //@todo remove this call? But complicated, because write mapping expects already initialized toData
+  mesh.allocateDataValues();
 
   const auto newSize = mesh.vertices().size();
   for (auto &context : _accessor->writeDataContexts()) {
@@ -1361,7 +1361,7 @@ void SolverInterfaceImpl::computePartitions()
       meshContext->mesh->computeBoundingBox();
     }
 
-    meshContext->mesh->allocateDataValues(); //@todo remove this call? But complicated, because write mapping expects already initialized toData
+    meshContext->mesh->allocateDataValues();
 
     const auto requiredSize = meshContext->mesh->vertices().size();
     for (auto &context : _accessor->writeDataContexts()) {

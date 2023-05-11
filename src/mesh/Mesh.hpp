@@ -198,9 +198,8 @@ public:
   /// Returns true if the given vertexID is valid
   bool isValidVertexID(VertexID vertexID) const;
 
-  //@todo remove this function! Use corresponding function from WriteDataContext instead.
   /// Allocates memory for the vertex data values and corresponding gradient values.
-  void allocateDataValues();
+  void allocateDataValues(); //@todo Redesign mapping and remove this function. See https://github.com/precice/precice/issues/1651.
 
   /// Computes the boundingBox for the vertices.
   void computeBoundingBox();
