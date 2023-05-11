@@ -111,7 +111,7 @@ private:
     PRECICE_ASSERT(false);
   }
 
-  /// Sample values of previous iteration.
+  /// Sample values of previous iteration (end of time window).
   time::Sample _previousIteration;
 
   /// Data associated with this CouplingData
