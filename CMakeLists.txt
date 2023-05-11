@@ -315,7 +315,7 @@ if (PRECICE_BUILD_TOOLS AND BUILD_TESTING)
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
   message(STATUS "Found Python ${Python3_VERSION}")
 endif()
-  
+
 # Option Python
 if (PRECICE_PythonActions)
   find_package(Python3 REQUIRED COMPONENTS Development NumPy)

@@ -156,7 +156,7 @@ Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh
 
   Eigen::MatrixXd matrixCLU(n, n);
 
-  precice::utils::Event cluAssembly{"map.rbf.assembleSystemMatrix", false};
+  precice::profiling::Event cluAssembly{"map.rbf.assembleSystemMatrix"};
   matrixCLU.setZero();
 
   // Compute RBF matrix entries
@@ -200,7 +200,7 @@ Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::
 
   Eigen::MatrixXd matrixA(outputSize, n);
 
-  precice::utils::Event outputAssembly{"map.rbf.assembleOutputMatrix", false};
+  precice::profiling::Event outputAssembly{"map.rbf.assembleOutputMatrix"};
   matrixA.setZero();
 
   // Compute RBF values for matrix A
