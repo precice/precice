@@ -14,15 +14,13 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Vertex.hpp"
+#include "profiling/Event.hpp"
 #include "query/Index.hpp"
-#include "utils/Event.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/Statistics.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-extern bool syncMode;
-
-namespace mapping {
+namespace precice::mapping {
 
 NearestProjectionMapping::NearestProjectionMapping(
     Constraint constraint,
@@ -47,8 +45,8 @@ NearestProjectionMapping::NearestProjectionMapping(
 void NearestProjectionMapping::computeMapping()
 {
   PRECICE_TRACE(input()->vertices().size(), output()->vertices().size());
-  const std::string     baseEvent = "map.np.computeMapping.From" + input()->getName() + "To" + output()->getName();
-  precice::utils::Event e(baseEvent, precice::syncMode);
+  const std::string         baseEvent = "map.np.computeMapping.From" + input()->getName() + "To" + output()->getName();
+  precice::profiling::Event e(baseEvent, profiling::Synchronize);
 
   // Setup Direction of Mapping
   mesh::PtrMesh origins, searchSpace;
@@ -111,5 +109,5 @@ std::string NearestProjectionMapping::getName() const
 {
   return "nearest-projection";
 }
-} // namespace mapping
-} // namespace precice
+
+} // namespace precice::mapping

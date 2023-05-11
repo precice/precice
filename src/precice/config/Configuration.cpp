@@ -10,7 +10,8 @@ namespace config {
 
 Configuration::Configuration()
     : _tag(*this, "precice-configuration", xml::XMLTag::OCCUR_ONCE),
-      _logConfig(_tag),
+      _logConfig(_tag), // This must be the first configuration to be constructed
+      _profilingConfig(_tag),
       _solverInterfaceConfig(_tag)
 {
   _tag.setDocumentation("Main tag containing preCICE configuration.");

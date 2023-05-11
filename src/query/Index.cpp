@@ -6,13 +6,11 @@
 
 #include "logging/LogMacros.hpp"
 #include "precice/types.hpp"
+#include "profiling/Event.hpp"
 #include "query/Index.hpp"
 #include "query/impl/RTreeAdapter.hpp"
-#include "utils/Event.hpp"
 
-namespace precice {
-extern bool syncMode;
-namespace query {
+namespace precice::query {
 
 precice::logging::Logger Index::_log{"query::Index"};
 
@@ -50,7 +48,7 @@ VertexTraits::Ptr Index::IndexImpl::getVertexRTree(const mesh::Mesh &mesh)
     return indices.vertexRTree;
   }
 
-  precice::utils::Event e("query.index.getVertexIndexTree." + mesh.getName());
+  precice::profiling::Event e("query.index.getVertexIndexTree." + mesh.getName());
 
   // Generating the rtree is expensive, so passing everything in the ctor is
   // the best we can do. Even passing an index range instead of calling
@@ -70,7 +68,7 @@ EdgeTraits::Ptr Index::IndexImpl::getEdgeRTree(const mesh::Mesh &mesh)
     return indices.edgeRTree;
   }
 
-  precice::utils::Event e("query.index.getEdgeIndexTree." + mesh.getName());
+  precice::profiling::Event e("query.index.getEdgeIndexTree." + mesh.getName());
 
   // Generating the rtree is expensive, so passing everything in the ctor is
   // the best we can do. Even passing an index range instead of calling
@@ -91,7 +89,7 @@ TriangleTraits::Ptr Index::IndexImpl::getTriangleRTree(const mesh::Mesh &mesh)
     return indices.triangleRTree;
   }
 
-  precice::utils::Event e("query.index.getTriangleIndexTree." + mesh.getName());
+  precice::profiling::Event e("query.index.getTriangleIndexTree." + mesh.getName());
 
   // We first generate the values for the triangle rtree.
   // The resulting vector is a random access range, which can be passed to the
@@ -119,7 +117,7 @@ TetrahedronTraits::Ptr Index::IndexImpl::getTetraRTree(const mesh::Mesh &mesh)
     return indices.tetraRTree;
   }
 
-  precice::utils::Event e("query.index.getTetraIndexTree." + mesh.getName());
+  precice::profiling::Event e("query.index.getTetraIndexTree." + mesh.getName());
 
   // We first generate the values for the tetra rtree.
   // The resulting vector is a random access range, which can be passed to the
@@ -356,5 +354,4 @@ void Index::clear()
   _pimpl->clear();
 }
 
-} // namespace query
-} // namespace precice
+} // namespace precice::query
