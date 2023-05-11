@@ -80,6 +80,15 @@ public:
 
   static void broadcast(precice::span<double> values);
 
+  /** Synchronizes all ranks if syncMode is enabled
+   * @see precice::syncMode
+   * @see barrier()
+   */
+  static void synchronize();
+
+  /// Synchronizes all ranks
+  static void barrier();
+
 private:
   static logging::Logger _log;
 
