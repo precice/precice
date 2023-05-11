@@ -1,12 +1,12 @@
 extern "C" {
-#include "precice/ParticipantC.h"
+#include "precice/precicec.h"
 }
 #include <memory>
 #include <string>
 #include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
-#include "precice/Participant.hpp"
 #include "precice/impl/versions.hpp"
+#include "precice/precice.hpp"
 #include "utils/assertion.hpp"
 
 #ifdef __GNUC__

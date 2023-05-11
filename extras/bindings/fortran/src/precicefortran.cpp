@@ -1,4 +1,4 @@
-#include "precice/ParticipantFortran.hpp"
+#include "precice/precicefortran.hpp"
 #include <iostream>
 #include <memory>
 #include <stddef.h>
@@ -7,8 +7,8 @@
 #include <string_view>
 #include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
-#include "precice/Participant.hpp"
 #include "precice/impl/versions.hpp"
+#include "precice/precice.hpp"
 #include "utils/assertion.hpp"
 
 #ifdef __GNUC__

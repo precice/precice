@@ -2,7 +2,7 @@
 
 #include "helpers.hpp"
 
-#include "precice/Participant.hpp"
+#include "precice/precice.hpp"
 #include "testing/Testing.hpp"
 
 /// Tests various distributed communication schemes.

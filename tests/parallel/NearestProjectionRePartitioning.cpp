@@ -3,8 +3,8 @@
 #include "testing/Testing.hpp"
 
 #include <boost/test/data/test_case.hpp>
-#include <precice/Participant.hpp>
 #include <precice/impl/ParticipantImpl.hpp>
+#include <precice/precice.hpp>
 #include <vector>
 
 /// This testcase is based on a bug documented in issue #371

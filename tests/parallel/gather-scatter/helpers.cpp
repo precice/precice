@@ -2,7 +2,7 @@
 
 #include "helpers.hpp"
 
-#include "precice/Participant.hpp"
+#include "precice/precice.hpp"
 #include "testing/Testing.hpp"
 
 // In order to test enforced gather scatter communication with an empty primary rank (see below)

@@ -4,8 +4,8 @@
 #include "testing/Testing.hpp"
 
 #include "mesh/Utils.hpp"
-#include "precice/Participant.hpp"
 #include "precice/impl/ParticipantImpl.hpp"
+#include "precice/precice.hpp"
 
 void testMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFunctions, const std::string configFile, const TestContext &context)
 {
