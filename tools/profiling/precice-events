@@ -1,12 +1,21 @@
 #!/usr/bin/python
 
-import json
+# Import the fastest jsons library available
+try:
+    import ujson as json
+except ImportError:
+    try:
+        import simplejson as json
+    except ImportError:
+        import json
+
 import csv
 import sys
 import datetime
 import argparse
 import os
 from collections import namedtuple
+import functools
 
 
 def mergedDict(dict1, dict2):
@@ -63,15 +72,9 @@ def printWide(df):
     for index, row in df.fillna("").iterrows():
         print(rowfmt.format(*row.to_list()))
 
-
-def ns_to_unit(obj, unit):
-    import numbers
-    if not isinstance(obj, (numbers.Integral, numbers.Real)):
-        import pandas
-        if isinstance(obj, (pandas.Timedelta, pandas.Timestamp)):
-            return ns_to_unit(obj.value, unit)
-
-    return obj * {
+@functools.cache
+def ns_to_unit_factor(unit):
+    return {
         'ns': 1,
         'us': 1e-3,
         'ms': 1e-6,
@@ -80,6 +83,15 @@ def ns_to_unit(obj, unit):
         'h': 1e-9/3600
     }[unit]
 
+def ns_to_unit(obj, unit):
+    factor = ns_to_unit_factor(unit)
+    import numbers
+    if not isinstance(obj, (numbers.Integral, numbers.Real)):
+        import pandas
+        if isinstance(obj, (pandas.Timedelta, pandas.Timestamp)):
+            return factor * obj.value
+
+    return obj * factor
 
 def alignEvents(events):
     """Aligns passed events of multiple ranks and or participants.
@@ -297,6 +309,9 @@ class RankData:
         df["eid"] = df["eid"].apply(lambda id: eventLookup[id])
         return df
 
+    def toListOfTuples(self, eventLookup):
+        for e in self.events:
+            yield (self.name, self.rank, eventLookup[e["eid"]], int(e["ts"]), int(e["dur"]))
 
 class Run:
     def __init__(self, filename):
@@ -363,48 +378,49 @@ class Run:
         return {"traceEvents": metaEvents + mainEvents}
 
     def toExportList(self, unit=None):
-        return [
-            {
-                "participant": rank.name,
-                "rank": rank.rank,
-                "size": rank.size,
-                "event": self.lookupEvent(e["eid"]),
-                "timestamp": e["ts"],
-                "duration": ns_to_unit(e["dur"]*1e3, unit) if unit else e["dur"],
-                "data": "" if "data" not in e else str(dict(zip(map(self.lookupEvent, e["data"].keys()), e["data"].values())))
-            }
-            for rank in self.iterRanks()
-            for e in rank.events
-        ]
+        factor = ns_to_unit_factor(unit)*1e3 if unit else 1
+        for rank in self.iterRanks():
+            for e in rank.events:
+                yield (
+                    rank.name,
+                    rank.rank,
+                    rank.size,
+                    self.lookupEvent(e["eid"]),
+                    e["ts"],
+                    e["dur"] * factor,
+                    "" if "data" not in e else str(dict(zip(map(self.lookupEvent, e["data"].keys()), e["data"].values())))
+                )
 
     def toDataFrame(self):
         import pandas
-        return pandas.concat([
-            rank.toDataFrame(self.eventLookup)
-            for rank in self.iterRanks()
-        ])
+        import itertools
+        columns=["participant", "rank", "eid", "ts", "dur" ]
+        df = pandas.DataFrame(itertools.chain.from_iterable(map(lambda r: r.toListOfTuples(self.eventLookup), self.iterRanks())), columns=columns)
+        df["dur"] = pandas.to_timedelta(df["dur"], unit='microseconds')
+        df["ts"] = pandas.to_datetime(df["ts"], unit="us", origin="unix")
+        return df
 
 
 def traceCommand(eventfile, outfile, rankfilter, limit):
     run = Run(eventfile)
     selection = set().union(rankfilter if rankfilter else []).union(range(limit) if limit else [])
     traces = run.toTrace(selection)
-    json_object = json.dumps(traces, indent=2)
+    #json_object = json.dumps(traces, indent=2)
     print(f"Writing to {outfile}")
     with open(outfile, "w") as outfile:
-        outfile.write(json_object)
+        json.dump(traces, outfile)#, indent=2)
+        #outfile.write(json_object)
     return 0
 
 
 def exportCommand(eventfile, outfile, unit):
     run = Run(eventfile)
-    total = run.toExportList(unit)
-    fieldnames = total[0].keys()
+    fieldnames = [ "participant", "rank", "size", "event", "timestamp", "duration", "data"]
     print(f"Writing to {outfile}")
     with open(outfile, 'w', newline='') as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(total)
+        writer = csv.writer(csvfile)
+        writer.writerow(fieldnames)
+        writer.writerows(run.toExportList(unit))
     return 0
 
 
@@ -420,7 +436,7 @@ def analyzeCommand(eventfile, participant, outfile=None, unit='us'):
     df.drop("participant", axis=1, inplace=True)
 
     # Convert duration to requested unit
-    df.dur = df.dur.apply(lambda td: ns_to_unit(td, unit))
+    df["dur"] = df["dur"].apply(lambda x: x.value * ns_to_unit_factor(unit))
     print(f"Output timing are in {unit}.")
 
     ranks = df["rank"].unique()
