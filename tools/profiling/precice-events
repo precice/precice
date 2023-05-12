@@ -41,7 +41,7 @@ def requireModules(modules):
 def loadRobust(content):
     try:
         return json.loads(content)
-    except json.decoder.JSONDecodeError:
+    except:
         print("Damaged input detected")
         content += "]}"
         return json.loads(content)
