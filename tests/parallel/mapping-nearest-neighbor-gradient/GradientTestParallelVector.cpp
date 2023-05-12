@@ -91,8 +91,8 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelVector)
     BOOST_TEST(interface.requiresGradientDataFor(meshName, dataName2) == true);
 
     if (interface.requiresGradientDataFor(meshName, dataName2)) {
-      std::vector<double> gradientValues(24, 1.0);
-      interface.writeGradientData(meshName, dataName2, vertexIDs, gradientValues);
+      std::vector<double> gradients(24, 1.0);
+      interface.writeGradientData(meshName, dataName2, vertexIDs, gradients);
     }
     interface.advance(1.0);
     interface.finalize();

@@ -1099,7 +1099,7 @@ void SolverInterfaceImpl::writeGradientData(
 
   PRECICE_VALIDATE_DATA(gradients.data(), gradients.size());
 
-  context.writeGradientValues(vertices, gradients);
+  context.writeGradients(vertices, gradients);
 }
 
 void SolverInterfaceImpl::setMeshAccessRegion(

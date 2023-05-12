@@ -58,10 +58,10 @@ public:
   const Eigen::VectorXd &values() const;
 
   /// Returns a reference to the gradient data values.
-  Eigen::MatrixXd &gradientValues();
+  Eigen::MatrixXd &gradients();
 
   /// Returns a const reference to the gradient data values.
-  const Eigen::MatrixXd &gradientValues() const;
+  const Eigen::MatrixXd &gradients() const;
 
   /// Returns the name of the data set, as set in the config file.
   const std::string &getName() const;
@@ -96,7 +96,7 @@ private:
 
   Eigen::VectorXd _values;
 
-  Eigen::MatrixXd _gradientValues;
+  Eigen::MatrixXd _gradients;
 
   /// Name of the data set.
   std::string _name;
