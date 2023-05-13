@@ -79,7 +79,7 @@ bool CompositionalCouplingScheme::addComputedTime(double timeToAdd)
 
   bool isAtWindowEnd = false;
   for (const auto scheme : schemesToRun()) {
-    isAtWindowEnd &= scheme->addComputedTime(timeToAdd);
+    isAtWindowEnd |= scheme->addComputedTime(timeToAdd); // @todo should be &= ?
   }
   return isAtWindowEnd;
 }
