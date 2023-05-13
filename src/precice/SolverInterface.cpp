@@ -1,6 +1,8 @@
-#include "precice/SolverInterface.hpp"
+#include <optional>
 #include <string_view>
+
 #include "cplscheme/Constants.hpp"
+#include "precice/SolverInterface.hpp"
 #include "precice/impl/SolverInterfaceImpl.hpp"
 #include "precice/impl/versions.hpp"
 
@@ -25,7 +27,7 @@ SolverInterface::SolverInterface(
     ::precice::string_view configurationFileName,
     int                    solverProcessIndex,
     int                    solverProcessSize)
-    : _impl(new impl::SolverInterfaceImpl(toSV(participantName), toSV(configurationFileName), solverProcessIndex, solverProcessSize))
+    : _impl(new impl::SolverInterfaceImpl(toSV(participantName), toSV(configurationFileName), solverProcessIndex, solverProcessSize, std::nullopt))
 {
 }
 
@@ -35,7 +37,7 @@ SolverInterface::SolverInterface(
     int                    solverProcessIndex,
     int                    solverProcessSize,
     void *                 communicator)
-    : _impl(new impl::SolverInterfaceImpl(toSV(participantName), toSV(configurationFileName), solverProcessIndex, solverProcessSize, communicator))
+    : _impl(new impl::SolverInterfaceImpl(toSV(participantName), toSV(configurationFileName), solverProcessIndex, solverProcessSize, {communicator}))
 {
 }
 

@@ -47,12 +47,12 @@ const Eigen::VectorXd &CouplingData::values() const
   return sample().values;
 }
 
-Eigen::MatrixXd &CouplingData::gradientValues()
+Eigen::MatrixXd &CouplingData::gradients()
 {
   return sample().gradients;
 }
 
-const Eigen::MatrixXd &CouplingData::gradientValues() const
+const Eigen::MatrixXd &CouplingData::gradients() const
 {
   return sample().gradients;
 }

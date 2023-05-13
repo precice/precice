@@ -9,8 +9,8 @@
 #include "mapping/impl/SphericalVertexCluster.hpp"
 #include "mesh/Filter.hpp"
 #include "precice/types.hpp"
+#include "profiling/Event.hpp"
 #include "query/Index.hpp"
-#include "utils/Event.hpp"
 #include "utils/IntraComm.hpp"
 
 namespace precice {
@@ -157,7 +157,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 {
   PRECICE_TRACE();
 
-  precice::utils::Event e("map.pou.computeMapping.From" + this->input()->getName() + "To" + this->output()->getName(), precice::syncMode);
+  precice::profiling::Event e("map.pou.computeMapping.From" + this->input()->getName() + "To" + this->output()->getName(), profiling::Synchronize);
 
   // Recompute the whole clustering
   PRECICE_ASSERT(!this->_hasComputedMapping, "Please clear the mapping before recomputing.");
@@ -266,7 +266,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(DataID in
 {
   PRECICE_TRACE(inputDataID, outputDataID);
 
-  precice::utils::Event e("map.pou.mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  precice::profiling::Event e("map.pou.mapData.From" + input()->getName() + "To" + output()->getName(), profiling::Synchronize);
 
   // Execute the actual mapping evaluation in all clusters
   // 1. Assert that all output data values were reset, as we accumulate data in all clusters independently
@@ -282,7 +282,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inpu
 {
   PRECICE_TRACE(inputDataID, outputDataID);
 
-  precice::utils::Event e("map.pou.mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  precice::profiling::Event e("map.pou.mapData.From" + input()->getName() + "To" + output()->getName(), profiling::Synchronize);
 
   // Execute the actual mapping evaluation in all clusters
   // 1. Assert that all output data values were reset, as we accumulate data in all clusters independently

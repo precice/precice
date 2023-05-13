@@ -34,6 +34,7 @@ The following components currently exist:
 - \ref precice::math "math" provides general mathematical constants and functions.
 - \ref precice::mapping "mapping" defines data mapping from points to meshes by using geometrical queries.
 - \ref precice::partition "partition" computes the partitioning of distributed meshes at initialization.
+- \ref precice::profiling "profiling" provides utilities for performance profiling .
 - \ref precice::query "query" holds classes to perform geometrical queries on geometries.
 - \ref precice::testing "testing" holds the code that configure the boost testing framework and the main function for the testprecice executable.
 - \ref precice::time "time" contains the functionality regarding interpolation in time

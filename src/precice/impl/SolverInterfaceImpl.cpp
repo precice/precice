@@ -7,6 +7,7 @@
 #include <functional>
 #include <iterator>
 #include <memory>
+#include <optional>
 #include <ostream>
 #include <sstream>
 #include <tuple>
@@ -59,10 +60,11 @@
 #include "precice/impl/WriteDataContext.hpp"
 #include "precice/impl/versions.hpp"
 #include "precice/types.hpp"
+#include "profiling/Event.hpp"
+#include "profiling/EventUtils.hpp"
+#include "profiling/config/ProfilingConfiguration.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/EigenIO.hpp"
-#include "utils/Event.hpp"
-#include "utils/EventUtils.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/Parallel.hpp"
@@ -71,8 +73,7 @@
 #include "utils/assertion.hpp"
 #include "xml/XMLTag.hpp"
 
-using precice::utils::Event;
-using precice::utils::EventRegistry;
+using precice::profiling::Event;
 
 namespace precice {
 
@@ -82,20 +83,19 @@ bool syncMode = false;
 namespace impl {
 
 SolverInterfaceImpl::SolverInterfaceImpl(
-    std::string_view participantName,
-    std::string_view configurationFileName,
-    int              solverProcessIndex,
-    int              solverProcessSize,
-    void *           communicator,
-    bool             allowNullptr)
+    std::string_view      participantName,
+    std::string_view      configurationFileName,
+    int                   solverProcessIndex,
+    int                   solverProcessSize,
+    std::optional<void *> communicator)
     : _accessorName(participantName),
       _accessorProcessRank(solverProcessIndex),
       _accessorCommunicatorSize(solverProcessSize)
 {
-  if (!allowNullptr) {
-    PRECICE_CHECK(communicator != nullptr,
-                  "Passing \"nullptr\" as \"communicator\" to SolverInterface constructor is not allowed. Please use the SolverInterface constructor without the \"communicator\" argument, if you don't want to pass an MPI communicator.");
-  }
+
+  PRECICE_CHECK(!communicator || communicator.value() != nullptr,
+                "Passing \"nullptr\" as \"communicator\" to SolverInterface constructor is not allowed. "
+                "Please use the SolverInterface constructor without the \"communicator\" argument, if you don't want to pass an MPI communicator.");
   PRECICE_CHECK(!_accessorName.empty(),
                 "This participant's name is an empty string. "
                 "When constructing a preCICE interface you need to pass the name of the "
@@ -113,53 +113,52 @@ SolverInterfaceImpl::SolverInterfaceImpl(
                 "Please check the values given when constructing a preCICE interface.",
                 _accessorProcessRank, _accessorCommunicatorSize);
 
-// Set the global communicator to the passed communicator.
-// This is a noop if preCICE is not configured with MPI.
-// nullpointer signals to use MPI_COMM_WORLD
+  // Set the global communicator to the passed communicator.
+  // This is a noop if preCICE is not configured with MPI.
 #ifndef PRECICE_NO_MPI
-  if (communicator != nullptr) {
-    auto commptr = static_cast<utils::Parallel::Communicator *>(communicator);
+  if (communicator.has_value()) {
+    auto commptr = static_cast<utils::Parallel::Communicator *>(communicator.value());
     utils::Parallel::registerUserProvidedComm(*commptr);
   }
 #endif
 
   logging::setParticipant(_accessorName);
 
+  profiling::EventRegistry::instance().initialize(_accessorName, _accessorProcessRank, _accessorCommunicatorSize);
+  profiling::applyDefaults();
+  Event                        e("construction", profiling::Fundamental);
+  profiling::ScopedEventPrefix sep("construction/");
+
+  Event e1("configure", profiling::Fundamental);
   configure(configurationFileName);
+  e1.stop();
 
-// This block cannot be merge with the one above as only configure calls
-// utils::Parallel::initializeMPI, which is needed for getProcessRank.
-#ifndef PRECICE_NO_MPI
-  if (communicator != nullptr) {
-    const auto currentRank = utils::Parallel::current()->rank();
-    PRECICE_CHECK(_accessorProcessRank == currentRank,
-                  "The solver process index given in the preCICE interface constructor({}) does not match the rank of the passed MPI communicator ({}).",
-                  _accessorProcessRank, currentRank);
-    const auto currentSize = utils::Parallel::current()->size();
-    PRECICE_CHECK(_accessorCommunicatorSize == currentSize,
-                  "The solver process size given in the preCICE interface constructor({}) does not match the size of the passed MPI communicator ({}).",
-                  _accessorCommunicatorSize, currentSize);
+  // Backend settings have been configured
+  Event e2("startProfilingBackend");
+  profiling::EventRegistry::instance().startBackend();
+  e2.stop();
+
+  PRECICE_DEBUG("Initialize intra-participant communication");
+  if (utils::IntraComm::isParallel()) {
+    initializeIntraCommunication();
   }
+
+  // This block cannot be merged with the one above as it only configures calls
+  // utils::Parallel::initializeMPI, which is needed for getProcessRank.
+#ifndef PRECICE_NO_MPI
+  const auto currentRank = utils::Parallel::current()->rank();
+  PRECICE_CHECK(_accessorProcessRank == currentRank,
+                "The solver process index given in the preCICE interface constructor({}) does not match the rank of the passed MPI communicator ({}).",
+                _accessorProcessRank, currentRank);
+  const auto currentSize = utils::Parallel::current()->size();
+  PRECICE_CHECK(_accessorCommunicatorSize == currentSize,
+                "The solver process size given in the preCICE interface constructor({}) does not match the size of the passed MPI communicator ({}).",
+                _accessorCommunicatorSize, currentSize);
 #endif
-}
 
-SolverInterfaceImpl::SolverInterfaceImpl(
-    std::string_view participantName,
-    std::string_view configurationFileName,
-    int              solverProcessIndex,
-    int              solverProcessSize)
-    : SolverInterfaceImpl::SolverInterfaceImpl(participantName, configurationFileName, solverProcessIndex, solverProcessSize, nullptr, true)
-{
-}
-
-SolverInterfaceImpl::SolverInterfaceImpl(
-    std::string_view participantName,
-    std::string_view configurationFileName,
-    int              solverProcessIndex,
-    int              solverProcessSize,
-    void *           communicator)
-    : SolverInterfaceImpl::SolverInterfaceImpl(participantName, configurationFileName, solverProcessIndex, solverProcessSize, communicator, false)
-{
+  e.stop();
+  sep.pop();
+  _solverInitEvent = std::make_unique<profiling::Event>("solver.initialize", profiling::Fundamental, profiling::Synchronize);
 }
 
 SolverInterfaceImpl::~SolverInterfaceImpl()
@@ -173,6 +172,7 @@ SolverInterfaceImpl::~SolverInterfaceImpl()
 void SolverInterfaceImpl::configure(
     std::string_view configurationFileName)
 {
+
   config::Configuration config;
   utils::Parallel::initializeManagedMPI(nullptr, nullptr);
   logging::setMPIRank(utils::Parallel::current()->rank());
@@ -213,9 +213,6 @@ void SolverInterfaceImpl::configure(
 {
   PRECICE_TRACE();
 
-  Event                    e("configure"); // no precice::syncMode as this is not yet configured here
-  utils::ScopedEventPrefix sep("configure/");
-
   _meshLock.clear();
 
   _dimensions         = config.getDimensions();
@@ -250,16 +247,6 @@ void SolverInterfaceImpl::configure(
   for (const MeshContext *meshContext : _accessor->usedMeshContexts()) {
     _meshLock.add(meshContext->mesh->getName(), false);
   }
-
-  utils::EventRegistry::instance().initialize("precice-" + _accessorName, "", utils::Parallel::current()->comm);
-
-  PRECICE_DEBUG("Initialize intra-participant communication");
-  if (utils::IntraComm::isParallel()) {
-    initializeIntraCommunication();
-  }
-
-  auto &solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
-  solverInitEvent.start(precice::syncMode);
 }
 
 void SolverInterfaceImpl::initialize()
@@ -274,16 +261,15 @@ void SolverInterfaceImpl::initialize()
                 "Initial data has to be written to preCICE before calling initialize(). "
                 "After defining your mesh, call requiresInitialData() to check if the participant is required to write initial data using an appropriate write...Data() function.");
 
-  auto &solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
-  solverInitEvent.pause(precice::syncMode);
-  Event                    e("initialize", precice::syncMode);
-  utils::ScopedEventPrefix sep("initialize/");
+  _solverInitEvent.reset();
+  Event                        e("initialize", profiling::Fundamental, profiling::Synchronize);
+  profiling::ScopedEventPrefix sep("initialize/");
 
   PRECICE_DEBUG("Preprocessing provided meshes");
   for (MeshContext *meshContext : _accessor->usedMeshContexts()) {
     if (meshContext->provideMesh) {
       auto &mesh = *(meshContext->mesh);
-      Event e("preprocess." + mesh.getName(), precice::syncMode);
+      Event e("preprocess." + mesh.getName(), profiling::Synchronize);
       meshContext->mesh->preprocess();
     }
   }
@@ -361,7 +347,6 @@ void SolverInterfaceImpl::initialize()
   for (auto &context : _accessor->readDataContexts()) {
     context.moveToNextWindow();
   }
-
   _couplingScheme->receiveResultOfFirstAdvance();
 
   if (_couplingScheme->hasDataBeenReceived()) {
@@ -372,10 +357,12 @@ void SolverInterfaceImpl::initialize()
   resetWrittenData(false);
   PRECICE_DEBUG("Plot output");
   _accessor->exportFinal();
-  solverInitEvent.start(precice::syncMode);
+  e.stop();
+  sep.pop();
 
   _state = State::Initialized;
   PRECICE_INFO(_couplingScheme->printCouplingState());
+  _solverAdvanceEvent = std::make_unique<profiling::Event>("solver.advance", profiling::Fundamental, profiling::Synchronize);
 }
 
 void SolverInterfaceImpl::advance(
@@ -385,13 +372,11 @@ void SolverInterfaceImpl::advance(
   PRECICE_TRACE(computedTimeStepSize);
 
   // Events for the solver time, stopped when we enter, restarted when we leave advance
-  auto &solverEvent = EventRegistry::instance().getStoredEvent("solver.advance");
-  solverEvent.stop(precice::syncMode);
-  auto &solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
-  solverInitEvent.stop(precice::syncMode);
+  PRECICE_ASSERT(_solverAdvanceEvent, "The advance event is created in initialize");
+  _solverAdvanceEvent->stop();
 
-  Event                    e("advance", precice::syncMode);
-  utils::ScopedEventPrefix sep("advance/");
+  Event                        e("advance", profiling::Fundamental, profiling::Synchronize);
+  profiling::ScopedEventPrefix sep("advance/");
 
   PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before advance().");
   PRECICE_CHECK(_state != State::Finalized, "advance() cannot be called after finalize().")
@@ -444,7 +429,10 @@ void SolverInterfaceImpl::advance(
   resetWrittenData(isAtWindowEnd);
 
   _meshLock.lockAll();
-  solverEvent.start(precice::syncMode);
+
+  sep.pop();
+  e.stop();
+  _solverAdvanceEvent->start();
 }
 
 void SolverInterfaceImpl::finalize()
@@ -453,11 +441,10 @@ void SolverInterfaceImpl::finalize()
   PRECICE_CHECK(_state != State::Finalized, "finalize() may only be called once.");
 
   // Events for the solver time, finally stopped here
-  auto &solverEvent = EventRegistry::instance().getStoredEvent("solver.advance");
-  solverEvent.stop(precice::syncMode);
+  _solverAdvanceEvent.reset();
 
-  Event                    e("finalize"); // no precice::syncMode here as MPI is already finalized at destruction of this event
-  utils::ScopedEventPrefix sep("finalize/");
+  Event                        e("finalize", profiling::Fundamental);
+  profiling::ScopedEventPrefix sep("finalize/");
 
   if (_state == State::Initialized) {
 
@@ -488,15 +475,9 @@ void SolverInterfaceImpl::finalize()
 
   // Finalize PETSc and Events first
   utils::Petsc::finalize();
-  utils::EventRegistry::instance().finalize();
-
-  // Printing requires finalization
-  if (not precice::utils::IntraComm::isSecondary()) {
-    utils::EventRegistry::instance().printAll();
-  }
+  profiling::EventRegistry::instance().finalize();
 
   // Finally clear events and finalize MPI
-  utils::EventRegistry::instance().clear();
   utils::Parallel::finalizeManagedMPI();
   _state = State::Finalized;
 }
@@ -646,7 +627,6 @@ int SolverInterfaceImpl::setMeshVertex(
   PRECICE_CHECK(position.size() == static_cast<unsigned long>(mesh.getDimensions()),
                 "Cannot set vertex for mesh \"{}\". Expected {} position components but found {}.", meshName, mesh.getDimensions(), position.size());
   auto index = mesh.createVertex(Eigen::Map<const Eigen::VectorXd>{position.data(), _dimensions}).getID();
-
   mesh.allocateDataValues();
 
   const auto newSize = mesh.vertices().size();
@@ -681,7 +661,6 @@ void SolverInterfaceImpl::setMeshVertices(
   for (unsigned long i = 0; i < ids.size(); ++i) {
     ids[i] = mesh.createVertex(posMatrix.col(i)).getID();
   }
-
   mesh.allocateDataValues();
 
   const auto newSize = mesh.vertices().size();
@@ -1463,10 +1442,11 @@ void SolverInterfaceImpl::initializeIntraCommunication()
 {
   PRECICE_TRACE();
 
-  Event e("com.initializeIntraCom", precice::syncMode);
+  Event e("com.initializeIntraCom", profiling::Fundamental);
   utils::IntraComm::getCommunication()->connectIntraComm(
       _accessorName, "IntraComm",
       _accessorProcessRank, _accessorCommunicatorSize);
+  utils::IntraComm::barrier();
 }
 
 void SolverInterfaceImpl::syncTimestep(double computedTimeStepSize)

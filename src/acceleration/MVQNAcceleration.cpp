@@ -18,8 +18,8 @@
 #include "cplscheme/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
 #include "precice/types.hpp"
+#include "profiling/Event.hpp"
 #include "utils/EigenHelperFunctions.hpp"
-#include "utils/Event.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
@@ -753,7 +753,7 @@ void MVQNAcceleration::specializedIterationsConverged(
 
         // < RESTART >
         _nbRestarts++;
-        utils::Event restartUpdate("IMVJRestart");
+        profiling::Event restartUpdate("IMVJRestart");
         restartIMVJ();
         restartUpdate.stop();
       }
