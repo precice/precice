@@ -184,10 +184,6 @@ private:
 
   void _solveRBFSystem(const std::shared_ptr<GinkgoVector> &rhs) const;
 
-  precice::profiling::Event _allocCopyEvent{"map.rbf.ginkgo.memoryAllocAndCopy"};
-
-  precice::profiling::Event _assemblyEvent{"map.rbf.ginkgo.assembleMatrices"};
-
   std::shared_ptr<gko::stop::Iteration::Factory> _iterationCriterion;
 
   std::shared_ptr<gko::stop::ResidualNormReduction<>::Factory> _residualCriterion;
@@ -237,7 +233,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
   _scalarNegativeOne = gko::share(gko::initialize<GinkgoScalar>({-1.0}, _deviceExecutor));
 
   // Now we fill the RBF system matrix on the GPU (or any other selected device)
-  _allocCopyEvent.start();
+  precice::profiling::Event _allocCopyEvent{"map.rbf.ginkgo.memoryAllocAndCopy"};
   _rbfCoefficients = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{n, 1}));
   _allocCopyEvent.stop();
   // Initial guess is required since uninitialized memory could lead to a never converging system
@@ -305,7 +301,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
     _matrixQ->fill(0.0);
     _matrixV->fill(0.0);
 
-    _assemblyEvent.start();
+    precice::profiling::Event _assemblyEvent{"map.rbf.ginkgo.assembleMatrices"};
     _deviceExecutor->run(make_polynomial_fill_operation(_matrixQ->get_size()[0], _matrixQ->get_size()[1], _matrixQ->get_values(), dInputVertices->get_values(), dInputVertices->get_size()[1], separatePolyParams));
     _deviceExecutor->run(make_polynomial_fill_operation(_matrixV->get_size()[0], _matrixV->get_size()[1], _matrixV->get_values(), dOutputVertices->get_values(), dOutputVertices->get_size()[1], separatePolyParams));
     _assemblyEvent.stop();
@@ -336,7 +332,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
   }
 
   // Launch RBF fill kernel on device
-  _assemblyEvent.start();
+  precice::profiling::Event _assemblyEvent{"map.rbf.ginkgo.assembleMatrices"};
   precice::profiling::Event systemMatrixAssemblyEvent{"map.rbf.ginkgo.assembleSystemMatrix"};
   _deviceExecutor->run(make_rbf_fill_operation(_rbfSystemMatrix->get_size()[0], _rbfSystemMatrix->get_size()[1], meshDim, activeAxis, _rbfSystemMatrix->get_values(), dInputVertices->get_values(), dInputVertices->get_values(), basisFunction, basisFunction.getFunctionParameters(), dInputVertices->get_size()[1], dInputVertices->get_size()[1], Polynomial::ON == polynomial, polyparams)); // polynomial evaluates to true only if ON is set
   _deviceExecutor->synchronize();
@@ -481,8 +477,8 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsis
     rhs->at(i, 0) = rhsValues(i, 0);
   }
 
-  _allocCopyEvent.start();
-  auto dRhs = gko::share(gko::clone(_deviceExecutor, rhs));
+  precice::profiling::Event _allocCopyEvent{"map.rbf.ginkgo.memoryAllocAndCopy"};
+  auto                      dRhs = gko::share(gko::clone(_deviceExecutor, rhs));
   rhs->clear();
   _allocCopyEvent.stop();
 
@@ -544,8 +540,8 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConser
     rhs->at(i, 0) = rhsValues(i, 0);
   }
 
-  _allocCopyEvent.start();
-  auto dRhs = gko::share(gko::clone(_deviceExecutor, rhs));
+  precice::profiling::Event _allocCopyEvent{"map.rbf.ginkgo.memoryAllocAndCopy"};
+  auto                      dRhs = gko::share(gko::clone(_deviceExecutor, rhs));
   rhs->clear();
   _allocCopyEvent.stop();
 

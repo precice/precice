@@ -55,7 +55,7 @@ endif()
 
 option(PRECICE_MPICommunication "Enables MPI-based communication and running coupling tests." ON)
 option(PRECICE_PETScMapping "Enable use of the PETSc linear algebra library." ON)
-option(PRECICE_GinkgoParallelization "Enable use of the Ginkgo linear algebra library for parallelization." OFF)
+option(PRECICE_GinkgoParallelization "**Experimental** Enable use of the Ginkgo linear algebra library for parallelization." OFF)
 option(PRECICE_PythonActions "Python support" ON)
 option(PRECICE_Packages "Configure package generation." ON)
 option(BUILD_SHARED_LIBS "Build shared instead of static libraries" ON)
@@ -112,7 +112,7 @@ add_feature_info(PETScMapping PRECICE_PETScMapping
    Requires MPICommunication.
   ")
   add_feature_info(GinkgoParallelization PRECICE_GinkgoParallelization
-  "Enables the Ginkgo library backend which supports the usage of GPUs and OpenMP in radial basis function mappings.
+  "**Experimental** Enables the Ginkgo library backend which supports the usage of GPUs and OpenMP in radial basis function mappings.
 
    Currently, this enables radial basis function mappings to leverage the compute power of Nvidia and AMD GPUs.
    It uses iterative solvers provided by Ginkgo or direct solvers offered by hip/cuSolver to compute the solution of interpolation problems.
