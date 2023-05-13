@@ -44,6 +44,7 @@ Eigen::VectorXd bSplineInterpolationAt(double t, Eigen::VectorXd ts, Eigen::Matr
 
   const int splineDimension = 1;
 
+  // @todo implement cache to avoid unnecessary recomputation. Important! Need to reset cache when entering next window or iteration.
   for (int i = 0; i < ndofs; i++) {
     const auto spline = Eigen::SplineFitting<Eigen::Spline<double, splineDimension>>::Interpolate(xs.row(i), splineDegree, ts);
     interpolated[i]   = spline(t)[0]; // get component of spline associated with xs.row(i)
