@@ -746,8 +746,8 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
     // first order extrapolation
     BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4); // = 2*3 - 2
   } else if (context.isNamed(second)) {
-    // extrapolation only applied to accelerated data. So data written by first participant.
-    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3);
+    // first order extrapolation, because no more data is written
+    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 5); // = 2*3 - 1
   }
 
   // reached end of simulation, ready to finalize
@@ -986,8 +986,8 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
     // first order extrapolation
     BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4); // = 2*3 - 2
   } else if (context.isNamed(second)) {
-    // extrapolation only applied to accelerated data. So data written by first participant.
-    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3);
+    // first order extrapolation, because no more data is written
+    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 5); // = 2*3 - 1
   }
 
   // reached end of simulation, ready to finalize
