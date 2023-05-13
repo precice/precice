@@ -23,7 +23,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
 
     std::vector<double> boundingBox = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 3.5}) : boundingBoxSecondaryRank;
     // Set bounding box
-    interface.setMeshAccessRegion(otherMeshName, boundingBox.data());
+    interface.setMeshAccessRegion(otherMeshName, boundingBox);
     // Initialize the solverinterface
     interface.initialize();
     double dt = interface.getMaxTimeStepSize();
@@ -39,7 +39,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
     // Allocate memory
     std::vector<int>    ids(meshSize);
     std::vector<double> coordinates(meshSize * dim);
-    interface.getMeshVerticesAndIDs(otherMeshName, meshSize, ids.data(), coordinates.data());
+    interface.getMeshVerticesAndIDs(otherMeshName, ids, coordinates);
 
     // Check the received vertex coordinates
     std::vector<double> expectedPositions = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 2.0, 0.0, 3.0}) : expectedPositionSecondaryRank;
@@ -87,7 +87,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
     const int        size = positions.size() / dim;
     std::vector<int> ids(size);
 
-    interface.setMeshVertices(meshName, size, positions.data(), ids.data());
+    interface.setMeshVertices(meshName, positions, ids);
 
     {
       // Check, if we can use the 'getMeshVerticesAndIDs' function on provided meshes as well,
@@ -96,7 +96,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
       BOOST_TEST(ownMeshSize == size);
       std::vector<int>    ownIDs(ownMeshSize);
       std::vector<double> ownCoordinates(ownMeshSize * dim);
-      interface.getMeshVerticesAndIDs(meshName, ownMeshSize, ownIDs.data(), ownCoordinates.data());
+      interface.getMeshVerticesAndIDs(meshName, ownIDs, ownCoordinates);
       BOOST_TEST(ownIDs == ids);
       BOOST_TEST(testing::equals(positions, ownCoordinates));
     }

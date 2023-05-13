@@ -27,16 +27,16 @@ public:
       mesh::PtrMesh mesh);
 
   /**
-   * @brief Get _providedData member.
+   * @brief Resets provided data, writeDataBuffer, (if mapping exists) fromData or toData, and (optionally) storage.
    *
-   * @return mesh::PtrData _providedData.
+   * @param atEndOfWindow if true, also the Storage will be reset (useful at end of window to clear storage).
    */
-  mesh::PtrData providedData();
+  void resetData(bool atEndOfWindow);
 
   /**
    * @brief Store values in _writeDataBuffer
    *
-   * @param[in] indices ids of data
+   * @param[in] vertices ids of data
    * @param[in] values values of data
    */
   void writeValuesIntoDataBuffer(::precice::span<const VertexID> vertices, ::precice::span<const double> values);
@@ -44,7 +44,7 @@ public:
   /**
    * @brief Store gradients in _writeDataBuffer
    *
-   * @param[in] indices ids of data
+   * @param[in] vertices ids of data
    * @param[in] gradients gradients of data
    */
   void writeGradientsIntoDataBuffer(::precice::span<const VertexID> vertices, ::precice::span<const double> gradients);
@@ -57,13 +57,6 @@ public:
    * @param[in] currentTime time data should be associated with
    */
   void storeBufferedData(double currentTime);
-
-  // void loadLastFromStorage();
-
-  /**
-   * @brief Clear data storage for next iteration or window.
-   */
-  void clearStorage();
 
   /**
    * @brief Adds a MappingContext and the MeshContext required by the write mapping to the corresponding WriteDataContext data structures.

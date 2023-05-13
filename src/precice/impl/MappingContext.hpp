@@ -36,7 +36,7 @@ struct MappingContext {
   void clearToDataStorage()
   {
     if (toData->timeStepsStorage().nTimes() > 0) {
-      toData->timeStepsStorage().clear();
+      toData->timeStepsStorage().trim();
     }
   }
 };

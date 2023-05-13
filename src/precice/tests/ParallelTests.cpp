@@ -58,7 +58,7 @@ void multiCouplingThreeSolversParallelControl(const std::string configFile, cons
     auto            dataBAID = "DataBA";
 
     if (context.isPrimary()) {
-      int vertex1 = cplInterface.setMeshVertex(meshName, coordOneA.data());
+      int vertex1 = cplInterface.setMeshVertex(meshName, coordOneA);
 
       cplInterface.initialize();
       double maxDt = cplInterface.getMaxTimeStepSize();
@@ -84,7 +84,7 @@ void multiCouplingThreeSolversParallelControl(const std::string configFile, cons
       cplInterface.finalize();
 
     } else {
-      int vertex2 = cplInterface.setMeshVertex(meshName, coordOneB.data());
+      int vertex2 = cplInterface.setMeshVertex(meshName, coordOneB);
 
       cplInterface.initialize();
       double maxDt = cplInterface.getMaxTimeStepSize();
@@ -114,10 +114,10 @@ void multiCouplingThreeSolversParallelControl(const std::string configFile, cons
     SolverInterface cplInterface("SolverB", configFile, 0, 1);
     auto            meshName1 = "MeshB1";
     auto            meshName2 = "MeshB2";
-    int             vertex1   = cplInterface.setMeshVertex(meshName1, coordOneA.data());
-    int             vertex2   = cplInterface.setMeshVertex(meshName1, coordOneB.data());
-    int             vertex3   = cplInterface.setMeshVertex(meshName2, coordOneA.data());
-    int             vertex4   = cplInterface.setMeshVertex(meshName2, coordOneB.data());
+    int             vertex1   = cplInterface.setMeshVertex(meshName1, coordOneA);
+    int             vertex2   = cplInterface.setMeshVertex(meshName1, coordOneB);
+    int             vertex3   = cplInterface.setMeshVertex(meshName2, coordOneA);
+    int             vertex4   = cplInterface.setMeshVertex(meshName2, coordOneB);
 
     auto dataABID = "DataAB"; // meshName1
     auto dataBAID = "DataBA"; // meshName1
@@ -159,8 +159,8 @@ void multiCouplingThreeSolversParallelControl(const std::string configFile, cons
   } else {
     SolverInterface cplInterface("SolverC", configFile, 0, 1);
     auto            meshName = "MeshC";
-    int             vertex1  = cplInterface.setMeshVertex(meshName, coordOneA.data());
-    int             vertex2  = cplInterface.setMeshVertex(meshName, coordOneB.data());
+    int             vertex1  = cplInterface.setMeshVertex(meshName, coordOneA);
+    int             vertex2  = cplInterface.setMeshVertex(meshName, coordOneB);
     auto            dataCBID = "DataCB";
     auto            dataBCID = "DataBC";
 

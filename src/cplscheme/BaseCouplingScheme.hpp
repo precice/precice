@@ -86,11 +86,8 @@ public:
    */
   bool isInitialized() const override final;
 
-  /**
-   * @brief Adds newly computed time. Has to be called before every advance.
-   * @param timeToAdd time to be added
-   */
-  void addComputedTime(double timeToAdd) override final;
+  /// @copydoc cplscheme::CouplingScheme::addComputedTime()
+  bool addComputedTime(double timeToAdd) override final;
 
   /**
    * @brief Returns true, if data will be exchanged when calling advance().
@@ -389,7 +386,7 @@ private:
   double _maxTime;
 
   /// current time; _time <= _maxTime
-  double _time = 0; // @todo remove?
+  double _time = 0;
 
   /// Number of time windows that have to be computed. End of simulation is reached, if _timeWindows == _maxTimeWindows
   int _maxTimeWindows;
@@ -492,6 +489,11 @@ private:
   std::vector<ConvergenceMeasureContext> _convergenceMeasures;
 
   /// Functions needed for initialize()
+
+  /**
+   * @brief Need to initialize receive data
+   */
+  virtual void initializeReceiveDataStorage() = 0;
 
   /**
    * @brief implements functionality for initialize in base class.

@@ -23,9 +23,7 @@ void runTestThreeSolvers(std::string const &config, std::vector<int> expectedCal
     precice::SolverInterface precice(context.name, config, 0, 1);
 
     auto meshAID = "MeshA";
-    auto meshBID = "MeshB";
     precice.setMeshVertex(meshAID, v0);
-    precice.setMeshVertex(meshBID, v1);
 
     if (precice.requiresInitialData()) {
     }

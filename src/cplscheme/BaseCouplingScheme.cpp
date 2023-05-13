@@ -101,11 +101,9 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
   PRECICE_ASSERT(m2n->isConnected());
 
   for (const auto &data : sendData | boost::adaptors::map_values) {
-    const auto stamples = data->getStamples();
-    // PRECICE_ASSERT(stamples.size() > 0);  //@todo preferable, but cannot use this, because of some invalid configs in tests (e.g. tests/serial/AitkenAcceleration.xml)
-    if (stamples.size() > 0) {
-      data->sample() = stamples.back().sample;
-    }
+    const auto stamples = data->stamples();
+    PRECICE_ASSERT(stamples.size() > 0);
+    data->sample() = stamples.back().sample;
 
     // Data is actually only send if size>0, which is checked in the derived classes implementation
     m2n->send(data->values(), data->getMeshID(), data->getDimensions());
@@ -183,6 +181,8 @@ void BaseCouplingScheme::finalize()
 
 void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
 {
+  // initialize with zero data here, might eventually be overwritten in exchangeInitialData
+  initializeReceiveDataStorage();
   // Initialize uses the template method pattern (https://en.wikipedia.org/wiki/Template_method_pattern).
   PRECICE_TRACE(startTime, startTimeWindow);
   PRECICE_ASSERT(not isInitialized());
@@ -341,7 +341,7 @@ bool BaseCouplingScheme::isInitialized() const
   return _isInitialized;
 }
 
-void BaseCouplingScheme::addComputedTime(
+bool BaseCouplingScheme::addComputedTime(
     double timeToAdd)
 {
   PRECICE_TRACE(timeToAdd, _time);
@@ -359,6 +359,9 @@ void BaseCouplingScheme::addComputedTime(
                 "Did you restrict your time step size, \"dt = min(preciceDt, solverDt)\"? "
                 "For more information, consult the adapter example in the preCICE documentation.",
                 timeToAdd, _timeWindowSize - _computedTimeWindowPart + timeToAdd);
+
+  const bool isAtWindowEnd = math::equals(getNormalizedWindowTime(), time::Storage::WINDOW_END, _eps);
+  return isAtWindowEnd;
 }
 
 bool BaseCouplingScheme::willDataBeExchanged(
@@ -402,7 +405,6 @@ void BaseCouplingScheme::setTimeWindows(int timeWindows)
 
 double BaseCouplingScheme::getTime() const
 {
-  // @todo Might be easier to store _timeWindowStartTime and compute _timeWindowStartTime + _computedTimeWindowPart here.
   return _time;
 }
 
@@ -737,11 +739,9 @@ void BaseCouplingScheme::doImplicitStep()
     if (_acceleration) {
       // Load from storage into buffer
       for (auto &pair : getAccelerationData()) {
-        const auto stamples = pair.second->getStamples();
-        // PRECICE_ASSERT(stamples.size() > 0);  //@todo preferable, but cannot use this, because of some invalid configs in tests (e.g. tests/serial/AitkenAcceleration.xml)
-        if (stamples.size() > 0) {
-          pair.second->sample() = stamples.back().sample;
-        }
+        const auto stamples = pair.second->stamples();
+        PRECICE_ASSERT(stamples.size() > 0);
+        pair.second->sample() = stamples.back().sample;
       }
 
       _acceleration->performAcceleration(getAccelerationData());

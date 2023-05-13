@@ -29,10 +29,10 @@ public:
   const Eigen::VectorXd &values() const;
 
   /// Returns a reference to the gradient data values.
-  Eigen::MatrixXd &gradientValues(); // @todo rename to gradients() ?
+  Eigen::MatrixXd &gradientValues();
 
   /// Returns a const reference to the gradient data values.
-  const Eigen::MatrixXd &gradientValues() const; // @todo rename to gradients() ?
+  const Eigen::MatrixXd &gradientValues() const;
 
   /// Returns a reference to the gradient data Sample.
   time::Sample &sample();
@@ -46,8 +46,11 @@ public:
   /// Returns a const reference to the time step storage of the data.
   const time::Storage &timeStepsStorage() const;
 
-  /// Returns a reference to the Stamples in _timeStepsStorage.
-  const std::vector<time::Stample> &getStamples() const;
+  /// Returns the stamples in _timeStepsStorage.
+  auto stamples() const
+  {
+    return timeStepsStorage().stamples();
+  }
 
   /// Add sample at given time to _timeStepsStorage.
   void setSampleAtTime(double time, time::Sample sample);
@@ -62,7 +65,7 @@ public:
   void storeIteration();
 
   /// returns data value from previous iteration
-  const Eigen::VectorXd previousIteration();
+  const Eigen::VectorXd previousIteration() const;
 
   /// returns gradient data from previous iteration
   const Eigen::MatrixXd &previousIterationGradients() const;
@@ -102,7 +105,7 @@ private:
     PRECICE_ASSERT(false);
   }
 
-  /// Sample values of previous iteration.
+  /// Sample values of previous iteration (end of time window).
   time::Sample _previousIteration;
 
   /// Data associated with this CouplingData

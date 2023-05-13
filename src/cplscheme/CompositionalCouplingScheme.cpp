@@ -66,13 +66,15 @@ bool CompositionalCouplingScheme::isInitialized() const
   return isInitialized;
 }
 
-void CompositionalCouplingScheme::addComputedTime(double timeToAdd)
+bool CompositionalCouplingScheme::addComputedTime(double timeToAdd)
 {
   PRECICE_TRACE(timeToAdd);
 
+  bool isAtWindowEnd = false;
   for (const auto scheme : schemesToRun()) {
-    scheme->addComputedTime(timeToAdd);
+    isAtWindowEnd &= scheme->addComputedTime(timeToAdd);
   }
+  return isAtWindowEnd;
 }
 
 CouplingScheme::ChangedMeshes CompositionalCouplingScheme::firstSynchronization(const CouplingScheme::ChangedMeshes &changes)

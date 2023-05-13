@@ -47,18 +47,18 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
 
     // Setup mesh one.
     std::vector<int> ids;
-    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneA.data()));
-    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneB.data()));
-    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneC.data()));
-    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneD.data()));
-    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneE.data()));
-    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneF.data()));
-    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneG.data()));
-    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneH.data()));
-    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneI.data()));
-    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneJ.data()));
-    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneK.data()));
-    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneL.data()));
+    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneA));
+    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneB));
+    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneC));
+    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneD));
+    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneE));
+    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneF));
+    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneG));
+    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneH));
+    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneI));
+    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneJ));
+    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneK));
+    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneL));
 
     // Initialize, thus sending the mesh.
     interface.initialize();
@@ -81,9 +81,9 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
     auto meshTwoID = "MeshTwo";
 
     // Setup receiving mesh.
-    int idA = interface.setMeshVertex(meshTwoID, coordTwoA.data());
-    int idB = interface.setMeshVertex(meshTwoID, coordTwoB.data());
-    int idC = interface.setMeshVertex(meshTwoID, coordTwoC.data());
+    int idA = interface.setMeshVertex(meshTwoID, coordTwoA);
+    int idB = interface.setMeshVertex(meshTwoID, coordTwoB);
+    int idC = interface.setMeshVertex(meshTwoID, coordTwoC);
 
     // Initialize, thus receive the data and map.
     interface.initialize();

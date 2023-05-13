@@ -59,8 +59,10 @@ public:
   /**
    * @brief Not implemented.
    */
-  void addComputedTime(double timeToAdd) override final
-  { /* Do nothing */
+  bool addComputedTime(double timeToAdd) override final
+  {
+    PRECICE_ASSERT(false);
+    return false;
   }
 
   /**

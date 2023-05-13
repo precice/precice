@@ -39,15 +39,15 @@ void testMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFuncti
     auto meshName = "MeshOne";
 
     // Setup mesh one.
-    int idA = interface.setMeshVertex(meshName, coordOneA.data());
-    int idB = interface.setMeshVertex(meshName, coordOneB.data());
-    int idC = interface.setMeshVertex(meshName, coordOneC.data());
-    int idD = interface.setMeshVertex(meshName, coordOneD.data());
+    int idA = interface.setMeshVertex(meshName, coordOneA);
+    int idB = interface.setMeshVertex(meshName, coordOneB);
+    int idC = interface.setMeshVertex(meshName, coordOneC);
+    int idD = interface.setMeshVertex(meshName, coordOneD);
 
     if (defineEdgesExplicitly) {
       if (useBulkFunctions) {
         std::vector ids{idA, idB, idB, idC, idC, idD, idD, idA, idC, idA};
-        interface.setMeshEdges(meshName, 5, ids.data());
+        interface.setMeshEdges(meshName, ids);
       } else {
         interface.setMeshEdge(meshName, idA, idB);
         interface.setMeshEdge(meshName, idB, idC);
@@ -59,7 +59,7 @@ void testMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFuncti
 
     if (useBulkFunctions) {
       std::vector ids{idA, idB, idC, idC, idD, idA};
-      interface.setMeshTriangles(meshName, 2, ids.data());
+      interface.setMeshTriangles(meshName, ids);
     } else {
       interface.setMeshTriangle(meshName, idA, idB, idC);
       interface.setMeshTriangle(meshName, idC, idD, idA);
@@ -89,9 +89,9 @@ void testMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFuncti
     auto meshName = "MeshTwo";
 
     // Setup receiving mesh.
-    int idA = interface.setMeshVertex(meshName, coordTwoA.data());
-    int idB = interface.setMeshVertex(meshName, coordTwoB.data());
-    int idC = interface.setMeshVertex(meshName, coordTwoC.data());
+    int idA = interface.setMeshVertex(meshName, coordTwoA);
+    int idB = interface.setMeshVertex(meshName, coordTwoB);
+    int idC = interface.setMeshVertex(meshName, coordTwoC);
 
     // Initialize, thus receive the data and map.
     interface.initialize();
@@ -149,15 +149,15 @@ void testQuadMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFu
     auto meshName = "MeshOne";
 
     // Setup mesh one.
-    int idA = interface.setMeshVertex(meshName, coordOneA.data());
-    int idB = interface.setMeshVertex(meshName, coordOneB.data());
-    int idC = interface.setMeshVertex(meshName, coordOneC.data());
-    int idD = interface.setMeshVertex(meshName, coordOneD.data());
+    int idA = interface.setMeshVertex(meshName, coordOneA);
+    int idB = interface.setMeshVertex(meshName, coordOneB);
+    int idC = interface.setMeshVertex(meshName, coordOneC);
+    int idD = interface.setMeshVertex(meshName, coordOneD);
 
     if (defineEdgesExplicitly) {
       if (useBulkFunctions) {
         std::vector ids{idA, idB, idB, idC, idC, idD, idD, idA};
-        interface.setMeshEdges(meshName, 4, ids.data());
+        interface.setMeshEdges(meshName, ids);
       } else {
         interface.setMeshEdge(meshName, idA, idB);
         interface.setMeshEdge(meshName, idB, idC);
@@ -168,7 +168,7 @@ void testQuadMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFu
 
     if (useBulkFunctions) {
       std::vector ids{idA, idB, idC, idD};
-      interface.setMeshQuads(meshName, 1, ids.data());
+      interface.setMeshQuads(meshName, ids);
     } else {
       interface.setMeshQuad(meshName, idA, idB, idC, idD);
     }
@@ -207,9 +207,9 @@ void testQuadMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFu
     auto meshName = "MeshTwo";
 
     // Setup receiving mesh.
-    int idA = interface.setMeshVertex(meshName, coordTwoA.data());
-    int idB = interface.setMeshVertex(meshName, coordTwoB.data());
-    int idC = interface.setMeshVertex(meshName, coordTwoC.data());
+    int idA = interface.setMeshVertex(meshName, coordTwoA);
+    int idB = interface.setMeshVertex(meshName, coordTwoB);
+    int idC = interface.setMeshVertex(meshName, coordTwoC);
 
     // Initialize, thus receive the data and map.
     interface.initialize();
@@ -251,15 +251,15 @@ void testQuadMappingNearestProjectionTallKite(bool defineEdgesExplicitly, bool u
     auto meshName = "MeshOne";
 
     // Setup mesh one.
-    int idA = interface.setMeshVertex(meshName, coordOneA.data());
-    int idB = interface.setMeshVertex(meshName, coordOneB.data());
-    int idC = interface.setMeshVertex(meshName, coordOneC.data());
-    int idD = interface.setMeshVertex(meshName, coordOneD.data());
+    int idA = interface.setMeshVertex(meshName, coordOneA);
+    int idB = interface.setMeshVertex(meshName, coordOneB);
+    int idC = interface.setMeshVertex(meshName, coordOneC);
+    int idD = interface.setMeshVertex(meshName, coordOneD);
 
     if (defineEdgesExplicitly) {
       if (useBulkFunctions) {
         std::vector ids{idA, idB, idB, idC, idC, idD, idD, idA};
-        interface.setMeshEdges(meshName, 4, ids.data());
+        interface.setMeshEdges(meshName, ids);
       } else {
         interface.setMeshEdge(meshName, idA, idB);
         interface.setMeshEdge(meshName, idB, idC);
@@ -270,7 +270,7 @@ void testQuadMappingNearestProjectionTallKite(bool defineEdgesExplicitly, bool u
 
     if (useBulkFunctions) {
       std::vector ids{idA, idB, idC, idD};
-      interface.setMeshQuads(meshName, 1, ids.data());
+      interface.setMeshQuads(meshName, ids);
     } else {
       interface.setMeshQuad(meshName, idA, idB, idC, idD);
     }
@@ -310,15 +310,15 @@ void testQuadMappingNearestProjectionWideKite(bool defineEdgesExplicitly, bool u
     auto meshName = "MeshOne";
 
     // Setup mesh one.
-    int idA = interface.setMeshVertex(meshName, coordOneA.data());
-    int idB = interface.setMeshVertex(meshName, coordOneB.data());
-    int idC = interface.setMeshVertex(meshName, coordOneC.data());
-    int idD = interface.setMeshVertex(meshName, coordOneD.data());
+    int idA = interface.setMeshVertex(meshName, coordOneA);
+    int idB = interface.setMeshVertex(meshName, coordOneB);
+    int idC = interface.setMeshVertex(meshName, coordOneC);
+    int idD = interface.setMeshVertex(meshName, coordOneD);
 
     if (defineEdgesExplicitly) {
       if (useBulkFunctions) {
         std::vector ids{idA, idB, idB, idC, idC, idD, idD, idA};
-        interface.setMeshEdges(meshName, 4, ids.data());
+        interface.setMeshEdges(meshName, ids);
       } else {
         interface.setMeshEdge(meshName, idA, idB);
         interface.setMeshEdge(meshName, idB, idC);
@@ -329,7 +329,7 @@ void testQuadMappingNearestProjectionWideKite(bool defineEdgesExplicitly, bool u
 
     if (useBulkFunctions) {
       std::vector ids{idA, idB, idD, idC};
-      interface.setMeshQuads(meshName, 1, ids.data());
+      interface.setMeshQuads(meshName, ids);
     } else {
       interface.setMeshQuad(meshName, idA, idB, idD, idC);
     }

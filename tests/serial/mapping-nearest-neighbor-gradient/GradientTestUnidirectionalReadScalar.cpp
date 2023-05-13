@@ -22,7 +22,7 @@
 #include "mesh/Vertex.hpp"
 #include "precice/SolverInterface.hpp"
 #include "precice/impl/MeshContext.hpp"
-#include "precice/impl/Participant.hpp"
+#include "precice/impl/ParticipantState.hpp"
 #include "precice/impl/SharedPointer.hpp"
 #include "precice/impl/SolverInterfaceImpl.hpp"
 #include "precice/types.hpp"
@@ -51,8 +51,8 @@ BOOST_AUTO_TEST_CASE(GradientTestUnidirectionalReadScalar)
 
     Vector3d posOne = Vector3d::Constant(0.0);
     Vector3d posTwo = Vector3d::Constant(1.0);
-    cplInterface.setMeshVertex(meshName, posOne.data());
-    cplInterface.setMeshVertex(meshName, posTwo.data());
+    cplInterface.setMeshVertex(meshName, posOne);
+    cplInterface.setMeshVertex(meshName, posTwo);
 
     // Initialize, thus sending the mesh.
     cplInterface.initialize();
@@ -84,8 +84,8 @@ BOOST_AUTO_TEST_CASE(GradientTestUnidirectionalReadScalar)
 
     Vector3d posOne = Vector3d::Constant(0.1);
     Vector3d posTwo = Vector3d::Constant(1.1);
-    cplInterface.setMeshVertex(meshName, posOne.data());
-    cplInterface.setMeshVertex(meshName, posTwo.data());
+    cplInterface.setMeshVertex(meshName, posOne);
+    cplInterface.setMeshVertex(meshName, posTwo);
 
     cplInterface.initialize();
     double maxDt = cplInterface.getMaxTimeStepSize();

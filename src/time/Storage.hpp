@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <boost/range.hpp>
 #include "logging/Logger.hpp"
 #include "time/Stample.hpp"
 
@@ -18,7 +19,7 @@ public:
    * @brief Stores data samples in time and provides corresponding convenience functions.
    *
    * The Storage must be initialized before it can be used. Then values can be stored in the Storage. It is only allowed to store samples with increasing times. Overwriting existing samples or writing samples with a time smaller then the maximum stored time is forbidden.
-   * The Storage is considered complete, when a sample with time 1.0 is provided. Then one can only sample or clear the storage, but not add any further samples.
+   * The Storage is considered complete, when a sample with time 1.0 is provided. Then one can only sample from the storage. To add further samples one needs to trim the storage first.
    *
    * This Storage is used in the context of Waveform relaxation where samples in time are provided. Starting at the beginning of the window with time 0.0 and reaching the end of the window with time 1.0.
    */
@@ -34,7 +35,7 @@ public:
   /**
    * @brief Store Sample at a specific time.
    *
-   * It is only allowed to store a Sample in time that comes after a Sample that was already stored. Therefore, time has to be larger than maxStoredNormalizedDt. Overwriting existing samples is forbidden. The function clear() should be used to clear the storage and provide new samples.
+   * It is only allowed to store a Sample in time that comes after a Sample that was already stored. Therefore, time has to be larger than maxStoredNormalizedDt. Overwriting existing samples is forbidden. The function trim() should be used to be able provide new samples.
    *
    * @param time the time associated with the sample
    * @param sample stored sample
@@ -68,11 +69,14 @@ public:
   Eigen::VectorXd getTimes() const;
 
   /**
-   * @brief Get the vector of Stamples
+   * @brief Get the stamples
    *
-   * @return std::vector<Stample>
+   * @return boost range of stamples
    */
-  const std::vector<Stample> &getStamples() const;
+  auto stamples() const
+  {
+    return boost::make_iterator_range(_stampleStorage);
+  }
 
   /**
    * @brief Get all normalized dts and values in ascending order (with respect to normalized dts)
@@ -101,13 +105,13 @@ public:
   void move();
 
   /**
-   * @brief Clear this Storage by deleting all values except values associated with 0.0.
+   * @brief Trims this Storage by deleting all values except values associated with 0.0.
    */
-  void clear();
+  void trim();
 
 private:
   /// Stores Stamples on the current window
-  std::vector<Stample> _sampleStorage;
+  std::vector<Stample> _stampleStorage;
 
   mutable logging::Logger _log{"time::Storage"};
 

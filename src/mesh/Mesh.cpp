@@ -46,11 +46,6 @@ const Mesh::VertexContainer &Mesh::vertices() const
   return _vertices;
 }
 
-int Mesh::verticesSize() const
-{
-  return _vertices.size();
-}
-
 Mesh::EdgeContainer &Mesh::edges()
 {
   return _edges;

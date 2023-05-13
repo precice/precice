@@ -14,32 +14,54 @@ WriteDataContext::WriteDataContext(
   _writeDataBuffer = time::Sample{Eigen::VectorXd(), Eigen::MatrixXd()};
 }
 
+void WriteDataContext::resetData(bool atEndOfWindow)
+{
+  // See also https://github.com/precice/precice/issues/1156.
+  _providedData->toZero();
+
+  // reset writeDataBuffer
+  _writeDataBuffer.values.setZero();
+  _writeDataBuffer.gradients.setZero();
+
+  PRECICE_ASSERT(!hasReadMapping(), "Read mapping is not allowed for WriteDataContext.");
+  // reset all toData
+  if (hasWriteMapping()) {
+    std::for_each(_mappingContexts.begin(), _mappingContexts.end(), [](auto &context) { context.toData->toZero(); });
+  }
+
+  if (atEndOfWindow) {
+    // need to not only clear _providedData->timeStepsStorage(), but also _toData->timeStepsStorage() as soon as we map from storage to storage.
+    _providedData->timeStepsStorage().trim();
+  }
+}
+
 void WriteDataContext::writeValuesIntoDataBuffer(::precice::span<const VertexID> vertices, ::precice::span<const double> values)
 {
-  Eigen::Map<const Eigen::MatrixXd> inputData(values.data(), getDataDimensions(), vertices.size());
-  Eigen::Map<Eigen::MatrixXd>       localData(_writeDataBuffer.values.data(), getDataDimensions(), getMesh().vertices().size());
+  PRECICE_ASSERT(vertices.size() * getDataDimensions() == values.size());
+  PRECICE_ASSERT(_writeDataBuffer.values.data());
 
-  for (int i = 0; i < vertices.size(); ++i) {
-    const auto vid = vertices[i];
-    PRECICE_CHECK(getMesh().isValidVertexID(vid),
-                  "Cannot write data \"{}\" to invalid Vertex ID ({}) of mesh \"{}\". Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                  getDataName(), vid, getMeshName());
-    localData.col(vid) = inputData.col(i);
+  Eigen::Map<const Eigen::MatrixXd> inputData(values.data(), getDataDimensions(), vertices.size());
+  Eigen::Map<Eigen::MatrixXd>       localData(_writeDataBuffer.values.data(), getDataDimensions(), getMeshVertexCount());
+
+  for (int i = 0; i < static_cast<int>(vertices.size()); ++i) {
+    PRECICE_ASSERT(vertices[i] < localData.cols());
+    localData.col(vertices[i]) = inputData.col(i);
   }
 }
 
 void WriteDataContext::writeGradientsIntoDataBuffer(::precice::span<const VertexID> vertices, ::precice::span<const double> gradients)
 {
-  const auto                        gradientComponents = getMesh().getDimensions() * getDataDimensions();
-  Eigen::Map<const Eigen::MatrixXd> inputGradients(gradients.data(), gradientComponents, vertices.size());
-  Eigen::Map<Eigen::MatrixXd>       localGradients(_writeDataBuffer.gradients.data(), gradientComponents, getMesh().vertices().size());
+  const auto gradientComponents = getSpatialDimensions() * getDataDimensions();
 
-  for (int i = 0; i < vertices.size(); ++i) {
-    const auto vid = vertices[i];
-    PRECICE_CHECK(getMesh().isValidVertexID(vid),
-                  "Cannot write gradient for data \"{}\" to invalid Vertex ID ({}) of mesh \"{}\". Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                  getDataName(), vid, getMeshName());
-    localGradients.col(vid) = inputGradients.col(i);
+  PRECICE_ASSERT(gradientComponents * vertices.size() == gradients.size());
+  PRECICE_ASSERT(_writeDataBuffer.gradients.data());
+
+  Eigen::Map<const Eigen::MatrixXd> inputGradients(gradients.data(), gradientComponents, vertices.size());
+  Eigen::Map<Eigen::MatrixXd>       localGradients(_writeDataBuffer.gradients.data(), gradientComponents, getMeshVertexCount());
+
+  for (int i = 0; i < static_cast<int>(vertices.size()); ++i) {
+    PRECICE_ASSERT(vertices[i] < localGradients.cols());
+    localGradients.col(vertices[i]) = inputGradients.col(i);
   }
 }
 
@@ -63,7 +85,7 @@ void WriteDataContext::resizeBufferTo(int nVertices)
 
   // Allocate gradient data values
   if (_providedData->hasGradient()) {
-    const SizeType spaceDimensions = getMesh().getDimensions();
+    const SizeType spaceDimensions = getSpatialDimensions();
 
     const SizeType expectedColumnSize = expectedSize * getDataDimensions();
     const auto     actualColumnSize   = static_cast<SizeType>(_writeDataBuffer.gradients.cols());
@@ -84,19 +106,7 @@ void WriteDataContext::resizeBufferTo(int nVertices)
 
 void WriteDataContext::storeBufferedData(double currentTime)
 {
-  PRECICE_DEBUG("storeBufferedData {} at time {}", getDataName(), currentTime);
   _providedData->setSampleAtTime(currentTime, _writeDataBuffer);
-}
-
-void WriteDataContext::clearStorage()
-{
-  _providedData->timeStepsStorage().clear();
-}
-
-mesh::PtrData WriteDataContext::providedData()
-{
-  PRECICE_ASSERT(_providedData);
-  return _providedData;
 }
 
 void WriteDataContext::appendMappingConfiguration(MappingContext &mappingContext, const MeshContext &meshContext)

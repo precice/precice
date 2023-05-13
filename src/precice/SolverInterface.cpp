@@ -126,8 +126,8 @@ bool SolverInterface::hasData(::precice::string_view meshName, ::precice::string
 // }
 
 int SolverInterface::setMeshVertex(
-    ::precice::string_view meshName,
-    const double *         position)
+    ::precice::string_view        meshName,
+    ::precice::span<const double> position)
 {
   return _impl->setMeshVertex(toSV(meshName), position);
 }
@@ -139,12 +139,11 @@ int SolverInterface::getMeshVertexSize(
 }
 
 void SolverInterface::setMeshVertices(
-    ::precice::string_view meshName,
-    int                    size,
-    const double *         positions,
-    int *                  ids)
+    ::precice::string_view        meshName,
+    ::precice::span<const double> positions,
+    ::precice::span<VertexID>     ids)
 {
-  _impl->setMeshVertices(toSV(meshName), size, positions, ids);
+  _impl->setMeshVertices(toSV(meshName), positions, ids);
 }
 
 void SolverInterface::setMeshEdge(
@@ -156,11 +155,10 @@ void SolverInterface::setMeshEdge(
 }
 
 void SolverInterface::setMeshEdges(
-    ::precice::string_view meshName,
-    int                    size,
-    const int *            vertices)
+    ::precice::string_view          meshName,
+    ::precice::span<const VertexID> vertices)
 {
-  _impl->setMeshEdges(toSV(meshName), size, vertices);
+  _impl->setMeshEdges(toSV(meshName), vertices);
 }
 
 void SolverInterface::setMeshTriangle(
@@ -173,11 +171,10 @@ void SolverInterface::setMeshTriangle(
 }
 
 void SolverInterface::setMeshTriangles(
-    ::precice::string_view meshName,
-    int                    size,
-    const int *            vertices)
+    ::precice::string_view          meshName,
+    ::precice::span<const VertexID> vertices)
 {
-  _impl->setMeshTriangles(toSV(meshName), size, vertices);
+  _impl->setMeshTriangles(toSV(meshName), vertices);
 }
 
 void SolverInterface::setMeshQuad(
@@ -192,11 +189,10 @@ void SolverInterface::setMeshQuad(
 }
 
 void SolverInterface::setMeshQuads(
-    ::precice::string_view meshName,
-    int                    size,
-    const int *            vertices)
+    ::precice::string_view          meshName,
+    ::precice::span<const VertexID> vertices)
 {
-  _impl->setMeshQuads(toSV(meshName), size, vertices);
+  _impl->setMeshQuads(toSV(meshName), vertices);
 }
 
 void SolverInterface::setMeshTetrahedron(
@@ -211,11 +207,10 @@ void SolverInterface::setMeshTetrahedron(
 }
 
 void SolverInterface::setMeshTetrahedra(
-    ::precice::string_view meshName,
-    int                    size,
-    const int *            vertices)
+    ::precice::string_view          meshName,
+    ::precice::span<const VertexID> vertices)
 {
-  _impl->setMeshTetrahedra(toSV(meshName), size, vertices);
+  _impl->setMeshTetrahedra(toSV(meshName), vertices);
 }
 
 void SolverInterface::writeData(
@@ -237,18 +232,17 @@ void SolverInterface::readData(
   _impl->readData(toSV(meshName), toSV(dataName), vertices, relativeReadTime, values);
 }
 
-void SolverInterface::setMeshAccessRegion(::precice::string_view meshName,
-                                          const double *         boundingBox) const
+void SolverInterface::setMeshAccessRegion(::precice::string_view        meshName,
+                                          ::precice::span<const double> boundingBox) const
 {
   _impl->setMeshAccessRegion(toSV(meshName), boundingBox);
 }
 
-void SolverInterface::getMeshVerticesAndIDs(::precice::string_view meshName,
-                                            const int              size,
-                                            int *                  ids,
-                                            double *               coordinates) const
+void SolverInterface::getMeshVerticesAndIDs(::precice::string_view    meshName,
+                                            ::precice::span<VertexID> ids,
+                                            ::precice::span<double>   coordinates) const
 {
-  _impl->getMeshVerticesAndIDs(toSV(meshName), size, ids, coordinates);
+  _impl->getMeshVerticesAndIDs(toSV(meshName), ids, coordinates);
 }
 
 void SolverInterface::writeGradientData(

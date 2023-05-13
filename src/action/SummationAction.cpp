@@ -35,8 +35,8 @@ void SummationAction::performAction(double time)
   targetValues.setZero();
 
   for (const auto &sourceData : _sourceDataVector) {
-    auto sourceStample = sourceData->getStamples().back();
-    PRECICE_ASSERT(sourceStample.timestamp == time::Storage::WINDOW_END);
+    auto sourceStample = sourceData->stamples().back();
+    PRECICE_ASSERT(math::equals(sourceStample.timestamp, time::Storage::WINDOW_END));
     auto sourceDataValues = sourceStample.sample.values;
     targetValues += sourceDataValues;
   }

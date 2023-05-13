@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(ParallelTriangleConservative2To1)
       coords = {0.7, 0.2};
     }
     vertexIDs.resize(coords.size() / 2);
-    interface.setMeshVertices(meshName, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, coords, vertexIDs);
 
     interface.initialize();
     dt = interface.getMaxTimeStepSize();
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(ParallelTriangleConservative2To1)
     std::vector<double> coords = {0.0, 0.0, 1.0, 0.0, 0.0, 1.0}; // Lower-left triangle making half the unit square
 
     vertexIDs.resize(coords.size() / 2);
-    interface.setMeshVertices(meshName, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, coords, vertexIDs);
     interface.setMeshTriangle(meshName, vertexIDs[0], vertexIDs[1], vertexIDs[2]);
 
     interface.initialize();

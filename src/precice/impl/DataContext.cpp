@@ -20,21 +20,16 @@ std::string DataContext::getDataName() const
   return _providedData->getName();
 }
 
-void DataContext::resetData()
-{
-  // See also https://github.com/precice/precice/issues/1156.
-  _providedData->toZero();
-  if (hasMapping()) {
-    PRECICE_ASSERT(hasWriteMapping());
-    PRECICE_ASSERT(!hasReadMapping());
-    std::for_each(_mappingContexts.begin(), _mappingContexts.end(), [](auto &context) { context.toData->toZero(); });
-  }
-}
-
 int DataContext::getDataDimensions() const
 {
   PRECICE_ASSERT(_providedData);
   return _providedData->getDimensions();
+}
+
+int DataContext::getSpatialDimensions() const
+{
+  PRECICE_ASSERT(_providedData);
+  return _providedData->getSpatialDimensions();
 }
 
 std::string DataContext::getMeshName() const
@@ -43,16 +38,22 @@ std::string DataContext::getMeshName() const
   return _mesh->getName();
 }
 
+int DataContext::getMeshVertexCount() const
+{
+  PRECICE_ASSERT(_mesh);
+  return _mesh->vertices().size();
+}
+
 MeshID DataContext::getMeshID() const
 {
   PRECICE_ASSERT(_mesh);
   return _mesh->getID();
 }
 
-const mesh::Mesh &DataContext::getMesh() const
+bool DataContext::hasGradient() const
 {
-  PRECICE_ASSERT(_mesh);
-  return *_mesh;
+  PRECICE_ASSERT(_providedData);
+  return _providedData->hasGradient();
 }
 
 void DataContext::appendMapping(MappingContext mappingContext)
@@ -83,8 +84,8 @@ void DataContext::mapData()
   for (auto &context : _mappingContexts) {
     context.clearToDataStorage();
 
-    PRECICE_ASSERT(context.fromData->getStamples().size() > 0);
-    for (auto &stample : context.fromData->getStamples()) {
+    PRECICE_ASSERT(context.fromData->stamples().size() > 0);
+    for (auto &stample : context.fromData->stamples()) {
       // Put data from storage into mapping buffer
       context.fromData->sample() = stample.sample;
 
@@ -110,6 +111,12 @@ bool DataContext::hasReadMapping() const
 bool DataContext::hasWriteMapping() const
 {
   return std::any_of(_mappingContexts.begin(), _mappingContexts.end(), [this](auto &context) { return context.fromData == _providedData; });
+}
+
+bool DataContext::isValidVertexID(const VertexID id) const
+{
+  PRECICE_ASSERT(_mesh);
+  return _mesh->isValidVertexID(id);
 }
 
 } // namespace precice::impl

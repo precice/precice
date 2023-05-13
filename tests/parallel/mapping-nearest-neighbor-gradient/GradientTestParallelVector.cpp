@@ -22,7 +22,7 @@
 #include "mesh/Vertex.hpp"
 #include "precice/SolverInterface.hpp"
 #include "precice/impl/MeshContext.hpp"
-#include "precice/impl/Participant.hpp"
+#include "precice/impl/ParticipantState.hpp"
 #include "precice/impl/SharedPointer.hpp"
 #include "precice/impl/SolverInterfaceImpl.hpp"
 #include "precice/types.hpp"
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelVector)
     int    vertexIDs[2];
     double xCoord       = context.rank * 0.4 + 0.05;
     double positions[4] = {xCoord, 0.0, xCoord + 0.2, 0.0};
-    interface.setMeshVertices(meshName, 2, positions, vertexIDs);
+    interface.setMeshVertices(meshName, positions, vertexIDs);
     BOOST_TEST(interface.requiresGradientDataFor(meshName, dataName1) == false);
     BOOST_TEST(interface.requiresGradientDataFor(meshName, dataName2) == false);
     interface.initialize();
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelVector)
     auto            meshName = "MeshTwo";
     int             vertexIDs[6];
     double          positions[12] = {0.0, 0.0, 0.2, 0.0, 0.4, 0.0, 0.6, 0.0, 0.8, 0.0, 1.0, 0.0};
-    interface.setMeshVertices(meshName, 6, positions, vertexIDs);
+    interface.setMeshVertices(meshName, positions, vertexIDs);
 
     auto dataName1 = "Data1";
     auto dataName2 = "Data2";

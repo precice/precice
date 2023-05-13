@@ -17,17 +17,24 @@
     <participant name="A">
       <provide-mesh name="A-Mesh" />
       <receive-mesh name="B-Mesh" from="B" />
+      <read-data name="Data2" mesh="A-Mesh" />
       <write-data name="Data" mesh="A-Mesh" />
       <mapping:nearest-neighbor
         direction="write"
         from="A-Mesh"
         to="B-Mesh"
         constraint="consistent" />
+      <mapping:nearest-neighbor
+        direction="read"
+        from="B-Mesh"
+        to="A-Mesh"
+        constraint="conservative" />
     </participant>
 
     <participant name="B">
       <provide-mesh name="B-Mesh" />
       <read-data name="Data" mesh="B-Mesh" />
+      <write-data name="Data2" mesh="B-Mesh" />
     </participant>
 
     <m2n:sockets from="B" to="A" />

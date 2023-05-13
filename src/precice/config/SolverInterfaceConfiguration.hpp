@@ -9,7 +9,7 @@
 #include "m2n/config/M2NConfiguration.hpp"
 #include "mapping/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "precice/impl/Participant.hpp"
+#include "precice/impl/ParticipantState.hpp"
 #include "precice/impl/SharedPointer.hpp"
 #include "xml/XMLTag.hpp"
 

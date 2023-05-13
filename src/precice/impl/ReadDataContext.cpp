@@ -31,14 +31,9 @@ void ReadDataContext::readValues(::precice::span<const VertexID> vertices, doubl
 {
   Eigen::Map<Eigen::MatrixXd>       outputData(values.data(), getDataDimensions(), values.size());
   const Eigen::MatrixXd             sample{_waveform->sample(normalizedDt)};
-  Eigen::Map<const Eigen::MatrixXd> localData(sample.data(), getDataDimensions(), getMesh().vertices().size());
-  for (int i = 0; i < vertices.size(); ++i) {
-    const auto vid = vertices[i];
-    PRECICE_CHECK(getMesh().isValidVertexID(vid),
-                  "Cannot read data \"{}\" from invalid Vertex ID ({}) of mesh \"{}\". "
-                  "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                  getDataName(), vid, getMeshName());
-    outputData.col(i) = localData.col(vid);
+  Eigen::Map<const Eigen::MatrixXd> localData(sample.data(), getDataDimensions(), getMeshVertexCount());
+  for (int i = 0; i < static_cast<int>(vertices.size()); ++i) {
+    outputData.col(i) = localData.col(vertices[i]);
   }
 }
 

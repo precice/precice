@@ -69,11 +69,6 @@ const time::Storage &CouplingData::timeStepsStorage() const
   return _data->timeStepsStorage();
 }
 
-const std::vector<time::Stample> &CouplingData::getStamples() const
-{
-  return timeStepsStorage().getStamples();
-}
-
 void CouplingData::setSampleAtTime(double time, time::Sample sample)
 {
   this->sample() = sample; // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
@@ -93,20 +88,14 @@ int CouplingData::meshDimensions() const
 
 void CouplingData::storeIteration()
 {
-  const auto stamples = this->getStamples();
-  // PRECICE_ASSERT(stamples.size() > 0);  //@todo preferable, but cannot use this, because of some invalid configs in tests (e.g. tests/serial/AitkenAcceleration.xml)
-  if (stamples.size() > 0) {
-    this->sample() = stamples.back().sample;
-  }
-
+  const auto stamples = this->stamples();
+  PRECICE_ASSERT(stamples.size() > 0);
+  this->sample()     = stamples.back().sample;
   _previousIteration = this->sample();
 }
 
-const Eigen::VectorXd CouplingData::previousIteration()
+const Eigen::VectorXd CouplingData::previousIteration() const
 {
-  if (_previousIteration.values.size() == 0) { // @todo work-around for direct mesh access, if _previousIteration was initialized with incorrect size.
-    _previousIteration = time::Sample{Eigen::VectorXd::Zero(getSize())};
-  }
   return _previousIteration.values;
 }
 
@@ -142,7 +131,7 @@ std::vector<int> CouplingData::getVertexOffsets()
 
 void CouplingData::moveToNextWindow()
 {
-  if (this->timeStepsStorage().getStamples().size() > 0) {
+  if (this->timeStepsStorage().stamples().size() > 0) {
     this->timeStepsStorage().move();
   }
 }
