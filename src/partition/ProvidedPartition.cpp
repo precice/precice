@@ -18,16 +18,13 @@
 #include "partition/Partition.hpp"
 #include "partition/ProvidedPartition.hpp"
 #include "precice/types.hpp"
-#include "utils/Event.hpp"
+#include "profiling/Event.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-using precice::utils::Event;
+using precice::profiling::Event;
 
-namespace precice {
-extern bool syncMode;
-
-namespace partition {
+namespace precice::partition {
 
 ProvidedPartition::ProvidedPartition(
     mesh::PtrMesh mesh)
@@ -59,7 +56,7 @@ void ProvidedPartition::communicate()
                                                  "participant.");
       twoLevelInitAlreadyUsed = true;
 
-      Event e("partition.broadcastMeshPartitions." + _mesh->getName(), precice::syncMode);
+      Event e("partition.broadcastMeshPartitions." + _mesh->getName(), profiling::Synchronize);
 
       // communicate the total number of vertices to the other participants primary rank
       if (utils::IntraComm::isPrimary()) {
@@ -83,7 +80,7 @@ void ProvidedPartition::communicate()
 
       if (not hasMeshBeenGathered) {
         // Gather mesh
-        Event e("partition.gatherMesh." + _mesh->getName(), precice::syncMode);
+        Event e("partition.gatherMesh." + _mesh->getName(), profiling::Synchronize);
         if (not utils::IntraComm::isSecondary()) {
           globalMesh.addMesh(*_mesh); // Add local primary mesh to global mesh
         }
@@ -105,7 +102,7 @@ void ProvidedPartition::communicate()
 
       // Send (global) Mesh
       PRECICE_INFO("Send global mesh {}", _mesh->getName());
-      Event e("partition.sendGlobalMesh." + _mesh->getName(), precice::syncMode);
+      Event e("partition.sendGlobalMesh." + _mesh->getName(), profiling::Synchronize);
 
       if (not utils::IntraComm::isSecondary()) {
         PRECICE_CHECK(globalMesh.vertices().size() > 0,
@@ -121,7 +118,7 @@ void ProvidedPartition::prepare()
 {
   PRECICE_TRACE();
   PRECICE_INFO("Prepare partition for mesh {}", _mesh->getName());
-  Event e("partition.prepareMesh." + _mesh->getName(), precice::syncMode);
+  Event e("partition.prepareMesh." + _mesh->getName(), profiling::Synchronize);
 
   int numberOfVertices = _mesh->vertices().size();
 
@@ -347,5 +344,4 @@ void ProvidedPartition::compareBoundingBoxes()
   }
 }
 
-} // namespace partition
-} // namespace precice
+} // namespace precice::partition

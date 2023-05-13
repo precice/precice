@@ -85,6 +85,10 @@
  *  @brief contains the partitioning of distributed meshes.
  */
 
+/** @namespace precice::profiling
+ *  @brief contains profiling utilities.
+ */
+
 /** @namespace precice::query
  *  @brief contains geometrical queries.
  */

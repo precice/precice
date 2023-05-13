@@ -13,7 +13,7 @@ class WaveformFixture;
 } // namespace testing
 
 namespace time {
-
+// @todo Refactor Waveform class. Move sample function inside of Storage::sample
 /**
  * @brief Stores data samples in time and allows to perform interpolation.
  *

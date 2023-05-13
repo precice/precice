@@ -65,6 +65,8 @@ option(PRECICE_ENABLE_FORTRAN "Enable the native Fortran bindings" ON)
 option(PRECICE_BUILD_TOOLS "Build the \"precice-tools\" executable" ON)
 option(PRECICE_ENABLE_LIBBACKTRACE "Enable libbacktrace for stacktrace generation." OFF)
 
+option(CMAKE_INTERPROCEDURAL_OPTIMIZATION "Enable interprocedural optimization for all targets." OFF)
+
 option(PRECICE_RELEASE_WITH_DEBUG_LOG "Enable debug logging in release builds" OFF)
 option(PRECICE_RELEASE_WITH_TRACE_LOG "Enable trace logging in release builds" OFF)
 option(PRECICE_RELEASE_WITH_ASSERTIONS "Enable assertions in release builds" OFF)
@@ -234,6 +236,12 @@ if (PRECICE_PETScMapping)
   message(STATUS "Found PETSc ${PETSc_VERSION}")
 else()
   message(STATUS "PETSc support disabled")
+endif()
+
+if (PRECICE_BUILD_TOOLS AND BUILD_TESTING)
+  # We need this to run the precice-events
+  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+  message(STATUS "Found Python ${Python3_VERSION}")
 endif()
 
 # Option Python
@@ -408,6 +416,12 @@ if (PRECICE_BUILD_TOOLS)
     CXX_STANDARD_REQUIRED Yes
     CXX_EXTENSIONS No
     )
+
+  # Link or copy the events script to the binary directory
+  file(CREATE_LINK
+    ${preCICE_SOURCE_DIR}/tools/profiling/precice-events
+    ${preCICE_BINARY_DIR}/precice-events
+    COPY_ON_ERROR SYMBOLIC)
 endif()
 
 #
@@ -469,6 +483,9 @@ if(PRECICE_BUILD_TOOLS)
     EXPORT preciceTargets
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     )
+
+    install(FILES ${preCICE_SOURCE_DIR}/tools/profiling/precice-events
+    DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
 # Install examples
@@ -576,6 +593,8 @@ if (BUILD_TESTING)
 
   include(${CMAKE_CURRENT_LIST_DIR}/cmake/CTestConfig.cmake)
 
+  # Add precice-events tests
+  add_subdirectory(tools/profiling)
 
   #
   # Add test_install

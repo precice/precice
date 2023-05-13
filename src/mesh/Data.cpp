@@ -42,12 +42,12 @@ const Eigen::VectorXd &Data::values() const
   return _sample.values;
 }
 
-Eigen::MatrixXd &Data::gradientValues()
+Eigen::MatrixXd &Data::gradients()
 {
   return _sample.gradients;
 }
 
-const Eigen::MatrixXd &Data::gradientValues() const
+const Eigen::MatrixXd &Data::gradients() const
 {
   return _sample.gradients;
 }

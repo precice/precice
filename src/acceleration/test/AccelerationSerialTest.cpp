@@ -280,18 +280,18 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradient)
   displacements->values().resize(4);
   displacements->values() << 1.0, 2.0, 3.0, 4.0;
   displacements->requireDataGradient();
-  displacements->gradientValues().resize(dim, 4);
+  displacements->gradients().resize(dim, 4);
   for (unsigned int r = 0; r < dim; ++r) {
     for (unsigned int c = 0; c < 4; ++c)
-      displacements->gradientValues()(r, c) = r + r * c;
+      displacements->gradients()(r, c) = r + r * c;
   }
   displacements->setSampleAtTime(time::Storage::WINDOW_END, displacements->sample());
   // //init forces
   forces->values().resize(4);
   forces->values() << 0.2, 0.2, 0.2, 0.2;
   forces->requireDataGradient();
-  forces->gradientValues().resize(dim, 4);
-  forces->gradientValues().setConstant(-2);
+  forces->gradients().resize(dim, 4);
+  forces->gradients().setConstant(-2);
   forces->setSampleAtTime(time::Storage::WINDOW_END, forces->sample());
 
   cplscheme::PtrCouplingData dpcd = std::make_shared<cplscheme::CouplingData>(displacements, dummyMesh, false);
@@ -306,10 +306,10 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradient)
   acc.initialize(data);
 
   displacements->values() << 3.5, 2.0, 2.0, 1.0;
-  displacements->gradientValues().setConstant(2.5);
+  displacements->gradients().setConstant(2.5);
   displacements->setSampleAtTime(time::Storage::WINDOW_END, displacements->sample());
   forces->values() << 0.1, 0.1, 0.1, 0.1;
-  forces->gradientValues().setConstant(3);
+  forces->gradients().setConstant(3);
   forces->setSampleAtTime(time::Storage::WINDOW_END, forces->sample());
 
   acc.performAcceleration(data);
@@ -325,21 +325,21 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradient)
   BOOST_TEST(data.at(1)->values()(3) == 0.16);
 
   // Test gradient data
-  BOOST_TEST(data.at(0)->gradientValues()(0, 0) == 1);
-  BOOST_TEST(data.at(0)->gradientValues()(0, 1) == 1);
-  BOOST_TEST(data.at(0)->gradientValues()(0, 2) == 1);
-  BOOST_TEST(data.at(0)->gradientValues()(1, 0) == 1.6);
-  BOOST_TEST(data.at(0)->gradientValues()(1, 1) == 2.2);
-  BOOST_TEST(data.at(0)->gradientValues()(1, 2) == 2.8);
-  BOOST_TEST(data.at(1)->gradientValues()(0, 0) == 0);
-  BOOST_TEST(data.at(1)->gradientValues()(0, 1) == 0);
-  BOOST_TEST(data.at(1)->gradientValues()(0, 2) == 0);
-  BOOST_TEST(data.at(1)->gradientValues()(1, 0) == 0);
-  BOOST_TEST(data.at(1)->gradientValues()(1, 1) == 0);
-  BOOST_TEST(data.at(1)->gradientValues()(1, 2) == 0);
+  BOOST_TEST(data.at(0)->gradients()(0, 0) == 1);
+  BOOST_TEST(data.at(0)->gradients()(0, 1) == 1);
+  BOOST_TEST(data.at(0)->gradients()(0, 2) == 1);
+  BOOST_TEST(data.at(0)->gradients()(1, 0) == 1.6);
+  BOOST_TEST(data.at(0)->gradients()(1, 1) == 2.2);
+  BOOST_TEST(data.at(0)->gradients()(1, 2) == 2.8);
+  BOOST_TEST(data.at(1)->gradients()(0, 0) == 0);
+  BOOST_TEST(data.at(1)->gradients()(0, 1) == 0);
+  BOOST_TEST(data.at(1)->gradients()(0, 2) == 0);
+  BOOST_TEST(data.at(1)->gradients()(1, 0) == 0);
+  BOOST_TEST(data.at(1)->gradients()(1, 1) == 0);
+  BOOST_TEST(data.at(1)->gradients()(1, 2) == 0);
 
   data.begin()->second->values() << 10, 10, 10, 10;
-  displacements->gradientValues().setConstant(4);
+  displacements->gradients().setConstant(4);
 
   acc.performAcceleration(data);
 
@@ -353,12 +353,12 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradient)
   BOOST_TEST(data.at(1)->values()(2) == 0.184);
   BOOST_TEST(data.at(1)->values()(3) == 0.184);
 
-  BOOST_TEST(data.at(0)->gradientValues()(0, 0) == 1.6);
-  BOOST_TEST(data.at(0)->gradientValues()(0, 1) == 1.6);
-  BOOST_TEST(data.at(0)->gradientValues()(0, 2) == 1.6);
-  BOOST_TEST(data.at(0)->gradientValues()(1, 0) == 2.2);
-  BOOST_TEST(data.at(0)->gradientValues()(1, 1) == 2.8);
-  BOOST_TEST(data.at(0)->gradientValues()(1, 2) == 3.4);
+  BOOST_TEST(data.at(0)->gradients()(0, 0) == 1.6);
+  BOOST_TEST(data.at(0)->gradients()(0, 1) == 1.6);
+  BOOST_TEST(data.at(0)->gradients()(0, 2) == 1.6);
+  BOOST_TEST(data.at(0)->gradients()(1, 0) == 2.2);
+  BOOST_TEST(data.at(0)->gradients()(1, 1) == 2.8);
+  BOOST_TEST(data.at(0)->gradients()(1, 2) == 3.4);
 }
 
 #endif // not PRECICE_NO_MPI

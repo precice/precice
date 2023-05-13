@@ -4,11 +4,8 @@
 #include "mapping/Mapping.hpp"
 #include "mesh/Filter.hpp"
 #include "precice/types.hpp"
-#include "utils/Event.hpp"
 
 namespace precice {
-extern bool syncMode;
-
 namespace mapping {
 
 /**

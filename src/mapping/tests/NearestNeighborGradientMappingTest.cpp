@@ -41,10 +41,10 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
   inValuesVector << 1.0, 2.0, 3.0, 4.0;
 
   // Create corresponding gradient data (all gradient values = const = 1)
-  Eigen::MatrixXd &inGradValuesScalar = inDataScalar->gradientValues();
-  Eigen::MatrixXd &inGradValuesVector = inDataVector->gradientValues();
-  inGradValuesScalar.setOnes();
-  inGradValuesVector.setOnes();
+  Eigen::MatrixXd &inGradientsScalar = inDataScalar->gradients();
+  Eigen::MatrixXd &inGradientsVector = inDataVector->gradients();
+  inGradientsScalar.setOnes();
+  inGradientsVector.setOnes();
 
   // Create mesh to map to
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
@@ -76,8 +76,8 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
   BOOST_CHECK(equals(inValuesVector, outValuesVector));
 
   // Map data with almost coinciding vertices, with a null gradient, has to result in equal values
-  inGradValuesScalar.setZero();
-  inGradValuesVector.setZero();
+  inGradientsScalar.setZero();
+  inGradientsVector.setZero();
   outVertex0.setCoords(inVertex0.getCoords() + Eigen::Vector2d::Constant(0.1));
   outVertex1.setCoords(inVertex1.getCoords() + Eigen::Vector2d::Constant(0.1));
 
@@ -91,8 +91,8 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
   BOOST_CHECK(equals(expected, outValuesVector));
 
   // Map data with almost coinciding vertices, should be a little different with the gradient optimization
-  inGradValuesScalar.setOnes();
-  inGradValuesVector.setOnes();
+  inGradientsScalar.setOnes();
+  inGradientsVector.setOnes();
   outVertex0.setCoords(inVertex0.getCoords() + Eigen::Vector2d::Constant(0.1));
   outVertex1.setCoords(inVertex1.getCoords() + Eigen::Vector2d::Constant(0.1));
 
@@ -132,16 +132,16 @@ BOOST_AUTO_TEST_CASE(ConsistentGradientNotConstant)
   inValuesVector << 1.0, 2.0, 3.0, 4.0;
 
   // Create corresponding gradient data (all gradient values = const = 1)
-  Eigen::MatrixXd &inGradValuesScalar = inDataScalar->gradientValues();
-  Eigen::MatrixXd &inGradValuesVector = inDataVector->gradientValues();
+  Eigen::MatrixXd &inGradientsScalar = inDataScalar->gradients();
+  Eigen::MatrixXd &inGradientsVector = inDataVector->gradients();
 
-  inGradValuesScalar.col(0) << 2.0, 3.0;
-  inGradValuesScalar.col(1) << 2.0, 3.0;
+  inGradientsScalar.col(0) << 2.0, 3.0;
+  inGradientsScalar.col(1) << 2.0, 3.0;
 
-  inGradValuesVector.col(0) << 2.0, 3.0;
-  inGradValuesVector.col(1) << 4.0, 5.0;
-  inGradValuesVector.col(2) << 2.0, 3.0;
-  inGradValuesVector.col(3) << 4.0, 5.0;
+  inGradientsVector.col(0) << 2.0, 3.0;
+  inGradientsVector.col(1) << 4.0, 5.0;
+  inGradientsVector.col(2) << 2.0, 3.0;
+  inGradientsVector.col(3) << 4.0, 5.0;
 
   // Create mesh to map to
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
