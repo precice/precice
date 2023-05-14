@@ -31,17 +31,20 @@ void SummationAction::performAction(double time)
 {
   PRECICE_TRACE();
 
-  auto &targetValues = _targetData->values();
-  targetValues.setZero();
-
-  for (const auto &sourceData : _sourceDataVector) {
-    auto sourceStample = sourceData->stamples().back();
-    PRECICE_ASSERT(math::equals(sourceStample.timestamp, time::Storage::WINDOW_END));
-    auto sourceDataValues = sourceStample.sample.values;
-    targetValues += sourceDataValues;
+  const auto &referenceData = _sourceDataVector.front(); // serves as reference
+  const int   nStamples     = referenceData->stamples().size();
+  for (int stampleId = 0; stampleId < nStamples; stampleId++) { // simultaneously loop over stamples in all sourceData of _sourceDataVector
+    auto &targetValues = _targetData->values();
+    targetValues.setZero();
+    const double currentTimestamp = referenceData->stamples()[stampleId].timestamp;
+    for (const auto &sourceData : _sourceDataVector) {
+      auto sourceStample = sourceData->stamples()[stampleId];
+      PRECICE_ASSERT(math::equals(sourceStample.timestamp, currentTimestamp), "Time mesh all sources must agree!");
+      auto sourceDataValues = sourceStample.sample.values;
+      targetValues += sourceDataValues;
+    }
+    _targetData->setSampleAtTime(currentTimestamp, _targetData->sample());
   }
-
-  _targetData->setSampleAtTime(time::Storage::WINDOW_END, _targetData->sample());
 }
 
 } // namespace precice::action
