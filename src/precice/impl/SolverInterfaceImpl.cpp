@@ -334,9 +334,7 @@ void SolverInterfaceImpl::initialize()
   }
 
   mapWrittenData();
-  if (_couplingScheme->sendsInitializedData()) { // @todo try to remove this check as well. Currently problematic, because of Integration/Serial/MultipleMappings/MultipleWriteToMappings (During initialization only data at WINDOW_START available. Should improve, if we apply actions to all samples in storage)
-    performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0);
-  }
+  performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0);
 
   PRECICE_DEBUG("Initialize coupling schemes");
   _couplingScheme->initialize(time, timeWindow);
