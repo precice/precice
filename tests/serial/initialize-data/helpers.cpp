@@ -3,7 +3,7 @@
 #include "helpers.hpp"
 #include "testing/Testing.hpp"
 
-#include "precice/SolverInterface.hpp"
+#include "precice/Participant.hpp"
 
 /**
  * @brief helper function for a simple test with data initialization
@@ -12,7 +12,7 @@ void testDataInitialization(precice::testing::TestContext context, std::string c
 {
   using Eigen::Vector3d;
 
-  SolverInterface cplInterface(context.name, config, 0, 1);
+  Participant cplInterface(context.name, config, 0, 1);
   if (context.isNamed("SolverOne")) {
     auto     meshName   = "MeshOne";
     Vector3d pos        = Vector3d::Zero();

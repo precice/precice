@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/Participant.hpp>
 #include <vector>
 
 BOOST_AUTO_TEST_SUITE(Integration)
@@ -12,9 +12,9 @@ BOOST_AUTO_TEST_CASE(LocalRBFPartitioning)
   PRECICE_TEST("SolverOne"_on(3_ranks), "SolverTwo"_on(1_rank));
 
   if (context.name == "SolverOne") {
-    precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    auto                     meshName = "MeshOne";
-    auto                     dataName = "Data2";
+    precice::Participant interface(context.name, context.config(), context.rank, context.size);
+    auto                 meshName = "MeshOne";
+    auto                 dataName = "Data2";
 
     int    vertexIDs[2];
     double xCoord       = context.rank * 0.4;
@@ -28,10 +28,10 @@ BOOST_AUTO_TEST_CASE(LocalRBFPartitioning)
     interface.finalize();
   } else {
     BOOST_REQUIRE(context.isNamed("SolverTwo"));
-    precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    auto                     meshName = "MeshTwo";
-    int                      vertexIDs[6];
-    double                   positions[12] = {0.0, 0.0, 0.2, 0.0, 0.4, 0.0, 0.6, 0.0, 0.8, 0.0, 1.0, 0.0};
+    precice::Participant interface(context.name, context.config(), context.rank, context.size);
+    auto                 meshName = "MeshTwo";
+    int                  vertexIDs[6];
+    double               positions[12] = {0.0, 0.0, 0.2, 0.0, 0.4, 0.0, 0.6, 0.0, 0.8, 0.0, 1.0, 0.0};
     interface.setMeshVertices(meshName, positions, vertexIDs);
     interface.initialize();
     auto   dataName  = "Data2";

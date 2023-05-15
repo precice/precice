@@ -20,11 +20,11 @@
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Utils.hpp"
 #include "mesh/Vertex.hpp"
-#include "precice/SolverInterface.hpp"
+#include "precice/Participant.hpp"
 #include "precice/impl/MeshContext.hpp"
+#include "precice/impl/ParticipantImpl.hpp"
 #include "precice/impl/ParticipantState.hpp"
 #include "precice/impl/SharedPointer.hpp"
-#include "precice/impl/SolverInterfaceImpl.hpp"
 #include "precice/types.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalReadVector)
 
   using Eigen::Vector3d;
 
-  SolverInterface cplInterface(context.name, context.config(), 0, 1);
+  Participant cplInterface(context.name, context.config(), 0, 1);
   if (context.isNamed("SolverOne")) {
     auto     meshName = "MeshOne";
     Vector3d posOne   = Vector3d::Constant(0.0);

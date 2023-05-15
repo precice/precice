@@ -1,6 +1,6 @@
 #ifndef PRECICE_NO_MPI
 
-#include <precice/SolverInterface.hpp>
+#include <precice/Participant.hpp>
 #include <vector>
 #include "testing/Testing.hpp"
 #include "utils/IntraComm.hpp"
@@ -14,7 +14,7 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative1To3)
   using precice::testing::equals;
 
   PRECICE_TEST("SolverOneCubeConservative1To3"_on(1_rank), "SolverTwoCubeConservative1To3"_on(3_ranks).setupIntraComm());
-  precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
+  precice::Participant interface(context.name, context.config(), context.rank, context.size);
 
   std::vector<VertexID> vertexIDs;
   double                dt;

@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/Participant.hpp>
 #include <vector>
 
 // Test case for a direct mesh access while also using waveform relaxation to test the integration of the two features.
@@ -15,12 +15,12 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithWaveform)
 
   if (context.isNamed("SolverOne")) {
     // Set up Solverinterface
-    precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    constexpr int            dim           = 2;
-    const auto               ownMeshName   = "MeshOne";
-    const auto               otherMeshName = "MeshTwo";
-    const auto               readDataName  = "Forces";
-    const auto               writeDataName = "Velocities";
+    precice::Participant interface(context.name, context.config(), context.rank, context.size);
+    constexpr int        dim           = 2;
+    const auto           ownMeshName   = "MeshOne";
+    const auto           otherMeshName = "MeshTwo";
+    const auto           readDataName  = "Forces";
+    const auto           writeDataName = "Velocities";
     BOOST_REQUIRE(interface.getMeshDimensions(ownMeshName) == 2);
     BOOST_REQUIRE(interface.getMeshDimensions(otherMeshName) == 2);
 
@@ -95,11 +95,11 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithWaveform)
 
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    constexpr int            dim         = 2;
-    const auto               meshID      = "MeshTwo";
-    const auto               writeDataID = "Forces";
-    const auto               readDataID  = "Velocities";
+    precice::Participant interface(context.name, context.config(), context.rank, context.size);
+    constexpr int        dim         = 2;
+    const auto           meshID      = "MeshTwo";
+    const auto           writeDataID = "Forces";
+    const auto           readDataID  = "Velocities";
     BOOST_REQUIRE(interface.getMeshDimensions(meshID) == 2);
 
     std::vector<double> positions = std::vector<double>({0.5, 0.25});

@@ -11,7 +11,7 @@
  */
 namespace precice {
 namespace impl {
-class SolverInterfaceImpl;
+class ParticipantImpl;
 }
 namespace testing {
 struct WhiteboxAccessor;
@@ -30,22 +30,22 @@ using string_view = ::precice::span<const char>;
  *
  * To adapt a solver to preCICE, follow the following main structure:
  *
- * -# Create an object of SolverInterface with SolverInterface()
- * -# Initialize preCICE with SolverInterface::initialize()
- * -# Advance to the next (time)step with SolverInterface::advance()
- * -# Finalize preCICE with SolverInterface::finalize()
+ * -# Create an object of Participant with Participant()
+ * -# Initialize preCICE with Participant::initialize()
+ * -# Advance to the next (time)step with Participant::advance()
+ * -# Finalize preCICE with Participant::finalize()
  *
  *  @note
  *  We use solver, simulation code, and participant as synonyms.
  *  The preferred name in the documentation is participant.
  */
-class PRECICE_API SolverInterface {
+class PRECICE_API Participant {
 public:
   ///@name Construction and Configuration
   ///@{
 
   /**
-   * @brief Constructs a SolverInterface for the given participant
+   * @brief Constructs a Participant for the given participant
    *
    * @param[in] participantName Name of the participant using the interface. Has to
    *        match the name given for a participant in the xml configuration file.
@@ -55,14 +55,14 @@ public:
    *        from 0 and end with solverProcessSize - 1.
    * @param[in] solverProcessSize The number of solver processes using preCICE.
    */
-  SolverInterface(
+  Participant(
       ::precice::string_view participantName,
       ::precice::string_view configurationFileName,
       int                    solverProcessIndex,
       int                    solverProcessSize);
 
   /**
-   * @brief Constructs a SolverInterface for the given participant and a custom MPI communicator.
+   * @brief Constructs a Participant for the given participant and a custom MPI communicator.
    *
    * @param[in] participantName Name of the participant using the interface. Has to
    *        match the name given for a participant in the xml configuration file.
@@ -73,14 +73,14 @@ public:
    * @param[in] solverProcessSize The number of solver processes using preCICE.
    * @param[in] communicator A pointer to an MPI_Comm to use as communicator.
    */
-  SolverInterface(
+  Participant(
       ::precice::string_view participantName,
       ::precice::string_view configurationFileName,
       int                    solverProcessIndex,
       int                    solverProcessSize,
       void *                 communicator);
 
-  ~SolverInterface();
+  ~Participant();
 
   ///@}
 
@@ -596,9 +596,9 @@ public:
    * @pre every VertexID in vertices is a return value of setMeshVertex or setMeshVertices
    * @pre values.size() == getDataDimensions(meshName, dataName) * vertices.size()
    *
-   * @see SolverInterface::setMeshVertex()
-   * @see SolverInterface::setMeshVertices()
-   * @see SolverInterface::getDataDimensions()
+   * @see Participant::setMeshVertex()
+   * @see Participant::setMeshVertices()
+   * @see Participant::getDataDimensions()
    */
   void writeData(
       ::precice::string_view          meshName,
@@ -632,9 +632,9 @@ public:
    *
    * @post values contain the read data as specified in the above format.
    *
-   * @see SolverInterface::setMeshVertex()
-   * @see SolverInterface::setMeshVertices()
-   * @see SolverInterface::getDataDimensions()
+   * @see Participant::setMeshVertex()
+   * @see Participant::setMeshVertices()
+   * @see Participant::getDataDimensions()
    */
   void readData(
       ::precice::string_view          meshName,
@@ -799,10 +799,10 @@ public:
    * @pre every VertexID in vertices is a return value of setMeshVertex or setMeshVertices
    * @pre gradients.size() == vertices.size() * getMeshDimensions(meshName) * getDataDimensions(meshName, dataName)
    *
-   * @see SolverInterface::setMeshVertex()
-   * @see SolverInterface::setMeshVertices()
-   * @see SolverInterface::getMeshDimensions()
-   * @see SolverInterface::getDataDimensions()
+   * @see Participant::setMeshVertex()
+   * @see Participant::setMeshVertices()
+   * @see Participant::getMeshDimensions()
+   * @see Participant::getDataDimensions()
    *
    */
   void writeGradientData(
@@ -814,14 +814,14 @@ public:
   ///@}
 
   /// Disable copy construction
-  SolverInterface(const SolverInterface &copy) = delete;
+  Participant(const Participant &copy) = delete;
 
   /// Disable assignment construction
-  SolverInterface &operator=(const SolverInterface &assign) = delete;
+  Participant &operator=(const Participant &assign) = delete;
 
 private:
-  /// Pointer to implementation of SolverInterface.
-  std::unique_ptr<impl::SolverInterfaceImpl> _impl;
+  /// Pointer to implementation of Participant.
+  std::unique_ptr<impl::ParticipantImpl> _impl;
 
   // @brief To allow white box tests.
   friend struct testing::WhiteboxAccessor;

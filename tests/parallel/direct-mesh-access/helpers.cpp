@@ -3,7 +3,7 @@
 #include "helpers.hpp"
 
 #include <numeric>
-#include "precice/SolverInterface.hpp"
+#include "precice/Participant.hpp"
 #include "testing/Testing.hpp"
 
 // StartIndex is here the first index to be used for writing on the secondary rank
@@ -16,10 +16,10 @@ void runTestAccessReceivedMesh(const TestContext &       context,
 {
   if (context.isNamed("SolverOne")) {
     // Defines the bounding box and writes data to the received mesh
-    precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    auto                     otherMeshName = "MeshTwo";
-    auto                     dataName      = "Velocities";
-    const int                dim           = interface.getMeshDimensions(otherMeshName);
+    precice::Participant interface(context.name, context.config(), context.rank, context.size);
+    auto                 otherMeshName = "MeshTwo";
+    auto                 dataName      = "Velocities";
+    const int            dim           = interface.getMeshDimensions(otherMeshName);
 
     std::vector<double> boundingBox = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 3.5}) : boundingBoxSecondaryRank;
     // Set bounding box
@@ -74,7 +74,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
   } else {
     // Defines the mesh and reads data
     BOOST_REQUIRE(context.isNamed("SolverTwo"));
-    precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
+    precice::Participant interface(context.name, context.config(), context.rank, context.size);
 
     // Get IDs
     auto      meshName = "MeshTwo";

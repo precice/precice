@@ -1,4 +1,4 @@
-#include "precice/SolverInterfaceC.h"
+#include "precice/ParticipantC.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,7 +35,7 @@ int main(int argc, char **argv)
   printf("DUMMY: Running solver dummy with preCICE config file \"%s\" and participant name \"%s\".\n",
          configFileName, participantName);
 
-  precicec_createSolverInterface(participantName, configFileName, solverProcessIndex, solverProcessSize);
+  precicec_createParticipant(participantName, configFileName, solverProcessIndex, solverProcessSize);
 
   if (strcmp(participantName, "SolverOne") == 0) {
     writeDataName = "Data-One";

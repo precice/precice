@@ -4,13 +4,13 @@
 
 # For Adapter Developers
 
-Please refer to the documentation on https://precice.org/docs and to the documentation of the \ref precice::SolverInterface SolverInterface.
+Please refer to the documentation on https://precice.org/docs and to the documentation of the \ref precice::Participant Participant.
 Refer to \ref precice::tooling for the tooling API.
 
 The API of further native bindings can be found here:
 
-- \ref SolverInterfaceC.h "SolverInterfaceC" for the C bindings.
-- \ref SolverInterfaceFortran.hpp "SolverInterfaceFortran" for the Fortran bindings.
+- \ref ParticipantC.h "ParticipantC" for the C bindings.
+- \ref ParticipantFortran.hpp "ParticipantFortran" for the Fortran bindings.
 
 # For Library Developers
 

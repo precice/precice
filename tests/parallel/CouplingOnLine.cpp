@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/Participant.hpp>
 #include <vector>
 
 /// This testcase is based on a bug reported by Thorsten for acoustic FASTEST-Ateles coupling
@@ -13,8 +13,8 @@ BOOST_AUTO_TEST_CASE(CouplingOnLine)
   PRECICE_TEST("Ateles"_on(3_ranks), "FASTEST"_on(1_rank));
 
   if (context.isNamed("Ateles")) {
-    precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    auto                     meshName = "Ateles_Mesh";
+    precice::Participant interface(context.name, context.config(), context.rank, context.size);
+    auto                 meshName = "Ateles_Mesh";
 
     int    vertexIDs[4];
     double offset        = context.rank * 0.4;
@@ -29,12 +29,12 @@ BOOST_AUTO_TEST_CASE(CouplingOnLine)
     interface.advance(1.0);
     interface.finalize();
   } else {
-    precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    auto                     meshName = "FASTEST_Mesh";
-    int                      vertexIDs[10];
-    double                   xCoord        = -0.0001;
-    double                   yCoord        = 1.00001;
-    double                   positions[30] = {xCoord, yCoord, 0.12,
+    precice::Participant interface(context.name, context.config(), context.rank, context.size);
+    auto                 meshName = "FASTEST_Mesh";
+    int                  vertexIDs[10];
+    double               xCoord        = -0.0001;
+    double               yCoord        = 1.00001;
+    double               positions[30] = {xCoord, yCoord, 0.12,
                             xCoord, yCoord, 0.24,
                             xCoord, yCoord, 0.36,
                             xCoord, yCoord, 0.48,

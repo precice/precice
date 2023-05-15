@@ -235,8 +235,8 @@ target_sources(preciceCore
     src/partition/ReceivedPartition.cpp
     src/partition/ReceivedPartition.hpp
     src/partition/SharedPointer.hpp
-    src/precice/SolverInterface.cpp
-    src/precice/SolverInterface.hpp
+    src/precice/Participant.cpp
+    src/precice/Participant.hpp
     src/precice/Tooling.cpp
     src/precice/Tooling.hpp
     src/precice/config/Configuration.cpp
@@ -256,8 +256,8 @@ target_sources(preciceCore
     src/precice/impl/ReadDataContext.cpp
     src/precice/impl/ReadDataContext.hpp
     src/precice/impl/SharedPointer.hpp
-    src/precice/impl/SolverInterfaceImpl.cpp
-    src/precice/impl/SolverInterfaceImpl.hpp
+    src/precice/impl/ParticipantImpl.cpp
+    src/precice/impl/ParticipantImpl.hpp
     src/precice/impl/ValidationMacros.hpp
     src/precice/impl/WatchIntegral.cpp
     src/precice/impl/WatchIntegral.hpp
@@ -336,7 +336,7 @@ target_sources(preciceCore
 
 set_property(TARGET precice PROPERTY PUBLIC_HEADER
     ${PROJECT_BINARY_DIR}/src/precice/Version.h
-    src/precice/SolverInterface.hpp
+    src/precice/Participant.hpp
     src/precice/Tooling.hpp
     src/precice/span.hpp
     src/precice/types.hpp

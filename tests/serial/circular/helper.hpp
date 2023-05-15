@@ -4,13 +4,13 @@
 #include "testing/Testing.hpp"
 
 #include <boost/test/tools/detail/per_element_manip.hpp>
-#include <precice/SolverInterface.hpp>
+#include <precice/Participant.hpp>
 #include <vector>
 
 namespace tests {
 inline void cyclicExplicit(TestContext &context)
 {
-  precice::SolverInterface interface{
+  precice::Participant interface{
       context.name, context.config(), 0, 1};
 
   auto meshName = "M" + context.name;
