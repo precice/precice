@@ -24,7 +24,7 @@ def mergedDict(dict1, dict2):
     return merged
 
 def requireModules(modules):
-    import importlib
+    import importlib.util
     notFound = [m for m in modules if importlib.util.find_spec(m) is None]
     if (notFound):
         def concat(l):
@@ -72,7 +72,7 @@ def printWide(df):
     for index, row in df.fillna("").iterrows():
         print(rowfmt.format(*row.to_list()))
 
-@functools.cache
+@functools.lru_cache
 def ns_to_unit_factor(unit):
     return {
         'ns': 1,
