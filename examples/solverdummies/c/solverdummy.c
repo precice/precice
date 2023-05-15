@@ -1,4 +1,4 @@
-#include "precice/precicec.h"
+#include "precice/preciceC.h"
 
 #include <stdio.h>
 #include <stdlib.h>

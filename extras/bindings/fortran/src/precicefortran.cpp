@@ -1,4 +1,4 @@
-#include "precice/precicefortran.hpp"
+#include "precice/preciceFortran.hpp"
 #include <iostream>
 #include <memory>
 #include <stddef.h>
@@ -24,7 +24,7 @@ using namespace std;
 
 static std::unique_ptr<precice::Participant> impl = nullptr;
 
-static precice::logging::Logger _log("precicefortran");
+static precice::logging::Logger _log("preciceFortran");
 
 static std::string errormsg = "preCICE has not been created properly. Be sure to call \"precicef_create\" before any other call to preCICE.";
 

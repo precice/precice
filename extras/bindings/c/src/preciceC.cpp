@@ -1,5 +1,5 @@
 extern "C" {
-#include "precice/precicec.h"
+#include "precice/preciceC.h"
 }
 #include <memory>
 #include <string>
