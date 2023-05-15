@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/Participant.hpp>
 #include <vector>
 
 BOOST_AUTO_TEST_SUITE(Integration)
@@ -21,7 +21,7 @@ BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
     double expectedValueD = 15.0;
 
     // Target solver
-    precice::SolverInterface interface(context.name, context.config(), 0, 1);
+    precice::Participant interface(context.name, context.config(), 0, 1);
 
     // Set mesh
     Vector3d coordA{0.0, 0.0, 0.3};
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
     interface.finalize();
   } else if (context.isNamed("SolverSourceOne")) {
     // Source solver one
-    precice::SolverInterface interface(context.name, context.config(), 0, 1);
+    precice::Participant interface(context.name, context.config(), 0, 1);
 
     // Set mesh
     Vector3d coordA{0.0, 0.0, 0.3};
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
   } else {
     BOOST_REQUIRE(context.isNamed("SolverSourceTwo"));
     // Source solver two
-    precice::SolverInterface interface(context.name, context.config(), 0, 1);
+    precice::Participant interface(context.name, context.config(), 0, 1);
 
     // Set mesh
     Vector3d coordA{0.0, 0.0, 0.3};

@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/Participant.hpp>
 #include <vector>
 
 using namespace precice;
@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantChangingDt)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
-  SolverInterface precice(context.name, context.config(), 0, 1);
+  Participant precice(context.name, context.config(), 0, 1);
 
   typedef double (*DataFunction)(double);
 

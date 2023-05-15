@@ -1,9 +1,9 @@
 #ifndef PRECICE_NO_MPI
 
-#include "precice/impl/SolverInterfaceImpl.hpp"
+#include "precice/impl/ParticipantImpl.hpp"
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/Participant.hpp>
 #include <vector>
 
 using namespace precice;
@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataScaling)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
-  SolverInterface cplInterface(context.name, context.config(), 0, 1);
+  Participant cplInterface(context.name, context.config(), 0, 1);
 
   std::vector<double> positions = {0.0, 0.0, 0.0, 0.1, 0.1, 0.1, 0.1, 0.0};
   std::vector<int>    ids       = {0, 0, 0, 0};

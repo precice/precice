@@ -3,7 +3,7 @@
 #include "testing/Testing.hpp"
 
 #include <action/RecorderAction.hpp>
-#include <precice/SolverInterface.hpp>
+#include <precice/Participant.hpp>
 #include <vector>
 
 /**
@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_CASE(ActionTimingsExplicit)
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
   using namespace precice;
-  SolverInterface interface(context.name, context.config(), 0, 1);
+  Participant interface(context.name, context.config(), 0, 1);
 
   std::string meshName;
   std::string writeDataName;

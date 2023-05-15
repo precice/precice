@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/Participant.hpp>
 #include <vector>
 
 // Test case for a direct mesh access on one participant to a mesh defined
@@ -18,12 +18,12 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
 
   if (context.isNamed("SolverOne")) {
     // Set up Solverinterface
-    precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    constexpr int            dim           = 2;
-    auto                     ownMeshName   = "MeshOne";
-    auto                     otherMeshName = "MeshTwo";
-    auto                     readDataName  = "Forces";
-    auto                     writeDataName = "Velocities";
+    precice::Participant interface(context.name, context.config(), context.rank, context.size);
+    constexpr int        dim           = 2;
+    auto                 ownMeshName   = "MeshOne";
+    auto                 otherMeshName = "MeshTwo";
+    auto                 readDataName  = "Forces";
+    auto                 writeDataName = "Velocities";
     BOOST_TEST(interface.getMeshDimensions(ownMeshName) == 2);
     BOOST_TEST(interface.getMeshDimensions(otherMeshName) == 2);
 
@@ -77,8 +77,8 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
     auto writeDataName = "Forces";
     auto readDataName  = "Velocities";
 
-    precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    const int                dim = interface.getMeshDimensions(meshName);
+    precice::Participant interface(context.name, context.config(), context.rank, context.size);
+    const int            dim = interface.getMeshDimensions(meshName);
     BOOST_TEST(context.isNamed("SolverTwo"));
     std::vector<double> positions = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 2.0}) : std::vector<double>({0.0, 3.5, 0.0, 4.0, 0.0, 5.0});
     std::vector<int>    ids(positions.size() / dim, -1);

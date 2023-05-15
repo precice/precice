@@ -3,7 +3,7 @@
 #include "testing/Testing.hpp"
 
 #include <action/RecorderAction.hpp>
-#include <precice/SolverInterface.hpp>
+#include <precice/Participant.hpp>
 
 #include <vector>
 
@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(ActionTimingsImplicit)
 
   using namespace precice;
 
-  SolverInterface interface(context.name, context.config(), context.rank, context.size);
+  Participant interface(context.name, context.config(), context.rank, context.size);
 
   std::string meshName;
   std::string writeDataName;

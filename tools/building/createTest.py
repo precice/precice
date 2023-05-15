@@ -117,7 +117,7 @@ PRECICE_TEST_BODY = """{
 
   // Implement your test here.
   BOOST_TEST(false);
-  precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
+  precice::Participant interface(context.name, context.config(), context.rank, context.size);
 
   std::vector<VertexID> vertexIDs;
 
@@ -139,7 +139,7 @@ def generateTestSource(name, suite, filepath):
         raise BaseException("The test source at \"{}\" already exists.".format(filepath))
 
     includes = [
-        "<precice/SolverInterface.hpp>", "<vector>", '"testing/Testing.hpp"'
+        "<precice/Participant.hpp>", "<vector>", '"testing/Testing.hpp"'
     ]
     suites = ["Integration"] + suite
     space = [""]

@@ -17,7 +17,7 @@ namespace precice {
 namespace config {
 
 /**
- * @brief Configures class SolverInterfaceImpl from XML.
+ * @brief Configures class ParticipantImpl from XML.
  */
 class SolverInterfaceConfiguration : public xml::XMLTag::Listener {
 public:

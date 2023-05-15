@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/Participant.hpp>
 #include <vector>
 
 BOOST_AUTO_TEST_SUITE(Integration)
@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataMultipleReadWrite)
 
   using Eigen::Vector3d;
 
-  precice::SolverInterface cplInterface(context.name, context.config(), 0, 1);
+  precice::Participant cplInterface(context.name, context.config(), 0, 1);
   if (context.isNamed("SolverOne")) {
     auto            meshName = "MeshOne";
     int             size     = 1;

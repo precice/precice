@@ -4,8 +4,8 @@
 #include "testing/Testing.hpp"
 
 #include "mesh/Utils.hpp"
-#include "precice/SolverInterface.hpp"
-#include "precice/impl/SolverInterfaceImpl.hpp"
+#include "precice/Participant.hpp"
+#include "precice/impl/ParticipantImpl.hpp"
 
 void testRBFMapping(const std::string configFile, const TestContext &context)
 {
@@ -41,7 +41,7 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
   double expectedValTwoC = 77.5938805368033;
 
   if (context.isNamed("SolverOne")) {
-    precice::SolverInterface interface("SolverOne", configFile, 0, 1);
+    precice::Participant interface("SolverOne", configFile, 0, 1);
     // namespace is required because we are outside the fixture
     auto meshOneID = "MeshOne";
 
@@ -76,7 +76,7 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
     interface.finalize();
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    precice::SolverInterface interface("SolverTwo", configFile, 0, 1);
+    precice::Participant interface("SolverTwo", configFile, 0, 1);
     // namespace is required because we are outside the fixture
     auto meshTwoID = "MeshTwo";
 

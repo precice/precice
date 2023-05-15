@@ -1,4 +1,4 @@
-#include "precice/SolverInterfaceFortran.hpp"
+#include "precice/ParticipantFortran.hpp"
 #include <iostream>
 #include <memory>
 #include <stddef.h>
@@ -7,7 +7,7 @@
 #include <string_view>
 #include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
-#include "precice/SolverInterface.hpp"
+#include "precice/Participant.hpp"
 #include "precice/impl/versions.hpp"
 #include "utils/assertion.hpp"
 
@@ -22,9 +22,9 @@
 
 using namespace std;
 
-static std::unique_ptr<precice::SolverInterface> impl = nullptr;
+static std::unique_ptr<precice::Participant> impl = nullptr;
 
-static precice::logging::Logger _log("SolverInterfaceFortran");
+static precice::logging::Logger _log("ParticipantFortran");
 
 static std::string errormsg = "preCICE has not been created properly. Be sure to call \"precicef_create\" before any other call to preCICE.";
 
@@ -46,7 +46,7 @@ void precicef_create_(
     int         participantNameLength,
     int         configFileNameLength)
 {
-  impl.reset(new precice::SolverInterface(
+  impl.reset(new precice::Participant(
       precice::impl::strippedStringView(participantName, participantNameLength),
       precice::impl::strippedStringView(configFileName, configFileNameLength),
       *solverProcessIndex,

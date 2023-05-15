@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/Participant.hpp>
 #include <vector>
 
 BOOST_AUTO_TEST_SUITE(Integration)
@@ -13,8 +13,8 @@ BOOST_AUTO_TEST_CASE(AitkenAcceleration)
 
   using Eigen::Vector2d;
 
-  precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-  Vector2d                 vertex{0.0, 0.0};
+  precice::Participant interface(context.name, context.config(), context.rank, context.size);
+  Vector2d             vertex{0.0, 0.0};
 
   if (context.isNamed("A")) {
     auto meshName = "A-Mesh";

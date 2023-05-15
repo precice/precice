@@ -2,8 +2,8 @@
 #include <string_view>
 
 #include "cplscheme/Constants.hpp"
-#include "precice/SolverInterface.hpp"
-#include "precice/impl/SolverInterfaceImpl.hpp"
+#include "precice/Participant.hpp"
+#include "precice/impl/ParticipantImpl.hpp"
 #include "precice/impl/versions.hpp"
 
 namespace precice {
@@ -22,125 +22,125 @@ std::string_view toSV(precice::string_view sv)
 }
 } // namespace
 
-SolverInterface::SolverInterface(
+Participant::Participant(
     ::precice::string_view participantName,
     ::precice::string_view configurationFileName,
     int                    solverProcessIndex,
     int                    solverProcessSize)
-    : _impl(new impl::SolverInterfaceImpl(toSV(participantName), toSV(configurationFileName), solverProcessIndex, solverProcessSize, std::nullopt))
+    : _impl(new impl::ParticipantImpl(toSV(participantName), toSV(configurationFileName), solverProcessIndex, solverProcessSize, std::nullopt))
 {
 }
 
-SolverInterface::SolverInterface(
+Participant::Participant(
     ::precice::string_view participantName,
     ::precice::string_view configurationFileName,
     int                    solverProcessIndex,
     int                    solverProcessSize,
     void *                 communicator)
-    : _impl(new impl::SolverInterfaceImpl(toSV(participantName), toSV(configurationFileName), solverProcessIndex, solverProcessSize, {communicator}))
+    : _impl(new impl::ParticipantImpl(toSV(participantName), toSV(configurationFileName), solverProcessIndex, solverProcessSize, {communicator}))
 {
 }
 
-SolverInterface::~SolverInterface() = default;
+Participant::~Participant() = default;
 
-void SolverInterface::initialize()
+void Participant::initialize()
 {
   _impl->initialize();
 }
 
-void SolverInterface::advance(
+void Participant::advance(
     double computedTimeStepSize)
 {
   _impl->advance(computedTimeStepSize);
 }
 
-void SolverInterface::finalize()
+void Participant::finalize()
 {
   return _impl->finalize();
 }
 
-int SolverInterface::getMeshDimensions(::precice::string_view meshName) const
+int Participant::getMeshDimensions(::precice::string_view meshName) const
 {
   return _impl->getMeshDimensions(toSV(meshName));
 }
 
-int SolverInterface::getDataDimensions(::precice::string_view meshName, ::precice::string_view dataName) const
+int Participant::getDataDimensions(::precice::string_view meshName, ::precice::string_view dataName) const
 {
   return _impl->getDataDimensions(toSV(meshName), toSV(dataName));
 }
 
-bool SolverInterface::isCouplingOngoing() const
+bool Participant::isCouplingOngoing() const
 {
   return _impl->isCouplingOngoing();
 }
 
-bool SolverInterface::isTimeWindowComplete() const
+bool Participant::isTimeWindowComplete() const
 {
   return _impl->isTimeWindowComplete();
 }
 
-double SolverInterface::getMaxTimeStepSize() const
+double Participant::getMaxTimeStepSize() const
 {
   return _impl->getMaxTimeStepSize();
 }
 
-bool SolverInterface::requiresInitialData()
+bool Participant::requiresInitialData()
 {
   return _impl->requiresInitialData();
 }
 
-bool SolverInterface::requiresReadingCheckpoint()
+bool Participant::requiresReadingCheckpoint()
 {
   return _impl->requiresReadingCheckpoint();
 }
 
-bool SolverInterface::requiresWritingCheckpoint()
+bool Participant::requiresWritingCheckpoint()
 {
   return _impl->requiresWritingCheckpoint();
 }
 
-bool SolverInterface::hasMesh(::precice::string_view meshName) const
+bool Participant::hasMesh(::precice::string_view meshName) const
 {
   return _impl->hasMesh(toSV(meshName));
 }
 
-bool SolverInterface::requiresMeshConnectivityFor(::precice::string_view meshName) const
+bool Participant::requiresMeshConnectivityFor(::precice::string_view meshName) const
 {
   return _impl->requiresMeshConnectivityFor(toSV(meshName));
 }
 
-bool SolverInterface::requiresGradientDataFor(::precice::string_view meshName,
-                                              ::precice::string_view dataName) const
+bool Participant::requiresGradientDataFor(::precice::string_view meshName,
+                                          ::precice::string_view dataName) const
 {
   return _impl->requiresGradientDataFor(toSV(meshName), toSV(dataName));
 }
 
-bool SolverInterface::hasData(::precice::string_view meshName, ::precice::string_view dataName) const
+bool Participant::hasData(::precice::string_view meshName, ::precice::string_view dataName) const
 {
   return _impl->hasData(toSV(meshName), toSV(dataName));
 }
 
-// void SolverInterface:: resetMesh
+// void Participant:: resetMesh
 //(
 //   ::precice::string_view meshName )
 //{
 //   _impl->resetMesh(toSV(meshName)ID);
 // }
 
-int SolverInterface::setMeshVertex(
+int Participant::setMeshVertex(
     ::precice::string_view        meshName,
     ::precice::span<const double> position)
 {
   return _impl->setMeshVertex(toSV(meshName), position);
 }
 
-int SolverInterface::getMeshVertexSize(
+int Participant::getMeshVertexSize(
     ::precice::string_view meshName) const
 {
   return _impl->getMeshVertexSize(toSV(meshName));
 }
 
-void SolverInterface::setMeshVertices(
+void Participant::setMeshVertices(
     ::precice::string_view        meshName,
     ::precice::span<const double> positions,
     ::precice::span<VertexID>     ids)
@@ -148,7 +148,7 @@ void SolverInterface::setMeshVertices(
   _impl->setMeshVertices(toSV(meshName), positions, ids);
 }
 
-void SolverInterface::setMeshEdge(
+void Participant::setMeshEdge(
     ::precice::string_view meshName,
     int                    firstVertexID,
     int                    secondVertexID)
@@ -156,14 +156,14 @@ void SolverInterface::setMeshEdge(
   _impl->setMeshEdge(toSV(meshName), firstVertexID, secondVertexID);
 }
 
-void SolverInterface::setMeshEdges(
+void Participant::setMeshEdges(
     ::precice::string_view          meshName,
     ::precice::span<const VertexID> vertices)
 {
   _impl->setMeshEdges(toSV(meshName), vertices);
 }
 
-void SolverInterface::setMeshTriangle(
+void Participant::setMeshTriangle(
     ::precice::string_view meshName,
     int                    firstVertexID,
     int                    secondVertexID,
@@ -172,14 +172,14 @@ void SolverInterface::setMeshTriangle(
   _impl->setMeshTriangle(toSV(meshName), firstVertexID, secondVertexID, thirdVertexID);
 }
 
-void SolverInterface::setMeshTriangles(
+void Participant::setMeshTriangles(
     ::precice::string_view          meshName,
     ::precice::span<const VertexID> vertices)
 {
   _impl->setMeshTriangles(toSV(meshName), vertices);
 }
 
-void SolverInterface::setMeshQuad(
+void Participant::setMeshQuad(
     ::precice::string_view meshName,
     int                    firstVertexID,
     int                    secondVertexID,
@@ -190,14 +190,14 @@ void SolverInterface::setMeshQuad(
                      fourthVertexID);
 }
 
-void SolverInterface::setMeshQuads(
+void Participant::setMeshQuads(
     ::precice::string_view          meshName,
     ::precice::span<const VertexID> vertices)
 {
   _impl->setMeshQuads(toSV(meshName), vertices);
 }
 
-void SolverInterface::setMeshTetrahedron(
+void Participant::setMeshTetrahedron(
     ::precice::string_view meshName,
     int                    firstVertexID,
     int                    secondVertexID,
@@ -208,14 +208,14 @@ void SolverInterface::setMeshTetrahedron(
                             fourthVertexID);
 }
 
-void SolverInterface::setMeshTetrahedra(
+void Participant::setMeshTetrahedra(
     ::precice::string_view          meshName,
     ::precice::span<const VertexID> vertices)
 {
   _impl->setMeshTetrahedra(toSV(meshName), vertices);
 }
 
-void SolverInterface::writeData(
+void Participant::writeData(
     ::precice::string_view          meshName,
     ::precice::string_view          dataName,
     ::precice::span<const VertexID> vertices,
@@ -224,7 +224,7 @@ void SolverInterface::writeData(
   _impl->writeData(toSV(meshName), toSV(dataName), vertices, values);
 }
 
-void SolverInterface::readData(
+void Participant::readData(
     ::precice::string_view          meshName,
     ::precice::string_view          dataName,
     ::precice::span<const VertexID> vertices,
@@ -234,20 +234,20 @@ void SolverInterface::readData(
   _impl->readData(toSV(meshName), toSV(dataName), vertices, relativeReadTime, values);
 }
 
-void SolverInterface::setMeshAccessRegion(::precice::string_view        meshName,
-                                          ::precice::span<const double> boundingBox) const
+void Participant::setMeshAccessRegion(::precice::string_view        meshName,
+                                      ::precice::span<const double> boundingBox) const
 {
   _impl->setMeshAccessRegion(toSV(meshName), boundingBox);
 }
 
-void SolverInterface::getMeshVerticesAndIDs(::precice::string_view    meshName,
-                                            ::precice::span<VertexID> ids,
-                                            ::precice::span<double>   coordinates) const
+void Participant::getMeshVerticesAndIDs(::precice::string_view    meshName,
+                                        ::precice::span<VertexID> ids,
+                                        ::precice::span<double>   coordinates) const
 {
   _impl->getMeshVerticesAndIDs(toSV(meshName), ids, coordinates);
 }
 
-void SolverInterface::writeGradientData(
+void Participant::writeGradientData(
     ::precice::string_view          meshName,
     ::precice::string_view          dataName,
     ::precice::span<const VertexID> vertices,

@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/Participant.hpp>
 #include <vector>
 
 using namespace precice;
@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantFixedWindows)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
-  SolverInterface precice(context.name, context.config(), 0, 1);
+  Participant precice(context.name, context.config(), 0, 1);
 
   // SolverOne prescribes these, thus SolverTwo expect these (we use "first-participant" as dt method)
   std::vector<std::vector<double>> timestepSizes{{1.0, 2.0, 1.0}, {2.0, 1.0, 2.0}, {3.0, 2.5, 3.0}};
