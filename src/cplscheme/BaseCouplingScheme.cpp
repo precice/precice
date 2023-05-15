@@ -51,7 +51,7 @@ BaseCouplingScheme::BaseCouplingScheme(
       _extrapolationOrder(extrapolationOrder),
       _eps(std::pow(10.0, -1 * validDigits))
 {
-  PRECICE_ASSERT(not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
+  PRECICE_ASSERT(not((maxTime != UNDEFINED_MAX_TIME) && (maxTime < 0.0)),
                  "Maximum time has to be larger than zero.");
   PRECICE_ASSERT(not((maxTimeWindows != UNDEFINED_TIME_WINDOWS) && (maxTimeWindows < 0)),
                  "Maximum number of time windows has to be larger than zero.");
@@ -105,7 +105,7 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
     m2n->send(data->values(), data->getMeshID(), data->getDimensions());
 
     if (data->hasGradient()) {
-      m2n->send(data->gradientValues(), data->getMeshID(), data->getDimensions() * data->meshDimensions());
+      m2n->send(data->gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions());
     }
   }
 }
@@ -120,7 +120,7 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
     m2n->receive(data->values(), data->getMeshID(), data->getDimensions());
 
     if (data->hasGradient()) {
-      m2n->receive(data->gradientValues(), data->getMeshID(), data->getDimensions() * data->meshDimensions());
+      m2n->receive(data->gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions());
     }
   }
 }
@@ -167,7 +167,7 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   PRECICE_ASSERT(not isInitialized());
   PRECICE_ASSERT(math::greaterEquals(startTime, 0.0), startTime);
   PRECICE_ASSERT(startTimeWindow >= 0, startTimeWindow);
-  _time                = startTime;
+  _timeWindowStartTime = startTime;
   _timeWindows         = startTimeWindow;
   _hasDataBeenReceived = false;
 
@@ -219,7 +219,7 @@ CouplingScheme::ChangedMeshes BaseCouplingScheme::firstSynchronization(const Cou
 
 void BaseCouplingScheme::firstExchange()
 {
-  PRECICE_TRACE(_timeWindows, _time);
+  PRECICE_TRACE(_timeWindows, getTime());
   checkCompletenessRequiredActions();
   PRECICE_ASSERT(_isInitialized, "Before calling advance() coupling scheme has to be initialized via initialize().");
   _hasDataBeenReceived  = false;
@@ -242,7 +242,7 @@ CouplingScheme::ChangedMeshes BaseCouplingScheme::secondSynchronization()
 
 void BaseCouplingScheme::secondExchange()
 {
-  PRECICE_TRACE(_timeWindows, _time);
+  PRECICE_TRACE(_timeWindows, getTime());
   checkCompletenessRequiredActions();
   PRECICE_ASSERT(_isInitialized, "Before calling advance() coupling scheme has to be initialized via initialize().");
   PRECICE_ASSERT(_couplingMode != Undefined);
@@ -262,13 +262,13 @@ void BaseCouplingScheme::secondExchange()
         // time window remainder is zero. Subtract the time window size and do another
         // coupling iteration.
         PRECICE_ASSERT(math::greater(_computedTimeWindowPart, 0.0));
-        _time = _time - _computedTimeWindowPart;
         _timeWindows -= 1;
       } else { // write output, prepare for next window
         PRECICE_DEBUG("Convergence achieved");
         advanceTXTWriters();
         PRECICE_INFO("Time window completed");
         _isTimeWindowComplete = true;
+        _timeWindowStartTime += _computedTimeWindowPart;
         if (isCouplingOngoing()) {
           PRECICE_DEBUG("Setting require create checkpoint");
           requireAction(CouplingScheme::Action::WriteCheckpoint);
@@ -284,6 +284,7 @@ void BaseCouplingScheme::secondExchange()
     } else {
       PRECICE_INFO("Time window completed");
       _isTimeWindowComplete = true;
+      _timeWindowStartTime += _computedTimeWindowPart;
     }
     if (isCouplingOngoing()) {
       PRECICE_ASSERT(_hasDataBeenReceived);
@@ -332,12 +333,11 @@ bool BaseCouplingScheme::isInitialized() const
 void BaseCouplingScheme::addComputedTime(
     double timeToAdd)
 {
-  PRECICE_TRACE(timeToAdd, _time);
+  PRECICE_TRACE(timeToAdd, getTime());
   PRECICE_ASSERT(isCouplingOngoing(), "Invalid call of addComputedTime() after simulation end.");
 
   // add time interval that has been computed in the solver to get the correct time remainder
   _computedTimeWindowPart += timeToAdd;
-  _time += timeToAdd;
 
   // Check validness
   bool valid = math::greaterEquals(getNextTimeStepMaxSize(), 0.0, _eps);
@@ -390,7 +390,7 @@ void BaseCouplingScheme::setTimeWindows(int timeWindows)
 
 double BaseCouplingScheme::getTime() const
 {
-  return _time;
+  return _timeWindowStartTime + _computedTimeWindowPart;
 }
 
 int BaseCouplingScheme::getTimeWindows() const
@@ -403,17 +403,17 @@ double BaseCouplingScheme::getNextTimeStepMaxSize() const
   if (hasTimeWindowSize()) {
     return _timeWindowSize - _computedTimeWindowPart;
   } else {
-    if (math::equals(_maxTime, UNDEFINED_TIME)) {
+    if (math::equals(_maxTime, UNDEFINED_MAX_TIME)) {
       return std::numeric_limits<double>::max();
     } else {
-      return _maxTime - _time;
+      return _maxTime - getTime();
     }
   }
 }
 
 bool BaseCouplingScheme::isCouplingOngoing() const
 {
-  bool timeLeft      = math::greater(_maxTime, _time, _eps) || math::equals(_maxTime, UNDEFINED_TIME);
+  bool timeLeft      = math::greater(_maxTime, getTime(), _eps) || math::equals(_maxTime, UNDEFINED_MAX_TIME);
   bool timestepsLeft = (_maxTimeWindows >= _timeWindows) || (_maxTimeWindows == UNDEFINED_TIME_WINDOWS);
   return timeLeft && timestepsLeft;
 }
@@ -455,7 +455,7 @@ std::string BaseCouplingScheme::printCouplingState() const
   if (_maxIterations != -1) {
     os << " of " << _maxIterations;
   }
-  os << ", " << printBasicState(_timeWindows, _time) << ", " << printActionsState();
+  os << ", " << printBasicState(_timeWindows, getTime()) << ", " << printActionsState();
   return os.str();
 }
 
@@ -469,13 +469,13 @@ std::string BaseCouplingScheme::printBasicState(
     os << " of " << _maxTimeWindows;
   }
   os << ", time: " << time;
-  if (_maxTime != UNDEFINED_TIME) {
+  if (_maxTime != UNDEFINED_MAX_TIME) {
     os << " of " << _maxTime;
   }
   if (hasTimeWindowSize()) {
     os << ", time-window-size: " << _timeWindowSize;
   }
-  if (hasTimeWindowSize() || (_maxTime != UNDEFINED_TIME)) {
+  if (hasTimeWindowSize() || (_maxTime != UNDEFINED_MAX_TIME)) {
     os << ", max-time-step-size: " << getNextTimeStepMaxSize();
   }
   os << ", ongoing: ";

@@ -4,6 +4,7 @@
 #include "logging/Logger.hpp"
 #include "logging/config/LogConfiguration.hpp"
 #include "precice/config/SolverInterfaceConfiguration.hpp"
+#include "profiling/config/ProfilingConfiguration.hpp"
 #include "xml/XMLTag.hpp"
 
 namespace precice {
@@ -54,7 +55,11 @@ private:
   // @brief Root tag of preCICE configuration.
   xml::XMLTag _tag;
 
+  // The log configuration must be constructed first to prevent log clutter
   LogConfiguration _logConfig;
+
+  // Handle other configuration afterwards
+  precice::profiling::ProfilingConfiguration _profilingConfig;
 
   SolverInterfaceConfiguration _solverInterfaceConfig;
 };

@@ -538,9 +538,9 @@ PRECICE_API void precicef_requires_gradient_data_for_(
  *   CHARACTER dataName(*),
  *   INTEGER size,
  *   INTEGER valueIndices,
- *   DOUBLE PRECISION gradientValues )
+ *   DOUBLE PRECISION gradients )
  *
- * IN:  mesh, data, size, valueIndices, gradientValues, meshNameLength, dataNameLength
+ * IN:  mesh, data, size, valueIndices, gradients, meshNameLength, dataNameLength
  * OUT: -
  *
  * @copydoc precice::Participant::writeGradientData
@@ -550,7 +550,7 @@ PRECICE_API void precicef_write_gradient_data_(
     const char *  dataName,
     const int *   size,
     const int *   valueIndices,
-    const double *gradientValues,
+    const double *gradients,
     int           meshNameLength,
     int           dataNameLength);
 

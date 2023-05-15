@@ -1,4 +1,3 @@
-
 #include "NearestNeighborGradientMapping.hpp"
 
 #include <Eigen/Core>
@@ -6,14 +5,12 @@
 #include <functional>
 #include <iostream>
 #include "logging/LogMacros.hpp"
+#include "profiling/Event.hpp"
 #include "utils/EigenHelperFunctions.hpp"
-#include "utils/Event.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-extern bool syncMode;
-
-namespace mapping {
+namespace precice::mapping {
 
 NearestNeighborGradientMapping::NearestNeighborGradientMapping(
     Constraint constraint,
@@ -57,7 +54,7 @@ void NearestNeighborGradientMapping::onMappingComputed(mesh::PtrMesh origins, me
 void NearestNeighborGradientMapping::mapConsistent(DataID inputDataID, DataID outputDataID)
 {
   PRECICE_TRACE(inputDataID, outputDataID);
-  precice::utils::Event e("map." + mappingNameShort + ".mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  precice::profiling::Event e("map." + mappingNameShort + ".mapData.From" + input()->getName() + "To" + output()->getName(), profiling::Synchronize);
 
   PRECICE_ASSERT(input()->data(inputDataID)->hasGradient(), "Mesh \"{}\" does not contain gradient data. Using Nearest Neighbor Gradient requires gradient data.",
                  input()->getName());
@@ -70,9 +67,9 @@ void NearestNeighborGradientMapping::mapConsistent(DataID inputDataID, DataID ou
   const int              valueDimensions = input()->data(inputDataID)->getDimensions(); // Data dimensions (for scalar = 1, for vectors > 1)
   const Eigen::VectorXd &inputValues     = input()->data(inputDataID)->values();
   Eigen::VectorXd &      outputValues    = output()->data(outputDataID)->values();
-  const Eigen::MatrixXd &gradientValues  = input()->data(inputDataID)->gradientValues();
+  const Eigen::MatrixXd &gradients       = input()->data(inputDataID)->gradients();
 
-  //Consistent mapping
+  // Consistent mapping
   PRECICE_DEBUG((hasConstraint(CONSISTENT) ? "Map consistent" : "Map scaled-consistent"));
   const size_t outSize = output()->vertices().size();
 
@@ -84,7 +81,7 @@ void NearestNeighborGradientMapping::mapConsistent(DataID inputDataID, DataID ou
       const int mapOutputIndex = (i * valueDimensions) + dim;
       const int mapInputIndex  = inputIndex + dim;
 
-      outputValues(mapOutputIndex) = inputValues(mapInputIndex) + _offsetsMatched[i].transpose() * gradientValues.col(mapInputIndex);
+      outputValues(mapOutputIndex) = inputValues(mapInputIndex) + _offsetsMatched[i].transpose() * gradients.col(mapInputIndex);
     }
   }
 
@@ -100,5 +97,5 @@ std::string NearestNeighborGradientMapping::getName() const
 {
   return "nearest-neighbor-gradient";
 }
-} // namespace mapping
-} // namespace precice
+
+} // namespace precice::mapping
