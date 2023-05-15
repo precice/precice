@@ -92,7 +92,7 @@ private:
 
   void exchangeSecondData() override final;
 
-  const DataMap getAccelerationData() override final;
+  const DataMap &getAccelerationData() override final;
 
   void exchangeInitialData() override final;
 
