@@ -768,6 +768,9 @@ void BaseCouplingScheme::doImplicitStep()
   } else {
     // no convergence achieved for the coupling iteration within the current time window
     if (_acceleration) {
+      // Acceleration works on CouplingData::values(), so we retrieve the data from the storage, perform the acceleration and then put the data back into the storage. See also https://github.com/precice/precice/issues/1645.
+      // @todo For acceleration schemes as described in "Rüth, B, Uekermann, B, Mehl, M, Birken, P, Monge, A, Bungartz, H-J. Quasi-Newton waveform iteration for partitioned surface-coupled multiphysics applications. https://doi.org/10.1002/nme.6443" we need a more elaborate implementation.
+
       // Load from storage into buffer
       for (auto &pair : getAccelerationData()) {
         const auto stamples = pair.second->stamples();
@@ -778,6 +781,7 @@ void BaseCouplingScheme::doImplicitStep()
       _acceleration->performAcceleration(getAccelerationData());
 
       // Store from buffer
+      // @todo Currently only data at time::Storage::WINDOW_END is accelerated. Remaining data in storage stays as it is.
       for (auto &pair : getAccelerationData()) {
         pair.second->setSampleAtTime(time::Storage::WINDOW_END, pair.second->sample());
       }
