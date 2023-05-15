@@ -323,30 +323,24 @@ void ParticipantImpl::initialize()
   }
 
   // Initialize coupling state, overwrite these values for restart
-  double time       = 0.0;
-  int    timeWindow = 1;
+  const double time         = 0.0;
+  const int    timeWindow   = 1;
+  const double relativeTime = time::Storage::WINDOW_START;
 
-  for (auto &context : _accessor->readDataContexts()) {
-    context.initializeWaveform();
-  }
   _meshLock.lockAll();
 
-  if (_couplingScheme->sendsInitializedData()) {
-    mapWrittenData();
-    performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0);
+  for (auto &context : _accessor->writeDataContexts()) {
+    context.storeBufferedData(relativeTime);
   }
+
+  mapWrittenData();
+  performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0);
 
   PRECICE_DEBUG("Initialize coupling schemes");
   _couplingScheme->initialize(time, timeWindow);
 
-  if (_couplingScheme->hasDataBeenReceived()) {
-    mapReadData();
-    performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
-    // @todo Refactor treatment of read and write data. See https://github.com/precice/precice/pull/1614, "Remarks on waveform handling"
-    for (auto &context : _accessor->readDataContexts()) {
-      context.storeDataInWaveform();
-    }
-  }
+  mapReadData();
+  performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
 
   for (auto &context : _accessor->readDataContexts()) {
     context.moveToNextWindow();
@@ -356,13 +350,9 @@ void ParticipantImpl::initialize()
   if (_couplingScheme->hasDataBeenReceived()) {
     mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
-    // @todo Refactor treatment of read and write data. See https://github.com/precice/precice/pull/1614, "Remarks on waveform handling"
-    for (auto &context : _accessor->readDataContexts()) {
-      context.storeDataInWaveform();
-    }
   }
 
-  resetWrittenData();
+  resetWrittenData(false);
   PRECICE_DEBUG("Plot output");
   _accessor->exportFinal();
   e.stop();
@@ -403,9 +393,13 @@ void ParticipantImpl::advance(
 #endif
 
   // Update the coupling scheme time state. Necessary to get correct remainder.
-  _couplingScheme->addComputedTime(computedTimeStepSize);
-  // Current time
-  double time = _couplingScheme->getTime();
+  const bool   isAtWindowEnd = _couplingScheme->addComputedTime(computedTimeStepSize);
+  const double time          = _couplingScheme->getTime();
+  const double relativeTime  = _couplingScheme->getNormalizedWindowTime();
+
+  for (auto &context : _accessor->writeDataContexts()) {
+    context.storeBufferedData(relativeTime);
+  }
 
   if (_couplingScheme->willDataBeExchanged(0.0)) {
     mapWrittenData();
@@ -423,10 +417,6 @@ void ParticipantImpl::advance(
   if (_couplingScheme->hasDataBeenReceived()) {
     mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, time);
-    // @todo Refactor treatment of read and write data. See https://github.com/precice/precice/pull/1614, "Remarks on waveform handling"
-    for (auto &context : _accessor->readDataContexts()) {
-      context.storeDataInWaveform();
-    }
   }
 
   PRECICE_INFO(_couplingScheme->printCouplingState());
@@ -434,7 +424,7 @@ void ParticipantImpl::advance(
   PRECICE_DEBUG("Handle exports");
   handleExports();
 
-  resetWrittenData();
+  resetWrittenData(isAtWindowEnd);
 
   _meshLock.lockAll();
 
@@ -636,6 +626,14 @@ int ParticipantImpl::setMeshVertex(
                 "Cannot set vertex for mesh \"{}\". Expected {} position components but found {}.", meshName, mesh.getDimensions(), position.size());
   auto index = mesh.createVertex(Eigen::Map<const Eigen::VectorXd>{position.data(), _dimensions}).getID();
   mesh.allocateDataValues();
+
+  const auto newSize = mesh.vertices().size();
+  for (auto &context : _accessor->writeDataContexts()) {
+    if (context.getMeshName() == mesh.getName()) {
+      context.resizeBufferTo(newSize);
+    }
+  }
+
   return index;
 }
 
@@ -662,6 +660,13 @@ void ParticipantImpl::setMeshVertices(
     ids[i] = mesh.createVertex(posMatrix.col(i)).getID();
   }
   mesh.allocateDataValues();
+
+  const auto newSize = mesh.vertices().size();
+  for (auto &context : _accessor->writeDataContexts()) {
+    if (context.getMeshName() == mesh.getName()) {
+      context.resizeBufferTo(newSize);
+    }
+  }
 }
 
 void ParticipantImpl::setMeshEdge(
@@ -1005,7 +1010,7 @@ void ParticipantImpl::writeData(
                   "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                   dataName, meshName, *index);
   }
-  context.writeValues(vertices, values);
+  context.writeValuesIntoDataBuffer(vertices, values);
 }
 
 void ParticipantImpl::readData(
@@ -1099,7 +1104,7 @@ void ParticipantImpl::writeGradientData(
 
   PRECICE_VALIDATE_DATA(gradients.data(), gradients.size());
 
-  context.writeGradients(vertices, gradients);
+  context.writeGradientsIntoDataBuffer(vertices, gradients);
 }
 
 void ParticipantImpl::setMeshAccessRegion(
@@ -1333,8 +1338,14 @@ void ParticipantImpl::computePartitions()
       meshContext->mesh->computeBoundingBox();
     }
 
-    // This allocates gradient values here too if available
     meshContext->mesh->allocateDataValues();
+
+    const auto requiredSize = meshContext->mesh->vertices().size();
+    for (auto &context : _accessor->writeDataContexts()) {
+      if (context.getMeshName() == meshContext->mesh->getName()) {
+        context.resizeBufferTo(requiredSize);
+      }
+    }
   }
 }
 
@@ -1376,7 +1387,6 @@ void ParticipantImpl::mapReadData()
       PRECICE_DEBUG("Map read data \"{}\" to mesh \"{}\"", context.getDataName(), context.getMeshName());
       context.mapData();
     }
-    context.storeDataInWaveform();
   }
 }
 
@@ -1403,11 +1413,11 @@ void ParticipantImpl::handleExports()
   _accessor->exportIntermediate(exp);
 }
 
-void ParticipantImpl::resetWrittenData()
+void ParticipantImpl::resetWrittenData(bool isAtWindowEnd)
 {
   PRECICE_TRACE();
   for (auto &context : _accessor->writeDataContexts()) {
-    context.resetData();
+    context.resetData(isAtWindowEnd);
   }
 }
 

@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_CASE(testInitialize)
   auto storage = Storage();
   int  nValues = 3;
   BOOST_TEST(storage.nTimes() == 0);
-  storage.initialize(Eigen::VectorXd::Ones(nValues));
+  storage.initialize(time::Sample{Eigen::VectorXd::Ones(nValues)});
   BOOST_TEST(storage.nDofs() == nValues);
   BOOST_TEST(storage.nTimes() == 2);
   for (int i = 0; i < nValues; i++) {
@@ -26,18 +26,18 @@ BOOST_AUTO_TEST_CASE(testInitialize)
   }
 }
 
-// create storage and clear it.
+// create storage and trim it.
 BOOST_AUTO_TEST_CASE(testClear)
 {
   PRECICE_TEST(1_rank);
   auto storage = Storage();
   int  nValues = 3;
   BOOST_TEST(storage.nTimes() == 0);
-  storage.initialize(Eigen::VectorXd::Ones(nValues));
+  storage.initialize(time::Sample{Eigen::VectorXd::Ones(nValues)});
   BOOST_TEST(storage.nDofs() == nValues);
   BOOST_TEST(storage.nTimes() == 2);
   BOOST_TEST(storage.maxStoredNormalizedDt() == 1.0);
-  storage.clear();
+  storage.trim();
   BOOST_TEST(storage.nDofs() == nValues);
   BOOST_TEST(storage.nTimes() == 1);
   BOOST_TEST(storage.maxStoredNormalizedDt() == 0.0);
@@ -50,16 +50,16 @@ BOOST_AUTO_TEST_CASE(testMove)
   auto storage = Storage();
   int  nValues = 3;
   BOOST_TEST(storage.nTimes() == 0);
-  storage.initialize(Eigen::VectorXd::Ones(nValues));
+  storage.initialize(time::Sample{Eigen::VectorXd::Ones(nValues)});
   BOOST_TEST(storage.nDofs() == nValues);
   BOOST_TEST(storage.nTimes() == 2);
   BOOST_TEST(storage.maxStoredNormalizedDt() == 1.0);
-  storage.clear();
+  storage.trim();
   BOOST_TEST(storage.nTimes() == 1);
-  storage.setValuesAtTime(0.5, Eigen::VectorXd::Ones(nValues));
+  storage.setSampleAtTime(0.5, Sample{Eigen::VectorXd::Ones(nValues)});
   BOOST_TEST(storage.nTimes() == 2);
   BOOST_TEST(storage.maxStoredNormalizedDt() == 0.5);
-  storage.setValuesAtTime(1.0, Eigen::VectorXd::Zero(nValues));
+  storage.setSampleAtTime(1.0, Sample{Eigen::VectorXd::Zero(nValues)});
   BOOST_TEST(storage.nTimes() == 3);
   BOOST_TEST(storage.maxStoredNormalizedDt() == 1.0);
   for (int i = 0; i < nValues; i++) {
@@ -83,10 +83,10 @@ BOOST_AUTO_TEST_CASE(testGetTimesAndValues)
   PRECICE_TEST(1_rank);
   auto storage = Storage();
   int  nValues = 3;
-  storage.initialize(Eigen::VectorXd::Ones(nValues));
-  storage.clear();
-  storage.setValuesAtTime(0.5, Eigen::VectorXd::Ones(nValues));
-  storage.setValuesAtTime(1.0, Eigen::VectorXd::Zero(nValues));
+  storage.initialize(time::Sample{Eigen::VectorXd::Ones(nValues)});
+  storage.trim();
+  storage.setSampleAtTime(0.5, Sample{Eigen::VectorXd::Ones(nValues)});
+  storage.setSampleAtTime(1.0, Sample{Eigen::VectorXd::Zero(nValues)});
   auto times = storage.getTimes();
   BOOST_TEST(times[0] == 0.0);
   BOOST_TEST(times[1] == 0.5);

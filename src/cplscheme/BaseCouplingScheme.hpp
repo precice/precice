@@ -86,11 +86,8 @@ public:
    */
   bool isInitialized() const override final;
 
-  /**
-   * @brief Adds newly computed time. Has to be called before every advance.
-   * @param timeToAdd time to be added
-   */
-  void addComputedTime(double timeToAdd) override final;
+  /// @copydoc cplscheme::CouplingScheme::addComputedTime()
+  bool addComputedTime(double timeToAdd) override final;
 
   /**
    * @brief Returns true, if data will be exchanged when calling advance().
@@ -139,6 +136,9 @@ public:
    * hasTimeWindowSize().
    */
   double getTimeWindowSize() const override final;
+
+  /// @copydoc CouplingScheme::getNormalizedWindowTime
+  double getNormalizedWindowTime() const override;
 
   /**
    * @brief Returns the maximal size of the next time step to be computed.
@@ -258,6 +258,13 @@ protected:
   void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData);
 
   /**
+   * @brief Initializes storage in receiveData as zero
+   *
+   * @param receiveData DataMap associated with received data
+   */
+  void initializeWithZeroInitialData(const DataMap &receiveData);
+
+  /**
    * @brief Adds CouplingData with given properties to this BaseCouplingScheme and returns a pointer to the CouplingData
    *
    * If CouplingData with ID of provided data already exists in coupling scheme, no duplicate is created but a pointer to the already existing CouplingData is returned.
@@ -285,7 +292,14 @@ protected:
    * @brief Getter for _computedTimeWindowPart
    * @returns _computedTimeWindowPart
    */
-  double getComputedTimeWindowPart();
+  double getComputedTimeWindowPart() const;
+
+  /**
+   * @brief Returns the time at the beginning of the current time window.
+   *
+   * @return time at beginning of the current time window.
+   */
+  double getWindowStartTime() const;
 
   /**
    * @brief Setter for _doesFirstStep
@@ -487,6 +501,11 @@ private:
   std::vector<ConvergenceMeasureContext> _convergenceMeasures;
 
   /// Functions needed for initialize()
+
+  /**
+   * @brief Need to initialize receive data
+   */
+  virtual void initializeReceiveDataStorage() = 0;
 
   /**
    * @brief implements functionality for initialize in base class.

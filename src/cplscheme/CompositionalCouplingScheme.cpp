@@ -73,13 +73,15 @@ bool CompositionalCouplingScheme::isInitialized() const
   return isInitialized;
 }
 
-void CompositionalCouplingScheme::addComputedTime(double timeToAdd)
+bool CompositionalCouplingScheme::addComputedTime(double timeToAdd)
 {
   PRECICE_TRACE(timeToAdd);
 
+  bool isAtWindowEnd = false;
   for (const auto scheme : schemesToRun()) {
-    scheme->addComputedTime(timeToAdd);
+    isAtWindowEnd |= scheme->addComputedTime(timeToAdd); // @todo should be &= ?
   }
+  return isAtWindowEnd;
 }
 
 CouplingScheme::ChangedMeshes CompositionalCouplingScheme::firstSynchronization(const CouplingScheme::ChangedMeshes &changes)
@@ -208,6 +210,18 @@ double CompositionalCouplingScheme::getTimeWindowSize() const
       std::mem_fn(&CouplingScheme::getTimeWindowSize));
   PRECICE_DEBUG("return {}", timeWindowSize);
   return timeWindowSize;
+}
+
+double CompositionalCouplingScheme::getNormalizedWindowTime() const
+{
+  PRECICE_TRACE();
+  auto   schemes      = allSchemes();
+  double normalizedDt = std::transform_reduce(
+      schemes.begin(), schemes.end(), std::numeric_limits<double>::max(),
+      ::min<double>,
+      std::mem_fn(&CouplingScheme::getNormalizedWindowTime));
+  PRECICE_DEBUG("return {}", normalizedDt);
+  return normalizedDt;
 }
 
 double CompositionalCouplingScheme::getNextTimeStepMaxSize() const

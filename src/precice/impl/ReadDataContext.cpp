@@ -12,7 +12,7 @@ ReadDataContext::ReadDataContext(
     int           interpolationOrder)
     : DataContext(data, mesh)
 {
-  _waveform = std::make_shared<time::Waveform>(interpolationOrder);
+  _waveform = std::make_shared<time::Waveform>(interpolationOrder, data);
 }
 
 void ReadDataContext::appendMappingConfiguration(MappingContext &mappingContext, const MeshContext &meshContext)
@@ -40,17 +40,6 @@ void ReadDataContext::readValues(::precice::span<const VertexID> vertices, doubl
 int ReadDataContext::getInterpolationOrder() const
 {
   return _waveform->getInterpolationOrder();
-}
-
-void ReadDataContext::storeDataInWaveform()
-{
-  _waveform->store(_providedData->values()); // store mapped or received _providedData in the _waveform
-}
-
-void ReadDataContext::initializeWaveform()
-{
-  PRECICE_ASSERT(not hasWriteMapping(), "Write mapping does not need waveforms.");
-  _waveform->initialize(_providedData->values());
 }
 
 void ReadDataContext::moveToNextWindow()

@@ -23,7 +23,7 @@ Data::Data(
     DataID      id,
     int         dimensions,
     int         spatialDimensions)
-    : _values(),
+    : _sample(time::Sample{}),
       _name(std::move(name)),
       _id(id),
       _dimensions(dimensions),
@@ -34,22 +34,43 @@ Data::Data(
 
 Eigen::VectorXd &Data::values()
 {
-  return _values;
+  return _sample.values;
 }
 
 const Eigen::VectorXd &Data::values() const
 {
-  return _values;
+  return _sample.values;
 }
 
 Eigen::MatrixXd &Data::gradients()
 {
-  return _gradients;
+  return _sample.gradients;
 }
 
 const Eigen::MatrixXd &Data::gradients() const
 {
-  return _gradients;
+  return _sample.gradients;
+}
+
+time::Sample &Data::sample()
+{
+  return _sample;
+}
+
+const time::Sample &Data::sample() const
+{
+  return _sample;
+}
+
+time::Storage &Data::timeStepsStorage()
+{
+  return _timeStepsStorage;
+}
+
+void Data::setSampleAtTime(double time, time::Sample sample)
+{
+  _sample = sample; // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
+  _timeStepsStorage.setSampleAtTime(time, sample);
 }
 
 const std::string &Data::getName() const
@@ -64,9 +85,9 @@ DataID Data::getID() const
 
 void Data::toZero()
 {
-  _values.setZero();
+  _sample.values.setZero();
   if (_hasGradient) {
-    _gradients.setZero();
+    _sample.gradients.setZero();
   }
 }
 
@@ -90,36 +111,36 @@ void Data::allocateValues(int expectedCount)
   using SizeType = std::remove_cv<decltype(expectedCount)>::type;
   // Allocate data values
   const SizeType expectedSize = expectedCount * _dimensions;
-  const auto     actualSize   = static_cast<SizeType>(_values.size());
+  const auto     actualSize   = static_cast<SizeType>(_sample.values.size());
   // Shrink Buffer
   if (expectedSize < actualSize) {
-    _values.resize(expectedSize);
+    _sample.values.resize(expectedSize);
   }
   // Enlarge Buffer
   if (expectedSize > actualSize) {
     const auto leftToAllocate = expectedSize - actualSize;
-    utils::append(_values, Eigen::VectorXd(Eigen::VectorXd::Zero(leftToAllocate)));
+    utils::append(_sample.values, Eigen::VectorXd(Eigen::VectorXd::Zero(leftToAllocate)));
   }
-  PRECICE_DEBUG("Data {} now has {} values", _name, _values.size());
+  PRECICE_DEBUG("Data {} now has {} values", _name, _sample.values.size());
 
   // Allocate gradient data values
   if (_hasGradient) {
     const SizeType spaceDimensions = _spatialDimensions;
 
     const SizeType expectedColumnSize = expectedCount * _dimensions;
-    const auto     actualColumnSize   = static_cast<SizeType>(_gradients.cols());
+    const auto     actualColumnSize   = static_cast<SizeType>(_sample.gradients.cols());
 
     // Shrink Buffer
     if (expectedColumnSize < actualColumnSize) {
-      _gradients.resize(spaceDimensions, expectedColumnSize);
+      _sample.gradients.resize(spaceDimensions, expectedColumnSize);
     }
 
     // Enlarge Buffer
     if (expectedColumnSize > actualColumnSize) {
       const auto columnLeftToAllocate = expectedColumnSize - actualColumnSize;
-      utils::append(_gradients, Eigen::MatrixXd(Eigen::MatrixXd::Zero(spaceDimensions, columnLeftToAllocate)));
+      utils::append(_sample.gradients, Eigen::MatrixXd(Eigen::MatrixXd::Zero(spaceDimensions, columnLeftToAllocate)));
     }
-    PRECICE_DEBUG("Gradient Data {} now has {} x {} values", _name, _gradients.rows(), _gradients.cols());
+    PRECICE_DEBUG("Gradient Data {} now has {} x {} values", _name, _sample.gradients.rows(), _sample.gradients.cols());
   }
 }
 

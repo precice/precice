@@ -61,6 +61,19 @@ void SerialCouplingScheme::sendTimeWindowSize()
   }
 }
 
+double SerialCouplingScheme::getNormalizedWindowTime() const
+{
+  if (not _participantSetsTimeWindowSize) {
+    const double timeWindowStart        = getWindowStartTime();
+    const double timeWindowSize         = getTimeWindowSize();
+    const double computedTimeWindowPart = getTime() - timeWindowStart;
+    // const double computedTimeWindowPart = getComputedTimeWindowPart();  // @todo make public?
+    return computedTimeWindowPart / timeWindowSize;
+  } else {
+    return time::Storage::WINDOW_END; // participant first method does not support subcycling (yet). See https://github.com/precice/precice/issues/1570
+  }
+}
+
 void SerialCouplingScheme::receiveAndSetTimeWindowSize()
 {
   PRECICE_TRACE();

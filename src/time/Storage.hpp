@@ -1,7 +1,9 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <boost/range.hpp>
 #include "logging/Logger.hpp"
+#include "time/Stample.hpp"
 
 namespace precice::time {
 
@@ -17,28 +19,28 @@ public:
    * @brief Stores data samples in time and provides corresponding convenience functions.
    *
    * The Storage must be initialized before it can be used. Then values can be stored in the Storage. It is only allowed to store samples with increasing times. Overwriting existing samples or writing samples with a time smaller then the maximum stored time is forbidden.
-   * The Storage is considered complete, when a sample with time 1.0 is provided. Then one can only sample or clear the storage, but not add any further samples.
+   * The Storage is considered complete, when a sample with time 1.0 is provided. Then one can only sample from the storage. To add further samples one needs to trim or clear the storage first.
    *
    * This Storage is used in the context of Waveform relaxation where samples in time are provided. Starting at the beginning of the window with time 0.0 and reaching the end of the window with time 1.0.
    */
   Storage();
 
   /**
-   * @brief Initialize storage by storing given values at time 0.0 and 1.0.
+   * @brief Initialize storage by storing given sample at time 0.0 and 1.0.
    *
-   * @param values initial values
+   * @param sample initial sample
    */
-  void initialize(Eigen::VectorXd values);
+  void initialize(time::Sample sample);
 
   /**
-   * @brief Store values at a specific time.
+   * @brief Store Sample at a specific time.
    *
-   * It is only allowed to store values in time that come after values that were already stored. Therefore, time has to be larger than maxStoredNormalizedDt. Overwriting existing values is forbidden. The function clear() should be used to clear the storage and provide new values.
+   * It is only allowed to store a Sample in time that comes after a Sample that was already stored. Therefore, time has to be larger than maxStoredNormalizedDt. Overwriting existing samples is forbidden. The function trim() or clear() should be used to be able provide new samples.
    *
-   * @param time the time associated with the values
-   * @param values stored values
+   * @param time the time associated with the sample
+   * @param sample stored sample
    */
-  void setValuesAtTime(double time, Eigen::VectorXd values);
+  void setSampleAtTime(double time, Sample sample);
 
   /**
    * @brief Get maximum normalized dt that is stored in this Storage.
@@ -63,6 +65,16 @@ public:
    * @return Eigen::VectorXd containing all stored normalized dts in ascending order.
    */
   Eigen::VectorXd getTimes() const;
+
+  /**
+   * @brief Get the stamples
+   *
+   * @return boost range of stamples
+   */
+  auto stamples() const
+  {
+    return boost::make_iterator_range(_stampleStorage);
+  }
 
   /**
    * @brief Get all normalized dts and values in ascending order (with respect to normalized dts)
@@ -91,13 +103,18 @@ public:
   void move();
 
   /**
-   * @brief Clear this Storage by deleting all values except values associated with 0.0.
+   * @brief Trims this Storage by deleting all values except values associated with 0.0.
+   */
+  void trim();
+
+  /**
+   * @brief Clear this Storage by deleting all values.
    */
   void clear();
 
 private:
-  /// Stores values on the current window associated with normalized dt.
-  std::vector<std::pair<double, Eigen::VectorXd>> _sampleStorage;
+  /// Stores Stamples on the current window
+  std::vector<Stample> _stampleStorage;
 
   mutable logging::Logger _log{"time::Storage"};
 };

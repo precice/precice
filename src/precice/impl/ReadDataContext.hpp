@@ -58,19 +58,9 @@ public:
   void readValues(::precice::span<const VertexID> vertices, double normalizedDt, ::precice::span<double> values) const;
 
   /**
-   * @brief Initializes the _waveform as a constant function with values from _providedData.
-   */
-  void initializeWaveform();
-
-  /**
    * @brief Updates _waveform when moving to the next time window.
    */
   void moveToNextWindow();
-
-  /**
-   * @brief Stores _providedData as first sample of _waveform.
-   */
-  void storeDataInWaveform();
 
   /// Disable copy construction
   ReadDataContext(const ReadDataContext &copy) = delete;

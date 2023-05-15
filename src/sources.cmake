@@ -276,7 +276,9 @@ target_sources(preciceCore
     src/query/Index.cpp
     src/query/Index.hpp
     src/query/impl/RTreeAdapter.hpp
+    src/time/Sample.hpp
     src/time/SharedPointer.hpp
+    src/time/Stample.hpp
     src/time/Storage.cpp
     src/time/Storage.hpp
     src/time/Time.cpp
