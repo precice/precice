@@ -215,23 +215,3 @@ std::ostream &operator<<(std::ostream &out, Mapping::MeshRequirement val)
 }
 
 } // namespace precice::mapping
-
-auto fmt::formatter<precice::mapping::Constraint>::format(precice::mapping::Constraint c, format_context &ctx) const
-{
-  std::string_view name = "unknown";
-  switch (c) {
-  case precice::mapping::Constraint::CONSISTENT:
-    name = "consistent";
-    break;
-  case precice::mapping::Constraint::CONSERVATIVE:
-    name = "conservative";
-    break;
-  case precice::mapping::Constraint::SCALED_CONSISTENT_SURFACE:
-    name = "scaled-consistent-surface";
-    break;
-  case precice::mapping::Constraint::SCALED_CONSISTENT_VOLUME:
-    name = "scaled-consistent-volume";
-    break;
-  }
-  return formatter<string_view>::format(name, ctx);
-}
