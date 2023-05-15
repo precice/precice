@@ -8,9 +8,8 @@
 #include <ginkgo/ginkgo.hpp>
 #include "device_launch_parameters.h"
 #include "mapping/device/CudaQRSolver.cuh"
-#include "utils/Event.hpp"
-#include "utils/EventUtils.hpp"
-
+#include "profiling/Event.hpp"
+#include "profiling/EventUtils.hpp"
 
 void computeQRDecompositionCuda(const int deviceId, const std::shared_ptr<gko::Executor> &exec, gko::matrix::Dense<> *A_Q, gko::matrix::Dense<> *R)
 {
@@ -19,7 +18,7 @@ void computeQRDecompositionCuda(const int deviceId, const std::shared_ptr<gko::E
   cudaSetDevice(deviceId);
 
   void *dWork{};
-  int  *devInfo{};
+  int * devInfo{};
 
   // Allocating important CUDA variables
   cudaMalloc((void **) &dWork, sizeof(double));
@@ -49,7 +48,7 @@ void computeQRDecompositionCuda(const int deviceId, const std::shared_ptr<gko::E
   double *dTau{};
   cudaMalloc((void **) &dTau, sizeof(double) * M);
 
-  precice::utils::Event calculateQRDecompEvent{"calculateQRDecomp"};
+  precice::profiling::Event calculateQRDecompEvent{"calculateQRDecomp"};
 
   // Query working space of geqrf and orgqr
   cusolverStatus_t cusolverStatus = cusolverDnXgeqrf_bufferSize(solverHandle, nullptr, M, N, CUDA_R_64F, A_T->get_values(), lda, CUDA_R_64F, dTau, CUDA_R_64F, &dLwork_geqrf, &hLwork_geqrf);
@@ -82,7 +81,7 @@ void computeQRDecompositionCuda(const int deviceId, const std::shared_ptr<gko::E
   cudaDeviceSynchronize();
   calculateQRDecompEvent.stop();
 
-  // Free the utilizted memory
+  // Free the utilized memory
   cudaFree(dTau);
   cudaFree(dWork);
   cudaFree(devInfo);
