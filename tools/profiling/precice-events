@@ -24,7 +24,7 @@ def mergedDict(dict1, dict2):
     return merged
 
 def requireModules(modules):
-    import importlib
+    import importlib.util
     notFound = [m for m in modules if importlib.util.find_spec(m) is None]
     if (notFound):
         def concat(l):
@@ -72,7 +72,7 @@ def printWide(df):
     for index, row in df.fillna("").iterrows():
         print(rowfmt.format(*row.to_list()))
 
-@functools.cache
+@functools.lru_cache
 def ns_to_unit_factor(unit):
     return {
         'ns': 1,
@@ -340,7 +340,8 @@ class Run:
         return self.eventLookup[int(id)]
 
     def toTrace(self, selectRanks):
-        print(f"Selected ranks {selectRanks}")
+        if selectRanks:
+            print(f'Selected ranks: {",".join(map(str,sorted(selectRanks)))}')
 
         def filterop(rank):
             return True if not selectRanks else rank.rank in selectRanks
@@ -405,11 +406,9 @@ def traceCommand(eventfile, outfile, rankfilter, limit):
     run = Run(eventfile)
     selection = set().union(rankfilter if rankfilter else []).union(range(limit) if limit else [])
     traces = run.toTrace(selection)
-    #json_object = json.dumps(traces, indent=2)
     print(f"Writing to {outfile}")
     with open(outfile, "w") as outfile:
-        json.dump(traces, outfile)#, indent=2)
-        #outfile.write(json_object)
+        json.dump(traces, outfile)
     return 0
 
 

@@ -282,7 +282,7 @@ auto errorMeshFilteredOut(const std::string &meshName, const int rank)
 
 void ReceivedPartition::filterByBoundingBox()
 {
-  PRECICE_TRACE(_geometricFilter);
+  PRECICE_TRACE(static_cast<int>(_geometricFilter));
 
   if (m2n().usesTwoLevelInitialization()) {
     std::string msg = "The received mesh " + _mesh->getName() +

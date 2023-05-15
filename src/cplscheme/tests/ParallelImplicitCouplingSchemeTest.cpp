@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   mesh->allocateDataValues();
   BOOST_TEST(data->values().size() == 1);
 
-  const double          maxTime        = CouplingScheme::UNDEFINED_TIME;
+  const double          maxTime        = CouplingScheme::UNDEFINED_MAX_TIME;
   const int             maxTimeWindows = 1;
   const double          timeWindowSize = 1.0;
   std::string           first          = "First";
@@ -340,7 +340,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
   meshConfig.addMesh(mesh);
 
   // Create all parameters necessary to create an ImplicitCouplingScheme object
-  const double maxTime            = CouplingScheme::UNDEFINED_TIME;
+  const double maxTime            = CouplingScheme::UNDEFINED_MAX_TIME;
   const int    maxTimeWindows     = 2;
   const double timeWindowSize     = 0.1;
   const int    maxIterations      = 3;
@@ -561,7 +561,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
   meshConfig.addMesh(mesh);
 
   // Create all parameters necessary to create an ImplicitCouplingScheme object
-  const double maxTime            = CouplingScheme::UNDEFINED_TIME;
+  const double maxTime            = CouplingScheme::UNDEFINED_MAX_TIME;
   const int    maxTimeWindows     = 2;
   const double timeWindowSize     = 0.1;
   const int    maxIterations      = 3;

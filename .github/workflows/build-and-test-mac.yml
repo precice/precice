@@ -11,6 +11,7 @@ on:
       - 'src/**'
       - 'thirdparty/**'
       - 'tests/**'
+      - 'tools/profiling/**'
       - 'CMakeLists.txt'
       - 'extras/bindings/**'
       - '.github/workflows/build-and-test-mac.yml'

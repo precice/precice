@@ -37,7 +37,7 @@ void BarycentricBaseMapping::mapConservative(DataID inputDataID, DataID outputDa
 {
   PRECICE_TRACE(inputDataID, outputDataID);
   precice::profiling::Event e("map.bbm.mapData.From" + input()->getName() + "To" + output()->getName(), profiling::Synchronize);
-  PRECICE_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
+  PRECICE_ASSERT(getConstraint() == CONSERVATIVE);
   PRECICE_DEBUG("Map conservative");
   PRECICE_ASSERT(_interpolations.size() == input()->vertices().size(),
                  _interpolations.size(), input()->vertices().size());
