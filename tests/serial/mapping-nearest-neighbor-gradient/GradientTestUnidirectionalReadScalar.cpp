@@ -66,8 +66,8 @@ BOOST_AUTO_TEST_CASE(GradientTestUnidirectionalReadScalar)
     BOOST_TEST(cplInterface.requiresGradientDataFor(meshName, dataName) == true);
 
     if (cplInterface.requiresGradientDataFor(meshName, dataName)) {
-      double gradientValues[6] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
-      cplInterface.writeGradientData(meshName, dataName, indices, gradientValues);
+      double gradients[6] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
+      cplInterface.writeGradientData(meshName, dataName, indices, gradients);
     }
 
     // Participant must make move after writing

@@ -75,8 +75,8 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelScalar)
 
     if (interface.requiresGradientDataFor(meshName, dataName)) {
 
-      double gradientValues[12] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
-      interface.writeGradientData(meshName, dataName, vertexIDs, gradientValues);
+      double gradients[12] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+      interface.writeGradientData(meshName, dataName, vertexIDs, gradients);
     }
     interface.advance(1.0);
     interface.finalize();

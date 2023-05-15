@@ -102,3 +102,10 @@ private:
 
 } // namespace io
 } // namespace precice
+//Required in order to print the vector types via the fmt interface
+template <>
+struct fmt::formatter<precice::io::TXTTableWriter::DataType> : formatter<string_view> {
+  // parse is inherited from formatter<string_view>.
+
+  auto format(precice::io::TXTTableWriter::DataType c, format_context &ctx) const;
+};

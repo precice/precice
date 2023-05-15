@@ -394,7 +394,7 @@ void precicef_write_gradient_data_(
     const char *  dataName,
     const int *   size,
     const int *   valueIndices,
-    const double *gradientValues,
+    const double *gradients,
     int           meshNameLength,
     int           dataNameLength)
 {
@@ -407,7 +407,7 @@ void precicef_write_gradient_data_(
   impl->writeGradientData(strippedMeshName,
                           strippedDataName,
                           {valueIndices, static_cast<unsigned long>(*size)},
-                          {gradientValues, static_cast<unsigned long>(gradientSize)});
+                          {gradients, static_cast<unsigned long>(gradientSize)});
 }
 
 void precicef_set_mesh_access_region_(

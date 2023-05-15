@@ -17,6 +17,7 @@ on:
       - 'tests/**'
       - 'thirdparty/**'
       - 'tests/**'
+      - 'tools/profiling/**'
       - 'CMakeLists.txt'
       - 'extras/bindings/**'
       - '.github/workflows/build-and-test.yml'

@@ -42,14 +42,14 @@ const Eigen::VectorXd &Data::values() const
   return _values;
 }
 
-Eigen::MatrixXd &Data::gradientValues()
+Eigen::MatrixXd &Data::gradients()
 {
-  return _gradientValues;
+  return _gradients;
 }
 
-const Eigen::MatrixXd &Data::gradientValues() const
+const Eigen::MatrixXd &Data::gradients() const
 {
-  return _gradientValues;
+  return _gradients;
 }
 
 const std::string &Data::getName() const
@@ -66,7 +66,7 @@ void Data::toZero()
 {
   _values.setZero();
   if (_hasGradient) {
-    _gradientValues.setZero();
+    _gradients.setZero();
   }
 }
 
@@ -107,19 +107,19 @@ void Data::allocateValues(int expectedCount)
     const SizeType spaceDimensions = _spatialDimensions;
 
     const SizeType expectedColumnSize = expectedCount * _dimensions;
-    const auto     actualColumnSize   = static_cast<SizeType>(_gradientValues.cols());
+    const auto     actualColumnSize   = static_cast<SizeType>(_gradients.cols());
 
     // Shrink Buffer
     if (expectedColumnSize < actualColumnSize) {
-      _gradientValues.resize(spaceDimensions, expectedColumnSize);
+      _gradients.resize(spaceDimensions, expectedColumnSize);
     }
 
     // Enlarge Buffer
     if (expectedColumnSize > actualColumnSize) {
       const auto columnLeftToAllocate = expectedColumnSize - actualColumnSize;
-      utils::append(_gradientValues, Eigen::MatrixXd(Eigen::MatrixXd::Zero(spaceDimensions, columnLeftToAllocate)));
+      utils::append(_gradients, Eigen::MatrixXd(Eigen::MatrixXd::Zero(spaceDimensions, columnLeftToAllocate)));
     }
-    PRECICE_DEBUG("Gradient Data {} now has {} x {} values", _name, _gradientValues.rows(), _gradientValues.cols());
+    PRECICE_DEBUG("Gradient Data {} now has {} x {} values", _name, _gradients.rows(), _gradients.cols());
   }
 }
 

@@ -44,10 +44,10 @@ BOOST_AUTO_TEST_CASE(ExportDataWithGradient2D)
   valuesVector.setLinSpaced(1., 5.);
 
   // Create corresponding gradient data (all gradient values = const = 1)
-  Eigen::MatrixXd &gradValuesScalar = dataScalar->gradientValues();
-  Eigen::MatrixXd &gradValuesVector = dataVector->gradientValues();
-  gradValuesScalar.setOnes();
-  gradValuesVector.setOnes();
+  Eigen::MatrixXd &gradientsScalar = dataScalar->gradients();
+  Eigen::MatrixXd &gradientsVector = dataVector->gradients();
+  gradientsScalar.setOnes();
+  gradientsVector.setOnes();
   io::ExportVTP exportVTP;
   std::string   filename = "io-VTPExport-ExportDatawithGradient" + std::to_string(dimensions);
   std::string   location = "";
@@ -76,10 +76,10 @@ BOOST_AUTO_TEST_CASE(ExportDataWithGradient3D)
   valuesVector.setLinSpaced(1., 5.);
 
   // Create corresponding gradient data (all gradient values = const = 1)
-  Eigen::MatrixXd &gradValuesScalar = dataScalar->gradientValues();
-  Eigen::MatrixXd &gradValuesVector = dataVector->gradientValues();
-  gradValuesScalar.setOnes();
-  gradValuesVector.setOnes();
+  Eigen::MatrixXd &gradientsScalar = dataScalar->gradients();
+  Eigen::MatrixXd &gradientsVector = dataVector->gradients();
+  gradientsScalar.setOnes();
+  gradientsVector.setOnes();
   io::ExportVTP exportVTP;
   std::string   filename = "io-VTPExport-ExportDatawithGradient" + std::to_string(dimensions);
   std::string   location = "";

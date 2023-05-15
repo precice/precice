@@ -268,6 +268,12 @@ target_sources(preciceCore
     src/precice/impl/WriteDataContext.hpp
     src/precice/span.hpp
     src/precice/types.hpp
+    src/profiling/Event.cpp
+    src/profiling/Event.hpp
+    src/profiling/EventUtils.cpp
+    src/profiling/EventUtils.hpp
+    src/profiling/config/ProfilingConfiguration.cpp
+    src/profiling/config/ProfilingConfiguration.hpp
     src/query/Index.cpp
     src/query/Index.hpp
     src/query/impl/RTreeAdapter.hpp
@@ -284,10 +290,6 @@ target_sources(preciceCore
     src/utils/EigenHelperFunctions.cpp
     src/utils/EigenHelperFunctions.hpp
     src/utils/EigenIO.hpp
-    src/utils/Event.cpp
-    src/utils/Event.hpp
-    src/utils/EventUtils.cpp
-    src/utils/EventUtils.hpp
     src/utils/Helpers.cpp
     src/utils/Helpers.hpp
     src/utils/IntraComm.cpp
