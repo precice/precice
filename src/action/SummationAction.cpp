@@ -39,7 +39,7 @@ void SummationAction::performAction(double time)
     const double currentTimestamp = referenceData->stamples()[stampleId].timestamp;
     for (const auto &sourceData : _sourceDataVector) {
       auto sourceStample = sourceData->stamples()[stampleId];
-      PRECICE_ASSERT(math::equals(sourceStample.timestamp, currentTimestamp), "Time mesh all sources must agree!");
+      PRECICE_CHECK(math::equals(sourceStample.timestamp, currentTimestamp), "Time mesh all sources must agree!");
       auto sourceDataValues = sourceStample.sample.values;
       targetValues += sourceDataValues;
     }

@@ -159,7 +159,7 @@ void SerialCouplingScheme::exchangeSecondData()
   }
 }
 
-const DataMap SerialCouplingScheme::getAccelerationData()
+const DataMap &SerialCouplingScheme::getAccelerationData()
 {
   // SerialCouplingSchemes applies acceleration to send data
   return getSendData();

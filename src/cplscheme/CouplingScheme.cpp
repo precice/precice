@@ -2,7 +2,7 @@
 
 namespace precice::cplscheme {
 
-const double CouplingScheme::UNDEFINED_TIME = -1.0;
+const double CouplingScheme::UNDEFINED_MAX_TIME = -1.0;
 
 const int CouplingScheme::UNDEFINED_TIME_WINDOWS = -1;
 

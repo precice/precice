@@ -293,7 +293,7 @@ protected:
    * @brief Getter for _computedTimeWindowPart
    * @returns _computedTimeWindowPart
    */
-  double getComputedTimeWindowPart();
+  double getComputedTimeWindowPart() const;
 
   /**
    * @brief Returns the time at the beginning of the current time window.
@@ -382,11 +382,11 @@ private:
 
   mutable logging::Logger _log{"cplscheme::BaseCouplingScheme"};
 
-  /// Maximum time being computed. End of simulation is reached, if _time == _maxTime
+  /// Maximum time being computed. End of simulation is reached, if getTime() == _maxTime
   double _maxTime;
 
-  /// current time; _time <= _maxTime
-  double _time = 0;
+  /// time of beginning of the current time window
+  double _timeWindowStartTime = 0;
 
   /// Number of time windows that have to be computed. End of simulation is reached, if _timeWindows == _maxTimeWindows
   int _maxTimeWindows;
@@ -517,7 +517,7 @@ private:
    * @brief interface to provide accelerated data, depending on coupling scheme being used
    * @return data being accelerated
    */
-  virtual const DataMap getAccelerationData() = 0;
+  virtual const DataMap &getAccelerationData() = 0;
 
   /**
    * @brief If any required actions are open, an error message is issued.
