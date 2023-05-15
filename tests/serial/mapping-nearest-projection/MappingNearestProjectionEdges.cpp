@@ -3,7 +3,7 @@
 #include "testing/Testing.hpp"
 
 #include <boost/test/data/test_case.hpp>
-#include <precice/SolverInterface.hpp>
+#include <precice/Participant.hpp>
 #include "helpers.hpp"
 
 BOOST_AUTO_TEST_SUITE(Integration)

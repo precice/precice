@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/Participant.hpp>
 #include "helpers.hpp"
 
 BOOST_AUTO_TEST_SUITE(Integration)
@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_CASE(ThreeSolversFirstParticipant)
   // SolverOne prescribes these, thus SolverTwo and SolverThree expect these (we use "first-participant" as dt method)
   std::vector<double> timestepSizes{1.0, 2.0, 3.0};
 
-  precice::SolverInterface precice(context.name, config, 0, 1);
+  precice::Participant precice(context.name, config, 0, 1);
 
   double v0[] = {0, 0};
 

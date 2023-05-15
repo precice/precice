@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/Participant.hpp>
 #include <vector>
 
 BOOST_AUTO_TEST_SUITE(Integration)
@@ -11,7 +11,7 @@ BOOST_AUTO_TEST_CASE(ExportTimeseries)
 {
   PRECICE_TEST("ExporterOne"_on(1_rank), "ExporterTwo"_on(2_ranks));
 
-  precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
+  precice::Participant interface(context.name, context.config(), context.rank, context.size);
 
   std::vector<precice::VertexID> vertexIds(6 / context.size, -1);
   double                         y = context.size;

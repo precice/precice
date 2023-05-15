@@ -9,7 +9,7 @@ namespace precice {
 /** @brief Contains the preCICE tooling API
  *
  * The contained methods allow to query internal information of preCICE
- * without having to create a \ref precice::SolverInterface.
+ * without having to create a \ref precice::Participant.
  *
  * @note These functions are not exposed via the bindings
  *

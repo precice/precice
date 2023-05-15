@@ -2,7 +2,7 @@
 
 #include "helpers.hpp"
 
-#include "precice/SolverInterface.hpp"
+#include "precice/Participant.hpp"
 #include "testing/Testing.hpp"
 
 /// tests for different QN settings if correct fixed point is reached
@@ -21,7 +21,7 @@ void runTestQN(std::string const &config, TestContext const &context)
     readDataName  = "Data1";
   }
 
-  precice::SolverInterface interface(context.name, config, context.rank, context.size);
+  precice::Participant interface(context.name, config, context.rank, context.size);
 
   VertexID vertexIDs[4];
 
@@ -116,7 +116,7 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
     readDataName  = "Data1";
   }
 
-  precice::SolverInterface interface(context.name, config, context.rank, context.size);
+  precice::Participant interface(context.name, config, context.rank, context.size);
 
   VertexID vertexIDs[4];
 

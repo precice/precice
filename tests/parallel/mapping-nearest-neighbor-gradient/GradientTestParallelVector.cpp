@@ -20,11 +20,11 @@
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Utils.hpp"
 #include "mesh/Vertex.hpp"
-#include "precice/SolverInterface.hpp"
+#include "precice/Participant.hpp"
 #include "precice/impl/MeshContext.hpp"
+#include "precice/impl/ParticipantImpl.hpp"
 #include "precice/impl/ParticipantState.hpp"
 #include "precice/impl/SharedPointer.hpp"
-#include "precice/impl/SolverInterfaceImpl.hpp"
 #include "precice/types.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
@@ -43,10 +43,10 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelVector)
   PRECICE_TEST("SolverOne"_on(3_ranks), "SolverTwo"_on(1_rank));
 
   if (context.isNamed("SolverOne")) {
-    SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    auto            meshName  = "MeshOne";
-    auto            dataName1 = "Data1";
-    auto            dataName2 = "Data2";
+    Participant interface(context.name, context.config(), context.rank, context.size);
+    auto        meshName  = "MeshOne";
+    auto        dataName1 = "Data1";
+    auto        dataName2 = "Data2";
 
     int    vertexIDs[2];
     double xCoord       = context.rank * 0.4 + 0.05;
@@ -66,10 +66,10 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelVector)
     interface.finalize();
   } else {
     BOOST_REQUIRE(context.isNamed("SolverTwo"));
-    SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    auto            meshName = "MeshTwo";
-    int             vertexIDs[6];
-    double          positions[12] = {0.0, 0.0, 0.2, 0.0, 0.4, 0.0, 0.6, 0.0, 0.8, 0.0, 1.0, 0.0};
+    Participant interface(context.name, context.config(), context.rank, context.size);
+    auto        meshName = "MeshTwo";
+    int         vertexIDs[6];
+    double      positions[12] = {0.0, 0.0, 0.2, 0.0, 0.4, 0.0, 0.6, 0.0, 0.8, 0.0, 1.0, 0.0};
     interface.setMeshVertices(meshName, positions, vertexIDs);
 
     auto dataName1 = "Data1";

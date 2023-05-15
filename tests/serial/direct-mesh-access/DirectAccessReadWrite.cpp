@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/Participant.hpp>
 #include <vector>
 
 // Test case for a direct mesh access by SolverTwo to a mesh defined
@@ -16,11 +16,11 @@ BOOST_AUTO_TEST_CASE(DirectAccessReadWrite)
 
   if (context.isNamed("SolverOne")) {
     // Set up Solverinterface
-    precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    constexpr int            dim              = 2;
-    const auto               providedMeshName = "MeshOne";
-    const auto               readDataName     = "Forces";
-    const auto               writeDataName    = "Velocities";
+    precice::Participant interface(context.name, context.config(), context.rank, context.size);
+    constexpr int        dim              = 2;
+    const auto           providedMeshName = "MeshOne";
+    const auto           readDataName     = "Forces";
+    const auto           writeDataName    = "Velocities";
     BOOST_TEST(interface.getMeshDimensions(providedMeshName) == 2);
 
     std::vector<double> positions = std::vector<double>({0.5, 0.25});
@@ -62,11 +62,11 @@ BOOST_AUTO_TEST_CASE(DirectAccessReadWrite)
 
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    constexpr int            dim              = 2;
-    const auto               receivedMeshName = "MeshOne";
-    const auto               writeDataName    = "Forces";
-    const auto               readDataName     = "Velocities";
+    precice::Participant interface(context.name, context.config(), context.rank, context.size);
+    constexpr int        dim              = 2;
+    const auto           receivedMeshName = "MeshOne";
+    const auto           writeDataName    = "Forces";
+    const auto           readDataName     = "Velocities";
     BOOST_TEST(interface.getMeshDimensions(receivedMeshName) == 2);
 
     std::array<double, dim * 2> boundingBox = std::array<double, dim * 2>{0.0, 1.0, 0.0, 1.0};

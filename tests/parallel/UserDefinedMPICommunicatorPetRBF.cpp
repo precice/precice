@@ -3,10 +3,10 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/Participant.hpp>
 #include <vector>
 
-// Tests SolverInterface() with a user-defined MPI communicator.
+// Tests Participant() with a user-defined MPI communicator.
 // Since PETSc also uses MPI, we use petrbf mapping here.
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
@@ -16,8 +16,8 @@ BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicatorPetRBF)
 
   if (context.isNamed("SolverOne")) {
 
-    MPI_Comm                 myComm = precice::utils::Parallel::current()->comm;
-    precice::SolverInterface interface(context.name, context.config(), context.rank, context.size, &myComm);
+    MPI_Comm             myComm = precice::utils::Parallel::current()->comm;
+    precice::Participant interface(context.name, context.config(), context.rank, context.size, &myComm);
 
     auto   meshName = "MeshOne";
     int    vertexIDs[2];
@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicatorPetRBF)
   } else {
 
     BOOST_REQUIRE(context.isNamed("SolverTwo"));
-    precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
+    precice::Participant interface(context.name, context.config(), context.rank, context.size);
 
     auto   meshName = "MeshTwo";
     int    vertexIDs[6];

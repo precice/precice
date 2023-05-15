@@ -13,9 +13,9 @@
 #include "math/constants.hpp"
 #include "math/geometry.hpp"
 #include "mesh/Mesh.hpp"
-#include "precice/SolverInterface.hpp"
+#include "precice/Participant.hpp"
 #include "precice/config/Configuration.hpp"
-#include "precice/impl/SolverInterfaceImpl.hpp"
+#include "precice/impl/ParticipantImpl.hpp"
 #include "precice/types.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
@@ -52,10 +52,10 @@ void multiCouplingThreeSolversParallelControl(const std::string configFile, cons
   double valueC2 = 3.5;
 
   if (context.isNamed("SolverA")) {
-    SolverInterface cplInterface("SolverA", configFile, context.rank, context.size);
-    auto            meshName = "MeshA";
-    auto            dataABID = "DataAB";
-    auto            dataBAID = "DataBA";
+    Participant cplInterface("SolverA", configFile, context.rank, context.size);
+    auto        meshName = "MeshA";
+    auto        dataABID = "DataAB";
+    auto        dataBAID = "DataBA";
 
     if (context.isPrimary()) {
       int vertex1 = cplInterface.setMeshVertex(meshName, coordOneA);
@@ -111,13 +111,13 @@ void multiCouplingThreeSolversParallelControl(const std::string configFile, cons
     }
 
   } else if (context.isNamed("SolverB")) {
-    SolverInterface cplInterface("SolverB", configFile, 0, 1);
-    auto            meshName1 = "MeshB1";
-    auto            meshName2 = "MeshB2";
-    int             vertex1   = cplInterface.setMeshVertex(meshName1, coordOneA);
-    int             vertex2   = cplInterface.setMeshVertex(meshName1, coordOneB);
-    int             vertex3   = cplInterface.setMeshVertex(meshName2, coordOneA);
-    int             vertex4   = cplInterface.setMeshVertex(meshName2, coordOneB);
+    Participant cplInterface("SolverB", configFile, 0, 1);
+    auto        meshName1 = "MeshB1";
+    auto        meshName2 = "MeshB2";
+    int         vertex1   = cplInterface.setMeshVertex(meshName1, coordOneA);
+    int         vertex2   = cplInterface.setMeshVertex(meshName1, coordOneB);
+    int         vertex3   = cplInterface.setMeshVertex(meshName2, coordOneA);
+    int         vertex4   = cplInterface.setMeshVertex(meshName2, coordOneB);
 
     auto dataABID = "DataAB"; // meshName1
     auto dataBAID = "DataBA"; // meshName1
@@ -157,12 +157,12 @@ void multiCouplingThreeSolversParallelControl(const std::string configFile, cons
     cplInterface.finalize();
 
   } else {
-    SolverInterface cplInterface("SolverC", configFile, 0, 1);
-    auto            meshName = "MeshC";
-    int             vertex1  = cplInterface.setMeshVertex(meshName, coordOneA);
-    int             vertex2  = cplInterface.setMeshVertex(meshName, coordOneB);
-    auto            dataCBID = "DataCB";
-    auto            dataBCID = "DataBC";
+    Participant cplInterface("SolverC", configFile, 0, 1);
+    auto        meshName = "MeshC";
+    int         vertex1  = cplInterface.setMeshVertex(meshName, coordOneA);
+    int         vertex2  = cplInterface.setMeshVertex(meshName, coordOneB);
+    auto        dataCBID = "DataCB";
+    auto        dataBCID = "DataBC";
 
     cplInterface.initialize();
     double maxDt = cplInterface.getMaxTimeStepSize();

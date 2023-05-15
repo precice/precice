@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/Participant.hpp>
 #include <vector>
 
 using namespace precice;
@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_CASE(Explicit)
 
   using Eigen::Vector3d;
 
-  SolverInterface cplInterface(context.name, context.config(), 0, 1);
+  Participant cplInterface(context.name, context.config(), 0, 1);
   if (context.isNamed("SolverOne")) {
     auto   meshName   = "MeshOne";
     double v[]        = {1.0, 2.0, 3.0};

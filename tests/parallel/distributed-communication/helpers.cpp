@@ -2,7 +2,7 @@
 
 #include "helpers.hpp"
 
-#include "precice/SolverInterface.hpp"
+#include "precice/Participant.hpp"
 #include "testing/Testing.hpp"
 
 /// Tests various distributed communication schemes.
@@ -53,9 +53,9 @@ void runTestDistributedCommunication(std::string const &config, TestContext cons
     }
   }
 
-  precice::SolverInterface precice(context.name, config, context.rank, context.size);
-  auto                     forcesID = "Forces";
-  auto                     velocID  = "Velocities";
+  precice::Participant precice(context.name, config, context.rank, context.size);
+  auto                 forcesID = "Forces";
+  auto                 velocID  = "Velocities";
 
   std::vector<int> vertexIDs;
   for (int i = i1; i < i2; i++) {

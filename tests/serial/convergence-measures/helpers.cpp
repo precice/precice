@@ -3,7 +3,7 @@
 #include "helpers.hpp"
 #include "testing/Testing.hpp"
 
-#include "precice/SolverInterface.hpp"
+#include "precice/Participant.hpp"
 
 void testConvergenceMeasures(const std::string configFile, TestContext const &context, std::vector<int> &expectedIterations)
 {
@@ -11,7 +11,7 @@ void testConvergenceMeasures(const std::string configFile, TestContext const &co
 
   std::string meshName = context.isNamed("SolverOne") ? "MeshOne" : "MeshTwo";
 
-  precice::SolverInterface interface(context.name, configFile, 0, 1);
+  precice::Participant interface(context.name, configFile, 0, 1);
 
   Vector2d vertex{0.0, 0.0};
 

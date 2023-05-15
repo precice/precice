@@ -1,10 +1,10 @@
 #ifndef PRECICE_NO_MPI
 
 #include <vector>
-#include "precice/SolverInterface.hpp"
+#include "precice/Participant.hpp"
 #include "precice/impl/MeshContext.hpp"
+#include "precice/impl/ParticipantImpl.hpp"
 #include "precice/impl/ParticipantState.hpp"
-#include "precice/impl/SolverInterfaceImpl.hpp"
 #include "testing/Testing.hpp"
 
 using namespace precice;
@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_CASE(TestConfigurationPeano)
 {
   PRECICE_TEST(1_rank);
   // Test configuration for accessor "Peano"
-  SolverInterface interfacePeano("Peano", context.config(), 0, 1);
+  Participant interfacePeano("Peano", context.config(), 0, 1);
 
   BOOST_TEST(testing::WhiteboxAccessor::impl(interfacePeano)._participants.size() == 2);
 

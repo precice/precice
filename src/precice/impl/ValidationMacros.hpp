@@ -1,9 +1,9 @@
 #pragma once
 
 /**@file
- * This file contains verification macros to harden the SolverInterface against misuse and misconfiguration.
+ * This file contains verification macros to harden the Participant against misuse and misconfiguration.
  *
- * \attention Only include this file from SolverInterfaceImpl.cpp
+ * \attention Only include this file from ParticipantImpl.cpp
  */
 
 //

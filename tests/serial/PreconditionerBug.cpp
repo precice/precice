@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/Participant.hpp>
 #include <vector>
 
 /**
@@ -16,8 +16,8 @@ BOOST_AUTO_TEST_CASE(PreconditionerBug)
 
   using Eigen::Vector2d;
 
-  std::string              meshName = context.isNamed("SolverOne") ? "MeshOne" : "MeshTwo";
-  precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
+  std::string          meshName = context.isNamed("SolverOne") ? "MeshOne" : "MeshTwo";
+  precice::Participant interface(context.name, context.config(), context.rank, context.size);
 
   Vector2d vertex{0.0, 0.0};
 
