@@ -4,7 +4,7 @@
 #include "helpers.hpp"
 #include "testing/Testing.hpp"
 
-#include "precice/SolverInterface.hpp"
+#include "precice/Participant.hpp"
 
 /// Test to run simple "do nothing" coupling between two solvers.
 void runTestExplicit(std::string const &configurationFileName, TestContext const &context)
@@ -14,7 +14,7 @@ void runTestExplicit(std::string const &configurationFileName, TestContext const
   int    timesteps = 0;
   double time      = 0.0;
 
-  SolverInterface couplingInterface(context.name, configurationFileName, 0, 1);
+  Participant couplingInterface(context.name, configurationFileName, 0, 1);
 
   double pos[] = {0, 0, 0, 1, 1, 1};
   int    vids[2];

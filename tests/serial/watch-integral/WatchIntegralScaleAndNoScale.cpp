@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/Participant.hpp>
 #include <vector>
 #include "helpers.hpp"
 #include "io/TXTTableWriter.hpp"
@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_CASE(WatchIntegralScaleAndNoScale)
   using Eigen::Vector2d;
 
   if (context.isNamed("SolverOne")) {
-    precice::SolverInterface interface(context.name, context.config(), 0, 1);
+    precice::Participant interface(context.name, context.config(), 0, 1);
 
     // Set mesh
     Vector2d coordA{0.0, 0.0};
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(WatchIntegralScaleAndNoScale)
     interface.finalize();
   } else if (context.isNamed("SolverTwo")) {
 
-    precice::SolverInterface interface(context.name, context.config(), 0, 1);
+    precice::Participant interface(context.name, context.config(), 0, 1);
 
     // Set mesh
     Vector2d coordA{0.0, 0.0};

@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/Participant.hpp>
 #include <vector>
 
 BOOST_AUTO_TEST_SUITE(Integration)
@@ -14,10 +14,10 @@ BOOST_AUTO_TEST_CASE(MultipleWriteFromMappings)
 
   using Eigen::Vector2d;
 
-  precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-  Vector2d                 vertex1{0.0, 0.0};
-  Vector2d                 vertex2{2.0, 0.0};
-  Vector2d                 vertex3{4.0, 0.0};
+  precice::Participant interface(context.name, context.config(), context.rank, context.size);
+  Vector2d             vertex1{0.0, 0.0};
+  Vector2d             vertex2{2.0, 0.0};
+  Vector2d             vertex3{4.0, 0.0};
 
   if (context.isNamed("A")) {
     auto meshNameTop    = "MeshATop";

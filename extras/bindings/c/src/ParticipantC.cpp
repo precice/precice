@@ -1,11 +1,11 @@
 extern "C" {
-#include "precice/SolverInterfaceC.h"
+#include "precice/ParticipantC.h"
 }
 #include <memory>
 #include <string>
 #include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
-#include "precice/SolverInterface.hpp"
+#include "precice/Participant.hpp"
 #include "precice/impl/versions.hpp"
 #include "utils/assertion.hpp"
 
@@ -18,14 +18,14 @@ extern "C" {
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #endif
 
-static std::unique_ptr<precice::SolverInterface> impl = nullptr;
+static std::unique_ptr<precice::Participant> impl = nullptr;
 
-static precice::logging::Logger _log("SolverInterfaceC");
+static precice::logging::Logger _log("ParticipantC");
 
-static std::string errormsg       = "preCICE has not been created properly. Be sure to call \"precicec_createSolverInterface\" or \"precicec_createSolverInterface_withCommunicator\" before any other call to preCICE.";
-static std::string errormsgCreate = "preCICE has been created already! Be sure to call either \"precicec_createSolverInterface\" or \"precicec_createSolverInterface_withCommunicator\" exactly once.";
+static std::string errormsg       = "preCICE has not been created properly. Be sure to call \"precicec_createParticipant\" or \"precicec_createParticipant_withCommunicator\" before any other call to preCICE.";
+static std::string errormsgCreate = "preCICE has been created already! Be sure to call either \"precicec_createParticipant\" or \"precicec_createParticipant_withCommunicator\" exactly once.";
 
-void precicec_createSolverInterface_withCommunicator(
+void precicec_createParticipant_withCommunicator(
     const char *participantName,
     const char *configFileName,
     int         solverProcessIndex,
@@ -33,24 +33,24 @@ void precicec_createSolverInterface_withCommunicator(
     void *      communicator)
 {
   PRECICE_CHECK(impl == nullptr, errormsgCreate);
-  impl.reset(new precice::SolverInterface(participantName,
-                                          configFileName,
-                                          solverProcessIndex,
-                                          solverProcessSize,
-                                          communicator));
+  impl.reset(new precice::Participant(participantName,
+                                      configFileName,
+                                      solverProcessIndex,
+                                      solverProcessSize,
+                                      communicator));
 }
 
-void precicec_createSolverInterface(
+void precicec_createParticipant(
     const char *participantName,
     const char *configFileName,
     int         solverProcessIndex,
     int         solverProcessSize)
 {
   PRECICE_CHECK(impl == nullptr, errormsgCreate);
-  impl.reset(new precice::SolverInterface(participantName,
-                                          configFileName,
-                                          solverProcessIndex,
-                                          solverProcessSize));
+  impl.reset(new precice::Participant(participantName,
+                                      configFileName,
+                                      solverProcessIndex,
+                                      solverProcessSize));
 }
 
 void precicec_initialize()
@@ -298,12 +298,12 @@ void precicec_writeBlockVectorGradientData(
     const char *  dataName,
     int           size,
     const int *   valueIndices,
-    const double *gradientValues)
+    const double *gradients)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   auto gradientComponents = impl->getDataDimensions(meshName, dataName) * impl->getMeshDimensions(meshName);
   auto gradientSize       = size * gradientComponents;
-  impl->writeGradientData(meshName, dataName, {valueIndices, static_cast<unsigned long>(size)}, {gradientValues, static_cast<unsigned long>(gradientSize)});
+  impl->writeGradientData(meshName, dataName, {valueIndices, static_cast<unsigned long>(size)}, {gradients, static_cast<unsigned long>(gradientSize)});
 }
 
 const char *precicec_getVersionInformation()

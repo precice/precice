@@ -2,7 +2,7 @@
 
 #include "helpers.hpp"
 
-#include "precice/SolverInterface.hpp"
+#include "precice/Participant.hpp"
 #include "testing/Testing.hpp"
 
 using namespace precice;
@@ -17,11 +17,11 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
   double valueC = 3.0;
 
   if (context.isNamed("SolverA")) {
-    SolverInterface cplInterface("SolverA", configFile, 0, 1);
-    auto            meshName = "MeshA";
-    int             vertexID = cplInterface.setMeshVertex(meshName, coordOneA);
-    auto            dataABID = "DataAB";
-    auto            dataBAID = "DataBA";
+    Participant cplInterface("SolverA", configFile, 0, 1);
+    auto        meshName = "MeshA";
+    int         vertexID = cplInterface.setMeshVertex(meshName, coordOneA);
+    auto        dataABID = "DataAB";
+    auto        dataBAID = "DataBA";
 
     cplInterface.initialize();
     double maxDt = cplInterface.getMaxTimeStepSize();
@@ -45,15 +45,15 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
 
     cplInterface.finalize();
   } else if (context.isNamed("SolverB")) {
-    SolverInterface cplInterface("SolverB", configFile, 0, 1);
-    auto            meshName1 = "MeshB1";
-    auto            meshName2 = "MeshB2";
-    int             vertexID1 = cplInterface.setMeshVertex(meshName1, coordOneA);
-    int             vertexID2 = cplInterface.setMeshVertex(meshName2, coordOneA);
-    auto            dataABID  = "DataAB";
-    auto            dataBAID  = "DataBA";
-    auto            dataCBID  = "DataCB";
-    auto            dataBCID  = "DataBC";
+    Participant cplInterface("SolverB", configFile, 0, 1);
+    auto        meshName1 = "MeshB1";
+    auto        meshName2 = "MeshB2";
+    int         vertexID1 = cplInterface.setMeshVertex(meshName1, coordOneA);
+    int         vertexID2 = cplInterface.setMeshVertex(meshName2, coordOneA);
+    auto        dataABID  = "DataAB";
+    auto        dataBAID  = "DataBA";
+    auto        dataCBID  = "DataCB";
+    auto        dataBCID  = "DataBC";
 
     cplInterface.initialize();
     double maxDt = cplInterface.getMaxTimeStepSize();
@@ -81,11 +81,11 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
     cplInterface.finalize();
 
   } else {
-    SolverInterface cplInterface("SolverC", configFile, 0, 1);
-    auto            meshName = "MeshC";
-    int             vertexID = cplInterface.setMeshVertex(meshName, coordOneA);
-    auto            dataCBID = "DataCB";
-    auto            dataBCID = "DataBC";
+    Participant cplInterface("SolverC", configFile, 0, 1);
+    auto        meshName = "MeshC";
+    int         vertexID = cplInterface.setMeshVertex(meshName, coordOneA);
+    auto        dataCBID = "DataCB";
+    auto        dataBCID = "DataBC";
 
     cplInterface.initialize();
     double maxDt = cplInterface.getMaxTimeStepSize();
@@ -117,11 +117,11 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
   Eigen::Vector2d coordOneA{0.0, 0.0};
 
   if (context.isNamed("SolverA")) {
-    SolverInterface cplInterface("SolverA", configFile, 0, 1);
-    auto            meshName = "MeshA";
-    int             vertexID = cplInterface.setMeshVertex(meshName, coordOneA);
-    auto            dataABID = "DataAB";
-    auto            dataBAID = "DataBA";
+    Participant cplInterface("SolverA", configFile, 0, 1);
+    auto        meshName = "MeshA";
+    int         vertexID = cplInterface.setMeshVertex(meshName, coordOneA);
+    auto        dataABID = "DataAB";
+    auto        dataBAID = "DataBA";
 
     cplInterface.initialize();
     double maxDt = cplInterface.getMaxTimeStepSize();
@@ -143,15 +143,15 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
     }
     cplInterface.finalize();
   } else if (context.isNamed("SolverB")) {
-    SolverInterface cplInterface("SolverB", configFile, 0, 1);
-    auto            meshName1 = "MeshB1";
-    auto            meshName2 = "MeshB2";
-    int             vertexID1 = cplInterface.setMeshVertex(meshName1, coordOneA);
-    int             vertexID2 = cplInterface.setMeshVertex(meshName2, coordOneA);
-    auto            dataABID  = "DataAB";
-    auto            dataBAID  = "DataBA";
-    auto            dataCBID  = "DataCB";
-    auto            dataBCID  = "DataBC";
+    Participant cplInterface("SolverB", configFile, 0, 1);
+    auto        meshName1 = "MeshB1";
+    auto        meshName2 = "MeshB2";
+    int         vertexID1 = cplInterface.setMeshVertex(meshName1, coordOneA);
+    int         vertexID2 = cplInterface.setMeshVertex(meshName2, coordOneA);
+    auto        dataABID  = "DataAB";
+    auto        dataBAID  = "DataBA";
+    auto        dataCBID  = "DataCB";
+    auto        dataBCID  = "DataBC";
 
     cplInterface.initialize();
     double maxDt = cplInterface.getMaxTimeStepSize();
@@ -176,15 +176,15 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
     cplInterface.finalize();
 
   } else if (context.isNamed("SolverC")) {
-    SolverInterface cplInterface("SolverC", configFile, 0, 1);
-    auto            meshName1 = "MeshC1";
-    auto            meshName2 = "MeshC2";
-    int             vertexID1 = cplInterface.setMeshVertex(meshName1, coordOneA);
-    int             vertexID2 = cplInterface.setMeshVertex(meshName2, coordOneA);
-    auto            dataBCID  = "DataBC";
-    auto            dataCBID  = "DataCB";
-    auto            dataCDID  = "DataCD";
-    auto            dataDCID  = "DataDC";
+    Participant cplInterface("SolverC", configFile, 0, 1);
+    auto        meshName1 = "MeshC1";
+    auto        meshName2 = "MeshC2";
+    int         vertexID1 = cplInterface.setMeshVertex(meshName1, coordOneA);
+    int         vertexID2 = cplInterface.setMeshVertex(meshName2, coordOneA);
+    auto        dataBCID  = "DataBC";
+    auto        dataCBID  = "DataCB";
+    auto        dataCDID  = "DataCD";
+    auto        dataDCID  = "DataDC";
 
     cplInterface.initialize();
     double maxDt = cplInterface.getMaxTimeStepSize();
@@ -208,11 +208,11 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
     }
     cplInterface.finalize();
   } else {
-    SolverInterface cplInterface("SolverD", configFile, 0, 1);
-    auto            meshName = "MeshD";
-    int             vertexID = cplInterface.setMeshVertex(meshName, coordOneA);
-    auto            dataCDID = "DataCD";
-    auto            dataDCID = "DataDC";
+    Participant cplInterface("SolverD", configFile, 0, 1);
+    auto        meshName = "MeshD";
+    int         vertexID = cplInterface.setMeshVertex(meshName, coordOneA);
+    auto        dataCDID = "DataCD";
+    auto        dataDCID = "DataDC";
 
     cplInterface.initialize();
     double maxDt = cplInterface.getMaxTimeStepSize();

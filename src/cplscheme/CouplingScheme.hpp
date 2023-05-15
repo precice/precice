@@ -41,7 +41,7 @@ namespace cplscheme {
 class CouplingScheme {
 public:
   /// Does not define a time limit for the coupled simulation.
-  static const double UNDEFINED_TIME;
+  static const double UNDEFINED_MAX_TIME;
 
   /// Does not define limit on time windows for the coupled simulation.
   static const int UNDEFINED_TIME_WINDOWS;
@@ -80,11 +80,11 @@ public:
       int    startTimeWindow) = 0;
 
   /**
-   * @brief Receives result of first advance, if this has to happen inside SolverInterface::initialize()
+   * @brief Receives result of first advance, if this has to happen inside Participant::initialize()
    *
    * This is only relevant for the second participant of the SerialCouplingScheme, because other coupling schemes only
    * receive initial data in initialize. This part is implemented as a public function to be called from
-   * SolverInterfaceImpl. SolverInterfaceImpl has to store data received in CouplingScheme::initialize before calling
+   * ParticipantImpl. ParticipantImpl has to store data received in CouplingScheme::initialize before calling
    * CouplingScheme::receiveResultOfFirstAdvance, which will override the data in the receive buffer.
    */
   virtual void receiveResultOfFirstAdvance() = 0;

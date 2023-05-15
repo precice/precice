@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/Participant.hpp>
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
@@ -10,8 +10,8 @@ BOOST_AUTO_TEST_SUITE(MeshRequirements)
 BOOST_AUTO_TEST_CASE(NearestNeighborB)
 {
   PRECICE_TEST(1_rank);
-  precice::SolverInterface interface("B", context.config(), 0, 1);
-  auto                     meshName = "MeshB";
+  precice::Participant interface("B", context.config(), 0, 1);
+  auto                 meshName = "MeshB";
   BOOST_TEST(!interface.requiresMeshConnectivityFor(meshName));
 }
 

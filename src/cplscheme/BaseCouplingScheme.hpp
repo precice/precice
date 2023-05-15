@@ -184,7 +184,7 @@ public:
    */
   void initialize(double startTime, int startTimeWindow) override final;
 
-  /// Receives result of first advance, if this has to happen inside SolverInterface::initialize(), see CouplingScheme.hpp
+  /// Receives result of first advance, if this has to happen inside Participant::initialize(), see CouplingScheme.hpp
   void receiveResultOfFirstAdvance() override final;
 
   ChangedMeshes firstSynchronization(const ChangedMeshes &changes) override final;
@@ -377,11 +377,11 @@ private:
 
   mutable logging::Logger _log{"cplscheme::BaseCouplingScheme"};
 
-  /// Maximum time being computed. End of simulation is reached, if _time == _maxTime
+  /// Maximum time being computed. End of simulation is reached, if getTime() == _maxTime
   double _maxTime;
 
-  /// current time; _time <= _maxTime
-  double _time = 0;
+  /// time of beginning of the current time window
+  double _timeWindowStartTime = 0;
 
   /// Number of time windows that have to be computed. End of simulation is reached, if _timeWindows == _maxTimeWindows
   int _maxTimeWindows;
@@ -510,7 +510,7 @@ private:
    * @brief interface to provide accelerated data, depending on coupling scheme being used
    * @return data being accelerated
    */
-  virtual const DataMap getAccelerationData() = 0;
+  virtual const DataMap &getAccelerationData() = 0;
 
   /**
    * @brief If any required actions are open, an error message is issued.

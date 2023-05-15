@@ -34,7 +34,7 @@ NearestProjectionMapping::NearestProjectionMapping(
     setInputRequirement(Mapping::MeshRequirement::VERTEX);
     setOutputRequirement(Mapping::MeshRequirement::FULL);
   } else {
-    PRECICE_ASSERT(isScaledConsistent(), constraint);
+    PRECICE_ASSERT(isScaledConsistent());
     setInputRequirement(Mapping::MeshRequirement::FULL);
     setOutputRequirement(Mapping::MeshRequirement::FULL);
   }

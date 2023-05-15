@@ -26,7 +26,7 @@ extern "C" {
  * IN:  participantName, configFileName, solverProcessIndex, solverProcessSize
  * OUT: -
  *
- * @copydoc precice::SolverInterface::SolverInterface()
+ * @copydoc precice::Participant::Participant()
  *
  */
 PRECICE_API void precicef_create_(
@@ -44,7 +44,7 @@ PRECICE_API void precicef_create_(
  * IN:  -
  * OUT: -
  *
- * @copydoc precice::SolverInterface::initialize()
+ * @copydoc precice::Participant::initialize()
  *
  */
 PRECICE_API void precicef_initialize_();
@@ -56,7 +56,7 @@ PRECICE_API void precicef_initialize_();
  * IN:  timeStepSize
  * OUT: -
  *
- * @copydoc precice::SolverInterface::advance()
+ * @copydoc precice::Participant::advance()
  *
  */
 PRECICE_API void precicef_advance_(const double *timeStepSize);
@@ -65,7 +65,7 @@ PRECICE_API void precicef_advance_(const double *timeStepSize);
  * Fortran syntax:
  * precicef_finalize();
  *
- * @copydoc precice::SolverInterface::finalize()
+ * @copydoc precice::Participant::finalize()
  *
  */
 PRECICE_API void precicef_finalize_();
@@ -79,7 +79,7 @@ PRECICE_API void precicef_finalize_();
  * IN:  mesh, meshNameLength
  * OUT: dimensions
  *
- * @copydoc precice::SolverInterface::getMeshDimensions()
+ * @copydoc precice::Participant::getMeshDimensions()
  *
  */
 PRECICE_API void precicef_get_mesh_dimensions_(
@@ -97,7 +97,7 @@ PRECICE_API void precicef_get_mesh_dimensions_(
  * IN:  mesh, data, meshNameLength, dataNameLength
  * OUT: dimensions
  *
- * @copydoc precice::SolverInterface::getDataDimensions()
+ * @copydoc precice::Participant::getDataDimensions()
  *
  */
 PRECICE_API void precicef_get_data_dimensions_(
@@ -114,7 +114,7 @@ PRECICE_API void precicef_get_data_dimensions_(
  * IN:  -
  * OUT: isOngoing(1:true, 0:false)
  *
- * @copydoc precice::SolverInterface::isCouplingOngoing()
+ * @copydoc precice::Participant::isCouplingOngoing()
  *
  */
 PRECICE_API void precicef_is_coupling_ongoing_(int *isOngoing);
@@ -126,7 +126,7 @@ PRECICE_API void precicef_is_coupling_ongoing_(int *isOngoing);
  * IN:  -
  * OUT: isComplete(1:true, 0:false)
  *
- * @copydoc precice::SolverInterface::isTimeWindowComplete()
+ * @copydoc precice::Participant::isTimeWindowComplete()
  *
  */
 PRECICE_API void precicef_is_time_window_complete_(int *isComplete);
@@ -138,7 +138,7 @@ PRECICE_API void precicef_is_time_window_complete_(int *isComplete);
  * IN:  -
  * OUT: maxTimeStepSize
  *
- * @copydoc precice::SolverInterface::getMaxTimeStepSize()
+ * @copydoc precice::Participant::getMaxTimeStepSize()
  *
  */
 PRECICE_API void precicef_get_max_time_step_size_(double *maxTimeStepSize);
@@ -151,7 +151,7 @@ PRECICE_API void precicef_get_max_time_step_size_(double *maxTimeStepSize);
  * IN:  -
  * OUT: isRequired(1:true, 0:false)
  *
- * @copydoc precice::SolverInterface::requiresInitialData()
+ * @copydoc precice::Participant::requiresInitialData()
  */
 PRECICE_API void precicef_requires_initial_data_(
     int *isRequired);
@@ -164,7 +164,7 @@ PRECICE_API void precicef_requires_initial_data_(
  * IN:  -
  * OUT: isRequired(1:true, 0:false)
  *
- * @copydoc precice::SolverInterface::requiresReadingCheckpoint()
+ * @copydoc precice::Participant::requiresReadingCheckpoint()
  */
 PRECICE_API void precicef_requires_reading_checkpoint_(
     int *isRequired);
@@ -177,7 +177,7 @@ PRECICE_API void precicef_requires_reading_checkpoint_(
  * IN:  -
  * OUT: isRequired(1:true, 0:false)
  *
- * @copydoc precice::SolverInterface::requiresWritingCheckpoint()
+ * @copydoc precice::Participant::requiresWritingCheckpoint()
  */
 PRECICE_API void precicef_requires_writing_checkpoint_(
     int *isRequired);
@@ -191,7 +191,7 @@ PRECICE_API void precicef_requires_writing_checkpoint_(
  * IN:  meshName
  * OUT: hasMesh(1:true, 0:false)
  *
- * @copydoc precice::SolverInterface::hasMesh()
+ * @copydoc precice::Participant::hasMesh()
  *
  */
 PRECICE_API void precicef_has_mesh_(
@@ -209,7 +209,7 @@ PRECICE_API void precicef_has_mesh_(
  * IN:  mesh, data, meshNameLength, dataNameLength
  * OUT: hasData(1:true, 0:false)
  *
- * @copydoc precice::SolverInterface::hasData()
+ * @copydoc precice::Participant::hasData()
  *
  */
 PRECICE_API void precicef_has_data_(
@@ -228,7 +228,7 @@ PRECICE_API void precicef_has_data_(
  * IN:  mesh, meshNameLength
  * OUT: required(1:true, 0:false)
  *
- * @copydoc precice::SolverInterface::requiresMeshConnectivityFor()
+ * @copydoc precice::Participant::requiresMeshConnectivityFor()
  */
 PRECICE_API void precicef_requires_mesh_connectivity_for_(
     const char *meshName,
@@ -245,7 +245,7 @@ PRECICE_API void precicef_requires_mesh_connectivity_for_(
  * IN:  mesh, position, meshNameLength
  * OUT: vertexID
  *
- * @copydoc precice::SolverInterface::setMeshVertex()
+ * @copydoc precice::Participant::setMeshVertex()
  *
  */
 PRECICE_API void precicef_set_vertex_(
@@ -263,7 +263,7 @@ PRECICE_API void precicef_set_vertex_(
  * IN:  mesh, meshNameLength
  * OUT: meshSize
  *
- * @copydoc precice::SolverInterface::getMeshVertexSize()
+ * @copydoc precice::Participant::getMeshVertexSize()
  *
  */
 PRECICE_API void precicef_get_mesh_vertex_size_(
@@ -282,7 +282,7 @@ PRECICE_API void precicef_get_mesh_vertex_size_(
  * IN:  mesh, size, positions, meshNameLength
  * OUT: positionIDs
  *
- * @copydoc precice::SolverInterface::setMeshVertices()
+ * @copydoc precice::Participant::setMeshVertices()
  *
  */
 PRECICE_API void precicef_set_vertices_(
@@ -302,7 +302,7 @@ PRECICE_API void precicef_set_vertices_(
  * IN:  mesh, firstVertexID, secondVertexID, meshNameLength
  * OUT: -
  *
- * @copydoc precice::SolverInterface::setMeshEdge()
+ * @copydoc precice::Participant::setMeshEdge()
  *
  */
 PRECICE_API void precicef_set_edge_(
@@ -321,7 +321,7 @@ PRECICE_API void precicef_set_edge_(
  * IN:  mesh, size, vertices, meshNameLength
  * OUT: -
  *
- * @copydoc precice::SolverInterface::setMeshEdges()
+ * @copydoc precice::Participant::setMeshEdges()
  *
  */
 PRECICE_API void precicef_set_mesh_edges_(
@@ -341,7 +341,7 @@ PRECICE_API void precicef_set_mesh_edges_(
  * IN:  mesh, firstVertexID, secondVertexID, thirdVertexID, meshNameLength
  * OUT: -
  *
- * @copydoc precice::SolverInterface::setMeshTriangle()
+ * @copydoc precice::Participant::setMeshTriangle()
  *
  */
 PRECICE_API void precicef_set_triangle_(
@@ -361,7 +361,7 @@ PRECICE_API void precicef_set_triangle_(
  * IN:  mesh, size, vertices, meshNameLength
  * OUT: -
  *
- * @copydoc precice::SolverInterface::setMeshTriangles()
+ * @copydoc precice::Participant::setMeshTriangles()
  *
  */
 PRECICE_API void precicef_set_mesh_edges_(
@@ -382,7 +382,7 @@ PRECICE_API void precicef_set_mesh_edges_(
  * IN:  mesh, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID, meshNameLength
  * OUT: -
  *
- * @copydoc precice::SolverInterface::setMeshQuad()
+ * @copydoc precice::Participant::setMeshQuad()
  *
  */
 PRECICE_API void precicef_set_quad_(
@@ -403,7 +403,7 @@ PRECICE_API void precicef_set_quad_(
  * IN:  mesh, size, vertices, meshNameLength
  * OUT: -
  *
- * @copydoc precice::SolverInterface::setMeshQuads()
+ * @copydoc precice::Participant::setMeshQuads()
  *
  */
 PRECICE_API void precicef_set_mesh_quads_(
@@ -424,7 +424,7 @@ PRECICE_API void precicef_set_mesh_quads_(
  * IN:  mesh, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID, meshNameLength
  * OUT: -
  *
- * @copydoc precice::SolverInterface::setMeshTetrahedron()
+ * @copydoc precice::Participant::setMeshTetrahedron()
  *
  */
 PRECICE_API void precicef_set_tetrahedron(
@@ -445,7 +445,7 @@ PRECICE_API void precicef_set_tetrahedron(
  * IN:  mesh, size, vertices, meshNameLength
  * OUT: -
  *
- * @copydoc precice::SolverInterface::setMeshTetrahedra()
+ * @copydoc precice::Participant::setMeshTetrahedra()
  *
  */
 PRECICE_API void precicef_set_mesh_tetrahedra_(
@@ -466,7 +466,7 @@ PRECICE_API void precicef_set_mesh_tetrahedra_(
  * IN:  mesh, data, size, valueIndices, values, meshNameLength, dataNameLength
  * OUT: -
  *
- * @copydoc precice::SolverInterface::writeData
+ * @copydoc precice::Participant::writeData
  *
  */
 PRECICE_API void precicef_write_data_(
@@ -491,7 +491,7 @@ PRECICE_API void precicef_write_data_(
  * IN:  mesh, data, size, valueIndices, meshNameLength, dataNameLength
  * OUT: values
  *
- * @copydoc precice::SolverInterface::readData
+ * @copydoc precice::Participant::readData
  *
  */
 PRECICE_API void precicef_read_data_(
@@ -523,7 +523,7 @@ PRECICE_API void precicef_get_version_information_(
  * IN:  dataID
  * OUT: required(1:true, 0:false)
  *
- * @copydoc precice::SolverInterface::requiresGradientDataFor
+ * @copydoc precice::Participant::requiresGradientDataFor
  */
 PRECICE_API void precicef_requires_gradient_data_for_(
     const char *meshName,
@@ -538,19 +538,19 @@ PRECICE_API void precicef_requires_gradient_data_for_(
  *   CHARACTER dataName(*),
  *   INTEGER size,
  *   INTEGER valueIndices,
- *   DOUBLE PRECISION gradientValues )
+ *   DOUBLE PRECISION gradients )
  *
- * IN:  mesh, data, size, valueIndices, gradientValues, meshNameLength, dataNameLength
+ * IN:  mesh, data, size, valueIndices, gradients, meshNameLength, dataNameLength
  * OUT: -
  *
- * @copydoc precice::SolverInterface::writeGradientData
+ * @copydoc precice::Participant::writeGradientData
  */
 PRECICE_API void precicef_write_gradient_data_(
     const char *  meshName,
     const char *  dataName,
     const int *   size,
     const int *   valueIndices,
-    const double *gradientValues,
+    const double *gradients,
     int           meshNameLength,
     int           dataNameLength);
 
@@ -563,7 +563,7 @@ PRECICE_API void precicef_write_gradient_data_(
  * IN:  mesh, bounding_box, meshNameLength
  * OUT: -
  *
- * @copydoc precice::SolverInterface::setMeshAccessRegion()
+ * @copydoc precice::Participant::setMeshAccessRegion()
  */
 PRECICE_API void precicef_set_mesh_access_region_(
     const char *  meshName,
@@ -581,7 +581,7 @@ PRECICE_API void precicef_set_mesh_access_region_(
  * IN:  mesh, size, meshNameLength
  * OUT: ids, coordinates
  *
- * @copydoc precice::SolverInterface::getMeshVerticesAndIDs()
+ * @copydoc precice::Participant::getMeshVerticesAndIDs()
  */
 PRECICE_API void precicef_get_mesh_vertices_and_ids_(
     const char *meshName,

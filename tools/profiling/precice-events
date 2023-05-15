@@ -1,12 +1,21 @@
 #!/usr/bin/python
 
-import json
+# Import the fastest jsons library available
+try:
+    import ujson as json
+except ImportError:
+    try:
+        import simplejson as json
+    except ImportError:
+        import json
+
 import csv
 import sys
 import datetime
 import argparse
 import os
 from collections import namedtuple
+import functools
 
 
 def mergedDict(dict1, dict2):
@@ -15,7 +24,7 @@ def mergedDict(dict1, dict2):
     return merged
 
 def requireModules(modules):
-    import importlib
+    import importlib.util
     notFound = [m for m in modules if importlib.util.find_spec(m) is None]
     if (notFound):
         def concat(l):
@@ -32,7 +41,7 @@ def requireModules(modules):
 def loadRobust(content):
     try:
         return json.loads(content)
-    except json.decoder.JSONDecodeError:
+    except:
         print("Damaged input detected")
         content += "]}"
         return json.loads(content)
@@ -63,15 +72,9 @@ def printWide(df):
     for index, row in df.fillna("").iterrows():
         print(rowfmt.format(*row.to_list()))
 
-
-def ns_to_unit(obj, unit):
-    import numbers
-    if not isinstance(obj, (numbers.Integral, numbers.Real)):
-        import pandas
-        if isinstance(obj, (pandas.Timedelta, pandas.Timestamp)):
-            return ns_to_unit(obj.value, unit)
-
-    return obj * {
+@functools.lru_cache
+def ns_to_unit_factor(unit):
+    return {
         'ns': 1,
         'us': 1e-3,
         'ms': 1e-6,
@@ -80,6 +83,15 @@ def ns_to_unit(obj, unit):
         'h': 1e-9/3600
     }[unit]
 
+def ns_to_unit(obj, unit):
+    factor = ns_to_unit_factor(unit)
+    import numbers
+    if not isinstance(obj, (numbers.Integral, numbers.Real)):
+        import pandas
+        if isinstance(obj, (pandas.Timedelta, pandas.Timestamp)):
+            return factor * obj.value
+
+    return obj * factor
 
 def alignEvents(events):
     """Aligns passed events of multiple ranks and or participants.
@@ -297,6 +309,9 @@ class RankData:
         df["eid"] = df["eid"].apply(lambda id: eventLookup[id])
         return df
 
+    def toListOfTuples(self, eventLookup):
+        for e in self.events:
+            yield (self.name, self.rank, eventLookup[e["eid"]], int(e["ts"]), int(e["dur"]))
 
 class Run:
     def __init__(self, filename):
@@ -325,7 +340,8 @@ class Run:
         return self.eventLookup[int(id)]
 
     def toTrace(self, selectRanks):
-        print(f"Selected ranks {selectRanks}")
+        if selectRanks:
+            print(f'Selected ranks: {",".join(map(str,sorted(selectRanks)))}')
 
         def filterop(rank):
             return True if not selectRanks else rank.rank in selectRanks
@@ -363,48 +379,47 @@ class Run:
         return {"traceEvents": metaEvents + mainEvents}
 
     def toExportList(self, unit=None):
-        return [
-            {
-                "participant": rank.name,
-                "rank": rank.rank,
-                "size": rank.size,
-                "event": self.lookupEvent(e["eid"]),
-                "timestamp": e["ts"],
-                "duration": ns_to_unit(e["dur"]*1e3, unit) if unit else e["dur"],
-                "data": "" if "data" not in e else str(dict(zip(map(self.lookupEvent, e["data"].keys()), e["data"].values())))
-            }
-            for rank in self.iterRanks()
-            for e in rank.events
-        ]
+        factor = ns_to_unit_factor(unit)*1e3 if unit else 1
+        for rank in self.iterRanks():
+            for e in rank.events:
+                yield (
+                    rank.name,
+                    rank.rank,
+                    rank.size,
+                    self.lookupEvent(e["eid"]),
+                    e["ts"],
+                    e["dur"] * factor,
+                    "" if "data" not in e else str(dict(zip(map(self.lookupEvent, e["data"].keys()), e["data"].values())))
+                )
 
     def toDataFrame(self):
         import pandas
-        return pandas.concat([
-            rank.toDataFrame(self.eventLookup)
-            for rank in self.iterRanks()
-        ])
+        import itertools
+        columns=["participant", "rank", "eid", "ts", "dur" ]
+        df = pandas.DataFrame(itertools.chain.from_iterable(map(lambda r: r.toListOfTuples(self.eventLookup), self.iterRanks())), columns=columns)
+        df["dur"] = pandas.to_timedelta(df["dur"], unit='microseconds')
+        df["ts"] = pandas.to_datetime(df["ts"], unit="us", origin="unix")
+        return df
 
 
 def traceCommand(eventfile, outfile, rankfilter, limit):
     run = Run(eventfile)
     selection = set().union(rankfilter if rankfilter else []).union(range(limit) if limit else [])
     traces = run.toTrace(selection)
-    json_object = json.dumps(traces, indent=2)
     print(f"Writing to {outfile}")
     with open(outfile, "w") as outfile:
-        outfile.write(json_object)
+        json.dump(traces, outfile)
     return 0
 
 
 def exportCommand(eventfile, outfile, unit):
     run = Run(eventfile)
-    total = run.toExportList(unit)
-    fieldnames = total[0].keys()
+    fieldnames = [ "participant", "rank", "size", "event", "timestamp", "duration", "data"]
     print(f"Writing to {outfile}")
     with open(outfile, 'w', newline='') as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(total)
+        writer = csv.writer(csvfile)
+        writer.writerow(fieldnames)
+        writer.writerows(run.toExportList(unit))
     return 0
 
 
@@ -420,7 +435,7 @@ def analyzeCommand(eventfile, participant, outfile=None, unit='us'):
     df.drop("participant", axis=1, inplace=True)
 
     # Convert duration to requested unit
-    df.dur = df.dur.apply(lambda td: ns_to_unit(td, unit))
+    df["dur"] = df["dur"].apply(lambda x: x.value * ns_to_unit_factor(unit))
     print(f"Output timing are in {unit}.")
 
     ranks = df["rank"].unique()
@@ -464,6 +479,54 @@ def analyzeCommand(eventfile, participant, outfile=None, unit='us'):
 
     return 0
 
+def histogramCommand(eventfile, outfile, participant, event, rank, bins, unit='us'):
+    requireModules(["pandas", "matplotlib"])
+    import pandas
+    import matplotlib.pyplot as plt
+
+    run = Run(eventfile)
+    df = run.toDataFrame()
+
+    # Check user input
+    assert participant in df["participant"].unique(), f"Given participant {participant} doesn't exist."
+    assert event in df["eid"].unique(), f"Given event {event} doesn't exist."
+    if not rank is None:
+        assert rank in df["rank"].unique(), f"Given rank {rank} doesn't exist."
+
+
+    # Filter by participant and event
+    df = df[(df["participant"] == participant) & (df["eid"] == event)]
+    df.drop(["participant", "eid"], axis=1, inplace=True)
+
+    if not rank is None:
+        df = df[df["rank"] == rank]
+
+    # Convert duration to requested unit
+    df.dur = df.dur.apply(lambda td: ns_to_unit(td, unit))
+
+    durations = df["dur"].to_list()
+
+    ranks = df["rank"].unique()
+    rankDesc = "ranks: " + ",".join(map(str,ranks)) if len(ranks) < 5 else f"{len(ranks)} ranks"
+
+    fig, ax = plt.subplots(figsize=(14,7), tight_layout=True)
+    ax.set_title(f"Histogram of event \"{event}\" on {participant} ({rankDesc})")
+    ax.set_xlabel(f"Duration [{unit}]")
+    ax.set_ylabel("Occurrence")
+    hist_data = ax.hist(durations, bins=bins, histtype="barstacked", align="mid")
+    ax.bar_label(hist_data[2])
+    binborders = hist_data[1]
+    ax.set_xticks(binborders, labels=[ f"{d:,.2f}" for d in binborders], rotation=90)
+    ax.set_xlim(left=min(binborders), right=max(binborders))
+    ax.grid(axis="x")
+
+    if (outfile):
+        print(f"Writing to {outfile}")
+        plt.savefig(outfile)
+    else:
+        plt.show()
+
+    return 0
 
 def detectFiles(files):
     # Default to loading from the local directory
@@ -594,6 +657,25 @@ if __name__ == '__main__':
     analyze.add_argument("-o", "--output",
                          help="Write the result to CSV file")
 
+    def try_int(s):
+        try:
+            return int(s)
+        except:
+            return s
+
+    histogram_help = """Plots the duration distribution of a single event of a given solver.
+    Event durations are displayed in the unit of choice.
+    """
+    histogram = subparsers.add_parser('histogram',
+                                    help=histogram_help.splitlines()[0], description=histogram_help)
+    histogram.add_argument("-o", "--output", default=None, help="Write to file instead of displaying the plot")
+    histogram.add_argument("-r", "--rank", type=int, default=None, help="Display only the given rank")
+    histogram.add_argument("-b", "--bins", type=try_int, default="fd", help="Number of bins or strategy. Must be a valid argument to numpy.histogram_bin_edges")
+    histogram.add_argument("participant", type=str, help="The participant to analyze")
+    histogram.add_argument("event", type=str, help="The event to analyze")
+    histogram.add_argument("eventfile", nargs="?", type=str, default="events.json",
+                         help="The event file to process")
+
     trace_help = "Transform events to the Trace Event Format."
     trace = subparsers.add_parser('trace',
                                   help=trace_help.splitlines()[0], description=trace_help)
@@ -626,6 +708,7 @@ if __name__ == '__main__':
         "trace": lambda ns: traceCommand(ns.eventfile, ns.output, ns.rank, ns.limit),
         "export": lambda ns: exportCommand(ns.eventfile, ns.output, ns.unit),
         "analyze": lambda ns: analyzeCommand(ns.eventfile, ns.participant, ns.output,  ns.unit),
+        "histogram": lambda ns: histogramCommand(ns.eventfile, ns.output, ns.participant, ns.event, ns.rank, ns.bins, ns.unit),
         "merge": lambda ns: mergeCommand(ns.files, ns.output, not ns.no_align)
     }
 

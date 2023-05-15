@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/Participant.hpp>
 #include <vector>
 
 /**
@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE(SendMeshToMultipleParticipants)
     meshName = "MeshC";
   }
 
-  precice::SolverInterface interface(context.name, context.config(), 0, 1);
+  precice::Participant interface(context.name, context.config(), 0, 1);
 
   const precice::VertexID vertexID = interface.setMeshVertex(meshName, vertex);
   auto                    dataName = "Data";

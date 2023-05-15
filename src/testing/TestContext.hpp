@@ -94,7 +94,7 @@ static_assert(std::is_same<ParticipantState &, decltype(""_on(2_ranks))>::value,
 /** Defines requirements for a test setup
  *
  * @note These are used for unit-tests.
- * Integration tests calling the SolverInterface initialize required components themselves.
+ * Integration tests calling the Participant initialize required components themselves.
  */
 enum class Require {
   /// Require to initialize PETSc. This implies the initialization of Events

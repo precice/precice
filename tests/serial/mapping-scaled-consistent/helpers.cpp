@@ -2,8 +2,8 @@
 
 #include "helpers.hpp"
 #include "math/geometry.hpp"
-#include "precice/SolverInterface.hpp"
-#include "precice/impl/SolverInterfaceImpl.hpp"
+#include "precice/Participant.hpp"
+#include "precice/impl/ParticipantImpl.hpp"
 #include "testing/Testing.hpp"
 
 void testQuadMappingScaledConsistent(const std::string configFile, const TestContext &context)
@@ -31,71 +31,71 @@ void testQuadMappingScaledConsistent(const std::string configFile, const TestCon
                             precice::math::geometry::triangleArea(coordOneA, coordOneC, coordOneD) * (valOneA + valOneC + valOneD) / 3.0;
 
   if (context.isNamed("SolverOne")) {
-    precice::SolverInterface interface("SolverOne", configFile, 0, 1);
+    precice::Participant participant("SolverOne", configFile, 0, 1);
     // namespace is required because we are outside the fixture
     auto meshOneID = "MeshOne";
 
     // Setup mesh one.
-    int idA = interface.setMeshVertex(meshOneID, coordOneA);
-    int idB = interface.setMeshVertex(meshOneID, coordOneB);
-    int idC = interface.setMeshVertex(meshOneID, coordOneC);
-    int idD = interface.setMeshVertex(meshOneID, coordOneD);
+    int idA = participant.setMeshVertex(meshOneID, coordOneA);
+    int idB = participant.setMeshVertex(meshOneID, coordOneB);
+    int idC = participant.setMeshVertex(meshOneID, coordOneC);
+    int idD = participant.setMeshVertex(meshOneID, coordOneD);
 
-    interface.setMeshQuad(meshOneID, idA, idB, idC, idD);
+    participant.setMeshQuad(meshOneID, idA, idB, idC, idD);
 
-    auto &mesh = testing::WhiteboxAccessor::impl(interface).mesh("MeshOne");
+    auto &mesh = testing::WhiteboxAccessor::impl(participant).mesh("MeshOne");
     BOOST_REQUIRE(mesh.vertices().size() == 4);
     BOOST_REQUIRE(mesh.edges().empty());
     BOOST_REQUIRE(mesh.triangles().size() == 2);
 
     // Initialize, thus sending the mesh.
-    interface.initialize();
-    double maxDt = interface.getMaxTimeStepSize();
+    participant.initialize();
+    double maxDt = participant.getMaxTimeStepSize();
     BOOST_TEST(mesh.edges().size() == 5);
     BOOST_TEST(mesh.triangles().size() == 2);
-    BOOST_TEST(interface.isCouplingOngoing(), "Sending participant should have to advance once!");
+    BOOST_TEST(participant.isCouplingOngoing(), "Sending participant should have to advance once!");
 
     // Write the data to be send.
     auto   dataAID  = "DataOne";
     int    ids[]    = {idA, idB, idC, idD};
     double values[] = {valOneA, valOneB, valOneC, valOneD};
-    interface.writeData(meshOneID, dataAID, ids, values);
+    participant.writeData(meshOneID, dataAID, ids, values);
 
     // Advance, thus send the data to the receiving partner.
-    interface.advance(maxDt);
-    BOOST_TEST(!interface.isCouplingOngoing(), "Sending participant should have to advance once!");
-    interface.finalize();
+    participant.advance(maxDt);
+    BOOST_TEST(!participant.isCouplingOngoing(), "Sending participant should have to advance once!");
+    participant.finalize();
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    precice::SolverInterface interface("SolverTwo", configFile, 0, 1);
+    precice::Participant participant("SolverTwo", configFile, 0, 1);
     // namespace is required because we are outside the fixture
     auto meshTwoID = "MeshTwo";
 
     // Setup receiving mesh.
-    int idA = interface.setMeshVertex(meshTwoID, coordTwoA);
-    int idB = interface.setMeshVertex(meshTwoID, coordTwoB);
-    int idC = interface.setMeshVertex(meshTwoID, coordTwoC);
+    int idA = participant.setMeshVertex(meshTwoID, coordTwoA);
+    int idB = participant.setMeshVertex(meshTwoID, coordTwoB);
+    int idC = participant.setMeshVertex(meshTwoID, coordTwoC);
 
-    interface.setMeshTriangle(meshTwoID, idA, idB, idC);
+    participant.setMeshTriangle(meshTwoID, idA, idB, idC);
 
     // Initialize, thus receive the data and map.
-    interface.initialize();
-    double maxDt = interface.getMaxTimeStepSize();
-    BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant should have to advance once!");
+    participant.initialize();
+    double maxDt = participant.getMaxTimeStepSize();
+    BOOST_TEST(participant.isCouplingOngoing(), "Receiving participant should have to advance once!");
 
     // Read the mapped data from the mesh.
     auto   dataAID = "DataOne";
     int    ids[]   = {idA, idB, idC};
     double values[3];
-    interface.readData(meshTwoID, dataAID, ids, maxDt, values);
+    participant.readData(meshTwoID, dataAID, ids, maxDt, values);
 
     double calculatedIntegral = precice::math::geometry::triangleArea(coordTwoA, coordTwoB, coordTwoC) * (values[0] + values[1] + values[2]) / 3.0;
     BOOST_TEST(expectedIntegral == calculatedIntegral);
 
     // Verify that there is only one time step necessary.
-    interface.advance(maxDt);
-    BOOST_TEST(!interface.isCouplingOngoing(), "Receiving participant should have to advance once!");
-    interface.finalize();
+    participant.advance(maxDt);
+    BOOST_TEST(!participant.isCouplingOngoing(), "Receiving participant should have to advance once!");
+    participant.finalize();
   }
 }
 
@@ -124,70 +124,70 @@ void testQuadMappingScaledConsistentVolumetric(const std::string configFile, con
   double expectedIntegral = 7.0 / 3;
 
   if (context.isNamed("SolverOne")) {
-    precice::SolverInterface interface("SolverOne", configFile, 0, 1);
+    precice::Participant participant("SolverOne", configFile, 0, 1);
     // namespace is required because we are outside the fixture
     auto meshOneID = "MeshOne";
 
     // Setup mesh one.
-    int idA     = interface.setMeshVertex(meshOneID, coordOneA);
-    int idB     = interface.setMeshVertex(meshOneID, coordOneB);
-    int idC     = interface.setMeshVertex(meshOneID, coordOneC);
-    int idD     = interface.setMeshVertex(meshOneID, coordOneD);
-    int idExtra = interface.setMeshVertex(meshOneID, coordOneExtra);
+    int idA     = participant.setMeshVertex(meshOneID, coordOneA);
+    int idB     = participant.setMeshVertex(meshOneID, coordOneB);
+    int idC     = participant.setMeshVertex(meshOneID, coordOneC);
+    int idD     = participant.setMeshVertex(meshOneID, coordOneD);
+    int idExtra = participant.setMeshVertex(meshOneID, coordOneExtra);
 
-    interface.setMeshTriangle(meshOneID, idA, idB, idExtra);
-    interface.setMeshTriangle(meshOneID, idA, idD, idExtra);
-    interface.setMeshTriangle(meshOneID, idB, idC, idExtra);
+    participant.setMeshTriangle(meshOneID, idA, idB, idExtra);
+    participant.setMeshTriangle(meshOneID, idA, idD, idExtra);
+    participant.setMeshTriangle(meshOneID, idB, idC, idExtra);
 
-    auto &mesh = testing::WhiteboxAccessor::impl(interface).mesh("MeshOne");
+    auto &mesh = testing::WhiteboxAccessor::impl(participant).mesh("MeshOne");
     BOOST_REQUIRE(mesh.vertices().size() == 5);
     BOOST_REQUIRE(mesh.triangles().size() == 3);
 
     // Initialize, thus sending the mesh.
-    interface.initialize();
-    double maxDt = interface.getMaxTimeStepSize();
-    BOOST_TEST(interface.isCouplingOngoing(), "Sending participant should have to advance once!");
+    participant.initialize();
+    double maxDt = participant.getMaxTimeStepSize();
+    BOOST_TEST(participant.isCouplingOngoing(), "Sending participant should have to advance once!");
 
     // Write the data to be send.
     auto   dataAID  = "DataOne";
     int    ids[]    = {idA, idB, idC, idD, idExtra};
     double values[] = {valOneA, valOneB, valOneC, valOneD, valOneExtra};
-    interface.writeData(meshOneID, dataAID, ids, values);
+    participant.writeData(meshOneID, dataAID, ids, values);
 
     // Advance, thus send the data to the receiving partner.
-    interface.advance(maxDt);
-    BOOST_TEST(!interface.isCouplingOngoing(), "Sending participant should have to advance once!");
-    interface.finalize();
+    participant.advance(maxDt);
+    BOOST_TEST(!participant.isCouplingOngoing(), "Sending participant should have to advance once!");
+    participant.finalize();
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    precice::SolverInterface interface("SolverTwo", configFile, 0, 1);
+    precice::Participant participant("SolverTwo", configFile, 0, 1);
     // namespace is required because we are outside the fixture
     auto meshTwoID = "MeshTwo";
 
     // Setup receiving mesh.
-    int idA = interface.setMeshVertex(meshTwoID, coordTwoA);
-    int idB = interface.setMeshVertex(meshTwoID, coordTwoB);
-    int idC = interface.setMeshVertex(meshTwoID, coordTwoC);
-    int idD = interface.setMeshVertex(meshTwoID, coordTwoD);
+    int idA = participant.setMeshVertex(meshTwoID, coordTwoA);
+    int idB = participant.setMeshVertex(meshTwoID, coordTwoB);
+    int idC = participant.setMeshVertex(meshTwoID, coordTwoC);
+    int idD = participant.setMeshVertex(meshTwoID, coordTwoD);
 
-    interface.setMeshEdge(meshTwoID, idA, idB);
-    interface.setMeshEdge(meshTwoID, idB, idC);
-    interface.setMeshEdge(meshTwoID, idA, idC);
+    participant.setMeshEdge(meshTwoID, idA, idB);
+    participant.setMeshEdge(meshTwoID, idB, idC);
+    participant.setMeshEdge(meshTwoID, idA, idC);
 
-    interface.setMeshTriangle(meshTwoID, idA, idB, idC);
-    interface.setMeshTriangle(meshTwoID, idA, idD, idC);
+    participant.setMeshTriangle(meshTwoID, idA, idB, idC);
+    participant.setMeshTriangle(meshTwoID, idA, idD, idC);
 
     // Initialize, thus receive the data and map.
-    interface.initialize();
-    double maxDt = interface.getMaxTimeStepSize();
-    BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant should have to advance once!");
+    participant.initialize();
+    double maxDt = participant.getMaxTimeStepSize();
+    BOOST_TEST(participant.isCouplingOngoing(), "Receiving participant should have to advance once!");
 
     // Read the mapped data from the mesh.
     auto dataAID = "DataOne";
 
     int    ids[] = {idA, idB, idC, idD};
     double values[4];
-    interface.readData(meshTwoID, dataAID, ids, maxDt, values);
+    participant.readData(meshTwoID, dataAID, ids, maxDt, values);
 
     double calculatedIntegral = precice::math::geometry::triangleArea(coordTwoA, coordTwoB, coordTwoC) * (values[0] + values[1] + values[2]) / 3.0 +
                                 precice::math::geometry::triangleArea(coordTwoA, coordTwoD, coordTwoC) * (values[0] + values[3] + values[2]) / 3.0;
@@ -195,9 +195,9 @@ void testQuadMappingScaledConsistentVolumetric(const std::string configFile, con
     BOOST_TEST(values[0] = valOneA * 8.0 / 7);
 
     // Verify that there is only one time step necessary.
-    interface.advance(maxDt);
-    BOOST_TEST(!interface.isCouplingOngoing(), "Receiving participant should have to advance once!");
-    interface.finalize();
+    participant.advance(maxDt);
+    BOOST_TEST(!participant.isCouplingOngoing(), "Receiving participant should have to advance once!");
+    participant.finalize();
   }
 }
 
@@ -226,72 +226,72 @@ void testTetraScaledConsistentVolumetric(const std::string configFile, const Tes
   double expectedIntegral = 6.5 / 12;
 
   if (context.isNamed("SolverOne")) {
-    precice::SolverInterface interface("SolverOne", configFile, 0, 1);
+    precice::Participant participant("SolverOne", configFile, 0, 1);
     // namespace is required because we are outside the fixture
     auto meshOneID = "MeshOne";
 
     // Setup mesh one.
-    int idA     = interface.setMeshVertex(meshOneID, coordOneA);
-    int idB     = interface.setMeshVertex(meshOneID, coordOneB);
-    int idC     = interface.setMeshVertex(meshOneID, coordOneC);
-    int idD     = interface.setMeshVertex(meshOneID, coordOneD);
-    int idExtra = interface.setMeshVertex(meshOneID, coordOneExtra);
+    int idA     = participant.setMeshVertex(meshOneID, coordOneA);
+    int idB     = participant.setMeshVertex(meshOneID, coordOneB);
+    int idC     = participant.setMeshVertex(meshOneID, coordOneC);
+    int idD     = participant.setMeshVertex(meshOneID, coordOneD);
+    int idExtra = participant.setMeshVertex(meshOneID, coordOneExtra);
 
-    interface.setMeshTetrahedron(meshOneID, idA, idB, idD, idExtra);
-    interface.setMeshTetrahedron(meshOneID, idC, idB, idD, idExtra);
+    participant.setMeshTetrahedron(meshOneID, idA, idB, idD, idExtra);
+    participant.setMeshTetrahedron(meshOneID, idC, idB, idD, idExtra);
 
-    auto &mesh = testing::WhiteboxAccessor::impl(interface).mesh("MeshOne");
+    auto &mesh = testing::WhiteboxAccessor::impl(participant).mesh("MeshOne");
     BOOST_REQUIRE(mesh.vertices().size() == 5);
     BOOST_REQUIRE(mesh.tetrahedra().size() == 2);
 
     // Initialize, thus sending the mesh.
-    interface.initialize();
-    double maxDt = interface.getMaxTimeStepSize();
-    BOOST_TEST(interface.isCouplingOngoing(), "Sending participant should have to advance once!");
+    participant.initialize();
+    double maxDt = participant.getMaxTimeStepSize();
+    BOOST_TEST(participant.isCouplingOngoing(), "Sending participant should have to advance once!");
 
     // Write the data to be send.
     auto   dataAID  = "DataOne";
     int    ids[]    = {idA, idB, idC, idD, idExtra};
     double values[] = {valOneA, valOneB, valOneC, valOneD, valOneExtra};
-    interface.writeData(meshOneID, dataAID, ids, values);
+    participant.writeData(meshOneID, dataAID, ids, values);
 
     // Advance, thus send the data to the receiving partner.
-    interface.advance(maxDt);
-    BOOST_TEST(!interface.isCouplingOngoing(), "Sending participant should have to advance once!");
-    interface.finalize();
+    participant.advance(maxDt);
+    BOOST_TEST(!participant.isCouplingOngoing(), "Sending participant should have to advance once!");
+    participant.finalize();
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    precice::SolverInterface interface("SolverTwo", configFile, 0, 1);
+    precice::Participant participant("SolverTwo", configFile, 0, 1);
     // namespace is required because we are outside the fixture
     auto meshTwoID = "MeshTwo";
 
     // Setup receiving mesh.
-    int idA = interface.setMeshVertex(meshTwoID, coordTwoA);
-    int idB = interface.setMeshVertex(meshTwoID, coordTwoB);
-    int idC = interface.setMeshVertex(meshTwoID, coordTwoC);
-    int idD = interface.setMeshVertex(meshTwoID, coordTwoD);
+    int idA = participant.setMeshVertex(meshTwoID, coordTwoA);
+    int idB = participant.setMeshVertex(meshTwoID, coordTwoB);
+    int idC = participant.setMeshVertex(meshTwoID, coordTwoC);
+    int idD = participant.setMeshVertex(meshTwoID, coordTwoD);
 
-    interface.setMeshTetrahedron(meshTwoID, idA, idB, idC, idD);
+    participant.setMeshTetrahedron(meshTwoID, idA, idB, idC, idD);
 
     // Initialize, thus receive the data and map.
-    interface.initialize();
-    double maxDt = interface.getMaxTimeStepSize();
-    BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant should have to advance once!");
+    participant.initialize();
+    double maxDt = participant.getMaxTimeStepSize();
+    BOOST_TEST(participant.isCouplingOngoing(), "Receiving participant should have to advance once!");
 
     // Read the mapped data from the mesh.
     auto   dataAID = "DataOne";
     double values[4];
     int    ids[] = {idA, idB, idC, idD};
-    interface.readData(meshTwoID, dataAID, ids, maxDt, values);
+    participant.readData(meshTwoID, dataAID, ids, maxDt, values);
 
     double calculatedIntegral = precice::math::geometry::tetraVolume(coordTwoA, coordTwoB, coordTwoC, coordTwoD) * (values[0] + values[1] + values[2] + values[3]) / 4.0;
     BOOST_TEST(expectedIntegral == calculatedIntegral);
     BOOST_TEST(values[0] == valOneA * 1.3);
 
     // Verify that there is only one time step necessary.
-    interface.advance(maxDt);
-    BOOST_TEST(!interface.isCouplingOngoing(), "Receiving participant should have to advance once!");
-    interface.finalize();
+    participant.advance(maxDt);
+    BOOST_TEST(!participant.isCouplingOngoing(), "Receiving participant should have to advance once!");
+    participant.finalize();
   }
 }
 

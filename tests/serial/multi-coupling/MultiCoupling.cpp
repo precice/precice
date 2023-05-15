@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/Participant.hpp>
 #include <vector>
 
 using namespace precice;
@@ -34,8 +34,8 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
   if (context.isNamed("SOLIDZ1") ||
       context.isNamed("SOLIDZ2") ||
       context.isNamed("SOLIDZ3")) {
-    precice::SolverInterface precice(context.name, context.config(), 0, 1);
-    std::string              meshName, dataWriteID, dataReadID;
+    precice::Participant precice(context.name, context.config(), 0, 1);
+    std::string          meshName, dataWriteID, dataReadID;
     if (context.isNamed("SOLIDZ1")) {
       meshName    = "SOLIDZ_Mesh1";
       dataWriteID = "Displacements1";
@@ -85,13 +85,13 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
 
   } else {
     BOOST_TEST(context.isNamed("NASTIN"));
-    precice::SolverInterface precice("NASTIN", context.config(), 0, 1);
-    auto                     meshName1    = "NASTIN_Mesh1";
-    auto                     meshName2    = "NASTIN_Mesh2";
-    auto                     meshName3    = "NASTIN_Mesh3";
-    auto                     dataWriteID1 = "Forces1";
-    auto                     dataWriteID2 = "Forces2";
-    auto                     dataWriteID3 = "Forces3";
+    precice::Participant precice("NASTIN", context.config(), 0, 1);
+    auto                 meshName1    = "NASTIN_Mesh1";
+    auto                 meshName2    = "NASTIN_Mesh2";
+    auto                 meshName3    = "NASTIN_Mesh3";
+    auto                 dataWriteID1 = "Forces1";
+    auto                 dataWriteID2 = "Forces2";
+    auto                 dataWriteID3 = "Forces3";
     BOOST_TEST(precice.getMeshDimensions(meshName1) == 2);
     BOOST_TEST(precice.getMeshDimensions(meshName2) == 2);
     BOOST_TEST(precice.getMeshDimensions(meshName3) == 2);

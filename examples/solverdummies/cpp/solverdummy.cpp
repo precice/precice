@@ -1,7 +1,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
-#include "precice/SolverInterface.hpp"
+#include "precice/Participant.hpp"
 
 int main(int argc, char **argv)
 {
@@ -26,7 +26,7 @@ int main(int argc, char **argv)
 
   std::cout << "DUMMY: Running solver dummy with preCICE config file \"" << configFileName << "\" and participant name \"" << solverName << "\".\n";
 
-  SolverInterface interface(solverName, configFileName, commRank, commSize);
+  Participant participant(solverName, configFileName, commRank, commSize);
 
   if (solverName == "SolverOne") {
     dataWriteName = "Data-One";
@@ -39,7 +39,7 @@ int main(int argc, char **argv)
     meshName      = "SolverTwo-Mesh";
   }
 
-  int dimensions       = interface.getMeshDimensions(meshName);
+  int dimensions       = participant.getMeshDimensions(meshName);
   int numberOfVertices = 3;
 
   std::vector<double> readData(numberOfVertices * dimensions);
@@ -55,39 +55,39 @@ int main(int argc, char **argv)
     }
   }
 
-  interface.setMeshVertices(meshName, vertices, vertexIDs);
+  participant.setMeshVertices(meshName, vertices, vertexIDs);
 
-  if (interface.requiresInitialData()) {
+  if (participant.requiresInitialData()) {
     std::cout << "DUMMY: Writing initial data\n";
   }
 
-  interface.initialize();
+  participant.initialize();
 
-  while (interface.isCouplingOngoing()) {
+  while (participant.isCouplingOngoing()) {
 
-    if (interface.requiresWritingCheckpoint()) {
+    if (participant.requiresWritingCheckpoint()) {
       std::cout << "DUMMY: Writing iteration checkpoint\n";
     }
 
-    double dt = interface.getMaxTimeStepSize();
-    interface.readData(meshName, dataReadName, vertexIDs, dt, readData);
+    double dt = participant.getMaxTimeStepSize();
+    participant.readData(meshName, dataReadName, vertexIDs, dt, readData);
 
     for (int i = 0; i < numberOfVertices * dimensions; i++) {
       writeData.at(i) = readData.at(i) + 1;
     }
 
-    interface.writeData(meshName, dataWriteName, vertexIDs, writeData);
+    participant.writeData(meshName, dataWriteName, vertexIDs, writeData);
 
-    interface.advance(dt);
+    participant.advance(dt);
 
-    if (interface.requiresReadingCheckpoint()) {
+    if (participant.requiresReadingCheckpoint()) {
       std::cout << "DUMMY: Reading iteration checkpoint\n";
     } else {
       std::cout << "DUMMY: Advancing in time\n";
     }
   }
 
-  interface.finalize();
+  participant.finalize();
   std::cout << "DUMMY: Closing C++ solver dummy...\n";
 
   return 0;

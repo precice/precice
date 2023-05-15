@@ -25,7 +25,7 @@ extern "C" {
  * @param[in] solverProcessSize The number of solver processes using preCICE.
  * @param[in] communicator A pointer to an MPI_Comm to use as communicator.
  */
-PRECICE_API void precicec_createSolverInterface_withCommunicator(
+PRECICE_API void precicec_createParticipant_withCommunicator(
     const char *participantName,
     const char *configFileName,
     int         solverProcessIndex,
@@ -47,7 +47,7 @@ PRECICE_API void precicec_createSolverInterface_withCommunicator(
  *                               from 0 and end with solverProcessSize - 1.
  * @param[in] solverProcessSize The number of solver processes using preCICE.
  */
-PRECICE_API void precicec_createSolverInterface(
+PRECICE_API void precicec_createParticipant(
     const char *participantName,
     const char *configFileName,
     int         solverProcessIndex,
@@ -80,10 +80,10 @@ PRECICE_API void precicec_finalize();
 ///@name Status Queries
 ///@{
 
-/// @copydoc precice::SolverInterface::getMeshDimensions()
+/// @copydoc precice::Participant::getMeshDimensions()
 PRECICE_API int precicec_getMeshDimensions(const char *meshName);
 
-/// @copydoc precice::SolverInterface::getDataDimensions()
+/// @copydoc precice::Participant::getDataDimensions()
 PRECICE_API int precicec_getDataDimensions(const char *meshName, const char *dataName);
 
 /**
@@ -106,13 +106,13 @@ PRECICE_API double precicec_getMaxTimeStepSize();
 ///@name Action Methods
 ///@{
 
-/// @copydoc precice::SolverInterface::requiresInitialData()
+/// @copydoc precice::Participant::requiresInitialData()
 PRECICE_API int precicec_requiresInitialData();
 
-/// @copydoc precice::SolverInterface::requiresWritingCheckpoint()
+/// @copydoc precice::Participant::requiresWritingCheckpoint()
 PRECICE_API int precicec_requiresWritingCheckpoint();
 
-/// @copydoc precice::SolverInterface::requiresReadingCheckpoint()
+/// @copydoc precice::Participant::requiresReadingCheckpoint()
 PRECICE_API int precicec_requiresReadingCheckpoint();
 
 ///@name Mesh Access
@@ -127,7 +127,7 @@ PRECICE_API int precicec_requiresReadingCheckpoint();
  */
 PRECICE_API int precicec_hasMesh(const char *meshName);
 
-/// @copydoc precice::SolverInterface::requiresMeshConnectivityFor()
+/// @copydoc precice::Participant::requiresMeshConnectivityFor()
 PRECICE_API int precicec_requiresMeshConnectivityFor(const char *meshName);
 
 /**
@@ -299,7 +299,7 @@ PRECICE_API int precicec_hasData(const char *meshName, const char *dataName);
  * @param[in] size Number of indices, and number of values * dimensions.
  * @param[in] values Values of the data to be written.
  *
- * @see SolverInterface::writeData
+ * @see Participant::writeData
  */
 PRECICE_API void precicec_writeData(
     const char *  meshName,
@@ -322,7 +322,7 @@ PRECICE_API void precicec_writeData(
  * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step.
  * @param[in] values Values of the data to be read.
  *
- * @see SolverInterface::readData
+ * @see Participant::readData
  */
 PRECICE_API void precicec_readData(
     const char *meshName,
@@ -350,27 +350,27 @@ PRECICE_API const char *precicec_getVersionInformation();
  */
 ///@{
 
-/// @copydoc precice::SolverInterface::requiresGradientDataFor
+/// @copydoc precice::Participant::requiresGradientDataFor
 PRECICE_API int precicec_requiresGradientDataFor(const char *meshName,
                                                  const char *dataName);
 
-/// @copydoc precice::SolverInterface::writeGradientData
+/// @copydoc precice::Participant::writeGradientData
 PRECICE_API void precicec_writeGradientData(
     const char *  meshName,
     const char *  dataName,
     int           size,
     const int *   valueIndices,
-    const double *gradientValues);
+    const double *gradients);
 
 /**
- * @brief See precice::SolverInterface::setMeshAccessRegion().
+ * @brief See precice::Participant::setMeshAccessRegion().
  */
 PRECICE_API void precicec_setMeshAccessRegion(
     const char *  meshName,
     const double *boundingBox);
 
 /**
- * @brief See precice::SolverInterface::getMeshVerticesAndIDs().
+ * @brief See precice::Participant::getMeshVerticesAndIDs().
  */
 PRECICE_API void precicec_getMeshVerticesAndIDs(
     const char *meshName,
