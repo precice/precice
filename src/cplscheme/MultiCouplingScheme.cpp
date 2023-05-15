@@ -65,10 +65,18 @@ bool MultiCouplingScheme::hasAnySendData()
   return std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(), [](const auto &sendExchange) { return not sendExchange.second.empty(); });
 }
 
-const DataMap MultiCouplingScheme::getAccelerationData()
+const DataMap &MultiCouplingScheme::getAccelerationData()
 {
   // MultiCouplingScheme applies acceleration to all CouplingData
   return _allData;
+}
+
+void MultiCouplingScheme::initializeReceiveDataStorage()
+{
+  // @todo check receiveData. Should only contain zero data!
+  for (auto &receiveExchange : _receiveDataVector) {
+    initializeWithZeroInitialData(receiveExchange.second);
+  }
 }
 
 void MultiCouplingScheme::exchangeInitialData()
@@ -81,6 +89,10 @@ void MultiCouplingScheme::exchangeInitialData()
         receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
       }
       checkDataHasBeenReceived();
+    } else {
+      for (auto &receiveExchange : _receiveDataVector) {
+        initializeWithZeroInitialData(receiveExchange.second);
+      }
     }
     if (sendsInitializedData()) {
       for (auto &sendExchange : _sendDataVector) {
@@ -98,6 +110,10 @@ void MultiCouplingScheme::exchangeInitialData()
         receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
       }
       checkDataHasBeenReceived();
+    } else {
+      for (auto &receiveExchange : _receiveDataVector) {
+        initializeWithZeroInitialData(receiveExchange.second);
+      }
     }
   }
   PRECICE_DEBUG("Initial data is exchanged in MultiCouplingScheme");
@@ -115,7 +131,6 @@ void MultiCouplingScheme::exchangeFirstData()
       receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
     }
     checkDataHasBeenReceived();
-
   } else {
     for (auto &sendExchange : _sendDataVector) {
       sendData(_m2ns[sendExchange.first], sendExchange.second);

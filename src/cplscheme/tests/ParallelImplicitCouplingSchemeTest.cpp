@@ -150,6 +150,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(Fixture::isImplicitCouplingScheme(cplScheme));
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::InitializeData));
     sendCouplingData->values() = Eigen::VectorXd::Constant(1, 4.0);
+    sendCouplingData->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{sendCouplingData->values()});
     cplScheme.markActionFulfilled(CouplingScheme::Action::InitializeData);
     cplScheme.initialize(0.0, 0);
     BOOST_TEST(cplScheme.hasDataBeenReceived());
@@ -178,6 +179,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     Eigen::VectorXd v(3);
     v << 1.0, 2.0, 3.0;
     sendCouplingData->values() = v;
+    sendCouplingData->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{sendCouplingData->values()});
     cplScheme.markActionFulfilled(CouplingScheme::Action::InitializeData);
     BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 0.0));
     BOOST_TEST(receiveCouplingData->values().size() == 1);
@@ -224,7 +226,7 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   mesh->allocateDataValues();
   BOOST_TEST(data->values().size() == 1);
 
-  const double          maxTime        = CouplingScheme::UNDEFINED_TIME;
+  const double          maxTime        = CouplingScheme::UNDEFINED_MAX_TIME;
   const int             maxTimeWindows = 1;
   const double          timeWindowSize = 1.0;
   std::string           first          = "First";
@@ -243,12 +245,12 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   using Fixture = testing::ParallelCouplingSchemeFixture;
 
   scheme.addDataToSend(data, mesh, true);
-  Fixture::initializeStorages(scheme);
   CouplingData *cplData = Fixture::getSendData(scheme, dataID);
   BOOST_CHECK(cplData); // no nullptr
   BOOST_TEST(cplData->getSize() == 1);
   BOOST_TEST(cplData->getPreviousIterationSize() == 1);
-
+  cplData->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{cplData->values()}); // data provided for initial value
+  Fixture::initializeStorages(scheme);
   Fixture::moveToNextWindow(scheme);
 
   // data is uninitialized
@@ -256,7 +258,8 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 0.0));
 
   // start first window
-  cplData->values()(0) = 1.0; // data provided at end of first window
+  cplData->values()(0) = 1.0;                                                           // data provided at end of first window
+  cplData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{cplData->values()}); // data provided at end of first window
   Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
   Fixture::storeExtrapolationData(scheme);
   BOOST_TEST(testing::equals(cplData->values()(0), 1.0));
@@ -267,7 +270,8 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   Fixture::storeIteration(scheme);
   BOOST_TEST(testing::equals(cplData->values()(0), 2.0)); // = 2*1 - 0
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
-  cplData->values()(0) = 4.0; // data provided at end of second window
+  cplData->values()(0) = 4.0;                                                           // data provided at end of second window
+  cplData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{cplData->values()}); // data provided at end of second window
   Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
   Fixture::storeExtrapolationData(scheme);
 
@@ -277,7 +281,8 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   Fixture::storeIteration(scheme);
   BOOST_TEST(testing::equals(cplData->values()(0), 7.0)); // = 2*4 - 1
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 7.0));
-  cplData->values()(0) = 10.0; // data provided at end of third window
+  cplData->values()(0) = 10.0;                                                          // data provided at end of third window
+  cplData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{cplData->values()}); // data provided at end of third window
   Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
   Fixture::storeExtrapolationData(scheme);
 
@@ -335,7 +340,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
   meshConfig.addMesh(mesh);
 
   // Create all parameters necessary to create an ImplicitCouplingScheme object
-  const double maxTime            = CouplingScheme::UNDEFINED_TIME;
+  const double maxTime            = CouplingScheme::UNDEFINED_MAX_TIME;
   const int    maxTimeWindows     = 2;
   const double timeWindowSize     = 0.1;
   const int    maxIterations      = 3;
@@ -379,9 +384,10 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
       new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
   cplScheme.addConvergenceMeasure(convergenceDataIndex, false, false, minIterationConvMeasure1, true);
 
-  cplScheme.initialize(0.0, 1);
-
   Eigen::VectorXd v(1); // buffer for data
+  v << 0;
+  mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{v});
+  cplScheme.initialize(0.0, 1);
 
   // write data is uninitialized
   BOOST_TEST(mesh->data(sendDataIndex)->values()(0) == 0);
@@ -431,7 +437,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
     } else if (context.isNamed(second)) {
       v << 2.0;
     }
-    mesh->data(sendDataIndex)->values() = v;
+    mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v});
     cplScheme.addComputedTime(timeStepSize);
 
     cplScheme.firstSynchronization({});
@@ -486,7 +492,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
     }
 
     v << 3.0;
-    mesh->data(sendDataIndex)->values() = v;
+    mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v});
     cplScheme.addComputedTime(timeStepSize);
 
     cplScheme.firstSynchronization({});
@@ -555,7 +561,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
   meshConfig.addMesh(mesh);
 
   // Create all parameters necessary to create an ImplicitCouplingScheme object
-  const double maxTime            = CouplingScheme::UNDEFINED_TIME;
+  const double maxTime            = CouplingScheme::UNDEFINED_MAX_TIME;
   const int    maxTimeWindows     = 2;
   const double timeWindowSize     = 0.1;
   const int    maxIterations      = 3;
@@ -609,11 +615,13 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
 
   if (context.isNamed(first)) {
     BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::InitializeData));
+    v << 0.0;
+    mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{v});
   } else {
     BOOST_TEST(context.isNamed(second));
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::InitializeData));
     v << 4.0;
-    mesh->data(sendDataIndex)->values() = v;
+    mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{v});
     cplScheme.markActionFulfilled(CouplingScheme::Action::InitializeData);
     BOOST_TEST(mesh->data(sendDataIndex)->values().size() == 1);
     BOOST_TEST(testing::equals(mesh->data(sendDataIndex)->values()(0), 4.0));
@@ -685,7 +693,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
     } else if (context.isNamed(second)) {
       v << 2.0;
     }
-    mesh->data(sendDataIndex)->values() = v;
+    mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v});
     cplScheme.addComputedTime(timeStepSize);
 
     cplScheme.firstSynchronization({});
@@ -740,7 +748,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
     }
 
     v << 3.0;
-    mesh->data(sendDataIndex)->values() = v;
+    mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v});
     cplScheme.addComputedTime(timeStepSize);
 
     cplScheme.firstSynchronization({});

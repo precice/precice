@@ -60,10 +60,11 @@
 #include "precice/impl/WriteDataContext.hpp"
 #include "precice/impl/versions.hpp"
 #include "precice/types.hpp"
+#include "profiling/Event.hpp"
+#include "profiling/EventUtils.hpp"
+#include "profiling/config/ProfilingConfiguration.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/EigenIO.hpp"
-#include "utils/Event.hpp"
-#include "utils/EventUtils.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/Parallel.hpp"
@@ -72,8 +73,7 @@
 #include "utils/assertion.hpp"
 #include "xml/XMLTag.hpp"
 
-using precice::utils::Event;
-using precice::utils::EventRegistry;
+using precice::profiling::Event;
 
 namespace precice {
 
@@ -124,7 +124,24 @@ ParticipantImpl::ParticipantImpl(
 
   logging::setParticipant(_accessorName);
 
+  profiling::EventRegistry::instance().initialize(_accessorName, _accessorProcessRank, _accessorCommunicatorSize);
+  profiling::applyDefaults();
+  Event                        e("construction", profiling::Fundamental);
+  profiling::ScopedEventPrefix sep("construction/");
+
+  Event e1("configure", profiling::Fundamental);
   configure(configurationFileName);
+  e1.stop();
+
+  // Backend settings have been configured
+  Event e2("startProfilingBackend");
+  profiling::EventRegistry::instance().startBackend();
+  e2.stop();
+
+  PRECICE_DEBUG("Initialize intra-participant communication");
+  if (utils::IntraComm::isParallel()) {
+    initializeIntraCommunication();
+  }
 
   // This block cannot be merged with the one above as it only configures calls
   // utils::Parallel::initializeMPI, which is needed for getProcessRank.
@@ -138,6 +155,10 @@ ParticipantImpl::ParticipantImpl(
                 "The solver process size given in the preCICE interface constructor({}) does not match the size of the passed MPI communicator ({}).",
                 _accessorCommunicatorSize, currentSize);
 #endif
+
+  e.stop();
+  sep.pop();
+  _solverInitEvent = std::make_unique<profiling::Event>("solver.initialize", profiling::Fundamental, profiling::Synchronize);
 }
 
 ParticipantImpl::~ParticipantImpl()
@@ -151,6 +172,7 @@ ParticipantImpl::~ParticipantImpl()
 void ParticipantImpl::configure(
     std::string_view configurationFileName)
 {
+
   config::Configuration config;
   utils::Parallel::initializeManagedMPI(nullptr, nullptr);
   logging::setMPIRank(utils::Parallel::current()->rank());
@@ -183,16 +205,9 @@ void ParticipantImpl::configure(
     PRECICE_INFO("Configuring preCICE with configuration \"{}\"", configurationFileName);
     PRECICE_INFO("I am participant \"{}\"", _accessorName);
   }
-  configure(config.getSolverInterfaceConfiguration());
-}
 
-void ParticipantImpl::configure(
-    const config::SolverInterfaceConfiguration &config)
-{
+  /*
   PRECICE_TRACE();
-
-  Event                    e("configure"); // no precice::syncMode as this is not yet configured here
-  utils::ScopedEventPrefix sep("configure/");
 
   _meshLock.clear();
 
@@ -228,16 +243,7 @@ void ParticipantImpl::configure(
   for (const MeshContext *meshContext : _accessor->usedMeshContexts()) {
     _meshLock.add(meshContext->mesh->getName(), false);
   }
-
-  utils::EventRegistry::instance().initialize("precice-" + _accessorName, "", utils::Parallel::current()->comm);
-
-  PRECICE_DEBUG("Initialize intra-participant communication");
-  if (utils::IntraComm::isParallel()) {
-    initializeIntraCommunication();
-  }
-
-  auto &solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
-  solverInitEvent.start(precice::syncMode);
+  */
 }
 
 void ParticipantImpl::initialize()
@@ -252,16 +258,15 @@ void ParticipantImpl::initialize()
                 "Initial data has to be written to preCICE before calling initialize(). "
                 "After defining your mesh, call requiresInitialData() to check if the participant is required to write initial data using an appropriate write...Data() function.");
 
-  auto &solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
-  solverInitEvent.pause(precice::syncMode);
-  Event                    e("initialize", precice::syncMode);
-  utils::ScopedEventPrefix sep("initialize/");
+  _solverInitEvent.reset();
+  Event                        e("initialize", profiling::Fundamental, profiling::Synchronize);
+  profiling::ScopedEventPrefix sep("initialize/");
 
   PRECICE_DEBUG("Preprocessing provided meshes");
   for (MeshContext *meshContext : _accessor->usedMeshContexts()) {
     if (meshContext->provideMesh) {
       auto &mesh = *(meshContext->mesh);
-      Event e("preprocess." + mesh.getName(), precice::syncMode);
+      Event e("preprocess." + mesh.getName(), profiling::Synchronize);
       meshContext->mesh->preprocess();
     }
   }
@@ -315,53 +320,44 @@ void ParticipantImpl::initialize()
   }
 
   // Initialize coupling state, overwrite these values for restart
-  double time       = 0.0;
-  int    timeWindow = 1;
+  const double time         = 0.0;
+  const int    timeWindow   = 1;
+  const double relativeTime = time::Storage::WINDOW_START;
 
-  for (auto &context : _accessor->readDataContexts()) {
-    context.initializeWaveform();
-  }
   _meshLock.lockAll();
 
-  if (_couplingScheme->sendsInitializedData()) {
-    mapWrittenData();
-    performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0);
+  for (auto &context : _accessor->writeDataContexts()) {
+    context.storeBufferedData(relativeTime);
   }
+
+  mapWrittenData();
+  performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0);
 
   PRECICE_DEBUG("Initialize coupling schemes");
   _couplingScheme->initialize(time, timeWindow);
 
-  if (_couplingScheme->hasDataBeenReceived()) {
-    mapReadData();
-    performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
-    // @todo Refactor treatment of read and write data. See https://github.com/precice/precice/pull/1614, "Remarks on waveform handling"
-    for (auto &context : _accessor->readDataContexts()) {
-      context.storeDataInWaveform();
-    }
-  }
+  mapReadData();
+  performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
 
   for (auto &context : _accessor->readDataContexts()) {
     context.moveToNextWindow();
   }
-
   _couplingScheme->receiveResultOfFirstAdvance();
 
   if (_couplingScheme->hasDataBeenReceived()) {
     mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
-    // @todo Refactor treatment of read and write data. See https://github.com/precice/precice/pull/1614, "Remarks on waveform handling"
-    for (auto &context : _accessor->readDataContexts()) {
-      context.storeDataInWaveform();
-    }
   }
 
-  resetWrittenData();
+  resetWrittenData(false);
   PRECICE_DEBUG("Plot output");
   _accessor->exportFinal();
-  solverInitEvent.start(precice::syncMode);
+  e.stop();
+  sep.pop();
 
   _state = State::Initialized;
   PRECICE_INFO(_couplingScheme->printCouplingState());
+  _solverAdvanceEvent = std::make_unique<profiling::Event>("solver.advance", profiling::Fundamental, profiling::Synchronize);
 }
 
 void ParticipantImpl::advance(
@@ -371,13 +367,11 @@ void ParticipantImpl::advance(
   PRECICE_TRACE(computedTimeStepSize);
 
   // Events for the solver time, stopped when we enter, restarted when we leave advance
-  auto &solverEvent = EventRegistry::instance().getStoredEvent("solver.advance");
-  solverEvent.stop(precice::syncMode);
-  auto &solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
-  solverInitEvent.stop(precice::syncMode);
+  PRECICE_ASSERT(_solverAdvanceEvent, "The advance event is created in initialize");
+  _solverAdvanceEvent->stop();
 
-  Event                    e("advance", precice::syncMode);
-  utils::ScopedEventPrefix sep("advance/");
+  Event                        e("advance", profiling::Fundamental, profiling::Synchronize);
+  profiling::ScopedEventPrefix sep("advance/");
 
   PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before advance().");
   PRECICE_CHECK(_state != State::Finalized, "advance() cannot be called after finalize().")
@@ -396,9 +390,13 @@ void ParticipantImpl::advance(
 #endif
 
   // Update the coupling scheme time state. Necessary to get correct remainder.
-  _couplingScheme->addComputedTime(computedTimeStepSize);
-  // Current time
-  double time = _couplingScheme->getTime();
+  const bool   isAtWindowEnd = _couplingScheme->addComputedTime(computedTimeStepSize);
+  const double time          = _couplingScheme->getTime();
+  const double relativeTime  = _couplingScheme->getNormalizedWindowTime();
+
+  for (auto &context : _accessor->writeDataContexts()) {
+    context.storeBufferedData(relativeTime);
+  }
 
   if (_couplingScheme->willDataBeExchanged(0.0)) {
     mapWrittenData();
@@ -416,10 +414,6 @@ void ParticipantImpl::advance(
   if (_couplingScheme->hasDataBeenReceived()) {
     mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, time);
-    // @todo Refactor treatment of read and write data. See https://github.com/precice/precice/pull/1614, "Remarks on waveform handling"
-    for (auto &context : _accessor->readDataContexts()) {
-      context.storeDataInWaveform();
-    }
   }
 
   PRECICE_INFO(_couplingScheme->printCouplingState());
@@ -427,10 +421,13 @@ void ParticipantImpl::advance(
   PRECICE_DEBUG("Handle exports");
   handleExports();
 
-  resetWrittenData();
+  resetWrittenData(isAtWindowEnd);
 
   _meshLock.lockAll();
-  solverEvent.start(precice::syncMode);
+
+  sep.pop();
+  e.stop();
+  _solverAdvanceEvent->start();
 }
 
 void ParticipantImpl::finalize()
@@ -439,11 +436,10 @@ void ParticipantImpl::finalize()
   PRECICE_CHECK(_state != State::Finalized, "finalize() may only be called once.");
 
   // Events for the solver time, finally stopped here
-  auto &solverEvent = EventRegistry::instance().getStoredEvent("solver.advance");
-  solverEvent.stop(precice::syncMode);
+  _solverAdvanceEvent.reset();
 
-  Event                    e("finalize"); // no precice::syncMode here as MPI is already finalized at destruction of this event
-  utils::ScopedEventPrefix sep("finalize/");
+  Event                        e("finalize", profiling::Fundamental);
+  profiling::ScopedEventPrefix sep("finalize/");
 
   if (_state == State::Initialized) {
 
@@ -474,15 +470,9 @@ void ParticipantImpl::finalize()
 
   // Finalize PETSc and Events first
   utils::Petsc::finalize();
-  utils::EventRegistry::instance().finalize();
-
-  // Printing requires finalization
-  if (not precice::utils::IntraComm::isSecondary()) {
-    utils::EventRegistry::instance().printAll();
-  }
+  profiling::EventRegistry::instance().finalize();
 
   // Finally clear events and finalize MPI
-  utils::EventRegistry::instance().clear();
   utils::Parallel::finalizeManagedMPI();
   _state = State::Finalized;
 }
@@ -633,6 +623,14 @@ int ParticipantImpl::setMeshVertex(
                 "Cannot set vertex for mesh \"{}\". Expected {} position components but found {}.", meshName, mesh.getDimensions(), position.size());
   auto index = mesh.createVertex(Eigen::Map<const Eigen::VectorXd>{position.data(), _dimensions}).getID();
   mesh.allocateDataValues();
+
+  const auto newSize = mesh.vertices().size();
+  for (auto &context : _accessor->writeDataContexts()) {
+    if (context.getMeshName() == mesh.getName()) {
+      context.resizeBufferTo(newSize);
+    }
+  }
+
   return index;
 }
 
@@ -659,6 +657,13 @@ void ParticipantImpl::setMeshVertices(
     ids[i] = mesh.createVertex(posMatrix.col(i)).getID();
   }
   mesh.allocateDataValues();
+
+  const auto newSize = mesh.vertices().size();
+  for (auto &context : _accessor->writeDataContexts()) {
+    if (context.getMeshName() == mesh.getName()) {
+      context.resizeBufferTo(newSize);
+    }
+  }
 }
 
 void ParticipantImpl::setMeshEdge(
@@ -1002,7 +1007,7 @@ void ParticipantImpl::writeData(
                   "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                   dataName, meshName, *index);
   }
-  context.writeValues(vertices, values);
+  context.writeValuesIntoDataBuffer(vertices, values);
 }
 
 void ParticipantImpl::readData(
@@ -1096,7 +1101,7 @@ void ParticipantImpl::writeGradientData(
 
   PRECICE_VALIDATE_DATA(gradients.data(), gradients.size());
 
-  context.writeGradientValues(vertices, gradients);
+  context.writeGradientsIntoDataBuffer(vertices, gradients);
 }
 
 void ParticipantImpl::setMeshAccessRegion(
@@ -1330,8 +1335,14 @@ void ParticipantImpl::computePartitions()
       meshContext->mesh->computeBoundingBox();
     }
 
-    // This allocates gradient values here too if available
     meshContext->mesh->allocateDataValues();
+
+    const auto requiredSize = meshContext->mesh->vertices().size();
+    for (auto &context : _accessor->writeDataContexts()) {
+      if (context.getMeshName() == meshContext->mesh->getName()) {
+        context.resizeBufferTo(requiredSize);
+      }
+    }
   }
 }
 
@@ -1373,7 +1384,6 @@ void ParticipantImpl::mapReadData()
       PRECICE_DEBUG("Map read data \"{}\" to mesh \"{}\"", context.getDataName(), context.getMeshName());
       context.mapData();
     }
-    context.storeDataInWaveform();
   }
 }
 
@@ -1400,11 +1410,11 @@ void ParticipantImpl::handleExports()
   _accessor->exportIntermediate(exp);
 }
 
-void ParticipantImpl::resetWrittenData()
+void ParticipantImpl::resetWrittenData(bool isAtWindowEnd)
 {
   PRECICE_TRACE();
   for (auto &context : _accessor->writeDataContexts()) {
-    context.resetData();
+    context.resetData(isAtWindowEnd);
   }
 }
 
@@ -1427,10 +1437,11 @@ void ParticipantImpl::initializeIntraCommunication()
 {
   PRECICE_TRACE();
 
-  Event e("com.initializeIntraCom", precice::syncMode);
+  Event e("com.initializeIntraCom", profiling::Fundamental);
   utils::IntraComm::getCommunication()->connectIntraComm(
       _accessorName, "IntraComm",
       _accessorProcessRank, _accessorCommunicatorSize);
+  utils::IntraComm::barrier();
 }
 
 void ParticipantImpl::syncTimestep(double computedTimeStepSize)

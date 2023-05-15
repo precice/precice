@@ -13,25 +13,25 @@ BOOST_AUTO_TEST_CASE(TestFinalize)
   PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
 
   if (context.isNamed("SolverOne")) {
-    precice::Participant interface(context.name, context.config(), context.rank, context.size);
+    precice::Participant participant(context.name, context.config(), context.rank, context.size);
     auto                 meshName = "MeshOne";
     double               xCoord   = 0.0 + context.rank;
     double               v[]      = {xCoord, 0, 0};
-    interface.setMeshVertex(meshName, v);
-    interface.initialize();
-    BOOST_TEST(precice::testing::WhiteboxAccessor::impl(interface).mesh("MeshOne").vertices().size() == 1);
-    BOOST_TEST(precice::testing::WhiteboxAccessor::impl(interface).mesh("MeshTwo").vertices().size() == 1);
-    interface.finalize();
+    participant.setMeshVertex(meshName, v);
+    participant.initialize();
+    BOOST_TEST(precice::testing::WhiteboxAccessor::impl(participant).mesh("MeshOne").vertices().size() == 1);
+    BOOST_TEST(precice::testing::WhiteboxAccessor::impl(participant).mesh("MeshTwo").vertices().size() == 1);
+    participant.finalize();
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    precice::Participant interface(context.name, context.config(), context.rank, context.size);
+    precice::Participant participant(context.name, context.config(), context.rank, context.size);
     auto                 meshName = "MeshTwo";
     double               xCoord   = 0.0 + context.rank;
     double               v[]      = {xCoord, 0, 0};
-    interface.setMeshVertex(meshName, v);
-    interface.initialize();
-    BOOST_TEST(precice::testing::WhiteboxAccessor::impl(interface).mesh("MeshTwo").vertices().size() == 1);
-    interface.finalize();
+    participant.setMeshVertex(meshName, v);
+    participant.initialize();
+    BOOST_TEST(precice::testing::WhiteboxAccessor::impl(participant).mesh("MeshTwo").vertices().size() == 1);
+    participant.finalize();
   }
 }
 

@@ -5,6 +5,7 @@
 #include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/impl/Extrapolation.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "time/Storage.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -29,10 +30,31 @@ public:
   const Eigen::VectorXd &values() const;
 
   /// Returns a reference to the gradient data values.
-  Eigen::MatrixXd &gradientValues();
+  Eigen::MatrixXd &gradients();
 
   /// Returns a const reference to the gradient data values.
-  const Eigen::MatrixXd &gradientValues() const;
+  const Eigen::MatrixXd &gradients() const;
+
+  /// Returns a reference to the gradient data Sample.
+  time::Sample &sample();
+
+  /// Returns a const reference to the data Sample.
+  const time::Sample &sample() const;
+
+  /// Returns a reference to the time step storage of the data.
+  time::Storage &timeStepsStorage();
+
+  /// Returns a const reference to the time step storage of the data.
+  const time::Storage &timeStepsStorage() const;
+
+  /// Returns the stamples in _timeStepsStorage.
+  auto stamples() const
+  {
+    return timeStepsStorage().stamples();
+  }
+
+  /// Add sample at given time to _timeStepsStorage.
+  void setSampleAtTime(double time, time::Sample sample);
 
   /// Returns if the data contains gradient data
   bool hasGradient() const;
@@ -89,12 +111,8 @@ private:
     PRECICE_ASSERT(false);
   }
 
-  /// Data values of previous iteration.
-  Eigen::VectorXd _previousIteration;
-
-  /// Gradient data of previous iteration.
-  /// Lazy allocation: only used in case the corresponding data has gradients
-  Eigen::MatrixXd _previousIterationGradients;
+  /// Sample values of previous iteration (end of time window).
+  time::Sample _previousIteration;
 
   /// Data associated with this CouplingData
   mesh::PtrData _data;

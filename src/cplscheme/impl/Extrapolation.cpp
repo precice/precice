@@ -27,6 +27,9 @@ void Extrapolation::initialize(
 void Extrapolation::store(const Eigen::VectorXd &values)
 {
   PRECICE_ASSERT(_storageIsInitialized);
+  if (values.size() != this->valuesSize()) { // @todo work-around, but becomes unnecessary with https://github.com/precice/precice/pull/1639
+    initialize(values.size());
+  }
   PRECICE_ASSERT(values.size() == this->valuesSize(), values.size(), this->valuesSize());
   this->_timeWindowsStorage.col(0) = values;
 }

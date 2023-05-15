@@ -19,10 +19,10 @@
 #include "m2n/PointToPointComFactory.hpp"
 #include "mesh/Data.hpp"
 #include "precice/types.hpp"
+#include "profiling/EventUtils.hpp"
 #include "query/Index.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
-#include "utils/EventUtils.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
@@ -37,7 +37,7 @@ TestContext::~TestContext() noexcept
     precice::utils::Petsc::finalize();
   }
   if (!invalid && _events) {
-    precice::utils::EventRegistry::instance().finalize();
+    precice::profiling::EventRegistry::instance().finalize();
   }
   if (!invalid && _initIntraComm) {
     utils::IntraComm::getCommunication() = nullptr;
@@ -205,7 +205,12 @@ void TestContext::initializeIntraComm()
 void TestContext::initializeEvents()
 {
   if (!invalid && _events) {
-    precice::utils::EventRegistry::instance().initialize("precice-Tests", "", _contextComm->comm);
+    auto &er = precice::profiling::EventRegistry::instance();
+    er.initialize(name, rank, size);
+    er.setMode(precice::profiling::Mode::All);
+    er.setDirectory("./precice-events");
+    er.initialize(name, rank, size);
+    er.startBackend();
   }
 }
 

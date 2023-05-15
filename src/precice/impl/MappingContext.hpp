@@ -31,6 +31,19 @@ struct MappingContext {
   {
     mapping->getInputMesh()->data(dataName)->requireDataGradient();
   }
+
+  /// Allows to clear data storage before mapping is performed
+  void clearToDataStorage()
+  {
+    // @todo messy. Try to improve this. Current problem: With clear we also remove the data at WINDOW_START, which is not received by the coupling scheme.
+    if (toData->timeStepsStorage().nTimes() > 0) {
+      if (toData->timeStepsStorage().getTimes()[0] != time::Storage::WINDOW_START) {
+        toData->timeStepsStorage().clear();
+      } else {
+        toData->timeStepsStorage().trim();
+      }
+    }
+  }
 };
 
 } // namespace impl

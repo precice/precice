@@ -4,6 +4,7 @@
 
 #include "DataContext.hpp"
 #include "logging/Logger.hpp"
+#include "time/Sample.hpp"
 
 namespace precice {
 namespace impl {
@@ -26,20 +27,36 @@ public:
       mesh::PtrMesh mesh);
 
   /**
-   * @brief Store values in _providedData.values()
+   * @brief Resets provided data, writeDataBuffer, (if mapping exists) fromData or toData, and (optionally) storage.
+   *
+   * @param atEndOfWindow if true, also the Storage will be reset (useful at end of window to clear storage).
+   */
+  void resetData(bool atEndOfWindow);
+
+  /**
+   * @brief Store values in _writeDataBuffer
    *
    * @param[in] vertices ids of data
    * @param[in] values values of data
    */
-  void writeValues(::precice::span<const VertexID> vertices, ::precice::span<const double> values);
+  void writeValuesIntoDataBuffer(::precice::span<const VertexID> vertices, ::precice::span<const double> values);
 
   /**
-   * @brief Store gradients in _providedData.gradientValues()
+   * @brief Store gradients in _writeDataBuffer
    *
    * @param[in] vertices ids of data
    * @param[in] gradients gradients of data
    */
-  void writeGradientValues(::precice::span<const VertexID> vertices, ::precice::span<const double> gradients);
+  void writeGradientsIntoDataBuffer(::precice::span<const VertexID> vertices, ::precice::span<const double> gradients);
+
+  void resizeBufferTo(int size);
+
+  /**
+   * @brief Store data from _writeDataBuffer in persistent storage
+   *
+   * @param[in] currentTime time data should be associated with
+   */
+  void storeBufferedData(double currentTime);
 
   /**
    * @brief Adds a MappingContext and the MeshContext required by the write mapping to the corresponding WriteDataContext data structures.
@@ -63,6 +80,9 @@ public:
 
 private:
   static logging::Logger _log;
+
+  /// @brief Buffer to store written data until it is copied to _providedData->timeStepsStorage()
+  time::Sample _writeDataBuffer;
 };
 
 } // namespace impl

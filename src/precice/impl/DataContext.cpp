@@ -20,17 +20,6 @@ std::string DataContext::getDataName() const
   return _providedData->getName();
 }
 
-void DataContext::resetData()
-{
-  // See also https://github.com/precice/precice/issues/1156.
-  _providedData->toZero();
-  if (hasMapping()) {
-    PRECICE_ASSERT(hasWriteMapping());
-    PRECICE_ASSERT(!hasReadMapping());
-    std::for_each(_mappingContexts.begin(), _mappingContexts.end(), [](auto &context) { context.toData->toZero(); });
-  }
-}
-
 int DataContext::getDataDimensions() const
 {
   PRECICE_ASSERT(_providedData);
@@ -93,12 +82,24 @@ void DataContext::mapData()
   PRECICE_ASSERT(hasMapping());
   // Execute the mapping
   for (auto &context : _mappingContexts) {
-    // Reset the toData before executing the mapping
-    context.toData->toZero();
-    const DataID fromDataID = context.fromData->getID();
-    const DataID toDataID   = context.toData->getID();
-    context.mapping->map(fromDataID, toDataID);
-    PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, context.toData->values()));
+    context.clearToDataStorage();
+
+    PRECICE_ASSERT(context.fromData->stamples().size() > 0);
+    for (auto &stample : context.fromData->stamples()) {
+      // Put data from storage into mapping buffer
+      context.fromData->sample() = stample.sample;
+
+      // Reset the toData before executing the mapping
+      context.toData->toZero();
+      const DataID fromDataID = context.fromData->getID();
+      const DataID toDataID   = context.toData->getID();
+      context.mapping->map(fromDataID, toDataID);
+
+      // Store data from mapping buffer in storage
+      context.toData->setSampleAtTime(stample.timestamp, context.toData->sample());
+
+      PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, context.toData->values()));
+    }
   }
 }
 

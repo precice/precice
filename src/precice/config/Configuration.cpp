@@ -42,25 +42,25 @@ Configuration::Configuration()
                           .setDocumentation("sync-mode enabled additional inter- and intra-participant synchronizations");
   _tag.addAttribute(attrSyncMode);
 
-  auto attrDimensions = makeXMLAttribute("dimensions", 2)
+  auto attrDimensions = xml::makeXMLAttribute("dimensions", 2)
                             .setDocumentation("Determines the spatial dimensionality of the configuration")
                             .setOptions({2, 3});
-  tag.addAttribute(attrDimensions);
+  _tag.addAttribute(attrDimensions);
 
-  auto attrExperimental = makeXMLAttribute("experimental", false)
+  auto attrExperimental = xml::makeXMLAttribute("experimental", false)
                               .setDocumentation("Enable experimental features.");
-  tag.addAttribute(attrExperimental);
+  _tag.addAttribute(attrExperimental);
 
   _dataConfiguration = std::make_shared<mesh::DataConfiguration>(
-      tag);
+      _tag);
   _meshConfiguration = std::make_shared<mesh::MeshConfiguration>(
-      tag, _dataConfiguration);
+      _tag, _dataConfiguration);
   _m2nConfiguration = std::make_shared<m2n::M2NConfiguration>(
-      tag);
+      _tag);
   _participantConfiguration = std::make_shared<ParticipantConfiguration>(
-      tag, _meshConfiguration);
+      _tag, _meshConfiguration);
   _couplingSchemeConfiguration = std::make_shared<cplscheme::CouplingSchemeConfiguration>(
-      tag, _meshConfiguration, _m2nConfiguration, _participantConfiguration);
+      _tag, _meshConfiguration, _m2nConfiguration, _participantConfiguration);
 }
 
 xml::XMLTag &Configuration::getXMLTag()

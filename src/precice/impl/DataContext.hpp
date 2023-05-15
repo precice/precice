@@ -36,11 +36,6 @@ public:
   std::string getDataName() const;
 
   /**
-   * @brief Resets provided data and (if mapping exists) fromData or toData.
-   */
-  void resetData();
-
-  /**
    * @brief Get the dimensions of _providedData.
    *
    * @return int Dimensions of _providedData.

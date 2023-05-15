@@ -360,7 +360,7 @@ PRECICE_API void precicec_writeGradientData(
     const char *  dataName,
     int           size,
     const int *   valueIndices,
-    const double *gradientValues);
+    const double *gradients);
 
 /**
  * @brief See precice::Participant::setMeshAccessRegion().

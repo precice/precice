@@ -67,8 +67,10 @@ public:
   /**
    * @brief Not implemented.
    */
-  void addComputedTime(double timeToAdd) override final
-  { /* Do nothing */
+  bool addComputedTime(double timeToAdd) override final
+  {
+    PRECICE_ASSERT(false);
+    return false;
   }
 
   /**
@@ -147,6 +149,15 @@ public:
    * @brief Not implemented.
    */
   double getTimeWindowSize() const override final
+  {
+    PRECICE_ASSERT(false);
+    return 0;
+  }
+
+  /**
+   * @brief Not implemented.
+   */
+  double getNormalizedWindowTime() const override final
   {
     PRECICE_ASSERT(false);
     return 0;
