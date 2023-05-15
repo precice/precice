@@ -349,11 +349,7 @@ double BaseCouplingScheme::getWindowStartTime() const
 
 double BaseCouplingScheme::getNormalizedWindowTime() const
 {
-  const double timeWindowStart        = getWindowStartTime();
-  const double timeWindowSize         = getTimeWindowSize();
-  const double computedTimeWindowPart = getTime() - timeWindowStart;
-  // const double computedTimeWindowPart = getComputedTimeWindowPart();  // @todo make public?
-  return computedTimeWindowPart / timeWindowSize;
+  return getComputedTimeWindowPart() / getTimeWindowSize();
 }
 
 bool BaseCouplingScheme::isInitialized() const
@@ -396,7 +392,7 @@ bool BaseCouplingScheme::hasDataBeenReceived() const
   return _hasDataBeenReceived;
 }
 
-double BaseCouplingScheme::getComputedTimeWindowPart()
+double BaseCouplingScheme::getComputedTimeWindowPart() const
 {
   return _computedTimeWindowPart;
 }

@@ -292,7 +292,7 @@ protected:
    * @brief Getter for _computedTimeWindowPart
    * @returns _computedTimeWindowPart
    */
-  double getComputedTimeWindowPart();
+  double getComputedTimeWindowPart() const;
 
   /**
    * @brief Returns the time at the beginning of the current time window.
