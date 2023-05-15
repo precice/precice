@@ -200,3 +200,11 @@ std::ostream &operator<<(std::ostream &out, Mapping::MeshRequirement val);
 
 } // namespace mapping
 } // namespace precice
+
+//Required in order to print the constraint types via the fmt interface
+template <>
+struct fmt::formatter<precice::mapping::Constraint> : formatter<string_view> {
+  // parse is inherited from formatter<string_view>.
+
+  auto format(precice::mapping::Constraint c, format_context &ctx) const;
+};
