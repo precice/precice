@@ -304,12 +304,8 @@ void BaseCouplingScheme::secondExchange()
 void BaseCouplingScheme::moveToNextWindow()
 {
   PRECICE_TRACE(_timeWindows);
-  // @todo breaks for CplSchemeTests/ParallelImplicitCouplingSchemeTests/Extrapolation/FirstOrder. Why? @fsimonis
-  // for (auto &data : getAccelerationData() | boost::adaptors::map_values) {
-  //  data->moveToNextWindow();
-  // }
-  for (auto &pair : _allData) {
-    pair.second->moveToNextWindow();
+  for (auto &data : getAccelerationData() | boost::adaptors::map_values) {
+    data->moveToNextWindow();
   }
 }
 
