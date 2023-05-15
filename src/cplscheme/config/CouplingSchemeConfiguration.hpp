@@ -142,7 +142,7 @@ private:
     std::vector<std::string>      participants;
     std::string                   controller;
     bool                          setController  = false;
-    double                        maxTime        = CouplingScheme::UNDEFINED_TIME;
+    double                        maxTime        = CouplingScheme::UNDEFINED_MAX_TIME;
     int                           maxTimeWindows = CouplingScheme::UNDEFINED_TIME_WINDOWS;
     double                        timeWindowSize = CouplingScheme::UNDEFINED_TIME_WINDOW_SIZE;
     int                           validDigits    = 16;
