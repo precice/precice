@@ -772,18 +772,18 @@ void BaseCouplingScheme::doImplicitStep()
       // @todo For acceleration schemes as described in "Rüth, B, Uekermann, B, Mehl, M, Birken, P, Monge, A, Bungartz, H-J. Quasi-Newton waveform iteration for partitioned surface-coupled multiphysics applications. https://doi.org/10.1002/nme.6443" we need a more elaborate implementation.
 
       // Load from storage into buffer
-      for (auto &pair : getAccelerationData()) {
-        const auto stamples = pair.second->stamples();
+      for (auto &data : getAccelerationData() | boost::adaptors::map_values) {
+        const auto stamples = data->stamples();
         PRECICE_ASSERT(stamples.size() > 0);
-        pair.second->sample() = stamples.back().sample;
+        data->sample() = stamples.back().sample;
       }
 
       _acceleration->performAcceleration(getAccelerationData());
 
       // Store from buffer
       // @todo Currently only data at time::Storage::WINDOW_END is accelerated. Remaining data in storage stays as it is.
-      for (auto &pair : getAccelerationData()) {
-        pair.second->setSampleAtTime(time::Storage::WINDOW_END, pair.second->sample());
+      for (auto &data : getAccelerationData() | boost::adaptors::map_values) {
+        data->setSampleAtTime(time::Storage::WINDOW_END, data->sample());
       }
     }
   }

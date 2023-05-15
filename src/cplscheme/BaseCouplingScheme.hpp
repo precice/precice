@@ -529,7 +529,7 @@ private:
    * @brief interface to provide accelerated data, depending on coupling scheme being used
    * @return data being accelerated
    */
-  virtual const DataMap getAccelerationData() = 0;
+  virtual const DataMap &getAccelerationData() = 0;
 
   /**
    * @brief If any required actions are open, an error message is issued.
