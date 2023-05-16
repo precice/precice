@@ -304,7 +304,7 @@ void BaseCouplingScheme::secondExchange()
 void BaseCouplingScheme::moveToNextWindow()
 {
   PRECICE_TRACE(_timeWindows);
-  for (auto &data : getAccelerationData() | boost::adaptors::map_values) {
+  for (auto &data : _allData | boost::adaptors::map_values) {
     data->moveToNextWindow();
   }
 }
