@@ -56,7 +56,6 @@ BOOST_AUTO_TEST_CASE(ActionTimingsImplicit)
   interface.initialize();
   dt = interface.getMaxTimeStepSize();
   BOOST_TEST(dt == 1.0);
-
   if (context.isNamed("SolverOne")) {
     BOOST_TEST(action::RecorderAction::records.size() == 2);
     BOOST_TEST(action::RecorderAction::records.at(0).timing == action::Action::WRITE_MAPPING_POST);

@@ -105,7 +105,7 @@ void PythonAction::performAction(double time)
     if (_sourceData) {                                     // _sourceData is optional
       auto &sourceStample   = _sourceData->stamples()[i];  // simultaneously iterate over _targetData->stamples()
       _sourceData->values() = sourceStample.sample.values; // put data into temporary buffer
-      PRECICE_CHECK(math::equals(sourceStample.timestamp, targetStample.timestamp), "Time mesh of source and target stample must agree!");
+      PRECICE_CHECK(math::equals(sourceStample.timestamp, targetStample.timestamp), "Trying to perform python action on samples with different timestamps: {} for source data and {} for target data. Time mesh of source data and target data must agree.", sourceStample.timestamp, targetStample.timestamp);
       i++;
       npy_intp sourceDim[]  = {_sourceData->values().size()};
       double * sourceValues = _sourceData->values().data();

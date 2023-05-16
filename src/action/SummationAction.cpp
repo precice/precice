@@ -39,7 +39,7 @@ void SummationAction::performAction(double time)
     const double currentTimestamp = referenceData->stamples()[stampleId].timestamp;
     for (const auto &sourceData : _sourceDataVector) {
       auto sourceStample = sourceData->stamples()[stampleId];
-      PRECICE_CHECK(math::equals(sourceStample.timestamp, currentTimestamp), "Time mesh all sources must agree!");
+      PRECICE_CHECK(math::equals(sourceStample.timestamp, currentTimestamp), "Trying to perform summation action on samples with different timestamps: expected timestamp {}, but got source data with timestamp {}.  Time meshes of all source data must agree. Actions do not fully support subcycling yet.", currentTimestamp, sourceStample.timestamp);
       auto sourceDataValues = sourceStample.sample.values;
       targetValues += sourceDataValues;
     }
