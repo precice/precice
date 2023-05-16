@@ -1,39 +1,44 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration>
-  <solver-interface dimensions="3">
-    <data:scalar name="Pressure" />
+<precice-configuration dimensions="3">
+  <data:scalar name="Pressure" />
 
-    <mesh name="FASTEST_Mesh">
-      <use-data name="Pressure" />
-    </mesh>
+  <mesh name="FASTEST_Mesh">
+    <use-data name="Pressure" />
+  </mesh>
 
-    <mesh name="Ateles_Mesh">
-      <use-data name="Pressure" />
-    </mesh>
+  <mesh name="Ateles_Mesh">
+    <use-data name="Pressure" />
+  </mesh>
 
-    <participant name="Ateles">
-      <receive-mesh name="FASTEST_Mesh" from="FASTEST" />
-      <provide-mesh name="Ateles_Mesh" />
-      <mapping:nearest-neighbor
-        direction="read"
-        from="FASTEST_Mesh"
-        to="Ateles_Mesh"
-        constraint="consistent" />
-      <read-data name="Pressure" mesh="Ateles_Mesh" />
-    </participant>
+  <participant name="Ateles">
+    <receive-mesh name="FASTEST_Mesh" from="FASTEST" />
 
-    <participant name="FASTEST">
-      <provide-mesh name="FASTEST_Mesh" />
-      <write-data name="Pressure" mesh="FASTEST_Mesh" />
-    </participant>
+    <provide-mesh name="Ateles_Mesh" />
 
-    <m2n:sockets from="FASTEST" to="Ateles" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="FASTEST_Mesh"
+      to="Ateles_Mesh"
+      constraint="consistent" />
 
-    <coupling-scheme:parallel-explicit>
-      <participants first="FASTEST" second="Ateles" />
-      <max-time-windows value="10" />
-      <time-window-size value="1.0" />
-      <exchange data="Pressure" mesh="FASTEST_Mesh" from="FASTEST" to="Ateles" />
-    </coupling-scheme:parallel-explicit>
-  </solver-interface>
+    <read-data name="Pressure" mesh="Ateles_Mesh" />
+  </participant>
+
+  <participant name="FASTEST">
+    <provide-mesh name="FASTEST_Mesh" />
+
+    <write-data name="Pressure" mesh="FASTEST_Mesh" />
+  </participant>
+
+  <m2n:sockets from="FASTEST" to="Ateles" />
+
+  <coupling-scheme:parallel-explicit>
+    <participants first="FASTEST" second="Ateles" />
+
+    <max-time-windows value="10" />
+
+    <time-window-size value="1.0" />
+
+    <exchange data="Pressure" mesh="FASTEST_Mesh" from="FASTEST" to="Ateles" />
+  </coupling-scheme:parallel-explicit>
 </precice-configuration>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration>
+<precice-configuration dimensions="2">
   <log>
     <sink
       type="stream"
@@ -9,57 +9,68 @@
       enabled="true" />
   </log>
 
-  <solver-interface dimensions="2">
-    <data:vector name="Forces" />
-    <data:vector name="Velocities" />
+  <data:vector name="Forces" />
+  <data:vector name="Velocities" />
 
-    <mesh name="MeshOne">
-      <use-data name="Forces" />
-      <use-data name="Velocities" />
-    </mesh>
+  <mesh name="MeshOne">
+    <use-data name="Forces" />
+    <use-data name="Velocities" />
+  </mesh>
 
-    <mesh name="MeshTwo">
-      <use-data name="Forces" />
-      <use-data name="Velocities" />
-    </mesh>
+  <mesh name="MeshTwo">
+    <use-data name="Forces" />
+    <use-data name="Velocities" />
+  </mesh>
 
-    <participant name="SolverOne">
-      <provide-mesh name="MeshOne" />
-      <write-data name="Forces" mesh="MeshOne" />
-      <read-data name="Velocities" mesh="MeshOne" />
-      <action:recorder timing="write-mapping-post" mesh="MeshOne" />
-      <action:recorder timing="read-mapping-post" mesh="MeshOne" />
-    </participant>
+  <participant name="SolverOne">
+    <provide-mesh name="MeshOne" />
 
-    <participant name="SolverTwo">
-      <receive-mesh name="MeshOne" from="SolverOne" />
-      <provide-mesh name="MeshTwo" />
-      <mapping:nearest-neighbor
-        direction="write"
-        from="MeshTwo"
-        to="MeshOne"
-        constraint="conservative" />
-      <mapping:nearest-projection
-        direction="read"
-        from="MeshOne"
-        to="MeshTwo"
-        constraint="consistent" />
-      <write-data name="Velocities" mesh="MeshTwo" />
-      <read-data name="Forces" mesh="MeshTwo" />
-      <action:recorder timing="write-mapping-post" mesh="MeshTwo" />
-      <action:recorder timing="read-mapping-post" mesh="MeshTwo" />
-    </participant>
+    <write-data name="Forces" mesh="MeshOne" />
 
-    <m2n:sockets from="SolverOne" to="SolverTwo" />
+    <read-data name="Velocities" mesh="MeshOne" />
 
-    <coupling-scheme:serial-implicit>
-      <participants first="SolverOne" second="SolverTwo" />
-      <max-time-windows value="10" />
-      <time-window-size value="1.0" />
-      <max-iterations value="3" />
-      <min-iteration-convergence-measure min-iterations="5" data="Forces" mesh="MeshOne" />
-      <exchange data="Forces" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
-      <exchange data="Velocities" mesh="MeshOne" from="SolverTwo" to="SolverOne" />
-    </coupling-scheme:serial-implicit>
-  </solver-interface>
+    <action:recorder timing="write-mapping-post" mesh="MeshOne" />
+    <action:recorder timing="read-mapping-post" mesh="MeshOne" />
+  </participant>
+
+  <participant name="SolverTwo">
+    <receive-mesh name="MeshOne" from="SolverOne" />
+
+    <provide-mesh name="MeshTwo" />
+
+    <mapping:nearest-neighbor
+      direction="write"
+      from="MeshTwo"
+      to="MeshOne"
+      constraint="conservative" />
+    <mapping:nearest-projection
+      direction="read"
+      from="MeshOne"
+      to="MeshTwo"
+      constraint="consistent" />
+
+    <write-data name="Velocities" mesh="MeshTwo" />
+
+    <read-data name="Forces" mesh="MeshTwo" />
+
+    <action:recorder timing="write-mapping-post" mesh="MeshTwo" />
+    <action:recorder timing="read-mapping-post" mesh="MeshTwo" />
+  </participant>
+
+  <m2n:sockets from="SolverOne" to="SolverTwo" />
+
+  <coupling-scheme:serial-implicit>
+    <participants first="SolverOne" second="SolverTwo" />
+
+    <max-time-windows value="10" />
+
+    <time-window-size value="1.0" />
+
+    <max-iterations value="3" />
+
+    <min-iteration-convergence-measure min-iterations="5" data="Forces" mesh="MeshOne" />
+
+    <exchange data="Forces" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
+    <exchange data="Velocities" mesh="MeshOne" from="SolverTwo" to="SolverOne" />
+  </coupling-scheme:serial-implicit>
 </precice-configuration>

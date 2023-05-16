@@ -1,63 +1,69 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration>
-  <solver-interface dimensions="2">
-    <data:scalar name="DisplacementSum" />
-    <data:scalar name="DisplacementTop" />
-    <data:scalar name="DisplacementBottom" />
-    <data:scalar name="Pressure" />
+<precice-configuration dimensions="2">
+  <data:scalar name="DisplacementSum" />
+  <data:scalar name="DisplacementTop" />
+  <data:scalar name="DisplacementBottom" />
+  <data:scalar name="Pressure" />
 
-    <mesh name="MeshB">
-      <use-data name="DisplacementTop" />
-      <use-data name="DisplacementBottom" />
-      <use-data name="DisplacementSum" />
-      <use-data name="Pressure" />
-    </mesh>
+  <mesh name="MeshB">
+    <use-data name="DisplacementTop" />
+    <use-data name="DisplacementBottom" />
+    <use-data name="DisplacementSum" />
+    <use-data name="Pressure" />
+  </mesh>
 
-    <mesh name="MeshATop">
-      <use-data name="DisplacementTop" />
-      <use-data name="Pressure" />
-    </mesh>
+  <mesh name="MeshATop">
+    <use-data name="DisplacementTop" />
+    <use-data name="Pressure" />
+  </mesh>
 
-    <mesh name="MeshABottom">
-      <use-data name="DisplacementBottom" />
-      <use-data name="Pressure" />
-    </mesh>
+  <mesh name="MeshABottom">
+    <use-data name="DisplacementBottom" />
+    <use-data name="Pressure" />
+  </mesh>
 
-    <participant name="A">
-      <provide-mesh name="MeshATop" />
-      <provide-mesh name="MeshABottom" />
-      <receive-mesh name="MeshB" from="B" />
-      <action:summation timing="write-mapping-post" mesh="MeshB">
-        <source-data name="DisplacementTop" />
-        <source-data name="DisplacementBottom" />
-        <target-data name="DisplacementSum" />
-      </action:summation>
-      <write-data name="DisplacementTop" mesh="MeshATop" />
-      <write-data name="DisplacementBottom" mesh="MeshABottom" />
-      <mapping:nearest-neighbor
-        direction="write"
-        from="MeshATop"
-        to="MeshB"
-        constraint="consistent" />
-      <mapping:nearest-neighbor
-        direction="write"
-        from="MeshABottom"
-        to="MeshB"
-        constraint="consistent" />
-    </participant>
+  <participant name="A">
+    <provide-mesh name="MeshATop" />
+    <provide-mesh name="MeshABottom" />
 
-    <participant name="B">
-      <provide-mesh name="MeshB" />
-      <read-data name="DisplacementSum" mesh="MeshB" />
-    </participant>
+    <receive-mesh name="MeshB" from="B" />
 
-    <m2n:sockets from="B" to="A" />
+    <action:summation timing="write-mapping-post" mesh="MeshB">
+      <source-data name="DisplacementTop" />
+      <source-data name="DisplacementBottom" />
+      <target-data name="DisplacementSum" />
+    </action:summation>
 
-    <coupling-scheme:parallel-explicit>
-      <participants first="A" second="B" />
-      <max-time value="1.0" />
-      <time-window-size value="1.0" />
-      <exchange data="DisplacementSum" mesh="MeshB" from="A" to="B" />
-    </coupling-scheme:parallel-explicit>
-  </solver-interface>
+    <write-data name="DisplacementTop" mesh="MeshATop" />
+    <write-data name="DisplacementBottom" mesh="MeshABottom" />
+
+    <mapping:nearest-neighbor
+      direction="write"
+      from="MeshATop"
+      to="MeshB"
+      constraint="consistent" />
+    <mapping:nearest-neighbor
+      direction="write"
+      from="MeshABottom"
+      to="MeshB"
+      constraint="consistent" />
+  </participant>
+
+  <participant name="B">
+    <provide-mesh name="MeshB" />
+
+    <read-data name="DisplacementSum" mesh="MeshB" />
+  </participant>
+
+  <m2n:sockets from="B" to="A" />
+
+  <coupling-scheme:parallel-explicit>
+    <participants first="A" second="B" />
+
+    <max-time value="1.0" />
+
+    <time-window-size value="1.0" />
+
+    <exchange data="DisplacementSum" mesh="MeshB" from="A" to="B" />
+  </coupling-scheme:parallel-explicit>
 </precice-configuration>

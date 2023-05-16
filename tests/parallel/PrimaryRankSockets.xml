@@ -1,51 +1,59 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration>
-  <solver-interface dimensions="2">
-    <data:scalar name="MyData1" />
-    <data:scalar name="MyData2" />
+<precice-configuration dimensions="2">
+  <data:scalar name="MyData1" />
+  <data:scalar name="MyData2" />
 
-    <mesh name="ParallelMesh">
-      <use-data name="MyData1" />
-      <use-data name="MyData2" />
-    </mesh>
+  <mesh name="ParallelMesh">
+    <use-data name="MyData1" />
+    <use-data name="MyData2" />
+  </mesh>
 
-    <mesh name="SerialMesh">
-      <use-data name="MyData1" />
-      <use-data name="MyData2" />
-    </mesh>
+  <mesh name="SerialMesh">
+    <use-data name="MyData1" />
+    <use-data name="MyData2" />
+  </mesh>
 
-    <participant name="ParallelSolver">
-      <intra-comm:sockets />
-      <provide-mesh name="ParallelMesh" />
-      <receive-mesh name="SerialMesh" from="SerialSolver" />
-      <write-data name="MyData1" mesh="ParallelMesh" />
-      <read-data name="MyData2" mesh="ParallelMesh" />
-      <mapping:nearest-neighbor
-        direction="write"
-        from="ParallelMesh"
-        to="SerialMesh"
-        constraint="conservative" />
-      <mapping:nearest-neighbor
-        direction="read"
-        from="SerialMesh"
-        to="ParallelMesh"
-        constraint="consistent" />
-    </participant>
+  <participant name="ParallelSolver">
+    <intra-comm:sockets />
 
-    <participant name="SerialSolver">
-      <provide-mesh name="SerialMesh" />
-      <read-data name="MyData1" mesh="SerialMesh" />
-      <write-data name="MyData2" mesh="SerialMesh" />
-    </participant>
+    <provide-mesh name="ParallelMesh" />
 
-    <m2n:sockets from="ParallelSolver" to="SerialSolver" enforce-gather-scatter="true" />
+    <receive-mesh name="SerialMesh" from="SerialSolver" />
 
-    <coupling-scheme:parallel-explicit>
-      <participants first="ParallelSolver" second="SerialSolver" />
-      <max-time value="1.0" />
-      <time-window-size value="1.0" valid-digits="8" />
-      <exchange data="MyData1" mesh="SerialMesh" from="ParallelSolver" to="SerialSolver" />
-      <exchange data="MyData2" mesh="SerialMesh" from="SerialSolver" to="ParallelSolver" />
-    </coupling-scheme:parallel-explicit>
-  </solver-interface>
+    <write-data name="MyData1" mesh="ParallelMesh" />
+
+    <read-data name="MyData2" mesh="ParallelMesh" />
+
+    <mapping:nearest-neighbor
+      direction="write"
+      from="ParallelMesh"
+      to="SerialMesh"
+      constraint="conservative" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="SerialMesh"
+      to="ParallelMesh"
+      constraint="consistent" />
+  </participant>
+
+  <participant name="SerialSolver">
+    <provide-mesh name="SerialMesh" />
+
+    <read-data name="MyData1" mesh="SerialMesh" />
+
+    <write-data name="MyData2" mesh="SerialMesh" />
+  </participant>
+
+  <m2n:sockets from="ParallelSolver" to="SerialSolver" enforce-gather-scatter="true" />
+
+  <coupling-scheme:parallel-explicit>
+    <participants first="ParallelSolver" second="SerialSolver" />
+
+    <max-time value="1.0" />
+
+    <time-window-size value="1.0" valid-digits="8" />
+
+    <exchange data="MyData1" mesh="SerialMesh" from="ParallelSolver" to="SerialSolver" />
+    <exchange data="MyData2" mesh="SerialMesh" from="SerialSolver" to="ParallelSolver" />
+  </coupling-scheme:parallel-explicit>
 </precice-configuration>

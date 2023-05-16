@@ -1,50 +1,57 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration>
-  <solver-interface dimensions="3">
-    <data:vector name="Forces" />
-    <data:vector name="Velocities" />
+<precice-configuration dimensions="3">
+  <data:vector name="Forces" />
+  <data:vector name="Velocities" />
 
-    <mesh name="Test-Square">
-      <use-data name="Forces" />
-      <use-data name="Velocities" />
-    </mesh>
+  <mesh name="Test-Square">
+    <use-data name="Forces" />
+    <use-data name="Velocities" />
+  </mesh>
 
-    <mesh name="MeshOne">
-      <use-data name="Forces" />
-      <use-data name="Velocities" />
-    </mesh>
+  <mesh name="MeshOne">
+    <use-data name="Forces" />
+    <use-data name="Velocities" />
+  </mesh>
 
-    <participant name="SolverOne">
-      <receive-mesh name="Test-Square" from="SolverTwo" />
-      <provide-mesh name="MeshOne" />
-      <mapping:nearest-neighbor
-        direction="write"
-        from="MeshOne"
-        to="Test-Square"
-        constraint="conservative" />
-      <mapping:nearest-neighbor
-        direction="read"
-        from="Test-Square"
-        to="MeshOne"
-        constraint="consistent" />
-      <write-data name="Forces" mesh="MeshOne" />
-      <read-data name="Velocities" mesh="MeshOne" />
-    </participant>
+  <participant name="SolverOne">
+    <receive-mesh name="Test-Square" from="SolverTwo" />
 
-    <participant name="SolverTwo">
-      <provide-mesh name="Test-Square" />
-      <write-data name="Velocities" mesh="Test-Square" />
-      <read-data name="Forces" mesh="Test-Square" />
-    </participant>
+    <provide-mesh name="MeshOne" />
 
-    <m2n:mpi-multiple-ports from="SolverOne" to="SolverTwo" />
+    <mapping:nearest-neighbor
+      direction="write"
+      from="MeshOne"
+      to="Test-Square"
+      constraint="conservative" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="Test-Square"
+      to="MeshOne"
+      constraint="consistent" />
 
-    <coupling-scheme:serial-explicit>
-      <participants first="SolverOne" second="SolverTwo" />
-      <max-time-windows value="10" />
-      <time-window-size value="1.0" />
-      <exchange data="Forces" mesh="Test-Square" from="SolverOne" to="SolverTwo" />
-      <exchange data="Velocities" mesh="Test-Square" from="SolverTwo" to="SolverOne" />
-    </coupling-scheme:serial-explicit>
-  </solver-interface>
+    <write-data name="Forces" mesh="MeshOne" />
+
+    <read-data name="Velocities" mesh="MeshOne" />
+  </participant>
+
+  <participant name="SolverTwo">
+    <provide-mesh name="Test-Square" />
+
+    <write-data name="Velocities" mesh="Test-Square" />
+
+    <read-data name="Forces" mesh="Test-Square" />
+  </participant>
+
+  <m2n:mpi-multiple-ports from="SolverOne" to="SolverTwo" />
+
+  <coupling-scheme:serial-explicit>
+    <participants first="SolverOne" second="SolverTwo" />
+
+    <max-time-windows value="10" />
+
+    <time-window-size value="1.0" />
+
+    <exchange data="Forces" mesh="Test-Square" from="SolverOne" to="SolverTwo" />
+    <exchange data="Velocities" mesh="Test-Square" from="SolverTwo" to="SolverOne" />
+  </coupling-scheme:serial-explicit>
 </precice-configuration>
