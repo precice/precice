@@ -336,7 +336,9 @@ target_sources(preciceCore
 #
 
 set_property(TARGET precice PROPERTY PUBLIC_HEADER
-    ${PROJECT_BINARY_DIR}/src/precice/precice.hpp
+    ${PROJECT_BINARY_DIR}/src/precice/Version.h
+    src/precice/precice.hpp
     src/precice/Tooling.hpp
+    src/precice/span.hpp
     src/precice/types.hpp
     )
