@@ -1,0 +1,22 @@
+name: Detect Merge Commits
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  test:
+    name: Check for merge commits
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Run test
+        uses: NexusPHP/no-merge-commits@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
