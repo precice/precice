@@ -153,7 +153,7 @@ void MultiCouplingScheme::exchangeSecondData()
     receiveConvergence(_m2ns[_controller]);
   }
 
-  if (hasConverged() || isExplicitCouplingScheme()) {
+  if (hasConverged()) {
     moveToNextWindow();
   }
 
@@ -168,9 +168,7 @@ void MultiCouplingScheme::exchangeSecondData()
     checkDataHasBeenReceived();
   }
 
-  if (isImplicitCouplingScheme()) {
-    storeIteration();
-  }
+  storeIteration();
 }
 
 void MultiCouplingScheme::addDataToSend(

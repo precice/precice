@@ -111,15 +111,15 @@ void SerialCouplingScheme::exchangeFirstData()
     sendData(getM2N(), getSendData());
   } else { // second participant
     if (isImplicitCouplingScheme()) {
-      PRECICE_DEBUG("Test Convergence and accelerate...");
+      PRECICE_DEBUG("Perform acceleration (only second participant)...");
       doImplicitStep();
+      PRECICE_DEBUG("Sending convergence...");
       sendConvergence(getM2N());
-      if (hasConverged()) {
-        moveToNextWindow();
-      }
-      storeIteration();
-    } else {
-      PRECICE_ASSERT(isExplicitCouplingScheme());
+    }
+  }
+
+  if (!doesFirstStep()) { // do moveToNextWindow already here for second participant in SerialCouplingScheme
+    if (hasConverged() || isExplicitCouplingScheme()) {
       moveToNextWindow();
     }
     PRECICE_DEBUG("Sending data...");
@@ -133,19 +133,23 @@ void SerialCouplingScheme::exchangeSecondData()
     PRECICE_DEBUG("Receiving convergence data...");
     if (isImplicitCouplingScheme()) {
       receiveConvergence(getM2N());
-      if (hasConverged()) {
-        moveToNextWindow(); // extrapolation result for receive data of first is directly overwritten!
-      }
-    } else {
-      PRECICE_ASSERT(isExplicitCouplingScheme());
-      moveToNextWindow(); // extrapolation result for receive data of first is directly overwritten!
     }
+  }
+
+  if (doesFirstStep()) { // first participant
+    if (hasConverged() || isExplicitCouplingScheme()) {
+      moveToNextWindow(); // extrapolation result for receive data of first is directly overwritten in next step
+    }
+  }
+
+  if (doesFirstStep()) {
     PRECICE_DEBUG("Receiving data...");
     receiveData(getM2N(), getReceiveData());
-    if (isImplicitCouplingScheme()) {
-      storeIteration();
-    }
     checkDataHasBeenReceived();
+  }
+
+  if (isImplicitCouplingScheme()) {
+    storeIteration();
   }
 
   if (!doesFirstStep()) { // second participant
