@@ -10,7 +10,6 @@
 #include "m2n/config/M2NConfiguration.hpp"
 #include "mapping/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "precice/config/SolverInterfaceConfiguration.hpp"
 #include "profiling/config/ProfilingConfiguration.hpp"
 #include "xml/XMLTag.hpp"
 

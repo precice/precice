@@ -48,7 +48,6 @@
 #include "precice/config/Configuration.hpp"
 #include "precice/config/ParticipantConfiguration.hpp"
 #include "precice/config/SharedPointer.hpp"
-#include "precice/config/SolverInterfaceConfiguration.hpp"
 #include "precice/impl/CommonErrorMessages.hpp"
 #include "precice/impl/MappingContext.hpp"
 #include "precice/impl/MeshContext.hpp"
@@ -206,7 +205,6 @@ void ParticipantImpl::configure(
     PRECICE_INFO("I am participant \"{}\"", _accessorName);
   }
 
-  /*
   PRECICE_TRACE();
 
   _meshLock.clear();
@@ -243,7 +241,6 @@ void ParticipantImpl::configure(
   for (const MeshContext *meshContext : _accessor->usedMeshContexts()) {
     _meshLock.add(meshContext->mesh->getName(), false);
   }
-  */
 }
 
 void ParticipantImpl::initialize()
@@ -1419,7 +1416,7 @@ void ParticipantImpl::resetWrittenData(bool isAtWindowEnd)
 }
 
 PtrParticipant ParticipantImpl::determineAccessingParticipant(
-    const config::SolverInterfaceConfiguration &config)
+    const config::Configuration &config)
 {
   const auto &partConfig = config.getParticipantConfiguration();
   for (const PtrParticipant &participant : partConfig->getParticipants()) {
