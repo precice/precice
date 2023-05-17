@@ -113,14 +113,17 @@ void SerialCouplingScheme::exchangeFirstData()
     if (isImplicitCouplingScheme()) {
       PRECICE_DEBUG("Perform acceleration (only second participant)...");
       doImplicitStep();
-      PRECICE_DEBUG("Sending convergence...");
-      sendConvergence(getM2N());
     }
   }
 
-  if (!doesFirstStep()) { // do moveToNextWindow already here for second participant in SerialCouplingScheme
+  // @todo bundle sendConvergence, specific moveToNextWindow and sendData into one function?
+  if (not doesFirstStep()) {
+    if (isImplicitCouplingScheme()) {
+      PRECICE_DEBUG("Sending convergence...");
+      sendConvergence(getM2N());
+    }
     if (hasConverged() || isExplicitCouplingScheme()) {
-      moveToNextWindow();
+      moveToNextWindow(); // do moveToNextWindow already here for second participant in SerialCouplingScheme
     }
     PRECICE_DEBUG("Sending data...");
     sendData(getM2N(), getSendData());
@@ -129,20 +132,15 @@ void SerialCouplingScheme::exchangeFirstData()
 
 void SerialCouplingScheme::exchangeSecondData()
 {
+  // @todo bundle receiveConvergence, specific moveToNextWindow and sendData into one function?
   if (doesFirstStep()) { // first participant
-    PRECICE_DEBUG("Receiving convergence data...");
     if (isImplicitCouplingScheme()) {
+      PRECICE_DEBUG("Receiving convergence data...");
       receiveConvergence(getM2N());
     }
-  }
-
-  if (doesFirstStep()) { // first participant
     if (hasConverged() || isExplicitCouplingScheme()) {
       moveToNextWindow(); // extrapolation result for receive data of first is directly overwritten in next step
     }
-  }
-
-  if (doesFirstStep()) {
     PRECICE_DEBUG("Receiving data...");
     receiveData(getM2N(), getReceiveData());
     checkDataHasBeenReceived();
@@ -152,7 +150,7 @@ void SerialCouplingScheme::exchangeSecondData()
     storeIteration();
   }
 
-  if (!doesFirstStep()) { // second participant
+  if (not doesFirstStep()) { // second participant
     // the second participant does not want new data in the last iteration of the last time window
     if (isCouplingOngoing() || (isImplicitCouplingScheme() && not hasConverged())) {
       receiveAndSetTimeWindowSize();

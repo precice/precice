@@ -37,27 +37,36 @@ void ParallelCouplingScheme::exchangeFirstData()
 
 void ParallelCouplingScheme::exchangeSecondData()
 {
-  if (isImplicitCouplingScheme()) {
-    if (doesFirstStep()) { // first participant
-      PRECICE_DEBUG("Receiving convergence...");
-      receiveConvergence(getM2N());
-    } else { // second participant
-      PRECICE_DEBUG("Perform acceleration (only second participant)...");
-      doImplicitStep();
-      PRECICE_DEBUG("Sending convergence...");
-      sendConvergence(getM2N());
-    }
-  }
-
-  if (hasConverged() || isExplicitCouplingScheme()) {
-    moveToNextWindow();
-  }
-
+  // @todo bundle receiveConvergence, specific moveToNextWindow and sendData into one function?
   if (doesFirstStep()) { // first participant
+    if (isImplicitCouplingScheme()) {
+      PRECICE_DEBUG("Receiving convergence data...");
+      receiveConvergence(getM2N());
+    }
+    if (hasConverged() || isExplicitCouplingScheme()) {
+      moveToNextWindow();
+    }
     PRECICE_DEBUG("Receiving data...");
     receiveData(getM2N(), getReceiveData());
     checkDataHasBeenReceived();
-  } else { // second participant
+  }
+
+  if (isImplicitCouplingScheme()) {
+    if (not doesFirstStep()) { // second participant
+      PRECICE_DEBUG("Perform acceleration (only second participant)...");
+      doImplicitStep();
+    }
+  }
+
+  // @todo bundle sendConvergence, specific moveToNextWindow and sendData into one function?
+  if (not doesFirstStep()) {
+    if (isImplicitCouplingScheme()) {
+      PRECICE_DEBUG("Sending convergence...");
+      sendConvergence(getM2N());
+    }
+    if (hasConverged() || isExplicitCouplingScheme()) {
+      moveToNextWindow();
+    }
     PRECICE_DEBUG("Sending data...");
     sendData(getM2N(), getSendData());
   }

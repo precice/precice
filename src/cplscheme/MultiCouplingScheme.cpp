@@ -144,28 +144,33 @@ void MultiCouplingScheme::exchangeSecondData()
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
   // @todo implement MultiCouplingScheme for explicit coupling
 
-  if (_isController) {
-    doImplicitStep();
-    for (const auto &m2n : _m2ns | boost::adaptors::map_values) {
-      sendConvergence(m2n);
-    }
-  } else {
+  // @todo bundle receiveConvergence, specific moveToNextWindow and sendData into one function?
+  if (not _isController) {
     receiveConvergence(_m2ns[_controller]);
-  }
-
-  if (hasConverged()) {
-    moveToNextWindow();
-  }
-
-  if (_isController) {
-    for (auto &sendExchange : _sendDataVector) {
-      sendData(_m2ns[sendExchange.first], sendExchange.second);
+    if (hasConverged()) {
+      moveToNextWindow();
     }
-  } else {
     for (auto &receiveExchange : _receiveDataVector) {
       receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
     }
     checkDataHasBeenReceived();
+  }
+
+  if (_isController) {
+    doImplicitStep();
+  }
+
+  // @todo bundle sendConvergence, specific moveToNextWindow and sendData into one function?
+  if (_isController) {
+    for (const auto &m2n : _m2ns | boost::adaptors::map_values) {
+      sendConvergence(m2n);
+    }
+    if (hasConverged()) {
+      moveToNextWindow();
+    }
+    for (auto &sendExchange : _sendDataVector) {
+      sendData(_m2ns[sendExchange.first], sendExchange.second);
+    }
   }
 
   storeIteration();
