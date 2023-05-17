@@ -15,10 +15,8 @@
 
   <participant name="ExporterOne">
     <provide-mesh name="A" />
-
     <write-data name="S" mesh="A" />
     <write-data name="V" mesh="A" />
-
     <export:vtk directory="timeseries" />
     <export:vtu directory="timeseries" />
     <export:vtp directory="timeseries" />
@@ -27,14 +25,10 @@
 
   <participant name="ExporterTwo">
     <receive-mesh name="A" from="ExporterOne" />
-
     <provide-mesh name="B" />
-
     <read-data name="S" mesh="B" />
     <read-data name="V" mesh="B" />
-
     <mapping:nearest-neighbor direction="read" from="A" to="B" constraint="consistent" />
-
     <export:vtu directory="timeseries" />
     <export:vtp directory="timeseries" />
     <export:csv directory="timeseries" />
@@ -44,11 +38,8 @@
 
   <coupling-scheme:serial-explicit>
     <participants first="ExporterOne" second="ExporterTwo" />
-
     <max-time-windows value="5" />
-
     <time-window-size value="1.0" />
-
     <exchange data="S" mesh="A" from="ExporterOne" to="ExporterTwo" />
     <exchange data="V" mesh="A" from="ExporterOne" to="ExporterTwo" />
   </coupling-scheme:serial-explicit>

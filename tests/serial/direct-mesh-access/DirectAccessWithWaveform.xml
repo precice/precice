@@ -14,13 +14,9 @@
 
   <participant name="SolverOne">
     <provide-mesh name="MeshOne" />
-
     <receive-mesh name="MeshTwo" from="SolverTwo" safety-factor="0" direct-access="true" />
-
     <write-data name="Velocities" mesh="MeshTwo" />
-
     <read-data name="Forces" mesh="MeshOne" waveform-order="1" />
-
     <mapping:nearest-neighbor
       direction="read"
       from="MeshTwo"
@@ -30,9 +26,7 @@
 
   <participant name="SolverTwo">
     <provide-mesh name="MeshTwo" />
-
     <read-data name="Velocities" mesh="MeshTwo" waveform-order="1" />
-
     <write-data name="Forces" mesh="MeshTwo" />
   </participant>
 
@@ -40,15 +34,10 @@
 
   <coupling-scheme:parallel-implicit>
     <participants first="SolverOne" second="SolverTwo" />
-
     <max-time-windows value="2" />
-
     <max-iterations value="3" />
-
     <min-iteration-convergence-measure min-iterations="3" data="Velocities" mesh="MeshTwo" />
-
     <time-window-size value="1.0" />
-
     <exchange data="Velocities" mesh="MeshTwo" from="SolverOne" to="SolverTwo" />
     <exchange data="Forces" mesh="MeshTwo" from="SolverTwo" to="SolverOne" />
   </coupling-scheme:parallel-implicit>

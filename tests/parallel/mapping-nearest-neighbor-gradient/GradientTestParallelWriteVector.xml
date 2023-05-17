@@ -15,11 +15,8 @@
 
   <participant name="SolverOne">
     <receive-mesh name="MeshTwo" from="SolverTwo" />
-
     <provide-mesh name="MeshOne" />
-
     <read-data name="Data2" mesh="MeshOne" />
-
     <mapping:nearest-neighbor-gradient
       direction="read"
       from="MeshTwo"
@@ -29,7 +26,6 @@
 
   <participant name="SolverTwo">
     <provide-mesh name="MeshTwo" />
-
     <write-data name="Data2" mesh="MeshTwo" />
   </participant>
 
@@ -37,11 +33,8 @@
 
   <coupling-scheme:parallel-explicit>
     <participants first="SolverOne" second="SolverTwo" />
-
     <max-time-windows value="1" />
-
     <time-window-size value="1.0" />
-
     <exchange data="Data2" mesh="MeshTwo" from="SolverTwo" to="SolverOne" />
   </coupling-scheme:parallel-explicit>
 </precice-configuration>

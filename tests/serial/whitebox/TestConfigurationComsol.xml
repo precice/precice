@@ -23,9 +23,7 @@
 
   <participant name="Peano">
     <provide-mesh name="PeanoNodes" />
-
     <receive-mesh name="ComsolNodes" from="Comsol" />
-
     <mapping:nearest-projection
       direction="write"
       from="PeanoNodes"
@@ -36,28 +34,21 @@
       from="ComsolNodes"
       to="PeanoNodes"
       constraint="consistent" />
-
     <write-data name="Forces" mesh="PeanoNodes" />
-
     <read-data name="Displacements" mesh="PeanoNodes" />
     <read-data name="Velocities" mesh="PeanoNodes" />
     <read-data name="VelocityDeltas" mesh="PeanoNodes" />
-
     <export:vtk every-n-time-windows="100" directory="output/" />
     <export:vtk every-n-time-windows="100" directory="" />
-
     <watch-point name="pointa" mesh="PeanoNodes" coordinate="1.0; 1.0" />
   </participant>
 
   <participant name="Comsol">
     <provide-mesh name="ComsolNodes" />
-
     <write-data name="Displacements" mesh="ComsolNodes" />
     <write-data name="Velocities" mesh="ComsolNodes" />
     <write-data name="VelocityDeltas" mesh="ComsolNodes" />
-
     <read-data name="Forces" mesh="ComsolNodes" />
-
     <action:divide-by-area mesh="ComsolNodes" timing="read-mapping-post">
       <target-data name="Forces" />
     </action:divide-by-area>
@@ -65,11 +56,8 @@
 
   <coupling-scheme:serial-explicit>
     <participants first="Peano" second="Comsol" />
-
     <max-time value="1.0" />
-
     <time-window-size value="0.1" />
-
     <exchange data="Forces" mesh="ComsolNodes" from="Peano" to="Comsol" />
     <exchange data="Velocities" mesh="ComsolNodes" from="Comsol" to="Peano" />
     <exchange data="Displacements" mesh="ComsolNodes" from="Comsol" to="Peano" />

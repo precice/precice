@@ -12,11 +12,8 @@
 
   <participant name="SolverOne">
     <provide-mesh name="MeshOne" />
-
     <receive-mesh name="MeshTwo" from="SolverTwo" geometric-filter="no-filter" />
-
     <write-data name="DataOne" mesh="MeshOne" />
-
     <mapping:linear-cell-interpolation
       direction="write"
       from="MeshOne"
@@ -26,7 +23,6 @@
 
   <participant name="SolverTwo">
     <provide-mesh name="MeshTwo" />
-
     <read-data name="DataOne" mesh="MeshTwo" />
   </participant>
 
@@ -34,11 +30,8 @@
 
   <coupling-scheme:serial-explicit>
     <participants first="SolverOne" second="SolverTwo" />
-
     <max-time-windows value="1" />
-
     <time-window-size value="1.0" />
-
     <exchange data="DataOne" mesh="MeshTwo" from="SolverOne" to="SolverTwo" />
   </coupling-scheme:serial-explicit>
 </precice-configuration>

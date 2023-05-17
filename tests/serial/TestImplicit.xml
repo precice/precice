@@ -17,17 +17,13 @@
 
   <participant name="SolverOne">
     <provide-mesh name="Square" />
-
     <write-data name="Forces" mesh="Square" />
-
     <read-data name="Velocities" mesh="Square" />
   </participant>
 
   <participant name="SolverTwo">
     <receive-mesh name="Square" from="SolverOne" />
-
     <provide-mesh name="SquareTwo" />
-
     <mapping:nearest-neighbor
       direction="write"
       from="SquareTwo"
@@ -38,23 +34,16 @@
       from="Square"
       to="SquareTwo"
       constraint="consistent" />
-
     <write-data name="Velocities" mesh="SquareTwo" />
-
     <read-data name="Forces" mesh="SquareTwo" />
   </participant>
 
   <coupling-scheme:serial-implicit>
     <participants first="SolverOne" second="SolverTwo" />
-
     <max-time-windows value="4" />
-
     <time-window-size value="0.01" />
-
     <max-iterations value="100" />
-
     <absolute-convergence-measure data="Velocities" mesh="Square" limit="1.73205080756887729" />
-
     <exchange data="Forces" mesh="Square" from="SolverOne" to="SolverTwo" />
     <exchange data="Velocities" mesh="Square" from="SolverTwo" to="SolverOne" />
   </coupling-scheme:serial-implicit>

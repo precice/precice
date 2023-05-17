@@ -20,9 +20,7 @@
 
   <participant name="SolverOne">
     <provide-mesh name="MeshOne" />
-
     <receive-mesh name="SolverGeometry" from="SolverTwo" />
-
     <mapping:nearest-neighbor
       direction="write"
       from="MeshOne"
@@ -33,29 +31,22 @@
       from="SolverGeometry"
       to="MeshOne"
       constraint="consistent" />
-
     <write-data name="Forces" mesh="MeshOne" />
-
     <read-data name="Velocities" mesh="MeshOne" />
     <read-data name="Displacements" mesh="MeshOne" />
   </participant>
 
   <participant name="SolverTwo">
     <provide-mesh name="SolverGeometry" />
-
     <write-data name="Displacements" mesh="SolverGeometry" />
     <write-data name="Velocities" mesh="SolverGeometry" />
-
     <read-data name="Forces" mesh="SolverGeometry" />
   </participant>
 
   <coupling-scheme:serial-explicit>
     <participants first="SolverOne" second="SolverTwo" />
-
     <max-time-windows value="5" />
-
     <time-window-size value="0.01" />
-
     <exchange data="Forces" mesh="SolverGeometry" from="SolverOne" to="SolverTwo" />
     <exchange data="Velocities" mesh="SolverGeometry" from="SolverTwo" to="SolverOne" />
     <exchange data="Displacements" mesh="SolverGeometry" from="SolverTwo" to="SolverOne" />

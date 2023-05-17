@@ -23,20 +23,16 @@
   <participant name="A">
     <provide-mesh name="MeshATop" />
     <provide-mesh name="MeshABottom" />
-
     <write-data name="DisplacementTop" mesh="MeshATop" />
     <write-data name="DisplacementBottom" mesh="MeshABottom" />
   </participant>
 
   <participant name="B">
     <provide-mesh name="MeshB" />
-
     <receive-mesh name="MeshATop" from="A" />
     <receive-mesh name="MeshABottom" from="A" />
-
     <read-data name="DisplacementTop" mesh="MeshB" />
     <read-data name="DisplacementBottom" mesh="MeshB" />
-
     <mapping:nearest-neighbor direction="read" from="MeshATop" to="MeshB" constraint="consistent" />
     <mapping:nearest-neighbor
       direction="read"
@@ -49,11 +45,8 @@
 
   <coupling-scheme:parallel-explicit>
     <participants first="A" second="B" />
-
     <max-time value="1.0" />
-
     <time-window-size value="1.0" />
-
     <exchange data="DisplacementTop" mesh="MeshATop" from="A" to="B" />
     <exchange data="DisplacementBottom" mesh="MeshABottom" from="A" to="B" />
   </coupling-scheme:parallel-explicit>

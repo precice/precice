@@ -15,17 +15,13 @@
 
   <participant name="SolverOne">
     <provide-mesh name="MeshOne" />
-
     <write-data name="DataOne" mesh="MeshOne" />
-
     <read-data name="DataTwo" mesh="MeshOne" />
   </participant>
 
   <participant name="SolverTwo">
     <receive-mesh name="MeshOne" from="SolverOne" />
-
     <provide-mesh name="MeshTwo" />
-
     <mapping:nearest-neighbor
       direction="write"
       from="MeshTwo"
@@ -36,9 +32,7 @@
       from="MeshOne"
       to="MeshTwo"
       constraint="consistent" />
-
     <write-data name="DataTwo" mesh="MeshTwo" />
-
     <read-data name="DataOne" mesh="MeshTwo" />
   </participant>
 
@@ -46,15 +40,10 @@
 
   <coupling-scheme:parallel-implicit>
     <participants first="SolverOne" second="SolverTwo" />
-
     <max-time-windows value="5" />
-
     <time-window-size value="2" />
-
     <max-iterations value="3" />
-
     <min-iteration-convergence-measure min-iterations="3" data="DataOne" mesh="MeshOne" />
-
     <exchange data="DataOne" mesh="MeshOne" from="SolverOne" to="SolverTwo" initialize="on" />
     <exchange data="DataTwo" mesh="MeshOne" from="SolverTwo" to="SolverOne" initialize="on" />
   </coupling-scheme:parallel-implicit>

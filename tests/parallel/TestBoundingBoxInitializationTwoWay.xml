@@ -15,13 +15,9 @@
 
   <participant name="Fluid">
     <provide-mesh name="FluidMesh" />
-
     <receive-mesh name="StructureMesh" from="Structure" />
-
     <write-data name="Forces" mesh="FluidMesh" />
-
     <read-data name="Velocities" mesh="FluidMesh" />
-
     <mapping:nearest-neighbor
       direction="write"
       from="FluidMesh"
@@ -36,9 +32,7 @@
 
   <participant name="Structure">
     <provide-mesh name="StructureMesh" />
-
     <write-data name="Velocities" mesh="StructureMesh" />
-
     <read-data name="Forces" mesh="StructureMesh" />
   </participant>
 
@@ -46,11 +40,8 @@
 
   <coupling-scheme:serial-explicit>
     <participants first="Fluid" second="Structure" />
-
     <max-time-windows value="1" />
-
     <time-window-size value="1.0" />
-
     <exchange data="Forces" mesh="StructureMesh" from="Fluid" to="Structure" />
     <exchange data="Velocities" mesh="StructureMesh" from="Structure" to="Fluid" />
   </coupling-scheme:serial-explicit>

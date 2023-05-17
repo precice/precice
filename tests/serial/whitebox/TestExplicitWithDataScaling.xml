@@ -14,23 +14,18 @@
 
   <participant name="SolverOne">
     <provide-mesh name="Test-Square-One" />
-
     <write-data name="Velocities" mesh="Test-Square-One" />
   </participant>
 
   <participant name="SolverTwo">
     <provide-mesh name="Test-Square-Two" />
-
     <receive-mesh name="Test-Square-One" from="SolverOne" />
-
     <read-data name="Velocities" mesh="Test-Square-Two" />
-
     <mapping:nearest-neighbor
       direction="read"
       from="Test-Square-One"
       to="Test-Square-Two"
       constraint="consistent" />
-
     <action:divide-by-area timing="read-mapping-post" mesh="Test-Square-Two">
       <target-data name="Velocities" />
     </action:divide-by-area>
@@ -38,11 +33,8 @@
 
   <coupling-scheme:serial-explicit>
     <participants first="SolverOne" second="SolverTwo" />
-
     <max-time-windows value="10" />
-
     <time-window-size value="0.01" />
-
     <exchange data="Velocities" mesh="Test-Square-One" from="SolverOne" to="SolverTwo" />
   </coupling-scheme:serial-explicit>
 </precice-configuration>

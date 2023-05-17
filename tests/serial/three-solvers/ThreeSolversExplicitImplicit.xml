@@ -24,35 +24,25 @@
 
   <participant name="SolverOne">
     <provide-mesh name="MeshA" />
-
     <write-data name="Data0" mesh="MeshA" />
-
     <read-data name="Data1" mesh="MeshA" />
     <read-data name="Data2" mesh="MeshA" />
   </participant>
 
   <participant name="SolverTwo">
     <receive-mesh name="MeshA" from="SolverOne" />
-
     <write-data name="Data1" mesh="MeshC" />
-
     <read-data name="Data0" mesh="MeshC" />
-
     <provide-mesh name="MeshC" />
-
     <mapping:nearest-neighbor direction="read" from="MeshA" to="MeshC" constraint="conservative" />
     <mapping:nearest-neighbor direction="write" from="MeshC" to="MeshA" constraint="consistent" />
   </participant>
 
   <participant name="SolverThree">
     <receive-mesh name="MeshA" from="SolverOne" />
-
     <write-data name="Data2" mesh="MeshD" />
-
     <read-data name="Data0" mesh="MeshD" />
-
     <provide-mesh name="MeshD" />
-
     <mapping:nearest-neighbor direction="read" from="MeshA" to="MeshD" constraint="conservative" />
     <mapping:nearest-neighbor direction="write" from="MeshD" to="MeshA" constraint="consistent" />
   </participant>
@@ -62,26 +52,18 @@
 
   <coupling-scheme:serial-explicit>
     <participants first="SolverOne" second="SolverTwo" />
-
     <max-time-windows value="10" />
-
     <time-window-size value="1.0" />
-
     <exchange data="Data0" mesh="MeshA" from="SolverOne" to="SolverTwo" />
     <exchange data="Data1" mesh="MeshA" from="SolverTwo" to="SolverOne" />
   </coupling-scheme:serial-explicit>
 
   <coupling-scheme:serial-implicit>
     <participants first="SolverOne" second="SolverThree" />
-
     <max-time-windows value="10" />
-
     <time-window-size value="1.0" />
-
     <max-iterations value="10" />
-
     <min-iteration-convergence-measure min-iterations="3" data="Data2" mesh="MeshA" />
-
     <exchange data="Data0" mesh="MeshA" from="SolverOne" to="SolverThree" />
     <exchange data="Data2" mesh="MeshA" from="SolverThree" to="SolverOne" />
   </coupling-scheme:serial-implicit>

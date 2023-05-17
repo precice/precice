@@ -15,15 +15,10 @@
 
   <participant name="ParallelSolver">
     <intra-comm:sockets />
-
     <provide-mesh name="ParallelMesh" />
-
     <receive-mesh name="SerialMesh" from="SerialSolver" />
-
     <write-data name="MyData1" mesh="ParallelMesh" />
-
     <read-data name="MyData2" mesh="ParallelMesh" />
-
     <mapping:nearest-neighbor
       direction="write"
       from="ParallelMesh"
@@ -38,9 +33,7 @@
 
   <participant name="SerialSolver">
     <provide-mesh name="SerialMesh" />
-
     <read-data name="MyData1" mesh="SerialMesh" />
-
     <write-data name="MyData2" mesh="SerialMesh" />
   </participant>
 
@@ -48,11 +41,8 @@
 
   <coupling-scheme:parallel-explicit>
     <participants first="ParallelSolver" second="SerialSolver" />
-
     <max-time value="1.0" />
-
     <time-window-size value="1.0" valid-digits="8" />
-
     <exchange data="MyData1" mesh="SerialMesh" from="ParallelSolver" to="SerialSolver" />
     <exchange data="MyData2" mesh="SerialMesh" from="SerialSolver" to="ParallelSolver" />
   </coupling-scheme:parallel-explicit>
