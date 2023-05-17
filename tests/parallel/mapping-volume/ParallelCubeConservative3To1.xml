@@ -1,48 +1,46 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration>
-  <solver-interface dimensions="3">
-    <data:scalar name="DataOne" />
+<precice-configuration dimensions="3">
+  <data:scalar name="DataOne" />
 
-    <mesh name="MeshOne">
-      <use-data name="DataOne" />
-    </mesh>
+  <mesh name="MeshOne">
+    <use-data name="DataOne" />
+  </mesh>
 
-    <mesh name="MeshTwo">
-      <use-data name="DataOne" />
-    </mesh>
+  <mesh name="MeshTwo">
+    <use-data name="DataOne" />
+  </mesh>
 
-    <participant name="SolverOneCubeConservative3To1">
-      <provide-mesh name="MeshOne" />
-      <receive-mesh
-        name="MeshTwo"
-        from="SolverTwoCubeConservative3To1"
-        geometric-filter="no-filter" />
-      <write-data name="DataOne" mesh="MeshOne" />
-      <mapping:linear-cell-interpolation
-        direction="write"
-        from="MeshOne"
-        to="MeshTwo"
-        constraint="conservative" />
-      <export:vtu />
-    </participant>
+  <participant name="SolverOneCubeConservative3To1">
+    <provide-mesh name="MeshOne" />
+    <receive-mesh
+      name="MeshTwo"
+      from="SolverTwoCubeConservative3To1"
+      geometric-filter="no-filter" />
+    <write-data name="DataOne" mesh="MeshOne" />
+    <mapping:linear-cell-interpolation
+      direction="write"
+      from="MeshOne"
+      to="MeshTwo"
+      constraint="conservative" />
+    <export:vtu />
+  </participant>
 
-    <participant name="SolverTwoCubeConservative3To1">
-      <provide-mesh name="MeshTwo" />
-      <read-data name="DataOne" mesh="MeshTwo" />
-      <export:vtu />
-    </participant>
+  <participant name="SolverTwoCubeConservative3To1">
+    <provide-mesh name="MeshTwo" />
+    <read-data name="DataOne" mesh="MeshTwo" />
+    <export:vtu />
+  </participant>
 
-    <m2n:sockets from="SolverOneCubeConservative3To1" to="SolverTwoCubeConservative3To1" />
+  <m2n:sockets from="SolverOneCubeConservative3To1" to="SolverTwoCubeConservative3To1" />
 
-    <coupling-scheme:serial-explicit>
-      <participants first="SolverOneCubeConservative3To1" second="SolverTwoCubeConservative3To1" />
-      <max-time-windows value="1" />
-      <time-window-size value="1.0" />
-      <exchange
-        data="DataOne"
-        mesh="MeshTwo"
-        from="SolverOneCubeConservative3To1"
-        to="SolverTwoCubeConservative3To1" />
-    </coupling-scheme:serial-explicit>
-  </solver-interface>
+  <coupling-scheme:serial-explicit>
+    <participants first="SolverOneCubeConservative3To1" second="SolverTwoCubeConservative3To1" />
+    <max-time-windows value="1" />
+    <time-window-size value="1.0" />
+    <exchange
+      data="DataOne"
+      mesh="MeshTwo"
+      from="SolverOneCubeConservative3To1"
+      to="SolverTwoCubeConservative3To1" />
+  </coupling-scheme:serial-explicit>
 </precice-configuration>

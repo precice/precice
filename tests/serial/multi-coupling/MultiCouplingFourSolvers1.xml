@@ -1,141 +1,127 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration>
-  <solver-interface dimensions="2">
-    <data:scalar name="DataAB" />
-    <data:scalar name="DataBA" />
-    <data:scalar name="DataBC" />
-    <data:scalar name="DataCB" />
-    <data:scalar name="DataCD" />
-    <data:scalar name="DataDC" />
+<precice-configuration dimensions="2">
+  <data:scalar name="DataAB" />
+  <data:scalar name="DataBA" />
+  <data:scalar name="DataBC" />
+  <data:scalar name="DataCB" />
+  <data:scalar name="DataCD" />
+  <data:scalar name="DataDC" />
 
-    <mesh name="MeshA">
-      <use-data name="DataAB" />
-      <use-data name="DataBA" />
-      <use-data name="DataCB" />
-      <use-data name="DataBC" />
-      <use-data name="DataCD" />
-      <use-data name="DataDC" />
-    </mesh>
+  <mesh name="MeshA">
+    <use-data name="DataAB" />
+    <use-data name="DataBA" />
+    <use-data name="DataCB" />
+    <use-data name="DataBC" />
+    <use-data name="DataCD" />
+    <use-data name="DataDC" />
+  </mesh>
 
-    <mesh name="MeshB1">
-      <use-data name="DataAB" />
-      <use-data name="DataBA" />
-    </mesh>
+  <mesh name="MeshB1">
+    <use-data name="DataAB" />
+    <use-data name="DataBA" />
+  </mesh>
 
-    <mesh name="MeshB2">
-      <use-data name="DataBC" />
-      <use-data name="DataCB" />
-    </mesh>
+  <mesh name="MeshB2">
+    <use-data name="DataBC" />
+    <use-data name="DataCB" />
+  </mesh>
 
-    <mesh name="MeshC1">
-      <use-data name="DataCB" />
-      <use-data name="DataBC" />
-    </mesh>
+  <mesh name="MeshC1">
+    <use-data name="DataCB" />
+    <use-data name="DataBC" />
+  </mesh>
 
-    <mesh name="MeshC2">
-      <use-data name="DataCD" />
-      <use-data name="DataDC" />
-    </mesh>
+  <mesh name="MeshC2">
+    <use-data name="DataCD" />
+    <use-data name="DataDC" />
+  </mesh>
 
-    <mesh name="MeshD">
-      <use-data name="DataCD" />
-      <use-data name="DataDC" />
-    </mesh>
+  <mesh name="MeshD">
+    <use-data name="DataCD" />
+    <use-data name="DataDC" />
+  </mesh>
 
-    <participant name="SolverA">
-      <provide-mesh name="MeshA" />
-      <receive-mesh name="MeshB2" from="SolverB" />
-      <receive-mesh name="MeshC1" from="SolverC" />
-      <receive-mesh name="MeshC2" from="SolverC" />
-      <receive-mesh name="MeshD" from="SolverD" />
-      <write-data name="DataAB" mesh="MeshA" />
-      <read-data name="DataBA" mesh="MeshA" />
-    </participant>
+  <participant name="SolverA">
+    <provide-mesh name="MeshA" />
+    <receive-mesh name="MeshB2" from="SolverB" />
+    <receive-mesh name="MeshC1" from="SolverC" />
+    <receive-mesh name="MeshC2" from="SolverC" />
+    <receive-mesh name="MeshD" from="SolverD" />
+    <write-data name="DataAB" mesh="MeshA" />
+    <read-data name="DataBA" mesh="MeshA" />
+  </participant>
 
-    <participant name="SolverB">
-      <provide-mesh name="MeshB1" />
-      <provide-mesh name="MeshB2" />
-      <receive-mesh name="MeshA" from="SolverA" />
-      <receive-mesh name="MeshC1" from="SolverC" />
-      <write-data name="DataBA" mesh="MeshB1" />
-      <write-data name="DataBC" mesh="MeshB2" />
-      <read-data name="DataAB" mesh="MeshB1" />
-      <read-data name="DataCB" mesh="MeshB2" />
-      <mapping:nearest-neighbor direction="read" from="MeshA" to="MeshB1" constraint="consistent" />
-      <mapping:nearest-neighbor
-        direction="read"
-        from="MeshC1"
-        to="MeshB2"
-        constraint="consistent" />
-      <mapping:nearest-neighbor
-        direction="write"
-        from="MeshB1"
-        to="MeshA"
-        constraint="consistent" />
-    </participant>
+  <participant name="SolverB">
+    <provide-mesh name="MeshB1" />
+    <provide-mesh name="MeshB2" />
+    <receive-mesh name="MeshA" from="SolverA" />
+    <receive-mesh name="MeshC1" from="SolverC" />
+    <write-data name="DataBA" mesh="MeshB1" />
+    <write-data name="DataBC" mesh="MeshB2" />
+    <read-data name="DataAB" mesh="MeshB1" />
+    <read-data name="DataCB" mesh="MeshB2" />
+    <mapping:nearest-neighbor direction="read" from="MeshA" to="MeshB1" constraint="consistent" />
+    <mapping:nearest-neighbor direction="read" from="MeshC1" to="MeshB2" constraint="consistent" />
+    <mapping:nearest-neighbor direction="write" from="MeshB1" to="MeshA" constraint="consistent" />
+  </participant>
 
-    <participant name="SolverC">
-      <provide-mesh name="MeshC1" />
-      <provide-mesh name="MeshC2" />
-      <receive-mesh name="MeshB2" from="SolverB" />
-      <receive-mesh name="MeshD" from="SolverD" />
-      <write-data name="DataCB" mesh="MeshC1" />
-      <write-data name="DataCD" mesh="MeshC2" />
-      <read-data name="DataBC" mesh="MeshC1" />
-      <read-data name="DataDC" mesh="MeshC2" />
-      <mapping:nearest-neighbor direction="read" from="MeshD" to="MeshC2" constraint="consistent" />
-      <mapping:nearest-neighbor
-        direction="read"
-        from="MeshB2"
-        to="MeshC1"
-        constraint="consistent" />
-    </participant>
+  <participant name="SolverC">
+    <provide-mesh name="MeshC1" />
+    <provide-mesh name="MeshC2" />
+    <receive-mesh name="MeshB2" from="SolverB" />
+    <receive-mesh name="MeshD" from="SolverD" />
+    <write-data name="DataCB" mesh="MeshC1" />
+    <write-data name="DataCD" mesh="MeshC2" />
+    <read-data name="DataBC" mesh="MeshC1" />
+    <read-data name="DataDC" mesh="MeshC2" />
+    <mapping:nearest-neighbor direction="read" from="MeshD" to="MeshC2" constraint="consistent" />
+    <mapping:nearest-neighbor direction="read" from="MeshB2" to="MeshC1" constraint="consistent" />
+  </participant>
 
-    <participant name="SolverD">
-      <provide-mesh name="MeshD" />
-      <receive-mesh name="MeshC2" from="SolverC" />
-      <write-data name="DataDC" mesh="MeshD" />
-      <read-data name="DataCD" mesh="MeshD" />
-      <mapping:nearest-neighbor direction="read" from="MeshC2" to="MeshD" constraint="consistent" />
-    </participant>
+  <participant name="SolverD">
+    <provide-mesh name="MeshD" />
+    <receive-mesh name="MeshC2" from="SolverC" />
+    <write-data name="DataDC" mesh="MeshD" />
+    <read-data name="DataCD" mesh="MeshD" />
+    <mapping:nearest-neighbor direction="read" from="MeshC2" to="MeshD" constraint="consistent" />
+  </participant>
 
-    <m2n:sockets from="SolverA" to="SolverB" />
-    <m2n:sockets from="SolverB" to="SolverC" />
-    <m2n:sockets from="SolverC" to="SolverD" />
-    <m2n:sockets from="SolverC" to="SolverA" />
-    <m2n:sockets from="SolverD" to="SolverA" />
+  <m2n:sockets from="SolverA" to="SolverB" />
+  <m2n:sockets from="SolverB" to="SolverC" />
+  <m2n:sockets from="SolverC" to="SolverD" />
+  <m2n:sockets from="SolverC" to="SolverA" />
+  <m2n:sockets from="SolverD" to="SolverA" />
 
-    <coupling-scheme:multi>
-      <participant name="SolverA" control="yes" />
-      <participant name="SolverB" />
-      <participant name="SolverC" />
-      <participant name="SolverD" />
-      <max-time-windows value="10" />
-      <time-window-size value="1.0" />
-      <max-iterations value="2" />
-      <exchange data="DataBA" mesh="MeshA" from="SolverB" to="SolverA" />
-      <exchange data="DataAB" mesh="MeshA" from="SolverA" to="SolverB" />
-      <exchange data="DataCB" mesh="MeshC1" from="SolverC" to="SolverB" />
-      <exchange data="DataBC" mesh="MeshB2" from="SolverB" to="SolverC" />
-      <exchange data="DataCD" mesh="MeshC2" from="SolverC" to="SolverD" />
-      <exchange data="DataDC" mesh="MeshD" from="SolverD" to="SolverC" />
-      <exchange data="DataCB" mesh="MeshC1" from="SolverC" to="SolverA" />
-      <exchange data="DataBC" mesh="MeshB2" from="SolverB" to="SolverA" />
-      <exchange data="DataDC" mesh="MeshD" from="SolverD" to="SolverA" />
-      <exchange data="DataCD" mesh="MeshC2" from="SolverC" to="SolverA" />
-      <relative-convergence-measure data="DataAB" mesh="MeshA" limit="1e-4" />
-      <relative-convergence-measure data="DataBA" mesh="MeshA" limit="1e-4" />
-      <relative-convergence-measure data="DataCB" mesh="MeshC1" limit="1e-4" />
-      <relative-convergence-measure data="DataBC" mesh="MeshB2" limit="1e-4" />
-      <relative-convergence-measure data="DataCD" mesh="MeshC2" limit="1e-4" />
-      <relative-convergence-measure data="DataDC" mesh="MeshD" limit="1e-4" />
-      <acceleration:IQN-ILS>
-        <data name="DataAB" mesh="MeshA" />
-        <filter type="QR2" limit="1e-1" />
-        <initial-relaxation value="1.0" />
-        <max-used-iterations value="10" />
-        <time-windows-reused value="0" />
-      </acceleration:IQN-ILS>
-    </coupling-scheme:multi>
-  </solver-interface>
+  <coupling-scheme:multi>
+    <participant name="SolverA" control="yes" />
+    <participant name="SolverB" />
+    <participant name="SolverC" />
+    <participant name="SolverD" />
+    <max-time-windows value="10" />
+    <time-window-size value="1.0" />
+    <max-iterations value="2" />
+    <exchange data="DataBA" mesh="MeshA" from="SolverB" to="SolverA" />
+    <exchange data="DataAB" mesh="MeshA" from="SolverA" to="SolverB" />
+    <exchange data="DataCB" mesh="MeshC1" from="SolverC" to="SolverB" />
+    <exchange data="DataBC" mesh="MeshB2" from="SolverB" to="SolverC" />
+    <exchange data="DataCD" mesh="MeshC2" from="SolverC" to="SolverD" />
+    <exchange data="DataDC" mesh="MeshD" from="SolverD" to="SolverC" />
+    <exchange data="DataCB" mesh="MeshC1" from="SolverC" to="SolverA" />
+    <exchange data="DataBC" mesh="MeshB2" from="SolverB" to="SolverA" />
+    <exchange data="DataDC" mesh="MeshD" from="SolverD" to="SolverA" />
+    <exchange data="DataCD" mesh="MeshC2" from="SolverC" to="SolverA" />
+    <relative-convergence-measure data="DataAB" mesh="MeshA" limit="1e-4" />
+    <relative-convergence-measure data="DataBA" mesh="MeshA" limit="1e-4" />
+    <relative-convergence-measure data="DataCB" mesh="MeshC1" limit="1e-4" />
+    <relative-convergence-measure data="DataBC" mesh="MeshB2" limit="1e-4" />
+    <relative-convergence-measure data="DataCD" mesh="MeshC2" limit="1e-4" />
+    <relative-convergence-measure data="DataDC" mesh="MeshD" limit="1e-4" />
+    <acceleration:IQN-ILS>
+      <data name="DataAB" mesh="MeshA" />
+      <filter type="QR2" limit="1e-1" />
+      <initial-relaxation value="1.0" />
+      <max-used-iterations value="10" />
+      <time-windows-reused value="0" />
+    </acceleration:IQN-ILS>
+  </coupling-scheme:multi>
 </precice-configuration>

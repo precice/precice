@@ -2,7 +2,6 @@
 <configuration>
   <test-config>
     <test-no_ns />
-
     <ns:test-ns />
   </test-config>
 </configuration>
