@@ -139,7 +139,7 @@ void SerialCouplingScheme::exchangeSecondData()
       receiveConvergence(getM2N());
     }
     if (hasConverged() || isExplicitCouplingScheme()) {
-      moveToNextWindow(); // extrapolation result for receive data of first is directly overwritten in next step
+      moveToNextWindow(); // extrapolation result for receive data of first is directly overwritten in the call of receiveData below
     }
     PRECICE_DEBUG("Receiving data...");
     receiveData(getM2N(), getReceiveData());
