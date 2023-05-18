@@ -108,6 +108,11 @@ void WriteDataContext::storeBufferedData(double currentTime)
   _providedData->setSampleAtTime(currentTime, _writeDataBuffer);
 }
 
+void WriteDataContext::moveToNextWindow()
+{
+  _providedData->timeStepsStorage().move();
+}
+
 void WriteDataContext::appendMappingConfiguration(MappingContext &mappingContext, const MeshContext &meshContext)
 {
   PRECICE_ASSERT(meshContext.mesh->hasDataName(getDataName()));

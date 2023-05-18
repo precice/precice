@@ -58,6 +58,8 @@ public:
    */
   void storeBufferedData(double currentTime);
 
+  void moveToNextWindow();
+
   /**
    * @brief Adds a MappingContext and the MeshContext required by the write mapping to the corresponding WriteDataContext data structures.
    *

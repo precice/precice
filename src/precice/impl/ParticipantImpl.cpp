@@ -408,6 +408,12 @@ void ParticipantImpl::advance(
   PRECICE_DEBUG("Handle exports");
   handleExports();
 
+  if (_couplingScheme->isTimeWindowComplete()) {
+    for (auto &context : _accessor->writeDataContexts()) {
+      context.moveToNextWindow();
+    }
+  }
+
   resetWrittenData(isAtWindowEnd);
 
   _meshLock.lockAll();

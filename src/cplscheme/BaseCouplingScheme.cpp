@@ -103,6 +103,16 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
   for (const auto &data : sendData | boost::adaptors::map_values) {
     const auto stamples = data->stamples();
     PRECICE_ASSERT(stamples.size() > 0);
+
+    data->sample() = stamples.front().sample;
+
+    // Data is actually only send if size>0, which is checked in the derived classes implementation
+    m2n->send(data->values(), data->getMeshID(), data->getDimensions());
+
+    if (data->hasGradient()) {
+      m2n->send(data->gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions());
+    }
+
     data->sample() = stamples.back().sample;
 
     // Data is actually only send if size>0, which is checked in the derived classes implementation
@@ -114,7 +124,7 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
   }
 }
 
-void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData, bool initialCommunication)
+void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(m2n.get());
@@ -127,8 +137,13 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
       m2n->receive(data->gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions());
     }
 
-    if (initialCommunication) {
-      data->setSampleAtTime(time::Storage::WINDOW_START, data->sample());
+    data->setSampleAtTime(time::Storage::WINDOW_START, data->sample());
+
+    // Data is only received on ranks with size>0, which is checked in the derived class implementation
+    m2n->receive(data->values(), data->getMeshID(), data->getDimensions());
+
+    if (data->hasGradient()) {
+      m2n->receive(data->gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions());
     }
 
     data->setSampleAtTime(time::Storage::WINDOW_END, data->sample());

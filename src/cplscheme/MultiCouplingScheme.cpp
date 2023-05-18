@@ -82,12 +82,11 @@ void MultiCouplingScheme::initializeReceiveDataStorage()
 void MultiCouplingScheme::exchangeInitialData()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
-  bool initialReceive = true;
 
   if (_isController) {
     if (receivesInitializedData()) {
       for (auto &receiveExchange : _receiveDataVector) {
-        receiveData(_m2ns[receiveExchange.first], receiveExchange.second, initialReceive);
+        receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
       }
       checkDataHasBeenReceived();
     } else {
@@ -108,7 +107,7 @@ void MultiCouplingScheme::exchangeInitialData()
     }
     if (receivesInitializedData()) {
       for (auto &receiveExchange : _receiveDataVector) {
-        receiveData(_m2ns[receiveExchange.first], receiveExchange.second, initialReceive);
+        receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
       }
       checkDataHasBeenReceived();
     } else {
