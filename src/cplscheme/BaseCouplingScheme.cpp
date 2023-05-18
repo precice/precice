@@ -209,7 +209,6 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   }
 
   exchangeInitialData();
-  performReceiveOfFirstAdvance();
 
   _isInitialized = true;
 }
@@ -500,12 +499,6 @@ std::string BaseCouplingScheme::printActionsState() const
     os << toString(action) << ' ';
   }
   return os.str();
-}
-
-void BaseCouplingScheme::performReceiveOfFirstAdvance()
-{
-  // noop by default. Will be overridden by child-coupling-schemes, if data has to be received here. See SerialCouplingScheme.
-  return;
 }
 
 void BaseCouplingScheme::checkCompletenessRequiredActions()
