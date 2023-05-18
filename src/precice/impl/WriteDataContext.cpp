@@ -30,7 +30,6 @@ void WriteDataContext::resetData(bool atEndOfWindow)
   }
 
   if (atEndOfWindow) {
-    // need to not only clear _providedData->timeStepsStorage(), but also _toData->timeStepsStorage() as soon as we map from storage to storage.
     _providedData->timeStepsStorage().trim();
   }
 }
