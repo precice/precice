@@ -500,11 +500,6 @@ private:
    */
   virtual void exchangeInitialData() = 0;
 
-  /**
-   * @brief implements functionality for receiveResultOfFirstAdvance
-   */
-  virtual void performReceiveOfFirstAdvance();
-
   /// Functions needed for advance()
 
   /// Exchanges the first set of data
