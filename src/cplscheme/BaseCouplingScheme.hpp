@@ -254,7 +254,7 @@ protected:
    *
    * @param m2n M2N used for communication
    * @param receiveData DataMap associated with received data
-   * @param initialCommunication if true, will store received data for WINDOW_START, else store received data for WINDOW_END
+   * @param initialCommunication if true, will store received data for WINDOW_START and WINDOW_END, else store received data only for WINDOW_END
    */
   void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData, bool initialCommunication = false);
 
