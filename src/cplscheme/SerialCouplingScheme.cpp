@@ -105,56 +105,80 @@ void SerialCouplingScheme::performReceiveOfFirstAdvance()
 
 void SerialCouplingScheme::exchangeFirstData()
 {
-  if (doesFirstStep()) { // first participant
-    PRECICE_DEBUG("Sending data...");
-    sendTimeWindowSize();
-    sendData(getM2N(), getSendData());
-  } else { // second participant
-    if (isImplicitCouplingScheme()) {
+  if (isExplicitCouplingScheme()) {
+    if (doesFirstStep()) { // first participant
+      PRECICE_DEBUG("Sending data...");
+      sendTimeWindowSize();
+      sendData(getM2N(), getSendData());
+    } else {              // second participant
+      moveToNextWindow(); // do moveToNextWindow already here for second participant in SerialCouplingScheme
+      PRECICE_DEBUG("Sending data...");
+      sendData(getM2N(), getSendData());
+    }
+  } else {
+    PRECICE_ASSERT(isImplicitCouplingScheme());
+
+    if (doesFirstStep()) { // first participant
+      PRECICE_DEBUG("Sending data...");
+      sendTimeWindowSize();
+      sendData(getM2N(), getSendData());
+    } else { // second participant
       PRECICE_DEBUG("Perform acceleration (only second participant)...");
       doImplicitStep();
-    }
-  }
-
-  if (not doesFirstStep()) {
-    if (isImplicitCouplingScheme()) {
       PRECICE_DEBUG("Sending convergence...");
       sendConvergence(getM2N());
+      if (hasConverged()) {
+        moveToNextWindow(); // do moveToNextWindow already here for second participant in SerialCouplingScheme
+      }
+      PRECICE_DEBUG("Sending data...");
+      sendData(getM2N(), getSendData());
     }
-    if (hasConverged() || isExplicitCouplingScheme()) {
-      moveToNextWindow(); // do moveToNextWindow already here for second participant in SerialCouplingScheme
-    }
-    PRECICE_DEBUG("Sending data...");
-    sendData(getM2N(), getSendData());
   }
 }
 
 void SerialCouplingScheme::exchangeSecondData()
 {
-  if (doesFirstStep()) { // first participant
-    if (isImplicitCouplingScheme()) {
-      PRECICE_DEBUG("Receiving convergence data...");
-      receiveConvergence(getM2N());
-    }
-    if (hasConverged() || isExplicitCouplingScheme()) {
-      moveToNextWindow(); // extrapolation result for receive data of first is directly overwritten in the call of receiveData below
-    }
-    PRECICE_DEBUG("Receiving data...");
-    receiveData(getM2N(), getReceiveData());
-    checkDataHasBeenReceived();
-  }
-
-  if (isImplicitCouplingScheme()) {
-    storeIteration();
-  }
-
-  if (not doesFirstStep()) { // second participant
-    // the second participant does not want new data in the last iteration of the last time window
-    if (isCouplingOngoing() || (isImplicitCouplingScheme() && not hasConverged())) {
-      receiveAndSetTimeWindowSize();
+  if (isExplicitCouplingScheme()) {
+    if (doesFirstStep()) { // first participant
+      moveToNextWindow();  // extrapolation result for receive data of first is directly overwritten in the call of receiveData below
       PRECICE_DEBUG("Receiving data...");
       receiveData(getM2N(), getReceiveData());
       checkDataHasBeenReceived();
+    }
+
+    if (not doesFirstStep()) { // second participant
+      // the second participant does not want new data in the last iteration of the last time window
+      if (isCouplingOngoing()) {
+        receiveAndSetTimeWindowSize();
+        PRECICE_DEBUG("Receiving data...");
+        receiveData(getM2N(), getReceiveData());
+        checkDataHasBeenReceived();
+      }
+    }
+  } else {
+    PRECICE_ASSERT(isImplicitCouplingScheme());
+
+    if (doesFirstStep()) { // first participant
+      PRECICE_DEBUG("Receiving convergence data...");
+      receiveConvergence(getM2N());
+      if (hasConverged()) {
+        moveToNextWindow(); // extrapolation result for receive data of first is directly overwritten in the call of receiveData below
+      }
+      PRECICE_DEBUG("Receiving data...");
+      receiveData(getM2N(), getReceiveData());
+      checkDataHasBeenReceived();
+    }
+
+    storeIteration();
+
+    if (not doesFirstStep()) { // second participant
+      // the second participant does not want new data in the last iteration of the last time window
+      if (isCouplingOngoing() || not hasConverged()) {
+        receiveAndSetTimeWindowSize();
+        PRECICE_DEBUG("Receiving data...");
+        receiveData(getM2N(), getReceiveData());
+        checkDataHasBeenReceived();
+      }
     }
   }
 }

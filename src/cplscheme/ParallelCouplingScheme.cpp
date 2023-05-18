@@ -37,39 +37,47 @@ void ParallelCouplingScheme::exchangeFirstData()
 
 void ParallelCouplingScheme::exchangeSecondData()
 {
-  if (doesFirstStep()) { // first participant
-    if (isImplicitCouplingScheme()) {
-      PRECICE_DEBUG("Receiving convergence data...");
-      receiveConvergence(getM2N());
-    }
-    if (hasConverged() || isExplicitCouplingScheme()) {
-      moveToNextWindow();
-    }
-    PRECICE_DEBUG("Receiving data...");
-    receiveData(getM2N(), getReceiveData());
-    checkDataHasBeenReceived();
-  }
+  if (isExplicitCouplingScheme()) {
+    moveToNextWindow();
 
-  if (isImplicitCouplingScheme()) {
-    if (not doesFirstStep()) { // second participant
+    if (doesFirstStep()) { // first participant
+      PRECICE_DEBUG("Receiving data...");
+      receiveData(getM2N(), getReceiveData());
+      checkDataHasBeenReceived();
+    } else { // second participant
+      PRECICE_DEBUG("Sending data...");
+      sendData(getM2N(), getSendData());
+    }
+  } else {
+    PRECICE_ASSERT(isImplicitCouplingScheme());
+
+    if (doesFirstStep()) { // first participant
+      if (isImplicitCouplingScheme()) {
+        PRECICE_DEBUG("Receiving convergence data...");
+        receiveConvergence(getM2N());
+      }
+    } else { // second participant
       PRECICE_DEBUG("Perform acceleration (only second participant)...");
       doImplicitStep();
+      if (isImplicitCouplingScheme()) {
+        PRECICE_DEBUG("Sending convergence...");
+        sendConvergence(getM2N());
+      }
     }
-  }
 
-  if (not doesFirstStep()) {
-    if (isImplicitCouplingScheme()) {
-      PRECICE_DEBUG("Sending convergence...");
-      sendConvergence(getM2N());
-    }
-    if (hasConverged() || isExplicitCouplingScheme()) {
+    if (hasConverged()) {
       moveToNextWindow();
     }
-    PRECICE_DEBUG("Sending data...");
-    sendData(getM2N(), getSendData());
-  }
 
-  if (isImplicitCouplingScheme()) {
+    if (doesFirstStep()) { // first participant
+      PRECICE_DEBUG("Receiving data...");
+      receiveData(getM2N(), getReceiveData());
+      checkDataHasBeenReceived();
+    } else { // second participant
+      PRECICE_DEBUG("Sending data...");
+      sendData(getM2N(), getSendData());
+    }
+
     storeIteration();
   }
 }
