@@ -1,5 +1,6 @@
 #include <boost/range.hpp>
 
+#include "cplscheme/CouplingScheme.hpp"
 #include "math/differences.hpp"
 #include "time/Storage.hpp"
 #include "utils/assertion.hpp"
@@ -113,7 +114,7 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> Storage::getTimesAndValues() const
 
 time::Sample Storage::computeExtrapolation()
 {
-  if (_extrapolationOrder == 0) {
+  if (_extrapolationOrder == 0 || _extrapolationOrder == cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER) {
     return getSampleAtEnd(); // use values at end of window as initial guess for next
   } else if (_extrapolationOrder == 1) {
     auto s0 = getSampleAtBeginning();
