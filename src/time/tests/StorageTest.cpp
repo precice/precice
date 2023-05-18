@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateDataZerothOrder)
 {
   PRECICE_TEST(1_rank);
 
-  // Test first order extrapolation
+  // Test zeroth order extrapolation
   const int extrapolationOrder = 0;
   auto      storage            = Storage();
   const int nValues            = 1;
