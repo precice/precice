@@ -24,14 +24,14 @@ void Storage::initialize(time::Sample sample)
 
 void Storage::setSampleAtTime(double time, Sample sample)
 {
-  PRECICE_ASSERT(math::smallerEquals(WINDOW_START, time), "Setting values outside of valid range!");
-  PRECICE_ASSERT(math::smallerEquals(time, WINDOW_END), "Sampling outside of valid range!");
+  PRECICE_ASSERT(math::smallerEquals(WINDOW_START, time), "Setting sample outside of valid range!");
+  PRECICE_ASSERT(math::smallerEquals(time, WINDOW_END), "Setting sample outside of valid range!");
   // check if key "time" exists.
   auto existingSample = std::find_if(_stampleStorage.begin(), _stampleStorage.end(), [&time](const auto &s) { return math::equals(s.timestamp, time); });
   if (existingSample == _stampleStorage.end()) { // key does not exist yet
-    PRECICE_ASSERT(math::smaller(maxStoredNormalizedDt(), time), maxStoredNormalizedDt(), time, "Trying to write values with a time that is too small. Please use clear(), if you want to write new samples to the storage.");
+    PRECICE_ASSERT(math::smaller(maxStoredNormalizedDt(), time), maxStoredNormalizedDt(), time, "Trying to write sample with a time that is too small. Please use clear(), if you want to write new samples to the storage.");
     _stampleStorage.emplace_back(Stample{time, sample});
-  } else { // overwrite values at "time"
+  } else { // overwrite sample at "time"
     for (auto &stample : _stampleStorage) {
       if (math::equals(stample.timestamp, time)) {
         stample.sample = sample;
