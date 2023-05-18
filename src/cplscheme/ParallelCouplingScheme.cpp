@@ -37,7 +37,6 @@ void ParallelCouplingScheme::exchangeFirstData()
 
 void ParallelCouplingScheme::exchangeSecondData()
 {
-  // @todo bundle receiveConvergence, specific moveToNextWindow and sendData into one function?
   if (doesFirstStep()) { // first participant
     if (isImplicitCouplingScheme()) {
       PRECICE_DEBUG("Receiving convergence data...");
@@ -58,7 +57,6 @@ void ParallelCouplingScheme::exchangeSecondData()
     }
   }
 
-  // @todo bundle sendConvergence, specific moveToNextWindow and sendData into one function?
   if (not doesFirstStep()) {
     if (isImplicitCouplingScheme()) {
       PRECICE_DEBUG("Sending convergence...");

@@ -116,7 +116,6 @@ void SerialCouplingScheme::exchangeFirstData()
     }
   }
 
-  // @todo bundle sendConvergence, specific moveToNextWindow and sendData into one function?
   if (not doesFirstStep()) {
     if (isImplicitCouplingScheme()) {
       PRECICE_DEBUG("Sending convergence...");
@@ -132,7 +131,6 @@ void SerialCouplingScheme::exchangeFirstData()
 
 void SerialCouplingScheme::exchangeSecondData()
 {
-  // @todo bundle receiveConvergence, specific moveToNextWindow and sendData into one function?
   if (doesFirstStep()) { // first participant
     if (isImplicitCouplingScheme()) {
       PRECICE_DEBUG("Receiving convergence data...");

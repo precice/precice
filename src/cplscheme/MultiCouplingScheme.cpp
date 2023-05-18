@@ -144,7 +144,6 @@ void MultiCouplingScheme::exchangeSecondData()
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
   // @todo implement MultiCouplingScheme for explicit coupling
 
-  // @todo bundle receiveConvergence, specific moveToNextWindow and sendData into one function?
   if (not _isController) {
     receiveConvergence(_m2ns[_controller]);
     if (hasConverged()) {
@@ -160,7 +159,6 @@ void MultiCouplingScheme::exchangeSecondData()
     doImplicitStep();
   }
 
-  // @todo bundle sendConvergence, specific moveToNextWindow and sendData into one function?
   if (_isController) {
     for (const auto &m2n : _m2ns | boost::adaptors::map_values) {
       sendConvergence(m2n);
