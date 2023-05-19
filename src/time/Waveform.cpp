@@ -22,17 +22,6 @@ int Waveform::getInterpolationOrder() const
   return _interpolationOrder;
 }
 
-void Waveform::store(const Eigen::VectorXd &values, double normalizedDt)
-{
-  if (math::equals(_data->timeStepsStorage().maxStoredNormalizedDt(), time::Storage::WINDOW_END)) { // reached end of window and trying to write new data from next window. Clearing window first.
-    _data->timeStepsStorage().trim();
-  }
-  if (_data->timeStepsStorage().nTimes() > 0) {
-    PRECICE_ASSERT(values.size() == _data->timeStepsStorage().nDofs());
-  }
-  _data->setSampleAtTime(normalizedDt, Sample{values});
-}
-
 // helper function to compute x(t) from given data (x0,t0), (x1,t1), ..., (xn,tn) via B-spline interpolation (implemented using Eigen).
 Eigen::VectorXd bSplineInterpolationAt(double t, Eigen::VectorXd ts, Eigen::MatrixXd xs, int splineDegree)
 {

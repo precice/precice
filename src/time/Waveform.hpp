@@ -15,10 +15,9 @@ class WaveformFixture;
 namespace time {
 // @todo Refactor Waveform class. Move sample function inside of Storage::sample
 /**
- * @brief Stores data samples in time and allows to perform interpolation.
+ * @brief Allows to perform interpolation on samples in storage of given data.
  *
- * The constructor Waveform(interpolationOrder) creates a Storage for the samples that are used to create the interpolant.
- * After creation of the waveform it must be initialized with Waveform::initialize(value) to finally reserve the storage. All newly added values must have the same dimension as the initially provided values.
+ * The constructor Waveform(interpolationOrder, data) creates a waveform. The samples of the data's storage are used to create the interpolant.
  * The waveform is initialized with two data values at the beginning and at the end of the window as a constant function. Waveform::store(value) allows the user to provide new data to the Waveform. Interpolation is performed based on these values.
  * The available interpolation order depends on the number of stored samples and can reach the interpolationOrder defined during construction as a maximum. If more samples are available than the maximum order requires, a piecewise interpolation will be used (piecewise constant, piecewise linear and B-Spline interpolation).
  * Interpolation is only performed inside the current time window. If the waveform should be used for the next time window, Waveform::moveToNextWindow() allows the user to use the data at the end of the current window as an initial guess for the next window.
@@ -42,13 +41,6 @@ public:
    * @return int _interpolationOrder
    */
   int getInterpolationOrder() const;
-
-  /**
-   * @brief Updates an entry for normalizedDt in _timeWindows with given value.
-   * @param values Sample at normalizedDt in this time window
-   * @param normalizedDt normalizedDt associated with this value. Only allows values between 0 and 1. 0 refers to the beginning of the window and 1 to the end.
-   */
-  void store(const Eigen::VectorXd &values, double normalizedDt = 1.0);
 
   /**
    * @brief Shifts all entries in _timeWindows. The new entry is initialized as the value from the last window (= constant extrapolation). Called when moving to the next time window.
