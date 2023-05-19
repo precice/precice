@@ -20,7 +20,7 @@ public:
     SPREAD,
     COLLECT
   };
-  enum RadialAxis {
+  enum MultiscaleAxis {
     X,
     Y,
     Z
@@ -34,10 +34,7 @@ public:
    * @param[in] type Geometric multiscale type of the mapping
    * @param[in] axis Main axis along which radial geometric multiscale coupling happens
    */
-  RadialGeoMultiscaleMapping(Constraint constraint, int dimensions, MultiscaleType type, RadialAxis axis);
-
-  /// Destructor, empty.
-  virtual ~RadialGeoMultiscaleMapping() {}
+  RadialGeoMultiscaleMapping(Constraint constraint, int dimensions, MultiscaleType type, MultiscaleAxis axis);
 
   /// Computes the mapping coefficients from the in- and output mesh.
   void computeMapping() override;
@@ -67,7 +64,7 @@ private:
   MultiscaleType _type;
 
   /// main axis along which radial geometric multiscale coupling happens
-  RadialAxis _axis;
+  MultiscaleAxis _axis;
 };
 
 } // namespace mapping

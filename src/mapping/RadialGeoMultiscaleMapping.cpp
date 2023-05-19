@@ -9,7 +9,7 @@ RadialGeoMultiscaleMapping::RadialGeoMultiscaleMapping(
     Constraint     constraint,
     int            dimensions,
     MultiscaleType type,
-    RadialAxis     axis)
+    MultiscaleAxis axis)
     : Mapping(constraint, dimensions),
       _type(type), _axis(axis)
 {
@@ -55,16 +55,11 @@ void RadialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID output
   int                    valueDimensions = input()->data(inputDataID)->getDimensions();
   Eigen::VectorXd &      outputValues    = output()->data(outputDataID)->values();
 
-  int coord = -1;
-  if (_axis == X) {
-    coord = 0;
-  } else if (_axis == Y) {
-    coord = 1;
-  } else if (_axis == Z) {
-    coord = 2;
-  } else {
-    PRECICE_ASSERT(false, "Unknown axis.");
-  }
+  int effectiveCoordinate = _axis;
+  PRECICE_ASSERT(effectiveCoordinate == 0 ||
+                     effectiveCoordinate == 1 ||
+                     effectiveCoordinate == 2,
+                 "Unknown multiscale axis type.")
 
   PRECICE_ASSERT((inputValues.size() / valueDimensions == static_cast<int>(input()->vertices().size())),
                  inputValues.size(), valueDimensions, input()->vertices().size());
@@ -74,18 +69,22 @@ void RadialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID output
 
   PRECICE_DEBUG("Map consistent");
   if (_type == SPREAD) {
+    /*
+      3D vertices are projected onto the 1D axis and the data is then mapped 
+      to the nearest neighbors of the 1D vertices in 1D projection space.
+    */
     size_t const inSize  = input()->vertices().size();
     size_t const outSize = output()->vertices().size();
 
     Eigen::VectorXd axisMidpoints(inSize);
     for (size_t i = 0; i < (inSize - 1); i++) {
-      auto axisPositionCurrent = input()->vertices()[i].getCoords()[coord];
-      auto axisPositionNext    = input()->vertices()[i + 1].getCoords()[coord];
+      auto axisPositionCurrent = input()->vertices()[i].getCoords()[effectiveCoordinate];
+      auto axisPositionNext    = input()->vertices()[i + 1].getCoords()[effectiveCoordinate];
       axisMidpoints(i)         = (axisPositionCurrent + axisPositionNext) / 2;
     }
-    axisMidpoints(inSize - 1) = 1e100; // arbitrary large number, such that vertices after the last midpoint are still assigned
+    axisMidpoints(inSize - 1) = std::numeric_limits<double>::max(); // large number, such that vertices after the last midpoint are still assigned
     for (size_t i = 0; i < outSize; i++) {
-      auto vertexCoords = output()->vertices()[i].getCoords()[coord];
+      auto vertexCoords = output()->vertices()[i].getCoords()[effectiveCoordinate];
       int  index        = 0;
       while (vertexCoords > axisMidpoints(index)) {
         index++;
@@ -95,14 +94,18 @@ void RadialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID output
     }
   } else {
     PRECICE_ASSERT(_type == COLLECT);
+    /*
+      3D vertices are projected onto the 1D axis and the data is then mapped 
+      to (and averaged at) the nearest 1D vertex in 1D projection space.
+    */
     PRECICE_ASSERT(outputValues.size() == static_cast<int>(output()->vertices().size()), outputValues.size(), valueDimensions, output()->vertices().size());
     size_t const inSize  = input()->vertices().size();
     size_t const outSize = output()->vertices().size();
 
     Eigen::VectorXd axisMidpoints(outSize);
     for (size_t i = 0; i < (outSize - 1); i++) {
-      auto axisPositionCurrent = output()->vertices()[i].getCoords()[coord];
-      auto axisPositionNext    = output()->vertices()[i + 1].getCoords()[coord];
+      auto axisPositionCurrent = output()->vertices()[i].getCoords()[effectiveCoordinate];
+      auto axisPositionNext    = output()->vertices()[i + 1].getCoords()[effectiveCoordinate];
       axisMidpoints(i)         = (axisPositionCurrent + axisPositionNext) / 2;
     }
     axisMidpoints(outSize - 1) = 1e100; // arbitrary large number, such that vertices after the last midpoint are still assigned
@@ -114,7 +117,7 @@ void RadialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID output
     }
 
     for (size_t i = 0; i < inSize; i++) {
-      auto vertexCoords = input()->vertices()[i].getCoords()[coord];
+      auto vertexCoords = input()->vertices()[i].getCoords()[effectiveCoordinate];
       int  index        = 0;
       while (vertexCoords > axisMidpoints(index)) {
         index++;

@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_SUITE(AxialGeoMultiscaleMapping)
 BOOST_AUTO_TEST_CASE(testConsistentSpread)
 {
   /*  The following test works by creating two dimensionally heterogeneous meshes, namely 1D and 3D.
-      Then, the data is mapped from the single vertex of the 1D mesh to defined vertices on the circular inlet of the 3D mesh (hence, SPREAD).
+      Then, the data is mapped from the single vertex of the 1D mesh to defined vertices on the circular inlet of the 3D mesh (hence, "spread").
       The defined vertices are at certain distances from the center, which enables to predict the expected behavior for Hagen-Poiseuille flow.
       Finally, this expected behavior is tested.  
   */
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(testConsistentSpread)
 BOOST_AUTO_TEST_CASE(testConsistentCollect)
 {
   /*  The following test works by creating two dimensionally heterogeneous meshes, namely 1D and 3D.
-      Then, the data is mapped from multiple defined vertices on the circular inlet of the 3D mesh to the single vertex of the 1D mesh (hence, COLLECT).
+      Then, the data is mapped from multiple defined vertices on the circular inlet of the 3D mesh to the single vertex of the 1D mesh (hence, "collect").
       The defined vertices are at certain distances from the center, which enables to predict the expected behavior for Hagen-Poiseuille flow.
       Finally, this expected behavior is tested.  
   */

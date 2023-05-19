@@ -176,7 +176,7 @@ private:
       Preallocation                    preallocation,
       double                           radius,
       const std::string &              multiscaleType,
-      const std::string &              radialAxis) const;
+      const std::string &              multiscaleAxis) const;
 
   /// Check whether a mapping to and from the same mesh already exists
   void checkDuplicates(const ConfiguredMapping &mapping);

@@ -20,7 +20,7 @@ public:
     SPREAD,
     COLLECT
   };
-  enum AxialAxis {
+  enum MultiscaleAxis {
     X,
     Y,
     Z
@@ -35,10 +35,7 @@ public:
    * @param[in] axis Main axis along which axial geometric multiscale coupling happens
    * @param[in] radius Radius of the 1D solver "tube"
    */
-  AxialGeoMultiscaleMapping(Constraint constraint, int dimensions, MultiscaleType type, AxialAxis axis, double radius);
-
-  /// Destructor, empty.
-  virtual ~AxialGeoMultiscaleMapping() {}
+  AxialGeoMultiscaleMapping(Constraint constraint, int dimensions, MultiscaleType type, MultiscaleAxis axis, double radius);
 
   /// Computes the mapping coefficients from the in- and output mesh.
   void computeMapping() override;
@@ -68,7 +65,7 @@ private:
   MultiscaleType _type;
 
   /// main axis along which axial geometric multiscale coupling happens
-  AxialAxis _axis;
+  MultiscaleAxis _axis;
 
   /// radius of the "tube" from or to which the data is mapped, i.e., radius of the circular interface between the two participants
   double _radius;

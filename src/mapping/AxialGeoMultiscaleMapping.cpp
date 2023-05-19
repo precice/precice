@@ -9,7 +9,7 @@ AxialGeoMultiscaleMapping::AxialGeoMultiscaleMapping(
     Constraint     constraint,
     int            dimensions,
     MultiscaleType type,
-    AxialAxis      axis,
+    MultiscaleAxis axis,
     double         radius)
     : Mapping(constraint, dimensions),
       _type(type),
@@ -65,16 +65,11 @@ void AxialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID outputD
   int                    outValueDimensions = output()->data(outputDataID)->getDimensions();
   Eigen::VectorXd &      outputValues       = output()->data(outputDataID)->values();
 
-  int coord = -1;
-  if (_axis == X) {
-    coord = 0;
-  } else if (_axis == Y) {
-    coord = 1;
-  } else if (_axis == Z) {
-    coord = 2;
-  } else {
-    PRECICE_ASSERT(false, "Unknown axis.");
-  }
+  int effectiveCoordinate = _axis;
+  PRECICE_ASSERT(effectiveCoordinate == 0 ||
+                     effectiveCoordinate == 1 ||
+                     effectiveCoordinate == 2,
+                 "Unknown multiscale axis type.")
 
   PRECICE_ASSERT((inputValues.size() / inValueDimensions == static_cast<int>(input()->vertices().size())),
                  inputValues.size(), inValueDimensions, input()->vertices().size());
@@ -94,8 +89,8 @@ void AxialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID outputD
       difference -= output()->vertices()[i].getCoords();
       double distance = difference.norm() / _radius;
       PRECICE_CHECK(distance <= 1.05, "Output mesh has vertices that do not coincide with the geometric multiscale interface defined by the input mesh. Ratio of vertex distance to radius is {}.", distance);
-      PRECICE_ASSERT(static_cast<int>((i * outValueDimensions) + coord) < outputValues.size(), ((i * outValueDimensions) + coord), outputValues.size())
-      outputValues((i * outValueDimensions) + coord) = 2 * inputValues(0) * (1 - distance * distance);
+      PRECICE_ASSERT(static_cast<int>((i * outValueDimensions) + effectiveCoordinate) < outputValues.size(), ((i * outValueDimensions) + effectiveCoordinate), outputValues.size())
+      outputValues((i * outValueDimensions) + effectiveCoordinate) = 2 * inputValues(0) * (1 - distance * distance);
     }
   } else {
     PRECICE_ASSERT(_type == COLLECT);
@@ -104,8 +99,8 @@ void AxialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID outputD
     outputValues(0)     = 0;
     size_t const inSize = input()->vertices().size();
     for (size_t i = 0; i < inSize; i++) {
-      PRECICE_ASSERT(static_cast<int>((i * inValueDimensions) + coord) < inputValues.size(), ((i * inValueDimensions) + coord), inputValues.size())
-      outputValues(0) += inputValues((i * inValueDimensions) + coord);
+      PRECICE_ASSERT(static_cast<int>((i * inValueDimensions) + effectiveCoordinate) < inputValues.size(), ((i * inValueDimensions) + effectiveCoordinate), inputValues.size())
+      outputValues(0) += inputValues((i * inValueDimensions) + effectiveCoordinate);
     }
     outputValues(0) = outputValues(0) / inSize;
   }
