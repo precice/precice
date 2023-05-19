@@ -26,7 +26,9 @@
 
 PRECICE_MEMORY_SPACE const double NUMERICAL_ZERO_DIFFERENCE = 1.0e-14;
 
+#if !defined(__NVCC__) || !defined(__HIPCC__)
 #include "logging/Logger.hpp"
+#endif
 #include "math/math.hpp"
 
 namespace precice {

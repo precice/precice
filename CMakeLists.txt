@@ -424,26 +424,23 @@ else()
   target_compile_definitions(preciceCore PUBLIC PRECICE_NO_PETSC)
 endif()
 
+add_library(preciceExternal INTERFACE)
+
 # Setup Ginkgo
 if (PRECICE_FEATURE_GINKGO_MAPPING)
   # Next we configure the common kernels for the matrix assembly
   # This CMake part is still a shortcoming from the experimental Ginkgo we are using right now
   # TODO: Remove as soon as GPU feature is in main branch
   set(Ginkgo_Path "${Ginkgo_DIR}/.." CACHE STRING "Path to the experimental Ginkgo Repository of branch a195f856e.")
-  include(${Ginkgo_Path}/cmake/unified_kernels.cmake)
+  include(${Ginkgo_Path}/cmake/extensions/kokkos.cmake)
+  find_package(Kokkos REQUIRED)
 
-  # This command registers Ginkgo kernels for different execution backends
-  ginkgo_add_unified_kernels(preciceCore src/mapping/device/GinkgoRBFKernels.cpp)
-  # shortcoming of the kernel registration: we need to add the includes here to all generated targets
-  include_directories(${PROJECT_SOURCE_DIR}/src)
-  include_directories(${EIGEN3_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/thirdparty/fmt/include)
-  target_compile_definitions(preciceCore_cuda PUBLIC EIGEN_NO_CUDA)
-  target_compile_definitions(preciceCore_hip PUBLIC EIGEN_NO_CUDA)
-  set_target_properties(preciceCore_cuda PROPERTIES POSITION_INDEPENDENT_CODE ON)
-  set_target_properties(preciceCore_reference PROPERTIES POSITION_INDEPENDENT_CODE ON)
-  set_target_properties(preciceCore_hip PROPERTIES POSITION_INDEPENDENT_CODE ON)
-  set_target_properties(preciceCore_omp PROPERTIES POSITION_INDEPENDENT_CODE ON)
-  set_target_properties(preciceCore_dpcpp PROPERTIES POSITION_INDEPENDENT_CODE ON)
+  ginkgo_enable_kokkos_language()
+
+  ginkgo_add_kokkos_library(preciceCore_ginkgo src/mapping/device/GinkgoRBFKernels.cpp)
+  target_link_libraries(preciceCore_ginkgo PRIVATE preciceCore)
+  target_compile_definitions(preciceCore_ginkgo PUBLIC EIGEN_NO_CUDA)
+  set_target_properties(preciceCore_ginkgo PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
   # Now we setup cuSolver and hipSOLVER for preCICE
   if(PRECICE_WITH_CUDA)
@@ -456,14 +453,10 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
   if(PRECICE_WITH_HIP)
     target_compile_definitions(preciceCore PUBLIC PRECICE_WITH_HIP)
     set(_hiplist ${PROJECT_SOURCE_DIR}/src/mapping/device/HipQRSolver.hip.cpp)
-    set_source_files_properties(${_hiplist} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT TRUE)
-    hip_add_library(preciceCore_qr_hip ${_hiplist}
-        HIPCC_OPTIONS ${GINKGO_HIPCC_OPTIONS} "-std=c++17 -DPRECICE_WITH_HIP"
-        CLANG_OPTIONS ${GINKGO_HIP_CLANG_OPTIONS}
-        NVCC_OPTIONS ${GINKGO_HIP_NVCC_OPTIONS}
-        STATIC)
-        target_link_libraries(preciceCore_qr_hip PRIVATE Ginkgo::ginkgo roc::hipsolver)
-        target_link_libraries(preciceCore PRIVATE preciceCore_qr_hip)
+    set_source_files_properties(${_hiplist} PROPERTIES LANGUAGE HIP)
+    add_library(preciceCore_qr_hip ${_hiplist})
+    target_link_libraries(preciceCore_qr_hip PRIVATE hip::device Ginkgo::ginkgo roc::hipsolver Kokkos::kokkos)
+#        target_link_libraries(preciceCore PRIVATE preciceCore_qr_hip)
     message(STATUS "Enabled HIP support for preCICE via the Ginkgo library.")
   endif()
 
@@ -476,6 +469,7 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
 
   # Finally, we link Ginkgo into preCICE
   target_link_libraries(preciceCore PUBLIC Ginkgo::ginkgo)
+  target_link_libraries(preciceExternal INTERFACE preciceCore_ginkgo)
 else()
   target_compile_definitions(preciceCore PUBLIC PRECICE_NO_GINKGO)
 endif()
@@ -510,7 +504,7 @@ target_include_directories(precice PUBLIC
   $<INSTALL_INTERFACE:include>
   )
 
-target_link_libraries(precice PRIVATE preciceCore)
+target_link_libraries(precice PRIVATE preciceCore preciceExternal)
 
 # Sources Configuration
 include(${CMAKE_CURRENT_LIST_DIR}/src/sources.cmake)
