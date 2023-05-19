@@ -371,11 +371,6 @@ protected:
    */
   void determineInitialReceive(DataMap &receiveData);
 
-  /**
-   * @brief getter for _extrapolationOrder
-   */
-  int getExtrapolationOrder();
-
 private:
   /// Coupling mode used by coupling scheme.
   CouplingMode _couplingMode = Undefined;
@@ -446,14 +441,13 @@ private:
   /**
    * Order of predictor of interface values for first participant.
    *
-   * The first participant in the implicit coupling scheme has to take some
-   * initial guess for the interface values computed by the second participant.
+   * When a participant enters a new window, it has to take some initial guess for the interface values at the end of the window computed by the other participants.
    * There are two possibilities to determine an initial guess:
    *
    * 1) Simply use the converged values of the last time window (constant extrapolation).
    * 2) Compute a linear function from the values of the last two time windows and use it to determine the initial guess (linear extrapolation)
    */
-  const int _extrapolationOrder;
+  int _extrapolationOrder;
 
   /// Smallest number, taking validDigits into account: eps = std::pow(10.0, -1 * validDigits)
   const double _eps;
