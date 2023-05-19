@@ -42,9 +42,4 @@ int ReadDataContext::getInterpolationOrder() const
   return _waveform->getInterpolationOrder();
 }
 
-void ReadDataContext::moveToNextWindow()
-{
-  _waveform->moveToNextWindow();
-}
-
 } // namespace precice::impl
