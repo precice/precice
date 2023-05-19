@@ -2,12 +2,9 @@
 <configuration>
   <test-config>
     <test-occ_once_or_more-once />
-
     <test-occ_arbitrary />
     <test-occ_arbitrary />
-
     <test-occ_not_or_once />
-
     <test-occ_once_or_more-more />
     <test-occ_once_or_more-more />
   </test-config>

@@ -1,48 +1,46 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration>
-  <solver-interface dimensions="3">
-    <data:scalar name="S" />
-    <data:vector name="V" />
+<precice-configuration dimensions="3">
+  <data:scalar name="S" />
+  <data:vector name="V" />
 
-    <mesh name="A">
-      <use-data name="S" />
-      <use-data name="V" />
-    </mesh>
+  <mesh name="A">
+    <use-data name="S" />
+    <use-data name="V" />
+  </mesh>
 
-    <mesh name="B">
-      <use-data name="S" />
-      <use-data name="V" />
-    </mesh>
+  <mesh name="B">
+    <use-data name="S" />
+    <use-data name="V" />
+  </mesh>
 
-    <participant name="ExporterOne">
-      <provide-mesh name="A" />
-      <write-data name="S" mesh="A" />
-      <write-data name="V" mesh="A" />
-      <export:vtk directory="timeseries" />
-      <export:vtu directory="timeseries" />
-      <export:vtp directory="timeseries" />
-      <export:csv directory="timeseries" />
-    </participant>
+  <participant name="ExporterOne">
+    <provide-mesh name="A" />
+    <write-data name="S" mesh="A" />
+    <write-data name="V" mesh="A" />
+    <export:vtk directory="timeseries" />
+    <export:vtu directory="timeseries" />
+    <export:vtp directory="timeseries" />
+    <export:csv directory="timeseries" />
+  </participant>
 
-    <participant name="ExporterTwo">
-      <receive-mesh name="A" from="ExporterOne" />
-      <provide-mesh name="B" />
-      <read-data name="S" mesh="B" />
-      <read-data name="V" mesh="B" />
-      <mapping:nearest-neighbor direction="read" from="A" to="B" constraint="consistent" />
-      <export:vtu directory="timeseries" />
-      <export:vtp directory="timeseries" />
-      <export:csv directory="timeseries" />
-    </participant>
+  <participant name="ExporterTwo">
+    <receive-mesh name="A" from="ExporterOne" />
+    <provide-mesh name="B" />
+    <read-data name="S" mesh="B" />
+    <read-data name="V" mesh="B" />
+    <mapping:nearest-neighbor direction="read" from="A" to="B" constraint="consistent" />
+    <export:vtu directory="timeseries" />
+    <export:vtp directory="timeseries" />
+    <export:csv directory="timeseries" />
+  </participant>
 
-    <m2n:sockets from="ExporterOne" to="ExporterTwo" />
+  <m2n:sockets from="ExporterOne" to="ExporterTwo" />
 
-    <coupling-scheme:serial-explicit>
-      <participants first="ExporterOne" second="ExporterTwo" />
-      <max-time-windows value="5" />
-      <time-window-size value="1.0" />
-      <exchange data="S" mesh="A" from="ExporterOne" to="ExporterTwo" />
-      <exchange data="V" mesh="A" from="ExporterOne" to="ExporterTwo" />
-    </coupling-scheme:serial-explicit>
-  </solver-interface>
+  <coupling-scheme:serial-explicit>
+    <participants first="ExporterOne" second="ExporterTwo" />
+    <max-time-windows value="5" />
+    <time-window-size value="1.0" />
+    <exchange data="S" mesh="A" from="ExporterOne" to="ExporterTwo" />
+    <exchange data="V" mesh="A" from="ExporterOne" to="ExporterTwo" />
+  </coupling-scheme:serial-explicit>
 </precice-configuration>

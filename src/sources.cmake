@@ -242,20 +242,18 @@ target_sources(preciceCore
     src/precice/config/ParticipantConfiguration.cpp
     src/precice/config/ParticipantConfiguration.hpp
     src/precice/config/SharedPointer.hpp
-    src/precice/config/SolverInterfaceConfiguration.cpp
-    src/precice/config/SolverInterfaceConfiguration.hpp
     src/precice/impl/CommonErrorMessages.hpp
     src/precice/impl/DataContext.cpp
     src/precice/impl/DataContext.hpp
     src/precice/impl/MappingContext.hpp
     src/precice/impl/MeshContext.hpp
+    src/precice/impl/ParticipantImpl.cpp
+    src/precice/impl/ParticipantImpl.hpp
     src/precice/impl/ParticipantState.cpp
     src/precice/impl/ParticipantState.hpp
     src/precice/impl/ReadDataContext.cpp
     src/precice/impl/ReadDataContext.hpp
     src/precice/impl/SharedPointer.hpp
-    src/precice/impl/ParticipantImpl.cpp
-    src/precice/impl/ParticipantImpl.hpp
     src/precice/impl/ValidationMacros.hpp
     src/precice/impl/WatchIntegral.cpp
     src/precice/impl/WatchIntegral.hpp

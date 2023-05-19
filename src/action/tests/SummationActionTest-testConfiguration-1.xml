@@ -16,7 +16,6 @@
     <source-data name="SourceData1" />
     <source-data name="SourceData2" />
     <source-data name="SourceData3" />
-
     <target-data name="TargetData" />
   </action:summation>
 </configuration>
