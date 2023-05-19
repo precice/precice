@@ -81,7 +81,7 @@ private:
 
   void performReceiveOfFirstAdvance() override final;
 
-  void exchangeFirstData() override;
+  void exchangeFirstData() override final;
 
   void exchangeSecondData() override final;
 
