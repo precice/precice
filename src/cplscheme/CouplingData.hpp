@@ -17,7 +17,7 @@ public:
       mesh::PtrData data,
       mesh::PtrMesh mesh,
       bool          requiresInitialization,
-      int           extrapolationOrder = CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
+      int           extrapolationOrder);
 
   int getDimensions() const;
 

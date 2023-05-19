@@ -380,11 +380,6 @@ protected:
    */
   void determineInitialReceive(DataMap &receiveData);
 
-  /**
-   * @brief getter for _extrapolationOrder
-   */
-  int getExtrapolationOrder();
-
 private:
   /// Coupling mode used by coupling scheme.
   CouplingMode _couplingMode = Undefined;

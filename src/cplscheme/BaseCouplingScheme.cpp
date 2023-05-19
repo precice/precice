@@ -145,11 +145,7 @@ PtrCouplingData BaseCouplingScheme::addCouplingData(const mesh::PtrData &data, m
   int             id = data->getID();
   PtrCouplingData ptrCplData;
   if (!utils::contained(id, _allData)) { // data is not used by this coupling scheme yet, create new CouplingData
-    if (isExplicitCouplingScheme()) {
-      ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization);
-    } else {
-      ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, getExtrapolationOrder());
-    }
+    ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, _extrapolationOrder);
     _allData.emplace(id, ptrCplData);
   } else { // data is already used by another exchange of this coupling scheme, use existing CouplingData
     ptrCplData = _allData[id];
@@ -725,11 +721,6 @@ void BaseCouplingScheme::determineInitialReceive(DataMap &receiveData)
   if (anyDataRequiresInitialization(receiveData)) {
     _receivesInitializedData = true;
   }
-}
-
-int BaseCouplingScheme::getExtrapolationOrder()
-{
-  return _extrapolationOrder;
 }
 
 bool BaseCouplingScheme::anyDataRequiresInitialization(DataMap &dataMap) const
