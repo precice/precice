@@ -1,11 +1,11 @@
 #ifdef PRECICE_WITH_HIP
 #pragma once
 
-#include <ginkgo/ginkgo.hpp>
+#include "mapping/GinkgoDefinitions.hpp"
 
 /**
  * Computes the QR decomposition using Hip
 */
-void computeQRDecompositionHip(const int deviceId, const std::shared_ptr<gko::Executor> &exec, gko::matrix::Dense<> *A_Q, gko::matrix::Dense<> *R);
+void computeQRDecompositionHip(const int deviceId, const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, GinkgoVector *R);
 
 #endif

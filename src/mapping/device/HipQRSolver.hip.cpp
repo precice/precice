@@ -6,7 +6,7 @@
 #include <hip/hip_runtime_api.h>
 #include <hipsolver.h>
 
-void computeQRDecompositionHip(const int deviceId, const std::shared_ptr<gko::Executor> &exec, gko::matrix::Dense<> *A_Q, gko::matrix::Dense<> *R)
+void computeQRDecompositionHip(const int deviceId, const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, GinkgoVector *R)
 {
   int backupDeviceId{};
   hipGetDevice(&backupDeviceId);

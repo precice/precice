@@ -12,6 +12,7 @@
 #include "mesh/Mesh.hpp"
 #include "precice/impl/Types.hpp"
 #include "profiling/Event.hpp"
+#include "GinkgoDefinitions.hpp"
 #ifdef PRECICE_WITH_HIP
 #include "mapping/device/HipQRSolver.hip.hpp"
 #endif
@@ -22,18 +23,6 @@
 #include <omp.h>
 #endif
 
-// Every class uses Ginkgo's default_precision = double
-// Ginkgo Data Structures
-using GinkgoVector = gko::matrix::Dense<>;
-using GinkgoMatrix = gko::matrix::Dense<>;
-using GinkgoScalar = gko::matrix::Dense<>;
-// Ginkgo Solver
-using cg         = gko::solver::Cg<>;
-using gmres      = gko::solver::Gmres<>;
-using triangular = gko::solver::UpperTrs<>;
-// Ginkgo Preconditioner
-using jacobi   = gko::preconditioner::Jacobi<>;
-using cholesky = gko::preconditioner::Ic<>;
 
 using precice::mapping::RadialBasisParameters;
 
