@@ -175,6 +175,7 @@ target_sources(testprecice
     tests/serial/time/implicit/multi-coupling/ReadWriteScalarDataWithWaveformSamplingFirst.cpp
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithWaveformSamplingFirst.cpp
+    tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithWaveformSamplingFirstExtrapolation.cpp
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithWaveformSamplingFirstNoInit.cpp
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithWaveformSamplingZero.cpp
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithWaveformSubcyclingFirst.cpp
@@ -185,6 +186,7 @@ target_sources(testprecice
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataFirstParticipantFixedWindows.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithWaveformSamplingFirst.cpp
+    tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithWaveformSamplingFirstExtrapolation.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithWaveformSamplingFirstNoInit.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithWaveformSamplingZero.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithWaveformSubcyclingFirst.cpp
