@@ -59,11 +59,6 @@ Eigen::VectorXd Waveform::sample(double normalizedDt) const
   return bSplineInterpolationAt(normalizedDt, data.first, data.second, usedOrder);
 }
 
-void Waveform::moveToNextWindow()
-{
-  _data->timeStepsStorage().move();
-}
-
 int Waveform::computeUsedOrder(int requestedOrder, int numberOfAvailableSamples) const
 {
   int usedOrder = -1;

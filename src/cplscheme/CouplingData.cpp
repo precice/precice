@@ -15,12 +15,12 @@ CouplingData::CouplingData(
     int           extrapolationOrder)
     : requiresInitialization(requiresInitialization),
       _data(std::move(data)),
-      _mesh(std::move(mesh)),
-      _extrapolation(extrapolationOrder)
+      _mesh(std::move(mesh))
 {
   PRECICE_ASSERT(_data != nullptr);
   /// Lazy allocation of _previousIteration.gradient: only used in case the corresponding data has gradients
   _previousIteration = time::Sample{Eigen::VectorXd::Zero(getSize())};
+  timeStepsStorage().setExtrapolationOrder(extrapolationOrder);
 
   PRECICE_ASSERT(_mesh != nullptr);
   PRECICE_ASSERT(_mesh.use_count() > 0);
@@ -129,26 +129,14 @@ std::vector<int> CouplingData::getVertexOffsets()
   return _mesh->getVertexOffsets();
 }
 
-void CouplingData::initializeExtrapolation()
-{
-  _extrapolation.initialize(getSize());
-  storeIteration();
-}
-
 void CouplingData::moveToNextWindow()
 {
-  _extrapolation.moveToNextWindow();
-  values() = _extrapolation.getInitialGuess();
-
-  this->setSampleAtTime(time::Storage::WINDOW_END, sample());
-}
-
-void CouplingData::storeExtrapolationData()
-{
-  const auto stamples = this->stamples();
-  PRECICE_ASSERT(stamples.size() > 0);
-  this->values() = stamples.back().sample.values;
-  _extrapolation.store(values());
+  if (this->timeStepsStorage().stamples().size() > 0) {
+    this->timeStepsStorage().move();
+    auto atEnd = this->timeStepsStorage().stamples().back();
+    PRECICE_ASSERT(math::equals(atEnd.timestamp, time::Storage::WINDOW_END));
+    _data->sample() = atEnd.sample;
+  }
 }
 
 time::Sample &CouplingData::sample()

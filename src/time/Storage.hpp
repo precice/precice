@@ -19,7 +19,7 @@ public:
    * @brief Stores data samples in time and provides corresponding convenience functions.
    *
    * The Storage must be initialized before it can be used. Then values can be stored in the Storage. It is only allowed to store samples with increasing times. Overwriting existing samples or writing samples with a time smaller then the maximum stored time is forbidden.
-   * The Storage is considered complete, when a sample with time 1.0 is provided. Then one can only sample from the storage. To add further samples one needs to trim or clear the storage first.
+   * The Storage is considered complete, when a sample with time 1.0 is provided. Then one can only sample from the storage. To add further samples one needs to trim the storage first.
    *
    * This Storage is used in the context of Waveform relaxation where samples in time are provided. Starting at the beginning of the window with time 0.0 and reaching the end of the window with time 1.0.
    */
@@ -35,12 +35,14 @@ public:
   /**
    * @brief Store Sample at a specific time.
    *
-   * It is only allowed to store a Sample in time that comes after a Sample that was already stored. Therefore, time has to be larger than maxStoredNormalizedDt. Overwriting existing samples is forbidden. The function trim() or clear() should be used to be able provide new samples.
+   * It is only allowed to store a Sample in time that comes after a Sample that was already stored. Therefore, time has to be larger than maxStoredNormalizedDt. Overwriting existing samples is forbidden. The function trim() should be used before providing new samples.
    *
    * @param time the time associated with the sample
    * @param sample stored sample
    */
   void setSampleAtTime(double time, Sample sample);
+
+  void setExtrapolationOrder(int extrapolationOrder);
 
   /**
    * @brief Get maximum normalized dt that is stored in this Storage.
@@ -107,16 +109,20 @@ public:
    */
   void trim();
 
-  /**
-   * @brief Clear this Storage by deleting all values.
-   */
-  void clear();
-
 private:
   /// Stores Stamples on the current window
   std::vector<Stample> _stampleStorage;
 
   mutable logging::Logger _log{"time::Storage"};
+
+  /// extrapolation order for this Storage
+  int _extrapolationOrder;
+
+  time::Sample computeExtrapolation();
+
+  time::Sample getSampleAtBeginning();
+
+  time::Sample getSampleAtEnd();
 };
 
 } // namespace precice::time

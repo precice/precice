@@ -87,9 +87,6 @@ protected:
   /// @copydoc cplscheme::BaseCouplingScheme::initializeReceiveDataStorage()
   void initializeReceiveDataStorage() override final;
 
-  /// @copydoc cplscheme::BaseCouplingScheme::exchangeInitialData()
-  void exchangeInitialData() override final;
-
 private:
   mutable logging::Logger _log{"cplscheme::BiCouplingScheme"};
 

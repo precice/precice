@@ -20,7 +20,7 @@ namespace time {
  * The constructor Waveform(interpolationOrder, data) creates a waveform. The samples of the data's storage are used to create the interpolant.
  * The waveform is initialized with two data values at the beginning and at the end of the window as a constant function. Waveform::store(value) allows the user to provide new data to the Waveform. Interpolation is performed based on these values.
  * The available interpolation order depends on the number of stored samples and can reach the interpolationOrder defined during construction as a maximum. If more samples are available than the maximum order requires, a piecewise interpolation will be used (piecewise constant, piecewise linear and B-Spline interpolation).
- * Interpolation is only performed inside the current time window. If the waveform should be used for the next time window, Waveform::moveToNextWindow() allows the user to use the data at the end of the current window as an initial guess for the next window.
+ * Interpolation is only performed inside the current time window.
  */
 class Waveform {
   friend class testing::WaveformFixture; // Make the fixture friend of this class
@@ -41,11 +41,6 @@ public:
    * @return int _interpolationOrder
    */
   int getInterpolationOrder() const;
-
-  /**
-   * @brief Shifts all entries in _timeWindows. The new entry is initialized as the value from the last window (= constant extrapolation). Called when moving to the next time window.
-   */
-  void moveToNextWindow();
 
   /**
    * @brief Evaluate waveform at specific point in time. Uses interpolation if necessary.

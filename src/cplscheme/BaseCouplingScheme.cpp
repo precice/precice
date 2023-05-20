@@ -76,6 +76,7 @@ BaseCouplingScheme::BaseCouplingScheme(
 
   if (isExplicitCouplingScheme()) {
     PRECICE_ASSERT(_extrapolationOrder == UNDEFINED_EXTRAPOLATION_ORDER, "Extrapolation is not allowed for explicit coupling");
+    _extrapolationOrder = 0; // set extrapolation order to zero.
   } else {
     PRECICE_ASSERT(isImplicitCouplingScheme());
     PRECICE_CHECK((_extrapolationOrder == 0) || (_extrapolationOrder == 1),
@@ -114,7 +115,7 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
   }
 }
 
-void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData)
+void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData, bool initialCommunication)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(m2n.get());
@@ -127,6 +128,10 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
       m2n->receive(data->gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions());
     }
 
+    if (initialCommunication) {
+      data->setSampleAtTime(time::Storage::WINDOW_START, data->sample());
+    }
+
     data->setSampleAtTime(time::Storage::WINDOW_END, data->sample());
   }
 }
@@ -136,6 +141,7 @@ void BaseCouplingScheme::initializeWithZeroInitialData(const DataMap &receiveDat
   for (const auto &data : receiveData | boost::adaptors::map_values) {
     PRECICE_DEBUG("Initialize {} as zero.", data->getDataName());
     // just store already initialized zero sample to storage.
+    data->setSampleAtTime(time::Storage::WINDOW_START, data->sample());
     data->setSampleAtTime(time::Storage::WINDOW_END, data->sample());
   }
 }
@@ -185,38 +191,23 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   _hasDataBeenReceived = false;
 
   if (isImplicitCouplingScheme()) {
+    storeIteration();
     if (not doesFirstStep()) {
       PRECICE_CHECK(not _convergenceMeasures.empty(),
                     "At least one convergence measure has to be defined for "
                     "an implicit coupling scheme.");
       // reserve memory and initialize data with zero
-      initializeStorages();
+      if (_acceleration) {
+        _acceleration->initialize(getAccelerationData());
+      }
     }
     requireAction(CouplingScheme::Action::WriteCheckpoint);
     initializeTXTWriters();
   }
 
-  if (isImplicitCouplingScheme()) {
-    storeIteration();
-  }
-
   exchangeInitialData();
 
-  if (isImplicitCouplingScheme()) {
-    if (not doesFirstStep()) {
-      storeExtrapolationData();
-      moveToNextWindow();
-    }
-  }
-
   _isInitialized = true;
-}
-
-void BaseCouplingScheme::receiveResultOfFirstAdvance()
-{
-  PRECICE_ASSERT(_isInitialized, "Before calling receiveResultOfFirstAdvance() one has to call initialize().");
-  _hasDataBeenReceived = false;
-  performReceiveOfFirstAdvance();
 }
 
 bool BaseCouplingScheme::sendsInitializedData() const
@@ -306,18 +297,10 @@ void BaseCouplingScheme::secondExchange()
   }
 }
 
-void BaseCouplingScheme::storeExtrapolationData()
-{
-  PRECICE_TRACE(_timeWindows);
-  for (auto &data : _allData | boost::adaptors::map_values) {
-    data->storeExtrapolationData();
-  }
-}
-
 void BaseCouplingScheme::moveToNextWindow()
 {
   PRECICE_TRACE(_timeWindows);
-  for (auto &data : getAccelerationData() | boost::adaptors::map_values) {
+  for (auto &data : _allData | boost::adaptors::map_values) {
     data->moveToNextWindow();
   }
 }
@@ -515,12 +498,6 @@ std::string BaseCouplingScheme::printActionsState() const
   return os.str();
 }
 
-void BaseCouplingScheme::performReceiveOfFirstAdvance()
-{
-  // noop by default. Will be overridden by child-coupling-schemes, if data has to be received here. See SerialCouplingScheme.
-  return;
-}
-
 void BaseCouplingScheme::checkCompletenessRequiredActions()
 {
   PRECICE_TRACE();
@@ -542,19 +519,6 @@ void BaseCouplingScheme::checkCompletenessRequiredActions()
   }
   _requiredActions.clear();
   _fulfilledActions.clear();
-}
-
-void BaseCouplingScheme::initializeStorages()
-{
-  PRECICE_TRACE();
-  // Reserve storage for all data
-  for (auto &data : _allData | boost::adaptors::map_values) {
-    data->initializeExtrapolation();
-  }
-  // Reserve storage for acceleration
-  if (_acceleration) {
-    _acceleration->initialize(getAccelerationData());
-  }
 }
 
 void BaseCouplingScheme::setAcceleration(
@@ -736,8 +700,6 @@ bool BaseCouplingScheme::anyDataRequiresInitialization(DataMap &dataMap) const
 
 void BaseCouplingScheme::doImplicitStep()
 {
-  storeExtrapolationData();
-
   PRECICE_DEBUG("measure convergence of the coupling iteration");
   _hasConverged = measureConvergence();
   // Stop, when maximal iteration count (given in config) is reached
@@ -750,7 +712,6 @@ void BaseCouplingScheme::doImplicitStep()
       _acceleration->iterationsConverged(getAccelerationData());
     }
     newConvergenceMeasurements();
-    moveToNextWindow();
   } else {
     // no convergence achieved for the coupling iteration within the current time window
     if (_acceleration) {
@@ -773,8 +734,6 @@ void BaseCouplingScheme::doImplicitStep()
       }
     }
   }
-  // Store data for conv. measurement, acceleration
-  storeIteration();
 }
 
 void BaseCouplingScheme::sendConvergence(const m2n::PtrM2N &m2n)

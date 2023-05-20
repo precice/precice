@@ -14,7 +14,7 @@ WriteDataContext::WriteDataContext(
   _writeDataBuffer = time::Sample{Eigen::VectorXd(), Eigen::MatrixXd()};
 }
 
-void WriteDataContext::resetData(bool atEndOfWindow)
+void WriteDataContext::resetData(bool atEndOfWindow, bool isTimeWindowComplete)
 {
   // See also https://github.com/precice/precice/issues/1156.
   _providedData->toZero();
@@ -29,9 +29,13 @@ void WriteDataContext::resetData(bool atEndOfWindow)
     std::for_each(_mappingContexts.begin(), _mappingContexts.end(), [](auto &context) { context.toData->toZero(); });
   }
 
-  if (atEndOfWindow) {
-    // need to not only clear _providedData->timeStepsStorage(), but also _toData->timeStepsStorage() as soon as we map from storage to storage.
-    _providedData->timeStepsStorage().clear();
+  if (isTimeWindowComplete) {
+    PRECICE_ASSERT(atEndOfWindow, "isTimeWindowComplete without atEndOfWindow is forbidden!");
+    auto atEnd = _providedData->timeStepsStorage().stamples().back().sample;
+    _providedData->timeStepsStorage().trim();
+    _providedData->timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_START, atEnd); // manually overwrite value at beginning with value from end. Need this exception for WriteDataContext, because CouplingScheme might not be able to update _providedData, if write mapping sits between _providedData and _toData. CouplingScheme in this case only has access to _toData.
+  } else if (atEndOfWindow) {
+    _providedData->timeStepsStorage().trim();
   }
 }
 

@@ -184,9 +184,6 @@ public:
    */
   void initialize(double startTime, int startTimeWindow) override final;
 
-  /// Receives result of first advance, if this has to happen inside Participant::initialize(), see CouplingScheme.hpp
-  void receiveResultOfFirstAdvance() override final;
-
   ChangedMeshes firstSynchronization(const ChangedMeshes &changes) override final;
 
   void firstExchange() override final;
@@ -241,6 +238,9 @@ protected:
   /// All send and receive data as a map "data ID -> data"
   DataMap _allData;
 
+  /// Acceleration method to speedup iteration convergence.
+  acceleration::PtrAcceleration _acceleration;
+
   /**
    * @brief Sends data sendDataIDs given in mapCouplingData with communication.
    *
@@ -254,8 +254,9 @@ protected:
    *
    * @param m2n M2N used for communication
    * @param receiveData DataMap associated with received data
+   * @param initialCommunication if true, will store received data for WINDOW_START and WINDOW_END, else store received data only for WINDOW_END
    */
-  void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData);
+  void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData, bool initialCommunication = false);
 
   /**
    * @brief Initializes storage in receiveData as zero
@@ -328,11 +329,6 @@ protected:
   void setTimeWindows(int timeWindows);
 
   /**
-   * @brief Reserves memory to store data values from previous iterations and time windows in coupling data and acceleration, and initializes with zero.
-   */
-  void initializeStorages();
-
-  /**
    * @brief sends convergence to other participant via m2n
    * @param m2n used for sending
    */
@@ -352,11 +348,6 @@ protected:
    * This function is called from the child classes
    */
   void doImplicitStep();
-
-  /**
-   * @brief stores current data in buffer for extrapolation
-   */
-  void storeExtrapolationData();
 
   /**
    * @brief finalizes this window's data and initializes data for next window.
@@ -419,9 +410,6 @@ private:
   /// True, if _computedTimeWindowPart == _timeWindowSize and (coupling has converged or _iterations == _maxIterations)
   bool _isTimeWindowComplete = false;
 
-  /// Acceleration method to speedup iteration convergence.
-  acceleration::PtrAcceleration _acceleration;
-
   /// True, if this participant has to send initialized data.
   bool _sendsInitializedData = false;
 
@@ -453,14 +441,13 @@ private:
   /**
    * Order of predictor of interface values for first participant.
    *
-   * The first participant in the implicit coupling scheme has to take some
-   * initial guess for the interface values computed by the second participant.
+   * When a participant enters a new window, it has to take some initial guess for the interface values at the end of the window computed by the other participants.
    * There are two possibilities to determine an initial guess:
    *
    * 1) Simply use the converged values of the last time window (constant extrapolation).
    * 2) Compute a linear function from the values of the last two time windows and use it to determine the initial guess (linear extrapolation)
    */
-  const int _extrapolationOrder;
+  int _extrapolationOrder;
 
   /// Smallest number, taking validDigits into account: eps = std::pow(10.0, -1 * validDigits)
   const double _eps;
@@ -506,11 +493,6 @@ private:
    * @brief implements functionality for initialize in base class.
    */
   virtual void exchangeInitialData() = 0;
-
-  /**
-   * @brief implements functionality for receiveResultOfFirstAdvance
-   */
-  virtual void performReceiveOfFirstAdvance();
 
   /// Functions needed for advance()
 

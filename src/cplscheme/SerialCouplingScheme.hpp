@@ -79,7 +79,8 @@ private:
   /// Receives and sets the time window size, if this participant is the one to receive
   void receiveAndSetTimeWindowSize();
 
-  void performReceiveOfFirstAdvance() override final;
+  /// @copydoc cplscheme::BaseCouplingScheme::exchangeInitialData()
+  void exchangeInitialData() override final;
 
   void exchangeFirstData() override final;
 

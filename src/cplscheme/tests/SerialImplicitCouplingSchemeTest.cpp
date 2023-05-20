@@ -75,7 +75,6 @@ void runCoupling(
   if (nameParticipant == nameParticipant0) {
     mesh->data(0)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{mesh->data(0)->values()});
     cplScheme.initialize(0.0, 1);
-    cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
     BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
@@ -145,7 +144,6 @@ void runCoupling(
   } else if (nameParticipant == nameParticipant1) {
     mesh->data(1)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{mesh->data(1)->values()});
     cplScheme.initialize(0.0, 1);
-    cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
     BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
@@ -250,7 +248,6 @@ void runCouplingWithSubcycling(
     iterationCount++; // different handling due to subcycling
     mesh->data(0)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{mesh->data(0)->values()});
     cplScheme.initialize(0.0, 1);
-    cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
     BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
@@ -266,7 +263,7 @@ void runCouplingWithSubcycling(
     int    subcyclingStep       = 0;
 
     // Clear data for iteration.
-    mesh->data(0)->timeStepsStorage().clear();
+    mesh->data(0)->timeStepsStorage().trim();
 
     // Main coupling loop
     while (cplScheme.isCouplingOngoing()) {
@@ -281,7 +278,7 @@ void runCouplingWithSubcycling(
       // timestep.
       if (cplScheme.isTimeWindowComplete()) {
         // Advance participant time and timestep
-        mesh->data(0)->timeStepsStorage().clear();
+        mesh->data(0)->timeStepsStorage().trim();
         computedTime += maxTimeStepSize;
         computedTimesteps++;
         BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
@@ -340,7 +337,6 @@ void runCouplingWithSubcycling(
     iterationCount++; // different handling due to subcycling
     mesh->data(1)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{mesh->data(1)->values()});
     cplScheme.initialize(0.0, 1);
-    cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
     BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
@@ -357,7 +353,7 @@ void runCouplingWithSubcycling(
     int    subcyclingStep        = 0;
 
     // Clear data for iteration.
-    mesh->data(1)->timeStepsStorage().clear();
+    mesh->data(1)->timeStepsStorage().trim();
 
     // Main coupling loop
     while (cplScheme.isCouplingOngoing()) {
@@ -375,7 +371,7 @@ void runCouplingWithSubcycling(
       // globally converged and if subcycling steps have filled one global
       // time step.
       if (cplScheme.isTimeWindowComplete()) {
-        mesh->data(1)->timeStepsStorage().clear();
+        mesh->data(1)->timeStepsStorage().trim();
         // Advance participant time and time step
         computedTime += maxTimeStepSize;
         computedTimesteps++;
@@ -503,14 +499,12 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   using Fixture = testing::SerialCouplingSchemeFixture;
 
   scheme.addDataToSend(data, mesh, true);
+  Fixture::initializeAcceleration(scheme);
   CouplingData *cplData = Fixture::getSendData(scheme, dataID);
   BOOST_CHECK(cplData); // no nullptr
   BOOST_TEST(cplData->getSize() == 1);
   BOOST_TEST(cplData->getPreviousIterationSize() == 1);
   cplData->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{cplData->values()}); // data provided for initial value
-  Fixture::initializeStorages(scheme);
-
-  Fixture::moveToNextWindow(scheme);
 
   // data is uninitialized
   BOOST_TEST(testing::equals(cplData->values()(0), 0.0));
@@ -520,7 +514,6 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   cplData->values()(0) = 1.0;                                                           // data provided at end of first window
   cplData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{cplData->values()}); // data provided at end of first window
   Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
-  Fixture::storeExtrapolationData(scheme);
   BOOST_TEST(testing::equals(cplData->values()(0), 1.0));
 
   // go to second window
@@ -532,7 +525,6 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   cplData->values()(0) = 4.0;                                                           // data provided at end of second window
   cplData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{cplData->values()}); // data provided at end of second window
   Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
-  Fixture::storeExtrapolationData(scheme);
 
   // go to third window
   Fixture::moveToNextWindow(scheme); // uses first order extrapolation (maximum allowed) at end of second window
@@ -543,7 +535,6 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   cplData->values()(0) = 10.0;                                                          // data provided at end of third window
   cplData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{cplData->values()}); // data provided at end of third window
   Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
-  Fixture::storeExtrapolationData(scheme);
 
   // go to fourth window
   Fixture::moveToNextWindow(scheme); // uses first order extrapolation (maximum allowed) at end of third window
@@ -647,8 +638,6 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
   v << 0;
   mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{v});
   cplScheme.initialize(0.0, 1);
-  cplScheme.receiveResultOfFirstAdvance();
-
   // write data is uninitialized
   BOOST_TEST(mesh->data(sendDataIndex)->values()(0) == 0);
 
@@ -757,8 +746,8 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
     // first order extrapolation
     BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4); // = 2*3 - 2
   } else if (context.isNamed(second)) {
-    // extrapolation only applied to accelerated data. So data written by first participant.
-    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3);
+    // first order extrapolation, because no more data is written
+    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 5); // = 2*3 - 1
   }
 
   // reached end of simulation, ready to finalize
@@ -875,8 +864,6 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
     // first participant receives initial data = 4 (see above)
     cplScheme.initialize(0.0, 1);
     BOOST_TEST(cplScheme.hasDataBeenReceived());
-    cplScheme.receiveResultOfFirstAdvance();
-    BOOST_TEST(!cplScheme.hasDataBeenReceived());
     BOOST_TEST(mesh->data(receiveDataIndex)->values().size() == 1);
     BOOST_TEST(testing::equals(mesh->data(receiveDataIndex)->values()(0), 4.0));
     // first participant does not send any data here
@@ -885,8 +872,6 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
   } else {
     // second participant result written by first participant in its first window = 1 (see below)
     cplScheme.initialize(0.0, 1);
-    BOOST_TEST(!cplScheme.hasDataBeenReceived());
-    cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(context.isNamed(second));
     BOOST_TEST(mesh->data(receiveDataIndex)->values().size() == 1);
@@ -1001,8 +986,8 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
     // first order extrapolation
     BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4); // = 2*3 - 2
   } else if (context.isNamed(second)) {
-    // extrapolation only applied to accelerated data. So data written by first participant.
-    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3);
+    // first order extrapolation, because no more data is written
+    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 5); // = 2*3 - 1
   }
 
   // reached end of simulation, ready to finalize
@@ -1333,8 +1318,6 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     sendCouplingData->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{sendCouplingData->values()});
     cplScheme.initialize(0.0, 1);
     BOOST_TEST(cplScheme.hasDataBeenReceived());
-    cplScheme.receiveResultOfFirstAdvance();
-    BOOST_TEST(!cplScheme.hasDataBeenReceived());
     // ensure that initial data was read
     BOOST_TEST(receiveCouplingData->getSize() == 3);
     BOOST_TEST(testing::equals(receiveCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
@@ -1378,8 +1361,6 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(sendCouplingData->getPreviousIterationSize() == 3); // here, previousIteration is correctly initialized, see above
     BOOST_TEST(testing::equals(sendCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
     cplScheme.initialize(0.0, 1);
-    BOOST_TEST(!cplScheme.hasDataBeenReceived());
-    cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(receiveCouplingData->getSize() == 1);
     BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 4.0));

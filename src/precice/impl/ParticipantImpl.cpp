@@ -336,17 +336,7 @@ void ParticipantImpl::initialize()
   mapReadData();
   performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
 
-  for (auto &context : _accessor->readDataContexts()) {
-    context.moveToNextWindow();
-  }
-  _couplingScheme->receiveResultOfFirstAdvance();
-
-  if (_couplingScheme->hasDataBeenReceived()) {
-    mapReadData();
-    performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
-  }
-
-  resetWrittenData(false);
+  resetWrittenData(false, false);
   PRECICE_DEBUG("Plot output");
   _accessor->exportFinal();
   e.stop();
@@ -402,12 +392,6 @@ void ParticipantImpl::advance(
 
   advanceCouplingScheme();
 
-  if (_couplingScheme->isTimeWindowComplete()) {
-    for (auto &context : _accessor->readDataContexts()) {
-      context.moveToNextWindow();
-    }
-  }
-
   if (_couplingScheme->hasDataBeenReceived()) {
     mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, time);
@@ -418,7 +402,7 @@ void ParticipantImpl::advance(
   PRECICE_DEBUG("Handle exports");
   handleExports();
 
-  resetWrittenData(isAtWindowEnd);
+  resetWrittenData(isAtWindowEnd, _couplingScheme->isTimeWindowComplete());
 
   _meshLock.lockAll();
 
@@ -1407,11 +1391,11 @@ void ParticipantImpl::handleExports()
   _accessor->exportIntermediate(exp);
 }
 
-void ParticipantImpl::resetWrittenData(bool isAtWindowEnd)
+void ParticipantImpl::resetWrittenData(bool isAtWindowEnd, bool isTimeWindowComplete)
 {
   PRECICE_TRACE();
   for (auto &context : _accessor->writeDataContexts()) {
-    context.resetData(isAtWindowEnd);
+    context.resetData(isAtWindowEnd, isTimeWindowComplete);
   }
 }
 

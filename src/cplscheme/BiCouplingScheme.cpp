@@ -142,32 +142,6 @@ void BiCouplingScheme::initializeReceiveDataStorage()
   initializeWithZeroInitialData(getReceiveData());
 }
 
-void BiCouplingScheme::exchangeInitialData()
-{
-  // F: send, receive, S: receive, send
-  if (doesFirstStep()) {
-    if (sendsInitializedData()) {
-      sendData(getM2N(), getSendData());
-    }
-    if (receivesInitializedData()) {
-      receiveData(getM2N(), getReceiveData());
-      checkDataHasBeenReceived();
-    } else {
-      initializeWithZeroInitialData(getReceiveData());
-    }
-  } else { // second participant
-    if (receivesInitializedData()) {
-      receiveData(getM2N(), getReceiveData());
-      checkDataHasBeenReceived();
-    } else {
-      initializeWithZeroInitialData(getReceiveData());
-    }
-    if (sendsInitializedData()) {
-      sendData(getM2N(), getSendData());
-    }
-  }
-}
-
 bool BiCouplingScheme::hasAnySendData()
 {
   return not getSendData().empty();

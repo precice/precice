@@ -387,9 +387,10 @@ private:
   /**
    * @brief Resets written data.
    *
-   * @param isAtWindowEnd set true, if function is called at end of window, to also reset the time sample storage
+   * @param isAtWindowEnd set true, if function is called at end of window to also trim the time sample storage
+   * @param isTimeWindowComplete set true, if function is called at end of converged window to trim and move the sample storage.
    */
-  void resetWrittenData(bool isAtWindowEnd);
+  void resetWrittenData(bool isAtWindowEnd, bool isTimeWindowComplete);
 
   /// Determines participant accessing this interface from the configuration.
   impl::PtrParticipant determineAccessingParticipant(

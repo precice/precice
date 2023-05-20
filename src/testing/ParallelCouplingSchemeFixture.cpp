@@ -1,4 +1,6 @@
 #include "testing/ParallelCouplingSchemeFixture.hpp"
+#include "acceleration/Acceleration.hpp"
+#include "acceleration/SharedPointer.hpp"
 
 namespace precice::testing {
 
@@ -27,18 +29,17 @@ void ParallelCouplingSchemeFixture::storeIteration(cplscheme::ParallelCouplingSc
   cplscheme.storeIteration();
 }
 
-void ParallelCouplingSchemeFixture::initializeStorages(cplscheme::ParallelCouplingScheme &cplscheme)
+void ParallelCouplingSchemeFixture::initializeAcceleration(cplscheme::ParallelCouplingScheme &cplscheme)
 {
-  cplscheme.initializeStorages();
-}
-
-void ParallelCouplingSchemeFixture::storeExtrapolationData(cplscheme::ParallelCouplingScheme &cplscheme)
-{
-  cplscheme.storeExtrapolationData();
+  if (cplscheme._acceleration) {
+    cplscheme._acceleration->initialize(cplscheme.getAccelerationData());
+  }
 }
 
 void ParallelCouplingSchemeFixture::moveToNextWindow(cplscheme::ParallelCouplingScheme &cplscheme)
 {
-  cplscheme.moveToNextWindow();
+  for (const auto &pair : cplscheme._allData) {
+    pair.second->timeStepsStorage().move();
+  }
 }
 } // namespace precice::testing
