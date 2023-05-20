@@ -29,11 +29,11 @@ void WriteDataContext::resetData(bool atEndOfWindow, bool isTimeWindowComplete)
     std::for_each(_mappingContexts.begin(), _mappingContexts.end(), [](auto &context) { context.toData->toZero(); });
   }
 
-  if (isTimeWindowComplete) {
+  if (isTimeWindowComplete && hasWriteMapping()) { // manually overwrite value at beginning with value from end. Need this exception for WriteDataContext with write mapping, because CouplingScheme is not able to update _providedData, if write mapping sits between _providedData and _toData. CouplingScheme in this case only has access to _toData.
     PRECICE_ASSERT(atEndOfWindow, "isTimeWindowComplete without atEndOfWindow is forbidden!");
     auto atEnd = _providedData->timeStepsStorage().stamples().back().sample;
     _providedData->timeStepsStorage().trim();
-    _providedData->timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_START, atEnd); // manually overwrite value at beginning with value from end. Need this exception for WriteDataContext, because CouplingScheme might not be able to update _providedData, if write mapping sits between _providedData and _toData. CouplingScheme in this case only has access to _toData.
+    _providedData->timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_START, atEnd);
   } else if (atEndOfWindow) {
     _providedData->timeStepsStorage().trim();
   }
@@ -111,11 +111,6 @@ void WriteDataContext::resizeBufferTo(int nVertices)
 void WriteDataContext::storeBufferedData(double currentTime)
 {
   _providedData->setSampleAtTime(currentTime, _writeDataBuffer);
-}
-
-void WriteDataContext::moveToNextWindow()
-{
-  _providedData->timeStepsStorage().move();
 }
 
 void WriteDataContext::appendMappingConfiguration(MappingContext &mappingContext, const MeshContext &meshContext)
