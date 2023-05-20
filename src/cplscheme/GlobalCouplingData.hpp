@@ -5,6 +5,7 @@
 #include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/impl/Extrapolation.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "time/Storage.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -26,6 +27,27 @@ public:
 
   /// Returns a const reference to the data values.
   const Eigen::VectorXd &values() const;
+
+  /// Returns a reference to the data Sample.
+  time::Sample &sample();
+
+  /// Returns a const reference to the data Sample.
+  const time::Sample &sample() const;
+
+  /// Returns a reference to the time step storage of the data.
+  time::Storage &timeStepsStorage();
+
+  /// Returns a const reference to the time step storage of the data.
+  const time::Storage &timeStepsStorage() const;
+
+  /// Returns the stamples in _timeStepsStorage.
+  auto stamples() const
+  {
+    return timeStepsStorage().stamples();
+  }
+
+  /// Add sample at given time to _timeStepsStorage.
+  void setSampleAtTime(double time, time::Sample sample);
 
   /// store _globalData->values() in read-only variable _previousIteration for convergence checks etc.
   void storeIteration();
@@ -67,8 +89,8 @@ private:
     PRECICE_ASSERT(false);
   }
 
-  /// Data values of previous iteration.
-  Eigen::VectorXd _previousIteration;
+  /// Sample values of previous iteration (end of time window).
+  time::Sample _previousIteration;
 
   /// Data associated with this CouplingData
   mesh::PtrData _data;

@@ -1147,31 +1147,6 @@ void CouplingSchemeConfiguration::checkIfDataIsExchanged(
                 dataName);
 }
 
-void CouplingSchemeConfiguration::checkIfGlobalDataIsExchanged(
-    DataID dataID) const
-{
-  PRECICE_ERROR("TODO");
-  const auto match = std::find_if(_config.globalExchanges.begin(),
-                                  _config.globalExchanges.end(),
-                                  [dataID](const Config::GlobalExchange &exchange) { return exchange.globalData->getID() == dataID; });
-  if (match != _config.globalExchanges.end()) {
-    return;
-  }
-
-  // Data is not being exchanged
-  std::string dataName = "";
-  // auto        dataptr  = findGlobalDataByID(dataID); //TODO: implement findGlobalDataByID
-  mesh::PtrData dataptr = nullptr; //TODO: implement findGlobalDataByID
-  if (dataptr) {
-    dataName = dataptr->getName();
-  }
-
-  PRECICE_ERROR("You need to exchange every data that you use for convergence measures and/or the iteration acceleration. "
-                "Data \"{}\" is currently not exchanged. "
-                "Please check the <exchange ... /> and <...-convergence-measure ... /> tags in the <coupling-scheme:... /> of your precice-config.xml.",
-                dataName);
-}
-
 void CouplingSchemeConfiguration::checkSerialImplicitAccelerationData(
     int                dataID,
     const std::string &first,

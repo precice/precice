@@ -85,6 +85,7 @@ void MultiCouplingScheme::initializeReceiveDataStorage()
   for (auto &receiveExchange : _receiveDataVector) {
     initializeWithZeroInitialData(receiveExchange.second);
   }
+  // TODO add global data here
 }
 
 void MultiCouplingScheme::exchangeInitialData()

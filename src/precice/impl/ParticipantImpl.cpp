@@ -53,10 +53,12 @@
 #include "precice/impl/MeshContext.hpp"
 #include "precice/impl/ParticipantState.hpp"
 #include "precice/impl/ReadDataContext.hpp"
+#include "precice/impl/ReadGlobalDataContext.hpp"
 #include "precice/impl/ValidationMacros.hpp"
 #include "precice/impl/WatchIntegral.hpp"
 #include "precice/impl/WatchPoint.hpp"
 #include "precice/impl/WriteDataContext.hpp"
+#include "precice/impl/WriteGlobalDataContext.hpp"
 #include "precice/impl/versions.hpp"
 #include "precice/types.hpp"
 #include "profiling/Event.hpp"
@@ -326,6 +328,9 @@ void ParticipantImpl::initialize()
   for (auto &context : _accessor->writeDataContexts()) {
     context.storeBufferedData(relativeTime);
   }
+  for (auto &context : _accessor->writeGlobalDataContexts()) {
+    context.storeBufferedData(relativeTime);
+  }
 
   mapWrittenData();
   performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0);
@@ -382,6 +387,9 @@ void ParticipantImpl::advance(
   const double relativeTime  = _couplingScheme->getNormalizedWindowTime();
 
   for (auto &context : _accessor->writeDataContexts()) {
+    context.storeBufferedData(relativeTime);
+  }
+  for (auto &context : _accessor->writeGlobalDataContexts()) {
     context.storeBufferedData(relativeTime);
   }
 
@@ -1104,7 +1112,6 @@ void ParticipantImpl::writeGlobalData(
   // TODO: write an analog of this for global.
 
   WriteGlobalDataContext &context = _accessor->writeGlobalDataContext(dataName);
-  PRECICE_ASSERT(context.providedData() != nullptr);
 
   const auto dataDims = context.getDataDimensions();
   // Handling inconsistent sizes
@@ -1117,7 +1124,7 @@ void ParticipantImpl::writeGlobalData(
   // Sizes are correct at this point
   PRECICE_VALIDATE_DATA(value.data(), value.size());
 
-  context.writeValue(value);
+  context.writeValueIntoDataBuffer(value);
 }
 
 void ParticipantImpl::readGlobalData(
@@ -1436,11 +1443,6 @@ void ParticipantImpl::mapReadData()
       context.mapData();
     }
   }
-
-  for (auto &context : _accessor->readGlobalDataContexts()) {
-    PRECICE_DEBUG("Store read global data \"{}\" in Waveform ", context.getDataName());
-    context.storeDataInWaveform();
-  }
 }
 
 void ParticipantImpl::performDataActions(
@@ -1473,7 +1475,7 @@ void ParticipantImpl::resetWrittenData(bool isAtWindowEnd, bool isTimeWindowComp
     context.resetData(isAtWindowEnd, isTimeWindowComplete);
   }
   for (auto &context : _accessor->writeGlobalDataContexts()) {
-    context.resetData();
+    context.resetData(isAtWindowEnd);
   }
 }
 

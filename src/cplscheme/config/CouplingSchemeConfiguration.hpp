@@ -294,9 +294,6 @@ private:
   void checkIfDataIsExchanged(
       DataID dataID) const;
 
-  void checkIfGlobalDataIsExchanged(
-      DataID dataID) const;
-
   void checkSerialImplicitAccelerationData(
       DataID dataID, const std::string &first, const std::string &second) const;
 

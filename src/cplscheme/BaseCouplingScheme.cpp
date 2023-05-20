@@ -228,6 +228,15 @@ void BaseCouplingScheme::initializeWithZeroInitialData(const DataMap &receiveDat
   }
 }
 
+void BaseCouplingScheme::initializeWithZeroInitialData(const GlobalDataMap &receiveGlobalData)
+{
+  for (const auto &data : receiveGlobalData | boost::adaptors::map_values) {
+    PRECICE_DEBUG("Initialize {} as zero.", data->getDataName());
+    // just store already initialized zero sample to storage.
+    data->setSampleAtTime(time::Storage::WINDOW_END, data->sample());
+  }
+}
+
 PtrCouplingData BaseCouplingScheme::addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization, bool communicateSubsteps)
 {
   int             id = data->getID();
@@ -246,13 +255,8 @@ PtrGlobalCouplingData BaseCouplingScheme::addGlobalCouplingData(const mesh::PtrD
   int                   id = data->getID();
   PtrGlobalCouplingData ptrGblCplData;
   if (!utils::contained(id, _allGlobalData)) { // data is not used by this coupling scheme yet, create new GlobalCouplingData
-    if (isExplicitCouplingScheme()) {
-      ptrGblCplData = std::make_shared<GlobalCouplingData>(data, requiresInitialization);
-    } else {
-      ptrGblCplData = std::make_shared<GlobalCouplingData>(data, requiresInitialization, getExtrapolationOrder());
-    }
+    ptrGblCplData = std::make_shared<GlobalCouplingData>(data, requiresInitialization);
     _allGlobalData.emplace(id, ptrGblCplData);
-    PRECICE_DEBUG("Added global data {} to _allGlobalData.", data->getName());
   } else { // data is already used by another exchange of this coupling scheme, use existing GlobalCouplingData
     ptrGblCplData = _allGlobalData[id];
   }
@@ -272,6 +276,10 @@ void BaseCouplingScheme::sendGlobalData(const m2n::PtrM2N &m2n, const GlobalData
   PRECICE_ASSERT(m2n->isConnected());
 
   for (const auto &data : sendGlobalData | boost::adaptors::map_values) {
+    const auto stamples = data->stamples();
+    PRECICE_ASSERT(stamples.size() > 0);
+    data->sample() = stamples.back().sample;
+
     // Data is actually only send if size>0, which is checked in the derived classes implementation
     m2n->send(data->values(), -1, data->getDimensions()); // TODO meshID=-1 is a makeshift thing here. Fix this.
   }
@@ -286,6 +294,7 @@ void BaseCouplingScheme::receiveGlobalData(const m2n::PtrM2N &m2n, const GlobalD
   for (const auto &data : receiveGlobalData | boost::adaptors::map_values) {
     // Data is only received on ranks with size>0, which is checked in the derived class implementation
     m2n->receive(data->values(), -1, data->getDimensions()); // TODO meshID=-1 is a makeshift thing here. Fix this.
+    data->setSampleAtTime(time::Storage::WINDOW_END, data->sample());
   }
 }
 
@@ -748,6 +757,7 @@ bool BaseCouplingScheme::measureConvergence()
   for (const auto &convMeasure : _convergenceMeasuresGlobalData) {
     PRECICE_ASSERT(convMeasure.couplingData != nullptr);
     PRECICE_ASSERT(convMeasure.measure.get() != nullptr);
+    PRECICE_ASSERT(convMeasure.couplingData->previousIteration().size() == convMeasure.couplingData->values().size(), convMeasure.couplingData->previousIteration().size(), convMeasure.couplingData->values().size(), convMeasure.couplingData->getDataName());
 
     convMeasure.measure->measure(convMeasure.couplingData->previousIteration(), convMeasure.couplingData->values());
 
@@ -875,6 +885,13 @@ void BaseCouplingScheme::determineInitialSend(GlobalDataMap &sendGlobalData)
 void BaseCouplingScheme::determineInitialReceive(DataMap &receiveData)
 {
   if (anyDataRequiresInitialization(receiveData)) {
+    _receivesInitializedData = true;
+  }
+}
+
+void BaseCouplingScheme::determineInitialReceive(GlobalDataMap &receiveGlobalData)
+{
+  if (anyDataRequiresInitialization(receiveGlobalData)) {
     _receivesInitializedData = true;
   }
 }

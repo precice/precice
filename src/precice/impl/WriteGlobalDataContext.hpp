@@ -4,6 +4,7 @@
 
 #include "DataContext.hpp"
 #include "logging/Logger.hpp"
+#include "time/Sample.hpp"
 
 namespace precice {
 namespace impl {
@@ -24,18 +25,25 @@ public:
       mesh::PtrData data);
 
   /**
-   * @brief Get _providedData member.
+   * @brief Resets provided data, writeDataBuffer, and (optionally) storage.
    *
-   * @return mesh::PtrData _providedData.
+   * @param atEndOfWindow if true, also the Storage will be reset (useful at end of window to clear storage).
    */
-  mesh::PtrData providedData();
+  void resetData(bool atEndOfWindow);
 
   /**
-   * @brief Store value in _providedData.values()
+   * @brief Store value in _writeDataBuffer
    *
    * @param[in] value value of data
    */
-  void writeValue(::precice::span<const double> values);
+  void writeValueIntoDataBuffer(::precice::span<const double> values);
+
+  /**
+   * @brief Store data from _writeDataBuffer in persistent storage
+   *
+   * @param[in] currentTime time data should be associated with
+   */
+  void storeBufferedData(double currentTime);
 
   /// Disable copy construction
   WriteGlobalDataContext(const WriteGlobalDataContext &copy) = delete;
@@ -49,6 +57,9 @@ public:
 
 private:
   static logging::Logger _log;
+
+  /// @brief Buffer to store written data until it is copied to _providedData->timeStepsStorage()
+  time::Sample _writeDataBuffer;
 };
 
 } // namespace impl

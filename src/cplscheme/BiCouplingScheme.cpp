@@ -210,6 +210,7 @@ void BiCouplingScheme::initializeReceiveDataStorage()
 {
   // @todo check receiveData. Should only contain zero data!
   initializeWithZeroInitialData(getReceiveData());
+  initializeWithZeroInitialData(getReceiveGlobalData());
 }
 
 bool BiCouplingScheme::hasAnySendData()
