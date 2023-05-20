@@ -29,9 +29,10 @@ public:
   /**
    * @brief Resets provided data, writeDataBuffer, (if mapping exists) fromData or toData, and (optionally) storage.
    *
-   * @param atEndOfWindow if true, also the Storage will be reset (useful at end of window to clear storage).
+   * @param atEndOfWindow if true, also the Storage will be reset (useful at end of window to trim storage).
+   * @param isTimeWindowComplete if true, overwrite sample at front of Storage with sample at back (basically a Storage::move with constant).
    */
-  void resetData(bool atEndOfWindow);
+  void resetData(bool atEndOfWindow, bool isTimeWindowComplete);
 
   /**
    * @brief Store values in _writeDataBuffer

@@ -1,9 +1,15 @@
 #pragma once
 
 #include <string>
+#include "SharedPointer.hpp"
+#include "boost/smart_ptr.hpp"
+#include "cplscheme/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "logging/config/LogConfiguration.hpp"
-#include "precice/config/SolverInterfaceConfiguration.hpp"
+#include "m2n/M2N.hpp"
+#include "m2n/config/M2NConfiguration.hpp"
+#include "mapping/SharedPointer.hpp"
+#include "mesh/SharedPointer.hpp"
 #include "profiling/config/ProfilingConfiguration.hpp"
 #include "xml/XMLTag.hpp"
 
@@ -45,12 +51,70 @@ public:
   virtual void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag);
 
   /**
-   * @brief Returns solver interface configuration.
+   * @brief Returns number of spatial dimensions configured.
    */
-  const SolverInterfaceConfiguration &getSolverInterfaceConfiguration() const;
+  int getDimensions() const;
+
+  /// @brief Returns whether experimental features are allowed or not
+  bool allowsExperimental() const
+  {
+    return _experimental;
+  }
+
+  const mesh::PtrDataConfiguration getDataConfiguration() const
+  {
+    return _dataConfiguration;
+  }
+
+  const mesh::PtrMeshConfiguration getMeshConfiguration() const
+  {
+    return _meshConfiguration;
+  }
+
+  const m2n::M2NConfiguration::SharedPointer getM2NConfiguration() const
+  {
+    return _m2nConfiguration;
+  }
+
+  const PtrParticipantConfiguration &getParticipantConfiguration() const;
+
+  const cplscheme::PtrCouplingSchemeConfiguration getCouplingSchemeConfiguration() const
+  {
+    return _couplingSchemeConfiguration;
+  }
+
+  /**
+   * @brief For manual configuration in test cases.
+   */
+  void setDataConfiguration(mesh::PtrDataConfiguration config)
+  {
+    _dataConfiguration = config;
+  }
+
+  /**
+   * @brief For manual configuration in test cases.
+   */
+  void setMeshConfiguration(mesh::PtrMeshConfiguration config)
+  {
+    _meshConfiguration = config;
+  }
+
+  /**
+    * @brief For manual configuration in test cases.
+    */
+  void setParticipantConfiguration(PtrParticipantConfiguration config)
+  {
+    _participantConfiguration = config;
+  }
 
 private:
   logging::Logger _log{"config::Configuration"};
+
+  /// Spatial dimension of problem to be solved. Either 2 or 3.
+  int _dimensions = -1;
+
+  /// Allow the use of experimental features
+  bool _experimental = false;
 
   // @brief Root tag of preCICE configuration.
   xml::XMLTag _tag;
@@ -61,7 +125,15 @@ private:
   // Handle other configuration afterwards
   precice::profiling::ProfilingConfiguration _profilingConfig;
 
-  SolverInterfaceConfiguration _solverInterfaceConfig;
+  mesh::PtrDataConfiguration _dataConfiguration;
+
+  mesh::PtrMeshConfiguration _meshConfiguration;
+
+  m2n::M2NConfiguration::SharedPointer _m2nConfiguration;
+
+  PtrParticipantConfiguration _participantConfiguration;
+
+  cplscheme::PtrCouplingSchemeConfiguration _couplingSchemeConfiguration;
 };
 
 } // namespace config

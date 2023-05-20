@@ -27,7 +27,7 @@ class Event;
 }
 
 namespace config {
-class SolverInterfaceConfiguration;
+class Configuration;
 }
 } // namespace precice
 
@@ -348,7 +348,7 @@ private:
    * Can be used to configure the ParticipantImpl without xml file. Requires
    * to manually setup the configuration object.
    */
-  void configure(const config::SolverInterfaceConfiguration &configuration);
+  void configure(const config::Configuration &configuration);
 
   void configureM2Ns(const m2n::M2NConfiguration::SharedPointer &config);
 
@@ -387,13 +387,14 @@ private:
   /**
    * @brief Resets written data.
    *
-   * @param isAtWindowEnd set true, if function is called at end of window, to also reset the time sample storage
+   * @param isAtWindowEnd set true, if function is called at end of window to also trim the time sample storage
+   * @param isTimeWindowComplete set true, if function is called at end of converged window to trim and move the sample storage.
    */
-  void resetWrittenData(bool isAtWindowEnd);
+  void resetWrittenData(bool isAtWindowEnd, bool isTimeWindowComplete);
 
   /// Determines participant accessing this interface from the configuration.
   impl::PtrParticipant determineAccessingParticipant(
-      const config::SolverInterfaceConfiguration &config);
+      const config::Configuration &config);
 
   /// Initializes intra-participant communication.
   void initializeIntraCommunication();

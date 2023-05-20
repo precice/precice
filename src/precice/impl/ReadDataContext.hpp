@@ -57,11 +57,6 @@ public:
    */
   void readValues(::precice::span<const VertexID> vertices, double normalizedDt, ::precice::span<double> values) const;
 
-  /**
-   * @brief Updates _waveform when moving to the next time window.
-   */
-  void moveToNextWindow();
-
   /// Disable copy construction
   ReadDataContext(const ReadDataContext &copy) = delete;
 

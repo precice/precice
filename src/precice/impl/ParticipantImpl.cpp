@@ -48,7 +48,6 @@
 #include "precice/config/Configuration.hpp"
 #include "precice/config/ParticipantConfiguration.hpp"
 #include "precice/config/SharedPointer.hpp"
-#include "precice/config/SolverInterfaceConfiguration.hpp"
 #include "precice/impl/CommonErrorMessages.hpp"
 #include "precice/impl/MappingContext.hpp"
 #include "precice/impl/MeshContext.hpp"
@@ -205,12 +204,7 @@ void ParticipantImpl::configure(
     PRECICE_INFO("Configuring preCICE with configuration \"{}\"", configurationFileName);
     PRECICE_INFO("I am participant \"{}\"", _accessorName);
   }
-  configure(config.getSolverInterfaceConfiguration());
-}
 
-void ParticipantImpl::configure(
-    const config::SolverInterfaceConfiguration &config)
-{
   PRECICE_TRACE();
 
   _meshLock.clear();
@@ -342,7 +336,7 @@ void ParticipantImpl::initialize()
   mapReadData();
   performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
 
-  resetWrittenData(false);
+  resetWrittenData(false, false);
   PRECICE_DEBUG("Plot output");
   _accessor->exportFinal();
   e.stop();
@@ -408,13 +402,7 @@ void ParticipantImpl::advance(
   PRECICE_DEBUG("Handle exports");
   handleExports();
 
-  if (_couplingScheme->isTimeWindowComplete()) {
-    for (auto &context : _accessor->writeDataContexts()) {
-      context.moveToNextWindow();
-    }
-  }
-
-  resetWrittenData(isAtWindowEnd);
+  resetWrittenData(isAtWindowEnd, _couplingScheme->isTimeWindowComplete());
 
   _meshLock.lockAll();
 
@@ -1403,16 +1391,16 @@ void ParticipantImpl::handleExports()
   _accessor->exportIntermediate(exp);
 }
 
-void ParticipantImpl::resetWrittenData(bool isAtWindowEnd)
+void ParticipantImpl::resetWrittenData(bool isAtWindowEnd, bool isTimeWindowComplete)
 {
   PRECICE_TRACE();
   for (auto &context : _accessor->writeDataContexts()) {
-    context.resetData(isAtWindowEnd);
+    context.resetData(isAtWindowEnd, isTimeWindowComplete);
   }
 }
 
 PtrParticipant ParticipantImpl::determineAccessingParticipant(
-    const config::SolverInterfaceConfiguration &config)
+    const config::Configuration &config)
 {
   const auto &partConfig = config.getParticipantConfiguration();
   for (const PtrParticipant &participant : partConfig->getParticipants()) {

@@ -1,42 +1,40 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration>
-  <solver-interface dimensions="3">
-    <data:scalar name="Data1" />
+<precice-configuration dimensions="3">
+  <data:scalar name="Data1" />
 
-    <mesh name="CellCenters">
-      <use-data name="Data1" />
-    </mesh>
+  <mesh name="CellCenters">
+    <use-data name="Data1" />
+  </mesh>
 
-    <mesh name="Nodes">
-      <use-data name="Data1" />
-    </mesh>
+  <mesh name="Nodes">
+    <use-data name="Data1" />
+  </mesh>
 
-    <participant name="FluidSolver">
-      <intra-comm:mpi-single />
-      <provide-mesh name="CellCenters" />
-      <receive-mesh name="Nodes" from="SolidSolver" safety-factor="0.5" />
-      <mapping:nearest-projection
-        direction="read"
-        from="Nodes"
-        to="CellCenters"
-        constraint="consistent" />
-      <read-data name="Data1" mesh="CellCenters" />
-      <export:vtk />
-    </participant>
+  <participant name="FluidSolver">
+    <intra-comm:mpi-single />
+    <provide-mesh name="CellCenters" />
+    <receive-mesh name="Nodes" from="SolidSolver" safety-factor="0.5" />
+    <mapping:nearest-projection
+      direction="read"
+      from="Nodes"
+      to="CellCenters"
+      constraint="consistent" />
+    <read-data name="Data1" mesh="CellCenters" />
+    <export:vtk />
+  </participant>
 
-    <participant name="SolidSolver">
-      <provide-mesh name="Nodes" />
-      <write-data name="Data1" mesh="Nodes" />
-      <export:vtk />
-    </participant>
+  <participant name="SolidSolver">
+    <provide-mesh name="Nodes" />
+    <write-data name="Data1" mesh="Nodes" />
+    <export:vtk />
+  </participant>
 
-    <m2n:sockets from="FluidSolver" to="SolidSolver" />
+  <m2n:sockets from="FluidSolver" to="SolidSolver" />
 
-    <coupling-scheme:parallel-explicit>
-      <participants first="FluidSolver" second="SolidSolver" />
-      <max-time-windows value="1" />
-      <time-window-size value="1.0" />
-      <exchange data="Data1" mesh="Nodes" from="SolidSolver" to="FluidSolver" />
-    </coupling-scheme:parallel-explicit>
-  </solver-interface>
+  <coupling-scheme:parallel-explicit>
+    <participants first="FluidSolver" second="SolidSolver" />
+    <max-time-windows value="1" />
+    <time-window-size value="1.0" />
+    <exchange data="Data1" mesh="Nodes" from="SolidSolver" to="FluidSolver" />
+  </coupling-scheme:parallel-explicit>
 </precice-configuration>

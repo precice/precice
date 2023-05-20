@@ -114,7 +114,7 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> Storage::getTimesAndValues() const
 
 time::Sample Storage::computeExtrapolation()
 {
-  if (_extrapolationOrder == 0 || _extrapolationOrder == cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER) {
+  if (_extrapolationOrder == 0) {
     return getSampleAtEnd(); // use values at end of window as initial guess for next
   } else if (_extrapolationOrder == 1) {
     auto s0 = getSampleAtBeginning();

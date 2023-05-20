@@ -1,59 +1,53 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration>
-  <solver-interface dimensions="2">
-    <data:scalar name="DisplacementTop" />
-    <data:scalar name="DisplacementBottom" />
-    <data:scalar name="Pressure" />
+<precice-configuration dimensions="2">
+  <data:scalar name="DisplacementTop" />
+  <data:scalar name="DisplacementBottom" />
+  <data:scalar name="Pressure" />
 
-    <mesh name="MeshB">
-      <use-data name="DisplacementTop" />
-      <use-data name="DisplacementBottom" />
-      <use-data name="Pressure" />
-    </mesh>
+  <mesh name="MeshB">
+    <use-data name="DisplacementTop" />
+    <use-data name="DisplacementBottom" />
+    <use-data name="Pressure" />
+  </mesh>
 
-    <mesh name="MeshATop">
-      <use-data name="DisplacementTop" />
-      <use-data name="Pressure" />
-    </mesh>
+  <mesh name="MeshATop">
+    <use-data name="DisplacementTop" />
+    <use-data name="Pressure" />
+  </mesh>
 
-    <mesh name="MeshABottom">
-      <use-data name="DisplacementBottom" />
-      <use-data name="Pressure" />
-    </mesh>
+  <mesh name="MeshABottom">
+    <use-data name="DisplacementBottom" />
+    <use-data name="Pressure" />
+  </mesh>
 
-    <participant name="A">
-      <provide-mesh name="MeshATop" />
-      <provide-mesh name="MeshABottom" />
-      <write-data name="DisplacementTop" mesh="MeshATop" />
-      <write-data name="DisplacementBottom" mesh="MeshABottom" />
-    </participant>
+  <participant name="A">
+    <provide-mesh name="MeshATop" />
+    <provide-mesh name="MeshABottom" />
+    <write-data name="DisplacementTop" mesh="MeshATop" />
+    <write-data name="DisplacementBottom" mesh="MeshABottom" />
+  </participant>
 
-    <participant name="B">
-      <provide-mesh name="MeshB" />
-      <receive-mesh name="MeshATop" from="A" />
-      <receive-mesh name="MeshABottom" from="A" />
-      <read-data name="DisplacementTop" mesh="MeshB" />
-      <read-data name="DisplacementBottom" mesh="MeshB" />
-      <mapping:nearest-neighbor
-        direction="read"
-        from="MeshATop"
-        to="MeshB"
-        constraint="consistent" />
-      <mapping:nearest-neighbor
-        direction="read"
-        from="MeshABottom"
-        to="MeshB"
-        constraint="consistent" />
-    </participant>
+  <participant name="B">
+    <provide-mesh name="MeshB" />
+    <receive-mesh name="MeshATop" from="A" />
+    <receive-mesh name="MeshABottom" from="A" />
+    <read-data name="DisplacementTop" mesh="MeshB" />
+    <read-data name="DisplacementBottom" mesh="MeshB" />
+    <mapping:nearest-neighbor direction="read" from="MeshATop" to="MeshB" constraint="consistent" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="MeshABottom"
+      to="MeshB"
+      constraint="consistent" />
+  </participant>
 
-    <m2n:sockets from="B" to="A" />
+  <m2n:sockets from="B" to="A" />
 
-    <coupling-scheme:parallel-explicit>
-      <participants first="A" second="B" />
-      <max-time value="1.0" />
-      <time-window-size value="1.0" />
-      <exchange data="DisplacementTop" mesh="MeshATop" from="A" to="B" />
-      <exchange data="DisplacementBottom" mesh="MeshABottom" from="A" to="B" />
-    </coupling-scheme:parallel-explicit>
-  </solver-interface>
+  <coupling-scheme:parallel-explicit>
+    <participants first="A" second="B" />
+    <max-time value="1.0" />
+    <time-window-size value="1.0" />
+    <exchange data="DisplacementTop" mesh="MeshATop" from="A" to="B" />
+    <exchange data="DisplacementBottom" mesh="MeshABottom" from="A" to="B" />
+  </coupling-scheme:parallel-explicit>
 </precice-configuration>
