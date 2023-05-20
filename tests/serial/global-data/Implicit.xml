@@ -1,40 +1,38 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration>
-  <solver-interface dimensions="2" experimental="true">
-    <global-data:vector name="GlobalVectorData1" />
-    <global-data:vector name="GlobalVectorData2" />
-    <global-data:scalar name="GlobalScalarData1" />
-    <global-data:scalar name="GlobalScalarData2" />
+<precice-configuration dimensions="2" experimental="true">
+  <global-data:vector name="GlobalVectorData1" />
+  <global-data:vector name="GlobalVectorData2" />
+  <global-data:scalar name="GlobalScalarData1" />
+  <global-data:scalar name="GlobalScalarData2" />
 
-    <participant name="SolverOne">
-      <write-data name="GlobalVectorData1" />
-      <write-data name="GlobalScalarData1" />
-      <read-data name="GlobalVectorData2" />
-      <read-data name="GlobalScalarData2" />
-    </participant>
+  <participant name="SolverOne">
+    <write-data name="GlobalVectorData1" />
+    <write-data name="GlobalScalarData1" />
+    <read-data name="GlobalVectorData2" />
+    <read-data name="GlobalScalarData2" />
+  </participant>
 
-    <participant name="SolverTwo">
-      <read-data name="GlobalVectorData1" />
-      <read-data name="GlobalScalarData1" />
-      <write-data name="GlobalVectorData2" />
-      <write-data name="GlobalScalarData2" />
-    </participant>
+  <participant name="SolverTwo">
+    <read-data name="GlobalVectorData1" />
+    <read-data name="GlobalScalarData1" />
+    <write-data name="GlobalVectorData2" />
+    <write-data name="GlobalScalarData2" />
+  </participant>
 
-    <m2n:sockets from="SolverOne" to="SolverTwo" />
+  <m2n:sockets from="SolverOne" to="SolverTwo" />
 
-    <coupling-scheme:serial-implicit>
-      <participants first="SolverOne" second="SolverTwo" />
-      <max-time-windows value="4" />
-      <time-window-size value="1.0" />
-      <max-iterations value="3" />
-      <exchange data="GlobalVectorData1" from="SolverOne" to="SolverTwo" />
-      <exchange data="GlobalScalarData1" from="SolverOne" to="SolverTwo" />
-      <exchange data="GlobalVectorData2" from="SolverTwo" to="SolverOne" />
-      <exchange data="GlobalScalarData2" from="SolverTwo" to="SolverOne" />
-      <absolute-convergence-measure data="GlobalVectorData1" limit="1" />
-      <absolute-convergence-measure data="GlobalVectorData2" limit="1" />
-      <absolute-convergence-measure data="GlobalScalarData1" limit="1" />
-      <absolute-convergence-measure data="GlobalScalarData2" limit="1" />
-    </coupling-scheme:serial-implicit>
-  </solver-interface>
+  <coupling-scheme:serial-implicit>
+    <participants first="SolverOne" second="SolverTwo" />
+    <max-time-windows value="4" />
+    <time-window-size value="1.0" />
+    <max-iterations value="3" />
+    <exchange data="GlobalVectorData1" from="SolverOne" to="SolverTwo" />
+    <exchange data="GlobalScalarData1" from="SolverOne" to="SolverTwo" />
+    <exchange data="GlobalVectorData2" from="SolverTwo" to="SolverOne" />
+    <exchange data="GlobalScalarData2" from="SolverTwo" to="SolverOne" />
+    <absolute-convergence-measure data="GlobalVectorData1" limit="1" />
+    <absolute-convergence-measure data="GlobalVectorData2" limit="1" />
+    <absolute-convergence-measure data="GlobalScalarData1" limit="1" />
+    <absolute-convergence-measure data="GlobalScalarData2" limit="1" />
+  </coupling-scheme:serial-implicit>
 </precice-configuration>

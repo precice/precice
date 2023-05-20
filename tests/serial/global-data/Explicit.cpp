@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/Participant.hpp>
 #include <vector>
 
 BOOST_AUTO_TEST_SUITE(Integration)
@@ -15,8 +15,8 @@ BOOST_AUTO_TEST_CASE(Explicit)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
-  precice::SolverInterface couplingInterface(context.name, context.config(), 0, 1);
-  const int                dimensions = 2;
+  precice::Participant couplingInterface(context.name, context.config(), 0, 1);
+  const int            dimensions = 2;
 
   if (context.isNamed("SolverOne")) {
     const std::string globalScalarDataName = "GlobalData1";
