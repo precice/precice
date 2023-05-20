@@ -15,25 +15,25 @@ BOOST_AUTO_TEST_CASE(Explicit)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
-  precice::Participant couplingInterface(context.name, context.config(), 0, 1);
+  precice::Participant participant(context.name, context.config(), 0, 1);
   const int            dimensions = 2;
 
   if (context.isNamed("SolverOne")) {
     const std::string globalScalarDataName = "GlobalData1";
     const std::string globalVectorDataName = "GlobalVectorData";
-    couplingInterface.initialize();
-    double dt = couplingInterface.getMaxTimeStepSize();
+    participant.initialize();
+    double dt = participant.getMaxTimeStepSize();
     // Some dummy writeData
     double              writeGlobalScalarData{5};
     std::vector<double> writeGlobalVectorData(dimensions, 50.5);
 
-    while (couplingInterface.isCouplingOngoing()) {
+    while (participant.isCouplingOngoing()) {
       // Write data to be sent to SolverTwo to buffer
-      couplingInterface.writeGlobalData(globalScalarDataName, {&writeGlobalScalarData, 1});
-      couplingInterface.writeGlobalData(globalVectorDataName, writeGlobalVectorData);
+      participant.writeGlobalData(globalScalarDataName, {&writeGlobalScalarData, 1});
+      participant.writeGlobalData(globalVectorDataName, writeGlobalVectorData);
       // send data
-      couplingInterface.advance(dt);
-      dt = couplingInterface.getMaxTimeStepSize();
+      participant.advance(dt);
+      dt = participant.getMaxTimeStepSize();
       // change reference data for next check
       writeGlobalScalarData++;
       for (auto &elem : writeGlobalVectorData) {
@@ -54,19 +54,19 @@ BOOST_AUTO_TEST_CASE(Explicit)
     // Initialize
     double              expectedGlobalData{5};
     std::vector<double> expectedGlobalVectorData(dimensions, 50.5);
-    couplingInterface.initialize(); // For serial-explicit, first communication happens here
-    double dt = couplingInterface.getMaxTimeStepSize();
+    participant.initialize(); // For serial-explicit, first communication happens here
+    double dt = participant.getMaxTimeStepSize();
 
-    while (couplingInterface.isCouplingOngoing()) {
+    while (participant.isCouplingOngoing()) {
       // read received data from buffer
-      couplingInterface.readGlobalData(globalScalarDataName, dt, {&readGlobalScalarData, 1});
-      couplingInterface.readGlobalData(globalVectorDataName, dt, readGlobalVectorData);
+      participant.readGlobalData(globalScalarDataName, dt, {&readGlobalScalarData, 1});
+      participant.readGlobalData(globalVectorDataName, dt, readGlobalVectorData);
       // check if received data is correct
       BOOST_TEST(precice::testing::equals(expectedGlobalData, readGlobalScalarData));
       BOOST_TEST(precice::testing::equals(expectedGlobalVectorData, readGlobalVectorData));
       // receive next data
-      couplingInterface.advance(dt);
-      dt = couplingInterface.getMaxTimeStepSize();
+      participant.advance(dt);
+      dt = participant.getMaxTimeStepSize();
       // change reference data for next check
       expectedGlobalData++;
       for (auto &elem : expectedGlobalVectorData) {

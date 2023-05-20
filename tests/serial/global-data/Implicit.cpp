@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_CASE(Implicit)
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
   // Set up API
-  precice::Participant couplingInterface(context.name, context.config(), 0, 1);
+  precice::Participant participant(context.name, context.config(), 0, 1);
   const int            dimensions = 2;
 
   std::string writeVectorDataName, writeScalarDataName;
@@ -50,26 +50,26 @@ BOOST_AUTO_TEST_CASE(Implicit)
   std::vector<double> readVectorData(dimensions, -1);
   double              readScalarData = -1;
 
-  couplingInterface.initialize();
-  dt = couplingInterface.getMaxTimeStepSize();
+  participant.initialize();
+  dt = participant.getMaxTimeStepSize();
 
-  while (couplingInterface.isCouplingOngoing()) {
-    if (couplingInterface.requiresWritingCheckpoint()) {
+  while (participant.isCouplingOngoing()) {
+    if (participant.requiresWritingCheckpoint()) {
     }
     // Write: from local data structure --> to precice buffer
-    couplingInterface.writeGlobalData(writeVectorDataName, writeVectorData);
-    couplingInterface.writeGlobalData(writeScalarDataName, {&writeScalarData, 1});
+    participant.writeGlobalData(writeVectorDataName, writeVectorData);
+    participant.writeGlobalData(writeScalarDataName, {&writeScalarData, 1});
     // Advance (exchange coupling data)
-    couplingInterface.advance(dt);
-    dt = couplingInterface.getMaxTimeStepSize();
+    participant.advance(dt);
+    dt = participant.getMaxTimeStepSize();
     // Read: from precice buffer --> to local data structure
-    couplingInterface.readGlobalData(readVectorDataName, dt, readVectorData);
-    couplingInterface.readGlobalData(readScalarDataName, dt, {&readScalarData, 1});
+    participant.readGlobalData(readVectorDataName, dt, readVectorData);
+    participant.readGlobalData(readScalarDataName, dt, {&readScalarData, 1});
     // Check read data
     BOOST_TEST(expectedReadVectorValue == readVectorData.at(0));
     BOOST_TEST(expectedReadVectorValue == readVectorData.at(1));
     BOOST_TEST(expectedReadScalarValue == readScalarData);
-    if (couplingInterface.requiresReadingCheckpoint()) {
+    if (participant.requiresReadingCheckpoint()) {
     }
   }
 }
