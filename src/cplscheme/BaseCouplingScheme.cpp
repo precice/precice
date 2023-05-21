@@ -122,9 +122,17 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
     PRECICE_ASSERT(stamples.size() > 0);
 
     auto timesAscending = data->getStoredTimesAscending();
-    PRECICE_ASSERT(math::equals(timesAscending(0), time::Storage::WINDOW_START), timesAscending(0));                                               // assert that first element is time::Storage::WINDOW_START
-    PRECICE_ASSERT(math::equals(timesAscending(timesAscending.size() - 1), time::Storage::WINDOW_END), timesAscending(timesAscending.size() - 1)); // assert that last element is time::Storage::WINDOW_END
-    int nTimeSteps = timesAscending.size();
+    int  nTimeSteps     = timesAscending.size();
+    PRECICE_ASSERT(nTimeSteps > 0);
+    PRECICE_ASSERT(math::equals(timesAscending(0), time::Storage::WINDOW_START), timesAscending(0));                                                  // assert that first element is time::Storage::WINDOW_START
+    if (nTimeSteps > 1) {                                                                                                                             // otherwise PRECICE_ASSERT below is triggered during initialization
+      PRECICE_ASSERT(math::equals(timesAscending(timesAscending.size() - 1), time::Storage::WINDOW_END), timesAscending(nTimeSteps - 1), nTimeSteps); // assert that last element is time::Storage::WINDOW_END
+    } else {                                                                                                                                          // needs special treatment during initialization
+      PRECICE_ASSERT(nTimeSteps == 1);
+      nTimeSteps     = 2;
+      timesAscending = Eigen::VectorXd(2);
+      timesAscending << time::Storage::WINDOW_START, time::Storage::WINDOW_END;
+    }
     sendNumberOfTimeSteps(m2n, nTimeSteps);
     sendTimes(m2n, timesAscending);
 
