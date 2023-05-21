@@ -78,6 +78,8 @@ public:
 
   static void broadcast(double &value);
 
+  static void broadcast(int &value);
+
   static void broadcast(precice::span<double> values);
 
   /** Synchronizes all ranks if syncMode is enabled

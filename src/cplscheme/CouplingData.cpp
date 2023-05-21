@@ -129,6 +129,14 @@ std::vector<int> CouplingData::getVertexOffsets()
   return _mesh->getVertexOffsets();
 }
 
+Eigen::VectorXd CouplingData::getStoredTimesAscending()
+{
+  // return timeStepsStorage().getTimes();  // only WINDOW_START and WINDOW_END for now.
+  Eigen::VectorXd times(2);
+  times << time::Storage::WINDOW_START, time::Storage::WINDOW_END;
+  return times;
+}
+
 void CouplingData::moveToNextWindow()
 {
   if (this->timeStepsStorage().stamples().size() > 0) {

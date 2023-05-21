@@ -163,6 +163,12 @@ public:
    */
   void send(double itemToSend);
 
+  /**
+   * @brief The primary rank sends an int to the other primary rank, for performance reasons, we
+   * neglect the gathering and checking step.
+   */
+  void send(int itemToSend);
+
   /// Broadcasts a mesh to connected ranks on remote participant (concerning the given mesh)
   void broadcastSendMesh(mesh::Mesh &mesh);
 
@@ -184,6 +190,9 @@ public:
 
   /// All ranks receive a double (the same for each rank).
   void receive(double &itemToReceive);
+
+  /// All ranks receive an int (the same for each rank).
+  void receive(int &itemToReceive);
 
   /// Receive mesh partitions per connected rank on remote participant (concerning the given mesh)
   void broadcastReceiveAllMesh(mesh::Mesh &mesh);

@@ -95,6 +95,22 @@ bool BaseCouplingScheme::hasConverged() const
   return _hasConverged;
 }
 
+void BaseCouplingScheme::sendNumberOfTimeSteps(const m2n::PtrM2N &m2n, const int numberOfTimeSteps)
+{
+  PRECICE_TRACE();
+  PRECICE_DEBUG("Sending number or time steps {}...", numberOfTimeSteps);
+  m2n->send(numberOfTimeSteps);
+}
+
+void BaseCouplingScheme::sendTimes(const m2n::PtrM2N &m2n, const Eigen::VectorXd times)
+{
+  PRECICE_TRACE();
+  PRECICE_DEBUG("Sending times...");
+  for (int i = 0; i < times.size(); i++) {
+    m2n->send(times(i));
+  }
+}
+
 void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendData)
 {
   PRECICE_TRACE();
@@ -105,8 +121,14 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
     const auto stamples = data->stamples();
     PRECICE_ASSERT(stamples.size() > 0);
 
+    auto timesAscending = data->getStoredTimesAscending();
+    PRECICE_ASSERT(math::equals(timesAscending(0), time::Storage::WINDOW_START), timesAscending(0));                                               // assert that first element is time::Storage::WINDOW_START
+    PRECICE_ASSERT(math::equals(timesAscending(timesAscending.size() - 1), time::Storage::WINDOW_END), timesAscending(timesAscending.size() - 1)); // assert that last element is time::Storage::WINDOW_END
+    int nTimeSteps = timesAscending.size();
+    sendNumberOfTimeSteps(m2n, nTimeSteps);
+    sendTimes(m2n, timesAscending);
+
     auto serializedValues = data->getSerializedValues();
-    int  nTimeSteps       = 2;
 
     // Data is actually only send if size>0, which is checked in the derived classes implementation
     m2n->send(serializedValues, data->getMeshID(), data->getDimensions() * nTimeSteps);
@@ -118,17 +140,38 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
   }
 }
 
+int BaseCouplingScheme::receiveNumberOfTimeSteps(const m2n::PtrM2N &m2n)
+{
+  PRECICE_TRACE();
+  PRECICE_DEBUG("Receiving number of time steps...");
+  int numberOfTimeSteps;
+  m2n->receive(numberOfTimeSteps);
+  return numberOfTimeSteps;
+}
+
+Eigen::VectorXd BaseCouplingScheme::receiveTimes(const m2n::PtrM2N &m2n, int nTimeSteps)
+{
+  PRECICE_TRACE();
+  PRECICE_DEBUG("Receiving times....");
+  auto times = Eigen::VectorXd(nTimeSteps);
+  for (int i = 0; i < nTimeSteps; i++) {
+    m2n->receive(times(i));
+  }
+  PRECICE_DEBUG("Received times {}", times);
+  return times;
+}
+
 void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(m2n.get());
   PRECICE_ASSERT(m2n->isConnected());
   for (const auto &data : receiveData | boost::adaptors::map_values) {
+    int nTimeSteps = receiveNumberOfTimeSteps(m2n);
 
-    int  nTimeSteps     = 2;
-    auto timesAscending = Eigen::VectorXd(nTimeSteps);
-    timesAscending << time::Storage::WINDOW_START, time::Storage::WINDOW_END;
     auto serializedValues = Eigen::VectorXd(nTimeSteps * data->getSize());
+    PRECICE_ASSERT(nTimeSteps > 0);
+    auto timesAscending = receiveTimes(m2n, nTimeSteps);
 
     // Data is only received on ranks with size>0, which is checked in the derived class implementation
     m2n->receive(serializedValues, data->getMeshID(), data->getDimensions() * nTimeSteps);

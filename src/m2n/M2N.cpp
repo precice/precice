@@ -248,6 +248,14 @@ void M2N::send(double itemToSend)
   }
 }
 
+void M2N::send(int itemToSend)
+{
+  PRECICE_TRACE(utils::IntraComm::getRank());
+  if (not utils::IntraComm::isSecondary()) {
+    _intraComm->send(itemToSend, 0);
+  }
+}
+
 void M2N::broadcastSendMesh(mesh::Mesh &mesh)
 {
   MeshID meshID = mesh.getID();
@@ -328,6 +336,16 @@ void M2N::receive(double &itemToReceive)
   utils::IntraComm::broadcast(itemToReceive);
 
   PRECICE_DEBUG("receive(double): {}", itemToReceive);
+}
+
+void M2N::receive(int &itemToReceive)
+{
+  PRECICE_TRACE(utils::IntraComm::getRank());
+  if (not utils::IntraComm::isSecondary()) {
+    _intraComm->receive(itemToReceive, 0);
+  }
+
+  utils::IntraComm::broadcast(itemToReceive);
 }
 
 void M2N::broadcastReceiveAll(std::vector<int> &itemToReceive, mesh::Mesh &mesh)
