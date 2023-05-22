@@ -1,11 +1,21 @@
 #pragma once
 
+#include <Eigen/Core>
 #include <iosfwd>
+#include <optional>
+
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
 
 namespace precice {
 namespace mapping {
+
+// @TODO move to waveform
+struct Sample {
+  int             dataDims;
+  Eigen::VectorXd values;
+  Eigen::MatrixXd gradients;
+};
 
 /**
  * @brief Abstract base class for mapping of data from one mesh to another.
@@ -48,8 +58,13 @@ public:
     FULL = 2
   };
 
+  enum class Transient : bool {
+    YES = true,
+    NO  = false
+  };
+
   /// Constructor, takes mapping constraint.
-  Mapping(Constraint constraint, int dimensions, bool requiresGradientData = false);
+  Mapping(Constraint constraint, int dimensions, bool requiresGradientData, Transient isTransient);
 
   Mapping &operator=(Mapping &&) = delete;
 
@@ -95,6 +110,16 @@ public:
   /// Returns true if mapping is a form of scaled consistent mapping
   bool isScaledConsistent() const;
 
+  /// Return true if the mapping is transient an can make use of past solutions
+  bool isTransient() const;
+
+  /// Return the provided initial guess of a transient mapping
+  const Eigen::VectorXd &initialGuess() const;
+
+  Eigen::VectorXd &initialGuess();
+
+  bool hasInitialGuess() const;
+
   /// Removes a computed mapping.
   virtual void clear() = 0;
 
@@ -108,6 +133,10 @@ public:
    * - output values are computed from input values
    */
   void map(int inputDataID, int outputDataID);
+  void map(int inputDataID, int outputDataID, Eigen::VectorXd &initialGuess);
+
+  void map(const Sample &input, Eigen::VectorXd &output);
+  void map(const Sample &input, Eigen::VectorXd &output, Eigen::VectorXd &initialGuess);
 
   /// Method used by partition. Tags vertices that could be owned by this rank.
   virtual void tagMeshFirstRound() = 0;
@@ -122,7 +151,7 @@ public:
    *
    * @pre Input and output mesh should have full connectivity information.
    */
-  virtual void scaleConsistentMapping(int inputDataID, int outputDataID, Constraint type) const;
+  virtual void scaleConsistentMapping(const Eigen::VectorXd &input, Eigen::VectorXd &output, Constraint type) const;
 
   /// Returns whether the mapping requires gradient data
   bool requiresGradientData() const;
@@ -154,18 +183,17 @@ protected:
   /**
    * @brief Maps data using a conservative constraint
    *
-   * @param[in] inputDataID Data ID of the input data set
-   * @param[in] outputDataID Data ID of the output data set
+   * @param[in] input Sample to map data from
+   * @param[in] output Values to map to
    */
-  virtual void mapConservative(DataID inputDataID, DataID outputDataID) = 0;
-
+  virtual void mapConservative(const Sample &input, Eigen::VectorXd &output) = 0;
   /**
    * @brief Maps data using a consistent constraint
    *
-   * @param[in] inputDataID Data ID of the input data set
-   * @param[in] outputDataID Data ID of the output data set
+   * @param[in] input Sample to map data from
+   * @param[in] output Values to map to
    */
-  virtual void mapConsistent(DataID inputDataID, DataID outputDataID) = 0;
+  virtual void mapConsistent(const Sample &input, Eigen::VectorXd &output) = 0;
 
 private:
   /// Determines whether mapping is consistent or conservative.
@@ -184,6 +212,10 @@ private:
   mesh::PtrMesh _output;
 
   int _dimensions;
+
+  Transient _transient;
+
+  Eigen::VectorXd *_initialGuess = nullptr;
 };
 
 /** Defines an ordering for MeshRequirement in terms of specificality

@@ -392,6 +392,15 @@ void ParticipantImpl::advance(
 
   advanceCouplingScheme();
 
+  if (_couplingScheme->isTimeWindowComplete()) {
+    for (auto &context : _accessor->readDataContexts()) {
+      context.resetInitialGuesses();
+    }
+    for (auto &context : _accessor->writeDataContexts()) {
+      context.resetInitialGuesses();
+    }
+  }
+
   if (_couplingScheme->hasDataBeenReceived()) {
     mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, time);

@@ -1,5 +1,6 @@
 #include "precice/impl/DataContext.hpp"
 #include <memory>
+#include <utility>
 #include "utils/EigenHelperFunctions.hpp"
 
 namespace precice::impl {
@@ -18,6 +19,13 @@ std::string DataContext::getDataName() const
 {
   PRECICE_ASSERT(_providedData);
   return _providedData->getName();
+}
+
+void DataContext::resetInitialGuesses()
+{
+  for (auto &kv : _lastSolutions) {
+    kv.second.setZero();
+  }
 }
 
 int DataContext::getDataDimensions() const
@@ -93,7 +101,18 @@ void DataContext::mapData()
       context.toData->toZero();
       const DataID fromDataID = context.fromData->getID();
       const DataID toDataID   = context.toData->getID();
-      context.mapping->map(fromDataID, toDataID);
+      auto &       mapping    = *context.mapping;
+
+      if (mapping.isTransient()) {
+        auto key = std::make_pair(fromDataID, toDataID);
+        if (_lastSolutions.count(key) == 0) {
+          _lastSolutions.emplace(key, Eigen::VectorXd{});
+        }
+        auto &lastSolution = _lastSolutions[key];
+        mapping.map(fromDataID, toDataID, lastSolution);
+      } else {
+        mapping.map(fromDataID, toDataID);
+      }
 
       // Store data from mapping buffer in storage
       context.toData->setSampleAtTime(stample.timestamp, context.toData->sample());

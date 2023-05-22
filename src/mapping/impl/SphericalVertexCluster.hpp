@@ -61,10 +61,10 @@ public:
                          mesh::PtrMesh           outputMesh);
 
   /// Evaluates a conservative mapping and agglomerates the result in the given output data
-  void mapConservative(mesh::PtrData inputData, mesh::PtrData outputData) const;
+  void mapConservative(const Sample &inData, Eigen::VectorXd &outData) const;
 
   /// Evaluates a consistent mapping and agglomerates the result in the given output data
-  void mapConsistent(mesh::PtrData inputData, mesh::PtrData outputData) const;
+  void mapConsistent(const Sample &inData, Eigen::VectorXd &outData) const;
 
   /// Set the normalized weight for the given \p vertexID in the outputMesh
   void setNormalizedWeight(double normalizedWeight, VertexID vertexID);
@@ -187,7 +187,7 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::setNormalizedWeight(double
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConservative(mesh::PtrData inputData, mesh::PtrData outputData) const
+void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConservative(const Sample &inData, Eigen::VectorXd &outData) const
 {
   // First, a few sanity checks. Empty partitions shouldn't be stored at all
   PRECICE_ASSERT(!empty());
@@ -195,8 +195,8 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConservative(mesh::PtrD
   PRECICE_ASSERT(_normalizedWeights.size() == _outputIDs.size());
 
   // Define an alias for data dimension in order to avoid ambiguity
-  const unsigned int nComponents = inputData->getDimensions();
-  const auto &       localInData = inputData->values();
+  const unsigned int nComponents = inData.dataDims;
+  const auto &       localInData = inData.values;
 
   // TODO: We can probably reduce the temporary allocations here
   Eigen::VectorXd in(_rbfSolver.getEvaluationMatrix().rows());
@@ -220,14 +220,14 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConservative(mesh::PtrD
     // Step 3: now accumulate the result into our global output data
     for (unsigned int i = 0; i < _inputIDs.size(); ++i) {
       const auto dataIndex = *(_inputIDs.nth(i));
-      PRECICE_ASSERT(dataIndex * nComponents + c < outputData->values().size(), dataIndex * nComponents + c, outputData->values().size());
-      outputData->values()[dataIndex * nComponents + c] += result(i);
+      PRECICE_ASSERT(dataIndex * nComponents + c < outData.size(), dataIndex * nComponents + c, outData.size());
+      outData[dataIndex * nComponents + c] += result(i);
     }
   }
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConsistent(mesh::PtrData inputData, mesh::PtrData outputData) const
+void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const Sample &inData, Eigen::VectorXd &outData) const
 {
   // First, a few sanity checks. Empty partitions shouldn't be stored at all
   PRECICE_ASSERT(!empty());
@@ -235,8 +235,8 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConsistent(mesh::PtrDat
   PRECICE_ASSERT(_normalizedWeights.size() == _outputIDs.size());
 
   // Define an alias for data dimension in order to avoid ambiguity
-  const unsigned int nComponents = inputData->getDimensions();
-  const auto &       localInData = inputData->values();
+  const unsigned int nComponents = inData.dataDims;
+  const auto &       localInData = inData.values;
 
   Eigen::VectorXd in(_rbfSolver.getEvaluationMatrix().cols());
 
@@ -257,10 +257,10 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConsistent(mesh::PtrDat
     // Step 3: now accumulate the result into our global output data
     for (unsigned int i = 0; i < _outputIDs.size(); ++i) {
       const auto dataIndex = *(_outputIDs.nth(i));
-      PRECICE_ASSERT(dataIndex * nComponents + c < outputData->values().size(), dataIndex * nComponents + c, outputData->values().size());
+      PRECICE_ASSERT(dataIndex * nComponents + c < outData.size(), dataIndex * nComponents + c, outData.size());
       PRECICE_ASSERT(_normalizedWeights[i] > 0);
       // here, we also directly apply the weighting, i.e., split the result data
-      outputData->values()[dataIndex * nComponents + c] += result(i) * _normalizedWeights[i];
+      outData[dataIndex * nComponents + c] += result(i) * _normalizedWeights[i];
     }
   }
 }

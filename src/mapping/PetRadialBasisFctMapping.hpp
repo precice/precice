@@ -1,5 +1,8 @@
 #pragma once
+#include <iterator>
+#include "logging/LogMacros.hpp"
 #include "utils/IntraComm.hpp"
+#include "utils/assertion.hpp"
 #ifndef PRECICE_NO_PETSC
 
 #include "mapping/RadialBasisFctBaseMapping.hpp"
@@ -14,15 +17,6 @@
 #include "utils/Petsc.hpp"
 namespace petsc = precice::utils::petsc;
 #include "profiling/Event.hpp"
-
-// Forward declaration to friend the boost test struct
-namespace MappingTests {
-namespace PetRadialBasisFunctionMapping {
-namespace Serial {
-struct SolutionCaching;
-}
-} // namespace PetRadialBasisFunctionMapping
-} // namespace MappingTests
 
 namespace precice {
 namespace mapping {
@@ -78,14 +72,12 @@ public:
   /// name of the rbf mapping
   std::string getName() const final override;
 
-  friend struct MappingTests::PetRadialBasisFunctionMapping::Serial::SolutionCaching;
-
 private:
   /// @copydoc RadialBasisFctBaseMapping::mapConservative
-  void mapConservative(DataID inputDataID, DataID outputDataID) final override;
+  void mapConservative(const Sample &inData, Eigen::VectorXd &outData) final override;
 
   /// @copydoc RadialBasisFctBaseMapping::mapConsistent
-  void mapConsistent(DataID inputDataID, DataID outputDataID) final override;
+  void mapConsistent(const Sample &inData, Eigen::VectorXd &outData) final override;
 
   /// Stores col -> value for each row. Used to return the already computed values from the preconditioning
   using VertexData = std::vector<std::vector<std::pair<int, double>>>;
@@ -133,9 +125,6 @@ private:
   /// Equals to polyparams if rank == 0. Is 0 everywhere else
   size_t localPolyparams;
 
-  /// Caches the solution from the previous iteration, used as starting value for current iteration
-  std::map<unsigned int, petsc::Vector> previousSolution;
-
   /// Prints an INFO about the current mapping
   void printMappingInfo(int inputDataID, int dim) const;
 
@@ -166,6 +155,12 @@ private:
   VertexData bgPreallocationMatrixC(const mesh::PtrMesh inMesh);
 
   VertexData bgPreallocationMatrixA(const mesh::PtrMesh inMesh, const mesh::PtrMesh outMesh);
+
+  // loads the initialGuess for a given dimension or allocates the storage for the first iteration
+  void loadInitialGuessForDim(int dimension, int allDimensions, petsc::Vector &destination);
+
+  // stores the initialGuess for a given dimension
+  void storeInitialGuessForDim(int dimension, int allDimensions, petsc::Vector &source);
 };
 
 // --------------------------------------------------- HEADER IMPLEMENTATIONS
@@ -179,7 +174,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping(
     double                         solverRtol,
     Polynomial                     polynomial,
     Preallocation                  preallocation)
-    : RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>(constraint, dimensions, function, deadAxis),
+    : RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>(constraint, dimensions, function, deadAxis, Mapping::Transient::YES),
       _matrixC("C"),
       _matrixQ("Q"),
       _matrixA("A"),
@@ -580,7 +575,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::clear()
 
   petsc::destroy(&_AOmapping);
 
-  previousSolution.clear();
   this->_hasComputedMapping = false;
 }
 
@@ -591,18 +585,52 @@ std::string PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::getName() const
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inputDataID, DataID outputDataID)
+void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::loadInitialGuessForDim(int dimension, int allDimensions, petsc::Vector &destination)
 {
-  PRECICE_TRACE(inputDataID, outputDataID);
+  auto sizePerDim = destination.getLocalSize();
+  if (sizePerDim == 0) {
+    return;
+  }
+  auto totalSize = sizePerDim * allDimensions;
+
+  if (!this->hasInitialGuess()) {
+    // We don't need to modify the petsc vector
+    this->initialGuess() = Eigen::VectorXd::Zero(totalSize);
+    return;
+  }
+
+  PRECICE_ASSERT(this->initialGuess().size() == totalSize, this->initialGuess().size(), totalSize);
+  auto offset = dimension * sizePerDim;
+  auto begin  = std::next(this->initialGuess().data(), offset);
+  destination.copyFrom({begin, static_cast<std::size_t>(sizePerDim)});
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::storeInitialGuessForDim(int dimension, int allDimensions, petsc::Vector &source)
+{
+  auto sizePerDim = source.getLocalSize();
+  if (sizePerDim == 0) {
+    return;
+  }
+
+  PRECICE_ASSERT(this->hasInitialGuess(), "Call loadInitialGuessForDim first");
+  PRECICE_ASSERT(this->initialGuess().size() == sizePerDim * allDimensions, this->initialGuess().size(), sizePerDim * allDimensions);
+  auto offset = dimension * sizePerDim;
+  auto begin  = std::next(this->initialGuess().data(), offset);
+  source.copyTo({begin, static_cast<std::size_t>(sizePerDim)});
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const Sample &inData, Eigen::VectorXd &outData)
+{
+  PRECICE_TRACE();
   precice::profiling::Event e("map.pet.mapData.From" + this->input()->getName() + "To" + this->output()->getName(), profiling::Synchronize);
 
   PetscErrorCode ierr      = 0;
-  auto const &   inValues  = this->input()->data(inputDataID)->values();
-  auto &         outValues = this->output()->data(outputDataID)->values();
+  auto const &   inValues  = inData.values;
+  auto &         outValues = outData;
 
-  int const valueDim = this->input()->data(inputDataID)->getDimensions();
-  PRECICE_ASSERT(valueDim == this->output()->data(outputDataID)->getDimensions(),
-                 valueDim, this->output()->data(outputDataID)->getDimensions());
+  int const valueDim = inData.dataDims;
   PRECICE_ASSERT(this->hasConstraint(Mapping::CONSISTENT) || this->isScaledConsistent());
 
   auto out = petsc::Vector::allocate(_matrixA, "out");
@@ -613,7 +641,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inp
 
   // For every data dimension, perform mapping
   for (int dim = 0; dim < valueDim; dim++) {
-    printMappingInfo(inputDataID, dim);
+    // TODO printMappingInfo(inputDataID, dim);
 
     // Fill input from input data values
     std::vector<PetscScalar> inVals;
@@ -658,16 +686,15 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inp
       MatMultAdd(_matrixQ, a, in, in); // Subtract the polynomial from the input values
     }
 
-    petsc::Vector &p = std::get<0>( // Save and reuse the solution from the previous iteration
-                           previousSolution.emplace(std::piecewise_construct,
-                                                    std::forward_as_tuple(inputDataID + outputDataID * 10 + dim * 100),
-                                                    std::forward_as_tuple(petsc::Vector::allocate(_matrixC, "p"))))
-                           ->second;
+    petsc::Vector p = petsc::Vector::allocate(_matrixC, "p");
+    loadInitialGuessForDim(dim, valueDim, p);
 
     profiling::Event eSolve("map.pet.solveConsistent.From" + this->input()->getName() + "To" + this->output()->getName(), profiling::Synchronize);
     const auto       solverResult = _solver.solve(in, p);
     eSolve.addData("Iterations", _solver.getIterationNumber());
     eSolve.stop();
+
+    storeInitialGuessForDim(dim, valueDim, p);
 
     switch (solverResult) {
     case (petsc::KSPSolver::SolverResult::Converged):
@@ -721,18 +748,16 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inp
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(DataID inputDataID, DataID outputDataID)
+void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(const Sample &inData, Eigen::VectorXd &outData)
 {
-  PRECICE_TRACE(inputDataID, outputDataID);
+  PRECICE_TRACE();
   precice::profiling::Event e("map.pet.mapData.From" + this->input()->getName() + "To" + this->output()->getName(), profiling::Synchronize);
 
   PetscErrorCode ierr      = 0;
-  auto const &   inValues  = this->input()->data(inputDataID)->values();
-  auto &         outValues = this->output()->data(outputDataID)->values();
+  auto const &   inValues  = inData.values;
+  auto &         outValues = outData;
 
-  int const valueDim = this->input()->data(inputDataID)->getDimensions();
-  PRECICE_ASSERT(valueDim == this->output()->data(outputDataID)->getDimensions(),
-                 valueDim, this->output()->data(outputDataID)->getDimensions());
+  int const valueDim = inData.dataDims;
   PRECICE_ASSERT(this->hasConstraint(Mapping::CONSERVATIVE));
 
   auto au = petsc::Vector::allocate(_matrixA, "au", petsc::Vector::RIGHT);
@@ -740,7 +765,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(DataID i
   int  inRangeStart, inRangeEnd;
   std::tie(inRangeStart, inRangeEnd) = in.ownerRange();
   for (int dim = 0; dim < valueDim; dim++) {
-    printMappingInfo(inputDataID, dim);
+    // TODO printMappingInfo(inputDataID, dim);
 
     // Fill input from input data values
     for (size_t i = 0; i < this->input()->vertices().size(); i++) {
@@ -753,11 +778,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(DataID i
 
     // Gets the petsc::vector for the given combination of outputData, inputData and dimension
     // If none created yet, create one, based on _matrixC
-    petsc::Vector &out = std::get<0>(
-                             previousSolution.emplace(std::piecewise_construct,
-                                                      std::forward_as_tuple(inputDataID + outputDataID * 10 + dim * 100),
-                                                      std::forward_as_tuple(petsc::Vector::allocate(_matrixC, "out"))))
-                             ->second;
+    //petsc::Vector out = petsc::Vector::allocate(_matrixC, "out").copyFrom(this->lastSolution());
+
+    petsc::Vector out = petsc::Vector::allocate(_matrixC, "out");
 
     if (_polynomial == Polynomial::SEPARATE) {
       auto epsilon = petsc::Vector::allocate(_matrixV, "epsilon", petsc::Vector::RIGHT);
@@ -768,7 +791,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(DataID i
       ierr     = MatMultTranspose(_matrixA, in, eta);
       CHKERRV(ierr);
       auto mu = petsc::Vector::allocate(_matrixC, "mu", petsc::Vector::LEFT);
+      // TODO loadInitialGuessForDim(dim, valueDim, mu);
       _solver.solve(eta, mu);
+      // TODO storeInitialGuessForDim(dim, valueDim, mu);
       VecScale(epsilon, -1);
       auto tau = petsc::Vector::allocate(_matrixQ, "tau", petsc::Vector::RIGHT);
       // tau = Q^T * mu + epsilon
@@ -802,10 +827,15 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(DataID i
     } else {
       ierr = MatMultTranspose(_matrixA, in, au);
       CHKERRV(ierr);
+
+      loadInitialGuessForDim(dim, valueDim, out);
+
       profiling::Event eSolve("map.pet.solveConservative.From" + this->input()->getName() + "To" + this->output()->getName(), profiling::Synchronize);
       const auto       solverResult = _solver.solve(au, out);
       eSolve.addData("Iterations", _solver.getIterationNumber());
       eSolve.stop();
+
+      storeInitialGuessForDim(dim, valueDim, out);
 
       switch (solverResult) {
       case (petsc::KSPSolver::SolverResult::Converged):
