@@ -177,6 +177,7 @@ void Mapping::scaleConsistentMapping(const Eigen::VectorXd &input, Eigen::Vector
   if (input.size() == 0 || output.size() == 0) {
     return;
   }
+  PRECICE_ASSERT(input.size() > 0 && output.size() > 0);
 
   bool            volumeMode = hasConstraint(SCALED_CONSISTENT_VOLUME);
   logging::Logger _log{"mapping::Mapping"};
