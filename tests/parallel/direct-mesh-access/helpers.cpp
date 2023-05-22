@@ -24,7 +24,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
     std::vector<double> boundingBox = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 3.5}) : boundingBoxSecondaryRank;
     // Set bounding box
     interface.setMeshAccessRegion(otherMeshName, boundingBox);
-    // Initialize the solverinterface
+    // Initialize the Participant
     interface.initialize();
     double dt = interface.getMaxTimeStepSize();
 
@@ -101,7 +101,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
       BOOST_TEST(testing::equals(positions, ownCoordinates));
     }
 
-    // Initialize the solverinterface
+    // Initialize the Participant
     interface.initialize();
     double dt = interface.getMaxTimeStepSize();
 
