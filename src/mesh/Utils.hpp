@@ -139,13 +139,9 @@ std::array<Eigen::VectorXd, n> coordsFor(const std::array<Vertex *, n> &vertexPt
 }
 
 /// Given the data and the mesh, this function returns the surface integral. Assumes no overlap exists for the mesh
-Eigen::VectorXd integrateSurface(const PtrMesh &mesh, const PtrData &data);
-
 Eigen::VectorXd integrateSurface(const PtrMesh &mesh, const Eigen::VectorXd &input);
 
 /// Given the data and the mesh, this function returns the volume integral. Assumes no overlap exists for the mesh
-Eigen::VectorXd integrateVolume(const PtrMesh &mesh, const PtrData &data);
-
 Eigen::VectorXd integrateVolume(const PtrMesh &mesh, const Eigen::VectorXd &input);
 
 template <typename Container>

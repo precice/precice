@@ -8,11 +8,6 @@
 namespace precice::mesh {
 
 /// Given the data and the mesh, this function returns the surface integral. Assumes no overlap exists for the mesh
-Eigen::VectorXd integrateSurface(const PtrMesh &mesh, const PtrData &data)
-{
-  return integrateSurface(mesh, data->values());
-}
-
 Eigen::VectorXd integrateSurface(const PtrMesh &mesh, const Eigen::VectorXd &input)
 {
   PRECICE_ASSERT(mesh->vertices().size() > 0);
@@ -41,11 +36,6 @@ Eigen::VectorXd integrateSurface(const PtrMesh &mesh, const Eigen::VectorXd &inp
     }
   }
   return integral;
-}
-
-Eigen::VectorXd integrateVolume(const PtrMesh &mesh, const PtrData &data)
-{
-  return integrateVolume(mesh, data->values());
 }
 
 Eigen::VectorXd integrateVolume(const PtrMesh &mesh, const Eigen::VectorXd &input)

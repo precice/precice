@@ -219,8 +219,8 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentNonIncremental)
   Eigen::VectorXd &outValues = outData->values();
   BOOST_TEST(mapping.hasComputedMapping() == true);
 
-  auto inputIntegral  = mesh::integrateSurface(inMesh, inData);
-  auto outputIntegral = mesh::integrateSurface(outMesh, outData);
+  auto inputIntegral  = mesh::integrateSurface(inMesh, inData->values());
+  auto outputIntegral = mesh::integrateSurface(outMesh, outData->values());
 
   for (int dim = 0; dim < inputIntegral.size(); ++dim) {
     BOOST_TEST(inputIntegral(dim) == outputIntegral(dim));
@@ -292,8 +292,8 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentVolume2D)
   Eigen::VectorXd &outValues = outData->values();
   BOOST_TEST(mapping.hasComputedMapping() == true);
 
-  auto inputIntegral  = mesh::integrateVolume(inMesh, inData);
-  auto outputIntegral = mesh::integrateVolume(outMesh, outData);
+  auto inputIntegral  = mesh::integrateVolume(inMesh, inData->values());
+  auto outputIntegral = mesh::integrateVolume(outMesh, outData->values());
 
   Eigen::VectorXd expectedIntegral(1);
   expectedIntegral << 3.0;
@@ -368,8 +368,8 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentVolume3D)
   Eigen::VectorXd &outValues = outData->values();
   BOOST_TEST(mapping.hasComputedMapping() == true);
 
-  auto inputIntegral  = mesh::integrateVolume(inMesh, inData);
-  auto outputIntegral = mesh::integrateVolume(outMesh, outData);
+  auto inputIntegral  = mesh::integrateVolume(inMesh, inData->values());
+  auto outputIntegral = mesh::integrateVolume(outMesh, outData->values());
 
   Eigen::VectorXd expectedIntegral(1);
   expectedIntegral << 6.5 * 1. / 12;
