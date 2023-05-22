@@ -8,6 +8,8 @@ WriteGlobalDataContext::WriteGlobalDataContext(
     mesh::PtrData data)
     : DataContext(data, nullptr)
 {
+  auto dimensions  = getDataDimensions();
+  _writeDataBuffer = time::Sample{Eigen::VectorXd(dimensions), Eigen::MatrixXd()};
 }
 
 void WriteGlobalDataContext::resetData(bool atEndOfWindow)
