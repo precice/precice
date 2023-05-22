@@ -791,9 +791,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(const Sa
       ierr     = MatMultTranspose(_matrixA, in, eta);
       CHKERRV(ierr);
       auto mu = petsc::Vector::allocate(_matrixC, "mu", petsc::Vector::LEFT);
-      // TODO loadInitialGuessForDim(dim, valueDim, mu);
+      loadInitialGuessForDim(dim, valueDim, mu);
       _solver.solve(eta, mu);
-      // TODO storeInitialGuessForDim(dim, valueDim, mu);
+      storeInitialGuessForDim(dim, valueDim, mu);
       VecScale(epsilon, -1);
       auto tau = petsc::Vector::allocate(_matrixQ, "tau", petsc::Vector::RIGHT);
       // tau = Q^T * mu + epsilon
