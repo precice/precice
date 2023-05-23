@@ -71,7 +71,7 @@ void RadialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID output
   if (_type == SPREAD) {
     /*
       3D vertices are projected onto the 1D axis and the data is then mapped 
-      to the nearest neighbors of the 1D vertices in 1D projection space.
+      to the nearest neighbors of the 1D vertices in projection space.
     */
     size_t const inSize  = input()->vertices().size();
     size_t const outSize = output()->vertices().size();

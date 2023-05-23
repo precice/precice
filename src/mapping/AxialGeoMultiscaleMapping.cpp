@@ -78,6 +78,10 @@ void AxialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID outputD
 
   PRECICE_DEBUG("Map consistent");
   if (_type == SPREAD) {
+    /*
+      3D vertices are assigned a value based on distance from the 1D vertex. 
+      Currently, a Hagen-Poiseuille profile determines the velocity value.
+    */
     PRECICE_ASSERT(inputValues.size() == 1);
     PRECICE_ASSERT(input()->vertices().size() == 1);
     mesh::Vertex &v0      = input()->vertices()[0];
@@ -94,6 +98,10 @@ void AxialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID outputD
     }
   } else {
     PRECICE_ASSERT(_type == COLLECT);
+    /*
+      1D vertex is assigned the averaged value over all 3D vertices at the outlet,
+      but only of the effectiveCoordinate component of the velocity vector.
+    */
     PRECICE_ASSERT(output()->vertices().size() == 1);
     PRECICE_ASSERT(outputValues.size() == 1);
     outputValues(0)     = 0;
