@@ -8,7 +8,7 @@ namespace precice {
 namespace mapping {
 
 /// Geometric multiscale mapping in axial direction
-class AxialGeoMultiscaleMapping : public Mapping {
+class RadialGeoMultiscaleMapping : public Mapping {
 public:
   /**
    * @brief Geometric multiscale nature of the mapping (spread or collect).
@@ -32,16 +32,12 @@ public:
    * @param[in] constraint Specifies mapping to be consistent or conservative.
    * @param[in] dimensions Dimensionality of the meshes
    * @param[in] type Geometric multiscale type of the mapping
-   * @param[in] axis Main axis along which axial geometric multiscale coupling happens
-   * @param[in] radius Radius of the 1D solver "tube"
+   * @param[in] axis Main axis along which radial geometric multiscale coupling happens
    */
-  AxialGeoMultiscaleMapping(Constraint constraint, int dimensions, MultiscaleType type, MultiscaleAxis axis, double radius);
+  RadialGeoMultiscaleMapping(Constraint constraint, int dimensions, MultiscaleType type, MultiscaleAxis axis);
 
   /// Computes the mapping coefficients from the in- and output mesh.
   void computeMapping() override;
-
-  /// Returns true, if computeMapping() has been called.
-  // bool hasComputedMapping() const override; // check if needed at all
 
   /// Removes a computed mapping.
   void clear() override;
@@ -60,15 +56,12 @@ protected:
   void mapConsistent(DataID inputDataID, DataID outputDataID) override;
 
 private:
-  mutable logging::Logger _log{"mapping::AxialGeoMultiscaleMapping"};
+  mutable logging::Logger _log{"mapping::RadialGeoMultiscaleMapping"};
 
   MultiscaleType _type;
 
-  /// main axis along which axial geometric multiscale coupling happens
+  /// main axis along which radial geometric multiscale coupling happens
   MultiscaleAxis _axis;
-
-  /// radius of the "tube" from or to which the data is mapped, i.e., radius of the circular interface between the two participants
-  double _radius;
 };
 
 } // namespace mapping

@@ -171,6 +171,8 @@ target_sources(preciceCore
     src/mapping/BarycentricBaseMapping.hpp
     src/mapping/AxialGeoMultiscaleMapping.cpp
     src/mapping/AxialGeoMultiscaleMapping.hpp
+    src/mapping/RadialGeoMultiscaleMapping.cpp
+    src/mapping/RadialGeoMultiscaleMapping.hpp
     src/mapping/LinearCellInterpolationMapping.cpp
     src/mapping/LinearCellInterpolationMapping.hpp
     src/mapping/Mapping.cpp

@@ -9,9 +9,11 @@ AxialGeoMultiscaleMapping::AxialGeoMultiscaleMapping(
     Constraint     constraint,
     int            dimensions,
     MultiscaleType type,
+    MultiscaleAxis axis,
     double         radius)
     : Mapping(constraint, dimensions),
       _type(type),
+      _axis(axis),
       _radius(radius)
 {
   setInputRequirement(Mapping::MeshRequirement::VERTEX);
@@ -58,46 +60,57 @@ void AxialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID outputD
 {
   PRECICE_TRACE(inputDataID, outputDataID);
 
-  const Eigen::VectorXd &inputValues     = input()->data(inputDataID)->values();
-  int                    valueDimensions = input()->data(inputDataID)->getDimensions();
-  Eigen::VectorXd &      outputValues    = output()->data(outputDataID)->values();
+  const Eigen::VectorXd &inputValues        = input()->data(inputDataID)->values();
+  int                    inValueDimensions  = input()->data(inputDataID)->getDimensions();
+  int                    outValueDimensions = output()->data(outputDataID)->getDimensions();
+  Eigen::VectorXd &      outputValues       = output()->data(outputDataID)->values();
 
-  PRECICE_ASSERT(valueDimensions == output()->data(outputDataID)->getDimensions(),
-                 valueDimensions, output()->data(outputDataID)->getDimensions());
-  PRECICE_ASSERT(inputValues.size() / valueDimensions == static_cast<int>(input()->vertices().size()),
-                 inputValues.size(), valueDimensions, input()->vertices().size());
-  PRECICE_ASSERT(outputValues.size() / valueDimensions == static_cast<int>(output()->vertices().size()),
-                 outputValues.size(), valueDimensions, output()->vertices().size());
+  int effectiveCoordinate = _axis;
+  PRECICE_ASSERT(effectiveCoordinate == 0 ||
+                     effectiveCoordinate == 1 ||
+                     effectiveCoordinate == 2,
+                 "Unknown multiscale axis type.")
+
+  PRECICE_ASSERT((inputValues.size() / inValueDimensions == static_cast<int>(input()->vertices().size())),
+                 inputValues.size(), inValueDimensions, input()->vertices().size());
+  PRECICE_ASSERT((outputValues.size() / outValueDimensions == static_cast<int>(output()->vertices().size())),
+                 outputValues.size(), outValueDimensions, output()->vertices().size());
 
   PRECICE_DEBUG("Map consistent");
   if (_type == SPREAD) {
-    PRECICE_ASSERT(inputValues.size() == valueDimensions);
+    /*
+      3D vertices are assigned a value based on distance from the 1D vertex. 
+      Currently, a Hagen-Poiseuille profile determines the velocity value.
+    */
+    PRECICE_ASSERT(inputValues.size() == 1);
     PRECICE_ASSERT(input()->vertices().size() == 1);
     mesh::Vertex &v0      = input()->vertices()[0];
     size_t const  outSize = output()->vertices().size();
+
     for (size_t i = 0; i < outSize; i++) {
-      Eigen::VectorXd difference(valueDimensions);
+      Eigen::VectorXd difference(outValueDimensions);
       difference = v0.getCoords();
       difference -= output()->vertices()[i].getCoords();
       double distance = difference.norm() / _radius;
       PRECICE_CHECK(distance <= 1.05, "Output mesh has vertices that do not coincide with the geometric multiscale interface defined by the input mesh. Ratio of vertex distance to radius is {}.", distance);
-      for (int dim = 0; dim < valueDimensions; dim++) {
-        outputValues((i * valueDimensions) + dim) = 2 * inputValues(dim) * (1 - distance * distance);
-      }
+      PRECICE_ASSERT(static_cast<int>((i * outValueDimensions) + effectiveCoordinate) < outputValues.size(), ((i * outValueDimensions) + effectiveCoordinate), outputValues.size())
+      outputValues((i * outValueDimensions) + effectiveCoordinate) = 2 * inputValues(0) * (1 - distance * distance);
     }
   } else {
     PRECICE_ASSERT(_type == COLLECT);
+    /*
+      1D vertex is assigned the averaged value over all 3D vertices at the outlet,
+      but only of the effectiveCoordinate component of the velocity vector.
+    */
     PRECICE_ASSERT(output()->vertices().size() == 1);
-    PRECICE_ASSERT(outputValues.size() == valueDimensions);
-    for (int dim = 0; dim < valueDimensions; dim++) {
-      outputValues(dim) = 0.0;
-    }
+    PRECICE_ASSERT(outputValues.size() == 1);
+    outputValues(0)     = 0;
     size_t const inSize = input()->vertices().size();
     for (size_t i = 0; i < inSize; i++) {
-      for (int dim = 0; dim < valueDimensions; dim++) {
-        outputValues(dim) += inputValues((i * valueDimensions) + dim) / inSize;
-      }
+      PRECICE_ASSERT(static_cast<int>((i * inValueDimensions) + effectiveCoordinate) < inputValues.size(), ((i * inValueDimensions) + effectiveCoordinate), inputValues.size())
+      outputValues(0) += inputValues((i * inValueDimensions) + effectiveCoordinate);
     }
+    outputValues(0) = outputValues(0) / inSize;
   }
 }
 
@@ -126,6 +139,12 @@ void AxialGeoMultiscaleMapping::tagMeshSecondRound()
   PRECICE_TRACE();
   // no operation needed here for the moment
 }
+
+// TODO: needed for porting to develop
+// std::string AxialGeoMultiscaleMapping::getName() const
+// {
+//   return "axial-geomultiscale";
+// }
 
 } // namespace mapping
 } // namespace precice
