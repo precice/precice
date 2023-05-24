@@ -11,7 +11,7 @@ WriteDataContext::WriteDataContext(
     mesh::PtrMesh mesh)
     : DataContext(data, mesh)
 {
-  _writeDataBuffer = time::Sample{Eigen::VectorXd(), Eigen::MatrixXd()};
+  _writeDataBuffer = time::Sample{data->getDimensions()};
 }
 
 void WriteDataContext::resetData(bool atEndOfWindow, bool isTimeWindowComplete)

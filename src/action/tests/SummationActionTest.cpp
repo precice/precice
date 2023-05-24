@@ -45,10 +45,10 @@ BOOST_AUTO_TEST_CASE(SummationOneDimensional)
   v1 << 2.0, 3.0, 4.0;
   v2 << 1.0, 2.0, 3.0;
   v3 << 2.0, 3.0, 4.0;
-  sourceData1->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v1});
-  sourceData2->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v2});
-  sourceData3->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v3});
-  // targetData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{Eigen::VectorXd::Zero(targetValues.size())});
+  sourceData1->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{dimension, v1});
+  sourceData2->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{dimension, v2});
+  sourceData3->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{dimension, v3});
+  // targetData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{dimension,Eigen::VectorXd::Zero(targetValues.size())});
 
   action::SummationAction sum(
       action::SummationAction::WRITE_MAPPING_POST, sourceDataIDs, targetDataID, mesh);
@@ -93,9 +93,9 @@ BOOST_AUTO_TEST_CASE(SummationThreeDimensional)
   v1 << 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0;
   v2 << 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0;
 
-  sourceData1->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v1});
-  sourceData2->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v2});
-  // targetData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{Eigen::VectorXd::Zero(targetValues.size())})
+  sourceData1->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{dimension, v1});
+  sourceData2->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{dimension, v2});
+  // targetData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{dimension,Eigen::VectorXd::Zero(targetValues.size())})
 
   action::SummationAction sum(
       action::SummationAction::WRITE_MAPPING_POST, sourceDataIDs, targetDataID, mesh);
@@ -164,10 +164,10 @@ BOOST_AUTO_TEST_CASE(SummationThreeDimensionalSubcycling)
   v1_1 << 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0;
   v2_1 << 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0;
 
-  sourceData1->setSampleAtTime(time::Storage::WINDOW_END * 0.5, time::Sample{v1_05});
-  sourceData2->setSampleAtTime(time::Storage::WINDOW_END * 0.5, time::Sample{v2_05});
-  sourceData1->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v1_1});
-  sourceData2->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v2_1});
+  sourceData1->setSampleAtTime(time::Storage::WINDOW_END * 0.5, time::Sample{dimension, v1_05});
+  sourceData2->setSampleAtTime(time::Storage::WINDOW_END * 0.5, time::Sample{dimension, v2_05});
+  sourceData1->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{dimension, v1_1});
+  sourceData2->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{dimension, v2_1});
 
   action::SummationAction sum(
       action::SummationAction::WRITE_MAPPING_POST, sourceDataIDs, targetDataID, mesh);

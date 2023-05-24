@@ -19,7 +19,7 @@ CouplingData::CouplingData(
 {
   PRECICE_ASSERT(_data != nullptr);
   /// Lazy allocation of _previousIteration.gradient: only used in case the corresponding data has gradients
-  _previousIteration = time::Sample{Eigen::VectorXd::Zero(getSize())};
+  _previousIteration = time::Sample{_data->getDimensions(), Eigen::VectorXd::Zero(getSize())};
   timeStepsStorage().setExtrapolationOrder(extrapolationOrder);
 
   PRECICE_ASSERT(_mesh != nullptr);

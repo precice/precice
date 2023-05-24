@@ -106,8 +106,8 @@ void DataContext::mapData()
           stample.sample.gradients};
 
       time::Sample outSample{
-          Eigen::VectorXd::Zero(dataDims * mapping.getOutputMesh()->vertices().size()),
-          {}};
+          dataDims,
+          Eigen::VectorXd::Zero(dataDims * mapping.getOutputMesh()->vertices().size())};
 
       if (mapping.isTransient()) {
         const auto key = std::make_pair(context.fromData->getID(), context.toData->getID());
