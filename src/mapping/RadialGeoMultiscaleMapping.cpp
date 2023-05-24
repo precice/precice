@@ -76,6 +76,7 @@ void RadialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID output
     size_t const inSize  = input()->vertices().size();
     size_t const outSize = output()->vertices().size();
 
+    // determine principle axis midpoints as borders to assign 3D vertices to their respective 1D vertex
     Eigen::VectorXd axisMidpoints(inSize);
     for (size_t i = 0; i < (inSize - 1); i++) {
       auto axisPositionCurrent = input()->vertices()[i].getCoords()[effectiveCoordinate];
@@ -83,6 +84,8 @@ void RadialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID output
       axisMidpoints(i)         = (axisPositionCurrent + axisPositionNext) / 2;
     }
     axisMidpoints(inSize - 1) = std::numeric_limits<double>::max(); // large number, such that vertices after the last midpoint are still assigned
+
+    // assign 1D vertex value to all 3D vertices in vicinity
     for (size_t i = 0; i < outSize; i++) {
       auto vertexCoords = output()->vertices()[i].getCoords()[effectiveCoordinate];
       int  index        = 0;
@@ -96,19 +99,20 @@ void RadialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID output
     PRECICE_ASSERT(_type == COLLECT);
     /*
       3D vertices are projected onto the 1D axis and the data is then mapped 
-      to (and averaged at) the nearest 1D vertex in 1D projection space.
+      to (and averaged at) the nearest 1D vertex in projection space.
     */
     PRECICE_ASSERT(outputValues.size() == static_cast<int>(output()->vertices().size()), outputValues.size(), valueDimensions, output()->vertices().size());
     size_t const inSize  = input()->vertices().size();
     size_t const outSize = output()->vertices().size();
 
+    // determine principle axis midpoints as borders to assign 3D vertices to their respective 1D vertex
     Eigen::VectorXd axisMidpoints(outSize);
     for (size_t i = 0; i < (outSize - 1); i++) {
       auto axisPositionCurrent = output()->vertices()[i].getCoords()[effectiveCoordinate];
       auto axisPositionNext    = output()->vertices()[i + 1].getCoords()[effectiveCoordinate];
       axisMidpoints(i)         = (axisPositionCurrent + axisPositionNext) / 2;
     }
-    axisMidpoints(outSize - 1) = 1e100; // arbitrary large number, such that vertices after the last midpoint are still assigned
+    axisMidpoints(outSize - 1) = std::numeric_limits<double>::max(); // large number, such that vertices after the last midpoint are still assigned
 
     Eigen::VectorXd counter(outSize); // counts number of vertices inbetween midpoints for averaging
     for (size_t i = 0; i < outSize; i++) {
@@ -116,6 +120,7 @@ void RadialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID output
       counter(i)                          = 0;
     }
 
+    // assign the 1D vertex the average of all 3D vertex values in vicinity
     for (size_t i = 0; i < inSize; i++) {
       auto vertexCoords = input()->vertices()[i].getCoords()[effectiveCoordinate];
       int  index        = 0;
