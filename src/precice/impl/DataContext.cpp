@@ -91,33 +91,35 @@ void DataContext::mapData()
   // Execute the mapping
   for (auto &context : _mappingContexts) {
     context.clearToDataStorage();
-
     PRECICE_ASSERT(context.fromData->stamples().size() > 0);
-    for (auto &stample : context.fromData->stamples()) {
-      // Put data from storage into mapping buffer
-      context.fromData->sample() = stample.sample;
 
-      // Reset the toData before executing the mapping
-      context.toData->toZero();
-      const DataID fromDataID = context.fromData->getID();
-      const DataID toDataID   = context.toData->getID();
-      auto &       mapping    = *context.mapping;
+    // Reset the toData before executing the mapping
+    auto &mapping = *context.mapping;
+
+    // Generate output sample for reuse
+    const auto dataDims = context.fromData->getDimensions();
+
+    for (const auto &stample : context.fromData->stamples()) {
+      mapping::Sample inSample{
+          dataDims,
+          stample.sample.values,
+          stample.sample.gradients};
+
+      time::Sample outSample{
+          Eigen::VectorXd::Zero(dataDims * mapping.getOutputMesh()->vertices().size()),
+          {}};
 
       if (mapping.isTransient()) {
-        auto key = std::make_pair(fromDataID, toDataID);
-        if (_lastSolutions.count(key) == 0) {
-          _lastSolutions.emplace(key, Eigen::VectorXd{});
-        }
-        auto &lastSolution = _lastSolutions[key];
-        mapping.map(fromDataID, toDataID, lastSolution);
+        const auto key = std::make_pair(context.fromData->getID(), context.toData->getID());
+        mapping.map(inSample, outSample.values, _lastSolutions[key]);
       } else {
-        mapping.map(fromDataID, toDataID);
+        mapping.map(inSample, outSample.values);
       }
 
-      // Store data from mapping buffer in storage
-      context.toData->setSampleAtTime(stample.timestamp, context.toData->sample());
+      PRECICE_DEBUG("Mapped values (t={}) = {}", stample.timestamp, utils::previewRange(3, outSample.values));
 
-      PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, context.toData->values()));
+      // Store data from mapping buffer in storage
+      context.toData->setSampleAtTime(stample.timestamp, outSample);
     }
   }
 }
