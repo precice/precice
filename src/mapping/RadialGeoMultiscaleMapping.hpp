@@ -39,9 +39,6 @@ public:
   /// Computes the mapping coefficients from the in- and output mesh.
   void computeMapping() override;
 
-  /// Returns true, if computeMapping() has been called.
-  // bool hasComputedMapping() const override; // check if needed at all
-
   /// Removes a computed mapping.
   void clear() override;
 
