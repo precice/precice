@@ -53,7 +53,7 @@ void NearestNeighborGradientMapping::onMappingComputed(mesh::PtrMesh origins, me
   }
 };
 
-void NearestNeighborGradientMapping::mapConsistent(const Sample &inData, Eigen::VectorXd &outData)
+void NearestNeighborGradientMapping::mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData)
 {
   PRECICE_TRACE();
   precice::profiling::Event e("map." + mappingNameShort + ".mapData.From" + input()->getName() + "To" + output()->getName(), profiling::Synchronize);
@@ -91,7 +91,7 @@ void NearestNeighborGradientMapping::mapConsistent(const Sample &inData, Eigen::
   PRECICE_DEBUG("Mapped values (with gradient) = {}", utils::previewRange(3, outputValues));
 }
 
-void NearestNeighborGradientMapping::mapConservative(const Sample & /* inData */, Eigen::VectorXd & /* outData */)
+void NearestNeighborGradientMapping::mapConservative(const time::Sample & /* inData */, Eigen::VectorXd & /* outData */)
 {
   PRECICE_ASSERT(false, "Not implemented.");
 }

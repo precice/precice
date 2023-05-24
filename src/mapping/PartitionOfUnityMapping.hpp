@@ -108,10 +108,10 @@ private:
   Polynomial _polynomial;
 
   /// @copydoc Mapping::mapConservative
-  virtual void mapConservative(const Sample &inData, Eigen::VectorXd &outData) override;
+  virtual void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) override;
 
   /// @copydoc Mapping::mapConsistent
-  virtual void mapConsistent(const Sample &inData, Eigen::VectorXd &outData) override;
+  virtual void mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) override;
 
   /// export the center vertices of all clusters as a mesh with some additional data on it such as vertex count
   /// only enabled in debug builds and mainly for debugging purpose
@@ -262,7 +262,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(const Sample &inData, Eigen::VectorXd &outData)
+void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(const time::Sample &inData, Eigen::VectorXd &outData)
 {
   PRECICE_TRACE();
 
@@ -277,7 +277,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(const Sam
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const Sample &inData, Eigen::VectorXd &outData)
+void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData)
 {
   PRECICE_TRACE();
 

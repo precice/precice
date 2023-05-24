@@ -139,13 +139,13 @@ void Mapping::map(int inputDataID,
   PRECICE_ASSERT(output()->data(outputDataID)->values().size() / output()->data(outputDataID)->getDimensions() == static_cast<int>(output()->vertices().size()),
                  output()->data(outputDataID)->values().size(), output()->data(outputDataID)->getDimensions(), output()->vertices().size());
 
-  Sample sample{input()->data(inputDataID)->getDimensions(),
-                input()->data(inputDataID)->values(),
-                input()->data(inputDataID)->gradients()};
+  time::Sample sample{input()->data(inputDataID)->getDimensions(),
+                      input()->data(inputDataID)->values(),
+                      input()->data(inputDataID)->gradients()};
   map(sample, output()->data(outputDataID)->values());
 }
 
-void Mapping::map(const Sample &input, Eigen::VectorXd &output, Eigen::VectorXd &lastSolution)
+void Mapping::map(const time::Sample &input, Eigen::VectorXd &output, Eigen::VectorXd &lastSolution)
 {
   PRECICE_ASSERT(_initialGuess == nullptr);
   _initialGuess = &lastSolution;
@@ -153,7 +153,7 @@ void Mapping::map(const Sample &input, Eigen::VectorXd &output, Eigen::VectorXd 
   _initialGuess = nullptr;
 }
 
-void Mapping::map(const Sample &input, Eigen::VectorXd &output)
+void Mapping::map(const time::Sample &input, Eigen::VectorXd &output)
 {
   PRECICE_ASSERT(_hasComputedMapping);
   PRECICE_ASSERT(!isTransient() || _initialGuess != nullptr, "Call the map version with lastSolution");

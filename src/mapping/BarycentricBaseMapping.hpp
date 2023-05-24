@@ -27,10 +27,10 @@ private:
 
 protected:
   /// @copydoc Mapping::mapConservative
-  void mapConservative(const Sample &inData, Eigen::VectorXd &outData) override;
+  void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) override;
 
   /// @copydoc Mapping::mapConsistent
-  void mapConsistent(const Sample &inData, Eigen::VectorXd &outData) override;
+  void mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) override;
 
   std::vector<Polation> _interpolations;
 };

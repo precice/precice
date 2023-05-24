@@ -34,7 +34,7 @@ void BarycentricBaseMapping::clear()
   _hasComputedMapping = false;
 }
 
-void BarycentricBaseMapping::mapConservative(const Sample &inData, Eigen::VectorXd &outData)
+void BarycentricBaseMapping::mapConservative(const time::Sample &inData, Eigen::VectorXd &outData)
 {
   PRECICE_TRACE();
   precice::profiling::Event e("map.bbm.mapData.From" + input()->getName() + "To" + output()->getName(), profiling::Synchronize);
@@ -62,7 +62,7 @@ void BarycentricBaseMapping::mapConservative(const Sample &inData, Eigen::Vector
   }
 }
 
-void BarycentricBaseMapping::mapConsistent(const Sample &inData, Eigen::VectorXd &outData)
+void BarycentricBaseMapping::mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData)
 {
   PRECICE_TRACE();
   precice::profiling::Event e("map.bbm.mapData.From" + input()->getName() + "To" + output()->getName(), profiling::Synchronize);

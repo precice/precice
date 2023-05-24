@@ -59,10 +59,10 @@ private:
 
   RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T> _rbfSolver;
   /// @copydoc RadialBasisFctBaseMapping::mapConservative
-  void mapConservative(const Sample &inData, Eigen::VectorXd &outData) final override;
+  void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) final override;
 
   /// @copydoc RadialBasisFctBaseMapping::mapConsistent
-  void mapConsistent(const Sample &inData, Eigen::VectorXd &outData) final override;
+  void mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) final override;
 
   /// Treatment of the polynomial
   Polynomial _polynomial;
@@ -168,7 +168,7 @@ std::string RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::getName() const
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(const Sample &inData, Eigen::VectorXd &outData)
+void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(const time::Sample &inData, Eigen::VectorXd &outData)
 {
   PRECICE_TRACE();
   precice::profiling::Event e("map.rbf.mapData.From" + this->input()->getName() + "To" + this->output()->getName(), profiling::Synchronize);
@@ -286,7 +286,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(const Sampl
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const Sample &inData, Eigen::VectorXd &outData)
+void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData)
 {
   PRECICE_TRACE();
   precice::profiling::Event e("map.rbf.mapData.From" + this->input()->getName() + "To" + this->output()->getName(), profiling::Synchronize);

@@ -100,7 +100,7 @@ void DataContext::mapData()
     const auto dataDims = context.fromData->getDimensions();
 
     for (const auto &stample : context.fromData->stamples()) {
-      mapping::Sample inSample{
+      time::Sample inSample{
           dataDims,
           stample.sample.values,
           stample.sample.gradients};

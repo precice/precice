@@ -10,13 +10,6 @@
 namespace precice {
 namespace mapping {
 
-// @TODO move to waveform
-struct Sample {
-  int             dataDims;
-  Eigen::VectorXd values;
-  Eigen::MatrixXd gradients;
-};
-
 /**
  * @brief Abstract base class for mapping of data from one mesh to another.
  */
@@ -135,8 +128,8 @@ public:
   void map(int inputDataID, int outputDataID);
   void map(int inputDataID, int outputDataID, Eigen::VectorXd &initialGuess);
 
-  void map(const Sample &input, Eigen::VectorXd &output);
-  void map(const Sample &input, Eigen::VectorXd &output, Eigen::VectorXd &initialGuess);
+  void map(const time::Sample &input, Eigen::VectorXd &output);
+  void map(const time::Sample &input, Eigen::VectorXd &output, Eigen::VectorXd &initialGuess);
 
   /// Method used by partition. Tags vertices that could be owned by this rank.
   virtual void tagMeshFirstRound() = 0;
@@ -186,14 +179,14 @@ protected:
    * @param[in] input Sample to map data from
    * @param[in] output Values to map to
    */
-  virtual void mapConservative(const Sample &input, Eigen::VectorXd &output) = 0;
+  virtual void mapConservative(const time::Sample &input, Eigen::VectorXd &output) = 0;
   /**
    * @brief Maps data using a consistent constraint
    *
    * @param[in] input Sample to map data from
    * @param[in] output Values to map to
    */
-  virtual void mapConsistent(const Sample &input, Eigen::VectorXd &output) = 0;
+  virtual void mapConsistent(const time::Sample &input, Eigen::VectorXd &output) = 0;
 
 private:
   /// Determines whether mapping is consistent or conservative.

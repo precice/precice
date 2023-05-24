@@ -61,10 +61,10 @@ public:
                          mesh::PtrMesh           outputMesh);
 
   /// Evaluates a conservative mapping and agglomerates the result in the given output data
-  void mapConservative(const Sample &inData, Eigen::VectorXd &outData) const;
+  void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) const;
 
   /// Evaluates a consistent mapping and agglomerates the result in the given output data
-  void mapConsistent(const Sample &inData, Eigen::VectorXd &outData) const;
+  void mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) const;
 
   /// Set the normalized weight for the given \p vertexID in the outputMesh
   void setNormalizedWeight(double normalizedWeight, VertexID vertexID);
@@ -187,7 +187,7 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::setNormalizedWeight(double
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConservative(const Sample &inData, Eigen::VectorXd &outData) const
+void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) const
 {
   // First, a few sanity checks. Empty partitions shouldn't be stored at all
   PRECICE_ASSERT(!empty());
@@ -227,7 +227,7 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConservative(const Samp
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const Sample &inData, Eigen::VectorXd &outData) const
+void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) const
 {
   // First, a few sanity checks. Empty partitions shouldn't be stored at all
   PRECICE_ASSERT(!empty());

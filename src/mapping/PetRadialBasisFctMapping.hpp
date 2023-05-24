@@ -74,10 +74,10 @@ public:
 
 private:
   /// @copydoc RadialBasisFctBaseMapping::mapConservative
-  void mapConservative(const Sample &inData, Eigen::VectorXd &outData) final override;
+  void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) final override;
 
   /// @copydoc RadialBasisFctBaseMapping::mapConsistent
-  void mapConsistent(const Sample &inData, Eigen::VectorXd &outData) final override;
+  void mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) final override;
 
   /// Stores col -> value for each row. Used to return the already computed values from the preconditioning
   using VertexData = std::vector<std::vector<std::pair<int, double>>>;
@@ -621,7 +621,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::storeInitialGuessForDim(
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const Sample &inData, Eigen::VectorXd &outData)
+void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData)
 {
   PRECICE_TRACE();
   precice::profiling::Event e("map.pet.mapData.From" + this->input()->getName() + "To" + this->output()->getName(), profiling::Synchronize);
@@ -748,7 +748,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const Samp
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(const Sample &inData, Eigen::VectorXd &outData)
+void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(const time::Sample &inData, Eigen::VectorXd &outData)
 {
   PRECICE_TRACE();
   precice::profiling::Event e("map.pet.mapData.From" + this->input()->getName() + "To" + this->output()->getName(), profiling::Synchronize);

@@ -26,7 +26,7 @@ NearestNeighborMapping::NearestNeighborMapping(
   }
 }
 
-void NearestNeighborMapping::mapConservative(const Sample &inData, Eigen::VectorXd &outData)
+void NearestNeighborMapping::mapConservative(const time::Sample &inData, Eigen::VectorXd &outData)
 {
   PRECICE_TRACE();
   precice::profiling::Event e("map." + mappingNameShort + ".mapData.From" + input()->getName() + "To" + output()->getName(), profiling::Synchronize);
@@ -53,7 +53,7 @@ void NearestNeighborMapping::mapConservative(const Sample &inData, Eigen::Vector
   PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, outputValues));
 }
 
-void NearestNeighborMapping::mapConsistent(const Sample &inData, Eigen::VectorXd &outData)
+void NearestNeighborMapping::mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData)
 {
   PRECICE_TRACE();
   precice::profiling::Event e("map." + mappingNameShort + ".mapData.From" + input()->getName() + "To" + output()->getName(), profiling::Synchronize);

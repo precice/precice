@@ -27,10 +27,10 @@ public:
 
 protected:
   /// @copydoc Mapping::mapConservative
-  void mapConservative(const Sample &inData, Eigen::VectorXd &outData) final override;
+  void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) final override;
 
   /// @copydoc Mapping::mapConsistent
-  void mapConsistent(const Sample &inData, Eigen::VectorXd &outData) final override;
+  void mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) final override;
 };
 
 } // namespace mapping
