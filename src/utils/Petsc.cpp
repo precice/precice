@@ -70,8 +70,11 @@ PetscErrorCode PetscOptionsSetValueWrapper(const char name[], const char value[]
 } // namespace
 #endif
 
-logging::Logger Petsc::_log("utils::Petsc");
-logging::Logger petsc::Vector::_log("utils::Petsc::Vector");
+precice::logging::Logger precice::utils::Petsc::_log("utils::Petsc");
+
+#ifndef PRECICE_NO_PETSC
+precice::logging::Logger precice::utils::petsc::Vector::_log("utils::Petsc::Vector");
+#endif // not PRECICE_NO_PETSC
 
 bool Petsc::weInitialized = false;
 
