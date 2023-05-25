@@ -40,11 +40,6 @@ public:
   //static const std::string TYPE_NAME_VECTOR;
 
   /**
-   * @brief Do not use this constructor! Only there for compatibility with std::map.
-   */
-  Data();
-
-  /**
    * @brief Constructor
    */
   Data(
@@ -114,8 +109,6 @@ public:
 private:
   logging::Logger _log{"mesh::Data"};
 
-  time::Sample _sample;
-
   /// Stores time steps in the current time window
   time::Storage _timeStepsStorage;
 
@@ -133,6 +126,8 @@ private:
 
   /// Whether gradient data is available or not
   bool _hasGradient = false;
+
+  time::Sample _sample;
 };
 
 } // namespace mesh

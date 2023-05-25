@@ -6,12 +6,11 @@ namespace precice::impl {
 
 logging::Logger WriteDataContext::_log{"impl::WriteDataContext"};
 
-WriteDataContext::WriteDataContext(
-    mesh::PtrData data,
-    mesh::PtrMesh mesh)
-    : DataContext(data, mesh)
+WriteDataContext::WriteDataContext(mesh::PtrData data,
+                                   mesh::PtrMesh mesh)
+    : DataContext(data, mesh),
+      _writeDataBuffer(data->getDimensions())
 {
-  _writeDataBuffer = time::Sample{data->getDimensions()};
 }
 
 void WriteDataContext::resetData(bool atEndOfWindow, bool isTimeWindowComplete)

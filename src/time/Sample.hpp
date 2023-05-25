@@ -7,9 +7,6 @@ namespace precice::time {
 
 /// @brief Sample of a \ref mesh::Data on a \ref mesh::Mesh
 struct Sample {
-  /// Constructs an invalid empty Sample
-  Sample() = default;
-
   /// Constructs an empty Sample of a given data dimensionality
   explicit Sample(int dims) noexcept
       : dataDims(dims) {}
@@ -41,7 +38,7 @@ struct Sample {
   }
 
   /// The dimensionality of the data
-  int dataDims{-1};
+  int dataDims;
 
   /// The data values linearised
   /// @todo Change to matrix so that values.col(i) gets the value at vertex i
