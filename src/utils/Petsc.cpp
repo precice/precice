@@ -1,7 +1,4 @@
 #include "Petsc.hpp"
-#include <endian.h>
-#include <iterator>
-#include <strings.h>
 
 // A logger is always required
 #include "logging/Logger.hpp"
