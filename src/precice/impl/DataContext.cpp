@@ -100,26 +100,21 @@ void DataContext::mapData()
     const auto dataDims = context.fromData->getDimensions();
 
     for (const auto &stample : context.fromData->stamples()) {
-      time::Sample inSample{
-          dataDims,
-          stample.sample.values,
-          stample.sample.gradients};
-
       time::Sample outSample{
           dataDims,
           Eigen::VectorXd::Zero(dataDims * mapping.getOutputMesh()->vertices().size())};
 
       if (mapping.isTransient()) {
         const auto key = std::make_pair(context.fromData->getID(), context.toData->getID());
-        mapping.map(inSample, outSample.values, _lastSolutions[key]);
+        mapping.map(stample.sample, outSample.values, _lastSolutions[key]);
       } else {
-        mapping.map(inSample, outSample.values);
+        mapping.map(stample.sample, outSample.values);
       }
 
       PRECICE_DEBUG("Mapped values (t={}) = {}", stample.timestamp, utils::previewRange(3, outSample.values));
 
       // Store data from mapping buffer in storage
-      context.toData->setSampleAtTime(stample.timestamp, outSample);
+      context.toData->setSampleAtTime(stample.timestamp, std::move(outSample));
     }
   }
 }
