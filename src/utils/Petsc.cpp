@@ -1,7 +1,6 @@
 #include "Petsc.hpp"
 #include <endian.h>
 #include <iterator>
-#include <petscvec.h>
 #include <strings.h>
 
 // A logger is always required
@@ -22,6 +21,7 @@
 #include "petscis.h"
 #include "petscksp.h"
 #include "petscsystypes.h"
+#include "petscvec.h"
 #include "petscviewertypes.h"
 #include "utils/Parallel.hpp"
 #include "utils/assertion.hpp"
