@@ -85,7 +85,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     double preciceDt = precice.getMaxTimeStepSize();
     double currentDt = solverDt > preciceDt ? preciceDt : solverDt; // determine actual time step size; must fit into remaining time in window
 
-    precice.readData(meshName, readDataName, {&vertexID, 1}, currentDt, {&readData, 1});
+    // do read at end of window. preCICE v2 style subcycling.
+    precice.readData(meshName, readDataName, {&vertexID, 1}, preciceDt, {&readData, 1});
 
     if (iterations == 0 && timestep == 0) {                                    // special situation: Both solvers are in their very first time windows, first iteration, first time step
       BOOST_TEST(readData == readFunction(startTime));                         // use initial data only.
