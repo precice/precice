@@ -81,15 +81,13 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingZero)
       timestepCheckpoint = timestep;
       iterations         = 0;
     }
-    double readTime;
-    readTime = timeCheckpoint + windowDt;
 
     precice.readData(meshName, readDataName, {&vertexID, 1}, currentDt, {&readData, 1});
 
     if (iterations == 0) { // in the first iteration of each window, use data from previous window.
       BOOST_TEST(readData == readFunction(timeCheckpoint));
     } else { // in the following iterations, use data at the end of window.
-      BOOST_TEST(readData == readFunction(readTime));
+      BOOST_TEST(readData == readFunction(time + currentDt));
     }
 
     precice.readData(meshName, readDataName, {&vertexID, 1}, currentDt / 2, {&readData, 1});
@@ -97,7 +95,14 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingZero)
     if (iterations == 0) { // in the first iteration of each window, use data from previous window.
       BOOST_TEST(readData == readFunction(timeCheckpoint));
     } else { // in the following iterations, use data at the end of window.
-      BOOST_TEST(readData == readFunction(readTime));
+      BOOST_TEST(readData == readFunction(time + currentDt));
+    }
+
+    precice.readData(meshName, readDataName, {&vertexID, 1}, 0, {&readData, 1});
+    if (iterations == 0) { // in the first iteration of each window, use data from previous window.
+      BOOST_TEST(readData == readFunction(timeCheckpoint));
+    } else { // in the following iterations, use data at the beginning of time step.
+      BOOST_TEST(readData == readFunction(time));
     }
 
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.

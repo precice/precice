@@ -82,21 +82,20 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingMixed)
       timestepCheckpoint = timestep;
       iterations         = 0;
     }
-    double readTime;
-    if (context.isNamed("SolverOne")) {
-      // zeroth order corresponds to end of window
-      readTime = timeCheckpoint + windowDt;
-    } else {
-      BOOST_TEST(context.isNamed("SolverTwo"));
-      // first order reads from interpolant inside window
-      readTime = time + currentDt;
-    }
 
     precice.readData(meshName, readDataName, {&vertexID, 1}, currentDt, {&readData, 1});
+
     if (context.isNamed("SolverOne") && iterations == 0) { // in the first iteration of each window, we only have one sample of data. Therefore constant interpolation. Only for first participant with serial coupling.
       BOOST_TEST(readData == readFunction(timeCheckpoint));
     } else {
-      BOOST_TEST(readData == readFunction(readTime));
+      if (context.isNamed("SolverOne")) {
+        // zeroth order corresponds to end of time step
+        BOOST_TEST(readData == readFunction(time + currentDt));
+      } else {
+        BOOST_TEST(context.isNamed("SolverTwo"));
+        // first order reads from interpolant inside window
+        BOOST_TEST(readData == readFunction(time + currentDt));
+      }
     }
 
     precice.readData(meshName, readDataName, {&vertexID, 1}, currentDt / 2, {&readData, 1});
@@ -104,11 +103,28 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingMixed)
     if (context.isNamed("SolverOne") && iterations == 0) { // in the first iteration of each window, use data from previous window. Only for first participant with serial coupling.
       BOOST_TEST(readData == readFunction(timeCheckpoint));
     } else {
-      if (context.isNamed("SolverOne")) { // in the following iterations, use data at the end of window.
-        BOOST_TEST(readData == readFunction(readTime));
-      } else { // in the following iterations we have two samples of data. Therefore linear interpolation
+      if (context.isNamed("SolverOne")) {
+        // zeroth order corresponds to end of time step
+        BOOST_TEST(readData == readFunction(time + currentDt));
+      } else {
         BOOST_TEST(context.isNamed("SolverTwo"));
-        BOOST_TEST(readData == readFunction(readTime - currentDt / 2));
+        // first order reads from interpolant inside window
+        BOOST_TEST(readData == readFunction(time + currentDt / 2));
+      }
+    }
+
+    precice.readData(meshName, readDataName, {&vertexID, 1}, 0, {&readData, 1});
+
+    if (context.isNamed("SolverOne") && iterations == 0) { // in the first iteration of each window, use data from previous window. Only for first participant with serial coupling.
+      BOOST_TEST(readData == readFunction(timeCheckpoint));
+    } else {
+      if (context.isNamed("SolverOne")) {
+        // zeroth order corresponds to beginning of time step
+        BOOST_TEST(readData == readFunction(time));
+      } else {
+        BOOST_TEST(context.isNamed("SolverTwo"));
+        // first order reads from interpolant inside window
+        BOOST_TEST(readData == readFunction(time));
       }
     }
 

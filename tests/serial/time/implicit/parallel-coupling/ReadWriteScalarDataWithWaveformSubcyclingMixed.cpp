@@ -81,34 +81,49 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingMixed)
       timestepCheckpoint = timestep;
       iterations         = 0;
     }
-    double readTime;
-    if (context.isNamed("SolverOne")) {
-      // zeroth order corresponds to end of window
-      readTime = timeCheckpoint + windowDt;
-    } else {
-      BOOST_TEST(context.isNamed("SolverTwo"));
-      // first order reads from interpolant inside window
-      readTime = time + currentDt;
-    }
 
     precice.readData(meshName, readDataName, {&vertexID, 1}, currentDt, {&readData, 1});
 
     if (iterations == 0) { // in the first iteration of each window, use data from previous window.
       BOOST_TEST(readData == readFunction(timeCheckpoint));
     } else {
-      BOOST_TEST(readData == readFunction(readTime));
+      if (context.isNamed("SolverOne")) {
+        // zeroth order corresponds to end of time step
+        BOOST_TEST(readData == readFunction(time + currentDt));
+      } else {
+        BOOST_TEST(context.isNamed("SolverTwo"));
+        // first order reads from interpolant inside window
+        BOOST_TEST(readData == readFunction(time + currentDt));
+      }
     }
 
     precice.readData(meshName, readDataName, {&vertexID, 1}, currentDt / 2, {&readData, 1});
 
     if (iterations == 0) { // in the first iteration of each window, use data from previous window.
       BOOST_TEST(readData == readFunction(timeCheckpoint));
-    } else {                              // in the following iterations, use data at the end of window.
-      if (context.isNamed("SolverOne")) { // in the following iterations, use data at the end of window.
-        BOOST_TEST(readData == readFunction(readTime));
-      } else { // in the following iterations we have two samples of data. Therefore linear interpolation
+    } else {
+      if (context.isNamed("SolverOne")) {
+        // zeroth order corresponds to end of time step
+        BOOST_TEST(readData == readFunction(time + currentDt));
+      } else {
         BOOST_TEST(context.isNamed("SolverTwo"));
-        BOOST_TEST(readData == readFunction(readTime - currentDt / 2));
+        // first order reads from interpolant inside window
+        BOOST_TEST(readData == readFunction(time + currentDt / 2));
+      }
+    }
+
+    precice.readData(meshName, readDataName, {&vertexID, 1}, 0, {&readData, 1});
+
+    if (iterations == 0) { // in the first iteration of each window, use data from previous window.
+      BOOST_TEST(readData == readFunction(timeCheckpoint));
+    } else {
+      if (context.isNamed("SolverOne")) {
+        // zeroth order corresponds to beginning of time step
+        BOOST_TEST(readData == readFunction(time));
+      } else {
+        BOOST_TEST(context.isNamed("SolverTwo"));
+        // first order reads from interpolant inside window
+        BOOST_TEST(readData == readFunction(time));
       }
     }
 
@@ -134,7 +149,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingMixed)
 BOOST_AUTO_TEST_SUITE_END() // Integration
 BOOST_AUTO_TEST_SUITE_END() // Serial
 BOOST_AUTO_TEST_SUITE_END() // Time
-BOOST_AUTO_TEST_SUITE_END() // Explicit
+BOOST_AUTO_TEST_SUITE_END() // Implicit
 BOOST_AUTO_TEST_SUITE_END() // ParallelCoupling
 
 #endif // PRECICE_NO_MPI
