@@ -164,6 +164,12 @@ public:
   void send(double itemToSend);
 
   /**
+   * @brief The primary rank sends a span of doubles to the other primary rank, for performance reasons, we
+   * neglect the gathering and checking step.
+   */
+  void send(precice::span<double const> itemsToSend);
+
+  /**
    * @brief The primary rank sends an int to the other primary rank, for performance reasons, we
    * neglect the gathering and checking step.
    */
@@ -190,6 +196,9 @@ public:
 
   /// All ranks receive a double (the same for each rank).
   void receive(double &itemToReceive);
+
+  /// All ranks receive a double values (the same for each rank).
+  void receive(precice::span<double> itemsToReceive);
 
   /// All ranks receive an int (the same for each rank).
   void receive(int &itemToReceive);

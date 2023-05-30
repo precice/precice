@@ -106,9 +106,7 @@ void BaseCouplingScheme::sendTimes(const m2n::PtrM2N &m2n, const Eigen::VectorXd
 {
   PRECICE_TRACE();
   PRECICE_DEBUG("Sending times...");
-  for (int i = 0; i < times.size(); i++) {
-    m2n->send(times(i));
-  }
+  m2n->send(times);
 }
 
 void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendData)
@@ -162,9 +160,7 @@ Eigen::VectorXd BaseCouplingScheme::receiveTimes(const m2n::PtrM2N &m2n, int nTi
   PRECICE_TRACE();
   PRECICE_DEBUG("Receiving times....");
   auto times = Eigen::VectorXd(nTimeSteps);
-  for (int i = 0; i < nTimeSteps; i++) {
-    m2n->receive(times(i));
-  }
+  m2n->receive(times);
   PRECICE_DEBUG("Received times {}", times);
   return times;
 }

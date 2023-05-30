@@ -248,6 +248,14 @@ void M2N::send(double itemToSend)
   }
 }
 
+void M2N::send(precice::span<double const> itemsToSend)
+{
+  PRECICE_TRACE(utils::IntraComm::getRank());
+  if (not utils::IntraComm::isSecondary()) {
+    _intraComm->send(itemsToSend, 0);
+  }
+}
+
 void M2N::send(int itemToSend)
 {
   PRECICE_TRACE(utils::IntraComm::getRank());
@@ -336,6 +344,18 @@ void M2N::receive(double &itemToReceive)
   utils::IntraComm::broadcast(itemToReceive);
 
   PRECICE_DEBUG("receive(double): {}", itemToReceive);
+}
+
+void M2N::receive(precice::span<double> itemsToReceive)
+{
+  PRECICE_TRACE(utils::IntraComm::getRank());
+  if (not utils::IntraComm::isSecondary()) { //coupling mode
+    _intraComm->receive(itemsToReceive, 0);
+  }
+
+  utils::IntraComm::broadcast(itemsToReceive);
+
+  PRECICE_DEBUG("receive(span<double>) .size() = {}", itemsToReceive.size());
 }
 
 void M2N::receive(int &itemToReceive)
