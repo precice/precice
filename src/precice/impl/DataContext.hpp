@@ -159,7 +159,8 @@ private:
 
   static logging::Logger _log;
 
-  std::map<std::pair<int, int>, Eigen::VectorXd> _lastSolutions;
+  using FromToDataIDs = std::pair<int, int>;
+  std::map<FromToDataIDs, Eigen::VectorXd> _initialGuesses;
 };
 
 } // namespace impl

@@ -23,7 +23,7 @@ std::string DataContext::getDataName() const
 
 void DataContext::resetInitialGuesses()
 {
-  for (auto &kv : _lastSolutions) {
+  for (auto &kv : _initialGuesses) {
     kv.second.setZero();
   }
 }
@@ -105,8 +105,8 @@ void DataContext::mapData()
           Eigen::VectorXd::Zero(dataDims * mapping.getOutputMesh()->vertices().size())};
 
       if (mapping.isTransient()) {
-        const auto key = std::make_pair(context.fromData->getID(), context.toData->getID());
-        mapping.map(stample.sample, outSample.values, _lastSolutions[key]);
+        const FromToDataIDs key{context.fromData->getID(), context.toData->getID()};
+        mapping.map(stample.sample, outSample.values, _initialGuesses[key]);
       } else {
         mapping.map(stample.sample, outSample.values);
       }
