@@ -35,7 +35,7 @@ public:
       int                     dimensions,
       RADIAL_BASIS_FUNCTION_T function,
       std::array<bool, 3>     deadAxis,
-      Transient               isTransient);
+      Type                    mappingType);
 
   virtual ~RadialBasisFctBaseMapping() = default;
 
@@ -82,8 +82,8 @@ RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctBaseMapping(
     int                     dimensions,
     RADIAL_BASIS_FUNCTION_T function,
     std::array<bool, 3>     deadAxis,
-    Transient               isTransient)
-    : Mapping(constraint, dimensions, false, isTransient),
+    Type                    mappingType)
+    : Mapping(constraint, dimensions, false, mappingType),
       _basisFunction(function)
 {
   if (isScaledConsistent()) {

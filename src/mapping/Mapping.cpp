@@ -11,7 +11,7 @@ Mapping::Mapping(
     Constraint constraint,
     int        dimensions,
     bool       requiresGradientData,
-    Transient  isTransient)
+    Type       mappingType)
     : _requiresGradientData(requiresGradientData),
       _constraint(constraint),
       _inputRequirement(MeshRequirement::UNDEFINED),
@@ -19,7 +19,7 @@ Mapping::Mapping(
       _input(),
       _output(),
       _dimensions(dimensions),
-      _transient(isTransient)
+      _mappingType(mappingType)
 {
 }
 
@@ -46,28 +46,28 @@ Mapping::Constraint Mapping::getConstraint() const
   return _constraint;
 }
 
-bool Mapping::isTransient() const
+bool Mapping::isIterative() const
 {
-  return _transient == Transient::YES;
+  return _mappingType == Type::Iterative;
 }
 
 bool Mapping::hasInitialGuess() const
 {
-  PRECICE_ASSERT(isTransient(), "This mapping isn't transient.");
+  PRECICE_ASSERT(isIterative(), "This mapping isn't iterative.");
   PRECICE_ASSERT(_initialGuess != nullptr, "The last solution wasn't provided.");
   return _initialGuess->size() > 0;
 }
 
 const Eigen::VectorXd &Mapping::initialGuess() const
 {
-  PRECICE_ASSERT(isTransient(), "This mapping isn't transient.");
+  PRECICE_ASSERT(isIterative(), "This mapping isn't iterative.");
   PRECICE_ASSERT(_initialGuess != nullptr, "The last solution wasn't provided.");
   return *_initialGuess;
 }
 
 Eigen::VectorXd &Mapping::initialGuess()
 {
-  PRECICE_ASSERT(isTransient(), "This mapping isn't transient.");
+  PRECICE_ASSERT(isIterative(), "This mapping isn't iterative.");
   PRECICE_ASSERT(_initialGuess != nullptr, "The last solution wasn't provided.");
   return *_initialGuess;
 }
@@ -126,7 +126,7 @@ void Mapping::map(int inputDataID,
                   int outputDataID)
 {
   PRECICE_ASSERT(_hasComputedMapping);
-  PRECICE_ASSERT(!isTransient() || _initialGuess != nullptr, "Call the map version with lastSolution");
+  PRECICE_ASSERT(!isIterative() || _initialGuess != nullptr, "Call the map version with lastSolution");
 
   PRECICE_ASSERT(input()->getDimensions() == output()->getDimensions(),
                  input()->getDimensions(), output()->getDimensions());
@@ -156,7 +156,7 @@ void Mapping::map(const time::Sample &input, Eigen::VectorXd &output, Eigen::Vec
 void Mapping::map(const time::Sample &input, Eigen::VectorXd &output)
 {
   PRECICE_ASSERT(_hasComputedMapping);
-  PRECICE_ASSERT(!isTransient() || _initialGuess != nullptr, "Call the map version with lastSolution");
+  PRECICE_ASSERT(!isIterative() || _initialGuess != nullptr, "Call the map version with lastSolution");
 
   if (hasConstraint(CONSERVATIVE)) {
     mapConservative(input, output);

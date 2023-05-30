@@ -52,22 +52,22 @@ public:
   };
 
   /**
-   * @brief Specifies whether the mapping is transient or not
+   * @brief Specifies whether the mapping is iterative or direct
    *
-   * A transient mapping uses an initial guess to perform the mapping.
-   * When calling the transient version of map, derived classed of Mapping can
+   * An iterative mapping uses an initial guess to perform the mapping.
+   * When calling the iterative version of map, derived classed of Mapping can
    * access and update this initial guess using \ref initialGuess().
    * Note that the size of the initial guess is controlled by the Mapping.
    *
    * The first initial guess is expected to be an empty VectorXd.
    */
-  enum class Transient : bool {
-    YES = true,
-    NO  = false
+  enum class Type : bool {
+    Iterative = true,
+    Direct    = false
   };
 
   /// Constructor, takes mapping constraint.
-  Mapping(Constraint constraint, int dimensions, bool requiresGradientData, Transient isTransient);
+  Mapping(Constraint constraint, int dimensions, bool requiresGradientData, Type mappingType);
 
   Mapping &operator=(Mapping &&) = delete;
 
@@ -113,10 +113,10 @@ public:
   /// Returns true if mapping is a form of scaled consistent mapping
   bool isScaledConsistent() const;
 
-  /// Return true if the mapping is transient an can make use of past solutions
-  bool isTransient() const;
+  /// Return true if the mapping is iterative an can make use of past solutions
+  bool isIterative() const;
 
-  /// Return the provided initial guess of a transient mapping
+  /// Return the provided initial guess of a iterative mapping
   const Eigen::VectorXd &initialGuess() const;
 
   Eigen::VectorXd &initialGuess();
@@ -137,13 +137,13 @@ public:
    *
    * Derived classed must implement the mapping functionality using mapConsistent() and mapConservative()
    *
-   * @warning this is the non-transient version of map
+   * @warning this is the non-iterative version of map
    *
    * @param[in] input sample to map
    * @param[out] output result data
    *
    * @pre \ref hasComputedMapping() == true
-   * @pre \ref isTransient() == false
+   * @pre \ref isIterative() == false
    *
    * @post output contains the mapped data
    */
@@ -156,7 +156,7 @@ public:
    *
    * Derived classed must implement the mapping functionality using mapConsistent() and mapConservative()
    *
-   * @warning this is the transient version of map
+   * @warning this is the iterative version of map
    *
    * @param[in] input sample to map
    * @param[out] output result data
@@ -164,7 +164,7 @@ public:
    *
    * @pre initialGuess is either an empty VectorXd or the result of a previous invocation of \ref map
    * @pre \ref hasComputedMapping() == true
-   * @pre \ref isTransient() == true
+   * @pre \ref isIterative() == true
    *
    * @post output contains the mapped data
    * @post \ref initialGuess() contains the initial guess for the next call to \ref map
@@ -219,11 +219,11 @@ protected:
    * @param[in] input Sample to map data from
    * @param[in] output Values to map to
    *
-   * If isTransient(), then the initial guess is available via initialGuess().
+   * If isIterative(), then the initial guess is available via initialGuess().
    * Provide a new initial guess by overwriting it.
    * The mapping has full control over its size.
    *
-   * @see For transient mappings: initialGuess() hasInitialGuess()
+   * @see For iterative mappings: initialGuess() hasInitialGuess()
    */
   virtual void mapConservative(const time::Sample &input, Eigen::VectorXd &output) = 0;
   /**
@@ -232,11 +232,11 @@ protected:
    * @param[in] input Sample to map data from
    * @param[in] output Values to map to
    *
-   * If isTransient(), then the initial guess is available via initialGuess().
+   * If isIterative(), then the initial guess is available via initialGuess().
    * Provide a new initial guess by overwriting it.
    * The mapping has full control over its size.
    *
-   * @see For transient mappings: initialGuess() hasInitialGuess()
+   * @see For iterative mappings: initialGuess() hasInitialGuess()
    */
   virtual void mapConsistent(const time::Sample &input, Eigen::VectorXd &output) = 0;
 
@@ -258,8 +258,8 @@ private:
 
   int _dimensions;
 
-  /// Transientness of the mapping
-  Transient _transient;
+  /// The type of the mapping
+  Type _mappingType;
 
   /// Pointer to the initialGuess set and unset by \ref map.
   Eigen::VectorXd *_initialGuess = nullptr;

@@ -104,7 +104,7 @@ void DataContext::mapData()
           dataDims,
           Eigen::VectorXd::Zero(dataDims * mapping.getOutputMesh()->vertices().size())};
 
-      if (mapping.isTransient()) {
+      if (mapping.isIterative()) {
         const FromToDataIDs key{context.fromData->getID(), context.toData->getID()};
         mapping.map(stample.sample, outSample.values, _initialGuesses[key]);
       } else {

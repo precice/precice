@@ -21,7 +21,7 @@ NearestNeighborBaseMapping::NearestNeighborBaseMapping(
     bool        requiresGradientData,
     std::string mappingName,
     std::string mappingNameShort)
-    : Mapping(constraint, dimensions, requiresGradientData, Mapping::Transient::NO),
+    : Mapping(constraint, dimensions, requiresGradientData, Mapping::Type::Direct),
       mappingName(mappingName),
       mappingNameShort(mappingNameShort)
 {

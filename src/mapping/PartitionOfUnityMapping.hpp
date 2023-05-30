@@ -128,7 +128,7 @@ PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::PartitionOfUnityMapping(
     unsigned int            verticesPerCluster,
     double                  relativeOverlap,
     bool                    projectToInput)
-    : Mapping(constraint, dimension, false, Mapping::Transient::NO),
+    : Mapping(constraint, dimension, false, Mapping::Type::Direct),
       _basisFunction(function), _verticesPerCluster(verticesPerCluster), _relativeOverlap(relativeOverlap), _projectToInput(projectToInput), _polynomial(polynomial)
 {
   PRECICE_ASSERT(this->getDimensions() <= 3);

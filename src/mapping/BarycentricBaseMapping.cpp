@@ -23,7 +23,7 @@
 namespace precice::mapping {
 
 BarycentricBaseMapping::BarycentricBaseMapping(Constraint constraint, int dimensions)
-    : Mapping(constraint, dimensions, false, Mapping::Transient::NO)
+    : Mapping(constraint, dimensions, false, Mapping::Type::Direct)
 {
 }
 
