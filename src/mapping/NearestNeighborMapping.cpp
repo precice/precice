@@ -30,7 +30,7 @@ void NearestNeighborMapping::mapConservative(const time::Sample &inData, Eigen::
 {
   PRECICE_TRACE();
   precice::profiling::Event e("map." + mappingNameShort + ".mapData.From" + input()->getName() + "To" + output()->getName(), profiling::Synchronize);
-  PRECICE_DEBUG("Map conservative");
+  PRECICE_DEBUG("Map conservative using {}", getName());
 
   const Eigen::VectorXd &inputValues  = inData.values;
   Eigen::VectorXd &      outputValues = outData;
@@ -57,7 +57,7 @@ void NearestNeighborMapping::mapConsistent(const time::Sample &inData, Eigen::Ve
 {
   PRECICE_TRACE();
   precice::profiling::Event e("map." + mappingNameShort + ".mapData.From" + input()->getName() + "To" + output()->getName(), profiling::Synchronize);
-  PRECICE_DEBUG((hasConstraint(CONSISTENT) ? "Map consistent" : "Map scaled-consistent"));
+  PRECICE_DEBUG("Map {} using {}", (hasConstraint(CONSISTENT) ? "consistent" : "scaled-consistent"), getName());
 
   const Eigen::VectorXd &inputValues  = inData.values;
   Eigen::VectorXd &      outputValues = outData;

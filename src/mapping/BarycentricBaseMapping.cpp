@@ -39,7 +39,7 @@ void BarycentricBaseMapping::mapConservative(const time::Sample &inData, Eigen::
   PRECICE_TRACE();
   precice::profiling::Event e("map.bbm.mapData.From" + input()->getName() + "To" + output()->getName(), profiling::Synchronize);
   PRECICE_ASSERT(getConstraint() == CONSERVATIVE);
-  PRECICE_DEBUG("Map conservative");
+  PRECICE_DEBUG("Map conservative using {}", getName());
   PRECICE_ASSERT(_interpolations.size() == input()->vertices().size(),
                  _interpolations.size(), input()->vertices().size());
   const int              dimensions = inData.dataDims;
@@ -66,7 +66,7 @@ void BarycentricBaseMapping::mapConsistent(const time::Sample &inData, Eigen::Ve
 {
   PRECICE_TRACE();
   precice::profiling::Event e("map.bbm.mapData.From" + input()->getName() + "To" + output()->getName(), profiling::Synchronize);
-  PRECICE_DEBUG("Map consistent");
+  PRECICE_DEBUG("Map {} using {}", (hasConstraint(CONSISTENT) ? "consistent" : "scaled-consistent"), getName());
   PRECICE_ASSERT(_interpolations.size() == output()->vertices().size(),
                  _interpolations.size(), output()->vertices().size());
 

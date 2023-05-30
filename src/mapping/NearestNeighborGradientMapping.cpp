@@ -73,7 +73,7 @@ void NearestNeighborGradientMapping::mapConsistent(const time::Sample &inData, E
   const Eigen::MatrixXd &gradients       = inData.gradients;
 
   // Consistent mapping
-  PRECICE_DEBUG((hasConstraint(CONSISTENT) ? "Map consistent" : "Map scaled-consistent"));
+  PRECICE_DEBUG("Map {} using {}", (hasConstraint(CONSISTENT) ? "consistent" : "scaled-consistent"), getName());
   const size_t outSize = output()->vertices().size();
 
   for (size_t i = 0; i < outSize; i++) {

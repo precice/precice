@@ -126,7 +126,7 @@ private:
   size_t localPolyparams;
 
   /// Prints an INFO about the current mapping
-  void printMappingInfo(int inputDataID, int dim) const;
+  void printMappingInfo(int dim) const;
 
   /// Toggles use of preallocation for matrix C and A
   const Preallocation _preallocation;
@@ -641,7 +641,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time
 
   // For every data dimension, perform mapping
   for (int dim = 0; dim < valueDim; dim++) {
-    // TODO printMappingInfo(inputDataID, dim);
+    printMappingInfo(dim);
 
     // Fill input from input data values
     std::vector<PetscScalar> inVals;
@@ -765,7 +765,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(const ti
   int  inRangeStart, inRangeEnd;
   std::tie(inRangeStart, inRangeEnd) = in.ownerRange();
   for (int dim = 0; dim < valueDim; dim++) {
-    // TODO printMappingInfo(inputDataID, dim);
+    printMappingInfo(dim);
 
     // Fill input from input data values
     for (size_t i = 0; i < this->input()->vertices().size(); i++) {
@@ -881,7 +881,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(const ti
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::printMappingInfo(int inputDataID, int dim) const
+void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::printMappingInfo(int dim) const
 {
   std::string constraintName;
   if (this->hasConstraint(Mapping::CONSISTENT)) {
@@ -896,11 +896,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::printMappingInfo(int inp
 
   const std::string polynomialName = _polynomial == Polynomial::ON ? "on" : _polynomial == Polynomial::OFF ? "off" : "separate";
 
-  PRECICE_INFO("Mapping \"{}\" {} from \"{}\" (ID {}) to \"{}\" (ID {}) for dimension {} with polynomial set to {}",
-               this->input()->data(inputDataID)->getName(), constraintName,
-               this->input()->getName(), this->input()->getID(),
-               this->output()->getName(), this->output()->getID(),
-               dim, polynomialName);
+  PRECICE_INFO("Mapping {} for dimension {} with polynomial set to {}",
+               constraintName, dim, polynomialName);
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>

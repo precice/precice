@@ -100,6 +100,8 @@ void DataContext::mapData()
     const auto dataDims = context.fromData->getDimensions();
 
     for (const auto &stample : context.fromData->stamples()) {
+      PRECICE_INFO("Mapping \"{}\" for t={} from \"{}\" to \"{}\"",
+                   getDataName(), stample.timestamp, mapping.getInputMesh()->getName(), mapping.getOutputMesh()->getName());
       time::Sample outSample{
           dataDims,
           Eigen::VectorXd::Zero(dataDims * mapping.getOutputMesh()->vertices().size())};

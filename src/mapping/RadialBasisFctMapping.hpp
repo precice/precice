@@ -174,6 +174,8 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(const time:
   precice::profiling::Event e("map.rbf.mapData.From" + this->input()->getName() + "To" + this->output()->getName(), profiling::Synchronize);
   using precice::com::AsVectorTag;
 
+  PRECICE_DEBUG("Map conservative using {}", getName());
+
   // Gather input data
   if (utils::IntraComm::isSecondary()) {
 
@@ -291,6 +293,8 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time::S
   PRECICE_TRACE();
   precice::profiling::Event e("map.rbf.mapData.From" + this->input()->getName() + "To" + this->output()->getName(), profiling::Synchronize);
   using precice::com::AsVectorTag;
+
+  PRECICE_DEBUG("Map {} using {}", (this->hasConstraint(Mapping::CONSISTENT) ? "consistent" : "scaled-consistent"), getName());
 
   // Gather input data
   if (utils::IntraComm::isSecondary()) {
