@@ -90,10 +90,10 @@ void DataContext::mapData()
   PRECICE_ASSERT(hasMapping());
   // Execute the mapping
   for (auto &context : _mappingContexts) {
+    // Reset the toData before mapping any samples
     context.clearToDataStorage();
     PRECICE_ASSERT(context.fromData->stamples().size() > 0);
 
-    // Reset the toData before executing the mapping
     auto &mapping = *context.mapping;
 
     // Generate output sample for reuse
