@@ -120,7 +120,7 @@ bool Participant::hasData(::precice::string_view meshName, ::precice::string_vie
   return _impl->hasData(toSV(meshName), toSV(dataName));
 }
 
-// void SolverInterface:: resetMesh
+// void Participant:: resetMesh
 //(
 //   ::precice::string_view meshName )
 //{

@@ -227,7 +227,7 @@ public:
   bool hasData(
       std::string_view meshName,
       std::string_view dataName) const;
-  
+
   /// @copydoc Participant::readData
   void readData(
       std::string_view                meshName,
@@ -250,12 +250,12 @@ public:
       ::precice::span<const VertexID> vertices,
       ::precice::span<const double>   gradients);
 
-  /// @copydoc SolverInterface::writeGlobalData
+  /// @copydoc Participant::writeGlobalData
   void writeGlobalData(
       std::string_view              dataName,
       ::precice::span<const double> value);
 
-  /// @copydoc SolverInterface::readGlobalData
+  /// @copydoc Participant::readGlobalData
   void readGlobalData(
       std::string_view        dataName,
       double                  relativeReadTime,
