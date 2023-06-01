@@ -32,9 +32,4 @@ Eigen::VectorXd ReadGlobalDataContext::sampleWaveformAt(double normalizedDt)
   return _waveform->sample(normalizedDt);
 }
 
-void ReadGlobalDataContext::moveToNextWindow()
-{
-  _waveform->moveToNextWindow();
-}
-
 } // namespace precice::impl

@@ -49,11 +49,6 @@ public:
    */
   Eigen::VectorXd sampleWaveformAt(double normalizedDt);
 
-  /**
-   * @brief Updates _waveform when moving to the next time window.
-   */
-  void moveToNextWindow();
-
   /// Disable copy construction
   ReadGlobalDataContext(const ReadGlobalDataContext &copy) = delete;
 

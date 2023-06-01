@@ -29,7 +29,7 @@ public:
    *
    * @param atEndOfWindow if true, also the Storage will be reset (useful at end of window to clear storage).
    */
-  void resetData(bool atEndOfWindow);
+  void resetData(bool atEndOfWindow, bool isTimeWindowComplete);
 
   /**
    * @brief Store value in _writeDataBuffer

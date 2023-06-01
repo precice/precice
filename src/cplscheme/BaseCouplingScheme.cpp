@@ -233,6 +233,7 @@ void BaseCouplingScheme::initializeWithZeroInitialData(const GlobalDataMap &rece
   for (const auto &data : receiveGlobalData | boost::adaptors::map_values) {
     PRECICE_DEBUG("Initialize {} as zero.", data->getDataName());
     // just store already initialized zero sample to storage.
+    data->setSampleAtTime(time::Storage::WINDOW_START, data->sample());
     data->setSampleAtTime(time::Storage::WINDOW_END, data->sample());
   }
 }
@@ -285,7 +286,7 @@ void BaseCouplingScheme::sendGlobalData(const m2n::PtrM2N &m2n, const GlobalData
   }
 }
 
-void BaseCouplingScheme::receiveGlobalData(const m2n::PtrM2N &m2n, const GlobalDataMap &receiveGlobalData)
+void BaseCouplingScheme::receiveGlobalData(const m2n::PtrM2N &m2n, const GlobalDataMap &receiveGlobalData, bool initialCommunication)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(m2n.get());
@@ -294,6 +295,11 @@ void BaseCouplingScheme::receiveGlobalData(const m2n::PtrM2N &m2n, const GlobalD
   for (const auto &data : receiveGlobalData | boost::adaptors::map_values) {
     // Data is only received on ranks with size>0, which is checked in the derived class implementation
     m2n->receive(data->values(), -1, data->getDimensions()); // TODO meshID=-1 is a makeshift thing here. Fix this.
+
+    if (initialCommunication) {
+      data->setSampleAtTime(time::Storage::WINDOW_START, data->sample());
+    }
+
     data->setSampleAtTime(time::Storage::WINDOW_END, data->sample());
   }
 }

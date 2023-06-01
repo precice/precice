@@ -2,6 +2,7 @@
 
 #include <utility>
 
+#include "math/differences.hpp" // for math::equals(...)
 #include "mesh/Data.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
@@ -12,12 +13,12 @@ GlobalCouplingData::GlobalCouplingData(
     bool          requiresInitialization,
     int           extrapolationOrder)
     : requiresInitialization(requiresInitialization),
-      _data(std::move(data)),
-      _extrapolation(extrapolationOrder)
+      _data(std::move(data))
 {
   PRECICE_ASSERT(_data != nullptr);
   /// Lazy allocation of _previousIteration.gradient: only used in case the corresponding data has gradients
-  _previousIteration = time::Sample{Eigen::VectorXd::Zero(getSize())}; // TODO: this may not be needed
+  _previousIteration = time::Sample{Eigen::VectorXd::Zero(getSize())};
+  timeStepsStorage().setExtrapolationOrder(extrapolationOrder);
 }
 
 int GlobalCouplingData::getDimensions() const
@@ -87,26 +88,14 @@ std::string GlobalCouplingData::getDataName()
   return _data->getName();
 }
 
-void GlobalCouplingData::initializeExtrapolation()
-{
-  _extrapolation.initialize(getSize());
-  storeIteration();
-}
-
 void GlobalCouplingData::moveToNextWindow()
 {
-  _extrapolation.moveToNextWindow();
-  values() = _extrapolation.getInitialGuess();
-
-  this->setSampleAtTime(time::Storage::WINDOW_END, sample());
-}
-
-void GlobalCouplingData::storeExtrapolationData()
-{
-  const auto stamples = this->stamples();
-  PRECICE_ASSERT(stamples.size() > 0);
-  this->values() = stamples.back().sample.values;
-  _extrapolation.store(values());
+  if (this->timeStepsStorage().stamples().size() > 0) {
+    this->timeStepsStorage().move();
+    auto atEnd = this->timeStepsStorage().stamples().back();
+    PRECICE_ASSERT(math::equals(atEnd.timestamp, time::Storage::WINDOW_END));
+    _data->sample() = atEnd.sample;
+  }
 }
 
 time::Sample &GlobalCouplingData::sample()

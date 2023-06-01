@@ -1475,7 +1475,7 @@ void ParticipantImpl::resetWrittenData(bool isAtWindowEnd, bool isTimeWindowComp
     context.resetData(isAtWindowEnd, isTimeWindowComplete);
   }
   for (auto &context : _accessor->writeGlobalDataContexts()) {
-    context.resetData(isAtWindowEnd);
+    context.resetData(isAtWindowEnd, isTimeWindowComplete);
   }
 }
 
