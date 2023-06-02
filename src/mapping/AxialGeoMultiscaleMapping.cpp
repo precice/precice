@@ -36,7 +36,7 @@ void AxialGeoMultiscaleMapping::computeMapping()
       PRECICE_CHECK(output()->vertices().size() == 1, "You can only define an axial geometric multiscale mapping of type spread from a mesh with exactly one vertex.");
     }
   } else {
-    PRECICE_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
+    PRECICE_ASSERT(getConstraint() == CONSERVATIVE);
     PRECICE_ASSERT(false, "Not yet implemented");
     PRECICE_DEBUG("Compute conservative mapping");
   }
@@ -51,7 +51,7 @@ void AxialGeoMultiscaleMapping::clear()
 
 void AxialGeoMultiscaleMapping::mapConservative(DataID inputDataID, DataID outputDataID)
 {
-  PRECICE_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
+  PRECICE_ASSERT(getConstraint() == CONSERVATIVE);
   PRECICE_ASSERT(false, "Not yet implemented");
   PRECICE_DEBUG("Map conservative");
 }
@@ -79,7 +79,7 @@ void AxialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID outputD
   PRECICE_DEBUG("Map consistent");
   if (_type == SPREAD) {
     /*
-      3D vertices are assigned a value based on distance from the 1D vertex. 
+      3D vertices are assigned a value based on distance from the 1D vertex.
       Currently, a Hagen-Poiseuille profile determines the velocity value.
     */
     PRECICE_ASSERT(inputValues.size() == 1);
@@ -127,7 +127,7 @@ void AxialGeoMultiscaleMapping::tagMeshFirstRound()
     input()->vertices()[0].tag();
 
   } else {
-    PRECICE_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
+    PRECICE_ASSERT(getConstraint() == CONSERVATIVE);
     PRECICE_ASSERT(false, "Not yet implemented");
   }
 
@@ -140,11 +140,10 @@ void AxialGeoMultiscaleMapping::tagMeshSecondRound()
   // no operation needed here for the moment
 }
 
-// TODO: needed for porting to develop
-// std::string AxialGeoMultiscaleMapping::getName() const
-// {
-//   return "axial-geomultiscale";
-// }
+std::string AxialGeoMultiscaleMapping::getName() const
+{
+  return "axial-geomultiscale";
+}
 
 } // namespace mapping
 } // namespace precice

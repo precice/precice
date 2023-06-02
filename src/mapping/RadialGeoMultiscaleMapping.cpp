@@ -27,7 +27,7 @@ void RadialGeoMultiscaleMapping::computeMapping()
   if (getConstraint() == CONSISTENT) {
     PRECICE_DEBUG("Compute consistent mapping");
   } else {
-    PRECICE_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
+    PRECICE_ASSERT(getConstraint() == CONSERVATIVE);
     PRECICE_ASSERT(false, "Not yet implemented");
     PRECICE_DEBUG("Compute conservative mapping");
   }
@@ -42,7 +42,7 @@ void RadialGeoMultiscaleMapping::clear()
 
 void RadialGeoMultiscaleMapping::mapConservative(DataID inputDataID, DataID outputDataID)
 {
-  PRECICE_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
+  PRECICE_ASSERT(getConstraint() == CONSERVATIVE);
   PRECICE_ASSERT(false, "Not yet implemented");
   PRECICE_DEBUG("Map conservative");
 }
@@ -70,7 +70,7 @@ void RadialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID output
   PRECICE_DEBUG("Map consistent");
   if (_type == SPREAD) {
     /*
-      3D vertices are projected onto the 1D axis and the data is then mapped 
+      3D vertices are projected onto the 1D axis and the data is then mapped
       to the nearest neighbors of the 1D vertices in projection space.
     */
     size_t const inSize  = input()->vertices().size();
@@ -98,7 +98,7 @@ void RadialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID output
   } else {
     PRECICE_ASSERT(_type == COLLECT);
     /*
-      3D vertices are projected onto the 1D axis and the data is then mapped 
+      3D vertices are projected onto the 1D axis and the data is then mapped
       to (and averaged at) the nearest 1D vertex in projection space.
     */
     PRECICE_ASSERT(outputValues.size() == static_cast<int>(output()->vertices().size()), outputValues.size(), valueDimensions, output()->vertices().size());
@@ -114,7 +114,7 @@ void RadialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID output
     }
     axisMidpoints(outSize - 1) = std::numeric_limits<double>::max(); // large number, such that vertices after the last midpoint are still assigned
 
-    Eigen::VectorXd counter(outSize); // counts number of vertices inbetween midpoints for averaging
+    Eigen::VectorXd counter(outSize); // counts number of vertices in between midpoints for averaging
     for (size_t i = 0; i < outSize; i++) {
       outputValues((i * valueDimensions)) = 0;
       counter(i)                          = 0;
@@ -153,7 +153,7 @@ void RadialGeoMultiscaleMapping::tagMeshFirstRound()
     }
 
   } else {
-    PRECICE_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
+    PRECICE_ASSERT(getConstraint() == CONSERVATIVE);
     PRECICE_ASSERT(false, "Not yet implemented");
   }
 
@@ -167,10 +167,10 @@ void RadialGeoMultiscaleMapping::tagMeshSecondRound()
 }
 
 // TODO: needed for porting to develop
-// std::string AxialGeoMultiscaleMapping::getName() const
-// {
-//   return "radial-geomultiscale";
-// }
+std::string RadialGeoMultiscaleMapping::getName() const
+{
+  return "radial-geomultiscale";
+}
 
 } // namespace mapping
 } // namespace precice
