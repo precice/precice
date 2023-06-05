@@ -451,12 +451,12 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
   endif()
 
   if(PRECICE_WITH_HIP)
-    target_compile_definitions(preciceCore PUBLIC PRECICE_WITH_HIP)
+    target_compile_definitions(preciceCore_ginkgo PUBLIC PRECICE_WITH_HIP)
     set(_hiplist ${PROJECT_SOURCE_DIR}/src/mapping/device/HipQRSolver.hip.cpp)
     set_source_files_properties(${_hiplist} PROPERTIES LANGUAGE HIP)
     add_library(preciceCore_qr_hip ${_hiplist})
-    target_link_libraries(preciceCore_qr_hip PRIVATE hip::device Ginkgo::ginkgo roc::hipsolver Kokkos::kokkos)
-#        target_link_libraries(preciceCore PRIVATE preciceCore_qr_hip)
+    target_link_libraries(preciceCore_qr_hip PRIVATE hip::device Ginkgo::ginkgo roc::hipsolver)
+    target_link_libraries(preciceCore_ginkgo PRIVATE preciceCore_qr_hip)
     message(STATUS "Enabled HIP support for preCICE via the Ginkgo library.")
   endif()
 
@@ -554,6 +554,7 @@ IF (BUILD_TESTING)
   target_link_libraries(testprecice
     PRIVATE
     preciceCore
+    preciceExternal
     )
   set_target_properties(testprecice PROPERTIES
     CXX_STANDARD 17
