@@ -5,13 +5,13 @@
 #include <cmath>
 #include <functional>
 #include <numeric>
+#include "GinkgoDefinitions.hpp"
+#include "GinkgoKernels.hpp"
 #include "mapping/config/MappingConfiguration.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
 #include "mesh/Mesh.hpp"
 #include "precice/impl/Types.hpp"
 #include "profiling/Event.hpp"
-#include "GinkgoDefinitions.hpp"
-#include "GinkgoKernels.hpp"
 #ifdef PRECICE_WITH_HIP
 #include "mapping/device/HipQRSolver.hip.hpp"
 #endif
@@ -21,7 +21,6 @@
 #ifdef PRECICE_WITH_OMP
 #include <omp.h>
 #endif
-
 
 using precice::mapping::RadialBasisParameters;
 
@@ -279,8 +278,8 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
     _matrixV->fill(0.0);
 
     precice::profiling::Event _assemblyEvent{"map.rbf.ginkgo.assembleMatrices"};
-//    _deviceExecutor->run(make_polynomial_fill_operation(_matrixQ->get_size()[0], _matrixQ->get_size()[1], _matrixQ->get_values(), dInputVertices->get_values(), dInputVertices->get_size()[1], separatePolyParams));
-//    _deviceExecutor->run(make_polynomial_fill_operation(_matrixV->get_size()[0], _matrixV->get_size()[1], _matrixV->get_values(), dOutputVertices->get_values(), dOutputVertices->get_size()[1], separatePolyParams));
+    kernel::fill_polynomial_matrix(_deviceExecutor, _matrixQ, dInputVertices, separatePolyParams);
+    kernel::fill_polynomial_matrix(_deviceExecutor, _matrixV, dOutputVertices, separatePolyParams);
     _assemblyEvent.stop();
 
     _deviceExecutor->synchronize();
@@ -311,15 +310,15 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
   // Launch RBF fill kernel on device
   precice::profiling::Event _assemblyEvent{"map.rbf.ginkgo.assembleMatrices"};
   precice::profiling::Event systemMatrixAssemblyEvent{"map.rbf.ginkgo.assembleSystemMatrix"};
-  kernel::create_rbf_system_matrix(_deviceExecutor,
-                                   _rbfSystemMatrix, activeAxis, dInputVertices, dInputVertices, basisFunction,
+  kernel::create_rbf_system_matrix(_deviceExecutor, _rbfSystemMatrix, activeAxis, dInputVertices, dInputVertices, basisFunction,
                                    basisFunction.getFunctionParameters(), Polynomial::ON == polynomial,
                                    polyparams); // polynomial evaluates to true only if ON is set
   _deviceExecutor->synchronize();
   systemMatrixAssemblyEvent.stop();
 
   precice::profiling::Event outputMatrixAssemblyEvent{"map.rbf.ginkgo.assembleOutputMatrix"};
-//  _deviceExecutor->run(make_rbf_fill_operation(_matrixA->get_size()[0], _matrixA->get_size()[1], meshDim, activeAxis, _matrixA->get_values(), dInputVertices->get_values(), dOutputVertices->get_values(), basisFunction, basisFunction.getFunctionParameters(), dInputVertices->get_size()[1], dOutputVertices->get_size()[1], Polynomial::ON == polynomial, polyparams));
+  kernel::create_rbf_system_matrix(_deviceExecutor, _matrixA, activeAxis, dInputVertices, dOutputVertices, basisFunction,
+                                   basisFunction.getFunctionParameters(), Polynomial::ON == polynomial, polyparams);
 
   // Wait for the kernels to finish
   _deviceExecutor->synchronize();
