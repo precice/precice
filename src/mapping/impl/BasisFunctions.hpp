@@ -6,7 +6,7 @@
 #define BOOST_PP_VARIADICS 1
 #define PRECICE_HOST_DEVICE __host__ __device__
 #define PRECICE_MEMORY_SPACE __device__
-#define FMA fma
+#define FMA std::fma
 
 #elif defined(__HIPCC__)
 
@@ -14,7 +14,7 @@
 #include <hip/hip_runtime.h>
 #define PRECICE_HOST_DEVICE __host__ __device__
 #define PRECICE_MEMORY_SPACE __device__
-#define FMA fma
+#define FMA std::fma
 
 #else
 
@@ -24,7 +24,7 @@
 
 #endif
 
-PRECICE_MEMORY_SPACE const double NUMERICAL_ZERO_DIFFERENCE = 1.0e-14;
+constexpr double NUMERICAL_ZERO_DIFFERENCE = 1.0e-14;
 
 #if !defined(__NVCC__) || !defined(__HIPCC__)
 #include "logging/Logger.hpp"
