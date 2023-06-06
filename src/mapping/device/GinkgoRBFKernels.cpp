@@ -38,7 +38,9 @@ void create_rbf_system_matrix(std::shared_ptr<const gko::Executor> exec,
 
             // Loop over each dimension and calculate euclidean distance
             for (size_t k = 0; k < activeAxis.size(); ++k) {
-              dist += pow_int<2>(k_supportPoints(j, k) - k_targetPoints(i, k)) * static_cast<int>(activeAxis[k]);
+              if(activeAxis[k]   ) {
+                dist += pow_int<2>(k_supportPoints(j, k) - k_targetPoints(i, k));
+              }
             }
 
             dist = Kokkos::sqrt(dist);
