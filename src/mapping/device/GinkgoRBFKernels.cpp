@@ -37,7 +37,7 @@ void create_rbf_system_matrix(std::shared_ptr<const gko::Executor> exec,
             }
 
             // Loop over each dimension and calculate euclidean distance
-            for (size_t k = 0; k < k_supportPoints.values.extent(1); ++k) {
+            for (size_t k = 0; k < activeAxis.size(); ++k) {
               dist += pow_int<2>(k_supportPoints(j, k) - k_targetPoints(i, k)) * static_cast<int>(activeAxis[k]);
             }
 
@@ -85,15 +85,16 @@ void fill_polynomial_matrix(std::shared_ptr<const gko::Executor> exec,
                                                                                                                 static_cast<int64_t>(mtx->get_size()[1])}),
             [dims, acc] GKO_KOKKOS_FN(const int &i, const int &j, auto k_mtx, auto k_x) {
               if (j < dims - 1) {
-                k_mtx(i * dims, j) = acc(i, j, k_x);
+                k_mtx(i, j) = acc(i, j, k_x);
               } else {
-                k_mtx(i * dims, j) = 1;
+                k_mtx(i, j) = 1;
               }
             },
             mtx.get(), x.get()));
   };
 
-  if(exec == exec->get_master()){
+    if(dynamic_cast<const gko::ReferenceExecutor*>(exec.get()) ||
+       dynamic_cast<const gko::OmpExecutor*>(exec.get())){
     run_kernel(row_major_acc);
   } else {
     run_kernel(col_major_acc);
