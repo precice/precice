@@ -201,14 +201,6 @@ public:
       impl::PtrConvergenceMeasure measure,
       bool                        doesLogging);
 
-  /// Adds a measure to determine the convergence of coupling iterations.
-  void addConvergenceMeasureGlobalData(
-      int                         dataID,
-      bool                        suffices,
-      bool                        strict,
-      impl::PtrConvergenceMeasure measure,
-      bool                        doesLogging);
-
   /// Set an acceleration technique.
   void setAcceleration(const acceleration::PtrAcceleration &acceleration);
 
@@ -547,41 +539,12 @@ private:
   };
 
   /**
-   * @brief Holds meta information to perform a convergence measurement.
-   * @param couplingData Coupling data history
-   * @param suffices Whether this measure already suffices for convergence
-   * @param strict Whether non-convergence of this measure leads to a premature end of the simulation
-   * @param measure Link to the actual convergence measure
-   * @param doesLogging Whether this measure is logged in the convergence file
-   */
-  struct ConvergenceMeasureContextGlobalData {
-    PtrGlobalCouplingData       couplingData;
-    bool                        suffices;
-    bool                        strict;
-    impl::PtrConvergenceMeasure measure;
-    bool                        doesLogging;
-
-    std::string logHeader() const
-    {
-      return "Res" + measure->getAbbreviation() + "(" + couplingData->getDataName() + ")";
-    }
-  };
-
-  /**
    * @brief Mesh-associated data convergence measures of coupling iterations.
    *
    * Before initialization, only dataID and measure variables are filled. Then,
    * the data is fetched from send and receive data assigned to the cpl scheme.
    */
   std::vector<ConvergenceMeasureContext> _convergenceMeasures;
-
-  /**
-   * @brief Global data convergence measures of coupling iterations.
-   *
-   * Before initialization, only dataID and measure variables are filled. Then,
-   * the data is fetched from send and receive data assigned to the cpl scheme.
-   */
-  std::vector<ConvergenceMeasureContextGlobalData> _convergenceMeasuresGlobalData;
 
   /// Functions needed for initialize()
 

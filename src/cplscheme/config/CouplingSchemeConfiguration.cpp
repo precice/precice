@@ -225,33 +225,45 @@ void CouplingSchemeConfiguration::xmlTagCallback(
   } else if (tag.getName() == TAG_ABS_CONV_MEASURE) {
     const std::string &dataName = tag.getStringAttributeValue(ATTR_DATA);
     const std::string &meshName = tag.getStringAttributeValue(ATTR_MESH);
-    double             limit    = tag.getDoubleAttributeValue(ATTR_LIMIT);
-    bool               suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
-    bool               strict   = tag.getBooleanAttributeValue(ATTR_STRICT);
+    PRECICE_CHECK(not meshName.empty(), "Convergence measures for global data are not yet supported. "
+                                        "Please remove the convergence-measure tag corresponding to \"{}\" in the configuration file.",
+                  dataName);
+    double limit    = tag.getDoubleAttributeValue(ATTR_LIMIT);
+    bool   suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
+    bool   strict   = tag.getBooleanAttributeValue(ATTR_STRICT);
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
     addAbsoluteConvergenceMeasure(dataName, limit, suffices, strict, meshName);
   } else if (tag.getName() == TAG_REL_CONV_MEASURE) {
     const std::string &dataName = tag.getStringAttributeValue(ATTR_DATA);
     const std::string &meshName = tag.getStringAttributeValue(ATTR_MESH);
-    double             limit    = tag.getDoubleAttributeValue(ATTR_LIMIT);
-    bool               suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
-    bool               strict   = tag.getBooleanAttributeValue(ATTR_STRICT);
+    PRECICE_CHECK(not meshName.empty(), "Convergence measures for global data are not yet supported. "
+                                        "Please remove the convergence-measure tag corresponding to \"{}\" in the configuration file.",
+                  dataName);
+    double limit    = tag.getDoubleAttributeValue(ATTR_LIMIT);
+    bool   suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
+    bool   strict   = tag.getBooleanAttributeValue(ATTR_STRICT);
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
     addRelativeConvergenceMeasure(dataName, limit, suffices, strict, meshName);
   } else if (tag.getName() == TAG_RES_REL_CONV_MEASURE) {
     const std::string &dataName = tag.getStringAttributeValue(ATTR_DATA);
     const std::string &meshName = tag.getStringAttributeValue(ATTR_MESH);
-    double             limit    = tag.getDoubleAttributeValue(ATTR_LIMIT);
-    bool               suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
-    bool               strict   = tag.getBooleanAttributeValue(ATTR_STRICT);
+    PRECICE_CHECK(not meshName.empty(), "Convergence measures for global data are not yet supported. "
+                                        "Please remove the convergence-measure tag corresponding to \"{}\" in the configuration file.",
+                  dataName);
+    double limit    = tag.getDoubleAttributeValue(ATTR_LIMIT);
+    bool   suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
+    bool   strict   = tag.getBooleanAttributeValue(ATTR_STRICT);
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
     addResidualRelativeConvergenceMeasure(dataName, limit, suffices, strict, meshName);
   } else if (tag.getName() == TAG_MIN_ITER_CONV_MEASURE) {
-    const std::string &dataName      = tag.getStringAttributeValue(ATTR_DATA);
-    const std::string &meshName      = tag.getStringAttributeValue(ATTR_MESH);
-    int                minIterations = tag.getIntAttributeValue(ATTR_MIN_ITERATIONS);
-    bool               suffices      = tag.getBooleanAttributeValue(ATTR_SUFFICES);
-    bool               strict        = tag.getBooleanAttributeValue(ATTR_STRICT);
+    const std::string &dataName = tag.getStringAttributeValue(ATTR_DATA);
+    const std::string &meshName = tag.getStringAttributeValue(ATTR_MESH);
+    PRECICE_CHECK(not meshName.empty(), "Convergence measures for global data are not yet supported. "
+                                        "Please remove the convergence-measure tag corresponding to \"{}\" in the configuration file.",
+                  dataName);
+    int  minIterations = tag.getIntAttributeValue(ATTR_MIN_ITERATIONS);
+    bool suffices      = tag.getBooleanAttributeValue(ATTR_SUFFICES);
+    bool strict        = tag.getBooleanAttributeValue(ATTR_STRICT);
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
     addMinIterationConvergenceMeasure(dataName, minIterations, suffices, strict, meshName);
 
@@ -679,11 +691,7 @@ void CouplingSchemeConfiguration::addAbsoluteConvergenceMeasure(
                 limit, dataName, meshName);
   impl::PtrConvergenceMeasure measure(new impl::AbsoluteConvergenceMeasure(limit));
   ConvergenceMeasureDefintion convMeasureDef;
-  if (not meshName.empty()) { // mesh associated data
-    convMeasureDef.data = getData(dataName, meshName);
-  } else { // global data
-    convMeasureDef.data = getGlobalData(dataName);
-  }
+  convMeasureDef.data        = getData(dataName, meshName);
   convMeasureDef.suffices    = suffices;
   convMeasureDef.strict      = strict;
   convMeasureDef.meshName    = meshName;
@@ -1186,12 +1194,9 @@ void CouplingSchemeConfiguration::addConvergenceMeasures(
 {
   for (auto &elem : convergenceMeasureDefinitions) {
     checkIfDataIsExchanged(elem.data->getID());
-    if (not elem.meshName.empty()) {
-      _meshConfig->addNeededMesh(participant, elem.meshName);
-      scheme->addConvergenceMeasure(elem.data->getID(), elem.suffices, elem.strict, elem.measure, elem.doesLogging);
-    } else { // empty meshName implies a convergence measure for global data
-      scheme->addConvergenceMeasureGlobalData(elem.data->getID(), elem.suffices, elem.strict, elem.measure, elem.doesLogging);
-    }
+    PRECICE_ASSERT(not elem.meshName.empty()); // ensure that convergence measure was not configured for global data
+    _meshConfig->addNeededMesh(participant, elem.meshName);
+    scheme->addConvergenceMeasure(elem.data->getID(), elem.suffices, elem.strict, elem.measure, elem.doesLogging);
   }
 }
 
