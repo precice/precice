@@ -682,10 +682,6 @@ void BaseCouplingScheme::newConvergenceMeasurements()
     PRECICE_ASSERT(convMeasure.measure.get() != nullptr);
     convMeasure.measure->newMeasurementSeries();
   }
-  // for (ConvergenceMeasureContextGlobalData &convMeasure : _convergenceMeasuresGlobalData) {
-  //   PRECICE_ASSERT(convMeasure.measure.get() != nullptr);
-  //   convMeasure.measure->newMeasurementSeries();
-  // }
 }
 
 void BaseCouplingScheme::addConvergenceMeasure(
@@ -704,23 +700,6 @@ void BaseCouplingScheme::addConvergenceMeasure(
   convMeasure.doesLogging  = doesLogging;
   _convergenceMeasures.push_back(convMeasure);
 }
-
-// void BaseCouplingScheme::addConvergenceMeasureGlobalData(
-//     int                         dataID,
-//     bool                        suffices,
-//     bool                        strict,
-//     impl::PtrConvergenceMeasure measure,
-//     bool                        doesLogging)
-// {
-//   ConvergenceMeasureContextGlobalData convMeasure;
-//   PRECICE_ASSERT(_allGlobalData.count(dataID) == 1, "Global Data with given data ID must exist!");
-//   convMeasure.couplingData = _allGlobalData.at(dataID);
-//   convMeasure.suffices     = suffices;
-//   convMeasure.strict       = strict;
-//   convMeasure.measure      = std::move(measure);
-//   convMeasure.doesLogging  = doesLogging;
-//   _convergenceMeasuresGlobalData.push_back(convMeasure);
-// }
 
 bool BaseCouplingScheme::measureConvergence()
 {
@@ -760,33 +739,6 @@ bool BaseCouplingScheme::measureConvergence()
     PRECICE_INFO(convMeasure.measure->printState(convMeasure.couplingData->getDataName()));
   }
 
-  // for (const auto &convMeasure : _convergenceMeasuresGlobalData) {
-  //   PRECICE_ASSERT(convMeasure.couplingData != nullptr);
-  //   PRECICE_ASSERT(convMeasure.measure.get() != nullptr);
-  //   PRECICE_ASSERT(convMeasure.couplingData->previousIteration().size() == convMeasure.couplingData->values().size(), convMeasure.couplingData->previousIteration().size(), convMeasure.couplingData->values().size(), convMeasure.couplingData->getDataName());
-
-  //   convMeasure.measure->measure(convMeasure.couplingData->previousIteration(), convMeasure.couplingData->values());
-
-  //   if (not utils::IntraComm::isSecondary() && convMeasure.doesLogging) {
-  //     _convergenceWriter->writeData(convMeasure.logHeader(), convMeasure.measure->getNormResidual());
-  //   }
-
-  //   if (not convMeasure.measure->isConvergence()) {
-  //     allConverged = false;
-  //     if (convMeasure.strict) {
-  //       oneStrict = true;
-  //       PRECICE_CHECK(_iterations < _maxIterations,
-  //                     "The strict convergence measure for global data \"" + convMeasure.couplingData->getDataName() +
-  //                         "\" did not converge within the maximum allowed iterations, which terminates the simulation. "
-  //                         "To avoid this forced termination do not mark the convergence measure as strict.")
-  //     }
-  //   } else if (convMeasure.suffices == true) {
-  //     oneSuffices = true;
-  //   }
-
-  //   PRECICE_INFO(convMeasure.measure->printState(convMeasure.couplingData->getDataName()));
-  // }
-
   if (allConverged) {
     PRECICE_INFO("All converged");
   } else if (oneSuffices && not oneStrict) { // strict overrules suffices
@@ -822,12 +774,6 @@ void BaseCouplingScheme::initializeTXTWriters()
           _convergenceWriter->addData(convMeasure.logHeader(), io::TXTTableWriter::DOUBLE);
         }
       }
-      // for (ConvergenceMeasureContextGlobalData &convMeasure : _convergenceMeasuresGlobalData) {
-
-      //   if (convMeasure.doesLogging) {
-      //     _convergenceWriter->addData(convMeasure.logHeader(), io::TXTTableWriter::DOUBLE);
-      //   }
-      // }
       if (_acceleration) {
         _iterationsWriter->addData("QNColumns", io::TXTTableWriter::INT);
         _iterationsWriter->addData("DeletedQNColumns", io::TXTTableWriter::INT);
