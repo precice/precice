@@ -5,7 +5,7 @@ target_sources(testprecice
     PRIVATE
     tests/serial/global-data/Explicit.cpp
     tests/serial/global-data/ExplicitWithDirectMeshAccess.cpp
-    tests/serial/global-data/Implicit.cpp
+    tests/serial/global-data/ImplicitWithMeshData.cpp
     tests/parallel/CouplingOnLine.cpp
     tests/parallel/ExportTimeseries.cpp
     tests/parallel/GlobalRBFPartitioning.cpp
