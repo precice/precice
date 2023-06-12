@@ -342,6 +342,8 @@ private:
   /// Initialize Events if required
   void initializeEvents();
 
+  /// Initialize Ginkgo if required
+  void initializeGinkgo();
   /// @}
 };
 

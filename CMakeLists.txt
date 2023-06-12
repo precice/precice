@@ -437,7 +437,9 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
 
   ginkgo_enable_kokkos_language()
 
-  ginkgo_add_kokkos_library(preciceCore_ginkgo src/mapping/device/GinkgoRBFKernels.cpp)
+  ginkgo_add_kokkos_library(preciceCore_ginkgo
+          src/mapping/device/GinkgoRBFKernels.cpp
+          src/utils/Ginkgo.cpp)
   target_link_libraries(preciceCore_ginkgo PRIVATE preciceCore)
   target_compile_definitions(preciceCore_ginkgo PUBLIC EIGEN_NO_CUDA)
   set_target_properties(preciceCore_ginkgo PROPERTIES POSITION_INDEPENDENT_CODE ON)
