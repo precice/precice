@@ -52,7 +52,7 @@ ParticipantConfiguration::ParticipantConfiguration(
   auto attrName = XMLAttribute<std::string>(ATTR_NAME)
                       .setDocumentation(
                           "Name of the participant. Has to match the name given on construction "
-                          "of the precice::SolverInterface object used by the participant.");
+                          "of the precice::Participant object used by the participant.");
   tag.addAttribute(attrName);
 
   XMLTag tagWriteData(*this, TAG_WRITE, XMLTag::OCCUR_ARBITRARY);
