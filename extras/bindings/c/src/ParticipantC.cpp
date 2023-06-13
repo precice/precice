@@ -293,7 +293,7 @@ int precicec_requiresGradientDataFor(const char *meshName,
   return 0;
 }
 
-void precicec_writeBlockVectorGradientData(
+void precicec_writeGradientData(
     const char *  meshName,
     const char *  dataName,
     int           size,
