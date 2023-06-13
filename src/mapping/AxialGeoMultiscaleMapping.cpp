@@ -1,9 +1,7 @@
 #include "AxialGeoMultiscaleMapping.hpp"
 #include "mesh/Mesh.hpp"
 
-namespace precice {
-
-namespace mapping {
+namespace precice::mapping {
 
 AxialGeoMultiscaleMapping::AxialGeoMultiscaleMapping(
     Constraint     constraint,
@@ -145,5 +143,4 @@ std::string AxialGeoMultiscaleMapping::getName() const
   return "axial-geomultiscale";
 }
 
-} // namespace mapping
-} // namespace precice
+} // namespace precice::mapping

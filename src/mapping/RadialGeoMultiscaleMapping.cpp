@@ -1,9 +1,7 @@
 #include "RadialGeoMultiscaleMapping.hpp"
 #include "mesh/Mesh.hpp"
 
-namespace precice {
-
-namespace mapping {
+namespace precice::mapping {
 
 RadialGeoMultiscaleMapping::RadialGeoMultiscaleMapping(
     Constraint     constraint,
@@ -172,5 +170,4 @@ std::string RadialGeoMultiscaleMapping::getName() const
   return "radial-geomultiscale";
 }
 
-} // namespace mapping
-} // namespace precice
+} // namespace precice::mapping
