@@ -80,7 +80,7 @@ void AxialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID outputD
       3D vertices are assigned a value based on distance from the 1D vertex.
       Currently, a Hagen-Poiseuille profile determines the velocity value.
     */
-    PRECICE_ASSERT(inputValues.size() == 1);
+    // PRECICE_ASSERT(inputValues.size() == 1);
     PRECICE_ASSERT(input()->vertices().size() == 1);
     mesh::Vertex &v0      = input()->vertices()[0];
     size_t const  outSize = output()->vertices().size();
@@ -92,7 +92,7 @@ void AxialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID outputD
       double distance = difference.norm() / _radius;
       PRECICE_CHECK(distance <= 1.05, "Output mesh has vertices that do not coincide with the geometric multiscale interface defined by the input mesh. Ratio of vertex distance to radius is {}.", distance);
       PRECICE_ASSERT(static_cast<int>((i * outValueDimensions) + effectiveCoordinate) < outputValues.size(), ((i * outValueDimensions) + effectiveCoordinate), outputValues.size())
-      outputValues((i * outValueDimensions) + effectiveCoordinate) = 2 * inputValues(0) * (1 - distance * distance);
+      outputValues((i * outValueDimensions) + effectiveCoordinate) = 2 * inputValues(effectiveCoordinate) * (1 - distance * distance);
     }
   } else {
     PRECICE_ASSERT(_type == COLLECT);
@@ -101,14 +101,14 @@ void AxialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID outputD
       but only of the effectiveCoordinate component of the velocity vector.
     */
     PRECICE_ASSERT(output()->vertices().size() == 1);
-    PRECICE_ASSERT(outputValues.size() == 1);
-    outputValues(0)     = 0;
-    size_t const inSize = input()->vertices().size();
+    //PRECICE_ASSERT(outputValues.size() == 1);
+    outputValues(effectiveCoordinate) = 0;
+    size_t const inSize               = input()->vertices().size();
     for (size_t i = 0; i < inSize; i++) {
       PRECICE_ASSERT(static_cast<int>((i * inValueDimensions) + effectiveCoordinate) < inputValues.size(), ((i * inValueDimensions) + effectiveCoordinate), inputValues.size())
-      outputValues(0) += inputValues((i * inValueDimensions) + effectiveCoordinate);
+      outputValues(effectiveCoordinate) += inputValues((i * inValueDimensions) + effectiveCoordinate);
     }
-    outputValues(0) = outputValues(0) / inSize;
+    outputValues(effectiveCoordinate) = outputValues(effectiveCoordinate) / inSize;
   }
 }
 
