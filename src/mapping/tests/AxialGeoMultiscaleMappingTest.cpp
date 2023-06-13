@@ -33,12 +33,12 @@ BOOST_AUTO_TEST_CASE(testConsistentSpreadX)
 
   // Create mesh to map from
   PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
-  PtrData inData   = inMesh->createData("InData", 1, 0_dataID);
+  PtrData inData   = inMesh->createData("InData", 3, 0_dataID);
   int     inDataID = inData->getID();
   inMesh->createVertex(Eigen::Vector3d::Constant(0.0));
   inMesh->allocateDataValues();
   Eigen::VectorXd &inValues = inData->values();
-  inValues << 2.0;
+  inValues << 2.0, 0.0, 0.0;
 
   double radius = 1.0; // radius of the "tube" from or to which the data is mapped, i.e., radius of the circular interface between the two participants
 
@@ -84,12 +84,12 @@ BOOST_AUTO_TEST_CASE(testConsistentSpreadZ)
 
   // Create mesh to map from
   PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
-  PtrData inData   = inMesh->createData("InData", 1, 0_dataID);
+  PtrData inData   = inMesh->createData("InData", 3, 0_dataID);
   int     inDataID = inData->getID();
   inMesh->createVertex(Eigen::Vector3d::Constant(0.0));
   inMesh->allocateDataValues();
   Eigen::VectorXd &inValues = inData->values();
-  inValues << 2.0;
+  inValues << 0.0, 0.0, 2.0;
 
   double radius = 1.0; // radius of the "tube" from or to which the data is mapped, i.e., radius of the circular interface between the two participants
 
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(testConsistentCollectX)
 
   // Create mesh to map to
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  PtrData outData   = outMesh->createData("OutData", 1, 2_dataID);
+  PtrData outData   = outMesh->createData("OutData", 3, 2_dataID);
   int     outDataID = outData->getID();
   outMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // equal to center of incoming mesh
   outMesh->allocateDataValues();
@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE(testConsistentCollectZ)
 
   // Create mesh to map to
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  PtrData outData   = outMesh->createData("OutData", 1, 2_dataID);
+  PtrData outData   = outMesh->createData("OutData", 3, 2_dataID);
   int     outDataID = outData->getID();
   outMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // equal to center of incoming mesh
   outMesh->allocateDataValues();
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(testConsistentCollectZ)
 
   // Check if data is averaged at center node
   BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(outValues(0) == (1 / 3.0) * (inValues(2) + inValues(5) + inValues(8)));
+  BOOST_TEST(outValues(2) == (1 / 3.0) * (inValues(2) + inValues(5) + inValues(8)));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
