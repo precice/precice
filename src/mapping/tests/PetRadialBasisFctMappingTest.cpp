@@ -151,19 +151,31 @@ void testDistributed(const TestContext &    context,
   mapping.computeMapping();
   BOOST_TEST(mapping.hasComputedMapping() == true);
   Eigen::VectorXd guess;
-  mapping.map(inDataID, outDataID, guess);
-
-  int index = 0;
-  for (auto &referenceVertex : referenceSpec) {
-    if (referenceVertex.first == context.rank or referenceVertex.first == -1) {
-      for (int dim = 0; dim < valueDimension; ++dim) {
-        BOOST_TEST_INFO("Index of vertex: " << index << " - Dimension: " << dim);
-        BOOST_TEST(outData->values()(index * valueDimension + dim) == referenceVertex.second.at(dim));
-      }
-      ++index;
+  // Rerun the map and see if a different initial guess influences the result
+  // Run 2 uses last solution as initial guess
+  // Run 3 uses a zero initial guess
+  // Run 4 uses a random initial guess
+  for (auto run : {1, 2, 3, 4}) {
+    if (run == 3) {
+      guess.setZero();
     }
+    if (run == 4) {
+      guess.setRandom();
+    }
+    mapping.map(inDataID, outDataID, guess);
+
+    int index = 0;
+    for (auto &referenceVertex : referenceSpec) {
+      if (referenceVertex.first == context.rank or referenceVertex.first == -1) {
+        for (int dim = 0; dim < valueDimension; ++dim) {
+          BOOST_TEST_INFO("Index of vertex: " << index << " - Dimension: " << dim);
+          BOOST_TEST(outData->values()(index * valueDimension + dim) == referenceVertex.second.at(dim));
+        }
+        ++index;
+      }
+    }
+    BOOST_TEST(outData->values().size() == index * valueDimension);
   }
-  BOOST_TEST(outData->values().size() == index * valueDimension);
 }
 
 /// Test with a homogeneous distribution of mesh among ranks
