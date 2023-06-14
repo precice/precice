@@ -88,7 +88,7 @@ int CouplingData::meshDimensions() const
 
 void CouplingData::storeIteration()
 {
-  const auto stamples = this->stamples();
+  const auto &stamples = this->stamples();
   PRECICE_ASSERT(stamples.size() > 0);
   this->sample()     = stamples.back().sample;
   _previousIteration = this->sample();
