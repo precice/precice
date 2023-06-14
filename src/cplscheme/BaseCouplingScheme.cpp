@@ -102,7 +102,7 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
   PRECICE_ASSERT(m2n->isConnected());
 
   for (const auto &data : sendData | boost::adaptors::map_values) {
-    const auto stamples = data->stamples();
+    const auto &stamples = data->stamples();
     PRECICE_ASSERT(stamples.size() > 0);
     data->sample() = stamples.back().sample;
 
@@ -720,7 +720,7 @@ void BaseCouplingScheme::doImplicitStep()
 
       // Load from storage into buffer
       for (auto &data : getAccelerationData() | boost::adaptors::map_values) {
-        const auto stamples = data->stamples();
+        const auto &stamples = data->stamples();
         PRECICE_ASSERT(stamples.size() > 0);
         data->sample() = stamples.back().sample;
       }
