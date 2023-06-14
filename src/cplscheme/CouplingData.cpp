@@ -147,7 +147,7 @@ void CouplingData::moveToNextWindow()
 Eigen::VectorXd CouplingData::getSerializedValues()
 {
   const int nValues    = getSize();
-  int       nTimeSteps = getStoredTimesAscending().size();
+  int       nTimeSteps = timeStepsStorage().nTimes();
 
   if (nTimeSteps == 1) { // special treatment during initialization
     PRECICE_ASSERT(timeStepsStorage().stamples().front().timestamp == time::Storage::WINDOW_START);
@@ -183,7 +183,7 @@ Eigen::VectorXd CouplingData::getSerializedValues()
 Eigen::VectorXd CouplingData::getSerializedGradients()
 {
   const int nValues    = sample().gradients.size();
-  int       nTimeSteps = getStoredTimesAscending().size();
+  int       nTimeSteps = timeStepsStorage().nTimes();
 
   if (nTimeSteps == 1) { // special treatment during initialization
     PRECICE_ASSERT(timeStepsStorage().stamples().front().timestamp == time::Storage::WINDOW_START);

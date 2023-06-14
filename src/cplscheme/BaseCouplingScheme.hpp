@@ -243,7 +243,7 @@ protected:
 
   void sendNumberOfTimeSteps(const m2n::PtrM2N &m2n, const int numberOfTimeSteps);
 
-  void sendTimes(const m2n::PtrM2N &m2n, const Eigen::VectorXd times);
+  void sendTimes(const m2n::PtrM2N &m2n, const Eigen::VectorXd &times);
 
   /**
    * @brief Sends data sendDataIDs given in mapCouplingData with communication.
