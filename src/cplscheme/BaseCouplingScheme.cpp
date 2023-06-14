@@ -126,7 +126,7 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
   for (const auto &data : receiveData | boost::adaptors::map_values) {
 
     int  nTimeSteps     = 2;
-    auto timesAscending = Eigen::VectorXd(nTimeSteps);
+    Eigen::VectorXd timesAscending(nTimeSteps);
     timesAscending << time::Storage::WINDOW_START, time::Storage::WINDOW_END;
     auto serializedValues = Eigen::VectorXd(nTimeSteps * data->getSize());
 
