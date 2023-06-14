@@ -137,13 +137,13 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
       sendTimes(m2n, timesAscending);
     }
 
-    const auto serializedValues = data->getSerializedValues();
+    const Eigen::VectorXd serializedValues = data->getSerializedValues();
 
     // Data is actually only send if size>0, which is checked in the derived classes implementation
     m2n->send(serializedValues, data->getMeshID(), data->getDimensions() * nTimeSteps);
 
     if (data->hasGradient()) {
-      const auto serializedGradients = data->getSerializedGradients();
+      const Eigen::VectorXd serializedGradients = data->getSerializedGradients();
       m2n->send(serializedGradients, data->getMeshID(), data->getDimensions() * data->meshDimensions() * nTimeSteps);
     }
   }
@@ -178,7 +178,7 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
 
     Eigen::VectorXd serializedValues(nTimeSteps * data->getSize());
     PRECICE_ASSERT(nTimeSteps > 0);
-    const auto timesAscending = receiveTimes(m2n, nTimeSteps);
+    const Eigen::VectorXd timesAscending = receiveTimes(m2n, nTimeSteps);
 
     // Data is only received on ranks with size>0, which is checked in the derived class implementation
     m2n->receive(serializedValues, data->getMeshID(), data->getDimensions() * nTimeSteps);
