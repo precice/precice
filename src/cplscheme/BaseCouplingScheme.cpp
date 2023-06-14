@@ -123,7 +123,7 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
     PRECICE_ASSERT(nTimeSteps > 0);
 
     if (nTimeSteps > 1) { // otherwise PRECICE_ASSERT below is triggered during initialization
-      const auto timesAscending = data->getStoredTimesAscending();
+      const Eigen::VectorXd timesAscending = data->timeStepsStorage().getTimes();
       PRECICE_ASSERT(math::equals(timesAscending(0), time::Storage::WINDOW_START), timesAscending(0));                                     // assert that first element is time::Storage::WINDOW_START
       PRECICE_ASSERT(math::equals(timesAscending(nTimeSteps - 1), time::Storage::WINDOW_END), timesAscending(nTimeSteps - 1), nTimeSteps); // assert that last element is time::Storage::WINDOW_END
       sendNumberOfTimeSteps(m2n, nTimeSteps);
