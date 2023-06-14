@@ -88,9 +88,6 @@ public:
   ///  True, if the data values of this CouplingData require to be initialized by this participant.
   const bool requiresInitialization;
 
-  /// returns keys in _timeStepsStorage in ascending order.
-  Eigen::VectorXd getStoredTimesAscending();
-
   /// move to next window and initialize data via extrapolation
   void moveToNextWindow();
 
