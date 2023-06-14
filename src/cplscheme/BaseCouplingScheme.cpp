@@ -116,7 +116,7 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
   PRECICE_ASSERT(m2n->isConnected());
 
   for (const auto &data : sendData | boost::adaptors::map_values) {
-    const auto stamples = data->stamples();
+    const auto &stamples = data->stamples();
     PRECICE_ASSERT(stamples.size() > 0);
 
     auto timesAscending = data->getStoredTimesAscending();
@@ -134,13 +134,13 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
     sendNumberOfTimeSteps(m2n, nTimeSteps);
     sendTimes(m2n, timesAscending);
 
-    auto serializedValues = data->getSerializedValues();
+    const auto serializedValues = data->getSerializedValues();
 
     // Data is actually only send if size>0, which is checked in the derived classes implementation
     m2n->send(serializedValues, data->getMeshID(), data->getDimensions() * nTimeSteps);
 
     if (data->hasGradient()) {
-      auto serializedGradients = data->getSerializedGradients();
+      const auto serializedGradients = data->getSerializedGradients();
       m2n->send(serializedGradients, data->getMeshID(), data->getDimensions() * data->meshDimensions() * nTimeSteps);
     }
   }
@@ -171,11 +171,11 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
   PRECICE_ASSERT(m2n.get());
   PRECICE_ASSERT(m2n->isConnected());
   for (const auto &data : receiveData | boost::adaptors::map_values) {
-    int nTimeSteps = receiveNumberOfTimeSteps(m2n);
+    const int nTimeSteps = receiveNumberOfTimeSteps(m2n);
 
-    auto serializedValues = Eigen::VectorXd(nTimeSteps * data->getSize());
+    Eigen::VectorXd serializedValues(nTimeSteps * data->getSize());
     PRECICE_ASSERT(nTimeSteps > 0);
-    auto timesAscending = receiveTimes(m2n, nTimeSteps);
+    const auto timesAscending = receiveTimes(m2n, nTimeSteps);
 
     // Data is only received on ranks with size>0, which is checked in the derived class implementation
     m2n->receive(serializedValues, data->getMeshID(), data->getDimensions() * nTimeSteps);
@@ -185,7 +185,7 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
     } else {
       PRECICE_ASSERT(data->hasGradient());
 
-      auto serializedGradients = Eigen::VectorXd(nTimeSteps * data->getSize() * data->meshDimensions());
+      Eigen::VectorXd serializedGradients(nTimeSteps * data->getSize() * data->meshDimensions());
       m2n->receive(serializedGradients, data->getMeshID(), data->getDimensions() * data->meshDimensions() * nTimeSteps);
       data->storeFromSerialized(timesAscending, serializedValues, serializedGradients);
     }
@@ -776,7 +776,7 @@ void BaseCouplingScheme::doImplicitStep()
 
       // Load from storage into buffer
       for (auto &data : getAccelerationData() | boost::adaptors::map_values) {
-        const auto stamples = data->stamples();
+        const auto &stamples = data->stamples();
         PRECICE_ASSERT(stamples.size() > 0);
         data->sample() = stamples.back().sample;
       }
