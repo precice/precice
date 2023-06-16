@@ -72,8 +72,7 @@ public:
       int                           maxIterations,
       CouplingMode                  cplMode,
       constants::TimesteppingMethod dtMethod,
-      int                           extrapolationOrder,
-      bool                          useExperimental);
+      int                           extrapolationOrder);
 
   /**
    * @brief Getter for _sendsInitializedData
@@ -242,9 +241,6 @@ protected:
   /// Acceleration method to speedup iteration convergence.
   acceleration::PtrAcceleration _acceleration;
 
-  /// Allows to query whether experimental mode is used or not.
-  const bool _useExperimental;
-
   void sendNumberOfTimeSteps(const m2n::PtrM2N &m2n, const int numberOfTimeSteps);
 
   void sendTimes(const m2n::PtrM2N &m2n, const Eigen::VectorXd &times);
@@ -284,9 +280,10 @@ protected:
    * @param data data the CouplingData is associated with
    * @param mesh mesh the CouplingData is associated with
    * @param requiresInitialization true, if CouplingData requires initialization
+   * @param exchangeSubsteps true, if CouplingData exchanges all substeps in send/recv
    * @return PtrCouplingData pointer to CouplingData owned by the CouplingScheme
    */
-  PtrCouplingData addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization);
+  PtrCouplingData addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization, bool exchangeSubsteps);
 
   /**
    * @brief Function to determine whether coupling scheme is an explicit coupling scheme

@@ -99,11 +99,10 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   meshConfig.addMesh(mesh);
 
   // Create all parameters necessary to create a ParallelImplicitCouplingScheme object
-  double       maxTime         = 1.0;
-  int          maxTimeWindows  = 3;
-  const double timeWindowSize  = 0.1;
-  const double timeStepSize    = timeWindowSize; // solver is not subcycling
-  bool         useExperimental = false;
+  double       maxTime        = 1.0;
+  int          maxTimeWindows = 3;
+  const double timeWindowSize = 0.1;
+  const double timeStepSize   = timeWindowSize; // solver is not subcycling
   std::string  nameParticipant0("Participant0");
   std::string  nameParticipant1("Participant1");
   int          sendDataIndex              = -1;
@@ -123,12 +122,12 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   // Create the coupling scheme object
   ParallelCouplingScheme cplScheme(
       maxTime, maxTimeWindows, timeWindowSize, 16, nameParticipant0, nameParticipant1,
-      context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, useExperimental, 100, extrapolationOrder);
+      context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, 100, extrapolationOrder);
 
   using Fixture = testing::ParallelCouplingSchemeFixture;
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, dataRequiresInitialization);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, dataRequiresInitialization, true);
   CouplingData *sendCouplingData = Fixture::getSendData(cplScheme, sendDataIndex);
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, dataRequiresInitialization);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, dataRequiresInitialization, true);
   CouplingData *receiveCouplingData = Fixture::getReceiveData(cplScheme, receiveDataIndex);
   cplScheme.determineInitialDataExchange();
 
@@ -227,13 +226,12 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   mesh->allocateDataValues();
   BOOST_TEST(data->values().size() == 1);
 
-  const double          maxTime         = CouplingScheme::UNDEFINED_MAX_TIME;
-  const int             maxTimeWindows  = 1;
-  const double          timeWindowSize  = 1.0;
-  bool                  useExperimental = false;
-  std::string           first           = "First";
-  std::string           second          = "Second";
-  std::string           accessor        = second;
+  const double          maxTime        = CouplingScheme::UNDEFINED_MAX_TIME;
+  const int             maxTimeWindows = 1;
+  const double          timeWindowSize = 1.0;
+  std::string           first          = "First";
+  std::string           second         = "Second";
+  std::string           accessor       = second;
   com::PtrCommunication com(new com::MPIDirectCommunication());
   m2n::PtrM2N           globalCom(new m2n::M2N(com, m2n::DistributedComFactory::SharedPointer()));
   const int             maxIterations      = 1;
@@ -242,11 +240,11 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   // Test first order extrapolation
   ParallelCouplingScheme scheme(maxTime, maxTimeWindows, timeWindowSize, 16, first, second,
                                 accessor, globalCom, constants::FIXED_TIME_WINDOW_SIZE,
-                                BaseCouplingScheme::Implicit, useExperimental, maxIterations, extrapolationOrder);
+                                BaseCouplingScheme::Implicit, maxIterations, extrapolationOrder);
 
   using Fixture = testing::ParallelCouplingSchemeFixture;
 
-  scheme.addDataToSend(data, mesh, true);
+  scheme.addDataToSend(data, mesh, true, true);
   Fixture::initializeAcceleration(scheme);
   CouplingData *cplData = Fixture::getSendData(scheme, dataID);
   BOOST_CHECK(cplData); // no nullptr
@@ -344,7 +342,6 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
   const int    maxIterations      = 3;
   const int    extrapolationOrder = 1;
   const double timeStepSize       = timeWindowSize; // solver is not subcycling
-  bool         useExperimental    = false;
   std::string  first("Participant0");
   std::string  second("Participant1");
   int          sendDataIndex        = -1;
@@ -368,9 +365,9 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
   cplscheme::ParallelCouplingScheme cplScheme(
       maxTime, maxTimeWindows, timeWindowSize, 16, first, second,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
-      BaseCouplingScheme::Implicit, useExperimental, maxIterations, extrapolationOrder);
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
+      BaseCouplingScheme::Implicit, maxIterations, extrapolationOrder);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, true);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, true);
   cplScheme.determineInitialDataExchange();
 
   // Add acceleration
@@ -566,7 +563,6 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
   const int    maxIterations      = 3;
   const int    extrapolationOrder = 1;
   const double timeStepSize       = timeWindowSize; // solver is not subcycling
-  bool         useExperimental    = false;
   std::string  first("Participant0");
   std::string  second("Participant1");
   int          sendDataIndex        = -1;
@@ -590,9 +586,9 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
   cplscheme::ParallelCouplingScheme cplScheme(
       maxTime, maxTimeWindows, timeWindowSize, 16, first, second,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
-      BaseCouplingScheme::Implicit, useExperimental, maxIterations, extrapolationOrder);
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, context.isNamed(second));
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, context.isNamed(first));
+      BaseCouplingScheme::Implicit, maxIterations, extrapolationOrder);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, context.isNamed(second), true);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, context.isNamed(first), true);
   cplScheme.determineInitialDataExchange();
 
   // Add acceleration

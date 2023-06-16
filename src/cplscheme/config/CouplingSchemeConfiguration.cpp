@@ -60,6 +60,7 @@ CouplingSchemeConfiguration::CouplingSchemeConfiguration(
       ATTR_MESH("mesh"),
       ATTR_PARTICIPANT("participant"),
       ATTR_INITIALIZE("initialize"),
+      ATTR_EXCHANGE_SUBSTEPS("substeps"),
       ATTR_TYPE("type"),
       ATTR_FIRST("first"),
       ATTR_SECOND("second"),
@@ -264,6 +265,7 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     std::string nameParticipantFrom = tag.getStringAttributeValue(ATTR_FROM);
     std::string nameParticipantTo   = tag.getStringAttributeValue(ATTR_TO);
     bool        initialize          = tag.getBooleanAttributeValue(ATTR_INITIALIZE);
+    bool        exchangeSubsteps    = tag.getBooleanAttributeValue(ATTR_EXCHANGE_SUBSTEPS);
 
     PRECICE_CHECK(_meshConfig->hasMeshName(nameMesh) && _meshConfig->getMesh(nameMesh)->hasDataName(nameData),
                   "Mesh \"{}\" with data \"{}\" not defined. "
@@ -276,7 +278,7 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     mesh::PtrData exchangeData = exchangeMesh->data(nameData);
     PRECICE_ASSERT(exchangeData);
 
-    Config::Exchange newExchange{exchangeData, exchangeMesh, nameParticipantFrom, nameParticipantTo, initialize};
+    Config::Exchange newExchange{exchangeData, exchangeMesh, nameParticipantFrom, nameParticipantTo, initialize, exchangeSubsteps};
     PRECICE_CHECK(!_config.hasExchange(newExchange),
                   R"(Data "{}" of mesh "{}" cannot be exchanged multiple times between participants "{}" and "{}". Please remove one of the exchange tags.)",
                   nameData, nameMesh, nameParticipantFrom, nameParticipantTo);
@@ -562,6 +564,8 @@ void CouplingSchemeConfiguration::addTagExchange(
   tagExchange.addAttribute(participantTo);
   auto attrInitialize = XMLAttribute<bool>(ATTR_INITIALIZE, false).setDocumentation("Should this data be initialized during initialize?");
   tagExchange.addAttribute(attrInitialize);
+  auto attrExchangeSubsteps = XMLAttribute<bool>(ATTR_EXCHANGE_SUBSTEPS, true).setDocumentation("Should this data exchange substeps?");
+  tagExchange.addAttribute(attrExchangeSubsteps);
   tag.addSubtag(tagExchange);
 }
 
@@ -812,7 +816,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialExplicitCouplingSchem
   SerialCouplingScheme *scheme = new SerialCouplingScheme(
       _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
       _config.validDigits, _config.participants[0], _config.participants[1],
-      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit, _experimental);
+      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit);
 
   addDataToBeExchanged(*scheme, accessor);
 
@@ -828,7 +832,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelExplicitCouplingSch
   ParallelCouplingScheme *scheme = new ParallelCouplingScheme(
       _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
       _config.validDigits, _config.participants[0], _config.participants[1],
-      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit, _experimental);
+      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit);
 
   addDataToBeExchanged(*scheme, accessor);
 
@@ -848,7 +852,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
   SerialCouplingScheme *scheme = new SerialCouplingScheme(
       _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
       _config.validDigits, first, second,
-      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _experimental, _config.maxIterations, _config.extrapolationOrder);
+      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations, _config.extrapolationOrder);
 
   addDataToBeExchanged(*scheme, accessor);
   PRECICE_CHECK(scheme->hasAnySendData(),
@@ -886,7 +890,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingSch
   ParallelCouplingScheme *scheme = new ParallelCouplingScheme(
       _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
       _config.validDigits, _config.participants[0], _config.participants[1],
-      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _experimental, _config.maxIterations, _config.extrapolationOrder);
+      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations, _config.extrapolationOrder);
 
   addDataToBeExchanged(*scheme, accessor);
   PRECICE_CHECK(scheme->hasAnySendData(),
@@ -924,7 +928,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
   scheme = new MultiCouplingScheme(
       _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
       _config.validDigits, accessor, m2ns, _config.dtMethod,
-      _config.controller, _experimental, _config.maxIterations, _config.extrapolationOrder);
+      _config.controller, _config.maxIterations, _config.extrapolationOrder);
 
   MultiCouplingScheme *castedScheme = dynamic_cast<MultiCouplingScheme *>(scheme);
   PRECICE_ASSERT(castedScheme, "The dynamic cast of CouplingScheme failed.");
@@ -1000,16 +1004,19 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
                   to, dataName, meshName, from, to);
 
     const bool requiresInitialization = exchange.requiresInitialization;
+
     PRECICE_CHECK(
         !(requiresInitialization && _participantConfig->getParticipant(from)->isDirectAccessAllowed(exchange.mesh->getName())),
         "Participant \"{}\" cannot initialize data of the directly-accessed mesh \"{}\" from the participant\"{}\". "
         "Either disable the initialization in the <exchange /> tag or use a locally provided mesh instead.",
         from, meshName, to);
 
+    const bool exchangeSubsteps = exchange.exchangeSubsteps;
+
     if (from == accessor) {
-      scheme.addDataToSend(exchange.data, exchange.mesh, requiresInitialization);
+      scheme.addDataToSend(exchange.data, exchange.mesh, requiresInitialization, exchangeSubsteps);
     } else if (to == accessor) {
-      scheme.addDataToReceive(exchange.data, exchange.mesh, requiresInitialization);
+      scheme.addDataToReceive(exchange.data, exchange.mesh, requiresInitialization, exchangeSubsteps);
     } else {
       PRECICE_ASSERT(_config.type == VALUE_MULTI);
     }
@@ -1040,11 +1047,13 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
     PRECICE_CHECK((utils::contained(to, _config.participants) || to == _config.controller),
                   "Participant \"{}\" is not configured for coupling scheme", to);
 
-    const bool initialize = exchange.requiresInitialization;
+    const bool initialize       = exchange.requiresInitialization;
+    const bool exchangeSubsteps = exchange.exchangeSubsteps;
+
     if (from == accessor) {
-      scheme.addDataToSend(exchange.data, exchange.mesh, initialize, to);
+      scheme.addDataToSend(exchange.data, exchange.mesh, initialize, exchangeSubsteps, to);
     } else if (to == accessor) {
-      scheme.addDataToReceive(exchange.data, exchange.mesh, initialize, from);
+      scheme.addDataToReceive(exchange.data, exchange.mesh, initialize, exchangeSubsteps, from);
     }
   }
   scheme.determineInitialDataExchange();
