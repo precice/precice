@@ -225,47 +225,35 @@ void CouplingSchemeConfiguration::xmlTagCallback(
   } else if (tag.getName() == TAG_ABS_CONV_MEASURE) {
     const std::string &dataName = tag.getStringAttributeValue(ATTR_DATA);
     const std::string &meshName = tag.getStringAttributeValue(ATTR_MESH);
-    PRECICE_CHECK(not meshName.empty(), "Convergence measures for global data are not yet supported. "
-                                        "Please remove the convergence-measure tag corresponding to \"{}\" in the configuration file.",
-                  dataName);
-    double limit    = tag.getDoubleAttributeValue(ATTR_LIMIT);
-    bool   suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
-    bool   strict   = tag.getBooleanAttributeValue(ATTR_STRICT);
+    double             limit    = tag.getDoubleAttributeValue(ATTR_LIMIT);
+    bool               suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
+    bool               strict   = tag.getBooleanAttributeValue(ATTR_STRICT);
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
-    addAbsoluteConvergenceMeasure(dataName, limit, suffices, strict, meshName);
+    addAbsoluteConvergenceMeasure(dataName, meshName, limit, suffices, strict);
   } else if (tag.getName() == TAG_REL_CONV_MEASURE) {
     const std::string &dataName = tag.getStringAttributeValue(ATTR_DATA);
     const std::string &meshName = tag.getStringAttributeValue(ATTR_MESH);
-    PRECICE_CHECK(not meshName.empty(), "Convergence measures for global data are not yet supported. "
-                                        "Please remove the convergence-measure tag corresponding to \"{}\" in the configuration file.",
-                  dataName);
-    double limit    = tag.getDoubleAttributeValue(ATTR_LIMIT);
-    bool   suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
-    bool   strict   = tag.getBooleanAttributeValue(ATTR_STRICT);
+    double             limit    = tag.getDoubleAttributeValue(ATTR_LIMIT);
+    bool               suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
+    bool               strict   = tag.getBooleanAttributeValue(ATTR_STRICT);
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
-    addRelativeConvergenceMeasure(dataName, limit, suffices, strict, meshName);
+    addRelativeConvergenceMeasure(dataName, meshName, limit, suffices, strict);
   } else if (tag.getName() == TAG_RES_REL_CONV_MEASURE) {
     const std::string &dataName = tag.getStringAttributeValue(ATTR_DATA);
     const std::string &meshName = tag.getStringAttributeValue(ATTR_MESH);
-    PRECICE_CHECK(not meshName.empty(), "Convergence measures for global data are not yet supported. "
-                                        "Please remove the convergence-measure tag corresponding to \"{}\" in the configuration file.",
-                  dataName);
-    double limit    = tag.getDoubleAttributeValue(ATTR_LIMIT);
-    bool   suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
-    bool   strict   = tag.getBooleanAttributeValue(ATTR_STRICT);
+    double             limit    = tag.getDoubleAttributeValue(ATTR_LIMIT);
+    bool               suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
+    bool               strict   = tag.getBooleanAttributeValue(ATTR_STRICT);
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
-    addResidualRelativeConvergenceMeasure(dataName, limit, suffices, strict, meshName);
+    addResidualRelativeConvergenceMeasure(dataName, meshName, limit, suffices, strict);
   } else if (tag.getName() == TAG_MIN_ITER_CONV_MEASURE) {
-    const std::string &dataName = tag.getStringAttributeValue(ATTR_DATA);
-    const std::string &meshName = tag.getStringAttributeValue(ATTR_MESH);
-    PRECICE_CHECK(not meshName.empty(), "Convergence measures for global data are not yet supported. "
-                                        "Please remove the convergence-measure tag corresponding to \"{}\" in the configuration file.",
-                  dataName);
-    int  minIterations = tag.getIntAttributeValue(ATTR_MIN_ITERATIONS);
-    bool suffices      = tag.getBooleanAttributeValue(ATTR_SUFFICES);
-    bool strict        = tag.getBooleanAttributeValue(ATTR_STRICT);
+    const std::string &dataName      = tag.getStringAttributeValue(ATTR_DATA);
+    const std::string &meshName      = tag.getStringAttributeValue(ATTR_MESH);
+    int                minIterations = tag.getIntAttributeValue(ATTR_MIN_ITERATIONS);
+    bool               suffices      = tag.getBooleanAttributeValue(ATTR_SUFFICES);
+    bool               strict        = tag.getBooleanAttributeValue(ATTR_STRICT);
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
-    addMinIterationConvergenceMeasure(dataName, minIterations, suffices, strict, meshName);
+    addMinIterationConvergenceMeasure(dataName, meshName, minIterations, suffices, strict);
 
   } else if (tag.getName() == TAG_EXCHANGE) {
     std::string nameData            = tag.getStringAttributeValue(ATTR_DATA);
@@ -630,7 +618,7 @@ void CouplingSchemeConfiguration::addBaseAttributesTagConvergenceMeasure(
   auto attrData = XMLAttribute<std::string>(ATTR_DATA)
                       .setDocumentation("Data to be measured.");
   tag.addAttribute(attrData);
-  auto attrMesh = XMLAttribute<std::string>(ATTR_MESH, "")
+  auto attrMesh = XMLAttribute<std::string>(ATTR_MESH)
                       .setDocumentation("Mesh holding the data.");
   tag.addAttribute(attrMesh);
   auto attrSuffices = makeXMLAttribute(ATTR_SUFFICES, false)
@@ -678,10 +666,10 @@ void CouplingSchemeConfiguration::addTagAcceleration(
 
 void CouplingSchemeConfiguration::addAbsoluteConvergenceMeasure(
     const std::string &dataName,
+    const std::string &meshName,
     double             limit,
     bool               suffices,
-    bool               strict,
-    const std::string &meshName)
+    bool               strict)
 {
   PRECICE_TRACE();
   PRECICE_CHECK(math::greater(limit, 0.0),
@@ -702,10 +690,10 @@ void CouplingSchemeConfiguration::addAbsoluteConvergenceMeasure(
 
 void CouplingSchemeConfiguration::addRelativeConvergenceMeasure(
     const std::string &dataName,
+    const std::string &meshName,
     double             limit,
     bool               suffices,
-    bool               strict,
-    const std::string &meshName)
+    bool               strict)
 {
   PRECICE_TRACE();
   PRECICE_CHECK(math::greater(limit, 0.0) && math::greaterEquals(1.0, limit),
@@ -732,10 +720,10 @@ void CouplingSchemeConfiguration::addRelativeConvergenceMeasure(
 
 void CouplingSchemeConfiguration::addResidualRelativeConvergenceMeasure(
     const std::string &dataName,
+    const std::string &meshName,
     double             limit,
     bool               suffices,
-    bool               strict,
-    const std::string &meshName)
+    bool               strict)
 {
   PRECICE_TRACE();
   PRECICE_CHECK(math::greater(limit, 0.0) && math::greaterEquals(1.0, limit),
@@ -762,10 +750,10 @@ void CouplingSchemeConfiguration::addResidualRelativeConvergenceMeasure(
 
 void CouplingSchemeConfiguration::addMinIterationConvergenceMeasure(
     const std::string &dataName,
+    const std::string &meshName,
     int                minIterations,
     bool               suffices,
-    bool               strict,
-    const std::string &meshName)
+    bool               strict)
 {
   PRECICE_TRACE();
   impl::PtrConvergenceMeasure measure(new impl::MinIterationConvergenceMeasure(minIterations));

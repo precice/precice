@@ -224,31 +224,31 @@ private:
 
   void addAbsoluteConvergenceMeasure(
       const std::string &dataName,
+      const std::string &meshName,
       double             limit,
       bool               suffices,
-      bool               strict,
-      const std::string &meshName = "");
+      bool               strict);
 
   void addRelativeConvergenceMeasure(
       const std::string &dataName,
+      const std::string &meshName,
       double             limit,
       bool               suffices,
-      bool               strict,
-      const std::string &meshName = "");
+      bool               strict);
 
   void addResidualRelativeConvergenceMeasure(
       const std::string &dataName,
+      const std::string &meshName,
       double             limit,
       bool               suffices,
-      bool               strict,
-      const std::string &meshName = "");
+      bool               strict);
 
   void addMinIterationConvergenceMeasure(
       const std::string &dataName,
+      const std::string &meshName,
       int                minIterations,
       bool               suffices,
-      bool               strict,
-      const std::string &meshName = "");
+      bool               strict);
 
   mesh::PtrData getData(
       const std::string &dataName,
