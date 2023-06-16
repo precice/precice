@@ -44,7 +44,7 @@ void SerializedStamples::allocate(const cplscheme::PtrCouplingData data)
   _values = Eigen::VectorXd(_timeSteps * data->getSize());
 
   if (data->hasGradient()) {
-    _gradients = Eigen::VectorXd(_timeSteps * data->getSize() * data->meshDimensions());
+    _gradients = Eigen::VectorXd(_timeSteps * data->getSize() * data->meshDimensions() * data->getDimensions());
   }
 }
 
@@ -77,7 +77,7 @@ void SerializedStamples::serializeGradients(const cplscheme::PtrCouplingData dat
   int         timeId   = 0;
   PRECICE_ASSERT(atBeginn.timestamp == time::Storage::WINDOW_START, atBeginn.timestamp);
   const auto sliceBeginn = Eigen::VectorXd::Map(atBeginn.sample.gradients.data(), atBeginn.sample.gradients.rows() * atBeginn.sample.gradients.cols());
-  PRECICE_ASSERT(data->getSize() * data->meshDimensions() == sliceBeginn.size());
+  PRECICE_ASSERT(data->getSize() * data->meshDimensions() * data->getDimensions() == sliceBeginn.size(), data->getSize(), data->meshDimensions(), data->getDimensions(), sliceBeginn.size());
   for (int valueId = 0; valueId < sliceBeginn.size(); valueId++) {
     _gradients(valueId * _timeSteps) = sliceBeginn(valueId);
   }
@@ -90,7 +90,7 @@ void SerializedStamples::serializeGradients(const cplscheme::PtrCouplingData dat
     PRECICE_ASSERT(math::equals(atEnd.timestamp, time::Storage::WINDOW_END), atEnd.timestamp);
   }
   const auto sliceEnd = Eigen::VectorXd::Map(atEnd.sample.gradients.data(), atEnd.sample.gradients.rows() * atEnd.sample.gradients.cols());
-  PRECICE_ASSERT(data->getSize() * data->meshDimensions() == sliceEnd.size());
+  PRECICE_ASSERT(data->getSize() * data->meshDimensions() * data->getDimensions() == sliceEnd.size(), data->getSize(), data->meshDimensions(), data->getDimensions(), sliceEnd.size());
   for (int valueId = 0; valueId < data->getSize() * data->meshDimensions(); valueId++) {
     _gradients(valueId * _timeSteps + timeId) = sliceEnd(valueId);
   }
@@ -144,6 +144,11 @@ const Eigen::VectorXd &SerializedStamples::gradients() const
 Eigen::VectorXd &SerializedStamples::gradients()
 {
   return _gradients;
+}
+
+int SerializedStamples::nTimeSteps() const
+{
+  return _timeSteps;
 }
 
 } // namespace precice::com::serialize

@@ -66,6 +66,13 @@ public:
    */
   Eigen::VectorXd &gradients();
 
+  /**
+ * @brief Returns number of timeSteps
+ *
+ * @return int number of time steps
+ */
+  int nTimeSteps() const;
+
 private:
   SerializedStamples() = default;
 
