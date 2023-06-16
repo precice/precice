@@ -11,6 +11,7 @@
 
 #include "BaseCouplingScheme.hpp"
 #include "acceleration/Acceleration.hpp"
+#include "com/SerializedStamples.hpp"
 #include "cplscheme/Constants.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "cplscheme/CouplingScheme.hpp"
@@ -138,14 +139,13 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
         sendTimes(m2n, timesAscending);
       }
 
-      const Eigen::VectorXd serializedValues = data->getSerializedValues();
+      const auto serialized = com::serialize::SerializedStamples::serialize(data);
 
       // Data is actually only send if size>0, which is checked in the derived classes implementation
-      m2n->send(serializedValues, data->getMeshID(), data->getDimensions() * nTimeSteps);
+      m2n->send(serialized.values(), data->getMeshID(), data->getDimensions() * serialized.nTimeSteps());
 
       if (data->hasGradient()) {
-        const Eigen::VectorXd serializedGradients = data->getSerializedGradients();
-        m2n->send(serializedGradients, data->getMeshID(), data->getDimensions() * data->meshDimensions() * nTimeSteps);
+        m2n->send(serialized.gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions() * serialized.nTimeSteps());
       }
     } else {
       data->sample() = stamples.back().sample;
@@ -195,18 +195,16 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
       PRECICE_ASSERT(nTimeSteps > 0);
       const Eigen::VectorXd timesAscending = receiveTimes(m2n, nTimeSteps);
 
+      auto serialized = com::serialize::SerializedStamples::empty(timesAscending, data);
+
       // Data is only received on ranks with size>0, which is checked in the derived class implementation
-      m2n->receive(serializedValues, data->getMeshID(), data->getDimensions() * nTimeSteps);
+      m2n->receive(serialized.values(), data->getMeshID(), data->getDimensions() * nTimeSteps);
 
-      if (not data->hasGradient()) {
-        data->storeFromSerialized(timesAscending, serializedValues);
-      } else {
-        PRECICE_ASSERT(data->hasGradient());
-
-        Eigen::VectorXd serializedGradients(nTimeSteps * data->getSize() * data->meshDimensions());
-        m2n->receive(serializedGradients, data->getMeshID(), data->getDimensions() * data->meshDimensions() * nTimeSteps);
-        data->storeFromSerialized(timesAscending, serializedValues, serializedGradients);
+      if (data->hasGradient()) {
+        m2n->receive(serialized.gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions() * nTimeSteps);
       }
+
+      serialized.deserializeInto(timesAscending, data);
     } else {
       // Data is only received on ranks with size>0, which is checked in the derived class implementation
       m2n->receive(data->values(), data->getMeshID(), data->getDimensions());
