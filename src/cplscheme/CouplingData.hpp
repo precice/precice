@@ -92,41 +92,6 @@ public:
   /// move to next window and initialize data via extrapolation
   void moveToNextWindow();
 
-  /**
-   * @brief Returns the values of all time steps stored in this coupling data in a serialized fashion
-   *
-   * Serialization of the data is performed per mesh node. The dimension of one node is then data dimension (scalar or vector) * number of time steps.
-   *
-   * @return Eigen::VectorXd a vector containing all data for all time steps in serialized fashion.
-   */
-  Eigen::VectorXd getSerializedValues();
-
-  /**
-   * @brief Returns the gradients of all time steps stored in this coupling data in a serialized fashion
-   *
-   * Serialization of the data is performed per mesh node. The dimension of one node is then data dimension (scalar or vector) * space dimension * number of time steps.
-   *
-   * @return Eigen::VectorXd a vector containing all gradient data for all time steps in serialized fashion.
-   */
-  Eigen::VectorXd getSerializedGradients();
-
-  /**
-   * @brief accepts serialized values and stores them in this coupling data
-   *
-   * @param timesAscending times associated with data
-   * @param serializedValues values in serialized form
-   */
-  void storeFromSerialized(Eigen::VectorXd timesAscending, Eigen::VectorXd serializedValues);
-
-  /**
-   * @brief accepts serialized values and gradients and stores them in this coupling data
-   *
-   * @param timesAscending times associated with data
-   * @param serializedValues values in serialized form
-   * @param serializedGradients gradients in serialized form
-   */
-  void storeFromSerialized(Eigen::VectorXd timesAscending, Eigen::VectorXd serializedValues, Eigen::MatrixXd serializedGradients);
-
   bool exchangeSubsteps() const;
 
 private:
