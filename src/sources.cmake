@@ -235,6 +235,7 @@ target_sources(preciceCore
     src/partition/SharedPointer.hpp
     src/precice/Participant.cpp
     src/precice/Participant.hpp
+    src/precice/precice.hpp
     src/precice/Tooling.cpp
     src/precice/Tooling.hpp
     src/precice/config/Configuration.cpp
@@ -334,7 +335,7 @@ target_sources(preciceCore
 
 set_property(TARGET precice PROPERTY PUBLIC_HEADER
     ${PROJECT_BINARY_DIR}/src/precice/Version.h
-    src/precice/Participant.hpp
+    src/precice/precice.hpp
     src/precice/Tooling.hpp
     src/precice/span.hpp
     src/precice/types.hpp

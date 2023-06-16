@@ -3,7 +3,7 @@
 #include "helpers.hpp"
 #include "testing/Testing.hpp"
 
-#include "precice/Participant.hpp"
+#include "precice/precice.hpp"
 
 /**
  * @brief Three solvers are coupled in a fork S2 <-> S1 <-> S3.
