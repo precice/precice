@@ -319,11 +319,10 @@ BOOST_AUTO_TEST_CASE(testSimpleExplicitCoupling)
   mesh->allocateDataValues();
   meshConfig.addMesh(mesh);
 
-  const double maxTime         = 1.0;
-  const int    maxTimeWindows  = 10;
-  const double timeWindowSize  = 0.1;
-  const double timeStepSize    = timeWindowSize; // solver is not subcycling
-  bool         useExperimental = false;
+  const double maxTime        = 1.0;
+  const int    maxTimeWindows = 10;
+  const double timeWindowSize = 0.1;
+  const double timeStepSize   = timeWindowSize; // solver is not subcycling
   std::string  nameParticipant0("Participant0");
   std::string  nameParticipant1("Participant1");
   int          sendDataIndex    = -1;
@@ -339,9 +338,9 @@ BOOST_AUTO_TEST_CASE(testSimpleExplicitCoupling)
   cplscheme::SerialCouplingScheme cplScheme(
       maxTime, maxTimeWindows, timeWindowSize, 12, nameParticipant0,
       nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
-      BaseCouplingScheme::Explicit, useExperimental);
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
+      BaseCouplingScheme::Explicit);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, true);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, true);
   cplScheme.determineInitialDataExchange();
   runSimpleExplicitCoupling(cplScheme, context.name, meshConfig);
 }
@@ -681,11 +680,10 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingWithSubcycling)
   mesh->allocateDataValues();
   meshConfig.addMesh(mesh);
 
-  const double maxTime         = 1.0;
-  const int    maxTimeWindows  = 10;
-  const double timeWindowSize  = 0.1;
-  const double timeStepSize    = timeWindowSize; // solver is not subcycling
-  bool         useExperimental = false;
+  const double maxTime        = 1.0;
+  const int    maxTimeWindows = 10;
+  const double timeWindowSize = 0.1;
+  const double timeStepSize   = timeWindowSize; // solver is not subcycling
   std::string  nameParticipant0("Participant0");
   std::string  nameParticipant1("Participant1");
   int          sendDataIndex    = -1;
@@ -700,9 +698,9 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingWithSubcycling)
   cplscheme::SerialCouplingScheme cplScheme(
       maxTime, maxTimeWindows, timeWindowSize, 12, nameParticipant0,
       nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
-      BaseCouplingScheme::Explicit, useExperimental);
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
+      BaseCouplingScheme::Explicit);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, true);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, true);
   cplScheme.determineInitialDataExchange();
   runExplicitCouplingWithSubcycling(cplScheme, context.name, meshConfig);
 }

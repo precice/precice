@@ -38,8 +38,7 @@ BaseCouplingScheme::BaseCouplingScheme(
     int                           maxIterations,
     CouplingMode                  cplMode,
     constants::TimesteppingMethod dtMethod,
-    int                           extrapolationOrder,
-    bool                          useExperimental)
+    int                           extrapolationOrder)
     : _couplingMode(cplMode),
       _maxTime(maxTime),
       _maxTimeWindows(maxTimeWindows),
@@ -50,7 +49,6 @@ BaseCouplingScheme::BaseCouplingScheme(
       _totalIterations(1),
       _localParticipant(std::move(localParticipant)),
       _extrapolationOrder(extrapolationOrder),
-      _useExperimental(useExperimental),
       _eps(std::pow(10.0, -1 * validDigits))
 {
   PRECICE_ASSERT(not((maxTime != UNDEFINED_MAX_TIME) && (maxTime < 0.0)),
@@ -107,7 +105,7 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
     const auto &stamples = data->stamples();
     PRECICE_ASSERT(stamples.size() > 0);
 
-    if (_useExperimental) {
+    if (data->exchangeSubsteps()) {
       const auto serializedValues = data->getSerializedValues();
       const int  nTimeSteps       = 2;
 
@@ -140,7 +138,7 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
   PRECICE_ASSERT(m2n->isConnected());
   for (const auto &data : receiveData | boost::adaptors::map_values) {
 
-    if (_useExperimental) {
+    if (data->exchangeSubsteps()) {
       int             nTimeSteps = 2;
       Eigen::VectorXd timesAscending(nTimeSteps);
       timesAscending << time::Storage::WINDOW_START, time::Storage::WINDOW_END;
@@ -183,12 +181,12 @@ void BaseCouplingScheme::initializeWithZeroInitialData(const DataMap &receiveDat
   }
 }
 
-PtrCouplingData BaseCouplingScheme::addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization)
+PtrCouplingData BaseCouplingScheme::addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization, bool communicateSubsteps)
 {
   int             id = data->getID();
   PtrCouplingData ptrCplData;
   if (!utils::contained(id, _allData)) { // data is not used by this coupling scheme yet, create new CouplingData
-    ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, _extrapolationOrder);
+    ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, communicateSubsteps, _extrapolationOrder);
     _allData.emplace(id, ptrCplData);
   } else { // data is already used by another exchange of this coupling scheme, use existing CouplingData
     ptrCplData = _allData[id];

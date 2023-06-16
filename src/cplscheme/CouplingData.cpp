@@ -12,10 +12,10 @@ CouplingData::CouplingData(
     mesh::PtrData data,
     mesh::PtrMesh mesh,
     bool          requiresInitialization,
-    bool          communicateSubsteps,
+    bool          exchangeSubsteps,
     int           extrapolationOrder)
     : requiresInitialization(requiresInitialization),
-      _communicateSubsteps(communicateSubsteps),
+      _exchangeSubsteps(exchangeSubsteps),
       _data(std::move(data)),
       _mesh(std::move(mesh))
 {
@@ -253,9 +253,9 @@ const time::Sample &CouplingData::sample() const
   return _data->sample();
 }
 
-bool CouplingData::communicateSubsteps() const
+bool CouplingData::exchangeSubsteps() const
 {
-  return _communicateSubsteps;
+  return _exchangeSubsteps;
 }
 
 } // namespace precice::cplscheme

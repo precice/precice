@@ -39,20 +39,21 @@ public:
       int                           maxIterations,
       CouplingMode                  cplMode,
       constants::TimesteppingMethod dtMethod,
-      int                           extrapolationOrder,
-      bool                          useExperimental);
+      int                           extrapolationOrder);
 
   /// Adds data to be sent on data exchange and possibly be modified during coupling iterations.
   void addDataToSend(
       const mesh::PtrData &data,
       mesh::PtrMesh        mesh,
-      bool                 requiresInitialization);
+      bool                 requiresInitialization,
+      bool                 exchangeSubsteps);
 
   /// Adds data to be received on data exchange.
   void addDataToReceive(
       const mesh::PtrData &data,
       mesh::PtrMesh        mesh,
-      bool                 requiresInitialization);
+      bool                 requiresInitialization,
+      bool                 exchangeSubsteps);
 
   void determineInitialDataExchange() override;
 

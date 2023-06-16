@@ -102,6 +102,7 @@ private:
   const std::string ATTR_MESH;
   const std::string ATTR_PARTICIPANT;
   const std::string ATTR_INITIALIZE;
+  const std::string ATTR_EXCHANGE_SUBSTEPS;
   const std::string ATTR_TYPE;
   const std::string ATTR_FIRST;
   const std::string ATTR_SECOND;
@@ -154,6 +155,7 @@ private:
       std::string   from;
       std::string   to;
       bool          requiresInitialization;
+      bool          exchangeSubsteps;
     };
     std::vector<Exchange>                    exchanges;
     std::vector<ConvergenceMeasureDefintion> convergenceMeasureDefinitions;
