@@ -16,6 +16,7 @@ public:
       mesh::PtrData data,
       mesh::PtrMesh mesh,
       bool          requiresInitialization,
+      bool          communicateSubsteps,
       int           extrapolationOrder);
 
   int getDimensions() const;
@@ -126,6 +127,8 @@ public:
    */
   void storeFromSerialized(Eigen::VectorXd timesAscending, Eigen::VectorXd serializedValues, Eigen::MatrixXd serializedGradients);
 
+  bool communicateSubsteps() const;
+
 private:
   logging::Logger _log{"cplscheme::CouplingData"};
 
@@ -148,6 +151,9 @@ private:
 
   /// Mesh associated with this CouplingData
   mesh::PtrMesh _mesh;
+
+  /// If true, all substeps will be sent / received for this coupling data
+  bool _communicateSubsteps;
 };
 
 } // namespace cplscheme
