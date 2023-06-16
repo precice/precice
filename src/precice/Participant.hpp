@@ -668,6 +668,7 @@ public:
    * @brief Reads value from a global data object. Value corresponds to a given point in time relative to the beginning of the current timestep.
    *
    * This function reads the value of a global data object.
+   * Global data is data that has no location in space and that is not associated to any mesh.   
    * Value is read into a block of continuous memory.
    *
    * The 1D/Scalar-format of values is (d)
