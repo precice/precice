@@ -617,7 +617,7 @@ public:
    * The 3D-format of value is (dx, dy, dz)
    *
    * @param[in] dataName the name of the data to write to.
-   * @param[in] value Pointer to the vector value.
+   * @param[in] value the values to write to preCICE.
    *
    * @pre value has the same size as that of the global data specified by dataName
    *
