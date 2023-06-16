@@ -39,7 +39,8 @@ public:
       int                           maxIterations,
       CouplingMode                  cplMode,
       constants::TimesteppingMethod dtMethod,
-      int                           extrapolationOrder);
+      int                           extrapolationOrder,
+      bool                          useExperimental);
 
   /// Adds data to be sent on data exchange and possibly be modified during coupling iterations.
   void addDataToSend(

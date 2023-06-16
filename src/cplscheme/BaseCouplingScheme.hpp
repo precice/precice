@@ -72,7 +72,8 @@ public:
       int                           maxIterations,
       CouplingMode                  cplMode,
       constants::TimesteppingMethod dtMethod,
-      int                           extrapolationOrder);
+      int                           extrapolationOrder,
+      bool                          useExperimental);
 
   /**
    * @brief Getter for _sendsInitializedData
@@ -240,6 +241,9 @@ protected:
 
   /// Acceleration method to speedup iteration convergence.
   acceleration::PtrAcceleration _acceleration;
+
+  /// Allows to query whether experimental mode is used or not.
+  const bool _useExperimental;
 
   void sendNumberOfTimeSteps(const m2n::PtrM2N &m2n, const int numberOfTimeSteps);
 

@@ -30,8 +30,9 @@ BiCouplingScheme::BiCouplingScheme(
     int                           maxIterations,
     CouplingMode                  cplMode,
     constants::TimesteppingMethod dtMethod,
-    int                           extrapolationOrder)
-    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, localParticipant, maxIterations, cplMode, dtMethod, extrapolationOrder),
+    int                           extrapolationOrder,
+    bool                          useExperimental)
+    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, localParticipant, maxIterations, cplMode, dtMethod, extrapolationOrder, useExperimental),
       _m2n(std::move(m2n)),
       _firstParticipant(std::move(firstParticipant)),
       _secondParticipant(std::move(secondParticipant))

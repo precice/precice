@@ -39,6 +39,7 @@ public:
    * @param[in] m2n Communication object for com. between participants.
    * @param[in] dtMethod Method used for determining the time window size, see https://www.precice.org/couple-your-code-timestep-sizes.html
    * @param[in] cplMode Set implicit or explicit coupling
+   * @param[in] useExperimental activates experimental communication for subcycling
    * @param[in] maxIterations maximum number of coupling iterations allowed for implicit coupling per time window
    * @param[in] extrapolationOrder order used for extrapolation
    */
@@ -53,6 +54,7 @@ public:
       m2n::PtrM2N                   m2n,
       constants::TimesteppingMethod dtMethod,
       CouplingMode                  cplMode,
+      bool                          useExperimental,
       int                           maxIterations      = UNDEFINED_MAX_ITERATIONS,
       int                           extrapolationOrder = UNDEFINED_EXTRAPOLATION_ORDER);
 
