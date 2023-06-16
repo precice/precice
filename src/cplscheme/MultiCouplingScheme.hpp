@@ -35,6 +35,7 @@ public:
  * @param[in] localParticipant Name of participant using this coupling scheme.
  * @param[in] m2ns M2N communications to all other participants of coupling scheme.
  * @param[in] dtMethod Method used for determining the time window size, see https://www.precice.org/couple-your-code-timestep-sizes.html
+ * @param[in] useExperimental activates experimental communication for subcycling
  * @param[in] maxIterations maximum number of coupling sub-iterations allowed.
  * @param[in] extrapolationOrder order used for extrapolation
  */
@@ -47,6 +48,7 @@ public:
       std::map<std::string, m2n::PtrM2N> m2ns,
       constants::TimesteppingMethod      dtMethod,
       const std::string &                controller,
+      bool                               useExperimental,
       int                                maxIterations,
       int                                extrapolationOrder);
 
