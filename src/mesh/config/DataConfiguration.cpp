@@ -41,7 +41,7 @@ DataConfiguration::DataConfiguration(xml::XMLTag &parent)
   tagGlobalVector.setDocumentation("Defines a (global) vector data not associated to any mesh."
                                    "Typically it is space-invariant data, e.g., angles between coordinate systems."
                                    "The number of components of each data entry depends on the spatial dimensions "
-                                   "set in tag <solver-interface>.");
+                                   "set in tag <precice-configuration>.");
   tagGlobalVector.addAttribute(attrName);
   parent.addSubtag(tagGlobalVector);
 }
