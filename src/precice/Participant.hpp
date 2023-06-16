@@ -610,6 +610,7 @@ public:
    * @brief Writes global data
    *
    * This function writes a specified value to a global data object.
+   * Global data is data that has no location in space and that is not associated to any mesh.
    * Values are provided as a block of continuous memory defined by value.
    *
    * The 1D/Scalar-format of values is (d)
