@@ -1133,6 +1133,7 @@ void ParticipantImpl::readGlobalData(
     double                  relativeReadTime,
     ::precice::span<double> value) const
 {
+  PRECICE_EXPERIMENTAL_API();
   PRECICE_TRACE(dataName, relativeReadTime);
   PRECICE_CHECK(_state != State::Finalized, "readGlobalData(...) cannot be called after finalize().");
   PRECICE_CHECK(relativeReadTime <= _couplingScheme->getNextTimeStepMaxSize(), "readGlobalData(...) cannot sample data outside of current time window.");
