@@ -1106,6 +1106,7 @@ void ParticipantImpl::writeGlobalData(
     std::string_view              dataName,
     ::precice::span<const double> value)
 {
+  PRECICE_EXPERIMENTAL_API();
   PRECICE_TRACE(dataName);
   PRECICE_CHECK(_state != State::Finalized, "writeGlobalData(...) cannot be called after finalize().");
   // PRECICE_REQUIRE_DATA_WRITE(dataName);
