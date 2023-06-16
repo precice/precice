@@ -31,11 +31,19 @@ void SummationAction::performAction(double time)
 {
   PRECICE_TRACE();
 
-  auto &targetValues = _targetData->values();
-  targetValues.setZero();
-
-  for (const auto &sourceData : _sourceDataVector) {
-    targetValues += sourceData->values();
+  const auto &referenceData = _sourceDataVector.front(); // serves as reference
+  const int   nStamples     = referenceData->stamples().size();
+  for (int stampleId = 0; stampleId < nStamples; stampleId++) { // simultaneously loop over stamples in all sourceData of _sourceDataVector
+    auto &targetValues = _targetData->values();
+    targetValues.setZero();
+    const double currentTimestamp = referenceData->stamples()[stampleId].timestamp;
+    for (const auto &sourceData : _sourceDataVector) {
+      auto sourceStample = sourceData->stamples()[stampleId];
+      PRECICE_CHECK(math::equals(sourceStample.timestamp, currentTimestamp), "Trying to perform summation action on samples with different timestamps: expected timestamp {}, but got source data with timestamp {}.  Time meshes of all source data must agree. Actions do not fully support subcycling yet.", currentTimestamp, sourceStample.timestamp);
+      auto sourceDataValues = sourceStample.sample.values;
+      targetValues += sourceDataValues;
+    }
+    _targetData->setSampleAtTime(currentTimestamp, _targetData->sample());
   }
 }
 

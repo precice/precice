@@ -1,62 +1,52 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration>
-  <solver-interface dimensions="2">
-    <data:scalar name="Data" />
+<precice-configuration dimensions="2">
+  <data:scalar name="Data" />
 
-    <mesh name="MeshA">
-      <use-data name="Data" />
-    </mesh>
+  <mesh name="MeshA">
+    <use-data name="Data" />
+  </mesh>
 
-    <mesh name="MeshB">
-      <use-data name="Data" />
-    </mesh>
+  <mesh name="MeshB">
+    <use-data name="Data" />
+  </mesh>
 
-    <mesh name="MeshC">
-      <use-data name="Data" />
-    </mesh>
+  <mesh name="MeshC">
+    <use-data name="Data" />
+  </mesh>
 
-    <participant name="SolverOne">
-      <provide-mesh name="MeshA" />
-      <write-data name="Data" mesh="MeshA" />
-    </participant>
+  <participant name="SolverOne">
+    <provide-mesh name="MeshA" />
+    <write-data name="Data" mesh="MeshA" />
+  </participant>
 
-    <participant name="SolverTwo">
-      <receive-mesh name="MeshA" from="SolverOne" />
-      <provide-mesh name="MeshB" />
-      <read-data name="Data" mesh="MeshB" />
-      <mapping:nearest-neighbor
-        direction="read"
-        from="MeshA"
-        to="MeshB"
-        constraint="conservative" />
-    </participant>
+  <participant name="SolverTwo">
+    <receive-mesh name="MeshA" from="SolverOne" />
+    <provide-mesh name="MeshB" />
+    <read-data name="Data" mesh="MeshB" />
+    <mapping:nearest-neighbor direction="read" from="MeshA" to="MeshB" constraint="conservative" />
+  </participant>
 
-    <participant name="SolverThree">
-      <receive-mesh name="MeshA" from="SolverOne" />
-      <provide-mesh name="MeshC" />
-      <read-data name="Data" mesh="MeshC" />
-      <mapping:nearest-neighbor
-        direction="read"
-        from="MeshA"
-        to="MeshC"
-        constraint="conservative" />
-    </participant>
+  <participant name="SolverThree">
+    <receive-mesh name="MeshA" from="SolverOne" />
+    <provide-mesh name="MeshC" />
+    <read-data name="Data" mesh="MeshC" />
+    <mapping:nearest-neighbor direction="read" from="MeshA" to="MeshC" constraint="conservative" />
+  </participant>
 
-    <m2n:sockets from="SolverOne" to="SolverTwo" />
-    <m2n:sockets from="SolverOne" to="SolverThree" />
+  <m2n:sockets from="SolverOne" to="SolverTwo" />
+  <m2n:sockets from="SolverOne" to="SolverThree" />
 
-    <coupling-scheme:serial-explicit>
-      <participants first="SolverOne" second="SolverTwo" />
-      <max-time-windows value="1" />
-      <time-window-size value="1.0" />
-      <exchange data="Data" mesh="MeshA" from="SolverOne" to="SolverTwo" />
-    </coupling-scheme:serial-explicit>
+  <coupling-scheme:serial-explicit>
+    <participants first="SolverOne" second="SolverTwo" />
+    <max-time-windows value="1" />
+    <time-window-size value="1.0" />
+    <exchange data="Data" mesh="MeshA" from="SolverOne" to="SolverTwo" />
+  </coupling-scheme:serial-explicit>
 
-    <coupling-scheme:serial-explicit>
-      <participants first="SolverOne" second="SolverThree" />
-      <max-time-windows value="1" />
-      <time-window-size value="1.0" />
-      <exchange data="Data" mesh="MeshA" from="SolverOne" to="SolverThree" />
-    </coupling-scheme:serial-explicit>
-  </solver-interface>
+  <coupling-scheme:serial-explicit>
+    <participants first="SolverOne" second="SolverThree" />
+    <max-time-windows value="1" />
+    <time-window-size value="1.0" />
+    <exchange data="Data" mesh="MeshA" from="SolverOne" to="SolverThree" />
+  </coupling-scheme:serial-explicit>
 </precice-configuration>

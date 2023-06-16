@@ -199,7 +199,7 @@ public:
   bool isValidVertexID(VertexID vertexID) const;
 
   /// Allocates memory for the vertex data values and corresponding gradient values.
-  void allocateDataValues();
+  void allocateDataValues(); //@todo Redesign mapping and remove this function. See https://github.com/precice/precice/issues/1651.
 
   /// Computes the boundingBox for the vertices.
   void computeBoundingBox();

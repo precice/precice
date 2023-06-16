@@ -15,7 +15,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessReadWrite)
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
   if (context.isNamed("SolverOne")) {
-    // Set up Solverinterface
+    // Set up Participant
     precice::Participant interface(context.name, context.config(), context.rank, context.size);
     constexpr int        dim              = 2;
     const auto           providedMeshName = "MeshOne";

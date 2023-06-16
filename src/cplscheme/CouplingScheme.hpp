@@ -80,16 +80,6 @@ public:
       int    startTimeWindow) = 0;
 
   /**
-   * @brief Receives result of first advance, if this has to happen inside Participant::initialize()
-   *
-   * This is only relevant for the second participant of the SerialCouplingScheme, because other coupling schemes only
-   * receive initial data in initialize. This part is implemented as a public function to be called from
-   * ParticipantImpl. ParticipantImpl has to store data received in CouplingScheme::initialize before calling
-   * CouplingScheme::receiveResultOfFirstAdvance, which will override the data in the receive buffer.
-   */
-  virtual void receiveResultOfFirstAdvance() = 0;
-
-  /**
    * @brief Returns whether this participant of the coupling scheme sends initialized data.
    *
    * @returns true, if this participant of the coupling scheme sends initialized data
@@ -105,8 +95,13 @@ public:
    * @{
    */
 
-  /// @brief Adds newly computed time. Has to be called before every advance.
-  virtual void addComputedTime(double timeToAdd) = 0;
+  /**
+   * @brief Adds newly computed time. Has to be called before every advance.
+   * @param timeToAdd time to be added
+   *
+   * @returns true, if reaches end of the window by adding timeToAdd to time in this time step.
+   */
+  virtual bool addComputedTime(double timeToAdd) = 0;
 
   using ChangedMeshes = std::vector<MeshID>;
 
@@ -189,6 +184,15 @@ public:
    * hasTimeWindowSize().
    */
   virtual double getTimeWindowSize() const = 0;
+
+  /**
+   * @brief Returns the normalized time within the current time window.
+   *
+   * TODO: Where do we define what the normalized time is? Refer this part in the docs!
+   *
+   * @return time normalized to [0,1] w.r.t current time window.
+   */
+  virtual double getNormalizedWindowTime() const = 0;
 
   /**
    * @brief Returns the maximal size of the next time step to be computed.

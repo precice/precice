@@ -81,16 +81,14 @@ public:
       double startTime,
       int    startTimeWindow) final override;
 
-  void receiveResultOfFirstAdvance() override final;
-
   /// Returns true, if any of the composed coupling schemes sendsInitializedData for this participant
   bool sendsInitializedData() const override final;
 
   /// Returns true, if initialize has been called.
   bool isInitialized() const final override;
 
-  /// Adds newly computed time. Has to be called before every advance.
-  void addComputedTime(double timeToAdd) final override;
+  /// @copydoc cplscheme::CouplingScheme::addComputedTime()
+  bool addComputedTime(double timeToAdd) final override;
 
   /// Exchanges data and updates the state of the coupling scheme.
   //void advance() final override;
@@ -154,6 +152,9 @@ public:
    *
    */
   double getTimeWindowSize() const final override;
+
+  /// @copydoc CouplingScheme::getNormalizedWindowTime
+  double getNormalizedWindowTime() const override final;
 
   /**
    * @brief Returns the maximal size of the next time step to be computed.

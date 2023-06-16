@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
   PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
 
   if (context.isNamed("SolverOne")) {
-    // Set up Solverinterface
+    // Set up Participant
     precice::Participant interface(context.name, context.config(), context.rank, context.size);
     constexpr int        dim           = 2;
     auto                 ownMeshName   = "MeshOne";

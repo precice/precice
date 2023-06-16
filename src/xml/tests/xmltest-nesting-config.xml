@@ -8,7 +8,6 @@
 
   <nested-tag>
     <subtag attribute="12" />
-
     <nested-tag>
       <subtag attribute="121" />
     </nested-tag>

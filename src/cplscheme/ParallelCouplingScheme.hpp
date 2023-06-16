@@ -59,11 +59,14 @@ public:
 private:
   logging::Logger _log{"cplscheme::ParallelCouplingScheme"};
 
+  /// @copydoc cplscheme::BaseCouplingScheme::exchangeInitialData()
+  void exchangeInitialData() override final;
+
   void exchangeFirstData() override final;
 
   void exchangeSecondData() override final;
 
-  const DataMap getAccelerationData() override final;
+  const DataMap &getAccelerationData() override final;
 };
 
 } // namespace cplscheme

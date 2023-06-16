@@ -65,22 +65,35 @@ bool MultiCouplingScheme::hasAnySendData()
   return std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(), [](const auto &sendExchange) { return not sendExchange.second.empty(); });
 }
 
-const DataMap MultiCouplingScheme::getAccelerationData()
+const DataMap &MultiCouplingScheme::getAccelerationData()
 {
   // MultiCouplingScheme applies acceleration to all CouplingData
   return _allData;
 }
 
+void MultiCouplingScheme::initializeReceiveDataStorage()
+{
+  // @todo check receiveData. Should only contain zero data!
+  for (auto &receiveExchange : _receiveDataVector) {
+    initializeWithZeroInitialData(receiveExchange.second);
+  }
+}
+
 void MultiCouplingScheme::exchangeInitialData()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
+  bool initialReceive = true;
 
   if (_isController) {
     if (receivesInitializedData()) {
       for (auto &receiveExchange : _receiveDataVector) {
-        receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
+        receiveData(_m2ns[receiveExchange.first], receiveExchange.second, initialReceive);
       }
       checkDataHasBeenReceived();
+    } else {
+      for (auto &receiveExchange : _receiveDataVector) {
+        initializeWithZeroInitialData(receiveExchange.second);
+      }
     }
     if (sendsInitializedData()) {
       for (auto &sendExchange : _sendDataVector) {
@@ -95,9 +108,13 @@ void MultiCouplingScheme::exchangeInitialData()
     }
     if (receivesInitializedData()) {
       for (auto &receiveExchange : _receiveDataVector) {
-        receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
+        receiveData(_m2ns[receiveExchange.first], receiveExchange.second, initialReceive);
       }
       checkDataHasBeenReceived();
+    } else {
+      for (auto &receiveExchange : _receiveDataVector) {
+        initializeWithZeroInitialData(receiveExchange.second);
+      }
     }
   }
   PRECICE_DEBUG("Initial data is exchanged in MultiCouplingScheme");
@@ -115,7 +132,6 @@ void MultiCouplingScheme::exchangeFirstData()
       receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
     }
     checkDataHasBeenReceived();
-
   } else {
     for (auto &sendExchange : _sendDataVector) {
       sendData(_m2ns[sendExchange.first], sendExchange.second);
@@ -128,23 +144,34 @@ void MultiCouplingScheme::exchangeSecondData()
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
   // @todo implement MultiCouplingScheme for explicit coupling
 
-  if (_isController) {
-    doImplicitStep();
-    for (const auto &m2n : _m2ns | boost::adaptors::map_values) {
-      sendConvergence(m2n);
-    }
-
-    for (auto &sendExchange : _sendDataVector) {
-      sendData(_m2ns[sendExchange.first], sendExchange.second);
-    }
-  } else {
+  if (not _isController) {
     receiveConvergence(_m2ns[_controller]);
-
+    if (hasConverged()) {
+      moveToNextWindow();
+    }
     for (auto &receiveExchange : _receiveDataVector) {
       receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
     }
     checkDataHasBeenReceived();
   }
+
+  if (_isController) {
+    doImplicitStep();
+  }
+
+  if (_isController) {
+    for (const auto &m2n : _m2ns | boost::adaptors::map_values) {
+      sendConvergence(m2n);
+    }
+    if (hasConverged()) {
+      moveToNextWindow();
+    }
+    for (auto &sendExchange : _sendDataVector) {
+      sendData(_m2ns[sendExchange.first], sendExchange.second);
+    }
+  }
+
+  storeIteration();
 }
 
 void MultiCouplingScheme::addDataToSend(

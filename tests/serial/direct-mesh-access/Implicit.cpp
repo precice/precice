@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_CASE(Implicit)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
-  // Set up Solverinterface
+  // Set up Participant
   precice::Participant couplingInterface(context.name, context.config(), 0, 1);
   constexpr int        dim = 2;
 

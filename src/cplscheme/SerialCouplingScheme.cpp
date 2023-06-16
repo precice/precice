@@ -61,6 +61,19 @@ void SerialCouplingScheme::sendTimeWindowSize()
   }
 }
 
+double SerialCouplingScheme::getNormalizedWindowTime() const
+{
+  if (not _participantSetsTimeWindowSize) {
+    const double timeWindowStart        = getWindowStartTime();
+    const double timeWindowSize         = getTimeWindowSize();
+    const double computedTimeWindowPart = getTime() - timeWindowStart;
+    // const double computedTimeWindowPart = getComputedTimeWindowPart();  // @todo make public?
+    return computedTimeWindowPart / timeWindowSize;
+  } else {
+    return time::Storage::WINDOW_END; // participant first method does not support subcycling (yet). See https://github.com/precice/precice/issues/1570
+  }
+}
+
 void SerialCouplingScheme::receiveAndSetTimeWindowSize()
 {
   PRECICE_TRACE();
@@ -75,11 +88,30 @@ void SerialCouplingScheme::receiveAndSetTimeWindowSize()
   }
 }
 
-void SerialCouplingScheme::performReceiveOfFirstAdvance()
+void SerialCouplingScheme::exchangeInitialData()
 {
+  bool initialReceive = true;
+  // F: send, receive, S: receive, send
   if (doesFirstStep()) {
-    // do nothing
+    if (sendsInitializedData()) {
+      sendData(getM2N(), getSendData());
+    }
+    if (receivesInitializedData()) {
+      receiveData(getM2N(), getReceiveData(), initialReceive);
+      checkDataHasBeenReceived();
+    } else {
+      initializeWithZeroInitialData(getReceiveData());
+    }
   } else { // second participant
+    if (receivesInitializedData()) {
+      receiveData(getM2N(), getReceiveData(), initialReceive);
+    } else {
+      initializeWithZeroInitialData(getReceiveData());
+    }
+    if (sendsInitializedData()) {
+      sendData(getM2N(), getSendData());
+    }
+    // similar to SerialCouplingScheme::exchangeSecondData()
     receiveAndSetTimeWindowSize();
     PRECICE_DEBUG("Receiving data...");
     receiveData(getM2N(), getReceiveData());
@@ -89,43 +121,85 @@ void SerialCouplingScheme::performReceiveOfFirstAdvance()
 
 void SerialCouplingScheme::exchangeFirstData()
 {
-  if (doesFirstStep()) { // first participant
-    PRECICE_DEBUG("Sending data...");
-    sendTimeWindowSize();
-    sendData(getM2N(), getSendData());
-  } else { // second participant
-    if (isImplicitCouplingScheme()) {
-      PRECICE_DEBUG("Test Convergence and accelerate...");
-      doImplicitStep();
-      sendConvergence(getM2N());
+  if (isExplicitCouplingScheme()) {
+    if (doesFirstStep()) { // first participant
+      PRECICE_DEBUG("Sending data...");
+      sendTimeWindowSize();
+      sendData(getM2N(), getSendData());
+    } else {              // second participant
+      moveToNextWindow(); // do moveToNextWindow already here for second participant in SerialCouplingScheme
+      PRECICE_DEBUG("Sending data...");
+      sendData(getM2N(), getSendData());
     }
-    PRECICE_DEBUG("Sending data...");
-    sendData(getM2N(), getSendData());
+  } else {
+    PRECICE_ASSERT(isImplicitCouplingScheme());
+
+    if (doesFirstStep()) { // first participant
+      PRECICE_DEBUG("Sending data...");
+      sendTimeWindowSize();
+      sendData(getM2N(), getSendData());
+    } else { // second participant
+      PRECICE_DEBUG("Perform acceleration (only second participant)...");
+      doImplicitStep();
+      PRECICE_DEBUG("Sending convergence...");
+      sendConvergence(getM2N());
+      if (hasConverged()) {
+        moveToNextWindow(); // do moveToNextWindow already here for second participant in SerialCouplingScheme
+      }
+      PRECICE_DEBUG("Sending data...");
+      sendData(getM2N(), getSendData());
+    }
   }
 }
 
 void SerialCouplingScheme::exchangeSecondData()
 {
-  if (doesFirstStep()) { // first participant
-    PRECICE_DEBUG("Receiving convergence data...");
-    if (isImplicitCouplingScheme()) {
-      receiveConvergence(getM2N());
-    }
-    PRECICE_DEBUG("Receiving data...");
-    receiveData(getM2N(), getReceiveData());
-    checkDataHasBeenReceived();
-  } else { // second participant
-    // the second participant does not want new data in the last iteration of the last time window
-    if (isCouplingOngoing() || (isImplicitCouplingScheme() && not hasConverged())) {
-      receiveAndSetTimeWindowSize();
+  if (isExplicitCouplingScheme()) {
+    if (doesFirstStep()) { // first participant
+      moveToNextWindow();  // extrapolation result for receive data of first is directly overwritten in the call of receiveData below
       PRECICE_DEBUG("Receiving data...");
       receiveData(getM2N(), getReceiveData());
       checkDataHasBeenReceived();
     }
+
+    if (not doesFirstStep()) { // second participant
+      // the second participant does not want new data in the last iteration of the last time window
+      if (isCouplingOngoing()) {
+        receiveAndSetTimeWindowSize();
+        PRECICE_DEBUG("Receiving data...");
+        receiveData(getM2N(), getReceiveData());
+        checkDataHasBeenReceived();
+      }
+    }
+  } else {
+    PRECICE_ASSERT(isImplicitCouplingScheme());
+
+    if (doesFirstStep()) { // first participant
+      PRECICE_DEBUG("Receiving convergence data...");
+      receiveConvergence(getM2N());
+      if (hasConverged()) {
+        moveToNextWindow(); // extrapolation result for receive data of first is directly overwritten in the call of receiveData below
+      }
+      PRECICE_DEBUG("Receiving data...");
+      receiveData(getM2N(), getReceiveData());
+      checkDataHasBeenReceived();
+    }
+
+    storeIteration();
+
+    if (not doesFirstStep()) { // second participant
+      // the second participant does not want new data in the last iteration of the last time window
+      if (isCouplingOngoing() || not hasConverged()) {
+        receiveAndSetTimeWindowSize();
+        PRECICE_DEBUG("Receiving data...");
+        receiveData(getM2N(), getReceiveData());
+        checkDataHasBeenReceived();
+      }
+    }
   }
 }
 
-const DataMap SerialCouplingScheme::getAccelerationData()
+const DataMap &SerialCouplingScheme::getAccelerationData()
 {
   // SerialCouplingSchemes applies acceleration to send data
   return getSendData();

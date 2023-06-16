@@ -76,6 +76,7 @@ BaseCouplingScheme::BaseCouplingScheme(
 
   if (isExplicitCouplingScheme()) {
     PRECICE_ASSERT(_extrapolationOrder == UNDEFINED_EXTRAPOLATION_ORDER, "Extrapolation is not allowed for explicit coupling");
+    _extrapolationOrder = 0; // set extrapolation order to zero.
   } else {
     PRECICE_ASSERT(isImplicitCouplingScheme());
     PRECICE_CHECK((_extrapolationOrder == 0) || (_extrapolationOrder == 1),
@@ -101,6 +102,10 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
   PRECICE_ASSERT(m2n->isConnected());
 
   for (const auto &data : sendData | boost::adaptors::map_values) {
+    const auto &stamples = data->stamples();
+    PRECICE_ASSERT(stamples.size() > 0);
+    data->sample() = stamples.back().sample;
+
     // Data is actually only send if size>0, which is checked in the derived classes implementation
     m2n->send(data->values(), data->getMeshID(), data->getDimensions());
 
@@ -110,7 +115,7 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
   }
 }
 
-void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData)
+void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData, bool initialCommunication)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(m2n.get());
@@ -122,6 +127,22 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
     if (data->hasGradient()) {
       m2n->receive(data->gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions());
     }
+
+    if (initialCommunication) {
+      data->setSampleAtTime(time::Storage::WINDOW_START, data->sample());
+    }
+
+    data->setSampleAtTime(time::Storage::WINDOW_END, data->sample());
+  }
+}
+
+void BaseCouplingScheme::initializeWithZeroInitialData(const DataMap &receiveData)
+{
+  for (const auto &data : receiveData | boost::adaptors::map_values) {
+    PRECICE_DEBUG("Initialize {} as zero.", data->getDataName());
+    // just store already initialized zero sample to storage.
+    data->setSampleAtTime(time::Storage::WINDOW_START, data->sample());
+    data->setSampleAtTime(time::Storage::WINDOW_END, data->sample());
   }
 }
 
@@ -130,11 +151,7 @@ PtrCouplingData BaseCouplingScheme::addCouplingData(const mesh::PtrData &data, m
   int             id = data->getID();
   PtrCouplingData ptrCplData;
   if (!utils::contained(id, _allData)) { // data is not used by this coupling scheme yet, create new CouplingData
-    if (isExplicitCouplingScheme()) {
-      ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization);
-    } else {
-      ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, getExtrapolationOrder());
-    }
+    ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, _extrapolationOrder);
     _allData.emplace(id, ptrCplData);
   } else { // data is already used by another exchange of this coupling scheme, use existing CouplingData
     ptrCplData = _allData[id];
@@ -162,6 +179,8 @@ void BaseCouplingScheme::finalize()
 
 void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
 {
+  // initialize with zero data here, might eventually be overwritten in exchangeInitialData
+  initializeReceiveDataStorage();
   // Initialize uses the template method pattern (https://en.wikipedia.org/wiki/Template_method_pattern).
   PRECICE_TRACE(startTime, startTimeWindow);
   PRECICE_ASSERT(not isInitialized());
@@ -172,38 +191,23 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   _hasDataBeenReceived = false;
 
   if (isImplicitCouplingScheme()) {
+    storeIteration();
     if (not doesFirstStep()) {
       PRECICE_CHECK(not _convergenceMeasures.empty(),
                     "At least one convergence measure has to be defined for "
                     "an implicit coupling scheme.");
       // reserve memory and initialize data with zero
-      initializeStorages();
+      if (_acceleration) {
+        _acceleration->initialize(getAccelerationData());
+      }
     }
     requireAction(CouplingScheme::Action::WriteCheckpoint);
     initializeTXTWriters();
   }
 
-  if (isImplicitCouplingScheme()) {
-    storeIteration();
-  }
-
   exchangeInitialData();
 
-  if (isImplicitCouplingScheme()) {
-    if (not doesFirstStep()) {
-      storeExtrapolationData();
-      moveToNextWindow();
-    }
-  }
-
   _isInitialized = true;
-}
-
-void BaseCouplingScheme::receiveResultOfFirstAdvance()
-{
-  PRECICE_ASSERT(_isInitialized, "Before calling receiveResultOfFirstAdvance() one has to call initialize().");
-  _hasDataBeenReceived = false;
-  performReceiveOfFirstAdvance();
 }
 
 bool BaseCouplingScheme::sendsInitializedData() const
@@ -293,24 +297,11 @@ void BaseCouplingScheme::secondExchange()
   }
 }
 
-void BaseCouplingScheme::storeExtrapolationData()
-{
-  PRECICE_TRACE(_timeWindows);
-  for (auto &data : _allData | boost::adaptors::map_values) {
-    data->storeExtrapolationData();
-  }
-}
-
 void BaseCouplingScheme::moveToNextWindow()
 {
   PRECICE_TRACE(_timeWindows);
-  // @todo breaks for CplSchemeTests/ParallelImplicitCouplingSchemeTests/Extrapolation/FirstOrder. Why? @fsimonis
-  // for (auto &data : getAccelerationData() | boost::adaptors::map_values) {
-  //  data->moveToNextWindow();
-  // }
-  for (auto &pair : getAccelerationData()) {
-    PRECICE_DEBUG("Store data: {}", pair.first);
-    pair.second->moveToNextWindow();
+  for (auto &data : _allData | boost::adaptors::map_values) {
+    data->moveToNextWindow();
   }
 }
 
@@ -325,12 +316,22 @@ double BaseCouplingScheme::getTimeWindowSize() const
   return _timeWindowSize;
 }
 
+double BaseCouplingScheme::getWindowStartTime() const
+{
+  return getTime() - _computedTimeWindowPart;
+}
+
+double BaseCouplingScheme::getNormalizedWindowTime() const
+{
+  return getComputedTimeWindowPart() / getTimeWindowSize();
+}
+
 bool BaseCouplingScheme::isInitialized() const
 {
   return _isInitialized;
 }
 
-void BaseCouplingScheme::addComputedTime(
+bool BaseCouplingScheme::addComputedTime(
     double timeToAdd)
 {
   PRECICE_TRACE(timeToAdd, getTime());
@@ -347,6 +348,9 @@ void BaseCouplingScheme::addComputedTime(
                 "Did you restrict your time step size, \"dt = min(preciceDt, solverDt)\"? "
                 "For more information, consult the adapter example in the preCICE documentation.",
                 timeToAdd, _timeWindowSize - _computedTimeWindowPart + timeToAdd);
+
+  const bool isAtWindowEnd = math::equals(getNormalizedWindowTime(), time::Storage::WINDOW_END, _eps);
+  return isAtWindowEnd;
 }
 
 bool BaseCouplingScheme::willDataBeExchanged(
@@ -362,7 +366,7 @@ bool BaseCouplingScheme::hasDataBeenReceived() const
   return _hasDataBeenReceived;
 }
 
-double BaseCouplingScheme::getComputedTimeWindowPart()
+double BaseCouplingScheme::getComputedTimeWindowPart() const
 {
   return _computedTimeWindowPart;
 }
@@ -494,12 +498,6 @@ std::string BaseCouplingScheme::printActionsState() const
   return os.str();
 }
 
-void BaseCouplingScheme::performReceiveOfFirstAdvance()
-{
-  // noop by default. Will be overridden by child-coupling-schemes, if data has to be received here. See SerialCouplingScheme.
-  return;
-}
-
 void BaseCouplingScheme::checkCompletenessRequiredActions()
 {
   PRECICE_TRACE();
@@ -521,19 +519,6 @@ void BaseCouplingScheme::checkCompletenessRequiredActions()
   }
   _requiredActions.clear();
   _fulfilledActions.clear();
-}
-
-void BaseCouplingScheme::initializeStorages()
-{
-  PRECICE_TRACE();
-  // Reserve storage for all data
-  for (auto &data : _allData | boost::adaptors::map_values) {
-    data->initializeExtrapolation();
-  }
-  // Reserve storage for acceleration
-  if (_acceleration) {
-    _acceleration->initialize(getAccelerationData());
-  }
 }
 
 void BaseCouplingScheme::setAcceleration(
@@ -589,7 +574,7 @@ bool BaseCouplingScheme::measureConvergence()
   for (const auto &convMeasure : _convergenceMeasures) {
     PRECICE_ASSERT(convMeasure.couplingData != nullptr);
     PRECICE_ASSERT(convMeasure.measure.get() != nullptr);
-
+    PRECICE_ASSERT(convMeasure.couplingData->previousIteration().size() == convMeasure.couplingData->values().size(), convMeasure.couplingData->previousIteration().size(), convMeasure.couplingData->values().size(), convMeasure.couplingData->getDataName());
     convMeasure.measure->measure(convMeasure.couplingData->previousIteration(), convMeasure.couplingData->values());
 
     if (not utils::IntraComm::isSecondary() && convMeasure.doesLogging) {
@@ -702,11 +687,6 @@ void BaseCouplingScheme::determineInitialReceive(DataMap &receiveData)
   }
 }
 
-int BaseCouplingScheme::getExtrapolationOrder()
-{
-  return _extrapolationOrder;
-}
-
 bool BaseCouplingScheme::anyDataRequiresInitialization(DataMap &dataMap) const
 {
   /// @todo implement this function using https://en.cppreference.com/w/cpp/algorithm/all_any_none_of
@@ -720,8 +700,6 @@ bool BaseCouplingScheme::anyDataRequiresInitialization(DataMap &dataMap) const
 
 void BaseCouplingScheme::doImplicitStep()
 {
-  storeExtrapolationData();
-
   PRECICE_DEBUG("measure convergence of the coupling iteration");
   _hasConverged = measureConvergence();
   // Stop, when maximal iteration count (given in config) is reached
@@ -734,15 +712,28 @@ void BaseCouplingScheme::doImplicitStep()
       _acceleration->iterationsConverged(getAccelerationData());
     }
     newConvergenceMeasurements();
-    moveToNextWindow();
   } else {
     // no convergence achieved for the coupling iteration within the current time window
     if (_acceleration) {
+      // Acceleration works on CouplingData::values(), so we retrieve the data from the storage, perform the acceleration and then put the data back into the storage. See also https://github.com/precice/precice/issues/1645.
+      // @todo For acceleration schemes as described in "Rüth, B, Uekermann, B, Mehl, M, Birken, P, Monge, A, Bungartz, H-J. Quasi-Newton waveform iteration for partitioned surface-coupled multiphysics applications. https://doi.org/10.1002/nme.6443" we need a more elaborate implementation.
+
+      // Load from storage into buffer
+      for (auto &data : getAccelerationData() | boost::adaptors::map_values) {
+        const auto &stamples = data->stamples();
+        PRECICE_ASSERT(stamples.size() > 0);
+        data->sample() = stamples.back().sample;
+      }
+
       _acceleration->performAcceleration(getAccelerationData());
+
+      // Store from buffer
+      // @todo Currently only data at time::Storage::WINDOW_END is accelerated. Remaining data in storage stays as it is.
+      for (auto &data : getAccelerationData() | boost::adaptors::map_values) {
+        data->setSampleAtTime(time::Storage::WINDOW_END, data->sample());
+      }
     }
   }
-  // Store data for conv. measurement, acceleration
-  storeIteration();
 }
 
 void BaseCouplingScheme::sendConvergence(const m2n::PtrM2N &m2n)
