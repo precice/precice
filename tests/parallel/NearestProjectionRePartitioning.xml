@@ -29,7 +29,7 @@
     <export:vtk />
   </participant>
 
-  <m2n:sockets acceptor="FluidSolver" to="SolidSolver" />
+  <m2n:sockets acceptor="FluidSolver" connector="SolidSolver" />
 
   <coupling-scheme:parallel-explicit>
     <participants first="FluidSolver" second="SolidSolver" />

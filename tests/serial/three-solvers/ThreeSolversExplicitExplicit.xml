@@ -33,8 +33,8 @@
     <mapping:nearest-neighbor direction="read" from="MeshA" to="MeshD" constraint="conservative" />
   </participant>
 
-  <m2n:sockets acceptor="SolverOne" to="SolverTwo" />
-  <m2n:sockets acceptor="SolverOne" to="SolverThree" />
+  <m2n:sockets acceptor="SolverOne" connector="SolverTwo" />
+  <m2n:sockets acceptor="SolverOne" connector="SolverThree" />
 
   <coupling-scheme:serial-explicit>
     <participants first="SolverOne" second="SolverTwo" />

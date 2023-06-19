@@ -50,8 +50,8 @@
     <write-data name="SourceTwo" mesh="MeshTwo" />
   </participant>
 
-  <m2n:sockets acceptor="SolverSourceOne" to="SolverTarget" />
-  <m2n:sockets acceptor="SolverSourceTwo" to="SolverTarget" />
+  <m2n:sockets acceptor="SolverSourceOne" connector="SolverTarget" />
+  <m2n:sockets acceptor="SolverSourceTwo" connector="SolverTarget" />
 
   <coupling-scheme:serial-explicit>
     <participants first="SolverSourceOne" second="SolverTarget" />

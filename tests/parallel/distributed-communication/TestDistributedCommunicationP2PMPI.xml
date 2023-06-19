@@ -38,7 +38,7 @@
     <read-data name="Forces" mesh="StructureMesh" />
   </participant>
 
-  <m2n:mpi acceptor="Fluid" to="Structure" />
+  <m2n:mpi acceptor="Fluid" connector="Structure" />
 
   <coupling-scheme:serial-explicit>
     <participants first="Fluid" second="Structure" />

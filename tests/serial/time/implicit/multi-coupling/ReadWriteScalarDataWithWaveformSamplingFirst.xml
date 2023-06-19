@@ -61,8 +61,8 @@
     <read-data name="DataOne" mesh="MeshThree" waveform-order="1" />
   </participant>
 
-  <m2n:sockets acceptor="SolverOne" to="SolverTwo" />
-  <m2n:sockets acceptor="SolverOne" to="SolverThree" />
+  <m2n:sockets acceptor="SolverOne" connector="SolverTwo" />
+  <m2n:sockets acceptor="SolverOne" connector="SolverThree" />
 
   <coupling-scheme:multi>
     <participant name="SolverOne" control="yes" />

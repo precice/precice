@@ -37,7 +37,7 @@
       constraint="consistent" />
   </participant>
 
-  <m2n:sockets acceptor="ParallelSolver" to="SerialSolver" enforce-gather-scatter="true" />
+  <m2n:sockets acceptor="ParallelSolver" connector="SerialSolver" enforce-gather-scatter="true" />
 
   <coupling-scheme:parallel-explicit>
     <participants first="ParallelSolver" second="SerialSolver" />

@@ -4,7 +4,7 @@
   <data:vector name="Velocities" />
   <data:vector name="Displacements" />
 
-  <m2n:sockets acceptor="SolverOne" to="SolverTwo" />
+  <m2n:sockets acceptor="SolverOne" connector="SolverTwo" />
 
   <mesh name="MeshOne">
     <use-data name="Forces" />
