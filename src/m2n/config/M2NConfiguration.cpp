@@ -111,7 +111,7 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
                       .setDocumentation(
                           "First participant name involved in communication. For performance reasons, we recommend to use "
                           "the participant with less ranks at the coupling interface as \"acceptor\" in the m2n communication.");
-  auto attrTo = XMLAttribute<std::string>("to")
+  auto attrTo = XMLAttribute<std::string>("connector")
                     .setDocumentation("Second participant name involved in communication.");
 
   for (XMLTag &tag : tags) {
