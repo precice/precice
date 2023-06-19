@@ -831,7 +831,6 @@ void BaseCouplingScheme::determineInitialSend(GlobalDataMap &sendGlobalData)
     _sendsInitializedData = true;
     requireAction(CouplingScheme::Action::InitializeData);
   }
-  //TODO test this
 }
 
 void BaseCouplingScheme::determineInitialReceive(DataMap &receiveData)
@@ -864,12 +863,10 @@ bool BaseCouplingScheme::anyDataRequiresInitialization(GlobalDataMap &globalData
   /// @todo implement this function using https://en.cppreference.com/w/cpp/algorithm/all_any_none_of
   for (const auto &data : globalDataMap | boost::adaptors::map_values) {
     if (data->requiresInitialization) {
-      PRECICE_ERROR("Initialization for global data exchange is not tested yet.");
       return true;
     }
   }
   return false;
-  //TODO test this
 }
 
 void BaseCouplingScheme::doImplicitStep()
