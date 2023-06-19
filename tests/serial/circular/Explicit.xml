@@ -43,9 +43,9 @@
     <mapping:nearest-neighbor direction="write" from="MC" to="MA" constraint="consistent" />
   </participant>
 
-  <m2n:sockets from="A" to="B" />
-  <m2n:sockets from="B" to="C" />
-  <m2n:sockets from="C" to="A" />
+  <m2n:sockets acceptor="A" to="B" />
+  <m2n:sockets acceptor="B" to="C" />
+  <m2n:sockets acceptor="C" to="A" />
 
   <coupling-scheme:serial-explicit>
     <participants first="A" second="B" />

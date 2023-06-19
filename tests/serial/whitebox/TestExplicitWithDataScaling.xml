@@ -10,7 +10,7 @@
     <use-data name="Velocities" />
   </mesh>
 
-  <m2n:sockets from="SolverOne" to="SolverTwo" />
+  <m2n:sockets acceptor="SolverOne" to="SolverTwo" />
 
   <participant name="SolverOne">
     <provide-mesh name="Test-Square-One" />

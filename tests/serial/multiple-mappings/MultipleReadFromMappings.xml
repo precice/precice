@@ -33,7 +33,7 @@
     <write-data name="Pressure" mesh="MeshB" />
   </participant>
 
-  <m2n:sockets from="B" to="A" />
+  <m2n:sockets acceptor="B" to="A" />
 
   <coupling-scheme:parallel-explicit>
     <participants first="A" second="B" />

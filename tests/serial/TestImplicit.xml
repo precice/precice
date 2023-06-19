@@ -3,7 +3,7 @@
   <data:vector name="Forces" />
   <data:vector name="Velocities" />
 
-  <m2n:sockets from="SolverOne" to="SolverTwo" />
+  <m2n:sockets acceptor="SolverOne" to="SolverTwo" />
 
   <mesh name="Square">
     <use-data name="Forces" />

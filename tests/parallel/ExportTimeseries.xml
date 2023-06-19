@@ -34,7 +34,7 @@
     <export:csv directory="timeseries" />
   </participant>
 
-  <m2n:sockets from="ExporterOne" to="ExporterTwo" />
+  <m2n:sockets acceptor="ExporterOne" to="ExporterTwo" />
 
   <coupling-scheme:serial-explicit>
     <participants first="ExporterOne" second="ExporterTwo" />

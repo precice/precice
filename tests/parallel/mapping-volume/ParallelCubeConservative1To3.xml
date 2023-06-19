@@ -27,7 +27,7 @@
     <read-data name="DataOne" mesh="MeshTwo" />
   </participant>
 
-  <m2n:sockets from="SolverOneCubeConservative1To3" to="SolverTwoCubeConservative1To3" />
+  <m2n:sockets acceptor="SolverOneCubeConservative1To3" to="SolverTwoCubeConservative1To3" />
 
   <coupling-scheme:serial-explicit>
     <participants first="SolverOneCubeConservative1To3" second="SolverTwoCubeConservative1To3" />

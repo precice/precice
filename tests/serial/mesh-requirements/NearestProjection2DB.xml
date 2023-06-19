@@ -10,7 +10,7 @@
     <use-data name="Data" />
   </mesh>
 
-  <m2n:sockets from="A" to="B" />
+  <m2n:sockets acceptor="A" to="B" />
 
   <participant name="A">
     <provide-mesh name="MeshA" />

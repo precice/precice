@@ -32,7 +32,7 @@
     <write-data name="Data2" mesh="B-Mesh" />
   </participant>
 
-  <m2n:sockets from="B" to="A" />
+  <m2n:sockets acceptor="B" to="A" />
 
   <coupling-scheme:serial-implicit>
     <participants first="B" second="A" />

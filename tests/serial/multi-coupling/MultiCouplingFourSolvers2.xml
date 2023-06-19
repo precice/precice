@@ -86,11 +86,11 @@
     <mapping:nearest-neighbor direction="read" from="MeshC2" to="MeshD" constraint="consistent" />
   </participant>
 
-  <m2n:sockets from="SolverA" to="SolverB" />
-  <m2n:sockets from="SolverB" to="SolverC" />
-  <m2n:sockets from="SolverC" to="SolverD" />
-  <m2n:sockets from="SolverC" to="SolverA" />
-  <m2n:sockets from="SolverD" to="SolverA" />
+  <m2n:sockets acceptor="SolverA" to="SolverB" />
+  <m2n:sockets acceptor="SolverB" to="SolverC" />
+  <m2n:sockets acceptor="SolverC" to="SolverD" />
+  <m2n:sockets acceptor="SolverC" to="SolverA" />
+  <m2n:sockets acceptor="SolverD" to="SolverA" />
 
   <coupling-scheme:multi>
     <participant name="SolverA" control="yes" />

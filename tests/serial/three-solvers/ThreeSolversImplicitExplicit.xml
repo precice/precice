@@ -47,8 +47,8 @@
     <mapping:nearest-neighbor direction="write" from="MeshD" to="MeshA" constraint="consistent" />
   </participant>
 
-  <m2n:sockets from="SolverOne" to="SolverTwo" />
-  <m2n:sockets from="SolverOne" to="SolverThree" />
+  <m2n:sockets acceptor="SolverOne" to="SolverTwo" />
+  <m2n:sockets acceptor="SolverOne" to="SolverThree" />
 
   <coupling-scheme:serial-implicit>
     <participants first="SolverOne" second="SolverTwo" />

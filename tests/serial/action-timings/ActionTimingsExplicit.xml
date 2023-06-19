@@ -49,7 +49,7 @@
     <action:recorder timing="read-mapping-post" mesh="MeshTwo" />
   </participant>
 
-  <m2n:sockets from="SolverOne" to="SolverTwo" />
+  <m2n:sockets acceptor="SolverOne" to="SolverTwo" />
 
   <coupling-scheme:serial-explicit>
     <participants first="SolverOne" second="SolverTwo" />
