@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     double preciceDt = precice.getMaxTimeStepSize();
     double currentDt = solverDt > preciceDt ? preciceDt : solverDt; // determine actual time step size; must fit into remaining time in window
 
-    precice.readData(meshName, readDataName, {&vertexID, 1}, currentDt, {&readData, 1}); // @todo should be able to observe difference compared to substeps="false"
+    precice.readData(meshName, readDataName, {&vertexID, 1}, currentDt, {&readData, 1});
 
     BOOST_TEST(readData == readFunction(readTime));
 
