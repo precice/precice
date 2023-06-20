@@ -3,6 +3,8 @@
 from lxml import etree
 import sys
 import argparse
+import os
+import shutil
 
 
 if sys.version_info < (3, 6):
@@ -75,6 +77,9 @@ def portConfiguration(root):
     assert root.tag == "precice-configuration"
     # remove SI
     si = root.find("solver-interface")
+    if si is None:
+        print("This configuration already seems to be a version 3 configuration file.")
+        return None
     dims = si.attrib["dimensions"]
     root.attrib.update({"dimensions": dims})
     experimental = si.attrib.get("experimental")
@@ -84,12 +89,13 @@ def portConfiguration(root):
         root.append(c)
     root.remove(si)
 
-    for p in tree.findall("participant"):
+    for p in root.findall("participant"):
         p = portParticipant(p)
 
-    for cpl in tree.findall("coupling-schemes"):
+    for cpl in root.findall("coupling-schemes"):
         cpl = portCouplingScheme(cpl)
     return root
+
 
 
 if __name__ == '__main__':
@@ -97,6 +103,16 @@ if __name__ == '__main__':
     parser.add_argument('infile',  type=str, help="The XML configuration file to update.")
     args = parser.parse_args()
 
-    tree = parseXMLFile(args.infile)
-    ported = portConfiguration(tree)
-    print(etree.tostring(ported).decode())
+    print("Parsing file")
+    root = parseXMLFile(args.infile)
+    ported = portConfiguration(root)
+    if ported is None:
+        sys.exit(1)
+
+    print("Creating backup")
+    shutil.copyfile(args.infile, args.infile+".bak")
+
+    print("Writing file")
+    tree = etree.ElementTree(ported)
+    tree.write(args.infile, pretty_print=True, xml_declaration=True, encoding="utf-8")
+    sys.exit(0)
