@@ -9,8 +9,8 @@ Refer to \ref precice::tooling for the tooling API.
 
 The API of further native bindings can be found here:
 
-- \ref ParticipantC.h "ParticipantC" for the C bindings.
-- \ref ParticipantFortran.hpp "ParticipantFortran" for the Fortran bindings.
+- \ref preciceC.h "precicec" for the C bindings.
+- \ref preciceFortran.hpp "preciceFortran" for the Fortran bindings.
 
 # For Library Developers
 
