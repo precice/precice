@@ -31,6 +31,7 @@ def parseXML(content):
 def parseXMLFile(filename):
     return parseXML(open(filename, "rb").read())
 
+
 def portParticipant(p):
     # use-mesh -> receive-mesh / provide-mesh
     for um in p.findall("use-mesh"):
@@ -61,8 +62,12 @@ def portParticipant(p):
     removedTimings = ["regular-prior", "regular-post", "on-exchange-prior", "on-exchange-post", "read-mapping-prior", "write-mapping-prior", "on-time-window-complete-post"]
     removedActions = ["ComputeCurvatureAction", "ScaleByDtAction"]
     for a in filter(lambda c: c.tag.startswith("action"), p.iterchildren()):
-        if a.tag.removeprefix("action:") in removedActions or a.tag.attrib["timing"] in removedTimings:
+        if a.tag.removeprefix("action:") in removedActions:
             p.remove(a)
+            print(f"Removed: {a.tag} (action unsupported)")
+        elif a.tag.removeprefix("action:") in removedActions:
+            p.remove(a)
+            print(f"Removed: {a.tag} (timing unsupported)")
     return p
 
 
@@ -70,6 +75,7 @@ def portCouplingScheme(cpl):
     # removed extrapolation order
     for extra in cpl.findall("extrapolation-order"):
         cpl.remove(extra)
+        print("Removed: extrapolation-order")
     return cpl
 
 
@@ -95,7 +101,6 @@ def portConfiguration(root):
     for cpl in root.findall("coupling-schemes"):
         cpl = portCouplingScheme(cpl)
     return root
-
 
 
 if __name__ == '__main__':
