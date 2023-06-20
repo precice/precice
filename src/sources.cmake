@@ -5,7 +5,7 @@
 target_sources(preciceCore
     PRIVATE
     ${CMAKE_BINARY_DIR}/src/precice/impl/versions.cpp
-    ${CMAKE_BINARY_DIR}/src/precice/impl/versions.hpp
+    ${PROJECT_BINARY_DIR}/src/precice/impl/versions.hpp
     src/acceleration/Acceleration.cpp
     src/acceleration/Acceleration.hpp
     src/acceleration/AitkenAcceleration.cpp
@@ -40,8 +40,6 @@ target_sources(preciceCore
     src/acceleration/impl/ValuePreconditioner.cpp
     src/acceleration/impl/ValuePreconditioner.hpp
     src/action/Action.hpp
-    src/action/ComputeCurvatureAction.cpp
-    src/action/ComputeCurvatureAction.hpp
     src/action/PythonAction.cpp
     src/action/PythonAction.hpp
     src/action/RecorderAction.cpp
@@ -115,8 +113,6 @@ target_sources(preciceCore
     src/cplscheme/impl/AbsoluteConvergenceMeasure.cpp
     src/cplscheme/impl/AbsoluteConvergenceMeasure.hpp
     src/cplscheme/impl/ConvergenceMeasure.hpp
-    src/cplscheme/impl/Extrapolation.cpp
-    src/cplscheme/impl/Extrapolation.hpp
     src/cplscheme/impl/MinIterationConvergenceMeasure.cpp
     src/cplscheme/impl/MinIterationConvergenceMeasure.hpp
     src/cplscheme/impl/RelativeConvergenceMeasure.cpp
@@ -185,6 +181,7 @@ target_sources(preciceCore
     src/mapping/NearestNeighborMapping.hpp
     src/mapping/NearestProjectionMapping.cpp
     src/mapping/NearestProjectionMapping.hpp
+    src/mapping/PartitionOfUnityMapping.hpp
     src/mapping/PetRadialBasisFctMapping.hpp
     src/mapping/Polation.cpp
     src/mapping/Polation.hpp
@@ -194,7 +191,10 @@ target_sources(preciceCore
     src/mapping/SharedPointer.hpp
     src/mapping/config/MappingConfiguration.cpp
     src/mapping/config/MappingConfiguration.hpp
+    src/mapping/config/MappingConfigurationTypes.hpp
     src/mapping/impl/BasisFunctions.hpp
+    src/mapping/impl/CreateClustering.hpp
+    src/mapping/impl/SphericalVertexCluster.hpp
     src/math/barycenter.cpp
     src/math/barycenter.hpp
     src/math/constants.hpp
@@ -233,8 +233,8 @@ target_sources(preciceCore
     src/partition/ReceivedPartition.cpp
     src/partition/ReceivedPartition.hpp
     src/partition/SharedPointer.hpp
-    src/precice/SolverInterface.cpp
-    src/precice/SolverInterface.hpp
+    src/precice/Participant.cpp
+    src/precice/Participant.hpp
     src/precice/Tooling.cpp
     src/precice/Tooling.hpp
     src/precice/config/Configuration.cpp
@@ -242,20 +242,18 @@ target_sources(preciceCore
     src/precice/config/ParticipantConfiguration.cpp
     src/precice/config/ParticipantConfiguration.hpp
     src/precice/config/SharedPointer.hpp
-    src/precice/config/SolverInterfaceConfiguration.cpp
-    src/precice/config/SolverInterfaceConfiguration.hpp
     src/precice/impl/CommonErrorMessages.hpp
     src/precice/impl/DataContext.cpp
     src/precice/impl/DataContext.hpp
     src/precice/impl/MappingContext.hpp
     src/precice/impl/MeshContext.hpp
-    src/precice/impl/Participant.cpp
-    src/precice/impl/Participant.hpp
+    src/precice/impl/ParticipantImpl.cpp
+    src/precice/impl/ParticipantImpl.hpp
+    src/precice/impl/ParticipantState.cpp
+    src/precice/impl/ParticipantState.hpp
     src/precice/impl/ReadDataContext.cpp
     src/precice/impl/ReadDataContext.hpp
     src/precice/impl/SharedPointer.hpp
-    src/precice/impl/SolverInterfaceImpl.cpp
-    src/precice/impl/SolverInterfaceImpl.hpp
     src/precice/impl/ValidationMacros.hpp
     src/precice/impl/WatchIntegral.cpp
     src/precice/impl/WatchIntegral.hpp
@@ -263,11 +261,21 @@ target_sources(preciceCore
     src/precice/impl/WatchPoint.hpp
     src/precice/impl/WriteDataContext.cpp
     src/precice/impl/WriteDataContext.hpp
+    src/precice/precice.hpp
+    src/precice/span.hpp
     src/precice/types.hpp
+    src/profiling/Event.cpp
+    src/profiling/Event.hpp
+    src/profiling/EventUtils.cpp
+    src/profiling/EventUtils.hpp
+    src/profiling/config/ProfilingConfiguration.cpp
+    src/profiling/config/ProfilingConfiguration.hpp
     src/query/Index.cpp
     src/query/Index.hpp
     src/query/impl/RTreeAdapter.hpp
+    src/time/Sample.hpp
     src/time/SharedPointer.hpp
+    src/time/Stample.hpp
     src/time/Storage.cpp
     src/time/Storage.hpp
     src/time/Time.cpp
@@ -280,10 +288,6 @@ target_sources(preciceCore
     src/utils/EigenHelperFunctions.cpp
     src/utils/EigenHelperFunctions.hpp
     src/utils/EigenIO.hpp
-    src/utils/Event.cpp
-    src/utils/Event.hpp
-    src/utils/EventUtils.cpp
-    src/utils/EventUtils.hpp
     src/utils/Helpers.cpp
     src/utils/Helpers.hpp
     src/utils/IntraComm.cpp
@@ -310,7 +314,6 @@ target_sources(preciceCore
     src/utils/fmtSTL.hpp
     src/utils/networking.cpp
     src/utils/networking.hpp
-    src/utils/span.hpp
     src/utils/span_tools.hpp
     src/utils/stacktrace.cpp
     src/utils/stacktrace.hpp
@@ -331,8 +334,10 @@ target_sources(preciceCore
 #
 
 set_property(TARGET precice PROPERTY PUBLIC_HEADER
-    ${CMAKE_BINARY_DIR}/src/precice/Version.h
-    src/precice/SolverInterface.hpp
+    ${PROJECT_BINARY_DIR}/src/precice/Version.h
+    src/precice/Participant.hpp
     src/precice/Tooling.hpp
+    src/precice/precice.hpp
+    src/precice/span.hpp
     src/precice/types.hpp
     )

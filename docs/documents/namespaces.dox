@@ -85,12 +85,20 @@
  *  @brief contains the partitioning of distributed meshes.
  */
 
+/** @namespace precice::profiling
+ *  @brief contains profiling utilities.
+ */
+
 /** @namespace precice::query
  *  @brief contains geometrical queries.
  */
 
 /** @namespace precice::testing
  *  @brief contains the testing framework.
+ */
+
+/** @namespace precice::time
+ *  @brief contains the time interpolation logic.
  */
 
 /** @namespace precice::utils

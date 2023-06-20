@@ -1,40 +1,38 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration>
-  <solver-interface dimensions="3" experimental="on">
-    <data:vector name="DataA" />
-    <data:scalar name="DataB" />
+<precice-configuration dimensions="3" experimental="on">
+  <data:vector name="DataA" />
+  <data:scalar name="DataB" />
 
-    <mesh name="MeshA">
-      <use-data name="DataA" />
-    </mesh>
+  <mesh name="MeshA">
+    <use-data name="DataA" />
+  </mesh>
 
-    <mesh name="MeshB">
-      <use-data name="DataA" />
-    </mesh>
+  <mesh name="MeshB">
+    <use-data name="DataA" />
+  </mesh>
 
-    <m2n:sockets from="A" to="B" />
+  <m2n:sockets from="A" to="B" />
 
-    <participant name="A">
-      <provide-mesh name="MeshA" />
-      <write-data name="DataA" mesh="MeshA" />
-    </participant>
+  <participant name="A">
+    <provide-mesh name="MeshA" />
+    <write-data name="DataA" mesh="MeshA" />
+  </participant>
 
-    <participant name="B">
-      <provide-mesh name="MeshB" />
-      <receive-mesh name="MeshA" from="A" />
-      <mapping:nearest-neighbor-gradient
-        constraint="consistent"
-        direction="read"
-        from="MeshA"
-        to="MeshB" />
-      <read-data name="DataA" mesh="MeshB" />
-    </participant>
+  <participant name="B">
+    <provide-mesh name="MeshB" />
+    <receive-mesh name="MeshA" from="A" />
+    <mapping:nearest-neighbor-gradient
+      constraint="consistent"
+      direction="read"
+      from="MeshA"
+      to="MeshB" />
+    <read-data name="DataA" mesh="MeshB" />
+  </participant>
 
-    <coupling-scheme:serial-explicit>
-      <participants first="A" second="B" />
-      <max-time-windows value="1" />
-      <time-window-size value="1" />
-      <exchange data="DataA" mesh="MeshA" from="A" to="B" />
-    </coupling-scheme:serial-explicit>
-  </solver-interface>
+  <coupling-scheme:serial-explicit>
+    <participants first="A" second="B" />
+    <max-time-windows value="1" />
+    <time-window-size value="1" />
+    <exchange data="DataA" mesh="MeshA" from="A" to="B" />
+  </coupling-scheme:serial-explicit>
 </precice-configuration>

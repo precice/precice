@@ -84,7 +84,8 @@ protected:
   /// @return Communication device to the other coupling participant.
   m2n::PtrM2N getM2N() const;
 
-  void exchangeInitialData() override final;
+  /// @copydoc cplscheme::BaseCouplingScheme::initializeReceiveDataStorage()
+  void initializeReceiveDataStorage() override final;
 
   CouplingScheme::ChangedMeshes receiveRemoteChanges();
 

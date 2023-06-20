@@ -23,7 +23,7 @@ void Acceleration::applyRelaxation(double omega, const DataMap &cplData) const
     values *= omega;
     values += oldValues * (1 - omega);
     if (couplingData->hasGradient()) {
-      auto &      gradients    = couplingData->gradientValues();
+      auto &      gradients    = couplingData->gradients();
       const auto &oldGradients = couplingData->previousIterationGradients();
       gradients *= omega;
       gradients += oldGradients * (1 - omega);

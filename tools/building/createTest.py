@@ -17,14 +17,14 @@ def is_precice_root(dir):
 def find_precice_root():
     search_depth = 10
     current = pathlib.Path(os.path.curdir).absolute()
-    candidats = [current] + list(current.parents)[:search_depth]
-    for dir in candidats:
+    candidates = [current] + list(current.parents)[:search_depth]
+    for dir in candidates:
         if is_precice_root(dir):
             return dir
     raise BaseException("Unable to find the root directory of precice")
 
 
-ABREVIATIONS = ["MPI", "QN", "RBF", "NN", "NP"]
+ABBREVIATIONS = ["MPI", "QN", "RBF", "NN", "NP"]
 
 
 def dirToSuite(dir):
@@ -34,7 +34,7 @@ def dirToSuite(dir):
     """
     def toSuite(s):
         upper = s.upper()
-        if upper in ABREVIATIONS:
+        if upper in ABBREVIATIONS:
             return upper
         else:
             return s.capitalize()
@@ -117,7 +117,7 @@ PRECICE_TEST_BODY = """{
 
   // Implement your test here.
   BOOST_TEST(false);
-  precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
+  precice::Participant interface(context.name, context.config(), context.rank, context.size);
 
   std::vector<VertexID> vertexIDs;
 
@@ -139,7 +139,7 @@ def generateTestSource(name, suite, filepath):
         raise BaseException("The test source at \"{}\" already exists.".format(filepath))
 
     includes = [
-        "<precice/SolverInterface.hpp>", "<vector>", '"testing/Testing.hpp"'
+        "<precice/precice.hpp>", "<vector>", '"testing/Testing.hpp"'
     ]
     suites = ["Integration"] + suite
     space = [""]

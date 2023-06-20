@@ -1,35 +1,33 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration>
-  <solver-interface dimensions="3">
-    <data:scalar name="Data" />
+<precice-configuration dimensions="3">
+  <data:scalar name="Data" />
 
-    <mesh name="MeshA">
-      <use-data name="Data" />
-    </mesh>
+  <mesh name="MeshA">
+    <use-data name="Data" />
+  </mesh>
 
-    <mesh name="MeshB">
-      <use-data name="Data" />
-    </mesh>
+  <mesh name="MeshB">
+    <use-data name="Data" />
+  </mesh>
 
-    <m2n:sockets from="A" to="B" />
+  <m2n:sockets from="A" to="B" />
 
-    <participant name="A">
-      <provide-mesh name="MeshA" />
-      <write-data name="Data" mesh="MeshA" />
-    </participant>
+  <participant name="A">
+    <provide-mesh name="MeshA" />
+    <write-data name="Data" mesh="MeshA" />
+  </participant>
 
-    <participant name="B">
-      <receive-mesh name="MeshA" from="A" />
-      <provide-mesh name="MeshB" />
-      <read-data name="Data" mesh="MeshB" />
-      <mapping:nearest-neighbor constraint="consistent" direction="read" from="MeshA" to="MeshB" />
-    </participant>
+  <participant name="B">
+    <receive-mesh name="MeshA" from="A" />
+    <provide-mesh name="MeshB" />
+    <read-data name="Data" mesh="MeshB" />
+    <mapping:nearest-neighbor constraint="consistent" direction="read" from="MeshA" to="MeshB" />
+  </participant>
 
-    <coupling-scheme:parallel-explicit>
-      <participants first="A" second="B" />
-      <max-time value="1.0" />
-      <time-window-size value="1" />
-      <exchange data="Data" mesh="MeshA" from="A" to="B" />
-    </coupling-scheme:parallel-explicit>
-  </solver-interface>
+  <coupling-scheme:parallel-explicit>
+    <participants first="A" second="B" />
+    <max-time value="1.0" />
+    <time-window-size value="1" />
+    <exchange data="Data" mesh="MeshA" from="A" to="B" />
+  </coupling-scheme:parallel-explicit>
 </precice-configuration>

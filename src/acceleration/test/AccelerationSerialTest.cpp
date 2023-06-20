@@ -34,17 +34,17 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
 {
   PRECICE_TEST(1_rank);
   //use two vectors and see if underrelaxation works
-  double           initialRelaxation        = 0.01;
-  int              maxIterationsUsed        = 50;
-  int              timestepsReused          = 6;
-  int              reusedTimestepsAtRestart = 0;
-  int              chunkSize                = 0;
-  int              filter                   = Acceleration::QR1FILTER;
-  int              restartType              = MVQNAcceleration::NO_RESTART;
-  double           singularityLimit         = 1e-10;
-  double           svdTruncationEps         = 0.0;
-  bool             enforceInitialRelaxation = false;
-  bool             alwaysBuildJacobian      = false;
+  double           initialRelaxation          = 0.01;
+  int              maxIterationsUsed          = 50;
+  int              timeWindowsReused          = 6;
+  int              reusedTimeWindowsAtRestart = 0;
+  int              chunkSize                  = 0;
+  int              filter                     = Acceleration::QR1FILTER;
+  int              restartType                = MVQNAcceleration::NO_RESTART;
+  double           singularityLimit           = 1e-10;
+  double           svdTruncationEps           = 0.0;
+  bool             enforceInitialRelaxation   = false;
+  bool             alwaysBuildJacobian        = false;
   std::vector<int> dataIDs;
   dataIDs.push_back(0);
   dataIDs.push_back(1);
@@ -54,8 +54,8 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
   mesh::PtrMesh           dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
 
   MVQNAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                      timestepsReused, filter, singularityLimit, dataIDs, prec, alwaysBuildJacobian,
-                      restartType, chunkSize, reusedTimestepsAtRestart, svdTruncationEps);
+                      timeWindowsReused, filter, singularityLimit, dataIDs, prec, alwaysBuildJacobian,
+                      restartType, chunkSize, reusedTimeWindowsAtRestart, svdTruncationEps);
 
   Eigen::VectorXd fcol1;
 
@@ -65,13 +65,15 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
   //init displacements
   displacements->values().resize(4);
   displacements->values() << 1.0, 1.0, 1.0, 1.0;
+  displacements->setSampleAtTime(time::Storage::WINDOW_END, displacements->sample());
 
   //init forces
   forces->values().resize(4);
   forces->values() << 0.2, 0.2, 0.2, 0.2;
+  forces->setSampleAtTime(time::Storage::WINDOW_END, forces->sample());
 
-  cplscheme::PtrCouplingData dpcd(new cplscheme::CouplingData(displacements, dummyMesh, false));
-  cplscheme::PtrCouplingData fpcd(new cplscheme::CouplingData(forces, dummyMesh, false));
+  cplscheme::PtrCouplingData dpcd(new cplscheme::CouplingData(displacements, dummyMesh, false, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
+  cplscheme::PtrCouplingData fpcd(new cplscheme::CouplingData(forces, dummyMesh, false, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
 
   DataMap data;
   data.insert(std::pair<int, cplscheme::PtrCouplingData>(0, dpcd));
@@ -82,7 +84,9 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
   pp.initialize(data);
 
   displacements->values() << 1.0, 2.0, 3.0, 4.0;
+  displacements->setSampleAtTime(time::Storage::WINDOW_END, displacements->sample());
   forces->values() << 0.1, 0.1, 0.1, 0.1;
+  forces->setSampleAtTime(time::Storage::WINDOW_END, forces->sample());
 
   pp.performAcceleration(data);
 
@@ -116,7 +120,7 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
 
   double           initialRelaxation        = 0.01;
   int              maxIterationsUsed        = 50;
-  int              timestepsReused          = 6;
+  int              timeWindowsReused        = 6;
   int              filter                   = acceleration::BaseQNAcceleration::QR1FILTER;
   double           singularityLimit         = 1e-10;
   bool             enforceInitialRelaxation = false;
@@ -133,7 +137,7 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
   mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
 
   IQNILSAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                        timestepsReused, filter, singularityLimit, dataIDs, prec);
+                        timeWindowsReused, filter, singularityLimit, dataIDs, prec);
 
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
   mesh::PtrData forces(new mesh::Data("fvalues", -1, 1));
@@ -141,13 +145,15 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
   //init displacements
   displacements->values().resize(4);
   displacements->values() << 1.0, 1.0, 1.0, 1.0;
+  displacements->setSampleAtTime(time::Storage::WINDOW_END, displacements->sample());
 
   //init forces
   forces->values().resize(4);
   forces->values() << 0.2, 0.2, 0.2, 0.2;
+  forces->setSampleAtTime(time::Storage::WINDOW_END, forces->sample());
 
-  cplscheme::PtrCouplingData dpcd(new cplscheme::CouplingData(displacements, dummyMesh, false));
-  cplscheme::PtrCouplingData fpcd(new cplscheme::CouplingData(forces, dummyMesh, false));
+  cplscheme::PtrCouplingData dpcd(new cplscheme::CouplingData(displacements, dummyMesh, false, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
+  cplscheme::PtrCouplingData fpcd(new cplscheme::CouplingData(forces, dummyMesh, false, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
   dpcd->storeIteration();
   fpcd->storeIteration();
 
@@ -158,7 +164,9 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
   pp.initialize(data);
 
   displacements->values() << 1.0, 2.0, 3.0, 4.0;
+  displacements->setSampleAtTime(time::Storage::WINDOW_END, displacements->sample());
   forces->values() << 0.1, 0.1, 0.1, 0.1;
+  forces->setSampleAtTime(time::Storage::WINDOW_END, forces->sample());
 
   pp.performAcceleration(data);
 
@@ -206,13 +214,15 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxation)
   // //init displacements
   displacements->values().resize(4);
   displacements->values() << 1.0, 2.0, 3.0, 4.0;
+  displacements->setSampleAtTime(time::Storage::WINDOW_END, displacements->sample());
 
   // //init forces
   forces->values().resize(4);
   forces->values() << 0.2, 0.2, 0.2, 0.2;
+  forces->setSampleAtTime(time::Storage::WINDOW_END, forces->sample());
 
-  cplscheme::PtrCouplingData dpcd = std::make_shared<cplscheme::CouplingData>(displacements, dummyMesh, false);
-  cplscheme::PtrCouplingData fpcd = std::make_shared<cplscheme::CouplingData>(forces, dummyMesh, false);
+  cplscheme::PtrCouplingData dpcd = std::make_shared<cplscheme::CouplingData>(displacements, dummyMesh, false, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
+  cplscheme::PtrCouplingData fpcd = std::make_shared<cplscheme::CouplingData>(forces, dummyMesh, false, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
 
   DataMap data;
   data.insert(std::pair<int, cplscheme::PtrCouplingData>(0, dpcd));
@@ -223,7 +233,9 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxation)
   acc.initialize(data);
 
   displacements->values() << 3.5, 2.0, 2.0, 1.0;
+  displacements->setSampleAtTime(time::Storage::WINDOW_END, displacements->sample());
   forces->values() << 0.1, 0.1, 0.1, 0.1;
+  forces->setSampleAtTime(time::Storage::WINDOW_END, forces->sample());
 
   acc.performAcceleration(data);
 
@@ -268,20 +280,22 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradient)
   displacements->values().resize(4);
   displacements->values() << 1.0, 2.0, 3.0, 4.0;
   displacements->requireDataGradient();
-  displacements->gradientValues().resize(dim, 4);
+  displacements->gradients().resize(dim, 4);
   for (unsigned int r = 0; r < dim; ++r) {
     for (unsigned int c = 0; c < 4; ++c)
-      displacements->gradientValues()(r, c) = r + r * c;
+      displacements->gradients()(r, c) = r + r * c;
   }
+  displacements->setSampleAtTime(time::Storage::WINDOW_END, displacements->sample());
   // //init forces
   forces->values().resize(4);
   forces->values() << 0.2, 0.2, 0.2, 0.2;
   forces->requireDataGradient();
-  forces->gradientValues().resize(dim, 4);
-  forces->gradientValues().setConstant(-2);
+  forces->gradients().resize(dim, 4);
+  forces->gradients().setConstant(-2);
+  forces->setSampleAtTime(time::Storage::WINDOW_END, forces->sample());
 
-  cplscheme::PtrCouplingData dpcd = std::make_shared<cplscheme::CouplingData>(displacements, dummyMesh, false);
-  cplscheme::PtrCouplingData fpcd = std::make_shared<cplscheme::CouplingData>(forces, dummyMesh, false);
+  cplscheme::PtrCouplingData dpcd = std::make_shared<cplscheme::CouplingData>(displacements, dummyMesh, false, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
+  cplscheme::PtrCouplingData fpcd = std::make_shared<cplscheme::CouplingData>(forces, dummyMesh, false, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
 
   DataMap data;
   data.insert(std::pair<int, cplscheme::PtrCouplingData>(0, dpcd));
@@ -292,9 +306,11 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradient)
   acc.initialize(data);
 
   displacements->values() << 3.5, 2.0, 2.0, 1.0;
-  displacements->gradientValues().setConstant(2.5);
+  displacements->gradients().setConstant(2.5);
+  displacements->setSampleAtTime(time::Storage::WINDOW_END, displacements->sample());
   forces->values() << 0.1, 0.1, 0.1, 0.1;
-  forces->gradientValues().setConstant(3);
+  forces->gradients().setConstant(3);
+  forces->setSampleAtTime(time::Storage::WINDOW_END, forces->sample());
 
   acc.performAcceleration(data);
 
@@ -309,21 +325,21 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradient)
   BOOST_TEST(data.at(1)->values()(3) == 0.16);
 
   // Test gradient data
-  BOOST_TEST(data.at(0)->gradientValues()(0, 0) == 1);
-  BOOST_TEST(data.at(0)->gradientValues()(0, 1) == 1);
-  BOOST_TEST(data.at(0)->gradientValues()(0, 2) == 1);
-  BOOST_TEST(data.at(0)->gradientValues()(1, 0) == 1.6);
-  BOOST_TEST(data.at(0)->gradientValues()(1, 1) == 2.2);
-  BOOST_TEST(data.at(0)->gradientValues()(1, 2) == 2.8);
-  BOOST_TEST(data.at(1)->gradientValues()(0, 0) == 0);
-  BOOST_TEST(data.at(1)->gradientValues()(0, 1) == 0);
-  BOOST_TEST(data.at(1)->gradientValues()(0, 2) == 0);
-  BOOST_TEST(data.at(1)->gradientValues()(1, 0) == 0);
-  BOOST_TEST(data.at(1)->gradientValues()(1, 1) == 0);
-  BOOST_TEST(data.at(1)->gradientValues()(1, 2) == 0);
+  BOOST_TEST(data.at(0)->gradients()(0, 0) == 1);
+  BOOST_TEST(data.at(0)->gradients()(0, 1) == 1);
+  BOOST_TEST(data.at(0)->gradients()(0, 2) == 1);
+  BOOST_TEST(data.at(0)->gradients()(1, 0) == 1.6);
+  BOOST_TEST(data.at(0)->gradients()(1, 1) == 2.2);
+  BOOST_TEST(data.at(0)->gradients()(1, 2) == 2.8);
+  BOOST_TEST(data.at(1)->gradients()(0, 0) == 0);
+  BOOST_TEST(data.at(1)->gradients()(0, 1) == 0);
+  BOOST_TEST(data.at(1)->gradients()(0, 2) == 0);
+  BOOST_TEST(data.at(1)->gradients()(1, 0) == 0);
+  BOOST_TEST(data.at(1)->gradients()(1, 1) == 0);
+  BOOST_TEST(data.at(1)->gradients()(1, 2) == 0);
 
   data.begin()->second->values() << 10, 10, 10, 10;
-  displacements->gradientValues().setConstant(4);
+  displacements->gradients().setConstant(4);
 
   acc.performAcceleration(data);
 
@@ -337,12 +353,12 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradient)
   BOOST_TEST(data.at(1)->values()(2) == 0.184);
   BOOST_TEST(data.at(1)->values()(3) == 0.184);
 
-  BOOST_TEST(data.at(0)->gradientValues()(0, 0) == 1.6);
-  BOOST_TEST(data.at(0)->gradientValues()(0, 1) == 1.6);
-  BOOST_TEST(data.at(0)->gradientValues()(0, 2) == 1.6);
-  BOOST_TEST(data.at(0)->gradientValues()(1, 0) == 2.2);
-  BOOST_TEST(data.at(0)->gradientValues()(1, 1) == 2.8);
-  BOOST_TEST(data.at(0)->gradientValues()(1, 2) == 3.4);
+  BOOST_TEST(data.at(0)->gradients()(0, 0) == 1.6);
+  BOOST_TEST(data.at(0)->gradients()(0, 1) == 1.6);
+  BOOST_TEST(data.at(0)->gradients()(0, 2) == 1.6);
+  BOOST_TEST(data.at(0)->gradients()(1, 0) == 2.2);
+  BOOST_TEST(data.at(0)->gradients()(1, 1) == 2.8);
+  BOOST_TEST(data.at(0)->gradients()(1, 2) == 3.4);
 }
 
 #endif // not PRECICE_NO_MPI

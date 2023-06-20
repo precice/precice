@@ -2,7 +2,7 @@
 
 #include "helpers.hpp"
 
-#include "precice/SolverInterface.hpp"
+#include "precice/precice.hpp"
 #include "testing/Testing.hpp"
 
 /// tests for different QN settings if correct fixed point is reached
@@ -21,10 +21,7 @@ void runTestQN(std::string const &config, TestContext const &context)
     readDataName  = "Data1";
   }
 
-  precice::SolverInterface interface(context.name, config, context.rank, context.size);
-  int                      meshID      = interface.getMeshID(meshName);
-  int                      writeDataID = interface.getDataID(writeDataName, meshID);
-  int                      readDataID  = interface.getDataID(readDataName, meshID);
+  precice::Participant interface(context.name, config, context.rank, context.size);
 
   VertexID vertexIDs[4];
 
@@ -34,16 +31,16 @@ void runTestQN(std::string const &config, TestContext const &context)
 
   if (context.isNamed("SolverOne")) {
     if (context.isPrimary()) {
-      interface.setMeshVertices(meshID, 4, positions0, vertexIDs);
+      interface.setMeshVertices(meshName, positions0, vertexIDs);
     } else {
-      interface.setMeshVertices(meshID, 4, positions1, vertexIDs);
+      interface.setMeshVertices(meshName, positions1, vertexIDs);
     }
   } else {
     BOOST_REQUIRE(context.isNamed("SolverTwo"));
     if (context.isPrimary()) {
-      interface.setMeshVertices(meshID, 4, positions0, vertexIDs);
+      interface.setMeshVertices(meshName, positions0, vertexIDs);
     } else {
-      interface.setMeshVertices(meshID, 4, positions1, vertexIDs);
+      interface.setMeshVertices(meshName, positions1, vertexIDs);
     }
   }
 
@@ -57,7 +54,8 @@ void runTestQN(std::string const &config, TestContext const &context)
     if (interface.requiresWritingCheckpoint()) {
     }
 
-    interface.readBlockScalarData(readDataID, 4, vertexIDs, inValues);
+    double preciceDt = interface.getMaxTimeStepSize();
+    interface.readData(meshName, readDataName, vertexIDs, preciceDt, inValues);
 
     /*
       Solves the following non-linear equations, which are extended to a fixed-point equation (simply +x)
@@ -81,7 +79,7 @@ void runTestQN(std::string const &config, TestContext const &context)
       outValues[3] = inValues[3] * inValues[3] - 4.0 + inValues[3];
     }
 
-    interface.writeBlockScalarData(writeDataID, 4, vertexIDs, outValues);
+    interface.writeData(meshName, writeDataName, vertexIDs, outValues);
     interface.advance(1.0);
 
     if (interface.requiresReadingCheckpoint()) {
@@ -118,10 +116,7 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
     readDataName  = "Data1";
   }
 
-  precice::SolverInterface interface(context.name, config, context.rank, context.size);
-  int                      meshID      = interface.getMeshID(meshName);
-  int                      writeDataID = interface.getDataID(writeDataName, meshID);
-  int                      readDataID  = interface.getDataID(readDataName, meshID);
+  precice::Participant interface(context.name, config, context.rank, context.size);
 
   VertexID vertexIDs[4];
 
@@ -131,13 +126,13 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
   if (context.isNamed("SolverOne")) {
     // All mesh is on primary rank
     if (context.isPrimary()) {
-      interface.setMeshVertices(meshID, 4, positions0, vertexIDs);
+      interface.setMeshVertices(meshName, positions0, vertexIDs);
     }
   } else {
     BOOST_REQUIRE(context.isNamed("SolverTwo"));
     // All mesh is on secondary rank
     if (not context.isPrimary()) {
-      interface.setMeshVertices(meshID, 4, positions0, vertexIDs);
+      interface.setMeshVertices(meshName, positions0, vertexIDs);
     }
   }
 
@@ -151,9 +146,11 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
     if (interface.requiresWritingCheckpoint()) {
     }
 
+    double preciceDt = interface.getMaxTimeStepSize();
+
     if ((context.isNamed("SolverOne") and context.isPrimary()) or
         (context.isNamed("SolverTwo") and (not context.isPrimary()))) {
-      interface.readBlockScalarData(readDataID, 4, vertexIDs, inValues);
+      interface.readData(meshName, readDataName, vertexIDs, preciceDt, inValues);
     }
 
     /*
@@ -180,7 +177,7 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
 
     if ((context.isNamed("SolverOne") and context.isPrimary()) or
         (context.isNamed("SolverTwo") and (not context.isPrimary()))) {
-      interface.writeBlockScalarData(writeDataID, 4, vertexIDs, outValues);
+      interface.writeData(meshName, writeDataName, vertexIDs, outValues);
     }
     interface.advance(1.0);
 

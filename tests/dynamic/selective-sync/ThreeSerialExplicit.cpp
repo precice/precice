@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/precice.hpp>
 #include "../../serial/three-solvers/helpers.hpp"
 
 BOOST_AUTO_TEST_SUITE(Integration)

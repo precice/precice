@@ -1,9 +1,12 @@
 #pragma once
 
+#include <optional>
 #include <string>
+
 #include "MappingContext.hpp"
 #include "MeshContext.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "mesh/Utils.hpp"
 
 namespace precice {
 
@@ -33,16 +36,18 @@ public:
   std::string getDataName() const;
 
   /**
-   * @brief Resets provided data and (if mapping exists) fromData or toData.
-   */
-  void resetData();
-
-  /**
    * @brief Get the dimensions of _providedData.
    *
    * @return int Dimensions of _providedData.
    */
   int getDataDimensions() const;
+
+  /**
+   * @brief Get the spatial dimensions of _providedData.
+   *
+   * @return int Spatial dimensions of _providedData.
+   */
+  int getSpatialDimensions() const;
 
   /**
    * @brief Get the name of _mesh.
@@ -57,6 +62,14 @@ public:
    * @return int ID of _mesh.
    */
   MeshID getMeshID() const;
+
+  /**
+   * @brief Returns whether _providedData has gradient
+   *
+   * @return true, if it has gradient
+   * @return false, if it has gradient
+   */
+  bool hasGradient() const;
 
   /**
    * @brief Perform the mapping for all mapping contexts and the corresponding data context (from and to data)
@@ -79,6 +92,12 @@ public:
    * @return True, if this DataContext is associated with a mapping. False, if not.
    */
   bool hasMapping() const;
+
+  template <typename Container>
+  std::optional<std::size_t> locateInvalidVertexID(const Container &c)
+  {
+    return mesh::locateInvalidVertexID(*_mesh, c);
+  }
 
 protected:
   /**
@@ -117,6 +136,16 @@ protected:
    * @return True, if DataContext has any write mapping.
    */
   bool hasWriteMapping() const;
+
+  /**
+   * @brief Get the number of vertices of mesh
+   *
+   * @return int number of vertices
+   */
+  int getMeshVertexCount() const;
+
+  /// Returns true if the given vertexID is valid
+  bool isValidVertexID(const VertexID id) const;
 
 private:
   /// Unique mesh associated with _providedData.

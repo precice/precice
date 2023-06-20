@@ -3,7 +3,7 @@
 #include "../../serial/explicit/helpers.hpp"
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/precice.hpp>
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Dynamic)

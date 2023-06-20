@@ -12,11 +12,10 @@
     <use-data name="TargetData" />
   </mesh>
 
-  <action:summation timing="regular-prior" mesh="Mesh">
+  <action:summation timing="write-mapping-post" mesh="Mesh">
     <source-data name="SourceData1" />
     <source-data name="SourceData2" />
     <source-data name="SourceData3" />
-
     <target-data name="TargetData" />
   </action:summation>
 </configuration>

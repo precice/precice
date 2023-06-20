@@ -5,13 +5,13 @@
 namespace precice {
 namespace impl {
 
-class Participant;
+class ParticipantState;
 class Coupling;
 class WatchPoint;
 class WatchIntegral;
 struct MeshContext;
 
-using PtrParticipant   = std::shared_ptr<Participant>;
+using PtrParticipant   = std::shared_ptr<ParticipantState>;
 using PtrCoupling      = std::shared_ptr<Coupling>;
 using PtrWatchPoint    = std::shared_ptr<WatchPoint>;
 using PtrWatchIntegral = std::shared_ptr<WatchIntegral>;

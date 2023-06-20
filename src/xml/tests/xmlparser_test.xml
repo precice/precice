@@ -3,15 +3,11 @@
   <test-config>
     <test-double attribute="1/3" />
     <test-double attribute="3.1" />
-
     <test-int attribute="4" />
-
     <test-string text="Hello World" />
-
     <test-bool attribute="No" />
     <test-bool attribute="Yes" />
     <test-bool attribute="1" />
-
     <test-eigen attribute="3.0; 2.0; 1.0" />
   </test-config>
 </configuration>

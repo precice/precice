@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration>
+<precice-configuration dimensions="3">
   <log>
     <sink
       type="stream"
@@ -9,53 +9,51 @@
       enabled="true" />
   </log>
 
-  <solver-interface dimensions="3">
-    <data:vector name="dataOne" />
-    <data:vector name="dataTwo" />
+  <data:vector name="Data-One" />
+  <data:vector name="Data-Two" />
 
-    <mesh name="MeshOne">
-      <use-data name="dataOne" />
-      <use-data name="dataTwo" />
-    </mesh>
+  <mesh name="SolverOne-Mesh">
+    <use-data name="Data-One" />
+    <use-data name="Data-Two" />
+  </mesh>
 
-    <mesh name="MeshTwo">
-      <use-data name="dataOne" />
-      <use-data name="dataTwo" />
-    </mesh>
+  <mesh name="SolverTwo-Mesh">
+    <use-data name="Data-One" />
+    <use-data name="Data-Two" />
+  </mesh>
 
-    <participant name="SolverOne">
-      <provide-mesh name="MeshOne" />
-      <write-data name="dataOne" mesh="MeshOne" />
-      <read-data name="dataTwo" mesh="MeshOne" />
-    </participant>
+  <participant name="SolverOne">
+    <provide-mesh name="SolverOne-Mesh" />
+    <write-data name="Data-One" mesh="SolverOne-Mesh" />
+    <read-data name="Data-Two" mesh="SolverOne-Mesh" />
+  </participant>
 
-    <participant name="SolverTwo">
-      <receive-mesh name="MeshOne" from="SolverOne" />
-      <provide-mesh name="MeshTwo" />
-      <mapping:nearest-neighbor
-        direction="write"
-        from="MeshTwo"
-        to="MeshOne"
-        constraint="conservative" />
-      <mapping:nearest-neighbor
-        direction="read"
-        from="MeshOne"
-        to="MeshTwo"
-        constraint="consistent" />
-      <write-data name="dataTwo" mesh="MeshTwo" />
-      <read-data name="dataOne" mesh="MeshTwo" />
-    </participant>
+  <participant name="SolverTwo">
+    <receive-mesh name="SolverOne-Mesh" from="SolverOne" />
+    <provide-mesh name="SolverTwo-Mesh" />
+    <mapping:nearest-neighbor
+      direction="write"
+      from="SolverTwo-Mesh"
+      to="SolverOne-Mesh"
+      constraint="conservative" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="SolverOne-Mesh"
+      to="SolverTwo-Mesh"
+      constraint="consistent" />
+    <write-data name="Data-Two" mesh="SolverTwo-Mesh" />
+    <read-data name="Data-One" mesh="SolverTwo-Mesh" />
+  </participant>
 
-    <m2n:sockets from="SolverOne" to="SolverTwo" />
+  <m2n:sockets from="SolverOne" to="SolverTwo" />
 
-    <coupling-scheme:serial-implicit>
-      <participants first="SolverOne" second="SolverTwo" />
-      <max-time-windows value="2" />
-      <time-window-size value="1.0" />
-      <max-iterations value="2" />
-      <min-iteration-convergence-measure min-iterations="5" data="dataOne" mesh="MeshOne" />
-      <exchange data="dataOne" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
-      <exchange data="dataTwo" mesh="MeshOne" from="SolverTwo" to="SolverOne" />
-    </coupling-scheme:serial-implicit>
-  </solver-interface>
+  <coupling-scheme:serial-implicit>
+    <participants first="SolverOne" second="SolverTwo" />
+    <max-time-windows value="2" />
+    <time-window-size value="1.0" />
+    <max-iterations value="2" />
+    <min-iteration-convergence-measure min-iterations="5" data="Data-One" mesh="SolverOne-Mesh" />
+    <exchange data="Data-One" mesh="SolverOne-Mesh" from="SolverOne" to="SolverTwo" />
+    <exchange data="Data-Two" mesh="SolverOne-Mesh" from="SolverTwo" to="SolverOne" />
+  </coupling-scheme:serial-implicit>
 </precice-configuration>

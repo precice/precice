@@ -59,7 +59,7 @@ function(add_precice_test)
     PROPERTIES
     RUN_SERIAL TRUE # Do not run this test in parallel with others
     WORKING_DIRECTORY "${PAT_WDIR}"
-    ENVIRONMENT "PRECICE_ROOT=${preCICE_SOURCE_DIR};OMPI_MCA_rmaps_base_oversubscribe=1"
+    ENVIRONMENT "OMPI_MCA_rmaps_base_oversubscribe=1"
     )
   if(PAT_TIMEOUT)
     set_tests_properties(${PAT_FULL_NAME} PROPERTIES TIMEOUT ${PAT_TIMEOUT} )
@@ -382,17 +382,17 @@ if(PRECICE_BUILD_TOOLS)
 
   add_tools_test(
     NAME check.file
-    COMMAND precice-tools check ${CMAKE_SOURCE_DIR}/src/precice/tests/config-checker.xml
+    COMMAND precice-tools check ${PROJECT_SOURCE_DIR}/src/precice/tests/config-checker.xml
     )
 
   add_tools_test(
     NAME check.file+name
-    COMMAND precice-tools check ${CMAKE_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo
+    COMMAND precice-tools check ${PROJECT_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo
     )
 
   add_tools_test(
     NAME check.file+name+size
-    COMMAND precice-tools check ${CMAKE_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo 2
+    COMMAND precice-tools check ${PROJECT_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo 2
     )
 endif()
 

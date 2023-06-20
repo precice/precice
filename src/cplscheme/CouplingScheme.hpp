@@ -42,7 +42,7 @@ namespace cplscheme {
 class CouplingScheme {
 public:
   /// Does not define a time limit for the coupled simulation.
-  static const double UNDEFINED_TIME;
+  static const double UNDEFINED_MAX_TIME;
 
   /// Does not define limit on time windows for the coupled simulation.
   static const int UNDEFINED_TIME_WINDOWS;
@@ -81,16 +81,6 @@ public:
       int    startTimeWindow) = 0;
 
   /**
-   * @brief Receives result of first advance, if this has to happen inside SolverInterface::initialize()
-   *
-   * This is only relevant for the second participant of the SerialCouplingScheme, because other coupling schemes only
-   * receive initial data in initialize. This part is implemented as a public function to be called from
-   * SolverInterfaceImpl. SolverInterfaceImpl has to store data received in CouplingScheme::initialize before calling
-   * CouplingScheme::receiveResultOfFirstAdvance, which will override the data in the receive buffer.
-   */
-  virtual void receiveResultOfFirstAdvance() = 0;
-
-  /**
    * @brief Returns whether this participant of the coupling scheme sends initialized data.
    *
    * @returns true, if this participant of the coupling scheme sends initialized data
@@ -106,8 +96,13 @@ public:
    * @{
    */
 
-  /// @brief Adds newly computed time. Has to be called before every advance.
-  virtual void addComputedTime(double timeToAdd) = 0;
+  /**
+   * @brief Adds newly computed time. Has to be called before every advance.
+   * @param timeToAdd time to be added
+   *
+   * @returns true, if reaches end of the window by adding timeToAdd to time in this time step.
+   */
+  virtual bool addComputedTime(double timeToAdd) = 0;
 
   using ChangedMeshes = std::vector<MeshID>;
 
@@ -168,10 +163,10 @@ public:
    * Also returns true after the last call of advance() at the end of the
    * simulation.
    *
-   * @param lastSolverTimestepLength [IN] The length of the last timestep
+   * @param lastSolverTimeStepSize [IN] The size of the last time step
    *        computed by the solver calling willDataBeExchanged().
    */
-  virtual bool willDataBeExchanged(double lastSolverTimestepLength) const = 0;
+  virtual bool willDataBeExchanged(double lastSolverTimeStepSize) const = 0;
 
   /// @brief Returns true, if data has been exchanged in last call of advance().
   virtual bool hasDataBeenReceived() const = 0;
@@ -194,23 +189,21 @@ public:
   virtual double getTimeWindowSize() const = 0;
 
   /**
-   * @brief Returns the remaining time within the current time window.
+   * @brief Returns the normalized time within the current time window.
    *
-   * This is not necessarily the time window size limit the solver has to obey
-   * which is returned by getNextTimestepMaxLength().  // TODO explain this better
+   * TODO: Where do we define what the normalized time is? Refer this part in the docs!
    *
-   * If no time window size is prescribed by the coupling scheme, always 0.0 is
-   * returned.
+   * @return time normalized to [0,1] w.r.t current time window.
    */
-  virtual double getThisTimeWindowRemainder() const = 0;
+  virtual double getNormalizedWindowTime() const = 0;
 
   /**
-   * @brief Returns the maximal length of the next timestep to be computed.
+   * @brief Returns the maximal size of the next time step to be computed.
    *
    * If no time window size is prescribed by the coupling scheme, always the
    * maximal double accuracy floating point number value is returned.
    */
-  virtual double getNextTimestepMaxLength() const = 0;
+  virtual double getNextTimeStepMaxSize() const = 0;
 
   /// Returns true, when the coupled simulation is still ongoing.
   virtual bool isCouplingOngoing() const = 0;

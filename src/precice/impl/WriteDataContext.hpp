@@ -4,6 +4,7 @@
 
 #include "DataContext.hpp"
 #include "logging/Logger.hpp"
+#include "time/Sample.hpp"
 
 namespace precice {
 namespace impl {
@@ -26,11 +27,37 @@ public:
       mesh::PtrMesh mesh);
 
   /**
-   * @brief Get _providedData member.
+   * @brief Resets provided data, writeDataBuffer, (if mapping exists) fromData or toData, and (optionally) storage.
    *
-   * @return mesh::PtrData _providedData.
+   * @param atEndOfWindow if true, also the Storage will be reset (useful at end of window to trim storage).
+   * @param isTimeWindowComplete if true, overwrite sample at front of Storage with sample at back (basically a Storage::move with constant).
    */
-  mesh::PtrData providedData();
+  void resetData(bool atEndOfWindow, bool isTimeWindowComplete);
+
+  /**
+   * @brief Store values in _writeDataBuffer
+   *
+   * @param[in] vertices ids of data
+   * @param[in] values values of data
+   */
+  void writeValuesIntoDataBuffer(::precice::span<const VertexID> vertices, ::precice::span<const double> values);
+
+  /**
+   * @brief Store gradients in _writeDataBuffer
+   *
+   * @param[in] vertices ids of data
+   * @param[in] gradients gradients of data
+   */
+  void writeGradientsIntoDataBuffer(::precice::span<const VertexID> vertices, ::precice::span<const double> gradients);
+
+  void resizeBufferTo(int size);
+
+  /**
+   * @brief Store data from _writeDataBuffer in persistent storage
+   *
+   * @param[in] currentTime time data should be associated with
+   */
+  void storeBufferedData(double currentTime);
 
   /**
    * @brief Adds a MappingContext and the MeshContext required by the write mapping to the corresponding WriteDataContext data structures.
@@ -42,8 +69,21 @@ public:
    */
   void appendMappingConfiguration(MappingContext &mappingContext, const MeshContext &meshContext) override;
 
+  /// Disable copy construction
+  WriteDataContext(const WriteDataContext &copy) = delete;
+
+  /// Disable assignment construction
+  WriteDataContext &operator=(const WriteDataContext &assign) = delete;
+
+  /// Move constructor, use the implicitly declared.
+  WriteDataContext(WriteDataContext &&) = default;
+  WriteDataContext &operator=(WriteDataContext &&) = default;
+
 private:
   static logging::Logger _log;
+
+  /// @brief Buffer to store written data until it is copied to _providedData->timeStepsStorage()
+  time::Sample _writeDataBuffer;
 };
 
 } // namespace impl

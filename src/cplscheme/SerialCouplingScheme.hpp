@@ -27,8 +27,8 @@ public:
   /**
  * @brief Constructor.
  *
- * @param[in] maxTime Simulation time limit, or UNDEFINED_TIME.
- * @param[in] maxTimeWindows Simulation time windows limit, or UNDEFINED_TIMEWINDOWS.
+ * @param[in] maxTime Simulation time limit, or UNDEFINED_MAX_TIME.
+ * @param[in] maxTimeWindows Simulation time windows limit, or UNDEFINED_TIME_WINDOWS.
  * @param[in] timeWindowSize Simulation time window size.
  * @param[in] validDigits valid digits for computation of the remainder of a time window
  * @param[in] firstParticipant Name of participant starting simulation.
@@ -58,6 +58,9 @@ public:
 
   CouplingScheme::ChangedMeshes secondSynchronization() final;
 
+  /// @copydoc CouplingScheme::getNormalizedWindowTime
+  double getNormalizedWindowTime() const override; // @todo try to make private?
+
 protected:
   /**
    * @brief Setter for _timeWindowSize
@@ -80,17 +83,18 @@ private:
   /// Receives and sets the time window size, if this participant is the one to receive
   void receiveAndSetTimeWindowSize();
 
-  void performReceiveOfFirstAdvance() override final;
+  /// @copydoc cplscheme::BaseCouplingScheme::exchangeInitialData()
+  void exchangeInitialData() override final;
 
   /// Exchanges the first set of data between the participants of the SerialCouplingSchemes
-  void exchangeFirstData() override;
+  void exchangeFirstData() override final;
 
   /**
    * @brief Exchanges the second set of data between the participants of the SerialCouplingSchemes
    */
   void exchangeSecondData() override;
 
-  const DataMap getAccelerationData() override final;
+  const DataMap &getAccelerationData() override final;
 };
 
 } // namespace cplscheme

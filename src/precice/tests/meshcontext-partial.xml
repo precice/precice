@@ -1,73 +1,63 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration>
-  <solver-interface dimensions="2" experimental="true">
-    <data:scalar name="Data1" />
-    <data:scalar name="Data2" />
-    <data:scalar name="Data3" />
-    <data:scalar name="Data4" />
+<precice-configuration dimensions="2" experimental="true">
+  <data:scalar name="Data1" />
+  <data:scalar name="Data2" />
+  <data:scalar name="Data3" />
+  <data:scalar name="Data4" />
 
-    <mesh name="MeshA">
-      <use-data name="Data1" />
-      <use-data name="Data2" />
-    </mesh>
+  <mesh name="MeshA">
+    <use-data name="Data1" />
+    <use-data name="Data2" />
+  </mesh>
 
-    <mesh name="MeshB">
-      <use-data name="Data1" />
-      <use-data name="Data2" />
-    </mesh>
+  <mesh name="MeshB">
+    <use-data name="Data1" />
+    <use-data name="Data2" />
+  </mesh>
 
-    <mesh name="MeshC">
-      <use-data name="Data3" />
-      <use-data name="Data4" />
-    </mesh>
+  <mesh name="MeshC">
+    <use-data name="Data3" />
+    <use-data name="Data4" />
+  </mesh>
 
-    <mesh name="MeshD">
-      <use-data name="Data3" />
-      <use-data name="Data4" />
-    </mesh>
+  <mesh name="MeshD">
+    <use-data name="Data3" />
+    <use-data name="Data4" />
+  </mesh>
 
-    <participant name="A">
-      <provide-mesh name="MeshA" />
-      <provide-mesh name="MeshC" />
-      <write-data name="Data1" mesh="MeshA" />
-      <read-data name="Data2" mesh="MeshA" />
-      <write-data name="Data3" mesh="MeshC" />
-      <read-data name="Data4" mesh="MeshC" />
-    </participant>
+  <participant name="A">
+    <provide-mesh name="MeshA" />
+    <provide-mesh name="MeshC" />
+    <write-data name="Data1" mesh="MeshA" />
+    <read-data name="Data2" mesh="MeshA" />
+    <write-data name="Data3" mesh="MeshC" />
+    <read-data name="Data4" mesh="MeshC" />
+  </participant>
 
-    <participant name="B">
-      <receive-mesh name="MeshA" from="A" />
-      <receive-mesh name="MeshC" from="A" />
-      <provide-mesh name="MeshB" dynamic="true" />
-      <provide-mesh name="MeshD" />
-      <mapping:nearest-neighbor direction="read" from="MeshA" to="MeshB" constraint="consistent" />
-      <mapping:nearest-neighbor
-        direction="write"
-        from="MeshB"
-        to="MeshA"
-        constraint="conservative" />
-      <mapping:nearest-neighbor direction="read" from="MeshC" to="MeshD" constraint="consistent" />
-      <mapping:nearest-neighbor
-        direction="write"
-        from="MeshD"
-        to="MeshC"
-        constraint="conservative" />
-      <write-data name="Data2" mesh="MeshB" />
-      <read-data name="Data1" mesh="MeshB" />
-      <write-data name="Data4" mesh="MeshD" />
-      <read-data name="Data3" mesh="MeshD" />
-    </participant>
+  <participant name="B">
+    <receive-mesh name="MeshA" from="A" />
+    <receive-mesh name="MeshC" from="A" />
+    <provide-mesh name="MeshB" dynamic="true" />
+    <provide-mesh name="MeshD" />
+    <mapping:nearest-neighbor direction="read" from="MeshA" to="MeshB" constraint="consistent" />
+    <mapping:nearest-neighbor direction="write" from="MeshB" to="MeshA" constraint="conservative" />
+    <mapping:nearest-neighbor direction="read" from="MeshC" to="MeshD" constraint="consistent" />
+    <mapping:nearest-neighbor direction="write" from="MeshD" to="MeshC" constraint="conservative" />
+    <write-data name="Data2" mesh="MeshB" />
+    <read-data name="Data1" mesh="MeshB" />
+    <write-data name="Data4" mesh="MeshD" />
+    <read-data name="Data3" mesh="MeshD" />
+  </participant>
 
-    <m2n:sockets from="A" to="B" />
+  <m2n:sockets from="A" to="B" />
 
-    <coupling-scheme:serial-explicit>
-      <participants first="A" second="B" />
-      <max-time-windows value="1" />
-      <time-window-size value="1.0" />
-      <exchange data="Data1" mesh="MeshA" from="A" to="B" />
-      <exchange data="Data2" mesh="MeshA" from="B" to="A" />
-      <exchange data="Data3" mesh="MeshC" from="A" to="B" />
-      <exchange data="Data4" mesh="MeshC" from="B" to="A" />
-    </coupling-scheme:serial-explicit>
-  </solver-interface>
+  <coupling-scheme:serial-explicit>
+    <participants first="A" second="B" />
+    <max-time-windows value="1" />
+    <time-window-size value="1.0" />
+    <exchange data="Data1" mesh="MeshA" from="A" to="B" />
+    <exchange data="Data2" mesh="MeshA" from="B" to="A" />
+    <exchange data="Data3" mesh="MeshC" from="A" to="B" />
+    <exchange data="Data4" mesh="MeshC" from="B" to="A" />
+  </coupling-scheme:serial-explicit>
 </precice-configuration>

@@ -3,8 +3,8 @@
 #include "testing/Testing.hpp"
 
 #include <boost/test/data/test_case.hpp>
-#include <precice/SolverInterface.hpp>
-#include <precice/impl/SolverInterfaceImpl.hpp>
+#include <precice/impl/ParticipantImpl.hpp>
+#include <precice/precice.hpp>
 #include <vector>
 
 /// This testcase is based on a bug documented in issue #371
@@ -17,16 +17,16 @@ BOOST_DATA_TEST_CASE(NearestProjectionRePartitioning,
   PRECICE_TEST("FluidSolver"_on(3_ranks), "SolidSolver"_on(1_rank));
 
   if (context.isNamed("FluidSolver")) {
-    precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
+    precice::Participant participant(context.name, context.config(), context.rank, context.size);
 
     if (context.isPrimary()) {
-      interface.initialize();
-      interface.advance(1.0);
-      interface.finalize();
+      participant.initialize();
+      participant.advance(1.0);
+      participant.finalize();
     } else {
-      const precice::MeshID meshID     = interface.getMeshID("CellCenters");
-      const int             dimensions = 3;
-      BOOST_TEST(interface.getDimensions() == dimensions);
+      auto      meshName   = "CellCenters";
+      const int dimensions = participant.getMeshDimensions(meshName);
+      BOOST_REQUIRE(dimensions == 3);
 
       const int                 numberOfVertices = 65;
       const double              yCoord           = 0.0;
@@ -99,18 +99,18 @@ BOOST_DATA_TEST_CASE(NearestProjectionRePartitioning,
           0.22547, yCoord, zCoord};
       BOOST_TEST(numberOfVertices * dimensions == positions.size());
       std::vector<int> vertexIDs(numberOfVertices);
-      interface.setMeshVertices(meshID, numberOfVertices, positions.data(), vertexIDs.data());
-      interface.initialize();
-      BOOST_TEST(precice::testing::WhiteboxAccessor::impl(interface).mesh("Nodes").triangles().size() == 15);
-      interface.advance(1.0);
-      interface.finalize();
+      participant.setMeshVertices(meshName, positions, vertexIDs);
+      participant.initialize();
+      BOOST_TEST(precice::testing::WhiteboxAccessor::impl(participant).mesh("Nodes").triangles().size() == 15);
+      participant.advance(1.0);
+      participant.finalize();
     }
   } else {
     BOOST_TEST(context.isNamed("SolidSolver"));
-    precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-    const int                meshID     = interface.getMeshID("Nodes");
-    const int                dimensions = 3;
-    BOOST_TEST(interface.getDimensions() == dimensions);
+    precice::Participant participant(context.name, context.config(), context.rank, context.size);
+    auto                 meshName   = "Nodes";
+    const int            dimensions = participant.getMeshDimensions(meshName);
+    BOOST_REQUIRE(dimensions == 3);
     const int                 numberOfVertices = 34;
     const double              yCoord           = 0.0;
     const double              zCoord1          = 0.0;
@@ -152,7 +152,7 @@ BOOST_DATA_TEST_CASE(NearestProjectionRePartitioning,
         0.5, yCoord, zCoord1};
     BOOST_TEST(numberOfVertices * dimensions == positions.size());
     std::vector<int> vertexIDs(numberOfVertices);
-    interface.setMeshVertices(meshID, numberOfVertices, positions.data(), vertexIDs.data());
+    participant.setMeshVertices(meshName, positions, vertexIDs);
 
     const int numberOfCells = numberOfVertices / 2 - 1;
 
@@ -169,20 +169,20 @@ BOOST_DATA_TEST_CASE(NearestProjectionRePartitioning,
         ids.push_back(vertexIDs.at(i * 2 + 2));
         ids.push_back(vertexIDs.at(i * 2 + 3));
       }
-      interface.setMeshTriangles(meshID, numberOfCells, ids.data());
+      participant.setMeshTriangles(meshName, ids);
     } else {
       for (int i = 0; i < numberOfCells; i++) {
         // left-diag-bottom
-        interface.setMeshTriangle(meshID, vertexIDs.at(i * 2), vertexIDs.at(i * 2 + 1), vertexIDs.at(i * 2 + 3));
+        participant.setMeshTriangle(meshName, vertexIDs.at(i * 2), vertexIDs.at(i * 2 + 1), vertexIDs.at(i * 2 + 3));
 
         // top-diag-right
-        interface.setMeshTriangle(meshID, vertexIDs.at(i * 2), vertexIDs.at(i * 2 + 2), vertexIDs.at(i * 2 + 3));
+        participant.setMeshTriangle(meshName, vertexIDs.at(i * 2), vertexIDs.at(i * 2 + 2), vertexIDs.at(i * 2 + 3));
       }
     }
 
-    interface.initialize();
-    interface.advance(1.0);
-    interface.finalize();
+    participant.initialize();
+    participant.advance(1.0);
+    participant.finalize();
   }
 }
 

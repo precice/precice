@@ -23,10 +23,21 @@ struct MappingContext {
   /// data which is mapped to mesh
   mesh::PtrData toData = nullptr;
 
+  /// used the automatic rbf alias tag in order to set the mapping
+  bool configuredWithAliasTag = false;
+
   /// Enables gradient data in the corresponding 'from' data class
   void requireGradientData(const std::string &dataName)
   {
     mapping->getInputMesh()->data(dataName)->requireDataGradient();
+  }
+
+  /// Allows to clear data storage before mapping is performed
+  void clearToDataStorage()
+  {
+    if (toData->timeStepsStorage().nTimes() > 0) {
+      toData->timeStepsStorage().trim();
+    }
   }
 };
 

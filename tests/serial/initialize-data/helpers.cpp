@@ -3,7 +3,7 @@
 #include "helpers.hpp"
 #include "testing/Testing.hpp"
 
-#include "precice/SolverInterface.hpp"
+#include "precice/precice.hpp"
 
 /**
  * @brief helper function for a simple test with data initialization
@@ -12,34 +12,37 @@ void testDataInitialization(precice::testing::TestContext context, std::string c
 {
   using Eigen::Vector3d;
 
-  SolverInterface cplInterface(context.name, config, 0, 1);
+  Participant cplInterface(context.name, config, 0, 1);
   if (context.isNamed("SolverOne")) {
-    int      meshOneID = cplInterface.getMeshID("MeshOne");
-    Vector3d pos       = Vector3d::Zero();
-    cplInterface.setMeshVertex(meshOneID, pos.data());
-    int    dataID     = cplInterface.getDataID("Data", meshOneID);
-    double valueDataB = 0.0;
-    double dt         = cplInterface.initialize();
-    cplInterface.readScalarData(dataID, 0, valueDataB);
+    auto     meshName   = "MeshOne";
+    Vector3d pos        = Vector3d::Zero();
+    auto     vid        = cplInterface.setMeshVertex(meshName, pos);
+    auto     dataName   = "Data";
+    double   valueDataB = 0.0;
+    cplInterface.initialize();
+    double dt = cplInterface.getMaxTimeStepSize();
+    cplInterface.readData(meshName, dataName, {&vid, 1}, dt, {&valueDataB, 1});
     BOOST_TEST(2.0 == valueDataB);
     while (cplInterface.isCouplingOngoing()) {
-      dt = cplInterface.advance(dt);
+      cplInterface.advance(cplInterface.getMaxTimeStepSize());
     }
     cplInterface.finalize();
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    int      meshTwoID = cplInterface.getMeshID("MeshTwo");
-    Vector3d pos       = Vector3d::Zero();
-    cplInterface.setMeshVertex(meshTwoID, pos.data());
+    auto     meshName = "MeshTwo";
+    Vector3d pos      = Vector3d::Zero();
+    auto     vid      = cplInterface.setMeshVertex(meshName, pos);
 
     //tell preCICE that data has been written
     BOOST_REQUIRE(cplInterface.requiresInitialData());
 
-    int dataID = cplInterface.getDataID("Data", meshTwoID);
-    cplInterface.writeScalarData(dataID, 0, 2.0);
-    double dt = cplInterface.initialize();
+    auto   dataName = "Data";
+    double data[]   = {2.0};
+    cplInterface.writeData(meshName, dataName, {&vid, 1}, data);
+    cplInterface.initialize();
     while (cplInterface.isCouplingOngoing()) {
-      dt = cplInterface.advance(dt);
+
+      cplInterface.advance(cplInterface.getMaxTimeStepSize());
     }
     cplInterface.finalize();
   }

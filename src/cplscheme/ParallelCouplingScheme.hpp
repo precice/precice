@@ -29,8 +29,8 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param[in] maxTime Simulation time limit, or UNDEFINED_TIME.
-   * @param[in] maxTimeWindows Simulation time windows limit, or UNDEFINED_TIMEWINDOWS.
+   * @param[in] maxTime Simulation time limit, or UNDEFINED_MAX_TIME.
+   * @param[in] maxTimeWindows Simulation time windows limit, or UNDEFINED_TIME_WINDOWS.
    * @param[in] timeWindowSize Simulation time window size.
    * @param[in] validDigits valid digits for computation of the remainder of a time window
    * @param[in] firstParticipant Name of participant starting simulation.
@@ -64,6 +64,9 @@ private:
   logging::Logger _log{"cplscheme::ParallelCouplingScheme"};
 
   /// Exchanges first set of data between the participants of the ParallelCouplingScheme
+  /// @copydoc cplscheme::BaseCouplingScheme::exchangeInitialData()
+  void exchangeInitialData() override final;
+
   void exchangeFirstData() override final;
 
   /**
@@ -71,7 +74,7 @@ private:
    */
   void exchangeSecondData() override final;
 
-  const DataMap getAccelerationData() override final;
+  const DataMap &getAccelerationData() override final;
 };
 
 } // namespace cplscheme

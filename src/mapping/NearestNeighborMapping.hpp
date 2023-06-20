@@ -19,6 +19,9 @@ public:
    */
   NearestNeighborMapping(Constraint constraint, int dimensions);
 
+  /// name of the nn mapping
+  std::string getName() const final override;
+
 protected:
   /// @copydoc Mapping::mapConservative
   void mapConservative(DataID inputDataID, DataID outputDataID) final override;

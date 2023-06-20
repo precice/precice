@@ -6,6 +6,7 @@
 #include <list>
 #include <map>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "logging/Logger.hpp"
@@ -180,10 +181,13 @@ public:
   const PtrData &data(DataID dataID) const;
 
   /// Returns whether Mesh has Data with the dataName
-  bool hasDataName(const std::string &dataName) const;
+  bool hasDataName(std::string_view dataName) const;
+
+  /// Returns the names of all available data
+  std::vector<std::string> availableData() const;
 
   /// Returns the data with the matching name
-  const PtrData &data(const std::string &dataName) const;
+  const PtrData &data(std::string_view dataName) const;
 
   /// Returns the name of the mesh, as set in the config file.
   const std::string &getName() const;
@@ -195,7 +199,7 @@ public:
   bool isValidVertexID(VertexID vertexID) const;
 
   /// Allocates memory for the vertex data values and corresponding gradient values.
-  void allocateDataValues();
+  void allocateDataValues(); //@todo Redesign mapping and remove this function. See https://github.com/precice/precice/issues/1651.
 
   /// Computes the boundingBox for the vertices.
   void computeBoundingBox();

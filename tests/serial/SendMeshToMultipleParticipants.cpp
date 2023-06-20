@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/precice.hpp>
 #include <vector>
 
 /**
@@ -26,18 +26,18 @@ BOOST_AUTO_TEST_CASE(SendMeshToMultipleParticipants)
     meshName = "MeshC";
   }
 
-  precice::SolverInterface interface(context.name, context.config(), 0, 1);
+  precice::Participant interface(context.name, context.config(), 0, 1);
 
-  const precice::MeshID   meshID   = interface.getMeshID(meshName);
-  const precice::VertexID vertexID = interface.setMeshVertex(meshID, vertex.data());
-  const precice::DataID   dataID   = interface.getDataID("Data", meshID);
-  double                  maxDt    = interface.initialize();
+  const precice::VertexID vertexID = interface.setMeshVertex(meshName, vertex);
+  auto                    dataName = "Data";
+  interface.initialize();
+  double maxDt = interface.getMaxTimeStepSize();
 
   if (context.isNamed("SolverOne")) {
-    interface.writeScalarData(dataID, vertexID, value);
+    interface.writeData(meshName, dataName, {&vertexID, 1}, {&value, 1});
   } else {
     double valueReceived = -1.0;
-    interface.readScalarData(dataID, vertexID, valueReceived);
+    interface.readData(meshName, dataName, {&vertexID, 1}, maxDt, {&valueReceived, 1});
     BOOST_TEST(valueReceived == value);
   }
 

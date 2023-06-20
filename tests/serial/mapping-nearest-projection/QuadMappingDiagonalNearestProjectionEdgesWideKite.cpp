@@ -3,7 +3,7 @@
 #include "testing/Testing.hpp"
 
 #include <boost/test/data/test_case.hpp>
-#include <precice/SolverInterface.hpp>
+#include <precice/precice.hpp>
 #include "helpers.hpp"
 
 /**

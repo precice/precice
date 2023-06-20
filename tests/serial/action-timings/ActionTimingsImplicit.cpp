@@ -3,7 +3,7 @@
 #include "testing/Testing.hpp"
 
 #include <action/RecorderAction.hpp>
-#include <precice/SolverInterface.hpp>
+#include <precice/precice.hpp>
 
 #include <vector>
 
@@ -19,9 +19,8 @@ BOOST_AUTO_TEST_CASE(ActionTimingsImplicit)
 
   using namespace precice;
 
-  SolverInterface interface(context.name, context.config(), context.rank, context.size);
+  Participant interface(context.name, context.config(), context.rank, context.size);
 
-  int         dimensions = interface.getDimensions();
   std::string meshName;
   std::string writeDataName;
   std::string readDataName;
@@ -39,11 +38,9 @@ BOOST_AUTO_TEST_CASE(ActionTimingsImplicit)
     readDataName  = "Forces";
     writeValue    = 2;
   }
-  int                 meshID      = interface.getMeshID(meshName);
-  int                 writeDataID = interface.getDataID(writeDataName, meshID);
-  int                 readDataID  = interface.getDataID(readDataName, meshID);
+  int                 dimensions = interface.getMeshDimensions(meshName);
   std::vector<double> vertex(dimensions, 0);
-  int                 vertexID = interface.setMeshVertex(meshID, vertex.data());
+  int                 vertexID = interface.setMeshVertex(meshName, vertex);
 
   double dt = -1;
   BOOST_TEST(action::RecorderAction::records.empty());
@@ -53,53 +50,37 @@ BOOST_AUTO_TEST_CASE(ActionTimingsImplicit)
 
   if (interface.requiresInitialData()) {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    interface.writeVectorData(writeDataID, vertexID, writeData.data());
+    interface.writeData(meshName, writeDataName, {&vertexID, 1}, writeData);
   }
 
-  dt = interface.initialize();
+  interface.initialize();
+  dt = interface.getMaxTimeStepSize();
   BOOST_TEST(dt == 1.0);
-  if (context.isNamed("SolverOne")) {
-    BOOST_TEST(action::RecorderAction::records.empty());
-  } else {
-    BOOST_TEST(context.isNamed("SolverTwo"));
-    BOOST_TEST(action::RecorderAction::records.size() == 2);
-    BOOST_TEST(action::RecorderAction::records.at(0).timing == action::Action::READ_MAPPING_PRIOR);
-    BOOST_TEST(action::RecorderAction::records.at(1).timing == action::Action::READ_MAPPING_POST);
-  }
+  BOOST_TEST(action::RecorderAction::records.size() == 2);
+  BOOST_TEST(action::RecorderAction::records.at(0).timing == action::Action::WRITE_MAPPING_POST);
+  BOOST_TEST(action::RecorderAction::records.at(1).timing == action::Action::READ_MAPPING_POST);
   action::RecorderAction::reset();
   int iteration = 0;
 
   while (interface.isCouplingOngoing()) {
-    interface.readVectorData(readDataID, vertexID, readData.data());
-    interface.writeVectorData(writeDataID, vertexID, writeData.data());
+    interface.readData(meshName, readDataName, {&vertexID, 1}, dt, readData);
+    interface.writeData(meshName, writeDataName, {&vertexID, 1}, writeData);
     if (interface.requiresWritingCheckpoint()) {
     }
-    dt = interface.advance(dt);
+    interface.advance(dt);
+    double dt = interface.getMaxTimeStepSize();
     if (interface.requiresReadingCheckpoint()) {
     }
     if (interface.isTimeWindowComplete()) {
       iteration++;
     }
     if (context.isNamed("SolverOne") || iteration < 10) {
-      if (interface.isTimeWindowComplete()) {
-        BOOST_TEST(action::RecorderAction::records.size() == 5);
-        BOOST_TEST(action::RecorderAction::records.at(4).timing == action::Action::ON_TIME_WINDOW_COMPLETE_POST);
-      } else {
-        BOOST_TEST(action::RecorderAction::records.size() == 4);
-      }
-      BOOST_TEST(action::RecorderAction::records.at(0).timing == action::Action::WRITE_MAPPING_PRIOR);
-      BOOST_TEST(action::RecorderAction::records.at(1).timing == action::Action::WRITE_MAPPING_POST);
-      BOOST_TEST(action::RecorderAction::records.at(2).timing == action::Action::READ_MAPPING_PRIOR);
-      BOOST_TEST(action::RecorderAction::records.at(3).timing == action::Action::READ_MAPPING_POST);
+      BOOST_TEST(action::RecorderAction::records.size() == 2);
+      BOOST_TEST(action::RecorderAction::records.at(0).timing == action::Action::WRITE_MAPPING_POST);
+      BOOST_TEST(action::RecorderAction::records.at(1).timing == action::Action::READ_MAPPING_POST);
     } else { // SolverTwo only writes in very last iteration, does not read.
-      if (interface.isTimeWindowComplete()) {
-        BOOST_TEST(action::RecorderAction::records.size() == 3);
-        BOOST_TEST(action::RecorderAction::records.at(2).timing == action::Action::ON_TIME_WINDOW_COMPLETE_POST);
-      } else {
-        BOOST_TEST(action::RecorderAction::records.size() == 2);
-      }
-      BOOST_TEST(action::RecorderAction::records.at(0).timing == action::Action::WRITE_MAPPING_PRIOR);
-      BOOST_TEST(action::RecorderAction::records.at(1).timing == action::Action::WRITE_MAPPING_POST);
+      BOOST_TEST(action::RecorderAction::records.size() == 1);
+      BOOST_TEST(action::RecorderAction::records.at(0).timing == action::Action::WRITE_MAPPING_POST);
     }
     action::RecorderAction::reset();
   }

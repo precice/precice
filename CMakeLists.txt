@@ -25,7 +25,7 @@ set(preCICE_SOVERSION ${preCICE_VERSION_MAJOR})
 list (APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 list (APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/modules")
 
-include(CheckCXX11Library)
+include(CheckSTL)
 include(CopyTargetProperty)
 include(XSDKMacros)
 include(Validation)
@@ -63,6 +63,9 @@ option(PRECICE_ALWAYS_VALIDATE_LIBS "Validate libraries even after the validatat
 option(PRECICE_ENABLE_C "Enable the native C bindings" ON)
 option(PRECICE_ENABLE_FORTRAN "Enable the native Fortran bindings" ON)
 option(PRECICE_BUILD_TOOLS "Build the \"precice-tools\" executable" ON)
+option(PRECICE_ENABLE_LIBBACKTRACE "Enable libbacktrace for stacktrace generation." OFF)
+
+option(CMAKE_INTERPROCEDURAL_OPTIMIZATION "Enable interprocedural optimization for all targets." OFF)
 
 option(PRECICE_RELEASE_WITH_DEBUG_LOG "Enable debug logging in release builds" OFF)
 option(PRECICE_RELEASE_WITH_TRACE_LOG "Enable trace logging in release builds" OFF)
@@ -133,13 +136,21 @@ add_feature_info(FortranBindings PRECICE_ENABLE_FORTRAN
 
    This feature can be enabled/disabled by setting the PRECICE_ENABLE_FORTRAN CMake option.
   ")
-  add_feature_info(PreciceTools PRECICE_BUILD_TOOLS
+add_feature_info(PreciceTools PRECICE_BUILD_TOOLS
   "Build the \"precice-tools\" executable
 
    preCICE offers in addition to the core library a variety of tools in order to check configuration
    files or generate xml references. The tools are copmiled into an executable called \"precice-tools\".
 
    This feature can be enabled/disabled by setting the PRECICE_BUILD_TOOLS CMake option.
+  ")
+  add_feature_info(libbacktrace PRECICE_ENABLE_LIBBACKTRACE
+  "Enables libbacktrace for stracktrace generation.
+
+   preCICE assertions are helpful during development, however, the default stacktraces may not be sufficient.
+   This feature enables the support for libbacktrace in boost.stacktrace.
+
+   This feature can be enabled/disabled by setting the PRECICE_ENABLE_LIBBACKTRACE CMake option.
   ")
 
 
@@ -173,7 +184,7 @@ if(TPL_ENABLE_EIGEN3)
   # Use EIGEN3_ROOT to set the directory
   xsdk_tpl_require(EIGEN3 EIGEN3_INCLUDE_DIR)
 endif()
-find_package(Eigen3 3.2 REQUIRED)
+find_package(Eigen3 3.3.7 REQUIRED)
 message(STATUS "Found Eigen ${EIGEN3_VERSION}")
 precice_validate_eigen()
 
@@ -227,6 +238,12 @@ else()
   message(STATUS "PETSc support disabled")
 endif()
 
+if (PRECICE_BUILD_TOOLS AND BUILD_TESTING)
+  # We need this to run the precice-events
+  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+  message(STATUS "Found Python ${Python3_VERSION}")
+endif()
+
 # Option Python
 if (PRECICE_PythonActions)
   find_package(Python3 REQUIRED COMPONENTS Development NumPy)
@@ -237,6 +254,11 @@ else()
   message(STATUS "Python support disabled")
 endif()
 
+# Option ENABLE_LIBBACKTRACE
+# Note that the FindBacktrace module does not work reliably to find libbacktrace installations
+if (PRECICE_ENABLE_LIBBACKTRACE)
+  add_subdirectory(thirdparty/libbacktrace)
+endif()
 
 #
 # Setup miscellaneous features
@@ -294,6 +316,10 @@ target_link_libraries(preciceCore PUBLIC
 if(UNIX OR APPLE OR MINGW)
   target_compile_definitions(preciceCore PUBLIC _GNU_SOURCE)
   target_link_libraries(preciceCore PUBLIC ${CMAKE_DL_LIBS})
+endif()
+if(PRECICE_ENABLE_LIBBACKTRACE)
+  target_compile_definitions(preciceCore PRIVATE BOOST_STACKTRACE_USE_BACKTRACE)
+  target_link_libraries(preciceCore PRIVATE internal::libbacktrace)
 endif()
 
 # Setup Eigen3
@@ -359,6 +385,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/src/sources.cmake)
 include(GenerateVersionInformation)
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/DetectGitRevision.cmake)
 configure_file("${PROJECT_SOURCE_DIR}/src/precice/impl/versions.hpp.in" "${PROJECT_BINARY_DIR}/src/precice/impl/versions.hpp" @ONLY)
+configure_file("${PROJECT_SOURCE_DIR}/src/testing/SourceLocation.hpp.in" "${PROJECT_BINARY_DIR}/src/testing/SourceLocation.hpp" @ONLY)
 configure_file("${PROJECT_SOURCE_DIR}/src/precice/Version.h.in" "${PROJECT_BINARY_DIR}/src/precice/Version.h" @ONLY)
 
 # Setup export header
@@ -372,7 +399,7 @@ GENERATE_EXPORT_HEADER(preciceCore
 
 # Add the export header to the public headers of the preCICE lib
 set_property(TARGET precice APPEND PROPERTY PUBLIC_HEADER
-    ${CMAKE_BINARY_DIR}/src/precice/export.h)
+    ${PROJECT_BINARY_DIR}/src/precice/export.h)
 
 #
 # Configuration of Target precice-tools
@@ -388,16 +415,6 @@ if (PRECICE_BUILD_TOOLS)
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED Yes
     CXX_EXTENSIONS No
-    )
-
-  # Add link for backwards compatibility
-  # TODO remove in 3.0.0
-  add_custom_target(
-    binprecice
-    ALL
-    COMMAND ${CMAKE_COMMAND} -E create_symlink precice-tools binprecice
-    DEPENDS precice-tools
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
 endif()
 
@@ -461,9 +478,8 @@ if(PRECICE_BUILD_TOOLS)
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     )
 
-  # Install the binprecice link for backwards compatibility
-  # TODO remove in 3.0.0
-  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/binprecice DESTINATION ${CMAKE_INSTALL_BINDIR})
+    install(FILES ${preCICE_SOURCE_DIR}/tools/profiling/precice-events
+    DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
 # Install examples
@@ -571,6 +587,8 @@ if (BUILD_TESTING)
 
   include(${CMAKE_CURRENT_LIST_DIR}/cmake/CTestConfig.cmake)
 
+  # Add precice-events tests
+  add_subdirectory(tools/profiling)
 
   #
   # Add test_install

@@ -26,14 +26,14 @@
 #include "partition/ReceivedPartition.hpp"
 #include "precice/impl/MappingContext.hpp"
 #include "precice/impl/MeshContext.hpp"
-#include "precice/impl/Participant.hpp"
+#include "precice/impl/ParticipantState.hpp"
 #include "precice/impl/WatchIntegral.hpp"
 #include "precice/impl/WatchPoint.hpp"
+#include "precice/span.hpp"
 #include "precice/types.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 #include "utils/networking.hpp"
-#include "utils/span.hpp"
 #include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 
@@ -55,7 +55,7 @@ ParticipantConfiguration::ParticipantConfiguration(
   auto attrName = XMLAttribute<std::string>(ATTR_NAME)
                       .setDocumentation(
                           "Name of the participant. Has to match the name given on construction "
-                          "of the precice::SolverInterface object used by the participant.");
+                          "of the precice::Participant object used by the participant.");
   tag.addAttribute(attrName);
 
   XMLTag tagWriteData(*this, TAG_WRITE, XMLTag::OCCUR_ARBITRARY);
@@ -270,7 +270,7 @@ void ParticipantConfiguration::xmlTagCallback(
   PRECICE_TRACE(tag.getName());
   if (tag.getName() == TAG) {
     const std::string &  name = tag.getStringAttributeValue(ATTR_NAME);
-    impl::PtrParticipant p(new impl::Participant(name, _meshConfig));
+    impl::PtrParticipant p(new impl::ParticipantState(name, _meshConfig));
     _participants.push_back(p);
   } else if (tag.getName() == TAG_PROVIDE_MESH) {
     PRECICE_ASSERT(_dimensions != 0); // setDimensions() has been called
@@ -487,10 +487,10 @@ void ParticipantConfiguration::finishParticipantConfiguration(
       }
     }
 
-    auto               fromMeshID      = confMapping.fromMesh->getID();
-    auto               toMeshID        = confMapping.toMesh->getID();
-    impl::MeshContext &fromMeshContext = participant->meshContext(fromMeshID);
-    impl::MeshContext &toMeshContext   = participant->meshContext(toMeshID);
+    const auto &       fromMeshID      = confMapping.fromMesh->getID();
+    const auto &       toMeshID        = confMapping.toMesh->getID();
+    impl::MeshContext &fromMeshContext = participant->meshContext(fromMesh);
+    impl::MeshContext &toMeshContext   = participant->meshContext(toMesh);
 
     if (confMapping.direction == mapping::MappingConfiguration::READ) {
       PRECICE_CHECK(toMeshContext.provideMesh,
@@ -512,7 +512,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                     participant->getName(), confMapping.toMesh->getName());
     }
 
-    if (confMapping.isRBF) {
+    // @TODO: is this still correct?
+    if (confMapping.requiresBasisFunction) {
       fromMeshContext.geoFilter = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
       toMeshContext.geoFilter   = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
     }
@@ -523,7 +524,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
     mapping::PtrMapping &map = mappingContext.mapping;
     PRECICE_ASSERT(map.get() == nullptr);
-    map = confMapping.mapping;
+    map                                   = confMapping.mapping;
+    mappingContext.configuredWithAliasTag = confMapping.configuredWithAliasTag;
 
     const mesh::PtrMesh &input  = fromMeshContext.mesh;
     const mesh::PtrMesh &output = toMeshContext.mesh;
@@ -556,12 +558,12 @@ void ParticipantConfiguration::finishParticipantConfiguration(
       const int fromMeshID = dataContext.getMeshID();
       if (mappingContext.fromMeshID == fromMeshID) {
         // Second we look for the "to" mesh ID
-        impl::MeshContext &meshContext = participant->meshContext(mappingContext.toMeshID);
+        impl::MeshContext &meshContext = participant->meshContext(mappingContext.mapping->getOutputMesh()->getName());
         // If this is true, we actually found a proper configuration
         // If it is false, we look for another "from" mesh ID, because we might have multiple read and write mappings
         if (meshContext.mesh->hasDataName(dataContext.getDataName())) {
           // Check, if the fromMesh is a provided mesh
-          PRECICE_CHECK(participant->isMeshProvided(fromMeshID),
+          PRECICE_CHECK(participant->isMeshProvided(dataContext.getMeshName()),
                         "Participant \"{}\" has to provide mesh \"{}\" to be able to write data to it. "
                         "Please add a provide-mesh node with name=\"{}\".",
                         participant->getName(), dataContext.getMeshName(), dataContext.getMeshName());
@@ -590,12 +592,12 @@ void ParticipantConfiguration::finishParticipantConfiguration(
       const int toMeshID = dataContext.getMeshID();
       if (mappingContext.toMeshID == toMeshID) {
         // Second we look for the "from" mesh ID
-        impl::MeshContext &meshContext = participant->meshContext(mappingContext.fromMeshID);
+        impl::MeshContext &meshContext = participant->meshContext(mappingContext.mapping->getInputMesh()->getName());
         // If this is true, we actually found a proper configuration
         // If it is false, we look for another "from" mesh ID, because we might have multiple read and write mappings
         if (meshContext.mesh->hasDataName(dataContext.getDataName())) {
           // Check, if the toMesh is a provided mesh
-          PRECICE_CHECK(participant->isMeshProvided(toMeshID),
+          PRECICE_CHECK(participant->isMeshProvided(dataContext.getMeshName()),
                         "Participant \"{}\" has to provide mesh \"{}\" in order to read data from it. "
                         "Please add a provide-mesh node with name=\"{}\".",
                         participant->getName(), dataContext.getMeshName(), dataContext.getMeshName());
@@ -617,7 +619,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
   // Add actions
   for (const action::PtrAction &action : _actionConfig->actions()) {
-    bool used = _participants.back()->isMeshUsed(action->getMesh()->getID());
+    bool used = _participants.back()->isMeshUsed(action->getMesh()->getName());
     PRECICE_CHECK(used,
                   "Data action of participant \"{}\" uses mesh \"{}\", which is not used by the participant. "
                   "Please add a provide-mesh or receive-mesh node with name=\"{}\".",
@@ -827,7 +829,7 @@ void ParticipantConfiguration::updateParticipantDynamicity()
     }
     // Mark transitively dynamic meshes (can be provided and received)
     for (const auto &context : participant->usedMeshContexts()) {
-      // alrady dynamic/marked or not in the transitive hull?
+      // already dynamic/marked or not in the transitive hull?
       if ((context->dynamic != Dynamicity::No) ||
           (transitiveHull.count(context->mesh->getName()) == 0)) {
         continue;
@@ -841,7 +843,7 @@ void ParticipantConfiguration::updateParticipantDynamicity()
     }
   }
 
-  // Mark all transitively recieved/dynamic meshes across participants
+  // Mark all transitively received/dynamic meshes across participants
   for (const auto &participant : _participants) {
     for (const auto &context : participant->usedMeshContexts()) {
       if (context->dynamic != Dynamicity::No) {

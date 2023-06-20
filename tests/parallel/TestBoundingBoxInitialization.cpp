@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/precice.hpp>
 #include <vector>
 
 BOOST_AUTO_TEST_SUITE(Integration)
@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitialization)
     }
   } else {
     BOOST_TEST(context.isNamed("Structure"));
-    // This partiticipant starts with negated data
+    // This participant starts with negated data
     for (int i = 0; i < 4; i++) {
       data[i] = -data[i];
     }
@@ -60,14 +60,14 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitialization)
   BOOST_REQUIRE(i1 >= 0);
   BOOST_REQUIRE(i2 >= 0);
 
-  precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
+  precice::Participant interface(context.name, context.config(), context.rank, context.size);
 
-  precice::MeshID meshID   = interface.getMeshID(context.name + "Mesh");
-  int             forcesID = interface.getDataID("Forces", meshID);
+  auto meshName = context.name + "Mesh";
+  auto forcesID = "Forces";
 
   std::vector<int> vertexIDs;
   for (int i = i1; i < i2; i++) {
-    precice::VertexID vertexID = interface.setMeshVertex(meshID, positions[i].data());
+    precice::VertexID vertexID = interface.setMeshVertex(meshName, positions[i]);
     vertexIDs.push_back(vertexID);
   }
 
@@ -75,15 +75,16 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitialization)
 
   if (context.isNamed("Fluid")) {
     for (size_t i = 0; i < vertexIDs.size(); i++) {
-      interface.writeVectorData(forcesID, vertexIDs[i], data[i + i1].data());
+      interface.writeData(meshName, forcesID, {&vertexIDs[i], 1}, {data[i + i1].data(), 3});
     }
   }
 
   interface.advance(1.0);
 
   if (context.isNamed("Structure")) {
+    double preciceDt = interface.getMaxTimeStepSize();
     for (size_t i = 0; i < vertexIDs.size(); i++) {
-      interface.readVectorData(forcesID, vertexIDs[i], data[i + i1].data());
+      interface.readData(meshName, forcesID, {&vertexIDs[i], 1}, preciceDt, {data[i + i1].data(), 3});
       for (size_t d = 0; d < 3; d++) {
         BOOST_TEST(expectedData[i + i1][d] == data[i + i1][d]);
       }

@@ -205,7 +205,8 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     _config.timeWindowSize = tag.getDoubleAttributeValue(ATTR_VALUE);
     _config.validDigits    = tag.getIntAttributeValue(ATTR_VALID_DIGITS);
     PRECICE_CHECK((_config.validDigits >= 1) && (_config.validDigits < 17), "Valid digits of time window size has to be between 1 and 16.");
-    _config.dtMethod = getTimesteppingMethod(tag.getStringAttributeValue(ATTR_METHOD));
+    // Attribute does not exist for parallel coupling schemes as it is always fixed.
+    _config.dtMethod = getTimesteppingMethod(tag.getStringAttributeValue(ATTR_METHOD, VALUE_FIXED));
     if (_config.dtMethod == constants::TimesteppingMethod::FIXED_TIME_WINDOW_SIZE) {
       PRECICE_CHECK(_config.timeWindowSize > 0,
                     "Time window size has to be larger than zero. "
@@ -306,10 +307,34 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
   PRECICE_TRACE(tag.getFullName());
   if (tag.getNamespace() == TAG) {
     if (_config.type == VALUE_SERIAL_EXPLICIT) {
+
+      //Check the waveform order of both participants in the explicit coupling
       if (_experimental) {
-        int maxAllowedOrder = 0; // explicit coupling schemes do not allow waveform iteration
-        checkWaveformOrderReadData(maxAllowedOrder);
+        const auto first  = _config.participants[0];
+        const auto second = _config.participants[1];
+
+        auto first_participant = _participantConfig->getParticipant(first);
+        for (const auto &dataContext : first_participant->readDataContexts()) {
+          const int usedOrder = dataContext.getInterpolationOrder();
+          // The first participants waveform order has to be 0 for serial explicit coupling
+          int allowedOrder = 0;
+          if (usedOrder != allowedOrder) {
+            PRECICE_ERROR(
+                "You configured <read-data name=\"{}\" mesh=\"{}\" waveform-order=\"{}\" />, but for the serial explicit coupling scheme only a maximum waveform-order of \"{}\" is allowed for the first participant.",
+                dataContext.getDataName(), dataContext.getMeshName(), usedOrder, allowedOrder);
+          }
+        }
+        auto second_participant = _participantConfig->getParticipant(second);
+        for (const auto &dataContext : second_participant->readDataContexts()) {
+          const int usedOrder = dataContext.getInterpolationOrder();
+          if (usedOrder < 0) {
+            PRECICE_ERROR(
+                "You configured <read-data name=\"{}\" mesh=\"{}\" waveform-order=\"{}\" />, but for the serial explicit coupling scheme the waveform-order must be non-negative for the second participant.",
+                dataContext.getDataName(), dataContext.getMeshName(), usedOrder);
+          }
+        }
       }
+
       std::string       accessor(_config.participants[0]);
       PtrCouplingScheme scheme = createSerialExplicitCouplingScheme(accessor);
       addCouplingScheme(scheme, accessor);
@@ -402,8 +427,7 @@ void CouplingSchemeConfiguration::addCouplingScheme(
 
 void CouplingSchemeConfiguration::addTypespecifcSubtags(
     const std::string &type,
-    // const std::string& name,
-    xml::XMLTag &tag)
+    xml::XMLTag &      tag)
 {
   PRECICE_TRACE(type);
   addTransientLimitTags(type, tag);
@@ -480,17 +504,15 @@ void CouplingSchemeConfiguration::addTransientLimitTags(
   XMLAttribute<int> attrValidDigits(ATTR_VALID_DIGITS, 10);
   attrValidDigits.setDocumentation(R"(Precision to use when checking for end of time windows used this many digits. \\(\phi = 10^{-validDigits}\\))");
   tagTimeWindowSize.addAttribute(attrValidDigits);
-  std::vector<std::string> allowedMethods;
   if (type == VALUE_SERIAL_EXPLICIT || type == VALUE_SERIAL_IMPLICIT) {
     // method="first-participant" is only allowed for serial coupling schemes
-    allowedMethods = {VALUE_FIXED, VALUE_FIRST_PARTICIPANT};
+    auto attrMethod = makeXMLAttribute(ATTR_METHOD, VALUE_FIXED)
+                          .setOptions({VALUE_FIXED, VALUE_FIRST_PARTICIPANT})
+                          .setDocumentation("The method used to determine the time window size. Use `fixed` to fix the time window size for the participants.");
+    tagTimeWindowSize.addAttribute(attrMethod);
   } else {
-    allowedMethods = {VALUE_FIXED};
+    tagTimeWindowSize.addAttributeHint(ATTR_METHOD, "This feature is only available for serial coupling schemes.");
   }
-  auto attrMethod = makeXMLAttribute(ATTR_METHOD, VALUE_FIXED)
-                        .setOptions(allowedMethods)
-                        .setDocumentation("The method used to determine the time window size. Use `fixed` to fix the time window size for the participants.");
-  tagTimeWindowSize.addAttribute(attrMethod);
   tag.addSubtag(tagTimeWindowSize);
 }
 
@@ -983,6 +1005,12 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
         iter != dynamicMeshes.end() && (iter->second.count(from) + iter->second.count(to) > 0)) {
       scheme.requireSynchronization();
     }
+    PRECICE_CHECK(
+        !(requiresInitialization && _participantConfig->getParticipant(from)->isDirectAccessAllowed(exchange.mesh->getName())),
+        "Participant \"{}\" cannot initialize data of the directly-accessed mesh \"{}\" from the participant\"{}\". "
+        "Either disable the initialization in the <exchange /> tag or use a locally provided mesh instead.",
+        from, meshName, to);
+
     if (from == accessor) {
       scheme.addDataToSend(exchange.data, exchange.mesh, requiresInitialization);
     } else if (to == accessor) {
@@ -1021,7 +1049,7 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
     const bool initialize = exchange.requiresInitialization;
     if (auto iter = dynamicMeshes.find(meshName);
         iter != dynamicMeshes.end() && (iter->second.count(from) + iter->second.count(to) > 0)) {
-      // The whole scheme requires synchonization, even if the local participant doesn't exchange anything
+      // The whole scheme requires synchronization, even if the local participant doesn't exchange anything
       scheme.requireSynchronization();
     }
     if (from == accessor) {
@@ -1056,21 +1084,12 @@ void CouplingSchemeConfiguration::checkIfDataIsExchanged(
                 dataName);
 }
 
-int CouplingSchemeConfiguration::getWaveformUsedOrder(std::string participantName, std::string readDataName) const
-{
-  auto participant = _participantConfig->getParticipant(participantName);
-  auto dataContext = participant->readDataContext(readDataName);
-  int  usedOrder   = dataContext.getInterpolationOrder();
-  PRECICE_ASSERT(usedOrder >= 0); // ensure that usedOrder was set
-  return usedOrder;
-}
-
 void CouplingSchemeConfiguration::checkWaveformOrderReadData(
     int maxAllowedOrder) const
 {
   for (const precice::impl::PtrParticipant &participant : _participantConfig->getParticipants()) {
-    for (auto &dataContext : participant->readDataContexts()) {
-      int usedOrder = dataContext.getInterpolationOrder();
+    for (const auto &dataContext : participant->readDataContexts()) {
+      const int usedOrder = dataContext.getInterpolationOrder();
       PRECICE_ASSERT(usedOrder >= 0); // ensure that usedOrder was set
       if (usedOrder > maxAllowedOrder) {
         PRECICE_ERROR(

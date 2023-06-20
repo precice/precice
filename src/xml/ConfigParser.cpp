@@ -1,15 +1,19 @@
-#include "xml/ConfigParser.hpp"
 #include <algorithm>
+#include <cstddef>
 #include <exception>
 #include <fstream>
 #include <iterator>
 #include <libxml/SAX.h>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <unordered_set>
 #include <utility>
+
 #include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
+#include "utils/String.hpp"
+#include "xml/ConfigParser.hpp"
 #include "xml/XMLTag.hpp"
 
 namespace precice::xml {
@@ -93,6 +97,16 @@ void OnStructuredErrorFunc(void *userData, xmlError *error)
   ConfigParser::MessageProxy(error->level, message);
 }
 
+void OnErrorFunc(void *userData, const char *error, ...)
+{
+  ConfigParser::MessageProxy(XML_ERR_ERROR, error);
+}
+
+void OnFatalErrorFunc(void *userData, const char *error, ...)
+{
+  ConfigParser::MessageProxy(XML_ERR_FATAL, error);
+}
+
 // ------------------------- ConfigParser implementation  -------------------------
 
 precice::logging::Logger ConfigParser::_log("xml::XMLParser");
@@ -146,6 +160,8 @@ int ConfigParser::readXmlFile(std::string const &filePath)
   SAXHandler.endElementNs   = OnEndElementNs;
   SAXHandler.characters     = OnCharacters;
   SAXHandler.serror         = OnStructuredErrorFunc;
+  SAXHandler.error          = OnErrorFunc;
+  SAXHandler.fatalError     = OnFatalErrorFunc;
 
   std::ifstream ifs(filePath);
   PRECICE_CHECK(ifs, "XML parser was unable to open configuration file \"{}\"", filePath);
@@ -162,6 +178,30 @@ int ConfigParser::readXmlFile(std::string const &filePath)
   return 0;
 }
 
+namespace {
+struct Distance {
+  std::size_t distance;
+  std::string name;
+
+  bool operator<(const Distance &other) const
+  {
+    return distance < other.distance;
+  }
+};
+auto gatherCandidates(const std::vector<std::shared_ptr<XMLTag>> &DefTags, std::string_view prefix)
+{
+  bool validPrefix = std::any_of(DefTags.begin(), DefTags.end(), [prefix](const auto &tag) { return tag->getNamespace() == prefix; });
+
+  std::set<std::string> entries;
+  for (const auto &tag : DefTags) {
+    if (!validPrefix || (tag->getNamespace() == prefix)) {
+      entries.insert(tag->getFullName());
+    }
+  }
+  return entries;
+}
+} // namespace
+
 void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<std::shared_ptr<XMLTag>> &DefTags, CTagPtrVec &SubTags)
 {
   std::unordered_set<std::string> usedTags;
@@ -176,7 +216,18 @@ void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<
         });
 
     if (tagPosition == DefTags.end()) {
-      PRECICE_ERROR("The configuration contains an unknown tag <{}>.", expectedName);
+      // Tag not found
+      auto names = gatherCandidates(DefTags, subtag->m_Prefix);
+
+      auto matches = utils::computeMatches(expectedName, names);
+      if (!matches.empty() && matches.front().distance < 3) {
+        matches.erase(std::remove_if(matches.begin(), matches.end(), [](auto &m) { return m.distance > 2; }), matches.end());
+        std::vector<std::string> stringMatches;
+        std::transform(matches.begin(), matches.end(), std::back_inserter(stringMatches), [](auto &m) { return m.name; });
+        PRECICE_ERROR("The configuration contains an unknown tag <{}>. Did you mean <{}>?", expectedName, fmt::join(stringMatches, ">,<"));
+      } else {
+        PRECICE_ERROR("The configuration contains an unknown tag <{}>. Expected tags are {}.", expectedName, fmt::join(names, ", "));
+      }
     }
 
     auto pDefSubTag = *tagPosition;

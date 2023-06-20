@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/precice.hpp>
 #include <vector>
 
 BOOST_AUTO_TEST_SUITE(Integration)
@@ -19,30 +19,31 @@ BOOST_AUTO_TEST_CASE(TestImplicit)
   double stateChange        = initialStateChange;
   int    computedTimesteps  = 0;
 
-  precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
+  precice::Participant interface(context.name, context.config(), context.rank, context.size);
 
   if (context.isNamed("SolverOne")) {
-    int    meshID = interface.getMeshID("Square");
+    auto   meshName = "Square";
     double pos[3];
     // Set mesh positions
     pos[0] = 0.0;
     pos[1] = 0.0;
     pos[2] = 0.0;
-    interface.setMeshVertex(meshID, pos);
+    interface.setMeshVertex(meshName, pos);
     pos[0] = 1.0;
     pos[1] = 0.0;
     pos[2] = 0.0;
-    interface.setMeshVertex(meshID, pos);
+    interface.setMeshVertex(meshName, pos);
     pos[0] = 1.0;
     pos[1] = 1.0;
     pos[2] = 0.0;
-    interface.setMeshVertex(meshID, pos);
+    interface.setMeshVertex(meshName, pos);
     pos[0] = 0.0;
     pos[1] = 1.0;
     pos[2] = 0.0;
-    interface.setMeshVertex(meshID, pos);
+    interface.setMeshVertex(meshName, pos);
 
-    double maxDt = interface.initialize();
+    interface.initialize();
+    double maxDt = interface.getMaxTimeStepSize();
     while (interface.isCouplingOngoing()) {
       if (interface.requiresWritingCheckpoint()) {
         checkpoint     = state;
@@ -54,7 +55,8 @@ BOOST_AUTO_TEST_CASE(TestImplicit)
       iterationCount++;
       stateChange = initialStateChange / (double) iterationCount;
       state += stateChange;
-      maxDt = interface.advance(maxDt);
+      interface.advance(maxDt);
+      maxDt = interface.getMaxTimeStepSize();
       if (interface.isTimeWindowComplete()) {
         computedTimesteps++;
       }
@@ -63,14 +65,15 @@ BOOST_AUTO_TEST_CASE(TestImplicit)
     BOOST_TEST(computedTimesteps == 4);
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    int    meshID = interface.getMeshID("SquareTwo");
+    auto   meshName = "SquareTwo";
     double pos[3];
     // Set mesh positions
     pos[0] = 0.0;
     pos[1] = 0.0;
     pos[2] = 0.0;
-    interface.setMeshVertex(meshID, pos);
-    double maxDt = interface.initialize();
+    interface.setMeshVertex(meshName, pos);
+    interface.initialize();
+    double maxDt = interface.getMaxTimeStepSize();
     while (interface.isCouplingOngoing()) {
       if (interface.requiresWritingCheckpoint()) {
         checkpoint     = state;
@@ -82,7 +85,8 @@ BOOST_AUTO_TEST_CASE(TestImplicit)
       }
       stateChange = initialStateChange / (double) iterationCount;
       state += stateChange;
-      maxDt = interface.advance(maxDt);
+      interface.advance(maxDt);
+      maxDt = interface.getMaxTimeStepSize();
       if (interface.isTimeWindowComplete()) {
         computedTimesteps++;
       }

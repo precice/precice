@@ -4,6 +4,7 @@
 #include <array>
 #include <mesh/Edge.hpp>
 #include <mesh/Mesh.hpp>
+#include <optional>
 #include <utility>
 
 namespace precice {
@@ -138,6 +139,16 @@ Eigen::VectorXd integrateSurface(const PtrMesh &mesh, const PtrData &data);
 
 /// Given the data and the mesh, this function returns the volume integral. Assumes no overlap exists for the mesh
 Eigen::VectorXd integrateVolume(const PtrMesh &mesh, const PtrData &data);
+
+template <typename Container>
+std::optional<std::size_t> locateInvalidVertexID(const Mesh &mesh, const Container &container)
+{
+  if (const auto invalidIter = std::find_if(container.begin(), container.end(), [&mesh](VertexID id) { return !mesh.isValidVertexID(id); });
+      invalidIter != container.end()) {
+    return {std::distance(container.begin(), invalidIter)};
+  }
+  return std::nullopt;
+}
 
 } // namespace mesh
 } // namespace precice

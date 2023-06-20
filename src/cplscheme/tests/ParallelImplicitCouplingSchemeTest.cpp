@@ -99,15 +99,16 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   meshConfig.addMesh(mesh);
 
   // Create all parameters necessary to create a ParallelImplicitCouplingScheme object
-  double      maxTime        = 1.0;
-  int         maxTimesteps   = 3;
-  double      timestepLength = 0.1;
-  std::string nameParticipant0("Participant0");
-  std::string nameParticipant1("Participant1");
-  int         sendDataIndex              = -1;
-  int         receiveDataIndex           = -1;
-  bool        dataRequiresInitialization = false;
-  int         extrapolationOrder         = 0;
+  double       maxTime        = 1.0;
+  int          maxTimeWindows = 3;
+  const double timeWindowSize = 0.1;
+  const double timeStepSize   = timeWindowSize; // solver is not subcycling
+  std::string  nameParticipant0("Participant0");
+  std::string  nameParticipant1("Participant1");
+  int          sendDataIndex              = -1;
+  int          receiveDataIndex           = -1;
+  bool         dataRequiresInitialization = false;
+  int          extrapolationOrder         = 0;
   if (context.isNamed(nameParticipant0)) {
     sendDataIndex              = dataID0;
     receiveDataIndex           = dataID1;
@@ -120,7 +121,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
 
   // Create the coupling scheme object
   ParallelCouplingScheme cplScheme(
-      maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
+      maxTime, maxTimeWindows, timeWindowSize, 16, nameParticipant0, nameParticipant1,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, 100, extrapolationOrder);
 
   using Fixture = testing::ParallelCouplingSchemeFixture;
@@ -149,6 +150,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(Fixture::isImplicitCouplingScheme(cplScheme));
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::InitializeData));
     sendCouplingData->values() = Eigen::VectorXd::Constant(1, 4.0);
+    sendCouplingData->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{sendCouplingData->values()});
     cplScheme.markActionFulfilled(CouplingScheme::Action::InitializeData);
     cplScheme.initialize(0.0, 0);
     BOOST_TEST(cplScheme.hasDataBeenReceived());
@@ -164,7 +166,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       if (cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint)) {
         cplScheme.markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
       }
-      cplScheme.addComputedTime(timestepLength);
+      cplScheme.addComputedTime(timeStepSize);
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
@@ -177,6 +179,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     Eigen::VectorXd v(3);
     v << 1.0, 2.0, 3.0;
     sendCouplingData->values() = v;
+    sendCouplingData->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{sendCouplingData->values()});
     cplScheme.markActionFulfilled(CouplingScheme::Action::InitializeData);
     BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 0.0));
     BOOST_TEST(receiveCouplingData->values().size() == 1);
@@ -196,7 +199,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       if (cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint)) {
         cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
       }
-      cplScheme.addComputedTime(timestepLength);
+      cplScheme.addComputedTime(timeStepSize);
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
@@ -223,41 +226,40 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   mesh->allocateDataValues();
   BOOST_TEST(data->values().size() == 1);
 
-  const double          maxTime      = CouplingScheme::UNDEFINED_TIME;
-  const int             maxTimesteps = 1;
-  const double          dt           = 1.0;
-  std::string           first        = "First";
-  std::string           second       = "Second";
-  std::string           accessor     = second;
+  const double          maxTime        = CouplingScheme::UNDEFINED_MAX_TIME;
+  const int             maxTimeWindows = 1;
+  const double          timeWindowSize = 1.0;
+  std::string           first          = "First";
+  std::string           second         = "Second";
+  std::string           accessor       = second;
   com::PtrCommunication com(new com::MPIDirectCommunication());
   m2n::PtrM2N           globalCom(new m2n::M2N(com, m2n::DistributedComFactory::SharedPointer()));
   const int             maxIterations      = 1;
   const int             extrapolationOrder = 1;
 
   // Test first order extrapolation
-  ParallelCouplingScheme scheme(maxTime, maxTimesteps, dt, 16, first, second,
+  ParallelCouplingScheme scheme(maxTime, maxTimeWindows, timeWindowSize, 16, first, second,
                                 accessor, globalCom, constants::FIXED_TIME_WINDOW_SIZE,
                                 BaseCouplingScheme::Implicit, maxIterations, extrapolationOrder);
 
   using Fixture = testing::ParallelCouplingSchemeFixture;
 
   scheme.addDataToSend(data, mesh, true);
-  Fixture::initializeStorages(scheme);
+  Fixture::initializeAcceleration(scheme);
   CouplingData *cplData = Fixture::getSendData(scheme, dataID);
   BOOST_CHECK(cplData); // no nullptr
   BOOST_TEST(cplData->getSize() == 1);
   BOOST_TEST(cplData->getPreviousIterationSize() == 1);
-
-  Fixture::moveToNextWindow(scheme);
+  cplData->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{cplData->values()}); // data provided for initial value
 
   // data is uninitialized
   BOOST_TEST(testing::equals(cplData->values()(0), 0.0));
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 0.0));
 
   // start first window
-  cplData->values()(0) = 1.0; // data provided at end of first window
+  cplData->values()(0) = 1.0;                                                           // data provided at end of first window
+  cplData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{cplData->values()}); // data provided at end of first window
   Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
-  Fixture::storeExtrapolationData(scheme);
   BOOST_TEST(testing::equals(cplData->values()(0), 1.0));
 
   // go to second window
@@ -266,9 +268,9 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   Fixture::storeIteration(scheme);
   BOOST_TEST(testing::equals(cplData->values()(0), 2.0)); // = 2*1 - 0
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
-  cplData->values()(0) = 4.0; // data provided at end of second window
+  cplData->values()(0) = 4.0;                                                           // data provided at end of second window
+  cplData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{cplData->values()}); // data provided at end of second window
   Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
-  Fixture::storeExtrapolationData(scheme);
 
   // go to third window
   Fixture::moveToNextWindow(scheme); // uses first order extrapolation (maximum allowed) at end of second window
@@ -276,9 +278,9 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   Fixture::storeIteration(scheme);
   BOOST_TEST(testing::equals(cplData->values()(0), 7.0)); // = 2*4 - 1
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 7.0));
-  cplData->values()(0) = 10.0; // data provided at end of third window
+  cplData->values()(0) = 10.0;                                                          // data provided at end of third window
+  cplData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{cplData->values()}); // data provided at end of third window
   Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
-  Fixture::storeExtrapolationData(scheme);
 
   // go to fourth window
   Fixture::moveToNextWindow(scheme); // uses first order extrapolation (maximum allowed) at end of third window
@@ -334,12 +336,12 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
   meshConfig.addMesh(mesh);
 
   // Create all parameters necessary to create an ImplicitCouplingScheme object
-  const double maxTime            = CouplingScheme::UNDEFINED_TIME;
+  const double maxTime            = CouplingScheme::UNDEFINED_MAX_TIME;
   const int    maxTimeWindows     = 2;
   const double timeWindowSize     = 0.1;
   const int    maxIterations      = 3;
   const int    extrapolationOrder = 1;
-  const double timestepLength     = timeWindowSize;
+  const double timeStepSize       = timeWindowSize; // solver is not subcycling
   std::string  first("Participant0");
   std::string  second("Participant1");
   int          sendDataIndex        = -1;
@@ -378,9 +380,10 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
       new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
   cplScheme.addConvergenceMeasure(convergenceDataIndex, false, false, minIterationConvMeasure1, true);
 
-  cplScheme.initialize(0.0, 1);
-
   Eigen::VectorXd v(1); // buffer for data
+  v << 0;
+  mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{v});
+  cplScheme.initialize(0.0, 1);
 
   // write data is uninitialized
   BOOST_TEST(mesh->data(sendDataIndex)->values()(0) == 0);
@@ -430,8 +433,8 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
     } else if (context.isNamed(second)) {
       v << 2.0;
     }
-    mesh->data(sendDataIndex)->values() = v;
-    cplScheme.addComputedTime(timestepLength);
+    mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v});
+    cplScheme.addComputedTime(timeStepSize);
 
     cplScheme.firstSynchronization({});
     cplScheme.firstExchange();
@@ -485,8 +488,8 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
     }
 
     v << 3.0;
-    mesh->data(sendDataIndex)->values() = v;
-    cplScheme.addComputedTime(timestepLength);
+    mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v});
+    cplScheme.addComputedTime(timeStepSize);
 
     cplScheme.firstSynchronization({});
     cplScheme.firstExchange();
@@ -554,12 +557,12 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
   meshConfig.addMesh(mesh);
 
   // Create all parameters necessary to create an ImplicitCouplingScheme object
-  const double maxTime            = CouplingScheme::UNDEFINED_TIME;
+  const double maxTime            = CouplingScheme::UNDEFINED_MAX_TIME;
   const int    maxTimeWindows     = 2;
   const double timeWindowSize     = 0.1;
   const int    maxIterations      = 3;
   const int    extrapolationOrder = 1;
-  const double timestepLength     = timeWindowSize;
+  const double timeStepSize       = timeWindowSize; // solver is not subcycling
   std::string  first("Participant0");
   std::string  second("Participant1");
   int          sendDataIndex        = -1;
@@ -608,11 +611,13 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
 
   if (context.isNamed(first)) {
     BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::InitializeData));
+    v << 0.0;
+    mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{v});
   } else {
     BOOST_TEST(context.isNamed(second));
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::InitializeData));
     v << 4.0;
-    mesh->data(sendDataIndex)->values() = v;
+    mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{v});
     cplScheme.markActionFulfilled(CouplingScheme::Action::InitializeData);
     BOOST_TEST(mesh->data(sendDataIndex)->values().size() == 1);
     BOOST_TEST(testing::equals(mesh->data(sendDataIndex)->values()(0), 4.0));
@@ -684,8 +689,8 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
     } else if (context.isNamed(second)) {
       v << 2.0;
     }
-    mesh->data(sendDataIndex)->values() = v;
-    cplScheme.addComputedTime(timestepLength);
+    mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v});
+    cplScheme.addComputedTime(timeStepSize);
 
     cplScheme.firstSynchronization({});
     cplScheme.firstExchange();
@@ -739,8 +744,8 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
     }
 
     v << 3.0;
-    mesh->data(sendDataIndex)->values() = v;
-    cplScheme.addComputedTime(timestepLength);
+    mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v});
+    cplScheme.addComputedTime(timeStepSize);
 
     cplScheme.firstSynchronization({});
     cplScheme.firstExchange();

@@ -175,26 +175,10 @@ void BiCouplingScheme::sendLocalChanges(const CouplingScheme::ChangedMeshes &cha
   getM2N()->getPrimaryRankCommunication()->sendRange(changesToSend, 0);
 }
 
-void BiCouplingScheme::exchangeInitialData()
+void BiCouplingScheme::initializeReceiveDataStorage()
 {
-  // F: send, receive, S: receive, send
-  if (doesFirstStep()) {
-    if (sendsInitializedData()) {
-      sendData(getM2N(), getSendData());
-    }
-    if (receivesInitializedData()) {
-      receiveData(getM2N(), getReceiveData());
-      checkDataHasBeenReceived();
-    }
-  } else { // second participant
-    if (receivesInitializedData()) {
-      receiveData(getM2N(), getReceiveData());
-      checkDataHasBeenReceived();
-    }
-    if (sendsInitializedData()) {
-      sendData(getM2N(), getSendData());
-    }
-  }
+  // @todo check receiveData. Should only contain zero data!
+  initializeWithZeroInitialData(getReceiveData());
 }
 
 bool BiCouplingScheme::hasAnySendData()

@@ -28,8 +28,8 @@ public:
   /**
  * @brief Constructor.
  *
- * @param[in] maxTime Simulation time limit, or UNDEFINED_TIME.
- * @param[in] maxTimeWindows Simulation time windows limit, or UNDEFINED_TIMEWINDOWS.
+ * @param[in] maxTime Simulation time limit, or UNDEFINED_MAX_TIME.
+ * @param[in] maxTimeWindows Simulation time windows limit, or UNDEFINED_TIME_WINDOWS.
  * @param[in] timeWindowSize Simulation time window size.
  * @param[in] validDigits valid digits for computation of the remainder of a time window
  * @param[in] localParticipant Name of participant using this coupling scheme.
@@ -96,8 +96,12 @@ private:
 
   void exchangeSecondData() override final;
 
-  const DataMap getAccelerationData() override final;
+  const DataMap &getAccelerationData() override final;
 
+  /// @copydoc cplscheme::BaseCouplingScheme::initializeReceiveDataStorage()
+  void initializeReceiveDataStorage() override final;
+
+  /// @copydoc cplscheme::BaseCouplingScheme::exchangeInitialData()
   void exchangeInitialData() override final;
 
   /// name of the controller participant

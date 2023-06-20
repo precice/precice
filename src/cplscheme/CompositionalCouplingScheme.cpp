@@ -49,13 +49,6 @@ void CompositionalCouplingScheme::initialize(
   }
 }
 
-void CompositionalCouplingScheme::receiveResultOfFirstAdvance()
-{
-  for (const auto scheme : allSchemes()) {
-    scheme->receiveResultOfFirstAdvance();
-  }
-}
-
 bool CompositionalCouplingScheme::sendsInitializedData() const
 {
   PRECICE_TRACE();
@@ -73,13 +66,15 @@ bool CompositionalCouplingScheme::isInitialized() const
   return isInitialized;
 }
 
-void CompositionalCouplingScheme::addComputedTime(double timeToAdd)
+bool CompositionalCouplingScheme::addComputedTime(double timeToAdd)
 {
   PRECICE_TRACE(timeToAdd);
 
+  bool isAtWindowEnd = false;
   for (const auto scheme : schemesToRun()) {
-    scheme->addComputedTime(timeToAdd);
+    isAtWindowEnd |= scheme->addComputedTime(timeToAdd); // @todo should be &= ?
   }
+  return isAtWindowEnd;
 }
 
 CouplingScheme::ChangedMeshes CompositionalCouplingScheme::firstSynchronization(const CouplingScheme::ChangedMeshes &changes)
@@ -149,12 +144,12 @@ std::vector<std::string> CompositionalCouplingScheme::getCouplingPartners() cons
   return partners;
 }
 
-bool CompositionalCouplingScheme::willDataBeExchanged(double lastSolverTimestepLength) const
+bool CompositionalCouplingScheme::willDataBeExchanged(double lastSolverTimeStepSize) const
 {
-  PRECICE_TRACE(lastSolverTimestepLength);
+  PRECICE_TRACE(lastSolverTimeStepSize);
   auto schemes         = allSchemes();
   bool willBeExchanged = std::any_of(schemes.begin(), schemes.end(),
-                                     [lastSolverTimestepLength](const auto &cpl) { return cpl->willDataBeExchanged(lastSolverTimestepLength); });
+                                     [lastSolverTimeStepSize](const auto &cpl) { return cpl->willDataBeExchanged(lastSolverTimeStepSize); });
   PRECICE_DEBUG("return {}", willBeExchanged);
   return willBeExchanged;
 }
@@ -216,26 +211,26 @@ double CompositionalCouplingScheme::getTimeWindowSize() const
   return timeWindowSize;
 }
 
-double CompositionalCouplingScheme::getThisTimeWindowRemainder() const
+double CompositionalCouplingScheme::getNormalizedWindowTime() const
 {
   PRECICE_TRACE();
   auto   schemes      = allSchemes();
-  double maxRemainder = std::transform_reduce(
-      schemes.begin(), schemes.end(), 0.0,
+  double normalizedDt = std::transform_reduce(
+      schemes.begin(), schemes.end(), std::numeric_limits<double>::max(),
       ::min<double>,
-      std::mem_fn(&CouplingScheme::getThisTimeWindowRemainder));
-  PRECICE_DEBUG("return {}", maxRemainder);
-  return maxRemainder;
+      std::mem_fn(&CouplingScheme::getNormalizedWindowTime));
+  PRECICE_DEBUG("return {}", normalizedDt);
+  return normalizedDt;
 }
 
-double CompositionalCouplingScheme::getNextTimestepMaxLength() const
+double CompositionalCouplingScheme::getNextTimeStepMaxSize() const
 {
   PRECICE_TRACE();
   auto   schemes   = allSchemes();
   double maxLength = std::transform_reduce(
       schemes.begin(), schemes.end(), std::numeric_limits<double>::max(),
       ::min<double>,
-      std::mem_fn(&CouplingScheme::getNextTimestepMaxLength));
+      std::mem_fn(&CouplingScheme::getNextTimeStepMaxSize));
   PRECICE_DEBUG("return {}", maxLength);
   return maxLength;
 }

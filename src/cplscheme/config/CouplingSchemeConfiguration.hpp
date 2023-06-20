@@ -142,7 +142,7 @@ private:
     std::vector<std::string>      participants;
     std::string                   controller;
     bool                          setController  = false;
-    double                        maxTime        = CouplingScheme::UNDEFINED_TIME;
+    double                        maxTime        = CouplingScheme::UNDEFINED_MAX_TIME;
     int                           maxTimeWindows = CouplingScheme::UNDEFINED_TIME_WINDOWS;
     double                        timeWindowSize = CouplingScheme::UNDEFINED_TIME_WINDOW_SIZE;
     int                           validDigits    = 16;
@@ -276,9 +276,6 @@ private:
 
   void checkIfDataIsExchanged(
       DataID dataID) const;
-
-  /// Get waveform order for read data of given name. Raises an error if data name is not found in the read data of this participant.
-  int getWaveformUsedOrder(std::string participantName, std::string readDataName) const;
 
   void checkWaveformOrderReadData(
       int maxAllowedOrder) const;

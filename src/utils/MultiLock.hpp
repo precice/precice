@@ -48,7 +48,8 @@ public:
    *
    * @param[in] name the name of to lock
    */
-  void lock(const Key &name)
+  template <typename K>
+  void lock(const K &name)
   {
     auto iter = _locks.find(name);
     if (iter == _locks.end()) {
@@ -70,7 +71,8 @@ public:
    *
    * @param[in] name the name of to unlock
    */
-  void unlock(const Key &name)
+  template <typename K>
+  void unlock(const K &name)
   {
     auto iter = _locks.find(name);
     if (iter == _locks.end()) {
@@ -100,7 +102,8 @@ public:
    *
    * @returns whether the lock is locked
    */
-  bool check(const Key &name) const
+  template <typename K>
+  bool check(const K &name) const
   {
     auto iter = _locks.find(name);
     if (iter == _locks.end()) {
@@ -125,7 +128,8 @@ public:
    *
    * @returns whether the name is a known lock
    */
-  bool contains(const Key &name) const noexcept
+  template <typename K>
+  bool contains(const K &name) const noexcept
   {
     return _locks.find(name) != _locks.end();
   }
@@ -149,7 +153,7 @@ public:
   }
 
 private:
-  using map_type = typename std::map<Key, bool>;
+  using map_type = typename std::map<Key, bool, std::less<>>;
 
   /// The map that keeps track of the locks and their state.
   map_type _locks;

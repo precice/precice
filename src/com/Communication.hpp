@@ -9,8 +9,8 @@
 #include "com/Request.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
+#include "precice/span.hpp"
 #include "precice/types.hpp"
-#include "utils/span.hpp"
 
 namespace precice {
 namespace com {

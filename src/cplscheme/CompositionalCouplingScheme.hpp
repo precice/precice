@@ -81,16 +81,14 @@ public:
       double startTime,
       int    startTimeWindow) final override;
 
-  void receiveResultOfFirstAdvance() override final;
-
   /// Returns true, if any of the composed coupling schemes sendsInitializedData for this participant
   bool sendsInitializedData() const override final;
 
   /// Returns true, if initialize has been called.
   bool isInitialized() const final override;
 
-  /// Adds newly computed time. Has to be called before every advance.
-  void addComputedTime(double timeToAdd) final override;
+  /// @copydoc cplscheme::CouplingScheme::addComputedTime()
+  bool addComputedTime(double timeToAdd) final override;
 
   /// Exchanges data and updates the state of the coupling scheme.
   //void advance() final override;
@@ -117,10 +115,10 @@ public:
    * Also returns true after the last call of advance() at the end of the
    * simulation.
    *
-   * @param lastSolverTimestepLength [IN] The length of the last timestep
+   * @param lastSolverTimeStepSize [IN] The size of the last time step
    *        computed by the solver calling willDataBeExchanged().
    */
-  bool willDataBeExchanged(double lastSolverTimestepLength) const final override;
+  bool willDataBeExchanged(double lastSolverTimeStepSize) const final override;
 
   /**
    * @brief checks all coupling schemes this coupling scheme is composed of.
@@ -143,46 +141,32 @@ public:
   int getTimeWindows() const final override;
 
   /**
-   * @brief Returns true, if timestep length by any of the coupling schemes in this compositional coupling scheme.
+   * @brief Returns true, if time window size is given by any of the coupling schemes in this compositional coupling scheme.
    *
-   * If any of the solvers in the composition has a timestep length limit, this
-   * counts as limit.
    */
   bool hasTimeWindowSize() const final override;
 
   /**
-   * @brief Returns the timestep length, if one is given by the coupling scheme.
+   * @brief Returns the time window size, if one is given by the coupling scheme.
    *
-   * An assertion is thrown, if no valid timestep is given. Check with
+   * An assertion is thrown, if no valid time window size is given. Check with
    * hasTimeWindowSize().
    *
-   * The smallest timestep length limit in the coupling scheme composition has
-   * to be obeyed.
    */
   double getTimeWindowSize() const final override;
 
-  /**
-   * @brief Returns the remaining timestep length inside the current time window.
-   *
-   * This is not necessarily the timestep length limit the solver has to obey
-   * which is returned by getNextTimestepMaxLength().
-   *
-   * If no timestep length is prescribed by the coupling scheme, always 0.0 is
-   * returned.
-   *
-   * The maximum remainder of all composed coupling schemes is returned.
-   */
-  double getThisTimeWindowRemainder() const final override;
+  /// @copydoc CouplingScheme::getNormalizedWindowTime
+  double getNormalizedWindowTime() const override final;
 
   /**
-   * @brief Returns the maximal length of the next timestep to be computed.
+   * @brief Returns the maximal size of the next time step to be computed.
    *
-   * If no timestep length is prescribed by the coupling scheme, always the
+   * If no time step size is prescribed by the coupling scheme, always the
    * maximal double accuracy floating point number value is returned.
    *
-   * This is the minimum of all max lengths of the composed coupling schemes.
+   * This is the minimum of all max sizes of the composed coupling schemes.
    */
-  double getNextTimestepMaxLength() const final override;
+  double getNextTimeStepMaxSize() const final override;
 
   /**
    * @brief Returns true, when the coupled simulation is still ongoing.

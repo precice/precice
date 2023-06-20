@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_CASE(ExchangeStatic)
   xml::configure(config.getXMLTag(),
                  cont,
                  context.prefix("meshcontext-static.xml"));
-  auto participants = config.getSolverInterfaceConfiguration().getParticipantConfiguration()->getParticipants();
+  auto participants = config.getParticipantConfiguration()->getParticipants();
 
   BOOST_REQUIRE(participants.size() == 2);
 
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(ExchangeDynamic)
   xml::configure(config.getXMLTag(),
                  cont,
                  context.prefix("meshcontext-dynamic.xml"));
-  auto participants = config.getSolverInterfaceConfiguration().getParticipantConfiguration()->getParticipants();
+  auto participants = config.getParticipantConfiguration()->getParticipants();
 
   BOOST_REQUIRE(participants.size() == 2);
 
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(ExchangeTransitive)
   xml::configure(config.getXMLTag(),
                  cont,
                  context.prefix("meshcontext-transitive.xml"));
-  auto participants = config.getSolverInterfaceConfiguration().getParticipantConfiguration()->getParticipants();
+  auto participants = config.getParticipantConfiguration()->getParticipants();
 
   BOOST_REQUIRE(participants.size() == 2);
 
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(ExchangeDirectAccess)
   xml::configure(config.getXMLTag(),
                  cont,
                  context.prefix("meshcontext-direct.xml"));
-  auto participants = config.getSolverInterfaceConfiguration().getParticipantConfiguration()->getParticipants();
+  auto participants = config.getParticipantConfiguration()->getParticipants();
 
   BOOST_REQUIRE(participants.size() == 2);
 
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(Partial)
   xml::configure(config.getXMLTag(),
                  cont,
                  context.prefix("meshcontext-partial.xml"));
-  auto participants = config.getSolverInterfaceConfiguration().getParticipantConfiguration()->getParticipants();
+  auto participants = config.getParticipantConfiguration()->getParticipants();
 
   BOOST_REQUIRE(participants.size() == 2);
 

@@ -6,6 +6,8 @@
 
 #include "logging/Logger.hpp"
 #include "precice/types.hpp"
+#include "time/Sample.hpp"
+#include "time/Storage.hpp"
 
 namespace precice {
 namespace mesh {
@@ -58,10 +60,28 @@ public:
   const Eigen::VectorXd &values() const;
 
   /// Returns a reference to the gradient data values.
-  Eigen::MatrixXd &gradientValues();
+  Eigen::MatrixXd &gradients();
 
   /// Returns a const reference to the gradient data values.
-  const Eigen::MatrixXd &gradientValues() const;
+  const Eigen::MatrixXd &gradients() const;
+
+  /// Returns a reference to the _sample.
+  time::Sample &sample();
+
+  /// Returns a const reference to the _sample.
+  const time::Sample &sample() const;
+
+  /// Returns a reference to the _timeStepsStorage.
+  time::Storage &timeStepsStorage();
+
+  /// Returns a the stamples from _timeStepsStorage.
+  auto stamples() const
+  {
+    return _timeStepsStorage.stamples();
+  }
+
+  /// Add sample at given time to _timeStepsStorage.
+  void setSampleAtTime(double time, time::Sample sample);
 
   /// Returns the name of the data set, as set in the config file.
   const std::string &getName() const;
@@ -84,12 +104,20 @@ public:
   /// Returns the dimension (i.e., number of components) of one data value (i.e number of columns of one gradient data value).
   int getDimensions() const;
 
+  /**
+   * @brief Allocates memory for the data values and corresponding gradient values.
+   *
+   * @param expectedCount expected number of values count (i.e. number of mesh vertices)
+   */
+  void allocateValues(int expectedCount);
+
 private:
   logging::Logger _log{"mesh::Data"};
 
-  Eigen::VectorXd _values;
+  time::Sample _sample;
 
-  Eigen::MatrixXd _gradientValues;
+  /// Stores time steps in the current time window
+  time::Storage _timeStepsStorage;
 
   /// Name of the data set.
   std::string _name;

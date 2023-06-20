@@ -23,7 +23,6 @@ target_sources(testprecice
     src/cplscheme/tests/DummyCouplingScheme.cpp
     src/cplscheme/tests/DummyCouplingScheme.hpp
     src/cplscheme/tests/ExplicitCouplingSchemeTest.cpp
-    src/cplscheme/tests/ExtrapolationTest.cpp
     src/cplscheme/tests/MinIterationConvergenceMeasureTest.cpp
     src/cplscheme/tests/ParallelImplicitCouplingSchemeTest.cpp
     src/cplscheme/tests/RelativeConvergenceMeasureTest.cpp
@@ -43,6 +42,8 @@ target_sources(testprecice
     src/mapping/tests/NearestNeighborGradientMappingTest.cpp
     src/mapping/tests/NearestNeighborMappingTest.cpp
     src/mapping/tests/NearestProjectionMappingTest.cpp
+    src/mapping/tests/PartitionOfUnityClusteringTest.cpp
+    src/mapping/tests/PartitionOfUnityMappingTest.cpp
     src/mapping/tests/PetRadialBasisFctMappingTest.cpp
     src/mapping/tests/PolationTest.cpp
     src/mapping/tests/RadialBasisFctMappingTest.cpp
@@ -57,6 +58,7 @@ target_sources(testprecice
     src/mesh/tests/MeshTest.cpp
     src/mesh/tests/TetrahedronTest.cpp
     src/mesh/tests/TriangleTest.cpp
+    src/mesh/tests/UtilsTest.cpp
     src/mesh/tests/VertexTest.cpp
     src/partition/tests/ProvidedPartitionTest.cpp
     src/partition/tests/ReceivedPartitionTest.cpp
@@ -64,6 +66,7 @@ target_sources(testprecice
     src/precice/tests/DataContextTest.cpp
     src/precice/tests/MeshContextTests.cpp
     src/precice/tests/ParallelTests.cpp
+    src/precice/tests/SpanTests.cpp
     src/precice/tests/ToolingTests.cpp
     src/precice/tests/VersioningTests.cpp
     src/precice/tests/WatchIntegralTest.cpp
@@ -72,8 +75,6 @@ target_sources(testprecice
     src/query/tests/RTreeTests.cpp
     src/testing/DataContextFixture.cpp
     src/testing/DataContextFixture.hpp
-    src/testing/ExtrapolationFixture.cpp
-    src/testing/ExtrapolationFixture.hpp
     src/testing/GlobalFixtures.cpp
     src/testing/ParallelCouplingSchemeFixture.cpp
     src/testing/ParallelCouplingSchemeFixture.hpp

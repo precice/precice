@@ -51,8 +51,8 @@ class CouplingData;
  * -# query actions and mark them as fulfilled
  * -# compute data to be sent (possibly taking into account received data from
  *    initialize())
- * -# advance the coupling scheme with advance(); where the maximum timestep
- *    length (= time window size) needs to be obeyed
+ * -# advance the coupling scheme with advance(); where the maximum time step
+ *    size (= time window size) needs to be obeyed
  * -# ....
  * -# when the method isCouplingOngoing() returns false, call finalize() to
  *    stop the coupling scheme
@@ -91,11 +91,8 @@ public:
    */
   bool isInitialized() const override final;
 
-  /**
-   * @brief Adds newly computed time. Has to be called before every advance.
-   * @param timeToAdd time to be added
-   */
-  void addComputedTime(double timeToAdd) override final;
+  /// @copydoc cplscheme::CouplingScheme::addComputedTime()
+  bool addComputedTime(double timeToAdd) override final;
 
   /**
    * @brief Returns true, if data will be exchanged when calling advance().
@@ -103,10 +100,10 @@ public:
    * Also returns true after the last call of advance() at the end of the
    * simulation.
    *
-   * @param lastSolverTimestepLength [IN] The length of the last timestep
+   * @param lastSolverTimeStepSize [IN] The size of the last time step
    *        computed by the solver calling willDataBeExchanged().
    */
-  bool willDataBeExchanged(double lastSolverTimestepLength) const override final;
+  bool willDataBeExchanged(double lastSolverTimeStepSize) const override final;
 
   /**
    * @brief getter for _hasDataBeenReceived
@@ -145,21 +142,16 @@ public:
    */
   double getTimeWindowSize() const override final;
 
-  /**
-   * @brief Returns the remaining timestep length within the current time window.
-   *
-   * If no time window size is prescribed by the coupling scheme, always 0.0 is
-   * returned.
-   */
-  double getThisTimeWindowRemainder() const override final;
+  /// @copydoc CouplingScheme::getNormalizedWindowTime
+  double getNormalizedWindowTime() const override;
 
   /**
-   * @brief Returns the maximal length of the next timestep to be computed.
+   * @brief Returns the maximal size of the next time step to be computed.
    *
    * If no time window size is prescribed by the coupling scheme, always the
    * maximal double accuracy floating point number value is returned.
    */
-  double getNextTimestepMaxLength() const override final; // @todo mainly used in tests. Is this function actually needed or can we drop it and only use getThisTimeWindowRemainder()?
+  double getNextTimeStepMaxSize() const override final;
 
   /// Returns true, when the coupled simulation is still ongoing.
   bool isCouplingOngoing() const override final;
@@ -196,9 +188,6 @@ public:
    * @param[in] startTimeWindow starting counter of time window, from which coupling scheme starts
    */
   void initialize(double startTime, int startTimeWindow) override final;
-
-  /// Receives result of first advance, if this has to happen inside SolverInterface::initialize(), see CouplingScheme.hpp
-  void receiveResultOfFirstAdvance() override final;
 
   void firstExchange() override final;
 
@@ -255,6 +244,9 @@ protected:
   /// All send and receive data as a map "data ID -> data"
   DataMap _allData;
 
+  /// Acceleration method to speedup iteration convergence.
+  acceleration::PtrAcceleration _acceleration;
+
   /**
    * @brief Sends data sendDataIDs given in mapCouplingData with communication.
    *
@@ -268,8 +260,16 @@ protected:
    *
    * @param m2n M2N used for communication
    * @param receiveData DataMap associated with received data
+   * @param initialCommunication if true, will store received data for WINDOW_START and WINDOW_END, else store received data only for WINDOW_END
    */
-  void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData);
+  void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData, bool initialCommunication = false);
+
+  /**
+   * @brief Initializes storage in receiveData as zero
+   *
+   * @param receiveData DataMap associated with received data
+   */
+  void initializeWithZeroInitialData(const DataMap &receiveData);
 
   /**
    * @brief Adds CouplingData with given properties to this BaseCouplingScheme and returns a pointer to the CouplingData
@@ -299,7 +299,14 @@ protected:
    * @brief Getter for _computedTimeWindowPart
    * @returns _computedTimeWindowPart
    */
-  double getComputedTimeWindowPart();
+  double getComputedTimeWindowPart() const;
+
+  /**
+   * @brief Returns the time at the beginning of the current time window.
+   *
+   * @return time at beginning of the current time window.
+   */
+  double getWindowStartTime() const;
 
   /**
    * @brief Setter for _doesFirstStep
@@ -328,11 +335,6 @@ protected:
   void setTimeWindows(int timeWindows);
 
   /**
-   * @brief Reserves memory to store data values from previous iterations and time windows in coupling data and acceleration, and initializes with zero.
-   */
-  void initializeStorages();
-
-  /**
    * @brief sends convergence to other participant via m2n
    * @param m2n used for sending
    */
@@ -352,11 +354,6 @@ protected:
    * This function is called from the child classes
    */
   void doImplicitStep();
-
-  /**
-   * @brief stores current data in buffer for extrapolation
-   */
-  void storeExtrapolationData();
 
   /**
    * @brief finalizes this window's data and initializes data for next window.
@@ -397,11 +394,11 @@ private:
 
   mutable logging::Logger _log{"cplscheme::BaseCouplingScheme"};
 
-  /// Maximum time being computed. End of simulation is reached, if _time == _maxTime
+  /// Maximum time being computed. End of simulation is reached, if getTime() == _maxTime
   double _maxTime;
 
-  /// current time; _time <= _maxTime
-  double _time = 0;
+  /// time of beginning of the current time window
+  double _timeWindowStartTime = 0;
 
   /// Number of time windows that have to be computed. End of simulation is reached, if _timeWindows == _maxTimeWindows
   int _maxTimeWindows;
@@ -429,9 +426,6 @@ private:
 
   /// True, if _computedTimeWindowPart == _timeWindowSize and (coupling has converged or _iterations == _maxIterations)
   bool _isTimeWindowComplete = false;
-
-  /// Acceleration method to speedup iteration convergence.
-  acceleration::PtrAcceleration _acceleration;
 
   /// True, if this participant has to send initialized data.
   bool _sendsInitializedData = false;
@@ -464,14 +458,13 @@ private:
   /**
    * Order of predictor of interface values for first participant.
    *
-   * The first participant in the implicit coupling scheme has to take some
-   * initial guess for the interface values computed by the second participant.
+   * When a participant enters a new window, it has to take some initial guess for the interface values at the end of the window computed by the other participants.
    * There are two possibilities to determine an initial guess:
    *
    * 1) Simply use the converged values of the last time window (constant extrapolation).
    * 2) Compute a linear function from the values of the last two time windows and use it to determine the initial guess (linear extrapolation)
    */
-  const int _extrapolationOrder;
+  int _extrapolationOrder;
 
   /// Smallest number, taking validDigits into account: eps = std::pow(10.0, -1 * validDigits)
   const double _eps;
@@ -512,14 +505,14 @@ private:
   /// Functions needed for initialize()
 
   /**
+   * @brief Need to initialize receive data
+   */
+  virtual void initializeReceiveDataStorage() = 0;
+
+  /**
    * @brief implements functionality for initialize in base class.
    */
   virtual void exchangeInitialData() = 0;
-
-  /**
-   * @brief implements functionality for receiveResultOfFirstAdvance
-   */
-  virtual void performReceiveOfFirstAdvance();
 
   /// Exchanges the first set of data
   virtual void exchangeFirstData() = 0;
@@ -531,7 +524,7 @@ private:
    * @brief interface to provide accelerated data, depending on coupling scheme being used
    * @return data being accelerated
    */
-  virtual const DataMap getAccelerationData() = 0;
+  virtual const DataMap &getAccelerationData() = 0;
 
   /**
    * @brief If any required actions are open, an error message is issued.

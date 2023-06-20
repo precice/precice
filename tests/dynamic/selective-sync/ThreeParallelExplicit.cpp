@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/precice.hpp>
 #include "../../serial/three-solvers/helpers.hpp"
 
 BOOST_AUTO_TEST_SUITE(Integration)
@@ -12,7 +12,7 @@ BOOST_AUTO_TEST_CASE(ThreeParallelExplicit)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank), "SolverThree"_on(1_rank));
   std::string      config = context.config();
-  std::vector<int> expectedCallsOfAdvance{30, 30, 10};
+  std::vector<int> expectedCallsOfAdvance{10, 10, 10};
   runTestThreeSolvers(config, expectedCallsOfAdvance, context);
 }
 
