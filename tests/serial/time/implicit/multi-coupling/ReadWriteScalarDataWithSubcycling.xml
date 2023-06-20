@@ -23,8 +23,8 @@
   <participant name="SolverOne">
     <provide-mesh name="MeshOne" />
     <write-data name="DataOne" mesh="MeshOne" />
-    <read-data name="DataTwo" mesh="MeshOne" waveform-order="1" />
-    <read-data name="DataThree" mesh="MeshOne" waveform-order="1" />
+    <read-data name="DataTwo" mesh="MeshOne" waveform-order="0" />
+    <read-data name="DataThree" mesh="MeshOne" waveform-order="0" />
   </participant>
 
   <participant name="SolverTwo">
