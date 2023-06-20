@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ostream>
 #include <vector>
 #include "MappingContext.hpp"
 #include "SharedPointer.hpp"
@@ -70,6 +71,20 @@ struct MeshContext {
     }
   }
 };
+
+inline std::ostream &operator<<(std::ostream &os, MeshContext::Dynamicity d)
+{
+  switch (d) {
+  case MeshContext::Dynamicity::Yes:
+    return os << "Dynamic";
+  case MeshContext::Dynamicity::No:
+    return os << "Static";
+  case MeshContext::Dynamicity::Transitively:
+    return os << "Transitively dynamic";
+  default:
+    return os;
+  };
+}
 
 inline void MeshContext::require(mapping::Mapping::MeshRequirement requirement)
 {
