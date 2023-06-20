@@ -80,11 +80,10 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     if (context.isNamed("SolverOne")) {
       readTime = timewindow * windowDt; // SolverOne lags one window behind SolverTwo for serial-explicit coupling.
     } else {
-      readTime = (timewindow + 1) * windowDt; // SolverTwo gets result at end of window from SolverOne
+      readTime = time + currentDt; // SolverTwo gets result at end of time step from SolverOne
     }
 
-    // do read at end of window. preCICE v2 style subcycling.
-    precice.readData(meshName, readDataName, {&vertexID, 1}, preciceDt, {&readData, 1});
+    precice.readData(meshName, readDataName, {&vertexID, 1}, currentDt, {&readData, 1});
     BOOST_TEST(readData == readFunction(readTime));
 
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.

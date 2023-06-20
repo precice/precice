@@ -11,14 +11,16 @@ BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(Time)
 BOOST_AUTO_TEST_SUITE(Implicit)
-BOOST_AUTO_TEST_SUITE(SerialCoupling)
+BOOST_AUTO_TEST_SUITE(ParallelCoupling)
 
 /**
  * @brief Test to run a simple coupling with subcycling.
  *
  * Ensures that each time step provides its own data, but preCICE only exchanges data at the end of the window.
+ *
+ * Deactivates exchange of substeps.
  */
-BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
+BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcyclingNoSubsteps)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
@@ -51,10 +53,9 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     readFunction  = dataOneFunction;
   }
 
-  double   writeData = 0;
-  double   readData  = 0;
-  double   v0[]      = {0, 0, 0};
-  VertexID vertexID  = precice.setMeshVertex(meshName, v0);
+  double   writeData, readData;
+  double   v0[]     = {0, 0, 0};
+  VertexID vertexID = precice.setMeshVertex(meshName, v0);
 
   int    nSubsteps       = 4; // perform subcycling on solvers. 4 steps happen in each window.
   int    nWindows        = 5; // perform 5 windows.
@@ -82,15 +83,20 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
       windowStartTime = time;
       windowStartStep = timestep;
     }
+
     double preciceDt = precice.getMaxTimeStepSize();
     double currentDt = solverDt > preciceDt ? preciceDt : solverDt; // determine actual time step size; must fit into remaining time in window
 
     precice.readData(meshName, readDataName, {&vertexID, 1}, currentDt, {&readData, 1});
 
-    if (context.isNamed("SolverOne") && iterations == 0) {                     // special situation for serial coupling: SolverOne gets the old data in its first iteration for all time windows.
-      BOOST_TEST(readData == readFunction(startTime + timewindow * windowDt)); // zeroth window: Initial Data from SolverTwo; following windows: data at end of window was written by SolverTwo.
-    } else {
-      BOOST_TEST(readData == readFunction(time + currentDt)); // read at end of time step.
+    if (iterations == 0 && timestep == 0) {                                    // special situation: Both solvers are in their very first time windows, first iteration, first time step
+      BOOST_TEST(readData == readFunction(startTime));                         // use initial data only.
+    } else if (iterations == 0) {                                              // special situation: Both solvers get the old data for all time windows.
+      BOOST_TEST(readData == readFunction(startTime + timewindow * windowDt)); // data at end of window was written by other solver.
+    } else if (iterations > 0) {
+      BOOST_TEST(readData == readFunction(startTime + (timewindow + 1) * windowDt));
+    } else { // we should not enter this branch, because this would skip all tests.
+      BOOST_TEST(false);
     }
 
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.

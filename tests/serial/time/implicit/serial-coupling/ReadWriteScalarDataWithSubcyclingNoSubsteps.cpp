@@ -17,8 +17,10 @@ BOOST_AUTO_TEST_SUITE(SerialCoupling)
  * @brief Test to run a simple coupling with subcycling.
  *
  * Ensures that each time step provides its own data, but preCICE only exchanges data at the end of the window.
+ *
+ * Deactivates exchange of substeps.
  */
-BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
+BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcyclingNoSubsteps)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
@@ -90,7 +92,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     if (context.isNamed("SolverOne") && iterations == 0) {                     // special situation for serial coupling: SolverOne gets the old data in its first iteration for all time windows.
       BOOST_TEST(readData == readFunction(startTime + timewindow * windowDt)); // zeroth window: Initial Data from SolverTwo; following windows: data at end of window was written by SolverTwo.
     } else {
-      BOOST_TEST(readData == readFunction(time + currentDt)); // read at end of time step.
+      BOOST_TEST(readData == readFunction(startTime + (timewindow + 1) * windowDt));
     }
 
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.

@@ -14,8 +14,10 @@ BOOST_AUTO_TEST_SUITE(Implicit)
 BOOST_AUTO_TEST_SUITE(MultiCoupling)
 /**
  * @brief Test to run a multi coupling with subcycling.
+ *
+ * Deactivates exchange of substeps.
  */
-BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
+BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcyclingNoSubsteps)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank), "SolverThree"_on(1_rank));
 
@@ -99,14 +101,13 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
       auto readFunction = readDataPair.second;
 
       precice.readData(meshName, readDataName, {&vertexID, 1}, currentDt, {&readData, 1});
-
       if (iterations == 0 && timestep == 0) {                        // special situation: Both solvers are in their very first time windows, first iteration, first time step
         BOOST_TEST(readData == readFunction(0));                     // use initial data only.
       } else if (iterations == 0) {                                  // special situation: Both solvers get the old data for all time windows.
         BOOST_TEST(readData == readFunction(timewindow * windowDt)); // data at end of window was written by other solver.
       } else if (iterations > 0) {
-        BOOST_TEST(readData == readFunction(time + currentDt)); // read at end of time step.
-      } else {                                                  // we should not enter this branch, because this would skip all tests.
+        BOOST_TEST(readData == readFunction((timewindow + 1) * windowDt));
+      } else { // we should not enter this branch, because this would skip all tests.
         BOOST_TEST(false);
       }
     }
