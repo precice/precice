@@ -301,31 +301,8 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
   PRECICE_TRACE(tag.getFullName());
   if (tag.getNamespace() == TAG) {
     if (_config.type == VALUE_SERIAL_EXPLICIT) {
-
-      //Check the waveform order of both participants in the explicit coupling
-      const auto first  = _config.participants[0];
-      const auto second = _config.participants[1];
-
-      auto first_participant = _participantConfig->getParticipant(first);
-      for (const auto &dataContext : first_participant->readDataContexts()) {
-        const int usedOrder = dataContext.getInterpolationOrder();
-        // The first participants waveform order has to be 1 for serial explicit coupling
-        int allowedOrder = 1;
-        if (usedOrder > allowedOrder) {
-          PRECICE_ERROR(
-              "You configured <read-data name=\"{}\" mesh=\"{}\" waveform-order=\"{}\" />, but for the serial explicit coupling scheme only a waveform-order of \"{}\" is allowed for the first participant.",
-              dataContext.getDataName(), dataContext.getMeshName(), usedOrder, allowedOrder);
-        }
-      }
-      auto second_participant = _participantConfig->getParticipant(second);
-      for (const auto &dataContext : second_participant->readDataContexts()) {
-        const int usedOrder = dataContext.getInterpolationOrder();
-        if (usedOrder < 0) {
-          PRECICE_ERROR(
-              "You configured <read-data name=\"{}\" mesh=\"{}\" waveform-order=\"{}\" />, but for the serial explicit coupling scheme the waveform-order must be non-negative for the second participant.",
-              dataContext.getDataName(), dataContext.getMeshName(), usedOrder);
-        }
-      }
+      int maxAllowedOrder = 1; // explicit coupling schemes do not allow higher-order waveform iteration
+      checkWaveformOrderReadData(maxAllowedOrder);
 
       std::string       accessor(_config.participants[0]);
       PtrCouplingScheme scheme = createSerialExplicitCouplingScheme(accessor);
@@ -337,7 +314,7 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
       //_couplingSchemes[accessor] = scheme;
       _config = Config();
     } else if (_config.type == VALUE_PARALLEL_EXPLICIT) {
-      int maxAllowedOrder = 1; // explicit coupling schemes do not allow waveform iteration
+      int maxAllowedOrder = 1; // explicit coupling schemes do not allow higher-order waveform iteration
       checkWaveformOrderReadData(maxAllowedOrder);
 
       std::string       accessor(_config.participants[0]);
