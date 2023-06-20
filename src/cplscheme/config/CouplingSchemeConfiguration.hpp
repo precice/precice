@@ -125,8 +125,6 @@ private:
   const std::string VALUE_FIXED;
   const std::string VALUE_FIRST_PARTICIPANT;
 
-  bool _experimental = false;
-
   struct ConvergenceMeasureDefintion {
     mesh::PtrData               data;
     bool                        suffices;
