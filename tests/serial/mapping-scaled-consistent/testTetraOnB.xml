@@ -23,7 +23,7 @@
       from="MeshOne"
       to="MeshTwo"
       constraint="scaled-consistent-volume" />
-    <read-data name="DataOne" mesh="MeshTwo" />
+    <read-data name="DataOne" mesh="MeshTwo" waveform-order="0" />
   </participant>
 
   <m2n:sockets from="SolverOne" to="SolverTwo" />

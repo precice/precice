@@ -16,7 +16,7 @@
     <provide-mesh name="MeshOne" />
     <receive-mesh name="MeshTwo" from="SolverTwo" safety-factor="0" direct-access="true" />
     <write-data name="Velocities" mesh="MeshTwo" />
-    <read-data name="Forces" mesh="MeshOne" waveform-order="1" />
+    <read-data name="Forces" mesh="MeshOne" />
     <mapping:nearest-neighbor
       direction="read"
       from="MeshTwo"
@@ -26,7 +26,7 @@
 
   <participant name="SolverTwo">
     <provide-mesh name="MeshTwo" />
-    <read-data name="Velocities" mesh="MeshTwo" waveform-order="1" />
+    <read-data name="Velocities" mesh="MeshTwo" />
     <write-data name="Forces" mesh="MeshTwo" />
   </participant>
 
