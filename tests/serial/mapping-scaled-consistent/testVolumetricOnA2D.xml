@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration dimensions="2">
+<precice-configuration dimensions="2" experimental="true">
   <data:scalar name="DataOne" />
 
   <mesh name="MeshOne">
@@ -12,7 +12,7 @@
 
   <participant name="SolverTwo">
     <provide-mesh name="MeshTwo" />
-    <read-data name="DataOne" mesh="MeshTwo" />
+    <read-data name="DataOne" mesh="MeshTwo" waveform-order="1" />
   </participant>
 
   <participant name="SolverOne">
@@ -32,6 +32,6 @@
     <participants first="SolverOne" second="SolverTwo" />
     <max-time-windows value="1" />
     <time-window-size value="1.0" />
-    <exchange data="DataOne" mesh="MeshTwo" from="SolverOne" to="SolverTwo" />
+    <exchange data="DataOne" mesh="MeshTwo" from="SolverOne" to="SolverTwo" initialize="true" />
   </coupling-scheme:serial-explicit>
 </precice-configuration>
