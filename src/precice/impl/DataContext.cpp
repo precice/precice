@@ -96,7 +96,6 @@ void DataContext::mapData()
 
     auto &mapping = *context.mapping;
 
-    // Generate output sample for reuse
     const auto dataDims = context.fromData->getDimensions();
 
     for (const auto &stample : context.fromData->stamples()) {
