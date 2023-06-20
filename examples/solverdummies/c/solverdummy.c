@@ -1,4 +1,4 @@
-#include "precice/ParticipantC.h"
+#include "precice/preciceC.h"
 
 #include <stdio.h>
 #include <stdlib.h>

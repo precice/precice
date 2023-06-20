@@ -1,10 +1,10 @@
 set_property(TARGET precice PROPERTY PUBLIC_HEADER
-  ${CMAKE_CURRENT_LIST_DIR}/include/precice/ParticipantFortran.hpp
+  ${CMAKE_CURRENT_LIST_DIR}/include/precice/preciceFortran.hpp
   APPEND)
 
 target_sources(preciceCore PRIVATE
-  ${CMAKE_CURRENT_LIST_DIR}/src/ParticipantFortran.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/include/precice/ParticipantFortran.hpp
+  ${CMAKE_CURRENT_LIST_DIR}/src/preciceFortran.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/include/precice/preciceFortran.hpp
   )
 
 target_include_directories(preciceCore PUBLIC

@@ -3,7 +3,7 @@
 #include "precice/impl/ParticipantImpl.hpp"
 #include "testing/Testing.hpp"
 
-#include <precice/Participant.hpp>
+#include <precice/precice.hpp>
 #include <vector>
 
 using namespace precice;

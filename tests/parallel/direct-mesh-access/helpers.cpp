@@ -3,7 +3,7 @@
 #include "helpers.hpp"
 
 #include <numeric>
-#include "precice/Participant.hpp"
+#include "precice/precice.hpp"
 #include "testing/Testing.hpp"
 
 // StartIndex is here the first index to be used for writing on the secondary rank

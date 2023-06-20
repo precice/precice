@@ -3,7 +3,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/Participant.hpp>
+#include <precice/precice.hpp>
 #include <vector>
 
 // Tests Participant() with a user-defined MPI communicator.

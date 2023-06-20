@@ -4,7 +4,7 @@
 #include "testing/Testing.hpp"
 
 #include <fstream>
-#include "precice/Participant.hpp"
+#include "precice/precice.hpp"
 
 std::vector<double> readDoublesFromTXTFile(const std::string &filename, int skip)
 {
