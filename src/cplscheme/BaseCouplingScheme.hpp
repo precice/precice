@@ -313,14 +313,14 @@ protected:
   PtrCouplingData addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization, bool exchangeSubsteps);
 
   /**
-   * @brief Adds GlobalCouplingData with given properties to this BaseCouplingScheme and returns a pointer to the CouplingData
+   * @brief Adds GlobalCouplingData with given properties to this BaseCouplingScheme and returns a pointer to the GlobalCouplingData
    *
    * This is to avoid creation of duplicate GlobalCouplingData objects which may happen for e.g. in case of Multi-Coupling Schemes.
    * If GlobalCouplingData with ID of provided data already exists in coupling scheme, no duplicate is created but a pointer to the already existing GlobalCouplingData is returned.
    *
    * @param data global data with which the GlobalCouplingData is associated
    * @param requiresInitialization true, if GlobalCouplingData requires initialization
-   * @return PtrGlobalCouplingData pointer to CouplingData owned by the CouplingScheme
+   * @return PtrGlobalCouplingData pointer to GlobalCouplingData owned by the CouplingScheme
    */
   PtrGlobalCouplingData addGlobalCouplingData(const mesh::PtrData &data, bool requiresInitialization);
 
