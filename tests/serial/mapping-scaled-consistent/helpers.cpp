@@ -2,8 +2,8 @@
 
 #include "helpers.hpp"
 #include "math/geometry.hpp"
-#include "precice/Participant.hpp"
 #include "precice/impl/ParticipantImpl.hpp"
+#include "precice/precice.hpp"
 #include "testing/Testing.hpp"
 
 void testQuadMappingScaledConsistent(const std::string configFile, const TestContext &context)

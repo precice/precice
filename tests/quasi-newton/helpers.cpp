@@ -2,7 +2,7 @@
 
 #include "helpers.hpp"
 
-#include "precice/Participant.hpp"
+#include "precice/precice.hpp"
 #include "testing/Testing.hpp"
 
 /// tests for different QN settings if correct fixed point is reached

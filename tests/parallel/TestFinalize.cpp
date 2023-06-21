@@ -2,8 +2,8 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/Participant.hpp>
 #include <precice/impl/ParticipantImpl.hpp>
+#include <precice/precice.hpp>
 #include <vector>
 
 BOOST_AUTO_TEST_SUITE(Integration)

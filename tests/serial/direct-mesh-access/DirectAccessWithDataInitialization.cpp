@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/Participant.hpp>
+#include <precice/precice.hpp>
 #include <vector>
 
 // Test case for a direct mesh access while also using data initialization to test the integration of the two features.
@@ -14,7 +14,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithDataInitialization)
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
   if (context.isNamed("SolverOne")) {
-    // Set up Solverinterface
+    // Set up Participant
     precice::Participant interface(context.name, context.config(), context.rank, context.size);
     constexpr int        dim         = 2;
     const auto           ownMeshID   = "MeshOne";

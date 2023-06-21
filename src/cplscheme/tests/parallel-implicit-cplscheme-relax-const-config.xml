@@ -8,42 +8,31 @@
     <use-data name="Data1" />
   </mesh>
 
-  <m2n:sockets from="Participant0" to="Participant1" />
+  <m2n:sockets acceptor="Participant0" connector="Participant1" />
 
   <participant name="Participant0">
     <provide-mesh name="Mesh" />
-
     <write-data name="Data0" mesh="Mesh" />
-
     <read-data name="Data1" mesh="Mesh" />
   </participant>
 
   <participant name="Participant1">
     <provide-mesh name="Mesh" />
-
     <write-data name="Data1" mesh="Mesh" />
-
     <read-data name="Data0" mesh="Mesh" />
   </participant>
 
   <coupling-scheme:parallel-implicit>
     <participants first="Participant0" second="Participant1" />
-
     <time-window-size value="1e-1" />
-
     <max-time value="1.0" />
-
     <max-time-windows value="3" />
-
     <max-iterations value="100" />
-
     <exchange data="Data0" mesh="Mesh" from="Participant0" to="Participant1" />
     <exchange data="Data1" mesh="Mesh" from="Participant1" to="Participant0" />
-
     <acceleration:constant>
       <relaxation value="0.01" />
     </acceleration:constant>
-
     <absolute-convergence-measure data="Data1" mesh="Mesh" limit="1.7320508075688772" />
   </coupling-scheme:parallel-implicit>
 </configuration>

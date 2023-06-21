@@ -628,7 +628,7 @@ def mergeCommand(files, outfile, align):
 
     print(f"Writing to {outfile}")
     with open(outfile, 'w', newline='') as file:
-        json.dump(merged, file, separators=(",", ":"))
+        json.dump(merged, file)
 
     return 0
 

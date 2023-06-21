@@ -4,7 +4,7 @@
 #include "helpers.hpp"
 #include "testing/Testing.hpp"
 
-#include "precice/Participant.hpp"
+#include "precice/precice.hpp"
 
 /// Test to run simple "do nothing" coupling between two solvers.
 void runTestExplicit(std::string const &configurationFileName, TestContext const &context)

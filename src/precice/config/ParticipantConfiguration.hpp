@@ -10,7 +10,6 @@
 #include "mapping/config/MappingConfigurationTypes.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "partition/ReceivedPartition.hpp"
-#include "precice/config/SolverInterfaceConfiguration.hpp"
 #include "precice/impl/ParticipantState.hpp"
 #include "precice/impl/SharedPointer.hpp"
 #include "time/Time.hpp"

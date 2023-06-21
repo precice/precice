@@ -1,10 +1,10 @@
 #ifndef PRECICE_NO_MPI
 
 #include <vector>
-#include "precice/Participant.hpp"
 #include "precice/impl/MeshContext.hpp"
 #include "precice/impl/ParticipantImpl.hpp"
 #include "precice/impl/ParticipantState.hpp"
+#include "precice/precice.hpp"
 #include "testing/Testing.hpp"
 
 using namespace precice;

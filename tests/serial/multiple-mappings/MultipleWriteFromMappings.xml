@@ -1,52 +1,50 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration>
-  <solver-interface dimensions="2">
-    <data:scalar name="Pressure" />
+<precice-configuration dimensions="2">
+  <data:scalar name="Pressure" />
 
-    <mesh name="MeshB">
-      <use-data name="Pressure" />
-    </mesh>
+  <mesh name="MeshB">
+    <use-data name="Pressure" />
+  </mesh>
 
-    <mesh name="MeshATop">
-      <use-data name="Pressure" />
-    </mesh>
+  <mesh name="MeshATop">
+    <use-data name="Pressure" />
+  </mesh>
 
-    <mesh name="MeshABottom">
-      <use-data name="Pressure" />
-    </mesh>
+  <mesh name="MeshABottom">
+    <use-data name="Pressure" />
+  </mesh>
 
-    <participant name="A">
-      <provide-mesh name="MeshATop" />
-      <provide-mesh name="MeshABottom" />
-      <read-data name="Pressure" mesh="MeshATop" />
-      <read-data name="Pressure" mesh="MeshABottom" />
-    </participant>
+  <participant name="A">
+    <provide-mesh name="MeshATop" />
+    <provide-mesh name="MeshABottom" />
+    <read-data name="Pressure" mesh="MeshATop" />
+    <read-data name="Pressure" mesh="MeshABottom" />
+  </participant>
 
-    <participant name="B">
-      <provide-mesh name="MeshB" />
-      <receive-mesh name="MeshATop" from="A" />
-      <receive-mesh name="MeshABottom" from="A" />
-      <write-data name="Pressure" mesh="MeshB" />
-      <mapping:nearest-neighbor
-        direction="write"
-        from="MeshB"
-        to="MeshATop"
-        constraint="consistent" />
-      <mapping:nearest-neighbor
-        direction="write"
-        from="MeshB"
-        to="MeshABottom"
-        constraint="consistent" />
-    </participant>
+  <participant name="B">
+    <provide-mesh name="MeshB" />
+    <receive-mesh name="MeshATop" from="A" />
+    <receive-mesh name="MeshABottom" from="A" />
+    <write-data name="Pressure" mesh="MeshB" />
+    <mapping:nearest-neighbor
+      direction="write"
+      from="MeshB"
+      to="MeshATop"
+      constraint="consistent" />
+    <mapping:nearest-neighbor
+      direction="write"
+      from="MeshB"
+      to="MeshABottom"
+      constraint="consistent" />
+  </participant>
 
-    <m2n:sockets from="B" to="A" />
+  <m2n:sockets acceptor="B" connector="A" />
 
-    <coupling-scheme:parallel-explicit>
-      <participants first="A" second="B" />
-      <max-time value="1.0" />
-      <time-window-size value="1.0" />
-      <exchange data="Pressure" mesh="MeshATop" from="B" to="A" />
-      <exchange data="Pressure" mesh="MeshABottom" from="B" to="A" />
-    </coupling-scheme:parallel-explicit>
-  </solver-interface>
+  <coupling-scheme:parallel-explicit>
+    <participants first="A" second="B" />
+    <max-time value="1.0" />
+    <time-window-size value="1.0" />
+    <exchange data="Pressure" mesh="MeshATop" from="B" to="A" />
+    <exchange data="Pressure" mesh="MeshABottom" from="B" to="A" />
+  </coupling-scheme:parallel-explicit>
 </precice-configuration>

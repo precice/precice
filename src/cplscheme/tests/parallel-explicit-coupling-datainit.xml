@@ -10,31 +10,24 @@
     <use-data name="Data2" />
   </mesh>
 
-  <m2n:sockets from="Participant0" to="Participant1" />
+  <m2n:sockets acceptor="Participant0" connector="Participant1" />
 
   <participant name="Participant0">
     <provide-mesh name="Mesh" />
-
     <write-data name="Data0" mesh="Mesh" />
-
     <read-data name="Data1" mesh="Mesh" />
   </participant>
 
   <participant name="Participant1">
     <provide-mesh name="Mesh" />
-
     <write-data name="Data1" mesh="Mesh" />
-
     <read-data name="Data0" mesh="Mesh" />
   </participant>
 
   <coupling-scheme:parallel-explicit>
     <participants first="Participant0" second="Participant1" />
-
     <time-window-size value="0.1" />
-
     <max-time-windows value="1" />
-
     <exchange data="Data0" mesh="Mesh" from="Participant1" to="Participant0" />
     <exchange data="Data1" mesh="Mesh" from="Participant1" to="Participant0" initialize="on" />
     <exchange data="Data2" mesh="Mesh" from="Participant0" to="Participant1" initialize="on" />

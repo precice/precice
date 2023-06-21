@@ -3,7 +3,7 @@
 #include "helpers.hpp"
 #include "testing/Testing.hpp"
 
-#include "precice/Participant.hpp"
+#include "precice/precice.hpp"
 
 /**
  * @brief helper function for a simple test with data initialization

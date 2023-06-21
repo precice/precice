@@ -113,8 +113,6 @@ target_sources(preciceCore
     src/cplscheme/impl/AbsoluteConvergenceMeasure.cpp
     src/cplscheme/impl/AbsoluteConvergenceMeasure.hpp
     src/cplscheme/impl/ConvergenceMeasure.hpp
-    src/cplscheme/impl/Extrapolation.cpp
-    src/cplscheme/impl/Extrapolation.hpp
     src/cplscheme/impl/MinIterationConvergenceMeasure.cpp
     src/cplscheme/impl/MinIterationConvergenceMeasure.hpp
     src/cplscheme/impl/RelativeConvergenceMeasure.cpp
@@ -245,20 +243,18 @@ target_sources(preciceCore
     src/precice/config/ParticipantConfiguration.cpp
     src/precice/config/ParticipantConfiguration.hpp
     src/precice/config/SharedPointer.hpp
-    src/precice/config/SolverInterfaceConfiguration.cpp
-    src/precice/config/SolverInterfaceConfiguration.hpp
     src/precice/impl/CommonErrorMessages.hpp
     src/precice/impl/DataContext.cpp
     src/precice/impl/DataContext.hpp
     src/precice/impl/MappingContext.hpp
     src/precice/impl/MeshContext.hpp
+    src/precice/impl/ParticipantImpl.cpp
+    src/precice/impl/ParticipantImpl.hpp
     src/precice/impl/ParticipantState.cpp
     src/precice/impl/ParticipantState.hpp
     src/precice/impl/ReadDataContext.cpp
     src/precice/impl/ReadDataContext.hpp
     src/precice/impl/SharedPointer.hpp
-    src/precice/impl/ParticipantImpl.cpp
-    src/precice/impl/ParticipantImpl.hpp
     src/precice/impl/ValidationMacros.hpp
     src/precice/impl/WatchIntegral.cpp
     src/precice/impl/WatchIntegral.hpp
@@ -266,6 +262,7 @@ target_sources(preciceCore
     src/precice/impl/WatchPoint.hpp
     src/precice/impl/WriteDataContext.cpp
     src/precice/impl/WriteDataContext.hpp
+    src/precice/precice.hpp
     src/precice/span.hpp
     src/precice/types.hpp
     src/profiling/Event.cpp
@@ -277,7 +274,9 @@ target_sources(preciceCore
     src/query/Index.cpp
     src/query/Index.hpp
     src/query/impl/RTreeAdapter.hpp
+    src/time/Sample.hpp
     src/time/SharedPointer.hpp
+    src/time/Stample.hpp
     src/time/Storage.cpp
     src/time/Storage.hpp
     src/time/Time.cpp
@@ -339,6 +338,7 @@ set_property(TARGET precice PROPERTY PUBLIC_HEADER
     ${PROJECT_BINARY_DIR}/src/precice/Version.h
     src/precice/Participant.hpp
     src/precice/Tooling.hpp
+    src/precice/precice.hpp
     src/precice/span.hpp
     src/precice/types.hpp
     )

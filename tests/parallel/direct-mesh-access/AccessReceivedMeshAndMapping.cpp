@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/Participant.hpp>
+#include <precice/precice.hpp>
 #include <vector>
 
 // Test case for a direct mesh access on one participant to a mesh defined
@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
   PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
 
   if (context.isNamed("SolverOne")) {
-    // Set up Solverinterface
+    // Set up Participant
     precice::Participant interface(context.name, context.config(), context.rank, context.size);
     constexpr int        dim           = 2;
     auto                 ownMeshName   = "MeshOne";

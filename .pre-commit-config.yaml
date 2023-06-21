@@ -17,10 +17,19 @@ repos:
   - id: end-of-file-fixer
 # Custom repo for the preCICE configuration formatter
 - repo: https://github.com/precice/precice-pre-commit-hooks
-  rev: 'v2.1'
+  rev: 'v3.1'
   hooks:
   - id: format-precice-config
 - repo: https://github.com/codespell-project/codespell
   rev: v2.2.2
   hooks:
     - id: codespell
+- repo: local
+  hooks:
+  - id: update-cmake-sources
+    name: update CMake sources
+    entry: tools/building/updateSourceFiles.py
+    pass_filenames: false
+    require_serial: true
+    language: python
+    types_or: [c, c++]

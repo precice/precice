@@ -543,12 +543,6 @@ if (PRECICE_BUILD_TOOLS)
     CXX_STANDARD_REQUIRED Yes
     CXX_EXTENSIONS No
     )
-
-  # Link or copy the events script to the binary directory
-  file(CREATE_LINK
-    ${preCICE_SOURCE_DIR}/tools/profiling/precice-events
-    ${preCICE_BINARY_DIR}/precice-events
-    COPY_ON_ERROR SYMBOLIC)
 endif()
 
 #

@@ -1,41 +1,39 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration>
-  <solver-interface dimensions="2" experimental="true">
-    <data:scalar name="Forces" />
-    <data:scalar name="Velocities" />
+<precice-configuration dimensions="2" experimental="true">
+  <data:scalar name="Forces" />
+  <data:scalar name="Velocities" />
 
-    <mesh name="MeshOne">
-      <use-data name="Forces" />
-    </mesh>
+  <mesh name="MeshOne">
+    <use-data name="Forces" />
+  </mesh>
 
-    <mesh name="MeshTwo">
-      <use-data name="Velocities" />
-    </mesh>
+  <mesh name="MeshTwo">
+    <use-data name="Velocities" />
+  </mesh>
 
-    <participant name="SolverOne">
-      <provide-mesh name="MeshOne" />
-      <receive-mesh name="MeshTwo" from="SolverTwo" direct-access="true" />
-      <write-data name="Velocities" mesh="MeshTwo" />
-      <read-data name="Forces" mesh="MeshOne" />
-    </participant>
+  <participant name="SolverOne">
+    <provide-mesh name="MeshOne" />
+    <receive-mesh name="MeshTwo" from="SolverTwo" direct-access="true" />
+    <write-data name="Velocities" mesh="MeshTwo" />
+    <read-data name="Forces" mesh="MeshOne" />
+  </participant>
 
-    <participant name="SolverTwo">
-      <receive-mesh name="MeshOne" from="SolverOne" direct-access="true" />
-      <provide-mesh name="MeshTwo" />
-      <write-data name="Forces" mesh="MeshOne" />
-      <read-data name="Velocities" mesh="MeshTwo" />
-    </participant>
+  <participant name="SolverTwo">
+    <receive-mesh name="MeshOne" from="SolverOne" direct-access="true" />
+    <provide-mesh name="MeshTwo" />
+    <write-data name="Forces" mesh="MeshOne" />
+    <read-data name="Velocities" mesh="MeshTwo" />
+  </participant>
 
-    <m2n:sockets from="SolverOne" to="SolverTwo" />
+  <m2n:sockets acceptor="SolverOne" connector="SolverTwo" />
 
-    <coupling-scheme:serial-implicit>
-      <participants first="SolverOne" second="SolverTwo" />
-      <max-time-windows value="4" />
-      <time-window-size value="0.01" />
-      <max-iterations value="100" />
-      <absolute-convergence-measure data="Forces" mesh="MeshOne" limit="1.73205080756887729" />
-      <exchange data="Forces" mesh="MeshOne" from="SolverTwo" to="SolverOne" />
-      <exchange data="Velocities" mesh="MeshTwo" from="SolverOne" to="SolverTwo" />
-    </coupling-scheme:serial-implicit>
-  </solver-interface>
+  <coupling-scheme:serial-implicit>
+    <participants first="SolverOne" second="SolverTwo" />
+    <max-time-windows value="4" />
+    <time-window-size value="0.01" />
+    <max-iterations value="100" />
+    <absolute-convergence-measure data="Forces" mesh="MeshOne" limit="1.73205080756887729" />
+    <exchange data="Forces" mesh="MeshOne" from="SolverTwo" to="SolverOne" />
+    <exchange data="Velocities" mesh="MeshTwo" from="SolverOne" to="SolverTwo" />
+  </coupling-scheme:serial-implicit>
 </precice-configuration>

@@ -39,9 +39,11 @@ BOOST_AUTO_TEST_CASE(DivideByArea2D)
   mesh->createEdge(v0, v1);
   mesh->createEdge(v1, v2);
   mesh->allocateDataValues();
-  auto &values = data->values();
-  values << 2.0, 3.0, 4.0;
+  Eigen::VectorXd v(3);
+  v << 2.0, 3.0, 4.0;
+  data->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v});
 
+  const auto &values = data->values();
   BOOST_TEST(values(0) == 2.0);
   BOOST_TEST(values(1) == 3.0);
   BOOST_TEST(values(2) == 4.0);
@@ -81,9 +83,11 @@ BOOST_AUTO_TEST_CASE(DivideByArea3D)
   mesh->createTriangle(e2, e3, e4);
   mesh->createTriangle(e4, e5, e6);
   mesh->allocateDataValues();
-  auto &values = data->values();
-  values << 2.0, 3.0, 6.0, 5.0, 6.0;
+  Eigen::VectorXd v(5);
+  v << 2.0, 3.0, 6.0, 5.0, 6.0;
+  data->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v});
 
+  const auto &values = data->values();
   BOOST_TEST(values(0) == 2.0);
   BOOST_TEST(values(1) == 3.0);
   BOOST_TEST(values(2) == 6.0);
