@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration dimensions="3" experimental="true">
+  <data:scalar name="DataOne" />
+  <data:scalar name="DataTwo" />
+
+  <global-data:scalar name="GlobalDataOne" />
+  <global-data:scalar name="GlobalDataTwo" />
+
+  <mesh name="MeshOne">
+    <use-data name="DataOne" />
+    <use-data name="DataTwo" />
+  </mesh>
+
+  <mesh name="MeshTwo">
+    <use-data name="DataOne" />
+    <use-data name="DataTwo" />
+  </mesh>
+
+  <participant name="SolverOne">
+    <provide-mesh name="MeshOne" />
+    <write-data name="DataOne" mesh="MeshOne" />
+    <write-data name="GlobalDataOne" />
+    <read-data name="DataTwo" mesh="MeshOne" waveform-order="1" />
+    <read-data name="GlobalDataTwo" waveform-order="1" />
+  </participant>
+
+  <participant name="SolverTwo">
+    <receive-mesh name="MeshOne" from="SolverOne" />
+    <provide-mesh name="MeshTwo" />
+    <mapping:nearest-neighbor
+      direction="write"
+      from="MeshTwo"
+      to="MeshOne"
+      constraint="conservative" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="MeshOne"
+      to="MeshTwo"
+      constraint="consistent" />
+    <write-data name="DataTwo" mesh="MeshTwo" />
+    <write-data name="GlobalDataTwo" />
+    <read-data name="DataOne" mesh="MeshTwo" waveform-order="1" />
+    <read-data name="GlobalDataOne" waveform-order="1" />
+  </participant>
+
+  <m2n:sockets from="SolverOne" to="SolverTwo" />
+
+  <coupling-scheme:serial-implicit>
+    <participants first="SolverOne" second="SolverTwo" />
+    <max-time-windows value="5" />
+    <time-window-size value="2" />
+    <max-iterations value="3" />
+    <min-iteration-convergence-measure min-iterations="3" data="DataOne" mesh="MeshOne" />
+    <exchange data="DataOne" mesh="MeshOne" from="SolverOne" to="SolverTwo" initialize="on" />
+    <exchange data="GlobalDataOne" from="SolverOne" to="SolverTwo" initialize="on" />
+    <exchange data="DataTwo" mesh="MeshOne" from="SolverTwo" to="SolverOne" initialize="on" />
+    <exchange data="GlobalDataTwo" from="SolverTwo" to="SolverOne" initialize="on" />
+  </coupling-scheme:serial-implicit>
+</precice-configuration>
