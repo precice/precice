@@ -67,12 +67,6 @@ bool MultiCouplingScheme::hasAnySendData()
   return std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(), [](const auto &sendExchange) { return not sendExchange.second.empty(); });
 }
 
-bool MultiCouplingScheme::hasAnySendGlobalData()
-{
-  // return std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(), [](const auto &sendExchange) { return not sendExchange.second.empty(); });
-  PRECICE_ERROR("TODO");
-}
-
 const DataMap &MultiCouplingScheme::getAccelerationData()
 {
   // MultiCouplingScheme applies acceleration to all CouplingData

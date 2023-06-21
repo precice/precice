@@ -847,7 +847,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
       accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations, _config.extrapolationOrder);
 
   addDataToBeExchanged(*scheme, accessor);
-  PRECICE_CHECK(scheme->hasAnySendData() || scheme->hasAnySendGlobalData(),
+  PRECICE_CHECK(scheme->hasAnySendData(),
                 "No send data configured. "
                 "Use explicit scheme for one-way coupling. "
                 "Please check your <coupling-scheme ... /> and make sure that you provide at least one <exchange .../> subtag, "

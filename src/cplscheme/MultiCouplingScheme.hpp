@@ -71,7 +71,6 @@ public:
   std::vector<std::string> getCouplingPartners() const override final;
 
   bool hasAnySendData() override final;
-  bool hasAnySendGlobalData() override final;
 
 private:
   /**

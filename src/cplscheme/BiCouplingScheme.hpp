@@ -76,11 +76,6 @@ public:
   bool hasAnySendData() override final;
 
   /**
-   * @returns true, if coupling scheme has any sendGlobalData
-   */
-  bool hasAnySendGlobalData() override final;
-
-  /**
    * @returns true, if coupling scheme has sendData with given DataID
    */
   bool hasSendData(DataID dataID);

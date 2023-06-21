@@ -214,12 +214,7 @@ void BiCouplingScheme::initializeReceiveDataStorage()
 
 bool BiCouplingScheme::hasAnySendData()
 {
-  return not getSendData().empty();
-}
-
-bool BiCouplingScheme::hasAnySendGlobalData()
-{
-  return not getSendGlobalData().empty();
+  return not(getSendData().empty() and getSendGlobalData().empty());
 }
 
 bool BiCouplingScheme::hasSendData(DataID dataID)

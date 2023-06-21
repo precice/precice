@@ -216,11 +216,6 @@ public:
   virtual bool hasAnySendData() = 0;
 
   /**
-   * @returns true, if coupling scheme has any sendGlobalData
-   */
-  virtual bool hasAnySendGlobalData() = 0;
-
-  /**
    * @brief Determines which data is initialized and therefore has to be exchanged during initialize.
    *
    * Calls determineInitialSend and determineInitialReceive for all send and receive data of this coupling scheme.
