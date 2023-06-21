@@ -104,12 +104,11 @@ void BiCouplingScheme::addGlobalDataToReceive(
     bool                 requiresInitialization)
 {
   PRECICE_TRACE();
-  PtrGlobalCouplingData PtrGblCplData = addGlobalCouplingData(data, requiresInitialization);
+  PtrGlobalCouplingData ptrGblCplData = addGlobalCouplingData(data, requiresInitialization);
   precice::DataID       id            = data->getID();
   if (!utils::contained(id, _receiveGlobalData)) {
     PRECICE_ASSERT(_receiveGlobalData.count(id) == 0, "Key already exists!");
-    // if (isExplicitCouplingScheme()) {
-    _receiveGlobalData.emplace(id, std::make_shared<GlobalCouplingData>(data, requiresInitialization));
+    _receiveGlobalData.emplace(id, ptrGblCplData);
     PRECICE_DEBUG("Added \"{}\" to _receiveGlobalData.", data->getName());
   } else {
     PRECICE_ERROR("Global Data \"{0}\" cannot be added twice for receiving. Please remove any duplicate <exchange data=\"{0}\" ... /> tags", data->getName());

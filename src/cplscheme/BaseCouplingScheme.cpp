@@ -256,7 +256,7 @@ PtrGlobalCouplingData BaseCouplingScheme::addGlobalCouplingData(const mesh::PtrD
   int                   id = data->getID();
   PtrGlobalCouplingData ptrGblCplData;
   if (!utils::contained(id, _allGlobalData)) { // data is not used by this coupling scheme yet, create new GlobalCouplingData
-    ptrGblCplData = std::make_shared<GlobalCouplingData>(data, requiresInitialization);
+    ptrGblCplData = std::make_shared<GlobalCouplingData>(data, requiresInitialization, _extrapolationOrder);
     _allGlobalData.emplace(id, ptrGblCplData);
   } else { // data is already used by another exchange of this coupling scheme, use existing GlobalCouplingData
     ptrGblCplData = _allGlobalData[id];

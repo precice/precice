@@ -15,7 +15,7 @@ public:
   GlobalCouplingData(
       mesh::PtrData data,
       bool          requiresInitialization,
-      int           extrapolationOrder = CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
+      int           extrapolationOrder);
 
   int getDimensions() const;
 
