@@ -444,7 +444,9 @@ void BaseCouplingScheme::moveToNextWindow()
   for (auto &data : _allData | boost::adaptors::map_values) {
     data->moveToNextWindow();
   }
-  // TODO: Add global data here?
+  for (auto &data : _allGlobalData | boost::adaptors::map_values) {
+    data->moveToNextWindow();
+  }
 }
 
 bool BaseCouplingScheme::hasTimeWindowSize() const
