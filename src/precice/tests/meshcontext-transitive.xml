@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration dimensions="2" experimental="true">
+  <data:scalar name="Data1" />
+  <data:scalar name="Data2" />
+
+  <mesh name="Dynamic">
+    <use-data name="Data1" />
+    <use-data name="Data2" />
+  </mesh>
+
+  <mesh name="Transitive">
+    <use-data name="Data1" />
+    <use-data name="Data2" />
+  </mesh>
+
+  <participant name="A">
+    <provide-mesh name="Transitive" />
+    <write-data name="Data1" mesh="Transitive" />
+    <read-data name="Data2" mesh="Transitive" />
+  </participant>
+
+  <participant name="B">
+    <provide-mesh name="Dynamic" dynamic="true" />
+    <receive-mesh name="Transitive" from="A" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="Transitive"
+      to="Dynamic"
+      constraint="consistent" />
+    <mapping:nearest-neighbor
+      direction="write"
+      from="Dynamic"
+      to="Transitive"
+      constraint="conservative" />
+    <write-data name="Data2" mesh="Dynamic" />
+    <read-data name="Data1" mesh="Dynamic" />
+  </participant>
+
+  <m2n:sockets from="A" to="B" />
+
+  <coupling-scheme:serial-explicit>
+    <participants first="A" second="B" />
+    <max-time-windows value="1" />
+    <time-window-size value="1.0" />
+    <exchange data="Data1" mesh="Transitive" from="A" to="B" />
+    <exchange data="Data2" mesh="Transitive" from="B" to="A" />
+  </coupling-scheme:serial-explicit>
+</precice-configuration>

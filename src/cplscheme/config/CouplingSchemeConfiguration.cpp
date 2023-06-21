@@ -978,6 +978,7 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
     const std::string &accessor) const
 {
   PRECICE_TRACE();
+  const auto dynamicMeshes = _participantConfig->getDynamicMeshMap();
   for (const Config::Exchange &exchange : _config.exchanges) {
     const std::string &from     = exchange.from;
     const std::string &to       = exchange.to;
@@ -1000,6 +1001,10 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
                   to, dataName, meshName, from, to);
 
     const bool requiresInitialization = exchange.requiresInitialization;
+    if (auto iter = dynamicMeshes.find(meshName);
+        iter != dynamicMeshes.end() && (iter->second.count(from) + iter->second.count(to) > 0)) {
+      scheme.requireSynchronization();
+    }
     PRECICE_CHECK(
         !(requiresInitialization && _participantConfig->getParticipant(from)->isDirectAccessAllowed(exchange.mesh->getName())),
         "Participant \"{}\" cannot initialize data of the directly-accessed mesh \"{}\" from the participant\"{}\". "
@@ -1022,6 +1027,7 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
     const std::string &  accessor) const
 {
   PRECICE_TRACE();
+  const auto dynamicMeshes = _participantConfig->getDynamicMeshMap();
   for (const Config::Exchange &exchange : _config.exchanges) {
     const std::string &from     = exchange.from;
     const std::string &to       = exchange.to;
@@ -1041,6 +1047,11 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
                   "Participant \"{}\" is not configured for coupling scheme", to);
 
     const bool initialize = exchange.requiresInitialization;
+    if (auto iter = dynamicMeshes.find(meshName);
+        iter != dynamicMeshes.end() && (iter->second.count(from) + iter->second.count(to) > 0)) {
+      // The whole scheme requires synchronization, even if the local participant doesn't exchange anything
+      scheme.requireSynchronization();
+    }
     if (from == accessor) {
       scheme.addDataToSend(exchange.data, exchange.mesh, initialize, to);
     } else if (to == accessor) {

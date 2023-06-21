@@ -127,6 +127,12 @@ void CompositionalCouplingScheme::finalize()
   }
 }
 
+std::string CompositionalCouplingScheme::getLocalParticipant() const
+{
+  // Returns the local participant of the first scheme
+  return allSchemes().front()->getLocalParticipant();
+}
+
 std::vector<std::string> CompositionalCouplingScheme::getCouplingPartners() const
 {
   PRECICE_TRACE();
@@ -345,6 +351,12 @@ bool CompositionalCouplingScheme::hasConverged() const
   }
 
   return _implicitScheme->hasConverged();
+}
+
+bool CompositionalCouplingScheme::isSynchronizationRequired() const
+{
+  auto schemes = allSchemes();
+  return std::any_of(schemes.begin(), schemes.end(), std::mem_fn(&CouplingScheme::isSynchronizationRequired));
 }
 
 } // namespace precice::cplscheme

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration dimensions="2">
+  <data:vector name="Data" />
+
+  <mesh name="MeshA">
+    <use-data name="Data" />
+  </mesh>
+
+  <mesh name="MeshC">
+    <use-data name="Data" />
+  </mesh>
+
+  <mesh name="MeshD">
+    <use-data name="Data" />
+  </mesh>
+
+  <participant name="SolverOne">
+    <provide-mesh name="MeshA" />
+    <write-data name="Data" mesh="MeshA" />
+  </participant>
+
+  <participant name="SolverTwo">
+    <receive-mesh name="MeshA" from="SolverOne" />
+    <provide-mesh name="MeshC" />
+    <read-data name="Data" mesh="MeshC" />
+    <mapping:nearest-neighbor direction="read" from="MeshA" to="MeshC" constraint="conservative" />
+  </participant>
+
+  <participant name="SolverThree">
+    <receive-mesh name="MeshA" from="SolverOne" />
+    <provide-mesh name="MeshD" />
+    <read-data name="Data" mesh="MeshD" />
+    <mapping:nearest-neighbor direction="read" from="MeshA" to="MeshD" constraint="conservative" />
+  </participant>
+
+  <m2n:sockets from="SolverOne" to="SolverTwo" />
+  <m2n:sockets from="SolverOne" to="SolverThree" />
+
+  <coupling-scheme:parallel-explicit>
+    <participants first="SolverOne" second="SolverTwo" />
+    <max-time-windows value="10" />
+    <time-window-size value="1.0" />
+    <exchange data="Data" mesh="MeshA" from="SolverOne" to="SolverTwo" />
+  </coupling-scheme:parallel-explicit>
+
+  <coupling-scheme:parallel-explicit>
+    <participants first="SolverOne" second="SolverThree" />
+    <max-time-windows value="10" />
+    <time-window-size value="1.0" />
+    <exchange data="Data" mesh="MeshA" from="SolverOne" to="SolverThree" />
+  </coupling-scheme:parallel-explicit>
+</precice-configuration>

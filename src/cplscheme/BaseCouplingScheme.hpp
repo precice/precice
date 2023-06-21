@@ -75,6 +75,11 @@ public:
       int                           extrapolationOrder);
 
   /**
+   * @brief Getter for _localParticipant
+   */
+  std::string getLocalParticipant() const override final;
+
+  /**
    * @brief Getter for _sendsInitializedData
    * @returns _sendsInitializedData
    */
@@ -184,11 +189,7 @@ public:
    */
   void initialize(double startTime, int startTimeWindow) override final;
 
-  ChangedMeshes firstSynchronization(const ChangedMeshes &changes) override final;
-
   void firstExchange() override final;
-
-  ChangedMeshes secondSynchronization() override final;
 
   void secondExchange() override final;
 
@@ -202,6 +203,9 @@ public:
 
   /// Set an acceleration technique.
   void setAcceleration(const acceleration::PtrAcceleration &acceleration);
+
+  /// Mark this couplingscheme as required to synchronize
+  void requireSynchronization();
 
   /**
    * @brief Getter for _doesFirstStep
@@ -233,6 +237,8 @@ public:
    * @pre \ref doImplicitStep() or \ref receiveConvergence() has been called
    */
   bool hasConverged() const override;
+
+  bool isSynchronizationRequired() const final;
 
 protected:
   /// All send and receive data as a map "data ID -> data"
@@ -371,6 +377,17 @@ protected:
    */
   void determineInitialReceive(DataMap &receiveData);
 
+  /**
+   * @brief getter for _extrapolationOrder
+   */
+  int getExtrapolationOrder();
+
+  /**
+   * @brief Function to check whether end of time window is reached. Does not check for convergence
+   * @returns true if end time of time window is reached.
+   */
+  bool reachedEndOfTimeWindow();
+
 private:
   /// Coupling mode used by coupling scheme.
   CouplingMode _couplingMode = Undefined;
@@ -452,6 +469,9 @@ private:
   /// Smallest number, taking validDigits into account: eps = std::pow(10.0, -1 * validDigits)
   const double _eps;
 
+  /// Is either the local or the remote coupling partner dynamic?
+  bool _isSynchonizationRequired = false;
+
   /**
    * @brief Holds meta information to perform a convergence measurement.
    * @param data Associated data field
@@ -494,8 +514,6 @@ private:
    */
   virtual void exchangeInitialData() = 0;
 
-  /// Functions needed for advance()
-
   /// Exchanges the first set of data
   virtual void exchangeFirstData() = 0;
 
@@ -512,12 +530,6 @@ private:
    * @brief If any required actions are open, an error message is issued.
    */
   void checkCompletenessRequiredActions();
-
-  /**
-   * @brief Function to check whether end of time window is reached. Does not check for convergence
-   * @returns true if end time of time window is reached.
-   */
-  bool reachedEndOfTimeWindow();
 
   /**
    * @brief Initialize txt writers for iterations and convergence tracking

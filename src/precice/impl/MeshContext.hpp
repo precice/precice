@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ostream>
 #include <vector>
 #include "MappingContext.hpp"
 #include "SharedPointer.hpp"
@@ -38,6 +39,16 @@ struct MeshContext {
   /// True, if accessor does create the mesh.
   bool provideMesh = false;
 
+  /// The kind of dynamicity of this mesh
+  enum struct Dynamicity {
+    No,          ///< static mesh, mappings will stay untouched too
+    Yes,         ///< dynamic mesh, which is provided or received
+    Transitively ///< static mesh, but has a mapping to a dynamic mesh
+  };
+
+  /// Whether the mesh is static, dynamically provided, dynamically received or transitively dynamic via mappings.
+  Dynamicity dynamic = Dynamicity::No;
+
   /// type of geometric filter
   partition::ReceivedPartition::GeometricFilter geoFilter = partition::ReceivedPartition::GeometricFilter::UNDEFINED;
 
@@ -60,6 +71,20 @@ struct MeshContext {
     }
   }
 };
+
+inline std::ostream &operator<<(std::ostream &os, MeshContext::Dynamicity d)
+{
+  switch (d) {
+  case MeshContext::Dynamicity::Yes:
+    return os << "Dynamic";
+  case MeshContext::Dynamicity::No:
+    return os << "Static";
+  case MeshContext::Dynamicity::Transitively:
+    return os << "Transitively dynamic";
+  default:
+    return os;
+  };
+}
 
 inline void MeshContext::require(mapping::Mapping::MeshRequirement requirement)
 {

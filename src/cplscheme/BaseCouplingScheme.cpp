@@ -84,6 +84,11 @@ BaseCouplingScheme::BaseCouplingScheme(
   }
 }
 
+std::string BaseCouplingScheme::getLocalParticipant() const
+{
+  return _localParticipant;
+}
+
 bool BaseCouplingScheme::isImplicitCouplingScheme() const
 {
   PRECICE_ASSERT(_couplingMode != Undefined);
@@ -215,12 +220,6 @@ bool BaseCouplingScheme::sendsInitializedData() const
   return _sendsInitializedData;
 }
 
-CouplingScheme::ChangedMeshes BaseCouplingScheme::firstSynchronization(const CouplingScheme::ChangedMeshes &changes)
-{
-  PRECICE_ASSERT(changes.empty());
-  return changes;
-}
-
 void BaseCouplingScheme::firstExchange()
 {
   PRECICE_TRACE(_timeWindows, getTime());
@@ -239,15 +238,11 @@ void BaseCouplingScheme::firstExchange()
   }
 }
 
-CouplingScheme::ChangedMeshes BaseCouplingScheme::secondSynchronization()
-{
-  return {};
-}
-
 void BaseCouplingScheme::secondExchange()
 {
   PRECICE_TRACE(_timeWindows, getTime());
   checkCompletenessRequiredActions();
+
   PRECICE_ASSERT(_isInitialized, "Before calling advance() coupling scheme has to be initialized via initialize().");
   PRECICE_ASSERT(_couplingMode != Undefined);
 
@@ -278,7 +273,7 @@ void BaseCouplingScheme::secondExchange()
           requireAction(CouplingScheme::Action::WriteCheckpoint);
         }
       }
-      //update iterations
+      // update iterations
       _totalIterations++;
       if (not hasConverged()) {
         _iterations++;
@@ -528,6 +523,16 @@ void BaseCouplingScheme::setAcceleration(
   _acceleration = acceleration;
 }
 
+void BaseCouplingScheme::requireSynchronization()
+{
+  if (_isSynchonizationRequired) {
+    return;
+  }
+  PRECICE_DEBUG("The scheme coupling {} to {} requires synchronization.",
+                getLocalParticipant(), getCouplingPartners());
+  _isSynchonizationRequired = true;
+}
+
 bool BaseCouplingScheme::doesFirstStep() const
 {
   return _doesFirstStep;
@@ -662,6 +667,11 @@ void BaseCouplingScheme::advanceTXTWriters()
 bool BaseCouplingScheme::reachedEndOfTimeWindow()
 {
   return math::equals(getNextTimeStepMaxSize(), 0.0, _eps) || not hasTimeWindowSize();
+}
+
+bool BaseCouplingScheme::isSynchronizationRequired() const
+{
+  return _isSynchonizationRequired;
 }
 
 void BaseCouplingScheme::storeIteration()

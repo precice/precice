@@ -23,6 +23,9 @@ void testDataInitialization(precice::testing::TestContext context, std::string c
     double dt = cplInterface.getMaxTimeStepSize();
     cplInterface.readData(meshName, dataName, {&vid, 1}, dt, {&valueDataB, 1});
     BOOST_TEST(2.0 == valueDataB);
+    while (cplInterface.isCouplingOngoing()) {
+      cplInterface.advance(cplInterface.getMaxTimeStepSize());
+    }
     cplInterface.finalize();
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
@@ -37,6 +40,10 @@ void testDataInitialization(precice::testing::TestContext context, std::string c
     double data[]   = {2.0};
     cplInterface.writeData(meshName, dataName, {&vid, 1}, data);
     cplInterface.initialize();
+    while (cplInterface.isCouplingOngoing()) {
+
+      cplInterface.advance(cplInterface.getMaxTimeStepSize());
+    }
     cplInterface.finalize();
   }
 }

@@ -56,6 +56,16 @@ public:
   /// Returns a participant with the given name
   const impl::PtrParticipant getParticipant(const std::string &participantName) const;
 
+  /** returns all dynamic participants for each dynamic mesh
+   *
+   * Structure: meshName -> {participantName}
+   *
+   * If no participant uses a mesh M dynamically, then M will not be a key in the map.
+   * A dynamic participant uses a dynamic mesh either directly (provided dynamic=true and received thereof),
+   * or transitively due to a mapping from/to the aforementioned.
+   */
+  std::map<std::string, std::set<std::string>> getDynamicMeshMap() const;
+
 private:
   struct WatchPointConfig {
     std::string     name;
@@ -82,6 +92,7 @@ private:
   const std::string TAG_INTRA_COMM     = "intra-comm";
 
   const std::string ATTR_NAME               = "name";
+  const std::string ATTR_DYNAMIC            = "dynamic";
   const std::string ATTR_SOURCE_DATA        = "source-data";
   const std::string ATTR_TARGET_DATA        = "target-data";
   const std::string ATTR_TIMING             = "timing";
@@ -151,6 +162,12 @@ private:
   void checkIllDefinedMappings(
       const mapping::MappingConfiguration::ConfiguredMapping &mapping,
       const impl::PtrParticipant &                            participant);
+
+  /** Updates all participants regarding dynamicity information
+   *
+   * There will be multiple non-trivial calls to this function when more than two participants are defined
+   */
+  void updateParticipantDynamicity();
 };
 
 } // namespace config

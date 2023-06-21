@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -151,6 +152,8 @@ public:
   /// Finalizes the coupling and disconnects communication.
   virtual void finalize() = 0;
 
+  virtual std::string getLocalParticipant() const = 0;
+
   /// Returns list of all coupling partners.
   virtual std::vector<std::string> getCouplingPartners() const = 0;
 
@@ -228,6 +231,9 @@ public:
 
   /// Returns false if the scheme is implicit and hasn't converged
   virtual bool hasConverged() const = 0;
+
+  /// Returns true if the scheme requires synchronization due to dynamicity
+  virtual bool isSynchronizationRequired() const = 0;
 };
 
 } // namespace cplscheme

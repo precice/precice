@@ -67,15 +67,18 @@ void ParticipantState::addWatchIntegral(
   _watchIntegrals.push_back(watchIntegral);
 }
 
-void ParticipantState::provideMesh(const mesh::PtrMesh &mesh)
+void ParticipantState::provideMesh(const mesh::PtrMesh &mesh, bool dynamic)
 {
   std::string meshName = mesh->getName();
   PRECICE_TRACE(_name, meshName);
   checkDuplicatedUse(meshName);
 
-  auto context                       = new MeshContext();
-  context->mesh                      = mesh;
-  context->provideMesh               = true;
+  auto context         = new MeshContext();
+  context->mesh        = mesh;
+  context->provideMesh = true;
+  if (dynamic) {
+    context->dynamic = MeshContext::Dynamicity::Yes;
+  }
   _meshContexts[std::move(meshName)] = context;
   _usedMeshContexts.push_back(context);
 }

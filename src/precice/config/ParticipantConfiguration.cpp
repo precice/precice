@@ -7,6 +7,7 @@
 
 #include "action/Action.hpp"
 #include "action/config/ActionConfiguration.hpp"
+#include "boost/range/algorithm/for_each.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "com/SharedPointer.hpp"
 #include "com/config/CommunicationConfiguration.hpp"
@@ -28,6 +29,8 @@
 #include "precice/impl/ParticipantState.hpp"
 #include "precice/impl/WatchIntegral.hpp"
 #include "precice/impl/WatchPoint.hpp"
+#include "precice/span.hpp"
+#include "precice/types.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 #include "utils/networking.hpp"
@@ -132,6 +135,8 @@ ParticipantConfiguration::ParticipantConfiguration(
   tagProvideMesh.setDocumentation(doc);
   attrName.setDocumentation("Name of the mesh to provide.");
   tagProvideMesh.addAttribute(attrName);
+  tagProvideMesh.addAttribute(makeXMLAttribute(ATTR_DYNAMIC, false)
+                                  .setDocumentation("Dynamic meshes may be reset during the simulation. Experimental!"));
   tag.addSubtag(tagProvideMesh);
 
   XMLTag tagReceiveMesh(*this, TAG_RECEIVE_MESH, XMLTag::OCCUR_ARBITRARY);
@@ -269,14 +274,21 @@ void ParticipantConfiguration::xmlTagCallback(
     _participants.push_back(p);
   } else if (tag.getName() == TAG_PROVIDE_MESH) {
     PRECICE_ASSERT(_dimensions != 0); // setDimensions() has been called
-    std::string name = tag.getStringAttributeValue(ATTR_NAME);
+    std::string name    = tag.getStringAttributeValue(ATTR_NAME);
+    auto        dynamic = tag.getBooleanAttributeValue(ATTR_DYNAMIC);
+
+    if (dynamic) {
+      PRECICE_CHECK(_experimental,
+                    "You tried to configure the provided mesh \"{}\" to use the option dynamic=\"true\", which is currently still experimental. Please set experimental=\"true\", if you want to use this feature.", name);
+      PRECICE_WARN("You configured the provided mesh \"{}\" to use the option dynamic=\"true\", which is currently still experimental. Use with care.", name);
+    }
 
     mesh::PtrMesh mesh = _meshConfig->getMesh(name);
     PRECICE_CHECK(mesh,
                   R"(Participant "{}" attempts to provide an unknown mesh "{}". <mesh name="{}"> needs to be defined first.)",
                   _participants.back()->getName(), name, name);
 
-    _participants.back()->provideMesh(mesh);
+    _participants.back()->provideMesh(mesh, dynamic);
   } else if (tag.getName() == TAG_RECEIVE_MESH) {
     PRECICE_ASSERT(_dimensions != 0); // setDimensions() has been called
     std::string                                   name              = tag.getStringAttributeValue(ATTR_NAME);
@@ -387,6 +399,20 @@ const impl::PtrParticipant ParticipantConfiguration::getParticipant(const std::s
   PRECICE_ASSERT(participant != _participants.end(), "Did not find participant \"{}\"", participantName);
 
   return *participant;
+}
+
+std::map<std::string, std::set<std::string>> ParticipantConfiguration::getDynamicMeshMap() const
+{
+  // Structure: meshName -> {participantName}
+  std::map<std::string, std::set<std::string>> result;
+  for (const auto &participant : _participants) {
+    for (const auto &context : participant->usedMeshContexts()) {
+      if (context->dynamic != precice::impl::MeshContext::Dynamicity::No) {
+        result[context->mesh->getName()].insert(participant->getName());
+      }
+    }
+  }
+  return result;
 }
 
 partition::ReceivedPartition::GeometricFilter ParticipantConfiguration::getGeoFilter(const std::string &geoFilter) const
@@ -672,6 +698,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   }
   _watchIntegralConfigs.clear();
 
+  updateParticipantDynamicity();
+
   // create default primary communication if needed
   if (context.size > 1 && not _isIntraCommDefined && participant->getName() == context.name) {
 #ifdef PRECICE_NO_MPI
@@ -729,6 +757,109 @@ void ParticipantConfiguration::checkIllDefinedMappings(
                         "The mapping is not well defined. "
                         "Which data \"{}\" should be mapped to mesh \"{}\"?",
                         mapping.toMesh->getName(), data->getName(), data->getName(), mapping.toMesh->getName());
+        }
+      }
+    }
+  }
+}
+
+void ParticipantConfiguration::updateParticipantDynamicity()
+{
+  // Skip for the first participant
+  if (_participants.size() == 1) {
+    return;
+  }
+
+  // Mark received dynamic meshes of participants as dynamic.
+  // Old participants need to be updated in case of new dynamic meshes.
+  // The new participant needs to know which meshes were marked as dynamic.
+  // Doing this here prevents even more state in the ParticipantConfiguration
+  using Dynamicity = precice::impl::MeshContext::Dynamicity;
+
+  using ParticipantName = std::string;
+  using MeshName        = std::string;
+
+  // Find all provided dynamic meshes
+  std::map<ParticipantName, std::set<MeshName>> providedDynamic;
+  for (const auto &participant : _participants) {
+    for (const auto &context : participant->usedMeshContexts()) {
+      if (context->provideMesh && context->dynamic == Dynamicity::Yes) {
+        providedDynamic[participant->getName()].emplace(context->mesh->getName());
+      }
+    }
+  }
+
+  // Mark all received dynamic meshes as dynamic
+  for (const auto &participant : _participants) {
+    for (const auto &context : participant->usedMeshContexts()) {
+      if (context->provideMesh ||
+          (providedDynamic.count(context->receiveMeshFrom) == 0) ||
+          (providedDynamic.at(context->receiveMeshFrom).count(context->mesh->getName()) == 0)) {
+        continue;
+      }
+      context->dynamic = Dynamicity::Yes;
+    }
+  }
+
+  std::map<MeshName, std::set<ParticipantName>> transitivelyProvidedBy, transitivelyReceivedFrom;
+
+  // Mark all transitively dynamic meshes using mappings
+  for (const auto &participant : _participants) {
+    // Determine mappings between meshes of this participant
+    std::map<MeshName, std::set<MeshName>> mappings;
+    auto                                   addmapping = [&mappings](const auto &mc) {
+      auto from = mc.mapping->getInputMesh()->getName();
+      auto to   = mc.mapping->getOutputMesh()->getName();
+      mappings[from].insert(to);
+      mappings[to].insert(from);
+    };
+    boost::for_each(participant->readMappingContexts(), addmapping);
+    boost::for_each(participant->writeMappingContexts(), addmapping);
+
+    // Find transitively dynamic meshes of this participant
+    std::set<MeshName> transitiveHull;
+    for (const auto &context : participant->usedMeshContexts()) {
+      auto meshName = context->mesh->getName();
+      if ((context->dynamic != Dynamicity::Yes) ||
+          (mappings.count(meshName) == 0)) {
+        continue;
+      }
+      const auto &mappingPartners = mappings.at(meshName);
+      transitiveHull.insert(mappingPartners.begin(), mappingPartners.end());
+    }
+    // Mark transitively dynamic meshes (can be provided and received)
+    for (const auto &context : participant->usedMeshContexts()) {
+      // already dynamic/marked or not in the transitive hull?
+      if ((context->dynamic != Dynamicity::No) ||
+          (transitiveHull.count(context->mesh->getName()) == 0)) {
+        continue;
+      }
+      context->dynamic = Dynamicity::Transitively;
+      if (context->provideMesh) {
+        transitivelyProvidedBy[context->mesh->getName()].insert(participant->getName());
+      } else {
+        transitivelyReceivedFrom[context->mesh->getName()].insert(context->receiveMeshFrom);
+      }
+    }
+  }
+
+  // Mark all transitively received/dynamic meshes across participants
+  for (const auto &participant : _participants) {
+    for (const auto &context : participant->usedMeshContexts()) {
+      if (context->dynamic != Dynamicity::No) {
+        continue; // Already marked
+      }
+      auto meshName = context->mesh->getName();
+      if (context->provideMesh) {
+        if (transitivelyReceivedFrom.count(meshName) > 0 &&
+            transitivelyReceivedFrom.at(meshName).count(participant->getName()) > 0) {
+          context->dynamic = Dynamicity::Transitively;
+        }
+      } else {
+        // received Mesh
+        if (transitivelyProvidedBy.count(meshName) > 0 &&
+            transitivelyProvidedBy.at(meshName).count(participant->getName()) > 0) {
+          context->dynamic = Dynamicity::Transitively;
         }
       }
     }

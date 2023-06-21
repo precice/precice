@@ -27,11 +27,6 @@ public:
       int maxTimeWindows);
 
   /**
-   * @brief Destructor, empty.
-   */
-  //virtual ~DummyCouplingScheme() {}
-
-  /**
    * @brief
    */
   void initialize(
@@ -65,11 +60,6 @@ public:
     return false;
   }
 
-  /**
-   * @brief
-   */
-  //void advance() override final;
-
   ChangedMeshes firstSynchronization(const ChangedMeshes &changes) override;
 
   void firstExchange() override;
@@ -82,6 +72,15 @@ public:
    * @brief
    */
   void finalize() override final;
+
+  /*
+   * @brief Not implemented.
+   */
+  virtual std::string getLocalParticipant() const
+  {
+    PRECICE_ASSERT(false);
+    return {};
+  }
 
   /*
    * @brief Not implemented.
@@ -227,6 +226,11 @@ public:
   }
 
   bool hasConverged() const override;
+
+  bool isSynchronizationRequired() const final
+  {
+    return false;
+  }
 
 private:
   mutable logging::Logger _log{"cplscheme::tests::DummyCouplingScheme"};

@@ -104,6 +104,8 @@ public:
   /// Finalizes the coupling and disconnects communication.
   void finalize() final override;
 
+  std::string getLocalParticipant() const final override;
+
   /// Returns list of all coupling partners
   std::vector<std::string> getCouplingPartners() const final override;
 
@@ -204,6 +206,8 @@ public:
 
   /// True if the implicit scheme has converged or no implicit scheme is defined
   bool hasConverged() const final;
+
+  bool isSynchronizationRequired() const final;
 
 private:
   mutable logging::Logger _log{"cplscheme::CompositionalCouplingScheme"};

@@ -1,11 +1,11 @@
 #pragma once
 
+#include <Eigen/Core>
 #include <boost/range/adaptor/map.hpp>
 #include <cmath>
 #include <memory>
 #include <stddef.h>
 #include <string>
-#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -48,30 +48,8 @@ class ManageUniqueIDs;
 
 namespace impl {
 
-/// Type that represent a compound key of two values
-template <typename T>
-struct MeshDataKey {
-  T mesh;
-  T data;
-  template <typename Other>
-  bool operator<(const MeshDataKey<Other> &other) const
-  {
-    if (mesh < other.mesh) {
-      return true;
-    }
-    if (other.mesh < mesh) {
-      return false;
-    }
-    return data < other.data;
-  }
-};
-
-/// Deduction guide for two identical parameter types
-template <class T>
-MeshDataKey(T, T)->MeshDataKey<T>;
-
 /// Holds coupling state of one participating solver in coupled simulation.
-class ParticipantState {
+class Participant {
 public:
   enum MappingConstants {
     MAPPING_LINEAR_CONSERVATIVE,
@@ -84,35 +62,35 @@ public:
    *
    * @param[in] name Name of the participant. Has to be unique.
    */
-  ParticipantState(
+  Participant(
       std::string                 name,
       mesh::PtrMeshConfiguration &meshConfig);
 
-  virtual ~ParticipantState();
+  virtual ~Participant();
 
   /// @name Configuration interface
   /// @{
-  /// Adds a configured write \ref Data to the ParticipantState
+  /// Adds a configured write \ref Data to the Participant
   void addWriteData(
       const mesh::PtrData &data,
       const mesh::PtrMesh &mesh);
 
-  /// Adds a configured read \ref Data to the ParticipantState
+  /// Adds a configured read \ref Data to the Participant
   void addReadData(
       const mesh::PtrData &data,
       const mesh::PtrMesh &mesh,
       int                  interpolationOrder);
 
-  /// Adds a configured read \ref Mapping to the ParticipantState
+  /// Adds a configured read \ref Mapping to the Participant
   void addReadMappingContext(const MappingContext &mappingContext);
 
-  /// Adds a configured write \ref Mapping to the ParticipantState
+  /// Adds a configured write \ref Mapping to the Participant
   void addWriteMappingContext(const MappingContext &mappingContext);
 
-  /// Adds a configured \ref WatchPoint to the ParticipantState
+  /// Adds a configured \ref WatchPoint to the Participant
   void addWatchPoint(const PtrWatchPoint &watchPoint);
 
-  /// Adds a configured \ref WatchIntegral to the ParticipantState
+  /// Adds a configured \ref WatchIntegral to the Participant
   void addWatchIntegral(const PtrWatchIntegral &watchIntegral);
 
   /// Sets weather the participant was configured with a primary tag
@@ -144,24 +122,30 @@ public:
   /// @name Data queries
   /// @{
   /** Provides access to \ref ReadDataContext
-   * @pre there exists a \ref ReadDataContext for \ref data
+   * @pre there exists a \ref ReadDataContext for \ref dataID
    */
-  const ReadDataContext &readDataContext(std::string_view mesh, std::string_view data) const;
+  const ReadDataContext &readDataContext(DataID dataID) const;
 
   /** Provides access to \ref ReadDataContext
-   * @pre there exists a \ref ReadDataContext for \ref data
+   * @pre there exists a \ref ReadDataContext for \ref dataID
    */
-  ReadDataContext &readDataContext(std::string_view mesh, std::string_view data);
+  ReadDataContext &readDataContext(DataID dataID);
+
+  /**
+   * Provides access to \ref ReadDataContext
+   * @pre there exists a \ref ReadDataContext for \ref dataName
+   */
+  ReadDataContext &readDataContext(const std::string &dataName);
 
   /** Provides access to \ref WriteDataContext
-   * @pre there exists a \ref WriteDataContext for \ref data
+   * @pre there exists a \ref WriteDataContext for \ref dataID
    */
-  const WriteDataContext &writeDataContext(std::string_view mesh, std::string_view data) const;
+  const WriteDataContext &writeDataContext(DataID dataID) const;
 
   /** Provides access to \ref WriteDataContext
-   * @pre there exists a \ref WriteDataContext for \ref data
+   * @pre there exists a \ref WriteDataContext for \ref dataID
    */
-  WriteDataContext &writeDataContext(std::string_view mesh, std::string_view data);
+  WriteDataContext &writeDataContext(DataID dataID);
 
   /** Provides access to all \ref WriteDataContext objects
    * @remarks does not contain nullptr.
@@ -184,23 +168,29 @@ public:
   int maxReadWaveformOrder() const
   {
     int maxOrder = -1;
-    for (const auto &context : _readDataContexts | boost::adaptors::map_values) {
+    for (auto &context : _readDataContexts | boost::adaptors::map_values) {
       maxOrder = std::max(maxOrder, context.getInterpolationOrder());
     }
     return maxOrder;
   }
 
   /// Is the dataID know to preCICE?
-  bool hasData(std::string_view mesh, std::string_view data) const;
+  bool hasData(DataID dataID) const;
 
   /// Is the data used by this participant?
-  bool isDataUsed(std::string_view mesh, std::string_view data) const;
+  bool isDataUsed(const std::string &dataName, MeshID meshId) const;
 
   /// Is the participant allowed to read the data?
-  bool isDataRead(std::string_view mesh, std::string_view data) const;
+  bool isDataRead(DataID dataID) const;
 
   /// Is the participant allowed to write the data?
-  bool isDataWrite(std::string_view mesh, std::string_view data) const;
+  bool isDataWrite(DataID dataID) const;
+
+  /// What is the dataID of the used data from a used mesh given the meshid and the data name?
+  int getUsedDataID(const std::string &dataName, MeshID meshID) const;
+
+  /// What is the name of the given data id
+  std::string getDataName(DataID dataID) const;
   /// @}
 
   /// @name Mesh queries
@@ -208,23 +198,23 @@ public:
   /*** Provides direct access to a \ref MeshContext given the \ref meshid
    * @param[in] meshID the id of the \ref Mesh
    * @returns a reference to the matching \ref MeshContext
-   * @pre the \ref Mesh with \ref meshID is used by the ParticipantState
+   * @pre the \ref Mesh with \ref meshID is used by the Participant
    */
-  const MeshContext &meshContext(std::string_view mesh) const;
+  const MeshContext &meshContext(MeshID meshID) const;
 
   /*** Provides direct access to a \ref MeshContext given the \ref meshid
    * @param[in] meshID the id of the \ref Mesh
    * @returns a reference to the matching \ref MeshContext
-   * @pre the \ref Mesh with \ref meshID is used by the ParticipantState
+   * @pre the \ref Mesh with \ref meshID is used by the Participant
    */
-  MeshContext &meshContext(std::string_view mesh);
+  MeshContext &meshContext(MeshID meshID);
 
-  /** Provides unordered access to all \ref MeshContext.used by this \ref ParticipantState
+  /** Provides unordered access to all \ref MeshContext.used by this \ref Participant
    * @remarks The sequence does not contain nullptr
    */
   const std::vector<MeshContext *> &usedMeshContexts() const;
 
-  /** Provides unordered access to all \ref MeshContext.used by this \ref ParticipantState
+  /** Provides unordered access to all \ref MeshContext.used by this \ref Participant
    * @remarks The sequence does not contain nullptr
    */
   std::vector<MeshContext *> &usedMeshContexts();
@@ -234,30 +224,62 @@ public:
    * @return a reference to the MeshContext
    * @pre there is a matching mesh
    */
-  MeshContext &usedMeshContext(std::string_view name);
+  MeshContext &usedMeshContext(const std::string &name);
 
   /** Looks for a used MeshContext with a given mesh name.
    * @param[in] name the name of the \ref Mesh
    * @return a reference to the MeshContext
    * @pre there is a matching mesh
    */
-  MeshContext const &usedMeshContext(std::string_view name) const;
+  MeshContext const &usedMeshContext(const std::string &name) const;
+
+  /** Looks for a used MeshContext with a given mesh ID.
+   * @param[in] meshID the id of the \ref Mesh
+   * @return a reference to the MeshContext
+   * @pre there is a matching mesh
+   */
+  MeshContext &usedMeshContext(MeshID meshID);
+
+  /** Looks for a used MeshContext with a given meshID
+   * @param[in] meshID the id of the \ref Mesh
+   * @return a reference to the MeshContext
+   * @pre there is a matching mesh
+   */
+  MeshContext const &usedMeshContext(MeshID meshID) const;
+
+  /// Does preCICE know a mesh with this meshID?
+  bool hasMesh(MeshID meshID) const;
 
   /// Does preCICE know a mesh with this name?
-  bool hasMesh(std::string_view mesh) const;
+  bool hasMesh(const std::string &meshName) const;
+
+  /// Is a mesh with this id used by this participant?
+  bool isMeshUsed(MeshID meshID) const;
 
   /// Is a mesh with this name used by this participant?
-  bool isMeshUsed(std::string_view mesh) const;
+  bool isMeshUsed(const std::string &meshID) const;
+
+  /// Is a mesh with this id provided?
+  bool isMeshProvided(MeshID meshID) const;
 
   /// Is a mesh with this name provided by this participant?
-  bool isMeshProvided(std::string_view mesh) const;
+  bool isMeshProvided(const std::string &meshName) const;
 
   /// Is a mesh with this name received by this participant?
-  bool isMeshReceived(std::string_view mesh) const;
+  bool isMeshReceived(const std::string &meshName) const;
+
+  /// Get the used mesh id of a mesh with this name.
+  int getUsedMeshID(const std::string &meshName) const;
 
   /// Returns whether we are allowed to access a received mesh direct
   /// which requires the config tag <receive-mesh ... direct-access="true"
-  bool isDirectAccessAllowed(std::string_view mesh) const;
+  bool isDirectAccessAllowed(const int meshID) const;
+
+  /// Get the name of a mesh given by its id.
+  std::string getMeshName(MeshID meshID) const;
+
+  /// Get a mesh name which uses the given data id.
+  std::string getMeshNameFromData(DataID dataID) const;
   /// @}
 
   /// @name Exporting interface
@@ -311,14 +333,8 @@ public:
 
   /// @}
 
-  /// @name Error helpers
-  /// @{
-  std::string hintForMesh(std::string_view mesh) const;
-  std::string hintForMeshData(std::string_view mesh, std::string_view data) const;
-  /// @}
-
 private:
-  mutable logging::Logger _log{"impl::ParticipantState"};
+  mutable logging::Logger _log{"impl::Participant"};
 
   std::string _name;
 
@@ -331,14 +347,8 @@ private:
 
   std::vector<action::PtrAction> _actions;
 
-  template <typename T>
-  using MeshMap = std::map<std::string, T, std::less<>>;
-
-  template <typename T>
-  using DataMap = std::map<MeshDataKey<std::string>, T, std::less<>>;
-
-  /// All mesh contexts involved in a simulation
-  MeshMap<MeshContext *> _meshContexts;
+  /// All mesh contexts involved in a simulation, mesh ID == index.
+  std::vector<MeshContext *> _meshContexts; // @todo use map here!
 
   /// Read mapping contexts used by the participant.
   std::vector<MappingContext> _readMappingContexts;
@@ -349,9 +359,9 @@ private:
   /// Mesh contexts used by the participant.
   std::vector<MeshContext *> _usedMeshContexts;
 
-  DataMap<WriteDataContext> _writeDataContexts;
+  std::map<DataID, WriteDataContext> _writeDataContexts;
 
-  DataMap<ReadDataContext> _readDataContexts;
+  std::map<DataID, ReadDataContext> _readDataContexts;
 
   bool _useIntraComm = false;
 
@@ -362,9 +372,9 @@ private:
       const std::vector<ELEMENT_T> &data,
       const ELEMENT_T &             newElement) const;
 
-  void checkDuplicatedUse(std::string_view mesh);
+  void checkDuplicatedUse(const mesh::PtrMesh &mesh);
 
-  void checkDuplicatedData(std::string_view mesh, std::string_view data);
+  void checkDuplicatedData(const mesh::PtrData &data, const std::string &meshName);
 
   /// To allow white box tests.
   friend struct Integration::Serial::Whitebox::TestConfigurationPeano;
@@ -374,7 +384,7 @@ private:
 // --------------------------------------------------------- HEADER DEFINITIONS
 
 template <typename ELEMENT_T>
-bool ParticipantState::isDataValid(
+bool Participant::isDataValid(
     const std::vector<ELEMENT_T> &data,
     const ELEMENT_T &             newElement) const
 {

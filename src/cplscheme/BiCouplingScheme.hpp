@@ -87,6 +87,10 @@ protected:
   /// @copydoc cplscheme::BaseCouplingScheme::initializeReceiveDataStorage()
   void initializeReceiveDataStorage() override final;
 
+  CouplingScheme::ChangedMeshes receiveRemoteChanges();
+
+  void sendLocalChanges(const CouplingScheme::ChangedMeshes &changes);
+
 private:
   mutable logging::Logger _log{"cplscheme::BiCouplingScheme"};
 

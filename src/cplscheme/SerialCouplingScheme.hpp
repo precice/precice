@@ -54,6 +54,10 @@ public:
       int                           maxIterations      = UNDEFINED_MAX_ITERATIONS,
       int                           extrapolationOrder = UNDEFINED_EXTRAPOLATION_ORDER);
 
+  CouplingScheme::ChangedMeshes firstSynchronization(const CouplingScheme::ChangedMeshes &changes) final;
+
+  CouplingScheme::ChangedMeshes secondSynchronization() final;
+
   /// @copydoc CouplingScheme::getNormalizedWindowTime
   double getNormalizedWindowTime() const override; // @todo try to make private?
 
@@ -82,9 +86,13 @@ private:
   /// @copydoc cplscheme::BaseCouplingScheme::exchangeInitialData()
   void exchangeInitialData() override final;
 
+  /// Exchanges the first set of data between the participants of the SerialCouplingSchemes
   void exchangeFirstData() override final;
 
-  void exchangeSecondData() override final;
+  /**
+   * @brief Exchanges the second set of data between the participants of the SerialCouplingSchemes
+   */
+  void exchangeSecondData() override;
 
   const DataMap &getAccelerationData() override final;
 };
