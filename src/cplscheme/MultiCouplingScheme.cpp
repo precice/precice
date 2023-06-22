@@ -11,7 +11,6 @@
 #include "acceleration/SharedPointer.hpp"
 #include "cplscheme/BaseCouplingScheme.hpp"
 #include "cplscheme/CouplingData.hpp"
-#include "cplscheme/GlobalCouplingData.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/SharedPointer.hpp"

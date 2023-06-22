@@ -10,7 +10,6 @@
 #include "Constants.hpp"
 #include "CouplingData.hpp"
 #include "CouplingScheme.hpp"
-#include "GlobalCouplingData.hpp"
 #include "SharedPointer.hpp"
 #include "acceleration/SharedPointer.hpp"
 #include "impl/ConvergenceMeasure.hpp"
@@ -239,7 +238,7 @@ protected:
   /// All send and receive mesh-associated data as a map "data ID -> data"
   DataMap _allData;
   /// All send and receive global data as a map "data ID -> global coupling data"
-  GlobalDataMap _allGlobalData;
+  DataMap _allGlobalData;
 
   /// Acceleration method to speedup iteration convergence.
   acceleration::PtrAcceleration _acceleration;
@@ -274,7 +273,7 @@ protected:
    * @param m2n M2N used for communication
    * @param sendGlobalData GlobalDataMap associated with sent data
    */
-  void sendGlobalData(const m2n::PtrM2N &m2n, const GlobalDataMap &sendGlobalData);
+  void sendGlobalData(const m2n::PtrM2N &m2n, const DataMap &sendGlobalData);
 
   /**
    * @brief Receives all global data in the map receiveGlobalData with communication.
@@ -283,7 +282,7 @@ protected:
    * @param receiveGlobalData GlobalDataMap associated with received data
    * @param initialCommunication if true, will store received data for WINDOW_START and WINDOW_END, else store received data only for WINDOW_END
    */
-  void receiveGlobalData(const m2n::PtrM2N &m2n, const GlobalDataMap &receiveGlobalData, bool initialCommunication = false);
+  void receiveGlobalData(const m2n::PtrM2N &m2n, const DataMap &receiveGlobalData, bool initialCommunication = false);
 
   /**
    * @brief Initializes storage in receiveData as zero
@@ -291,13 +290,6 @@ protected:
    * @param receiveData DataMap associated with received data
    */
   void initializeWithZeroInitialData(const DataMap &receiveData);
-
-  /**
-   * @brief Initializes storage in receiveGlobalData as zero
-   *
-   * @param receiveGlobalData GlobalDataMap associated with received global data
-   */
-  void initializeWithZeroInitialData(const GlobalDataMap &receiveGlobalData);
 
   /**
    * @brief Adds CouplingData with given properties to this BaseCouplingScheme and returns a pointer to the CouplingData
@@ -322,7 +314,7 @@ protected:
    * @param requiresInitialization true, if GlobalCouplingData requires initialization
    * @return PtrGlobalCouplingData pointer to GlobalCouplingData owned by the CouplingScheme
    */
-  PtrGlobalCouplingData addGlobalCouplingData(const mesh::PtrData &data, bool requiresInitialization);
+  PtrCouplingData addGlobalCouplingData(const mesh::PtrData &data, bool requiresInitialization);
 
   /**
    * @brief Function to determine whether coupling scheme is an explicit coupling scheme
@@ -413,22 +405,10 @@ protected:
   void determineInitialSend(DataMap &sendData);
 
   /**
-   * @brief Sets _sendsInitializedData, if sendGlobalData requires initialization
-   * @param sendGlobalData GlobalCouplingData being checked
-   */
-  void determineInitialSend(GlobalDataMap &sendGlobalData);
-
-  /**
    * @brief Sets _receivesInitializedData, if receiveData requires initialization
    * @param receiveData CouplingData being checked
    */
   void determineInitialReceive(DataMap &receiveData);
-
-  /**
-   * @brief Sets _receivesInitializedData, if receiveGlobalData requires initialization
-   * @param receiveGlobalData GlobalCouplingData being checked
-   */
-  void determineInitialReceive(GlobalDataMap &receiveGlobalData);
 
 private:
   /// Coupling mode used by coupling scheme.
@@ -621,13 +601,6 @@ private:
    * @return true, if any CouplingData in dataMap requires initialization
    */
   bool anyDataRequiresInitialization(DataMap &dataMap) const;
-
-  /**
-   * @brief Checks whether any GlobalCouplingData in globalDataMap requires initialization
-   * @param globalDataMap map containing GlobalCouplingData
-   * @return true, if any GlobalCouplingData in globalDataMap requires initialization
-   */
-  bool anyDataRequiresInitialization(GlobalDataMap &globalDataMap) const;
 };
 } // namespace cplscheme
 } // namespace precice

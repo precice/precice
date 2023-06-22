@@ -8,7 +8,6 @@
 #include "BiCouplingScheme.hpp"
 #include "cplscheme/BaseCouplingScheme.hpp"
 #include "cplscheme/CouplingData.hpp"
-#include "cplscheme/GlobalCouplingData.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/M2N.hpp"
@@ -71,11 +70,11 @@ void BiCouplingScheme::addGlobalDataToSend(
     bool                 requiresInitialization)
 {
   PRECICE_TRACE();
-  PtrGlobalCouplingData ptrGblCplData = addGlobalCouplingData(data, requiresInitialization);
-  precice::DataID       id            = data->getID();
+  PtrCouplingData ptrCplData = addGlobalCouplingData(data, requiresInitialization);
+  precice::DataID id         = data->getID();
   if (!utils::contained(id, _sendGlobalData)) {
     PRECICE_ASSERT(_sendGlobalData.count(id) == 0, "Key already exists!");
-    _sendGlobalData.emplace(id, ptrGblCplData);
+    _sendGlobalData.emplace(id, ptrCplData);
     PRECICE_DEBUG("Added \"{}\" to _sendGlobalData. Now _sendGlobalData.size is {}.", data->getName(), _sendGlobalData.size());
   } else {
     PRECICE_ERROR("Global Data \"{0}\" cannot be added twice for sending. Please remove any duplicate <exchange data=\"{0}\" .../> tags", data->getName());
@@ -104,11 +103,11 @@ void BiCouplingScheme::addGlobalDataToReceive(
     bool                 requiresInitialization)
 {
   PRECICE_TRACE();
-  PtrGlobalCouplingData ptrGblCplData = addGlobalCouplingData(data, requiresInitialization);
-  precice::DataID       id            = data->getID();
+  PtrCouplingData ptrCplData = addGlobalCouplingData(data, requiresInitialization);
+  precice::DataID id         = data->getID();
   if (!utils::contained(id, _receiveGlobalData)) {
     PRECICE_ASSERT(_receiveGlobalData.count(id) == 0, "Key already exists!");
-    _receiveGlobalData.emplace(id, ptrGblCplData);
+    _receiveGlobalData.emplace(id, ptrCplData);
     PRECICE_DEBUG("Added \"{}\" to _receiveGlobalData.", data->getName());
   } else {
     PRECICE_ERROR("Global Data \"{0}\" cannot be added twice for receiving. Please remove any duplicate <exchange data=\"{0}\" ... /> tags", data->getName());
@@ -145,12 +144,12 @@ DataMap &BiCouplingScheme::getReceiveData()
   return _receiveData;
 }
 
-GlobalDataMap &BiCouplingScheme::getSendGlobalData()
+DataMap &BiCouplingScheme::getSendGlobalData()
 {
   return _sendGlobalData;
 }
 
-GlobalDataMap &BiCouplingScheme::getReceiveGlobalData()
+DataMap &BiCouplingScheme::getReceiveGlobalData()
 {
   return _receiveGlobalData;
 }
@@ -177,22 +176,22 @@ CouplingData *BiCouplingScheme::getReceiveData(
   return nullptr;
 }
 
-GlobalCouplingData *BiCouplingScheme::getSendGlobalData(
+CouplingData *BiCouplingScheme::getSendGlobalData(
     DataID dataID)
 {
   PRECICE_TRACE(dataID);
-  GlobalDataMap::iterator iter = _sendGlobalData.find(dataID);
+  DataMap::iterator iter = _sendGlobalData.find(dataID);
   if (iter != _sendGlobalData.end()) {
     return &(*(iter->second));
   }
   return nullptr;
 }
 
-GlobalCouplingData *BiCouplingScheme::getReceiveGlobalData(
+CouplingData *BiCouplingScheme::getReceiveGlobalData(
     DataID dataID)
 {
   PRECICE_TRACE(dataID);
-  GlobalDataMap::iterator iter = _receiveGlobalData.find(dataID);
+  DataMap::iterator iter = _receiveGlobalData.find(dataID);
   if (iter != _receiveGlobalData.end()) {
     return &(*(iter->second));
   }

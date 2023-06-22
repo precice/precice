@@ -15,7 +15,6 @@
 #include "cplscheme/Constants.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "cplscheme/CouplingScheme.hpp"
-#include "cplscheme/GlobalCouplingData.hpp"
 #include "cplscheme/impl/SharedPointer.hpp"
 #include "impl/ConvergenceMeasure.hpp"
 #include "io/TXTTableWriter.hpp"
@@ -228,16 +227,6 @@ void BaseCouplingScheme::initializeWithZeroInitialData(const DataMap &receiveDat
   }
 }
 
-void BaseCouplingScheme::initializeWithZeroInitialData(const GlobalDataMap &receiveGlobalData)
-{
-  for (const auto &data : receiveGlobalData | boost::adaptors::map_values) {
-    PRECICE_DEBUG("Initialize {} as zero.", data->getDataName());
-    // just store already initialized zero sample to storage.
-    data->setSampleAtTime(time::Storage::WINDOW_START, data->sample());
-    data->setSampleAtTime(time::Storage::WINDOW_END, data->sample());
-  }
-}
-
 PtrCouplingData BaseCouplingScheme::addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization, bool communicateSubsteps)
 {
   int             id = data->getID();
@@ -251,17 +240,17 @@ PtrCouplingData BaseCouplingScheme::addCouplingData(const mesh::PtrData &data, m
   return ptrCplData;
 }
 
-PtrGlobalCouplingData BaseCouplingScheme::addGlobalCouplingData(const mesh::PtrData &data, bool requiresInitialization)
+PtrCouplingData BaseCouplingScheme::addGlobalCouplingData(const mesh::PtrData &data, bool requiresInitialization)
 {
-  int                   id = data->getID();
-  PtrGlobalCouplingData ptrGblCplData;
+  int             id = data->getID();
+  PtrCouplingData ptrCplData;
   if (!utils::contained(id, _allGlobalData)) { // data is not used by this coupling scheme yet, create new GlobalCouplingData
-    ptrGblCplData = std::make_shared<GlobalCouplingData>(data, requiresInitialization, _extrapolationOrder);
-    _allGlobalData.emplace(id, ptrGblCplData);
+    ptrCplData = std::make_shared<CouplingData>(data, nullptr, requiresInitialization, _extrapolationOrder);
+    _allGlobalData.emplace(id, ptrCplData);
   } else { // data is already used by another exchange of this coupling scheme, use existing GlobalCouplingData
-    ptrGblCplData = _allGlobalData[id];
+    ptrCplData = _allGlobalData[id];
   }
-  return ptrGblCplData;
+  return ptrCplData;
 }
 
 bool BaseCouplingScheme::isExplicitCouplingScheme()
@@ -270,7 +259,7 @@ bool BaseCouplingScheme::isExplicitCouplingScheme()
   return _couplingMode == Explicit;
 }
 
-void BaseCouplingScheme::sendGlobalData(const m2n::PtrM2N &m2n, const GlobalDataMap &sendGlobalData)
+void BaseCouplingScheme::sendGlobalData(const m2n::PtrM2N &m2n, const DataMap &sendGlobalData)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(m2n.get() != nullptr);
@@ -286,7 +275,7 @@ void BaseCouplingScheme::sendGlobalData(const m2n::PtrM2N &m2n, const GlobalData
   }
 }
 
-void BaseCouplingScheme::receiveGlobalData(const m2n::PtrM2N &m2n, const GlobalDataMap &receiveGlobalData, bool initialCommunication)
+void BaseCouplingScheme::receiveGlobalData(const m2n::PtrM2N &m2n, const DataMap &receiveGlobalData, bool initialCommunication)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(m2n.get());
@@ -827,24 +816,9 @@ void BaseCouplingScheme::determineInitialSend(DataMap &sendData)
   }
 }
 
-void BaseCouplingScheme::determineInitialSend(GlobalDataMap &sendGlobalData)
-{
-  if (anyDataRequiresInitialization(sendGlobalData)) {
-    _sendsInitializedData = true;
-    requireAction(CouplingScheme::Action::InitializeData);
-  }
-}
-
 void BaseCouplingScheme::determineInitialReceive(DataMap &receiveData)
 {
   if (anyDataRequiresInitialization(receiveData)) {
-    _receivesInitializedData = true;
-  }
-}
-
-void BaseCouplingScheme::determineInitialReceive(GlobalDataMap &receiveGlobalData)
-{
-  if (anyDataRequiresInitialization(receiveGlobalData)) {
     _receivesInitializedData = true;
   }
 }
@@ -853,17 +827,6 @@ bool BaseCouplingScheme::anyDataRequiresInitialization(DataMap &dataMap) const
 {
   /// @todo implement this function using https://en.cppreference.com/w/cpp/algorithm/all_any_none_of
   for (const auto &data : dataMap | boost::adaptors::map_values) {
-    if (data->requiresInitialization) {
-      return true;
-    }
-  }
-  return false;
-}
-
-bool BaseCouplingScheme::anyDataRequiresInitialization(GlobalDataMap &globalDataMap) const
-{
-  /// @todo implement this function using https://en.cppreference.com/w/cpp/algorithm/all_any_none_of
-  for (const auto &data : globalDataMap | boost::adaptors::map_values) {
     if (data->requiresInitialization) {
       return true;
     }
