@@ -16,7 +16,7 @@
     <read-data name="Velocities" mesh="MeshTwo" />
   </participant>
 
-  <m2n:sockets from="SolverOne" to="SolverTwo" use-two-level-initialization="true" />
+  <m2n:sockets acceptor="SolverOne" connector="SolverTwo" use-two-level-initialization="true" />
 
   <coupling-scheme:serial-explicit>
     <participants first="SolverOne" second="SolverTwo" />

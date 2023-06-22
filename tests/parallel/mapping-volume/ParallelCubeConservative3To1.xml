@@ -31,7 +31,7 @@
     <export:vtu />
   </participant>
 
-  <m2n:sockets from="SolverOneCubeConservative3To1" to="SolverTwoCubeConservative3To1" />
+  <m2n:sockets acceptor="SolverOneCubeConservative3To1" connector="SolverTwoCubeConservative3To1" />
 
   <coupling-scheme:serial-explicit>
     <participants first="SolverOneCubeConservative3To1" second="SolverTwoCubeConservative3To1" />

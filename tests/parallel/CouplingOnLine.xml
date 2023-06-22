@@ -26,7 +26,7 @@
     <write-data name="Pressure" mesh="FASTEST_Mesh" />
   </participant>
 
-  <m2n:sockets from="FASTEST" to="Ateles" />
+  <m2n:sockets acceptor="FASTEST" connector="Ateles" />
 
   <coupling-scheme:parallel-explicit>
     <participants first="FASTEST" second="Ateles" />
