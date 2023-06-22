@@ -42,13 +42,6 @@ public:
    */
   void readValue(double normalizedDt, ::precice::span<double> value) const;
 
-  /**
-   * @brief Samples data at a given point in time within the current time window
-   *
-   * @param normalizedDt Point in time where waveform is sampled. Must be normalized to [0,1], where 0 refers to the beginning and 1 to the end of the current time window.
-   */
-  Eigen::VectorXd sampleWaveformAt(double normalizedDt);
-
   /// Disable copy construction
   ReadGlobalDataContext(const ReadGlobalDataContext &copy) = delete;
 

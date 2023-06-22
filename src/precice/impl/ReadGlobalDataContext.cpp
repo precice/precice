@@ -27,9 +27,4 @@ int ReadGlobalDataContext::getInterpolationOrder() const
   return _waveform->getInterpolationOrder();
 }
 
-Eigen::VectorXd ReadGlobalDataContext::sampleWaveformAt(double normalizedDt)
-{
-  return _waveform->sample(normalizedDt);
-}
-
 } // namespace precice::impl
