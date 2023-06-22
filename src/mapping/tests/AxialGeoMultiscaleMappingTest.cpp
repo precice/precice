@@ -114,11 +114,11 @@ BOOST_AUTO_TEST_CASE(testConsistentSpreadZ)
 
   // Check if x axis data is doubled at center node
   BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(outValues(2) == 2 * inValues(0));
+  BOOST_TEST(outValues(2) == 2 * inValues(2));
   // Check if x axis data at distance = r is equal to zero
   BOOST_TEST(outValues(5) == 0.0);
   // Check if x axis data at distance = r/2 is 3/2 times invalue data
-  BOOST_TEST(outValues(8) == 1.5 * inValues(0));
+  BOOST_TEST(outValues(8) == 1.5 * inValues(2));
 }
 
 BOOST_AUTO_TEST_CASE(testConsistentCollectX)

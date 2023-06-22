@@ -129,6 +129,8 @@ target_sources(testprecice
     tests/serial/mapping-scaled-consistent/testTetraOnB.cpp
     tests/serial/mapping-scaled-consistent/testVolumetricOnA2D.cpp
     tests/serial/mapping-scaled-consistent/testVolumetricOnB2D.cpp
+    tests/serial/mapping-geomultiscale/AxialGeoMultiscaleTestBidirectionalReadVector.cpp
+    tests/serial/mapping-geomultiscale/RadialGeoMultiscaleTestBidirectionalReadScalar.cpp
     tests/serial/mapping-volume/OneTetraConservativeRead.cpp
     tests/serial/mapping-volume/OneTetraConservativeWrite.cpp
     tests/serial/mapping-volume/OneTetraRead.cpp
