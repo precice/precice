@@ -236,8 +236,8 @@ public:
 
 protected:
   /// All send and receive mesh-associated data as a map "data ID -> data"
-  DataMap _allData;
-  /// All send and receive global data as a map "data ID -> global coupling data"
+  DataMap _allMeshData;
+  /// All send and receive global data as a map "data ID -> data"
   DataMap _allGlobalData;
 
   /// Acceleration method to speedup iteration convergence.
@@ -271,7 +271,7 @@ protected:
    * @brief Sends all global data in the map sendGlobalData with communication.
    *
    * @param m2n M2N used for communication
-   * @param sendGlobalData GlobalDataMap associated with sent data
+   * @param sendGlobalData DataMap associated with sent data
    */
   void sendGlobalData(const m2n::PtrM2N &m2n, const DataMap &sendGlobalData);
 
@@ -279,7 +279,7 @@ protected:
    * @brief Receives all global data in the map receiveGlobalData with communication.
    *
    * @param m2n M2N used for communication
-   * @param receiveGlobalData GlobalDataMap associated with received data
+   * @param receiveGlobalData DataMap associated with received data
    * @param initialCommunication if true, will store received data for WINDOW_START and WINDOW_END, else store received data only for WINDOW_END
    */
   void receiveGlobalData(const m2n::PtrM2N &m2n, const DataMap &receiveGlobalData, bool initialCommunication = false);
@@ -292,7 +292,7 @@ protected:
   void initializeWithZeroInitialData(const DataMap &receiveData);
 
   /**
-   * @brief Adds CouplingData with given properties to this BaseCouplingScheme and returns a pointer to the CouplingData
+   * @brief Adds CouplingData with given properties to _allMeshData this BaseCouplingScheme and returns a pointer to the CouplingData
    *
    * If CouplingData with ID of provided data already exists in coupling scheme, no duplicate is created but a pointer to the already existing CouplingData is returned.
    *
@@ -305,14 +305,14 @@ protected:
   PtrCouplingData addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization, bool exchangeSubsteps);
 
   /**
-   * @brief Adds GlobalCouplingData with given properties to this BaseCouplingScheme and returns a pointer to the GlobalCouplingData
+   * @brief Adds CouplingData with given properties to _allGlobalData of this BaseCouplingScheme and returns a pointer to the CouplingData
    *
-   * This is to avoid creation of duplicate GlobalCouplingData objects which may happen for e.g. in case of Multi-Coupling Schemes.
-   * If GlobalCouplingData with ID of provided data already exists in coupling scheme, no duplicate is created but a pointer to the already existing GlobalCouplingData is returned.
+   * This is to avoid creation of duplicate CouplingData objects which may happen for e.g. in case of Multi-Coupling Schemes.
+   * If CouplingData with ID of provided data already exists in coupling scheme, no duplicate is created but a pointer to the already existing CouplingData is returned.
    *
-   * @param data global data with which the GlobalCouplingData is associated
-   * @param requiresInitialization true, if GlobalCouplingData requires initialization
-   * @return PtrGlobalCouplingData pointer to GlobalCouplingData owned by the CouplingScheme
+   * @param data global data with which the CouplingData is associated
+   * @param requiresInitialization true, if CouplingData requires initialization
+   * @return PtrCouplingData pointer to CouplingData owned by the CouplingScheme
    */
   PtrCouplingData addGlobalCouplingData(const mesh::PtrData &data, bool requiresInitialization);
 

@@ -69,7 +69,7 @@ bool MultiCouplingScheme::hasAnySendData()
 const DataMap &MultiCouplingScheme::getAccelerationData()
 {
   // MultiCouplingScheme applies acceleration to all CouplingData
-  return _allData;
+  return _allMeshData;
 }
 
 void MultiCouplingScheme::initializeReceiveDataStorage()

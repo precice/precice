@@ -231,11 +231,11 @@ PtrCouplingData BaseCouplingScheme::addCouplingData(const mesh::PtrData &data, m
 {
   int             id = data->getID();
   PtrCouplingData ptrCplData;
-  if (!utils::contained(id, _allData)) { // data is not used by this coupling scheme yet, create new CouplingData
+  if (!utils::contained(id, _allMeshData)) { // data is not used by this coupling scheme yet, create new CouplingData
     ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, communicateSubsteps, _extrapolationOrder);
-    _allData.emplace(id, ptrCplData);
+    _allMeshData.emplace(id, ptrCplData);
   } else { // data is already used by another exchange of this coupling scheme, use existing CouplingData
-    ptrCplData = _allData[id];
+    ptrCplData = _allMeshData[id];
   }
   return ptrCplData;
 }
@@ -430,7 +430,7 @@ void BaseCouplingScheme::secondExchange()
 void BaseCouplingScheme::moveToNextWindow()
 {
   PRECICE_TRACE(_timeWindows);
-  for (auto &data : _allData | boost::adaptors::map_values) {
+  for (auto &data : _allMeshData | boost::adaptors::map_values) {
     data->moveToNextWindow();
   }
   for (auto &data : _allGlobalData | boost::adaptors::map_values) {
@@ -683,8 +683,8 @@ void BaseCouplingScheme::addConvergenceMeasure(
     bool                        doesLogging)
 {
   ConvergenceMeasureContext convMeasure;
-  PRECICE_ASSERT(_allData.count(dataID) == 1, "Data with given data ID must exist!");
-  convMeasure.couplingData = _allData.at(dataID);
+  PRECICE_ASSERT(_allMeshData.count(dataID) == 1, "Data with given data ID must exist!");
+  convMeasure.couplingData = _allMeshData.at(dataID);
   convMeasure.suffices     = suffices;
   convMeasure.strict       = strict;
   convMeasure.measure      = std::move(measure);
@@ -800,7 +800,7 @@ bool BaseCouplingScheme::reachedEndOfTimeWindow()
 void BaseCouplingScheme::storeIteration()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme());
-  for (const auto &data : _allData | boost::adaptors::map_values) {
+  for (const auto &data : _allMeshData | boost::adaptors::map_values) {
     data->storeIteration();
   }
   for (const auto &data : _allGlobalData | boost::adaptors::map_values) {
