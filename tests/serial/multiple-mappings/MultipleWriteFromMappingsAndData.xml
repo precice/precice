@@ -45,7 +45,7 @@
       constraint="consistent" />
   </participant>
 
-  <m2n:sockets from="B" to="A" />
+  <m2n:sockets acceptor="B" connector="A" />
 
   <coupling-scheme:parallel-explicit>
     <participants first="A" second="B" />

@@ -36,7 +36,7 @@
     <read-data name="Forces" mesh="StructureMesh" />
   </participant>
 
-  <m2n:sockets from="Fluid" to="Structure" use-two-level-initialization="true" />
+  <m2n:sockets acceptor="Fluid" connector="Structure" use-two-level-initialization="true" />
 
   <coupling-scheme:serial-explicit>
     <participants first="Fluid" second="Structure" />

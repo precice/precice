@@ -29,8 +29,8 @@
     <read-data name="Data1" mesh="Mesh" />
   </participant>
 
-  <m2n:sockets from="Participant0" to="Participant1" />
-  <m2n:sockets from="Participant1" to="Participant2" />
+  <m2n:sockets acceptor="Participant0" connector="Participant1" />
+  <m2n:sockets acceptor="Participant1" connector="Participant2" />
 
   <coupling-scheme:serial-implicit>
     <participants first="Participant0" second="Participant1" />
