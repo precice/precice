@@ -78,7 +78,6 @@ void Configuration::xmlTagCallback(const xml::ConfigurationContext &context, xml
     _meshConfiguration->setDimensions(_dimensions);
     _participantConfiguration->setDimensions(_dimensions);
     _experimental = tag.getBooleanAttributeValue("experimental");
-    _couplingSchemeConfiguration->setExperimental(_experimental);
     _participantConfiguration->setExperimental(_experimental);
   } else {
     PRECICE_UNREACHABLE("Received callback from unknown tag '{}'.", tag.getName());
