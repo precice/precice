@@ -301,9 +301,6 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
   PRECICE_TRACE(tag.getFullName());
   if (tag.getNamespace() == TAG) {
     if (_config.type == VALUE_SERIAL_EXPLICIT) {
-      int maxAllowedOrder = 1; // explicit coupling schemes do not allow higher-order waveform iteration
-      checkWaveformOrderReadData(maxAllowedOrder);
-
       std::string       accessor(_config.participants[0]);
       PtrCouplingScheme scheme = createSerialExplicitCouplingScheme(accessor);
       addCouplingScheme(scheme, accessor);
@@ -314,9 +311,6 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
       //_couplingSchemes[accessor] = scheme;
       _config = Config();
     } else if (_config.type == VALUE_PARALLEL_EXPLICIT) {
-      int maxAllowedOrder = 1; // explicit coupling schemes do not allow higher-order waveform iteration
-      checkWaveformOrderReadData(maxAllowedOrder);
-
       std::string       accessor(_config.participants[0]);
       PtrCouplingScheme scheme = createParallelExplicitCouplingScheme(accessor);
       addCouplingScheme(scheme, accessor);
@@ -1039,22 +1033,6 @@ void CouplingSchemeConfiguration::checkIfDataIsExchanged(
                 "Data \"{}\" is currently not exchanged over the respective mesh on which it is used for convergence measures and/or iteration acceleration. "
                 "Please check the <exchange ... /> and <...-convergence-measure ... /> tags in the <coupling-scheme:... /> of your precice-config.xml.",
                 dataName);
-}
-
-void CouplingSchemeConfiguration::checkWaveformOrderReadData(
-    int maxAllowedOrder) const
-{
-  for (const precice::impl::PtrParticipant &participant : _participantConfig->getParticipants()) {
-    for (const auto &dataContext : participant->readDataContexts()) {
-      const int usedOrder = dataContext.getInterpolationOrder();
-      PRECICE_ASSERT(usedOrder >= 0); // ensure that usedOrder was set
-      if (usedOrder > maxAllowedOrder) {
-        PRECICE_ERROR(
-            "You configured <read-data name=\"{}\" mesh=\"{}\" waveform-order=\"{}\" />, but for the coupling scheme you are using only a maximum waveform-order of \"{}\" is allowed.",
-            dataContext.getDataName(), dataContext.getMeshName(), usedOrder, maxAllowedOrder);
-      }
-    }
-  }
 }
 
 void CouplingSchemeConfiguration::checkSerialImplicitAccelerationData(

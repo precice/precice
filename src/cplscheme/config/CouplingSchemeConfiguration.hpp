@@ -275,9 +275,6 @@ private:
   void checkIfDataIsExchanged(
       DataID dataID) const;
 
-  void checkWaveformOrderReadData(
-      int maxAllowedOrder) const;
-
   void checkSerialImplicitAccelerationData(
       DataID dataID, const std::string &first, const std::string &second) const;
 
