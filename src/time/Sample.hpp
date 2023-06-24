@@ -5,7 +5,11 @@
 
 namespace precice::time {
 
-/// @brief Sample of a \ref mesh::Data on a \ref mesh::Mesh
+/** Sample of a \ref mesh::Data on a \ref mesh::Mesh
+ *
+ * A \ref Sample encapsulates user-provided data of a mesh including values and gradients.
+ * It is also aware of the dimensionality of the data, which is important for empty meshes.
+ */
 struct Sample {
   /// Constructs an empty Sample of a given data dimensionality
   explicit Sample(int dims) noexcept
