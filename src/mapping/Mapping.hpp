@@ -2,7 +2,6 @@
 
 #include <Eigen/Core>
 #include <iosfwd>
-#include <optional>
 
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
