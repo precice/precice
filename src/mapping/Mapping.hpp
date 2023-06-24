@@ -53,7 +53,9 @@ public:
   /**
    * @brief Specifies whether the mapping is iterative or direct
    *
-   * An iterative mapping uses an initial guess to perform the mapping.
+   * A direct mapping maps input data to map directly to output data.
+   *
+   * An iterative mapping uses an additional initial guess to perform the mapping.
    * When calling the iterative version of map, derived classes of Mapping can
    * access and update this initial guess using \ref initialGuess().
    * Note that the size of the initial guess is controlled by the Mapping.
