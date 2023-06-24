@@ -777,9 +777,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(const ti
     in.assemble();
 
     // Gets the petsc::vector for the given combination of outputData, inputData and dimension
-    // If none created yet, create one, based on _matrixC
-    //petsc::Vector out = petsc::Vector::allocate(_matrixC, "out").copyFrom(this->lastSolution());
-
     petsc::Vector out = petsc::Vector::allocate(_matrixC, "out");
 
     if (_polynomial == Polynomial::SEPARATE) {
