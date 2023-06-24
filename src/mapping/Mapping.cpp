@@ -53,14 +53,14 @@ bool Mapping::isIterative() const
 
 bool Mapping::hasInitialGuess() const
 {
-  PRECICE_ASSERT(isIterative(), "This mapping isn't iterative.");
+  PRECICE_ASSERT(isIterative(), "This mapping isn't iterative, so it cannot have an initial guess.");
   PRECICE_ASSERT(_initialGuess != nullptr, "The last solution wasn't provided.");
   return _initialGuess->size() > 0;
 }
 
 const Eigen::VectorXd &Mapping::initialGuess() const
 {
-  PRECICE_ASSERT(isIterative(), "This mapping isn't iterative.");
+  PRECICE_ASSERT(isIterative(), "This mapping isn't iterative, so it cannot compute an initial guess.");
   PRECICE_ASSERT(_initialGuess != nullptr, "The last solution wasn't provided.");
   return *_initialGuess;
 }

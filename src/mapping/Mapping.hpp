@@ -55,7 +55,7 @@ public:
    * @brief Specifies whether the mapping is iterative or direct
    *
    * An iterative mapping uses an initial guess to perform the mapping.
-   * When calling the iterative version of map, derived classed of Mapping can
+   * When calling the iterative version of map, derived classes of Mapping can
    * access and update this initial guess using \ref initialGuess().
    * Note that the size of the initial guess is controlled by the Mapping.
    *

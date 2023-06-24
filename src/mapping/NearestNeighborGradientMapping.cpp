@@ -59,7 +59,7 @@ void NearestNeighborGradientMapping::mapConsistent(const time::Sample &inData, E
   precice::profiling::Event e("map." + mappingNameShort + ".mapData.From" + input()->getName() + "To" + output()->getName(), profiling::Synchronize);
 
   PRECICE_ASSERT(inData.values.size() == 0 || inData.gradients.size() != 0,
-                 "Mesh \"{}\" does not contain gradient data. Using Nearest Neighbor Gradient requires gradient data.",
+                 "Mesh \"{}\" does not contain gradient data. Using Nearest Neighbor Gradient mapping requires gradient data.",
                  input()->getName());
 
   /// Check if input has gradient data, else send Error
