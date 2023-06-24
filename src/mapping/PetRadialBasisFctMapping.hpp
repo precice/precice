@@ -156,10 +156,20 @@ private:
 
   VertexData bgPreallocationMatrixA(const mesh::PtrMesh inMesh, const mesh::PtrMesh outMesh);
 
-  // loads the initialGuess for a given dimension or allocates the storage for the first iteration
+  /** load the initialGuess for a given dimension or allocates the storage for the first iteration
+   *
+   * The initialGuess passed to \ref Mapping::map contains one guess for each data dimension as the mapping is evaluated for each dimension.
+   * As an examples, a 3D vector thus contains 3 initialGuesses, one for each solver.
+   * This extracts it from the overall initialGuess.
+   */
   void loadInitialGuessForDim(int dimension, int allDimensions, petsc::Vector &destination);
 
-  // stores the initialGuess for a given dimension
+  /** stores the initialGuess for a given dimension
+   *
+   * The initialGuess passed to \ref Mapping::map contains one guess for each data dimension as the mapping is evaluated for each dimension.
+   * As an examples, a 3D vector thus contains 3 initialGuesses, one for each solver.
+   * This stores the initialGuess of a given dimension into the overall initialGuess.
+   */
   void storeInitialGuessForDim(int dimension, int allDimensions, petsc::Vector &source);
 };
 
