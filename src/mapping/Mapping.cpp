@@ -225,7 +225,7 @@ void Mapping::scaleConsistentMapping(const Eigen::VectorXd &input, Eigen::Vector
   Eigen::Map<Eigen::MatrixXd> outputValuesMatrix(output.data(), valueDimensions, output.size() / valueDimensions);
 
   // Scale in each direction
-  Eigen::VectorXd scalingFactor = integralInput.array() / integralOutput.array();
+  const Eigen::VectorXd scalingFactor = integralInput.binaryExpr(integralOutput, [](double lhs, double rhs) { return (rhs == 0.0) ? 0.0 : (lhs / rhs); });
   PRECICE_DEBUG("Scaling factor in scaled-consistent mapping: {}", scalingFactor);
   outputValuesMatrix.array().colwise() *= scalingFactor.array();
 } // namespace mapping
