@@ -569,7 +569,14 @@ BOOST_AUTO_TEST_CASE(testSerialDataInitialization)
   }
 }
 
-/// Test that runs on 2 processors.
+/**
+ * @brief Test that runs on 2 processors. Test Data initialization for explicit coupling scheme.
+ *
+ * Participant0 reads Data0 and Data1 from Participant1. Data0 is not initialized. Data1 is initialized.
+ * Participant1 reads Data2 from Participant0. Data2 is initialized.
+ *
+ * @todo Currently, only initializing only some of the data that is exchanged by a participants does not work as expected. See https://github.com/precice/precice/issues/1693.
+ */
 BOOST_AUTO_TEST_CASE(testParallelDataInitialization)
 {
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
@@ -613,6 +620,10 @@ BOOST_AUTO_TEST_CASE(testParallelDataInitialization)
   auto &dataValues1 = mesh->data(1)->values();
   auto &dataValues2 = mesh->data(2)->values();
 
+  BOOST_TEST(mesh->data(0)->getName() == "Data0");
+  BOOST_TEST(mesh->data(1)->getName() == "Data1");
+  BOOST_TEST(mesh->data(2)->getName() == "Data2");
+
   if (context.isNamed(nameParticipant0)) {
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::InitializeData));
     dataValues2(0) = 3.0;
@@ -636,6 +647,8 @@ BOOST_AUTO_TEST_CASE(testParallelDataInitialization)
   } else {
     BOOST_TEST(context.isNamed(nameParticipant1));
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::InitializeData));
+    // @todo test should succeed, if we uncomment line below to write data that is not used, because Data0 is not initialized. See https://github.com/precice/precice/issues/1693
+    // dataValues0(0) = 1.0;  // value is written, but initialization is turned off.
     dataValues1(0) = 1.0;
     cplScheme.markActionFulfilled(CouplingScheme::Action::InitializeData);
     mesh->data(0)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{mesh->data(0)->values()});
