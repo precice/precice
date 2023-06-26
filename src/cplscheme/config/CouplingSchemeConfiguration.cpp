@@ -939,6 +939,33 @@ CouplingSchemeConfiguration::getTimesteppingMethod(
   }
 }
 
+void CouplingSchemeConfiguration::checkSubstepExchangeWaveformOrder(const Config::Exchange &exchange) const
+{
+  const auto &participant = _participantConfig->getParticipant(exchange.to);
+
+  const auto &meshPtr = participant->findMesh(exchange.data->getName()); // related to https://github.com/precice/precice/issues/1694
+
+  if (meshPtr == nullptr) {
+    // Only warn, because might be valid configuration, if summation action is used. See Integration/Serial/SummationActionTwoSources.
+    PRECICE_WARN("You defined <exchange data=\"{}\" ... to=\"{}\" /> in the <coupling-scheme:... />, but <participant name=\"{}\"> has no corresponding <read-data name=\"{}\" ... />. Usually this means that there is an error in your configuration.",
+                 exchange.data->getName(), exchange.to, exchange.to, exchange.data->getName());
+    return; // skip checks below
+  }
+
+  const auto &readDataContext = participant->readDataContext(meshPtr->getName(), exchange.data->getName());
+  if (readDataContext.getInterpolationOrder() == 0) {
+    PRECICE_CHECK(!exchange.exchangeSubsteps,
+                  "You configured <read-data name=\"{}\" mesh=\"{}\" waveform-order=\"{}\" />. Please deactivate exchange of substeps by setting substeps=\"false\" in the following exchange tag of your coupling scheme: <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" />. Reason: For zeroth order interpolation no exchange of data for substeps is needed. Please consider using waveform-order=\"1\" or higher order, if you want to use subcycling.",
+                  readDataContext.getDataName(), readDataContext.getMeshName(), readDataContext.getInterpolationOrder(), exchange.data->getName(), exchange.mesh->getName(), exchange.from, exchange.to);
+  } else if (readDataContext.getInterpolationOrder() >= 2) {
+    PRECICE_CHECK(exchange.exchangeSubsteps,
+                  "You configured <read-data name=\"{}\" mesh=\"{}\" waveform-order=\"{}\" />. Please activate exchange of substeps by setting substeps=\"true\" in the following exchange tag of your coupling scheme: <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" />. Reason: For higher-order interpolation exchange of data for substeps is required. If you don't want to activate exchange of additional data, please consider using waveform-order=\"1\". Note that deactivating exchange of substep data might lead to worse results, if you use subcycling.",
+                  readDataContext.getDataName(), readDataContext.getMeshName(), readDataContext.getInterpolationOrder(), exchange.data->getName(), exchange.mesh->getName(), exchange.from, exchange.to);
+  } else { // For first order there is no restriction for exchange of substeps
+    PRECICE_ASSERT(readDataContext.getInterpolationOrder() == 1);
+  }
+}
+
 void CouplingSchemeConfiguration::addDataToBeExchanged(
     BiCouplingScheme & scheme,
     const std::string &accessor) const
@@ -978,6 +1005,7 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
     if (from == accessor) {
       scheme.addDataToSend(exchange.data, exchange.mesh, requiresInitialization, exchangeSubsteps);
     } else if (to == accessor) {
+      checkSubstepExchangeWaveformOrder(exchange);
       scheme.addDataToReceive(exchange.data, exchange.mesh, requiresInitialization, exchangeSubsteps);
     } else {
       PRECICE_ASSERT(_config.type == VALUE_MULTI);
