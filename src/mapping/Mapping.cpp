@@ -19,7 +19,7 @@ Mapping::Mapping(
       _input(),
       _output(),
       _dimensions(dimensions),
-      _mappingType(mappingType)
+      _initialGuessRequirement(mappingType)
 {
 }
 
@@ -46,28 +46,28 @@ Mapping::Constraint Mapping::getConstraint() const
   return _constraint;
 }
 
-bool Mapping::isIterative() const
+bool Mapping::requiresInitialGuess() const
 {
-  return _mappingType == InitialGuessRequirement::Required;
+  return _initialGuessRequirement == InitialGuessRequirement::Required;
 }
 
 bool Mapping::hasInitialGuess() const
 {
-  PRECICE_ASSERT(isIterative(), "This mapping isn't iterative, so it cannot have an initial guess.");
+  PRECICE_ASSERT(requiresInitialGuess(), "This mapping isn't iterative, so it cannot have an initial guess.");
   PRECICE_ASSERT(_initialGuess != nullptr, "The last solution wasn't provided.");
   return _initialGuess->size() > 0;
 }
 
 const Eigen::VectorXd &Mapping::initialGuess() const
 {
-  PRECICE_ASSERT(isIterative(), "This mapping isn't iterative, so it doesn't have an initial guess.");
+  PRECICE_ASSERT(requiresInitialGuess(), "This mapping isn't iterative, so it doesn't have an initial guess.");
   PRECICE_ASSERT(_initialGuess != nullptr, "The last solution wasn't provided.");
   return *_initialGuess;
 }
 
 Eigen::VectorXd &Mapping::initialGuess()
 {
-  PRECICE_ASSERT(isIterative(), "This mapping isn't iterative, so it doesn't have an initial guess.");
+  PRECICE_ASSERT(requiresInitialGuess(), "This mapping isn't iterative, so it doesn't have an initial guess.");
   PRECICE_ASSERT(_initialGuess != nullptr, "The last solution wasn't provided.");
   return *_initialGuess;
 }
@@ -126,7 +126,7 @@ void Mapping::map(int inputDataID,
                   int outputDataID)
 {
   PRECICE_ASSERT(_hasComputedMapping);
-  PRECICE_ASSERT(!isIterative() || _initialGuess != nullptr, "Call the map version with lastSolution");
+  PRECICE_ASSERT(!requiresInitialGuess() || _initialGuess != nullptr, "Call the map version with lastSolution");
 
   PRECICE_ASSERT(input()->getDimensions() == output()->getDimensions(),
                  input()->getDimensions(), output()->getDimensions());
@@ -156,7 +156,7 @@ void Mapping::map(const time::Sample &input, Eigen::VectorXd &output, Eigen::Vec
 void Mapping::map(const time::Sample &input, Eigen::VectorXd &output)
 {
   PRECICE_ASSERT(_hasComputedMapping);
-  PRECICE_ASSERT(!isIterative() || _initialGuess != nullptr, "Call the map version with lastSolution");
+  PRECICE_ASSERT(!requiresInitialGuess() || _initialGuess != nullptr, "Call the map version with lastSolution");
 
   if (hasConstraint(CONSERVATIVE)) {
     mapConservative(input, output);
