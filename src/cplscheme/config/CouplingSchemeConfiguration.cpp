@@ -943,14 +943,11 @@ void CouplingSchemeConfiguration::checkSubstepExchangeWaveformOrder(const Config
 {
   const auto &participant = _participantConfig->getParticipant(exchange.to);
 
-  const auto &meshPtr = participant->findMesh(exchange.data->getName());
+  const auto &meshPtr = participant->findMesh(exchange.data->getName()); // related to https://github.com/precice/precice/issues/1694
 
-  // @todo would be good to perform this check, but there are some problematic tests.
-  // PRECICE_CHECK(meshPtr,
-  //               "You defined <exchange data=\"{}\" ... to=\"{}\" /> in the <coupling-scheme:... />, but <participant name=\"{}\"> has no corresponding <read-data name=\"{}\" ... />.",
-  //               exchange.data->getName(), exchange.to, exchange.to, exchange.data->getName());
   if (meshPtr == nullptr) {
-    PRECICE_WARN("You defined <exchange data=\"{}\" ... to=\"{}\" /> in the <coupling-scheme:... />, but <participant name=\"{}\"> has no corresponding <read-data name=\"{}\" ... />.",
+    // Only warn, because might be valid configuration, if summation action is used. See Integration/Serial/SummationActionTwoSources.
+    PRECICE_WARN("You defined <exchange data=\"{}\" ... to=\"{}\" /> in the <coupling-scheme:... />, but <participant name=\"{}\"> has no corresponding <read-data name=\"{}\" ... />. Usually this means that there is an error in your configuration.",
                  exchange.data->getName(), exchange.to, exchange.to, exchange.data->getName());
     return; // skip checks below
   }
