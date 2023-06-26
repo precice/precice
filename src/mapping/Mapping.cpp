@@ -8,10 +8,10 @@
 namespace precice::mapping {
 
 Mapping::Mapping(
-    Constraint constraint,
-    int        dimensions,
-    bool       requiresGradientData,
-    Type       mappingType)
+    Constraint              constraint,
+    int                     dimensions,
+    bool                    requiresGradientData,
+    InitialGuessRequirement mappingType)
     : _requiresGradientData(requiresGradientData),
       _constraint(constraint),
       _inputRequirement(MeshRequirement::UNDEFINED),
@@ -48,7 +48,7 @@ Mapping::Constraint Mapping::getConstraint() const
 
 bool Mapping::isIterative() const
 {
-  return _mappingType == Type::Iterative;
+  return _mappingType == InitialGuessRequirement::Iterative;
 }
 
 bool Mapping::hasInitialGuess() const

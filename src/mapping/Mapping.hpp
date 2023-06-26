@@ -62,13 +62,13 @@ public:
    *
    * The first initial guess is expected to be an empty VectorXd.
    */
-  enum class Type : bool {
+  enum class InitialGuessRequirement : bool {
     Iterative = true,
     Direct    = false
   };
 
   /// Constructor, takes mapping constraint.
-  Mapping(Constraint constraint, int dimensions, bool requiresGradientData, Type mappingType);
+  Mapping(Constraint constraint, int dimensions, bool requiresGradientData, InitialGuessRequirement mappingType);
 
   Mapping &operator=(Mapping &&) = delete;
 
@@ -260,7 +260,7 @@ private:
   int _dimensions;
 
   /// The type of the mapping
-  Type _mappingType;
+  InitialGuessRequirement _mappingType;
 
   /// Pointer to the initialGuess set and unset by \ref map.
   Eigen::VectorXd *_initialGuess = nullptr;

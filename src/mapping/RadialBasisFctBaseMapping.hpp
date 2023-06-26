@@ -35,7 +35,7 @@ public:
       int                     dimensions,
       RADIAL_BASIS_FUNCTION_T function,
       std::array<bool, 3>     deadAxis,
-      Type                    mappingType);
+      InitialGuessRequirement mappingType);
 
   virtual ~RadialBasisFctBaseMapping() = default;
 
@@ -82,7 +82,7 @@ RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctBaseMapping(
     int                     dimensions,
     RADIAL_BASIS_FUNCTION_T function,
     std::array<bool, 3>     deadAxis,
-    Type                    mappingType)
+    InitialGuessRequirement mappingType)
     : Mapping(constraint, dimensions, false, mappingType),
       _basisFunction(function)
 {

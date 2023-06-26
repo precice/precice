@@ -184,7 +184,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping(
     double                         solverRtol,
     Polynomial                     polynomial,
     Preallocation                  preallocation)
-    : RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>(constraint, dimensions, function, deadAxis, Mapping::Type::Iterative),
+    : RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>(constraint, dimensions, function, deadAxis, Mapping::InitialGuessRequirement::Iterative),
       _matrixC("C"),
       _matrixQ("Q"),
       _matrixA("A"),
