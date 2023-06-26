@@ -45,13 +45,15 @@ public:
   void addDataToSend(
       const mesh::PtrData &data,
       mesh::PtrMesh        mesh,
-      bool                 requiresInitialization);
+      bool                 requiresInitialization,
+      bool                 exchangeSubsteps);
 
   /// Adds data to be received on data exchange.
   void addDataToReceive(
       const mesh::PtrData &data,
       mesh::PtrMesh        mesh,
-      bool                 requiresInitialization);
+      bool                 requiresInitialization,
+      bool                 exchangeSubsteps);
 
   void determineInitialDataExchange() override;
 

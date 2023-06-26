@@ -16,6 +16,7 @@ public:
       mesh::PtrData data,
       mesh::PtrMesh mesh,
       bool          requiresInitialization,
+      bool          exchangeSubsteps,
       int           extrapolationOrder);
 
   int getDimensions() const;
@@ -91,6 +92,8 @@ public:
   /// move to next window and initialize data via extrapolation
   void moveToNextWindow();
 
+  bool exchangeSubsteps() const;
+
 private:
   logging::Logger _log{"cplscheme::CouplingData"};
 
@@ -113,6 +116,9 @@ private:
 
   /// Mesh associated with this CouplingData
   mesh::PtrMesh _mesh;
+
+  /// If true, all substeps will be sent / received for this coupling data
+  bool _exchangeSubsteps;
 };
 
 } // namespace cplscheme

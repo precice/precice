@@ -82,12 +82,11 @@ void MultiCouplingScheme::initializeReceiveDataStorage()
 void MultiCouplingScheme::exchangeInitialData()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
-  bool initialReceive = true;
 
   if (_isController) {
     if (receivesInitializedData()) {
       for (auto &receiveExchange : _receiveDataVector) {
-        receiveData(_m2ns[receiveExchange.first], receiveExchange.second, initialReceive);
+        receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
       }
       checkDataHasBeenReceived();
     } else {
@@ -108,7 +107,7 @@ void MultiCouplingScheme::exchangeInitialData()
     }
     if (receivesInitializedData()) {
       for (auto &receiveExchange : _receiveDataVector) {
-        receiveData(_m2ns[receiveExchange.first], receiveExchange.second, initialReceive);
+        receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
       }
       checkDataHasBeenReceived();
     } else {
@@ -178,9 +177,10 @@ void MultiCouplingScheme::addDataToSend(
     const mesh::PtrData &data,
     mesh::PtrMesh        mesh,
     bool                 requiresInitialization,
+    bool                 exchangeSubsteps,
     const std::string &  to)
 {
-  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization);
+  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization, exchangeSubsteps);
   PRECICE_DEBUG("Configuring send data to {}", to);
   _sendDataVector[to].emplace(data->getID(), ptrCplData);
 }
@@ -189,9 +189,10 @@ void MultiCouplingScheme::addDataToReceive(
     const mesh::PtrData &data,
     mesh::PtrMesh        mesh,
     bool                 requiresInitialization,
+    bool                 exchangeSubsteps,
     const std::string &  from)
 {
-  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization);
+  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization, exchangeSubsteps);
   PRECICE_DEBUG("Configuring receive data from {}", from);
   _receiveDataVector[from].emplace(data->getID(), ptrCplData);
 }

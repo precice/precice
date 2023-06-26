@@ -78,6 +78,8 @@ target_sources(preciceCore
     src/com/SerializedMesh.hpp
     src/com/SerializedPartitioning.cpp
     src/com/SerializedPartitioning.hpp
+    src/com/SerializedStamples.cpp
+    src/com/SerializedStamples.hpp
     src/com/SharedPointer.hpp
     src/com/SocketCommunication.cpp
     src/com/SocketCommunication.hpp

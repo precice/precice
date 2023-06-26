@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_SUITE(SerialCoupling)
 /**
  * @brief Test to run a simple coupling with subcycling.
  *
- * Ensures that each time step provides its own data, but preCICE only exchanges data at the end of the window.
+ * Ensures that each time step provides its own data.
  */
 BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
 {
@@ -77,14 +77,14 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     double readTime;
     double preciceDt = precice.getMaxTimeStepSize();
     double currentDt = solverDt > preciceDt ? preciceDt : solverDt; // determine actual time step size; must fit into remaining time in window
-    if (context.isNamed("SolverOne")) {
-      readTime = timewindow * windowDt; // SolverOne lags one window behind SolverTwo for serial-explicit coupling.
-    } else {
-      readTime = (timewindow + 1) * windowDt; // SolverTwo gets result at end of window from SolverOne
-    }
 
     precice.readData(meshName, readDataName, {&vertexID, 1}, currentDt, {&readData, 1});
-    BOOST_TEST(readData == readFunction(readTime));
+
+    if (context.isNamed("SolverOne")) { // first participant receives constant value from second
+      BOOST_TEST(readData == readFunction(timewindow * windowDt));
+    } else { // second participant samples from waveform
+      BOOST_TEST(readData == readFunction(time + currentDt));
+    }
 
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.
     BOOST_TEST(currentDt == expectedDts[timestep % nSubsteps]);

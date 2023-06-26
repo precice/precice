@@ -55,6 +55,7 @@ public:
       const mesh::PtrData &data,
       mesh::PtrMesh        mesh,
       bool                 requiresInitialization,
+      bool                 exchangeSubsteps,
       const std::string &  to);
 
   /// Adds data to be received on data exchange.
@@ -62,6 +63,7 @@ public:
       const mesh::PtrData &data,
       mesh::PtrMesh        mesh,
       bool                 requiresInitialization,
+      bool                 exchangeSubsteps,
       const std::string &  from);
 
   void determineInitialDataExchange() override;

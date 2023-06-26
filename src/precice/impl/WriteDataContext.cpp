@@ -29,7 +29,7 @@ void WriteDataContext::resetData(bool atEndOfWindow, bool isTimeWindowComplete)
     std::for_each(_mappingContexts.begin(), _mappingContexts.end(), [](auto &context) { context.toData->toZero(); });
   }
 
-  if (isTimeWindowComplete) {
+  if (isTimeWindowComplete && hasWriteMapping()) { // manually overwrite value at beginning with value from end. Need this exception for WriteDataContext with write mapping, because CouplingScheme is not able to update _providedData, if write mapping sits between _providedData and _toData. CouplingScheme in this case only has access to _toData.
     PRECICE_ASSERT(atEndOfWindow, "isTimeWindowComplete without atEndOfWindow is forbidden!");
     _providedData->timeStepsStorage().move();
     _providedData->timeStepsStorage().trim();

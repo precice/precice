@@ -339,8 +339,8 @@ BOOST_AUTO_TEST_CASE(testSimpleExplicitCoupling)
       maxTime, maxTimeWindows, timeWindowSize, 12, nameParticipant0,
       nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Explicit);
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, true);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, true);
   cplScheme.determineInitialDataExchange();
   runSimpleExplicitCoupling(cplScheme, context.name, meshConfig);
 }
@@ -728,8 +728,8 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingWithSubcycling)
       maxTime, maxTimeWindows, timeWindowSize, 12, nameParticipant0,
       nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Explicit);
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, true);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, true);
   cplScheme.determineInitialDataExchange();
   runExplicitCouplingWithSubcycling(cplScheme, context.name, meshConfig);
 }
