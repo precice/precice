@@ -16,7 +16,7 @@
   <participant name="SolverOne">
     <provide-mesh name="MeshOne" />
     <write-data name="DataOne" mesh="MeshOne" />
-    <read-data name="DataTwo" mesh="MeshOne" waveform-order="0" />
+    <read-data name="DataTwo" mesh="MeshOne" />
   </participant>
 
   <participant name="SolverTwo">
