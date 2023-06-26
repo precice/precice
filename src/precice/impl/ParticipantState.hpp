@@ -153,6 +153,14 @@ public:
    */
   ReadDataContext &readDataContext(std::string_view mesh, std::string_view data);
 
+  /**
+   * @brief Returns the mesh associated with ReadDataContext with given data name in _readDataContexts of this Participant
+   *
+   * @param data name of the data
+   * @return mesh::PtrMesh, returns nullptr, if no read data contest for given data name was found
+   */
+  mesh::PtrMesh findMesh(std::string_view data) const;
+
   /** Provides access to \ref WriteDataContext
    * @pre there exists a \ref WriteDataContext for \ref data
    */
