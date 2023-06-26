@@ -63,8 +63,8 @@ public:
    * The first initial guess is expected to be an empty VectorXd.
    */
   enum class InitialGuessRequirement : bool {
-    Iterative = true,
-    Direct    = false
+    Required = true,
+    None     = false
   };
 
   /// Constructor, takes mapping constraint.

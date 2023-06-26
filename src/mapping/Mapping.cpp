@@ -48,7 +48,7 @@ Mapping::Constraint Mapping::getConstraint() const
 
 bool Mapping::isIterative() const
 {
-  return _mappingType == InitialGuessRequirement::Iterative;
+  return _mappingType == InitialGuessRequirement::Required;
 }
 
 bool Mapping::hasInitialGuess() const
