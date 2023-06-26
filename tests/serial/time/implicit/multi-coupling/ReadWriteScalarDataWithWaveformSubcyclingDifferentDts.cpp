@@ -13,53 +13,6 @@ BOOST_AUTO_TEST_SUITE(Time)
 BOOST_AUTO_TEST_SUITE(Implicit)
 BOOST_AUTO_TEST_SUITE(MultiCoupling)
 
-int solverOneNSubsteps   = 4;
-int solverTwoNSubsteps   = 3;
-int solverThreeNSubsteps = 2;
-
-double matchTimeFromOtherSolver(double thisTime, double windowStartTime, int otherSubsteps, double *otherTimeGrid)
-{
-  double returnedTime = windowStartTime;
-
-  if (math::equals(windowStartTime, thisTime)) { // we are at the beginning of the window
-    return returnedTime;
-  }
-
-  for (int i = 0; i < otherSubsteps; i++) { // step through all times on the grid of the other solver
-    double relativeDt = otherTimeGrid[i];
-    returnedTime      = windowStartTime + relativeDt;                  // point in time on grid of other solver
-    if (math::greaterEquals(windowStartTime + relativeDt, thisTime)) { // thisTime lies between windowStartTime+otherTimeGrid[i-1] and windowStartTime+otherTimeGrid[i]
-      return returnedTime;                                             // return windowStartTime+otherTimeGrid[i]
-    }
-  }
-  BOOST_TEST(false); // unreachable
-  return -1;
-}
-
-// helper to map a time to the corresponding time on the time grid of solver one. Helps to determine the expected value in the constant interpolation
-double solverOneTime(double time, double windowStartTime)
-{
-  BOOST_TEST(solverOneNSubsteps == 4);
-  double relativeDts[4] = {0.5, 1.0, 1.5, 2.0};
-  return matchTimeFromOtherSolver(time, windowStartTime, solverOneNSubsteps, relativeDts);
-}
-
-// helper to map a time to the corresponding time on the time grid of solver two. Helps to determine the expected value in the constant interpolation
-double solverTwoTime(double time, double windowStartTime)
-{
-  BOOST_TEST(solverTwoNSubsteps == 3);
-  double relativeDts[3] = {2.0 / 3, 4.0 / 3, 2.0};
-  return matchTimeFromOtherSolver(time, windowStartTime, solverTwoNSubsteps, relativeDts);
-}
-
-// helper to map a time to the corresponding time on the time grid of solver three. Helps to determine the expected value in the constant interpolation
-double solverThreeTime(double time, double windowStartTime)
-{
-  BOOST_TEST(solverThreeNSubsteps == 2);
-  double relativeDts[2] = {1.0, 2.0};
-  return matchTimeFromOtherSolver(time, windowStartTime, solverThreeNSubsteps, relativeDts);
-}
-
 /**
  * @brief Test to run a multi coupling with zeroth order waveform subcycling. Uses different time step sizes for each solver.
  */
@@ -96,14 +49,14 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingDifferentDts)
     readDataPairs.push_back(std::make_pair(dataTwoName, dataTwoFunction));
     auto dataThreeName = "DataThree";
     readDataPairs.push_back(std::make_pair(dataThreeName, dataThreeFunction));
-    nSubsteps = solverOneNSubsteps;
+    nSubsteps = 4;
   } else if (context.isNamed("SolverTwo")) {
     meshName         = "MeshTwo";
     writeDataName    = "DataTwo";
     writeFunction    = dataTwoFunction;
     auto dataOneName = "DataOne";
     readDataPairs.push_back(std::make_pair(dataOneName, dataOneFunction));
-    nSubsteps = solverTwoNSubsteps;
+    nSubsteps = 3;
   } else {
     BOOST_TEST(context.isNamed("SolverThree"));
     meshName         = "MeshThree";
@@ -111,7 +64,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingDifferentDts)
     writeFunction    = dataThreeFunction;
     auto dataOneName = "DataOne";
     readDataPairs.push_back(std::make_pair(dataOneName, dataOneFunction));
-    nSubsteps = solverThreeNSubsteps;
+    nSubsteps = 2;
   }
 
   double   writeData = 0;
@@ -155,17 +108,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingDifferentDts)
       if (iterations == 0) { // in the first iteration of each window, use data from previous window.
         BOOST_TEST(readData == readFunction(windowStartTime));
       } else { // in the following iterations, use data at the end of window.
-        double readTime;
-        if (readDataName == "DataOne") {
-          readTime = solverOneTime(time + currentDt, windowStartTime);
-        } else if (readDataName == "DataTwo") {
-          readTime = solverTwoTime(time + currentDt, windowStartTime);
-        } else if (readDataName == "DataThree") {
-          readTime = solverThreeTime(time + currentDt, windowStartTime);
-        } else {
-          BOOST_TEST(false);
-        }
-        BOOST_TEST(readData == readFunction(readTime));
+        BOOST_TEST(readData == readFunction(time + currentDt));
       }
 
       precice.readData(meshName, readDataName, {&vertexID, 1}, currentDt / 2, {&readData, 1});
@@ -173,17 +116,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingDifferentDts)
       if (iterations == 0) { // in the first iteration of each window, use data from previous window.
         BOOST_TEST(readData == readFunction(windowStartTime));
       } else { // in the following iterations, use data at the end of window.
-        double readTime;
-        if (readDataName == "DataOne") {
-          readTime = solverOneTime(time + currentDt / 2, windowStartTime);
-        } else if (readDataName == "DataTwo") {
-          readTime = solverTwoTime(time + currentDt / 2, windowStartTime);
-        } else if (readDataName == "DataThree") {
-          readTime = solverThreeTime(time + currentDt / 2, windowStartTime);
-        } else {
-          BOOST_TEST(false);
-        }
-        BOOST_TEST(readData == readFunction(readTime));
+        BOOST_TEST(readData == readFunction(time + currentDt / 2));
       }
 
       precice.readData(meshName, readDataName, {&vertexID, 1}, 0, {&readData, 1});
@@ -191,17 +124,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingDifferentDts)
       if (iterations == 0) { // in the first iteration of each window, use data from previous window.
         BOOST_TEST(readData == readFunction(windowStartTime));
       } else { // in the following iterations, use data at the end of window.
-        double readTime;
-        if (readDataName == "DataOne") {
-          readTime = solverOneTime(time, windowStartTime);
-        } else if (readDataName == "DataTwo") {
-          readTime = solverTwoTime(time, windowStartTime);
-        } else if (readDataName == "DataThree") {
-          readTime = solverThreeTime(time, windowStartTime);
-        } else {
-          BOOST_TEST(false);
-        }
-        BOOST_TEST(readData == readFunction(readTime));
+        BOOST_TEST(readData == readFunction(time));
       }
     }
 
