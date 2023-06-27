@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration dimensions="3" experimental="on">
-  <data:vector name="DataOne" />
-  <data:vector name="DataTwo" />
+  <data:scalar name="DataOne" />
+  <data:scalar name="DataTwo" />
 
   <mesh name="MeshOne">
     <use-data name="DataOne" />
@@ -22,19 +22,19 @@
   <participant name="SolverTwo">
     <receive-mesh name="MeshOne" from="SolverOne" />
     <provide-mesh name="MeshTwo" />
-    <mapping:axial-geometric-multiscale
+    <mapping:radial-geometric-multiscale
       direction="write"
-      type="spread"
-      radius="1.0"
-      axis="Z"
+      multiscale-type="spread"
+      multiscale-radius=""
+      multiscale-axis="Z"
       from="MeshTwo"
       to="MeshOne"
-      constraint="conservative" />
-    <mapping:axial-geometric-multiscale
+      constraint="consistent" />
+    <mapping:radial-geometric-multiscale
       direction="read"
-      type="spread"
-      radius="1.0"
-      axis="Z"
+      multiscale-type="spread"
+      multiscale-radius=""
+      multiscale-axis="Z"
       from="MeshOne"
       to="MeshTwo"
       constraint="consistent" />

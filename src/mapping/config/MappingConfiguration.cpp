@@ -175,8 +175,6 @@ MappingConfiguration::MappingConfiguration(
       XMLTag{*this, TYPE_RBF_PUM_DIRECT, occ, TAG}.setDocumentation("Radial-basis-function mapping using a partition of unity method, which supports a distributed parallelism.")};
   std::list<XMLTag> rbfAliasTag{
       XMLTag{*this, TYPE_RBF_ALIAS, occ, TAG}.setDocumentation("Alias tag, which auto-selects a radial-basis-function mapping depending on the simulation parameter,")};
-
-  // TODO: check correctness
   std::list<XMLTag> geoMultiscaleTags{
       XMLTag{*this, TYPE_AXIAL_GEOMETRIC_MULTISCALE, occ, TAG}.setDocumentation("Axial geometric multiscale mapping which enables coupling of 1D and 3D flow solvers."),
       XMLTag{*this, TYPE_RADIAL_GEOMETRIC_MULTISCALE, occ, TAG}.setDocumentation("Radial geometric multiscale mapping that couples a 1D and 3D solver along a principle axis.")};
@@ -222,7 +220,6 @@ MappingConfiguration::MappingConfiguration(
   auto projectToInput = XMLAttribute<bool>(ATTR_PROJECT_TO_INPUT, true)
                             .setDocumentation("If enabled, places the cluster centers at the closest vertex of the input mesh. Should be enabled in case of non-uniform point distributions such as for shell structures.");
 
-  // TODO: check if correct
   auto attrGeoMultiscaleType = XMLAttribute<std::string>(ATTR_GEOMULTISCALE_TYPE)
                                    .setDocumentation("Type of geometric multiscale mapping. Either 'spread' or 'collect'.");
   auto attrGeoMultiscaleAxis = XMLAttribute<std::string>(ATTR_GEOMULTISCALE_AXIS)
@@ -236,6 +233,7 @@ MappingConfiguration::MappingConfiguration(
   addAttributes(rbfIterativeTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead, attrSolverRtol, attrPreallocation});
   addAttributes(pumDirectTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPumPolynomial, attrXDead, attrYDead, attrZDead, verticesPerCluster, relativeOverlap, projectToInput});
   addAttributes(rbfAliasTag, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrXDead, attrYDead, attrZDead});
+  addAttributes(geoMultiscaleTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrGeoMultiscaleType, attrGeoMultiscaleAxis, attrGeoMultiscaleRadius});
 
   // Now we take care of the subtag basis function
   // First, we have the tags using a support radius
@@ -297,6 +295,7 @@ MappingConfiguration::MappingConfiguration(
   parent.addSubtags(rbfDirectTags);
   parent.addSubtags(pumDirectTags);
   parent.addSubtags(rbfAliasTag);
+  parent.addSubtags(geoMultiscaleTags);
 }
 
 void MappingConfiguration::xmlTagCallback(

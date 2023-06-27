@@ -167,12 +167,10 @@ target_sources(preciceCore
     src/m2n/SharedPointer.hpp
     src/m2n/config/M2NConfiguration.cpp
     src/m2n/config/M2NConfiguration.hpp
-    src/mapping/BarycentricBaseMapping.cpp
-    src/mapping/BarycentricBaseMapping.hpp
     src/mapping/AxialGeoMultiscaleMapping.cpp
     src/mapping/AxialGeoMultiscaleMapping.hpp
-    src/mapping/RadialGeoMultiscaleMapping.cpp
-    src/mapping/RadialGeoMultiscaleMapping.hpp
+    src/mapping/BarycentricBaseMapping.cpp
+    src/mapping/BarycentricBaseMapping.hpp
     src/mapping/LinearCellInterpolationMapping.cpp
     src/mapping/LinearCellInterpolationMapping.hpp
     src/mapping/Mapping.cpp
@@ -192,6 +190,8 @@ target_sources(preciceCore
     src/mapping/RadialBasisFctBaseMapping.hpp
     src/mapping/RadialBasisFctMapping.hpp
     src/mapping/RadialBasisFctSolver.hpp
+    src/mapping/RadialGeoMultiscaleMapping.cpp
+    src/mapping/RadialGeoMultiscaleMapping.hpp
     src/mapping/SharedPointer.hpp
     src/mapping/config/MappingConfiguration.cpp
     src/mapping/config/MappingConfiguration.hpp

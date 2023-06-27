@@ -1,45 +1,17 @@
 #ifndef PRECICE_NO_MPI
 
-#include <Eigen/Core>
-#include <algorithm>
-#include <deque>
-#include <fstream>
-#include <istream>
-#include <iterator>
-#include <memory>
-#include <ostream>
-#include <string>
-#include <vector>
-
-#include "action/RecorderAction.hpp"
-#include "logging/LogMacros.hpp"
-#include "math/constants.hpp"
-#include "math/geometry.hpp"
-#include "mesh/Data.hpp"
-#include "mesh/Mesh.hpp"
-#include "mesh/SharedPointer.hpp"
-#include "mesh/Utils.hpp"
-#include "mesh/Vertex.hpp"
-#include "precice/Participant.hpp"
-#include "precice/impl/MeshContext.hpp"
-#include "precice/impl/ParticipantImpl.hpp"
-#include "precice/impl/ParticipantState.hpp"
-#include "precice/impl/SharedPointer.hpp"
-#include "precice/types.hpp"
-#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
+
+#include <precice/Participant.hpp>
+#include <vector>
+#include "testing/TestContext.hpp"
 
 using namespace precice;
 using precice::testing::TestContext;
 
-//std::string pathToTests = testing::getPathToSources() + "/tests/serial/mapping-nearest-neighbor-gradient/";
-
 BOOST_AUTO_TEST_SUITE(Integration)
-BOOST_AUTO_TEST_SUITE(Serial)
-BOOST_AUTO_TEST_SUITE(RadialGeoMultiscaleMapping)
-
-// Bidirectional test : Read: Vector & NNG - Write: Vector & NN (Serial coupling)
-BOOST_AUTO_TEST_CASE(RadialGeoTestBidirectionalReadVector)
+BOOST_AUTO_TEST_SUITE(GeomultiscaleMapping)
+BOOST_AUTO_TEST_CASE(RadialGeoMultiscale)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
   using Eigen::Vector3d;
@@ -104,8 +76,7 @@ BOOST_AUTO_TEST_CASE(RadialGeoTestBidirectionalReadVector)
   }
 }
 
-BOOST_AUTO_TEST_SUITE_END()
-BOOST_AUTO_TEST_SUITE_END()
-BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END() // Integration
+BOOST_AUTO_TEST_SUITE_END() // GeomultiscaleMapping
 
 #endif // PRECICE_NO_MPI

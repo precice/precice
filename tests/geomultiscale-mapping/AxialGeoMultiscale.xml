@@ -22,13 +22,19 @@
   <participant name="SolverTwo">
     <receive-mesh name="MeshOne" from="SolverOne" />
     <provide-mesh name="MeshTwo" />
-    <mapping:radial-geometric-multiscale
+    <mapping:axial-geometric-multiscale
       direction="write"
+      multiscale-type="spread"
+      multiscale-radius="1.0"
+      multiscale-axis="Z"
       from="MeshTwo"
       to="MeshOne"
-      constraint="conservative" />
-    <mapping:radial-geometric-multiscale
+      constraint="consistent" />
+    <mapping:axial-geometric-multiscale
       direction="read"
+      multiscale-type="spread"
+      multiscale-radius="1.0"
+      multiscale-axis="Z"
       from="MeshOne"
       to="MeshTwo"
       constraint="consistent" />

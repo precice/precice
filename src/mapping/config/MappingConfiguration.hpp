@@ -115,7 +115,7 @@ private:
   const std::string TYPE_RBF_PUM_DIRECT              = "rbf-pum-direct";
   const std::string TYPE_RBF_ALIAS                   = "rbf";
   const std::string TYPE_AXIAL_GEOMETRIC_MULTISCALE  = "axial-geometric-multiscale";
-  const std::string TYPE_RADIAL_GEOMETRIC_MULTISCALE = "axial-geometric-multiscale";
+  const std::string TYPE_RADIAL_GEOMETRIC_MULTISCALE = "radial-geometric-multiscale";
 
   const std::string ATTR_DIRECTION  = "direction";
   const std::string DIRECTION_WRITE = "write";
