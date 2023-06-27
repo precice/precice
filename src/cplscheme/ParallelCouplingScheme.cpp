@@ -29,22 +29,28 @@ void ParallelCouplingScheme::exchangeInitialData()
   if (doesFirstStep()) {
     if (sendsInitializedData()) {
       sendData(getM2N(), getSendData());
+      sendGlobalData(getM2N(), getSendGlobalData());
     }
     if (receivesInitializedData()) {
       receiveData(getM2N(), getReceiveData());
+      receiveGlobalData(getM2N(), getReceiveGlobalData());
       checkDataHasBeenReceived();
     } else {
       initializeWithZeroInitialData(getReceiveData());
+      initializeWithZeroInitialData(getReceiveGlobalData());
     }
   } else { // second participant
     if (receivesInitializedData()) {
       receiveData(getM2N(), getReceiveData());
+      receiveGlobalData(getM2N(), getReceiveGlobalData());
       checkDataHasBeenReceived();
     } else {
       initializeWithZeroInitialData(getReceiveData());
+      initializeWithZeroInitialData(getReceiveGlobalData());
     }
     if (sendsInitializedData()) {
       sendData(getM2N(), getSendData());
+      sendGlobalData(getM2N(), getSendGlobalData());
     }
   }
 }
@@ -54,9 +60,11 @@ void ParallelCouplingScheme::exchangeFirstData()
   if (doesFirstStep()) { // first participant
     PRECICE_DEBUG("Sending data...");
     sendData(getM2N(), getSendData());
+    sendGlobalData(getM2N(), getSendGlobalData());
   } else { // second participant
     PRECICE_DEBUG("Receiving data...");
     receiveData(getM2N(), getReceiveData());
+    receiveGlobalData(getM2N(), getReceiveGlobalData());
     checkDataHasBeenReceived();
   }
 }
@@ -69,10 +77,12 @@ void ParallelCouplingScheme::exchangeSecondData()
     if (doesFirstStep()) { // first participant
       PRECICE_DEBUG("Receiving data...");
       receiveData(getM2N(), getReceiveData());
+      receiveGlobalData(getM2N(), getReceiveGlobalData());
       checkDataHasBeenReceived();
     } else { // second participant
       PRECICE_DEBUG("Sending data...");
       sendData(getM2N(), getSendData());
+      sendGlobalData(getM2N(), getSendGlobalData());
     }
   } else {
     PRECICE_ASSERT(isImplicitCouplingScheme());
@@ -98,10 +108,12 @@ void ParallelCouplingScheme::exchangeSecondData()
     if (doesFirstStep()) { // first participant
       PRECICE_DEBUG("Receiving data...");
       receiveData(getM2N(), getReceiveData());
+      receiveGlobalData(getM2N(), getReceiveGlobalData());
       checkDataHasBeenReceived();
     } else { // second participant
       PRECICE_DEBUG("Sending data...");
       sendData(getM2N(), getSendData());
+      sendGlobalData(getM2N(), getSendGlobalData());
     }
 
     storeIteration();
