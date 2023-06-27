@@ -532,7 +532,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
     AxialGeoMultiscaleMapping::MultiscaleType multiscaleType;
     if (geoMultiscaleType == "spread") {
       multiscaleType = AxialGeoMultiscaleMapping::MultiscaleType::SPREAD;
-    } else if (geoMultiscaleAxis == "collect") {
+    } else if (geoMultiscaleType == "collect") {
       multiscaleType = AxialGeoMultiscaleMapping::MultiscaleType::COLLECT;
     } else {
       PRECICE_UNREACHABLE("Unknown geometric multiscale type \"{}\".", geoMultiscaleType);
@@ -562,7 +562,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
     RadialGeoMultiscaleMapping::MultiscaleType multiscaleType;
     if (geoMultiscaleType == "spread") {
       multiscaleType = RadialGeoMultiscaleMapping::MultiscaleType::SPREAD;
-    } else if (geoMultiscaleAxis == "collect") {
+    } else if (geoMultiscaleType == "collect") {
       multiscaleType = RadialGeoMultiscaleMapping::MultiscaleType::COLLECT;
     } else {
       PRECICE_UNREACHABLE("Unknown geometric multiscale type \"{}\".", geoMultiscaleType);
