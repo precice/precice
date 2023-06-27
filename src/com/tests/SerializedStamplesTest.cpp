@@ -19,14 +19,15 @@ BOOST_AUTO_TEST_CASE(SerializeValues)
   std::vector<int> vertexOffsets{4, 8, 8, 10};
 
   const int meshDimensions = 3;
+  const int dataDimensions = 1;
   const int nValues        = 4;
   const int nTimeSteps     = 2;
 
   mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
   dummyMesh->setVertexOffsets(vertexOffsets);
 
-  mesh::PtrData fromData(new mesh::Data("from", -1, 1));
-  mesh::PtrData toData(new mesh::Data("to", -1, 1));
+  mesh::PtrData fromData(new mesh::Data("from", -1, dataDimensions));
+  mesh::PtrData toData(new mesh::Data("to", -1, dataDimensions));
 
   Eigen::VectorXd insert0(nValues);
   insert0 << 1.0, 2.0, 3.0, 4.0;
@@ -38,9 +39,9 @@ BOOST_AUTO_TEST_CASE(SerializeValues)
   cplscheme::PtrCouplingData fromDataPtr(new cplscheme::CouplingData(fromData, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
   cplscheme::PtrCouplingData toDataPtr(new cplscheme::CouplingData(toData, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
 
-  fromDataPtr->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{insert0});
-  fromDataPtr->setSampleAtTime(0.5 * time::Storage::WINDOW_END, time::Sample{insert05});
-  fromDataPtr->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{insert1});
+  fromDataPtr->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{dataDimensions, insert0});
+  fromDataPtr->setSampleAtTime(0.5 * time::Storage::WINDOW_END, time::Sample{dataDimensions, insert05});
+  fromDataPtr->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{dataDimensions, insert1});
 
   const auto serialized = serialize::SerializedStamples::serialize(fromDataPtr);
 
@@ -104,13 +105,14 @@ BOOST_AUTO_TEST_CASE(SerializeValuesAndGradients)
   std::vector<int> vertexOffsets{4, 8, 8, 10};
 
   const int meshDimensions = 3;
+  const int dataDimensions = 1;
   const int nValues        = 4;
   const int nTimeSteps     = 2;
 
   mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", meshDimensions, testing::nextMeshID()));
   dummyMesh->setVertexOffsets(vertexOffsets);
 
-  mesh::PtrData fromData(new mesh::Data("from", -1, 1));
+  mesh::PtrData fromData(new mesh::Data("from", -1, dataDimensions));
   fromData->requireDataGradient();
 
   Eigen::VectorXd insert0(nValues);
@@ -137,9 +139,9 @@ BOOST_AUTO_TEST_CASE(SerializeValuesAndGradients)
 
   cplscheme::PtrCouplingData fromDataPtr(new cplscheme::CouplingData(fromData, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
 
-  fromDataPtr->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{insert0, insertGradients0});
-  fromDataPtr->setSampleAtTime(0.5 * time::Storage::WINDOW_END, time::Sample{insert05, insertGradients05});
-  fromDataPtr->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{insert1, insertGradients1});
+  fromDataPtr->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{dataDimensions, insert0, insertGradients0});
+  fromDataPtr->setSampleAtTime(0.5 * time::Storage::WINDOW_END, time::Sample{dataDimensions, insert05, insertGradients05});
+  fromDataPtr->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{dataDimensions, insert1, insertGradients1});
 
   const auto serialized = serialize::SerializedStamples::serialize(fromDataPtr);
 

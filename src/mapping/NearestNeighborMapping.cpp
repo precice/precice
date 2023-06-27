@@ -26,18 +26,18 @@ NearestNeighborMapping::NearestNeighborMapping(
   }
 }
 
-void NearestNeighborMapping::mapConservative(DataID inputDataID, DataID outputDataID)
+void NearestNeighborMapping::mapConservative(const time::Sample &inData, Eigen::VectorXd &outData)
 {
-  PRECICE_TRACE(inputDataID, outputDataID);
+  PRECICE_TRACE();
   precice::profiling::Event e("map." + mappingNameShort + ".mapData.From" + input()->getName() + "To" + output()->getName(), profiling::Synchronize);
-  PRECICE_DEBUG("Map conservative");
+  PRECICE_DEBUG("Map conservative using {}", getName());
 
-  const Eigen::VectorXd &inputValues  = input()->data(inputDataID)->values();
-  Eigen::VectorXd &      outputValues = output()->data(outputDataID)->values();
+  const Eigen::VectorXd &inputValues  = inData.values;
+  Eigen::VectorXd &      outputValues = outData;
 
   // Data dimensions (for scalar = 1, for vectors > 1)
-  const int    valueDimensions = input()->data(inputDataID)->getDimensions();
   const size_t inSize          = input()->vertices().size();
+  const int    valueDimensions = inData.dataDims;
 
   for (size_t i = 0; i < inSize; i++) {
     int const outputIndex = _vertexIndices[i] * valueDimensions;
@@ -53,18 +53,18 @@ void NearestNeighborMapping::mapConservative(DataID inputDataID, DataID outputDa
   PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, outputValues));
 }
 
-void NearestNeighborMapping::mapConsistent(DataID inputDataID, DataID outputDataID)
+void NearestNeighborMapping::mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData)
 {
-  PRECICE_TRACE(inputDataID, outputDataID);
+  PRECICE_TRACE();
   precice::profiling::Event e("map." + mappingNameShort + ".mapData.From" + input()->getName() + "To" + output()->getName(), profiling::Synchronize);
-  PRECICE_DEBUG((hasConstraint(CONSISTENT) ? "Map consistent" : "Map scaled-consistent"));
+  PRECICE_DEBUG("Map {} using {}", (hasConstraint(CONSISTENT) ? "consistent" : "scaled-consistent"), getName());
 
-  const Eigen::VectorXd &inputValues  = input()->data(inputDataID)->values();
-  Eigen::VectorXd &      outputValues = output()->data(outputDataID)->values();
+  const Eigen::VectorXd &inputValues  = inData.values;
+  Eigen::VectorXd &      outputValues = outData;
 
   // Data dimensions (for scalar = 1, for vectors > 1)
-  const int    valueDimensions = input()->data(inputDataID)->getDimensions();
   const size_t outSize         = output()->vertices().size();
+  const int    valueDimensions = inData.dataDims;
 
   for (size_t i = 0; i < outSize; i++) {
     int inputIndex = _vertexIndices[i] * valueDimensions;

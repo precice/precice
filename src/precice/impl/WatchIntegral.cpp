@@ -121,7 +121,7 @@ Eigen::VectorXd WatchIntegral::calculateIntegral(const mesh::PtrData &data) cons
     }
     return sum;
   } else { // Connectivity information is given
-    return mesh::integrateSurface(_mesh, data);
+    return mesh::integrateSurface(_mesh, data->values());
   }
 }
 

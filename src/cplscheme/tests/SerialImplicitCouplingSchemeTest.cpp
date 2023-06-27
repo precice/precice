@@ -73,7 +73,7 @@ void runCoupling(
   std::vector<int>::const_iterator iterValidIterations = validIterations.begin();
 
   if (nameParticipant == nameParticipant0) {
-    mesh->data(0)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{mesh->data(0)->values()});
+    mesh->data(0)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, mesh->data(0)->values()});
     cplScheme.initialize(0.0, 1);
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
@@ -87,7 +87,7 @@ void runCoupling(
 
     while (cplScheme.isCouplingOngoing()) {
       dataValues0(index) += stepsizeData0;
-      mesh->data(0)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{mesh->data(0)->values()});
+      mesh->data(0)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, mesh->data(0)->values()});
       // The max time step size is required to be obeyed.
       double maxTimeStepSize = cplScheme.getNextTimeStepMaxSize();
       cplScheme.addComputedTime(maxTimeStepSize);
@@ -142,7 +142,7 @@ void runCoupling(
     BOOST_TEST(testing::equals(computedTime, 0.3));
     BOOST_TEST(testing::equals(computedTimesteps, 3));
   } else if (nameParticipant == nameParticipant1) {
-    mesh->data(1)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{mesh->data(1)->values()});
+    mesh->data(1)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, mesh->data(1)->values()});
     cplScheme.initialize(0.0, 1);
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
@@ -159,7 +159,7 @@ void runCoupling(
       currentData = dataValues1.segment(index * 3, 3);
       currentData += stepsizeData1;
       dataValues1.segment(index * 3, 3) = currentData;
-      mesh->data(1)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{mesh->data(1)->values()});
+      mesh->data(1)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, mesh->data(1)->values()});
       // The max time step size is required to be obeyed.
       double maxTimeStepSize = cplScheme.getNextTimeStepMaxSize();
       cplScheme.addComputedTime(maxTimeStepSize);
@@ -246,7 +246,7 @@ void runCouplingWithSubcycling(
 
   if (nameParticipant == nameParticipant0) {
     iterationCount++; // different handling due to subcycling
-    mesh->data(0)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{mesh->data(0)->values()});
+    mesh->data(0)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, mesh->data(0)->values()});
     cplScheme.initialize(0.0, 1);
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
@@ -268,7 +268,7 @@ void runCouplingWithSubcycling(
     // Main coupling loop
     while (cplScheme.isCouplingOngoing()) {
       cplScheme.addComputedTime(computedTimeStepSize);
-      mesh->data(0)->setSampleAtTime(cplScheme.getNormalizedWindowTime(), time::Sample{mesh->data(0)->values()});
+      mesh->data(0)->setSampleAtTime(cplScheme.getNormalizedWindowTime(), time::Sample{1, mesh->data(0)->values()});
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
@@ -335,7 +335,7 @@ void runCouplingWithSubcycling(
 
   else if (nameParticipant == nameParticipant1) {
     iterationCount++; // different handling due to subcycling
-    mesh->data(1)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{mesh->data(1)->values()});
+    mesh->data(1)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, mesh->data(1)->values()});
     cplScheme.initialize(0.0, 1);
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
@@ -358,7 +358,7 @@ void runCouplingWithSubcycling(
     // Main coupling loop
     while (cplScheme.isCouplingOngoing()) {
       cplScheme.addComputedTime(computedTimeStepSize);
-      mesh->data(1)->setSampleAtTime(cplScheme.getNormalizedWindowTime(), time::Sample{mesh->data(1)->values()});
+      mesh->data(1)->setSampleAtTime(cplScheme.getNormalizedWindowTime(), time::Sample{1, mesh->data(1)->values()});
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
@@ -504,15 +504,15 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   BOOST_CHECK(cplData); // no nullptr
   BOOST_TEST(cplData->getSize() == 1);
   BOOST_TEST(cplData->getPreviousIterationSize() == 1);
-  cplData->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{cplData->values()}); // data provided for initial value
+  cplData->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, cplData->values()}); // data provided for initial value
 
   // data is uninitialized
   BOOST_TEST(testing::equals(cplData->values()(0), 0.0));
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 0.0));
 
   // start first window
-  cplData->values()(0) = 1.0;                                                           // data provided at end of first window
-  cplData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{cplData->values()}); // data provided at end of first window
+  cplData->values()(0) = 1.0;                                                              // data provided at end of first window
+  cplData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, cplData->values()}); // data provided at end of first window
   Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
   BOOST_TEST(testing::equals(cplData->values()(0), 1.0));
 
@@ -522,8 +522,8 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   Fixture::storeIteration(scheme);
   BOOST_TEST(testing::equals(cplData->values()(0), 2.0)); // = 2*1 - 0
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
-  cplData->values()(0) = 4.0;                                                           // data provided at end of second window
-  cplData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{cplData->values()}); // data provided at end of second window
+  cplData->values()(0) = 4.0;                                                              // data provided at end of second window
+  cplData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, cplData->values()}); // data provided at end of second window
   Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
 
   // go to third window
@@ -532,8 +532,8 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   Fixture::storeIteration(scheme);
   BOOST_TEST(testing::equals(cplData->values()(0), 7.0)); // = 2*4 - 1
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 7.0));
-  cplData->values()(0) = 10.0;                                                          // data provided at end of third window
-  cplData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{cplData->values()}); // data provided at end of third window
+  cplData->values()(0) = 10.0;                                                             // data provided at end of third window
+  cplData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, cplData->values()}); // data provided at end of third window
   Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
 
   // go to fourth window
@@ -636,7 +636,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
 
   Eigen::VectorXd v(1); // buffer for data
   v << 0;
-  mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{v});
+  mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, v});
   cplScheme.initialize(0.0, 1);
   // write data is uninitialized
   BOOST_TEST(mesh->data(sendDataIndex)->values()(0) == 0);
@@ -678,7 +678,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
     } else if (context.isNamed(second)) {
       v << 2.0;
     }
-    mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v});
+    mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, v});
     cplScheme.addComputedTime(timeStepSize);
 
     cplScheme.firstSynchronization({});
@@ -725,7 +725,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
     }
 
     v << 3.0;
-    mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v});
+    mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, v});
     cplScheme.addComputedTime(timeStepSize);
 
     cplScheme.firstSynchronization({});
@@ -849,12 +849,12 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
   if (context.isNamed(first)) {
     BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::InitializeData));
     v << 0.0;
-    mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{v});
+    mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, v});
   } else {
     BOOST_TEST(context.isNamed(second));
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::InitializeData));
     v << 4.0;
-    mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{v});
+    mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, v});
     cplScheme.markActionFulfilled(CouplingScheme::Action::InitializeData);
     BOOST_TEST(mesh->data(sendDataIndex)->values().size() == 1);
     BOOST_TEST(testing::equals(mesh->data(sendDataIndex)->values()(0), 4.0));
@@ -918,7 +918,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
     } else if (context.isNamed(second)) {
       v << 2.0;
     }
-    mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v});
+    mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, v});
     cplScheme.addComputedTime(timeStepSize);
 
     cplScheme.firstSynchronization({});
@@ -965,7 +965,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
     }
 
     v << 3.0;
-    mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v});
+    mesh->data(sendDataIndex)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, v});
     cplScheme.addComputedTime(timeStepSize);
 
     cplScheme.firstSynchronization({});
@@ -1315,7 +1315,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(testing::equals(sendCouplingData->previousIteration()(0), 0.0));
 
     BOOST_TEST(Fixture::isImplicitCouplingScheme(cplScheme));
-    sendCouplingData->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{sendCouplingData->values()});
+    sendCouplingData->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, sendCouplingData->values()});
     cplScheme.initialize(0.0, 1);
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     // ensure that initial data was read
@@ -1330,7 +1330,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(testing::equals(sendCouplingData->previousIteration()(0), 0.0));
     BOOST_TEST(sendCouplingData->getPreviousIterationSize() == 1);
     // set write data
-    sendCouplingData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{Eigen::VectorXd::Constant(sendCouplingData->getSize(), 4.0)});
+    sendCouplingData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, Eigen::VectorXd::Constant(sendCouplingData->getSize(), 4.0)});
     while (cplScheme.isCouplingOngoing()) {
       if (cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint)) {
         cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
@@ -1350,7 +1350,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::InitializeData));
     Eigen::VectorXd v(3);
     v << 1.0, 2.0, 3.0;
-    sendCouplingData->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{v});
+    sendCouplingData->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, v});
     cplScheme.markActionFulfilled(CouplingScheme::Action::InitializeData);
     BOOST_TEST(receiveCouplingData->getSize() == 1);
     BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 0.0));

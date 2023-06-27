@@ -250,7 +250,7 @@ public:
   }
 
   // Get the data of owned vertices for given data ID
-  Eigen::VectorXd getOwnedVertexData(DataID dataID);
+  Eigen::VectorXd getOwnedVertexData(const Eigen::VectorXd &values);
 
   // Tag all the vertices
   void tagAll();

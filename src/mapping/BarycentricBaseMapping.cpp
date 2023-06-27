@@ -7,6 +7,7 @@
 
 #include "logging/LogMacros.hpp"
 #include "mapping/BarycentricBaseMapping.hpp"
+#include "mapping/Mapping.hpp"
 #include "mapping/Polation.hpp"
 #include "math/differences.hpp"
 #include "mesh/Data.hpp"
@@ -22,7 +23,7 @@
 namespace precice::mapping {
 
 BarycentricBaseMapping::BarycentricBaseMapping(Constraint constraint, int dimensions)
-    : Mapping(constraint, dimensions)
+    : Mapping(constraint, dimensions, false, Mapping::InitialGuessRequirement::None)
 {
 }
 
@@ -33,17 +34,17 @@ void BarycentricBaseMapping::clear()
   _hasComputedMapping = false;
 }
 
-void BarycentricBaseMapping::mapConservative(DataID inputDataID, DataID outputDataID)
+void BarycentricBaseMapping::mapConservative(const time::Sample &inData, Eigen::VectorXd &outData)
 {
-  PRECICE_TRACE(inputDataID, outputDataID);
+  PRECICE_TRACE();
   precice::profiling::Event e("map.bbm.mapData.From" + input()->getName() + "To" + output()->getName(), profiling::Synchronize);
   PRECICE_ASSERT(getConstraint() == CONSERVATIVE);
-  PRECICE_DEBUG("Map conservative");
+  PRECICE_DEBUG("Map conservative using {}", getName());
   PRECICE_ASSERT(_interpolations.size() == input()->vertices().size(),
                  _interpolations.size(), input()->vertices().size());
-  const int              dimensions = input()->data(inputDataID)->getDimensions();
-  const Eigen::VectorXd &inValues   = input()->data(inputDataID)->values();
-  Eigen::VectorXd &      outValues  = output()->data(outputDataID)->values();
+  const int              dimensions = inData.dataDims;
+  const Eigen::VectorXd &inValues   = inData.values;
+  Eigen::VectorXd &      outValues  = outData;
 
   // For each input vertex, distribute the conserved data among the relevant output vertices
   // Do it for all dimensions (i.e. components if data is a vector)
@@ -61,17 +62,17 @@ void BarycentricBaseMapping::mapConservative(DataID inputDataID, DataID outputDa
   }
 }
 
-void BarycentricBaseMapping::mapConsistent(DataID inputDataID, DataID outputDataID)
+void BarycentricBaseMapping::mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData)
 {
-  PRECICE_TRACE(inputDataID, outputDataID);
+  PRECICE_TRACE();
   precice::profiling::Event e("map.bbm.mapData.From" + input()->getName() + "To" + output()->getName(), profiling::Synchronize);
-  PRECICE_DEBUG("Map consistent");
+  PRECICE_DEBUG("Map {} using {}", (hasConstraint(CONSISTENT) ? "consistent" : "scaled-consistent"), getName());
   PRECICE_ASSERT(_interpolations.size() == output()->vertices().size(),
                  _interpolations.size(), output()->vertices().size());
 
-  const int              dimensions = input()->data(inputDataID)->getDimensions();
-  const Eigen::VectorXd &inValues   = input()->data(inputDataID)->values();
-  Eigen::VectorXd &      outValues  = output()->data(outputDataID)->values();
+  const int              dimensions = inData.dataDims;
+  const Eigen::VectorXd &inValues   = inData.values;
+  Eigen::VectorXd &      outValues  = outData;
 
   // For each output vertex, compute the linear combination of input vertices
   // Do it for all dimensions (i.e. components if data is a vector)

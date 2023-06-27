@@ -1,4 +1,5 @@
 #include <Eigen/Core>
+#include <Eigen/src/Core/Matrix.h>
 #include <algorithm>
 #include <array>
 #include <boost/container/flat_map.hpp>
@@ -19,6 +20,7 @@
 #include "mesh/Vertex.hpp"
 #include "precice/types.hpp"
 #include "query/Index.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice::mesh {
 
@@ -256,17 +258,20 @@ void Mesh::clearPartitioning()
   _globalNumberOfVertices = 0;
 }
 
-Eigen::VectorXd Mesh::getOwnedVertexData(DataID dataID)
+Eigen::VectorXd Mesh::getOwnedVertexData(const Eigen::VectorXd &values)
 {
-
   std::vector<double> ownedDataVector;
-  int                 valueDim = data(dataID)->getDimensions();
-  int                 index    = 0;
+  PRECICE_ASSERT(static_cast<std::size_t>(values.size()) >= vertices().size());
+  if (vertices().empty()) {
+    return {};
+  }
+  int valueDim = values.size() / vertices().size();
+  int index    = 0;
 
   for (const auto &vertex : vertices()) {
     if (vertex.isOwner()) {
       for (int dim = 0; dim < valueDim; ++dim) {
-        ownedDataVector.push_back(data(dataID)->values()[index * valueDim + dim]);
+        ownedDataVector.push_back(values[index * valueDim + dim]);
       }
     }
     ++index;
