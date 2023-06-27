@@ -1,12 +1,12 @@
 extern "C" {
-#include "precice/ParticipantC.h"
+#include "precice/preciceC.h"
 }
 #include <memory>
 #include <string>
 #include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
-#include "precice/Participant.hpp"
 #include "precice/impl/versions.hpp"
+#include "precice/precice.hpp"
 #include "utils/assertion.hpp"
 
 #ifdef __GNUC__
@@ -20,7 +20,7 @@ extern "C" {
 
 static std::unique_ptr<precice::Participant> impl = nullptr;
 
-static precice::logging::Logger _log("ParticipantC");
+static precice::logging::Logger _log("precicec");
 
 static std::string errormsg       = "preCICE has not been created properly. Be sure to call \"precicec_createParticipant\" or \"precicec_createParticipant_withCommunicator\" before any other call to preCICE.";
 static std::string errormsgCreate = "preCICE has been created already! Be sure to call either \"precicec_createParticipant\" or \"precicec_createParticipant_withCommunicator\" exactly once.";
@@ -293,7 +293,7 @@ int precicec_requiresGradientDataFor(const char *meshName,
   return 0;
 }
 
-void precicec_writeBlockVectorGradientData(
+void precicec_writeGradientData(
     const char *  meshName,
     const char *  dataName,
     int           size,

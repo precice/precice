@@ -23,8 +23,8 @@
   <participant name="SolverOne">
     <provide-mesh name="MeshOne" />
     <write-data name="DataOne" mesh="MeshOne" />
-    <read-data name="DataTwo" mesh="MeshOne" />
-    <read-data name="DataThree" mesh="MeshOne" />
+    <read-data name="DataTwo" mesh="MeshOne" waveform-order="0" />
+    <read-data name="DataThree" mesh="MeshOne" waveform-order="0" />
   </participant>
 
   <participant name="SolverTwo">
@@ -41,7 +41,7 @@
       to="MeshTwo"
       constraint="consistent" />
     <write-data name="DataTwo" mesh="MeshTwo" />
-    <read-data name="DataOne" mesh="MeshTwo" />
+    <read-data name="DataOne" mesh="MeshTwo" waveform-order="0" />
   </participant>
 
   <participant name="SolverThree">
@@ -58,11 +58,11 @@
       to="MeshThree"
       constraint="consistent" />
     <write-data name="DataThree" mesh="MeshThree" />
-    <read-data name="DataOne" mesh="MeshThree" />
+    <read-data name="DataOne" mesh="MeshThree" waveform-order="0" />
   </participant>
 
-  <m2n:sockets from="SolverOne" to="SolverTwo" />
-  <m2n:sockets from="SolverOne" to="SolverThree" />
+  <m2n:sockets acceptor="SolverOne" connector="SolverTwo" />
+  <m2n:sockets acceptor="SolverOne" connector="SolverThree" />
 
   <coupling-scheme:multi>
     <participant name="SolverOne" control="yes" />

@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/Participant.hpp>
+#include <precice/precice.hpp>
 #include <vector>
 
 using namespace precice;
@@ -39,28 +39,28 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
 
   std::string meshName, writeDataName;
   if (context.isNamed("SolverOne")) {
-    meshName       = "MeshOne";
-    writeDataName  = "DataOne";
-    writeFunction  = dataOneFunction;
-    auto dataTwoId = "DataTwo";
-    readDataPairs.push_back(std::make_pair(dataTwoId, dataTwoFunction));
-    auto dataThreeId = "DataThree";
-    readDataPairs.push_back(std::make_pair(dataThreeId, dataThreeFunction));
+    meshName         = "MeshOne";
+    writeDataName    = "DataOne";
+    writeFunction    = dataOneFunction;
+    auto dataTwoName = "DataTwo";
+    readDataPairs.push_back(std::make_pair(dataTwoName, dataTwoFunction));
+    auto dataThreeName = "DataThree";
+    readDataPairs.push_back(std::make_pair(dataThreeName, dataThreeFunction));
     nSubsteps = 1;
   } else if (context.isNamed("SolverTwo")) {
-    meshName       = "MeshTwo";
-    writeDataName  = "DataTwo";
-    writeFunction  = dataTwoFunction;
-    auto dataOneId = "DataOne";
-    readDataPairs.push_back(std::make_pair(dataOneId, dataOneFunction));
+    meshName         = "MeshTwo";
+    writeDataName    = "DataTwo";
+    writeFunction    = dataTwoFunction;
+    auto dataOneName = "DataOne";
+    readDataPairs.push_back(std::make_pair(dataOneName, dataOneFunction));
     nSubsteps = 2;
   } else {
     BOOST_TEST(context.isNamed("SolverThree"));
-    meshName       = "MeshThree";
-    writeDataName  = "DataThree";
-    writeFunction  = dataThreeFunction;
-    auto dataOneId = "DataOne";
-    readDataPairs.push_back(std::make_pair(dataOneId, dataOneFunction));
+    meshName         = "MeshThree";
+    writeDataName    = "DataThree";
+    writeFunction    = dataThreeFunction;
+    auto dataOneName = "DataOne";
+    readDataPairs.push_back(std::make_pair(dataOneName, dataOneFunction));
     nSubsteps = 3;
   }
 

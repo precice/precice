@@ -78,6 +78,8 @@ target_sources(preciceCore
     src/com/SerializedMesh.hpp
     src/com/SerializedPartitioning.cpp
     src/com/SerializedPartitioning.hpp
+    src/com/SerializedStamples.cpp
+    src/com/SerializedStamples.hpp
     src/com/SharedPointer.hpp
     src/com/SocketCommunication.cpp
     src/com/SocketCommunication.hpp
@@ -261,6 +263,7 @@ target_sources(preciceCore
     src/precice/impl/WatchPoint.hpp
     src/precice/impl/WriteDataContext.cpp
     src/precice/impl/WriteDataContext.hpp
+    src/precice/precice.hpp
     src/precice/span.hpp
     src/precice/types.hpp
     src/profiling/Event.cpp
@@ -336,6 +339,7 @@ set_property(TARGET precice PROPERTY PUBLIC_HEADER
     ${PROJECT_BINARY_DIR}/src/precice/Version.h
     src/precice/Participant.hpp
     src/precice/Tooling.hpp
+    src/precice/precice.hpp
     src/precice/span.hpp
     src/precice/types.hpp
     )

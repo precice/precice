@@ -4,7 +4,7 @@
 #include "testing/Testing.hpp"
 
 #include <boost/test/tools/detail/per_element_manip.hpp>
-#include <precice/Participant.hpp>
+#include <precice/precice.hpp>
 #include <vector>
 
 namespace tests {

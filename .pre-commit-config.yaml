@@ -24,3 +24,12 @@ repos:
   rev: v2.2.2
   hooks:
     - id: codespell
+- repo: local
+  hooks:
+  - id: update-cmake-sources
+    name: update CMake sources
+    entry: tools/building/updateSourceFiles.py
+    pass_filenames: false
+    require_serial: true
+    language: python
+    types_or: [c, c++]

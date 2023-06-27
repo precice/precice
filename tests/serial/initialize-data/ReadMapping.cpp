@@ -1,6 +1,6 @@
 #ifndef PRECICE_NO_MPI
 
-#include <precice/Participant.hpp>
+#include <precice/precice.hpp>
 #include <vector>
 #include "helpers.hpp"
 #include "testing/Testing.hpp"

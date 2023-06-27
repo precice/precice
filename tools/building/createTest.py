@@ -139,7 +139,7 @@ def generateTestSource(name, suite, filepath):
         raise BaseException("The test source at \"{}\" already exists.".format(filepath))
 
     includes = [
-        "<precice/Participant.hpp>", "<vector>", '"testing/Testing.hpp"'
+        "<precice/precice.hpp>", "<vector>", '"testing/Testing.hpp"'
     ]
     suites = ["Integration"] + suite
     space = [""]

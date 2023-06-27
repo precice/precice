@@ -12,11 +12,13 @@ CouplingData::CouplingData(
     mesh::PtrData data,
     mesh::PtrMesh mesh,
     bool          requiresInitialization,
+    bool          exchangeSubsteps,
     int           extrapolationOrder)
     : requiresInitialization(requiresInitialization),
       _mesh(std::move(mesh)),
       _data(std::move(data)),
-      _previousIteration(_data->getDimensions(), Eigen::VectorXd::Zero(getSize()))
+      _previousIteration(_data->getDimensions(), Eigen::VectorXd::Zero(getSize())),
+      _exchangeSubsteps(exchangeSubsteps)
 {
   PRECICE_ASSERT(_data != nullptr);
   timeStepsStorage().setExtrapolationOrder(extrapolationOrder);
@@ -87,7 +89,7 @@ int CouplingData::meshDimensions() const
 
 void CouplingData::storeIteration()
 {
-  const auto stamples = this->stamples();
+  const auto &stamples = this->stamples();
   PRECICE_ASSERT(stamples.size() > 0);
   this->sample()     = stamples.back().sample;
   _previousIteration = this->sample();
@@ -132,7 +134,7 @@ void CouplingData::moveToNextWindow()
 {
   if (this->timeStepsStorage().stamples().size() > 0) {
     this->timeStepsStorage().move();
-    auto atEnd = this->timeStepsStorage().stamples().back();
+    const auto &atEnd = this->timeStepsStorage().stamples().back();
     PRECICE_ASSERT(math::equals(atEnd.timestamp, time::Storage::WINDOW_END));
     _data->sample() = atEnd.sample;
   }
@@ -148,6 +150,11 @@ const time::Sample &CouplingData::sample() const
 {
   PRECICE_ASSERT(_data != nullptr);
   return _data->sample();
+}
+
+bool CouplingData::exchangeSubsteps() const
+{
+  return _exchangeSubsteps;
 }
 
 } // namespace precice::cplscheme

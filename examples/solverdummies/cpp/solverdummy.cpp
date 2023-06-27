@@ -1,7 +1,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
-#include "precice/Participant.hpp"
+#include "precice/precice.hpp"
 
 int main(int argc, char **argv)
 {

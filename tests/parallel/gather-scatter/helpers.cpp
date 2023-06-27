@@ -2,7 +2,7 @@
 
 #include "helpers.hpp"
 
-#include "precice/Participant.hpp"
+#include "precice/precice.hpp"
 #include "testing/Testing.hpp"
 
 // In order to test enforced gather scatter communication with an empty primary rank (see below)
@@ -25,7 +25,7 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
     // Set mesh vertices
     interface.setMeshVertices(meshName, coordinates, ids);
 
-    // Initialize the solverinterface
+    // Initialize the Participant
     interface.initialize();
     double dt = interface.getMaxTimeStepSize();
 
@@ -38,7 +38,7 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
     // Allocate memory for readData
     std::vector<double> readData(size);
     while (interface.isCouplingOngoing()) {
-      // Write data, advance the solverinterface and readData
+      // Write data, advance the Participant and readData
       interface.writeData(meshName, writeDataName, ids, writeData);
 
       interface.advance(dt);
@@ -68,7 +68,7 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
     // Set vertices
     interface.setMeshVertices(meshName, coordinates, ids);
 
-    // Initialize the solverinterface
+    // Initialize the Participant
     interface.initialize();
     double dt = interface.getMaxTimeStepSize();
 
@@ -78,7 +78,7 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
 
     // Start the time loop
     while (interface.isCouplingOngoing()) {
-      // Write data, advance solverinterface and read data
+      // Write data, advance Participant and read data
       interface.writeData(meshName, writeDataName, ids, writeData);
       interface.advance(dt);
       double dt = interface.getMaxTimeStepSize();

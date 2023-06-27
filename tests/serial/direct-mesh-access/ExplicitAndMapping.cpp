@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/Participant.hpp>
+#include <precice/precice.hpp>
 #include <vector>
 
 BOOST_AUTO_TEST_SUITE(Integration)
@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(ExplicitAndMapping)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
-  // Set up Solverinterface
+  // Set up Participant
   precice::Participant interface(context.name, context.config(), 0, 1);
   constexpr int        dim = 2;
 

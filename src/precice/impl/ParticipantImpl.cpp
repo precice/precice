@@ -93,8 +93,8 @@ ParticipantImpl::ParticipantImpl(
 {
 
   PRECICE_CHECK(!communicator || communicator.value() != nullptr,
-                "Passing \"nullptr\" as \"communicator\" to SolverInterface constructor is not allowed. "
-                "Please use the SolverInterface constructor without the \"communicator\" argument, if you don't want to pass an MPI communicator.");
+                "Passing \"nullptr\" as \"communicator\" to Participant constructor is not allowed. "
+                "Please use the Participant constructor without the \"communicator\" argument, if you don't want to pass an MPI communicator.");
   PRECICE_CHECK(!_accessorName.empty(),
                 "This participant's name is an empty string. "
                 "When constructing a preCICE interface you need to pass the name of the "

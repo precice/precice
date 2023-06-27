@@ -80,9 +80,9 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
     insert << 0.2, 0.2, 0.2, 0.2;
     utils::append(forces->values(), insert);
 
-    PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
+    PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
     dpcd->setSampleAtTime(time::Storage::WINDOW_START, dpcd->sample());
-    PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
+    PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
     fpcd->setSampleAtTime(time::Storage::WINDOW_START, fpcd->sample());
 
     data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
@@ -112,9 +112,9 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
     insert << 0.2, 0.2, 0.2, 0.2;
     utils::append(forces->values(), insert);
 
-    PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
+    PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
     dpcd->setSampleAtTime(time::Storage::WINDOW_START, dpcd->sample());
-    PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
+    PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
     fpcd->setSampleAtTime(time::Storage::WINDOW_START, fpcd->sample());
 
     data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
@@ -137,11 +137,11 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
      */
 
     //init displacements
-    PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
+    PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
     dpcd->setSampleAtTime(time::Storage::WINDOW_START, dpcd->sample());
 
     //init forces
-    PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
+    PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
     fpcd->setSampleAtTime(time::Storage::WINDOW_START, fpcd->sample());
 
     data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
@@ -166,9 +166,9 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
     insert << 0.2, 0.2;
     utils::append(forces->values(), insert);
 
-    PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
+    PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
     dpcd->setSampleAtTime(time::Storage::WINDOW_START, dpcd->sample());
-    PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
+    PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
     fpcd->setSampleAtTime(time::Storage::WINDOW_START, fpcd->sample());
 
     data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
@@ -318,9 +318,9 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
     insert << 0.2, 0.2, 0.2, 0.2;
     utils::append(forces->values(), insert);
 
-    PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
+    PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
     dpcd->setSampleAtTime(time::Storage::WINDOW_START, dpcd->sample());
-    PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
+    PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
     fpcd->setSampleAtTime(time::Storage::WINDOW_START, fpcd->sample());
 
     dpcd->storeIteration();
@@ -370,9 +370,9 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
     insert << 0.2, 0.2, 0.2, 0.2;
     utils::append(forces->values(), insert);
 
-    PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
+    PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
     dpcd->setSampleAtTime(time::Storage::WINDOW_START, dpcd->sample());
-    PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
+    PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
     fpcd->setSampleAtTime(time::Storage::WINDOW_START, fpcd->sample());
 
     dpcd->storeIteration();
@@ -414,11 +414,11 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
      */
 
     //init displacements
-    PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
+    PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
     dpcd->setSampleAtTime(time::Storage::WINDOW_START, dpcd->sample());
 
     //init forces
-    PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
+    PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
     fpcd->setSampleAtTime(time::Storage::WINDOW_START, fpcd->sample());
 
     dpcd->storeIteration();
@@ -445,9 +445,9 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
     insert << 0.2, 0.2;
     utils::append(forces->values(), insert);
 
-    PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
+    PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
     dpcd->setSampleAtTime(time::Storage::WINDOW_START, dpcd->sample());
-    PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
+    PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
     fpcd->setSampleAtTime(time::Storage::WINDOW_START, fpcd->sample());
 
     dpcd->storeIteration();
@@ -598,11 +598,11 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
     forces->values().resize(0);
 
     //init displacements
-    dpcd.reset(new CouplingData(displacements, dummyMesh, false, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
+    dpcd.reset(new CouplingData(displacements, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
     dpcd->setSampleAtTime(time::Storage::WINDOW_END, dpcd->sample());
 
     //init forces
-    fpcd.reset(new CouplingData(forces, dummyMesh, false, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
+    fpcd.reset(new CouplingData(forces, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
     fpcd->setSampleAtTime(time::Storage::WINDOW_END, fpcd->sample());
 
     dpcd->storeIteration();
@@ -623,9 +623,9 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
     displacements->values() << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
     forces->values() << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
 
-    dpcd.reset(new CouplingData(displacements, dummyMesh, false, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
+    dpcd.reset(new CouplingData(displacements, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
     dpcd->setSampleAtTime(time::Storage::WINDOW_END, dpcd->sample());
-    fpcd.reset(new CouplingData(forces, dummyMesh, false, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
+    fpcd.reset(new CouplingData(forces, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
     fpcd->setSampleAtTime(time::Storage::WINDOW_END, fpcd->sample());
 
     dpcd->storeIteration();
@@ -648,9 +648,9 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
     displacements->values() << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
     forces->values() << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
 
-    dpcd.reset(new CouplingData(displacements, dummyMesh, false, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
+    dpcd.reset(new CouplingData(displacements, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
     dpcd->setSampleAtTime(time::Storage::WINDOW_END, dpcd->sample());
-    fpcd.reset(new CouplingData(forces, dummyMesh, false, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
+    fpcd.reset(new CouplingData(forces, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
     fpcd->setSampleAtTime(time::Storage::WINDOW_END, fpcd->sample());
 
     dpcd->storeIteration();
@@ -670,9 +670,9 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
     displacements->values().resize(0);
     forces->values().resize(0);
 
-    dpcd.reset(new CouplingData(displacements, dummyMesh, false, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
+    dpcd.reset(new CouplingData(displacements, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
     dpcd->setSampleAtTime(time::Storage::WINDOW_END, dpcd->sample());
-    fpcd.reset(new CouplingData(forces, dummyMesh, false, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
+    fpcd.reset(new CouplingData(forces, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
     fpcd->setSampleAtTime(time::Storage::WINDOW_END, fpcd->sample());
 
     dpcd->storeIteration();
@@ -1070,7 +1070,7 @@ BOOST_AUTO_TEST_CASE(testColumnsLogging)
 
   utils::append(displacements->values(), insert);
 
-  PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
+  PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
   data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
   dpcd->setSampleAtTime(time::Storage::WINDOW_END, dpcd->sample());
   dpcd->storeIteration();

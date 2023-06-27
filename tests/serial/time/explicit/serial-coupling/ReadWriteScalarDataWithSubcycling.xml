@@ -36,13 +36,13 @@
     <read-data name="DataOne" mesh="MeshTwo" />
   </participant>
 
-  <m2n:sockets from="SolverOne" to="SolverTwo" />
+  <m2n:sockets acceptor="SolverOne" connector="SolverTwo" />
 
   <coupling-scheme:serial-explicit>
     <participants first="SolverOne" second="SolverTwo" />
     <max-time-windows value="5" />
     <time-window-size value="2.0" />
-    <exchange data="DataOne" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
+    <exchange data="DataOne" mesh="MeshOne" from="SolverOne" to="SolverTwo" initialize="on" />
     <exchange data="DataTwo" mesh="MeshOne" from="SolverTwo" to="SolverOne" initialize="on" />
   </coupling-scheme:serial-explicit>
 </precice-configuration>

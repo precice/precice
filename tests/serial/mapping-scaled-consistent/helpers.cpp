@@ -2,8 +2,8 @@
 
 #include "helpers.hpp"
 #include "math/geometry.hpp"
-#include "precice/Participant.hpp"
 #include "precice/impl/ParticipantImpl.hpp"
+#include "precice/precice.hpp"
 #include "testing/Testing.hpp"
 
 void testQuadMappingScaledConsistent(const std::string configFile, const TestContext &context)
@@ -48,6 +48,15 @@ void testQuadMappingScaledConsistent(const std::string configFile, const TestCon
     BOOST_REQUIRE(mesh.edges().empty());
     BOOST_REQUIRE(mesh.triangles().size() == 2);
 
+    auto   dataAID  = "DataOne";
+    int    ids[]    = {idA, idB, idC, idD};
+    double values[] = {valOneA, valOneB, valOneC, valOneD};
+
+    // Hotfix for https://github.com/precice/precice/issues/1686
+    if (participant.requiresInitialData()) {
+      participant.writeData(meshOneID, dataAID, ids, values);
+    }
+
     // Initialize, thus sending the mesh.
     participant.initialize();
     double maxDt = participant.getMaxTimeStepSize();
@@ -56,9 +65,6 @@ void testQuadMappingScaledConsistent(const std::string configFile, const TestCon
     BOOST_TEST(participant.isCouplingOngoing(), "Sending participant should have to advance once!");
 
     // Write the data to be send.
-    auto   dataAID  = "DataOne";
-    int    ids[]    = {idA, idB, idC, idD};
-    double values[] = {valOneA, valOneB, valOneC, valOneD};
     participant.writeData(meshOneID, dataAID, ids, values);
 
     // Advance, thus send the data to the receiving partner.
@@ -143,15 +149,21 @@ void testQuadMappingScaledConsistentVolumetric(const std::string configFile, con
     BOOST_REQUIRE(mesh.vertices().size() == 5);
     BOOST_REQUIRE(mesh.triangles().size() == 3);
 
+    auto   dataAID  = "DataOne";
+    int    ids[]    = {idA, idB, idC, idD, idExtra};
+    double values[] = {valOneA, valOneB, valOneC, valOneD, valOneExtra};
+
+    // Hotfix for https://github.com/precice/precice/issues/1686
+    if (participant.requiresInitialData()) {
+      participant.writeData(meshOneID, dataAID, ids, values);
+    }
+
     // Initialize, thus sending the mesh.
     participant.initialize();
     double maxDt = participant.getMaxTimeStepSize();
     BOOST_TEST(participant.isCouplingOngoing(), "Sending participant should have to advance once!");
 
     // Write the data to be send.
-    auto   dataAID  = "DataOne";
-    int    ids[]    = {idA, idB, idC, idD, idExtra};
-    double values[] = {valOneA, valOneB, valOneC, valOneD, valOneExtra};
     participant.writeData(meshOneID, dataAID, ids, values);
 
     // Advance, thus send the data to the receiving partner.
@@ -244,15 +256,21 @@ void testTetraScaledConsistentVolumetric(const std::string configFile, const Tes
     BOOST_REQUIRE(mesh.vertices().size() == 5);
     BOOST_REQUIRE(mesh.tetrahedra().size() == 2);
 
+    auto   dataAID  = "DataOne";
+    int    ids[]    = {idA, idB, idC, idD, idExtra};
+    double values[] = {valOneA, valOneB, valOneC, valOneD, valOneExtra};
+
+    // Hotfix for https://github.com/precice/precice/issues/1686
+    if (participant.requiresInitialData()) {
+      participant.writeData(meshOneID, dataAID, ids, values);
+    }
+
     // Initialize, thus sending the mesh.
     participant.initialize();
     double maxDt = participant.getMaxTimeStepSize();
     BOOST_TEST(participant.isCouplingOngoing(), "Sending participant should have to advance once!");
 
     // Write the data to be send.
-    auto   dataAID  = "DataOne";
-    int    ids[]    = {idA, idB, idC, idD, idExtra};
-    double values[] = {valOneA, valOneB, valOneC, valOneD, valOneExtra};
     participant.writeData(meshOneID, dataAID, ids, values);
 
     // Advance, thus send the data to the receiving partner.

@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/Participant.hpp>
+#include <precice/precice.hpp>
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)

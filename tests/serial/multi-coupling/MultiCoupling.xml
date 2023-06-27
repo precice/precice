@@ -109,9 +109,9 @@
     <read-data name="Forces3" mesh="SOLIDZ_Mesh3" />
   </participant>
 
-  <m2n:sockets from="NASTIN" to="SOLIDZ1" />
-  <m2n:sockets from="NASTIN" to="SOLIDZ2" />
-  <m2n:sockets from="NASTIN" to="SOLIDZ3" />
+  <m2n:sockets acceptor="NASTIN" connector="SOLIDZ1" />
+  <m2n:sockets acceptor="NASTIN" connector="SOLIDZ2" />
+  <m2n:sockets acceptor="NASTIN" connector="SOLIDZ3" />
 
   <coupling-scheme:multi>
     <participant name="SOLIDZ1" />

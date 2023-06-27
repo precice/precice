@@ -31,8 +31,8 @@ public:
     * user names.
     */
   m2n::PtrM2N getM2N(
-      const std::string &from,
-      const std::string &to);
+      const std::string &acceptor,
+      const std::string &connector);
 
   /// Returns all configured communication objects.
   std::vector<M2NTuple> &m2ns()
@@ -40,7 +40,7 @@ public:
     return _m2ns;
   }
 
-  bool isM2NConfigured(const std::string &from, const std::string &to);
+  bool isM2NConfigured(const std::string &acceptor, const std::string &connector);
 
   virtual void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag);
 
@@ -57,8 +57,8 @@ private:
   std::vector<M2NTuple> _m2ns;
 
   void checkDuplicates(
-      const std::string &from,
-      const std::string &to);
+      const std::string &acceptor,
+      const std::string &connector);
 };
 
 } // namespace m2n
