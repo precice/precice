@@ -20,8 +20,8 @@
     <provide-mesh name="MeshOne" />
     <write-data name="DataOne" mesh="MeshOne" />
     <write-data name="GlobalDataOne" />
-    <read-data name="DataTwo" mesh="MeshOne" waveform-order="1" />
-    <read-data name="GlobalDataTwo" waveform-order="1" />
+    <read-data name="DataTwo" mesh="MeshOne" />
+    <read-data name="GlobalDataTwo" />
   </participant>
 
   <participant name="SolverTwo">
@@ -39,8 +39,8 @@
       constraint="consistent" />
     <write-data name="DataTwo" mesh="MeshTwo" />
     <write-data name="GlobalDataTwo" />
-    <read-data name="DataOne" mesh="MeshTwo" waveform-order="1" />
-    <read-data name="GlobalDataOne" waveform-order="1" />
+    <read-data name="DataOne" mesh="MeshTwo" />
+    <read-data name="GlobalDataOne" />
   </participant>
 
   <m2n:sockets from="SolverOne" to="SolverTwo" />
