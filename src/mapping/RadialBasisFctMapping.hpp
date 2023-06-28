@@ -62,10 +62,10 @@ private:
   std::unique_ptr<SOLVER_T> _rbfSolver;
 
   /// @copydoc RadialBasisFctBaseMapping::mapConservative
-  void mapConservative(DataID inputDataID, DataID outputDataID) final override;
+  void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) final override;
 
   /// @copydoc RadialBasisFctBaseMapping::mapConsistent
-  void mapConsistent(DataID inputDataID, DataID outputDataID) final override;
+  void mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) final override;
 
   /// Treatment of the polynomial
   Polynomial _polynomial;
@@ -84,7 +84,7 @@ RadialBasisFctMapping<SOLVER_T, Args...>::RadialBasisFctMapping(
     std::array<bool, 3>     deadAxis,
     Polynomial              polynomial,
     Args... args)
-    : RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>(constraint, dimensions, function, deadAxis),
+    : RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>(constraint, dimensions, function, deadAxis, Mapping::InitialGuessRequirement::None),
       _polynomial(polynomial),
       optionalArgs(std::make_tuple(std::forward<Args>(args)...))
 {
@@ -182,16 +182,18 @@ std::string RadialBasisFctMapping<SOLVER_T, Args...>::getName() const
 }
 
 template <typename SOLVER_T, typename... Args>
-void RadialBasisFctMapping<SOLVER_T, Args...>::mapConservative(DataID inputDataID, DataID outputDataID)
+void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(const time::Sample &inData, Eigen::VectorXd &outData)
 {
+  PRECICE_TRACE();
   precice::profiling::Event e("map.rbf.mapData.From" + this->input()->getName() + "To" + this->output()->getName(), profiling::Synchronize);
-  PRECICE_TRACE(inputDataID, outputDataID);
   using precice::com::AsVectorTag;
+
+  PRECICE_DEBUG("Map conservative using {}", getName());
 
   // Gather input data
   if (utils::IntraComm::isSecondary()) {
 
-    const auto &localInData = this->input()->data(inputDataID)->values();
+    const auto &localInData = inData.values;
 
     int localOutputSize = 0;
     for (const auto &vertex : this->output()->vertices()) {
@@ -200,7 +202,7 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConservative(DataID inputDataI
       }
     }
 
-    localOutputSize *= this->output()->data(outputDataID)->getDimensions();
+    localOutputSize *= inData.dataDims;
 
     utils::IntraComm::getCommunication()->sendRange(localInData, 0);
     utils::IntraComm::getCommunication()->send(localOutputSize, 0);
@@ -210,7 +212,7 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConservative(DataID inputDataI
     std::vector<double> globalInValues;
     std::vector<double> outputValueSizes;
     {
-      const auto &localInData = this->input()->data(inputDataID)->values();
+      const auto &localInData = inData.values;
       globalInValues.insert(globalInValues.begin(), localInData.data(), localInData.data() + localInData.size());
 
       int localOutputSize = 0;
@@ -220,7 +222,7 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConservative(DataID inputDataI
         }
       }
 
-      localOutputSize *= this->output()->data(outputDataID)->getDimensions();
+      localOutputSize *= inData.dataDims;
 
       outputValueSizes.push_back(localOutputSize);
     }
@@ -236,7 +238,7 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConservative(DataID inputDataI
       }
     }
 
-    int valueDim = this->output()->data(outputDataID)->getDimensions();
+    const int valueDim = inData.dataDims;
 
     // Construct Eigen vectors
     Eigen::Map<Eigen::VectorXd> inputValues(globalInValues.data(), globalInValues.size());
@@ -269,7 +271,7 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConservative(DataID inputDataI
       for (int i = 0; i < static_cast<int>(this->output()->vertices().size()); ++i) {
         if (this->output()->vertices()[i].isOwner()) {
           for (int dim = 0; dim < valueDim; ++dim) {
-            this->output()->data(outputDataID)->values()[i * valueDim + dim] = outputValues(outputCounter);
+            outData[i * valueDim + dim] = outputValues(outputCounter);
             ++outputCounter;
           }
         }
@@ -283,19 +285,19 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConservative(DataID inputDataI
         beginPoint += outputValueSizes.at(rank);
       }
     } else { // Serial
-      this->output()->data(outputDataID)->values() = outputValues;
+      outData = outputValues;
     }
   }
   if (utils::IntraComm::isSecondary()) {
     std::vector<double> receivedValues = utils::IntraComm::getCommunication()->receiveRange(0, AsVectorTag<double>{});
 
-    int valueDim = this->output()->data(outputDataID)->getDimensions();
+    const int valueDim = inData.dataDims;
 
     int outputCounter = 0;
     for (int i = 0; i < static_cast<int>(this->output()->vertices().size()); ++i) {
       if (this->output()->vertices()[i].isOwner()) {
         for (int dim = 0; dim < valueDim; ++dim) {
-          this->output()->data(outputDataID)->values()[i * valueDim + dim] = receivedValues.at(outputCounter);
+          outData[i * valueDim + dim] = receivedValues.at(outputCounter);
           ++outputCounter;
         }
       }
@@ -304,17 +306,19 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConservative(DataID inputDataI
 }
 
 template <typename SOLVER_T, typename... Args>
-void RadialBasisFctMapping<SOLVER_T, Args...>::mapConsistent(DataID inputDataID, DataID outputDataID)
+void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData)
 {
+  PRECICE_TRACE();
   precice::profiling::Event e("map.rbf.mapData.From" + this->input()->getName() + "To" + this->output()->getName(), profiling::Synchronize);
-  PRECICE_TRACE(inputDataID, outputDataID);
   using precice::com::AsVectorTag;
+
+  PRECICE_DEBUG("Map {} using {}", (this->hasConstraint(Mapping::CONSISTENT) ? "consistent" : "scaled-consistent"), getName());
 
   // Gather input data
   if (utils::IntraComm::isSecondary()) {
     // Input data is filtered
-    auto localInDataFiltered = this->input()->getOwnedVertexData(inputDataID);
-    int  localOutputSize     = this->output()->data(outputDataID)->values().size();
+    auto localInDataFiltered = this->input()->getOwnedVertexData(inData.values);
+    int  localOutputSize     = outData.size();
 
     // Send data and output size
     utils::IntraComm::getCommunication()->sendRange(localInDataFiltered, 0);
@@ -322,7 +326,7 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConsistent(DataID inputDataID,
 
   } else { // Primary rank or Serial case
 
-    int valueDim = this->output()->data(outputDataID)->getDimensions();
+    const int valueDim = inData.dataDims;
 
     std::vector<double> globalInValues(static_cast<std::size_t>(this->input()->getGlobalNumberOfVertices()) * valueDim, 0.0);
     std::vector<int>    outValuesSize;
@@ -330,9 +334,9 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConsistent(DataID inputDataID,
     if (utils::IntraComm::isPrimary()) { // Parallel case
 
       // Filter input data
-      const auto &localInData = this->input()->getOwnedVertexData(inputDataID);
+      const auto &localInData = this->input()->getOwnedVertexData(inData.values);
       std::copy(localInData.data(), localInData.data() + localInData.size(), globalInValues.begin());
-      outValuesSize.push_back(this->output()->data(outputDataID)->values().size());
+      outValuesSize.push_back(outData.size());
 
       int inputSizeCounter = localInData.size();
       int secondaryOutDataSize{0};
@@ -347,9 +351,9 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConsistent(DataID inputDataID,
       }
 
     } else { // Serial case
-      const auto &localInData = this->input()->data(inputDataID)->values();
+      const auto &localInData = inData.values;
       std::copy(localInData.data(), localInData.data() + localInData.size(), globalInValues.begin());
-      outValuesSize.push_back(this->output()->data(outputDataID)->values().size());
+      outValuesSize.push_back(outData.size());
     }
 
     Eigen::VectorXd in;
@@ -381,7 +385,7 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConsistent(DataID inputDataID,
       }
     }
 
-    this->output()->data(outputDataID)->values() = Eigen::Map<Eigen::VectorXd>(outputValues.data(), outValuesSize.at(0));
+    outData = Eigen::Map<Eigen::VectorXd>(outputValues.data(), outValuesSize.at(0));
 
     // Data scattering to secondary ranks
     int beginPoint = outValuesSize.at(0);
@@ -395,8 +399,8 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConsistent(DataID inputDataID,
     }
   }
   if (utils::IntraComm::isSecondary()) {
-    std::vector<double> receivedValues           = utils::IntraComm::getCommunication()->receiveRange(0, AsVectorTag<double>{});
-    this->output()->data(outputDataID)->values() = Eigen::Map<Eigen::VectorXd>(receivedValues.data(), receivedValues.size());
+    std::vector<double> receivedValues = utils::IntraComm::getCommunication()->receiveRange(0, AsVectorTag<double>{});
+    outData                            = Eigen::Map<Eigen::VectorXd>(receivedValues.data(), receivedValues.size());
   }
 }
 } // namespace mapping

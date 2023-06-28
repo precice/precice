@@ -241,6 +241,10 @@ protected:
   /// Acceleration method to speedup iteration convergence.
   acceleration::PtrAcceleration _acceleration;
 
+  void sendNumberOfTimeSteps(const m2n::PtrM2N &m2n, const int numberOfTimeSteps);
+
+  void sendTimes(const m2n::PtrM2N &m2n, const Eigen::VectorXd &times);
+
   /**
    * @brief Sends data sendDataIDs given in mapCouplingData with communication.
    *
@@ -249,14 +253,17 @@ protected:
    */
   void sendData(const m2n::PtrM2N &m2n, const DataMap &sendData);
 
+  int receiveNumberOfTimeSteps(const m2n::PtrM2N &m2n);
+
+  Eigen::VectorXd receiveTimes(const m2n::PtrM2N &m2n, int nTimeSteps);
+
   /**
    * @brief Receives data receiveDataIDs given in mapCouplingData with communication.
    *
    * @param m2n M2N used for communication
    * @param receiveData DataMap associated with received data
-   * @param initialCommunication if true, will store received data for WINDOW_START and WINDOW_END, else store received data only for WINDOW_END
    */
-  void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData, bool initialCommunication = false);
+  void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData);
 
   /**
    * @brief Initializes storage in receiveData as zero
@@ -273,9 +280,10 @@ protected:
    * @param data data the CouplingData is associated with
    * @param mesh mesh the CouplingData is associated with
    * @param requiresInitialization true, if CouplingData requires initialization
+   * @param exchangeSubsteps true, if CouplingData exchanges all substeps in send/recv
    * @return PtrCouplingData pointer to CouplingData owned by the CouplingScheme
    */
-  PtrCouplingData addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization);
+  PtrCouplingData addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization, bool exchangeSubsteps);
 
   /**
    * @brief Function to determine whether coupling scheme is an explicit coupling scheme

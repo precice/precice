@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration dimensions="3" experimental="true">
+<precice-configuration dimensions="3">
   <data:scalar name="DataOne" />
   <data:scalar name="DataTwo" />
 
@@ -38,13 +38,23 @@
 
   <m2n:sockets acceptor="SolverOne" connector="SolverTwo" />
 
-  <coupling-scheme:serial-implicit>
+  <coupling-scheme:parallel-explicit>
     <participants first="SolverOne" second="SolverTwo" />
     <max-time-windows value="5" />
-    <time-window-size value="2" />
-    <max-iterations value="3" />
-    <min-iteration-convergence-measure min-iterations="3" data="DataOne" mesh="MeshOne" />
-    <exchange data="DataOne" mesh="MeshOne" from="SolverOne" to="SolverTwo" initialize="on" />
-    <exchange data="DataTwo" mesh="MeshOne" from="SolverTwo" to="SolverOne" initialize="on" />
-  </coupling-scheme:serial-implicit>
+    <time-window-size value="2.0" />
+    <exchange
+      data="DataOne"
+      mesh="MeshOne"
+      from="SolverOne"
+      to="SolverTwo"
+      initialize="on"
+      substeps="false" />
+    <exchange
+      data="DataTwo"
+      mesh="MeshOne"
+      from="SolverTwo"
+      to="SolverOne"
+      initialize="on"
+      substeps="false" />
+  </coupling-scheme:parallel-explicit>
 </precice-configuration>

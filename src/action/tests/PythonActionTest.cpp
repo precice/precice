@@ -34,15 +34,15 @@ BOOST_AUTO_TEST_CASE(PerformActionWithGlobalIterationsCounter)
 
   Eigen::VectorXd v(3);
   v << 0.1, 0.2, 0.3;
-  mesh->data(sourceID)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v});
-  mesh->data(targetID)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{Eigen::VectorXd::Zero(mesh->vertices().size())});
+  mesh->data(sourceID)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, v});
+  mesh->data(targetID)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, Eigen::VectorXd::Zero(mesh->vertices().size())});
 
   action.performAction(0.0);
 
   Eigen::VectorXd result(3);
   result << 1.1, 1.2, 1.3;
   BOOST_TEST(testing::equals(mesh->data(targetID)->values(), result));
-  mesh->data(sourceID)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{Eigen::VectorXd::Zero(mesh->vertices().size())});
+  mesh->data(sourceID)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, Eigen::VectorXd::Zero(mesh->vertices().size())});
 
   action.performAction(0.0);
 

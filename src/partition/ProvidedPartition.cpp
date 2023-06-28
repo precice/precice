@@ -202,7 +202,7 @@ void ProvidedPartition::prepare()
     PRECICE_ASSERT(_mesh->getVertexOffsets().empty());
     _mesh->setVertexOffsets(std::move(vertexOffsets));
 
-  } else { // Coupling mode
+  } else {
 
     // The only rank of the participant contains all vertices
     PRECICE_ASSERT(_mesh->getVertexDistribution().empty());

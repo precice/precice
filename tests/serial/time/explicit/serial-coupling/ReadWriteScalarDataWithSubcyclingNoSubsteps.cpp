@@ -1,8 +1,10 @@
+#include <string>
 #ifndef PRECICE_NO_MPI
 
-#include <precice/precice.hpp>
-#include <vector>
 #include "testing/Testing.hpp"
+
+#include <precice/Participant.hpp>
+#include <vector>
 
 using namespace precice;
 
@@ -13,17 +15,17 @@ BOOST_AUTO_TEST_SUITE(Explicit)
 BOOST_AUTO_TEST_SUITE(SerialCoupling)
 
 /**
- * @brief Test to run a simple explicit coupling with first order waveform subcycling.
+ * @brief Test to run a simple coupling with subcycling.
+ *
+ * Ensures that each time step provides its own data, but preCICE only exchanges data at the end of the window.
+ *
+ * Deactivates exchange of substeps.
  */
-BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveform)
+BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcyclingNoSubsteps)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
   Participant precice(context.name, context.config(), 0, 1);
-
-  std::string meshName;
-  std::string writeDataName;
-  std::string readDataName;
 
   typedef double (*DataFunction)(double);
 
@@ -36,6 +38,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveform)
   DataFunction writeFunction;
   DataFunction readFunction;
 
+  std::string meshName, writeDataName, readDataName;
   if (context.isNamed("SolverOne")) {
     meshName      = "MeshOne";
     writeDataName = "DataOne";
@@ -67,47 +70,39 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveform)
   }
 
   precice.initialize();
-  double maxDt = precice.getMaxTimeStepSize();
-  BOOST_TEST(maxDt == 2.0); // use window size != 1.0 to be able to detect more possible bugs
-  double windowDt  = maxDt;
-  double dt        = windowDt / (nSubsteps - 0.5); // Solver always tries to do a timestep of fixed size.
-  double currentDt = dt > maxDt ? maxDt : dt;      // determine actual time step size; must fit into remaining time in window
-  double timeCheckpoint{0};
+  BOOST_TEST(precice.getMaxTimeStepSize() == 2.0); // use window size != 1.0 to be able to detect more possible bugs
+  double windowDt      = precice.getMaxTimeStepSize();
+  double solverDt      = windowDt / (nSubsteps - 0.5);                 // Solver always tries to do a timestep of fixed size.
+  double expectedDts[] = {4.0 / 7.0, 4.0 / 7.0, 4.0 / 7.0, 2.0 / 7.0}; // If solver uses timestep size of 4/7, fourth step will be restricted to 2/7 via preCICE steering to fit into the window.
 
   while (precice.isCouplingOngoing()) {
+    double readTime;
+    double preciceDt = precice.getMaxTimeStepSize();
+    double currentDt = solverDt > preciceDt ? preciceDt : solverDt; // determine actual time step size; must fit into remaining time in window
+    if (context.isNamed("SolverOne")) {
+      readTime = timewindow * windowDt; // SolverOne lags one window behind SolverTwo for serial-explicit coupling.
+    } else {
+      readTime = (timewindow + 1) * windowDt; // SolverTwo gets result at end of window from SolverOne
+    }
 
     precice.readData(meshName, readDataName, {&vertexID, 1}, currentDt, {&readData, 1});
-
-    if (context.isNamed("SolverOne")) { // first participant receives constant value from second
-      BOOST_TEST(readData == readFunction(timeCheckpoint));
-    } else { // second participant samples from waveform
-      BOOST_TEST(readData == readFunction(time + currentDt));
-    }
-
-    precice.readData(meshName, readDataName, {&vertexID, 1}, currentDt / 2, {&readData, 1});
-
-    if (context.isNamed("SolverOne")) { // first participant receives constant value from second
-      BOOST_TEST(readData == readFunction(timeCheckpoint));
-    } else { // second participant samples from waveform
-      BOOST_TEST(readData == readFunction(time + currentDt / 2));
-    }
+    BOOST_TEST(readData == readFunction(readTime));
 
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.
+    BOOST_TEST(currentDt == expectedDts[timestep % nSubsteps]);
     time += currentDt;
-    // Need to keep track of the timewindows to check correct order on the first participant!
-    timestep++;
-    if (timestep % nSubsteps == 0) {
-      timeCheckpoint += windowDt;
-    }
 
     writeData = writeFunction(time);
     precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&writeData, 1});
-    precice.advance(currentDt);
-    maxDt = precice.getMaxTimeStepSize();
 
-    currentDt = dt > maxDt ? maxDt : dt;
+    precice.advance(currentDt);
+    timestep++;
+    if (precice.isTimeWindowComplete()) {
+      timewindow++;
+    }
   }
 
+  precice.finalize();
   BOOST_TEST(timestep == nWindows * nSubsteps);
 }
 

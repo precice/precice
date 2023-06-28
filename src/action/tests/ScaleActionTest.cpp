@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(DivideByArea2D)
   mesh->allocateDataValues();
   Eigen::VectorXd v(3);
   v << 2.0, 3.0, 4.0;
-  data->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v});
+  data->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, v});
 
   const auto &values = data->values();
   BOOST_TEST(values(0) == 2.0);
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(DivideByArea3D)
   mesh->allocateDataValues();
   Eigen::VectorXd v(5);
   v << 2.0, 3.0, 6.0, 5.0, 6.0;
-  data->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{v});
+  data->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, v});
 
   const auto &values = data->values();
   BOOST_TEST(values(0) == 2.0);

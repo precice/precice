@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <optional>
 #include <string>
 
@@ -34,6 +35,11 @@ public:
    * @return std::string Name of _providedData.
    */
   std::string getDataName() const;
+
+  /**
+   * @brief Resets initial guesses of transient mappings to zero.
+   */
+  void resetInitialGuesses();
 
   /**
    * @brief Get the dimensions of _providedData.
@@ -152,6 +158,9 @@ private:
   mesh::PtrMesh _mesh;
 
   static logging::Logger _log;
+
+  using FromToDataIDs = std::pair<int, int>;
+  std::map<FromToDataIDs, Eigen::VectorXd> _initialGuesses;
 };
 
 } // namespace impl

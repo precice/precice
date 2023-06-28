@@ -38,8 +38,8 @@ void addGlobalIndex(mesh::PtrMesh &mesh, int offset = 0)
 
 void testSerialScaledConsistent(mesh::PtrMesh inMesh, mesh::PtrMesh outMesh, mesh::PtrData inData, mesh::PtrData outData)
 {
-  auto inputIntegral  = mesh::integrateSurface(inMesh, inData);
-  auto outputIntegral = mesh::integrateSurface(outMesh, outData);
+  auto inputIntegral  = mesh::integrateSurface(inMesh, inData->values());
+  auto outputIntegral = mesh::integrateSurface(outMesh, outData->values());
 
   for (int dim = 0; dim < inputIntegral.size(); ++dim) {
     BOOST_TEST(inputIntegral(dim) == outputIntegral(dim));

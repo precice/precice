@@ -12,14 +12,15 @@ CouplingData::CouplingData(
     mesh::PtrData data,
     mesh::PtrMesh mesh,
     bool          requiresInitialization,
+    bool          exchangeSubsteps,
     int           extrapolationOrder)
     : requiresInitialization(requiresInitialization),
+      _mesh(std::move(mesh)),
       _data(std::move(data)),
-      _mesh(std::move(mesh))
+      _previousIteration(_data->getDimensions(), Eigen::VectorXd::Zero(getSize())),
+      _exchangeSubsteps(exchangeSubsteps)
 {
   PRECICE_ASSERT(_data != nullptr);
-  /// Lazy allocation of _previousIteration.gradient: only used in case the corresponding data has gradients
-  _previousIteration = time::Sample{Eigen::VectorXd::Zero(getSize())};
   timeStepsStorage().setExtrapolationOrder(extrapolationOrder);
 
   PRECICE_ASSERT(_mesh != nullptr);
@@ -149,6 +150,11 @@ const time::Sample &CouplingData::sample() const
 {
   PRECICE_ASSERT(_data != nullptr);
   return _data->sample();
+}
+
+bool CouplingData::exchangeSubsteps() const
+{
+  return _exchangeSubsteps;
 }
 
 } // namespace precice::cplscheme
