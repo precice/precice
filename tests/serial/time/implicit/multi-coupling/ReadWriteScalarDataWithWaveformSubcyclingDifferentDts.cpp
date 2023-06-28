@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/precice.hpp>
+#include <precice/Participant.hpp>
 #include <vector>
 
 using namespace precice;
@@ -12,14 +12,18 @@ BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(Time)
 BOOST_AUTO_TEST_SUITE(Implicit)
 BOOST_AUTO_TEST_SUITE(MultiCoupling)
+
 /**
- * @brief Test to run a multi coupling with subcycling.
+ * @brief Test to run a multi coupling with zeroth order waveform subcycling. Uses different time step sizes for each solver.
  */
-BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
+BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingDifferentDts)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank), "SolverThree"_on(1_rank));
 
   Participant precice(context.name, context.config(), 0, 1);
+
+  std::string meshName;
+  std::string writeDataName;
 
   typedef double (*DataFunction)(double);
   std::vector<std::pair<std::string, DataFunction>> readDataPairs;
@@ -35,9 +39,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
   };
   DataFunction writeFunction;
 
-  int nSubsteps = 4;
+  int nSubsteps; // let three solvers use different time step sizes
 
-  std::string meshName, writeDataName;
   if (context.isNamed("SolverOne")) {
     meshName         = "MeshOne";
     writeDataName    = "DataOne";
@@ -46,12 +49,14 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     readDataPairs.push_back(std::make_pair(dataTwoName, dataTwoFunction));
     auto dataThreeName = "DataThree";
     readDataPairs.push_back(std::make_pair(dataThreeName, dataThreeFunction));
+    nSubsteps = 4;
   } else if (context.isNamed("SolverTwo")) {
     meshName         = "MeshTwo";
     writeDataName    = "DataTwo";
     writeFunction    = dataTwoFunction;
     auto dataOneName = "DataOne";
     readDataPairs.push_back(std::make_pair(dataOneName, dataOneFunction));
+    nSubsteps = 3;
   } else {
     BOOST_TEST(context.isNamed("SolverThree"));
     meshName         = "MeshThree";
@@ -59,6 +64,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     writeFunction    = dataThreeFunction;
     auto dataOneName = "DataOne";
     readDataPairs.push_back(std::make_pair(dataOneName, dataOneFunction));
+    nSubsteps = 2;
   }
 
   double   writeData = 0;
@@ -81,33 +87,44 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
   }
 
   precice.initialize();
-  double windowDt = precice.getMaxTimeStepSize();
-  double solverDt = windowDt / nSubsteps; // time step size desired by solver. E.g. 2 steps with size 1/2
+  double maxDt     = precice.getMaxTimeStepSize();
+  double windowDt  = maxDt;
+  double dt        = windowDt / nSubsteps; // Timestep length desired by solver. E.g. 2 steps with size 1/2
+  double currentDt = dt;                   // Timestep length used by solver
 
   while (precice.isCouplingOngoing()) {
     if (precice.requiresWritingCheckpoint()) {
       windowStartTime = time;
       windowStartStep = timestep;
+      iterations      = 0;
     }
 
-    double preciceDt = precice.getMaxTimeStepSize();
-    double currentDt = solverDt > preciceDt ? preciceDt : solverDt; // determine actual time step size; must fit into remaining time in window
-    BOOST_CHECK(currentDt == windowDt / nSubsteps);                 // no subcycling.
-
-    for (auto &readDataPair : readDataPairs) {
+    for (auto readDataPair : readDataPairs) {
       auto readDataName = readDataPair.first;
       auto readFunction = readDataPair.second;
 
       precice.readData(meshName, readDataName, {&vertexID, 1}, currentDt, {&readData, 1});
 
-      if (iterations == 0 && timestep == 0) {                        // special situation: Both solvers are in their very first time windows, first iteration, first time step
-        BOOST_TEST(readData == readFunction(0));                     // use initial data only.
-      } else if (iterations == 0) {                                  // special situation: Both solvers get the old data for all time windows.
-        BOOST_TEST(readData == readFunction(timewindow * windowDt)); // data at end of window was written by other solver.
-      } else if (iterations > 0) {
-        BOOST_TEST(readData == readFunction(time + currentDt)); // read at end of time step.
-      } else {                                                  // we should not enter this branch, because this would skip all tests.
-        BOOST_TEST(false);
+      if (iterations == 0) { // in the first iteration of each window, use data from previous window.
+        BOOST_TEST(readData == readFunction(windowStartTime));
+      } else { // in the following iterations, use data at the end of window.
+        BOOST_TEST(readData == readFunction(time + currentDt));
+      }
+
+      precice.readData(meshName, readDataName, {&vertexID, 1}, currentDt / 2, {&readData, 1});
+
+      if (iterations == 0) { // in the first iteration of each window, use data from previous window.
+        BOOST_TEST(readData == readFunction(windowStartTime));
+      } else { // in the following iterations, use data at the end of window.
+        BOOST_TEST(readData == readFunction(time + currentDt / 2));
+      }
+
+      precice.readData(meshName, readDataName, {&vertexID, 1}, 0, {&readData, 1});
+
+      if (iterations == 0) { // in the first iteration of each window, use data from previous window.
+        BOOST_TEST(readData == readFunction(windowStartTime));
+      } else { // in the following iterations, use data at the end of window.
+        BOOST_TEST(readData == readFunction(time));
       }
     }
 
@@ -116,6 +133,9 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     writeData = writeFunction(time);
     precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&writeData, 1});
     precice.advance(currentDt);
+    double maxDt = precice.getMaxTimeStepSize();
+    currentDt    = dt > maxDt ? maxDt : dt;
+    BOOST_CHECK(currentDt == windowDt / nSubsteps); // no subcycling.
     timestep++;
     if (precice.requiresReadingCheckpoint()) { // at end of window and we have to repeat it.
       iterations++;

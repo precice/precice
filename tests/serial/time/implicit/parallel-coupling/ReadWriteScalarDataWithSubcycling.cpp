@@ -92,8 +92,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     } else if (iterations == 0) {                                              // special situation: Both solvers get the old data for all time windows.
       BOOST_TEST(readData == readFunction(startTime + timewindow * windowDt)); // data at end of window was written by other solver.
     } else if (iterations > 0) {
-      BOOST_TEST(readData == readFunction(time + currentDt));
-    } else { // we should not enter this branch, because this would skip all tests.
+      BOOST_TEST(readData == readFunction(time + currentDt)); // read at end of time step.
+    } else {                                                  // we should not enter this branch, because this would skip all tests.
       BOOST_TEST(false);
     }
 

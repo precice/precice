@@ -21,7 +21,7 @@ BOOST_AUTO_TEST_CASE(SerializeValues)
   const int meshDimensions = 3;
   const int dataDimensions = 1;
   const int nValues        = 4;
-  const int nTimeSteps     = 2;
+  const int nTimeSteps     = 3;
 
   mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
   dummyMesh->setVertexOffsets(vertexOffsets);
@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(SerializeValues)
   const auto serialized = serialize::SerializedStamples::serialize(fromDataPtr);
 
   Eigen::VectorXd expectedSerialized(nTimeSteps * nValues);
-  expectedSerialized << 1.0, 100.0, 2.0, 200.0, 3.0, 300.0, 4.0, 400.0;
+  expectedSerialized << 1.0, 10.0, 100.0, 2.0, 20.0, 200.0, 3.0, 30.0, 300.0, 4.0, 40.0, 400.0;
 
   for (int i = 0; i < nTimeSteps * nValues; i++) {
     BOOST_TEST(testing::equals(serialized.values()(i), expectedSerialized(i)));
@@ -59,10 +59,10 @@ BOOST_AUTO_TEST_CASE(DeserializeValues)
 
   const int meshDimensions = 3;
   const int nValues        = 4;
-  const int nTimeSteps     = 2;
+  const int nTimeSteps     = 3;
 
   Eigen::VectorXd serializedValues(nTimeSteps * nValues);
-  serializedValues << 1.0, 100.0, 2.0, 200.0, 3.0, 300.0, 4.0, 400.0;
+  serializedValues << 1.0, 10.0, 100.0, 2.0, 20.0, 200.0, 3.0, 30.0, 300.0, 4.0, 40.0, 400.0;
 
   mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
   dummyMesh->setVertexOffsets(vertexOffsets);
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(DeserializeValues)
   toDataPtr->setSampleAtTime(time::Storage::WINDOW_START, toDataPtr->sample());
 
   Eigen::VectorXd timeStamps(nTimeSteps);
-  timeStamps << time::Storage::WINDOW_START, time::Storage::WINDOW_END;
+  timeStamps << time::Storage::WINDOW_START, 0.5 * time::Storage::WINDOW_END, time::Storage::WINDOW_END;
 
   auto serialized = serialize::SerializedStamples::empty(timeStamps, toDataPtr);
 
@@ -85,10 +85,13 @@ BOOST_AUTO_TEST_CASE(DeserializeValues)
 
   Eigen::VectorXd insert0(nValues);
   insert0 << 1.0, 2.0, 3.0, 4.0;
+  Eigen::VectorXd insert05(nValues);
+  insert05 << 10.0, 20.0, 30.0, 40.0;
   Eigen::VectorXd insert1(nValues);
   insert1 << 100.0, 200.0, 300.0, 400.0;
 
   expectedValues.push_back(insert0);
+  expectedValues.push_back(insert05);
   expectedValues.push_back(insert1);
 
   BOOST_TEST(toDataPtr->timeStepsStorage().stamples().size() == nTimeSteps);
@@ -107,7 +110,7 @@ BOOST_AUTO_TEST_CASE(SerializeValuesAndGradients)
   const int meshDimensions = 3;
   const int dataDimensions = 1;
   const int nValues        = 4;
-  const int nTimeSteps     = 2;
+  const int nTimeSteps     = 3;
 
   mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", meshDimensions, testing::nextMeshID()));
   dummyMesh->setVertexOffsets(vertexOffsets);
@@ -146,10 +149,10 @@ BOOST_AUTO_TEST_CASE(SerializeValuesAndGradients)
   const auto serialized = serialize::SerializedStamples::serialize(fromDataPtr);
 
   Eigen::VectorXd expectedSerializedValues(nTimeSteps * nValues);
-  expectedSerializedValues << 1.0, 100.0, 2.0, 200.0, 3.0, 300.0, 4.0, 400.0;
+  expectedSerializedValues << 1.0, 10.0, 100.0, 2.0, 20.0, 200.0, 3.0, 30.0, 300.0, 4.0, 40.0, 400.0;
 
   Eigen::VectorXd expectedSerializedGradients(nTimeSteps * nValues * meshDimensions);
-  expectedSerializedGradients << 1.0, 111.0, 4.0, 411.0, 3.0, 311.0, 2.0, 211.0, 2.0, 211.0, 1.0, 111.0, 4.0, 411.0, 3.0, 311.0, 3.0, 311.0, 2.0, 211.0, 1.0, 111.0, 4.0, 411.0;
+  expectedSerializedGradients << 1.0, 11.0, 111.0, 4.0, 41.0, 411.0, 3.0, 31.0, 311.0, 2.0, 21.0, 211.0, 2.0, 21.0, 211.0, 1.0, 11.0, 111.0, 4.0, 41.0, 411.0, 3.0, 31.0, 311.0, 3.0, 31.0, 311.0, 2.0, 21.0, 211.0, 1.0, 11.0, 111.0, 4.0, 41.0, 411.0;
 
   for (int i = 0; i < nTimeSteps * nValues; i++) {
     BOOST_TEST(testing::equals(serialized.values()(i), expectedSerializedValues(i)));
@@ -166,13 +169,13 @@ BOOST_AUTO_TEST_CASE(DeserializeValuesAndGradients)
 
   const int meshDimensions = 3;
   const int nValues        = 4;
-  const int nTimeSteps     = 2;
+  const int nTimeSteps     = 3;
 
   Eigen::VectorXd serializedValues(nTimeSteps * nValues);
-  serializedValues << 1.0, 100.0, 2.0, 200.0, 3.0, 300.0, 4.0, 400.0;
+  serializedValues << 1.0, 10.0, 100.0, 2.0, 20.0, 200.0, 3.0, 30.0, 300.0, 4.0, 40.0, 400.0;
 
   Eigen::VectorXd serializedGradients(nTimeSteps * nValues * meshDimensions);
-  serializedGradients << 1.0, 111.0, 4.0, 411.0, 3.0, 311.0, 2.0, 211.0, 2.0, 211.0, 1.0, 111.0, 4.0, 411.0, 3.0, 311.0, 3.0, 311.0, 2.0, 211.0, 1.0, 111.0, 4.0, 411.0;
+  serializedGradients << 1.0, 11.0, 111.0, 4.0, 41.0, 411.0, 3.0, 31.0, 311.0, 2.0, 21.0, 211.0, 2.0, 21.0, 211.0, 1.0, 11.0, 111.0, 4.0, 41.0, 411.0, 3.0, 31.0, 311.0, 3.0, 31.0, 311.0, 2.0, 21.0, 211.0, 1.0, 11.0, 111.0, 4.0, 41.0, 411.0;
 
   mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
   dummyMesh->setVertexOffsets(vertexOffsets);
@@ -186,7 +189,7 @@ BOOST_AUTO_TEST_CASE(DeserializeValuesAndGradients)
   toDataPtr->setSampleAtTime(time::Storage::WINDOW_START, toDataPtr->sample());
 
   Eigen::VectorXd timeStamps(nTimeSteps);
-  timeStamps << time::Storage::WINDOW_START, time::Storage::WINDOW_END;
+  timeStamps << time::Storage::WINDOW_START, 0.5 * time::Storage::WINDOW_END, time::Storage::WINDOW_END;
 
   auto serialized = serialize::SerializedStamples::empty(timeStamps, toDataPtr);
 
@@ -199,10 +202,13 @@ BOOST_AUTO_TEST_CASE(DeserializeValuesAndGradients)
 
   Eigen::VectorXd insert0(nValues);
   insert0 << 1.0, 2.0, 3.0, 4.0;
+  Eigen::VectorXd insert05(nValues);
+  insert05 << 10.0, 20.0, 30.0, 40.0;
   Eigen::VectorXd insert1(nValues);
   insert1 << 100.0, 200.0, 300.0, 400.0;
 
   expectedValues.push_back(insert0);
+  expectedValues.push_back(insert05);
   expectedValues.push_back(insert1);
 
   std::vector<Eigen::MatrixXd> expectedGradients;
@@ -212,6 +218,11 @@ BOOST_AUTO_TEST_CASE(DeserializeValuesAndGradients)
       4.0, 1.0, 2.0,
       3.0, 4.0, 1.0,
       2.0, 3.0, 4.0;
+  Eigen::MatrixXd insertGradients05(nValues, meshDimensions);
+  insertGradients05 << 11.0, 21.0, 31.0,
+      41.0, 11.0, 21.0,
+      31.0, 41.0, 11.0,
+      21.0, 31.0, 41.0;
   Eigen::MatrixXd insertGradients1(nValues, meshDimensions);
   insertGradients1 << 111.0, 211.0, 311.0,
       411.0, 111.0, 211.0,
@@ -219,6 +230,7 @@ BOOST_AUTO_TEST_CASE(DeserializeValuesAndGradients)
       211.0, 311.0, 411.0;
 
   expectedGradients.push_back(insertGradients0);
+  expectedGradients.push_back(insertGradients05);
   expectedGradients.push_back(insertGradients1);
 
   BOOST_TEST(toDataPtr->timeStepsStorage().stamples().size() == nTimeSteps);

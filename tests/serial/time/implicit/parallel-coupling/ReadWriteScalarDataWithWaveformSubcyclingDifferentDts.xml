@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration dimensions="3">
+<precice-configuration dimensions="3" experimental="true">
   <data:scalar name="DataOne" />
   <data:scalar name="DataTwo" />
-  <data:scalar name="DataThree" />
 
   <mesh name="MeshOne">
     <use-data name="DataOne" />
     <use-data name="DataTwo" />
-    <use-data name="DataThree" />
   </mesh>
 
   <mesh name="MeshTwo">
@@ -15,16 +13,10 @@
     <use-data name="DataTwo" />
   </mesh>
 
-  <mesh name="MeshThree">
-    <use-data name="DataOne" />
-    <use-data name="DataThree" />
-  </mesh>
-
   <participant name="SolverOne">
     <provide-mesh name="MeshOne" />
     <write-data name="DataOne" mesh="MeshOne" />
     <read-data name="DataTwo" mesh="MeshOne" />
-    <read-data name="DataThree" mesh="MeshOne" />
   </participant>
 
   <participant name="SolverTwo">
@@ -44,37 +36,15 @@
     <read-data name="DataOne" mesh="MeshTwo" />
   </participant>
 
-  <participant name="SolverThree">
-    <receive-mesh name="MeshOne" from="SolverOne" />
-    <provide-mesh name="MeshThree" />
-    <mapping:nearest-neighbor
-      direction="write"
-      from="MeshThree"
-      to="MeshOne"
-      constraint="conservative" />
-    <mapping:nearest-neighbor
-      direction="read"
-      from="MeshOne"
-      to="MeshThree"
-      constraint="consistent" />
-    <write-data name="DataThree" mesh="MeshThree" />
-    <read-data name="DataOne" mesh="MeshThree" />
-  </participant>
-
   <m2n:sockets acceptor="SolverOne" connector="SolverTwo" />
-  <m2n:sockets acceptor="SolverOne" connector="SolverThree" />
 
-  <coupling-scheme:multi>
-    <participant name="SolverOne" control="yes" />
-    <participant name="SolverTwo" />
-    <participant name="SolverThree" />
+  <coupling-scheme:parallel-implicit>
+    <participants first="SolverOne" second="SolverTwo" />
     <max-time-windows value="5" />
     <time-window-size value="2" />
     <max-iterations value="3" />
     <min-iteration-convergence-measure min-iterations="3" data="DataOne" mesh="MeshOne" />
     <exchange data="DataOne" mesh="MeshOne" from="SolverOne" to="SolverTwo" initialize="on" />
     <exchange data="DataTwo" mesh="MeshOne" from="SolverTwo" to="SolverOne" initialize="on" />
-    <exchange data="DataOne" mesh="MeshOne" from="SolverOne" to="SolverThree" initialize="on" />
-    <exchange data="DataThree" mesh="MeshOne" from="SolverThree" to="SolverOne" initialize="on" />
-  </coupling-scheme:multi>
+  </coupling-scheme:parallel-implicit>
 </precice-configuration>

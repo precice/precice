@@ -13,7 +13,7 @@ BOOST_AUTO_TEST_SUITE(Time)
 BOOST_AUTO_TEST_SUITE(Implicit)
 BOOST_AUTO_TEST_SUITE(MultiCoupling)
 /**
- * @brief Test to run a multi coupling with subcycling. The three solvers use each a different time step size.
+ * @brief Test to run a multi coupling with subcycling.
  *
  * Deactivates exchange of substeps.
  */
@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcyclingNoSubsteps)
   };
   DataFunction writeFunction;
 
-  int nSubsteps; // let three solvers use different time step sizes
+  int nSubsteps = 4;
 
   std::string meshName, writeDataName;
   if (context.isNamed("SolverOne")) {
@@ -48,14 +48,12 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcyclingNoSubsteps)
     readDataPairs.push_back(std::make_pair(dataTwoName, dataTwoFunction));
     auto dataThreeName = "DataThree";
     readDataPairs.push_back(std::make_pair(dataThreeName, dataThreeFunction));
-    nSubsteps = 1;
   } else if (context.isNamed("SolverTwo")) {
     meshName         = "MeshTwo";
     writeDataName    = "DataTwo";
     writeFunction    = dataTwoFunction;
     auto dataOneName = "DataOne";
     readDataPairs.push_back(std::make_pair(dataOneName, dataOneFunction));
-    nSubsteps = 2;
   } else {
     BOOST_TEST(context.isNamed("SolverThree"));
     meshName         = "MeshThree";
@@ -63,7 +61,6 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcyclingNoSubsteps)
     writeFunction    = dataThreeFunction;
     auto dataOneName = "DataOne";
     readDataPairs.push_back(std::make_pair(dataOneName, dataOneFunction));
-    nSubsteps = 3;
   }
 
   double   writeData = 0;

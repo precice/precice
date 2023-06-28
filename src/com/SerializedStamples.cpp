@@ -8,14 +8,24 @@ SerializedStamples SerializedStamples::serialize(const cplscheme::PtrCouplingDat
 {
   SerializedStamples result;
 
-  result._timeSteps = 2; // @todo use all available time steps for subcycling
+  result._timeSteps = data->timeStepsStorage().nTimes(); // @todo use all available time steps for subcycling
 
-  result.allocate(data);
-
-  result.serializeValues(data);
-
-  if (data->hasGradient()) {
-    result.serializeGradients(data);
+  if (result._timeSteps == 1) { // special treatment during initialization
+    PRECICE_ASSERT(math::equals(data->timeStepsStorage().stamples().front().timestamp, time::Storage::WINDOW_START));
+    result._timeSteps = 2;
+    result.allocate(data);
+    result.serializeValuesInitialization(data);
+    if (data->hasGradient()) {
+      result.serializeGradientsInitialization(data);
+    }
+  } else {
+    PRECICE_ASSERT(math::equals(data->timeStepsStorage().stamples().front().timestamp, time::Storage::WINDOW_START));
+    PRECICE_ASSERT(math::equals(data->timeStepsStorage().stamples().back().timestamp, time::Storage::WINDOW_END));
+    result.allocate(data);
+    result.serializeValues(data);
+    if (data->hasGradient()) {
+      result.serializeGradients(data);
+    }
   }
 
   return result;
@@ -50,49 +60,57 @@ void SerializedStamples::allocate(const cplscheme::PtrCouplingData data)
 
 void SerializedStamples::serializeValues(const cplscheme::PtrCouplingData data)
 {
-  const auto &atBeginn = data->timeStepsStorage().stamples().front();
-  int         timeId   = 0;
-  PRECICE_ASSERT(atBeginn.timestamp == time::Storage::WINDOW_START, atBeginn.timestamp);
-  auto sliceBeginn = atBeginn.sample.values;
-  for (int valueId = 0; valueId < data->getSize(); valueId++) {
-    _values(valueId * _timeSteps) = sliceBeginn(valueId);
+  const int nValues = data->sample().values.size();
+  int       timeId  = 0;
+  for (const auto &stample : data->timeStepsStorage().stamples()) {
+    const Eigen::VectorXd &slice = stample.sample.values;
+    for (int valueId = 0; valueId < nValues; valueId++) {
+      _values(valueId * _timeSteps + timeId) = slice(valueId);
+    }
+    timeId++;
   }
+}
 
-  const auto &atEnd = data->timeStepsStorage().stamples().back();
-  timeId            = 1;
-  if (data->timeStepsStorage().nTimes() == 1) { // during exchangeInitialData where only data at WINDOW_START is provided. Use identical data atBeginn and atEnd.
-    PRECICE_ASSERT(math::equals(atEnd.timestamp, time::Storage::WINDOW_START), atEnd.timestamp);
-  } else {
-    PRECICE_ASSERT(math::equals(atEnd.timestamp, time::Storage::WINDOW_END), atEnd.timestamp);
-  }
-  auto sliceEnd = atEnd.sample.values;
-  for (int valueId = 0; valueId < data->getSize(); valueId++) {
-    _values(valueId * _timeSteps + timeId) = sliceEnd(valueId);
+void SerializedStamples::serializeValuesInitialization(const cplscheme::PtrCouplingData data)
+{
+  PRECICE_ASSERT(data->timeStepsStorage().stamples().size() == 1, "serializeValuesInitialization(...) may only be called during initialization. Please use serializeValues(...) instead.");
+
+  const int nValues = data->sample().values.size();
+  for (int i = 0; i < _timeSteps; i++) { // put sample at WINDOW_START twice into serialized data
+    const auto &           stample = data->timeStepsStorage().stamples().front();
+    const Eigen::VectorXd &slice   = stample.sample.values;
+    for (int valueId = 0; valueId < nValues; valueId++) {
+      _values(valueId * _timeSteps + i) = slice(valueId);
+    }
   }
 }
 
 void SerializedStamples::serializeGradients(const cplscheme::PtrCouplingData data)
 {
-  const auto &atBeginn = data->timeStepsStorage().stamples().front();
-  int         timeId   = 0;
-  PRECICE_ASSERT(atBeginn.timestamp == time::Storage::WINDOW_START, atBeginn.timestamp);
-  const auto sliceBeginn = Eigen::VectorXd::Map(atBeginn.sample.gradients.data(), atBeginn.sample.gradients.rows() * atBeginn.sample.gradients.cols());
-  PRECICE_ASSERT(data->getSize() * data->meshDimensions() * data->getDimensions() == sliceBeginn.size(), data->getSize(), data->meshDimensions(), data->getDimensions(), sliceBeginn.size());
-  for (int valueId = 0; valueId < sliceBeginn.size(); valueId++) {
-    _gradients(valueId * _timeSteps) = sliceBeginn(valueId);
+  const int nValues = data->sample().gradients.size();
+  int       timeId  = 0;
+  for (const auto &stample : data->timeStepsStorage().stamples()) {
+    const Eigen::VectorXd &slice = Eigen::VectorXd::Map(stample.sample.gradients.data(), stample.sample.gradients.rows() * stample.sample.gradients.cols());
+    PRECICE_ASSERT(nValues == slice.size());
+    for (int valueId = 0; valueId < slice.size(); valueId++) {
+      _gradients(valueId * _timeSteps + timeId) = slice(valueId);
+    }
+    timeId++;
   }
+}
 
-  const auto &atEnd = data->timeStepsStorage().stamples().back();
-  timeId            = 1;
-  if (data->timeStepsStorage().nTimes() == 1) { // during exchangeInitialData where only data at WINDOW_START is provided. Use identical data atBeginn and atEnd.
-    PRECICE_ASSERT(math::equals(atEnd.timestamp, time::Storage::WINDOW_START), atEnd.timestamp);
-  } else {
-    PRECICE_ASSERT(math::equals(atEnd.timestamp, time::Storage::WINDOW_END), atEnd.timestamp);
-  }
-  const auto sliceEnd = Eigen::VectorXd::Map(atEnd.sample.gradients.data(), atEnd.sample.gradients.rows() * atEnd.sample.gradients.cols());
-  PRECICE_ASSERT(data->getSize() * data->meshDimensions() * data->getDimensions() == sliceEnd.size(), data->getSize(), data->meshDimensions(), data->getDimensions(), sliceEnd.size());
-  for (int valueId = 0; valueId < data->getSize() * data->meshDimensions(); valueId++) {
-    _gradients(valueId * _timeSteps + timeId) = sliceEnd(valueId);
+void SerializedStamples::serializeGradientsInitialization(const cplscheme::PtrCouplingData data)
+{
+  PRECICE_ASSERT(data->timeStepsStorage().stamples().size() == 1, "serializeGradientsInitialization(...) may only be called during initialization. Please use serializeGradients(...) instead.");
+
+  const int nValues = data->sample().gradients.size();
+  for (int i = 0; i < _timeSteps; i++) { // put sample at WINDOW_START twice into serialized data
+    const auto &           stample = data->timeStepsStorage().stamples().front();
+    const Eigen::VectorXd &slice   = Eigen::VectorXd::Map(stample.sample.gradients.data(), stample.sample.gradients.rows() * stample.sample.gradients.cols());
+    PRECICE_ASSERT(nValues == slice.size());
+    for (int valueId = 0; valueId < slice.size(); valueId++) {
+      _gradients(valueId * _timeSteps + i) = slice(valueId);
+    }
   }
 }
 

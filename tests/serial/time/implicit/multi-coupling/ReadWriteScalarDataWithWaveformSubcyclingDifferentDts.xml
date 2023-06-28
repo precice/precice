@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration dimensions="3">
+<precice-configuration dimensions="3" experimental="true">
   <data:scalar name="DataOne" />
   <data:scalar name="DataTwo" />
   <data:scalar name="DataThree" />
