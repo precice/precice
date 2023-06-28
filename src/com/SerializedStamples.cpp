@@ -73,6 +73,8 @@ void SerializedStamples::serializeValues(const cplscheme::PtrCouplingData data)
 
 void SerializedStamples::serializeValuesInitialization(const cplscheme::PtrCouplingData data)
 {
+  PRECICE_ASSERT(data->timeStepsStorage().stamples().size() == 1, "serializeValuesInitialization(...) may only be called during initialization. Please use serializeValues(...) instead.");
+
   const int nValues = data->sample().values.size();
   for (int i = 0; i < _timeSteps; i++) { // put sample at WINDOW_START twice into serialized data
     const auto &           stample = data->timeStepsStorage().stamples().front();
@@ -99,6 +101,8 @@ void SerializedStamples::serializeGradients(const cplscheme::PtrCouplingData dat
 
 void SerializedStamples::serializeGradientsInitialization(const cplscheme::PtrCouplingData data)
 {
+  PRECICE_ASSERT(data->timeStepsStorage().stamples().size() == 1, "serializeGradientsInitialization(...) may only be called during initialization. Please use serializeGradients(...) instead.");
+
   const int nValues = data->sample().gradients.size();
   for (int i = 0; i < _timeSteps; i++) { // put sample at WINDOW_START twice into serialized data
     const auto &           stample = data->timeStepsStorage().stamples().front();
