@@ -321,7 +321,7 @@ void M2N::receive(bool &itemToReceive)
 void M2N::receive(double &itemToReceive)
 {
   PRECICE_TRACE(utils::IntraComm::getRank());
-  if (not utils::IntraComm::isSecondary()) { //coupling mode
+  if (not utils::IntraComm::isSecondary()) {
     _intraComm->receive(itemToReceive, 0);
   }
 
