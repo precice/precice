@@ -323,8 +323,8 @@ void ParticipantConfiguration::xmlTagCallback(
     } else {
       mesh::PtrMesh mesh = _meshConfig->getMesh(meshName);
       PRECICE_CHECK(mesh,
-                    "Participant \"{}\" has to use mesh \"{}\" in order to write data to it. Please add a use-mesh node with name=\"{}\".",
-                    _participants.back()->getName(), meshName, meshName);
+                    R"(Participant "{}" attempts to read data "{}" from an unknown mesh "{}". <mesh name="{}"> needs to be defined first.)",
+                    _participants.back()->getName(), dataName, meshName, meshName);
       mesh::PtrData data = getData(mesh, dataName);
       _participants.back()->addWriteData(data, mesh);
     }
@@ -338,12 +338,12 @@ void ParticipantConfiguration::xmlTagCallback(
     mesh::PtrData data = getData(mesh, dataName);
     if (meshName.empty()) { // no mesh implies it's global data
       mesh::PtrData data = getGlobalData(dataName);
-      _participants.back()->addReadGlobalData(data, waveformOrder);
+      _participants.back()->addReadGlobalData(data);
     } else {
       mesh::PtrMesh mesh = _meshConfig->getMesh(meshName);
       PRECICE_CHECK(mesh,
-                    "Participant \"{}\" has to use mesh \"{}\" in order to read data from it. Please add a use-mesh node with name=\"{}\".",
-                    _participants.back()->getName(), meshName, meshName);
+                    R"(Participant "{}" attempts to write data "{}" to an unknown mesh "{}". <mesh name="{}"> needs to be defined first.)",
+                    _participants.back()->getName(), dataName, meshName, meshName);
       mesh::PtrData data = getData(mesh, dataName);
       _participants.back()->addReadData(data, mesh);
     }

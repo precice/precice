@@ -21,11 +21,9 @@ public:
    * @brief Construct a new ReadGlobalDataContext object without a mapping.
    *
    * @param data Data associated with this ReadGlobalDataContext.
-   * @param interpolationOrder Order of the Waveform stored by this ReadGlobalDataContext.
    */
   ReadGlobalDataContext(
-      mesh::PtrData data,
-      int           interpolationOrder = time::Time::DEFAULT_INTERPOLATION_ORDER);
+      mesh::PtrData data);
 
   /**
    * @brief Gets _interpolationOrder of _waveform
