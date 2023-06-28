@@ -3,11 +3,6 @@
 #
 target_sources(testprecice
     PRIVATE
-    tests/serial/global-data/Explicit.cpp
-    tests/serial/global-data/ExplicitWithDirectMeshAccess.cpp
-    tests/serial/global-data/ImplicitWithMeshData.cpp
-    tests/serial/global-data/ExplicitInitializeData.cpp
-    tests/serial/global-data/ReadWriteScalarDataWithWaveformSamplingFirst.cpp
     tests/parallel/CouplingOnLine.cpp
     tests/parallel/ExportTimeseries.cpp
     tests/parallel/GlobalRBFPartitioning.cpp
@@ -97,6 +92,11 @@ target_sources(testprecice
     tests/serial/explicit/TestExplicitSockets.cpp
     tests/serial/explicit/helpers.cpp
     tests/serial/explicit/helpers.hpp
+    tests/serial/global-data/Explicit.cpp
+    tests/serial/global-data/ExplicitInitializeData.cpp
+    tests/serial/global-data/ExplicitWithDirectMeshAccess.cpp
+    tests/serial/global-data/ImplicitWithMeshData.cpp
+    tests/serial/global-data/ReadWriteScalarDataWithWaveformSamplingFirst.cpp
     tests/serial/initialize-data/Explicit.cpp
     tests/serial/initialize-data/Implicit.cpp
     tests/serial/initialize-data/ImplicitBoth.cpp
