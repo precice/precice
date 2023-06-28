@@ -1,9 +1,11 @@
 #include "NearestNeighborGradientMapping.hpp"
 
 #include <Eigen/Core>
+#include <Eigen/src/Core/Matrix.h>
 #include <boost/container/flat_set.hpp>
 #include <functional>
 #include <iostream>
+#include <strings.h>
 #include "logging/LogMacros.hpp"
 #include "profiling/Event.hpp"
 #include "utils/EigenHelperFunctions.hpp"
@@ -51,12 +53,13 @@ void NearestNeighborGradientMapping::onMappingComputed(mesh::PtrMesh origins, me
   }
 };
 
-void NearestNeighborGradientMapping::mapConsistent(DataID inputDataID, DataID outputDataID)
+void NearestNeighborGradientMapping::mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData)
 {
-  PRECICE_TRACE(inputDataID, outputDataID);
+  PRECICE_TRACE();
   precice::profiling::Event e("map." + mappingNameShort + ".mapData.From" + input()->getName() + "To" + output()->getName(), profiling::Synchronize);
 
-  PRECICE_ASSERT(input()->data(inputDataID)->hasGradient(), "Mesh \"{}\" does not contain gradient data. Using Nearest Neighbor Gradient requires gradient data.",
+  PRECICE_ASSERT(inData.values.size() == 0 || inData.gradients.size() != 0,
+                 "Mesh \"{}\" does not contain gradient data. Using Nearest Neighbor Gradient mapping requires gradient data.",
                  input()->getName());
 
   /// Check if input has gradient data, else send Error
@@ -64,13 +67,13 @@ void NearestNeighborGradientMapping::mapConsistent(DataID inputDataID, DataID ou
     PRECICE_WARN("The mesh doesn't contain any vertices.");
   }
 
-  const int              valueDimensions = input()->data(inputDataID)->getDimensions(); // Data dimensions (for scalar = 1, for vectors > 1)
-  const Eigen::VectorXd &inputValues     = input()->data(inputDataID)->values();
-  Eigen::VectorXd &      outputValues    = output()->data(outputDataID)->values();
-  const Eigen::MatrixXd &gradients       = input()->data(inputDataID)->gradients();
+  const int              valueDimensions = inData.dataDims;
+  const Eigen::VectorXd &inputValues     = inData.values;
+  Eigen::VectorXd &      outputValues    = outData;
+  const Eigen::MatrixXd &gradients       = inData.gradients;
 
   // Consistent mapping
-  PRECICE_DEBUG((hasConstraint(CONSISTENT) ? "Map consistent" : "Map scaled-consistent"));
+  PRECICE_DEBUG("Map {} using {}", (hasConstraint(CONSISTENT) ? "consistent" : "scaled-consistent"), getName());
   const size_t outSize = output()->vertices().size();
 
   for (size_t i = 0; i < outSize; i++) {
@@ -88,7 +91,7 @@ void NearestNeighborGradientMapping::mapConsistent(DataID inputDataID, DataID ou
   PRECICE_DEBUG("Mapped values (with gradient) = {}", utils::previewRange(3, outputValues));
 }
 
-void NearestNeighborGradientMapping::mapConservative(DataID /*inputDataID*/, DataID /*outputDataID*/)
+void NearestNeighborGradientMapping::mapConservative(const time::Sample & /* inData */, Eigen::VectorXd & /* outData */)
 {
   PRECICE_ASSERT(false, "Not implemented.");
 }

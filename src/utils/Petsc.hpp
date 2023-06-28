@@ -1,6 +1,7 @@
 #pragma once
 
 #include "logging/Logger.hpp"
+#include "precice/span.hpp"
 #include "utils/Parallel.hpp"
 
 namespace precice {
@@ -135,6 +136,10 @@ public:
 
   void fillWithRandoms();
 
+  Vector &copyFrom(precice::span<const double> source);
+
+  Vector &copyTo(precice::span<double> destination);
+
   /// Sorts the LOCAL partition of the vector
   void sort();
 
@@ -154,6 +159,9 @@ public:
 
   /// returns the l2-norm of the vector
   double l2norm() const;
+
+private:
+  static logging::Logger _log;
 };
 
 void swap(Vector &lhs, Vector &rhs) noexcept;

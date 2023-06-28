@@ -116,6 +116,8 @@ void SerializedStamples::deserialize(const Eigen::VectorXd timeStamps, cplscheme
 
   data->timeStepsStorage().trim();
 
+  const auto dataDims = data->getDimensions();
+
   for (int timeId = 0; timeId < timeStamps.size(); timeId++) {
     const double time = timeStamps(timeId);
     PRECICE_ASSERT(math::greaterEquals(time, time::Storage::WINDOW_START) && math::greaterEquals(time::Storage::WINDOW_END, time)); // time < 0 or time > 1 is not allowed.
@@ -126,7 +128,7 @@ void SerializedStamples::deserialize(const Eigen::VectorXd timeStamps, cplscheme
     }
 
     if (not data->hasGradient()) {
-      data->setSampleAtTime(time, time::Sample{slice});
+      data->setSampleAtTime(time, time::Sample{dataDims, slice});
     } else {
       PRECICE_ASSERT(data->hasGradient());
 
@@ -135,7 +137,7 @@ void SerializedStamples::deserialize(const Eigen::VectorXd timeStamps, cplscheme
       for (int gradientId = 0; gradientId < gradientView.size(); gradientId++) {
         gradientView(gradientId) = _gradients(gradientId * timeStamps.size() + timeId);
       }
-      data->setSampleAtTime(time, time::Sample{slice, gradientSlice});
+      data->setSampleAtTime(time, time::Sample{dataDims, slice, gradientSlice});
     }
   }
 }
