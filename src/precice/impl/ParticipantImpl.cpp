@@ -419,6 +419,12 @@ void ParticipantImpl::advance(
     for (auto &context : _accessor->writeDataContexts()) {
       context.resetInitialGuesses();
     }
+    for (auto &context : _accessor->readGlobalDataContexts()) {
+      context.resetInitialGuesses();
+    }
+    for (auto &context : _accessor->writeGlobalDataContexts()) {
+      context.resetInitialGuesses();
+    }
   }
 
   _meshLock.lockAll();

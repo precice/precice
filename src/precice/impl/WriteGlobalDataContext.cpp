@@ -6,10 +6,9 @@ logging::Logger WriteGlobalDataContext::_log{"impl::WriteGlobalDataContext"};
 
 WriteGlobalDataContext::WriteGlobalDataContext(
     mesh::PtrData data)
-    : DataContext(data, nullptr)
+    : DataContext(data, nullptr),
+      _writeDataBuffer(data->getDimensions())
 {
-  auto dimensions  = getDataDimensions();
-  _writeDataBuffer = time::Sample{Eigen::VectorXd(dimensions), Eigen::MatrixXd()};
 }
 
 void WriteGlobalDataContext::resetData(bool atEndOfWindow, bool isTimeWindowComplete)
