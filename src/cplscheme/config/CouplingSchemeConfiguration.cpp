@@ -271,7 +271,7 @@ void CouplingSchemeConfiguration::xmlTagCallback(
                     nameData, nameData, nameParticipantFrom, nameParticipantTo);
       mesh::PtrData exchangeData = _meshConfig->getDataConfiguration()->globalData(nameData);
       PRECICE_ASSERT(exchangeData);
-      Config::GlobalExchange newGlobalExchange{exchangeData, nameParticipantFrom, nameParticipantTo, initialize};
+      Config::GlobalExchange newGlobalExchange{exchangeData, nameParticipantFrom, nameParticipantTo, initialize, exchangeSubsteps};
       PRECICE_CHECK(!_config.hasGlobalExchange(newGlobalExchange),
                     R"(Data "{}" cannot be exchanged multiple times between participants "{}" and "{}". Please remove one of the exchange tags.)",
                     nameData, nameParticipantFrom, nameParticipantTo);
@@ -289,7 +289,7 @@ void CouplingSchemeConfiguration::xmlTagCallback(
       mesh::PtrData exchangeData = exchangeMesh->data(nameData);
       PRECICE_ASSERT(exchangeData);
 
-      Config::Exchange newExchange{exchangeData, exchangeMesh, nameParticipantFrom, nameParticipantTo, initialize};
+      Config::Exchange newExchange{exchangeData, exchangeMesh, nameParticipantFrom, nameParticipantTo, initialize, exchangeSubsteps};
       PRECICE_CHECK(!_config.hasExchange(newExchange),
                     R"(Data "{}" of mesh "{}" cannot be exchanged multiple times between participants "{}" and "{}". Please remove one of the exchange tags.)",
                     nameData, nameMesh, nameParticipantFrom, nameParticipantTo);
@@ -996,6 +996,33 @@ void CouplingSchemeConfiguration::checkSubstepExchangeWaveformDegree(const Confi
   }
 }
 
+void CouplingSchemeConfiguration::checkSubstepExchangeWaveformOrder(const Config::GlobalExchange &exchange) const
+{
+  const auto &participant = _participantConfig->getParticipant(exchange.to);
+
+  // const auto &meshPtr = participant->findMesh(exchange.data->getName()); // related to https://github.com/precice/precice/issues/1694
+
+  // if (meshPtr == nullptr) {
+  //   // Only warn, because might be valid configuration, if summation action is used. See Integration/Serial/SummationActionTwoSources.
+  //   PRECICE_WARN("You defined <exchange data=\"{}\" ... to=\"{}\" /> in the <coupling-scheme:... />, but <participant name=\"{}\"> has no corresponding <read-data name=\"{}\" ... />. Usually this means that there is an error in your configuration.",
+  //                exchange.data->getName(), exchange.to, exchange.to, exchange.data->getName());
+  //   return; // skip checks below
+  // }
+
+  const auto &readGlobalDataContext = participant->readGlobalDataContext(exchange.data->getName());
+  if (readGlobalDataContext.getInterpolationOrder() == 0) {
+    PRECICE_CHECK(!exchange.exchangeSubsteps,
+                  "You configured <read-data name=\"{}\" waveform-order=\"{}\" />. Please deactivate exchange of substeps by setting substeps=\"false\" in the following exchange tag of your coupling scheme: <exchange data=\"{}\" from=\"{}\" to=\"{}\" />. Reason: For zeroth order interpolation no exchange of data for substeps is needed. Please consider using waveform-order=\"1\" or higher order, if you want to use subcycling.",
+                  readGlobalDataContext.getDataName(), readGlobalDataContext.getInterpolationOrder(), exchange.data->getName(), exchange.from, exchange.to);
+  } else if (readGlobalDataContext.getInterpolationOrder() >= 2) {
+    PRECICE_CHECK(exchange.exchangeSubsteps,
+                  "You configured <read-data name=\"{}\" waveform-order=\"{}\" />. Please activate exchange of substeps by setting substeps=\"true\" in the following exchange tag of your coupling scheme: <exchange data=\"{}\" from=\"{}\" to=\"{}\" />. Reason: For higher-order interpolation exchange of data for substeps is required. If you don't want to activate exchange of additional data, please consider using waveform-order=\"1\". Note that deactivating exchange of substep data might lead to worse results, if you use subcycling.",
+                  readGlobalDataContext.getDataName(), readGlobalDataContext.getInterpolationOrder(), exchange.data->getName(), exchange.from, exchange.to);
+  } else { // For first order there is no restriction for exchange of substeps
+    PRECICE_ASSERT(readGlobalDataContext.getInterpolationOrder() == 1);
+  }
+}
+
 void CouplingSchemeConfiguration::addDataToBeExchanged(
     BiCouplingScheme & scheme,
     const std::string &accessor) const
@@ -1064,10 +1091,14 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
                   to, dataName, from, to);
 
     const bool requiresInitialization = exchange.requiresInitialization;
+
+    const bool exchangeSubsteps = exchange.exchangeSubsteps;
+
     if (from == accessor) {
-      scheme.addGlobalDataToSend(exchange.data, requiresInitialization);
+      scheme.addGlobalDataToSend(exchange.data, requiresInitialization, exchangeSubsteps);
     } else if (to == accessor) {
-      scheme.addGlobalDataToReceive(exchange.data, requiresInitialization);
+      checkSubstepExchangeWaveformOrder(exchange);
+      scheme.addGlobalDataToReceive(exchange.data, requiresInitialization, exchangeSubsteps);
     } else {
       PRECICE_ASSERT(_config.type == VALUE_MULTI);
     }
@@ -1109,6 +1140,8 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
     }
   }
   scheme.determineInitialDataExchange();
+
+  //TODO: Add global data to be exchanged
 }
 
 void CouplingSchemeConfiguration::checkIfDataIsExchanged(

@@ -160,6 +160,7 @@ private:
       std::string   from;
       std::string   to;
       bool          requiresInitialization;
+      bool          exchangeSubsteps;
     };
     std::vector<Exchange>                    exchanges;
     std::vector<GlobalExchange>              globalExchanges;

@@ -67,10 +67,11 @@ void BiCouplingScheme::addDataToSend(
 
 void BiCouplingScheme::addGlobalDataToSend(
     const mesh::PtrData &data,
-    bool                 requiresInitialization)
+    bool                 requiresInitialization,
+    bool                 exchangeSubsteps)
 {
   PRECICE_TRACE();
-  PtrCouplingData ptrCplData = addGlobalCouplingData(data, requiresInitialization);
+  PtrCouplingData ptrCplData = addGlobalCouplingData(data, requiresInitialization, exchangeSubsteps);
   precice::DataID id         = data->getID();
   if (!utils::contained(id, _sendGlobalData)) {
     PRECICE_ASSERT(_sendGlobalData.count(id) == 0, "Key already exists!");
@@ -100,10 +101,11 @@ void BiCouplingScheme::addDataToReceive(
 
 void BiCouplingScheme::addGlobalDataToReceive(
     const mesh::PtrData &data,
-    bool                 requiresInitialization)
+    bool                 requiresInitialization,
+    bool                 exchangeSubsteps)
 {
   PRECICE_TRACE();
-  PtrCouplingData ptrCplData = addGlobalCouplingData(data, requiresInitialization);
+  PtrCouplingData ptrCplData = addGlobalCouplingData(data, requiresInitialization, exchangeSubsteps);
   precice::DataID id         = data->getID();
   if (!utils::contained(id, _receiveGlobalData)) {
     PRECICE_ASSERT(_receiveGlobalData.count(id) == 0, "Key already exists!");

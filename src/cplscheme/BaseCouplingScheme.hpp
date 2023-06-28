@@ -282,7 +282,7 @@ protected:
    * @param receiveGlobalData DataMap associated with received data
    * @param initialCommunication if true, will store received data for WINDOW_START and WINDOW_END, else store received data only for WINDOW_END
    */
-  void receiveGlobalData(const m2n::PtrM2N &m2n, const DataMap &receiveGlobalData, bool initialCommunication = false);
+  void receiveGlobalData(const m2n::PtrM2N &m2n, const DataMap &receiveGlobalData);
 
   /**
    * @brief Initializes storage in receiveData as zero
@@ -312,9 +312,10 @@ protected:
    *
    * @param data global data with which the CouplingData is associated
    * @param requiresInitialization true, if CouplingData requires initialization
+   * @param exchangeSubsteps true, if CouplingData exchanges all substeps in send/recv
    * @return PtrCouplingData pointer to CouplingData owned by the CouplingScheme
    */
-  PtrCouplingData addGlobalCouplingData(const mesh::PtrData &data, bool requiresInitialization);
+  PtrCouplingData addGlobalCouplingData(const mesh::PtrData &data, bool requiresInitialization, bool exchangeSubsteps);
 
   /**
    * @brief Function to determine whether coupling scheme is an explicit coupling scheme
