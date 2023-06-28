@@ -182,7 +182,7 @@ std::string RadialBasisFctMapping<SOLVER_T, Args...>::getName() const
 }
 
 template <typename SOLVER_T, typename... Args>
-void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(const time::Sample &inData, Eigen::VectorXd &outData)
+void RadialBasisFctMapping<SOLVER_T, Args...>::mapConservative(const time::Sample &inData, Eigen::VectorXd &outData)
 {
   PRECICE_TRACE();
   precice::profiling::Event e("map.rbf.mapData.From" + this->input()->getName() + "To" + this->output()->getName(), profiling::Synchronize);
@@ -306,7 +306,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(const time:
 }
 
 template <typename SOLVER_T, typename... Args>
-void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData)
+void RadialBasisFctMapping<SOLVER_T, Args...>::mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData)
 {
   PRECICE_TRACE();
   precice::profiling::Event e("map.rbf.mapData.From" + this->input()->getName() + "To" + this->output()->getName(), profiling::Synchronize);
