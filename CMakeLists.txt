@@ -188,6 +188,10 @@ find_package(Eigen3 3.3.7 REQUIRED)
 message(STATUS "Found Eigen ${EIGEN3_VERSION}")
 precice_validate_eigen()
 
+# GNU Scientific Library
+find_package(GSL REQUIRED)
+message(STATUS "Found GSL ${GSL_VERSION}")
+
 # LibXML2
 find_package(LibXml2 REQUIRED)
 message(STATUS "Found LibXml2 ${LIBXML2_VERSION_STRING}")
@@ -325,6 +329,9 @@ endif()
 # Setup Eigen3
 target_link_libraries(preciceCore PUBLIC Eigen3::Eigen)
 target_compile_definitions(preciceCore PUBLIC "$<$<CONFIG:DEBUG>:EIGEN_INITIALIZE_MATRICES_BY_NAN>")
+
+# Setup GSL
+target_link_libraries(preciceCore PUBLIC GSL::gsl)
 
 # Setup LIBXML2
 target_link_libraries(preciceCore PUBLIC LibXml2::LibXml2)
