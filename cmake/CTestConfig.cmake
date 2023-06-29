@@ -287,6 +287,11 @@ add_precice_test(
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   )
 add_precice_test(
+  NAME time
+  ARGUMENTS "--run_test=TimeTests"
+  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+  )
+add_precice_test(
   NAME utils
   ARGUMENTS "--run_test=UtilsTests"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
