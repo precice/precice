@@ -266,7 +266,7 @@ void BaseCouplingScheme::sendGlobalData(const m2n::PtrM2N &m2n, const DataMap &s
   PRECICE_ASSERT(m2n->isConnected());
 
   for (const auto &data : sendGlobalData | boost::adaptors::map_values) {
-    const auto stamples = data->stamples();
+    const auto &stamples = data->stamples();
     PRECICE_ASSERT(stamples.size() > 0);
 
     if (data->exchangeSubsteps()) {
