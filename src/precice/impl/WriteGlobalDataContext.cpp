@@ -21,8 +21,8 @@ void WriteGlobalDataContext::resetData(bool atEndOfWindow, bool isTimeWindowComp
 
   if (isTimeWindowComplete) {
     PRECICE_ASSERT(atEndOfWindow, "isTimeWindowComplete without atEndOfWindow is forbidden!");
-    auto atEnd = _providedData->timeStepsStorage().stamples().back().sample;
-    _providedData->timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_START, atEnd); // manually overwrite value at beginning with value from end. Need this exception for WriteDataContext, because CouplingScheme might not be able to update _providedData, if write mapping sits between _providedData and _toData. CouplingScheme in this case only has access to _toData.
+    _providedData->timeStepsStorage().move();
+    _providedData->timeStepsStorage().trim();
   } else if (atEndOfWindow) {
     _providedData->timeStepsStorage().trim();
   }
