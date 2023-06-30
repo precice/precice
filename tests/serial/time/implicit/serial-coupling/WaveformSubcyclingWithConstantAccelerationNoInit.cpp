@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_SUITE(SerialCoupling)
 /**
  * @brief Simple test to ensure that underrelaxation is applied to every  timestep.
  */
-BOOST_AUTO_TEST_CASE(WaveformSubcyclingWithConstantAcceleration)
+BOOST_AUTO_TEST_CASE(WaveformSubcyclingWithConstantAccelerationNoInit)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
