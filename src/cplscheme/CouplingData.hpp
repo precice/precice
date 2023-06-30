@@ -102,24 +102,14 @@ public:
 private:
   logging::Logger _log{"cplscheme::CouplingData"};
 
-  /**
-   * @brief Default constructor, not to be used!
-   *
-   * Necessary when compiler creates template code for std::map::operator[].
-   */
-  CouplingData()
-      : requiresInitialization(false)
-  {
-    PRECICE_ASSERT(false);
-  }
+  /// Mesh associated with this CouplingData
+  mesh::PtrMesh _mesh;
 
   /// Data associated with this CouplingData
   mesh::PtrData _data;
 
+  /// Sample values of previous iteration (end of time window).
   time::Storage _timeStepsStoragePrevious; // @todo move this inside _data?
-
-  /// Mesh associated with this CouplingData
-  mesh::PtrMesh _mesh;
 
   /// If true, all substeps will be sent / received for this coupling data
   bool _exchangeSubsteps;

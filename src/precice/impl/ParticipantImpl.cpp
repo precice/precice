@@ -404,6 +404,15 @@ void ParticipantImpl::advance(
 
   resetWrittenData(isAtWindowEnd, _couplingScheme->isTimeWindowComplete());
 
+  if (_couplingScheme->isTimeWindowComplete()) {
+    for (auto &context : _accessor->readDataContexts()) {
+      context.resetInitialGuesses();
+    }
+    for (auto &context : _accessor->writeDataContexts()) {
+      context.resetInitialGuesses();
+    }
+  }
+
   _meshLock.lockAll();
 
   sep.pop();

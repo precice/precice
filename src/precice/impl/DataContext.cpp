@@ -1,5 +1,6 @@
 #include "precice/impl/DataContext.hpp"
 #include <memory>
+#include <utility>
 #include "utils/EigenHelperFunctions.hpp"
 
 namespace precice::impl {
@@ -18,6 +19,13 @@ std::string DataContext::getDataName() const
 {
   PRECICE_ASSERT(_providedData);
   return _providedData->getName();
+}
+
+void DataContext::resetInitialGuesses()
+{
+  for (auto &kv : _initialGuesses) {
+    kv.second.setZero();
+  }
 }
 
 int DataContext::getDataDimensions() const
@@ -82,23 +90,32 @@ void DataContext::mapData()
   PRECICE_ASSERT(hasMapping());
   // Execute the mapping
   for (auto &context : _mappingContexts) {
+    // Reset the toData before mapping any samples
     context.clearToDataStorage();
-
     PRECICE_ASSERT(context.fromData->stamples().size() > 0);
-    for (auto &stample : context.fromData->stamples()) {
-      // Put data from storage into mapping buffer
-      context.fromData->sample() = stample.sample;
 
-      // Reset the toData before executing the mapping
-      context.toData->toZero();
-      const DataID fromDataID = context.fromData->getID();
-      const DataID toDataID   = context.toData->getID();
-      context.mapping->map(fromDataID, toDataID);
+    auto &mapping = *context.mapping;
+
+    const auto dataDims = context.fromData->getDimensions();
+
+    for (const auto &stample : context.fromData->stamples()) {
+      PRECICE_INFO("Mapping \"{}\" for t={} from \"{}\" to \"{}\"",
+                   getDataName(), stample.timestamp, mapping.getInputMesh()->getName(), mapping.getOutputMesh()->getName());
+      time::Sample outSample{
+          dataDims,
+          Eigen::VectorXd::Zero(dataDims * mapping.getOutputMesh()->vertices().size())};
+
+      if (mapping.requiresInitialGuess()) {
+        const FromToDataIDs key{context.fromData->getID(), context.toData->getID()};
+        mapping.map(stample.sample, outSample.values, _initialGuesses[key]);
+      } else {
+        mapping.map(stample.sample, outSample.values);
+      }
+
+      PRECICE_DEBUG("Mapped values (t={}) = {}", stample.timestamp, utils::previewRange(3, outSample.values));
 
       // Store data from mapping buffer in storage
-      context.toData->setSampleAtTime(stample.timestamp, context.toData->sample());
-
-      PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, context.toData->values()));
+      context.toData->setSampleAtTime(stample.timestamp, std::move(outSample));
     }
   }
 }

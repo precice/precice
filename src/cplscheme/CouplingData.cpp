@@ -15,18 +15,17 @@ CouplingData::CouplingData(
     bool          exchangeSubsteps,
     int           extrapolationOrder)
     : requiresInitialization(requiresInitialization),
-      _exchangeSubsteps(exchangeSubsteps),
-      _data(std::move(data)),
       _mesh(std::move(mesh)),
+      _data(std::move(data)),
+      _exchangeSubsteps(exchangeSubsteps),
       _timeStepsStoragePrevious()
 {
   PRECICE_ASSERT(_data != nullptr);
-  /// Lazy allocation of _previousIteration.gradient: only used in case the corresponding data has gradients
   timeStepsStorage().setExtrapolationOrder(extrapolationOrder);
   _timeStepsStoragePrevious.setExtrapolationOrder(extrapolationOrder);
   _timeStepsStoragePrevious.setInterpolationOrder(3); // @todo hard-coded for now, but we need to somehow link this to <read-data waveform-order="ORDER" />
-  _timeStepsStoragePrevious.setSampleAtTime(time::Storage::WINDOW_START, time::Sample{Eigen::VectorXd::Zero(getSize())});
-  _timeStepsStoragePrevious.setSampleAtTime(time::Storage::WINDOW_END, time::Sample{Eigen::VectorXd::Zero(getSize())});
+  _timeStepsStoragePrevious.setSampleAtTime(time::Storage::WINDOW_START, time::Sample{getDimensions(), Eigen::VectorXd::Zero(getSize())});
+  _timeStepsStoragePrevious.setSampleAtTime(time::Storage::WINDOW_END, time::Sample{getDimensions(), Eigen::VectorXd::Zero(getSize())});
 
   PRECICE_ASSERT(_mesh != nullptr);
   PRECICE_ASSERT(_mesh.use_count() > 0);

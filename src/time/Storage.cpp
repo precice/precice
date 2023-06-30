@@ -134,7 +134,7 @@ time::Sample Storage::computeExtrapolation()
   } else if (_extrapolationOrder == 1) {
     auto s0 = getSampleAtBeginning();
     auto s1 = getSampleAtEnd();
-    return time::Sample{2 * s1.values - s0.values, 2 * s1.gradients - s0.gradients}; // use linear extrapolation from window at beginning and end of window.
+    return time::Sample{s1.dataDims, 2 * s1.values - s0.values, 2 * s1.gradients - s0.gradients}; // use linear extrapolation from window at beginning and end of window.
   }
   PRECICE_UNREACHABLE("Invalid _extrapolationOrder")
 }

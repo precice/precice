@@ -9,25 +9,16 @@
 
 namespace precice::mesh {
 
-Data::Data()
-    : _name(""),
-      _id(-1),
-      _dimensions(0),
-      _spatialDimensions(-1)
-{
-  PRECICE_ASSERT(false);
-}
-
 Data::Data(
     std::string name,
     DataID      id,
     int         dimensions,
     int         spatialDimensions)
-    : _sample(time::Sample{}),
-      _name(std::move(name)),
+    : _name(std::move(name)),
       _id(id),
       _dimensions(dimensions),
-      _spatialDimensions(spatialDimensions)
+      _spatialDimensions(spatialDimensions),
+      _sample(_dimensions)
 {
   PRECICE_ASSERT(dimensions > 0, dimensions);
 }
