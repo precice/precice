@@ -65,12 +65,12 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
   //init displacements
   displacements->values().resize(4);
   displacements->values() << 1.0, 1.0, 1.0, 1.0;
-  displacements->setSampleAtTime(time::Storage::WINDOW_END, displacements->sample());
+  displacements->setSampleAtTime(time::Storage::WINDOW_START, displacements->sample());
 
   //init forces
   forces->values().resize(4);
   forces->values() << 0.2, 0.2, 0.2, 0.2;
-  forces->setSampleAtTime(time::Storage::WINDOW_END, forces->sample());
+  forces->setSampleAtTime(time::Storage::WINDOW_START, forces->sample());
 
   cplscheme::PtrCouplingData dpcd(new cplscheme::CouplingData(displacements, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
   cplscheme::PtrCouplingData fpcd(new cplscheme::CouplingData(forces, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
@@ -145,12 +145,12 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
   //init displacements
   displacements->values().resize(4);
   displacements->values() << 1.0, 1.0, 1.0, 1.0;
-  displacements->setSampleAtTime(time::Storage::WINDOW_END, displacements->sample());
+  displacements->setSampleAtTime(time::Storage::WINDOW_START, displacements->sample());
 
   //init forces
   forces->values().resize(4);
   forces->values() << 0.2, 0.2, 0.2, 0.2;
-  forces->setSampleAtTime(time::Storage::WINDOW_END, forces->sample());
+  forces->setSampleAtTime(time::Storage::WINDOW_START, forces->sample());
 
   cplscheme::PtrCouplingData dpcd(new cplscheme::CouplingData(displacements, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
   cplscheme::PtrCouplingData fpcd(new cplscheme::CouplingData(forces, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
@@ -214,12 +214,12 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxation)
   // //init displacements
   displacements->values().resize(4);
   displacements->values() << 1.0, 2.0, 3.0, 4.0;
-  displacements->setSampleAtTime(time::Storage::WINDOW_END, displacements->sample());
+  displacements->setSampleAtTime(time::Storage::WINDOW_START, displacements->sample());
 
   // //init forces
   forces->values().resize(4);
   forces->values() << 0.2, 0.2, 0.2, 0.2;
-  forces->setSampleAtTime(time::Storage::WINDOW_END, forces->sample());
+  forces->setSampleAtTime(time::Storage::WINDOW_START, forces->sample());
 
   cplscheme::PtrCouplingData dpcd = std::make_shared<cplscheme::CouplingData>(displacements, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
   cplscheme::PtrCouplingData fpcd = std::make_shared<cplscheme::CouplingData>(forces, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
@@ -248,7 +248,9 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxation)
   BOOST_TEST(data.at(1)->values()(2) == 0.16);
   BOOST_TEST(data.at(1)->values()(3) == 0.16);
 
-  data.begin()->second->values() << 10, 10, 10, 10;
+  displacements->values() << 10, 10, 10, 10;
+  displacements->setSampleAtTime(time::Storage::WINDOW_END, displacements->sample());
+  forces->setSampleAtTime(time::Storage::WINDOW_END, forces->sample());
 
   acc.performAcceleration(data);
 
@@ -285,14 +287,14 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradient)
     for (unsigned int c = 0; c < 4; ++c)
       displacements->gradients()(r, c) = r + r * c;
   }
-  displacements->setSampleAtTime(time::Storage::WINDOW_END, displacements->sample());
+  displacements->setSampleAtTime(time::Storage::WINDOW_START, displacements->sample());
   // //init forces
   forces->values().resize(4);
   forces->values() << 0.2, 0.2, 0.2, 0.2;
   forces->requireDataGradient();
   forces->gradients().resize(dim, 4);
   forces->gradients().setConstant(-2);
-  forces->setSampleAtTime(time::Storage::WINDOW_END, forces->sample());
+  forces->setSampleAtTime(time::Storage::WINDOW_START, forces->sample());
 
   cplscheme::PtrCouplingData dpcd = std::make_shared<cplscheme::CouplingData>(displacements, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
   cplscheme::PtrCouplingData fpcd = std::make_shared<cplscheme::CouplingData>(forces, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
@@ -338,8 +340,10 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradient)
   BOOST_TEST(data.at(1)->gradients()(1, 1) == 0);
   BOOST_TEST(data.at(1)->gradients()(1, 2) == 0);
 
-  data.begin()->second->values() << 10, 10, 10, 10;
+  displacements->values() << 10, 10, 10, 10;
   displacements->gradients().setConstant(4);
+  displacements->setSampleAtTime(time::Storage::WINDOW_END, displacements->sample());
+  forces->setSampleAtTime(time::Storage::WINDOW_END, forces->sample());
 
   acc.performAcceleration(data);
 
