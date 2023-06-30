@@ -17,12 +17,16 @@ CouplingData::CouplingData(
     : requiresInitialization(requiresInitialization),
       _exchangeSubsteps(exchangeSubsteps),
       _data(std::move(data)),
-      _mesh(std::move(mesh))
+      _mesh(std::move(mesh)),
+      _timeStepsStoragePrevious()
 {
   PRECICE_ASSERT(_data != nullptr);
   /// Lazy allocation of _previousIteration.gradient: only used in case the corresponding data has gradients
-  _previousIteration = time::Sample{Eigen::VectorXd::Zero(getSize())};
   timeStepsStorage().setExtrapolationOrder(extrapolationOrder);
+  _timeStepsStoragePrevious.setExtrapolationOrder(extrapolationOrder);
+  _timeStepsStoragePrevious.setInterpolationOrder(3); // @todo hard-coded for now, but we need to somehow link this to <read-data waveform-order="ORDER" />
+  _timeStepsStoragePrevious.setSampleAtTime(time::Storage::WINDOW_START, time::Sample{Eigen::VectorXd::Zero(getSize())});
+  _timeStepsStoragePrevious.setSampleAtTime(time::Storage::WINDOW_END, time::Sample{Eigen::VectorXd::Zero(getSize())});
 
   PRECICE_ASSERT(_mesh != nullptr);
   PRECICE_ASSERT(_mesh.use_count() > 0);
@@ -71,6 +75,16 @@ const time::Storage &CouplingData::timeStepsStorage() const
   return _data->timeStepsStorage();
 }
 
+Eigen::VectorXd CouplingData::getPreviousValuesAtTime(double relativeDt)
+{
+  return _timeStepsStoragePrevious.sampleAt(relativeDt);
+}
+
+Eigen::MatrixXd CouplingData::getPreviousGradientsAtTime(double relativeDt)
+{
+  return _timeStepsStoragePrevious.sampleGradientsAt(relativeDt);
+}
+
 void CouplingData::setSampleAtTime(double time, time::Sample sample)
 {
   this->sample() = sample; // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
@@ -92,23 +106,36 @@ void CouplingData::storeIteration()
 {
   const auto &stamples = this->stamples();
   PRECICE_ASSERT(stamples.size() > 0);
-  this->sample()     = stamples.back().sample;
-  _previousIteration = this->sample();
+  this->sample() = stamples.back().sample;
+
+  _timeStepsStoragePrevious.trim();
+  if (stamples.size() == 1) { // special treatment during initialization
+    const auto &stample = this->stamples().back();
+    PRECICE_ASSERT(math::equals(stample.timestamp, time::Storage::WINDOW_START), "stample.timestamp must be WINDOW_START");
+    _timeStepsStoragePrevious.setSampleAtTime(time::Storage::WINDOW_START, stample.sample);
+    _timeStepsStoragePrevious.setSampleAtTime(time::Storage::WINDOW_END, stample.sample);
+  } else {
+    // @todo add function to copy from this->timeStepsStorage() to _timeStepsStoragePrevious to avoid duplication
+    PRECICE_ASSERT(math::equals(this->stamples().back().timestamp, time::Storage::WINDOW_END), "Only allowed to storeIteration, if at window end");
+    for (const auto &stample : this->stamples()) {
+      _timeStepsStoragePrevious.setSampleAtTime(stample.timestamp, stample.sample);
+    }
+  }
 }
 
 const Eigen::VectorXd CouplingData::previousIteration() const
 {
-  return _previousIteration.values;
+  return _timeStepsStoragePrevious.stamples().back().sample.values;
 }
 
 const Eigen::MatrixXd &CouplingData::previousIterationGradients() const
 {
-  return _previousIteration.gradients;
+  return _timeStepsStoragePrevious.stamples().back().sample.gradients;
 }
 
 int CouplingData::getPreviousIterationSize() const
 {
-  return _previousIteration.values.size();
+  return _timeStepsStoragePrevious.stamples().back().sample.values.size();
 }
 
 int CouplingData::getMeshID()
@@ -133,11 +160,19 @@ std::vector<int> CouplingData::getVertexOffsets()
 
 void CouplingData::moveToNextWindow()
 {
-  if (this->timeStepsStorage().stamples().size() > 0) {
+  if (this->stamples().size() > 0) {
     this->timeStepsStorage().move();
-    const auto &atEnd = this->timeStepsStorage().stamples().back();
+
+    const auto &atEnd = this->stamples().back();
     PRECICE_ASSERT(math::equals(atEnd.timestamp, time::Storage::WINDOW_END));
     _data->sample() = atEnd.sample;
+
+    // @todo add function to copy from this->timeStepsStorage() to _timeStepsStoragePrevious to avoid duplication
+    this->_timeStepsStoragePrevious.move();
+    PRECICE_ASSERT(math::equals(this->stamples().back().timestamp, time::Storage::WINDOW_END), "this->stamples() needs to be initialized properly for WINDOW_START and WINDOW_END");
+    for (const auto &stample : this->stamples()) {
+      _timeStepsStoragePrevious.setSampleAtTime(stample.timestamp, stample.sample);
+    }
   }
 }
 

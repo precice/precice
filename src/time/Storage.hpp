@@ -44,6 +44,8 @@ public:
 
   void setExtrapolationOrder(int extrapolationOrder);
 
+  void setInterpolationOrder(int interpolationOrder);
+
   /**
    * @brief Get maximum normalized dt that is stored in this Storage.
    *
@@ -60,6 +62,8 @@ public:
    * @return Eigen::VectorXd values in this Storage at or directly after "before"
    */
   Eigen::VectorXd getValuesAtOrAfter(double before) const;
+
+  Eigen::MatrixXd getGradientsAtOrAfter(double before) const;
 
   /**
    * @brief Get all normalized dts stored in this Storage sorted ascending.
@@ -109,6 +113,16 @@ public:
    */
   void trim();
 
+  /**
+   * @brief Need to use interpolation for the case with changing time grids
+   *
+   * @param normalizedDt a double, where we want to sample the waveform
+   * @return Eigen::VectorXd values in this Storage at or directly after "before"
+  */
+  Eigen::VectorXd sampleAt(double normalizedDt); // @todo try to solve this differently. Currently duplicates a lot of code from Waveform::sample. Maybe even move Waveform inside Storage, if every Storage needs to interpolate anyway?
+
+  Eigen::MatrixXd sampleGradientsAt(double normalizedDt); // @todo try to solve this differently. Currently duplicates a lot of code from Waveform::sample. Maybe even move Waveform inside Storage, if every Storage needs to interpolate anyway?
+
 private:
   /// Stores Stamples on the current window
   std::vector<Stample> _stampleStorage;
@@ -117,6 +131,12 @@ private:
 
   /// extrapolation order for this Storage
   int _extrapolationOrder;
+
+  int _interpolationOrder;
+
+  Eigen::VectorXd bSplineInterpolationAt(double t, Eigen::VectorXd ts, Eigen::MatrixXd xs, int splineDegree);
+
+  int computeUsedOrder(int requestedOrder, int numberOfAvailableSamples);
 
   time::Sample computeExtrapolation();
 
