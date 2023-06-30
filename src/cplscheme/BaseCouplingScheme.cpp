@@ -352,12 +352,12 @@ void BaseCouplingScheme::secondExchange()
         PRECICE_DEBUG("Convergence achieved");
         advanceTXTWriters();
         PRECICE_INFO("Time window completed");
-        _isTimeWindowComplete = true;
-        _timeWindowStartTime += _computedTimeWindowPart;
         if (isCouplingOngoing()) {
           PRECICE_DEBUG("Setting require create checkpoint");
           requireAction(CouplingScheme::Action::WriteCheckpoint);
         }
+        _isTimeWindowComplete = true;
+        _timeWindowStartTime += _computedTimeWindowPart;
       }
       //update iterations
       _totalIterations++;
