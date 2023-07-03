@@ -236,6 +236,7 @@ void EventRegistry::flush()
   auto first = _writeQueue.begin();
   // Don't prefix the first write with a comma
   if (_firstwrite) {
+    PRECICE_ASSERT(!_writeQueue.empty() && !_writeQueue.front().valueless_by_exception());
     std::visit(EventWriter{_output, _initClock, ""}, _writeQueue.front());
     ++first;
     _firstwrite = false;
