@@ -34,6 +34,8 @@
 [![CodeFactor](https://www.codefactor.io/repository/github/precice/precice/badge)](https://www.codefactor.io/repository/github/precice/precice)
 [![CodeQL](https://github.com/precice/precice/actions/workflows/codeql.yml/badge.svg)](https://github.com/precice/precice/actions/workflows/codeql.yml)
 [![codecov](https://codecov.io/gh/precice/precice/branch/develop/graph/badge.svg?token=ixXCTXAZMU)](https://codecov.io/gh/precice/precice)
+[![Coverity](https://scan.coverity.com/projects/19312/badge.svg)](https://scan.coverity.com/projects/precice-precice)
+
 
 preCICE stands for Precise Code Interaction Coupling Environment. Its main component is a library that can be used by simulation programs to be coupled together in a partitioned way, enabling multi-physics simulations, such as fluid-structure interaction.
 
