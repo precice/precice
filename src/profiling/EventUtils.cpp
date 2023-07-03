@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <iterator>
 #include <memory>
+#include <optional>
 #include <ratio>
 #include <string>
 #include <sys/types.h>
@@ -62,7 +63,7 @@ void EventRegistry::initialize(std::string applicationName, int rank, int size)
 
   _writeQueue.clear();
   _firstwrite = true;
-  _globalId   = -1;
+  _globalId   = std::nullopt;
 
   _initialized = true;
   _finalized   = false;
@@ -121,7 +122,7 @@ void EventRegistry::startBackend()
   _output.open(filename);
   PRECICE_CHECK(_output, "Unable to open the events-file: \"{}\"", filename);
   _globalId = nameToID("_GLOBAL");
-  _writeQueue.emplace_back(StartEntry{_globalId, _initClock});
+  _writeQueue.emplace_back(StartEntry{_globalId.value(), _initClock});
 
   // write header
   fmt::print(_output,
@@ -152,7 +153,7 @@ void EventRegistry::stopBackend()
   }
   // create end of global event
   auto now = Event::Clock::now();
-  put(StopEntry{_globalId, now});
+  put(StopEntry{_globalId.value(), now});
   // flush the queue
   flush();
   _output << "]}";
