@@ -241,7 +241,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     // In case the sum is equal to zero, we assign equal weights for all clusters
     if (weightSum <= 0) {
       PRECICE_ASSERT(weights.size() > 0);
-      std::for_each(weights.begin(), weights.end(), [&weights](auto &w) { w = 1 / weights.size(); });
+      std::for_each(weights.begin(), weights.end(), [&weights](auto &w) { w = 1. / weights.size(); });
       weightSum = 1;
     }
     PRECICE_ASSERT(weightSum > 0);
