@@ -72,6 +72,7 @@ const time::Storage &CouplingData::timeStepsStorage() const
 
 void CouplingData::setSampleAtTime(double time, time::Sample sample)
 {
+  PRECICE_ASSERT(not this->values().hasNaN());
   this->sample() = sample; // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
   timeStepsStorage().setSampleAtTime(time, sample);
 }
