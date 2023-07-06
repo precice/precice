@@ -146,6 +146,10 @@ PtrData &Mesh::createData(
   //#rows = dimensions of current mesh #columns = dimensions of corresponding data set
   PtrData data(new Data(name, id, dimension, _dimensions));
   _data.push_back(data);
+  // @todo strange, but would otherwise require a lot of refactoring of Waveform class.
+  int interpolationOrder = 0; // @todo needs to be set by exchange. Reasonable default else
+  data->initializeWaveform(data, interpolationOrder);
+
   return _data.back();
 }
 

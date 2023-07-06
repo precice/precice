@@ -4,8 +4,6 @@
 
 #include "DataContext.hpp"
 #include "logging/Logger.hpp"
-#include "time/SharedPointer.hpp"
-#include "time/Time.hpp"
 
 namespace precice {
 namespace impl {
@@ -22,7 +20,6 @@ public:
    *
    * @param data Data associated with this ReadDataContext.
    * @param mesh Mesh associated with this ReadDataContext.
-   * @param interpolationOrder Order of the Waveform stored by this ReadDataContext.
    */
   ReadDataContext(
       mesh::PtrData data,
@@ -69,9 +66,6 @@ public:
 
 private:
   static logging::Logger _log;
-
-  /// Waveform wrapped by this ReadDataContext.
-  time::PtrWaveform _waveform;
 };
 
 } // namespace impl

@@ -2,8 +2,8 @@
 #include <algorithm>
 #include <utility>
 
-#include "SharedPointer.hpp"
 #include "precice/types.hpp"
+#include "time/Waveform.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/assertion.hpp"
 
@@ -48,9 +48,29 @@ time::Sample &Data::sample()
   return _sample;
 }
 
+void Data::initializeWaveform(PtrData ptrToMe, int interpolationOrder)
+{
+  _waveform = std::make_shared<time::Waveform>(interpolationOrder, PtrData(ptrToMe)); // @todo strange. Looks like mesh::Data should implement most of the Waveform functionality
+}
+
 const time::Sample &Data::sample() const
 {
   return _sample;
+}
+
+Eigen::VectorXd Data::sampleAtTime(double normalizedDt) const
+{
+  return _waveform->sample(normalizedDt);
+}
+
+int Data::getInterpolationOrder() const
+{
+  return _waveform->getInterpolationOrder();
+}
+
+void Data::setInterpolationOrder(int interpolationOrder)
+{
+  _waveform->setInterpolationOrder(interpolationOrder);
 }
 
 time::Storage &Data::timeStepsStorage()

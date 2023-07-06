@@ -42,6 +42,8 @@ public:
    */
   int getInterpolationOrder() const;
 
+  void setInterpolationOrder(int interpolationOrder);
+
   /**
    * @brief Evaluate waveform at specific point in time. Uses interpolation if necessary.
    *
@@ -57,7 +59,7 @@ private:
   mesh::PtrData _data;
 
   /// interpolation order for this waveform
-  const int _interpolationOrder;
+  int _interpolationOrder;
 
   mutable logging::Logger _log{"time::Waveform"};
 
