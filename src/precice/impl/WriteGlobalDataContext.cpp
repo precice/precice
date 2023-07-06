@@ -7,8 +7,9 @@ logging::Logger WriteGlobalDataContext::_log{"impl::WriteGlobalDataContext"};
 WriteGlobalDataContext::WriteGlobalDataContext(
     mesh::PtrData data)
     : DataContext(data, nullptr),
-      _writeDataBuffer(data->getDimensions())
+      _writeDataBuffer(data->getDimensions(), 1)
 {
+  _writeDataBuffer.values.setZero();
 }
 
 void WriteGlobalDataContext::resetData(bool atEndOfWindow, bool isTimeWindowComplete)
