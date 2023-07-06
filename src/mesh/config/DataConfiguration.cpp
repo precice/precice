@@ -14,9 +14,13 @@ DataConfiguration::DataConfiguration(xml::XMLTag &parent)
   auto attrName = XMLAttribute<std::string>(ATTR_NAME)
                       .setDocumentation("Unique name for the data set.");
 
+  auto attrDegree = makeXMLAttribute(ATTR_DEGREE, time::Time::DEFAULT_WAVEFORM_DEGREE);
+  attrDegree.setDocumentation("Polynomial degree used for interpolation in waveform iteration when reading data.");
+
   XMLTag tagScalar(*this, VALUE_SCALAR, XMLTag::OCCUR_ARBITRARY, TAG);
   tagScalar.setDocumentation("Defines a scalar data set to be assigned to meshes.");
   tagScalar.addAttribute(attrName);
+  tagScalar.addAttribute(attrDegree);
   parent.addSubtag(tagScalar);
 
   XMLTag tagVector(*this, VALUE_VECTOR, XMLTag::OCCUR_ARBITRARY, TAG);
@@ -24,6 +28,7 @@ DataConfiguration::DataConfiguration(xml::XMLTag &parent)
                              "components of each data entry depends on the spatial dimensions set "
                              "in tag <precice-configuration>.");
   tagVector.addAttribute(attrName);
+  tagVector.addAttribute(attrDegree);
   parent.addSubtag(tagVector);
 }
 
@@ -57,8 +62,12 @@ void DataConfiguration::xmlTagCallback(
     PRECICE_ASSERT(_dimensions != 0);
     const std::string &name           = tag.getStringAttributeValue(ATTR_NAME);
     const std::string &typeName       = tag.getName();
-    int                dataDimensions = getDataDimensions(typeName);
-    addData(name, dataDimensions);
+    const int          waveformDegree = tag.getIntAttributeValue(ATTR_DEGREE);
+    if (waveformDegree < time::Time::MIN_WAVEFORM_DEGREE || waveformDegree > time::Time::MAX_WAVEFORM_DEGREE) {
+      PRECICE_ERROR("You tried to configure the data with name \"{}\" to use the waveform-degree=\"{}\", but the degree must be between \"{}\" and \"{}\". Please use an order in the allowed range.", name, waveformDegree, time::Time::MIN_WAVEFORM_DEGREE, time::Time::MAX_WAVEFORM_DEGREE);
+    }
+    int dataDimensions = getDataDimensions(typeName);
+    addData(name, dataDimensions, waveformDegree);
   } else {
     PRECICE_ASSERT(false, "Received callback from an unknown tag.", tag.getName());
   }
@@ -72,7 +81,8 @@ void DataConfiguration::xmlEndTagCallback(
 
 void DataConfiguration::addData(
     const std::string &name,
-    int                dataDimensions)
+    int                dataDimensions,
+    int                waveformDegree)
 {
   // Check if data with same name has been added already
   for (auto &elem : _data) {
@@ -81,7 +91,7 @@ void DataConfiguration::addData(
                   name);
   }
 
-  _data.emplace_back(name, dataDimensions);
+  _data.emplace_back(name, dataDimensions, waveformDegree);
 }
 
 int DataConfiguration::getDataDimensions(

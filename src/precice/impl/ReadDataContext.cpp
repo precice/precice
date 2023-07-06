@@ -6,11 +6,9 @@ logging::Logger ReadDataContext::_log{"impl::ReadDataContext"};
 
 ReadDataContext::ReadDataContext(
     mesh::PtrData data,
-    mesh::PtrMesh mesh,
-    int           interpolationOrder)
+    mesh::PtrMesh mesh)
     : DataContext(data, mesh)
 {
-  data->setInterpolationOrder(interpolationOrder);
 }
 
 void ReadDataContext::appendMappingConfiguration(MappingContext &mappingContext, const MeshContext &meshContext)

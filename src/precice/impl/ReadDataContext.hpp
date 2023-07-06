@@ -23,8 +23,7 @@ public:
    */
   ReadDataContext(
       mesh::PtrData data,
-      mesh::PtrMesh mesh,
-      int           interpolationOrder = time::Time::DEFAULT_INTERPOLATION_ORDER);
+      mesh::PtrMesh mesh);
 
   /**
    * @brief Gets _interpolationOrder of _waveform

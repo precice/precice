@@ -6,13 +6,13 @@ namespace time {
 class Time {
 public:
   /// To be used, when the interpolation order is not defined.
-  static const int DEFAULT_INTERPOLATION_ORDER;
+  static const int DEFAULT_WAVEFORM_DEGREE;
 
   /// The minimum required interpolation order.
-  static const int MIN_INTERPOLATION_ORDER;
+  static const int MIN_WAVEFORM_DEGREE;
 
   /// The maximum allowed interpolation order.
-  static const int MAX_INTERPOLATION_ORDER;
+  static const int MAX_WAVEFORM_DEGREE;
 };
 
 } // namespace time

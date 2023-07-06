@@ -169,7 +169,8 @@ public:
   /// Create only data for vertex
   PtrData &createData(const std::string &name,
                       int                dimension,
-                      DataID             id);
+                      DataID             id,
+                      int                waveformDegree = time::Time::DEFAULT_WAVEFORM_DEGREE);
 
   /// Allows access to all data
   const DataContainer &data() const;

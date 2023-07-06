@@ -13,7 +13,7 @@ Data::Data(
     std::string name,
     DataID      id,
     int         dimensions,
-    int         spatialDimensions)
+    int         spatialDimensions) //@todo also set interpolationOrder here and directly initializeWaveform?
     : _name(std::move(name)),
       _id(id),
       _dimensions(dimensions),
@@ -48,9 +48,9 @@ time::Sample &Data::sample()
   return _sample;
 }
 
-void Data::initializeWaveform(PtrData ptrToMe, int interpolationOrder)
+void Data::initializeWaveform(PtrData ptrToMe, int waveformDegree)
 {
-  _waveform = std::make_shared<time::Waveform>(interpolationOrder, PtrData(ptrToMe)); // @todo strange. Looks like mesh::Data should implement most of the Waveform functionality
+  _waveform = std::make_shared<time::Waveform>(waveformDegree, PtrData(ptrToMe)); // @todo strange. Looks like mesh::Data should implement most of the Waveform functionality
 }
 
 const time::Sample &Data::sample() const

@@ -134,7 +134,8 @@ Tetrahedron &Mesh::createTetrahedron(
 PtrData &Mesh::createData(
     const std::string &name,
     int                dimension,
-    DataID             id)
+    DataID             id,
+    int                waveformDegree)
 {
   PRECICE_TRACE(name, dimension);
   for (const PtrData &data : _data) {
@@ -147,8 +148,7 @@ PtrData &Mesh::createData(
   PtrData data(new Data(name, id, dimension, _dimensions));
   _data.push_back(data);
   // @todo strange, but would otherwise require a lot of refactoring of Waveform class.
-  int interpolationOrder = 0; // @todo needs to be set by exchange. Reasonable default else
-  data->initializeWaveform(data, interpolationOrder);
+  data->initializeWaveform(data, waveformDegree);
 
   return _data.back();
 }

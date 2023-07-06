@@ -14,7 +14,7 @@ Waveform::Waveform(
     const int interpolationOrder, mesh::PtrData data)
     : _interpolationOrder(interpolationOrder), _data(data)
 {
-  PRECICE_ASSERT(Time::MIN_INTERPOLATION_ORDER <= _interpolationOrder && _interpolationOrder <= Time::MAX_INTERPOLATION_ORDER);
+  PRECICE_ASSERT(Time::MIN_WAVEFORM_DEGREE <= _interpolationOrder && _interpolationOrder <= Time::MAX_WAVEFORM_DEGREE);
 }
 
 int Waveform::getInterpolationOrder() const

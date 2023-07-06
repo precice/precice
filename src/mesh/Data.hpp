@@ -70,7 +70,8 @@ public:
    *
    * @todo try to solve this differently and let exchange initialize Waveform of data. PtrStorage should be sufficient for Waveform, PtrData is overkill.
    */
-  void initializeWaveform(PtrData ptrToMe, int interpolationOrder);
+  void initializeWaveform(PtrData ptrToMe,
+                          int     waveformDegree = time::Time::DEFAULT_WAVEFORM_DEGREE);
 
   /// Returns a reference to the _sample.
   time::Sample &sample();

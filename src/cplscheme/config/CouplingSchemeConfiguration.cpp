@@ -939,7 +939,7 @@ CouplingSchemeConfiguration::getTimesteppingMethod(
   }
 }
 
-void CouplingSchemeConfiguration::checkSubstepExchangeWaveformOrder(const Config::Exchange &exchange) const
+void CouplingSchemeConfiguration::checkSubstepExchangeWaveformDegree(const Config::Exchange &exchange) const
 {
   const auto &participant = _participantConfig->getParticipant(exchange.to);
 
@@ -1005,7 +1005,7 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
     if (from == accessor) {
       scheme.addDataToSend(exchange.data, exchange.mesh, requiresInitialization, exchangeSubsteps);
     } else if (to == accessor) {
-      checkSubstepExchangeWaveformOrder(exchange);
+      checkSubstepExchangeWaveformDegree(exchange);
       scheme.addDataToReceive(exchange.data, exchange.mesh, requiresInitialization, exchangeSubsteps);
     } else {
       PRECICE_ASSERT(_config.type == VALUE_MULTI);
