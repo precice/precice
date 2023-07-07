@@ -15,14 +15,14 @@ BOOST_AUTO_TEST_SUITE(WaveformTests)
 BOOST_AUTO_TEST_CASE(testInitialization)
 {
   PRECICE_TEST(1_rank);
-  const int       interpolationOrder = 0;
-  const int       valuesSize         = 1;
-  mesh::PtrData   dataPtr            = std::make_shared<mesh::Data>(mesh::Data("name", -1, valuesSize, 1));
+  const int       interpolationDegree = 0;
+  const int       valuesSize          = 1;
+  mesh::PtrData   dataPtr             = std::make_shared<mesh::Data>(mesh::Data("name", -1, valuesSize, 1));
   Eigen::VectorXd value(1);
   value(0) = 0.0;
   dataPtr->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
 
-  Waveform waveform(interpolationOrder, dataPtr);
+  Waveform waveform(interpolationDegree, dataPtr);
 
   testing::WaveformFixture fixture;
   BOOST_TEST(fixture.valuesSize(waveform) == valuesSize);
@@ -35,14 +35,14 @@ BOOST_AUTO_TEST_CASE(testInitializationVector)
 {
   PRECICE_TEST(1_rank);
 
-  const int       interpolationOrder = 0;
-  const int       valuesSize         = 3;
-  mesh::PtrData   dataPtr            = std::make_shared<mesh::Data>(mesh::Data("name", -1, valuesSize, 1));
+  const int       interpolationDegree = 0;
+  const int       valuesSize          = 3;
+  mesh::PtrData   dataPtr             = std::make_shared<mesh::Data>(mesh::Data("name", -1, valuesSize, 1));
   Eigen::VectorXd value(valuesSize);
   value << 0, 0, 0;
   dataPtr->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
 
-  Waveform waveform(interpolationOrder, dataPtr);
+  Waveform waveform(interpolationDegree, dataPtr);
 
   testing::WaveformFixture fixture;
   BOOST_TEST(fixture.valuesSize(waveform) == valuesSize);
@@ -55,22 +55,22 @@ BOOST_AUTO_TEST_CASE(testInitializationVector)
 
 BOOST_AUTO_TEST_SUITE(InterpolationTests)
 
-BOOST_AUTO_TEST_CASE(testInterpolateDataZerothOrder)
+BOOST_AUTO_TEST_CASE(testInterpolateDataZerothDegree)
 {
   PRECICE_TEST(1_rank);
 
   testing::WaveformFixture fixture;
 
-  // Test zeroth order interpolation
-  const int       interpolationOrder = 0;
-  const int       valuesSize         = 1;
-  mesh::PtrData   dataPtr            = std::make_shared<mesh::Data>(mesh::Data("name", -1, valuesSize, 1));
+  // Test zeroth degree interpolation
+  const int       interpolationDegree = 0;
+  const int       valuesSize          = 1;
+  mesh::PtrData   dataPtr             = std::make_shared<mesh::Data>(mesh::Data("name", -1, valuesSize, 1));
   Eigen::VectorXd value(1);
   value(0) = 0.0;
   dataPtr->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, value});
   value(0) = 1.0;
   dataPtr->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
-  Waveform waveform(interpolationOrder, dataPtr);
+  Waveform waveform(interpolationDegree, dataPtr);
 
   BOOST_TEST(fixture.valuesSize(waveform) == valuesSize);
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 2);
@@ -103,23 +103,23 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataZerothOrder)
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 3.0));
 }
 
-BOOST_AUTO_TEST_CASE(testInterpolateDataFirstOrder)
+BOOST_AUTO_TEST_CASE(testInterpolateDataFirstDegree)
 {
   PRECICE_TEST(1_rank);
 
   testing::WaveformFixture fixture;
 
-  // Test first order interpolation
-  const int       interpolationOrder = 1;
-  const int       valuesSize         = 1;
-  mesh::PtrData   dataPtr            = std::make_shared<mesh::Data>(mesh::Data("name", -1, valuesSize, 1));
+  // Test first degree interpolation
+  const int       interpolationDegree = 1;
+  const int       valuesSize          = 1;
+  mesh::PtrData   dataPtr             = std::make_shared<mesh::Data>(mesh::Data("name", -1, valuesSize, 1));
   Eigen::VectorXd value(1);
   value(0) = 0.0;
   dataPtr->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, value});
   value(0) = 1.0;
   dataPtr->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
 
-  Waveform waveform(interpolationOrder, dataPtr);
+  Waveform waveform(interpolationDegree, dataPtr);
 
   BOOST_TEST(fixture.valuesSize(waveform) == valuesSize);
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 2);
@@ -150,24 +150,24 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataFirstOrder)
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 3.0));
 }
 
-// Remove or modify this feature? Creating a second degree interpolant by using data from previous windows is difficult, because this would require several pieces of data during initialization. What would be useful: Generating a second order interpolant from multiple samples in a single window (if available). This would go into the least-squares direction
-BOOST_AUTO_TEST_CASE(testInterpolateDataSecondOrder)
+// Remove or modify this feature? Creating a second degree interpolant by using data from previous windows is difficult, because this would require several pieces of data during initialization. What would be useful: Generating a second degree interpolant from multiple samples in a single window (if available). This would go into the least-squares direction
+BOOST_AUTO_TEST_CASE(testInterpolateDataSecondDegree)
 {
   PRECICE_TEST(1_rank);
 
   testing::WaveformFixture fixture;
 
-  // Test second order interpolation, but there are not enough samples. Therefore, always only first order.
-  const int       interpolationOrder = 2;
-  const int       valuesSize         = 1;
-  mesh::PtrData   dataPtr            = std::make_shared<mesh::Data>(mesh::Data("name", -1, valuesSize, 1));
+  // Test second degree interpolation, but there are not enough samples. Therefore, always only first degree.
+  const int       interpolationDegree = 2;
+  const int       valuesSize          = 1;
+  mesh::PtrData   dataPtr             = std::make_shared<mesh::Data>(mesh::Data("name", -1, valuesSize, 1));
   Eigen::VectorXd value(1);
   value(0) = 0.0;
   dataPtr->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, value});
   value(0) = 1.0;
   dataPtr->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
 
-  Waveform waveform(interpolationOrder, dataPtr);
+  Waveform waveform(interpolationDegree, dataPtr);
 
   BOOST_TEST(fixture.valuesSize(waveform) == valuesSize);
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 2);
@@ -223,23 +223,23 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataSecondOrder)
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 8.0));
 }
 
-BOOST_AUTO_TEST_CASE(testInterpolateDataFirstOrderVector)
+BOOST_AUTO_TEST_CASE(testInterpolateDataFirstDegreeVector)
 {
   PRECICE_TEST(1_rank);
 
   testing::WaveformFixture fixture;
 
-  // Test first order interpolation
-  const int       interpolationOrder = 1;
-  const int       valuesSize         = 3;
-  mesh::PtrData   dataPtr            = std::make_shared<mesh::Data>(mesh::Data("name", -1, valuesSize, 1));
+  // Test first degree interpolation
+  const int       interpolationDegree = 1;
+  const int       valuesSize          = 3;
+  mesh::PtrData   dataPtr             = std::make_shared<mesh::Data>(mesh::Data("name", -1, valuesSize, 1));
   Eigen::VectorXd value(valuesSize);
   value << 0, 0, 0;
   dataPtr->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, value});
   value << 1, 2, 3;
   dataPtr->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
 
-  Waveform waveform(interpolationOrder, dataPtr);
+  Waveform waveform(interpolationDegree, dataPtr);
 
   BOOST_TEST(fixture.valuesSize(waveform) == valuesSize);
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 2);
@@ -280,16 +280,16 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataFirstOrderVector)
   }
 }
 
-BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataZerothOrder)
+BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataZerothDegree)
 {
   PRECICE_TEST(1_rank);
 
   testing::WaveformFixture fixture;
 
-  // Test zeroth order interpolation
-  const int       interpolationOrder = 0;
-  const int       valuesSize         = 1;
-  mesh::PtrData   dataPtr            = std::make_shared<mesh::Data>(mesh::Data("name", -1, valuesSize, 1));
+  // Test zeroth degree interpolation
+  const int       interpolationDegree = 0;
+  const int       valuesSize          = 1;
+  mesh::PtrData   dataPtr             = std::make_shared<mesh::Data>(mesh::Data("name", -1, valuesSize, 1));
   Eigen::VectorXd value(1);
   value(0) = 0.0;
   dataPtr->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, value});
@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataZerothOrder)
   value(0) = 1.0;
   dataPtr->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
 
-  Waveform waveform(interpolationOrder, dataPtr);
+  Waveform waveform(interpolationDegree, dataPtr);
 
   BOOST_TEST(fixture.valuesSize(waveform) == valuesSize);
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 3);
@@ -352,16 +352,16 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataZerothOrder)
   BOOST_TEST(testing::equals(waveform.sample(1.00)(0), 4.0));
 }
 
-BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataFirstOrder)
+BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataFirstDegree)
 {
   PRECICE_TEST(1_rank);
 
   testing::WaveformFixture fixture;
 
-  // Test zeroth order interpolation
-  const int       interpolationOrder = 1;
-  const int       valuesSize         = 1;
-  mesh::PtrData   dataPtr            = std::make_shared<mesh::Data>(mesh::Data("name", -1, valuesSize, 1));
+  // Test zeroth degree interpolation
+  const int       interpolationDegree = 1;
+  const int       valuesSize          = 1;
+  mesh::PtrData   dataPtr             = std::make_shared<mesh::Data>(mesh::Data("name", -1, valuesSize, 1));
   Eigen::VectorXd value(1);
   value(0) = 0.0;
   dataPtr->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, value});
@@ -370,7 +370,7 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataFirstOrder)
   value(0) = 1.0;
   dataPtr->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
 
-  Waveform waveform(interpolationOrder, dataPtr);
+  Waveform waveform(interpolationDegree, dataPtr);
 
   BOOST_TEST(fixture.valuesSize(waveform) == valuesSize);
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 3);
@@ -422,16 +422,16 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataFirstOrder)
   BOOST_TEST(testing::equals(waveform.sample(1.00)(0), 4.00));
 }
 
-BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataSecondOrder)
+BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataSecondDegree)
 {
   PRECICE_TEST(1_rank);
 
   testing::WaveformFixture fixture;
 
-  // Test zeroth order interpolation
-  const int       interpolationOrder = 2;
-  const int       valuesSize         = 1;
-  mesh::PtrData   dataPtr            = std::make_shared<mesh::Data>(mesh::Data("name", -1, valuesSize, 1));
+  // Test zeroth degree interpolation
+  const int       interpolationDegree = 2;
+  const int       valuesSize          = 1;
+  mesh::PtrData   dataPtr             = std::make_shared<mesh::Data>(mesh::Data("name", -1, valuesSize, 1));
   Eigen::VectorXd value(1);
   value(0) = 0.0;
   dataPtr->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, value});
@@ -440,7 +440,7 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataSecondOrder)
   value(0) = 2.0;
   dataPtr->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
 
-  Waveform waveform(interpolationOrder, dataPtr);
+  Waveform waveform(interpolationDegree, dataPtr);
 
   BOOST_TEST(fixture.valuesSize(waveform) == valuesSize);
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 3);
@@ -451,18 +451,18 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataSecondOrder)
   BOOST_TEST(testing::equals(waveform.sample(1.00)(0), 2.00));
 }
 
-BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataThirdOrder)
+BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataThirdDegree)
 {
   PRECICE_TEST(1_rank);
 
   testing::WaveformFixture fixture;
 
-  // Test zeroth order interpolation
-  const int     interpolationOrder = 3;
-  const int     valuesSize         = 1;
-  mesh::PtrData dataPtr            = std::make_shared<mesh::Data>(mesh::Data("name", -1, valuesSize, 1));
+  // Test zeroth degree interpolation
+  const int     interpolationDegree = 3;
+  const int     valuesSize          = 1;
+  mesh::PtrData dataPtr             = std::make_shared<mesh::Data>(mesh::Data("name", -1, valuesSize, 1));
 
-  Waveform waveform(interpolationOrder, dataPtr);
+  Waveform waveform(interpolationDegree, dataPtr);
 
   // linearly increasing values
   Eigen::VectorXd value(1);

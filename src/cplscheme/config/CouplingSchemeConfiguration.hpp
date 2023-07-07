@@ -50,7 +50,7 @@ public:
    * @param[in] parent  Used to add subtags to hierarchical XML structure.
    * @param[in] meshConfig For checking if a used mesh is defined.
    * @param[in] m2nConfig For checking if a communication between participants to be coupled is defined.
-   * @param[in] participantConfig For checking waveform order.
+   * @param[in] participantConfig For checking waveform degree.
    */
   CouplingSchemeConfiguration(
       xml::XMLTag &                        parent,
@@ -302,7 +302,7 @@ private:
    *
    * The following rules are checked:
    *
-   * 1) If waveform-degree="0", then user must set substeps="false", because order zero is intended for debugging and user should use first degree instead.
+   * 1) If waveform-degree="0", then user must set substeps="false", because constant interpolation (zeroth degree) is intended for debugging and user should use first degree instead.
    * 2) If waveform-degree="1", then any configuration for substeps is allowed. The user might want to set substeps="false" for better performance.
    * 3) If waveform-degree="2" or greater, the user must set substeps="true", because subcycling and exchange of substeps is required for higher-degree B-splines.
    *

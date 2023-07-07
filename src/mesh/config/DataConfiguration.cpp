@@ -15,7 +15,7 @@ DataConfiguration::DataConfiguration(xml::XMLTag &parent)
                       .setDocumentation("Unique name for the data set.");
 
   auto attrDegree = makeXMLAttribute(ATTR_DEGREE, time::Time::DEFAULT_WAVEFORM_DEGREE);
-  attrDegree.setDocumentation("Polynomial degree used for interpolation in waveform iteration when reading data.");
+  attrDegree.setDocumentation("Polynomial degree used by waveform iteration when reading data.");
 
   XMLTag tagScalar(*this, VALUE_SCALAR, XMLTag::OCCUR_ARBITRARY, TAG);
   tagScalar.setDocumentation("Defines a scalar data set to be assigned to meshes.");
@@ -64,7 +64,7 @@ void DataConfiguration::xmlTagCallback(
     const std::string &typeName       = tag.getName();
     const int          waveformDegree = tag.getIntAttributeValue(ATTR_DEGREE);
     if (waveformDegree < time::Time::MIN_WAVEFORM_DEGREE || waveformDegree > time::Time::MAX_WAVEFORM_DEGREE) {
-      PRECICE_ERROR("You tried to configure the data with name \"{}\" to use the waveform-degree=\"{}\", but the degree must be between \"{}\" and \"{}\". Please use an order in the allowed range.", name, waveformDegree, time::Time::MIN_WAVEFORM_DEGREE, time::Time::MAX_WAVEFORM_DEGREE);
+      PRECICE_ERROR("You tried to configure the data with name \"{}\" to use the waveform-degree=\"{}\", but the degree must be between \"{}\" and \"{}\". Please use a degree in the allowed range.", name, waveformDegree, time::Time::MIN_WAVEFORM_DEGREE, time::Time::MAX_WAVEFORM_DEGREE);
     }
     int dataDimensions = getDataDimensions(typeName);
     addData(name, dataDimensions, waveformDegree);

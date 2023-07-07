@@ -13,7 +13,7 @@ Data::Data(
     std::string name,
     DataID      id,
     int         dimensions,
-    int         spatialDimensions) //@todo also set interpolationOrder here and directly initializeWaveform?
+    int         spatialDimensions) //@todo also set interpolationDegree here and directly initializeWaveform?
     : _name(std::move(name)),
       _id(id),
       _dimensions(dimensions),
@@ -63,14 +63,14 @@ Eigen::VectorXd Data::sampleAtTime(double normalizedDt) const
   return _waveform->sample(normalizedDt);
 }
 
-int Data::getInterpolationOrder() const
+int Data::getInterpolationDegree() const
 {
-  return _waveform->getInterpolationOrder();
+  return _waveform->getInterpolationDegree();
 }
 
-void Data::setInterpolationOrder(int interpolationOrder)
+void Data::setInterpolationDegree(int interpolationDegree)
 {
-  _waveform->setInterpolationOrder(interpolationOrder);
+  _waveform->setInterpolationDegree(interpolationDegree);
 }
 
 time::Storage &Data::timeStepsStorage()
