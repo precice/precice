@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration dimensions="3">
   <data:scalar name="DataOne" />
-  <data:scalar name="DataTwo" />
+  <data:scalar name="DataTwo" waveform-degree="0" />
 
   <mesh name="MeshOne">
     <use-data name="DataOne" />
@@ -16,7 +16,7 @@
   <participant name="SolverOne">
     <provide-mesh name="MeshOne" />
     <write-data name="DataOne" mesh="MeshOne" />
-    <read-data name="DataTwo" mesh="MeshOne" waveform-order="0" />
+    <read-data name="DataTwo" mesh="MeshOne" />
   </participant>
 
   <participant name="SolverTwo">
