@@ -1060,10 +1060,10 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
     const bool exchangeSubsteps = exchange.exchangeSubsteps;
 
     if (from == accessor) {
-      scheme.addDataToSend(exchange.data, exchange.mesh, requiresInitialization, exchangeSubsteps);
+      scheme.addDataToSend(exchange.data, exchange.mesh, requiresInitialization, exchangeSubsteps, false);
     } else if (to == accessor) {
       checkSubstepExchangeWaveformDegree(exchange);
-      scheme.addDataToReceive(exchange.data, exchange.mesh, requiresInitialization, exchangeSubsteps);
+      scheme.addDataToReceive(exchange.data, exchange.mesh, requiresInitialization, exchangeSubsteps, false);
     } else {
       PRECICE_ASSERT(_config.type == VALUE_MULTI);
     }
@@ -1095,10 +1095,10 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
     const bool exchangeSubsteps = exchange.exchangeSubsteps;
 
     if (from == accessor) {
-      scheme.addGlobalDataToSend(exchange.data, requiresInitialization, exchangeSubsteps);
+      scheme.addDataToSend(exchange.data, nullptr, requiresInitialization, exchangeSubsteps, true);
     } else if (to == accessor) {
       checkSubstepExchangeWaveformOrder(exchange);
-      scheme.addGlobalDataToReceive(exchange.data, requiresInitialization, exchangeSubsteps);
+      scheme.addDataToReceive(exchange.data, nullptr, requiresInitialization, exchangeSubsteps, true);
     } else {
       PRECICE_ASSERT(_config.type == VALUE_MULTI);
     }

@@ -182,7 +182,7 @@ void MultiCouplingScheme::addDataToSend(
     bool                 exchangeSubsteps,
     const std::string &  to)
 {
-  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization, exchangeSubsteps);
+  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization, exchangeSubsteps, false);
   PRECICE_DEBUG("Configuring send data to {}", to);
   _sendDataVector[to].emplace(data->getID(), ptrCplData);
 }
@@ -194,7 +194,7 @@ void MultiCouplingScheme::addDataToReceive(
     bool                 exchangeSubsteps,
     const std::string &  from)
 {
-  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization, exchangeSubsteps);
+  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization, exchangeSubsteps, false);
   PRECICE_DEBUG("Configuring receive data from {}", from);
   _receiveDataVector[from].emplace(data->getID(), ptrCplData);
 }

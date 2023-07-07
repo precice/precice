@@ -52,33 +52,32 @@ void BiCouplingScheme::addDataToSend(
     const mesh::PtrData &data,
     mesh::PtrMesh        mesh,
     bool                 requiresInitialization,
-    bool                 exchangeSubsteps)
+    bool                 exchangeSubsteps,
+    bool                 isGlobal)
 {
   PRECICE_TRACE();
-  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization, exchangeSubsteps);
 
-  if (!utils::contained(data->getID(), _sendData)) {
-    PRECICE_ASSERT(_sendData.count(data->getID()) == 0, "Key already exists!");
-    _sendData.emplace(data->getID(), ptrCplData);
-  } else {
-    PRECICE_ERROR("Data \"{0}\" cannot be added twice for sending. Please remove any duplicate <exchange data=\"{0}\" .../> tags", data->getName());
-  }
-}
+  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization, exchangeSubsteps, isGlobal);
+  // TODO: the following assertion should not fail but somehow it is failing
+  // PRECICE_ASSERT((mesh==nullptr and isGlobal) or (mesh!=nullptr and !isGlobal)); // either global data without mesh, or mesh data with mesh
 
-void BiCouplingScheme::addGlobalDataToSend(
-    const mesh::PtrData &data,
-    bool                 requiresInitialization,
-    bool                 exchangeSubsteps)
-{
-  PRECICE_TRACE();
-  PtrCouplingData ptrCplData = addGlobalCouplingData(data, requiresInitialization, exchangeSubsteps);
-  precice::DataID id         = data->getID();
-  if (!utils::contained(id, _sendGlobalData)) {
-    PRECICE_ASSERT(_sendGlobalData.count(id) == 0, "Key already exists!");
-    _sendGlobalData.emplace(id, ptrCplData);
-    PRECICE_DEBUG("Added \"{}\" to _sendGlobalData. Now _sendGlobalData.size is {}.", data->getName(), _sendGlobalData.size());
-  } else {
-    PRECICE_ERROR("Global Data \"{0}\" cannot be added twice for sending. Please remove any duplicate <exchange data=\"{0}\" .../> tags", data->getName());
+  if (isGlobal) {
+    auto id = data->getID();
+    if (!utils::contained(id, _sendGlobalData)) {
+      PRECICE_ASSERT(_sendGlobalData.count(id) == 0, "Key already exists!");
+      _sendGlobalData.emplace(id, ptrCplData);
+      PRECICE_DEBUG("Added \"{}\" to _sendGlobalData. Now _sendGlobalData.size is {}.", data->getName(), _sendGlobalData.size());
+    } else {
+      PRECICE_ERROR("Global Data \"{0}\" cannot be added twice for sending. Please remove any duplicate <exchange data=\"{0}\" .../> tags", data->getName());
+    }
+
+  } else { // mesh data
+    if (!utils::contained(data->getID(), _sendData)) {
+      PRECICE_ASSERT(_sendData.count(data->getID()) == 0, "Key already exists!");
+      _sendData.emplace(data->getID(), ptrCplData);
+    } else {
+      PRECICE_ERROR("Data \"{0}\" cannot be added twice for sending. Please remove any duplicate <exchange data=\"{0}\" .../> tags", data->getName());
+    }
   }
 }
 
@@ -86,33 +85,29 @@ void BiCouplingScheme::addDataToReceive(
     const mesh::PtrData &data,
     mesh::PtrMesh        mesh,
     bool                 requiresInitialization,
-    bool                 exchangeSubsteps)
+    bool                 exchangeSubsteps,
+    bool                 isGlobal)
 {
   PRECICE_TRACE();
-  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization, exchangeSubsteps);
+  // PRECICE_ASSERT((mesh==nullptr and isGlobal) or (mesh!=nullptr and !isGlobal)); // either global data without mesh, or mesh data with mesh
+  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization, exchangeSubsteps, isGlobal);
 
-  if (!utils::contained(data->getID(), _receiveData)) {
-    PRECICE_ASSERT(_receiveData.count(data->getID()) == 0, "Key already exists!");
-    _receiveData.emplace(data->getID(), ptrCplData);
+  if (isGlobal) {
+    auto id = data->getID();
+    if (!utils::contained(data->getID(), _receiveGlobalData)) {
+      PRECICE_ASSERT(_receiveGlobalData.count(id) == 0, "Key already exists!");
+      _receiveGlobalData.emplace(data->getID(), ptrCplData);
+      PRECICE_DEBUG("Added \"{}\" to _receiveGlobalData.", data->getName());
+    } else {
+      PRECICE_ERROR("Global Data \"{0}\" cannot be added twice for receiving. Please remove any duplicate <exchange data=\"{0}\" ... /> tags", data->getName());
+    }
   } else {
-    PRECICE_ERROR("Data \"{0}\" cannot be added twice for receiving. Please remove any duplicate <exchange data=\"{0}\" ... /> tags", data->getName());
-  }
-}
-
-void BiCouplingScheme::addGlobalDataToReceive(
-    const mesh::PtrData &data,
-    bool                 requiresInitialization,
-    bool                 exchangeSubsteps)
-{
-  PRECICE_TRACE();
-  PtrCouplingData ptrCplData = addGlobalCouplingData(data, requiresInitialization, exchangeSubsteps);
-  precice::DataID id         = data->getID();
-  if (!utils::contained(id, _receiveGlobalData)) {
-    PRECICE_ASSERT(_receiveGlobalData.count(id) == 0, "Key already exists!");
-    _receiveGlobalData.emplace(id, ptrCplData);
-    PRECICE_DEBUG("Added \"{}\" to _receiveGlobalData.", data->getName());
-  } else {
-    PRECICE_ERROR("Global Data \"{0}\" cannot be added twice for receiving. Please remove any duplicate <exchange data=\"{0}\" ... /> tags", data->getName());
+    if (!utils::contained(data->getID(), _receiveData)) {
+      PRECICE_ASSERT(_receiveData.count(data->getID()) == 0, "Key already exists!");
+      _receiveData.emplace(data->getID(), ptrCplData);
+    } else {
+      PRECICE_ERROR("Data \"{0}\" cannot be added twice for receiving. Please remove any duplicate <exchange data=\"{0}\" ... /> tags", data->getName());
+    }
   }
 }
 

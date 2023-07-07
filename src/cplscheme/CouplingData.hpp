@@ -17,7 +17,8 @@ public:
       mesh::PtrMesh mesh,
       bool          requiresInitialization,
       bool          exchangeSubsteps,
-      int           extrapolationOrder);
+      int           extrapolationOrder,
+      bool          isGlobal = false);
 
   int getDimensions() const;
 
@@ -80,6 +81,9 @@ public:
   /// get ID of this CouplingData's data. See Data::getID().
   int getDataID();
 
+  /// get whether this CouplingData's data is global.
+  bool isGlobal();
+
   /// get name of this CouplingData's data. See Data::getName().
   std::string getDataName();
 
@@ -102,6 +106,9 @@ private:
 
   /// Data associated with this CouplingData
   mesh::PtrData _data;
+
+  /// whether the associated data is global
+  bool _isGlobal;
 
   /// Sample values of previous iteration (end of time window).
   time::Sample _previousIteration;
