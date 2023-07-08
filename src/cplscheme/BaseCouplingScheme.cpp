@@ -242,19 +242,18 @@ void BaseCouplingScheme::initializeWithZeroInitialData(const DataMap &receiveDat
 
 PtrCouplingData BaseCouplingScheme::addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization, bool communicateSubsteps, bool isGlobal)
 {
-  int             id = data->getID();
-  PtrCouplingData ptrCplData;
+  int             id         = data->getID();
+  PtrCouplingData ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, communicateSubsteps, _extrapolationOrder, isGlobal);
 
+  // TODO: store mesh and global data together in a `DataMap _allData ` (currently produces a bug)
   if (isGlobal) {
-    if (!utils::contained(id, _allGlobalData)) { // data is not used by this coupling scheme yet, create new GlobalCouplingData
-      ptrCplData = std::make_shared<CouplingData>(data, nullptr, requiresInitialization, communicateSubsteps, _extrapolationOrder, true);
+    if (!utils::contained(id, _allGlobalData)) { // data is not used by this coupling scheme yet, create new CouplingData
       _allGlobalData.emplace(id, ptrCplData);
-    } else { // data is already used by another exchange of this coupling scheme, use existing GlobalCouplingData
+    } else { // data is already used by another exchange of this coupling scheme, use existing CouplingData
       ptrCplData = _allGlobalData[id];
     }
   } else {                                     // mesh data
     if (!utils::contained(id, _allMeshData)) { // data is not used by this coupling scheme yet, create new CouplingData
-      ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, communicateSubsteps, _extrapolationOrder, false);
       _allMeshData.emplace(id, ptrCplData);
     } else { // data is already used by another exchange of this coupling scheme, use existing CouplingData
       ptrCplData = _allMeshData[id];
