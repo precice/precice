@@ -56,10 +56,8 @@ void BiCouplingScheme::addDataToSend(
     bool                 isGlobal)
 {
   PRECICE_TRACE();
-
+  PRECICE_ASSERT((mesh == nullptr and isGlobal) or (mesh != nullptr and !isGlobal)); // must be either global data without mesh, or mesh data with mesh
   PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization, exchangeSubsteps, isGlobal);
-  // TODO: the following assertion should not fail but somehow it is failing
-  // PRECICE_ASSERT((mesh==nullptr and isGlobal) or (mesh!=nullptr and !isGlobal)); // either global data without mesh, or mesh data with mesh
 
   if (isGlobal) {
     auto id = data->getID();
@@ -89,7 +87,7 @@ void BiCouplingScheme::addDataToReceive(
     bool                 isGlobal)
 {
   PRECICE_TRACE();
-  // PRECICE_ASSERT((mesh==nullptr and isGlobal) or (mesh!=nullptr and !isGlobal)); // either global data without mesh, or mesh data with mesh
+  PRECICE_ASSERT((mesh == nullptr and isGlobal) or (mesh != nullptr and !isGlobal)); // must be either global data without mesh, or mesh data with mesh
   PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization, exchangeSubsteps, isGlobal);
 
   if (isGlobal) {
