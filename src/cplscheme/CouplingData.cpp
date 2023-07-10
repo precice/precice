@@ -21,7 +21,7 @@ CouplingData::CouplingData(
       _timeStepsStoragePrevious()
 {
   PRECICE_ASSERT(_data != nullptr);
-  timeStepsStorage().setExtrapolationOrder(extrapolationOrder);
+  _data->timeStepsStorage().setExtrapolationOrder(extrapolationOrder);
   _timeStepsStoragePrevious.setExtrapolationOrder(extrapolationOrder);
   _timeStepsStoragePrevious.setInterpolationOrder(3); // @todo hard-coded for now, but we need to somehow link this to <read-data waveform-order="ORDER" />
   _timeStepsStoragePrevious.setSampleAtTime(time::Storage::WINDOW_START, time::Sample{getDimensions(), Eigen::VectorXd::Zero(getSize())});
@@ -87,7 +87,7 @@ Eigen::MatrixXd CouplingData::getPreviousGradientsAtTime(double relativeDt)
 void CouplingData::setSampleAtTime(double time, time::Sample sample)
 {
   this->sample() = sample; // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
-  timeStepsStorage().setSampleAtTime(time, sample);
+  _data->setSampleAtTime(time, sample);
 }
 
 bool CouplingData::hasGradient() const
@@ -159,13 +159,9 @@ std::vector<int> CouplingData::getVertexOffsets()
 
 void CouplingData::moveToNextWindow()
 {
+  _data->moveToNextWindow();
+  // @todo put everything into _data->moveToNextWindow().
   if (this->stamples().size() > 0) {
-    this->timeStepsStorage().move();
-
-    const auto &atEnd = this->stamples().back();
-    PRECICE_ASSERT(math::equals(atEnd.timestamp, time::Storage::WINDOW_END));
-    _data->sample() = atEnd.sample;
-
     // @todo add function to copy from this->timeStepsStorage() to _timeStepsStoragePrevious to avoid duplication
     this->_timeStepsStoragePrevious.move();
     PRECICE_ASSERT(math::equals(this->stamples().back().timestamp, time::Storage::WINDOW_END), "this->stamples() needs to be initialized properly for WINDOW_START and WINDOW_END");

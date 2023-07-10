@@ -2,8 +2,8 @@
 #include <algorithm>
 #include <utility>
 
+#include "math/differences.hpp"
 #include "precice/types.hpp"
-#include "time/Waveform.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/assertion.hpp"
 
@@ -13,12 +13,14 @@ Data::Data(
     std::string name,
     DataID      id,
     int         dimensions,
-    int         spatialDimensions) //@todo also set interpolationDegree here and directly initializeWaveform?
+    int         spatialDimensions,
+    int         waveformDegree)
     : _name(std::move(name)),
       _id(id),
       _dimensions(dimensions),
       _spatialDimensions(spatialDimensions),
-      _sample(_dimensions)
+      _sample(_dimensions),
+      _waveform(waveformDegree)
 {
   PRECICE_ASSERT(dimensions > 0, dimensions);
 }
@@ -48,11 +50,6 @@ time::Sample &Data::sample()
   return _sample;
 }
 
-void Data::initializeWaveform(PtrData ptrToMe, int waveformDegree)
-{
-  _waveform = std::make_shared<time::Waveform>(waveformDegree, PtrData(ptrToMe)); // @todo strange. Looks like mesh::Data should implement most of the Waveform functionality
-}
-
 const time::Sample &Data::sample() const
 {
   return _sample;
@@ -60,28 +57,33 @@ const time::Sample &Data::sample() const
 
 Eigen::VectorXd Data::sampleAtTime(double normalizedDt) const
 {
-  return _waveform->sample(normalizedDt);
+  return _waveform.sample(normalizedDt);
 }
 
-int Data::getInterpolationDegree() const
+int Data::getWaveformDegree() const
 {
-  return _waveform->getInterpolationDegree();
-}
-
-void Data::setInterpolationDegree(int interpolationDegree)
-{
-  _waveform->setInterpolationDegree(interpolationDegree);
+  return _waveform.getDegree();
 }
 
 time::Storage &Data::timeStepsStorage()
 {
-  return _timeStepsStorage;
+  return _waveform.timeStepsStorage();
+}
+
+void Data::moveToNextWindow()
+{
+  if (stamples().size() > 0) {
+    timeStepsStorage().move();
+    const auto &atEnd = stamples().back();
+    PRECICE_ASSERT(math::equals(atEnd.timestamp, time::Storage::WINDOW_END));
+    sample() = atEnd.sample;
+  }
 }
 
 void Data::setSampleAtTime(double time, time::Sample sample)
 {
   _sample = sample; // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
-  _timeStepsStorage.setSampleAtTime(time, sample);
+  _waveform.timeStepsStorage().setSampleAtTime(time, sample);
 }
 
 const std::string &Data::getName() const

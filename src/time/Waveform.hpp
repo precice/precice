@@ -17,7 +17,7 @@ namespace time {
 /**
  * @brief Allows to perform interpolation on samples in storage of given data.
  *
- * The constructor Waveform(interpolationDegree, data) creates a waveform. The samples of the data's storage are used to create the interpolant.
+ * The constructor Waveform(degree, data) creates a waveform. The samples of the data's storage are used to create the interpolant.
  * The waveform is initialized with two data values at the beginning and at the end of the window as a constant function. Waveform::store(value) allows the user to provide new data to the Waveform. Interpolation is performed based on these values.
  * The maximum allowed polynomial degree depends on the number of stored samples and can reach the interpolationDegree defined during construction as a maximum. If more samples are available than the maximum degree requires, a piecewise interpolation will be used (piecewise constant, piecewise linear and B-Spline interpolation).
  * Interpolation is only performed inside the current time window.
@@ -28,26 +28,33 @@ public:
   /**
    * @brief Waveform object which stores values of current and past time windows for performing interpolation.
    *
-   * Storage still needs to be initialized with Waveform::initialize, before the Waveform can be used.
-   *
-   * @param interpolationDegree Defines the polynomial degree supported by this Waveform and reserves storage correspondingly
-   * @param data pointer to data this waveform interpolates
+   * @param degree Defines the polynomial degree supported by this Waveform and reserves storage correspondingly
    */
-  Waveform(const int interpolationDegree, mesh::PtrData data);
+  Waveform(const int degree);
 
   /**
-   * @brief Get the _interpolationDegree.
+   * @brief Get the _degree.
    *
-   * @return int _interpolationDegree
+   * @return int _degree
    */
-  int getInterpolationDegree() const;
+  int getDegree() const;
 
-  void setInterpolationDegree(int interpolationDegree);
+  /// Returns a reference to the _timeStepsStorage.
+  time::Storage &timeStepsStorage();
+
+  /// Returns a const reference to the _timeStepsStorage.
+  const time::Storage &timeStepsStorage() const;
+
+  /// Returns a the stamples from _timeStepsStorage.
+  auto stamples() const
+  {
+    return _timeStepsStorage.stamples();
+  }
 
   /**
    * @brief Evaluate waveform at specific point in time. Uses interpolation if necessary.
    *
-   * Interpolates values inside current time window using _storage and an interpolation scheme of the maximum degree of this Waveform. The interpolation scheme always uses all available values in _storage and tries to reach _interpolationDegree. If more than the required number of values needed to reach _interpolationDegree are available, a piecewise interpolation strategy will be applied to obtain an interpolation that reaches the requested polynomial degree and still interpolates all the provided data points.
+   * Interpolates values inside current time window using _storage and an interpolation scheme of the maximum degree of this Waveform. The interpolation scheme always uses all available values in _storage and tries to reach _degree. If more than the required number of values needed to reach _degree are available, a piecewise interpolation strategy will be applied to obtain an interpolation that reaches the requested polynomial degree and still interpolates all the provided data points.
    *
    * @param normalizedDt Time where the sampling inside the window happens. Only allows values between 0 and 1. 0 refers to the beginning of the window and 1 to the end.
    * @return Value of Waveform at time normalizedDt.
@@ -55,11 +62,11 @@ public:
   Eigen::VectorXd sample(const double normalizedDt) const;
 
 private:
-  /// Stores values.
-  mesh::PtrData _data;
+  /// Stores time steps in the current time window
+  time::Storage _timeStepsStorage;
 
   /// interpolation degree for this waveform
-  int _interpolationDegree;
+  int _degree;
 
   mutable logging::Logger _log{"time::Waveform"};
 

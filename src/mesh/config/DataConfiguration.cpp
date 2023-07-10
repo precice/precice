@@ -15,7 +15,7 @@ DataConfiguration::DataConfiguration(xml::XMLTag &parent)
                       .setDocumentation("Unique name for the data set.");
 
   auto attrDegree = makeXMLAttribute(ATTR_DEGREE, time::Time::DEFAULT_WAVEFORM_DEGREE);
-  attrDegree.setDocumentation("Polynomial degree used by waveform iteration when reading data.");
+  attrDegree.setDocumentation("Polynomial degree of waveform that is used for time interpolation.");
 
   XMLTag tagScalar(*this, VALUE_SCALAR, XMLTag::OCCUR_ARBITRARY, TAG);
   tagScalar.setDocumentation("Defines a scalar data set to be assigned to meshes.");

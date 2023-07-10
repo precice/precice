@@ -953,16 +953,16 @@ void CouplingSchemeConfiguration::checkSubstepExchangeWaveformDegree(const Confi
   }
 
   const auto &readDataContext = participant->readDataContext(meshPtr->getName(), exchange.data->getName());
-  if (readDataContext.getInterpolationDegree() == 0) {
+  if (readDataContext.getWaveformDegree() == 0) {
     PRECICE_CHECK(!exchange.exchangeSubsteps,
                   "You configured <data:scalar/vector name=\"{}\" waveform-degree=\"{}\" />. Please deactivate exchange of substeps by setting substeps=\"false\" in the following exchange tag of your coupling scheme: <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" />. Reason: For constant interpolation no exchange of data for substeps is needed. Please consider using waveform-degree=\"1\" or higher, if you want to use subcycling.",
-                  readDataContext.getDataName(), readDataContext.getInterpolationDegree(), exchange.data->getName(), exchange.mesh->getName(), exchange.from, exchange.to);
-  } else if (readDataContext.getInterpolationDegree() >= 2) {
+                  readDataContext.getDataName(), readDataContext.getWaveformDegree(), exchange.data->getName(), exchange.mesh->getName(), exchange.from, exchange.to);
+  } else if (readDataContext.getWaveformDegree() >= 2) {
     PRECICE_CHECK(exchange.exchangeSubsteps,
                   "You configured <data:scalar/vector name=\"{}\" waveform-degree=\"{}\" />. Please activate exchange of substeps by setting substeps=\"true\" in the following exchange tag of your coupling scheme: <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" />. Reason: For higher-order interpolation exchange of data for substeps is required. If you don't want to activate exchange of additional data, please consider using waveform-degree=\"1\". Note that deactivating exchange of substep data might lead to worse results, if you use subcycling.",
-                  readDataContext.getDataName(), readDataContext.getInterpolationDegree(), exchange.data->getName(), exchange.mesh->getName(), exchange.from, exchange.to);
+                  readDataContext.getDataName(), readDataContext.getWaveformDegree(), exchange.data->getName(), exchange.mesh->getName(), exchange.from, exchange.to);
   } else { // For first degree there is no restriction for exchange of substeps
-    PRECICE_ASSERT(readDataContext.getInterpolationDegree() == 1);
+    PRECICE_ASSERT(readDataContext.getWaveformDegree() == 1);
   }
 }
 

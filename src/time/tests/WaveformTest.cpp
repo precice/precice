@@ -1,5 +1,4 @@
 #include <Eigen/Core>
-#include "mesh/Data.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "testing/WaveformFixture.hpp"
@@ -17,12 +16,10 @@ BOOST_AUTO_TEST_CASE(testInitialization)
   PRECICE_TEST(1_rank);
   const int       interpolationDegree = 0;
   const int       valuesSize          = 1;
-  mesh::PtrData   dataPtr             = std::make_shared<mesh::Data>(mesh::Data("name", -1, valuesSize, 1));
-  Eigen::VectorXd value(1);
+  Eigen::VectorXd value(valuesSize);
+  Waveform        waveform(interpolationDegree);
   value(0) = 0.0;
-  dataPtr->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
-
-  Waveform waveform(interpolationDegree, dataPtr);
+  waveform.timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
 
   testing::WaveformFixture fixture;
   BOOST_TEST(fixture.valuesSize(waveform) == valuesSize);
@@ -37,12 +34,10 @@ BOOST_AUTO_TEST_CASE(testInitializationVector)
 
   const int       interpolationDegree = 0;
   const int       valuesSize          = 3;
-  mesh::PtrData   dataPtr             = std::make_shared<mesh::Data>(mesh::Data("name", -1, valuesSize, 1));
   Eigen::VectorXd value(valuesSize);
+  Waveform        waveform(interpolationDegree);
   value << 0, 0, 0;
-  dataPtr->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
-
-  Waveform waveform(interpolationDegree, dataPtr);
+  waveform.timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
 
   testing::WaveformFixture fixture;
   BOOST_TEST(fixture.valuesSize(waveform) == valuesSize);
@@ -64,31 +59,30 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataZerothDegree)
   // Test zeroth degree interpolation
   const int       interpolationDegree = 0;
   const int       valuesSize          = 1;
-  mesh::PtrData   dataPtr             = std::make_shared<mesh::Data>(mesh::Data("name", -1, valuesSize, 1));
-  Eigen::VectorXd value(1);
+  Eigen::VectorXd value(valuesSize);
+  Waveform        waveform(interpolationDegree);
   value(0) = 0.0;
-  dataPtr->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, value});
+  waveform.timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, value});
   value(0) = 1.0;
-  dataPtr->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
-  Waveform waveform(interpolationDegree, dataPtr);
+  waveform.timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
 
   BOOST_TEST(fixture.valuesSize(waveform) == valuesSize);
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 2);
 
-  dataPtr->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
+  waveform.timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
 
   BOOST_TEST(testing::equals(waveform.sample(0.0)(0), 0.0));
   BOOST_TEST(testing::equals(waveform.sample(0.5)(0), 1.0));
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 1.0));
 
   value(0) = 2.0;
-  dataPtr->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
+  waveform.timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
 
   BOOST_TEST(testing::equals(waveform.sample(0.0)(0), 0.0));
   BOOST_TEST(testing::equals(waveform.sample(0.5)(0), 2.0));
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 2.0));
 
-  dataPtr->timeStepsStorage().move();
+  waveform.timeStepsStorage().move();
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 2);
 
   BOOST_TEST(testing::equals(waveform.sample(0.0)(0), 2.0));
@@ -96,7 +90,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataZerothDegree)
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 2.0));
 
   value(0) = 3.0;
-  dataPtr->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
+  waveform.timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
 
   BOOST_TEST(testing::equals(waveform.sample(0.0)(0), 2.0));
   BOOST_TEST(testing::equals(waveform.sample(0.5)(0), 3.0));
@@ -112,14 +106,12 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataFirstDegree)
   // Test first degree interpolation
   const int       interpolationDegree = 1;
   const int       valuesSize          = 1;
-  mesh::PtrData   dataPtr             = std::make_shared<mesh::Data>(mesh::Data("name", -1, valuesSize, 1));
-  Eigen::VectorXd value(1);
+  Eigen::VectorXd value(valuesSize);
+  Waveform        waveform(interpolationDegree);
   value(0) = 0.0;
-  dataPtr->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, value});
+  waveform.timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, value});
   value(0) = 1.0;
-  dataPtr->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
-
-  Waveform waveform(interpolationDegree, dataPtr);
+  waveform.timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
 
   BOOST_TEST(fixture.valuesSize(waveform) == valuesSize);
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 2);
@@ -129,13 +121,13 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataFirstDegree)
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 1.0));
 
   value(0) = 2.0;
-  dataPtr->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
+  waveform.timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
 
   BOOST_TEST(testing::equals(waveform.sample(0.0)(0), 0.0));
   BOOST_TEST(testing::equals(waveform.sample(0.5)(0), 1.0));
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 2.0));
 
-  dataPtr->timeStepsStorage().move();
+  waveform.timeStepsStorage().move();
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 2);
 
   BOOST_TEST(testing::equals(waveform.sample(0.0)(0), 2.0));
@@ -143,7 +135,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataFirstDegree)
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 2.0));
 
   value(0) = 3.0;
-  dataPtr->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
+  waveform.timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
 
   BOOST_TEST(testing::equals(waveform.sample(0.0)(0), 2.0));
   BOOST_TEST(testing::equals(waveform.sample(0.5)(0), 2.5));
@@ -160,14 +152,12 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataSecondDegree)
   // Test second degree interpolation, but there are not enough samples. Therefore, always only first degree.
   const int       interpolationDegree = 2;
   const int       valuesSize          = 1;
-  mesh::PtrData   dataPtr             = std::make_shared<mesh::Data>(mesh::Data("name", -1, valuesSize, 1));
-  Eigen::VectorXd value(1);
+  Eigen::VectorXd value(valuesSize);
+  Waveform        waveform(interpolationDegree);
   value(0) = 0.0;
-  dataPtr->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, value});
+  waveform.timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, value});
   value(0) = 1.0;
-  dataPtr->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
-
-  Waveform waveform(interpolationDegree, dataPtr);
+  waveform.timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
 
   BOOST_TEST(fixture.valuesSize(waveform) == valuesSize);
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 2);
@@ -176,16 +166,16 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataSecondDegree)
   BOOST_TEST(testing::equals(waveform.sample(0.5)(0), 0.5));
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 1.0));
 
-  dataPtr->timeStepsStorage().trim();
+  waveform.timeStepsStorage().trim();
 
   value(0) = 2.0;
-  dataPtr->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
+  waveform.timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
 
   BOOST_TEST(testing::equals(waveform.sample(0.0)(0), 0.0));
   BOOST_TEST(testing::equals(waveform.sample(0.5)(0), 1.0));
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 2.0));
 
-  dataPtr->timeStepsStorage().move();
+  waveform.timeStepsStorage().move();
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 2);
 
   BOOST_TEST(testing::equals(waveform.sample(0.0)(0), 2.0));
@@ -193,22 +183,22 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataSecondDegree)
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 2.0));
 
   value(0) = 8.0;
-  dataPtr->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
+  waveform.timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
 
   BOOST_TEST(testing::equals(waveform.sample(0.0)(0), 2.0));
   BOOST_TEST(testing::equals(waveform.sample(0.5)(0), 5.0));
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 8.0));
 
-  dataPtr->timeStepsStorage().trim();
+  waveform.timeStepsStorage().trim();
 
   value(0) = 4.0;
-  dataPtr->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
+  waveform.timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
 
   BOOST_TEST(testing::equals(waveform.sample(0.0)(0), 2.0));
   BOOST_TEST(testing::equals(waveform.sample(0.5)(0), 3.0));
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 4.0));
 
-  dataPtr->timeStepsStorage().move();
+  waveform.timeStepsStorage().move();
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 2);
 
   BOOST_TEST(testing::equals(waveform.sample(0.0)(0), 4.0));
@@ -216,7 +206,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataSecondDegree)
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 4.0));
 
   value(0) = 8.0;
-  dataPtr->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
+  waveform.timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
 
   BOOST_TEST(testing::equals(waveform.sample(0.0)(0), 4.0));
   BOOST_TEST(testing::equals(waveform.sample(0.5)(0), 6.0));
@@ -232,14 +222,12 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataFirstDegreeVector)
   // Test first degree interpolation
   const int       interpolationDegree = 1;
   const int       valuesSize          = 3;
-  mesh::PtrData   dataPtr             = std::make_shared<mesh::Data>(mesh::Data("name", -1, valuesSize, 1));
   Eigen::VectorXd value(valuesSize);
+  Waveform        waveform(interpolationDegree);
   value << 0, 0, 0;
-  dataPtr->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, value});
+  waveform.timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, value});
   value << 1, 2, 3;
-  dataPtr->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
-
-  Waveform waveform(interpolationDegree, dataPtr);
+  waveform.timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
 
   BOOST_TEST(fixture.valuesSize(waveform) == valuesSize);
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 2);
@@ -250,10 +238,10 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataFirstDegreeVector)
     BOOST_TEST(testing::equals(waveform.sample(1.0)(i), value[i]));
   }
 
-  dataPtr->timeStepsStorage().trim();
+  waveform.timeStepsStorage().trim();
 
   value << 2, 4, 2;
-  dataPtr->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
+  waveform.timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
 
   for (int i = 0; i < valuesSize; i++) {
     BOOST_TEST(testing::equals(waveform.sample(0.0)(i), 0 * value[i]));
@@ -261,7 +249,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataFirstDegreeVector)
     BOOST_TEST(testing::equals(waveform.sample(1.0)(i), value[i]));
   }
 
-  dataPtr->timeStepsStorage().move();
+  waveform.timeStepsStorage().move();
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 2);
 
   for (int i = 0; i < valuesSize; i++) {
@@ -272,7 +260,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataFirstDegreeVector)
 
   Eigen::VectorXd value0 = value;
   value << 1, 2, 3;
-  dataPtr->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
+  waveform.timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
 
   for (int i = 0; i < valuesSize; i++) {
     BOOST_TEST(testing::equals(waveform.sample(0.0)(i), value0[i]));
@@ -289,16 +277,14 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataZerothDegree)
   // Test zeroth degree interpolation
   const int       interpolationDegree = 0;
   const int       valuesSize          = 1;
-  mesh::PtrData   dataPtr             = std::make_shared<mesh::Data>(mesh::Data("name", -1, valuesSize, 1));
-  Eigen::VectorXd value(1);
+  Eigen::VectorXd value(valuesSize);
+  Waveform        waveform(interpolationDegree);
   value(0) = 0.0;
-  dataPtr->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, value});
+  waveform.timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, value});
   value(0) = 0.5;
-  dataPtr->setSampleAtTime(0.5 * time::Storage::WINDOW_END, time::Sample{1, value});
+  waveform.timeStepsStorage().setSampleAtTime(0.5 * time::Storage::WINDOW_END, time::Sample{1, value});
   value(0) = 1.0;
-  dataPtr->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
-
-  Waveform waveform(interpolationDegree, dataPtr);
+  waveform.timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
 
   BOOST_TEST(fixture.valuesSize(waveform) == valuesSize);
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 3);
@@ -308,20 +294,20 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataZerothDegree)
   BOOST_TEST(testing::equals(waveform.sample(0.75)(0), 1.0));
   BOOST_TEST(testing::equals(waveform.sample(1.00)(0), 1.0));
 
-  dataPtr->timeStepsStorage().trim();
+  waveform.timeStepsStorage().trim();
 
   value(0) = 1.5;
-  dataPtr->setSampleAtTime(0.5 * time::Storage::WINDOW_END, time::Sample{1, value});
+  waveform.timeStepsStorage().setSampleAtTime(0.5 * time::Storage::WINDOW_END, time::Sample{1, value});
 
   value(0) = 2.0;
-  dataPtr->setSampleAtTime(1.0 * time::Storage::WINDOW_END, time::Sample{1, value});
+  waveform.timeStepsStorage().setSampleAtTime(1.0 * time::Storage::WINDOW_END, time::Sample{1, value});
   BOOST_TEST(testing::equals(waveform.sample(0.00)(0), 0.0));
   BOOST_TEST(testing::equals(waveform.sample(0.25)(0), 1.5));
   BOOST_TEST(testing::equals(waveform.sample(0.50)(0), 1.5));
   BOOST_TEST(testing::equals(waveform.sample(0.75)(0), 2.0));
   BOOST_TEST(testing::equals(waveform.sample(1.00)(0), 2.0));
 
-  dataPtr->timeStepsStorage().move();
+  waveform.timeStepsStorage().move();
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 2);
 
   BOOST_TEST(testing::equals(waveform.sample(0.00)(0), 2.0));
@@ -331,20 +317,20 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataZerothDegree)
   BOOST_TEST(testing::equals(waveform.sample(1.00)(0), 2.0));
 
   value(0) = 3.0;
-  dataPtr->setSampleAtTime(1.0 * time::Storage::WINDOW_END, time::Sample{1, value});
+  waveform.timeStepsStorage().setSampleAtTime(1.0 * time::Storage::WINDOW_END, time::Sample{1, value});
   BOOST_TEST(testing::equals(waveform.sample(0.00)(0), 2.0));
   BOOST_TEST(testing::equals(waveform.sample(0.25)(0), 3.0));
   BOOST_TEST(testing::equals(waveform.sample(0.50)(0), 3.0));
   BOOST_TEST(testing::equals(waveform.sample(0.75)(0), 3.0));
   BOOST_TEST(testing::equals(waveform.sample(1.00)(0), 3.0));
 
-  dataPtr->timeStepsStorage().trim();
+  waveform.timeStepsStorage().trim();
 
   value(0) = 1.5;
-  dataPtr->setSampleAtTime(0.5 * time::Storage::WINDOW_END, time::Sample{1, value});
+  waveform.timeStepsStorage().setSampleAtTime(0.5 * time::Storage::WINDOW_END, time::Sample{1, value});
 
   value(0) = 4.0;
-  dataPtr->setSampleAtTime(1.0 * time::Storage::WINDOW_END, time::Sample{1, value});
+  waveform.timeStepsStorage().setSampleAtTime(1.0 * time::Storage::WINDOW_END, time::Sample{1, value});
   BOOST_TEST(testing::equals(waveform.sample(0.00)(0), 2.0));
   BOOST_TEST(testing::equals(waveform.sample(0.25)(0), 1.5));
   BOOST_TEST(testing::equals(waveform.sample(0.50)(0), 1.5));
@@ -361,16 +347,14 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataFirstDegree)
   // Test zeroth degree interpolation
   const int       interpolationDegree = 1;
   const int       valuesSize          = 1;
-  mesh::PtrData   dataPtr             = std::make_shared<mesh::Data>(mesh::Data("name", -1, valuesSize, 1));
-  Eigen::VectorXd value(1);
+  Eigen::VectorXd value(valuesSize);
+  Waveform        waveform(interpolationDegree);
   value(0) = 0.0;
-  dataPtr->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, value});
+  waveform.timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, value});
   value(0) = 0.5;
-  dataPtr->setSampleAtTime(0.5 * time::Storage::WINDOW_END, time::Sample{1, value});
+  waveform.timeStepsStorage().setSampleAtTime(0.5 * time::Storage::WINDOW_END, time::Sample{1, value});
   value(0) = 1.0;
-  dataPtr->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
-
-  Waveform waveform(interpolationDegree, dataPtr);
+  waveform.timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
 
   BOOST_TEST(fixture.valuesSize(waveform) == valuesSize);
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 3);
@@ -381,17 +365,17 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataFirstDegree)
   BOOST_TEST(testing::equals(waveform.sample(1.00)(0), 1.00));
 
   value(0) = 1.5;
-  dataPtr->setSampleAtTime(0.5 * time::Storage::WINDOW_END, time::Sample{1, value});
+  waveform.timeStepsStorage().setSampleAtTime(0.5 * time::Storage::WINDOW_END, time::Sample{1, value});
 
   value(0) = 2.0;
-  dataPtr->setSampleAtTime(1.0 * time::Storage::WINDOW_END, time::Sample{1, value});
+  waveform.timeStepsStorage().setSampleAtTime(1.0 * time::Storage::WINDOW_END, time::Sample{1, value});
   BOOST_TEST(testing::equals(waveform.sample(0.00)(0), 0.00));
   BOOST_TEST(testing::equals(waveform.sample(0.25)(0), 0.75));
   BOOST_TEST(testing::equals(waveform.sample(0.50)(0), 1.50));
   BOOST_TEST(testing::equals(waveform.sample(0.75)(0), 1.75));
   BOOST_TEST(testing::equals(waveform.sample(1.00)(0), 2.00));
 
-  dataPtr->timeStepsStorage().move();
+  waveform.timeStepsStorage().move();
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 2);
 
   BOOST_TEST(testing::equals(waveform.sample(0.00)(0), 2.00));
@@ -401,20 +385,20 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataFirstDegree)
   BOOST_TEST(testing::equals(waveform.sample(1.00)(0), 2.00));
 
   value(0) = 3.0;
-  dataPtr->setSampleAtTime(1.0 * time::Storage::WINDOW_END, time::Sample{1, value});
+  waveform.timeStepsStorage().setSampleAtTime(1.0 * time::Storage::WINDOW_END, time::Sample{1, value});
   BOOST_TEST(testing::equals(waveform.sample(0.00)(0), 2.00));
   BOOST_TEST(testing::equals(waveform.sample(0.25)(0), 2.25));
   BOOST_TEST(testing::equals(waveform.sample(0.50)(0), 2.50));
   BOOST_TEST(testing::equals(waveform.sample(0.75)(0), 2.75));
   BOOST_TEST(testing::equals(waveform.sample(1.00)(0), 3.00));
 
-  dataPtr->timeStepsStorage().trim();
+  waveform.timeStepsStorage().trim();
 
   value(0) = 1.5;
-  dataPtr->setSampleAtTime(0.5 * time::Storage::WINDOW_END, time::Sample{1, value});
+  waveform.timeStepsStorage().setSampleAtTime(0.5 * time::Storage::WINDOW_END, time::Sample{1, value});
 
   value(0) = 4.0;
-  dataPtr->setSampleAtTime(1.0 * time::Storage::WINDOW_END, time::Sample{1, value});
+  waveform.timeStepsStorage().setSampleAtTime(1.0 * time::Storage::WINDOW_END, time::Sample{1, value});
   BOOST_TEST(testing::equals(waveform.sample(0.00)(0), 2.00));
   BOOST_TEST(testing::equals(waveform.sample(0.25)(0), 1.75));
   BOOST_TEST(testing::equals(waveform.sample(0.50)(0), 1.50));
@@ -431,16 +415,14 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataSecondDegree)
   // Test zeroth degree interpolation
   const int       interpolationDegree = 2;
   const int       valuesSize          = 1;
-  mesh::PtrData   dataPtr             = std::make_shared<mesh::Data>(mesh::Data("name", -1, valuesSize, 1));
-  Eigen::VectorXd value(1);
+  Waveform        waveform(interpolationDegree);
+  Eigen::VectorXd value(valuesSize);
   value(0) = 0.0;
-  dataPtr->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, value});
+  waveform.timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, value});
   value(0) = 0.0;
-  dataPtr->setSampleAtTime(0.5 * time::Storage::WINDOW_END, time::Sample{1, value});
+  waveform.timeStepsStorage().setSampleAtTime(0.5 * time::Storage::WINDOW_END, time::Sample{1, value});
   value(0) = 2.0;
-  dataPtr->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
-
-  Waveform waveform(interpolationDegree, dataPtr);
+  waveform.timeStepsStorage().setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, value});
 
   BOOST_TEST(fixture.valuesSize(waveform) == valuesSize);
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 3);
@@ -458,17 +440,15 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataThirdDegree)
   testing::WaveformFixture fixture;
 
   // Test zeroth degree interpolation
-  const int     interpolationDegree = 3;
-  const int     valuesSize          = 1;
-  mesh::PtrData dataPtr             = std::make_shared<mesh::Data>(mesh::Data("name", -1, valuesSize, 1));
-
-  Waveform waveform(interpolationDegree, dataPtr);
+  const int interpolationDegree = 3;
+  const int valuesSize          = 1;
+  Waveform  waveform(interpolationDegree);
 
   // linearly increasing values
-  Eigen::VectorXd value(1);
+  Eigen::VectorXd value(valuesSize);
   for (double t : std::vector<double>{0, 0.25, 0.5, 0.75, 1}) {
     value(0) = t;
-    dataPtr->setSampleAtTime(t * time::Storage::WINDOW_END, time::Sample{1, value});
+    waveform.timeStepsStorage().setSampleAtTime(t * time::Storage::WINDOW_END, time::Sample{1, value});
   }
 
   BOOST_TEST(fixture.valuesSize(waveform) == valuesSize);
@@ -478,12 +458,12 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataThirdDegree)
     BOOST_TEST(testing::equals(waveform.sample(t)(0), t));
   }
 
-  dataPtr->timeStepsStorage().trim();
+  waveform.timeStepsStorage().trim();
 
   // quadratically increasing values
   for (double t : std::vector<double>{0, 0.25, 0.5, 0.75, 1}) {
     value(0) = t * t;
-    dataPtr->setSampleAtTime(t * time::Storage::WINDOW_END, time::Sample{1, value});
+    waveform.timeStepsStorage().setSampleAtTime(t * time::Storage::WINDOW_END, time::Sample{1, value});
   }
 
   // interpolates given values
@@ -496,12 +476,12 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataThirdDegree)
     BOOST_TEST(testing::equals(waveform.sample(t)(0), t * t));
   }
 
-  dataPtr->timeStepsStorage().trim();
+  waveform.timeStepsStorage().trim();
 
   // cubically increasing values
   for (double t : std::vector<double>{0, 0.25, 0.5, 0.75, 1}) {
     value(0) = t * t * t;
-    dataPtr->setSampleAtTime(t * time::Storage::WINDOW_END, time::Sample{1, value});
+    waveform.timeStepsStorage().setSampleAtTime(t * time::Storage::WINDOW_END, time::Sample{1, value});
   }
 
   // interpolates given values
@@ -514,12 +494,12 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataThirdDegree)
     BOOST_TEST(testing::equals(waveform.sample(t)(0), t * t * t));
   }
 
-  dataPtr->timeStepsStorage().trim();
+  waveform.timeStepsStorage().trim();
 
   // cubically increasing values, but with non-uniform spacing
   for (double t : std::vector<double>{0, 0.01, 0.1, 0.2, 1}) {
     value(0) = t * t * t;
-    dataPtr->setSampleAtTime(t * time::Storage::WINDOW_END, time::Sample{1, value});
+    waveform.timeStepsStorage().setSampleAtTime(t * time::Storage::WINDOW_END, time::Sample{1, value});
   }
 
   // interpolates given values
@@ -532,12 +512,12 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataThirdDegree)
     BOOST_TEST(testing::equals(waveform.sample(t)(0), t * t * t));
   }
 
-  dataPtr->timeStepsStorage().trim();
+  waveform.timeStepsStorage().trim();
 
   // quadratically increasing values, but with non-uniform spacing
   for (double t : std::vector<double>{0, 0.25, 0.5, 0.75, 1}) {
     value(0) = t * t * t * t;
-    dataPtr->setSampleAtTime(t * time::Storage::WINDOW_END, time::Sample{1, value});
+    waveform.timeStepsStorage().setSampleAtTime(t * time::Storage::WINDOW_END, time::Sample{1, value});
   }
 
   // interpolates given values

@@ -145,11 +145,8 @@ PtrData &Mesh::createData(
                   name, _name, name);
   }
   //#rows = dimensions of current mesh #columns = dimensions of corresponding data set
-  PtrData data(new Data(name, id, dimension, _dimensions));
+  PtrData data(new Data(name, id, dimension, _dimensions, waveformDegree));
   _data.push_back(data);
-  // @todo strange, but would otherwise require a lot of refactoring of Waveform class.
-  data->initializeWaveform(data, waveformDegree);
-
   return _data.back();
 }
 

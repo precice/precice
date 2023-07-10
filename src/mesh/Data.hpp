@@ -8,9 +8,9 @@
 #include "logging/Logger.hpp"
 #include "precice/types.hpp"
 #include "time/Sample.hpp"
-#include "time/SharedPointer.hpp"
 #include "time/Storage.hpp"
 #include "time/Time.hpp"
+#include "time/Waveform.hpp"
 
 namespace precice {
 namespace mesh {
@@ -49,7 +49,8 @@ public:
       std::string name,
       DataID      id,
       int         dimension,
-      int         spatialDimensions = -1);
+      int         spatialDimensions = -1,
+      int         waveformDegree    = time::Time::DEFAULT_WAVEFORM_DEGREE);
 
   /// Returns a reference to the data values.
   Eigen::VectorXd &values();
@@ -62,16 +63,6 @@ public:
 
   /// Returns a const reference to the gradient data values.
   const Eigen::MatrixXd &gradients() const;
-
-  /**
-   * @brief Creates and initialized _waveform
-   *
-   * Currently needed, because Waveform requests PtrData. Creating PtrData(this) in constructor of data leads to memory management problems.
-   *
-   * @todo try to solve this differently and let exchange initialize Waveform of data. PtrStorage should be sufficient for Waveform, PtrData is overkill.
-   */
-  void initializeWaveform(PtrData ptrToMe,
-                          int     waveformDegree = time::Time::DEFAULT_WAVEFORM_DEGREE);
 
   /// Returns a reference to the _sample.
   time::Sample &sample();
@@ -88,28 +79,21 @@ public:
   Eigen::VectorXd sampleAtTime(double normalizedDt) const;
 
   /**
-   * @brief Get the _interpolationDegree.
+   * @brief get degree of _waveform.
    *
-   * @return int _interpolationDegree
+   * @return int degree of _waveform
    */
-  int getInterpolationDegree() const;
+  int getWaveformDegree() const;
 
-  /**
-   * @brief Set polynomial degree of waveform after this Data has been created
-   *
-   * @todo Try to remove this function!
-   *
-   * @param interpolationDegree
-   */
-  void setInterpolationDegree(int interpolationDegree);
-
-  /// Returns a reference to the _timeStepsStorage.
+  /// Returns a reference to the _timeStepsStorage of _waveform.
   time::Storage &timeStepsStorage();
+
+  void moveToNextWindow();
 
   /// Returns a the stamples from _timeStepsStorage.
   auto stamples() const
   {
-    return _timeStepsStorage.stamples();
+    return _waveform.stamples();
   }
 
   /// Add sample at given time to _timeStepsStorage.
@@ -147,10 +131,7 @@ private:
   logging::Logger _log{"mesh::Data"};
 
   /// Waveform wrapping this Data.
-  time::PtrWaveform _waveform; // @todo just merge _waveform into _timeStepsStorage?
-
-  /// Stores time steps in the current time window
-  time::Storage _timeStepsStorage;
+  time::Waveform _waveform;
 
   /// Name of the data set.
   std::string _name;
