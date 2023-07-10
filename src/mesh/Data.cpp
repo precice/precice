@@ -68,11 +68,6 @@ int Data::getWaveformDegree() const
   return _waveform->getDegree();
 }
 
-void Data::setWaveformDegree(int degree)
-{
-  _waveform->setDegree(degree);
-}
-
 time::Storage &Data::timeStepsStorage()
 {
   return _timeStepsStorage;

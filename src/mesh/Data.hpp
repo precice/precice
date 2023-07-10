@@ -94,15 +94,6 @@ public:
    */
   int getWaveformDegree() const;
 
-  /**
-   * @brief Set polynomial degree of waveform after this Data has been created
-   *
-   * @todo Try to remove this function!
-   *
-   * @param degree
-   */
-  void setWaveformDegree(int degree);
-
   /// Returns a reference to the _timeStepsStorage.
   time::Storage &timeStepsStorage();
 

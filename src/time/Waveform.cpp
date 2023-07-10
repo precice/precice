@@ -22,11 +22,6 @@ int Waveform::getDegree() const
   return _degree;
 }
 
-void Waveform::setDegree(int degree)
-{
-  _degree = degree;
-}
-
 // helper function to compute x(t) from given data (x0,t0), (x1,t1), ..., (xn,tn) via B-spline interpolation (implemented using Eigen).
 Eigen::VectorXd bSplineInterpolationAt(double t, Eigen::VectorXd ts, Eigen::MatrixXd xs, int splineDegree)
 {

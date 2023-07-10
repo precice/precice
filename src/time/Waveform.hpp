@@ -42,8 +42,6 @@ public:
    */
   int getDegree() const;
 
-  void setDegree(int degree);
-
   /**
    * @brief Evaluate waveform at specific point in time. Uses interpolation if necessary.
    *
