@@ -63,14 +63,14 @@ Eigen::VectorXd Data::sampleAtTime(double normalizedDt) const
   return _waveform->sample(normalizedDt);
 }
 
-int Data::getInterpolationDegree() const
+int Data::getWaveformDegree() const
 {
-  return _waveform->getInterpolationDegree();
+  return _waveform->getDegree();
 }
 
-void Data::setInterpolationDegree(int interpolationDegree)
+void Data::setWaveformDegree(int degree)
 {
-  _waveform->setInterpolationDegree(interpolationDegree);
+  _waveform->setDegree(degree);
 }
 
 time::Storage &Data::timeStepsStorage()

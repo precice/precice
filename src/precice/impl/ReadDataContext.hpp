@@ -26,11 +26,11 @@ public:
       mesh::PtrMesh mesh);
 
   /**
-   * @brief Gets _interpolationDegree of _waveform
+   * @brief Gets degree of waveform
    *
-   * @return _interpolationDegree of _waveform
+   * @return int degree of waveform
    */
-  int getInterpolationDegree() const;
+  int getWaveformDegree() const;
 
   /**
    * @brief Adds a MappingContext and the MeshContext required by the read mapping to the corresponding ReadDataContext data structures.

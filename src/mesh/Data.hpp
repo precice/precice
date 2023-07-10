@@ -88,20 +88,20 @@ public:
   Eigen::VectorXd sampleAtTime(double normalizedDt) const;
 
   /**
-   * @brief Get the _interpolationDegree.
+   * @brief get degree of _waveform.
    *
-   * @return int _interpolationDegree
+   * @return int degree of _waveform
    */
-  int getInterpolationDegree() const;
+  int getWaveformDegree() const;
 
   /**
    * @brief Set polynomial degree of waveform after this Data has been created
    *
    * @todo Try to remove this function!
    *
-   * @param interpolationDegree
+   * @param degree
    */
-  void setInterpolationDegree(int interpolationDegree);
+  void setWaveformDegree(int degree);
 
   /// Returns a reference to the _timeStepsStorage.
   time::Storage &timeStepsStorage();

@@ -11,20 +11,20 @@
 namespace precice::time {
 
 Waveform::Waveform(
-    const int interpolationDegree, mesh::PtrData data)
-    : _interpolationDegree(interpolationDegree), _data(data)
+    const int degree, mesh::PtrData data)
+    : _degree(degree), _data(data)
 {
-  PRECICE_ASSERT(Time::MIN_WAVEFORM_DEGREE <= _interpolationDegree && _interpolationDegree <= Time::MAX_WAVEFORM_DEGREE);
+  PRECICE_ASSERT(Time::MIN_WAVEFORM_DEGREE <= _degree && _degree <= Time::MAX_WAVEFORM_DEGREE);
 }
 
-int Waveform::getInterpolationDegree() const
+int Waveform::getDegree() const
 {
-  return _interpolationDegree;
+  return _degree;
 }
 
-void Waveform::setInterpolationDegree(int interpolationDegree)
+void Waveform::setDegree(int degree)
 {
-  _interpolationDegree = interpolationDegree;
+  _degree = degree;
 }
 
 // helper function to compute x(t) from given data (x0,t0), (x1,t1), ..., (xn,tn) via B-spline interpolation (implemented using Eigen).
@@ -49,11 +49,11 @@ Eigen::VectorXd bSplineInterpolationAt(double t, Eigen::VectorXd ts, Eigen::Matr
 
 Eigen::VectorXd Waveform::sample(double normalizedDt) const
 {
-  const int usedDegree = computeUsedDegree(_interpolationDegree, _data->timeStepsStorage().nTimes());
+  const int usedDegree = computeUsedDegree(_degree, _data->timeStepsStorage().nTimes());
 
   PRECICE_ASSERT(math::equals(this->_data->timeStepsStorage().maxStoredNormalizedDt(), time::Storage::WINDOW_END), this->_data->timeStepsStorage().maxStoredNormalizedDt()); // sampling is only allowed, if a window is complete.
 
-  if (_interpolationDegree == 0) {
+  if (_degree == 0) {
     return this->_data->timeStepsStorage().getValuesAtOrAfter(normalizedDt);
   }
 

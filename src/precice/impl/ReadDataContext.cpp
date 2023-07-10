@@ -33,9 +33,9 @@ void ReadDataContext::readValues(::precice::span<const VertexID> vertices, doubl
   }
 }
 
-int ReadDataContext::getInterpolationDegree() const
+int ReadDataContext::getWaveformDegree() const
 {
-  return _providedData->getInterpolationDegree();
+  return _providedData->getWaveformDegree();
 }
 
 } // namespace precice::impl
