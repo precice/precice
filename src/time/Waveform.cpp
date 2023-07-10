@@ -10,9 +10,8 @@
 
 namespace precice::time {
 
-Waveform::Waveform(
-    const int degree, mesh::PtrData data)
-    : _degree(degree), _data(data)
+Waveform::Waveform(const int degree)
+    : _degree(degree)
 {
   PRECICE_ASSERT(Time::MIN_WAVEFORM_DEGREE <= _degree && _degree <= Time::MAX_WAVEFORM_DEGREE);
 }
@@ -20,6 +19,16 @@ Waveform::Waveform(
 int Waveform::getDegree() const
 {
   return _degree;
+}
+
+time::Storage &Waveform::timeStepsStorage()
+{
+  return _timeStepsStorage;
+}
+
+const time::Storage &Waveform::timeStepsStorage() const
+{
+  return _timeStepsStorage;
 }
 
 // helper function to compute x(t) from given data (x0,t0), (x1,t1), ..., (xn,tn) via B-spline interpolation (implemented using Eigen).
@@ -44,17 +53,17 @@ Eigen::VectorXd bSplineInterpolationAt(double t, Eigen::VectorXd ts, Eigen::Matr
 
 Eigen::VectorXd Waveform::sample(double normalizedDt) const
 {
-  const int usedDegree = computeUsedDegree(_degree, _data->timeStepsStorage().nTimes());
+  const int usedDegree = computeUsedDegree(_degree, _timeStepsStorage.nTimes());
 
-  PRECICE_ASSERT(math::equals(this->_data->timeStepsStorage().maxStoredNormalizedDt(), time::Storage::WINDOW_END), this->_data->timeStepsStorage().maxStoredNormalizedDt()); // sampling is only allowed, if a window is complete.
+  PRECICE_ASSERT(math::equals(this->_timeStepsStorage.maxStoredNormalizedDt(), time::Storage::WINDOW_END), this->_timeStepsStorage.maxStoredNormalizedDt()); // sampling is only allowed, if a window is complete.
 
   if (_degree == 0) {
-    return this->_data->timeStepsStorage().getValuesAtOrAfter(normalizedDt);
+    return this->_timeStepsStorage.getValuesAtOrAfter(normalizedDt);
   }
 
   PRECICE_ASSERT(usedDegree >= 1);
 
-  const auto data = _data->timeStepsStorage().getTimesAndValues();
+  const auto data = _timeStepsStorage.getTimesAndValues();
 
   return bSplineInterpolationAt(normalizedDt, data.first, data.second, usedDegree);
 }

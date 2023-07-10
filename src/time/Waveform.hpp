@@ -28,12 +28,9 @@ public:
   /**
    * @brief Waveform object which stores values of current and past time windows for performing interpolation.
    *
-   * Storage still needs to be initialized with Waveform::initialize, before the Waveform can be used.
-   *
    * @param degree Defines the polynomial degree supported by this Waveform and reserves storage correspondingly
-   * @param data pointer to data this waveform interpolates
    */
-  Waveform(const int degree, mesh::PtrData data);
+  Waveform(const int degree);
 
   /**
    * @brief Get the _degree.
@@ -41,6 +38,18 @@ public:
    * @return int _degree
    */
   int getDegree() const;
+
+  /// Returns a reference to the _timeStepsStorage.
+  time::Storage &timeStepsStorage();
+
+  /// Returns a const reference to the _timeStepsStorage.
+  const time::Storage &timeStepsStorage() const;
+
+  /// Returns a the stamples from _timeStepsStorage.
+  auto stamples() const
+  {
+    return _timeStepsStorage.stamples();
+  }
 
   /**
    * @brief Evaluate waveform at specific point in time. Uses interpolation if necessary.
@@ -53,8 +62,8 @@ public:
   Eigen::VectorXd sample(const double normalizedDt) const;
 
 private:
-  /// Stores values.
-  mesh::PtrData _data;
+  /// Stores time steps in the current time window
+  time::Storage _timeStepsStorage;
 
   /// interpolation degree for this waveform
   int _degree;
