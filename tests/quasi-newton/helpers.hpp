@@ -11,4 +11,6 @@ void runTestQN(std::string const &config, TestContext const &context);
 
 void runTestQNEmptyPartition(std::string const &config, TestContext const &context);
 
+void runTestQNWR(std::string const &config, TestContext const &context);
+
 #endif

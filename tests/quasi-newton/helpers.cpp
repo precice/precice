@@ -102,6 +102,99 @@ void runTestQN(std::string const &config, TestContext const &context)
   BOOST_TEST(iterations >= 5);
 }
 
+/// tests Waveform iterations and QN acceleration if correct fixed point is reached
+void runTestQNWR(std::string const &config, TestContext const &context)
+{
+  std::string meshName, writeDataName, readDataName;
+
+  if (context.isNamed("SolverOne")) {
+    meshName      = "MeshOne";
+    writeDataName = "Data1";
+    readDataName  = "Data2";
+  } else {
+    BOOST_REQUIRE(context.isNamed("SolverTwo"));
+    meshName      = "MeshTwo";
+    writeDataName = "Data2";
+    readDataName  = "Data1";
+  }
+
+  precice::SolverInterface interface(context.name, config, context.rank, context.size);
+  int                      meshID      = interface.getMeshID(meshName);
+  int                      writeDataID = interface.getDataID(writeDataName, meshID);
+  int                      readDataID  = interface.getDataID(readDataName, meshID);
+
+  VertexID vertexIDs[2];
+
+  // meshes for rank 0 and rank 1, we use matching meshes for both participants
+  double positions0[8] = {1.0, 0.0, 1.0, 0.5, 1.0, 1.0, 1.0, 1.5};
+  double positions1[8] = {2.0, 0.0, 2.0, 0.5, 2.0, 1.0, 2.0, 1.5};
+
+  if (context.isNamed("SolverOne")) {
+    if (context.isPrimary()) {
+      interface.setMeshVertices(meshID, 2, positions0, vertexIDs);
+    } else {
+      interface.setMeshVertices(meshID, 2, positions1, vertexIDs);
+    }
+  } else {
+    BOOST_REQUIRE(context.isNamed("SolverTwo"));
+    if (context.isPrimary()) {
+      interface.setMeshVertices(meshID, 2, positions0, vertexIDs);
+    } else {
+      interface.setMeshVertices(meshID, 2, positions1, vertexIDs);
+    }
+  }
+
+  double maxDt        = interface.initialize();
+  double inValues[2]  = {0.0, 0.0};
+  double outValues[2] = {0.0, 0.0};
+  double dt           = maxDt / 3; //Do 3 substeps to check if QNWR works
+  double t            = 0;
+  int    iterations   = 0;
+
+  while (interface.isCouplingOngoing()) {
+    if (interface.requiresWritingCheckpoint()) {
+    }
+
+    interface.readBlockScalarData(readDataID, 4, vertexIDs, inValues);
+
+    /*
+      Solves the following linear system
+      2*x1 + x2 = t**2
+      x2 - 3*x1 = t
+
+      Analytical solutions are x1 = 1/3*(t**2 + t) and x2 = 1/3*(t**2 + 2*t).
+      Quasi newton is equivalent to GMRES for linear systems so it should converge within 4 iterations to numerical accuracy.
+    */
+
+    if (context.isNamed("SolverOne")) {
+      for (int i = 0; i < 4; i++) {
+        outValues[i] = inValues[i]; //only pushes solution through
+      }
+    } else {
+      outValues[0] = 2 * inValues[0] - inValues[1] + t * t;
+      outValues[1] = -3 * inValues[0] + inValues[1] + t;
+    }
+
+    interface.writeBlockScalarData(writeDataID, 2, vertexIDs, outValues);
+
+    maxDt = interface.advance(dt);
+
+    if (interface.requiresReadingCheckpoint()) {
+    }
+    iterations++;
+  }
+
+  interface.finalize();
+
+  //relative residual in config is 1e-7, so 2 orders of magnitude less strict
+  BOOST_TEST(outValues[0] == -2.0, boost::test_tools::tolerance(1e-5));
+  BOOST_TEST(outValues[1] == 0.0, boost::test_tools::tolerance(1e-5));
+
+  // to exclude false or no convergence
+  BOOST_TEST(iterations <= 20);
+  BOOST_TEST(iterations >= 5);
+}
+
 /// tests for different QN settings if correct fixed point is reached mesh with empty partition
 void runTestQNEmptyPartition(std::string const &config, TestContext const &context)
 {
