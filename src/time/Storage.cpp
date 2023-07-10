@@ -24,6 +24,7 @@ void Storage::initialize(time::Sample sample)
 
 void Storage::setSampleAtTime(double time, Sample sample)
 {
+  PRECICE_ASSERT(not sample.values.hasNaN());
   PRECICE_ASSERT(math::smallerEquals(WINDOW_START, time), "Setting sample outside of valid range!");
   PRECICE_ASSERT(math::smallerEquals(time, WINDOW_END), "Setting sample outside of valid range!");
   // check if key "time" exists.
