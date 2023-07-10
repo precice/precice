@@ -144,55 +144,66 @@ void runTestQNWR(std::string const &config, TestContext const &context)
     }
   }
 
+  int    nSubsteps    = 3; // perform subcycling on solvers. 4 steps happen in each window.
   double maxDt        = interface.initialize();
   double inValues[2]  = {0.0, 0.0};
   double outValues[2] = {0.0, 0.0};
-  double dt           = maxDt / 3; //Do 3 substeps to check if QNWR works
+  double dt           = maxDt / nSubsteps; //Do 3 substeps to check if QNWR works
   double t            = 0;
   int    iterations   = 0;
-
+  double timeCheckpoint;
   while (interface.isCouplingOngoing()) {
     if (interface.requiresWritingCheckpoint()) {
+      timeCheckpoint = t;
+      iterations     = 0;
     }
 
-    interface.readBlockScalarData(readDataID, 4, vertexIDs, inValues);
+    t += dt;
+    interface.readBlockScalarData(readDataID, 2, vertexIDs, dt, inValues);
 
     /*
       Solves the following linear system
       2*x1 + x2 = t**2
-      x2 - 3*x1 = t
+      x2 - 1*x1 = t
 
       Analytical solutions are x1 = 1/3*(t**2 + t) and x2 = 1/3*(t**2 + 2*t).
       Quasi newton is equivalent to GMRES for linear systems so it should converge within 4 iterations to numerical accuracy.
     */
 
     if (context.isNamed("SolverOne")) {
-      for (int i = 0; i < 4; i++) {
+      for (int i = 0; i < 2; i++) {
         outValues[i] = inValues[i]; //only pushes solution through
       }
     } else {
-      outValues[0] = 2 * inValues[0] - inValues[1] + t * t;
-      outValues[1] = -3 * inValues[0] + inValues[1] + t;
+      outValues[0] = -inValues[0] - inValues[1] + t * t;
+      outValues[1] = inValues[0] + t;
     }
 
     interface.writeBlockScalarData(writeDataID, 2, vertexIDs, outValues);
 
-    maxDt = interface.advance(dt);
+    //QN is equivalent to gmres for linear systems so after 4 iterations we should converge to the exact solution
+    //, boost::test_tools::tolerance(1e-9)
+    if (iterations > 3) {
+      std::cout << 1 / 3 * (t * t - t);
+      std::cout << outValues[0];
+      BOOST_TEST(outValues[0] == 1 / 3 * (t * t - t));
+      BOOST_TEST(outValues[1] == 1 / 3 * (t * t + 2 * t));
+    }
 
+    maxDt = interface.advance(dt);
+    dt    = dt > maxDt ? maxDt : dt;
     if (interface.requiresReadingCheckpoint()) {
+      t = timeCheckpoint;
+      iterations++;
     }
     iterations++;
   }
 
   interface.finalize();
 
-  //relative residual in config is 1e-7, so 2 orders of magnitude less strict
-  BOOST_TEST(outValues[0] == -2.0, boost::test_tools::tolerance(1e-5));
-  BOOST_TEST(outValues[1] == 0.0, boost::test_tools::tolerance(1e-5));
-
   // to exclude false or no convergence
-  BOOST_TEST(iterations <= 20);
-  BOOST_TEST(iterations >= 5);
+  BOOST_TEST(iterations <= 4);
+  BOOST_TEST(iterations > 3);
 }
 
 /// tests for different QN settings if correct fixed point is reached mesh with empty partition
