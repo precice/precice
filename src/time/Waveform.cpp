@@ -11,15 +11,20 @@
 namespace precice::time {
 
 Waveform::Waveform(
-    const int interpolationOrder, mesh::PtrData data)
-    : _interpolationOrder(interpolationOrder), _data(data)
+    const int interpolationDegree, mesh::PtrData data)
+    : _interpolationDegree(interpolationDegree), _data(data)
 {
-  PRECICE_ASSERT(Time::MIN_INTERPOLATION_ORDER <= _interpolationOrder && _interpolationOrder <= Time::MAX_INTERPOLATION_ORDER);
+  PRECICE_ASSERT(Time::MIN_WAVEFORM_DEGREE <= _interpolationDegree && _interpolationDegree <= Time::MAX_WAVEFORM_DEGREE);
 }
 
-int Waveform::getInterpolationOrder() const
+int Waveform::getInterpolationDegree() const
 {
-  return _interpolationOrder;
+  return _interpolationDegree;
+}
+
+void Waveform::setInterpolationDegree(int interpolationDegree)
+{
+  _interpolationDegree = interpolationDegree;
 }
 
 // helper function to compute x(t) from given data (x0,t0), (x1,t1), ..., (xn,tn) via B-spline interpolation (implemented using Eigen).
@@ -44,37 +49,37 @@ Eigen::VectorXd bSplineInterpolationAt(double t, Eigen::VectorXd ts, Eigen::Matr
 
 Eigen::VectorXd Waveform::sample(double normalizedDt) const
 {
-  const int usedOrder = computeUsedOrder(_interpolationOrder, _data->timeStepsStorage().nTimes());
+  const int usedDegree = computeUsedDegree(_interpolationDegree, _data->timeStepsStorage().nTimes());
 
   PRECICE_ASSERT(math::equals(this->_data->timeStepsStorage().maxStoredNormalizedDt(), time::Storage::WINDOW_END), this->_data->timeStepsStorage().maxStoredNormalizedDt()); // sampling is only allowed, if a window is complete.
 
-  if (_interpolationOrder == 0) {
+  if (_interpolationDegree == 0) {
     return this->_data->timeStepsStorage().getValuesAtOrAfter(normalizedDt);
   }
 
-  PRECICE_ASSERT(usedOrder >= 1);
+  PRECICE_ASSERT(usedDegree >= 1);
 
   const auto data = _data->timeStepsStorage().getTimesAndValues();
 
-  return bSplineInterpolationAt(normalizedDt, data.first, data.second, usedOrder);
+  return bSplineInterpolationAt(normalizedDt, data.first, data.second, usedDegree);
 }
 
-int Waveform::computeUsedOrder(int requestedOrder, int numberOfAvailableSamples) const
+int Waveform::computeUsedDegree(int requestedDegree, int numberOfAvailableSamples) const
 {
-  int usedOrder = -1;
-  PRECICE_ASSERT(requestedOrder <= 3);
-  if (requestedOrder == 0 || numberOfAvailableSamples < 2) {
-    usedOrder = 0;
-  } else if (requestedOrder == 1 || numberOfAvailableSamples < 3) {
-    usedOrder = 1;
-  } else if (requestedOrder == 2 || numberOfAvailableSamples < 4) {
-    usedOrder = 2;
-  } else if (requestedOrder == 3 || numberOfAvailableSamples < 5) {
-    usedOrder = 3;
+  int usedDegree = -1;
+  PRECICE_ASSERT(requestedDegree <= 3);
+  if (requestedDegree == 0 || numberOfAvailableSamples < 2) {
+    usedDegree = 0;
+  } else if (requestedDegree == 1 || numberOfAvailableSamples < 3) {
+    usedDegree = 1;
+  } else if (requestedDegree == 2 || numberOfAvailableSamples < 4) {
+    usedDegree = 2;
+  } else if (requestedDegree == 3 || numberOfAvailableSamples < 5) {
+    usedDegree = 3;
   } else {
     PRECICE_ASSERT(false); // not supported
   }
-  return usedOrder;
+  return usedDegree;
 }
 
 } // namespace precice::time

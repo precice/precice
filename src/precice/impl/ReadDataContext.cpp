@@ -1,18 +1,14 @@
 #include "ReadDataContext.hpp"
 
-#include "time/Waveform.hpp"
-
 namespace precice::impl {
 
 logging::Logger ReadDataContext::_log{"impl::ReadDataContext"};
 
 ReadDataContext::ReadDataContext(
     mesh::PtrData data,
-    mesh::PtrMesh mesh,
-    int           interpolationOrder)
+    mesh::PtrMesh mesh)
     : DataContext(data, mesh)
 {
-  _waveform = std::make_shared<time::Waveform>(interpolationOrder, data);
 }
 
 void ReadDataContext::appendMappingConfiguration(MappingContext &mappingContext, const MeshContext &meshContext)
@@ -30,16 +26,16 @@ void ReadDataContext::appendMappingConfiguration(MappingContext &mappingContext,
 void ReadDataContext::readValues(::precice::span<const VertexID> vertices, double normalizedDt, ::precice::span<double> values) const
 {
   Eigen::Map<Eigen::MatrixXd>       outputData(values.data(), getDataDimensions(), values.size());
-  const Eigen::MatrixXd             sample{_waveform->sample(normalizedDt)};
+  const Eigen::MatrixXd             sample{_providedData->sampleAtTime(normalizedDt)};
   Eigen::Map<const Eigen::MatrixXd> localData(sample.data(), getDataDimensions(), getMeshVertexCount());
   for (int i = 0; i < static_cast<int>(vertices.size()); ++i) {
     outputData.col(i) = localData.col(vertices[i]);
   }
 }
 
-int ReadDataContext::getInterpolationOrder() const
+int ReadDataContext::getInterpolationDegree() const
 {
-  return _waveform->getInterpolationOrder();
+  return _providedData->getInterpolationDegree();
 }
 
 } // namespace precice::impl

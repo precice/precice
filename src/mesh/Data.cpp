@@ -2,8 +2,8 @@
 #include <algorithm>
 #include <utility>
 
-#include "SharedPointer.hpp"
 #include "precice/types.hpp"
+#include "time/Waveform.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/assertion.hpp"
 
@@ -13,7 +13,7 @@ Data::Data(
     std::string name,
     DataID      id,
     int         dimensions,
-    int         spatialDimensions)
+    int         spatialDimensions) //@todo also set interpolationDegree here and directly initializeWaveform?
     : _name(std::move(name)),
       _id(id),
       _dimensions(dimensions),
@@ -48,9 +48,29 @@ time::Sample &Data::sample()
   return _sample;
 }
 
+void Data::initializeWaveform(PtrData ptrToMe, int waveformDegree)
+{
+  _waveform = std::make_shared<time::Waveform>(waveformDegree, PtrData(ptrToMe)); // @todo strange. Looks like mesh::Data should implement most of the Waveform functionality
+}
+
 const time::Sample &Data::sample() const
 {
   return _sample;
+}
+
+Eigen::VectorXd Data::sampleAtTime(double normalizedDt) const
+{
+  return _waveform->sample(normalizedDt);
+}
+
+int Data::getInterpolationDegree() const
+{
+  return _waveform->getInterpolationDegree();
+}
+
+void Data::setInterpolationDegree(int interpolationDegree)
+{
+  _waveform->setInterpolationDegree(interpolationDegree);
 }
 
 time::Storage &Data::timeStepsStorage()

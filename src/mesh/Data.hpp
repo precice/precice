@@ -4,10 +4,13 @@
 #include <stddef.h>
 #include <string>
 
+#include "SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "precice/types.hpp"
 #include "time/Sample.hpp"
+#include "time/SharedPointer.hpp"
 #include "time/Storage.hpp"
+#include "time/Time.hpp"
 
 namespace precice {
 namespace mesh {
@@ -60,11 +63,45 @@ public:
   /// Returns a const reference to the gradient data values.
   const Eigen::MatrixXd &gradients() const;
 
+  /**
+   * @brief Creates and initialized _waveform
+   *
+   * Currently needed, because Waveform requests PtrData. Creating PtrData(this) in constructor of data leads to memory management problems.
+   *
+   * @todo try to solve this differently and let exchange initialize Waveform of data. PtrStorage should be sufficient for Waveform, PtrData is overkill.
+   */
+  void initializeWaveform(PtrData ptrToMe,
+                          int     waveformDegree = time::Time::DEFAULT_WAVEFORM_DEGREE);
+
   /// Returns a reference to the _sample.
   time::Sample &sample();
 
   /// Returns a const reference to the _sample.
   const time::Sample &sample() const;
+
+  /**
+   * @brief Samples _waveform at given time
+   *
+   * @param normalizedDt Time where the sampling inside the window happens. Only allows values between 0 and 1. 0 refers to the beginning of the window and 1 to the end.
+   * @return Value of _waveform at time normalizedDt.
+   */
+  Eigen::VectorXd sampleAtTime(double normalizedDt) const;
+
+  /**
+   * @brief Get the _interpolationDegree.
+   *
+   * @return int _interpolationDegree
+   */
+  int getInterpolationDegree() const;
+
+  /**
+   * @brief Set polynomial degree of waveform after this Data has been created
+   *
+   * @todo Try to remove this function!
+   *
+   * @param interpolationDegree
+   */
+  void setInterpolationDegree(int interpolationDegree);
 
   /// Returns a reference to the _timeStepsStorage.
   time::Storage &timeStepsStorage();
@@ -108,6 +145,9 @@ public:
 
 private:
   logging::Logger _log{"mesh::Data"};
+
+  /// Waveform wrapping this Data.
+  time::PtrWaveform _waveform; // @todo just merge _waveform into _timeStepsStorage?
 
   /// Stores time steps in the current time window
   time::Storage _timeStepsStorage;
