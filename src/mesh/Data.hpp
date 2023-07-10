@@ -64,7 +64,7 @@ public:
   const Eigen::MatrixXd &gradients() const;
 
   /**
-   * @brief Creates and initialized _waveform
+   * @brief Creates and initializes _waveform
    *
    * Currently needed, because Waveform requests PtrData. Creating PtrData(this) in constructor of data leads to memory management problems.
    *
