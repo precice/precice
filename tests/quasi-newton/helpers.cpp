@@ -184,10 +184,8 @@ void runTestQNWR(std::string const &config, TestContext const &context)
     //QN is equivalent to gmres for linear systems so after 4 iterations we should converge to the exact solution
     //, boost::test_tools::tolerance(1e-9)
     if (iterations > 3) {
-      std::cout << 1 / 3 * (t * t - t);
-      std::cout << outValues[0];
-      BOOST_TEST(outValues[0] == 1 / 3 * (t * t - t));
-      BOOST_TEST(outValues[1] == 1 / 3 * (t * t + 2 * t));
+      BOOST_TEST(outValues[0] == (t * t - t) / 3);
+      BOOST_TEST(outValues[1] == (t * t + 2 * t) / 3);
     }
 
     maxDt = interface.advance(dt);
