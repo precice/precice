@@ -114,11 +114,10 @@ void ParticipantState::addWriteData(
 
 void ParticipantState::addReadData(
     const mesh::PtrData &data,
-    const mesh::PtrMesh &mesh,
-    int                  interpolationOrder)
+    const mesh::PtrMesh &mesh)
 {
   checkDuplicatedData(mesh->getName(), data->getName());
-  _readDataContexts.emplace(MeshDataKey{mesh->getName(), data->getName()}, ReadDataContext(data, mesh, interpolationOrder));
+  _readDataContexts.emplace(MeshDataKey{mesh->getName(), data->getName()}, ReadDataContext(data, mesh));
 }
 
 void ParticipantState::addReadMappingContext(

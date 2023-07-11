@@ -100,8 +100,7 @@ public:
   /// Adds a configured read \ref Data to the ParticipantState
   void addReadData(
       const mesh::PtrData &data,
-      const mesh::PtrMesh &mesh,
-      int                  interpolationOrder);
+      const mesh::PtrMesh &mesh);
 
   /// Adds a configured read \ref Mapping to the ParticipantState
   void addReadMappingContext(const MappingContext &mappingContext);
