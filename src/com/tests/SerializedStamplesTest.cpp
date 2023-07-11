@@ -70,6 +70,8 @@ BOOST_AUTO_TEST_CASE(DeserializeValues)
   mesh::PtrData              toData(new mesh::Data("to", -1, 1));
   cplscheme::PtrCouplingData toDataPtr(new cplscheme::CouplingData(toData, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
   toDataPtr->sample().values = Eigen::VectorXd(nValues);
+  toDataPtr->sample().setZero();
+
   toDataPtr->setSampleAtTime(time::Storage::WINDOW_START, toDataPtr->sample());
 
   Eigen::VectorXd timeStamps(nTimeSteps);
@@ -186,6 +188,8 @@ BOOST_AUTO_TEST_CASE(DeserializeValuesAndGradients)
   cplscheme::PtrCouplingData toDataPtr(new cplscheme::CouplingData(toData, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
   toDataPtr->sample().values    = Eigen::VectorXd(nValues);
   toDataPtr->sample().gradients = Eigen::MatrixXd(nValues, meshDimensions);
+  toDataPtr->sample().setZero();
+
   toDataPtr->setSampleAtTime(time::Storage::WINDOW_START, toDataPtr->sample());
 
   Eigen::VectorXd timeStamps(nTimeSteps);
