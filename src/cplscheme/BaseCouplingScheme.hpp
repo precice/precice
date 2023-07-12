@@ -251,7 +251,7 @@ protected:
    * @param m2n M2N used for communication
    * @param sendData DataMap associated with sent data
    */
-  void sendData(const m2n::PtrM2N &m2n, const DataMap &sendData);
+  void sendData(const m2n::PtrM2N &m2n, const DataMap &sendData, bool initialDataExchange = false);
 
   int receiveNumberOfTimeSteps(const m2n::PtrM2N &m2n);
 
@@ -263,7 +263,7 @@ protected:
    * @param m2n M2N used for communication
    * @param receiveData DataMap associated with received data
    */
-  void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData);
+  void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData, bool initialDataExchange = false);
 
   /**
    * @brief Initializes storage in receiveData as zero

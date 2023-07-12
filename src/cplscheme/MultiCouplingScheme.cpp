@@ -83,9 +83,12 @@ void MultiCouplingScheme::exchangeInitialData()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
 
+  bool initialDataExchange = true;
+
   if (_isController) {
     if (receivesInitializedData()) {
       for (auto &receiveExchange : _receiveDataVector) {
+        receiveData(_m2ns[receiveExchange.first], receiveExchange.second, initialDataExchange);
         receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
       }
       checkDataHasBeenReceived();
@@ -96,17 +99,20 @@ void MultiCouplingScheme::exchangeInitialData()
     }
     if (sendsInitializedData()) {
       for (auto &sendExchange : _sendDataVector) {
-        sendData(_m2ns[sendExchange.first], sendExchange.second);
+        sendData(_m2ns[sendExchange.first], sendExchange.second, initialDataExchange);
+        sendData(_m2ns[sendExchange.first], sendExchange.second, initialDataExchange);
       }
     }
   } else {
     if (sendsInitializedData()) {
       for (auto &sendExchange : _sendDataVector) {
-        sendData(_m2ns[sendExchange.first], sendExchange.second);
+        sendData(_m2ns[sendExchange.first], sendExchange.second, initialDataExchange);
+        sendData(_m2ns[sendExchange.first], sendExchange.second, initialDataExchange);
       }
     }
     if (receivesInitializedData()) {
       for (auto &receiveExchange : _receiveDataVector) {
+        receiveData(_m2ns[receiveExchange.first], receiveExchange.second, initialDataExchange);
         receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
       }
       checkDataHasBeenReceived();
