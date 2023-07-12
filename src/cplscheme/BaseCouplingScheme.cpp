@@ -245,7 +245,7 @@ PtrCouplingData BaseCouplingScheme::addCouplingData(const mesh::PtrData &data, m
   int             id         = data->getID();
   PtrCouplingData ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, communicateSubsteps, _extrapolationOrder, isGlobal);
 
-  // TODO: store mesh and global data together in a `DataMap _allData ` (currently produces a bug)
+  // TODO: store mesh and global data together in a `DataMap _allData ` (currently produces a bug), see https://github.com/precice/precice/issues/1716
   if (isGlobal) {
     if (!utils::contained(id, _allGlobalData)) { // data is not used by this coupling scheme yet, create new CouplingData
       _allGlobalData.emplace(id, ptrCplData);
