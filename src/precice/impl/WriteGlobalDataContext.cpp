@@ -20,7 +20,7 @@ void WriteGlobalDataContext::resetData(bool atEndOfWindow, bool isTimeWindowComp
   // reset writeDataBuffer
   _writeDataBuffer.values.setZero();
 
-  if (isTimeWindowComplete) {
+  if (isTimeWindowComplete) { // this is copied from WriteDataContext, not sure if it is needed here
     PRECICE_ASSERT(atEndOfWindow, "isTimeWindowComplete without atEndOfWindow is forbidden!");
     _providedData->timeStepsStorage().move();
     _providedData->timeStepsStorage().trim();

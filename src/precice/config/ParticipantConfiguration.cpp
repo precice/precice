@@ -331,11 +331,6 @@ void ParticipantConfiguration::xmlTagCallback(
   } else if (tag.getName() == TAG_READ) {
     const std::string &dataName = tag.getStringAttributeValue(ATTR_NAME);
     std::string        meshName = tag.getStringAttributeValue(ATTR_MESH);
-    mesh::PtrMesh      mesh     = _meshConfig->getMesh(meshName);
-    PRECICE_CHECK(mesh,
-                  R"(Participant "{}" attempts to write data "{}" to an unknown mesh "{}". <mesh name="{}"> needs to be defined first.)",
-                  _participants.back()->getName(), dataName, meshName, meshName);
-    mesh::PtrData data = getData(mesh, dataName);
     if (meshName.empty()) { // no mesh implies it's global data
       mesh::PtrData data = getGlobalData(dataName);
       _participants.back()->addReadGlobalData(data);
