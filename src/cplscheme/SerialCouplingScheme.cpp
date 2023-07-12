@@ -90,25 +90,25 @@ void SerialCouplingScheme::receiveAndSetTimeWindowSize()
 
 void SerialCouplingScheme::exchangeInitialData()
 {
-  bool initialDataExchange = true;
+  bool initialCommunication = true;
 
   // F: send, receive, S: receive, send
   if (doesFirstStep()) {
     if (receivesInitializedData()) {
-      receiveData(getM2N(), getReceiveData(), initialDataExchange);
+      receiveData(getM2N(), getReceiveData(), initialCommunication);
       checkDataHasBeenReceived();
     } else {
       initializeWithZeroInitialData(getReceiveData());
     }
     if (sendsInitializedData()) { // this send/recv pair is only needed, if no substeps are exchanged.
-      sendData(getM2N(), getSendData(), initialDataExchange);
+      sendData(getM2N(), getSendData(), initialCommunication);
     }
   } else { // second participant
     if (sendsInitializedData()) {
-      sendData(getM2N(), getSendData(), initialDataExchange);
+      sendData(getM2N(), getSendData(), initialCommunication);
     }
-    if (receivesInitializedData()) {                                // this send/recv pair is only needed, if no substeps are exchanged.
-      receiveData(getM2N(), getReceiveData(), initialDataExchange); // Receive data for WINDOW_START and WINDOW_END here
+    if (receivesInitializedData()) {                                 // this send/recv pair is only needed, if no substeps are exchanged.
+      receiveData(getM2N(), getReceiveData(), initialCommunication); // Receive data for WINDOW_START and WINDOW_END here
     }
     // similar to SerialCouplingScheme::exchangeSecondData()
     PRECICE_DEBUG("Receiving data...");

@@ -110,7 +110,7 @@ void BaseCouplingScheme::sendTimes(const m2n::PtrM2N &m2n, const Eigen::VectorXd
   m2n->send(times);
 }
 
-void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendData, bool initialDataExchange)
+void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendData, bool initialCommunication)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(m2n.get() != nullptr);
@@ -148,7 +148,7 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
         m2n->send(serialized.gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions() * serialized.nTimeSteps());
       }
     } else {
-      if (initialDataExchange) { // send data for WINDOW_START. Will be used for WINDOW_START and WINDOW_END.
+      if (initialCommunication) { // send data for WINDOW_START. Will be used for WINDOW_START and WINDOW_END.
         PRECICE_ASSERT(math::equals(stamples.front().timestamp, time::Storage::WINDOW_START));
         PRECICE_ASSERT(math::equals(stamples.back().timestamp, time::Storage::WINDOW_START));
       } else { // send data for WINDOW_END.
@@ -186,7 +186,7 @@ Eigen::VectorXd BaseCouplingScheme::receiveTimes(const m2n::PtrM2N &m2n, int nTi
   return times;
 }
 
-void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData, bool initialDataExchange)
+void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData, bool initialCommunication)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(m2n.get());
@@ -219,7 +219,7 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
         m2n->receive(data->gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions());
       }
 
-      if (initialDataExchange) { // also use receive data for WINDOW_START.
+      if (initialCommunication) { // also use receive data for WINDOW_START.
         data->setSampleAtTime(time::Storage::WINDOW_START, data->sample());
       }
       // use received data for WINDOW_END.
