@@ -4,8 +4,6 @@
 
 #include "DataContext.hpp"
 #include "logging/Logger.hpp"
-#include "time/SharedPointer.hpp"
-#include "time/Time.hpp"
 
 namespace precice {
 namespace impl {
@@ -26,11 +24,11 @@ public:
       mesh::PtrData data);
 
   /**
-   * @brief Gets _interpolationOrder of _waveform
+   * @brief Gets deree of waveform
    *
-   * @return _interpolationOrder of _waveform
+   * @return int degree of waveform
    */
-  int getInterpolationOrder() const;
+  int getWaveformDegree() const;
 
   /**
    * @brief Samples data at a given point in time within the current time window and writes it to the given span
@@ -52,9 +50,6 @@ public:
 
 private:
   static logging::Logger _log;
-
-  /// Waveform wrapped by this ReadGlobalDataContext.
-  time::PtrWaveform _waveform;
 };
 
 } // namespace impl

@@ -35,6 +35,7 @@ DataConfiguration::DataConfiguration(xml::XMLTag &parent)
   tagGlobalScalar.setDocumentation("Defines (global) scalar data not associated to any mesh."
                                    "Typically, it is space-invariant data, e.g., density for incompressible flow.");
   tagGlobalScalar.addAttribute(attrName);
+  tagGlobalScalar.addAttribute(attrDegree);
   parent.addSubtag(tagGlobalScalar);
 
   XMLTag tagGlobalVector(*this, VALUE_VECTOR, XMLTag::OCCUR_ARBITRARY, TAG_GLOBAL_DATA);
@@ -43,6 +44,7 @@ DataConfiguration::DataConfiguration(xml::XMLTag &parent)
                                    "The number of components of each data entry depends on the spatial dimensions "
                                    "set in tag <precice-configuration>.");
   tagGlobalVector.addAttribute(attrName);
+  tagGlobalVector.addAttribute(attrDegree);
   parent.addSubtag(tagGlobalVector);
 }
 
@@ -109,13 +111,13 @@ void DataConfiguration::xmlTagCallback(
     if (waveformDegree < time::Time::MIN_WAVEFORM_DEGREE || waveformDegree > time::Time::MAX_WAVEFORM_DEGREE) {
       PRECICE_ERROR("You tried to configure the data with name \"{}\" to use the waveform-degree=\"{}\", but the degree must be between \"{}\" and \"{}\". Please use a degree in the allowed range.", name, waveformDegree, time::Time::MIN_WAVEFORM_DEGREE, time::Time::MAX_WAVEFORM_DEGREE);
     }
-    int                dataDimensions = getDataDimensions(typeName);
+    int dataDimensions = getDataDimensions(typeName);
     if (!_experimental) {
       PRECICE_ERROR("You tried to configure \"{}\" as global data, which is currently still experimental. Please set experimental=\"true\", if you want to use this feature.", name);
     }
     PRECICE_WARN("You configured \"{}\" as global data, which is currently still experimental. Use with care.", name);
     addData(name, dataDimensions, waveformDegree, isGlobal);
-    createGlobalData(name, dataDimensions, _dataIDManager.getFreeID()); // TODO: Add waveformDegree here?
+    createGlobalData(name, dataDimensions, _dataIDManager.getFreeID(), waveformDegree);
   } else {
     PRECICE_ASSERT(false, "Received callback from an unknown tag.", tag.getName());
   }
@@ -145,7 +147,8 @@ void DataConfiguration::addData(
 
 void DataConfiguration::createGlobalData(const std::string &name,
                                          int                dimension,
-                                         DataID             id)
+                                         DataID             id,
+                                         int                waveformDegree)
 {
   PRECICE_TRACE(name, dimension, id);
   for (const PtrData &globalData : _globalData) {
@@ -154,7 +157,7 @@ void DataConfiguration::createGlobalData(const std::string &name,
                   "Please rename or remove one of the global-data tags with name \"{}\".",
                   name, name);
   }
-  PtrData globalData(new Data(name, id, dimension, _dimensions));
+  PtrData globalData(new Data(name, id, dimension, _dimensions, waveformDegree));
   globalData->allocateValues(1);
   _globalData.push_back(globalData);
 }

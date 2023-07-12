@@ -996,30 +996,21 @@ void CouplingSchemeConfiguration::checkSubstepExchangeWaveformDegree(const Confi
   }
 }
 
-void CouplingSchemeConfiguration::checkSubstepExchangeWaveformOrder(const Config::GlobalExchange &exchange) const
+void CouplingSchemeConfiguration::checkSubstepExchangeWaveformDegree(const Config::GlobalExchange &exchange) const
 {
   const auto &participant = _participantConfig->getParticipant(exchange.to);
 
-  // const auto &meshPtr = participant->findMesh(exchange.data->getName()); // related to https://github.com/precice/precice/issues/1694
-
-  // if (meshPtr == nullptr) {
-  //   // Only warn, because might be valid configuration, if summation action is used. See Integration/Serial/SummationActionTwoSources.
-  //   PRECICE_WARN("You defined <exchange data=\"{}\" ... to=\"{}\" /> in the <coupling-scheme:... />, but <participant name=\"{}\"> has no corresponding <read-data name=\"{}\" ... />. Usually this means that there is an error in your configuration.",
-  //                exchange.data->getName(), exchange.to, exchange.to, exchange.data->getName());
-  //   return; // skip checks below
-  // }
-
   const auto &readGlobalDataContext = participant->readGlobalDataContext(exchange.data->getName());
-  if (readGlobalDataContext.getInterpolationOrder() == 0) {
+  if (readGlobalDataContext.getWaveformDegree() == 0) {
     PRECICE_CHECK(!exchange.exchangeSubsteps,
-                  "You configured <read-data name=\"{}\" waveform-order=\"{}\" />. Please deactivate exchange of substeps by setting substeps=\"false\" in the following exchange tag of your coupling scheme: <exchange data=\"{}\" from=\"{}\" to=\"{}\" />. Reason: For zeroth order interpolation no exchange of data for substeps is needed. Please consider using waveform-order=\"1\" or higher order, if you want to use subcycling.",
-                  readGlobalDataContext.getDataName(), readGlobalDataContext.getInterpolationOrder(), exchange.data->getName(), exchange.from, exchange.to);
-  } else if (readGlobalDataContext.getInterpolationOrder() >= 2) {
+                  "You configured <global-data:scalar/vector name=\"{}\" waveform-order=\"{}\" />. Please deactivate exchange of substeps by setting substeps=\"false\" in the following exchange tag of your coupling scheme: <exchange data=\"{}\" from=\"{}\" to=\"{}\" />. Reason: For constant interpolation no exchange of data for substeps is needed. Please consider using waveform-order=\"1\" or higher, if you want to use subcycling.",
+                  readGlobalDataContext.getDataName(), readGlobalDataContext.getWaveformDegree(), exchange.data->getName(), exchange.from, exchange.to);
+  } else if (readGlobalDataContext.getWaveformDegree() >= 2) {
     PRECICE_CHECK(exchange.exchangeSubsteps,
-                  "You configured <read-data name=\"{}\" waveform-order=\"{}\" />. Please activate exchange of substeps by setting substeps=\"true\" in the following exchange tag of your coupling scheme: <exchange data=\"{}\" from=\"{}\" to=\"{}\" />. Reason: For higher-order interpolation exchange of data for substeps is required. If you don't want to activate exchange of additional data, please consider using waveform-order=\"1\". Note that deactivating exchange of substep data might lead to worse results, if you use subcycling.",
-                  readGlobalDataContext.getDataName(), readGlobalDataContext.getInterpolationOrder(), exchange.data->getName(), exchange.from, exchange.to);
+                  "You configured <global-data:scalar/vector name=\"{}\" waveform-degree=\"{}\" />. Please activate exchange of substeps by setting substeps=\"true\" in the following exchange tag of your coupling scheme: <exchange data=\"{}\" from=\"{}\" to=\"{}\" />. Reason: For higher-order interpolation exchange of data for substeps is required. If you don't want to activate exchange of additional data, please consider using waveform-degree=\"1\". Note that deactivating exchange of substep data might lead to worse results, if you use subcycling.",
+                  readGlobalDataContext.getDataName(), readGlobalDataContext.getWaveformDegree(), exchange.data->getName(), exchange.from, exchange.to);
   } else { // For first order there is no restriction for exchange of substeps
-    PRECICE_ASSERT(readGlobalDataContext.getInterpolationOrder() == 1);
+    PRECICE_ASSERT(readGlobalDataContext.getWaveformDegree() == 1);
   }
 }
 
@@ -1097,7 +1088,7 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
     if (from == accessor) {
       scheme.addDataToSend(exchange.data, nullptr, requiresInitialization, exchangeSubsteps, true);
     } else if (to == accessor) {
-      checkSubstepExchangeWaveformOrder(exchange);
+      checkSubstepExchangeWaveformDegree(exchange);
       scheme.addDataToReceive(exchange.data, nullptr, requiresInitialization, exchangeSubsteps, true);
     } else {
       PRECICE_ASSERT(_config.type == VALUE_MULTI);

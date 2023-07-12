@@ -4,8 +4,8 @@
 #include <vector>
 #include "logging/Logger.hpp"
 #include "mesh/Data.hpp"
-#include "time/Time.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "time/Time.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "xml/XMLTag.hpp"
 
@@ -61,7 +61,7 @@ public:
   void addData(const std::string &name,
                int                dataDimensions,
                int                waveformDegree = time::Time::DEFAULT_WAVEFORM_DEGREE,
-               bool               isGlobal);
+               bool               isGlobal       = false);
 
   void setExperimental(bool experimental);
 
@@ -70,10 +70,10 @@ private:
 
   const std::string TAG_MESH_DATA   = "data";
   const std::string TAG_GLOBAL_DATA = "global-data";
-  const std::string ATTR_NAME    = "name";
-  const std::string ATTR_DEGREE  = "waveform-degree";
-  const std::string VALUE_VECTOR = "vector";
-  const std::string VALUE_SCALAR = "scalar";
+  const std::string ATTR_NAME       = "name";
+  const std::string ATTR_DEGREE     = "waveform-degree";
+  const std::string VALUE_VECTOR    = "vector";
+  const std::string VALUE_SCALAR    = "scalar";
 
   /// Dimension of space.
   int _dimensions = 0;
@@ -91,7 +91,8 @@ private:
   /// Creates a GlobalData object and appends it to _globalData vector
   void createGlobalData(const std::string &name,
                         int                dimension,
-                        DataID             id);
+                        DataID             id,
+                        int                waveformDegree = time::Time::DEFAULT_WAVEFORM_DEGREE);
 
   bool _experimental = false;
 };

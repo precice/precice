@@ -327,6 +327,19 @@ private:
    * @param exchange The Exchange being checked.
    */
   void checkSubstepExchangeWaveformDegree(const Config::Exchange &exchange) const;
+
+  /**
+   * @brief Helper function to check that waveform-degree and substep exchange are compatible.
+   *
+   * The following rules are checked:
+   *
+   * 1) If waveform-degree="0", then user must set substeps="false", because constant interpolation (zeroth degree) is intended for debugging and user should use first degree instead.
+   * 2) If waveform-degree="1", then any configuration for substeps is allowed. The user might want to set substeps="false" for better performance.
+   * 3) If waveform-degree="2" or greater, the user must set substeps="true", because subcycling and exchange of substeps is required for higher-degree B-splines.
+   *
+   * @param exchange The GlobalExchange being checked.
+   */
+  void checkSubstepExchangeWaveformDegree(const Config::GlobalExchange &exchange) const;
 };
 } // namespace cplscheme
 } // namespace precice
