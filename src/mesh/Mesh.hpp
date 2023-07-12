@@ -57,6 +57,8 @@ public:
   /// Use if the id of the mesh is not necessary
   static constexpr MeshID MESH_ID_UNDEFINED{-1};
 
+  /// Mesh ID associated with global data (see https://github.com/precice/precice/pull/1549#discussion_r1260757692, https://github.com/precice/precice/issues/1716)
+  static constexpr MeshID GLOBAL_DATA_MESH_ID{-2};
   /**
    * @brief Constructor.
    *

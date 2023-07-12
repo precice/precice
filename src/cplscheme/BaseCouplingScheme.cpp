@@ -120,7 +120,7 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
     if (not data->isGlobal()) {
       meshID = data->getMeshID();
     } else {
-      meshID = -1;
+      meshID = mesh::Mesh::GLOBAL_DATA_MESH_ID;
     }
 
     const auto &stamples = data->stamples();
@@ -197,7 +197,7 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
     if (not data->isGlobal()) {
       meshID = data->getMeshID();
     } else {
-      meshID = -1;
+      meshID = mesh::Mesh::GLOBAL_DATA_MESH_ID;
     }
 
     if (data->exchangeSubsteps()) {

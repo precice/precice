@@ -211,7 +211,7 @@ void M2N::send(
     int                         meshID,
     int                         valueDimension)
 {
-  if ((not _useOnlyPrimaryCom) && meshID != -1) { // meshID != -1 is temporary fix to always go to intracomm for global data
+  if ((not _useOnlyPrimaryCom) && meshID != mesh::Mesh::GLOBAL_DATA_MESH_ID) { // meshID != mesh::Mesh::GLOBAL_DATA_MESH_ID is temporary fix to always go to intracomm for global data
     PRECICE_ASSERT(_areSecondaryRanksConnected);
     PRECICE_ASSERT(_distComs.find(meshID) != _distComs.end());
     PRECICE_ASSERT(_distComs[meshID].get() != nullptr);
@@ -298,7 +298,7 @@ void M2N::receive(precice::span<double> itemsToReceive,
                   int                   meshID,
                   int                   valueDimension)
 {
-  if ((not _useOnlyPrimaryCom) && meshID != -1) {
+  if ((not _useOnlyPrimaryCom) && meshID != mesh::Mesh::GLOBAL_DATA_MESH_ID) {
     PRECICE_ASSERT(_areSecondaryRanksConnected);
     PRECICE_ASSERT(_distComs.find(meshID) != _distComs.end());
     PRECICE_ASSERT(_distComs[meshID].get() != nullptr);
