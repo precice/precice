@@ -107,10 +107,10 @@ void SerialCouplingScheme::exchangeInitialData()
     if (sendsInitializedData()) {
       sendData(getM2N(), getSendData(), initialDataExchange);
     }
-    // similar to SerialCouplingScheme::exchangeSecondData()
     if (receivesInitializedData()) {                                // this send/recv pair is only needed, if no substeps are exchanged.
       receiveData(getM2N(), getReceiveData(), initialDataExchange); // Receive data for WINDOW_START and WINDOW_END here
     }
+    // similar to SerialCouplingScheme::exchangeSecondData()
     PRECICE_DEBUG("Receiving data...");
     receiveAndSetTimeWindowSize();
     receiveData(getM2N(), getReceiveData());
