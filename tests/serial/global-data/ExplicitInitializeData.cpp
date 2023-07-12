@@ -13,7 +13,7 @@ BOOST_AUTO_TEST_SUITE(GlobalData)
 
 /**
  * @brief Test simple explicit coupled simulation with
- * global data initialization and without acceleration.
+ * global data initialization.
  * The second solver initializes the data of the first.
  *
  */
