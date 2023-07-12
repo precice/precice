@@ -1132,7 +1132,7 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
   }
   scheme.determineInitialDataExchange();
 
-  //TODO: Add global data to be exchanged
+  //TODO: Add global data to be exchanged, see https://github.com/precice/precice/issues/1716
 }
 
 void CouplingSchemeConfiguration::checkIfDataIsExchanged(
