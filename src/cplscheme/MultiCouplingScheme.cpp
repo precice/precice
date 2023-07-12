@@ -78,7 +78,7 @@ void MultiCouplingScheme::initializeReceiveDataStorage()
   for (auto &receiveExchange : _receiveDataVector) {
     initializeWithZeroInitialData(receiveExchange.second);
   }
-  // TODO add global data here
+  // TODO add global data here, see https://github.com/precice/precice/issues/1716
 }
 
 void MultiCouplingScheme::exchangeInitialData()
