@@ -8,9 +8,9 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(GlobalData)
-// Test case to send global (meshless) data from one participant to another.
-// The test case here is the most basic variant in order
-// use such a feature. SolverOne defines the data and SolverTwo receives it.
+// Test case to send global (meshless) data from one participant to another,
+// while also writing data through direct mesh access.
+// SolverOne writes all data and SolverTwo reads it.
 BOOST_AUTO_TEST_CASE(ExplicitWithDirectMeshAccess)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
