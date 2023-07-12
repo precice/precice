@@ -216,28 +216,12 @@ public:
     return _readDataContexts | boost::adaptors::map_values;
   }
 
-  /** Provides const access to all \ref WriteGlobalDataContext objects
-   * @remarks does not contain nullptr.
-   */
-  auto writeGlobalDataContexts() const
-  {
-    return _writeGlobalDataContexts | boost::adaptors::map_values;
-  }
-
   /** Provides access to all \ref WriteGlobalDataContext objects
    * @remarks does not contain nullptr.
    */
   auto writeGlobalDataContexts()
   {
     return _writeGlobalDataContexts | boost::adaptors::map_values;
-  }
-
-  /** Provides const access to all \ref ReadGlobalDataContext objects
-   * @remarks does not contain nullptr.
-   */
-  auto readGlobalDataContexts() const
-  {
-    return _readGlobalDataContexts | boost::adaptors::map_values;
   }
 
   /** Provides access to all \ref ReadGlobalDataContext objects
