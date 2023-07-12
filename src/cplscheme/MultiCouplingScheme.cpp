@@ -47,7 +47,7 @@ void MultiCouplingScheme::determineInitialDataExchange()
   for (auto &receiveExchange : _receiveDataVector | boost::adaptors::map_values) {
     determineInitialReceive(receiveExchange);
   }
-  // TODO add global data here
+  // TODO add global data here, see https://github.com/precice/precice/issues/1716
 }
 
 std::vector<std::string> MultiCouplingScheme::getCouplingPartners() const
