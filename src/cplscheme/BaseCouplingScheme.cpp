@@ -148,13 +148,13 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
         m2n->send(serialized.gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions() * serialized.nTimeSteps());
       }
     } else {
-      if (initialDataExchange) {
+      if (initialDataExchange) { // send data for WINDOW_START. Will be used for WINDOW_START and WINDOW_END.
         PRECICE_ASSERT(math::equals(stamples.front().timestamp, time::Storage::WINDOW_START));
-        data->sample() = stamples.front().sample;
-      } else {
+        PRECICE_ASSERT(math::equals(stamples.back().timestamp, time::Storage::WINDOW_START));
+      } else { // send data for WINDOW_END.
         PRECICE_ASSERT(math::equals(stamples.back().timestamp, time::Storage::WINDOW_END));
-        data->sample() = stamples.back().sample;
       }
+      data->sample() = stamples.back().sample;
 
       // Data is only received on ranks with size>0, which is checked in the derived class implementation
       m2n->send(data->values(), data->getMeshID(), data->getDimensions());
@@ -219,11 +219,11 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
         m2n->receive(data->gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions());
       }
 
-      if (initialDataExchange) {
+      if (initialDataExchange) { // also use receive data for WINDOW_START.
         data->setSampleAtTime(time::Storage::WINDOW_START, data->sample());
-      } else {
-        data->setSampleAtTime(time::Storage::WINDOW_END, data->sample());
       }
+      // use received data for WINDOW_END.
+      data->setSampleAtTime(time::Storage::WINDOW_END, data->sample());
     }
   }
 }

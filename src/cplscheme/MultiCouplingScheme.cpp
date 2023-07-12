@@ -89,7 +89,6 @@ void MultiCouplingScheme::exchangeInitialData()
     if (receivesInitializedData()) {
       for (auto &receiveExchange : _receiveDataVector) {
         receiveData(_m2ns[receiveExchange.first], receiveExchange.second, initialDataExchange);
-        receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
       }
       checkDataHasBeenReceived();
     } else {
@@ -100,20 +99,17 @@ void MultiCouplingScheme::exchangeInitialData()
     if (sendsInitializedData()) {
       for (auto &sendExchange : _sendDataVector) {
         sendData(_m2ns[sendExchange.first], sendExchange.second, initialDataExchange);
-        sendData(_m2ns[sendExchange.first], sendExchange.second, initialDataExchange);
       }
     }
   } else {
     if (sendsInitializedData()) {
       for (auto &sendExchange : _sendDataVector) {
         sendData(_m2ns[sendExchange.first], sendExchange.second, initialDataExchange);
-        sendData(_m2ns[sendExchange.first], sendExchange.second, initialDataExchange);
       }
     }
     if (receivesInitializedData()) {
       for (auto &receiveExchange : _receiveDataVector) {
         receiveData(_m2ns[receiveExchange.first], receiveExchange.second, initialDataExchange);
-        receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
       }
       checkDataHasBeenReceived();
     } else {

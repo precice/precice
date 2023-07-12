@@ -31,11 +31,9 @@ void ParallelCouplingScheme::exchangeInitialData()
   if (doesFirstStep()) {
     if (sendsInitializedData()) {
       sendData(getM2N(), getSendData(), initialDataExchange);
-      sendData(getM2N(), getSendData(), initialDataExchange);
     }
     if (receivesInitializedData()) {
       receiveData(getM2N(), getReceiveData(), initialDataExchange);
-      receiveData(getM2N(), getReceiveData());
       checkDataHasBeenReceived();
     } else {
       initializeWithZeroInitialData(getReceiveData());
@@ -43,13 +41,11 @@ void ParallelCouplingScheme::exchangeInitialData()
   } else { // second participant
     if (receivesInitializedData()) {
       receiveData(getM2N(), getReceiveData(), initialDataExchange);
-      receiveData(getM2N(), getReceiveData());
       checkDataHasBeenReceived();
     } else {
       initializeWithZeroInitialData(getReceiveData());
     }
     if (sendsInitializedData()) {
-      sendData(getM2N(), getSendData(), initialDataExchange);
       sendData(getM2N(), getSendData(), initialDataExchange);
     }
   }

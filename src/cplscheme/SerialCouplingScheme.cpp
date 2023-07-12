@@ -96,7 +96,6 @@ void SerialCouplingScheme::exchangeInitialData()
   if (doesFirstStep()) {
     if (receivesInitializedData()) {
       receiveData(getM2N(), getReceiveData(), initialDataExchange);
-      receiveData(getM2N(), getReceiveData());
       checkDataHasBeenReceived();
     } else {
       initializeWithZeroInitialData(getReceiveData());
@@ -107,23 +106,20 @@ void SerialCouplingScheme::exchangeInitialData()
   } else { // second participant
     if (sendsInitializedData()) {
       sendData(getM2N(), getSendData(), initialDataExchange);
-      sendData(getM2N(), getSendData(), initialDataExchange);
     }
     PRECICE_DEBUG("Receiving data...");
+    // similar to SerialCouplingScheme::exchangeSecondData()
     if (receivesInitializedData()) {                                // should actually also check if(data->exchangeSubsteps()), but a bit difficult...
       receiveData(getM2N(), getReceiveData(), initialDataExchange); // @todo need to receive data for WINDOW_START and WINDOW_END here, if no substeps are exchanged...
     }
-    // similar to SerialCouplingScheme::exchangeSecondData()
     receiveAndSetTimeWindowSize();
-    receiveData(getM2N(), getReceiveData());
+    receiveData(getM2N(), getReceiveData()); // receive data from end of first time step of first participant
     checkDataHasBeenReceived();
   }
 }
 
 void SerialCouplingScheme::exchangeFirstData()
 {
-  bool initialDataExchange = true;
-
   if (isExplicitCouplingScheme()) {
     if (doesFirstStep()) { // first participant
       PRECICE_DEBUG("Sending data...");
