@@ -72,8 +72,10 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
   forces->values() << 0.2, 0.2, 0.2, 0.2;
   forces->setSampleAtTime(time::Storage::WINDOW_END, forces->sample());
 
-  cplscheme::PtrCouplingData dpcd(new cplscheme::CouplingData(displacements, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
-  cplscheme::PtrCouplingData fpcd(new cplscheme::CouplingData(forces, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
+  bool exchangeSubsteps = false; // @todo set "true" as soon as acceleration scheme supports subcycling
+
+  cplscheme::PtrCouplingData dpcd(new cplscheme::CouplingData(displacements, dummyMesh, false, exchangeSubsteps, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
+  cplscheme::PtrCouplingData fpcd(new cplscheme::CouplingData(forces, dummyMesh, false, exchangeSubsteps, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
 
   DataMap data;
   data.insert(std::pair<int, cplscheme::PtrCouplingData>(0, dpcd));
@@ -152,8 +154,10 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
   forces->values() << 0.2, 0.2, 0.2, 0.2;
   forces->setSampleAtTime(time::Storage::WINDOW_END, forces->sample());
 
-  cplscheme::PtrCouplingData dpcd(new cplscheme::CouplingData(displacements, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
-  cplscheme::PtrCouplingData fpcd(new cplscheme::CouplingData(forces, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
+  bool exchangeSubsteps = false; // @todo set "true" as soon as acceleration scheme supports subcycling
+
+  cplscheme::PtrCouplingData dpcd(new cplscheme::CouplingData(displacements, dummyMesh, false, exchangeSubsteps, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
+  cplscheme::PtrCouplingData fpcd(new cplscheme::CouplingData(forces, dummyMesh, false, exchangeSubsteps, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
   dpcd->storeIteration();
   fpcd->storeIteration();
 
@@ -221,8 +225,10 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxation)
   forces->values() << 0.2, 0.2, 0.2, 0.2;
   forces->setSampleAtTime(time::Storage::WINDOW_END, forces->sample());
 
-  cplscheme::PtrCouplingData dpcd = std::make_shared<cplscheme::CouplingData>(displacements, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
-  cplscheme::PtrCouplingData fpcd = std::make_shared<cplscheme::CouplingData>(forces, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
+  bool exchangeSubsteps = false; // @todo set "true" as soon as acceleration scheme supports subcycling, i.e. https://github.com/precice/precice/pull/1696 is merged
+
+  cplscheme::PtrCouplingData dpcd = std::make_shared<cplscheme::CouplingData>(displacements, dummyMesh, false, exchangeSubsteps, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
+  cplscheme::PtrCouplingData fpcd = std::make_shared<cplscheme::CouplingData>(forces, dummyMesh, false, exchangeSubsteps, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
 
   DataMap data;
   data.insert(std::pair<int, cplscheme::PtrCouplingData>(0, dpcd));
@@ -294,8 +300,10 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradient)
   forces->gradients().setConstant(-2);
   forces->setSampleAtTime(time::Storage::WINDOW_END, forces->sample());
 
-  cplscheme::PtrCouplingData dpcd = std::make_shared<cplscheme::CouplingData>(displacements, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
-  cplscheme::PtrCouplingData fpcd = std::make_shared<cplscheme::CouplingData>(forces, dummyMesh, false, true, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
+  bool exchangeSubsteps = false; // @todo set "true" as soon as acceleration scheme supports subcycling, i.e. https://github.com/precice/precice/pull/1696 is merged
+
+  cplscheme::PtrCouplingData dpcd = std::make_shared<cplscheme::CouplingData>(displacements, dummyMesh, false, exchangeSubsteps, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
+  cplscheme::PtrCouplingData fpcd = std::make_shared<cplscheme::CouplingData>(forces, dummyMesh, false, exchangeSubsteps, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
 
   DataMap data;
   data.insert(std::pair<int, cplscheme::PtrCouplingData>(0, dpcd));

@@ -68,12 +68,12 @@
     <max-time-windows value="10" />
     <time-window-size value="1.0" />
     <max-iterations value="2" />
-    <exchange data="DataBA" mesh="MeshA" from="SolverB" to="SolverA" />
-    <exchange data="DataAB" mesh="MeshA" from="SolverA" to="SolverB" />
-    <exchange data="DataCB" mesh="MeshC" from="SolverC" to="SolverB" />
-    <exchange data="DataCB" mesh="MeshC" from="SolverC" to="SolverA" />
-    <exchange data="DataBC" mesh="MeshB2" from="SolverB" to="SolverC" />
-    <exchange data="DataBC" mesh="MeshB2" from="SolverB" to="SolverA" />
+    <exchange data="DataBA" mesh="MeshA" from="SolverB" to="SolverA" substeps="false" />
+    <exchange data="DataAB" mesh="MeshA" from="SolverA" to="SolverB" substeps="false" />
+    <exchange data="DataCB" mesh="MeshC" from="SolverC" to="SolverB" substeps="false" />
+    <exchange data="DataCB" mesh="MeshC" from="SolverC" to="SolverA" substeps="false" />
+    <exchange data="DataBC" mesh="MeshB2" from="SolverB" to="SolverC" substeps="false" />
+    <exchange data="DataBC" mesh="MeshB2" from="SolverB" to="SolverA" substeps="false" />
     <relative-convergence-measure data="DataAB" mesh="MeshA" limit="1e-4" />
     <relative-convergence-measure data="DataBA" mesh="MeshA" limit="1e-4" />
     <relative-convergence-measure data="DataCB" mesh="MeshC" limit="1e-4" />

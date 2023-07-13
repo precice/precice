@@ -43,7 +43,7 @@
     <max-time-windows value="1" />
     <time-window-size value="1.0" />
     <exchange data="Data1" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
-    <exchange data="Data2" mesh="MeshOne" from="SolverTwo" to="SolverOne" />
+    <exchange data="Data2" mesh="MeshOne" from="SolverTwo" to="SolverOne" substeps="false" />
     <max-iterations value="100" />
     <relative-convergence-measure limit="1e-7" data="Data2" mesh="MeshOne" />
     <acceleration:IQN-ILS>
