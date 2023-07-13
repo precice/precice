@@ -1,5 +1,6 @@
 #include "acceleration/AitkenAcceleration.hpp"
 #include <Eigen/Core>
+#include <boost/range/adaptor/map.hpp>
 #include <cmath>
 #include <cstddef>
 #include <limits>
@@ -51,6 +52,12 @@ void AitkenAcceleration::performAcceleration(
     const DataMap &cplData)
 {
   PRECICE_TRACE();
+
+  for (const auto &data : cplData | boost::adaptors::map_values) {
+    if (data->exchangeSubsteps()) {
+      PRECICE_ERROR("Acceleration scheme does not support subcycling. Please pick a different acceleration scheme or set substeps=\"false\" in the exchange tag of data \"{}\".", data->getDataName());
+    }
+  }
 
   // Compute aitken relaxation factor
   PRECICE_ASSERT(utils::contained(*_dataIDs.begin(), cplData));
