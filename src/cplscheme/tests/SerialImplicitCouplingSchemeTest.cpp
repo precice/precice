@@ -601,7 +601,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
   int          sendDataIndex        = -1;
   int          receiveDataIndex     = -1;
   int          convergenceDataIndex = -1;
-  bool         exchangeSubsteps     = false; // @todo set "true" as soon as https://github.com/precice/precice/pull/1696 is merged.
+  bool         exchangeSubsteps     = true;
 
   BOOST_TEST(dataID0 == 0);
   BOOST_TEST(dataID1 == 1);
@@ -806,7 +806,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
   int          sendDataIndex        = -1;
   int          receiveDataIndex     = -1;
   int          convergenceDataIndex = -1;
-  bool         exchangeSubsteps     = false; // @todo set "true" as soon as https://github.com/precice/precice/pull/1696 is merged.
+  bool         exchangeSubsteps     = true;
 
   BOOST_TEST(dataID0 == 0);
   BOOST_TEST(dataID1 == 1);

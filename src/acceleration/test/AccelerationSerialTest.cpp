@@ -225,7 +225,7 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxation)
   forces->values() << 0.2, 0.2, 0.2, 0.2;
   forces->setSampleAtTime(time::Storage::WINDOW_START, forces->sample());
 
-  bool exchangeSubsteps = false; // @todo set "true" as soon as acceleration scheme supports subcycling, i.e. https://github.com/precice/precice/pull/1696 is merged
+  bool exchangeSubsteps = true;
 
   cplscheme::PtrCouplingData dpcd = std::make_shared<cplscheme::CouplingData>(displacements, dummyMesh, false, exchangeSubsteps, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
   cplscheme::PtrCouplingData fpcd = std::make_shared<cplscheme::CouplingData>(forces, dummyMesh, false, exchangeSubsteps, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
@@ -302,7 +302,7 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradient)
   forces->gradients().setConstant(-2);
   forces->setSampleAtTime(time::Storage::WINDOW_START, forces->sample());
 
-  bool exchangeSubsteps = false; // @todo set "true" as soon as acceleration scheme supports subcycling, i.e. https://github.com/precice/precice/pull/1696 is merged
+  bool exchangeSubsteps = true;
 
   cplscheme::PtrCouplingData dpcd = std::make_shared<cplscheme::CouplingData>(displacements, dummyMesh, false, exchangeSubsteps, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
   cplscheme::PtrCouplingData fpcd = std::make_shared<cplscheme::CouplingData>(forces, dummyMesh, false, exchangeSubsteps, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
