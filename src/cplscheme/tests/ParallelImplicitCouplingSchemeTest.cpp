@@ -345,6 +345,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
   int          sendDataIndex        = -1;
   int          receiveDataIndex     = -1;
   int          convergenceDataIndex = -1;
+  bool         exchangeSubsteps     = false; // @todo set "true" as soon as https://github.com/precice/precice/pull/1696 is merged.
 
   BOOST_TEST(dataID0 == 0);
   BOOST_TEST(dataID1 == 1);
@@ -364,8 +365,8 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
       maxTime, maxTimeWindows, timeWindowSize, 16, first, second,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, maxIterations, extrapolationOrder);
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, true);
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, true);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, exchangeSubsteps);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, exchangeSubsteps);
   cplScheme.determineInitialDataExchange();
 
   // Add acceleration
@@ -566,6 +567,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
   int          sendDataIndex        = -1;
   int          receiveDataIndex     = -1;
   int          convergenceDataIndex = -1;
+  bool         exchangeSubsteps     = false; // @todo set "true" as soon as https://github.com/precice/precice/pull/1696 is merged.
 
   BOOST_TEST(dataID0 == 0);
   BOOST_TEST(dataID1 == 1);
@@ -585,8 +587,8 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
       maxTime, maxTimeWindows, timeWindowSize, 16, first, second,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, maxIterations, extrapolationOrder);
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, context.isNamed(second), true);
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, context.isNamed(first), true);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, context.isNamed(second), exchangeSubsteps);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, context.isNamed(first), exchangeSubsteps);
   cplScheme.determineInitialDataExchange();
 
   // Add acceleration

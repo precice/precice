@@ -1,4 +1,6 @@
 #include "acceleration/ConstantRelaxationAcceleration.hpp"
+#include <boost/range/adaptor/map.hpp>
+
 #include <Eigen/Core>
 #include <map>
 #include <memory>
@@ -32,6 +34,13 @@ void ConstantRelaxationAcceleration::initialize(const DataMap &cplData)
 void ConstantRelaxationAcceleration::performAcceleration(const DataMap &cplData)
 {
   PRECICE_TRACE();
+
+  for (const auto &data : cplData | boost::adaptors::map_values) {
+    if (data->exchangeSubsteps()) {
+      PRECICE_ERROR("Acceleration scheme does not support subcycling. Please pick a different acceleration scheme or set substeps=\"false\" in the exchange tag of data \"{}\".", data->getDataName());
+    }
+  }
+
   applyRelaxation(_relaxation, cplData);
 }
 

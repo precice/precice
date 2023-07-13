@@ -1,5 +1,6 @@
 #include "acceleration/BaseQNAcceleration.hpp"
 #include <Eigen/Core>
+#include <boost/range/adaptor/map.hpp>
 #include <cmath>
 #include <memory>
 #include <utility>
@@ -267,6 +268,12 @@ void BaseQNAcceleration::performAcceleration(
     const DataMap &cplData)
 {
   PRECICE_TRACE(_dataIDs.size(), cplData.size());
+
+  for (const auto &data : cplData | boost::adaptors::map_values) {
+    if (data->exchangeSubsteps()) {
+      PRECICE_ERROR("Acceleration scheme does not support subcycling. Please pick a different acceleration scheme or set substeps=\"false\" in the exchange tag of data \"{}\".", data->getDataName());
+    }
+  }
 
   profiling::Event e("cpl.computeQuasiNewtonUpdate", profiling::Synchronize);
 
