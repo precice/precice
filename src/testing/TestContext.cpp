@@ -36,7 +36,8 @@ TestContext::~TestContext() noexcept
   if (!invalid && _petsc) {
     precice::utils::Petsc::finalize();
   }
-  if (!invalid && _events) {
+  if (!invalid) {
+    // Always clean up tests.
     precice::profiling::EventRegistry::instance().finalize();
   }
   if (!invalid && _initIntraComm) {
@@ -204,14 +205,19 @@ void TestContext::initializeIntraComm()
 
 void TestContext::initializeEvents()
 {
-  if (!invalid && _events) {
-    auto &er = precice::profiling::EventRegistry::instance();
-    er.initialize(name, rank, size);
+  if (invalid) {
+    return;
+  }
+  // Always initialize the events
+  auto &er = precice::profiling::EventRegistry::instance();
+  er.initialize(name, rank, size);
+  if (_events) { // Enable them if they are requested
     er.setMode(precice::profiling::Mode::All);
     er.setDirectory("./precice-events");
-    er.initialize(name, rank, size);
-    er.startBackend();
+  } else {
+    er.setMode(precice::profiling::Mode::Off);
   }
+  er.startBackend();
 }
 
 void TestContext::initializePetsc()
