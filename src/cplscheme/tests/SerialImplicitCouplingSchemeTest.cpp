@@ -119,7 +119,7 @@ void runCoupling(
         iterationCount = 0;
         iterValidIterations++;
         if (iterValidIterations == validIterations.end()) {
-          BOOST_TEST(not cplScheme.isCouplingOngoing());
+          BOOST_REQUIRE(not cplScheme.isCouplingOngoing());
         }
         // Reset data values, to simulate same convergence behavior of
         // interface values in next timestep.
@@ -191,7 +191,7 @@ void runCoupling(
         iterationCount = 0;
         iterValidIterations++;
         if (iterValidIterations == validIterations.end()) {
-          BOOST_TEST(not cplScheme.isCouplingOngoing());
+          BOOST_REQUIRE(not cplScheme.isCouplingOngoing());
         }
         // Reset data values, to simulate same convergence behavior of
         // interface values in next timestep.
@@ -297,7 +297,7 @@ void runCouplingWithSubcycling(
         iterationCount = 1;
         iterValidIterations++;
         if (iterValidIterations == validIterations.end()) {
-          BOOST_TEST(not cplScheme.isCouplingOngoing());
+          BOOST_REQUIRE(not cplScheme.isCouplingOngoing());
         }
         // Reset data values, to simulate same convergence behavior of
         // interface values in next time step.
@@ -391,7 +391,7 @@ void runCouplingWithSubcycling(
         iterationCount = 1;
         iterValidIterations++;
         if (iterValidIterations == validIterations.end()) {
-          BOOST_TEST(not cplScheme.isCouplingOngoing());
+          BOOST_REQUIRE(not cplScheme.isCouplingOngoing());
         }
         // Reset data values, to simulate same convergence behavior of
         // interface values in next time step.
