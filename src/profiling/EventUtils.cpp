@@ -13,6 +13,7 @@
 #include <sys/types.h>
 #include <tuple>
 #include <utility>
+#include <variant>
 
 #include "logging/LogMacros.hpp"
 #include "profiling/Event.hpp"
@@ -228,7 +229,7 @@ struct EventWriter {
 } // namespace
 
 void EventRegistry::flush()
-{
+try {
   if (_mode == Mode::Off || _writeQueue.empty()) {
     return;
   }
@@ -248,6 +249,8 @@ void EventRegistry::flush()
 
   _output.flush();
   _writeQueue.clear();
+} catch (const std::bad_variant_access &e) {
+  PRECICE_UNREACHABLE(e.what());
 }
 
 int EventRegistry::nameToID(const std::string &name)
