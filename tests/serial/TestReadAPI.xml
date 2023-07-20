@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration dimensions="3" experimental="True">
+<precice-configuration dimensions="3">
   <data:vector name="DataOne" />
   <data:scalar name="DataTwo" />
 
@@ -16,7 +16,7 @@
   <participant name="SolverOne">
     <provide-mesh name="MeshOne" />
     <write-data name="DataOne" mesh="MeshOne" />
-    <read-data name="DataTwo" mesh="MeshOne" waveform-order="1" />
+    <read-data name="DataTwo" mesh="MeshOne" />
   </participant>
 
   <participant name="SolverTwo">
@@ -32,11 +32,11 @@
       from="MeshOne"
       to="MeshTwo"
       constraint="consistent" />
-    <read-data name="DataOne" mesh="MeshTwo" waveform-order="1" />
+    <read-data name="DataOne" mesh="MeshTwo" />
     <write-data name="DataTwo" mesh="MeshTwo" />
   </participant>
 
-  <m2n:sockets from="SolverOne" to="SolverTwo" />
+  <m2n:sockets acceptor="SolverOne" connector="SolverTwo" />
 
   <coupling-scheme:parallel-implicit>
     <participants first="SolverOne" second="SolverTwo" />

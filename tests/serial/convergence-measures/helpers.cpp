@@ -3,7 +3,7 @@
 #include "helpers.hpp"
 #include "testing/Testing.hpp"
 
-#include "precice/Participant.hpp"
+#include "precice/precice.hpp"
 
 void testConvergenceMeasures(const std::string configFile, TestContext const &context, std::vector<int> &expectedIterations)
 {

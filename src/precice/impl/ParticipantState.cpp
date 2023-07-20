@@ -114,11 +114,10 @@ void ParticipantState::addWriteData(
 
 void ParticipantState::addReadData(
     const mesh::PtrData &data,
-    const mesh::PtrMesh &mesh,
-    int                  interpolationOrder)
+    const mesh::PtrMesh &mesh)
 {
   checkDuplicatedData(mesh->getName(), data->getName());
-  _readDataContexts.emplace(MeshDataKey{mesh->getName(), data->getName()}, ReadDataContext(data, mesh, interpolationOrder));
+  _readDataContexts.emplace(MeshDataKey{mesh->getName(), data->getName()}, ReadDataContext(data, mesh));
 }
 
 void ParticipantState::addReadMappingContext(
@@ -137,15 +136,29 @@ void ParticipantState::addWriteMappingContext(
 const ReadDataContext &ParticipantState::readDataContext(std::string_view mesh, std::string_view data) const
 {
   auto it = _readDataContexts.find(MeshDataKey{mesh, data});
-  PRECICE_CHECK(it != _readDataContexts.end(), "Data \"{}\" does not exist for mesh \"{}\".", data, mesh)
+  PRECICE_CHECK(it != _readDataContexts.end(), "Data \"{}\" does not exist for mesh \"{}\".", data, mesh);
   return it->second;
 }
 
 ReadDataContext &ParticipantState::readDataContext(std::string_view mesh, std::string_view data)
 {
   auto it = _readDataContexts.find(MeshDataKey{mesh, data});
-  PRECICE_CHECK(it != _readDataContexts.end(), "Data \"{}\" does not exist for mesh \"{}\".", data, mesh)
+  PRECICE_CHECK(it != _readDataContexts.end(), "Data \"{}\" does not exist for mesh \"{}\".", data, mesh);
   return it->second;
+}
+
+mesh::PtrMesh ParticipantState::findMesh(std::string_view data) const
+{
+  bool foundReadDataContextForAnyMesh = false;
+  for (const auto &meshContext : _meshContexts) {
+    const auto &             mesh = meshContext.second->mesh->getName();
+    MeshDataKey<std::string> key{mesh, std::string{data}};
+    const auto               it = _readDataContexts.find(key);
+    if (it != _readDataContexts.end()) {
+      return meshContext.second->mesh;
+    }
+  }
+  return nullptr;
 }
 
 const WriteDataContext &ParticipantState::writeDataContext(std::string_view mesh, std::string_view data) const

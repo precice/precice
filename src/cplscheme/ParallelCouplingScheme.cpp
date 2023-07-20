@@ -25,21 +25,20 @@ ParallelCouplingScheme::ParallelCouplingScheme(
 
 void ParallelCouplingScheme::exchangeInitialData()
 {
-  bool initialReceive = true;
   // F: send, receive, S: receive, send
   if (doesFirstStep()) {
     if (sendsInitializedData()) {
       sendData(getM2N(), getSendData());
     }
     if (receivesInitializedData()) {
-      receiveData(getM2N(), getReceiveData(), initialReceive);
+      receiveData(getM2N(), getReceiveData());
       checkDataHasBeenReceived();
     } else {
       initializeWithZeroInitialData(getReceiveData());
     }
   } else { // second participant
     if (receivesInitializedData()) {
-      receiveData(getM2N(), getReceiveData(), initialReceive);
+      receiveData(getM2N(), getReceiveData());
       checkDataHasBeenReceived();
     } else {
       initializeWithZeroInitialData(getReceiveData());

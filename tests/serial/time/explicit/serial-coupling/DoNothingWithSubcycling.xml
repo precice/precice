@@ -36,7 +36,7 @@
     <read-data name="Forces" mesh="Test-Square" />
   </participant>
 
-  <m2n:mpi from="SolverOne" to="SolverTwo" />
+  <m2n:mpi acceptor="SolverOne" connector="SolverTwo" />
 
   <coupling-scheme:serial-explicit>
     <participants first="SolverOne" second="SolverTwo" />

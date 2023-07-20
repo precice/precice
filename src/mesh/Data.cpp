@@ -2,32 +2,25 @@
 #include <algorithm>
 #include <utility>
 
-#include "SharedPointer.hpp"
+#include "math/differences.hpp"
 #include "precice/types.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice::mesh {
 
-Data::Data()
-    : _name(""),
-      _id(-1),
-      _dimensions(0),
-      _spatialDimensions(-1)
-{
-  PRECICE_ASSERT(false);
-}
-
 Data::Data(
     std::string name,
     DataID      id,
     int         dimensions,
-    int         spatialDimensions)
-    : _sample(time::Sample{}),
-      _name(std::move(name)),
+    int         spatialDimensions,
+    int         waveformDegree)
+    : _name(std::move(name)),
       _id(id),
       _dimensions(dimensions),
-      _spatialDimensions(spatialDimensions)
+      _spatialDimensions(spatialDimensions),
+      _sample(_dimensions),
+      _waveform(waveformDegree)
 {
   PRECICE_ASSERT(dimensions > 0, dimensions);
 }
@@ -62,15 +55,35 @@ const time::Sample &Data::sample() const
   return _sample;
 }
 
+Eigen::VectorXd Data::sampleAtTime(double normalizedDt) const
+{
+  return _waveform.sample(normalizedDt);
+}
+
+int Data::getWaveformDegree() const
+{
+  return _waveform.getDegree();
+}
+
 time::Storage &Data::timeStepsStorage()
 {
-  return _timeStepsStorage;
+  return _waveform.timeStepsStorage();
+}
+
+void Data::moveToNextWindow()
+{
+  if (stamples().size() > 0) {
+    timeStepsStorage().move();
+    const auto &atEnd = stamples().back();
+    PRECICE_ASSERT(math::equals(atEnd.timestamp, time::Storage::WINDOW_END));
+    sample() = atEnd.sample;
+  }
 }
 
 void Data::setSampleAtTime(double time, time::Sample sample)
 {
   _sample = sample; // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
-  _timeStepsStorage.setSampleAtTime(time, sample);
+  _waveform.timeStepsStorage().setSampleAtTime(time, sample);
 }
 
 const std::string &Data::getName() const

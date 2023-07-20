@@ -248,6 +248,22 @@ void M2N::send(double itemToSend)
   }
 }
 
+void M2N::send(precice::span<double const> itemsToSend)
+{
+  PRECICE_TRACE(utils::IntraComm::getRank());
+  if (not utils::IntraComm::isSecondary()) {
+    _intraComm->send(itemsToSend, 0);
+  }
+}
+
+void M2N::send(int itemToSend)
+{
+  PRECICE_TRACE(utils::IntraComm::getRank());
+  if (not utils::IntraComm::isSecondary()) {
+    _intraComm->send(itemToSend, 0);
+  }
+}
+
 void M2N::broadcastSendMesh(mesh::Mesh &mesh)
 {
   MeshID meshID = mesh.getID();
@@ -321,13 +337,35 @@ void M2N::receive(bool &itemToReceive)
 void M2N::receive(double &itemToReceive)
 {
   PRECICE_TRACE(utils::IntraComm::getRank());
-  if (not utils::IntraComm::isSecondary()) { //coupling mode
+  if (not utils::IntraComm::isSecondary()) {
     _intraComm->receive(itemToReceive, 0);
   }
 
   utils::IntraComm::broadcast(itemToReceive);
 
   PRECICE_DEBUG("receive(double): {}", itemToReceive);
+}
+
+void M2N::receive(precice::span<double> itemsToReceive)
+{
+  PRECICE_TRACE(utils::IntraComm::getRank());
+  if (not utils::IntraComm::isSecondary()) {
+    _intraComm->receive(itemsToReceive, 0);
+  }
+
+  utils::IntraComm::broadcast(itemsToReceive);
+
+  PRECICE_DEBUG("receive(span<double>) .size() = {}", itemsToReceive.size());
+}
+
+void M2N::receive(int &itemToReceive)
+{
+  PRECICE_TRACE(utils::IntraComm::getRank());
+  if (not utils::IntraComm::isSecondary()) {
+    _intraComm->receive(itemToReceive, 0);
+  }
+
+  utils::IntraComm::broadcast(itemToReceive);
 }
 
 void M2N::broadcastReceiveAll(std::vector<int> &itemToReceive, mesh::Mesh &mesh)

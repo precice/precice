@@ -4,6 +4,7 @@
 #include <vector>
 #include "logging/Logger.hpp"
 #include "mesh/Data.hpp"
+#include "time/Time.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "xml/XMLTag.hpp"
 
@@ -16,11 +17,13 @@ public:
   struct ConfiguredData {
     std::string name;
     int         dimensions;
+    int         waveformDegree;
 
     ConfiguredData(
         const std::string &name,
-        int                dimensions)
-        : name(name), dimensions(dimensions) {}
+        int                dimensions,
+        int                waveformDegree)
+        : name(name), dimensions(dimensions), waveformDegree(waveformDegree) {}
   };
 
   DataConfiguration(xml::XMLTag &parent);
@@ -44,14 +47,18 @@ public:
    *
    * @param[in] name Unique name of the data.
    * @param[in] dataDimensions Dimensionality (1: scalar, 2,3: vector) of data.
+   * @param[in] waveformDegree Degree of waveform associated with this data.
    */
-  void addData(const std::string &name, int dataDimensions);
+  void addData(const std::string &name,
+               int                dataDimensions,
+               int                waveformDegree = time::Time::DEFAULT_WAVEFORM_DEGREE);
 
 private:
   mutable logging::Logger _log{"mesh::DataConfiguration"};
 
   const std::string TAG          = "data";
   const std::string ATTR_NAME    = "name";
+  const std::string ATTR_DEGREE  = "waveform-degree";
   const std::string VALUE_VECTOR = "vector";
   const std::string VALUE_SCALAR = "scalar";
 

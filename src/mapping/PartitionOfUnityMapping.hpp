@@ -108,10 +108,10 @@ private:
   Polynomial _polynomial;
 
   /// @copydoc Mapping::mapConservative
-  virtual void mapConservative(DataID inputDataID, DataID outputDataID) override;
+  virtual void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) override;
 
   /// @copydoc Mapping::mapConsistent
-  virtual void mapConsistent(DataID inputDataID, DataID outputDataID) override;
+  virtual void mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) override;
 
   /// export the center vertices of all clusters as a mesh with some additional data on it such as vertex count
   /// only enabled in debug builds and mainly for debugging purpose
@@ -128,7 +128,7 @@ PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::PartitionOfUnityMapping(
     unsigned int            verticesPerCluster,
     double                  relativeOverlap,
     bool                    projectToInput)
-    : Mapping(constraint, dimension),
+    : Mapping(constraint, dimension, false, Mapping::InitialGuessRequirement::None),
       _basisFunction(function), _verticesPerCluster(verticesPerCluster), _relativeOverlap(relativeOverlap), _projectToInput(projectToInput), _polynomial(polynomial)
 {
   PRECICE_ASSERT(this->getDimensions() <= 3);
@@ -241,7 +241,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     // In case the sum is equal to zero, we assign equal weights for all clusters
     if (weightSum <= 0) {
       PRECICE_ASSERT(weights.size() > 0);
-      std::for_each(weights.begin(), weights.end(), [&weights](auto &w) { w = 1 / weights.size(); });
+      std::for_each(weights.begin(), weights.end(), [&weights](auto &w) { w = 1. / weights.size(); });
       weightSum = 1;
     }
     PRECICE_ASSERT(weightSum > 0);
@@ -262,35 +262,33 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(DataID inputDataID, DataID outputDataID)
+void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(const time::Sample &inData, Eigen::VectorXd &outData)
 {
-  PRECICE_TRACE(inputDataID, outputDataID);
+  PRECICE_TRACE();
 
   precice::profiling::Event e("map.pou.mapData.From" + input()->getName() + "To" + output()->getName(), profiling::Synchronize);
 
   // Execute the actual mapping evaluation in all clusters
   // 1. Assert that all output data values were reset, as we accumulate data in all clusters independently
-  PRECICE_ASSERT(output()->data(outputDataID)->values().isZero());
+  PRECICE_ASSERT(outData.isZero());
 
   // 2. Iterate over all clusters and accumulate the result in the output data
-  std::for_each(_clusters.begin(), _clusters.end(), [&](auto &cluster) { cluster.mapConservative(input()->data(inputDataID),
-                                                                                                 output()->data(outputDataID)); });
+  std::for_each(_clusters.begin(), _clusters.end(), [&](auto &cluster) { cluster.mapConservative(inData, outData); });
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inputDataID, DataID outputDataID)
+void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData)
 {
-  PRECICE_TRACE(inputDataID, outputDataID);
+  PRECICE_TRACE();
 
   precice::profiling::Event e("map.pou.mapData.From" + input()->getName() + "To" + output()->getName(), profiling::Synchronize);
 
   // Execute the actual mapping evaluation in all clusters
   // 1. Assert that all output data values were reset, as we accumulate data in all clusters independently
-  PRECICE_ASSERT(output()->data(outputDataID)->values().isZero());
+  PRECICE_ASSERT(outData.isZero());
 
   // 2. Execute the actual mapping evaluation in all vertex clusters and accumulate the data
-  std::for_each(_clusters.begin(), _clusters.end(), [&](auto &clusters) { clusters.mapConsistent(input()->data(inputDataID),
-                                                                                                 output()->data(outputDataID)); });
+  std::for_each(_clusters.begin(), _clusters.end(), [&](auto &clusters) { clusters.mapConsistent(inData, outData); });
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>

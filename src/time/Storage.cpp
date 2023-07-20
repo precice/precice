@@ -24,6 +24,7 @@ void Storage::initialize(time::Sample sample)
 
 void Storage::setSampleAtTime(double time, Sample sample)
 {
+  PRECICE_ASSERT(not sample.values.hasNaN());
   PRECICE_ASSERT(math::smallerEquals(WINDOW_START, time), "Setting sample outside of valid range!");
   PRECICE_ASSERT(math::smallerEquals(time, WINDOW_END), "Setting sample outside of valid range!");
   // check if key "time" exists.
@@ -73,8 +74,8 @@ void Storage::move()
   auto sampleAtBeginning = getSampleAtEnd();
   auto sampleAtEnd       = computeExtrapolation();
   _stampleStorage.clear();
-  _stampleStorage.emplace_back(time::Stample{WINDOW_START, sampleAtBeginning});
-  _stampleStorage.emplace_back(time::Stample{WINDOW_END, sampleAtEnd});
+  _stampleStorage.emplace_back(time::Stample{WINDOW_START, std::move(sampleAtBeginning)});
+  _stampleStorage.emplace_back(time::Stample{WINDOW_END, std::move(sampleAtEnd)});
 }
 
 void Storage::trim()
@@ -119,7 +120,7 @@ time::Sample Storage::computeExtrapolation()
   } else if (_extrapolationOrder == 1) {
     auto s0 = getSampleAtBeginning();
     auto s1 = getSampleAtEnd();
-    return time::Sample{2 * s1.values - s0.values, 2 * s1.gradients - s0.gradients}; // use linear extrapolation from window at beginning and end of window.
+    return time::Sample{s1.dataDims, 2 * s1.values - s0.values, 2 * s1.gradients - s0.gradients}; // use linear extrapolation from window at beginning and end of window.
   }
   PRECICE_UNREACHABLE("Invalid _extrapolationOrder")
 }

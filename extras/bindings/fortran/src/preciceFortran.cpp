@@ -1,4 +1,4 @@
-#include "precice/ParticipantFortran.hpp"
+#include "precice/preciceFortran.hpp"
 #include <iostream>
 #include <memory>
 #include <stddef.h>
@@ -7,8 +7,8 @@
 #include <string_view>
 #include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
-#include "precice/Participant.hpp"
 #include "precice/impl/versions.hpp"
+#include "precice/precice.hpp"
 #include "utils/assertion.hpp"
 
 #ifdef __GNUC__
@@ -24,7 +24,7 @@ using namespace std;
 
 static std::unique_ptr<precice::Participant> impl = nullptr;
 
-static precice::logging::Logger _log("ParticipantFortran");
+static precice::logging::Logger _log("preciceFortran");
 
 static std::string errormsg = "preCICE has not been created properly. Be sure to call \"precicef_create\" before any other call to preCICE.";
 

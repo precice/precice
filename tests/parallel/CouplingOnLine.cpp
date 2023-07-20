@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/Participant.hpp>
+#include <precice/precice.hpp>
 #include <vector>
 
 /// This testcase is based on a bug reported by Thorsten for acoustic FASTEST-Ateles coupling

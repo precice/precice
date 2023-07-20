@@ -502,7 +502,7 @@ BOOST_AUTO_TEST_CASE(Integrate2DScalarData)
   mesh->data(0)->values()(2) = 5.0;
   mesh->data(0)->values()(3) = 7.0;
 
-  auto   result   = mesh::integrateSurface(mesh, mesh->data(0));
+  auto   result   = mesh::integrateSurface(mesh, mesh->data(0)->values());
   double expected = 17.0;
   BOOST_REQUIRE(result.size() == 1);
   BOOST_TEST(result(0) == expected);
@@ -533,7 +533,7 @@ BOOST_AUTO_TEST_CASE(Integrate2DVectorData)
   mesh->data(0)->values()(6) = 7.0;
   mesh->data(0)->values()(7) = 8.0;
 
-  auto            result = mesh::integrateSurface(mesh, mesh->data(0));
+  auto            result = mesh::integrateSurface(mesh, mesh->data(0)->values());
   Eigen::Vector2d expected(17.0, 20.5);
   BOOST_REQUIRE(result.size() == 2);
   BOOST_TEST(result(0) == expected(0));
@@ -566,7 +566,7 @@ BOOST_AUTO_TEST_CASE(Integrate3DScalarData)
   mesh->data(0)->values()(2) = 5.0;
   mesh->data(0)->values()(3) = 7.0;
 
-  auto   result   = mesh::integrateSurface(mesh, mesh->data(0));
+  auto   result   = mesh::integrateSurface(mesh, mesh->data(0)->values());
   double expected = 70.0;
   BOOST_REQUIRE(result.size() == 1);
   BOOST_TEST(result(0) == expected);
@@ -602,7 +602,7 @@ BOOST_AUTO_TEST_CASE(Integrate3DVectorData)
   mesh->data(0)->values()(6) = 7.0;
   mesh->data(0)->values()(7) = 8.0;
 
-  auto            result = mesh::integrateSurface(mesh, mesh->data(0));
+  auto            result = mesh::integrateSurface(mesh, mesh->data(0)->values());
   Eigen::Vector2d expected(70.0, 88.0);
   BOOST_REQUIRE(result.size() == 2);
   BOOST_TEST(result(0) == expected(0));
@@ -652,7 +652,7 @@ BOOST_FIXTURE_TEST_CASE(Integrate2DScalarDataVolume, UnitSquareFixture)
   mesh->data(0)->values()(2) = 7.0;
   mesh->data(0)->values()(3) = 5.0;
 
-  auto   result   = mesh::integrateVolume(mesh, mesh->data(0));
+  auto   result   = mesh::integrateVolume(mesh, mesh->data(0)->values());
   double expected = 4.0;
   BOOST_REQUIRE(result.size() == 1);
   BOOST_TEST(result(0) == expected);
@@ -695,7 +695,7 @@ BOOST_FIXTURE_TEST_CASE(Integrate2DVectorDataVolume, UnitSquareFixture)
   mesh->data(0)->values()(5) = 8.0;
   mesh->data(0)->values()(7) = 6.0;
 
-  auto            result = mesh::integrateVolume(mesh, mesh->data(0));
+  auto            result = mesh::integrateVolume(mesh, mesh->data(0)->values());
   Eigen::Vector2d expected(4.0, 5.0);
   BOOST_REQUIRE(result.size() == 2);
   BOOST_TEST(result(0) == expected(0));
@@ -733,7 +733,7 @@ BOOST_FIXTURE_TEST_CASE(Integrate3DScalarDataVolume, OneTetraFixture)
   mesh->data(0)->values()(2) = 5.0;
   mesh->data(0)->values()(3) = 7.0;
 
-  auto   result   = mesh::integrateVolume(mesh, mesh->data(0));
+  auto   result   = mesh::integrateVolume(mesh, mesh->data(0)->values());
   double expected = 4.0 / 6;
   BOOST_REQUIRE(result.size() == 1);
   BOOST_TEST(result(0) == expected);
@@ -773,7 +773,7 @@ BOOST_FIXTURE_TEST_CASE(Integrate3DVectorDataVolume, OneTetraFixture)
   mesh->data(0)->values()(2 * 3 + 2) = 0.0;
   mesh->data(0)->values()(3 * 3 + 2) = 0.0;
 
-  auto            result = mesh::integrateVolume(mesh, mesh->data(0));
+  auto            result = mesh::integrateVolume(mesh, mesh->data(0)->values());
   Eigen::Vector3d expected(4.0 / 6, 1.0 / 6, 1.0 / 24);
   BOOST_REQUIRE(result.size() == 3);
   BOOST_TEST(result(0) == expected(0));

@@ -60,6 +60,7 @@ CouplingSchemeConfiguration::CouplingSchemeConfiguration(
       ATTR_MESH("mesh"),
       ATTR_PARTICIPANT("participant"),
       ATTR_INITIALIZE("initialize"),
+      ATTR_EXCHANGE_SUBSTEPS("substeps"),
       ATTR_TYPE("type"),
       ATTR_FIRST("first"),
       ATTR_SECOND("second"),
@@ -129,12 +130,6 @@ CouplingSchemeConfiguration::CouplingSchemeConfiguration(
   for (XMLTag &tag : tags) {
     parent.addSubtag(tag);
   }
-}
-
-void CouplingSchemeConfiguration::setExperimental(
-    bool experimental)
-{
-  _experimental = experimental;
 }
 
 bool CouplingSchemeConfiguration::hasCouplingScheme(
@@ -264,6 +259,7 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     std::string nameParticipantFrom = tag.getStringAttributeValue(ATTR_FROM);
     std::string nameParticipantTo   = tag.getStringAttributeValue(ATTR_TO);
     bool        initialize          = tag.getBooleanAttributeValue(ATTR_INITIALIZE);
+    bool        exchangeSubsteps    = tag.getBooleanAttributeValue(ATTR_EXCHANGE_SUBSTEPS);
 
     PRECICE_CHECK(_meshConfig->hasMeshName(nameMesh) && _meshConfig->getMesh(nameMesh)->hasDataName(nameData),
                   "Mesh \"{}\" with data \"{}\" not defined. "
@@ -276,7 +272,7 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     mesh::PtrData exchangeData = exchangeMesh->data(nameData);
     PRECICE_ASSERT(exchangeData);
 
-    Config::Exchange newExchange{exchangeData, exchangeMesh, nameParticipantFrom, nameParticipantTo, initialize};
+    Config::Exchange newExchange{exchangeData, exchangeMesh, nameParticipantFrom, nameParticipantTo, initialize, exchangeSubsteps};
     PRECICE_CHECK(!_config.hasExchange(newExchange),
                   R"(Data "{}" of mesh "{}" cannot be exchanged multiple times between participants "{}" and "{}". Please remove one of the exchange tags.)",
                   nameData, nameMesh, nameParticipantFrom, nameParticipantTo);
@@ -307,34 +303,6 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
   PRECICE_TRACE(tag.getFullName());
   if (tag.getNamespace() == TAG) {
     if (_config.type == VALUE_SERIAL_EXPLICIT) {
-
-      //Check the waveform order of both participants in the explicit coupling
-      if (_experimental) {
-        const auto first  = _config.participants[0];
-        const auto second = _config.participants[1];
-
-        auto first_participant = _participantConfig->getParticipant(first);
-        for (const auto &dataContext : first_participant->readDataContexts()) {
-          const int usedOrder = dataContext.getInterpolationOrder();
-          // The first participants waveform order has to be 0 for serial explicit coupling
-          int allowedOrder = 0;
-          if (usedOrder != allowedOrder) {
-            PRECICE_ERROR(
-                "You configured <read-data name=\"{}\" mesh=\"{}\" waveform-order=\"{}\" />, but for the serial explicit coupling scheme only a maximum waveform-order of \"{}\" is allowed for the first participant.",
-                dataContext.getDataName(), dataContext.getMeshName(), usedOrder, allowedOrder);
-          }
-        }
-        auto second_participant = _participantConfig->getParticipant(second);
-        for (const auto &dataContext : second_participant->readDataContexts()) {
-          const int usedOrder = dataContext.getInterpolationOrder();
-          if (usedOrder < 0) {
-            PRECICE_ERROR(
-                "You configured <read-data name=\"{}\" mesh=\"{}\" waveform-order=\"{}\" />, but for the serial explicit coupling scheme the waveform-order must be non-negative for the second participant.",
-                dataContext.getDataName(), dataContext.getMeshName(), usedOrder);
-          }
-        }
-      }
-
       std::string       accessor(_config.participants[0]);
       PtrCouplingScheme scheme = createSerialExplicitCouplingScheme(accessor);
       addCouplingScheme(scheme, accessor);
@@ -345,10 +313,6 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
       //_couplingSchemes[accessor] = scheme;
       _config = Config();
     } else if (_config.type == VALUE_PARALLEL_EXPLICIT) {
-      if (_experimental) {
-        int maxAllowedOrder = 0; // explicit coupling schemes do not allow waveform iteration
-        checkWaveformOrderReadData(maxAllowedOrder);
-      }
       std::string       accessor(_config.participants[0]);
       PtrCouplingScheme scheme = createParallelExplicitCouplingScheme(accessor);
       addCouplingScheme(scheme, accessor);
@@ -562,6 +526,8 @@ void CouplingSchemeConfiguration::addTagExchange(
   tagExchange.addAttribute(participantTo);
   auto attrInitialize = XMLAttribute<bool>(ATTR_INITIALIZE, false).setDocumentation("Should this data be initialized during initialize?");
   tagExchange.addAttribute(attrInitialize);
+  auto attrExchangeSubsteps = XMLAttribute<bool>(ATTR_EXCHANGE_SUBSTEPS, true).setDocumentation("Should this data exchange substeps?");
+  tagExchange.addAttribute(attrExchangeSubsteps);
   tag.addSubtag(tagExchange);
 }
 
@@ -672,7 +638,7 @@ void CouplingSchemeConfiguration::addTagAcceleration(
     xml::XMLTag &tag)
 {
   PRECICE_TRACE(tag.getFullName());
-  if (_accelerationConfig.get() == nullptr) {
+  if (!_accelerationConfig) {
     _accelerationConfig = std::make_shared<acceleration::AccelerationConfiguration>(
         _meshConfig);
   }
@@ -973,6 +939,33 @@ CouplingSchemeConfiguration::getTimesteppingMethod(
   }
 }
 
+void CouplingSchemeConfiguration::checkSubstepExchangeWaveformDegree(const Config::Exchange &exchange) const
+{
+  const auto &participant = _participantConfig->getParticipant(exchange.to);
+
+  const auto &meshPtr = participant->findMesh(exchange.data->getName()); // related to https://github.com/precice/precice/issues/1694
+
+  if (meshPtr == nullptr) {
+    // Only warn, because might be valid configuration, if summation action is used. See Integration/Serial/SummationActionTwoSources.
+    PRECICE_WARN("You defined <exchange data=\"{}\" ... to=\"{}\" /> in the <coupling-scheme:... />, but <participant name=\"{}\"> has no corresponding <read-data name=\"{}\" ... />. Usually this means that there is an error in your configuration.",
+                 exchange.data->getName(), exchange.to, exchange.to, exchange.data->getName());
+    return; // skip checks below
+  }
+
+  const auto &readDataContext = participant->readDataContext(meshPtr->getName(), exchange.data->getName());
+  if (readDataContext.getWaveformDegree() == 0) {
+    PRECICE_CHECK(!exchange.exchangeSubsteps,
+                  "You configured <data:scalar/vector name=\"{}\" waveform-degree=\"{}\" />. Please deactivate exchange of substeps by setting substeps=\"false\" in the following exchange tag of your coupling scheme: <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" />. Reason: For constant interpolation no exchange of data for substeps is needed. Please consider using waveform-degree=\"1\" or higher, if you want to use subcycling.",
+                  readDataContext.getDataName(), readDataContext.getWaveformDegree(), exchange.data->getName(), exchange.mesh->getName(), exchange.from, exchange.to);
+  } else if (readDataContext.getWaveformDegree() >= 2) {
+    PRECICE_CHECK(exchange.exchangeSubsteps,
+                  "You configured <data:scalar/vector name=\"{}\" waveform-degree=\"{}\" />. Please activate exchange of substeps by setting substeps=\"true\" in the following exchange tag of your coupling scheme: <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" />. Reason: For higher-order interpolation exchange of data for substeps is required. If you don't want to activate exchange of additional data, please consider using waveform-degree=\"1\". Note that deactivating exchange of substep data might lead to worse results, if you use subcycling.",
+                  readDataContext.getDataName(), readDataContext.getWaveformDegree(), exchange.data->getName(), exchange.mesh->getName(), exchange.from, exchange.to);
+  } else { // For first degree there is no restriction for exchange of substeps
+    PRECICE_ASSERT(readDataContext.getWaveformDegree() == 1);
+  }
+}
+
 void CouplingSchemeConfiguration::addDataToBeExchanged(
     BiCouplingScheme & scheme,
     const std::string &accessor) const
@@ -1000,16 +993,20 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
                   to, dataName, meshName, from, to);
 
     const bool requiresInitialization = exchange.requiresInitialization;
+
     PRECICE_CHECK(
         !(requiresInitialization && _participantConfig->getParticipant(from)->isDirectAccessAllowed(exchange.mesh->getName())),
         "Participant \"{}\" cannot initialize data of the directly-accessed mesh \"{}\" from the participant\"{}\". "
         "Either disable the initialization in the <exchange /> tag or use a locally provided mesh instead.",
         from, meshName, to);
 
+    const bool exchangeSubsteps = exchange.exchangeSubsteps;
+
     if (from == accessor) {
-      scheme.addDataToSend(exchange.data, exchange.mesh, requiresInitialization);
+      scheme.addDataToSend(exchange.data, exchange.mesh, requiresInitialization, exchangeSubsteps);
     } else if (to == accessor) {
-      scheme.addDataToReceive(exchange.data, exchange.mesh, requiresInitialization);
+      checkSubstepExchangeWaveformDegree(exchange);
+      scheme.addDataToReceive(exchange.data, exchange.mesh, requiresInitialization, exchangeSubsteps);
     } else {
       PRECICE_ASSERT(_config.type == VALUE_MULTI);
     }
@@ -1040,11 +1037,13 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
     PRECICE_CHECK((utils::contained(to, _config.participants) || to == _config.controller),
                   "Participant \"{}\" is not configured for coupling scheme", to);
 
-    const bool initialize = exchange.requiresInitialization;
+    const bool initialize       = exchange.requiresInitialization;
+    const bool exchangeSubsteps = exchange.exchangeSubsteps;
+
     if (from == accessor) {
-      scheme.addDataToSend(exchange.data, exchange.mesh, initialize, to);
+      scheme.addDataToSend(exchange.data, exchange.mesh, initialize, exchangeSubsteps, to);
     } else if (to == accessor) {
-      scheme.addDataToReceive(exchange.data, exchange.mesh, initialize, from);
+      scheme.addDataToReceive(exchange.data, exchange.mesh, initialize, exchangeSubsteps, from);
     }
   }
   scheme.determineInitialDataExchange();
@@ -1071,22 +1070,6 @@ void CouplingSchemeConfiguration::checkIfDataIsExchanged(
                 "Data \"{}\" is currently not exchanged over the respective mesh on which it is used for convergence measures and/or iteration acceleration. "
                 "Please check the <exchange ... /> and <...-convergence-measure ... /> tags in the <coupling-scheme:... /> of your precice-config.xml.",
                 dataName);
-}
-
-void CouplingSchemeConfiguration::checkWaveformOrderReadData(
-    int maxAllowedOrder) const
-{
-  for (const precice::impl::PtrParticipant &participant : _participantConfig->getParticipants()) {
-    for (const auto &dataContext : participant->readDataContexts()) {
-      const int usedOrder = dataContext.getInterpolationOrder();
-      PRECICE_ASSERT(usedOrder >= 0); // ensure that usedOrder was set
-      if (usedOrder > maxAllowedOrder) {
-        PRECICE_ERROR(
-            "You configured <read-data name=\"{}\" mesh=\"{}\" waveform-order=\"{}\" />, but for the coupling scheme you are using only a maximum waveform-order of \"{}\" is allowed.",
-            dataContext.getDataName(), dataContext.getMeshName(), usedOrder, maxAllowedOrder);
-      }
-    }
-  }
 }
 
 void CouplingSchemeConfiguration::checkSerialImplicitAccelerationData(

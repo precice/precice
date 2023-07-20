@@ -91,7 +91,7 @@ void ReceivedPartition::compute()
   PRECICE_TRACE();
 
   // handle coupling mode first (i.e. serial participant)
-  if (!utils::IntraComm::isParallel()) { // coupling mode
+  if (!utils::IntraComm::isParallel()) {
     PRECICE_DEBUG("Handle partition data structures for serial participant");
 
     if (_allowDirectAccess) {

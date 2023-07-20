@@ -74,9 +74,6 @@ ParticipantConfiguration::ParticipantConfiguration(
   tagWriteData.addAttribute(attrMesh);
   tagReadData.addAttribute(attrMesh);
 
-  XMLAttribute<int> attrOrder = makeXMLAttribute(ATTR_ORDER, time::Time::DEFAULT_INTERPOLATION_ORDER)
-                                    .setDocumentation("Interpolation order used by waveform iteration when reading data.");
-  tagReadData.addAttribute(attrOrder);
   tag.addSubtag(tagWriteData);
   tag.addSubtag(tagReadData);
 
@@ -331,18 +328,8 @@ void ParticipantConfiguration::xmlTagCallback(
     PRECICE_CHECK(mesh,
                   R"(Participant "{}" attempts to write data "{}" to an unknown mesh "{}". <mesh name="{}"> needs to be defined first.)",
                   _participants.back()->getName(), dataName, meshName, meshName);
-    mesh::PtrData data          = getData(mesh, dataName);
-    int           waveformOrder = tag.getIntAttributeValue(ATTR_ORDER);
-    if (waveformOrder != time::Time::DEFAULT_INTERPOLATION_ORDER) {
-      if (!_experimental) {
-        PRECICE_ERROR("You tried to configure the read data with name \"{}\" to use the waveform-order=\"{}\", which is currently still experimental. Please set experimental=\"true\", if you want to use this feature.", dataName, waveformOrder);
-      }
-      if (waveformOrder < time::Time::MIN_INTERPOLATION_ORDER || waveformOrder > time::Time::MAX_INTERPOLATION_ORDER) {
-        PRECICE_ERROR("You tried to configure the read data with name \"{}\" to use the waveform-order=\"{}\", but the order must be between \"{}\" and \"{}\". Please use an order in the allowed range.", dataName, waveformOrder, time::Time::MIN_INTERPOLATION_ORDER, time::Time::MAX_INTERPOLATION_ORDER);
-      }
-      PRECICE_WARN("You configured the read data with name \"{}\" to use the waveform-order=\"{}\", which is currently still experimental. Use with care.", dataName, waveformOrder);
-    }
-    _participants.back()->addReadData(data, mesh, waveformOrder);
+    mesh::PtrData data = getData(mesh, dataName);
+    _participants.back()->addReadData(data, mesh);
   } else if (tag.getName() == TAG_WATCH_POINT) {
     PRECICE_ASSERT(_dimensions != 0); // setDimensions() has been called
     WatchPointConfig config;

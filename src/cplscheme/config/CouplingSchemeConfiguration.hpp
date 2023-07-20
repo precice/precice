@@ -50,7 +50,7 @@ public:
    * @param[in] parent  Used to add subtags to hierarchical XML structure.
    * @param[in] meshConfig For checking if a used mesh is defined.
    * @param[in] m2nConfig For checking if a communication between participants to be coupled is defined.
-   * @param[in] participantConfig For checking waveform order.
+   * @param[in] participantConfig For checking waveform degree.
    */
   CouplingSchemeConfiguration(
       xml::XMLTag &                        parent,
@@ -102,6 +102,7 @@ private:
   const std::string ATTR_MESH;
   const std::string ATTR_PARTICIPANT;
   const std::string ATTR_INITIALIZE;
+  const std::string ATTR_EXCHANGE_SUBSTEPS;
   const std::string ATTR_TYPE;
   const std::string ATTR_FIRST;
   const std::string ATTR_SECOND;
@@ -124,8 +125,6 @@ private:
   const std::string VALUE_MULTI;
   const std::string VALUE_FIXED;
   const std::string VALUE_FIRST_PARTICIPANT;
-
-  bool _experimental = false;
 
   struct ConvergenceMeasureDefintion {
     mesh::PtrData               data;
@@ -154,6 +153,7 @@ private:
       std::string   from;
       std::string   to;
       bool          requiresInitialization;
+      bool          exchangeSubsteps;
     };
     std::vector<Exchange>                    exchanges;
     std::vector<ConvergenceMeasureDefintion> convergenceMeasureDefinitions;
@@ -277,9 +277,6 @@ private:
   void checkIfDataIsExchanged(
       DataID dataID) const;
 
-  void checkWaveformOrderReadData(
-      int maxAllowedOrder) const;
-
   void checkSerialImplicitAccelerationData(
       DataID dataID, const std::string &first, const std::string &second) const;
 
@@ -299,6 +296,19 @@ private:
 
   friend struct CplSchemeTests::ParallelImplicitCouplingSchemeTests::testParseConfigurationWithRelaxation; // For whitebox tests
   friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testParseConfigurationWithRelaxation;   // For whitebox tests
+
+  /**
+   * @brief Helper function to check that waveform-degree and substep exchange are compatible.
+   *
+   * The following rules are checked:
+   *
+   * 1) If waveform-degree="0", then user must set substeps="false", because constant interpolation (zeroth degree) is intended for debugging and user should use first degree instead.
+   * 2) If waveform-degree="1", then any configuration for substeps is allowed. The user might want to set substeps="false" for better performance.
+   * 3) If waveform-degree="2" or greater, the user must set substeps="true", because subcycling and exchange of substeps is required for higher-degree B-splines.
+   *
+   * @param exchange The Exchange being checked.
+   */
+  void checkSubstepExchangeWaveformDegree(const Config::Exchange &exchange) const;
 };
 } // namespace cplscheme
 } // namespace precice

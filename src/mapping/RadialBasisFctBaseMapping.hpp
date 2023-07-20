@@ -31,10 +31,11 @@ public:
    * @param[in] xDead, yDead, zDead Deactivates mapping along an axis
    */
   RadialBasisFctBaseMapping(
-      Constraint              constraint,
-      int                     dimensions,
-      RADIAL_BASIS_FUNCTION_T function,
-      std::array<bool, 3>     deadAxis);
+      Constraint                     constraint,
+      int                            dimensions,
+      const RADIAL_BASIS_FUNCTION_T &function,
+      std::array<bool, 3>            deadAxis,
+      InitialGuessRequirement        mappingType);
 
   virtual ~RadialBasisFctBaseMapping() = default;
 
@@ -77,11 +78,12 @@ private:
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctBaseMapping(
-    Constraint              constraint,
-    int                     dimensions,
-    RADIAL_BASIS_FUNCTION_T function,
-    std::array<bool, 3>     deadAxis)
-    : Mapping(constraint, dimensions),
+    Constraint                     constraint,
+    int                            dimensions,
+    const RADIAL_BASIS_FUNCTION_T &function,
+    std::array<bool, 3>            deadAxis,
+    InitialGuessRequirement        mappingType)
+    : Mapping(constraint, dimensions, false, mappingType),
       _basisFunction(function)
 {
   if (isScaledConsistent()) {

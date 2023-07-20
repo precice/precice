@@ -16,6 +16,7 @@ public:
       mesh::PtrData data,
       mesh::PtrMesh mesh,
       bool          requiresInitialization,
+      bool          exchangeSubsteps,
       int           extrapolationOrder);
 
   int getDimensions() const;
@@ -91,28 +92,22 @@ public:
   /// move to next window and initialize data via extrapolation
   void moveToNextWindow();
 
+  bool exchangeSubsteps() const;
+
 private:
   logging::Logger _log{"cplscheme::CouplingData"};
 
-  /**
-   * @brief Default constructor, not to be used!
-   *
-   * Necessary when compiler creates template code for std::map::operator[].
-   */
-  CouplingData()
-      : requiresInitialization(false)
-  {
-    PRECICE_ASSERT(false);
-  }
-
-  /// Sample values of previous iteration (end of time window).
-  time::Sample _previousIteration;
+  /// Mesh associated with this CouplingData
+  mesh::PtrMesh _mesh;
 
   /// Data associated with this CouplingData
   mesh::PtrData _data;
 
-  /// Mesh associated with this CouplingData
-  mesh::PtrMesh _mesh;
+  /// Sample values of previous iteration (end of time window).
+  time::Sample _previousIteration;
+
+  /// If true, all substeps will be sent / received for this coupling data
+  bool _exchangeSubsteps;
 };
 
 } // namespace cplscheme

@@ -12,15 +12,16 @@ CouplingData::CouplingData(
     mesh::PtrData data,
     mesh::PtrMesh mesh,
     bool          requiresInitialization,
+    bool          exchangeSubsteps,
     int           extrapolationOrder)
     : requiresInitialization(requiresInitialization),
+      _mesh(std::move(mesh)),
       _data(std::move(data)),
-      _mesh(std::move(mesh))
+      _previousIteration(_data->getDimensions(), Eigen::VectorXd::Zero(getSize())),
+      _exchangeSubsteps(exchangeSubsteps)
 {
   PRECICE_ASSERT(_data != nullptr);
-  /// Lazy allocation of _previousIteration.gradient: only used in case the corresponding data has gradients
-  _previousIteration = time::Sample{Eigen::VectorXd::Zero(getSize())};
-  timeStepsStorage().setExtrapolationOrder(extrapolationOrder);
+  _data->timeStepsStorage().setExtrapolationOrder(extrapolationOrder);
 
   PRECICE_ASSERT(_mesh != nullptr);
   PRECICE_ASSERT(_mesh.use_count() > 0);
@@ -71,8 +72,9 @@ const time::Storage &CouplingData::timeStepsStorage() const
 
 void CouplingData::setSampleAtTime(double time, time::Sample sample)
 {
+  PRECICE_ASSERT(not sample.values.hasNaN());
   this->sample() = sample; // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
-  timeStepsStorage().setSampleAtTime(time, sample);
+  _data->setSampleAtTime(time, sample);
 }
 
 bool CouplingData::hasGradient() const
@@ -88,7 +90,7 @@ int CouplingData::meshDimensions() const
 
 void CouplingData::storeIteration()
 {
-  const auto stamples = this->stamples();
+  const auto &stamples = this->stamples();
   PRECICE_ASSERT(stamples.size() > 0);
   this->sample()     = stamples.back().sample;
   _previousIteration = this->sample();
@@ -131,12 +133,7 @@ std::vector<int> CouplingData::getVertexOffsets()
 
 void CouplingData::moveToNextWindow()
 {
-  if (this->timeStepsStorage().stamples().size() > 0) {
-    this->timeStepsStorage().move();
-    auto atEnd = this->timeStepsStorage().stamples().back();
-    PRECICE_ASSERT(math::equals(atEnd.timestamp, time::Storage::WINDOW_END));
-    _data->sample() = atEnd.sample;
-  }
+  _data->moveToNextWindow();
 }
 
 time::Sample &CouplingData::sample()
@@ -149,6 +146,11 @@ const time::Sample &CouplingData::sample() const
 {
   PRECICE_ASSERT(_data != nullptr);
   return _data->sample();
+}
+
+bool CouplingData::exchangeSubsteps() const
+{
+  return _exchangeSubsteps;
 }
 
 } // namespace precice::cplscheme

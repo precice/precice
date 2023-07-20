@@ -169,7 +169,8 @@ public:
   /// Create only data for vertex
   PtrData &createData(const std::string &name,
                       int                dimension,
-                      DataID             id);
+                      DataID             id,
+                      int                waveformDegree = time::Time::DEFAULT_WAVEFORM_DEGREE);
 
   /// Allows access to all data
   const DataContainer &data() const;
@@ -250,7 +251,7 @@ public:
   }
 
   // Get the data of owned vertices for given data ID
-  Eigen::VectorXd getOwnedVertexData(DataID dataID);
+  Eigen::VectorXd getOwnedVertexData(const Eigen::VectorXd &values);
 
   // Tag all the vertices
   void tagAll();

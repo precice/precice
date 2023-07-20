@@ -17,6 +17,7 @@ target_sources(testprecice
     src/com/tests/MPIDirectCommunicationTest.cpp
     src/com/tests/MPIPortsCommunicationTest.cpp
     src/com/tests/MPISinglePortsCommunicationTest.cpp
+    src/com/tests/SerializedStamplesTest.cpp
     src/com/tests/SocketCommunicationTest.cpp
     src/cplscheme/tests/AbsoluteConvergenceMeasureTest.cpp
     src/cplscheme/tests/CompositionalCouplingSchemeTest.cpp

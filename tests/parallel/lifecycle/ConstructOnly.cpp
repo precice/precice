@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/Participant.hpp>
+#include <precice/precice.hpp>
 #include <vector>
 
 // Test representing the minimal lifecylce, which consists out of construction only.

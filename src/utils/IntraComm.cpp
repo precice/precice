@@ -340,6 +340,28 @@ void IntraComm::broadcast(double &value)
   }
 }
 
+void IntraComm::broadcast(int &value)
+{
+  PRECICE_TRACE();
+
+  if (not _isPrimaryRank && not _isSecondaryRank) {
+    return;
+  }
+
+  PRECICE_ASSERT(_communication.get() != nullptr);
+  PRECICE_ASSERT(_communication->isConnected());
+
+  if (_isPrimaryRank) {
+    // Broadcast (send) value.
+    _communication->broadcast(value);
+  }
+
+  if (_isSecondaryRank) {
+    // Broadcast (receive) value.
+    _communication->broadcast(value, 0);
+  }
+}
+
 void IntraComm::synchronize()
 {
   PRECICE_TRACE();

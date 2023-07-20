@@ -100,8 +100,7 @@ public:
   /// Adds a configured read \ref Data to the ParticipantState
   void addReadData(
       const mesh::PtrData &data,
-      const mesh::PtrMesh &mesh,
-      int                  interpolationOrder);
+      const mesh::PtrMesh &mesh);
 
   /// Adds a configured read \ref Mapping to the ParticipantState
   void addReadMappingContext(const MappingContext &mappingContext);
@@ -153,6 +152,14 @@ public:
    */
   ReadDataContext &readDataContext(std::string_view mesh, std::string_view data);
 
+  /**
+   * @brief Returns the mesh associated with ReadDataContext with given data name in _readDataContexts of this Participant
+   *
+   * @param data name of the data
+   * @return mesh::PtrMesh, returns nullptr, if no read data contest for given data name was found
+   */
+  mesh::PtrMesh findMesh(std::string_view data) const;
+
   /** Provides access to \ref WriteDataContext
    * @pre there exists a \ref WriteDataContext for \ref data
    */
@@ -177,17 +184,6 @@ public:
   auto readDataContexts()
   {
     return _readDataContexts | boost::adaptors::map_values;
-  }
-
-  /** @brief Determines and returns the maximum order of all read waveforms of this participant
-   */
-  int maxReadWaveformOrder() const
-  {
-    int maxOrder = -1;
-    for (const auto &context : _readDataContexts | boost::adaptors::map_values) {
-      maxOrder = std::max(maxOrder, context.getInterpolationOrder());
-    }
-    return maxOrder;
   }
 
   /// Is the dataID know to preCICE?
