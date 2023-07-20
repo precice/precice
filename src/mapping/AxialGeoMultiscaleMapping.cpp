@@ -82,7 +82,6 @@ void AxialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen:
       3D vertices are assigned a value based on distance from the 1D vertex.
       Currently, a Hagen-Poiseuille profile determines the velocity value.
     */
-    // PRECICE_ASSERT(inputValues.size() == 1);
     PRECICE_ASSERT(input()->vertices().size() == 1);
     mesh::Vertex &v0      = input()->vertices()[0];
     size_t const  outSize = output()->vertices().size();
