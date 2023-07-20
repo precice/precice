@@ -18,61 +18,66 @@ BOOST_AUTO_TEST_CASE(RadialGeoMultiscale)
 
   Participant cplInterface(context.name, context.config(), 0, 1);
   if (context.isNamed("SolverOne")) {
-    auto     meshName = "MeshOne";
-    Vector3d vec1     = Vector3d::Constant(0.0);
-    auto     vid      = cplInterface.setMeshVertex(meshName, vec1);
-    auto     dataAID  = "DataOne";
-    auto     dataBID  = "DataTwo";
+    Vector3d            coordOneA{0.0, 0.0, 0.0};
+    Vector3d            coordOneB{0.0, 0.0, 1.0};
+    Vector3d            coordOneC{0.0, 0.0, 2.0};
+    std::vector<double> values;
+    const unsigned int  nCoords = 3;
+    for (unsigned int i = 0; i < nCoords; ++i) {
+      values.emplace_back(std::pow(i + 1, 2));
+    }
+    auto             meshOneID = "MeshOne";
+    std::vector<int> ids;
+    ids.emplace_back(cplInterface.setMeshVertex(meshOneID, coordOneA));
+    ids.emplace_back(cplInterface.setMeshVertex(meshOneID, coordOneB));
+    ids.emplace_back(cplInterface.setMeshVertex(meshOneID, coordOneC));
 
-    double valueDataB = -1.0;
+    auto dataAID = "DataOne";
+
     cplInterface.initialize();
     double maxDt = cplInterface.getMaxTimeStepSize();
-    cplInterface.readData(meshName, dataBID, {&vid, 1}, maxDt, {&valueDataB, 1});
-    BOOST_TEST(valueDataB == 1.0);
+    BOOST_TEST(cplInterface.isCouplingOngoing());
 
-    while (cplInterface.isCouplingOngoing()) {
+    cplInterface.writeData(meshOneID, dataAID, ids, values);
+    cplInterface.advance(maxDt);
 
-      double data[] = {1.0};
-      cplInterface.writeData(meshName, dataAID, {&vid, 1}, data);
-
-      cplInterface.advance(maxDt);
-      maxDt = cplInterface.getMaxTimeStepSize();
-
-      cplInterface.readData(meshName, dataBID, {&vid, 1}, maxDt, {&valueDataB, 1});
-      BOOST_TEST(valueDataB == 1.0);
-    }
     cplInterface.finalize();
+
+    std::cout << "This is done 1 \n";
 
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    auto     meshName = "MeshTwo";
-    Vector3d vec2     = Vector3d::Constant(1.0);
-    auto     vid      = cplInterface.setMeshVertex(meshName, vec2);
+    auto meshTwoID = "MeshTwo";
+
+    Vector3d coordTwoA{0.5, 0.0, 0.0};
+    Vector3d coordTwoB{0.5, 0.0, 1.0};
+    Vector3d coordTwoC{0.5, 0.0, 2.0};
+
+    // Setup receiving mesh.
+    int idA = cplInterface.setMeshVertex(meshTwoID, coordTwoA);
+    int idB = cplInterface.setMeshVertex(meshTwoID, coordTwoB);
+    int idC = cplInterface.setMeshVertex(meshTwoID, coordTwoC);
 
     auto dataAID = "DataOne";
-    auto dataBID = "DataTwo";
     BOOST_REQUIRE(cplInterface.requiresInitialData());
-    BOOST_TEST(cplInterface.requiresGradientDataFor(meshName, dataBID) == false);
+    BOOST_TEST(cplInterface.requiresGradientDataFor(meshTwoID, dataAID) == false);
 
-    double valueDataB = 1.0;
-    cplInterface.writeData(meshName, dataBID, {&vid, 1}, {&valueDataB, 1});
-
-    //tell preCICE that data has been written and call initialize
     cplInterface.initialize();
     double maxDt = cplInterface.getMaxTimeStepSize();
 
-    while (cplInterface.isCouplingOngoing()) {
-      double data[] = {1.0};
-      cplInterface.writeData(meshName, dataBID, {&vid, 1}, data);
+    double values[3];
+    int    ids[] = {idA, idB, idC};
 
-      cplInterface.advance(maxDt);
-      maxDt = cplInterface.getMaxTimeStepSize();
+    cplInterface.readData(meshTwoID, dataAID, ids, maxDt, values);
+    cplInterface.advance(maxDt);
 
-      double valueDataA;
-      cplInterface.readData(meshName, dataAID, {&vid, 1}, maxDt, {&valueDataA, 1});
-      BOOST_TEST(valueDataA == 1.0);
-    }
+    BOOST_TEST(values[0] == 1);
+    BOOST_TEST(values[1] == 4);
+    BOOST_TEST(values[2] == 9);
+
     cplInterface.finalize();
+
+    std::cout << "And this is done 2 \n";
   }
 }
 
