@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(RadialGeoMultiscale)
     auto     dataAID  = "DataOne";
     auto     dataBID  = "DataTwo";
 
-    double valueDataB = 1.0;
+    double valueDataB = -1.0;
     cplInterface.initialize();
     double maxDt = cplInterface.getMaxTimeStepSize();
     cplInterface.readData(meshName, dataBID, {&vid, 1}, maxDt, {&valueDataB, 1});
