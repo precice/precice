@@ -1,3 +1,4 @@
+#include <boost/test/tools/interface.hpp>
 #ifndef PRECICE_NO_MPI
 
 #include "testing/Testing.hpp"
@@ -53,6 +54,7 @@ BOOST_AUTO_TEST_CASE(TestImplicit)
         state = checkpoint;
       }
       iterationCount++;
+      BOOST_TEST_REQUIRE(iterationCount > 0);
       stateChange = initialStateChange / (double) iterationCount;
       state += stateChange;
       interface.advance(maxDt);
@@ -83,6 +85,7 @@ BOOST_AUTO_TEST_CASE(TestImplicit)
         state = checkpoint;
         iterationCount++;
       }
+      BOOST_TEST_REQUIRE(iterationCount > 0);
       stateChange = initialStateChange / (double) iterationCount;
       state += stateChange;
       interface.advance(maxDt);
