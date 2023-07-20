@@ -9,7 +9,7 @@ RadialGeoMultiscaleMapping::RadialGeoMultiscaleMapping(
     int            dimensions,
     MultiscaleType type,
     MultiscaleAxis axis)
-    : Mapping(constraint, dimensions),
+    : Mapping(constraint, dimensions, false, Mapping::InitialGuessRequirement::None),
       _type(type), _axis(axis)
 {
   setInputRequirement(Mapping::MeshRequirement::VERTEX);
@@ -48,7 +48,7 @@ void RadialGeoMultiscaleMapping::mapConservative(const time::Sample &inData, Eig
 
 void RadialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData)
 {
-  PRECICE_TRACE(inputDataID, outputDataID);
+  PRECICE_TRACE();
 
   const int              valueDimensions = inData.dataDims;
   const Eigen::VectorXd &inputValues     = inData.values;

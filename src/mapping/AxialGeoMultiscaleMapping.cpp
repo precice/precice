@@ -10,7 +10,7 @@ AxialGeoMultiscaleMapping::AxialGeoMultiscaleMapping(
     MultiscaleType type,
     MultiscaleAxis axis,
     double         radius)
-    : Mapping(constraint, dimensions),
+    : Mapping(constraint, dimensions, false, Mapping::InitialGuessRequirement::None),
       _type(type),
       _axis(axis),
       _radius(radius)
@@ -59,10 +59,11 @@ void AxialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen:
 {
   PRECICE_TRACE();
 
-  const int              inValueDimensions  = inData.dataDims;
-  const Eigen::VectorXd &inputValues        = inData.values;
-  Eigen::VectorXd &      outputValues       = outData;
-  const int              outValueDimensions = outData.dataDims;
+  const int              inValueDimensions = inData.dataDims;
+  const Eigen::VectorXd &inputValues       = inData.values;
+  Eigen::VectorXd &      outputValues      = outData;
+  // TODO: check how to access correct outValueDimensions
+  const int outValueDimensions = outData.size() / output()->vertices().size();
 
   int effectiveCoordinate = _axis;
   PRECICE_ASSERT(effectiveCoordinate == 0 ||
