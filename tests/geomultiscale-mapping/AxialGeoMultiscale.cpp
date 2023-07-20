@@ -15,6 +15,10 @@ BOOST_AUTO_TEST_CASE(AxialGeoMultiscale)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 
+  /*  In this test case, SolverOne is the 1D code (despite having 3D vertices, due to current shortcomings)
+      and we're testing the AxialGeoMultiscaleMapping feature with a parabolic inlet profile at the (downstream) 3D inlet.
+  */
+
   using Eigen::Vector3d;
 
   Participant cplInterface(context.name, context.config(), 0, 1);

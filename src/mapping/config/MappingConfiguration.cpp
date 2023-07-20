@@ -176,8 +176,8 @@ MappingConfiguration::MappingConfiguration(
   std::list<XMLTag> rbfAliasTag{
       XMLTag{*this, TYPE_RBF_ALIAS, occ, TAG}.setDocumentation("Alias tag, which auto-selects a radial-basis-function mapping depending on the simulation parameter,")};
   std::list<XMLTag> geoMultiscaleTags{
-      XMLTag{*this, TYPE_AXIAL_GEOMETRIC_MULTISCALE, occ, TAG}.setDocumentation("Axial geometric multiscale mapping which enables coupling of 1D and 3D flow solvers."),
-      XMLTag{*this, TYPE_RADIAL_GEOMETRIC_MULTISCALE, occ, TAG}.setDocumentation("Radial geometric multiscale mapping that couples a 1D and 3D solver along a principle axis.")};
+      XMLTag{*this, TYPE_AXIAL_GEOMETRIC_MULTISCALE, occ, TAG}.setDocumentation("Axial geometric multiscale mapping between one 1D and multiple 3D vertices."),
+      XMLTag{*this, TYPE_RADIAL_GEOMETRIC_MULTISCALE, occ, TAG}.setDocumentation("Radial geometric multiscale mapping between multiple 1D and multiple 3D vertices, distributed along a principle axis.")};
 
   // List of all attributes with corresponding documentation
   auto attrDirection = XMLAttribute<std::string>(ATTR_DIRECTION)
@@ -322,7 +322,6 @@ void MappingConfiguration::xmlTagCallback(
     std::string strPrealloc   = tag.getStringAttributeValue(ATTR_PREALLOCATION, PREALLOCATION_TREE);
 
     // geometric multiscale related tags
-    // TODO: check for correctness
     std::string geoMultiscaleType = tag.getStringAttributeValue(ATTR_GEOMULTISCALE_TYPE, "");
     std::string geoMultiscaleAxis = tag.getStringAttributeValue(ATTR_GEOMULTISCALE_AXIS, "");
     double      multiscaleRadius  = tag.getDoubleAttributeValue(ATTR_GEOMULTISCALE_RADIUS, 1.0);
@@ -514,7 +513,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
 
     // Geometric multiscale is not applicable with the conservative constraint
     PRECICE_CHECK(constraintValue != Mapping::CONSERVATIVE,
-                  "Axial geometrix multiscale mapping is not implemented using a \"conservative\" constraint. "
+                  "Axial geometric multiscale mapping is not implemented for the \"conservative\" constraint. "
                   "Please select constraint=\" consistent\" or a different mapping method.");
 
     // Convert strings into enums
@@ -544,7 +543,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
 
     // Geometric multiscale is not applicable with the conservative constraint
     PRECICE_CHECK(constraintValue != Mapping::CONSERVATIVE,
-                  "Radial geometrix multiscale mapping is not implemented using a \"conservative\" constraint. "
+                  "Radial geometric multiscale mapping is not implemented for the \"conservative\" constraint. "
                   "Please select constraint=\" consistent\" or a different mapping method.");
 
     // Convert strings into enums
