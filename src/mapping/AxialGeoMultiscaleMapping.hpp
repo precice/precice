@@ -54,10 +54,10 @@ public:
 
 protected:
   /// @copydoc Mapping::mapConservative
-  void mapConservative(DataID inputDataID, DataID outputDataID) override;
+  void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) override;
 
   /// @copydoc Mapping::mapConsistent
-  void mapConsistent(DataID inputDataID, DataID outputDataID) override;
+  void mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) override;
 
 private:
   mutable logging::Logger _log{"mapping::AxialGeoMultiscaleMapping"};

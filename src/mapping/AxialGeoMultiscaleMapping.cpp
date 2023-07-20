@@ -1,4 +1,5 @@
 #include "AxialGeoMultiscaleMapping.hpp"
+#include <Eigen/src/Core/Matrix.h>
 #include "mesh/Mesh.hpp"
 
 namespace precice::mapping {
@@ -47,21 +48,21 @@ void AxialGeoMultiscaleMapping::clear()
   _hasComputedMapping = false;
 }
 
-void AxialGeoMultiscaleMapping::mapConservative(DataID inputDataID, DataID outputDataID)
+void AxialGeoMultiscaleMapping::mapConservative(const time::Sample &inData, Eigen::VectorXd &outData)
 {
   PRECICE_ASSERT(getConstraint() == CONSERVATIVE);
   PRECICE_ASSERT(false, "Not yet implemented");
   PRECICE_DEBUG("Map conservative");
 }
 
-void AxialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID outputDataID)
+void AxialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData)
 {
-  PRECICE_TRACE(inputDataID, outputDataID);
+  PRECICE_TRACE();
 
-  const Eigen::VectorXd &inputValues        = input()->data(inputDataID)->values();
-  int                    inValueDimensions  = input()->data(inputDataID)->getDimensions();
-  int                    outValueDimensions = output()->data(outputDataID)->getDimensions();
-  Eigen::VectorXd &      outputValues       = output()->data(outputDataID)->values();
+  const int              inValueDimensions  = inData.dataDims;
+  const Eigen::VectorXd &inputValues        = inData.values;
+  Eigen::VectorXd &      outputValues       = outData;
+  const int              outValueDimensions = outData.dataDims;
 
   int effectiveCoordinate = _axis;
   PRECICE_ASSERT(effectiveCoordinate == 0 ||

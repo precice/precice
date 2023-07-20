@@ -1,4 +1,5 @@
 #include "RadialGeoMultiscaleMapping.hpp"
+#include <Eigen/src/Core/Matrix.h>
 #include "mesh/Mesh.hpp"
 
 namespace precice::mapping {
@@ -38,20 +39,20 @@ void RadialGeoMultiscaleMapping::clear()
   _hasComputedMapping = false;
 }
 
-void RadialGeoMultiscaleMapping::mapConservative(DataID inputDataID, DataID outputDataID)
+void RadialGeoMultiscaleMapping::mapConservative(const time::Sample &inData, Eigen::VectorXd &outData)
 {
   PRECICE_ASSERT(getConstraint() == CONSERVATIVE);
   PRECICE_ASSERT(false, "Not yet implemented");
   PRECICE_DEBUG("Map conservative");
 }
 
-void RadialGeoMultiscaleMapping::mapConsistent(DataID inputDataID, DataID outputDataID)
+void RadialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData)
 {
   PRECICE_TRACE(inputDataID, outputDataID);
 
-  const Eigen::VectorXd &inputValues     = input()->data(inputDataID)->values();
-  int                    valueDimensions = input()->data(inputDataID)->getDimensions();
-  Eigen::VectorXd &      outputValues    = output()->data(outputDataID)->values();
+  const int              valueDimensions = inData.dataDims;
+  const Eigen::VectorXd &inputValues     = inData.values;
+  Eigen::VectorXd &      outputValues    = outData;
 
   int effectiveCoordinate = _axis;
   PRECICE_ASSERT(effectiveCoordinate == 0 ||
