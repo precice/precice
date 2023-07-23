@@ -34,7 +34,6 @@ void ConstantRelaxationAcceleration::initialize(const DataMap &cplData)
 void ConstantRelaxationAcceleration::performAcceleration(const DataMap &cplData)
 {
   PRECICE_TRACE();
-
   applyRelaxation(_relaxation, cplData);
 }
 

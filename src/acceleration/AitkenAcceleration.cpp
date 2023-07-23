@@ -35,6 +35,13 @@ AitkenAcceleration::AitkenAcceleration(double           initialRelaxation,
 void AitkenAcceleration::initialize(const DataMap &cplData)
 {
   checkDataIDs(cplData);
+
+  for (const auto &data : cplData | boost::adaptors::map_values) {
+    if (data->exchangeSubsteps()) {
+      PRECICE_ERROR("Aitken acceleration does not yet support using data from all substeps. Please set substeps=\"false\" in the exchange tag of data \"{}\".", data->getDataName());
+    }
+  }
+
   size_t entries = 0;
   if (_dataIDs.size() == 1) {
     entries = cplData.at(_dataIDs.at(0))->getSize();
@@ -52,12 +59,6 @@ void AitkenAcceleration::performAcceleration(
     const DataMap &cplData)
 {
   PRECICE_TRACE();
-
-  for (const auto &data : cplData | boost::adaptors::map_values) {
-    if (data->exchangeSubsteps()) {
-      PRECICE_ERROR("Acceleration scheme does not support subcycling. Please pick a different acceleration scheme or set substeps=\"false\" in the exchange tag of data \"{}\".", data->getDataName());
-    }
-  }
 
   // Compute aitken relaxation factor
   PRECICE_ASSERT(utils::contained(*_dataIDs.begin(), cplData));
