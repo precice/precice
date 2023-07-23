@@ -37,7 +37,7 @@ using DataMap = std::map<int, PtrCouplingData>;
 BOOST_AUTO_TEST_SUITE(AccelerationIntraCommTests)
 
 /// Test that runs on 4 processors.
-BOOST_AUTO_TEST_CASE(testVIQNILSpp)
+BOOST_AUTO_TEST_CASE(testVIQNILSppWithoutSubsteps)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   double           initialRelaxation        = 0.01;
@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
   mesh::PtrData forces(new mesh::Data("fvalues", -1, 1));
 
-  bool exchangeSubsteps = false; // @todo set "true" as soon as acceleration scheme supports subcycling
+  bool exchangeSubsteps = false; // @todo add testVIQNILSppWithSubsteps, where exchangeSubsteps = true as soon as acceleration scheme supports subcycling.
 
   if (context.isPrimary()) { //Primary
     /**
@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
 }
 
 /// Test that runs on 4 processors.
-BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
+BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   double initialRelaxation          = 0.01;
@@ -306,7 +306,7 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
 
   DataMap data;
 
-  bool exchangeSubsteps = false; // @todo set "true" as soon as acceleration scheme supports subcycling
+  bool exchangeSubsteps = false; // @todo add testVIQNIMVJppWithSubsteps, where exchangeSubsteps = true as soon as acceleration scheme supports subcycling.
 
   if (context.isPrimary()) { //Primary
 
@@ -553,7 +553,7 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
 }
 
 /// Test that runs on 4 processors.
-BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
+BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   // config:
@@ -593,7 +593,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
   PtrCouplingData dpcd;
   PtrCouplingData fpcd;
 
-  bool exchangeSubsteps = false; // @todo set "true" as soon as acceleration scheme supports subcycling
+  bool exchangeSubsteps = false; // @todo add testIMVJ_effUpdate_ppWithSubsteps, where exchangeSubsteps = true as soon as acceleration scheme supports subcycling.
 
   if (context.isPrimary()) { //Primary
     /**
@@ -1034,7 +1034,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
 }
 
 /// Test that runs on 4 processors.
-BOOST_AUTO_TEST_CASE(testColumnsLogging)
+BOOST_AUTO_TEST_CASE(testColumnsLoggingWithoutSubsteps)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   double           initialRelaxation        = 0.1;
@@ -1076,7 +1076,7 @@ BOOST_AUTO_TEST_CASE(testColumnsLogging)
 
   utils::append(displacements->values(), insert);
 
-  bool exchangeSubsteps = false; // @todo set "true" as soon as acceleration scheme supports subcycling
+  bool exchangeSubsteps = false; // @todo add testColumnsLoggingWithSubsteps, where exchangeSubsteps = true as soon as acceleration scheme supports subcycling.
 
   PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, exchangeSubsteps, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
   data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
