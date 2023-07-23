@@ -271,7 +271,7 @@ void BaseQNAcceleration::performAcceleration(
 
   for (const auto &data : cplData | boost::adaptors::map_values) {
     if (data->exchangeSubsteps()) {
-      PRECICE_ERROR("Acceleration scheme does not support subcycling. Please pick a different acceleration scheme or set substeps=\"false\" in the exchange tag of data \"{}\".", data->getDataName());
+      PRECICE_ERROR("Quasi-Newton acceleration does not yet support using data from all substeps. Please set substeps=\"false\" in the exchange tag of data \"{}\".", data->getDataName());
     }
   }
 
