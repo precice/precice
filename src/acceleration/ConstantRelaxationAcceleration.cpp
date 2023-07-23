@@ -29,18 +29,17 @@ ConstantRelaxationAcceleration::ConstantRelaxationAcceleration(
 void ConstantRelaxationAcceleration::initialize(const DataMap &cplData)
 {
   checkDataIDs(cplData);
-}
-
-void ConstantRelaxationAcceleration::performAcceleration(const DataMap &cplData)
-{
-  PRECICE_TRACE();
 
   for (const auto &data : cplData | boost::adaptors::map_values) {
     if (data->exchangeSubsteps()) {
       PRECICE_ERROR("Constant acceleration does not yet support using data from all substeps. Please set substeps=\"false\" in the exchange tag of data \"{}\".", data->getDataName());
     }
   }
+}
 
+void ConstantRelaxationAcceleration::performAcceleration(const DataMap &cplData)
+{
+  PRECICE_TRACE();
   applyRelaxation(_relaxation, cplData);
 }
 
