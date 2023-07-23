@@ -110,7 +110,7 @@ void CouplingData::storeIteration()
   _timeStepsStoragePrevious.trim();
   if (stamples.size() == 1) { // special treatment during initialization
     const auto &stample = this->stamples().back();
-    PRECICE_ASSERT(math::equals(stample.timestamp, time::Storage::WINDOW_START), "stample.timestamp must be WINDOW_START");
+    PRECICE_ASSERT(math::equals(stample.timestamp, time::Storage::WINDOW_START), "stample.timestamp must be WINDOW_START", stample.timestamp);
     _timeStepsStoragePrevious.setSampleAtTime(time::Storage::WINDOW_START, stample.sample);
     _timeStepsStoragePrevious.setSampleAtTime(time::Storage::WINDOW_END, stample.sample);
   } else {
