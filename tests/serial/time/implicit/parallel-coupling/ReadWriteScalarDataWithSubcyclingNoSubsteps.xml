@@ -44,19 +44,7 @@
     <time-window-size value="2" />
     <max-iterations value="3" />
     <min-iteration-convergence-measure min-iterations="3" data="DataOne" mesh="MeshOne" />
-    <exchange
-      data="DataOne"
-      mesh="MeshOne"
-      from="SolverOne"
-      to="SolverTwo"
-      initialize="on"
-      substeps="false" />
-    <exchange
-      data="DataTwo"
-      mesh="MeshOne"
-      from="SolverTwo"
-      to="SolverOne"
-      initialize="on"
-      substeps="false" />
+    <exchange data="DataOne" mesh="MeshOne" from="SolverOne" to="SolverTwo" initialize="on" />
+    <exchange data="DataTwo" mesh="MeshOne" from="SolverTwo" to="SolverOne" initialize="on" />
   </coupling-scheme:parallel-implicit>
 </precice-configuration>
