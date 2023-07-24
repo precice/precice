@@ -75,14 +75,14 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingDifferentDts)
   }
 
   precice.initialize();
-  double maxDt    = precice.getMaxTimeStepSize();
-  double windowDt = maxDt;
-  int    timestepCheckpoint;
-  double dt = windowDt / nSubsteps;       // Timestep length desired by solver. E.g. 4 steps  with size 1/4, 3 steps with size 1/3
-  dt += windowDt / nSubsteps / nSubsteps; // increase timestep such that we get a non-matching subcycling. E.g. 3 steps with size 5/16 and 1 steps with size 1/16; 2 steps with size 4/9 and 1 step with size 1/9
-  double currentDt = dt;                  // Timestep length used by solver
-  double timeCheckpoint;
-  int    iterations;
+  double maxDt              = precice.getMaxTimeStepSize();
+  double windowDt           = maxDt;
+  int    timestepCheckpoint = 0;
+  double dt                 = windowDt / nSubsteps; // Timestep length desired by solver. E.g. 4 steps  with size 1/4, 3 steps with size 1/3
+  dt += windowDt / nSubsteps / nSubsteps;           // increase timestep such that we get a non-matching subcycling. E.g. 3 steps with size 5/16 and 1 steps with size 1/16; 2 steps with size 4/9 and 1 step with size 1/9
+  double currentDt      = dt;                       // Timestep length used by solver
+  double timeCheckpoint = 0.0;
+  int    iterations     = 0;
 
   while (precice.isCouplingOngoing()) {
     if (precice.requiresWritingCheckpoint()) {

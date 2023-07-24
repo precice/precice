@@ -80,8 +80,8 @@ void Storage::move()
   auto sampleAtBeginning = getSampleAtEnd();
   auto sampleAtEnd       = computeExtrapolation();
   _stampleStorage.clear();
-  _stampleStorage.emplace_back(time::Stample{WINDOW_START, sampleAtBeginning});
-  _stampleStorage.emplace_back(time::Stample{WINDOW_END, sampleAtEnd});
+  _stampleStorage.emplace_back(time::Stample{WINDOW_START, std::move(sampleAtBeginning)});
+  _stampleStorage.emplace_back(time::Stample{WINDOW_END, std::move(sampleAtEnd)});
 }
 
 void Storage::trim()

@@ -638,7 +638,7 @@ void CouplingSchemeConfiguration::addTagAcceleration(
     xml::XMLTag &tag)
 {
   PRECICE_TRACE(tag.getFullName());
-  if (_accelerationConfig.get() == nullptr) {
+  if (!_accelerationConfig) {
     _accelerationConfig = std::make_shared<acceleration::AccelerationConfiguration>(
         _meshConfig);
   }
