@@ -325,8 +325,9 @@ void XMLTag::areAllSubtagsConfigured() const
     bool occurOnceOrMore = tag->getOccurrence() == OCCUR_ONCE_OR_MORE;
 
     if (not ns.empty()) {
-      PRECICE_ASSERT(utils::contained(ns, _configuredNamespaces));
-      configured |= _configuredNamespaces.find(ns)->second;
+      auto nsIter = _configuredNamespaces.find(ns);
+      PRECICE_ASSERT(nsIter != _configuredNamespaces.end());
+      configured |= nsIter->second;
     }
 
     if ((not configured) && (occurOnce || occurOnceOrMore)) {

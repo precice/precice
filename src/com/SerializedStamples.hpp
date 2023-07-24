@@ -126,7 +126,7 @@ private:
   Eigen::VectorXd _gradients;
 
   /// number of timesteps stored in SerializedStamples
-  int _timeSteps;
+  int _timeSteps = 0;
 };
 
 } // namespace serialize

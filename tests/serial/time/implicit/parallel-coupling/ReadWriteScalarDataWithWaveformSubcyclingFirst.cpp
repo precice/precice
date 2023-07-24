@@ -57,11 +57,11 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
   double v0[] = {0, 0, 0};
   vertexID    = precice.setMeshVertex(meshName, v0);
 
-  int    nSubsteps = 4; // perform subcycling on solvers. 4 steps happen in each window.
-  int    nWindows  = 5; // perform 5 windows.
-  int    timestep  = 0;
-  int    timestepCheckpoint;
-  double time = 0;
+  int    nSubsteps          = 4; // perform subcycling on solvers. 4 steps happen in each window.
+  int    nWindows           = 5; // perform 5 windows.
+  int    timestep           = 0;
+  int    timestepCheckpoint = 0;
+  double time               = 0;
 
   if (precice.requiresInitialData()) {
     writeData = writeFunction(time);
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
   dt += windowDt / nSubsteps / nSubsteps; // increase time step size such that we get a non-matching subcycling. E.g. 3 step with size 5/16 and 1 step with size 1/16.
   double currentDt = dt;                  // time step size used by solver
   double timeCheckpoint{0.0};
-  int    iterations;
+  int    iterations = 0;
 
   while (precice.isCouplingOngoing()) {
     if (precice.requiresWritingCheckpoint()) {
