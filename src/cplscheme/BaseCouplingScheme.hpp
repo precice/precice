@@ -250,8 +250,9 @@ protected:
    *
    * @param m2n M2N used for communication
    * @param sendData DataMap associated with sent data
+   * @param initialCommunication if true and exchange of substeps is deactivated, will send data for WINDOW_START, else will send data for WINDOW_END
    */
-  void sendData(const m2n::PtrM2N &m2n, const DataMap &sendData);
+  void sendData(const m2n::PtrM2N &m2n, const DataMap &sendData, bool initialCommunication = false);
 
   int receiveNumberOfTimeSteps(const m2n::PtrM2N &m2n);
 
@@ -262,8 +263,9 @@ protected:
    *
    * @param m2n M2N used for communication
    * @param receiveData DataMap associated with received data
+   * @param initialCommunication if true and exchange of substeps is deactivated, will store received data for WINDOW_START and WINDOW_END, else store received data only for WINDOW_END
    */
-  void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData);
+  void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData, bool initialCommunication = false);
 
   /**
    * @brief Initializes storage in receiveData as zero
