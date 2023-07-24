@@ -21,11 +21,11 @@ struct Sample {
 
   /// Constructs a Sample of given data dimensionality and data values
   Sample(int dims, Eigen::VectorXd inValues)
-      : dataDims(dims), values(inValues) {}
+      : dataDims(dims), values(std::move(inValues)) {}
 
   /// Constructs a Sample of given data dimensionality, data values, and data gradients
   Sample(int dims, Eigen::VectorXd inValues, Eigen::MatrixXd inGradients)
-      : dataDims(dims), values(inValues), gradients(inGradients) {}
+      : dataDims(dims), values(std::move(inValues)), gradients(std::move(inGradients)) {}
 
   Sample(const Sample &) = default;
   Sample(Sample &&)      = default;

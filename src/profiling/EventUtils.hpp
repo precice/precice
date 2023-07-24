@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <fstream>
 #include <iosfwd>
+#include <optional>
 #include <string>
 #include <utility>
 #include <variant>
@@ -141,16 +142,16 @@ private:
   Mode _mode = Mode::Fundamental;
 
   /// The rank/number of parallel instance of the current program
-  int _rank;
+  int _rank = 0;
 
   /// The amount of parallel instances of the current program
-  int _size;
+  int _size = 1;
 
   /// Indicator for the first record to be written
-  bool _firstwrite;
+  bool _firstwrite = true;
 
   /// The id of the global event
-  int _globalId;
+  std::optional<int> _globalId;
 
   /// Private, empty constructor for singleton pattern
   EventRegistry() = default;
