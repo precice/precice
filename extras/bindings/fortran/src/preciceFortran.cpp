@@ -431,7 +431,7 @@ void precicef_get_mesh_vertices_and_ids_(
   PRECICE_CHECK(impl != nullptr, errormsg);
   auto sv              = precice::impl::strippedStringView(meshName, meshNameLength);
   auto coordinatesSize = static_cast<unsigned long>(impl->getMeshDimensions(sv) * size);
-  impl->getMeshVerticesAndIDs(sv, {ids, static_cast<unsigned long>(size)}, {coordinates, coordinatesSize});
+  impl->getMeshVertexIDsAndCoordinates(sv, {ids, static_cast<unsigned long>(size)}, {coordinates, coordinatesSize});
 }
 
 #ifdef __GNUC__

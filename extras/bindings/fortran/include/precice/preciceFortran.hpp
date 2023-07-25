@@ -581,7 +581,7 @@ PRECICE_API void precicef_set_mesh_access_region_(
  * IN:  mesh, size, meshNameLength
  * OUT: ids, coordinates
  *
- * @copydoc precice::Participant::getMeshVerticesAndIDs()
+ * @copydoc precice::Participant::getMeshVertexIDsAndCoordinates()
  */
 PRECICE_API void precicef_get_mesh_vertices_and_ids_(
     const char *meshName,

@@ -370,9 +370,9 @@ PRECICE_API void precicec_setMeshAccessRegion(
     const double *boundingBox);
 
 /**
- * @brief See precice::Participant::getMeshVerticesAndIDs().
+ * @brief See precice::Participant::getMeshVertexIDsAndCoordinates().
  */
-PRECICE_API void precicec_getMeshVerticesAndIDs(
+PRECICE_API void precicec_getMeshVertexIDsAndCoordinates(
     const char *meshName,
     const int   size,
     int *       ids,

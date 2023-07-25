@@ -1132,7 +1132,7 @@ void ParticipantImpl::setMeshAccessRegion(
   _accessRegionDefined = true;
 }
 
-void ParticipantImpl::getMeshVerticesAndIDs(
+void ParticipantImpl::getMeshVertexIDsAndCoordinates(
     const std::string_view    meshName,
     ::precice::span<VertexID> ids,
     ::precice::span<double>   coordinates) const
