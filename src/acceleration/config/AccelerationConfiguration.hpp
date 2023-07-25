@@ -70,7 +70,6 @@ private:
   const std::string VALUE_AITKEN;
   const std::string VALUE_IQNILS;
   const std::string VALUE_MVQN;
-  const std::string VALUE_BROYDEN;
   const std::string VALUE_QR1FILTER;
   const std::string VALUE_QR1_ABSFILTER;
   const std::string VALUE_QR2FILTER;
