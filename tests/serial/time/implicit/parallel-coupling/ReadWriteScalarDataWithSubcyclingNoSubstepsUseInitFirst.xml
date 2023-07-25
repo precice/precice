@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration dimensions="3">
-  <data:scalar name="DataOne" waveform-degree="0" />
-  <data:scalar name="DataTwo" waveform-degree="0" />
+  <data:scalar name="DataOne" waveform-degree="1" />
+  <data:scalar name="DataTwo" waveform-degree="1" />
 
   <mesh name="MeshOne">
     <use-data name="DataOne" />
@@ -38,11 +38,19 @@
 
   <m2n:sockets acceptor="SolverOne" connector="SolverTwo" />
 
-  <coupling-scheme:serial-explicit>
+  <coupling-scheme:parallel-implicit>
     <participants first="SolverOne" second="SolverTwo" />
     <max-time-windows value="5" />
-    <time-window-size value="2.0" />
-    <exchange data="DataOne" mesh="MeshOne" from="SolverOne" to="SolverTwo" substeps="false" />
+    <time-window-size value="2" />
+    <max-iterations value="3" />
+    <min-iteration-convergence-measure min-iterations="3" data="DataOne" mesh="MeshOne" />
+    <exchange
+      data="DataOne"
+      mesh="MeshOne"
+      from="SolverOne"
+      to="SolverTwo"
+      initialize="on"
+      substeps="false" />
     <exchange
       data="DataTwo"
       mesh="MeshOne"
@@ -50,5 +58,5 @@
       to="SolverOne"
       initialize="on"
       substeps="false" />
-  </coupling-scheme:serial-explicit>
+  </coupling-scheme:parallel-implicit>
 </precice-configuration>

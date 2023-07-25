@@ -21,7 +21,7 @@ CouplingData::CouplingData(
       _exchangeSubsteps(exchangeSubsteps)
 {
   PRECICE_ASSERT(_data != nullptr);
-  timeStepsStorage().setExtrapolationOrder(extrapolationOrder);
+  _data->timeStepsStorage().setExtrapolationOrder(extrapolationOrder);
 
   PRECICE_ASSERT(_mesh != nullptr);
   PRECICE_ASSERT(_mesh.use_count() > 0);
@@ -72,8 +72,9 @@ const time::Storage &CouplingData::timeStepsStorage() const
 
 void CouplingData::setSampleAtTime(double time, time::Sample sample)
 {
+  PRECICE_ASSERT(not sample.values.hasNaN());
   this->sample() = sample; // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
-  timeStepsStorage().setSampleAtTime(time, sample);
+  _data->setSampleAtTime(time, sample);
 }
 
 bool CouplingData::hasGradient() const
@@ -132,12 +133,7 @@ std::vector<int> CouplingData::getVertexOffsets()
 
 void CouplingData::moveToNextWindow()
 {
-  if (this->timeStepsStorage().stamples().size() > 0) {
-    this->timeStepsStorage().move();
-    const auto &atEnd = this->timeStepsStorage().stamples().back();
-    PRECICE_ASSERT(math::equals(atEnd.timestamp, time::Storage::WINDOW_END));
-    _data->sample() = atEnd.sample;
-  }
+  _data->moveToNextWindow();
 }
 
 time::Sample &CouplingData::sample()

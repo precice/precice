@@ -63,6 +63,7 @@ target_sources(testprecice
     tests/quasi-newton/serial/TestQN2.cpp
     tests/quasi-newton/serial/TestQN3.cpp
     tests/serial/AitkenAcceleration.cpp
+    tests/serial/ImplicitCheckpointing.cpp
     tests/serial/PreconditionerBug.cpp
     tests/serial/SendMeshToMultipleParticipants.cpp
     tests/serial/SummationActionTwoSources.cpp
@@ -179,6 +180,7 @@ target_sources(testprecice
     tests/serial/time/implicit/multi-coupling/ReadWriteScalarDataWithWaveformSubcyclingDifferentDts.cpp
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithSubcyclingNoSubsteps.cpp
+    tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithSubcyclingNoSubstepsUseInitFirst.cpp
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithWaveformSamplingFirst.cpp
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithWaveformSamplingFirstExtrapolation.cpp
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithWaveformSamplingFirstNoInit.cpp
@@ -191,6 +193,7 @@ target_sources(testprecice
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataFirstParticipantFixedWindows.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithSubcyclingNoSubsteps.cpp
+    tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithSubcyclingNoSubstepsUseInitFirst.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithWaveformSamplingFirst.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithWaveformSamplingFirstExtrapolation.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithWaveformSamplingFirstNoInit.cpp

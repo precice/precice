@@ -4,10 +4,13 @@
 #include <stddef.h>
 #include <string>
 
+#include "SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "precice/types.hpp"
 #include "time/Sample.hpp"
 #include "time/Storage.hpp"
+#include "time/Time.hpp"
+#include "time/Waveform.hpp"
 
 namespace precice {
 namespace mesh {
@@ -46,7 +49,8 @@ public:
       std::string name,
       DataID      id,
       int         dimension,
-      int         spatialDimensions = -1);
+      int         spatialDimensions = -1,
+      int         waveformDegree    = time::Time::DEFAULT_WAVEFORM_DEGREE);
 
   /// Returns a reference to the data values.
   Eigen::VectorXd &values();
@@ -66,13 +70,30 @@ public:
   /// Returns a const reference to the _sample.
   const time::Sample &sample() const;
 
-  /// Returns a reference to the _timeStepsStorage.
+  /**
+   * @brief Samples _waveform at given time
+   *
+   * @param normalizedDt Time where the sampling inside the window happens. Only allows values between 0 and 1. 0 refers to the beginning of the window and 1 to the end.
+   * @return Value of _waveform at time normalizedDt.
+   */
+  Eigen::VectorXd sampleAtTime(double normalizedDt) const;
+
+  /**
+   * @brief get degree of _waveform.
+   *
+   * @return int degree of _waveform
+   */
+  int getWaveformDegree() const;
+
+  /// Returns a reference to the _timeStepsStorage of _waveform.
   time::Storage &timeStepsStorage();
+
+  void moveToNextWindow();
 
   /// Returns a the stamples from _timeStepsStorage.
   auto stamples() const
   {
-    return _timeStepsStorage.stamples();
+    return _waveform.stamples();
   }
 
   /// Add sample at given time to _timeStepsStorage.
@@ -109,8 +130,8 @@ public:
 private:
   logging::Logger _log{"mesh::Data"};
 
-  /// Stores time steps in the current time window
-  time::Storage _timeStepsStorage;
+  /// Waveform wrapping this Data.
+  time::Waveform _waveform;
 
   /// Name of the data set.
   std::string _name;

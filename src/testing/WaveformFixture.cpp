@@ -5,12 +5,12 @@ namespace precice::testing {
 
 int WaveformFixture::numberOfStoredSamples(time::Waveform &waveform)
 {
-  return waveform._data->timeStepsStorage().nTimes();
+  return waveform._timeStepsStorage.nTimes();
 }
 
 int WaveformFixture::valuesSize(time::Waveform &waveform)
 {
-  return waveform._data->timeStepsStorage().nDofs();
+  return waveform._timeStepsStorage.nDofs();
 }
 
 } // namespace precice::testing

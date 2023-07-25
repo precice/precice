@@ -75,7 +75,7 @@ void MeshConfiguration::xmlTagCallback(
     bool        found = false;
     for (const DataConfiguration::ConfiguredData &data : _dataConfig->data()) {
       if (data.name == name) {
-        _meshes.back()->createData(data.name, data.dimensions, _dataIDManager.getFreeID());
+        _meshes.back()->createData(data.name, data.dimensions, _dataIDManager.getFreeID(), data.waveformDegree);
         found = true;
         break;
       }

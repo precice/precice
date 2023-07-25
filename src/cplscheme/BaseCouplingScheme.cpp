@@ -110,7 +110,7 @@ void BaseCouplingScheme::sendTimes(const m2n::PtrM2N &m2n, const Eigen::VectorXd
   m2n->send(times);
 }
 
-void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendData)
+void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendData, bool initialCommunication)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(m2n.get() != nullptr);
@@ -120,10 +120,10 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
     const auto &stamples = data->stamples();
     PRECICE_ASSERT(stamples.size() > 0);
 
-    if (data->exchangeSubsteps()) {
-      int nTimeSteps = data->timeStepsStorage().nTimes();
-      PRECICE_ASSERT(nTimeSteps > 0);
+    int nTimeSteps = data->timeStepsStorage().nTimes();
+    PRECICE_ASSERT(nTimeSteps > 0);
 
+    if (data->exchangeSubsteps()) {
       if (nTimeSteps > 1) { // otherwise PRECICE_ASSERT below is triggered during initialization
         const Eigen::VectorXd timesAscending = data->timeStepsStorage().getTimes();
         PRECICE_ASSERT(math::equals(timesAscending(0), time::Storage::WINDOW_START), timesAscending(0));                                     // assert that first element is time::Storage::WINDOW_START
@@ -148,6 +148,12 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
         m2n->send(serialized.gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions() * serialized.nTimeSteps());
       }
     } else {
+      if (initialCommunication) { // send data for WINDOW_START. Will be used for WINDOW_START and WINDOW_END.
+        PRECICE_ASSERT(math::equals(stamples.front().timestamp, time::Storage::WINDOW_START));
+        PRECICE_ASSERT(math::equals(stamples.back().timestamp, time::Storage::WINDOW_START));
+      } else { // send data for WINDOW_END.
+        PRECICE_ASSERT(math::equals(stamples.back().timestamp, time::Storage::WINDOW_END));
+      }
       data->sample() = stamples.back().sample;
 
       // Data is only received on ranks with size>0, which is checked in the derived class implementation
@@ -180,7 +186,7 @@ Eigen::VectorXd BaseCouplingScheme::receiveTimes(const m2n::PtrM2N &m2n, int nTi
   return times;
 }
 
-void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData)
+void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData, bool initialCommunication)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(m2n.get());
@@ -212,6 +218,11 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
         PRECICE_ASSERT(data->hasGradient());
         m2n->receive(data->gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions());
       }
+
+      if (initialCommunication) { // also use receive data for WINDOW_START.
+        data->setSampleAtTime(time::Storage::WINDOW_START, data->sample());
+      }
+      // use received data for WINDOW_END.
       data->setSampleAtTime(time::Storage::WINDOW_END, data->sample());
     }
   }
@@ -348,12 +359,14 @@ void BaseCouplingScheme::secondExchange()
         // coupling iteration.
         PRECICE_ASSERT(math::greater(_computedTimeWindowPart, 0.0));
         _timeWindows -= 1;
-      } else { // write output, prepare for next window
+        _computedTimeWindowPart = 0.0; // reset window
+      } else {                         // write output, prepare for next window
         PRECICE_DEBUG("Convergence achieved");
         advanceTXTWriters();
         PRECICE_INFO("Time window completed");
         _isTimeWindowComplete = true;
         _timeWindowStartTime += _computedTimeWindowPart;
+        _computedTimeWindowPart = 0.0; // reset window
         if (isCouplingOngoing()) {
           PRECICE_DEBUG("Setting require create checkpoint");
           requireAction(CouplingScheme::Action::WriteCheckpoint);
@@ -370,11 +383,11 @@ void BaseCouplingScheme::secondExchange()
       PRECICE_INFO("Time window completed");
       _isTimeWindowComplete = true;
       _timeWindowStartTime += _computedTimeWindowPart;
+      _computedTimeWindowPart = 0.0; // reset window
     }
     if (isCouplingOngoing()) {
       PRECICE_ASSERT(_hasDataBeenReceived);
     }
-    _computedTimeWindowPart = 0.0; // reset window
   }
 }
 
