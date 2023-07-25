@@ -96,7 +96,6 @@ private:
   const std::string TAG_RES_REL_CONV_MEASURE;
   const std::string TAG_MIN_ITER_CONV_MEASURE;
   const std::string TAG_MAX_ITERATIONS;
-  const std::string TAG_EXTRAPOLATION;
 
   const std::string ATTR_DATA;
   const std::string ATTR_MESH;
@@ -157,8 +156,7 @@ private:
     };
     std::vector<Exchange>                    exchanges;
     std::vector<ConvergenceMeasureDefintion> convergenceMeasureDefinitions;
-    int                                      maxIterations      = -1;
-    int                                      extrapolationOrder = 0;
+    int                                      maxIterations = -1;
 
     bool hasExchange(const Exchange &totest) const
     {
@@ -203,8 +201,6 @@ private:
   void addBaseAttributesTagConvergenceMeasure(xml::XMLTag &tag);
 
   void addTagMaxIterations(xml::XMLTag &tag);
-
-  void addTagExtrapolation(xml::XMLTag &tag);
 
   void addTagAcceleration(xml::XMLTag &tag);
 
