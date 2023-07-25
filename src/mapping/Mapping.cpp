@@ -225,7 +225,19 @@ void Mapping::scaleConsistentMapping(const Eigen::VectorXd &input, Eigen::Vector
   Eigen::Map<Eigen::MatrixXd> outputValuesMatrix(output.data(), valueDimensions, output.size() / valueDimensions);
 
   // Scale in each direction
-  const Eigen::VectorXd scalingFactor = integralInput.binaryExpr(integralOutput, [](double lhs, double rhs) { return (rhs == 0.0) ? 0.0 : (lhs / rhs); });
+  // We cannot handle the case with zero output data and non-zero input data.
+  // To fulfill the constraint, we would need to scale the output data in such a way, that the integral sum of the input is preserved.
+  // That's not possible using a constant scaling factor as the output sum will always be zero. Here, we return 1 and emit a warning afterwards.
+  const Eigen::VectorXd scalingFactor = integralInput.binaryExpr(integralOutput, [](double lhs, double rhs) { return (rhs == 0.0) ? 1.0 : (lhs / rhs); });
+   PRECICE_DEBUG("Scaling factor in scaled-consistent mapping: {}", scalingFactor);
+
+  // check whether the constraint is fulfilled
+  for (Eigen::Index i = 0; i < scalingFactor.size(); ++i) {
+    double consistency = std::abs(scalingFactor[i] * integralOutput[i] - integralInput[i]);
+    if (consistency > 0)
+      PRECICE_WARN("Failed to fulfill consistency constraint for scaled-consistent mapping from mesh \"{}\" to mesh \"{}\". Consistency difference between input and output is \"{}\".", this->input()->getName(), this->output()->getName(), integralInput[i] - integralOutput[i]);
+  }
+
   PRECICE_DEBUG("Scaling factor in scaled-consistent mapping: {}", scalingFactor);
   outputValuesMatrix.array().colwise() *= scalingFactor.array();
 } // namespace mapping
