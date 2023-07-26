@@ -106,7 +106,7 @@ void MeshConfiguration::addMesh(
   for (const PtrData &dataNewMesh : mesh->data()) {
     bool found = false;
     for (const DataConfiguration::ConfiguredData &data : _dataConfig->data()) {
-      if ((dataNewMesh->getName() == data.name) && (dataNewMesh->getDimensions() == getDataDimensions(mesh->getName(), data.typeName))) {
+      if (dataNewMesh->getName() == data.name) {
         found = true;
         break;
       }
