@@ -180,8 +180,6 @@ if(PKG_CONFIG_FOUND)
     else()
       list(APPEND _petsc_missing_libs "${_next_lib}")
     endif()
-    set(PETSC_LIBRARY "${_petsc_lib_${_next_lib}}" CACHE PATH "Path to the PETSc library.")
-    mark_as_advanced(_petsc_lib_${_next_lib})
   endforeach()
 
   # Link against MPI if it is used.
