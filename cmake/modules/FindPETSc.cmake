@@ -174,12 +174,14 @@ if(PKG_CONFIG_FOUND)
 
   # Find main PETSc libraries
   foreach(_next_lib IN LISTS PC_PETSc_LIBRARIES)
-    find_library(_petsc_lib_${_next_lib} NAMES ${_next_lib} HINTS ${PC_PETSc_LIBRARY_DIRS})
+    set(PETSC_LIBRARY "${_petsc_lib_${_next_lib}}" CACHE PATH "Path to the PETSc library.")
+    find_library(${PETSC_LIBRARY} NAMES ${_next_lib} HINTS ${PC_PETSc_LIBRARY_DIRS})
     if(_petsc_lib_${_next_lib})
       list(APPEND _petsc_libs "${_petsc_lib_${_next_lib}}")
     else()
       list(APPEND _petsc_missing_libs "${_next_lib}")
     endif()
+    mark_as_advanced(_petsc_lib_${_next_lib})
   endforeach()
 
   # Link against MPI if it is used.
