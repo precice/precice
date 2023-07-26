@@ -60,9 +60,6 @@ private:
   const std::string VALUE_VECTOR = "vector";
   const std::string VALUE_SCALAR = "scalar";
 
-  /// Dimension of space.
-  int _dimensions = 0;
-
   std::vector<ConfiguredData> _data;
 
   int _indexLastConfigured = -1;

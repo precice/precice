@@ -51,7 +51,6 @@ void DataConfiguration::xmlTagCallback(
     xml::XMLTag &                    tag)
 {
   if (tag.getNamespace() == TAG) {
-    PRECICE_ASSERT(_dimensions != 0);
     const std::string &name           = tag.getStringAttributeValue(ATTR_NAME);
     const std::string &typeName       = tag.getName();
     const int          waveformDegree = tag.getIntAttributeValue(ATTR_DEGREE);
