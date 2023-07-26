@@ -355,7 +355,6 @@ BOOST_AUTO_TEST_CASE(testConfiguredSimpleExplicitCoupling)
   std::string configurationPath(_pathToTests + "explicit-coupling-scheme-1.xml");
   std::string nameParticipant0("Participant0");
   std::string nameParticipant1("Participant1");
-  int         dimensions = 3;
 
   xml::XMLTag                                  root = xml::getRootTag();
   PtrDataConfiguration                         dataConfig(new DataConfiguration(root));
@@ -389,7 +388,6 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingFirstParticipantSetsDt)
   std::string configurationPath(_pathToTests + "explicit-coupling-scheme-2.xml");
   std::string nameParticipant0("Participant0");
   std::string nameParticipant1("Participant1");
-  int         dimensions = 3;
 
   xml::XMLTag                                  root = xml::getRootTag();
   PtrDataConfiguration                         dataConfig(new DataConfiguration(root));
@@ -495,7 +493,6 @@ BOOST_AUTO_TEST_CASE(testSerialDataInitialization)
   std::string configurationPath(_pathToTests + "serial-explicit-coupling-datainit.xml");
   std::string nameParticipant0("Participant0");
   std::string nameParticipant1("Participant1");
-  int         dimensions = 2;
 
   xml::XMLTag                                  root = xml::getRootTag();
   PtrDataConfiguration                         dataConfig(new DataConfiguration(root));
@@ -592,7 +589,6 @@ BOOST_AUTO_TEST_CASE(testParallelDataInitialization)
   std::string configurationPath(_pathToTests + "parallel-explicit-coupling-datainit.xml");
   std::string nameParticipant0("Participant0");
   std::string nameParticipant1("Participant1");
-  int         dimensions = 2;
 
   xml::XMLTag                                  root = xml::getRootTag();
   PtrDataConfiguration                         dataConfig(new DataConfiguration(root));
@@ -730,7 +726,6 @@ BOOST_AUTO_TEST_CASE(testConfiguredExplicitCouplingWithSubcycling)
   std::string configurationPath(_pathToTests + "explicit-coupling-scheme-1.xml");
   std::string nameParticipant0("Participant0");
   std::string nameParticipant1("Participant1");
-  int         dimensions = 3;
 
   xml::XMLTag                                  root = xml::getRootTag();
   PtrDataConfiguration                         dataConfig(new DataConfiguration(root));
