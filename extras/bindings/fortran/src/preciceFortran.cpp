@@ -1,7 +1,7 @@
 #include "precice/preciceFortran.hpp"
+#include <cstddef>
 #include <iostream>
 #include <memory>
-#include <stddef.h>
 #include <stdexcept>
 #include <string>
 #include <string_view>
