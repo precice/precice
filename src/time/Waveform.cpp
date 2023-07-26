@@ -38,34 +38,38 @@ Eigen::VectorXd bSplineInterpolationAt(double t, Eigen::VectorXd ts, Eigen::Matr
   PRECICE_ASSERT(xs.cols() == ts.size());
   const int ndofs = xs.rows(); // number of dofs. Each dof needs it's own interpolant.
 
+  double tRelative = (t - ts(0)) / (ts(ts.size() - 1) - ts(0)); // Eigen requires us to scale the time t to the interval [0,1]
+
+  Eigen::VectorXd tsRelative(ts.size());
+
+  for (int i = 0; i < ts.size(); i++) {
+    tsRelative[i] = (ts(i) - ts(0)) / (ts(ts.size() - 1) - ts(0)); // Eigen requires us to scale the knot vector ts to the interval [0,1]
+  }
+
   Eigen::VectorXd interpolated(ndofs);
 
   const int splineDimension = 1;
 
   // @todo implement cache to avoid unnecessary recomputation. Important! Need to reset cache when entering next window or iteration.
   for (int i = 0; i < ndofs; i++) {
-    const auto spline = Eigen::SplineFitting<Eigen::Spline<double, splineDimension>>::Interpolate(xs.row(i), splineDegree, ts);
-    interpolated[i]   = spline(t)[0]; // get component of spline associated with xs.row(i)
+    const auto spline = Eigen::SplineFitting<Eigen::Spline<double, splineDimension>>::Interpolate(xs.row(i), splineDegree, tsRelative);
+    interpolated[i]   = spline(tRelative)[0]; // get component of spline associated with xs.row(i)
   }
 
   return interpolated;
 }
 
-Eigen::VectorXd Waveform::sample(double normalizedDt) const
+Eigen::VectorXd Waveform::sample(double time) const
 {
   const int usedDegree = computeUsedDegree(_degree, _timeStepsStorage.nTimes());
 
-  PRECICE_ASSERT(math::equals(this->_timeStepsStorage.maxStoredNormalizedDt(), time::Storage::WINDOW_END), this->_timeStepsStorage.maxStoredNormalizedDt()); // sampling is only allowed, if a window is complete.
-
-  if (_degree == 0) {
-    return this->_timeStepsStorage.getValuesAtOrAfter(normalizedDt);
+  if (usedDegree == 0) {
+    return this->_timeStepsStorage.getValuesAtOrAfter(time);
   }
-
-  PRECICE_ASSERT(usedDegree >= 1);
 
   const auto data = _timeStepsStorage.getTimesAndValues();
 
-  return bSplineInterpolationAt(normalizedDt, data.first, data.second, usedDegree);
+  return bSplineInterpolationAt(time, data.first, data.second, usedDegree);
 }
 
 int Waveform::computeUsedDegree(int requestedDegree, int numberOfAvailableSamples) const

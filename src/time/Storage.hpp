@@ -9,24 +9,18 @@ namespace precice::time {
 
 class Storage {
 public:
-  /// Fixed time associated with beginning of window
-  static const double WINDOW_START;
-
-  /// Fixed time associated with end of window
-  static const double WINDOW_END;
-
   /**
    * @brief Stores data samples in time and provides corresponding convenience functions.
    *
    * The Storage must be initialized before it can be used. Then values can be stored in the Storage. It is only allowed to store samples with increasing times. Overwriting existing samples or writing samples with a time smaller then the maximum stored time is forbidden.
-   * The Storage is considered complete, when a sample with time 1.0 is provided. Then one can only sample from the storage. To add further samples one needs to trim the storage first.
+   * The Storage is considered complete, when a sample for the end of the current window is provided. Then one can only sample from the storage. To add further samples one needs to trim the storage or move to the next time window first.
    *
-   * This Storage is used in the context of Waveform relaxation where samples in time are provided. Starting at the beginning of the window with time 0.0 and reaching the end of the window with time 1.0.
+   * This Storage is used in the context of Waveform relaxation where samples in time are provided.
    */
   Storage();
 
   /**
-   * @brief Initialize storage by storing given sample at time 0.0 and 1.0.
+   * @brief Initialize storage by storing given sample at window start and window end.
    *
    * @param sample initial sample
    */
@@ -35,7 +29,7 @@ public:
   /**
    * @brief Store Sample at a specific time.
    *
-   * It is only allowed to store a Sample in time that comes after a Sample that was already stored. Therefore, time has to be larger than maxStoredNormalizedDt. Overwriting existing samples is forbidden. The function trim() should be used before providing new samples.
+   * It is only allowed to store a Sample in time that comes after a Sample that was already stored. Therefore, time has to be larger than maxStoredTime. Overwriting existing samples is forbidden. The function trim() should be used before providing new samples.
    *
    * @param time the time associated with the sample
    * @param sample stored sample
@@ -43,11 +37,11 @@ public:
   void setSampleAtTime(double time, Sample sample);
 
   /**
-   * @brief Get maximum normalized dt that is stored in this Storage.
+   * @brief Get maximum time that is stored in this Storage.
    *
-   * @return the maximum normalized dt from this Storage
+   * @return the maximum time from this Storage
    */
-  double maxStoredNormalizedDt() const;
+  double maxStoredTime() const;
 
   /**
    * @brief Returns the values at time following "before" contained in this Storage.
@@ -98,12 +92,12 @@ public:
   int nDofs() const;
 
   /**
-   * @brief Move this Storage by storing the values at the end of the Storage at 0.0 and clearing the storage. Time 1.0 is initialized as values at 0.0
+   * @brief Move this Storage by deleting all stamples except the one at the end of the window.
    */
   void move();
 
   /**
-   * @brief Trims this Storage by deleting all values except values associated with 0.0.
+   * @brief Trims this Storage by deleting all values except values associated with the window start.
    */
   void trim();
 
@@ -112,6 +106,9 @@ private:
   std::vector<Stample> _stampleStorage;
 
   mutable logging::Logger _log{"time::Storage"};
+
+  /// End time of the current window
+  double _currentWindowStart;
 
   time::Sample getSampleAtBeginning();
 

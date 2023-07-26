@@ -205,18 +205,6 @@ double CompositionalCouplingScheme::getTimeWindowSize() const
   return timeWindowSize;
 }
 
-double CompositionalCouplingScheme::getNormalizedWindowTime() const
-{
-  PRECICE_TRACE();
-  auto   schemes      = allSchemes();
-  double normalizedDt = std::transform_reduce(
-      schemes.begin(), schemes.end(), std::numeric_limits<double>::max(),
-      ::min<double>,
-      std::mem_fn(&CouplingScheme::getNormalizedWindowTime));
-  PRECICE_DEBUG("return {}", normalizedDt);
-  return normalizedDt;
-}
-
 double CompositionalCouplingScheme::getNextTimeStepMaxSize() const
 {
   PRECICE_TRACE();

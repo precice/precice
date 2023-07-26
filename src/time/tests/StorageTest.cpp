@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_CASE(testInitialize)
   BOOST_TEST(storage.nTimes() == 0);
   storage.initialize(time::Sample{1, Eigen::VectorXd::Ones(nValues)});
   BOOST_TEST(storage.nDofs() == nValues);
-  BOOST_TEST(storage.nTimes() == 2);
+  BOOST_TEST(storage.nTimes() == 1);
   for (int i = 0; i < nValues; i++) {
     BOOST_TEST(storage.getValuesAtOrAfter(0)(i) == 1);
     BOOST_TEST(storage.getValuesAtOrAfter(0.5)(i) == 1);
@@ -35,12 +35,12 @@ BOOST_AUTO_TEST_CASE(testClear)
   BOOST_TEST(storage.nTimes() == 0);
   storage.initialize(time::Sample{1, Eigen::VectorXd::Ones(nValues)});
   BOOST_TEST(storage.nDofs() == nValues);
-  BOOST_TEST(storage.nTimes() == 2);
-  BOOST_TEST(storage.maxStoredNormalizedDt() == 1.0);
+  BOOST_TEST(storage.nTimes() == 1);
+  BOOST_TEST(storage.maxStoredTime() == 0.0);
   storage.trim();
   BOOST_TEST(storage.nDofs() == nValues);
   BOOST_TEST(storage.nTimes() == 1);
-  BOOST_TEST(storage.maxStoredNormalizedDt() == 0.0);
+  BOOST_TEST(storage.maxStoredTime() == 0.0);
 }
 
 // create storage, add some values and then move to next window.
@@ -52,16 +52,17 @@ BOOST_AUTO_TEST_CASE(testMove)
   BOOST_TEST(storage.nTimes() == 0);
   storage.initialize(time::Sample{1, Eigen::VectorXd::Ones(nValues)});
   BOOST_TEST(storage.nDofs() == nValues);
-  BOOST_TEST(storage.nTimes() == 2);
-  BOOST_TEST(storage.maxStoredNormalizedDt() == 1.0);
+  BOOST_TEST(storage.nTimes() == 1);
+  BOOST_TEST(storage.maxStoredTime() == 0.0);
   storage.trim();
   BOOST_TEST(storage.nTimes() == 1);
+  BOOST_TEST(storage.maxStoredTime() == 0.0);
   storage.setSampleAtTime(0.5, time::Sample{1, Eigen::VectorXd::Ones(nValues)});
   BOOST_TEST(storage.nTimes() == 2);
-  BOOST_TEST(storage.maxStoredNormalizedDt() == 0.5);
+  BOOST_TEST(storage.maxStoredTime() == 0.5);
   storage.setSampleAtTime(1.0, time::Sample{1, Eigen::VectorXd::Zero(nValues)});
   BOOST_TEST(storage.nTimes() == 3);
-  BOOST_TEST(storage.maxStoredNormalizedDt() == 1.0);
+  BOOST_TEST(storage.maxStoredTime() == 1.0);
   for (int i = 0; i < nValues; i++) {
     BOOST_TEST(storage.getValuesAtOrAfter(0)(i) == 1);
     BOOST_TEST(storage.getValuesAtOrAfter(0.5)(i) == 1);
@@ -69,8 +70,8 @@ BOOST_AUTO_TEST_CASE(testMove)
   }
   storage.move();
   BOOST_TEST(storage.nDofs() == nValues);
-  BOOST_TEST(storage.nTimes() == 2);
-  BOOST_TEST(storage.maxStoredNormalizedDt() == 1.0);
+  BOOST_TEST(storage.nTimes() == 1);
+  BOOST_TEST(storage.maxStoredTime() == 1.0);
   for (int i = 0; i < nValues; i++) {
     BOOST_TEST(storage.getValuesAtOrAfter(0)(i) == 0);
     BOOST_TEST(storage.getValuesAtOrAfter(1)(i) == 0);
@@ -115,10 +116,8 @@ BOOST_AUTO_TEST_CASE(testExtrapolateDataZerothOrder)
   storage.move();
   auto times = storage.getTimes();
   BOOST_TEST(times[0] == 0.0);
-  BOOST_TEST(times[1] == 1.0);
   auto timesAndValues = storage.getTimesAndValues();
   BOOST_TEST(timesAndValues.second.col(0)(0) == 0.0);
-  BOOST_TEST(timesAndValues.second.col(1)(0) == 0.0);
 
   storage.trim();
   storage.setSampleAtTime(1.0, time::Sample{1, Eigen::VectorXd::Ones(nValues)});
@@ -133,21 +132,26 @@ BOOST_AUTO_TEST_CASE(testExtrapolateDataZerothOrder)
   storage.move();
 
   times = storage.getTimes();
-  BOOST_TEST(times[0] == 0.0);
-  BOOST_TEST(times[1] == 1.0);
+  BOOST_TEST(times[0] == 1.0);
   timesAndValues = storage.getTimesAndValues();
   BOOST_TEST(timesAndValues.second.col(0)(0) == 1.0);
-  BOOST_TEST(timesAndValues.second.col(1)(0) == 1.0);
 
   // make sure that subcycling is ignored for extrapolation
   storage.trim();
-  storage.setSampleAtTime(0.5, time::Sample{1, 2 * Eigen::VectorXd::Ones(nValues)});
-  storage.setSampleAtTime(1.0, time::Sample{1, 3 * Eigen::VectorXd::Ones(nValues)});
+  storage.setSampleAtTime(1.5, time::Sample{1, 2 * Eigen::VectorXd::Ones(nValues)});
+  storage.setSampleAtTime(2.0, time::Sample{1, 3 * Eigen::VectorXd::Ones(nValues)});
+
+  times = storage.getTimes();
+  BOOST_TEST(times[0] == 1.0);
+  BOOST_TEST(times[1] == 1.5);
+  BOOST_TEST(times[2] == 2.0);
+
   storage.move();
 
+  times = storage.getTimes();
+  BOOST_TEST(times[0] == 2.0);
   timesAndValues = storage.getTimesAndValues();
   BOOST_TEST(timesAndValues.second.col(0)(0) == 3.0);
-  BOOST_TEST(timesAndValues.second.col(1)(0) == 3.0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

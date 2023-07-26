@@ -136,9 +136,6 @@ public:
    */
   double getTimeWindowSize() const override final;
 
-  /// @copydoc CouplingScheme::getNormalizedWindowTime
-  double getNormalizedWindowTime() const override;
-
   /**
    * @brief Returns the maximal size of the next time step to be computed.
    *
@@ -249,9 +246,8 @@ protected:
    *
    * @param m2n M2N used for communication
    * @param sendData DataMap associated with sent data
-   * @param initialCommunication if true and exchange of substeps is deactivated, will send data for WINDOW_START, else will send data for WINDOW_END
    */
-  void sendData(const m2n::PtrM2N &m2n, const DataMap &sendData, bool initialCommunication = false);
+  void sendData(const m2n::PtrM2N &m2n, const DataMap &sendData);
 
   int receiveNumberOfTimeSteps(const m2n::PtrM2N &m2n);
 
@@ -262,9 +258,8 @@ protected:
    *
    * @param m2n M2N used for communication
    * @param receiveData DataMap associated with received data
-   * @param initialCommunication if true and exchange of substeps is deactivated, will store received data for WINDOW_START and WINDOW_END, else store received data only for WINDOW_END
    */
-  void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData, bool initialCommunication = false);
+  void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData);
 
   /**
    * @brief Initializes storage in receiveData as zero

@@ -74,9 +74,8 @@ void Data::moveToNextWindow()
 {
   if (stamples().size() > 0) {
     timeStepsStorage().move();
-    const auto &atEnd = stamples().back();
-    PRECICE_ASSERT(math::equals(atEnd.timestamp, time::Storage::WINDOW_END));
-    sample() = atEnd.sample;
+    PRECICE_ASSERT(stamples().size() == 1);
+    sample() = stamples().back().sample;
   }
 }
 

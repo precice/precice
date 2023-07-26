@@ -59,19 +59,6 @@ void SerialCouplingScheme::sendTimeWindowSize()
   }
 }
 
-double SerialCouplingScheme::getNormalizedWindowTime() const
-{
-  if (not _participantSetsTimeWindowSize) {
-    const double timeWindowStart        = getWindowStartTime();
-    const double timeWindowSize         = getTimeWindowSize();
-    const double computedTimeWindowPart = getTime() - timeWindowStart;
-    // const double computedTimeWindowPart = getComputedTimeWindowPart();  // @todo make public?
-    return computedTimeWindowPart / timeWindowSize;
-  } else {
-    return time::Storage::WINDOW_END; // participant first method does not support subcycling (yet). See https://github.com/precice/precice/issues/1570
-  }
-}
-
 void SerialCouplingScheme::receiveAndSetTimeWindowSize()
 {
   PRECICE_TRACE();
@@ -88,25 +75,23 @@ void SerialCouplingScheme::receiveAndSetTimeWindowSize()
 
 void SerialCouplingScheme::exchangeInitialData()
 {
-  bool initialCommunication = true;
-
   // F: send, receive, S: receive, send
   if (doesFirstStep()) {
     if (receivesInitializedData()) {
-      receiveData(getM2N(), getReceiveData(), initialCommunication);
+      receiveData(getM2N(), getReceiveData());
       checkDataHasBeenReceived();
     } else {
       initializeWithZeroInitialData(getReceiveData());
     }
     if (sendsInitializedData()) { // this send/recv pair is only needed, if no substeps are exchanged.
-      sendData(getM2N(), getSendData(), initialCommunication);
+      sendData(getM2N(), getSendData());
     }
   } else { // second participant
     if (sendsInitializedData()) {
-      sendData(getM2N(), getSendData(), initialCommunication);
+      sendData(getM2N(), getSendData());
     }
-    if (receivesInitializedData()) {                                 // this send/recv pair is only needed, if no substeps are exchanged.
-      receiveData(getM2N(), getReceiveData(), initialCommunication); // Receive data for WINDOW_START and WINDOW_END here
+    if (receivesInitializedData()) {           // this send/recv pair is only needed, if no substeps are exchanged.
+      receiveData(getM2N(), getReceiveData()); // THIS WILL CAUSE US TROUBLE!!!
     }
     // similar to SerialCouplingScheme::exchangeSecondData()
     PRECICE_DEBUG("Receiving data...");

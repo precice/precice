@@ -7,10 +7,6 @@
 
 namespace precice::time {
 
-const double Storage::WINDOW_START = 0.0;
-
-const double Storage::WINDOW_END = 1.0;
-
 Storage::Storage()
     : _stampleStorage{}
 {
@@ -18,19 +14,18 @@ Storage::Storage()
 
 void Storage::initialize(time::Sample sample)
 {
-  _stampleStorage.emplace_back(Stample{WINDOW_START, sample});
-  _stampleStorage.emplace_back(Stample{WINDOW_END, sample});
+  _currentWindowStart = 0;
+  _stampleStorage.emplace_back(Stample{_currentWindowStart, sample});
 }
 
 void Storage::setSampleAtTime(double time, Sample sample)
 {
   PRECICE_ASSERT(not sample.values.hasNaN());
-  PRECICE_ASSERT(math::smallerEquals(WINDOW_START, time), "Setting sample outside of valid range!");
-  PRECICE_ASSERT(math::smallerEquals(time, WINDOW_END), "Setting sample outside of valid range!");
+  PRECICE_ASSERT(math::smallerEquals(_currentWindowStart, time), "Setting sample outside of valid range!", _currentWindowStart, time);
   // check if key "time" exists.
   auto existingSample = std::find_if(_stampleStorage.begin(), _stampleStorage.end(), [&time](const auto &s) { return math::equals(s.timestamp, time); });
   if (existingSample == _stampleStorage.end()) { // key does not exist yet
-    PRECICE_ASSERT(math::smaller(maxStoredNormalizedDt(), time), maxStoredNormalizedDt(), time, "Trying to write sample with a time that is too small. Please use clear(), if you want to write new samples to the storage.");
+    PRECICE_ASSERT(math::smaller(maxStoredTime(), time), maxStoredTime(), time, "Trying to write sample with a time that is too small. Please use clear(), if you want to write new samples to the storage.");
     _stampleStorage.emplace_back(Stample{time, sample});
   } else { // overwrite sample at "time"
     for (auto &stample : _stampleStorage) {
@@ -43,7 +38,7 @@ void Storage::setSampleAtTime(double time, Sample sample)
   }
 }
 
-double Storage::maxStoredNormalizedDt() const
+double Storage::maxStoredTime() const
 {
   if (_stampleStorage.size() == 0) {
     return -1; // invalid return
@@ -65,27 +60,29 @@ int Storage::nDofs() const
 
 void Storage::move()
 {
-  PRECICE_ASSERT(nTimes() > 0);
-  auto sampleAtBeginning = getSampleAtEnd();
-  auto sampleAtEnd       = getSampleAtEnd();
-  _stampleStorage.clear();
-  _stampleStorage.emplace_back(time::Stample{WINDOW_START, std::move(sampleAtBeginning)});
-  _stampleStorage.emplace_back(time::Stample{WINDOW_END, std::move(sampleAtEnd)});
+  PRECICE_ASSERT(!_stampleStorage.empty(), "Storage does not contain any data!");
+  PRECICE_ASSERT(math::equals(_stampleStorage.front().timestamp, _currentWindowStart), _stampleStorage.front().timestamp, _currentWindowStart);
+  _currentWindowStart = _stampleStorage.back().timestamp;
+  _stampleStorage.erase(_stampleStorage.begin(), --_stampleStorage.end());
+  PRECICE_ASSERT(_currentWindowStart == _stampleStorage.front().timestamp);
 }
 
 void Storage::trim()
 {
   PRECICE_ASSERT(!_stampleStorage.empty(), "Storage does not contain any data!");
-  PRECICE_ASSERT(_stampleStorage.front().timestamp == time::Storage::WINDOW_START);
+  PRECICE_ASSERT(math::equals(_stampleStorage.front().timestamp, _currentWindowStart), _stampleStorage.front().timestamp, _currentWindowStart);
   _stampleStorage.erase(++_stampleStorage.begin(), _stampleStorage.end());
 }
 
 Eigen::VectorXd Storage::getValuesAtOrAfter(double before) const
 {
-  auto stample = std::find_if(_stampleStorage.begin(), _stampleStorage.end(), [&before](const auto &s) { return math::greaterEquals(s.timestamp, before); });
-  PRECICE_ASSERT(stample != _stampleStorage.end(), "no values found!");
-
-  return stample->sample.values;
+  if (nTimes() == 1) {
+    return _stampleStorage.front().sample.values;
+  } else {
+    auto stample = std::find_if(_stampleStorage.begin(), _stampleStorage.end(), [&before](const auto &s) { return math::greaterEquals(s.timestamp, before); });
+    PRECICE_ASSERT(stample != _stampleStorage.end(), "no values found!");
+    return stample->sample.values;
+  }
 }
 
 Eigen::VectorXd Storage::getTimes() const

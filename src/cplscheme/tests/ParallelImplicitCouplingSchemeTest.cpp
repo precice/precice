@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(sendCouplingData->getPreviousIterationSize() == 1);
     BOOST_TEST(Fixture::isImplicitCouplingScheme(cplScheme));
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::InitializeData));
-    sendCouplingData->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, Eigen::VectorXd::Constant(1, 4.0)});
+    sendCouplingData->setSampleAtTime(0, time::Sample{1, Eigen::VectorXd::Constant(1, 4.0)});
     cplScheme.markActionFulfilled(CouplingScheme::Action::InitializeData);
     cplScheme.initialize(0.0, 0);
     BOOST_TEST(cplScheme.hasDataBeenReceived());
@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::InitializeData));
     Eigen::VectorXd v(3);
     v << 1.0, 2.0, 3.0;
-    sendCouplingData->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{3, v});
+    sendCouplingData->setSampleAtTime(0, time::Sample{3, v});
     cplScheme.markActionFulfilled(CouplingScheme::Action::InitializeData);
     BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 0.0));
     BOOST_TEST(receiveCouplingData->values().size() == 1);

@@ -73,7 +73,7 @@ void runCoupling(
   std::vector<int>::const_iterator iterValidIterations = validIterations.begin();
 
   if (nameParticipant == nameParticipant0) {
-    mesh->data(0)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, mesh->data(0)->values()});
+    mesh->data(0)->setSampleAtTime(0, time::Sample{1, mesh->data(0)->values()});
     cplScheme.initialize(0.0, 1);
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
@@ -87,10 +87,10 @@ void runCoupling(
 
     while (cplScheme.isCouplingOngoing()) {
       dataValues0(index) += stepsizeData0;
-      mesh->data(0)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, mesh->data(0)->values()});
       // The max time step size is required to be obeyed.
       double maxTimeStepSize = cplScheme.getNextTimeStepMaxSize();
       cplScheme.addComputedTime(maxTimeStepSize);
+      mesh->data(0)->setSampleAtTime(cplScheme.getTime(), time::Sample{1, mesh->data(0)->values()});
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
@@ -142,7 +142,7 @@ void runCoupling(
     BOOST_TEST(testing::equals(computedTime, 0.3));
     BOOST_TEST(testing::equals(computedTimesteps, 3));
   } else if (nameParticipant == nameParticipant1) {
-    mesh->data(1)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, mesh->data(1)->values()});
+    mesh->data(1)->setSampleAtTime(0, time::Sample{1, mesh->data(1)->values()});
     cplScheme.initialize(0.0, 1);
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
@@ -159,10 +159,10 @@ void runCoupling(
       currentData = dataValues1.segment(index * 3, 3);
       currentData += stepsizeData1;
       dataValues1.segment(index * 3, 3) = currentData;
-      mesh->data(1)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, mesh->data(1)->values()});
       // The max time step size is required to be obeyed.
       double maxTimeStepSize = cplScheme.getNextTimeStepMaxSize();
       cplScheme.addComputedTime(maxTimeStepSize);
+      mesh->data(1)->setSampleAtTime(cplScheme.getTime(), time::Sample{1, mesh->data(1)->values()});
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
@@ -246,7 +246,7 @@ void runCouplingWithSubcycling(
 
   if (nameParticipant == nameParticipant0) {
     iterationCount++; // different handling due to subcycling
-    mesh->data(0)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, mesh->data(0)->values()});
+    mesh->data(0)->setSampleAtTime(0, time::Sample{1, mesh->data(0)->values()});
     cplScheme.initialize(0.0, 1);
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
@@ -268,7 +268,7 @@ void runCouplingWithSubcycling(
     // Main coupling loop
     while (cplScheme.isCouplingOngoing()) {
       cplScheme.addComputedTime(computedTimeStepSize);
-      mesh->data(0)->setSampleAtTime(cplScheme.getNormalizedWindowTime(), time::Sample{1, mesh->data(0)->values()});
+      mesh->data(0)->setSampleAtTime(cplScheme.getTime(), time::Sample{1, mesh->data(0)->values()});
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
@@ -335,7 +335,7 @@ void runCouplingWithSubcycling(
 
   else if (nameParticipant == nameParticipant1) {
     iterationCount++; // different handling due to subcycling
-    mesh->data(1)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, mesh->data(1)->values()});
+    mesh->data(1)->setSampleAtTime(0, time::Sample{1, mesh->data(1)->values()});
     cplScheme.initialize(0.0, 1);
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
@@ -358,7 +358,7 @@ void runCouplingWithSubcycling(
     // Main coupling loop
     while (cplScheme.isCouplingOngoing()) {
       cplScheme.addComputedTime(computedTimeStepSize);
-      mesh->data(1)->setSampleAtTime(cplScheme.getNormalizedWindowTime(), time::Sample{1, mesh->data(1)->values()});
+      mesh->data(1)->setSampleAtTime(cplScheme.getTime(), time::Sample{1, mesh->data(1)->values()});
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
@@ -781,7 +781,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(testing::equals(sendCouplingData->previousIteration()(0), 0.0));
 
     BOOST_TEST(Fixture::isImplicitCouplingScheme(cplScheme));
-    sendCouplingData->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, sendCouplingData->values()});
+    sendCouplingData->setSampleAtTime(0, time::Sample{1, sendCouplingData->values()});
     cplScheme.initialize(0.0, 1);
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     // ensure that initial data was read
@@ -796,7 +796,6 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(testing::equals(sendCouplingData->previousIteration()(0), 0.0));
     BOOST_TEST(sendCouplingData->getPreviousIterationSize() == 1);
     // set write data
-    sendCouplingData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, Eigen::VectorXd::Constant(sendCouplingData->getSize(), 4.0)});
     while (cplScheme.isCouplingOngoing()) {
       if (cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint)) {
         cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
@@ -805,6 +804,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
         cplScheme.markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
       }
       cplScheme.addComputedTime(timeStepSize);
+      sendCouplingData->setSampleAtTime(cplScheme.getTime(), time::Sample{1, Eigen::VectorXd::Constant(sendCouplingData->getSize(), 4.0)});
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
@@ -816,7 +816,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::InitializeData));
     Eigen::VectorXd v(3);
     v << 1.0, 2.0, 3.0;
-    sendCouplingData->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, v});
+    sendCouplingData->setSampleAtTime(0, time::Sample{1, v});
     cplScheme.markActionFulfilled(CouplingScheme::Action::InitializeData);
     BOOST_TEST(receiveCouplingData->getSize() == 1);
     BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 0.0));
