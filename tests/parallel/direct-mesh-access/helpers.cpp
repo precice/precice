@@ -39,7 +39,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
     // Allocate memory
     std::vector<int>    ids(meshSize);
     std::vector<double> coordinates(meshSize * dim);
-    interface.getMeshVerticesAndIDs(otherMeshName, ids, coordinates);
+    interface.getMeshVertexIDsAndCoordinates(otherMeshName, ids, coordinates);
 
     // Check the received vertex coordinates
     std::vector<double> expectedPositions = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 2.0, 0.0, 3.0}) : expectedPositionSecondaryRank;
@@ -90,13 +90,13 @@ void runTestAccessReceivedMesh(const TestContext &       context,
     interface.setMeshVertices(meshName, positions, ids);
 
     {
-      // Check, if we can use the 'getMeshVerticesAndIDs' function on provided meshes as well,
+      // Check, if we can use the 'getMeshVertexIDsAndCoordinates' function on provided meshes as well,
       // though the actual purpose is of course using it on received meshes
       const std::size_t ownMeshSize = interface.getMeshVertexSize(meshName);
       BOOST_TEST(ownMeshSize == size);
       std::vector<int>    ownIDs(ownMeshSize);
       std::vector<double> ownCoordinates(ownMeshSize * dim);
-      interface.getMeshVerticesAndIDs(meshName, ownIDs, ownCoordinates);
+      interface.getMeshVertexIDsAndCoordinates(meshName, ownIDs, ownCoordinates);
       BOOST_TEST(ownIDs == ids);
       BOOST_TEST(testing::equals(positions, ownCoordinates));
     }

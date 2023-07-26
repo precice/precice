@@ -645,10 +645,8 @@ public:
 
   ///@}
 
-  /** @name Experimental: Direct Access
-   * These API functions are \b experimental and may change in future versions.
+  /** @name Direct Access
    */
-  ///@{
 
   /**
    * @brief setMeshAccessRegion Define a region of interest on a received mesh
@@ -738,8 +736,6 @@ public:
       ::precice::string_view    meshName,
       ::precice::span<VertexID> ids,
       ::precice::span<double>   coordinates) const;
-
-  ///@}
 
   /** @name Experimental: Gradient Data
    * These API functions are \b experimental and may change in future versions.
