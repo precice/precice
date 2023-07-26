@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <configuration>
-  <mesh name="TestMesh" />
-  <mesh name="TestMeshTwo" />
-  <mesh name="TestMeshThree" />
+  <mesh name="TestMesh" dimensions="3" />
+  <mesh name="TestMeshTwo" dimensions="3" />
+  <mesh name="TestMeshThree" dimensions="3" />
 
   <mapping:nearest-projection
     direction="write"
