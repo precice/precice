@@ -29,8 +29,6 @@ public:
       xml::XMLTag &        parent,
       PtrDataConfiguration config);
 
-  void setDimensions(int dimensions);
-
   /// Returns all configured meshes.
   const std::vector<PtrMesh> &meshes() const;
 
@@ -72,6 +70,7 @@ private:
 
   const std::string TAG;
   const std::string ATTR_NAME;
+  const std::string ATTR_DIMENSIONS;
   const std::string TAG_DATA;
   const std::string ATTR_SIDE_INDEX;
 
@@ -79,6 +78,8 @@ private:
 
   /// Data configuration.
   PtrDataConfiguration _dataConfig;
+
+  int getDataDimensions(const std::string &typeName);
 
   /// Configured meshes.
   std::vector<PtrMesh> _meshes;

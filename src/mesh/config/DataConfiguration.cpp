@@ -32,14 +32,6 @@ DataConfiguration::DataConfiguration(xml::XMLTag &parent)
   parent.addSubtag(tagVector);
 }
 
-void DataConfiguration::setDimensions(
-    int dimensions)
-{
-  PRECICE_TRACE(dimensions);
-  PRECICE_ASSERT((dimensions == 2) || (dimensions == 3), dimensions);
-  _dimensions = dimensions;
-}
-
 const std::vector<DataConfiguration::ConfiguredData> &
 DataConfiguration::data() const
 {
@@ -66,8 +58,7 @@ void DataConfiguration::xmlTagCallback(
     if (waveformDegree < time::Time::MIN_WAVEFORM_DEGREE || waveformDegree > time::Time::MAX_WAVEFORM_DEGREE) {
       PRECICE_ERROR("You tried to configure the data with name \"{}\" to use the waveform-degree=\"{}\", but the degree must be between \"{}\" and \"{}\". Please use a degree in the allowed range.", name, waveformDegree, time::Time::MIN_WAVEFORM_DEGREE, time::Time::MAX_WAVEFORM_DEGREE);
     }
-    int dataDimensions = getDataDimensions(typeName);
-    addData(name, dataDimensions, waveformDegree);
+    addData(name, typeName, waveformDegree);
   } else {
     PRECICE_ASSERT(false, "Received callback from an unknown tag.", tag.getName());
   }
@@ -81,7 +72,7 @@ void DataConfiguration::xmlEndTagCallback(
 
 void DataConfiguration::addData(
     const std::string &name,
-    int                dataDimensions,
+    const std::string &typeName,
     int                waveformDegree)
 {
   // Check if data with same name has been added already
@@ -91,19 +82,7 @@ void DataConfiguration::addData(
                   name);
   }
 
-  _data.emplace_back(name, dataDimensions, waveformDegree);
-}
-
-int DataConfiguration::getDataDimensions(
-    const std::string &typeName) const
-{
-  if (typeName == VALUE_VECTOR) {
-    return _dimensions;
-  } else if (typeName == VALUE_SCALAR) {
-    return 1;
-  }
-  // We should never reach this point
-  PRECICE_UNREACHABLE("Unknown data type \"{}\".", typeName);
+  _data.emplace_back(name, typeName, waveformDegree);
 }
 
 } // namespace precice::mesh

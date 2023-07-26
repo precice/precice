@@ -16,19 +16,17 @@ class DataConfiguration : public xml::XMLTag::Listener {
 public:
   struct ConfiguredData {
     std::string name;
-    int         dimensions;
+    std::string typeName;
     int         waveformDegree;
 
     ConfiguredData(
         const std::string &name,
-        int                dimensions,
+        const std::string &typeName,
         int                waveformDegree)
-        : name(name), dimensions(dimensions), waveformDegree(waveformDegree) {}
+        : name(name), typeName(typeName), waveformDegree(waveformDegree) {}
   };
 
   DataConfiguration(xml::XMLTag &parent);
-
-  void setDimensions(int dimensions);
 
   const std::vector<ConfiguredData> &data() const;
 
@@ -50,7 +48,7 @@ public:
    * @param[in] waveformDegree Degree of waveform associated with this data.
    */
   void addData(const std::string &name,
-               int                dataDimensions,
+               const std::string &typeName,
                int                waveformDegree = time::Time::DEFAULT_WAVEFORM_DEGREE);
 
 private:

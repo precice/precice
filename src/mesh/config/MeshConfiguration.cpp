@@ -21,6 +21,7 @@ MeshConfiguration::MeshConfiguration(
     PtrDataConfiguration config)
     : TAG("mesh"),
       ATTR_NAME("name"),
+      ATTR_DIMENSIONS("dimensions"),
       TAG_DATA("use-data"),
       ATTR_SIDE_INDEX("side"),
       _dimensions(0),
@@ -42,6 +43,11 @@ MeshConfiguration::MeshConfiguration(
                       .setDocumentation("Unique name for the mesh.");
   tag.addAttribute(attrName);
 
+  auto attrDimensions = XMLAttribute<int>(ATTR_DIMENSIONS)
+                            .setDocumentation("Spatial dimensions of mesh")
+                            .setOptions({2, 3});
+  tag.addAttribute(attrDimensions);
+
   XMLTag subtagData(*this, TAG_DATA, XMLTag::OCCUR_ARBITRARY);
   doc = "Assigns a before defined data set (see tag <data>) to the mesh.";
   subtagData.setDocumentation(doc);
@@ -52,30 +58,24 @@ MeshConfiguration::MeshConfiguration(
   parent.addSubtag(tag);
 }
 
-void MeshConfiguration::setDimensions(
-    int dimensions)
-{
-  PRECICE_TRACE(dimensions);
-  PRECICE_ASSERT((dimensions == 2) || (dimensions == 3), dimensions);
-  _dimensions = dimensions;
-}
-
 void MeshConfiguration::xmlTagCallback(
     const xml::ConfigurationContext &context,
     xml::XMLTag &                    tag)
 {
   PRECICE_TRACE(tag.getName());
   if (tag.getName() == TAG) {
-    PRECICE_ASSERT(_dimensions != 0);
     std::string name = tag.getStringAttributeValue(ATTR_NAME);
+    _dimensions      = tag.getIntAttributeValue(ATTR_DIMENSIONS);
+    PRECICE_ASSERT(_dimensions != 0);
     PRECICE_ASSERT(_meshIdManager);
     _meshes.push_back(std::make_shared<Mesh>(name, _dimensions, _meshIdManager->getFreeID()));
   } else if (tag.getName() == TAG_DATA) {
     std::string name  = tag.getStringAttributeValue(ATTR_NAME);
     bool        found = false;
     for (const DataConfiguration::ConfiguredData &data : _dataConfig->data()) {
+      auto dataDimensions = getDataDimensions(data.typeName);
       if (data.name == name) {
-        _meshes.back()->createData(data.name, data.dimensions, _dataIDManager.getFreeID(), data.waveformDegree);
+        _meshes.back()->createData(data.name, dataDimensions, _dataIDManager.getFreeID(), data.waveformDegree);
         found = true;
         break;
       }
@@ -105,7 +105,7 @@ void MeshConfiguration::addMesh(
   for (const PtrData &dataNewMesh : mesh->data()) {
     bool found = false;
     for (const DataConfiguration::ConfiguredData &data : _dataConfig->data()) {
-      if ((dataNewMesh->getName() == data.name) && (dataNewMesh->getDimensions() == data.dimensions)) {
+      if ((dataNewMesh->getName() == data.name) && (dataNewMesh->getDimensions() == getDataDimensions(data.typeName))) {
         found = true;
         break;
       }
@@ -157,5 +157,17 @@ void MeshConfiguration::addNeededMesh(
     _neededMeshes.find(participant)->second.push_back(mesh);
   }
 }
+
+int MeshConfiguration::getDataDimensions(const std::string &typeName)
+{
+  // TODO: Get the values from elsewhere / make an enum
+  if (typeName == "vector") {
+    return _dimensions;
+  } else if (typeName == "scalar") {
+    return 1;
+  }
+  // We should never reach this point
+  PRECICE_UNREACHABLE("Unknown data type \"{}\".", typeName);
+};
 
 } // namespace precice::mesh

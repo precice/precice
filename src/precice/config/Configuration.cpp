@@ -34,11 +34,6 @@ Configuration::Configuration()
   _tag.addNamespace("coupling-scheme");
   _tag.addNamespace("acceleration");
 
-  auto attrDimensions = xml::makeXMLAttribute("dimensions", 2)
-                            .setDocumentation("Determines the spatial dimensionality of the configuration")
-                            .setOptions({2, 3});
-  _tag.addAttribute(attrDimensions);
-
   auto attrExperimental = xml::makeXMLAttribute("experimental", false)
                               .setDocumentation("Enable experimental features.");
   _tag.addAttribute(attrExperimental);
@@ -64,10 +59,6 @@ void Configuration::xmlTagCallback(const xml::ConfigurationContext &context, xml
 {
   PRECICE_TRACE(tag.getName());
   if (tag.getName() == "precice-configuration") {
-    _dimensions = tag.getIntAttributeValue("dimensions");
-    _dataConfiguration->setDimensions(_dimensions);
-    _meshConfiguration->setDimensions(_dimensions);
-    _participantConfiguration->setDimensions(_dimensions);
     _experimental = tag.getBooleanAttributeValue("experimental");
     _participantConfiguration->setExperimental(_experimental);
   } else {
@@ -100,11 +91,6 @@ void Configuration::xmlEndTagCallback(
       PRECICE_ASSERT(participantFound);
     }
   }
-}
-
-int Configuration::getDimensions() const
-{
-  return _dimensions;
 }
 
 const PtrParticipantConfiguration &
