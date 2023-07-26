@@ -76,9 +76,6 @@ using precice::profiling::Event;
 
 namespace precice {
 
-/// Enabled further inter- and intra-solver synchronisation
-bool syncMode = false;
-
 namespace impl {
 
 ParticipantImpl::ParticipantImpl(
