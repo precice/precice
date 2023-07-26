@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration dimensions="2">
+<precice-configuration>
   <data:scalar name="DisplacementSum" />
   <data:scalar name="DisplacementTop" />
   <data:scalar name="DisplacementBottom" />
   <data:scalar name="Pressure" />
 
-  <mesh name="MeshB">
+  <mesh name="MeshB" dimensions="2">
     <use-data name="DisplacementTop" />
     <use-data name="DisplacementBottom" />
     <use-data name="DisplacementSum" />
     <use-data name="Pressure" />
   </mesh>
 
-  <mesh name="MeshATop">
+  <mesh name="MeshATop" dimensions="2">
     <use-data name="DisplacementTop" />
     <use-data name="Pressure" />
   </mesh>
 
-  <mesh name="MeshABottom">
+  <mesh name="MeshABottom" dimensions="2">
     <use-data name="DisplacementBottom" />
     <use-data name="Pressure" />
   </mesh>

@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration dimensions="2">
+<precice-configuration>
   <data:scalar name="Pressure" />
   <data:scalar name="Temperature" />
 
-  <mesh name="MeshB">
+  <mesh name="MeshB" dimensions="2">
     <use-data name="Pressure" />
     <use-data name="Temperature" />
   </mesh>
 
-  <mesh name="MeshATop">
+  <mesh name="MeshATop" dimensions="2">
     <use-data name="Pressure" />
     <use-data name="Temperature" />
   </mesh>
 
-  <mesh name="MeshABottom">
+  <mesh name="MeshABottom" dimensions="2">
     <use-data name="Pressure" />
     <use-data name="Temperature" />
   </mesh>

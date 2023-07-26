@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration dimensions="2">
+<precice-configuration>
   <data:vector name="Forces" />
   <data:vector name="Velocities" />
   <data:vector name="Displacements" />
   <data:vector name="VelocityDeltas" />
 
-  <mesh name="PeanoNodes">
+  <mesh name="PeanoNodes" dimensions="2">
     <use-data name="Forces" />
     <use-data name="Velocities" />
     <use-data name="Displacements" />
     <use-data name="VelocityDeltas" />
   </mesh>
 
-  <mesh name="ComsolNodes">
+  <mesh name="ComsolNodes" dimensions="2">
     <use-data name="Forces" />
     <use-data name="Velocities" />
     <use-data name="Displacements" />
