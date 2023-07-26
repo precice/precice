@@ -24,7 +24,7 @@ MeshConfiguration::MeshConfiguration(
       ATTR_DIMENSIONS("dimensions"),
       TAG_DATA("use-data"),
       ATTR_SIDE_INDEX("side"),
-      _dimensions(0),
+      _meshDimensionsMap(),
       _dataConfig(std::move(config)),
       _meshes(),
       _neededMeshes(),
@@ -64,16 +64,17 @@ void MeshConfiguration::xmlTagCallback(
 {
   PRECICE_TRACE(tag.getName());
   if (tag.getName() == TAG) {
-    std::string name = tag.getStringAttributeValue(ATTR_NAME);
-    _dimensions      = tag.getIntAttributeValue(ATTR_DIMENSIONS);
-    PRECICE_ASSERT(_dimensions != 0);
+    std::string name       = tag.getStringAttributeValue(ATTR_NAME);
+    int         dimensions = tag.getIntAttributeValue(ATTR_DIMENSIONS);
+    _meshDimensionsMap.insert<std::pair<std::string, int>>(name, dimensions);
+    PRECICE_ASSERT(dimensions != 0);
     PRECICE_ASSERT(_meshIdManager);
-    _meshes.push_back(std::make_shared<Mesh>(name, _dimensions, _meshIdManager->getFreeID()));
+    _meshes.push_back(std::make_shared<Mesh>(name, dimensions, _meshIdManager->getFreeID()));
   } else if (tag.getName() == TAG_DATA) {
     std::string name  = tag.getStringAttributeValue(ATTR_NAME);
     bool        found = false;
     for (const DataConfiguration::ConfiguredData &data : _dataConfig->data()) {
-      auto dataDimensions = getDataDimensions(data.typeName);
+      auto dataDimensions = getDataDimensions(_meshes.back()->getName(), data.typeName);
       if (data.name == name) {
         _meshes.back()->createData(data.name, dataDimensions, _dataIDManager.getFreeID(), data.waveformDegree);
         found = true;
@@ -158,11 +159,11 @@ void MeshConfiguration::addNeededMesh(
   }
 }
 
-int MeshConfiguration::getDataDimensions(const std::string &typeName)
+int MeshConfiguration::getDataDimensions(const std::string &meshName, const std::string &typeName)
 {
   // TODO: Get the values from elsewhere / make an enum
   if (typeName == "vector") {
-    return _dimensions;
+    return _meshDimensionsMap[meshName];
   } else if (typeName == "scalar") {
     return 1;
   }

@@ -74,12 +74,12 @@ private:
   const std::string TAG_DATA;
   const std::string ATTR_SIDE_INDEX;
 
-  int _dimensions;
+  std::map<std::string, int> _meshDimensionsMap;
 
   /// Data configuration.
   PtrDataConfiguration _dataConfig;
 
-  int getDataDimensions(const std::string &typeName);
+  int getDataDimensions(const std::string &meshName, const std::string &typeName);
 
   /// Configured meshes.
   std::vector<PtrMesh> _meshes;
