@@ -252,8 +252,7 @@ public:
 
   ///@}
 
-  /** @name Experimental Data Access
-   * These API functions are \b experimental and may change in future versions.
+  /** @name Direct Access
    */
   ///@{
 
