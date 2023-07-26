@@ -28,8 +28,6 @@ public:
       xml::XMLTag &              parent,
       mesh::PtrMeshConfiguration meshConfiguration);
 
-  void setDimensions(int dimensions);
-
   void setExperimental(bool experimental);
 
   /**
