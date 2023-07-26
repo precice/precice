@@ -447,16 +447,13 @@ BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
 
   std::string path(_pathToTests + "serial-implicit-cplscheme-relax-const-config.xml");
 
-  xml::XMLTag          root = xml::getRootTag();
-  PtrDataConfiguration dataConfig(new DataConfiguration(root));
-  dataConfig->setDimensions(dimensions);
-  PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
-  meshConfig->setDimensions(dimensions);
+  xml::XMLTag                          root = xml::getRootTag();
+  PtrDataConfiguration                 dataConfig(new DataConfiguration(root));
+  PtrMeshConfiguration                 meshConfig(new MeshConfiguration(root, dataConfig));
   m2n::M2NConfiguration::SharedPointer m2nConfig(
       new m2n::M2NConfiguration(root));
   precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
-  participantConfig->setDimensions(dimensions);
-  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
+  CouplingSchemeConfiguration                  cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
   xml::configure(root, xml::ConfigurationContext{}, path);
   BOOST_CHECK(cplSchemeConfig.getData("Data0", "Mesh") != cplSchemeConfig.getData("Data1", "Mesh"));
@@ -482,13 +479,11 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
   xml::XMLTag root = xml::getRootTag();
   // Create a data configuration, to simplify configuration of data
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
-  dataConfig->setDimensions(dimensions);
-  dataConfig->addData("data0", 1);
-  dataConfig->addData("data1", 3);
+  dataConfig->addData("data0", "scalar");
+  dataConfig->addData("data1", "vector");
 
   MeshConfiguration meshConfig(root, dataConfig);
-  meshConfig.setDimensions(dimensions);
-  mesh::PtrMesh mesh(new Mesh("Mesh", 3, testing::nextMeshID()));
+  mesh::PtrMesh     mesh(new Mesh("Mesh", 3, testing::nextMeshID()));
   mesh->createData("data0", 1, 0_dataID);
   mesh->createData("data1", 3, 1_dataID);
   mesh->createVertex(Eigen::Vector3d::Zero());
@@ -544,15 +539,12 @@ BOOST_AUTO_TEST_CASE(testConfiguredAbsConvergenceMeasureSynchronized)
   std::string configurationPath(
       _pathToTests + "serial-implicit-cplscheme-absolute-config.xml");
 
-  xml::XMLTag          root = xml::getRootTag();
-  PtrDataConfiguration dataConfig(new DataConfiguration(root));
-  dataConfig->setDimensions(dimensions);
-  PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
-  meshConfig->setDimensions(dimensions);
+  xml::XMLTag                                  root = xml::getRootTag();
+  PtrDataConfiguration                         dataConfig(new DataConfiguration(root));
+  PtrMeshConfiguration                         meshConfig(new MeshConfiguration(root, dataConfig));
   m2n::M2NConfiguration::SharedPointer         m2nConfig(new m2n::M2NConfiguration(root));
   precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
-  participantConfig->setDimensions(dimensions);
-  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
+  CouplingSchemeConfiguration                  cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
   xml::configure(root, xml::ConfigurationContext{}, configurationPath);
   m2n::PtrM2N m2n        = m2nConfig->getM2N("Participant0", "Participant1");
@@ -587,13 +579,11 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
   xml::XMLTag root = xml::getRootTag();
   // Create a data configuration, to simplify configuration of data
   mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(root));
-  dataConfig->setDimensions(3);
-  dataConfig->addData("data0", 1);
-  dataConfig->addData("data1", 3);
+  dataConfig->addData("data0", "scalar");
+  dataConfig->addData("data1", "vector");
 
   mesh::MeshConfiguration meshConfig(root, dataConfig);
-  meshConfig.setDimensions(3);
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
+  mesh::PtrMesh           mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
   mesh->createData("data0", 1, 0_dataID);
   mesh->createData("data1", 3, 1_dataID);
   mesh->createVertex(Eigen::Vector3d::Zero());
@@ -649,13 +639,11 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
   xml::XMLTag root = xml::getRootTag();
   // Create a data configuration, to simplify configuration of data
   mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(root));
-  dataConfig->setDimensions(3);
-  dataConfig->addData("data0", 1);
-  dataConfig->addData("data1", 3);
+  dataConfig->addData("data0", "scalar");
+  dataConfig->addData("data1", "vector");
 
   mesh::MeshConfiguration meshConfig(root, dataConfig);
-  meshConfig.setDimensions(3);
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
+  mesh::PtrMesh           mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
   mesh->createData("data0", 1, 0_dataID);
   mesh->createData("data1", 3, 1_dataID);
   mesh->createVertex(Eigen::Vector3d::Zero());
@@ -714,15 +702,13 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   // Create a data configuration, to simplify configuration of data
 
   mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(root));
-  dataConfig->setDimensions(3);
-  dataConfig->addData("Data0", 1);
-  dataConfig->addData("Data1", 3);
+  dataConfig->addData("Data0", "scalar");
+  dataConfig->addData("Data1", "vector");
 
   mesh::MeshConfiguration meshConfig(root, dataConfig);
-  meshConfig.setDimensions(3);
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
-  const auto    dataID0 = mesh->createData("Data0", 1, 0_dataID)->getID();
-  const auto    dataID1 = mesh->createData("Data1", 3, 1_dataID)->getID();
+  mesh::PtrMesh           mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
+  const auto              dataID0 = mesh->createData("Data0", 1, 0_dataID)->getID();
+  const auto              dataID1 = mesh->createData("Data1", 3, 1_dataID)->getID();
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
   meshConfig.addMesh(mesh);

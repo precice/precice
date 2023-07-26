@@ -24,11 +24,9 @@ BOOST_AUTO_TEST_CASE(Configuration)
   std::string pathToTests = testing::getPathToSources() + "/mapping/tests/";
   std::string file(pathToTests + "mapping-config.xml");
   using xml::XMLTag;
-  XMLTag                     tag = xml::getRootTag();
-  mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(tag));
-  dataConfig->setDimensions(3);
-  mesh::PtrMeshConfiguration meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
-  meshConfig->setDimensions(3);
+  XMLTag                        tag = xml::getRootTag();
+  mesh::PtrDataConfiguration    dataConfig(new mesh::DataConfiguration(tag));
+  mesh::PtrMeshConfiguration    meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
   mapping::MappingConfiguration mappingConfig(tag, meshConfig);
   xml::configure(tag, xml::ConfigurationContext{}, file);
 
@@ -54,11 +52,9 @@ BOOST_AUTO_TEST_CASE(RBFDirectConfiguration)
   std::string pathToTests = testing::getPathToSources() + "/mapping/tests/";
   std::string file(pathToTests + "mapping-rbf-direct-config.xml");
   using xml::XMLTag;
-  XMLTag                     tag = xml::getRootTag();
-  mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(tag));
-  dataConfig->setDimensions(3);
-  mesh::PtrMeshConfiguration meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
-  meshConfig->setDimensions(3);
+  XMLTag                        tag = xml::getRootTag();
+  mesh::PtrDataConfiguration    dataConfig(new mesh::DataConfiguration(tag));
+  mesh::PtrMeshConfiguration    meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
   mapping::MappingConfiguration mappingConfig(tag, meshConfig);
   xml::configure(tag, xml::ConfigurationContext{}, file);
 
@@ -93,11 +89,9 @@ BOOST_AUTO_TEST_CASE(RBFPUMConfiguration)
   std::string pathToTests = testing::getPathToSources() + "/mapping/tests/";
   std::string file(pathToTests + "mapping-rbf-pum-direct-config.xml");
   using xml::XMLTag;
-  XMLTag                     tag = xml::getRootTag();
-  mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(tag));
-  dataConfig->setDimensions(3);
-  mesh::PtrMeshConfiguration meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
-  meshConfig->setDimensions(3);
+  XMLTag                        tag = xml::getRootTag();
+  mesh::PtrDataConfiguration    dataConfig(new mesh::DataConfiguration(tag));
+  mesh::PtrMeshConfiguration    meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
   mapping::MappingConfiguration mappingConfig(tag, meshConfig);
   xml::configure(tag, xml::ConfigurationContext{}, file);
 
@@ -137,11 +131,9 @@ BOOST_AUTO_TEST_CASE(RBFIterativeConfiguration)
   std::string pathToTests = testing::getPathToSources() + "/mapping/tests/";
   std::string file(pathToTests + "mapping-rbf-iterative-config.xml");
   using xml::XMLTag;
-  XMLTag                     tag = xml::getRootTag();
-  mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(tag));
-  dataConfig->setDimensions(3);
-  mesh::PtrMeshConfiguration meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
-  meshConfig->setDimensions(3);
+  XMLTag                        tag = xml::getRootTag();
+  mesh::PtrDataConfiguration    dataConfig(new mesh::DataConfiguration(tag));
+  mesh::PtrMeshConfiguration    meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
   mapping::MappingConfiguration mappingConfig(tag, meshConfig);
   xml::configure(tag, xml::ConfigurationContext{}, file);
 
@@ -177,11 +169,9 @@ BOOST_AUTO_TEST_CASE(RBFAliasConfiguration)
   std::string pathToTests = testing::getPathToSources() + "/mapping/tests/";
   std::string file(pathToTests + "mapping-rbf-alias-config.xml");
   using xml::XMLTag;
-  XMLTag                     tag = xml::getRootTag();
-  mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(tag));
-  dataConfig->setDimensions(3);
-  mesh::PtrMeshConfiguration meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
-  meshConfig->setDimensions(3);
+  XMLTag                        tag = xml::getRootTag();
+  mesh::PtrDataConfiguration    dataConfig(new mesh::DataConfiguration(tag));
+  mesh::PtrMeshConfiguration    meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
   mapping::MappingConfiguration mappingConfig(tag, meshConfig);
   xml::configure(tag, xml::ConfigurationContext{}, file);
 

@@ -53,20 +53,15 @@ BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
   PRECICE_TEST(1_rank);
   using namespace mesh;
 
-  int dimensions = 3;
-
   std::string path(_pathToTests + "parallel-implicit-cplscheme-relax-const-config.xml");
 
-  xml::XMLTag          root = xml::getRootTag();
-  PtrDataConfiguration dataConfig(new DataConfiguration(root));
-  dataConfig->setDimensions(dimensions);
-  PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
-  meshConfig->setDimensions(dimensions);
+  xml::XMLTag                          root = xml::getRootTag();
+  PtrDataConfiguration                 dataConfig(new DataConfiguration(root));
+  PtrMeshConfiguration                 meshConfig(new MeshConfiguration(root, dataConfig));
   m2n::M2NConfiguration::SharedPointer m2nConfig(
       new m2n::M2NConfiguration(root));
   precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
-  participantConfig->setDimensions(dimensions);
-  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
+  CouplingSchemeConfiguration                  cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
   xml::configure(root, xml::ConfigurationContext{}, path);
   BOOST_CHECK(cplSchemeConfig._accelerationConfig->getAcceleration().get());
@@ -85,15 +80,13 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
 
   // Create a data configuration, to simplify configuration of data
   mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(root));
-  dataConfig->setDimensions(dimensions);
-  dataConfig->addData("Data0", 1);
-  dataConfig->addData("Data1", 3);
+  dataConfig->addData("Data0", "scalar");
+  dataConfig->addData("Data1", "vector");
 
   mesh::MeshConfiguration meshConfig(root, dataConfig);
-  meshConfig.setDimensions(dimensions);
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
-  const auto    dataID0 = mesh->createData("Data0", 1, 0_dataID)->getID();
-  const auto    dataID1 = mesh->createData("Data1", 3, 1_dataID)->getID();
+  mesh::PtrMesh           mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
+  const auto              dataID0 = mesh->createData("Data0", 1, 0_dataID)->getID();
+  const auto              dataID1 = mesh->createData("Data1", 3, 1_dataID)->getID();
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
   meshConfig.addMesh(mesh);
