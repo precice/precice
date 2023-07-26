@@ -74,12 +74,7 @@
 
 using precice::profiling::Event;
 
-namespace precice {
-
-/// Enabled further inter- and intra-solver synchronisation
-bool syncMode = false;
-
-namespace impl {
+namespace precice::impl {
 
 ParticipantImpl::ParticipantImpl(
     std::string_view      participantName,
@@ -1504,5 +1499,4 @@ const mesh::Mesh &ParticipantImpl::mesh(const std::string &meshName) const
   return *_accessor->usedMeshContext(meshName).mesh;
 }
 
-} // namespace impl
-} // namespace precice
+} // namespace precice::impl
