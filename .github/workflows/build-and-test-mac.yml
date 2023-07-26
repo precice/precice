@@ -43,6 +43,10 @@ jobs:
       with:
        python-version: '3.10'
        check-latest: true
+    - name: Install pandas
+      run: |
+        pip3 install --user pandas
+        python3 -c 'import pandas'
     - name: Install numpy
       run: pip3 install numpy
     - name: Install preCICE dependencies
