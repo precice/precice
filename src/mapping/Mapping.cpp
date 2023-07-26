@@ -229,7 +229,7 @@ void Mapping::scaleConsistentMapping(const Eigen::VectorXd &input, Eigen::Vector
   // To fulfill the constraint, we would need to scale the output data in such a way, that the integral sum of the input is preserved.
   // That's not possible using a constant scaling factor as the output sum will always be zero. Here, we return 1 and emit a warning afterwards.
   const Eigen::VectorXd scalingFactor = integralInput.binaryExpr(integralOutput, [](double lhs, double rhs) { return (rhs == 0.0) ? 1.0 : (lhs / rhs); });
-   PRECICE_DEBUG("Scaling factor in scaled-consistent mapping: {}", scalingFactor);
+  PRECICE_DEBUG("Scaling factor in scaled-consistent mapping: {}", scalingFactor);
 
   // check whether the constraint is fulfilled
   for (Eigen::Index i = 0; i < scalingFactor.size(); ++i) {
