@@ -66,7 +66,7 @@ void MeshConfiguration::xmlTagCallback(
   if (tag.getName() == TAG) {
     std::string name       = tag.getStringAttributeValue(ATTR_NAME);
     int         dimensions = tag.getIntAttributeValue(ATTR_DIMENSIONS);
-    _meshDimensionsMap.insert<std::pair<std::string, int>>(name, dimensions);
+    _meshDimensionsMap.insert(std::pair<std::string, int>(name, dimensions));
     PRECICE_ASSERT(dimensions != 0);
     PRECICE_ASSERT(_meshIdManager);
     _meshes.push_back(std::make_shared<Mesh>(name, dimensions, _meshIdManager->getFreeID()));
@@ -106,7 +106,7 @@ void MeshConfiguration::addMesh(
   for (const PtrData &dataNewMesh : mesh->data()) {
     bool found = false;
     for (const DataConfiguration::ConfiguredData &data : _dataConfig->data()) {
-      if ((dataNewMesh->getName() == data.name) && (dataNewMesh->getDimensions() == getDataDimensions(data.typeName))) {
+      if ((dataNewMesh->getName() == data.name) && (dataNewMesh->getDimensions() == getDataDimensions(_meshes.back()->getName(), data.typeName))) {
         found = true;
         break;
       }
