@@ -67,7 +67,6 @@ void MeshConfiguration::xmlTagCallback(
     std::string name = tag.getStringAttributeValue(ATTR_NAME);
     _dimensions      = tag.getIntAttributeValue(ATTR_DIMENSIONS);
     PRECICE_ASSERT(_dimensions != 0);
-    PRECICE_ASSERT((dimensions == 2) || (dimensions == 3), dimensions);
     PRECICE_ASSERT(_meshIdManager);
     _meshes.push_back(std::make_shared<Mesh>(name, _dimensions, _meshIdManager->getFreeID()));
   } else if (tag.getName() == TAG_DATA) {
