@@ -145,9 +145,6 @@ public:
   /// @copydoc Participant::resetMesh
   void resetMesh(std::string_view meshName);
 
-  /// @copydoc Participant::hasMesh
-  bool hasMesh(std::string_view meshName) const;
-
   /// @copydoc Participant::requiresMeshConnectivityFor
   bool requiresMeshConnectivityFor(std::string_view meshName) const;
 
@@ -222,11 +219,6 @@ public:
 
   ///@name Data Access
   ///@{
-
-  /// @copydoc Participant::hasData
-  bool hasData(
-      std::string_view meshName,
-      std::string_view dataName) const;
 
   /// @copydoc Participant::readData
   void readData(

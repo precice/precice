@@ -99,11 +99,6 @@ bool Participant::requiresWritingCheckpoint()
   return _impl->requiresWritingCheckpoint();
 }
 
-bool Participant::hasMesh(::precice::string_view meshName) const
-{
-  return _impl->hasMesh(toSV(meshName));
-}
-
 bool Participant::requiresMeshConnectivityFor(::precice::string_view meshName) const
 {
   return _impl->requiresMeshConnectivityFor(toSV(meshName));
@@ -113,11 +108,6 @@ bool Participant::requiresGradientDataFor(::precice::string_view meshName,
                                           ::precice::string_view dataName) const
 {
   return _impl->requiresGradientDataFor(toSV(meshName), toSV(dataName));
-}
-
-bool Participant::hasData(::precice::string_view meshName, ::precice::string_view dataName) const
-{
-  return _impl->hasData(toSV(meshName), toSV(dataName));
 }
 
 // void Participant:: resetMesh

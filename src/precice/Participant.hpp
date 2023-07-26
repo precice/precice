@@ -320,14 +320,6 @@ public:
   //  void resetMesh ( ::precice::string_view meshName );
 
   /**
-   * @brief Checks if the mesh with given name is used by a solver.
-   *
-   * @param[in] meshName the name of the mesh
-   * @returns whether the mesh is used.
-   */
-  bool hasMesh(::precice::string_view meshName) const;
-
-  /**
    * @brief Checks if the given mesh requires connectivity.
    *
    * preCICE may require connectivity information from the solver and
@@ -565,17 +557,6 @@ public:
 
   ///@name Data Access
   ///@{
-
-  /**
-   * @brief Checks if the data with given name is used by a solver and mesh.
-   *
-   * @param[in] meshName the name of the associated mesh
-   * @param[in] dataName the name of the data to check
-   * @returns whether the mesh contains the data.
-   */
-  bool hasData(
-      ::precice::string_view meshName,
-      ::precice::string_view dataName) const;
 
   /**
    * @brief Writes data to a mesh.

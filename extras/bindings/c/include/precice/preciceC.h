@@ -119,14 +119,6 @@ PRECICE_API int precicec_requiresReadingCheckpoint();
 ///@anchor precice-mesh-access
 ///@{
 
-/**
- * @brief Checks if the mesh with given name is used by a solver.
- *
- * @param[in] meshName the name of the mesh.
- * @returns whether the mesh is used.
- */
-PRECICE_API int precicec_hasMesh(const char *meshName);
-
 /// @copydoc precice::Participant::requiresMeshConnectivityFor()
 PRECICE_API int precicec_requiresMeshConnectivityFor(const char *meshName);
 
@@ -281,11 +273,6 @@ PRECICE_API void precicec_setMeshTetrahedra(
 
 ///@name Data Access
 ///@{
-
-/**
- * @brief Returns true (!=0), if data with given name is available.
- */
-PRECICE_API int precicec_hasData(const char *meshName, const char *dataName);
 
 /**
  * @brief Writes vector data values given as block.
