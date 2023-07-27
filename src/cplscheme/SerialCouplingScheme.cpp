@@ -28,10 +28,8 @@ SerialCouplingScheme::SerialCouplingScheme(
     m2n::PtrM2N                   m2n,
     constants::TimesteppingMethod dtMethod,
     CouplingMode                  cplMode,
-    int                           maxIterations,
-    int                           extrapolationOrder)
-    : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
-                       secondParticipant, localParticipant, std::move(m2n), maxIterations, cplMode, dtMethod, extrapolationOrder)
+    int                           maxIterations)
+    : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant, secondParticipant, localParticipant, std::move(m2n), maxIterations, cplMode, dtMethod)
 {
   if (dtMethod == constants::FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE) {
     if (doesFirstStep()) {
@@ -155,7 +153,7 @@ void SerialCouplingScheme::exchangeSecondData()
 {
   if (isExplicitCouplingScheme()) {
     if (doesFirstStep()) { // first participant
-      moveToNextWindow();  // extrapolation result for receive data of first is directly overwritten in the call of receiveData below
+      moveToNextWindow();
       PRECICE_DEBUG("Receiving data...");
       receiveData(getM2N(), getReceiveData());
       checkDataHasBeenReceived();
@@ -177,7 +175,7 @@ void SerialCouplingScheme::exchangeSecondData()
       PRECICE_DEBUG("Receiving convergence data...");
       receiveConvergence(getM2N());
       if (hasConverged()) {
-        moveToNextWindow(); // extrapolation result for receive data of first is directly overwritten in the call of receiveData below
+        moveToNextWindow();
       }
       PRECICE_DEBUG("Receiving data...");
       receiveData(getM2N(), getReceiveData());

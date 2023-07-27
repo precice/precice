@@ -12,8 +12,7 @@ CouplingData::CouplingData(
     mesh::PtrData data,
     mesh::PtrMesh mesh,
     bool          requiresInitialization,
-    bool          exchangeSubsteps,
-    int           extrapolationOrder)
+    bool          exchangeSubsteps)
     : requiresInitialization(requiresInitialization),
       _mesh(std::move(mesh)),
       _data(std::move(data)),
@@ -21,8 +20,6 @@ CouplingData::CouplingData(
       _exchangeSubsteps(exchangeSubsteps)
 {
   PRECICE_ASSERT(_data != nullptr);
-  _data->timeStepsStorage().setExtrapolationOrder(extrapolationOrder);
-
   PRECICE_ASSERT(_mesh != nullptr);
   PRECICE_ASSERT(_mesh.use_count() > 0);
 }
