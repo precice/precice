@@ -164,10 +164,10 @@ BOOST_AUTO_TEST_CASE(SummationThreeDimensionalSubcycling)
   v1_1 << 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0;
   v2_1 << 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0;
 
-  sourceData1->setSampleAtTime(0 * 0.5, time::Sample{dimensions, v1_05});
-  sourceData2->setSampleAtTime(0 * 0.5, time::Sample{dimensions, v2_05});
-  sourceData1->setSampleAtTime(0, time::Sample{dimensions, v1_1});
-  sourceData2->setSampleAtTime(0, time::Sample{dimensions, v2_1});
+  sourceData1->setSampleAtTime(0.5, time::Sample{dimensions, v1_05});
+  sourceData2->setSampleAtTime(0.5, time::Sample{dimensions, v2_05});
+  sourceData1->setSampleAtTime(1.0, time::Sample{dimensions, v1_1});
+  sourceData2->setSampleAtTime(1.0, time::Sample{dimensions, v2_1});
 
   action::SummationAction sum(
       action::SummationAction::WRITE_MAPPING_POST, sourceDataIDs, targetDataID, mesh);

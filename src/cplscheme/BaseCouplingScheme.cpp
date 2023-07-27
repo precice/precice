@@ -404,8 +404,12 @@ bool BaseCouplingScheme::addComputedTime(
                 "For more information, consult the adapter example in the preCICE documentation.",
                 timeToAdd, _timeWindowSize - _computedTimeWindowPart + timeToAdd);
 
-  const bool isAtWindowEnd = math::equals(getComputedTimeWindowPart(), getTimeWindowSize(), _eps);
-  return isAtWindowEnd;
+  if (hasTimeWindowSize()) {
+    const bool isAtWindowEnd = math::equals(getComputedTimeWindowPart(), getTimeWindowSize(), _eps);
+    return isAtWindowEnd;
+  } else { // using participant first method
+    return true;
+  }
 }
 
 bool BaseCouplingScheme::willDataBeExchanged(
