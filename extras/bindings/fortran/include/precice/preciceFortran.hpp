@@ -184,43 +184,6 @@ PRECICE_API void precicef_requires_writing_checkpoint_(
 
 /**
  * Fortran syntax:
- * precicef_has_mesh(
- *   CHARACTER meshName(*),
- *   INTEGER   hasMesh )
- *
- * IN:  meshName
- * OUT: hasMesh(1:true, 0:false)
- *
- * @copydoc precice::Participant::hasMesh()
- *
- */
-PRECICE_API void precicef_has_mesh_(
-    const char *meshName,
-    int *       hasMesh,
-    int         meshNameLengthName);
-
-/**
- * Fortran syntax:
- * precicef_has_data(
- *   CHARACTER meshName(*),
- *   CHARACTER dataName(*),
- *   INTEGER   hasData)
- *
- * IN:  mesh, data, meshNameLength, dataNameLength
- * OUT: hasData(1:true, 0:false)
- *
- * @copydoc precice::Participant::hasData()
- *
- */
-PRECICE_API void precicef_has_data_(
-    const char *meshName,
-    const char *dataName,
-    int *       hasData,
-    int         meshNameLength,
-    int         dataNameLength);
-
-/**
- * Fortran syntax:
  * precicef_precicef_requires_mesh_connectivity_for_(
  *   CHARACTER meshName(*),
  *   INTEGER   required)
