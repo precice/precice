@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_CASE(testInitialize)
   auto storage = Storage();
   int  nValues = 3;
   BOOST_TEST(storage.nTimes() == 0);
-  storage.initialize(time::Sample{1, Eigen::VectorXd::Ones(nValues)});
+  storage.setSampleAtTime(0, time::Sample{1, Eigen::VectorXd::Ones(nValues)});
   BOOST_TEST(storage.nDofs() == nValues);
   BOOST_TEST(storage.nTimes() == 1);
   for (int i = 0; i < nValues; i++) {
@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(testClear)
   auto storage = Storage();
   int  nValues = 3;
   BOOST_TEST(storage.nTimes() == 0);
-  storage.initialize(time::Sample{1, Eigen::VectorXd::Ones(nValues)});
+  storage.setSampleAtTime(0, time::Sample{1, Eigen::VectorXd::Ones(nValues)});
   BOOST_TEST(storage.nDofs() == nValues);
   BOOST_TEST(storage.nTimes() == 1);
   BOOST_TEST(storage.maxStoredTime() == 0.0);
@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(testMove)
   auto storage = Storage();
   int  nValues = 3;
   BOOST_TEST(storage.nTimes() == 0);
-  storage.initialize(time::Sample{1, Eigen::VectorXd::Ones(nValues)});
+  storage.setSampleAtTime(0, time::Sample{1, Eigen::VectorXd::Ones(nValues)});
   BOOST_TEST(storage.nDofs() == nValues);
   BOOST_TEST(storage.nTimes() == 1);
   BOOST_TEST(storage.maxStoredTime() == 0.0);
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(testGetTimesAndValues)
   PRECICE_TEST(1_rank);
   auto storage = Storage();
   int  nValues = 3;
-  storage.initialize(time::Sample{1, Eigen::VectorXd::Ones(nValues)});
+  storage.setSampleAtTime(0, time::Sample{1, Eigen::VectorXd::Ones(nValues)});
   storage.trim();
   storage.setSampleAtTime(0.5, time::Sample{1, Eigen::VectorXd::Ones(nValues)});
   storage.setSampleAtTime(1.0, time::Sample{1, Eigen::VectorXd::Zero(nValues)});
@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateDataZerothOrder)
 
   auto      storage = Storage();
   const int nValues = 1;
-  storage.initialize(time::Sample{1, Eigen::VectorXd::Zero(nValues)});
+  storage.setSampleAtTime(0, time::Sample{1, Eigen::VectorXd::Zero(nValues)});
 
   // use zero initial data
   storage.move();

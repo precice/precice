@@ -20,13 +20,6 @@ public:
   Storage();
 
   /**
-   * @brief Initialize storage by storing given sample at window start and window end.
-   *
-   * @param sample initial sample
-   */
-  void initialize(time::Sample sample);
-
-  /**
    * @brief Store Sample at a specific time.
    *
    * It is only allowed to store a Sample in time that comes after a Sample that was already stored. Therefore, time has to be larger than maxStoredTime. Overwriting existing samples is forbidden. The function trim() should be used before providing new samples.
@@ -106,9 +99,6 @@ private:
   std::vector<Stample> _stampleStorage;
 
   mutable logging::Logger _log{"time::Storage"};
-
-  /// End time of the current window
-  double _currentWindowStart;
 
   time::Sample getSampleAtBeginning();
 

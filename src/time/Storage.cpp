@@ -12,16 +12,17 @@ Storage::Storage()
 {
 }
 
-void Storage::initialize(time::Sample sample)
-{
-  _currentWindowStart = 0;
-  _stampleStorage.emplace_back(Stample{_currentWindowStart, sample});
-}
-
 void Storage::setSampleAtTime(double time, Sample sample)
 {
+  if (_stampleStorage.empty()) {
+    _stampleStorage.emplace_back(Stample{time, sample});
+    return;
+  }
+
+  const double currentWindowStart = _stampleStorage.front().timestamp;
+
   PRECICE_ASSERT(not sample.values.hasNaN());
-  PRECICE_ASSERT(math::smallerEquals(_currentWindowStart, time), "Setting sample outside of valid range!", _currentWindowStart, time);
+  PRECICE_ASSERT(math::smallerEquals(currentWindowStart, time), "Setting sample outside of valid range!", currentWindowStart, time);
   // check if key "time" exists.
   auto existingSample = std::find_if(_stampleStorage.begin(), _stampleStorage.end(), [&time](const auto &s) { return math::equals(s.timestamp, time); });
   if (existingSample == _stampleStorage.end()) { // key does not exist yet
@@ -61,17 +62,18 @@ int Storage::nDofs() const
 void Storage::move()
 {
   PRECICE_ASSERT(!_stampleStorage.empty(), "Storage does not contain any data!");
-  PRECICE_ASSERT(math::equals(_stampleStorage.front().timestamp, _currentWindowStart), _stampleStorage.front().timestamp, _currentWindowStart);
-  _currentWindowStart = _stampleStorage.back().timestamp;
+  const double nextWindowStart = _stampleStorage.back().timestamp;
   _stampleStorage.erase(_stampleStorage.begin(), --_stampleStorage.end());
-  PRECICE_ASSERT(_currentWindowStart == _stampleStorage.front().timestamp);
+  PRECICE_ASSERT(nextWindowStart == _stampleStorage.front().timestamp);
 }
 
 void Storage::trim()
 {
   PRECICE_ASSERT(!_stampleStorage.empty(), "Storage does not contain any data!");
-  PRECICE_ASSERT(math::equals(_stampleStorage.front().timestamp, _currentWindowStart), _stampleStorage.front().timestamp, _currentWindowStart);
+  const double thisWindowStart = _stampleStorage.front().timestamp;
   _stampleStorage.erase(++_stampleStorage.begin(), _stampleStorage.end());
+  PRECICE_ASSERT(_stampleStorage.size() == 1);
+  PRECICE_ASSERT(thisWindowStart == _stampleStorage.front().timestamp);
 }
 
 Eigen::VectorXd Storage::getValuesAtOrAfter(double before) const
