@@ -351,7 +351,7 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentZeroDataComponent)
   mapping.computeMapping();
   BOOST_TEST(mapping.hasComputedMapping() == true);
 
-  Eigen::VectorXd inValues;
+  Eigen::VectorXd inValues(8);
   inValues << 1, 0, 0.5, 0, 1.5, 0, 1, 0;
   time::Sample    inSample(2, inValues);
   Eigen::VectorXd outValues = Eigen::VectorXd::Zero(6);
@@ -390,7 +390,7 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentZeroIntegralComponent)
   mapping.computeMapping();
   BOOST_TEST(mapping.hasComputedMapping() == true);
 
-  Eigen::VectorXd inValues;
+  Eigen::VectorXd inValues(8);
   inValues << 2, 1, 3, 1, 1, -1, 2, -1;
   time::Sample    inSample(2, inValues);
   Eigen::VectorXd outValues = Eigen::VectorXd::Zero(6);
