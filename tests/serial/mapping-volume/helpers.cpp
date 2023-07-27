@@ -7,7 +7,7 @@
 #include "precice/impl/ParticipantImpl.hpp"
 #include "precice/precice.hpp"
 
-void testMappingVolumeOneTriangle(const std::string configFile, const TestContext &context)
+void testMappingVolumeOneTriangle(const std::string configFile, const TestContext &context, bool read)
 {
   using precice::testing::equals;
 
@@ -65,6 +65,14 @@ void testMappingVolumeOneTriangle(const std::string configFile, const TestContex
     participant.initialize();
     double dt = participant.getMaxTimeStepSize();
     BOOST_TEST(participant.isCouplingOngoing(), "Receiving participant must advance once.");
+
+    // If "read" mapping, check received mesh
+    if (read) {
+      auto &mesh = precice::testing::WhiteboxAccessor::impl(participant).mesh("MeshOne");
+      BOOST_REQUIRE(mesh.vertices().size() == 3);
+      BOOST_REQUIRE(mesh.edges().size() == 3);
+      BOOST_REQUIRE(mesh.triangles().size() == 1);
+    }
 
     participant.advance(dt);
     BOOST_TEST(!participant.isCouplingOngoing(), "Receiving participant must advance only once.");
@@ -151,7 +159,7 @@ void testMappingVolumeOneTriangleConservative(const std::string configFile, cons
   }
 }
 
-void testMappingVolumeOneTetra(const std::string configFile, const TestContext &context)
+void testMappingVolumeOneTetra(const std::string configFile, const TestContext &context, bool read)
 {
   using precice::testing::equals;
 
@@ -219,6 +227,15 @@ void testMappingVolumeOneTetra(const std::string configFile, const TestContext &
     participant.initialize();
     double dt = participant.getMaxTimeStepSize();
     BOOST_TEST(participant.isCouplingOngoing(), "Receiving participant must advance once.");
+
+    // If "read" mapping, check received mesh, including connectivity
+    if (read) {
+      auto &mesh = precice::testing::WhiteboxAccessor::impl(participant).mesh("MeshOne");
+      BOOST_CHECK(mesh.vertices().size() == 4);
+      BOOST_CHECK(mesh.edges().size() == 6);
+      BOOST_CHECK(mesh.triangles().size() == 4);
+      BOOST_CHECK(mesh.tetrahedra().size() == 1);
+    }
 
     participant.advance(dt);
     BOOST_TEST(!participant.isCouplingOngoing(), "Receiving participant must advance only once.");
