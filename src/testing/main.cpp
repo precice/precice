@@ -4,6 +4,9 @@
 // Specify the overall name of test framework
 #define BOOST_TEST_MODULE "preCICE Tests"
 
+#include <boost/filesystem/directory.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
 #include <boost/test/tools/fpc_tolerance.hpp>
 #include <boost/test/tree/test_case_counter.hpp>
 #include <boost/test/tree/traverse.hpp>
@@ -36,6 +39,16 @@ void setupTolerance()
   boost::test_tools::fpc_tolerance<float>()  = tolerance;
 }
 
+void removeStaleRunDirectory()
+{
+  namespace bf = boost::filesystem;
+  bf::path runDir("precice-run");
+  if (bf::exists(runDir) && bf::is_directory(runDir) && !bf::is_empty(runDir)) {
+    std::cout << "Removing a non-empty precice-run directory from a previously failing test.\n";
+    bf::remove_all(runDir);
+  }
+}
+
 /// Entry point for the boost test executable
 int main(int argc, char *argv[])
 {
@@ -55,6 +68,10 @@ int main(int argc, char *argv[])
   }
 
   std::cout << "This test suite runs on rank " << rank << " of " << size << '\n';
+
+  if (rank == 0) {
+    removeStaleRunDirectory();
+  }
 
   setupTolerance();
   int       retCode  = boost::unit_test::unit_test_main(&init_unit_test, argc, argv);
