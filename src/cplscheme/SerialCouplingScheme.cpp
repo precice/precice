@@ -90,13 +90,15 @@ void SerialCouplingScheme::exchangeInitialData()
     if (sendsInitializedData()) {
       sendData(getM2N(), getSendData());
     }
-    if (receivesInitializedData()) {           // this send/recv pair is only needed, if no substeps are exchanged.
-      receiveData(getM2N(), getReceiveData()); // THIS WILL CAUSE US TROUBLE!!!
+    if (receivesInitializedData()) { // this send/recv pair is only needed, if no substeps are exchanged.
+      receiveData(getM2N(), getReceiveData());
     }
     // similar to SerialCouplingScheme::exchangeSecondData()
     PRECICE_DEBUG("Receiving data...");
     receiveAndSetTimeWindowSize();
-    receiveData(getM2N(), getReceiveData());
+    addComputedTime(getTimeWindowSize());    // needed such that getTime() returns time at end of window
+    receiveData(getM2N(), getReceiveData()); // receive data for end of window
+    resetComputedTime();                     // reset to time at beginning of window
     checkDataHasBeenReceived();
   }
 }
@@ -108,8 +110,7 @@ void SerialCouplingScheme::exchangeFirstData()
       PRECICE_DEBUG("Sending data...");
       sendTimeWindowSize();
       sendData(getM2N(), getSendData());
-    } else {              // second participant
-      moveToNextWindow(); // do moveToNextWindow already here for second participant in SerialCouplingScheme
+    } else { // second participant
       PRECICE_DEBUG("Sending data...");
       sendData(getM2N(), getSendData());
     }
@@ -138,9 +139,9 @@ void SerialCouplingScheme::exchangeSecondData()
 {
   if (isExplicitCouplingScheme()) {
     if (doesFirstStep()) { // first participant
-      moveToNextWindow();
       PRECICE_DEBUG("Receiving data...");
       receiveData(getM2N(), getReceiveData());
+      moveToNextWindow();
       checkDataHasBeenReceived();
     }
 
@@ -150,6 +151,7 @@ void SerialCouplingScheme::exchangeSecondData()
         receiveAndSetTimeWindowSize();
         PRECICE_DEBUG("Receiving data...");
         receiveData(getM2N(), getReceiveData());
+        moveToNextWindow();
         checkDataHasBeenReceived();
       }
     }

@@ -88,6 +88,8 @@ public:
   /// @copydoc cplscheme::CouplingScheme::addComputedTime()
   bool addComputedTime(double timeToAdd) override final;
 
+  void resetComputedTime();
+
   /**
    * @brief Returns true, if data will be exchanged when calling advance().
    *
@@ -298,13 +300,6 @@ protected:
    * @returns _computedTimeWindowPart
    */
   double getComputedTimeWindowPart() const;
-
-  /**
-   * @brief Returns the time at the beginning of the current time window.
-   *
-   * @return time at beginning of the current time window.
-   */
-  double getWindowStartTime() const;
 
   /**
    * @brief Setter for _doesFirstStep

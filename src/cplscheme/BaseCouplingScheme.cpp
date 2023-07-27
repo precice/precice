@@ -190,7 +190,7 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
         PRECICE_ASSERT(data->hasGradient());
         m2n->receive(data->gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions());
       }
-      data->timeStepsStorage().clear();
+      data->timeStepsStorage().trim();
       data->setSampleAtTime(getTime(), data->sample());
     }
   }
@@ -326,14 +326,14 @@ void BaseCouplingScheme::secondExchange()
         // coupling iteration.
         PRECICE_ASSERT(math::greater(_computedTimeWindowPart, 0.0));
         _timeWindows -= 1;
-        _computedTimeWindowPart = 0.0; // reset window
-      } else {                         // write output, prepare for next window
+        resetComputedTime(); // reset window
+      } else {               // write output, prepare for next window
         PRECICE_DEBUG("Convergence achieved");
         advanceTXTWriters();
         PRECICE_INFO("Time window completed");
         _isTimeWindowComplete = true;
         _timeWindowStartTime += _computedTimeWindowPart;
-        _computedTimeWindowPart = 0.0; // reset window
+        resetComputedTime(); // reset window
         if (isCouplingOngoing()) {
           PRECICE_DEBUG("Setting require create checkpoint");
           requireAction(CouplingScheme::Action::WriteCheckpoint);
@@ -350,7 +350,7 @@ void BaseCouplingScheme::secondExchange()
       PRECICE_INFO("Time window completed");
       _isTimeWindowComplete = true;
       _timeWindowStartTime += _computedTimeWindowPart;
-      _computedTimeWindowPart = 0.0; // reset window
+      resetComputedTime(); // reset window
     }
     if (isCouplingOngoing()) {
       PRECICE_ASSERT(_hasDataBeenReceived);
@@ -375,11 +375,6 @@ double BaseCouplingScheme::getTimeWindowSize() const
 {
   PRECICE_ASSERT(hasTimeWindowSize());
   return _timeWindowSize;
-}
-
-double BaseCouplingScheme::getWindowStartTime() const
-{
-  return getTime() - _computedTimeWindowPart;
 }
 
 bool BaseCouplingScheme::isInitialized() const
@@ -411,6 +406,11 @@ bool BaseCouplingScheme::addComputedTime(
   } else { // using participant first method
     return true;
   }
+}
+
+void BaseCouplingScheme::resetComputedTime()
+{
+  _computedTimeWindowPart = 0;
 }
 
 bool BaseCouplingScheme::willDataBeExchanged(

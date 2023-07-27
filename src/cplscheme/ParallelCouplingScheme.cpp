@@ -63,8 +63,6 @@ void ParallelCouplingScheme::exchangeFirstData()
 void ParallelCouplingScheme::exchangeSecondData()
 {
   if (isExplicitCouplingScheme()) {
-    moveToNextWindow();
-
     if (doesFirstStep()) { // first participant
       PRECICE_DEBUG("Receiving data...");
       receiveData(getM2N(), getReceiveData());
@@ -73,6 +71,7 @@ void ParallelCouplingScheme::exchangeSecondData()
       PRECICE_DEBUG("Sending data...");
       sendData(getM2N(), getSendData());
     }
+    moveToNextWindow();
   } else {
     PRECICE_ASSERT(isImplicitCouplingScheme());
 
