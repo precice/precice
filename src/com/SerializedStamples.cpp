@@ -75,7 +75,7 @@ void SerializedStamples::deserialize(const Eigen::VectorXd timeStamps, cplscheme
 {
   PRECICE_ASSERT(timeStamps.size() * data->getSize() == _values.size(), timeStamps.size() * data->getSize(), _values.size());
 
-  data->timeStepsStorage().trim();
+  data->timeStepsStorage().clear(); // @todo needs optimization. Don't need to communicate and serialize / deserialize data at beginning of window, because it is already there.
 
   const auto dataDims = data->getDimensions();
 

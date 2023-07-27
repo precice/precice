@@ -76,10 +76,16 @@ void Storage::trim()
   PRECICE_ASSERT(thisWindowStart == _stampleStorage.front().timestamp);
 }
 
+void Storage::clear()
+{
+  _stampleStorage.clear();
+  PRECICE_ASSERT(_stampleStorage.size() == 0);
+}
+
 Eigen::VectorXd Storage::getValuesAtOrAfter(double before) const
 {
   if (nTimes() == 1) {
-    return _stampleStorage.front().sample.values;
+    return _stampleStorage.front().sample.values; // @todo in this case the name getValuesAtOrAfter does not fit, because _stampleStorage.front().sample.values is returned for any time before.
   } else {
     auto stample = std::find_if(_stampleStorage.begin(), _stampleStorage.end(), [&before](const auto &s) { return math::greaterEquals(s.timestamp, before); });
     PRECICE_ASSERT(stample != _stampleStorage.end(), "no values found!");

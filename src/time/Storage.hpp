@@ -94,6 +94,11 @@ public:
    */
   void trim();
 
+  /**
+   * @brief Clears this Storage by deleting all values.
+   */
+  void clear();
+
 private:
   /// Stores Stamples on the current window
   std::vector<Stample> _stampleStorage;
