@@ -36,8 +36,8 @@ namespace mapping {
  * @brief Wrapper struct that is used to transfer RBF-specific parameters to the GPU.
  *
  * Its parameters 1, 2 and 3 are filled individually, depending on the requirements
- * of each RBF (e.g., support radius, shape parameter, etc.). 
- * This parameter struct is handed to the GPU device kernel 
+ * of each RBF (e.g., support radius, shape parameter, etc.).
+ * This parameter struct is handed to the GPU device kernel
  * when assemblying the interpolation matrices
  * and its parameters used in every RBF evaluation.
  * Since there are at most 3 parameters for a RBF in the
