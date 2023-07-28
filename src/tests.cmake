@@ -48,6 +48,7 @@ target_sources(testprecice
     src/mapping/tests/PetRadialBasisFctMappingTest.cpp
     src/mapping/tests/PolationTest.cpp
     src/mapping/tests/RadialBasisFctMappingTest.cpp
+    src/math/tests/BSplineTest.cpp
     src/math/tests/BarycenterTest.cpp
     src/math/tests/DifferencesTest.cpp
     src/math/tests/GeometryTest.cpp
