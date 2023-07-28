@@ -197,6 +197,8 @@ target_sources(preciceCore
     src/mapping/impl/SphericalVertexCluster.hpp
     src/math/barycenter.cpp
     src/math/barycenter.hpp
+    src/math/bspline.cpp
+    src/math/bspline.hpp
     src/math/constants.hpp
     src/math/differences.hpp
     src/math/geometry.cpp
