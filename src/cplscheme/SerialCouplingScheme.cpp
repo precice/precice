@@ -96,9 +96,10 @@ void SerialCouplingScheme::exchangeInitialData()
     // similar to SerialCouplingScheme::exchangeSecondData()
     PRECICE_DEBUG("Receiving data...");
     receiveAndSetTimeWindowSize();
-    addComputedTime(getTimeWindowSize());    // needed such that getTime() returns time at end of window
-    receiveData(getM2N(), getReceiveData()); // receive data for end of window
-    resetComputedTime();                     // reset to time at beginning of window
+    const double oldComputedTimeWindowPart = getComputedTime();
+    addComputedTime(getTimeWindowSize());           // needed such that getTime() returns time at end
+    receiveData(getM2N(), getReceiveData());        // receive data for end of window
+    resetComputedTimeTo(oldComputedTimeWindowPart); // reset to time before addComputedTime(...)
     checkDataHasBeenReceived();
   }
 }
@@ -112,6 +113,7 @@ void SerialCouplingScheme::exchangeFirstData()
       sendData(getM2N(), getSendData());
     } else { // second participant
       PRECICE_DEBUG("Sending data...");
+      moveToNextWindow(); // do moveToNextWindow already here for second participant in SerialCouplingScheme
       sendData(getM2N(), getSendData());
     }
   } else {
@@ -150,8 +152,10 @@ void SerialCouplingScheme::exchangeSecondData()
       if (isCouplingOngoing()) {
         receiveAndSetTimeWindowSize();
         PRECICE_DEBUG("Receiving data...");
-        receiveData(getM2N(), getReceiveData());
-        moveToNextWindow();
+        const double oldComputedTimeWindowPart = getComputedTime();
+        addComputedTime(getTimeWindowSize());           // needed such that getTime() returns time at end
+        receiveData(getM2N(), getReceiveData());        // receive data for end of window
+        resetComputedTimeTo(oldComputedTimeWindowPart); // reset to time before addComputedTime(...)
         checkDataHasBeenReceived();
       }
     }
@@ -161,11 +165,11 @@ void SerialCouplingScheme::exchangeSecondData()
     if (doesFirstStep()) { // first participant
       PRECICE_DEBUG("Receiving convergence data...");
       receiveConvergence(getM2N());
+      PRECICE_DEBUG("Receiving data...");
+      receiveData(getM2N(), getReceiveData());
       if (hasConverged()) {
         moveToNextWindow();
       }
-      PRECICE_DEBUG("Receiving data...");
-      receiveData(getM2N(), getReceiveData());
       checkDataHasBeenReceived();
     }
 
@@ -176,8 +180,14 @@ void SerialCouplingScheme::exchangeSecondData()
       if (isCouplingOngoing() || not hasConverged()) {
         receiveAndSetTimeWindowSize();
         PRECICE_DEBUG("Receiving data...");
-        receiveData(getM2N(), getReceiveData());
-        checkDataHasBeenReceived();
+        if (hasConverged()) {
+          const double oldComputedTimeWindowPart = getComputedTime();
+          addComputedTime(getTimeWindowSize());           // needed such that getTime() returns time at end of window
+          receiveData(getM2N(), getReceiveData());        // receive data for end of window
+          resetComputedTimeTo(oldComputedTimeWindowPart); // reset to time before addComputedTime(...)
+        } else {
+          receiveData(getM2N(), getReceiveData()); // receive data for end of window
+        }
       }
     }
   }

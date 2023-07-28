@@ -61,19 +61,25 @@ int Storage::nDofs() const
 
 void Storage::move()
 {
+  PRECICE_DEBUG("Storage::move()");
+  PRECICE_DEBUG("times before: {}", getTimes());
   PRECICE_ASSERT(!_stampleStorage.empty(), "Storage does not contain any data!");
   const double nextWindowStart = _stampleStorage.back().timestamp;
   _stampleStorage.erase(_stampleStorage.begin(), --_stampleStorage.end());
   PRECICE_ASSERT(nextWindowStart == _stampleStorage.front().timestamp);
+  PRECICE_DEBUG("times after: {}", getTimes());
 }
 
 void Storage::trim()
 {
+  PRECICE_DEBUG("Storage::trim()");
+  PRECICE_DEBUG("times before: {}", getTimes());
   PRECICE_ASSERT(!_stampleStorage.empty(), "Storage does not contain any data!");
   const double thisWindowStart = _stampleStorage.front().timestamp;
   _stampleStorage.erase(++_stampleStorage.begin(), _stampleStorage.end());
   PRECICE_ASSERT(_stampleStorage.size() == 1);
   PRECICE_ASSERT(thisWindowStart == _stampleStorage.front().timestamp);
+  PRECICE_DEBUG("times after: {}", getTimes());
 }
 
 void Storage::clear()
@@ -84,6 +90,8 @@ void Storage::clear()
 
 Eigen::VectorXd Storage::getValuesAtOrAfter(double before) const
 {
+  PRECICE_DEBUG("getValuesAtOrAfter({})", before);
+  PRECICE_DEBUG("available times: {}", getTimes());
   if (nTimes() == 1) {
     return _stampleStorage.front().sample.values; // @todo in this case the name getValuesAtOrAfter does not fit, because _stampleStorage.front().sample.values is returned for any time before.
   } else {

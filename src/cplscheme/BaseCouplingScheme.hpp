@@ -88,7 +88,9 @@ public:
   /// @copydoc cplscheme::CouplingScheme::addComputedTime()
   bool addComputedTime(double timeToAdd) override final;
 
-  void resetComputedTime();
+  double getComputedTime() const;
+
+  void resetComputedTimeTo(double computedTime);
 
   /**
    * @brief Returns true, if data will be exchanged when calling advance().
