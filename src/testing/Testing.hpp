@@ -77,16 +77,19 @@ boost::test_tools::predicate_result equals(const Eigen::MatrixBase<DerivedA> &A,
                                            const Eigen::MatrixBase<DerivedB> &B,
                                            double                             tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
 {
-  if (not math::equals(A, B, tolerance)) {
+  if ((A - B).array().abs().maxCoeff() > tolerance) {
     boost::test_tools::predicate_result res(false);
     Eigen::IOFormat                     format;
     if (A.cols() == 1) {
       format.rowSeparator = ", ";
       format.rowPrefix    = "  ";
+      format.precision    = Eigen::FullPrecision;
     }
     res.message() << "\n"
                   << A.format(format) << " != \n"
-                  << B.format(format);
+                  << B.format(format) << '\n'
+                  << (A - B).cwiseAbs().format(format) << " < " << tolerance << '\n'
+                  << (A - B).unaryExpr([tolerance](double e) -> bool { return std::abs(e) < tolerance; }).format(format) << " in tolerance";
     return res;
   }
   return true;
