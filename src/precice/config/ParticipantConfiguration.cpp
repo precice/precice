@@ -287,13 +287,6 @@ void ParticipantConfiguration::xmlTagCallback(
                   "Please add the name of the other participant to the receive-mesh tag: <receive-mesh name=\"{}\" from=\"(other participant)\" ... />",
                   context.name, name, name)
 
-    if (allowDirectAccess) {
-      if (!_experimental) {
-        PRECICE_ERROR("You tried to configure the received mesh \"{}\" to use the option access-direct=\"true\", which is currently still experimental. Please set experimental=\"true\", if you want to use this feature.", name);
-      }
-      PRECICE_WARN("You configured the received mesh \"{}\" to use the option access-direct=\"true\", which is currently still experimental. Use with care.", name);
-    }
-
     PRECICE_CHECK(_participants.back()->getName() != from,
                   "Participant \"{}\" cannot receive mesh \"{}\" from itself. "
                   "To provide a mesh, use <provide-mesh name=\"{}\" /> instead.",
