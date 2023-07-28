@@ -626,10 +626,8 @@ public:
 
   ///@}
 
-  /** @name Experimental: Direct Access
-   * These API functions are \b experimental and may change in future versions.
+  /** @name Direct Access
    */
-  ///@{
 
   /**
    * @brief setMeshAccessRegion Define a region of interest on a received mesh
@@ -693,7 +691,7 @@ public:
       ::precice::span<const double> boundingBox) const;
 
   /**
-   * @brief getMeshVerticesAndIDs Iterates over the region of
+   * @brief getMeshVertexIDsAndCoordinates Iterates over the region of
    *        interest defined by bounding boxes and reads the corresponding
    *        coordinates omitting the mapping.
    *
@@ -715,12 +713,10 @@ public:
    * @see getMeshVertexSize() to get the amount of vertices in the mesh
    * @see getMeshDimensions() to get the spacial dimensionality of the mesh
    */
-  void getMeshVerticesAndIDs(
+  void getMeshVertexIDsAndCoordinates(
       ::precice::string_view    meshName,
       ::precice::span<VertexID> ids,
       ::precice::span<double>   coordinates) const;
-
-  ///@}
 
   /** @name Experimental: Gradient Data
    * These API functions are \b experimental and may change in future versions.

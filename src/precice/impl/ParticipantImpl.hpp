@@ -244,8 +244,7 @@ public:
 
   ///@}
 
-  /** @name Experimental Data Access
-   * These API functions are \b experimental and may change in future versions.
+  /** @name Direct Access
    */
   ///@{
 
@@ -253,8 +252,8 @@ public:
   void setMeshAccessRegion(std::string_view              meshName,
                            ::precice::span<const double> boundingBox) const;
 
-  /// @copydoc Participant::getMeshVerticesAndIDs
-  void getMeshVerticesAndIDs(
+  /// @copydoc Participant::getMeshVertexIDsAndCoordinates
+  void getMeshVertexIDsAndCoordinates(
       std::string_view          meshName,
       ::precice::span<VertexID> ids,
       ::precice::span<double>   coordinates) const;

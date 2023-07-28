@@ -269,6 +269,22 @@ PRECICE_API void precicec_setMeshTetrahedra(
     int         size,
     const int * vertices);
 
+/**
+ * @brief See precice::Participant::setMeshAccessRegion().
+ */
+PRECICE_API void precicec_setMeshAccessRegion(
+    const char *  meshName,
+    const double *boundingBox);
+
+/**
+ * @brief See precice::Participant::getMeshVertexIDsAndCoordinates().
+ */
+PRECICE_API void precicec_getMeshVertexIDsAndCoordinates(
+    const char *meshName,
+    const int   size,
+    int *       ids,
+    double *    coordinates);
+
 ///@}
 
 ///@name Data Access
@@ -348,22 +364,6 @@ PRECICE_API void precicec_writeGradientData(
     int           size,
     const int *   valueIndices,
     const double *gradients);
-
-/**
- * @brief See precice::Participant::setMeshAccessRegion().
- */
-PRECICE_API void precicec_setMeshAccessRegion(
-    const char *  meshName,
-    const double *boundingBox);
-
-/**
- * @brief See precice::Participant::getMeshVerticesAndIDs().
- */
-PRECICE_API void precicec_getMeshVerticesAndIDs(
-    const char *meshName,
-    const int   size,
-    int *       ids,
-    double *    coordinates);
 
 ///@}
 

@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithWaveform)
 
     std::vector<double> otherPositions(otherMeshSize * dim);
     std::vector<int>    otherIDs(otherMeshSize, -1);
-    interface.getMeshVerticesAndIDs(otherMeshName, otherIDs, otherPositions);
+    interface.getMeshVertexIDsAndCoordinates(otherMeshName, otherIDs, otherPositions);
 
     // Some dummy writeData
     std::vector<double> readData(ownIDs.size(), -1);

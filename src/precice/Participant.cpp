@@ -230,11 +230,11 @@ void Participant::setMeshAccessRegion(::precice::string_view        meshName,
   _impl->setMeshAccessRegion(toSV(meshName), boundingBox);
 }
 
-void Participant::getMeshVerticesAndIDs(::precice::string_view    meshName,
-                                        ::precice::span<VertexID> ids,
-                                        ::precice::span<double>   coordinates) const
+void Participant::getMeshVertexIDsAndCoordinates(::precice::string_view    meshName,
+                                                 ::precice::span<VertexID> ids,
+                                                 ::precice::span<double>   coordinates) const
 {
-  _impl->getMeshVerticesAndIDs(toSV(meshName), ids, coordinates);
+  _impl->getMeshVertexIDsAndCoordinates(toSV(meshName), ids, coordinates);
 }
 
 void Participant::writeGradientData(

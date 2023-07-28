@@ -304,14 +304,14 @@ void precicec_setMeshAccessRegion(
   impl->setMeshAccessRegion(meshName, {boundingBox, bbSize});
 }
 
-void precicec_getMeshVerticesAndIDs(
+void precicec_getMeshVertexIDsAndCoordinates(
     const char *meshName,
     const int   size,
     int *       ids,
     double *    coordinates)
 {
   auto coordinatesSize = static_cast<long unsigned>(impl->getMeshDimensions(meshName) * size);
-  impl->getMeshVerticesAndIDs(meshName, {ids, static_cast<unsigned long>(size)}, {coordinates, coordinatesSize});
+  impl->getMeshVertexIDsAndCoordinates(meshName, {ids, static_cast<unsigned long>(size)}, {coordinates, coordinatesSize});
 }
 
 #ifdef __GNUC__

@@ -1078,7 +1078,6 @@ void ParticipantImpl::setMeshAccessRegion(
     const std::string_view        meshName,
     ::precice::span<const double> boundingBox) const
 {
-  PRECICE_EXPERIMENTAL_API();
   PRECICE_TRACE(meshName, boundingBox.size());
   PRECICE_REQUIRE_MESH_USE(meshName);
   PRECICE_CHECK(_state != State::Finalized, "setMeshAccessRegion() cannot be called after finalize().")
@@ -1112,12 +1111,11 @@ void ParticipantImpl::setMeshAccessRegion(
   _accessRegionDefined = true;
 }
 
-void ParticipantImpl::getMeshVerticesAndIDs(
+void ParticipantImpl::getMeshVertexIDsAndCoordinates(
     const std::string_view    meshName,
     ::precice::span<VertexID> ids,
     ::precice::span<double>   coordinates) const
 {
-  PRECICE_EXPERIMENTAL_API();
   PRECICE_TRACE(meshName, ids.size(), coordinates.size());
   PRECICE_REQUIRE_MESH_USE(meshName);
   PRECICE_DEBUG("Get {} mesh vertices with IDs", ids.size());

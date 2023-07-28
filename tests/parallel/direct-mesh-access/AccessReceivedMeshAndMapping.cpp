@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
     // Allocate a vector containing the vertices
     std::vector<double> solverTwoMesh(otherMeshSize * dim);
     std::vector<int>    otherIDs(otherMeshSize, -1);
-    interface.getMeshVerticesAndIDs(otherMeshName, otherIDs, solverTwoMesh);
+    interface.getMeshVertexIDsAndCoordinates(otherMeshName, otherIDs, solverTwoMesh);
     // Expected data = positions of the other participant's mesh
     const std::vector<double> expectedData = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 2.0, 0.0, 3.5}) : std::vector<double>({0.0, 3.5, 0.0, 4.0, 0.0, 5.0});
     BOOST_TEST(solverTwoMesh == expectedData);
