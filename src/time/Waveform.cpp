@@ -1,12 +1,12 @@
-#include "time/Waveform.hpp"
 #include <algorithm>
-#include <unsupported/Eigen/Splines>
+
 #include "cplscheme/CouplingScheme.hpp"
 #include "logging/LogMacros.hpp"
+#include "math/bspline.hpp"
 #include "math/differences.hpp"
 #include "mesh/Data.hpp"
 #include "time/Time.hpp"
-#include "utils/EigenHelperFunctions.hpp"
+#include "time/Waveform.hpp"
 
 namespace precice::time {
 
@@ -31,34 +31,6 @@ const time::Storage &Waveform::timeStepsStorage() const
   return _timeStepsStorage;
 }
 
-// helper function to compute x(t) from given data (x0,t0), (x1,t1), ..., (xn,tn) via B-spline interpolation (implemented using Eigen).
-Eigen::VectorXd bSplineInterpolationAt(double t, Eigen::VectorXd ts, Eigen::MatrixXd xs, int splineDegree)
-{
-  // organize data in columns. Each column represents one sample in time.
-  PRECICE_ASSERT(xs.cols() == ts.size());
-  const int ndofs = xs.rows(); // number of dofs. Each dof needs it's own interpolant.
-
-  double tRelative = (t - ts(0)) / (ts(ts.size() - 1) - ts(0)); // Eigen requires us to scale the time t to the interval [0,1]
-
-  Eigen::VectorXd tsRelative(ts.size());
-
-  for (int i = 0; i < ts.size(); i++) {
-    tsRelative[i] = (ts(i) - ts(0)) / (ts(ts.size() - 1) - ts(0)); // Eigen requires us to scale the knot vector ts to the interval [0,1]
-  }
-
-  Eigen::VectorXd interpolated(ndofs);
-
-  const int splineDimension = 1;
-
-  // @todo implement cache to avoid unnecessary recomputation. Important! Need to reset cache when entering next window or iteration.
-  for (int i = 0; i < ndofs; i++) {
-    const auto spline = Eigen::SplineFitting<Eigen::Spline<double, splineDimension>>::Interpolate(xs.row(i), splineDegree, tsRelative);
-    interpolated[i]   = spline(tRelative)[0]; // get component of spline associated with xs.row(i)
-  }
-
-  return interpolated;
-}
-
 Eigen::VectorXd Waveform::sample(double time) const
 {
   const int usedDegree = computeUsedDegree(_degree, _timeStepsStorage.nTimes());
@@ -69,7 +41,7 @@ Eigen::VectorXd Waveform::sample(double time) const
 
   const auto data = _timeStepsStorage.getTimesAndValues();
 
-  return bSplineInterpolationAt(time, data.first, data.second, usedDegree);
+  return math::bspline::interpolateAt(data.first, data.second, usedDegree, time);
 }
 
 int Waveform::computeUsedDegree(int requestedDegree, int numberOfAvailableSamples) const
