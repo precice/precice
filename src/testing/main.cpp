@@ -4,9 +4,7 @@
 // Specify the overall name of test framework
 #define BOOST_TEST_MODULE "preCICE Tests"
 
-#include <boost/filesystem/directory.hpp>
-#include <boost/filesystem/operations.hpp>
-#include <boost/filesystem/path.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/test/tools/fpc_tolerance.hpp>
 #include <boost/test/tree/test_case_counter.hpp>
 #include <boost/test/tree/traverse.hpp>
