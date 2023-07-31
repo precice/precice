@@ -148,7 +148,6 @@ void AccelerationConfiguration::xmlTagCallback(
     if (_config.type == VALUE_MVQN)
       _config.alwaysBuildJacobian = callingTag.getBooleanAttributeValue(ATTR_BUILDJACOBIAN);
   }
-
   if (callingTag.getName() == TAG_RELAX) {
     _config.relaxationFactor = callingTag.getDoubleAttributeValue(ATTR_VALUE);
   } else if (callingTag.getName() == TAG_DATA) {
@@ -178,18 +177,22 @@ void AccelerationConfiguration::xmlTagCallback(
 
     _neededMeshes.push_back(_meshName);
   } else if (callingTag.getName() == TAG_INIT_RELAX) {
-    _config.relaxationFactor = callingTag.getDoubleAttributeValue(ATTR_VALUE);
+    _userDefinitions.definedRelaxationFactor = true;
+    _config.relaxationFactor                 = callingTag.getDoubleAttributeValue(ATTR_VALUE);
     if (callingTag.hasAttribute(ATTR_ENFORCE)) {
       _config.forceInitialRelaxation = callingTag.getBooleanAttributeValue(ATTR_ENFORCE);
     } else {
       _config.forceInitialRelaxation = false;
     }
   } else if (callingTag.getName() == TAG_MAX_USED_ITERATIONS) {
-    _config.maxIterationsUsed = callingTag.getIntAttributeValue(ATTR_VALUE);
+    _userDefinitions.definedMaxIterationsUsed = true;
+    _config.maxIterationsUsed                 = callingTag.getIntAttributeValue(ATTR_VALUE);
   } else if (callingTag.getName() == TAG_TIME_WINDOWS_REUSED) {
-    _config.timeWindowsReused = callingTag.getIntAttributeValue(ATTR_VALUE);
+    _userDefinitions.definedTimeWindowsReused = true;
+    _config.timeWindowsReused                 = callingTag.getIntAttributeValue(ATTR_VALUE);
   } else if (callingTag.getName() == TAG_FILTER) {
-    const auto &f = callingTag.getStringAttributeValue(ATTR_TYPE);
+    _userDefinitions.definedFilter = true;
+    const auto &f                  = callingTag.getStringAttributeValue(ATTR_TYPE);
     if (f == VALUE_QR1FILTER) {
       _config.filter = Acceleration::QR1FILTER;
     } else if (f == VALUE_QR1_ABSFILTER) {
@@ -201,8 +204,9 @@ void AccelerationConfiguration::xmlTagCallback(
     }
     _config.singularityLimit = callingTag.getDoubleAttributeValue(ATTR_SINGULARITYLIMIT);
   } else if (callingTag.getName() == TAG_PRECONDITIONER) {
-    _config.preconditionerType         = callingTag.getStringAttributeValue(ATTR_TYPE);
-    _config.precond_nbNonConstTWindows = callingTag.getIntAttributeValue(ATTR_PRECOND_NONCONST_TIME_WINDOWS);
+    _userDefinitions.definedPreconditionerType = true;
+    _config.preconditionerType                 = callingTag.getStringAttributeValue(ATTR_TYPE);
+    _config.precond_nbNonConstTWindows         = callingTag.getIntAttributeValue(ATTR_PRECOND_NONCONST_TIME_WINDOWS);
   } else if (callingTag.getName() == TAG_IMVJRESTART) {
 
     if (_config.alwaysBuildJacobian)
@@ -248,7 +252,6 @@ void AccelerationConfiguration::xmlEndTagCallback(
       if (callingTag.getName() == VALUE_MVQN && _config.imvjRestartType > 0)
         if (_config.precond_nbNonConstTWindows > _config.imvjChunkSize)
           _config.precond_nbNonConstTWindows = _config.imvjChunkSize;
-
       if (_config.preconditionerType == VALUE_CONSTANT_PRECONDITIONER) {
         std::vector<double> factors;
         for (int id : _config.dataIDs) {
@@ -263,11 +266,13 @@ void AccelerationConfiguration::xmlEndTagCallback(
         _preconditioner = PtrPreconditioner(new ResidualSumPreconditioner(_config.precond_nbNonConstTWindows));
       } else {
         // no preconditioner defined
+        /*if ()
         std::vector<double> factors;
         for (int id = 0; id < static_cast<int>(_config.dataIDs.size()); ++id) {
           factors.push_back(1.0);
         }
-        _preconditioner = PtrPreconditioner(new ConstantPreconditioner(factors));
+        _preconditioner = PtrPreconditioner(new ConstantPreconditioner(factors));*/
+        _preconditioner = PtrPreconditioner(new ResidualSumPreconditioner(_defaultValuesIQNILS.precond_nbNonConstTWindows));
       }
     }
 
@@ -280,7 +285,12 @@ void AccelerationConfiguration::xmlEndTagCallback(
           new AitkenAcceleration(
               _config.relaxationFactor, _config.dataIDs));
     } else if (callingTag.getName() == VALUE_IQNILS) {
-      _acceleration = PtrAcceleration(
+      _config.relaxationFactor  = (_userDefinitions.definedRelaxationFactor) ?: _defaultValuesIQNILS.relaxationFactor;
+      _config.maxIterationsUsed = (_userDefinitions.definedMaxIterationsUsed) ?: _defaultValuesIQNILS.maxIterationsUsed;
+      _config.timeWindowsReused = (_userDefinitions.definedTimeWindowsReused) ?: _defaultValuesIQNILS.timeWindowsReused;
+      _config.filter            = (_userDefinitions.definedFilter) ?: _defaultValuesIQNILS.filter;
+      _config.singularityLimit  = (_userDefinitions.definedFilter) ?: _defaultValuesIQNILS.singularityLimit;
+      _acceleration             = PtrAcceleration(
           new IQNILSAcceleration(
               _config.relaxationFactor,
               _config.forceInitialRelaxation,
@@ -291,7 +301,12 @@ void AccelerationConfiguration::xmlEndTagCallback(
               _preconditioner));
     } else if (callingTag.getName() == VALUE_MVQN) {
 #ifndef PRECICE_NO_MPI
-      _acceleration = PtrAcceleration(
+      _config.relaxationFactor  = (_userDefinitions.definedRelaxationFactor) ?: _defaultValuesIQNIMVJ.relaxationFactor;
+      _config.maxIterationsUsed = (_userDefinitions.definedMaxIterationsUsed) ?: _defaultValuesIQNIMVJ.maxIterationsUsed;
+      _config.timeWindowsReused = (_userDefinitions.definedTimeWindowsReused) ?: _defaultValuesIQNIMVJ.timeWindowsReused;
+      _config.filter            = (_userDefinitions.definedFilter) ?: _defaultValuesIQNILS.filter;
+      _config.singularityLimit  = (_userDefinitions.definedFilter) ?: _defaultValuesIQNILS.singularityLimit;
+      _acceleration             = PtrAcceleration(
           new MVQNAcceleration(
               _config.relaxationFactor,
               _config.forceInitialRelaxation,
@@ -359,7 +374,7 @@ void AccelerationConfiguration::addCommonIQNSubtags(xml::XMLTag &tag)
                              "Please note that a QR1 is based on Given's rotations whereas QR2 uses "
                              "modified Gram-Schmidt. This can give different results even when no columns "
                              "are filtered out.");
-  XMLAttribute<double> attrSingularityLimit(ATTR_SINGULARITYLIMIT, 1e-16);
+  XMLAttribute<double> attrSingularityLimit(ATTR_SINGULARITYLIMIT, 1e-2);
   attrSingularityLimit.setDocumentation("Limit eps of the filter.");
   tagFilter.addAttribute(attrSingularityLimit);
   auto attrFilterName = XMLAttribute<std::string>(ATTR_TYPE)
@@ -399,7 +414,8 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     tagData.addAttribute(attrMesh);
     tag.addSubtag(tagData);
   } else if (tag.getName() == VALUE_IQNILS) {
-    XMLTag tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_ONCE);
+
+    XMLTag tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_NOT_OR_ONCE);
     tagInitRelax.setDocumentation("Initial relaxation factor.");
     XMLAttribute<double> attrDoubleValue(ATTR_VALUE);
     attrDoubleValue.setDocumentation("Initial relaxation factor.");
@@ -409,14 +425,14 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     tagInitRelax.addAttribute(attrEnforce);
     tag.addSubtag(tagInitRelax);
 
-    XMLTag tagMaxUsedIter(*this, TAG_MAX_USED_ITERATIONS, XMLTag::OCCUR_ONCE);
+    XMLTag tagMaxUsedIter(*this, TAG_MAX_USED_ITERATIONS, XMLTag::OCCUR_NOT_OR_ONCE);
     tagMaxUsedIter.setDocumentation("Maximum number of columns used in low-rank approximation of Jacobian.");
     XMLAttribute<int> attrIntValue(ATTR_VALUE);
     attrIntValue.setDocumentation("The number of columns.");
     tagMaxUsedIter.addAttribute(attrIntValue);
     tag.addSubtag(tagMaxUsedIter);
 
-    XMLTag tagTimeWindowsReused(*this, TAG_TIME_WINDOWS_REUSED, XMLTag::OCCUR_ONCE);
+    XMLTag tagTimeWindowsReused(*this, TAG_TIME_WINDOWS_REUSED, XMLTag::OCCUR_NOT_OR_ONCE);
     tagTimeWindowsReused.setDocumentation("Number of past time windows from which columns are used to approximate Jacobian.");
     XMLAttribute<int> attrNumTimeWindowsReused(ATTR_VALUE);
     attrNumTimeWindowsReused.setDocumentation("The number of time windows.");
@@ -447,7 +463,7 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     tag.addSubtag(tagPreconditioner);
 
   } else if (tag.getName() == VALUE_MVQN) {
-    XMLTag tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_ONCE);
+    XMLTag tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_NOT_OR_ONCE);
     tagInitRelax.setDocumentation("Initial relaxation factor.");
     tagInitRelax.addAttribute(
         XMLAttribute<double>(ATTR_VALUE).setDocumentation("Initial relaxation factor."));
@@ -482,14 +498,14 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     tagIMVJRESTART.addAttribute(attrRSSVD_truncationEps);
     tag.addSubtag(tagIMVJRESTART);
 
-    XMLTag tagMaxUsedIter(*this, TAG_MAX_USED_ITERATIONS, XMLTag::OCCUR_ONCE);
+    XMLTag tagMaxUsedIter(*this, TAG_MAX_USED_ITERATIONS, XMLTag::OCCUR_NOT_OR_ONCE);
     tagMaxUsedIter.setDocumentation("Maximum number of columns used in low-rank approximation of Jacobian.");
     XMLAttribute<int> attrIntValue(ATTR_VALUE);
     attrIntValue.setDocumentation("The number of columns.");
     tagMaxUsedIter.addAttribute(attrIntValue);
     tag.addSubtag(tagMaxUsedIter);
 
-    XMLTag tagTimeWindowsReused(*this, TAG_TIME_WINDOWS_REUSED, XMLTag::OCCUR_ONCE);
+    XMLTag tagTimeWindowsReused(*this, TAG_TIME_WINDOWS_REUSED, XMLTag::OCCUR_NOT_OR_ONCE);
     tagTimeWindowsReused.setDocumentation("Number of past time windows from which columns are used to approximate Jacobian.");
     tagTimeWindowsReused.addAttribute(attrIntValue);
     tag.addSubtag(tagTimeWindowsReused);

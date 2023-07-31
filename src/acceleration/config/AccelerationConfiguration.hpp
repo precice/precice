@@ -117,6 +117,34 @@ private:
     std::string           preconditionerType;
   } _config;
 
+  const struct DefaultValuesIQN {
+    double      relaxationFactor           = 0.1;
+    int         maxIterationsUsed          = 100;
+    int         timeWindowsReused          = 10;
+    int         filter                     = Acceleration::QR2FILTER;
+    double      singularityLimit           = 1e-2;
+    std::string preconditionerType         = "residual-sum";
+    int         precond_nbNonConstTWindows = -1;
+  } _defaultValuesIQNILS;
+
+  const struct DefaultValuesIMVJ {
+    double      relaxationFactor           = 0.1;
+    int         maxIterationsUsed          = 10;
+    int         timeWindowsReused          = 0;
+    int         filter                     = Acceleration::QR2FILTER;
+    double      singularityLimit           = 1e-2;
+    std::string preconditionerType         = "residual-sum";
+    int         precond_nbNonConstTWindows = -1;
+  } _defaultValuesIQNIMVJ;
+
+  struct UserDefinitions {
+    bool definedRelaxationFactor   = false;
+    bool definedMaxIterationsUsed  = false;
+    bool definedTimeWindowsReused  = false;
+    bool definedFilter             = false;
+    bool definedPreconditionerType = false;
+  } _userDefinitions;
+
   void addTypeSpecificSubtags(xml::XMLTag &tag);
   void addCommonIQNSubtags(xml::XMLTag &tag);
 };
