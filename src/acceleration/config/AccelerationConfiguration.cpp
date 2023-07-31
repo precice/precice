@@ -285,11 +285,11 @@ void AccelerationConfiguration::xmlEndTagCallback(
           new AitkenAcceleration(
               _config.relaxationFactor, _config.dataIDs));
     } else if (callingTag.getName() == VALUE_IQNILS) {
-      _config.relaxationFactor  = (_userDefinitions.definedRelaxationFactor) ?: _defaultValuesIQNILS.relaxationFactor;
-      _config.maxIterationsUsed = (_userDefinitions.definedMaxIterationsUsed) ?: _defaultValuesIQNILS.maxIterationsUsed;
-      _config.timeWindowsReused = (_userDefinitions.definedTimeWindowsReused) ?: _defaultValuesIQNILS.timeWindowsReused;
-      _config.filter            = (_userDefinitions.definedFilter) ?: _defaultValuesIQNILS.filter;
-      _config.singularityLimit  = (_userDefinitions.definedFilter) ?: _defaultValuesIQNILS.singularityLimit;
+      _config.relaxationFactor  = (_userDefinitions.definedRelaxationFactor) ? _config.relaxationFactor : _defaultValuesIQNILS.relaxationFactor;
+      _config.maxIterationsUsed = (_userDefinitions.definedMaxIterationsUsed) ? _config.maxIterationsUsed : _defaultValuesIQNILS.maxIterationsUsed;
+      _config.timeWindowsReused = (_userDefinitions.definedTimeWindowsReused) ? _config.timeWindowsReused : _defaultValuesIQNILS.timeWindowsReused;
+      _config.filter            = (_userDefinitions.definedFilter) ? _config.filter : _defaultValuesIQNILS.filter;
+      _config.singularityLimit  = (_userDefinitions.definedFilter) ? _config.singularityLimit : _defaultValuesIQNILS.singularityLimit;
       _acceleration             = PtrAcceleration(
           new IQNILSAcceleration(
               _config.relaxationFactor,
@@ -301,11 +301,11 @@ void AccelerationConfiguration::xmlEndTagCallback(
               _preconditioner));
     } else if (callingTag.getName() == VALUE_MVQN) {
 #ifndef PRECICE_NO_MPI
-      _config.relaxationFactor  = (_userDefinitions.definedRelaxationFactor) ?: _defaultValuesIQNIMVJ.relaxationFactor;
-      _config.maxIterationsUsed = (_userDefinitions.definedMaxIterationsUsed) ?: _defaultValuesIQNIMVJ.maxIterationsUsed;
-      _config.timeWindowsReused = (_userDefinitions.definedTimeWindowsReused) ?: _defaultValuesIQNIMVJ.timeWindowsReused;
-      _config.filter            = (_userDefinitions.definedFilter) ?: _defaultValuesIQNILS.filter;
-      _config.singularityLimit  = (_userDefinitions.definedFilter) ?: _defaultValuesIQNILS.singularityLimit;
+      _config.relaxationFactor  = (_userDefinitions.definedRelaxationFactor) ? _config.relaxationFactor : _defaultValuesIQNIMVJ.relaxationFactor;
+      _config.maxIterationsUsed = (_userDefinitions.definedMaxIterationsUsed) ? _config.maxIterationsUsed : _defaultValuesIQNIMVJ.maxIterationsUsed;
+      _config.timeWindowsReused = (_userDefinitions.definedTimeWindowsReused) ? _config.timeWindowsReused : _defaultValuesIQNIMVJ.timeWindowsReused;
+      _config.filter            = (_userDefinitions.definedFilter) ? _config.filter : _defaultValuesIQNILS.filter;
+      _config.singularityLimit  = (_userDefinitions.definedFilter) ? _config.singularityLimit : _defaultValuesIQNILS.singularityLimit;
       _acceleration             = PtrAcceleration(
           new MVQNAcceleration(
               _config.relaxationFactor,
