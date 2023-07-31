@@ -23,7 +23,11 @@ def quote(text):
     return f'"{text}"'
 
 
+PRECICE_NAMESPACES = ["basis-function", "mapping"]
+
 def parseXML(content):
+    for ns in PRECICE_NAMESPACES:
+        etree.register_namespace(ns, ns)
     p = etree.XMLParser(recover=True, remove_comments=True)
     return etree.fromstring(content, p)
 
@@ -49,23 +53,25 @@ def portParticipant(p):
             m.attrib["constraint"] = "scaled-consisitent-surface"
 
         # rbf mappings
-        if m.tag.startswith("mapping:rbf"):
-            rbf = m.tag.removeprefix("mapping:rbf-")
-            if isTrue(attrib.get("use-qr-decomposition", "false")):
-                m.tag = "mapping:rbf-global-iterative"
-            else:
-                m.tag = "mapping:rbf-global-direct"
-            rbfattribs = {k: v for k, v in m.attrib.itmes() if k in ["shape-parameter", "support-radius"]}
-            m.append(etree.Element("basis-function:"+rbf, rbfattribs))
+        if m.tag.startswith("mapping:rbf-"):
+            rbf = m.tag.split("-", 1)[1]
+            rbfAttribs = {k: v for k, v in m.attrib.items() if k in ["shape-parameter", "support-radius"]}
+            mapAttribs = {k: v for k, v in m.attrib.items() if k not in ["shape-parameter", "support-radius", "use-qr-decomposition"]}
+
+            mapping = etree.Element("{mapping}rbf", mapAttribs)
+            mapping.append(etree.Element("{basis-function}"+rbf, rbfAttribs))
+            p.remove(m)
+            p.append(mapping)
+
 
     # actions
     removedTimings = ["regular-prior", "regular-post", "on-exchange-prior", "on-exchange-post", "read-mapping-prior", "write-mapping-prior", "on-time-window-complete-post"]
     removedActions = ["ComputeCurvatureAction", "ScaleByDtAction"]
     for a in filter(lambda c: c.tag.startswith("action"), p.iterchildren()):
-        if a.tag.removeprefix("action:") in removedActions:
+        if a.tag.split(":")[1] in removedActions:
             p.remove(a)
             print(f"Removed: {a.tag} (action unsupported)")
-        elif a.tag.removeprefix("action:") in removedActions:
+        elif a.attrib["timing"] in removedTimings:
             p.remove(a)
             print(f"Removed: {a.tag} (timing unsupported)")
     return p
@@ -77,7 +83,6 @@ def portCouplingScheme(cpl):
         cpl.remove(extra)
         print("Removed: extrapolation-order")
     return cpl
-
 
 def portConfiguration(root):
     assert root.tag == "precice-configuration"
@@ -100,6 +105,7 @@ def portConfiguration(root):
 
     for cpl in root.findall("coupling-schemes"):
         cpl = portCouplingScheme(cpl)
+
     return root
 
 
