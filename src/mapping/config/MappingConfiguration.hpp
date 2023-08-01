@@ -87,7 +87,6 @@ public:
     std::array<bool, 3> deadAxis{};
     Polynomial          polynomial{};
     double              solverRtol{};
-    Preallocation       preallocation{};
     int                 verticesPerCluster{};
     double              relativeOverlap{};
     bool                projectToInput{};
@@ -150,13 +149,6 @@ private:
 
   // For iterative RBFs
   const std::string ATTR_SOLVER_RTOL = "solver-rtol";
-
-  const std::string ATTR_PREALLOCATION     = "preallocation";
-  const std::string PREALLOCATION_ESTIMATE = "estimate";
-  const std::string PREALLOCATION_COMPUTE  = "compute";
-  const std::string PREALLOCATION_SAVE     = "save";
-  const std::string PREALLOCATION_TREE     = "tree";
-  const std::string PREALLOCATION_OFF      = "off";
 
   // For the future
   // const std::string ATTR_PARALLELISM           = "parallelism";
@@ -254,7 +246,6 @@ private:
    */
   RBFConfiguration configureRBFMapping(const std::string &type,
                                        const std::string &polynomial,
-                                       const std::string &preallocation,
                                        bool xDead, bool yDead, bool zDead,
                                        double solverRtol,
                                        double verticesPerCluster,
