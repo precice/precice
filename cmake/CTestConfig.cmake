@@ -37,7 +37,7 @@ function(add_precice_test)
 
   # Are direct dependencies fulfilled?
   if( (NOT PRECICE_MPICommunication) OR (PAT_PETSC AND NOT PRECICE_PETScMapping)
-       OR (PAT_GINKGO AND NOT PRECICE_GinkgoParallelization)
+       OR (PAT_GINKGO AND NOT PRECICE_FEATURE_GINKGO_MAPPING)
        OR (PAT_GINKGO_OMP AND NOT PRECICE_WITH_OMP)
        OR (PAT_GINKGO_CUDA AND NOT PRECICE_WITH_CUDA)
        OR (PAT_GINKGO_HIP AND NOT PRECICE_WITH_HIP))
