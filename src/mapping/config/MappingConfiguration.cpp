@@ -204,9 +204,6 @@ MappingConfiguration::MappingConfiguration(
 
   auto attrSolverRtol = makeXMLAttribute(ATTR_SOLVER_RTOL, 1e-9)
                             .setDocumentation("Solver relative tolerance for convergence");
-  auto attrPreallocation = makeXMLAttribute(ATTR_PREALLOCATION, PREALLOCATION_TREE)
-                               .setDocumentation("Sets kind of preallocation for PETSc RBF implementation")
-                               .setOptions({PREALLOCATION_ESTIMATE, PREALLOCATION_COMPUTE, PREALLOCATION_OFF, PREALLOCATION_SAVE, PREALLOCATION_TREE});
 
   auto verticesPerCluster = XMLAttribute<int>(ATTR_VERTICES_PER_CLUSTER, 100)
                                 .setDocumentation("Average number of vertices per cluster (partition) applied in the rbf partition of unity method.");
@@ -218,7 +215,7 @@ MappingConfiguration::MappingConfiguration(
   // Add the relevant attributes to the relevant tags
   addAttributes(projectionTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint});
   addAttributes(rbfDirectTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead});
-  addAttributes(rbfIterativeTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead, attrSolverRtol, attrPreallocation});
+  addAttributes(rbfIterativeTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead, attrSolverRtol});
   addAttributes(pumDirectTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPumPolynomial, attrXDead, attrYDead, attrZDead, verticesPerCluster, relativeOverlap, projectToInput});
   addAttributes(rbfAliasTag, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrXDead, attrYDead, attrZDead});
 
@@ -305,7 +302,6 @@ void MappingConfiguration::xmlTagCallback(
     bool        zDead         = tag.getBooleanAttributeValue(ATTR_Z_DEAD, false);
     double      solverRtol    = tag.getDoubleAttributeValue(ATTR_SOLVER_RTOL, 1e-9);
     std::string strPolynomial = tag.getStringAttributeValue(ATTR_POLYNOMIAL, POLYNOMIAL_SEPARATE);
-    std::string strPrealloc   = tag.getStringAttributeValue(ATTR_PREALLOCATION, PREALLOCATION_TREE);
 
     // pum related tags
     int    verticesPerCluster = tag.getIntAttributeValue(ATTR_VERTICES_PER_CLUSTER, 100);
@@ -327,7 +323,7 @@ void MappingConfiguration::xmlTagCallback(
 
     ConfiguredMapping configuredMapping = createMapping(dir, type, fromMesh, toMesh);
 
-    _rbfConfig = configureRBFMapping(type, strPolynomial, strPrealloc, xDead, yDead, zDead, solverRtol, verticesPerCluster, relativeOverlap, projectToInput);
+    _rbfConfig = configureRBFMapping(type, strPolynomial, xDead, yDead, zDead, solverRtol, verticesPerCluster, relativeOverlap, projectToInput);
 
     checkDuplicates(configuredMapping);
     _mappings.push_back(configuredMapping);
@@ -371,7 +367,7 @@ void MappingConfiguration::xmlTagCallback(
       utils::Petsc::initialize(&argc, &argv, utils::Parallel::current()->comm);
       delete[] arg;
 
-      mapping.mapping = getRBFMapping<RBFBackend::PETSc>(basisFunction, constraintValue, mapping.fromMesh->getDimensions(), supportRadius, shapeParameter, _rbfConfig.deadAxis, _rbfConfig.solverRtol, _rbfConfig.polynomial, _rbfConfig.preallocation);
+      mapping.mapping = getRBFMapping<RBFBackend::PETSc>(basisFunction, constraintValue, mapping.fromMesh->getDimensions(), supportRadius, shapeParameter, _rbfConfig.deadAxis, _rbfConfig.solverRtol, _rbfConfig.polynomial);
 #else
       PRECICE_CHECK(false, "The global-iterative RBF solver requires a preCICE build with PETSc enabled.");
 #endif
@@ -385,7 +381,6 @@ void MappingConfiguration::xmlTagCallback(
 
 MappingConfiguration::RBFConfiguration MappingConfiguration::configureRBFMapping(const std::string &type,
                                                                                  const std::string &polynomial,
-                                                                                 const std::string &preallocation,
                                                                                  bool xDead, bool yDead, bool zDead,
                                                                                  double solverRtol,
                                                                                  double verticesPerCluster,
@@ -417,19 +412,6 @@ MappingConfiguration::RBFConfiguration MappingConfiguration::configureRBFMapping
     rbfConfig.polynomial = Polynomial::OFF;
   else
     PRECICE_UNREACHABLE("Unknown polynomial configuration.");
-
-  if (preallocation == PREALLOCATION_ESTIMATE)
-    rbfConfig.preallocation = Preallocation::ESTIMATE;
-  else if (preallocation == PREALLOCATION_COMPUTE)
-    rbfConfig.preallocation = Preallocation::COMPUTE;
-  else if (preallocation == PREALLOCATION_SAVE)
-    rbfConfig.preallocation = Preallocation::SAVE;
-  else if (preallocation == PREALLOCATION_TREE)
-    rbfConfig.preallocation = Preallocation::TREE;
-  else if (preallocation == PREALLOCATION_OFF)
-    rbfConfig.preallocation = Preallocation::OFF;
-  else
-    PRECICE_UNREACHABLE("Unknown preallocation configuration");
 
   rbfConfig.deadAxis   = {{xDead, yDead, zDead}};
   rbfConfig.solverRtol = solverRtol;
