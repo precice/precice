@@ -47,7 +47,7 @@ std::string filterFromLogLevel(boost::unit_test::log_level logLevel)
   namespace bu = boost::unit_test;
 
   if (logLevel == bu::log_successful_tests || logLevel == bu::log_test_units) {
-    return "";
+    return "%Severity% >= debug";
   }
   if (logLevel == bu::log_messages) {
     return "%Severity% >= info";
@@ -87,7 +87,7 @@ void setupTestLogging()
 
     // The full debug log
     config.output = "test.debug.log";
-    config.filter = "";
+    config.filter = "%Severity% >= debug";
     logConfigs.push_back(config);
   }
 
