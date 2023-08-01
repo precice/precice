@@ -55,7 +55,7 @@ endif()
 
 option(PRECICE_MPICommunication "Enables MPI-based communication and running coupling tests." ON)
 option(PRECICE_PETScMapping "Enable use of the PETSc linear algebra library." ON)
-option(PRECICE_GinkgoParallelization "**Experimental** Enable use of the Ginkgo linear algebra library for parallelization." OFF)
+option(PRECICE_FEATURE_GINKGO_MAPPING "**Experimental** Enable use of Ginkgo (unreleased version) for data mapping." OFF)
 option(PRECICE_PythonActions "Python support" ON)
 option(PRECICE_Packages "Configure package generation." ON)
 option(BUILD_SHARED_LIBS "Build shared instead of static libraries" ON)
@@ -111,14 +111,14 @@ add_feature_info(PETScMapping PRECICE_PETScMapping
    This feature can be enabled/disabled by setting the PRECICE_PETScMapping CMake option.
    Requires MPICommunication.
   ")
-  add_feature_info(GinkgoParallelization PRECICE_GinkgoParallelization
-  "**Experimental** Enables the Ginkgo library backend which supports the usage of GPUs and OpenMP in radial basis function mappings.
+  add_feature_info(GinkgoParallelization PRECICE_FEATURE_GINKGO_MAPPING
+  "**Experimental** Enables the Ginkgo (requires branch public_common_kernels) backend which supports the usage of GPUs and OpenMP for (global) radial-basis function mappings.
 
-   Currently, this enables radial basis function mappings to leverage the compute power of Nvidia and AMD GPUs.
-   It uses iterative solvers provided by Ginkgo or direct solvers offered by hip/cuSolver to compute the solution of interpolation problems.
+   Currently, this enables radial-basis function mappings to leverage the compute power of Nvidia/AMD GPUs and OpenMP.
+   It uses iterative solvers provided by Ginkgo or direct solvers offered by hip/cuSolver.
 
-   This feature can be enabled/disabled by setting the PRECICE_GinkgoParallelization CMake option.
-   Requires the Ginkgo library. Note that this feature is still experimental.
+   This feature can be enabled/disabled by setting the PRECICE_FEATURE_GINKGO_MAPPING CMake option.
+   Requires the Ginkgo library (branch public_common_kernels) and Eigen 3.4. Note that this feature is still experimental.
   ")
 add_feature_info(PythonActions PRECICE_PythonActions
   "Enables the support for user-defined python actions.
@@ -195,7 +195,7 @@ if(TPL_ENABLE_EIGEN3)
   xsdk_tpl_require(EIGEN3 EIGEN3_INCLUDE_DIR)
 endif()
 # We need Eigen 3.4.0 such that Eigen deals properly with cuda
-if(PRECICE_GinkgoParallelization)
+if(PRECICE_FEATURE_GINKGO_MAPPING)
   find_package(Eigen3 3.4.0 REQUIRED)
 else()
   find_package(Eigen3 3.3.7 REQUIRED)
@@ -254,14 +254,14 @@ else()
 endif()
 
 # Option: Ginkgo
-if (PRECICE_GinkgoParallelization)
+if (PRECICE_FEATURE_GINKGO_MAPPING)
   find_package(Ginkgo 1.5 REQUIRED)
   message(STATUS "Found Ginkgo ${GINKGO_PROJECT_VERSION} at ${GINKGO_INSTALL_PREFIX}")
 
   include(CMakeDependentOption)
-  cmake_dependent_option(PRECICE_WITH_CUDA "Enable Ginkgo Cuda support in preCICE" ON "PRECICE_GinkgoParallelization;GINKGO_BUILD_CUDA" OFF)
-  cmake_dependent_option(PRECICE_WITH_HIP "Enable Ginkgo HIP support in preCICE" ON "PRECICE_GinkgoParallelization;GINKGO_BUILD_HIP" OFF)
-  cmake_dependent_option(PRECICE_WITH_OMP "Enable Ginkgo OpenMP support in preCICE" ON "PRECICE_GinkgoParallelization;GINKGO_BUILD_OMP" OFF)
+  cmake_dependent_option(PRECICE_WITH_CUDA "Enable Ginkgo Cuda support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;GINKGO_BUILD_CUDA" OFF)
+  cmake_dependent_option(PRECICE_WITH_HIP "Enable Ginkgo HIP support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;GINKGO_BUILD_HIP" OFF)
+  cmake_dependent_option(PRECICE_WITH_OMP "Enable Ginkgo OpenMP support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;GINKGO_BUILD_OMP" OFF)
 
   # We aim for the same configuration as Ginkgo itself and check immediately for device compiler
   # such that preciceCore inherits all relevant flags directly
@@ -419,7 +419,7 @@ else()
 endif()
 
 # Setup Ginkgo
-if (PRECICE_GinkgoParallelization)
+if (PRECICE_FEATURE_GINKGO_MAPPING)
   # Next we configure the common kernels for the matrix assembly
   # This CMake part is still a shortcoming from the experimental Ginkgo we are using right now
   # TODO: Remove as soon as GPU feature is in main branch
