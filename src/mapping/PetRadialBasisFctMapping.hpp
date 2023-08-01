@@ -47,7 +47,6 @@ public:
    * @param[in] xDead, yDead, zDead Deactivates mapping along an axis
    * @param[in] solverRtol Relative tolerance for the linear solver.
    * @param[in] polynomial Type of polynomial augmentation
-   * @param[in] preallocation Sets kind of preallocation of matrices.
    *
    * For description on convergence testing and meaning of solverRtol see http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPConvergedDefault.html#KSPConvergedDefault
    */
@@ -56,9 +55,8 @@ public:
       int                            dimensions,
       const RADIAL_BASIS_FUNCTION_T &function,
       std::array<bool, 3>            deadAxis,
-      double                         solverRtol    = 1e-9,
-      Polynomial                     polynomial    = Polynomial::SEPARATE,
-      Preallocation                  preallocation = Preallocation::TREE);
+      double                         solverRtol = 1e-9,
+      Polynomial                     polynomial = Polynomial::SEPARATE);
 
   /// Deletes the PETSc objects and the _deadAxis array
   ~PetRadialBasisFctMapping() override;
@@ -182,8 +180,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping(
     const RADIAL_BASIS_FUNCTION_T &function,
     std::array<bool, 3>            deadAxis,
     double                         solverRtol,
-    Polynomial                     polynomial,
-    Preallocation                  preallocation)
+    Polynomial                     polynomial)
     : RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>(constraint, dimensions, function, deadAxis, Mapping::InitialGuessRequirement::Required),
       _matrixC("C"),
       _matrixQ("Q"),
@@ -194,7 +191,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping(
       _AOmapping(nullptr),
       _solverRtol(solverRtol),
       _polynomial(polynomial),
-      _preallocation(preallocation),
+      _preallocation(Preallocation::TREE),
       _commState(utils::Parallel::current())
 {
   polyparams      = (_polynomial == Polynomial::ON) ? this->getPolynomialParameters() : 0;
