@@ -84,10 +84,11 @@ void MultiCouplingScheme::exchangeInitialData()
 
   if (_isController) {
     if (receivesInitializedData()) {
+      ensureDataHasNotYetBeenReceived();
       for (auto &receiveExchange : _receiveDataVector) {
         receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
       }
-      checkDataHasBeenReceived();
+      notifyDataHasBeenReceived();
     } else {
       for (auto &receiveExchange : _receiveDataVector) {
         initializeWithZeroInitialData(receiveExchange.second);
@@ -105,10 +106,11 @@ void MultiCouplingScheme::exchangeInitialData()
       }
     }
     if (receivesInitializedData()) {
+      ensureDataHasNotYetBeenReceived();
       for (auto &receiveExchange : _receiveDataVector) {
         receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
       }
-      checkDataHasBeenReceived();
+      notifyDataHasBeenReceived();
     } else {
       for (auto &receiveExchange : _receiveDataVector) {
         initializeWithZeroInitialData(receiveExchange.second);
@@ -126,10 +128,11 @@ void MultiCouplingScheme::exchangeFirstData()
   PRECICE_DEBUG("Computed full length of iteration");
 
   if (_isController) {
+    ensureDataHasNotYetBeenReceived();
     for (auto &receiveExchange : _receiveDataVector) {
       receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
     }
-    checkDataHasBeenReceived();
+    notifyDataHasBeenReceived();
   } else {
     for (auto &sendExchange : _sendDataVector) {
       sendData(_m2ns[sendExchange.first], sendExchange.second);
@@ -147,10 +150,11 @@ void MultiCouplingScheme::exchangeSecondData()
     if (hasConverged()) {
       moveToNextWindow();
     }
+    ensureDataHasNotYetBeenReceived();
     for (auto &receiveExchange : _receiveDataVector) {
       receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
     }
-    checkDataHasBeenReceived();
+    notifyDataHasBeenReceived();
   }
 
   if (_isController) {

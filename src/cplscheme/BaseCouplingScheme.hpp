@@ -309,9 +309,14 @@ protected:
   void setDoesFirstStep(bool doesFirstStep);
 
   /**
+   * @brief Checks if data has not been received by receiveData().
+   */
+  void ensureDataHasNotYetBeenReceived() const;
+
+  /**
    * @brief Used to set flag after data has been received using receiveData().
    */
-  void checkDataHasBeenReceived();
+  void notifyDataHasBeenReceived();
 
   /**
    * @brief Getter for _receivesInitializedData

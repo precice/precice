@@ -442,9 +442,14 @@ void BaseCouplingScheme::setDoesFirstStep(bool doesFirstStep)
   _doesFirstStep = doesFirstStep;
 }
 
-void BaseCouplingScheme::checkDataHasBeenReceived()
+void BaseCouplingScheme::ensureDataHasNotYetBeenReceived() const
 {
-  PRECICE_ASSERT(not _hasDataBeenReceived, "checkDataHasBeenReceived() may only be called once within one coupling iteration. If this assertion is triggered this probably means that your coupling scheme has a bug.");
+  PRECICE_ASSERT(not _hasDataBeenReceived, "notifyDataHasBeenReceived() may only be called once within one coupling iteration. If this assertion is triggered this probably means that your coupling scheme has a bug.");
+}
+
+void BaseCouplingScheme::notifyDataHasBeenReceived()
+{
+  PRECICE_ASSERT(not _hasDataBeenReceived, "notifyDataHasBeenReceived() may only be called once within one coupling iteration. If this assertion is triggered this probably means that your coupling scheme has a bug.");
   _hasDataBeenReceived = true;
 }
 
