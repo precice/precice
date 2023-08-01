@@ -119,14 +119,6 @@ PRECICE_API int precicec_requiresReadingCheckpoint();
 ///@anchor precice-mesh-access
 ///@{
 
-/**
- * @brief Checks if the mesh with given name is used by a solver.
- *
- * @param[in] meshName the name of the mesh.
- * @returns whether the mesh is used.
- */
-PRECICE_API int precicec_hasMesh(const char *meshName);
-
 /// @copydoc precice::Participant::requiresMeshConnectivityFor()
 PRECICE_API int precicec_requiresMeshConnectivityFor(const char *meshName);
 
@@ -277,15 +269,26 @@ PRECICE_API void precicec_setMeshTetrahedra(
     int         size,
     const int * vertices);
 
+/**
+ * @brief See precice::Participant::setMeshAccessRegion().
+ */
+PRECICE_API void precicec_setMeshAccessRegion(
+    const char *  meshName,
+    const double *boundingBox);
+
+/**
+ * @brief See precice::Participant::getMeshVertexIDsAndCoordinates().
+ */
+PRECICE_API void precicec_getMeshVertexIDsAndCoordinates(
+    const char *meshName,
+    const int   size,
+    int *       ids,
+    double *    coordinates);
+
 ///@}
 
 ///@name Data Access
 ///@{
-
-/**
- * @brief Returns true (!=0), if data with given name is available.
- */
-PRECICE_API int precicec_hasData(const char *meshName, const char *dataName);
 
 /**
  * @brief Writes vector data values given as block.
@@ -361,22 +364,6 @@ PRECICE_API void precicec_writeGradientData(
     int           size,
     const int *   valueIndices,
     const double *gradients);
-
-/**
- * @brief See precice::Participant::setMeshAccessRegion().
- */
-PRECICE_API void precicec_setMeshAccessRegion(
-    const char *  meshName,
-    const double *boundingBox);
-
-/**
- * @brief See precice::Participant::getMeshVerticesAndIDs().
- */
-PRECICE_API void precicec_getMeshVerticesAndIDs(
-    const char *meshName,
-    const int   size,
-    int *       ids,
-    double *    coordinates);
 
 ///@}
 

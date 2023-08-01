@@ -1141,6 +1141,131 @@ BOOST_AUTO_TEST_CASE(PartitionOfUnityMappingTests)
   perform3DTestConservativeMappingVector(conservativeMap3DVector);
 }
 
+// Test for small meshes, where the number of requested vertices per cluster is bigger than the global
+BOOST_AUTO_TEST_CASE(TestSingleClusterPartitionOfUnity)
+{
+  PRECICE_TEST(1_rank);
+  mapping::CompactPolynomialC0                          function(3);
+  std::array<bool, 3>                                   deadAxis({{false, false, false}});
+  mapping::PartitionOfUnityMapping<CompactPolynomialC0> mapping(Mapping::CONSISTENT, 3, function, deadAxis, Polynomial::SEPARATE, 50, 0.4, false);
+
+  int dimensions = 3;
+  using Eigen::Vector3d;
+
+  // Create mesh to map from
+  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
+  mesh::PtrData inData   = inMesh->createData("InData", 1, 0_dataID);
+  int           inDataID = inData->getID();
+  inMesh->createVertex(Vector3d(0.0, 0.0, 0.0));
+  inMesh->createVertex(Vector3d(1.0, 0.0, 0.0));
+  inMesh->createVertex(Vector3d(1.0, 1.0, 0.0));
+  inMesh->createVertex(Vector3d(0.0, 1.0, 0.0));
+
+  inMesh->createVertex(Vector3d(0.0, 0.0, 1.0));
+  inMesh->createVertex(Vector3d(1.0, 0.0, 1.0));
+  inMesh->createVertex(Vector3d(1.0, 1.0, 1.0));
+  inMesh->createVertex(Vector3d(0.0, 1.0, 1.0));
+
+  inMesh->createVertex(Vector3d(2.0, 0.0, 0.0));
+  inMesh->createVertex(Vector3d(3.0, 0.0, 0.0));
+  inMesh->createVertex(Vector3d(3.0, 1.0, 0.0));
+  inMesh->createVertex(Vector3d(2.0, 1.0, 0.0));
+
+  inMesh->createVertex(Vector3d(2.0, 0.0, 1.0));
+  inMesh->createVertex(Vector3d(3.0, 0.0, 1.0));
+  inMesh->createVertex(Vector3d(3.0, 1.0, 1.0));
+  inMesh->createVertex(Vector3d(2.0, 1.0, 1.0));
+
+  inMesh->createVertex(Vector3d(4.0, 0.0, 0.0));
+  inMesh->createVertex(Vector3d(5.0, 0.0, 0.0));
+  inMesh->createVertex(Vector3d(5.0, 1.0, 0.0));
+  inMesh->createVertex(Vector3d(4.0, 1.0, 0.0));
+
+  inMesh->createVertex(Vector3d(4.0, 0.0, 1.0));
+  inMesh->createVertex(Vector3d(5.0, 0.0, 1.0));
+  inMesh->createVertex(Vector3d(5.0, 1.0, 1.0));
+  inMesh->createVertex(Vector3d(4.0, 1.0, 1.0));
+
+  inMesh->allocateDataValues();
+  addGlobalIndex(inMesh);
+
+  auto &values = inData->values();
+  // Set the values in the parallel (z) plane 3*values
+  values << 1.0, 2.0, 2.0, 1.0, 3.0, 6.0, 6.0, 3.0, 3.0, 4.0, 4.0, 3.0, 9.0, 12.0, 12.0, 9.0, 5.0, 6.0, 6.0, 5.0, 15.0, 18.0, 18.0, 15.0;
+
+  // Create mesh to map to
+  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
+  mesh::PtrData outData   = outMesh->createData("OutData", 1, 1_dataID);
+  int           outDataID = outData->getID();
+  mesh::Vertex &vertex    = outMesh->createVertex(Vector3d(0, 0, 0));
+  mesh::Vertex &vertex1   = outMesh->createVertex(Vector3d(3.5, 0.5, 0.5));
+  mesh::Vertex &vertex2   = outMesh->createVertex(Vector3d(2.5, 0.5, 1.0));
+  outMesh->createVertex(Vector3d(0, 0, 0.5));
+  outMesh->createVertex(Vector3d(5, 1, 0.5));
+  outMesh->allocateDataValues();
+  addGlobalIndex(outMesh);
+
+  // Setup mapping with mapping coordinates and geometry used
+  mapping.setMeshes(inMesh, outMesh);
+  BOOST_TEST(mapping.hasComputedMapping() == false);
+
+  vertex.setCoords(Vector3d(0.0, 0.0, 0.0));
+  mapping.computeMapping();
+  mapping.map(inDataID, outDataID);
+  double value  = outData->values()(0);
+  double value1 = outData->values()(1);
+  double value2 = outData->values()(2);
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+  BOOST_TEST(value == 1.0);
+  BOOST_TEST(value1 == 9.0);
+  BOOST_TEST(value2 == 10.5);
+
+  vertex.setCoords(Vector3d(0.0, 0.5, 0.5));
+  mapping.clear();
+  outData->values().setZero();
+  mapping.computeMapping();
+  mapping.map(inDataID, outDataID);
+  value = outData->values()(0);
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+  BOOST_TEST(value == 2.0);
+
+  vertex.setCoords(Vector3d(1.0, 0.0, 0.0));
+  mapping.clear();
+  outData->values().setZero();
+  mapping.computeMapping();
+  mapping.map(inDataID, outDataID);
+  value = outData->values()(0);
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+  BOOST_TEST(value == 2.0);
+
+  vertex.setCoords(Vector3d(1.0, 0.5, 0.5));
+  mapping.clear();
+  outData->values().setZero();
+  mapping.computeMapping();
+  mapping.map(inDataID, outDataID);
+  value = outData->values()(0);
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+  BOOST_TEST(value == 4.0);
+
+  vertex.setCoords(Vector3d(0.5, 0.5, 1.0));
+  mapping.clear();
+  outData->values().setZero();
+  mapping.computeMapping();
+  mapping.map(inDataID, outDataID);
+  value = outData->values()(0);
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+  BOOST_TEST(value > 4.6);
+
+  vertex.setCoords(Vector3d(0.5, 1.0, 0.0));
+  mapping.clear();
+  outData->values().setZero();
+  mapping.computeMapping();
+  mapping.map(inDataID, outDataID);
+  value = outData->values()(0);
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+  BOOST_TEST(value < 1.4);
+}
+
 BOOST_AUTO_TEST_SUITE_END() // Serial
 
 BOOST_AUTO_TEST_SUITE(Parallel)

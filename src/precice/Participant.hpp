@@ -320,14 +320,6 @@ public:
   //  void resetMesh ( ::precice::string_view meshName );
 
   /**
-   * @brief Checks if the mesh with given name is used by a solver.
-   *
-   * @param[in] meshName the name of the mesh
-   * @returns whether the mesh is used.
-   */
-  bool hasMesh(::precice::string_view meshName) const;
-
-  /**
    * @brief Checks if the given mesh requires connectivity.
    *
    * preCICE may require connectivity information from the solver and
@@ -567,17 +559,6 @@ public:
   ///@{
 
   /**
-   * @brief Checks if the data with given name is used by a solver and mesh.
-   *
-   * @param[in] meshName the name of the associated mesh
-   * @param[in] dataName the name of the data to check
-   * @returns whether the mesh contains the data.
-   */
-  bool hasData(
-      ::precice::string_view meshName,
-      ::precice::string_view dataName) const;
-
-  /**
    * @brief Writes data to a mesh.
    *
    * This function writes values of specified vertices to data of a mesh.
@@ -645,10 +626,8 @@ public:
 
   ///@}
 
-  /** @name Experimental: Direct Access
-   * These API functions are \b experimental and may change in future versions.
+  /** @name Direct Access
    */
-  ///@{
 
   /**
    * @brief setMeshAccessRegion Define a region of interest on a received mesh
@@ -712,7 +691,7 @@ public:
       ::precice::span<const double> boundingBox) const;
 
   /**
-   * @brief getMeshVerticesAndIDs Iterates over the region of
+   * @brief getMeshVertexIDsAndCoordinates Iterates over the region of
    *        interest defined by bounding boxes and reads the corresponding
    *        coordinates omitting the mapping.
    *
@@ -734,12 +713,10 @@ public:
    * @see getMeshVertexSize() to get the amount of vertices in the mesh
    * @see getMeshDimensions() to get the spacial dimensionality of the mesh
    */
-  void getMeshVerticesAndIDs(
+  void getMeshVertexIDsAndCoordinates(
       ::precice::string_view    meshName,
       ::precice::span<VertexID> ids,
       ::precice::span<double>   coordinates) const;
-
-  ///@}
 
   /** @name Experimental: Gradient Data
    * These API functions are \b experimental and may change in future versions.

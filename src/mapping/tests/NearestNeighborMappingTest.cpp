@@ -1,6 +1,7 @@
 #include <Eigen/Core>
 #include <algorithm>
 #include <memory>
+#include <string_view>
 #include "logging/LogMacros.hpp"
 #include "mapping/Mapping.hpp"
 #include "mapping/NearestNeighborMapping.hpp"
@@ -12,6 +13,7 @@
 #include "mesh/Vertex.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
+#include "time/Sample.hpp"
 
 using namespace precice;
 using namespace precice::mesh;
@@ -233,6 +235,179 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentNonIncremental)
   BOOST_TEST(inValues(1) * scaleFactor == outValues(1));
   BOOST_TEST(inValues(2) * scaleFactor == outValues(2));
   BOOST_TEST(inValues(3) * scaleFactor == outValues(3));
+}
+
+namespace {
+template <int N>
+PtrMesh create2DLinSpaceMesh(std::string_view name, int dims, double x0, double x1)
+{
+  static_assert(N > 1, "More than 1 vertex required");
+  PtrMesh               mesh(new Mesh("InMesh", dims, testing::nextMeshID()));
+  std::vector<Vertex *> vertices;
+  double                dx = (x1 - x0) / (double) (N - 1);
+  for (int i = 0; i < N; ++i) {
+    double x = x0 + dx * i;
+    vertices.push_back(&mesh->createVertex(Eigen::Vector2d{x, 0.0}));
+  }
+  auto first  = vertices.begin();
+  auto second = ++vertices.begin();
+  while (second != vertices.end()) {
+    mesh->createEdge(**first, **second);
+    ++first;
+    ++second;
+  }
+  return mesh;
+}
+} // namespace
+
+BOOST_AUTO_TEST_CASE(ScaledConsistentZeroData)
+{
+  PRECICE_TEST(1_rank);
+  int dimensions = 2;
+
+  // Create mesh to map from
+  PtrMesh inMesh = create2DLinSpaceMesh<4>("InMesh", dimensions, 0, 1);
+
+  // Create mesh to map to
+  PtrMesh outMesh = create2DLinSpaceMesh<3>("OutMesh", dimensions, 0, 1);
+
+  // Setup mapping with mapping coordinates and geometry used
+  precice::mapping::NearestNeighborMapping mapping(mapping::Mapping::SCALED_CONSISTENT_SURFACE, dimensions);
+
+  mapping.setMeshes(inMesh, outMesh);
+  BOOST_TEST(mapping.hasComputedMapping() == false);
+  mapping.computeMapping();
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+
+  Eigen::VectorXd inValues = Eigen::VectorXd::Zero(4);
+  time::Sample    inSample(1, inValues);
+  Eigen::VectorXd outValues = Eigen::VectorXd::Zero(3);
+  mapping.map(inSample, outValues);
+
+  BOOST_TEST(!outValues.hasNaN());
+  BOOST_TEST(outValues.isZero());
+
+  auto inputIntegral = mesh::integrateSurface(inMesh, inValues);
+  BOOST_TEST(!inputIntegral.hasNaN());
+  BOOST_TEST(inputIntegral.isZero());
+
+  auto outputIntegral = mesh::integrateSurface(outMesh, outValues);
+  BOOST_TEST(!outputIntegral.hasNaN());
+  BOOST_TEST(outputIntegral.isZero());
+}
+
+BOOST_AUTO_TEST_CASE(ScaledConsistentZeroIntegral)
+{
+  PRECICE_TEST(1_rank);
+  int dimensions = 2;
+
+  // Create mesh to map from
+  PtrMesh inMesh = create2DLinSpaceMesh<4>("InMesh", dimensions, 0, 1);
+
+  // Create mesh to map to
+  PtrMesh outMesh = create2DLinSpaceMesh<3>("OutMesh", dimensions, 0, 1);
+
+  // Setup mapping with mapping coordinates and geometry used
+  precice::mapping::NearestNeighborMapping mapping(mapping::Mapping::SCALED_CONSISTENT_SURFACE, dimensions);
+
+  mapping.setMeshes(inMesh, outMesh);
+  BOOST_TEST(mapping.hasComputedMapping() == false);
+  mapping.computeMapping();
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+
+  Eigen::Vector4d inValues{1, 1, -1, -1};
+  time::Sample    inSample(1, inValues);
+  Eigen::VectorXd outValues = Eigen::VectorXd::Zero(3);
+  mapping.map(inSample, outValues);
+
+  BOOST_TEST(!outValues.hasNaN());
+  BOOST_TEST((outValues.array() == 0.0).count() == 0);
+
+  auto inputIntegral = mesh::integrateSurface(inMesh, inValues);
+  BOOST_TEST(!inputIntegral.hasNaN());
+  BOOST_TEST(inputIntegral(0) == 0.0);
+
+  auto outputIntegral = mesh::integrateSurface(outMesh, outValues);
+  BOOST_TEST(!outputIntegral.hasNaN());
+  BOOST_TEST(outputIntegral(0) == 0.0);
+}
+
+BOOST_AUTO_TEST_CASE(ScaledConsistentZeroDataComponent)
+{
+  PRECICE_TEST(1_rank);
+  int dimensions = 2;
+
+  // Create mesh to map from
+  PtrMesh inMesh = create2DLinSpaceMesh<4>("InMesh", dimensions, 0, 1);
+
+  // Create mesh to map to
+  PtrMesh outMesh = create2DLinSpaceMesh<3>("OutMesh", dimensions, 0, 1);
+
+  // Setup mapping with mapping coordinates and geometry used
+  precice::mapping::NearestNeighborMapping mapping(mapping::Mapping::SCALED_CONSISTENT_SURFACE, dimensions);
+
+  mapping.setMeshes(inMesh, outMesh);
+  BOOST_TEST(mapping.hasComputedMapping() == false);
+  mapping.computeMapping();
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+
+  Eigen::VectorXd inValues(8);
+  inValues << 1, 0, 0.5, 0, 1.5, 0, 1, 0;
+  time::Sample    inSample(2, inValues);
+  Eigen::VectorXd outValues = Eigen::VectorXd::Zero(6);
+  mapping.map(inSample, outValues);
+
+  BOOST_TEST(!outValues.hasNaN());
+  BOOST_TEST((outValues.array() == 0.0).count() == 3);
+
+  auto inputIntegral = mesh::integrateSurface(inMesh, inValues);
+  BOOST_TEST(!inputIntegral.hasNaN());
+  BOOST_TEST(inputIntegral(0) == 1.0);
+  BOOST_TEST(inputIntegral(1) == 0.0);
+
+  auto outputIntegral = mesh::integrateSurface(outMesh, outValues);
+  BOOST_TEST(!outputIntegral.hasNaN());
+  BOOST_TEST(outputIntegral(0) == 1.0);
+  BOOST_TEST(outputIntegral(1) == 0.0);
+}
+
+BOOST_AUTO_TEST_CASE(ScaledConsistentZeroIntegralComponent)
+{
+  PRECICE_TEST(1_rank);
+  int dimensions = 2;
+
+  // Create mesh to map from
+  PtrMesh inMesh = create2DLinSpaceMesh<4>("InMesh", dimensions, 0, 1);
+
+  // Create mesh to map to
+  PtrMesh outMesh = create2DLinSpaceMesh<3>("OutMesh", dimensions, 0, 1);
+
+  // Setup mapping with mapping coordinates and geometry used
+  precice::mapping::NearestNeighborMapping mapping(mapping::Mapping::SCALED_CONSISTENT_SURFACE, dimensions);
+
+  mapping.setMeshes(inMesh, outMesh);
+  BOOST_TEST(mapping.hasComputedMapping() == false);
+  mapping.computeMapping();
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+
+  Eigen::VectorXd inValues(8);
+  inValues << 2, 1, 3, 1, 1, -1, 2, -1;
+  time::Sample    inSample(2, inValues);
+  Eigen::VectorXd outValues = Eigen::VectorXd::Zero(6);
+  mapping.map(inSample, outValues);
+
+  BOOST_TEST(!outValues.hasNaN());
+  BOOST_TEST((outValues.array() == 0.0).count() == 0);
+
+  auto inputIntegral = mesh::integrateSurface(inMesh, inValues);
+  BOOST_TEST(!inputIntegral.hasNaN());
+  BOOST_TEST(inputIntegral(0) == 2.0);
+  BOOST_TEST(inputIntegral(1) == 0.0);
+
+  auto outputIntegral = mesh::integrateSurface(outMesh, outValues);
+  BOOST_TEST(!outputIntegral.hasNaN());
+  BOOST_TEST(outputIntegral(0) == 2.0);
+  BOOST_TEST(outputIntegral(1) == 0.0);
 }
 
 BOOST_AUTO_TEST_CASE(ScaledConsistentVolume2D)
