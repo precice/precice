@@ -193,16 +193,6 @@ find_package(LibXml2 REQUIRED)
 message(STATUS "Found LibXml2 ${LIBXML2_VERSION_STRING}")
 precice_validate_libxml2()
 
-# nlohmann/JSON
-if(TPL_ENABLE_JSON)
-  xsdk_tpl_require(JSON JSON_INCLUDE_DIR)
-  add_library(JSON INTERFACE IMPORTED)
-  set_property(TARGET JSON PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${JSON_INCLUDE_DIR}")
-else()
-  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/json)
-endif()
-precice_validate_json()
-
 # libfmt
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/fmt)
 precice_validate_fmtlib()
@@ -329,8 +319,8 @@ target_compile_definitions(preciceCore PUBLIC "$<$<CONFIG:DEBUG>:EIGEN_INITIALIZ
 # Setup LIBXML2
 target_link_libraries(preciceCore PUBLIC LibXml2::LibXml2)
 
-# Setup JSON
-target_link_libraries(preciceCore PUBLIC JSON fmt-header-only)
+# Setup FMT
+target_link_libraries(preciceCore PUBLIC fmt-header-only)
 
 # Setup MPI
 if (PRECICE_MPICommunication)
