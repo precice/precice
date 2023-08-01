@@ -60,8 +60,8 @@ option(PRECICE_CONFIGURE_PACKAGE_GENERATION "Configure package generation." ON)
 option(BUILD_SHARED_LIBS "Build shared instead of static libraries" ON)
 option(BUILD_TESTING "Build tests" ON)
 option(PRECICE_ALWAYS_VALIDATE_LIBS "Validate libraries even after the validatation succeeded." OFF)
-option(PRECICE_C_BINDINGS "Enable the native C bindings" ON)
-option(PRECICE_FORTRAN_BINDINGS "Enable the native Fortran bindings" ON)
+option(PRECICE_BINDINGS_C "Enable the native C bindings" ON)
+option(PRECICE_BINDINGS_FORTRAN "Enable the native Fortran bindings" ON)
 option(PRECICE_BUILD_TOOLS "Build the \"precice-tools\" executable" ON)
 option(PRECICE_ENABLE_LIBBACKTRACE "Enable libbacktrace for stacktrace generation." OFF)
 
@@ -118,23 +118,23 @@ add_feature_info(PRECICE_PYTHON_ACTIONS PRECICE_PYTHON_ACTIONS
 
    This feature can be enabled/disabled by setting the PRECICE_PYTHON_ACTIONS CMake option.
   ")
-add_feature_info(PRECICE_C_BINDINGS PRECICE_C_BINDINGS
+add_feature_info(PRECICE_BINDINGS_C PRECICE_BINDINGS_C
   "Enables the native C bindings.
 
    preCICE provides native bindings for C, which are compiled into the library.
    This feature enables the compilation and installation of the bindings into the library.
    Note that we strongly recommend to compile with C bindings enabled for compatibility reasons.
 
-   This feature can be enabled/disabled by setting the PRECICE_C_BINDINGS CMake option.
+   This feature can be enabled/disabled by setting the PRECICE_BINDINGS_C CMake option.
   ")
-add_feature_info(PRECICE_FORTRAN_BINDINGS PRECICE_FORTRAN_BINDINGS
+add_feature_info(PRECICE_BINDINGS_FORTRAN PRECICE_BINDINGS_FORTRAN
   "Enables the native Fortran bindings.
 
    preCICE provides native bindings for Fortran, which are compiled into the library.
    This feature enables the compilation and installation of the bindings into the library.
    Note that we strongly recommend to compile with Fortran bindings enabled for compatibility reasons.
 
-   This feature can be enabled/disabled by setting the PRECICE_FORTRAN_BINDINGS CMake option.
+   This feature can be enabled/disabled by setting the PRECICE_BINDINGS_FORTRAN CMake option.
   ")
 add_feature_info(PRECICE_BUILD_TOOLS PRECICE_BUILD_TOOLS
   "Build the \"precice-tools\" executable
@@ -446,13 +446,13 @@ else(BUILD_TESTING)
 endif(BUILD_TESTING)
 
 # Include Native C Bindings
-if (PRECICE_C_BINDINGS)
+if (PRECICE_BINDINGS_C)
   # include(${CMAKE_CURRENT_LIST_DIR}/extras/bindings/c/CMakeLists.txt)
   add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/extras/bindings/c)
 endif()
 
 # Include Native Fortran Bindings
-if (PRECICE_FORTRAN_BINDINGS)
+if (PRECICE_BINDINGS_FORTRAN)
   # include((${CMAKE_CURRENT_LIST_DIR}/extras/bindings/fortran/CMakeLists.txt)
   add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/extras/bindings/fortran)
 endif()
