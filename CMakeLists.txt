@@ -53,9 +53,9 @@ if(NOT CMAKE_BUILD_TYPE)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release RelWithDebInfo MinSizeRel)
 endif()
 
-option(PRECICE_MPI_COMMUNICATION "Enables MPI-based communication and running coupling tests." ON)
-option(PRECICE_PETSC_MAPPING "Enable use of the PETSc linear algebra library for global-iterative RBF data mappings." ON)
-option(PRECICE_PYTHON_ACTIONS "Enable Python support for preCICE actions." ON)
+option(PRECICE_FEATURE_MPI_COMMUNICATION "Enables MPI-based communication and running coupling tests." ON)
+option(PRECICE_FEATURE_PETSC_MAPPING "Enable use of the PETSc linear algebra library for global-iterative RBF data mappings." ON)
+option(PRECICE_FEATURE_PYTHON_ACTIONS "Enable Python support for preCICE actions." ON)
 option(PRECICE_CONFIGURE_PACKAGE_GENERATION "Configure package generation." ON)
 option(BUILD_SHARED_LIBS "Build shared instead of static libraries" ON)
 option(BUILD_TESTING "Build tests" ON)
@@ -71,11 +71,11 @@ option(PRECICE_RELEASE_WITH_DEBUG_LOG "Enable debug logging in release builds" O
 option(PRECICE_RELEASE_WITH_TRACE_LOG "Enable trace logging in release builds" OFF)
 option(PRECICE_RELEASE_WITH_ASSERTIONS "Enable assertions in release builds" OFF)
 
-xsdk_tpl_option_override(PRECICE_MPI_COMMUNICATION TPL_ENABLE_MPI)
-xsdk_tpl_option_override(PRECICE_PETSC_MAPPING TPL_ENABLE_PETSC)
-xsdk_tpl_option_override(PRECICE_PYTHON_ACTIONS TPL_ENABLE_PYTHON)
+xsdk_tpl_option_override(PRECICE_FEATURE_MPI_COMMUNICATION TPL_ENABLE_MPI)
+xsdk_tpl_option_override(PRECICE_FEATURE_PETSC_MAPPING TPL_ENABLE_PETSC)
+xsdk_tpl_option_override(PRECICE_FEATURE_PYTHON_ACTIONS TPL_ENABLE_PYTHON)
 
-if(PRECICE_PETSC_MAPPING AND NOT PRECICE_MPI_COMMUNICATION)
+if(PRECICE_FEATURE_PETSC_MAPPING AND NOT PRECICE_FEATURE_MPI_COMMUNICATION)
   message(FATAL_ERROR "Please enable MPI to use PETSC.")
 endif()
 
@@ -93,30 +93,30 @@ print_configuration(
 print_empty()
 
 include(FeatureSummary)
-add_feature_info(PRECICE_MPI_COMMUNICATION PRECICE_MPI_COMMUNICATION
+add_feature_info(PRECICE_FEATURE_MPI_COMMUNICATION PRECICE_FEATURE_MPI_COMMUNICATION
   "Enables the MPI communication back-end.
 
    This enables the MPI communication back-end which is highly recommended on multi-node systems.
    See the documentation of the CMake module FindMPI to control its functionality.
 
-   This feature can be enabled/disabled by setting the PRECICE_MPI_COMMUNICATION CMake option.
+   This feature can be enabled/disabled by setting the PRECICE_FEATURE_MPI_COMMUNICATION CMake option.
 ")
-add_feature_info(PRECICE_PETSC_MAPPING PRECICE_PETSC_MAPPING
+add_feature_info(PRECICE_FEATURE_PETSC_MAPPING PRECICE_FEATURE_PETSC_MAPPING
   "Enables the PETSc-powered radial basic function mappings.
 
    This enables the PETSc-based variant of radial basis function mappings which can run in parallel,
    also across different compute nodes. This is highly recommended for large cases running in parallel.
 
-   This feature can be enabled/disabled by setting the PRECICE_PETSC_MAPPING CMake option.
-   Requires PRECICE_MPI_COMMUNICATION.
+   This feature can be enabled/disabled by setting the PRECICE_FEATURE_PETSC_MAPPING CMake option.
+   Requires PRECICE_FEATURE_MPI_COMMUNICATION.
   ")
-add_feature_info(PRECICE_PYTHON_ACTIONS PRECICE_PYTHON_ACTIONS
+add_feature_info(PRECICE_FEATURE_PYTHON_ACTIONS PRECICE_FEATURE_PYTHON_ACTIONS
   "Enables the support for user-defined python actions.
 
    preCICE allows to manipulate coupling data at runtime using configurable actions.
    This feature enables the support for user-defined actions written in Python based on numpy.
 
-   This feature can be enabled/disabled by setting the PRECICE_PYTHON_ACTIONS CMake option.
+   This feature can be enabled/disabled by setting the PRECICE_FEATURE_PYTHON_ACTIONS CMake option.
   ")
 add_feature_info(PRECICE_BINDINGS_C PRECICE_BINDINGS_C
   "Enables the native C bindings.
@@ -211,8 +211,8 @@ precice_validate_fmtlib()
 # Find Configurable Dependencies
 #
 
-# Option: PRECICE_MPI_COMMUNICATION
-if (PRECICE_MPI_COMMUNICATION)
+# Option: PRECICE_FEATURE_MPI_COMMUNICATION
+if (PRECICE_FEATURE_MPI_COMMUNICATION)
   set(MPI_DETERMINE_LIBRARY_VERSION ON) # Try to detect the library vendor
 
   find_package(MPI REQUIRED)
@@ -226,7 +226,7 @@ if (PRECICE_MPI_COMMUNICATION)
 endif()
 
 # Option: PETSC
-if (PRECICE_PETSC_MAPPING)
+if (PRECICE_FEATURE_PETSC_MAPPING)
   if (TPL_ENABLE_PETSC)
     xsdk_tpl_require(PETSC PETSC_DIR PETSC_ARCH)
     # PETSc detection uses primarily these ENVs
@@ -245,7 +245,7 @@ if (PRECICE_BUILD_TOOLS AND BUILD_TESTING)
 endif()
 
 # Option Python
-if (PRECICE_PYTHON_ACTIONS)
+if (PRECICE_FEATURE_PYTHON_ACTIONS)
   find_package(Python3 REQUIRED COMPONENTS Development NumPy)
   message(STATUS "Found Python ${Python3_VERSION} with NumPy ${Python3_NumPy_VERSION}")
   precice_validate_libpython()
@@ -333,21 +333,21 @@ target_link_libraries(preciceCore PUBLIC LibXml2::LibXml2)
 target_link_libraries(preciceCore PUBLIC JSON fmt-header-only)
 
 # Setup MPI
-if (PRECICE_MPI_COMMUNICATION)
+if (PRECICE_FEATURE_MPI_COMMUNICATION)
   target_link_libraries(preciceCore PUBLIC MPI::MPI_CXX)
 else()
   target_compile_definitions(preciceCore PUBLIC PRECICE_NO_MPI)
 endif()
 
 # Setup PETSC
-if (PRECICE_PETSC_MAPPING AND PRECICE_MPI_COMMUNICATION)
+if (PRECICE_FEATURE_PETSC_MAPPING AND PRECICE_FEATURE_MPI_COMMUNICATION)
   target_link_libraries(preciceCore PUBLIC PETSc::PETSc)
 else()
   target_compile_definitions(preciceCore PUBLIC PRECICE_NO_PETSC)
 endif()
 
 # Option Python
-if (PRECICE_PYTHON_ACTIONS)
+if (PRECICE_FEATURE_PYTHON_ACTIONS)
   target_link_libraries(preciceCore PUBLIC Python3::NumPy Python3::Python)
   target_compile_definitions(preciceCore PUBLIC NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION)
 else()
