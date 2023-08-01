@@ -59,7 +59,6 @@ function(add_precice_test)
   set(PAT_WDIR "${PRECICE_TEST_DIR}/${PAT_NAME}")
   file(MAKE_DIRECTORY "${PAT_WDIR}")
   # Setting properties
-  # Question: Do we want to set the OMP env only if PAT_GINKGO_OMP?
   set_tests_properties(${PAT_FULL_NAME}
     PROPERTIES
     RUN_SERIAL TRUE # Do not run this test in parallel with others

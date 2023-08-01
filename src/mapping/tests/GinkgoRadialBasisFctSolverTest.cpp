@@ -25,6 +25,7 @@ BOOST_AUTO_TEST_SUITE(GinkgoRadialBasisFunctionSolver)
   {                                                                                                                                                                                                                  \
     MappingConfiguration::GinkgoParameter gpm;                                                                                                                                                                       \
     gpm.executor          = EXECUTOR;                                                                                                                                                                                \
+    gpm.deviceId          = 0;                                                                                                                                                                                \
     gpm.solver            = SOLVER;                                                                                                                                                                                  \
     gpm.maxIterations     = 100;                                                                                                                                                                                     \
     gpm.usePreconditioner = false;                                                                                                                                                                                   \

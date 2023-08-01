@@ -304,6 +304,9 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
     set(HIP_NVCC_FLAGS "-fPIC")
   endif()
 
+  if(PRECICE_WITH_OMP)
+    find_package(OpenMP 3.0 REQUIRED)
+  endif()
   # That's essentially all backends we use from Ginkgo. The reference executor and OMP doesn't need any special treatments and
   # DPCPP has not yet been tested/setup
 else()
@@ -463,6 +466,7 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
 
   if(PRECICE_WITH_OMP)
     target_compile_definitions(preciceCore PUBLIC PRECICE_WITH_OMP)
+    target_link_libraries(preciceCore PUBLIC OpenMP::OpenMP_CXX)
     # There is nothing special required for OpenMP, looking for OpenMP and setting the flag is handled by the unified kernels
     message(STATUS "Enabled OpenMP support for preCICE via the Ginkgo library.")
   endif()
@@ -563,9 +567,6 @@ IF (BUILD_TESTING)
     ${preCICE_SOURCE_DIR}/src
     ${preCICE_SOURCE_DIR}/tests
     )
-  if(PRECICE_WITH_OMP)
-    target_compile_options(testprecice PRIVATE "-fopenmp")
-  endif()
 
   message(STATUS "Including test sources")
   # Test Sources Configuration
