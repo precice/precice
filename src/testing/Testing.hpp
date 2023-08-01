@@ -77,7 +77,18 @@ boost::test_tools::predicate_result equals(const Eigen::MatrixBase<DerivedA> &A,
                                            const Eigen::MatrixBase<DerivedB> &B,
                                            double                             tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
 {
-  if ((A - B).array().abs().maxCoeff() > tolerance) {
+  auto approx = [tolerance](double a, double b) -> bool {
+    // For values close to zero, use an absolute tolerance
+    if (std::abs(a) < tolerance || std::abs(b) < tolerance) {
+      // use absolute tolerance
+      return std::abs(a - b) <= tolerance;
+    } else {
+      // use relative tolerance
+      return std::abs(a - b) <= tolerance * std::min(std::abs(a), std::abs(b));
+    }
+  };
+
+  if (!A.binaryExpr(B, approx).all()) {
     boost::test_tools::predicate_result res(false);
     Eigen::IOFormat                     format;
     if (A.cols() == 1) {
@@ -88,8 +99,8 @@ boost::test_tools::predicate_result equals(const Eigen::MatrixBase<DerivedA> &A,
     res.message() << "\n"
                   << A.format(format) << " != \n"
                   << B.format(format) << '\n'
-                  << (A - B).cwiseAbs().format(format) << " < " << tolerance << '\n'
-                  << (A - B).unaryExpr([tolerance](double e) -> bool { return std::abs(e) < tolerance; }).format(format) << " in tolerance";
+                  << (A - B).cwiseAbs().format(format) << " difference\n"
+                  << A.binaryExpr(B, approx).format(format) << "in tolerance (" << tolerance << ')';
     return res;
   }
   return true;
