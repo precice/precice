@@ -3,19 +3,6 @@
   <mesh name="TestMeshEleven" />
   <mesh name="TestMeshTwelve" />
 
-  <mapping:rbf-global-direct
-    direction="read"
-    from="TestMeshTwelve"
-    to="TestMeshEleven"
-    constraint="consistent"
-    polynomial="separate"
-    x-dead="true"
-    y-dead="false"
-    z-dead="true">
-    <executor:cuda gpu-device-id="0" />
-    <basis-function:gaussian shape-parameter="0.3" />
-  </mapping:rbf-global-direct>
-
   <mapping:rbf-global-iterative
     direction="write"
     from="TestMeshTwelve"
@@ -26,7 +13,7 @@
     y-dead="false"
     z-dead="true"
     solver-rtol="1e-6">
-    <executor:cuda gpu-device-id="0" />
+    <executor:omp n-threads="2" />
     <basis-function:gaussian shape-parameter="0.3" />
   </mapping:rbf-global-iterative>
 </configuration>
