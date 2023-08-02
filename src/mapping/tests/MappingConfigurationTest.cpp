@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(RBFAliasConfiguration)
 
 #ifndef PRECICE_NO_GINKGO
 
-#ifndef PRECICE_WITH_CUDA
+#ifdef PRECICE_WITH_CUDA
 // This test mostly runs the configuration path, but it does not test the actual
 // setting in the Ginkgo solver class (being a cuda executor), since the mapping
 // configuration does not expose this information
@@ -258,7 +258,7 @@ BOOST_AUTO_TEST_CASE(RBFGinkgoCudaConfiguration)
 }
 #endif
 
-#ifndef PRECICE_WITH_HIP
+#ifdef PRECICE_WITH_HIP
 // This test mostly runs the configuration path, but it does not test the actual
 // setting in the Ginkgo solver class (being a hip executor), since the mapping
 // configuration does not expose this information
@@ -301,7 +301,7 @@ BOOST_AUTO_TEST_CASE(RBFGinkgoHipConfiguration)
 }
 #endif
 
-#ifndef PRECICE_WITH_OMP
+#ifdef PRECICE_WITH_OMP
 // This test mostly runs the configuration path, but it does not test the actual
 // setting in the Ginkgo solver class (being an OpenMP executor), since the mapping
 // configuration does not expose this information
@@ -320,13 +320,13 @@ BOOST_AUTO_TEST_CASE(RBFGinkgoOMPConfiguration)
   mapping::MappingConfiguration mappingConfig(tag, meshConfig);
   xml::configure(tag, xml::ConfigurationContext{}, file);
 
-  BOOST_TEST(meshConfig->meshes().size() == 1);
+  BOOST_TEST(meshConfig->meshes().size() == 2);
   BOOST_TEST(mappingConfig.mappings().size() == 1);
   for (unsigned int i = 0; i < mappingConfig.mappings().size(); ++i) {
     BOOST_TEST(mappingConfig.mappings().at(i).mapping != nullptr);
     BOOST_TEST(mappingConfig.mappings().at(i).fromMesh == meshConfig->meshes().at(i + 1));
     BOOST_TEST(mappingConfig.mappings().at(i).toMesh == meshConfig->meshes().at(i));
-    BOOST_TEST(mappingConfig.mappings().at(i).direction == MappingConfiguration::READ);
+    BOOST_TEST(mappingConfig.mappings().at(i).direction == MappingConfiguration::WRITE);
     BOOST_TEST(mappingConfig.mappings().at(i).requiresBasisFunction == true);
     BOOST_TEST(mappingConfig.mappings().at(i).configuredWithAliasTag == false);
   }
@@ -339,7 +339,7 @@ BOOST_AUTO_TEST_CASE(RBFGinkgoOMPConfiguration)
     BOOST_TEST(mappingConfig.rbfConfig().deadAxis[0] == true);
     BOOST_TEST(mappingConfig.rbfConfig().deadAxis[1] == false);
     BOOST_TEST(mappingConfig.rbfConfig().deadAxis[2] == true);
-    BOOST_TEST(mappingConfig.rbfConfig().solverRtol == 1e-9);
+    BOOST_TEST(mappingConfig.rbfConfig().solverRtol == 1e-6);
   }
 }
 #endif
