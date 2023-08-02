@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <configuration>
+  <mesh name="TestMeshTen" />
   <mesh name="TestMeshEleven" />
   <mesh name="TestMeshTwelve" />
 
   <mapping:rbf-global-direct
     direction="read"
-    from="TestMeshTwelve"
-    to="TestMeshEleven"
+    from="TestMeshEleven"
+    to="TestMeshTen"
     constraint="consistent"
     polynomial="separate"
     x-dead="true"
@@ -17,7 +18,7 @@
   </mapping:rbf-global-direct>
 
   <mapping:rbf-global-iterative
-    direction="write"
+    direction="read"
     from="TestMeshTwelve"
     to="TestMeshEleven"
     constraint="conservative"
