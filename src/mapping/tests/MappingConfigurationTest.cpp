@@ -216,6 +216,9 @@ BOOST_AUTO_TEST_CASE(RBFAliasConfiguration)
 #ifndef PRECICE_NO_GINKGO
 
 #ifndef PRECICE_WITH_CUDA
+// This test mostly runs the configuration path, but it does not test the actual
+// setting in the Ginkgo solver class (being a cuda executor), since the mapping
+// configuration does not expose this information
 BOOST_AUTO_TEST_CASE(RBFGinkgoCudaConfiguration)
 {
   PRECICE_TEST(1_rank);
