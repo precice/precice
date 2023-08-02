@@ -142,7 +142,8 @@ SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::SphericalVertexCluster(
   PRECICE_ASSERT(deadAxis.size() == inputMesh->getDimensions());
 
   // Get vertices to be mapped
-  auto outIDs = outputMesh->index().getVerticesInsideBox(center, radius);
+  // Subtract a safety margin to exclude the vertices at the edge
+  auto outIDs = outputMesh->index().getVerticesInsideBox(center, radius - math::NUMERICAL_ZERO_DIFFERENCE);
   // Constructing the partition when we don't have evaluation points is pointless
   auto inIDs = inputMesh->index().getVerticesInsideBox(center, radius);
 
