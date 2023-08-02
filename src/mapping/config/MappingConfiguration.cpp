@@ -597,11 +597,20 @@ void MappingConfiguration::finishRBFConfiguration()
     _ginkgoParameter.deviceId          = _executorConfig->deviceId;
     if (_executorConfig->executor == ExecutorConfiguration::Executor::CUDA) {
       _ginkgoParameter.executor = "cuda-executor";
+#ifndef PRECICE_WITH_CUDA
+      PRECICE_CHECK(false, "The cuda-executor (configured for the mapping from mesh {} to mesh {}) requires a Ginkgo and preCICE build with Cuda enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
+#endif
     } else if (_executorConfig->executor == ExecutorConfiguration::Executor::HIP) {
       _ginkgoParameter.executor = "hip-executor";
+#ifndef PRECICE_WITH_HIP
+      PRECICE_CHECK(false, "The hip-executor (configured for the mapping from mesh {} to mesh {}) requires a Ginkgo and preCICE build with HIP enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
+#endif
     } else if (_executorConfig->executor == ExecutorConfiguration::Executor::OpenMP) {
       _ginkgoParameter.executor = "omp-executor";
       _ginkgoParameter.nThreads = _executorConfig->nThreads;
+#ifndef PRECICE_WITH_OMP
+      PRECICE_CHECK(false, "The omp-executor (configured for the mapping from mesh {} to mesh {}) requires a Ginkgo and preCICE build with OpenMP enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
+#endif
     }
     if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalDirect) {
       _ginkgoParameter.solver = "qr-solver";

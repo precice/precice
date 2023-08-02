@@ -70,6 +70,7 @@ BOOST_AUTO_TEST_CASE(RBFDirectConfiguration)
     BOOST_TEST(mappingConfig.mappings().at(i).toMesh == meshConfig->meshes().at(i));
     BOOST_TEST(mappingConfig.mappings().at(i).direction == MappingConfiguration::READ);
     BOOST_TEST(mappingConfig.mappings().at(i).requiresBasisFunction == true);
+    BOOST_TEST(mappingConfig.mappings().at(i).configuredWithAliasTag == false);
   }
   {
     // last configured RBF
@@ -107,6 +108,7 @@ BOOST_AUTO_TEST_CASE(RBFPUMConfiguration)
     BOOST_TEST(mappingConfig.mappings().at(i).toMesh == meshConfig->meshes().at(i));
     BOOST_TEST(mappingConfig.mappings().at(i).direction == MappingConfiguration::READ);
     BOOST_TEST(mappingConfig.mappings().at(i).requiresBasisFunction == true);
+    BOOST_TEST(mappingConfig.mappings().at(i).configuredWithAliasTag == false);
   }
   {
     // last configured RBF
@@ -149,6 +151,7 @@ BOOST_AUTO_TEST_CASE(RBFIterativeConfiguration)
     BOOST_TEST(mappingConfig.mappings().at(i).toMesh == meshConfig->meshes().at(i));
     BOOST_TEST(mappingConfig.mappings().at(i).direction == MappingConfiguration::WRITE);
     BOOST_TEST(mappingConfig.mappings().at(i).requiresBasisFunction == true);
+    BOOST_TEST(mappingConfig.mappings().at(i).configuredWithAliasTag == false);
   }
   {
     // last configured RBF
@@ -186,13 +189,15 @@ BOOST_AUTO_TEST_CASE(RBFAliasConfiguration)
   BOOST_TEST(mappingConfig.mappings().at(0).toMesh == meshConfig->meshes().at(2));
   BOOST_TEST(mappingConfig.mappings().at(0).direction == MappingConfiguration::WRITE);
   BOOST_TEST(mappingConfig.mappings().at(0).requiresBasisFunction == true);
+  BOOST_TEST(mappingConfig.mappings().at(0).configuredWithAliasTag == true);
 
   // The second mapping
   BOOST_TEST(mappingConfig.mappings().at(1).mapping != nullptr);
   BOOST_TEST(mappingConfig.mappings().at(1).fromMesh == meshConfig->meshes().at(2));
   BOOST_TEST(mappingConfig.mappings().at(1).toMesh == meshConfig->meshes().at(1));
   BOOST_TEST(mappingConfig.mappings().at(1).direction == MappingConfiguration::READ);
-  BOOST_TEST(mappingConfig.mappings().at(0).requiresBasisFunction == true);
+  BOOST_TEST(mappingConfig.mappings().at(1).requiresBasisFunction == true);
+  BOOST_TEST(mappingConfig.mappings().at(1).configuredWithAliasTag == true);
   {
     // last configured RBF
     bool solverSelection = mappingConfig.rbfConfig().solver == MappingConfiguration::RBFConfiguration::SystemSolver::PUMDirect;
