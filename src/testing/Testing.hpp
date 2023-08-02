@@ -78,13 +78,10 @@ boost::test_tools::predicate_result equals(const Eigen::MatrixBase<DerivedA> &A,
                                            double                             tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
 {
   auto approx = [tolerance](double a, double b) -> bool {
-    // For values close to zero, use an absolute tolerance
-    if (std::abs(a) < tolerance || std::abs(b) < tolerance) {
-      // use absolute tolerance
-      return std::abs(a - b) <= tolerance;
+    if (std::max(std::abs(a), std::abs(b)) < tolerance) {
+      return true;
     } else {
-      // use relative tolerance
-      return std::abs(a - b) <= tolerance * std::min(std::abs(a), std::abs(b));
+      return std::abs(a - b) <= tolerance * std::max(std::abs(a), std::abs(b));
     }
   };
 
