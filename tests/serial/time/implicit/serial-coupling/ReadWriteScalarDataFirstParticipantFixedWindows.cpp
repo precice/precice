@@ -63,8 +63,9 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantFixedWindows)
         precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&expectedDataValue, 1});
 
         if (context.isNamed("SolverOne")) {
-          precice.advance(iterationSizes.at(it));
-          dt = precice.getMaxTimeStepSize();
+          dt = iterationSizes.at(it);
+          precice.advance(dt);
+          BOOST_TEST(precice.getMaxTimeStepSize() == std::numeric_limits<double>::max());
         } else if (context.isNamed("SolverTwo")) {
           BOOST_TEST(dt == iterationSizes.at(it));
           precice.advance(dt);
@@ -72,11 +73,6 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantFixedWindows)
         }
 
         BOOST_TEST(precice.requiresReadingCheckpoint() == (it != 2));
-
-        if (context.isNamed("SolverOne")) {
-          // Check remainder of simulation time
-          BOOST_TEST(dt == std::numeric_limits<double>::max());
-        }
 
         if (it == 2 && tw != 2) {
           BOOST_TEST(precice.requiresWritingCheckpoint());
