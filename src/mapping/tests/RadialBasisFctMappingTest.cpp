@@ -8,7 +8,10 @@
 #include "logging/Logger.hpp"
 #include "mapping/Mapping.hpp"
 #include "mapping/RadialBasisFctMapping.hpp"
+#include "mapping/RadialBasisFctSolver.hpp"
+#include "mapping/config/MappingConfiguration.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
+#include "mapping/tests/RadialBasisFctHelper.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -25,23 +28,6 @@ using precice::testing::TestContext;
 
 BOOST_AUTO_TEST_SUITE(MappingTests)
 BOOST_AUTO_TEST_SUITE(RadialBasisFunctionMapping)
-
-void addGlobalIndex(mesh::PtrMesh &mesh, int offset = 0)
-{
-  for (mesh::Vertex &v : mesh->vertices()) {
-    v.setGlobalIndex(v.getID() + offset);
-  }
-}
-
-void testSerialScaledConsistent(mesh::PtrMesh inMesh, mesh::PtrMesh outMesh, mesh::PtrData inData, mesh::PtrData outData)
-{
-  auto inputIntegral  = mesh::integrateSurface(inMesh, inData->values());
-  auto outputIntegral = mesh::integrateSurface(outMesh, outData->values());
-
-  for (int dim = 0; dim < inputIntegral.size(); ++dim) {
-    BOOST_TEST(inputIntegral(dim) == outputIntegral(dim));
-  }
-}
 
 BOOST_AUTO_TEST_SUITE(Parallel)
 
@@ -195,11 +181,11 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1)
                              {3, {7}},
                              {3, {8}}};
 
-  RadialBasisFctMapping<Multiquadrics> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
+  RadialBasisFctMapping<RadialBasisFctSolver<Multiquadrics>> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
   testDistributed(context, mapping_on, in, out, ref);
-  RadialBasisFctMapping<Multiquadrics> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  RadialBasisFctMapping<RadialBasisFctSolver<Multiquadrics>> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
   testDistributed(context, mapping_sep, in, out, ref);
-  RadialBasisFctMapping<Multiquadrics> mapping_off(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  RadialBasisFctMapping<RadialBasisFctSolver<Multiquadrics>> mapping_off(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::OFF);
   testDistributed(context, mapping_off, in, out, ref);
 }
 
@@ -236,11 +222,11 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1Vector)
                              {3, {7, 10}},
                              {3, {8, 11}}};
 
-  RadialBasisFctMapping<Multiquadrics> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
+  RadialBasisFctMapping<RadialBasisFctSolver<Multiquadrics>> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
   testDistributed(context, mapping_on, in, out, ref);
-  RadialBasisFctMapping<Multiquadrics> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  RadialBasisFctMapping<RadialBasisFctSolver<Multiquadrics>> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
   testDistributed(context, mapping_sep, in, out, ref);
-  RadialBasisFctMapping<Multiquadrics> mapping_off(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  RadialBasisFctMapping<RadialBasisFctSolver<Multiquadrics>> mapping_off(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::OFF);
   testDistributed(context, mapping_off, in, out, ref);
 }
 
@@ -250,7 +236,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2)
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   Multiquadrics fct(5.0);
 
-  MeshSpecification                    in{// Consistent mapping: The inMesh is communicated, rank 2 owns no vertices
+  MeshSpecification                                          in{// Consistent mapping: The inMesh is communicated, rank 2 owns no vertices
                        {-1, 0, {0, 0}, {1}},
                        {-1, 0, {0, 1}, {2}},
                        {-1, 1, {1, 0}, {3}},
@@ -259,7 +245,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2)
                        {-1, 3, {2, 1}, {6}},
                        {-1, 3, {3, 0}, {7}},
                        {-1, 3, {3, 1}, {8}}};
-  MeshSpecification                    out{// The outMesh is local, rank 1 is empty
+  MeshSpecification                                          out{// The outMesh is local, rank 1 is empty
                         {0, -1, {0, 0}, {0}},
                         {0, -1, {0, 1}, {0}},
                         {0, -1, {1, 0}, {0}},
@@ -268,7 +254,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2)
                         {2, -1, {2, 1}, {0}},
                         {3, -1, {3, 0}, {0}},
                         {3, -1, {3, 1}, {0}}};
-  ReferenceSpecification               ref{// Tests for {0, 1, 2} on the first rank,
+  ReferenceSpecification                                     ref{// Tests for {0, 1, 2} on the first rank,
                              // second rank (consistent with the outMesh) is empty, ...
                              {0, {1}},
                              {0, {2}},
@@ -278,11 +264,11 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2)
                              {2, {6}},
                              {3, {7}},
                              {3, {8}}};
-  RadialBasisFctMapping<Multiquadrics> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
+  RadialBasisFctMapping<RadialBasisFctSolver<Multiquadrics>> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
   testDistributed(context, mapping_on, in, out, ref);
-  RadialBasisFctMapping<Multiquadrics> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  RadialBasisFctMapping<RadialBasisFctSolver<Multiquadrics>> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
   testDistributed(context, mapping_sep, in, out, ref);
-  RadialBasisFctMapping<Multiquadrics> mapping_off(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  RadialBasisFctMapping<RadialBasisFctSolver<Multiquadrics>> mapping_off(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::OFF);
   testDistributed(context, mapping_off, in, out, ref);
 }
 
@@ -338,11 +324,11 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
                              {3, {7}},
                              {3, {8}}};
 
-  RadialBasisFctMapping<Multiquadrics> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
+  RadialBasisFctMapping<RadialBasisFctSolver<Multiquadrics>> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
   testDistributed(context, mapping_on, in, out, ref, globalIndexOffsets.at(context.rank));
-  RadialBasisFctMapping<Multiquadrics> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  RadialBasisFctMapping<RadialBasisFctSolver<Multiquadrics>> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
   testDistributed(context, mapping_sep, in, out, ref, globalIndexOffsets.at(context.rank));
-  RadialBasisFctMapping<Multiquadrics> mapping_off(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  RadialBasisFctMapping<RadialBasisFctSolver<Multiquadrics>> mapping_off(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::OFF);
   testDistributed(context, mapping_off, in, out, ref, globalIndexOffsets.at(context.rank));
 }
 
@@ -378,7 +364,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3Vector)
       {3, 3, {3, 0}, {7, 10}},
       {3, 3, {3, 1}, {8, 11}},
   };
-  MeshSpecification                    out{// The outMesh is local, rank 1 is empty
+  MeshSpecification                                          out{// The outMesh is local, rank 1 is empty
                         {0, -1, {0, 0}, {0, 0}},
                         {0, -1, {0, 1}, {0, 0}},
                         {0, -1, {1, 0}, {0, 0}},
@@ -387,7 +373,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3Vector)
                         {2, -1, {2, 1}, {0, 0}},
                         {3, -1, {3, 0}, {0, 0}},
                         {3, -1, {3, 1}, {0, 0}}};
-  ReferenceSpecification               ref{// Tests for {0, 1, 2} on the first rank,
+  ReferenceSpecification                                     ref{// Tests for {0, 1, 2} on the first rank,
                              // second rank (consistent with the outMesh) is empty, ...
                              {0, {1, 4}},
                              {0, {2, 5}},
@@ -397,11 +383,11 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3Vector)
                              {2, {6, 9}},
                              {3, {7, 10}},
                              {3, {8, 11}}};
-  RadialBasisFctMapping<Multiquadrics> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
+  RadialBasisFctMapping<RadialBasisFctSolver<Multiquadrics>> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
   testDistributed(context, mapping_on, in, out, ref, globalIndexOffsets.at(context.rank));
-  RadialBasisFctMapping<Multiquadrics> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  RadialBasisFctMapping<RadialBasisFctSolver<Multiquadrics>> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
   testDistributed(context, mapping_sep, in, out, ref, globalIndexOffsets.at(context.rank));
-  RadialBasisFctMapping<Multiquadrics> mapping_off(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  RadialBasisFctMapping<RadialBasisFctSolver<Multiquadrics>> mapping_off(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::OFF);
   testDistributed(context, mapping_off, in, out, ref, globalIndexOffsets.at(context.rank));
 }
 
@@ -435,7 +421,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
       {2, 2, {3, 1}, {8}},
       // Rank 3 has no vertices
   };
-  MeshSpecification                       out{// The outMesh is local, rank 0 and 3 are empty
+  MeshSpecification                                             out{// The outMesh is local, rank 0 and 3 are empty
                         // not same order as input mesh and vertex (2,0) appears twice
                         {1, -1, {2, 0}, {0}},
                         {1, -1, {1, 0}, {0}},
@@ -455,11 +441,11 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
                              {2, {6}},
                              {2, {7}},
                              {2, {8}}};
-  RadialBasisFctMapping<ThinPlateSplines> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
+  RadialBasisFctMapping<RadialBasisFctSolver<ThinPlateSplines>> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
   testDistributed(context, mapping_on, in, out, ref, globalIndexOffsets.at(context.rank));
-  RadialBasisFctMapping<ThinPlateSplines> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  RadialBasisFctMapping<RadialBasisFctSolver<ThinPlateSplines>> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
   testDistributed(context, mapping_sep, in, out, ref, globalIndexOffsets.at(context.rank));
-  RadialBasisFctMapping<ThinPlateSplines> mapping_off(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  RadialBasisFctMapping<RadialBasisFctSolver<ThinPlateSplines>> mapping_off(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::OFF);
   testDistributed(context, mapping_off, in, out, ref, globalIndexOffsets.at(context.rank));
 }
 
@@ -505,7 +491,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5)
       {3, 3, {3, 0}, {7}},
       {3, 3, {3, 1}, {8}},
   };
-  MeshSpecification                       out{// The outMesh is local, rank 0 and 3 are empty
+  MeshSpecification                                             out{// The outMesh is local, rank 0 and 3 are empty
                         // not same order as input mesh and vertex (2,0) appears twice
                         {1, -1, {2, 0}, {0}},
                         {1, -1, {1, 0}, {0}},
@@ -525,11 +511,11 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5)
                              {2, {6}},
                              {2, {7}},
                              {2, {8}}};
-  RadialBasisFctMapping<ThinPlateSplines> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
+  RadialBasisFctMapping<RadialBasisFctSolver<ThinPlateSplines>> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
   testDistributed(context, mapping_on, in, out, ref, globalIndexOffsets.at(context.rank));
-  RadialBasisFctMapping<ThinPlateSplines> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  RadialBasisFctMapping<RadialBasisFctSolver<ThinPlateSplines>> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
   testDistributed(context, mapping_sep, in, out, ref, globalIndexOffsets.at(context.rank));
-  RadialBasisFctMapping<ThinPlateSplines> mapping_off(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  RadialBasisFctMapping<RadialBasisFctSolver<ThinPlateSplines>> mapping_off(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::OFF);
   testDistributed(context, mapping_off, in, out, ref, globalIndexOffsets.at(context.rank));
 }
 
@@ -563,7 +549,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6,
       {2, 2, {3, 1}, {8}},
       // Rank 3 has no vertices
   };
-  MeshSpecification                       out{// The outMesh is local, rank 0 and 3 are empty
+  MeshSpecification                                             out{// The outMesh is local, rank 0 and 3 are empty
                         // not same order as input mesh and vertex (2,0) appears twice
                         {1, -1, {2, 0}, {0}},
                         {1, -1, {1, 0}, {0}},
@@ -583,11 +569,11 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6,
                              {2, {6}},
                              {2, {7}},
                              {2, {8}}};
-  RadialBasisFctMapping<ThinPlateSplines> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
+  RadialBasisFctMapping<RadialBasisFctSolver<ThinPlateSplines>> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
   testDistributed(context, mapping_on, in, out, ref, globalIndexOffsets.at(context.rank));
-  RadialBasisFctMapping<ThinPlateSplines> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  RadialBasisFctMapping<RadialBasisFctSolver<ThinPlateSplines>> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
   testDistributed(context, mapping_sep, in, out, ref, globalIndexOffsets.at(context.rank));
-  RadialBasisFctMapping<ThinPlateSplines> mapping_off(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  RadialBasisFctMapping<RadialBasisFctSolver<ThinPlateSplines>> mapping_off(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::OFF);
   testDistributed(context, mapping_off, in, out, ref, globalIndexOffsets.at(context.rank));
 }
 
@@ -650,11 +636,11 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1)
                              {3, {7}},
                              {3, {8}}};
 
-  RadialBasisFctMapping<Multiquadrics> mapping_on(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
+  RadialBasisFctMapping<RadialBasisFctSolver<Multiquadrics>> mapping_on(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
   testDistributed(context, mapping_on, in, out, ref, context.rank * 2);
-  RadialBasisFctMapping<Multiquadrics> mapping_sep(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  RadialBasisFctMapping<RadialBasisFctSolver<Multiquadrics>> mapping_sep(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
   testDistributed(context, mapping_sep, in, out, ref, context.rank * 2);
-  RadialBasisFctMapping<Multiquadrics> mapping_off(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  RadialBasisFctMapping<RadialBasisFctSolver<Multiquadrics>> mapping_off(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::OFF);
   testDistributed(context, mapping_off, in, out, ref, context.rank * 2);
 }
 
@@ -662,8 +648,8 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1)
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV1Vector)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
-  Multiquadrics                        fct(5.0);
-  MeshSpecification                    in{// Conservative mapping: The inMesh is local
+  Multiquadrics                                              fct(5.0);
+  MeshSpecification                                          in{// Conservative mapping: The inMesh is local
                        {0, -1, {0, 0}, {1, 4}},
                        {0, -1, {0, 1}, {2, 5}},
                        {1, -1, {1, 0}, {3, 6}},
@@ -672,7 +658,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1Vector)
                        {2, -1, {2, 1}, {6, 9}},
                        {3, -1, {3, 0}, {7, 10}},
                        {3, -1, {3, 1}, {8, 11}}};
-  MeshSpecification                    out{// The outMesh is distributed
+  MeshSpecification                                          out{// The outMesh is distributed
                         {-1, 0, {0, 0}, {0, 0}},
                         {-1, 0, {0, 1}, {0, 0}},
                         {-1, 1, {1, 0}, {0, 0}},
@@ -681,7 +667,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1Vector)
                         {-1, 2, {2, 1}, {0, 0}},
                         {-1, 3, {3, 0}, {0, 0}},
                         {-1, 3, {3, 1}, {0, 0}}};
-  ReferenceSpecification               ref{// Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
+  ReferenceSpecification                                     ref{// Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
                              // {0, 0, 2, 3, 0, 0, 0, 0} on the second, ...
                              {0, {1, 4}},
                              {0, {2, 5}},
@@ -715,11 +701,11 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1Vector)
                              {3, {0, 0}},
                              {3, {7, 10}},
                              {3, {8, 11}}};
-  RadialBasisFctMapping<Multiquadrics> mapping_on(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
+  RadialBasisFctMapping<RadialBasisFctSolver<Multiquadrics>> mapping_on(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
   testDistributed(context, mapping_on, in, out, ref, context.rank * 2);
-  RadialBasisFctMapping<Multiquadrics> mapping_sep(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  RadialBasisFctMapping<RadialBasisFctSolver<Multiquadrics>> mapping_sep(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
   testDistributed(context, mapping_sep, in, out, ref, context.rank * 2);
-  RadialBasisFctMapping<Multiquadrics> mapping_off(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  RadialBasisFctMapping<RadialBasisFctSolver<Multiquadrics>> mapping_off(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::OFF);
   testDistributed(context, mapping_off, in, out, ref, context.rank * 2);
 }
 
@@ -784,11 +770,11 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV2)
                              {3, {7}},
                              {3, {8}}};
 
-  RadialBasisFctMapping<Multiquadrics> mapping_on(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
+  RadialBasisFctMapping<RadialBasisFctSolver<Multiquadrics>> mapping_on(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
   testDistributed(context, mapping_on, in, out, ref, globalIndexOffsets.at(context.rank));
-  RadialBasisFctMapping<Multiquadrics> mapping_sep(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  RadialBasisFctMapping<RadialBasisFctSolver<Multiquadrics>> mapping_sep(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
   testDistributed(context, mapping_sep, in, out, ref, globalIndexOffsets.at(context.rank));
-  RadialBasisFctMapping<Multiquadrics> mapping_off(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  RadialBasisFctMapping<RadialBasisFctSolver<Multiquadrics>> mapping_off(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::OFF);
   testDistributed(context, mapping_off, in, out, ref, globalIndexOffsets.at(context.rank));
 }
 
@@ -851,11 +837,11 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV3)
                              {3, {7}},
                              {3, {8}}};
   // Sum of reference is also 34
-  RadialBasisFctMapping<Multiquadrics> mapping_on(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
+  RadialBasisFctMapping<RadialBasisFctSolver<Multiquadrics>> mapping_on(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
   testDistributed(context, mapping_on, in, out, ref, globalIndexOffsets.at(context.rank));
-  RadialBasisFctMapping<Multiquadrics> mapping_sep(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  RadialBasisFctMapping<RadialBasisFctSolver<Multiquadrics>> mapping_sep(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
   testDistributed(context, mapping_sep, in, out, ref, globalIndexOffsets.at(context.rank));
-  RadialBasisFctMapping<Multiquadrics> mapping_off(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  RadialBasisFctMapping<RadialBasisFctSolver<Multiquadrics>> mapping_off(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::OFF);
   testDistributed(context, mapping_off, in, out, ref, globalIndexOffsets.at(context.rank));
 }
 
@@ -867,7 +853,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
   ThinPlateSplines fct;
   std::vector<int> globalIndexOffsets = {0, 2, 4, 6};
 
-  MeshSpecification                       in{// Conservative mapping: The inMesh is local
+  MeshSpecification                                             in{// Conservative mapping: The inMesh is local
                        {0, -1, {0, 0}, {1}},
                        {0, -1, {0, 1}, {2}},
                        {1, -1, {1, 0}, {3}},
@@ -876,7 +862,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
                        {2, -1, {2, 1}, {6}},
                        {3, -1, {3, 0}, {7}},
                        {3, -1, {3, 1}, {8}}}; // Sum is 36
-  MeshSpecification                       out{                      // The outMesh is distributed, rank 0 has no vertex at all
+  MeshSpecification                                             out{                      // The outMesh is distributed, rank 0 has no vertex at all
                         {-1, 1, {0, 1}, {0}},
                         {-1, 1, {1, 0}, {0}},
                         {-1, 1, {1, 1}, {0}},
@@ -884,7 +870,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
                         {-1, 2, {2, 1}, {0}},
                         {-1, 3, {3, 0}, {0}},
                         {-1, 3, {3, 1}, {0}}};
-  ReferenceSpecification                  ref{// Tests for {0, 0, 0, 0, 0, 0, 0, 0} on the first rank,
+  ReferenceSpecification                                        ref{// Tests for {0, 0, 0, 0, 0, 0, 0, 0} on the first rank,
                              // {2, 3, 4, 3, 0, 0, 0, 0} on the second, ...
                              {0, {0}},
                              {0, {0}},
@@ -914,7 +900,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
                              {3, {0}},
                              {3, {7.4683403859032156}},
                              {3, {7.9287135404698859}}}; // Sum is ~36
-  RadialBasisFctMapping<ThinPlateSplines> mapping_sep(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  RadialBasisFctMapping<RadialBasisFctSolver<ThinPlateSplines>> mapping_sep(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
   testDistributed(context, mapping_sep, in, out, ref, globalIndexOffsets.at(context.rank), true);
   // Polynomial == OFF won't reach the desired accuracy
 }
@@ -977,11 +963,11 @@ BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5)
                              {3, {7}},
                              {3, {8}}};
 
-  RadialBasisFctMapping<Multiquadrics> mapping_on(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
+  RadialBasisFctMapping<RadialBasisFctSolver<Multiquadrics>> mapping_on(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
   testDistributed(context, mapping_on, in, out, ref, context.rank * 2);
-  RadialBasisFctMapping<Multiquadrics> mapping_sep(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  RadialBasisFctMapping<RadialBasisFctSolver<Multiquadrics>> mapping_sep(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
   testDistributed(context, mapping_sep, in, out, ref, context.rank * 2);
-  RadialBasisFctMapping<Multiquadrics> mapping_off(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  RadialBasisFctMapping<RadialBasisFctSolver<Multiquadrics>> mapping_off(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::OFF);
   testDistributed(context, mapping_off, in, out, ref, context.rank * 2);
 }
 
@@ -991,7 +977,7 @@ BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5Vector)
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   Multiquadrics fct(5.0);
 
-  MeshSpecification                    in{// Conservative mapping: The inMesh is local
+  MeshSpecification                                          in{// Conservative mapping: The inMesh is local
                        {0, -1, {0, 0}, {1, 4}},
                        {0, -1, {0, 1}, {2, 5}},
                        {1, -1, {1, 0}, {3, 6}},
@@ -1000,7 +986,7 @@ BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5Vector)
                        {2, -1, {2, 1}, {6, 9}},
                        {3, -1, {3, 0}, {7, 10}},
                        {3, -1, {3, 1}, {8, 11}}};
-  MeshSpecification                    out{// The outMesh is distributed and non-contigous
+  MeshSpecification                                          out{// The outMesh is distributed and non-contigous
                         {-1, 0, {0, 0}, {0, 0}},
                         {-1, 1, {0, 1}, {0, 0}},
                         {-1, 1, {1, 0}, {0, 0}},
@@ -1009,7 +995,7 @@ BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5Vector)
                         {-1, 2, {2, 1}, {0, 0}},
                         {-1, 3, {3, 0}, {0, 0}},
                         {-1, 3, {3, 1}, {0, 0}}};
-  ReferenceSpecification               ref{// Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
+  ReferenceSpecification                                     ref{// Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
                              // {0, 0, 2, 3, 0, 0, 0, 0} on the second, ...
                              {0, {1, 4}},
                              {0, {0, 0}},
@@ -1043,11 +1029,11 @@ BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5Vector)
                              {3, {0, 0}},
                              {3, {7, 10}},
                              {3, {8, 11}}};
-  RadialBasisFctMapping<Multiquadrics> mapping_on(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
+  RadialBasisFctMapping<RadialBasisFctSolver<Multiquadrics>> mapping_on(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::ON);
   testDistributed(context, mapping_on, in, out, ref, context.rank * 2);
-  RadialBasisFctMapping<Multiquadrics> mapping_sep(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  RadialBasisFctMapping<RadialBasisFctSolver<Multiquadrics>> mapping_sep(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
   testDistributed(context, mapping_sep, in, out, ref, context.rank * 2);
-  RadialBasisFctMapping<Multiquadrics> mapping_off(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::OFF);
+  RadialBasisFctMapping<RadialBasisFctSolver<Multiquadrics>> mapping_off(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}}, Polynomial::OFF);
   testDistributed(context, mapping_off, in, out, ref, context.rank * 2);
 }
 
@@ -1069,9 +1055,9 @@ void testTagging(const TestContext &context,
   mesh::PtrData outData = outMesh->createData("OutData", valueDimension, 1_dataID);
   getDistributedMesh(context, outMeshSpec, outMesh, outData);
 
-  Gaussian                        fct(4.5); //Support radius approx. 1
-  Mapping::Constraint             constr = consistent ? Mapping::CONSISTENT : Mapping::CONSERVATIVE;
-  RadialBasisFctMapping<Gaussian> mapping(constr, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
+  Gaussian                                              fct(4.5); // Support radius approx. 1
+  Mapping::Constraint                                   constr = consistent ? Mapping::CONSISTENT : Mapping::CONSERVATIVE;
+  RadialBasisFctMapping<RadialBasisFctSolver<Gaussian>> mapping(constr, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
   inMesh->computeBoundingBox();
   outMesh->computeBoundingBox();
 
@@ -1123,14 +1109,14 @@ BOOST_AUTO_TEST_CASE(testTagFirstRound)
   MeshSpecification outMeshSpec = {
       {0, -1, {0, 0}, {0}}};
   MeshSpecification inMeshSpec = {
-      {0, -1, {-1, 0}, {1}}, //inside
-      {0, -1, {-2, 0}, {1}}, //outside
-      {0, 0, {1, 0}, {1}},   //inside, owner
-      {0, -1, {2, 0}, {1}},  //outside
-      {0, -1, {0, -1}, {1}}, //inside
-      {0, -1, {0, -2}, {1}}, //outside
-      {0, -1, {0, 1}, {1}},  //inside
-      {0, -1, {0, 2}, {1}}   //outside
+      {0, -1, {-1, 0}, {1}}, // inside
+      {0, -1, {-2, 0}, {1}}, // outside
+      {0, 0, {1, 0}, {1}},   // inside, owner
+      {0, -1, {2, 0}, {1}},  // outside
+      {0, -1, {0, -1}, {1}}, // inside
+      {0, -1, {0, -2}, {1}}, // outside
+      {0, -1, {0, 1}, {1}},  // inside
+      {0, -1, {0, 2}, {1}}   // outside
   };
   MeshSpecification shouldTagFirstRound = {
       {0, -1, {-1, 0}, {1}},
@@ -1148,671 +1134,25 @@ BOOST_AUTO_TEST_SUITE_END() // Parallel
 
 BOOST_AUTO_TEST_SUITE(Serial)
 
-void perform2DTestConsistentMapping(Mapping &mapping)
-{
-  int dimensions = 2;
-  using Eigen::Vector2d;
-
-  // Create mesh to map from
-  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData inData   = inMesh->createData("InData", 1, 0_dataID);
-  int           inDataID = inData->getID();
-  inMesh->createVertex(Vector2d(0.0, 0.0));
-  inMesh->createVertex(Vector2d(1.0, 0.0));
-  inMesh->createVertex(Vector2d(1.0, 1.0));
-  inMesh->createVertex(Vector2d(0.0, 1.0));
-  inMesh->allocateDataValues();
-  addGlobalIndex(inMesh);
-  inMesh->setGlobalNumberOfVertices(inMesh->vertices().size());
-
-  auto &values = inData->values();
-  values << 1.0, 2.0, 2.0, 1.0;
-
-  // Create mesh to map to
-  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData outData   = outMesh->createData("OutData", 1, 1_dataID);
-  int           outDataID = outData->getID();
-  mesh::Vertex &vertex    = outMesh->createVertex(Vector2d(0, 0));
-  outMesh->allocateDataValues();
-  addGlobalIndex(outMesh);
-  outMesh->setGlobalNumberOfVertices(outMesh->vertices().size());
-
-  // Setup mapping with mapping coordinates and geometry used
-  mapping.setMeshes(inMesh, outMesh);
-  BOOST_TEST(mapping.hasComputedMapping() == false);
-
-  vertex.setCoords(Vector2d(0.0, 0.0));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  double value = outData->values()(0);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(value == 1.0);
-
-  vertex.setCoords(Vector2d(0.0, 0.5));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  value = outData->values()(0);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(value == 1.0);
-
-  vertex.setCoords(Vector2d(0.0, 1.0));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  value = outData->values()(0);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(value == 1.0);
-
-  vertex.setCoords(Vector2d(1.0, 0.0));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  value = outData->values()(0);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(value == 2.0);
-
-  vertex.setCoords(Vector2d(1.0, 0.5));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  value = outData->values()(0);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(value == 2.0);
-
-  vertex.setCoords(Vector2d(1.0, 1.0));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  value = outData->values()(0);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(value == 2.0);
-
-  vertex.setCoords(Vector2d(0.5, 0.0));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  value = outData->values()(0);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(value == 1.5);
-
-  vertex.setCoords(Vector2d(0.5, 0.5));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  value = outData->values()(0);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(value == 1.5);
-
-  vertex.setCoords(Vector2d(0.5, 1.0));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  value = outData->values()(0);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(value == 1.5);
-}
-
-void perform2DTestConsistentMappingVector(Mapping &mapping)
-{
-  int dimensions = 2;
-  using Eigen::Vector2d;
-
-  // Create mesh to map from
-  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData inData   = inMesh->createData("InData", 2, 0_dataID);
-  int           inDataID = inData->getID();
-  inMesh->createVertex(Vector2d(0.0, 0.0));
-  inMesh->createVertex(Vector2d(1.0, 0.0));
-  inMesh->createVertex(Vector2d(1.0, 1.0));
-  inMesh->createVertex(Vector2d(0.0, 1.0));
-  inMesh->allocateDataValues();
-  addGlobalIndex(inMesh);
-  inMesh->setGlobalNumberOfVertices(inMesh->vertices().size());
-
-  auto &values = inData->values();
-  values << 1.0, 4.0, 2.0, 5.0, 2.0, 5.0, 1.0, 4.0;
-
-  // Create mesh to map to
-  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData outData   = outMesh->createData("OutData", 2, 1_dataID);
-  int           outDataID = outData->getID();
-  mesh::Vertex &vertex    = outMesh->createVertex(Vector2d(0, 0));
-  outMesh->allocateDataValues();
-  addGlobalIndex(outMesh);
-  outMesh->setGlobalNumberOfVertices(outMesh->vertices().size());
-
-  // Setup mapping with mapping coordinates and geometry used
-  mapping.setMeshes(inMesh, outMesh);
-  BOOST_TEST(mapping.hasComputedMapping() == false);
-
-  vertex.setCoords(Vector2d(0.0, 0.0));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  double value1 = outData->values()(0);
-  double value2 = outData->values()(1);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(value1 == 1.0);
-  BOOST_TEST(value2 == 4.0);
-
-  vertex.setCoords(Vector2d(0.0, 0.5));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  value1 = outData->values()(0);
-  value2 = outData->values()(1);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(value1 == 1.0);
-  BOOST_TEST(value2 == 4.0);
-
-  vertex.setCoords(Vector2d(0.0, 1.0));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  value1 = outData->values()(0);
-  value2 = outData->values()(1);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(value1 == 1.0);
-  BOOST_TEST(value2 == 4.0);
-
-  vertex.setCoords(Vector2d(1.0, 0.0));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  value1 = outData->values()(0);
-  value2 = outData->values()(1);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(value1 == 2.0);
-  BOOST_TEST(value2 == 5.0);
-
-  vertex.setCoords(Vector2d(1.0, 0.5));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  value1 = outData->values()(0);
-  value2 = outData->values()(1);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(value1 == 2.0);
-  BOOST_TEST(value2 == 5.0);
-
-  vertex.setCoords(Vector2d(1.0, 1.0));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  value1 = outData->values()(0);
-  value2 = outData->values()(1);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(value1 == 2.0);
-  BOOST_TEST(value2 == 5.0);
-
-  vertex.setCoords(Vector2d(0.5, 0.0));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  value1 = outData->values()(0);
-  value2 = outData->values()(1);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(value1 == 1.5);
-  BOOST_TEST(value2 == 4.5);
-
-  vertex.setCoords(Vector2d(0.5, 0.5));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  value1 = outData->values()(0);
-  value2 = outData->values()(1);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(value1 == 1.5);
-  BOOST_TEST(value2 == 4.5);
-
-  vertex.setCoords(Vector2d(0.5, 1.0));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  value1 = outData->values()(0);
-  value2 = outData->values()(1);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(value1 == 1.5);
-  BOOST_TEST(value2 == 4.5);
-}
-
-void perform3DTestConsistentMapping(Mapping &mapping)
-{
-  int dimensions = 3;
-
-  // Create mesh to map from
-  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData inData   = inMesh->createData("InData", 1, 0_dataID);
-  int           inDataID = inData->getID();
-  inMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
-  inMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
-  inMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 0.0));
-  inMesh->createVertex(Eigen::Vector3d(1.0, 1.0, 0.0));
-  inMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 1.0));
-  inMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 1.0));
-  inMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 1.0));
-  inMesh->createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
-  inMesh->allocateDataValues();
-  addGlobalIndex(inMesh);
-  inMesh->setGlobalNumberOfVertices(inMesh->vertices().size());
-
-  auto &values = inData->values();
-  values << 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0;
-
-  // Create mesh to map to
-  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData outData   = outMesh->createData("OutData", 1, 1_dataID);
-  int           outDataID = outData->getID();
-  mesh::Vertex &vertex    = outMesh->createVertex(Eigen::Vector3d::Zero());
-  outMesh->allocateDataValues();
-  addGlobalIndex(outMesh);
-  outMesh->setGlobalNumberOfVertices(outMesh->vertices().size());
-
-  // Setup mapping with mapping coordinates and geometry used
-  mapping.setMeshes(inMesh, outMesh);
-  BOOST_TEST(mapping.hasComputedMapping() == false);
-
-  vertex.setCoords(Eigen::Vector3d(0.0, 0.0, 0.0));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  double value = outData->values()(0);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(value == 1.0);
-
-  vertex.setCoords(Eigen::Vector3d(0.0, 0.5, 0.0));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  value = outData->values()(0);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(value == 1.0);
-
-  vertex.setCoords(Eigen::Vector3d(0.5, 0.5, 0.0));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  value = outData->values()(0);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(value == 1.0);
-
-  vertex.setCoords(Eigen::Vector3d(1.0, 0.0, 0.0));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  value = outData->values()(0);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(value == 1.0);
-
-  vertex.setCoords(Eigen::Vector3d(1.0, 1.0, 0.0));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  value = outData->values()(0);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(value == 1.0);
-
-  vertex.setCoords(Eigen::Vector3d(0.0, 0.0, 1.0));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  value = outData->values()(0);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(value == 2.0);
-
-  vertex.setCoords(Eigen::Vector3d(1.0, 0.0, 1.0));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  value = outData->values()(0);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(value == 2.0);
-
-  vertex.setCoords(Eigen::Vector3d(1.0, 1.0, 1.0));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  value = outData->values()(0);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(value == 2.0);
-
-  vertex.setCoords(Eigen::Vector3d(0.5, 0.5, 1.0));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  value = outData->values()(0);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(value == 2.0);
-
-  vertex.setCoords(Eigen::Vector3d(0.0, 0.0, 0.5));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  value = outData->values()(0);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(value, 1.5);
-
-  vertex.setCoords(Eigen::Vector3d(1.0, 0.0, 0.5));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  value = outData->values()(0);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(value == 1.5);
-
-  vertex.setCoords(Eigen::Vector3d(0.0, 1.0, 0.5));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  value = outData->values()(0);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(value == 1.5);
-
-  vertex.setCoords(Eigen::Vector3d(1.0, 1.0, 0.5));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  value = outData->values()(0);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(value == 1.5);
-
-  vertex.setCoords(Eigen::Vector3d(0.5, 0.5, 0.5));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  value = outData->values()(0);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(value == 1.5);
-}
-
-void perform2DTestScaledConsistentMapping(Mapping &mapping)
-{
-  int dimensions = 2;
-  using Eigen::Vector2d;
-
-  // Create mesh to map from
-  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData inData   = inMesh->createData("InData", 1, 0_dataID);
-  int           inDataID = inData->getID();
-  auto &        inV1     = inMesh->createVertex(Vector2d(0.0, 0.0));
-  auto &        inV2     = inMesh->createVertex(Vector2d(1.0, 0.0));
-  auto &        inV3     = inMesh->createVertex(Vector2d(1.0, 1.0));
-  auto &        inV4     = inMesh->createVertex(Vector2d(0.0, 1.0));
-
-  inMesh->createEdge(inV1, inV2);
-  inMesh->createEdge(inV2, inV3);
-  inMesh->createEdge(inV3, inV4);
-  inMesh->createEdge(inV1, inV4);
-
-  inMesh->allocateDataValues();
-  addGlobalIndex(inMesh);
-  inMesh->setGlobalNumberOfVertices(inMesh->vertices().size());
-
-  auto &inValues = inData->values();
-  inValues << 1.0, 2.0, 2.0, 1.0;
-
-  // Create mesh to map to
-  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData outData   = outMesh->createData("OutData", 1, 1_dataID);
-  int           outDataID = outData->getID();
-  auto &        outV1     = outMesh->createVertex(Vector2d(0.0, 0.0));
-  auto &        outV2     = outMesh->createVertex(Vector2d(0.0, 1.0));
-  auto &        outV3     = outMesh->createVertex(Vector2d(1.1, 1.1));
-  auto &        outV4     = outMesh->createVertex(Vector2d(0.1, 1.1));
-  outMesh->createEdge(outV1, outV2);
-  outMesh->createEdge(outV2, outV3);
-  outMesh->createEdge(outV3, outV4);
-  outMesh->createEdge(outV1, outV4);
-  outMesh->allocateDataValues();
-  addGlobalIndex(outMesh);
-  outMesh->setGlobalNumberOfVertices(outMesh->vertices().size());
-
-  // Setup mapping with mapping coordinates and geometry used
-  mapping.setMeshes(inMesh, outMesh);
-  BOOST_TEST(mapping.hasComputedMapping() == false);
-
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-
-  testSerialScaledConsistent(inMesh, outMesh, inData, outData);
-}
-
-void perform3DTestScaledConsistentMapping(Mapping &mapping)
-{
-  int dimensions = 3;
-
-  // Create mesh to map from
-  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData inData   = inMesh->createData("InData", 1, 0_dataID);
-  int           inDataID = inData->getID();
-  auto &        inV1     = inMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
-  auto &        inV2     = inMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
-  auto &        inV3     = inMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 0.5));
-  auto &        inV4     = inMesh->createVertex(Eigen::Vector3d(2.0, 0.0, 0.0));
-  auto &        inV5     = inMesh->createVertex(Eigen::Vector3d(0.0, 2.0, 0.0));
-  auto &        inV6     = inMesh->createVertex(Eigen::Vector3d(0.0, 2.0, 1.0));
-  auto &        inE1     = inMesh->createEdge(inV1, inV2);
-  auto &        inE2     = inMesh->createEdge(inV2, inV3);
-  auto &        inE3     = inMesh->createEdge(inV1, inV3);
-  auto &        inE4     = inMesh->createEdge(inV4, inV5);
-  auto &        inE5     = inMesh->createEdge(inV5, inV6);
-  auto &        inE6     = inMesh->createEdge(inV4, inV6);
-  inMesh->createTriangle(inE1, inE2, inE3);
-  inMesh->createTriangle(inE4, inE5, inE6);
-
-  inMesh->allocateDataValues();
-  addGlobalIndex(inMesh);
-  inMesh->setGlobalNumberOfVertices(inMesh->vertices().size());
-
-  auto &inValues = inData->values();
-  inValues << 1.0, 2.0, 4.0, 6.0, 8.0, 9.0;
-
-  // Create mesh to map to
-  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData outData   = outMesh->createData("OutData", 1, 1_dataID);
-  int           outDataID = outData->getID();
-  auto &        outV1     = outMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
-  auto &        outV2     = outMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
-  auto &        outV3     = outMesh->createVertex(Eigen::Vector3d(0.0, 1.1, 0.6));
-  auto &        outE1     = outMesh->createEdge(outV1, outV2);
-  auto &        outE2     = outMesh->createEdge(outV2, outV3);
-  auto &        outE3     = outMesh->createEdge(outV1, outV3);
-  outMesh->createTriangle(outE1, outE2, outE3);
-
-  outMesh->allocateDataValues();
-  addGlobalIndex(outMesh);
-  outMesh->setGlobalNumberOfVertices(outMesh->vertices().size());
-
-  // Setup mapping with mapping coordinates and geometry used
-  mapping.setMeshes(inMesh, outMesh);
-  BOOST_TEST(mapping.hasComputedMapping() == false);
-  mapping.computeMapping();
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  mapping.map(inDataID, outDataID);
-
-  testSerialScaledConsistent(inMesh, outMesh, inData, outData);
-}
-
-void perform2DTestConservativeMapping(Mapping &mapping)
-{
-  const int    dimensions = 2;
-  const double tolerance  = 1e-6;
-  using Eigen::Vector2d;
-
-  // Create mesh to map from
-  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData inData   = inMesh->createData("InData", 1, 0_dataID);
-  int           inDataID = inData->getID();
-  mesh::Vertex &vertex0  = inMesh->createVertex(Vector2d(0, 0));
-  mesh::Vertex &vertex1  = inMesh->createVertex(Vector2d(0, 0));
-  inMesh->allocateDataValues();
-  inData->values() << 1.0, 2.0;
-  addGlobalIndex(inMesh);
-  inMesh->setGlobalNumberOfVertices(inMesh->vertices().size());
-
-  // Create mesh to map to
-  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData outData   = outMesh->createData("OutData", 1, 1_dataID);
-  int           outDataID = outData->getID();
-  outMesh->createVertex(Vector2d(0.0, 0.0));
-  outMesh->createVertex(Vector2d(1.0, 0.0));
-  outMesh->createVertex(Vector2d(1.0, 1.0));
-  outMesh->createVertex(Vector2d(0.0, 1.0));
-  outMesh->allocateDataValues();
-  addGlobalIndex(outMesh);
-  outMesh->setGlobalNumberOfVertices(outMesh->vertices().size());
-
-  auto &values = outData->values();
-
-  mapping.setMeshes(inMesh, outMesh);
-  BOOST_TEST(mapping.hasComputedMapping() == false);
-
-  vertex0.setCoords(Vector2d(0.5, 0.0));
-  vertex1.setCoords(Vector2d(0.5, 1.0));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(testing::equals(values, Eigen::Vector4d(0.5, 0.5, 1.0, 1.0), tolerance));
-
-  vertex0.setCoords(Vector2d(0.0, 0.5));
-  vertex1.setCoords(Vector2d(1.0, 0.5));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(testing::equals(values, Eigen::Vector4d(0.5, 1.0, 1.0, 0.5), tolerance));
-
-  vertex0.setCoords(Vector2d(0.0, 1.0));
-  vertex1.setCoords(Vector2d(1.0, 0.0));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(testing::equals(values, Eigen::Vector4d(0.0, 2.0, 0.0, 1.0), tolerance));
-
-  vertex0.setCoords(Vector2d(0.0, 0.0));
-  vertex1.setCoords(Vector2d(1.0, 1.0));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(testing::equals(values, Eigen::Vector4d(1.0, 0.0, 2.0, 0.0), tolerance));
-
-  vertex0.setCoords(Vector2d(0.4, 0.5));
-  vertex1.setCoords(Vector2d(0.6, 0.5));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(values.sum() == 3.0);
-}
-
-void perform2DTestConservativeMappingVector(Mapping &mapping)
-{
-  const int    dimensions = 2;
-  const double tolerance  = 1e-6;
-  using Eigen::Vector2d;
-
-  // Create mesh to map from
-  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData inData   = inMesh->createData("InData", 2, 0_dataID);
-  int           inDataID = inData->getID();
-  mesh::Vertex &vertex0  = inMesh->createVertex(Vector2d(0, 0));
-  mesh::Vertex &vertex1  = inMesh->createVertex(Vector2d(0, 0));
-  inMesh->allocateDataValues();
-  inData->values() << 1.0, 4.0, 2.0, 5.0;
-  addGlobalIndex(inMesh);
-  inMesh->setGlobalNumberOfVertices(inMesh->vertices().size());
-
-  // Create mesh to map to
-  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData outData   = outMesh->createData("OutData", 2, 1_dataID);
-  int           outDataID = outData->getID();
-  outMesh->createVertex(Vector2d(0.0, 0.0));
-  outMesh->createVertex(Vector2d(1.0, 0.0));
-  outMesh->createVertex(Vector2d(1.0, 1.0));
-  outMesh->createVertex(Vector2d(0.0, 1.0));
-  outMesh->allocateDataValues();
-  addGlobalIndex(outMesh);
-  outMesh->setGlobalNumberOfVertices(outMesh->vertices().size());
-
-  auto &values = outData->values();
-
-  mapping.setMeshes(inMesh, outMesh);
-  BOOST_TEST(mapping.hasComputedMapping() == false);
-
-  vertex0.setCoords(Vector2d(0.5, 0.0));
-  vertex1.setCoords(Vector2d(0.5, 1.0));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  Eigen::VectorXd refValues(8);
-  refValues << 0.5, 2, 0.5, 2, 1.0, 2.5, 1.0, 2.5;
-  BOOST_TEST(testing::equals(values, refValues, tolerance));
-
-  vertex0.setCoords(Vector2d(0.0, 0.5));
-  vertex1.setCoords(Vector2d(1.0, 0.5));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  refValues << 0.5, 2, 1.0, 2.5, 1.0, 2.5, 0.5, 2;
-  BOOST_TEST(testing::equals(values, refValues, tolerance));
-
-  vertex0.setCoords(Vector2d(0.0, 1.0));
-  vertex1.setCoords(Vector2d(1.0, 0.0));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  refValues << 0.0, 0.0, 2.0, 5.0, 0.0, 0.0, 1.0, 4.0;
-  BOOST_TEST(testing::equals(values, refValues, tolerance));
-
-  vertex0.setCoords(Vector2d(0.0, 0.0));
-  vertex1.setCoords(Vector2d(1.0, 1.0));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  refValues << 1.0, 4.0, 0.0, 0.0, 2.0, 5.0, 0.0, 0.0;
-  BOOST_TEST(testing::equals(values, refValues, tolerance));
-
-  vertex0.setCoords(Vector2d(0.4, 0.5));
-  vertex1.setCoords(Vector2d(0.6, 0.5));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(values.sum() == 12.0);
-}
-
-void perform3DTestConservativeMapping(Mapping &mapping)
-{
-  using Eigen::Vector3d;
-  int dimensions = 3;
-
-  // Create mesh to map from
-  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData inData   = inMesh->createData("InData", 1, 0_dataID);
-  int           inDataID = inData->getID();
-  mesh::Vertex &vertex0  = inMesh->createVertex(Vector3d(0, 0, 0));
-  mesh::Vertex &vertex1  = inMesh->createVertex(Vector3d(0, 0, 0));
-  inMesh->allocateDataValues();
-  inData->values() << 1.0, 2.0;
-  addGlobalIndex(inMesh);
-  inMesh->setGlobalNumberOfVertices(inMesh->vertices().size());
-
-  // Create mesh to map to
-  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData outData   = outMesh->createData("OutData", 1, 1_dataID);
-  int           outDataID = outData->getID();
-  outMesh->createVertex(Vector3d(0.0, 0.0, 0.0));
-  outMesh->createVertex(Vector3d(1.0, 0.0, 0.0));
-  outMesh->createVertex(Vector3d(1.0, 1.0, 0.0));
-  outMesh->createVertex(Vector3d(0.0, 1.0, 0.0));
-  outMesh->createVertex(Vector3d(0.0, 0.0, 1.0));
-  outMesh->createVertex(Vector3d(1.0, 0.0, 1.0));
-  outMesh->createVertex(Vector3d(1.0, 1.0, 1.0));
-  outMesh->createVertex(Vector3d(0.0, 1.0, 1.0));
-  outMesh->allocateDataValues();
-  addGlobalIndex(outMesh);
-  outMesh->setGlobalNumberOfVertices(outMesh->vertices().size());
-
-  auto & values      = outData->values();
-  double expectedSum = inData->values().sum();
-
-  mapping.setMeshes(inMesh, outMesh);
-  BOOST_TEST(mapping.hasComputedMapping() == false);
-
-  vertex0.setCoords(Vector3d(0.5, 0.0, 0.0));
-  vertex1.setCoords(Vector3d(0.5, 1.0, 0.0));
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  BOOST_TEST(mapping.hasComputedMapping());
-  BOOST_TEST(values.sum() == expectedSum);
-}
-
 #undef doLocalCode
-#define doLocalCode(Type, function, polynomial)                                                                                              \
-  {                                                                                                                                          \
-    RadialBasisFctMapping<Type> consistentMap2D(Mapping::CONSISTENT, 2, function, {{false, false, false}}, polynomial);                      \
-    perform2DTestConsistentMapping(consistentMap2D);                                                                                         \
-    RadialBasisFctMapping<Type> consistentMap2DVector(Mapping::CONSISTENT, 2, function, {{false, false, false}}, polynomial);                \
-    perform2DTestConsistentMappingVector(consistentMap2DVector);                                                                             \
-    RadialBasisFctMapping<Type> consistentMap3D(Mapping::CONSISTENT, 3, function, {{false, false, false}}, polynomial);                      \
-    perform3DTestConsistentMapping(consistentMap3D);                                                                                         \
-    RadialBasisFctMapping<Type> scaledConsistentMap2D(Mapping::SCALED_CONSISTENT_SURFACE, 2, function, {{false, false, false}}, polynomial); \
-    perform2DTestScaledConsistentMapping(scaledConsistentMap2D);                                                                             \
-    RadialBasisFctMapping<Type> scaledConsistentMap3D(Mapping::SCALED_CONSISTENT_SURFACE, 3, function, {{false, false, false}}, polynomial); \
-    perform3DTestScaledConsistentMapping(scaledConsistentMap3D);                                                                             \
-    RadialBasisFctMapping<Type> conservativeMap2D(Mapping::CONSERVATIVE, 2, function, {{false, false, false}}, polynomial);                  \
-    perform2DTestConservativeMapping(conservativeMap2D);                                                                                     \
-    RadialBasisFctMapping<Type> conservativeMap2DVector(Mapping::CONSERVATIVE, 2, function, {{false, false, false}}, polynomial);            \
-    perform2DTestConservativeMappingVector(conservativeMap2DVector);                                                                         \
-    RadialBasisFctMapping<Type> conservativeMap3D(Mapping::CONSERVATIVE, 3, function, {{false, false, false}}, polynomial);                  \
-    perform3DTestConservativeMapping(conservativeMap3D);                                                                                     \
+#define doLocalCode(Type, function, polynomial)                                                                                                                    \
+  {                                                                                                                                                                \
+    RadialBasisFctMapping<RadialBasisFctSolver<Type>> consistentMap2D(Mapping::CONSISTENT, 2, function, {{false, false, false}}, polynomial);                      \
+    perform2DTestConsistentMapping(consistentMap2D);                                                                                                               \
+    RadialBasisFctMapping<RadialBasisFctSolver<Type>> consistentMap2DVector(Mapping::CONSISTENT, 2, function, {{false, false, false}}, polynomial);                \
+    perform2DTestConsistentMappingVector(consistentMap2DVector);                                                                                                   \
+    RadialBasisFctMapping<RadialBasisFctSolver<Type>> consistentMap3D(Mapping::CONSISTENT, 3, function, {{false, false, false}}, polynomial);                      \
+    perform3DTestConsistentMapping(consistentMap3D);                                                                                                               \
+    RadialBasisFctMapping<RadialBasisFctSolver<Type>> scaledConsistentMap2D(Mapping::SCALED_CONSISTENT_SURFACE, 2, function, {{false, false, false}}, polynomial); \
+    perform2DTestScaledConsistentMapping(scaledConsistentMap2D);                                                                                                   \
+    RadialBasisFctMapping<RadialBasisFctSolver<Type>> scaledConsistentMap3D(Mapping::SCALED_CONSISTENT_SURFACE, 3, function, {{false, false, false}}, polynomial); \
+    perform3DTestScaledConsistentMapping(scaledConsistentMap3D);                                                                                                   \
+    RadialBasisFctMapping<RadialBasisFctSolver<Type>> conservativeMap2D(Mapping::CONSERVATIVE, 2, function, {{false, false, false}}, polynomial);                  \
+    perform2DTestConservativeMapping(conservativeMap2D);                                                                                                           \
+    RadialBasisFctMapping<RadialBasisFctSolver<Type>> conservativeMap2DVector(Mapping::CONSERVATIVE, 2, function, {{false, false, false}}, polynomial);            \
+    perform2DTestConservativeMappingVector(conservativeMap2DVector);                                                                                               \
+    RadialBasisFctMapping<RadialBasisFctSolver<Type>> conservativeMap3D(Mapping::CONSERVATIVE, 3, function, {{false, false, false}}, polynomial);                  \
+    perform3DTestConservativeMapping(conservativeMap3D);                                                                                                           \
   }
 
 BOOST_AUTO_TEST_CASE(MapThinPlateSplines)
@@ -1903,9 +1243,9 @@ void testDeadAxis2d(Polynomial polynomial, Mapping::Constraint constraint)
   bool yDead = true;
   bool zDead = false;
 
-  ThinPlateSplines                        fct;
-  RadialBasisFctMapping<ThinPlateSplines> mapping(constraint, dimensions, fct,
-                                                  {{xDead, yDead, zDead}}, polynomial);
+  ThinPlateSplines                                              fct;
+  RadialBasisFctMapping<RadialBasisFctSolver<ThinPlateSplines>> mapping(constraint, dimensions, fct,
+                                                                        {{xDead, yDead, zDead}}, polynomial);
 
   // Create mesh to map from
   mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
@@ -1969,7 +1309,7 @@ void testDeadAxis3d(Polynomial polynomial, Mapping::Constraint constraint)
   bool             xDead = false;
   bool             yDead = true;
   bool             zDead = false;
-  using Mapping          = RadialBasisFctMapping<ThinPlateSplines>;
+  using Mapping          = RadialBasisFctMapping<RadialBasisFctSolver<ThinPlateSplines>>;
   Mapping mapping(constraint, dimensions, fct, {{xDead, yDead, zDead}}, polynomial);
 
   // Create mesh to map from

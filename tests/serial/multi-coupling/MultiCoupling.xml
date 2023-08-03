@@ -136,7 +136,6 @@
     <relative-convergence-measure data="Forces1" mesh="SOLIDZ_Mesh1" limit="1e-4" />
     <relative-convergence-measure data="Forces2" mesh="SOLIDZ_Mesh2" limit="1e-4" />
     <relative-convergence-measure data="Forces3" mesh="SOLIDZ_Mesh3" limit="1e-4" />
-    <extrapolation-order value="1" />
     <acceleration:IQN-ILS>
       <data name="DisplacementDeltas1" mesh="SOLIDZ_Mesh1" />
       <data name="DisplacementDeltas2" mesh="SOLIDZ_Mesh2" />

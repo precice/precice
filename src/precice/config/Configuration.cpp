@@ -18,11 +18,7 @@
 #include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 
-namespace precice {
-
-extern bool syncMode;
-
-namespace config {
+namespace precice::config {
 
 Configuration::Configuration()
     : _tag(*this, "precice-configuration", xml::XMLTag::OCCUR_ONCE),
@@ -37,10 +33,6 @@ Configuration::Configuration()
   _tag.addNamespace("action");
   _tag.addNamespace("coupling-scheme");
   _tag.addNamespace("acceleration");
-
-  auto attrSyncMode = xml::makeXMLAttribute("sync-mode", false)
-                          .setDocumentation("sync-mode enabled additional inter- and intra-participant synchronizations");
-  _tag.addAttribute(attrSyncMode);
 
   auto attrDimensions = xml::makeXMLAttribute("dimensions", 2)
                             .setDocumentation("Determines the spatial dimensionality of the configuration")
@@ -72,8 +64,7 @@ void Configuration::xmlTagCallback(const xml::ConfigurationContext &context, xml
 {
   PRECICE_TRACE(tag.getName());
   if (tag.getName() == "precice-configuration") {
-    precice::syncMode = tag.getBooleanAttributeValue("sync-mode");
-    _dimensions       = tag.getIntAttributeValue("dimensions");
+    _dimensions = tag.getIntAttributeValue("dimensions");
     _dataConfiguration->setDimensions(_dimensions);
     _meshConfiguration->setDimensions(_dimensions);
     _participantConfiguration->setDimensions(_dimensions);
@@ -122,5 +113,4 @@ Configuration::getParticipantConfiguration() const
   return _participantConfiguration;
 }
 
-} // namespace config
-} // namespace precice
+} // namespace precice::config

@@ -38,8 +38,7 @@ BaseCouplingScheme::BaseCouplingScheme(
     std::string                   localParticipant,
     int                           maxIterations,
     CouplingMode                  cplMode,
-    constants::TimesteppingMethod dtMethod,
-    int                           extrapolationOrder)
+    constants::TimesteppingMethod dtMethod)
     : _couplingMode(cplMode),
       _maxTime(maxTime),
       _maxTimeWindows(maxTimeWindows),
@@ -49,7 +48,6 @@ BaseCouplingScheme::BaseCouplingScheme(
       _iterations(1),
       _totalIterations(1),
       _localParticipant(std::move(localParticipant)),
-      _extrapolationOrder(extrapolationOrder),
       _eps(std::pow(10.0, -1 * validDigits))
 {
   PRECICE_ASSERT(not((maxTime != UNDEFINED_MAX_TIME) && (maxTime < 0.0)),
@@ -73,15 +71,6 @@ BaseCouplingScheme::BaseCouplingScheme(
   } else {
     PRECICE_ASSERT(isImplicitCouplingScheme());
     PRECICE_ASSERT(maxIterations >= 1);
-  }
-
-  if (isExplicitCouplingScheme()) {
-    PRECICE_ASSERT(_extrapolationOrder == UNDEFINED_EXTRAPOLATION_ORDER, "Extrapolation is not allowed for explicit coupling");
-    _extrapolationOrder = 0; // set extrapolation order to zero.
-  } else {
-    PRECICE_ASSERT(isImplicitCouplingScheme());
-    PRECICE_CHECK((_extrapolationOrder == 0) || (_extrapolationOrder == 1),
-                  "Extrapolation order has to be 0 or 1.");
   }
 }
 
@@ -243,7 +232,7 @@ PtrCouplingData BaseCouplingScheme::addCouplingData(const mesh::PtrData &data, m
   int             id = data->getID();
   PtrCouplingData ptrCplData;
   if (!utils::contained(id, _allData)) { // data is not used by this coupling scheme yet, create new CouplingData
-    ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, communicateSubsteps, _extrapolationOrder);
+    ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, communicateSubsteps);
     _allData.emplace(id, ptrCplData);
   } else { // data is already used by another exchange of this coupling scheme, use existing CouplingData
     ptrCplData = _allData[id];

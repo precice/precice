@@ -143,34 +143,6 @@ void precicef_requires_reading_checkpoint_(
   *isRequired = impl->requiresReadingCheckpoint() ? 1 : 0;
 }
 
-void precicef_has_mesh_(
-    const char *meshName,
-    int *       hasMesh,
-    int         meshNameLength)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  if (impl->hasMesh(precice::impl::strippedStringView(meshName, meshNameLength))) {
-    *hasMesh = 1;
-  } else {
-    *hasMesh = 0;
-  }
-}
-
-void precicef_has_data_(
-    const char *meshName,
-    const char *dataName,
-    int *       hasData,
-    int         meshNameLength,
-    int         dataNameLength)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  if (impl->hasData(precice::impl::strippedStringView(meshName, meshNameLength), precice::impl::strippedStringView(dataName, dataNameLength))) {
-    *hasData = 1;
-  } else {
-    *hasData = 0;
-  }
-}
-
 void precicef_requires_mesh_connectivity_for_(
     const char *meshName,
     int *       required,
@@ -431,7 +403,7 @@ void precicef_get_mesh_vertices_and_ids_(
   PRECICE_CHECK(impl != nullptr, errormsg);
   auto sv              = precice::impl::strippedStringView(meshName, meshNameLength);
   auto coordinatesSize = static_cast<unsigned long>(impl->getMeshDimensions(sv) * size);
-  impl->getMeshVerticesAndIDs(sv, {ids, static_cast<unsigned long>(size)}, {coordinates, coordinatesSize});
+  impl->getMeshVertexIDsAndCoordinates(sv, {ids, static_cast<unsigned long>(size)}, {coordinates, coordinatesSize});
 }
 
 #ifdef __GNUC__

@@ -12,8 +12,6 @@ target_sources(preciceCore
     src/acceleration/AitkenAcceleration.hpp
     src/acceleration/BaseQNAcceleration.cpp
     src/acceleration/BaseQNAcceleration.hpp
-    src/acceleration/BroydenAcceleration.cpp
-    src/acceleration/BroydenAcceleration.hpp
     src/acceleration/ConstantRelaxationAcceleration.cpp
     src/acceleration/ConstantRelaxationAcceleration.hpp
     src/acceleration/IQNILSAcceleration.cpp
@@ -171,6 +169,7 @@ target_sources(preciceCore
     src/m2n/config/M2NConfiguration.hpp
     src/mapping/BarycentricBaseMapping.cpp
     src/mapping/BarycentricBaseMapping.hpp
+    src/mapping/GinkgoRadialBasisFctSolver.hpp
     src/mapping/LinearCellInterpolationMapping.cpp
     src/mapping/LinearCellInterpolationMapping.hpp
     src/mapping/Mapping.cpp

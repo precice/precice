@@ -96,14 +96,6 @@ macro(precice_validate_eigen)
 endmacro()
 
 
-# Validation for JSON
-macro(precice_validate_json)
-  precice_validate_lib(
-    "#include <nlohmann/json.hpp>\nint main() { return 0; } "
-    NAME JSON
-    LINK_LIBRARIES JSON)
-endmacro()
-
 # Validation for fmtlib
 macro(precice_validate_fmtlib)
   precice_validate_lib(

@@ -71,8 +71,7 @@ public:
       std::string                   localParticipant,
       int                           maxIterations,
       CouplingMode                  cplMode,
-      constants::TimesteppingMethod dtMethod,
-      int                           extrapolationOrder);
+      constants::TimesteppingMethod dtMethod);
 
   /**
    * @brief Getter for _sendsInitializedData
@@ -447,17 +446,6 @@ private:
 
   /// Local participant name.
   std::string _localParticipant = "unknown";
-
-  /**
-   * Order of predictor of interface values for first participant.
-   *
-   * When a participant enters a new window, it has to take some initial guess for the interface values at the end of the window computed by the other participants.
-   * There are two possibilities to determine an initial guess:
-   *
-   * 1) Simply use the converged values of the last time window (constant extrapolation).
-   * 2) Compute a linear function from the values of the last two time windows and use it to determine the initial guess (linear extrapolation)
-   */
-  int _extrapolationOrder;
 
   /// Smallest number, taking validDigits into account: eps = std::pow(10.0, -1 * validDigits)
   const double _eps;
