@@ -463,7 +463,7 @@ def analyzeCommand(eventfile, participant, outfile=None, unit='us'):
 
     if (outfile):
         print(f"Writing to {outfile}")
-        joined.write_csv(outfile, index=False)
+        joined.write_csv(outfile)
 
     return 0
 
