@@ -36,6 +36,19 @@ public:
     bool configuredWithAliasTag = false;
   };
 
+  struct GinkgoParameter {
+    std::string  executor            = "reference-executor";
+    std::string  solver              = "cg-solver";
+    std::string  preconditioner      = "jacobi-preconditioner";
+    double       residualNorm        = 1e-8;
+    std::size_t  maxIterations       = 1e6;
+    bool         usePreconditioner   = false;
+    unsigned int jacobiBlockSize     = 4;
+    unsigned int deviceId            = 0;
+    unsigned int nThreads            = 0;
+    bool         enableUnifiedMemory = false;
+  };
+
   MappingConfiguration(
       xml::XMLTag &              parent,
       mesh::PtrMeshConfiguration meshConfiguration);
@@ -77,6 +90,10 @@ public:
     int                 verticesPerCluster{};
     double              relativeOverlap{};
     bool                projectToInput{};
+    BasisFunction       basisFunction{};
+    double              supportRadius{};
+    double              shapeParameter{};
+    bool                basisFunctionDefined = false;
   };
 
   /// Returns the RBF configuration, which was configured at the latest.
@@ -132,7 +149,6 @@ private:
 
   // For iterative RBFs
   const std::string ATTR_SOLVER_RTOL = "solver-rtol";
-  // const std::string ATTR_MAX_ITERATIONS="";
 
   // For the future
   // const std::string ATTR_PARALLELISM           = "parallelism";
@@ -161,6 +177,22 @@ private:
   const std::string ATTR_SHAPE_PARAM    = "shape-parameter";
   const std::string ATTR_SUPPORT_RADIUS = "support-radius";
 
+  // For iterative RBFs using Ginkgo
+  const std::string SUBTAG_EXECUTOR = "executor";
+  const std::string EXECUTOR_CPU    = "cpu";
+  const std::string EXECUTOR_CUDA   = "cuda";
+  const std::string EXECUTOR_HIP    = "hip";
+  const std::string EXECUTOR_OMP    = "openmp";
+
+  const std::string ATTR_DEVICE_ID = "gpu-device-id";
+  const std::string ATTR_N_THREADS = "n-threads";
+  // const std::string ATTR_ENABLE_UNIFIED_MEMORY = "enable-unified-memory";
+  // const std::string ATTR_SOLVER                = "solver";
+  // const std::string ATTR_USE_PRECONDITIONER    = "use-preconditioner";
+  // const std::string ATTR_PRECONDITIONER        = "preconditioner";
+  // const std::string ATTR_JACOBI_BLOCK_SIZE     = "jacobi-block-size";
+  // const std::string ATTR_MAX_ITERATIONS        = "max-iterations";
+
   // mapping constraint
   Mapping::Constraint constraintValue{};
 
@@ -173,6 +205,24 @@ private:
   // as we can only instantiate the RBF classes when we know the RBF
   // which is configured in the subtag
   RBFConfiguration _rbfConfig;
+
+  struct ExecutorConfiguration {
+    enum struct Executor {
+      CPU,
+      CUDA,
+      HIP,
+      OpenMP
+    };
+
+    Executor executor = Executor::CPU;
+    int      deviceId{};
+    int      nThreads{};
+  };
+
+  std::unique_ptr<ExecutorConfiguration> _executorConfig;
+
+  // Settings for the iterative solvers provided by Ginkgo
+  GinkgoParameter _ginkgoParameter;
 
   /**
    * Configures and instantiates all mappings, which do not require
@@ -189,11 +239,11 @@ private:
       const std::string &toMeshName) const;
 
   /**
- * Stores additional information about the requested RBF mapping such as the
- * configured polynomial and the solver type, which is not required for all
- * the other mapping types. The information is then used later when instantiating
- * the RBF mappings in \ref xmlTagCallback().
- */
+   * Stores additional information about the requested RBF mapping such as the
+   * configured polynomial and the solver type, which is not required for all
+   * the other mapping types. The information is then used later when instantiating
+   * the RBF mappings in \ref xmlTagCallback().
+   */
   RBFConfiguration configureRBFMapping(const std::string &type,
                                        const std::string &polynomial,
                                        bool xDead, bool yDead, bool zDead,
@@ -201,6 +251,8 @@ private:
                                        double verticesPerCluster,
                                        double relativeOverlap,
                                        bool   projectToInput) const;
+
+  void finishRBFConfiguration();
 
   /// Check whether a mapping to and from the same mesh already exists
   void checkDuplicates(const ConfiguredMapping &mapping);
