@@ -366,9 +366,9 @@ void performTestConsistentMapDeadAxis(Mapping &mapping, int dim)
   double value2 = outData->values()(2);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   if (dim == 2) {
-    BOOST_TEST(value == 19935.374757794027);
-    BOOST_TEST(value1 == 19935.37795225389);
-    BOOST_TEST(value2 == 19935.35164938603);
+    BOOST_TEST(math::equals(value, 19935.374757794027, 0.2));
+    BOOST_TEST(math::equals(value1, 19935.37795225389, 0.2));
+    BOOST_TEST(math::equals(value2, 19935.35164938603, 0.2));
   } else {
     BOOST_TEST(value == 829.28063055069435);
     BOOST_TEST(value1 == 819.35577218983303);

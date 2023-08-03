@@ -277,7 +277,7 @@ BOOST_AUTO_TEST_CASE(RBFGinkgoHipConfiguration)
   mapping::MappingConfiguration mappingConfig(tag, meshConfig);
   xml::configure(tag, xml::ConfigurationContext{}, file);
 
-  BOOST_TEST(meshConfig->meshes().size() == 2);
+  BOOST_TEST(meshConfig->meshes().size() == 3);
   BOOST_TEST(mappingConfig.mappings().size() == 2);
   for (unsigned int i = 0; i < mappingConfig.mappings().size(); ++i) {
     BOOST_TEST(mappingConfig.mappings().at(i).mapping != nullptr);
@@ -296,7 +296,7 @@ BOOST_AUTO_TEST_CASE(RBFGinkgoHipConfiguration)
     BOOST_TEST(mappingConfig.rbfConfig().deadAxis[0] == true);
     BOOST_TEST(mappingConfig.rbfConfig().deadAxis[1] == false);
     BOOST_TEST(mappingConfig.rbfConfig().deadAxis[2] == true);
-    BOOST_TEST(mappingConfig.rbfConfig().solverRtol == 1e-9);
+    BOOST_TEST(mappingConfig.rbfConfig().solverRtol == 1e-6);
   }
 }
 #endif
