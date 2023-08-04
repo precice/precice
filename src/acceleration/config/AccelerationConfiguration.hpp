@@ -129,7 +129,7 @@ private:
 
   const struct DefaultValuesIMVJ {
     double      relaxationFactor           = 0.1;
-    int         maxIterationsUsed          = 10;
+    int         maxIterationsUsed          = 20;
     int         timeWindowsReused          = 0;
     int         filter                     = Acceleration::QR2FILTER;
     double      singularityLimit           = 1e-2;
