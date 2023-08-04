@@ -64,7 +64,7 @@ option(PRECICE_ALWAYS_VALIDATE_LIBS "Validate libraries even after the validatat
 option(PRECICE_BINDINGS_C "Enable the native C bindings" ON)
 option(PRECICE_BINDINGS_FORTRAN "Enable the native Fortran bindings" ON)
 option(PRECICE_BUILD_TOOLS "Build the \"precice-tools\" executable" ON)
-option(PRECICE_ENABLE_LIBBACKTRACE "Enable libbacktrace for stacktrace generation." OFF)
+option(PRECICE_FEATURE_LIBBACKTRACE_STACKTRACES "Enable libbacktrace for stacktrace generation." OFF)
 
 option(CMAKE_INTERPROCEDURAL_OPTIMIZATION "Enable interprocedural optimization for all targets." OFF)
 
@@ -156,13 +156,13 @@ add_feature_info(PRECICE_BUILD_TOOLS PRECICE_BUILD_TOOLS
 
    This feature can be enabled/disabled by setting the PRECICE_BUILD_TOOLS CMake option.
   ")
-  add_feature_info(PRECICE_ENABLE_LIBBACKTRACE PRECICE_ENABLE_LIBBACKTRACE
+  add_feature_info(PRECICE_FEATURE_LIBBACKTRACE_STACKTRACES PRECICE_FEATURE_LIBBACKTRACE_STACKTRACES
   "Enables libbacktrace for stracktrace generation.
 
    preCICE assertions are helpful during development, however, the default stacktraces may not be sufficient.
    This feature enables the support for libbacktrace in boost.stacktrace.
 
-   This feature can be enabled/disabled by setting the PRECICE_ENABLE_LIBBACKTRACE CMake option.
+   This feature can be enabled/disabled by setting the PRECICE_FEATURE_LIBBACKTRACE_STACKTRACES CMake option.
   ")
 
 
@@ -323,7 +323,7 @@ endif()
 
 # Option ENABLE_LIBBACKTRACE
 # Note that the FindBacktrace module does not work reliably to find libbacktrace installations
-if (PRECICE_ENABLE_LIBBACKTRACE)
+if (PRECICE_FEATURE_LIBBACKTRACE_STACKTRACES)
   add_subdirectory(thirdparty/libbacktrace)
 endif()
 
@@ -384,7 +384,7 @@ if(UNIX OR APPLE OR MINGW)
   target_compile_definitions(preciceCore PUBLIC _GNU_SOURCE)
   target_link_libraries(preciceCore PUBLIC ${CMAKE_DL_LIBS})
 endif()
-if(PRECICE_ENABLE_LIBBACKTRACE)
+if(PRECICE_FEATURE_LIBBACKTRACE_STACKTRACES)
   target_compile_definitions(preciceCore PRIVATE BOOST_STACKTRACE_USE_BACKTRACE)
   target_link_libraries(preciceCore PRIVATE internal::libbacktrace)
 endif()
