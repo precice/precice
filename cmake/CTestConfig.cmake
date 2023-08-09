@@ -36,7 +36,7 @@ function(add_precice_test)
   set(PAT_FULL_NAME "precice.${PAT_NAME}")
 
   # Are direct dependencies fulfilled?
-  if( (NOT PRECICE_MPICommunication) OR (PAT_PETSC AND NOT PRECICE_PETScMapping)
+  if( (NOT PRECICE_FEATURE_MPI_COMMUNICATION) OR (PAT_PETSC AND NOT PRECICE_FEATURE_PETSC_MAPPING)
        OR (PAT_GINKGO AND NOT PRECICE_FEATURE_GINKGO_MAPPING)
        OR (PAT_GINKGO_OMP AND NOT PRECICE_WITH_OMP)
        OR (PAT_GINKGO_CUDA AND NOT PRECICE_WITH_CUDA)
@@ -200,7 +200,7 @@ endfunction(add_precice_test_run_solverdummies)
 
 enable_testing()
 
-if(NOT PRECICE_MPICommunication)
+if(NOT PRECICE_FEATURE_MPI_COMMUNICATION)
   message("Tests require MPICommunication to be enabled.")
 endif()
 
