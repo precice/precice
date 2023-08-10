@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(ExplicitRead)
 
     // Allocate a vector containing the vertices
     std::vector<double> solverTwoMesh(meshSize * dim);
-    couplingInterface.getMeshVerticesAndIDs(otherMeshName, ids, solverTwoMesh);
+    couplingInterface.getMeshVertexIDsAndCoordinates(otherMeshName, ids, solverTwoMesh);
 
     // Allocate data to read
     std::vector<double> readData(4, std::numeric_limits<double>::max());

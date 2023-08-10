@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration dimensions="2" experimental="true">
+<precice-configuration dimensions="2">
   <data:scalar name="Forces" />
   <data:scalar name="Velocities" />
 

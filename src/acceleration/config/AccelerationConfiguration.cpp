@@ -7,7 +7,6 @@
 #include <vector>
 #include "acceleration/Acceleration.hpp"
 #include "acceleration/AitkenAcceleration.hpp"
-#include "acceleration/BroydenAcceleration.hpp"
 #include "acceleration/ConstantRelaxationAcceleration.hpp"
 #include "acceleration/IQNILSAcceleration.hpp"
 #include "acceleration/MVQNAcceleration.hpp"
@@ -57,7 +56,6 @@ AccelerationConfiguration::AccelerationConfiguration(
       VALUE_AITKEN("aitken"),
       VALUE_IQNILS("IQN-ILS"),
       VALUE_MVQN("IQN-IMVJ"),
-      VALUE_BROYDEN("broyden"),
       VALUE_QR1FILTER("QR1"),
       VALUE_QR1_ABSFILTER("QR1-absolute"),
       VALUE_QR2FILTER("QR2"),
@@ -119,12 +117,6 @@ void AccelerationConfiguration::connectTags(xml::XMLTag &parent)
     addTypeSpecificSubtags(tag);
     tags.push_back(tag);
   }
-  {
-    XMLTag tag(*this, VALUE_BROYDEN, occ, TAG);
-    tag.setDocumentation("Accelerates coupling data with the (single-vector) Broyden method.");
-    addTypeSpecificSubtags(tag);
-    tags.push_back(tag);
-  }
 
   for (XMLTag &tag : tags) {
     parent.addSubtag(tag);
@@ -162,7 +154,7 @@ void AccelerationConfiguration::xmlTagCallback(
     }
     _meshName      = callingTag.getStringAttributeValue(ATTR_MESH);
     double scaling = 1.0;
-    if (_config.type == VALUE_IQNILS || _config.type == VALUE_MVQN || _config.type == VALUE_BROYDEN) {
+    if (_config.type == VALUE_IQNILS || _config.type == VALUE_MVQN) {
       scaling = callingTag.getDoubleAttributeValue(ATTR_SCALING);
     }
 
@@ -308,16 +300,6 @@ void AccelerationConfiguration::xmlEndTagCallback(
 #else
       PRECICE_ERROR("Acceleration IQN-IMVJ only works if preCICE is compiled with MPI");
 #endif
-    } else if (callingTag.getName() == VALUE_BROYDEN) {
-      _acceleration = PtrAcceleration(
-          new BroydenAcceleration(
-              _config.relaxationFactor,
-              _config.forceInitialRelaxation,
-              _config.maxIterationsUsed,
-              _config.timeWindowsReused,
-              _config.filter, _config.singularityLimit,
-              _config.dataIDs,
-              _preconditioner));
     } else {
       PRECICE_ASSERT(false);
     }
@@ -516,34 +498,6 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     tagPreconditioner.addAttribute(nonconstTWindows);
     tag.addSubtag(tagPreconditioner);
 
-  } else if (tag.getName() == VALUE_BROYDEN) {
-    XMLTag               tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_ONCE);
-    XMLAttribute<double> attrDoubleValue(ATTR_VALUE);
-    tagInitRelax.addAttribute(attrDoubleValue);
-    XMLAttribute<bool> attrEnforce(ATTR_ENFORCE, false);
-    tagInitRelax.addAttribute(attrEnforce);
-    tag.addSubtag(tagInitRelax);
-
-    XMLTag            tagMaxUsedIter(*this, TAG_MAX_USED_ITERATIONS, XMLTag::OCCUR_ONCE);
-    XMLAttribute<int> attrIntValue(ATTR_VALUE);
-    tagMaxUsedIter.addAttribute(attrIntValue);
-    tag.addSubtag(tagMaxUsedIter);
-
-    XMLTag tagTimeWindowsReused(*this, TAG_TIME_WINDOWS_REUSED, XMLTag::OCCUR_ONCE);
-    tagTimeWindowsReused.addAttribute(attrIntValue);
-    tag.addSubtag(tagTimeWindowsReused);
-
-    XMLTag                    tagData(*this, TAG_DATA, XMLTag::OCCUR_ONCE_OR_MORE);
-    XMLAttribute<std::string> attrName(ATTR_NAME);
-    XMLAttribute<std::string> attrMesh(ATTR_MESH);
-    auto                      attrScaling = makeXMLAttribute(ATTR_SCALING, 1.0)
-                           .setDocumentation(
-                               "To improve the performance of a parallel or a multi coupling schemes, "
-                               "data values can be manually scaled. We recommend, however, to use an automatic scaling via a preconditioner.");
-    tagData.addAttribute(attrScaling);
-    tagData.addAttribute(attrName);
-    tagData.addAttribute(attrMesh);
-    tag.addSubtag(tagData);
   } else {
     PRECICE_ERROR("Acceleration of type \"{}\" is unknown. Please choose a valid acceleration scheme or check the spelling in the configuration file.", tag.getName());
   }

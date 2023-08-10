@@ -28,10 +28,8 @@ SerialCouplingScheme::SerialCouplingScheme(
     m2n::PtrM2N                   m2n,
     constants::TimesteppingMethod dtMethod,
     CouplingMode                  cplMode,
-    int                           maxIterations,
-    int                           extrapolationOrder)
-    : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
-                       secondParticipant, localParticipant, std::move(m2n), maxIterations, cplMode, dtMethod, extrapolationOrder)
+    int                           maxIterations)
+    : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant, secondParticipant, localParticipant, std::move(m2n), maxIterations, cplMode, dtMethod)
 {
   if (dtMethod == constants::FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE) {
     if (doesFirstStep()) {
@@ -90,21 +88,29 @@ void SerialCouplingScheme::receiveAndSetTimeWindowSize()
 
 void SerialCouplingScheme::exchangeInitialData()
 {
+  bool initialCommunication = true;
+
   // F: send, receive, S: receive, send
   if (doesFirstStep()) {
     if (receivesInitializedData()) {
-      receiveData(getM2N(), getReceiveData());
+      receiveData(getM2N(), getReceiveData(), initialCommunication);
       checkDataHasBeenReceived();
     } else {
       initializeWithZeroInitialData(getReceiveData());
     }
+    if (sendsInitializedData()) { // this send/recv pair is only needed, if no substeps are exchanged.
+      sendData(getM2N(), getSendData(), initialCommunication);
+    }
   } else { // second participant
     if (sendsInitializedData()) {
-      sendData(getM2N(), getSendData());
+      sendData(getM2N(), getSendData(), initialCommunication);
+    }
+    if (receivesInitializedData()) {                                 // this send/recv pair is only needed, if no substeps are exchanged.
+      receiveData(getM2N(), getReceiveData(), initialCommunication); // Receive data for WINDOW_START and WINDOW_END here
     }
     // similar to SerialCouplingScheme::exchangeSecondData()
-    receiveAndSetTimeWindowSize();
     PRECICE_DEBUG("Receiving data...");
+    receiveAndSetTimeWindowSize();
     receiveData(getM2N(), getReceiveData());
     checkDataHasBeenReceived();
   }
@@ -147,7 +153,7 @@ void SerialCouplingScheme::exchangeSecondData()
 {
   if (isExplicitCouplingScheme()) {
     if (doesFirstStep()) { // first participant
-      moveToNextWindow();  // extrapolation result for receive data of first is directly overwritten in the call of receiveData below
+      moveToNextWindow();
       PRECICE_DEBUG("Receiving data...");
       receiveData(getM2N(), getReceiveData());
       checkDataHasBeenReceived();
@@ -169,7 +175,7 @@ void SerialCouplingScheme::exchangeSecondData()
       PRECICE_DEBUG("Receiving convergence data...");
       receiveConvergence(getM2N());
       if (hasConverged()) {
-        moveToNextWindow(); // extrapolation result for receive data of first is directly overwritten in the call of receiveData below
+        moveToNextWindow();
       }
       PRECICE_DEBUG("Receiving data...");
       receiveData(getM2N(), getReceiveData());

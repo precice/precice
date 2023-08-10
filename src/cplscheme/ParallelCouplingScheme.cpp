@@ -18,33 +18,34 @@ ParallelCouplingScheme::ParallelCouplingScheme(
     m2n::PtrM2N                   m2n,
     constants::TimesteppingMethod dtMethod,
     CouplingMode                  cplMode,
-    int                           maxIterations,
-    int                           extrapolationOrder)
+    int                           maxIterations)
     : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
-                       secondParticipant, localParticipant, std::move(m2n), maxIterations, cplMode, dtMethod, extrapolationOrder) {}
+                       secondParticipant, localParticipant, std::move(m2n), maxIterations, cplMode, dtMethod) {}
 
 void ParallelCouplingScheme::exchangeInitialData()
 {
+  bool initialCommunication = true;
+
   // F: send, receive, S: receive, send
   if (doesFirstStep()) {
     if (sendsInitializedData()) {
-      sendData(getM2N(), getSendData());
+      sendData(getM2N(), getSendData(), initialCommunication);
     }
     if (receivesInitializedData()) {
-      receiveData(getM2N(), getReceiveData());
+      receiveData(getM2N(), getReceiveData(), initialCommunication);
       checkDataHasBeenReceived();
     } else {
       initializeWithZeroInitialData(getReceiveData());
     }
   } else { // second participant
     if (receivesInitializedData()) {
-      receiveData(getM2N(), getReceiveData());
+      receiveData(getM2N(), getReceiveData(), initialCommunication);
       checkDataHasBeenReceived();
     } else {
       initializeWithZeroInitialData(getReceiveData());
     }
     if (sendsInitializedData()) {
-      sendData(getM2N(), getSendData());
+      sendData(getM2N(), getSendData(), initialCommunication);
     }
   }
 }

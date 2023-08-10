@@ -8,7 +8,7 @@ import collections
 import pathlib
 
 """ Files matching this pattern will be filtered out """
-IGNORE_PATTERNS = ["drivers"]
+IGNORE_PATTERNS = ["drivers", "mapping/device"]
 
 """ Configured files, which should be ignored by git, yet installed by CMake"""
 CONFIGURED_PUBLIC = ["${PROJECT_BINARY_DIR}/src/precice/Version.h"]

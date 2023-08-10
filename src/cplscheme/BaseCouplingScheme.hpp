@@ -71,8 +71,7 @@ public:
       std::string                   localParticipant,
       int                           maxIterations,
       CouplingMode                  cplMode,
-      constants::TimesteppingMethod dtMethod,
-      int                           extrapolationOrder);
+      constants::TimesteppingMethod dtMethod);
 
   /**
    * @brief Getter for _sendsInitializedData
@@ -250,8 +249,9 @@ protected:
    *
    * @param m2n M2N used for communication
    * @param sendData DataMap associated with sent data
+   * @param initialCommunication if true and exchange of substeps is deactivated, will send data for WINDOW_START, else will send data for WINDOW_END
    */
-  void sendData(const m2n::PtrM2N &m2n, const DataMap &sendData);
+  void sendData(const m2n::PtrM2N &m2n, const DataMap &sendData, bool initialCommunication = false);
 
   int receiveNumberOfTimeSteps(const m2n::PtrM2N &m2n);
 
@@ -262,8 +262,9 @@ protected:
    *
    * @param m2n M2N used for communication
    * @param receiveData DataMap associated with received data
+   * @param initialCommunication if true and exchange of substeps is deactivated, will store received data for WINDOW_START and WINDOW_END, else store received data only for WINDOW_END
    */
-  void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData);
+  void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData, bool initialCommunication = false);
 
   /**
    * @brief Initializes storage in receiveData as zero
@@ -445,17 +446,6 @@ private:
 
   /// Local participant name.
   std::string _localParticipant = "unknown";
-
-  /**
-   * Order of predictor of interface values for first participant.
-   *
-   * When a participant enters a new window, it has to take some initial guess for the interface values at the end of the window computed by the other participants.
-   * There are two possibilities to determine an initial guess:
-   *
-   * 1) Simply use the converged values of the last time window (constant extrapolation).
-   * 2) Compute a linear function from the values of the last two time windows and use it to determine the initial guess (linear extrapolation)
-   */
-  int _extrapolationOrder;
 
   /// Smallest number, taking validDigits into account: eps = std::pow(10.0, -1 * validDigits)
   const double _eps;

@@ -38,8 +38,7 @@ BaseCouplingScheme::BaseCouplingScheme(
     std::string                   localParticipant,
     int                           maxIterations,
     CouplingMode                  cplMode,
-    constants::TimesteppingMethod dtMethod,
-    int                           extrapolationOrder)
+    constants::TimesteppingMethod dtMethod)
     : _couplingMode(cplMode),
       _maxTime(maxTime),
       _maxTimeWindows(maxTimeWindows),
@@ -49,7 +48,6 @@ BaseCouplingScheme::BaseCouplingScheme(
       _iterations(1),
       _totalIterations(1),
       _localParticipant(std::move(localParticipant)),
-      _extrapolationOrder(extrapolationOrder),
       _eps(std::pow(10.0, -1 * validDigits))
 {
   PRECICE_ASSERT(not((maxTime != UNDEFINED_MAX_TIME) && (maxTime < 0.0)),
@@ -73,15 +71,6 @@ BaseCouplingScheme::BaseCouplingScheme(
   } else {
     PRECICE_ASSERT(isImplicitCouplingScheme());
     PRECICE_ASSERT(maxIterations >= 1);
-  }
-
-  if (isExplicitCouplingScheme()) {
-    PRECICE_ASSERT(_extrapolationOrder == UNDEFINED_EXTRAPOLATION_ORDER, "Extrapolation is not allowed for explicit coupling");
-    _extrapolationOrder = 0; // set extrapolation order to zero.
-  } else {
-    PRECICE_ASSERT(isImplicitCouplingScheme());
-    PRECICE_CHECK((_extrapolationOrder == 0) || (_extrapolationOrder == 1),
-                  "Extrapolation order has to be 0 or 1.");
   }
 }
 
@@ -110,7 +99,7 @@ void BaseCouplingScheme::sendTimes(const m2n::PtrM2N &m2n, const Eigen::VectorXd
   m2n->send(times);
 }
 
-void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendData)
+void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendData, bool initialCommunication)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(m2n.get() != nullptr);
@@ -120,10 +109,10 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
     const auto &stamples = data->stamples();
     PRECICE_ASSERT(stamples.size() > 0);
 
-    if (data->exchangeSubsteps()) {
-      int nTimeSteps = data->timeStepsStorage().nTimes();
-      PRECICE_ASSERT(nTimeSteps > 0);
+    int nTimeSteps = data->timeStepsStorage().nTimes();
+    PRECICE_ASSERT(nTimeSteps > 0);
 
+    if (data->exchangeSubsteps()) {
       if (nTimeSteps > 1) { // otherwise PRECICE_ASSERT below is triggered during initialization
         const Eigen::VectorXd timesAscending = data->timeStepsStorage().getTimes();
         PRECICE_ASSERT(math::equals(timesAscending(0), time::Storage::WINDOW_START), timesAscending(0));                                     // assert that first element is time::Storage::WINDOW_START
@@ -148,6 +137,12 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
         m2n->send(serialized.gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions() * serialized.nTimeSteps());
       }
     } else {
+      if (initialCommunication) { // send data for WINDOW_START. Will be used for WINDOW_START and WINDOW_END.
+        PRECICE_ASSERT(math::equals(stamples.front().timestamp, time::Storage::WINDOW_START));
+        PRECICE_ASSERT(math::equals(stamples.back().timestamp, time::Storage::WINDOW_START));
+      } else { // send data for WINDOW_END.
+        PRECICE_ASSERT(math::equals(stamples.back().timestamp, time::Storage::WINDOW_END));
+      }
       data->sample() = stamples.back().sample;
 
       // Data is only received on ranks with size>0, which is checked in the derived class implementation
@@ -180,7 +175,7 @@ Eigen::VectorXd BaseCouplingScheme::receiveTimes(const m2n::PtrM2N &m2n, int nTi
   return times;
 }
 
-void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData)
+void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData, bool initialCommunication)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(m2n.get());
@@ -212,6 +207,11 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
         PRECICE_ASSERT(data->hasGradient());
         m2n->receive(data->gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions());
       }
+
+      if (initialCommunication) { // also use receive data for WINDOW_START.
+        data->setSampleAtTime(time::Storage::WINDOW_START, data->sample());
+      }
+      // use received data for WINDOW_END.
       data->setSampleAtTime(time::Storage::WINDOW_END, data->sample());
     }
   }
@@ -232,7 +232,7 @@ PtrCouplingData BaseCouplingScheme::addCouplingData(const mesh::PtrData &data, m
   int             id = data->getID();
   PtrCouplingData ptrCplData;
   if (!utils::contained(id, _allData)) { // data is not used by this coupling scheme yet, create new CouplingData
-    ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, communicateSubsteps, _extrapolationOrder);
+    ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, communicateSubsteps);
     _allData.emplace(id, ptrCplData);
   } else { // data is already used by another exchange of this coupling scheme, use existing CouplingData
     ptrCplData = _allData[id];

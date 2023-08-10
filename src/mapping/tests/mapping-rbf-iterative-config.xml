@@ -91,6 +91,7 @@
     to="TestMeshTen"
     constraint="conservative">
     <basis-function:gaussian support-radius="0.3" />
+    <executor:cpu />
   </mapping:rbf-global-iterative>
 
   <mapping:rbf-global-iterative
@@ -102,7 +103,6 @@
     x-dead="true"
     y-dead="false"
     z-dead="true"
-    preallocation="save"
     solver-rtol="1e-6">
     <basis-function:gaussian shape-parameter="0.3" />
   </mapping:rbf-global-iterative>
