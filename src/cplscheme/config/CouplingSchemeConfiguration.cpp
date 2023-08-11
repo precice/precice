@@ -543,7 +543,7 @@ void CouplingSchemeConfiguration::addTagResidualRelativeConvergenceMeasure(
                                XMLTag::OCCUR_ARBITRARY);
   tagConvergenceMeasure.setDocumentation(
       "Residual relative convergence criterion based on the relative two-norm differences of data values between iterations.\n"
-      "\\$$\\frac{\\left\\lVert H(x^k) - x^k \\right\\rVert_2}{\\left\\lVert H(x^{k-1}) - x^{k-1} \\right\\rVert_2} < \\text{limit}\\$$");
+      "\\$$\\frac{\\left\\lVert H(x^k) - x^k \\right\\rVert_2}{\\left\\lVert H(x^0) - x^0 \\right\\rVert_2} < \\text{limit}\\$$");
   addBaseAttributesTagConvergenceMeasure(tagConvergenceMeasure);
   XMLAttribute<double> attrLimit(ATTR_LIMIT);
   attrLimit.setDocumentation("Limit under which the measure is considered to have converged. Must be in \\((0, 1]\\).");
