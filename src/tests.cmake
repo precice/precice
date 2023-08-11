@@ -38,6 +38,7 @@ target_sources(testprecice
     src/io/tests/TXTWriterReaderTest.cpp
     src/m2n/tests/GatherScatterCommunicationTest.cpp
     src/m2n/tests/PointToPointCommunicationTest.cpp
+    src/mapping/tests/GinkgoRadialBasisFctSolverTest.cpp
     src/mapping/tests/LinearCellInterpolationMappingTest.cpp
     src/mapping/tests/MappingConfigurationTest.cpp
     src/mapping/tests/NearestNeighborGradientMappingTest.cpp
@@ -47,6 +48,7 @@ target_sources(testprecice
     src/mapping/tests/PartitionOfUnityMappingTest.cpp
     src/mapping/tests/PetRadialBasisFctMappingTest.cpp
     src/mapping/tests/PolationTest.cpp
+    src/mapping/tests/RadialBasisFctHelper.hpp
     src/mapping/tests/RadialBasisFctMappingTest.cpp
     src/math/tests/BarycenterTest.cpp
     src/math/tests/DifferencesTest.cpp

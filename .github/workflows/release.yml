@@ -45,7 +45,7 @@ jobs:
         working-directory: build
         run: |
           cmake --version
-          cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DCPACK_GENERATOR="DEB" -DPRECICE_PETScMapping=ON -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=ON ..
+          cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DCPACK_GENERATOR="DEB" -DPRECICE_FEATURE_PETSC_MAPPING=ON -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=ON ..
       - name: Compile
         working-directory: build
         run: make -j $(nproc)

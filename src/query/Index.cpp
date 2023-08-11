@@ -230,7 +230,7 @@ std::vector<VertexID> Index::getVerticesInsideBox(const mesh::Vertex &centerVert
 
   const auto &          rtree = _pimpl->getVertexRTree(*_mesh);
   std::vector<VertexID> matches;
-  rtree->query(bgi::intersects(searchBox) and bg::index::satisfies([&](size_t const i) { return bg::distance(centerVertex, _mesh->vertices()[i]) <= radius; }),
+  rtree->query(bgi::intersects(searchBox) and bg::index::satisfies([&](size_t const i) { return bg::distance(centerVertex, _mesh->vertices()[i]) < radius; }),
                std::back_inserter(matches));
   return matches;
 }
