@@ -263,8 +263,6 @@ void ParticipantConfiguration::xmlTagCallback(
     PRECICE_CHECK(mesh,
                   R"(Participant "{}" attempts to provide an unknown mesh "{}". <mesh name="{}"> needs to be defined first.)",
                   _participants.back()->getName(), name, name);
-    _dimensions = mesh->getDimensions();
-    PRECICE_ASSERT(_dimensions != 0);
     _participants.back()->provideMesh(mesh);
   } else if (tag.getName() == TAG_RECEIVE_MESH) {
     std::string                                   name              = tag.getStringAttributeValue(ATTR_NAME);
@@ -278,8 +276,6 @@ void ParticipantConfiguration::xmlTagCallback(
     PRECICE_CHECK(mesh,
                   R"(Participant "{}" attempts to provide an unknown mesh "{}". <mesh name="{}"> needs to be defined first.)",
                   _participants.back()->getName(), name, name);
-    _dimensions = mesh->getDimensions();
-    PRECICE_ASSERT(_dimensions != 0);
 
     // Then check the attributes
     PRECICE_CHECK(!from.empty(),
@@ -305,8 +301,6 @@ void ParticipantConfiguration::xmlTagCallback(
     PRECICE_CHECK(mesh,
                   R"(Participant "{}" attempts to read data "{}" from an unknown mesh "{}". <mesh name="{}"> needs to be defined first.)",
                   _participants.back()->getName(), dataName, meshName, meshName);
-    _dimensions = mesh->getDimensions();
-    PRECICE_ASSERT(_dimensions != 0);
     mesh::PtrData data = getData(mesh, dataName);
     _participants.back()->addWriteData(data, mesh);
   } else if (tag.getName() == TAG_READ) {
@@ -316,17 +310,13 @@ void ParticipantConfiguration::xmlTagCallback(
     PRECICE_CHECK(mesh,
                   R"(Participant "{}" attempts to write data "{}" to an unknown mesh "{}". <mesh name="{}"> needs to be defined first.)",
                   _participants.back()->getName(), dataName, meshName, meshName);
-    _dimensions = mesh->getDimensions();
-    PRECICE_ASSERT(_dimensions != 0);
     mesh::PtrData data = getData(mesh, dataName);
     _participants.back()->addReadData(data, mesh);
   } else if (tag.getName() == TAG_WATCH_POINT) {
     WatchPointConfig config;
-    config.name     = tag.getStringAttributeValue(ATTR_NAME);
-    config.nameMesh = tag.getStringAttributeValue(ATTR_MESH);
-    _dimensions     = _meshConfig->getMesh(config.nameMesh)->getDimensions();
-    PRECICE_ASSERT(_dimensions != 0);
-    config.coordinates = tag.getEigenVectorXdAttributeValue(ATTR_COORDINATE, _dimensions);
+    config.name        = tag.getStringAttributeValue(ATTR_NAME);
+    config.nameMesh    = tag.getStringAttributeValue(ATTR_MESH);
+    config.coordinates = tag.getEigenVectorXdAttributeValue(ATTR_COORDINATE, _meshConfig->getMesh(config.nameMesh)->getDimensions());
     _watchPointConfigs.push_back(config);
   } else if (tag.getName() == TAG_WATCH_INTEGRAL) {
     WatchIntegralConfig config;

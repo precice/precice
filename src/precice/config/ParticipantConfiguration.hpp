@@ -107,8 +107,6 @@ private:
   const std::string VALUE_VTP = "vtp";
   const std::string VALUE_CSV = "csv";
 
-  int _dimensions = 0;
-
   bool _experimental = false;
 
   mesh::PtrMeshConfiguration _meshConfig;
