@@ -106,10 +106,13 @@ void MeshConfiguration::addMesh(
   for (const PtrData &dataNewMesh : mesh->data()) {
     bool found = false;
     for (const DataConfiguration::ConfiguredData &data : _dataConfig->data()) {
-      if ((dataNewMesh->getName() == data.name && dataNewMesh->getDimensions() == getDataDimensions(data.typeName) {
+      if (dataNewMesh->getName() == data.name && dataNewMesh->getDimensions() == getDataDimensions(mesh->getName(), data.typeName)) {
         found = true;
         break;
       }
+    }
+    if (found) {
+      break;
     }
     PRECICE_CHECK(found, "Data {0} is not defined. Please define a data tag with name=\"{0}\".", dataNewMesh->getName());
   }
