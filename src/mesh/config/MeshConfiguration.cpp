@@ -164,9 +164,9 @@ void MeshConfiguration::addNeededMesh(
 
 int MeshConfiguration::getDataDimensions(const std::string &meshName, const Data::typeName dataTypeName)
 {
-  if (_dataTypeName == Data::typeName::VECTOR) {
+  if (dataTypeName == Data::typeName::VECTOR) {
     return _meshDimensionsMap[meshName];
-  } else if (_dataTypeName == Data::typeName::SCALAR) {
+  } else if (dataTypeName == Data::typeName::SCALAR) {
     return 1;
   }
   // We should never reach this point
