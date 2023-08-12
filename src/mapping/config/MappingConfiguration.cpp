@@ -494,6 +494,14 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
                 "Mesh \"{0}\" was not found while creating a mapping. "
                 "Please correct the to=\"{0}\" attribute.",
                 toMeshName);
+
+  // Check for compatible mesh dimensions
+  PRECICE_CHECK(fromMesh->getDimensions() == toMesh->getDimensions(),
+                "Mapping between meshes of different dimensions is not allowed. "
+                "Please set the same dimensions attribute to meshes \"{}\" and \"{}\", "
+                "or choose different meshes.",
+                fromMeshName, toMeshName);
+
   configuredMapping.fromMesh = fromMesh;
   configuredMapping.toMesh   = toMesh;
 
