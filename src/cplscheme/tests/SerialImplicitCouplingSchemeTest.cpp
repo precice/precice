@@ -479,8 +479,8 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
   xml::XMLTag root = xml::getRootTag();
   // Create a data configuration, to simplify configuration of data
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
-  dataConfig->addData("data0", "scalar");
-  dataConfig->addData("data1", "vector");
+  dataConfig->addData("data0", mesh::Data::typeName::SCALAR);
+  dataConfig->addData("data1", mesh::Data::typeName::VECTOR);
 
   MeshConfiguration meshConfig(root, dataConfig);
   mesh::PtrMesh     mesh(new Mesh("Mesh", 3, testing::nextMeshID()));
@@ -579,8 +579,8 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
   xml::XMLTag root = xml::getRootTag();
   // Create a data configuration, to simplify configuration of data
   mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(root));
-  dataConfig->addData("data0", "scalar");
-  dataConfig->addData("data1", "vector");
+  dataConfig->addData("data0", mesh::Data::typeName::SCALAR);
+  dataConfig->addData("data1", mesh::Data::typeName::VECTOR);
 
   mesh::MeshConfiguration meshConfig(root, dataConfig);
   mesh::PtrMesh           mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
@@ -639,8 +639,8 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
   xml::XMLTag root = xml::getRootTag();
   // Create a data configuration, to simplify configuration of data
   mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(root));
-  dataConfig->addData("data0", "scalar");
-  dataConfig->addData("data1", "vector");
+  dataConfig->addData("data0", mesh::Data::typeName::SCALAR);
+  dataConfig->addData("data1", mesh::Data::typeName::VECTOR);
 
   mesh::MeshConfiguration meshConfig(root, dataConfig);
   mesh::PtrMesh           mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
@@ -702,8 +702,8 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   // Create a data configuration, to simplify configuration of data
 
   mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(root));
-  dataConfig->addData("Data0", "scalar");
-  dataConfig->addData("Data1", "vector");
+  dataConfig->addData("Data0", mesh::Data::typeName::SCALAR);
+  dataConfig->addData("Data1", mesh::Data::typeName::VECTOR);
 
   mesh::MeshConfiguration meshConfig(root, dataConfig);
   mesh::PtrMesh           mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));

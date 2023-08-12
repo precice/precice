@@ -51,9 +51,18 @@ void DataConfiguration::xmlTagCallback(
     xml::XMLTag &                    tag)
 {
   if (tag.getNamespace() == TAG) {
-    const std::string &name           = tag.getStringAttributeValue(ATTR_NAME);
-    const std::string &typeName       = tag.getName();
-    const int          waveformDegree = tag.getIntAttributeValue(ATTR_DEGREE);
+    const std::string &name = tag.getStringAttributeValue(ATTR_NAME);
+
+    Data::typeName typeName;
+    if (tag.getName() == "scalar") {
+      typeName = Data::typeName::SCALAR;
+    } else if (tag.getName() == "vector") {
+      typeName = Data::typeName::VECTOR;
+    } else {
+      PRECICE_ERROR("You configured data with name=\"{}\" to be of type \"{}\", but this type is unknown. Known types are \"scalar\" and \"vector\".", name, tag.getName());
+    };
+
+    const int waveformDegree = tag.getIntAttributeValue(ATTR_DEGREE);
     if (waveformDegree < time::Time::MIN_WAVEFORM_DEGREE || waveformDegree > time::Time::MAX_WAVEFORM_DEGREE) {
       PRECICE_ERROR("You tried to configure the data with name \"{}\" to use the waveform-degree=\"{}\", but the degree must be between \"{}\" and \"{}\". Please use a degree in the allowed range.", name, waveformDegree, time::Time::MIN_WAVEFORM_DEGREE, time::Time::MAX_WAVEFORM_DEGREE);
     }
@@ -70,9 +79,9 @@ void DataConfiguration::xmlEndTagCallback(
 }
 
 void DataConfiguration::addData(
-    const std::string &name,
-    const std::string &typeName,
-    int                waveformDegree)
+    const std::string &  name,
+    const Data::typeName typeName,
+    int                  waveformDegree)
 {
   // Check if data with same name has been added already
   for (auto &elem : _data) {

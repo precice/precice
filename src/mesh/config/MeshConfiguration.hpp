@@ -7,6 +7,7 @@
 #include <utility>
 #include <vector>
 #include "logging/Logger.hpp"
+#include "mesh/Data.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "xml/XMLTag.hpp"
@@ -79,7 +80,8 @@ private:
   /// Data configuration.
   PtrDataConfiguration _dataConfig;
 
-  int getDataDimensions(const std::string &meshName, const std::string &typeName);
+  /// Get the number of dimensions data values of this type (scalar/vector) have on this mesh
+  int getDataDimensions(const std::string &meshName, const Data::typeName typeName);
 
   /// Configured meshes.
   std::vector<PtrMesh> _meshes;

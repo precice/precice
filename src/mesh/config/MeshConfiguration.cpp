@@ -162,16 +162,15 @@ void MeshConfiguration::addNeededMesh(
   }
 }
 
-int MeshConfiguration::getDataDimensions(const std::string &meshName, const std::string &typeName)
+int MeshConfiguration::getDataDimensions(const std::string &meshName, const Data::typeName dataTypeName)
 {
-  // TODO: Get the values from elsewhere / make an enum
-  if (typeName == "vector") {
+  if (_dataTypeName == Data::typeName::VECTOR) {
     return _meshDimensionsMap[meshName];
-  } else if (typeName == "scalar") {
+  } else if (_dataTypeName == Data::typeName::SCALAR) {
     return 1;
   }
   // We should never reach this point
-  PRECICE_UNREACHABLE("Unknown data type \"{}\".", typeName);
+  PRECICE_UNREACHABLE("Unknown data type defined on mesh \"{}\".", meshName);
 };
 
 } // namespace precice::mesh

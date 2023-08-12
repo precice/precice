@@ -309,8 +309,8 @@ BOOST_AUTO_TEST_CASE(testSimpleExplicitCoupling)
 
   xml::XMLTag                root = xml::getRootTag();
   mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(root));
-  dataConfig->addData("Data0", "scalar");
-  dataConfig->addData("Data1", "vector");
+  dataConfig->addData("Data0", mesh::Data::typeName::SCALAR);
+  dataConfig->addData("Data1", mesh::Data::typeName::VECTOR);
   mesh::MeshConfiguration meshConfig(root, dataConfig);
   mesh::PtrMesh           mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
   mesh->createData("Data0", 1, 0_dataID);
@@ -681,8 +681,8 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingWithSubcycling)
 
   xml::XMLTag                root = xml::getRootTag();
   mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(root));
-  dataConfig->addData("Data0", "scalar");
-  dataConfig->addData("Data1", "vector");
+  dataConfig->addData("Data0", mesh::Data::typeName::SCALAR);
+  dataConfig->addData("Data1", mesh::Data::typeName::VECTOR);
   mesh::MeshConfiguration meshConfig(root, dataConfig);
   mesh::PtrMesh           mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
   mesh->createData("Data0", 1, 0_dataID);

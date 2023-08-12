@@ -80,8 +80,8 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
 
   // Create a data configuration, to simplify configuration of data
   mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(root));
-  dataConfig->addData("Data0", "scalar");
-  dataConfig->addData("Data1", "vector");
+  dataConfig->addData("Data0", mesh::Data::typeName::SCALAR);
+  dataConfig->addData("Data1", mesh::Data::typeName::VECTOR);
 
   mesh::MeshConfiguration meshConfig(root, dataConfig);
   mesh::PtrMesh           mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
