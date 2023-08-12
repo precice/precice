@@ -774,7 +774,7 @@ void ParticipantImpl::setMeshQuad(
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   MeshContext &context = _accessor->usedMeshContext(meshName);
   PRECICE_CHECK(context.mesh->getDimensions() == 3, "setMeshQuad is only possible for 3D cases."
-                                                    " Please set the dimension to 3 in the preCICE configuration file.");
+                                                    " Please set the mesh dimension to 3 in the preCICE configuration file.");
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
     PRECICE_ASSERT(context.mesh);
     mesh::Mesh &mesh = *(context.mesh);
@@ -888,7 +888,7 @@ void ParticipantImpl::setMeshTetrahedron(
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   MeshContext &context = _accessor->usedMeshContext(meshName);
   PRECICE_CHECK(context.mesh->getDimensions() == 3, "setMeshTetrahedron is only possible for 3D cases."
-                                                    " Please set the dimension to 3 in the preCICE configuration file.");
+                                                    " Please set the mesh dimension to 3 in the preCICE configuration file.");
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
     mesh::PtrMesh &mesh = context.mesh;
     using impl::errorInvalidVertexID;
