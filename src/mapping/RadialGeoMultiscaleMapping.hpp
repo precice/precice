@@ -58,10 +58,21 @@ protected:
 private:
   mutable logging::Logger _log{"mapping::RadialGeoMultiscaleMapping"};
 
+  /// type of mapping, namely spread or collect
   MultiscaleType _type;
 
   /// main axis along which radial geometric multiscale coupling happens
   MultiscaleAxis _axis;
+
+  /// principle axis midpoints between 1D vertices
+  Eigen::VectorXd _axisMidpoints;
+
+  /// computed vertex indices to map data from input vertices to output vertices and vice versa
+  std::vector<int> _vertexIndicesSpread;
+  std::vector<int> _vertexIndicesCollect;
+
+  /// counts number of vertices between midpoints for averaging
+  Eigen::VectorXd _vertexCounter;
 };
 
 } // namespace mapping

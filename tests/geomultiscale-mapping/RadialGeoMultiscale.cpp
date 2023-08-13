@@ -43,15 +43,13 @@ BOOST_AUTO_TEST_CASE(RadialGeoMultiscale)
 
     cplInterface.finalize();
 
-    std::cout << "This is done 1 \n";
-
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
     auto meshTwoID = "MeshTwo";
 
-    Vector3d coordTwoA{0.5, 0.0, 0.0};
-    Vector3d coordTwoB{0.5, 0.0, 1.0};
-    Vector3d coordTwoC{0.5, 0.0, 2.0};
+    Vector3d coordTwoA{0.5, 2.0, 0.0};
+    Vector3d coordTwoB{0.5, 3.0, 1.0};
+    Vector3d coordTwoC{0.5, 4.0, 2.0};
 
     // Setup receiving mesh.
     int idA = cplInterface.setMeshVertex(meshTwoID, coordTwoA);
@@ -76,8 +74,6 @@ BOOST_AUTO_TEST_CASE(RadialGeoMultiscale)
     BOOST_TEST(values[2] == 9);
 
     cplInterface.finalize();
-
-    std::cout << "And this is done 2 \n";
   }
 }
 

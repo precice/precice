@@ -30,6 +30,29 @@ void AxialGeoMultiscaleMapping::computeMapping()
     PRECICE_DEBUG("Compute consistent mapping");
     if (_type == SPREAD) {
       PRECICE_CHECK(input()->vertices().size() == 1, "You can only define an axial geometric multiscale mapping of type spread from a mesh with exactly one vertex.");
+
+      // TODO: get rid of hardcoded values via access to mesh dimension
+      const int inValueDimensions  = 1;
+      const int outValueDimensions = 3;
+
+      int effectiveCoordinate = _axis;
+      PRECICE_ASSERT(effectiveCoordinate == 0 ||
+                         effectiveCoordinate == 1 ||
+                         effectiveCoordinate == 2,
+                     "Unknown multiscale axis type.")
+
+      // compute distances between 1D vertex and 3D vertices
+      mesh::Vertex &v0      = input()->vertices()[0];
+      size_t const  outSize = output()->vertices().size();
+
+      for (size_t i = 0; i < outSize; i++) {
+        Eigen::VectorXd difference(outValueDimensions);
+        difference = v0.getCoords();
+        difference -= output()->vertices()[i].getCoords();
+        double distance = difference.norm() / _radius;
+        PRECICE_CHECK(distance <= 1.05, "Output mesh has vertices that do not coincide with the geometric multiscale interface defined by the input mesh. Ratio of vertex distance to radius is {} (which is larger than the assumed threshold of 1.05).", distance);
+        _vertexDistances.push_back(distance);
+      }
     } else {
       PRECICE_ASSERT(_type == COLLECT);
       PRECICE_CHECK(output()->vertices().size() == 1, "You can only define an axial geometric multiscale mapping of type spread from a mesh with exactly one vertex.");
@@ -45,6 +68,7 @@ void AxialGeoMultiscaleMapping::computeMapping()
 void AxialGeoMultiscaleMapping::clear()
 {
   PRECICE_TRACE();
+  _vertexDistances.clear();
   _hasComputedMapping = false;
 }
 
@@ -62,7 +86,7 @@ void AxialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen:
   const int              inValueDimensions = inData.dataDims;
   const Eigen::VectorXd &inputValues       = inData.values;
   Eigen::VectorXd &      outputValues      = outData;
-  // TODO: check how to access correct outValueDimensions
+  // TODO: check if this needs to change when access to mesh dimension is possible
   const int outValueDimensions = outData.size() / output()->vertices().size();
 
   int effectiveCoordinate = _axis;
@@ -87,13 +111,8 @@ void AxialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen:
     size_t const  outSize = output()->vertices().size();
 
     for (size_t i = 0; i < outSize; i++) {
-      Eigen::VectorXd difference(outValueDimensions);
-      difference = v0.getCoords();
-      difference -= output()->vertices()[i].getCoords();
-      double distance = difference.norm() / _radius;
-      PRECICE_CHECK(distance <= 1.05, "Output mesh has vertices that do not coincide with the geometric multiscale interface defined by the input mesh. Ratio of vertex distance to radius is {} (which is larger than the assumed threshold of 1.05).", distance);
-      PRECICE_ASSERT(static_cast<int>((i * outValueDimensions) + effectiveCoordinate) < outputValues.size(), ((i * outValueDimensions) + effectiveCoordinate), outputValues.size())
-      outputValues((i * outValueDimensions) + effectiveCoordinate) = 2 * inputValues(effectiveCoordinate) * (1 - distance * distance);
+      PRECICE_ASSERT(static_cast<int>((i * outValueDimensions) + effectiveCoordinate) < outputValues.size(), ((i * outValueDimensions) + effectiveCoordinate), outputValues.size());
+      outputValues((i * outValueDimensions) + effectiveCoordinate) = 2 * inputValues(effectiveCoordinate) * (1 - (_vertexDistances[i] * _vertexDistances[i]));
     }
   } else {
     PRECICE_ASSERT(_type == COLLECT);
@@ -102,7 +121,6 @@ void AxialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen:
       but only of the effectiveCoordinate component of the velocity vector.
     */
     PRECICE_ASSERT(output()->vertices().size() == 1);
-    //PRECICE_ASSERT(outputValues.size() == 1);
     outputValues(effectiveCoordinate) = 0;
     size_t const inSize               = input()->vertices().size();
     for (size_t i = 0; i < inSize; i++) {

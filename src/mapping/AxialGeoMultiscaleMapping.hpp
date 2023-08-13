@@ -62,13 +62,17 @@ protected:
 private:
   mutable logging::Logger _log{"mapping::AxialGeoMultiscaleMapping"};
 
+  /// type of mapping, namely spread or collect
   MultiscaleType _type;
 
-  /// main axis along which axial geometric multiscale coupling happens
+  /// main axis along which radial geometric multiscale coupling happens
   MultiscaleAxis _axis;
 
   /// radius of the "tube" from or to which the data is mapped, i.e., radius of the circular interface between the two participants
   double _radius;
+
+  /// computed vertex distances to map data from input vertex to output vertices
+  std::vector<double> _vertexDistances;
 };
 
 } // namespace mapping
