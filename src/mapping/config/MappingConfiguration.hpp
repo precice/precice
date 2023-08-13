@@ -187,9 +187,9 @@ private:
   const std::string ATTR_SUPPORT_RADIUS = "support-radius";
 
   // Attributes for geometric multiscale
-  const std::string ATTR_GEOMULTISCALE_TYPE   = "multiscale-type";
-  const std::string ATTR_GEOMULTISCALE_AXIS   = "multiscale-axis";
-  const std::string ATTR_GEOMULTISCALE_RADIUS = "multiscale-radius";
+  const std::string ATTR_GEOMETRIC_MULTISCALE_TYPE   = "multiscale-type";
+  const std::string ATTR_GEOMETRIC_MULTISCALE_AXIS   = "multiscale-axis";
+  const std::string ATTR_GEOMETRIC_MULTISCALE_RADIUS = "multiscale-radius";
   // For iterative RBFs using Ginkgo
   const std::string SUBTAG_EXECUTOR = "executor";
   const std::string EXECUTOR_CPU    = "cpu";

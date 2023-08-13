@@ -10,7 +10,7 @@ using namespace precice;
 using precice::testing::TestContext;
 
 BOOST_AUTO_TEST_SUITE(Integration)
-BOOST_AUTO_TEST_SUITE(GeomultiscaleMapping)
+BOOST_AUTO_TEST_SUITE(GeometricMultiscale)
 BOOST_AUTO_TEST_CASE(RadialGeoMultiscale)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));

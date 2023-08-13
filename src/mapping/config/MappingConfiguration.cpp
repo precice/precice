@@ -230,11 +230,11 @@ MappingConfiguration::MappingConfiguration(
   auto projectToInput = XMLAttribute<bool>(ATTR_PROJECT_TO_INPUT, true)
                             .setDocumentation("If enabled, places the cluster centers at the closest vertex of the input mesh. Should be enabled in case of non-uniform point distributions such as for shell structures.");
 
-  auto attrGeoMultiscaleType = XMLAttribute<std::string>(ATTR_GEOMULTISCALE_TYPE)
+  auto attrGeoMultiscaleType = XMLAttribute<std::string>(ATTR_GEOMETRIC_MULTISCALE_TYPE)
                                    .setDocumentation("Type of geometric multiscale mapping. Either 'spread' or 'collect'.");
-  auto attrGeoMultiscaleAxis = XMLAttribute<std::string>(ATTR_GEOMULTISCALE_AXIS)
+  auto attrGeoMultiscaleAxis = XMLAttribute<std::string>(ATTR_GEOMETRIC_MULTISCALE_AXIS)
                                    .setDocumentation("Principle axis along which geometric multiscale mapping is performed.");
-  auto attrGeoMultiscaleRadius = XMLAttribute<double>(ATTR_GEOMULTISCALE_RADIUS)
+  auto attrGeoMultiscaleRadius = XMLAttribute<double>(ATTR_GEOMETRIC_MULTISCALE_RADIUS)
                                      .setDocumentation("Radius of the circular interface between the 1D and 3D participant.");
 
   // Add the relevant attributes to the relevant tags
@@ -373,9 +373,9 @@ void MappingConfiguration::xmlTagCallback(
     std::string strPolynomial = tag.getStringAttributeValue(ATTR_POLYNOMIAL, POLYNOMIAL_SEPARATE);
 
     // geometric multiscale related tags
-    std::string geoMultiscaleType = tag.getStringAttributeValue(ATTR_GEOMULTISCALE_TYPE, "");
-    std::string geoMultiscaleAxis = tag.getStringAttributeValue(ATTR_GEOMULTISCALE_AXIS, "");
-    double      multiscaleRadius  = tag.getDoubleAttributeValue(ATTR_GEOMULTISCALE_RADIUS, 1.0);
+    std::string geoMultiscaleType = tag.getStringAttributeValue(ATTR_GEOMETRIC_MULTISCALE_TYPE, "");
+    std::string geoMultiscaleAxis = tag.getStringAttributeValue(ATTR_GEOMETRIC_MULTISCALE_AXIS, "");
+    double      multiscaleRadius  = tag.getDoubleAttributeValue(ATTR_GEOMETRIC_MULTISCALE_RADIUS, 1.0);
 
     // pum related tags
     int    verticesPerCluster = tag.getIntAttributeValue(ATTR_VERTICES_PER_CLUSTER, 100);

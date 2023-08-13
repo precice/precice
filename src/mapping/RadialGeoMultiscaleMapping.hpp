@@ -7,11 +7,11 @@
 namespace precice {
 namespace mapping {
 
-/// Geometric multiscale mapping in axial direction
+/// Geometric multiscale mapping in radial direction
 class RadialGeoMultiscaleMapping : public Mapping {
 public:
   /**
-   * @brief Geometric multiscale nature of the mapping (spread or collect).
+   * @brief Geometric multiscale type of the mapping (spread or collect).
    *
    * A geometric multiscale mapping can either go from the 1D to the 2D/3D solver. Then, we call it "spread".
    * Or from the 2D/3D to the 1D solver, which we call "collect".
@@ -36,7 +36,7 @@ public:
    */
   RadialGeoMultiscaleMapping(Constraint constraint, int dimensions, MultiscaleType type, MultiscaleAxis axis);
 
-  /// Computes the mapping coefficients from the in- and output mesh.
+  /// Computes the mapping coefficients needed to transfer data between the in- and output mesh.
   void computeMapping() override;
 
   /// Removes a computed mapping.
@@ -45,7 +45,7 @@ public:
   void tagMeshFirstRound() override;
   void tagMeshSecondRound() override;
 
-  /// Returns name of the mapping - TODO: needed for porting to develop
+  /// Returns name of the mapping
   std::string getName() const final override;
 
 protected:
