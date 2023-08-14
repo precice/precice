@@ -81,7 +81,7 @@ public:
   /// Get n number of closest triangles to the given vertex
   std::vector<TriangleMatch> getClosestTriangles(const Eigen::VectorXd &sourceCoord, int n);
 
-  /// Return all the vertices inside the box formed by vertex and radius
+  /// Return all the vertices inside the box formed by vertex and radius (boundary exclusive)
   std::vector<VertexID> getVerticesInsideBox(const mesh::Vertex &centerVertex, double radius);
 
   /// Return all the vertices inside a bounding box

@@ -121,6 +121,7 @@
     vertices-per-cluster="10"
     relative-overlap="0.4">
     <basis-function:gaussian support-radius="0.3" />
+    <executor:cpu />
   </mapping:rbf-pum-direct>
 
   <mapping:rbf-pum-direct
@@ -135,6 +136,7 @@
     x-dead="true"
     y-dead="false"
     z-dead="true">
+    <executor:cpu />
     <basis-function:gaussian shape-parameter="0.3" />
   </mapping:rbf-pum-direct>
 </configuration>

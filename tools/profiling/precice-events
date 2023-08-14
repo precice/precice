@@ -54,11 +54,15 @@ def readRobust(filename):
 
 def printWide(df):
     from itertools import repeat
+    import polars as pl
 
     mincolwidth = 8
-    headerWidths = [ len(f"{c:}") for c in df.columns.to_list() ]
-    bodyWidths = df.applymap(lambda s: len("{:}".format(s))).max().to_list()
+    formattedLength = lambda s: len("{:}".format(s))
+    headerWidths = tuple(map(formattedLength, df.columns))
+    bodyWidths = tuple(df.select(pl.all().apply(formattedLength)).max().row(0))
+    assert len(headerWidths) == len(bodyWidths)
     colwidths = map(max, zip( headerWidths, bodyWidths, repeat(mincolwidth)))
+
     colfmts = [ "{:>"+str(w)+"}" for w in colwidths ]
 
     rowfmt = colfmts[0]
@@ -69,8 +73,8 @@ def printWide(df):
         rowfmt += " | " + " ".join(batch)
 
     print(rowfmt.format(*(df.columns)))
-    for index, row in df.fillna("").iterrows():
-        print(rowfmt.format(*row.to_list()))
+    for row in df.iter_rows():
+        print(rowfmt.format(*map(lambda e: "" if e is None else e, row)))
 
 @functools.lru_cache
 def ns_to_unit_factor(unit):
@@ -82,16 +86,6 @@ def ns_to_unit_factor(unit):
         'm': 1e-9/60,
         'h': 1e-9/3600
     }[unit]
-
-def ns_to_unit(obj, unit):
-    factor = ns_to_unit_factor(unit)
-    import numbers
-    if not isinstance(obj, (numbers.Integral, numbers.Real)):
-        import pandas
-        if isinstance(obj, (pandas.Timedelta, pandas.Timestamp)):
-            return factor * obj.value
-
-    return obj * factor
 
 def alignEvents(events):
     """Aligns passed events of multiple ranks and or participants.
@@ -297,18 +291,6 @@ class RankData:
     def type(self):
         return "Primary (0)" if self.rank == 0 else f"Secondary ({self.rank})"
 
-    def toDataFrame(self, eventLookup):
-        import pandas
-        df = pandas.DataFrame(self.events)
-        if "data" in df:
-            df.drop("data", axis=1, inplace=True)
-        df["dur"] = pandas.to_timedelta(df["dur"], unit='microseconds')
-        df["ts"] = pandas.to_datetime(df["ts"], unit="us", origin="unix")
-        df.insert(0, 'participant', self.name)
-        df.insert(1, 'rank', self.rank)
-        df["eid"] = df["eid"].apply(lambda id: eventLookup[id])
-        return df
-
     def toListOfTuples(self, eventLookup):
         for e in self.events:
             yield (self.name, self.rank, eventLookup[e["eid"]], int(e["ts"]), int(e["dur"]))
@@ -393,12 +375,16 @@ class Run:
                 )
 
     def toDataFrame(self):
-        import pandas
+        import polars as pl
         import itertools
         columns=["participant", "rank", "eid", "ts", "dur" ]
-        df = pandas.DataFrame(itertools.chain.from_iterable(map(lambda r: r.toListOfTuples(self.eventLookup), self.iterRanks())), columns=columns)
-        df["dur"] = pandas.to_timedelta(df["dur"], unit='microseconds')
-        df["ts"] = pandas.to_datetime(df["ts"], unit="us", origin="unix")
+        df = pl.DataFrame(
+            data=itertools.chain.from_iterable(map(lambda r: r.toListOfTuples(self.eventLookup), self.iterRanks())),
+            schema=[("participant", pl.Utf8), ("rank", pl.Int32), ("eid", pl.Utf8),
+                    ("ts", pl.Int64), ("dur", pl.Int64) ]
+        ).with_columns([
+            pl.col("ts").cast(pl.Datetime("us"))
+        ])
         return df
 
 
@@ -424,87 +410,89 @@ def exportCommand(eventfile, outfile, unit):
 
 
 def analyzeCommand(eventfile, participant, outfile=None, unit='us'):
-    requireModules(["pandas"])
-    import pandas
+    requireModules(["polars"])
+    import polars as pl
 
     run = Run(eventfile)
     df = run.toDataFrame()
 
-    # Filter by participant
-    df = df[df["participant"] == participant]
-    df.drop("participant", axis=1, inplace=True)
+    assert df.select(pl.col("participant").is_in([participant]).any()).item(), f"Given participant {participant} doesn't exist."
 
-    # Convert duration to requested unit
-    df["dur"] = df["dur"].apply(lambda x: x.value * ns_to_unit_factor(unit))
     print(f"Output timing are in {unit}.")
 
-    ranks = df["rank"].unique()
+    # Filter by participant
+    # Convert duration to requested unit
+    dur_factor = 1000 * ns_to_unit_factor(unit)
+    df = (df.filter(pl.col("participant") == participant)
+        .drop("participant")
+        .with_columns(pl.col("dur") * dur_factor))
+
+    ranks = df.select("rank").unique()
 
     if len(ranks) == 1:
-        primary = df[df["rank"] == 0].groupby("eid").agg(
-            {"dur": [("sum", "sum"), ("count", "count"), ("mean", "mean"), ("min", "min"), ("max", "max")]})
-        primary.columns = primary.columns.droplevel()
-        joined = primary
+        joined = (df.groupby("eid")
+                  .agg(
+                      pl.sum("dur").alias("sum"),
+                      pl.count("dur").alias("count"),
+                      pl.mean("dur").alias("mean"),
+                      pl.min("dur").alias("min"),
+                      pl.max("dur").alias("max")
+                  ))
     else:
-        rankAdvance = df[(df["eid"] == "advance") & (df["rank"] > 0)].groupby("rank").sum("dur")
-        minSecRank = rankAdvance["dur"].idxmin()
-        maxSecRank = rankAdvance["dur"].idxmax()
-
+        ldf = df.lazy()
+        rankAdvance = ldf.filter((pl.col("eid") == "advance") & (pl.col("rank") > 0)).groupby("rank").agg(pl.col("dur").sum()).sort("dur").collect()
+        minSecRank = rankAdvance.select(pl.first("rank")).item()
+        maxSecRank = rankAdvance.select(pl.last("rank")).item()
         print(f"Selection contains the primary rank 0, the cheapest secondary rank {minSecRank}, and the most expensive secondary rank {maxSecRank}.")
 
-        prefix = "R0"
-        primary = df[df["rank"] == 0].groupby("eid").agg(
-            {"dur": [(f"{prefix}:sum", "sum"), (f"{prefix}:count", "count"), (f"{prefix}:mean", "mean"), (f"{prefix}:min", "min"), (f"{prefix}:max", "max")]})
-        primary.columns = primary.columns.droplevel()
-
-        prefix = f"R{minSecRank}"
-        minSec = df[df["rank"] == minSecRank].groupby("eid").agg(
-            {"dur": [(f"{prefix}:sum", "sum"), (f"{prefix}:count", "count"), (f"{prefix}:mean", "mean"), (f"{prefix}:min", "min"), (f"{prefix}:max", "max")]})
-        minSec.columns = minSec.columns.droplevel()
-
-        prefix = f"R{maxSecRank}"
-        maxSec = df[df["rank"] == maxSecRank].groupby("eid").agg(
-            {"dur": [(f"{prefix}:sum", "sum"), (f"{prefix}:count", "count"), (f"{prefix}:mean", "mean"), (f"{prefix}:min", "min"), (f"{prefix}:max", "max")]})
-        maxSec.columns = maxSec.columns.droplevel()
-
-        joined = pandas.concat([primary, minSec, maxSec], axis=1)
-
-    joined.reset_index(inplace=True, names="event")
+        ldf = df.lazy()
+        joined = pl.concat([
+            (ldf.filter(pl.col("rank")==rank)
+              .groupby("eid")
+              .agg(
+                  pl.sum("dur").alias(f"R{rank}:sum"),
+                  pl.count("dur").alias(f"R{rank}:count"),
+                  pl.mean("dur").alias(f"R{rank}:mean"),
+                  pl.min("dur").alias(f"R{rank}:min"),
+                  pl.max("dur").alias(f"R{rank}:max")
+              ))
+            for rank in (0, minSecRank, maxSecRank)
+        ], how="align").collect()
 
     printWide(joined)
 
     if (outfile):
         print(f"Writing to {outfile}")
-        joined.to_csv(outfile, index=False)
+        joined.write_csv(outfile)
 
     return 0
 
 def histogramCommand(eventfile, outfile, participant, event, rank, bins, unit='us'):
-    requireModules(["pandas", "matplotlib"])
-    import pandas
+    requireModules(["polars", "matplotlib"])
+    import polars as pl
     import matplotlib.pyplot as plt
 
     run = Run(eventfile)
     df = run.toDataFrame()
 
     # Check user input
-    assert participant in df["participant"].unique(), f"Given participant {participant} doesn't exist."
-    assert event in df["eid"].unique(), f"Given event {event} doesn't exist."
+    assert df.select(pl.col("participant").is_in([participant]).any()).item(), f"Given participant {participant} doesn't exist."
+    assert df.select(pl.col("eid").is_in([event]).any()).item(), f"Given event {event} doesn't exist."
     if not rank is None:
-        assert rank in df["rank"].unique(), f"Given rank {rank} doesn't exist."
+        assert df.select(pl.col("rank").is_in([rank]).any()).item(), f"Given rank {rank} doesn't exist."
 
 
     # Filter by participant and event
-    df = df[(df["participant"] == participant) & (df["eid"] == event)]
-    df.drop(["participant", "eid"], axis=1, inplace=True)
-
+    filter = (pl.col("participant") == participant) & (pl.col("eid") == event)
+    # Optionally filter by rank
     if not rank is None:
-        df = df[df["rank"] == rank]
+        filter = filter & (pl.col("rank") == rank)
 
-    # Convert duration to requested unit
-    df.dur = df.dur.apply(lambda td: ns_to_unit(td, unit))
+    # duration scaling factor
+    dur_factor = 1000 * ns_to_unit_factor(unit)
 
-    durations = df["dur"].to_list()
+    # Query durations
+    durations = df.filter(filter).select(pl.col("dur") * dur_factor)
 
     ranks = df["rank"].unique()
     rankDesc = "ranks: " + ",".join(map(str,ranks)) if len(ranks) < 5 else f"{len(ranks)} ranks"
@@ -636,7 +624,7 @@ def mergeCommand(files, outfile, align):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="", epilog="")
     subparsers = parser.add_subparsers(title='commands',
-                                       description='Note that some commands may require pandas.',
+                                       description='Note that some commands may require polars.',
                                        help='additional help',
                                        dest="cmd"
                                        )

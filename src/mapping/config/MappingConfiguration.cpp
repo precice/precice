@@ -8,6 +8,7 @@
 #include <utility>
 #include <variant>
 #include "logging/LogMacros.hpp"
+#include "mapping/GinkgoRadialBasisFctSolver.hpp"
 #include "mapping/LinearCellInterpolationMapping.hpp"
 #include "mapping/Mapping.hpp"
 #include "mapping/NearestNeighborGradientMapping.hpp"
@@ -16,6 +17,7 @@
 #include "mapping/PartitionOfUnityMapping.hpp"
 #include "mapping/PetRadialBasisFctMapping.hpp"
 #include "mapping/RadialBasisFctMapping.hpp"
+#include "mapping/RadialBasisFctSolver.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -56,6 +58,7 @@ void addAttributes(TagStorage &storage, const std::vector<variant_t> &attributes
 enum struct RBFBackend {
   Eigen,
   PETSc,
+  Ginkgo,
   PUM
 };
 
@@ -69,7 +72,7 @@ struct BackendSelector {
 // Specialization for the RBF Eigen backend
 template <typename RBF>
 struct BackendSelector<RBFBackend::Eigen, RBF> {
-  typedef mapping::RadialBasisFctMapping<RBF> type;
+  typedef mapping::RadialBasisFctMapping<RadialBasisFctSolver<RBF>> type;
 };
 
 // Specialization for the PETSc RBF backend
@@ -80,6 +83,13 @@ struct BackendSelector<RBFBackend::PETSc, RBF> {
 };
 #endif
 
+// Specialization for the Ginkgo RBF backend
+#ifndef PRECICE_NO_GINKGO
+template <typename RBF>
+struct BackendSelector<RBFBackend::Ginkgo, RBF> {
+  typedef mapping::RadialBasisFctMapping<GinkgoRadialBasisFctSolver<RBF>, MappingConfiguration::GinkgoParameter> type;
+};
+#endif
 // Specialization for the RBF PUM backend
 template <typename RBF>
 struct BackendSelector<RBFBackend::PUM, RBF> {
@@ -204,9 +214,9 @@ MappingConfiguration::MappingConfiguration(
 
   auto attrSolverRtol = makeXMLAttribute(ATTR_SOLVER_RTOL, 1e-9)
                             .setDocumentation("Solver relative tolerance for convergence");
-  auto attrPreallocation = makeXMLAttribute(ATTR_PREALLOCATION, PREALLOCATION_TREE)
-                               .setDocumentation("Sets kind of preallocation for PETSc RBF implementation")
-                               .setOptions({PREALLOCATION_ESTIMATE, PREALLOCATION_COMPUTE, PREALLOCATION_OFF, PREALLOCATION_SAVE, PREALLOCATION_TREE});
+  // TODO: Discuss whether we wanto to introduce this attribute
+  // auto attrMaxIterations = makeXMLAttribute(ATTR_MAX_ITERATIONS, 1e6)
+  //                              .setDocumentation("Maximum number of iterations of the solver");
 
   auto verticesPerCluster = XMLAttribute<int>(ATTR_VERTICES_PER_CLUSTER, 100)
                                 .setDocumentation("Average number of vertices per cluster (partition) applied in the rbf partition of unity method.");
@@ -218,14 +228,56 @@ MappingConfiguration::MappingConfiguration(
   // Add the relevant attributes to the relevant tags
   addAttributes(projectionTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint});
   addAttributes(rbfDirectTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead});
-  addAttributes(rbfIterativeTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead, attrSolverRtol, attrPreallocation});
+  addAttributes(rbfIterativeTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead, attrSolverRtol});
   addAttributes(pumDirectTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPumPolynomial, attrXDead, attrYDead, attrZDead, verticesPerCluster, relativeOverlap, projectToInput});
   addAttributes(rbfAliasTag, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrXDead, attrYDead, attrZDead});
 
+  // Now we take care of the subtag executor. We repeat some of the subtags in order to add individual documentation
+  XMLTag::Occurrence once = XMLTag::OCCUR_NOT_OR_ONCE;
+  // TODO, make type an int
+  auto attrDeviceId = makeXMLAttribute(ATTR_DEVICE_ID, static_cast<int>(0))
+                          .setDocumentation("Specifies the ID of the GPU that should be used for the Ginkgo GPU backend.");
+  auto attrNThreads = makeXMLAttribute(ATTR_N_THREADS, static_cast<int>(0))
+                          .setDocumentation("Specifies the number of threads for the OpenMP executor that should be used for the Ginkgo OpenMP backend. If a value of \"0\" is set, preCICE doesn't set the number of threads and the default behavior of OpenMP applies.");
+
+  // First, we have the executors for the direct solvers
+  {
+    std::list<XMLTag> cpuExecutor{
+        XMLTag{*this, EXECUTOR_CPU, once, SUBTAG_EXECUTOR}.setDocumentation("The default executor, which uses a single-core CPU with a gather-scatter parallelism.")};
+    std::list<XMLTag> deviceExecutors{
+        XMLTag{*this, EXECUTOR_CUDA, once, SUBTAG_EXECUTOR}.setDocumentation("Cuda (Nvidia) executor, which uses cuSolver/Ginkgo and a direct QR decomposition with a gather-scatter parallelism."),
+        XMLTag{*this, EXECUTOR_HIP, once, SUBTAG_EXECUTOR}.setDocumentation("Hip (AMD/Nvidia) executor, which uses hipSolver/Ginkgo and a direct QR decomposition with a gather-scatter parallelism.")};
+
+    addAttributes(deviceExecutors, {attrDeviceId});
+    addSubtagsToParents(cpuExecutor, rbfDirectTags);
+    addSubtagsToParents(deviceExecutors, rbfDirectTags);
+  }
+  // Second, the executors for the iterative solver
+  {
+    std::list<XMLTag> cpuExecutor{
+        XMLTag{*this, EXECUTOR_CPU, once, SUBTAG_EXECUTOR}.setDocumentation("The default executor relying on PETSc, which uses CPUs and distributed memory parallelism via MPI.")};
+    std::list<XMLTag> deviceExecutors{
+        XMLTag{*this, EXECUTOR_CUDA, once, SUBTAG_EXECUTOR}.setDocumentation("Cuda (Nvidia) executor, which uses Ginkgo with a gather-scatter parallelism."),
+        XMLTag{*this, EXECUTOR_HIP, once, SUBTAG_EXECUTOR}.setDocumentation("Hip (AMD/Nvidia) executor, which uses hipSolver with a gather-scatter parallelism.")};
+    std::list<XMLTag> ompExecutor{
+        XMLTag{*this, EXECUTOR_OMP, once, SUBTAG_EXECUTOR}.setDocumentation("OpenMP executor, which uses Ginkgo with a gather-scatter parallelism.")};
+
+    addAttributes(deviceExecutors, {attrDeviceId});
+    addAttributes(ompExecutor, {attrNThreads});
+    addSubtagsToParents(cpuExecutor, rbfIterativeTags);
+    addSubtagsToParents(deviceExecutors, rbfIterativeTags);
+    addSubtagsToParents(ompExecutor, rbfIterativeTags);
+  }
+  {
+    std::list<XMLTag> cpuExecutor{
+        XMLTag{*this, EXECUTOR_CPU, once, SUBTAG_EXECUTOR}.setDocumentation("The default (and currently only) executor using a CPU and a distributed memory parallelism via MPI.")};
+    addSubtagsToParents(cpuExecutor, pumDirectTags);
+  }
+  // The alias tag doesn't receive the subtag at all
+
   // Now we take care of the subtag basis function
   // First, we have the tags using a support radius
-  XMLTag::Occurrence once = XMLTag::OCCUR_NOT_OR_ONCE;
-  std::list<XMLTag>  supportRadiusRBF{
+  std::list<XMLTag> supportRadiusRBF{
       XMLTag{*this, RBF_CPOLYNOMIAL_C0, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Wendland C0 function"),
       XMLTag{*this, RBF_CPOLYNOMIAL_C2, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Wendland C2 function"),
       XMLTag{*this, RBF_CPOLYNOMIAL_C4, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Wendland C4 function"),
@@ -305,7 +357,6 @@ void MappingConfiguration::xmlTagCallback(
     bool        zDead         = tag.getBooleanAttributeValue(ATTR_Z_DEAD, false);
     double      solverRtol    = tag.getDoubleAttributeValue(ATTR_SOLVER_RTOL, 1e-9);
     std::string strPolynomial = tag.getStringAttributeValue(ATTR_POLYNOMIAL, POLYNOMIAL_SEPARATE);
-    std::string strPrealloc   = tag.getStringAttributeValue(ATTR_PREALLOCATION, PREALLOCATION_TREE);
 
     // pum related tags
     int    verticesPerCluster = tag.getIntAttributeValue(ATTR_VERTICES_PER_CLUSTER, 100);
@@ -327,28 +378,30 @@ void MappingConfiguration::xmlTagCallback(
 
     ConfiguredMapping configuredMapping = createMapping(dir, type, fromMesh, toMesh);
 
-    _rbfConfig = configureRBFMapping(type, strPolynomial, strPrealloc, xDead, yDead, zDead, solverRtol, verticesPerCluster, relativeOverlap, projectToInput);
+    _rbfConfig = configureRBFMapping(type, strPolynomial, xDead, yDead, zDead, solverRtol, verticesPerCluster, relativeOverlap, projectToInput);
 
     checkDuplicates(configuredMapping);
     _mappings.push_back(configuredMapping);
   } else if (tag.getNamespace() == SUBTAG_BASIS_FUNCTION) {
 
     PRECICE_ASSERT(!_mappings.empty());
+    PRECICE_CHECK(_mappings.back().requiresBasisFunction == true, "A basis-function was defined for the mapping "
+                                                                  "from mesh \"{}\" to mesh \"{}\", but no basis-function is required for this mapping type. "
+                                                                  "Please remove the basis-function tag or configure an rbf mapping, which requires a basis-function.",
+                  _mappings.back().fromMesh->getName(), _mappings.back().toMesh->getName());
     // We can only set one subtag
-    PRECICE_CHECK(_mappings.back().mapping == nullptr, "More than one basis-function was defined for the mapping "
-                                                       "from mesh \"{}\" to mesh \"{}\".",
+    PRECICE_CHECK(_rbfConfig.basisFunctionDefined == false, "More than one basis-function was defined for the mapping "
+                                                            "from mesh \"{}\" to mesh \"{}\".",
                   _mappings.back().fromMesh->getName(), _mappings.back().toMesh->getName());
 
     std::string basisFctName   = tag.getName();
     double      supportRadius  = tag.getDoubleAttributeValue(ATTR_SUPPORT_RADIUS, 0.);
     double      shapeParameter = tag.getDoubleAttributeValue(ATTR_SHAPE_PARAM, 0.);
 
-    ConfiguredMapping &mapping = _mappings.back();
-
-    BasisFunction basisFunction = parseBasisFunctions(basisFctName);
-
+    _rbfConfig.basisFunction        = parseBasisFunctions(basisFctName);
+    _rbfConfig.basisFunctionDefined = true;
     // The Gaussian RBF is always treated as a shape-parameter RBF. Hence, we have to convert the support radius, if necessary
-    if (basisFunction == BasisFunction::Gaussian) {
+    if (_rbfConfig.basisFunction == BasisFunction::Gaussian) {
       const bool exactlyOneSet = (std::isfinite(supportRadius) && !std::isfinite(shapeParameter)) ||
                                  (std::isfinite(shapeParameter) && !std::isfinite(supportRadius));
       PRECICE_CHECK(exactlyOneSet, "The specified parameters for the Gaussian RBF mapping are invalid. Please specify either a \"shape-parameter\" or a \"support-radius\".");
@@ -358,34 +411,28 @@ void MappingConfiguration::xmlTagCallback(
       }
     }
 
-    // Instantiate the RBF mapping classes
-    if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalDirect) {
-      mapping.mapping = getRBFMapping<RBFBackend::Eigen>(basisFunction, constraintValue, mapping.fromMesh->getDimensions(), supportRadius, shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial);
-    } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalIterative) {
-#ifndef PRECICE_NO_PETSC
-      // for petsc initialization
-      int   argc = 1;
-      char *arg  = new char[8];
-      strcpy(arg, "precice");
-      char **argv = &arg;
-      utils::Petsc::initialize(&argc, &argv, utils::Parallel::current()->comm);
-      delete[] arg;
+    _rbfConfig.supportRadius  = supportRadius;
+    _rbfConfig.shapeParameter = shapeParameter;
+  } else if (tag.getNamespace() == SUBTAG_EXECUTOR) {
+    _executorConfig = std::make_unique<ExecutorConfiguration>();
 
-      mapping.mapping = getRBFMapping<RBFBackend::PETSc>(basisFunction, constraintValue, mapping.fromMesh->getDimensions(), supportRadius, shapeParameter, _rbfConfig.deadAxis, _rbfConfig.solverRtol, _rbfConfig.polynomial, _rbfConfig.preallocation);
-#else
-      PRECICE_CHECK(false, "The global-iterative RBF solver requires a preCICE build with PETSc enabled.");
-#endif
-    } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::PUMDirect) {
-      mapping.mapping = getRBFMapping<RBFBackend::PUM>(basisFunction, constraintValue, mapping.fromMesh->getDimensions(), supportRadius, shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput);
-    } else {
-      PRECICE_UNREACHABLE("Unknown RBF solver.");
+    if (tag.getName() == EXECUTOR_CPU) {
+      _executorConfig->executor = ExecutorConfiguration::Executor::CPU;
+    } else if (tag.getName() == EXECUTOR_CUDA) {
+      _executorConfig->executor = ExecutorConfiguration::Executor::CUDA;
+    } else if (tag.getName() == EXECUTOR_HIP) {
+      _executorConfig->executor = ExecutorConfiguration::Executor::HIP;
+    } else if (tag.getName() == EXECUTOR_OMP) {
+      _executorConfig->executor = ExecutorConfiguration::Executor::OpenMP;
     }
+
+    _executorConfig->deviceId = tag.getIntAttributeValue(ATTR_DEVICE_ID, -1);
+    _executorConfig->nThreads = tag.getIntAttributeValue(ATTR_N_THREADS, 0);
   }
 }
 
 MappingConfiguration::RBFConfiguration MappingConfiguration::configureRBFMapping(const std::string &type,
                                                                                  const std::string &polynomial,
-                                                                                 const std::string &preallocation,
                                                                                  bool xDead, bool yDead, bool zDead,
                                                                                  double solverRtol,
                                                                                  double verticesPerCluster,
@@ -417,19 +464,6 @@ MappingConfiguration::RBFConfiguration MappingConfiguration::configureRBFMapping
     rbfConfig.polynomial = Polynomial::OFF;
   else
     PRECICE_UNREACHABLE("Unknown polynomial configuration.");
-
-  if (preallocation == PREALLOCATION_ESTIMATE)
-    rbfConfig.preallocation = Preallocation::ESTIMATE;
-  else if (preallocation == PREALLOCATION_COMPUTE)
-    rbfConfig.preallocation = Preallocation::COMPUTE;
-  else if (preallocation == PREALLOCATION_SAVE)
-    rbfConfig.preallocation = Preallocation::SAVE;
-  else if (preallocation == PREALLOCATION_TREE)
-    rbfConfig.preallocation = Preallocation::TREE;
-  else if (preallocation == PREALLOCATION_OFF)
-    rbfConfig.preallocation = Preallocation::OFF;
-  else
-    PRECICE_UNREACHABLE("Unknown preallocation configuration");
 
   rbfConfig.deadAxis   = {{xDead, yDead, zDead}};
   rbfConfig.solverRtol = solverRtol;
@@ -513,10 +547,84 @@ void MappingConfiguration::checkDuplicates(const ConfiguredMapping &mapping)
 
 void MappingConfiguration::xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag)
 {
-  if (requiresBasisFunction(tag.getName())) {
-    PRECICE_CHECK(_mappings.back().mapping != nullptr, "No basis-function was defined for the \"{}\" mapping from mesh \"{}\" to mesh \"{}\".", tag.getName(), _mappings.back().fromMesh->getName(), _mappings.back().toMesh->getName());
+  if (tag.getNamespace() == TAG) {
+    if (requiresBasisFunction(tag.getName())) {
+      PRECICE_CHECK(_rbfConfig.basisFunctionDefined, "No basis-function was defined for the \"{}\" mapping from mesh \"{}\" to mesh \"{}\".", tag.getName(), _mappings.back().fromMesh->getName(), _mappings.back().toMesh->getName());
+      if (!_executorConfig) {
+        _executorConfig = std::make_unique<ExecutorConfiguration>();
+      }
+      finishRBFConfiguration();
+      _executorConfig.reset();
+    }
+    PRECICE_ASSERT(_mappings.back().mapping != nullptr);
   }
-  PRECICE_ASSERT(_mappings.back().mapping != nullptr);
+}
+
+void MappingConfiguration::finishRBFConfiguration()
+{
+  PRECICE_ASSERT(_executorConfig);
+  ConfiguredMapping &mapping = _mappings.back();
+  // Instantiate the RBF mapping classes
+  // We first categorize according to the executor
+  // 1. the CPU executor
+  if (_executorConfig->executor == ExecutorConfiguration::Executor::CPU) {
+    if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalDirect) {
+      mapping.mapping = getRBFMapping<RBFBackend::Eigen>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial);
+    } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalIterative) {
+#ifndef PRECICE_NO_PETSC
+      // for petsc initialization
+      int   argc = 1;
+      char *arg  = new char[8];
+      strcpy(arg, "precice");
+      char **argv = &arg;
+      utils::Petsc::initialize(&argc, &argv, utils::Parallel::current()->comm);
+      delete[] arg;
+
+      mapping.mapping = getRBFMapping<RBFBackend::PETSc>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.solverRtol, _rbfConfig.polynomial);
+#else
+      PRECICE_CHECK(false, "The global-iterative RBF solver on a CPU requires a preCICE build with PETSc enabled.");
+#endif
+    } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::PUMDirect) {
+      mapping.mapping = getRBFMapping<RBFBackend::PUM>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput);
+    } else {
+      PRECICE_UNREACHABLE("Unknown RBF solver.");
+    }
+    // 2. any other executor is configured via Ginkgo
+  } else {
+#ifndef PRECICE_NO_GINKGO
+    _ginkgoParameter                   = GinkgoParameter();
+    _ginkgoParameter.usePreconditioner = false;
+    _ginkgoParameter.deviceId          = _executorConfig->deviceId;
+    if (_executorConfig->executor == ExecutorConfiguration::Executor::CUDA) {
+      _ginkgoParameter.executor = "cuda-executor";
+#ifndef PRECICE_WITH_CUDA
+      PRECICE_CHECK(false, "The cuda-executor (configured for the mapping from mesh {} to mesh {}) requires a Ginkgo and preCICE build with Cuda enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
+#endif
+    } else if (_executorConfig->executor == ExecutorConfiguration::Executor::HIP) {
+      _ginkgoParameter.executor = "hip-executor";
+#ifndef PRECICE_WITH_HIP
+      PRECICE_CHECK(false, "The hip-executor (configured for the mapping from mesh {} to mesh {}) requires a Ginkgo and preCICE build with HIP enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
+#endif
+    } else if (_executorConfig->executor == ExecutorConfiguration::Executor::OpenMP) {
+      _ginkgoParameter.executor = "omp-executor";
+      _ginkgoParameter.nThreads = _executorConfig->nThreads;
+#ifndef PRECICE_WITH_OMP
+      PRECICE_CHECK(false, "The omp-executor (configured for the mapping from mesh {} to mesh {}) requires a Ginkgo and preCICE build with OpenMP enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
+#endif
+    }
+    if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalDirect) {
+      _ginkgoParameter.solver = "qr-solver";
+    } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalIterative) {
+      _ginkgoParameter.solver       = "cg-solver";
+      _ginkgoParameter.residualNorm = _rbfConfig.solverRtol;
+    } else {
+      PRECICE_UNREACHABLE("Unknown solver type.");
+    }
+    mapping.mapping = getRBFMapping<RBFBackend::Ginkgo>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _ginkgoParameter);
+#else
+    PRECICE_CHECK(false, "The selected executor for the mapping from mesh {} to mesh {} requires a preCICE build with Ginkgo enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
+#endif
+  }
 }
 
 const std::vector<MappingConfiguration::ConfiguredMapping> &MappingConfiguration::mappings()

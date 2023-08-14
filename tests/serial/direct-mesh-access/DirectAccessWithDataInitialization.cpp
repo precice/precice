@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithDataInitialization)
 
     std::vector<double> otherPositions(otherMeshSize * dim);
     std::vector<int>    otherIDs(otherMeshSize, -1);
-    interface.getMeshVerticesAndIDs(otherMeshID, otherIDs, otherPositions);
+    interface.getMeshVertexIDsAndCoordinates(otherMeshID, otherIDs, otherPositions);
 
     // writeData for first window
     for (int i = 0; i < otherMeshSize; ++i) {
