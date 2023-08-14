@@ -11,7 +11,10 @@ namespace precice::math::bspline {
 Eigen::VectorXd interpolateAt(Eigen::VectorXd ts, const Eigen::MatrixXd &xs, int splineDegree, double t)
 {
   PRECICE_ASSERT(ts.size() >= 2, "Interpolation requires at least 2 samples");
-  PRECICE_ASSERT(std::is_sorted(ts.begin(), ts.end()), "Timestamps must be sorted");
+  // Eigen 3.3 implementation, see https://stackoverflow.com/a/58357194
+  PRECICE_ASSERT(std::is_sorted(ts.data(), ts.data() + ts.size()), "Timestamps must be sorted");
+  // Eigen >= 3.4 implementation
+  // PRECICE_ASSERT(std::is_sorted(ts.begin(), ts.end()), "Timestamps must be sorted");
 
   // organize data in columns. Each column represents one sample in time.
   PRECICE_ASSERT(xs.cols() == ts.size());
