@@ -65,6 +65,9 @@ add_test(NAME ${_test_name}
   COMMAND ${CMAKE_COMMAND} -DEVENTS_SCRIPT=${_precice_events} -DTEST_FOLDER=${_test_location} -DFOLDER_ARG=${_test_location}/A\;${_test_location}/B -P ${_test_script}
   WORKING_DIRECTORY ${_test_wd}
   )
+if (PRECICE_TEST_VENV)
+  set_tests_properties(${_test_name} PROPERTIES ENVIRONMENT "VIRTUAL_ENV=${PRECICE_TEST_VENV}")
+endif()
 
 
 unset(_precice_events)
