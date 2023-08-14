@@ -26,7 +26,7 @@ if(NOT PRECICE_TEST_VENV)
     execute_process(COMMAND ${Python3_EXECUTABLE} -m venv --clear venv WORKING_DIRECTORY ${_test_root} OUTPUT_QUIET)
     execute_process(COMMAND ${_test_root}/venv/bin/pip install --upgrade pip polars OUTPUT_QUIET)
 
-    execute_process(COMMAND ${_test_root}/venv/bin/python -c "import polars" RESULTS_VARIABLE _precice_has_polars ERROR_QUIET OUTPUT_QUIET)
+    execute_process(COMMAND ${_test_root}/venv/bin/python -c "import polars" RESULTS_VARIABLE _precice_has_polars OUTPUT_QUIET)
     if ("${_precice_has_polars}" EQUAL 0)
       set(PRECICE_TEST_VENV "${_test_root}/venv" CACHE INTERNAL "Location of venv for preCICE tests")
     else()
