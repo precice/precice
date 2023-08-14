@@ -55,9 +55,9 @@ const time::Sample &Data::sample() const
   return _sample;
 }
 
-Eigen::VectorXd Data::sampleAtTime(double normalizedDt) const
+Eigen::VectorXd Data::sampleAtTime(double time) const
 {
-  return _waveform.sample(normalizedDt);
+  return _waveform.sample(time);
 }
 
 int Data::getWaveformDegree() const
