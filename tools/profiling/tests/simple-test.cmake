@@ -11,6 +11,7 @@
 # Force using a virtual env if it is set in the environment
 if(DEFINED ENV{VIRTUAL_ENV})
   set(Python3_FIND_VIRTUALENV ONLY)
+  message(STATUS "Running in the python venv $ENV{VIRTUAL_ENV}")
 endif()
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
