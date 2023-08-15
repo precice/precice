@@ -773,7 +773,7 @@ void ParticipantImpl::setMeshQuad(
                 secondVertexID, thirdVertexID, fourthVertexID);
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   MeshContext &context = _accessor->usedMeshContext(meshName);
-  PRECICE_CHECK(context.mesh->getDimensions() == 3, "setMeshQuad is only possible for 3D cases."
+  PRECICE_CHECK(context.mesh->getDimensions() == 3, "setMeshQuad is only possible for 3D meshes."
                                                     " Please set the mesh dimension to 3 in the preCICE configuration file.");
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
     PRECICE_ASSERT(context.mesh);
