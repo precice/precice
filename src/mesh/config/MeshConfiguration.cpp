@@ -163,7 +163,7 @@ void MeshConfiguration::insertMeshToMeshDimensionsMap(
     const std::string &mesh,
     int                dimensions)
 {
-  PRECICE_ASSERT(_meshDimensionsMap.count(mesh) == 0, "Mesh {} already exists in the mesh-dimensions map.")
+  PRECICE_ASSERT(_meshDimensionsMap.count(mesh) == 0, "Mesh {} already exists in the mesh-dimensions map.", mesh)
   _meshDimensionsMap.insert(std::pair<std::string, int>(mesh, dimensions));
 }
 
