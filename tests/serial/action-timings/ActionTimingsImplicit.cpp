@@ -74,14 +74,11 @@ BOOST_AUTO_TEST_CASE(ActionTimingsImplicit)
     if (interface.isTimeWindowComplete()) {
       iteration++;
     }
-    if (context.isNamed("SolverOne") || iteration < 10) {
-      BOOST_TEST(action::RecorderAction::records.size() == 2);
-      BOOST_TEST(action::RecorderAction::records.at(0).timing == action::Action::WRITE_MAPPING_POST);
-      BOOST_TEST(action::RecorderAction::records.at(1).timing == action::Action::READ_MAPPING_POST);
-    } else { // SolverTwo only writes in very last iteration, does not read.
-      BOOST_TEST(action::RecorderAction::records.size() == 1);
-      BOOST_TEST(action::RecorderAction::records.at(0).timing == action::Action::WRITE_MAPPING_POST);
-    }
+
+    BOOST_TEST(action::RecorderAction::records.size() == 2);
+    BOOST_TEST(action::RecorderAction::records.at(0).timing == action::Action::WRITE_MAPPING_POST);
+    BOOST_TEST(action::RecorderAction::records.at(1).timing == action::Action::READ_MAPPING_POST);
+
     action::RecorderAction::reset();
   }
   interface.finalize();
