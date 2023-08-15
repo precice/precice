@@ -163,15 +163,14 @@ void MeshConfiguration::insertMeshToMeshDimensionsMap(
     const std::string &mesh,
     int                dimensions)
 {
-  if (_meshDimensionsMap.count(mesh) == 0) {
-    _meshDimensionsMap.insert(std::pair<std::string, int>(mesh, dimensions));
-  }
+  PRECICE_ASSERT(_meshDimensionsMap.count(mesh) == 0, "Mesh {} already exists in the mesh-dimensions map.")
+  _meshDimensionsMap.insert(std::pair<std::string, int>(mesh, dimensions));
 }
 
 int MeshConfiguration::getDataDimensions(const std::string &meshName, const Data::typeName dataTypeName) const
 {
   if (dataTypeName == Data::typeName::VECTOR) {
-    PRECICE_ASSERT(_meshDimensionsMap.count(meshName) > 0, "Mesh {} does not exist in the meshs-dimensions map.", meshName)
+    PRECICE_ASSERT(_meshDimensionsMap.count(meshName) > 0, "Mesh {} does not exist in the mesh-dimensions map.", meshName)
     return _meshDimensionsMap.at(meshName);
   } else if (dataTypeName == Data::typeName::SCALAR) {
     return 1;
