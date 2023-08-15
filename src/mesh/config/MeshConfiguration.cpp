@@ -103,6 +103,12 @@ const PtrDataConfiguration &MeshConfiguration::getDataConfiguration() const
 void MeshConfiguration::addMesh(
     const mesh::PtrMesh &mesh)
 {
+  // The mesh-dimensions map is normally defined when reading a configuration file.
+  // However, some unit tests directly create mesh objects without going through the config reading.
+  if (_meshDimensionsMap.count(mesh->getName()) <= 0) {
+    _meshDimensionsMap.insert(std::pair<std::string, int>(mesh->getName(), mesh->getDimensions()));
+  }
+
   for (const PtrData &dataNewMesh : mesh->data()) {
     bool found = false;
     for (const DataConfiguration::ConfiguredData &data : _dataConfig->data()) {
