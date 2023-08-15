@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration dimensions="3">
+<precice-configuration>
   <data:vector name="Forces" />
   <data:vector name="Velocities" />
   <data:vector name="Displacements" />
 
   <m2n:sockets acceptor="SolverOne" connector="SolverTwo" />
 
-  <mesh name="MeshOne">
+  <mesh name="MeshOne" dimensions="3">
     <use-data name="Forces" />
     <use-data name="Velocities" />
     <use-data name="Displacements" />
   </mesh>
 
-  <mesh name="SolverGeometry">
+  <mesh name="SolverGeometry" dimensions="3">
     <use-data name="Forces" />
     <use-data name="Velocities" />
     <use-data name="Displacements" />
