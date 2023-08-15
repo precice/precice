@@ -111,9 +111,6 @@ void MeshConfiguration::addMesh(
         break;
       }
     }
-    if (found) {
-      break;
-    }
     PRECICE_CHECK(found, "Data {0} is not defined. Please define a data tag with name=\"{0}\".", dataNewMesh->getName());
   }
   _meshes.push_back(mesh);
@@ -165,7 +162,8 @@ void MeshConfiguration::addNeededMesh(
 int MeshConfiguration::getDataDimensions(const std::string &meshName, const Data::typeName dataTypeName)
 {
   if (dataTypeName == Data::typeName::VECTOR) {
-    return _meshDimensionsMap[meshName];
+    PRECICE_ASSERT(_meshDimensionsMap.count(meshName) > 0, "Mesh {} does not exist in the meshs-dimensions map.", meshName)
+    return _meshDimensionsMap.at(meshName);
   } else if (dataTypeName == Data::typeName::SCALAR) {
     return 1;
   }
