@@ -80,7 +80,7 @@ private:
   /// Data configuration.
   PtrDataConfiguration _dataConfig;
 
-  /// Get the number of dimensions data values of this type (scalar/vector) have on this mesh
+  /// Get the number of dimensions that data values of this type (scalar/vector) have on this mesh
   int getDataDimensions(const std::string &meshName, const Data::typeName typeName);
 
   /// Configured meshes.
