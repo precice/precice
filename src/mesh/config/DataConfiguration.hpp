@@ -65,8 +65,6 @@ private:
   std::vector<ConfiguredData> _data;
 
   int _indexLastConfigured = -1;
-
-  int getDataDimensions(const Data::typeName typeName) const;
 };
 
 } // namespace mesh
