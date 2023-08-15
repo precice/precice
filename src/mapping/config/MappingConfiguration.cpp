@@ -497,7 +497,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
 
   // Check for compatible mesh dimensions
   PRECICE_CHECK(fromMesh->getDimensions() == toMesh->getDimensions(),
-                "Mapping between meshes of different dimensions is not allowed. "
+                "Mapping between meshes of different dimensions is not allowed yet. "
                 "Please set the same dimensions attribute to meshes \"{}\" and \"{}\", "
                 "or choose different meshes.",
                 fromMeshName, toMeshName);
