@@ -66,6 +66,10 @@ public:
     return std::move(_meshIdManager);
   }
 
+  /// Initialize the map between meshes and dimensions, for unit tests that directly create mesh objects without going through the config reading.
+  void insertMeshToMeshDimensionsMap(const std::string &mesh,
+                                     int                dimensions);
+
 private:
   logging::Logger _log{"mesh::MeshConfiguration"};
 
@@ -81,7 +85,7 @@ private:
   PtrDataConfiguration _dataConfig;
 
   /// Get the number of dimensions that data values of this type (scalar/vector) have on this mesh
-  int getDataDimensions(const std::string &meshName, const Data::typeName typeName);
+  int getDataDimensions(const std::string &meshName, const Data::typeName typeName) const;
 
   /// Configured meshes.
   std::vector<PtrMesh> _meshes;

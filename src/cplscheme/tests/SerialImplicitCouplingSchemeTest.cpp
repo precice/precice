@@ -488,6 +488,7 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
   mesh->createData("data1", 3, 1_dataID);
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
+  meshConfig.insertMeshToMeshDimensionsMap(mesh->getName(), mesh->getDimensions());
   meshConfig.addMesh(mesh);
 
   // Create all parameters necessary to create an ImplicitCouplingScheme object
@@ -588,6 +589,7 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
   mesh->createData("data1", 3, 1_dataID);
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
+  meshConfig.insertMeshToMeshDimensionsMap(mesh->getName(), mesh->getDimensions());
   meshConfig.addMesh(mesh);
 
   // Create all parameters necessary to create an ImplicitCouplingScheme object
@@ -648,6 +650,7 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
   mesh->createData("data1", 3, 1_dataID);
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
+  meshConfig.insertMeshToMeshDimensionsMap(mesh->getName(), mesh->getDimensions());
   meshConfig.addMesh(mesh);
 
   // Create all parameters necessary to create an ImplicitCouplingScheme object
@@ -711,6 +714,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   const auto              dataID1 = mesh->createData("Data1", 3, 1_dataID)->getID();
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
+  meshConfig.insertMeshToMeshDimensionsMap(mesh->getName(), mesh->getDimensions());
   meshConfig.addMesh(mesh);
 
   // Create all parameters necessary to create an ImplicitCouplingScheme object

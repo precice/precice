@@ -317,6 +317,7 @@ BOOST_AUTO_TEST_CASE(testSimpleExplicitCoupling)
   mesh->createData("Data1", 3, 1_dataID);
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
+  meshConfig.insertMeshToMeshDimensionsMap(mesh->getName(), mesh->getDimensions());
   meshConfig.addMesh(mesh);
 
   const double maxTime        = 1.0;
@@ -689,6 +690,7 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingWithSubcycling)
   mesh->createData("Data1", 3, 1_dataID);
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
+  meshConfig.insertMeshToMeshDimensionsMap(mesh->getName(), mesh->getDimensions());
   meshConfig.addMesh(mesh);
 
   const double maxTime        = 1.0;
