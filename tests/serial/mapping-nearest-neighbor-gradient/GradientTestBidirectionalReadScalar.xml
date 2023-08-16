@@ -20,7 +20,7 @@
   </participant>
 
   <participant name="SolverTwo">
-    <!-- <intra-comm:mpi-single /> -->
+    
     <receive-mesh name="MeshOne" from="SolverOne" />
     <provide-mesh name="MeshTwo" />
     <mapping:nearest-neighbor

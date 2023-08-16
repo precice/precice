@@ -14,7 +14,7 @@
   </mesh>
 
   <participant name="SolverOne">
-    <intra-comm:mpi/>
+    
     <receive-mesh name="MeshTwo" from="SolverTwo" />
     <provide-mesh name="MeshOne" />
     <mapping:nearest-neighbor
@@ -32,7 +32,7 @@
   </participant>
 
   <participant name="SolverTwo">
-    <intra-comm:mpi />
+    
     <provide-mesh name="MeshTwo" />
     <write-data name="Data2" mesh="MeshTwo" />
     <read-data name="Data1" mesh="MeshTwo" />
