@@ -20,7 +20,7 @@ set(_test_root "${PROJECT_BINARY_DIR}/TestOutput")
 
 # Install polars in a venv if available
 if(NOT PRECICE_TEST_VENV)
-  execute_process(COMMAND ${Python3_EXECUTABLE} -c "import venv" RESULTS_VARIABLE _precice_has_venv ERROR_QUIET)
+  execute_process(COMMAND ${Python3_EXECUTABLE} -c "import venv, ensurepip" RESULTS_VARIABLE _precice_has_venv ERROR_QUIET)
   if("${_precice_has_venv}" EQUAL 0)
     message("Installing polars in a python venv to allow for full profiling tests.")
     execute_process(COMMAND ${Python3_EXECUTABLE} -m venv --clear venv WORKING_DIRECTORY ${_test_root} OUTPUT_QUIET)
