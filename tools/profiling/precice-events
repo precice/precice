@@ -443,7 +443,12 @@ def analyzeCommand(eventfile, participant, outfile=None, unit='us'):
         rankAdvance = ldf.filter((pl.col("eid") == "advance") & (pl.col("rank") > 0)).groupby("rank").agg(pl.col("dur").sum()).sort("dur").collect()
         minSecRank = rankAdvance.select(pl.first("rank")).item()
         maxSecRank = rankAdvance.select(pl.last("rank")).item()
-        print(f"Selection contains the primary rank 0, the cheapest secondary rank {minSecRank}, and the most expensive secondary rank {maxSecRank}.")
+
+        ranksToPrint = (0, minSecRank) if minSecRank == maxSecRank else (0, minSecRank, maxSecRank)
+        if len(ranksToPrint) == 2:
+            print(f"Selection contains the primary rank 0 and secondary rank {minSecRank}.")
+        else:
+            print(f"Selection contains the primary rank 0, the cheapest secondary rank {minSecRank}, and the most expensive secondary rank {maxSecRank}.")
 
         ldf = df.lazy()
         joined = pl.concat([
@@ -456,7 +461,7 @@ def analyzeCommand(eventfile, participant, outfile=None, unit='us'):
                   pl.min("dur").alias(f"R{rank}:min"),
                   pl.max("dur").alias(f"R{rank}:max")
               ))
-            for rank in (0, minSecRank, maxSecRank)
+            for rank in ranksToPrint
         ], how="align").collect()
 
     printWide(joined)
