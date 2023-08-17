@@ -14,7 +14,6 @@
   </mesh>
 
   <participant name="SolverOne">
-    <intra-comm:mpi-single />
     <receive-mesh name="MeshTwo" from="SolverTwo" />
     <provide-mesh name="MeshOne" />
     <mapping:rbf-global-iterative
