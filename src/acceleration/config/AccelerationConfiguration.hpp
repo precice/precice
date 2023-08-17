@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include "acceleration/Acceleration.hpp"
-#include "acceleration/MVQNAcceleration.hpp"
+#include "acceleration/IQNIMVJAcceleration.hpp"
 #include "acceleration/SharedPointer.hpp"
 #include "acceleration/impl/SharedPointer.hpp"
 #include "logging/Logger.hpp"
@@ -69,7 +69,7 @@ private:
   const std::string VALUE_CONSTANT;
   const std::string VALUE_AITKEN;
   const std::string VALUE_IQNILS;
-  const std::string VALUE_MVQN;
+  const std::string VALUE_IQNIMVJ;
   const std::string VALUE_QR1FILTER;
   const std::string VALUE_QR1_ABSFILTER;
   const std::string VALUE_QR2FILTER;
