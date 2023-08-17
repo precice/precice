@@ -226,7 +226,7 @@ ParticipantConfiguration::ParticipantConfiguration(
 
     intraCommTags.push_back(tagIntraComm);
   }
-  
+
   for (XMLTag &tagIntraComm : intraCommTags) {
     tag.addSubtag(tagIntraComm);
   }

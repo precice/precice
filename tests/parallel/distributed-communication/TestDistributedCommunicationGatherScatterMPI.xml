@@ -14,7 +14,6 @@
   </mesh>
 
   <participant name="Fluid">
-    
     <provide-mesh name="FluidMesh" />
     <receive-mesh name="StructureMesh" from="Structure" />
     <write-data name="Forces" mesh="FluidMesh" />
@@ -32,7 +31,6 @@
   </participant>
 
   <participant name="Structure">
-    
     <provide-mesh name="StructureMesh" />
     <write-data name="Velocities" mesh="StructureMesh" />
     <read-data name="Forces" mesh="StructureMesh" />
