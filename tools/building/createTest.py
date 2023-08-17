@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
 
-import os
 import argparse
+import collections
+import os
 import pathlib
 import re
-import collections
 
 
 def is_precice_root(dir):
-    detect = [
-        "CHANGELOG.md", "CMakeLists.txt", "LICENSE", "src", "tests", "cmake"
-    ]
+    detect = ["CHANGELOG.md", "CMakeLists.txt", "LICENSE", "src", "tests", "cmake"]
     return all(map(lambda c: os.path.exists(os.path.join(dir, c)), detect))
 
 
@@ -32,6 +30,7 @@ def dirToSuite(dir):
     Takes a kebab-case-directory and transforms it to a CamelCaseDirectory.
     Abbreviations defined above will be all upper case.
     """
+
     def toSuite(s):
         upper = s.upper()
         if upper in ABBREVIATIONS:
@@ -43,41 +42,44 @@ def dirToSuite(dir):
 
 
 def checkTestSuite(arg):
-    assert (arg)
+    assert arg
     if " " in arg:
         raise argparse.ArgumentTypeError(
-            "The given suite name \"{}\" cannot contain spaces.".format(arg))
+            'The given suite name "{}" cannot contain spaces.'.format(arg)
+        )
     if "." in arg:
         raise argparse.ArgumentTypeError(
-            "The given suite name \"{}\" cannot contain the file extensions.".
-            format(arg))
+            'The given suite name "{}" cannot contain the file extensions.'.format(arg)
+        )
     if re.search(r"[^a-z-]", arg) is not None:
         raise argparse.ArgumentTypeError(
-            "The given suite dir \"{}\" must be dashed-lower-case.".format(
-                arg))
+            'The given suite dir "{}" must be dashed-lower-case.'.format(arg)
+        )
     if re.search(r"^[a-z]", arg) is None:
         raise argparse.ArgumentTypeError(
-            "The given suite dir \"{}\" must start with a lowercase letter".format(
-                arg))
+            'The given suite dir "{}" must start with a lowercase letter'.format(arg)
+        )
     if re.search(r"[a-z]$", arg) is None:
         raise argparse.ArgumentTypeError(
-            "The given suite dir \"{}\" must end with a lowercase letter".format(
-                arg))
+            'The given suite dir "{}" must end with a lowercase letter'.format(arg)
+        )
     return arg
 
 
 def checkTestName(arg):
-    assert (arg)
+    assert arg
     if " " in arg:
         raise argparse.ArgumentTypeError(
-            "The given test name \"{}\" cannot contain spaces.".format(arg))
+            'The given test name "{}" cannot contain spaces.'.format(arg)
+        )
     if "." in arg:
         raise argparse.ArgumentTypeError(
-            "The given test name \"{}\" cannot contain the file extensions.".
-            format(arg))
+            'The given test name "{}" cannot contain the file extensions.'.format(arg)
+        )
     if re.search(r"[^a-zA-Z0-9]", arg) is not None:
         raise argparse.ArgumentTypeError(
-            "The given test name \"{}\" must use CamelCase.".format(arg))
+            'The given test name "{}" must use CamelCase.'.format(arg)
+        )
     return arg
 
 
@@ -105,11 +107,15 @@ def testarg(arg):
     location = tests.joinpath(*dirs)
     if location.exists() and not location.is_dir():
         raise argparse.ArgumentTypeError(
-            "The given test location \"{}\" exists, but is not a directory.".format(location))
+            'The given test location "{}" exists, but is not a directory.'.format(
+                location
+            )
+        )
 
     suites = [dirToSuite(dir) for dir in dirs]
-    return collections.namedtuple("TestSetup","location suites name")(location, suites, name)
-
+    return collections.namedtuple("TestSetup", "location suites name")(
+        location, suites, name
+    )
 
 
 PRECICE_TEST_BODY = """{
@@ -136,11 +142,9 @@ PRECICE_TEST_BODY = """{
 
 def generateTestSource(name, suite, filepath):
     if os.path.exists(filepath):
-        raise BaseException("The test source at \"{}\" already exists.".format(filepath))
+        raise BaseException('The test source at "{}" already exists.'.format(filepath))
 
-    includes = [
-        "<precice/precice.hpp>", "<vector>", '"testing/Testing.hpp"'
-    ]
+    includes = ["<precice/precice.hpp>", "<vector>", '"testing/Testing.hpp"']
     suites = ["Integration"] + suite
     space = [""]
     lines = ["#ifndef PRECICE_NO_MPI"]
@@ -161,27 +165,26 @@ def generateTestSource(name, suite, filepath):
 
 def generateTestConfig(name, suite, filepath):
     if os.path.exists(filepath):
-        print("The test config at \"{}\" already exists.".format(filepath))
+        print('The test config at "{}" already exists.'.format(filepath))
     else:
-        open(filepath, 'w').close()
+        open(filepath, "w").close()
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="preCICE integration test creation tool.")
+        description="preCICE integration test creation tool."
+    )
     parser.add_argument(
         "test",
         metavar="[Suite/]TestName",
         type=testarg,
-        help=
-        "The path to the test, the last component being the test name. "
+        help="The path to the test, the last component being the test name. "
         "If executed within tests/, then the test will be created relative to the local directory. "
-        "Otherwise, the path will be assumed to be relative to the tests directory."
+        "Otherwise, the path will be assumed to be relative to the tests directory.",
     )
-    parser.add_argument("-n",
-                        "--dry-run",
-                        action="store_true",
-                        help="print actions only")
+    parser.add_argument(
+        "-n", "--dry-run", action="store_true", help="print actions only"
+    )
     args = parser.parse_args()
 
     print("Create directory {}".format(args.test.location))
@@ -203,5 +206,5 @@ def main():
     print("Remember to run tools/building/updateSourceFiles.py or make sourcesIndex")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

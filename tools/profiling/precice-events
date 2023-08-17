@@ -9,13 +9,13 @@ except ImportError:
     except ImportError:
         import json
 
-import csv
-import sys
-import datetime
 import argparse
-import os
-from collections import namedtuple
+import csv
+import datetime
 import functools
+import os
+import sys
+from collections import namedtuple
 
 
 def mergedDict(dict1, dict2):
@@ -23,17 +23,22 @@ def mergedDict(dict1, dict2):
     merged.update(dict2)
     return merged
 
+
 def requireModules(modules):
     import importlib.util
+
     notFound = [m for m in modules if importlib.util.find_spec(m) is None]
-    if (notFound):
+    if notFound:
+
         def concat(l):
             if len(l) == 1:
                 return l[0]
             else:
                 return ", ".join(l[:-1]) + f", and {l[-1]}"
+
         print(
-            f"This command requires the following additional dependencies: {concat(modules)}")
+            f"This command requires the following additional dependencies: {concat(modules)}"
+        )
         print(f"The following is/are missing: {concat(notFound)}")
         sys.exit(1)
 
@@ -48,12 +53,13 @@ def loadRobust(content):
 
 
 def readRobust(filename):
-    with open(filename, 'r') as openfile:
+    with open(filename, "r") as openfile:
         return loadRobust(openfile.read())
 
 
 def printWide(df):
     from itertools import repeat
+
     import polars as pl
 
     mincolwidth = 8
@@ -61,31 +67,34 @@ def printWide(df):
     headerWidths = tuple(map(formattedLength, df.columns))
     bodyWidths = tuple(df.select(pl.all().apply(formattedLength)).max().row(0))
     assert len(headerWidths) == len(bodyWidths)
-    colwidths = map(max, zip( headerWidths, bodyWidths, repeat(mincolwidth)))
+    colwidths = map(max, zip(headerWidths, bodyWidths, repeat(mincolwidth)))
 
-    colfmts = [ "{:>"+str(w)+"}" for w in colwidths ]
+    colfmts = ["{:>" + str(w) + "}" for w in colwidths]
 
     rowfmt = colfmts[0]
     # Measurements always come in batches of 5
     from itertools import islice
+
     fmts = iter(colfmts[1:])
-    while batch := list(islice(fmts,5)):
+    while batch := list(islice(fmts, 5)):
         rowfmt += " | " + " ".join(batch)
 
     print(rowfmt.format(*(df.columns)))
     for row in df.iter_rows():
         print(rowfmt.format(*map(lambda e: "" if e is None else e, row)))
 
+
 @functools.lru_cache
 def ns_to_unit_factor(unit):
     return {
-        'ns': 1,
-        'us': 1e-3,
-        'ms': 1e-6,
-        's': 1e-9,
-        'm': 1e-9/60,
-        'h': 1e-9/3600
+        "ns": 1,
+        "us": 1e-3,
+        "ms": 1e-6,
+        "s": 1e-9,
+        "m": 1e-9 / 60,
+        "h": 1e-9 / 3600,
     }[unit]
+
 
 def alignEvents(events):
     """Aligns passed events of multiple ranks and or participants.
@@ -102,16 +111,20 @@ def alignEvents(events):
         if len(ranks) == 1:
             continue
         print(f"Aligning {len(ranks)} ranks of {participant}")
-        intraSyncID = [id for id, name in events["eventDict"].items(
-        ) if "com.initializeIntraCom" in name][0]
-        syncs = {rank: e["ts"]+e["dur"]
-                 for rank, data in ranks.items()
-                 for e in data["events"]
-                 if e["eid"] == intraSyncID
-                 }
+        intraSyncID = [
+            id
+            for id, name in events["eventDict"].items()
+            if "com.initializeIntraCom" in name
+        ][0]
+        syncs = {
+            rank: e["ts"] + e["dur"]
+            for rank, data in ranks.items()
+            for e in data["events"]
+            if e["eid"] == intraSyncID
+        }
 
         firstSync = min(syncs.values())
-        shifts = {rank: firstSync-tp for rank, tp in syncs.items()}
+        shifts = {rank: firstSync - tp for rank, tp in syncs.items()}
 
         for rank, data in ranks.items():
             for e in data["events"]:
@@ -121,8 +134,7 @@ def alignEvents(events):
         return events
 
     # Align participants
-    primaries = [name for name, ranks in events["events"].items()
-                 if 0 in ranks]
+    primaries = [name for name, ranks in events["events"].items() if 0 in ranks]
 
     for lonely in set(events["events"].keys()).difference(primaries):
         print(f"Cannot align {lonely} as event file of rank 0 is missing.")
@@ -132,13 +144,16 @@ def alignEvents(events):
         return events
 
     # Find synchronization points
-    syncEvents = ["m2n.acceptPrimaryRankConnection.",
-                  "m2n.requestPrimaryRankConnection."]
+    syncEvents = [
+        "m2n.acceptPrimaryRankConnection.",
+        "m2n.requestPrimaryRankConnection.",
+    ]
     # Event ID -> Remote name
-    syncIDs = {id: name.rsplit(".", 1)[1]
-               for id, name in events["eventDict"].items()
-               if any([check in name for check in syncEvents])
-               }
+    syncIDs = {
+        id: name.rsplit(".", 1)[1]
+        for id, name in events["eventDict"].items()
+        if any([check in name for check in syncEvents])
+    }
     syncs = {
         local: {
             remote: e["ts"] + e["dur"]
@@ -149,11 +164,16 @@ def alignEvents(events):
         for local in primaries
     }
 
-    def hasSync(l, r): return syncs.get(l) and syncs.get(
-        l).get(r) and syncs.get(r) and syncs.get(r).get(l)
+    def hasSync(l, r):
+        return (
+            syncs.get(l)
+            and syncs.get(l).get(r)
+            and syncs.get(r)
+            and syncs.get(r).get(l)
+        )
+
     shifts = {
         (local, remote): syncs[local][remote] - syncs[remote][local]
-
         # all unique participant combinations
         for local in primaries
         for remote in primaries
@@ -184,16 +204,16 @@ def groupEvents(events, initTime, nameMapping):
         # Handle event starts
         if type == "b":
             # assert(name not in active.keys())
-            if (name in active.keys()):
+            if name in active.keys():
                 print(f"Ignoring start of active event {name}")
             else:
                 event["ts"] = int(event["ts"])
-                event["eid"] = name # map to global name
+                event["eid"] = name  # map to global name
                 active[name] = event
         # Handle event stops
         elif type == "e":
             # assert(name in active.keys())
-            if (name not in active.keys()):
+            if name not in active.keys():
                 print(f"Ignoring end of inactive event {name}")
             else:
                 begin = active[name]
@@ -204,7 +224,7 @@ def groupEvents(events, initTime, nameMapping):
                 completed.append(begin)
         # Handle event data
         elif type == "d":
-            if (name not in active.keys()):
+            if name not in active.keys():
                 print(f"Dropping data event {name} as event isn't yet known.")
             else:
                 d = active[name].get("data", {})
@@ -217,7 +237,7 @@ def groupEvents(events, initTime, nameMapping):
     if active:
         lastTS = min(map(lambda e: e["ts"] + e["dur"], completed))
         for event in active.values():
-            name = event["eid"] # This is a global id
+            name = event["eid"]  # This is a global id
             print(f"Truncating event without end {name}")
             begin = active[name]
             begin["ts"] = int(begin["ts"]) + initTime
@@ -237,26 +257,24 @@ def loadEventFiles(filenames):
 
     # Get all names
     print("Globalizing event names")
-    nameIDs = {} # name to global id
-    nameMappings = {} # participant -> localid -> globalid
+    nameIDs = {}  # name to global id
+    nameMappings = {}  # participant -> localid -> globalid
     for i, json in enumerate(jsons):
         name = json["meta"]["name"]
         rank = int(json["meta"]["rank"])
-        localNames = { int(e["eid"]): e["en"]
-                      for e in json["events"]
-                      if e["et"] == "n"}
+        localNames = {int(e["eid"]): e["en"] for e in json["events"] if e["et"] == "n"}
         for lid, n in localNames.items():
             # get or create a global id for the name
             gid = nameIDs.setdefault(n, len(nameIDs))
             # register the local to global mapping
-            nameMappings.setdefault(name, {}).setdefault(rank, {}) .update({lid: gid})
+            nameMappings.setdefault(name, {}).setdefault(rank, {}).update({lid: gid})
 
     # Grouping events
     print("Grouping events")
     events = {}
     for i, json in enumerate(jsons):
-        name =  json["meta"]["name"]
-        rank= int(json["meta"]["rank"])
+        name = json["meta"]["name"]
+        rank = int(json["meta"]["rank"])
         mapping = nameMappings[name][rank]
         unix_us = int(json["meta"]["unix_us"])
         events.setdefault(name, {})[rank] = {
@@ -265,15 +283,12 @@ def loadEventFiles(filenames):
                 "rank": rank,
                 "size": int(json["meta"]["size"]),
                 "unix_us": unix_us,
-                "tinit": json["meta"]["tinit"]
+                "tinit": json["meta"]["tinit"],
             },
-            "events": groupEvents(json["events"], unix_us, mapping)
+            "events": groupEvents(json["events"], unix_us, mapping),
         }
 
-    return {
-        "eventDict":  { id: n for n, id in nameIDs.items()},
-        "events": events
-    }
+    return {"eventDict": {id: n for n, id in nameIDs.items()}, "events": events}
 
 
 class RankData:
@@ -293,22 +308,31 @@ class RankData:
 
     def toListOfTuples(self, eventLookup):
         for e in self.events:
-            yield (self.name, self.rank, eventLookup[e["eid"]], int(e["ts"]), int(e["dur"]))
+            yield (
+                self.name,
+                self.rank,
+                eventLookup[e["eid"]],
+                int(e["ts"]),
+                int(e["dur"]),
+            )
+
 
 class Run:
     def __init__(self, filename):
         print(f"Reading events file {filename}")
         import json
-        with open(filename, 'r') as f:
+
+        with open(filename, "r") as f:
             content = json.load(f)
 
-        self.eventLookup = {int(id): name for id,
-                            name in content["eventDict"].items()}
+        self.eventLookup = {int(id): name for id, name in content["eventDict"].items()}
         self.data = content["events"]
 
     def iterRanks(self):
         for pranks in self.data.values():
-            for d in sorted(pranks.values(), key=lambda data: int(data["meta"]["rank"])):
+            for d in sorted(
+                pranks.values(), key=lambda data: int(data["meta"]["rank"])
+            ):
                 yield RankData(d)
 
     def iterParticipant(self, name):
@@ -329,39 +353,58 @@ class Run:
             return True if not selectRanks else rank.rank in selectRanks
 
         pids = {name: id for id, name in enumerate(self.participants())}
-        tids = { (rank.name, rank.rank): id
-                for id, rank in enumerate(filter(filterop, self.iterRanks()))
-                }
+        tids = {
+            (rank.name, rank.rank): id
+            for id, rank in enumerate(filter(filterop, self.iterRanks()))
+        }
         metaEvents = [
             {"name": "process_name", "ph": "M", "pid": pid, "args": {"name": name}}
             for name, pid in pids.items()
         ] + [
-            {"name": "thread_name", "ph": "M", "pid": pid,
-                "tid": tids[(rank.name, rank.rank)], "args": {"name": rank.type}}
+            {
+                "name": "thread_name",
+                "ph": "M",
+                "pid": pid,
+                "tid": tids[(rank.name, rank.rank)],
+                "args": {"name": rank.type},
+            }
             for name, pid in pids.items()
             for rank in filter(filterop, self.iterParticipant(name))
         ]
 
         mainEvents = []
-        for rank in  filter(filterop, self.iterRanks()):
+        for rank in filter(filterop, self.iterRanks()):
             pid, tid = pids[rank.name], tids[(rank.name, rank.rank)]
             for e in rank.events:
                 en = self.lookupEvent(e["eid"])
                 mainEvents.append(
-                    mergedDict({
-                    "name": en,
-                    "cat": "Solver" if en.startswith("solver") else "preCICE",
-                    "ph": "X",  # complete event
-                    "pid": pid,
-                    "tid": tid,
-                    "ts": e["ts"],
-                    "dur": e["dur"]
-                }, {} if "data" not in e else {"args": dict(zip(map(self.lookupEvent, e["data"].keys()), e["data"].values()))}))
+                    mergedDict(
+                        {
+                            "name": en,
+                            "cat": "Solver" if en.startswith("solver") else "preCICE",
+                            "ph": "X",  # complete event
+                            "pid": pid,
+                            "tid": tid,
+                            "ts": e["ts"],
+                            "dur": e["dur"],
+                        },
+                        {}
+                        if "data" not in e
+                        else {
+                            "args": dict(
+                                zip(
+                                    map(self.lookupEvent, e["data"].keys()),
+                                    e["data"].values(),
+                                )
+                            )
+                        },
+                    )
+                )
 
         return {"traceEvents": metaEvents + mainEvents}
 
     def toExportList(self, unit=None):
-        factor = ns_to_unit_factor(unit)*1e3 if unit else 1
+        factor = ns_to_unit_factor(unit) * 1e3 if unit else 1
         for rank in self.iterRanks():
             for e in rank.events:
                 yield (
@@ -371,26 +414,46 @@ class Run:
                     self.lookupEvent(e["eid"]),
                     e["ts"],
                     e["dur"] * factor,
-                    "" if "data" not in e else str(dict(zip(map(self.lookupEvent, e["data"].keys()), e["data"].values())))
+                    ""
+                    if "data" not in e
+                    else str(
+                        dict(
+                            zip(
+                                map(self.lookupEvent, e["data"].keys()),
+                                e["data"].values(),
+                            )
+                        )
+                    ),
                 )
 
     def toDataFrame(self):
-        import polars as pl
         import itertools
-        columns=["participant", "rank", "eid", "ts", "dur" ]
+
+        import polars as pl
+
+        columns = ["participant", "rank", "eid", "ts", "dur"]
         df = pl.DataFrame(
-            data=itertools.chain.from_iterable(map(lambda r: r.toListOfTuples(self.eventLookup), self.iterRanks())),
-            schema=[("participant", pl.Utf8), ("rank", pl.Int32), ("eid", pl.Utf8),
-                    ("ts", pl.Int64), ("dur", pl.Int64) ]
-        ).with_columns([
-            pl.col("ts").cast(pl.Datetime("us"))
-        ])
+            data=itertools.chain.from_iterable(
+                map(lambda r: r.toListOfTuples(self.eventLookup), self.iterRanks())
+            ),
+            schema=[
+                ("participant", pl.Utf8),
+                ("rank", pl.Int32),
+                ("eid", pl.Utf8),
+                ("ts", pl.Int64),
+                ("dur", pl.Int64),
+            ],
+        ).with_columns([pl.col("ts").cast(pl.Datetime("us"))])
         return df
 
 
 def traceCommand(eventfile, outfile, rankfilter, limit):
     run = Run(eventfile)
-    selection = set().union(rankfilter if rankfilter else []).union(range(limit) if limit else [])
+    selection = (
+        set()
+        .union(rankfilter if rankfilter else [])
+        .union(range(limit) if limit else [])
+    )
     traces = run.toTrace(selection)
     print(f"Writing to {outfile}")
     with open(outfile, "w") as outfile:
@@ -400,92 +463,126 @@ def traceCommand(eventfile, outfile, rankfilter, limit):
 
 def exportCommand(eventfile, outfile, unit):
     run = Run(eventfile)
-    fieldnames = [ "participant", "rank", "size", "event", "timestamp", "duration", "data"]
+    fieldnames = [
+        "participant",
+        "rank",
+        "size",
+        "event",
+        "timestamp",
+        "duration",
+        "data",
+    ]
     print(f"Writing to {outfile}")
-    with open(outfile, 'w', newline='') as csvfile:
+    with open(outfile, "w", newline="") as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(fieldnames)
         writer.writerows(run.toExportList(unit))
     return 0
 
 
-def analyzeCommand(eventfile, participant, outfile=None, unit='us'):
+def analyzeCommand(eventfile, participant, outfile=None, unit="us"):
     requireModules(["polars"])
     import polars as pl
 
     run = Run(eventfile)
     df = run.toDataFrame()
 
-    assert df.select(pl.col("participant").is_in([participant]).any()).item(), f"Given participant {participant} doesn't exist."
+    assert df.select(
+        pl.col("participant").is_in([participant]).any()
+    ).item(), f"Given participant {participant} doesn't exist."
 
     print(f"Output timing are in {unit}.")
 
     # Filter by participant
     # Convert duration to requested unit
     dur_factor = 1000 * ns_to_unit_factor(unit)
-    df = (df.filter(pl.col("participant") == participant)
+    df = (
+        df.filter(pl.col("participant") == participant)
         .drop("participant")
-        .with_columns(pl.col("dur") * dur_factor))
+        .with_columns(pl.col("dur") * dur_factor)
+    )
 
     ranks = df.select("rank").unique()
 
     if len(ranks) == 1:
-        joined = (df.groupby("eid")
-                  .agg(
-                      pl.sum("dur").alias("sum"),
-                      pl.count("dur").alias("count"),
-                      pl.mean("dur").alias("mean"),
-                      pl.min("dur").alias("min"),
-                      pl.max("dur").alias("max")
-                  ))
+        joined = df.groupby("eid").agg(
+            pl.sum("dur").alias("sum"),
+            pl.count("dur").alias("count"),
+            pl.mean("dur").alias("mean"),
+            pl.min("dur").alias("min"),
+            pl.max("dur").alias("max"),
+        )
     else:
         ldf = df.lazy()
-        rankAdvance = ldf.filter((pl.col("eid") == "advance") & (pl.col("rank") > 0)).groupby("rank").agg(pl.col("dur").sum()).sort("dur").collect()
+        rankAdvance = (
+            ldf.filter((pl.col("eid") == "advance") & (pl.col("rank") > 0))
+            .groupby("rank")
+            .agg(pl.col("dur").sum())
+            .sort("dur")
+            .collect()
+        )
         minSecRank = rankAdvance.select(pl.first("rank")).item()
         maxSecRank = rankAdvance.select(pl.last("rank")).item()
 
-        ranksToPrint = (0, minSecRank) if minSecRank == maxSecRank else (0, minSecRank, maxSecRank)
+        ranksToPrint = (
+            (0, minSecRank) if minSecRank == maxSecRank else (0, minSecRank, maxSecRank)
+        )
         if len(ranksToPrint) == 2:
-            print(f"Selection contains the primary rank 0 and secondary rank {minSecRank}.")
+            print(
+                f"Selection contains the primary rank 0 and secondary rank {minSecRank}."
+            )
         else:
-            print(f"Selection contains the primary rank 0, the cheapest secondary rank {minSecRank}, and the most expensive secondary rank {maxSecRank}.")
+            print(
+                f"Selection contains the primary rank 0, the cheapest secondary rank {minSecRank}, and the most expensive secondary rank {maxSecRank}."
+            )
 
         ldf = df.lazy()
-        joined = pl.concat([
-            (ldf.filter(pl.col("rank")==rank)
-              .groupby("eid")
-              .agg(
-                  pl.sum("dur").alias(f"R{rank}:sum"),
-                  pl.count("dur").alias(f"R{rank}:count"),
-                  pl.mean("dur").alias(f"R{rank}:mean"),
-                  pl.min("dur").alias(f"R{rank}:min"),
-                  pl.max("dur").alias(f"R{rank}:max")
-              ))
-            for rank in ranksToPrint
-        ], how="align").collect()
+        joined = pl.concat(
+            [
+                (
+                    ldf.filter(pl.col("rank") == rank)
+                    .groupby("eid")
+                    .agg(
+                        pl.sum("dur").alias(f"R{rank}:sum"),
+                        pl.count("dur").alias(f"R{rank}:count"),
+                        pl.mean("dur").alias(f"R{rank}:mean"),
+                        pl.min("dur").alias(f"R{rank}:min"),
+                        pl.max("dur").alias(f"R{rank}:max"),
+                    )
+                )
+                for rank in ranksToPrint
+            ],
+            how="align",
+        ).collect()
 
     printWide(joined)
 
-    if (outfile):
+    if outfile:
         print(f"Writing to {outfile}")
         joined.write_csv(outfile)
 
     return 0
 
-def histogramCommand(eventfile, outfile, participant, event, rank, bins, unit='us'):
+
+def histogramCommand(eventfile, outfile, participant, event, rank, bins, unit="us"):
     requireModules(["polars", "matplotlib"])
-    import polars as pl
     import matplotlib.pyplot as plt
+    import polars as pl
 
     run = Run(eventfile)
     df = run.toDataFrame()
 
     # Check user input
-    assert df.select(pl.col("participant").is_in([participant]).any()).item(), f"Given participant {participant} doesn't exist."
-    assert df.select(pl.col("eid").is_in([event]).any()).item(), f"Given event {event} doesn't exist."
+    assert df.select(
+        pl.col("participant").is_in([participant]).any()
+    ).item(), f"Given participant {participant} doesn't exist."
+    assert df.select(
+        pl.col("eid").is_in([event]).any()
+    ).item(), f"Given event {event} doesn't exist."
     if not rank is None:
-        assert df.select(pl.col("rank").is_in([rank]).any()).item(), f"Given rank {rank} doesn't exist."
-
+        assert df.select(
+            pl.col("rank").is_in([rank]).any()
+        ).item(), f"Given rank {rank} doesn't exist."
 
     # Filter by participant and event
     filter = (pl.col("participant") == participant) & (pl.col("eid") == event)
@@ -500,26 +597,31 @@ def histogramCommand(eventfile, outfile, participant, event, rank, bins, unit='u
     durations = df.filter(filter).select(pl.col("dur") * dur_factor)
 
     ranks = df["rank"].unique()
-    rankDesc = "ranks: " + ",".join(map(str,ranks)) if len(ranks) < 5 else f"{len(ranks)} ranks"
+    rankDesc = (
+        "ranks: " + ",".join(map(str, ranks))
+        if len(ranks) < 5
+        else f"{len(ranks)} ranks"
+    )
 
-    fig, ax = plt.subplots(figsize=(14,7), tight_layout=True)
-    ax.set_title(f"Histogram of event \"{event}\" on {participant} ({rankDesc})")
+    fig, ax = plt.subplots(figsize=(14, 7), tight_layout=True)
+    ax.set_title(f'Histogram of event "{event}" on {participant} ({rankDesc})')
     ax.set_xlabel(f"Duration [{unit}]")
     ax.set_ylabel("Occurrence")
     hist_data = ax.hist(durations, bins=bins, histtype="barstacked", align="mid")
     ax.bar_label(hist_data[2])
     binborders = hist_data[1]
-    ax.set_xticks(binborders, labels=[ f"{d:,.2f}" for d in binborders], rotation=90)
+    ax.set_xticks(binborders, labels=[f"{d:,.2f}" for d in binborders], rotation=90)
     ax.set_xlim(left=min(binborders), right=max(binborders))
     ax.grid(axis="x")
 
-    if (outfile):
+    if outfile:
         print(f"Writing to {outfile}")
         plt.savefig(outfile)
     else:
         plt.show()
 
     return 0
+
 
 def detectFiles(files):
     # Default to loading from the local directory
@@ -529,6 +631,7 @@ def detectFiles(files):
     def searchDir(directory):
         assert os.path.isdir(directory)
         import glob
+
         return glob.glob(os.path.join(directory, "*-*-*.json"))
 
     resolved = []
@@ -538,11 +641,12 @@ def detectFiles(files):
             continue
         if os.path.isdir(path):
             print(f"Searching {path} : ", end="")
-            candidates = [".",
-                          "precice-events",
-                          "../precice-events",
-                          "../../precice-events",
-                          ]
+            candidates = [
+                ".",
+                "precice-events",
+                "../precice-events",
+                "../../precice-events",
+            ]
             found = False
             for candidate in candidates:
                 dir = os.path.join(path, candidate)
@@ -560,19 +664,19 @@ def detectFiles(files):
                 print(f"nothing found")
 
         else:
-            print(f"Cannot interpret \"{path}\"")
+            print(f'Cannot interpret "{path}"')
     unique = list(set(resolved))
     print(f"Found {len(unique)} unique event files")
     return unique
 
 
 def findFilesOfLatestRun(name, sizes):
-    assert len(sizes)>1
+    assert len(sizes) > 1
     print(f"Found multiple runs for participant {name}")
     timestamps = []
     for size, ranks in sizes.items():
         assert len(ranks) > 0
-        example = next(iter(ranks.values())) # Get some file of this run
+        example = next(iter(ranks.values()))  # Get some file of this run
         timestamp = int(readRobust(example)["meta"]["unix_us"])
         timestamps.append((size, timestamp))
 
@@ -582,15 +686,17 @@ def findFilesOfLatestRun(name, sizes):
 
     return list(sizes[size].values())
 
+
 def sanitizeFiles(files):
     PieceFile = namedtuple("PieceFile", ["name", "rank", "size", "filename"])
+
     def info(filename):
         base = os.path.splitext(os.path.basename(filename))[0]
         parts = base.split("-")
         name = "-".join(parts[:-2])
-        return PieceFile(name, int(parts[-2]), int(parts[-1]) , filename)
+        return PieceFile(name, int(parts[-2]), int(parts[-1]), filename)
 
-    pieces = [ info(filename) for filename in files ]
+    pieces = [info(filename) for filename in files]
 
     map = {}
     for n, r, s, fn in pieces:
@@ -601,9 +707,7 @@ def sanitizeFiles(files):
         if len(sizes) == 1:
             print(f"Found a single run for participant {name}")
             filesToLoad += [
-                filename
-                for _, ranks in sizes.items()
-                for filename in ranks.values()
+                filename for _, ranks in sizes.items() for filename in ranks.values()
             ]
             continue
 
@@ -620,35 +724,45 @@ def mergeCommand(files, outfile, align):
         merged = alignEvents(merged)
 
     print(f"Writing to {outfile}")
-    with open(outfile, 'w', newline='') as file:
+    with open(outfile, "w", newline="") as file:
         json.dump(merged, file)
 
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="", epilog="")
-    subparsers = parser.add_subparsers(title='commands',
-                                       description='Note that some commands may require polars.',
-                                       help='additional help',
-                                       dest="cmd"
-                                       )
+    subparsers = parser.add_subparsers(
+        title="commands",
+        description="Note that some commands may require polars.",
+        help="additional help",
+        dest="cmd",
+    )
     # parser.add_argument("-v", "--verbose", help="Print verbose output")
-    parser.add_argument("-u", "--unit", choices=["h", "m", "s", "ms", "us"], default="us",
-                        help="The duration unit to use")
+    parser.add_argument(
+        "-u",
+        "--unit",
+        choices=["h", "m", "s", "ms", "us"],
+        default="us",
+        help="The duration unit to use",
+    )
 
     analyze_help = """Analyze events data of a given solver.
     Event durations are displayed in the unit of choice.
     Parallel solvers show events of the primary rank next to the secondary ranks spending the least and most time in advance of preCICE.
     """
-    analyze = subparsers.add_parser('analyze',
-                                    help=analyze_help.splitlines()[0], description=analyze_help)
-    analyze.add_argument("participant", type=str,
-                         help="The participant to analyze")
-    analyze.add_argument("eventfile", nargs="?", type=str, default="events.json",
-                         help="The event file to process")
-    analyze.add_argument("-o", "--output",
-                         help="Write the result to CSV file")
+    analyze = subparsers.add_parser(
+        "analyze", help=analyze_help.splitlines()[0], description=analyze_help
+    )
+    analyze.add_argument("participant", type=str, help="The participant to analyze")
+    analyze.add_argument(
+        "eventfile",
+        nargs="?",
+        type=str,
+        default="events.json",
+        help="The event file to process",
+    )
+    analyze.add_argument("-o", "--output", help="Write the result to CSV file")
 
     def try_int(s):
         try:
@@ -659,50 +773,106 @@ if __name__ == '__main__':
     histogram_help = """Plots the duration distribution of a single event of a given solver.
     Event durations are displayed in the unit of choice.
     """
-    histogram = subparsers.add_parser('histogram',
-                                    help=histogram_help.splitlines()[0], description=histogram_help)
-    histogram.add_argument("-o", "--output", default=None, help="Write to file instead of displaying the plot")
-    histogram.add_argument("-r", "--rank", type=int, default=None, help="Display only the given rank")
-    histogram.add_argument("-b", "--bins", type=try_int, default="fd", help="Number of bins or strategy. Must be a valid argument to numpy.histogram_bin_edges")
+    histogram = subparsers.add_parser(
+        "histogram", help=histogram_help.splitlines()[0], description=histogram_help
+    )
+    histogram.add_argument(
+        "-o",
+        "--output",
+        default=None,
+        help="Write to file instead of displaying the plot",
+    )
+    histogram.add_argument(
+        "-r", "--rank", type=int, default=None, help="Display only the given rank"
+    )
+    histogram.add_argument(
+        "-b",
+        "--bins",
+        type=try_int,
+        default="fd",
+        help="Number of bins or strategy. Must be a valid argument to numpy.histogram_bin_edges",
+    )
     histogram.add_argument("participant", type=str, help="The participant to analyze")
     histogram.add_argument("event", type=str, help="The event to analyze")
-    histogram.add_argument("eventfile", nargs="?", type=str, default="events.json",
-                         help="The event file to process")
+    histogram.add_argument(
+        "eventfile",
+        nargs="?",
+        type=str,
+        default="events.json",
+        help="The event file to process",
+    )
 
     trace_help = "Transform events to the Trace Event Format."
-    trace = subparsers.add_parser('trace',
-                                  help=trace_help.splitlines()[0], description=trace_help)
-    trace.add_argument("eventfile", type=str, nargs="?", default="events.json",
-                       help="The event file to process")
-    trace.add_argument("-o", "--output", default="trace.json",
-                       help="The resulting trace file")
-    trace.add_argument("-l", "--limit", type=int, metavar="n", help="Select the first n ranks")
-    trace.add_argument("-r", "--rank", type=int, nargs="*",  help="Select individual ranks")
+    trace = subparsers.add_parser(
+        "trace", help=trace_help.splitlines()[0], description=trace_help
+    )
+    trace.add_argument(
+        "eventfile",
+        type=str,
+        nargs="?",
+        default="events.json",
+        help="The event file to process",
+    )
+    trace.add_argument(
+        "-o", "--output", default="trace.json", help="The resulting trace file"
+    )
+    trace.add_argument(
+        "-l", "--limit", type=int, metavar="n", help="Select the first n ranks"
+    )
+    trace.add_argument(
+        "-r", "--rank", type=int, nargs="*", help="Select individual ranks"
+    )
 
     export_help = "Export the events as a CSV file."
-    export = subparsers.add_parser('export',
-                                   help=export_help.splitlines()[0], description=export_help)
-    export.add_argument("eventfile", nargs="?", type=str, default="events.json",
-                        help="The event files to process")
-    export.add_argument("-o", "--output", type=str, default="events.csv",
-                        help="The CSV file to export to.")
+    export = subparsers.add_parser(
+        "export", help=export_help.splitlines()[0], description=export_help
+    )
+    export.add_argument(
+        "eventfile",
+        nargs="?",
+        type=str,
+        default="events.json",
+        help="The event files to process",
+    )
+    export.add_argument(
+        "-o",
+        "--output",
+        type=str,
+        default="events.csv",
+        help="The CSV file to export to.",
+    )
 
     merge_help = "Transform multiple events to the Trace Event Format."
-    merge = subparsers.add_parser('merge',
-                                  help=merge_help.splitlines()[0], description=merge_help)
-    merge.add_argument("files", nargs="*",
-                       help="The event files to process, directories to search, or nothing to autodetect")
-    merge.add_argument("-o", "--output", type=str, default="events.json",
-                       help="The resulting event file.")
-    merge.add_argument("-n", "--no-align", action="store_true", help="Don't align participants?")
+    merge = subparsers.add_parser(
+        "merge", help=merge_help.splitlines()[0], description=merge_help
+    )
+    merge.add_argument(
+        "files",
+        nargs="*",
+        help="The event files to process, directories to search, or nothing to autodetect",
+    )
+    merge.add_argument(
+        "-o",
+        "--output",
+        type=str,
+        default="events.json",
+        help="The resulting event file.",
+    )
+    merge.add_argument(
+        "-n", "--no-align", action="store_true", help="Don't align participants?"
+    )
     args = parser.parse_args()
 
     dispatcher = {
         "trace": lambda ns: traceCommand(ns.eventfile, ns.output, ns.rank, ns.limit),
         "export": lambda ns: exportCommand(ns.eventfile, ns.output, ns.unit),
-        "analyze": lambda ns: analyzeCommand(ns.eventfile, ns.participant, ns.output,  ns.unit),
-        "histogram": lambda ns: histogramCommand(ns.eventfile, ns.output, ns.participant, ns.event, ns.rank, ns.bins, ns.unit),
-        "merge": lambda ns: mergeCommand(ns.files, ns.output, not ns.no_align)
+        "analyze": lambda ns: analyzeCommand(
+            ns.eventfile, ns.participant, ns.output, ns.unit
+        ),
+        "histogram": lambda ns: histogramCommand(
+            ns.eventfile, ns.output, ns.participant, ns.event, ns.rank, ns.bins, ns.unit
+        ),
+        "merge": lambda ns: mergeCommand(ns.files, ns.output, not ns.no_align),
     }
 
     def showHelp(ns):
