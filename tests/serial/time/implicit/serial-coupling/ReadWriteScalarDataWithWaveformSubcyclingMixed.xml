@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration dimensions="3">
+<precice-configuration>
   <data:scalar name="DataOne" />
   <data:scalar name="DataTwo" waveform-degree="0" />
 
-  <mesh name="MeshOne">
+  <mesh name="MeshOne" dimensions="3">
     <use-data name="DataOne" />
     <use-data name="DataTwo" />
   </mesh>
 
-  <mesh name="MeshTwo">
+  <mesh name="MeshTwo" dimensions="3">
     <use-data name="DataOne" />
     <use-data name="DataTwo" />
   </mesh>

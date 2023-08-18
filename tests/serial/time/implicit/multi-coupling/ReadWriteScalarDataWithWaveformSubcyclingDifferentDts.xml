@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration dimensions="3" experimental="true">
+<precice-configuration experimental="true">
   <data:scalar name="DataOne" />
   <data:scalar name="DataTwo" />
   <data:scalar name="DataThree" />
 
-  <mesh name="MeshOne">
+  <mesh name="MeshOne" dimensions="3">
     <use-data name="DataOne" />
     <use-data name="DataTwo" />
     <use-data name="DataThree" />
   </mesh>
 
-  <mesh name="MeshTwo">
+  <mesh name="MeshTwo" dimensions="3">
     <use-data name="DataOne" />
     <use-data name="DataTwo" />
   </mesh>
 
-  <mesh name="MeshThree">
+  <mesh name="MeshThree" dimensions="3">
     <use-data name="DataOne" />
     <use-data name="DataThree" />
   </mesh>

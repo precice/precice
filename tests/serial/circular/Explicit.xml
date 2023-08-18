@@ -4,17 +4,17 @@
   <data:scalar name="DBC" />
   <data:scalar name="DCA" />
 
-  <mesh name="MA">
+  <mesh name="MA" dimensions="2">
     <use-data name="DAB" />
     <use-data name="DCA" />
   </mesh>
 
-  <mesh name="MB">
+  <mesh name="MB" dimensions="2">
     <use-data name="DAB" />
     <use-data name="DBC" />
   </mesh>
 
-  <mesh name="MC">
+  <mesh name="MC" dimensions="2">
     <use-data name="DBC" />
     <use-data name="DCA" />
   </mesh>

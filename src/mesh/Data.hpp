@@ -28,6 +28,12 @@ namespace mesh {
  */
 class Data {
 public:
+  // @brief Data dimensions type (scalar/vector)
+  enum typeName {
+    SCALAR,
+    VECTOR
+  };
+
   // @brief Possible types of data values.
   //  enum DataType {
   //    TYPE_UNDEFINED,

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <configuration>
-  <mesh name="TestMeshEleven" />
-  <mesh name="TestMeshTwelve" />
+  <mesh name="TestMeshEleven" dimensions="3" />
+  <mesh name="TestMeshTwelve" dimensions="3" />
 
   <mapping:rbf-global-iterative
     direction="write"

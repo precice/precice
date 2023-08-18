@@ -50,11 +50,6 @@ public:
    */
   virtual void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag);
 
-  /**
-   * @brief Returns number of spatial dimensions configured.
-   */
-  int getDimensions() const;
-
   /// @brief Returns whether experimental features are allowed or not
   bool allowsExperimental() const
   {
@@ -109,9 +104,6 @@ public:
 
 private:
   logging::Logger _log{"config::Configuration"};
-
-  /// Spatial dimension of problem to be solved. Either 2 or 3.
-  int _dimensions = -1;
 
   /// Allow the use of experimental features
   bool _experimental = false;

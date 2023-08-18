@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration dimensions="3">
+<precice-configuration>
   <data:vector name="Forces" />
   <data:vector name="Velocities" />
 
   <m2n:sockets acceptor="SolverOne" connector="SolverTwo" />
 
-  <mesh name="Square">
+  <mesh name="Square" dimensions="3">
     <use-data name="Forces" />
     <use-data name="Velocities" />
   </mesh>
 
-  <mesh name="SquareTwo">
+  <mesh name="SquareTwo" dimensions="3">
     <use-data name="Forces" />
     <use-data name="Velocities" />
   </mesh>
