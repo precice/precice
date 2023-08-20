@@ -138,7 +138,7 @@ private:
   // std::fstream _info2;
   double _avgRank;
 
-  /** @brief: comptes the IQNIMVJ update using QR decomposition of V,
+  /** @brief: computes the IQNIMVJ update using QR decomposition of V,
    *        furthermore it updates the inverse of the system jacobian
    */
   virtual void computeQNUpdate(const DataMap &cplData, Eigen::VectorXd &xUpdate);
