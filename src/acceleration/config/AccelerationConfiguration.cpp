@@ -439,7 +439,7 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
                                     "are frozen and the preconditioner acts like a constant preconditioner.");
     tagPreconditioner.addAttribute(nonconstTWindows);
     tag.addSubtag(tagPreconditioner);
-    
+
   } else if (tag.getName() == VALUE_IQNIMVJ) {
     XMLTag tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_NOT_OR_ONCE);
     tagInitRelax.setDocumentation("Initial relaxation factor. If this tag is not provided, an initial relaxation of 0.1 is used.");
