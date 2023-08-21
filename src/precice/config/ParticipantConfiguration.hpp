@@ -28,8 +28,6 @@ public:
       xml::XMLTag &              parent,
       mesh::PtrMeshConfiguration meshConfiguration);
 
-  void setDimensions(int dimensions);
-
   void setExperimental(bool experimental);
 
   /**
@@ -108,8 +106,6 @@ private:
   const std::string VALUE_VTU = "vtu";
   const std::string VALUE_VTP = "vtp";
   const std::string VALUE_CSV = "csv";
-
-  int _dimensions = 0;
 
   bool _experimental = false;
 

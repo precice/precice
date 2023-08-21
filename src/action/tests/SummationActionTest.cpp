@@ -269,12 +269,10 @@ BOOST_AUTO_TEST_CASE(SummationThreeDimensionalSubcycling)
 BOOST_AUTO_TEST_CASE(Configuration)
 {
   PRECICE_TEST(1_rank);
-  std::string                filename = testing::getPathToSources() + "/action/tests/SummationActionTest-testConfiguration-1.xml";
-  xml::XMLTag                tag      = xml::getRootTag();
-  mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(tag));
-  dataConfig->setDimensions(3);
-  mesh::PtrMeshConfiguration meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
-  meshConfig->setDimensions(3);
+  std::string                 filename = testing::getPathToSources() + "/action/tests/SummationActionTest-testConfiguration-1.xml";
+  xml::XMLTag                 tag      = xml::getRootTag();
+  mesh::PtrDataConfiguration  dataConfig(new mesh::DataConfiguration(tag));
+  mesh::PtrMeshConfiguration  meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
   action::ActionConfiguration config(tag, meshConfig);
   xml::configure(tag, xml::ConfigurationContext{}, filename);
   BOOST_TEST(config.actions().size() == 1);

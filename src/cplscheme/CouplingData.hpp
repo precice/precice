@@ -16,8 +16,7 @@ public:
       mesh::PtrData data,
       mesh::PtrMesh mesh,
       bool          requiresInitialization,
-      bool          exchangeSubsteps,
-      int           extrapolationOrder);
+      bool          exchangeSubsteps);
 
   int getDimensions() const;
 

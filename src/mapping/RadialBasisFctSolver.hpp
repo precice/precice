@@ -24,7 +24,7 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 class RadialBasisFctSolver {
 public:
   using DecompositionType = std::conditional_t<RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite(), Eigen::LLT<Eigen::MatrixXd>, Eigen::ColPivHouseholderQR<Eigen::MatrixXd>>;
-
+  using BASIS_FUNCTION_T  = RADIAL_BASIS_FUNCTION_T;
   /// Default constructor
   RadialBasisFctSolver() = default;
 
@@ -48,8 +48,11 @@ public:
   // Clear all stored matrices
   void clear();
 
-  // Access to the evaluation matrix (output x input)
-  const Eigen::MatrixXd &getEvaluationMatrix() const;
+  // Returns the size of the input data
+  Eigen::Index getInputSize() const;
+
+  // Returns the size of the input data
+  Eigen::Index getOutputSize() const;
 
 private:
   precice::logging::Logger _log{"mapping::RadialBasisFctSolver"};
@@ -152,6 +155,8 @@ Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh
   PRECICE_ASSERT((inputSize >= 1 + polyparams) || polynomial != Polynomial::ON, inputSize);
 
   Eigen::MatrixXd matrixCLU(n, n);
+
+  precice::profiling::Event cluAssembly{"map.rbf.assembleSystemMatrix"};
   matrixCLU.setZero();
 
   // Compute RBF matrix entries
@@ -167,6 +172,7 @@ Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh
       matrixCLU(i_index, j_index)   = basisFunction.evaluate(std::sqrt(squaredDifference));
     }
   }
+  cluAssembly.stop();
 
   // Add potentially the polynomial contribution in the matrix
   if (polynomial == Polynomial::ON) {
@@ -193,6 +199,8 @@ Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::
   PRECICE_ASSERT((inputSize >= 1 + polyparams) || polynomial != Polynomial::ON, inputSize);
 
   Eigen::MatrixXd matrixA(outputSize, n);
+
+  precice::profiling::Event outputAssembly{"map.rbf.assembleOutputMatrix"};
   matrixA.setZero();
 
   // Compute RBF values for matrix A
@@ -204,6 +212,8 @@ Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::
       matrixA(i.index(), j.index()) = basisFunction.evaluate(std::sqrt(squaredDifference));
     }
   }
+
+  outputAssembly.stop();
 
   // Add potentially the polynomial contribution in the matrix
   if (polynomial == Polynomial::ON) {
@@ -359,10 +369,15 @@ void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::clear()
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-const Eigen::MatrixXd &RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::getEvaluationMatrix() const
+Eigen::Index RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::getInputSize() const
 {
-  return _matrixA;
+  return _matrixA.cols();
 }
 
+template <typename RADIAL_BASIS_FUNCTION_T>
+Eigen::Index RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::getOutputSize() const
+{
+  return _matrixA.rows();
+}
 } // namespace mapping
 } // namespace precice

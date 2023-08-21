@@ -145,9 +145,6 @@ public:
   /// @copydoc Participant::resetMesh
   void resetMesh(std::string_view meshName);
 
-  /// @copydoc Participant::hasMesh
-  bool hasMesh(std::string_view meshName) const;
-
   /// @copydoc Participant::requiresMeshConnectivityFor
   bool requiresMeshConnectivityFor(std::string_view meshName) const;
 
@@ -223,11 +220,6 @@ public:
   ///@name Data Access
   ///@{
 
-  /// @copydoc Participant::hasData
-  bool hasData(
-      std::string_view meshName,
-      std::string_view dataName) const;
-
   /// @copydoc Participant::readData
   void readData(
       std::string_view                meshName,
@@ -252,8 +244,7 @@ public:
 
   ///@}
 
-  /** @name Experimental Data Access
-   * These API functions are \b experimental and may change in future versions.
+  /** @name Direct Access
    */
   ///@{
 
@@ -261,8 +252,8 @@ public:
   void setMeshAccessRegion(std::string_view              meshName,
                            ::precice::span<const double> boundingBox) const;
 
-  /// @copydoc Participant::getMeshVerticesAndIDs
-  void getMeshVerticesAndIDs(
+  /// @copydoc Participant::getMeshVertexIDsAndCoordinates
+  void getMeshVertexIDsAndCoordinates(
       std::string_view          meshName,
       ::precice::span<VertexID> ids,
       ::precice::span<double>   coordinates) const;

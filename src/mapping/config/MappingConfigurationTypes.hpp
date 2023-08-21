@@ -14,14 +14,6 @@ enum class Polynomial {
   SEPARATE
 };
 
-enum class Preallocation {
-  OFF,
-  COMPUTE,
-  ESTIMATE,
-  SAVE,
-  TREE
-};
-
 enum class BasisFunction {
   WendlandC0,
   WendlandC2,

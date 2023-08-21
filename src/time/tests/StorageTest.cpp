@@ -107,11 +107,8 @@ BOOST_AUTO_TEST_CASE(testExtrapolateDataZerothOrder)
 {
   PRECICE_TEST(1_rank);
 
-  // Test zeroth order extrapolation
-  const int extrapolationOrder = 0;
-  auto      storage            = Storage();
-  const int nValues            = 1;
-  storage.setExtrapolationOrder(extrapolationOrder);
+  auto      storage = Storage();
+  const int nValues = 1;
   storage.initialize(time::Sample{1, Eigen::VectorXd::Zero(nValues)});
 
   // use zero initial data
@@ -151,55 +148,6 @@ BOOST_AUTO_TEST_CASE(testExtrapolateDataZerothOrder)
   timesAndValues = storage.getTimesAndValues();
   BOOST_TEST(timesAndValues.second.col(0)(0) == 3.0);
   BOOST_TEST(timesAndValues.second.col(1)(0) == 3.0);
-}
-
-BOOST_AUTO_TEST_CASE(testExtrapolateDataFirstOrder)
-{
-  PRECICE_TEST(1_rank);
-
-  // Test first order extrapolation
-  const int extrapolationOrder = 1;
-  auto      storage            = Storage();
-  const int nValues            = 1;
-  storage.setExtrapolationOrder(extrapolationOrder);
-  storage.initialize(time::Sample{1, Eigen::VectorXd::Zero(nValues)});
-
-  // use zero initial data
-  storage.move();
-  auto times = storage.getTimes();
-  BOOST_TEST(times[0] == 0.0);
-  BOOST_TEST(times[1] == 1.0);
-  auto timesAndValues = storage.getTimesAndValues();
-  BOOST_TEST(timesAndValues.second.col(0)(0) == 0.0);
-  BOOST_TEST(timesAndValues.second.col(1)(0) == 0.0);
-
-  storage.trim();
-  storage.setSampleAtTime(1.0, time::Sample{1, Eigen::VectorXd::Ones(nValues)});
-
-  times = storage.getTimes();
-  BOOST_TEST(times[0] == 0.0);
-  BOOST_TEST(times[1] == 1.0);
-  timesAndValues = storage.getTimesAndValues();
-  BOOST_TEST(timesAndValues.second.col(0)(0) == 0.0);
-  BOOST_TEST(timesAndValues.second.col(1)(0) == 1.0);
-
-  storage.move();
-  times = storage.getTimes();
-  BOOST_TEST(times[0] == 0.0);
-  BOOST_TEST(times[1] == 1.0);
-  timesAndValues = storage.getTimesAndValues();
-  BOOST_TEST(timesAndValues.second.col(0)(0) == 1.0);
-  BOOST_TEST(timesAndValues.second.col(1)(0) == 2.0);
-
-  // make sure that subcycling is ignored for extrapolation
-  storage.trim();
-  storage.setSampleAtTime(0.5, time::Sample{1, 2 * Eigen::VectorXd::Ones(nValues)});
-  storage.setSampleAtTime(1.0, time::Sample{1, 3 * Eigen::VectorXd::Ones(nValues)});
-  storage.move();
-
-  timesAndValues = storage.getTimesAndValues();
-  BOOST_TEST(timesAndValues.second.col(0)(0) == 3.0);
-  BOOST_TEST(timesAndValues.second.col(1)(0) == 5.0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

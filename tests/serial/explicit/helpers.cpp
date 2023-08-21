@@ -22,13 +22,11 @@ void runTestExplicit(std::string const &configurationFileName, TestContext const
   // was necessary to replace pre-defined geometries
   if (context.isNamed("SolverOne")) {
     auto meshName = "MeshOne";
-    BOOST_REQUIRE(couplingInterface.hasMesh(meshName));
     BOOST_REQUIRE(couplingInterface.getMeshDimensions(meshName) == 3);
     couplingInterface.setMeshVertices(meshName, pos, vids);
   }
   if (context.isNamed("SolverTwo")) {
     auto meshName = "Test-Square";
-    BOOST_REQUIRE(couplingInterface.hasMesh(meshName));
     BOOST_REQUIRE(couplingInterface.getMeshDimensions(meshName) == 3);
     couplingInterface.setMeshVertices(meshName, pos, vids);
   }

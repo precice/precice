@@ -25,11 +25,12 @@ function(precice_vi_add_option NAME)
   precice_vi_add_value(${NAME} ${PVI_VAL})
 endfunction()
 
-precice_vi_add_option(PRECICE_MPICommunication)
-precice_vi_add_option(PRECICE_PETScMapping)
-precice_vi_add_option(PRECICE_PythonActions)
-precice_vi_add_option(PRECICE_ENABLE_C)
-precice_vi_add_option(PRECICE_ENABLE_FORTRAN)
+precice_vi_add_option(PRECICE_FEATURE_MPI_COMMUNICATION)
+precice_vi_add_option(PRECICE_FEATURE_PETSC_MAPPING)
+precice_vi_add_option(PRECICE_FEATURE_GINKGO_MAPPING)
+precice_vi_add_option(PRECICE_FEATURE_PYTHON_ACTIONS)
+precice_vi_add_option(PRECICE_BINDINGS_C)
+precice_vi_add_option(PRECICE_BINDINGS_FORTRAN)
 precice_vi_add_value(CXX "${CMAKE_CXX_COMPILER_ID}")
 
 # Add compiler flags

@@ -7,10 +7,9 @@
 #include <vector>
 #include "acceleration/Acceleration.hpp"
 #include "acceleration/AitkenAcceleration.hpp"
-#include "acceleration/BroydenAcceleration.hpp"
 #include "acceleration/ConstantRelaxationAcceleration.hpp"
 #include "acceleration/IQNILSAcceleration.hpp"
-#include "acceleration/MVQNAcceleration.hpp"
+#include "acceleration/IQNIMVJAcceleration.hpp"
 #include "acceleration/impl/ConstantPreconditioner.hpp"
 #include "acceleration/impl/QRFactorization.hpp"
 #include "acceleration/impl/ResidualPreconditioner.hpp"
@@ -56,8 +55,7 @@ AccelerationConfiguration::AccelerationConfiguration(
       VALUE_CONSTANT("constant"),
       VALUE_AITKEN("aitken"),
       VALUE_IQNILS("IQN-ILS"),
-      VALUE_MVQN("IQN-IMVJ"),
-      VALUE_BROYDEN("broyden"),
+      VALUE_IQNIMVJ("IQN-IMVJ"),
       VALUE_QR1FILTER("QR1"),
       VALUE_QR1_ABSFILTER("QR1-absolute"),
       VALUE_QR2FILTER("QR2"),
@@ -107,7 +105,7 @@ void AccelerationConfiguration::connectTags(xml::XMLTag &parent)
     tags.push_back(tag);
   }
   {
-    XMLTag tag(*this, VALUE_MVQN, occ, TAG);
+    XMLTag tag(*this, VALUE_IQNIMVJ, occ, TAG);
     tag.setDocumentation("Accelerates coupling data with the interface quasi-Newton inverse multi-vector Jacobian method.");
 
     auto alwaybuildJacobian = makeXMLAttribute(ATTR_BUILDJACOBIAN, false)
@@ -116,12 +114,6 @@ void AccelerationConfiguration::connectTags(xml::XMLTag &parent)
                                                     " the Jacobian is only build in the last iteration and the updates are computed using (relatively) cheap MATVEC products.");
     tag.addAttribute(alwaybuildJacobian);
 
-    addTypeSpecificSubtags(tag);
-    tags.push_back(tag);
-  }
-  {
-    XMLTag tag(*this, VALUE_BROYDEN, occ, TAG);
-    tag.setDocumentation("Accelerates coupling data with the (single-vector) Broyden method.");
     addTypeSpecificSubtags(tag);
     tags.push_back(tag);
   }
@@ -145,7 +137,7 @@ void AccelerationConfiguration::xmlTagCallback(
   if (callingTag.getNamespace() == TAG) {
     _config.type = callingTag.getName();
 
-    if (_config.type == VALUE_MVQN)
+    if (_config.type == VALUE_IQNIMVJ)
       _config.alwaysBuildJacobian = callingTag.getBooleanAttributeValue(ATTR_BUILDJACOBIAN);
   }
   if (callingTag.getName() == TAG_RELAX) {
@@ -161,7 +153,7 @@ void AccelerationConfiguration::xmlTagCallback(
     }
     _meshName      = callingTag.getStringAttributeValue(ATTR_MESH);
     double scaling = 1.0;
-    if (_config.type == VALUE_IQNILS || _config.type == VALUE_MVQN || _config.type == VALUE_BROYDEN) {
+    if (_config.type == VALUE_IQNILS || _config.type == VALUE_IQNIMVJ) {
       scaling = callingTag.getDoubleAttributeValue(ATTR_SCALING);
     }
 
@@ -217,17 +209,17 @@ void AccelerationConfiguration::xmlTagCallback(
     _config.imvjChunkSize = callingTag.getIntAttributeValue(ATTR_IMVJCHUNKSIZE);
     const auto &f         = callingTag.getStringAttributeValue(ATTR_TYPE);
     if (f == VALUE_NO_RESTART) {
-      _config.imvjRestartType = MVQNAcceleration::NO_RESTART;
+      _config.imvjRestartType = IQNIMVJAcceleration::NO_RESTART;
     } else if (f == VALUE_ZERO_RESTART) {
-      _config.imvjRestartType = MVQNAcceleration::RS_ZERO;
+      _config.imvjRestartType = IQNIMVJAcceleration::RS_ZERO;
     } else if (f == VALUE_LS_RESTART) {
       _config.imvjRSLS_reusedTimeWindows = callingTag.getIntAttributeValue(ATTR_RSLS_REUSED_TIME_WINDOWS);
-      _config.imvjRestartType            = MVQNAcceleration::RS_LS;
+      _config.imvjRestartType            = IQNIMVJAcceleration::RS_LS;
     } else if (f == VALUE_SVD_RESTART) {
       _config.imvjRSSVD_truncationEps = callingTag.getDoubleAttributeValue(ATTR_RSSVD_TRUNCATIONEPS);
-      _config.imvjRestartType         = MVQNAcceleration::RS_SVD;
+      _config.imvjRestartType         = IQNIMVJAcceleration::RS_SVD;
     } else if (f == VALUE_SLIDE_RESTART) {
-      _config.imvjRestartType = MVQNAcceleration::RS_SLIDE;
+      _config.imvjRestartType = IQNIMVJAcceleration::RS_SLIDE;
     } else {
       _config.imvjChunkSize = 0;
       PRECICE_ASSERT(false);
@@ -245,11 +237,11 @@ void AccelerationConfiguration::xmlEndTagCallback(
   PRECICE_TRACE(callingTag.getName());
   if (callingTag.getNamespace() == TAG) {
 
-    //create preconditioner
-    if (callingTag.getName() == VALUE_IQNILS || callingTag.getName() == VALUE_MVQN) {
+    // create preconditioner
+    if (callingTag.getName() == VALUE_IQNILS || callingTag.getName() == VALUE_IQNIMVJ) {
 
       // if imvj restart-mode is of type RS-SVD, max number of non-const preconditioned time windows is limited by the chunksize
-      if (callingTag.getName() == VALUE_MVQN && _config.imvjRestartType > 0)
+      if (callingTag.getName() == VALUE_IQNIMVJ && _config.imvjRestartType > 0)
         if (_config.precond_nbNonConstTWindows > _config.imvjChunkSize)
           _config.precond_nbNonConstTWindows = _config.imvjChunkSize;
       if (_config.preconditionerType == VALUE_CONSTANT_PRECONDITIONER) {
@@ -293,7 +285,7 @@ void AccelerationConfiguration::xmlEndTagCallback(
               _config.filter, _config.singularityLimit,
               _config.dataIDs,
               _preconditioner));
-    } else if (callingTag.getName() == VALUE_MVQN) {
+    } else if (callingTag.getName() == VALUE_IQNIMVJ) {
 #ifndef PRECICE_NO_MPI
       _config.relaxationFactor  = (_userDefinitions.definedRelaxationFactor) ? _config.relaxationFactor : _defaultValuesIQNIMVJ.relaxationFactor;
       _config.maxIterationsUsed = (_userDefinitions.definedMaxIterationsUsed) ? _config.maxIterationsUsed : _defaultValuesIQNIMVJ.maxIterationsUsed;
@@ -301,7 +293,7 @@ void AccelerationConfiguration::xmlEndTagCallback(
       _config.filter            = (_userDefinitions.definedFilter) ? _config.filter : _defaultValuesIQNILS.filter;
       _config.singularityLimit  = (_userDefinitions.definedFilter) ? _config.singularityLimit : _defaultValuesIQNILS.singularityLimit;
       _acceleration             = PtrAcceleration(
-          new MVQNAcceleration(
+          new IQNIMVJAcceleration(
               _config.relaxationFactor,
               _config.forceInitialRelaxation,
               _config.maxIterationsUsed,
@@ -317,16 +309,6 @@ void AccelerationConfiguration::xmlEndTagCallback(
 #else
       PRECICE_ERROR("Acceleration IQN-IMVJ only works if preCICE is compiled with MPI");
 #endif
-    } else if (callingTag.getName() == VALUE_BROYDEN) {
-      _acceleration = PtrAcceleration(
-          new BroydenAcceleration(
-              _config.relaxationFactor,
-              _config.forceInitialRelaxation,
-              _config.maxIterationsUsed,
-              _config.timeWindowsReused,
-              _config.filter, _config.singularityLimit,
-              _config.dataIDs,
-              _preconditioner));
     } else {
       PRECICE_ASSERT(false);
     }
@@ -457,8 +439,8 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
                                     "are frozen and the preconditioner acts like a constant preconditioner.");
     tagPreconditioner.addAttribute(nonconstTWindows);
     tag.addSubtag(tagPreconditioner);
-
-  } else if (tag.getName() == VALUE_MVQN) {
+    
+  } else if (tag.getName() == VALUE_IQNIMVJ) {
     XMLTag tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_NOT_OR_ONCE);
     tagInitRelax.setDocumentation("Initial relaxation factor. If this tag is not provided, an initial relaxation of 0.1 is used.");
     tagInitRelax.addAttribute(
@@ -529,34 +511,6 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     tagPreconditioner.addAttribute(nonconstTWindows);
     tag.addSubtag(tagPreconditioner);
 
-  } else if (tag.getName() == VALUE_BROYDEN) {
-    XMLTag               tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_ONCE);
-    XMLAttribute<double> attrDoubleValue(ATTR_VALUE);
-    tagInitRelax.addAttribute(attrDoubleValue);
-    XMLAttribute<bool> attrEnforce(ATTR_ENFORCE, false);
-    tagInitRelax.addAttribute(attrEnforce);
-    tag.addSubtag(tagInitRelax);
-
-    XMLTag            tagMaxUsedIter(*this, TAG_MAX_USED_ITERATIONS, XMLTag::OCCUR_ONCE);
-    XMLAttribute<int> attrIntValue(ATTR_VALUE);
-    tagMaxUsedIter.addAttribute(attrIntValue);
-    tag.addSubtag(tagMaxUsedIter);
-
-    XMLTag tagTimeWindowsReused(*this, TAG_TIME_WINDOWS_REUSED, XMLTag::OCCUR_ONCE);
-    tagTimeWindowsReused.addAttribute(attrIntValue);
-    tag.addSubtag(tagTimeWindowsReused);
-
-    XMLTag                    tagData(*this, TAG_DATA, XMLTag::OCCUR_ONCE_OR_MORE);
-    XMLAttribute<std::string> attrName(ATTR_NAME);
-    XMLAttribute<std::string> attrMesh(ATTR_MESH);
-    auto                      attrScaling = makeXMLAttribute(ATTR_SCALING, 1.0)
-                           .setDocumentation(
-                               "To improve the performance of a parallel or a multi coupling schemes, "
-                               "data values can be manually scaled. We recommend, however, to use an automatic scaling via a preconditioner.");
-    tagData.addAttribute(attrScaling);
-    tagData.addAttribute(attrName);
-    tagData.addAttribute(attrMesh);
-    tag.addSubtag(tagData);
   } else {
     PRECICE_ERROR("Acceleration of type \"{}\" is unknown. Please choose a valid acceleration scheme or check the spelling in the configuration file.", tag.getName());
   }

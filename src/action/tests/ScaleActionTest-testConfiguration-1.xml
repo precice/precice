@@ -2,7 +2,7 @@
 <configuration>
   <data:scalar name="Data" />
 
-  <mesh name="Mesh">
+  <mesh name="Mesh" dimensions="2">
     <use-data name="Data" />
   </mesh>
 
