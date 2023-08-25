@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <configuration>
-  <mesh name="TestMeshTen" />
-  <mesh name="TestMeshEleven" />
-  <mesh name="TestMeshTwelve" />
+  <mesh name="TestMeshTen" dimensions="3" />
+  <mesh name="TestMeshEleven" dimensions="3" />
+  <mesh name="TestMeshTwelve" dimensions="3" />
 
   <mapping:rbf-global-direct
     direction="read"

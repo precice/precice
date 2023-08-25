@@ -15,20 +15,18 @@ namespace mesh {
 class DataConfiguration : public xml::XMLTag::Listener {
 public:
   struct ConfiguredData {
-    std::string name;
-    int         dimensions;
-    int         waveformDegree;
+    std::string    name;
+    Data::typeName typeName;
+    int            waveformDegree;
 
     ConfiguredData(
-        const std::string &name,
-        int                dimensions,
-        int                waveformDegree)
-        : name(name), dimensions(dimensions), waveformDegree(waveformDegree) {}
+        const std::string &  name,
+        const Data::typeName typeName,
+        int                  waveformDegree)
+        : name(name), typeName(typeName), waveformDegree(waveformDegree) {}
   };
 
   DataConfiguration(xml::XMLTag &parent);
-
-  void setDimensions(int dimensions);
 
   const std::vector<ConfiguredData> &data() const;
 
@@ -49,9 +47,9 @@ public:
    * @param[in] dataDimensions Dimensionality (1: scalar, 2,3: vector) of data.
    * @param[in] waveformDegree Degree of waveform associated with this data.
    */
-  void addData(const std::string &name,
-               int                dataDimensions,
-               int                waveformDegree = time::Time::DEFAULT_WAVEFORM_DEGREE);
+  void addData(const std::string &  name,
+               const Data::typeName typeName,
+               int                  waveformDegree = time::Time::DEFAULT_WAVEFORM_DEGREE);
 
 private:
   mutable logging::Logger _log{"mesh::DataConfiguration"};
@@ -62,14 +60,11 @@ private:
   const std::string VALUE_VECTOR = "vector";
   const std::string VALUE_SCALAR = "scalar";
 
-  /// Dimension of space.
-  int _dimensions = 0;
+  const Data::typeName _dataTypeName{};
 
   std::vector<ConfiguredData> _data;
 
   int _indexLastConfigured = -1;
-
-  int getDataDimensions(const std::string &typeName) const;
 };
 
 } // namespace mesh

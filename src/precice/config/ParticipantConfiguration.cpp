@@ -233,14 +233,6 @@ ParticipantConfiguration::ParticipantConfiguration(
   parent.addSubtag(tag);
 }
 
-void ParticipantConfiguration::setDimensions(
-    int dimensions)
-{
-  PRECICE_TRACE(dimensions);
-  PRECICE_ASSERT((dimensions == 2) || (dimensions == 3), dimensions);
-  _dimensions = dimensions;
-}
-
 void ParticipantConfiguration::setExperimental(
     bool experimental)
 {
@@ -257,17 +249,14 @@ void ParticipantConfiguration::xmlTagCallback(
     impl::PtrParticipant p(new impl::ParticipantState(name, _meshConfig));
     _participants.push_back(p);
   } else if (tag.getName() == TAG_PROVIDE_MESH) {
-    PRECICE_ASSERT(_dimensions != 0); // setDimensions() has been called
     std::string name = tag.getStringAttributeValue(ATTR_NAME);
 
     mesh::PtrMesh mesh = _meshConfig->getMesh(name);
     PRECICE_CHECK(mesh,
                   R"(Participant "{}" attempts to provide an unknown mesh "{}". <mesh name="{}"> needs to be defined first.)",
                   _participants.back()->getName(), name, name);
-
     _participants.back()->provideMesh(mesh);
   } else if (tag.getName() == TAG_RECEIVE_MESH) {
-    PRECICE_ASSERT(_dimensions != 0); // setDimensions() has been called
     std::string                                   name              = tag.getStringAttributeValue(ATTR_NAME);
     std::string                                   from              = tag.getStringAttributeValue(ATTR_FROM);
     double                                        safetyFactor      = tag.getDoubleAttributeValue(ATTR_SAFETY_FACTOR);
@@ -316,14 +305,12 @@ void ParticipantConfiguration::xmlTagCallback(
     mesh::PtrData data = getData(mesh, dataName);
     _participants.back()->addReadData(data, mesh);
   } else if (tag.getName() == TAG_WATCH_POINT) {
-    PRECICE_ASSERT(_dimensions != 0); // setDimensions() has been called
     WatchPointConfig config;
     config.name        = tag.getStringAttributeValue(ATTR_NAME);
     config.nameMesh    = tag.getStringAttributeValue(ATTR_MESH);
-    config.coordinates = tag.getEigenVectorXdAttributeValue(ATTR_COORDINATE, _dimensions);
+    config.coordinates = tag.getEigenVectorXdAttributeValue(ATTR_COORDINATE, _meshConfig->getMesh(config.nameMesh)->getDimensions());
     _watchPointConfigs.push_back(config);
   } else if (tag.getName() == TAG_WATCH_INTEGRAL) {
-    PRECICE_ASSERT(_dimensions != 0);
     WatchIntegralConfig config;
     config.name        = tag.getStringAttributeValue(ATTR_NAME);
     config.nameMesh    = tag.getStringAttributeValue(ATTR_MESH);
