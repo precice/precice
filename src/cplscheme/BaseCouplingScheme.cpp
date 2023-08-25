@@ -366,6 +366,14 @@ void BaseCouplingScheme::moveToNextWindow()
   }
 }
 
+void BaseCouplingScheme::repeatSameWindow()
+{
+  PRECICE_TRACE(_timeWindows);
+  for (auto &data : _allData | boost::adaptors::map_values) {
+    data->trimAfter(_timeWindowStartTime);
+  }
+}
+
 bool BaseCouplingScheme::hasTimeWindowSize() const
 {
   return not math::equals(_timeWindowSize, UNDEFINED_TIME_WINDOW_SIZE);

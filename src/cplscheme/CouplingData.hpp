@@ -90,6 +90,7 @@ public:
 
   /// move to next window and initialize data via extrapolation
   void moveToNextWindow();
+  void trimAfter(double t);
 
   bool exchangeSubsteps() const;
 

@@ -13,7 +13,7 @@ WriteDataContext::WriteDataContext(mesh::PtrData data,
 {
 }
 
-void WriteDataContext::resetData(bool atEndOfWindow, bool isTimeWindowComplete)
+void WriteDataContext::resetData(bool atEndOfWindow, bool isTimeWindowComplete, double t)
 {
   // See also https://github.com/precice/precice/issues/1156.
   _providedData->toZero();
@@ -31,9 +31,9 @@ void WriteDataContext::resetData(bool atEndOfWindow, bool isTimeWindowComplete)
   if (isTimeWindowComplete && hasWriteMapping()) { // manually overwrite value at beginning with value from end. Need this exception for WriteDataContext with write mapping, because CouplingScheme is not able to update _providedData, if write mapping sits between _providedData and _toData. CouplingScheme in this case only has access to _toData.
     PRECICE_ASSERT(atEndOfWindow, "isTimeWindowComplete without atEndOfWindow is forbidden!");
     _providedData->timeStepsStorage().move();
-    _providedData->timeStepsStorage().trim();
+    //_providedData->timeStepsStorage().trim();
   } else if (atEndOfWindow) {
-    _providedData->timeStepsStorage().trim();
+    _providedData->timeStepsStorage().trimAfter(t);
   }
 }
 

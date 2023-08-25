@@ -360,6 +360,8 @@ protected:
    */
   void moveToNextWindow();
 
+  void repeatSameWindow();
+
   /**
    * @brief used for storing all Data at end of doImplicitStep for later reference.
    */

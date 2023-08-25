@@ -79,6 +79,14 @@ void Data::moveToNextWindow()
   }
 }
 
+void Data::trimAfter(double t)
+{
+  if (stamples().size() > 0) {
+    timeStepsStorage().trimAfter(t);
+    sample() = stamples().back().sample;
+  }
+}
+
 void Data::setSampleAtTime(double time, time::Sample sample)
 {
   _sample = sample; // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage

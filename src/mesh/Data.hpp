@@ -96,6 +96,8 @@ public:
 
   void moveToNextWindow();
 
+  void trimAfter(double t);
+
   /// Returns a the stamples from _timeStepsStorage.
   auto stamples() const
   {
@@ -134,7 +136,7 @@ public:
   void allocateValues(int expectedCount);
 
 private:
-  logging::Logger _log{"mesh::Data"};
+  mutable logging::Logger _log{"mesh::Data"};
 
   /// Waveform wrapping this Data.
   time::Waveform _waveform;

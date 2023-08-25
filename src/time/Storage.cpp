@@ -61,12 +61,21 @@ int Storage::nDofs() const
 
 void Storage::move()
 {
-  PRECICE_DEBUG("Storage::move()");
-  PRECICE_DEBUG("times before: {}", getTimes());
   PRECICE_ASSERT(!_stampleStorage.empty(), "Storage does not contain any data!");
   const double nextWindowStart = _stampleStorage.back().timestamp;
   _stampleStorage.erase(_stampleStorage.begin(), --_stampleStorage.end());
   PRECICE_ASSERT(nextWindowStart == _stampleStorage.front().timestamp);
+}
+
+void Storage::trimAfter(double t)
+{
+  PRECICE_ASSERT(!_stampleStorage.empty(), "Storage does not contain any data!");
+
+  _stampleStorage.erase(
+      std::find_if(_stampleStorage.begin(), _stampleStorage.end(),
+                   [t](const auto &stample) { return stample.timestamp > t; }),
+      _stampleStorage.end());
+  PRECICE_ASSERT(_stampleStorage.size() >= 1);
   PRECICE_DEBUG("times after: {}", getTimes());
 }
 

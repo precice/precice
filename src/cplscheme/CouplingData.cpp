@@ -133,6 +133,11 @@ void CouplingData::moveToNextWindow()
   _data->moveToNextWindow();
 }
 
+void CouplingData::trimAfter(double t)
+{
+  _data->trimAfter(t);
+}
+
 time::Sample &CouplingData::sample()
 {
   PRECICE_ASSERT(_data != nullptr);

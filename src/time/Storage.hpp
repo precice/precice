@@ -89,6 +89,8 @@ public:
    */
   void move();
 
+  void trimAfter(double t);
+
   /**
    * @brief Trims this Storage by deleting all values except values associated with the window start.
    */
