@@ -18,7 +18,6 @@
     <write-data name="S" mesh="A" />
     <write-data name="V" mesh="A" />
     <export:vtu directory="timeseries" />
-    <export:vtu directory="timeseries" />
     <export:vtp directory="timeseries" />
     <export:csv directory="timeseries" />
   </participant>
