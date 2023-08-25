@@ -82,6 +82,11 @@ public:
   /// get name of this CouplingData's data. See Data::getName().
   std::string getDataName();
 
+  /// get name of this CouplingData's mesh. See Mesh::getName().
+  std::string getMeshName();
+
+  std::vector<double> getTimeStamps() const;
+
   /// get vertex offsets of this CouplingData's mesh. See Mesh::getVertexOffsets().
   std::vector<int> getVertexOffsets();
 

@@ -84,6 +84,8 @@ public:
    */
   Eigen::VectorXd sampleAtTime(double time) const;
 
+  std::vector<double> getTimeStamps() const;
+
   /**
    * @brief get degree of _waveform.
    *

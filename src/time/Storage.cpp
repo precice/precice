@@ -29,6 +29,7 @@ void Storage::setSampleAtTime(double time, Sample sample)
     PRECICE_ASSERT(math::smaller(maxStoredTime(), time), maxStoredTime(), time, "Trying to write sample with a time that is too small. Please use clear(), if you want to write new samples to the storage.");
     _stampleStorage.emplace_back(Stample{time, sample});
   } else { // overwrite sample at "time"
+    PRECICE_WARN("Overwriting sample at t {} with {}", time, sample.values);
     for (auto &stample : _stampleStorage) {
       if (math::equals(stample.timestamp, time)) {
         stample.sample = sample;
@@ -61,14 +62,18 @@ int Storage::nDofs() const
 
 void Storage::move()
 {
+  auto before = getTimes();
   PRECICE_ASSERT(!_stampleStorage.empty(), "Storage does not contain any data!");
   const double nextWindowStart = _stampleStorage.back().timestamp;
   _stampleStorage.erase(_stampleStorage.begin(), --_stampleStorage.end());
   PRECICE_ASSERT(nextWindowStart == _stampleStorage.front().timestamp);
+  PRECICE_WARN("moved timestamps from {} to {}", before, getTimes());
 }
 
 void Storage::trimAfter(double t)
 {
+  PRECICE_DEBUG("Storage::trim({})", t);
+  PRECICE_DEBUG("times before: {}", getTimes());
   PRECICE_ASSERT(!_stampleStorage.empty(), "Storage does not contain any data!");
 
   _stampleStorage.erase(
