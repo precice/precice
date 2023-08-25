@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration dimensions="2">
+<precice-configuration>
   <data:vector name="Data" />
 
-  <mesh name="MeshA">
+  <mesh name="MeshA" dimensions="2">
     <use-data name="Data" />
   </mesh>
 
-  <mesh name="MeshC">
+  <mesh name="MeshC" dimensions="2">
     <use-data name="Data" />
   </mesh>
 
-  <mesh name="MeshD">
+  <mesh name="MeshD" dimensions="2">
     <use-data name="Data" />
   </mesh>
 

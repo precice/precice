@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration dimensions="3">
+<precice-configuration>
   <data:vector name="Forces" />
   <data:vector name="Velocities" />
 
-  <mesh name="FluidMesh">
+  <mesh name="FluidMesh" dimensions="3">
     <use-data name="Forces" />
     <use-data name="Velocities" />
   </mesh>
 
-  <mesh name="StructureMesh">
+  <mesh name="StructureMesh" dimensions="3">
     <use-data name="Forces" />
     <use-data name="Velocities" />
   </mesh>

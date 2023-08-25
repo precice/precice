@@ -11,6 +11,7 @@
 # Force using a virtual env if it is set in the environment
 if(DEFINED ENV{VIRTUAL_ENV})
   set(Python3_FIND_VIRTUALENV ONLY)
+  message(STATUS "Running in the python venv $ENV{VIRTUAL_ENV}")
 endif()
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
@@ -43,9 +44,9 @@ if(NOT EXISTS "events.csv")
   message(FATAL_ERROR "No events.csv file found")
 endif()
 
-execute_process(COMMAND ${Python3_EXECUTABLE} -c "import pandas"
-                RESULTS_VARIABLE PYTHON_NO_PANDAS)
-if(NOT ${PYTHON_NO_PANDAS})
+execute_process(COMMAND ${Python3_EXECUTABLE} -c "import polars"
+  RESULTS_VARIABLE PYTHON_NO_POLARS)
+if(NOT ${PYTHON_NO_POLARS})
   file(STRINGS "${TEST_FOLDER}/.test" _participants)
   foreach(_participant IN LISTS _participants)
     message(STATUS "Testing: analyze ${_participant}")

@@ -15,6 +15,17 @@ repos:
   - id: trailing-whitespace
     args: [--markdown-linebreak-ext=md]
   - id: end-of-file-fixer
+# isort for python imports
+- repo: https://github.com/pycqa/isort
+  rev: 5.12.0
+  hooks:
+    - id: isort
+      name: isort (python)
+# black repo for python formatting
+- repo: https://github.com/ambv/black
+  rev: 22.12.0
+  hooks:
+    - id: black
 # Custom repo for the preCICE configuration formatter
 - repo: https://github.com/precice/precice-pre-commit-hooks
   rev: 'v3.1'
