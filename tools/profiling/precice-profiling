@@ -666,7 +666,7 @@ def detectFiles(files):
         else:
             print(f'Cannot interpret "{path}"')
     unique = list(set(resolved))
-    print(f"Found {len(unique)} unique event files")
+    print(f"Found {len(unique)} unique profiling files")
     return unique
 
 
@@ -747,7 +747,7 @@ if __name__ == "__main__":
         help="The duration unit to use",
     )
 
-    analyze_help = """Analyze events data of a given solver.
+    analyze_help = """Analyze profiling data of a given solver.
     Event durations are displayed in the unit of choice.
     Parallel solvers show events of the primary rank next to the secondary ranks spending the least and most time in advance of preCICE.
     """
@@ -759,8 +759,8 @@ if __name__ == "__main__":
         "eventfile",
         nargs="?",
         type=str,
-        default="events.json",
-        help="The event file to process",
+        default="profiling.json",
+        help="The profiling file to process",
     )
     analyze.add_argument("-o", "--output", help="Write the result to CSV file")
 
@@ -798,11 +798,11 @@ if __name__ == "__main__":
         "eventfile",
         nargs="?",
         type=str,
-        default="events.json",
-        help="The event file to process",
+        default="profiling.json",
+        help="The profiling file to process",
     )
 
-    trace_help = "Transform events to the Trace Event Format."
+    trace_help = "Transform profiling to the Trace Event Format."
     trace = subparsers.add_parser(
         "trace", help=trace_help.splitlines()[0], description=trace_help
     )
@@ -810,8 +810,8 @@ if __name__ == "__main__":
         "eventfile",
         type=str,
         nargs="?",
-        default="events.json",
-        help="The event file to process",
+        default="profiling.json",
+        help="The profiling file to process",
     )
     trace.add_argument(
         "-o", "--output", default="trace.json", help="The resulting trace file"
@@ -823,7 +823,7 @@ if __name__ == "__main__":
         "-r", "--rank", type=int, nargs="*", help="Select individual ranks"
     )
 
-    export_help = "Export the events as a CSV file."
+    export_help = "Export the profiling data as a CSV file."
     export = subparsers.add_parser(
         "export", help=export_help.splitlines()[0], description=export_help
     )
@@ -831,32 +831,32 @@ if __name__ == "__main__":
         "eventfile",
         nargs="?",
         type=str,
-        default="events.json",
-        help="The event files to process",
+        default="profiling.json",
+        help="The profiling files to process",
     )
     export.add_argument(
         "-o",
         "--output",
         type=str,
-        default="events.csv",
+        default="profiling.csv",
         help="The CSV file to export to.",
     )
 
-    merge_help = "Transform multiple events to the Trace Event Format."
+    merge_help = "Merges preCICE profiling output files to a single file used by the other commands."
     merge = subparsers.add_parser(
         "merge", help=merge_help.splitlines()[0], description=merge_help
     )
     merge.add_argument(
         "files",
         nargs="*",
-        help="The event files to process, directories to search, or nothing to autodetect",
+        help="The profiling files to process, directories to search, or nothing to autodetect",
     )
     merge.add_argument(
         "-o",
         "--output",
         type=str,
-        default="events.json",
-        help="The resulting event file.",
+        default="profiling.json",
+        help="The resulting profiling file.",
     )
     merge.add_argument(
         "-n", "--no-align", action="store_true", help="Don't align participants?"
