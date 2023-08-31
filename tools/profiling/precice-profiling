@@ -248,7 +248,7 @@ def groupEvents(events, initTime, nameMapping):
     return sorted(completed, key=lambda e: e["ts"])
 
 
-def loadEventFiles(filenames):
+def loadProfilingOutputs(filenames):
     # Load all jsons
     print("Loading event files")
     jsons = []
@@ -447,8 +447,8 @@ class Run:
         return df
 
 
-def traceCommand(eventfile, outfile, rankfilter, limit):
-    run = Run(eventfile)
+def traceCommand(profilingfile, outfile, rankfilter, limit):
+    run = Run(profilingfile)
     selection = (
         set()
         .union(rankfilter if rankfilter else [])
@@ -461,8 +461,8 @@ def traceCommand(eventfile, outfile, rankfilter, limit):
     return 0
 
 
-def exportCommand(eventfile, outfile, unit):
-    run = Run(eventfile)
+def exportCommand(profilingfile, outfile, unit):
+    run = Run(profilingfile)
     fieldnames = [
         "participant",
         "rank",
@@ -480,11 +480,11 @@ def exportCommand(eventfile, outfile, unit):
     return 0
 
 
-def analyzeCommand(eventfile, participant, outfile=None, unit="us"):
+def analyzeCommand(profilingfile, participant, outfile=None, unit="us"):
     requireModules(["polars"])
     import polars as pl
 
-    run = Run(eventfile)
+    run = Run(profilingfile)
     df = run.toDataFrame()
 
     assert df.select(
@@ -564,12 +564,12 @@ def analyzeCommand(eventfile, participant, outfile=None, unit="us"):
     return 0
 
 
-def histogramCommand(eventfile, outfile, participant, event, rank, bins, unit="us"):
+def histogramCommand(profilingfile, outfile, participant, event, rank, bins, unit="us"):
     requireModules(["polars", "matplotlib"])
     import matplotlib.pyplot as plt
     import polars as pl
 
-    run = Run(eventfile)
+    run = Run(profilingfile)
     df = run.toDataFrame()
 
     # Check user input
@@ -718,7 +718,7 @@ def sanitizeFiles(files):
 def mergeCommand(files, outfile, align):
     resolved = detectFiles(files)
     sanitized = sanitizeFiles(resolved)
-    merged = loadEventFiles(sanitized)
+    merged = loadProfilingOutputs(sanitized)
 
     if align:
         merged = alignEvents(merged)
@@ -756,7 +756,7 @@ if __name__ == "__main__":
     )
     analyze.add_argument("participant", type=str, help="The participant to analyze")
     analyze.add_argument(
-        "eventfile",
+        "profilingfile",
         nargs="?",
         type=str,
         default="profiling.json",
@@ -795,7 +795,7 @@ if __name__ == "__main__":
     histogram.add_argument("participant", type=str, help="The participant to analyze")
     histogram.add_argument("event", type=str, help="The event to analyze")
     histogram.add_argument(
-        "eventfile",
+        "profilingfile",
         nargs="?",
         type=str,
         default="profiling.json",
@@ -807,7 +807,7 @@ if __name__ == "__main__":
         "trace", help=trace_help.splitlines()[0], description=trace_help
     )
     trace.add_argument(
-        "eventfile",
+        "profilingfile",
         type=str,
         nargs="?",
         default="profiling.json",
@@ -828,7 +828,7 @@ if __name__ == "__main__":
         "export", help=export_help.splitlines()[0], description=export_help
     )
     export.add_argument(
-        "eventfile",
+        "profilingfile",
         nargs="?",
         type=str,
         default="profiling.json",
@@ -864,13 +864,21 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     dispatcher = {
-        "trace": lambda ns: traceCommand(ns.eventfile, ns.output, ns.rank, ns.limit),
-        "export": lambda ns: exportCommand(ns.eventfile, ns.output, ns.unit),
+        "trace": lambda ns: traceCommand(
+            ns.profilingfile, ns.output, ns.rank, ns.limit
+        ),
+        "export": lambda ns: exportCommand(ns.profilingfile, ns.output, ns.unit),
         "analyze": lambda ns: analyzeCommand(
-            ns.eventfile, ns.participant, ns.output, ns.unit
+            ns.profilingfile, ns.participant, ns.output, ns.unit
         ),
         "histogram": lambda ns: histogramCommand(
-            ns.eventfile, ns.output, ns.participant, ns.event, ns.rank, ns.bins, ns.unit
+            ns.profilingfile,
+            ns.output,
+            ns.participant,
+            ns.event,
+            ns.rank,
+            ns.bins,
+            ns.unit,
         ),
         "merge": lambda ns: mergeCommand(ns.files, ns.output, not ns.no_align),
     }
