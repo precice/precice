@@ -643,9 +643,9 @@ def detectFiles(files):
             print(f"Searching {path} : ", end="")
             candidates = [
                 ".",
-                "precice-events",
-                "../precice-events",
-                "../../precice-events",
+                "precice-profiling",
+                "../precice-profiling",
+                "../../precice-profiling",
             ]
             found = False
             for candidate in candidates:
