@@ -84,20 +84,6 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
     tag.addAttribute(attrExchangeDirectory);
     tags.push_back(tag);
   }
-  {
-    /// @TODO Remove in Version 3.0, see https://github.com/precice/precice/issues/1650
-    XMLTag tag(*this, "mpi-singleports", occ, TAG);
-    doc = "Communication via MPI with startup in separated communication spaces, using a single communicator";
-    tag.setDocumentation(doc);
-
-    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
-                                     .setDocumentation(
-                                         "Directory where connection information is exchanged. By default, the "
-                                         "directory of startup is chosen, and both solvers have to be started "
-                                         "in the same directory.");
-    tag.addAttribute(attrExchangeDirectory);
-    tags.push_back(tag);
-  }
 
   XMLAttribute<bool> attrEnforce(ATTR_ENFORCE_GATHER_SCATTER, false);
   attrEnforce.setDocumentation("Enforce the distributed communication to a gather-scatter scheme. "
@@ -185,10 +171,7 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, 
       comFactory = std::make_shared<com::MPIPortsCommunicationFactory>(dir);
       com        = comFactory->newCommunication();
 #endif
-    } else if (tagName == "mpi" || tagName == "mpi-singleports") {
-      if (tagName == "mpi-singleports") {
-        PRECICE_WARN("You used <m2n:mpi-singleports />, which is deprecated. Please use <m2n:mpi /> instead.");
-      }
+    } else if (tagName == "mpi") {
       std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
 #ifdef PRECICE_NO_MPI
       PRECICE_ERROR("Communication type \"{}\" can only be used if preCICE was compiled with MPI support enabled. "

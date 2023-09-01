@@ -16,8 +16,8 @@ target_sources(preciceCore
     src/acceleration/ConstantRelaxationAcceleration.hpp
     src/acceleration/IQNILSAcceleration.cpp
     src/acceleration/IQNILSAcceleration.hpp
-    src/acceleration/MVQNAcceleration.cpp
-    src/acceleration/MVQNAcceleration.hpp
+    src/acceleration/IQNIMVJAcceleration.cpp
+    src/acceleration/IQNIMVJAcceleration.hpp
     src/acceleration/SharedPointer.hpp
     src/acceleration/config/AccelerationConfiguration.cpp
     src/acceleration/config/AccelerationConfiguration.hpp

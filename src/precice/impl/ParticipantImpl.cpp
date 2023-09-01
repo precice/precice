@@ -247,7 +247,7 @@ void ParticipantImpl::initialize()
   bool failedToInitialize = _couplingScheme->isActionRequired(cplscheme::CouplingScheme::Action::InitializeData) && not _couplingScheme->isActionFulfilled(cplscheme::CouplingScheme::Action::InitializeData);
   PRECICE_CHECK(not failedToInitialize,
                 "Initial data has to be written to preCICE before calling initialize(). "
-                "After defining your mesh, call requiresInitialData() to check if the participant is required to write initial data using an appropriate write...Data() function.");
+                "After defining your mesh, call requiresInitialData() to check if the participant is required to write initial data using the writeData() function.");
 
   _solverInitEvent.reset();
   Event                        e("initialize", profiling::Fundamental, profiling::Synchronize);
@@ -495,7 +495,7 @@ bool ParticipantImpl::isTimeWindowComplete() const
 double ParticipantImpl::getMaxTimeStepSize() const
 {
   PRECICE_CHECK(_state != State::Finalized, "getMaxTimeStepSize() cannot be called after finalize().");
-  PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before isCouplingOngoing() can be evaluated.");
+  PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before getMaxTimeStepSize() can be evaluated.");
   return _couplingScheme->getNextTimeStepMaxSize();
 }
 
