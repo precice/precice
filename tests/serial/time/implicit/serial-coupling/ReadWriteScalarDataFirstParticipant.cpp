@@ -32,7 +32,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipant)
 
   // some dummy values, to check the actual values is not the point of this test,
   // but more to test whether reading / writing is possible at all
-  const double expectedDataValue = 2.5;
+  double expectedDataValue = 2.5;
+  double actualDataValue   = -1.0;
 
   std::string meshName, writeDataName, readDataName;
   if (context.isNamed("SolverOne")) {
@@ -49,63 +50,52 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipant)
   double   v0[]     = {0, 0, 0};
   VertexID vertexID = precice.setMeshVertex(meshName, v0);
   precice.initialize();
+  double dt = precice.getMaxTimeStepSize();
 
-  double       startOfWindowTime = 0;
-  double       timeInWindow      = 0;
-  const double totalTime         = 6; // max-time from config
+  if (precice.requiresWritingCheckpoint()) {
+    // do nothing
+  }
 
-  int tw = 0;
+  double startOfWindowTime = 0;
+  double timeInWindow      = 0;
+  double totalTime         = 6; // max-time from config
+
   for (auto iterationSizes : timestepSizes) {
     for (int it = 0; it < maxIterations; it++) {
-      BOOST_TEST_CONTEXT("tw " << tw << ", it " << it)
-      {
-        BOOST_TEST(precice.isCouplingOngoing());
+      actualDataValue = -1; // reset value.
+      BOOST_TEST(precice.isCouplingOngoing());
+      precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&expectedDataValue, 1});
 
-        if (precice.requiresWritingCheckpoint()) {
-          // do nothing
-        }
-
-        // deduce timestep to take
-        double dt;
-        if (context.isNamed("SolverOne")) {
-          dt = iterationSizes.at(it);
-          BOOST_TEST(dt <= precice.getMaxTimeStepSize());
-        } else {
-          dt = precice.getMaxTimeStepSize();
-          BOOST_TEST(dt == iterationSizes.at(it));
-        }
-
-        double actualDataValue = -1.0;
-        precice.readData(meshName, readDataName, {&vertexID, 1}, dt, {&actualDataValue, 1});
-        // Account for SolverOne initializing Data to 0
-        if (context.isNamed("SolverOne") && tw == 0 && it == 0) {
-          BOOST_TEST(actualDataValue == 0.0);
-        } else {
-          BOOST_TEST(actualDataValue == expectedDataValue);
-        }
-
-        precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&expectedDataValue, 1});
-
+      if (context.isNamed("SolverOne")) {
+        precice.advance(iterationSizes.at(it));
+        dt = precice.getMaxTimeStepSize();
+        timeInWindow += iterationSizes.at(it);
+      } else if (context.isNamed("SolverTwo")) {
+        BOOST_TEST(dt == iterationSizes.at(it));
         precice.advance(dt);
-        if (context.isNamed("SolverOne")) {
-          timeInWindow += dt;
-        }
-
-        if (precice.requiresReadingCheckpoint()) {
-          timeInWindow = 0;
-        }
-        if (precice.isTimeWindowComplete()) {
-          startOfWindowTime += timeInWindow;
-          timeInWindow = 0;
-        }
-
-        if (context.isNamed("SolverOne")) {
-          // Check remainder of simulation time
-          BOOST_TEST(precice.getMaxTimeStepSize() == totalTime - startOfWindowTime - timeInWindow);
-        }
+        dt = precice.getMaxTimeStepSize();
       }
+
+      if (precice.requiresReadingCheckpoint()) {
+        timeInWindow = 0;
+      }
+      if (precice.isTimeWindowComplete()) {
+        startOfWindowTime += timeInWindow;
+        timeInWindow = 0;
+      }
+
+      if (context.isNamed("SolverOne")) {
+        // Check remainder of simulation time
+        BOOST_TEST(dt == totalTime - startOfWindowTime);
+      }
+
+      if (precice.requiresWritingCheckpoint()) {
+        // do nothing
+      }
+
+      precice.readData(meshName, readDataName, {&vertexID, 1}, dt, {&actualDataValue, 1});
+      BOOST_TEST(actualDataValue == expectedDataValue);
     }
-    ++tw;
   }
 
   BOOST_TEST(not precice.isCouplingOngoing());
