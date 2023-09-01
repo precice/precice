@@ -82,7 +82,6 @@ bool BaseCouplingScheme::isImplicitCouplingScheme() const
 
 bool BaseCouplingScheme::hasConverged() const
 {
-  PRECICE_WARN("Converged? {}", _hasConverged);
   return _hasConverged;
 }
 
@@ -362,25 +361,9 @@ void BaseCouplingScheme::secondExchange()
 void BaseCouplingScheme::moveToNextWindow()
 {
   PRECICE_TRACE(_timeWindows);
-  std::ostringstream oss;
   for (auto &data : _allData | boost::adaptors::map_values) {
-    auto ts = data->getTimeStamps();
     data->moveToNextWindow();
-    fmt::print(oss, "{}:{}@{}>{} ", data->getMeshName(), data->getDataName(), ts, data->getTimeStamps());
   }
-  PRECICE_WARN("Moving coupling data: {}", oss.str());
-}
-
-void BaseCouplingScheme::repeatSameWindow()
-{
-  PRECICE_TRACE(_timeWindows);
-  std::ostringstream oss;
-  for (auto &data : _allData | boost::adaptors::map_values) {
-    auto ts = data->getTimeStamps();
-    data->trimAfter(_timeWindowStartTime);
-    fmt::print(oss, "{}:{}@{}>{} ", data->getMeshName(), data->getDataName(), ts, data->getTimeStamps());
-  }
-  PRECICE_WARN("Repeating coupling data: {}", oss.str());
 }
 
 bool BaseCouplingScheme::hasTimeWindowSize() const

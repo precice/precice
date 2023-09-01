@@ -381,7 +381,7 @@ private:
    * @param isAtWindowEnd set true, if function is called at end of window to also trim the time sample storage
    * @param isTimeWindowComplete set true, if function is called at end of converged window to trim and move the sample storage.
    */
-  void resetWrittenData(bool isAtWindowEnd, bool isTimeWindowComplete, double t);
+  void resetWrittenData(bool isAtWindowEnd, bool isTimeWindowComplete);
 
   /// Determines participant accessing this interface from the configuration.
   impl::PtrParticipant determineAccessingParticipant(

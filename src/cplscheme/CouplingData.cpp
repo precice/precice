@@ -128,11 +128,6 @@ std::string CouplingData::getMeshName()
   return _mesh->getName();
 }
 
-std::vector<double> CouplingData::getTimeStamps() const
-{
-  return _data->getTimeStamps();
-}
-
 std::vector<int> CouplingData::getVertexOffsets()
 {
   return _mesh->getVertexOffsets();
@@ -141,11 +136,6 @@ std::vector<int> CouplingData::getVertexOffsets()
 void CouplingData::moveToNextWindow()
 {
   _data->moveToNextWindow();
-}
-
-void CouplingData::trimAfter(double t)
-{
-  _data->trimAfter(t);
 }
 
 time::Sample &CouplingData::sample()

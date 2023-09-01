@@ -62,8 +62,6 @@ public:
    */
   std::string getMeshName() const;
 
-  std::vector<double> getTimeStamps() const;
-
   /**
    * @brief Get the ID of _mesh.
    *

@@ -84,8 +84,6 @@ public:
    */
   Eigen::VectorXd sampleAtTime(double time) const;
 
-  std::vector<double> getTimeStamps() const;
-
   /**
    * @brief get degree of _waveform.
    *
@@ -97,8 +95,6 @@ public:
   time::Storage &timeStepsStorage();
 
   void moveToNextWindow();
-
-  void trimAfter(double t);
 
   /// Returns a the stamples from _timeStepsStorage.
   auto stamples() const
@@ -138,7 +134,7 @@ public:
   void allocateValues(int expectedCount);
 
 private:
-  mutable logging::Logger _log{"mesh::Data"};
+  logging::Logger _log{"mesh::Data"};
 
   /// Waveform wrapping this Data.
   time::Waveform _waveform;

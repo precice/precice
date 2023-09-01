@@ -330,7 +330,7 @@ void ParticipantImpl::initialize()
   mapReadData();
   performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
 
-  //resetWrittenData(false, false);
+  resetWrittenData(false, false);
   PRECICE_DEBUG("Plot output");
   _accessor->exportFinal();
   e.stop();
@@ -411,18 +411,7 @@ void ParticipantImpl::advance(
   PRECICE_DEBUG("Handle exports");
   handleExports();
 
-  resetWrittenData(isAtWindowEnd, _couplingScheme->isTimeWindowComplete(), _couplingScheme->getTime());
-
-  std::ostringstream oss;
-  oss << "RDC ";
-  for (auto &context : _accessor->readDataContexts()) {
-    fmt::print(oss, "{}:{}@{} ", context.getMeshName(), context.getDataName(), context.getTimeStamps());
-  }
-  oss << "WDC ";
-  for (auto &context : _accessor->writeDataContexts()) {
-    fmt::print(oss, "{}:{}@{} ", context.getMeshName(), context.getDataName(), context.getTimeStamps());
-  }
-  PRECICE_WARN("Data context status {}", oss.str());
+  resetWrittenData(isAtWindowEnd, _couplingScheme->isTimeWindowComplete());
 
   if (_couplingScheme->isTimeWindowComplete()) {
     for (auto &context : _accessor->readDataContexts()) {
@@ -1410,11 +1399,11 @@ void ParticipantImpl::handleExports()
   _accessor->exportIntermediate(exp);
 }
 
-void ParticipantImpl::resetWrittenData(bool isAtWindowEnd, bool isTimeWindowComplete, double t)
+void ParticipantImpl::resetWrittenData(bool isAtWindowEnd, bool isTimeWindowComplete)
 {
   PRECICE_TRACE();
   for (auto &context : _accessor->writeDataContexts()) {
-    context.resetData(isAtWindowEnd, isTimeWindowComplete, t);
+    context.resetData(isAtWindowEnd, isTimeWindowComplete);
   }
 }
 

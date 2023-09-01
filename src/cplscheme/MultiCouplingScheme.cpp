@@ -127,7 +127,6 @@ void MultiCouplingScheme::exchangeFirstData()
 
   PRECICE_DEBUG("Computed full length of iteration");
 
-  // Exchange all samples as we may still decide to iterate
   if (_isController) {
     ensureDataHasNotYetBeenReceived();
     for (auto &receiveExchange : _receiveDataVector) {
@@ -146,26 +145,16 @@ void MultiCouplingScheme::exchangeSecondData()
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
   // @todo implement MultiCouplingScheme for explicit coupling
 
-  // First we either
-  // - move to the next time window
-  //   keeping only the last sample
-  // - repeat the time window
-  //   throwing future written samples away
   if (not _isController) {
     receiveConvergence(_m2ns[_controller]);
-
-    // inefficient to receive first and filter later
+    if (hasConverged()) {
+      moveToNextWindow();
+    }
     ensureDataHasNotYetBeenReceived();
     for (auto &receiveExchange : _receiveDataVector) {
       receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
     }
     notifyDataHasBeenReceived();
-
-    if (hasConverged()) {
-      moveToNextWindow();
-    } else {
-      repeatSameWindow();
-    }
   }
 
   if (_isController) {
@@ -176,15 +165,11 @@ void MultiCouplingScheme::exchangeSecondData()
     for (const auto &m2n : _m2ns | boost::adaptors::map_values) {
       sendConvergence(m2n);
     }
-    // inefficient to send first and filter later
-    for (auto &sendExchange : _sendDataVector) {
-      sendData(_m2ns[sendExchange.first], sendExchange.second);
-    }
-
     if (hasConverged()) {
       moveToNextWindow();
-    } else {
-      repeatSameWindow(); //_sendDataVector);
+    }
+    for (auto &sendExchange : _sendDataVector) {
+      sendData(_m2ns[sendExchange.first], sendExchange.second);
     }
   }
 

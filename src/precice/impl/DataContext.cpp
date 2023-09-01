@@ -46,12 +46,6 @@ std::string DataContext::getMeshName() const
   return _mesh->getName();
 }
 
-std::vector<double> DataContext::getTimeStamps() const
-{
-  PRECICE_ASSERT(_providedData);
-  return _providedData->getTimeStamps();
-}
-
 int DataContext::getMeshVertexCount() const
 {
   PRECICE_ASSERT(_mesh);

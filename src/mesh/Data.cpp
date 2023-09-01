@@ -57,14 +57,7 @@ const time::Sample &Data::sample() const
 
 Eigen::VectorXd Data::sampleAtTime(double time) const
 {
-  PRECICE_WARN("Sampling {} at {} in {}", _name, time, _waveform.timeStepsStorage().getTimes());
   return _waveform.sample(time);
-}
-
-std::vector<double> Data::getTimeStamps() const
-{
-  auto ts = _waveform.timeStepsStorage().getTimes();
-  return std::vector<double>(ts.data(), ts.data() + ts.size());
 }
 
 int Data::getWaveformDegree() const
@@ -79,7 +72,6 @@ time::Storage &Data::timeStepsStorage()
 
 void Data::moveToNextWindow()
 {
-  PRECICE_WARN("Moving {}", _name);
   if (stamples().size() > 0) {
     timeStepsStorage().move();
     PRECICE_ASSERT(stamples().size() == 1);
@@ -87,18 +79,8 @@ void Data::moveToNextWindow()
   }
 }
 
-void Data::trimAfter(double t)
-{
-  PRECICE_WARN("Trimming {} after {}", _name, t);
-  if (stamples().size() > 0) {
-    timeStepsStorage().trimAfter(t);
-    sample() = stamples().back().sample;
-  }
-}
-
 void Data::setSampleAtTime(double time, time::Sample sample)
 {
-  PRECICE_WARN("New Sample for {} at {}", _name, time);
   _sample = sample; // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
   _waveform.timeStepsStorage().setSampleAtTime(time, sample);
 }

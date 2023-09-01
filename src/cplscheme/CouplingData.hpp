@@ -85,8 +85,6 @@ public:
   /// get name of this CouplingData's mesh. See Mesh::getName().
   std::string getMeshName();
 
-  std::vector<double> getTimeStamps() const;
-
   /// get vertex offsets of this CouplingData's mesh. See Mesh::getVertexOffsets().
   std::vector<int> getVertexOffsets();
 
@@ -95,7 +93,6 @@ public:
 
   /// move to next window and initialize data via extrapolation
   void moveToNextWindow();
-  void trimAfter(double t);
 
   bool exchangeSubsteps() const;
 
