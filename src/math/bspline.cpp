@@ -27,6 +27,8 @@ Eigen::VectorXd interpolateAt(Eigen::VectorXd ts, const Eigen::MatrixXd &xs, int
   const int ndofs = xs.rows(); // number of dofs. Each dof needs it's own interpolant.
 
   // transform all times to the relative interval [0; 1]
+  PRECICE_ASSERT(math::greaterEquals(t, ts(0)), "t is before the first sample!", t, ts(0), ts);                       // Only allowed to use BSpline for interpolation, not extrapolation.
+  PRECICE_ASSERT(math::smallerEquals(t, ts(ts.size() - 1)), "t is after the last sample!", t, ts(ts.size() - 1), ts); // Only allowed to use BSpline for interpolation, not extrapolation.
   auto         relativeTime = [tsMin = ts(0), tsMax = ts(ts.size() - 1)](double t) -> double { return (t - tsMin) / (tsMax - tsMin); };
   const double tRelative    = relativeTime(t);
   ts                        = ts.unaryExpr(relativeTime);
