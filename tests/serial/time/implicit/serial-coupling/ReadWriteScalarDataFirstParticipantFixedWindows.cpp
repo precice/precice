@@ -14,18 +14,18 @@ BOOST_AUTO_TEST_SUITE(Implicit)
 BOOST_AUTO_TEST_SUITE(SerialCoupling)
 
 /**
- * @brief Test to run a simple serial coupling where the first participant prescribes the time window size.
+ * @brief Test to run a simple serial coupling where the first participant prescribes the time window size. Maximum simulation time is defined via max-time-windows, not max-time.
  *
  * Ensures that time window sizes are passed correctly and that reading and writing is possible.
  */
-BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipant)
+BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantFixedWindows)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
   Participant precice(context.name, context.config(), 0, 1);
 
   // SolverOne prescribes these, thus SolverTwo expect these (we use "first-participant" as dt method)
-  std::vector<std::vector<double>> timestepSizes{{1.0, 1.0, 1.0}, {2.0, 2.0, 2.0}, {3.0, 3.0, 3.0}};
+  std::vector<std::vector<double>> timestepSizes{{1.0, 2.0, 1.0}, {2.0, 1.0, 2.0}, {3.0, 2.5, 3.0}};
 
   // max number of iterations in implicit coupling
   int maxIterations = 3;
@@ -56,10 +56,6 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipant)
     // do nothing
   }
 
-  double startOfWindowTime = 0;
-  double timeInWindow      = 0;
-  double totalTime         = 6; // max-time from config
-
   for (auto iterationSizes : timestepSizes) {
     for (int it = 0; it < maxIterations; it++) {
       actualDataValue = -1; // reset value.
@@ -68,8 +64,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipant)
 
       if (context.isNamed("SolverOne")) {
         precice.advance(iterationSizes.at(it));
-        dt = precice.getMaxTimeStepSize();
-        timeInWindow += iterationSizes.at(it);
+        double dt = precice.getMaxTimeStepSize();
       } else if (context.isNamed("SolverTwo")) {
         BOOST_TEST(dt == iterationSizes.at(it));
         precice.advance(dt);
@@ -77,16 +72,12 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipant)
       }
 
       if (precice.requiresReadingCheckpoint()) {
-        timeInWindow = 0;
-      }
-      if (precice.isTimeWindowComplete()) {
-        startOfWindowTime += timeInWindow;
-        timeInWindow = 0;
+        // do nothing
       }
 
       if (context.isNamed("SolverOne")) {
         // Check remainder of simulation time
-        BOOST_TEST(dt == totalTime - startOfWindowTime);
+        BOOST_TEST(dt == std::numeric_limits<double>::max());
       }
 
       if (precice.requiresWritingCheckpoint()) {
