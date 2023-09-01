@@ -82,6 +82,11 @@ void SerialCouplingScheme::receiveAndSetTimeWindowSize()
     PRECICE_ASSERT(not _participantSetsTimeWindowSize);
     PRECICE_ASSERT(not math::equals(dt, UNDEFINED_TIME_WINDOW_SIZE));
     PRECICE_ASSERT(not doesFirstStep(), "Only second participant can receive time window size.");
+
+    if (hasTimeWindowSize() && isImplicitCouplingScheme() && not hasConverged()) { // Restriction necessary as long as extrapolation is not implemented. See https://github.com/precice/precice/issues/1770 for details.
+      PRECICE_ASSERT(dt == getTimeWindowSize(), "May only use a larger time window size in the first iteration of the window. Otherwise old time window size must equal new time window size.");
+    }
+
     setTimeWindowSize(dt);
   }
 }
