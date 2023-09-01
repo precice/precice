@@ -123,11 +123,6 @@ std::string CouplingData::getDataName()
   return _data->getName();
 }
 
-std::string CouplingData::getMeshName()
-{
-  return _mesh->getName();
-}
-
 std::vector<int> CouplingData::getVertexOffsets()
 {
   return _mesh->getVertexOffsets();

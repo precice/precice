@@ -10,7 +10,6 @@
 #include <optional>
 #include <ostream>
 #include <sstream>
-#include <string>
 #include <tuple>
 #include <utility>
 
@@ -346,7 +345,6 @@ void ParticipantImpl::advance(
 {
 
   PRECICE_TRACE(computedTimeStepSize);
-  PRECICE_WARN("advancing {} by {}", _couplingScheme->getTime(), computedTimeStepSize);
 
   // Events for the solver time, stopped when we enter, restarted when we leave advance
   PRECICE_ASSERT(_solverAdvanceEvent, "The advance event is created in initialize");
@@ -363,20 +361,6 @@ void ParticipantImpl::advance(
   PRECICE_CHECK(!math::equals(computedTimeStepSize, 0.0), "advance() cannot be called with a time step size of 0.");
   PRECICE_CHECK(computedTimeStepSize > 0.0, "advance() cannot be called with a negative time step size {}.", computedTimeStepSize);
   _numberAdvanceCalls++;
-
-  {
-    std::ofstream meshDebug{"MS_" + _accessorName + "_" + std::to_string(_numberAdvanceCalls) + "_b.yml"};
-    for (auto &mc : _accessor->usedMeshContexts()) {
-      const auto &m = *mc->mesh;
-      fmt::print(meshDebug, "{}:\n", m.getName());
-      for (auto &d : m.data()) {
-        fmt::print(meshDebug, "  {}:\n", d->getName());
-        for (const auto &s : d->stamples()) {
-          fmt::print(meshDebug, "    {}: {}\n", s.timestamp, s.sample.values);
-        }
-      }
-    }
-  }
 
 #ifndef NDEBUG
   PRECICE_DEBUG("Synchronize time step size");
@@ -400,7 +384,6 @@ void ParticipantImpl::advance(
 
   advanceCouplingScheme();
 
-  PRECICE_WARN("Data Recv:{} TWComplete:{} for READ Mapping", _couplingScheme->hasDataBeenReceived(), _couplingScheme->isTimeWindowComplete());
   if (_couplingScheme->hasDataBeenReceived() || _couplingScheme->isTimeWindowComplete()) {
     mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, time);
@@ -419,20 +402,6 @@ void ParticipantImpl::advance(
     }
     for (auto &context : _accessor->writeDataContexts()) {
       context.resetInitialGuesses();
-    }
-  }
-
-  {
-    std::ofstream meshDebug{"MS_" + _accessorName + "_" + std::to_string(_numberAdvanceCalls) + "_e.yml"};
-    for (auto &mc : _accessor->usedMeshContexts()) {
-      const auto &m = *mc->mesh;
-      fmt::print(meshDebug, "{}:\n", m.getName());
-      for (auto &d : m.data()) {
-        fmt::print(meshDebug, "  {}:\n", d->getName());
-        for (const auto &s : d->stamples()) {
-          fmt::print(meshDebug, "    {}: {}\n", s.timestamp, s.sample.values);
-        }
-      }
     }
   }
 
@@ -1370,7 +1339,6 @@ void ParticipantImpl::mapReadData()
   computeMappings(_accessor->readMappingContexts(), "read");
   for (auto &context : _accessor->readDataContexts()) {
     if (context.hasMapping()) {
-      PRECICE_WARN("Map read data \"{}\" to mesh \"{}\"", context.getDataName(), context.getMeshName());
       context.mapData();
     }
   }
