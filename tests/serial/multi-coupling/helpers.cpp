@@ -28,7 +28,6 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
     double valueRead;
 
     BOOST_TEST(cplInterface.isCouplingOngoing());
-    bool firstTW = true;
     while (cplInterface.isCouplingOngoing()) {
       cplInterface.writeData(meshName, dataABID, {&vertexID, 1}, {&valueA, 1});
       if (cplInterface.requiresWritingCheckpoint()) {
@@ -38,16 +37,11 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
       maxDt = cplInterface.getMaxTimeStepSize();
 
       if (cplInterface.requiresReadingCheckpoint()) {
-      } else {
-        firstTW = false;
       }
       cplInterface.readData(meshName, dataBAID, {&vertexID, 1}, maxDt, {&valueRead, 1});
-      if (firstTW) {
-        BOOST_TEST(valueRead == 0.0);
-      } else {
-        BOOST_TEST(valueRead == valueB);
-      }
     }
+
+    BOOST_TEST(valueRead == valueB);
 
     cplInterface.finalize();
   } else if (context.isNamed("SolverB")) {
@@ -66,7 +60,6 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
     double valueReadA, valueReadC;
 
     BOOST_TEST(cplInterface.isCouplingOngoing());
-    bool firstTW = true;
     while (cplInterface.isCouplingOngoing()) {
       cplInterface.writeData(meshName1, dataBAID, {&vertexID1, 1}, {&valueB, 1});
       cplInterface.writeData(meshName2, dataBCID, {&vertexID2, 1}, {&valueB, 1});
@@ -77,19 +70,13 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
       maxDt = cplInterface.getMaxTimeStepSize();
 
       if (cplInterface.requiresReadingCheckpoint()) {
-      } else {
-        firstTW = false;
       }
       cplInterface.readData(meshName1, dataABID, {&vertexID1, 1}, maxDt, {&valueReadA, 1});
       cplInterface.readData(meshName2, dataCBID, {&vertexID2, 1}, maxDt, {&valueReadC, 1});
-      if (firstTW) {
-        BOOST_TEST(valueReadA == 0.0);
-        BOOST_TEST(valueReadC == 0.0);
-      } else {
-        BOOST_TEST(valueReadA == 1.0);
-        BOOST_TEST(valueReadC == 3.0);
-      }
     }
+
+    BOOST_TEST(valueReadA == 1.0);
+    BOOST_TEST(valueReadC == 3.0);
 
     cplInterface.finalize();
 
@@ -105,7 +92,6 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
     double valueRead;
 
     BOOST_TEST(cplInterface.isCouplingOngoing());
-    bool firstTW = true;
     while (cplInterface.isCouplingOngoing()) {
 
       cplInterface.writeData(meshName, dataCBID, {&vertexID, 1}, {&valueC, 1});
@@ -116,16 +102,11 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
       maxDt = cplInterface.getMaxTimeStepSize();
 
       if (cplInterface.requiresReadingCheckpoint()) {
-      } else {
-        firstTW = false;
       }
       cplInterface.readData(meshName, dataBCID, {&vertexID, 1}, maxDt, {&valueRead, 1});
-      if (firstTW) {
-        BOOST_TEST(valueRead == 0.0);
-      } else {
-        BOOST_TEST(valueRead == 2.0);
-      };
     }
+
+    BOOST_TEST(valueRead == 2.0);
 
     cplInterface.finalize();
   }
