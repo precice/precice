@@ -386,7 +386,7 @@ void ParticipantImpl::advance(
 
   advanceCouplingScheme();
 
-  if (_couplingScheme->hasDataBeenReceived()) {
+  if (_couplingScheme->hasDataBeenReceived() || _couplingScheme->isTimeWindowComplete()) {
     mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, time);
   }
