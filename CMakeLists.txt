@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.16.3)
-project(preCICE VERSION 2.5.0 LANGUAGES CXX)
+project(preCICE VERSION 3.0.0 LANGUAGES CXX)
 set(preCICE_SOVERSION ${preCICE_VERSION_MAJOR})
 
 #
@@ -53,17 +53,18 @@ if(NOT CMAKE_BUILD_TYPE)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release RelWithDebInfo MinSizeRel)
 endif()
 
-option(PRECICE_MPICommunication "Enables MPI-based communication and running coupling tests." ON)
-option(PRECICE_PETScMapping "Enable use of the PETSc linear algebra library." ON)
-option(PRECICE_PythonActions "Python support" ON)
-option(PRECICE_Packages "Configure package generation." ON)
+option(PRECICE_FEATURE_MPI_COMMUNICATION "Enables MPI-based communication and running coupling tests." ON)
+option(PRECICE_FEATURE_PETSC_MAPPING "Enable use of the PETSc linear algebra library for global-iterative RBF data mappings." ON)
+option(PRECICE_FEATURE_PYTHON_ACTIONS "Enable Python support for preCICE actions." ON)
+option(PRECICE_CONFIGURE_PACKAGE_GENERATION "Configure package generation." ON)
+option(PRECICE_FEATURE_GINKGO_MAPPING "**Experimental** Enable use of Ginkgo (unreleased version) for data mapping." OFF)
 option(BUILD_SHARED_LIBS "Build shared instead of static libraries" ON)
 option(BUILD_TESTING "Build tests" ON)
 option(PRECICE_ALWAYS_VALIDATE_LIBS "Validate libraries even after the validatation succeeded." OFF)
-option(PRECICE_ENABLE_C "Enable the native C bindings" ON)
-option(PRECICE_ENABLE_FORTRAN "Enable the native Fortran bindings" ON)
+option(PRECICE_BINDINGS_C "Enable the native C bindings" ON)
+option(PRECICE_BINDINGS_FORTRAN "Enable the native Fortran bindings" ON)
 option(PRECICE_BUILD_TOOLS "Build the \"precice-tools\" executable" ON)
-option(PRECICE_ENABLE_LIBBACKTRACE "Enable libbacktrace for stacktrace generation." OFF)
+option(PRECICE_FEATURE_LIBBACKTRACE_STACKTRACES "Enable libbacktrace for stacktrace generation." OFF)
 
 option(CMAKE_INTERPROCEDURAL_OPTIMIZATION "Enable interprocedural optimization for all targets." OFF)
 
@@ -71,11 +72,11 @@ option(PRECICE_RELEASE_WITH_DEBUG_LOG "Enable debug logging in release builds" O
 option(PRECICE_RELEASE_WITH_TRACE_LOG "Enable trace logging in release builds" OFF)
 option(PRECICE_RELEASE_WITH_ASSERTIONS "Enable assertions in release builds" OFF)
 
-xsdk_tpl_option_override(PRECICE_MPICommunication TPL_ENABLE_MPI)
-xsdk_tpl_option_override(PRECICE_PETScMapping TPL_ENABLE_PETSC)
-xsdk_tpl_option_override(PRECICE_PythonActions TPL_ENABLE_PYTHON)
+xsdk_tpl_option_override(PRECICE_FEATURE_MPI_COMMUNICATION TPL_ENABLE_MPI)
+xsdk_tpl_option_override(PRECICE_FEATURE_PETSC_MAPPING TPL_ENABLE_PETSC)
+xsdk_tpl_option_override(PRECICE_FEATURE_PYTHON_ACTIONS TPL_ENABLE_PYTHON)
 
-if(PRECICE_PETScMapping AND NOT PRECICE_MPICommunication)
+if(PRECICE_FEATURE_PETSC_MAPPING AND NOT PRECICE_FEATURE_MPI_COMMUNICATION)
   message(FATAL_ERROR "Please enable MPI to use PETSC.")
 endif()
 
@@ -87,56 +88,67 @@ include(XSDKOptions)
 include(PrintHelper)
 print_configuration(
   ADDITIONAL
-  "PRECICE_Packages;Configure package generation"
+  "PRECICE_CONFIGURE_PACKAGE_GENERATION;Configure package generation"
   "PRECICE_CTEST_MPI_FLAGS;Additional CTest MPI Flags"
   )
 print_empty()
 
 include(FeatureSummary)
-add_feature_info(MPICommunication PRECICE_MPICommunication
+add_feature_info(PRECICE_FEATURE_MPI_COMMUNICATION PRECICE_FEATURE_MPI_COMMUNICATION
   "Enables the MPI communication back-end.
 
    This enables the MPI communication back-end which is highly recommended on multi-node systems.
    See the documentation of the CMake module FindMPI to control its functionality.
 
-   This feature can be enabled/disabled by setting the PRECICE_MPICommunication CMake option.
+   This feature can be enabled/disabled by setting the PRECICE_FEATURE_MPI_COMMUNICATION CMake option.
 ")
-add_feature_info(PETScMapping PRECICE_PETScMapping
+add_feature_info(PRECICE_FEATURE_PETSC_MAPPING PRECICE_FEATURE_PETSC_MAPPING
   "Enables the PETSc-powered radial basic function mappings.
 
    This enables the PETSc-based variant of radial basis function mappings which can run in parallel,
    also across different compute nodes. This is highly recommended for large cases running in parallel.
 
-   This feature can be enabled/disabled by setting the PRECICE_PETScMapping CMake option.
-   Requires MPICommunication.
+   This feature can be enabled/disabled by setting the PRECICE_FEATURE_PETSC_MAPPING CMake option.
+   Requires PRECICE_FEATURE_MPI_COMMUNICATION.
   ")
-add_feature_info(PythonActions PRECICE_PythonActions
+
+  add_feature_info(PRECICE_FEATURE_GINKGO_MAPPING PRECICE_FEATURE_GINKGO_MAPPING
+  "**Experimental** Enables the Ginkgo (requires branch public_common_kernels) backend which supports the usage of GPUs and OpenMP for (global) radial-basis function mappings.
+
+   Currently, this enables radial-basis function mappings to leverage the compute power of Nvidia/AMD GPUs and OpenMP.
+   It uses iterative solvers provided by Ginkgo or direct solvers offered by hip/cuSolver.
+
+   This feature can be enabled/disabled by setting the PRECICE_FEATURE_GINKGO_MAPPING CMake option.
+   Requires the Ginkgo library (branch public_common_kernels) and Eigen 3.4. Note that this feature is still experimental.
+  ")
+
+  add_feature_info(PRECICE_FEATURE_PYTHON_ACTIONS PRECICE_FEATURE_PYTHON_ACTIONS
   "Enables the support for user-defined python actions.
 
    preCICE allows to manipulate coupling data at runtime using configurable actions.
    This feature enables the support for user-defined actions written in Python based on numpy.
 
-   This feature can be enabled/disabled by setting the PRECICE_PythonActions CMake option.
+   This feature can be enabled/disabled by setting the PRECICE_FEATURE_PYTHON_ACTIONS CMake option.
   ")
-add_feature_info(CBindings PRECICE_ENABLE_C
+add_feature_info(PRECICE_BINDINGS_C PRECICE_BINDINGS_C
   "Enables the native C bindings.
 
    preCICE provides native bindings for C, which are compiled into the library.
    This feature enables the compilation and installation of the bindings into the library.
    Note that we strongly recommend to compile with C bindings enabled for compatibility reasons.
 
-   This feature can be enabled/disabled by setting the PRECICE_ENABLE_C CMake option.
+   This feature can be enabled/disabled by setting the PRECICE_BINDINGS_C CMake option.
   ")
-add_feature_info(FortranBindings PRECICE_ENABLE_FORTRAN
+add_feature_info(PRECICE_BINDINGS_FORTRAN PRECICE_BINDINGS_FORTRAN
   "Enables the native Fortran bindings.
 
    preCICE provides native bindings for Fortran, which are compiled into the library.
    This feature enables the compilation and installation of the bindings into the library.
    Note that we strongly recommend to compile with Fortran bindings enabled for compatibility reasons.
 
-   This feature can be enabled/disabled by setting the PRECICE_ENABLE_FORTRAN CMake option.
+   This feature can be enabled/disabled by setting the PRECICE_BINDINGS_FORTRAN CMake option.
   ")
-add_feature_info(PreciceTools PRECICE_BUILD_TOOLS
+add_feature_info(PRECICE_BUILD_TOOLS PRECICE_BUILD_TOOLS
   "Build the \"precice-tools\" executable
 
    preCICE offers in addition to the core library a variety of tools in order to check configuration
@@ -144,13 +156,13 @@ add_feature_info(PreciceTools PRECICE_BUILD_TOOLS
 
    This feature can be enabled/disabled by setting the PRECICE_BUILD_TOOLS CMake option.
   ")
-  add_feature_info(libbacktrace PRECICE_ENABLE_LIBBACKTRACE
+  add_feature_info(PRECICE_FEATURE_LIBBACKTRACE_STACKTRACES PRECICE_FEATURE_LIBBACKTRACE_STACKTRACES
   "Enables libbacktrace for stracktrace generation.
 
    preCICE assertions are helpful during development, however, the default stacktraces may not be sufficient.
    This feature enables the support for libbacktrace in boost.stacktrace.
 
-   This feature can be enabled/disabled by setting the PRECICE_ENABLE_LIBBACKTRACE CMake option.
+   This feature can be enabled/disabled by setting the PRECICE_FEATURE_LIBBACKTRACE_STACKTRACES CMake option.
   ")
 
 
@@ -184,7 +196,12 @@ if(TPL_ENABLE_EIGEN3)
   # Use EIGEN3_ROOT to set the directory
   xsdk_tpl_require(EIGEN3 EIGEN3_INCLUDE_DIR)
 endif()
-find_package(Eigen3 3.3.7 REQUIRED)
+# We need Eigen 3.4.0 such that Eigen deals properly with cuda
+if(PRECICE_FEATURE_GINKGO_MAPPING)
+  find_package(Eigen3 3.4.0 REQUIRED)
+else()
+  find_package(Eigen3 3.3.7 REQUIRED)
+endif()
 message(STATUS "Found Eigen ${EIGEN3_VERSION}")
 precice_validate_eigen()
 
@@ -192,16 +209,6 @@ precice_validate_eigen()
 find_package(LibXml2 REQUIRED)
 message(STATUS "Found LibXml2 ${LIBXML2_VERSION_STRING}")
 precice_validate_libxml2()
-
-# nlohmann/JSON
-if(TPL_ENABLE_JSON)
-  xsdk_tpl_require(JSON JSON_INCLUDE_DIR)
-  add_library(JSON INTERFACE IMPORTED)
-  set_property(TARGET JSON PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${JSON_INCLUDE_DIR}")
-else()
-  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/json)
-endif()
-precice_validate_json()
 
 # libfmt
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/fmt)
@@ -211,8 +218,8 @@ precice_validate_fmtlib()
 # Find Configurable Dependencies
 #
 
-# Option: PRECICE_MPICommunication
-if (PRECICE_MPICommunication)
+# Option: PRECICE_FEATURE_MPI_COMMUNICATION
+if (PRECICE_FEATURE_MPI_COMMUNICATION)
   set(MPI_DETERMINE_LIBRARY_VERSION ON) # Try to detect the library vendor
 
   find_package(MPI REQUIRED)
@@ -226,7 +233,7 @@ if (PRECICE_MPICommunication)
 endif()
 
 # Option: PETSC
-if (PRECICE_PETScMapping)
+if (PRECICE_FEATURE_PETSC_MAPPING)
   if (TPL_ENABLE_PETSC)
     xsdk_tpl_require(PETSC PETSC_DIR PETSC_ARCH)
     # PETSc detection uses primarily these ENVs
@@ -238,6 +245,66 @@ else()
   message(STATUS "PETSc support disabled")
 endif()
 
+# Option: Ginkgo
+if (PRECICE_FEATURE_GINKGO_MAPPING)
+  find_package(Ginkgo 1.5 REQUIRED)
+  message(STATUS "Found Ginkgo ${GINKGO_PROJECT_VERSION} at ${GINKGO_INSTALL_PREFIX}")
+
+  include(CMakeDependentOption)
+  cmake_dependent_option(PRECICE_WITH_CUDA "Enable Ginkgo Cuda support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;GINKGO_BUILD_CUDA" OFF)
+  cmake_dependent_option(PRECICE_WITH_HIP "Enable Ginkgo HIP support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;GINKGO_BUILD_HIP" OFF)
+  cmake_dependent_option(PRECICE_WITH_OMP "Enable Ginkgo OpenMP support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;GINKGO_BUILD_OMP" OFF)
+
+  # We aim for the same configuration as Ginkgo itself and check immediately for device compiler
+  # such that preciceCore inherits all relevant flags directly
+  # 1. Check if Ginkgo was built with CUDA and if CUDA is available on the system
+  if(PRECICE_WITH_CUDA)
+    # Necessary for the unified kernels and the qr decomposition
+    include(CheckLanguage)
+    check_language(CUDA)
+    enable_language(CUDA)
+    set(CMAKE_CUDA_STANDARD 17)
+    set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+    set(CMAKE_CUDA_FLAGS "${GINKGO_CUDA_ARCH_FLAGS} --expt-relaxed-constexpr")
+
+    # Similar to Ginkgo, we don't let CMake deduce the architecture, but inherit the Ginkgo flags
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.18)
+      set(CMAKE_CUDA_ARCHITECTURES OFF)
+    endif()
+  endif()
+
+  # 2. Check if Ginkgo was built with HIP and if HIP is available on the system
+  if(PRECICE_WITH_HIP)
+    if(NOT DEFINED HIP_PATH)
+     if(NOT DEFINED $ENV{HIP_PATH})
+       set(HIP_PATH "/opt/rocm/hip" CACHE PATH "Path to which HIP has been installed")
+       set(ENV{HIP_PATH} ${HIP_PATH})
+     else()
+       set(HIP_PATH $ENV{HIP_PATH} CACHE PATH "Path to which HIP has been installed")
+     endif()
+    endif()
+
+    if(NOT DEFINED ROCM_PATH)
+     set(ROCM_PATH "/opt/rocm" CACHE PATH "Path to which ROCM has been installed")
+     set(ENV{ROCM_PATH} ${ROCM_PATH})
+    endif()
+
+    find_package(HIP REQUIRED)
+    find_package(hipsolver REQUIRED)
+
+    set(HIP_CLANG_FLAGS "-fPIC -w")
+    set(HIP_NVCC_FLAGS "-fPIC")
+  endif()
+
+  if(PRECICE_WITH_OMP)
+    find_package(OpenMP 3.0 REQUIRED)
+  endif()
+  # That's essentially all backends we use from Ginkgo. The reference executor and OMP doesn't need any special treatments and
+  # DPCPP has not yet been tested/setup
+else()
+  message(STATUS "Ginkgo support disabled")
+endif()
+
 if (PRECICE_BUILD_TOOLS AND BUILD_TESTING)
   # We need this to run the precice-events
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
@@ -245,7 +312,7 @@ if (PRECICE_BUILD_TOOLS AND BUILD_TESTING)
 endif()
 
 # Option Python
-if (PRECICE_PythonActions)
+if (PRECICE_FEATURE_PYTHON_ACTIONS)
   find_package(Python3 REQUIRED COMPONENTS Development NumPy)
   message(STATUS "Found Python ${Python3_VERSION} with NumPy ${Python3_NumPy_VERSION}")
   precice_validate_libpython()
@@ -256,7 +323,7 @@ endif()
 
 # Option ENABLE_LIBBACKTRACE
 # Note that the FindBacktrace module does not work reliably to find libbacktrace installations
-if (PRECICE_ENABLE_LIBBACKTRACE)
+if (PRECICE_FEATURE_LIBBACKTRACE_STACKTRACES)
   add_subdirectory(thirdparty/libbacktrace)
 endif()
 
@@ -317,7 +384,7 @@ if(UNIX OR APPLE OR MINGW)
   target_compile_definitions(preciceCore PUBLIC _GNU_SOURCE)
   target_link_libraries(preciceCore PUBLIC ${CMAKE_DL_LIBS})
 endif()
-if(PRECICE_ENABLE_LIBBACKTRACE)
+if(PRECICE_FEATURE_LIBBACKTRACE_STACKTRACES)
   target_compile_definitions(preciceCore PRIVATE BOOST_STACKTRACE_USE_BACKTRACE)
   target_link_libraries(preciceCore PRIVATE internal::libbacktrace)
 endif()
@@ -329,25 +396,81 @@ target_compile_definitions(preciceCore PUBLIC "$<$<CONFIG:DEBUG>:EIGEN_INITIALIZ
 # Setup LIBXML2
 target_link_libraries(preciceCore PUBLIC LibXml2::LibXml2)
 
-# Setup JSON
-target_link_libraries(preciceCore PUBLIC JSON fmt-header-only)
+# Setup FMT
+target_link_libraries(preciceCore PUBLIC fmt-header-only)
 
 # Setup MPI
-if (PRECICE_MPICommunication)
+if (PRECICE_FEATURE_MPI_COMMUNICATION)
   target_link_libraries(preciceCore PUBLIC MPI::MPI_CXX)
 else()
   target_compile_definitions(preciceCore PUBLIC PRECICE_NO_MPI)
 endif()
 
 # Setup PETSC
-if (PRECICE_PETScMapping AND PRECICE_MPICommunication)
+if (PRECICE_FEATURE_PETSC_MAPPING AND PRECICE_FEATURE_MPI_COMMUNICATION)
   target_link_libraries(preciceCore PUBLIC PETSc::PETSc)
 else()
   target_compile_definitions(preciceCore PUBLIC PRECICE_NO_PETSC)
 endif()
 
+# Setup Ginkgo
+if (PRECICE_FEATURE_GINKGO_MAPPING)
+  # Next we configure the common kernels for the matrix assembly
+  # This CMake part is still a shortcoming from the experimental Ginkgo we are using right now
+  # TODO: Remove as soon as GPU feature is in main branch
+  set(Ginkgo_Path "${Ginkgo_DIR}/.." CACHE STRING "Path to the experimental Ginkgo Repository of branch a195f856e.")
+  include(${Ginkgo_Path}/cmake/unified_kernels.cmake)
+
+  # This command registers Ginkgo kernels for different execution backends
+  ginkgo_add_unified_kernels(preciceCore src/mapping/device/GinkgoRBFKernels.cpp)
+  # shortcoming of the kernel registration: we need to add the includes here to all generated targets
+  include_directories(${PROJECT_SOURCE_DIR}/src)
+  include_directories(${EIGEN3_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/thirdparty/fmt/include)
+  target_compile_definitions(preciceCore_cuda PUBLIC EIGEN_NO_CUDA)
+  target_compile_definitions(preciceCore_hip PUBLIC EIGEN_NO_CUDA)
+  set_target_properties(preciceCore_cuda PROPERTIES POSITION_INDEPENDENT_CODE ON)
+  set_target_properties(preciceCore_reference PROPERTIES POSITION_INDEPENDENT_CODE ON)
+  set_target_properties(preciceCore_hip PROPERTIES POSITION_INDEPENDENT_CODE ON)
+  set_target_properties(preciceCore_omp PROPERTIES POSITION_INDEPENDENT_CODE ON)
+  set_target_properties(preciceCore_dpcpp PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+  # Now we setup cuSolver and hipSOLVER for preCICE
+  if(PRECICE_WITH_CUDA)
+    target_compile_definitions(preciceCore PUBLIC PRECICE_WITH_CUDA)
+    target_sources(preciceCore PRIVATE ${PROJECT_SOURCE_DIR}/src/mapping/device/CudaQRSolver.cuh ${PROJECT_SOURCE_DIR}/src/mapping/device/CudaQRSolver.cu)
+    target_link_libraries(preciceCore PUBLIC cusolver)
+    message(STATUS "Enabled CUDA support for preCICE via the Ginkgo library.")
+  endif()
+
+  if(PRECICE_WITH_HIP)
+    target_compile_definitions(preciceCore PUBLIC PRECICE_WITH_HIP)
+    set(_hiplist ${PROJECT_SOURCE_DIR}/src/mapping/device/HipQRSolver.hip.cpp)
+    set_source_files_properties(${_hiplist} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT TRUE)
+    hip_add_library(preciceCore_qr_hip ${_hiplist}
+        HIPCC_OPTIONS ${GINKGO_HIPCC_OPTIONS} "-std=c++17 -DPRECICE_WITH_HIP"
+        CLANG_OPTIONS ${GINKGO_HIP_CLANG_OPTIONS}
+        NVCC_OPTIONS ${GINKGO_HIP_NVCC_OPTIONS}
+        STATIC)
+        target_link_libraries(preciceCore_qr_hip PRIVATE Ginkgo::ginkgo roc::hipsolver)
+        target_link_libraries(preciceCore PRIVATE preciceCore_qr_hip)
+    message(STATUS "Enabled HIP support for preCICE via the Ginkgo library.")
+  endif()
+
+  if(PRECICE_WITH_OMP)
+    target_compile_definitions(preciceCore PUBLIC PRECICE_WITH_OMP)
+    target_link_libraries(preciceCore PUBLIC OpenMP::OpenMP_CXX)
+    # There is nothing special required for OpenMP, looking for OpenMP and setting the flag is handled by the unified kernels
+    message(STATUS "Enabled OpenMP support for preCICE via the Ginkgo library.")
+  endif()
+
+  # Finally, we link Ginkgo into preCICE
+  target_link_libraries(preciceCore PUBLIC Ginkgo::ginkgo)
+else()
+  target_compile_definitions(preciceCore PUBLIC PRECICE_NO_GINKGO)
+endif()
+
 # Option Python
-if (PRECICE_PythonActions)
+if (PRECICE_FEATURE_PYTHON_ACTIONS)
   target_link_libraries(preciceCore PUBLIC Python3::NumPy Python3::Python)
   target_compile_definitions(preciceCore PUBLIC NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION)
 else()
@@ -407,7 +530,7 @@ set_property(TARGET precice APPEND PROPERTY PUBLIC_HEADER
 if (PRECICE_BUILD_TOOLS)
   add_executable(precice-tools "src/drivers/main.cpp")
   target_link_libraries(precice-tools
-    PRIVATE
+   PRIVATE
    precice
    )
   set_target_properties(precice-tools PROPERTIES
@@ -446,13 +569,13 @@ else(BUILD_TESTING)
 endif(BUILD_TESTING)
 
 # Include Native C Bindings
-if (PRECICE_ENABLE_C)
+if (PRECICE_BINDINGS_C)
   # include(${CMAKE_CURRENT_LIST_DIR}/extras/bindings/c/CMakeLists.txt)
   add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/extras/bindings/c)
 endif()
 
 # Include Native Fortran Bindings
-if (PRECICE_ENABLE_FORTRAN)
+if (PRECICE_BINDINGS_FORTRAN)
   # include((${CMAKE_CURRENT_LIST_DIR}/extras/bindings/fortran/CMakeLists.txt)
   add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/extras/bindings/fortran)
 endif()
@@ -573,7 +696,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/cmake/Uninstall.cmake)
 # CPack
 #
 
-if (PRECICE_Packages)
+if (PRECICE_CONFIGURE_PACKAGE_GENERATION)
   include(${CMAKE_CURRENT_LIST_DIR}/cmake/CPackConfig.cmake)
 endif()
 

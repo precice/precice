@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration>
+  <mesh name="TestMeshTen" dimensions="3" />
+  <mesh name="TestMeshEleven" dimensions="3" />
+  <mesh name="TestMeshTwelve" dimensions="3" />
+
+  <mapping:rbf-global-direct
+    direction="read"
+    from="TestMeshEleven"
+    to="TestMeshTen"
+    constraint="consistent"
+    polynomial="separate"
+    x-dead="true"
+    y-dead="false"
+    z-dead="true">
+    <executor:cuda gpu-device-id="0" />
+    <basis-function:gaussian shape-parameter="0.3" />
+  </mapping:rbf-global-direct>
+
+  <mapping:rbf-global-iterative
+    direction="read"
+    from="TestMeshTwelve"
+    to="TestMeshEleven"
+    constraint="conservative"
+    polynomial="off"
+    x-dead="true"
+    y-dead="false"
+    z-dead="true"
+    solver-rtol="1e-6">
+    <executor:cuda gpu-device-id="0" />
+    <basis-function:gaussian shape-parameter="0.3" />
+  </mapping:rbf-global-iterative>
+</configuration>

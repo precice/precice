@@ -12,8 +12,7 @@ CouplingData::CouplingData(
     mesh::PtrData data,
     mesh::PtrMesh mesh,
     bool          requiresInitialization,
-    bool          exchangeSubsteps,
-    int           extrapolationOrder)
+    bool          exchangeSubsteps)
     : requiresInitialization(requiresInitialization),
       _mesh(std::move(mesh)),
       _data(std::move(data)),
@@ -21,8 +20,6 @@ CouplingData::CouplingData(
       _timeStepsStoragePrevious()
 {
   PRECICE_ASSERT(_data != nullptr);
-  _data->timeStepsStorage().setExtrapolationOrder(extrapolationOrder);
-  _timeStepsStoragePrevious.setExtrapolationOrder(extrapolationOrder);
   _timeStepsStoragePrevious.setInterpolationOrder(3); // @todo hard-coded for now, but we need to somehow link this to <read-data waveform-order="ORDER" />
   _timeStepsStoragePrevious.setSampleAtTime(time::Storage::WINDOW_START, time::Sample{getDimensions(), Eigen::VectorXd::Zero(getSize())});
   _timeStepsStoragePrevious.setSampleAtTime(time::Storage::WINDOW_END, time::Sample{getDimensions(), Eigen::VectorXd::Zero(getSize())});
@@ -86,6 +83,7 @@ Eigen::MatrixXd CouplingData::getPreviousGradientsAtTime(double relativeDt)
 
 void CouplingData::setSampleAtTime(double time, time::Sample sample)
 {
+  PRECICE_ASSERT(not sample.values.hasNaN());
   this->sample() = sample; // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
   _data->setSampleAtTime(time, sample);
 }

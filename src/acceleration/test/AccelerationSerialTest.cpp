@@ -4,7 +4,7 @@
 #include "acceleration/BaseQNAcceleration.hpp"
 #include "acceleration/ConstantRelaxationAcceleration.hpp"
 #include "acceleration/IQNILSAcceleration.hpp"
-#include "acceleration/MVQNAcceleration.hpp"
+#include "acceleration/IQNIMVJAcceleration.hpp"
 #include "acceleration/SharedPointer.hpp"
 #include "acceleration/config/AccelerationConfiguration.hpp"
 #include "acceleration/impl/ConstantPreconditioner.hpp"
@@ -23,24 +23,24 @@ BOOST_AUTO_TEST_SUITE(AccelerationTests)
 struct AccelerationSerialTestsFixture {
   using DataMap = std::map<int, cplscheme::PtrCouplingData>;
 
-  //AccelerationSerialTestsFixture() {}
+  // AccelerationSerialTestsFixture() {}
 };
 
 BOOST_FIXTURE_TEST_SUITE(AccelerationSerialTests, AccelerationSerialTestsFixture)
 
 #ifndef PRECICE_NO_MPI
 
-BOOST_AUTO_TEST_CASE(testMVQNPPWithoutSubsteps)
+BOOST_AUTO_TEST_CASE(testIQNIMVJPPWithoutSubsteps)
 {
   PRECICE_TEST(1_rank);
-  //use two vectors and see if underrelaxation works
+  // use two vectors and see if underrelaxation works
   double           initialRelaxation          = 0.01;
   int              maxIterationsUsed          = 50;
   int              timeWindowsReused          = 6;
   int              reusedTimeWindowsAtRestart = 0;
   int              chunkSize                  = 0;
   int              filter                     = Acceleration::QR1FILTER;
-  int              restartType                = MVQNAcceleration::NO_RESTART;
+  int              restartType                = IQNIMVJAcceleration::NO_RESTART;
   double           singularityLimit           = 1e-10;
   double           svdTruncationEps           = 0.0;
   bool             enforceInitialRelaxation   = false;
@@ -53,29 +53,29 @@ BOOST_AUTO_TEST_CASE(testMVQNPPWithoutSubsteps)
   impl::PtrPreconditioner prec(new impl::ConstantPreconditioner(factors));
   mesh::PtrMesh           dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
 
-  MVQNAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                      timeWindowsReused, filter, singularityLimit, dataIDs, prec, alwaysBuildJacobian,
-                      restartType, chunkSize, reusedTimeWindowsAtRestart, svdTruncationEps);
+  IQNIMVJAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
+                         timeWindowsReused, filter, singularityLimit, dataIDs, prec, alwaysBuildJacobian,
+                         restartType, chunkSize, reusedTimeWindowsAtRestart, svdTruncationEps);
 
   Eigen::VectorXd fcol1;
 
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
   mesh::PtrData forces(new mesh::Data("fvalues", -1, 1));
 
-  //init displacements
+  // init displacements
   displacements->values().resize(4);
   displacements->values() << 1.0, 1.0, 1.0, 1.0;
   displacements->setSampleAtTime(time::Storage::WINDOW_START, displacements->sample());
 
-  //init forces
+  // init forces
   forces->values().resize(4);
   forces->values() << 0.2, 0.2, 0.2, 0.2;
   forces->setSampleAtTime(time::Storage::WINDOW_START, forces->sample());
 
-  bool exchangeSubsteps = false; // @todo add testMVQNPPWithSubsteps, where exchangeSubsteps = true as soon as acceleration scheme supports subcycling.
+  bool exchangeSubsteps = false; // @todo add testIQNIMVJPPWithSubsteps, where exchangeSubsteps = true as soon as acceleration scheme supports subcycling.
 
-  cplscheme::PtrCouplingData dpcd(new cplscheme::CouplingData(displacements, dummyMesh, false, exchangeSubsteps, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
-  cplscheme::PtrCouplingData fpcd(new cplscheme::CouplingData(forces, dummyMesh, false, exchangeSubsteps, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
+  cplscheme::PtrCouplingData dpcd(new cplscheme::CouplingData(displacements, dummyMesh, false, exchangeSubsteps));
+  cplscheme::PtrCouplingData fpcd(new cplscheme::CouplingData(forces, dummyMesh, false, exchangeSubsteps));
 
   DataMap data;
   data.insert(std::pair<int, cplscheme::PtrCouplingData>(0, dpcd));
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(testMVQNPPWithoutSubsteps)
 BOOST_AUTO_TEST_CASE(testVIQNPPWithoutSubsteps)
 {
   PRECICE_TEST(1_rank);
-  //use two vectors and see if underrelaxation works
+  // use two vectors and see if underrelaxation works
 
   double           initialRelaxation        = 0.01;
   int              maxIterationsUsed        = 50;
@@ -144,20 +144,20 @@ BOOST_AUTO_TEST_CASE(testVIQNPPWithoutSubsteps)
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
   mesh::PtrData forces(new mesh::Data("fvalues", -1, 1));
 
-  //init displacements
+  // init displacements
   displacements->values().resize(4);
   displacements->values() << 1.0, 1.0, 1.0, 1.0;
   displacements->setSampleAtTime(time::Storage::WINDOW_START, displacements->sample());
 
-  //init forces
+  // init forces
   forces->values().resize(4);
   forces->values() << 0.2, 0.2, 0.2, 0.2;
   forces->setSampleAtTime(time::Storage::WINDOW_START, forces->sample());
 
   bool exchangeSubsteps = false; // @todo add testVIQNPPWithoutSubsteps, where exchangeSubsteps = true as soon as acceleration scheme supports subcycling.
 
-  cplscheme::PtrCouplingData dpcd(new cplscheme::CouplingData(displacements, dummyMesh, false, exchangeSubsteps, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
-  cplscheme::PtrCouplingData fpcd(new cplscheme::CouplingData(forces, dummyMesh, false, exchangeSubsteps, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER));
+  cplscheme::PtrCouplingData dpcd(new cplscheme::CouplingData(displacements, dummyMesh, false, exchangeSubsteps));
+  cplscheme::PtrCouplingData fpcd(new cplscheme::CouplingData(forces, dummyMesh, false, exchangeSubsteps));
   dpcd->storeIteration();
   fpcd->storeIteration();
 
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(testVIQNPPWithoutSubsteps)
 BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithSubsteps)
 {
   PRECICE_TEST(1_rank);
-  //use two vectors and see if underrelaxation works
+  // use two vectors and see if underrelaxation works
   double           relaxation = 0.4;
   std::vector<int> dataIDs{0, 1};
   mesh::PtrMesh    dummyMesh = std::make_shared<mesh::Mesh>("DummyMesh", 3, testing::nextMeshID());
@@ -227,8 +227,8 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithSubsteps)
 
   bool exchangeSubsteps = true;
 
-  cplscheme::PtrCouplingData dpcd = std::make_shared<cplscheme::CouplingData>(displacements, dummyMesh, false, exchangeSubsteps, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
-  cplscheme::PtrCouplingData fpcd = std::make_shared<cplscheme::CouplingData>(forces, dummyMesh, false, exchangeSubsteps, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
+  cplscheme::PtrCouplingData dpcd = std::make_shared<cplscheme::CouplingData>(displacements, dummyMesh, false, exchangeSubsteps);
+  cplscheme::PtrCouplingData fpcd = std::make_shared<cplscheme::CouplingData>(forces, dummyMesh, false, exchangeSubsteps);
 
   DataMap data;
   data.insert(std::pair<int, cplscheme::PtrCouplingData>(0, dpcd));
@@ -304,8 +304,8 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithSubsteps)
 
   bool exchangeSubsteps = true;
 
-  cplscheme::PtrCouplingData dpcd = std::make_shared<cplscheme::CouplingData>(displacements, dummyMesh, false, exchangeSubsteps, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
-  cplscheme::PtrCouplingData fpcd = std::make_shared<cplscheme::CouplingData>(forces, dummyMesh, false, exchangeSubsteps, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
+  cplscheme::PtrCouplingData dpcd = std::make_shared<cplscheme::CouplingData>(displacements, dummyMesh, false, exchangeSubsteps);
+  cplscheme::PtrCouplingData fpcd = std::make_shared<cplscheme::CouplingData>(forces, dummyMesh, false, exchangeSubsteps);
 
   DataMap data;
   data.insert(std::pair<int, cplscheme::PtrCouplingData>(0, dpcd));
@@ -398,8 +398,8 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithoutSubsteps)
 
   bool exchangeSubsteps = false;
 
-  cplscheme::PtrCouplingData dpcd = std::make_shared<cplscheme::CouplingData>(displacements, dummyMesh, false, exchangeSubsteps, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
-  cplscheme::PtrCouplingData fpcd = std::make_shared<cplscheme::CouplingData>(forces, dummyMesh, false, exchangeSubsteps, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
+  cplscheme::PtrCouplingData dpcd = std::make_shared<cplscheme::CouplingData>(displacements, dummyMesh, false, exchangeSubsteps);
+  cplscheme::PtrCouplingData fpcd = std::make_shared<cplscheme::CouplingData>(forces, dummyMesh, false, exchangeSubsteps);
 
   DataMap data;
   data.insert(std::pair<int, cplscheme::PtrCouplingData>(0, dpcd));
@@ -444,7 +444,7 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithoutSubsteps)
 BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithoutSubsteps)
 {
   PRECICE_TEST(1_rank);
-  //use two vectors and see if underrelaxation works
+  // use two vectors and see if underrelaxation works
   double           relaxation = 0.4;
   std::vector<int> dataIDs{0, 1};
   const int        dim       = 3;
@@ -475,8 +475,8 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithoutSubsteps)
 
   bool exchangeSubsteps = false;
 
-  cplscheme::PtrCouplingData dpcd = std::make_shared<cplscheme::CouplingData>(displacements, dummyMesh, false, exchangeSubsteps, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
-  cplscheme::PtrCouplingData fpcd = std::make_shared<cplscheme::CouplingData>(forces, dummyMesh, false, exchangeSubsteps, cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
+  cplscheme::PtrCouplingData dpcd = std::make_shared<cplscheme::CouplingData>(displacements, dummyMesh, false, exchangeSubsteps);
+  cplscheme::PtrCouplingData fpcd = std::make_shared<cplscheme::CouplingData>(forces, dummyMesh, false, exchangeSubsteps);
 
   DataMap data;
   data.insert(std::pair<int, cplscheme::PtrCouplingData>(0, dpcd));

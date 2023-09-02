@@ -13,7 +13,7 @@ const double Storage::WINDOW_START = 0.0;
 const double Storage::WINDOW_END = 1.0;
 
 Storage::Storage()
-    : _stampleStorage{}, _extrapolationOrder{0}, _interpolationOrder(0)
+    : _stampleStorage{}, _interpolationOrder(0)
 {
 }
 
@@ -42,11 +42,6 @@ void Storage::setSampleAtTime(double time, Sample sample)
     }
     PRECICE_ASSERT(false, "unreachable!");
   }
-}
-
-void Storage::setExtrapolationOrder(int extrapolationOrder)
-{
-  _extrapolationOrder = extrapolationOrder;
 }
 
 void Storage::setInterpolationOrder(int interpolationOrder)
@@ -78,7 +73,7 @@ void Storage::move()
 {
   PRECICE_ASSERT(nTimes() > 0);
   auto sampleAtBeginning = getSampleAtEnd();
-  auto sampleAtEnd       = computeExtrapolation();
+  auto sampleAtEnd       = getSampleAtEnd();
   _stampleStorage.clear();
   _stampleStorage.emplace_back(time::Stample{WINDOW_START, std::move(sampleAtBeginning)});
   _stampleStorage.emplace_back(time::Stample{WINDOW_END, std::move(sampleAtEnd)});
@@ -126,18 +121,6 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> Storage::getTimesAndValues() const
     values.col(i) = _stampleStorage[i].sample.values;
   }
   return std::make_pair(times, values);
-}
-
-time::Sample Storage::computeExtrapolation()
-{
-  if (_extrapolationOrder == 0) {
-    return getSampleAtEnd(); // use values at end of window as initial guess for next
-  } else if (_extrapolationOrder == 1) {
-    auto s0 = getSampleAtBeginning();
-    auto s1 = getSampleAtEnd();
-    return time::Sample{s1.dataDims, 2 * s1.values - s0.values, 2 * s1.gradients - s0.gradients}; // use linear extrapolation from window at beginning and end of window.
-  }
-  PRECICE_UNREACHABLE("Invalid _extrapolationOrder")
 }
 
 // helper function to compute x(t) from given data (x0,t0), (x1,t1), ..., (xn,tn) via B-spline interpolation (implemented using Eigen).

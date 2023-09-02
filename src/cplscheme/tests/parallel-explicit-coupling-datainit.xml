@@ -4,7 +4,7 @@
   <data:vector name="Data1" />
   <data:scalar name="Data2" />
 
-  <mesh name="Mesh">
+  <mesh name="Mesh" dimensions="2">
     <use-data name="Data0" />
     <use-data name="Data1" />
     <use-data name="Data2" />

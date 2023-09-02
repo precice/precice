@@ -55,7 +55,6 @@ CouplingSchemeConfiguration::CouplingSchemeConfiguration(
       TAG_RES_REL_CONV_MEASURE("residual-relative-convergence-measure"),
       TAG_MIN_ITER_CONV_MEASURE("min-iteration-convergence-measure"),
       TAG_MAX_ITERATIONS("max-iterations"),
-      TAG_EXTRAPOLATION("extrapolation-order"),
       ATTR_DATA("data"),
       ATTR_MESH("mesh"),
       ATTR_PARTICIPANT("participant"),
@@ -286,13 +285,6 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     PRECICE_CHECK(_config.maxIterations > 0,
                   "Maximal iteration limit has to be larger than zero. Please check the <max-iterations value = \"{}\" /> subtag in the <coupling-scheme:... /> of your precice-config.xml.",
                   _config.maxIterations);
-  } else if (tag.getName() == TAG_EXTRAPOLATION) {
-    PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
-    _config.extrapolationOrder = tag.getIntAttributeValue(ATTR_VALUE);
-    PRECICE_CHECK((_config.extrapolationOrder == 0) || (_config.extrapolationOrder == 1),
-                  "Extrapolation order has to be 0 or 1. "
-                  "Please check the <extrapolation-order value=\"{}\" /> subtag in the <coupling-scheme:... /> of your precice-config.xml.",
-                  _config.extrapolationOrder);
   }
 }
 
@@ -413,7 +405,6 @@ void CouplingSchemeConfiguration::addTypespecifcSubtags(
     addTagResidualRelativeConvergenceMeasure(tag);
     addTagMinIterationConvergenceMeasure(tag);
     addTagMaxIterations(tag);
-    addTagExtrapolation(tag);
   } else if (type == VALUE_MULTI) {
     addTagParticipant(tag);
     addTagExchange(tag);
@@ -423,7 +414,6 @@ void CouplingSchemeConfiguration::addTypespecifcSubtags(
     addTagResidualRelativeConvergenceMeasure(tag);
     addTagMinIterationConvergenceMeasure(tag);
     addTagMaxIterations(tag);
-    addTagExtrapolation(tag);
   } else if (type == VALUE_SERIAL_IMPLICIT) {
     addTagParticipants(tag);
     addTagExchange(tag);
@@ -433,7 +423,6 @@ void CouplingSchemeConfiguration::addTypespecifcSubtags(
     addTagResidualRelativeConvergenceMeasure(tag);
     addTagMinIterationConvergenceMeasure(tag);
     addTagMaxIterations(tag);
-    addTagExtrapolation(tag);
   } else {
     // If wrong coupling scheme type is provided, this is already caught by the config parser. If the assertion below is triggered, it's a bug in preCICE, not wrong usage.
     PRECICE_ASSERT(false, "Unknown coupling scheme.");
@@ -553,8 +542,8 @@ void CouplingSchemeConfiguration::addTagResidualRelativeConvergenceMeasure(
   XMLTag tagConvergenceMeasure(*this, TAG_RES_REL_CONV_MEASURE,
                                XMLTag::OCCUR_ARBITRARY);
   tagConvergenceMeasure.setDocumentation(
-      "Residual relative convergence criterion based on the relative two-norm differences of data values between iterations.\n"
-      "\\$$\\frac{\\left\\lVert H(x^k) - x^k \\right\\rVert_2}{\\left\\lVert H(x^{k-1}) - x^{k-1} \\right\\rVert_2} < \\text{limit}\\$$");
+      "Relative convergence criterion comparing the currently measured residual to the residual of the first iteration in the time window.\n"
+      "\\$$\\frac{\\left\\lVert H(x^k) - x^k \\right\\rVert_2}{\\left\\lVert H(x^0) - x^0 \\right\\rVert_2} < \\text{limit}\\$$");
   addBaseAttributesTagConvergenceMeasure(tagConvergenceMeasure);
   XMLAttribute<double> attrLimit(ATTR_LIMIT);
   attrLimit.setDocumentation("Limit under which the measure is considered to have converged. Must be in \\((0, 1]\\).");
@@ -620,18 +609,6 @@ void CouplingSchemeConfiguration::addTagMaxIterations(
   attrValue.setDocumentation("The maximum value of iterations.");
   tagMaxIterations.addAttribute(attrValue);
   tag.addSubtag(tagMaxIterations);
-}
-
-void CouplingSchemeConfiguration::addTagExtrapolation(
-    xml::XMLTag &tag)
-{
-  using namespace xml;
-  XMLTag            tagExtrapolation(*this, TAG_EXTRAPOLATION, XMLTag::OCCUR_NOT_OR_ONCE);
-  XMLAttribute<int> attrValue(ATTR_VALUE);
-  attrValue.setDocumentation("The extrapolation order to use.");
-  tagExtrapolation.addAttribute(attrValue);
-  tagExtrapolation.setDocumentation("Sets order of predictor of interface values for first participant.");
-  tag.addSubtag(tagExtrapolation);
 }
 
 void CouplingSchemeConfiguration::addTagAcceleration(
@@ -814,7 +791,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
   SerialCouplingScheme *scheme = new SerialCouplingScheme(
       _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
       _config.validDigits, first, second,
-      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations, _config.extrapolationOrder);
+      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations);
 
   addDataToBeExchanged(*scheme, accessor);
   PRECICE_CHECK(scheme->hasAnySendData(),
@@ -852,7 +829,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingSch
   ParallelCouplingScheme *scheme = new ParallelCouplingScheme(
       _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
       _config.validDigits, _config.participants[0], _config.participants[1],
-      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations, _config.extrapolationOrder);
+      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations);
 
   addDataToBeExchanged(*scheme, accessor);
   PRECICE_CHECK(scheme->hasAnySendData(),
@@ -890,7 +867,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
   scheme = new MultiCouplingScheme(
       _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
       _config.validDigits, accessor, m2ns, _config.dtMethod,
-      _config.controller, _config.maxIterations, _config.extrapolationOrder);
+      _config.controller, _config.maxIterations);
 
   MultiCouplingScheme *castedScheme = dynamic_cast<MultiCouplingScheme *>(scheme);
   PRECICE_ASSERT(castedScheme, "The dynamic cast of CouplingScheme failed.");

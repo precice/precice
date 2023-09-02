@@ -42,8 +42,6 @@ public:
    */
   void setSampleAtTime(double time, Sample sample);
 
-  void setExtrapolationOrder(int extrapolationOrder);
-
   void setInterpolationOrder(int interpolationOrder);
 
   /**
@@ -129,16 +127,11 @@ private:
 
   mutable logging::Logger _log{"time::Storage"};
 
-  /// extrapolation order for this Storage
-  int _extrapolationOrder;
-
   int _interpolationOrder;
 
   Eigen::VectorXd bSplineInterpolationAt(double t, Eigen::VectorXd ts, Eigen::MatrixXd xs, int splineDegree);
 
   int computeUsedOrder(int requestedOrder, int numberOfAvailableSamples);
-
-  time::Sample computeExtrapolation();
 
   time::Sample getSampleAtBeginning();
 
