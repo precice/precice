@@ -1,28 +1,28 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration dimensions="2">
+<precice-configuration>
   <data:scalar name="DataAB" />
   <data:scalar name="DataBA" />
   <data:scalar name="DataBC" />
   <data:scalar name="DataCB" />
 
-  <mesh name="MeshA">
+  <mesh name="MeshA" dimensions="2">
     <use-data name="DataAB" />
     <use-data name="DataBA" />
     <use-data name="DataCB" />
     <use-data name="DataBC" />
   </mesh>
 
-  <mesh name="MeshB1">
+  <mesh name="MeshB1" dimensions="2">
     <use-data name="DataAB" />
     <use-data name="DataBA" />
   </mesh>
 
-  <mesh name="MeshB2">
+  <mesh name="MeshB2" dimensions="2">
     <use-data name="DataBC" />
     <use-data name="DataCB" />
   </mesh>
 
-  <mesh name="MeshC">
+  <mesh name="MeshC" dimensions="2">
     <use-data name="DataBC" />
     <use-data name="DataCB" />
   </mesh>

@@ -334,6 +334,15 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
   inMesh->computeBoundingBox();
   auto localBB = inMesh->getBoundingBox();
 
+  // If we have less vertices in the whole domain than our target cluster size,
+  // we just use a single cluster. The clustering result of the algorithm further
+  // down is in this case not optimal.
+  // The single cluster has in principle a radius of inf. We use here twice the
+  // length of the longest bounding box edge length and the center of the bounding
+  // box for the center point.
+  if (inMesh->vertices().size() < verticesPerCluster)
+    return {localBB.longestEdgeLength() * 2, Vertices{mesh::Vertex({localBB.center(), 0})}};
+
   // We define a convenience alias for the localBB. In case we need to synchronize the clustering across ranks later on, we need
   // to work with the global bounding box of the whole domain.
   auto globalBB = localBB;

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration dimensions="2">
+<precice-configuration>
   <log>
     <sink
       type="stream"
@@ -12,12 +12,12 @@
   <data:vector name="Forces" />
   <data:vector name="Velocities" />
 
-  <mesh name="MeshOne">
+  <mesh name="MeshOne" dimensions="2">
     <use-data name="Forces" />
     <use-data name="Velocities" />
   </mesh>
 
-  <mesh name="MeshTwo">
+  <mesh name="MeshTwo" dimensions="2">
     <use-data name="Forces" />
     <use-data name="Velocities" />
   </mesh>
@@ -51,11 +51,11 @@
 
   <m2n:sockets acceptor="SolverOne" connector="SolverTwo" />
 
-  <coupling-scheme:serial-explicit>
+  <coupling-scheme:parallel-explicit>
     <participants first="SolverOne" second="SolverTwo" />
     <max-time-windows value="10" />
     <time-window-size value="1.0" />
     <exchange data="Forces" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
     <exchange data="Velocities" mesh="MeshOne" from="SolverTwo" to="SolverOne" initialize="True" />
-  </coupling-scheme:serial-explicit>
+  </coupling-scheme:parallel-explicit>
 </precice-configuration>

@@ -1,20 +1,19 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration dimensions="3">
+<precice-configuration>
   <data:vector name="Data1" />
   <data:vector name="Data2" />
 
-  <mesh name="MeshOne">
+  <mesh name="MeshOne" dimensions="3">
     <use-data name="Data1" />
     <use-data name="Data2" />
   </mesh>
 
-  <mesh name="MeshTwo">
+  <mesh name="MeshTwo" dimensions="3">
     <use-data name="Data1" />
     <use-data name="Data2" />
   </mesh>
 
   <participant name="SolverOne">
-    <intra-comm:mpi-single />
     <receive-mesh name="MeshTwo" from="SolverTwo" />
     <provide-mesh name="MeshOne" />
     <mapping:nearest-neighbor
@@ -32,7 +31,6 @@
   </participant>
 
   <participant name="SolverTwo">
-    <intra-comm:mpi-single />
     <provide-mesh name="MeshTwo" />
     <write-data name="Data2" mesh="MeshTwo" />
     <read-data name="Data1" mesh="MeshTwo" />

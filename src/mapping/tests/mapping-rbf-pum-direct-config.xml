@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <configuration>
-  <mesh name="TestMesh" />
-  <mesh name="TestMeshTwo" />
-  <mesh name="TestMeshThree" />
-  <mesh name="TestMeshFour" />
-  <mesh name="TestMeshFive" />
-  <mesh name="TestMeshSix" />
-  <mesh name="TestMeshSeven" />
-  <mesh name="TestMeshEight" />
-  <mesh name="TestMeshNine" />
-  <mesh name="TestMeshTen" />
-  <mesh name="TestMeshEleven" />
-  <mesh name="TestMeshTwelve" />
+  <mesh name="TestMesh" dimensions="3" />
+  <mesh name="TestMeshTwo" dimensions="3" />
+  <mesh name="TestMeshThree" dimensions="3" />
+  <mesh name="TestMeshFour" dimensions="3" />
+  <mesh name="TestMeshFive" dimensions="3" />
+  <mesh name="TestMeshSix" dimensions="3" />
+  <mesh name="TestMeshSeven" dimensions="3" />
+  <mesh name="TestMeshEight" dimensions="3" />
+  <mesh name="TestMeshNine" dimensions="3" />
+  <mesh name="TestMeshTen" dimensions="3" />
+  <mesh name="TestMeshEleven" dimensions="3" />
+  <mesh name="TestMeshTwelve" dimensions="3" />
 
   <mapping:rbf-pum-direct
     direction="read"
@@ -121,6 +121,7 @@
     vertices-per-cluster="10"
     relative-overlap="0.4">
     <basis-function:gaussian support-radius="0.3" />
+    <executor:cpu />
   </mapping:rbf-pum-direct>
 
   <mapping:rbf-pum-direct
@@ -135,6 +136,7 @@
     x-dead="true"
     y-dead="false"
     z-dead="true">
+    <executor:cpu />
     <basis-function:gaussian shape-parameter="0.3" />
   </mapping:rbf-pum-direct>
 </configuration>

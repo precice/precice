@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(DirectAccessReadWrite)
     // Allocate a vector containing the vertices
     std::vector<double> receivedMesh(receivedMeshSize * dim);
     std::vector<int>    receiveMeshIDs(receivedMeshSize, -1);
-    interface.getMeshVerticesAndIDs(receivedMeshName, receiveMeshIDs, receivedMesh);
+    interface.getMeshVertexIDsAndCoordinates(receivedMeshName, receiveMeshIDs, receivedMesh);
 
     // Allocate data to read and write
     std::vector<double> readData(receiveMeshIDs.size(), -1);

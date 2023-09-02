@@ -16,8 +16,8 @@ target_sources(preciceCore
     src/acceleration/ConstantRelaxationAcceleration.hpp
     src/acceleration/IQNILSAcceleration.cpp
     src/acceleration/IQNILSAcceleration.hpp
-    src/acceleration/MVQNAcceleration.cpp
-    src/acceleration/MVQNAcceleration.hpp
+    src/acceleration/IQNIMVJAcceleration.cpp
+    src/acceleration/IQNIMVJAcceleration.hpp
     src/acceleration/SharedPointer.hpp
     src/acceleration/config/AccelerationConfiguration.cpp
     src/acceleration/config/AccelerationConfiguration.hpp
@@ -169,6 +169,7 @@ target_sources(preciceCore
     src/m2n/config/M2NConfiguration.hpp
     src/mapping/BarycentricBaseMapping.cpp
     src/mapping/BarycentricBaseMapping.hpp
+    src/mapping/GinkgoRadialBasisFctSolver.hpp
     src/mapping/LinearCellInterpolationMapping.cpp
     src/mapping/LinearCellInterpolationMapping.hpp
     src/mapping/Mapping.cpp
@@ -197,6 +198,8 @@ target_sources(preciceCore
     src/mapping/impl/SphericalVertexCluster.hpp
     src/math/barycenter.cpp
     src/math/barycenter.hpp
+    src/math/bspline.cpp
+    src/math/bspline.hpp
     src/math/constants.hpp
     src/math/differences.hpp
     src/math/geometry.cpp

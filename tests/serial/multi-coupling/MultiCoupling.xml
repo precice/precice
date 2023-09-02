@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration dimensions="2">
+<precice-configuration>
   <data:vector name="Forces1" />
   <data:vector name="Forces2" />
   <data:vector name="Forces3" />
@@ -10,34 +10,34 @@
   <data:vector name="DisplacementDeltas2" />
   <data:vector name="DisplacementDeltas3" />
 
-  <mesh name="NASTIN_Mesh1">
+  <mesh name="NASTIN_Mesh1" dimensions="2">
     <use-data name="DisplacementDeltas1" />
     <use-data name="Forces1" />
   </mesh>
 
-  <mesh name="SOLIDZ_Mesh1">
+  <mesh name="SOLIDZ_Mesh1" dimensions="2">
     <use-data name="Displacements1" />
     <use-data name="DisplacementDeltas1" />
     <use-data name="Forces1" />
   </mesh>
 
-  <mesh name="NASTIN_Mesh2">
+  <mesh name="NASTIN_Mesh2" dimensions="2">
     <use-data name="DisplacementDeltas2" />
     <use-data name="Forces2" />
   </mesh>
 
-  <mesh name="SOLIDZ_Mesh2">
+  <mesh name="SOLIDZ_Mesh2" dimensions="2">
     <use-data name="Displacements2" />
     <use-data name="DisplacementDeltas2" />
     <use-data name="Forces2" />
   </mesh>
 
-  <mesh name="NASTIN_Mesh3">
+  <mesh name="NASTIN_Mesh3" dimensions="2">
     <use-data name="DisplacementDeltas3" />
     <use-data name="Forces3" />
   </mesh>
 
-  <mesh name="SOLIDZ_Mesh3">
+  <mesh name="SOLIDZ_Mesh3" dimensions="2">
     <use-data name="Displacements3" />
     <use-data name="DisplacementDeltas3" />
     <use-data name="Forces3" />

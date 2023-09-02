@@ -550,7 +550,7 @@ void TestSendAndReceiveRanges(TestContext const &context)
   using precice::com::AsVectorTag;
 
   if (context.isPrimary()) {
-    com.acceptConnection("Master", "Slave", "", 0, 1);
+    com.acceptConnection("Primary", "Secondary", "", 0, 1);
     {
       std::vector<int> recv{1, 2, 3};
       std::vector<int> msg = com.receiveRange(1, AsVectorTag<int>{});
@@ -564,7 +564,7 @@ void TestSendAndReceiveRanges(TestContext const &context)
     }
     com.closeConnection();
   } else {
-    com.requestConnection("Master", "Slave", "", 0, 1);
+    com.requestConnection("Primary", "Secondary", "", 0, 1);
     {
       std::vector<int> msg{1, 2, 3};
       com.sendRange(msg, 0);

@@ -59,6 +59,7 @@ target_sources(testprecice
     tests/quasi-newton/parallel/TestQN2EmptyPartition.cpp
     tests/quasi-newton/parallel/TestQN3.cpp
     tests/quasi-newton/parallel/TestQN3EmptyPartition.cpp
+    tests/quasi-newton/serial/DefaultConfig.cpp
     tests/quasi-newton/serial/TestQN1.cpp
     tests/quasi-newton/serial/TestQN2.cpp
     tests/quasi-newton/serial/TestQN3.cpp
@@ -71,8 +72,10 @@ target_sources(testprecice
     tests/serial/TestExplicitWithSolverGeometry.cpp
     tests/serial/TestImplicit.cpp
     tests/serial/TestReadAPI.cpp
-    tests/serial/action-timings/ActionTimingsExplicit.cpp
-    tests/serial/action-timings/ActionTimingsImplicit.cpp
+    tests/serial/action-timings/ActionTimingsParallelExplicit.cpp
+    tests/serial/action-timings/ActionTimingsParallelImplicit.cpp
+    tests/serial/action-timings/ActionTimingsSerialExplicit.cpp
+    tests/serial/action-timings/ActionTimingsSerialImplicit.cpp
     tests/serial/circular/Explicit.cpp
     tests/serial/circular/helper.hpp
     tests/serial/convergence-measures/helpers.cpp
@@ -188,8 +191,6 @@ target_sources(testprecice
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithWaveformSubcyclingMixed.cpp
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithWaveformSubcyclingThird.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataFirstParticipant.cpp
-    tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataFirstParticipantChangingDt.cpp
-    tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataFirstParticipantFixedWindows.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithSubcyclingNoSubsteps.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithSubcyclingNoSubstepsUseInitFirst.cpp

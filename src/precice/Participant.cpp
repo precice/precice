@@ -99,11 +99,6 @@ bool Participant::requiresWritingCheckpoint()
   return _impl->requiresWritingCheckpoint();
 }
 
-bool Participant::hasMesh(::precice::string_view meshName) const
-{
-  return _impl->hasMesh(toSV(meshName));
-}
-
 bool Participant::requiresMeshConnectivityFor(::precice::string_view meshName) const
 {
   return _impl->requiresMeshConnectivityFor(toSV(meshName));
@@ -113,11 +108,6 @@ bool Participant::requiresGradientDataFor(::precice::string_view meshName,
                                           ::precice::string_view dataName) const
 {
   return _impl->requiresGradientDataFor(toSV(meshName), toSV(dataName));
-}
-
-bool Participant::hasData(::precice::string_view meshName, ::precice::string_view dataName) const
-{
-  return _impl->hasData(toSV(meshName), toSV(dataName));
 }
 
 // void Participant:: resetMesh
@@ -240,11 +230,11 @@ void Participant::setMeshAccessRegion(::precice::string_view        meshName,
   _impl->setMeshAccessRegion(toSV(meshName), boundingBox);
 }
 
-void Participant::getMeshVerticesAndIDs(::precice::string_view    meshName,
-                                        ::precice::span<VertexID> ids,
-                                        ::precice::span<double>   coordinates) const
+void Participant::getMeshVertexIDsAndCoordinates(::precice::string_view    meshName,
+                                                 ::precice::span<VertexID> ids,
+                                                 ::precice::span<double>   coordinates) const
 {
-  _impl->getMeshVerticesAndIDs(toSV(meshName), ids, coordinates);
+  _impl->getMeshVertexIDsAndCoordinates(toSV(meshName), ids, coordinates);
 }
 
 void Participant::writeGradientData(

@@ -74,12 +74,7 @@
 
 using precice::profiling::Event;
 
-namespace precice {
-
-/// Enabled further inter- and intra-solver synchronisation
-bool syncMode = false;
-
-namespace impl {
+namespace precice::impl {
 
 ParticipantImpl::ParticipantImpl(
     std::string_view      participantName,
@@ -209,7 +204,6 @@ void ParticipantImpl::configure(
 
   _meshLock.clear();
 
-  _dimensions         = config.getDimensions();
   _allowsExperimental = config.allowsExperimental();
   _accessor           = determineAccessingParticipant(config);
   _accessor->setMeshIdManager(config.getMeshConfiguration()->extractMeshIdManager());
@@ -253,7 +247,7 @@ void ParticipantImpl::initialize()
   bool failedToInitialize = _couplingScheme->isActionRequired(cplscheme::CouplingScheme::Action::InitializeData) && not _couplingScheme->isActionFulfilled(cplscheme::CouplingScheme::Action::InitializeData);
   PRECICE_CHECK(not failedToInitialize,
                 "Initial data has to be written to preCICE before calling initialize(). "
-                "After defining your mesh, call requiresInitialData() to check if the participant is required to write initial data using an appropriate write...Data() function.");
+                "After defining your mesh, call requiresInitialData() to check if the participant is required to write initial data using the writeData() function.");
 
   _solverInitEvent.reset();
   Event                        e("initialize", profiling::Fundamental, profiling::Synchronize);
@@ -392,7 +386,7 @@ void ParticipantImpl::advance(
 
   advanceCouplingScheme();
 
-  if (_couplingScheme->hasDataBeenReceived()) {
+  if (_couplingScheme->hasDataBeenReceived() || _couplingScheme->isTimeWindowComplete()) { // @todo potential to avoid unnecessary mappings here.
     mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, time);
   }
@@ -501,7 +495,7 @@ bool ParticipantImpl::isTimeWindowComplete() const
 double ParticipantImpl::getMaxTimeStepSize() const
 {
   PRECICE_CHECK(_state != State::Finalized, "getMaxTimeStepSize() cannot be called after finalize().");
-  PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before isCouplingOngoing() can be evaluated.");
+  PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before getMaxTimeStepSize() can be evaluated.");
   return _couplingScheme->getNextTimeStepMaxSize();
 }
 
@@ -536,21 +530,6 @@ bool ParticipantImpl::requiresReadingCheckpoint()
     _couplingScheme->markActionFulfilled(cplscheme::CouplingScheme::Action::ReadCheckpoint);
   }
   return required;
-}
-
-bool ParticipantImpl::hasMesh(std::string_view meshName) const
-{
-  PRECICE_TRACE(meshName);
-  return _accessor->hasMesh(meshName);
-}
-
-bool ParticipantImpl::hasData(
-    std::string_view meshName,
-    std::string_view dataName) const
-{
-  PRECICE_TRACE(dataName, meshName);
-  PRECICE_VALIDATE_MESH_NAME(meshName);
-  return _accessor->isDataUsed(dataName, meshName);
 }
 
 bool ParticipantImpl::requiresMeshConnectivityFor(std::string_view meshName) const
@@ -611,7 +590,7 @@ int ParticipantImpl::setMeshVertex(
   auto &       mesh    = *context.mesh;
   PRECICE_CHECK(position.size() == static_cast<unsigned long>(mesh.getDimensions()),
                 "Cannot set vertex for mesh \"{}\". Expected {} position components but found {}.", meshName, mesh.getDimensions(), position.size());
-  auto index = mesh.createVertex(Eigen::Map<const Eigen::VectorXd>{position.data(), _dimensions}).getID();
+  auto index = mesh.createVertex(Eigen::Map<const Eigen::VectorXd>{position.data(), mesh.getDimensions()}).getID();
   mesh.allocateDataValues();
 
   const auto newSize = mesh.vertices().size();
@@ -642,7 +621,7 @@ void ParticipantImpl::setMeshVertices(
                 meshDims, meshName, ids.size(), positions.size(), expectedPositionSize, ids.size(), meshDims);
 
   const Eigen::Map<const Eigen::MatrixXd> posMatrix{
-      positions.data(), _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(ids.size())};
+      positions.data(), mesh.getDimensions(), static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(ids.size())};
   for (unsigned long i = 0; i < ids.size(); ++i) {
     ids[i] = mesh.createVertex(posMatrix.col(i)).getID();
   }
@@ -792,10 +771,10 @@ void ParticipantImpl::setMeshQuad(
 {
   PRECICE_TRACE(meshName, firstVertexID,
                 secondVertexID, thirdVertexID, fourthVertexID);
-  PRECICE_CHECK(_dimensions == 3, "setMeshQuad is only possible for 3D cases."
-                                  " Please set the dimension to 3 in the preCICE configuration file.");
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   MeshContext &context = _accessor->usedMeshContext(meshName);
+  PRECICE_CHECK(context.mesh->getDimensions() == 3, "setMeshQuad is only possible for 3D meshes."
+                                                    " Please set the mesh dimension to 3 in the preCICE configuration file.");
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
     PRECICE_ASSERT(context.mesh);
     mesh::Mesh &mesh = *(context.mesh);
@@ -907,9 +886,9 @@ void ParticipantImpl::setMeshTetrahedron(
 {
   PRECICE_TRACE(meshName, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
-  PRECICE_CHECK(_dimensions == 3, "setMeshTetrahedron is only possible for 3D cases."
-                                  " Please set the dimension to 3 in the preCICE configuration file.");
   MeshContext &context = _accessor->usedMeshContext(meshName);
+  PRECICE_CHECK(context.mesh->getDimensions() == 3, "setMeshTetrahedron is only possible for 3D meshes."
+                                                    " Please set the mesh dimension to 3 in the preCICE configuration file.");
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
     mesh::PtrMesh &mesh = context.mesh;
     using impl::errorInvalidVertexID;
@@ -1098,7 +1077,6 @@ void ParticipantImpl::setMeshAccessRegion(
     const std::string_view        meshName,
     ::precice::span<const double> boundingBox) const
 {
-  PRECICE_EXPERIMENTAL_API();
   PRECICE_TRACE(meshName, boundingBox.size());
   PRECICE_REQUIRE_MESH_USE(meshName);
   PRECICE_CHECK(_state != State::Finalized, "setMeshAccessRegion() cannot be called after finalize().")
@@ -1132,12 +1110,11 @@ void ParticipantImpl::setMeshAccessRegion(
   _accessRegionDefined = true;
 }
 
-void ParticipantImpl::getMeshVerticesAndIDs(
+void ParticipantImpl::getMeshVertexIDsAndCoordinates(
     const std::string_view    meshName,
     ::precice::span<VertexID> ids,
     ::precice::span<double>   coordinates) const
 {
-  PRECICE_EXPERIMENTAL_API();
   PRECICE_TRACE(meshName, ids.size(), coordinates.size());
   PRECICE_REQUIRE_MESH_USE(meshName);
   PRECICE_DEBUG("Get {} mesh vertices with IDs", ids.size());
@@ -1171,7 +1148,7 @@ void ParticipantImpl::getMeshVerticesAndIDs(
   PRECICE_CHECK(ids.size() <= vertices.size(), "The queried size exceeds the number of available points.");
 
   Eigen::Map<Eigen::MatrixXd> posMatrix{
-      coordinates.data(), _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(ids.size())};
+      coordinates.data(), mesh->getDimensions(), static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(ids.size())};
 
   for (unsigned long i = 0; i < ids.size(); i++) {
     PRECICE_ASSERT(i < vertices.size(), i, vertices.size());
@@ -1504,5 +1481,4 @@ const mesh::Mesh &ParticipantImpl::mesh(const std::string &meshName) const
   return *_accessor->usedMeshContext(meshName).mesh;
 }
 
-} // namespace impl
-} // namespace precice
+} // namespace precice::impl

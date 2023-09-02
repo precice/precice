@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(Implicit)
     std::vector<double> solverTwoMesh(meshSize * dim);
     std::vector<int>    otherIDs(meshSize);
 
-    couplingInterface.getMeshVerticesAndIDs(otherMeshName, otherIDs, solverTwoMesh);
+    couplingInterface.getMeshVertexIDsAndCoordinates(otherMeshName, otherIDs, solverTwoMesh);
     // Some dummy writeData
     std::array<double, 3> writeData({1, 2, 3});
 
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(Implicit)
     std::vector<double> solverOneMesh(meshSize * dim);
     std::vector<int>    otherIDs(meshSize);
 
-    couplingInterface.getMeshVerticesAndIDs(otherMeshName, otherIDs, solverOneMesh);
+    couplingInterface.getMeshVertexIDsAndCoordinates(otherMeshName, otherIDs, solverOneMesh);
     // Some dummy writeData
     std::array<double, 4> writeData({10, 11, 12, 13});
 

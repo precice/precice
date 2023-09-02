@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration dimensions="2" experimental="true">
+<precice-configuration>
   <data:scalar name="Velocities" />
 
-  <mesh name="MeshTwo">
+  <mesh name="MeshTwo" dimensions="2">
     <use-data name="Velocities" />
   </mesh>
 
