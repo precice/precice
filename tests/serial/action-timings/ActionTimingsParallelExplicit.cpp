@@ -12,7 +12,7 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(ActionTimings)
-BOOST_AUTO_TEST_CASE(ActionTimingsExplicit)
+BOOST_AUTO_TEST_CASE(ActionTimingsParallelExplicit)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
