@@ -72,8 +72,10 @@ target_sources(testprecice
     tests/serial/TestExplicitWithSolverGeometry.cpp
     tests/serial/TestImplicit.cpp
     tests/serial/TestReadAPI.cpp
-    tests/serial/action-timings/ActionTimingsExplicit.cpp
-    tests/serial/action-timings/ActionTimingsImplicit.cpp
+    tests/serial/action-timings/ActionTimingsParallelExplicit.cpp
+    tests/serial/action-timings/ActionTimingsParallelImplicit.cpp
+    tests/serial/action-timings/ActionTimingsSerialExplicit.cpp
+    tests/serial/action-timings/ActionTimingsSerialImplicit.cpp
     tests/serial/circular/Explicit.cpp
     tests/serial/circular/helper.hpp
     tests/serial/convergence-measures/helpers.cpp
