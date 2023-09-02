@@ -9,6 +9,8 @@
 #include "xml/XMLAttribute.hpp"
 #include "xml/XMLTag.hpp"
 
+bool precice::syncMode = false;
+
 namespace precice::profiling {
 
 namespace {
@@ -53,6 +55,11 @@ ProfilingConfiguration::ProfilingConfiguration(xml::XMLTag &parent)
                                              "Events will be written to `<directory>/precice-events/`");
   tag.addAttribute(attrDirectory);
 
+  auto attrSynchronize = xml::makeXMLAttribute("synchronize", false)
+                             .setDocumentation("Enables additional inter- and intra-participant synchronization points. "
+                                               "This avoids measuring blocking time for communication and other collective operations.");
+  tag.addAttribute(attrSynchronize);
+
   parent.addSubtag(tag);
 }
 
@@ -60,9 +67,10 @@ void ProfilingConfiguration::xmlTagCallback(
     const xml::ConfigurationContext &context,
     xml::XMLTag &                    tag)
 {
-  auto mode       = tag.getStringAttributeValue("mode");
-  auto flushEvery = tag.getIntAttributeValue("flush-every");
-  auto directory  = boost::filesystem::path(tag.getStringAttributeValue("directory"));
+  precice::syncMode = tag.getBooleanAttributeValue("synchronize");
+  auto mode         = tag.getStringAttributeValue("mode");
+  auto flushEvery   = tag.getIntAttributeValue("flush-every");
+  auto directory    = boost::filesystem::path(tag.getStringAttributeValue("directory"));
   PRECICE_CHECK(flushEvery >= 0, "You configured the profiling to flush-every=\"{}\", which is invalid. "
                                  "Please choose a number >= 0.");
 
@@ -79,7 +87,8 @@ void ProfilingConfiguration::xmlTagCallback(
 
 void applyDefaults()
 {
-  auto &er = profiling::EventRegistry::instance();
+  precice::syncMode = false;
+  auto &er          = profiling::EventRegistry::instance();
 
   er.setWriteQueueMax(DEFAULT_SYNC_EVERY);
 

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration>
+  <mesh name="TestMeshEleven" dimensions="3" />
+  <mesh name="TestMeshTwelve" dimensions="3" />
+
+  <mapping:rbf-global-iterative
+    direction="write"
+    from="TestMeshTwelve"
+    to="TestMeshEleven"
+    constraint="conservative"
+    polynomial="off"
+    x-dead="true"
+    y-dead="false"
+    z-dead="true"
+    solver-rtol="1e-6">
+    <executor:openmp n-threads="2" />
+    <basis-function:gaussian shape-parameter="0.3" />
+  </mapping:rbf-global-iterative>
+</configuration>

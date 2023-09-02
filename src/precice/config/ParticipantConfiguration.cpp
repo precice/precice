@@ -226,27 +226,11 @@ ParticipantConfiguration::ParticipantConfiguration(
 
     intraCommTags.push_back(tagIntraComm);
   }
-  {
-    XMLTag tagIntraComm(*this, "mpi-single", intraCommOcc, TAG_INTRA_COMM);
-    doc = "A solver in parallel needs a communication between its ranks. ";
-    doc += "By default (which is this option), the participant's MPI_COM_WORLD is reused.";
-    doc += "This tag is only used to ensure backwards compatibility.";
-    tagIntraComm.setDocumentation(doc);
 
-    intraCommTags.push_back(tagIntraComm);
-  }
   for (XMLTag &tagIntraComm : intraCommTags) {
     tag.addSubtag(tagIntraComm);
   }
   parent.addSubtag(tag);
-}
-
-void ParticipantConfiguration::setDimensions(
-    int dimensions)
-{
-  PRECICE_TRACE(dimensions);
-  PRECICE_ASSERT((dimensions == 2) || (dimensions == 3), dimensions);
-  _dimensions = dimensions;
 }
 
 void ParticipantConfiguration::setExperimental(
@@ -265,17 +249,14 @@ void ParticipantConfiguration::xmlTagCallback(
     impl::PtrParticipant p(new impl::ParticipantState(name, _meshConfig));
     _participants.push_back(p);
   } else if (tag.getName() == TAG_PROVIDE_MESH) {
-    PRECICE_ASSERT(_dimensions != 0); // setDimensions() has been called
     std::string name = tag.getStringAttributeValue(ATTR_NAME);
 
     mesh::PtrMesh mesh = _meshConfig->getMesh(name);
     PRECICE_CHECK(mesh,
                   R"(Participant "{}" attempts to provide an unknown mesh "{}". <mesh name="{}"> needs to be defined first.)",
                   _participants.back()->getName(), name, name);
-
     _participants.back()->provideMesh(mesh);
   } else if (tag.getName() == TAG_RECEIVE_MESH) {
-    PRECICE_ASSERT(_dimensions != 0); // setDimensions() has been called
     std::string                                   name              = tag.getStringAttributeValue(ATTR_NAME);
     std::string                                   from              = tag.getStringAttributeValue(ATTR_FROM);
     double                                        safetyFactor      = tag.getDoubleAttributeValue(ATTR_SAFETY_FACTOR);
@@ -293,13 +274,6 @@ void ParticipantConfiguration::xmlTagCallback(
                   R"(Participant "{}" receives mesh "{}", but doesn't specify where from. )"
                   "Please add the name of the other participant to the receive-mesh tag: <receive-mesh name=\"{}\" from=\"(other participant)\" ... />",
                   context.name, name, name)
-
-    if (allowDirectAccess) {
-      if (!_experimental) {
-        PRECICE_ERROR("You tried to configure the received mesh \"{}\" to use the option access-direct=\"true\", which is currently still experimental. Please set experimental=\"true\", if you want to use this feature.", name);
-      }
-      PRECICE_WARN("You configured the received mesh \"{}\" to use the option access-direct=\"true\", which is currently still experimental. Use with care.", name);
-    }
 
     PRECICE_CHECK(_participants.back()->getName() != from,
                   "Participant \"{}\" cannot receive mesh \"{}\" from itself. "
@@ -331,14 +305,12 @@ void ParticipantConfiguration::xmlTagCallback(
     mesh::PtrData data = getData(mesh, dataName);
     _participants.back()->addReadData(data, mesh);
   } else if (tag.getName() == TAG_WATCH_POINT) {
-    PRECICE_ASSERT(_dimensions != 0); // setDimensions() has been called
     WatchPointConfig config;
     config.name        = tag.getStringAttributeValue(ATTR_NAME);
     config.nameMesh    = tag.getStringAttributeValue(ATTR_MESH);
-    config.coordinates = tag.getEigenVectorXdAttributeValue(ATTR_COORDINATE, _dimensions);
+    config.coordinates = tag.getEigenVectorXdAttributeValue(ATTR_COORDINATE, _meshConfig->getMesh(config.nameMesh)->getDimensions());
     _watchPointConfigs.push_back(config);
   } else if (tag.getName() == TAG_WATCH_INTEGRAL) {
-    PRECICE_ASSERT(_dimensions != 0);
     WatchIntegralConfig config;
     config.name        = tag.getStringAttributeValue(ATTR_NAME);
     config.nameMesh    = tag.getStringAttributeValue(ATTR_MESH);
@@ -599,11 +571,10 @@ void ParticipantConfiguration::finishParticipantConfiguration(
       if (context.size > 1) {
         // Only display the warning message if this participant configuration is the current one.
         if (context.name == participant->getName()) {
-          PRECICE_WARN("You are using the VTK exporter in the parallel participant {}. "
-                       "Note that this will export as PVTU instead. For consistency, prefer \"<export:vtu ... />\" instead.",
-                       participant->getName());
+          PRECICE_ERROR("You attempted to use the legacy VTK exporter with the parallel participant {}, which isn't supported."
+                        "Migrate to another exporter, such as the VTU exporter by specifying \"<export:vtu ... />\"  instead of \"<export:vtk ... />\".",
+                        participant->getName());
         }
-        exporter = io::PtrExport(new io::ExportVTU());
       } else {
         exporter = io::PtrExport(new io::ExportVTK());
       }

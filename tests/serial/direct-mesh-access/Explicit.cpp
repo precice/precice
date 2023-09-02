@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(Explicit)
 
     // Allocate a vector containing the vertices
     std::vector<double> solverTwoMesh(meshSize * dim);
-    couplingInterface.getMeshVerticesAndIDs(otherMeshName, ids, solverTwoMesh);
+    couplingInterface.getMeshVertexIDsAndCoordinates(otherMeshName, ids, solverTwoMesh);
     // Some dummy writeData
     std::array<double, 4> writeData({1, 2, 3, 4});
 

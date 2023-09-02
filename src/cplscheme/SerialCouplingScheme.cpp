@@ -28,10 +28,8 @@ SerialCouplingScheme::SerialCouplingScheme(
     m2n::PtrM2N                   m2n,
     constants::TimesteppingMethod dtMethod,
     CouplingMode                  cplMode,
-    int                           maxIterations,
-    int                           extrapolationOrder)
-    : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
-                       secondParticipant, localParticipant, std::move(m2n), maxIterations, cplMode, dtMethod, extrapolationOrder)
+    int                           maxIterations)
+    : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant, secondParticipant, localParticipant, std::move(m2n), maxIterations, cplMode, dtMethod)
 {
   if (dtMethod == constants::FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE) {
     if (doesFirstStep()) {
@@ -84,6 +82,11 @@ void SerialCouplingScheme::receiveAndSetTimeWindowSize()
     PRECICE_ASSERT(not _participantSetsTimeWindowSize);
     PRECICE_ASSERT(not math::equals(dt, UNDEFINED_TIME_WINDOW_SIZE));
     PRECICE_ASSERT(not doesFirstStep(), "Only second participant can receive time window size.");
+
+    if (hasTimeWindowSize() && isImplicitCouplingScheme() && not hasConverged()) { // Restriction necessary as long as extrapolation is not implemented. See https://github.com/precice/precice/issues/1770 for details.
+      PRECICE_ASSERT(dt == getTimeWindowSize(), "May only use a larger time window size in the first iteration of the window. Otherwise old time window size must equal new time window size.");
+    }
+
     setTimeWindowSize(dt);
   }
 }
@@ -155,7 +158,7 @@ void SerialCouplingScheme::exchangeSecondData()
 {
   if (isExplicitCouplingScheme()) {
     if (doesFirstStep()) { // first participant
-      moveToNextWindow();  // extrapolation result for receive data of first is directly overwritten in the call of receiveData below
+      moveToNextWindow();
       PRECICE_DEBUG("Receiving data...");
       receiveData(getM2N(), getReceiveData());
       checkDataHasBeenReceived();
@@ -177,7 +180,7 @@ void SerialCouplingScheme::exchangeSecondData()
       PRECICE_DEBUG("Receiving convergence data...");
       receiveConvergence(getM2N());
       if (hasConverged()) {
-        moveToNextWindow(); // extrapolation result for receive data of first is directly overwritten in the call of receiveData below
+        moveToNextWindow();
       }
       PRECICE_DEBUG("Receiving data...");
       receiveData(getM2N(), getReceiveData());

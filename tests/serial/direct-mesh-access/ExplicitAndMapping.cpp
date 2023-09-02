@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(ExplicitAndMapping)
     // Allocate a vector containing the vertices
     std::vector<double> solverTwoMesh(otherMeshSize * dim);
     std::vector<int>    otherIDs(otherMeshSize, -1);
-    interface.getMeshVerticesAndIDs(otherMeshName, otherIDs, solverTwoMesh);
+    interface.getMeshVertexIDsAndCoordinates(otherMeshName, otherIDs, solverTwoMesh);
     // Some dummy writeData
     std::array<double, 5> writeData({1, 2, 3, 4, 5});
 

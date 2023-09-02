@@ -26,7 +26,7 @@ mark_as_advanced(PRECICE_TEST_WRAPPER_SCRIPT)
 
 
 function(add_precice_test)
-  cmake_parse_arguments(PARSE_ARGV 0 PAT "PETSC;MPIPORTS" "NAME;ARGUMENTS;TIMEOUT;LABELS" "")
+  cmake_parse_arguments(PARSE_ARGV 0 PAT "PETSC;MPIPORTS;GINKGO;GINKGO_OMP;GINKGO_CUDA;GINKGO_HIP" "NAME;ARGUMENTS;TIMEOUT;LABELS" "")
   # Check arguments
   if(NOT PAT_NAME)
     message(FATAL_ERROR "Argument NAME not passed")
@@ -36,7 +36,11 @@ function(add_precice_test)
   set(PAT_FULL_NAME "precice.${PAT_NAME}")
 
   # Are direct dependencies fulfilled?
-  if( (NOT PRECICE_MPICommunication) OR (PAT_PETSC AND NOT PRECICE_PETScMapping) )
+  if( (NOT PRECICE_FEATURE_MPI_COMMUNICATION) OR (PAT_PETSC AND NOT PRECICE_FEATURE_PETSC_MAPPING)
+       OR (PAT_GINKGO AND NOT PRECICE_FEATURE_GINKGO_MAPPING)
+       OR (PAT_GINKGO_OMP AND NOT PRECICE_WITH_OMP)
+       OR (PAT_GINKGO_CUDA AND NOT PRECICE_WITH_CUDA)
+       OR (PAT_GINKGO_HIP AND NOT PRECICE_WITH_HIP))
     message(STATUS "Test ${PAT_FULL_NAME} - skipped")
     return()
   endif()
@@ -59,7 +63,7 @@ function(add_precice_test)
     PROPERTIES
     RUN_SERIAL TRUE # Do not run this test in parallel with others
     WORKING_DIRECTORY "${PAT_WDIR}"
-    ENVIRONMENT "OMPI_MCA_rmaps_base_oversubscribe=1"
+    ENVIRONMENT "OMPI_MCA_rmaps_base_oversubscribe=1;OMP_NUM_THREADS=2"
     )
   if(PAT_TIMEOUT)
     set_tests_properties(${PAT_FULL_NAME} PROPERTIES TIMEOUT ${PAT_TIMEOUT} )
@@ -196,7 +200,7 @@ endfunction(add_precice_test_run_solverdummies)
 
 enable_testing()
 
-if(NOT PRECICE_MPICommunication)
+if(NOT PRECICE_FEATURE_MPI_COMMUNICATION)
   message("Tests require MPICommunication to be enabled.")
 endif()
 
@@ -246,7 +250,7 @@ add_precice_test(
   )
 add_precice_test(
   NAME mapping
-  ARGUMENTS "--run_test=MappingTests:\!MappingTests/PetRadialBasisFunctionMapping"
+  ARGUMENTS "--run_test=MappingTests:\!MappingTests/PetRadialBasisFunctionMapping:\!MappingTests/GinkgoRadialBasisFunctionSolver"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   )
 add_precice_test(
@@ -255,6 +259,48 @@ add_precice_test(
   TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
   LABELS petsc
   PETSC
+  )
+add_precice_test(
+  NAME mapping.ginkgo.reference
+  ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/Reference"
+  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+  LABELS ginkgo
+  GINKGO
+  )
+add_precice_test(
+  NAME mapping.ginkgo.openmp
+  ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/OpenMP"
+  TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
+  LABELS ginkgo
+  GINKGO_OMP
+  )
+add_precice_test(
+  NAME mapping.ginkgo.cuda
+  ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/Cuda"
+  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+  LABELS ginkgo
+  GINKGO_CUDA
+  )
+add_precice_test(
+  NAME mapping.ginkgo.cuSolver
+  ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/cuSolver"
+  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+  LABELS ginkgo
+  GINKGO_CUDA
+  )
+add_precice_test(
+  NAME mapping.ginkgo.hip
+  ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/Hip"
+  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+  LABELS ginkgo
+  GINKGO_HIP
+  )
+add_precice_test(
+  NAME mapping.ginkgo.hipSolver
+  ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/hipSolver"
+  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+  LABELS ginkgo
+  GINKGO_HIP
   )
 add_precice_test(
   NAME math

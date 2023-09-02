@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration dimensions="3">
+<precice-configuration>
   <data:scalar name="S" />
   <data:vector name="V" />
 
-  <mesh name="A">
+  <mesh name="A" dimensions="3">
     <use-data name="S" />
     <use-data name="V" />
   </mesh>
 
-  <mesh name="B">
+  <mesh name="B" dimensions="3">
     <use-data name="S" />
     <use-data name="V" />
   </mesh>
@@ -17,7 +17,6 @@
     <provide-mesh name="A" />
     <write-data name="S" mesh="A" />
     <write-data name="V" mesh="A" />
-    <export:vtk directory="timeseries" />
     <export:vtu directory="timeseries" />
     <export:vtp directory="timeseries" />
     <export:csv directory="timeseries" />

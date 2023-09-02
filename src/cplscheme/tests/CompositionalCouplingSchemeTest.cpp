@@ -45,17 +45,13 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
     std::string nameParticipant0("Participant0");
     std::string nameParticipant1("Participant1");
     std::string nameParticipant2("Participant2");
-    int         dimensions = 3;
 
-    xml::XMLTag          root = xml::getRootTag();
-    PtrDataConfiguration dataConfig(new DataConfiguration(root));
-    dataConfig->setDimensions(dimensions);
-    PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
-    meshConfig->setDimensions(dimensions);
+    xml::XMLTag                                  root = xml::getRootTag();
+    PtrDataConfiguration                         dataConfig(new DataConfiguration(root));
+    PtrMeshConfiguration                         meshConfig(new MeshConfiguration(root, dataConfig));
     m2n::M2NConfiguration::SharedPointer         m2nConfig(new m2n::M2NConfiguration(root));
     precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
-    participantConfig->setDimensions(dimensions);
-    CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
+    CouplingSchemeConfiguration                  cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
     const xml::ConfigurationContext ccontext{context.name, 0, 1};
     xml::configure(root, ccontext, configFilename);

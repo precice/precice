@@ -38,7 +38,7 @@ void ParallelMatrixOperations::establishCircularCommunication()
 
   const auto size = utils::IntraComm::getSize();
   const auto rank = utils::IntraComm::getRank();
-  com::connectCircularComm("MVQNCyclicComm", "", rank, size, *cyclicCommLeft, *cyclicCommRight);
+  com::connectCircularComm("IQNIMVJCyclicComm", "", rank, size, *cyclicCommLeft, *cyclicCommRight);
 
   _cyclicCommLeft  = std::move(cyclicCommLeft);
   _cyclicCommRight = std::move(cyclicCommRight);

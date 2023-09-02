@@ -4,6 +4,11 @@
 #include "logging/Logger.hpp"
 #include "xml/XMLTag.hpp"
 
+namespace precice {
+/// Enabled further inter- and intra-solver synchronisation
+extern bool syncMode;
+} // namespace precice
+
 namespace precice::profiling {
 
 constexpr int         DEFAULT_SYNC_EVERY = 50;

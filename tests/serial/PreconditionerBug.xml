@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration dimensions="2">
+<precice-configuration>
   <data:vector name="DataOne" />
   <data:vector name="DataTwo" />
 
-  <mesh name="MeshOne">
+  <mesh name="MeshOne" dimensions="2">
     <use-data name="DataOne" />
     <use-data name="DataTwo" />
   </mesh>
 
-  <mesh name="MeshTwo">
+  <mesh name="MeshTwo" dimensions="2">
     <use-data name="DataOne" />
     <use-data name="DataTwo" />
   </mesh>

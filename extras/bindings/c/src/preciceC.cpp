@@ -125,21 +125,6 @@ int precicec_requiresReadingCheckpoint()
   return impl->requiresReadingCheckpoint() ? 1 : 0;
 }
 
-int precicec_hasMesh(const char *meshName)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  if (impl->hasMesh(meshName)) {
-    return 1;
-  }
-  return 0;
-}
-
-int precicec_hasData(const char *meshName, const char *dataName)
-{
-  PRECICE_CHECK(impl != nullptr, errormsg);
-  return impl->hasData(meshName, dataName);
-}
-
 int precicec_requiresMeshConnectivityFor(const char *meshName)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
@@ -319,14 +304,14 @@ void precicec_setMeshAccessRegion(
   impl->setMeshAccessRegion(meshName, {boundingBox, bbSize});
 }
 
-void precicec_getMeshVerticesAndIDs(
+void precicec_getMeshVertexIDsAndCoordinates(
     const char *meshName,
     const int   size,
     int *       ids,
     double *    coordinates)
 {
   auto coordinatesSize = static_cast<long unsigned>(impl->getMeshDimensions(meshName) * size);
-  impl->getMeshVerticesAndIDs(meshName, {ids, static_cast<unsigned long>(size)}, {coordinates, coordinatesSize});
+  impl->getMeshVertexIDsAndCoordinates(meshName, {ids, static_cast<unsigned long>(size)}, {coordinates, coordinatesSize});
 }
 
 #ifdef __GNUC__

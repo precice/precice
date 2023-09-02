@@ -42,8 +42,6 @@ public:
    */
   void setSampleAtTime(double time, Sample sample);
 
-  void setExtrapolationOrder(int extrapolationOrder);
-
   /**
    * @brief Get maximum normalized dt that is stored in this Storage.
    *
@@ -114,11 +112,6 @@ private:
   std::vector<Stample> _stampleStorage;
 
   mutable logging::Logger _log{"time::Storage"};
-
-  /// extrapolation order for this Storage
-  int _extrapolationOrder;
-
-  time::Sample computeExtrapolation();
 
   time::Sample getSampleAtBeginning();
 

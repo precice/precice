@@ -87,6 +87,11 @@ set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${preCICE_SOURCE_DIR}/tools/releasing/pa
 set(CPACK_DEBIAN_PACKAGE_GENERATE_SHLIBS TRUE)
 set(CPACK_DEBIAN_PACKAGE_GENERATE_SHLIBS_POLICY "=")
 
+# Handling version conflicts
+set(CPACK_DEBIAN_PACKAGE_PROVIDES precice)
+set(CPACK_DEBIAN_PACKAGE_CONFLICTS "precice, libprecice2")
+set(CPACK_DEBIAN_PACKAGE_REPLACES precice)
+
 # Install doc files
 install(FILES tools/releasing/packaging/debian/copyright
   DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/doc/${CPACK_PACKAGE_NAME}
