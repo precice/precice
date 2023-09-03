@@ -103,7 +103,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
         if (cplScheme->isActionRequired(CouplingScheme::Action::WriteCheckpoint)) {
           cplScheme->markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
         }
-        mesh->data(0)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, mesh->data(0)->values()});
+        mesh->data(0)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, mesh->data(0)->values()});
         cplScheme->addComputedTime(cplScheme->getNextTimeStepMaxSize());
         cplScheme->firstSynchronization({});
         cplScheme->firstExchange();
@@ -138,7 +138,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
         if (cplScheme->isActionRequired(CouplingScheme::Action::WriteCheckpoint)) {
           cplScheme->markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
         }
-        mesh->data(1)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{ddims, mesh->data(1)->values()});
+        mesh->data(1)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{ddims, mesh->data(1)->values()});
         cplScheme->addComputedTime(cplScheme->getNextTimeStepMaxSize());
         cplScheme->firstSynchronization({});
         cplScheme->firstExchange();
@@ -174,7 +174,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
         if (cplScheme->isActionRequired(CouplingScheme::Action::WriteCheckpoint)) {
           cplScheme->markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
         }
-        mesh->data(2)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{ddims, mesh->data(2)->values()});
+        mesh->data(2)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{ddims, mesh->data(2)->values()});
         cplScheme->addComputedTime(cplScheme->getNextTimeStepMaxSize());
         cplScheme->firstSynchronization({});
         cplScheme->firstExchange();
