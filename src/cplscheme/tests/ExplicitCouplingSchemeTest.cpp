@@ -428,9 +428,10 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingFirstParticipantSetsDt)
     while (cplScheme.isCouplingOngoing()) {
       preciceDt = cplScheme.getNextTimeStepMaxSize();
       dt        = std::min({solverDt, preciceDt});
+      mesh->data(0)->setSampleAtTime(computedTime + dt, time::Sample{mesh->data(0)->getDimensions(), mesh->data(0)->values()});
+      cplScheme.addComputedTime(dt);
       computedTime += dt;
       computedTimesteps++;
-      cplScheme.addComputedTime(dt);
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
@@ -455,9 +456,10 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingFirstParticipantSetsDt)
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isCouplingOngoing());
     while (cplScheme.isCouplingOngoing()) {
+      mesh->data(1)->setSampleAtTime(computedTime + cplScheme.getTimeWindowSize(), time::Sample{mesh->data(1)->getDimensions(), mesh->data(1)->values()});
+      cplScheme.addComputedTime(cplScheme.getTimeWindowSize());
       computedTime += cplScheme.getTimeWindowSize();
       computedTimesteps++;
-      cplScheme.addComputedTime(cplScheme.getTimeWindowSize());
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();

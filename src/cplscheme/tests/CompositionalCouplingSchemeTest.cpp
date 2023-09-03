@@ -103,8 +103,11 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
         if (cplScheme->isActionRequired(CouplingScheme::Action::WriteCheckpoint)) {
           cplScheme->markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
         }
-        mesh->data(0)->setSampleAtTime(cplScheme->getNextTimeStepMaxSize(), time::Sample{1, mesh->data(0)->values()});
-        cplScheme->addComputedTime(cplScheme->getNextTimeStepMaxSize());
+        double stepSize = cplScheme->getNextTimeStepMaxSize();
+        mesh->data(0)->setSampleAtTime(computedTime + stepSize, time::Sample{1, mesh->data(0)->values()});
+        BOOST_TEST(cplScheme->getTime() == computedTime);
+        cplScheme->addComputedTime(stepSize);
+        BOOST_TEST(cplScheme->getTime() == computedTime + stepSize); // ensure that time is correctly updated, even if iterating. See https://github.com/precice/precice/pull/1792.
         cplScheme->firstSynchronization({});
         cplScheme->firstExchange();
         cplScheme->secondSynchronization();
@@ -113,7 +116,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
           cplScheme->markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
         } else {
           BOOST_TEST(cplScheme->isTimeWindowComplete());
-          computedTime += cplScheme->getNextTimeStepMaxSize();
+          computedTime += stepSize;
           computedTimesteps++;
         }
         BOOST_TEST(testing::equals(computedTime, cplScheme->getTime()));
@@ -138,8 +141,11 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
         if (cplScheme->isActionRequired(CouplingScheme::Action::WriteCheckpoint)) {
           cplScheme->markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
         }
-        mesh->data(1)->setSampleAtTime(cplScheme->getNextTimeStepMaxSize(), time::Sample{ddims, mesh->data(1)->values()});
-        cplScheme->addComputedTime(cplScheme->getNextTimeStepMaxSize());
+        double stepSize = cplScheme->getNextTimeStepMaxSize();
+        mesh->data(1)->setSampleAtTime(computedTime + stepSize, time::Sample{ddims, mesh->data(1)->values()});
+        BOOST_TEST(cplScheme->getTime() == computedTime);
+        cplScheme->addComputedTime(stepSize);
+        BOOST_TEST(cplScheme->getTime() == computedTime + stepSize); // ensure that time is correctly updated, even if iterating. See https://github.com/precice/precice/pull/1792.
         cplScheme->firstSynchronization({});
         cplScheme->firstExchange();
         cplScheme->secondSynchronization();
@@ -148,7 +154,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
           cplScheme->markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
         } else {
           BOOST_TEST(cplScheme->isTimeWindowComplete());
-          computedTime += cplScheme->getNextTimeStepMaxSize();
+          computedTime += stepSize;
           computedTimesteps++;
         }
         BOOST_TEST(testing::equals(computedTime, cplScheme->getTime()));
@@ -174,8 +180,11 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
         if (cplScheme->isActionRequired(CouplingScheme::Action::WriteCheckpoint)) {
           cplScheme->markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
         }
+        double stepSize = cplScheme->getNextTimeStepMaxSize();
         mesh->data(2)->setSampleAtTime(cplScheme->getNextTimeStepMaxSize(), time::Sample{ddims, mesh->data(2)->values()});
-        cplScheme->addComputedTime(cplScheme->getNextTimeStepMaxSize());
+        BOOST_TEST(cplScheme->getTime() == computedTime);
+        cplScheme->addComputedTime(stepSize);
+        BOOST_TEST(cplScheme->getTime() == computedTime + stepSize); // ensure that time is correctly updated, even if iterating. See https://github.com/precice/precice/pull/1792.
         cplScheme->firstSynchronization({});
         cplScheme->firstExchange();
         cplScheme->secondSynchronization();
@@ -184,7 +193,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
           cplScheme->markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
         } else {
           BOOST_TEST(cplScheme->isTimeWindowComplete());
-          computedTime += cplScheme->getNextTimeStepMaxSize();
+          computedTime += stepSize;
           computedTimesteps++;
         }
         BOOST_TEST(testing::equals(computedTime, cplScheme->getTime()));

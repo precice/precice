@@ -155,15 +155,17 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       if (cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint)) {
         cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
       }
-      if (cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint)) {
-        cplScheme.markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
-      }
+      BOOST_TEST(cplScheme.getNextTimeStepMaxSize() == timeStepSize);
+      sendCouplingData->setSampleAtTime(cplScheme.getTime() + timeStepSize, time::Sample{1, Eigen::VectorXd::Constant(1, 4.0)});
       cplScheme.addComputedTime(timeStepSize);
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
       cplScheme.secondExchange();
       BOOST_TEST(cplScheme.hasDataBeenReceived());
+      if (cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint)) {
+        cplScheme.markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
+      }
     }
   } else {
     BOOST_TEST(context.isNamed(nameParticipant1));
@@ -190,6 +192,8 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       if (cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint)) {
         cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
       }
+      BOOST_TEST(cplScheme.getNextTimeStepMaxSize() == timeStepSize);
+      sendCouplingData->setSampleAtTime(cplScheme.getTime() + timeStepSize, time::Sample{3, v});
       cplScheme.addComputedTime(timeStepSize);
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();
