@@ -1,5 +1,6 @@
 #include <boost/range.hpp>
 
+#include <unsupported/Eigen/Splines>
 #include "cplscheme/CouplingScheme.hpp"
 #include "math/differences.hpp"
 #include "time/Storage.hpp"
@@ -12,7 +13,7 @@ const double Storage::WINDOW_START = 0.0;
 const double Storage::WINDOW_END = 1.0;
 
 Storage::Storage()
-    : _stampleStorage{}
+    : _stampleStorage{}, _interpolationOrder(0)
 {
 }
 
@@ -41,6 +42,11 @@ void Storage::setSampleAtTime(double time, Sample sample)
     }
     PRECICE_ASSERT(false, "unreachable!");
   }
+}
+
+void Storage::setInterpolationOrder(int interpolationOrder)
+{
+  _interpolationOrder = interpolationOrder;
 }
 
 double Storage::maxStoredNormalizedDt() const
@@ -91,6 +97,15 @@ Eigen::VectorXd Storage::getValuesAtOrAfter(double before) const
   return stample->sample.values;
 }
 
+//@todo merge getValuesAtOrAfter and getGradientsAtOrAfter into getSampleAtOrAfter, then let user draw data from Sample
+Eigen::MatrixXd Storage::getGradientsAtOrAfter(double before) const
+{
+  auto stample = std::find_if(_stampleStorage.begin(), _stampleStorage.end(), [&before](const auto &s) { return math::greaterEquals(s.timestamp, before); });
+  PRECICE_ASSERT(stample != _stampleStorage.end(), "no values found!");
+
+  return stample->sample.gradients;
+}
+
 Eigen::VectorXd Storage::getTimes() const
 {
   auto times = Eigen::VectorXd(nTimes());
@@ -109,6 +124,73 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> Storage::getTimesAndValues() const
     values.col(i) = _stampleStorage[i].sample.values;
   }
   return std::make_pair(times, values);
+}
+
+// helper function to compute x(t) from given data (x0,t0), (x1,t1), ..., (xn,tn) via B-spline interpolation (implemented using Eigen).
+Eigen::VectorXd Storage::bSplineInterpolationAt(double t, Eigen::VectorXd ts, Eigen::MatrixXd xs, int splineDegree)
+{
+  // organize data in columns. Each column represents one sample in time.
+  PRECICE_ASSERT(xs.cols() == ts.size());
+  const int ndofs = xs.rows(); // number of dofs. Each dof needs it's own interpolant.
+
+  Eigen::VectorXd interpolated(ndofs);
+
+  const int splineDimension = 1;
+
+  for (int i = 0; i < ndofs; i++) {
+    auto spline     = Eigen::SplineFitting<Eigen::Spline<double, splineDimension>>::Interpolate(xs.row(i), splineDegree, ts);
+    interpolated[i] = spline(t)[0]; // get component of spline associated with xs.row(i)
+  }
+
+  return interpolated;
+}
+
+Eigen::VectorXd Storage::sampleAt(double normalizedDt)
+{
+  const int usedOrder = computeUsedOrder(_interpolationOrder, nTimes());
+
+  PRECICE_ASSERT(math::equals(this->maxStoredNormalizedDt(), time::Storage::WINDOW_END), this->maxStoredNormalizedDt()); // sampling is only allowed, if a window is complete.
+
+  if (_interpolationOrder == 0) {
+    return this->getValuesAtOrAfter(normalizedDt);
+  }
+
+  PRECICE_ASSERT(usedOrder >= 1);
+
+  auto data = getTimesAndValues();
+  return bSplineInterpolationAt(normalizedDt, data.first, data.second, usedOrder);
+}
+
+Eigen::MatrixXd Storage::sampleGradientsAt(double normalizedDt)
+{
+  const int usedOrder = computeUsedOrder(_interpolationOrder, nTimes());
+
+  PRECICE_ASSERT(math::equals(this->maxStoredNormalizedDt(), time::Storage::WINDOW_END), this->maxStoredNormalizedDt()); // sampling is only allowed, if a window is complete.
+
+  if (_interpolationOrder == 0) {
+    return this->getGradientsAtOrAfter(normalizedDt);
+  }
+
+  PRECICE_WARN("You specified interpolation degree of {}, but only degree 0 is supported for gradient interpolation"); // @todo implement this like for sampleAt
+  return this->getGradientsAtOrAfter(normalizedDt);
+}
+
+int Storage::computeUsedOrder(int requestedOrder, int numberOfAvailableSamples)
+{
+  int usedOrder = -1;
+  PRECICE_ASSERT(requestedOrder <= 3);
+  if (requestedOrder == 0 || numberOfAvailableSamples < 2) {
+    usedOrder = 0;
+  } else if (requestedOrder == 1 || numberOfAvailableSamples < 3) {
+    usedOrder = 1;
+  } else if (requestedOrder == 2 || numberOfAvailableSamples < 4) {
+    usedOrder = 2;
+  } else if (requestedOrder == 3 || numberOfAvailableSamples < 5) {
+    usedOrder = 3;
+  } else {
+    PRECICE_ASSERT(false); // not supported
+  }
+  return usedOrder;
 }
 
 time::Sample Storage::getSampleAtBeginning()
