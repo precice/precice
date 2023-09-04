@@ -20,7 +20,7 @@ CouplingData::CouplingData(
       _timeStepsStoragePrevious()
 {
   PRECICE_ASSERT(_data != nullptr);
-  _timeStepsStoragePrevious.setInterpolationOrder(3); // @todo hard-coded for now, but we need to somehow link this to <read-data waveform-order="ORDER" />
+  _timeStepsStoragePrevious.setInterpolationDegree(3); // @todo hard-coded for now, but we need to somehow link this to <read-data waveform-order="ORDER" />
   _timeStepsStoragePrevious.setSampleAtTime(time::Storage::WINDOW_START, time::Sample{getDimensions(), Eigen::VectorXd::Zero(getSize())});
   _timeStepsStoragePrevious.setSampleAtTime(time::Storage::WINDOW_END, time::Sample{getDimensions(), Eigen::VectorXd::Zero(getSize())});
 
@@ -73,12 +73,12 @@ const time::Storage &CouplingData::timeStepsStorage() const
 
 Eigen::VectorXd CouplingData::getPreviousValuesAtTime(double relativeDt)
 {
-  return _timeStepsStoragePrevious.sampleAt(relativeDt);
+  return _timeStepsStoragePrevious.sample(relativeDt);
 }
 
 Eigen::MatrixXd CouplingData::getPreviousGradientsAtTime(double relativeDt)
 {
-  return _timeStepsStoragePrevious.sampleGradientsAt(relativeDt);
+  return _timeStepsStoragePrevious.sampleGradients(relativeDt);
 }
 
 void CouplingData::setSampleAtTime(double time, time::Sample sample)

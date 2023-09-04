@@ -42,7 +42,7 @@ public:
    */
   void setSampleAtTime(double time, Sample sample);
 
-  void setInterpolationOrder(int interpolationOrder);
+  void setInterpolationDegree(int interpolationDegree);
 
   /**
    * @brief Get maximum normalized dt that is stored in this Storage.
@@ -117,9 +117,9 @@ public:
    * @param normalizedDt a double, where we want to sample the waveform
    * @return Eigen::VectorXd values in this Storage at or directly after "before"
   */
-  Eigen::VectorXd sampleAt(double normalizedDt); // @todo try to solve this differently. Currently duplicates a lot of code from Waveform::sample. Maybe even move Waveform inside Storage, if every Storage needs to interpolate anyway?
+  Eigen::VectorXd sample(double normalizedDt) const; // @todo try to solve this differently. Currently duplicates a lot of code from Waveform::sample. Maybe even move Waveform inside Storage, if every Storage needs to interpolate anyway?
 
-  Eigen::MatrixXd sampleGradientsAt(double normalizedDt); // @todo try to solve this differently. Currently duplicates a lot of code from Waveform::sample. Maybe even move Waveform inside Storage, if every Storage needs to interpolate anyway?
+  Eigen::MatrixXd sampleGradients(double normalizedDt) const; // @todo try to solve this differently. Currently duplicates a lot of code from Waveform::sample. Maybe even move Waveform inside Storage, if every Storage needs to interpolate anyway?
 
 private:
   /// Stores Stamples on the current window
@@ -127,11 +127,19 @@ private:
 
   mutable logging::Logger _log{"time::Storage"};
 
-  int _interpolationOrder;
+  int _degree;
 
-  Eigen::VectorXd bSplineInterpolationAt(double t, Eigen::VectorXd ts, Eigen::MatrixXd xs, int splineDegree);
-
-  int computeUsedOrder(int requestedOrder, int numberOfAvailableSamples);
+  /**
+   * @brief Computes which degree may be used for interpolation.
+   *
+   * Actual degree of interpolating B-spline is determined by number of stored samples and maximum degree defined by the user.
+   * Example: If only two samples are available, the maximum degree we may use is 1, even if the user demands degree 2.
+   *
+   * @param requestedDegree B-spline degree requested by the user.
+   * @param numberOfAvailableSamples Samples available for interpolation.
+   * @return B-spline degree that may be used.
+   */
+  int computeUsedDegree(int requestedDegree, int numberOfAvailableSamples) const;
 
   time::Sample getSampleAtBeginning();
 

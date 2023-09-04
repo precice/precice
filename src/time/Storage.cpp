@@ -1,7 +1,7 @@
 #include <boost/range.hpp>
 
-#include <unsupported/Eigen/Splines>
 #include "cplscheme/CouplingScheme.hpp"
+#include "math/bspline.hpp"
 #include "math/differences.hpp"
 #include "time/Storage.hpp"
 #include "utils/assertion.hpp"
@@ -13,7 +13,7 @@ const double Storage::WINDOW_START = 0.0;
 const double Storage::WINDOW_END = 1.0;
 
 Storage::Storage()
-    : _stampleStorage{}, _interpolationOrder(0)
+    : _stampleStorage{}, _degree(0)
 {
 }
 
@@ -44,9 +44,9 @@ void Storage::setSampleAtTime(double time, Sample sample)
   }
 }
 
-void Storage::setInterpolationOrder(int interpolationOrder)
+void Storage::setInterpolationDegree(int interpolationDegree)
 {
-  _interpolationOrder = interpolationOrder;
+  _degree = interpolationDegree;
 }
 
 double Storage::maxStoredNormalizedDt() const
@@ -126,71 +126,53 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> Storage::getTimesAndValues() const
   return std::make_pair(times, values);
 }
 
-// helper function to compute x(t) from given data (x0,t0), (x1,t1), ..., (xn,tn) via B-spline interpolation (implemented using Eigen).
-Eigen::VectorXd Storage::bSplineInterpolationAt(double t, Eigen::VectorXd ts, Eigen::MatrixXd xs, int splineDegree)
+Eigen::VectorXd Storage::sample(double normalizedDt) const
 {
-  // organize data in columns. Each column represents one sample in time.
-  PRECICE_ASSERT(xs.cols() == ts.size());
-  const int ndofs = xs.rows(); // number of dofs. Each dof needs it's own interpolant.
-
-  Eigen::VectorXd interpolated(ndofs);
-
-  const int splineDimension = 1;
-
-  for (int i = 0; i < ndofs; i++) {
-    auto spline     = Eigen::SplineFitting<Eigen::Spline<double, splineDimension>>::Interpolate(xs.row(i), splineDegree, ts);
-    interpolated[i] = spline(t)[0]; // get component of spline associated with xs.row(i)
-  }
-
-  return interpolated;
-}
-
-Eigen::VectorXd Storage::sampleAt(double normalizedDt)
-{
-  const int usedOrder = computeUsedOrder(_interpolationOrder, nTimes());
+  const int usedDegree = computeUsedDegree(_degree, nTimes());
 
   PRECICE_ASSERT(math::equals(this->maxStoredNormalizedDt(), time::Storage::WINDOW_END), this->maxStoredNormalizedDt()); // sampling is only allowed, if a window is complete.
 
-  if (_interpolationOrder == 0) {
+  if (_degree == 0) {
     return this->getValuesAtOrAfter(normalizedDt);
   }
 
-  PRECICE_ASSERT(usedOrder >= 1);
+  PRECICE_ASSERT(usedDegree >= 1);
 
   auto data = getTimesAndValues();
-  return bSplineInterpolationAt(normalizedDt, data.first, data.second, usedOrder);
+
+  return math::bspline::interpolateAt(data.first, data.second, usedDegree, normalizedDt);
 }
 
-Eigen::MatrixXd Storage::sampleGradientsAt(double normalizedDt)
+Eigen::MatrixXd Storage::sampleGradients(double normalizedDt) const
 {
-  const int usedOrder = computeUsedOrder(_interpolationOrder, nTimes());
+  const int usedDegree = computeUsedDegree(_degree, nTimes());
 
   PRECICE_ASSERT(math::equals(this->maxStoredNormalizedDt(), time::Storage::WINDOW_END), this->maxStoredNormalizedDt()); // sampling is only allowed, if a window is complete.
 
-  if (_interpolationOrder == 0) {
+  if (_degree == 0) {
     return this->getGradientsAtOrAfter(normalizedDt);
   }
 
-  PRECICE_WARN("You specified interpolation degree of {}, but only degree 0 is supported for gradient interpolation"); // @todo implement this like for sampleAt
+  PRECICE_WARN("You specified interpolation degree of {}, but only degree 0 is supported for gradient interpolation", usedDegree); // @todo implement this like for sampleAt
   return this->getGradientsAtOrAfter(normalizedDt);
 }
 
-int Storage::computeUsedOrder(int requestedOrder, int numberOfAvailableSamples)
+int Storage::computeUsedDegree(int requestedDegree, int numberOfAvailableSamples) const
 {
-  int usedOrder = -1;
-  PRECICE_ASSERT(requestedOrder <= 3);
-  if (requestedOrder == 0 || numberOfAvailableSamples < 2) {
-    usedOrder = 0;
-  } else if (requestedOrder == 1 || numberOfAvailableSamples < 3) {
-    usedOrder = 1;
-  } else if (requestedOrder == 2 || numberOfAvailableSamples < 4) {
-    usedOrder = 2;
-  } else if (requestedOrder == 3 || numberOfAvailableSamples < 5) {
-    usedOrder = 3;
+  int usedDegree = -1;
+  PRECICE_ASSERT(requestedDegree <= 3);
+  if (requestedDegree == 0 || numberOfAvailableSamples < 2) {
+    usedDegree = 0;
+  } else if (requestedDegree == 1 || numberOfAvailableSamples < 3) {
+    usedDegree = 1;
+  } else if (requestedDegree == 2 || numberOfAvailableSamples < 4) {
+    usedDegree = 2;
+  } else if (requestedDegree == 3 || numberOfAvailableSamples < 5) {
+    usedDegree = 3;
   } else {
     PRECICE_ASSERT(false); // not supported
   }
-  return usedOrder;
+  return usedDegree;
 }
 
 time::Sample Storage::getSampleAtBeginning()
