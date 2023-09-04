@@ -65,12 +65,12 @@ BOOST_AUTO_TEST_CASE(testIQNIMVJPP)
   // init displacements
   displacements->values().resize(4);
   displacements->values() << 1.0, 1.0, 1.0, 1.0;
-  displacements->setSampleAtTime(time::Storage::WINDOW_END, displacements->sample());
+  displacements->setSampleAtTime(time::Storage::WINDOW_START, displacements->sample());
 
   // init forces
   forces->values().resize(4);
   forces->values() << 0.2, 0.2, 0.2, 0.2;
-  forces->setSampleAtTime(time::Storage::WINDOW_END, forces->sample());
+  forces->setSampleAtTime(time::Storage::WINDOW_START, forces->sample());
 
   bool exchangeSubsteps = true;
 
@@ -147,12 +147,12 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
   // init displacements
   displacements->values().resize(4);
   displacements->values() << 1.0, 1.0, 1.0, 1.0;
-  displacements->setSampleAtTime(time::Storage::WINDOW_END, displacements->sample());
+  displacements->setSampleAtTime(time::Storage::WINDOW_START, displacements->sample());
 
   // init forces
   forces->values().resize(4);
   forces->values() << 0.2, 0.2, 0.2, 0.2;
-  forces->setSampleAtTime(time::Storage::WINDOW_END, forces->sample());
+  forces->setSampleAtTime(time::Storage::WINDOW_START, forces->sample());
 
   bool exchangeSubsteps = true;
 
