@@ -65,12 +65,12 @@ BOOST_AUTO_TEST_CASE(testIQNIMVJPP)
   // init displacements
   displacements->values().resize(4);
   displacements->values() << 1.0, 1.0, 1.0, 1.0;
-  displacements->setSampleAtTime(time::Storage::WINDOW_END, displacements->sample());
+  displacements->setSampleAtTime(time::Storage::WINDOW_START, displacements->sample());
 
   // init forces
   forces->values().resize(4);
   forces->values() << 0.2, 0.2, 0.2, 0.2;
-  forces->setSampleAtTime(time::Storage::WINDOW_END, forces->sample());
+  forces->setSampleAtTime(time::Storage::WINDOW_START, forces->sample());
 
   bool exchangeSubsteps = true;
 
@@ -147,12 +147,12 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
   // init displacements
   displacements->values().resize(4);
   displacements->values() << 1.0, 1.0, 1.0, 1.0;
-  displacements->setSampleAtTime(time::Storage::WINDOW_END, displacements->sample());
+  displacements->setSampleAtTime(time::Storage::WINDOW_START, displacements->sample());
 
   // init forces
   forces->values().resize(4);
   forces->values() << 0.2, 0.2, 0.2, 0.2;
-  forces->setSampleAtTime(time::Storage::WINDOW_END, forces->sample());
+  forces->setSampleAtTime(time::Storage::WINDOW_START, forces->sample());
 
   bool exchangeSubsteps = true;
 
@@ -218,12 +218,12 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxation)
   // //init displacements
   displacements->values().resize(4);
   displacements->values() << 1.0, 2.0, 3.0, 4.0;
-  displacements->setSampleAtTime(time::Storage::WINDOW_END, displacements->sample());
+  displacements->setSampleAtTime(time::Storage::WINDOW_START, displacements->sample());
 
   // //init forces
   forces->values().resize(4);
   forces->values() << 0.2, 0.2, 0.2, 0.2;
-  forces->setSampleAtTime(time::Storage::WINDOW_END, forces->sample());
+  forces->setSampleAtTime(time::Storage::WINDOW_START, forces->sample());
 
   bool exchangeSubsteps = true;
 
@@ -291,14 +291,14 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradient)
     for (unsigned int c = 0; c < 4; ++c)
       displacements->gradients()(r, c) = r + r * c;
   }
-  displacements->setSampleAtTime(time::Storage::WINDOW_END, displacements->sample());
+  displacements->setSampleAtTime(time::Storage::WINDOW_START, displacements->sample());
   // //init forces
   forces->values().resize(4);
   forces->values() << 0.2, 0.2, 0.2, 0.2;
   forces->requireDataGradient();
   forces->gradients().resize(dim, 4);
   forces->gradients().setConstant(-2);
-  forces->setSampleAtTime(time::Storage::WINDOW_END, forces->sample());
+  forces->setSampleAtTime(time::Storage::WINDOW_START, forces->sample());
 
   bool exchangeSubsteps = true;
 
