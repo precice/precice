@@ -112,11 +112,8 @@ void CouplingData::storeIteration()
     _timeStepsStoragePrevious.setSampleAtTime(time::Storage::WINDOW_START, stample.sample);
     _timeStepsStoragePrevious.setSampleAtTime(time::Storage::WINDOW_END, stample.sample);
   } else {
-    // @todo add function to copy from this->timeStepsStorage() to _timeStepsStoragePrevious to avoid duplication
     PRECICE_ASSERT(math::equals(this->stamples().back().timestamp, time::Storage::WINDOW_END), "Only allowed to storeIteration, if at window end");
-    for (const auto &stample : this->stamples()) {
-      _timeStepsStoragePrevious.setSampleAtTime(stample.timestamp, stample.sample);
-    }
+    _timeStepsStoragePrevious = _data->timeStepsStorage();
   }
 }
 
@@ -158,14 +155,9 @@ std::vector<int> CouplingData::getVertexOffsets()
 void CouplingData::moveToNextWindow()
 {
   _data->moveToNextWindow();
-  // @todo put everything into _data->moveToNextWindow().
   if (this->stamples().size() > 0) {
-    // @todo add function to copy from this->timeStepsStorage() to _timeStepsStoragePrevious to avoid duplication
-    this->_timeStepsStoragePrevious.move();
     PRECICE_ASSERT(math::equals(this->stamples().back().timestamp, time::Storage::WINDOW_END), "this->stamples() needs to be initialized properly for WINDOW_START and WINDOW_END");
-    for (const auto &stample : this->stamples()) {
-      _timeStepsStoragePrevious.setSampleAtTime(stample.timestamp, stample.sample);
-    }
+    _timeStepsStoragePrevious = _data->timeStepsStorage();
   }
 }
 

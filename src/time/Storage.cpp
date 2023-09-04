@@ -17,6 +17,14 @@ Storage::Storage()
 {
 }
 
+Storage &Storage::operator=(const Storage &other)
+{
+  for (const auto &stample : other.stamples()) {
+    this->setSampleAtTime(stample.timestamp, stample.sample);
+  }
+  return *this;
+}
+
 void Storage::initialize(time::Sample sample)
 {
   _stampleStorage.emplace_back(Stample{WINDOW_START, sample});
@@ -89,21 +97,12 @@ void Storage::trim()
   _stampleStorage.erase(++_stampleStorage.begin(), _stampleStorage.end());
 }
 
-Eigen::VectorXd Storage::getValuesAtOrAfter(double before) const
+Sample Storage::getSampleAtOrAfter(double before) const
 {
   auto stample = std::find_if(_stampleStorage.begin(), _stampleStorage.end(), [&before](const auto &s) { return math::greaterEquals(s.timestamp, before); });
   PRECICE_ASSERT(stample != _stampleStorage.end(), "no values found!");
 
-  return stample->sample.values;
-}
-
-//@todo merge getValuesAtOrAfter and getGradientsAtOrAfter into getSampleAtOrAfter, then let user draw data from Sample
-Eigen::MatrixXd Storage::getGradientsAtOrAfter(double before) const
-{
-  auto stample = std::find_if(_stampleStorage.begin(), _stampleStorage.end(), [&before](const auto &s) { return math::greaterEquals(s.timestamp, before); });
-  PRECICE_ASSERT(stample != _stampleStorage.end(), "no values found!");
-
-  return stample->sample.gradients;
+  return stample->sample;
 }
 
 Eigen::VectorXd Storage::getTimes() const
@@ -133,7 +132,7 @@ Eigen::VectorXd Storage::sample(double normalizedDt) const
   PRECICE_ASSERT(math::equals(this->maxStoredNormalizedDt(), time::Storage::WINDOW_END), this->maxStoredNormalizedDt()); // sampling is only allowed, if a window is complete.
 
   if (_degree == 0) {
-    return this->getValuesAtOrAfter(normalizedDt);
+    return this->getSampleAtOrAfter(normalizedDt).values;
   }
 
   PRECICE_ASSERT(usedDegree >= 1);
@@ -150,11 +149,11 @@ Eigen::MatrixXd Storage::sampleGradients(double normalizedDt) const
   PRECICE_ASSERT(math::equals(this->maxStoredNormalizedDt(), time::Storage::WINDOW_END), this->maxStoredNormalizedDt()); // sampling is only allowed, if a window is complete.
 
   if (_degree == 0) {
-    return this->getGradientsAtOrAfter(normalizedDt);
+    return this->getSampleAtOrAfter(normalizedDt).gradients;
   }
 
   PRECICE_WARN("You specified interpolation degree of {}, but only degree 0 is supported for gradient interpolation", usedDegree); // @todo implement this like for sampleAt
-  return this->getGradientsAtOrAfter(normalizedDt);
+  return this->getSampleAtOrAfter(normalizedDt).gradients;
 }
 
 int Storage::computeUsedDegree(int requestedDegree, int numberOfAvailableSamples) const

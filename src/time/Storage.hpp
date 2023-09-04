@@ -26,6 +26,14 @@ public:
   Storage();
 
   /**
+   * @brief Copy assignment operator to assign Storage to this Storage
+   *
+   * @param other Storage
+   * @return Storage&
+   */
+  Storage &operator=(const Storage &other);
+
+  /**
    * @brief Initialize storage by storing given sample at time 0.0 and 1.0.
    *
    * @param sample initial sample
@@ -52,16 +60,14 @@ public:
   double maxStoredNormalizedDt() const;
 
   /**
-   * @brief Returns the values at time following "before" contained in this Storage.
+   * @brief Returns the Sample at time following "before" contained in this Storage.
    *
-   * The stored normalized dt is larger or equal than "before". If "before" is a normalized dt stored in this Storage, this function returns the values at "before"
+   * The stored normalized dt is larger or equal than "before". If "before" is a normalized dt stored in this Storage, this function returns the Sample at "before"
    *
    * @param before a double, where we want to find a normalized dt that comes directly after this one
-   * @return Eigen::VectorXd values in this Storage at or directly after "before"
+   * @return Sample in this Storage at or directly after "before"
    */
-  Eigen::VectorXd getValuesAtOrAfter(double before) const;
-
-  Eigen::MatrixXd getGradientsAtOrAfter(double before) const;
+  Sample getSampleAtOrAfter(double before) const;
 
   /**
    * @brief Get all normalized dts stored in this Storage sorted ascending.
