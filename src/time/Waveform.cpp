@@ -38,7 +38,7 @@ Eigen::VectorXd Waveform::sample(double normalizedDt) const
   PRECICE_ASSERT(math::equals(this->_timeStepsStorage.maxStoredNormalizedDt(), time::Storage::WINDOW_END), this->_timeStepsStorage.maxStoredNormalizedDt()); // sampling is only allowed, if a window is complete.
 
   if (_degree == 0) {
-    return this->_timeStepsStorage.getValuesAtOrAfter(normalizedDt);
+    return this->_timeStepsStorage.getSampleAtOrAfter(normalizedDt).values;
   }
 
   PRECICE_ASSERT(usedDegree >= 1);
