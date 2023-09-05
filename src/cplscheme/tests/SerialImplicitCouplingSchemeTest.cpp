@@ -786,20 +786,20 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(testing::equals(sendCouplingData->previousIteration()(0), 0.0));
     BOOST_TEST(sendCouplingData->getPreviousIterationSize() == 1);
     // set write data
-    sendCouplingData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, Eigen::VectorXd::Constant(sendCouplingData->getSize(), 4.0)});
     while (cplScheme.isCouplingOngoing()) {
       if (cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint)) {
         cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
       }
-      if (cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint)) {
-        cplScheme.markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
-      }
+      sendCouplingData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, Eigen::VectorXd::Constant(sendCouplingData->getSize(), 4.0)});
       cplScheme.addComputedTime(timeStepSize);
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
       cplScheme.secondExchange();
       BOOST_TEST(cplScheme.hasDataBeenReceived());
+      if (cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint)) {
+        cplScheme.markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
+      }
     }
   } else {
     BOOST_TEST(context.isNamed(nameParticipant1));
@@ -830,6 +830,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       if (cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint)) {
         cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
       }
+      sendCouplingData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, v});
       cplScheme.addComputedTime(timeStepSize);
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();

@@ -605,11 +605,11 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
 
     // init displacements
     dpcd.reset(new CouplingData(displacements, dummyMesh, false, exchangeSubsteps));
-    dpcd->setSampleAtTime(time::Storage::WINDOW_END, dpcd->sample());
+    dpcd->setSampleAtTime(time::Storage::WINDOW_START, dpcd->sample());
 
     // init forces
     fpcd.reset(new CouplingData(forces, dummyMesh, false, exchangeSubsteps));
-    fpcd->setSampleAtTime(time::Storage::WINDOW_END, fpcd->sample());
+    fpcd->setSampleAtTime(time::Storage::WINDOW_START, fpcd->sample());
 
     dpcd->storeIteration();
     fpcd->storeIteration();
@@ -630,9 +630,9 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
     forces->values() << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
 
     dpcd.reset(new CouplingData(displacements, dummyMesh, false, exchangeSubsteps));
-    dpcd->setSampleAtTime(time::Storage::WINDOW_END, dpcd->sample());
+    dpcd->setSampleAtTime(time::Storage::WINDOW_START, dpcd->sample());
     fpcd.reset(new CouplingData(forces, dummyMesh, false, exchangeSubsteps));
-    fpcd->setSampleAtTime(time::Storage::WINDOW_END, fpcd->sample());
+    fpcd->setSampleAtTime(time::Storage::WINDOW_START, fpcd->sample());
 
     dpcd->storeIteration();
     fpcd->storeIteration();
@@ -655,9 +655,9 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
     forces->values() << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
 
     dpcd.reset(new CouplingData(displacements, dummyMesh, false, exchangeSubsteps));
-    dpcd->setSampleAtTime(time::Storage::WINDOW_END, dpcd->sample());
+    dpcd->setSampleAtTime(time::Storage::WINDOW_START, dpcd->sample());
     fpcd.reset(new CouplingData(forces, dummyMesh, false, exchangeSubsteps));
-    fpcd->setSampleAtTime(time::Storage::WINDOW_END, fpcd->sample());
+    fpcd->setSampleAtTime(time::Storage::WINDOW_START, fpcd->sample());
 
     dpcd->storeIteration();
     fpcd->storeIteration();
@@ -677,9 +677,9 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
     forces->values().resize(0);
 
     dpcd.reset(new CouplingData(displacements, dummyMesh, false, exchangeSubsteps));
-    dpcd->setSampleAtTime(time::Storage::WINDOW_END, dpcd->sample());
+    dpcd->setSampleAtTime(time::Storage::WINDOW_START, dpcd->sample());
     fpcd.reset(new CouplingData(forces, dummyMesh, false, exchangeSubsteps));
-    fpcd->setSampleAtTime(time::Storage::WINDOW_END, fpcd->sample());
+    fpcd->setSampleAtTime(time::Storage::WINDOW_START, fpcd->sample());
 
     dpcd->storeIteration();
     fpcd->storeIteration();
@@ -1080,7 +1080,7 @@ BOOST_AUTO_TEST_CASE(testColumnsLoggingWithoutSubsteps)
 
   PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, exchangeSubsteps));
   data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
-  dpcd->setSampleAtTime(time::Storage::WINDOW_END, dpcd->sample());
+  dpcd->setSampleAtTime(time::Storage::WINDOW_START, dpcd->sample());
   dpcd->storeIteration();
 
   acc.initialize(data);
