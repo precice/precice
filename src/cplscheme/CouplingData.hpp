@@ -108,7 +108,7 @@ private:
   mesh::PtrData _data;
 
   /// Sample values of previous iteration (end of time window).
-  time::Storage _timeStepsStoragePrevious;
+  time::Storage _previousTimeStepsStorage;
 
   /// If true, all substeps will be sent / received for this coupling data
   bool _exchangeSubsteps;

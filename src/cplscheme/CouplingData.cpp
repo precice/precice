@@ -17,12 +17,12 @@ CouplingData::CouplingData(
       _mesh(std::move(mesh)),
       _data(std::move(data)),
       _exchangeSubsteps(exchangeSubsteps),
-      _timeStepsStoragePrevious()
+      _previousTimeStepsStorage()
 {
   PRECICE_ASSERT(_data != nullptr);
-  _timeStepsStoragePrevious.setInterpolationDegree(3); // @todo hard-coded for now, but we need to somehow link this to <read-data waveform-order="ORDER" />
-  _timeStepsStoragePrevious.setSampleAtTime(time::Storage::WINDOW_START, time::Sample{getDimensions(), Eigen::VectorXd::Zero(getSize())});
-  _timeStepsStoragePrevious.setSampleAtTime(time::Storage::WINDOW_END, time::Sample{getDimensions(), Eigen::VectorXd::Zero(getSize())});
+  _previousTimeStepsStorage.setInterpolationDegree(3); // @todo hard-coded for now, but we need to somehow link this to <read-data waveform-order="ORDER" />
+  _previousTimeStepsStorage.setSampleAtTime(time::Storage::WINDOW_START, time::Sample{getDimensions(), Eigen::VectorXd::Zero(getSize())});
+  _previousTimeStepsStorage.setSampleAtTime(time::Storage::WINDOW_END, time::Sample{getDimensions(), Eigen::VectorXd::Zero(getSize())});
 
   PRECICE_ASSERT(_mesh != nullptr);
   PRECICE_ASSERT(_mesh.use_count() > 0);
@@ -73,12 +73,12 @@ const time::Storage &CouplingData::timeStepsStorage() const
 
 Eigen::VectorXd CouplingData::getPreviousValuesAtTime(double relativeDt)
 {
-  return _timeStepsStoragePrevious.sample(relativeDt);
+  return _previousTimeStepsStorage.sample(relativeDt);
 }
 
 Eigen::MatrixXd CouplingData::getPreviousGradientsAtTime(double relativeDt)
 {
-  return _timeStepsStoragePrevious.sampleGradients(relativeDt);
+  return _previousTimeStepsStorage.sampleGradients(relativeDt);
 }
 
 void CouplingData::setSampleAtTime(double time, time::Sample sample)
@@ -105,31 +105,31 @@ void CouplingData::storeIteration()
   PRECICE_ASSERT(stamples.size() > 0);
   this->sample() = stamples.back().sample;
 
-  _timeStepsStoragePrevious.trim();
+  _previousTimeStepsStorage.trim();
   if (stamples.size() == 1) { // special treatment during initialization
     const auto &stample = this->stamples().back();
     PRECICE_ASSERT(math::equals(stample.timestamp, time::Storage::WINDOW_START), "stample.timestamp must be WINDOW_START", stample.timestamp);
-    _timeStepsStoragePrevious.setSampleAtTime(time::Storage::WINDOW_START, stample.sample);
-    _timeStepsStoragePrevious.setSampleAtTime(time::Storage::WINDOW_END, stample.sample);
+    _previousTimeStepsStorage.setSampleAtTime(time::Storage::WINDOW_START, stample.sample);
+    _previousTimeStepsStorage.setSampleAtTime(time::Storage::WINDOW_END, stample.sample);
   } else {
     PRECICE_ASSERT(math::equals(this->stamples().back().timestamp, time::Storage::WINDOW_END), "Only allowed to storeIteration, if at window end");
-    _timeStepsStoragePrevious = _data->timeStepsStorage();
+    _previousTimeStepsStorage = _data->timeStepsStorage();
   }
 }
 
 const Eigen::VectorXd CouplingData::previousIteration() const
 {
-  return _timeStepsStoragePrevious.stamples().back().sample.values;
+  return _previousTimeStepsStorage.stamples().back().sample.values;
 }
 
 const Eigen::MatrixXd &CouplingData::previousIterationGradients() const
 {
-  return _timeStepsStoragePrevious.stamples().back().sample.gradients;
+  return _previousTimeStepsStorage.stamples().back().sample.gradients;
 }
 
 int CouplingData::getPreviousIterationSize() const
 {
-  return _timeStepsStoragePrevious.stamples().back().sample.values.size();
+  return _previousTimeStepsStorage.stamples().back().sample.values.size();
 }
 
 int CouplingData::getMeshID()
@@ -157,7 +157,7 @@ void CouplingData::moveToNextWindow()
   _data->moveToNextWindow();
   if (this->stamples().size() > 0) {
     PRECICE_ASSERT(math::equals(this->stamples().back().timestamp, time::Storage::WINDOW_END), "this->stamples() needs to be initialized properly for WINDOW_START and WINDOW_END");
-    _timeStepsStoragePrevious = _data->timeStepsStorage();
+    _previousTimeStepsStorage = _data->timeStepsStorage();
   }
 }
 
