@@ -4,6 +4,7 @@
 #include "math/bspline.hpp"
 #include "math/differences.hpp"
 #include "time/Storage.hpp"
+#include "time/Time.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice::time {
@@ -19,6 +20,7 @@ Storage::Storage()
 
 Storage &Storage::operator=(const Storage &other)
 {
+  this->_degree = other.getInterpolationDegree();
   for (const auto &stample : other.stamples()) {
     this->setSampleAtTime(stample.timestamp, stample.sample);
   }
@@ -54,7 +56,13 @@ void Storage::setSampleAtTime(double time, Sample sample)
 
 void Storage::setInterpolationDegree(int interpolationDegree)
 {
+  PRECICE_ASSERT(Time::MIN_WAVEFORM_DEGREE <= _degree && _degree <= Time::MAX_WAVEFORM_DEGREE);
   _degree = interpolationDegree;
+}
+
+int Storage::getInterpolationDegree() const
+{
+  return _degree;
 }
 
 double Storage::maxStoredNormalizedDt() const

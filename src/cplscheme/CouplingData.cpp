@@ -20,7 +20,7 @@ CouplingData::CouplingData(
       _previousTimeStepsStorage()
 {
   PRECICE_ASSERT(_data != nullptr);
-  _previousTimeStepsStorage.setInterpolationDegree(3); // @todo hard-coded for now, but we need to somehow link this to <read-data waveform-order="ORDER" />
+  _previousTimeStepsStorage = _data->timeStepsStorage();
   _previousTimeStepsStorage.setSampleAtTime(time::Storage::WINDOW_START, time::Sample{getDimensions(), Eigen::VectorXd::Zero(getSize())});
   _previousTimeStepsStorage.setSampleAtTime(time::Storage::WINDOW_END, time::Sample{getDimensions(), Eigen::VectorXd::Zero(getSize())});
 

@@ -52,6 +52,8 @@ public:
 
   void setInterpolationDegree(int interpolationDegree);
 
+  int getInterpolationDegree() const;
+
   /**
    * @brief Get maximum normalized dt that is stored in this Storage.
    *
