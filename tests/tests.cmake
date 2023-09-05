@@ -153,6 +153,7 @@ target_sources(testprecice
     tests/serial/multi-coupling/MultiCouplingThreeSolvers1.cpp
     tests/serial/multi-coupling/MultiCouplingThreeSolvers2.cpp
     tests/serial/multi-coupling/MultiCouplingThreeSolvers3.cpp
+    tests/serial/multi-coupling/MultiCouplingTwoSolvers.cpp
     tests/serial/multi-coupling/helpers.cpp
     tests/serial/multi-coupling/helpers.hpp
     tests/serial/multiple-mappings/MultipleReadFromMappings.cpp
@@ -190,6 +191,7 @@ target_sources(testprecice
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithWaveformSubcyclingFirst.cpp
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithWaveformSubcyclingMixed.cpp
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithWaveformSubcyclingThird.cpp
+    tests/serial/time/implicit/parallel-coupling/WaveformSubcyclingWithDifferentNumberOfDts.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataFirstParticipant.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithSubcyclingNoSubsteps.cpp

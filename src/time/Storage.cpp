@@ -65,7 +65,10 @@ int Storage::nDofs() const
 
 void Storage::move()
 {
-  PRECICE_ASSERT(nTimes() > 0);
+  PRECICE_ASSERT(nTimes() >= 2, "Calling Storage::move() is only allowed, if there is a sample at the beginning and at the end. This ensures that this function is only called at the end of the window.", getTimes());
+  PRECICE_ASSERT(math::equals(_stampleStorage.front().timestamp, time::Storage::WINDOW_START), _stampleStorage.front().timestamp);
+  PRECICE_ASSERT(math::equals(_stampleStorage.back().timestamp, time::Storage::WINDOW_END), _stampleStorage.back().timestamp);
+
   auto sampleAtBeginning = getSampleAtEnd();
   auto sampleAtEnd       = getSampleAtEnd();
   _stampleStorage.clear();

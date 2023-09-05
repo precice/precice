@@ -104,7 +104,9 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
           cplScheme->markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
         }
         mesh->data(0)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, mesh->data(0)->values()});
+        BOOST_TEST(cplScheme->getNormalizedWindowTime() == time::Storage::WINDOW_START);
         cplScheme->addComputedTime(cplScheme->getNextTimeStepMaxSize());
+        BOOST_TEST(cplScheme->getNormalizedWindowTime() == time::Storage::WINDOW_END); // ensure that time is correctly updated, even if iterating. See https://github.com/precice/precice/pull/1792.
         cplScheme->firstSynchronization({});
         cplScheme->firstExchange();
         cplScheme->secondSynchronization();
@@ -139,7 +141,9 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
           cplScheme->markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
         }
         mesh->data(1)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{ddims, mesh->data(1)->values()});
+        BOOST_TEST(cplScheme->getNormalizedWindowTime() == time::Storage::WINDOW_START);
         cplScheme->addComputedTime(cplScheme->getNextTimeStepMaxSize());
+        BOOST_TEST(cplScheme->getNormalizedWindowTime() == time::Storage::WINDOW_END); // ensure that time is correctly updated, even if iterating. See https://github.com/precice/precice/pull/1792.
         cplScheme->firstSynchronization({});
         cplScheme->firstExchange();
         cplScheme->secondSynchronization();
@@ -175,7 +179,9 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
           cplScheme->markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
         }
         mesh->data(2)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{ddims, mesh->data(2)->values()});
+        BOOST_TEST(cplScheme->getNormalizedWindowTime() == time::Storage::WINDOW_START);
         cplScheme->addComputedTime(cplScheme->getNextTimeStepMaxSize());
+        BOOST_TEST(cplScheme->getNormalizedWindowTime() == time::Storage::WINDOW_END); // ensure that time is correctly updated, even if iterating. See https://github.com/precice/precice/pull/1792.
         cplScheme->firstSynchronization({});
         cplScheme->firstExchange();
         cplScheme->secondSynchronization();
