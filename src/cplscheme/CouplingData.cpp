@@ -119,16 +119,19 @@ void CouplingData::storeIteration()
 
 const Eigen::VectorXd CouplingData::previousIteration() const
 {
+  PRECICE_ASSERT(!_previousTimeStepsStorage.stamples().empty());
   return _previousTimeStepsStorage.stamples().back().sample.values;
 }
 
 const Eigen::MatrixXd &CouplingData::previousIterationGradients() const
 {
+  PRECICE_ASSERT(!_previousTimeStepsStorage.stamples().empty());
   return _previousTimeStepsStorage.stamples().back().sample.gradients;
 }
 
 int CouplingData::getPreviousIterationSize() const
 {
+  PRECICE_ASSERT(!_previousTimeStepsStorage.stamples().empty());
   return _previousTimeStepsStorage.stamples().back().sample.values.size();
 }
 
