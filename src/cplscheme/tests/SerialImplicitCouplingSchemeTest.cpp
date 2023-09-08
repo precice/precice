@@ -762,13 +762,9 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     // ensure that read data is uninitialized
     BOOST_TEST(receiveCouplingData->getSize() == 3);
     BOOST_TEST(testing::equals(receiveCouplingData->values(), Eigen::Vector3d(0.0, 0.0, 0.0)));
-    BOOST_TEST(receiveCouplingData->getPreviousIterationSize() == 3);
-    BOOST_TEST(testing::equals(receiveCouplingData->previousIteration(), Eigen::Vector3d(0.0, 0.0, 0.0)));
     // ensure that write data is uninitialized
     BOOST_TEST(sendCouplingData->getSize() == 1);
     BOOST_TEST(testing::equals(sendCouplingData->values()(0), 0.0));
-    BOOST_TEST(sendCouplingData->getPreviousIterationSize() == 1);
-    BOOST_TEST(testing::equals(sendCouplingData->previousIteration()(0), 0.0));
 
     BOOST_TEST(Fixture::isImplicitCouplingScheme(cplScheme));
     sendCouplingData->setSampleAtTime(0, time::Sample{1, sendCouplingData->values()});
@@ -812,11 +808,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     cplScheme.markActionFulfilled(CouplingScheme::Action::InitializeData);
     BOOST_TEST(receiveCouplingData->getSize() == 1);
     BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 0.0));
-    BOOST_TEST(receiveCouplingData->getPreviousIterationSize() == 1);
-    BOOST_TEST(receiveCouplingData->getPreviousIterationSize() == 1); // here, previousIteration is correctly initialized, see above
     BOOST_TEST(sendCouplingData->getSize() == 3);
-    BOOST_TEST(testing::equals(sendCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
-    BOOST_TEST(sendCouplingData->getPreviousIterationSize() == 3); // here, previousIteration is correctly initialized, see above
     BOOST_TEST(testing::equals(sendCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
     cplScheme.initialize(0.0, 1);
     BOOST_TEST(cplScheme.hasDataBeenReceived());

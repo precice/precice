@@ -36,8 +36,10 @@ Eigen::VectorXd Waveform::sample(double time) const
   const int usedDegree = computeUsedDegree(_degree, _timeStepsStorage.nTimes());
 
   if (usedDegree == 0) {
-    return this->_timeStepsStorage.getValuesAtOrAfter(time);
+    return this->_timeStepsStorage.getSampleAtOrAfter(time).values;
   }
+
+  PRECICE_ASSERT(usedDegree >= 1);
 
   const auto data = _timeStepsStorage.getTimesAndValues();
 

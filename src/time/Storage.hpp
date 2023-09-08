@@ -20,6 +20,14 @@ public:
   Storage();
 
   /**
+   * @brief Copy assignment operator to assign Storage to this Storage
+   *
+   * @param other Storage
+   * @return Storage&
+   */
+  Storage &operator=(const Storage &other);
+
+  /**
    * @brief Store Sample at a specific time.
    *
    * It is only allowed to store a Sample in time that comes after a Sample that was already stored. Therefore, time has to be larger than maxStoredTime. Overwriting existing samples is forbidden. The function trim() should be used before providing new samples.
@@ -29,6 +37,8 @@ public:
    */
   void setSampleAtTime(double time, Sample sample);
 
+  void setInterpolationDegree(int interpolationDegree);
+
   /**
    * @brief Get maximum time that is stored in this Storage.
    *
@@ -37,14 +47,14 @@ public:
   double maxStoredTime() const;
 
   /**
-   * @brief Returns the values at time following "before" contained in this Storage.
+   * @brief Returns the Sample at time following "before" contained in this Storage.
    *
-   * The stored normalized dt is larger or equal than "before". If "before" is a normalized dt stored in this Storage, this function returns the values at "before"
+   * The stored normalized dt is larger or equal than "before". If "before" is a normalized dt stored in this Storage, this function returns the Sample at "before"
    *
    * @param before a double, where we want to find a normalized dt that comes directly after this one
-   * @return Eigen::VectorXd values in this Storage at or directly after "before"
+   * @return Sample in this Storage at or directly after "before"
    */
-  Eigen::VectorXd getValuesAtOrAfter(double before) const;
+  Sample getSampleAtOrAfter(double before) const;
 
   /**
    * @brief Get all normalized dts stored in this Storage sorted ascending.
@@ -99,11 +109,35 @@ public:
    */
   void clear();
 
+  /**
+   * @brief Need to use interpolation for the case with changing time grids
+   *
+   * @param normalizedDt a double, where we want to sample the waveform
+   * @return Eigen::VectorXd values in this Storage at or directly after "before"
+  */
+  Eigen::VectorXd sample(double normalizedDt) const; // @todo try to solve this differently. Currently duplicates a lot of code from Waveform::sample. Maybe even move Waveform inside Storage, if every Storage needs to interpolate anyway?
+
+  Eigen::MatrixXd sampleGradients(double normalizedDt) const; // @todo try to solve this differently. Currently duplicates a lot of code from Waveform::sample. Maybe even move Waveform inside Storage, if every Storage needs to interpolate anyway?
+
 private:
   /// Stores Stamples on the current window
   std::vector<Stample> _stampleStorage;
 
   mutable logging::Logger _log{"time::Storage"};
+
+  int _degree;
+
+  /**
+   * @brief Computes which degree may be used for interpolation.
+   *
+   * Actual degree of interpolating B-spline is determined by number of stored samples and maximum degree defined by the user.
+   * Example: If only two samples are available, the maximum degree we may use is 1, even if the user demands degree 2.
+   *
+   * @param requestedDegree B-spline degree requested by the user.
+   * @param numberOfAvailableSamples Samples available for interpolation.
+   * @return B-spline degree that may be used.
+   */
+  int computeUsedDegree(int requestedDegree, int numberOfAvailableSamples) const;
 
   time::Sample getSampleAtBeginning();
 

@@ -1,6 +1,7 @@
 #include <boost/range.hpp>
 
 #include "cplscheme/CouplingScheme.hpp"
+#include "math/bspline.hpp"
 #include "math/differences.hpp"
 #include "time/Storage.hpp"
 #include "utils/assertion.hpp"
@@ -8,8 +9,17 @@
 namespace precice::time {
 
 Storage::Storage()
-    : _stampleStorage{}
+    : _stampleStorage{}, _degree(0)
 {
+}
+
+Storage &Storage::operator=(const Storage &other)
+{
+  this->clear();
+  for (const auto &stample : other.stamples()) {
+    this->setSampleAtTime(stample.timestamp, stample.sample);
+  }
+  return *this;
 }
 
 void Storage::setSampleAtTime(double time, Sample sample)
@@ -37,6 +47,11 @@ void Storage::setSampleAtTime(double time, Sample sample)
     }
     PRECICE_ASSERT(false, "unreachable!");
   }
+}
+
+void Storage::setInterpolationDegree(int interpolationDegree)
+{
+  _degree = interpolationDegree;
 }
 
 double Storage::maxStoredTime() const
@@ -73,14 +88,11 @@ void Storage::move()
 
 void Storage::trim()
 {
-  PRECICE_DEBUG("Storage::trim()");
-  PRECICE_DEBUG("times before: {}", getTimes());
   PRECICE_ASSERT(!_stampleStorage.empty(), "Storage does not contain any data!");
   const double thisWindowStart = _stampleStorage.front().timestamp;
   _stampleStorage.erase(++_stampleStorage.begin(), _stampleStorage.end());
   PRECICE_ASSERT(_stampleStorage.size() == 1);
   PRECICE_ASSERT(thisWindowStart == _stampleStorage.front().timestamp);
-  PRECICE_DEBUG("times after: {}", getTimes());
 }
 
 void Storage::clear()
@@ -89,16 +101,16 @@ void Storage::clear()
   PRECICE_ASSERT(_stampleStorage.size() == 0);
 }
 
-Eigen::VectorXd Storage::getValuesAtOrAfter(double before) const
+Sample Storage::getSampleAtOrAfter(double before) const
 {
-  PRECICE_DEBUG("getValuesAtOrAfter({})", before);
+  PRECICE_DEBUG("getSampleAtOrAfter({})", before);
   PRECICE_DEBUG("available times: {}", getTimes());
   if (nTimes() == 1) {
-    return _stampleStorage.front().sample.values; // @todo in this case the name getValuesAtOrAfter does not fit, because _stampleStorage.front().sample.values is returned for any time before.
+    return _stampleStorage.front().sample; // @todo in this case the name getSampleAtOrAfter does not fit, because _stampleStorage.front().sample is returned for any time before.
   } else {
     auto stample = std::find_if(_stampleStorage.begin(), _stampleStorage.end(), [&before](const auto &s) { return math::greaterEquals(s.timestamp, before); });
     PRECICE_ASSERT(stample != _stampleStorage.end(), "no values found!");
-    return stample->sample.values;
+    return stample->sample;
   }
 }
 
@@ -120,6 +132,51 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> Storage::getTimesAndValues() const
     values.col(i) = _stampleStorage[i].sample.values;
   }
   return std::make_pair(times, values);
+}
+
+Eigen::VectorXd Storage::sample(double normalizedDt) const
+{
+  const int usedDegree = computeUsedDegree(_degree, nTimes());
+
+  if (usedDegree == 0) {
+    return this->getSampleAtOrAfter(normalizedDt).values;
+  }
+
+  PRECICE_ASSERT(usedDegree >= 1);
+
+  auto data = getTimesAndValues();
+
+  return math::bspline::interpolateAt(data.first, data.second, usedDegree, normalizedDt);
+}
+
+Eigen::MatrixXd Storage::sampleGradients(double normalizedDt) const
+{
+  const int usedDegree = computeUsedDegree(_degree, nTimes());
+
+  if (usedDegree == 0) {
+    return this->getSampleAtOrAfter(normalizedDt).gradients;
+  }
+
+  PRECICE_WARN("You specified interpolation degree of {}, but only degree 0 is supported for gradient interpolation", usedDegree); // @todo implement this like for sampleAt
+  return this->getSampleAtOrAfter(normalizedDt).gradients;
+}
+
+int Storage::computeUsedDegree(int requestedDegree, int numberOfAvailableSamples) const
+{
+  int usedDegree = -1;
+  PRECICE_ASSERT(requestedDegree <= 3);
+  if (requestedDegree == 0 || numberOfAvailableSamples < 2) {
+    usedDegree = 0;
+  } else if (requestedDegree == 1 || numberOfAvailableSamples < 3) {
+    usedDegree = 1;
+  } else if (requestedDegree == 2 || numberOfAvailableSamples < 4) {
+    usedDegree = 2;
+  } else if (requestedDegree == 3 || numberOfAvailableSamples < 5) {
+    usedDegree = 3;
+  } else {
+    PRECICE_ASSERT(false); // not supported
+  }
+  return usedDegree;
 }
 
 time::Sample Storage::getSampleAtBeginning()
