@@ -19,6 +19,7 @@ Storage::Storage()
 
 Storage &Storage::operator=(const Storage &other)
 {
+  this->_stampleStorage.clear();
   for (const auto &stample : other.stamples()) {
     this->setSampleAtTime(stample.timestamp, stample.sample);
   }
@@ -131,7 +132,7 @@ Eigen::VectorXd Storage::sample(double normalizedDt) const
 
   PRECICE_ASSERT(math::equals(this->maxStoredNormalizedDt(), time::Storage::WINDOW_END), this->maxStoredNormalizedDt()); // sampling is only allowed, if a window is complete.
 
-  if (_degree == 0) {
+  if (usedDegree == 0) {
     return this->getSampleAtOrAfter(normalizedDt).values;
   }
 
@@ -148,7 +149,7 @@ Eigen::MatrixXd Storage::sampleGradients(double normalizedDt) const
 
   PRECICE_ASSERT(math::equals(this->maxStoredNormalizedDt(), time::Storage::WINDOW_END), this->maxStoredNormalizedDt()); // sampling is only allowed, if a window is complete.
 
-  if (_degree == 0) {
+  if (usedDegree == 0) {
     return this->getSampleAtOrAfter(normalizedDt).gradients;
   }
 
