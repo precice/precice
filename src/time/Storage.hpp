@@ -52,6 +52,8 @@ public:
 
   void setInterpolationDegree(int interpolationDegree);
 
+  int getInterpolationDegree() const;
+
   /**
    * @brief Get maximum normalized dt that is stored in this Storage.
    *
@@ -123,9 +125,9 @@ public:
    * @param normalizedDt a double, where we want to sample the waveform
    * @return Eigen::VectorXd values in this Storage at or directly after "before"
   */
-  Eigen::VectorXd sample(double normalizedDt) const; // @todo try to solve this differently. Currently duplicates a lot of code from Waveform::sample. Maybe even move Waveform inside Storage, if every Storage needs to interpolate anyway?
+  Eigen::VectorXd sample(double normalizedDt) const;
 
-  Eigen::MatrixXd sampleGradients(double normalizedDt) const; // @todo try to solve this differently. Currently duplicates a lot of code from Waveform::sample. Maybe even move Waveform inside Storage, if every Storage needs to interpolate anyway?
+  Eigen::MatrixXd sampleGradients(double normalizedDt) const;
 
 private:
   /// Stores Stamples on the current window
