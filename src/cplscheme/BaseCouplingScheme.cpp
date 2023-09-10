@@ -334,14 +334,14 @@ void BaseCouplingScheme::secondExchange()
         // coupling iteration.
         PRECICE_ASSERT(math::greater(_computedTimeWindowPart, 0.0));
         _timeWindows -= 1;
-        _computedTimeWindowPart = 0; // reset window
-      } else {                       // write output, prepare for next window
+        _computedTimeWindowPart = 0.0; // reset window
+      } else {                         // write output, prepare for next window
         PRECICE_DEBUG("Convergence achieved");
         advanceTXTWriters();
         PRECICE_INFO("Time window completed");
         _isTimeWindowComplete = true;
         _timeWindowStartTime += _computedTimeWindowPart;
-        _computedTimeWindowPart = 0; // reset window
+        _computedTimeWindowPart = 0.0; // reset window
         if (isCouplingOngoing()) {
           PRECICE_DEBUG("Setting require create checkpoint");
           requireAction(CouplingScheme::Action::WriteCheckpoint);
@@ -358,7 +358,7 @@ void BaseCouplingScheme::secondExchange()
       PRECICE_INFO("Time window completed");
       _isTimeWindowComplete = true;
       _timeWindowStartTime += _computedTimeWindowPart;
-      _computedTimeWindowPart = 0; // reset window
+      _computedTimeWindowPart = 0.0; // reset window
     }
     if (isCouplingOngoing()) {
       PRECICE_ASSERT(_hasDataBeenReceived);
