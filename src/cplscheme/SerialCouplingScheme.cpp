@@ -83,7 +83,6 @@ void SerialCouplingScheme::exchangeInitialData()
   // F: send, receive, S: receive, send
   if (doesFirstStep()) {
     if (receivesInitializedData()) {
-      ensureDataHasNotYetBeenReceived();
       receiveData(getM2N(), getReceiveData());
       notifyDataHasBeenReceived();
     } else {
@@ -101,7 +100,6 @@ void SerialCouplingScheme::exchangeInitialData()
     }
     // similar to SerialCouplingScheme::exchangeSecondData()
     PRECICE_DEBUG("Receiving data...");
-    ensureDataHasNotYetBeenReceived();
     receiveAndSetTimeWindowSize();
     const double oldComputedTimeWindowPart = getComputedTime();
     addComputedTime(getTimeWindowSize());           // needed such that getTime() returns time at end
@@ -149,7 +147,6 @@ void SerialCouplingScheme::exchangeSecondData()
   if (isExplicitCouplingScheme()) {
     if (doesFirstStep()) { // first participant
       PRECICE_DEBUG("Receiving data...");
-      ensureDataHasNotYetBeenReceived();
       receiveData(getM2N(), getReceiveData());
       notifyDataHasBeenReceived();
       moveToNextWindow();
@@ -160,7 +157,6 @@ void SerialCouplingScheme::exchangeSecondData()
       if (isCouplingOngoing()) {
         receiveAndSetTimeWindowSize();
         PRECICE_DEBUG("Receiving data...");
-        ensureDataHasNotYetBeenReceived();
         const double oldComputedTimeWindowPart = getComputedTime();
         addComputedTime(getTimeWindowSize());           // needed such that getTime() returns time at end
         receiveData(getM2N(), getReceiveData());        // receive data for end of window
@@ -175,7 +171,6 @@ void SerialCouplingScheme::exchangeSecondData()
       PRECICE_DEBUG("Receiving convergence data...");
       receiveConvergence(getM2N());
       PRECICE_DEBUG("Receiving data...");
-      ensureDataHasNotYetBeenReceived();
       receiveData(getM2N(), getReceiveData());
       notifyDataHasBeenReceived();
       if (hasConverged()) {
@@ -190,7 +185,6 @@ void SerialCouplingScheme::exchangeSecondData()
       if (isCouplingOngoing() || not hasConverged()) {
         receiveAndSetTimeWindowSize();
         PRECICE_DEBUG("Receiving data...");
-        ensureDataHasNotYetBeenReceived();
         if (hasConverged()) {
           const double oldComputedTimeWindowPart = getComputedTime();
           addComputedTime(getTimeWindowSize());           // needed such that getTime() returns time at end of window

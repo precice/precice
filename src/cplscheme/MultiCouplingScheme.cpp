@@ -84,7 +84,6 @@ void MultiCouplingScheme::exchangeInitialData()
 
   if (_isController) {
     if (receivesInitializedData()) {
-      ensureDataHasNotYetBeenReceived();
       for (auto &receiveExchange : _receiveDataVector) {
         receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
       }
@@ -106,7 +105,6 @@ void MultiCouplingScheme::exchangeInitialData()
       }
     }
     if (receivesInitializedData()) {
-      ensureDataHasNotYetBeenReceived();
       for (auto &receiveExchange : _receiveDataVector) {
         receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
       }
@@ -128,7 +126,6 @@ void MultiCouplingScheme::exchangeFirstData()
   PRECICE_DEBUG("Computed full length of iteration");
 
   if (_isController) {
-    ensureDataHasNotYetBeenReceived();
     for (auto &receiveExchange : _receiveDataVector) {
       receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
     }
@@ -147,7 +144,6 @@ void MultiCouplingScheme::exchangeSecondData()
 
   if (not _isController) {
     receiveConvergence(_m2ns[_controller]);
-    ensureDataHasNotYetBeenReceived();
     for (auto &receiveExchange : _receiveDataVector) {
       receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
     }

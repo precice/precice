@@ -30,7 +30,6 @@ void ParallelCouplingScheme::exchangeInitialData()
       sendData(getM2N(), getSendData());
     }
     if (receivesInitializedData()) {
-      ensureDataHasNotYetBeenReceived();
       receiveData(getM2N(), getReceiveData());
       notifyDataHasBeenReceived();
     } else {
@@ -38,7 +37,6 @@ void ParallelCouplingScheme::exchangeInitialData()
     }
   } else { // second participant
     if (receivesInitializedData()) {
-      ensureDataHasNotYetBeenReceived();
       receiveData(getM2N(), getReceiveData());
       notifyDataHasBeenReceived();
     } else {
@@ -57,7 +55,6 @@ void ParallelCouplingScheme::exchangeFirstData()
     sendData(getM2N(), getSendData());
   } else { // second participant
     PRECICE_DEBUG("Receiving data...");
-    ensureDataHasNotYetBeenReceived();
     receiveData(getM2N(), getReceiveData());
     notifyDataHasBeenReceived();
   }
@@ -68,7 +65,6 @@ void ParallelCouplingScheme::exchangeSecondData()
   if (isExplicitCouplingScheme()) {
     if (doesFirstStep()) { // first participant
       PRECICE_DEBUG("Receiving data...");
-      ensureDataHasNotYetBeenReceived();
       receiveData(getM2N(), getReceiveData());
       notifyDataHasBeenReceived();
     } else { // second participant
@@ -83,7 +79,6 @@ void ParallelCouplingScheme::exchangeSecondData()
       PRECICE_DEBUG("Receiving convergence data...");
       receiveConvergence(getM2N());
       PRECICE_DEBUG("Receiving data...");
-      ensureDataHasNotYetBeenReceived();
       receiveData(getM2N(), getReceiveData());
       notifyDataHasBeenReceived();
     } else { // second participant
