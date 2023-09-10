@@ -79,28 +79,22 @@ void ParallelCouplingScheme::exchangeSecondData()
     PRECICE_ASSERT(isImplicitCouplingScheme());
 
     if (doesFirstStep()) { // first participant
-      if (isImplicitCouplingScheme()) {
-        PRECICE_DEBUG("Receiving convergence data...");
-        receiveConvergence(getM2N());
+      PRECICE_DEBUG("Receiving convergence data...");
+      receiveConvergence(getM2N());
+      if (hasConverged()) {
+        moveToNextWindow();
       }
-    } else { // second participant
-      PRECICE_DEBUG("Perform acceleration (only second participant)...");
-      doImplicitStep();
-      if (isImplicitCouplingScheme()) {
-        PRECICE_DEBUG("Sending convergence...");
-        sendConvergence(getM2N());
-      }
-    }
-
-    if (hasConverged()) {
-      moveToNextWindow();
-    }
-
-    if (doesFirstStep()) { // first participant
       PRECICE_DEBUG("Receiving data...");
       receiveData(getM2N(), getReceiveData());
       notifyDataHasBeenReceived();
     } else { // second participant
+      PRECICE_DEBUG("Perform acceleration (only second participant)...");
+      doImplicitStep();
+      PRECICE_DEBUG("Sending convergence...");
+      sendConvergence(getM2N());
+      if (hasConverged()) {
+        moveToNextWindow();
+      }
       PRECICE_DEBUG("Sending data...");
       sendData(getM2N(), getSendData());
     }

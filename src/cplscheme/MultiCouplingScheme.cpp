@@ -153,13 +153,8 @@ void MultiCouplingScheme::exchangeSecondData()
       receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
     }
     notifyDataHasBeenReceived();
-  }
-
-  if (_isController) {
+  } else {
     doImplicitStep();
-  }
-
-  if (_isController) {
     for (const auto &m2n : _m2ns | boost::adaptors::map_values) {
       sendConvergence(m2n);
     }
