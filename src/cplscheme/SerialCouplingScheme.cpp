@@ -99,7 +99,7 @@ void SerialCouplingScheme::exchangeInitialData()
   if (doesFirstStep()) {
     if (receivesInitializedData()) {
       receiveData(getM2N(), getReceiveData(), initialCommunication);
-      checkDataHasBeenReceived();
+      notifyDataHasBeenReceived();
     } else {
       initializeWithZeroInitialData(getReceiveData());
     }
@@ -117,7 +117,7 @@ void SerialCouplingScheme::exchangeInitialData()
     PRECICE_DEBUG("Receiving data...");
     receiveAndSetTimeWindowSize();
     receiveData(getM2N(), getReceiveData());
-    checkDataHasBeenReceived();
+    notifyDataHasBeenReceived();
   }
 }
 
@@ -161,7 +161,7 @@ void SerialCouplingScheme::exchangeSecondData()
       moveToNextWindow();
       PRECICE_DEBUG("Receiving data...");
       receiveData(getM2N(), getReceiveData());
-      checkDataHasBeenReceived();
+      notifyDataHasBeenReceived();
     }
 
     if (not doesFirstStep()) { // second participant
@@ -170,7 +170,7 @@ void SerialCouplingScheme::exchangeSecondData()
         receiveAndSetTimeWindowSize();
         PRECICE_DEBUG("Receiving data...");
         receiveData(getM2N(), getReceiveData());
-        checkDataHasBeenReceived();
+        notifyDataHasBeenReceived();
       }
     }
   } else {
@@ -184,7 +184,7 @@ void SerialCouplingScheme::exchangeSecondData()
       }
       PRECICE_DEBUG("Receiving data...");
       receiveData(getM2N(), getReceiveData());
-      checkDataHasBeenReceived();
+      notifyDataHasBeenReceived();
     }
 
     storeIteration();
@@ -195,7 +195,7 @@ void SerialCouplingScheme::exchangeSecondData()
         receiveAndSetTimeWindowSize();
         PRECICE_DEBUG("Receiving data...");
         receiveData(getM2N(), getReceiveData());
-        checkDataHasBeenReceived();
+        notifyDataHasBeenReceived();
       }
     }
   }
