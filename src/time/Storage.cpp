@@ -57,6 +57,11 @@ void Storage::setInterpolationDegree(int interpolationDegree)
   _degree = interpolationDegree;
 }
 
+int Storage::getInterpolationDegree() const
+{
+  return _degree;
+}
+
 double Storage::maxStoredTime() const
 {
   if (_stampleStorage.size() == 0) {
