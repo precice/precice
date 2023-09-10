@@ -9,7 +9,7 @@ using namespace precice;
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
-BOOST_AUTO_TEST_SUITE(MultiCoupling, *boost::unit_test::disabled())
+BOOST_AUTO_TEST_SUITE(MultiCoupling)
 /// Four solvers are multi-coupled.
 BOOST_AUTO_TEST_CASE(MultiCoupling)
 {
