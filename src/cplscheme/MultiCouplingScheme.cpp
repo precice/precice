@@ -147,30 +147,23 @@ void MultiCouplingScheme::exchangeSecondData()
 
   if (not _isController) {
     receiveConvergence(_m2ns[_controller]);
-    if (hasConverged()) {
-      moveToNextWindow();
-    }
     ensureDataHasNotYetBeenReceived();
     for (auto &receiveExchange : _receiveDataVector) {
       receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
     }
     notifyDataHasBeenReceived();
-  }
-
-  if (_isController) {
+  } else {
     doImplicitStep();
-  }
-
-  if (_isController) {
     for (const auto &m2n : _m2ns | boost::adaptors::map_values) {
       sendConvergence(m2n);
-    }
-    if (hasConverged()) {
-      moveToNextWindow();
     }
     for (auto &sendExchange : _sendDataVector) {
       sendData(_m2ns[sendExchange.first], sendExchange.second);
     }
+  }
+
+  if (hasConverged()) {
+    moveToNextWindow();
   }
 
   storeIteration();

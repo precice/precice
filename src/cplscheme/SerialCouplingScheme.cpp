@@ -151,8 +151,8 @@ void SerialCouplingScheme::exchangeSecondData()
       PRECICE_DEBUG("Receiving data...");
       ensureDataHasNotYetBeenReceived();
       receiveData(getM2N(), getReceiveData());
-      moveToNextWindow();
       notifyDataHasBeenReceived();
+      moveToNextWindow();
     }
 
     if (not doesFirstStep()) { // second participant
@@ -177,10 +177,10 @@ void SerialCouplingScheme::exchangeSecondData()
       PRECICE_DEBUG("Receiving data...");
       ensureDataHasNotYetBeenReceived();
       receiveData(getM2N(), getReceiveData());
+      notifyDataHasBeenReceived();
       if (hasConverged()) {
         moveToNextWindow();
       }
-      notifyDataHasBeenReceived();
     }
 
     storeIteration();
