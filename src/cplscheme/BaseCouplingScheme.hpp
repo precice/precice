@@ -88,10 +88,6 @@ public:
   /// @copydoc cplscheme::CouplingScheme::addComputedTime()
   bool addComputedTime(double timeToAdd) override final;
 
-  double getComputedTime() const;
-
-  void resetComputedTimeTo(double computedTime);
-
   /**
    * @brief Returns true, if data will be exchanged when calling advance().
    *
@@ -264,6 +260,14 @@ protected:
    * @param receiveData DataMap associated with received data
    */
   void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData);
+
+  /**
+   * @brief Like receiveData, but sets window time to end of window. Needed by SerialCouplingScheme.
+   *
+   * @param m2n M2N used for communication
+   * @param receiveData DataMap associated with received data
+   */
+  void receiveDataForWindowEnd(const m2n::PtrM2N &m2n, const DataMap &receiveData);
 
   /**
    * @brief Initializes storage in receiveData as zero

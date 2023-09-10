@@ -101,10 +101,7 @@ void SerialCouplingScheme::exchangeInitialData()
     // similar to SerialCouplingScheme::exchangeSecondData()
     PRECICE_DEBUG("Receiving data...");
     receiveAndSetTimeWindowSize();
-    const double oldComputedTimeWindowPart = getComputedTime();
-    addComputedTime(getTimeWindowSize());           // needed such that getTime() returns time at end
-    receiveData(getM2N(), getReceiveData());        // receive data for end of window
-    resetComputedTimeTo(oldComputedTimeWindowPart); // reset to time before addComputedTime(...)
+    receiveDataForWindowEnd(getM2N(), getReceiveData());
     notifyDataHasBeenReceived();
   }
 }
@@ -157,10 +154,7 @@ void SerialCouplingScheme::exchangeSecondData()
       if (isCouplingOngoing()) {
         receiveAndSetTimeWindowSize();
         PRECICE_DEBUG("Receiving data...");
-        const double oldComputedTimeWindowPart = getComputedTime();
-        addComputedTime(getTimeWindowSize());           // needed such that getTime() returns time at end
-        receiveData(getM2N(), getReceiveData());        // receive data for end of window
-        resetComputedTimeTo(oldComputedTimeWindowPart); // reset to time before addComputedTime(...)
+        receiveDataForWindowEnd(getM2N(), getReceiveData());
         notifyDataHasBeenReceived();
       }
     }
@@ -186,10 +180,7 @@ void SerialCouplingScheme::exchangeSecondData()
         receiveAndSetTimeWindowSize();
         PRECICE_DEBUG("Receiving data...");
         if (hasConverged()) {
-          const double oldComputedTimeWindowPart = getComputedTime();
-          addComputedTime(getTimeWindowSize());           // needed such that getTime() returns time at end of window
-          receiveData(getM2N(), getReceiveData());        // receive data for end of window
-          resetComputedTimeTo(oldComputedTimeWindowPart); // reset to time before addComputedTime(...)
+          receiveDataForWindowEnd(getM2N(), getReceiveData());
         } else {
           receiveData(getM2N(), getReceiveData()); // receive data for end of window
         }

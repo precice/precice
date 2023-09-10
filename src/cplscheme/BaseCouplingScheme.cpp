@@ -196,6 +196,14 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
   }
 }
 
+void BaseCouplingScheme::receiveDataForWindowEnd(const m2n::PtrM2N &m2n, const DataMap &receiveData)
+{
+  const double oldComputedTimeWindowPart = _computedTimeWindowPart;
+  _computedTimeWindowPart += getTimeWindowSize(); // such that getTime() in receiveData returns time at end of window
+  this->receiveData(m2n, receiveData);            // receive data for end of window
+  _computedTimeWindowPart = oldComputedTimeWindowPart;
+}
+
 void BaseCouplingScheme::initializeWithZeroInitialData(const DataMap &receiveData)
 {
   for (const auto &data : receiveData | boost::adaptors::map_values) {
@@ -326,14 +334,14 @@ void BaseCouplingScheme::secondExchange()
         // coupling iteration.
         PRECICE_ASSERT(math::greater(_computedTimeWindowPart, 0.0));
         _timeWindows -= 1;
-        resetComputedTimeTo(0); // reset window
-      } else {                  // write output, prepare for next window
+        _computedTimeWindowPart = 0; // reset window
+      } else {                       // write output, prepare for next window
         PRECICE_DEBUG("Convergence achieved");
         advanceTXTWriters();
         PRECICE_INFO("Time window completed");
         _isTimeWindowComplete = true;
         _timeWindowStartTime += _computedTimeWindowPart;
-        resetComputedTimeTo(0); // reset window
+        _computedTimeWindowPart = 0; // reset window
         if (isCouplingOngoing()) {
           PRECICE_DEBUG("Setting require create checkpoint");
           requireAction(CouplingScheme::Action::WriteCheckpoint);
@@ -350,7 +358,7 @@ void BaseCouplingScheme::secondExchange()
       PRECICE_INFO("Time window completed");
       _isTimeWindowComplete = true;
       _timeWindowStartTime += _computedTimeWindowPart;
-      resetComputedTimeTo(0); // reset window
+      _computedTimeWindowPart = 0; // reset window
     }
     if (isCouplingOngoing()) {
       PRECICE_ASSERT(_hasDataBeenReceived);
@@ -393,13 +401,12 @@ bool BaseCouplingScheme::addComputedTime(
 
   // Check validness
   bool valid = math::greaterEquals(getNextTimeStepMaxSize(), 0.0, _eps);
-  // @todo bypass this check for serial coupling, maybe better to put the whole into receiveDataForEndOfWindow or so.
-  // PRECICE_CHECK(valid,
-  //               "The time step size given to preCICE in \"advance\" {} exceeds the maximum allowed time step size {} "
-  //               "in the remaining of this time window. "
-  //               "Did you restrict your time step size, \"dt = min(preciceDt, solverDt)\"? "
-  //               "For more information, consult the adapter example in the preCICE documentation.",
-  //               timeToAdd, _timeWindowSize - _computedTimeWindowPart + timeToAdd);
+  PRECICE_CHECK(valid,
+                "The time step size given to preCICE in \"advance\" {} exceeds the maximum allowed time step size {} "
+                "in the remaining of this time window. "
+                "Did you restrict your time step size, \"dt = min(preciceDt, solverDt)\"? "
+                "For more information, consult the adapter example in the preCICE documentation.",
+                timeToAdd, _timeWindowSize - _computedTimeWindowPart + timeToAdd);
 
   if (hasTimeWindowSize()) {
     const bool isAtWindowEnd = math::equals(getComputedTimeWindowPart(), getTimeWindowSize(), _eps);
@@ -407,16 +414,6 @@ bool BaseCouplingScheme::addComputedTime(
   } else { // using participant first method
     return true;
   }
-}
-
-double BaseCouplingScheme::getComputedTime() const
-{
-  return _computedTimeWindowPart;
-}
-
-void BaseCouplingScheme::resetComputedTimeTo(double computedTime)
-{
-  _computedTimeWindowPart = computedTime;
 }
 
 bool BaseCouplingScheme::willDataBeExchanged(
