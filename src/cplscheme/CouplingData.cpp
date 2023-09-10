@@ -20,7 +20,7 @@ CouplingData::CouplingData(
       _previousTimeStepsStorage()
 {
   PRECICE_ASSERT(_data != nullptr);
-  _previousTimeStepsStorage.setInterpolationDegree(3); // @todo hard-coded for now, but we need to somehow link this to <read-data waveform-order="ORDER" />
+  _previousTimeStepsStorage = _data->timeStepsStorage();
 
   PRECICE_ASSERT(_mesh != nullptr);
   PRECICE_ASSERT(_mesh.use_count() > 0);

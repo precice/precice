@@ -39,6 +39,8 @@ public:
 
   void setInterpolationDegree(int interpolationDegree);
 
+  int getInterpolationDegree() const;
+
   /**
    * @brief Get maximum time that is stored in this Storage.
    *
@@ -112,12 +114,12 @@ public:
   /**
    * @brief Need to use interpolation for the case with changing time grids
    *
-   * @param normalizedDt a double, where we want to sample the waveform
+   * @param time a double, where we want to sample the waveform
    * @return Eigen::VectorXd values in this Storage at or directly after "before"
   */
-  Eigen::VectorXd sample(double normalizedDt) const; // @todo try to solve this differently. Currently duplicates a lot of code from Waveform::sample. Maybe even move Waveform inside Storage, if every Storage needs to interpolate anyway?
+  Eigen::VectorXd sample(double time) const;
 
-  Eigen::MatrixXd sampleGradients(double normalizedDt) const; // @todo try to solve this differently. Currently duplicates a lot of code from Waveform::sample. Maybe even move Waveform inside Storage, if every Storage needs to interpolate anyway?
+  Eigen::MatrixXd sampleGradients(double time) const;
 
 private:
   /// Stores Stamples on the current window

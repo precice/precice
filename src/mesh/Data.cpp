@@ -62,7 +62,7 @@ Eigen::VectorXd Data::sampleAtTime(double time) const
 
 int Data::getWaveformDegree() const
 {
-  return _waveform.getDegree();
+  return _waveform.timeStepsStorage().getInterpolationDegree();
 }
 
 time::Storage &Data::timeStepsStorage()
