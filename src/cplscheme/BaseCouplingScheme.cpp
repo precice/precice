@@ -353,7 +353,7 @@ void BaseCouplingScheme::secondExchange()
       resetComputedTimeTo(0); // reset window
     }
     if (isCouplingOngoing()) {
-      // PRECICE_ASSERT(_hasDataBeenReceived);  // @todo needs workaround, triggers assertion in Integration/Serial/Time/Implicit/SerialCoupling/ReadWriteScalarDataWithSubcyclingNoSubsteps.
+      PRECICE_ASSERT(_hasDataBeenReceived);
     }
   }
 }
