@@ -115,7 +115,6 @@ void SerialCouplingScheme::exchangeFirstData()
       sendData(getM2N(), getSendData());
     } else { // second participant
       PRECICE_DEBUG("Sending data...");
-      moveToNextWindow(); // do moveToNextWindow already here for second participant in SerialCouplingScheme
       sendData(getM2N(), getSendData());
     }
   } else {
@@ -130,9 +129,6 @@ void SerialCouplingScheme::exchangeFirstData()
       doImplicitStep();
       PRECICE_DEBUG("Sending convergence...");
       sendConvergence(getM2N());
-      if (hasConverged()) {
-        moveToNextWindow(); // do moveToNextWindow already here for second participant in SerialCouplingScheme
-      }
       PRECICE_DEBUG("Sending data...");
       sendData(getM2N(), getSendData());
     }
@@ -146,8 +142,9 @@ void SerialCouplingScheme::exchangeSecondData()
       PRECICE_DEBUG("Receiving data...");
       receiveData(getM2N(), getReceiveData());
       notifyDataHasBeenReceived();
-      moveToNextWindow();
     }
+
+    moveToNextWindow();
 
     if (not doesFirstStep()) { // second participant
       // the second participant does not want new data in the last iteration of the last time window
@@ -167,9 +164,10 @@ void SerialCouplingScheme::exchangeSecondData()
       PRECICE_DEBUG("Receiving data...");
       receiveData(getM2N(), getReceiveData());
       notifyDataHasBeenReceived();
-      if (hasConverged()) {
-        moveToNextWindow();
-      }
+    }
+
+    if (hasConverged()) {
+      moveToNextWindow();
     }
 
     storeIteration();
