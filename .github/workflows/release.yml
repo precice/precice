@@ -30,7 +30,7 @@ jobs:
       matrix:
         TARGET: ["ubuntu:20.04", "ubuntu:22.04", "debian:11"]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Generate build directory
         run: mkdir -p build
       - name: Install common dependencies
@@ -72,7 +72,7 @@ jobs:
         uses: dawidd6/action-get-tag@v1
         with:
           strip_v: true
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       - name: Login to DockerHub
