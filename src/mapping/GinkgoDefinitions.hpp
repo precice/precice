@@ -1,6 +1,4 @@
-#ifndef PRECICE_GINKGODEFINITIONS_HPP
-#define PRECICE_GINKGODEFINITIONS_HPP
-
+#pragma once
 
 #include <ginkgo/ginkgo.hpp>
 
@@ -16,6 +14,3 @@ using triangular = gko::solver::UpperTrs<>;
 // Ginkgo Preconditioner
 using jacobi   = gko::preconditioner::Jacobi<>;
 using cholesky = gko::preconditioner::Ic<>;
-
-
-#endif // PRECICE_GINKGODEFINITIONS_HPP

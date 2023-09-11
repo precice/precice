@@ -1,7 +1,7 @@
 #ifdef PRECICE_WITH_CUDA
 #pragma once
 
-#include "mapping/GinkgoDefinitions"
+#include "mapping/GinkgoDefinitions.hpp"
 
 /**
  * Computes the QR decomposition using CUDA
