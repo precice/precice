@@ -1,4 +1,4 @@
-#include "mapping/GinkgoKernels.hpp"
+#include "mapping/device/GinkgoRBFKernels.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
 #include "math/math.hpp"
 
@@ -9,8 +9,8 @@
 using precice::mapping::RadialBasisParameters;
 using precice::math::pow_int;
 
-template <typename T, typename MemorySpace>
-using native_type = gko::ext::kokkos::native_type<T, MemorySpace>;
+template <typename T>
+using native_type = gko::ext::kokkos::native_type<T>;
 
 using gko::ext::kokkos::map_data;
 

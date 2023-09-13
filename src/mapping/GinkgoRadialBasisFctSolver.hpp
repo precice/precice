@@ -5,13 +5,14 @@
 #include <cmath>
 #include <functional>
 #include <numeric>
-#include "GinkgoDefinitions.hpp"
-#include "GinkgoKernels.hpp"
+#include "mapping/GinkgoDefinitions.hpp"
 #include "mapping/config/MappingConfiguration.hpp"
+#include "mapping/device/GinkgoRBFKernels.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
 #include "mesh/Mesh.hpp"
 #include "precice/impl/Types.hpp"
 #include "profiling/Event.hpp"
+#include "utils/Ginkgo.hpp"
 #ifdef PRECICE_WITH_HIP
 #include "mapping/device/HipQRSolver.hip.hpp"
 #endif
@@ -164,6 +165,8 @@ private:
 
   std::shared_ptr<gko::stop::ResidualNorm<>::Factory> _residualCriterion;
 
+  std::shared_ptr<gko::stop::ResidualNorm<>::Factory> _absoluteResidualCriterion;
+
   MappingConfiguration::GinkgoParameter _ginkgoParameter;
 };
 
@@ -301,6 +304,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
                                                           .on(_deviceExecutor),
                                                       gko::stop::ResidualNorm<>::build()
                                                           .with_reduction_factor(1e-6)
+                                                          .with_baseline(gko::stop::mode::initial_resnorm)
                                                           .on(_deviceExecutor))
                                        .on(_deviceExecutor);
 
@@ -334,7 +338,14 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
 
   _residualCriterion = gko::share(gko::stop::ResidualNorm<>::build()
                                       .with_reduction_factor(ginkgoParameter.residualNorm)
+                                      .with_baseline(gko::stop::mode::initial_resnorm)
                                       .on(_deviceExecutor));
+
+  // For cases where we reach a stationary solution such that the coupling data doesn't change (or map zero data)
+  _absoluteResidualCriterion = gko::share(gko::stop::ResidualNorm<>::build()
+                                              .with_reduction_factor(1e-30)
+                                              .with_baseline(gko::stop::mode::absolute)
+                                              .on(_deviceExecutor));
 
   if (_solverType == GinkgoSolverType::CG) {
 
@@ -348,13 +359,13 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
       }();
 
       auto solverFactory = solverFactoryWithPreconditioner
-                               .with_criteria(_iterationCriterion, _residualCriterion)
+                               .with_criteria(_iterationCriterion, _residualCriterion, _absoluteResidualCriterion)
                                .on(_deviceExecutor);
 
       _cgSolver = gko::share(solverFactory->generate(_rbfSystemMatrix));
     } else {
       auto solverFactory = cg::build()
-                               .with_criteria(_iterationCriterion, _residualCriterion)
+                               .with_criteria(_iterationCriterion, _residualCriterion, _absoluteResidualCriterion)
                                .on(_deviceExecutor);
 
       _cgSolver = gko::share(solverFactory->generate(_rbfSystemMatrix));
@@ -372,13 +383,13 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
       }();
 
       auto solverFactory = solverFactoryWithPreconditioner
-                               .with_criteria(_iterationCriterion, _residualCriterion)
+                               .with_criteria(_iterationCriterion, _residualCriterion, _absoluteResidualCriterion)
                                .on(_deviceExecutor);
 
       _gmresSolver = gko::share(solverFactory->generate(_rbfSystemMatrix));
     } else {
       auto solverFactory = gmres::build()
-                               .with_criteria(_iterationCriterion, _residualCriterion)
+                               .with_criteria(_iterationCriterion, _residualCriterion, _absoluteResidualCriterion)
                                .on(_deviceExecutor);
 
       _gmresSolver = gko::share(solverFactory->generate(_rbfSystemMatrix));
@@ -421,6 +432,7 @@ void GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::_solveRBFSystem(const 
 
   _iterationCriterion->add_logger(logger);
   _residualCriterion->add_logger(logger);
+  _absoluteResidualCriterion->add_logger(logger);
 
   precice::profiling::Event solverEvent("map.rbf.ginkgo.solveSystemMatrix");
   if (_solverType == GinkgoSolverType::CG) {
@@ -442,6 +454,7 @@ void GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::_solveRBFSystem(const 
 
   _iterationCriterion->clear_loggers();
   _residualCriterion->clear_loggers();
+  _absoluteResidualCriterion->clear_loggers();
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -561,6 +574,7 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConser
                                                             .on(_deviceExecutor),
                                                         gko::stop::ResidualNorm<>::build()
                                                             .with_reduction_factor(1e-6)
+                                                            .with_baseline(gko::stop::mode::initial_resnorm)
                                                             .on(_deviceExecutor))
                                          .on(_deviceExecutor);
 
