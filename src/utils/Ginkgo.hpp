@@ -1,16 +1,14 @@
 #pragma once
 
-namespace precice{
-namespace utils{
+namespace precice {
+namespace utils {
 
-class Ginkgo{
+class Ginkgo {
 public:
-  static void initialize(int* argc, char*** argv);
+  static void initialize(int *argc, char ***argv);
 
   static void finalize();
-private:
-  static bool needs_finalize;
 };
 
-}
-}
+} // namespace utils
+} // namespace precice

@@ -7,24 +7,22 @@
 
 namespace precice::utils {
 
-bool Ginkgo::needs_finalize = false;
+// bool Ginkgo::needs_finalize = false;
 
 void Ginkgo::initialize(int *argc, char ***argv)
 {
-  if (!Kokkos::is_initialized()) {
+  if (!Kokkos::is_initialized() && !Kokkos::is_finalized()) {
     Kokkos::initialize(*argc, *argv);
-    needs_finalize = true;
   }
 }
 
 void Ginkgo::finalize()
 {
-  if (needs_finalize) {
+  if (Kokkos::is_initialized()) {
     Kokkos::finalize();
-    needs_finalize = false;
   }
 }
 
-}
+} // namespace precice::utils
 
 #endif

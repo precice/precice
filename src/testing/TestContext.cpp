@@ -44,9 +44,6 @@ TestContext::~TestContext() noexcept
     utils::IntraComm::getCommunication() = nullptr;
     utils::IntraComm::reset();
   }
-  if(!invalid){
-    precice::utils::Ginkgo::finalize();
-  }
 
   // Reset communicators
   Par::resetCommState();
@@ -101,6 +98,10 @@ void TestContext::handleOption(Participants &, testing::Require requirement)
     _events = true;
     break;
   case Require::Events:
+    _events = true;
+    break;
+  case Require::Kokkos:
+    _kokkos = true;
     _events = true;
     break;
   default:
@@ -220,7 +221,7 @@ void TestContext::initializePetsc()
 
 void TestContext::initializeGinkgo()
 {
-  if(!invalid) {
+  if (!invalid && _kokkos) {
     int    argc = 0;
     char **argv;
     precice::utils::Ginkgo::initialize(&argc, &argv);
