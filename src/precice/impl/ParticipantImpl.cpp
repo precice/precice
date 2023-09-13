@@ -64,6 +64,7 @@
 #include "profiling/config/ProfilingConfiguration.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/EigenIO.hpp"
+#include "utils/Ginkgo.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/Parallel.hpp"
@@ -514,6 +515,8 @@ void ParticipantImpl::finalize()
 
   // Finalize PETSc and Events first
   utils::Petsc::finalize();
+  // This will lead to issues if we call finalize afterwards again
+  utils::Ginkgo::finalize();
   profiling::EventRegistry::instance().finalize();
 
   // Finally clear events and finalize MPI

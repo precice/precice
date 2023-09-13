@@ -24,6 +24,7 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
+#include "utils/Ginkgo.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
 #include "utils/assertion.hpp"
@@ -730,6 +731,8 @@ void MappingConfiguration::finishRBFConfiguration()
     } else {
       PRECICE_UNREACHABLE("Unknown solver type.");
     }
+
+    utils::Ginkgo::initialize(_ginkgoParameter.nThreads, _ginkgoParameter.deviceId);
     mapping.mapping = getRBFMapping<RBFBackend::Ginkgo>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _ginkgoParameter);
 #else
     PRECICE_CHECK(false, "The selected executor for the mapping from mesh {} to mesh {} requires a preCICE build with Ginkgo enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());

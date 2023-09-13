@@ -16,6 +16,13 @@ void Ginkgo::initialize(int *argc, char ***argv)
   }
 }
 
+void Ginkgo::initialize(int nThreads, int deviceId)
+{
+  if (!Kokkos::is_initialized() && !Kokkos::is_finalized()) {
+    Kokkos::initialize(Kokkos::InitializationSettings().set_num_threads(nThreads).set_device_id(deviceId).set_disable_warnings(true));
+  }
+}
+
 void Ginkgo::finalize()
 {
   if (Kokkos::is_initialized()) {
