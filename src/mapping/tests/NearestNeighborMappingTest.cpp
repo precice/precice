@@ -176,8 +176,6 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentNonIncremental)
 
   // Create mesh to map from
   PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
-  PtrData inData    = inMesh->createData("InData", 1, 0_dataID);
-  int     inDataID  = inData->getID();
   Vertex &inVertex0 = inMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
   Vertex &inVertex1 = inMesh->createVertex(Eigen::Vector2d{1.0, 0.0});
   Vertex &inVertex2 = inMesh->createVertex(Eigen::Vector2d{3.0, 0.0});
@@ -187,17 +185,14 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentNonIncremental)
   inMesh->createEdge(inVertex1, inVertex2);
   inMesh->createEdge(inVertex2, inVertex3);
 
-  inMesh->allocateDataValues();
-  Eigen::VectorXd &inValues = inData->values();
-  inValues(0)               = 1.0;
-  inValues(1)               = 2.0;
-  inValues(2)               = 3.0;
-  inValues(3)               = 4.0;
+  Eigen::VectorXd inValues = Eigen::VectorXd::Zero(4);
+  inValues(0)              = 1.0;
+  inValues(1)              = 2.0;
+  inValues(2)              = 3.0;
+  inValues(3)              = 4.0;
 
   // Create mesh to map to
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  PtrData outData    = outMesh->createData("OutData", 1, 1_dataID);
-  int     outDataID  = outData->getID();
   Vertex &outVertex0 = outMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
   Vertex &outVertex1 = outMesh->createVertex(Eigen::Vector2d(0.8, 0.0));
   Vertex &outVertex2 = outMesh->createVertex(Eigen::Vector2d(3.0, 0.0));
@@ -207,8 +202,6 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentNonIncremental)
   outMesh->createEdge(outVertex1, outVertex2);
   outMesh->createEdge(outVertex2, outVertex3);
 
-  outMesh->allocateDataValues();
-
   // Setup mapping with mapping coordinates and geometry used
   precice::mapping::NearestNeighborMapping mapping(mapping::Mapping::SCALED_CONSISTENT_SURFACE, dimensions);
 
@@ -216,13 +209,14 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentNonIncremental)
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
 
-  Eigen::VectorXd &outValues = outData->values();
+  Eigen::VectorXd outValues = Eigen::VectorXd::Zero(4);
   BOOST_TEST(mapping.hasComputedMapping() == true);
+  time::Sample inSample(1, inValues);
+  mapping.map(inSample, outValues);
 
-  auto inputIntegral  = mesh::integrateSurface(inMesh, inData->values());
-  auto outputIntegral = mesh::integrateSurface(outMesh, outData->values());
+  auto inputIntegral  = mesh::integrateSurface(inMesh, inValues);
+  auto outputIntegral = mesh::integrateSurface(outMesh, outValues);
 
   for (int dim = 0; dim < inputIntegral.size(); ++dim) {
     BOOST_TEST(inputIntegral(dim) == outputIntegral(dim));
