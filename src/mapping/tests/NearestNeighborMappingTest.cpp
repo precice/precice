@@ -108,23 +108,17 @@ BOOST_AUTO_TEST_CASE(ConservativeNonIncremental)
   int dimensions = 2;
 
   // Create mesh to map from
-  PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
-  PtrData inData    = inMesh->createData("InData", 1, 0_dataID);
-  int     inDataID  = inData->getID();
-  Vertex &inVertex0 = inMesh->createVertex(Eigen::Vector2d::Constant(0.0));
-  Vertex &inVertex1 = inMesh->createVertex(Eigen::Vector2d::Constant(1.0));
-  inMesh->allocateDataValues();
-  Eigen::VectorXd &inValues = inData->values();
+  PtrMesh         inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
+  Vertex &        inVertex0 = inMesh->createVertex(Eigen::Vector2d::Constant(0.0));
+  Vertex &        inVertex1 = inMesh->createVertex(Eigen::Vector2d::Constant(1.0));
+  Eigen::VectorXd inValues  = Eigen::VectorXd::Zero(2);
   inValues(0)               = 1.0;
   inValues(1)               = 2.0;
 
   // Create mesh to map to
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  PtrData outData    = outMesh->createData("OutData", 1, 1_dataID);
-  int     outDataID  = outData->getID();
   Vertex &outVertex0 = outMesh->createVertex(Eigen::Vector2d::Constant(0.0));
   Vertex &outVertex1 = outMesh->createVertex(Eigen::Vector2d::Constant(1.0));
-  outMesh->allocateDataValues();
 
   // Setup mapping with mapping coordinates and geometry used
   precice::mapping::NearestNeighborMapping mapping(mapping::Mapping::CONSERVATIVE, dimensions);
@@ -133,8 +127,9 @@ BOOST_AUTO_TEST_CASE(ConservativeNonIncremental)
 
   // Map data with coinciding vertices, has to result in equal values.
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  Eigen::VectorXd &outValues = outData->values();
+  Eigen::VectorXd outValues = Eigen::VectorXd::Zero(2);
+  time::Sample    inSample(1, inValues);
+  mapping.map(inSample, outValues);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(outValues(0) == inValues(0));
   BOOST_TEST(outValues(1) == inValues(1));
@@ -144,7 +139,8 @@ BOOST_AUTO_TEST_CASE(ConservativeNonIncremental)
   inVertex0.setCoords(outVertex0.getCoords() + Eigen::Vector2d::Constant(0.1));
   inVertex1.setCoords(outVertex1.getCoords() + Eigen::Vector2d::Constant(0.1));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  inSample = time::Sample(1, inValues);
+  mapping.map(inSample, outValues);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(outValues(0) == inValues(0));
   BOOST_TEST(outValues(1) == inValues(1));
@@ -154,7 +150,8 @@ BOOST_AUTO_TEST_CASE(ConservativeNonIncremental)
   inVertex0.setCoords(outVertex1.getCoords());
   inVertex1.setCoords(outVertex0.getCoords());
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  inSample = time::Sample(1, inValues);
+  mapping.map(inSample, outValues);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(outValues(1) == inValues(0));
   BOOST_TEST(outValues(0) == inValues(1));
@@ -163,7 +160,8 @@ BOOST_AUTO_TEST_CASE(ConservativeNonIncremental)
   // Map data with coinciding output vertices, has to result in double values.
   outVertex1.setCoords(Eigen::Vector2d::Constant(-1.0));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  inSample = time::Sample(1, inValues);
+  mapping.map(inSample, outValues);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(outValues(0) == inValues(0) + inValues(1));
   BOOST_TEST(outValues(1) == 0.0);
