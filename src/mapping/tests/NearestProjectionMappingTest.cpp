@@ -579,7 +579,7 @@ const Eigen::VectorXd &runNPMapping(mapping::Mapping::Constraint constraint, Ptr
   mapping.map(inData->getID(), outData->getID());
   return outData->values();
 }
-const Eigen::VectorXd &runNPMapping(mapping::Mapping::Constraint constraint, PtrMesh &inMesh, Eigen::VectorXd &inData, PtrMesh &outMesh, Eigen::VectorXd &outData)
+const Eigen::VectorXd &runNPMapping(mapping::Mapping::Constraint constraint, PtrMesh &inMesh, Eigen::VectorXd *inData, PtrMesh &outMesh, Eigen::VectorXd *outData)
 {
   BOOST_REQUIRE(inMesh->getDimensions() == outMesh->getDimensions());
   precice::mapping::NearestProjectionMapping mapping(constraint, inMesh->getDimensions());
@@ -587,9 +587,9 @@ const Eigen::VectorXd &runNPMapping(mapping::Mapping::Constraint constraint, Ptr
   BOOST_REQUIRE(mapping.hasComputedMapping() == false);
   mapping.computeMapping();
   BOOST_REQUIRE(mapping.hasComputedMapping() == true);
-  time::Sample inSample(1, inData);
-  mapping.map(inSample, outData);
-  return outData;
+  time::Sample inSample(1, *inData);
+  mapping.map(inSample, *outData);
+  return *outData;
 }
 
 void makeTriangle(PtrMesh &inMesh, Vertex &a, Vertex &b, Vertex &c)
@@ -608,7 +608,6 @@ BOOST_AUTO_TEST_CASE(AvoidClosestTriangle)
   constexpr int dimensions = 3;
 
   PtrMesh inMesh(new mesh::Mesh("InMesh", 3, testing::nextMeshID()));
-  PtrData inData = inMesh->createData("InData", 1, 0_dataID);
   // Close triangle - extrapolating
   auto &vc0 = inMesh->createVertex(Eigen::Vector3d(3, 0, 0));
   auto &vc1 = inMesh->createVertex(Eigen::Vector3d(3, 2, 0));
@@ -621,16 +620,14 @@ BOOST_AUTO_TEST_CASE(AvoidClosestTriangle)
   auto &vf2 = inMesh->createVertex(Eigen::Vector3d(0, 1, 1));
   makeTriangle(inMesh, vf0, vf1, vf2);
 
-  inMesh->allocateDataValues();
-  inData->values() << 0, 0, 0, 1, 1, 1;
+  Eigen::VectorXd inValues(5);
+  inValues << 0, 0, 0, 1, 1;
 
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  PtrData outData = outMesh->createData("OutData", 1, 1_dataID);
   outMesh->createVertex(Eigen::Vector3d{2, 1, 0});
-  outMesh->allocateDataValues();
-  outData->values() = Eigen::VectorXd::Constant(1, 0.0);
+  Eigen::VectorXd outValues = Eigen::VectorXd::Constant(1, 0.0);
 
-  const auto &values = runNPMapping(mapping::Mapping::CONSISTENT, inMesh, inData, outMesh, outData);
+  const auto &values = runNPMapping(mapping::Mapping::CONSISTENT, inMesh, &inValues, outMesh, &outValues);
 
   // Interpolatin triangle is further than NN => fall back on NN
   BOOST_TEST(values(0) == 0.0);
@@ -642,7 +639,6 @@ BOOST_AUTO_TEST_CASE(PickClosestTriangle)
   using namespace precice::mesh;
 
   PtrMesh inMesh(new mesh::Mesh("InMesh", 3, testing::nextMeshID()));
-  PtrData inData = inMesh->createData("InData", 1, 0_dataID);
   // Far triangle - interpolating
   auto &vf0 = inMesh->createVertex(Eigen::Vector3d(0, 0, -1));
   auto &vf1 = inMesh->createVertex(Eigen::Vector3d(0, 1, 1));
@@ -655,16 +651,14 @@ BOOST_AUTO_TEST_CASE(PickClosestTriangle)
   auto &vc2 = inMesh->createVertex(Eigen::Vector3d(4, 1, 0));
   makeTriangle(inMesh, vc0, vc1, vc2);
 
-  inMesh->allocateDataValues();
-  inData->values() << 1, 1, 1, 0, 0, 0;
+  Eigen::VectorXd inValues(6);
+  inValues << 1, 1, 1, 0, 0, 0;
 
   PtrMesh outMesh(new Mesh("OutMesh", 3, testing::nextMeshID()));
-  PtrData outData = outMesh->createData("OutData", 1, 1_dataID);
   outMesh->createVertex(Eigen::Vector3d{1, 1, 0});
-  outMesh->allocateDataValues();
-  outData->values() = Eigen::VectorXd::Constant(1, 0.0);
+  Eigen::VectorXd outValues = Eigen::VectorXd::Constant(1, 0.0);
 
-  const auto &values = runNPMapping(mapping::Mapping::CONSISTENT, inMesh, inData, outMesh, outData);
+  const auto &values = runNPMapping(mapping::Mapping::CONSISTENT, inMesh, &inValues, outMesh, &outValues);
 
   BOOST_TEST(values(0) == 1.0);
 }
@@ -676,7 +670,6 @@ BOOST_AUTO_TEST_CASE(PreferTriangleOverEdge)
   constexpr int dimensions = 3;
 
   PtrMesh inMesh(new mesh::Mesh("InMesh", 3, testing::nextMeshID()));
-  PtrData inData = inMesh->createData("InData", 1, 0_dataID);
   // Close edge ->
   auto &vc0 = inMesh->createVertex(Eigen::Vector3d(0, 0, 0));
   auto &vc1 = inMesh->createVertex(Eigen::Vector3d(0, 2, 0));
@@ -688,16 +681,14 @@ BOOST_AUTO_TEST_CASE(PreferTriangleOverEdge)
   auto &vf2 = inMesh->createVertex(Eigen::Vector3d(3, 1, 0));
   makeTriangle(inMesh, vf0, vf1, vf2);
 
-  inMesh->allocateDataValues();
-  inData->values() << 0, 1, 2, 2, 2;
+  Eigen::VectorXd inValues(5);
+  inValues << 0, 1, 2, 2, 2;
 
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  PtrData outData = outMesh->createData("OutData", 1, 1_dataID);
   outMesh->createVertex(Eigen::Vector3d{1, 1, 1});
-  outMesh->allocateDataValues();
-  outData->values() = Eigen::VectorXd::Constant(1, 0.0);
+  Eigen::VectorXd outValues = Eigen::VectorXd::Constant(1, 0.0);
 
-  const auto &values = runNPMapping(mapping::Mapping::CONSISTENT, inMesh, inData, outMesh, outData);
+  const auto &values = runNPMapping(mapping::Mapping::CONSISTENT, inMesh, &inValues, outMesh, &outValues);
 
   // Distance to triangle > distance to NN > distance to edge => Interpolation on edge
   // Projection is on the middle of the edge => (0+1)/2 = 0.5
@@ -711,7 +702,6 @@ BOOST_AUTO_TEST_CASE(TriangleDistances)
   constexpr int dimensions = 3;
 
   PtrMesh inMesh(new mesh::Mesh("InMesh", 3, testing::nextMeshID()));
-  PtrData inData = inMesh->createData("InData", 1, 0_dataID);
 
   // Close triangle
   auto &vc0 = inMesh->createVertex(Eigen::Vector3d(0, 0, 0));
@@ -725,16 +715,14 @@ BOOST_AUTO_TEST_CASE(TriangleDistances)
   auto &vf2 = inMesh->createVertex(Eigen::Vector3d(3, 1, 0));
   makeTriangle(inMesh, vf0, vf1, vf2);
 
-  inMesh->allocateDataValues();
-  inData->values() << 1, 1, 1, 0, 0, 0;
+  Eigen::VectorXd inValues(6);
+  inValues << 1, 1, 1, 0, 0, 0;
 
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  PtrData outData = outMesh->createData("OutData", 1, 1_dataID);
   outMesh->createVertex(Eigen::Vector3d{1, 1, 1});
-  outMesh->allocateDataValues();
-  outData->values() = Eigen::VectorXd::Constant(1, 0.0);
+  Eigen::VectorXd outValues = Eigen::VectorXd::Constant(1, 0.0);
 
-  const auto &values = runNPMapping(mapping::Mapping::CONSISTENT, inMesh, inData, outMesh, outData);
+  const auto &values = runNPMapping(mapping::Mapping::CONSISTENT, inMesh, &inValues, outMesh, &outValues);
 
   BOOST_TEST(values(0) == 1.0);
 }
