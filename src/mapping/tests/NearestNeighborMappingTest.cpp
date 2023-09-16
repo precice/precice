@@ -408,8 +408,6 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentVolume2D)
 
   // Create mesh to map from
   PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
-  PtrData inData   = inMesh->createData("InData", 1, 0_dataID);
-  int     inDataID = inData->getID();
 
   // One square with 3 triangles
   Vertex &inVertex0 = inMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
@@ -422,18 +420,15 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentVolume2D)
   inMesh->createTriangle(inVertex0, inVertex3, inVertex4);
   inMesh->createTriangle(inVertex1, inVertex2, inVertex4);
 
-  inMesh->allocateDataValues();
-  Eigen::VectorXd &inValues = inData->values();
-  inValues(0)               = 1.0;
-  inValues(1)               = 2.0;
-  inValues(2)               = 3.0;
-  inValues(3)               = 4.0;
-  inValues(4)               = 5.0;
+  Eigen::VectorXd inValues(5);
+  inValues(0) = 1.0;
+  inValues(1) = 2.0;
+  inValues(2) = 3.0;
+  inValues(3) = 4.0;
+  inValues(4) = 5.0;
 
   // Create mesh to map to
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  PtrData outData   = outMesh->createData("OutData", 1, 1_dataID);
-  int     outDataID = outData->getID();
 
   // Unit square as 2 triangles
   Vertex &outVertex0 = outMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
@@ -444,22 +439,21 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentVolume2D)
   outMesh->createTriangle(outVertex0, outVertex1, outVertex2);
   outMesh->createTriangle(outVertex0, outVertex2, outVertex3);
 
-  outMesh->allocateDataValues();
-
   // Setup mapping with mapping coordinates and geometry used
   precice::mapping::NearestNeighborMapping mapping(mapping::Mapping::SCALED_CONSISTENT_VOLUME, dimensions);
 
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
+  Eigen::VectorXd outValues(5);
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  time::Sample inSample(1, inValues);
+  mapping.map(inSample, outValues);
 
-  Eigen::VectorXd &outValues = outData->values();
   BOOST_TEST(mapping.hasComputedMapping() == true);
 
-  auto inputIntegral  = mesh::integrateVolume(inMesh, inData->values());
-  auto outputIntegral = mesh::integrateVolume(outMesh, outData->values());
+  auto inputIntegral  = mesh::integrateVolume(inMesh, inValues);
+  auto outputIntegral = mesh::integrateVolume(outMesh, outValues);
 
   Eigen::VectorXd expectedIntegral(1);
   expectedIntegral << 3.0;
@@ -486,8 +480,6 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentVolume3D)
 
   // Create mesh to map from
   PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
-  PtrData inData   = inMesh->createData("InData", 1, 0_dataID);
-  int     inDataID = inData->getID();
 
   // One tetra on "out". The "in" has the same but split into two
   Vertex &inVertex0 = inMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
@@ -499,18 +491,15 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentVolume3D)
   inMesh->createTetrahedron(inVertex0, inVertex1, inVertex3, inVertex4);
   inMesh->createTetrahedron(inVertex1, inVertex2, inVertex3, inVertex4);
 
-  inMesh->allocateDataValues();
-  Eigen::VectorXd &inValues = inData->values();
-  inValues(0)               = 1.0;
-  inValues(1)               = 2.0;
-  inValues(2)               = 3.0;
-  inValues(3)               = 4.0;
-  inValues(4)               = 5.0;
+  Eigen::VectorXd inValues(5);
+  inValues(0) = 1.0;
+  inValues(1) = 2.0;
+  inValues(2) = 3.0;
+  inValues(3) = 4.0;
+  inValues(4) = 5.0;
 
   // Create mesh to map to
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  PtrData outData   = outMesh->createData("OutData", 1, 1_dataID);
-  int     outDataID = outData->getID();
 
   // One big tetra
   Vertex &outVertex0 = outMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
@@ -520,22 +509,21 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentVolume3D)
 
   outMesh->createTetrahedron(outVertex0, outVertex1, outVertex2, outVertex3);
 
-  outMesh->allocateDataValues();
-
   // Setup mapping with mapping coordinates and geometry used
   precice::mapping::NearestNeighborMapping mapping(mapping::Mapping::SCALED_CONSISTENT_VOLUME, dimensions);
 
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
+  Eigen::VectorXd outValues(5);
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  time::Sample inSample(1, inValues);
+  mapping.map(inSample, outValues);
 
-  Eigen::VectorXd &outValues = outData->values();
   BOOST_TEST(mapping.hasComputedMapping() == true);
 
-  auto inputIntegral  = mesh::integrateVolume(inMesh, inData->values());
-  auto outputIntegral = mesh::integrateVolume(outMesh, outData->values());
+  auto inputIntegral  = mesh::integrateVolume(inMesh, inValues);
+  auto outputIntegral = mesh::integrateVolume(outMesh, outValues);
 
   Eigen::VectorXd expectedIntegral(1);
   expectedIntegral << 6.5 * 1. / 12;
