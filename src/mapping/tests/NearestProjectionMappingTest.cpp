@@ -31,10 +31,8 @@ BOOST_AUTO_TEST_CASE(testConservativeNonIncremental)
 
   // Setup geometry to map to
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  PtrData outData   = outMesh->createData("Data", 1, 0_dataID);
-  int     outDataID = outData->getID();
-  Vertex &v1        = outMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
-  Vertex &v2        = outMesh->createVertex(Eigen::Vector2d(1.0, 1.0));
+  Vertex &v1 = outMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
+  Vertex &v2 = outMesh->createVertex(Eigen::Vector2d(1.0, 1.0));
   outMesh->createEdge(v1, v2);
   outMesh->allocateDataValues();
 
@@ -45,9 +43,6 @@ BOOST_AUTO_TEST_CASE(testConservativeNonIncremental)
     // Setup mapping with mapping coordinates and geometry used
     mapping::NearestProjectionMapping mapping(mapping::Mapping::CONSERVATIVE, dimensions);
     PtrMesh                           inMesh(new Mesh("InMesh0", dimensions, testing::nextMeshID()));
-    PtrData                           inData   = inMesh->createData("Data0", 1, 1_dataID);
-    int                               inDataID = inData->getID();
-
     // Map value 1.0 from middle of edge to geometry. Expect half of the
     // value to be added to vertex1 and half of it to vertex2.
     inMesh->createVertex(Eigen::Vector2d(0.5, 0.5));
@@ -58,17 +53,15 @@ BOOST_AUTO_TEST_CASE(testConservativeNonIncremental)
     // Do the same thing from above, expect vertex2 to get the full value now.
     inMesh->createVertex(Eigen::Vector2d(1.5, 1.5));
 
-    inMesh->allocateDataValues();
-
-    //assign(inData->values()) = value;
-    inData->values() = Eigen::VectorXd::Constant(inData->values().size(), value);
-    //assign(values) = 0.0;
-    Eigen::VectorXd &values = outData->values();
-    values                  = Eigen::VectorXd::Constant(values.size(), 0.0);
+    Eigen::VectorXd inValues(3);
+    inValues = Eigen::VectorXd::Constant(inValues.size(), value);
+    Eigen::VectorXd values(2);
+    values = Eigen::VectorXd::Constant(values.size(), 0.0);
 
     mapping.setMeshes(inMesh, outMesh);
     mapping.computeMapping();
-    mapping.map(inDataID, outDataID);
+    time::Sample inSample(1, inValues);
+    mapping.map(inSample, values);
     BOOST_TEST_CONTEXT(*inMesh)
     {
       BOOST_TEST(values(0) == value * 1.5);
@@ -79,24 +72,20 @@ BOOST_AUTO_TEST_CASE(testConservativeNonIncremental)
     // Setup mapping with mapping coordinates and geometry used
     mapping::NearestProjectionMapping mapping(mapping::Mapping::CONSERVATIVE, dimensions);
     PtrMesh                           inMesh(new Mesh("InMesh1", dimensions, testing::nextMeshID()));
-    PtrData                           inData   = inMesh->createData("Data1", 1, 1_dataID);
-    int                               inDataID = inData->getID();
 
     inMesh->createVertex(Eigen::Vector2d(-1.0, -1.0));
     inMesh->createVertex(Eigen::Vector2d(-1.0, -1.0));
     inMesh->createVertex(Eigen::Vector2d(1.0, 1.0));
 
-    inMesh->allocateDataValues();
-
-    //assign(inData->values()) = value;
-    inData->values() = Eigen::VectorXd::Constant(inData->values().size(), value);
-    //assign(values) = 0.0;
-    Eigen::VectorXd &values = outData->values();
-    values                  = Eigen::VectorXd::Constant(values.size(), 0.0);
+    Eigen::VectorXd inValues(3);
+    inValues = Eigen::VectorXd::Constant(inValues.size(), value);
+    Eigen::VectorXd values(2);
+    values = Eigen::VectorXd::Constant(values.size(), 0.0);
 
     mapping.setMeshes(inMesh, outMesh);
     mapping.computeMapping();
-    mapping.map(inDataID, outDataID);
+    time::Sample inSample(1, inValues);
+    mapping.map(inSample, values);
     BOOST_TEST_CONTEXT(*inMesh)
     {
       BOOST_TEST(values(0) == value * 2.0);
@@ -104,10 +93,9 @@ BOOST_AUTO_TEST_CASE(testConservativeNonIncremental)
     }
 
     // reset output value and remap
-    //assign(values) = 0.0;
     values = Eigen::VectorXd::Constant(values.size(), 0.0);
 
-    mapping.map(inDataID, outDataID);
+    mapping.map(inSample, values);
     BOOST_TEST_CONTEXT(*inMesh)
     {
       BOOST_TEST(values(0) == value * 2.0);
