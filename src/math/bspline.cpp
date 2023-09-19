@@ -5,8 +5,6 @@
 #include <Eigen/Core>
 #include <algorithm>
 #include <cstdlib>
-#include <functional>
-#include <iterator>
 #include <unsupported/Eigen/Splines>
 
 namespace precice::math::bspline {
@@ -14,13 +12,11 @@ namespace precice::math::bspline {
 Eigen::VectorXd interpolateAt(Eigen::VectorXd ts, const Eigen::MatrixXd &xs, int splineDegree, double t)
 {
   PRECICE_ASSERT(ts.size() >= 2, "Interpolation requires at least 2 samples");
-
-  PRECICE_ASSERT(std::inner_product(
-                     ts.data(), std::next(ts.data(), ts.size() - 1),
-                     std::next(ts.data()), true,
-                     std::logical_and<bool>{},
-                     [](double l, double r) { return math::smaller(l, r); }),
-                 "Timestamps must be strictly increasting", ts);
+#if EIGEN_VERSION_AT_LEAST(3, 4, 0)
+  PRECICE_ASSERT(std::is_sorted(ts.begin(), ts.end()), "Timestamps must be sorted");
+#else
+  PRECICE_ASSERT(std::is_sorted(ts.data(), ts.data() + ts.size()), "Timestamps must be sorted");
+#endif
 
   // organize data in columns. Each column represents one sample in time.
   PRECICE_ASSERT(xs.cols() == ts.size());

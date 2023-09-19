@@ -319,7 +319,7 @@ protected:
   /**
    * @brief Used to set flag after data has been received using receiveData().
    */
-  void checkDataHasBeenReceived();
+  void notifyDataHasBeenReceived();
 
   /**
    * @brief Getter for _receivesInitializedData

@@ -26,6 +26,14 @@ public:
   Storage();
 
   /**
+   * @brief Copy assignment operator to assign Storage to this Storage
+   *
+   * @param other Storage
+   * @return Storage&
+   */
+  Storage &operator=(const Storage &other);
+
+  /**
    * @brief Initialize storage by storing given sample at time 0.0 and 1.0.
    *
    * @param sample initial sample
@@ -42,6 +50,10 @@ public:
    */
   void setSampleAtTime(double time, Sample sample);
 
+  void setInterpolationDegree(int interpolationDegree);
+
+  int getInterpolationDegree() const;
+
   /**
    * @brief Get maximum normalized dt that is stored in this Storage.
    *
@@ -50,14 +62,14 @@ public:
   double maxStoredNormalizedDt() const;
 
   /**
-   * @brief Returns the values at time following "before" contained in this Storage.
+   * @brief Returns the Sample at time following "before" contained in this Storage.
    *
-   * The stored normalized dt is larger or equal than "before". If "before" is a normalized dt stored in this Storage, this function returns the values at "before"
+   * The stored normalized dt is larger or equal than "before". If "before" is a normalized dt stored in this Storage, this function returns the Sample at "before"
    *
    * @param before a double, where we want to find a normalized dt that comes directly after this one
-   * @return Eigen::VectorXd values in this Storage at or directly after "before"
+   * @return Sample in this Storage at or directly after "before"
    */
-  Eigen::VectorXd getValuesAtOrAfter(double before) const;
+  Sample getSampleAtOrAfter(double before) const;
 
   /**
    * @brief Get all normalized dts stored in this Storage sorted ascending.
@@ -107,11 +119,35 @@ public:
    */
   void trim();
 
+  /**
+   * @brief Need to use interpolation for the case with changing time grids
+   *
+   * @param normalizedDt a double, where we want to sample the waveform
+   * @return Eigen::VectorXd values in this Storage at or directly after "before"
+  */
+  Eigen::VectorXd sample(double normalizedDt) const;
+
+  Eigen::MatrixXd sampleGradients(double normalizedDt) const;
+
 private:
   /// Stores Stamples on the current window
   std::vector<Stample> _stampleStorage;
 
   mutable logging::Logger _log{"time::Storage"};
+
+  int _degree;
+
+  /**
+   * @brief Computes which degree may be used for interpolation.
+   *
+   * Actual degree of interpolating B-spline is determined by number of stored samples and maximum degree defined by the user.
+   * Example: If only two samples are available, the maximum degree we may use is 1, even if the user demands degree 2.
+   *
+   * @param requestedDegree B-spline degree requested by the user.
+   * @param numberOfAvailableSamples Samples available for interpolation.
+   * @return B-spline degree that may be used.
+   */
+  int computeUsedDegree(int requestedDegree, int numberOfAvailableSamples) const;
 
   time::Sample getSampleAtBeginning();
 

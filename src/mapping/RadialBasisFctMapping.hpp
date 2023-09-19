@@ -178,7 +178,17 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::clear()
 template <typename SOLVER_T, typename... Args>
 std::string RadialBasisFctMapping<SOLVER_T, Args...>::getName() const
 {
-  return "global-direct RBF";
+  if constexpr (std::tuple_size_v<std::tuple<Args...>>> 0) {
+    auto        param = std::get<0>(optionalArgs);
+    std::string exec  = param.executor;
+    if (param.solver == "qr-solver") {
+      return "global-direct RBF (" + exec + ")";
+    } else {
+      return "global-iterative RBF (" + exec + ")";
+    }
+  } else {
+    return "global-direct RBF (cpu-executor)";
+  }
 }
 
 template <typename SOLVER_T, typename... Args>
