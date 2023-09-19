@@ -332,7 +332,13 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
   // pro outMesh: we want perfectly fitting clusters around our output vertices
   // however, this makes the cluster distribution/mapping dependent on the output
   inMesh->computeBoundingBox();
-  auto localBB = inMesh->getBoundingBox();
+
+  precice::mesh::BoundingBox localBB(inMesh->getDimensions());
+  for (const mesh::Vertex &vertex : inMesh->vertices()) {
+    localBB.expandBy(vertex);
+  }
+
+  // auto localBB = inMesh->getBoundingBox();
 
   // If we have less vertices in the whole domain than our target cluster size,
   // we just use a single cluster. The clustering result of the algorithm further
