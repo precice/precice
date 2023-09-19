@@ -33,14 +33,14 @@ void ParallelCouplingScheme::exchangeInitialData()
     }
     if (receivesInitializedData()) {
       receiveData(getM2N(), getReceiveData(), initialCommunication);
-      checkDataHasBeenReceived();
+      notifyDataHasBeenReceived();
     } else {
       initializeWithZeroInitialData(getReceiveData());
     }
   } else { // second participant
     if (receivesInitializedData()) {
       receiveData(getM2N(), getReceiveData(), initialCommunication);
-      checkDataHasBeenReceived();
+      notifyDataHasBeenReceived();
     } else {
       initializeWithZeroInitialData(getReceiveData());
     }
@@ -58,7 +58,7 @@ void ParallelCouplingScheme::exchangeFirstData()
   } else { // second participant
     PRECICE_DEBUG("Receiving data...");
     receiveData(getM2N(), getReceiveData());
-    checkDataHasBeenReceived();
+    notifyDataHasBeenReceived();
   }
 }
 
@@ -70,7 +70,7 @@ void ParallelCouplingScheme::exchangeSecondData()
     if (doesFirstStep()) { // first participant
       PRECICE_DEBUG("Receiving data...");
       receiveData(getM2N(), getReceiveData());
-      checkDataHasBeenReceived();
+      notifyDataHasBeenReceived();
     } else { // second participant
       PRECICE_DEBUG("Sending data...");
       sendData(getM2N(), getSendData());
@@ -79,28 +79,22 @@ void ParallelCouplingScheme::exchangeSecondData()
     PRECICE_ASSERT(isImplicitCouplingScheme());
 
     if (doesFirstStep()) { // first participant
-      if (isImplicitCouplingScheme()) {
-        PRECICE_DEBUG("Receiving convergence data...");
-        receiveConvergence(getM2N());
+      PRECICE_DEBUG("Receiving convergence data...");
+      receiveConvergence(getM2N());
+      if (hasConverged()) {
+        moveToNextWindow();
       }
+      PRECICE_DEBUG("Receiving data...");
+      receiveData(getM2N(), getReceiveData());
+      notifyDataHasBeenReceived();
     } else { // second participant
       PRECICE_DEBUG("Perform acceleration (only second participant)...");
       doImplicitStep();
-      if (isImplicitCouplingScheme()) {
-        PRECICE_DEBUG("Sending convergence...");
-        sendConvergence(getM2N());
+      PRECICE_DEBUG("Sending convergence...");
+      sendConvergence(getM2N());
+      if (hasConverged()) {
+        moveToNextWindow();
       }
-    }
-
-    if (hasConverged()) {
-      moveToNextWindow();
-    }
-
-    if (doesFirstStep()) { // first participant
-      PRECICE_DEBUG("Receiving data...");
-      receiveData(getM2N(), getReceiveData());
-      checkDataHasBeenReceived();
-    } else { // second participant
       PRECICE_DEBUG("Sending data...");
       sendData(getM2N(), getSendData());
     }

@@ -96,7 +96,7 @@ public:
   template <typename IndexContainer>
   GinkgoRadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
                              const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial,
-                             MappingConfiguration::GinkgoParameter ginkgoParameter = MappingConfiguration::GinkgoParameter());
+                             MappingConfiguration::GinkgoParameter ginkgoParameter);
 
   /// Maps the given input data
   Eigen::VectorXd solveConsistent(const Eigen::VectorXd &inputData, Polynomial polynomial);
@@ -202,8 +202,8 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
   PRECICE_INFO("Using Ginkgo solver {} on executor {} with max. iterations {} and residual reduction {}", ginkgoParameter.solver, ginkgoParameter.executor, ginkgoParameter.maxIterations, ginkgoParameter.residualNorm);
   _deviceExecutor = ginkgoExecutorLookup.at(ginkgoParameter.executor)(ginkgoParameter.deviceId, ginkgoParameter.enableUnifiedMemory);
 #ifdef PRECICE_WITH_OMP
-  if (_ginkgoParameter.nThreads > 0 && _ginkgoParameter.solver == "omp-executor")
-    omp_set_num_threads(ginkgoParameter.nThreads);
+  if (_ginkgoParameter.nThreads > 0 && _ginkgoParameter.executor == "omp-executor")
+    omp_set_num_threads(_ginkgoParameter.nThreads);
 #endif
   _solverType         = solverTypeLookup.at(ginkgoParameter.solver);
   _preconditionerType = preconditionerTypeLookup.at(ginkgoParameter.preconditioner);

@@ -571,11 +571,10 @@ void ParticipantConfiguration::finishParticipantConfiguration(
       if (context.size > 1) {
         // Only display the warning message if this participant configuration is the current one.
         if (context.name == participant->getName()) {
-          PRECICE_WARN("You are using the VTK exporter in the parallel participant {}. "
-                       "Note that this will export as PVTU instead. For consistency, prefer \"<export:vtu ... />\" instead.",
-                       participant->getName());
+          PRECICE_ERROR("You attempted to use the legacy VTK exporter with the parallel participant {}, which isn't supported."
+                        "Migrate to another exporter, such as the VTU exporter by specifying \"<export:vtu ... />\"  instead of \"<export:vtk ... />\".",
+                        participant->getName());
         }
-        exporter = io::PtrExport(new io::ExportVTU());
       } else {
         exporter = io::PtrExport(new io::ExportVTK());
       }

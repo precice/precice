@@ -208,7 +208,7 @@ double CompositionalCouplingScheme::getTimeWindowSize() const
 double CompositionalCouplingScheme::getNormalizedWindowTime() const
 {
   PRECICE_TRACE();
-  auto   schemes      = allSchemes();
+  auto   schemes      = schemesToRun();
   double normalizedDt = std::transform_reduce(
       schemes.begin(), schemes.end(), std::numeric_limits<double>::max(),
       ::min<double>,

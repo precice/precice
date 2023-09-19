@@ -21,7 +21,7 @@ jobs:
           TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
 
       - name: Checkout preCICE
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: 'precice'
 

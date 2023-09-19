@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     container: 'precice/ci-ubuntu-2204:latest'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: fetch clang
         run: apt update && apt install -y clang && apt install -y clang-tidy
       - name: run clang-tidy
