@@ -206,7 +206,7 @@ public:
   void computeBoundingBox();
 
   /**
-   * @brief Removes all mesh elements and data values (does not remove data).
+   * @brief Removes all mesh elements and data values (does not remove data or the bounding boxes).
    *
    * A mesh element is a
    * - vertex
