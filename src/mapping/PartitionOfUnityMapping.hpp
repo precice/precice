@@ -311,8 +311,13 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
   // In order to construct the local partitions, we need all vertices with a distance of 2 x radius,
   // as the relevant partitions centers have a maximum distance of radius, and the proper construction of the
   // interpolant requires all vertices with a distance of radius from the center.
-  filterMesh->computeBoundingBox();
-  auto bb = filterMesh->getBoundingBox();
+  // Note that we don't use the corresponding bounding box functions from
+  // precice::mesh (e.g. ::getBoundingBox), as the stored bounding box might
+  // have the wrong size (e.g. direct access)
+  precice::mesh::BoundingBox bb(filterMesh->getDimensions());
+  for (const mesh::Vertex &vertex : filterMesh->vertices()) {
+    bb.expandBy(vertex);
+  }
 
   // @TODO: This assert is not completely right, as it checks all dimensions for non-emptyness (which might not be the case).
   // However, with the current BB implementation, the expandBy function will just do nothing.

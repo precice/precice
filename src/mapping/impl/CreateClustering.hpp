@@ -327,18 +327,18 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
   PRECICE_DEBUG("Relative overlap: {}", relativeOverlap);
   PRECICE_DEBUG("Vertices per cluster: {}", verticesPerCluster);
 
-  // Step 1: Get the (global) bounding box of the input mesh
+  // Step 1: Compute the local bounding box of the input mesh manually
+  // Note that we don't use the corresponding bounding box functions from
+  // precice::mesh (e.g. ::getBoundingBox), as the stored bounding box might
+  // have the wrong size (e.g. direct access)
   // @todo: Which mesh should be used in order to determine the cluster centers:
   // pro outMesh: we want perfectly fitting clusters around our output vertices
   // however, this makes the cluster distribution/mapping dependent on the output
-  inMesh->computeBoundingBox();
 
   precice::mesh::BoundingBox localBB(inMesh->getDimensions());
   for (const mesh::Vertex &vertex : inMesh->vertices()) {
     localBB.expandBy(vertex);
   }
-
-  // auto localBB = inMesh->getBoundingBox();
 
   // If we have less vertices in the whole domain than our target cluster size,
   // we just use a single cluster. The clustering result of the algorithm further
