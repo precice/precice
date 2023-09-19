@@ -52,11 +52,6 @@ const std::map<std::string, GinkgoPreconditionerType> preconditionerTypeLookup{
     {"cholesky-preconditioner", GinkgoPreconditionerType::Cholesky},
     {"no-preconditioner", GinkgoPreconditionerType::None}};
 
-const std::map<std::string, std::function<std::shared_ptr<gko::Executor>(const unsigned int, const bool)>> ginkgoExecutorLookup{{"reference-executor", [](auto unused, auto unused2) { return gko::ReferenceExecutor::create(); }},
-                                                                                                                                {"omp-executor", [](auto unused, auto unused2) { return gko::OmpExecutor::create(); }},
-                                                                                                                                {"cuda-executor", [](auto deviceId, auto enableUnifiedMemory) { if(enableUnifiedMemory) return gko::CudaExecutor::create(deviceId, gko::OmpExecutor::create(), true, gko::allocation_mode::unified_global); else return gko::CudaExecutor::create(deviceId, gko::OmpExecutor::create(), true, gko::allocation_mode::device); }},
-                                                                                                                                {"hip-executor", [](auto deviceId, auto unused) { return gko::HipExecutor::create(deviceId, gko::OmpExecutor::create(), true); }}};
-
 /**
  * This class assembles and solves an RBF system, given an input mesh and an output mesh with relevant vertex IDs.
  * It uses iterative solvers (CG, GMRES) and preconditioners ((Block-)Jacobi, Cholesky, Ilu) to solve the interpolation
@@ -178,8 +173,12 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
     : _ginkgoParameter(ginkgoParameter)
 {
   PRECICE_TRACE();
-  PRECICE_INFO("Using Ginkgo solver {} on executor {} with max. iterations {} and residual reduction {}", ginkgoParameter.solver, ginkgoParameter.executor, ginkgoParameter.maxIterations, ginkgoParameter.residualNorm);
-  _deviceExecutor = ginkgoExecutorLookup.at(ginkgoParameter.executor)(ginkgoParameter.deviceId, ginkgoParameter.enableUnifiedMemory);
+  PRECICE_INFO("Using Ginkgo solver {} on executor {} with max. iterations {} and residual reduction {}",
+               ginkgoParameter.solver,
+               ginkgoParameter.executor,
+               ginkgoParameter.maxIterations,
+               ginkgoParameter.residualNorm);
+  _deviceExecutor = create_device_executor(ginkgoParameter.enableUnifiedMemory);
 #ifdef PRECICE_WITH_OMP
   if (_ginkgoParameter.nThreads > 0 && _ginkgoParameter.executor == "omp-executor")
     omp_set_num_threads(_ginkgoParameter.nThreads);

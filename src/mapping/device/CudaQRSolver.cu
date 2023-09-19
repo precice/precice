@@ -11,11 +11,9 @@
 #include "profiling/Event.hpp"
 #include "profiling/EventUtils.hpp"
 
-void computeQRDecompositionCuda(const int deviceId, const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, GinkgoVector *R)
+void computeQRDecompositionCuda(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, GinkgoVector *R)
 {
-  int backupDeviceId{};
-  cudaGetDevice(&backupDeviceId);
-  cudaSetDevice(deviceId);
+  auto scope_guard = exec->get_scoped_device_id_guard();
 
   void *dWork{};
   int * devInfo{};
@@ -86,8 +84,5 @@ void computeQRDecompositionCuda(const int deviceId, const std::shared_ptr<gko::E
   cudaFree(dWork);
   cudaFree(devInfo);
   cusolverDnDestroy(solverHandle);
-
-  // ...and switch back to the GPU used for all coupled solvers
-  cudaSetDevice(backupDeviceId);
 }
 #endif

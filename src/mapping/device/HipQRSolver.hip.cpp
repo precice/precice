@@ -6,11 +6,9 @@
 #include <hip/hip_runtime_api.h>
 #include <hipsolver.h>
 
-void computeQRDecompositionHip(const int deviceId, const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, GinkgoVector *R)
+void computeQRDecompositionHip(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, GinkgoVector *R)
 {
-  int backupDeviceId{};
-  hipGetDevice(&backupDeviceId);
-  hipSetDevice(deviceId);
+  auto scope_guard = exec->get_scoped_device_id_guard();
 
   void *dWork{};
   int * devInfo{};
@@ -74,8 +72,5 @@ void computeQRDecompositionHip(const int deviceId, const std::shared_ptr<gko::Ex
   hipFree(dWork);
   hipFree(devInfo);
   hipsolverDnDestroy(solverHandle);
-
-  // ...and switch back to the GPU used for all coupled solvers
-  hipSetDevice(backupDeviceId);
 }
 #endif

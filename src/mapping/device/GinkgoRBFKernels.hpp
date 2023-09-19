@@ -6,6 +6,8 @@
 namespace precice {
 namespace mapping {
 
+std::shared_ptr<gko::Executor> create_device_executor(bool enableUnifiedMemory);
+
 namespace kernel {
 
 template <typename EvalFunctionType>

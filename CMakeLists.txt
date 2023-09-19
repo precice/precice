@@ -241,13 +241,17 @@ endif()
 
 # Option: Ginkgo
 if (PRECICE_FEATURE_GINKGO_MAPPING)
-  find_package(Ginkgo 1.5 REQUIRED)
+  # Current develop version, we probably need to require v 1.7 once it will be released
+  find_package(Ginkgo REQUIRED)
   message(STATUS "Found Ginkgo ${GINKGO_PROJECT_VERSION} at ${GINKGO_INSTALL_PREFIX}")
 
+  find_package(Kokkos 4.1 REQUIRED)
+  message(STATUS "Found Kokkos ${KOKKOS_PROJECT_VERSION} at ${KOKKOS_INSTALL_PREFIX}")
+
   include(CMakeDependentOption)
-  cmake_dependent_option(PRECICE_WITH_CUDA "Enable Ginkgo Cuda support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;GINKGO_BUILD_CUDA" OFF)
-  cmake_dependent_option(PRECICE_WITH_HIP "Enable Ginkgo HIP support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;GINKGO_BUILD_HIP" OFF)
-  cmake_dependent_option(PRECICE_WITH_OMP "Enable Ginkgo OpenMP support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;GINKGO_BUILD_OMP" OFF)
+  cmake_dependent_option(PRECICE_WITH_CUDA "Enable Ginkgo Cuda support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;Kokkos_ENABLE_CUDA" OFF)
+  cmake_dependent_option(PRECICE_WITH_HIP "Enable Ginkgo HIP support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;Kokkos_ENABLE_HIP" OFF)
+  cmake_dependent_option(PRECICE_WITH_OMP "Enable Ginkgo OpenMP support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;Kokkos_ENABLE_OMP" OFF)
 
   # We aim for the same configuration as Ginkgo itself and check immediately for device compiler
   # such that preciceCore inherits all relevant flags directly
@@ -432,17 +436,16 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
   # This CMake part is still a shortcoming from the experimental Ginkgo we are using right now
   # TODO: Remove as soon as GPU feature is in main branch
   set(Ginkgo_Path "${Ginkgo_DIR}/.." CACHE STRING "Path to the experimental Ginkgo Repository of branch a195f856e.")
-  include(${Ginkgo_Path}/cmake/extensions/kokkos.cmake)
-  find_package(Kokkos REQUIRED)
 
-  ginkgo_enable_kokkos_language()
-
-  ginkgo_add_kokkos_library(preciceCore_ginkgo
+  add_library(preciceCore_ginkgo
           src/mapping/device/GinkgoRBFKernels.cpp
           src/utils/Ginkgo.cpp)
-  target_link_libraries(preciceCore_ginkgo PRIVATE preciceCore)
+  target_link_libraries(preciceCore_ginkgo PRIVATE Ginkgo::ginkgo Kokkos::kokkos preciceCore)
   target_compile_definitions(preciceCore_ginkgo PUBLIC EIGEN_NO_CUDA)
   set_target_properties(preciceCore_ginkgo PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+  # Disable compiler launcher since Kokkos ships its own nvcc wrapper
+  set_target_properties(preciceCore_ginkgo PROPERTIES CXX_COMPILER_LAUNCHER "")
 
   # Now we setup cuSolver and hipSOLVER for preCICE
   if(PRECICE_WITH_CUDA)

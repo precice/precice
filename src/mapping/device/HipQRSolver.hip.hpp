@@ -6,6 +6,6 @@
 /**
  * Computes the QR decomposition using Hip
 */
-void computeQRDecompositionHip(const int deviceId, const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, GinkgoVector *R);
+void computeQRDecompositionHip(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, GinkgoVector *R);
 
 #endif

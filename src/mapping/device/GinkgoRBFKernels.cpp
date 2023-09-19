@@ -3,18 +3,27 @@
 #include "math/math.hpp"
 
 #include <functional>
-#include <ginkgo/extensions.hpp>
+#include <ginkgo/extensions/kokkos.hpp>
 #include <ginkgo/ginkgo.hpp>
 
 using precice::mapping::RadialBasisParameters;
 using precice::math::pow_int;
 
-template <typename T>
-using native_type = gko::ext::kokkos::native_type<T>;
-
 using gko::ext::kokkos::map_data;
 
-namespace precice::mapping::kernel {
+namespace precice::mapping {
+
+std::shared_ptr<gko::Executor> create_device_executor(bool enableUnifiedMemory)
+{
+  if (enableUnifiedMemory) {
+    return gko::ext::kokkos::create_executor(Kokkos::DefaultExecutionSpace{},
+                                             Kokkos::SharedSpace{});
+  } else {
+    return gko::ext::kokkos::create_executor(Kokkos::DefaultExecutionSpace{});
+  }
+}
+
+namespace kernel {
 
 auto create_row_major_acc()
 {
@@ -31,38 +40,43 @@ auto create_col_major_acc()
 };
 
 template <typename EvalFunctionType>
-void create_rbf_system_matrix(std::shared_ptr<const gko::Executor> exec,
-                              gko::ptr_param<GinkgoMatrix> mtx, const std::array<bool, 3> activeAxis,
-                              gko::ptr_param<GinkgoMatrix> supportPoints, gko::ptr_param<GinkgoMatrix> targetPoints,
-                              EvalFunctionType f, ::precice::mapping::RadialBasisParameters rbf_params, bool addPolynomial, unsigned int extraDims)
+void create_rbf_system_matrix(std::shared_ptr<const gko::Executor>      exec,
+                              gko::ptr_param<GinkgoMatrix>              mtx,
+                              const std::array<bool, 3>                 activeAxis,
+                              gko::ptr_param<GinkgoMatrix>              supportPoints,
+                              gko::ptr_param<GinkgoMatrix>              targetPoints,
+                              EvalFunctionType                          f,
+                              ::precice::mapping::RadialBasisParameters rbf_params,
+                              bool                                      addPolynomial,
+                              unsigned int                              extraDims)
 {
+  auto k_mtx           = map_data(mtx.get());
+  auto k_supportPoints = map_data(supportPoints.get());
+  auto k_targetPoints  = map_data(targetPoints.get());
+
   auto run_kernel = [=](auto acc) {
-    exec->run(
-        gko::ext::kokkos::parallel_for(
-            "create_rbf_system_matrix",
-            gko::ext::kokkos::make_policy_top<Kokkos::MDRangePolicy, Kokkos::Rank<2>>(Kokkos::Array<int64_t, 2>{0, 0},
-                                                                                      Kokkos::Array<int64_t, 2>{static_cast<int64_t>(mtx->get_size()[0]),
-                                                                                                                static_cast<int64_t>(mtx->get_size()[1])}),
-            [=] GKO_KOKKOS_FN(const int &i, const int &j, auto k_mtx, auto k_supportPoints, auto k_targetPoints) {
-              double dist = 0;
+    Kokkos::parallel_for(
+        "create_rbf_system_matrix",
+        Kokkos::MDRangePolicy<Kokkos::Rank<2>>{{0, 0}, {mtx->get_size()[0], mtx->get_size()[1]}},
+        KOKKOS_LAMBDA(const int &i, const int &j) {
+          double dist = 0;
 
-              // Make each entry zero if polynomial is on since not every entry will be adjusted below
-              if (addPolynomial) {
-                k_mtx(i, j) = 0;
-              }
+          // Make each entry zero if polynomial is on since not every entry will be adjusted below
+          if (addPolynomial) {
+            k_mtx(i, j) = 0;
+          }
 
-              // Loop over each dimension and calculate euclidean distance
-              for (size_t k = 0; k < activeAxis.size(); ++k) {
-                if (activeAxis[k]) {
-                  dist += pow_int<2>(acc(j, k, k_supportPoints) - acc(i, k, k_targetPoints));
-                }
-              }
+          // Loop over each dimension and calculate euclidean distance
+          for (size_t k = 0; k < activeAxis.size(); ++k) {
+            if (activeAxis[k]) {
+              dist += pow_int<2>(acc(j, k, k_supportPoints) - acc(i, k, k_targetPoints));
+            }
+          }
 
-              dist = Kokkos::sqrt(dist);
+          dist = Kokkos::sqrt(dist);
 
-              k_mtx(i, j) = f(dist, rbf_params);
-            },
-            mtx.get(), supportPoints.get(), targetPoints.get()));
+          k_mtx(i, j) = f(dist, rbf_params);
+        });
   };
 
   if (dynamic_cast<const gko::ReferenceExecutor *>(exec.get()) ||
@@ -91,23 +105,24 @@ INSTATIATE_CREATE_RBF_SYSTEM_MATRIX(CompactPolynomialC4);
 INSTATIATE_CREATE_RBF_SYSTEM_MATRIX(CompactPolynomialC6);
 
 void fill_polynomial_matrix(std::shared_ptr<const gko::Executor> exec,
-                            gko::ptr_param<GinkgoMatrix> mtx, gko::ptr_param<const GinkgoMatrix> x, const unsigned int dims)
+                            gko::ptr_param<GinkgoMatrix>         mtx,
+                            gko::ptr_param<const GinkgoMatrix>   x,
+                            const unsigned int                   dims)
 {
+  auto k_mtx = map_data(mtx.get());
+  auto k_x   = map_data(x.get());
+
   auto run_kernel = [=](auto acc) {
-    exec->run(
-        gko::ext::kokkos::parallel_for(
-            "create_rbf_system_matrix",
-            gko::ext::kokkos::make_policy_top<Kokkos::MDRangePolicy, Kokkos::Rank<2>>(Kokkos::Array<int64_t, 2>{0, 0},
-                                                                                      Kokkos::Array<int64_t, 2>{static_cast<int64_t>(mtx->get_size()[0]),
-                                                                                                                static_cast<int64_t>(mtx->get_size()[1])}),
-            [dims, acc] GKO_KOKKOS_FN(const int &i, const int &j, auto k_mtx, auto k_x) {
-              if (j < dims - 1) {
-                k_mtx(i, j) = acc(i, j, k_x);
-              } else {
-                k_mtx(i, j) = 1;
-              }
-            },
-            mtx.get(), x.get()));
+    Kokkos::parallel_for(
+        "fill_polynomial_matrix",
+        Kokkos::MDRangePolicy<Kokkos::Rank<2>>{{0, 0}, {mtx->get_size()[0], mtx->get_size()[1]}},
+        KOKKOS_LAMBDA(const int &i, const int &j) {
+          if (j < dims - 1) {
+            k_mtx(i, j) = acc(i, j, k_x);
+          } else {
+            k_mtx(i, j) = 1;
+          }
+        });
   };
 
   if (dynamic_cast<const gko::ReferenceExecutor *>(exec.get()) ||
@@ -118,4 +133,5 @@ void fill_polynomial_matrix(std::shared_ptr<const gko::Executor> exec,
   }
 }
 
-} // namespace precice::mapping::kernel
+} // namespace kernel
+} // namespace precice::mapping
