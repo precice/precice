@@ -72,6 +72,9 @@ if(PRECICE_PETScMapping)
   set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, petsc-dev (>= 3.6)")
 endif()
 
+# Suggest installing python for the precice-profiling script
+set(CPACK_DEBIAN_PACKAGE_RECOMMENDS "python3")
+
 set(CPACK_DEBIAN_PACKAGE_SECTION "devel")
 set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "\
  preCICE is a coupling library for partitioned multi-physics simulations,\n\
