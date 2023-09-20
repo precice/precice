@@ -1,4 +1,4 @@
-# Adds the tests for the precice-events
+# Adds the tests for the precice-profiling
 
 # Single directory tests
 
@@ -14,7 +14,7 @@ set(_tests
   two-serial-solvers
   )
 
-set(_precice_events "${CMAKE_CURRENT_LIST_DIR}/precice-events")
+set(_precice_profiling "${CMAKE_CURRENT_LIST_DIR}/precice-profiling")
 set(_test_script "${CMAKE_CURRENT_LIST_DIR}/tests/simple-test.cmake")
 set(_test_root "${PROJECT_BINARY_DIR}/TestOutput")
 
@@ -38,13 +38,13 @@ if(NOT PRECICE_TEST_VENV)
 endif()
 
 foreach(test IN LISTS _tests)
-  set(_test_name precice.tools.events.${test})
+  set(_test_name precice.tools.profiling.${test})
   set(_test_location "${CMAKE_CURRENT_LIST_DIR}/tests/${test}")
-  set(_test_wd "${_test_root}/tools.events.${test}")
+  set(_test_wd "${_test_root}/tools.profiling.${test}")
   file(MAKE_DIRECTORY ${_test_wd})
   message(STATUS "Test ${_test_name}")
   add_test(NAME ${_test_name}
-    COMMAND ${CMAKE_COMMAND} -DEVENTS_SCRIPT=${_precice_events} -DTEST_FOLDER=${_test_location} -DFOLDER_ARG=${_test_location} -P ${_test_script}
+    COMMAND ${CMAKE_COMMAND} -DPROFILING_SCRIPT=${_precice_profiling} -DTEST_FOLDER=${_test_location} -DFOLDER_ARG=${_test_location} -P ${_test_script}
     WORKING_DIRECTORY ${_test_wd}
     )
   # Pass the venv to the script
@@ -56,13 +56,13 @@ endforeach(test)
 # Multi directory tests
 
 set(test from-solver-dirs)
-set(_test_name precice.tools.events.${test})
+set(_test_name precice.tools.profiling.${test})
 set(_test_location "${CMAKE_CURRENT_LIST_DIR}/tests/${test}")
-set(_test_wd "${PROJECT_BINARY_DIR}/TestOutput/tools.events.${test}")
+set(_test_wd "${PROJECT_BINARY_DIR}/TestOutput/tools.profiling.${test}")
 file(MAKE_DIRECTORY ${_test_wd})
 message(STATUS "Test ${_test_name}")
 add_test(NAME ${_test_name}
-  COMMAND ${CMAKE_COMMAND} -DEVENTS_SCRIPT=${_precice_events} -DTEST_FOLDER=${_test_location} -DFOLDER_ARG=${_test_location}/A\;${_test_location}/B -P ${_test_script}
+  COMMAND ${CMAKE_COMMAND} -DPROFILING_SCRIPT=${_precice_profiling} -DTEST_FOLDER=${_test_location} -DFOLDER_ARG=${_test_location}/A\;${_test_location}/B -P ${_test_script}
   WORKING_DIRECTORY ${_test_wd}
   )
 if (PRECICE_TEST_VENV)
@@ -70,4 +70,4 @@ if (PRECICE_TEST_VENV)
 endif()
 
 
-unset(_precice_events)
+unset(_precice_profiling)
