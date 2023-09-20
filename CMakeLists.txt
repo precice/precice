@@ -601,7 +601,7 @@ if(PRECICE_BUILD_TOOLS)
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     )
 
-    install(FILES ${preCICE_SOURCE_DIR}/tools/profiling/precice-profiling
+  install(PROGRAMS ${preCICE_SOURCE_DIR}/tools/profiling/precice-profiling
     DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
