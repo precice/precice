@@ -45,8 +45,10 @@ if(NOT EXISTS "profiling.csv")
 endif()
 
 execute_process(COMMAND ${Python3_EXECUTABLE} -c "import polars"
-  RESULTS_VARIABLE PYTHON_NO_POLARS)
-if(NOT ${PYTHON_NO_POLARS})
+  RESULTS_VARIABLE PRECICE_PYTHON_POLARS_CHECK)
+if(NOT "${PRECICE_PYTHON_POLARS_CHECK}" EQUAL "0")
+  message("Skipping analysis as polars is missing")
+else()
   file(STRINGS "${TEST_FOLDER}/.test" _participants)
   foreach(_participant IN LISTS _participants)
     message(STATUS "Testing: analyze ${_participant}")
