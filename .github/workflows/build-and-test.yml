@@ -106,6 +106,9 @@ jobs:
       - uses: actions/checkout@v4
       - name: Generate build directory
         run: mkdir -p build
+      - name: Install polars
+        run: pip install polars
+        if: ${{ contains(matrix.IMAGE, 'ubuntu') }}
       - name: Configure
         working-directory: build
         env:
