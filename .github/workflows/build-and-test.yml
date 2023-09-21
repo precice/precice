@@ -70,22 +70,22 @@ jobs:
             CONFIG: MPIPETScGinkgo
             CXX: 'g++'
             TYPE: Debug
-            #- IMAGE: 'archlinux'
-            #  CONFIG: MPIPETSc
-            #  CXX: 'g++'
-            #  TYPE: Debug
-            #- IMAGE: 'archlinux'
-            #  CONFIG: MPIPETSc
-            #  CXX: 'g++'
-            #  TYPE: Release
-            #- IMAGE: 'archlinux'
-            #  CONFIG: MPIPETSc
-            #  CXX: 'clang++'
-            #  TYPE: Debug
-            #- IMAGE: 'archlinux'
-            #  CONFIG: MPIPETSc
-            #  CXX: 'clang++'
-            #  TYPE: Release
+          - IMAGE: 'archlinux'
+            CONFIG: MPIPETSc
+            CXX: 'g++'
+            TYPE: Debug
+          - IMAGE: 'archlinux'
+            CONFIG: MPIPETSc
+            CXX: 'g++'
+            TYPE: Release
+          - IMAGE: 'archlinux'
+            CONFIG: MPIPETSc
+            CXX: 'clang++'
+            TYPE: Debug
+          - IMAGE: 'archlinux'
+            CONFIG: MPIPETSc
+            CXX: 'clang++'
+            TYPE: Release
           - IMAGE: 'fedora'
             CONFIG: MPIPETSc
             CXX: 'g++'
@@ -148,6 +148,7 @@ jobs:
         env:
           CTEST_OUTPUT_ON_FAILURE: 1
           BOOST_TEST_LOG_LEVEL: all
+          OMPI_MCA_btl_tcp_include_if: "${{ contains(matrix.IMAGE, 'archlinux') && 'lo' || '' }}"
         working-directory: build
         run: su -c "ctest" $PRECICE_USER
       - name: Coverage Report
