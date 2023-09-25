@@ -1012,8 +1012,6 @@ void ParticipantImpl::readData(
   }
 
   double readTime = _couplingScheme->getTime() + relativeReadTime;
-  PRECICE_DEBUG("relativeReadTime {}", relativeReadTime);
-  PRECICE_DEBUG("Read at absolute time {}", readTime);
   context.readValues(vertices, readTime, values);
 }
 
