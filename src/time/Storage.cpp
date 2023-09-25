@@ -111,7 +111,7 @@ void Storage::clear()
 
 Sample Storage::getSampleAtOrAfter(double before) const
 {
-  PRECICE_DEBUG("getSampleAtOrAfter({})", before);
+  PRECICE_TRACE(before);
   PRECICE_DEBUG("available times: {}", getTimes());
   if (nTimes() == 1) {
     return _stampleStorage.front().sample; // @todo in this case the name getSampleAtOrAfter does not fit, because _stampleStorage.front().sample is returned for any time before.
