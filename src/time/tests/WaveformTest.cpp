@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataSecondDegree)
   BOOST_TEST(testing::equals(waveform.sample(0.5)(0), 0.5));
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 1.0));
 
-  waveform.timeStepsStorage().trim();
+  waveform.timeStepsStorage().clearAfter(0.0);
 
   value(0) = 2.0;
   waveform.timeStepsStorage().setSampleAtTime(1, time::Sample{1, value});
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataSecondDegree)
   BOOST_TEST(testing::equals(waveform.sample(1.5)(0), 5.0));
   BOOST_TEST(testing::equals(waveform.sample(2.0)(0), 8.0));
 
-  waveform.timeStepsStorage().trim();
+  waveform.timeStepsStorage().clearAfter(1.0);
 
   value(0) = 4.0;
   waveform.timeStepsStorage().setSampleAtTime(2, time::Sample{1, value});
@@ -236,7 +236,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataFirstDegreeVector)
     BOOST_TEST(testing::equals(waveform.sample(1.0)(i), value[i]));
   }
 
-  waveform.timeStepsStorage().trim();
+  waveform.timeStepsStorage().clearAfter(0.0);
 
   value << 2, 4, 2;
   waveform.timeStepsStorage().setSampleAtTime(1, time::Sample{1, value});
@@ -292,7 +292,7 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataZerothDegree)
   BOOST_TEST(testing::equals(waveform.sample(0.75)(0), 1.0));
   BOOST_TEST(testing::equals(waveform.sample(1.00)(0), 1.0));
 
-  waveform.timeStepsStorage().trim();
+  waveform.timeStepsStorage().clearAfter(0.0);
 
   value(0) = 1.5;
   waveform.timeStepsStorage().setSampleAtTime(0.5, time::Sample{1, value});
@@ -322,7 +322,7 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataZerothDegree)
   BOOST_TEST(testing::equals(waveform.sample(1.75)(0), 3.0));
   BOOST_TEST(testing::equals(waveform.sample(2.00)(0), 3.0));
 
-  waveform.timeStepsStorage().trim();
+  waveform.timeStepsStorage().clearAfter(1.0);
 
   value(0) = 1.5;
   waveform.timeStepsStorage().setSampleAtTime(1.5, time::Sample{1, value});
@@ -390,7 +390,7 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataFirstDegree)
   BOOST_TEST(testing::equals(waveform.sample(1.75)(0), 2.75));
   BOOST_TEST(testing::equals(waveform.sample(2.00)(0), 3.00));
 
-  waveform.timeStepsStorage().trim();
+  waveform.timeStepsStorage().clearAfter(1.0);
 
   value(0) = 1.5;
   waveform.timeStepsStorage().setSampleAtTime(1.5, time::Sample{1, value});
@@ -456,7 +456,7 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataThirdDegree)
     BOOST_TEST(testing::equals(waveform.sample(t)(0), t));
   }
 
-  waveform.timeStepsStorage().trim();
+  waveform.timeStepsStorage().clearAfter(0.0);
 
   // quadratically increasing values
   for (double t : std::vector<double>{0, 0.25, 0.5, 0.75, 1}) {
@@ -474,7 +474,7 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataThirdDegree)
     BOOST_TEST(testing::equals(waveform.sample(t)(0), t * t));
   }
 
-  waveform.timeStepsStorage().trim();
+  waveform.timeStepsStorage().clearAfter(0.0);
 
   // cubically increasing values
   for (double t : std::vector<double>{0, 0.25, 0.5, 0.75, 1}) {
@@ -492,7 +492,7 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataThirdDegree)
     BOOST_TEST(testing::equals(waveform.sample(t)(0), t * t * t));
   }
 
-  waveform.timeStepsStorage().trim();
+  waveform.timeStepsStorage().clearAfter(0.0);
 
   // cubically increasing values, but with non-uniform spacing
   for (double t : std::vector<double>{0, 0.01, 0.1, 0.2, 1}) {
@@ -510,7 +510,7 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataThirdDegree)
     BOOST_TEST(testing::equals(waveform.sample(t)(0), t * t * t));
   }
 
-  waveform.timeStepsStorage().trim();
+  waveform.timeStepsStorage().clearAfter(0.0);
 
   // quadratically increasing values, but with non-uniform spacing
   for (double t : std::vector<double>{0, 0.25, 0.5, 0.75, 1}) {

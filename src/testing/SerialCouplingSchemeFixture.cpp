@@ -39,7 +39,7 @@ void SerialCouplingSchemeFixture::initializeAcceleration(cplscheme::SerialCoupli
 void SerialCouplingSchemeFixture::moveToNextWindow(cplscheme::SerialCouplingScheme &cplscheme)
 {
   for (const auto &pair : cplscheme._allData) {
-    pair.second->timeStepsStorage().move();
+    pair.second->moveToNextWindow();
   }
 }
 } // namespace precice::testing

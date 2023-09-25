@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(testClear)
   BOOST_TEST(storage.nDofs() == nValues);
   BOOST_TEST(storage.nTimes() == 2);
   BOOST_TEST(storage.maxStoredTime() == 1.0);
-  storage.trim();
+  storage.clearAfter(0.0);
   BOOST_TEST(storage.nDofs() == nValues);
   BOOST_TEST(storage.nTimes() == 1);
   BOOST_TEST(storage.maxStoredTime() == 0.0);
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateDataZerothOrder)
   BOOST_TEST(timesAndValues.second.col(0)(0) == 1.0);
 
   // make sure that subcycling is ignored for extrapolation
-  storage.trim();
+  storage.clearAfter(1.0);
   storage.setSampleAtTime(1.5, time::Sample{1, 2 * Eigen::VectorXd::Ones(nValues)});
   storage.setSampleAtTime(2.0, time::Sample{1, 3 * Eigen::VectorXd::Ones(nValues)});
 
