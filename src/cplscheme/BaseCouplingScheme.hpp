@@ -262,7 +262,11 @@ protected:
   void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData);
 
   /**
-   * @brief Like receiveData, but sets window time to end of window. Needed by SerialCouplingScheme.
+   * @brief Like receiveData, but temporarily sets window time to end of window.
+   *
+   * This function is only needed for SerialCouplingScheme, if substeps="false". Here, a special situation arises for the second participant, because it receives data for the end of the window from the first participant: If substeps="false" only values without timestamps are exchanged. Therefore, getTime() is used to determine the time associated with the values. However, getTime() of the second participant points to the beginning of the window, if we enter a new window. We need to temporarily modify the return value of getTime() to point to the end of the window to be able to store the values at the correct point in time.
+   *
+   * Note: This function could be removed by a) removing the option to turn off exchange of substeps or by b) refactoring the communication such that sent/received values always carry a timestamp.
    *
    * @param m2n M2N used for communication
    * @param receiveData DataMap associated with received data
