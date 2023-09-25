@@ -99,12 +99,12 @@ public:
   /**
    * @brief Move this Storage by deleting all stamples except the one at the end of the window.
    */
-  void move();
+  void move(); //@todo Remove this function. Directly use clearBefore(timeWindowEnd) from CouplingScheme or even ParticipantImpl
 
   /**
    * @brief Trims this Storage by deleting all values except values associated with the window start.
    */
-  void trim();
+  void trim(); //@todo Remove this function. Directly use clearAfter(timeWindowStart) from CouplingScheme or even ParticipantImpl
 
   void clearBefore(double time);
 
