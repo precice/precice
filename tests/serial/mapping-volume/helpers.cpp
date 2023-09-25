@@ -84,7 +84,7 @@ void testMappingVolumeOneTriangle(const std::string configFile, const TestContex
     // Expected value in the middle of the triangle is the average of inputs (1, 10, 100)
     expected << 111.0 / 3;
 
-    participant.readData(meshName, dataName, vertexIDs, 0, readData);
+    participant.readData(meshName, dataName, vertexIDs, dt, readData);
     BOOST_CHECK(equals(expected, readData));
 
     participant.finalize();
@@ -154,7 +154,7 @@ void testMappingVolumeOneTriangleConservative(const std::string configFile, cons
     expected << 0.5, 0.3, 0.2;
 
     dt = participant.getMaxTimeStepSize();
-    participant.readData(meshName, dataName, vertexIDs, 0, readData);
+    participant.readData(meshName, dataName, vertexIDs, dt, readData);
     BOOST_CHECK(equals(expected, readData));
 
     participant.finalize();
