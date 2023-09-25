@@ -37,6 +37,10 @@ BOOST_AUTO_TEST_CASE(testClear)
   BOOST_TEST(storage.nDofs() == nValues);
   BOOST_TEST(storage.nTimes() == 1);
   BOOST_TEST(storage.maxStoredTime() == 0.0);
+  storage.setSampleAtTime(1, time::Sample{1, Eigen::VectorXd::Ones(nValues)});
+  BOOST_TEST(storage.nDofs() == nValues);
+  BOOST_TEST(storage.nTimes() == 2);
+  BOOST_TEST(storage.maxStoredTime() == 1.0);
   storage.trim();
   BOOST_TEST(storage.nDofs() == nValues);
   BOOST_TEST(storage.nTimes() == 1);
@@ -52,9 +56,6 @@ BOOST_AUTO_TEST_CASE(testMove)
   BOOST_TEST(storage.nTimes() == 0);
   storage.setSampleAtTime(0, time::Sample{1, Eigen::VectorXd::Ones(nValues)});
   BOOST_TEST(storage.nDofs() == nValues);
-  BOOST_TEST(storage.nTimes() == 1);
-  BOOST_TEST(storage.maxStoredTime() == 0.0);
-  storage.trim();
   BOOST_TEST(storage.nTimes() == 1);
   BOOST_TEST(storage.maxStoredTime() == 0.0);
   storage.setSampleAtTime(0.5, time::Sample{1, Eigen::VectorXd::Ones(nValues)});
@@ -85,7 +86,6 @@ BOOST_AUTO_TEST_CASE(testGetTimesAndValues)
   auto storage = Storage();
   int  nValues = 3;
   storage.setSampleAtTime(0, time::Sample{1, Eigen::VectorXd::Ones(nValues)});
-  storage.trim();
   storage.setSampleAtTime(0.5, time::Sample{1, Eigen::VectorXd::Ones(nValues)});
   storage.setSampleAtTime(1.0, time::Sample{1, Eigen::VectorXd::Zero(nValues)});
   auto times = storage.getTimes();
@@ -110,18 +110,14 @@ BOOST_AUTO_TEST_CASE(testExtrapolateDataZerothOrder)
 
   auto      storage = Storage();
   const int nValues = 1;
-  storage.setSampleAtTime(0, time::Sample{1, Eigen::VectorXd::Zero(nValues)});
 
-  // use zero initial data
-  storage.move();
+  storage.setSampleAtTime(0.0, time::Sample{1, Eigen::VectorXd::Zero(nValues)});
   auto times = storage.getTimes();
   BOOST_TEST(times[0] == 0.0);
   auto timesAndValues = storage.getTimesAndValues();
   BOOST_TEST(timesAndValues.second.col(0)(0) == 0.0);
 
-  storage.trim();
   storage.setSampleAtTime(1.0, time::Sample{1, Eigen::VectorXd::Ones(nValues)});
-
   times = storage.getTimes();
   BOOST_TEST(times[0] == 0.0);
   BOOST_TEST(times[1] == 1.0);
