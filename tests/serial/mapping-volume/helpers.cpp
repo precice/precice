@@ -40,13 +40,12 @@ void testMappingVolumeOneTriangle(const std::string configFile, const TestContex
     BOOST_TEST(equals(mesh.triangles()[0].getArea(), 0.5), "Triangle area must be 0.5");
 
     // Initialize, write data, advance and finalize
-    std::vector<double> values{1.0, 100.0, 10.0};
-    participant.writeData(meshName, dataName, vertexIDs, values);
     participant.initialize();
     double dt = participant.getMaxTimeStepSize();
     BOOST_TEST(!mesh.triangles().empty(), "Triangle must still be stored");
     BOOST_TEST(participant.isCouplingOngoing(), "Sending participant must advance once.");
 
+    std::vector<double> values{1.0, 100.0, 10.0};
     participant.writeData(meshName, dataName, vertexIDs, values);
 
     participant.advance(dt);
@@ -114,12 +113,11 @@ void testMappingVolumeOneTriangleConservative(const std::string configFile, cons
     BOOST_CHECK(participant.getMeshVertexSize(meshName) == 1);
 
     // Initialize, write data, advance and finalize
-    std::vector<double> values{1.0};
-    participant.writeData(meshName, dataName, vertexIDs, values);
     participant.initialize();
     double dt = participant.getMaxTimeStepSize();
     BOOST_TEST(participant.isCouplingOngoing(), "Sending participant must advance once.");
 
+    std::vector<double> values{1.0};
     participant.writeData(meshName, dataName, vertexIDs, values);
 
     participant.advance(dt);
@@ -200,9 +198,6 @@ void testMappingVolumeOneTetra(const std::string configFile, const TestContext &
     BOOST_TEST(equals(mesh.tetrahedra()[0].getVolume(), 1.0 / 6), "Tetrahedron volume must be 1/6");
 
     // Initialize, write data, advance and finalize
-    // Send 1 + 5x - 3y + 9z
-    std::vector<double> values{1.0, 6.0, -2.0, 8.0};
-    participant.writeData(meshName, dataName, vertexIDs, values);
     participant.initialize();
     double dt = participant.getMaxTimeStepSize();
     BOOST_REQUIRE(mesh.edges().size() == 6);
@@ -211,6 +206,8 @@ void testMappingVolumeOneTetra(const std::string configFile, const TestContext &
     BOOST_TEST(!mesh.tetrahedra().empty(), "Tetrahedra must still be stored");
     BOOST_TEST(participant.isCouplingOngoing(), "Sending participant must advance once.");
 
+    // Send 1 + 5x - 3y + 9z
+    std::vector<double> values{1.0, 6.0, -2.0, 8.0};
     participant.writeData(meshName, dataName, vertexIDs, values);
 
     participant.advance(dt);
@@ -280,12 +277,11 @@ void testMappingVolumeOneTetraConservative(const std::string configFile, const T
     BOOST_CHECK(participant.getMeshVertexSize(meshName) == 1);
 
     // Initialize, write data, advance and finalize
-    std::vector<double> values{1.0};
-    participant.writeData(meshName, dataName, vertexIDs, values);
     participant.initialize();
     double dt = participant.getMaxTimeStepSize();
     BOOST_TEST(participant.isCouplingOngoing(), "Sending participant must advance once.");
 
+    std::vector<double> values{1.0};
     participant.writeData(meshName, dataName, vertexIDs, values);
 
     participant.advance(dt);
