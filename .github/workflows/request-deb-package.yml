@@ -36,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     container: '${{ github.event.inputs.distro }}:${{ github.event.inputs.version }}'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.release }}
       - name: Generate build directory
