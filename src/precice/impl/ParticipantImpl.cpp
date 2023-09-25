@@ -1339,6 +1339,7 @@ void ParticipantImpl::mapReadData()
   computeMappings(_accessor->readMappingContexts(), "read");
   for (auto &context : _accessor->readDataContexts()) {
     if (context.hasMapping()) {
+      PRECICE_DEBUG("Map read data \"{}\" to mesh \"{}\"", context.getDataName(), context.getMeshName());
       context.mapData();
     }
   }
