@@ -111,6 +111,8 @@ public:
    */
   double getTime() const override final;
 
+  double getWindowEndTime() const override final;
+
   /**
    * @brief getter for _timeWindows
    * @returns the number of currently computed time windows of the coupling scheme.
@@ -134,7 +136,7 @@ public:
    * An assertion is thrown, if no valid time window size is given. Check with
    * hasTimeWindowSize().
    */
-  double getTimeWindowSize() const override final;
+  double getTimeWindowSize() const override;
 
   /**
    * @brief Returns the maximal size of the next time step to be computed.

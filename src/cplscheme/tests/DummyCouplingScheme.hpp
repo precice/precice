@@ -122,6 +122,15 @@ public:
   /**
    * @brief Not implemented.
    */
+  double getWindowEndTime() const override final
+  {
+    PRECICE_ASSERT(false);
+    return 0;
+  }
+
+  /**
+   * @brief Not implemented.
+   */
   int getTimeWindows() const override final
   {
     return _timeWindows;

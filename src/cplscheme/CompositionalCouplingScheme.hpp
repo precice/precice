@@ -131,6 +131,8 @@ public:
    */
   double getTime() const final override;
 
+  double getWindowEndTime() const override final;
+
   /**
    * @brief Returns the currently computed time windows of the coupling scheme.
    *

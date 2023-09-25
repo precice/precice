@@ -168,6 +168,9 @@ public:
   /// Returns the currently computed time of the coupling scheme.
   virtual double getTime() const = 0;
 
+  /// Returns the time at the end of the current window.
+  virtual double getWindowEndTime() const = 0;
+
   /// Returns the currently computed time windows of the coupling scheme.
   virtual int getTimeWindows() const = 0;
 

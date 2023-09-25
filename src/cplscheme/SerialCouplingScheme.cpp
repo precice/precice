@@ -44,6 +44,16 @@ SerialCouplingScheme::SerialCouplingScheme(
   }
 }
 
+double SerialCouplingScheme::getTimeWindowSize() const
+{
+  if (_participantSetsTimeWindowSize) {
+    return getComputedTimeWindowPart();
+  } else {
+    PRECICE_ASSERT(hasTimeWindowSize());
+    return BaseCouplingScheme::getTimeWindowSize();
+  }
+}
+
 void SerialCouplingScheme::setTimeWindowSize(double timeWindowSize)
 {
   PRECICE_ASSERT(not _participantSetsTimeWindowSize);

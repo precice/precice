@@ -53,6 +53,8 @@ public:
       int                           maxIterations = UNDEFINED_MAX_ITERATIONS);
 
 protected:
+  double getTimeWindowSize() const override final;
+
   /**
    * @brief Setter for _timeWindowSize
    * @param timeWindowSize

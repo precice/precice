@@ -171,6 +171,19 @@ double CompositionalCouplingScheme::getTime() const
   return time;
 }
 
+double CompositionalCouplingScheme::getWindowEndTime() const
+{
+  PRECICE_TRACE();
+  auto schemes = schemesToRun();
+  auto time    = std::transform_reduce(
+      schemes.begin(), schemes.end(),
+      std::numeric_limits<double>::max(),
+      ::min<double>,
+      std::mem_fn(&CouplingScheme::getWindowEndTime));
+  PRECICE_DEBUG("return {}", time);
+  return time;
+}
+
 int CompositionalCouplingScheme::getTimeWindows() const
 {
   PRECICE_TRACE();

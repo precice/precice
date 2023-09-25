@@ -460,6 +460,11 @@ double BaseCouplingScheme::getTime() const
   return _timeWindowStartTime + _computedTimeWindowPart;
 }
 
+double BaseCouplingScheme::getWindowEndTime() const
+{
+  return _timeWindowStartTime + getTimeWindowSize();
+}
+
 int BaseCouplingScheme::getTimeWindows() const
 {
   return _timeWindows;
