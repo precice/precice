@@ -91,7 +91,6 @@ void Storage::move()
   const double nextWindowStart = _stampleStorage.back().timestamp;
   _stampleStorage.erase(_stampleStorage.begin(), --_stampleStorage.end());
   PRECICE_ASSERT(nextWindowStart == _stampleStorage.front().timestamp);
-  PRECICE_DEBUG("times after: {}", getTimes());
 }
 
 void Storage::trim()
@@ -112,7 +111,6 @@ void Storage::clear()
 Sample Storage::getSampleAtOrAfter(double before) const
 {
   PRECICE_TRACE(before);
-  PRECICE_DEBUG("available times: {}", getTimes());
   if (nTimes() == 1) {
     return _stampleStorage.front().sample; // @todo in this case the name getSampleAtOrAfter does not fit, because _stampleStorage.front().sample is returned for any time before.
   } else {
