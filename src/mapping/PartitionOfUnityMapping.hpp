@@ -314,11 +314,16 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
   // Note that we don't use the corresponding bounding box functions from
   // precice::mesh (e.g. ::getBoundingBox), as the stored bounding box might
   // have the wrong size (e.g. direct access)
-  precice::mesh::BoundingBox bb(filterMesh->getDimensions());
-  for (const mesh::Vertex &vertex : filterMesh->vertices()) {
-    bb.expandBy(vertex);
-  }
+  precice::mesh::BoundingBox bb = filterMesh->index().getRtreeBounds();
 
+#ifndef NDEBUG
+  // Safety check
+  precice::mesh::BoundingBox bb_check(filterMesh->getDimensions());
+  for (const mesh::Vertex &vertex : filterMesh->vertices()) {
+    bb_check.expandBy(vertex);
+  }
+  PRECICE_ASSERT(bb_check == bb);
+#endif
   // @TODO: This assert is not completely right, as it checks all dimensions for non-emptyness (which might not be the case).
   // However, with the current BB implementation, the expandBy function will just do nothing.
   PRECICE_ASSERT(!bb.empty());

@@ -334,11 +334,16 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
   // @todo: Which mesh should be used in order to determine the cluster centers:
   // pro outMesh: we want perfectly fitting clusters around our output vertices
   // however, this makes the cluster distribution/mapping dependent on the output
+  precice::mesh::BoundingBox localBB = inMesh->index().getRtreeBounds();
 
-  precice::mesh::BoundingBox localBB(inMesh->getDimensions());
+#ifndef NDEBUG
+  // Safety check
+  precice::mesh::BoundingBox bb_check(inMesh->getDimensions());
   for (const mesh::Vertex &vertex : inMesh->vertices()) {
-    localBB.expandBy(vertex);
+    bb_check.expandBy(vertex);
   }
+  PRECICE_ASSERT(bb_check == localBB);
+#endif
 
   // If we have less vertices in the whole domain than our target cluster size,
   // we just use a single cluster. The clustering result of the algorithm further
