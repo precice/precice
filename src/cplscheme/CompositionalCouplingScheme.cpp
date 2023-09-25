@@ -161,7 +161,7 @@ bool CompositionalCouplingScheme::hasDataBeenReceived() const
 double CompositionalCouplingScheme::getTime() const
 {
   PRECICE_TRACE();
-  auto schemes = schemesToRun(); // analogous change to https://github.com/precice/precice/pull/1792, but if we use allSchemes() tests do not trigger. Why?
+  auto schemes = allSchemes();
   auto time    = std::transform_reduce(
       schemes.begin(), schemes.end(),
       std::numeric_limits<double>::max(),
