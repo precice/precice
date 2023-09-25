@@ -146,9 +146,7 @@ std::vector<int> CouplingData::getVertexOffsets()
 void CouplingData::moveToNextWindow()
 {
   _data->moveToNextWindow();
-  if (this->stamples().size() > 0) {
-    _previousTimeStepsStorage = _data->timeStepsStorage();
-  }
+  _previousTimeStepsStorage = _data->timeStepsStorage();
 }
 
 time::Sample &CouplingData::sample()
