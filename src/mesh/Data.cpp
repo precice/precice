@@ -72,7 +72,7 @@ time::Storage &Data::timeStepsStorage()
 
 void Data::moveToNextWindow()
 {
-  if (stamples().size() > 1) { // Needed to avoid CompositionalCouplingScheme callong moveToNextWindow on same Data multiple times. Could be simplifies by replacing moveToNextWindow() with clearUntilTime(...).
+  if (stamples().size() > 1) { // Needed to avoid CompositionalCouplingScheme callong moveToNextWindow on same Data multiple times. Could be simplifies by replacing Storage::move() with clearBefore(double time).
     timeStepsStorage().move();
     PRECICE_ASSERT(stamples().size() == 1);
     sample() = stamples().back().sample;
