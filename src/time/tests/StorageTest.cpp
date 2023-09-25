@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(testClear)
 }
 
 // create storage, add some values and then move to next window.
-BOOST_AUTO_TEST_CASE(testMove)
+BOOST_AUTO_TEST_CASE(testClearBefore)
 {
   PRECICE_TEST(1_rank);
   auto storage = Storage();
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(testMove)
     BOOST_TEST(storage.getSampleAtOrAfter(0.5).values(i) == 1);
     BOOST_TEST(storage.getSampleAtOrAfter(1).values(i) == 0);
   }
-  storage.move();
+  storage.clearBefore(1.0);
   BOOST_TEST(storage.nDofs() == nValues);
   BOOST_TEST(storage.nTimes() == 1);
   BOOST_TEST(storage.maxStoredTime() == 1.0);
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateDataZerothOrder)
   BOOST_TEST(timesAndValues.second.col(0)(0) == 0.0);
   BOOST_TEST(timesAndValues.second.col(1)(0) == 1.0);
 
-  storage.move();
+  storage.clearBefore(1.0);
 
   times = storage.getTimes();
   BOOST_TEST(times[0] == 1.0);
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateDataZerothOrder)
   BOOST_TEST(times[1] == 1.5);
   BOOST_TEST(times[2] == 2.0);
 
-  storage.move();
+  storage.clearBefore(2.0);
 
   times = storage.getTimes();
   BOOST_TEST(times[0] == 2.0);

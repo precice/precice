@@ -87,7 +87,7 @@ void Storage::move()
   PRECICE_ASSERT(nTimes() >= 2, "Calling Storage::move() is only allowed, if there is a sample at the beginning and at the end. This ensures that this function is only called at the end of the window.", getTimes());
   PRECICE_ASSERT(!_stampleStorage.empty(), "Storage does not contain any data!");
   const double nextWindowStart = _stampleStorage.back().timestamp;
-  _stampleStorage.erase(_stampleStorage.begin(), --_stampleStorage.end());
+  clearBefore(nextWindowStart);
   PRECICE_ASSERT(nextWindowStart == _stampleStorage.front().timestamp);
 }
 
@@ -95,9 +95,30 @@ void Storage::trim()
 {
   PRECICE_ASSERT(!_stampleStorage.empty(), "Storage does not contain any data!");
   const double thisWindowStart = _stampleStorage.front().timestamp;
-  _stampleStorage.erase(++_stampleStorage.begin(), _stampleStorage.end());
+  clearAfter(thisWindowStart);
   PRECICE_ASSERT(_stampleStorage.size() == 1);
   PRECICE_ASSERT(thisWindowStart == _stampleStorage.front().timestamp);
+}
+
+void Storage::clearBefore(double time)
+{
+  PRECICE_DEBUG("Storage::clearBefore({})", time);
+  PRECICE_DEBUG("_stampleStorage.size() before is {}", _stampleStorage.size());
+  auto stample = std::find_if(_stampleStorage.begin(), _stampleStorage.end(), [&time](const auto &s) { return math::greaterEquals(s.timestamp, time); });
+  PRECICE_ASSERT(stample != _stampleStorage.end(), "no values found!", getTimes(), time);
+  _stampleStorage.erase(_stampleStorage.begin(), stample);
+  PRECICE_DEBUG("_stampleStorage.size() after is {}", _stampleStorage.size());
+}
+
+void Storage::clearAfter(double time)
+{
+  auto stample = std::find_if(_stampleStorage.begin(), _stampleStorage.end(), [&time](const auto &s) { return math::greater(s.timestamp, time); });
+  if (stample != _stampleStorage.end()) { // @todo remove this safeguard?
+    PRECICE_ASSERT(stample != _stampleStorage.end(), "no values found!");
+    _stampleStorage.erase(stample, _stampleStorage.end());
+  } else {
+    // PRECICE_ASSERT(math::equals(_stampleStorage.back().timestamp, time));
+  }
 }
 
 void Storage::clear()

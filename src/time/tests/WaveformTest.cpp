@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataZerothDegree)
   BOOST_TEST(testing::equals(waveform.sample(0.5)(0), 2.0));
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 2.0));
 
-  waveform.timeStepsStorage().move();
+  waveform.timeStepsStorage().clearBefore(1.0);
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 1);
 
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 2.0));
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataFirstDegree)
   BOOST_TEST(testing::equals(waveform.sample(0.5)(0), 1.0));
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 2.0));
 
-  waveform.timeStepsStorage().move();
+  waveform.timeStepsStorage().clearBefore(1.0);
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 1);
 
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 2.0));
@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataSecondDegree)
   BOOST_TEST(testing::equals(waveform.sample(0.5)(0), 1.0));
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 2.0));
 
-  waveform.timeStepsStorage().move();
+  waveform.timeStepsStorage().clearBefore(1.0);
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 1);
 
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 2.0));
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataSecondDegree)
   BOOST_TEST(testing::equals(waveform.sample(1.5)(0), 3.0));
   BOOST_TEST(testing::equals(waveform.sample(2.0)(0), 4.0));
 
-  waveform.timeStepsStorage().move();
+  waveform.timeStepsStorage().clearBefore(2.0);
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 1);
 
   BOOST_TEST(testing::equals(waveform.sample(2.0)(0), 4.0));
@@ -247,7 +247,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataFirstDegreeVector)
     BOOST_TEST(testing::equals(waveform.sample(1.0)(i), value[i]));
   }
 
-  waveform.timeStepsStorage().move();
+  waveform.timeStepsStorage().clearBefore(1.0);
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 1);
 
   for (int i = 0; i < valuesSize; i++) {
@@ -305,7 +305,7 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataZerothDegree)
   BOOST_TEST(testing::equals(waveform.sample(0.75)(0), 2.0));
   BOOST_TEST(testing::equals(waveform.sample(1.00)(0), 2.0));
 
-  waveform.timeStepsStorage().move();
+  waveform.timeStepsStorage().clearBefore(1.0);
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 1);
 
   BOOST_TEST(testing::equals(waveform.sample(0.00)(0), 2.0));
@@ -373,7 +373,7 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataFirstDegree)
   BOOST_TEST(testing::equals(waveform.sample(0.75)(0), 1.75));
   BOOST_TEST(testing::equals(waveform.sample(1.00)(0), 2.00));
 
-  waveform.timeStepsStorage().move();
+  waveform.timeStepsStorage().clearBefore(1.0);
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 1);
 
   BOOST_TEST(testing::equals(waveform.sample(1.00)(0), 2.00));

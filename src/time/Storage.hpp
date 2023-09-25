@@ -106,6 +106,10 @@ public:
    */
   void trim();
 
+  void clearBefore(double time);
+
+  void clearAfter(double time);
+
   /**
    * @brief Clears this Storage by deleting all values.
    */
