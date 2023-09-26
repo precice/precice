@@ -1,7 +1,7 @@
 #include <boost/range.hpp>
 
 #include "cplscheme/CouplingScheme.hpp"
-#include "math/bspline.hpp"
+#include "math/Bspline.hpp"
 #include "math/differences.hpp"
 #include "time/Storage.hpp"
 #include "time/Time.hpp"
@@ -26,6 +26,9 @@ Storage &Storage::operator=(const Storage &other)
 
 void Storage::setSampleAtTime(double time, Sample sample)
 {
+  // The spline has to be recomputed, since the underlying data has changed
+  _bspline.reset();
+
   if (_stampleStorage.empty()) {
     _stampleStorage.emplace_back(Stample{time, sample});
     return;
@@ -55,6 +58,9 @@ void Storage::setInterpolationDegree(int interpolationDegree)
 {
   PRECICE_ASSERT(Time::MIN_WAVEFORM_DEGREE <= _degree && _degree <= Time::MAX_WAVEFORM_DEGREE);
   _degree = interpolationDegree;
+
+  // The spline has to be recomputed, since the underlying data has changed
+  _bspline.reset();
 }
 
 int Storage::getInterpolationDegree() const
@@ -89,6 +95,9 @@ void Storage::move()
   const double nextWindowStart = _stampleStorage.back().timestamp;
   _stampleStorage.erase(_stampleStorage.begin(), --_stampleStorage.end());
   PRECICE_ASSERT(nextWindowStart == _stampleStorage.front().timestamp);
+
+  // The spline has to be recomputed, since the underlying data has changed
+  _bspline.reset();
 }
 
 void Storage::trim()
@@ -98,12 +107,18 @@ void Storage::trim()
   _stampleStorage.erase(++_stampleStorage.begin(), _stampleStorage.end());
   PRECICE_ASSERT(_stampleStorage.size() == 1);
   PRECICE_ASSERT(thisWindowStart == _stampleStorage.front().timestamp);
+
+  // The spline has to be recomputed, since the underlying data has changed
+  _bspline.reset();
 }
 
 void Storage::clear()
 {
   _stampleStorage.clear();
   PRECICE_ASSERT(_stampleStorage.size() == 0);
+
+  // The spline has to be recomputed, since the underlying data has changed
+  _bspline.reset();
 }
 
 Sample Storage::getSampleAtOrAfter(double before) const
@@ -149,8 +164,12 @@ Eigen::VectorXd Storage::sample(double time) const
   PRECICE_ASSERT(usedDegree >= 1);
 
   auto data = getTimesAndValues();
+  //Create a new bspline if _bspline does not already contain a spline
+  if (!_bspline.has_value()) {
+    _bspline.emplace(data.first, data.second, usedDegree);
+  }
 
-  return math::bspline::interpolateAt(data.first, data.second, usedDegree, time);
+  return _bspline.value().interpolateAt(time);
 }
 
 Eigen::MatrixXd Storage::sampleGradients(double time) const
