@@ -2,7 +2,6 @@
 
 #include "cplscheme/CouplingScheme.hpp"
 #include "logging/LogMacros.hpp"
-#include "math/Bspline.hpp"
 #include "math/differences.hpp"
 #include "mesh/Data.hpp"
 #include "time/Waveform.hpp"
