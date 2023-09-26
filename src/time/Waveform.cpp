@@ -24,9 +24,9 @@ const time::Storage &Waveform::timeStepsStorage() const
   return _timeStepsStorage;
 }
 
-Eigen::VectorXd Waveform::sample(double normalizedDt) const
+Eigen::VectorXd Waveform::sample(double time) const
 {
-  return _timeStepsStorage.sample(normalizedDt);
+  return _timeStepsStorage.sample(time);
 }
 
 } // namespace precice::time

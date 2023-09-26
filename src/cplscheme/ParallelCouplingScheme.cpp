@@ -24,28 +24,26 @@ ParallelCouplingScheme::ParallelCouplingScheme(
 
 void ParallelCouplingScheme::exchangeInitialData()
 {
-  bool initialCommunication = true;
-
   // F: send, receive, S: receive, send
   if (doesFirstStep()) {
     if (sendsInitializedData()) {
-      sendData(getM2N(), getSendData(), initialCommunication);
+      sendData(getM2N(), getSendData());
     }
     if (receivesInitializedData()) {
-      receiveData(getM2N(), getReceiveData(), initialCommunication);
+      receiveData(getM2N(), getReceiveData());
       notifyDataHasBeenReceived();
     } else {
       initializeWithZeroInitialData(getReceiveData());
     }
   } else { // second participant
     if (receivesInitializedData()) {
-      receiveData(getM2N(), getReceiveData(), initialCommunication);
+      receiveData(getM2N(), getReceiveData());
       notifyDataHasBeenReceived();
     } else {
       initializeWithZeroInitialData(getReceiveData());
     }
     if (sendsInitializedData()) {
-      sendData(getM2N(), getSendData(), initialCommunication);
+      sendData(getM2N(), getSendData());
     }
   }
 }
@@ -65,8 +63,6 @@ void ParallelCouplingScheme::exchangeFirstData()
 void ParallelCouplingScheme::exchangeSecondData()
 {
   if (isExplicitCouplingScheme()) {
-    moveToNextWindow();
-
     if (doesFirstStep()) { // first participant
       PRECICE_DEBUG("Receiving data...");
       receiveData(getM2N(), getReceiveData());
@@ -75,15 +71,13 @@ void ParallelCouplingScheme::exchangeSecondData()
       PRECICE_DEBUG("Sending data...");
       sendData(getM2N(), getSendData());
     }
+    moveToNextWindow();
   } else {
     PRECICE_ASSERT(isImplicitCouplingScheme());
 
     if (doesFirstStep()) { // first participant
       PRECICE_DEBUG("Receiving convergence data...");
       receiveConvergence(getM2N());
-      if (hasConverged()) {
-        moveToNextWindow();
-      }
       PRECICE_DEBUG("Receiving data...");
       receiveData(getM2N(), getReceiveData());
       notifyDataHasBeenReceived();
@@ -92,11 +86,12 @@ void ParallelCouplingScheme::exchangeSecondData()
       doImplicitStep();
       PRECICE_DEBUG("Sending convergence...");
       sendConvergence(getM2N());
-      if (hasConverged()) {
-        moveToNextWindow();
-      }
       PRECICE_DEBUG("Sending data...");
       sendData(getM2N(), getSendData());
+    }
+
+    if (hasConverged()) {
+      moveToNextWindow();
     }
 
     storeIteration();

@@ -52,9 +52,6 @@ public:
       CouplingMode                  cplMode,
       int                           maxIterations = UNDEFINED_MAX_ITERATIONS);
 
-  /// @copydoc CouplingScheme::getNormalizedWindowTime
-  double getNormalizedWindowTime() const override; // @todo try to make private?
-
 protected:
   /**
    * @brief Setter for _timeWindowSize
