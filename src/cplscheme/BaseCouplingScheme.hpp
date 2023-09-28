@@ -136,9 +136,6 @@ public:
    */
   double getTimeWindowSize() const override final;
 
-  /// @copydoc CouplingScheme::getNormalizedWindowTime
-  double getNormalizedWindowTime() const override;
-
   /**
    * @brief Returns the maximal size of the next time step to be computed.
    *
@@ -249,9 +246,8 @@ protected:
    *
    * @param m2n M2N used for communication
    * @param sendData DataMap associated with sent data
-   * @param initialCommunication if true and exchange of substeps is deactivated, will send data for WINDOW_START, else will send data for WINDOW_END
    */
-  void sendData(const m2n::PtrM2N &m2n, const DataMap &sendData, bool initialCommunication = false);
+  void sendData(const m2n::PtrM2N &m2n, const DataMap &sendData);
 
   int receiveNumberOfTimeSteps(const m2n::PtrM2N &m2n);
 
@@ -262,9 +258,20 @@ protected:
    *
    * @param m2n M2N used for communication
    * @param receiveData DataMap associated with received data
-   * @param initialCommunication if true and exchange of substeps is deactivated, will store received data for WINDOW_START and WINDOW_END, else store received data only for WINDOW_END
    */
-  void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData, bool initialCommunication = false);
+  void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData);
+
+  /**
+   * @brief Like receiveData, but temporarily sets window time to end of window.
+   *
+   * This function is only needed for SerialCouplingScheme, if substeps="false". Here, a special situation arises for the second participant, because it receives data for the end of the window from the first participant: If substeps="false" only values without timestamps are exchanged. Therefore, getTime() is used to determine the time associated with the values. However, getTime() of the second participant points to the beginning of the window, if we enter a new window. We need to temporarily modify the return value of getTime() to point to the end of the window to be able to store the values at the correct point in time.
+   *
+   * Note: This function could be removed by a) removing the option to turn off exchange of substeps or by b) refactoring the communication such that sent/received values always carry a timestamp.
+   *
+   * @param m2n M2N used for communication
+   * @param receiveData DataMap associated with received data
+   */
+  void receiveDataForWindowEnd(const m2n::PtrM2N &m2n, const DataMap &receiveData);
 
   /**
    * @brief Initializes storage in receiveData as zero
@@ -303,13 +310,6 @@ protected:
    * @returns _computedTimeWindowPart
    */
   double getComputedTimeWindowPart() const;
-
-  /**
-   * @brief Returns the time at the beginning of the current time window.
-   *
-   * @return time at beginning of the current time window.
-   */
-  double getWindowStartTime() const;
 
   /**
    * @brief Setter for _doesFirstStep
