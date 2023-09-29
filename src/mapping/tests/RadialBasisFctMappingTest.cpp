@@ -103,6 +103,47 @@ void getDistributedMesh(const TestContext &      context,
   data->values() = d;
 }
 
+Eigen::VectorXd getDistributedMesh(const TestContext &      context,
+                                   MeshSpecification const &vertices,
+                                   mesh::PtrMesh &          mesh,
+                                   int                      globalIndexOffset = 0,
+                                   bool                     meshIsSmaller     = false)
+{
+  Eigen::VectorXd d;
+
+  int i = 0;
+  for (auto &vertex : vertices) {
+    if (vertex.rank == context.rank or vertex.rank == -1) {
+      if (vertex.position.size() == 3) // 3-dimensional
+        mesh->createVertex(Eigen::Vector3d(vertex.position.data()));
+      else if (vertex.position.size() == 2) // 2-dimensional
+        mesh->createVertex(Eigen::Vector2d(vertex.position.data()));
+
+      int valueDimension = vertex.value.size();
+
+      if (vertex.owner == context.rank)
+        mesh->vertices().back().setOwner(true);
+      else
+        mesh->vertices().back().setOwner(false);
+
+      d.conservativeResize(i * valueDimension + valueDimension);
+      // Get data in every dimension
+      for (int dim = 0; dim < valueDimension; ++dim) {
+        d(i * valueDimension + dim) = vertex.value.at(dim);
+      }
+      i++;
+    }
+  }
+  addGlobalIndex(mesh, globalIndexOffset);
+  // All tests use eight vertices
+  if (meshIsSmaller) {
+    mesh->setGlobalNumberOfVertices(7);
+  } else {
+    mesh->setGlobalNumberOfVertices(8);
+  }
+  return d;
+}
+
 void testDistributed(const TestContext &    context,
                      Mapping &              mapping,
                      MeshSpecification      inMeshSpec,
@@ -114,36 +155,30 @@ void testDistributed(const TestContext &    context,
   int meshDimension  = inMeshSpec.at(0).position.size();
   int valueDimension = inMeshSpec.at(0).value.size();
 
-  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", meshDimension, testing::nextMeshID()));
-  mesh::PtrData inData   = inMesh->createData("InData", valueDimension, 0_dataID);
-  int           inDataID = inData->getID();
+  mesh::PtrMesh   inMesh(new mesh::Mesh("InMesh", meshDimension, testing::nextMeshID()));
+  Eigen::VectorXd inValues = getDistributedMesh(context, inMeshSpec, inMesh, inGlobalIndexOffset);
 
-  getDistributedMesh(context, inMeshSpec, inMesh, inData, inGlobalIndexOffset);
-
-  mesh::PtrMesh outMesh(new mesh::Mesh("outMesh", meshDimension, testing::nextMeshID()));
-  mesh::PtrData outData   = outMesh->createData("OutData", valueDimension, 1_dataID);
-  int           outDataID = outData->getID();
-
-  getDistributedMesh(context, outMeshSpec, outMesh, outData, 0, meshIsSmaller);
-
+  mesh::PtrMesh   outMesh(new mesh::Mesh("outMesh", meshDimension, testing::nextMeshID()));
+  Eigen::VectorXd outValues = getDistributedMesh(context, outMeshSpec, outMesh, 0, meshIsSmaller);
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
   mapping.computeMapping();
   BOOST_TEST(mapping.hasComputedMapping() == true);
-  mapping.map(inDataID, outDataID);
+  time::Sample inSample(valueDimension, inValues);
+  mapping.map(inSample, outValues);
 
   int index = 0;
   for (auto &referenceVertex : referenceSpec) {
     if (referenceVertex.first == context.rank or referenceVertex.first == -1) {
       for (int dim = 0; dim < valueDimension; ++dim) {
         BOOST_TEST_INFO("Index of vertex: " << index << " - Dimension: " << dim);
-        BOOST_TEST(outData->values()(index * valueDimension + dim) == referenceVertex.second.at(dim));
+        BOOST_TEST(outValues(index * valueDimension + dim) == referenceVertex.second.at(dim));
       }
       ++index;
     }
   }
-  BOOST_TEST(outData->values().size() == index * valueDimension);
+  BOOST_TEST(outValues.size() == index * valueDimension);
 }
 
 /// Test with a homogeneous distribution of mesh among ranks
@@ -1047,13 +1082,11 @@ void testTagging(const TestContext &context,
   int meshDimension  = inMeshSpec.at(0).position.size();
   int valueDimension = inMeshSpec.at(0).value.size();
 
-  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", meshDimension, testing::nextMeshID()));
-  mesh::PtrData inData = inMesh->createData("InData", valueDimension, 0_dataID);
-  getDistributedMesh(context, inMeshSpec, inMesh, inData);
+  mesh::PtrMesh   inMesh(new mesh::Mesh("InMesh", meshDimension, testing::nextMeshID()));
+  Eigen::VectorXd inValues = getDistributedMesh(context, inMeshSpec, inMesh);
 
-  mesh::PtrMesh outMesh(new mesh::Mesh("outMesh", meshDimension, testing::nextMeshID()));
-  mesh::PtrData outData = outMesh->createData("OutData", valueDimension, 1_dataID);
-  getDistributedMesh(context, outMeshSpec, outMesh, outData);
+  mesh::PtrMesh   outMesh(new mesh::Mesh("outMesh", meshDimension, testing::nextMeshID()));
+  Eigen::VectorXd outValues = getDistributedMesh(context, outMeshSpec, outMesh);
 
   Gaussian                                              fct(4.5); // Support radius approx. 1
   Mapping::Constraint                                   constr = consistent ? Mapping::CONSISTENT : Mapping::CONSERVATIVE;
@@ -1249,28 +1282,22 @@ void testDeadAxis2d(Polynomial polynomial, Mapping::Constraint constraint)
 
   // Create mesh to map from
   mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData inData   = inMesh->createData("InData", 1, 0_dataID);
-  int           inDataID = inData->getID();
   inMesh->createVertex(Vector2d(0.0, 1.0));
   inMesh->createVertex(Vector2d(1.0, 1.0));
   inMesh->createVertex(Vector2d(2.0, 1.0));
   inMesh->createVertex(Vector2d(3.0, 1.0));
-  inMesh->allocateDataValues();
   addGlobalIndex(inMesh);
   inMesh->setGlobalNumberOfVertices(inMesh->vertices().size());
 
-  auto &values = inData->values();
+  Eigen::VectorXd values(4);
   values << 1.0, 2.0, 2.0, 1.0;
 
   // Create mesh to map to
   mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData outData   = outMesh->createData("OutData", 1, 1_dataID);
-  int           outDataID = outData->getID();
   outMesh->createVertex(Vector2d(0, 1.));
   outMesh->createVertex(Vector2d(3, 1.));
   outMesh->createVertex(Vector2d(1.3, 1.));
   outMesh->createVertex(Vector2d(5, 1.));
-  outMesh->allocateDataValues();
   addGlobalIndex(outMesh);
   outMesh->setGlobalNumberOfVertices(outMesh->vertices().size());
 
@@ -1279,23 +1306,25 @@ void testDeadAxis2d(Polynomial polynomial, Mapping::Constraint constraint)
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  Eigen::VectorXd outValues(4);
+  time::Sample    inSample(1, values);
+  mapping.map(inSample, outValues);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   if (constraint == Mapping::CONSISTENT) {
     if (polynomial == Polynomial::OFF) {
-      BOOST_TEST(testing::equals(outData->values()(2), 2.0522549299731567, 1e-7));
+      BOOST_TEST(testing::equals(outValues(2), 2.0522549299731567, 1e-7));
     } else if (polynomial == Polynomial::SEPARATE) {
-      BOOST_TEST(testing::equals(outData->values()(2), 2.0896514371485777, 1e-7));
+      BOOST_TEST(testing::equals(outValues(2), 2.0896514371485777, 1e-7));
     } else {
-      BOOST_TEST(testing::equals(outData->values()(2), 2.1180354377884774, 1e-7));
+      BOOST_TEST(testing::equals(outValues(2), 2.1180354377884774, 1e-7));
     }
   } else {
     if (polynomial == Polynomial::OFF) {
-      BOOST_TEST(testing::equals(outData->values()(1), 1.8471144693068295, 1e-7));
+      BOOST_TEST(testing::equals(outValues(1), 1.8471144693068295, 1e-7));
     } else if (polynomial == Polynomial::SEPARATE) {
-      BOOST_TEST(testing::equals(outData->values()(1), 1.8236736422730249, 1e-7));
+      BOOST_TEST(testing::equals(outValues(1), 1.8236736422730249, 1e-7));
     } else {
-      BOOST_TEST(testing::equals(outData->values()(1), 1.7587181970483183, 1e-7));
+      BOOST_TEST(testing::equals(outValues(1), 1.7587181970483183, 1e-7));
     }
   }
 }
@@ -1314,28 +1343,22 @@ void testDeadAxis3d(Polynomial polynomial, Mapping::Constraint constraint)
 
   // Create mesh to map from
   mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData inData   = inMesh->createData("InData", 1, 0_dataID);
-  int           inDataID = inData->getID();
   inMesh->createVertex(Vector3d(0.0, 3.0, 0.0));
   inMesh->createVertex(Vector3d(1.0, 3.0, 0.0));
   inMesh->createVertex(Vector3d(0.0, 3.0, 1.0));
   inMesh->createVertex(Vector3d(1.0, 3.0, 1.0));
-  inMesh->allocateDataValues();
   addGlobalIndex(inMesh);
   inMesh->setGlobalNumberOfVertices(inMesh->vertices().size());
 
-  auto &values = inData->values();
+  Eigen::VectorXd values(4);
   values << 1.0, 2.0, 3.0, 4.0;
 
   // Create mesh to map to
   mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData outData   = outMesh->createData("OutData", 1, 1_dataID);
-  int           outDataID = outData->getID();
   outMesh->createVertex(Vector3d(0.0, 2.9, 0.0));
   outMesh->createVertex(Vector3d(0.8, 2.9, 0.1));
   outMesh->createVertex(Vector3d(0.1, 2.9, 0.9));
   outMesh->createVertex(Vector3d(1.1, 2.9, 1.1));
-  outMesh->allocateDataValues();
   addGlobalIndex(outMesh);
   outMesh->setGlobalNumberOfVertices(outMesh->vertices().size());
 
@@ -1344,41 +1367,43 @@ void testDeadAxis3d(Polynomial polynomial, Mapping::Constraint constraint)
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  Eigen::VectorXd outValues(4);
+  time::Sample    inSample(1, values);
+  mapping.map(inSample, outValues);
   BOOST_TEST(mapping.hasComputedMapping() == true);
 
   if (constraint == Mapping::CONSISTENT) {
     if (polynomial == Polynomial::OFF) {
       const double tolerance = 1e-7;
-      BOOST_TEST(outData->values()(0) == 1.0);
-      BOOST_TEST(testing::equals(outData->values()(1), -0.454450524334, tolerance));
-      BOOST_TEST(testing::equals(outData->values()(2), 0.99146426249, tolerance));
-      BOOST_TEST(testing::equals(outData->values()(3), 6.98958304876, tolerance));
+      BOOST_TEST(outValues(0) == 1.0);
+      BOOST_TEST(testing::equals(outValues(1), -0.454450524334, tolerance));
+      BOOST_TEST(testing::equals(outValues(2), 0.99146426249, tolerance));
+      BOOST_TEST(testing::equals(outValues(3), 6.98958304876, tolerance));
     } else {
-      BOOST_TEST(outData->values()(0) == 1.0);
-      BOOST_TEST(outData->values()(1) == 2.0);
-      BOOST_TEST(outData->values()(2) == 2.9);
-      BOOST_TEST(outData->values()(3) == 4.3);
+      BOOST_TEST(outValues(0) == 1.0);
+      BOOST_TEST(outValues(1) == 2.0);
+      BOOST_TEST(outValues(2) == 2.9);
+      BOOST_TEST(outValues(3) == 4.3);
     }
   } else {
     if (polynomial == Polynomial::OFF) {
       const double tolerance = 1e-6;
-      BOOST_TEST(testing::equals(outData->values()(0), 1.17251596926, tolerance));
-      BOOST_TEST(testing::equals(outData->values()(1), 4.10368825944, tolerance));
-      BOOST_TEST(testing::equals(outData->values()(2), 3.56931954192, tolerance));
-      BOOST_TEST(testing::equals(outData->values()(3), 3.40160932341, tolerance));
+      BOOST_TEST(testing::equals(outValues(0), 1.17251596926, tolerance));
+      BOOST_TEST(testing::equals(outValues(1), 4.10368825944, tolerance));
+      BOOST_TEST(testing::equals(outValues(2), 3.56931954192, tolerance));
+      BOOST_TEST(testing::equals(outValues(3), 3.40160932341, tolerance));
     } else if (polynomial == Polynomial::ON) {
       const double tolerance = 1e-6;
-      BOOST_TEST(testing::equals(outData->values()(0), 0.856701171969, tolerance));
-      BOOST_TEST(testing::equals(outData->values()(1), 2.38947124326, tolerance));
-      BOOST_TEST(testing::equals(outData->values()(2), 3.34078733786, tolerance));
-      BOOST_TEST(testing::equals(outData->values()(3), 3.41304024691, tolerance));
+      BOOST_TEST(testing::equals(outValues(0), 0.856701171969, tolerance));
+      BOOST_TEST(testing::equals(outValues(1), 2.38947124326, tolerance));
+      BOOST_TEST(testing::equals(outValues(2), 3.34078733786, tolerance));
+      BOOST_TEST(testing::equals(outValues(3), 3.41304024691, tolerance));
     } else {
       const double tolerance = 1e-6;
-      BOOST_TEST(testing::equals(outData->values()(0), 0.380480856704, tolerance));
-      BOOST_TEST(testing::equals(outData->values()(1), 2.83529451713, tolerance));
-      BOOST_TEST(testing::equals(outData->values()(2), 3.73088270249, tolerance));
-      BOOST_TEST(testing::equals(outData->values()(3), 3.05334192368, tolerance));
+      BOOST_TEST(testing::equals(outValues(0), 0.380480856704, tolerance));
+      BOOST_TEST(testing::equals(outValues(1), 2.83529451713, tolerance));
+      BOOST_TEST(testing::equals(outValues(2), 3.73088270249, tolerance));
+      BOOST_TEST(testing::equals(outValues(3), 3.05334192368, tolerance));
     }
   }
 }
