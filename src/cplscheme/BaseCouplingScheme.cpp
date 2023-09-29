@@ -226,7 +226,7 @@ PtrCouplingData BaseCouplingScheme::addCouplingData(const mesh::PtrData &data, m
   return ptrCplData;
 }
 
-bool BaseCouplingScheme::isExplicitCouplingScheme()
+bool BaseCouplingScheme::isExplicitCouplingScheme() const
 {
   PRECICE_ASSERT(_couplingMode != Undefined);
   return _couplingMode == Explicit;
@@ -722,7 +722,7 @@ void BaseCouplingScheme::advanceTXTWriters()
   }
 }
 
-bool BaseCouplingScheme::reachedEndOfTimeWindow()
+bool BaseCouplingScheme::reachedEndOfTimeWindow() const
 {
   return math::equals(getNextTimeStepMaxSize(), 0.0, _eps) || not hasTimeWindowSize();
 }

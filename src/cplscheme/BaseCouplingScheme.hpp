@@ -297,7 +297,7 @@ protected:
    * @brief Function to determine whether coupling scheme is an explicit coupling scheme
    * @returns true, if coupling scheme is explicit
    */
-  bool isExplicitCouplingScheme();
+  bool isExplicitCouplingScheme() const;
 
   /**
    * @brief Setter for _timeWindowSize
@@ -515,7 +515,7 @@ private:
    * @brief Function to check whether end of time window is reached. Does not check for convergence
    * @returns true if end time of time window is reached.
    */
-  bool reachedEndOfTimeWindow();
+  bool reachedEndOfTimeWindow() const;
 
   /**
    * @brief Initialize txt writers for iterations and convergence tracking
