@@ -63,12 +63,9 @@ using ReferenceSpecification = std::vector<std::pair<int, std::vector<double>>>;
 void getDistributedMesh(const TestContext &      context,
                         MeshSpecification const &vertices,
                         mesh::PtrMesh &          mesh,
-                        mesh::PtrData &          data,
                         int                      globalIndexOffset = 0,
                         bool                     meshIsSmaller     = false)
 {
-  Eigen::VectorXd d;
-
   int i = 0;
   for (auto &vertex : vertices) {
     if (vertex.rank == context.rank or vertex.rank == -1) {
@@ -77,55 +74,32 @@ void getDistributedMesh(const TestContext &      context,
       else if (vertex.position.size() == 2) // 2-dimensional
         mesh->createVertex(Eigen::Vector2d(vertex.position.data()));
 
-      int valueDimension = vertex.value.size();
-
       if (vertex.owner == context.rank)
         mesh->vertices().back().setOwner(true);
       else
         mesh->vertices().back().setOwner(false);
 
-      d.conservativeResize(i * valueDimension + valueDimension);
-      // Get data in every dimension
-      for (int dim = 0; dim < valueDimension; ++dim) {
-        d(i * valueDimension + dim) = vertex.value.at(dim);
-      }
       i++;
     }
   }
   addGlobalIndex(mesh, globalIndexOffset);
-  mesh->allocateDataValues();
   // All tests use eight vertices
   if (meshIsSmaller) {
     mesh->setGlobalNumberOfVertices(7);
   } else {
     mesh->setGlobalNumberOfVertices(8);
   }
-  data->values() = d;
 }
 
-Eigen::VectorXd getDistributedMesh(const TestContext &      context,
-                                   MeshSpecification const &vertices,
-                                   mesh::PtrMesh &          mesh,
-                                   int                      globalIndexOffset = 0,
-                                   bool                     meshIsSmaller     = false)
+Eigen::VectorXd getDistributedData(const TestContext &      context,
+                                   MeshSpecification const &vertices)
 {
   Eigen::VectorXd d;
 
   int i = 0;
   for (auto &vertex : vertices) {
     if (vertex.rank == context.rank or vertex.rank == -1) {
-      if (vertex.position.size() == 3) // 3-dimensional
-        mesh->createVertex(Eigen::Vector3d(vertex.position.data()));
-      else if (vertex.position.size() == 2) // 2-dimensional
-        mesh->createVertex(Eigen::Vector2d(vertex.position.data()));
-
       int valueDimension = vertex.value.size();
-
-      if (vertex.owner == context.rank)
-        mesh->vertices().back().setOwner(true);
-      else
-        mesh->vertices().back().setOwner(false);
-
       d.conservativeResize(i * valueDimension + valueDimension);
       // Get data in every dimension
       for (int dim = 0; dim < valueDimension; ++dim) {
@@ -133,13 +107,6 @@ Eigen::VectorXd getDistributedMesh(const TestContext &      context,
       }
       i++;
     }
-  }
-  addGlobalIndex(mesh, globalIndexOffset);
-  // All tests use eight vertices
-  if (meshIsSmaller) {
-    mesh->setGlobalNumberOfVertices(7);
-  } else {
-    mesh->setGlobalNumberOfVertices(8);
   }
   return d;
 }
@@ -155,11 +122,13 @@ void testDistributed(const TestContext &    context,
   int meshDimension  = inMeshSpec.at(0).position.size();
   int valueDimension = inMeshSpec.at(0).value.size();
 
-  mesh::PtrMesh   inMesh(new mesh::Mesh("InMesh", meshDimension, testing::nextMeshID()));
-  Eigen::VectorXd inValues = getDistributedMesh(context, inMeshSpec, inMesh, inGlobalIndexOffset);
+  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", meshDimension, testing::nextMeshID()));
+  getDistributedMesh(context, inMeshSpec, inMesh, inGlobalIndexOffset);
+  Eigen::VectorXd inValues = getDistributedData(context, inMeshSpec);
 
-  mesh::PtrMesh   outMesh(new mesh::Mesh("outMesh", meshDimension, testing::nextMeshID()));
-  Eigen::VectorXd outValues = getDistributedMesh(context, outMeshSpec, outMesh, 0, meshIsSmaller);
+  mesh::PtrMesh outMesh(new mesh::Mesh("outMesh", meshDimension, testing::nextMeshID()));
+  getDistributedMesh(context, outMeshSpec, outMesh, 0, meshIsSmaller);
+  Eigen::VectorXd outValues = getDistributedData(context, outMeshSpec);
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
@@ -1079,14 +1048,15 @@ void testTagging(const TestContext &context,
                  MeshSpecification  shouldTagSecondRound,
                  bool               consistent)
 {
-  int meshDimension  = inMeshSpec.at(0).position.size();
-  int valueDimension = inMeshSpec.at(0).value.size();
+  int meshDimension = inMeshSpec.at(0).position.size();
 
-  mesh::PtrMesh   inMesh(new mesh::Mesh("InMesh", meshDimension, testing::nextMeshID()));
-  Eigen::VectorXd inValues = getDistributedMesh(context, inMeshSpec, inMesh);
+  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", meshDimension, testing::nextMeshID()));
+  getDistributedMesh(context, inMeshSpec, inMesh);
+  Eigen::VectorXd inValues = getDistributedData(context, inMeshSpec);
 
-  mesh::PtrMesh   outMesh(new mesh::Mesh("outMesh", meshDimension, testing::nextMeshID()));
-  Eigen::VectorXd outValues = getDistributedMesh(context, outMeshSpec, outMesh);
+  mesh::PtrMesh outMesh(new mesh::Mesh("outMesh", meshDimension, testing::nextMeshID()));
+  getDistributedMesh(context, outMeshSpec, outMesh);
+  Eigen::VectorXd outValues = getDistributedData(context, outMeshSpec);
 
   Gaussian                                              fct(4.5); // Support radius approx. 1
   Mapping::Constraint                                   constr = consistent ? Mapping::CONSISTENT : Mapping::CONSERVATIVE;
@@ -1374,36 +1344,31 @@ void testDeadAxis3d(Polynomial polynomial, Mapping::Constraint constraint)
 
   if (constraint == Mapping::CONSISTENT) {
     if (polynomial == Polynomial::OFF) {
-      const double tolerance = 1e-7;
-      BOOST_TEST(outValues(0) == 1.0);
-      BOOST_TEST(testing::equals(outValues(1), -0.454450524334, tolerance));
-      BOOST_TEST(testing::equals(outValues(2), 0.99146426249, tolerance));
-      BOOST_TEST(testing::equals(outValues(3), 6.98958304876, tolerance));
+      const double    tolerance = 1e-7;
+      Eigen::VectorXd expected(4);
+      expected << 1.0, -0.454450524334, 0.99146426249, 6.98958304876;
+      BOOST_TEST(testing::equals(outValues, expected, tolerance));
     } else {
-      BOOST_TEST(outValues(0) == 1.0);
-      BOOST_TEST(outValues(1) == 2.0);
-      BOOST_TEST(outValues(2) == 2.9);
-      BOOST_TEST(outValues(3) == 4.3);
+      Eigen::VectorXd expected(4);
+      expected << 1.0, 2.0, 2.9, 4.3;
+      BOOST_TEST(testing::equals(outValues, expected));
     }
   } else {
     if (polynomial == Polynomial::OFF) {
-      const double tolerance = 1e-6;
-      BOOST_TEST(testing::equals(outValues(0), 1.17251596926, tolerance));
-      BOOST_TEST(testing::equals(outValues(1), 4.10368825944, tolerance));
-      BOOST_TEST(testing::equals(outValues(2), 3.56931954192, tolerance));
-      BOOST_TEST(testing::equals(outValues(3), 3.40160932341, tolerance));
+      const double    tolerance = 1e-6;
+      Eigen::VectorXd expected(4);
+      expected << 1.17251596926, 4.10368825944, 3.56931954192, 3.40160932341;
+      BOOST_TEST(testing::equals(outValues, expected, tolerance));
     } else if (polynomial == Polynomial::ON) {
-      const double tolerance = 1e-6;
-      BOOST_TEST(testing::equals(outValues(0), 0.856701171969, tolerance));
-      BOOST_TEST(testing::equals(outValues(1), 2.38947124326, tolerance));
-      BOOST_TEST(testing::equals(outValues(2), 3.34078733786, tolerance));
-      BOOST_TEST(testing::equals(outValues(3), 3.41304024691, tolerance));
+      const double    tolerance = 1e-6;
+      Eigen::VectorXd expected(4);
+      expected << 0.856701171969, 2.38947124326, 3.34078733786, 3.41304024691;
+      BOOST_TEST(testing::equals(outValues, expected, tolerance));
     } else {
-      const double tolerance = 1e-6;
-      BOOST_TEST(testing::equals(outValues(0), 0.380480856704, tolerance));
-      BOOST_TEST(testing::equals(outValues(1), 2.83529451713, tolerance));
-      BOOST_TEST(testing::equals(outValues(2), 3.73088270249, tolerance));
-      BOOST_TEST(testing::equals(outValues(3), 3.05334192368, tolerance));
+      const double    tolerance = 1e-6;
+      Eigen::VectorXd expected(4);
+      expected << 0.380480856704, 2.83529451713, 3.73088270249, 3.05334192368;
+      BOOST_TEST(testing::equals(outValues, expected, tolerance));
     }
   }
 }
