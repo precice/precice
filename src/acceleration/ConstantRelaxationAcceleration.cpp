@@ -1,6 +1,4 @@
 #include "acceleration/ConstantRelaxationAcceleration.hpp"
-#include <boost/range/adaptor/map.hpp>
-
 #include <Eigen/Core>
 #include <map>
 #include <memory>
@@ -29,12 +27,6 @@ ConstantRelaxationAcceleration::ConstantRelaxationAcceleration(
 void ConstantRelaxationAcceleration::initialize(const DataMap &cplData)
 {
   checkDataIDs(cplData);
-
-  for (const auto &data : cplData | boost::adaptors::map_values) {
-    if (data->exchangeSubsteps()) {
-      PRECICE_ERROR("Constant underrelaxation does not yet support using data from all substeps. Please set substeps=\"false\" in the exchange tag of data \"{}\".", data->getDataName());
-    }
-  }
 }
 
 void ConstantRelaxationAcceleration::performAcceleration(const DataMap &cplData)
