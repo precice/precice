@@ -161,6 +161,12 @@ target_sources(testprecice
     tests/serial/multiple-mappings/MultipleWriteFromMappings.cpp
     tests/serial/multiple-mappings/MultipleWriteFromMappingsAndData.cpp
     tests/serial/multiple-mappings/MultipleWriteToMappings.cpp
+    tests/serial/parallel-coupling/SolverAFirst.cpp
+    tests/serial/parallel-coupling/SolverAFirstSubsteps.cpp
+    tests/serial/parallel-coupling/SolverBFirst.cpp
+    tests/serial/parallel-coupling/SolverBFirstSubsteps.cpp
+    tests/serial/parallel-coupling/helpers.cpp
+    tests/serial/parallel-coupling/helpers.hpp
     tests/serial/three-solvers/ThreeSolversExplicitExplicit.cpp
     tests/serial/three-solvers/ThreeSolversExplicitImplicit.cpp
     tests/serial/three-solvers/ThreeSolversFirstParticipant.cpp
@@ -201,6 +207,8 @@ target_sources(testprecice
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithWaveformSubcyclingFirst.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithWaveformSubcyclingMixed.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithWaveformSubcyclingThird.cpp
+    tests/serial/time/implicit/serial-coupling/WaveformSubcyclingWithConstantAcceleration.cpp
+    tests/serial/time/implicit/serial-coupling/WaveformSubcyclingWithConstantAccelerationNoInit.cpp
     tests/serial/watch-integral/WatchIntegralScaleAndNoScale.cpp
     tests/serial/watch-integral/helpers.cpp
     tests/serial/watch-integral/helpers.hpp

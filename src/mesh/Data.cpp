@@ -55,14 +55,14 @@ const time::Sample &Data::sample() const
   return _sample;
 }
 
-Eigen::VectorXd Data::sampleAtTime(double normalizedDt) const
+Eigen::VectorXd Data::sampleAtTime(double time) const
 {
-  return _waveform.sample(normalizedDt);
+  return _waveform.sample(time);
 }
 
 int Data::getWaveformDegree() const
 {
-  return _waveform.getDegree();
+  return _waveform.timeStepsStorage().getInterpolationDegree();
 }
 
 time::Storage &Data::timeStepsStorage()
@@ -72,11 +72,10 @@ time::Storage &Data::timeStepsStorage()
 
 void Data::moveToNextWindow()
 {
-  if (stamples().size() > 0) {
+  if (stamples().size() > 1) { // Needed to avoid CompositionalCouplingScheme callong moveToNextWindow on same Data multiple times. Could be simplified by replacing Storage::move() with clearBefore(double time). See https://github.com/precice/precice/issues/1821.
     timeStepsStorage().move();
-    const auto &atEnd = stamples().back();
-    PRECICE_ASSERT(math::equals(atEnd.timestamp, time::Storage::WINDOW_END));
-    sample() = atEnd.sample;
+    PRECICE_ASSERT(stamples().size() == 1);
+    sample() = stamples().back().sample;
   }
 }
 

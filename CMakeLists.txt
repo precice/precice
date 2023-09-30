@@ -306,7 +306,7 @@ else()
 endif()
 
 if (PRECICE_BUILD_TOOLS AND BUILD_TESTING)
-  # We need this to run the precice-events
+  # We need this to run the script precice-profiling
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
   message(STATUS "Found Python ${Python3_VERSION}")
 endif()
@@ -601,7 +601,7 @@ if(PRECICE_BUILD_TOOLS)
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     )
 
-    install(FILES ${preCICE_SOURCE_DIR}/tools/profiling/precice-events
+  install(PROGRAMS ${preCICE_SOURCE_DIR}/tools/profiling/precice-profiling
     DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
@@ -710,7 +710,7 @@ if (BUILD_TESTING)
 
   include(${CMAKE_CURRENT_LIST_DIR}/cmake/CTestConfig.cmake)
 
-  # Add precice-events tests
+  # Add precice-profiling tests
   add_subdirectory(tools/profiling)
 
   #

@@ -83,9 +83,9 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
     utils::append(forces->values(), insert);
 
     PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, exchangeSubsteps));
-    dpcd->setSampleAtTime(time::Storage::WINDOW_START, dpcd->sample());
+    dpcd->setSampleAtTime(0, dpcd->sample());
     PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false, exchangeSubsteps));
-    fpcd->setSampleAtTime(time::Storage::WINDOW_START, fpcd->sample());
+    fpcd->setSampleAtTime(0, fpcd->sample());
 
     data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
     data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
@@ -115,9 +115,9 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
     utils::append(forces->values(), insert);
 
     PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, exchangeSubsteps));
-    dpcd->setSampleAtTime(time::Storage::WINDOW_START, dpcd->sample());
+    dpcd->setSampleAtTime(0, dpcd->sample());
     PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false, exchangeSubsteps));
-    fpcd->setSampleAtTime(time::Storage::WINDOW_START, fpcd->sample());
+    fpcd->setSampleAtTime(0, fpcd->sample());
 
     data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
     data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
@@ -140,11 +140,11 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
 
     // init displacements
     PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, exchangeSubsteps));
-    dpcd->setSampleAtTime(time::Storage::WINDOW_START, dpcd->sample());
+    dpcd->setSampleAtTime(0, dpcd->sample());
 
     // init forces
     PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false, exchangeSubsteps));
-    fpcd->setSampleAtTime(time::Storage::WINDOW_START, fpcd->sample());
+    fpcd->setSampleAtTime(0, fpcd->sample());
 
     data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
     data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
@@ -169,9 +169,9 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
     utils::append(forces->values(), insert);
 
     PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, exchangeSubsteps));
-    dpcd->setSampleAtTime(time::Storage::WINDOW_START, dpcd->sample());
+    dpcd->setSampleAtTime(0, dpcd->sample());
     PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false, exchangeSubsteps));
-    fpcd->setSampleAtTime(time::Storage::WINDOW_START, fpcd->sample());
+    fpcd->setSampleAtTime(0, fpcd->sample());
 
     data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
     data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
@@ -323,9 +323,9 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
     utils::append(forces->values(), insert);
 
     PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, exchangeSubsteps));
-    dpcd->setSampleAtTime(time::Storage::WINDOW_START, dpcd->sample());
+    dpcd->setSampleAtTime(0, dpcd->sample());
     PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false, exchangeSubsteps));
-    fpcd->setSampleAtTime(time::Storage::WINDOW_START, fpcd->sample());
+    fpcd->setSampleAtTime(0, fpcd->sample());
 
     dpcd->storeIteration();
     fpcd->storeIteration();
@@ -375,9 +375,9 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
     utils::append(forces->values(), insert);
 
     PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, exchangeSubsteps));
-    dpcd->setSampleAtTime(time::Storage::WINDOW_START, dpcd->sample());
+    dpcd->setSampleAtTime(0, dpcd->sample());
     PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false, exchangeSubsteps));
-    fpcd->setSampleAtTime(time::Storage::WINDOW_START, fpcd->sample());
+    fpcd->setSampleAtTime(0, fpcd->sample());
 
     dpcd->storeIteration();
     fpcd->storeIteration();
@@ -419,11 +419,11 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
 
     // init displacements
     PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, exchangeSubsteps));
-    dpcd->setSampleAtTime(time::Storage::WINDOW_START, dpcd->sample());
+    dpcd->setSampleAtTime(0, dpcd->sample());
 
     // init forces
     PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false, exchangeSubsteps));
-    fpcd->setSampleAtTime(time::Storage::WINDOW_START, fpcd->sample());
+    fpcd->setSampleAtTime(0, fpcd->sample());
 
     dpcd->storeIteration();
     fpcd->storeIteration();
@@ -450,9 +450,9 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
     utils::append(forces->values(), insert);
 
     PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, exchangeSubsteps));
-    dpcd->setSampleAtTime(time::Storage::WINDOW_START, dpcd->sample());
+    dpcd->setSampleAtTime(0, dpcd->sample());
     PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false, exchangeSubsteps));
-    fpcd->setSampleAtTime(time::Storage::WINDOW_START, fpcd->sample());
+    fpcd->setSampleAtTime(0, fpcd->sample());
 
     dpcd->storeIteration();
     fpcd->storeIteration();
@@ -605,11 +605,11 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
 
     // init displacements
     dpcd.reset(new CouplingData(displacements, dummyMesh, false, exchangeSubsteps));
-    dpcd->setSampleAtTime(time::Storage::WINDOW_START, dpcd->sample());
+    dpcd->setSampleAtTime(0, dpcd->sample());
 
     // init forces
     fpcd.reset(new CouplingData(forces, dummyMesh, false, exchangeSubsteps));
-    fpcd->setSampleAtTime(time::Storage::WINDOW_START, fpcd->sample());
+    fpcd->setSampleAtTime(0, fpcd->sample());
 
     dpcd->storeIteration();
     fpcd->storeIteration();
@@ -630,9 +630,9 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
     forces->values() << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
 
     dpcd.reset(new CouplingData(displacements, dummyMesh, false, exchangeSubsteps));
-    dpcd->setSampleAtTime(time::Storage::WINDOW_START, dpcd->sample());
+    dpcd->setSampleAtTime(0, dpcd->sample());
     fpcd.reset(new CouplingData(forces, dummyMesh, false, exchangeSubsteps));
-    fpcd->setSampleAtTime(time::Storage::WINDOW_START, fpcd->sample());
+    fpcd->setSampleAtTime(0, fpcd->sample());
 
     dpcd->storeIteration();
     fpcd->storeIteration();
@@ -655,9 +655,9 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
     forces->values() << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
 
     dpcd.reset(new CouplingData(displacements, dummyMesh, false, exchangeSubsteps));
-    dpcd->setSampleAtTime(time::Storage::WINDOW_START, dpcd->sample());
+    dpcd->setSampleAtTime(0, dpcd->sample());
     fpcd.reset(new CouplingData(forces, dummyMesh, false, exchangeSubsteps));
-    fpcd->setSampleAtTime(time::Storage::WINDOW_START, fpcd->sample());
+    fpcd->setSampleAtTime(0, fpcd->sample());
 
     dpcd->storeIteration();
     fpcd->storeIteration();
@@ -677,9 +677,9 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
     forces->values().resize(0);
 
     dpcd.reset(new CouplingData(displacements, dummyMesh, false, exchangeSubsteps));
-    dpcd->setSampleAtTime(time::Storage::WINDOW_START, dpcd->sample());
+    dpcd->setSampleAtTime(0, dpcd->sample());
     fpcd.reset(new CouplingData(forces, dummyMesh, false, exchangeSubsteps));
-    fpcd->setSampleAtTime(time::Storage::WINDOW_START, fpcd->sample());
+    fpcd->setSampleAtTime(0, fpcd->sample());
 
     dpcd->storeIteration();
     fpcd->storeIteration();
@@ -694,7 +694,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
 
   // necessary because acceleration does not directly work on storage, but on CouplingData::values. See and https://github.com/precice/precice/issues/1645 current implementation in BaseCouplingScheme::doImplicitStep()
   for (auto &pair : data) {
-    pair.second->setSampleAtTime(time::Storage::WINDOW_END, pair.second->sample());
+    pair.second->setSampleAtTime(1, pair.second->sample());
   }
 
   // underrelaxation, first iteration
@@ -760,7 +760,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
 
   // necessary because acceleration does not directly work on storage, but on CouplingData::values. See and https://github.com/precice/precice/issues/1645 current implementation in BaseCouplingScheme::doImplicitStep()
   for (auto &pair : data) {
-    pair.second->setSampleAtTime(time::Storage::WINDOW_END, pair.second->sample());
+    pair.second->setSampleAtTime(1, pair.second->sample());
   }
 
   if (context.isPrimary()) { // Primary
@@ -826,7 +826,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
 
   // necessary because acceleration does not directly work on storage, but on CouplingData::values. See and https://github.com/precice/precice/issues/1645 current implementation in BaseCouplingScheme::doImplicitStep()
   for (auto &pair : data) {
-    pair.second->setSampleAtTime(time::Storage::WINDOW_END, pair.second->sample());
+    pair.second->setSampleAtTime(1, pair.second->sample());
   }
 
   if (context.isPrimary()) { // Primary
@@ -892,7 +892,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
 
   // necessary because acceleration does not directly work on storage, but on CouplingData::values. See and https://github.com/precice/precice/issues/1645 current implementation in BaseCouplingScheme::doImplicitStep()
   for (auto &pair : data) {
-    pair.second->setSampleAtTime(time::Storage::WINDOW_END, pair.second->sample());
+    pair.second->setSampleAtTime(1, pair.second->sample());
   }
 
   if (context.isPrimary()) { // Primary
@@ -958,7 +958,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
 
   // necessary because acceleration does not directly work on storage, but on CouplingData::values. See and https://github.com/precice/precice/issues/1645 current implementation in BaseCouplingScheme::doImplicitStep()
   for (auto &pair : data) {
-    pair.second->setSampleAtTime(time::Storage::WINDOW_END, pair.second->sample());
+    pair.second->setSampleAtTime(1, pair.second->sample());
   }
 
   if (context.isPrimary()) { // Primary
@@ -1080,7 +1080,7 @@ BOOST_AUTO_TEST_CASE(testColumnsLogging)
 
   PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, exchangeSubsteps));
   data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
-  dpcd->setSampleAtTime(time::Storage::WINDOW_START, dpcd->sample());
+  dpcd->setSampleAtTime(0, dpcd->sample());
   dpcd->storeIteration();
 
   acc.initialize(data);

@@ -153,9 +153,6 @@ public:
    */
   double getTimeWindowSize() const final override;
 
-  /// @copydoc CouplingScheme::getNormalizedWindowTime
-  double getNormalizedWindowTime() const override final;
-
   /**
    * @brief Returns the maximal size of the next time step to be computed.
    *
