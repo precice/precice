@@ -100,29 +100,17 @@
     <max-time-windows value="10" />
     <time-window-size value="1.0" />
     <max-iterations value="2" />
-    <exchange data="DataBA" mesh="MeshA" from="SolverB" to="SolverA" substeps="false" />
-    <exchange data="DataAB" mesh="MeshA" from="SolverA" to="SolverB" substeps="false" />
-    <exchange data="DataCB" mesh="MeshC1" from="SolverC" to="SolverB" substeps="false" />
-    <exchange data="DataBC" mesh="MeshB2" from="SolverB" to="SolverC" substeps="false" />
-    <exchange data="DataCD" mesh="MeshC2" from="SolverC" to="SolverD" substeps="false" />
-    <exchange data="DataDC" mesh="MeshD" from="SolverD" to="SolverC" substeps="false" />
-    <exchange data="DataCB" mesh="MeshC1" from="SolverC" to="SolverA" substeps="false" />
-    <exchange data="DataBC" mesh="MeshB2" from="SolverB" to="SolverA" substeps="false" />
-    <exchange data="DataDC" mesh="MeshD" from="SolverD" to="SolverA" substeps="false" />
-    <exchange data="DataCD" mesh="MeshC2" from="SolverC" to="SolverA" substeps="false" />
+    <exchange data="DataBA" mesh="MeshA" from="SolverB" to="SolverA" />
+    <exchange data="DataAB" mesh="MeshA" from="SolverA" to="SolverB" />
+    <exchange data="DataCB" mesh="MeshC1" from="SolverC" to="SolverB" />
+    <exchange data="DataBC" mesh="MeshB2" from="SolverB" to="SolverC" />
+    <exchange data="DataCD" mesh="MeshC2" from="SolverC" to="SolverD" />
+    <exchange data="DataDC" mesh="MeshD" from="SolverD" to="SolverC" />
+    <exchange data="DataCB" mesh="MeshC1" from="SolverC" to="SolverA" />
+    <exchange data="DataBC" mesh="MeshB2" from="SolverB" to="SolverA" />
+    <exchange data="DataDC" mesh="MeshD" from="SolverD" to="SolverA" />
+    <exchange data="DataCD" mesh="MeshC2" from="SolverC" to="SolverA" />
     <relative-convergence-measure data="DataAB" mesh="MeshA" limit="1e-4" />
     <relative-convergence-measure data="DataDC" mesh="MeshD" limit="1e-4" />
-    <acceleration:IQN-ILS>
-      <data name="DataAB" mesh="MeshA" />
-      <data name="DataBA" mesh="MeshA" />
-      <data name="DataCB" mesh="MeshC1" />
-      <data name="DataBC" mesh="MeshB2" />
-      <data name="DataCD" mesh="MeshC2" />
-      <data name="DataDC" mesh="MeshD" />
-      <filter type="QR2" limit="1e-1" />
-      <initial-relaxation value="1.0" />
-      <max-used-iterations value="10" />
-      <time-windows-reused value="0" />
-    </acceleration:IQN-ILS>
   </coupling-scheme:multi>
 </precice-configuration>
