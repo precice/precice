@@ -65,12 +65,12 @@ BOOST_AUTO_TEST_CASE(testIQNIMVJPPWithoutSubsteps)
   // init displacements
   displacements->values().resize(4);
   displacements->values() << 1.0, 1.0, 1.0, 1.0;
-  displacements->setSampleAtTime(time::Storage::WINDOW_START, displacements->sample());
+  displacements->setSampleAtTime(0, displacements->sample());
 
   // init forces
   forces->values().resize(4);
   forces->values() << 0.2, 0.2, 0.2, 0.2;
-  forces->setSampleAtTime(time::Storage::WINDOW_START, forces->sample());
+  forces->setSampleAtTime(0, forces->sample());
 
   bool exchangeSubsteps = false; // @todo add testIQNIMVJPPWithSubsteps, where exchangeSubsteps = true as soon as acceleration scheme supports subcycling.
 
@@ -86,9 +86,9 @@ BOOST_AUTO_TEST_CASE(testIQNIMVJPPWithoutSubsteps)
   pp.initialize(data);
 
   displacements->values() << 1.0, 2.0, 3.0, 4.0;
-  displacements->setSampleAtTime(time::Storage::WINDOW_END, displacements->sample());
+  displacements->setSampleAtTime(1, displacements->sample());
   forces->values() << 0.1, 0.1, 0.1, 0.1;
-  forces->setSampleAtTime(time::Storage::WINDOW_END, forces->sample());
+  forces->setSampleAtTime(1, forces->sample());
 
   pp.performAcceleration(data);
 
@@ -147,12 +147,12 @@ BOOST_AUTO_TEST_CASE(testVIQNPPWithoutSubsteps)
   // init displacements
   displacements->values().resize(4);
   displacements->values() << 1.0, 1.0, 1.0, 1.0;
-  displacements->setSampleAtTime(time::Storage::WINDOW_START, displacements->sample());
+  displacements->setSampleAtTime(0, displacements->sample());
 
   // init forces
   forces->values().resize(4);
   forces->values() << 0.2, 0.2, 0.2, 0.2;
-  forces->setSampleAtTime(time::Storage::WINDOW_START, forces->sample());
+  forces->setSampleAtTime(0, forces->sample());
 
   bool exchangeSubsteps = false; // @todo add testVIQNPPWithoutSubsteps, where exchangeSubsteps = true as soon as acceleration scheme supports subcycling.
 
@@ -168,9 +168,9 @@ BOOST_AUTO_TEST_CASE(testVIQNPPWithoutSubsteps)
   pp.initialize(data);
 
   displacements->values() << 1.0, 2.0, 3.0, 4.0;
-  displacements->setSampleAtTime(time::Storage::WINDOW_END, displacements->sample());
+  displacements->setSampleAtTime(1, displacements->sample());
   forces->values() << 0.1, 0.1, 0.1, 0.1;
-  forces->setSampleAtTime(time::Storage::WINDOW_END, forces->sample());
+  forces->setSampleAtTime(1, forces->sample());
 
   pp.performAcceleration(data);
 
@@ -218,12 +218,12 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithSubsteps)
   // //init displacements
   displacements->values().resize(4);
   displacements->values() << 1.0, 2.0, 3.0, 4.0;
-  displacements->setSampleAtTime(time::Storage::WINDOW_START, displacements->sample());
+  displacements->setSampleAtTime(0, displacements->sample());
 
   // //init forces
   forces->values().resize(4);
   forces->values() << 0.2, 0.2, 0.2, 0.2;
-  forces->setSampleAtTime(time::Storage::WINDOW_START, forces->sample());
+  forces->setSampleAtTime(0, forces->sample());
 
   bool exchangeSubsteps = true;
 
@@ -239,9 +239,9 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithSubsteps)
   acc.initialize(data);
 
   displacements->values() << 3.5, 2.0, 2.0, 1.0;
-  displacements->setSampleAtTime(time::Storage::WINDOW_END, displacements->sample());
+  displacements->setSampleAtTime(1, displacements->sample());
   forces->values() << 0.1, 0.1, 0.1, 0.1;
-  forces->setSampleAtTime(time::Storage::WINDOW_END, forces->sample());
+  forces->setSampleAtTime(1, forces->sample());
 
   acc.performAcceleration(data);
 
@@ -255,8 +255,8 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithSubsteps)
   BOOST_TEST(data.at(1)->values()(3) == 0.16);
 
   displacements->values() << 10, 10, 10, 10;
-  displacements->setSampleAtTime(time::Storage::WINDOW_END, displacements->sample());
-  forces->setSampleAtTime(time::Storage::WINDOW_END, forces->sample());
+  displacements->setSampleAtTime(1.0, displacements->sample());
+  forces->setSampleAtTime(1.0, forces->sample());
 
   acc.performAcceleration(data);
 
@@ -293,14 +293,14 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithSubsteps)
     for (unsigned int c = 0; c < 4; ++c)
       displacements->gradients()(r, c) = r + r * c;
   }
-  displacements->setSampleAtTime(time::Storage::WINDOW_START, displacements->sample());
+  displacements->setSampleAtTime(0.0, displacements->sample());
   // //init forces
   forces->values().resize(4);
   forces->values() << 0.2, 0.2, 0.2, 0.2;
   forces->requireDataGradient();
   forces->gradients().resize(dim, 4);
   forces->gradients().setConstant(-2);
-  forces->setSampleAtTime(time::Storage::WINDOW_START, forces->sample());
+  forces->setSampleAtTime(0.0, forces->sample());
 
   bool exchangeSubsteps = true;
 
@@ -317,10 +317,10 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithSubsteps)
 
   displacements->values() << 3.5, 2.0, 2.0, 1.0;
   displacements->gradients().setConstant(2.5);
-  displacements->setSampleAtTime(time::Storage::WINDOW_END, displacements->sample());
+  displacements->setSampleAtTime(1.0, displacements->sample());
   forces->values() << 0.1, 0.1, 0.1, 0.1;
   forces->gradients().setConstant(3);
-  forces->setSampleAtTime(time::Storage::WINDOW_END, forces->sample());
+  forces->setSampleAtTime(1.0, forces->sample());
 
   acc.performAcceleration(data);
 
@@ -350,8 +350,8 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithSubsteps)
 
   displacements->values() << 10, 10, 10, 10;
   displacements->gradients().setConstant(4);
-  displacements->setSampleAtTime(time::Storage::WINDOW_END, displacements->sample());
-  forces->setSampleAtTime(time::Storage::WINDOW_END, forces->sample());
+  displacements->setSampleAtTime(1, displacements->sample());
+  forces->setSampleAtTime(1, forces->sample());
 
   acc.performAcceleration(data);
 
@@ -389,12 +389,12 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithoutSubsteps)
   // //init displacements
   displacements->values().resize(4);
   displacements->values() << 1.0, 2.0, 3.0, 4.0;
-  displacements->setSampleAtTime(time::Storage::WINDOW_START, displacements->sample());
+  displacements->setSampleAtTime(0.0, displacements->sample());
 
   // //init forces
   forces->values().resize(4);
   forces->values() << 0.2, 0.2, 0.2, 0.2;
-  forces->setSampleAtTime(time::Storage::WINDOW_START, forces->sample());
+  forces->setSampleAtTime(0.0, forces->sample());
 
   bool exchangeSubsteps = false;
 
@@ -410,9 +410,9 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithoutSubsteps)
   acc.initialize(data);
 
   displacements->values() << 3.5, 2.0, 2.0, 1.0;
-  displacements->setSampleAtTime(time::Storage::WINDOW_END, displacements->sample());
+  displacements->setSampleAtTime(1.0, displacements->sample());
   forces->values() << 0.1, 0.1, 0.1, 0.1;
-  forces->setSampleAtTime(time::Storage::WINDOW_END, forces->sample());
+  forces->setSampleAtTime(1.0, forces->sample());
 
   acc.performAcceleration(data);
 
@@ -426,8 +426,8 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithoutSubsteps)
   BOOST_TEST(data.at(1)->values()(3) == 0.16);
 
   displacements->values() << 10, 10, 10, 10;
-  displacements->setSampleAtTime(time::Storage::WINDOW_END, displacements->sample());
-  forces->setSampleAtTime(time::Storage::WINDOW_END, forces->sample());
+  displacements->setSampleAtTime(1.0, displacements->sample());
+  forces->setSampleAtTime(1.0, forces->sample());
 
   acc.performAcceleration(data);
 
@@ -464,14 +464,14 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithoutSubsteps)
     for (unsigned int c = 0; c < 4; ++c)
       displacements->gradients()(r, c) = r + r * c;
   }
-  displacements->setSampleAtTime(time::Storage::WINDOW_START, displacements->sample());
+  displacements->setSampleAtTime(0, displacements->sample());
   // //init forces
   forces->values().resize(4);
   forces->values() << 0.2, 0.2, 0.2, 0.2;
   forces->requireDataGradient();
   forces->gradients().resize(dim, 4);
   forces->gradients().setConstant(-2);
-  forces->setSampleAtTime(time::Storage::WINDOW_START, forces->sample());
+  forces->setSampleAtTime(0, forces->sample());
 
   bool exchangeSubsteps = false;
 
@@ -488,10 +488,10 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithoutSubsteps)
 
   displacements->values() << 3.5, 2.0, 2.0, 1.0;
   displacements->gradients().setConstant(2.5);
-  displacements->setSampleAtTime(time::Storage::WINDOW_END, displacements->sample());
+  displacements->setSampleAtTime(1, displacements->sample());
   forces->values() << 0.1, 0.1, 0.1, 0.1;
   forces->gradients().setConstant(3);
-  forces->setSampleAtTime(time::Storage::WINDOW_END, forces->sample());
+  forces->setSampleAtTime(1, forces->sample());
 
   acc.performAcceleration(data);
 
@@ -519,10 +519,10 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithoutSubsteps)
   BOOST_TEST(data.at(1)->gradients()(1, 1) == 0);
   BOOST_TEST(data.at(1)->gradients()(1, 2) == 0);
 
-  displacements->values() << 10, 10, 10, 10;
+  data.begin()->second->values() << 10, 10, 10, 10;
   displacements->gradients().setConstant(4);
-  displacements->setSampleAtTime(time::Storage::WINDOW_END, displacements->sample());
-  forces->setSampleAtTime(time::Storage::WINDOW_END, forces->sample());
+  displacements->setSampleAtTime(1, displacements->sample());
+  forces->setSampleAtTime(1, forces->sample());
 
   acc.performAcceleration(data);
 
