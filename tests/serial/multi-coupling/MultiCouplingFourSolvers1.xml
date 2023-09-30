@@ -116,12 +116,5 @@
     <relative-convergence-measure data="DataBC" mesh="MeshB2" limit="1e-4" />
     <relative-convergence-measure data="DataCD" mesh="MeshC2" limit="1e-4" />
     <relative-convergence-measure data="DataDC" mesh="MeshD" limit="1e-4" />
-    <acceleration:IQN-ILS>
-      <data name="DataAB" mesh="MeshA" />
-      <filter type="QR2" limit="1e-1" />
-      <initial-relaxation value="1.0" />
-      <max-used-iterations value="10" />
-      <time-windows-reused value="0" />
-    </acceleration:IQN-ILS>
   </coupling-scheme:multi>
 </precice-configuration>

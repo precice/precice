@@ -73,12 +73,5 @@
     <exchange data="DataCB" mesh="MeshC" from="SolverC" to="SolverA" />
     <relative-convergence-measure data="DataCB" mesh="MeshC" limit="1e-4" />
     <relative-convergence-measure data="DataBA" mesh="MeshA" limit="1e-4" />
-    <acceleration:IQN-ILS>
-      <data name="DataAB" mesh="MeshA" />
-      <filter type="QR2" limit="1e-1" />
-      <initial-relaxation value="1.0" />
-      <max-used-iterations value="10" />
-      <time-windows-reused value="0" />
-    </acceleration:IQN-ILS>
   </coupling-scheme:multi>
 </precice-configuration>
