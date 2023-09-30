@@ -54,10 +54,8 @@
     <participants first="SolverOne" second="SolverTwo" />
     <max-time-windows value="10" />
     <time-window-size value="1.0" />
-    <!-- Does not work for substeps="false" -->
-    <exchange data="Data0" mesh="MeshA" from="SolverOne" to="SolverTwo" substeps="true" />
-    <!-- Does not work for substeps="false" -->
-    <exchange data="Data1" mesh="MeshA" from="SolverTwo" to="SolverOne" substeps="true" />
+    <exchange data="Data0" mesh="MeshA" from="SolverOne" to="SolverTwo" />
+    <exchange data="Data1" mesh="MeshA" from="SolverTwo" to="SolverOne" />
   </coupling-scheme:serial-explicit>
 
   <coupling-scheme:serial-implicit>
@@ -66,9 +64,7 @@
     <time-window-size value="1.0" />
     <max-iterations value="10" />
     <min-iteration-convergence-measure min-iterations="3" data="Data2" mesh="MeshA" />
-    <!-- Does not work for substeps="false" -->
-    <exchange data="Data0" mesh="MeshA" from="SolverOne" to="SolverThree" substeps="true" />
-    <!-- Does not work for substeps="false" -->
-    <exchange data="Data2" mesh="MeshA" from="SolverThree" to="SolverOne" substeps="true" />
+    <exchange data="Data0" mesh="MeshA" from="SolverOne" to="SolverThree" />
+    <exchange data="Data2" mesh="MeshA" from="SolverThree" to="SolverOne" />
   </coupling-scheme:serial-implicit>
 </precice-configuration>
