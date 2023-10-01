@@ -167,6 +167,7 @@ public:
     _psi.conservativeResize(_rows, _cols);
     _phi.conservativeResize(_rows, _cols);
     _sigma.conservativeResize(_cols);
+    PRECICE_ASSERT(_sigma.size() == std::min(_psi.cols(), _psi.rows()));
     PRECICE_DEBUG("SVD factorization of Jacobian is truncated to {} DOFs. Cut off {} DOFs", _cols, waste);
 
     _initialSVD = true;
