@@ -52,7 +52,11 @@
       <initial-relaxation value="1.0" />
       <max-used-iterations value="10" />
       <time-windows-reused value="0" />
-      <imvj-restart-mode truncation-threshold="0.0001" chunk-size="2" reused-time-windows-at-restart="2" type="no-restart"/>
+      <imvj-restart-mode
+        truncation-threshold="0.0001"
+        chunk-size="2"
+        reused-time-windows-at-restart="2"
+        type="no-restart" />
     </acceleration:IQN-IMVJ>
   </coupling-scheme:serial-implicit>
 </precice-configuration>
