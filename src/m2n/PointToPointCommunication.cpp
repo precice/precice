@@ -236,6 +236,23 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
   }
 }
 
+template<class InputIt1, class InputIt2, class OutputIt>
+OutputIt set_intersection(InputIt1 ref, InputIt1 first1, InputIt1 last1,
+                          InputIt2 first2, InputIt2 last2, OutputIt d_first)
+{
+    while (first1 != last1 && first2 != last2)
+    {
+        if (*first1 < *first2)
+            ++first1;
+        else
+        {
+            if (!(*first2 < *first1))
+                *d_first++ = std::distance(ref, first1++); // *first1 and *first2 are equivalent.
+            ++first2;
+        }
+    }
+    return d_first;
+}
 /** builds the communication map for a local distribution given the global distribution.
  *
  *
@@ -254,35 +271,51 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
  */
 std::map<int, std::vector<int>> buildCommunicationMap(
     // `thisVertexDistribution' is input vertex distribution from this participant.
-    mesh::Mesh::VertexDistribution const &thisVertexDistribution,
+    mesh::Mesh::VertexDistribution  &thisVertexDistribution,
     // `otherVertexDistribution' is input vertex distribution from other participant.
-    mesh::Mesh::VertexDistribution const &otherVertexDistribution,
+    mesh::Mesh::VertexDistribution  &otherVertexDistribution,
     int                                   thisRank = utils::IntraComm::getRank())
 {
   auto iterator = thisVertexDistribution.find(thisRank);
   if (iterator == thisVertexDistribution.end())
     return {};
-
-  // Build lookup table from otherIndex -> rank for the otherVertexDistribution
-  const auto lookupIndexRank = [&otherVertexDistribution] {
-    boost::container::flat_multimap<int, int> lookupIndexRank;
-    for (const auto &other : otherVertexDistribution) {
-      for (const auto &otherIndex : other.second) {
-        lookupIndexRank.emplace(otherIndex, other.first);
-      }
-    }
-    return lookupIndexRank;
-  }();
-
-  auto const &indices = iterator->second;
-
+    Event e0("m2n.copyMap");
   std::map<int, std::vector<int>> communicationMap;
-  for (size_t index = 0lu; index < indices.size(); ++index) {
-    auto range = lookupIndexRank.equal_range(indices[index]);
-    for (auto iter = range.first; iter != range.second; ++iter) {
-      communicationMap[iter->second].push_back(index);
+  // creating the map is very expensive O (n log n) for large data sets and the performance becomes
+  // only worse if we add more ranks as data-locality of the source map deteriorates
+  // hence we first look, whether there are any relevant indices in the map and only add entries in case
+  // they are relevant
+  logging::Logger _log{"m2n::buildMap"};
+  // take advantage that these data structures are in most cases sorted by construction
+   if(!std::is_sorted(iterator->second.begin(), iterator->second.end())){
+       PRECICE_CHECK(false, "APPLYING  SORTING ");
+      std::sort(iterator->second.begin(), iterator->second.end());
+   }
+
+  for (auto &other : otherVertexDistribution) {
+    // first a safety check, that we are actually sorted
+    if(!std::is_sorted(other.second.begin(), other.second.end())) {
+       PRECICE_CHECK(false, "APPLYING  SORTING ");
+       std::sort(other.second.begin(), other.second.end());
+    }
+    // now we start inserting elements
+    // first check if elements can possibly be in there
+    if(iterator->second.empty() ||  other.second.empty() || (other.second.back() < iterator->second.at(0)) || (other.second.at(0) > iterator->second.back())){
+      // in this case there is nothing to be done
+      continue;
+    }
+    else {
+    // we have an intersection, let's compute it
+    std::vector<int> inters;
+    precice::m2n::set_intersection(iterator->second.begin(), iterator->second.begin(), iterator->second.end(),
+                         other.second.begin(), other.second.end(),
+			 std::back_inserter(inters));
+    // we have the results, now commit it into the final map
+     if(!inters.empty())
+       	communicationMap.insert({other.first, std::move(inters)});
     }
   }
+
   return communicationMap;
 }
 
