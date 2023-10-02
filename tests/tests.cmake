@@ -59,10 +59,22 @@ target_sources(testprecice
     tests/quasi-newton/parallel/TestQN2EmptyPartition.cpp
     tests/quasi-newton/parallel/TestQN3.cpp
     tests/quasi-newton/parallel/TestQN3EmptyPartition.cpp
+    tests/quasi-newton/parallel/TestQN4.cpp
+    tests/quasi-newton/parallel/TestQN4EmptyPartition.cpp
+    tests/quasi-newton/parallel/TestQN5.cpp
+    tests/quasi-newton/parallel/TestQN5EmptyPartition.cpp
+    tests/quasi-newton/parallel/TestQN6.cpp
+    tests/quasi-newton/parallel/TestQN6EmptyPartition.cpp
+    tests/quasi-newton/parallel/TestQN7.cpp
+    tests/quasi-newton/parallel/TestQN7EmptyPartition.cpp
     tests/quasi-newton/serial/DefaultConfig.cpp
     tests/quasi-newton/serial/TestQN1.cpp
     tests/quasi-newton/serial/TestQN2.cpp
     tests/quasi-newton/serial/TestQN3.cpp
+    tests/quasi-newton/serial/TestQN4.cpp
+    tests/quasi-newton/serial/TestQN5.cpp
+    tests/quasi-newton/serial/TestQN6.cpp
+    tests/quasi-newton/serial/TestQN7.cpp
     tests/serial/AitkenAcceleration.cpp
     tests/serial/ImplicitCheckpointing.cpp
     tests/serial/PreconditionerBug.cpp
