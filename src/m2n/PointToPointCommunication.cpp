@@ -236,21 +236,42 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
   }
 }
 
+namespace {
+/**
+   * @brief This function is by by and large the same as std::set_intersection().
+   * The only difference is that we don't return the intersection set itself, but
+   * we return the indices of elements in \p InputIt1, which appear in both sets
+   * ( \p InputIt1 and \p InputIt2 )
+   * The implementation was taken from
+   * https://en.cppreference.com/w/cpp/algorithm/set_intersection#Version_1 with the
+   * only difference that we compute and store std::distance() in the output iterator.
+   * Similar to the std function, this function operates on sorted ranges.
+   *
+   * @param ref1 The reference iterator, to which we compute the distance/indices.
+   * @param first1 The begin of the first range we want to compute the intersection with
+   * @param last1 The end of the first range we want to compute the intersection with
+   * @param first1 The begin of the second range we want to compute the intersection with
+   * @param last1 The end of the second range we want to compute the intersection with
+   * @param d_first Beginning of the output range
+   * @return OutputIt Iterator past the end of the constructed range.
+   */
 template <class InputIt1, class InputIt2, class OutputIt>
-OutputIt set_intersection(InputIt1 ref, InputIt1 first1, InputIt1 last1,
-                          InputIt2 first2, InputIt2 last2, OutputIt d_first)
+OutputIt set_intersection_indices(InputIt1 ref1, InputIt1 first1, InputIt1 last1,
+                                  InputIt2 first2, InputIt2 last2, OutputIt d_first)
 {
   while (first1 != last1 && first2 != last2) {
     if (*first1 < *first2)
       ++first1;
     else {
       if (!(*first2 < *first1))
-        *d_first++ = std::distance(ref, first1++); // *first1 and *first2 are equivalent.
+        *d_first++ = std::distance(ref1, first1++); // *first1 and *first2 are equivalent.
       ++first2;
     }
   }
   return d_first;
 }
+} // namespace
+
 /** builds the communication map for a local distribution given the global distribution.
  *
  *
@@ -260,12 +281,19 @@ OutputIt set_intersection(InputIt1 ref, InputIt1 first1, InputIt1 last1,
  *
  * @returns the resulting communication map for rank thisRank
  *
- * The approximate complexity of this function is:
- * \f$ \mathcal{O}(n \log(n) + m \log(n)) \f$
+ * The worst case complexity of the function is:
+ * \f$ \mathcal{O}(p n \log(n) + p 2 (2 n)) \f$
  *
- * * n is the total number of data indices for all ranks in `otherVertexDistribution'
- * * m is the number of local data indices for the current rank in `thisVertexDistribution`
+ * which is composed of the initial std::sort for each vector and the subsequent
+ * computation of the intersection.
  *
+ * * n is the number of data indices for each vector in `otherVertexDistribution'
+ * * p number of ranks
+ * * Note that n becomes smaller, if we have more ranks.
+ *
+ * However, in case our indices are already sorted (which is typically the case),
+ * the complexity boils down to linear complexity
+ * \f$ \mathcal{O}(p n) \f$
  */
 std::map<int, std::vector<int>> buildCommunicationMap(
     // `thisVertexDistribution' is input vertex distribution from this participant.
@@ -279,32 +307,36 @@ std::map<int, std::vector<int>> buildCommunicationMap(
     return {};
 
   std::map<int, std::vector<int>> communicationMap;
-  // creating the map is very expensive O (n log n) for large data sets and the performance becomes
-  // only worse if we add more ranks as data-locality of the source map deteriorates
-  // hence we first look, whether there are any relevant indices in the map and only add entries in case
-  // they are relevant
 
-  // take advantage that these data structures are in most cases sorted by construction
+  // take advantage that these data structures are in most cases sorted by construction,
+  // i.e., we perform here mostly a safety check and don't perform an actual sorting
   if (!std::is_sorted(iterator->second.begin(), iterator->second.end())) {
     std::sort(iterator->second.begin(), iterator->second.end());
   }
 
+  // now we iterate over all other vertex distributions to compute the intersection
   for (auto &other : otherVertexDistribution) {
-    // first a safety check, that we are actually sorted
+    // first a safety check, that we are actually sorted, similar to above
     if (!std::is_sorted(other.second.begin(), other.second.end())) {
       std::sort(other.second.begin(), other.second.end());
     }
-    // now we start inserting elements
-    // first check if elements can possibly be in there
+
+    // before starting to compute an actual intersection, we first check if elements can
+    // possibly be in both data sets by comparing upper and lower index bounds of both
+    // data sets. For typical partitioning schemes, each rank only exchanges data with
+    // a few neighbors such that this check already filters out a significant amount of
+    // computations
     if (iterator->second.empty() || other.second.empty() || (other.second.back() < iterator->second.at(0)) || (other.second.at(0) > iterator->second.back())) {
       // in this case there is nothing to be done
       continue;
     } else {
       // we have an intersection, let's compute it
       std::vector<int> inters;
-      precice::m2n::set_intersection(iterator->second.begin(), iterator->second.begin(), iterator->second.end(),
-                                     other.second.begin(), other.second.end(),
-                                     std::back_inserter(inters));
+      // the actual worker function, which gives us the indices of intersecting elements
+      // have a look at the documentation of the function for more details
+      precice::m2n::set_intersection_indices(iterator->second.begin(), iterator->second.begin(), iterator->second.end(),
+                                             other.second.begin(), other.second.end(),
+                                             std::back_inserter(inters));
       // we have the results, now commit it into the final map
       if (!inters.empty())
         communicationMap.insert({other.first, std::move(inters)});
