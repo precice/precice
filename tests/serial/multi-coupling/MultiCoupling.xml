@@ -6,40 +6,31 @@
   <data:vector name="Displacements1" />
   <data:vector name="Displacements2" />
   <data:vector name="Displacements3" />
-  <data:vector name="DisplacementDeltas1" />
-  <data:vector name="DisplacementDeltas2" />
-  <data:vector name="DisplacementDeltas3" />
 
   <mesh name="NASTIN_Mesh1" dimensions="2">
-    <use-data name="DisplacementDeltas1" />
     <use-data name="Forces1" />
   </mesh>
 
   <mesh name="SOLIDZ_Mesh1" dimensions="2">
     <use-data name="Displacements1" />
-    <use-data name="DisplacementDeltas1" />
     <use-data name="Forces1" />
   </mesh>
 
   <mesh name="NASTIN_Mesh2" dimensions="2">
-    <use-data name="DisplacementDeltas2" />
     <use-data name="Forces2" />
   </mesh>
 
   <mesh name="SOLIDZ_Mesh2" dimensions="2">
     <use-data name="Displacements2" />
-    <use-data name="DisplacementDeltas2" />
     <use-data name="Forces2" />
   </mesh>
 
   <mesh name="NASTIN_Mesh3" dimensions="2">
-    <use-data name="DisplacementDeltas3" />
     <use-data name="Forces3" />
   </mesh>
 
   <mesh name="SOLIDZ_Mesh3" dimensions="2">
     <use-data name="Displacements3" />
-    <use-data name="DisplacementDeltas3" />
     <use-data name="Forces3" />
   </mesh>
 
@@ -53,9 +44,6 @@
     <write-data name="Forces1" mesh="NASTIN_Mesh1" />
     <write-data name="Forces2" mesh="NASTIN_Mesh2" />
     <write-data name="Forces3" mesh="NASTIN_Mesh3" />
-    <read-data name="DisplacementDeltas1" mesh="NASTIN_Mesh1" />
-    <read-data name="DisplacementDeltas2" mesh="NASTIN_Mesh2" />
-    <read-data name="DisplacementDeltas3" mesh="NASTIN_Mesh3" />
     <mapping:nearest-neighbor
       direction="write"
       from="NASTIN_Mesh1"
@@ -71,41 +59,23 @@
       from="NASTIN_Mesh3"
       to="SOLIDZ_Mesh3"
       constraint="conservative" />
-    <mapping:nearest-neighbor
-      direction="read"
-      from="SOLIDZ_Mesh1"
-      to="NASTIN_Mesh1"
-      constraint="consistent" />
-    <mapping:nearest-neighbor
-      direction="read"
-      from="SOLIDZ_Mesh2"
-      to="NASTIN_Mesh2"
-      constraint="consistent" />
-    <mapping:nearest-neighbor
-      direction="read"
-      from="SOLIDZ_Mesh3"
-      to="NASTIN_Mesh3"
-      constraint="consistent" />
   </participant>
 
   <participant name="SOLIDZ1">
     <provide-mesh name="SOLIDZ_Mesh1" />
     <write-data name="Displacements1" mesh="SOLIDZ_Mesh1" />
-    <write-data name="DisplacementDeltas1" mesh="SOLIDZ_Mesh1" />
     <read-data name="Forces1" mesh="SOLIDZ_Mesh1" />
   </participant>
 
   <participant name="SOLIDZ2">
     <provide-mesh name="SOLIDZ_Mesh2" />
     <write-data name="Displacements2" mesh="SOLIDZ_Mesh2" />
-    <write-data name="DisplacementDeltas2" mesh="SOLIDZ_Mesh2" />
     <read-data name="Forces2" mesh="SOLIDZ_Mesh2" />
   </participant>
 
   <participant name="SOLIDZ3">
     <provide-mesh name="SOLIDZ_Mesh3" />
     <write-data name="Displacements3" mesh="SOLIDZ_Mesh3" />
-    <write-data name="DisplacementDeltas3" mesh="SOLIDZ_Mesh3" />
     <read-data name="Forces3" mesh="SOLIDZ_Mesh3" />
   </participant>
 
@@ -141,24 +111,6 @@
       from="SOLIDZ3"
       to="NASTIN"
       substeps="false" />
-    <exchange
-      data="DisplacementDeltas1"
-      mesh="SOLIDZ_Mesh1"
-      from="SOLIDZ1"
-      to="NASTIN"
-      substeps="false" />
-    <exchange
-      data="DisplacementDeltas2"
-      mesh="SOLIDZ_Mesh2"
-      from="SOLIDZ2"
-      to="NASTIN"
-      substeps="false" />
-    <exchange
-      data="DisplacementDeltas3"
-      mesh="SOLIDZ_Mesh3"
-      from="SOLIDZ3"
-      to="NASTIN"
-      substeps="false" />
     <max-iterations value="50" />
     <relative-convergence-measure data="Displacements1" mesh="SOLIDZ_Mesh1" limit="1e-4" />
     <relative-convergence-measure data="Displacements2" mesh="SOLIDZ_Mesh2" limit="1e-4" />
@@ -167,9 +119,6 @@
     <relative-convergence-measure data="Forces2" mesh="SOLIDZ_Mesh2" limit="1e-4" />
     <relative-convergence-measure data="Forces3" mesh="SOLIDZ_Mesh3" limit="1e-4" />
     <acceleration:IQN-ILS>
-      <data name="DisplacementDeltas1" mesh="SOLIDZ_Mesh1" />
-      <data name="DisplacementDeltas2" mesh="SOLIDZ_Mesh2" />
-      <data name="DisplacementDeltas3" mesh="SOLIDZ_Mesh3" />
       <data name="Forces1" mesh="SOLIDZ_Mesh1" scaling="1e6" />
       <data name="Forces2" mesh="SOLIDZ_Mesh2" scaling="1e6" />
       <data name="Forces3" mesh="SOLIDZ_Mesh3" scaling="1e6" />
