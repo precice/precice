@@ -513,7 +513,7 @@ private:
 
   /**
    * @brief Function to check whether end of time window is reached. Does not check for convergence
-   * @returns true if end time of time window is reached.
+   * @returns true if end time of time window is reached or if this participant defines time window size (participant first method)
    */
   bool reachedEndOfTimeWindow() const;
 
