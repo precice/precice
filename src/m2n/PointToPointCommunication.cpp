@@ -281,25 +281,24 @@ void set_intersection_indices(InputIt1 ref1, InputIt1 first1, InputIt1 last1,
  * @returns the resulting communication map for rank thisRank
  *
  * The worst case complexity of the function is:
- * \f$ \mathcal{O}(p n \log(n) + p 2 (2 n)) \f$
+ * \f$ \mathcal{O}(p 2 (2 n)) \f$
  *
- * which is composed of the initial std::sort for each vector and the subsequent
- * computation of the intersection.
+ * which consists of the computation of all intersections.
  *
  * * n is the number of data indices for each vector in `otherVertexDistribution'
  * * p number of ranks
  * * Note that n becomes smaller, if we have more ranks.
  *
- * However, in case our indices are already sorted (which is typically the case),
- * the complexity boils down to linear complexity
- * \f$ \mathcal{O}(p n) \f$
+ * However, in case of a proper partitioning and communication between neighbor
+ * ranks (r), we would most likely end up with a factor r<<p
+ * \f$ \mathcal{O}(r 2 (2 n)) \f$
  */
 std::map<int, std::vector<int>> buildCommunicationMap(
     // `thisVertexDistribution' is input vertex distribution from this participant.
-    mesh::Mesh::VertexDistribution &thisVertexDistribution,
+    mesh::Mesh::VertexDistribution const &thisVertexDistribution,
     // `otherVertexDistribution' is input vertex distribution from other participant.
-    mesh::Mesh::VertexDistribution &otherVertexDistribution,
-    int                             thisRank = utils::IntraComm::getRank())
+    mesh::Mesh::VertexDistribution const &otherVertexDistribution,
+    int                                   thisRank = utils::IntraComm::getRank())
 {
   auto iterator = thisVertexDistribution.find(thisRank);
   if (iterator == thisVertexDistribution.end()) {
@@ -307,25 +306,22 @@ std::map<int, std::vector<int>> buildCommunicationMap(
   }
 
   std::map<int, std::vector<int>> communicationMap;
-  // take advantage that these data structures are in most cases sorted by construction,
-  // i.e., we perform here mostly a safety check and don't perform an actual sorting
-  if (!std::is_sorted(iterator->second.begin(), iterator->second.end())) {
-    std::sort(iterator->second.begin(), iterator->second.end());
-  }
+  // first a safety check, that we are actually sorted, as the function below operates
+  // on sorted data sets
+  PRECICE_ASSERT(std::is_sorted(iterator->second.begin(), iterator->second.end()));
 
   // now we iterate over all other vertex distributions to compute the intersection
-  for (auto &other : otherVertexDistribution) {
-    // first a safety check, that we are actually sorted, similar to above
-    if (!std::is_sorted(other.second.begin(), other.second.end())) {
-      std::sort(other.second.begin(), other.second.end());
-    }
+  for (const auto &[rank, vertices] : otherVertexDistribution) {
+    // first a safety check, that we are actually sorted, as the function below operates
+    // on sorted data sets
+    PRECICE_ASSERT(std::is_sorted(vertices.begin(), vertices.end()));
 
     // before starting to compute an actual intersection, we first check if elements can
     // possibly be in both data sets by comparing upper and lower index bounds of both
     // data sets. For typical partitioning schemes, each rank only exchanges data with
     // a few neighbors such that this check already filters out a significant amount of
     // computations
-    if (iterator->second.empty() || other.second.empty() || (other.second.back() < iterator->second.at(0)) || (other.second.at(0) > iterator->second.back())) {
+    if (iterator->second.empty() || vertices.empty() || (vertices.back() < iterator->second.at(0)) || (vertices.at(0) > iterator->second.back())) {
       // in this case there is nothing to be done
       continue;
     }
@@ -334,11 +330,11 @@ std::map<int, std::vector<int>> buildCommunicationMap(
     // the actual worker function, which gives us the indices of intersecting elements
     // have a look at the documentation of the function for more details
     precice::m2n::set_intersection_indices(iterator->second.begin(), iterator->second.begin(), iterator->second.end(),
-                                           other.second.begin(), other.second.end(),
+                                           vertices.begin(), vertices.end(),
                                            std::back_inserter(inters));
     // we have the results, now commit it into the final map
     if (!inters.empty()) {
-      communicationMap.insert({other.first, std::move(inters)});
+      communicationMap.insert({rank, std::move(inters)});
     }
   }
   return communicationMap;
