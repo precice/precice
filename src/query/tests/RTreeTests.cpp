@@ -213,6 +213,49 @@ BOOST_AUTO_TEST_CASE(QueryWithBoxEverything)
   BOOST_TEST(results.size() == 8);
 }
 
+BOOST_AUTO_TEST_CASE(QueryRtreeBoundingBox2D)
+{
+  PRECICE_TEST(1_rank);
+  auto mesh   = edgeMesh2D();
+  auto result = mesh->index().getRtreeBounds();
+  mesh->computeBoundingBox();
+  auto comparison = mesh->getBoundingBox();
+
+  BOOST_TEST(result == comparison);
+  BOOST_TEST(result.minCorner() == Eigen::Vector2d(0, 0));
+  BOOST_TEST(result.maxCorner() == Eigen::Vector2d(1, 1));
+}
+
+BOOST_AUTO_TEST_CASE(QueryRtreeBoundingBox3D)
+{
+  PRECICE_TEST(1_rank);
+  auto mesh   = vertexMesh3D();
+  auto result = mesh->index().getRtreeBounds();
+  mesh->computeBoundingBox();
+  auto comparison = mesh->getBoundingBox();
+
+  BOOST_TEST(result == comparison);
+  BOOST_TEST(result.minCorner() == Eigen::Vector3d(0, 0, 0));
+  BOOST_TEST(result.maxCorner() == Eigen::Vector3d(1, 1, 1));
+}
+
+BOOST_AUTO_TEST_CASE(QueryRtreeBoundingBox3DComplex)
+{
+  PRECICE_TEST(1_rank);
+  PtrMesh mesh(new precice::mesh::Mesh("MyMesh", 3, precice::testing::nextMeshID()));
+  mesh->createVertex(Eigen::Vector3d(7, 4, 3.3));
+  mesh->createVertex(Eigen::Vector3d(26.4777, 5, 8));
+  mesh->createVertex(Eigen::Vector3d(-23.4, 100000.2, 7));
+  mesh->createVertex(Eigen::Vector3d(0.211, -21.37, 0.00003));
+  auto result = mesh->index().getRtreeBounds();
+  mesh->computeBoundingBox();
+  auto comparison = mesh->getBoundingBox();
+
+  BOOST_TEST(result == comparison);
+  BOOST_TEST(result.minCorner() == Eigen::Vector3d(-23.4, -21.37, 0.00003));
+  BOOST_TEST(result.maxCorner() == Eigen::Vector3d(26.4777, 100000.2, 8));
+}
+
 BOOST_AUTO_TEST_SUITE_END() // Vertex
 
 BOOST_AUTO_TEST_SUITE(Edge)
