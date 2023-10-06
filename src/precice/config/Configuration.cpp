@@ -41,7 +41,7 @@ Configuration::Configuration()
 
   auto attrMinTimeStepSize = xml::makeXMLAttribute("min-time-step-size", math::NUMERICAL_ZERO_DIFFERENCE)
                                  .setDocumentation("The smallest maximal time step that preCICE will return."
-                                                   "This means that preCICE will round up the time window end by min-time-step-size, which will  "
+                                                   "This means that preCICE will round up the end of the time window by min-time-step-size, which will  "
                                                    " introduce an extra coupling error. For more details see https://github.com/precice/precice/issues/1832.");
   _tag.addAttribute(attrMinTimeStepSize);
 
