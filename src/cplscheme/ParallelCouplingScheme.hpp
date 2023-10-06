@@ -32,7 +32,7 @@ public:
    * @param[in] maxTime Simulation time limit, or UNDEFINED_MAX_TIME.
    * @param[in] maxTimeWindows Simulation time windows limit, or UNDEFINED_TIME_WINDOWS.
    * @param[in] timeWindowSize Simulation time window size.
-   * @param[in] validDigits valid digits for computation of the remainder of a time window
+   * @param[in] minTimeStepSize Minimum time step size.
    * @param[in] firstParticipant Name of participant starting simulation.
    * @param[in] secondParticipant Name of second participant in coupling.
    * @param[in] localParticipant Name of participant using this coupling scheme.
@@ -45,7 +45,7 @@ public:
       double                        maxTime,
       int                           maxTimeWindows,
       double                        timeWindowSize,
-      int                           validDigits,
+      double                        minTimeStepSize,
       const std::string &           firstParticipant,
       const std::string &           secondParticipant,
       const std::string &           localParticipant,

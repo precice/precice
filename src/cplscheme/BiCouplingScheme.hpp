@@ -31,7 +31,7 @@ public:
       double                        maxTime,
       int                           maxTimeWindows,
       double                        timeWindowSize,
-      int                           validDigits,
+      double                        minTimeStepSize,
       std::string                   firstParticipant,
       std::string                   secondParticipant,
       const std::string &           localParticipant,

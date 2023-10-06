@@ -11,7 +11,7 @@ ParallelCouplingScheme::ParallelCouplingScheme(
     double                        maxTime,
     int                           maxTimeWindows,
     double                        timeWindowSize,
-    int                           validDigits,
+    double                        minTimeStepSize,
     const std::string &           firstParticipant,
     const std::string &           secondParticipant,
     const std::string &           localParticipant,
@@ -19,7 +19,7 @@ ParallelCouplingScheme::ParallelCouplingScheme(
     constants::TimesteppingMethod dtMethod,
     CouplingMode                  cplMode,
     int                           maxIterations)
-    : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
+    : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, minTimeStepSize, firstParticipant,
                        secondParticipant, localParticipant, std::move(m2n), maxIterations, cplMode, dtMethod) {}
 
 void ParallelCouplingScheme::exchangeInitialData()

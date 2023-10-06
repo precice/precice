@@ -21,7 +21,7 @@ SerialCouplingScheme::SerialCouplingScheme(
     double                        maxTime,
     int                           maxTimeWindows,
     double                        timeWindowSize,
-    int                           validDigits,
+    double                        minTimeStepSize,
     const std::string &           firstParticipant,
     const std::string &           secondParticipant,
     const std::string &           localParticipant,
@@ -29,7 +29,7 @@ SerialCouplingScheme::SerialCouplingScheme(
     constants::TimesteppingMethod dtMethod,
     CouplingMode                  cplMode,
     int                           maxIterations)
-    : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant, secondParticipant, localParticipant, std::move(m2n), maxIterations, cplMode, dtMethod)
+    : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, minTimeStepSize, firstParticipant, secondParticipant, localParticipant, std::move(m2n), maxIterations, cplMode, dtMethod)
 {
   if (dtMethod == constants::FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE) {
     if (doesFirstStep()) {

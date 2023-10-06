@@ -89,7 +89,7 @@
     <participant name="NASTIN" control="yes" />
     <participant name="SOLIDZ3" />
     <max-time value="40.0" />
-    <time-window-size value="1e-4" valid-digits="8" />
+    <time-window-size value="1e-4" />
     <exchange data="Forces1" mesh="SOLIDZ_Mesh1" from="NASTIN" to="SOLIDZ1" />
     <exchange data="Forces2" mesh="SOLIDZ_Mesh2" from="NASTIN" to="SOLIDZ2" />
     <exchange data="Forces3" mesh="SOLIDZ_Mesh3" from="NASTIN" to="SOLIDZ3" />
