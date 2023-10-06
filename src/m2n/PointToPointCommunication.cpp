@@ -253,22 +253,21 @@ namespace {
    * @param first1 The begin of the second range we want to compute the intersection with
    * @param last1 The end of the second range we want to compute the intersection with
    * @param d_first Beginning of the output range
-   * @return OutputIt Iterator past the end of the constructed range.
    */
 template <class InputIt1, class InputIt2, class OutputIt>
-OutputIt set_intersection_indices(InputIt1 ref1, InputIt1 first1, InputIt1 last1,
-                                  InputIt2 first2, InputIt2 last2, OutputIt d_first)
+void set_intersection_indices(InputIt1 ref1, InputIt1 first1, InputIt1 last1,
+                              InputIt2 first2, InputIt2 last2, OutputIt d_first)
 {
   while (first1 != last1 && first2 != last2) {
-    if (*first1 < *first2)
+    if (*first1 < *first2) {
       ++first1;
-    else {
-      if (!(*first2 < *first1))
+    } else {
+      if (!(*first2 < *first1)) {
         *d_first++ = std::distance(ref1, first1++); // *first1 and *first2 are equivalent.
+      }
       ++first2;
     }
   }
-  return d_first;
 }
 } // namespace
 
@@ -303,11 +302,11 @@ std::map<int, std::vector<int>> buildCommunicationMap(
     int                             thisRank = utils::IntraComm::getRank())
 {
   auto iterator = thisVertexDistribution.find(thisRank);
-  if (iterator == thisVertexDistribution.end())
+  if (iterator == thisVertexDistribution.end()) {
     return {};
+  }
 
   std::map<int, std::vector<int>> communicationMap;
-
   // take advantage that these data structures are in most cases sorted by construction,
   // i.e., we perform here mostly a safety check and don't perform an actual sorting
   if (!std::is_sorted(iterator->second.begin(), iterator->second.end())) {
@@ -329,17 +328,17 @@ std::map<int, std::vector<int>> buildCommunicationMap(
     if (iterator->second.empty() || other.second.empty() || (other.second.back() < iterator->second.at(0)) || (other.second.at(0) > iterator->second.back())) {
       // in this case there is nothing to be done
       continue;
-    } else {
-      // we have an intersection, let's compute it
-      std::vector<int> inters;
-      // the actual worker function, which gives us the indices of intersecting elements
-      // have a look at the documentation of the function for more details
-      precice::m2n::set_intersection_indices(iterator->second.begin(), iterator->second.begin(), iterator->second.end(),
-                                             other.second.begin(), other.second.end(),
-                                             std::back_inserter(inters));
-      // we have the results, now commit it into the final map
-      if (!inters.empty())
-        communicationMap.insert({other.first, std::move(inters)});
+    }
+    // we have an intersection, let's compute it
+    std::vector<int> inters;
+    // the actual worker function, which gives us the indices of intersecting elements
+    // have a look at the documentation of the function for more details
+    precice::m2n::set_intersection_indices(iterator->second.begin(), iterator->second.begin(), iterator->second.end(),
+                                           other.second.begin(), other.second.end(),
+                                           std::back_inserter(inters));
+    // we have the results, now commit it into the final map
+    if (!inters.empty()) {
+      communicationMap.insert({other.first, std::move(inters)});
     }
   }
   return communicationMap;
