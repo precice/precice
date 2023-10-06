@@ -220,6 +220,7 @@ public:
 
   void setVertexDistribution(VertexDistribution vd)
   {
+    PRECICE_ASSERT(std::all_of(vd.begin(), vd.end(), [](const auto &p) { return std::is_sorted(p.second.begin(), p.second.end()); }));
     _vertexDistribution = std::move(vd);
   }
 
