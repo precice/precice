@@ -40,7 +40,9 @@ Configuration::Configuration()
   _tag.addAttribute(attrExperimental);
 
   auto attrMinTimeStepSize = xml::makeXMLAttribute("min-time-step-size", math::NUMERICAL_ZERO_DIFFERENCE)
-                                 .setDocumentation("Overall minimal time step size allowed");
+                                 .setDocumentation("The smallest maximal time step that preCICE will return."
+                                                   "This means that preCICE will round up the time window end by min-time-step-size, which will  "
+                                                   " introduce an extra coupling error. For more details see https://github.com/precice/precice/issues/1832.");
   _tag.addAttribute(attrMinTimeStepSize);
 
   _dataConfiguration = std::make_shared<mesh::DataConfiguration>(
