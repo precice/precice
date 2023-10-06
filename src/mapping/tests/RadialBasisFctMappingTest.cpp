@@ -55,49 +55,52 @@ ReferenceSpecification format:
 - -1 on rank means all ranks
 - v is the expected value of n-th vertex on that particular rank
 */
-using MeshSpecification = std::vector<VertexSpecification>;
+struct MeshSpecification {
+  std::vector<VertexSpecification> vertices;
+  int                              meshDimension;
+  mesh::PtrMesh                    meshName;
+};
 
 /// Contains which values are expected on which rank: rank -> vector of data.
 using ReferenceSpecification = std::vector<std::pair<int, std::vector<double>>>;
 
-void getDistributedMesh(const TestContext &      context,
-                        MeshSpecification const &vertices,
-                        mesh::PtrMesh &          mesh,
-                        int                      globalIndexOffset = 0,
-                        bool                     meshIsSmaller     = false)
+void getDistributedMesh(const TestContext &context,
+                        MeshSpecification &meshSpec,
+                        int                globalIndexOffset = 0,
+                        bool               meshIsSmaller     = false)
 {
   int i = 0;
-  for (auto &vertex : vertices) {
+  for (auto &vertex : meshSpec.vertices) {
     if (vertex.rank == context.rank or vertex.rank == -1) {
       if (vertex.position.size() == 3) // 3-dimensional
-        mesh->createVertex(Eigen::Vector3d(vertex.position.data()));
+        meshSpec.meshName->createVertex(Eigen::Vector3d(vertex.position.data()));
       else if (vertex.position.size() == 2) // 2-dimensional
-        mesh->createVertex(Eigen::Vector2d(vertex.position.data()));
+        meshSpec.meshName->createVertex(Eigen::Vector2d(vertex.position.data()));
 
       if (vertex.owner == context.rank)
-        mesh->vertices().back().setOwner(true);
+        meshSpec.meshName->vertices().back().setOwner(true);
       else
-        mesh->vertices().back().setOwner(false);
+        meshSpec.meshName->vertices().back().setOwner(false);
 
       i++;
     }
   }
-  addGlobalIndex(mesh, globalIndexOffset);
+  addGlobalIndex(meshSpec.meshName, globalIndexOffset);
   // All tests use eight vertices
   if (meshIsSmaller) {
-    mesh->setGlobalNumberOfVertices(7);
+    meshSpec.meshName->setGlobalNumberOfVertices(7);
   } else {
-    mesh->setGlobalNumberOfVertices(8);
+    meshSpec.meshName->setGlobalNumberOfVertices(8);
   }
 }
 
 Eigen::VectorXd getDistributedData(const TestContext &      context,
-                                   MeshSpecification const &vertices)
+                                   MeshSpecification const &meshSpec)
 {
   Eigen::VectorXd d;
 
   int i = 0;
-  for (auto &vertex : vertices) {
+  for (auto &vertex : meshSpec.vertices) {
     if (vertex.rank == context.rank or vertex.rank == -1) {
       int valueDimension = vertex.value.size();
       d.conservativeResize(i * valueDimension + valueDimension);
@@ -119,17 +122,16 @@ void testDistributed(const TestContext &    context,
                      int                    inGlobalIndexOffset = 0,
                      bool                   meshIsSmaller       = false)
 {
-  int meshDimension  = inMeshSpec.at(0).position.size();
-  int valueDimension = inMeshSpec.at(0).value.size();
+  int valueDimension = inMeshSpec.vertices.at(0).value.size();
 
-  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", meshDimension, testing::nextMeshID()));
-  getDistributedMesh(context, inMeshSpec, inMesh, inGlobalIndexOffset);
+  inMeshSpec.meshName = mesh::PtrMesh(new mesh::Mesh("InMesh", inMeshSpec.meshDimension, testing::nextMeshID()));
+  getDistributedMesh(context, inMeshSpec, inGlobalIndexOffset);
   Eigen::VectorXd inValues = getDistributedData(context, inMeshSpec);
 
-  mesh::PtrMesh outMesh(new mesh::Mesh("outMesh", meshDimension, testing::nextMeshID()));
-  getDistributedMesh(context, outMeshSpec, outMesh, 0, meshIsSmaller);
+  outMeshSpec.meshName = mesh::PtrMesh(new mesh::Mesh("outMesh", outMeshSpec.meshDimension, testing::nextMeshID()));
+  getDistributedMesh(context, outMeshSpec, 0, meshIsSmaller);
   Eigen::VectorXd outValues = getDistributedData(context, outMeshSpec);
-  mapping.setMeshes(inMesh, outMesh);
+  mapping.setMeshes(inMeshSpec.meshName, outMeshSpec.meshName);
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
   mapping.computeMapping();
@@ -156,25 +158,35 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1)
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   Multiquadrics fct(5.0);
 
-  MeshSpecification in{// Consistent mapping: The inMesh is communicated
-                       {-1, 0, {0, 0}, {1}},
-                       {-1, 0, {0, 1}, {2}},
-                       {-1, 1, {1, 0}, {3}},
-                       {-1, 1, {1, 1}, {4}},
-                       {-1, 2, {2, 0}, {5}},
-                       {-1, 2, {2, 1}, {6}},
-                       {-1, 3, {3, 0}, {7}},
-                       {-1, 3, {3, 1}, {8}}};
-  MeshSpecification out{// The outMesh is local, distributed among all ranks
-                        {0, -1, {0, 0}, {0}},
-                        {0, -1, {0, 1}, {0}},
-                        {1, -1, {1, 0}, {0}},
-                        {1, -1, {1, 1}, {0}},
-                        {2, -1, {2, 0}, {0}},
-                        {2, -1, {2, 1}, {0}},
-                        {3, -1, {3, 0}, {0}},
-                        {3, -1, {3, 1}, {0}}};
+  std::vector<VertexSpecification> inVertexList = {
+      {-1, 0, {0, 0}, {1}},
+      {-1, 0, {0, 1}, {2}},
+      {-1, 1, {1, 0}, {3}},
+      {-1, 1, {1, 1}, {4}},
+      {-1, 2, {2, 0}, {5}},
+      {-1, 2, {2, 1}, {6}},
+      {-1, 3, {3, 0}, {7}},
+      {-1, 3, {3, 1}, {8}}};
 
+  MeshSpecification in = {
+      inVertexList,
+      inVertexList.at(0).position.size(),
+      nullptr};
+
+  std::vector<VertexSpecification> outVertexList = {
+      {0, -1, {0, 0}, {0}},
+      {0, -1, {0, 1}, {0}},
+      {1, -1, {1, 0}, {0}},
+      {1, -1, {1, 1}, {0}},
+      {2, -1, {2, 0}, {0}},
+      {2, -1, {2, 1}, {0}},
+      {3, -1, {3, 0}, {0}},
+      {3, -1, {3, 1}, {0}}};
+
+  MeshSpecification out = {
+      outVertexList,
+      outVertexList.at(0).position.size(),
+      nullptr};
   ReferenceSpecification ref{// Tests for {0, 1} on the first rank, {1, 2} on the second, ...
                              {0, {1}},
                              {0, {2}},
@@ -198,24 +210,33 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1Vector)
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   Multiquadrics fct(5.0);
 
-  MeshSpecification      in{// Consistent mapping: The inMesh is communicated
-                       {-1, 0, {0, 0}, {1, 4}},
-                       {-1, 0, {0, 1}, {2, 5}},
-                       {-1, 1, {1, 0}, {3, 6}},
-                       {-1, 1, {1, 1}, {4, 7}},
-                       {-1, 2, {2, 0}, {5, 8}},
-                       {-1, 2, {2, 1}, {6, 9}},
-                       {-1, 3, {3, 0}, {7, 10}},
-                       {-1, 3, {3, 1}, {8, 11}}};
-  MeshSpecification      out{// The outMesh is local, distributed among all ranks
-                        {0, -1, {0, 0}, {0, 0}},
-                        {0, -1, {0, 1}, {0, 0}},
-                        {1, -1, {1, 0}, {0, 0}},
-                        {1, -1, {1, 1}, {0, 0}},
-                        {2, -1, {2, 0}, {0, 0}},
-                        {2, -1, {2, 1}, {0, 0}},
-                        {3, -1, {3, 0}, {0, 0}},
-                        {3, -1, {3, 1}, {0, 0}}};
+  std::vector<VertexSpecification> inVertexList = {// Consistent mapping: The inMesh is communicated
+                                                   {-1, 0, {0, 0}, {1, 4}},
+                                                   {-1, 0, {0, 1}, {2, 5}},
+                                                   {-1, 1, {1, 0}, {3, 6}},
+                                                   {-1, 1, {1, 1}, {4, 7}},
+                                                   {-1, 2, {2, 0}, {5, 8}},
+                                                   {-1, 2, {2, 1}, {6, 9}},
+                                                   {-1, 3, {3, 0}, {7, 10}},
+                                                   {-1, 3, {3, 1}, {8, 11}}};
+  MeshSpecification                in{// The outMesh is local, distributed among all ranks
+                       inVertexList,
+                       inVertexList.at(0).position.size(),
+                       nullptr};
+
+  std::vector<VertexSpecification> outVertexList = {// The outMesh is local, distributed among all ranks
+                                                    {0, -1, {0, 0}, {0, 0}},
+                                                    {0, -1, {0, 1}, {0, 0}},
+                                                    {1, -1, {1, 0}, {0, 0}},
+                                                    {1, -1, {1, 1}, {0, 0}},
+                                                    {2, -1, {2, 0}, {0, 0}},
+                                                    {2, -1, {2, 1}, {0, 0}},
+                                                    {3, -1, {3, 0}, {0, 0}},
+                                                    {3, -1, {3, 1}, {0, 0}}};
+  MeshSpecification                out{
+      outVertexList,
+      outVertexList.at(0).position.size(),
+      nullptr};
   ReferenceSpecification ref{// Tests for {0, 1} on the first rank, {1, 2} on the second, ...
                              {0, {1, 4}},
                              {0, {2, 5}},
@@ -240,24 +261,33 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2)
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   Multiquadrics fct(5.0);
 
-  MeshSpecification                                          in{// Consistent mapping: The inMesh is communicated, rank 2 owns no vertices
-                       {-1, 0, {0, 0}, {1}},
-                       {-1, 0, {0, 1}, {2}},
-                       {-1, 1, {1, 0}, {3}},
-                       {-1, 1, {1, 1}, {4}},
-                       {-1, 1, {2, 0}, {5}},
-                       {-1, 3, {2, 1}, {6}},
-                       {-1, 3, {3, 0}, {7}},
-                       {-1, 3, {3, 1}, {8}}};
-  MeshSpecification                                          out{// The outMesh is local, rank 1 is empty
-                        {0, -1, {0, 0}, {0}},
-                        {0, -1, {0, 1}, {0}},
-                        {0, -1, {1, 0}, {0}},
-                        {2, -1, {1, 1}, {0}},
-                        {2, -1, {2, 0}, {0}},
-                        {2, -1, {2, 1}, {0}},
-                        {3, -1, {3, 0}, {0}},
-                        {3, -1, {3, 1}, {0}}};
+  std::vector<VertexSpecification> inVertexList = {// Consistent mapping: The inMesh is communicated, rank 2 owns no vertices
+                                                   {-1, 0, {0, 0}, {1}},
+                                                   {-1, 0, {0, 1}, {2}},
+                                                   {-1, 1, {1, 0}, {3}},
+                                                   {-1, 1, {1, 1}, {4}},
+                                                   {-1, 1, {2, 0}, {5}},
+                                                   {-1, 3, {2, 1}, {6}},
+                                                   {-1, 3, {3, 0}, {7}},
+                                                   {-1, 3, {3, 1}, {8}}};
+
+  MeshSpecification in = {
+      inVertexList,
+      inVertexList.at(0).position.size(),
+      nullptr};
+  std::vector<VertexSpecification> outVertexList = {// The outMesh is local, rank 1 is empty
+                                                    {0, -1, {0, 0}, {0}},
+                                                    {0, -1, {0, 1}, {0}},
+                                                    {0, -1, {1, 0}, {0}},
+                                                    {2, -1, {1, 1}, {0}},
+                                                    {2, -1, {2, 0}, {0}},
+                                                    {2, -1, {2, 1}, {0}},
+                                                    {3, -1, {3, 0}, {0}},
+                                                    {3, -1, {3, 1}, {0}}};
+  MeshSpecification                out           = {
+      outVertexList,
+      outVertexList.at(0).position.size(),
+      nullptr};
   ReferenceSpecification                                     ref{// Tests for {0, 1, 2} on the first rank,
                              // second rank (consistent with the outMesh) is empty, ...
                              {0, {1}},
@@ -284,7 +314,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
 
   std::vector<int> globalIndexOffsets = {0, 0, 0, 4};
 
-  MeshSpecification in{
+  std::vector<VertexSpecification> inVertexList = {
       // Rank 0 has part of the mesh, owns a subpart
       {0, 0, {0, 0}, {1}},
       {0, 0, {0, 1}, {2}},
@@ -308,15 +338,23 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
       {3, 3, {3, 0}, {7}},
       {3, 3, {3, 1}, {8}},
   };
-  MeshSpecification      out{// The outMesh is local, rank 1 is empty
-                        {0, -1, {0, 0}, {0}},
-                        {0, -1, {0, 1}, {0}},
-                        {0, -1, {1, 0}, {0}},
-                        {2, -1, {1, 1}, {0}},
-                        {2, -1, {2, 0}, {0}},
-                        {2, -1, {2, 1}, {0}},
-                        {3, -1, {3, 0}, {0}},
-                        {3, -1, {3, 1}, {0}}};
+  MeshSpecification in{
+      inVertexList,
+      inVertexList.at(0).position.size(),
+      nullptr};
+  std::vector<VertexSpecification> outVertexList = {// The outMesh is local, rank 1 is empty
+                                                    {0, -1, {0, 0}, {0}},
+                                                    {0, -1, {0, 1}, {0}},
+                                                    {0, -1, {1, 0}, {0}},
+                                                    {2, -1, {1, 1}, {0}},
+                                                    {2, -1, {2, 0}, {0}},
+                                                    {2, -1, {2, 1}, {0}},
+                                                    {3, -1, {3, 0}, {0}},
+                                                    {3, -1, {3, 1}, {0}}};
+  MeshSpecification                out{
+      outVertexList,
+      outVertexList.at(0).position.size(),
+      nullptr};
   ReferenceSpecification ref{// Tests for {0, 1, 2} on the first rank,
                              // second rank (consistent with the outMesh) is empty, ...
                              {0, {1}},
@@ -344,7 +382,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3Vector)
 
   std::vector<int> globalIndexOffsets = {0, 0, 0, 4};
 
-  MeshSpecification in{
+  std::vector<VertexSpecification> inVertexList = {
       // Rank 0 has part of the mesh, owns a subpart
       {0, 0, {0, 0}, {1, 4}},
       {0, 0, {0, 1}, {2, 5}},
@@ -368,15 +406,24 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3Vector)
       {3, 3, {3, 0}, {7, 10}},
       {3, 3, {3, 1}, {8, 11}},
   };
-  MeshSpecification                                          out{// The outMesh is local, rank 1 is empty
-                        {0, -1, {0, 0}, {0, 0}},
-                        {0, -1, {0, 1}, {0, 0}},
-                        {0, -1, {1, 0}, {0, 0}},
-                        {2, -1, {1, 1}, {0, 0}},
-                        {2, -1, {2, 0}, {0, 0}},
-                        {2, -1, {2, 1}, {0, 0}},
-                        {3, -1, {3, 0}, {0, 0}},
-                        {3, -1, {3, 1}, {0, 0}}};
+  MeshSpecification in{
+      inVertexList,
+      inVertexList.at(0).position.size(),
+      nullptr};
+  std::vector<VertexSpecification> outVertexList = {// The outMesh is local, rank 1 is empty
+                                                    {0, -1, {0, 0}, {0, 0}},
+                                                    {0, -1, {0, 1}, {0, 0}},
+                                                    {0, -1, {1, 0}, {0, 0}},
+                                                    {2, -1, {1, 1}, {0, 0}},
+                                                    {2, -1, {2, 0}, {0, 0}},
+                                                    {2, -1, {2, 1}, {0, 0}},
+                                                    {3, -1, {3, 0}, {0, 0}},
+                                                    {3, -1, {3, 1}, {0, 0}}};
+  MeshSpecification                out{
+      outVertexList,
+      outVertexList.at(0).position.size(),
+      nullptr};
+
   ReferenceSpecification                                     ref{// Tests for {0, 1, 2} on the first rank,
                              // second rank (consistent with the outMesh) is empty, ...
                              {0, {1, 4}},
@@ -403,7 +450,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
 
   std::vector<int> globalIndexOffsets = {0, 0, 0, 0};
 
-  MeshSpecification in{
+  std::vector<VertexSpecification> inVertexList = {
       // Rank 0 has no vertices
       // Rank 1 has the entire mesh, owns a subpart
       {1, 1, {0, 0}, {1.1}},
@@ -425,18 +472,26 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
       {2, 2, {3, 1}, {8}},
       // Rank 3 has no vertices
   };
-  MeshSpecification                                             out{// The outMesh is local, rank 0 and 3 are empty
-                        // not same order as input mesh and vertex (2,0) appears twice
-                        {1, -1, {2, 0}, {0}},
-                        {1, -1, {1, 0}, {0}},
-                        {1, -1, {0, 1}, {0}},
-                        {1, -1, {1, 1}, {0}},
-                        {1, -1, {0, 0}, {0}},
-                        {2, -1, {2, 0}, {0}},
-                        {2, -1, {2, 1}, {0}},
-                        {2, -1, {3, 0}, {0}},
-                        {2, -1, {3, 1}, {0}}};
-  ReferenceSpecification ref{{1, {5}},
+  MeshSpecification in{
+      inVertexList,
+      inVertexList.at(0).position.size(),
+      nullptr};
+  std::vector<VertexSpecification> outVertexList = {// The outMesh is local, rank 0 and 3 are empty
+                                                    // not same order as input mesh and vertex (2,0) appears twice
+                                                    {1, -1, {2, 0}, {0}},
+                                                    {1, -1, {1, 0}, {0}},
+                                                    {1, -1, {0, 1}, {0}},
+                                                    {1, -1, {1, 1}, {0}},
+                                                    {1, -1, {0, 0}, {0}},
+                                                    {2, -1, {2, 0}, {0}},
+                                                    {2, -1, {2, 1}, {0}},
+                                                    {2, -1, {3, 0}, {0}},
+                                                    {2, -1, {3, 1}, {0}}};
+  MeshSpecification out{
+      outVertexList,
+      outVertexList.at(0).position.size(),
+      nullptr};
+  ReferenceSpecification                                        ref{{1, {5}},
                              {1, {3}},
                              {1, {2.5}},
                              {1, {4}},
@@ -459,8 +514,8 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5)
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   ThinPlateSplines fct;
 
-  std::vector<int>  globalIndexOffsets = {0, 0, 0, 0};
-  MeshSpecification in{
+  std::vector<int>                 globalIndexOffsets = {0, 0, 0, 0};
+  std::vector<VertexSpecification> inVertexList       = {
       // Every rank has the entire mesh and owns a subpart
       {0, 0, {0, 0}, {1.1}},
       {0, 0, {0, 1}, {2.5}},
@@ -495,18 +550,26 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5)
       {3, 3, {3, 0}, {7}},
       {3, 3, {3, 1}, {8}},
   };
-  MeshSpecification                                             out{// The outMesh is local, rank 0 and 3 are empty
-                        // not same order as input mesh and vertex (2,0) appears twice
-                        {1, -1, {2, 0}, {0}},
-                        {1, -1, {1, 0}, {0}},
-                        {1, -1, {0, 1}, {0}},
-                        {1, -1, {1, 1}, {0}},
-                        {1, -1, {0, 0}, {0}},
-                        {2, -1, {2, 0}, {0}},
-                        {2, -1, {2, 1}, {0}},
-                        {2, -1, {3, 0}, {0}},
-                        {2, -1, {3, 1}, {0}}};
-  ReferenceSpecification ref{{1, {5}},
+  MeshSpecification in{
+      inVertexList,
+      inVertexList.at(0).position.size(),
+      nullptr};
+  std::vector<VertexSpecification> outVertexList = {// The outMesh is local, rank 0 and 3 are empty
+                                                    // not same order as input mesh and vertex (2,0) appears twice
+                                                    {1, -1, {2, 0}, {0}},
+                                                    {1, -1, {1, 0}, {0}},
+                                                    {1, -1, {0, 1}, {0}},
+                                                    {1, -1, {1, 1}, {0}},
+                                                    {1, -1, {0, 0}, {0}},
+                                                    {2, -1, {2, 0}, {0}},
+                                                    {2, -1, {2, 1}, {0}},
+                                                    {2, -1, {3, 0}, {0}},
+                                                    {2, -1, {3, 1}, {0}}};
+  MeshSpecification out{
+      outVertexList,
+      outVertexList.at(0).position.size(),
+      nullptr};
+  ReferenceSpecification                                        ref{{1, {5}},
                              {1, {3}},
                              {1, {2.5}},
                              {1, {4}},
@@ -531,7 +594,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6,
   ThinPlateSplines fct;
   std::vector<int> globalIndexOffsets = {0, 0, 0, 0};
 
-  MeshSpecification in{
+  std::vector<VertexSpecification> inVertexList = {
       // Rank 0 has no vertices
       // Rank 1 has the entire mesh, owns a subpart
       {1, 1, {0, 0}, {1}},
@@ -553,18 +616,26 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6,
       {2, 2, {3, 1}, {8}},
       // Rank 3 has no vertices
   };
-  MeshSpecification                                             out{// The outMesh is local, rank 0 and 3 are empty
-                        // not same order as input mesh and vertex (2,0) appears twice
-                        {1, -1, {2, 0}, {0}},
-                        {1, -1, {1, 0}, {0}},
-                        {1, -1, {0, 1}, {0}},
-                        {1, -1, {1, 1}, {0}},
-                        {1, -1, {0, 0}, {0}},
-                        {2, -1, {2, 0}, {0}},
-                        {2, -1, {2, 1}, {0}},
-                        {2, -1, {3, 0}, {0}},
-                        {2, -1, {3, 1}, {0}}};
-  ReferenceSpecification ref{{1, {5}},
+  MeshSpecification in{
+      inVertexList,
+      inVertexList.at(0).position.size(),
+      nullptr};
+  std::vector<VertexSpecification> outVertexList = {// The outMesh is local, rank 0 and 3 are empty
+                                                    // not same order as input mesh and vertex (2,0) appears twice
+                                                    {1, -1, {2, 0}, {0}},
+                                                    {1, -1, {1, 0}, {0}},
+                                                    {1, -1, {0, 1}, {0}},
+                                                    {1, -1, {1, 1}, {0}},
+                                                    {1, -1, {0, 0}, {0}},
+                                                    {2, -1, {2, 0}, {0}},
+                                                    {2, -1, {2, 1}, {0}},
+                                                    {2, -1, {3, 0}, {0}},
+                                                    {2, -1, {3, 1}, {0}}};
+  MeshSpecification out{
+      outVertexList,
+      outVertexList.at(0).position.size(),
+      nullptr};
+  ReferenceSpecification                                        ref{{1, {5}},
                              {1, {3}},
                              {1, {2}},
                              {1, {4}},
@@ -587,24 +658,32 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1)
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   Multiquadrics fct(5.0);
 
-  MeshSpecification      in{// Conservative mapping: The inMesh is local
-                       {0, -1, {0, 0}, {1}},
-                       {0, -1, {0, 1}, {2}},
-                       {1, -1, {1, 0}, {3}},
-                       {1, -1, {1, 1}, {4}},
-                       {2, -1, {2, 0}, {5}},
-                       {2, -1, {2, 1}, {6}},
-                       {3, -1, {3, 0}, {7}},
-                       {3, -1, {3, 1}, {8}}};
-  MeshSpecification      out{// The outMesh is distributed
-                        {-1, 0, {0, 0}, {0}},
-                        {-1, 0, {0, 1}, {0}},
-                        {-1, 1, {1, 0}, {0}},
-                        {-1, 1, {1, 1}, {0}},
-                        {-1, 2, {2, 0}, {0}},
-                        {-1, 2, {2, 1}, {0}},
-                        {-1, 3, {3, 0}, {0}},
-                        {-1, 3, {3, 1}, {0}}};
+  std::vector<VertexSpecification> inVertexList = {// Conservative mapping: The inMesh is local
+                                                   {0, -1, {0, 0}, {1}},
+                                                   {0, -1, {0, 1}, {2}},
+                                                   {1, -1, {1, 0}, {3}},
+                                                   {1, -1, {1, 1}, {4}},
+                                                   {2, -1, {2, 0}, {5}},
+                                                   {2, -1, {2, 1}, {6}},
+                                                   {3, -1, {3, 0}, {7}},
+                                                   {3, -1, {3, 1}, {8}}};
+  MeshSpecification                in           = {
+      inVertexList,
+      inVertexList.at(0).position.size(),
+      nullptr};
+  std::vector<VertexSpecification> outVertexList = {// The outMesh is distributed
+                                                    {-1, 0, {0, 0}, {0}},
+                                                    {-1, 0, {0, 1}, {0}},
+                                                    {-1, 1, {1, 0}, {0}},
+                                                    {-1, 1, {1, 1}, {0}},
+                                                    {-1, 2, {2, 0}, {0}},
+                                                    {-1, 2, {2, 1}, {0}},
+                                                    {-1, 3, {3, 0}, {0}},
+                                                    {-1, 3, {3, 1}, {0}}};
+  MeshSpecification                out           = {
+      outVertexList,
+      outVertexList.at(0).position.size(),
+      nullptr};
   ReferenceSpecification ref{// Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
                              // {0, 0, 2, 3, 0, 0, 0, 0} on the second, ...
                              {0, {1}},
@@ -652,25 +731,33 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1)
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV1Vector)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
-  Multiquadrics                                              fct(5.0);
-  MeshSpecification                                          in{// Conservative mapping: The inMesh is local
-                       {0, -1, {0, 0}, {1, 4}},
-                       {0, -1, {0, 1}, {2, 5}},
-                       {1, -1, {1, 0}, {3, 6}},
-                       {1, -1, {1, 1}, {4, 7}},
-                       {2, -1, {2, 0}, {5, 8}},
-                       {2, -1, {2, 1}, {6, 9}},
-                       {3, -1, {3, 0}, {7, 10}},
-                       {3, -1, {3, 1}, {8, 11}}};
-  MeshSpecification                                          out{// The outMesh is distributed
-                        {-1, 0, {0, 0}, {0, 0}},
-                        {-1, 0, {0, 1}, {0, 0}},
-                        {-1, 1, {1, 0}, {0, 0}},
-                        {-1, 1, {1, 1}, {0, 0}},
-                        {-1, 2, {2, 0}, {0, 0}},
-                        {-1, 2, {2, 1}, {0, 0}},
-                        {-1, 3, {3, 0}, {0, 0}},
-                        {-1, 3, {3, 1}, {0, 0}}};
+  Multiquadrics                    fct(5.0);
+  std::vector<VertexSpecification> inVertexList = {// Conservative mapping: The inMesh is local
+                                                   {0, -1, {0, 0}, {1, 4}},
+                                                   {0, -1, {0, 1}, {2, 5}},
+                                                   {1, -1, {1, 0}, {3, 6}},
+                                                   {1, -1, {1, 1}, {4, 7}},
+                                                   {2, -1, {2, 0}, {5, 8}},
+                                                   {2, -1, {2, 1}, {6, 9}},
+                                                   {3, -1, {3, 0}, {7, 10}},
+                                                   {3, -1, {3, 1}, {8, 11}}};
+  MeshSpecification                in           = {
+      inVertexList,
+      inVertexList.at(0).position.size(),
+      nullptr};
+  std::vector<VertexSpecification> outVertexList = {// The outMesh is distributed
+                                                    {-1, 0, {0, 0}, {0, 0}},
+                                                    {-1, 0, {0, 1}, {0, 0}},
+                                                    {-1, 1, {1, 0}, {0, 0}},
+                                                    {-1, 1, {1, 1}, {0, 0}},
+                                                    {-1, 2, {2, 0}, {0, 0}},
+                                                    {-1, 2, {2, 1}, {0, 0}},
+                                                    {-1, 3, {3, 0}, {0, 0}},
+                                                    {-1, 3, {3, 1}, {0, 0}}};
+  MeshSpecification                out           = {
+      outVertexList,
+      outVertexList.at(0).position.size(),
+      nullptr};
   ReferenceSpecification                                     ref{// Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
                              // {0, 0, 2, 3, 0, 0, 0, 0} on the second, ...
                              {0, {1, 4}},
@@ -721,24 +808,32 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV2)
 
   std::vector<int> globalIndexOffsets = {0, 0, 4, 6};
 
-  MeshSpecification      in{// Conservative mapping: The inMesh is local but rank 0 has no vertices
-                       {1, -1, {0, 0}, {1}},
-                       {1, -1, {0, 1}, {2}},
-                       {1, -1, {1, 0}, {3}},
-                       {1, -1, {1, 1}, {4}},
-                       {2, -1, {2, 0}, {5}},
-                       {2, -1, {2, 1}, {6}},
-                       {3, -1, {3, 0}, {7}},
-                       {3, -1, {3, 1}, {8}}};
-  MeshSpecification      out{// The outMesh is distributed, rank 0 owns no vertex
-                        {-1, 1, {0, 0}, {0}},
-                        {-1, 1, {0, 1}, {0}},
-                        {-1, 1, {1, 0}, {0}},
-                        {-1, 1, {1, 1}, {0}},
-                        {-1, 2, {2, 0}, {0}},
-                        {-1, 2, {2, 1}, {0}},
-                        {-1, 3, {3, 0}, {0}},
-                        {-1, 3, {3, 1}, {0}}};
+  std::vector<VertexSpecification> inVertexList = {// Conservative mapping: The inMesh is local but rank 0 has no vertices
+                                                   {1, -1, {0, 0}, {1}},
+                                                   {1, -1, {0, 1}, {2}},
+                                                   {1, -1, {1, 0}, {3}},
+                                                   {1, -1, {1, 1}, {4}},
+                                                   {2, -1, {2, 0}, {5}},
+                                                   {2, -1, {2, 1}, {6}},
+                                                   {3, -1, {3, 0}, {7}},
+                                                   {3, -1, {3, 1}, {8}}};
+  MeshSpecification                in           = {
+      inVertexList,
+      inVertexList.at(0).position.size(),
+      nullptr};
+  std::vector<VertexSpecification> outVertexList = {// The outMesh is distributed, rank 0 owns no vertex
+                                                    {-1, 1, {0, 0}, {0}},
+                                                    {-1, 1, {0, 1}, {0}},
+                                                    {-1, 1, {1, 0}, {0}},
+                                                    {-1, 1, {1, 1}, {0}},
+                                                    {-1, 2, {2, 0}, {0}},
+                                                    {-1, 2, {2, 1}, {0}},
+                                                    {-1, 3, {3, 0}, {0}},
+                                                    {-1, 3, {3, 1}, {0}}};
+  MeshSpecification                out           = {
+      outVertexList,
+      outVertexList.at(0).position.size(),
+      nullptr};
   ReferenceSpecification ref{// Tests for {0, 0, 0, 0, 0, 0, 0, 0} on the first rank,
                              // {1, 2, 2, 3, 0, 0, 0, 0} on the second, ...
                              {0, {0}},
@@ -789,23 +884,31 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV3)
   Multiquadrics    fct(2.0);
   std::vector<int> globalIndexOffsets = {0, 0, 3, 5};
 
-  MeshSpecification      in{// Conservative mapping: The inMesh is local but rank 0 has no vertices
-                       {1, -1, {0, 0}, {1}},
-                       {1, -1, {1, 0}, {3}},
-                       {1, -1, {1, 1}, {4}},
-                       {2, -1, {2, 0}, {5}},
-                       {2, -1, {2, 1}, {6}},
-                       {3, -1, {3, 0}, {7}},
-                       {3, -1, {3, 1}, {8}}}; // Sum of all vertices is 34
-  MeshSpecification      out{                      // The outMesh is distributed, rank 0 owns no vertex
-                        {-1, 1, {0, 0}, {0}},
-                        {-1, 1, {0, 1}, {0}},
-                        {-1, 1, {1, 0}, {0}},
-                        {-1, 1, {1, 1}, {0}},
-                        {-1, 2, {2, 0}, {0}},
-                        {-1, 2, {2, 1}, {0}},
-                        {-1, 3, {3, 0}, {0}},
-                        {-1, 3, {3, 1}, {0}}};
+  std::vector<VertexSpecification> inVertexList = {// Conservative mapping: The inMesh is local but rank 0 has no vertices
+                                                   {1, -1, {0, 0}, {1}},
+                                                   {1, -1, {1, 0}, {3}},
+                                                   {1, -1, {1, 1}, {4}},
+                                                   {2, -1, {2, 0}, {5}},
+                                                   {2, -1, {2, 1}, {6}},
+                                                   {3, -1, {3, 0}, {7}},
+                                                   {3, -1, {3, 1}, {8}}}; // Sum of all vertices is 34
+  MeshSpecification                in           = {
+      inVertexList,
+      inVertexList.at(0).position.size(),
+      nullptr};
+  std::vector<VertexSpecification> outVertexList = {// The outMesh is distributed, rank 0 owns no vertex
+                                                    {-1, 1, {0, 0}, {0}},
+                                                    {-1, 1, {0, 1}, {0}},
+                                                    {-1, 1, {1, 0}, {0}},
+                                                    {-1, 1, {1, 1}, {0}},
+                                                    {-1, 2, {2, 0}, {0}},
+                                                    {-1, 2, {2, 1}, {0}},
+                                                    {-1, 3, {3, 0}, {0}},
+                                                    {-1, 3, {3, 1}, {0}}};
+  MeshSpecification                out           = {
+      outVertexList,
+      outVertexList.at(0).position.size(),
+      nullptr};
   ReferenceSpecification ref{// Tests for {0, 0, 0, 0, 0, 0, 0, 0} on the first rank,
                              // {1, 2, 2, 3, 0, 0, 0, 0} on the second, ...
                              {0, {0}},
@@ -857,23 +960,31 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
   ThinPlateSplines fct;
   std::vector<int> globalIndexOffsets = {0, 2, 4, 6};
 
-  MeshSpecification                                             in{// Conservative mapping: The inMesh is local
-                       {0, -1, {0, 0}, {1}},
-                       {0, -1, {0, 1}, {2}},
-                       {1, -1, {1, 0}, {3}},
-                       {1, -1, {1, 1}, {4}},
-                       {2, -1, {2, 0}, {5}},
-                       {2, -1, {2, 1}, {6}},
-                       {3, -1, {3, 0}, {7}},
-                       {3, -1, {3, 1}, {8}}}; // Sum is 36
-  MeshSpecification                                             out{                      // The outMesh is distributed, rank 0 has no vertex at all
-                        {-1, 1, {0, 1}, {0}},
-                        {-1, 1, {1, 0}, {0}},
-                        {-1, 1, {1, 1}, {0}},
-                        {-1, 2, {2, 0}, {0}},
-                        {-1, 2, {2, 1}, {0}},
-                        {-1, 3, {3, 0}, {0}},
-                        {-1, 3, {3, 1}, {0}}};
+  std::vector<VertexSpecification> inVertexList = {// Conservative mapping: The inMesh is local
+                                                   {0, -1, {0, 0}, {1}},
+                                                   {0, -1, {0, 1}, {2}},
+                                                   {1, -1, {1, 0}, {3}},
+                                                   {1, -1, {1, 1}, {4}},
+                                                   {2, -1, {2, 0}, {5}},
+                                                   {2, -1, {2, 1}, {6}},
+                                                   {3, -1, {3, 0}, {7}},
+                                                   {3, -1, {3, 1}, {8}}}; // Sum is 36
+  MeshSpecification                in           = {
+      inVertexList,
+      inVertexList.at(0).position.size(),
+      nullptr};
+  std::vector<VertexSpecification> outVertexList = {// The outMesh is distributed, rank 0 has no vertex at all
+                                                    {-1, 1, {0, 1}, {0}},
+                                                    {-1, 1, {1, 0}, {0}},
+                                                    {-1, 1, {1, 1}, {0}},
+                                                    {-1, 2, {2, 0}, {0}},
+                                                    {-1, 2, {2, 1}, {0}},
+                                                    {-1, 3, {3, 0}, {0}},
+                                                    {-1, 3, {3, 1}, {0}}};
+  MeshSpecification                out           = {
+      outVertexList,
+      outVertexList.at(0).position.size(),
+      nullptr};
   ReferenceSpecification                                        ref{// Tests for {0, 0, 0, 0, 0, 0, 0, 0} on the first rank,
                              // {2, 3, 4, 3, 0, 0, 0, 0} on the second, ...
                              {0, {0}},
@@ -913,25 +1024,33 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
 BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
-  Multiquadrics          fct(5.0);
-  MeshSpecification      in{// Conservative mapping: The inMesh is local
-                       {0, -1, {0, 0}, {1}},
-                       {0, -1, {0, 1}, {2}},
-                       {1, -1, {1, 0}, {3}},
-                       {1, -1, {1, 1}, {4}},
-                       {2, -1, {2, 0}, {5}},
-                       {2, -1, {2, 1}, {6}},
-                       {3, -1, {3, 0}, {7}},
-                       {3, -1, {3, 1}, {8}}};
-  MeshSpecification      out{// The outMesh is distributed and non-contigous
-                        {-1, 0, {0, 0}, {0}},
-                        {-1, 1, {0, 1}, {0}},
-                        {-1, 1, {1, 0}, {0}},
-                        {-1, 0, {1, 1}, {0}},
-                        {-1, 2, {2, 0}, {0}},
-                        {-1, 2, {2, 1}, {0}},
-                        {-1, 3, {3, 0}, {0}},
-                        {-1, 3, {3, 1}, {0}}};
+  Multiquadrics                    fct(5.0);
+  std::vector<VertexSpecification> inVertexList = {// Conservative mapping: The inMesh is local
+                                                   {0, -1, {0, 0}, {1}},
+                                                   {0, -1, {0, 1}, {2}},
+                                                   {1, -1, {1, 0}, {3}},
+                                                   {1, -1, {1, 1}, {4}},
+                                                   {2, -1, {2, 0}, {5}},
+                                                   {2, -1, {2, 1}, {6}},
+                                                   {3, -1, {3, 0}, {7}},
+                                                   {3, -1, {3, 1}, {8}}};
+  MeshSpecification                in           = {
+      inVertexList,
+      inVertexList.at(0).position.size(),
+      nullptr};
+  std::vector<VertexSpecification> outVertexList = {// The outMesh is distributed and non-contigous
+                                                    {-1, 0, {0, 0}, {0}},
+                                                    {-1, 1, {0, 1}, {0}},
+                                                    {-1, 1, {1, 0}, {0}},
+                                                    {-1, 0, {1, 1}, {0}},
+                                                    {-1, 2, {2, 0}, {0}},
+                                                    {-1, 2, {2, 1}, {0}},
+                                                    {-1, 3, {3, 0}, {0}},
+                                                    {-1, 3, {3, 1}, {0}}};
+  MeshSpecification                out           = {
+      outVertexList,
+      outVertexList.at(0).position.size(),
+      nullptr};
   ReferenceSpecification ref{// Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
                              // {0, 0, 2, 3, 0, 0, 0, 0} on the second, ...
                              {0, {1}},
@@ -981,24 +1100,32 @@ BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5Vector)
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   Multiquadrics fct(5.0);
 
-  MeshSpecification                                          in{// Conservative mapping: The inMesh is local
-                       {0, -1, {0, 0}, {1, 4}},
-                       {0, -1, {0, 1}, {2, 5}},
-                       {1, -1, {1, 0}, {3, 6}},
-                       {1, -1, {1, 1}, {4, 7}},
-                       {2, -1, {2, 0}, {5, 8}},
-                       {2, -1, {2, 1}, {6, 9}},
-                       {3, -1, {3, 0}, {7, 10}},
-                       {3, -1, {3, 1}, {8, 11}}};
-  MeshSpecification                                          out{// The outMesh is distributed and non-contigous
-                        {-1, 0, {0, 0}, {0, 0}},
-                        {-1, 1, {0, 1}, {0, 0}},
-                        {-1, 1, {1, 0}, {0, 0}},
-                        {-1, 0, {1, 1}, {0, 0}},
-                        {-1, 2, {2, 0}, {0, 0}},
-                        {-1, 2, {2, 1}, {0, 0}},
-                        {-1, 3, {3, 0}, {0, 0}},
-                        {-1, 3, {3, 1}, {0, 0}}};
+  std::vector<VertexSpecification> inVertexList = {// Conservative mapping: The inMesh is local
+                                                   {0, -1, {0, 0}, {1, 4}},
+                                                   {0, -1, {0, 1}, {2, 5}},
+                                                   {1, -1, {1, 0}, {3, 6}},
+                                                   {1, -1, {1, 1}, {4, 7}},
+                                                   {2, -1, {2, 0}, {5, 8}},
+                                                   {2, -1, {2, 1}, {6, 9}},
+                                                   {3, -1, {3, 0}, {7, 10}},
+                                                   {3, -1, {3, 1}, {8, 11}}};
+  MeshSpecification                in           = {
+      inVertexList,
+      inVertexList.at(0).position.size(),
+      nullptr};
+  std::vector<VertexSpecification> outVertexList = {// The outMesh is distributed and non-contigous
+                                                    {-1, 0, {0, 0}, {0, 0}},
+                                                    {-1, 1, {0, 1}, {0, 0}},
+                                                    {-1, 1, {1, 0}, {0, 0}},
+                                                    {-1, 0, {1, 1}, {0, 0}},
+                                                    {-1, 2, {2, 0}, {0, 0}},
+                                                    {-1, 2, {2, 1}, {0, 0}},
+                                                    {-1, 3, {3, 0}, {0, 0}},
+                                                    {-1, 3, {3, 1}, {0, 0}}};
+  MeshSpecification                out           = {
+      outVertexList,
+      outVertexList.at(0).position.size(),
+      nullptr};
   ReferenceSpecification                                     ref{// Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
                              // {0, 0, 2, 3, 0, 0, 0, 0} on the second, ...
                              {0, {1, 4}},
@@ -1048,31 +1175,31 @@ void testTagging(const TestContext &context,
                  MeshSpecification  shouldTagSecondRound,
                  bool               consistent)
 {
-  int meshDimension = inMeshSpec.at(0).position.size();
+  int meshDimension = inMeshSpec.meshDimension;
 
-  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", meshDimension, testing::nextMeshID()));
-  getDistributedMesh(context, inMeshSpec, inMesh);
+  inMeshSpec.meshName = mesh::PtrMesh(new mesh::Mesh("InMesh", inMeshSpec.meshDimension, testing::nextMeshID()));
+  getDistributedMesh(context, inMeshSpec);
   Eigen::VectorXd inValues = getDistributedData(context, inMeshSpec);
 
-  mesh::PtrMesh outMesh(new mesh::Mesh("outMesh", meshDimension, testing::nextMeshID()));
-  getDistributedMesh(context, outMeshSpec, outMesh);
+  outMeshSpec.meshName = mesh::PtrMesh(new mesh::Mesh("outMesh", outMeshSpec.meshDimension, testing::nextMeshID()));
+  getDistributedMesh(context, outMeshSpec);
   Eigen::VectorXd outValues = getDistributedData(context, outMeshSpec);
 
   Gaussian                                              fct(4.5); // Support radius approx. 1
   Mapping::Constraint                                   constr = consistent ? Mapping::CONSISTENT : Mapping::CONSERVATIVE;
   RadialBasisFctMapping<RadialBasisFctSolver<Gaussian>> mapping(constr, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
-  inMesh->computeBoundingBox();
-  outMesh->computeBoundingBox();
+  inMeshSpec.meshName->computeBoundingBox();
+  outMeshSpec.meshName->computeBoundingBox();
 
-  mapping.setMeshes(inMesh, outMesh);
+  mapping.setMeshes(inMeshSpec.meshName, outMeshSpec.meshName);
   mapping.tagMeshFirstRound();
 
-  for (const auto &v : inMesh->vertices()) {
-    auto pos   = std::find_if(shouldTagFirstRound.begin(), shouldTagFirstRound.end(),
+  for (const auto &v : inMeshSpec.meshName->vertices()) {
+    auto pos   = std::find_if(shouldTagFirstRound.vertices.begin(), shouldTagFirstRound.vertices.end(),
                             [meshDimension, &v](const VertexSpecification &spec) {
                               return std::equal(spec.position.data(), spec.position.data() + meshDimension, v.getCoords().data());
                             });
-    bool found = pos != shouldTagFirstRound.end();
+    bool found = pos != shouldTagFirstRound.vertices.end();
     BOOST_TEST(found >= v.isTagged(),
                "FirstRound: Vertex " << v << " is tagged, but should not be.");
     BOOST_TEST(found <= v.isTagged(),
@@ -1081,17 +1208,17 @@ void testTagging(const TestContext &context,
 
   mapping.tagMeshSecondRound();
 
-  for (const auto &v : inMesh->vertices()) {
-    auto posFirst    = std::find_if(shouldTagFirstRound.begin(), shouldTagFirstRound.end(),
+  for (const auto &v : inMeshSpec.meshName->vertices()) {
+    auto posFirst    = std::find_if(shouldTagFirstRound.vertices.begin(), shouldTagFirstRound.vertices.end(),
                                  [meshDimension, &v](const VertexSpecification &spec) {
                                    return std::equal(spec.position.data(), spec.position.data() + meshDimension, v.getCoords().data());
                                  });
-    bool foundFirst  = posFirst != shouldTagFirstRound.end();
-    auto posSecond   = std::find_if(shouldTagSecondRound.begin(), shouldTagSecondRound.end(),
+    bool foundFirst  = posFirst != shouldTagFirstRound.vertices.end();
+    auto posSecond   = std::find_if(shouldTagSecondRound.vertices.begin(), shouldTagSecondRound.vertices.end(),
                                   [meshDimension, &v](const VertexSpecification &spec) {
                                     return std::equal(spec.position.data(), spec.position.data() + meshDimension, v.getCoords().data());
                                   });
-    bool foundSecond = posSecond != shouldTagSecondRound.end();
+    bool foundSecond = posSecond != shouldTagSecondRound.vertices.end();
     BOOST_TEST(foundFirst <= v.isTagged(), "SecondRound: Vertex " << v
                                                                   << " is not tagged, but should be from the first round.");
     BOOST_TEST(foundSecond <= v.isTagged(), "SecondRound: Vertex " << v
@@ -1109,9 +1236,13 @@ BOOST_AUTO_TEST_CASE(testTagFirstRound)
   //* * x * *
   //    *
   //    *
-  MeshSpecification outMeshSpec = {
+  std::vector<VertexSpecification> outVertexList = {
       {0, -1, {0, 0}, {0}}};
-  MeshSpecification inMeshSpec = {
+  MeshSpecification outMeshSpec = {
+      outVertexList,
+      outVertexList.at(0).position.size(),
+      nullptr};
+  std::vector<VertexSpecification> inVertexList = {
       {0, -1, {-1, 0}, {1}}, // inside
       {0, -1, {-2, 0}, {1}}, // outside
       {0, 0, {1, 0}, {1}},   // inside, owner
@@ -1121,13 +1252,26 @@ BOOST_AUTO_TEST_CASE(testTagFirstRound)
       {0, -1, {0, 1}, {1}},  // inside
       {0, -1, {0, 2}, {1}}   // outside
   };
-  MeshSpecification shouldTagFirstRound = {
+  MeshSpecification inMeshSpec = {
+      inVertexList,
+      inVertexList.at(0).position.size(),
+      nullptr};
+  std::vector<VertexSpecification> firstRoundVertices = {
       {0, -1, {-1, 0}, {1}},
       {0, -1, {1, 0}, {1}},
       {0, -1, {0, -1}, {1}},
       {0, -1, {0, 1}, {1}}};
-  MeshSpecification shouldTagSecondRound = {
+
+  MeshSpecification shouldTagFirstRound = {
+      firstRoundVertices,
+      firstRoundVertices.at(0).position.size(),
+      nullptr};
+  std::vector<VertexSpecification> secondRoundVertices = {
       {0, -1, {2, 0}, {1}}};
+  MeshSpecification shouldTagSecondRound = {
+      secondRoundVertices,
+      secondRoundVertices.at(0).position.size(),
+      nullptr};
   testTagging(context, inMeshSpec, outMeshSpec, shouldTagFirstRound, shouldTagSecondRound, true);
   // For conservative just swap meshes.
   testTagging(context, outMeshSpec, inMeshSpec, shouldTagFirstRound, shouldTagSecondRound, false);
