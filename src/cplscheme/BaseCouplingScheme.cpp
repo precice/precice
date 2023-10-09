@@ -226,7 +226,7 @@ PtrCouplingData BaseCouplingScheme::addCouplingData(const mesh::PtrData &data, m
   return ptrCplData;
 }
 
-bool BaseCouplingScheme::isExplicitCouplingScheme()
+bool BaseCouplingScheme::isExplicitCouplingScheme() const
 {
   PRECICE_ASSERT(_couplingMode != Undefined);
   return _couplingMode == Explicit;
@@ -408,12 +408,7 @@ bool BaseCouplingScheme::addComputedTime(
                 "For more information, consult the adapter example in the preCICE documentation.",
                 timeToAdd, _timeWindowSize - _computedTimeWindowPart + timeToAdd);
 
-  if (hasTimeWindowSize()) {
-    const bool isAtWindowEnd = math::equals(getComputedTimeWindowPart(), getTimeWindowSize(), _eps);
-    return isAtWindowEnd;
-  } else { // using participant first method
-    return true;
-  }
+  return reachedEndOfTimeWindow();
 }
 
 bool BaseCouplingScheme::willDataBeExchanged(
@@ -722,9 +717,9 @@ void BaseCouplingScheme::advanceTXTWriters()
   }
 }
 
-bool BaseCouplingScheme::reachedEndOfTimeWindow()
+bool BaseCouplingScheme::reachedEndOfTimeWindow() const
 {
-  return math::equals(getNextTimeStepMaxSize(), 0.0, _eps) || not hasTimeWindowSize();
+  return math::equals(_timeWindowSize - _computedTimeWindowPart, 0.0, _eps) || not hasTimeWindowSize();
 }
 
 void BaseCouplingScheme::storeIteration()

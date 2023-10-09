@@ -36,15 +36,8 @@
     <max-time-windows value="10" />
     <time-window-size value="1.0" />
     <max-iterations value="2" />
-    <exchange data="DataBA" mesh="MeshA" from="SolverB" to="SolverA" substeps="false" />
-    <exchange data="DataAB" mesh="MeshA" from="SolverA" to="SolverB" substeps="false" />
+    <exchange data="DataBA" mesh="MeshA" from="SolverB" to="SolverA" />
+    <exchange data="DataAB" mesh="MeshA" from="SolverA" to="SolverB" />
     <relative-convergence-measure data="DataBA" mesh="MeshA" limit="1e-4" />
-    <acceleration:IQN-ILS>
-      <data name="DataAB" mesh="MeshA" />
-      <filter type="QR2" limit="1e-1" />
-      <initial-relaxation value="1.0" />
-      <max-used-iterations value="10" />
-      <time-windows-reused value="0" />
-    </acceleration:IQN-ILS>
   </coupling-scheme:multi>
 </precice-configuration>
